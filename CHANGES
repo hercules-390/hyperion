@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+11 Jun 2004 Minor ETF3 optimalizations - Bernard van der Helm
 10 Jun 2004 Prevent multiple console threads from being created - Fish
 10 Jun 2004 ETF3 fixes Roger Bowler/Bernard van der Helm
 10 Jun 2004 ipaddr/mask filtering support for terminal devices - Fish

@@ -1803,8 +1803,8 @@ DEF_INST(convert_utf8_to_utf32)
   int read;                        /* Bytes read                     */
   VADR srce;                       /* Source address                 */
   GREG srcelen;                    /* Source length                  */
-  BYTE u32[4];                     /* utf32 character(s)             */
-  BYTE u8[4];                      /* utf8 character(s)              */
+  BYTE utf32[4];                   /* utf32 character(s)             */
+  BYTE utf8[4];                    /* utf8 character(s)              */
   int xlated;                      /* characters translated          */
   
   RRE(inst, regs, r1, r2);
@@ -1815,7 +1815,10 @@ DEF_INST(convert_utf8_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-  
+
+  /* Every valid utf-32 starts with 0x00 */
+  utf32[0] = 0x00;
+    
   /* Initialize number of translated charachters */
   xlated = 0;
   while(xlated < 4096)
@@ -1833,18 +1836,17 @@ DEF_INST(convert_utf8_to_utf32)
     }
     
     /* Fetch a byte */
-    u8[0] = ARCH_DEP(vfetchb)(srce, r2, regs);
-    if(u8[0] < 0x80) 
+    utf8[0] = ARCH_DEP(vfetchb)(srce, r2, regs);
+    if(utf8[0] < 0x80) 
     {
       /* xlate range 00-7f */
       /* 0jklmnop -> 00000000 00000000 00000000 0jklmnop */
-      u32[0] = 0x00;
-      u32[1] = 0x00;
-      u32[2] = 0x00;
-      u32[3] = u8[0];
+      utf32[1] = 0x00;
+      utf32[2] = 0x00;
+      utf32[3] = utf8[0];
       read = 1;
     }
-    else if(u8[0] >= 0xc0 && u8[0] <= 0xdf)
+    else if(utf8[0] >= 0xc0 && utf8[0] <= 0xdf)
     {
       /* Check end of source */
       if(srcelen < 2)
@@ -1854,17 +1856,16 @@ DEF_INST(convert_utf8_to_utf32)
       }
     
       /* Get the next byte */      
-      u8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
+      utf8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
             
       /* xlate range c000-dfff */
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
-      u32[0] = 0x00;
-      u32[1] = 0x00;
-      u32[2] = (u8[0] & 0x1c) >> 2;
-      u32[3] = (u8[0] << 6) & (u8[1] & 0x3f);
+      utf32[1] = 0x00;
+      utf32[2] = (utf8[0] & 0x1c) >> 2;
+      utf32[3] = (utf8[0] << 6) & (utf8[1] & 0x3f);
       read = 2;
     }
-    else if(u8[0] >= 0xe0 && u8[0] <= 0xef)
+    else if(utf8[0] >= 0xe0 && utf8[0] <= 0xef)
     {
       /* Check end of source */
       if(srcelen < 3)
@@ -1874,17 +1875,16 @@ DEF_INST(convert_utf8_to_utf32)
       }
 
       /* Get the next 2 bytes */      
-      ARCH_DEP(vfetchc)(&u8[1], 1, srce + 1, r2, regs);
+      ARCH_DEP(vfetchc)(&utf8[1], 1, srce + 1, r2, regs);
     
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
-      u32[0] = 0x00;
-      u32[1] = 0x00;
-      u32[2] = (u8[0] << 4) & ((u8[1] & 0x3c) >> 2);
-      u32[3] = (u8[1] << 6) & (u8[2] & 0x3f);
+      utf32[1] = 0x00;
+      utf32[2] = (utf8[0] << 4) & ((utf8[1] & 0x3c) >> 2);
+      utf32[3] = (utf8[1] << 6) & (utf8[2] & 0x3f);
       read = 3;
     }
-    else if(u8[0] >= 0xf0 && u8[0] <= 0xf7)
+    else if(utf8[0] >= 0xf0 && utf8[0] <= 0xf7)
     {
       /* Check end of source */
       if(srcelen < 4)
@@ -1894,14 +1894,13 @@ DEF_INST(convert_utf8_to_utf32)
       }
 
       /* Get the next 3 bytes */      
-      ARCH_DEP(vfetchc)(&u8[1], 2, srce + 1, r2, regs);
+      ARCH_DEP(vfetchc)(&utf8[1], 2, srce + 1, r2, regs);
     
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
-      u32[0] = 0x00;
-      u32[1] = ((u8[0] & 0x07) << 2) & ((u8[1] & 0x30) >> 4);
-      u32[2] = (u8[1] << 4) & ((u8[2] & 0x3f) >> 2);
-      u32[3] = (u8[2] << 6) & (u8[3] & 0x3f);
+      utf32[1] = ((utf8[0] & 0x07) << 2) & ((utf8[1] & 0x30) >> 4);
+      utf32[2] = (utf8[1] << 4) & ((utf8[2] & 0x3c) >> 2);
+      utf32[3] = (utf8[2] << 6) & (utf8[3] & 0x3f);
       read = 4;
     }
     else
@@ -1911,7 +1910,7 @@ DEF_INST(convert_utf8_to_utf32)
     }
     
     /* Write and commit registers */
-    ARCH_DEP(vstorec)(u32, 4 - 1, dest, r1, regs);
+    ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
     GR_A(r1, regs) = (dest + 4) & ADDRESS_MAXWRAP(regs);
     GR_A(r1 + 1, regs) = destlen - 4;
     GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
@@ -1936,8 +1935,8 @@ DEF_INST(convert_utf16_to_utf32)
   int read;                        /* Bytes read                     */
   VADR srce;                       /* Source address                 */
   GREG srcelen;                    /* Source length                  */
-  BYTE u16[4];                     /* utf16 character(s)             */
-  BYTE u32[4];                     /* utf328 character(s)            */
+  BYTE utf16[4];                     /* utf16 character(s)             */
+  BYTE utf32[4];                     /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
   int xlated;                      /* characters translated          */
   
@@ -1949,7 +1948,10 @@ DEF_INST(convert_utf16_to_utf32)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-  
+
+  /* Every valid utf-32 starts with 0x00 */
+  utf32[0] = 0x00;
+    
   /* Initialize number of translated charachters */
   xlated = 0;
   while(xlated < 4096)
@@ -1967,15 +1969,14 @@ DEF_INST(convert_utf16_to_utf32)
     }
 
     /* Fetch 2 bytes */
-    ARCH_DEP(vfetchc)(u16, 1, srce, r2, regs);
-    if(u16[0] <= 0xd7 || u16[0] >= 0xdc) 
+    ARCH_DEP(vfetchc)(utf16, 1, srce, r2, regs);
+    if(utf16[0] <= 0xd7 || utf16[0] >= 0xdc) 
     {
       /* xlate range 0000-d7fff and dc00-ffff */
       /* abcdefgh ijklmnop -> 00000000 00000000 abcdefgh ijklmnop */
-      u32[0] = 0x00;
-      u32[1] = 0x00;
-      u32[2] = u16[0];
-      u32[3] = u16[1];
+      utf32[1] = 0x00;
+      utf32[2] = utf16[0];
+      utf32[3] = utf16[1];
       read = 2;
     }
     else
@@ -1988,21 +1989,20 @@ DEF_INST(convert_utf16_to_utf32)
       }
 
       /* Fetch another 2 bytes */
-      ARCH_DEP(vfetchc)(&u16[2], 1, srce, r2, regs);
+      ARCH_DEP(vfetchc)(&utf16[2], 1, srce, r2, regs);
       
       /* xlate range d800-dbff */
       /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
       /* 000uvwxy = 0000abcde + 1 */
-      uvwxy = (((u16[0] & 0x03) << 2) | (u16[1] >> 6)) + 1;
-      u32[0] = 0x00;
-      u32[1] = uvwxy;
-      u32[2] = (u16[1] << 2) | (u16[2] & 0x03);
-      u32[3] = u16[3];
+      uvwxy = (((utf16[0] & 0x03) << 2) | (utf16[1] >> 6)) + 1;
+      utf32[1] = uvwxy;
+      utf32[2] = (utf16[1] << 2) | (utf16[2] & 0x03);
+      utf32[3] = utf16[3];
       read = 4;
     }
     
     /* Write and commit registers */
-    ARCH_DEP(vstorec)(u32, 4 - 1, dest, r1, regs);
+    ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
     GR_A(r1, regs) = (dest + 4) & ADDRESS_MAXWRAP(regs);
     GR_A(r1 + 1, regs) = destlen - 4;
     GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
@@ -2026,8 +2026,8 @@ DEF_INST(convert_utf32_to_utf8)
   int r2;
   VADR srce;                       /* Source address                 */
   GREG srcelen;                    /* Source length                  */
-  BYTE u32[4];                     /* utf32 character(s)             */
-  BYTE u8[4];                      /* utf8 character(s)              */
+  BYTE utf32[4];                     /* utf32 character(s)             */
+  BYTE utf8[4];                      /* utf8 character(s)              */
   BYTE uvwxy;                      /* Work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
@@ -2058,26 +2058,26 @@ DEF_INST(convert_utf32_to_utf8)
     }
 
     /* Get 4 bytes */
-    ARCH_DEP(vfetchc)(u32, 3, srce, r2, regs);
+    ARCH_DEP(vfetchc)(utf32, 3, srce, r2, regs);
 
-    if(u32[0])
+    if(utf32[0] != 0x00)
     {
       regs->psw.cc = 2;
       return;
     }
-    else if(u32[1] = 0x00)
+    else if(utf32[1] = 0x00)
     {
-      if(u32[2] == 0x00)
+      if(utf32[2] == 0x00)
       {
-        if(u32[3] <= 0x7f)
+        if(utf32[3] <= 0x7f)
 	{
 	  /* xlate range 00000000-0000007f */
 	  /* 00000000 00000000 00000000 0jklmnop -> 0jklmnop */
-	  u8[0] = u32[3];
+	  utf8[0] = utf32[3];
 	  write = 1;
 	}
       }
-      else if(u32[2] <= 0x07)
+      else if(utf32[2] <= 0x07)
       {
         /* Check destination length */
         if(destlen < 2)
@@ -2088,11 +2088,11 @@ DEF_INST(convert_utf32_to_utf8)
       
 	/* xlate range 00000080-000007ff */
         /* 00000000 00000000 00000fgh ijklmnop -> 110fghij 10klmnop */
-	u8[0] = 0xc0 | (u32[2] << 2) | (u32[2] >> 6);
-	u8[1] = 0x80 | (u32[2] & 0x3f);
+	utf8[0] = 0xc0 | (utf32[2] << 2) | (utf32[2] >> 6);
+	utf8[1] = 0x80 | (utf32[2] & 0x3f);
 	write = 2;
       }
-      else if(u32[2] <= 0xd7 || u32[2] > 0xdc)
+      else if(utf32[2] <= 0xd7 || utf32[2] > 0xdc)
       {
         /* Check destination length */
         if(destlen < 3)
@@ -2103,9 +2103,9 @@ DEF_INST(convert_utf32_to_utf8)
 	
 	/* xlate range 00000800-0000d7ff and 0000dc00-0000ffff */
 	/* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */      
-        u8[0] = 0xe0 | (u32[2] >> 4);
-	u8[1] = 0x80 | ((u32[2] & 0x0f) << 2) | (u32[3] >> 6);
-	u8[2] = 0x80 | (u32[3] & 0x3f);
+        utf8[0] = 0xe0 | (utf32[2] >> 4);
+	utf8[1] = 0x80 | ((utf32[2] & 0x0f) << 2) | (utf32[3] >> 6);
+	utf8[2] = 0x80 | (utf32[3] & 0x3f);
 	write = 3;
       }
       else
@@ -2114,7 +2114,7 @@ DEF_INST(convert_utf32_to_utf8)
         return;	
       }
     }
-    else if(u32[1] >= 0x01 && u32[1] <= 0x10)
+    else if(utf32[1] >= 0x01 && utf32[1] <= 0x10)
     {
       /* Check destination length */
       if(destlen < 4)
@@ -2125,10 +2125,10 @@ DEF_INST(convert_utf32_to_utf8)
     
       /* xlate range 00010000-0010ffff */
       /* 00000000 000uvwxy efghijkl mnopqrst -> 11110uvw 10xyefgh 10ijklmn 10opqrst */
-      u8[0] = 0xf0 | (u32[1] >> 2);
-      u8[1] = 0x80 | ((u32[1] & 0x03) << 4) | (u32[2] >> 4);
-      u8[2] = 0x80 | ((u32[2] & 0x0f) < 2) | (u32[3] >> 6);
-      u8[3] = 0x80 | (u32[3] & 0x3f);
+      utf8[0] = 0xf0 | (utf32[1] >> 2);
+      utf8[1] = 0x80 | ((utf32[1] & 0x03) << 4) | (utf32[2] >> 4);
+      utf8[2] = 0x80 | ((utf32[2] & 0x0f) < 2) | (utf32[3] >> 6);
+      utf8[3] = 0x80 | (utf32[3] & 0x3f);
       write = 4;
     }
     else
@@ -2138,7 +2138,7 @@ DEF_INST(convert_utf32_to_utf8)
     }
     
     /* Write and commit registers */
-    ARCH_DEP(vstorec)(u8, write - 1, dest, r1, regs);
+    ARCH_DEP(vstorec)(utf8, write - 1, dest, r1, regs);
     GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
     GR_A(r1 + 1, regs) = destlen - write;
     GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
@@ -2162,8 +2162,8 @@ DEF_INST(convert_utf32_to_utf16)
   int r2;
   VADR srce;                       /* Source address                 */
   GREG srcelen;                    /* Source length                  */
-  BYTE u16[4];                     /* utf16 character(s)             */
-  BYTE u32[4];                     /* utf32 character(s)             */
+  BYTE utf16[4];                     /* utf16 character(s)             */
+  BYTE utf32[4];                     /* utf32 character(s)             */
   BYTE uvwxy;                      /* work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
@@ -2195,21 +2195,22 @@ DEF_INST(convert_utf32_to_utf16)
     }
 
     /* Get 4 bytes */
-    ARCH_DEP(vfetchc)(u32, 3, srce, r2, regs);
-    if(u32[0] != 0x00)
+    ARCH_DEP(vfetchc)(utf32, 3, srce, r2, regs);
+    
+    if(utf32[0] != 0x00)
     {
       regs->psw.cc = 2;
       return;
     }
-    else if(u32[1] == 0x00 && (u32[2] <= 0xd7 || u32[2] >= 0xdc))
+    else if(utf32[1] == 0x00 && (utf32[2] <= 0xd7 || utf32[2] >= 0xdc))
     {
       /* xlate range 00000000-0000d7ff and 0000dc00-0000ffff */
       /* 00000000 00000000 abcdefgh ijklmnop -> abcdefgh ijklmnop */
-      u16[0] = u32[2];
-      u16[1] = u32[3];
+      utf16[0] = utf32[2];
+      utf16[1] = utf32[3];
       write = 2;
     }
-    else if(u32[1] >= 0x01 && u32[1] <= 0x10)
+    else if(utf32[1] >= 0x01 && utf32[1] <= 0x10)
     {
       /* Check end of destination */
       if(destlen < 4)
@@ -2221,11 +2222,11 @@ DEF_INST(convert_utf32_to_utf16)
       /* xlate range 00010000-0010ffff */
       /* 00000000 000uvwxy efghijkl mnopqrst -> 110110ab cdefghij 110111kl mnopqrst */
       /* 000zabcd = 000uvwxy - 1 */
-      zabcd = (u32[1] - 1) & 0x0f;
-      u16[0] = 0xd8 | (zabcd >> 2);
-      u16[1] = (zabcd << 6) | (u32[2] >> 2);
-      u16[2] = 0xd9 | (u32[2] & 0x03);
-      u16[3] = u32[3];
+      zabcd = (utf32[1] - 1) & 0x0f;
+      utf16[0] = 0xd8 | (zabcd >> 2);
+      utf16[1] = (zabcd << 6) | (utf32[2] >> 2);
+      utf16[2] = 0xd9 | (utf32[2] & 0x03);
+      utf16[3] = utf32[3];
       write = 4;
     }    
     else
@@ -2235,7 +2236,7 @@ DEF_INST(convert_utf32_to_utf16)
     }
     
     /* Write and commit registers */
-    ARCH_DEP(vstorec)(u16, write - 1, dest, r1, regs);
+    ARCH_DEP(vstorec)(utf16, write - 1, dest, r1, regs);
     GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
     GR_A(r1 + 1, regs) = destlen - write;
     GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
