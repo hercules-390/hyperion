@@ -1,3 +1,4 @@
+19 Dec 2002 Apply reworked Gabor Hoffer patches part 1 - Greg Smith, Jan Jaeger
 15 Dec 2002 Renumbered messages in printer.c and console.c - Jay Maynard
 15 Dec 2002 Streamlining Windows build processing, add P4 support - Volker Bandke
 12 Dec 2002 Main storage addressing cleanup - Jan Jaeger

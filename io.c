@@ -938,7 +938,7 @@ int     i;
        CPU then return with cc1 */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
     {
-        if(sysblk.regs[i].chanset == effective_addr2)
+        if(sysblk.regs[i]->chanset == effective_addr2)
         {
             release_lock(&sysblk.intlock);
             regs->psw.cc = 1;
@@ -998,11 +998,11 @@ int     i;
        CPU then return with cc0 */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
     {
-        if(sysblk.regs[i].chanset == effective_addr2)
+        if(sysblk.regs[i]->chanset == effective_addr2)
         {
-            if(sysblk.regs[i].cpustate != CPUSTATE_STARTED)
+            if(sysblk.regs[i]->cpustate != CPUSTATE_STARTED)
             {
-                sysblk.regs[i].chanset = 0xFFFF;
+                sysblk.regs[i]->chanset = 0xFFFF;
                 regs->psw.cc = 0;
             }
             else

@@ -48,7 +48,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Perform CPU reset on all other CPUs */
     for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-        ARCH_DEP(cpu_reset) (sysblk.regs + cpu);
+        ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
 
     /* put cpu in load state */
     regs->loadstate = 1;
@@ -256,7 +256,7 @@ U32     fileaddr;
 
     /* Perform CPU reset on all other CPUs */
     for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-        ARCH_DEP(cpu_reset) (sysblk.regs + cpu);
+        ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
 
     /* put cpu in load state */
     regs->loadstate = 1;

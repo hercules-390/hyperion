@@ -384,7 +384,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         return;
         }
     }
-    regs = sysblk.regs + sysblk.pcpu;
+    regs = sysblk.regs[sysblk.pcpu];
 
 #if defined(OPTION_MIPS_COUNTING)
     fprintf(confp, ANSI_WHT_BLU);
@@ -487,13 +487,13 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #ifdef OPTION_MIPS_COUNTING
 #ifdef _FEATURE_CPU_RECONFIG
     for(mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-      if(sysblk.regs[i].cpuonline)
+      if(sysblk.regs[i]->cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
     for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
     {
-        mipsrate += sysblk.regs[i].mipsrate;
-        siosrate += sysblk.regs[i].siosrate;
+        mipsrate += sysblk.regs[i]->mipsrate;
+        siosrate += sysblk.regs[i]->siosrate;
     }
     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
     fprintf(confp, "%2.1d.%2.2d  %5d",
@@ -1004,7 +1004,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     while (1)
     {
         /* Set target CPU for commands and displays */
-        regs = sysblk.regs + sysblk.pcpu;
+        regs = sysblk.regs[sysblk.pcpu];
         /* If the requested CPU is offline, then take the first available CPU*/
         if(!regs->cpuonline)
           /* regs = first online CPU
@@ -1012,13 +1012,13 @@ struct  timeval tv;                     /* Select timeout structure  */
            */
           for(regs = 0, sysblk.pcpu = 0, i = 0 ;
               i < MAX_CPU_ENGINES ; ++i )
-            if (sysblk.regs[i].cpuonline) {
+            if (sysblk.regs[i]->cpuonline) {
               if (!regs)
-                regs = sysblk.regs + i;
+                regs = sysblk.regs[i];
               ++sysblk.pcpu;
             }
 
-        if (!regs) regs = sysblk.regs;
+        if (!regs) regs = sysblk.regs[0];
 
 #if defined(_FEATURE_SIE)
         /* Point to SIE copy in SIE state */
@@ -1683,13 +1683,13 @@ struct  timeval tv;                     /* Select timeout structure  */
                     /* Calculate MIPS rate */
 #ifdef FEATURE_CPU_RECONFIG
                     for (mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-                        if(sysblk.regs[i].cpuonline)
+                        if(sysblk.regs[i]->cpuonline)
 #else /*!FEATURE_CPU_RECONFIG*/
                         for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
 #endif /*!FEATURE_CPU_RECONFIG*/
                         {
-                            mipsrate += sysblk.regs[i].mipsrate;
-                            siosrate += sysblk.regs[i].siosrate;
+                            mipsrate += sysblk.regs[i]->mipsrate;
+                            siosrate += sysblk.regs[i]->siosrate;
                         }
 
                     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */

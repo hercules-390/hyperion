@@ -108,7 +108,7 @@ install_sh = @install_sh@
 AUTOMAKE_OPTIONS = foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4  intl m4  po util html
+SUBDIRS = intl m4  intl m4  intl m4  intl m4  po util html
 
 @BUILD_HERCIFC_TRUE@HERCIFC = hercifc
 @BUILD_HERCIFC_FALSE@HERCIFC = 
@@ -227,7 +227,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
 
 noinst_HEADERS = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
@@ -241,7 +241,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = intl/Makefile intl/Makefile
+CONFIG_CLEAN_FILES = intl/Makefile intl/Makefile intl/Makefile
 EXTRA_PROGRAMS = hercifc$(EXEEXT)
 @BUILD_HERCIFC_TRUE@bin_PROGRAMS = hercules$(EXEEXT) hercifc$(EXEEXT) \
 @BUILD_HERCIFC_TRUE@	dasdinit$(EXEEXT) dasdisup$(EXEEXT) \
@@ -591,6 +591,8 @@ $(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(top_srcdir)/configure.ac $(ACLOC
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
+intl/Makefile: $(top_builddir)/config.status $(top_srcdir)/intl/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 intl/Makefile: $(top_builddir)/config.status $(top_srcdir)/intl/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 intl/Makefile: $(top_builddir)/config.status $(top_srcdir)/intl/Makefile.in
