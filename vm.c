@@ -716,7 +716,7 @@ BYTE            c;                      /* Character work area       */
         idlen = sizeof(buf);
 
     /* Store the extended identification code at operand address */
-    ARCH_DEP(vstorec) (buf, idlen-1, idaddr, r1, regs);
+    ARCH_DEP(vstorec) (buf, idlen-1, idaddr, USE_REAL_ADDR, regs);
 
     /* Deduct number of bytes from the R2 register */
     regs->GR_L(r2) -= idlen;
