@@ -851,9 +851,9 @@ do { \
             (_r1) = (temp >> 20) & 0xf; \
             tempx = (temp >> 16) & 0xf; \
             (_b2) = (temp >> 12) & 0xf; \
-            temp2 = (_inst[4] << 12) Ý (temp & 0xfff); \
-            if (temp2 & 0x80000) temp2 Ý= 0xfff00000; \
-            (_effective_addr2) =
+            temp2 = (_inst[4] << 12) | (temp & 0xfff); \
+            if (temp2 & 0x80000) temp2 |= 0xfff00000; \
+            (_effective_addr2) = \
                         (tempx ? (_regs)->GR(tempx) : (GREG)0) + \
                         ((_b2) ? (_regs)->GR((_b2)) : (GREG)0) + \
                         temp2; \
@@ -932,9 +932,9 @@ do { \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_b2) = (temp >> 12) & 0xf; \
-            temp2 = (_inst[4] << 12) Ý (temp & 0xfff); \
-            if (temp2 & 0x80000) temp2 Ý= 0xfff00000; \
-            (_effective_addr2) =
+            temp2 = (_inst[4] << 12) | (temp & 0xfff); \
+            if (temp2 & 0x80000) temp2 |= 0xfff00000; \
+            (_effective_addr2) = \
                         ((_b2) ? (_regs)->GR((_b2)) : (GREG)0) + \
                         temp2; \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
@@ -1051,9 +1051,9 @@ do { \
             temp = CSWAP32(temp); \
             (_i2) = (temp >> 16) & 0xff; \
             (_b1) = (temp >> 12) & 0xf; \
-            temp1 = (_inst[4] << 12) Ý (temp & 0xfff); \
-            if (temp1 & 0x80000) temp1 Ý= 0xfff00000; \
-            (_effective_addr1) =
+            temp1 = (_inst[4] << 12) | (temp & 0xfff); \
+            if (temp1 & 0x80000) temp1 |= 0xfff00000; \
+            (_effective_addr1) = \
                         ((_b1) ? (_regs)->GR((_b1)) : (GREG)0) + \
                         temp1; \
             (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
