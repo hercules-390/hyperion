@@ -237,7 +237,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
 
     memset( &ifreq, 0, sizeof( struct ifreq ) );
 
-    sin = (struct sockaddr_in*)&ifreq.ifr_dstaddr;
+    sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
     sin->sin_family = AF_INET;
 
