@@ -1023,8 +1023,6 @@ U32     ptl;                            /* Page table length         */
         if (tlbix >= 0)
         {
             regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-            if(regs->dat.protect & 2)
-                regs->tlb.TLB_ASD(tlbix) ^= TLB_PROT_ASD;
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
@@ -1354,8 +1352,6 @@ U16     sx, px;                         /* Segment and page index,
         if (tlbix >= 0)
         {
             regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
-            if(regs->dat.protect & 2)
-                regs->tlb.TLB_ASD(tlbix) ^= TLB_PROT_ASD;
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
