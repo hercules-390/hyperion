@@ -248,8 +248,8 @@ char *modname;
 
     if(!(dllent->dll = dlopen(name, RTLD_NOW)))
     {
-        logmsg("HHCHD007E unable to open DLL: %s\n",
-          dlerror());
+        logmsg("HHCHD007E unable to open DLL %s: %s\n",
+          name,dlerror());
         free(dllent);
         return -1;
     }
