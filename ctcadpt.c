@@ -1279,8 +1279,8 @@ BYTE            c;                      /* Character work area       */
 /*-------------------------------------------------------------------*/
 static int init_ctci (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
-    UNREFERENCED(argc);
 #if defined(WIN32)
+    UNREFERENCED(argc);
     dev->ctctype = CTC_CTCT;
     *cutype = CTC_3088_08;
     logmsg ("HHC835I %4.4X %s mode not implemented\n",
