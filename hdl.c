@@ -424,7 +424,7 @@ char *modname;
 int hdl_dele(char *name)
 {
 DLLENT **dllent, *tmpdll;
-MODENT **modent, *tmpmod;
+MODENT *modent, *tmpmod;
 char *modname;
 
     modname = (modname = strrchr(name,'/')) ? ++modname : name;
@@ -436,12 +436,14 @@ char *modname;
         if(!((*dllent)->flags & HDL_LOAD_NOUNLOAD)
           && !strcmp(modname,(*dllent)->name))
         {
-            for(modent = &((*dllent)->modent); *modent; modent = &((*modent)->modnext))
+           
+            modent = (*dllent)->modent;
+            while(modent)
             {
-                tmpmod = *modent;
+                tmpmod = modent;
                 
                 /* remove current entry from chain */
-                *modent = (*modent)->modnext;
+                modent = modent->modnext;
 
                 /* free module resources */
                 free(tmpmod->name);
