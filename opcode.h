@@ -301,12 +301,6 @@ do { \
 	if (((_m) == 2) || ((_m) == 3) || ((_m) & 8)) \
 	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
-#define BFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) ) { \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
-        }
-
 #define PRIV_CHECK(_regs) \
 	if( (_regs)->psw.prob ) \
 	    ARCH_DEP(program_interrupt)( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
@@ -405,7 +399,68 @@ static inline void store_dw(void* storage, U64 value) {
 #undef HFPODD2_CHECK
 #undef FPR2I
 #undef FPREX
+
 #if defined(FEATURE_BASIC_FP_EXTENSIONS)
+#if defined(_FEATURE_SIE)
+
+#define BFPINST_CHECK(_regs) \
+        if( !((_regs)->CR(0) & CR0_AFP) \
+            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
+            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        }
+
+
+	/* Program check if r1 is not 0, 2, 4, or 6 */
+#define HFPREG_CHECK(_r, _regs) \
+	if( !((_regs)->CR(0) & CR0_AFP) \
+            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+	    if( (_r) & 9 ) { \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
+		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+	    } \
+	}
+
+	/* Program check if r1 and r2 are not 0, 2, 4, or 6 */
+#define HFPREG2_CHECK(_r1, _r2, _regs) \
+	if( !((_regs)->CR(0) & CR0_AFP) \
+            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+	    if( ((_r1) & 9) || ((_r2) & 9) ) { \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
+		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+	    } \
+	}
+
+	/* Program check if r1 is not 0 or 4 */
+#define HFPODD_CHECK(_r, _regs) \
+	if( (_r) & 2 ) \
+	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
+	else if( !((_regs)->CR(0) & CR0_AFP) \
+               || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+	    if( (_r) & 9 ) { \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
+		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+	    } \
+	}
+
+	/* Program check if r1 and r2 are not 0 or 4 */
+#define HFPODD2_CHECK(_r1, _r2, _regs) \
+	if( ((_r1) & 2) || ((_r2) & 2) ) \
+	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
+	else if( !((_regs)->CR(0) & CR0_AFP) \
+                || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+	    if( ((_r1) & 9) || ((_r2) & 9) ) { \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
+		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+	    } \
+	}
+#else /*!defined(_FEATURE_SIE)*/
+
+#define BFPINST_CHECK(_regs) \
+        if( !((_regs)->CR(0) & CR0_AFP) ) { \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
+            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        }
 
 	/* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
@@ -446,6 +501,9 @@ static inline void store_dw(void* storage, U64 value) {
 		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
 	    } \
 	}
+
+#endif /*!defined(_FEATURE_SIE)*/ 
+
 
 	/* Convert fpr to index */
 #define FPR2I(_r) \
