@@ -520,7 +520,7 @@ void*  DeviceThread (void* pArg)
 	// were manually "cancelled" or asked to stop processing; i.e. the i/o subsystem
 	// was reset). Discard all i/o requests that may still be remaining in our queue.
 
-	TRACE("** DeviceThread %8.8X: shutdown detected\n",pThreadParms->dwThreadID);
+	TRACE("** DeviceThread %8.8lX: shutdown detected\n",pThreadParms->dwThreadID);
 
 	LockThreadParms(pThreadParms);			// (freeze moving target)
 
@@ -532,7 +532,7 @@ void*  DeviceThread (void* pArg)
 
 		pIORequest = CONTAINING_RECORD(pListEntry,DEVIOREQUEST,IORequestListLinkingListEntry);
 
-		TRACE("** DeviceThread %8.8X: discarding i/o request for device %4.4X\n",
+		TRACE("** DeviceThread %8.8lX: discarding i/o request for device %4.4X\n",
 			pThreadParms->dwThreadID,pIORequest->wDevNum);
 
 		free(pIORequest);
@@ -540,7 +540,7 @@ void*  DeviceThread (void* pArg)
 
 	pThreadParms->bThreadIsDead = TRUE;		// (tell scheduler we've died)
 
-	TRACE("** DeviceThread %8.8X: shutdown complete\n",pThreadParms->dwThreadID);
+	TRACE("** DeviceThread %8.8lX: shutdown complete\n",pThreadParms->dwThreadID);
 
 	UnlockThreadParms(pThreadParms);		// (thaw moving target)
 
