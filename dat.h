@@ -1803,8 +1803,10 @@ U16     xcode;                          /* Exception code            */
 
 #if defined(FEATURE_PER2)
         if( EN_IC_PER_SA(regs)
-          && regs->CR(10) >= addr
-          && regs->CR(11) <= addr )
+          && (REAL_MODE(&regs->psw) 
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+          && addr >= regs->CR(10)
+          && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER2)*/
 
@@ -1818,8 +1820,10 @@ U16     xcode;                          /* Exception code            */
 
 #if defined(FEATURE_PER2)
         if( EN_IC_PER_SA(regs)
-          && regs->CR(10) >= addr
-          && regs->CR(11) <= addr )
+          && (REAL_MODE(&regs->psw) 
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+          && addr >= regs->CR(10)
+          && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER2)*/
 
@@ -2011,8 +2015,10 @@ int     aeind;
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
 #if defined(FEATURE_PER2)
         if( EN_IC_PER_SA(regs)
-          && regs->CR(10) >= addr
-          && regs->CR(11) <= addr )
+          && (REAL_MODE(&regs->psw) 
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+          && addr >= regs->CR(10)
+          && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER2)*/
         break;
@@ -2024,8 +2030,10 @@ int     aeind;
             goto vabs_prot_excp;
 #if defined(FEATURE_PER2)
         if( EN_IC_PER_SA(regs)
-          && regs->CR(10) >= addr
-          && regs->CR(11) <= addr )
+          && (REAL_MODE(&regs->psw) 
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+          && addr >= regs->CR(10)
+          && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER2)*/
 
