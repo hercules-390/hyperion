@@ -179,6 +179,8 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(9347, tapedev_device_hndinfo );
     HDL_DEVICE(9348, tapedev_device_hndinfo );
     HDL_DEVICE(8809, tapedev_device_hndinfo );
+    HDL_DEVICE(3422, tapedev_device_hndinfo );
+    HDL_DEVICE(3430, tapedev_device_hndinfo );
 
 #if !defined(__APPLE__)
     /* Communications devices */
