@@ -1057,8 +1057,7 @@ cckd_read_trk_retry:
     switch (buf2[0] & CCKD_COMPRESS_MASK) {
 
     case CCKD_COMPRESS_NONE:
-        memcpy (buf, &buf2, len2);
-        len = len2;
+        memcpy (buf, &buf2, len2);        len = len2;
         urc = 0;
         cckdtrc ("cckddasd: %d rdtrk[%d] %d not compressed\n",
                  ra, lru, trk);
@@ -1098,8 +1097,7 @@ cckd_read_trk_retry:
 
     default:
         urc = 1;
-        break;
-    } /* switch (compression type) */
+        break;    } /* switch (compression type) */
 
     if (urc == 0) vrc = cckd_validate (dev, buf, trk, len);
     cckdtrc ("cckddasd: %d rdtrk[%d] %d urc=%d vrc=%d\n",
@@ -3142,8 +3140,17 @@ char           *comp[] = {"none", "zlib", "bzip2"};
          && head < dev->ckdheads
          && (trk == -1 || t == trk))
         {
-            if (buf[0] <= CCKD_COMPRESS_MAX)
+            if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX)
+            {
+                if (buf[0] & ~CCKD_COMPRESS_MASK)
+                {
+                    devmsg ("%4.4X:cckddasd: invalid byte 0 trk %d: "
+                            "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n", dev->devnum,
+                            t, buf[0],buf[1],buf[2],buf[3],buf[4]);
+                    buf[0] &= CCKD_COMPRESS_MASK;
+                } 
                 return t;
+            }
             if (buf[0] <= CCKD_COMPRESS_MAX_POSSIBLE)
                 badcomp = 1;
         }
@@ -3155,8 +3162,17 @@ char           *comp[] = {"none", "zlib", "bzip2"};
         if (t < dev->fbanumblk
          && (trk == -1 || t == trk))
         {
-            if (buf[0] <= CCKD_COMPRESS_MAX)
+            if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX)
+            {
+                if (buf[0] & ~CCKD_COMPRESS_MASK)
+                {
+                    devmsg ("%4.4X:cckddasd: invalid byte 0 blkgrp %d: "
+                            "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n", dev->devnum,
+                            t, buf[0],buf[1],buf[2],buf[3],buf[4]);
+                    buf[0] &= CCKD_COMPRESS_MASK;
+                } 
                 return t;
+            }
             if (buf[0] <= CCKD_COMPRESS_MAX_POSSIBLE)
                 badcomp = 1;
         }
