@@ -24,7 +24,7 @@ case "$host_os" in
 		;;
 esac
 
-AM_CONDITIONAL(BUILD_HERCIFC, [test "$build_hercifc" = "true"])
+AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
 
 # Libraries
 AC_CHECK_LIB(pthread, pthread_create)
@@ -69,20 +69,22 @@ case "$host_cpu" in
 esac
 
 AC_ARG_ENABLE(cckd-bzip2,
-[  --enable-cckd-bzip2         enable bzip2 compression for emulated DASD],
-[case "${enableval}" in
-  yes) cckd_bzip2=yes ;;
-  no) cckd_bzip2=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-cckd-bzip2) ;;
-esac],[cckd_bzip2=$have_libbz2])
+              [  --enable-cckd-bzip2         enable bzip2 compression for emulated DASD],
+              [case "${enableval}" in
+                 yes) cckd_bzip2=yes ;;
+                 no) cckd_bzip2=no ;;
+                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-cckd-bzip2) ;;
+               esac],
+              [cckd_bzip2=$have_libbz2])
 
 AC_ARG_ENABLE(het-bzip2,
-[  --enable-het-bzip2          enable bzip2 compression for emulated tapes],
-[case "${enableval}" in
-  yes) het_bzip2=yes ;;
-  no) het_bzip2=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-het-bzip2) ;;
-esac],[het_bzip2=$have_libbz2])
+              [  --enable-het-bzip2          enable bzip2 compression for emulated tapes],
+              [case "${enableval}" in
+                 yes) het_bzip2=yes ;;
+                 no) het_bzip2=no ;;
+                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-het-bzip2) ;;
+               esac],
+              [het_bzip2=$have_libbz2])
 
 if test $cckd_bzip2 = yes -o $het_bzip2 = yes; then
   if test $have_libbz2 != yes; then
@@ -107,44 +109,45 @@ AC_CHECK_FUNCS(sqrtl)
 # User-definable settings
 
 AC_ARG_ENABLE(profiling,
-[  --enable-profiling          enable profiling],
-[case "${enableval}" in
-  yes) CFLAGS="-pg -DPROFILE_CPU $CFLAGS" ;;
-  no) ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-profiling]) ;;
-esac])
+              [  --enable-profiling          enable profiling],
+              [case "${enableval}" in
+                yes) CFLAGS="-pg -DPROFILE_CPU $CFLAGS" ;;
+                no) ;;
+                *) AC_MSG_ERROR([bad value ${enableval} for --enable-profiling]) ;;
+               esac])
 
 AC_ARG_ENABLE(debug,
-[  --enable-debug              enable debugging],
-[case "${enableval}" in
-  yes)
-    debug=true
-    CFLAGS="-g $CFLAGS"
-    ;;
-  no) debug=false ;;
-  *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
-esac],
-[debug=false])
+              [  --enable-debug              enable debugging],
+              [case "${enableval}" in
+                yes)
+                  debug=true
+                  CFLAGS="-g $CFLAGS"
+                  ;;
+                no) debug=false ;;
+                *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
+               esac],
+              [debug=false])
 
 AC_ARG_ENABLE(setuid-hercifc,
-[  --enable-setuid-hercifc     install hercifc setuid root],
-[case "${enableval}" in
-  yes) setuid_hercifc=yes ;;
-  no)  setuid_hercifc=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-setuid-hercifc) ;;
-esac],[setuid_hercifc=no])
+              [  --enable-setuid-hercifc     install hercifc setuid root],
+              [case "${enableval}" in
+                yes) setuid_hercifc=yes ;;
+                no)  setuid_hercifc=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --enable-setuid-hercifc) ;;
+               esac],
+              [setuid_hercifc=no])
 AM_CONDITIONAL(SETUID_HERCIFC, test x$setuid_hercifc = xyes)
 
 AC_MSG_CHECKING([for optimization flags to use])
 
 AC_ARG_ENABLE(optimization,
-[  --enable-optimization[=FLAGS] enable optimization],
-[case "${enableval}" in
-  yes) optimize=true ;;
-  no) optimize=false ;;
-  *) optimize=false; OFLAGS="${enableval}" ;;
-esac],
-[optimize=true])
+              [  --enable-optimization[=FLAGS] enable optimization],
+              [case "${enableval}" in
+                yes) optimize=true ;;
+                no) optimize=false ;;
+                *) optimize=false; OFLAGS="${enableval}" ;;
+               esac],
+              [optimize=true])
 
 if test x$optimize = xtrue -a x$debug != xtrue; then
   case "$host_cpu" in
@@ -169,14 +172,14 @@ else
 fi
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
-	[Define if your gcc does not support __attribute__((regparm(n)))])
+	    [Define if your gcc does not support __attribute__((regparm(n)))])
 AH_TEMPLATE([NO_ASM_BYTESWAP],
-	[Define to disable assembler routines for byte swapping])
+	    [Define to disable assembler routines for byte swapping])
 AH_TEMPLATE([NO_IEEE_SUPPORT],
-	[Define to disable IEEE floating point support])
+	    [Define to disable IEEE floating point support])
 AH_TEMPLATE([CCKD_BZIP2],
-	[Define to enable bzip2 compression in emulated DASDs])
+	    [Define to enable bzip2 compression in emulated DASDs])
 AH_TEMPLATE([HET_BZIP2],
-	[Define to enable bzip2 compression in emulated tapes])
+	    [Define to enable bzip2 compression in emulated tapes])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
