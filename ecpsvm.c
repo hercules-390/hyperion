@@ -52,6 +52,13 @@
 // #define DEBUG_ASSIST(x) ( x )
 #define DEBUG_ASSIST(x)
 
+/* Utility macros because I am very lazy */
+#define EVM_IC( x )  ARCH_DEP(vfetchb) ( ( x ) , USE_REAL_ADDR , regs )
+#define EVM_LH( x )  ARCH_DEP(vfetch2) ( ( x ) , USE_REAL_ADDR , regs )
+#define EVM_L( x )  ARCH_DEP(vfetch4) ( ( x ) , USE_REAL_ADDR , regs )
+#define EVM_ST( x , y ) ARCH_DEP(vstore4) ( ( x ) , ( y ) , USE_REAL_ADDR , regs )
+#define EVM_MVC( x , y , z ) ARCH_DEP(vfetchc) ( ( x ) , ( z ) , ( y ) , USE_REAL_ADDR , regs )
+
 #define BR14 regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWRAP(regs)
 
 #define ECPSVM_PROLOG \
@@ -68,6 +75,8 @@ VADR    effective_addr1, \
      { \
         return; \
      } \
+
+#ifdef FEATURE_ECPSVM
 
 DEF_INST(ecpsvm_basic_freex)
 {
@@ -228,18 +237,18 @@ DEF_INST(ecpsvm_locate_rblock)
 
     ECPSVM_PROLOG
 
-    /* Get the address specified for the 2nd operand */
-    arioct=APPLY_PREFIXING(effective_addr2,regs->PX);
-
     /* Obtain the Device address */
     rdev=(effective_addr1 & 0xfff);
+    /* And the DMKRIO tables addresses */
+    arioct=effective_addr2;
+
     DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n",effective_addr1,arioct));
 
     /* Get the Channel Index Table */
-    FETCH_FW(rchixtbl,regs->mainstor+arioct);
+    rchixtbl= EVM_L(effective_addr2);
 
     /* Obtain the RCH offset */
-    FETCH_HW(chix,regs->mainstor+rchixtbl+((rdev & 0xf00) >> 7 ));
+    chix=EVM_LH(rchixtbl+((rdev & 0xf00) >> 7));
 
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n",chix);
 
@@ -259,17 +268,17 @@ DEF_INST(ecpsvm_locate_rblock)
     }
 
     /* Obtain the RCH Table pointer */
-    FETCH_FW(rchtbl,regs->mainstor+arioct+4);
+    rchtbl=EVM_L(arioct+4);
 
     /* Add the RCH Index offset */
     rchblk=rchtbl+chix;
 
     /* Try to obtain RCU index with bits 8-12 of the device */
-    FETCH_HW(cuix,regs->mainstor+rchblk+0x20+((rdev & 0xf8 )>> 2));
+    cuix=EVM_LH(rchblk+0x20+((rdev & 0xf8)>>2));
     if(cuix & 0x8000)
     {
         /* Try with bits 8-11 */
-        FETCH_HW(cuix,regs->mainstor+rchblk+0x20+((rdev & 0xf0) >> 2));
+        cuix=EVM_LH(rchblk+0x20+((rdev & 0xf0)>>2));
         if(cuix & 0x8000)
         {
             // logmsg("HHCEV300D : ECPS:VM SCNRU : NO CONTROL UNIT\n");
@@ -284,14 +293,14 @@ DEF_INST(ecpsvm_locate_rblock)
         }
     }
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n",cuix);
-    FETCH_FW(rcutbl,regs->mainstor+arioct+8);
+    rcutbl=EVM_L(arioct+8);
     rcublk=rcutbl+cuix;
-    FETCH_HW(dvix,regs->mainstor+rcublk+0x28+((rdev & 0xf)<<1));
+    dvix=EVM_LH(rcublk+0x28+((rdev & 0x00f)<<1));
     dvix<<=3;
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n",dvix);
-    if(regs->mainstor[rcublk+5]&0x40)
+    if(EVM_IC(rcublk+5)&0x40)
     {
-        FETCH_FW(rcublk,regs->mainstor+rcublk+0x10);
+        rcublk=EVM_L(rcublk+0x10);
     }
     if(dvix & 0x8000)
     {
@@ -305,7 +314,7 @@ DEF_INST(ecpsvm_locate_rblock)
         */
         return;
     }
-    FETCH_FW(rdvtbl,regs->mainstor+arioct+12);
+    rdvtbl=EVM_L(arioct+12);
     rdvblk=rdvtbl+dvix;
     DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n",rchblk,rcublk,rdvblk));
     regs->GR_L(6)=rchblk;
@@ -333,7 +342,7 @@ DEF_INST(ecpsvm_disp2)
 DEF_INST(ecpsvm_store_level)
 {
     ECPSVM_PROLOG
-    ARCH_DEP(vstore4) (sysblk.ecpsvm.level,effective_addr1,b1,regs);
+    EVM_ST(sysblk.ecpsvm.level,effective_addr1);
     DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM STORE LEVEL %d called\n",sysblk.ecpsvm.level));
 }
 DEF_INST(ecpsvm_loc_chgshrpg)
@@ -363,25 +372,25 @@ DEF_INST(ecpsvm_extended_freex)
     /* E1 = @ of MAXSIZE (maximum # of DW allocatable by FREEX from subpools) */
     /*      followed by subpool pointers                                      */
     /* E2 = @ of subpool indices                                              */
-    FETCH_FW(maxdw,regs->mainstor+effective_addr1);
+    maxdw=EVM_L(maxsztbl);
     if(regs->GR_L(0)>maxdw)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : FREEX request beyond subpool capacity\n"));
         return;
     }
     /* Fetch subpool index */
-    spix=regs->mainstor[spixtbl+numdw];
+    spix=EVM_IC(spixtbl+numdw);
     DEBUG_ASSIST(logmsg("HHCEV300D : Subpool index = %X\n",spix));
     /* Fetch value */
-    FETCH_FW(freeblock,regs->mainstor+maxsztbl+4+spix);
+    freeblock=EVM_L(maxsztbl+4+spix);
     DEBUG_ASSIST(logmsg("HHCEV300D : Value in subpool table = %6.6X\n",freeblock));
     if(freeblock==0)
     {
         /* Can't fullfill request here */
         return;
     }
-    FETCH_FW(nextblk,regs->mainstor+freeblock);
-    STORE_FW(regs->mainstor+maxsztbl+4+spix,nextblk);
+    nextblk=EVM_L(freeblock);
+    EVM_ST(nextblk,maxsztbl+4+spix);
     DEBUG_ASSIST(logmsg("HHCEV300D : New Value in subpool table = %6.6X\n",nextblk));
     regs->GR_L(1)=freeblock;
     regs->psw.cc=0;
@@ -410,34 +419,33 @@ DEF_INST(ecpsvm_extended_fretx)
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n"));
         return;
     }
-    FETCH_FW(maxdw,regs->mainstor+maxsztbl);
+    maxdw=EVM_L(maxsztbl);
     if(numdw>maxdw)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n",numdw,maxdw));
         return;
     }
-    FETCH_FW(cortbl,regs->mainstor+fretl);
+    cortbl=EVM_L(fretl);
     cortbe=cortbl+((block & 0xfff000)>>8);
-    if(memcmp(regs->mainstor+cortbe,regs->mainstor+fretl+4,4)!=0)
-
+    if(EVM_L(cortbe)!=EVM_L(fretl+4))
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n"));
         return;
     }
-    if(regs->mainstor[cortbe+8]!=0x02)
+    if(EVM_IC(cortbe+8)!=0x02)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n"));
         return;
     }
-    spix=regs->mainstor[fretl+11+numdw];
-    FETCH_FW(prevblk,regs->mainstor+maxsztbl+4+spix);
+    spix=EVM_IC(fretl+11+numdw);
+    prevblk=EVM_L(maxsztbl+4+spix);
     if(prevblk==block)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n"));
         return;
     }
-    STORE_FW(regs->mainstor+maxsztbl+4+spix,block);
-    STORE_FW(regs->mainstor+block,prevblk);
+    EVM_ST(block,maxsztbl+4+spix);
+    EVM_ST(prevblk,block);
     BR14;
     return;
 }
@@ -446,3 +454,5 @@ DEF_INST(ecpsvm_prefmach_assist)
     ECPSVM_PROLOG
     DEBUG_ASSIST(logmsg("HHCEV300D : PMA\n"));
 }
+
+#endif /* ifdef FEATURE_ECPSVM */
