@@ -54,83 +54,83 @@ hercules_OBJ = hostinfo.o w32ctca.o impl.o config.o panel.o \
                parser.o hetlib.o ieee.o sockdev.o httpserv.o \
                cgibin.o devtype.o codepage.o ctc_ctci.o ctc_lcs.o \
                tuntap.o hsccmd.o hscmisc.o logger.o commadpt.o \
-               cache.o ecpsvm.o shared.o
+               cache.o ecpsvm.o shared.o logmsg.o
 
 hercifc_OBJ  = hercifc.o hostinfo.o version.o 
 
 dasdinit_OBJ = dasdinit.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o
+               cache.o shared.o logmsg.o
 
 dasdisup_OBJ = dasdisup.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o
+               cache.o shared.o logmsg.o
 
 dasdload_OBJ = dasdload.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o
+               cache.o shared.o logmsg.o
 
 dasdls_OBJ   = dasdls.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o
+               cache.o shared.o logmsg.o
 
 dasdcat_OBJ  = dasdcat.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o
+               cache.o shared.o logmsg.o
 
 dasdpdsu_OBJ = dasdpdsu.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o
+               cache.o shared.o logmsg.o
 
 dasdseq_OBJ  = dasdseq.o dasdutil.o codepage.o hostinfo.o version.o  \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o
+               cache.o shared.o logmsg.o
 
-tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o 
+tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o logmsg.o
 
-tapemap_OBJ  = tapemap.o codepage.o hostinfo.o version.o 
+tapemap_OBJ  = tapemap.o codepage.o hostinfo.o version.o logmsg.o
 
-tapesplt_OBJ = tapesplt.o codepage.o hostinfo.o version.o 
+tapesplt_OBJ = tapesplt.o codepage.o hostinfo.o version.o logmsg.o
 
-cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o 
+cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
-cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o 
+cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
 cckddiag_OBJ = cckddiag.o cckddasd.o cckdutil.o ckddasd.o codepage.o \
                dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o \
-               shared.o
+               shared.o logmsg.o
 
-cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o 
+cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
 cckd2ckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
-               shared.o
+               shared.o logmsg.o
 
 ckd2cckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
-               shared.o
+               shared.o logmsg.o
 
 fba2cfba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o
+               shared.o logmsg.o
 
 cfba2fba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o
+               shared.o logmsg.o
 
 dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o
+               shared.o logmsg.o
 
-hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o 
+hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
 
-hetinit_OBJ  = hetinit.o hetlib.o sllib.o hostinfo.o version.o 
+hetinit_OBJ  = hetinit.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
 
-hetmap_OBJ   = hetmap.o hetlib.o sllib.o hostinfo.o version.o 
+hetmap_OBJ   = hetmap.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
 
-hetupd_OBJ   = hetupd.o hetlib.o sllib.o hostinfo.o version.o 
+hetupd_OBJ   = hetupd.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
 
-dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o 
+dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o
 
 HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
