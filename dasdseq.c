@@ -417,13 +417,14 @@ void makext(
         int starttrk,           // start track
         int size) {             // extent size in tracks
 
+        int endcyl = ((startcyl * heads) + starttrk + size - 1) / heads;
+        int endtrk = ((startcyl * heads) + starttrk + size - 1) % heads;
+
         if (i > (MAX_EXTENTS - 1)) {
                 fprintf(stderr, 
                         "makext extent # parm invalid %d, abort\n", i);
                 exit(4);
         }
-        int endcyl = ((startcyl * heads) + starttrk + size - 1) / heads;
-        int endtrk = ((startcyl * heads) + starttrk + size - 1) % heads;
 
         extent[i].xttype = 1;                   // extent type
         extent[i].xtseqn = i;                   // extent # (relative zero)
