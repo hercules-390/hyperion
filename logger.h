@@ -17,12 +17,39 @@
  #define LOG_DEFSIZE 65536
 #endif
 
-/*
+#ifdef NO_CYGWIN_SETVBUF_BUG
+#if 0
 #define logmsg(_message...) printf(_message)
-*/
+#else
 #define logmsg(_message...) log_write(0,_message)
 #define logmsgp(_message...) log_write(1,_message)
 #define logmsgb(_message...) log_write(2,_message)
+#endif
+#else /*NO_CYGWIN_SETVBUF_BUG*/
+#if 0
+#define logmsg(_message...) \
+do { \
+    printf(_message); \
+    fflush(stdout); \
+} while(0)
+#else
+#define logmsg(_message...) \
+do { \
+    log_write(0,_message); \
+    fflush(stdout); \
+} while(0)
+#define logmsgp(_message...) \
+do { \
+    log_write(1,_message); \
+    fflush(stdout); \
+} while(0)
+#define logmsgb(_message...) \
+do { \
+    log_write(2,_message); \
+    fflush(stdout); \
+} while(0)
+#endif
+#endif /*NO_CYGWIN_SETVBUF_BUG*/
 
 void logger_init(void);
 
