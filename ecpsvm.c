@@ -140,6 +140,71 @@ DEF_INST(ecpsvm_dispatch_main)
     ECPSVM_PROLOG
     DEBUG_ASSIST(logmsg("HHCEV300D : DISP 0\n"));
 }
+
+/******************************************************/
+/* SCNRU Instruction : Scan Real Unit                 */
+/* Invoked by DMKSCN                                  */
+/* SCNRU D1(B1,I1),D2(B2,I2)                          */
+/*                                                    */
+/* Operations                                         */
+/* The Device Address specified in operand 1 is       */
+/* the real device address for which control block    */
+/* addresses are to be returned. The storage area     */
+/* designated as the 2nd operand is a list of 4       */
+/* consecutive fullword (note : the 2nd operand is    */
+/* treated as a Real Address, regardless of any       */
+/* translation mode that may be in effect)            */
+/* +--------------------+-------------------+         */
+/* | CHNLINDEX          | RCHTABLE          |         */
+/* +--------------------+-------------------+         */
+/* | RCUTABLE           | RDVTABLE          |         */
+/* +--------------------+-------------------+         */
+/* CHNLINDEX is an array of 16 halfwords, each        */
+/* representing the offset of the target's device     */
+/* channel's RCHBLOCK. If the channel is not defined  */
+/* in the RIO table, the index has bit 0, byte 0 set  */
+/* to 1                                               */
+/*                                                    */
+/* The RCHBLOK has at offset +X'20' a table of        */
+/* 32 possible control unit indices                   */
+/* the device's address bit 8 to 12 are used to fetch */
+/* the index specified at the table. If it has        */
+/* bit 0 byte 0 set, then the same operation is       */
+/* attempted with bits 8 to 11                        */
+/* The RCUBLOK then fetched from RCUTABLE + the index */
+/* fetched from the RCHBLOK has a DEVICE index table  */
+/* at offset +X'28' which can be fetched by using     */
+/* bits 5-7                                           */
+/* If the RCUBLOK designates an alternate control     */
+/* unit block, (Offset +X'5' bit 1 set), then         */
+/* the primary RCUBLOK is fetched from offset X'10'   */
+/*                                                    */
+/* If no RCHBLOK is found, R6,R7 and R8 contain -1    */
+/* and Condition Code 3 is set                        */
+/*                                                    */
+/* if no RCUBLOK is found, R6 contains the RCHBLOK,   */
+/* R7 and R8 contain -1, and Condition Code 2 is set  */
+/*                                                    */
+/* if no RDVBLOK is found, R6 contains the RCHBLOK,   */
+/* R7 contains the RCUBLOK and R8 contains -1, and    */
+/* condition code 1 is set                            */
+/*                                                    */
+/* If all 3 control blocks are found, R6 contains the */
+/* the RCHBLOK, R7 Contains the RCUBLOK and R8 cont-  */
+/* ains the RDVBLOK. Condition code 0 is set          */
+/*                                                    */
+/* If the instruction is sucesfull, control is        */
+/* returned at the address specified by GPR14.        */
+/* Otherwise, the next sequential instruction is      */
+/* executed, and no GPR or condition code is changed. */
+/*                                                    */
+/* Exceptions :                                       */
+/*       Operation Exception : ECPS:VM Disabled       */
+/*       Priviledged Exception : PSW in problem state */
+/*                                                    */
+/* Note : no access exception is generated for        */
+/*        the second operand.                         */
+/******************************************************/
 DEF_INST(ecpsvm_locate_rblock)
 {
     U16 chix;           /* offset of RCH in RCH Array */
@@ -155,13 +220,25 @@ DEF_INST(ecpsvm_locate_rblock)
     VADR rcublk;        /* Effective RCUBLOK Address */
     VADR rdvblk;        /* Effective RDVBLOK Address */
     U16 rdev;
+
     ECPSVM_PROLOG
+
+    /* Get the address specified for the 2nd operand */
     arioct=APPLY_PREFIXING(effective_addr2,regs->PX);
+
+    /* Obtain the Device address */
     rdev=(effective_addr1 & 0xfff);
     DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n",effective_addr1,arioct));
+
+    /* Get the Channel Index Table */
     FETCH_FW(rchixtbl,sysblk.mainstor+arioct);
+
+    /* Obtain the RCH offset */
     FETCH_HW(chix,sysblk.mainstor+rchixtbl+((rdev & 0xf00) >> 7 ));
+
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n",chix);
+
+    /* Check if Bit 0 set (no RCH) */
     if(chix & 0x8000)
     {
         // logmsg("HHCEV300D : ECPS:VM SCNRU : NO CHANNEL\n");
@@ -172,15 +249,21 @@ DEF_INST(ecpsvm_locate_rblock)
         regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWREP(regs);
         regs->psw.cc=1;
         */
+        /* Right now, let CP handle the case */
         return;
     }
+
+    /* Obtain the RCH Table pointer */
     FETCH_FW(rchtbl,sysblk.mainstor+arioct+4);
+
+    /* Add the RCH Index offset */
     rchblk=rchtbl+chix;
-    /* RCHBLK now contains RCHBLOK address */
+
+    /* Try to obtain RCU index with bits 8-12 of the device */
     FETCH_HW(cuix,sysblk.mainstor+rchblk+0x20+((rdev & 0xf8 )>> 2));
     if(cuix & 0x8000)
     {
-        /* Try with 0xF0 */
+        /* Try with bits 8-11 */
         FETCH_HW(cuix,sysblk.mainstor+rchblk+0x20+((rdev & 0xf0) >> 2));
         if(cuix & 0x8000)
         {
