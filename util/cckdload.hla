@@ -1358,8 +1358,8 @@ writer    STM  r0,rf,save1
           CLC  eightFF,5+8+8(r1)    check for end-of-track
           BNE  w_wnoteot             continue if not
           MVC  5+8+8(8,r1),5(r1)      else copy r0 t0 r1
-          MVI  5+8+8+4,1               and set r to 1
-          MVI  5+8+8+7,0                and data len to 0
+          MVI  5+8+8+4(r1),1           and set r to 1
+          MVI  5+8+8+7(r1),0            and data len to 0
           MVC  5+8+8+8(8,r1),eightFF     now set the eot
 w_wnoteot DS   0h
 
