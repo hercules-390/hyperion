@@ -10,9 +10,6 @@ AC_CANONICAL_HOST
 # Initialization
 CFLAGS="-W -Wall $CFLAGS"
 
-#loadable modules
-LIBS="-ldl"
-
 # Programs
 AC_PROG_CC
 
@@ -56,6 +53,7 @@ AM_CONDITIONAL(USE_DLLTOOL, [test "x$use_dlltool" = "xtrue"])
 AC_SYS_LARGEFILE
 
 # Libraries
+AC_CHECK_LIB(dl, dlopen)
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)

@@ -22,6 +22,7 @@ bin_PROGRAMS = hercules $(HERCIFC) \
 	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
 	   hetget hetinit hetmap hetupd \
 	   dmap2hrc dyninst
+
 EXTRA_PROGRAMS=hercifc
 
 fthreads_sources=fthreads.c
