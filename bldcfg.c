@@ -241,8 +241,7 @@ int off;
     }
 
     /* Initial power-on reset for main storage */
-    memset(sysblk.mainstor,0,sysblk.mainsize);
-    memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+    storage_clear();
 
 #if 0   /*DEBUG-JJ-20/03/2000*/
     /* Mark selected frames invalid for debugging purposes */
@@ -268,7 +267,7 @@ int off;
             delayed_exit(1);
         }
         /* Initial power-on reset for expanded storage */
-        memset(sysblk.xpndstor,0,sysblk.xpndsize * XSTORE_PAGESIZE);
+        xstorage_clear();
 #else /*!_FEATURE_EXPANDED_STORAGE*/
         logmsg(_("HHCCF034W Expanded storage support not installed\n"));
 #endif /*!_FEATURE_EXPANDED_STORAGE*/

@@ -660,7 +660,7 @@ U32 doipl;
     {
         obtain_lock (&sysblk.intlock);
         /* Perform IPL function */
-        if( load_ipl(ipldev, iplcpu) )
+        if( load_ipl(ipldev, iplcpu,0) )
         {
             fprintf(webblk->hsock,"<h3>IPL failed, see the "
                                   "<a href=\"syslog#bottom\">system log</a> "

@@ -1262,11 +1262,46 @@ int loadparm_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+/* system reset/system reset clear handlers */
+int reset_cmd(int ac,char *av[],char *cmdline,int clear)
+{
+    int i;
+
+    UNREFERENCED(ac);
+    UNREFERENCED(av);
+    UNREFERENCED(cmdline);
+    obtain_lock(&sysblk.intlock);
+
+    for (i = 0; i < MAX_CPU; i++)
+        if (IS_CPU_ONLINE(i)
+         && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
+        {
+            release_lock(&sysblk.intlock);
+            logmsg( _("HHCPN053E System reset/clear rejected: All CPU's must be stopped\n") );
+            return -1;
+        }
+
+    system_reset (sysblk.pcpu, clear);
+
+    release_lock (&sysblk.intlock);
+
+    return 0;
+
+}
+int sysr_cmd(int ac,char *av[],char *cmdline)
+{
+    return(reset_cmd(ac,av,cmdline,0));
+}
+int sysc_cmd(int ac,char *av[],char *cmdline)
+{
+    return(reset_cmd(ac,av,cmdline,1));
+}
 
 ///////////////////////////////////////////////////////////////////////
 /* ipl xxxx command - IPL from device xxxx */
 
-int ipl_cmd(int argc, char *argv[], char *cmdline)
+
+int ipl_cmd2(int argc, char *argv[], char *cmdline, int clear)
 {
 BYTE c;                                 /* Character work area       */
 int  rc;                                /* Return code               */
@@ -1295,13 +1330,22 @@ int  rc;                                /* Return code               */
     /* This is a load from the service processor             */
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
-        rc = load_hmc(strtok(cmdline+3," \t"), sysblk.pcpu);
+        rc = load_hmc(strtok(cmdline+3," \t"), sysblk.pcpu, clear);
     else
-        rc = load_ipl (devnum, sysblk.pcpu);
+        rc = load_ipl (devnum, sysblk.pcpu, clear);
 
     release_lock (&sysblk.intlock);
 
     return rc;
+}
+
+int ipl_cmd(int argc, char *argv[], char *cmdline)
+{
+    return(ipl_cmd2(argc,argv,cmdline,0));
+}
+int iplc_cmd(int argc, char *argv[], char *cmdline)
+{
+    return(ipl_cmd2(argc,argv,cmdline,1));
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -3449,7 +3493,10 @@ COMMAND ( "restart",   restart_cmd,   "generate restart interrupt\n" )
 COMMAND ( "store",     store_cmd,     "store CPU status at absolute zero" )
 COMMAND ( "archmode",  archmode_cmd,  "set architecture mode" )
 COMMAND ( "loadparm",  loadparm_cmd,  "set IPL parameter" )
-COMMAND ( "ipl",       ipl_cmd,       "IPL from device xxxx\n" )
+COMMAND ( "ipl",       ipl_cmd,       "IPL Normal from device xxxx" )
+COMMAND ( "iplc",      iplc_cmd,      "IPL Clear from device xxxx" )
+COMMAND ( "sysreset",  sysr_cmd,      "Issue SYSTEM Reset manual operation" )
+COMMAND ( "sysclear",  sysc_cmd,      "Issue SYSTEM Clear Reset manual operation\n" )
 
 COMMAND ( "psw",       psw_cmd,       "display program status word" )
 COMMAND ( "gpr",       gpr_cmd,       "display general purpose registers" )

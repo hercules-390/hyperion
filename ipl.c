@@ -21,27 +21,16 @@
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
 
-/*-------------------------------------------------------------------*/
-/* Function to run initial CCW chain from IPL device and load IPLPSW */
-/* Returns 0 if successful, -1 if error                              */
-/* intlock MUST be held on entry                                     */
-/*-------------------------------------------------------------------*/
-int ARCH_DEP(load_ipl) (U16 devnum, int cpu)
+
+void ARCH_DEP(system_reset) (int cpu, int clear)
 {
 REGS   *regs;                           /* -> Regs                   */
-int     rc;                             /* Return code               */
-int     i;                              /* Array subscript           */
-DEVBLK *dev;                            /* -> Device control block   */
-PSA    *psa;                            /* -> Prefixed storage area  */
-BYTE    unitstat;                       /* IPL device unit status    */
-BYTE    chanstat;                       /* IPL device channel status */
-
     /* Configure the cpu if it is not online */
     if (!IS_CPU_ONLINE(cpu))
     {
         configure_cpu(cpu);
         if (!IS_CPU_ONLINE(cpu))
-            return -1;
+            return;
     }
 
     regs = sysblk.regs[cpu];
@@ -65,6 +54,33 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Perform I/O reset */
     io_reset ();
+
+    /* If requested, clear storage */
+    if(clear)
+    {
+        storage_clear();
+        xstorage_clear();
+    }
+}
+/*-------------------------------------------------------------------*/
+/* Function to run initial CCW chain from IPL device and load IPLPSW */
+/* Returns 0 if successful, -1 if error                              */
+/* intlock MUST be held on entry                                     */
+/*-------------------------------------------------------------------*/
+int ARCH_DEP(load_ipl) (U16 devnum, int cpu, int clear)
+{
+REGS   *regs;                           /* -> Regs                   */
+int     rc;                             /* Return code               */
+int     i;                              /* Array subscript           */
+DEVBLK *dev;                            /* -> Device control block   */
+PSA    *psa;                            /* -> Prefixed storage area  */
+BYTE    unitstat;                       /* IPL device unit status    */
+BYTE    chanstat;                       /* IPL device channel status */
+
+    regs = sysblk.regs[cpu];
+
+    ARCH_DEP(system_reset(cpu,clear));
+
 
     /* Point to the device block for the IPL device */
     dev = find_device_by_devnum (devnum);
@@ -226,7 +242,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 /* The location of the image files is relative to the location of   */
 /* the descriptor file.                         Jan Jaeger 10-11-01 */
 /*                                                                  */
-int ARCH_DEP(load_hmc) (char *fname, int cpu)
+int ARCH_DEP(load_hmc) (char *fname, int cpu, int clear)
 {
 REGS   *regs;                           /* -> Regs                   */
 int     rc;                             /* Return code               */
@@ -271,6 +287,13 @@ U32     fileaddr;
 
     /* Perform I/O reset */
     io_reset ();
+
+    /* If requested, clear storage */
+    if(clear)
+    {
+        storage_clear();
+        xstorage_clear();
+    }
 
     /* remove filename from pathname */
     strcpy(dirname,fname);
@@ -505,7 +528,7 @@ U32  pagesize;
 #endif
 
 
-int load_ipl (U16 devnum, int cpu)
+int load_ipl (U16 devnum, int cpu, int clear)
 {
     if(sysblk.arch_mode == ARCH_900)
         sysblk.arch_mode = ARCH_390;
@@ -515,17 +538,17 @@ int load_ipl (U16 devnum, int cpu)
 #endif // defined(OPTION_FISHIO)
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370: return s370_load_ipl(devnum, cpu);
+        case ARCH_370: return s370_load_ipl(devnum, cpu, clear);
 #endif
 #if defined(_390)
-        default:       return s390_load_ipl(devnum, cpu);
+        default:       return s390_load_ipl(devnum, cpu, clear);
 #endif
     }
     return -1;
 }
 
 
-int load_hmc (char *fname, int cpu)
+int load_hmc (char *fname, int cpu, int clear)
 {
     if(sysblk.arch_mode == ARCH_900)
         sysblk.arch_mode = ARCH_390;
@@ -535,10 +558,10 @@ int load_hmc (char *fname, int cpu)
 #endif // defined(OPTION_FISHIO)
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370: return s370_load_hmc(fname, cpu);
+        case ARCH_370: return s370_load_hmc(fname, cpu, clear);
 #endif
 #if defined(_390)
-        default:       return s390_load_hmc(fname, cpu);
+        default:       return s390_load_hmc(fname, cpu, clear);
 #endif
     }
     return -1;
@@ -563,6 +586,21 @@ void initial_cpu_reset(REGS *regs)
     regs->arch_mode = sysblk.arch_mode;
 }
 
+void system_reset(int cpu,int clear)
+{
+    switch(sysblk.arch_mode) {
+#if defined(_370)
+        case ARCH_370:
+            s370_system_reset (cpu,clear);
+            break;
+#endif
+#if defined(_390)
+        default:
+            s390_system_reset (cpu,clear);
+            break;
+#endif
+    }
+}
 
 int load_main(char *fname, RADR startloc)
 {
@@ -578,6 +616,22 @@ int load_main(char *fname, RADR startloc)
 #endif
     }
     return -1;
+}
+
+/* Function to clear storage */
+void storage_clear()
+{
+    memset(sysblk.mainstor,0,sysblk.mainsize);
+    memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+
+}
+/* Function to clear expanded storage */
+void xstorage_clear()
+{
+    if(sysblk.xpndsize)
+    {
+        memset(sysblk.xpndstor,0,sysblk.xpndsize * XSTORE_PAGESIZE);
+    }
 }
 
 

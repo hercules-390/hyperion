@@ -1475,15 +1475,19 @@ void store_status (REGS *ssreg, U64 aaddr);
 
 
 /* Functions in module ipl.c */
-int  load_ipl (U16 devnum, int cpu);
-int  ARCH_DEP(load_ipl) (U16 devnum, int cpu);
+int  load_ipl (U16 devnum, int cpu, int clear);
+int  ARCH_DEP(load_ipl) (U16 devnum, int cpu, int clear);
 void ARCH_DEP(cpu_reset) (REGS *regs);
 void initial_cpu_reset (REGS *regs);
 void ARCH_DEP(initial_cpu_reset) (REGS *regs);
 int load_main(char *fname, RADR startloc);
 int ARCH_DEP(load_main) (char *fname, RADR startloc);
-int load_hmc(char *fname, int cpu);
-int ARCH_DEP(load_hmc) (char *fname, int cpu);
+int load_hmc(char *fname, int cpu, int clear);
+int ARCH_DEP(load_hmc) (char *fname, int cpu, int clear);
+void storage_clear(void);
+void xstorage_clear(void);
+void    system_reset(int cpu,int clear);
+void    ARCH_DEP(system_reset)(int cpu,int clear);
 
 
 /* Functions in module machchk.c */
