@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+14 Dec 2004 Ensure dyncrypt is built *AFTER* core - Ivan Warren
 14 Dec 2004 cckd garbage collector fix - Greg Smith
 14 Dec 2004 Bug in utf xlations, cc2 was never reached - Bernard van der Helm
 10 Dec 2004 ppc assembler assists for cmpxchg1, cmpxchg4 - Greg Smith
