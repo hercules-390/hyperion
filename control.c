@@ -3331,7 +3331,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #ifdef FEATURE_TRACING
     /* Build trace entry if ASN tracing is on */
     if (regs->CR(12) & CR12_ASNTRACE)
-        newcr12 = ARCH_DEP(trace_pt) (pasn, regs->GR(r2), regs);
+        newcr12 = ARCH_DEP(trace_pt) (pti_instruction, pasn, regs->GR(r2), regs);
 #endif /*FEATURE_TRACING*/
 
     /* Determine instruction address, amode, and problem state */
@@ -3435,7 +3435,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* For PTI-ss only, generate an ASTE instance exception
            if the ASTEIN in bits 0-31 of the R1 register does
-           not equal the ASTEIN in the ASTE */
+           not equal the ASTEIN in the ASTE*/
         if (pti_instruction && aste[11] != regs->GR_H(r1)) 
         {
             ARCH_DEP(program_interrupt) (regs, PGM_ASTE_INSTANCE_EXCEPTION);
@@ -4422,7 +4422,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #ifdef FEATURE_TRACING
     /* Form trace entry if ASN tracing is on */
     if (regs->CR(12) & CR12_ASNTRACE)
-        newcr12 = ARCH_DEP(trace_ssar) (sasn, regs);
+        newcr12 = ARCH_DEP(trace_ssar) (ssair_instruction, sasn, regs);
 #endif /*FEATURE_TRACING*/
 
     /* Test for SSAR/SSAIR to current primary */
@@ -4465,7 +4465,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* For SSAIR-ss only, generate an ASTE instance exception
            if the ASTEIN in bits 0-31 of the R1 register does
-           not equal the ASTEIN in the ASTE */
+           not equal the ASTEIN in the ASTE */
         if (ssair_instruction && aste[11] != regs->GR_H(r1)) 
         {
             ARCH_DEP(program_interrupt) (regs, PGM_ASTE_INSTANCE_EXCEPTION);
