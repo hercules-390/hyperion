@@ -150,7 +150,7 @@ int  i;
 #if defined(FEATURE_ESAME)
     /* Fetch word 0 of the TCB */
     atcba = ARCH_DEP(abs_trap_addr) (tcba, regs, ACCTYPE_READ);
-    tcba0 = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
+    FETCH_FW(tcba0, sysblk.mainstor + atcba);
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Advance to offset +12 */
@@ -158,15 +158,16 @@ int  i;
     atcba = ARCH_DEP(abs_trap_addr) (tcba, regs, ACCTYPE_READ);
 
     /* Fetch word 3 of the TCB */
-    tsao = ARCH_DEP(fetch_fullword_absolute)(atcba, regs) & 0x7FFFFFF8;
+    FETCH_FW(tsao, sysblk.mainstor + atcba);
+    tsao &= 0x7FFFFFF8;
 
     /* Advance to offset +20 */
     tcba += 8; atcba += 8;
     if((atcba & PAGEFRAME_BYTEMASK) < 8)
         atcba = ARCH_DEP(abs_trap_addr) (tcba, regs, ACCTYPE_READ);
 
-    /* Fetch word 3 of the TCB */
-    trap_ia = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
+    /* Fetch word 5 of the TCB */
+    FETCH_FW(trap_ia, sysblk.mainstor + atcba);
     trap_ia &= 0x7FFFFFFF;
 
     /* Calculate last byte stored */
