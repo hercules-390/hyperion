@@ -1,3 +1,5 @@
+25 Aug 2002 Fix cckd free space chain corruption when freeing space
+            for a `type 1' null track - Greg Smith & Volker Bandke
 08 Aug 2002 Increased cckd shutdown serialization - Greg Smith
 08 Aug 2002 Add 'Send" button in syslog cgi - Adam Thornton by Jan Jaeger
 08 Aug 2002 AEA invalidation performance enhancement - Gabor Hofi by Greg Smith

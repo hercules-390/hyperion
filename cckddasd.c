@@ -1596,7 +1596,7 @@ struct stat     st;                     /* File status area          */
 
     cckdtrc ("cckddasd: get_space len %d\n", len);
 
-    if (len == 0 || len == 0xffff) return 0;
+    if (len <= 1 || len >= 0xffff) return 0;
     if (!cckd->free) cckd_read_fsp (dev);
 
     if (!(len == cckd->cdevhdr[sfx].free_largest ||
@@ -1620,7 +1620,24 @@ struct stat     st;                     /* File status area          */
 
         if ((off_t)(fpos + len) > st.st_size)
         {
-            rc = ftruncate (cckd->fd[sfx], fpos + len);
+            int sz = fpos + len;
+            /* FIXME - workaround for ftruncate() linux problem */
+            if (cckdblk.ftruncwa)
+            {
+                BYTE sfn[1024];
+                sz = (sz + 1024*1024) & 0xfff00000;
+                close (cckd->fd[sfx]);
+                usleep(15000);
+                cckd_sf_name (dev, sfx, (char *)&sfn);
+                cckd->fd[sfx] = open (sfn, O_RDWR|O_BINARY);
+                if (cckd->fd[sfx] < 0)
+                {
+                    devmsg ("%4.4X:cckddasd truncate re-open error: %s\n",
+                            dev->devnum, strerror(errno));
+                    return -1;
+                }
+            }
+            rc = ftruncate (cckd->fd[sfx], sz);
             if (rc < 0)
             {
                 devmsg("%4.4X:cckddasd file[%d] get space ftruncate error, size %llx: %s\n",
@@ -1711,7 +1728,7 @@ off_t           ppos,npos;              /* Prev/next offsets         */
 int             p2,p,i,n,n2;            /* Free space indices        */
 int             sfx;                    /* Shadow file index         */
 
-    if (len == 0 || len == 0xffff) return;
+    if (len <= 1 || len >= 0xffff) return;
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
@@ -1741,7 +1758,7 @@ int             sfx;                    /* Shadow file index         */
     if (cckdblk.freepend >= 0)
         cckd->free[i].pending = cckdblk.freepend;
     else
-        cckd->free[i].pending = 1 + cckdblk.nofsync;
+        cckd->free[i].pending = 1 + (1 - cckdblk.fsync);
 
     /* Update the free space statistics */
     cckd->cdevhdr[sfx].free_number++;
@@ -2893,7 +2910,7 @@ int             rc;                     /* Return code               */
     rc = cckd_write_chdr (dev);
     if (rc < 0) return -1;
 
-    if (!cckdblk.nofsync)
+    if (cckdblk.fsync)
         rc = fdatasync (cckd->fd[cckd->sfn]);
 
     return 0;
@@ -2954,8 +2971,8 @@ off_t           sz;                     /* Change for ftruncate      */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    /* FIXME - workaround for fsync(), ftruncate() linux problem */
-    if (cckdblk.fsyncwa) sz = 1024 * 1024;
+    /* FIXME - workaround for ftruncate() linux problem */
+    if (cckdblk.ftruncwa) sz = 2 * 1024 * 1024;
     else sz = 0;
 
     rc = fstat (cckd->fd[sfx], &st);
@@ -2971,14 +2988,15 @@ off_t           sz;                     /* Change for ftruncate      */
 
     if (now || (off_t)(st.st_size - cckd->cdevhdr[sfx].size) > sz)
     {
-        /* FIXME - workaround for fsync(), ftruncate() linux problem */
-        if (cckdblk.fsyncwa)
+        /* FIXME - workaround for ftruncate() linux problem */
+        if (cckdblk.ftruncwa)
         {
             BYTE sfn[1024];
             close (cckd->fd[sfx]);
-            cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
-            cckd->fd[cckd->sfn] = open (sfn, O_RDWR|O_BINARY);
-            if (rc < 0)
+            usleep(15000);
+            cckd_sf_name (dev, sfx, (char *)&sfn);
+            cckd->fd[sfx] = open (sfn, O_RDWR|O_BINARY);
+            if (cckd->fd[sfx] < 0)
             {
                 devmsg ("%4.4X:cckddasd truncate re-open error: %s\n",
                         dev->devnum, strerror(errno));
@@ -3903,7 +3921,7 @@ int             gctab[5]= {             /* default gcol parameters   */
             if (cckdblk.gcolwait >= 5 || cckd->lastsync + 5 <= now.tv_sec)
             {
                 obtain_lock (&cckd->filelock);
-                if (!cckdblk.nofsync)
+                if (cckdblk.fsync)
                     rc = fdatasync (cckd->fd[cckd->sfn]);
                 cckd_flush_space (dev);
                 cckd_truncate (dev, 0);
@@ -3943,6 +3961,7 @@ int cckd_gc_percolate(DEVBLK *dev, int size)
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* lseek() return value      */
 int             i,j,p,f;                /* Indexes                   */
+int             count;                  /* Count free spaces examined*/
 int             fd;                     /* Current file descriptor   */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             sfx,l1x,l2x;            /* Table Indices             */
@@ -3994,7 +4013,7 @@ BYTE            buf[65536];             /* Buffer                    */
            will combine with the most other pending 0 free spaces ...
            This algorithm is subject to change ;-)  */
         fpos = (off_t)cckd->cdevhdr[sfx].free;
-        f = combine = maxcombine = -1;
+        f = combine = maxcombine = -1; count = 0;
         for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         {
             if (!cckd->free[i].pending)
@@ -4016,6 +4035,7 @@ BYTE            buf[65536];             /* Buffer                    */
                     maxcombine = combine;
                     f = i;
                 }
+                if (count++ > 500) break;
             }
             fpos = cckd->free[i].pos;
         }
@@ -4189,8 +4209,8 @@ void cckd_command_help()
              "\t\t    (least agressive ... most aggressive)\n"
              "nostress=<n>\t1=Disable stress writes\n"
              "freepend=<n>\tSet free pending cycles\t\t\t(-1 .. 4)\n"
-             "nofsync=<n>\t1=Disable fsync()\n"
-             "fsyncwa=<n>\t1=Enable fsync()/ftruncate() workaround fix\n"
+             "fsync=<n>\t1=Enable fsync()\n"
+             "ftruncwa=<n>\t1=Enable ftruncate() workaround fix\n"
              "trace=<n>\tSet trace table size\t\t\t(0 .. 200000)\n"
             );
 } /* end function cckd_command_help */
@@ -4203,13 +4223,13 @@ void cckd_command_opts()
 {
     cckdmsg ("cache=%d,l2cache=%d,ra=%d,raq=%d,rat=%d,"
              "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n"
-             "\tfreepend=%d,nofsync=%d,fsyncwa=%d,trace=%d\n",
+             "\tfreepend=%d,fsync=%d,ftruncwa=%d,trace=%d\n",
              (cckdblk.cachenbr + 8) >> 4,
              cckdblk.l2cachenbr << 1, cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
              cckdblk.writermax, cckdblk.gcolwait,
              cckdblk.gcolparm, cckdblk.nostress, cckdblk.freepend,
-             cckdblk.nofsync, cckdblk.fsyncwa,cckdblk.itracen);
+             cckdblk.fsync, cckdblk.ftruncwa,cckdblk.itracen);
 } /* end function cckd_command_opts */
 
 
@@ -4484,29 +4504,29 @@ int   val, i, opts = 0;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "nofsync") == 0)
+        else if (strcasecmp (kw, "fsync") == 0)
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                cckdmsg ("Invalid value for nofsync=\n");
+                cckdmsg ("Invalid value for fsync=\n");
                 return -1;
             }
             else
             {
-                cckdblk.nofsync = val;
+                cckdblk.fsync = val;
                 opts = 1;
             }
         }
-        else if (strcasecmp (kw, "fsyncwa") == 0)
+        else if (strcasecmp (kw, "ftruncwa") == 0)
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                cckdmsg ("Invalid value for fsyncwa=\n");
+                cckdmsg ("Invalid value for ftruncwa=\n");
                 return -1;
             }
             else
             {
-                cckdblk.fsyncwa = val;
+                cckdblk.ftruncwa = val;
                 opts = 1;
             }
         }
@@ -4545,6 +4565,7 @@ int   val, i, opts = 0;
         }
         else
         {
+            cckdmsg ("cckd invalid keyword: %s\n",kw);
             if (!cmd) return -1;
             cckd_command_help ();
             op = NULL;

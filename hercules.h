@@ -1427,8 +1427,8 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         int              rafree;        /* Free readahead entry      */
         int              freepend;      /* Number freepend cycles    */
         int              nostress;      /* 1=No stress writes        */
-        int              nofsync;       /* 1=No fsync()              */
-        int              fsyncwa;       /* 1=fsync() prob workaround */
+        int              fsync;         /* 1=Perform fsync()         */
+        int              ftruncwa;      /* 1=ftruncate() workaround  */
         COND             writercond;    /* Writer condition          */
         int              writepending;  /* Number writes pending     */
         int              writerswaiting;/* Number writers waiting    */
