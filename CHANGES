@@ -1,3 +1,4 @@
+07 Jan 2003 Updated cckd utilities (cckddump & cckdload) - Greg Smith
 07 Jan 2003 Fix/recover possible cckd corruption - Greg Smith
 07 Jan 2003 Add Region Relocate, I/O- External- and Wait-assists - Jan Jaeger
 06 Jan 2003 delay exit in config.c to give time to display message - Fish

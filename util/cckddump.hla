@@ -2,8 +2,8 @@
 * *      build a dasd file from sysut1 to sysut2
 * * ---------------------------------------------------------------- */
 version  EQU   0
-release  EQU   2
-mod      EQU   1
+release  EQU   1
+mod      EQU   14                                               SOMITCW
 
 */* ----------------------------------------------------------------
 * *      macros
@@ -141,13 +141,6 @@ pgmid    EQU   main+5
          MVCL  r0,re
 
 */* ----------------------------------------------------------------
-* *      get parameters
-* * ---------------------------------------------------------------- */
-
-         LR    r1,r2
-         BAS   re,getopts
-
-*/* ----------------------------------------------------------------
 * *      try to open print file
 * * ---------------------------------------------------------------- */
 
@@ -167,6 +160,13 @@ pr       USING IHADCB,prdcb
         #MSG   0,'main workarea is at address 0x%x, 24-bit workarea is x
                at address 0x%x',vdw_31,vdw_24
 noprint  DS    0H
+
+*/* ----------------------------------------------------------------
+* *      get parameters
+* * ---------------------------------------------------------------- */
+
+         LR    r1,r2
+         BAS   r9,getopts
 
 */* ----------------------------------------------------------------
 * *      get device information for sysut1 [the volume to be dumped]
@@ -510,6 +510,7 @@ f1_in_ok L     r1,dsn_excl_list
          LTR   rf,rf
          BNZ   f1_ex_ok
          OI    dsn_flag,dsn_excl
+        #MSG   1,'%s:44 Excluded',DS1DSNAM  Msg for DS exclude  SOMITCW
 f1_ex_ok TM    dsn_flag,dsn_not_incl+dsn_excl
          BNZ   f1_exit
 
@@ -572,6 +573,19 @@ vtoc_exit DS   0H
          XC    vtoc_area,vtoc_area
          XC    last_f1_dscb,last_f1_dscb
          XC    vtoc_size,vtoc_size
+
+*  The dsn_excl_list memory is being freed here.                SOMITCW
+         L    r1,dsn_excl_list  Load addr. of first list entry  SOMITCW
+in_free  DS   0H                                                SOMITCW
+         LTR  r1,r1         See if a list entry to free         SOMITCW
+         BZ   in_freed      All dsn_excl_list freed, go exit    SOMITCW
+         L    r2,0(,r1)     Save the next address to free       SOMITCW
+         FREEMAIN RU,LV=49,A=(1)  Free the list entry           SOMITCW
+         LR   r1,r2         Set the next address to free        SOMITCW
+         B    in_free       Go to free the next list entry      SOMITCW
+in_freed DS   0H                                                SOMITCW
+         XC   dsn_excl_list(4),dsn_excl_list  Clear the anchor  SOMITCW
+
 
 */* ----------------------------------------------------------------
 * *      count number of tracks we're going to dump
@@ -737,8 +751,9 @@ o        USING IHADCB,outdcb
          SLR   rf,rf
          MVCL  r0,re
          USING CKDDASD_DEVHDR,VDH_devhdr
-         MVC   CKD_devid,=cl8'CKD_C370'
-         TR    CKD_devid,e2aTab
+*        MVC   CKD_devid,=cl8'CKD_C370'                 Deleted SOMITCW
+*        TR    CKD_devid,e2aTab                         Deleted SOMITCW
+         MVC   CKD_devid,=XL8'434B445F43333730'                 SOMITCW
          L     rf,trks_per_cyl
          STLE  rf,CKD_heads
          L     rf,trk_size
@@ -807,7 +822,6 @@ read_loop CL   r2,trks
           L    r4,0(rf,r3)
           LTR  r4,r4
           BZ   read_next
-          USING dsn_area,r4
           SLR  r6,r6
           LR   r7,r2
           D    r6,trks_per_cyl           get cc [r7] and hh [r6]
@@ -847,8 +861,8 @@ read_rt   MVI  ha_bin,0                  build a ha
           LA   r2,1(,r2)                 increment track nbr
           LR   rf,r2
           SLL  rf,2
-          L    rf,0(rf,r3)
-          LTR  rf,rf
+          L    r4,0(rf,r3)
+          LTR  r4,r4
           BZ   read_rt_x                 exit if trk_vec entry is 0
           LA   r5,CCW0END                 else point to next ccw
           B    read_rt                     and loop back
@@ -947,6 +961,21 @@ no_compress2   DS 0H
           BC   12,*+8
           AL   r0,=A(1)
           STM  r0,r1,bytes_written
+
+          L    r1,ctrk_addr              calculate dsn entry address
+          USING ha_bin,r1
+          SLR  re,re
+          SLR  rf,rf
+          ICM  rf,3,ha_cc
+          M    re,trks_per_cyl
+          SLR  re,re
+          ICM  re,3,ha_hh
+          ALR  rf,re
+          SLL  rf,2
+          L    r4,0(rf,r3)
+          DROP r1
+          USING dsn_area,r4
+
           LM   r0,r1,dsn_bytes_read      dataset bytes read
           AL   r1,trk_sz
           BC   12,*+8
@@ -958,13 +987,14 @@ no_compress2   DS 0H
           AL   r0,=A(1)
           STM  r0,r1,dsn_bytes_written
 
+          DROP r4
+
 *         call write track routine
           LA   r1,ctrk_addr              point to addr, len
           BAL  re,write_track            call write_track()
 
           L    r1,trk_addr
           A    r1,trk_size
-          LA   r4,dsn_next
           BCT  r6,read_proc              loop back if more tracks
 
 *         next track
@@ -1345,24 +1375,33 @@ wt_upd_ok CLOSE outdcb,MF=(E,openl24)
          #MSG  1,'file SYSUT2 closed for update'
           B    wt_return
 
-*/* ----------------------------------------------------------------
-* *      subroutine to check if dsn is in a null terminated list
-* *      r1 points to the list, r2 points to the dsname
-* *      rf will have 0 if yes, otherwise 4
-* * ---------------------------------------------------------------- */
-
-chk_dsn_list   DS 0H
-         LR    rf,r0
-cdl_loop TM    0(r1),255-C' '
-         BZ    cdl_ret4
-         CLC   0(44,r1),0(rf)
-         BE    cdl_ret0
-         LA    r1,44(,r1)
-         B     cdl_loop
-cdl_ret4 LA    rf,4
-         B     cdl_ret
-cdl_ret0 SLR   rf,rf
-cdl_ret  BR    re
+*/* ------------------------------------------------------      SOMITCW
+* *      subroutine to check if dsn is in the include or        SOMITCW
+* *      exclude list.                                          SOMITCW
+* *      r0 points to the dsname from the vtoc on entry         SOMITCW
+* *      rf points to the dsname from the vtoc for compare      SOMITCW
+* *      r1 points to the first list entry                      SOMITCW
+* *          A(next-entry-address)                              SOMITCW
+* *          XL1'EX-CLC-compare-length'                         SOMITCW
+* *          CL44'dsn-or-dsn-prefix'                            SOMITCW
+* *      r2 is the length for the EX of the CLC instruction     SOMITCW
+* *      rf will have 0 if dsname found, otherwise 4            SOMITCW
+* * ---------------------------------------------------- */     SOMITCW
+*                                                               SOMITCW
+chk_dsn_list   DS 0H                                            SOMITCW
+         LR    rf,r0        Copy DS1-DSNAME for addressing      SOMITCW
+cdl_loop DS    0H                                               SOMITCW
+         IC    r2,4(,r1)    Load length for EX of CLC           SOMITCW
+         EX    r2,cdl_CLC   See if the data set name found      SOMITCW
+         BE    cdl_ret0     Data set in list, go return         SOMITCW
+         ICM   r1,B'1111',0(r1)  Link to the next entry         SOMITCW
+         BZ    cdl_ret4     End of list, return dsn not found   SOMITCW
+         B     cdl_loop     Go back to try next list entry      SOMITCW
+cdl_ret4 LA    rf,4         Indicate that dsname not found      SOMITCW
+         BR    re           Return to caller                    SOMITCW
+cdl_ret0 SLR   rf,rf        Indicate that dsname was found      SOMITCW
+cdl_ret  BR    re           Return to caller                    SOMITCW
+cdl_CLC  CLC   0(0,rf),5(r1)  See if the dsn is in list         SOMITCW
 
 */* ----------------------------------------------------------------
 * *      subroutine to convert a 10 byte vtoc extent descriptor [r1]
@@ -1457,15 +1496,96 @@ utvret   STM   r1,r3,24(rd)
 * *      retrieve options
 * * ---------------------------------------------------------------- */
 
-getopts  MVI   opts,COMPRESSION
-         MVC   compr_level,=A(Z_DEFAULT_COMPRESSION)
-         MVC   cckd_compr_level,=A(Z_DEFAULT_COMPRESSION)
+getopts  DS    0H
+         MVI   opts,COMPRESSION
+         MVC   compr_level,=A(CCKD_DEFAULT_COMPRESSION)    For this JOB
+         MVC   cckd_compr_level,=A(Z_DEFAULT_COMPRESSION)  In CCKD disk
          MVC   cckd_compr,=A(CCKD_COMPRESS_ZLIB)
-         BR    re
+
+*/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   SOMITCW
+* *      See if a SYSIN file                                    SOMITCW
+* * - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  SOMITCW
+*                                                               SOMITCW
+*  Locate Task I/O Table                                        SOMITCW
+         MVC   extract,model_extract  Move MF=L EXTRACT MACRO   SOMITCW
+         EXTRACT tiot_addr,'S',FIELDS=TIOT,MF=(E,EXTRACT)       SOMITCW
+         L     rf,tiot_addr                                     SOMITCW
+         LA    r1,24        Bump past JOB, STEP, PROCSTEP names SOMITCW
+in_tiot  DS    0H                                               SOMITCW
+         AR    rf,r1        Bump to next TIOT entry             SOMITCW
+         ICM   r1,b'0001',0(rf) Load length of TIOT entry       SOMITCW
+         BZR   r9           No SYSIN, take all defaults         SOMITCW
+*        CLC   in.DCBDDNAM,4(rf)   See if the SYSIN entry       SOMITCW
+    CLC model_indcb+DCBDDNAM-IHADCB(8),4(rf) See if SYSIN entry SOMITCW
+         BNE   in_tiot      Not SYSIN, go check next TIOT entry SOMITCW
+*                                                               SOMITCW
+*/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   SOMITCW
+* *      try to open SYSIN file                                 SOMITCW
+* * - - - - - - - - - - - - - - - - - - - - - - - - - - - - */  SOMITCW
+*                                                               SOMITCW
+         MVC   indcb,model_indcb                                SOMITCW
+         MVC   indcbe,model_indcbe                              SOMITCW
+in       USING IHADCB,indcb                                     SOMITCW
+         LA    r1,indcbe                                        SOMITCW
+         ST    r1,in.DCBDCBE                                    SOMITCW
+* SYSIN exists, OPEN it                                         SOMITCW
+* * A list entry will be built for each exclude record          SOMITCW
+* * Format of each list entry will be:                          SOMITCW
+* *    A(next-entry-address)                                    SOMITCW
+* *    XL1'EX-CLC-compare-length'                               SOMITCW
+* *    CL44'dsn-or-dsn-prefix'                                  SOMITCW
+* * r2 will contain the address of the previous list entry,     SOMITCW
+* *    to link the new list entry to the previous.              SOMITCW
+         MVC   openl,model_openl   Insure unused bits are zero  SOMITCW
+         OPEN  (in.IHADCB,INPUT),MODE=31,MF=(E,openl)           SOMITCW
+         TM    in.DCBOFLGS,DCBOFOPN  See if SYSIN OPENed        SOMITCW
+         BZ    X'081B'(rb)  Abend S0C6 if OPEN failed           SOMITCW
+         LA    R2,dsn_excl_list  Load address of list anchor    SOMITCW
+in_get   DS    0h                                               SOMITCW
+         GET   in.IHADCB    Read a record                       SOMITCW
+         MVC   in_rec,0(r1) Store record for display            SOMITCW
+        #MSG   1,'SYSIN Read: %s:71',in_rec  Display the record SOMITCW
+         CLI   in_rec,C'*'  See if a comment                    SOMITCW
+         BE    in_get       Is comment, don't process           SOMITCW
+         CLC   =Cl8'EXCLUDE ',in_rec  See if an exclude         SOMITCW
+         BNE   ut1_bad_sysin  Not an exclude, go abend          SOMITCW
+         GETMAIN RU,LV=49   Get memory for a list entry         SOMITCW
+         XC    0(4,r1),0(r1)  Clear link addr.in GETMAINed area SOMITCW
+         ST    r1,0(,r2)    Link to the old list entry          SOMITCW
+         LR    rf,r1        Load the new list entry address     SOMITCW
+         CLI   in_rec+8,X'40' See if a data set name            SOMITCW
+         BE    ut1_bad_sysin  No data set name, go abend        SOMITCW
+         MVC   5(44,rf),in_rec+8  Save entire possible dsname   SOMITCW
+         TRT   in_rec+8(44),in_trt_table find space or asterisk SOMITCW
+         BZ    in_full44    Full data set name, go store        SOMITCW
+         LA    r2,in_rec+8  Load address of start of dsname     SOMITCW
+         CLI   0(r1),X'40'  See if a space found                SOMITCW
+         BE    in_dsn_found Dsn found, go add to list           SOMITCW
+in_prefix_found DS 0H                                           SOMITCW
+         BCTR  r1,0         Drop the asterisk byte for prefix   SOMITCW
+in_dsn_found DS 0H                                              SOMITCW
+*already LA    r2,in_rec+8  Load address of start of dsname     SOMITCW
+         SR    r1,r2        Find the length of the dsname       SOMITCW
+         STC   r1,4(,rf)    Store the length for compare        SOMITCW
+in_next  DS    0H                                               SOMITCW
+         LR    r2,rf        Restore list entry address          SOMITCW
+         B     in_get       Go get the next record              SOMITCW
+in_full44 DS 0H                                                 SOMITCW
+         MVI   4(rf),x'43'  Store EX length of data set name    SOMITCW
+         B     in_next      Go get next SYSIN record            SOMITCW
+in_exit  DS    0H                                               SOMITCW
+         CLOSE in.IHADCB,MODE=31,MF=(E,openl)                   SOMITCW
+         BR    r9           SYSIN processed, return to caller   SOMITCW
+*        BR    re                                       Deleted SOMITCW
 
 */* ----------------------------------------------------------------
 * *      fatal errors
 * * ---------------------------------------------------------------- */
+
+ut1_bad_sysin  DS 0H                                            SOMITCW
+         LR    r2,r1        Save bad sysin record               SOMITCW
+  #MSG   3,'Bad record on SYSIN, must start with "EXCLUDE dsn"' SOMITCW
+         B     abend                                            SOMITCW
 
 ut1_devt_err   DS 0H
          STM   rf,r0,retcode
@@ -1540,7 +1660,13 @@ abend    ABEND 99,DUMP
 
                  LTORG ,
                  WXTRN EDCXHOTL,EDCXHOTU,EDCXHOTT,COMPRESS
-                 PRINT NOGEN
+                 PRINT   GEN             Was NOGEN              SOMITCW
+model_extract    EXTRACT *-*,'S',FIELDS=TIOT,MF=L               SOMITCW
+model_extract_l  EQU  *-model_extract                           SOMITCW
+model_indcb      DCB  DDNAME=SYSIN,DSORG=PS,MACRF=GL,DCBE=0     SOMITCW
+model_indcb_l    EQU  *-model_indcb                             SOMITCW
+model_indcbe     DCBE RMODE31=BUFF,EODAD=in_exit                SOMITCW
+model_indcbe_l   EQU  *-model_indcbe                            SOMITCW
 model_prdcb      DCB  DDNAME=SYSPRINT,DSORG=PS,MACRF=PL,DCBE=0
 model_prdcb_l    EQU  *-model_prdcb
 model_prdcbe     DCBE RMODE31=BUFF
@@ -1564,24 +1690,32 @@ model_cvpl       CVAFSEQ MF=L
 model_cvpl_l     EQU  *-model_cvpl
 model_trkcalcl   TRKCALC MF=L
 model_trkcalcl_l EQU  *-model_trkcalcl
-e2aTAB   DS    0D
-*      0 1 2 3 4 5 6 7 8 9 a b c d e f
- DC X'000102031A091A7F1A1A1A0B0C0D0E0F' 0
- DC X'101112131A0A081A18191A1A1C1D1E1F' 1
- DC X'1A1A1C1A1A0A171B1A1A1A1A1A050607' 2
- DC X'1A1A161A1A1E1A041A1A1A1A14151A1A' 3
- DC X'20A6E180EB909FE2AB8B9B2E3C282B7C' 4
- DC X'26A9AA9CDBA599E3A89E21242A293B5E' 5
- DC X'2D2FDFDC9ADDDE989DACBA2C255F3E3F' 6
- DC X'D78894B0B1B2FCD6FB603A2340273D22' 7
- DC X'F861626364656667686996A4F3AFAEC5' 8
- DC X'8C6A6B6C6D6E6F7071729787CE93F1FE' 9
- DC X'C87E737475767778797AEFC0DA5BF2F9' a
- DC X'B5B6FDB7B8B9E6BBBCBD8DD9BF5DD8C4' b
- DC X'7B414243444546474849CBCABEE8ECED' c
- DC X'7D4A4B4C4D4E4F505152A1ADF5F4A38F' d
- DC X'5CE7535455565758595AA0858EE9E4D1' e
- DC X'30313233343536373839B3F7F0FAA7FF' f
+* e2aTAB   DS    0D                                     Deleted SOMITCW
+*      0 1 2 3  4 5 6 7  8 9 a b  c d e f               Deleted SOMITCW
+* DC X'00010203 1A091A7F 1A1A1A0B 0C0D0E0F' 0           Deleted SOMITCW
+* DC X'10111213 1A0A081A 18191A1A 1C1D1E1F' 1           Deleted SOMITCW
+* DC X'1A1A1C1A 1A0A171B 1A1A1A1A 1A050607' 2           Deleted SOMITCW
+* DC X'1A1A161A 1A1E1A04 1A1A1A1A 14151A1A' 3           Deleted SOMITCW
+* DC X'20A6E180 EB909FE2 AB8B9B2E 3C282B7C' 4           Deleted SOMITCW
+* DC X'26A9AA9C DBA599E3 A89E2124 2A293B5E' 5           Deleted SOMITCW
+* DC X'2D2FDFDC 9ADDDE98 9DACBA2C 255F3E3F' 6           Deleted SOMITCW
+* DC X'D78894B0 B1B2FCD6 FB603A23 40273D22' 7           Deleted SOMITCW
+* DC X'F8616263 64656667 686996A4 F3AFAEC5' 8           Deleted SOMITCW
+* DC X'8C6A6B6C 6D6E6F70 71729787 CE93F1FE' 9           Deleted SOMITCW
+* DC X'C87E7374 75767778 797AEFC0 DA5BF2F9' a           Deleted SOMITCW
+* DC X'B5B6FDB7 B8B9E6BB BCBD8DD9 BF5DD8C4' b           Deleted SOMITCW
+* DC X'7B414243 44454647 4849CBCA BEE8ECED' c           Deleted SOMITCW
+* DC X'7D4A4B4C 4D4E4F50 5152A1AD F5F4A38F' d           Deleted SOMITCW
+* DC X'5CE75354 55565758 595AA085 8EE9E4D1' e           Deleted SOMITCW
+* DC X'30313233 34353637 3839B3F7 F0FAA7FF' f           Deleted SOMITCW
+
+in_trt_table DC 256Xl1'0'   Table to find end of dsname         SOMITCW
+         ORG   in_trt_table+X'40'  Back up the location counter SOMITCW
+         DC    XL1'40'      Overlay the space position          SOMITCW
+         ORG   ,            Set the location counter to normal  SOMITCW
+         ORG   in_trt_table+X'5C'  Back up the location counter SOMITCW
+         DC    XL1'5C'      Overlay the asterisk position       SOMITCW
+         ORG   ,            Set the location counter to normal  SOMITCW
                  PRINT GEN
          DROP ,
 
@@ -1915,6 +2049,8 @@ vtoc_area         DS  A                  addr of area to hold all dscbs
 vtoc_size         DS  F                  size of area to hold all dscbs
 last_f1_dscb      DS  A                  addr last format 1 dscb
 dsn_nbr           DS  F                  nbr datasets on volume
+tiot_addr      DS  A        Address of the Task I/O Table       SOMITCW
+in_rec         DS  CL80     Input record for display            SOMITCW
 dsn_area_addr     DS  A
 dsn_area_size     DS  A
 dsn_incl_list     DS  A
@@ -1931,6 +2067,7 @@ Z_NO_COMPRESSION      EQU  0
 Z_BEST_SPEED          EQU  1
 Z_BEST_COMPRESSION    EQU  9
 Z_DEFAULT_COMPRESSION EQU -1
+CCKD_DEFAULT_COMPRESSION EQU  3
 out_buf           DS  A                  current output buf addr
 out_buf_pos       DS  F                  pos for current buf
 out_bufsz         DS  F                  total buf size used for output
@@ -1950,6 +2087,8 @@ bytes_ovh         DS  F
 bytes_free        DS  F
 handle            DS  F
 msgl              DS  16F
+extract        DS  XL(model_extract_l)                          SOMITCW
+indcbe         DS  XL(model_indcbe_l)                           SOMITCW
 prdcbe            DS  XL(model_prdcbe_l)
 openl             DS  XL(model_openl_l)
 devtl             DS  XL(model_devtl_l)
@@ -1967,10 +2106,11 @@ bflent            DS  256XL(BFLELN)
 bfle_arg          DS  XL(L'BFLEARG)
 vdw_len           EQU *-vdw
 
-vdw24          DSECT
+vdw24          DSECT  ,
 id24              DS  CL4'vdw24'
 openl24           DS  XL(model_openl24_l)
 exlst             DS  F
+indcb          DS  XL(model_indcb_l)                            SOMITCW
 prdcb             DS  XL(model_prdcb_l)
 vtdcb             DS  XL(model_vtdcb_l)
 exdcb             DS  XL(model_exdcb_l)
@@ -2089,7 +2229,7 @@ CCKD_free_largest   DS  F
 CCKD_free_number    DS  F
 CCKD_free_imbed     DS  F
 CCKD_cyls           DS  F
-                    DS  X         
+                    DS  X
 CCKD_compress       DS  X
 CCKD_COMPRESS_NONE  EQU 0
 CCKD_COMPRESS_ZLIB  EQU 1
@@ -2102,7 +2242,7 @@ CCKD_len            EQU *-CCKDDASD_DEVHDR
 * *      dsects
 * * ---------------------------------------------------------------- */
 
- PRINT NOGEN
+ PRINT   GEN           Was NOGEN                                SOMITCW
  DCBD DSORG=PS
  IEFUCBOB ,
  IEFJFCBN ,
@@ -2137,4 +2277,4 @@ rd equ 13
 re equ 14
 rf equ 15
 
- END
+ END   ,
