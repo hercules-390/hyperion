@@ -50,6 +50,13 @@
 
 #define _GNU_SOURCE 1
 
+/* COMMENT OUT THE FOLLOWING DEFINE    */
+/* (_ISW_PREVENT_COMPWARN)             */
+/* IF IEEE FP INSTRUCTIONS ARE GIVING  */
+/* INCOHERENT RESULTS IN RESPECT TO    */
+/* INFINITY.                           */
+#define _ISW_PREVENT_COMPWARN
+
 
 #include "hercules.h"
 #include "opcode.h"
@@ -386,6 +393,9 @@ void sbfpinfinity(struct sbfp *op, int sign)
 void ebfpston(struct ebfp *op)
 {
     long double h, l;
+#if defined(_ISW_PREVENT_COMPWARN)
+    int dummyzero;
+#endif
 
     switch (ebfpclassify(op)) {
     case FP_NAN:
@@ -397,7 +407,12 @@ void ebfpston(struct ebfp *op)
         if (op->sign) {
             op->v = log(0);
         } else {
+#if defined(_ISW_PREVENT_COMPWARN)
+            dummyzero=0;
+            op->v = 1/dummyzero;
+#else
             op->v = 1/0;
+#endif
         }
         break;
     case FP_ZERO:
@@ -437,6 +452,9 @@ void ebfpston(struct ebfp *op)
 void lbfpston(struct lbfp *op)
 {
     double t;
+#if defined(_ISW_PREVENT_COMPWARN)
+    int dummyzero;
+#endif
 
     switch (lbfpclassify(op)) {
     case FP_NAN:
@@ -448,7 +466,12 @@ void lbfpston(struct lbfp *op)
         if (op->sign) {
             op->v = log(0);
         } else {
+#if defined(_ISW_PREVENT_COMPWARN)
+            dummyzero=0;
+            op->v = 1/dummyzero;
+#else
             op->v = 1/0;
+#endif
         }
         break;
     case FP_ZERO:
@@ -482,6 +505,9 @@ void lbfpston(struct lbfp *op)
 void sbfpston(struct sbfp *op)
 {
     float t;
+#if defined(_ISW_PREVENT_COMPWARN)
+    int dummyzero;
+#endif
 
     switch (sbfpclassify(op)) {
     case FP_NAN:
@@ -493,7 +519,12 @@ void sbfpston(struct sbfp *op)
         if (op->sign) {
             op->v = log(0);
         } else {
+#if defined(_ISW_PREVENT_COMPWARN)
+            dummyzero=0;
+            op->v = 1/dummyzero;
+#else
             op->v = 1/0;
+#endif
         }
         break;
     case FP_ZERO:
