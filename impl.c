@@ -98,6 +98,7 @@ int main (int argc, char *argv[])
 {
 BYTE   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
+int     arg_error = 0;                  /* 1=Invalid arguments       */
 #ifdef PROFILE_CPU
 TID paneltid;
 #endif
@@ -109,14 +110,16 @@ TID paneltid;
     /* Display the version identifier */
     display_version (stdout, "Hercules ");
 
-    /* Process the command line options */
 #ifdef EXTERNALGUI
+    /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
         extgui = 1;
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Process the command line options */
     while ((c = getopt(argc, argv, "f:")) != EOF)
     {
         switch (c) {
@@ -124,12 +127,25 @@ TID paneltid;
             cfgfile = optarg;
             break;
         default:
-            fprintf (stderr,
-                    "usage: %s [-f config-filename]\n",
-                    argv[0]);
-            exit (1);
+            arg_error = 1;
+
         } /* end switch(c) */
     } /* end while */
+
+    /* The getopt function sets the external variable optind
+       to the index in argv of the first non-option argument.
+       There should not be any non-option arguments */
+    if (optind < argc)
+        arg_error = 1;
+
+    /* Terminate if invalid arguments were detected */
+    if (arg_error)
+    {
+        fprintf (stderr,
+                "usage: %s [-f config-filename]\n",
+                argv[0]);
+        exit(1);
+    }
 
     /* Build system configuration */
     build_config (cfgfile);
