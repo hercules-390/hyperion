@@ -17,39 +17,10 @@
  #define LOG_DEFSIZE 65536
 #endif
 
-#if defined(NO_CYGWIN_SETVBUF_BUG) || !defined(WIN32)
-#if 0
-#define logmsg(_message...) printf(_message)
-#else
-#define logmsg(_message...) log_write(0,_message)
-#define logmsgp(_message...) log_write(1,_message)
-#define logmsgb(_message...) log_write(2,_message)
-#endif
-#else /*NO_CYGWIN_SETVBUF_BUG*/
-#if 0
-#define logmsg(_message...) \
-do { \
-    printf(_message); \
-    fflush(stdout); \
-} while(0)
-#else
-#define logmsg(_message...) \
-do { \
-    log_write(0,_message); \
-    fflush(stdout); \
-} while(0)
-#define logmsgp(_message...) \
-do { \
-    log_write(1,_message); \
-    fflush(stdout); \
-} while(0)
-#define logmsgb(_message...) \
-do { \
-    log_write(2,_message); \
-    fflush(stdout); \
-} while(0)
-#endif
-#endif /*NO_CYGWIN_SETVBUF_BUG*/
+/* Logging functions in logmsg.c */
+void logmsg(char *,...);
+void logmsgp(char *,...);
+void logmsgb(char *,...);
 
 void logger_init(void);
 
@@ -62,9 +33,9 @@ void log_wakeup(void *arg);
 typedef void LOG_WRITER(void *,char *);
 typedef void LOG_CLOSER(void *);
 
-int log_open(LOG_WRITER,LOG_CLOSER,void *);
+int log_open(LOG_WRITER*,LOG_CLOSER*,void *);
 void log_close(void);
-void log_write(int,char *,...);
+void log_write(int,char *,va_list);
 /* End of log routing section */
 
 /* Log routing utility */

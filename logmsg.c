@@ -96,15 +96,43 @@ void log_close(void)
     return;
 }
 
+void logmsg(char *msg,...)
+{
+    va_list vl;
+    va_start(vl,msg);
+    log_write(0,msg,vl); 
+  #if defined(WIN32) && !defined(NO_CYGWIN_SETVBUF_BUG) && !defined(_MSVC_)
+    fflush(stdout);  
+  #endif
+}
+
+void logmsgp(char *msg,...)
+{
+    va_list vl;
+    va_start(vl,msg);
+    log_write(1,msg,vl); 
+  #if defined(WIN32) && !defined(NO_CYGWIN_SETVBUF_BUG) && !defined(_MSVC_)
+    fflush(stdout);  
+  #endif
+}
+ 
+void logmsgb(char *msg,...)
+{
+    va_list vl;
+    va_start(vl,msg);
+    log_write(2,msg,vl); 
+  #if defined(WIN32) && !defined(NO_CYGWIN_SETVBUF_BUG) && !defined(_MSVC_)
+    fflush(stdout);  
+  #endif
+}
+
 /* panel : 0 - No, 1 - Only, 2 - Also */
-void log_write(int panel,char *msg,...)
+void log_write(int panel,char *msg,va_list vl)
 {
     char *bfr;
     int rc;
-    va_list vl;
     int slot;
     log_route_init();
-    va_start(vl,msg);
     if(panel==1)
     {
         vprintf(msg,vl);
@@ -116,23 +144,18 @@ void log_write(int panel,char *msg,...)
     if(slot<0 || panel>0)
     {
         vprintf(msg,vl);
-        va_end(vl);
         if(slot<0)
         {
             return;
         }
-        va_start(vl,msg);
     }
     bfr=malloc(256);
     rc=vsnprintf(bfr,256,msg,vl);
-    va_end(vl);
     if(rc>=256)
     {
         free(bfr);
         bfr=malloc(rc+1);
-        va_start(vl,msg);
         vsnprintf(bfr,rc,msg,vl);
-        va_end(vl);
     }
     log_routes[slot].w(log_routes[slot].u,bfr);
     free(bfr);
