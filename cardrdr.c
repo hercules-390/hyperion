@@ -236,7 +236,7 @@ int     fc;                             /* File counter              */
         if (!sockdev)
         {
             /* Check for specification of no file mounted on reader */
-            if (dev->filename[0] == '*')
+            if (argv[0][0] == '*')
             {
                 dev->filename[0] = '\0';
             }
