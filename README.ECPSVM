@@ -106,10 +106,14 @@ VM Assists for MVS
 .. Maybe others ...
 
 *****************
+BUGS & Caveats :
 
 ECPS:VM Has not been tested in a AP/MP System.
 My belief is that they WILL NOT WORK.
 ECPS:VM Should be disabled if the system is MP or AP generated
+
+For the time being, ECPS:VM Should be disabled on the host system when running VM/SP Under [z/]VM/[XA/ESA]
+because ECPS:VM Under SIE is still not finalized
 
 *****************
 
