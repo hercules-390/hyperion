@@ -384,11 +384,10 @@ U16     xcode;                          /* Exception code            */
     {
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (vaddr, 0, ACCTYPE_STACK, regs) )
-              && PER_RANGE_CHECK(vaddr,regs->CR(10),regs->CR(11)) )
+          && ( REAL_MODE(&regs->psw) ||
+               ARCH_DEP(check_sa_per2) (vaddr, 0, ACCTYPE_STACK, regs) )
 #endif /*defined(FEATURE_PER2)*/
-            )
+          && PER_RANGE_CHECK(vaddr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
     }
@@ -483,11 +482,10 @@ U16     xcode;                          /* Exception code            */
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (vaddr, 0, ACCTYPE_STACK, regs) )
-              && PER_RANGE_CHECK(vaddr,regs->CR(10),regs->CR(11)) )
+          && ( REAL_MODE(&regs->psw) ||
+               ARCH_DEP(check_sa_per2) (vaddr, 0, ACCTYPE_STACK, regs) )
 #endif /*defined(FEATURE_PER2)*/
-            )
+          && PER_RANGE_CHECK(vaddr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
     }
