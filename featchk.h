@@ -298,6 +298,16 @@
  #endif
 #endif
 
+#if defined(FEATURE_FPS_EXTENSIONS) \
+ && !defined(FEATURE_BINARY_FLOATING_POINT)
+ #error FP support extensions requires binary floating point
+#endif
+
+#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT) \
+ && !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
+ #error HFP multiply add/subtract requires hexadecimal floating point
+#endif
+
 #if defined(FEATURE_PER2) && !defined(FEATURE_PER)
  #error FEATURE_PER must be defined when using FEATURE_PER2
 #endif
