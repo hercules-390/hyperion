@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-16 20:56-0600\n"
+"POT-Creation-Date: 2002-12-16 21:12-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1292,28 +1292,9 @@ msgstr ""
 msgid "HHC420I <unknown> connected to device %4.4X (%s)\n"
 msgstr ""
 
-#: cardpch.c:54
-msgid "HHC421I File name missing or invalid\n"
-msgstr ""
-
 #: panel.c:2018
 #, c-format
 msgid "HHC422I Device %4.4X unbound from socket %s\n"
-msgstr ""
-
-#: cardpch.c:89
-#, c-format
-msgid "HHC422I Invalid argument: %s\n"
-msgstr ""
-
-#: cardpch.c:167
-#, c-format
-msgid "HHC423I Error opening file %s: %s\n"
-msgstr ""
-
-#: cardpch.c:34
-#, c-format
-msgid "HHC423I Error writing to %s: %s\n"
 msgstr ""
 
 #: hsccmd.c:215
@@ -1811,6 +1792,25 @@ msgstr ""
 #: printer.c:152
 #, c-format
 msgid "HHCPR012E %4.4X Unable to execute %s: %s\n"
+msgstr ""
+
+#: cardpch.c:54
+msgid "HHCPU001E File name missing or invalid\n"
+msgstr ""
+
+#: cardpch.c:89
+#, c-format
+msgid "HHCPU002E Invalid argument: %s\n"
+msgstr ""
+
+#: cardpch.c:167
+#, c-format
+msgid "HHCPU003E Error opening file %s: %s\n"
+msgstr ""
+
+#: cardpch.c:34
+#, c-format
+msgid "HHCPU004E Error writing to %s: %s\n"
 msgstr ""
 
 #: cardrdr.c:58
