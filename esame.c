@@ -611,55 +611,22 @@ BYTE    dec[16];                        /* Packed decimal operand    */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_to_decimal_long)
 {
-int     r1;                             /* Values of R fields        */
+S64     bin;                            /* Signed value to convert   */
+int     r1;                             /* Value of R1 field         */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     n;                              /* Absolute value to convert */
-BYTE    result[16];                     /* 31-digit signed result    */
-int     i;                              /* Array subscript           */
-int     d;                              /* Decimal digit or sign     */
+BYTE    dec[16];                        /* Packed decimal result     */
 
     RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
-    /* Special case when R1 is maximum negative value */
-    if (regs->GR_G(r1) == 0x8000000000000000ULL)
-    {
-        memcpy (result,
-                "\x00\x00\x00\x00\x00\x00\x92\x23"
-                "\x37\x20\x36\x85\x47\x75\x80\x8D",
-                sizeof(result));
-    }
-    else
-    {
-        /* Load absolute value and generate sign */
-        if (regs->GR_G(r1) < 0x8000000000000000ULL)
-        {
-            /* Value is positive */
-            n = regs->GR_G(r1);
-            d = 0x0C;
-        }
-        else
-        {
-            /* Value is negative */
-            n = -((S64)(regs->GR_G(r1)));
-            d = 0x0D;
-        }
+    /* Load signed value of register */
+    bin = (S64)(regs->GR_G(r1));
 
-        /* Store sign and decimal digits from right to left */
-        memset (result, 0, 16);
-        for (i = 16 - 1; d != 0 || n != 0; i--)
-        {
-            result[i] = d;
-            d = n % 10;
-            n /= 10;
-            result[i] |= (d << 4);
-            d = n % 10;
-            n /= 10;
-        }
-    }
+    /* Convert to 16-byte packed decimal number */
+    binary_to_packed (bin, dec);
 
     /* Store 16-byte packed decimal result at operand address */
-    ARCH_DEP(vstorec) ( result, 16-1, effective_addr2, b2, regs );
+    ARCH_DEP(vstorec) ( dec, 16-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(convert_to_decimal_long) */
 #endif /*defined(FEATURE_ESAME)*/
