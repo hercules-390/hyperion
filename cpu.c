@@ -1405,8 +1405,6 @@ int     stepthis;                       /* Stop on this instruction  */
 
     while (1)
     {
-if(!regs->cpuonline)
-logmsg("cpu%4.4x not online\n",regs->cpuad);
 #if 0
         U32 oldmask = regs->ints_mask;
 	    SET_IC_EXTERNAL_MASK(regs);
