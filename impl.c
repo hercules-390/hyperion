@@ -191,8 +191,8 @@ TID     rctid;                          /* RC file thread identifier */
     /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        extgui = 0;
-        daemon_mode = 0;
+//      extgui = 0;
+//      daemon_mode = 0;
         hdl_load("dyngui",HDL_LOAD_NOUNLOAD);
         argc--;
     }
@@ -391,6 +391,11 @@ TID     rctid;                          /* RC file thread identifier */
 /*-------------------------------------------------------------------*/
 void system_cleanup (void)
 {
+    /* ZZ FIXME: The panel display should handle it's own 
+       termination  the following should be dropped in future */
+    if(!daemon_mode)
+        panel_cleanup();
+
     /* ZZ FIXME: Closing the syslog makes the logger terminate 
        but a more elegant shutdown procedure is required */
     close(sysblk.syslogfd[LOG_WRITE]) ;

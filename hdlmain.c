@@ -65,7 +65,6 @@ HDL_REGISTER_SECTION;
 /*                register this            as the address of
                   entry-point name,        this var or func
 */
-    HDL_REGISTER( ptr_to_sysblk,           sysblk          );
     HDL_REGISTER( panel_command,           panel_command_r );
     HDL_REGISTER( panel_display,           panel_display_r );
     HDL_REGISTER( config_command,          *NULL           );
@@ -112,7 +111,7 @@ HDL_RESOLVER_SECTION;
                          Your pointer-   Herc's registered
                          variable name   entry-point name
     */
-//  HDL_RESOLVE_PTRVAR(  my_sysblk_ptr,  ptr_to_sysblk  );
+//  HDL_RESOLVE_PTRVAR(  my_sysblk_ptr,  sysblk         );
 }
 END_RESOLVER_SECTION;
 

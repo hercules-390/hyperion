@@ -880,6 +880,7 @@ void*  gui_debug_cpu_state ( REGS* pREGS )
 
 ///////////////////////////////////////////////////////////////////////////////
 // Our Hercules "panel_display" override...
+// or "daemon_task" in daemon mode
 
 void gui_panel_display ()
 {
@@ -935,6 +936,7 @@ HDL_REGISTER_SECTION;       // ("Register" our entry-points)
 //             name             value
 
 HDL_REGISTER ( panel_display,   gui_panel_display   );
+HDL_REGISTER ( daemon_task,     gui_panel_display   );
 HDL_REGISTER ( debug_cpu_state, gui_debug_cpu_state );
 HDL_REGISTER ( panel_command,   gui_panel_command   );
 
@@ -958,7 +960,7 @@ HDL_RESOLVE ( panel_command );
 
 //                    Our pointer-    Registered entry-
 //                    variable name   point value name
-HDL_RESOLVE_PTRVAR (  my_sysblk_ptr,  ptr_to_sysblk     );
+HDL_RESOLVE_PTRVAR (  my_sysblk_ptr,  sysblk            );
 
 END_RESOLVER_SECTION;
 
