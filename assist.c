@@ -48,7 +48,6 @@
 #endif /*!defined(_ASSIST_C)*/
 
 
-#if !defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
 /* E503       - SVC assist                                     [SSE] */
 /*-------------------------------------------------------------------*/
@@ -66,7 +65,6 @@ VADR    effective_addr1,
                   AND MVS WILL HAVE TO HANDLE THE SITUATION*/
 
 }
-#endif /*!defined(FEATURE_ESAME)*/
 
 
 /*-------------------------------------------------------------------*/

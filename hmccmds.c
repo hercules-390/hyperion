@@ -891,7 +891,7 @@ int devlist_cmd(char* cmdline, int argc, char *argv[])
 
 int attach_cmd(char* cmdline, int argc, char *argv[])
 {
-    U16  devnum, dummy_devtype;
+    U16  devnum /* , dummy_devtype */;
 
     UNREFERENCED(cmdline);
 
@@ -907,11 +907,13 @@ int attach_cmd(char* cmdline, int argc, char *argv[])
         return -1;
     }
 
+#if 0 /* JAP - Breaks the whole idea behind devtype.c */
     if (sscanf(argv[2], "%hx%c", &dummy_devtype, &c) != 1)
     {
         logmsg( _("Device type %s is invalid\n"), argv[2] );
         return -1;
     }
+#endif
 
     return  attach_device (devnum, argv[2], argc-3, (BYTE**)&argv[3]);
 }

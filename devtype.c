@@ -52,6 +52,10 @@ DEVENT device_handler_table[] = {
     { "3287", 0x3287, &loc3270_device_hndinfo },
 
     /* Communications devices */
-    { "3088", 0x3088, &ctcadpt_device_hndinfo },
+    { "3088",  0x3088, &ctcadpt_device_hndinfo },
+    { "CTCI",  0x3088, &ctcadpt_device_hndinfo },
+    { "CTCT",  0x3088, &ctcadpt_device_hndinfo },
+    { "LCS",   0x3088, &ctcadpt_device_hndinfo },
+    { "VMNET", 0x3088, &ctcadpt_device_hndinfo },
 
     { NULL, 0, NULL } };

@@ -1028,6 +1028,9 @@ BYTE    c;                              /* Work area for sscanf      */
     InitializeListHead(&bind_head);
     initialize_lock(&bind_lock);
 
+    /* Initialize HercIFC fd's */
+    sysblk.ifcfd[0] = sysblk.ifcfd[1] = -1;
+
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock
        adjustment, then add in the specified time zone offset
@@ -1233,6 +1236,16 @@ int     cpu;
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
        if (dev->pmcw.flag5 & PMCW5_V)
            detach_device(dev->devnum);
+
+    /* Terminate HercIFC if necessary */
+    if( sysblk.ifcfd[0] != -1 || sysblk.ifcfd[1] != -1 )
+    {
+        close( sysblk.ifcfd[0] );
+        close( sysblk.ifcfd[1] );
+        sysblk.ifcfd[0] = sysblk.ifcfd[1] = -1;
+
+        kill( sysblk.ifcpid, SIGINT );
+    }
 
     /* Deconfigure all CPU's */
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)

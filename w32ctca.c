@@ -25,6 +25,11 @@ int w32ctca_dummy = 0;
 #include <stdarg.h>
 #include <ctype.h>
 #include "w32ctca.h"
+
+#if !defined( IFNAMSIZ )
+#define IFNAMSIZ 16
+#endif
+
 #include "tt32api.h"    // (exported TunTap32.dll functions)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,15 +71,17 @@ while(0)
 char     g_tt32_dllname[MAX_TT32_DLLNAMELEN] = {0};
 HMODULE  g_tt32_hmoddll = NULL;
 
-ptuntap32_copyright_string       g_tt32_pfn_copyright_string      = NULL;
-ptuntap32_version_string         g_tt32_pfn_version_string        = NULL;
-ptuntap32_version_numbers        g_tt32_pfn_version_numbers       = NULL;
-ptuntap32_open_ip_tuntap         g_tt32_pfn_open_ip_tuntap        = NULL;
-ptuntap32_write_ip_tun           g_tt32_pfn_write_ip_tun          = NULL;
-ptuntap32_read_ip_tap            g_tt32_pfn_read_ip_tap           = NULL;
-ptuntap32_close_ip_tuntap        g_tt32_pfn_close_ip_tuntap       = NULL;
-ptuntap32_get_ip_stats           g_tt32_pfn_get_ip_stats          = NULL;
-ptuntap32_set_debug_output_func  g_tt32_pfn_set_debug_output_func = NULL;
+ptuntap32_copyright_string      g_tt32_pfn_copyright_string      = NULL;
+ptuntap32_version_string        g_tt32_pfn_version_string        = NULL;
+ptuntap32_version_numbers       g_tt32_pfn_version_numbers       = NULL;
+ptuntap32_open                  g_tt32_pfn_open                  = NULL;
+ptuntap32_write                 g_tt32_pfn_write                 = NULL;
+ptuntap32_read                  g_tt32_pfn_read                  = NULL;
+ptuntap32_close                 g_tt32_pfn_close                 = NULL;
+ptuntap32_ioctl                 g_tt32_pfn_ioctl                 = NULL;
+ptuntap32_get_default_iface     g_tt32_pfn_get_default_iface     = NULL;
+ptuntap32_get_stats             g_tt32_pfn_get_stats             = NULL;
+ptuntap32_set_debug_output_func g_tt32_pfn_set_debug_output_func = NULL;
 
 CRITICAL_SECTION  g_tt32_lock;              // (lock for accessing above variables)
 FILE*             g_tt32_msgpipew = NULL;   // (so we can issue msgs to Herc console)
@@ -84,10 +91,11 @@ FILE*             g_tt32_msgpipew = NULL;   // (so we can issue msgs to Herc con
 
 BOOL tt32_loaddll();    // (forward reference)
 
-void tt32_init
-(
-    FILE*  msgpipew     // (for issuing msgs to Herc console)
-)
+//
+//
+//
+
+void            tt32_init( FILE*  msgpipew )
 {
     InitializeCriticalSection(&g_tt32_lock);
 
@@ -106,46 +114,74 @@ void tt32_init
     tt32_loaddll();     // (try loading the dll now)
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
+//
+// tt32_open
+//
 
-int tt32_open (char* hercip, char* gateip, unsigned long drvbuff, unsigned long dllbuff)
+int             tt32_open( char* pszGatewayDevice, int iFlags )
 {
     if (!tt32_loaddll()) return -1;
-    return g_tt32_pfn_open_ip_tuntap(hercip, gateip,
-        drvbuff ? drvbuff : (DEF_TT32DRV_BUFFSIZE_K * 1024),
-        dllbuff ? dllbuff : (DEF_TT32DLL_BUFFSIZE_K * 1024));
+    return g_tt32_pfn_open( pszGatewayDevice, iFlags );
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
 
-int tt32_read  (int fd, unsigned char* buffer, int size, int timeout)
+int             tt32_read( int fd, u_char* buffer, u_long size )
 {
     if (!tt32_loaddll()) return -1;
-    return g_tt32_pfn_read_ip_tap(fd,buffer,size,timeout);
+    return g_tt32_pfn_read( fd, buffer, size );
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
 
-int tt32_write (int fd, unsigned char* buffer, int size)
+int             tt32_write( int fd, u_char* buffer, u_long size )
 {
     if (!tt32_loaddll()) return -1;
-    return g_tt32_pfn_write_ip_tun(fd,buffer,size);
+    return g_tt32_pfn_write( fd, buffer, size );
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
 
-int tt32_close (int fd)
+int             tt32_close( int fd )
 {
     if (!tt32_loaddll()) return -1;
 #if defined(DEBUG) || defined(_DEBUG)
     display_tt32_stats(fd);
 #endif // defined(DEBUG) || defined(_DEBUG)
-    return g_tt32_pfn_close_ip_tuntap(fd);
+    return g_tt32_pfn_close(fd);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
 
-int display_tt32_stats (int fd)
+int             tt32_ioctl( int fd, int iRequest, char* argp )
+{
+    if (!tt32_loaddll()) return -1;
+    return g_tt32_pfn_ioctl( fd, iRequest, argp );
+}
+
+//
+//
+//
+
+const char*     tt32_get_default_iface()
+{
+    if (!tt32_loaddll()) return NULL;
+    return g_tt32_pfn_get_default_iface();
+}
+
+//
+//
+//
+
+int             display_tt32_stats( int fd )
 {
     TT32STATS stats;
 
@@ -154,7 +190,7 @@ int display_tt32_stats (int fd)
     memset(&stats,0,sizeof(stats));
     stats.dwStructSize = sizeof(stats);
 
-    if (g_tt32_pfn_get_ip_stats(fd,&stats) < (int)(sizeof(stats))) return -1;
+    if (g_tt32_pfn_get_stats(fd,&stats) < (int)(sizeof(stats))) return -1;
 
     logmsg
     (
@@ -247,30 +283,40 @@ BOOL tt32_loaddll()
      "tuntap32_version_numbers"); if (!
     g_tt32_pfn_version_numbers) goto error;
 
-    g_tt32_pfn_open_ip_tuntap =
-    (ptuntap32_open_ip_tuntap) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_open_ip_tuntap"); if (!
-    g_tt32_pfn_open_ip_tuntap) goto error;
+    g_tt32_pfn_open =
+    (ptuntap32_open) GetProcAddress(g_tt32_hmoddll,
+     "tuntap32_open"); if (!
+    g_tt32_pfn_open) goto error;
 
-    g_tt32_pfn_write_ip_tun =
-    (ptuntap32_write_ip_tun) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_write_ip_tun"); if (!
-    g_tt32_pfn_write_ip_tun) goto error;
+    g_tt32_pfn_write =
+    (ptuntap32_write) GetProcAddress(g_tt32_hmoddll,
+     "tuntap32_write"); if (!
+    g_tt32_pfn_write) goto error;
 
-    g_tt32_pfn_read_ip_tap =
-    (ptuntap32_read_ip_tap) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_read_ip_tap"); if (!
-    g_tt32_pfn_read_ip_tap) goto error;
+    g_tt32_pfn_read =
+    (ptuntap32_read) GetProcAddress(g_tt32_hmoddll,
+     "tuntap32_read"); if (!
+    g_tt32_pfn_read) goto error;
 
-    g_tt32_pfn_close_ip_tuntap =
-    (ptuntap32_close_ip_tuntap) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_close_ip_tuntap"); if (!
-    g_tt32_pfn_close_ip_tuntap) goto error;
+    g_tt32_pfn_close =
+    (ptuntap32_close) GetProcAddress(g_tt32_hmoddll,
+     "tuntap32_close"); if (!
+    g_tt32_pfn_close) goto error;
 
-    g_tt32_pfn_get_ip_stats =
-    (ptuntap32_get_ip_stats) GetProcAddress(g_tt32_hmoddll,
-     "tuntap32_get_ip_stats"); if (!
-    g_tt32_pfn_get_ip_stats) goto error;
+    g_tt32_pfn_ioctl =
+    (ptuntap32_ioctl) GetProcAddress(g_tt32_hmoddll,
+     "tuntap32_ioctl"); if (!
+    g_tt32_pfn_ioctl) goto error;
+
+    g_tt32_pfn_get_default_iface =
+    (ptuntap32_get_default_iface) GetProcAddress(g_tt32_hmoddll,
+     "tuntap32_get_default_iface"); if (!
+    g_tt32_pfn_get_default_iface) goto error;
+
+    g_tt32_pfn_get_stats =
+    (ptuntap32_get_stats) GetProcAddress(g_tt32_hmoddll,
+     "tuntap32_get_stats"); if (!
+    g_tt32_pfn_get_stats) goto error;
 
     g_tt32_pfn_set_debug_output_func =
     (ptuntap32_set_debug_output_func) GetProcAddress(g_tt32_hmoddll,

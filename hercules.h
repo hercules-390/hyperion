@@ -727,6 +727,8 @@ typedef struct _SYSBLK {
         char   *httproot;               /* HTTP root                 */
 // #endif /*defined(OPTION_HTTP_SERVER)*/
         CPCONV *codepage;
+        int     ifcfd[2];
+        int     ifcpid;
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -970,6 +972,9 @@ typedef struct _DEVBLK {
         U64     syncios;                /* Number synchronous I/Os   */
         U64     asyncios;               /* Number asynchronous I/Os  */
 
+        /*  Device dependent data (generic)                          */
+        void    *dev_data;
+
         /*  Device dependent fields for console                      */
 
         struct  in_addr ipaddr;         /* Client IP address         */
@@ -1010,17 +1015,9 @@ typedef struct _DEVBLK {
         int     ctclastpos;             /* last packet read          */
         int     ctclastrem;             /* last packet read          */
         U32                             /* Flags                     */
-                ctcxmode:1,             /* 0=Basic mode, 1=Extended  */
-                lcscmd:1,               /* lcs cmd response pending  */ /*LCS*/
-                readpnd:1,              /* read pending on thread    */ /*LCS*/
-                readstrt:1,             /* read thread started       */ /*LCS*/
-                readerr:1;              /* read error                */ /*LCS*/
+                ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
-        FWORD   ctcipsrc;               /* LCS source IP address     */ /*LCS*/
-        int lcslen;                     /* LCS read length           */ /*LCS*/
-        int lcscmdlen;                  /* LCS command length        */ /*LCS*/
-        BYTE   *lcsbuf;                 /* -> to lcs command buffer  */ /*LCS*/
 
         /*  Device dependent fields for printer                      */
 
@@ -1650,10 +1647,10 @@ int     cckd_endian ();
 int     cckd_comp (int, FILE *);
 int     cckd_chkdsk(int, FILE *, int);
 
-#if defined(OPTION_W32_CTCI)
+/* #if defined(OPTION_W32_CTCI)  */
 /* Functions in module w32ctca.c */
 #include "w32ctca.h"
-#endif // defined(OPTION_W32_CTCI)
+/* #endif // defined(OPTION_W32_CTCI) */
 
 
 #endif /*!defined(_HERCULES_H)*/

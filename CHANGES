@@ -1,3 +1,5 @@
+14 Nov 2002 New CTC and LCS emulation - Jim Pierson
+14 Nov 2002 Add SVCA to z/Architecture mode - Jan Jaeger
 07 Nov 2002 Correct execution controls - Jan Jaeger
 29 Oct 2002 Make card reader eof/intrq parameter persistent - Jay Maynard
 29 Oct 2002 Correct devinit command to work when only one argument is given -

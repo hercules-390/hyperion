@@ -62,7 +62,8 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
 	   parser.c hetlib.c ieee.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
-           httpserv.c cgibin.c devtype.c codepage.c
+           httpserv.c cgibin.c devtype.c codepage.c \
+           ctc_ctci.c ctc_lcs.c tuntap.c
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
@@ -128,7 +129,8 @@ noinst_HEADERS  = fishhang.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
     hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
-    if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h
+    if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
+    ctcadpt.h hercifc.h tuntap.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
