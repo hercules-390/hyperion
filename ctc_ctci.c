@@ -977,7 +977,7 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 	    if( inet_aton( optarg, &addr ) == 0 )
 	    {
 		// Not an IP address, check for valid MAC
-		if( !ParseMAC( optarg, mac ) )
+		if( ParseMAC( optarg, mac ) != 0 )
 		{
 		    logmsg( _("CTC004E %4.4X: Invalid adapter address %s\n"),
 			    pDEVBLK->devnum, optarg );
@@ -1217,7 +1217,7 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 		if( inet_aton( *argv, &addr ) == 0 )
 		{
 		    // Not an IP address, check for valid MAC
-		    if( !ParseMAC( *argv, mac ) )
+		    if( ParseMAC( *argv, mac ) != 0 )
 		    {
 			logmsg( _("CTC012E %4.4X: Invalid MAC address %s\n"),
 				pDEVBLK->devnum, *argv );
