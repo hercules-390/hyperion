@@ -670,11 +670,10 @@ DEF_INST(branch_on_condition_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, regs, r1, r2);
-
     /* Branch if R1 mask bit is set and R2 is not register 0 */
-    if (((0x08 >> regs->psw.cc) & r1) && r2 != 0)
+    if (((0x80 >> regs->psw.cc) & inst[1]) && (inst[1] & 0x0f) != 0) 
     {
+        RR(inst, regs, r1, r2);
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -708,7 +707,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     /* Branch to operand address if r1 mask bit is set */
-    if ((0x80 >> regs->psw.cc) & inst[1])
+    if ((0x80 >> regs->psw.cc) & inst[1]) 
     {
         RX(inst, regs, r1, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
