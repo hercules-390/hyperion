@@ -1135,7 +1135,7 @@ U32     n;                              /* 32-bit operand value      */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if MAX_CPU_ENGINES > 1
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
     /* It this is a failed compare and swap
        and there is more then 1 CPU in the configuration
        and there is no broadcast synchronization in progress
@@ -1144,7 +1144,7 @@ U32     n;                              /* 32-bit operand value      */
        the physical CPU on a spinlock */
     if(regs->psw.cc && sysblk.numcpu > 1)
         usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 */
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
@@ -1207,7 +1207,7 @@ U32     n1, n2;                         /* 32-bit operand values     */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if MAX_CPU_ENGINES > 1
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
     /* It this is a failed compare and swap
        and there is more then 1 CPU in the configuration
        and there is no broadcast synchronization in progress
@@ -1216,7 +1216,7 @@ U32     n1, n2;                         /* 32-bit operand values     */
        the physical CPU on a spinlock */
     if(regs->psw.cc && sysblk.numcpu > 1)
         usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 */
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))

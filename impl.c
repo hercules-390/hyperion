@@ -57,7 +57,7 @@ static void sigint_handler (int signo)
 #if !defined(NO_SIGABEND_HANDLER)
 static void watchdog_thread()
 {
-U64 savecount[MAX_CPU_ENGINES];
+S64 savecount[MAX_CPU_ENGINES];
 int i;
 
 #ifndef WIN32

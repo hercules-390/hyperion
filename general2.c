@@ -423,7 +423,7 @@ VADR    effective_addr2,
         /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
 
-#if MAX_CPU_ENGINES > 1
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
         /* It this is a failed locked operation
            and there is more then 1 CPU in the configuration
            and there is no broadcast synchronization in progress
@@ -432,7 +432,7 @@ VADR    effective_addr2,
            the physical CPU on a spinlock */
         if(regs->psw.cc && sysblk.numcpu > 1)
             usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 */
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
     }
 }
@@ -1293,7 +1293,7 @@ BYTE    obyte;                          /* Operand byte              */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-#if MAX_CPU_ENGINES > 1
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
         /* It this is a failed locked operation
            and there is more then 1 CPU in the configuration
            and there is no broadcast synchronization in progress
@@ -1302,7 +1302,7 @@ BYTE    obyte;                          /* Operand byte              */
            the physical CPU on a spinlock */
         if(regs->psw.cc && sysblk.numcpu > 1)
             usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 */
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
 }
 

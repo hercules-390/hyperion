@@ -30,6 +30,7 @@
 #define OPTION_FAST_PREFIX       	/* Performance option	     */
 #define OPTION_REDUCED_INVAL     	/* Performance option	     */
 #define OPTION_FETCHIBYTE       	/* Performance option	     */
+#undef	OPTION_CS_USLEEP			/* Sleep if CS collision         */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
