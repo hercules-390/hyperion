@@ -4951,6 +4951,9 @@ BYTE    svalue, dvalue, tvalue;
     /* Determine test value */
     tvalue = regs->GR_LHLCL(0);
 
+    /* Preset condition code to zero in case of zero length */
+    regs->psw.cc = 0;
+
     while(len)
     {
         svalue = ARCH_DEP(vfetchb) (addr2, r2, regs);
@@ -5018,6 +5021,9 @@ BYTE    dvalue, tvalue;
 
     /* Determine test value */
     tvalue = regs->GR_LHL(0);
+
+    /* Preset condition code to zero in case of zero length */
+    regs->psw.cc = 0;
 
     while(len)
     {
@@ -5089,6 +5095,9 @@ BYTE    dvalue, tvalue;
     /* Determine test value */
     tvalue = regs->GR_LHLCL(0);
 
+    /* Preset condition code to zero in case of zero length */
+    regs->psw.cc = 0;
+
     while(len)
     {
         svalue = ARCH_DEP(vfetch2) (addr2, r2, regs);
@@ -5157,6 +5166,9 @@ U16     svalue, dvalue, tvalue;
 
     /* Determine test value */
     tvalue = regs->GR_LHL(0);
+
+    /* Preset condition code to zero in case of zero length */
+    regs->psw.cc = 0;
 
     while(len)
     {
