@@ -54,37 +54,37 @@ hercules_OBJ = hostinfo.o w32ctca.o impl.o config.o panel.o \
                parser.o hetlib.o ieee.o sockdev.o httpserv.o \
                cgibin.o devtype.o codepage.o ctc_ctci.o ctc_lcs.o \
                tuntap.o hsccmd.o hscmisc.o logger.o commadpt.o \
-               cache.o ecpsvm.o
+               cache.o ecpsvm.o shared.o
 
 hercifc_OBJ  = hercifc.o hostinfo.o version.o 
 
 dasdinit_OBJ = dasdinit.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o
+               cache.o shared.o
 
 dasdisup_OBJ = dasdisup.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o
+               cache.o shared.o
 
 dasdload_OBJ = dasdload.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o
+               cache.o shared.o
 
 dasdls_OBJ   = dasdls.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o
+               cache.o shared.o
 
 dasdcat_OBJ  = dasdcat.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o
+               cache.o shared.o
 
 dasdpdsu_OBJ = dasdpdsu.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o
+               cache.o shared.o
 
 dasdseq_OBJ  = dasdseq.o dasdutil.o codepage.o hostinfo.o version.o  \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o
+               cache.o shared.o
 
 tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o 
 
@@ -97,24 +97,30 @@ cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o
 cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o 
 
 cckddiag_OBJ = cckddiag.o cckddasd.o cckdutil.o ckddasd.o codepage.o \
-               dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o
+               dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o \
+               shared.o
 
 cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o 
 
 cckd2ckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o
+               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
+               shared.o
 
 ckd2cckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o
+               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
+               shared.o
 
 fba2cfba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
+               shared.o
 
 cfba2fba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
+               shared.o
 
 dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
+               shared.o
 
 hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o 
 
@@ -133,7 +139,7 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            hetlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
            if_tun.h inline.h linklist.h logger.h machdep.h opcode.h \
            parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
-           vstore.h w32chan.h w32ctca.h
+           vstore.h w32chan.h w32ctca.h shared.h
 
 all:	   $(EXEFILES)
 
