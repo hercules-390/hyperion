@@ -1285,7 +1285,7 @@ DEF_INST(channel_subsystem_call)
 {
 int     r1, r2;                                 /* register values   */
 VADR    n;                                      /* Unsigned work     */
-RADR    abs;                                    /* Unsigned work     */
+BYTE   *main;                                   /* Unsigned work     */
 U16     length;                                 /* Length of request */
 U16     req;                                    /* Request code      */
 CHSC_REQ *chsc_req;                             /* Request structure */
@@ -1302,8 +1302,8 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
     if(n & 0xFFF)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    abs = LOGICAL_TO_ABS(n, r1, regs, ACCTYPE_READ, regs->psw.pkey);
-    chsc_req = (CHSC_REQ*)(regs->mainstor + abs);
+    main = MADDR(n, r1, regs, ACCTYPE_READ, regs->psw.pkey);
+    chsc_req = (CHSC_REQ*)(main);
 
     /* Fetch length of request field */
     FETCH_HW(length, chsc_req->length);

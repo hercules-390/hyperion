@@ -173,9 +173,11 @@ typedef struct  _PSW {
 /* Structure for Dynamic Address Translation */
 typedef struct _DAT {
         RADR    raddr;                  /* Real address              */
+        RADR    aaddr;                  /* Absolute address          */
         RADR    asd;                    /* Address space designator: */
                                         /*   STD or ASCE             */
         int     stid;                   /* Address space indicator   */
+        BYTE   *storkey;                /* ->Storage key             */
         U16     xcode;                  /* Translation exception code*/ 
         BYTE    private:1,              /* 1=Private address space   */
                 protect:2;              /* 1=Page prot, 2=ALE prot   */ 

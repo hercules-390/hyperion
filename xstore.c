@@ -18,7 +18,8 @@
 DEF_INST(page_in)
 {
 int     r1, r2;                         /* Values of R fields        */
-RADR    maddr;                          /* Main storage address      */
+VADR    vaddr;                          /* Virtual storage address   */
+BYTE   *maddr;                          /* Main storage address      */
 U32     xaddr;                          /* Expanded storage address  */
 
     RRE(inst, regs, r1, r2);
@@ -59,13 +60,11 @@ U32     xaddr;                          /* Expanded storage address  */
     xaddr <<= XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
-    maddr = LOGICAL_TO_ABS (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
-         USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
-    maddr &= XSTORE_PAGEMASK;
+    vaddr = (regs->GR(r1) & ADDRESS_MAXWRAP(regs)) & XSTORE_PAGEMASK;
+    maddr = MADDR (vaddr, USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
 
     /* Copy data from expanded to main */
-    memcpy (regs->mainstor + maddr, sysblk.xpndstor + xaddr,
-            XSTORE_PAGESIZE);
+    memcpy (maddr, sysblk.xpndstor + xaddr, XSTORE_PAGESIZE);
 
     /* cc0 means pgin ok */
     regs->psw.cc = 0;
@@ -81,7 +80,8 @@ U32     xaddr;                          /* Expanded storage address  */
 DEF_INST(page_out)
 {
 int     r1, r2;                         /* Values of R fields        */
-RADR    maddr;                          /* Main storage address      */
+VADR    vaddr;                          /* Virtual storage address   */
+BYTE   *maddr;                          /* Main storage address      */
 U32     xaddr;                          /* Expanded storage address  */
 
     RRE(inst, regs, r1, r2);
@@ -122,13 +122,11 @@ U32     xaddr;                          /* Expanded storage address  */
     xaddr <<= XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
-    maddr = LOGICAL_TO_ABS (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
-         USE_REAL_ADDR, regs, ACCTYPE_READ, 0);
-    maddr &= XSTORE_PAGEMASK;
+    vaddr = (regs->GR(r1) & ADDRESS_MAXWRAP(regs)) & XSTORE_PAGEMASK;
+    maddr = MADDR (vaddr, USE_REAL_ADDR, regs, ACCTYPE_READ, 0);
 
     /* Copy data from main to expanded */
-    memcpy (sysblk.xpndstor + xaddr, regs->mainstor + maddr,
-            XSTORE_PAGESIZE);
+    memcpy (sysblk.xpndstor + xaddr, maddr, XSTORE_PAGESIZE);
 
     /* cc0 means pgout ok */
     regs->psw.cc = 0;
@@ -196,7 +194,8 @@ int     rc = 0;                         /* Return code               */
 int     cc = 0;             /* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
 RADR    raddr1, raddr2, xpkeya;         /* Real addresses            */
-RADR    aaddr1 = 0, aaddr2 = 0;         /* Absolute addresses        */
+BYTE   *main1 = NULL, *main2 = NULL;    /* Mainstor addresses        */
+BYTE   *sk1;                            /* Storage key address       */
 BYTE    akey;                           /* Access key in register 0  */
 BYTE    akey1, akey2;                   /* Access keys for operands  */
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -293,7 +292,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
         {
-        FETCH_W(pte2,regs->mainstor + raddr2);
+            FETCH_W(pte2,regs->mainstor + raddr2);
             /* If page is invalid in real storage but valid in expanded
                storage then xpblk2 now contains expanded storage block# */
             if(pte2 & PAGETAB_ESVALID)
@@ -345,9 +344,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
            in either main storage or expanded storage */
         if (rc)
         {
-        cc = 2;
+            cc = 2;
             goto mvpg_progck;
-    }
+        }
 
         /* Reset protection indication before calling translate_addr() */
         regs->dat.protect = 0;
@@ -389,7 +388,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
         {
-        FETCH_W(pte1,regs->mainstor + raddr1);
+            FETCH_W(pte1,regs->mainstor + raddr1);
             /* If page is invalid in real storage but valid in expanded
                storage then xpblk1 now contains expanded storage block# */
             if(pte1 & PAGETAB_ESVALID)
@@ -499,8 +498,8 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     {
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
-        aaddr1 = LOGICAL_TO_ABS (vaddr1, r1, regs,
-                                ACCTYPE_WRITE, akey1);
+        main1 = MADDR (vaddr1, r1, regs, ACCTYPE_WRITE_SKP, akey1);
+        sk1 = regs->dat.storkey;
     }
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -520,9 +519,8 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Obtain absolute address of main storage block,
            check protection, and set reference bit.
            Use last byte of page to avoid FPO area.  */
-        aaddr2 = LOGICAL_TO_ABS (vaddr2 + 0xFFF, r2, regs,
-                                ACCTYPE_READ, akey2);
-        aaddr2 &= 0xFFFFF000;
+        main2 = MADDR (vaddr2 | 0xFFF, r2, regs, ACCTYPE_READ, akey2);
+        main2 -= 0xFFF;
     }
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -530,41 +528,35 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     if (xpvalid2)
     {
         /* Set the main storage reference and change bits */
-        STORAGE_KEY(aaddr1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
 
-    /* Set Expanded Storage reference bit in the PTE */
+        /* Set Expanded Storage reference bit in the PTE */
         STORE_W(regs->mainstor + raddr2, pte2 | PAGETAB_ESREF);
 
 
         /* Move 4K bytes from expanded storage to main storage */
-        memcpy (regs->mainstor + aaddr1,
+        memcpy (main1,
                 sysblk.xpndstor + (xpblk2 << XSTORE_PAGESHIFT),
                 XSTORE_PAGESIZE);
     }
     else if (xpvalid1)
     {
-        /* Set the main storage reference bit */
-        STORAGE_KEY(aaddr2, regs) |= STORKEY_REF;
-
-    /* Set Expanded Storage reference and change bits in the PTE */
+        /* Set Expanded Storage reference and change bits in the PTE */
         STORE_W(regs->mainstor + raddr1, pte1 | PAGETAB_ESREF | PAGETAB_ESCHA);
 
         /* Move 4K bytes from main storage to expanded storage */
         memcpy (sysblk.xpndstor + (xpblk1 << XSTORE_PAGESHIFT),
-                regs->mainstor + aaddr2,
+                main2,
                 XSTORE_PAGESIZE);
     }
     else
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Set the main storage reference and change bits */
-        STORAGE_KEY(aaddr1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(aaddr2, regs) |= STORKEY_REF;
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
 
         /* Move 4K bytes from main storage to main storage */
-        memcpy (regs->mainstor + aaddr1,
-                regs->mainstor + aaddr2,
-                XSTORE_PAGESIZE);
+        memcpy (main1, main2, XSTORE_PAGESIZE);
     }
 
     /* Return condition code zero */

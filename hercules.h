@@ -518,29 +518,23 @@ typedef struct _REGS {                  /* Processor registers       */
 #define CR_LHH(_r) cr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
 #define CR_LHHCH(_r) cr[(_r)].F.L.H.H.B.H   /* Character, bits 32-39 */
 #define CR_LHL(_r) cr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define MC_G     mc.D
-#define MC_L     mc.F.L.F
-#define EA_G     ea.D
-#define EA_L     ea.F.L.F
-#define ET_G     et.D
-#define ET_L     et.F.L.F
-#define PX_G     px.D
-#define PX_L     px.F.L.F
-#define AI_G     ai.D
-#define AI_L     ai.F.L.F
-#define VI_G     vi.D
-#define VI_L     vi.F.L.F
-#define VIE_G    vie.D
-#define VIE_L    vie.F.L.F
-#define AE_G(_r) ae[(_r)].D
-#define AE_L(_r) ae[(_r)].F.L.F
-#define VE_G(_r) ve[(_r)].D
-#define VE_L(_r) ve[(_r)].F.L.F
-#define ME_G(_r) me[(_r)].D
-#define ME_L(_r) me[(_r)].F.L.F
-#define AR(_r)   ar[(_r)]
-#define INVABS_G invabs.D
-#define INVABS_L invabs.F.L.F
+#define MC_G      mc.D
+#define MC_L      mc.F.L.F
+#define EA_G      ea.D
+#define EA_L      ea.F.L.F
+#define ET_G      et.D
+#define ET_L      et.F.L.F
+#define PX_G      px.D
+#define PX_L      px.F.L.F
+#define AIV_G     aiv.D
+#define AIV_L     aiv.F.L.F
+#define AIE_G     aie.D
+#define AIE_L     aie.F.L.F
+#define AEV_G(_r) aev[(_r)].D
+#define AEV_L(_r) aev[(_r)].F.L.F
+#define AR(_r)    ar[(_r)]
+#define INVABS_G  invabs.D
+#define INVABS_L  invabs.F.L.F
 
         U16     chanset;                /* Connected channel set     */
         U32     todpr;                  /* TOD programmable register */
@@ -644,19 +638,19 @@ typedef struct _REGS {                  /* Processor registers       */
 
      /* AIA - Instruction fetch accelerator                          */
 
-        BYTE   *mi;                     /* Mainstor instruction addr */
-        DW      ai;                     /* Absolute instruction addr */
-        DW      vi;                     /* Virtual instruction addr  */
-        DW      vie;                    /* Virt instr page end addr  */
+        BYTE   *aim;                    /* Mainstor address          */
+        DW      aiv;                    /* Virtual address           */
+        DW      aie;                    /* Virtual page end address  */
 
      /* AEA - Virtual storage translation accelerator                */
 
-        U32     aeID;                   /* Validation identifier     */
         int     aearvalid;              /* 1=Address(es) in AR mode  */
-        DW      ae[256];                /* Absolute effective addr   */
-        DW      ve[256];                /* Virtual effective addr    */
-        DW      me[256];                /* Mangled effective addr    */
-        BYTE    aekey[256];             /* Storage Key               */
+        U32     aeID;                   /* Validation identifier     */
+        int     aeid[256];              /* Identifier                */
+        BYTE   *aem[256];               /* Mainstor address          */
+        BYTE   *aesk[256];              /* ->Storage key             */
+        DW      aev[256];               /* Virtual address           */
+        BYTE    aekey[256];             /* Access Key                */
         BYTE    aeacc[256];             /* Access type               */
         char    aearn[256];             /* Access register used      */
 

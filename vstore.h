@@ -39,23 +39,28 @@
 _VSTORE_C_STATIC void ARCH_DEP(vstorec) (void *src, BYTE len,
                                         VADR addr, int arn, REGS *regs)
 {
-RADR    abs, abs2;                      /* Absolute addresses        */
-BYTE    len2;                           /* Length to end of page     */
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+int     len2;                           /* Length to end of page     */
 
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
     if ( likely((addr & 0x7FF) <= 0x7FF - len) )
     {
-        MEMCPY (regs->mainstor + abs, src, len + 1);
+        MEMCPY(MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey),
+               src, len + 1);
     }
     else
     {
         len2 = 0x800 - (addr & 0x7FF);
-        abs2 = LOGICAL_TO_ABS((addr + len2) & ADDRESS_MAXWRAP(regs),
-                             arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        MEMCPY (regs->mainstor + abs, src, len2);
-        MEMCPY (regs->mainstor + abs2, src + len2, len + 1 - len2);
-        STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(abs2, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP,
+                      regs->psw.pkey);
+        sk1 = regs->dat.storkey;
+        main2 = MADDR((addr + len2) & ADDRESS_MAXWRAP(regs), arn,
+                      regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
+        MEMCPY (main1, src, len2);
+        MEMCPY (main2, src + len2, len + 1 - len2);
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 } /* end function ARCH_DEP(vstorec) */
@@ -74,11 +79,13 @@ BYTE    len2;                           /* Length to end of page     */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
 _VSTORE_C_STATIC void ARCH_DEP(vstoreb) (BYTE value, VADR addr,
-                                                   int arn, REGS *regs)
+                                         int arn, REGS *regs)
 {
-    addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE,
-                                regs->psw.pkey);
-    regs->mainstor[addr] = value;
+BYTE   *main1;                          /* Mainstor address          */
+
+    main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    *main1 = value;
+
 } /* end function ARCH_DEP(vstoreb) */
 
 /*-------------------------------------------------------------------*/
@@ -97,41 +104,45 @@ _VSTORE_C_STATIC void ARCH_DEP(vstoreb) (BYTE value, VADR addr,
 _VSTORE_C_STATIC void ARCH_DEP(vstore2_full) (U16 value, VADR addr,
                                               int arn, REGS *regs)
 {
-RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    /* Check if store crosses boundary or not */
-    if ((addr & 0x7FF) < 0x7FF)
+    /* Check if store crosses a boundary */
+    if ((addr & 0x7FF) != 0x7FF)
     {
-        STORE_HW (regs->mainstor + abs, value);
+        main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_HW (main1, value);
     }
     else
     {
-        abs2 = LOGICAL_TO_ABS ((addr + 1) & ADDRESS_MAXWRAP(regs),
-                       arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-        regs->mainstor[abs] = value >> 8;
-        regs->mainstor[abs2] = value & 0xFF;
-        STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(abs2, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP,
+                      regs->psw.pkey);
+        sk1 = regs->dat.storkey;
+        main2 = MADDR((addr + 1) & ADDRESS_MAXWRAP(regs), arn, regs,
+                      ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
+        *main1 = value >> 8;
+        *main2 = value & 0xFF;
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
-} /* end function ARCH_DEP(vstore2) */
+} /* end function ARCH_DEP(vstore2_full) */
 
 /* vstore2 accelerator - Simple case only (better inline candidate) */
 _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
                                                             REGS *regs)
 {
     /* Most common case : Aligned & not crossing page boundary */
-    if(likely(!(addr & 0x01)) || ((addr & 0x7ff) <= 0x7fe))
+    if (likely(!(addr & 1) || (addr & 0x7FF) != 0x7FF))
     {
-        register RADR abs;
-        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
-        STORE_HW(regs->mainstor + abs, value);
-        return;
+        BYTE *main;
+        main = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_HW(main, value);
     }
-    ARCH_DEP(vstore2_full)(value,addr,arn,regs);
-}
+    else
+        ARCH_DEP(vstore2_full)(value, addr, arn, regs);
+} /* end function ARCH_DEP(vstore2) */
 
 /*-------------------------------------------------------------------*/
 /* Store a four-byte integer into virtual storage operand            */
@@ -149,36 +160,40 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
 _VSTORE_C_STATIC void ARCH_DEP(vstore4_full) (U32 value, VADR addr,
                                               int arn, REGS *regs)
 {
-RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
 BYTE    temp[4];                        /* Copied value              */ 
 
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    /* Check if store crosses boundary or not */
+    /* Check if store crosses a boundary */
     if ((addr & 0x7FF) <= 0x7FC)
     {
-        STORE_FW(regs->mainstor + abs, value);
+        main1 = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_FW(main1, value);
     }
     else
     {
         len = 0x800 - (addr & 0x7FF);
-        abs2 = LOGICAL_TO_ABS ((addr + len) & ADDRESS_MAXWRAP(regs),
-                        arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        main1 = MADDR (addr, arn, regs, ACCTYPE_WRITE_SKP,
+                       regs->psw.pkey);
+        sk1 = regs->dat.storkey;
+        main2 = MADDR ((addr + len) & ADDRESS_MAXWRAP(regs), arn,
+                       regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
         STORE_FW(temp, value);
         switch (len) {
-        case 1: memcpy (regs->mainstor + abs,  temp,  1);
-                memcpy (regs->mainstor + abs2, temp + 1, 3);
+        case 1: memcpy (main1, temp,     1);
+                memcpy (main2, temp + 1, 3);
                 break;
-        case 2: memcpy (regs->mainstor + abs,  temp,  2);
-                memcpy (regs->mainstor + abs2, temp + 2, 2);
+        case 2: memcpy (main1, temp,     2);
+                memcpy (main2, temp + 2, 2);
                 break;
-        case 3: memcpy (regs->mainstor + abs,  temp,  3);
-                memcpy (regs->mainstor + abs2, temp + 3, 1);
+        case 3: memcpy (main1, temp,     3);
+                memcpy (main2, temp + 3, 1);
                 break;
         }
-        STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(abs2, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 } /* end function ARCH_DEP(vstore4_full) */
@@ -190,12 +205,12 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
     /* Most common case : Aligned & not crossing page boundary */
     if(likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc))
     {
-        register RADR abs;
-        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
-        STORE_FW(regs->mainstor + abs, value);
-        return;
+        BYTE *main;
+        main = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_FW(main, value);
     }
-    ARCH_DEP(vstore4_full)(value,addr,arn,regs);
+    else
+        ARCH_DEP(vstore4_full)(value,addr,arn,regs);
 }
 
 /*-------------------------------------------------------------------*/
@@ -211,51 +226,55 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore8_full) (U64 value, VADR addr, int arn,
-                                                            REGS *regs)
+_VSTORE_C_STATIC void ARCH_DEP(vstore8_full) (U64 value, VADR addr,
+                                              int arn, REGS *regs)
 {
-RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE   *main1, *main2;                  /* Mainstor addresses        */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     len;                            /* Length to end of page     */
 BYTE    temp[8];                        /* Copied value              */ 
 
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-    /* Check if store crosses boundary or not */
+    /* Check if store crosses a boundary */
     if ((addr & 0x7FF) <= 0x7F8)
     {
-        STORE_DW(regs->mainstor + abs, value);
+        main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_DW(main1, value);
     }
     else
     {
         len = 0x800 - (addr & 0x7FF);
-        abs2 = LOGICAL_TO_ABS ((addr + len) & ADDRESS_MAXWRAP(regs),
-                        arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        main1 = MADDR(addr, arn, regs, ACCTYPE_WRITE_SKP,
+                      regs->psw.pkey);
+        sk1 = regs->dat.storkey;
+        main2 = MADDR((addr + len) & ADDRESS_MAXWRAP(regs), arn,
+                      regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
         STORE_DW(temp, value);
         switch (len) {
-        case 1: memcpy (regs->mainstor + abs,  temp,  1);
-                memcpy (regs->mainstor + abs2, temp + 1, 7);
+        case 1: memcpy (main1, temp,     1);
+                memcpy (main2, temp + 1, 7);
                 break;
-        case 2: memcpy (regs->mainstor + abs,  temp,  2);
-                memcpy (regs->mainstor + abs2, temp + 2, 6);
+        case 2: memcpy (main1, temp,     2);
+                memcpy (main2, temp + 2, 6);
                 break;
-        case 3: memcpy (regs->mainstor + abs,  temp,  3);
-                memcpy (regs->mainstor + abs2, temp + 3, 5);
+        case 3: memcpy (main1, temp,     3);
+                memcpy (main2, temp + 3, 5);
                 break;
-        case 4: memcpy (regs->mainstor + abs,  temp,  4);
-                memcpy (regs->mainstor + abs2, temp + 4, 4);
+        case 4: memcpy (main1, temp,     4);
+                memcpy (main2, temp + 4, 4);
                 break;
-        case 5: memcpy (regs->mainstor + abs,  temp,  5);
-                memcpy (regs->mainstor + abs2, temp + 5, 3);
+        case 5: memcpy (main1, temp,     5);
+                memcpy (main2, temp + 5, 3);
                 break;
-        case 6: memcpy (regs->mainstor + abs,  temp,  6);
-                memcpy (regs->mainstor + abs2, temp + 6, 2);
+        case 6: memcpy (main1, temp,     6);
+                memcpy (main2, temp + 6, 2);
                 break;
-        case 7: memcpy (regs->mainstor + abs,  temp,  7);
-                memcpy (regs->mainstor + abs2, temp + 7, 1);
+        case 7: memcpy (main1, temp,     7);
+                memcpy (main2, temp + 7, 1);
                 break;
         }
-        STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(abs2, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 } /* end function ARCH_DEP(vstore8) */
@@ -265,12 +284,12 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
     /* Most common case : Aligned & not crossing page boundary */
     if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8))
     {
-        register RADR abs;
-        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
-        STORE_DW(regs->mainstor + abs, value);
-        return;
+        BYTE *main;
+        main=MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+        STORE_DW(main, value);
     }
-    ARCH_DEP(vstore8_full)(value,addr,arn,regs);
+    else
+        ARCH_DEP(vstore8_full)(value,addr,arn,regs);
 }
 
 /*-------------------------------------------------------------------*/
@@ -291,13 +310,12 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
 _VSTORE_C_STATIC void ARCH_DEP(vfetchc) (void *dest, BYTE len,
                                         VADR addr, int arn, REGS *regs)
 {
-BYTE   *main;                           /* Main storage addresses    */
+BYTE   *main1, *main2;                  /* Main storage addresses    */
 int     len2;                           /* Length to copy on page    */
 
-    main = LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey)
-         + regs->mainstor;
+    main1 = MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
 
-    if ( likely((addr & 0x7FF) <= 0x7FF - len) )
+    if ( likely((addr & 0x7FF) <= 0x7FF - len))
     {
 #ifdef FEATURE_INTERVAL_TIMER
         if (unlikely(addr == 80))
@@ -307,7 +325,7 @@ int     len2;                           /* Length to copy on page    */
         }
 #endif /*FEATURE_INTERVAL_TIMER*/
 
-        MEMCPY (dest, main, len + 1);
+        MEMCPY (dest, main1, len + 1);
 
 #ifdef FEATURE_INTERVAL_TIMER
         if (unlikely(addr == 80))
@@ -316,13 +334,11 @@ int     len2;                           /* Length to copy on page    */
     }
     else
     {
-        /* Possibly crossing page or FPO boundary */
         len2 = 0x800 - (addr & 0x7FF);
-        MEMCPY (dest, main, len2);
-        main = LOGICAL_TO_ABS((addr + len2) & ADDRESS_MAXWRAP(regs),
-                               arn, regs, ACCTYPE_READ, regs->psw.pkey)
-             + regs->mainstor;
-        MEMCPY (dest + len2, main, len + 1 - len2);
+        main2 = MADDR ((addr + len2) & ADDRESS_MAXWRAP(regs),
+                       arn, regs, ACCTYPE_READ, regs->psw.pkey);
+        MEMCPY (dest, main1, len2);
+        MEMCPY (dest + len2, main2, len + 1 - len2);
     }
 
 } /* end function ARCH_DEP(vfetchc) */
@@ -342,11 +358,12 @@ int     len2;                           /* Length to copy on page    */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
 _VSTORE_C_STATIC BYTE ARCH_DEP(vfetchb) (VADR addr, int arn,
-                                                            REGS *regs)
+                                         REGS *regs)
 {
-    addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ,
-                                regs->psw.pkey);
-    return regs->mainstor[addr];
+BYTE   *main;                           /* Main storage address      */
+
+    main = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    return *main;
 } /* end function ARCH_DEP(vfetchb) */
 
 /*-------------------------------------------------------------------*/
@@ -366,20 +383,18 @@ _VSTORE_C_STATIC BYTE ARCH_DEP(vfetchb) (VADR addr, int arn,
 _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2_full) (VADR addr, int arn,
                                              REGS *regs)
 {
-RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE   *main1, *main2;                  /* Main storage addresses    */
 
-    /* Get absolute address of first byte of operand */
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    main1 = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    /* Fetch 2 bytes when operand does not cross a boundary */
-    if( (abs & 0x7FF) < 0x7FF)
+    if( (addr & 0x7FF) < 0x7FF)
     {
-        return fetch_hw (regs->mainstor + abs);
+        return fetch_hw (main1);
     }
 
-    abs2 = LOGICAL_TO_ABS ((addr + 1) & ADDRESS_MAXWRAP(regs),
-                             arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    return (regs->mainstor[abs] << 8) | regs->mainstor[abs2];
+    main2 = MADDR ((addr + 1) & ADDRESS_MAXWRAP(regs),
+                   arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    return (*main1 << 8) | *main2;
 
 } /* end function ARCH_DEP(vfetch2) */
 
@@ -387,9 +402,9 @@ _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
 {
     if(likely(!(addr & 0x01)) || ((addr & 0x7ff) !=0x7ff ))
     {
-        register RADR abs;
-        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
-        return(fetch_hw(regs->mainstor + abs));
+        BYTE *main;
+        main = MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
+        return fetch_hw(main);
     }
     return(ARCH_DEP(vfetch2_full)(addr,arn,regs));
 }
@@ -411,14 +426,12 @@ _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
 _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4_full) (VADR addr, int arn,
                                              REGS *regs)
 {
-RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE   *main1, *main2;                  /* Main storage addresses    */
 int     len;                            /* Length to end of page     */
 BYTE    temp[4];                        /* Copy destination          */
 
-    /* Get absolute address of first byte of operand */
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    main1 = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    /* Fetch 4 bytes when operand does not cross a boundary */
     if ((addr & 0x7FF) <= 0x7FC)
     {
 #ifdef FEATURE_INTERVAL_TIMER
@@ -429,21 +442,21 @@ BYTE    temp[4];                        /* Copy destination          */
             release_lock( &sysblk.todlock );
           }
 #endif /*FEATURE_INTERVAL_TIMER*/
-        return fetch_fw(regs->mainstor + abs);
+        return fetch_fw(main1);
     }
 
     len = 0x800 - (addr & 0x7FF);
-    abs2 = LOGICAL_TO_ABS ((addr + len) & ADDRESS_MAXWRAP(regs),
-                           arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    main2 = MADDR ((addr + len) & ADDRESS_MAXWRAP(regs), arn, regs,
+                   ACCTYPE_READ, regs->psw.pkey);
     switch (len) {
-    case 1: memcpy (temp,     regs->mainstor + abs,  1);
-            memcpy (temp + 1, regs->mainstor + abs2, 3);
+    case 1: memcpy (temp,     main1, 1);
+            memcpy (temp + 1, main2, 3);
             break;
-    case 2: memcpy (temp,     regs->mainstor + abs,  2);
-            memcpy (temp + 2, regs->mainstor + abs2, 2);
+    case 2: memcpy (temp,     main1, 2);
+            memcpy (temp + 2, main2, 2);
             break;
-    case 3: memcpy (temp,     regs->mainstor + abs,  3);
-            memcpy (temp + 3, regs->mainstor + abs2, 1);
+    case 3: memcpy (temp,     main1, 3);
+            memcpy (temp + 3, main2, 1);
             break;
     }
     return fetch_fw(temp);
@@ -458,9 +471,9 @@ _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 #endif
        )
     {
-        register RADR abs;
-        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
-        return fetch_fw(regs->mainstor + abs);
+        BYTE *main;
+        main=MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
+        return fetch_fw(main);
     }
     return(ARCH_DEP(vfetch4_full)(addr,arn,regs));
 }
@@ -482,12 +495,12 @@ _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8_full) (VADR addr, int arn,
                                              REGS *regs)
 {
-RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE   *main1, *main2;                  /* Main storage addresses    */
 int     len;                            /* Length to end of page     */
 BYTE    temp[8];                        /* Copy destination          */
 
     /* Get absolute address of first byte of operand */
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    main1 = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
 
     /* Fetch 4 bytes when operand does not cross a boundary */
     if ((addr & 0x7FF) <= 0x7F8)
@@ -500,33 +513,33 @@ BYTE    temp[8];                        /* Copy destination          */
             release_lock( &sysblk.todlock );
           }
 #endif /*FEATURE_INTERVAL_TIMER*/
-        return fetch_dw(regs->mainstor + abs);
+        return fetch_dw(main1);
     }
 
     len = 0x800 - (addr & 0x7FF);
-    abs2 = LOGICAL_TO_ABS ((addr + len) & ADDRESS_MAXWRAP(regs),
-                           arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    main2 = MADDR ((addr + len) & ADDRESS_MAXWRAP(regs),
+                   arn, regs, ACCTYPE_READ, regs->psw.pkey);
     switch (len) {
-    case 1: memcpy (temp,     regs->mainstor + abs,  1);
-            memcpy (temp + 1, regs->mainstor + abs2, 7);
+    case 1: memcpy (temp,     main1, 1);
+            memcpy (temp + 1, main2, 7);
             break;
-    case 2: memcpy (temp,     regs->mainstor + abs,  2);
-            memcpy (temp + 2, regs->mainstor + abs2, 6);
+    case 2: memcpy (temp,     main1, 2);
+            memcpy (temp + 2, main2, 6);
             break;
-    case 3: memcpy (temp,     regs->mainstor + abs,  3);
-            memcpy (temp + 3, regs->mainstor + abs2, 5);
+    case 3: memcpy (temp,     main1, 3);
+            memcpy (temp + 3, main2, 5);
             break;
-    case 4: memcpy (temp,     regs->mainstor + abs,  4);
-            memcpy (temp + 4, regs->mainstor + abs2, 4);
+    case 4: memcpy (temp,     main1, 4);
+            memcpy (temp + 4, main2, 4);
             break;
-    case 5: memcpy (temp,     regs->mainstor + abs,  5);
-            memcpy (temp + 5, regs->mainstor + abs2, 3);
+    case 5: memcpy (temp,     main1, 5);
+            memcpy (temp + 5, main2, 3);
             break;
-    case 6: memcpy (temp,     regs->mainstor + abs,  6);
-            memcpy (temp + 6, regs->mainstor + abs2, 2);
+    case 6: memcpy (temp,     main1, 6);
+            memcpy (temp + 6, main2, 2);
             break;
-    case 7: memcpy (temp,     regs->mainstor + abs,  7);
-            memcpy (temp + 7, regs->mainstor + abs2, 1);
+    case 7: memcpy (temp,     main1, 7);
+            memcpy (temp + 7, main2, 1);
             break;
     }
     return fetch_dw(temp);
@@ -537,9 +550,9 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 {
     if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8 ))
     {
-        register RADR abs;
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-        return fetch_dw(regs->mainstor + abs);
+        BYTE *main;
+        main = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+        return fetch_dw(main);
     }
     return ARCH_DEP(vfetch8_full)(addr,arn,regs);
 }
@@ -601,22 +614,22 @@ VADR    mask;                           /* Mask for page crossing    */
 #endif /*defined(FEATURE_PER)*/
 
     /* Get instruction address */
-    abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-    ia = abs + regs->mainstor;
+    ia = MADDR (addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
 
-    /* If page is crossed then copy instruction to the destination */
-    ilc = ILC(ia[0]);
-    mask = addr < PSA_SIZE ? 0x7FF : PAGEFRAME_BYTEMASK;
-    if ( unlikely((addr & mask) > mask + 1 - ilc) )
+    /* If boundary is crossed then copy instruction to destination */
+    if ( unlikely((addr & 0x7FF) > 0x7FA) )
     {
      // NOTE: `dest' must be at least 8 bytes
-        len = (mask + 1) - (addr & mask);
-        memcpy (dest, ia, 4);
-        addr += len;
-        addr &= ADDRESS_MAXWRAP(regs);
-        abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-        ia = abs + regs->mainstor;
-        memcpy(dest + len, ia, 4);
+        len = 0x800 - (addr & 0x7FF);
+        if (ILC(ia[0]) > len)
+        {
+            memcpy (dest, ia, 4);
+            addr = (addr + len) & ADDRESS_MAXWRAP(regs);
+            ia = MADDR(addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+            memcpy(dest + len, ia, 4);
+        }
+        else
+            len = 0;
     }
 
     /* Update the AIA */
@@ -626,11 +639,10 @@ VADR    mask;                           /* Mask for page crossing    */
 #endif /*defined(FEATURE_PER)*/
        )
     {
-        regs->VI = addr & PAGEFRAME_PAGEMASK;
-        regs->VIE = (addr | mask) - 5;
-        abs &= PAGEFRAME_PAGEMASK;
-        regs->AI = abs;
-        regs->mi = NEW_IADDR(regs, addr, abs + regs->mainstor);
+        regs->AIV = addr & PAGEFRAME_PAGEMASK;
+        regs->AIE = (addr & PAGEFRAME_PAGEMASK)
+                  | (addr < PSA_SIZE ? 0x7FA : (PAGEFRAME_BYTEMASK -  5));
+        regs->aim = NEW_AIADDR(regs, addr, ia);
     }
 
     regs->instvalid = 1;
@@ -680,22 +692,17 @@ _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
        BYTE key1, VADR addr2, int arn2, BYTE key2, int len, REGS *regs)
 {
 BYTE   *dest1, *dest2;                  /* Destination addresses     */
-RADR    abs1, abs2;                     /* Destination abs addresses */
 BYTE   *source1, *source2;              /* Source addresses          */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     len2, len3;                     /* Lengths to copy           */
 int     i;                              /* Loop counter              */
-
-    /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
-    dest1 = abs1 + regs->mainstor;
-    source1 = LOGICAL_TO_ABS (addr2, arn2, regs, ACCTYPE_READ, key2)
-            + regs->mainstor;
 
     /* Quick out if copying just 1 byte */
     if (unlikely(len == 0))
     {
+        source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
+        dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
         *dest1 = *source1;
-        STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         return;
     }
 
@@ -715,8 +722,13 @@ int     i;                              /* Loop counter              */
      *     these scenarios.  Over 95% of the calls are scenario (1a).
      */
 
+    /* Translate addresses of leftmost operand bytes */
+    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
+    sk1 = regs->dat.storkey;
+    source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
+
 #ifdef FEATURE_INTERVAL_TIMER
-    if (addr2 == 80)
+    if (unlikely(addr2 == 80))
     {
         obtain_lock (&sysblk.todlock);
         /* If a program check occurs during address translation
@@ -789,23 +801,21 @@ int     i;                              /* Loop counter              */
         {
              /* (2) - Second operand crosses a boundary */
              len2 = 0x800 - (addr2 & 0x7FF);
-             source2 = LOGICAL_TO_ABS ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
-                                    arn2, regs, ACCTYPE_READ, key2)
-                     + regs->mainstor;
-
+             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
+                              arn2, regs, ACCTYPE_READ, key2);
              for ( i = 0; i < len2; i++) *dest1++ = *source1++;
              len2 = len - len2;
              for ( i = 0; i <= len2; i++) *dest1++ = *source2++;
         }
-        STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
     {
         /* First operand crosses a boundary */
         len2 = 0x800 - (addr1 & 0x7FF);
-        abs2 = LOGICAL_TO_ABS ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
-                            arn1, regs, ACCTYPE_WRITE_SKP, key1);
-        dest2 = abs2 + regs->mainstor;
+        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
+                       arn1, regs, ACCTYPE_WRITE_SKP, key1);
+        sk2 = regs->dat.storkey;
 
         if ( (addr2 & 0x7FF) <= 0x7FF - len )
         {
@@ -818,9 +828,8 @@ int     i;                              /* Loop counter              */
         {
             /* (4) - Both operands cross a boundary */
             len3 = 0x800 - (addr2 & 0x7FF);
-            source2 = LOGICAL_TO_ABS ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
-                                    arn2, regs, ACCTYPE_READ, key2)
-                    + regs->mainstor;
+            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
+                             arn2, regs, ACCTYPE_READ, key2);
             if (len2 == len3)
             {
                 /* (4a) - Both operands cross at the same time */
@@ -847,12 +856,12 @@ int     i;                              /* Loop counter              */
                 for ( i = 0; i <= len3; i++) *dest2++ = *source2++;
             }
         }
-        STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(abs2, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
-    if (addr2 == 80)
+    if (unlikely(addr2 == 80))
     {
         regs->todlock = 0;
         release_lock (&sysblk.todlock);
@@ -885,13 +894,13 @@ _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
                                       int len, int acctype, REGS *regs)
 {
     /* Translate address of leftmost operand byte */
-    LOGICAL_TO_ABS (addr, arn, regs, acctype, regs->psw.pkey);
+    MADDR (addr, arn, regs, acctype, regs->psw.pkey);
 
     /* Translate next page if boundary crossed */
     if ( (addr & 0x7FF) > 0x7FF - len)
     {
-        LOGICAL_TO_ABS ((addr + len) & ADDRESS_MAXWRAP(regs),
-                         arn, regs, acctype, regs->psw.pkey);
+        MADDR ((addr + len) & ADDRESS_MAXWRAP(regs),
+               arn, regs, acctype, regs->psw.pkey);
     }
 } /* end function ARCH_DEP(validate_operand) */
 

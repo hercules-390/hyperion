@@ -675,7 +675,7 @@ DEF_INST(compare_and_swap_and_purge)
 {
 int     r1, r2;                         /* Values of R fields        */
 U64     n2;                             /* virtual address of op2    */
-RADR    abs2;                           /* absolute address of op2   */
+BYTE   *main2;                          /* mainstor address of op2   */
 U32     old;                            /* old value                 */
 
     RRE(inst, regs, r1, r2);
@@ -703,7 +703,7 @@ U32     old;                            /* old value                 */
 
     /* Obtain 2nd operand address from r2 */
     n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP(regs);
-    abs2 = LOGICAL_TO_ABS (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    main2 = MADDR (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     old = CSWAP32 (regs->GR_L(r1));
 
@@ -711,7 +711,7 @@ U32     old;                            /* old value                 */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r1+1)), regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r1+1)), main2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -5428,7 +5428,7 @@ DEF_INST(store_system_information)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-RADR    n;                              /* Absolute address          */
+BYTE   *m;                              /* Mainstor address          */
 int     i;
 SYSIB111  *sysib111;                    /* Basic machine conf        */
 SYSIB121  *sysib121;                    /* Basic machine CPU         */
@@ -5498,8 +5498,7 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
 
     /* Obtain absolute address of main storage block,
        check protection, and set reference and change bits */
-    n = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-                        ACCTYPE_WRITE, regs->psw.pkey);
+    m = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     switch(regs->GR_L(0) & STSI_GPR0_FC_MASK) {
 
@@ -5512,7 +5511,7 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK) {
 
             case 1:
-                sysib111 = (SYSIB111*)(regs->mainstor + n);
+                sysib111 = (SYSIB111*)(m);
                 memset(sysib111, 0x00, sizeof(SYSIB111));
                 memcpy(sysib111->manufact,manufact,sizeof(manufact));
                 for(i = 0; i < 4; i++)
@@ -5538,7 +5537,7 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
             switch(regs->GR_L(1) & STSI_GPR1_SEL2_MASK) {
 
             case 1:
-                sysib121 = (SYSIB121*)(regs->mainstor + n);
+                sysib121 = (SYSIB121*)(m);
                 memset(sysib121, 0x00, sizeof(SYSIB121));
                 memset(sysib121->seqc,0xF0,sizeof(sysib121->seqc));
                 for(i = 0; i < 6; i++)
@@ -5550,7 +5549,7 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 break;
 
             case 2:
-                sysib122 = (SYSIB122*)(regs->mainstor + n);
+                sysib122 = (SYSIB122*)(m);
                 memset(sysib122, 0x00, sizeof(SYSIB122));
                 STORE_FW(sysib122->cap, STSI_CAPACITY);
                 STORE_HW(sysib122->totcpu, MAX_CPU);

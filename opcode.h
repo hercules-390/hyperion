@@ -267,19 +267,22 @@ do { \
 
 /* Instruction fetching */
 
-#define IADDR(_regs, _addr) \
- (sizeof(BYTE *) == sizeof(unsigned int)) \
- ?  (BYTE *)((unsigned int)(_regs)->mi ^ (unsigned int)(_addr)) \
- :  ((_regs)->mi + ((_addr) & PAGEFRAME_BYTEMASK))
+#define AIADDR(_regs, _addr) \
+ ( (sizeof(BYTE *) == sizeof(unsigned int)) \
+   ?  (BYTE *)((unsigned int)(_regs)->aim ^ (unsigned int)(_addr)) \
+   :  ((_regs)->aim + ((_addr) & PAGEFRAME_BYTEMASK)) \
+ )
 
-#define NEW_IADDR(_regs, _addr, _ia) \
- (sizeof(BYTE *) == sizeof(unsigned int)) \
- ?  (BYTE *)((unsigned int)(_ia) ^ (unsigned int)((_addr) & PAGEFRAME_PAGEMASK)) \
- :  (_ia)
+#define NEW_AIADDR(_regs, _addr, _ia) \
+ ( (sizeof(BYTE *) == sizeof(unsigned int)) \
+   ?  (BYTE *)(((unsigned int)(_ia) - (unsigned int)((_addr) & PAGEFRAME_BYTEMASK)) \
+              ^ (unsigned int)((_addr) & PAGEFRAME_PAGEMASK)) \
+   :  (_ia) - (unsigned int)((_addr) & PAGEFRAME_BYTEMASK) \
+ )
 
 #define INSTRUCTION_FETCH(_dest, _addr, _regs, _valid) \
-  likely((_addr) <= (_regs)->VIE && (_regs)->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
-  ? IADDR((_regs), (_addr)) \
+  likely((_addr) <= (_regs)->AIE && (_regs)->AIV == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
+  ? AIADDR((_regs), (_addr)) \
   : ((_regs)->instvalid = (_valid), \
      ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)) \
     )
@@ -520,31 +523,48 @@ do { \
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
 #define INVALIDATE_AIA(_regs) \
-    (_regs)->VI = 1
+    (_regs)->AIV = 1
 
-#define INVALIDATE_AIA_ABS(_addr, _regs) \
+#define INVALIDATE_AIA_ABS(_aaddr, _regs) \
 do { \
-  if (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->AI) \
-    (_regs)->VI = 1; \
+  if ((_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK) == AIADDR((_regs), (_regs)->AIV)) \
+    (_regs)->AIV = 1; \
 } while (0)
 
-#define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
+#define AEAIX(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
 #define MAXAEA 256
 
-#define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
- (     (_arn) >= 0 \
-   &&  (_acctype) <= (_regs)->aeacc[AEIND(_addr)] \
-   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
-   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
-   &&  ( (_regs)->aearn[AEIND(_addr)] == 0 \
+#define AEADDR(_regs, _addr) \
+ ( (sizeof(unsigned int) == sizeof(BYTE*)) \
+   ? (BYTE *)((unsigned int)(_regs)->aem[AEAIX(_addr)] ^ (unsigned int)(_addr)) \
+   : ((_regs)->aem[AEAIX(_addr)] + ((_addr) & PAGEFRAME_BYTEMASK)) \
+ )
+
+#define NEW_AEADDR(_regs, _addr, _aaddr) \
+ ( (sizeof(unsigned int) == sizeof(BYTE*)) \
+   ? (BYTE *)((unsigned int)((_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK)) \
+            ^ (unsigned int)((_addr) & PAGEFRAME_PAGEMASK)) \
+   : (_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK) \
+ )
+
+#define MADDR(_addr, _arn, _regs, _acctype, _akey) \
+ (     ((_acctype) <= ACCTYPE_READ || ((_acctype) <= ACCTYPE_WRITE && (_regs)->aeacc[AEAIX(_addr)])) \
+   &&  ((_arn) >= 0) \
+   &&  ((_regs)->aeid[AEAIX(_addr)] == (_regs)->aeID) \
+   &&  (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->AEV(AEAIX(_addr))) \
+   &&  ((_akey) == 0 || (_regs)->aekey[AEAIX(_addr)] == (_akey)) \
+   &&  ( (_regs)->aearn[AEAIX(_addr)] == 0 \
        && ( !ACCESS_REGISTER_MODE(&(_regs)->psw) || (_arn) == 0 || (_regs)->AR(_arn) == 0 ) \
-     ||  ( ACCESS_REGISTER_MODE(&(_regs)->psw) && (_regs)->aearn[AEIND(_addr)] == (_arn) ) \
+     ||  ( ACCESS_REGISTER_MODE(&(_regs)->psw) && (_regs)->aearn[AEAIX(_addr)] == (_arn) ) \
        ) \
    ? ( \
-       (_regs)->ME(AEIND(_addr)) ^ (_addr) \
+       ((_acctype) == ACCTYPE_WRITE_SKP) \
+        ? (_regs)->dat.storkey = (_regs)->aesk[AEAIX(_addr)] \
+        : (0), \
+       AEADDR((_regs), (_addr)) \
      ) \
    : ( \
-       ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
+       ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
      ) \
  )
 
@@ -552,9 +572,9 @@ do { \
 do { \
     int i; \
     if ((_regs)->aearvalid) \
-      for(i = 0; i < MAXAEA; i++) \
+      for (i = 0; i < MAXAEA; i++) \
         if ((_regs)->aearn[i] == (_arn)) \
-          (_regs)->VE(i) = 0; \
+          (_regs)->aeid[i] = 0; \
 } while(0)
 
 #define INVALIDATE_AEA_ARALL(_regs) \
@@ -563,28 +583,28 @@ do { \
     if ((_regs)->aearvalid) \
     { \
       (_regs)->aearvalid = 0; \
-      for(i = 0; i < MAXAEA; i++) \
+      for (i = 0; i < MAXAEA; i++) \
         if ((_regs)->aearn[i] != 0) \
-          (_regs)->VE(i) = 0; \
+          (_regs)->aeid[i] = 0; \
     } \
 } while(0)
 
-#define INVALIDATE_AEA_ABS(_addr, _regs) \
+#define INVALIDATE_AEA_ABS(_aaddr, _regs) \
 do { \
     int i; \
-    (_addr) &= PAGEFRAME_PAGEMASK; \
-    for(i = 0; i < MAXAEA; i++) \
-      if ((_addr) == (_regs)->AE(i)) \
-        (_regs)->VE(i) = 0; \
+    BYTE *main = (_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK); \
+    for (i = 0; i < MAXAEA; i++) \
+      if (main == AEADDR( (_regs), (_regs)->AEV(i) ) ) \
+        (_regs)->aeid[i] = 0; \
 } while(0)
 
 #define INVALIDATE_AEA_ALL(_regs) \
 do { \
     (_regs)->aearvalid = 0; \
-    if (((++(_regs)->aeID) & AEA_BYTEMASK) == 0) \
+    if (++(_regs)->aeID == 0) \
     { \
         (_regs)->aeID = 1; \
-        memset((_regs)->ve, 0, 256*sizeof(DW)); \
+        memset((_regs)->aeid, 0, MAXAEA*sizeof(unsigned int)); \
     } \
 } while (0)
 
@@ -598,15 +618,15 @@ do { \
  * be tighter than what is provided here.
  */
 
-#define STORKEY_INVALIDATE(n, regs) \
+#define STORKEY_INVALIDATE(_n, _regs) \
  do { \
-   INVALIDATE_AIA_ABS(n, regs); \
-   INVALIDATE_AEA_ABS(n, regs); \
+   INVALIDATE_AIA_ABS((_n), (_regs)); \
+   INVALIDATE_AEA_ABS((_n), (_regs)); \
    if (sysblk.cpus > 1) { \
      int i; \
      obtain_lock (&sysblk.intlock); \
      for (i = 0; i < HI_CPU; i++) { \
-       if ( !IS_CPU_ONLINE(i) || sysblk.regs[i]->cpuad == regs->cpuad \
+       if ( !IS_CPU_ONLINE(i) || sysblk.regs[i]->cpuad == (_regs)->cpuad \
         ||  test_bit(4, i, &sysblk.waiting_mask) ) \
          continue; \
        ON_IC_INTERRUPT( sysblk.regs[i] ); \
@@ -1115,8 +1135,11 @@ do { \
 #define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype) \
     ARCH_DEP(translate_addr)((_addr), (_arn), (_regs), (_acctype))
 
-#define SIE_LOGICAL_TO_ABS(_parms...) \
-    ARCH_DEP(logical_to_abs)(_parms)
+#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...) \
+  ( \
+    ARCH_DEP(logical_to_main)(_addr, _arn, _regs, _parms), \
+    (_regs)->dat.aaddr \
+  )
 
 #elif __GEN_ARCH == 370 && defined(_FEATURE_SIE)
 
@@ -1124,7 +1147,10 @@ do { \
     s390_translate_addr((_addr), (_arn), (_regs), (_acctype))
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)   \
-    s390_logical_to_abs((_addr), (_arn), (_regs), _parms)
+  ( \
+    s390_logical_to_main((_addr), (_arn), (_regs), _parms), \
+    (_regs)->dat.aaddr \
+  )
 
 #else /*__GEN_ARCH == 390 && defined(_FEATURE_ZSIE)*/
 
@@ -1134,9 +1160,12 @@ do { \
     z900_translate_addr((_addr), (_arn), (_regs), (_acctype)) )
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)   \
-    ( ((_regs)->arch_mode == ARCH_390) ?            \
-    s390_logical_to_abs((_addr), (_arn), (_regs), _parms) : \
-    z900_logical_to_abs((_addr), (_arn), (_regs), _parms) )
+  ( \
+    ((_regs)->arch_mode == ARCH_390) \
+    ? s390_logical_to_main((_addr), (_arn), (_regs), _parms) \
+    : z900_logical_to_main((_addr), (_arn), (_regs), _parms), \
+    (_regs)->dat.aaddr \
+  )
 
 #endif
 

@@ -307,10 +307,10 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
 /*      if a translation exception occurs), the translation is       */
 /*      performed using a temporary copy of the CPU registers.       */
 /*-------------------------------------------------------------------*/
-static U16 ARCH_DEP(virt_to_abs) (RADR *aaptr, int *siptr,
+static U16 ARCH_DEP(virt_to_abs) (RADR *raptr, int *siptr,
                         VADR vaddr, int arn, REGS *regs, int acctype)
 {
-RADR    aaddr;
+RADR    raddr;
 int     icode;
 REGS    gregs, hgregs;
 
@@ -329,39 +329,17 @@ REGS    gregs, hgregs;
 
     hgregs.ghostregs = 1;
         
-    if(!(icode = setjmp(gregs.progjmp)))
+    if( !(icode = setjmp(gregs.progjmp)) )
     {
-//      hgregs.progjmp = gregs.progjmp;
         memcpy(&hgregs.progjmp,&gregs.progjmp,sizeof(jmp_buf));
-
-        /* Convert logical address to real address */
-        if (REAL_MODE(&gregs.psw) || arn == USE_REAL_ADDR)
-            gregs.dat.raddr = vaddr;
-        else {
-            /* Return condition code 3 if translation exception */
-            if (ARCH_DEP(translate_addr) (vaddr, arn, &gregs, acctype))
-                *siptr = gregs.dat.stid;
-                return gregs.dat.xcode;
-        }
-
-        /* Convert real address to absolute address */
-        aaddr = APPLY_PREFIXING (gregs.dat.raddr, gregs.PX);
-
-        /* Program check if absolute address is outside main storage */
-        if (aaddr > gregs.mainlim)
-            return PGM_ADDRESSING_EXCEPTION;
-
-        SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, &gregs);
-    
-        /* Program check if absolute address is outside main storage */
-        if (aaddr > gregs.mainlim)
-            return PGM_ADDRESSING_EXCEPTION;
-
+        ARCH_DEP(logical_to_main) (vaddr, arn, &gregs, acctype, 0);
+        raddr = SIE_MODE(&gregs) ? hgregs.dat.raddr : gregs.dat.raddr;
     }
     else
         return icode;
 
-    *aaptr = aaddr;
+    *siptr = gregs.dat.stid;
+    *raptr = raddr;
 
     return 0;
 

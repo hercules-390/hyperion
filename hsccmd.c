@@ -2915,15 +2915,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("cpu %d aearvalid %d aeID 0x%5.5x\n",sysblk.pcpu,regs->aearvalid,regs->aeID);
-    logmsg (" ix               ve key ar a               ae\n");
+    logmsg ("cpu %d aearvalid %d aeID %d mainstor %p\n",
+            sysblk.pcpu,regs->aearvalid,regs->aeID,regs->mainstor);
+    logmsg (" ix               ve key ar a         me       id\n");
     for (i = 0; i < MAXAEA; i++)
     {
-        logmsg("%s%2.2x %16.16llx  %2.2x %2d %d %16.16llx\n",
-         (regs->VE_G(i) & AEA_BYTEMASK) == regs->aeID ? "*" : " ", i,
-         regs->VE_G(i),regs->aekey[i], regs->aearn[i], regs->aeacc[i],
-         regs->AE_G(i));
-        if ((regs->VE_G(i) & AEA_BYTEMASK) == regs->aeID) matches++;
+        logmsg("%s%2.2x %16.16llx  %2.2x %2d %d %p %8d\n",
+         regs->aeid[i] == regs->aeID ? "*" : " ", i,
+         regs->AEV_G(i),regs->aekey[i], regs->aearn[i], regs->aeacc[i],
+         regs->aem[i],regs->aeid[i]);
+        if (regs->aeid[i] == regs->aeID) matches++;
     }
     logmsg("%d aeID matches\n", matches);
 

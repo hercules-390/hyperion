@@ -1746,7 +1746,7 @@ static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype,  REGS *regs)
 /*      or translation exception then a program check is generated   */
 /*      and the function does not return.                            */
 /*-------------------------------------------------------------------*/
-_LOGICAL_C_STATIC RADR ARCH_DEP(logical_to_abs) (VADR addr, int arn,
+_LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
                                     REGS *regs, int acctype, BYTE akey)
 {
 RADR    aaddr;                          /* Absolute address          */
@@ -1777,10 +1777,10 @@ RADR    aaddr;                          /* Absolute address          */
         goto vabs_prot_excp;
 
     /* Convert real address to absolute address */
-    aaddr = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
+    regs->dat.aaddr = aaddr = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
     /* Program check if absolute address is outside main storage */
-    if (aaddr > regs->mainlim)
+    if (regs->dat.aaddr > regs->mainlim)
         goto vabs_addr_excp;
 
 #if defined(_FEATURE_SIE)
@@ -1788,18 +1788,19 @@ RADR    aaddr;                          /* Absolute address          */
     {
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-        if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-            (arn > 0 && AR_BIT(&regs->psw) && regs->siebk->mx & SIE_MX_XC)
+        if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
+            (arn > 0 && AR_BIT(&regs->psw) && (regs->siebk->mx & SIE_MX_XC))
             ? arn : USE_PRIMARY_SPACE,
             regs->hostregs, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-        if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
+        if (SIE_TRANSLATE_ADDR (regs->sie_mso + regs->dat.aaddr,
                       USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
 
         /* Convert host real address to host absolute address */
-        aaddr = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+        regs->hostregs->dat.aaddr = aaddr =
+              APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
     }
 
     /* Do not apply host key access when SIE fetches/stores data */
@@ -1808,24 +1809,24 @@ RADR    aaddr;                          /* Absolute address          */
 #endif /*defined(_FEATURE_SIE)*/
 
     /* Check protection and set reference and change bits */
-    switch (acctype) {
-
-    case ACCTYPE_READ:
-    case ACCTYPE_INSTFETCH:
+    regs->dat.storkey = &(STORAGE_KEY(aaddr, regs));
+    if (acctype == ACCTYPE_INSTFETCH || acctype == ACCTYPE_READ)
+    {
         /* Program check if fetch protected location */
-        if (ARCH_DEP(is_fetch_protected) (addr, STORAGE_KEY(aaddr, regs), akey, regs))
+        if (ARCH_DEP(is_fetch_protected) (addr, *regs->dat.storkey, akey, regs))
         {
             if (SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
             goto vabs_prot_excp;
         }
 
         /* Set the reference bit in the storage key */
-        STORAGE_KEY(aaddr, regs) |= STORKEY_REF;
-        break;
-
-    case ACCTYPE_WRITE:
+        *regs->dat.storkey |= STORKEY_REF;
+    } /* acctype == ACCTYPE_INSTFETCH || acctype == ACCTYPE_READ */
+    else
+    if (acctype == ACCTYPE_WRITE_SKP || acctype == ACCTYPE_WRITE)
+    {
         /* Program check if store protected location */
-        if (ARCH_DEP(is_store_protected) (addr, STORAGE_KEY(aaddr, regs), akey, regs))
+        if (ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs))
         {
             if (SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
             goto vabs_prot_excp;
@@ -1834,27 +1835,8 @@ RADR    aaddr;                          /* Absolute address          */
             goto vabs_prot_excp;
 
         /* Set the reference and change bits in the storage key */
-        STORAGE_KEY(aaddr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
-#if defined(FEATURE_PER2)
-          && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (arn, acctype, regs) )
-#endif /*defined(FEATURE_PER2)*/
-          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
-            ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
-        break;
-
-    case ACCTYPE_WRITE_SKP:
-        /* Program check if store protected location */
-        if (ARCH_DEP(is_store_protected) (addr, STORAGE_KEY(aaddr, regs), akey, regs))
-        {
-            if (SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
-            goto vabs_prot_excp;
-        }
-        if(SIE_MODE(regs) && regs->hostregs->dat.protect)
-            goto vabs_prot_excp;
+        if (acctype == ACCTYPE_WRITE)
+            *regs->dat.storkey |= (STORKEY_REF | STORKEY_CHANGE);
 
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
@@ -1865,37 +1847,35 @@ RADR    aaddr;                          /* Absolute address          */
           && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
-
-        break;
-
-    } /* end switch */
+    } /* acctype == ACCTYPE_WRITE_SKP || acctype == ACCTYPE_WRITE */
 
     /* Update the aea tables */
-    if ( arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs)
-     &&  ( addr >= PSA_SIZE || regs->dat.private || akey == 0 ) )
+    if ( arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs) )
     {
+        int i;
+
         if ((addr < PSA_SIZE && !regs->dat.private) || acctype < ACCTYPE_READ)
             acctype = ACCTYPE_READ;
-        else if (acctype > ACCTYPE_READ)
-            acctype = ACCTYPE_WRITE;
 
 #if defined(FEATURE_ACCESS_REGISTERS)
-        if ( !ACCESS_REGISTER_MODE(&regs->psw)
-         ||  (arn > 0 && regs->AR(arn) == 0) )
+        if ( ACCESS_REGISTER_MODE(&regs->psw) && arn > 0 && regs->AR(arn) != 0 )
+            regs->aearvalid = 1;
+        else
 #endif
             arn = 0;
 
-        regs->AE(AEIND(addr)) = aaddr & PAGEFRAME_PAGEMASK;
-        regs->ME(AEIND(addr)) = (aaddr ^ addr) & PAGEFRAME_PAGEMASK;
-        regs->VE(AEIND(addr)) = (addr & AEA_PAGEMASK) | regs->aeID;
-        regs->aekey[AEIND(addr)] = akey;
-        regs->aeacc[AEIND(addr)] = acctype;
-        regs->aearn[AEIND(addr)] = arn;
-        if (arn) regs->aearvalid = 1;
+        i = AEAIX(addr);
+        regs->aearn[i] = arn;
+        regs->aem[i]   = NEW_AEADDR (regs, addr, aaddr);
+        regs->AEV(i)   = (addr & PAGEFRAME_PAGEMASK);
+        regs->aekey[i] = akey;
+        regs->aeacc[i] = (acctype > ACCTYPE_READ);
+        regs->aeid[i]  = regs->aeID;
+        regs->aesk[i]  = regs->dat.storkey;
     }
 
-    /* Return the absolute address */
-    return aaddr;
+    /* Return mainstor address */
+    return regs->mainstor + aaddr;
 
 vabs_addr_excp:
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
@@ -1931,7 +1911,7 @@ vabs_prot_excp:
 vabs_prog_check:
     ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
 
-    return -1; /* prevent warning from compiler */
+    return NULL; /* prevent warning from compiler */
 } /* end function logical_to_abs */
 
 #endif /*!defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C) */

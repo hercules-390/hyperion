@@ -94,12 +94,10 @@
 #undef F_AREG
 #undef STORE_W
 #undef FETCH_W
-#undef AI
-#undef VI
+#undef AIV
+#undef AIE
 #undef VIE
-#undef AE
-#undef VE
-#undef ME
+#undef AEV
 #undef SIEBK
 #undef ZPB
 #undef TLB_STD
@@ -192,12 +190,9 @@ s370_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
-#define AI  AI_L
-#define VI  VI_L
-#define VIE VIE_L
-#define AE(_r)  AE_L(_r)
-#define VE(_r)  VE_L(_r)
-#define ME(_r)  ME_L(_r)
+#define AIV     AIV_L
+#define AIE     AIE_L
+#define AEV(_r) AEV_L(_r)
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
 #define TLB_STD   TLB_STD_L
@@ -293,12 +288,9 @@ s390_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
-#define AI  AI_L
-#define VI  VI_L
-#define VIE VIE_L
-#define AE(_r)  AE_L(_r)
-#define VE(_r)  VE_L(_r)
-#define ME(_r)  ME_L(_r)
+#define AIV     AIV_L
+#define AIE     AIE_L
+#define AEV(_r) AEV_L(_r)
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
 #define TLB_STD   TLB_STD_L
@@ -393,12 +385,9 @@ z900_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_DW
 #define FETCH_W FETCH_DW
-#define AI  AI_G
-#define VI  VI_G
-#define VIE VIE_G
-#define AE(_r)  AE_G(_r)
-#define VE(_r)  VE_G(_r)
-#define ME(_r)  ME_G(_r)
+#define AIV     AIV_G
+#define AIE     AIE_G
+#define AEV(_r) AEV_G(_r)
 #define SIEBK                   SIE2BK
 #define ZPB                     ZPB2
 #define TLB_STD   TLB_STD_G

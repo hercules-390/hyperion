@@ -285,7 +285,7 @@ U32     ia;                             /* ia for trace              */
 #endif /*!defined(FEATURE_ESAME)*/
 BYTE    amode;                          /* amode for trace           */
 PSW     save_psw;                       /* Saved copy of current PSW */
-RADR    abs;                            /* Absolute address of parm  */
+BYTE   *main;                           /* Mainstor address of parm  */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
@@ -296,9 +296,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     pl_addr = !regs->execflag ? regs->psw.IA : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
-    abs = LOGICAL_TO_ABS (pl_addr, 0, regs,
-            ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(flags, regs->mainstor + abs);
+    main = MADDR (pl_addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(flags, main);
 
 #if defined(FEATURE_ESAME)
     /* Bits 0-12 must be zero */
@@ -310,27 +309,23 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the offset to the new psw */
-    abs = LOGICAL_TO_ABS (pl_addr + 2, 0, regs,
-            ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(psw_offset, regs->mainstor + abs);
+    main = MADDR (pl_addr + 2, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(psw_offset, main);
 
     /* Fetch the offset to the new ar */
-    abs = LOGICAL_TO_ABS (pl_addr + 4, 0, regs,
-            ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(ar_offset, regs->mainstor + abs);
+    main = MADDR (pl_addr + 4, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(ar_offset, main);
 
     /* Fetch the offset to the new gr */
-    abs = LOGICAL_TO_ABS (pl_addr + 6, 0, regs,
-            ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(gr_offset, regs->mainstor + abs);
+    main = MADDR (pl_addr + 6, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(gr_offset, main);
 
 #if defined(FEATURE_ESAME)
     /* Fetch the offset to the new disjoint gr_h */
     if((flags & 0x0003) == 0x0003)
     {
-        abs = LOGICAL_TO_ABS (pl_addr + 8, 0, regs,
-            ACCTYPE_INSTFETCH, regs->psw.pkey);
-        FETCH_HW(grd_offset, regs->mainstor + abs);
+        main = MADDR (pl_addr + 8, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+        FETCH_HW(grd_offset, main);
     }
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -2151,7 +2146,7 @@ DEF_INST(compare_and_swap_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-RADR    abs2;                           /* absolute address          */
+BYTE   *main2;                          /* mainstor address          */
 U64     old;                            /* old value                 */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
@@ -2162,8 +2157,7 @@ U64     old;                            /* old value                 */
     PERFORM_SERIALIZATION (regs);
 
     /* Get operand absolute address */
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-                           ACCTYPE_WRITE, regs->psw.pkey);
+    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get old value */
     old = CSWAP64(regs->GR_G(r1));
@@ -2172,7 +2166,7 @@ U64     old;                            /* old value                 */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r3)), regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r3)), main2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -2210,7 +2204,7 @@ DEF_INST(compare_double_and_swap_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-RADR    abs2;                           /* absolute address          */
+BYTE   *main2;                          /* mainstor address          */
 U64     old1, old2;                     /* old value                 */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
@@ -2222,9 +2216,8 @@ U64     old1, old2;                     /* old value                 */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
-    /* Get operand absolute address */
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-                           ACCTYPE_WRITE, regs->psw.pkey);
+    /* Get operand mainstor address */
+    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get old values */
     old1 = CSWAP64(regs->GR_G(r1));
@@ -2236,7 +2229,7 @@ U64     old1, old2;                     /* old value                 */
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg16 (&old1, &old2,
                               CSWAP64(regs->GR_G(r3)), CSWAP64(regs->GR_G(r3+1)),
-                              regs->mainstor + abs2);
+                              main2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -5627,7 +5620,7 @@ DEF_INST(compare_and_swap_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-RADR    abs2;                           /* absolute address          */
+BYTE   *main2;                          /* mainstor address          */
 U32     old;                            /* old value                 */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
@@ -5637,9 +5630,8 @@ U32     old;                            /* old value                 */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
-    /* Get operand absolute address */
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-                           ACCTYPE_WRITE, regs->psw.pkey);
+    /* Get operand mainstor address */
+    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get old value */
     old = CSWAP32(regs->GR_L(r1));
@@ -5648,7 +5640,7 @@ U32     old;                            /* old value                 */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -5686,7 +5678,7 @@ DEF_INST(compare_double_and_swap_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-RADR    abs2;                           /* absolute address          */
+BYTE   *main2;                          /* mainstor address          */
 U64     old, new;                       /* old, new values           */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
@@ -5698,9 +5690,8 @@ U64     old, new;                       /* old, new values           */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
-    /* Get operand absolute address */
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-                           ACCTYPE_WRITE, regs->psw.pkey);
+    /* Get operand mainstor address */
+    main2 = MADDR (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get old, new values */
     old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
@@ -5710,7 +5701,7 @@ U64     old, new;                       /* old, new values           */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&old, new, regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg8 (&old, new, main2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);

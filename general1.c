@@ -244,80 +244,125 @@ BYTE    rbyte;                          /* Result byte               */
 /*-------------------------------------------------------------------*/
 DEF_INST(and_character)
 {
-BYTE    l;                              /* Length byte               */
+int     len, len2, len3;                /* Lengths to copy           */
 int     b1, b2;                         /* Base register numbers     */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
-RADR    abs1, abs2;                     /* Absolute addresses        */
-VADR    npv1, npv2;                     /* Next page virtual addrs   */
-RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
+VADR    addr1, addr2;                   /* Virtual addresses         */
+BYTE   *dest1, *dest2;                  /* Destination addresses     */
+BYTE   *source1, *source2;              /* Source addresses          */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     i;                              /* Loop counter              */
 int     cc = 0;                         /* Condition code            */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L(inst, regs, len, b1, addr1, b2, addr2);
 
-    /* Obtain current access key from PSW */
-    akey = regs->psw.pkey;
+    /* Quick out for 1 byte (no boundary crossed) */
+    if (unlikely(len == 0))
+    {
+        source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        *dest1 &= *source1;
+        regs->psw.cc = (*dest1 != 0);
+        return;
+    }
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
+    dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    sk1 = regs->dat.storkey;
+    source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    /* Calculate page addresses of rightmost operand bytes */
-    npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= ~0x7FF;
-    npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= ~0x7FF;
-
-    /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & ~0x7FF))
-        npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
-
-    /* all operands and page crossers valid, now alter ref & chg bits */
-    STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-    if (npa1)
-        STORAGE_KEY(npa1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-
-    /* Process operands from left to right */
-    for ( i = 0; i <= l; i++ )
+    if ( (addr1 & 0x7FF) <= 0x7FF - len )
     {
-        /* Fetch a byte from each operand */
-        byte1 = regs->mainstor[abs1];
-        byte2 = regs->mainstor[abs2];
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (1) - No boundaries are crossed */
+            for (i = 0; i <= len; i++)
+                if (*dest1++ &= *source1++) cc = 1;
 
-        /* Copy low digit of operand 2 to operand 1 */
-        byte1 &=  byte2;
+        }
+        else
+        {
+             /* (2) - Second operand crosses a boundary */
+             len2 = 0x800 - (addr2 & 0x7FF);
+             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
+                              b2, regs, ACCTYPE_READ, regs->psw.pkey);
+             for ( i = 0; i < len2; i++)
+                 if (*dest1++ &= *source1++) cc = 1;
+             len2 = len - len2;
+             for ( i = 0; i <= len2; i++)
+                 if (*dest1++ &= *source2++) cc = 1;
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len2 = 0x800 - (addr1 & 0x7FF);
+        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
+                       b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
 
-        /* Set condition code 1 if result is non-zero */
-        if (byte1 != 0) cc = 1;
-
-        /* Store the result in the destination operand */
-        regs->mainstor[abs1] = byte1;
-
-        /* Increment first operand address */
-        effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
-        abs1++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr1 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs1 = npa1;
-
-        /* Increment second operand address */
-        effective_addr2++;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-        abs2++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr2 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs2 = npa2;
-
-    } /* end for(i) */
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+             /* (3) - First operand crosses a boundary */
+             for ( i = 0; i < len2; i++)
+                 if (*dest1++ &= *source1++) cc = 1;
+             len2 = len - len2;
+             for ( i = 0; i <= len2; i++)
+                 if (*dest2++ &= *source1++) cc = 1;
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len3 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
+                             b2, regs, ACCTYPE_READ, regs->psw.pkey);
+            if (len2 == len3)
+            {
+                /* (4a) - Both operands cross at the same time */
+                for ( i = 0; i < len2; i++)
+                    if (*dest1++ &= *source1++) cc = 1;
+                len2 = len - len2;
+                for ( i = 0; i <= len2; i++)
+                    if (*dest2++ &= *source2++) cc = 1;
+            }
+            else if (len2 < len3)
+            {
+                /* (4b) - First operand crosses first */
+                for ( i = 0; i < len2; i++)
+                    if (*dest1++ &= *source1++) cc = 1;
+                len2 = len3 - len2;
+                for ( i = 0; i < len2; i++)
+                    if (*dest2++ &= *source1++) cc = 1;
+                len2 = len - len3;
+                for ( i = 0; i <= len2; i++)
+                    if (*dest2++ &= *source2++) cc = 1;
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                for ( i = 0; i < len3; i++)
+                    if (*dest1++ &= *source1++) cc = 1;
+                len3 = len2 - len3;
+                for ( i = 0; i < len3; i++)
+                    if (*dest1++ &= *source2++) cc = 1;
+                len3 = len - len2;
+                for ( i = 0; i <= len3; i++)
+                    if (*dest2++ &= *source2++) cc = 1;
+            }
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
 
     regs->psw.cc = cc;
 
@@ -1282,20 +1327,19 @@ DEF_INST(compare_and_swap)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
-VADR    effective_addr2;                /* effective address         */
-RADR    abs2;                           /* absolute address          */
+VADR    addr2;                          /* effective address         */
+BYTE   *main2;                          /* mainstor address          */
 U32     old;                            /* old value                 */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, addr2);
 
-    FW_CHECK(effective_addr2, regs);
+    FW_CHECK(addr2, regs);
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
-    /* Get operand absolute address */
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-                           ACCTYPE_WRITE, regs->psw.pkey);
+    /* Get mainstor address */
+    main2 = MADDR (addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     old = CSWAP32(regs->GR_L(r1));
 
@@ -1303,7 +1347,7 @@ U32     old;                            /* old value                 */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), main2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -1336,22 +1380,21 @@ DEF_INST(compare_double_and_swap)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
-VADR    effective_addr2;                /* effective address         */
-RADR    abs2;                           /* absolute address          */
+VADR    addr2;                          /* effective address         */
+BYTE   *main2;                          /* mainstor address          */
 U64     old, new;                       /* old, new values           */
 
-    RS(inst, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
-    DW_CHECK(effective_addr2, regs);
+    DW_CHECK(addr2, regs);
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
     /* Get operand absolute address */
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-                           ACCTYPE_WRITE, regs->psw.pkey);
+    main2 = MADDR (addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Get old, new values */
     old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
@@ -1361,7 +1404,7 @@ U64     old, new;                       /* old, new values           */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&old, new, regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg8 (&old, new, main2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -1526,10 +1569,9 @@ VADR    ea1, ea2;                       /* Effective addresses       */
 	//  on their boundaries some configure & run time tests need to be
 	//  added.
 
-        main1 = LOGICAL_TO_ABS (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey)
-              + regs->mainstor;
-        main2 = LOGICAL_TO_ABS (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey)
-              + regs->mainstor;
+        main1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
+        main2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
 	switch(l)
 	{
 		case 0:
@@ -2579,114 +2621,136 @@ BYTE    rbyte;                          /* Result byte               */
 /*-------------------------------------------------------------------*/
 DEF_INST(exclusive_or_character)
 {
-BYTE    l;                              /* Length byte               */
+int     len, len2, len3;                /* Lengths to copy           */
 int     b1, b2;                         /* Base register numbers     */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
-RADR    abs1, abs2;                     /* Absolute addresses        */
-VADR    npv1, npv2;                     /* Next page virtual addrs   */
-RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
+VADR    addr1, addr2;                   /* Virtual addresses         */
+BYTE   *dest1, *dest2;                  /* Destination addresses     */
+BYTE   *source1, *source2;              /* Source addresses          */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     i;                              /* Loop counter              */
 int     cc = 0;                         /* Condition code            */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L(inst, regs, len, b1, addr1, b2, addr2);
 
-    /* Obtain current access key from PSW */
-    akey = regs->psw.pkey;
-
-    /* Performance assist if source and destination are the same;
-       this means we set the source/destination to zero */
-    if (effective_addr1 == effective_addr2 && b1 == b2)
+    /* Quick out for 1 byte (no boundary crossed) */
+    if (unlikely(len == 0))
     {
-        abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-
-        /* Calculate page addresses of rightmost operand bytes */
-        npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-        npv1 &= ~0x7FF;
-
-        /* Translate next page addresses if page boundary crossed */
-        if (npv1 != (effective_addr1 & ~0x7FF))
-            npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-
-        /* all operands and page crossers valid, now alter ref & chg bits */
-        STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        if (!npa1)
-        {
-            memset (regs->mainstor + abs1, 0, l + 1);
-        }
-        else
-        {
-            int l1;
-            STORAGE_KEY(npa1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-            l1 = 0x800 - (effective_addr1 & 0x7FF);
-            memset (regs->mainstor + abs1, 0, l1);
-            memset (regs->mainstor + npa1, 0 , l + 1 - l1);
-        }
-        regs->psw.cc = 0;
+        source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        if (*dest1 ^= *source1) cc = 1;
+        regs->psw.cc = cc;
         return;
     }
 
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     *     (a) dest and source are the same, set dest to zeroes
+     *     (b) dest and source are not the same
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
+
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
+    dest1 = MADDR (addr1, b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    sk1 = regs->dat.storkey;
+    source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    /* Calculate page addresses of rightmost operand bytes */
-    npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= ~0x7FF;
-    npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= ~0x7FF;
-
-    /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & ~0x7FF))
-        npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
-
-    /* all operands and page crossers valid, now alter ref & chg bits */
-    STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-    if (npa1)
-        STORAGE_KEY(npa1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-
-    /* Process operands from left to right */
-    for ( i = 0; i <= l; i++ )
+    if ( (addr1 & 0x7FF) <= 0x7FF - len )
     {
-        /* Fetch a byte from each operand */
-        byte1 = regs->mainstor[abs1];
-        byte2 = regs->mainstor[abs2];
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (1) - No boundaries are crossed */
+            if (dest1 == source1)
+            {
+               /* (1a) - Dest and source are the same */
+               MEMSET(dest1, 0, len + 1);
+            }
+            else
+            {
+               /* (1b) - Dest and source are not the sam */
+                for (i = 0; i <= len; i++)
+                    if (*dest1++ ^= *source1++) cc = 1;
+            }
+        }
+        else
+        {
+             /* (2) - Second operand crosses a boundary */
+             len2 = 0x800 - (addr2 & 0x7FF);
+             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
+                              b2, regs, ACCTYPE_READ, regs->psw.pkey);
+             for ( i = 0; i < len2; i++)
+                 if (*dest1++ ^= *source1++) cc = 1;
+             len2 = len - len2;
+             for ( i = 0; i <= len2; i++)
+                 if (*dest1++ ^= *source2++) cc = 1;
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len2 = 0x800 - (addr1 & 0x7FF);
+        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
+                       b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
 
-        /* XOR operand 1 with operand 2 */
-        byte1 ^= byte2;
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+             /* (3) - First operand crosses a boundary */
+             for ( i = 0; i < len2; i++)
+                 if (*dest1++ ^= *source1++) cc = 1;
+             len2 = len - len2;
+             for ( i = 0; i <= len2; i++)
+                 if (*dest2++ ^= *source1++) cc = 1;
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len3 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
+                             b2, regs, ACCTYPE_READ, regs->psw.pkey);
+            if (len2 == len3)
+            {
+                /* (4a) - Both operands cross at the same time */
+                for ( i = 0; i < len2; i++)
+                    if (*dest1++ ^= *source1++) cc = 1;
+                len2 = len - len2;
+                for ( i = 0; i <= len2; i++)
+                    if (*dest2++ ^= *source2++) cc = 1;
+            }
+            else if (len2 < len3)
+            {
+                /* (4b) - First operand crosses first */
+                for ( i = 0; i < len2; i++)
+                    if (*dest1++ ^= *source1++) cc = 1;
+                len2 = len3 - len2;
+                for ( i = 0; i < len2; i++)
+                    if (*dest2++ ^= *source1++) cc = 1;
+                len2 = len - len3;
+                for ( i = 0; i <= len2; i++)
+                    if (*dest2++ ^= *source2++) cc = 1;
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                for ( i = 0; i < len3; i++)
+                    if (*dest1++ ^= *source1++) cc = 1;
+                len3 = len2 - len3;
+                for ( i = 0; i < len3; i++)
+                    if (*dest1++ ^= *source2++) cc = 1;
+                len3 = len - len2;
+                for ( i = 0; i <= len3; i++)
+                    if (*dest2++ ^= *source2++) cc = 1;
+            }
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
 
-        /* Set condition code 1 if result is non-zero */
-        if (byte1 != 0) cc = 1;
-
-        /* Store the result in the destination operand */
-        regs->mainstor[abs1] = byte1;
-
-        /* Increment first operand address */
-        effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
-        abs1++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr1 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs1 = npa1;
-
-        /* Increment second operand address */
-        effective_addr2++;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-        abs2++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr2 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs2 = npa2;
-
-    } /* end for(i) */
-
-    /* Set condition code */
     regs->psw.cc = cc;
 
 }
@@ -3254,16 +3318,12 @@ int     i;                              /* Integer work areas        */
 DEF_INST(move_long)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     cc;                             /* Condition code            */
 VADR    addr1, addr2;                   /* Operand addresses         */
-GREG    len1, len2;                     /* Operand lengths           */
-GREG    n;                              /* Work area                 */
-BYTE    obyte;                          /* Operand byte              */
+int     len1, len2;                     /* Operand lengths           */
+int     len, len3, len4;                /* Work lengths              */
+VADR    n;                              /* Work area                 */
+BYTE   *dest, *source;                  /* Mainstor addresses        */
 BYTE    pad;                            /* Padding byte              */
-#ifdef OPTION_FAST_MOVELONG
-RADR    abs1, abs2;
-GREG    len3;
-#endif
 
     RR(inst, regs, r1, r2);
 
@@ -3305,184 +3365,89 @@ GREG    len3;
     }
 
     /* Set the condition code according to the lengths */
-    cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
+    regs->psw.cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
-#ifdef OPTION_FAST_MOVELONG
-
-    if (!len2)
+    /* Initialize source and dest addresses */
+    if (len1)
     {
-        while (len1 > 0)
-        {
-            if (((addr1 & PAGEFRAME_PAGEMASK) !=
-                ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)))
-                len3 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-            else
-                len3 = len1;
-
-            abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE,
-                                   regs->psw.pkey);
-            memset(regs->mainstor+abs1, pad, len3);
-
-#if defined(FEATURE_PER)
-            if( EN_IC_PER_SA(regs)
-#if defined(FEATURE_PER2)
-              && ( REAL_MODE(&regs->psw) ||
-                   ARCH_DEP(check_sa_per2) (r1, ACCTYPE_WRITE, regs) )
-#endif /*defined(FEATURE_PER2)*/
-              && PER_RANGE_CHECK2(addr1, addr1+len3, regs->CR(10), regs->CR(11)) )
-                ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
-
-            len1 -= len3;
-            addr1 += len3;
-            addr1 &= ADDRESS_MAXWRAP(regs);
-
-            /* Update the registers */
-            GR_A(r1, regs) = addr1;
-            regs->GR_LA24(r1+1) = len1;
-
-            /* The instruction can be interrupted when a CPU determined
-               number of bytes have been processed.  The instruction
-               address will be backed up, and the instruction will
-               be re-executed.  This is consistent with operation
-               under a hypervisor such as LPAR or VM.                *JJ */
-            if ( (len1 > 255) && !(addr1 & 0xFFF) &&
-                (OPEN_IC_EXTPENDING(regs) ||
-                 OPEN_IC_IOPENDING(regs)) )
-            {
-                regs->psw.IA -= regs->psw.ilc;
-                regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-                break;
-            }
-        }
-        regs->psw.cc = cc;
-        return;
+        if (len2)
+            source = MADDR (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+        dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     }
 
-    if ((len2) && (len1 == len2) &&
-                  ((addr1 & PAGEFRAME_PAGEMASK) ==
-                   ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)) &&
-                  ((addr2 & PAGEFRAME_PAGEMASK) ==
-                   ((addr2 + len2 - 1) & PAGEFRAME_PAGEMASK)))
+    while (len1)
     {
-        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-
-        memcpy(regs->mainstor+abs1, regs->mainstor+abs2, len1);
-
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
-#if defined(FEATURE_PER2)
-          && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (r1, ACCTYPE_WRITE, regs) )
-#endif /*defined(FEATURE_PER2)*/
-          && PER_RANGE_CHECK2(addr1, addr1+len1, regs->CR(10), regs->CR(11)) )
-            ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
-
-        /* Update the registers */
-        GR_A(r1, regs) = addr1 + len1;
-        GR_A(r2, regs) = addr2 + len2;
-        regs->GR_LA24(r1+1) = 0;
-        regs->GR_LA24(r2+1) = 0;
-        regs->psw.cc = cc;
-        return;
-    }
-
-    while ((len1 >= 256) && (len2 >= 256) &&
-                  ((addr1 & PAGEFRAME_PAGEMASK) ==
-                   ((addr1 + 255) & PAGEFRAME_PAGEMASK)) &&
-                  ((addr2 & PAGEFRAME_PAGEMASK) ==
-                   ((addr2 + 255) & PAGEFRAME_PAGEMASK)))
-    {
-        abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-        memcpy(regs->mainstor+abs1, regs->mainstor+abs2, 256);
-
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
-#if defined(FEATURE_PER2)
-          && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (r1, ACCTYPE_WRITE, regs) )
-#endif /*defined(FEATURE_PER2)*/
-          && PER_RANGE_CHECK2(addr1, addr1+255, regs->CR(10), regs->CR(11)) )
-            ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
-
-        addr1 += 256;
-        addr2 += 256;
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        len1 -= 256;
-        len2 -= 256;
-
-        /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r2, regs) = addr2;
-        regs->GR_LA24(r1+1) = len1;
-        regs->GR_LA24(r2+1) = len2;
-
-        /* The instruction can be interrupted when a CPU determined
-           number of bytes have been processed.  The instruction
-           address will be backed up, and the instruction will
-           be re-executed.  This is consistent with operation
-           under a hypervisor such as LPAR or VM.                *JJ */
-        if ((regs->GR_LA24(r1+1) || regs->GR_LA24(r2+1)) &&
-            (OPEN_IC_EXTPENDING(regs) ||
-             OPEN_IC_IOPENDING(regs)) )
+        /* Clear or copy memory */
+        if (len2 == 0)
         {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-            return;
-        }
-    }
-
-#endif
-
-    /* Process operands from left to right */
-    while (len1 > 0)
-    {
-        /* Fetch byte from source operand, or use padding byte */
-        if (len2 > 0)
-        {
-            obyte = ARCH_DEP(vfetchb) ( addr2, r2, regs );
-            addr2++;
-            addr2 &= ADDRESS_MAXWRAP(regs);
-            len2--;
+            len = 0x800 - (addr1 & 0x7FF) < len1 ? 0x800 - (addr1 & 0x7FF) : len1;
+            memset (dest, pad, len);
         }
         else
-            obyte = pad;
+        {
+            len3 = 0x800 - (addr1 & 0x7FF) < len1 ? 0x800 - (addr1 & 0x7FF) : len1;
+            len4 = 0x800 - (addr2 & 0x7FF) < len2 ? 0x800 - (addr2 & 0x7FF) : len2;
+            len = len3 < len4 ? len3 : len4;
+            memcpy (dest, source, len);
+        }
 
-        /* Store the byte in the destination operand */
-        ARCH_DEP(vstoreb) ( obyte, addr1, r1, regs );
-        addr1++;
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        len1--;
+        /* Check for storage alteration PER event */
+#if defined(FEATURE_PER)
+        if ( EN_IC_PER_SA(regs)
+#if defined(FEATURE_PER2)
+         && ( REAL_MODE(&regs->psw)
+          ||  ARCH_DEP(check_sa_per2) (r1, ACCTYPE_WRITE, regs)
+            )
+#endif /*defined(FEATURE_PER2)*/
+         && PER_RANGE_CHECK2(addr1, addr1+len, regs->CR(10), regs->CR(11)) )
+            ON_IC_PER_SA(regs);
+#endif /*defined(FEATURE_PER)*/
 
-        /* Update the registers */
+        /* Adjust lengths and virtual addresses */
+        len1 -= len;
+        addr1 = (addr1 + len) & ADDRESS_MAXWRAP(regs);
+        if (len2)
+        {
+            len2 -= len;
+            addr2 = (addr2 + len) & ADDRESS_MAXWRAP(regs);
+        }
+
+        /* Update regs (since interrupt may occur) */
         GR_A(r1, regs) = addr1;
         GR_A(r2, regs) = addr2;
         regs->GR_LA24(r1+1) = len1;
         regs->GR_LA24(r2+1) = len2;
 
-        /* The instruction can be interrupted when a CPU determined
-           number of bytes have been processed.  The instruction
-           address will be backed up, and the instruction will
-           be re-executed.  This is consistent with operation
-           under a hypervisor such as LPAR or VM.                *JJ */
-        if ((len1 > 255) && !(addr1 & 0xFFF) &&
-            (OPEN_IC_EXTPENDING(regs) ||
-             OPEN_IC_IOPENDING(regs)) )
+        /* Check for pending interrupt */
+        if ( len1 > 256
+         && (OPEN_IC_EXTPENDING(regs) || OPEN_IC_IOPENDING(regs)) )
         {
             regs->psw.IA -= regs->psw.ilc;
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
             break;
         }
 
-    } /* end while(len1) */
+        /* Translate next source and dest addresses */
+        if (len1)
+        {
+            if (len2)
+            {
+                if (addr2 & 0x7FF)
+                    source += len;
+                else
+                    source = MADDR (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+            }
+            if (addr1 & 0x7FF)
+                dest += len;
+            else
+                dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        }
 
-    regs->psw.cc = cc;
+    } /* while (len1) */
+
+    /* If len1 is non-zero then we were interrupted */
+    if (len1)
+        RETURN_INTCHECK(regs);
 
 }
 
@@ -3574,77 +3539,113 @@ int     cpu_length;                     /* cpu determined length     */
 /*-------------------------------------------------------------------*/
 DEF_INST(move_numerics)
 {
-BYTE    l;                              /* Length byte               */
-int     b1, b2;                         /* Base register numbers     */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
-RADR    abs1, abs2;                     /* Absolute addresses        */
-VADR    npv1, npv2;                     /* Next page virtual addrs   */
-RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
+VADR    addr1, addr2;                   /* Operand virtual addresses */
+int     len, arn1, arn2;                /* Operand values            */
+BYTE   *dest1, *dest2;                  /* Destination addresses     */
+BYTE   *source1, *source2;              /* Source addresses          */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+int     len2, len3;                     /* Lengths to copy           */
 int     i;                              /* Loop counter              */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
-
-    /* Obtain current access key from PSW */
-    akey = regs->psw.pkey;
+    SS_L(inst, regs, len, arn1, addr1, arn2, addr2);
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
+    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    sk1 = regs->dat.storkey;
+    source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    /* Calculate page addresses of rightmost operand bytes */
-    npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= ~0x7FF;
-    npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= ~0x7FF;
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
 
-    /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & ~0x7FF))
-        npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
-
-    /* all operands and page crossers valid, now alter ref & chg bits */
-    STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-    if (npa1)
-        STORAGE_KEY(npa1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-
-    /* Process operands from left to right */
-    for ( i = 0; i <= l; i++ )
+    if ( (addr1 & 0x7FF) <= 0x7FF - len )
     {
-        /* Fetch a byte from each operand */
-        byte1 = regs->mainstor[abs1];
-        byte2 = regs->mainstor[abs2];
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (1) - No boundaries are crossed */
+            for ( i = 0; i <= len; i++)
+                *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
+                             arn2, regs, ACCTYPE_READ, regs->psw.pkey);
+            for ( i = 0; i < len2; i++)
+                *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+            len2 = len - len2;
+            for ( i = 0; i <= len2; i++)
+                *dest1++ = (*dest1 & 0xF0) | (*source2++ & 0x0F);
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len2 = 0x800 - (addr1 & 0x7FF);
+        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
+                       arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
 
-        /* Copy low digit of operand 2 to operand 1 */
-        byte1 = (byte1 & 0xF0) | (byte2 & 0x0F);
-
-        /* Store the result in the destination operand */
-        regs->mainstor[abs1] = byte1;
-
-        /* Increment first operand address */
-        effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
-        abs1++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr1 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs1 = npa1;
-
-        /* Increment second operand address */
-        effective_addr2++;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-        abs2++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr2 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs2 = npa2;
-
-    } /* end for(i) */
-
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (3) - First operand crosses a boundary */
+            for ( i = 0; i < len2; i++)
+                *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+            len2 = len - len2;
+            for ( i = 0; i <= len2; i++)
+                *dest2++ = (*dest2 & 0xF0) | (*source1++ & 0x0F);
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len3 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
+                             arn2, regs, ACCTYPE_READ, regs->psw.pkey);
+            if (len2 == len3)
+            {
+                /* (4a) - Both operands cross at the same time */
+                for ( i = 0; i < len2; i++)
+                   *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                len2 = len - len2;
+                for ( i = 0; i <= len2; i++)
+                   *dest2++ = (*dest2 & 0xF0) | (*source2++ & 0x0F);
+            }
+            else if (len2 < len3)
+            {
+                /* (4b) - First operand crosses first */
+                for ( i = 0; i < len2; i++)
+                   *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                len2 = len3 - len2;
+                for ( i = 0; i < len2; i++)
+                   *dest2++ = (*dest2 & 0xF0) | (*source1++ & 0x0F);
+                len2 = len - len3;
+                for ( i = 0; i <= len2; i++)
+                   *dest2++ = (*dest2 & 0xF0) | (*source2++ & 0x0F);
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                for ( i = 0; i < len3; i++)
+                   *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                len3 = len2 - len3;
+                for ( i = 0; i < len3; i++)
+                   *dest1++ = (*dest1 & 0xF0) | (*source2++ & 0x0F);
+                len3 = len - len2;
+                for ( i = 0; i <= len3; i++) *dest2++ = *source2++;
+                   *dest2++ = (*dest2 & 0xF0) | (*source2++ & 0x0F);
+            }
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
 }
 
 
@@ -3787,77 +3788,113 @@ BYTE    dbyte;                          /* Destination operand byte  */
 /*-------------------------------------------------------------------*/
 DEF_INST(move_zones)
 {
-BYTE    l;                              /* Length byte               */
-int     b1, b2;                         /* Base register numbers     */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
-RADR    abs1, abs2;                     /* Absolute addresses        */
-VADR    npv1, npv2;                     /* Next page virtual addrs   */
-RADR    npa1 = 0, npa2 = 0;             /* Next page absolute addrs  */
+VADR    addr1, addr2;                   /* Operand virtual addresses */
+int     len, arn1, arn2;                /* Operand values            */
+BYTE   *dest1, *dest2;                  /* Destination addresses     */
+BYTE   *source1, *source2;              /* Source addresses          */
+BYTE   *sk1, *sk2;                      /* Storage key addresses     */
+int     len2, len3;                     /* Lengths to copy           */
 int     i;                              /* Loop counter              */
-BYTE    byte1, byte2;                   /* Operand bytes             */
-BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
-
-    /* Obtain current access key from PSW */
-    akey = regs->psw.pkey;
+    SS_L(inst, regs, len, arn1, addr1, arn2, addr2);
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
+    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+    sk1 = regs->dat.storkey;
+    source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    /* Calculate page addresses of rightmost operand bytes */
-    npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= ~0x7FF;
-    npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= ~0x7FF;
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
 
-    /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & ~0x7FF))
-        npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
-
-    /* all operands and page crossers valid, now alter ref & chg bits */
-    STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-    if (npa1)
-        STORAGE_KEY(npa1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-
-    /* Process operands from left to right */
-    for ( i = 0; i <= l; i++ )
+    if ( (addr1 & 0x7FF) <= 0x7FF - len )
     {
-        /* Fetch a byte from each operand */
-        byte1 = regs->mainstor[abs1];
-        byte2 = regs->mainstor[abs2];
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (1) - No boundaries are crossed */
+            for ( i = 0; i <= len; i++)
+                *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
+                             arn2, regs, ACCTYPE_READ, regs->psw.pkey);
+            for ( i = 0; i < len2; i++)
+                *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+            len2 = len - len2;
+            for ( i = 0; i <= len2; i++)
+                *dest1++ = (*dest1 & 0x0F) | (*source2++ & 0xF0);
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
+    else
+    {
+        /* First operand crosses a boundary */
+        len2 = 0x800 - (addr1 & 0x7FF);
+        dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
+                       arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
+        sk2 = regs->dat.storkey;
 
-        /* Copy high digit of operand 2 to operand 1 */
-        byte1 = (byte1 & 0x0F) | (byte2 & 0xF0);
-
-        /* Store the result in the destination operand */
-        regs->mainstor[abs1] = byte1;
-
-        /* Increment first operand address */
-        effective_addr1++;
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
-        abs1++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr1 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs1 = npa1;
-
-        /* Increment second operand address */
-        effective_addr2++;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-        abs2++;
-
-        /* Adjust absolute address if page boundary crossed */
-        if ((effective_addr2 & PAGEFRAME_BYTEMASK) == 0x000)
-            abs2 = npa2;
-
-    } /* end for(i) */
-
+        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (3) - First operand crosses a boundary */
+            for ( i = 0; i < len2; i++)
+                *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+            len2 = len - len2;
+            for ( i = 0; i <= len2; i++)
+                *dest2++ = (*dest2 & 0x0F) | (*source1++ & 0xF0);
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len3 = 0x800 - (addr2 & 0x7FF);
+            source2 = MADDR ((addr2 + len3) & ADDRESS_MAXWRAP(regs),
+                             arn2, regs, ACCTYPE_READ, regs->psw.pkey);
+            if (len2 == len3)
+            {
+                /* (4a) - Both operands cross at the same time */
+                for ( i = 0; i < len2; i++)
+                   *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                len2 = len - len2;
+                for ( i = 0; i <= len2; i++)
+                   *dest2++ = (*dest2 & 0x0F) | (*source2++ & 0xF0);
+            }
+            else if (len2 < len3)
+            {
+                /* (4b) - First operand crosses first */
+                for ( i = 0; i < len2; i++)
+                   *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                len2 = len3 - len2;
+                for ( i = 0; i < len2; i++)
+                   *dest2++ = (*dest2 & 0x0F) | (*source1++ & 0xF0);
+                len2 = len - len3;
+                for ( i = 0; i <= len2; i++)
+                   *dest2++ = (*dest2 & 0x0F) | (*source2++ & 0xF0);
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                for ( i = 0; i < len3; i++)
+                   *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                len3 = len2 - len3;
+                for ( i = 0; i < len3; i++)
+                   *dest1++ = (*dest1 & 0x0F) | (*source2++ & 0xF0);
+                len3 = len - len2;
+                for ( i = 0; i <= len3; i++) *dest2++ = *source2++;
+                   *dest2++ = (*dest2 & 0x0F) | (*source2++ & 0xF0);
+            }
+        }
+        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
+        *sk2 |= (STORKEY_REF | STORKEY_CHANGE);
+    }
 }
 
 
