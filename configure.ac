@@ -299,5 +299,7 @@ AH_TEMPLATE([OPTION_FTHREADS],
             [Define to use included threads implementation (fthreads)])
 AH_TEMPLATE([CUSTOM_BUILD_STRING],
             [Define to provide additional information about this build])
+AH_TEMPLATE([DEBUG],
+            [Define to enable extra debugging code])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
