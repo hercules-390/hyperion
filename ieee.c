@@ -58,7 +58,11 @@
 #if defined(FEATURE_BINARY_FLOATING_POINT) && !defined(NO_IEEE_SUPPORT)
 
 #include <math.h>
+#ifndef WIN32
 #include <fenv.h>
+#else
+#include "ieee-w32.h"
+#endif
 
 #if !defined(_IEEE_C)
 /* Architecture independent code goes within this ifdef */

@@ -1,3 +1,4 @@
+15 Apr 2002 IEEE floating point (attempt) for Win32 - Greg Smith
 13 Apr 2002 Add description to ctci-w32 error message (w32ctca) - Fish
 13 Apr 2002 Fix bug in w32chan "devtmax" logic (TrimDeviceThreads) - Fish
 13 Apr 2002 Fix some benign warnings - Fish
