@@ -1,3 +1,6 @@
+10 Jun 2001 Correct halt subchannel function - Jan Jaeger
+10 Jun 2001 Correct set pathgroup id ccw - Jan Jaeger
+10 Jun 2001 Correct clear subchannel function - Jan Jaeger
 09 Jun 2001 Fix CUTFU/CUUTF with zero op2 length - Paul Leisy
 09 Jun 2001 Fix STSI condition code - Paul Leisy
 09 Jun 2001 Add t-ckd/t-ckd ckd keytrace command - Valery Pogonchenko

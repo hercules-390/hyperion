@@ -3848,6 +3848,19 @@ long            locblock;               /* Block Id for Locate Block */
         /* Byte 0 is the path group state byte */
         if ((iobuf[0] & SPG_SET_COMMAND) == SPG_SET_ESTABLISH)
         {
+            /* Only accept the new pathgroup id when
+               1) it has not yet been set (ie contains zeros) or
+               2) It is set, but we are setting the same value */
+            if(memcmp(dev->pgid,
+                 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 11)
+              && memcmp(dev->pgid, iobuf+1, 11))
+            {
+                dev->sense[0] = SENSE_CR;
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+
+            /* Bytes 1-11 contain the path group identifier */
             /* Bytes 1-11 contain the path group identifier */
             memcpy (dev->pgid, iobuf+1, 11);
         }
