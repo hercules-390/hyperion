@@ -61,7 +61,6 @@ else
 HERCULES_EXP=
 HERCULES_A=
 hercules_LDFLAGS = -rdynamic
-dyninst_LDFLAGS = -shared
 endif
 
 hercules_SOURCES = hostinfo.c w32ctca.c \
@@ -179,6 +178,7 @@ dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 dyninst_SOURCES = dyninst.c
+dyninst_LDFLAGS = -shared
 
 if USE_DLLTOOL
 hercules.def: $(am_hercules_OBJECTS)
