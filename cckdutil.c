@@ -961,7 +961,8 @@ char *compression[] = {"none", "zlib", "bzip2"};
             CDSKMSG (m, "forcing check level 1; file not closed\n");
             level = 1;
         }
-        else if ((cdevhdr.options & (CCKD_OPENED | CCKD_ORDWR)) == 0)
+        else if ((cdevhdr.options & CCKD_ORDWR) == 0
+              || (fdflags & O_RDWR) == 0)
             level = -1;
     }
 
