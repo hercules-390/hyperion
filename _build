@@ -9,10 +9,15 @@
 # !                                                                               !
 # ! Defaults:  build `uname -m` fthreads                                          !
 # !                                                                               !
-# ! Last Change: '$Id$'
-# !                                                                               !
-# ! Change log: '$Log$'
 # +-------------------------------------------------------------------------------+
+# !
+# ! Last Change: '$Id$'
+# !
+# ! Change log: '$Log$
+# ! Change log: 'Revision 1.7  2001/10/22 08:44:58  vbandke
+# ! Change log: 'no message
+# !
+# +-------------------------------------------------------------------------------
 if ! test -f configure
 then
   echo "running autogen.sh"
