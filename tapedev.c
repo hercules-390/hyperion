@@ -5136,6 +5136,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     case 0xBB:
     case 0xA3:
     case 0xAB:
+    case 0xEB: /* invalid mode set issued by DOS/VS */
     /*---------------------------------------------------------------*/
     /* MODE SET                                                      */
     /*---------------------------------------------------------------*/
