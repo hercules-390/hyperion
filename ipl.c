@@ -233,6 +233,9 @@ BYTE    filename[256];                  /* filename of image file    */
 BYTE    pathname[256];                  /* pathname of image file    */
 U32     fileaddr;
 
+    if(fname == NULL)                   /* Default ipl from DASD     */
+        fname = "hercules.ins";         /*   from hercules.ins       */
+
 #ifdef EXTERNALGUI
     if (extgui) logmsg("LOAD=1\n");
 #endif /*EXTERNALGUI*/
