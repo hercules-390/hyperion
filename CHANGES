@@ -1,3 +1,5 @@
+03 Apr 2003 ECPS:VM SSM Correction, panel command rework (evm) 
+            and conditional debug messages - Ivan Warren
 02 Apr 2003 Reordered int/dev locks in channel handler
             to avoid race conditions in certain situations - Ivan Warren
 29 Mar 2003 Addl VM Assist support : SVC + SSM VM Assists  

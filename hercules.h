@@ -686,7 +686,8 @@ typedef struct _SYSBLK {
 //
         /* ECPS:VM */
         struct {
-                U16 available:1;
+                U16 available:1,
+                    debug:1;
                 U16 level;
         } ecpsvm;                       /* ECPS:VM structure         */
 #endif

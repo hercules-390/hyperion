@@ -34,7 +34,7 @@ extern  void  FishHangAtExit();
 #endif // defined(FISH_HANG)
 
 #if defined(FEATURE_ECPSVM)
-extern void ecpsvm_showstats(void);
+extern void ecpsvm_command(int argc,char **argv);
 #endif
 
 /* Added forward declaration to process_script_file ISW20030220-3 */
@@ -2426,13 +2426,13 @@ int aea_cmd(char* cmdline, int argc, char *argv[])
 }
 
 #ifdef FEATURE_ECPSVM
-int evmstat_cmd(char* cmdline, int argc, char *argv[])
+int evm_cmd(char* cmdline, int argc, char *argv[])
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    ecpsvm_showstats();
+    ecpsvm_command(argc,argv);
     return 0;
 }
 #endif
@@ -2547,7 +2547,7 @@ COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/eve
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
 COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread" )
 #if defined(FEATURE_ECPSVM)
-COMMAND ( "evmstat",   evmstat_cmd,   "Display ECPS:VM Statistics" )
+COMMAND ( "evm",   evm_cmd,   "ECPS:VM Commands" )
 #endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
@@ -2803,7 +2803,8 @@ CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the curren
                        )
 
 #if defined(FEATURE_ECPSVM)
-CMDHELP ( "evmstat",   "Format: \"evmstat\". This command displays ECPS:VM Statistics.\n"
+CMDHELP ( "evm",   "Format: \"evm\". This command invokes ECPS:VM Subcommands.\n"
+                       "Type \"evm help\" to see a list of available commands\n"
                        )
 #endif
 
