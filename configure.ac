@@ -4,11 +4,9 @@ AC_CONFIG_AUX_DIR(autoconf)
 AM_INIT_AUTOMAKE(hercules,2.14a)
 AM_CONFIG_HEADER(config.h)
 
-dnl We can switch to using a config.h once every source file includes it
-dnl AM_CONFIG_HEADER(autoconf/config.h)
-
 AC_CANONICAL_HOST
 
+# Initialization
 CFLAGS="-Wall $CFLAGS"
 
 # Programs
