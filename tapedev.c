@@ -2774,7 +2774,7 @@ U32             stat;                   /* SCSI tape status bits     */
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int tapedev_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
+static int tapedev_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
 {
 int             len;                    /* Length of file name       */
 int             i;                      /* Argument index            */
@@ -2955,7 +2955,7 @@ union
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void tapedev_query_device (DEVBLK *dev, BYTE **class,
+static void tapedev_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -2974,7 +2974,7 @@ void tapedev_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int tapedev_close_device ( DEVBLK *dev )
+static int tapedev_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
     switch (dev->tapedevt)
@@ -3014,7 +3014,7 @@ int tapedev_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
+static void tapedev_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
 {

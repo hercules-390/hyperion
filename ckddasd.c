@@ -582,7 +582,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void ckddasd_query_device (DEVBLK *dev, BYTE **class,
+static void ckddasd_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -1946,7 +1946,7 @@ int             skiplen;                /* Number of bytes to skip   */
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+static void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {

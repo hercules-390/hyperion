@@ -19,7 +19,7 @@
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int cardrdr_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+static int cardrdr_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 int     i;                              /* Array subscript           */
 int     fc;                             /* File counter              */
@@ -270,7 +270,7 @@ int     fc;                             /* File counter              */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void cardrdr_query_device (DEVBLK *dev, BYTE **class,
+static void cardrdr_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
     *class = "RDR";
@@ -290,7 +290,7 @@ void cardrdr_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int cardrdr_close_device ( DEVBLK *dev )
+static int cardrdr_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
 
@@ -674,7 +674,7 @@ BYTE    c;                              /* Input character           */
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void cardrdr_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+static void cardrdr_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {

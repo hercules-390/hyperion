@@ -44,7 +44,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int cardpch_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
+static int cardpch_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
 {
 int     i;                              /* Array subscript           */
 
@@ -116,7 +116,7 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void cardpch_query_device (DEVBLK *dev, BYTE **class,
+static void cardpch_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -131,7 +131,7 @@ void cardpch_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int cardpch_close_device ( DEVBLK *dev )
+static int cardpch_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
     close (dev->fd);
@@ -143,7 +143,7 @@ int cardpch_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void cardpch_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
+static void cardpch_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
 {

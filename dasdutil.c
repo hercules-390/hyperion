@@ -11,8 +11,8 @@
 /*-------------------------------------------------------------------*/
 /* External references         (defined in ckddasd.c)                */
 /*-------------------------------------------------------------------*/
-extern int ckddasd_init_handler(DEVBLK *dev, int argc, BYTE *argv[]);
-extern int ckddasd_close_device(DEVBLK *dev);
+extern int ckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] );
+extern int ckddasd_close_device ( DEVBLK *dev );
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -601,7 +601,7 @@ BYTE           *sfxptr;                 /* -> Last char of file name */
 U16             devnum;                 /* Device number             */
 BYTE            c;                      /* Work area for sscanf      */
 BYTE           *argv[2];                /* Arguments to              */
-int             argc=0;                 /*     ckddasd_init_handler  */
+int             argc=0;                 /*                           */
 BYTE            sfxname[1024];          /* Suffixed file name        */
 
     /* Obtain storage for the file descriptor structure */
@@ -781,7 +781,7 @@ DEVBLK         *dev;                    /* -> CKD device block       */
 
     /* Close the CKD image file */
     dev = &cif->devblk;
-    rc = ckddasd_close_device (dev);
+    rc = ckddasd_close_device(dev);
     if (rc < 0) return -1;
 
     /* Release the track buffer and the file descriptor structure */

@@ -224,7 +224,7 @@
 #define write_ctci_w32  write_ctci
 #endif /* defined(OPTION_W32_CTCI) */
 
-int ctcadpt_close_device(DEVBLK *dev);  /*   (forward reference)     */
+static int ctcadpt_close_device(DEVBLK *dev);  /*   (forward reference)     */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for 3088 model numbers                                */
@@ -2768,7 +2768,7 @@ int             lastlen = 2;            /* block length at last pckt */
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int ctcadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
+static int ctcadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
 {
 int             rc;                     /* Return code               */
 U32             cutype;                 /* Control unit type         */
@@ -2860,7 +2860,7 @@ U32             cutype;                 /* Control unit type         */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void ctcadpt_query_device (DEVBLK *dev, BYTE **class,
+static void ctcadpt_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -2873,7 +2873,7 @@ void ctcadpt_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int ctcadpt_close_device ( DEVBLK *dev )
+static int ctcadpt_close_device ( DEVBLK *dev )
 {
     DEVBLK *dev_ctcpair = find_device_by_devnum (dev->devnum ^ 0x01);
     /* Close the device file (if not already closed) */
@@ -2895,7 +2895,7 @@ int ctcadpt_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void ctcadpt_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
+static void ctcadpt_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
 {

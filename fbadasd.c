@@ -42,7 +42,7 @@
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+static int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 int     rc;                             /* Return code               */
 struct  stat statbuf;                   /* File information          */
@@ -151,7 +151,7 @@ BYTE    c;                              /* Character work area       */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void fbadasd_query_device (DEVBLK *dev, BYTE **class,
+static void fbadasd_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -165,7 +165,7 @@ void fbadasd_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-int fbadasd_close_device ( DEVBLK *dev )
+static int fbadasd_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
     close (dev->fd);
@@ -177,7 +177,7 @@ int fbadasd_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+static void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
