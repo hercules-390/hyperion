@@ -1,6 +1,11 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+21 Dec 2004 Fix to cc in CUUTF and CUTFU instruction - Greg
+21 Dec 2004 Fix minor benign glitch in breakpoint cmd - Fish
+22 Dec 2004 Fix to TROT instruction in esame.c - Fish
+21 Dec 2004 Make 'notimer' the pttrace default as per comments - Fish
+21 Dec 2004 Mark Drummond channel.c tape read backwards fixes - Fish
 19 Dec 2004 dasdinit VOL1 and linux vtoc tweaks - Greg Smith
 16 Dec 2004 Fix BRXHG and BRXLG to branch backwards too - Greg Smith
 14 Dec 2004 Ensure dyncrypt is built *AFTER* core - Ivan Warren

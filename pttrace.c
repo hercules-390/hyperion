@@ -38,7 +38,7 @@ void ptt_trace_init (int n, int init)
 #else
         pthread_mutex_init (&pttlock, NULL);
 #endif
-        pttimer = 1;
+        pttimer = 0; /* (default = 'notimer') */
         pttnothreads = 0;
         pttnolock = 0;
     }
@@ -359,7 +359,7 @@ void ptt_pthread_print ()
 {
 PTT_TRACE *p;
 int   i;
-char  result[8];
+char  result[32]; // (result is 'int'; if 64-bits, 19 digits or more!)
 char *tbuf;
 
     if (pttrace == NULL) return;
@@ -377,7 +377,7 @@ char *tbuf;
             sprintf(result, "%d", p[i].result);
             if (p[i].result == PTT_MAGIC) result[0] = '\0';
 #if SIZEOF_INT_P == 8
-            logmsg ("%8.8x %-12.12s %8.8x %8.8x %-12.12s %4d %s" "." "%6.6ld %s\n",
+            logmsg ("%8.8x %-12.12s %16.16llx %16.16llx %-12.12s %4d %s" "." "%6.6ld %s\n",
                 (U32)p[i].tid, p[i].type, (U64)p[i].data1,
                 (U64)p[i].data2, p[i].file, p[i].line,
                 tbuf + 11, p[i].tv.tv_usec, result);

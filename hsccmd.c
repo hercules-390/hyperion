@@ -1127,20 +1127,14 @@ BYTE c[2];                              /* Character work area       */
         return -1;
     }
 
-#if SIZEOF_LONG == 8
-    rc = sscanf(argv[1], "%lx%c%lx%c", &sysblk.breakaddr[0], &c[0],
-                                         &sysblk.breakaddr[1], &c[2]);
-#else
     rc = sscanf(argv[1], "%llx%c%llx%c", &sysblk.breakaddr[0], &c[0],
-                                         &sysblk.breakaddr[1], &c[2]);
-#endif
+                                         &sysblk.breakaddr[1], &c[1]);
     if (rc == 1 || (rc == 3 && c[0] == '-'))
     {
         if (rc == 1)
             sysblk.breakaddr[1] = sysblk.breakaddr[0];
         logmsg( _("HHCPN040I Setting breakpoint at %16.16llX-%16.16llx\n"),
-            (long long)sysblk.breakaddr[0],(long long)sysblk.breakaddr[1]
-            );
+            sysblk.breakaddr[0],sysblk.breakaddr[1]);
         sysblk.instbreak = 1;
         SET_IC_TRACE;
     }

@@ -102,7 +102,6 @@ BYTE    area[64];                       /* Data display area         */
 
 } /* end function display_ccw */
 
-// #ifdef FEATURE_S370_CHANNEL
 /*-------------------------------------------------------------------*/
 /* DISPLAY CHANNEL STATUS WORD                                       */
 /*-------------------------------------------------------------------*/
@@ -115,9 +114,7 @@ static void display_csw (DEVBLK *dev, BYTE csw[])
             csw[1], csw[2], csw[3]);
 
 } /* end function display_csw */
-// #endif /*FEATURE_S370_CHANNEL*/
 
-// #ifdef FEATURE_CHANNEL_SUBSYSTEM
 /*-------------------------------------------------------------------*/
 /* DISPLAY SUBCHANNEL STATUS WORD                                    */
 /*-------------------------------------------------------------------*/
@@ -134,9 +131,7 @@ static void display_scsw (DEVBLK *dev, SCSW scsw)
             scsw.ccwaddr[2], scsw.ccwaddr[3]);
 
 } /* end function display_scsw */
-// #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
-// #ifdef FEATURE_S370_CHANNEL
 /*-------------------------------------------------------------------*/
 /* STORE CHANNEL ID                                                  */
 /*-------------------------------------------------------------------*/
@@ -425,9 +420,7 @@ int      pending = 0;                   /* New interrupt pending     */
     return cc;
 
 } /* end function haltio */
-// #endif /*FEATURE_S370_CHANNEL*/
 
-// #ifdef FEATURE_CHANNEL_SUBSYSTEM
 /*-------------------------------------------------------------------*/
 /* CANCEL SUBCHANNEL                                                 */
 /*-------------------------------------------------------------------*/
@@ -1048,7 +1041,6 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     return 0;
 
 } /* end function resume_subchan */
-// #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
 /*-------------------------------------------------------------------*/
 /* Reset a device to initialized status                              */
@@ -1195,7 +1187,6 @@ io_reset (void)
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int     console = 0;                    /* 1 = console device reset  */
-// #if defined(FEATURE_CHANNEL_SWITCHING)
 int i;
 
     /* reset sclp interface */
@@ -1205,7 +1196,6 @@ int i;
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
             sysblk.regs[i]->chanset = i;
-// #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
 
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -1474,9 +1464,6 @@ BYTE    storkey;                        /* Storage key               */
             return;
         }
 
-        /* Pre-decrement first idaw */
-        idaw -= (idaseq == 0 ? 1 : 0);
-
         /* Calculate address of next page boundary */
         idapage = (idaw & ~idapmask);
         idalen = (idaw - idapage) + 1;
@@ -1577,7 +1564,7 @@ BYTE    area[64];                       /* Data display area         */
             {
                 idadata =  (idadata - idalen) + 1;
                 memcpy (dev->mainstor + idadata,
-                        iobuf + dev->curblkrem, idalen);
+                        iobuf + dev->curblkrem + idacount - idalen, idalen);
             }
             else
             {
@@ -2010,8 +1997,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     /* For hercules `resume' resume suspended state */
     if (dev->resumesuspended) 
     {
-	    dev->resumesuspended=0;
-	    goto resume_suspend;
+        dev->resumesuspended=0;
+        goto resume_suspend;
     }
 #endif
 
@@ -2593,10 +2580,10 @@ resume_suspend:
             break;
         }
 
-	dev->is_immed=IS_CCW_IMMEDIATE(dev);
+    dev->is_immed=IS_CCW_IMMEDIATE(dev);
         /* For WRITE and CONTROL operations, copy data
            from main storage into channel buffer */
-	/*
+    /*
         if (IS_CCW_WRITE(dev->code)
             ||
             (
@@ -2604,10 +2591,10 @@ resume_suspend:
                 &&
                 !(IS_CCW_NOP(dev->code) || IS_CCW_SET_EXTENDED(dev->code))
             ))
-	    */
+        */
         if ( IS_CCW_WRITE(dev->code) 
-		|| ( IS_CCW_CONTROL(dev->code)
-		&& (!dev->is_immed)))
+        || ( IS_CCW_CONTROL(dev->code)
+        && (!dev->is_immed)))
         {
             /* Channel program check if data exceeds buffer size */
             if (bufpos + count > 65536)

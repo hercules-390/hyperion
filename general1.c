@@ -2312,7 +2312,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         SET_GR_A(r2, regs,addr2);
         SET_GR_A(r2+1, regs,len2);
 
-        if (len1 == 0)
+        if (len1 == 0 && len2 != 0)
             cc = 1;
 
     } /* end for(i) */
@@ -2473,7 +2473,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         SET_GR_A(r2, regs,addr2);
         SET_GR_A(r2+1, regs,len2);
 
-        if (len1 == 0)
+        if (len1 == 0 && len2 != 0)
             cc = 1;
 
     } /* end for(i) */

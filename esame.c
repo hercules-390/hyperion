@@ -5139,7 +5139,7 @@ int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue;
-BYTE    dvalue, tvalue;
+U16     dvalue, tvalue;
 
     RRE(inst, regs, r1, r2);
 
