@@ -2333,81 +2333,38 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_to_binary)
 {
-int     r1;                             /* Values of R fields        */
+U64     dreg;                           /* 64-bit result accumulator */
+int     r1;                             /* Value of R1 field         */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     dreg;                           /* 64-bit result accumulator */
-int     i;                              /* Loop counter              */
-int     h, d;                           /* Decimal digits            */
-BYTE    sbyte;                          /* Source operand byte       */
+int     ovf;                            /* 1=overflow                */
+int     dxf;                            /* 1=data exception          */
+BYTE    dec[8];                         /* Packed decimal operand    */
 
     RX(inst, execflag, regs, r1, b2, effective_addr2);
 
-    /* Initialize binary result */
-    dreg = 0;
+    /* Fetch 8-byte packed decimal operand */
+    ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
 
-    /* Convert digits to binary */
-    for (i = 0; i < 8; i++)
+    /* Convert 8-byte packed decimal to 64-bit signed binary */
+    packed_to_binary (dec, 8-1, &dreg, &ovf, &dxf);
+
+    /* Data exception if invalid digits or sign */
+    if (dxf)
     {
-        /* Load next byte of operand */
-        sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-
-        /* Isolate high-order and low-order digits */
-        h = (sbyte & 0xF0) >> 4;
-        d = sbyte & 0x0F;
-
-        /* Check for valid high-order digit */
-        if (h > 9)
-        {
-            regs->dxc = DXC_DECIMAL;
-            ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-        }
-
-        /* Accumulate high-order digit into result */
-        dreg *= 10;
-        dreg += h;
-
-        /* Check for valid low-order digit or sign */
-        if (i < 7)
-        {
-            /* Check for valid low-order digit */
-            if (d > 9)
-            {
-                regs->dxc = DXC_DECIMAL;
-                ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-            }
-
-            /* Accumulate low-order digit into result */
-            dreg *= 10;
-            dreg += d;
-        }
-        else
-        {
-            /* Check for valid sign */
-            if (d < 10)
-            {
-                regs->dxc = DXC_DECIMAL;
-                ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-            }
-        }
-
-        /* Increment operand address */
-        effective_addr2++;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-
-    } /* end for(i) */
-
-    /* Result is negative if sign is X'B' or X'D' */
-    if (d == 0x0B || d == 0x0D)
-    {
-        (S64)dreg = -((S64)dreg);
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
     }
+
+    /* Overflow if result exceeds 31 bits plus sign */
+    if ((S64)dreg < -2147483648LL || (S64)dreg > 2147483647LL)
+       ovf = 1;
 
     /* Store low-order 32 bits of result into R1 register */
     regs->GR_L(r1) = dreg & 0xFFFFFFFF;
 
-    /* Program check if overflow */
-    if ((S64)dreg < -2147483648LL || (S64)dreg > 2147483647LL)
+    /* Program check if overflow (R1 contains rightmost 32 bits) */
+    if (ovf)
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
 }
@@ -3254,7 +3211,7 @@ GREG    n;                              /* Work area                 */
 BYTE    obyte;                          /* Operand byte              */
 BYTE    pad;                            /* Padding byte              */
 #ifdef OPTION_FAST_MOVELONG
-RADR	abs1, abs2;
+RADR    abs1, abs2;
 GREG    len3;
 #endif
 
@@ -3979,12 +3936,12 @@ U32     n;                              /* 32-bit operand values     */
 #if defined(_ARCHMODE2)
  #define  _GEN_ARCH _ARCHMODE2
  #include "general1.c"
-#endif 
+#endif
 
 #if defined(_ARCHMODE3)
  #undef   _GEN_ARCH
  #define  _GEN_ARCH _ARCHMODE3
  #include "general1.c"
-#endif 
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/
