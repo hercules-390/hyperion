@@ -53,10 +53,9 @@
 
 struct _ECPSVM_STATS
 {
-    ECPSVM_STAT_DCL(SASSIST);
     ECPSVM_STAT_DCL(SVC);
     ECPSVM_STAT_DCL(SSM);
-    ECPSVM_STAT_DCL(CPASSIST);
+    ECPSVM_STAT_DCL(SASSIST);
     ECPSVM_STAT_DCL(FREE);
     ECPSVM_STAT_DCL(FRET);
     ECPSVM_STAT_DCL(LCKPG);
@@ -80,34 +79,35 @@ struct _ECPSVM_STATS
     ECPSVM_STAT_DCL(FRETX);
     ECPSVM_STAT_DCL(PMASS);
     ECPSVM_STAT_DCL(LCSPG);
+    ECPSVM_STAT_DCL(CPASSIST);
 } ecpsvm_stats={
-    ECPSVM_STAT_DEF(SASSIST),
     ECPSVM_STAT_DEF(SVC),
     ECPSVM_STAT_DEF(SSM),
-    ECPSVM_STAT_DEF(CPASSIST),
-    ECPSVM_STAT_DEF(FREE),
-    ECPSVM_STAT_DEF(FRET),
+    ECPSVM_STAT_DEFM(SASSIST),
+    ECPSVM_STAT_DEFU(FREE),
+    ECPSVM_STAT_DEFU(FRET),
     ECPSVM_STAT_DEF(LCKPG),
     ECPSVM_STAT_DEF(ULKPG),
     ECPSVM_STAT_DEF(SCNRU),
-    ECPSVM_STAT_DEF(SCNVU),
-    ECPSVM_STAT_DEF(DISP0),
-    ECPSVM_STAT_DEF(DISP1),
-    ECPSVM_STAT_DEF(DISP2),
-    ECPSVM_STAT_DEF(DNCCW),
-    ECPSVM_STAT_DEF(DFCCW),
-    ECPSVM_STAT_DEF(FCCWS),
-    ECPSVM_STAT_DEF(CCWGN),
-    ECPSVM_STAT_DEF(UXCCW),
-    ECPSVM_STAT_DEF(TRBRG),
-    ECPSVM_STAT_DEF(TRLOK),
-    ECPSVM_STAT_DEF(VIST),
-    ECPSVM_STAT_DEF(VIPT),
+    ECPSVM_STAT_DEFU(SCNVU),
+    ECPSVM_STAT_DEFU(DISP0),
+    ECPSVM_STAT_DEFU(DISP1),
+    ECPSVM_STAT_DEFU(DISP2),
+    ECPSVM_STAT_DEFU(DNCCW),
+    ECPSVM_STAT_DEFU(DFCCW),
+    ECPSVM_STAT_DEFU(FCCWS),
+    ECPSVM_STAT_DEFU(CCWGN),
+    ECPSVM_STAT_DEFU(UXCCW),
+    ECPSVM_STAT_DEFU(TRBRG),
+    ECPSVM_STAT_DEFU(TRLOK),
+    ECPSVM_STAT_DEFU(VIST),
+    ECPSVM_STAT_DEFU(VIPT),
     ECPSVM_STAT_DEF(STEVL),
     ECPSVM_STAT_DEF(FREEX),
     ECPSVM_STAT_DEF(FRETX),
-    ECPSVM_STAT_DEF(PMASS),
-    ECPSVM_STAT_DEF(LCSPG),
+    ECPSVM_STAT_DEFU(PMASS),
+    ECPSVM_STAT_DEFU(LCSPG),
+    ECPSVM_STAT_DEFM(CPASSIST),
 };
 
 typedef union _ECPSVM_STATARRAY
@@ -885,20 +885,69 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
 
 void ecpsvm_showstats(void)
 {
+    char *sep="HHCEV003I +-----------+----------+----------+-------+\n";
+    char nname[32];
+    size_t  nument;
+    int  havedisp=0;
+    int  notshown=0;
+    size_t unsupcc=0;
     ECPSVM_STATARRAY *ar;
     size_t i;
     ar=(ECPSVM_STATARRAY *)&ecpsvm_stats;
-    for(i=0;i<(sizeof(struct _ECPSVM_STATS)/sizeof(ECPSVM_STAT));i++)
+    logmsg(sep);
+    logmsg("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n","Function","Calls","Hits","Ratio");
+    logmsg(sep);
+    nument=(sizeof(struct _ECPSVM_STATS)/sizeof(ECPSVM_STAT));
+    for(i=0;i<nument;i++)
     {
-        if(ar->s[i].call)
+        if(ar->s[i].total && havedisp)
         {
-            logmsg("HHCEV001I : %-8s : Calls = %8d, Hits = %8d, Ratio = %3d%%\n",
-                    ar->s[i].name,
+                logmsg(sep);
+        }
+        if(ar->s[i].call || ar->s[i].total)
+        {
+            if(!ar->s[i].support)
+            {
+                unsupcc+=ar->s[i].call;
+            }
+            havedisp=1;
+            snprintf(nname,32,"%s%s",ar->s[i].name,ar->s[i].support ? "" : "*");
+            if(ar->s[i].total)
+            {
+                strcat(nname,"+");
+            }
+            logmsg("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n",
+                    nname,
                     ar->s[i].call,
                     ar->s[i].hit,
                     ar->s[i].call ?
                             (ar->s[i].hit*100)/ar->s[i].call :
                             100);
+        }
+        else
+        {
+            notshown++;
+        }
+        if(ar->s[i].total && i!=(nument-1))
+        {
+                logmsg(sep);
+        }
+    }
+    logmsg(sep);
+    logmsg("HHCEV004I (*) Unsupported; (+) Category summary.\n");
+    if(notshown)
+    {
+        logmsg("HHCEV005I %d Entr%s not shown (never invoked)\n",notshown,notshown==1?"y":"ies");
+    }
+    if(unsupcc)
+    {
+        if(unsupcc==1)
+        {
+                logmsg("HHCEV006I 1 call was made to an unsupported function\n");
+        }
+        else
+        {
+            logmsg("HHCEV006I %d calls where made to unsupported functions\n",unsupcc);
         }
     }
     return;

@@ -84,9 +84,13 @@ typedef struct _ECPSVM_STAT
     char *name;
     U32  call;
     U32  hit;
+    U16  support:1,
+        total:1;
 } ECPSVM_STAT;
 
 #define ECPSVM_STAT_DCL(_name) ECPSVM_STAT _name
-#define ECPSVM_STAT_DEF(_name) ._name = { .name = ""#_name"" ,.call=0,.hit=0}
+#define ECPSVM_STAT_DEF(_name) ._name = { .name = ""#_name"" ,.call=0,.hit=0,.support=1,.total=0}
+#define ECPSVM_STAT_DEFU(_name) ._name = { .name = ""#_name"" ,.call=0,.hit=0,.support=0,.total=0}
+#define ECPSVM_STAT_DEFM(_name) ._name = { .name = ""#_name"" ,.call=0,.hit=0,.support=1,.total=1}
 
 #endif
