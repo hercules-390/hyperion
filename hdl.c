@@ -242,7 +242,7 @@ static void hdl_term(void)
 {
 DLLENT *dllent;
 
-    /* Call all final */
+    /* Call all final routines, in reverse load order */
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         if(dllent->hdlfini)
