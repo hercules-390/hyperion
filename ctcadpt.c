@@ -139,8 +139,6 @@
 /* Solaris (and maybe even Windows NT/2000 at a future date).        */
 /* The driver can be obtained from http://vtun.sourceforge.net/tun   */
 /*                                                                   */
-#if defined(OPTION_W32_CTCI)
-/*                                                                   */
 /* CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)          */
 /* ----------------------------------------------------------------- */
 /* This is a point-to-point link to the Windows TCP/IP stack. The    */
@@ -184,8 +182,6 @@
 /* Windows distribution of Hercules, but the required WinPCap packet */
 /* driver must be installed separately. The WinPCap packet driver    */
 /* can be obtained from: http://netgroup-serv.polito.it/winpcap/     */
-/*                                                                   */
-#endif /* defined(OPTION_W32_CTCI) */
 /*                                                                   */
 /* CFC (Coupling Facility Channel)                                   */
 /* -------------------------------                                   */
@@ -275,194 +271,194 @@ typedef struct _CTCI_SEGHDR {           /* CTCI segment header       */
 /*-------------------------------------------------------------------*/
 /* Definitions for LCS Command Frame                                 */
 /*-------------------------------------------------------------------*/
-typedef	struct	_LCS_FRAME {             /* LCS 8232 block header    */
-		HWORD	EOB_offset;              /* End of block offset      */
-		BYTE	control;                 /* control 00=LCS cmd       */
-		BYTE	direction;               /* direction flags          */
+typedef struct  _LCS_FRAME {             /* LCS 8232 block header    */
+        HWORD   EOB_offset;              /* End of block offset      */
+        BYTE    control;                 /* control 00=LCS cmd       */
+        BYTE    direction;               /* direction flags          */
 
-		BYTE	lcscmd;                  /* modecntl=0 LCS cmd       */
-		BYTE	flags;                   /* Flags                    */
-		U16		sequence;                /* sequence number          */
+        BYTE    lcscmd;                  /* modecntl=0 LCS cmd       */
+        BYTE    flags;                   /* Flags                    */
+        U16     sequence;                /* sequence number          */
 
-		U16		return_code;             /* LCS return code          */
-		BYTE	media;                   /* 01=ethernet              */
-		BYTE	port;                    /* LAN port                 */
+        U16     return_code;             /* LCS return code          */
+        BYTE    media;                   /* 01=ethernet              */
+        BYTE    port;                    /* LAN port                 */
 
-		U16		count;                   /* usually the read buffer  */
-		HWORD	operation;               /* got me on this one       */
+        U16     count;                   /* usually the read buffer  */
+        HWORD   operation;               /* got me on this one       */
 
-		DWORD	rsvd1;                   /* ditto                    */
-		FWORD	rsvd2;                   /* ditto                    */
-		HWORD	eob;                     /* this should be the end   */
+        DWORD   rsvd1;                   /* ditto                    */
+        FWORD   rsvd2;                   /* ditto                    */
+        HWORD   eob;                     /* this should be the end   */
 
 
-	} LCS_FRAME;
+    } LCS_FRAME;
 
-#define	LCS_TIMING		0x00             /* Timing request           */
-#define	LCS_STRTLAN		0x01             /* Start LAN                */
-#define	LCS_STOPLAN		0x02             /* Stop LAN                 */
-#define	LCS_GENSTAT		0x03             /* Generate Stats           */
-#define	LCS_LANSTAT		0x04             /* LAN Stats                */
-#define	LCS_LISTLAN		0x06             /* List LAN                 */
+#define LCS_TIMING      0x00             /* Timing request           */
+#define LCS_STRTLAN     0x01             /* Start LAN                */
+#define LCS_STOPLAN     0x02             /* Stop LAN                 */
+#define LCS_GENSTAT     0x03             /* Generate Stats           */
+#define LCS_LANSTAT     0x04             /* LAN Stats                */
+#define LCS_LISTLAN     0x06             /* List LAN                 */
 #define LCS_STARTUP     0x07             /* Start Host               */
-#define LCS_SHUTDOWN	0x08             /* Shutdown Host            */
-#define	LCS_LISTLAN2	0x0B             /* Another version          */
-#define	LCS_MULTICAST	0xB2             /* Multicast                */
-#define LCS_MULTICAST2	0xb4             /* Multicast 2              */
-#define	LCS_CONTROL_MODE 0x00            /* LCS command mode         */
+#define LCS_SHUTDOWN    0x08             /* Shutdown Host            */
+#define LCS_LISTLAN2    0x0B             /* Another version          */
+#define LCS_MULTICAST   0xB2             /* Multicast                */
+#define LCS_MULTICAST2  0xb4             /* Multicast 2              */
+#define LCS_CONTROL_MODE 0x00            /* LCS command mode         */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for LCS LANSTAT                                       */
 /*-------------------------------------------------------------------*/
-typedef struct	_LANSTAT {
-		FWORD	pad01;                    /* pad area 1              */
-		FWORD	pad02;                    /* pad area 2              */
-		HWORD	pad03;                    /* pad area 3              */
-		HWORD	mac_addr1;                /* mac prefix              */
-		FWORD	mac_addr2;                /* mac node addr           */
-		FWORD	cnt_out_deblk_lan;        /* outbound deblock to Lan */
-		FWORD	cnt_in_blk_tcp;           /* inbound block to TCP    */
-		FWORD	cnt_out_lan;              /* outbound packets to Lan */
-		FWORD	cnt_out_err;              /* outbound packet errors  */
-		FWORD	cnt_out_disc;             /* outbound packet discard */
-		FWORD	cnt_in_lan;               /* inbound packet from Lan */
-		FWORD	cnt_in_err;               /* inbound packet errors   */
-		FWORD	cnt_in_nobuff;            /* inbound packet no buff  */
-		FWORD	cnt_in_disc;              /* inbound packets discard */
-		HWORD	eob_lan;                  /* end of block            */
-	} LANSTAT;
+typedef struct  _LANSTAT {
+        FWORD   pad01;                    /* pad area 1              */
+        FWORD   pad02;                    /* pad area 2              */
+        HWORD   pad03;                    /* pad area 3              */
+        HWORD   mac_addr1;                /* mac prefix              */
+        FWORD   mac_addr2;                /* mac node addr           */
+        FWORD   cnt_out_deblk_lan;        /* outbound deblock to Lan */
+        FWORD   cnt_in_blk_tcp;           /* inbound block to TCP    */
+        FWORD   cnt_out_lan;              /* outbound packets to Lan */
+        FWORD   cnt_out_err;              /* outbound packet errors  */
+        FWORD   cnt_out_disc;             /* outbound packet discard */
+        FWORD   cnt_in_lan;               /* inbound packet from Lan */
+        FWORD   cnt_in_err;               /* inbound packet errors   */
+        FWORD   cnt_in_nobuff;            /* inbound packet no buff  */
+        FWORD   cnt_in_disc;              /* inbound packets discard */
+        HWORD   eob_lan;                  /* end of block            */
+    } LANSTAT;
 
-#define LANSTAT_EOB		0x42              /* lanstat block size      */
+#define LANSTAT_EOB     0x42              /* lanstat block size      */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for LCS Inbound Packet Header                         */
 /*-------------------------------------------------------------------*/
-typedef	struct	_LCS_PACKET	{
-		HWORD	EOB_packet;               /* end of packet block     */
-		BYTE	p_media;                  /* packet media=01=ethernet*/
-		BYTE	p_port;                   /* LAN port                */
+typedef struct  _LCS_PACKET {
+        HWORD   EOB_packet;               /* end of packet block     */
+        BYTE    p_media;                  /* packet media=01=ethernet*/
+        BYTE    p_port;                   /* LAN port                */
 
-		HWORD	MAC_dest_half;		      /* Destination MAC Address */
-		FWORD	MAC_dest_full;            /* ditto                   */
+        HWORD   MAC_dest_half;            /* Destination MAC Address */
+        FWORD   MAC_dest_full;            /* ditto                   */
 
-		HWORD	MAC_srce_half;            /* Source MAC Address      */
-		FWORD	MAC_srce_full;            /* ditto                   */
+        HWORD   MAC_srce_half;            /* Source MAC Address      */
+        FWORD   MAC_srce_full;            /* ditto                   */
 
-		HWORD	Ethernet_type;            /* ethernet type           */
+        HWORD   Ethernet_type;            /* ethernet type           */
 
-	} LCS_PACKET;
+    } LCS_PACKET;
 
-#define	LCS_MEDIA_ETH	0x01              /* Ethernet media          */
-#define	LCS_PORT0		0x00              /* Port 0                  */
-#define	LCS_PORT1		0x01              /* Port 1                  */
+#define LCS_MEDIA_ETH   0x01              /* Ethernet media          */
+#define LCS_PORT0       0x00              /* Port 0                  */
+#define LCS_PORT1       0x01              /* Port 1                  */
 #define LCS_ETHNT_TYPE  0x08              /* ethernet type           */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for ICMP Message                                      */
 /*-------------------------------------------------------------------*/
-typedef	struct	_LCS_ICMP_MSG {
-		BYTE	icmp_type;                /* message type            */
-		BYTE	icmp_code;                /* message code            */
-		HWORD	icmp_checksum;            /* message checksum        */
-		HWORD	icmp_identifier;          /* message identifier      */
-		HWORD	icmp_sequence;            /* message sequence        */
-		HWORD	icmp_data;                /* data portion of ICMP    */
-	} LCS_ICMP_MSG;
+typedef struct  _LCS_ICMP_MSG {
+        BYTE    icmp_type;                /* message type            */
+        BYTE    icmp_code;                /* message code            */
+        HWORD   icmp_checksum;            /* message checksum        */
+        HWORD   icmp_identifier;          /* message identifier      */
+        HWORD   icmp_sequence;            /* message sequence        */
+        HWORD   icmp_data;                /* data portion of ICMP    */
+    } LCS_ICMP_MSG;
 
-#define	ICMP_ECHO_REPLY	0x00              /* ping reply              */
-#define ICMP_ECHO_REQ	0x08              /* ping request            */
-#define ICMP_ROUTER_AD	0x09              /* router advertisment     */
-#define	ICMP_ROUTER_SOL	0x10              /* router solicitation     */
-#define	ICMP_TIMESTMP_REQ	0x13          /* timestamp request       */
-#define	ICMP_TEMESTMP_RPLY	0x14          /* timestamp replay        */
-#define	ICMP_INFO_REQ	0x0F              /* information request     */
-#define	ICMP_INFO_RPLY	0x10              /* information reply       */
-#define	ICMP_ADDR_MSK_REQ	0x17          /* address mask request    */
-#define	ICMP_ADDR_MSK_RPLY	0x18          /* address mask replay     */
+#define ICMP_ECHO_REPLY 0x00              /* ping reply              */
+#define ICMP_ECHO_REQ   0x08              /* ping request            */
+#define ICMP_ROUTER_AD  0x09              /* router advertisment     */
+#define ICMP_ROUTER_SOL 0x10              /* router solicitation     */
+#define ICMP_TIMESTMP_REQ   0x13          /* timestamp request       */
+#define ICMP_TEMESTMP_RPLY  0x14          /* timestamp replay        */
+#define ICMP_INFO_REQ   0x0F              /* information request     */
+#define ICMP_INFO_RPLY  0x10              /* information reply       */
+#define ICMP_ADDR_MSK_REQ   0x17          /* address mask request    */
+#define ICMP_ADDR_MSK_RPLY  0x18          /* address mask replay     */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for LCS/IP Header                                     */
 /*-------------------------------------------------------------------*/
-typedef	struct	_LCS_IP_HEADER {
-		BYTE	ip_vers_lngth;            /* version/header length   */
-		BYTE	ip_tos;                   /* type of service         */
-		HWORD	ip_total_length;          /* total length            */
-		HWORD	ip_identification;        /* indentification         */
-		HWORD	ip_fragment_offset;       /* fragment offset         */
-		BYTE	ip_ttl;                   /* time to live            */
-		BYTE	ip_protocol;              /* protocol                */
-		HWORD	ip_checksum;              /* checksum                */
-		FWORD	ip_source_address;        /* source address          */
-		FWORD	ip_destination_address;   /* destination address     */
-		struct _LCS_ICMP_MSG icmp;        /* icmp structure          */
-	} LCS_IP_HEADER;
+typedef struct  _LCS_IP_HEADER {
+        BYTE    ip_vers_lngth;            /* version/header length   */
+        BYTE    ip_tos;                   /* type of service         */
+        HWORD   ip_total_length;          /* total length            */
+        HWORD   ip_identification;        /* indentification         */
+        HWORD   ip_fragment_offset;       /* fragment offset         */
+        BYTE    ip_ttl;                   /* time to live            */
+        BYTE    ip_protocol;              /* protocol                */
+        HWORD   ip_checksum;              /* checksum                */
+        FWORD   ip_source_address;        /* source address          */
+        FWORD   ip_destination_address;   /* destination address     */
+        struct _LCS_ICMP_MSG icmp;        /* icmp structure          */
+    } LCS_IP_HEADER;
 
-#define	LCS_IPVERS		0x45              /* normal value            */
-#define	LCS_IPVERSX		0x46              /* internal value          */
-#define	LCS_EYEBALL		0x00D3C3E2        /* eyeball                 */
+#define LCS_IPVERS      0x45              /* normal value            */
+#define LCS_IPVERSX     0x46              /* internal value          */
+#define LCS_EYEBALL     0x00D3C3E2        /* eyeball                 */
 #define LCS_MIN_TOL     0x30              /* our minimum size        */
 
 /*-------------------------------------------------------------------*/
 /* Definitions for ARP request/response                              */
 /*-------------------------------------------------------------------*/
-typedef	struct	_LCS_ARP {
+typedef struct  _LCS_ARP {
 
-		HWORD	EOB_packet;               /* end of packet block     */
-		BYTE	p_media;                  /* packet media=01=ethernet*/
-		BYTE	p_port;                   /* LAN port                */
+        HWORD   EOB_packet;               /* end of packet block     */
+        BYTE    p_media;                  /* packet media=01=ethernet*/
+        BYTE    p_port;                   /* LAN port                */
 
-		HWORD	MAC_dest_half;		      /* Destination MAC Address */
-		FWORD	MAC_dest_full;            /* ditto                   */
+        HWORD   MAC_dest_half;            /* Destination MAC Address */
+        FWORD   MAC_dest_full;            /* ditto                   */
 
-		HWORD	MAC_srce_half;            /* Source MAC Address      */
-		FWORD	MAC_srce_full;            /* ditto                   */
+        HWORD   MAC_srce_half;            /* Source MAC Address      */
+        FWORD   MAC_srce_full;            /* ditto                   */
 
-		HWORD	Ethernet_type;            /* ethernet type           */
+        HWORD   Ethernet_type;            /* ethernet type           */
 
-		HWORD	Hard_type;                /* hardware address type   */
+        HWORD   Hard_type;                /* hardware address type   */
 
-		HWORD	Prot_type;                /* protocol address type   */
+        HWORD   Prot_type;                /* protocol address type   */
 
-		BYTE	Hard_size;                /* hardware address size   */
-		BYTE	Prot_size;                /* protocol address size   */
+        BYTE    Hard_size;                /* hardware address size   */
+        BYTE    Prot_size;                /* protocol address size   */
 
-		HWORD	Operation;                /* ARP operation type      */
+        HWORD   Operation;                /* ARP operation type      */
 
-		BYTE	Send_Eth_addr[6];         /* send hardware address   */
-		BYTE	Send_IP_addr[4];          /* send IP address         */
+        BYTE    Send_Eth_addr[6];         /* send hardware address   */
+        BYTE    Send_IP_addr[4];          /* send IP address         */
 
-		BYTE	Targ_Eth_addr[6];         /* target hardware address */
-		BYTE	Targ_IP_addr[4];          /* target IP address       */
+        BYTE    Targ_Eth_addr[6];         /* target hardware address */
+        BYTE    Targ_IP_addr[4];          /* target IP address       */
 
-		BYTE	filler[20];               /* filler bytes            */
+        BYTE    filler[20];               /* filler bytes            */
 
-	} LCS_ARP;
+    } LCS_ARP;
 
-#define	ARP_request		0x01
-#define ARP_reply		0x02
-#define	RARP_request	0x03
-#define	RARP_reply		0x04
+#define ARP_request     0x01
+#define ARP_reply       0x02
+#define RARP_request    0x03
+#define RARP_reply      0x04
 
 /*-------------------------------------------------------------------*/
 /* Definitions for Outbound LCS Packet Header                        */
 /*-------------------------------------------------------------------*/
-typedef	struct	_LCS_OUT_PACKET {
+typedef struct  _LCS_OUT_PACKET {
 
-		HWORD	EOB_packet;               /* end of packet block     */
-		BYTE	p_media;                  /* packet media=01=ethernet*/
-		BYTE	p_port;                   /* LAN port                */
+        HWORD   EOB_packet;               /* end of packet block     */
+        BYTE    p_media;                  /* packet media=01=ethernet*/
+        BYTE    p_port;                   /* LAN port                */
 
-		HWORD	MAC_dest_half;		      /* Destination MAC Address */
-		FWORD	MAC_dest_full;            /* ditto                   */
+        HWORD   MAC_dest_half;            /* Destination MAC Address */
+        FWORD   MAC_dest_full;            /* ditto                   */
 
-		HWORD	MAC_srce_half;            /* Source MAC Address      */
-		FWORD	MAC_srce_full;            /* ditto                   */
+        HWORD   MAC_srce_half;            /* Source MAC Address      */
+        FWORD   MAC_srce_full;            /* ditto                   */
 
-		HWORD	Ethernet_type;            /* ethernet type           */
+        HWORD   Ethernet_type;            /* ethernet type           */
 
-		struct _LCS_IP_HEADER ip;         /* ip portion of message   */
+        struct _LCS_IP_HEADER ip;         /* ip portion of message   */
 
-	} LCS_OUT_PACKET;
+    } LCS_OUT_PACKET;
 
 
 /*-------------------------------------------------------------------*/
@@ -513,38 +509,38 @@ unsigned char print_chars[17];
 /*-------------------------------------------------------------------*/
 /* LCS subroutine to service incoming IP packets                     */
 /*-------------------------------------------------------------------*/
-static void * serv_lcs(DEVBLK *dev)
+static void serv_lcs(DEVBLK *dev)
 {
-	int	i;
+    int i;
 
-	i = 1;
-	dev->readerr = 0;
+    i = 1;
+    dev->readerr = 0;
 
-	if (dev->ccwtrace || dev->ccwstep)
-		logmsg ("LCS001I %4.4X: LCS read thread active\n",
-		dev->devnum);
+    if (dev->ccwtrace || dev->ccwstep)
+        logmsg ("LCS001I %4.4X: LCS read thread active\n",
+        dev->devnum);
 
-	while (i == 1)
-	{
-		/* Read an IP packet from the TUN device */
-		dev->lcslen = read (dev->fd, dev->buf, dev->bufsize);
+    while (i == 1)
+    {
+        /* Read an IP packet from the TUN device */
+        dev->lcslen = read (dev->fd, dev->buf, dev->bufsize);
 
-		/* Check for other error condition */
-		if (dev->lcslen < 0)
-		{
-			dev->readerr = 1;
-		    logmsg ("HHC869I %4.4X Error reading from %s: %s\n",
-		          dev->devnum, dev->filename, strerror(errno));
-		    dev->readstrt = 0;
-		   	i = 0;
-		}
-		else dev->readpnd = 1;
+        /* Check for other error condition */
+        if (dev->lcslen < 0)
+        {
+            dev->readerr = 1;
+            logmsg ("HHC869I %4.4X Error reading from %s: %s\n",
+                   dev->devnum, dev->filename, strerror(errno));
+            dev->readstrt = 0;
+            i = 0;
+        }
+        else dev->readpnd = 1;
 
-	} /* end while loop */
+    } /* end while loop */
 
-	if (dev->ccwtrace || dev->ccwstep)
-		logmsg ("LCS002I %4.4X: LCS read thread finished\n",
-		dev->devnum);
+    if (dev->ccwtrace || dev->ccwstep)
+        logmsg ("LCS002I %4.4X: LCS read thread finished\n",
+            dev->devnum);
 
 } /* end of serv_lcs */
 
@@ -678,7 +674,7 @@ BYTE            c;                      /* Character work area       */
     }
     memcpy (&dev->ctcipsrc, &ipaddr, 4);
 
-	/* The fifth argument is the IP address of the
+    /* The fifth argument is the IP address of the
        driving system side of the point-to-point link */
     drivaddr = argv[4];
     if (inet_aton(drivaddr, &ipaddr) == 0)
@@ -742,16 +738,16 @@ BYTE            c;                      /* Character work area       */
                 &&
                 /* If it failed with EINVAL, try with the pre-2.4.5 value */
                 (errno != EINVAL || ioctl(fd, ('T' << 8) | 202, &ifr) != 0) )
-                {
-                  logmsg ("LCS009E %4.4X setting net device param failed: %s\n",
-                          dev->devnum, strerror(errno));
-                  ctcadpt_close_device(dev);
-                  return -1;
-                }
-	    strcpy(dev->netdevname, ifr.ifr_name);
-        } else
-	  {
-
+            {
+              logmsg ("LCS009E %4.4X setting net device param failed: %s\n",
+                      dev->devnum, strerror(errno));
+              ctcadpt_close_device(dev);
+              return -1;
+            }
+            strcpy(dev->netdevname, ifr.ifr_name);
+        }
+        else
+        {
             /* Other OS: Simply use basename of the device */
             char *p = strrchr(dev->filename, '/');
             if (p)
@@ -1914,164 +1910,162 @@ static struct timeval tv;               /* Timeout time for 'select' */
 static void read_lcs (DEVBLK *dev, U16 count, BYTE *iobuf,
                        BYTE *unitstat, U16 *residual, BYTE *more)
 {
-int				lenx;                   /* LCS cmd response length   */
-int				t_len;                  /* temp copy of length       */
-LCS_PACKET	   *packet;                 /* lcs packet                */
+int             lenx;                   /* LCS cmd response length   */
+int             t_len;                  /* temp copy of length       */
+LCS_PACKET      *packet;                 /* lcs packet                */
 U16             num;                    /* Number of bytes returned  */
 TID             tid;                    /* Thread ID for server      */
-int				i;
+int             i;
 struct  timeval tv;                     /* Structure for gettimeofday
                                            and select function calls */
 
+    /* First check if we got an IP read error to report from the read*/
+    /* thread.                                                       */
+    if (dev->readerr)
+    {
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE |CSW_UC;
+        dev->readerr = 0;
+        return;
+    }
 
-	/* First check if we got an IP read error to report from the read*/
-	/* thread.                                                       */
-	if (dev->readerr)
-	{
-		dev->sense[0] = SENSE_EC;
-		*unitstat = CSW_CE | CSW_DE |CSW_UC;
-		dev->readerr = 0;
-		return;
-	}
+    /* If not already started, create a read IP thread */
+    if (!(dev->readstrt))
+    {
+        create_thread(&tid, NULL, serv_lcs, dev);
+        dev->readstrt = 1;
+    }
 
-	/* If not already started, create a read IP thread */
-	if (!(dev->readstrt))
-	{
-		create_thread(&tid, NULL, serv_lcs, dev);
-		dev->readstrt = 1;
-	}
+    /* This is the "look for work loop".                              */
+    /* There are 3 events that are scanned for:                       */
+    /* (1) read error encountered on IP packet => reported by the     */
+    /*     read thread.                                               */
+    /* (2) read pending => read thread has inbound IP packet          */
+    /* (3) LCS command response pending                               */
+    /* Any one of these events will cause a return, which ends the    */
+    /* read CCW operation.                                            */
+    /* If there are no events, the logic will "sleep".                */
+    i = 1;
 
+    if (dev->ccwtrace || dev->ccwstep)
+        logmsg ("LCS102I %4.4X: Entering while loop...\n",
+            dev->devnum);
 
-	/* This is the "look for work loop".                              */
-	/* There are 3 events that are scanned for:                       */
-	/* (1) read error encountered on IP packet => reported by the     */
-	/*     read thread.                                               */
-	/* (2) read pending => read thread has inbound IP packet          */
-	/* (3) LCS command response pending                               */
-	/* Any one of these events will cause a return, which ends the    */
-	/* read CCW operation.                                            */
-	/* If there are no events, the logic will "sleep".                */
-	i = 1;
+    while (i == 1)
+    {
+        /* Always check to see if the read thread encountered any     */
+        /* errors.                                                    */
+        if (dev->readerr)
+        {
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            dev->readerr = 0;
+            i = 0;
+            return;
+        }
 
-	if (dev->ccwtrace || dev->ccwstep)
-		logmsg ("LCS102I %4.4X: Entering while loop...\n",
-			dev->devnum);
+        /* Check to see if the read thread found something for us     */
+        if (dev->readpnd)
+        {
+            if (dev->ccwtrace || dev->ccwstep)
+            {
+                logmsg ("LCS101I %4.4X: Incoming Packet\n",
+                    dev->devnum);
+                packet_trace(dev->buf, dev->lcslen);
+            }
 
-	while (i == 1)
-	{
-		/* Always check to see if the read thread encountered any     */
-		/* errors.                                                    */
-		if (dev->readerr)
-		{
-			dev->sense[0] = SENSE_EC;
-			*unitstat = CSW_CE | CSW_DE | CSW_UC;
-			dev->readerr = 0;
-			i = 0;
-			return;
-		}
+            /* Build the LCS Packet Header in the io buffer      */
+            packet = (LCS_PACKET*)iobuf;
+            t_len = dev->lcslen + sizeof(LCS_PACKET);
 
-		/* Check to see if the read thread found something for us     */
-		if (dev->readpnd)
-		{
-			if (dev->ccwtrace || dev->ccwstep)
-			{
-				logmsg ("LCS101I %4.4X: Incoming Packet\n",
-					dev->devnum);
-				packet_trace(dev->buf, dev->lcslen);
-			}
+            packet->EOB_packet[0] = t_len >> 8;
+            packet->EOB_packet[1] = t_len;
 
-			/* Build the LCS Packet Header in the io buffer      */
-			packet = (LCS_PACKET*)iobuf;
-			t_len = dev->lcslen + sizeof(LCS_PACKET);
+            packet->p_media = LCS_MEDIA_ETH;
+            packet->p_port = LCS_PORT0;
 
-			packet->EOB_packet[0] = t_len >> 8;
-			packet->EOB_packet[1] = t_len;
+            packet->MAC_dest_half[0] = 0x40;
+            packet->MAC_dest_full[0] = 0x00;
+            packet->MAC_dest_full[1] = 0x00;
+            packet->MAC_dest_full[2] = 0x00;
+            packet->MAC_dest_full[3] = 0x88;
 
-			packet->p_media = LCS_MEDIA_ETH;
-			packet->p_port = LCS_PORT0;
+            packet->MAC_srce_half[0] = 0x40;
+            packet->MAC_srce_full[0] = 0x00;
+            packet->MAC_srce_full[1] = 0x00;
+            packet->MAC_srce_full[2] = 0x00;
+            packet->MAC_srce_full[3] = 0x89;
 
-			packet->MAC_dest_half[0] = 0x40;
-			packet->MAC_dest_full[0] = 0x00;
-			packet->MAC_dest_full[1] = 0x00;
-			packet->MAC_dest_full[2] = 0x00;
-			packet->MAC_dest_full[3] = 0x88;
+            packet->Ethernet_type[0] = 0x08;
+            packet->Ethernet_type[1] = 0x00;
 
-			packet->MAC_srce_half[0] = 0x40;
-			packet->MAC_srce_full[0] = 0x00;
-			packet->MAC_srce_full[1] = 0x00;
-			packet->MAC_srce_full[2] = 0x00;
-			packet->MAC_srce_full[3] = 0x89;
+            /* Copy the IP header + data                         */
+            memcpy (iobuf + sizeof(LCS_PACKET), dev->buf, dev->lcslen);
+            lenx = dev->lcslen + sizeof(LCS_PACKET);
+            iobuf[lenx] = 0x00;
+            iobuf[lenx+1]= 0x00;
+            dev->readpnd = 0;
 
-			packet->Ethernet_type[0] = 0x08;
-			packet->Ethernet_type[1] = 0x00;
+            /* Calculate #of bytes returned including two slack bytes */
+            num = lenx + 2;
 
-			/* Copy the IP header + data                         */
-			memcpy (iobuf + sizeof(LCS_PACKET), dev->buf, dev->lcslen);
-			lenx = dev->lcslen + sizeof(LCS_PACKET);
-			iobuf[lenx] = 0x00;
-			iobuf[lenx+1]= 0x00;
-			dev->readpnd = 0;
+            /* Calculate the residual byte count */
+            if (num > count)
+            {
+                *more = 1;
+                *residual = 0;
+            }
+            else
+            {
+                *residual = count - num;
+            }
 
-			/* Calculate #of bytes returned including two slack bytes */
-   			num = lenx + 2;
+            /* Set unit status */
+            *unitstat = CSW_CE | CSW_DE;
+            if (dev->ccwtrace || dev->ccwstep)
+            {
+                logmsg ("LCS102I %4.4X: LCS packet\n",
+                    dev->devnum);
+                packet_trace (iobuf, num);
+            }
+            i = 0;
 
-   			/* Calculate the residual byte count */
-   			if (num > count)
-   			 {
-   			     *more = 1;
-   			     *residual = 0;
-   			 }
-   			 else
-   			 {
-   			     *residual = count - num;
-   			 }
+            return;
+        }
 
-   			 /* Set unit status */
-   			 *unitstat = CSW_CE | CSW_DE;
-   			 if (dev->ccwtrace || dev->ccwstep)
-   			 {
-				 logmsg ("LCS102I %4.4X: LCS packet\n",
-				 	dev->devnum);
-				 packet_trace (iobuf, num);
-			 }
-			 i = 0;
+        /* check for LCS command response         */
+        if (dev->lcscmd)
+        {
+            /* copy the response into the read CCW buffer */
+            memcpy (iobuf, dev->lcsbuf, dev->lcscmdlen);
 
-   			 return;
-		}
+            /* finish up and exit                  */
+            *residual = count - dev->lcscmdlen;
+            *unitstat = CSW_CE | CSW_DE;
 
-		/* check for LCS command response         */
-		if (dev->lcscmd)
-		{
-			/* copy the response into the read CCW buffer */
-			memcpy (iobuf, dev->lcsbuf, dev->lcscmdlen);
+            if (dev->ccwtrace || dev->ccwstep)
+            {
+                logmsg ("LCS100I %4.4X: LCS command response\n",
+                    dev->devnum);
+                packet_trace (iobuf, dev->lcscmdlen);
+            }
 
-			/* finish up and exit                  */
-			*residual = count - dev->lcscmdlen;
-			*unitstat = CSW_CE | CSW_DE;
+            dev->lcscmd = 0;
+            i = 0;
+            return;
+        }
 
-			if (dev->ccwtrace || dev->ccwstep)
-			{
-				logmsg ("LCS100I %4.4X: LCS command response\n",
-					dev->devnum);
-				packet_trace (iobuf, dev->lcscmdlen);
-			}
-
-			dev->lcscmd = 0;
-			i = 0;
-			return;
-		}
-
-		/* check for halt condition */
-		if (dev->scsw.flag2 & SCSW2_FC_HALT)
-		{
-			if (dev->ccwtrace || dev->ccwstep)
-				logmsg ("LCS101I %4.4X: Halt Condition Recognized\n",
-					dev->devnum);
-			*unitstat = CSW_CE | CSW_DE;
-			*residual = count;
-			i = 0;
-			return;
-		}
+        /* check for halt condition */
+        if (dev->scsw.flag2 & SCSW2_FC_HALT)
+        {
+            if (dev->ccwtrace || dev->ccwstep)
+                logmsg ("LCS101I %4.4X: Halt Condition Recognized\n",
+                    dev->devnum);
+            *unitstat = CSW_CE | CSW_DE;
+            *residual = count;
+            i = 0;
+            return;
+        }
 
         /* Sleep for one system clock tick by specifying a one-microsecond
            delay, which will get stretched out to the next clock tick */
@@ -2079,7 +2073,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
         tv.tv_usec = 1;
         select (0, NULL, NULL, NULL, &tv);
 
-	}
+    }
 
 } /* end function read_lcs */
 
@@ -2109,338 +2103,335 @@ static void write_lcs (DEVBLK *dev, U16 count, BYTE *iobuf,
                         BYTE *unitstat, U16 *residual)
 {
 int             rc;                     /* Return code               */
-unsigned int	datalen;                /* length of packet data     */
+unsigned int    datalen;                /* length of packet data     */
 LCS_FRAME      *lcsfrm;                 /* -> Block header in buffer */
 LCS_FRAME      *lcs;                    /* -> Block header in dev buf*/
 LCS_OUT_PACKET *packet;                 /* -> lcs packet             */
-LCS_ARP		   *arp_in;                 /* -> arp inbound packet     */
-LCS_ARP		   *arp_out;                /* -> arp outbound packet    */
-LANSTAT		   *lanstat;                /* -> lan stat area          */
+LCS_ARP        *arp_in;                 /* -> arp inbound packet     */
+LCS_ARP        *arp_out;                /* -> arp outbound packet    */
+LANSTAT        *lanstat;                /* -> lan stat area          */
 int             i;                      /* Array subscript           */
-int				cmd;
-int			    offset;
-int				buff_offset;
-int				last_offset;
-int				current_offset;
+int             cmd;
+int             offset;
+int             buff_offset;
+int             last_offset;
+int             current_offset;
 
-	lcsfrm = (LCS_FRAME*)iobuf;
+    lcsfrm = (LCS_FRAME*)iobuf;
 
-	if (dev->ctcpair == NULL)
-	{
-		logmsg ("LCS200E %4.4X: CTCPAIR pointer is null\n",
-			dev->devnum);
-		*unitstat = CSW_CE | CSW_DE | CSW_UC;
-		*residual = 0;
-		return;
-	}
+    if (dev->ctcpair == NULL)
+    {
+        logmsg ("LCS200E %4.4X: CTCPAIR pointer is null\n",
+            dev->devnum);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        *residual = 0;
+        return;
+    }
 
-	/* Check for LCS command                                         */
-	/*                                                               */
-	/* LCS commands are identified by the setting of the control byte*/
-	/* which is 0x00. The length of the LCS frame changes based on   */
-	/* the mode identified.                                          */
+    /* Check for LCS command                                         */
+    /*                                                               */
+    /* LCS commands are identified by the setting of the control byte*/
+    /* which is 0x00. The length of the LCS frame changes based on   */
+    /* the mode identified.                                          */
+
+    if (lcsfrm->control == LCS_CONTROL_MODE)
+    {
+        i = 1;
+        dev->ctcpair->lcscmdlen = 0;
+        *residual = count;
+        buff_offset = 0;
+        lcs = (LCS_FRAME*)dev->ctcpair->lcsbuf;
+
+        while ( i == 1)
+        {
+            cmd = lcsfrm->lcscmd;
+            switch(cmd)
+            {
+                case LCS_STRTLAN:
+                case LCS_STOPLAN:
+                case LCS_STARTUP:
+                case LCS_SHUTDOWN:
+                case LCS_MULTICAST2:
+                {
+                    if (dev->ccwtrace || dev->ccwstep)
+                        logmsg ("entering case 1\n");
+
+                    buff_offset += 0x14;
+                    dev->ctcpair->lcscmdlen += 0x16;
+                    lcs->EOB_offset[0] = buff_offset << 8;
+                    lcs->EOB_offset[1] = buff_offset;
+                    lcs->control = 0x00;
+                    lcs->direction = 0x00;
+                    lcs->lcscmd = lcsfrm->lcscmd;
+                    lcs->sequence = lcsfrm->sequence;
+                    lcs->return_code = 0x0000;
+                    lcs->media = 0x01;
+                    lcs->port = 0x00;
+                    lcs->rsvd1[4] = 0x00;
+                    lcs->rsvd1[5] = 0x00;
+                    lcs->eob[0] = 0x00;
+                    lcs->eob[1] = 0x00;
+
+                    *residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
+
+                    offset = (int)lcsfrm;
+                    offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
+                    lcsfrm = (LCS_FRAME*)offset;
+                    offset = (int)lcs;
+                    offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
+                    lcs = (LCS_FRAME*)offset;
+
+                    if ( (*residual < 3) ||
+                        ((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
+                    {
+                        if (dev->ccwtrace || dev->ccwstep)
+                        {
+                            logmsg ("LCS202I %4.4X: LCS write completed\n",
+                                dev->devnum);
+
+                        }
+                        *unitstat = CSW_CE | CSW_DE;
+                        dev->ctcpair->lcscmd = 1;
+                        return;
+                    }
+                    break;
+                }
+                case LCS_MULTICAST:
+                {
+                    if (dev->ccwtrace || dev->ccwstep)
+                        logmsg ("entering case 2\n");
+
+                    buff_offset += 0x14;
+                    dev->ctcpair->lcscmdlen += 0x16;
+                    lcs->EOB_offset[0] = buff_offset << 8;
+                    lcs->EOB_offset[1] = buff_offset;
+                    lcs->control = 0x00;
+                    lcs->direction = 0x00;
+                    lcs->lcscmd = lcsfrm->lcscmd;
+                    lcs->sequence = lcsfrm->sequence;
+                    lcs->flags = 0x00;
+                    lcs->return_code = 0x0000;
+                    lcs->media = 0x01;
+                    lcs->port = 0x01;
+                    lcs->count = 0x0000;
+                    lcs->operation[1] = 0xFF;
+                    lcs->rsvd1[1] = 0xFF;
+                    lcs->rsvd1[3] = lcsfrm->rsvd1[3];
+                    lcs->eob[0] = 0x00;
+                    lcs->eob[1] = 0x00;
+
+                    *residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
+
+                    offset = (int)lcsfrm;
+                    offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
+                    lcsfrm = (LCS_FRAME*)offset;
+                    offset = (int)lcs;
+                    offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
+                    lcs = (LCS_FRAME*)offset;
+
+                    if ( (*residual < 3) ||
+                        ((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
+                    {
+                        if (dev->ccwtrace || dev->ccwstep)
+                        {
+                            logmsg ("LCS203I %4.4X: LCS write completed\n",
+                                dev->devnum);
+
+                        }
+                        *unitstat = CSW_CE | CSW_DE;
+                        dev->ctcpair->lcscmd = 1;
+                        return;
+                    }
+                    break;
+                }
+                case LCS_LANSTAT:
+                {
+                    if (dev->ccwtrace || dev->ccwstep)
+                        logmsg ("entering case 4\n");
+
+                    buff_offset += LANSTAT_EOB;
+                    dev->ctcpair->lcscmdlen += LANSTAT_EOB + 2;
+                    lcs->EOB_offset[0] = buff_offset << 8;
+                    lcs->EOB_offset[1] = buff_offset;
+                    lcs->control = 0x00;
+                    lcs->direction = 0x00;
+                    lcs->lcscmd = lcsfrm->lcscmd;
+                    lcs->sequence = lcsfrm->sequence;
+                    lcs->return_code = 0x0000;
+                    lcs->count = 0x0100;
+                    lcs->media = 0x01;
+                    lcs->port= 0x00;
+
+                    lanstat = (LANSTAT*)&lcs->count;
+
+                    lanstat->pad03[0] = 0x01;
+                    lanstat->mac_addr1[0] = 0x40;
+                    lanstat->mac_addr1[1] = 0x00;
+                    lanstat->mac_addr2[0] = 0x00;
+                    lanstat->mac_addr2[1] = 0x00;
+                    lanstat->mac_addr2[2] = 0x00;
+                    lanstat->mac_addr2[3] = 0x88;
+                    lanstat->eob_lan[0] = 0x00;
+                    lanstat->eob_lan[1] = 0x00;
+
+                    *residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
+
+                    offset = (int)lcsfrm;
+                    offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
+                    lcsfrm = (LCS_FRAME*)offset;
+                    offset = (int)lcs;
+                    offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
+                    lcs = (LCS_FRAME*)offset;
+
+                    if ( (*residual < 3) ||
+                        ((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
+                    {
+                        if (dev->ccwtrace || dev->ccwstep)
+                        {
+                            logmsg ("LCS204I %4.4X: LCS write completed\n",
+                                dev->devnum);
+
+                        }
+                        *unitstat = CSW_CE | CSW_DE;
+                        dev->ctcpair->lcscmd = 1;
+                        return;
+                    }
+                    break;
+                }
+
+                default:
+                {
+                    buff_offset += 0x14;
+                    dev->ctcpair->lcscmdlen += 0x16;
+                    lcs->EOB_offset[0] = buff_offset << 8;
+                    lcs->EOB_offset[1] = buff_offset;
+                    lcs->control = 0x00;
+                    lcs->direction = 0x00;
+                    lcs->lcscmd = lcsfrm->lcscmd;
+                    lcs->sequence = lcsfrm->sequence;
+                    lcs->return_code = 0x0100;
+                    lcs->media = 0x01;
+                    lcs->port = 0x00;
+                    lcs->rsvd1[4] = 0x00;
+                    lcs->rsvd1[5] = 0x00;
+                    lcs->eob[0] = 0x00;
+                    lcs->eob[1] = 0x00;
+
+                    *residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
+
+                    offset = (int)lcsfrm;
+                    offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
+                    lcsfrm = (LCS_FRAME*)offset;
+                    offset = (int)lcs;
+                    offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
+                    lcs = (LCS_FRAME*)offset;
+
+                    if ( (*residual < 3) ||
+                        ((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
+                    {
+                        if (dev->ccwtrace || dev->ccwstep)
+                        {
+                            logmsg ("LCS205I %4.4X: LCS write completed\n",
+                                dev->devnum);
+
+                        }
+                        *unitstat = CSW_CE | CSW_DE;
+                        dev->ctcpair->lcscmd = 1;
+                        return;
+                    }
+                    break;
+
+                }
+
+            } /* end switch */
+        } /* end while loop */
+
+    } /* end LCS command processing */
 
 
-	if (lcsfrm->control == LCS_CONTROL_MODE)
-	{
-		i = 1;
-		dev->ctcpair->lcscmdlen = 0;
-		*residual = count;
-		buff_offset = 0;
-		lcs = (LCS_FRAME*)dev->ctcpair->lcsbuf;
+    /* For Non-LCS Command frames => process each data frame */
+    packet = (LCS_OUT_PACKET*)iobuf;
+    offset = (unsigned int)iobuf;
 
-		while ( i == 1)
-		{
-			cmd = lcsfrm->lcscmd;
-			switch(cmd)
-			{
-				case LCS_STRTLAN:
-				case LCS_STOPLAN:
-				case LCS_STARTUP:
-				case LCS_SHUTDOWN:
-				case LCS_MULTICAST2:
-				{
-					if (dev->ccwtrace || dev->ccwstep)
-						logmsg ("entering case 1\n");
+    i = 1;
+    last_offset = 0;
+    current_offset = 0;
 
-					buff_offset += 0x14;
-					dev->ctcpair->lcscmdlen += 0x16;
-					lcs->EOB_offset[0] = buff_offset << 8;
-					lcs->EOB_offset[1] = buff_offset;
-					lcs->control = 0x00;
-					lcs->direction = 0x00;
-					lcs->lcscmd = lcsfrm->lcscmd;
-					lcs->sequence = lcsfrm->sequence;
-					lcs->return_code = 0x0000;
-					lcs->media = 0x01;
-					lcs->port = 0x00;
-					lcs->rsvd1[4] = 0x00;
-					lcs->rsvd1[5] = 0x00;
-					lcs->eob[0] = 0x00;
-					lcs->eob[1] = 0x00;
+    while ( i == 1 )
+    {
+        last_offset = current_offset;
+        current_offset = (packet->EOB_packet[0] << 8) + packet->EOB_packet[1];
+        datalen = (current_offset - last_offset) - sizeof(LCS_PACKET);
 
-					*residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
+        /* Check for an ARP request  */
+        if ( (packet->Ethernet_type[0] == 0x08) && (packet->Ethernet_type[1] == 0x06) )
+        {
+            arp_out = (LCS_ARP*)packet;
 
-					offset = (int)lcsfrm;
-					offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
-					lcsfrm = (LCS_FRAME*)offset;
-					offset = (int)lcs;
-					offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
-					lcs = (LCS_FRAME*)offset;
+            if (memcmp(&dev->ctcipsrc, &arp_out->Targ_IP_addr,4)==0)
+            {
+                    /* Set unit status and residual byte count        */
+                    /* ARP request is testing for duplicate IP address*/
+                    /* In this case, just exit and let request time out*/
+                    *unitstat = CSW_CE | CSW_DE;
+                    *residual = 0;
+                    return;
+            }
 
-					if ( (*residual < 3) ||
-						((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
-					{
-						if (dev->ccwtrace || dev->ccwstep)
-						{
-							logmsg ("LCS202I %4.4X: LCS write completed\n",
-								dev->devnum);
+            /* copy the ARP request into the read CCW LCS command buffer */
+            memcpy (dev->ctcpair->lcsbuf, packet, sizeof(LCS_ARP));
 
-						}
-						*unitstat = CSW_CE | CSW_DE;
-						dev->ctcpair->lcscmd = 1;
-						return;
-					}
-					break;
-				}
-				case LCS_MULTICAST:
-				{
-					if (dev->ccwtrace || dev->ccwstep)
-						logmsg ("entering case 2\n");
+            /* Modify the request into an ARP response */
+            arp_in = (LCS_ARP*)dev->ctcpair->lcsbuf;
+            arp_out = (LCS_ARP*)packet;
+            memcpy (arp_in->MAC_dest_half, arp_out->Send_Eth_addr, 6);
+            memcpy (arp_in->Targ_Eth_addr, arp_out->Send_Eth_addr, 10);
+            memcpy (arp_in->Send_IP_addr, arp_out->Targ_IP_addr, 4);
+            arp_in->Operation[1] = ARP_reply;
+            arp_in->MAC_srce_full[3] = 0x89;
+            arp_in->MAC_srce_half[0] = 0x40;
+            arp_in->Send_Eth_addr[5] = 0x89;
+            arp_in->Send_Eth_addr[0] = 0x40;
+            arp_in->filler[18] = 0x00;
+            arp_in->filler[19] = 0x00;
 
-					buff_offset += 0x14;
-					dev->ctcpair->lcscmdlen += 0x16;
-					lcs->EOB_offset[0] = buff_offset << 8;
-					lcs->EOB_offset[1] = buff_offset;
-					lcs->control = 0x00;
-					lcs->direction = 0x00;
-					lcs->lcscmd = lcsfrm->lcscmd;
-					lcs->sequence = lcsfrm->sequence;
-					lcs->flags = 0x00;
-					lcs->return_code = 0x0000;
-					lcs->media = 0x01;
-					lcs->port = 0x01;
-					lcs->count = 0x0000;
-					lcs->operation[1] = 0xFF;
-					lcs->rsvd1[1] = 0xFF;
-					lcs->rsvd1[3] = lcsfrm->rsvd1[3];
-					lcs->eob[0] = 0x00;
-					lcs->eob[1] = 0x00;
+            /* Throw the response over the fence to the read CCW */
+            dev->ctcpair->lcscmdlen = sizeof(LCS_ARP);
+            dev->ctcpair->lcscmd = 1;
+        }
+        else
+        {
+            /* This is a client message */
 
-					*residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
+            /* Trace the IP packet before sending to TUN device */
+            if (dev->ccwtrace || dev->ccwstep)
+            {
+                logmsg ("LCS206I %4.4X: Sending packet to %s:\n",
+                        dev->devnum, dev->filename);
+                /* packet_trace (&packet->ip.ip_vers_lngth, datalen); */
+            }
 
-					offset = (int)lcsfrm;
-					offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
-					lcsfrm = (LCS_FRAME*)offset;
-					offset = (int)lcs;
-					offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
-					lcs = (LCS_FRAME*)offset;
+            /* Write the IP packet to the TUN device */
+            rc = write (dev->fd, &packet->ip.ip_vers_lngth, datalen);
 
-					if ( (*residual < 3) ||
-						((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
-					{
-						if (dev->ccwtrace || dev->ccwstep)
-						{
-							logmsg ("LCS203I %4.4X: LCS write completed\n",
-								dev->devnum);
+            if (rc < 0)
+            {
+                logmsg ("LCS207E %4.4X LCS error writing to %s: %s\n",
+                        dev->devnum, dev->filename, strerror(errno));
+                dev->sense[0] = SENSE_EC;
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                return;
+            }
+        }
 
-						}
-						*unitstat = CSW_CE | CSW_DE;
-						dev->ctcpair->lcscmd = 1;
-						return;
-					}
-					break;
-				}
-				case LCS_LANSTAT:
-				{
-					if (dev->ccwtrace || dev->ccwstep)
-						logmsg ("entering case 4\n");
+        /* force the pointer to the next frame => note that frame lengths */
+        /* are variable.                                                  */
+        packet = (LCS_OUT_PACKET*) offset + current_offset;
 
-					buff_offset += LANSTAT_EOB;
-					dev->ctcpair->lcscmdlen += LANSTAT_EOB + 2;
-					lcs->EOB_offset[0] = buff_offset << 8;
-					lcs->EOB_offset[1] = buff_offset;
-					lcs->control = 0x00;
-					lcs->direction = 0x00;
-					lcs->lcscmd = lcsfrm->lcscmd;
-					lcs->sequence = lcsfrm->sequence;
-					lcs->return_code = 0x0000;
-					lcs->count = 0x0100;
-					lcs->media = 0x01;
-					lcs->port= 0x00;
-
-					lanstat = (LANSTAT*)&lcs->count;
-
-					lanstat->pad03[0] = 0x01;
-					lanstat->mac_addr1[0] = 0x40;
-					lanstat->mac_addr1[1] = 0x00;
-					lanstat->mac_addr2[0] = 0x00;
-					lanstat->mac_addr2[1] = 0x00;
-					lanstat->mac_addr2[2] = 0x00;
-					lanstat->mac_addr2[3] = 0x88;
-					lanstat->eob_lan[0] = 0x00;
-					lanstat->eob_lan[1] = 0x00;
-
-					*residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
-
-					offset = (int)lcsfrm;
-					offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
-					lcsfrm = (LCS_FRAME*)offset;
-					offset = (int)lcs;
-					offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
-					lcs = (LCS_FRAME*)offset;
-
-					if ( (*residual < 3) ||
-						((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
-					{
-						if (dev->ccwtrace || dev->ccwstep)
-						{
-							logmsg ("LCS204I %4.4X: LCS write completed\n",
-								dev->devnum);
-
-						}
-						*unitstat = CSW_CE | CSW_DE;
-						dev->ctcpair->lcscmd = 1;
-						return;
-					}
-					break;
-				}
-
-				default:
-				{
-					buff_offset += 0x14;
-					dev->ctcpair->lcscmdlen += 0x16;
-					lcs->EOB_offset[0] = buff_offset << 8;
-					lcs->EOB_offset[1] = buff_offset;
-					lcs->control = 0x00;
-					lcs->direction = 0x00;
-					lcs->lcscmd = lcsfrm->lcscmd;
-					lcs->sequence = lcsfrm->sequence;
-					lcs->return_code = 0x0100;
-					lcs->media = 0x01;
-					lcs->port = 0x00;
-					lcs->rsvd1[4] = 0x00;
-					lcs->rsvd1[5] = 0x00;
-					lcs->eob[0] = 0x00;
-					lcs->eob[1] = 0x00;
-
-					*residual -= ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8) + 2);
-
-					offset = (int)lcsfrm;
-					offset += ((lcsfrm->EOB_offset[1]) + (lcsfrm->EOB_offset[0] << 8));
-					lcsfrm = (LCS_FRAME*)offset;
-					offset = (int)lcs;
-					offset += ((lcs->EOB_offset[1]) + (lcs->EOB_offset[0] << 8));
-					lcs = (LCS_FRAME*)offset;
-
-					if ( (*residual < 3) ||
-						((lcsfrm->EOB_offset[1] == 0x00) && (lcsfrm->EOB_offset[0] == 0x00)) )
-					{
-						if (dev->ccwtrace || dev->ccwstep)
-						{
-							logmsg ("LCS205I %4.4X: LCS write completed\n",
-								dev->devnum);
-
-						}
-						*unitstat = CSW_CE | CSW_DE;
-						dev->ctcpair->lcscmd = 1;
-						return;
-					}
-					break;
-
-				}
-
-			} /* end switch */
-		} /* end while loop */
-
-	} /* end LCS command processing */
-
-
-	/* For Non-LCS Command frames => process each data frame */
-	packet = (LCS_OUT_PACKET*)iobuf;
-	offset = (unsigned int)iobuf;
-
-	i = 1;
-	last_offset = 0;
-	current_offset = 0;
-
-	while ( i == 1 )
-	{
-		last_offset = current_offset;
-		current_offset = (packet->EOB_packet[0] << 8) + packet->EOB_packet[1];
-		datalen = (current_offset - last_offset) - sizeof(LCS_PACKET);
-
-		/* Check for an ARP request  */
-		if ( (packet->Ethernet_type[0] == 0x08) && (packet->Ethernet_type[1] == 0x06) )
-		{
-			arp_out = (LCS_ARP*)packet;
-
-			if (memcmp(&dev->ctcipsrc, &arp_out->Targ_IP_addr,4)==0)
-			{
-				/* Set unit status and residual byte count        */
-				/* ARP request is testing for duplicate IP address*/
-				/* In this case, just exit and let request time out*/
-				*unitstat = CSW_CE | CSW_DE;
-				*residual = 0;
-				return;
-			}
-
-			/* copy the ARP request into the read CCW LCS command buffer */
-			memcpy (dev->ctcpair->lcsbuf, packet, sizeof(LCS_ARP));
-
-			/* Modify the request into an ARP response */
-			arp_in = (LCS_ARP*)dev->ctcpair->lcsbuf;
-			arp_out = (LCS_ARP*)packet;
-			memcpy (arp_in->MAC_dest_half, arp_out->Send_Eth_addr, 6);
-			memcpy (arp_in->Targ_Eth_addr, arp_out->Send_Eth_addr, 10);
-			memcpy (arp_in->Send_IP_addr, arp_out->Targ_IP_addr, 4);
-			arp_in->Operation[1] = ARP_reply;
-			arp_in->MAC_srce_full[3] = 0x89;
-			arp_in->MAC_srce_half[0] = 0x40;
-			arp_in->Send_Eth_addr[5] = 0x89;
-			arp_in->Send_Eth_addr[0] = 0x40;
-			arp_in->filler[18] = 0x00;
-			arp_in->filler[19] = 0x00;
-
-			/* Throw the response over the fence to the read CCW */
-			dev->ctcpair->lcscmdlen = sizeof(LCS_ARP);
-			dev->ctcpair->lcscmd = 1;
-
-		}
-		else
-		{
-			/* This is a client message */
-
-        	/* Trace the IP packet before sending to TUN device */
-        	if (dev->ccwtrace || dev->ccwstep)
-        	{
-        	    logmsg ("LCS206I %4.4X: Sending packet to %s:\n",
-        	            dev->devnum, dev->filename);
-        	    /* packet_trace (&packet->ip.ip_vers_lngth, datalen); */
-        	}
-
-			/* Write the IP packet to the TUN device */
-			rc = write (dev->fd, &packet->ip.ip_vers_lngth, datalen);
-
-        	if (rc < 0)
-        	{
-        	    logmsg ("LCS207E %4.4X LCS error writing to %s: %s\n",
-        	            dev->devnum, dev->filename, strerror(errno));
-        	    dev->sense[0] = SENSE_EC;
-        	    *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        	    return;
-			}
-		}
-
-		/* force the pointer to the next frame => note that frame lengths */
-		/* are variable.                                                  */
-		packet = offset + current_offset;
-
-		/* Check to see if we are at the end of the frames.               */
-		if (packet->EOB_packet[0] == 0x00 && packet->EOB_packet[1] == 0x00)
-			i = 0;
-	} /* end while loop */
-
+        /* Check to see if we are at the end of the frames.               */
+        if (packet->EOB_packet[0] == 0x00 && packet->EOB_packet[1] == 0x00)
+            i = 0;
+    } /* end while loop */
 
     /* Set unit status and residual byte count */
     *unitstat = CSW_CE | CSW_DE;
@@ -2830,31 +2821,31 @@ U32             cutype;                 /* Control unit type         */
 
     if (dev->ctctype == CTC_LCS)
     {
-		dev->devid[4] = 0x00;
-		dev->devid[5] = 0x00;
-		dev->devid[6] = 0x00;
-		dev->devid[7] = 0x00;
-		dev->devid[8] = 0x40;
-		dev->devid[9] = 0x72;
-		dev->devid[10] = 0x00;
-		dev->devid[11] = 0x80;
-		dev->devid[12] = 0x41;
-		dev->devid[13] = 0x83;
-		dev->devid[14] = 0x00;
-		dev->devid[15] = 0x04;
-		dev->devid[16] = 0x42;
-		dev->devid[17] = 0x82;
-		dev->devid[18] = 0x00;
-		dev->devid[19] = 0x40;
-		dev->numdevid = 20;
-	}
-	else
-	{
-    dev->devid[4] = dev->devtype >> 8;
-    dev->devid[5] = dev->devtype & 0xFF;
-    dev->devid[6] = 0x01;
-    dev->numdevid = 7;
-	}
+        dev->devid[4] = 0x00;
+        dev->devid[5] = 0x00;
+        dev->devid[6] = 0x00;
+        dev->devid[7] = 0x00;
+        dev->devid[8] = 0x40;
+        dev->devid[9] = 0x72;
+        dev->devid[10] = 0x00;
+        dev->devid[11] = 0x80;
+        dev->devid[12] = 0x41;
+        dev->devid[13] = 0x83;
+        dev->devid[14] = 0x00;
+        dev->devid[15] = 0x04;
+        dev->devid[16] = 0x42;
+        dev->devid[17] = 0x82;
+        dev->devid[18] = 0x00;
+        dev->devid[19] = 0x40;
+        dev->numdevid = 20;
+    }
+    else
+    {
+        dev->devid[4] = dev->devtype >> 8;
+        dev->devid[5] = dev->devtype & 0xFF;
+        dev->devid[6] = 0x01;
+        dev->numdevid = 7;
+    }
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
@@ -2957,9 +2948,9 @@ BYTE            opcode;                 /* CCW opcode with modifier
 
         /* Write data and set unit status and residual byte count */
         switch (dev->ctctype) {
-		case CTC_LCS:
-			write_lcs (dev, count, iobuf, unitstat, residual);
-			break;
+        case CTC_LCS:
+            write_lcs (dev, count, iobuf, unitstat, residual);
+            break;
         case CTC_CTCT:
             write_ctci (dev, count, iobuf, unitstat, residual);
             break;
@@ -2994,9 +2985,9 @@ BYTE            opcode;                 /* CCW opcode with modifier
     /*---------------------------------------------------------------*/
         /* Read data and set unit status and residual byte count */
         switch (dev->ctctype) {
-		case CTC_LCS:
-			read_lcs (dev, count, iobuf, unitstat, residual, more);
-			break;
+        case CTC_LCS:
+            read_lcs (dev, count, iobuf, unitstat, residual, more);
+            break;
         case CTC_CTCT:
             read_ctci (dev, count, iobuf, unitstat, residual, more);
             break;

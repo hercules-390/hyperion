@@ -1,3 +1,4 @@
+16 Mar 2002 Fixed benign warnings in ctcadpt.c & un-tabbed file - Fish
 15 Mar 2002 Fixed automagic for building standalone dasd utilities - Volker Bandke
 09 Mar 2002 Lan Channel Station (LCS) support
 09 Mar 2002 Initial cckd dasd utilities support - Greg Smith
