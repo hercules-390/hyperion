@@ -88,10 +88,10 @@ a real System/390.  The configuration file is an ASCII text file.
     0141      <a href="#3370">3370</a>    syswk1.141
     0300      <a href="#3370">3370</a>    sysres.300
 
-    0400      <a href="#3088">3088</a>    CTCT  30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
-    0401      <a href="#3088">3088</a>    CTCT  30881  192.168.100.2  30881  2048
-    0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
-    0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
+    0400      <a href="#device_types_table">3088</a>    CTCT  30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
+    0401      <a href="#device_types_table">3088</a>    CTCT  30881  192.168.100.2  30881  2048
+    0420.2    <a href="#device_types_table">CTCI</a>    192.168.200.1  192.168.200.2
+    0440.2    <a href="#device_types_table">LCS</a>     -n   /dev/net/tun   192.168.200.2
 
     0580      <a href="#3420">3420</a>    ickdsf.ipl
     0581      <a href="#3420">3420</a>    /dev/nst0   # SCSI
@@ -152,7 +152,7 @@ a real System/390.  The configuration file is an ASCII text file.
     and/or dismounts that may still be pending.
     <p>
     <i>
-    <b>Note:</b> enabling this option may negatively impact Hercules performance
+    <b>Note:</b> &nbsp;enabling this option may negatively impact Hercules performance
     depending on how the host operating system (Windows, Linux, etc) handles
     SCSI attached tape drive status queries.
     </i>
@@ -831,7 +831,7 @@ a real System/390.  The configuration file is an ASCII text file.
     <table>
     <tr>
 
-        <td width=20%>
+        <td width=15%>
         &nbsp;
         </td>
 
@@ -879,10 +879,52 @@ a real System/390.  The configuration file is an ASCII text file.
                 <td>Disk file, CDROM, or SCSI tape</td>
             </tr>
 
-            <tr><td>3088</td>
-                <td><a href="#ctca">Channel-to-channel adapters</a></td>
-                <td>TCP socket, TUN/TAP Driver</td>
+
+            <tr>
+                <td>
+                        <a href="#3088">
+                            3088
+                        </a>
+                </td>
+                <td>
+                        Channel-to-Channel Adapter device
+                </td>
+                <td>
+                        <a href="#CTCT">"CTCT" driver</a>
+                </td>
             </tr>
+
+
+            <tr>
+                <td>
+                        (( <a href="#CTCI">CTCI</a> ))
+                </td>
+                <td>
+                        Channel-to-Channel link to host TCP/IP stack
+                </td>
+                <td>
+                        <a href="#CTCI">"CTCI" TUN/TAP Driver</a>
+                </td>
+            </tr>
+
+
+            <tr>
+                <td>
+                        (( <a href="#LCS">LCS</a> ))
+                </td>
+                <td>
+                            IBM 2216 router, IBM 3172 running ICP,
+                        <br>IBM 8232 LCS device, LCS3172 driver of a P/390,
+                        <br>IBM Open Systems Adapter (OSA)
+                </td>
+                <td>
+                        <a href="#LCS">"LCS" (LAN Channel Station)
+                        <br>TUN/TAP Driver</a>
+                </td>
+            </tr>
+
+
+
 
             <tr><td>3310, 3370, 9332, 9335<br>
                     9336, 0671</td>
@@ -1384,8 +1426,8 @@ a real System/390.  The configuration file is an ASCII text file.
     See the README.TAPE file for additional information, system and application programming for tape devices.
     <p>
 
-<a name="3088">
 <a name="ctca">
+<a name="3088">
 <dt><em>Channel-to-channel adapters</em>
 <dd><p>
     The first argument defines the emulation type, and the remaining
@@ -1527,7 +1569,7 @@ a real System/390.  The configuration file is an ASCII text file.
         <p>
 
         Note: CTCT currently only supports IP traffic, so it cannot be used to
-        transport NJE, SNA, PVM, etc.. payload. This may change in the future.
+        transport NJE, SNA, PVM, etc. type payloads. This may change in the future.
         <p>
 
 <a name="LCS">
@@ -1648,7 +1690,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
                 <dd><p>
                     is the operation mode: IP or SNA.
                     <p>
-                    (<i><b>Note:</b> the SNA operation mode is NOT currently implemented.</i>)
+                    <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
                     <p>
 
                 <dt><code><em>Port</em></code>
@@ -1684,7 +1726,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
             create automatically.
             <p>
 
-            <i><b>Note:</b> the SNA operation mode is NOT currently implemented.</i>
+            <i><b>Note:</b> &nbsp;<u>the SNA operation mode is NOT currently implemented</u>.</i>
             <p>
 
             Additionally, two other statements can be included in the
@@ -1753,9 +1795,9 @@ ROUTE  00  172.021.003.032  255.255.255.224
     <p>
 
     <blockquote>
-    <em>Note! When CKD DASD images are spread across multiple files, you must
+    <em><b>Note:</b> &nbsp;When CKD DASD images are spread across multiple files, you must
     specify only the first file name (the file with suffix _1) in the
-    configuration statement!</em>
+    configuration statement.</em>
     </blockquote>
     <p>
 
@@ -1855,7 +1897,7 @@ ROUTE  00  172.021.003.032  255.255.255.224
         the hercules syncio panel command.
         <p>
 
-        Note: If you plan on using syncio with <b>Linux/390</b> and/or <b>zLinux</b>
+        <b>Note:</b> If you plan on using syncio with <b>Linux/390</b> and/or <b>zLinux</b>
         you might also want to take a look at the <a href="#IODELAY">IODELAY</a>
         configuration file statement as well.
         <p>
