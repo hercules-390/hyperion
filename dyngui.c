@@ -15,6 +15,8 @@
 /* 29/05/04  Minor fix to UpdateTargetCPU, remove max MIPS rate      */
 /*           check in UpdateCPUStatus (trust Herc to be correct),    */
 /*           use Herc-calculate MIPS/SIOS rate.                      */
+/* 01/06/04  Minor fix to detect switching to a different displayed  */
+/*           (target) CPU when no other status has otherwise changed.*/
 /*                                                                   */
 /*********************************************************************/
 
@@ -525,8 +527,9 @@ void*  gui_panel_command (char* pszCommand)
 
 QWORD  psw, prev_psw;
 BYTE   wait_bit;
-BYTE   prev_cpustate  = 0xFF;
-U64    prev_instcount = 0;
+BYTE   prev_cpustate       = 0xFF;
+U64    prev_instcount      = 0;
+REGS*  pPrevTargetCPU_REGS = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send status information messages back to the gui...
@@ -582,6 +585,7 @@ void  UpdateStatus ()
     bStatusChanged = FALSE;     // (whether or not anything has changed)
 
     if (0
+        || pTargetCPU_REGS != pPrevTargetCPU_REGS
         || memcmp(prev_psw, psw, sizeof(prev_psw)) != 0
         || prev_cpustate   != pTargetCPU_REGS->cpustate
         || (prev_instcount != (
@@ -596,6 +600,7 @@ void  UpdateStatus ()
 
         // Save new values for next time...
 
+        pPrevTargetCPU_REGS = pTargetCPU_REGS;
         memcpy(prev_psw, psw, sizeof(prev_psw));
         prev_cpustate = pTargetCPU_REGS->cpustate;
         prev_instcount = (
