@@ -919,7 +919,7 @@ int m3,r1,r2;
     m3 = inst[2] >> 4;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    logmsg("%-6.6s%d,%d,%d\n",mnemonic,m3,r1,r2);
+    logmsg("%-6.6s%d,%d,%d\n",mnemonic,r1,m3,r2);
 }
 
 void disasm_RRF_RM (BYTE inst[], BYTE mnemonic[])
@@ -929,7 +929,7 @@ int r3,m4,r1,r2;
     m4 = inst[2] & 0x0F;
     r1 = inst[3] >> 4;
     r2 = inst[3] & 0x0F;
-    logmsg("%-6.6s%d,%d,%d,%d\n",mnemonic,r3,m4,r1,r2);
+    logmsg("%-6.6s%d,%d,%d,%d\n",mnemonic,r1,r3,r2,m4);
 }
 
 void disasm_RX (BYTE inst[], BYTE mnemonic[])
@@ -2353,7 +2353,7 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B350*/ GENx___x390x900 (convert_float_long_to_bfp_short_reg,RRF_M,"TBEDR"),
  /*B351*/ GENx___x390x900 (convert_float_long_to_bfp_long_reg,RRF_M,"TBDR"),
  /*B352*/ GENx___x___x___ ,
- /*B353*/ GENx___x390x900 (dummy_instruction,RRF_M,"DIEBR"),
+ /*B353*/ GENx___x390x900 (dummy_instruction,RRF_RM,"DIEBR"),
  /*B354*/ GENx___x___x___ ,
  /*B355*/ GENx___x___x___ ,
  /*B356*/ GENx___x___x___ ,
@@ -2361,7 +2361,7 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B358*/ GENx___x390x900 (convert_bfp_short_to_float_long_reg,RRE,"THDER"),
  /*B359*/ GENx___x390x900 (convert_bfp_long_to_float_long_reg,RRE,"THDR"),
  /*B35A*/ GENx___x___x___ ,
- /*B35B*/ GENx___x390x900 (dummy_instruction,RRF_M,"DIDBR"),
+ /*B35B*/ GENx___x390x900 (dummy_instruction,RRF_RM,"DIDBR"),
  /*B35C*/ GENx___x___x___ ,
  /*B35D*/ GENx___x___x___ ,
  /*B35E*/ GENx___x___x___ ,
@@ -2674,7 +2674,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B98B*/ GENx___x___x___ ,
  /*B98C*/ GENx___x___x___ ,
  /*B98D*/ GENx___x390x900 (extract_psw,RRE,"EPSW"),
- /*B98E*/ GENx___x___x900 (invalidate_dat_table_entry,RRF_R,"IDTE"),
+ /*B98E*/ GENx___x___x900 (invalidate_dat_table_entry,RRF_M,"IDTE"),
  /*B98F*/ GENx___x___x___ ,
  /*B990*/ GENx___x390x900 (translate_two_to_two,RRE,"TRTT"),
  /*B991*/ GENx___x390x900 (translate_two_to_one,RRE,"TRTO"),
