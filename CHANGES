@@ -1,3 +1,5 @@
+27 Jul 2001 BSA missing INVALIDATA_AEA, not ANDing CR3 - Paul Leisy
+27 Jul 2001 TRAP missing key-ctl protection - Paul Leisy
 24 Jul 2001 Add CPUPRIO config statement - Jan Jaeger
 24 Jul 2001 Add SETMODE setuid support - Jan Jaeger
 23 Jul 2001 RP not making trace entry - Paul Leisy
