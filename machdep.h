@@ -90,6 +90,8 @@ static __inline__ unsigned long ffs_i686(unsigned long word)
 		:"rm" (word));
 	return word;
 }
+/* Following simulates builtin FFS (so that it doesn't get redefined afterwards */
+#define HAVE_FFS    1
 
 #define or_bits(x,y,z) or_bits_i686((x),(y),(z))
 static __inline__ void or_bits_i686(int len, int bits, volatile void * addr)
