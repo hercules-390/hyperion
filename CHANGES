@@ -1,9 +1,11 @@
 21 May 2001 Correct availability of N3 instructions in S/390 mode - Jan Jaeger
 19 May 2001 Compression corrections - Bernard van der Helm
 19 May 2001 Include basic crypto support - Jan Jaeger
-19 May 2001 Correct RCP host address when nozero MSO - Paul Leisy
+19 May 2001 Correct multiply/divide long - Jan Jaeger
+19 May 2001 Correct RCP host address when nonzero MSO - Paul Leisy
 18 May 2001 Correct CEFBR/CFEBR register use - Jan Jaeger
 18 May 2001 Correct STOSM/STNSM interception - Paul Leisy
+18 May 2001 Correct TRAP save area page crosser - Paul Leisy
 18 May 2001 Correct operation exception interception - Paul Leisy
 17 May 2001 Correct address wrap when SIE is interrupted - Jan Jaeger
 17 May 2001 Correct specification exception interception - Jan Jaeger

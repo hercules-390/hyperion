@@ -118,8 +118,8 @@ int  notesame_save;
 U32  tcba0;
 #endif /*defined(FEATURE_ESAME)*/
 U32  tsao;
-RADR tsaa1;
-RADR tsaa2;
+RADR tsaa1,
+     tsaa2;
 U32  trap_ia;
 U32  trap_flags;
 QWORD trap_psw;
@@ -172,7 +172,10 @@ int  i;
     /* Use abs_stack_addr as it conforms to trap save area access */
     tsaa1 = tsaa2 = ARCH_DEP(abs_stack_addr) (tsao, regs, ACCTYPE_WRITE);
     if((tsaa1 & PAGEFRAME_PAGEMASK) != ((tsaa1 + 255) & PAGEFRAME_PAGEMASK))
+    {
+        tsao = (tsao + 255) & PAGEFRAME_PAGEMASK;
         tsaa2 = ARCH_DEP(abs_stack_addr) (tsao, regs, ACCTYPE_WRITE);
+    }
 
 #if defined(FEATURE_ESAME)
     /* Special operation exception if P == 0 and EA == 1 */
@@ -261,7 +264,7 @@ int  i;
         }
  
     /* Load the Trap Control Block Address in gr15 */
-    regs->GR_L(15) = duct11;
+    regs->GR_L(15) = duct11 & DUCT11_TCBA;
     
     /* Set the Trap program address as a 31 bit instruction address */
 #if defined(FEATURE_ESAME)
