@@ -266,7 +266,8 @@ U32     fileaddr;
 
     /* Perform CPU reset on all other CPUs */
     for (cpu = 0; cpu < MAX_CPU; cpu++)
-        ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
+        if (IS_CPU_ONLINE(cpu))
+            ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
 
     /* put cpu in load state */
     regs->loadstate = 1;
