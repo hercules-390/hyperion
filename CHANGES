@@ -4,6 +4,9 @@
 22 Apr 2001 cmpsc fixes for expansion - Greg Smith
 22 Apr 2001 Correct prefix alignment for ESA/390 
             guest in 64 bit mode SIE - Jan Jaeger
+21 Apr 2001 Added support for muliple files in card reader
+21 Apr 2001 Added support auto-padding of ebcdic files in card reader
+21 Apr 2001 Added support for builtin tun driver of linux kernel 2.4.x
 17 Apr 2001 Fix SSKE rcp guest ref and change bits - Paul Leisy
 18 Apr 2001 Fix CPU TIMER interrupt processing - Jan Jaeger
 17 Apr 2001 Device I/O thread throttling - Greg Smith & Fish
