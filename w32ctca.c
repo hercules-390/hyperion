@@ -102,7 +102,6 @@ void            tt32_init()
         strncpy(g_tt32_dllname,tt32_dllname,sizeof(g_tt32_dllname));
     }
 
-    tt32_loaddll();     // (try loading the dll now)
 }
 
 //
@@ -239,6 +238,14 @@ void __cdecl tt32_output_debug_string(const char* debug_string)
 
 BOOL tt32_loaddll()
 {
+static int tt32_init_done = 0;
+
+    if(!tt32_init_done)
+    {
+        tt32_init();
+        tt32_init_done = 1;
+    }
+
     TCHAR szErrMsgBuff[MAX_ERR_MSG_LEN];
 
     EnterCriticalSection(&g_tt32_lock);

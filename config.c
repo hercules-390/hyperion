@@ -1407,9 +1407,7 @@ BYTE **orig_newargv;
     for(i = 0; i < MAX_CPU_ENGINES; i++)
         initialize_lock (&sysblk.regs[i].accum_wait_time_lock);
 #endif /*defined(OPTION_CPU_UTILIZATION)*/
-#if defined(OPTION_W32_CTCI)
-    tt32_init();
-#endif /* defined(OPTION_W32_CTCI) */
+
 #if defined(OPTION_FISHIO)
     InitIOScheduler                         // initialize i/o scheduler...
         (
