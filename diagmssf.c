@@ -357,7 +357,9 @@ RADR              abs;                 /* abs addr of data area      */
 U64               dreg;                /* work doubleword            */
 U32               i;                   /* loop counter               */
 struct rusage     usage;               /* RMF type data              */
+#if !defined(OPTION_LPARNAME)
 static char       lparname[] = "HERCULES";
+#endif /*!defined(LPARNAME)*/
 static char       physical[] = "PHYSICAL";
 static U64        diag204tod;          /* last diag204 tod           */
 
@@ -410,7 +412,11 @@ static U64        diag204tod;          /* last diag204 tod           */
         partinfo->partnum = 1;
         partinfo->virtcpu = sysblk.cpus;
         for(i = 0; i < sizeof(partinfo->partname); i++)
+#if defined(OPTION_LPARNAME)
+            partinfo->partname[i] = host_to_guest((int)sysblk.lparname[i]);
+#else
             partinfo->partname[i] = host_to_guest((int)lparname[i]);
+#endif /*defined(OPTION_LPARNAME)*/
 
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
