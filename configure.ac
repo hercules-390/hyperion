@@ -685,7 +685,7 @@ if test x$auto_optimize = xtrue; then
             OFLAGS="-O3 -frename-registers -mcpu=$host_cpu -mtune=$host_cpu"
             ;;
           x86_64-yes)
-                OFLAGS="-O3 -march=k8 -fomit-frame-pointers"
+                OFLAGS="-O3 -march=k8 -fomit-frame-pointer"
            ;;
           i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
             if test $host_cpu = "i786" ; then
