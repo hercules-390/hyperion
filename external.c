@@ -478,7 +478,11 @@ PSA     *sspsa;                         /* -> Store status area      */
     STORE_DW(sspsa->storeptmr, ssreg->ptimer);
 
     /* Store clock comparator in bytes 224-231 */
+#if defined(FEATURE_ESAME)
+    STORE_DW(sspsa->storeclkc, ssreg->clkc);
+#else /*defined(FEATURE_ESAME)*/
     STORE_DW(sspsa->storeclkc, ssreg->clkc << 8);
+#endif /*defined(FEATURE_ESAME)*/
 
     /* Store PSW in bytes 256-263 */
     ARCH_DEP(store_psw) (ssreg, sspsa->storepsw);
