@@ -4677,10 +4677,7 @@ int     armode;
         regs->psw.ecmode &&
 #endif /*defined(FEATURE_BCMODE)*/
                             (regs->psw.sysmask & 0xB8) != 0)
-    {
-        logmsg("SSM Specification\n");
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-    }
 
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
