@@ -98,6 +98,15 @@ struct sbfp {
 #ifndef HAVE_SQRTL
 #define sqrtl(x) sqrt(x)
 #endif
+#ifndef HAVE_LDEXPL
+#define ldexpl(x,y) ldexp(x,y)
+#endif
+#ifndef HAVE_FABSL
+#define fabsl(x) fabs(x)
+#endif
+#ifndef HAVE_FMODL
+#define fmodl(x,y) fmod(x,y)
+#endif
 
 #endif	/* !defined(_GEN_ARCH) */
 
