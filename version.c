@@ -81,6 +81,9 @@ static const char *build_info[] = {
 #if !defined(EXTERNALGUI)
     "No external GUI support",
 #endif
+#if defined(OPTION_HTTP_SERVER)
+    "HTTP Server support",
+#endif
 
 #if defined(NO_IEEE_SUPPORT)
     "No IEEE support",
