@@ -5,6 +5,9 @@
 
 #include "hercules.h"
 #include "opcode.h"
+#ifdef OPTION_FISHIO
+#include "w32chan.h"
+#endif
 #include "sr.h"
 
 /* subroutine to check for active devices */
