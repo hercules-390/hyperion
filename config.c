@@ -394,11 +394,16 @@ static int detach_devblk (DEVBLK *dev)
 
         dev->group->memdev[dev->member] = NULL;
 
-        for(i = 0; i < dev->group->acount; i++)
+        if(dev->group->members)
         {
-            if(dev->group->memdev[i])
+            dev->group->members = 0;
+
+            for(i = 0; i < dev->group->acount; i++)
             {
-                detach_devblk(dev->group->memdev[i]);
+                if(dev->group->memdev[i])
+                {
+                    detach_devblk(dev->group->memdev[i]);
+                }
             }
         }
 

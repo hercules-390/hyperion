@@ -453,13 +453,12 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
         TUNTAP_Close( pCTCBLK->fd );
 
         pCTCBLK->fd = -1;
-        pDEVBLK->fd = -1;           // indicate we're now closed
-
-	if(pDEVBLK->group && pDEVBLK->group->memdev[pDEVBLK->member ? 0 : 1])
-	    pDEVBLK->group->memdev[pDEVBLK->member ? 0 : 1]->fd = -1;
 
         pCTCBLK->fCloseInProgress = 0;
     }
+
+    pDEVBLK->fd = -1;           // indicate we're now closed
+
 
     return 0;
 }
