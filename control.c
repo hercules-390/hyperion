@@ -1874,7 +1874,7 @@ U16     updated = 0;                    /* Updated control regs      */
 #else
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (test_bit(2, regs->aea_ar[16], &updated))
+    if (test_bit(2, regs->aea_ar[USE_INST_SPACE], &updated))
         INVALIDATE_AIA(regs);
 #endif
     if (test_bit(2, 9, &updated) && EN_IC_PER_SA(regs))

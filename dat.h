@@ -487,6 +487,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
 {
     UNREFERENCED(regs);
 
+    ARCH_DEP(purge_tlb) (regs); /* TEMP */
 } /* end function purge_alb */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
@@ -849,7 +850,7 @@ U32     ptl;                            /* Page table length         */
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
-            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
+            regs->tlb.protect[tlbix]   = regs->dat.protect;
             regs->tlb.acc[tlbix]       = 0;
             regs->tlb.main[tlbix]       = NULL;
 
@@ -905,17 +906,19 @@ U32     ptl;                            /* Page table length         */
 
     /* Only a single entry in the TLB will be looked up, namely the
        entry indexed by bits 12-19 of the virtual address */
+
     if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE)
         tlbix = TLBIX(vaddr);
 
-    if (tlbix >= 0
+    if (tlbix >= 0 // && !regs->tlb.protect[tlbix]
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private))
+        && !(regs->tlb.common[tlbix] && regs->dat.private)
+        && (regs->tlb.protect[tlbix] != 2 || regs->dat.protect == 2))
     {
         pte = regs->tlb.TLB_PTE(tlbix);
         if (regs->tlb.protect[tlbix])
-            regs->dat.protect = 1;
+            regs->dat.protect = regs->tlb.protect[tlbix];
     }
     else
     {
@@ -994,7 +997,7 @@ U32     ptl;                            /* Page table length         */
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
             regs->tlb.acc[tlbix]       = 0;
-            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
+            regs->tlb.protect[tlbix]   = regs->dat.protect;
             regs->tlb.main[tlbix]       = NULL;
         }
 
@@ -1046,14 +1049,15 @@ U16     sx, px;                         /* Segment and page index,
     if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE)
         tlbix = TLBIX(vaddr);
 
-    if (tlbix >= 0
+    if (tlbix >= 0 // && !regs->tlb.protect[tlbix]
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private))
+        && !(regs->tlb.common[tlbix] && regs->dat.private)
+        && (regs->tlb.protect[tlbix] != 2 || regs->dat.protect == 2))
     {
         pte = regs->tlb.TLB_PTE(tlbix);
         if (regs->tlb.protect[tlbix])
-            regs->dat.protect = 1;
+            regs->dat.protect = regs->tlb.protect[tlbix];
     }
     else
     {
@@ -1322,7 +1326,7 @@ U16     sx, px;                         /* Segment and page index,
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
-            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
+            regs->tlb.protect[tlbix]   = regs->dat.protect;
             regs->tlb.acc[tlbix]       = 0;
             regs->tlb.main[tlbix]      = NULL;
         }
