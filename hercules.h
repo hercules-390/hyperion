@@ -56,6 +56,12 @@
 #include "version.h"
 #include "hetlib.h"
 
+
+/* definition of CLK_TCK is not part of the SUSE 7.2 definition.  Added (VB) */
+#  ifndef CLK_TCK
+#   define CLK_TCK	CLOCKS_PER_SEC
+#  endif
+
 #if 1
 /* Following declares are missing from suse 7.1 */
 int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
