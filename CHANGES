@@ -1,3 +1,4 @@
+23 Aug 2001 Fix general1.c so commented statements don't wrap to 2 lines - Paul Leisy
 23 Aug 2001 LXD missing PIC 06 when R1 not valid - Paul Leisy
 23 Aug 2001 CFXR needs to test overflow after rounding - Paul Leisy
 23 Aug 2001 BSG failed to set subspace active in DUCT - Paul Leisy
