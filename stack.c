@@ -770,11 +770,6 @@ int     i;                              /* Array subscript           */
             lsed.rfs[1], lsed.nes[0], lsed.nes[1]);
 #endif /*STACK_DEBUG*/
 
-// logmsg("cr15: " F_VADR " cr15_n: " F_VADR " section_size = %d\n",
-//   regs->CR(15), lsea, lsea - regs->CR(15));
-if((regs->CR(15) & PAGEFRAME_PAGEMASK) != ((lsea + 8) & PAGEFRAME_PAGEMASK))
-  logmsg("abs1:" F_VADR " abs2:" F_VADR "\n",abs,abs2);
-    if(abs2 == 0)
     /* [5.12.3.4] Update control register 15 */
     regs->CR(15) = lsea & CR15_LSEA;
 

@@ -3425,6 +3425,12 @@ U64     dreg;                           /* Clock value               */
     /* Update the clock comparator and set epoch to zero */
     regs->clkc = dreg >> 8;
 
+    /* Release the TOD clock update lock */
+    release_lock (&sysblk.todlock);
+
+    /* Obtain the interrupt lock */
+    obtain_lock (&sysblk.intlock);
+
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
     if( (sysblk.todclk + regs->todoffset) > regs->clkc )
@@ -3432,8 +3438,8 @@ U64     dreg;                           /* Clock value               */
     else
         OFF_IC_CLKC(regs);
 
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    /* Release the interrupt lock */
+    release_lock (&sysblk.intlock);
 
 }
 
@@ -3488,14 +3494,20 @@ U64     dreg;                           /* Timer value               */
     /* Update the CPU timer */
     regs->ptimer = dreg;
 
+    /* Release the TOD clock update lock */
+    release_lock (&sysblk.todlock);
+
+    /* Obtain the interrupt lock */
+    obtain_lock (&sysblk.intlock);
+
     /* reset the cpu timer pending flag according to its value */
     if( (S64)regs->ptimer < 0 )
         ON_IC_PTIMER(regs);
     else
         OFF_IC_PTIMER(regs);
 
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    /* Release the interrupt lock */
+    release_lock (&sysblk.intlock);
 
 //  /*debug*/logmsg("Set CPU timer=%16.16llX\n", dreg);
 
@@ -4572,14 +4584,20 @@ U64     dreg;                           /* Double word workarea      */
     /* Save the CPU timer value */
     dreg = --regs->ptimer;
 
+    /* Release the TOD clock update lock */
+    release_lock (&sysblk.todlock);
+
+    /* Obtain the interrupt lock */
+    obtain_lock (&sysblk.intlock);
+
     /* reset the cpu timer pending flag according to its value */
     if( (S64)regs->ptimer < 0 )
         ON_IC_PTIMER(regs);
     else
         OFF_IC_PTIMER(regs);
 
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
+    /* Release the interrupt lock */
+    release_lock (&sysblk.intlock);
 
     /* Store CPU timer value at operand location */
     ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
