@@ -12,6 +12,7 @@
 /*      EPSW/EREGG/LMD instructions - Roger Bowler                   */
 /*      PKA/PKU/UNPKA/UNPKU instructions - Roger Bowler              */
 /*      Divide logical instructions - Vic Cross                      */
+/*      Long displacement facility - Roger Bowler            June2003*/
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -522,7 +523,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
 #if defined(FEATURE_ESAME) && defined(FEATURE_TRACING)
 /*-------------------------------------------------------------------*/
-/* EB0F TRACG - Trace Long                                     [RSE] */
+/* EB0F TRACG - Trace Long                                     [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(trace_long)
 {
@@ -533,7 +534,7 @@ VADR    effective_addr2;                /* effective address         */
 U32     op;                             /* Operand                   */
 #endif /*defined(FEATURE_TRACING)*/
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -566,7 +567,7 @@ U32     op;                             /* Operand                   */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E30E CVBG  - Convert to Binary Long                         [RXE] */
+/* E30E CVBG  - Convert to Binary Long                         [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_to_binary_long)
 {
@@ -580,7 +581,7 @@ BYTE    sbyte;                          /* Source operand byte       */
 int     ovf = 0;                        /* Overflow indicator        */
 U64     oreg = 0;                       /* 64 bit overflow work reg  */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Initialize binary result */
     dreg = 0;
@@ -664,7 +665,7 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E32E CVDG  - Convert to Decimal Long                        [RXE] */
+/* E32E CVDG  - Convert to Decimal Long                        [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_to_decimal_long)
 {
@@ -676,7 +677,7 @@ BYTE    result[16];                     /* 31-digit signed result    */
 int     i;                              /* Array subscript           */
 int     d;                              /* Decimal digit or sign     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Special case when R1 is maximum negative value */
     if (regs->GR_G(r1) == 0x8000000000000000ULL)
@@ -724,7 +725,7 @@ int     d;                              /* Decimal digit or sign     */
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E396 ML    - Multiply Logical                               [RXE] */
+/* E396 ML    - Multiply Logical                               [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_logical)
 {
@@ -734,7 +735,7 @@ VADR    effective_addr2;                /* Effective Address         */
 U32     m;
 U64     p;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -754,7 +755,7 @@ U64     p;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E386 MLG   - Multiply Logical Long                          [RXE] */
+/* E386 MLG   - Multiply Logical Long                          [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_logical_long)
 {
@@ -763,7 +764,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective Address         */
 U64     m, ph, pl;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -831,7 +832,7 @@ U64     ph, pl;
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E397 DL    - Divide Logical                                 [RXE] */
+/* E397 DL    - Divide Logical                                 [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_logical)
 {
@@ -841,7 +842,7 @@ VADR    effective_addr2;                /* Effective Address         */
 U32     d;
 U64     n;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -864,7 +865,7 @@ U64     n;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E387 DLG   - Divide Logical Long                            [RXE] */
+/* E387 DLG   - Divide Logical Long                            [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_logical_long)
 {
@@ -873,7 +874,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective Address         */
 U64     d, r, q;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1031,7 +1032,7 @@ U64     n;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E388 ALCG  - Add Logical with Carry Long                    [RXE] */
+/* E388 ALCG  - Add Logical with Carry Long                    [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_carry_long)
 {
@@ -1041,7 +1042,7 @@ VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 int     carry = 0;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -1062,7 +1063,7 @@ int     carry = 0;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E389 SLBG  - Subtract Logical with Borrow Long              [RXE] */
+/* E389 SLBG  - Subtract Logical with Borrow Long              [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_logical_borrow_long)
 {
@@ -1072,7 +1073,7 @@ VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 int     borrow = 2;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -1151,7 +1152,7 @@ U32     n;
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E398 ALC   - Add Logical with Carry                         [RXE] */
+/* E398 ALC   - Add Logical with Carry                         [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_carry)
 {
@@ -1161,7 +1162,7 @@ VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 int     carry = 0;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1182,7 +1183,7 @@ int     carry = 0;
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E399 SLB   - Subtract Logical with Borrow                   [RXE] */
+/* E399 SLB   - Subtract Logical with Borrow                   [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_logical_borrow)
 {
@@ -1192,7 +1193,7 @@ VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 int     borrow = 2;
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1214,7 +1215,7 @@ int     borrow = 2;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E30D DSG   - Divide Single Long                             [RXE] */
+/* E30D DSG   - Divide Single Long                             [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_single_long)
 {
@@ -1223,7 +1224,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1244,7 +1245,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E31D DSGF  - Divide Single Long Fullword                    [RXE] */
+/* E31D DSGF  - Divide Single Long Fullword                    [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(divide_single_long_fullword)
 {
@@ -1253,7 +1254,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1330,7 +1331,7 @@ U32     n;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E390 LLGC  - Load Logical Character                         [RXE] */
+/* E390 LLGC  - Load Logical Character                         [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_logical_character)
 {
@@ -1338,7 +1339,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     regs->GR_G(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
@@ -1348,7 +1349,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E391 LLGH  - Load Logical Halfword                          [RXE] */
+/* E391 LLGH  - Load Logical Halfword                          [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_logical_halfword)
 {
@@ -1356,7 +1357,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     regs->GR_G(r1) = ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
@@ -1366,7 +1367,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E38E STPQ  - Store Pair to Quadword                         [RXE] */
+/* E38E STPQ  - Store Pair to Quadword                         [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_pair_to_quadword)
 {
@@ -1375,7 +1376,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 QWORD   qwork;                          /* Quadword work area        */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1398,7 +1399,7 @@ QWORD   qwork;                          /* Quadword work area        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E38F LPQ   - Load Pair from Quadword                        [RXE] */
+/* E38F LPQ   - Load Pair from Quadword                        [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_pair_from_quadword)
 {
@@ -1407,7 +1408,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 QWORD   qwork;                          /* Quadword work area        */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1923,7 +1924,7 @@ U32     i2;                             /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB20 CLMH  - Compare Logical Characters under Mask High     [RSE] */
+/* EB20 CLMH  - Compare Logical Characters under Mask High     [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_logical_characters_under_mask_high)
 {
@@ -1936,7 +1937,7 @@ BYTE    sbyte,
         dbyte;                          /* Byte work areas           */
 int     i;                              /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Load value from register */
     n = regs->GR_H(r1);
@@ -1978,7 +1979,7 @@ int     i;                              /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB2C STCMH - Store Characters under Mask High               [RSE] */
+/* EB2C STCMH - Store Characters under Mask High               [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_characters_under_mask_high)
 {
@@ -1989,7 +1990,7 @@ U32     n;                              /* 32-bit operand values     */
 int     i, j;                           /* Integer work areas        */
 BYTE    cwork[4];                       /* Character work areas      */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Load value from register */
     n = regs->GR_H(r1);
@@ -2030,7 +2031,7 @@ BYTE    cwork[4];                       /* Character work areas      */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB80 ICMH  - Insert Characters under Mask High              [RSE] */
+/* EB80 ICMH  - Insert Characters under Mask High              [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(insert_characters_under_mask_high)
 {
@@ -2042,7 +2043,7 @@ BYTE    tbyte;                          /* Byte work areas           */
 int     h, i;                           /* Integer work areas        */
 U64     dreg;                           /* Double register work area */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* If the mask is all zero, we must nevertheless load one
        byte from the storage operand, because POP requires us
@@ -2184,7 +2185,7 @@ S64     i,j;                            /* Integer workareas         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB44 BXHG  - Branch on Index High Long                      [RSE] */
+/* EB44 BXHG  - Branch on Index High Long                      [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_index_high_long)
 {
@@ -2193,7 +2194,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2225,7 +2226,7 @@ S64     i, j;                           /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB45 BXLEG - Branch on Index Low or Equal Long              [RSE] */
+/* EB45 BXLEG - Branch on Index Low or Equal Long              [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_index_low_or_equal_long)
 {
@@ -2234,7 +2235,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
     i = regs->GR_G(r3);
@@ -2266,7 +2267,7 @@ S64     i, j;                           /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB30 CSG   - Compare and Swap Long                          [RSE] */
+/* EB30 CSG   - Compare and Swap Long                          [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_and_swap_long)
 {
@@ -2276,7 +2277,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U64     old;                            /* old value                 */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     DW_CHECK(effective_addr2, regs);
 
@@ -2323,7 +2324,7 @@ U64     old;                            /* old value                 */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB3E CDSG  - Compare Double and Swap Long                   [RSE] */
+/* EB3E CDSG  - Compare Double and Swap Long                   [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_double_and_swap_long)
 {
@@ -2333,7 +2334,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U64     old1, old2;                     /* old value                 */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -2387,7 +2388,7 @@ U64     old1, old2;                     /* old value                 */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E346 BCTG  - Branch on Count Long                           [RXE] */
+/* E346 BCTG  - Branch on Count Long                           [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_count_long)
 {
@@ -2395,7 +2396,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
@@ -2490,7 +2491,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E320 CG    - Compare Long                                   [RXE] */
+/* E320 CG    - Compare Long                                   [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_long)
 {
@@ -2499,7 +2500,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2515,7 +2516,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E330 CGF   - Compare Long Fullword                          [RXE] */
+/* E330 CGF   - Compare Long Fullword                          [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_long_fullword)
 {
@@ -2524,7 +2525,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2540,7 +2541,7 @@ U32     n;                              /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E30A ALG   - Add Logical Long                               [RXE] */
+/* E30A ALG   - Add Logical Long                               [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_long)
 {
@@ -2549,7 +2550,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2565,7 +2566,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E31A ALGF  - Add Logical Long Fullword                      [RXE] */
+/* E31A ALGF  - Add Logical Long Fullword                      [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_logical_long_fullword)
 {
@@ -2574,7 +2575,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2590,7 +2591,7 @@ U32     n;                              /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E318 AGF   - Add Long Fullword                              [RXE] */
+/* E318 AGF   - Add Long Fullword                              [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_long_fullword)
 {
@@ -2599,7 +2600,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2619,7 +2620,7 @@ U32     n;                              /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E308 AG    - Add Long                                       [RXE] */
+/* E308 AG    - Add Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(add_long)
 {
@@ -2628,7 +2629,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2648,7 +2649,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E30B SLG   - Subtract Logical Long                          [RXE] */
+/* E30B SLG   - Subtract Logical Long                          [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_logical_long)
 {
@@ -2657,7 +2658,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2673,7 +2674,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E31B SLGF  - Subtract Logical Long Fullword                 [RXE] */
+/* E31B SLGF  - Subtract Logical Long Fullword                 [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_logical_long_fullword)
 {
@@ -2682,7 +2683,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2698,7 +2699,7 @@ U32     n;                              /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E319 SGF   - Subtract Long Fullword                         [RXE] */
+/* E319 SGF   - Subtract Long Fullword                         [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_long_fullword)
 {
@@ -2707,7 +2708,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2727,7 +2728,7 @@ U32     n;                              /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E309 SG    - Subtract Long                                  [RXE] */
+/* E309 SG    - Subtract Long                                  [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(subtract_long)
 {
@@ -2736,7 +2737,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3130,7 +3131,7 @@ U16     i2;                             /* 16-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E321 CLG   - Compare Logical long                           [RXE] */
+/* E321 CLG   - Compare Logical long                           [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_logical_long)
 {
@@ -3139,7 +3140,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3154,7 +3155,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E331 CLGF  - Compare Logical long fullword                  [RXE] */
+/* E331 CLGF  - Compare Logical long fullword                  [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_logical_long_fullword)
 {
@@ -3163,7 +3164,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -3230,7 +3231,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB1C RLLG  - Rotate Left Single Logical Long                [RSE] */
+/* EB1C RLLG  - Rotate Left Single Logical Long                [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_left_single_logical_long)
 {
@@ -3239,7 +3240,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3254,7 +3255,7 @@ U64     n;                              /* Integer work areas        */
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB1D RLL   - Rotate Left Single Logical                     [RSE] */
+/* EB1D RLL   - Rotate Left Single Logical                     [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(rotate_left_single_logical)
 {
@@ -3263,7 +3264,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost five bits of operand address as shift count */
     n = effective_addr2 & 0x1F;
@@ -3278,7 +3279,7 @@ U64     n;                              /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB0D SLLG  - Shift Left Single Logical Long                 [RSE] */
+/* EB0D SLLG  - Shift Left Single Logical Long                 [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_left_single_logical_long)
 {
@@ -3287,7 +3288,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3301,7 +3302,7 @@ U64     n;                              /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB0C SRLG  - Shift Right Single Logical Long                [RSE] */
+/* EB0C SRLG  - Shift Right Single Logical Long                [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single_logical_long)
 {
@@ -3310,7 +3311,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3324,7 +3325,7 @@ U64     n;                              /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB0B SLAG  - Shift Left Single Long                         [RSE] */
+/* EB0B SLAG  - Shift Left Single Long                         [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_left_single_long)
 {
@@ -3334,7 +3335,7 @@ VADR    effective_addr2;                /* effective address         */
 U64     n, n1, n2;                      /* 64-bit operand values     */
 U32     i, j;                           /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3376,7 +3377,7 @@ U32     i, j;                           /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB0A SRAG  - Shift Right single Long                        [RSE] */
+/* EB0A SRAG  - Shift Right single Long                        [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_right_single_long)
 {
@@ -3385,7 +3386,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3405,7 +3406,7 @@ U64     n;                              /* Integer work areas        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E31C MSGF  - Multiply Single Long Fullword                  [RXE] */
+/* E31C MSGF  - Multiply Single Long Fullword                  [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_single_long_fullword)
 {
@@ -3414,7 +3415,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -3428,7 +3429,7 @@ U32     n;                              /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E30C MSG   - Multiply Single Long                           [RXE] */
+/* E30C MSG   - Multiply Single Long                           [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_single_long)
 {
@@ -3437,7 +3438,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3620,7 +3621,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E380 NG    - And Long                                       [RXE] */
+/* E380 NG    - And Long                                       [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(and_long)
 {
@@ -3629,7 +3630,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3643,7 +3644,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E381 OG    - Or Long                                        [RXE] */
+/* E381 OG    - Or Long                                        [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(or_long)
 {
@@ -3652,7 +3653,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3666,7 +3667,7 @@ U64     n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E382 XG    - Exclusive Or Long                              [RXE] */
+/* E382 XG    - Exclusive Or Long                              [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(exclusive_or_long)
 {
@@ -3675,7 +3676,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3861,7 +3862,7 @@ BYTE    rworkh[64], rworkl[64];         /* High and low halves of new
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB96 LMH   - Load Multiple High                             [RSE] */
+/* EB96 LMH   - Load Multiple High                             [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_multiple_high)
 {
@@ -3871,7 +3872,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Character work areas      */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate the number of bytes to be loaded */
     d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
@@ -3898,7 +3899,7 @@ BYTE    rwork[64];                      /* Character work areas      */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB04 LMG   - Load Multiple Long                             [RSE] */
+/* EB04 LMG   - Load Multiple Long                             [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_multiple_long)
 {
@@ -3908,7 +3909,7 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                     /* Register work areas       */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate the number of bytes to be loaded */
     d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 8;
@@ -3935,7 +3936,7 @@ BYTE    rwork[128];                     /* Register work areas       */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB25 STCTG - Store Control Long                             [RSE] */
+/* EB25 STCTG - Store Control Long                             [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_control_long)
 {
@@ -3945,7 +3946,7 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                      /* Register work areas       */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -3978,7 +3979,7 @@ BYTE    rwork[128];                      /* Register work areas       */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB2F LCTLG - Load Control Long                              [RSE] */
+/* EB2F LCTLG - Load Control Long                              [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_control_long)
 {
@@ -3989,7 +3990,7 @@ int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                     /* Register work areas       */
 int     inval = 0;                      /* Invalidation flag        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -4081,7 +4082,7 @@ int     inval = 0;                      /* Invalidation flag        */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB24 STMG  - Store Multiple Long                            [RSE] */
+/* EB24 STMG  - Store Multiple Long                            [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_multiple_long)
 {
@@ -4091,7 +4092,7 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                      /* Register work areas       */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Copy control registers into work area */
     for ( i = r1, d = 0; ; )
@@ -4115,7 +4116,7 @@ BYTE    rwork[128];                      /* Register work areas       */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* EB26 STMH  - Store Multiple High                            [RSE] */
+/* EB26 STMH  - Store Multiple High                            [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_multiple_high)
 {
@@ -4125,7 +4126,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i, d;                           /* Integer work area         */
 BYTE    rwork[64];                      /* Register work area        */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Copy register contents into work area */
     for ( i = r1, d = 0; ; )
@@ -4317,7 +4318,7 @@ DEF_INST(set_addressing_mode_64)
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E324 STG   - Store Long                                     [RXE] */
+/* E324 STG   - Store Long                                     [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_long)
 {
@@ -4325,7 +4326,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, b2, regs );
@@ -4369,7 +4370,7 @@ RADR    n;                              /* 64-bit operand values     */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E304 LG    - Load Long                                      [RXE] */
+/* E304 LG    - Load Long                                      [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_long)
 {
@@ -4377,7 +4378,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -4388,7 +4389,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E314 LGF   - Load Long Fullword                             [RXE] */
+/* E314 LGF   - Load Long Fullword                             [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_long_fullword)
 {
@@ -4396,7 +4397,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     (S64)regs->GR_G(r1) = (S32)ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -4407,7 +4408,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E315 LGH   - Load Long Halfword                             [RXE] */
+/* E315 LGH   - Load Long Halfword                             [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_long_halfword)
 {
@@ -4415,7 +4416,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     (S64)regs->GR_G(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -4426,7 +4427,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E316 LLGF  - Load Logical Long Fullword                     [RXE] */
+/* E316 LLGF  - Load Logical Long Fullword                     [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_logical_long_fullword)
 {
@@ -4434,7 +4435,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -4445,7 +4446,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E317 LLGT  - Load Logical Long Thirtyone                    [RXE] */
+/* E317 LLGT  - Load Logical Long Thirtyone                    [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_logical_long_thirtyone)
 {
@@ -4453,7 +4454,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs )
@@ -4512,7 +4513,7 @@ int     rc;
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E303 LRAG  - Load Real Address Long                         [RXE] */
+/* E303 LRAG  - Load Real Address Long                         [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_real_address_long)
 {
@@ -4526,7 +4527,7 @@ int     stid;                           /* Segment table indication  */
 int     cc;                             /* Condition code            */
 RADR    n;                              /* 64-bit operand values     */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -4660,7 +4661,7 @@ int     r1, r2;                         /* Values of R fields        */
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E30F LRVG  - Load Reversed Long                             [RXE] */
+/* E30F LRVG  - Load Reversed Long                             [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_reversed_long)
 {
@@ -4668,7 +4669,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = bswap_64(ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ));
@@ -4679,7 +4680,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
-/* E31E LRV   - Load Reversed                                  [RXE] */
+/* E31E LRV   - Load Reversed                                  [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_reversed)
 {
@@ -4687,7 +4688,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = bswap_32(ARCH_DEP(vfetch4) ( effective_addr2, b2, regs ));
@@ -4698,7 +4699,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
-/* E31F LRVH  - Load Reversed Half                             [RXE] */
+/* E31F LRVH  - Load Reversed Half                             [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(load_reversed_half)
 {
@@ -4706,7 +4707,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_LHL(r1) = bswap_16(ARCH_DEP(vfetch2) ( effective_addr2, b2, regs ));
@@ -4716,7 +4717,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E32F STRVG - Store Reversed Long                            [RXE] */
+/* E32F STRVG - Store Reversed Long                            [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_reversed_long)
 {
@@ -4724,7 +4725,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore8) ( bswap_64(regs->GR_G(r1)), effective_addr2, b2, regs );
@@ -4735,7 +4736,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
-/* E33E STRV  - Store Reversed                                 [RXE] */
+/* E33E STRV  - Store Reversed                                 [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_reversed)
 {
@@ -4743,7 +4744,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore4) ( bswap_32(regs->GR_L(r1)), effective_addr2, b2, regs );
@@ -4754,7 +4755,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_LOAD_REVERSED)
 /*-------------------------------------------------------------------*/
-/* E33F STRVH - Store Reversed Half                            [RXE] */
+/* E33F STRVH - Store Reversed Half                            [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_reversed_half)
 {
@@ -4762,7 +4763,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXE(inst, execflag, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore2) ( bswap_16(regs->GR_LHL(r1)), effective_addr2, b2, regs );
@@ -5249,7 +5250,7 @@ U16     svalue, dvalue, tvalue;
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* EB8E MVCLU - Move Long Unicode                              [RSE] */
+/* EB8E MVCLU - Move Long Unicode                              [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(move_long_unicode)
 {
@@ -5264,7 +5265,7 @@ U16     odbyte;                         /* Operand double byte       */
 U16     pad;                            /* Padding double byte       */
 int     cpu_length;                     /* cpu determined length     */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -5333,7 +5334,7 @@ int     cpu_length;                     /* cpu determined length     */
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
 /*-------------------------------------------------------------------*/
-/* EB8F CLCLU - Compare Logical Long Unicode                   [RSE] */
+/* EB8F CLCLU - Compare Logical Long Unicode                   [RSY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_logical_long_unicode)
 {
@@ -5348,7 +5349,7 @@ U16     dbyte1, dbyte3;                 /* Operand double bytes      */
 U16     pad;                            /* Padding double byte       */
 int     cpu_length;                     /* cpu determined length     */
 
-    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -5421,6 +5422,83 @@ int     cpu_length;                     /* cpu determined length     */
 }
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E376 LB    - Load Byte                                      [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_byte)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load sign-extended byte from operand address */
+    (S32)regs->GR_L(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E377 LGB   - Load Byte Long                                 [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_byte_long)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load sign-extended byte from operand address */
+    (S64)regs->GR_G(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+/* The following long displacement instructions are not yet implemented */
+#if defined(FEATURE_LONG_DISPLACEMENT)
+ UNDEF_INST(add_y)
+ UNDEF_INST(add_halfword_y)
+ UNDEF_INST(add_logical_y)
+ UNDEF_INST(and_immediate_y)
+ UNDEF_INST(and_y)
+ UNDEF_INST(compare_y)
+ UNDEF_INST(compare_and_swap_y)
+ UNDEF_INST(compare_double_and_swap_y)
+ UNDEF_INST(compare_halfword_y)
+ UNDEF_INST(compare_logical_y)
+ UNDEF_INST(compare_logical_immediate_y)
+ UNDEF_INST(compare_logical_characters_under_mask_y)
+ UNDEF_INST(convert_to_binary_y)
+ UNDEF_INST(convert_to_decimal_y)
+ UNDEF_INST(exclusive_or_immediate_y)
+ UNDEF_INST(exclusive_or_y)
+ UNDEF_INST(insert_character_y)
+ UNDEF_INST(insert_characters_under_mask_y)
+ UNDEF_INST(load_y)
+ UNDEF_INST(load_access_multiple_y)
+ UNDEF_INST(load_address_y)
+ UNDEF_INST(load_halfword_y)
+ UNDEF_INST(load_multiple_y)
+ UNDEF_INST(load_real_address_y)
+ UNDEF_INST(move_immediate_y)
+ UNDEF_INST(multiply_single_y)
+ UNDEF_INST(or_immediate_y)
+ UNDEF_INST(or_y)
+ UNDEF_INST(store_y)
+ UNDEF_INST(store_access_multiple_y)
+ UNDEF_INST(store_character_y)
+ UNDEF_INST(store_characters_under_mask_y)
+ UNDEF_INST(store_halfword_y)
+ UNDEF_INST(store_multiple_y)
+ UNDEF_INST(subtract_y)
+ UNDEF_INST(subtract_halfword_y)
+ UNDEF_INST(subtract_logical_y)
+ UNDEF_INST(test_under_mask_y)
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 #if !defined(_GEN_ARCH)
 
