@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+28 Sep 2004 Fix directive inside macro problem in tapecopy.c - Greg Smith
 28 Sep 2004 Fix resume-suspend logic in channel.c - Greg Smith
 28 Sep 2004 Added iplc (IPL Clear), sysreset (System reset) and
             sysclear (System reset clear) panel commands - Ivan Warren

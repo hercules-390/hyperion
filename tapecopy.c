@@ -612,16 +612,17 @@ int64_t         file_bytes;             /* Byte count for curr file  */
 
     printf
     (
-        _(
 #if SIZEOF_LONG == 8
+        _(
             "HHCTC000I Successful completion;\n"
             "          Bytes read: %ld (%3.1f MB), Blocks=%u, avg=%u\n"
+         )
 #else
+        _(
             "HHCTC000I Successful completion;\n"
             "          Bytes read: %lld (%3.1f MB), Blocks=%u, avg=%u\n"
-#endif
         )
-
+#endif
         ,           bytes_read
         ,(double) ( bytes_read    + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
         ,totalblks
