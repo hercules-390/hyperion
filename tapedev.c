@@ -3024,7 +3024,6 @@ static void ReqAutoMount( DEVBLK *dev )
                     eyecatcher,
                     keep_or_retain,
                     ascii ? "ASCII " : "",lbltype,
-                    volser,
                     dev->devnum, dev->filename,
                     eyecatcher );
             }
