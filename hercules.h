@@ -413,7 +413,9 @@ typedef void*THREAD_FUNC(void*);
 #define SLEEP(_n) \
  do { \
    unsigned int rc = (_n); \
-   while (rc) rc = sleep (rc); \
+   while (rc) \
+     if ((rc = sleep (rc))) \
+       sched_yield(); \
  } while (0)
 
 /*-------------------------------------------------------------------*/
