@@ -1038,11 +1038,15 @@ DEF_INST (compression_call)
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "cmpsc.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "cmpsc.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "cmpsc.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "cmpsc.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH) */

@@ -436,9 +436,9 @@ PSA     *sspsa;                         /* -> Store status area      */
     sspsa->arch = 1;
 #endif /*defined(FEATURE_ESAME)*/
 
-#if defined(FEATURE_ESAME_INSTALLED)
+#if defined(_900)
     sspsa->arch = 0;
-#endif /*defined(FEATURE_ESAME_INSTALLED)*/
+#endif /*defined(_900)*/
 
     /* Store access registers in bytes 288-351 */
     for (i = 0; i < 16; i++)
@@ -465,28 +465,38 @@ PSA     *sspsa;                         /* -> Store status area      */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "external.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "external.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "external.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "external.c"
+#endif
 
 
 void store_status (REGS *ssreg, U64 aaddr)
 {
     switch(ssreg->arch_mode) {
+#if defined(_370)
         case ARCH_370:
             aaddr &= 0x7FFFFFFF;
             s370_store_status (ssreg, aaddr);
             break;
+#endif
+#if defined(_390)
         case ARCH_390:
             aaddr &= 0x7FFFFFFF;
             s390_store_status (ssreg, aaddr);
             break;
+#endif
+#if defined(_900)
         case ARCH_900:
             z900_store_status (ssreg, aaddr);
             break;
+#endif
     }
 }
 #endif /*!defined(_GEN_ARCH)*/

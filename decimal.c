@@ -1183,11 +1183,15 @@ BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "decimal.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "decimal.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "decimal.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "decimal.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/

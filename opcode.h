@@ -12,77 +12,93 @@
 #include <config.h>
 #endif
 
-#define GEN_MAXARCH	3+2
+#if defined(_370)
+ #define _GEN370(_name) &s370_ ## _name,
+#else
+ #define _GEN370(_name)
+#endif
+
+#if defined(_390)
+ #define _GEN390(_name) &s390_ ## _name,
+#else
+ #define _GEN390(_name)
+#endif
+
+#if defined(_900)
+ #define _GEN900(_name) &z900_ ## _name,
+#else
+ #define _GEN900(_name)
+#endif
 
 
 #define GENx___x___x___ \
     { \
-	&s370_operation_exception, \
-	&s390_operation_exception, \
-	&z900_operation_exception, \
+	_GEN370(operation_exception) \
+	_GEN390(operation_exception) \
+	_GEN900(operation_exception) \
         (void*)&disasm_none, \
         (void*)&"?????" \
     }
 
 #define GENx370x___x___(_name,_format,_mnemonic) \
     { \
-	&s370_ ## _name, \
-	&s390_operation_exception, \
-	&z900_operation_exception, \
+	_GEN370(_name) \
+	_GEN390(operation_exception) \
+	_GEN900(operation_exception) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic \
     }
 
-#define GENx___x390x___(_name,_format,_mnemonic) \
+#define GENx___x390x_(_name)_format,_mnemonic) \
     { \
-	&s370_operation_exception, \
-	&s390_ ## _name, \
-	&z900_operation_exception, \
+	_GEN370(operation_exception) \
+	_GEN390(_name) \
+	_GEN900(operation_exception) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic \
     }
 
 #define GENx370x390x___(_name,_format,_mnemonic) \
     { \
-	&s370_ ## _name, \
-	&s390_ ## _name, \
-	&z900_operation_exception, \
+	_GEN370(_name) \
+	_GEN390(_name) \
+	_GEN900(operation_exception) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic \
     }
 
 #define GENx___x___x900(_name,_format,_mnemonic) \
     { \
-	&s370_operation_exception, \
-	&s390_operation_exception, \
-	&z900_ ## _name, \
+	_GEN370(operation_exception) \
+	_GEN390(operation_exception) \
+	_GEN900(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic \
     }
 
 #define GENx370x___x900(_name,_format,_mnemonic) \
     { \
-	&s370_ ## _name, \
-	&s390_operation_exception, \
-	&z900_ ## _name, \
+	_GEN370(_name) \
+	_GEN390(operation_exception) \
+	_GEN900(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic \
     }
 
 #define GENx___x390x900(_name,_format,_mnemonic) \
     { \
-	&s370_operation_exception, \
-	&s390_ ## _name, \
-	&z900_ ## _name, \
+	_GEN370(operation_exception) \
+	_GEN390(_name) \
+	_GEN900(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic \
     }
 
 #define GENx370x390x900(_name,_format,_mnemonic) \
     { \
-	&s370_ ## _name, \
-	&s390_ ## _name, \
-	&z900_ ## _name, \
+	_GEN370(_name) \
+	_GEN390(_name) \
+	_GEN900(_name) \
         (void*)&disasm_ ## _format, \
         (void*)& _mnemonic \
     }
@@ -275,6 +291,109 @@ do { \
 	if( (_value) & 15 ) \
 	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
+	/* Program check if m is not 0, 1, or 4 to 7 */
+#define HFPM_CHECK(_m, _regs) \
+	if (((_m) == 2) || ((_m) == 3) || ((_m) & 8)) \
+	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
+#define BFPINST_CHECK(_regs) \
+        if( !((_regs)->CR(0) & CR0_AFP) ) { \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
+            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
+        }
+
+#define PRIV_CHECK(_regs) \
+	if( (_regs)->psw.prob ) \
+	    ARCH_DEP(program_interrupt)( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
+
+#define BFPREGPAIR2_CHECK(_r1, _r2, _regs) \
+	if( ((_r1) & 2) || ((_r2) & 2) ) \
+	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
+#define PER_RANGE_CHECK(_addr, _low, _high) \
+  ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
+  (((_addr) >= ((_low) & MAXADDRESS)) && (_addr) <= ((_high) & MAXADDRESS)) : \
+  (((_addr) >= ((_low) & MAXADDRESS)) || (_addr) <= ((_high) & MAXADDRESS)) )
+
+
+#ifdef WORDS_BIGENDIAN
+ #define CSWAP16(_x) (_x)
+ #define CSWAP32(_x) (_x)
+ #define CSWAP64(_x) (_x)
+#else
+ #define CSWAP16(_x) bswap_16(_x)
+ #define CSWAP32(_x) bswap_32(_x)
+ #define CSWAP64(_x) bswap_64(_x)
+#endif
+
+#if i386
+#define store_hw(_storage, _value) \
+	*((U16*)(_storage)) = CSWAP16((_value))
+
+#define fetch_hw(_storage) \
+	CSWAP16(*((U16*)(_storage)))
+
+#define store_fw(_storage, _value) \
+	*((U32*)(_storage)) = CSWAP32((_value))
+
+#define fetch_fw(_storage) \
+	CSWAP32(*((U32*)(_storage)))
+
+#define store_dw(_storage, _value) \
+	*((U64*)(_storage)) = CSWAP64((_value))
+
+#define fetch_dw(_storage) \
+	CSWAP64(*((U64*)(_storage)))
+
+#else
+
+static inline U16 fetch_hw(void* storage) {
+  U16 tmp;
+  memcpy(&tmp, storage, 2);
+  return CSWAP16(tmp);
+}
+static inline void store_hw(void* storage, U16 value) {
+  U16 tmp = CSWAP16(value);
+  memcpy(storage, &tmp, 2);
+}
+static inline U32 fetch_fw(void* storage) {
+  U32 tmp;
+  memcpy(&tmp, storage, 4);
+  return CSWAP32(tmp);
+}
+static inline void store_fw(void* storage, U32 value) {
+  U32 tmp = CSWAP32(value);
+  memcpy(storage, &tmp, 4);
+}
+static inline U64 fetch_dw(void* storage) {
+  U64 tmp;
+  memcpy(&tmp, storage, 8);
+  return CSWAP64(tmp);
+}
+static inline void store_dw(void* storage, U64 value) {
+  U64 tmp = CSWAP64(value);
+  memcpy(storage, &tmp, 8);
+}
+
+#endif /* i386 */
+
+#define FETCH_HW(_value, _storage) (_value) = fetch_hw(_storage)
+#define FETCH_FW(_value, _storage) (_value) = fetch_fw(_storage)
+#define FETCH_DW(_value, _storage) (_value) = fetch_dw(_storage)
+
+#define STORE_HW(_storage, _value) store_hw(_storage, _value)
+#define STORE_FW(_storage, _value) store_fw(_storage, _value)
+#define STORE_DW(_storage, _value) store_dw(_storage, _value)
+
+#endif /*!defined(_OPCODE_H)*/
+
+
+#undef HFPREG_CHECK
+#undef HFPREG2_CHECK
+#undef HFPODD_CHECK
+#undef HFPODD2_CHECK
+#undef FPR2I
+#undef FPREX
 #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 
 	/* Program check if r1 is not 0, 2, 4, or 6 */
@@ -354,105 +473,6 @@ do { \
 #define FPREX 2
 
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
-
-	/* Program check if m is not 0, 1, or 4 to 7 */
-#define HFPM_CHECK(_m, _regs) \
-	if (((_m) == 2) || ((_m) == 3) || ((_m) & 8)) \
-	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
-
-#define BFPINST_CHECK(_regs) \
-        if( !((_regs)->CR(0) & CR0_AFP) ) { \
-            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
-            ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
-        }
-
-#define PRIV_CHECK(_regs) \
-	if( (_regs)->psw.prob ) \
-	    ARCH_DEP(program_interrupt)( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
-
-#if defined(FEATURE_BINARY_FLOATING_POINT)
-#define BFPREGPAIR2_CHECK(_r1, _r2, _regs) \
-	if( ((_r1) & 2) || ((_r2) & 2) ) \
-	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
-#endif /* defined(FEATURE_BINARY_FLOATING_POINT) */
-
-
-#define PER_RANGE_CHECK(_addr, _low, _high) \
-  ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
-  (((_addr) >= ((_low) & MAXADDRESS)) && (_addr) <= ((_high) & MAXADDRESS)) : \
-  (((_addr) >= ((_low) & MAXADDRESS)) || (_addr) <= ((_high) & MAXADDRESS)) )
-
-
-#ifdef WORDS_BIGENDIAN
- #define CSWAP16(_x) (_x)
- #define CSWAP32(_x) (_x)
- #define CSWAP64(_x) (_x)
-#else
- #define CSWAP16(_x) bswap_16(_x)
- #define CSWAP32(_x) bswap_32(_x)
- #define CSWAP64(_x) bswap_64(_x)
-#endif
-
-#if i386
-#define store_hw(_storage, _value) \
-	*((U16*)(_storage)) = CSWAP16((_value))
-
-#define fetch_hw(_storage) \
-	CSWAP16(*((U16*)(_storage)))
-
-#define store_fw(_storage, _value) \
-	*((U32*)(_storage)) = CSWAP32((_value))
-
-#define fetch_fw(_storage) \
-	CSWAP32(*((U32*)(_storage)))
-
-#define store_dw(_storage, _value) \
-	*((U64*)(_storage)) = CSWAP64((_value))
-
-#define fetch_dw(_storage) \
-	CSWAP64(*((U64*)(_storage)))
-
-#else
-
-static inline U16 fetch_hw(void* storage) {
-  U16 tmp;
-  memcpy(&tmp, storage, 2);
-  return CSWAP16(tmp);
-}
-static inline void store_hw(void* storage, U16 value) {
-  U16 tmp = CSWAP16(value);
-  memcpy(storage, &tmp, 2);
-}
-static inline U32 fetch_fw(void* storage) {
-  U32 tmp;
-  memcpy(&tmp, storage, 4);
-  return CSWAP32(tmp);
-}
-static inline void store_fw(void* storage, U32 value) {
-  U32 tmp = CSWAP32(value);
-  memcpy(storage, &tmp, 4);
-}
-static inline U64 fetch_dw(void* storage) {
-  U64 tmp;
-  memcpy(&tmp, storage, 8);
-  return CSWAP64(tmp);
-}
-static inline void store_dw(void* storage, U64 value) {
-  U64 tmp = CSWAP64(value);
-  memcpy(storage, &tmp, 8);
-}
-
-#endif /* i386 */
-
-#define FETCH_HW(_value, _storage) (_value) = fetch_hw(_storage)
-#define FETCH_FW(_value, _storage) (_value) = fetch_fw(_storage)
-#define FETCH_DW(_value, _storage) (_value) = fetch_dw(_storage)
-
-#define STORE_HW(_storage, _value) store_hw(_storage, _value)
-#define STORE_FW(_storage, _value) store_fw(_storage, _value)
-#define STORE_DW(_storage, _value) store_dw(_storage, _value)
-
-#endif /*!defined(_OPCODE_H)*/
 
 
 #if defined(OPTION_AIA_BUFFER)
@@ -1286,7 +1306,7 @@ do { \
         memset((_regs)->siebk->vi_zero, 0, 6); \
     }
 
-#if !defined(_GEN_ARCH) || _GEN_ARCH == 900 || (_GEN_ARCH == 390 && !defined(_FEATURE_ZSIE))
+#if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined(_FEATURE_ZSIE))
 
 #define SIE_TRANSLATE_ADDR(_parms...) \
 	ARCH_DEP(translate_addr)(_parms)
@@ -1294,7 +1314,15 @@ do { \
 #define SIE_LOGICAL_TO_ABS(_parms...) \
 	ARCH_DEP(logical_to_abs)(_parms)
 
-#else /*_GEN_ARCH == 390 || _GEN_ARCH == 370*/
+#elif __GEN_ARCH == 370 && defined(_FEATURE_SIE)
+
+#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _parms...)	\
+	s390_translate_addr((_addr), (_arn), (_regs), _parms)
+
+#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)	\
+	s390_logical_to_abs((_addr), (_arn), (_regs), _parms)
+
+#else /*__GEN_ARCH == 390 && defined(_FEATURE_ZSIE)*/
 
 #define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _parms...)	\
 	( ((_regs)->arch_mode == ARCH_390) ?			\

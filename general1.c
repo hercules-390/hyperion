@@ -3957,11 +3957,15 @@ U32     n;                              /* 32-bit operand values     */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "general1.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "general1.c"
+#endif 
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "general1.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "general1.c"
+#endif 
 
 #endif /*!defined(_GEN_ARCH)*/

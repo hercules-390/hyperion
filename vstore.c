@@ -14,12 +14,16 @@
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "vstore.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "vstore.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "vstore.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "vstore.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/
 

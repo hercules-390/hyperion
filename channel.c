@@ -949,10 +949,15 @@ void device_thread ()
 
             switch (sysblk.arch_mode)
             {
+#if defined(_370)
                 case ARCH_370: s370_execute_ccw_chain (dev); break;
-                case ARCH_900: z900_execute_ccw_chain (dev); break;
-                default:
+#endif
+#if defined(_390)
                 case ARCH_390: s390_execute_ccw_chain (dev); break;
+#endif
+#if defined(_900)
+                case ARCH_900: z900_execute_ccw_chain (dev); break;
+#endif
             }
 
             obtain_lock(&sysblk.ioqlock);
@@ -1485,10 +1490,15 @@ int     rc;                             /* Return code               */
         release_lock (&dev->lock);
         switch (sysblk.arch_mode)
         {
+#if defined(_370)
             case ARCH_370: s370_execute_ccw_chain (dev); break;
-            case ARCH_900: z900_execute_ccw_chain (dev); break;
-            default:
+#endif
+#if defined(_390)
             case ARCH_390: s390_execute_ccw_chain (dev); break;
+#endif
+#if defined(_900)
+            case ARCH_900: z900_execute_ccw_chain (dev); break;
+#endif
         }
         /* Return code 0 if the retry bit is not on */
         if (!dev->syncio_retry)
@@ -2632,20 +2642,30 @@ int     iopending = 0;                  /* 1 = I/O still pending     */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "channel.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "channel.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "channel.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "channel.c"
+#endif
 
 
 int device_attention (DEVBLK *dev, BYTE unitstat)
 {
     switch(sysblk.arch_mode) {
+#if defined(_370)
         case ARCH_370: return s370_device_attention(dev, unitstat);
+#endif
+#if defined(_390)
         case ARCH_390: return s390_device_attention(dev, unitstat);
+#endif
+#if defined(_900)
         case ARCH_900: return z900_device_attention(dev, unitstat);
+#endif
     }
     return 3;
 }
@@ -2655,10 +2675,15 @@ void  call_execute_ccw_chain(int arch_mode, void* pDevBlk)
 {
     switch (arch_mode)
     {
+#if defined(_370)
         case ARCH_370: s370_execute_ccw_chain((DEVBLK*)pDevBlk); break;
-        case ARCH_900: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
-        default:
+#endif
+#if defined(_390)
         case ARCH_390: s390_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+#endif
+#if defined(_900)
+        case ARCH_900: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+#endif
     }
 }
 #endif // defined(OPTION_FISHIO)

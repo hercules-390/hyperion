@@ -29,13 +29,17 @@
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "config.c"
-#undef   _GEN_ARCH
+#if defined(_ARCHMODE3)
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "config.c"
+ #undef   _GEN_ARCH
+#endif
 
-#define  _GEN_ARCH 370
-#include "config.c"
-#undef   _GEN_ARCH
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "config.c"
+ #undef   _GEN_ARCH
+#endif
 
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
@@ -323,7 +327,11 @@ BYTE    c;                              /* Work area for sscanf      */
     sysepoch = 1900;
     tzoffset = 0;
     toddrag = 1;
+#if defined(_390)
     archmode = ARCH_390;
+#else
+    archmode = ARCH_370;
+#endif
     ostailor = OS_NONE;
     panrate = PANEL_REFRESH_RATE_SLOW;
     cpuprio = 15;
@@ -469,29 +477,39 @@ BYTE    c;                              /* Work area for sscanf      */
 
         if (sarchmode != NULL)
         {
-            if (strcasecmp (sarchmode, "S/370") == 0)
+#if defined(_370)
+            if (strcasecmp (sarchmode, arch_name[ARCH_370]) == 0)
             {
                 archmode = ARCH_370;
             }
-            else if (strcasecmp (sarchmode, "ESA/390") == 0)
+            else
+#endif
+#if defined(_390)
+            if (strcasecmp (sarchmode, arch_name[ARCH_390]) == 0)
             {
                 archmode = ARCH_390;
             }
-            else if (strcasecmp (sarchmode, "ESAME") == 0)
+            else
+#endif
+#if defined(_900)
+            if (strcasecmp (sarchmode, arch_name[ARCH_900]) == 0)
             {
                 archmode = ARCH_900;
             }
             else
+#endif
             {
                 logmsg( "HHC017I Error in %s line %d: "
-                        "Unknown ARCHMODE specification %s\n",
+                        "Unknown or unsupported ARCHMODE specification %s\n",
                         fname, stmt, sarchmode);
                 exit(1);
             }
         }
         sysblk.arch_mode = archmode;
+#if defined(_900)
         /* Indicate if z/Architecture is supported */
         sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
+#endif
 
         /* Parse CPU serial number operand */
         if (sserial != NULL)

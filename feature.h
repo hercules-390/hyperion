@@ -19,14 +19,25 @@
 #define   FEATCHK_CHECK_DONE
 #endif /*!defined(FEATCHK_CHECK_DONE)*/
 
-#include  "featall.h"
-#if	  _GEN_ARCH == 370
- #include "feat370.h"
-#elif	  _GEN_ARCH == 390
- #include "feat390.h"
-#else  /* _GEN_ARCH = 900 */
- #include "feat900.h"
+#undef __GEN_ARCH
+#if defined(_GEN_ARCH)
+ #define __GEN_ARCH _GEN_ARCH
+#else
+ #define __GEN_ARCH _ARCHMODE1
 #endif
+
+#include  "featall.h"
+#if	  __GEN_ARCH == 370
+ #include "feat370.h"
+#elif	  __GEN_ARCH == 390
+ #include "feat390.h"
+#elif     __GEN_ARCH == 900
+ #include "feat900.h"
+#else
+ #error Unable to determine Architecture Mode
+#endif
+
+
 #include  "featchk.h"
 
 
@@ -89,7 +100,6 @@
 #undef TLB_STD
 #undef TLB_VADDR
 #undef TLB_PTE
-/* The default mode is 900, basic ESAME */
 
 #if !defined(NO_ATTR_REGPARM) && !defined(PROFILE_CPU)
 #define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
@@ -97,11 +107,7 @@
 #define ATTR_REGPARM(n) /* nothing */
 #endif
 
-#if !defined(_GEN_ARCH)
-#define _GEN_ARCH 900
-#endif
-
-#if _GEN_ARCH == 370
+#if __GEN_ARCH == 370
 
 #define ARCH_MODE	ARCH_370
 
@@ -123,9 +129,14 @@ s370_ ## _name
 #define REAL_MODE(p) \
 	((p)->ecmode==0 || ((p)->sysmask & PSW_DATMODE)==0)
 
+#if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE)) \
           | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
+#else
+#define PER_MODE(_regs) \
+        ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE))
+#endif
 
 #define ASF_ENABLED(_regs)	0 /* ASF is never enabled for S/370 */
 
@@ -183,7 +194,7 @@ s370_ ## _name
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
 
-#elif _GEN_ARCH == 390
+#elif __GEN_ARCH == 390
 
 #define ARCH_MODE	ARCH_390
 
@@ -205,9 +216,14 @@ s390_ ## _name
 #define REAL_MODE(p) \
 	(((p)->sysmask & PSW_DATMODE)==0)
 
+#if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.sysmask & PSW_PERMODE) \
           | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
+#else
+#define PER_MODE(_regs) \
+        ((_regs)->psw.sysmask & PSW_PERMODE)
+#endif
 
 #define ASF_ENABLED(_regs)	((_regs)->CR(0) & CR0_ASF)
 
@@ -274,7 +290,7 @@ s390_ ## _name
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
 
-#elif _GEN_ARCH == 900
+#elif __GEN_ARCH == 900
 
 #define ARCH_MODE	ARCH_900
 
@@ -290,9 +306,14 @@ s390_ ## _name
 #define REAL_MODE(p) \
 	(((p)->sysmask & PSW_DATMODE)==0)
 
+#if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.sysmask & PSW_PERMODE) \
           | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
+#else
+#define PER_MODE(_regs) \
+        ((_regs)->psw.sysmask & PSW_PERMODE)
+#endif
 
 #define ASF_ENABLED(_regs)	1 /* ASF is always enabled for ESAME */
 
@@ -362,12 +383,8 @@ z900_ ## _name
 
 #else
 
-#warning _GEN_ARCH must be 370, 390, 900 or undefined
+#warning __GEN_ARCH must be 370, 390, 900 or undefined
 
-#endif
-
-#if _GEN_ARCH == 900
-#undef _GEN_ARCH
 #endif
 
 #undef PAGEFRAME_PAGESIZE

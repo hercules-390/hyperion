@@ -355,7 +355,7 @@ typedef struct _TLBE {
 #define ALET_ALEN	0x0000FFFF	/* Access-list entry number  */
 
 /* Access-list designation bit definitions */
-#if FEATURE_ALD_FORMAT == 0 || defined(FEATURE_ESAME)
+#if FEATURE_ALD_FORMAT == 0 || defined(_900)
 #define ALD_ALO 	0x7FFFFF80	/* Access-list origin (fmt0) */
 #define ALD_ALL 	0x0000007F	/* Access-list length (fmt0) */
 #define ALD_ALL_SHIFT	3		/* Length units are 2**3     */

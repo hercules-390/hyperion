@@ -7,6 +7,10 @@
 /*-------------------------------------------------------------------*/
 #define MAX_CPU_ENGINES               2 /* Maximum number of engines */
 #undef  SMP_SERIALIZATION               /* Serialize storage for SMP */
+#define OPTION_370_MODE                 /* Generate S/370 support    */
+#define OPTION_390_MODE                 /* Generate ESA/390 support  */
+#define OPTION_900_MODE                 /* Generate ESAME support    */
+#define OPTION_LPP_RESTRICT             /* Disable Licensed Software */
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
 #define CKD_MAXFILES                  4 /* Max files per CKD volume  */
@@ -41,15 +45,19 @@
 #undef  OPTION_CMPSC_DEBUGLVL      /* 3 ** 1=Exp 2=Comp 3=Both debug */
 #undef  MODEL_DEPENDENT_CS              /* CS, CDS, CSP always store */
 #undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
-
-/* This is set as appropriate by configure and makefile.w32; don't
-   define or undefine it here. -mdz */
-/* #undef NO_SIGABEND_HANDLER */
+#define FEATURE_ALD_FORMAT            0
 
 
-/* The following option is set as appropriate by configure and
-   makefile.w32; don't define or undefine it here. */
-/* #define OPTION_FTHREADS */           /* Fish pthreads replacement */
+/* Allow for compiler command line overrides */
+#if defined(OPTION_370_MODE) && defined(NO_370_MODE)
+ #undef OPTION_370_MODE
+#endif
+#if defined(OPTION_390_MODE) && defined(NO_390_MODE)
+ #undef OPTION_390_MODE
+#endif
+#if defined(OPTION_900_MODE) && defined(NO_900_MODE)
+ #undef OPTION_900_MODE
+#endif
 
 
 /* OPTION_FISHIO only possible with OPTION_FTHREADS */
@@ -60,9 +68,8 @@
 #endif
 
 
-#define FEATURE_ALD_FORMAT            0
-
 #undef FEATURE_4K_STORAGE_KEYS
+#undef FEATURE_2K_STORAGE_KEYS
 #undef FEATURE_ACCESS_REGISTERS
 #undef FEATURE_ADDRESS_LIMIT_CHECKING
 #undef FEATURE_BASIC_FP_EXTENSIONS
@@ -83,7 +90,6 @@
 #undef FEATURE_DUAL_ADDRESS_SPACE
 #undef FEATURE_EMULATE_VM
 #undef FEATURE_ESAME
-#undef FEATURE_ESAME_INSTALLED
 #undef FEATURE_ESAME_N3_ESA390
 #undef FEATURE_EXPANDED_STORAGE
 #undef FEATURE_EXTENDED_STORAGE_KEYS
@@ -117,6 +123,7 @@
 #undef FEATURE_S390_DAT
 #undef FEATURE_SERVICE_PROCESSOR
 #undef FEATURE_SEGMENT_PROTECTION
+#undef FEATURE_CHANNEL_SWITCHING
 #undef FEATURE_CHSC
 #undef FEATURE_SQUARE_ROOT
 #undef FEATURE_STORAGE_KEY_ASSIST

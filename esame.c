@@ -4511,7 +4511,7 @@ RADR    n;                              /* 64-bit operand values     */
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
+#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facilities List                            [S] */
 /*-------------------------------------------------------------------*/
@@ -4537,9 +4537,9 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
                  | STFL_0_N3
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
-#if defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)
+#if defined(_900) || defined(FEATURE_ESAME)
                  | (sysblk.arch_z900 ? STFL_0_ESAME_INSTALLED : 0)
-#endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_ESAME)*/
 #if defined(FEATURE_ESAME)
                  | STFL_0_ESAME_ACTIVE
 #endif /*defined(FEATURE_ESAME)*/
@@ -4553,7 +4553,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     psa->stfl[3] = 0;
 
 } /* end DEF_INST(store_facilities_list) */
-#endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_ESAME)*/
 
 
 #if defined(FEATURE_LOAD_REVERSED) && defined(FEATURE_ESAME)
@@ -4891,11 +4891,16 @@ int     cc;                             /* Condition code            */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "esame.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "esame.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "esame.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "esame.c"
+#endif
+
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -2,7 +2,8 @@
 /*		ESA/390 feature definitions			     */
 
 /* This file MUST NOT contain #undef statements */
-#define FEATURE_ESAME_INSTALLED
+#if defined(OPTION_390_MODE)
+#define _ARCH_390_NAME "ESA/390"
 
 #define FEATURE_4K_STORAGE_KEYS
 #define FEATURE_ACCESS_REGISTERS
@@ -57,6 +58,8 @@
 #define FEATURE_SUPPRESSION_ON_PROTECTION
 #define FEATURE_SYSTEM_CONSOLE
 #define FEATURE_TRACING
+
 // #define FEATURE_VECTOR_FACILITY
 
+#endif /*defined(OPTION_390_MODE)*/
 /* end of FEAT390.H */

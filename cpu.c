@@ -911,7 +911,17 @@ void s370_run_cpu (REGS *regs);
 void s390_run_cpu (REGS *regs);
 void z900_run_cpu (REGS *regs);
 static void (* run_cpu[GEN_MAXARCH]) (REGS *regs) =
-                { s370_run_cpu, s390_run_cpu, z900_run_cpu };
+                {
+#if defined(_370)
+                    s370_run_cpu,
+#endif
+#if defined(_390)
+                    s390_run_cpu,
+#endif
+#if defined(_900)
+                    z900_run_cpu
+#endif
+                };
 
 void *cpu_thread (REGS *regs)
 {
@@ -1498,12 +1508,16 @@ int     stepthis;                       /* Stop on this instruction  */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "cpu.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "cpu.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "cpu.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "cpu.c"
+#endif
 
 
 /*-------------------------------------------------------------------*/
@@ -1512,15 +1526,21 @@ int     stepthis;                       /* Stop on this instruction  */
 void store_psw (REGS *regs, BYTE *addr)
 {
     switch(regs->arch_mode) {
+#if defined(_370)
         case ARCH_370:
             s370_store_psw(regs, addr);
             break;
+#endif
+#if defined(_390)
         case ARCH_390:
             s390_store_psw(regs, addr);
             break;
+#endif
+#if defined(_900)
         case ARCH_900:
             z900_store_psw(regs, addr);
             break;
+#endif
     }
 } /* end function store_psw */
 
@@ -1534,7 +1554,7 @@ QWORD   qword;                            /* quadword work area      */
 
     memset(qword, 0, sizeof(qword));
 
-    if( regs->arch_mode < ARCH_900 )
+    if( regs->arch_mode != ARCH_900 )
     {
         store_psw (regs, qword);
         logmsg ("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n",
@@ -1556,7 +1576,17 @@ QWORD   qword;                            /* quadword work area      */
 } /* end function display_psw */
 
 const char* arch_name[GEN_MAXARCH] =
-	{ "S/370", "ESA/390", "ESAME" };
+    {
+#if defined(_370)
+        _ARCH_370_NAME,
+#endif
+#if defined(_390)
+        _ARCH_390_NAME,
+#endif
+#if defined(_900)
+        _ARCH_900_NAME
+#endif
+    };
 
 const char* get_arch_mode_string(REGS* regs)
 {

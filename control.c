@@ -983,7 +983,9 @@ DEF_INST(insert_storage_key)
 {
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Absolute storage addr     */
+#if defined(_FEATURE_SIE)
 BYTE    storkey;
+#endif /*defined(_FEATURE_SIE)*/
 
     RR(inst, execflag, regs, r1, r2);
 
@@ -1144,7 +1146,9 @@ DEF_INST(insert_storage_key_extended)
 {
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Workarea                  */
+#if defined(_FEATURE_SIE)
 BYTE    storkey;
+#endif /*defined(_FEATURE_SIE)*/
 
     RRE(inst, execflag, regs, r1, r2);
 
@@ -4522,10 +4526,10 @@ GREG    status = 0;                     /* Signal status             */
 RADR    abs;                            /* Absolute address          */
 U16     cpad;                           /* Target CPU address        */
 BYTE    order;                          /* SIGP order code           */
-#if defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
 int     cpu;                            /* cpu number                */
 int     set_arch = 0;                   /* Need to switch mode       */
-#endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_ESAME)*/
 static char *ordername[] = {    "Unassigned",
         /* SIGP_SENSE     */    "Sense",
         /* SIGP_EXTCALL   */    "External call",
@@ -4899,7 +4903,7 @@ static char *ordername[] = {    "Unassigned",
 
             break;
 
-#if defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
         case SIGP_SETARCH:
 
             /* CPU must have ESAME support */
@@ -4964,7 +4968,7 @@ static char *ordername[] = {    "Unassigned",
             PERFORM_CHKPT_SYNC (regs);
 
             break;
-#endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_ESAME)*/
 
         default:
             status = SIGP_STATUS_INVALID_ORDER;
@@ -4992,10 +4996,10 @@ static char *ordername[] = {    "Unassigned",
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
+#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_HERCULES_DIAGCALLS)
     if(set_arch)
         longjmp(regs->archjmp, 0);
-#endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/
+#endif /*defined(_900) || defined(FEATURE_ESAME)*/
 
     RETURN_INTCHECK(regs);
 
@@ -5810,11 +5814,15 @@ U32     op;                             /* Operand                   */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "control.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "control.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "control.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "control.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -22,11 +22,24 @@
 
 #define _SIE_C
 
+#if defined(_FEATURE_SIE)
 int s370_run_sie (REGS *regs);
 int s390_run_sie (REGS *regs);
+#if defined(_900)
 int z900_run_sie (REGS *regs);
+#endif /*defined(_900)*/
 static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
-                { s370_run_sie, s390_run_sie, z900_run_sie };
+    {
+#if defined(_370)
+        s370_run_sie,
+#endif
+#if defined(_390)
+        s390_run_sie,
+#endif
+#if defined(_900)
+        z900_run_sie
+#endif
+    };
 
 #define GUESTREGS (regs->guestregs)
 #define STATEBK   ((SIEBK*)(GUESTREGS->siebk))
@@ -57,6 +70,7 @@ static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
            && ((_guestregs)->psw.sysmask & PSW_IOMASK ))
 #endif /*defined(FEATURE_ESAME)*/
 
+#endif /*defined(_FEATURE_SIE)*/
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
 
 /*-------------------------------------------------------------------*/
@@ -66,7 +80,7 @@ DEF_INST(start_interpretive_execution)
 {
 int     b2;                             /* Values of R fields        */
 RADR    effective_addr2;                /* address of state desc.    */
-int     gpv;                            /* guest psw validity        */
+int     gpv = 0;                        /* guest psw validity        */
 int     n;                              /* Loop counter              */
 U16     lhcpu;                          /* Last Host CPU address     */
 int     icode;                          /* Interception code         */
@@ -117,9 +131,13 @@ int     icode;                          /* Interception code         */
 #else /*!defined(FEATURE_ESAME)*/
     if(STATEBK->m & SIE_M_370)
     {
+#if defined(_370)
         GUESTREGS->arch_mode = ARCH_370;
         GUESTREGS->sie_guestpi = (SIEFN)&s370_program_interrupt;
         gpv = s370_load_psw(GUESTREGS, STATEBK->psw);
+#else
+// validation intercept
+#endif
     }
 #endif /*!defined(FEATURE_ESAME)*/
     else
@@ -458,11 +476,15 @@ int     n;
     /* Store the PSW */
     if(GUESTREGS->arch_mode == ARCH_390)
         s390_store_psw (GUESTREGS, STATEBK->psw);
+#if defined(_370) || defined(_900)
     else
+#endif
 #if defined(FEATURE_ESAME)
         z900_store_psw (GUESTREGS, STATEBK->psw);
 #else /*!defined(FEATURE_ESAME)*/
+#if defined(_370)
         s370_store_psw (GUESTREGS, STATEBK->psw);
+#endif
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* save control registers */
@@ -636,11 +658,15 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "sie.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "sie.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "sie.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "sie.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/

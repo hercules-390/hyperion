@@ -126,6 +126,7 @@ do { \
    else \
      (_regs)->ints_mask &= ~IC_EXTPENDING
 
+#undef SET_IC_IO_MASK
 #ifdef FEATURE_BCMODE
   #define SET_IC_IO_MASK(_regs) \
   if( ((_regs)->psw.ecmode ? ((_regs)->psw.sysmask&PSW_IOMASK) : \

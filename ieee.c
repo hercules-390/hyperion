@@ -60,7 +60,7 @@
 #include <math.h>
 #include <fenv.h>
 
-#if !defined(_GEN_ARCH)
+#if !defined(_IEEE_C)
 /* Architecture independent code goes within this ifdef */
 
 /* move this into an appropriate header file */
@@ -108,7 +108,7 @@ struct sbfp {
 #define fmodl(x,y) fmod(x,y)
 #endif
 
-#endif	/* !defined(_GEN_ARCH) */
+#endif	/* !defined(_IEEE_C) */
 
 /* externally defined architecture-dependent functions */
 /* I guess this could go into an include file... */
@@ -200,7 +200,7 @@ static inline int ieee_exception(int raised, REGS * regs)
 	}
 }
 
-#if !defined(_GEN_ARCH)
+#if !defined(_IEEE_C)
 /*
  * Classify emulated fp values
  */
@@ -623,7 +623,7 @@ static void get_lbfp(struct lbfp *op, U32 *fpr)
 	op->fract = (((U64)fpr[0] & 0x000FFFFF) << 32) | fpr[1];
 	//logmsg("lget r=%8.8x%8.8x exp=%d fract=%llx\n", fpr[0], fpr[1], op->exp, op->fract);
 }
-#endif	/* !defined(_GEN_ARCH) */
+#endif	/* !defined(_IEEE_C) */
 
 static void vfetch_lbfp(struct lbfp *op, VADR addr, int arn, REGS *regs)
 {
@@ -637,7 +637,7 @@ static void vfetch_lbfp(struct lbfp *op, VADR addr, int arn, REGS *regs)
 	//logmsg("lfetch m=%16.16llx exp=%d fract=%llx\n", v, op->exp, op->fract);
 }
 
-#if !defined(_GEN_ARCH)
+#if !defined(_IEEE_C)
 static void get_sbfp(struct sbfp *op, U32 *fpr)
 {
 	op->sign = (*fpr & 0x80000000) != 0;
@@ -645,7 +645,7 @@ static void get_sbfp(struct sbfp *op, U32 *fpr)
 	op->fract = *fpr & 0x007FFFFF;
 	//logmsg("sget r=%8.8x exp=%d fract=%x\n", *fpr, op->exp, op->fract);
 }
-#endif	/* !defined(_GEN_ARCH) */
+#endif	/* !defined(_IEEE_C) */
 
 static void vfetch_sbfp(struct sbfp *op, VADR addr, int arn, REGS *regs)
 {
@@ -659,7 +659,7 @@ static void vfetch_sbfp(struct sbfp *op, VADR addr, int arn, REGS *regs)
 	//logmsg("sfetch m=%8.8x exp=%d fract=%x\n", v, op->exp, op->fract);
 }
 
-#if !defined(_GEN_ARCH)
+#if !defined(_IEEE_C)
 /*
  * Put binary float in registers
  */
@@ -683,7 +683,8 @@ static void put_sbfp(struct sbfp *op, U32 *fpr)
 	fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<23) | op->fract;
 	//logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
 }
-#endif	/* !defined(_GEN_ARCH) */
+#define _IEEE_C
+#endif	/* !defined(_IEEE_C) */
 
 /*
  * Chapter 9. Floating-Point Overview and Support Instructions
@@ -3607,12 +3608,16 @@ DEF_INST(testdataclass_bfp_ext)
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "ieee.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "ieee.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "ieee.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "ieee.c"
+#endif
 
 #endif	/*!defined(_GEN_ARCH) */
 

@@ -1,5 +1,7 @@
 /* FEAT900.H	(c) Copyright Jan Jaeger, 2000-2001		     */
 /*		ESAME feature definitions			     */
+#if defined(OPTION_900_MODE)
+#define _ARCH_900_NAME "ESAME"
 
 /* This file MUST NOT contain #undef statements */
 #define FEATURE_4K_STORAGE_KEYS
@@ -56,4 +58,5 @@
 #define FEATURE_SYSTEM_CONSOLE
 #define FEATURE_TRACING
 
+#endif /*defined(OPTION_900_MODE)*/
 /* end of FEAT900.H */

@@ -475,24 +475,32 @@ U32  pagesize;
 }
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "ipl.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "ipl.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "ipl.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "ipl.c"
+#endif
 
 
 int load_ipl (U16 devnum, REGS *regs)
 {
-    if(sysblk.arch_mode > ARCH_390)
+    if(sysblk.arch_mode == ARCH_900)
         sysblk.arch_mode = ARCH_390;
 #if defined(OPTION_FISHIO)
     ios_arch_mode = sysblk.arch_mode;
 #endif // defined(OPTION_FISHIO)
     switch(sysblk.arch_mode) {
+#if defined(_370)
         case ARCH_370: return s370_load_ipl(devnum, regs);
+#endif
+#if defined(_390)
         default:       return s390_load_ipl(devnum, regs);
+#endif
     }
     return -1;
 }
@@ -500,14 +508,18 @@ int load_ipl (U16 devnum, REGS *regs)
 
 int load_hmc (char *fname, REGS *regs)
 {
-    if(sysblk.arch_mode > ARCH_390)
+    if(sysblk.arch_mode == ARCH_900)
         sysblk.arch_mode = ARCH_390;
 #if defined(OPTION_FISHIO)
     ios_arch_mode = sysblk.arch_mode;
 #endif // defined(OPTION_FISHIO)
     switch(sysblk.arch_mode) {
+#if defined(_370)
         case ARCH_370: return s370_load_hmc(fname, regs);
+#endif
+#if defined(_390)
         default:       return s390_load_hmc(fname, regs);
+#endif
     }
     return -1;
 }
@@ -517,12 +529,16 @@ void initial_cpu_reset(REGS *regs)
 {
     /* Perform initial CPU reset */
     switch(sysblk.arch_mode) {
+#if defined(_370)
         case ARCH_370:
             s370_initial_cpu_reset (regs);
             break;
+#endif
+#if defined(_390)
         default:
             s390_initial_cpu_reset (regs);
             break;
+#endif
     }
     regs->arch_mode = sysblk.arch_mode;
 }
@@ -531,9 +547,15 @@ void initial_cpu_reset(REGS *regs)
 int load_main(char *fname, RADR startloc)
 {
     switch(sysblk.arch_mode) {
+#if defined(_370)
         case ARCH_370: return s370_load_main(fname, startloc);
+#endif
+#if defined(_390)
         case ARCH_390: return s390_load_main(fname, startloc);
+#endif
+#if defined(_900)
         case ARCH_900: return z900_load_main(fname, startloc);
+#endif
     }
     return -1;
 }

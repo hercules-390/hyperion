@@ -17,12 +17,14 @@
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
 
 #include "feature.h"
+
 #if !defined(_GNU_SOURCE)
  #define _GNU_SOURCE                   /* required by strsignal() *JJ */
 #endif
 
-#if !defined(_HERCULES_H)
 #include "cpuint.h"
+
+#if !defined(_HERCULES_H)
 
 #include "machdep.h"
 
@@ -1403,11 +1405,6 @@ extern int unbind_device (DEVBLK* dev);
 #define SIE_INTERCEPT_EXT      (-12)    /* External interrupt pending*/
 #define SIE_INTERCEPT_VALIDITY (-13)    /* SIE validity check        */
 #define SIE_INTERCEPT_PER      (-14)    /* SIE guest per event       */
-
-/* Architectural mode definitions */
-#define ARCH_370        0               /* S/370 mode                */
-#define ARCH_390        1               /* ESA/390 mode              */
-#define ARCH_900        2               /* ESAME mode                */
 
 
 /* Functions in module timer.c */

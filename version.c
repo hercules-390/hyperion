@@ -10,6 +10,7 @@
 #include <config.h>
 #endif
 
+#include "feature.h"
 #include "version.h"
 #include <stdio.h>
 
@@ -22,6 +23,22 @@ static const char *build_info[] = {
 #if defined(DEBUG)
     "**DEBUG**",
 #endif
+
+#if !defined(_ARCHMODE2)
+    "Mode:"
+#else
+    "Modes:"
+#endif
+#if defined(_370)
+    " " _ARCH_370_NAME
+#endif
+#if defined(_390)
+    " " _ARCH_390_NAME
+#endif
+#if defined(_900)
+    " " _ARCH_900_NAME
+#endif
+    ,
 
 #if defined(WIN32)
     "Win32 (Windows) build",
@@ -75,6 +92,10 @@ static const char *build_info[] = {
 
 #if !defined(HET_BZIP2)
     "No HET BZIP2 support",
+#endif
+
+#if defined(OPTION_LPP_RESTRICT)
+    "Licensed Program Product restrictions",
 #endif
 
 #if defined(CUSTOM_BUILD_STRING)

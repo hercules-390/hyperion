@@ -1,3 +1,5 @@
+23 Dec 2001 OPTION_LPP_RESTRICT - Jan Jaeger
+23 Dec 2001 Selective ArchMode build options - Jan Jaeger
 18 Dec 2001 Make sure PC, PR, PT state switch when pending PER - Paul Leisy
 18 Dec 2001 Fix up ILC for PR when PER interrupt - Paul Leisy
 18 Dec 2001 Zero STD ID part of PER code for STURA - Paul Leisy

@@ -1599,11 +1599,15 @@ VADR op4addr,
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "plo.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "plo.c"
+#endif
 
+#if defined(_ARCHMODE3)
 #undef   _GEN_ARCH
-#define  _GEN_ARCH 370
+#define  _GEN_ARCH _ARCHMODE3
 #include "plo.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/

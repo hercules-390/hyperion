@@ -1020,11 +1020,15 @@ int     i;
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "io.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "io.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "io.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "io.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/

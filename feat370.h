@@ -1,5 +1,7 @@
 /* FEAT370.H    (c) Copyright Jan Jaeger, 2000-2001                  */
 /*              S/370 feature definitions                            */
+#if defined(OPTION_370_MODE)
+#define _ARCH_370_NAME "S/370"
 
 /* This file MUST NOT contain #undef statements */
 #define FEATURE_2K_STORAGE_KEYS
@@ -15,4 +17,5 @@
 #define FEATURE_S370_CHANNEL
 #define FEATURE_CHANNEL_SWITCHING
 
+#endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */

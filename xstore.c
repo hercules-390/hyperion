@@ -529,11 +529,15 @@ mvpg_progck:
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "xstore.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "xstore.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "xstore.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "xstore.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/

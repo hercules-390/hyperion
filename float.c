@@ -74,7 +74,7 @@
  #undef square_root_fraction
  #undef sq_sf
  #undef sq_lf
-#if _GEN_ARCH == 370
+#if __GEN_ARCH == 370
  #define get_ef s370_get_ef
  #define get_lf s370_get_lf
  #define get_sf s370_get_sf
@@ -116,7 +116,7 @@
  #define square_root_fraction   s370_square_root_fraction
  #define sq_sf  s370_sq_sf
  #define sq_lf  s370_sq_lf
-#elif _GEN_ARCH == 390
+#elif __GEN_ARCH == 390
  #define get_ef s390_get_ef
  #define get_lf s390_get_lf
  #define get_sf s390_get_sf
@@ -158,7 +158,7 @@
  #define square_root_fraction   s390_square_root_fraction
  #define sq_sf  s390_sq_sf
  #define sq_lf  s390_sq_lf
-#else
+#elif __GEN_ARCH == 900
  #define get_ef z900_get_ef
  #define get_lf z900_get_lf
  #define get_sf z900_get_sf
@@ -198,8 +198,10 @@
  #define mul_lf_to_ef   z900_mul_lf_to_ef
  #define mul_sf_to_lf   z900_mul_sf_to_lf
  #define square_root_fraction   z900_square_root_fraction
- #define sq_sf  s900_sq_sf
- #define sq_lf  s900_sq_lf
+ #define sq_sf  z900_sq_sf
+ #define sq_lf  z900_sq_lf
+#else
+ #error Unable to determine GEN_ARCH
 #endif
 
 #if !defined(_FLOAT_C)
@@ -6032,12 +6034,16 @@ int     pgm_check;
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "float.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "float.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "float.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "float.c"
+#endif
 
 #endif /*!defined(_GEN_ARCH)*/
 

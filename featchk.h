@@ -30,8 +30,7 @@
  #define _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
 #endif
 
-#if defined(FEATURE_2K_STORAGE_KEYS) \
- && defined(FEATURE_4K_STORAGE_KEYS)
+#if defined(FEATURE_2K_STORAGE_KEYS)
  #define _FEATURE_2K_STORAGE_KEYS
 #endif
 
@@ -45,6 +44,10 @@
 
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
  #define _FEATURE_CHANNEL_SUBSYSTEM
+#endif
+
+#if defined(FEATURE_SYSTEM_CONSOLE)
+ #define _FEATURE_SYSTEM_CONSOLE
 #endif
 
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -95,14 +98,69 @@
  #define _LOGICAL_C_STATIC
 #endif
 
+#if !defined(OPTION_370_MODE) \
+  && !defined(OPTION_390_MODE) \
+  && !defined(OPTION_900_MODE)
+ #error No Architecture mode
+#endif
+#if defined(OPTION_370_MODE)
+ #define _370
+ #define _ARCHMODE1 370
+ #define ARCH_370 0
+#endif
+
+#if defined(OPTION_390_MODE)
+ #define _390
+ #if !defined(_ARCHMODE1)
+  #define _ARCHMODE1 390
+  #define ARCH_390 0
+ #else
+  #define _ARCHMODE2 390
+  #define ARCH_390 1
+ #endif
+#endif
+
+#if defined(OPTION_900_MODE)
+ #define _900
+ #if !defined(_ARCHMODE2)
+  #define _ARCHMODE2 900
+  #define ARCH_900 1
+ #else
+  #define _ARCHMODE3 900
+  #define ARCH_900 2
+ #endif
+#endif
+
+#if !defined(ARCH_370)
+ #define ARCH_370 -1
+#endif
+#if !defined(ARCH_390)
+ #define ARCH_390 -1
+#endif
+#if !defined(ARCH_900)
+ #define ARCH_900 -1
+#endif
+
+#if defined(_ARCHMODE3)
+ #define GEN_MAXARCH	3+2
+#elif defined(_ARCHMODE2)
+ #define GEN_MAXARCH	2+2
+#else 
+ #define GEN_MAXARCH	1+2
+#endif
+
+#if defined(_900) && !defined(_390)
+ #error OPTION_390_MODE must be enabled for OPTION_900_MODE
+#endif
+
 #else /*!defined(FEATCHK_CHECK_ALL)*/
 
 /* When ESAME is installed then all instructions
    marked N3 in the reference are also available
    in ESA/390 mode */
-#if defined(FEATURE_ESAME_INSTALLED)
+#if defined(_900)
  #define FEATURE_ESAME_N3_ESA390
-#endif /*defined(FEATURE_ESAME_INSTALLED)*/
+#endif /*defined(_900)*/
 
 #if !defined(FEATURE_2K_STORAGE_KEYS) \
  && !defined(FEATURE_4K_STORAGE_KEYS)
@@ -114,14 +172,19 @@
  #error Expanded storage cannot be defined with 2K storage keys
 #endif
 
-#if ( defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME) ) \
- && defined(FEATURE_VECTOR_FACILITY)
+#if defined(_900) && defined(FEATURE_VECTOR_FACILITY)
  #error Vector Facility not supported on ESAME capable processors
 #endif
  
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2) \
  && !defined(FEATURE_4K_STORAGE_KEYS)
  #error Move page facility cannot be defined with 2K storage keys
+#endif
+
+#if defined(FEATURE_ESAME) \
+  && defined(FEATURE_INTERPRETIVE_EXECUTION) \
+  && !defined(_FEATURE_SIE)
+ #error ESA/390 SIE must be defined when defining ESAME SIE
 #endif
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE) \

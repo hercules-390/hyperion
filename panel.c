@@ -138,7 +138,7 @@ char NPdevstr[16];      /* device - stringed */
 /* the following fields are current states, to detect changes and redisplay */
 
 char NPstate[24];       /* Current displayed CPU state */
-int NPregs[16];         /* Current displayed reg values */
+U32 NPregs[16];         /* Current displayed reg values */
 int NPbusy[24];         /* Current busy state of displayed devices */
 int NPpend[24];         /* Current int pending state */
 int NPopen[24];         /* Current open state */
@@ -332,7 +332,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     int s, i, r, c;
     int online, busy, pend, open;
     QWORD curpsw;
-    int curreg[16];
+    U32 curreg[16];
     char state[24];
     char dclear[128];
     char devnam[128];
@@ -412,7 +412,11 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #else /*!defined(_FEATURE_SIE)*/
                     '.',
 #endif /*!defined(_FEATURE_SIE)*/
-                    regs->arch_mode > ARCH_390 ? 'Z' : '.');
+#if defined(_900)
+                    regs->arch_mode == ARCH_900 ? 'Z' : '.');
+#else
+                    ' ');
+#endif
     s = 20 + ((17 - strlen(state)) / 2);
     if (strcmp(state, NPstate) != 0) {
         fprintf (confp, ANSI_CURSOR, 3, 20);
@@ -655,7 +659,7 @@ static void display_regs (REGS *regs)
 {
 int     i;
 
-    if(regs->arch_mode < ARCH_900)
+    if(regs->arch_mode != ARCH_900)
         for (i = 0; i < 16; i++)
             logmsg ("GR%2.2d=%8.8X%s", i, regs->GR_L(i),
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
@@ -673,7 +677,7 @@ static void display_cregs (REGS *regs)
 {
 int     i;
 
-    if(regs->arch_mode < ARCH_900)
+    if(regs->arch_mode != ARCH_900)
         for (i = 0; i < 16; i++)
             logmsg ("CR%2.2d=%8.8X%s", i, regs->CR_L(i),
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
@@ -996,11 +1000,11 @@ BYTE   *cmdarg;                         /* -> Command argument       */
  #define STSPALL_CMD
 #endif /*MAX_CPU_ENGINES>1*/
 
-#ifdef FEATURE_SYSTEM_CONSOLE
+#ifdef _FEATURE_SYSTEM_CONSOLE
  #define SYSCONS_CMD ".xxx=scp command, !xxx=scp priority messsage\n"
 #else
  #define SYSCONS_CMD
-#endif /*FEATURE_SYSTEM_CONSOLE*/
+#endif /*_FEATURE_SYSTEM_CONSOLE*/
 
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
  #define TODDRAG_CMD "toddrag nnn = display or set TOD clock drag factor\n"
@@ -1134,13 +1138,21 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                     logmsg("archmode: All CPU's must be stopped to change architecture\n");
                     return NULL;
                 }
+#if defined(_370)
             if (strcasecmp (archmode, arch_name[ARCH_370]) == 0)
                 sysblk.arch_mode = ARCH_370;
-            else if (strcasecmp (archmode, arch_name[ARCH_390]) == 0)
+            else
+#endif
+#if defined(_390)
+            if (strcasecmp (archmode, arch_name[ARCH_390]) == 0)
                 sysblk.arch_mode = ARCH_390;
-            else if (strcasecmp (archmode, arch_name[ARCH_900]) == 0)
+            else
+#endif
+#if defined(_900)
+            if (strcasecmp (archmode, arch_name[ARCH_900]) == 0)
                 sysblk.arch_mode = ARCH_900;
             else
+#endif
             {
                 logmsg("Invalid architecture mode %s\n",archmode);
                 return NULL;
@@ -1483,7 +1495,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
 
 /*********************************************************************/
-#ifdef FEATURE_SYSTEM_CONSOLE
+#ifdef _FEATURE_SYSTEM_CONSOLE
     /* .xxx and !xxx commands - send command or priority message
        to SCP via the HMC system console facility */
     if (cmd[0] == '.' || cmd[0] == '!')
@@ -1491,7 +1503,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
        scp_command (cmd+1, cmd[0] == '!');
        return NULL;
     }
-#endif /*FEATURE_SYSTEM_CONSOLE*/
+#endif /*_FEATURE_SYSTEM_CONSOLE*/
 
 /*********************************************************************/
     if (!strncmp(cmd,"sh",2))
@@ -1624,7 +1636,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     /* pr command - display prefix register */
     if (strcmp(cmd,"pr") == 0)
     {
-        if(regs->arch_mode > ARCH_390)
+        if(regs->arch_mode == ARCH_900)
             logmsg ("Prefix=%16.16llX\n", regs->PX_G);
         else
             logmsg ("Prefix=%8.8X\n", regs->PX_L);
@@ -3329,7 +3341,11 @@ struct  timeval tv;                     /* Select timeout structure  */
 #else /*!defined(_FEATURE_SIE)*/
                     '.',
 #endif /*!defined(_FEATURE_SIE)*/
-                    regs->arch_mode > ARCH_390 ? 'Z' : '.',
+#if defined(_900)
+                    regs->arch_mode == ARCH_900 ? 'Z' : '.',
+#else
+                    ' ',
+#endif
 #if defined(_FEATURE_SIE)
                     regs->sie_state ?  regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
@@ -4031,12 +4047,16 @@ int     n;                              /* Number of bytes in buffer */
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 390
-#include "panel.c"
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "panel.c"
+#endif
 
-#undef   _GEN_ARCH
-#define  _GEN_ARCH 370
-#include "panel.c"
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "panel.c"
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Wrappers for architecture-dependent functions                     */
@@ -4044,12 +4064,18 @@ int     n;                              /* Number of bytes in buffer */
 static void alter_display_real (BYTE *opnd, REGS *regs)
 {
     switch(sysblk.arch_mode) {
+#if defined(_370)
         case ARCH_370:
             s370_alter_display_real (opnd, regs); break;
+#endif
+#if defined(_390)
         case ARCH_390:
             s390_alter_display_real (opnd, regs); break;
+#endif
+#if defined(_900)
         case ARCH_900:
             z900_alter_display_real (opnd, regs); break;
+#endif
     }
     return;
 } /* end function alter_display_real */
@@ -4057,12 +4083,18 @@ static void alter_display_real (BYTE *opnd, REGS *regs)
 static void alter_display_virt (BYTE *opnd, REGS *regs)
 {
     switch(sysblk.arch_mode) {
+#if defined(_370)
         case ARCH_370:
             s370_alter_display_virt (opnd, regs); break;
+#endif
+#if defined(_390)
         case ARCH_390:
             s390_alter_display_virt (opnd, regs); break;
+#endif
+#if defined(_900)
         case ARCH_900:
             z900_alter_display_virt (opnd, regs); break;
+#endif
     }
     return;
 } /* end function alter_display_virt */
@@ -4070,16 +4102,21 @@ static void alter_display_virt (BYTE *opnd, REGS *regs)
 void display_inst(REGS *regs, BYTE *inst)
 {
     switch(regs->arch_mode) {
+#if defined(_370)
         case ARCH_370:
             s370_display_inst(regs,inst);
             break;
+#endif
+#if defined(_390)
+        case ARCH_390:
+            s390_display_inst(regs,inst);
+            break;
+#endif
+#if defined(_900)
         case ARCH_900:
             z900_display_inst(regs,inst);
             break;
-        case ARCH_390:
-        default:
-            s390_display_inst(regs,inst);
-            break;
+#endif
     }
 }
 
