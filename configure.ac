@@ -161,7 +161,7 @@ fi
 # User-definable settings
 
 AC_ARG_ENABLE(profiling,
-              [  --enable-profiling          enable profiling],
+              AC_HELP_STRING([--enable-profiling], [enable execution profiling]),
               [case "${enableval}" in
                 yes) CFLAGS="-pg -DPROFILE_CPU $CFLAGS" ;;
                 no) ;;
@@ -169,7 +169,7 @@ AC_ARG_ENABLE(profiling,
                esac])
 
 AC_ARG_ENABLE(debug,
-              [  --enable-debug              enable debugging],
+              AC_HELP_STRING([--enable-debug], [enable debugging]),
               [case "${enableval}" in
                 yes)
                   debug=true
@@ -181,7 +181,7 @@ AC_ARG_ENABLE(debug,
               [debug=false])
 
 AC_ARG_ENABLE(setuid-hercifc,
-              [  --enable-setuid-hercifc     install hercifc setuid root],
+              AC_HELP_STRING([--enable-setuid-hercifc], [install hercifc setuid root]),
               [case "${enableval}" in
                 yes) setuid_hercifc=yes ;;
                 no)  setuid_hercifc=no ;;
@@ -193,7 +193,8 @@ AM_CONDITIONAL(SETUID_HERCIFC, test x$setuid_hercifc = xyes)
 AC_MSG_CHECKING([for optimization flags to use])
 
 AC_ARG_ENABLE(optimization,
-              [  --enable-optimization[=FLAGS] enable optimization],
+              AC_HELP_STRING([--enable-optimization=FLAGS],
+                             [enable/disable automatic optimization, or specify flags]),
               [case "${enableval}" in
                 yes) auto_optimize=true ;;
                 no) auto_optimize=false ;;
@@ -224,7 +225,8 @@ else
 fi
 
 AC_ARG_ENABLE(external-gui,
-              [  --enable-external-gui         Build interface to external Windows  GUI],
+              AC_HELP_STRING([--with-external-gui],
+                             [Interface to external Windows GUI]),
               [case "${enableval}" in
                  yes) build_external_gui=true ;;
                  no) build_external_gui=false ;;
