@@ -1,3 +1,5 @@
+28 Feb 2001 Allow for cr/lf in 3215 code and change ebcdic to ascii
+            convertion table entry x'15' from x'b4' to x'0a' - Jan Jaeger
 26 Feb 2002 `sf-xxx nomerge' rebuilds current shadow file if previous
             file is `read-only' - Greg Smith
 26 Feb 2002 Set ILC=4 when an EX with PER is to an SVC - Paul Leisy

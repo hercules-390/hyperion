@@ -2129,7 +2129,7 @@ BYTE    stat;                           /* Unit status               */
         for (len = 0; len < num; len++)
         {
             c = ebcdic_to_ascii[iobuf[len]];
-            if (!isprint(c)) c = SPACE;
+            if (!isprint(c) && c != 0x0a && c != 0x0d) c = SPACE;
             iobuf[len] = c;
         } /* end for(len) */
 
