@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+29 Nov 2003 Fix reset_channel_path - Mark Drummond by Greg Smith
 28 Nov 2003 Flush Buffer On lost data condition in 2703 handler - Ivan Warren
 27 Nov 2003 CTCI/LCS: fix enqueue full frame buffer loop; enable thread
             joining at LCS close - Fish
