@@ -387,12 +387,16 @@ static void http_download(WEBBLK *webblk, char *filename)
 
     if(stat(fullname,&st)) 
         http_error(webblk, "404 File Not Found","",
-                           "The requested file was not found");
+                           strerror(errno));
+
+    if(!S_ISREG(st.st_mode))
+        http_error(webblk, "404 File Not Found","",
+                           "The requested file is not a regular file");
 
     fd = open(fullname,O_RDONLY,0);
     if (fd == -1) {
         http_error(webblk, "404 File Not Found","",
-                           "The requested file was not found");
+                           strerror(errno));
     }
 
     fprintf(webblk->hsock,"HTTP/1.0 200 OK\n");
