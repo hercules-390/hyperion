@@ -3246,11 +3246,11 @@ struct stat     st;                     /* stat() buffer             */
     cckd = dev->cckd_ext;
 
     /* return if no shadow files */
-    if (dev->dasdsfn[0] == '\0') return 0;
+    if (dev->dasdsfn == NULL) return 0;
 
 #if 1
     /* Check for shadow file name collision */
-    for (i = 1; i <= CCKD_MAX_SF && dev->dasdsfn; i++)
+    for (i = 1; i <= CCKD_MAX_SF && dev->dasdsfn != NULL; i++)
     {
      DEVBLK       *dev2;
      CCKDDASD_EXT *cckd2;
@@ -3260,7 +3260,7 @@ struct stat     st;                     /* stat() buffer             */
         {
             cckd2 = dev2->cckd_ext;
             if (dev2 == dev) continue;
-            for (j = 0; j <= CCKD_MAX_SF && dev2->dasdsfn; j++)
+            for (j = 0; j <= CCKD_MAX_SF && dev2->dasdsfn != NULL; j++)
             {
                 if (strcmp (cckd_sf_name(dev, i),cckd_sf_name(dev2, j)) == 0)
                 {
@@ -3773,8 +3773,12 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
         return;
     }
 
-    strcpy ((char *)&dev->dasdsfn, (const char *)sfn);
+    if (dev->dasdsfn != NULL)
+        free (dev->dasdsfn);
+
+    dev->dasdsfn = strdup (sfn);
     logmsg (_("HHCCD204I %4.4X shadow file name set to %s\n"), dev->devnum, sfn);
+
     release_lock (&cckd->filelock);
 
 } /* end function cckd_sf_newname */
@@ -3895,7 +3899,7 @@ int             freenbr=0;              /* Total number free spaces  */
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
             cckd->reads[0], cckd->writes[0], cckd->l2reads[0]);
 
-    if (dev->dasdsfn && CCKD_MAX_SF > 0)
+    if (dev->dasdsfn != NULL && CCKD_MAX_SF > 0)
         logmsg (_("HHCCD217I %s\n"), cckd_sf_name(dev, -1));
 
     /* shadow file statistics */
