@@ -46,7 +46,7 @@ void display_version (FILE *f, char *prog, char *version,
     if (sizeof(build_options) == 0)
       fprintf(f, "  (none)\n");
     else
-      for( i = 0 ; i < sizeof(build_options) ; ++i )
+      for( i = 0 ; i < sizeof(build_options) / sizeof(build_options[0]) ; ++i )
 	fprintf(f, "  %s\n", build_options[i]);
 
     fprintf(f, "%s\n", HERCULES_COPYRIGHT);
