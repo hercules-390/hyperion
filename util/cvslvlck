@@ -15,8 +15,8 @@ use strict;
 #
 my @req = qw(
      cvs         0      1  http://www.cvshome.org
-     autoconf    2.50	0  http://www.gnu.org/directory/autoconf.html
-     automake    1.5	0  http://www.gnu.org/directory/automake.html
+     autoconf    2.54	0  http://www.gnu.org/directory/autoconf.html
+     automake    1.7	0  http://www.gnu.org/directory/automake.html
      flex        2.5	0  http://www.gnu.org/directory/flex.html
      gawk        3.0	0  http://www.gnu.org/directory/gawk.html
      gcc         2.95	0  http://www.gnu.org/directory/gcc.html
