@@ -37,7 +37,8 @@
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
 #undef  OPTION_CMPSC_DEBUGLVL      /* 3 ** 1=Exp 2=Comp 3=Both debug */
-
+#undef  MODEL_DEPENDENT_CS              /* CS, CDS, CSP always store */
+#undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
 
 /* This is set as appropriate by configure and makefile.w32; don't
    define or undefine it here. -mdz */
