@@ -682,14 +682,14 @@ BYTE   buf[80];
              (dev->hnd->query)(dev, &class, sizeof(buf), buf);
 
              fprintf(webblk->hsock,"<tr>"
-                                   "<td>%4.4X</td>"    /* devnum */
-                                   "<td>%4.4X</td>"    /* schnum */
-                                   "<td>%s</td>"       /* class  */
-                                   "<td>%4.4X</td>"    /* devtyp */
-                                   "<td>%s%s%s</td>\n" /* status */
-                                   "</tr>",
-                                   dev->devnum,
-                                   dev->subchan,
+                                   "<td><a href=\"detail?devnum=%4.4X\">%4.4X</a></td>"
+                                   "<td><a href=\"detail?schnum=%4.4X\">%4.4X</a></td>"
+                                   "<td>%s</td>"
+                                   "<td>%4.4X</td>"
+                                   "<td>%s%s%s</td>"
+                                   "</tr>\n",
+                                   dev->devnum,dev->devnum,
+                                   dev->subchan,dev->subchan,
                                    class,
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
@@ -705,11 +705,22 @@ BYTE   buf[80];
 }
 
 
+void cgibin_debug_device_detail(WEBBLK *webblk)
+{
+    html_header(webblk);
+
+    fprintf(webblk->hsock,"<h1>Function not yet implemented</h1>\n");
+
+    html_footer(webblk);
+
+}
+
+
 void cgibin_debug_version_info(WEBBLK *webblk)
 {
     html_header(webblk);
 
-    fprintf(webblk->hsock,"<h2>Hercules Version Information</h2>\n"
+    fprintf(webblk->hsock,"<h1>Hercules Version Information</h1>\n"
                           "<pre>\n");
     display_version(webblk->hsock,"Hercules HTTP Server ");
     fprintf(webblk->hsock,"</pre>\n");
@@ -729,6 +740,7 @@ CGITAB cgidir[] = {
     { "debug/storage", &cgibin_debug_storage },
     { "debug/version_info", &cgibin_debug_version_info },
     { "debug/device/list", &cgibin_debug_device_list },
+    { "debug/device/detail", &cgibin_debug_device_detail },
     { "registers/general", &cgibin_reg_general },
     { "registers/control", &cgibin_reg_control },
     { "registers/psw", &cgibin_psw },
