@@ -23,8 +23,7 @@ do { \
         cckdblk.itracep = p + 1; \
     } \
     gettimeofday(&tv, NULL); \
-    if (p) snprintf ((char *)p, sizeof(CCKD_TRACE), \
-                    "%6.6ld" "." "%6.6ld %4.4X:" format, \
+    if (p) sprintf ((char *)p, "%6.6ld" "." "%6.6ld %4.4X:" format, \
                     tv.tv_sec, tv.tv_usec, dev ? dev->devnum : 0, a); \
  } \
 } while (0)
@@ -85,7 +84,7 @@ void    cckd_truncate(DEVBLK *dev, int now);
 int     cckd_null_trk(DEVBLK *dev, BYTE *buf, int trk, int sz0);
 int     cckd_cchh(DEVBLK *dev, BYTE *buf, int trk);
 int     cckd_validate(DEVBLK *dev, BYTE *buf, int trk, int len);
-int     cckd_sf_name(DEVBLK *dev, int sfx, char *sfn, size_t bufsz);
+int     cckd_sf_name(DEVBLK *dev, int sfx, char *sfn);
 int     cckd_sf_init(DEVBLK *dev);
 int     cckd_sf_new(DEVBLK *dev);
 void    cckd_sf_add(DEVBLK *dev);
@@ -1595,7 +1594,7 @@ struct stat     st;                     /* File status area          */
           len + CCKD_FREEBLK_SIZE <= cckd->cdevhdr[sfx].free_largest))
     { /* no free space big enough; add space to end of the file */
         fpos = cckd->cdevhdr[sfx].size;
-        if ((U64)(fpos + len) & 0xFFFFFFFF00000000ULL)
+        if ((U64)(fpos + len) > 4294967295ULL)
         {
             devmsg("%4.4X:cckddasd file[%d] get space error, size exceeds 4G\n",
                    dev->devnum, sfx);
@@ -1621,7 +1620,7 @@ struct stat     st;                     /* File status area          */
                 fsync (cckd->fd[sfx]);
                 close (cckd->fd[sfx]);
                 usleep(10000 * cckdblk.ftruncwa);
-                cckd_sf_name (dev, sfx, (char *)sfn, sizeof(sfn));
+                cckd_sf_name (dev, sfx, (char *)&sfn);
                 cckd->fd[sfx] = open (sfn, O_RDWR|O_BINARY);
                 if (cckd->fd[sfx] < 0)
                 {
@@ -2972,7 +2971,7 @@ off_t           sz;                     /* Change for ftruncate      */
             fsync (cckd->fd[sfx]);
             close (cckd->fd[sfx]);
             usleep(10000 * cckdblk.ftruncwa);
-            cckd_sf_name (dev, sfx, (char *)sfn, sizeof(sfn));
+            cckd_sf_name (dev, sfx, (char *)&sfn);
             cckd->fd[sfx] = open (sfn, O_RDWR|O_BINARY);
             if (cckd->fd[sfx] < 0)
             {
@@ -3225,14 +3224,14 @@ int             kl,dl;                  /* Key/Data lengths          */
 /*-------------------------------------------------------------------*/
 /* Create a shadow file name                                         */
 /*-------------------------------------------------------------------*/
-int cckd_sf_name (DEVBLK *dev, int sfx, char *sfn, size_t bufsz)
+int cckd_sf_name (DEVBLK *dev, int sfx, char *sfn)
 {
-BYTE *sfxptr;                           /* -> Last char of file name */
+BYTE           *sfxptr;                 /* -> Last char of file name */
 
     /* return base file name if index is 0 */
     if (!sfx)
     {
-        safe_strcpy (sfn, bufsz, dev->filename);
+        strcpy (sfn, (const char *)&dev->filename);
         return 0;
     }
 
@@ -3253,7 +3252,7 @@ BYTE *sfxptr;                           /* -> Last char of file name */
     }
 
     /* copy the shadow file name */
-    safe_strcpy (sfn, bufsz, dev->dasdsfn);
+    strcpy (sfn, (const char *)&dev->dasdsfn);
     if (sfx == 1) return 0;
 
     /* Locate and change the last character of the file name */
@@ -3294,7 +3293,7 @@ char            sfn[256];               /* Shadow file name          */
      char          sfn2[256];
      int           j;
 
-        rc = cckd_sf_name (dev, i, (char *)sfn, sizeof(sfn));
+        rc = cckd_sf_name (dev, i, (char *)&sfn);
         if (rc < 0) continue;
         for (dev2 = cckdblk.dev1st; dev2; dev2 = cckd2->devnext)
         {
@@ -3303,7 +3302,7 @@ char            sfn[256];               /* Shadow file name          */
             for (j = 0; j <= CCKD_MAX_SF; j++)
             {
                 if (j > 0 && dev2->dasdsfn[0] == '\0') break;
-                rc = cckd_sf_name (dev2, j, (char *)sfn2, sizeof(sfn2));
+                rc = cckd_sf_name (dev2, j, (char *)&sfn2);
                 if (rc < 0) continue;
                 if (strcmp ((char *)&sfn, (char *)&sfn2) == 0)
                 {
@@ -3321,7 +3320,7 @@ char            sfn[256];               /* Shadow file name          */
     for (cckd->sfn = 1; cckd->sfn <= CCKD_MAX_SF; cckd->sfn++)
     {
         /* get the shadow file name */
-        rc = cckd_sf_name (dev, cckd->sfn, (char *)sfn, sizeof(sfn));
+        rc = cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
         if (rc < 0) return -1;
 
         /* try to open the shadow file read-write then read-only */
@@ -3362,7 +3361,7 @@ char            sfn[256];               /* Shadow file name          */
         close (cckd->fd[i]);
 
         /* get the file name */
-        rc = cckd_sf_name (dev, i, (char *)sfn, sizeof(sfn));
+        rc = cckd_sf_name (dev, i, (char *)&sfn);
         if (rc < 0) return -1;
 
         /* open the file read-only */
@@ -3401,7 +3400,7 @@ int             l1size;                 /* Size of level 1 table     */
     sfx = cckd->sfn + 1;
 
     /* get new shadow file name */
-    rc = cckd_sf_name (dev, sfx, (char *)sfn, sizeof(sfn));
+    rc = cckd_sf_name (dev, sfx, (char *)&sfn);
     if (rc < 0) return -1;
 
     /* Open the new shadow file */
@@ -3540,13 +3539,13 @@ BYTE            sfn[256];               /* Shadow file name          */
     if (cckd->open[cckd->sfn-1] == CCKD_OPEN_RW)
     {
         close (cckd->fd[cckd->sfn-1]);
-        rc = cckd_sf_name (dev, cckd->sfn-1, (char *)sfn, sizeof(sfn));
+        rc = cckd_sf_name (dev, cckd->sfn-1, (char *)&sfn);
         cckd->fd[cckd->sfn-1] = open (sfn, O_RDONLY|O_BINARY);
         cckd->open[cckd->sfn-1] = CCKD_OPEN_RD;
         if (!(cckd->sfn-1)) dev->fd = cckd->fd[cckd->sfn-1];
     }
 
-    rc = cckd_sf_name (dev, cckd->sfn, (char *)sfn, sizeof(sfn));
+    rc = cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
     devmsg ("%4.4X:cckddasd: file[%d] %s added\n",dev->devnum, cckd->sfn, sfn);
     release_lock (&cckd->filelock);
 
@@ -3619,7 +3618,7 @@ BYTE            buf[65536];             /* Buffer                    */
 
     /* Attempt to re-open the `to' file read-write */
     close (cckd->fd[sfx[1]]);
-    cckd_sf_name (dev, sfx[1], (char *)sfn, sizeof(sfn));
+    cckd_sf_name (dev, sfx[1], (char *)&sfn);
     cckd->fd[sfx[1]] = open (sfn, O_RDWR|O_BINARY);
     if (cckd->fd[sfx[1]] < 0)
     {
@@ -3887,7 +3886,7 @@ BYTE            buf[65536];             /* Buffer                    */
     free (cckd->l1[sfx[0]]);
     cckd->l1[sfx[0]] = NULL;
     memset (&cckd->cdevhdr[sfx[0]], 0, CCKDDASD_DEVHDR_SIZE); 
-    cckd_sf_name (dev, sfx[0], (char *)sfn, sizeof(sfn));
+    cckd_sf_name (dev, sfx[0], (char *)&sfn);
     rc = unlink ((char *)&sfn);
 
     /* Add the file back if necessary */
@@ -3942,7 +3941,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
         return;
     }
 
-    safe_strcpy (dev->dasdsfn, sizeof(dev->dasdsfn), sfn);
+    strcpy ((char *)&dev->dasdsfn, (const char *)sfn);
     devmsg ("cckddasd: shadow file name set to %s\n", sfn);
     release_lock (&cckd->filelock);
 
@@ -4070,7 +4069,7 @@ BYTE            sfn[256];               /* Shadow file name          */
 
     if (dev->dasdsfn[0] && CCKD_MAX_SF > 0)
     {
-        cckd_sf_name ( dev, -1, (char *)sfn, sizeof(sfn));
+        cckd_sf_name ( dev, -1, (char *)&sfn);
         devmsg ("cckddasd: %s\n", sfn);
     }
 
@@ -4859,7 +4858,7 @@ int   val, opts = 0;
         return 0;
     }
 
-    safe_strcpy(buf, sizeof(buf), op);
+    strcpy(buf, op);
     op = buf;
 
     /* Initialize the global cckd block if necessary */

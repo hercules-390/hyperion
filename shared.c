@@ -115,7 +115,7 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
 
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
-        safe_strcpy (buf, sizeof(buf), argv[0]);
+        strcpy (buf, argv[0]);
 
         /* First argument is `ipname:port:devnum' */
         ipname = buf;
@@ -133,9 +133,9 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
         if ( strcmp (ipname, "localhost") == 0)
             dev->localhost = 1;
         else {
-        if ( (he = gethostbyname (ipname)) == NULL )
-            return -1;
-        memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
+            if ( (he = gethostbyname (ipname)) == NULL )
+                return -1;
+            memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
         }
 
         if (port && strlen(port)) {
@@ -370,7 +370,7 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
 
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
-        safe_strcpy (buf, sizeof(buf), argv[0]);
+        strcpy (buf, argv[0]);
 
         /* First argument is `ipname:port:devnum' */
         ipname = buf;
@@ -1163,14 +1163,14 @@ DEVBLK         *dev = data;             /* -> device block           */
  *-------------------------------------------------------------------*/
 static int clientConnect (DEVBLK *dev, int retry)
 {
-int      rc;                            /* Return code               */
+int                rc;                  /* Return code               */
 struct sockaddr   *server;              /* -> server descriptor      */
 int                len;                 /* Length server descriptor  */
 struct sockaddr_in iserver;             /* inet server descriptor    */
 struct sockaddr_un userver;             /* unix server descriptor    */
-int      retries = 10;                  /* Number of retries         */
-HWORD    id;                            /* Returned identifier       */
-HWORD    comp;                          /* Returned compression parm */
+int                retries = 10;        /* Number of retries         */
+HWORD              id;                  /* Returned identifier       */
+HWORD              comp;                /* Returned compression parm */
 
     do {
 
@@ -1186,18 +1186,17 @@ HWORD    comp;                          /* Returned compression parm */
                 return -1;
             }
             userver.sun_family = AF_UNIX;
-            snprintf(userver.sun_path, sizeof(userver.sun_path),
-                "/tmp/hercules_shared.%d", dev->rmtport);
+            sprintf(userver.sun_path, "/tmp/hercules_shared.%d", dev->rmtport);
             server = (struct sockaddr *)&userver;
             len = sizeof(userver);
         }
         else {
-        dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
-        if (dev->fd < 0) {
-            logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
-                    dev->devnum, strerror(errno));
-            return -1;
-        }
+            dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
+            if (dev->fd < 0) {
+                logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
+                        dev->devnum, strerror(errno));
+                return -1;
+            }
             iserver.sin_family      = AF_INET; 
             iserver.sin_port        = htons(dev->rmtport); 
             memcpy(&iserver.sin_addr.s_addr,&dev->rmtaddr,sizeof(struct in_addr));
@@ -1363,7 +1362,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
             cmd |= SHRD_COMP;
             flag = (SHRD_LIBZ << 4) | off;
             hdr = cbuf;
-            hdrlen += newlen; 
+            hdrlen += newlen;
             buf = NULL;
             buflen = 0;
         }
@@ -1405,6 +1404,7 @@ retry:
     }
 
     return rc;
+
 } /* clientSend */
 
 /*-------------------------------------------------------------------
@@ -1438,6 +1438,7 @@ int      len;                           /* Response length           */
         return rc;
     }
     SHRD_GET_HDR(hdr, code, status, devnum, id, len);
+
     shrdtrc("client_recv %2.2x %2.2x %2.2x %d %d\n",
              code,status,devnum,id,len);
 
@@ -1450,8 +1451,8 @@ int      len;                           /* Response length           */
 
     /* Reset code/status if response was compressed */
     if (len > 0 && code == SHRD_COMP) {
-            code = SHRD_OK;
-            status = 0;
+        code = SHRD_OK;
+        status = 0;
     }
 
     /* Reset the header */
@@ -1500,8 +1501,8 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
     /* Check for compressed data */
     if ((server && (cmd & SHRD_COMP))
      || (!server && cmd == SHRD_COMP)) {
-    comp = (flag & SHRD_COMP_MASK) >> 4;
-    off = flag & SHRD_COMP_OFF;
+        comp = (flag & SHRD_COMP_MASK) >> 4;
+        off = flag & SHRD_COMP_OFF;
         cmd &= ~SHRD_COMP;
         flag = 0;
         recvbuf = cbuf;
@@ -1746,14 +1747,14 @@ int      off;                           /* Offset into record        */
                 dev->busy = 0;
             }
 
-        /* Reset any `waiting' bits */
-        for (i = 0; i < SHARED_MAX_SYS; i++)
-            if (dev->shrd[i])
-                dev->shrd[i]->waiting = 0;
+            /* Reset any `waiting' bits */
+            for (i = 0; i < SHARED_MAX_SYS; i++)
+                if (dev->shrd[i])
+                    dev->shrd[i]->waiting = 0;
 
             /* Notify any waiters */
             if (dev->iowaiters)
-            signal_condition (&dev->iocond);
+                signal_condition (&dev->iocond);
         }
         shrdtrc("server_request inactive id=%d\n", id);
 
@@ -2012,8 +2013,8 @@ BYTE hdr[SHRD_HDR_SIZE];                /* Header                    */
 
     /* Get message length */
     len = strlen(msg) + 1;
-        if (len > SHARED_MAX_MSGLEN)
-            len = SHARED_MAX_MSGLEN;
+    if (len > SHARED_MAX_MSGLEN)
+        len = SHARED_MAX_MSGLEN;
 
     SHRD_SET_HDR (hdr, code, status, dev ? dev->devnum : 0,
                   ix < 0 ? 0 : dev->shrd[ix]->id, len);
@@ -2048,7 +2049,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     else if (buflen == 0) buf = NULL;
 
     /* Calculate length of header, may contain additional data */
-    SHRD_GET_HDR(hdr, code, status, devnum, id, len);
+    SHRD_GET_HDR(hdr, code, status, devnum, id, len); 
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
     sendlen = hdrlen + buflen;
 
@@ -2117,6 +2118,7 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     }
 
     return rc;
+
 } /* serverSend */
 
 /*-------------------------------------------------------------------
@@ -2215,7 +2217,7 @@ DEVBLK      *dev;                       /* -> Device block           */
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->devnum == devnum) break;
-            return dev;
+    return dev;
 
 } /* findDevice */
 
@@ -2439,7 +2441,7 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
                 continue;
             }
         }
-
+            
         /* Process the request */
         serverRequest (dev, ix, hdr, buf);
 
@@ -2541,8 +2543,7 @@ TID                     tid;            /* Negotiation thread id     */
 
     /* Bind the unix socket */
     userver.sun_family = AF_UNIX;
-    snprintf(userver.sun_path, sizeof(userver.sun_path),
-        "/tmp/hercules_shared.%d", sysblk.shrdport);
+    sprintf(userver.sun_path, "/tmp/hercules_shared.%d", sysblk.shrdport);
     unlink(userver.sun_path);
     fchmod (usock, 0700);
 
@@ -2591,8 +2592,6 @@ TID                     tid;            /* Negotiation thread id     */
 
         /* Wait for a file descriptor to become ready */
         rc = select ( hi, &selset, NULL, NULL, NULL );
-
-        if (sysblk.shutdown) break;
 
         if (rc == 0) continue;
 
@@ -2666,7 +2665,7 @@ int shared_cmd(char* cmdline, int argc, char *argv[])
         logmsg (_("HHCSH070E Invalid or missing argument 1\n"));
         return 0;
     }
-    safe_strcpy (buf, sizeof(buf), argv[1]);
+    strcpy (buf, argv[1]);
     kw = strtok (buf, "=");
     op = strtok (NULL, " \t");
 

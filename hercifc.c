@@ -22,8 +22,16 @@
 #include "hercules.h"
 #include "hercifc.h"
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
+/* ISW 02/20/2003 - Proposed patch ISW20032002-2
+   define dummy 'extgui' so that hercules can be defined on
+   a build with --enable-external-gui
+   extgui is set to 0 regardless of the environment
+   (i.e. there is no EXTERNALGUI argument to hercifc
+*/
+#ifdef EXTERNALGUI
+int   extgui=0;
+#endif
+/* End of ISW20032002-2 */
 
 // --------------------------------------------------------------------
 // HERCIFC program entry point
@@ -150,9 +158,9 @@ int main( int argc, char **argv )
             exit( 0 );
 
         default:
-            snprintf( szMsgBuffer, sizeof(szMsgBuffer),
-                _("HHCIF004W %s: Unknown request: %8.8X.\n"),
-                pszProgName, ctlreq.iCtlOp );
+            sprintf( szMsgBuffer,
+                     _("HHCIF004W %s: Unknown request: %8.8X.\n"),
+                     pszProgName, ctlreq.iCtlOp );
             
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
 
@@ -163,7 +171,7 @@ int main( int argc, char **argv )
     
         if( rc < 0 )
         {
-            snprintf( szMsgBuffer, sizeof(szMsgBuffer),
+            sprintf( szMsgBuffer,
                      _("HHCIF005E %s: ioctl error doing %s on %s: %s\n"),
                      pszProgName, pOp, pIF, strerror( errno ) );
             

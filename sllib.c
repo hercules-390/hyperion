@@ -1186,7 +1186,7 @@ sl_ds1( SLLABEL *lab,
     {
         return( SLE_VOLSEQ );
     }
-    snprintf( wbuf, sizeof(wbuf), "%04u", volseq );
+    sprintf( wbuf, "%04u", volseq );
     memcpy( lab->slds1.volseq, wbuf, 4 );
 
     /*
@@ -1196,7 +1196,7 @@ sl_ds1( SLLABEL *lab,
     {
         return( SLE_DSSEQ );
     }
-    snprintf( wbuf, sizeof(wbuf), "%04u", dsseq );
+    sprintf( wbuf, "%04u", dsseq );
     memcpy( lab->slds1.dsseq, wbuf, 4 );
 
     /*
@@ -1224,7 +1224,7 @@ sl_ds1( SLLABEL *lab,
     {
         blocks = 0;
     }
-    snprintf( wbuf, sizeof(wbuf), "%010u", blocks );
+    sprintf( wbuf, "%010u", blocks );
     memcpy( lab->slds1.blklo, &wbuf[ 4 ], 6 );
 
     /*
@@ -1235,7 +1235,7 @@ sl_ds1( SLLABEL *lab,
     /*
     || Block count - high
     */
-    snprintf( wbuf, sizeof(wbuf), "%10u", blocks );
+    sprintf( wbuf, "%10u", blocks );
     memcpy( lab->slds1.blkhi, wbuf, 4 );
 
     /*
@@ -1410,13 +1410,13 @@ sl_ds2( SLLABEL *lab,
 
     if( blksize > 32760 )
     {
-        snprintf( wbuf, sizeof(wbuf), "%10u", blksize );
+        sprintf( wbuf, "%10u", blksize );
         memcpy( lab->slds2.lblkln, wbuf, 10 );
         memcpy( lab->slds2.blksize, "00000", 5 );
     }
     else
     {
-        snprintf( wbuf, sizeof(wbuf), "%05u", blksize );
+        sprintf( wbuf, "%05u", blksize );
         memcpy( lab->slds2.blksize, wbuf, 5 );
     }
 
@@ -1466,7 +1466,7 @@ sl_ds2( SLLABEL *lab,
             }
         break;
     }
-    snprintf( wbuf, sizeof(wbuf), "%05u", lrecl );
+    sprintf( wbuf, "%05u", lrecl );
     memcpy( lab->slds2.lrecl, wbuf, 5 );
 
     /*
@@ -1498,7 +1498,7 @@ sl_ds2( SLLABEL *lab,
             return( SLE_JOBNAME );
         }
     }
-    snprintf( wbuf, sizeof(wbuf), "%-8.8s/%-8.8s", jobname, stepname );
+    sprintf( wbuf, "%-8.8s/%-8.8s", jobname, stepname );
     memcpy( lab->slds2.jobid, wbuf, 17 );
         
     /*
@@ -1549,7 +1549,7 @@ sl_ds2( SLLABEL *lab,
     /*
     || Device serial number
     */
-    snprintf( wbuf, sizeof(wbuf), "%06u", rand() );
+    sprintf( wbuf, "%06u", rand() );
     memcpy( lab->slds2.devser, wbuf, 6 );
     
     /*

@@ -89,11 +89,10 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp );
 //      pszNetDevName Pointer to receive the name if the interface.
 // 
 
-int             TUNTAP_CreateInterface( char*   pszTUNDevice, 
-                                        int     iFlags,
-                                        int*    pfd, 
-                                        char*   pszNetDevName,
-                                        size_t  bufsz_pszNetDevName )
+int             TUNTAP_CreateInterface( char* pszTUNDevice, 
+                                        int   iFlags,
+                                        int*  pfd, 
+                                        char* pszNetDevName )
 {
     int            fd;                  // File descriptor
     struct utsname utsbuf;
@@ -140,7 +139,7 @@ int             TUNTAP_CreateInterface( char*   pszTUNDevice,
             return -1;
         }
         
-        safe_strcpy( pszNetDevName, bufsz_pszNetDevName, ifr.ifr_name );
+        strcpy( pszNetDevName, ifr.ifr_name );
     } 
     else
     {
@@ -198,7 +197,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
         return -1;
     }
 
-    safe_strcpy( ifreq.ifr_name, sizeof(ifreq.ifr_name), pszNetDevName );
+    strcpy( ifreq.ifr_name, pszNetDevName );
 
     if( !pszIPAddr  || 
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
@@ -234,7 +233,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
         return -1;
     }
 
-    safe_strcpy( ifreq.ifr_name, sizeof(ifreq.ifr_name), pszNetDevName );
+    strcpy( ifreq.ifr_name, pszNetDevName );
 
     if( !pszDestAddr  || 
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
@@ -270,7 +269,7 @@ int             TUNTAP_SetNetMask( char*   pszNetDevName,
         return -1;
     }
 
-    safe_strcpy( ifreq.ifr_name, sizeof(ifreq.ifr_name), pszNetDevName );
+    strcpy( ifreq.ifr_name, pszNetDevName );
 
     if( !pszNetMask  || 
         !inet_aton( pszNetMask, &sin->sin_addr ) )
@@ -307,7 +306,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
         return -1;
     }
 
-    safe_strcpy( ifreq.ifr_name, sizeof(ifreq.ifr_name), pszNetDevName );
+    strcpy( ifreq.ifr_name, pszNetDevName );
 
     if( !pszMTU  || !*pszMTU )
     {
@@ -354,7 +353,7 @@ int             TUNTAP_SetMACAddr( char*   pszNetDevName,
         return -1;
     }
 
-    safe_strcpy( ifreq.ifr_name, sizeof(ifreq.ifr_name), pszNetDevName );
+    strcpy( ifreq.ifr_name, pszNetDevName );
 
     if( !pszMACAddr || ParseMAC( pszMACAddr, mac ) != 0 )
     {
@@ -391,7 +390,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
         return -1;
     }
 
-    safe_strcpy( ifreq.ifr_name, sizeof(ifreq.ifr_name), pszNetDevName );
+    strcpy( ifreq.ifr_name, pszNetDevName );
 
     ifreq.ifr_flags = iFlags;
 
@@ -549,7 +548,7 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
     if( iRequest == SIOCADDRT ||
         iRequest == SIOCDELRT )
     {
-      safe_strcpy( ctlreq.szIFName, sizeof(ctlreq.szIFName), ((struct rtentry*)argp)->rt_dev );
+      strcpy( ctlreq.szIFName, ((struct rtentry*)argp)->rt_dev );
       memcpy( &ctlreq.iru.rtentry, argp, sizeof( struct rtentry ) );
       ((struct rtentry*)argp)->rt_dev = NULL;
     }

@@ -113,12 +113,11 @@ char   *scodepage;
 void data_dump ( void *addr, int len )
 {
 unsigned int    maxlen = 2048;
-unsigned int    i, offset, startoff = 0;
+unsigned int    i, xi, offset, startoff = 0;
 BYTE            c;
 BYTE           *pchar;
 BYTE            print_chars[17];
 BYTE            hex_chars[64];
-BYTE            tmp[4];
 BYTE            prev_hex[64] = "";
 int             firstsame = 0;
 int             lastsame = 0;
@@ -165,7 +164,7 @@ char   *scodepage;
                 }
                 printf ("+%4.4X %s %s\n",
                         startoff, hex_chars, print_chars);
-                safe_strcpy ( prev_hex, sizeof(prev_hex), hex_chars );
+                strcpy ( prev_hex, hex_chars );
             }
         }
 
@@ -174,21 +173,22 @@ char   *scodepage;
         memset ( print_chars, 0, sizeof(print_chars) );
         memset ( hex_chars, SPACE, sizeof(hex_chars) );
         startoff = offset;
-        for (i=0; i < 16; i++)
+        for (xi=0, i=0; i < 16; i++)
         {
             c = *pchar++;
             if (offset < (U32)len) {
-                snprintf(tmp, sizeof(tmp), "%2.2X", c);
-                safe_strcat(hex_chars, sizeof(hex_chars), tmp);
+                sprintf(hex_chars+xi, "%2.2X", c);
                 print_chars[i] = '.';
                 if (isprint(c)) print_chars[i] = c;
                 c = guest_to_host(c);
                 if (isprint(c)) print_chars[i] = c;
             }
             offset++;
-            if ((offset & 3) == 0)
-                safe_strcat(hex_chars, sizeof(hex_chars), " ");
+            xi += 2;
+            hex_chars[xi] = SPACE;
+            if ((offset & 3) == 0) xi++;
         } /* end for(i) */
+        hex_chars[xi] = '\0';
 
     } /* end for(offset) */
 
@@ -549,7 +549,7 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
     rmtdev = strchr(fname, ':');
 
     /* Read the device header so we can determine the device type */
-    safe_strcpy (sfxname, sizeof(sfxname), fname);
+    strcpy (sfxname, fname);
     fd = open (sfxname, omode);
     if (fd < 0)
     {
@@ -576,16 +576,15 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
                     suffix = sfxname + i - 1;
                 else
                 {
-                    sfxname[i] = 0;
-                    safe_strcat (sfxname, sizeof(sfxname), "_1");
-                    safe_strcat (sfxname, sizeof(sfxname), fname + i);
+                    strcpy (sfxname + i, "_1");
+                    strcat (sfxname, fname + i);
                     suffix = sfxname + i + 1;
                 }
             }
             else
             {
                 if (strlen(sfxname) < 2 || sfxname[strlen(sfxname)-2] != '_')
-                    safe_strcat (sfxname, sizeof(sfxname), "_1");
+                    strcat (sfxname, "_1");
                 suffix = sfxname + strlen(sfxname) - 1;
             }
             *suffix = '1';
@@ -598,7 +597,7 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
             free (cif);
             return NULL;
         }
-        else if (fd < 0) safe_strcpy (sfxname, sizeof(sfxname), fname);
+        else if (fd < 0) strcpy (sfxname, fname);
     }
 
     /* If not a possible remote devic, check the dasd header
@@ -1294,10 +1293,12 @@ int             x=O_EXCL;               /* Open option               */
             /* Display progress message every 10 cylinders */
             if (cyl && !(cyl % 10))
             {
-                if (fstate)
-                    statmsg("CYL=%u\n", cyl);
+#ifdef EXTERNALGUI
+                if (extgui)
+                    fprintf (stderr, "CYL=%u\n", cyl);
                 else
-                    fprintf (stderr, "Writing cylinder %u\r", cyl);
+#endif /*EXTERNALGUI*/
+                fprintf (stderr, "Writing cylinder %u\r", cyl);
             }
 
             for (head = 0; head < heads; head++)
@@ -1556,7 +1557,7 @@ U32             trksize;                /* DASD image track length   */
             devtype, volser, volcyls, heads, trksize);
 
     /* Copy the unsuffixed DASD image file name */
-    safe_strcpy (sfname, sizeof(sfname), fname);
+    strcpy (sfname, fname);
     suffix = NULL;
 
     /* Create the suffixed file name if volume will exceed 2GB */
@@ -1578,16 +1579,15 @@ U32             trksize;                /* DASD image track length   */
                 suffix = sfname + i - 1;
             else
             {
-                sfname[i] = 0;
-                safe_strcat (sfname, sizeof(sfname), "_1");
-                safe_strcat (sfname, sizeof(sfname), fname + i);
+                strcpy (sfname + i, "_1");
+                strcat (sfname, fname + i);
                 suffix = sfname + i + 1;
             }
         }
         else
         {
             if (strlen(sfname) < 2 || sfname[strlen(sfname)-2] == '_')
-                safe_strcat (sfname, sizeof(sfname), "_1");
+                strcat (sfname, "_1");
             suffix = sfname + strlen(sfname) - 1;
         }
     }
@@ -1720,10 +1720,14 @@ int             x=O_EXCL;               /* Open option               */
 
             /* Display progress message every 100 sectors */
             if ((sectnum % 100) == 0)
+#ifdef EXTERNALGUI
             {
-                if (fstate) statmsg("BLK=%u\n", sectnum);
+                if (extgui) fprintf (stderr, "BLK=%u\n", sectnum);
                 else fprintf (stderr, "Writing sector %u\r", sectnum);
             }
+#else /*!EXTERNALGUI*/
+            fprintf (stderr, "Writing sector %u\r", sectnum);
+#endif /*EXTERNALGUI*/
 
             /* Write the sector to the file */
             rc = write (fd, buf, sectsz);

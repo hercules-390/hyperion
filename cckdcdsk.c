@@ -13,8 +13,11 @@ int syntax ();
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
 /*-------------------------------------------------------------------*/
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Main function for stand-alone chkdsk                              */
@@ -35,11 +38,13 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     textdomain(PACKAGE);
 #endif
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)

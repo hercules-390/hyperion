@@ -1,12 +1,12 @@
-/* INLINE.H (c) Copyright Jan Jaeger, 2000-2003                      */
-/*      Inline function definitions                                  */
+/* INLINE.H (c) Copyright Jan Jaeger, 2000-2003          */
+/*      Inline function definitions              */
 
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2003      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2003      */
 
-/* Storage protection override fix       Jan Jaeger 31/08/00         */
-/* ESAME low-address protection      v208d Roger Bowler 20/01/01     */
-/* ESAME subspace replacement        v208e Roger Bowler 27/01/01     */
+/* Storage protection override fix       Jan Jaeger 31/08/00 */
+/* ESAME low-address protection      v208d Roger Bowler 20/01/01 */
+/* ESAME subspace replacement        v208e Roger Bowler 27/01/01 */
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
@@ -30,17 +30,15 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
 _LOGICAL_C_STATIC RADR ARCH_DEP(logical_to_abs) (VADR addr, int arn,
                    REGS *regs, int acctype, BYTE akey);
 
-#if (defined(_FEATURE_SIE) && ARCH_MODE != ARCH_900) || defined(_ECPSVM_C)
+#if defined(_FEATURE_SIE) && ARCH_MODE != ARCH_900
 _LOGICAL_C_STATIC RADR s390_logical_to_abs (U32 addr, int arn, REGS *regs,
                            int acctype, BYTE akey);
-#if !defined(_ECPSVM_C)
 _DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
                int acctype, RADR *raddr, U16 *xcode, int *priv,
                                         int *prot, int *pstid);
-#endif /*!defined(_ECPSVM_C)*/
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined(_FEATURE_ZSIE) && !defined(_ECPSVM_C)
+#if defined(_FEATURE_ZSIE)
 _LOGICAL_C_STATIC RADR z900_logical_to_abs (U64 addr, int arn, REGS *regs,
                            int acctype, BYTE akey);
 _DAT_C_STATIC int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
@@ -155,7 +153,7 @@ S64 r;
 /*-------------------------------------------------------------------*/
 /* Divide a signed doubleword dividend by a signed fullword divisor  */
 /* giving a signed fullword remainder and a signed fullword quotient.*/
-/* Returns 0 if successful, 1 if divide overflow.                    */
+/* Returns 0 if successful, 1 if divide overflow.            */
 /*-------------------------------------------------------------------*/
 static inline int div_signed ( U32 *remainder, U32 *quotient,
               U32 dividendhi, U32 dividendlo, U32 divisor )
@@ -178,17 +176,17 @@ S64 quot, rem;
 
 
 /*-------------------------------------------------------------------*/
-/* Test for fetch protected storage location.                        */
-/*                                                                   */
-/* Input:                                                            */
-/*  addr    Logical address of storage location                      */
-/*  skey    Storage key with fetch, reference, and change bits       */
-/*      and one low-order zero appended                              */
-/*  akey    Access key with 4 low-order zeroes appended              */
-/*  private 1=Location is in a private address space                 */
-/*  regs    Pointer to the CPU register context                      */
-/* Return value:                                                     */
-/*  1=Fetch protected, 0=Not fetch protected                         */
+/* Test for fetch protected storage location.                */
+/*                                   */
+/* Input:                                */
+/*  addr    Logical address of storage location          */
+/*  skey    Storage key with fetch, reference, and change bits   */
+/*      and one low-order zero appended              */
+/*  akey    Access key with 4 low-order zeroes appended      */
+/*  private 1=Location is in a private address space         */
+/*  regs    Pointer to the CPU register context          */
+/* Return value:                             */
+/*  1=Fetch protected, 0=Not fetch protected             */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
                     BYTE akey, int private, REGS *regs)
@@ -232,14 +230,14 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 } /* end function is_fetch_protected */
 
 /*-------------------------------------------------------------------*/
-/* Test for low-address protection.                                  */
-/*                                                                   */
-/* Input:                                                            */
-/*  addr    Logical address of storage location                      */
-/*  private 1=Location is in a private address space                 */
-/*  regs    Pointer to the CPU register context                      */
-/* Return value:                                                     */
-/*  1=Low-address protected, 0=Not low-address protected             */
+/* Test for low-address protection.                  */
+/*                                   */
+/* Input:                                */
+/*  addr    Logical address of storage location          */
+/*  private 1=Location is in a private address space         */
+/*  regs    Pointer to the CPU register context          */
+/* Return value:                             */
+/*  1=Low-address protected, 0=Not low-address protected         */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
             int private, REGS *regs)
@@ -278,18 +276,18 @@ static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 } /* end function is_low_address_protected */
 
 /*-------------------------------------------------------------------*/
-/* Test for store protected storage location.                        */
-/*                                                                   */
-/* Input:                                                            */
-/*  addr    Logical address of storage location                      */
-/*  skey    Storage key with fetch, reference, and change bits       */
-/*      and one low-order zero appended                              */
-/*  akey    Access key with 4 low-order zeroes appended              */
-/*  private 1=Location is in a private address space                 */
-/*  protect 1=Access list protection or page protection applies      */
-/*  regs    Pointer to the CPU register context                      */
-/* Return value:                                                     */
-/*  1=Store protected, 0=Not store protected                         */
+/* Test for store protected storage location.                */
+/*                                   */
+/* Input:                                */
+/*  addr    Logical address of storage location          */
+/*  skey    Storage key with fetch, reference, and change bits   */
+/*      and one low-order zero appended              */
+/*  akey    Access key with 4 low-order zeroes appended      */
+/*  private 1=Location is in a private address space         */
+/*  protect 1=Access list protection or page protection applies  */
+/*  regs    Pointer to the CPU register context          */
+/* Return value:                             */
+/*  1=Store protected, 0=Not store protected             */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
                BYTE akey, int private, int protect, REGS *regs)
@@ -333,9 +331,9 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
 
 
 /*-------------------------------------------------------------------*/
-/* Fetch a doubleword from absolute storage.                         */
+/* Fetch a doubleword from absolute storage.                 */
 /* The caller is assumed to have already checked that the absolute   */
-/* address is within the limit of main storage.                      */
+/* address is within the limit of main storage.              */
 /* All bytes of the word are fetched concurrently as observed by     */
 /* other CPUs.  The doubleword is first fetched as an integer, then  */
 /* the bytes are reversed into host byte order if necessary.         */
@@ -360,9 +358,9 @@ static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
 
 
 /*-------------------------------------------------------------------*/
-/* Fetch a fullword from absolute storage.                           */
+/* Fetch a fullword from absolute storage.               */
 /* The caller is assumed to have already checked that the absolute   */
-/* address is within the limit of main storage.                      */
+/* address is within the limit of main storage.              */
 /* All bytes of the word are fetched concurrently as observed by     */
 /* other CPUs.  The fullword is first fetched as an integer, then    */
 /* the bytes are reversed into host byte order if necessary.         */
@@ -386,9 +384,9 @@ static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
 
 
 /*-------------------------------------------------------------------*/
-/* Fetch a halfword from absolute storage.                           */
+/* Fetch a halfword from absolute storage.               */
 /* The caller is assumed to have already checked that the absolute   */
-/* address is within the limit of main storage.                      */
+/* address is within the limit of main storage.              */
 /* All bytes of the halfword are fetched concurrently as observed by */
 /* other CPUs.  The halfword is first fetched as an integer, then    */
 /* the bytes are reversed into host byte order if necessary.         */
@@ -413,7 +411,7 @@ static inline U16 ARCH_DEP(fetch_halfword_absolute) (RADR addr,
 
 
 /*-------------------------------------------------------------------*/
-/* Store doubleword into absolute storage.                           */
+/* Store doubleword into absolute storage.               */
 /* All bytes of the word are stored concurrently as observed by      */
 /* other CPUs.  The bytes of the word are reversed if necessary      */
 /* and the word is then stored as an integer in absolute storage.    */
@@ -438,7 +436,7 @@ static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
 
 
 /*-------------------------------------------------------------------*/
-/* Store a fullword into absolute storage.                           */
+/* Store a fullword into absolute storage.               */
 /* All bytes of the word are stored concurrently as observed by      */
 /* other CPUs.  The bytes of the word are reversed if necessary      */
 /* and the word is then stored as an integer in absolute storage.    */
@@ -463,47 +461,47 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 
 
 /*-------------------------------------------------------------------*/
-/* Perform subspace replacement                                      */
-/*                                                                   */
-/* Input:                                                            */
-/*  std Original segment table designation (STD) or ASCE             */
-/*  asteo   ASTE origin obtained by ASN translation                  */
-/*  xcode   Pointer to field to receive exception code, or NULL      */
-/*  regs    Pointer to the CPU register context                      */
-/* Output:                                                           */
-/*  xcode   Exception code or zero (if xcode is not NULL)            */
-/* Return value:                                                     */
-/*  On successful completion, the exception code field (if not       */
-/*  NULL) is set to zero, and the function return value is the       */
-/*  STD resulting from subspace replacement, or is the original      */
-/*  STD if subspace replacement is not applicable.                   */
-/* Operation:                                                        */
-/*  If the ASF control is enabled, and the STD or ASCE is a          */
-/*  member of a subspace-group (bit 22 is one), and the              */
-/*  dispatchable unit is subspace active (DUCT word 1 bit 0 is       */
-/*  one), and the ASTE obtained by ASN translation is the ASTE       */
-/*  for the base space of the dispatchable unit, then the STD        */
-/*  or ASCE is replaced (except for the event control bits) by       */
-/*  the STD or ASCE from the ASTE for the subspace in which the      */
-/*  dispatchable unit last had control; otherwise the STD or         */
-/*  ASCE remains unchanged.                                          */
-/* Error conditions:                                                 */
-/*  If an ASTE validity exception or ASTE sequence exception         */
-/*  occurs, and the xcode parameter is a non-NULL pointer,           */
-/*  then the exception code is returned in the xcode field           */
-/*  and the function return value is zero.                           */
-/*  For all other error conditions a program check is generated      */
-/*  and the function does not return.                                */
+/* Perform subspace replacement                      */
+/*                                   */
+/* Input:                                */
+/*  std Original segment table designation (STD) or ASCE     */
+/*  asteo   ASTE origin obtained by ASN translation          */
+/*  xcode   Pointer to field to receive exception code, or NULL  */
+/*  regs    Pointer to the CPU register context          */
+/* Output:                               */
+/*  xcode   Exception code or zero (if xcode is not NULL)        */
+/* Return value:                             */
+/*  On successful completion, the exception code field (if not   */
+/*  NULL) is set to zero, and the function return value is the   */
+/*  STD resulting from subspace replacement, or is the original  */
+/*  STD if subspace replacement is not applicable.           */
+/* Operation:                                */
+/*  If the ASF control is enabled, and the STD or ASCE is a      */
+/*  member of a subspace-group (bit 22 is one), and the      */
+/*  dispatchable unit is subspace active (DUCT word 1 bit 0 is   */
+/*  one), and the ASTE obtained by ASN translation is the ASTE   */
+/*  for the base space of the dispatchable unit, then the STD    */
+/*  or ASCE is replaced (except for the event control bits) by   */
+/*  the STD or ASCE from the ASTE for the subspace in which the  */
+/*  dispatchable unit last had control; otherwise the STD or     */
+/*  ASCE remains unchanged.                      */
+/* Error conditions:                             */
+/*  If an ASTE validity exception or ASTE sequence exception     */
+/*  occurs, and the xcode parameter is a non-NULL pointer,       */
+/*  then the exception code is returned in the xcode field       */
+/*  and the function return value is zero.               */
+/*  For all other error conditions a program check is generated  */
+/*  and the function does not return.                */
 /*-------------------------------------------------------------------*/
 static inline RADR ARCH_DEP(subspace_replace) (RADR std, U32 asteo,
                         U16 *xcode, REGS *regs)
 {
-U32 ducto;              /* DUCT origin               */
-U32 duct0;              /* DUCT word 0               */
-U32 duct1;              /* DUCT word 1               */
-U32 duct3;              /* DUCT word 3               */
+U32 ducto;              /* DUCT origin           */
+U32 duct0;              /* DUCT word 0           */
+U32 duct1;              /* DUCT word 1           */
+U32 duct3;              /* DUCT word 3           */
 U32 ssasteo;            /* Subspace ASTE origin      */
-U32 ssaste[16];         /* Subspace ASTE             */
+U32 ssaste[16];         /* Subspace ASTE         */
 
     /* Clear the exception code field, if provided */
     if (xcode != NULL) *xcode = 0;

@@ -3256,7 +3256,7 @@ GREG    n;                              /* Work area                 */
 BYTE    obyte;                          /* Operand byte              */
 BYTE    pad;                            /* Padding byte              */
 #ifdef OPTION_FAST_MOVELONG
-RADR    abs1, abs2;
+RADR	abs1, abs2;
 GREG    len3;
 #endif
 

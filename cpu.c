@@ -27,7 +27,9 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
+
 #include "opcode.h"
+
 #include "inline.h"
 
 /*-------------------------------------------------------------------*/
@@ -1072,7 +1074,7 @@ void *cpu_thread (REGS *regs)
             regs->cpuad,get_arch_mode_string(regs));
     }
 
-    initdone = 1;  /* now safe for panel_thread function to proceed */
+    initdone = 1;  /* now safe for panel_display function to proceed */
 
     /* Execute the program in specified mode */
     run_cpu[regs->arch_mode] (regs);
@@ -1103,7 +1105,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if( OPEN_IC_DEBUG(regs) )
     {
         U32 prevmask = regs->ints_mask;
-    SET_IC_EXTERNAL_MASK(regs);
+	SET_IC_EXTERNAL_MASK(regs);
         SET_IC_IO_MASK(regs);
         SET_IC_MCK_MASK(regs);
         SET_IC_PER_MASK(regs);
@@ -1244,16 +1246,20 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         sysblk.waitmask |= regs->cpumask;
         sysblk.started_mask &= ~regs->cpumask;
 
-        if (regs == (sysblk.regs + sysblk.pcpu))
-            statmsg("MAN=1\n");
+#ifdef EXTERNALGUI
+        if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+            logmsg("MAN=1\n");
+#endif /*EXTERNALGUI*/
 
         while (regs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&regs->intcond, &sysblk.intlock);
         }
 
-        if (regs == (sysblk.regs + sysblk.pcpu))
-            statmsg("MAN=0\n");
+#ifdef EXTERNALGUI
+        if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+            logmsg("MAN=0\n");
+#endif /*EXTERNALGUI*/
 
         sysblk.started_mask |= regs->cpumask;
         sysblk.waitmask &= ~regs->cpumask;
@@ -1331,16 +1337,20 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             obtain_lock (&sysblk.intlock);
             sysblk.waitmask |= regs->cpumask;
 
-            if (regs == (sysblk.regs + sysblk.pcpu))
-                statmsg("MAN=1\n");
+#ifdef EXTERNALGUI
+            if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+                logmsg("MAN=1\n");
+#endif /*EXTERNALGUI*/
 
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
             }
 
-            if (regs == (sysblk.regs + sysblk.pcpu))
-                statmsg("MAN=0\n");
+#ifdef EXTERNALGUI
+            if (extgui && regs == (sysblk.regs + sysblk.pcpu))
+                logmsg("MAN=0\n");
+#endif /*EXTERNALGUI*/
 
             sysblk.waitmask &= ~regs->cpumask;
             release_lock (&sysblk.intlock);
@@ -1606,3 +1616,5 @@ int timeval_add (struct timeval *dif_timeval, struct timeval *accum_timeval)
 #endif /*defined(OPTION_CPU_UTILIZATION)*/
 
 #endif /*!defined(_GEN_ARCH)*/
+
+

@@ -46,8 +46,11 @@ typedef struct _DEVMAP_DEV {
     } parms;
     } DEVMAP_DEV;
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
+#if defined(EXTERNALGUI)
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*defined(EXTERNALGUI)*/
 
 /*-------------------------------------------------------------------*/
 /* DEVMAP2CNF main entry point                                       */
@@ -64,11 +67,13 @@ BYTE        output_type[5];     /* Device type to print      */
 BYTE           *output_filename;    /* -> filename to print      */
 int     more_devices;       /* More devices this ctlr?   */
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr,
@@ -187,11 +192,11 @@ int     more_devices;       /* More devices this ctlr?   */
         
         if (strncmp(device.type, "3278", 4) == 0)
         {
-            safe_strcpy(output_type, sizeof(output_type), "3270");
+            strcpy(output_type, "3270");
             output_filename = "";
         }
         if (strncmp(device.type, "2540", 4) == 0)
-            safe_strcpy(output_type, sizeof(output_type), "3505");
+            strcpy(output_type, "3505");
         
         /* Emit the Hercules config file entry. */
         printf("%02X%02X    %s",

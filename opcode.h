@@ -227,7 +227,7 @@ do { \
 
 /* The footprint_buffer option saves a copy of the register context
    every time an instruction is executed.  This is for problem
-   determination only, as it severely impacts performance.   *JJ */
+   determination only, as it severely impacts performance.	 *JJ */
 
 #if defined(OPTION_FOOTPRINT_BUFFER)
 #define FOOTPRINT(_regs) \
@@ -670,97 +670,97 @@ do { \
 
 
 #define INST_UPDATE_PSW(_regs, _len, _execflag) \
-    { \
-        if( !(_execflag) ) \
-        { \
-        (_regs)->psw.ilc = (_len); \
-        (_regs)->psw.IA += (_len); \
-        (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-        } \
-    }
+	{ \
+	    if( !(_execflag) ) \
+	    { \
+		(_regs)->psw.ilc = (_len); \
+		(_regs)->psw.IA += (_len); \
+		(_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
+	    } \
+	}
 
 /* E implied operands and extended op code */
 #undef E
 #define E(_inst, _execflag, _regs) \
-    { \
+	{ \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-    }
+	}
 
 /* RR register to register */
 #undef RR
 #if defined(FETCHIBYTE1)
 #define RR(_inst, _execflag, _regs, _r1, _r2) \
-    { \
+	{ \
             register U32 ib; \
             FETCHIBYTE1(ib, (_inst)) \
-        (_r1) = ib >> 4; \
-        (_r2) = ib & 0x0F; \
+	    (_r1) = ib >> 4; \
+	    (_r2) = ib & 0x0F; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-    }
+	}
 #else
 #define RR(_inst, _execflag, _regs, _r1, _r2) \
-    { \
-        (_r1) = (_inst)[1] >> 4; \
-        (_r2) = (_inst)[1] & 0x0F; \
+	{ \
+	    (_r1) = (_inst)[1] >> 4; \
+	    (_r2) = (_inst)[1] & 0x0F; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-    }
+	}
 #endif
 
 /* RR special format for SVC instruction */
 #undef RR_SVC
 #if defined(FETCHIBYTE1)
 #define RR_SVC(_inst, _execflag, _regs, _svc) \
-    { \
+	{ \
             FETCHIBYTE1((_svc), (_inst)) \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-    }
+	}
 #else
 #define RR_SVC(_inst, _execflag, _regs, _svc) \
-    { \
-        (_svc) = (_inst)[1]; \
+	{ \
+	    (_svc) = (_inst)[1]; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-    }
+	}
 #endif
 
 /* RRE register to register with extended op code */
 #undef RRE
 #define RRE(_inst, _execflag, _regs, _r1, _r2) \
-    {   U32 temp; \
+	{   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
             INST_UPDATE_PSW((_regs), 4, (_execflag)); \
-    }
+	}
 
 /* RRF register to register with additional R3 field */
 #undef RRF_R
 #define RRF_R(_inst, _execflag, _regs, _r1, _r2, _r3) \
-    {   U32 temp; \
+	{   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 12) & 0xf; \
             (_r3) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
             INST_UPDATE_PSW((_regs), 4, (_execflag)); \
-    }
+	}
 
 /* RRF register to register with additional M3 field */
 #undef RRF_M
 #define RRF_M(_inst, _execflag, _regs, _r1, _r2, _m3) \
-    {   U32 temp; \
+	{   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_m3) = (temp >> 12) & 0xf; \
             (_r1) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
             INST_UPDATE_PSW((_regs), 4, (_execflag)); \
-    }
+	}
 
 /* RRF register to register with additional R3 and M4 fields */
 #undef RRF_RM
 #define RRF_RM(_inst, _execflag, _regs, _r1, _r2, _r3, _m4) \
-    {   U32 temp; \
+	{   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r3) = (temp >> 12) & 0xf; \

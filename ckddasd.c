@@ -202,7 +202,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     }
 
     /* Save the file name in the device block */
-    safe_strcpy (dev->filename, sizeof(dev->filename), argv[0]);
+    strcpy (dev->filename, argv[0]);
 
     /* Device is shareable */
     dev->shared = 1;
@@ -281,7 +281,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         {
             if ('\"' == argv[i][3]) argv[i]++;
             if (strlen(argv[i]+3) < 256)
-                safe_strcpy (dev->dasdsfn, sizeof(dev->dasdsfn), argv[i]+3);
+                strcpy (dev->dasdsfn, argv[i]+3);
             continue;
         }
         if (strlen (argv[i]) > 3

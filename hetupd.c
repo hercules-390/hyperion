@@ -39,14 +39,15 @@ static char *o_dname    = NULL;
 static int dorename     = FALSE;
 static HETB *s_hetb     = NULL;
 static HETB *d_hetb     = NULL;
-
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
-
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int extgui = 0;
 /* Previous reported file position */
 static long prevpos = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
+#endif /*EXTERNALGUI*/
 
 /*
 || Local constant data
@@ -127,15 +128,18 @@ copytape( void )
 
     while( TRUE )
     {
+#ifdef EXTERNALGUI
+        if( extgui )
         {
             /* Report progress every nnnK */
             long curpos = ftell( s_hetb->fd );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
-                statmsg("IPOS=%ld\n", curpos );
+                fprintf( stderr, "IPOS=%ld\n", curpos );
             }
         }
+#endif /*EXTERNALGUI*/
 
         rc = het_read( s_hetb, buf );
         if( rc == HETE_EOT )
@@ -260,11 +264,13 @@ main( int argc, char *argv[] )
     HETB *d_hetb;
     int rc;
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     s_hetb = NULL;
     d_hetb = NULL;
@@ -347,7 +353,7 @@ main( int argc, char *argv[] )
     switch( argc )
     {
         case 1:
-            snprintf( toname, sizeof(toname), "%s.%010d", argv[ optind ], rand() );
+            sprintf( toname, "%s.%010d", argv[ optind ], rand() );
             o_dname = toname;
             dorename = TRUE;
         break;

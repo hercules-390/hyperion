@@ -35,13 +35,15 @@ static const char help[] =
     "  -h  display usage summary\n"
     "  -l  print only label information (default: off)\n";
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
-
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int extgui = 0;
 /* Previous reported file position */
 static long prevpos = 0;
 /* Report progress every this many bytes */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
+#endif /*EXTERNALGUI*/
 
 /*
 || Print terse dataset information (from VOL1/EOF1/EOF2)
@@ -82,22 +84,10 @@ printdataset( char *buf, int len, int fileno )
     else if( sl_iseof( buf, 2 ) )
     {
         recfm[ 0 ] = '\0';
-        safe_strcat
-        (
-            safe_strcat
-            (
-                safe_strcat
-                (
-                    recfm,
-                    sizeof(recfm),
-                    fmt.slds2.recfm
-                ),
-                sizeof(recfm),
-                fmt.slds2.blkattr
-            ),
-            sizeof(recfm),
-            fmt.slds2.ctrl
-        );
+        strcat( strcat( strcat( recfm,
+                                fmt.slds2.recfm ),
+                        fmt.slds2.blkattr ),
+                fmt.slds2.ctrl );
         printf( "job=%17.17s  recfm=%-3.3s       lrecl=%-5d     blksize=%-5d\n\n",
                 fmt.slds2.jobid,
                 recfm,
@@ -171,11 +161,13 @@ main( int argc, char *argv[] )
 #define O_LABELS        0X40
 #define O_DATASETS      0X20
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     opts = O_ALL;
 
@@ -257,15 +249,18 @@ main( int argc, char *argv[] )
 
     while( TRUE )
     {
+#ifdef EXTERNALGUI
+        if( extgui )
         {
             /* Report progress every nnnK */
             long curpos = ftell( hetb->fd );
             if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
             {
                 prevpos = curpos;
-                statmsg("IPOS=%ld\n", curpos );
+                fprintf( stderr, "IPOS=%ld\n", curpos );
             }
         }
+#endif /*EXTERNALGUI*/
 
         rc = het_read( hetb, buf );
         if( rc == HETE_EOT )

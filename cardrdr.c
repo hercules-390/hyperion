@@ -258,7 +258,7 @@ int     fc;                             /* File counter              */
 
         /* Save the file name in the device block */
 
-        safe_strcpy (dev->filename, sizeof(dev->filename), argv[0]);
+        strcpy (dev->filename, argv[0]);
     }
     else
     {
@@ -363,7 +363,7 @@ static int clear_cardrdr ( DEVBLK *dev )
     /* If next file is available, open it */
     if (dev->current_file && *(dev->current_file))
     {
-        safe_strcpy(dev->filename, sizeof(dev->filename), *(dev->current_file++));
+        strcpy(dev->filename, *(dev->current_file++));
     }
     else
     {

@@ -268,13 +268,13 @@ int sbfpclassify(struct sbfp *op)
 int ebfpissnan(struct ebfp *op)
 {
     return ebfpclassify(op) == FP_NAN
-        && (op->fracth & 0x0000800000000000ULL) == 0;
+        && (op->fracth & 0x0000800000000000L) == 0;
 }
 
 int lbfpissnan(struct lbfp *op)
 {
     return lbfpclassify(op) == FP_NAN
-        && (op->fract & 0x0008000000000000ULL) == 0;
+        && (op->fract & 0x0008000000000000L) == 0;
 }
 
 int sbfpissnan(struct sbfp *op)
@@ -293,14 +293,14 @@ void ebfpdnan(struct ebfp *op)
 {
     op->sign = 0;
     op->exp = 0x7FFF;
-    op->fracth = 0x0000800000000000ULL;
+    op->fracth = 0x0000800000000000L;
     op->fractl = 0;
 }
 void lbfpdnan(struct lbfp *op)
 {
     op->sign = 0;
     op->exp = 0x7FF;
-    op->fract = 0x0008000000000000ULL;
+    op->fract = 0x0008000000000000L;
 }
 void sbfpdnan(struct sbfp *op)
 {
@@ -310,11 +310,11 @@ void sbfpdnan(struct sbfp *op)
 }
 void ebfpstoqnan(struct ebfp *op)
 {
-    op->fracth |= 0x0000800000000000ULL;
+    op->fracth |= 0x0000800000000000L;
 }
 void lbfpstoqnan(struct lbfp *op)
 {
-    op->fract |= 0x0008000000000000ULL;
+    op->fract |= 0x0008000000000000L;
 }
 void sbfpstoqnan(struct sbfp *op)
 {
@@ -397,8 +397,7 @@ void ebfpston(struct ebfp *op)
         if (op->sign) {
             op->v = log(0);
         } else {
-            op->v = 1/0;    /* (this will get a compiler warning
-                                that can be safely ignored) */
+            op->v = 1/0;
         }
         break;
     case FP_ZERO:
@@ -423,7 +422,7 @@ void ebfpston(struct ebfp *op)
         op->v = ldexpl(h + l, op->exp - 16383);
         break;
     case FP_NORMAL:
-        h = ldexpl((long double)(op->fracth | 0x1000000000000ULL), -48);
+        h = ldexpl((long double)(op->fracth | 0x1000000000000L), -48);
         l = ldexpl((long double)op->fractl, -112);
         if (op->sign) {
             h = -h;
@@ -449,8 +448,7 @@ void lbfpston(struct lbfp *op)
         if (op->sign) {
             op->v = log(0);
         } else {
-            op->v = 1/0;    /* (this will get a compiler warning
-                                that can be safely ignored) */
+            op->v = 1/0;
         }
         break;
     case FP_ZERO:
@@ -472,7 +470,7 @@ void lbfpston(struct lbfp *op)
         op->v = ldexp(t, op->exp - 1023);
         break;
     case FP_NORMAL:
-        t = ldexp((double)(op->fract | 0x10000000000000ULL), -52);
+        t = ldexp((double)(op->fract | 0x10000000000000L), -52);
         if (op->sign)
             t = -t;
         op->v = ldexp(t, op->exp - 1023);
@@ -495,8 +493,7 @@ void sbfpston(struct sbfp *op)
         if (op->sign) {
             op->v = log(0);
         } else {
-            op->v = 1/0;    /* (this will get a compiler warning
-                                that can be safely ignored) */
+            op->v = 1/0;
         }
         break;
     case FP_ZERO:
@@ -553,7 +550,7 @@ void ebfpntos(struct ebfp *op)
         f = frexpl(op->v, &(op->exp));
         op->sign = signbit(op->v);
         op->exp += 16383 - 1;
-        op->fracth = (U64)ldexp(fabsl(f), 49) & 0xFFFFFFFFFFFFULL;
+        op->fracth = (U64)ldexp(fabsl(f), 49) & 0xFFFFFFFFFFFFL;
         op->fractl = (U64)fmodl(ldexp(fabsl(f), 113), pow(2, 64));
         break;
     }
@@ -583,7 +580,7 @@ void lbfpntos(struct lbfp *op)
         f = frexp(op->v, &(op->exp));
         op->sign = signbit(op->v);
         op->exp += 1023 - 1;
-        op->fract = (U64)ldexp(fabs(f), 53) & 0xFFFFFFFFFFFFFULL;
+        op->fract = (U64)ldexp(fabs(f), 53) & 0xFFFFFFFFFFFFFL;
         break;
     }
     //logmsg("exp=%d fract=%llx v=%g\n", op->exp, op->fract, op->v);
@@ -644,9 +641,9 @@ static void vfetch_lbfp(struct lbfp *op, VADR addr, int arn, REGS *regs)
 
     v = vfetch8(addr, arn, regs);
 
-    op->sign = (v & 0x8000000000000000ULL) != 0;
-    op->exp = (v & 0x7FF0000000000000ULL) >> 52;
-    op->fract = v & 0x000FFFFFFFFFFFFFULL;
+    op->sign = (v & 0x8000000000000000L) != 0;
+    op->exp = (v & 0x7FF0000000000000L) >> 52;
+    op->fract = v & 0x000FFFFFFFFFFFFFL;
     //logmsg("lfetch m=%16.16llx exp=%d fract=%llx\n", v, op->exp, op->fract);
 }
 
@@ -1747,7 +1744,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
-        regs->GR_G(r1) = 0x8000000000000000ULL;
+        regs->GR_G(r1) = 0x8000000000000000L;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
@@ -1762,9 +1759,9 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
         if (op2.sign) {
-            regs->GR_G(r1) = 0x8000000000000000ULL;
+            regs->GR_G(r1) = 0x8000000000000000L;
         } else {
-            regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
+            regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFL;
         }
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -1810,7 +1807,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     case FP_NAN:
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
-        regs->GR_G(r1) = 0x8000000000000000ULL;
+        regs->GR_G(r1) = 0x8000000000000000L;
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
             if (pgm_check) {
@@ -1824,9 +1821,9 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
         if (op2.sign) {
-            regs->GR_G(r1) = 0x8000000000000000ULL;
+            regs->GR_G(r1) = 0x8000000000000000L;
         } else {
-            regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
+            regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFL;
         }
         if (regs->fpc & FPC_MASK_IMX) {
             pgm_check = ieee_exception(FE_INEXACT, regs);
@@ -2382,15 +2379,15 @@ DEF_INST(load_fp_int_short_reg)
 
         feclearexcept(FE_ALL_EXCEPT);
         sbfpston(&op);
-        op.v = rint(op.v);
+	    op.v = rint(op.v);
 
-        if (regs->fpc & FPC_MASK_IMX) {
+    	if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
         } else {
             ieee_exception(FE_INVALID, regs);
         }
 
-        sbfpston(&op);
+	    sbfpston(&op);
     
         raised = fetestexcept(FE_ALL_EXCEPT);
 
@@ -2438,15 +2435,15 @@ DEF_INST(load_fp_int_long_reg)
 
         feclearexcept(FE_ALL_EXCEPT);
         lbfpston(&op);
-        op.v = rint(op.v);
+	    op.v = rint(op.v);
 
-        if (regs->fpc & FPC_MASK_IMX) {
+    	if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
         } else {
             ieee_exception(FE_INVALID, regs);
         }
 
-        lbfpston(&op);
+	    lbfpston(&op);
     
         raised = fetestexcept(FE_ALL_EXCEPT);
 
@@ -2495,15 +2492,15 @@ DEF_INST(load_fp_int_ext_reg)
 
         feclearexcept(FE_ALL_EXCEPT);
         ebfpston(&op);
-        op.v = rint(op.v);
+	    op.v = rint(op.v);
 
-        if (regs->fpc & FPC_MASK_IMX) {
+    	if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
         } else {
             ieee_exception(FE_INVALID, regs);
         }
 
-        ebfpston(&op);
+	    ebfpston(&op);
     
         raised = fetestexcept(FE_ALL_EXCEPT);
 

@@ -75,6 +75,10 @@ static const char *build_info[] = {
     "Using fthreads instead of pthreads",
 #endif
 
+#if !defined(EXTERNALGUI) && defined(WIN32)
+    "No external GUI support",
+#endif
+
 #if defined(OPTION_HTTP_SERVER)
     "HTTP Server support",
 #endif
@@ -107,6 +111,10 @@ static const char *build_info[] = {
 
 };
 
+#if defined(EXTERNALGUI)
+extern int extgui;              /* external gui present */
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Display version and copyright                                     */
 /*-------------------------------------------------------------------*/
@@ -114,19 +122,31 @@ void display_version (FILE *f, char *prog)
 {
     unsigned int i;
 
-    /* Log version */
+#if defined(EXTERNALGUI)
+    /* If external gui being used, set stdout & stderr streams
+       to unbuffered so we don't have to flush them all the time
+       in order to ensure consistent sequence of log messages.
+    */
+    if (extgui)
+    {
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
+    }
+#endif /*EXTERNALGUI*/
+
+        /* Log version */
 
     fprintf (f, _("%sVersion %s\n"), prog, VERSION);
 
-    /* Log Copyright */
+        /* Log Copyright */
 
     fprintf(f, "%s\n", HERCULES_COPYRIGHT);
 
-    /* Log build date/time */
+        /* Log build date/time */
 
     fprintf (f, _("Built on %s at %s\n"), __DATE__, __TIME__);
 
-    /* Log "unusual" build options */
+        /* Log "unusual" build options */
 
     fprintf (f, _("Build information:\n"));
 

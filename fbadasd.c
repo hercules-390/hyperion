@@ -63,7 +63,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     }
 
     /* Save the file name in the device block */
-    safe_strcpy (dev->filename, sizeof(dev->filename), argv[0]);
+    strcpy (dev->filename, argv[0]);
 
     /* Device is shareable */
     dev->shared = 1;
@@ -151,7 +151,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
              && memcmp ("sf=", argv[i], 3) == 0)
             {
                 if (strlen(argv[i]+3) < 256)
-                    safe_strcpy (dev->dasdsfn, sizeof(dev->dasdsfn), argv[i]+3);
+                    strcpy (dev->dasdsfn, argv[i]+3);
                 continue;
             }
             if (strcasecmp ("nosyncio", argv[i]) == 0

@@ -118,9 +118,12 @@ unsigned char *recptr = NULL;
 int recidx = 0;
 int reclen = 0;
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
-
+#ifdef EXTERNALGUI
+/*
+|| Special flag to indicate whether or not we're being
+|| run under the control of the external GUI facility.
+*/
+int extgui = 0;
 /*
 || Previously reported file position
 */
@@ -129,6 +132,7 @@ static long prevpos = 0;
 || Report progress every this many bytes
 */
 #define PROGRESS_MASK (~0x3FFFF /* 256K */)
+#endif /*EXTERNALGUI*/
 
 /*
 || Merge DCB information from HDR2 label
@@ -507,16 +511,18 @@ getfile( HETB *hetb, FILE *outf )
         */
         while( ( rc = getrecord( hetb ) ) >= 0 )
         {
+#ifdef EXTERNALGUI
+            if( extgui )
             {
                 /* Report progress every nnnK */
                 long curpos = ftell( hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    statmsg("IPOS=%ld\n", curpos );
+                    fprintf( stderr, "IPOS=%ld\n", curpos );
                 }
             }
-
+#endif /*EXTERNALGUI*/
             /*
             || Get working copy of record ptr
             */
@@ -571,16 +577,18 @@ getfile( HETB *hetb, FILE *outf )
         */
         while( ( rc = getblock( hetb ) ) >= 0 )
         {
+#ifdef EXTERNALGUI
+            if( extgui )
             {
                 /* Report progress every nnnK */
                 long curpos = ftell( hetb->fd );
                 if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
                 {
                     prevpos = curpos;
-                    statmsg("IPOS=%ld\n", curpos );
+                    fprintf( stderr, "IPOS=%ld\n", curpos );
                 }
             }
-
+#endif /*EXTERNALGUI*/
             /*
             || Write the record out
             */
@@ -611,11 +619,13 @@ main( int argc, char *argv[] )
     int rc;
     int i;
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr, "Hercules HET extract files program ");

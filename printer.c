@@ -101,7 +101,7 @@ pid_t           pid;                    /* Child process identifier  */
 
         /* Execute the specified pipe receiver program */
 
-#if 0 /*defined(WIN32)*/  /*+++++ rescinded.(Fish) +++++++*/
+#if defined(WIN32)
         {
             /* The dev=, pid= and extgui= arguments are for informational
                purposes only so the spooler knows who/what it's spooling. */
@@ -109,7 +109,13 @@ pid_t           pid;                    /* Child process identifier  */
             BYTE  cmdline[256];
 
             snprintf(cmdline,256,"\"%s\" pid=%d dev=%4.4X extgui=%d",
-                dev->filename+1,getpid(),dev->devnum,fscreen?0:1);
+                dev->filename+1,getpid(),dev->devnum,
+#ifdef EXTERNALGUI
+                extgui
+#else /*!EXTERNALGUI*/
+                0
+#endif /*EXTERNALGUI*/
+                );
 
             rc = system (cmdline);
         }
@@ -152,35 +158,22 @@ pid_t           pid;                    /* Child process identifier  */
 static void
 write_buffer (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
 {
+int             rc;                     /* Return code               */
+
     /* Write data to the printer file */
-    int rc = write (dev->fd, buf, len);
+    rc = write (dev->fd, buf, len);
 
-    /* Equipment check or intervention required
-       if i/o error writing to printer file */
-
+    /* Equipment check if error writing to printer file */
     if (rc < len)
     {
-        if (EPIPE == errno)
-        {
-            /* Set unit check with intervention required */
-            logmsg (_("HHCPR013E INTREQ printer %4.4X (%s): %s\n"),
-                dev->devnum, dev->filename, strerror(errno));
-            logmsg (_("HHCPR014I Printer %4.4X (%s) stopped.\n"),
-                dev->devnum, dev->filename);
-            dev->stopprt = 1;
-            dev->sense[0] = SENSE_IR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        }
-        else
-        {
-            /* bona fide i/o error (equipment check)... */
-            logmsg (_("HHCPR003E %4.4X Error writing to %s: %s\n"),
+        logmsg (_("HHCPR003E %4.4X Error writing to %s: %s\n"),
                 dev->devnum, dev->filename,
                 (errno == 0 ? _("incomplete"): strerror(errno)));
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        }
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
     }
+
 } /* end function write_buffer */
 
 /*-------------------------------------------------------------------*/
@@ -200,7 +193,7 @@ int     i;                              /* Array subscript           */
     }
 
     /* Save the file name in the device block */
-    safe_strcpy (dev->filename, sizeof(dev->filename), argv[0]);
+    strcpy (dev->filename, argv[0]);
 
     /* Initialize device dependent fields */
     dev->fd = -1;
@@ -399,8 +392,7 @@ BYTE            c;                      /* Print character           */
                 if (dev->buf[i-1] != SPACE) break;
 
             /* Append carriage return and line feed(s) */
-            *(dev->buf + i) = 0;
-            safe_strcat(dev->buf, dev->bufsize, eor);
+            strcpy (dev->buf + i, eor);
             i += strlen(eor);
 
             /* Write print line */

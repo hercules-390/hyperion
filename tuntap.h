@@ -20,8 +20,7 @@
 extern int      TUNTAP_CreateInterface  ( char*   pszTUNDevice, 
                                           int     iFlags,
                                           int*    pfd, 
-                                          char*   pszNetDevName,
-                                          size_t  bufsz_pszNetDevName );
+                                          char*   pszNetDevName );
 
 //
 // Configure TUN/TAP Interface

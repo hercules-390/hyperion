@@ -490,7 +490,6 @@ static int cache_adjust(int ix, int n)
     return 0;
 }
 
-#if 0
 static int cache_resize (int ix, int n)
 {
     CACHE *cache;
@@ -531,7 +530,6 @@ static int cache_resize (int ix, int n)
     }
     return 1;
 }
-#endif
 
 static void cache_allocbuf(int ix, int i, int len)
 {

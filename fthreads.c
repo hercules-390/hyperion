@@ -24,7 +24,27 @@ int dummy = 0;
 #include "fthreads.h"
 #include "hostinfo.h"
 #include "logger.h"
-#include "debug.h"
+
+////////////////////////////////////////////////////////////////////////////////////
+// Debugging
+
+#if defined(DEBUG) || defined(_DEBUG)
+    #define TRACE(a...) logmsg(a)
+    #define ASSERT(a) \
+        do \
+        { \
+            if (!(a)) \
+            { \
+                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+            } \
+        } \
+        while(0)
+    #define VERIFY(a) ASSERT((a))
+#else
+    #define TRACE(a...)
+    #define ASSERT(a)
+    #define VERIFY(a) ((void)(a))
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 

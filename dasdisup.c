@@ -74,6 +74,12 @@ static BYTE *secondload[] = {
 
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 #if 0
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
@@ -106,7 +112,7 @@ BYTE            card[81];               /* Logical record (ASCIIZ)   */
     memset (ofname, 0, sizeof(ofname));
     strncpy (ofname, memname, 8);
     string_to_lower (ofname);
-    safe_strcat (ofname, sizeof(ofname), ".mac");
+    strcat (ofname, ".mac");
 
     /* Open the output file */
     ofp = fopen (ofname, "w");
@@ -588,9 +594,6 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
     return 0;
 } /* end function resolve_xctltab */
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
-
 /*-------------------------------------------------------------------*/
 /* DASDISUP main entry point                                         */
 /*-------------------------------------------------------------------*/
@@ -612,11 +615,13 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr,
@@ -698,13 +703,16 @@ int             nmem = 0;               /* Number of array entries   */
             "HHCDS002I End of directory: %d members selected\n",
             nmem);
 
-    statmsg("NMEM=%d\n",nmem);
+#ifdef EXTERNALGUI
+    if (extgui) fprintf (stderr,"NMEM=%d\n",nmem);
+#endif /*EXTERNALGUI*/
 
     /* Read each member and resolve the embedded TTRs */
     for (i = 0; i < nmem; i++)
     {
-        statmsg("MEM=%d\n",i);
-
+#ifdef EXTERNALGUI
+        if (extgui) fprintf (stderr,"MEM=%d\n",i);
+#endif /*EXTERNALGUI*/
         rc = resolve_xctltab (cif, noext, extent, memtab+i,
                                 memtab, nmem);
 

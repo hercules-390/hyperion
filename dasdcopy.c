@@ -16,6 +16,12 @@ int syntax (char *);
 void status (int, int);
 int nulltrk(BYTE *, int, int);
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 #define CKD      0x01
 #define CCKD     0x02
 #define FBA      0x04
@@ -23,9 +29,6 @@ int nulltrk(BYTE *, int, int);
 #define CKDMASK  0x03
 #define FBAMASK  0x0c
 #define COMPMASK 0x0a
-
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
 
 /*-------------------------------------------------------------------*/
 /* Copy a dasd file to another dasd file                             */
@@ -59,11 +62,13 @@ BYTE            msgbuf[512];            /* Message buffer            */
     textdomain(PACKAGE);
 #endif
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strcmp(argv[argc-1],"EXTERNALGUI") == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* Figure out processing based on the program name */
     pgm = strrchr (argv[0], '/');
@@ -571,12 +576,14 @@ void status (int i, int n)
 {
 static char indic[] = "|/-\\";
 
-    if (fstate)
+#ifdef EXTERNALGUI
+    if (extgui)
     {
         if (i % 100) return;
-        statmsg("TRK=%d\n", i);
+        fprintf (stderr, "TRK=%d\n", i);
         return; 
     } 
+#endif /*EXTERNALGUI*/
 //  if (i % 101 != 1) return;
     printf ("\r%c %3d%% %7d", indic[i%4], (int)((i*100.0)/n), i);
 } /* end function status */

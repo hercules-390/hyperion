@@ -287,7 +287,6 @@ fi
 AM_CONDITIONAL(USE_BUILTIN_MEMRCHR, [test x$have_memrchr = xno])
 
 AC_CHECK_FUNCS(strerror_r,,[AC_DEFINE(BUILTIN_STRERROR_R)])
-AC_CHECK_FUNCS(asprintf)
 
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
 AC_CHECK_FUNCS(strsignal)
@@ -374,6 +373,23 @@ else
   CFLAGS="$OFLAGS $CFLAGS"
 fi
 
+AC_ARG_ENABLE(external-gui,
+              AC_HELP_STRING([--disable-external-gui],
+                             [disable interface to external Windows GUI]),
+              [case "${enableval}" in
+                 yes) build_external_gui=true ;;
+                 no) build_external_gui=false ;;
+                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-external-gui) ;;
+               esac],
+              [case "$host_os" in
+                 *cygwin*) build_external_gui=true ;;
+                 *) build_external_gui=false ;;
+               esac])
+
+if test x$build_external_gui = xtrue; then
+  AC_DEFINE([EXTERNALGUI])
+fi
+
 AC_ARG_ENABLE(custom,
               AC_HELP_STRING([--enable-custom=STRING],
                              [provide a custom description for this build]),
@@ -407,6 +423,8 @@ AH_TEMPLATE([CCKD_BZIP2],
             [Define to enable bzip2 compression in emulated DASDs])
 AH_TEMPLATE([HET_BZIP2],
             [Define to enable bzip2 compression in emulated tapes])
+AH_TEMPLATE([EXTERNALGUI],
+            [Define to build interface to external Windows GUI])
 AH_TEMPLATE([HAVE_U_INT],
             [Define if your system uses u_int8_t, etc. instead of uint8_t])
 AH_TEMPLATE([NO_SETUID],

@@ -266,23 +266,6 @@ The following system parameters may be specified:
     "437/500" and "850/273" are also supported.
     If no codepage is specified then the environment variable HERCULES_CP
     will be inspected.  The default codepage used is "default"
-<dt><code>ECPS:VM YES &#124 <em>NO</em> &#124 n</code>
-<dd>specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
-    support is to be enabled. If <em>YES</em> is specified, then the support
-    level reported to the operating system is <em>20</em>. The purpose of
-    ECPS:VM is to provide to the VM/370 Operating system a set of shortcut
-    facilities to perform hypervisor functions (CP Assists) and virtual
-    machine simulation (VM Assists). Although this feature does not affect
-    VM Operating system products operating in XA, ESA or z/Architecture mode,
-    it will affect VM/370 and VM/SP products running under VM/XA, VM/ESA or z/VM.
-    running VM/370 and VM/SP products under VM/XA, VM/ESA or z/VM should be
-    done with ECPS:VM disabled. ECPS:VM should not be enabled in an AP or MP
-    environment. ECPS:VM has no effect on non-VM operating systems. It is
-    however recommended to disable ECPS:VM when running native non-VM operating
-    systems. If a numeric value is specified, this value will be reported 
-    to the operating system when it issues a Store ECPS:VM level, but it
-    doesn't otherwise alter the ECPS:VM facility operations. This is a partial
-    implementation.
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any system

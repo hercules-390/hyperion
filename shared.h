@@ -439,8 +439,7 @@ do { \
         p = sysblk.shrdtrace; \
         sysblk.shrdtracep = p + 1; \
     } \
-    if (p) snprintf ((char *)p, sizeof(SHRD_TRACE), \
-        "%6.6ld" "." "%6.6ld %4.4X:" format, tv.tv_sec, tv.tv_usec, dev ? dev->devnum : 0, a); \
+    if (p) sprintf ((char *)p, "%6.6ld" "." "%6.6ld %4.4X:" format, tv.tv_sec, tv.tv_usec, dev ? dev->devnum : 0, a); \
  } \
 } while (0)
 
@@ -452,16 +451,16 @@ int    shared_cmd(char* cmdline, int argc, char *argv[]);
 
 #ifdef _HERCULES_SHARED_C
 static int     shared_ckd_close ( DEVBLK *dev );
-static int     shared_fba_close ( DEVBLK *dev );
+static int     shared_fba_close (DEVBLK *dev);
 static void    shared_start(DEVBLK *dev);
 static void    shared_end (DEVBLK *dev);
 static int     shared_ckd_read (DEVBLK *dev, int trk, BYTE *unitstat);
 static int     shared_ckd_write (DEVBLK *dev, int trk, int off,
-                         BYTE *buf, int len, BYTE *unitstat);
+                      BYTE *buf, int len, BYTE *unitstat);
 static int     shared_ckd_trklen (DEVBLK *dev, BYTE *buf);
 static int     shared_fba_read (DEVBLK *dev, int blkgrp, BYTE *unitstat);
 static int     shared_fba_write (DEVBLK *dev, int blkgrp, int off,
-                         BYTE *buf, int len, BYTE *unitstat);
+                      BYTE *buf, int len, BYTE *unitstat);
 static int     shared_fba_blkgrp_len (DEVBLK *dev, int blkgrp);
 static int     shared_used (DEVBLK *dev);
 static void    shared_reserve (DEVBLK *dev);

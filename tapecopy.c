@@ -117,8 +117,11 @@ struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
     return 0;
 } /* end function print_status */
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
+#if defined(EXTERNALGUI)
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*defined(EXTERNALGUI)*/
 
 /*-------------------------------------------------------------------*/
 /* TAPECOPY main entry point                                         */
@@ -152,11 +155,14 @@ char   *scodepage;
             set_codepage("default");
     }
 
+
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr, "Hercules tape copy program ");

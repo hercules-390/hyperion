@@ -56,7 +56,7 @@ int     i;                              /* Array subscript           */
     }
 
     /* Save the file name in the device block */
-    safe_strcpy (dev->filename, sizeof(dev->filename), argv[0]);
+    strcpy (dev->filename, argv[0]);
 
     /* Initialize device dependent fields */
     dev->fd = -1;

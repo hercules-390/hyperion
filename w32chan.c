@@ -24,7 +24,6 @@ int dummy = 0;
 #include "fthreads.h"   // (need "fthread_create")
 #include "w32chan.h"    // (function prototypes for this module)
 #include "linklist.h"   // (linked list macros)
-#include "debug.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // (helper macros...)
@@ -62,6 +61,27 @@ int dummy = 0;
 #endif // defined(FISH_HANG)
 
 #define IsEventSet(hEventHandle) (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
+
+/////////////////////////////////////////////////////////////////////////////
+// Debugging
+
+#if defined(DEBUG) || defined(_DEBUG)
+    #define TRACE(a...) logmsg(a)
+    #define ASSERT(a) \
+        do \
+        { \
+            if (!(a)) \
+            { \
+                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+            } \
+        } \
+        while(0)
+    #define VERIFY(a) ASSERT((a))
+#else
+    #define TRACE(a...)
+    #define ASSERT(a)
+    #define VERIFY(a) ((void)(a))
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // i/o scheduler variables...  (some private, some externally visible)
@@ -656,7 +676,7 @@ void  RemoveThisThreadFromOurList(DEVTHREADPARMS* pThreadParms)
 
 #if defined(FISH_HANG)
 
-char PrintDEVIOREQUESTBuffer[1024];
+char PrintDEVIOREQUESTBuffer[2048];
 
 char*  PrintDEVIOREQUEST(DEVIOREQUEST* pIORequest, DEVTHREADPARMS* pDEVTHREADPARMS)
 {
@@ -671,7 +691,7 @@ char*  PrintDEVIOREQUEST(DEVIOREQUEST* pIORequest, DEVTHREADPARMS* pDEVTHREADPAR
     }
     else pNextDEVIOREQUEST = (DEVIOREQUEST*) &pDEVTHREADPARMS->IORequestListHeadListEntry;
 
-    snprintf(PrintDEVIOREQUESTBuffer, sizeof(PrintDEVIOREQUESTBuffer),
+    sprintf(PrintDEVIOREQUESTBuffer,
         "DEVIOREQUEST @ %8.8X\n"
         "               pDevBlk                       = %8.8X\n"
         "               wDevNum                       = %4.4X\n"
@@ -704,7 +724,7 @@ void  PrintAllDEVIOREQUESTs(DEVTHREADPARMS* pDEVTHREADPARMS)
 
 /////////////////////////////////////////////////////////////////////////////
 
-char PrintDEVTHREADPARMSBuffer[1024];
+char PrintDEVTHREADPARMSBuffer[4096];
 
 char*  PrintDEVTHREADPARMS(DEVTHREADPARMS* pDEVTHREADPARMS)
 {
@@ -728,7 +748,7 @@ char*  PrintDEVTHREADPARMS(DEVTHREADPARMS* pDEVTHREADPARMS)
     }
     else pNextDEVTHREADPARMS = (DEVTHREADPARMS*) &ThreadListHeadListEntry;
 
-    snprintf(PrintDEVTHREADPARMSBuffer, sizeof(PrintDEVTHREADPARMSBuffer),
+    sprintf(PrintDEVTHREADPARMSBuffer,
 
         "DEVTHREADPARMS @ %8.8X\n"
         "                 dwThreadID                 = %8.8X\n"

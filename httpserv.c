@@ -57,7 +57,7 @@ int html_include(WEBBLK *webblk, char *filename)
     int ret;
 
     strncpy(fullname,sysblk.httproot,1024);
-    inclfile = fopen(safe_strcat(fullname,1024,filename),"r");
+    inclfile = fopen(strncat(fullname,filename,1024),"r");
 
     if (!inclfile)
     {
@@ -281,7 +281,7 @@ static void http_verify_path(WEBBLK *webblk, char *path)
     char resolved_path[1024];
     int i;
 
-    realpath(sysblk.httproot,resolved_base); safe_strcat(resolved_base,1024,"/");
+    realpath(sysblk.httproot,resolved_base); strncat(resolved_base,"/",1024);
     realpath(path,resolved_path);
 
     for (i = 0; path[i]; i++)
@@ -364,7 +364,7 @@ static void http_download(WEBBLK *webblk, char *filename)
     CONTYP *mime_type = mime_types;
 
     strncpy(fullname,sysblk.httproot,1024);
-    safe_strcat(fullname,1024,filename);
+    strncat(fullname,filename,1024);
 
     http_verify_path(webblk,fullname);
 
@@ -614,7 +614,7 @@ TID                     httptid;        /* Negotiation thread id     */
             sysblk.httpport);
 
     /* Handle http requests */
-    while (!sysblk.shutdown) {
+    while (TRUE) {
 
         /* Initialize the select parameters */
         FD_ZERO (&selset);
@@ -629,8 +629,6 @@ TID                     httptid;        /* Negotiation thread id     */
 #else /*!defined(WIN32)*/
         rc = select ( lsock+1, &selset, NULL, NULL, NULL );
 #endif /*!defined(WIN32)*/
-
-        if (sysblk.shutdown) break;
 
         if (rc == 0) continue;
 

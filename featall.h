@@ -41,7 +41,6 @@
 #define FEATURE_SIE_MAXZONES          8
 
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#define OPTION_OLD_EXTERNALGUI          /* Support for old gui       */
 
 
 /* Allow for compiler command line overrides */

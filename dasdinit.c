@@ -39,6 +39,12 @@
 #include "hercules.h"
 #include "dasdblks.h"
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
@@ -115,9 +121,6 @@ argexit ( int code, char *m )
     exit(code);
 } /* end function argexit */
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
-
 /*-------------------------------------------------------------------*/
 /* DASDINIT program main entry point                                 */
 /*-------------------------------------------------------------------*/
@@ -139,11 +142,13 @@ CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */
 int     lfs = 0;                        /* 1 = Build large file      */
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* Display program identification and help */
     if (argc <= 1 || (argc == 2 && !strcmp(argv[1], "-v")))
@@ -182,7 +187,7 @@ int     lfs = 0;                        /* 1 = Build large file      */
         || strlen(argv[1]) > sizeof(fname)-1)
         argexit(1, argv[1]);
 
-    safe_strcpy (fname, sizeof(fname), argv[1]);
+    strcpy (fname, argv[1]);
 
     /* The second argument is the device type,
        with or without the model number. */
@@ -221,7 +226,7 @@ int     lfs = 0;                        /* 1 = Build large file      */
         || strlen(argv[3]) > sizeof(volser)-1)
         argexit(3, argv[3]);
 
-    safe_strcpy (volser, sizeof(volser), argv[3]);
+    strcpy (volser, argv[3]);
     string_to_upper (volser);
 
     /* The fourth argument is the volume size */

@@ -11,166 +11,166 @@
 #include "htypes.h"
 
 /*-------------------------------------------------------------------*/
-/* Header file containing ESA/390 structure definitions          */
+/* Header file containing ESA/390 structure definitions 	     */
 /*-------------------------------------------------------------------*/
 
 /* Platform-independent storage operand definitions */
-typedef uint8_t BYTE;
-typedef uint8_t HWORD[2];
-typedef uint8_t FWORD[4];
-typedef uint8_t DWORD[8];
-typedef uint8_t QWORD[16];
-typedef uint16_t    U16;
-typedef int16_t     S16;
-typedef uint32_t    U32;
-typedef int32_t     S32;
-typedef uint64_t    U64;
-typedef int64_t     S64;
+typedef uint8_t	BYTE;
+typedef uint8_t	HWORD[2];
+typedef uint8_t	FWORD[4];
+typedef uint8_t	DWORD[8];
+typedef uint8_t	QWORD[16];
+typedef uint16_t	U16;
+typedef int16_t 	S16;
+typedef uint32_t	U32;
+typedef int32_t 	S32;
+typedef uint64_t	U64;
+typedef int64_t 	S64;
 #ifdef WORDS_BIGENDIAN
  typedef union {
-         U16 H;
-         struct { BYTE H; BYTE L; } B;
-           } HW;
+		 U16 H;
+		 struct { BYTE H; BYTE L; } B;
+	       } HW;
  typedef union {
-         U32 F;
-         struct { HW H; HW L; } H;
-         struct { BYTE B; U32 A:24; } A;
-           } FW;
+		 U32 F;
+		 struct { HW H; HW L; } H;
+		 struct { BYTE B; U32 A:24; } A;
+	       } FW;
  typedef union {
-         U64 D;
-         struct { FW H; FW L; } F;
-           } DW;
+		 U64 D;
+		 struct { FW H; FW L; } F;
+	       } DW;
 #else
  typedef union {
-         U16 H;
-         struct { BYTE L; BYTE H; } B;
-           } HW;
+		 U16 H;
+		 struct { BYTE L; BYTE H; } B;
+	       } HW;
  typedef union {
-         U32 F;
-         struct { HW L; HW H; } H;
-         struct { U32 A:24; BYTE B; } A;
-           } FW;
+		 U32 F;
+		 struct { HW L; HW H; } H;
+		 struct { U32 A:24; BYTE B; } A;
+	       } FW;
  typedef union {
-         U64 D;
-         struct { FW L; FW H; } F;
-           } DW;
+		 U64 D;
+		 struct { FW L; FW H; } F;
+	       } DW;
 #endif
 
 typedef union {
                  HWORD H;
                  struct { BYTE H; BYTE L; } B;
-           } HWORD_U;
+	       } HWORD_U;
 typedef union {
-         FWORD F;
-         struct { HWORD_U H; HWORD_U L; } H;
-           } FWORD_U;
+		 FWORD F;
+		 struct { HWORD_U H; HWORD_U L; } H;
+	       } FWORD_U;
 typedef union {
-         DWORD D;
-         struct { FWORD_U H; FWORD_U L; } F;
-           } DWORD_U;
+		 DWORD D;
+		 struct { FWORD_U H; FWORD_U L; } F;
+	       } DWORD_U;
 
 /* Internal-format PSW structure definition */
 typedef struct _PSW {
-    unsigned int
-        prob:1,         /* 1=Problem state       */
-        wait:1,         /* 1=Wait state          */
-        mach:1,         /* 1=Machine check enabled   */
-        ecmode:1,       /* 1=ECMODE, 0=BCMODE        */
+	unsigned int
+		prob:1, 		/* 1=Problem state	     */
+		wait:1, 		/* 1=Wait state 	     */
+		mach:1, 		/* 1=Machine check enabled   */
+		ecmode:1,		/* 1=ECMODE, 0=BCMODE	     */
 #define notesame ecmode
-        sgmask:1,       /* Significance mask         */
-        eumask:1,       /* Exponent underflow mask   */
-        domask:1,       /* Decimal overflow mask     */
-        fomask:1,       /* Fixed-point overflow mask */
-        armode:1,       /* Access-register mode      */
-        space:1,        /* Secondary-space mode      */
-        amode:1,        /* Addressing mode 31        */
-        amode64:1;      /* Addressing mode 64        */
-    BYTE    sysmask;        /* System mask           */
-    BYTE    pkey;           /* Bits 0-3=key, 4-7=zeroes  */
-    BYTE    ilc;            /* Instruction length code   */
-    BYTE    cc;             /* Condition code        */
-    U16 intcode;        /* Interruption code         */
-    DW  ia;             /* Instruction addrress      */
+		sgmask:1,		/* Significance mask	     */
+		eumask:1,		/* Exponent underflow mask   */
+		domask:1,		/* Decimal overflow mask     */
+		fomask:1,		/* Fixed-point overflow mask */
+		armode:1,		/* Access-register mode      */
+		space:1,		/* Secondary-space mode      */
+		amode:1,		/* Addressing mode 31	     */
+		amode64:1;		/* Addressing mode 64	     */
+	BYTE	sysmask;		/* System mask		     */
+	BYTE	pkey;			/* Bits 0-3=key, 4-7=zeroes  */
+	BYTE	ilc;			/* Instruction length code   */
+	BYTE	cc;			    /* Condition code	     */
+	U16	intcode;		/* Interruption code	     */
+	DW	ia;			    /* Instruction addrress      */
         BYTE    zerobyte;       /* bits 24-31                */
-#define IA_G    ia.D
-#define IA_H    ia.F.H.F
-#define IA_L    ia.F.L.F
+#define IA_G	ia.D
+#define IA_H	ia.F.H.F
+#define IA_L	ia.F.L.F
 #define IA_LA24 ia.F.L.A.A
         DW      amask;                  /* Address wraparound mask   */
-#define AMASK_G amask.D
-#define AMASK_L amask.F.L.F
+#define AMASK_G	amask.D
+#define AMASK_L	amask.F.L.F
 #define AMASK24 0x00FFFFFF
 #define AMASK31 0x7FFFFFFF
 #define AMASK64 0xFFFFFFFFFFFFFFFFULL
     } PSW;
 
 /* Bit definitions for ECMODE PSW system mask */
-#define PSW_PERMODE 0x40        /* Program event recording   */
-#define PSW_DATMODE 0x04        /* Dynamic addr translation  */
-#define PSW_IOMASK  0x02        /* I/O interrupt mask        */
-#define PSW_EXTMASK 0x01        /* External interrupt mask   */
+#define PSW_PERMODE	0x40		/* Program event recording   */
+#define PSW_DATMODE	0x04		/* Dynamic addr translation  */
+#define PSW_IOMASK	0x02		/* I/O interrupt mask	     */
+#define PSW_EXTMASK	0x01		/* External interrupt mask   */
 
 /* Macros for testing addressing mode */
 #define PRIMARY_SPACE_MODE(p) \
-    ((p)->space==0 && (p)->armode==0)
+	((p)->space==0 && (p)->armode==0)
 #define SECONDARY_SPACE_MODE(p) \
-    ((p)->space==1 && (p)->armode==0)
+	((p)->space==1 && (p)->armode==0)
 #define ACCESS_REGISTER_MODE(p) \
-    ((p)->space==0 && (p)->armode==1)
+	((p)->space==0 && (p)->armode==1)
 #define HOME_SPACE_MODE(p) \
-    ((p)->space==1 && (p)->armode==1)
+	((p)->space==1 && (p)->armode==1)
 
 /* Structure definition for translation-lookaside buffer entry */
 typedef struct _TLBE {
-    DW  std;            /* Segment table designation */
-#define TLB_STD_G   std.D
-#define TLB_STD_L   std.F.L.F
-    DW  vaddr;          /* Virtual page address      */
-#define TLB_VADDR_G     vaddr.D
-#define TLB_VADDR_L vaddr.F.L.F
-    DW  pte;            /* Copy of page table entry  */
-#define TLB_PTE_G   pte.D
-#define TLB_PTE_L   pte.F.L.F
-    BYTE    valid;          /* 1=TLB entry is valid      */
-    BYTE    common;         /* 1=Page in common segment  */
-    BYTE    protect;        /* 1=Page in protected segmnt*/
-    BYTE    resv[1];        /* Padding for alignment     */
+	DW 	std;			/* Segment table designation */
+#define TLB_STD_G 	std.D
+#define TLB_STD_L	std.F.L.F
+	DW 	vaddr;			/* Virtual page address      */
+#define TLB_VADDR_G 	vaddr.D
+#define TLB_VADDR_L	vaddr.F.L.F
+	DW 	pte;			/* Copy of page table entry  */
+#define TLB_PTE_G 	pte.D
+#define TLB_PTE_L	pte.F.L.F
+	BYTE	valid;			/* 1=TLB entry is valid      */
+	BYTE	common; 		/* 1=Page in common segment  */
+	BYTE	protect;		/* 1=Page in protected segmnt*/
+	BYTE	resv[1];		/* Padding for alignment     */
     } TLBE;
 
 /* Bit definitions for control register 0 */
-#define CR0_BMPX    0x80000000  /* Block multiplex ctl  S/370*/
-#define CR0_SSM_SUPP    0x40000000  /* SSM suppression control   */
-#define CR0_TOD_SYNC    0x20000000  /* TOD clock sync control    */
-#define CR0_LOW_PROT    0x10000000  /* Low-address protection    */
-#define CR0_EXT_AUTH    0x08000000  /* Extraction auth control   */
-#define CR0_SEC_SPACE   0x04000000  /* Secondary space control   */
-#define CR0_FETCH_OVRD  0x02000000  /* Fetch protection override */
-#define CR0_STORE_OVRD  0x01000000  /* Store protection override */
-#define CR0_STORKEY_4K  0x01000000  /* Storkey exception control */
-#define CR0_TRAN_FMT    0x00F80000  /* Translation format bits...*/
-#define CR0_TRAN_ESA390 0x00B00000  /* ...1M/4K ESA/390 format   */
-#define CR0_PAGE_SIZE   0x00C00000  /* Page size for S/370...    */
-#define CR0_PAGE_SZ_2K  0x00400000  /* ...2K pages           */
-#define CR0_PAGE_SZ_4K  0x00800000  /* ...4K pages           */
-#define CR0_SEG_SIZE    0x00380000  /* Segment size for S/370... */
-#define CR0_SEG_SZ_64K  0x00000000  /* ...64K segments       */
-#define CR0_SEG_SZ_1M   0x00100000  /* ...1M segments        */
-#define CR0_AFP     0x00040000  /* AFP register control      */
-#define CR0_VOP     0x00020000  /* Vector control     390*/
-#define CR0_ASF     0x00010000  /* AS function control    390*/
-#define CR0_XM_MALFALT  0x00008000  /* Malfunction alert mask    */
-#define CR0_XM_EMERSIG  0x00004000  /* Emergency signal mask     */
-#define CR0_XM_EXTCALL  0x00002000  /* External call mask        */
-#define CR0_XM_TODSYNC  0x00001000  /* TOD clock sync mask       */
-#define CR0_XM_CLKC 0x00000800  /* Clock comparator mask     */
-#define CR0_XM_PTIMER   0x00000400  /* CPU timer mask        */
-#define CR0_XM_SERVSIG  0x00000200  /* Service signal mask       */
-#define CR0_XM_ITIMER   0x00000080  /* Interval timer mask  S/370*/
-#define CR0_XM_INTKEY   0x00000040  /* Interrupt key mask        */
-#define CR0_XM_EXTSIG   0x00000020  /* External signal mask S/370*/
-#define CR0_XM_ETR  0x00000010  /* External timer mask       */
-#define CR0_PC_FAST 0x00000008  /* PC fast control    390*/
-#define CR0_CRYPTO  0x00000004  /* Crypto control   ESAME*/
+#define CR0_BMPX	0x80000000	/* Block multiplex ctl	S/370*/
+#define CR0_SSM_SUPP	0x40000000	/* SSM suppression control   */
+#define CR0_TOD_SYNC	0x20000000	/* TOD clock sync control    */
+#define CR0_LOW_PROT	0x10000000	/* Low-address protection    */
+#define CR0_EXT_AUTH	0x08000000	/* Extraction auth control   */
+#define CR0_SEC_SPACE	0x04000000	/* Secondary space control   */
+#define CR0_FETCH_OVRD	0x02000000	/* Fetch protection override */
+#define CR0_STORE_OVRD	0x01000000	/* Store protection override */
+#define CR0_STORKEY_4K	0x01000000	/* Storkey exception control */
+#define CR0_TRAN_FMT	0x00F80000	/* Translation format bits...*/
+#define CR0_TRAN_ESA390 0x00B00000	/* ...1M/4K ESA/390 format   */
+#define CR0_PAGE_SIZE	0x00C00000	/* Page size for S/370...    */
+#define CR0_PAGE_SZ_2K	0x00400000	/* ...2K pages		     */
+#define CR0_PAGE_SZ_4K	0x00800000	/* ...4K pages		     */
+#define CR0_SEG_SIZE	0x00380000	/* Segment size for S/370... */
+#define CR0_SEG_SZ_64K	0x00000000	/* ...64K segments	     */
+#define CR0_SEG_SZ_1M	0x00100000	/* ...1M segments	     */
+#define CR0_AFP 	0x00040000	/* AFP register control      */
+#define CR0_VOP 	0x00020000	/* Vector control	  390*/
+#define CR0_ASF 	0x00010000	/* AS function control	  390*/
+#define CR0_XM_MALFALT	0x00008000	/* Malfunction alert mask    */
+#define CR0_XM_EMERSIG	0x00004000	/* Emergency signal mask     */
+#define CR0_XM_EXTCALL	0x00002000	/* External call mask	     */
+#define CR0_XM_TODSYNC	0x00001000	/* TOD clock sync mask	     */
+#define CR0_XM_CLKC	0x00000800	/* Clock comparator mask     */
+#define CR0_XM_PTIMER	0x00000400	/* CPU timer mask	     */
+#define CR0_XM_SERVSIG	0x00000200	/* Service signal mask	     */
+#define CR0_XM_ITIMER	0x00000080	/* Interval timer mask	S/370*/
+#define CR0_XM_INTKEY	0x00000040	/* Interrupt key mask	     */
+#define CR0_XM_EXTSIG	0x00000020	/* External signal mask S/370*/
+#define CR0_XM_ETR	0x00000010	/* External timer mask	     */
+#define CR0_PC_FAST	0x00000008	/* PC fast control	  390*/
+#define CR0_CRYPTO	0x00000004	/* Crypto control	ESAME*/
 
 #define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
 #define SERVSIG_ADDR    0xFFFFFFF8      /* Parameter address         */
@@ -1618,12 +1618,12 @@ typedef struct _ZPB2 {
                             bits 0-19 must be 0       */
     DWORD   msl;         /* Main Storage Limit
                             bits 0-19 must be 0       */
-#define ZPB2_MS_VALID 0x00000FFFFFFFFFFFULL
+#define ZPB2_MS_VALID 0x00000FFFFFFFFFFF
     DWORD   eso;         /* Expanded Storage Origin
                             bits 0-7 must be 0        */
     DWORD   esl;         /* Expanded Storage Limit
                             bits 0-7 must be 0        */
-#define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFFULL
+#define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFF
 } ZPB2;
 
 #define LKPG_GPR0_LOCKBIT   0x00000200

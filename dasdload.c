@@ -128,6 +128,12 @@ BYTE noiplccw2[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
    3=Member information, 4=Text units, record headers, 5=Dump data */
 int  infolvl = 1;
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
@@ -172,15 +178,15 @@ dsorg_name (BYTE *dsorg)
 static BYTE     name[8];                /* Name of dsorg             */
 
     if (dsorg[0] & DSORG_IS)
-        safe_strcpy (name, sizeof(name), "IS");
+        strcpy (name, "IS");
     else if (dsorg[0] & DSORG_PS)
-        safe_strcpy (name, sizeof(name), "PS");
+        strcpy (name, "PS");
     else if (dsorg[0] & DSORG_DA)
-        safe_strcpy (name, sizeof(name), "DA");
+        strcpy (name, "DA");
     else if (dsorg[0] & DSORG_PO)
-        safe_strcpy (name, sizeof(name), "PO");
+        strcpy (name, "PO");
 
-    if (dsorg[0] & DSORG_U) safe_strcat (name, sizeof(name), "U");
+    if (dsorg[0] & DSORG_U) strcat (name, "U");
 
     return name;
 } /* end function dsorg_name */
@@ -195,24 +201,24 @@ static BYTE     name[8];                /* Name of record format     */
 
     switch (recfm[0] & RECFM_FORMAT) {
     case RECFM_FORMAT_V:
-        safe_strcpy (name, sizeof(name), "V"); break;
+        strcpy (name, "V"); break;
     case RECFM_FORMAT_F:
-        safe_strcpy (name, sizeof(name), "F"); break;
+        strcpy (name, "F"); break;
     case RECFM_FORMAT_U:
-        safe_strcpy (name, sizeof(name), "U"); break;
+        strcpy (name, "U"); break;
     default:
-        safe_strcpy (name, sizeof(name), "??");
+        strcpy (name,"??");
     } /* end switch */
 
-    if (recfm[0] & RECFM_TRKOFLOW) safe_strcat (name, sizeof(name), "T");
-    if (recfm[0] & RECFM_BLOCKED)  safe_strcat (name, sizeof(name), "B");
-    if (recfm[0] & RECFM_SPANNED)  safe_strcat (name, sizeof(name), "S");
+    if (recfm[0] & RECFM_TRKOFLOW) strcat (name, "T");
+    if (recfm[0] & RECFM_BLOCKED) strcat (name, "B");
+    if (recfm[0] & RECFM_SPANNED) strcat (name, "S");
 
     switch (recfm[0] & RECFM_CTLCHAR) {
     case RECFM_CTLCHAR_A:
-        safe_strcpy (name, sizeof(name), "A"); break;
+        strcpy (name, "A"); break;
     case RECFM_CTLCHAR_M:
-        safe_strcpy (name, sizeof(name), "M"); break;
+        strcpy (name, "M"); break;
     } /* end switch */
 
     return name;
@@ -1512,7 +1518,7 @@ int     field;                          /* Field number              */
 int     offset;                         /* Offset into text unit     */
 U16     len;                            /* Field length              */
 BYTE   *name;                           /* Text unit name            */
-BYTE    c, hex[17], chars[9], tmp[4];   /* Character work areas      */
+BYTE    c, hex[17], chars[9];           /* Character work areas      */
 char   *scodepage;
 
     if(!sysblk.codepage)
@@ -1592,8 +1598,7 @@ char   *scodepage;
                 memset (chars, '\0', sizeof(chars));
                 j = 0;
             }
-            snprintf(tmp, sizeof(tmp), "%2.2X", xbuf[bufpos+offset+i]);
-            safe_strcat(hex, sizeof(hex), tmp);
+            sprintf(hex+2*j, "%2.2X", xbuf[bufpos+offset+i]);
             c = guest_to_host(xbuf[bufpos+offset+i]);
             if (!isprint(c)) c = '.';
             chars[j] = c;
@@ -2145,7 +2150,6 @@ int             dirrem;                 /* Number of bytes remaining */
 PDSDIR         *dirent;                 /* -> Directory entry        */
 BYTE            memname[9];             /* Member name (ASCIIZ)      */
 BYTE            c, hex[49], chars[25];  /* Character work areas      */
-BYTE            tmp[4];                 /* Character work area       */
 char   *scodepage;
 
     if(!sysblk.codepage)
@@ -2258,8 +2262,7 @@ char   *scodepage;
                 memset (chars, '\0', sizeof(chars));
                 j = 0;
             }
-            snprintf(tmp, sizeof(tmp), "%2.2X", dirent->pds2usrd[i]);
-            safe_strcat(hex, sizeof(hex), tmp);
+            sprintf(hex+2*j, "%2.2X", dirent->pds2usrd[i]);
             c = guest_to_host(dirent->pds2usrd[i]);
             if (!isprint(c)) c = '.';
             chars[j] = c;
@@ -3692,8 +3695,10 @@ static int      stmtno = 0;             /* Statement number          */
             return -1;
         }
 
+#ifdef EXTERNALGUI
         /* Indicate input file progess */
-        statmsg("IPOS=%ld\n", ftell(cfp));
+        if (extgui) fprintf (stderr, "IPOS=%ld\n", ftell(cfp));
+#endif /*EXTERNALGUI*/
 
         /* Check for DOS end of file character */
         if (stmt[0] == '\x1A')
@@ -4251,15 +4256,21 @@ int             fsflag = 0;             /* 1=Free space message sent */
         /* Issue free space information message */
         if (fsflag == 0)
         {
-            statmsg("REQCYLS=%d\n", reqcyls);
+#ifdef EXTERNALGUI
+            if (extgui) fprintf (stderr, "REQCYLS=%d\n", reqcyls);
+            else
+#endif /*EXTERNALGUI*/
             XMINFF (1, "HHCDL014I Free space starts at cyl %d head %d\n",
-                outcyl, outhead);
+                    outcyl, outhead);
             fsflag = 1;
         }
 
+#ifdef EXTERNALGUI
         /* Indicate output file progess */
-        if ((outcyl % 10) == 0)
-            statmsg("OUTCYL=%d\n", outcyl);
+        if (extgui)
+            if ((outcyl % 10) == 0)
+                fprintf (stderr, "OUTCYL=%d\n", outcyl);
+#endif /*EXTERNALGUI*/
 
         /* Initialize track buffer with empty track */
         init_track (trklen, cif->trkbuf, outcyl, outhead, &outusedv);
@@ -4311,9 +4322,6 @@ int             fsflag = 0;             /* 1=Free space message sent */
 
 } /* end function process_control_file */
 
-FILE* fstate = NULL;             /* state stream for daemon_mode     */
-int is_hercules = 0;             /* 1==Hercules calling, not utility */
-
 /*-------------------------------------------------------------------*/
 /* DASDLOAD main entry point                                         */
 /*-------------------------------------------------------------------*/
@@ -4348,11 +4356,13 @@ BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 int             lfs = 0;                /* 1 = Large file            */
 
+#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        fstate = stderr;
+        extgui = 1;
         argc--;
     }
+#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr,
