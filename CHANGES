@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+18 Aug 2004 cckd fixes: possible sf- corruption, messages - Greg Smith
 16 Aug 2004 DAT-enhancement facility: IDTE instruction - Roger Bowler
 10 Aug 2004 Fix dasdcopy to large ckd file - Fish & Greg
 04 Aug 2004 PIC1 all ALRF only instructions when ALRF disabled
