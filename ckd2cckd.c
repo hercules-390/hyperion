@@ -303,6 +303,8 @@ CKDDEV         *ckd;                    /* -> DASD table entry       */
 
     /* Set cylinders and tracks */
     cyls = ckd->cyls;
+    if (cyls < ckdcyls)
+        cyls = ckdcyls; /* device has alternate cyls */
     trks = cyls * heads;
 
     /* Open the output file */
