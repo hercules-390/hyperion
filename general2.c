@@ -1713,8 +1713,7 @@ int     ar1 = 4;                        /* Access register number    */
             /* Load GR2 and GR3 from tempword2 and tempword3 */
             regs->GR_L(2) = tempword2;
             regs->GR_L(3) = tempword3;
-
-           regs->GR_L(5) = tempword1;
+            regs->GR_L(5) = tempword1;
             cc = 0;
             break;
         }
