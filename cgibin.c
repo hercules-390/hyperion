@@ -591,7 +591,7 @@ void cgibin_ipl(WEBBLK *webblk)
 U32 i;
 char *value;
 DEVBLK *dev;
-U32 ipldev;
+U16 ipldev;
 U32 iplcpu;
 U32 doipl;
 
@@ -605,7 +605,7 @@ U32 doipl;
         doipl = 0;
 
     if((value = cgi_variable(webblk,"device")))
-        sscanf(value,"%x",&ipldev);
+        sscanf(value,"%hx",&ipldev);
     else
         ipldev = sysblk.ipldev;
 
@@ -663,6 +663,7 @@ U32 doipl;
     }
     else
     {
+        obtain_lock (&sysblk.intlock);
         /* Perform IPL function */
         if( load_ipl(ipldev, iplcpu) )
         {
@@ -674,6 +675,7 @@ U32 doipl;
         {
             fprintf(webblk->hsock,"<h3>IPL completed</h3>\n");
         }
+        release_lock (&sysblk.intlock);
     }
 
     html_footer(webblk);
