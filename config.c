@@ -578,6 +578,9 @@ BYTE   *sshrdport;                      /* -> Shared device port nbr */
 #ifdef OPTION_IODELAY_KLUDGE
 BYTE   *siodelay;                       /* -> I/O delay value        */
 #endif /*OPTION_IODELAY_KLUDGE*/
+#if defined(OPTION_PTTRACE)
+BYTE   *sptt;                           /* Pthread trace table size  */
+#endif /*defined(OPTION_PTTRACE)*/
 BYTE   *scckd;                          /* -> CCKD parameters        */
 BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
@@ -617,6 +620,9 @@ int     ecpsvmlevel;                    /* ECPS:VM declared level    */
 #ifdef OPTION_IODELAY_KLUDGE
 int     iodelay=-1;                     /* I/O delay value           */
 #endif /*OPTION_IODELAY_KLUDGE*/
+#ifdef OPTION_PTTRACE
+int     ptt = 0;                        /* Pthread trace table size  */
+#endif /*OPTION_PTTRACE*/
 BYTE    c;                              /* Work area for sscanf      */
 #ifdef OPTION_SELECT_KLUDGE
 int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
@@ -771,6 +777,9 @@ BYTE **orig_newargv;
 #ifdef OPTION_IODELAY_KLUDGE
         siodelay = NULL;
 #endif /*OPTION_IODELAY_KLUDGE*/
+#ifdef OPTION_PTTRACE
+        sptt = NULL;
+#endif /*OPTION_PTTRACE*/
         scckd = NULL;
 
         /* Check for old-style CPU statement */
@@ -924,6 +933,12 @@ BYTE **orig_newargv;
                 siodelay = operand;
             }
 #endif /*OPTION_IODELAY_KLUDGE*/
+#ifdef OPTION_PTTRACE
+            else if (strcasecmp (keyword, "ptt") == 0)
+            {
+                sptt = operand;
+            }
+#endif /*OPTION_PTTRACE*/
 #if defined(OPTION_CONFIG_SYMBOLS)
             else if (strcasecmp(keyword,"defsym")==0)
             {
@@ -1556,6 +1571,20 @@ BYTE **orig_newargv;
         }
 #endif /*OPTION_IODELAY_KLUDGE*/
 
+#ifdef OPTION_PTTRACE
+        /* Parse pthread trace value */
+        if (sptt != NULL)
+        {
+            if (sscanf(sptt, "%d%c", &ptt, &c) != 1)
+            {
+                fprintf(stderr, _("HHCCF031S Error in %s line %d: "
+                        "Invalid ptt value: %s\n"),
+                        fname, stmt, sptt);
+                delayed_exit(1);
+            }
+        }
+#endif /*OPTION_PTTRACE*/
+
         /* Parse cckd value value */
         if (scckd)
             cckd_command (scckd, 0);
@@ -1605,6 +1634,9 @@ BYTE **orig_newargv;
     memcpy (sysblk.loadparm, loadparm, 8);
 
     /* Initialize locks, conditions, and attributes */
+#ifdef OPTION_PTTRACE
+    ptt_trace_init (ptt, 1);
+#endif
     initialize_lock (&sysblk.todlock);
     initialize_lock (&sysblk.mainlock);
     initialize_lock (&sysblk.intlock);

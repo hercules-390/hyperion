@@ -2680,6 +2680,10 @@ COMMAND ( ".reply",    g_cmd,         "scp command" )
 COMMAND ( "!message",    g_cmd,       "scp priority messsage\n" )
 #endif
 
+#ifdef OPTION_PTTRACE
+COMMAND ( "ptt",       ptt_cmd,       "display pthread trace" )
+#endif
+ 
 COMMAND ( "i",         i_cmd,         "generate I/O attention interrupt for device" )
 COMMAND ( "ext",       ext_cmd,       "generate external interrupt" )
 COMMAND ( "restart",   restart_cmd,   "generate restart interrupt\n" )

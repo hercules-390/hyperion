@@ -279,7 +279,8 @@ endif
                         dasdtab.c   \
                         cache.c     \
                         dasdutil.c  \
-                        shared.c 
+                        shared.c    \
+                        pttrace.c
 
   libhercd_la_LDFLAGS = $(LIB_LD_FLAGS)
 

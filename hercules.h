@@ -346,6 +346,42 @@ typedef void*THREAD_FUNC(void*);
         pthread_self()
 #endif // defined(OPTION_FTHREADS)
 
+#ifdef OPTION_PTTRACE
+#include "pttrace.h"
+#undef  initialize_lock
+#define initialize_lock(plk) \
+        ptt_pthread_mutex_init((plk),NULL,__FILE__,__LINE__)
+#undef  obtain_lock
+#define obtain_lock(plk) \
+        ptt_pthread_mutex_lock((plk),__FILE__,__LINE__)
+#undef  release_lock
+#define release_lock(plk) \
+        ptt_pthread_mutex_unlock((plk),__FILE__,__LINE__)
+#undef  initialize_condition
+#define initialize_condition(pcond) \
+        ptt_pthread_cond_init((pcond),NULL,__FILE__,__LINE__)
+#undef  signal_condition
+#define signal_condition(pcond) \
+        ptt_pthread_cond_signal((pcond),__FILE__,__LINE__)
+#undef  broadcast_condition
+#define broadcast_condition(pcond) \
+        ptt_pthread_cond_broadcast((pcond),__FILE__,__LINE__)
+#undef  wait_condition
+#define wait_condition(pcond,plk) \
+        ptt_pthread_cond_wait((pcond),(plk),__FILE__,__LINE__)
+#undef  timed_wait_condition
+#define timed_wait_condition(pcond,plk,timeout) \
+        ptt_pthread_cond_timedwait((pcond),(plk),(timeout),__FILE__,__LINE__)
+#undef  create_thread
+#if     defined(OPTION_FTHREADS)
+#define create_thread(ptid,pat,fn,arg) \
+        ptt_pthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),__FILE__,__LINE__)
+#else
+#define create_thread(ptid,pat,fn,arg) \
+        ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,__FILE__,__LINE__)
+#endif
+#endif /* OPTION_PTTRACE */
+
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
 #if defined(WIN32) && !defined(OPTION_FTHREADS)
