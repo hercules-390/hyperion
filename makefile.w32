@@ -16,7 +16,7 @@ ifndef HOST_ARCH
 HOST_ARCH=pentium
 endif
 
-VERSION  = 2.12m_$(HOST_ARCH)
+VERSION  = 2.12n_$(HOST_ARCH)
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -29,12 +29,15 @@ DESTDIR  = $(prefix)/usr/bin
 endif
 
 # Standard compiler flags used for all architectures
-CFLAGS = -Wall -fomit-frame-pointer -DVERSION=$(VERSION) -DNO_BYTESWAP_H
+CFLAGS = -Wall -fomit-frame-pointer -DVERSION=$(VERSION) -DNO_ATTR_REGPARM
 
 
 ifeq ($(WIN),yes)
-CFLAGS += -DWIN32 -D__LITTLE_ENDIAN=1234 -I/usr/Pthreads
-CFLAGS +=  -D__BYTE_ORDER="__LITTLE_ENDIAN" -DNO_ASM_BYTESWAP
+CFLAGS +=  -I/usr/Pthreads
+CFLAGS +=  -DWIN32 
+CFLAGS +=  -D__LITTLE_ENDIAN=1234 
+CFLAGS +=  -D__BYTE_ORDER="__LITTLE_ENDIAN"
+CFLAGS +=  -DNO_BYTESWAP_H  -DNO_ASM_BYTESWAP
 endif
 
 # Directory where the pthreads-win32 library was installed.
@@ -97,11 +100,11 @@ CFLAGS += -DEXTERNALGUI
 #CFLAGS  += -DNO_CCKD
 LFLAGS	+= -lz
 
-# Uncomment these lines to enable Compressed CKD bzip2 compression
+# Remove (comment) these lines to disable Compressed CKD bzip2 compression
 CFLAGS	+= -DCCKD_BZIP2
 LFLAGS += -lbz2
 
-# Uncomment these lines to enable HET bzip2 compression
+# Remove (comment) these lines to enable HET bzip2 compression
 CFLAGS += -DHET_BZIP2
 LFLAGS += -lbz2
 
@@ -125,17 +128,17 @@ EXEFILES = hercules \
 
 ifeq ($(WIN),yes)
 else
-EXEFILE += hercifc
+EXEFILES += hercifc
 endif
 
-TARFILES = makefile	\
-	   *.c		\
-	   *.h		\
-	   hercules.cnf \
-	   tapeconv.jcl \
-	   dasdlist	\
-	   html 	\
-	   zzsa.cnf	\
+TARFILES = makefile		\
+	   *.c			\
+	   *.h			\
+	   hercules.cnf 	\
+	   tapeconv.jcl 	\
+	   util/dasdlist	\
+	   html 		\
+	   zzsa.cnf		\
 	   zzsacard.bin
 
 HRC_OBJS = impl.o \
@@ -344,7 +347,7 @@ ifeq ($(WIN),yes)
 	cp *.exe $(DESTDIR)
 else
 	cp $(EXEFILES) $(DESTDIR)
-	cp dasdlist $(DESTDIR)
+	cp util/dasdlist $(DESTDIR)
 	chown root $(DESTDIR)/hercifc
 	chmod 0751 $(DESTDIR)/hercifc
 	chmod +s $(DESTDIR)/hercifc
