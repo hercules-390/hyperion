@@ -938,12 +938,12 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
 #if defined(_FEATURE_ECPSVM)
         /* Parse ECPS:VM level */
-        while(1)        /* Dummy while loop for break support */
+        if(secpsvmlevel != NULL)
         {
-            ecpsvmavail=0;
-            ecpsvmlevel=0;
-            if(secpsvmlevel != NULL)
+            while(1)        /* Dummy while loop for break support */
             {
+                ecpsvmavail=0;
+                ecpsvmlevel=0;
                 if(strcasecmp(secpsvmlevel,"no")==0)
                 {
                     ecpsvmavail=0;
@@ -965,11 +965,11 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                     ecpsvmlevel=0;
                     break;
                 }
-            } /* End if secpsvmlevel!=NULL */
-            break;
-        } /* End Dummy while loop */
-        sysblk.ecpsvm.available=ecpsvmavail;
-        sysblk.ecpsvm.level=ecpsvmlevel;
+                break;
+            }
+            sysblk.ecpsvm.available=ecpsvmavail;
+            sysblk.ecpsvm.level=ecpsvmlevel;
+        }
 #endif /*defined(_FEATURE_ECPSVM)*/
 
 #if defined(OPTION_HTTP_SERVER)
