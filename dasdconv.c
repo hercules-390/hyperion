@@ -136,11 +136,12 @@ find_input_record (BYTE *buf, BYTE **ppbuf, int *plen,
                 BYTE *pkl, BYTE **pkp, U16 *pdl, BYTE **pdp,
                 U32 *pcc, U32 *phh, BYTE *prn)
 {
-UNREFERENCED(buf);
 H30CKD_RECHDR  *hrec;                   /* Input record header       */
 U16             dlen;                   /* Data length               */
 BYTE            klen;                   /* Key length                */
 int             n;                      /* Integer work area         */
+
+    UNREFERENCED(buf);
 
     /* End of track if not enough bytes remain in buffer */
     if (*plen < H30CKD_RECHDR_SIZE) return 1;
@@ -386,7 +387,6 @@ convert_ckd_file (int ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
                 U32 trksize, BYTE *obuf, U32 start, U32 end,
                 U32 volcyls, BYTE *volser)
 {
-UNREFERENCED(volser);
 int             rc;                     /* Return code               */
 int             ofd;                    /* Output file descriptor    */
 CKDDASD_DEVHDR  devhdr;                 /* Output device header      */
@@ -407,6 +407,8 @@ int             ilen;                   /* Bytes left in input buffer*/
 H30CKD_TRKHDR  *ith;                    /* -> Input track header     */
 U32             ihc, ihh;               /* Input trk header cyl,head */
 U32             offset;                 /* Current input file offset */
+
+    UNREFERENCED(volser);
 
     /* Set file sequence number to zero if this is the only file */
     if (fseqn == 1 && end + 1 == volcyls)
