@@ -1251,6 +1251,8 @@ VADR    firstbyte,                      /* First byte to be fetched  */
         lastbyte;                       /* Last byte to be fetched   */
 int     i;                              /* Array subscript           */
 
+    UNREFERENCED(gtype);
+
     /* Point back to byte 0 of the state entry */
     lsea -= LSSE_SIZE - sizeof(LSED);
     LSEA_WRAP(lsea);

@@ -213,7 +213,7 @@ int             lfs=0;                  /* 1=Large File supported    */
         exit (5);
     } 
     rc = read (ifd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-    if (rc != cdevhdr.numl1tab * CCKD_L1ENT_SIZE)
+    if (rc != (int)(cdevhdr.numl1tab * CCKD_L1ENT_SIZE))
     {
         fprintf (stderr, _("cckd2ckd: %s read error: %s\n"),
                  ifile, strerror(errno));
@@ -307,11 +307,11 @@ int             lfs=0;                  /* 1=Large File supported    */
     }
 
     /* process each entry in the primary lookup table */
-    for (i = 0; i * 256 < trks || l1[i] != 0; i++)
+    for (i = 0; i * 256 < (int)trks || l1[i] != 0; i++)
     {
-        if (limited && i * 256 >= trks) break;
+        if (limited && i * 256 >= (int)trks) break;
         /* get the secondary lookup table */
-        if (i >= cdevhdr.numl1tab || l1[i] == 0)
+        if (i >= (int)cdevhdr.numl1tab || l1[i] == 0)
             memset (&l2, 0, CCKD_L2TAB_SIZE);
         else
         {
@@ -334,12 +334,12 @@ int             lfs=0;                  /* 1=Large File supported    */
 
         /* process each entry in the secondary lookup table */
         for (j = 0;
-             j < 256 && (i * 256 + j < trks || (l1[i] != 0 && l2[j].pos != 0));
+             j < 256 && (i * 256 + j < (int)trks || (l1[i] != 0 && l2[j].pos != 0));
              j++)
 
         {
             trk = i * 256 + j;
-            if (limited && trk >= trks) break;
+            if (limited && trk >= (int)trks) break;
 
             /* check for new output file */
             if (trk % trks_per_file == 0)

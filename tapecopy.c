@@ -299,7 +299,7 @@ char   *scodepage;
 
                 /* Write block header to output file */
                 rc = write (outfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
-                if (rc < sizeof(AWSTAPE_BLKHDR))
+                if (rc < (int)sizeof(AWSTAPE_BLKHDR))
                 {
                     printf ("tapecopy: Error writing %s: %s\n",
                             filename, strerror(errno));
@@ -358,7 +358,7 @@ char   *scodepage;
 
             /* Write block header to output file */
             rc = write (outfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
-            if (rc < sizeof(AWSTAPE_BLKHDR))
+            if (rc < (int)sizeof(AWSTAPE_BLKHDR))
             {
                 printf ("tapecopy: Error writing %s: %s\n",
                         filename, strerror(errno));

@@ -191,6 +191,10 @@ S64	quot, rem;
 static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 				    BYTE akey, int private, REGS *regs)
 {
+    UNREFERENCED_370(addr);
+    UNREFERENCED_370(private);
+    UNREFERENCED_370(regs);
+
     /* [3.4.1] Fetch is allowed if access key is zero, regardless
        of the storage key and fetch protection bit */
     if (akey == 0)

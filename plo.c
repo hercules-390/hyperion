@@ -51,6 +51,8 @@ U64 op1c,
 U32 op4alet = 0;
 VADR op4addr;
 
+    UNREFERENCED(r1);
+
     DW_CHECK(effective_addr4, regs);
     DW_CHECK(effective_addr2, regs);
 
@@ -142,6 +144,8 @@ BYTE op1c[16],
 U32 op4alet = 0;
 VADR op4addr;
 
+    UNREFERENCED(r1);
+
     DW_CHECK(effective_addr4, regs);
     DW_CHECK(effective_addr2, regs);
 
@@ -193,6 +197,10 @@ int ARCH_DEP(plo_cs) (int r1, int r3, VADR effective_addr2, int b2,
 {
 U32 op2;
 
+    UNREFERENCED(r3);
+    UNREFERENCED(effective_addr4);
+    UNREFERENCED(b4);
+
     ODD_CHECK(r1, regs);
     FW_CHECK(effective_addr2, regs);
 
@@ -224,6 +232,9 @@ int ARCH_DEP(plo_csg) (int r1, int r3, VADR effective_addr2, int b2,
 U64 op1c,
     op1r,
     op2;
+
+    UNREFERENCED(r1);
+    UNREFERENCED(r3);
 
     DW_CHECK(effective_addr4, regs);
     DW_CHECK(effective_addr2, regs);
@@ -260,6 +271,10 @@ int ARCH_DEP(plo_csgr) (int r1, int r3, VADR effective_addr2, int b2,
 {
 U64 op2;
 
+    UNREFERENCED(r3);
+    UNREFERENCED(effective_addr4);
+    UNREFERENCED(b4);
+
     ODD_CHECK(r1, regs);
     DW_CHECK(effective_addr2, regs);
 
@@ -293,6 +308,9 @@ int ARCH_DEP(plo_csx) (int r1, int r3, VADR effective_addr2, int b2,
 BYTE op1c[16],
      op1r[16],
      op2[16];
+
+    UNREFERENCED(r1);
+    UNREFERENCED(r3);
 
     DW_CHECK(effective_addr4, regs);
     DW_CHECK(effective_addr2, regs);
@@ -383,6 +401,8 @@ U64 op1c,
     op4;
 U32 op4alet = 0;
 VADR op4addr;
+
+    UNREFERENCED(r1);
 
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
@@ -520,6 +540,8 @@ BYTE op1c[16],
 U32 op4alet = 0;
 VADR op4addr;
 
+    UNREFERENCED(r1);
+
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
@@ -635,6 +657,8 @@ U64 op1c,
 U32 op4alet = 0;
 VADR op4addr;
 
+    UNREFERENCED(r1);
+
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
 
@@ -733,6 +757,8 @@ BYTE op1c[16],
      op3[16];
 U32 op4alet = 0;
 VADR op4addr;
+
+    UNREFERENCED(r1);
 
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
@@ -883,6 +909,8 @@ U32 op4alet = 0,
     op6alet = 0;
 VADR op4addr,
     op6addr;
+
+    UNREFERENCED(r1);
 
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
@@ -1059,6 +1087,8 @@ U32 op4alet = 0,
     op6alet = 0;
 VADR op4addr,
     op6addr;
+
+    UNREFERENCED(r1);
 
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
@@ -1265,6 +1295,8 @@ U32 op4alet = 0,
 VADR op4addr,
     op6addr,
     op8addr;
+
+    UNREFERENCED(r1);
 
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);
@@ -1497,6 +1529,8 @@ U32 op4alet = 0,
 VADR op4addr,
     op6addr,
     op8addr;
+
+    UNREFERENCED(r1);
 
     DW_CHECK(effective_addr2, regs);
     DW_CHECK(effective_addr4, regs);

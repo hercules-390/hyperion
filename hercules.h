@@ -13,6 +13,11 @@
 #include <config.h>
 #endif
 
+#define UNREFERENCED(x)     ((x)=(x))
+#define UNREFERENCED_370(x) ((x)=(x))
+#define UNREFERENCED_390(x) ((x)=(x))
+#define UNREFERENCED_900(x) ((x)=(x))
+
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
 
@@ -883,12 +888,12 @@ typedef struct _DEVBLK {
 
         /*  device buffer management fields                          */
         BYTE   *buf;                    /* -> Device data buffer     */
-        int     bufsize;                /* Device data buffer size   */
+        U32     bufsize;                /* Device data buffer size   */
         int     bufoff;                 /* Offset into data buffer   */
         int     bufoffhi;               /* Highest offset allowed    */
         int     bufupdlo;               /* Lowest offset updated     */
         int     bufupdhi;               /* Highest offset updated    */
-        int     bufupd;                 /* 1=Buffer updated          */
+        U32     bufupd;                 /* 1=Buffer updated          */
 
         /*  device i/o scheduling fields...                          */
 
@@ -923,11 +928,11 @@ typedef struct _DEVBLK {
         BYTE    pcicsw[8];              /* PCI channel status word   */
         ESW     esw;                    /* Extended status word      */
         BYTE    ecw[32];                /* Extended control word     */
-        int     numsense;               /* Number of sense bytes     */
+        U32     numsense;               /* Number of sense bytes     */
         BYTE    sense[32];              /* Sense bytes               */
-        int     numdevid;               /* Number of device id bytes */
+        U32     numdevid;               /* Number of device id bytes */
         BYTE    devid[256];             /* Device identifier bytes   */
-        int     numdevchar;             /* Number of devchar bytes   */
+        U32     numdevchar;             /* Number of devchar bytes   */
         BYTE    devchar[64];            /* Device characteristics    */
         BYTE    pgid[11];               /* Path Group ID             */
         BYTE    reserved2[5];           /* (pad/align/unused/avail)  */
@@ -938,7 +943,7 @@ typedef struct _DEVBLK {
 
         /*  control flags...                                         */
 
-        unsigned int                    /* Flags                     */
+        U32                             /* Flags                     */
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
 #endif /*OPTION_CKD_KEY_TRACING*/
@@ -951,12 +956,12 @@ typedef struct _DEVBLK {
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1;             /* 1=Channel will merge data
                                              chained write CCWs      */
-        int     pending;                /* 1=Interrupt pending       */
-        int     busy;                   /* 1=Device busy             */
-        int     pcipending;             /* 1=PCI interrupt pending   */
-        int     crwpending;             /* 1=CRW pending             */
-        int     syncio_active;          /* 1=Synchronous I/O active  */
-        int     syncio_retry;           /* 1=Retry I/O asynchronously*/
+        U32     pending;                /* 1=Interrupt pending       */
+        U32     busy;                   /* 1=Device busy             */
+        U32     pcipending;             /* 1=PCI interrupt pending   */
+        U32     crwpending;             /* 1=CRW pending             */
+        U32     syncio_active;          /* 1=Synchronous I/O active  */
+        U32     syncio_retry;           /* 1=Retry I/O asynchronously*/
 
         /*  Synchronous I/O                                          */
 
@@ -967,11 +972,11 @@ typedef struct _DEVBLK {
         /*  Device dependent fields for console                      */
 
         struct  in_addr ipaddr;         /* Client IP address         */
-        int     rlen3270;               /* Length of data in buffer  */
+        U32     rlen3270;               /* Length of data in buffer  */
         int     pos3270;                /* Current screen position   */
         int     keybdrem;               /* Number of bytes remaining
                                            in keyboard read buffer   */
-        unsigned int                    /* Flags                     */
+        U32                             /* Flags                     */
                 eab3270:1;              /* 1=Extended attributes     */
         BYTE    aid3270;                /* Current input AID value   */
         BYTE    mod3270;                /* 3270 model number         */
@@ -986,7 +991,7 @@ typedef struct _DEVBLK {
                                            read from data buffer     */
         int     cardrem;                /* Number of bytes remaining
                                            in data buffer            */
-        unsigned int                    /* Flags                     */
+        U32                             /* Flags                     */
                 multifile:1,            /* 1=auto-open next i/p file */
                 rdreof:1,               /* 1=Unit exception at EOF   */
                 ebcdic:1,               /* 1=Card deck is EBCDIC     */
@@ -1002,7 +1007,7 @@ typedef struct _DEVBLK {
         int     ctcrem;                 /* bytes remaining in buffer */
         int     ctclastpos;             /* last packet read          */
         int     ctclastrem;             /* last packet read          */
-        unsigned int                    /* Flags                     */
+        U32                             /* Flags                     */
                 ctcxmode:1,             /* 0=Basic mode, 1=Extended  */
 				lcscmd:1, 		        /* lcs cmd response pending  */ /*LCS*/
 				readpnd:1,         		/* read pending on thread    */ /*LCS*/
@@ -1021,8 +1026,8 @@ typedef struct _DEVBLK {
                                            placed in print buffer    */
         int     printrem;               /* Number of bytes remaining
                                            in print buffer           */
-        int     stopprt;                /* 1=stopped; 0=started      */
-        unsigned int                    /* Flags                     */
+        U32     stopprt;                /* 1=stopped; 0=started      */
+        U32                             /* Flags                     */
                 crlf:1,                 /* 1=CRLF delimiters, 0=LF   */
                 diaggate:1,             /* 1=Diagnostic gate command */
                 fold:1;                 /* 1=Fold to upper case      */
@@ -1049,7 +1054,7 @@ typedef struct _DEVBLK {
             U16 level:4;                /* Compression level         */
             U16 chksize;                /* Chunk size                */
         }       tdparms;                /* HET device parms          */
-        unsigned int                    /* Flags                     */
+        U32                             /* Flags                     */
                 readonly:1,             /* 1=Tape is write-protected */
                 longfmt:1;              /* 1=Long record format (DDR)*/ /*DDR*/
         BYTE    tapedevt;               /* Tape device type          */
@@ -1077,7 +1082,7 @@ typedef struct _DEVBLK {
                                            of first block for locate */
         U16     fbalcnum;               /* Block count for locate    */
         U16     fbablksiz;              /* Physical block size       */
-        unsigned int                    /* Flags                     */
+        U32                             /* Flags                     */
                 fbaxtdef:1;             /* 1=Extent defined          */
         BYTE    fbaoper;                /* Locate operation byte     */
         BYTE    fbamask;                /* Define extent file mask   */
@@ -1090,17 +1095,17 @@ typedef struct _DEVBLK {
 #endif
         CKDRT  *ckdrdtrk;               /* -> Read track routine     */
         CKDUT  *ckdupdtrk;              /* -> Update track routine   */
-        int     ckdnumfd;               /* Number of CKD image files */
+        U32     ckdnumfd;               /* Number of CKD image files */
         int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
         int     ckdhitrk[CKD_MAXFILES]; /* Highest track number
                                            in each CKD image file    */
         CKDDEV *ckdtab;                 /* Device table entry        */
         CKDCU  *ckdcu;                  /* Control unit entry        */
         U64     ckdtrkoff;              /* Track image file offset   */
-        int     ckdcyls;                /* Number of cylinders       */
-        int     ckdtrks;                /* Number of tracks          */
-        int     ckdheads;               /* #of heads per cylinder    */
-        int     ckdtrksz;               /* Track size                */
+        U32     ckdcyls;                /* Number of cylinders       */
+        U32     ckdtrks;                /* Number of tracks          */
+        U32     ckdheads;               /* #of heads per cylinder    */
+        U32     ckdtrksz;               /* Track size                */
         int     ckdcurcyl;              /* Current cylinder          */
         int     ckdcurhead;             /* Current head              */
         int     ckdcurrec;              /* Current record id         */
@@ -1125,13 +1130,13 @@ typedef struct _DEVBLK {
         BYTE    ckdlaux;                /* Locate record aux byte    */
         BYTE    ckdlcount;              /* Locate record count       */
         struct _CKDDASD_CACHE *ckdcache;/* Cache table               */
-        int     ckdcachenbr;            /* Cache table size          */
-        int     ckdcachehits;           /* Cache hits                */
-        int     ckdcachemisses;         /* Cache misses              */
+        U32     ckdcachenbr;            /* Cache table size          */
+        U32     ckdcachehits;           /* Cache hits                */
+        U32     ckdcachemisses;         /* Cache misses              */
         U64     ckdcacheage;            /* Cache aging counter       */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
-        unsigned int                    /* Flags                     */
+        U32                            /* Flags                     */
                 ckd3990:1,              /* 1=Control unit is 3990    */
                 ckdxtdef:1,             /* 1=Define Extent processed */
                 ckdsetfm:1,             /* 1=Set File Mask processed */
@@ -1390,36 +1395,36 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         LOCK             cachelock;     /* Cache lock                */
         COND             cachecond;     /* Wait for cache condition  */
         U64              cacheage;      /* Cache aging value         */
-        int              cachewaiting;  /* Threads waiting for cache */
+        U32              cachewaiting;  /* Threads waiting for cache */
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
-        int              gcols;         /* Number garbage collectors */
-        int              gcolmax;       /* Max garbage collectors    */
-        int              gcolwait;      /* Wait time in seconds      */
+        U32              gcols;         /* Number garbage collectors */
+        U32              gcolmax;       /* Max garbage collectors    */
+        U32              gcolwait;      /* Wait time in seconds      */
         int              gcolparm;      /* Adjustment parm           */
         LOCK             ralock;        /* Readahead lock            */
         COND             racond;        /* Readahead condition       */
-        int              ras;           /* Number readahead threads  */
-        int              ramax;         /* Max readahead threads     */
-        int              rawaiting;     /* Number threads waiting    */
+        U32              ras;           /* Number readahead threads  */
+        U32              ramax;         /* Max readahead threads     */
+        U32              rawaiting;     /* Number threads waiting    */
         int              ranbr;         /* Readahead queue size      */
         int              readaheads;    /* Nbr tracks to read ahead  */
         CCKD_RA          ra[CCKD_MAX_RA_SIZE]; /* Readahead queue    */
         int              ra1st;         /* First readahead entry     */
         int              ralast;        /* Last readahead entry      */
         int              rafree;        /* Free readahead entry      */
-        int              nostress;      /* 1=No stress writes        */
+        U32              nostress;      /* 1=No stress writes        */
         COND             writercond;    /* Writer condition          */
-        int              writepending;  /* Number writes pending     */
-        int              writerswaiting;/* Number writers waiting    */
-        int              writers;       /* Number writer threads     */
-        int              writermax;     /* Max writer threads        */
+        U32              writepending;  /* Number writes pending     */
+        U32              writerswaiting;/* Number writers waiting    */
+        U32              writers;       /* Number writer threads     */
+        U32              writermax;     /* Max writer threads        */
         int              writerprio;    /* Writer thread priority    */
         int              writewaiting;  /* Threads waiting for writes*/
         COND             writecond;     /* Write wait condition      */
         COND             termcond;      /* Termination condition     */
         int              l2cachenbr;    /* Size of level 2 cache     */
-        int              cachenbr;      /* Size of cache             */
+        U32              cachenbr;      /* Size of cache             */
         U64              stats_switches;       /* Switches           */
         U64              stats_cachehits;      /* Cache hits         */
         U64              stats_cachemisses;    /* Cache misses       */
@@ -1467,20 +1472,20 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         COND             readcond;      /* Wait for read condition   */
         COND             writecond;     /* Wait for write condition  */
         CCKD_FREEBLK    *free;          /* Internal free space chain */
-        int              freenbr;       /* Number free space entries */
+        U32              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */
         int              freeavail;     /* Index of available entry  */
         int              lastsync;      /* Time of last sync         */
         int              reads[CCKD_MAX_SF+1];   /* Nbr track reads  */
         int              l2reads[CCKD_MAX_SF+1]; /* Nbr l2 reads     */
         int              writes[CCKD_MAX_SF+1];  /* Nbr track writes */
-        int              totreads;      /* Total nbr trk reads       */
-        int              totwrites;     /* Total nbr trk writes      */
-        int              totl2reads;    /* Total nbr l2 reads        */
-        int              cachehits;     /* Cache hits                */
-        int              readaheads;    /* Number trks read ahead    */
-        int              switches;      /* Number trk switches       */
-        int              misses;        /* Number readahead misses   */
+        U32              totreads;      /* Total nbr trk reads       */
+        U32              totwrites;     /* Total nbr trk writes      */
+        U32              totl2reads;    /* Total nbr l2 reads        */
+        U32              cachehits;     /* Cache hits                */
+        U32              readaheads;    /* Number trks read ahead    */
+        U32              switches;      /* Number trk switches       */
+        U32              misses;        /* Number readahead misses   */
     } CCKDDASD_EXT;
 
 #define CCKD_OPEN_NONE         0

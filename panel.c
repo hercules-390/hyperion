@@ -1984,7 +1984,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         if((len = write(fd, sysblk.mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
             logmsg(_("HHCxxxI savecore error writing to %s: %s\n"),fname,strerror(errno));
-        else if(len < (aaddr2 - aaddr) + 1)
+        else if((U32)len < (aaddr2 - aaddr) + 1)
             logmsg(_("HHCxxxI savecore: unable to save %d bytes\n"),
               ((aaddr2 - aaddr) + 1) - len);
 
@@ -2123,7 +2123,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         if (loadparm != NULL)
         {
             memset (sysblk.loadparm, 0x4B, 8);
-            for (i = 0; i < strlen(loadparm) && i < 8; i++)
+            for (i = 0; i < (int)strlen(loadparm) && i < 8; i++)
             {
                 c = loadparm[i];
                 c = toupper(c);
@@ -2856,6 +2856,8 @@ BYTE   *rcbuf = NULL;                   /* RC file input buffer      */
 int     rclen;                          /* length of RC file record  */
 int     rc_pause_amt = 0;               /* seconds to pause RC file  */
 BYTE   *p;                              /* (work)                    */
+
+    UNREFERENCED(dummy);
 
     /* Obtain the name of the hercules.rc file or default */
 

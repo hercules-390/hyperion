@@ -158,7 +158,7 @@ DEVIOREQUEST;
 // (forward references for some of our functions...)
 
 DEVTHREADPARMS*  SelectDeviceThread();
-DEVTHREADPARMS*  CreateDeviceThread(void* pDevBlk, unsigned short wDevNum);
+DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum);
 
 void*  DeviceThread(void* pThreadParms);
 void   RemoveDeadThreadsFromList();
@@ -211,7 +211,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum)
 
 		RemoveDeadThreadsFromList();	// (prevent runaway list)
 
-		if (!(pThreadParms = CreateDeviceThread(pDevBlk,wDevNum)))
+		if (!(pThreadParms = CreateDeviceThread(wDevNum)))
 		{
 			UnlockScheduler();			// (unlock scheduler vars)
 			free(pIORequest);			// (discard i/o request)
@@ -260,7 +260,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum)
 			// (Note: the device thread's parms will automatically
 			//  be locked upon return if creation was successful.)
 
-			if (!(pThreadParms = CreateDeviceThread(pDevBlk,wDevNum)))
+			if (!(pThreadParms = CreateDeviceThread(wDevNum)))
 			{
 				UnlockScheduler();			// (unlock scheduler vars)
 				free(pIORequest);			// (discard i/o request)
@@ -339,7 +339,7 @@ DEVTHREADPARMS*  SelectDeviceThread()
 // NOTE! the IOSchedulerLock must be acquired before calling this function!
 // NOTE! the created thread's parms will be locked upon return!
 
-DEVTHREADPARMS*  CreateDeviceThread(void* pDevBlk, unsigned short wDevNum)
+DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 {
 	DEVTHREADPARMS*  pThreadParms;		// ptr to returned device_thread parameters
 	DWORD            dwThreadID;		// (work)

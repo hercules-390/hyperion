@@ -809,7 +809,7 @@ int     i, j;                           /* Integer work areas        */
     n2 = regs.GR_L(r1) & 0x80000000;
 
     /* Shift the numeric portion left n positions */
-    for (i = 0, j = 0; i < n; i++)
+    for (i = 0, j = 0; i < (int)n; i++)
     {
         /* Shift bits 1-31 left one bit position */
         n1 <<= 1;
@@ -1278,9 +1278,9 @@ BYTE    *a1, *a2;
 
     /* Fast CLC */
     if (((effective_addr1 & PAGEFRAME_BYTEMASK)
-                < PAGEFRAME_PAGESIZE - l) &&
+                < (VADR)(PAGEFRAME_PAGESIZE - l)) &&
     ((effective_addr2 & PAGEFRAME_BYTEMASK)
-                < PAGEFRAME_PAGESIZE - l))
+                < (VADR)(PAGEFRAME_PAGESIZE - l)))
     {
         RADR    abs1, abs2;
         int i = 0;

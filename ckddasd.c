@@ -390,7 +390,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
         /* Read the device header */
         rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-        if (rc < CKDDASD_DEVHDR_SIZE)
+        if (rc < (int)CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
                 devmsg (_("HHC354I %s read error: %s\n"),
@@ -426,7 +426,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         if ( cckd )
         {
             rc = read (dev->fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-            if (rc < CCKDDASD_DEVHDR_SIZE)
+            if (rc < (int)CCKDDASD_DEVHDR_SIZE)
             {
                 if (rc < 0)
                 {

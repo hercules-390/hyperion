@@ -176,7 +176,7 @@ int     stmtlen;                        /* Statement length          */
             if (c == '\0' || c == '\r') continue;
 
             /* Check that statement does not overflow buffer */
-            if (stmtlen >= sizeof(buf) - 1)
+            if (stmtlen >= (int)(sizeof(buf) - 1))
             {
                 logmsg(_("HHC002I File %s line %d is too long\n"),
                     fname, stmt);
@@ -750,7 +750,7 @@ BYTE    c;                              /* Work area for sscanf      */
 
             /* Convert the load parameter to EBCDIC */
             memset (loadparm, 0x4B, 8);
-            for (i = 0; i < strlen(sloadparm); i++)
+            for (i = 0; i < (int)strlen(sloadparm); i++)
                 loadparm[i] = host_to_guest(sloadparm[i]);
         }
 

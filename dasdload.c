@@ -495,6 +495,9 @@ write_track (CIFBLK *cif, BYTE *ofname, int heads, int trklen,
 {
 int             rc;                     /* Return code               */
 
+    UNREFERENCED(ofname);
+    UNREFERENCED(trklen);
+
     /* Build end of track marker at end of buffer */
     memcpy (cif->trkbuf + *usedv, eighthexFF, 8);
     cif->trkmodif = 1;
@@ -510,7 +513,7 @@ int             rc;                     /* Return code               */
     *usedv = 0;
 
     /* Read the next track */
-    if (*cyl < cif->devblk.ckdcyls)
+    if (*cyl < (int)cif->devblk.ckdcyls)
     {
         rc = read_track (cif, *cyl, *head);
         if (rc < 0) return -1;
@@ -553,6 +556,8 @@ write_block (CIFBLK *cif, BYTE *ofname, DATABLK *blk, int keylen,
 int             rc;                     /* Return code               */
 int             cc;                     /* Capacity calculation code */
 CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+
+    UNREFERENCED(devtype);
 
     /* Determine whether record will fit on current track */
     cc = capacity_calc (cif, *usedr, keylen, datalen,
@@ -606,7 +611,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 
     /* Double check that record will not exceed virtual track size */
     if (*usedv + CKDDASD_RECHDR_SIZE + keylen + datalen + 8
-        > trklen)
+        > (U32)trklen)
     {
         XMERRF ("Input record CCHHR=%2.2X%2.2X%2.2X%2.2X%2.2X "
                 "exceeds virtual device track size\n",
@@ -805,6 +810,9 @@ int             skiplen;                /* Number of bytes to skip   */
 int             offset;                 /* Offset into trkbuf        */
 CKDDASD_TRKHDR  trkhdr;                 /* Track header              */
 CKDDASD_RECHDR  rechdr;                 /* Record header             */
+
+    UNREFERENCED(heads);
+    UNREFERENCED(trklen);
 
     /* Save the current position in the output file */
     curcyl = cif->curcyl;
@@ -1749,7 +1757,7 @@ DATABLK        *datablk;                /* Data block                */
 
     else if (recnum == 1) {
        xreclen = read(xfd, xbuf, sizeof(COPYR2));  /* read COPYR2 */
-       if (xreclen < sizeof(COPYR2))
+       if (xreclen < (int)sizeof(COPYR2))
         {
             XMERRF ("%s read error: %s\n",
                     xfname,
@@ -1901,7 +1909,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
             for (i = 0; i < tunum; i++)
             {
                 len = strlen(tudsnam);
-                if (i > 0 && len < sizeof(tudsnam) - 1)
+                if (i > 0 && len < (int)(sizeof(tudsnam) - 1))
                     tudsnam[len++] = '.';
                 make_asciiz (tudsnam + len, sizeof(tudsnam) - len,
                                 fieldptr[i], fieldlen[i]);
@@ -2349,6 +2357,8 @@ int             skiplen;                /* Number of bytes to skip   */
 CKDDASD_TRKHDR  trkhdr;                 /* Track header              */
 CKDDASD_RECHDR  rechdr;                 /* Record header             */
 BYTE            notelist[1024];         /* Note list                 */
+
+    UNREFERENCED(trklen);
 
     /* Load the TTR of the note list record */
     trk = (ttrn[0] << 8) | ttrn[1];
@@ -4470,7 +4480,7 @@ int             lfs = 0;                /* 1 = Large file            */
 
     /* Open the output file */
     cif = open_ckd_image (ofname, NULL, O_RDWR | O_BINARY);
-    if (cif == NULL < 0)
+    if (!cif)
     {
         XMERRF ("Cannot open %s\n", ofname);
         return -1;

@@ -81,7 +81,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 
     /* Read the first block to see if it's compressed */
     rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc < CKDDASD_DEVHDR_SIZE)
+    if (rc < (int)CKDDASD_DEVHDR_SIZE)
     {
         /* Handle read error condition */
         if (rc < 0)
@@ -102,7 +102,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 
         /* Read the compressed device header */
         rc = read (dev->fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-        if (rc < CKDDASD_DEVHDR_SIZE)
+        if (rc < (int)CKDDASD_DEVHDR_SIZE)
         {
             /* Handle read error condition */
             if (rc < 0)
@@ -636,10 +636,10 @@ int     repcnt;                         /* Replication count         */
 
         /* Verify that the block count is non-zero, and that
            the starting and ending blocks fall within the extent */
-        if (dev->fbalcnum == 0
-            || dev->fbalcnum - 1 > dev->fbaxlast
-            || dev->fbalcblk < dev->fbaxfirst
-            || dev->fbalcblk > dev->fbaxlast - (dev->fbalcnum - 1))
+        if (!(U32)dev->fbalcnum
+            || (U32)(dev->fbalcnum - 1) > (U32)dev->fbaxlast
+            || (U32)dev->fbalcblk < (U32)dev->fbaxfirst
+            || (U32)dev->fbalcblk > (U32)(dev->fbaxlast - (dev->fbalcnum - 1)))
         {
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -912,13 +912,13 @@ int     blkfactor;                      /* Number of device blocks
     case 0x01:
         /* Write block from I/O buffer */
         rc = (dev->fbawrblk) (dev, iobuf, blksize, unitstat);
-        if (rc < blksize) return;
+        if (rc < (int)blksize) return;
         break;
 
     case 0x02:
         /* Read block into I/O buffer */
         rc = (dev->fbardblk) (dev, iobuf, blksize, unitstat);
-        if (rc < blksize) return;
+        if (rc < (int)blksize) return;
         break;
 
     } /* end switch(type) */

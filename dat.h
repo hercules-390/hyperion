@@ -312,7 +312,7 @@ _DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
 U32     cb;                             /* DUCT or PASTE address     */
 U32     ald;                            /* Access-list designation   */
 U32     alo;                            /* Access-list origin        */
-int     all;                            /* Access-list length        */
+U32     all;                            /* Access-list length        */
 U32     ale[4];                         /* Access-list entry         */
 U32     aste_addr;                      /* Real address of ASTE      */
 U32     abs;                            /* Absolute address          */
@@ -547,6 +547,10 @@ U16     eax;                            /* Authorization index       */
 U16     xcode;                          /* ALET tran.exception code  */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
+    UNREFERENCED_370(arn);
+    UNREFERENCED_370(acctype);
+    UNREFERENCED_370(pprot);
+
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
     if (acctype == ACCTYPE_INSTFETCH)
   #if defined(FEATURE_LINKAGE_STACK)
@@ -745,10 +749,10 @@ int     cc;                             /* Condition code            */
 /* S/370 Dynamic Address Translation */
 /*-----------------------------------*/
 RADR    std;                            /* Segment table descriptor  */
-int     stl;                            /* Segment table length      */
+U32     stl;                            /* Segment table length      */
 RADR    ste;                            /* Segment table entry       */
 U16     pte;                            /* Page table entry          */
-int     ptl;                            /* Page table length         */
+U32     ptl;                            /* Page table length         */
 TLBE   *tlbp;                           /* -> TLB entry              */
 
     /* Load the effective segment table descriptor */
@@ -902,10 +906,10 @@ TLBE   *tlbp;                           /* -> TLB entry              */
 /* S/390 Dynamic Address Translation */
 /*-----------------------------------*/
 RADR    std;                            /* Segment table descriptor  */
-int     stl;                            /* Segment table length      */
+U32     stl;                            /* Segment table length      */
 RADR    ste;                            /* Segment table entry       */
 RADR    pte;                            /* Page table entry          */
-int     ptl;                            /* Page table length         */
+U32     ptl;                            /* Page table length         */
 TLBE   *tlbp;                           /* -> TLB entry              */
 
     /* [3.11.3.1] Load the effective segment table descriptor */
@@ -1562,6 +1566,8 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
 RADR    raddr;                          /* Addr of page table entry  */
 RADR    pte;
 
+    UNREFERENCED_370(ibyte);
+
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
     {
         /* Program check if translation format is invalid */
@@ -1674,6 +1680,8 @@ static inline int ARCH_DEP(check_sa_per2) (VADR addr, int arn, int acctype,  REG
 RADR std;
 int stid = 0;
 int protect = 0;
+
+    UNREFERENCED(addr);
 
     if(ARCH_DEP(load_address_space_designator) (arn, regs, acctype,
       &std, &stid, &protect))

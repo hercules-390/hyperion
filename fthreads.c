@@ -26,6 +26,8 @@ int dummy = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////
 
+#define UNREFERENCED(x) ((x)=(x))
+
 #if defined(FISH_HANG)
 
 	#include "fishhang.h"	// (function definitions)
@@ -252,6 +254,8 @@ void fthread_kill		// (nop)
 )
 {
 	// (nop)
+	UNREFERENCED(dummy1);
+	UNREFERENCED(dummy2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -309,6 +313,8 @@ fthread_create
 {
 	FT_CALL_THREAD_PARMS*  pCallTheirThreadParms;
 	FT_W32_HANDLE          hWin32ThreadFunc;
+
+	UNREFERENCED(dummy1);
 
 	pCallTheirThreadParms =
 		(FT_CALL_THREAD_PARMS*) malloc(sizeof(FT_CALL_THREAD_PARMS));

@@ -441,7 +441,7 @@ sl_islabel( SLLABEL *lab, void *buf, int len )
         return FALSE;
     }
 
-    for( i = 1 ; i < SL_ELABS_MAX ; i++ )
+    for( i = 1 ; i < (int)SL_ELABS_MAX ; i++ )
     {
         if( memcmp( sl_elabs[ i ], buf, 3 ) == 0 )
         {
@@ -975,7 +975,7 @@ sl_vol( SLLABEL *lab,
     }
 
     len = strlen( volser );
-    if( ( len > 6 ) || ( strspn( volser, volser_cset ) != len ) )
+    if( ( len > 6 ) || ( (int)strspn( volser, volser_cset ) != len ) )
     {
         return( SLE_VOLSER );
     }
@@ -1383,7 +1383,7 @@ sl_ds2( SLLABEL *lab,
         return( SLE_RECFM );
     }
 
-    for( i = 0 ; i < VALFMCNT ; i++ )
+    for( i = 0 ; i < (int)VALFMCNT ; i++ )
     {
         if( strcmp( recfm, valfm[ i ].recfm ) == 0 )
         {
@@ -1744,7 +1744,7 @@ sl_error( int rc )
     /*
     || Within range?
     */
-    if( rc >= SL_ERRSTR_MAX )
+    if( rc >= (int)SL_ERRSTR_MAX )
     {
         rc = SL_ERRSTR_MAX - 1;
     }

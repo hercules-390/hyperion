@@ -2027,7 +2027,7 @@ GREG    nlen2;                          /* Next operand 2 length     */
 U16     uvwxy;                          /* Unicode work area         */
 U16     unicode1;                       /* Unicode character         */
 U16     unicode2;                       /* Unicode low surrogate     */
-int     n;                              /* Number of UTF-8 bytes - 1 */
+GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
 
     RRE(inst, execflag, regs, r1, r2);
@@ -2156,7 +2156,7 @@ int     pair;                           /* 1=Store Unicode pair      */
 U16     uvwxy;                          /* Unicode work area         */
 U16     unicode1;                       /* Unicode character         */
 U16     unicode2 = 0;                   /* Unicode low surrogate     */
-int     n;                              /* Number of UTF-8 bytes - 1 */
+GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
 
     RRE(inst, execflag, regs, r1, r2);

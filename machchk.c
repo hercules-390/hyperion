@@ -111,6 +111,11 @@ int ARCH_DEP(present_mck_interrupt)(REGS *regs, U64 *mcic, U32 *xdmg, RADR *fsta
 {
 int rc = 0;
 
+    UNREFERENCED_370(regs);
+    UNREFERENCED_370(mcic);
+    UNREFERENCED_370(xdmg);
+    UNREFERENCED_370(fsta);
+
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* If there is a crw pending and we are enabled for the channel
        report interrupt subclass then process the interrupt */

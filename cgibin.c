@@ -612,12 +612,12 @@ U32 addr = 0;
 
 void cgibin_ipl(WEBBLK *webblk)
 {
-int i;
+U32 i;
 char *value;
 DEVBLK *dev;
-int ipldev;
-int iplcpu;
-int doipl;
+U32 ipldev;
+U32 iplcpu;
+U32 doipl;
 
     html_header(webblk);
 

@@ -224,6 +224,8 @@ int     cc;                             /* Condition code            */
 PSA_3XX *psa;                           /* -> Prefixed storage area  */
 int     deq=0;                          /* Device may be dequeued    */
 
+    UNREFERENCED(ibyte);
+
 if (dev->ccwtrace || dev->ccwstep)
     logmsg (_("%4.4X: Test I/O\n"), dev->devnum);
 
@@ -321,6 +323,8 @@ int haltio (REGS *regs, DEVBLK *dev, BYTE ibyte)
 int     cc;                             /* Condition code            */
 PSA_3XX *psa;                           /* -> Prefixed storage area  */
 int     deq=0;                          /* Device may be dequeued    */
+
+    UNREFERENCED(ibyte);
 
     if (dev->ccwtrace || dev->ccwstep)
         logmsg (_("%4.4X: Halt I/O\n"), dev->devnum);
@@ -436,6 +440,8 @@ int cancel_subchan (REGS *regs, DEVBLK *dev)
 {
 int     cc;                             /* Condition code            */
 
+    UNREFERENCED(regs);
+
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
 
@@ -511,6 +517,8 @@ int     cc;                             /* Condition code            */
 int test_subchan (REGS *regs, DEVBLK *dev, IRB *irb)
 {
 int     cc;                             /* Condition code            */
+
+    UNREFERENCED(regs);
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
@@ -654,6 +662,8 @@ int     cc;                             /* Condition code            */
 /*-------------------------------------------------------------------*/
 void clear_subchan (REGS *regs, DEVBLK *dev)
 {
+    UNREFERENCED(regs);
+
     if (dev->ccwtrace || dev->ccwstep)
         logmsg (_("%4.4X: Clear subchannel\n"), dev->devnum);
 
@@ -758,6 +768,7 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 int halt_subchan (REGS *regs, DEVBLK *dev)
 {
+    UNREFERENCED(regs);
 
     if (dev->ccwtrace || dev->ccwstep)
         logmsg (_("%4.4X: Halt subchannel\n"), dev->devnum);
@@ -878,6 +889,7 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 int resume_subchan (REGS *regs, DEVBLK *dev)
 {
+    UNREFERENCED(regs);
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
@@ -1161,6 +1173,8 @@ static void ARCH_DEP(fetch_ccw) (
 BYTE    storkey;                        /* Storage key               */
 BYTE   *ccw;                            /* CCW pointer               */
 
+    UNREFERENCED_370(dev);
+
     /* Channel program check if CCW is not on a doubleword
        boundary or is outside limit of main storage */
     if ( (ccwaddr & 0x00000007) || CHADDRCHK(ccwaddr, dev) )
@@ -1225,6 +1239,8 @@ U64     idaw2;                          /* Format-2 IDAW         @IWZ*/
 RADR    idapage;                        /* Addr of next IDA page @IWZ*/
 U16     idalen;                         /* #of bytes until next page */
 BYTE    storkey;                        /* Storage key               */
+
+    UNREFERENCED_370(dev);
 
     /* Channel program check if IDAW is not on correct           @IWZ
        boundary or is outside limit of main storage */
@@ -2611,7 +2627,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
     {
         dev->scsw.flag1 |= SCSW1_E;
         dev->esw.erw0 |= ERW0_S;
-        dev->esw.erw1 = (dev->numsense < sizeof(dev->ecw)) ?
+        dev->esw.erw1 = (dev->numsense < (int)sizeof(dev->ecw)) ?
                         dev->numsense : sizeof(dev->ecw);
         memcpy (dev->ecw, dev->sense, dev->esw.erw1 & ERW1_SCNT);
         memset (dev->sense, 0, sizeof(dev->sense));
@@ -2722,6 +2738,12 @@ int ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 {
 DEVBLK *dev;                            /* -> Device control block   */
 int     iopending = 0;                  /* 1 = I/O still pending     */
+
+    UNREFERENCED_370(ioparm);
+    UNREFERENCED_370(iointid);
+    UNREFERENCED_390(iointid);
+    UNREFERENCED_390(csw);
+    UNREFERENCED_900(csw);
 
     /* Find a device with pending interrupt */
     for (dev = sysblk.iointq; dev != NULL; dev = dev->iointq)

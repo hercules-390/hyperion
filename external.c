@@ -45,7 +45,7 @@
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, U64 pfra)
 {
-int     i;                              /* Array subscript           */
+U32     i;                              /* Array subscript           */
 REGS   *realregs;                       /* Real REGS if guest        */
 
     realregs =

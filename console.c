@@ -438,6 +438,8 @@ static BYTE do_bin[] = { IAC, DO, BINARY, IAC, WILL, BINARY };
 static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
 #endif
 
+    UNREFERENCED(caption);
+
     rc = recv_packet (csock, buf, len, 0);
     if (rc < 0) return -1;
 
@@ -532,7 +534,7 @@ static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
     rc = recv_packet (csock, buf, sizeof(buf)-2, SE);
     if (rc < 0) return -1;
 
-    if (rc < sizeof(type_is) + 2
+    if (rc < (int)(sizeof(type_is) + 2)
         || memcmp(buf, type_is, sizeof(type_is)) != 0
         || buf[rc-2] != IAC || buf[rc-1] != SE) {
         TNSDEBUG2("Expected IAC SB TERMINAL_TYPE IS\n");
@@ -1180,6 +1182,8 @@ TID                     tidneg;         /* Negotiation thread id     */
 DEVBLK                 *dev;            /* -> Device block           */
 BYTE                    unitstat;       /* Status after receive data */
 
+    UNREFERENCED(arg);
+
     /* Display thread started message on control panel */
     logmsg (_("HHC600I Console connection thread started: "
             "tid="TIDPAT", pid=%d\n"),
@@ -1418,6 +1422,9 @@ console_remove(DEVBLK *dev)
 static int
 loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
     /* Indicate that this is a console device */
     dev->console = 1;
 
@@ -1481,6 +1488,9 @@ loc3270_close_device ( DEVBLK *dev )
 static int
 constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
     /* Indicate that this is a console device */
     dev->console = 1;
 
@@ -1727,9 +1737,12 @@ int             rc;                     /* Return code               */
 int             num;                    /* Number of bytes to copy   */
 int             len;                    /* Data length               */
 int             aid;                    /* First read: AID present   */
-int             off;                    /* Offset in device buffer   */
+U32             off;                    /* Offset in device buffer   */
 BYTE            cmd;                    /* tn3270 command code       */
 BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
+
+    UNREFERENCED(prevcode);
+    UNREFERENCED(ccwseq);
 
     /* Clear the current screen position at start of CCW chain */
     if (!chained)
@@ -2143,6 +2156,10 @@ int     len;                            /* Length of data            */
 int     num;                            /* Number of bytes to move   */
 BYTE    c;                              /* Print character           */
 BYTE    stat;                           /* Unit status               */
+
+    UNREFERENCED(chained);
+    UNREFERENCED(prevcode);
+    UNREFERENCED(ccwseq);
 
     /* Unit check with intervention required if no client connected */
     if (dev->connected == 0 && !IS_CCW_SENSE(code))

@@ -152,6 +152,9 @@ int             i;                      /* Loop counter              */
 int             num;                    /* Number of bytes to move   */
 BYTE            c;                      /* Output character          */
 
+    UNREFERENCED(prevcode);
+    UNREFERENCED(ccwseq);
+
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {

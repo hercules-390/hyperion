@@ -41,6 +41,7 @@ struct
 opts = 
 {
     NULL,
+    NULL,
     0,
     0,
     0,
@@ -153,7 +154,7 @@ merge( SLLABEL *lab )
     if( opts.recfm == 0 )
     {
         opts.recfm = O_UNDEFINED;
-        for( i = 0 ; i < VALFMCNT ; i++ )
+        for( i = 0 ; i < (int)VALFMCNT ; i++ )
         {
             if( strcasecmp( fmt.slds2.recfm, valfm[ i ].recfm ) == 0 )
             {
@@ -192,7 +193,7 @@ merge( SLLABEL *lab )
     /*
     || Locate final RECFM string
     */
-    for( i = 0 ; i < VALFMCNT ; i++ )
+    for( i = 0 ; i < (int)VALFMCNT ; i++ )
     {
         if( strcasecmp( fmt.slds2.recfm, valfm[ i ].recfm ) == 0 )
         {
@@ -723,7 +724,7 @@ main( int argc, char *argv[] )
         || Lookup the specified RECFM in our table
         */
         opts.recfm = 0;
-        for( i = 0 ; i < VALFMCNT ; i++ )
+        for( i = 0 ; i < (int)VALFMCNT ; i++ )
         {
             if( strcasecmp( argv[ optind + 3 ], valfm[ i ].recfm ) == 0 )
             {
@@ -741,7 +742,7 @@ main( int argc, char *argv[] )
             || Dump out the valid RECFMs
             */
             printf( "Valid record formats are:\n" );
-            for( i = 0 ; i < VALFMCNT ; i++ )
+            for( i = 0 ; i < (int)VALFMCNT ; i++ )
             {
                 printf( "  %-4.4s", valfm[ i ].recfm );
                 if( ( ( i + 1 ) % 3 ) == 0 )

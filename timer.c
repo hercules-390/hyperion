@@ -274,6 +274,7 @@ U64     diff;                           /* Difference between new and
 #endif /*OPTION_MIPS_COUNTING*/
 struct  timeval tv;                     /* Structure for gettimeofday
                                            and select function calls */
+  UNREFERENCED(argp);
 
     /* Display thread started message on control panel */
     logmsg (_("HHC610I Timer thread started: tid="TIDPAT", pid=%d\n"),

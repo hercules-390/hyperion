@@ -28,6 +28,8 @@ static void sigint_handler (int signo)
 //  logmsg ("config: sigint handler entered for thread %lu\n",/*debug*/
 //          thread_id());                                     /*debug*/
 
+    UNREFERENCED(signo);
+
     signal(SIGINT, sigint_handler);
     /* Ignore signal unless presented on console thread */
     if (thread_id() != sysblk.cnsltid)
@@ -199,7 +201,7 @@ TID paneltid;
 #ifdef SA_NODEFER
         sa.sa_flags = SA_NODEFER;
 #else
-	sa.sa_flags = 0
+	sa.sa_flags = 0;
 #endif
 
         if( sigaction(SIGILL, &sa, NULL)
@@ -240,6 +242,14 @@ TID paneltid;
 #endif /*defined(WIN32)*/
             sysblk.httproot = HTTP_ROOT;
         }
+#if defined(WIN32)
+        if (is_win32_directory(sysblk.httproot))
+        {
+            char posix_dir[1024];
+            convert_win32_directory_to_posix_directory(sysblk.httproot,posix_dir);
+            sysblk.httproot = strdup(posix_dir);
+        }
+#endif /*defined(WIN32)*/
         TRACE("HTTPROOT = %s\n",sysblk.httproot);
         if ( create_thread (&sysblk.httptid, &sysblk.detattr,
                             http_server, NULL) )

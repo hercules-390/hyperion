@@ -687,6 +687,7 @@ void disasm_ ## _table (BYTE inst[], BYTE unused[]) \
 { \
 func disasm_fn; \
 BYTE* mnemonic; \
+    UNREFERENCED(unused); \
     mnemonic = (void*)opcode_ ## _table [inst _route ][GEN_MAXARCH-1]; \
     disasm_fn = (void*)opcode_ ## _table [inst _route ][GEN_MAXARCH-2]; \
     disasm_fn(inst, mnemonic); \
@@ -726,11 +727,13 @@ DISASM_ROUTE(edxx,[5]);
 
 void disasm_none (BYTE inst[], BYTE mnemonic[])
 {
+    UNREFERENCED(inst);
     logmsg("%s\n",mnemonic);
 }
 
 void disasm_E (BYTE inst[], BYTE mnemonic[])
 {
+    UNREFERENCED(inst);
     logmsg("%s\n",mnemonic);
 }
 

@@ -142,7 +142,7 @@ char   *scodepage;
         }
 
         /* Did we finish too soon? */
-        if ((len > 0) && (len < sizeof(AWSTAPE_BLKHDR)))
+        if ((len > 0) && (len < (int)sizeof(AWSTAPE_BLKHDR)))
         {
             printf ("tapemap: incomplete block header on %s\n",
                     filename);

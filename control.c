@@ -1708,7 +1708,7 @@ U32     dchn;                           /* Disabled channel mask     */
     /* Force I/O interrupt check when enabling an I/O subclass */
     if(dism & regs->CR_LHHCH(6))
 #elif defined(FEATURE_S370_CHANNEL)
-    if(dchn & regs->CR_L(2));
+    if(dchn & regs->CR_L(2))
 #endif
     {
         obtain_lock(&sysblk.intlock);
@@ -2273,10 +2273,10 @@ U32     oldpstd;                        /* Old Primary STD or ASCE   */
 U32     ltd;                            /* Linkage table designation */
 U32     pasteo;                         /* Primary ASTE origin       */
 RADR    lto;                            /* Linkage table origin      */
-int     ltl;                            /* Linkage table length      */
+U32     ltl;                            /* Linkage table length      */
 U32     lte;                            /* Linkage table entry       */
 RADR    eto;                            /* Entry table origin        */
-int     etl;                            /* Entry table length        */
+U32     etl;                            /* Entry table length        */
 U32     ete[8];                         /* Entry table entry         */
 int     numwords;                       /* ETE size (4 or 8 words)   */
 int     i;                              /* Array subscript           */
@@ -2801,6 +2801,8 @@ U16     xcode;                          /* Exception code            */
 int     rc;                             /* return code from load_psw */
 
     E(inst, execflag, regs);
+
+    UNREFERENCED(inst);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -3906,6 +3908,8 @@ U64     dreg;                           /* Clock value               */
 DEF_INST(set_clock_programmable_field)
 {
     E(inst, execflag, regs);
+
+    UNREFERENCED(inst);
 
     PRIV_CHECK(regs);
 

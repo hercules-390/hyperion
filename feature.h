@@ -116,8 +116,8 @@ ATTR_REGPARM(3) void s370_ ## _name (BYTE inst[], int execflag, REGS *regs)
 s370_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
-	((((addr)&0x7FFFF000)==0)?((addr)&0xFFF)|pfx:\
-	(((addr)&0x7FFFF000)==pfx)?(addr)&0xFFF:(addr))
+	(((U32)((addr)&0x7FFFF000)==(U32)0)?((addr)&0xFFF)|pfx:\
+	((U32)((addr)&0x7FFFF000)==(U32)pfx)?(addr)&0xFFF:(addr))
 
 #define AMASK   AMASK_L
 

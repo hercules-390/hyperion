@@ -202,7 +202,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
 
         /* Read the device header */
         rc = read (ifd, &devhdr, CKDDASD_DEVHDR_SIZE);
-        if (rc < CKDDASD_DEVHDR_SIZE)
+        if (rc < (int)CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
                 fprintf (stderr, _("ckd2cckd %s read error: %s\n"),
@@ -248,9 +248,9 @@ int             l2empty;                /* 1=level 2 table is empty  */
 
         /* Consistency check device header */
         if (cyls * heads != trks
-            || (trks * trksz) + CKDDASD_DEVHDR_SIZE
+            || (trks * trksz) + (int)CKDDASD_DEVHDR_SIZE
                             != statbuf.st_size
-            || (highcyl != 0 && highcyl != ckdcyls + cyls - 1))
+            || (highcyl && highcyl != (int)(ckdcyls + cyls - 1)))
         {
             fprintf (stderr,
                     _("ckd2cckd: %s CKD header inconsistent with file size\n"),
@@ -374,7 +374,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     /* Build and write the primary lookup table */
     l1 = calloc (cdevhdr.numl1tab, CCKD_L1ENT_SIZE);
     rc = write (ofd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-    if (rc != cdevhdr.numl1tab * CCKD_L1ENT_SIZE)
+    if (rc != (int)(cdevhdr.numl1tab * CCKD_L1ENT_SIZE))
     {
         fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                  ofile, strerror(errno));
@@ -609,7 +609,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         exit (24);
     }
     rc = write (ofd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-    if (rc != cdevhdr.numl1tab * CCKD_L1ENT_SIZE)
+    if (rc != (int)(cdevhdr.numl1tab * CCKD_L1ENT_SIZE))
     {
         fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                  ofile, strerror(errno));

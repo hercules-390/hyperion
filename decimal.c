@@ -966,7 +966,7 @@ int     carry;                          /* Carry indicator           */
         cc = (count == 0) ? 0 : (sign < 0) ? 1 : 2;
 
         /* Set cc=3 if non-zero digits will be lost on left shift */
-        if (count > 0 && effective_addr2 > (l1+1)*2 - 1 - count)
+        if (count > 0 && effective_addr2 > (VADR)((l1+1)*2 - 1 - count))
             cc = 3;
 
         /* Shift operand left */

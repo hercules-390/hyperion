@@ -232,6 +232,10 @@ int             dirrem;                 /* Number of bytes remaining */
 PDSDIR         *dirent;                 /* -> Directory entry        */
 BYTE            memnama[9];             /* Member name (ASCIIZ)      */
 
+    UNREFERENCED(cif);
+    UNREFERENCED(noext);
+    UNREFERENCED(extent);
+
     /* Load number of bytes in directory block */
     dirptr = dirblk;
     dirrem = (dirptr[0] << 8) | dirptr[1];

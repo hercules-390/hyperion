@@ -135,22 +135,22 @@ static FBADEV fbatab[] = {
 /*-------------------------------------------------------------------*/
 void *dasd_lookup (int dtype, BYTE *name, U32 devt, U32 size)
 {
-int i;                                  /* Loop Index                */
+U32 i;                                  /* Loop Index                */
 
     switch (dtype) {
 
     case DASD_CKDDEV:
-        for (i = 0; i < CKDDEV_NUM; i++)
+        for (i = 0; i < (int)CKDDEV_NUM; i++)
         {
-            if ((name != NULL && strcmp(name, ckdtab[i].name) == 0)
-             || ((devt == ckdtab[i].devt || devt == (ckdtab[i].devt & 0xff))
-              && size <= ckdtab[i].cyls + ckdtab[i].altcyls))
+            if ((name && !strcmp(name, ckdtab[i].name))
+             || (((U32)devt == (U32)ckdtab[i].devt || (U32)devt == (U32)(ckdtab[i].devt & 0xff))
+              && (U32)size <= (U32)(ckdtab[i].cyls + ckdtab[i].altcyls)))
                 return &ckdtab[i];
         }
         return NULL;
 
     case DASD_CKDCU:
-        for (i = 0; i < CKDCU_NUM; i++)
+        for (i = 0; i < (int)CKDCU_NUM; i++)
         {
             if ((name != NULL && strcmp(name, ckdcutab[i].name) == 0)
              || devt == ckdcutab[i].devt)
@@ -159,10 +159,10 @@ int i;                                  /* Loop Index                */
         return NULL;
 
     case DASD_FBADEV:
-        for (i = 0; i < FBADEV_NUM; i++)
+        for (i = 0; i < (int)FBADEV_NUM; i++)
         {
-            if ((name != NULL && strcmp(name, fbatab[i].name) == 0)
-             || ((devt == fbatab[i].devt || devt == (fbatab[i].devt & 0xff))
+            if ((name && !strcmp(name, fbatab[i].name))
+             || (((U32)devt == (U32)fbatab[i].devt || (U32)devt == (U32)(fbatab[i].devt & 0xff))
               && ((size <= fbatab[i].blks) || (fbatab[i].blks == 0))))
                 return &fbatab[i];
         }

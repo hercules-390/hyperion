@@ -155,8 +155,8 @@ U16             devnum;                 /* Device number             */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(syncblk_io) (int r1, int r2, REGS *regs)
 {
-int             i;                      /* Array subscript           */
-int             numsense;               /* Number of sense bytes     */
+U32             i;                      /* Array subscript           */
+U32             numsense;               /* Number of sense bytes     */
 U32             iopaddr;                /* Address of HCPSBIOP       */
 HCPSBIOP        ioparm;                 /* I/O parameter list        */
 DEVBLK         *dev;                    /* -> Device block           */
@@ -173,6 +173,7 @@ BYTE            unitstat = 0;           /* Device status             */
 BYTE            chanstat = 0;           /* Subchannel status         */
 BYTE            skey1, skey2;           /* Storage keys of first and
                                            last byte of I/O buffer   */
+    UNREFERENCED(r2);
 
     /* Register R1 contains the real address of the parameter list */
     iopaddr = regs->GR_L(r1);
@@ -417,8 +418,8 @@ BYTE            skey1, skey2;           /* Storage keys of first and
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(syncgen_io) (int r1, int r2, REGS *regs)
 {
-int             i;                      /* Array subscript           */
-int             numsense;               /* Number of sense bytes     */
+U32             i;                      /* Array subscript           */
+U32             numsense;               /* Number of sense bytes     */
 U32             iopaddr;                /* Address of HCPSGIOP       */
 HCPSGIOP        ioparm;                 /* I/O parameter list        */
 DEVBLK         *dev;                    /* -> Device block           */
@@ -429,6 +430,8 @@ U32             lastccw;                /* CCW address at interrupt  */
 BYTE            accum;                  /* Work area                 */
 BYTE            unitstat = 0;           /* Device status             */
 BYTE            chanstat = 0;           /* Subchannel status         */
+
+    UNREFERENCED(r2);
 
     /* Register R1 contains the real address of the parameter list */
     iopaddr = regs->GR_L(r1);
@@ -485,7 +488,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
        or if CCW address exceeds maximum according to CCW format */
     if ((ccwaddr & 0x00000007) || ccwaddr >
            ((ioparm.flag & HCPSGIOP_FORMAT1_CCW) ?
-                        0x7FFFFFFF : 0x00FFFFFF))
+                        (U32)0x7FFFFFFF : (U32)0x00FFFFFF))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
         return 0;
@@ -724,8 +727,8 @@ BYTE            c;                      /* Character work area       */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(cpcmd_call) (int r1, int r2, REGS *regs)
 {
-int     i;                              /* Array subscript           */
-int     cc = 0;                         /* Condition code            */
+U32     i;                              /* Array subscript           */
+U32     cc = 0;                         /* Condition code            */
 U32     cmdaddr;                        /* Address of command string */
 U32     cmdlen;                         /* Length of command string  */
 U32     respadr;                        /* Address of response buffer*/

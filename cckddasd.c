@@ -137,6 +137,9 @@ int cckddasd_init (int argc, BYTE *argv[])
 {
 int             i;                      /* Index                     */
 
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
     if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)) == 0)
         return 0;
 
@@ -236,6 +239,9 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 DEVBLK         *dev2;                   /* -> device in cckd queue   */
 int             rc;                     /* Return code               */
 int             fdflags;                /* File flags                */
+
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
 
     /* Obtain area for cckd extension */
     dev->cckd_ext = cckd = malloc(sizeof(CCKDDASD_EXT));

@@ -350,7 +350,7 @@ int             rc;                     /* Return code               */
     }
 
     /* Handle end of file within block header */
-    if (rc < sizeof(AWSTAPE_BLKHDR))
+    if (rc < (int)sizeof(AWSTAPE_BLKHDR))
     {
         logmsg (_("HHC204I Unexpected end of file in block header "
                 "at offset %8.8lX in file %s\n"),
@@ -500,7 +500,7 @@ U16             prvblkl;                /* Length of previous block  */
 
     /* Write the block header */
     rc = write (dev->fd, &awshdr, sizeof(awshdr));
-    if (rc < sizeof(awshdr))
+    if (rc < (int)sizeof(awshdr))
     {
         /* Handle write error condition */
         logmsg (_("HHC208I Error writing block header "
@@ -594,7 +594,7 @@ U16             prvblkl;                /* Length of previous block  */
 
     /* Write the block header */
     rc = write (dev->fd, &awshdr, sizeof(awshdr));
-    if (rc < sizeof(awshdr))
+    if (rc < (int)sizeof(awshdr))
     {
         /* Handle write error condition */
         logmsg (_("HHC211I Error writing block header "
@@ -1775,7 +1775,7 @@ BYTE            c;                      /* Work area for sscanf      */
         }
 
         /* Convert the file name to Unix format */
-        for (i = 0; i < strlen(tdffilenm); i++)
+        for (i = 0; i < (int)strlen(tdffilenm); i++)
         {
             if (tdffilenm[i] == '\\')
                 tdffilenm[i] = '/';
@@ -1966,7 +1966,7 @@ S32             nxthdro;                /* Offset of next header     */
     }
 
     /* Handle end of file within block header */
-    if (rc < sizeof(omahdr))
+    if (rc < (int)sizeof(omahdr))
     {
         logmsg (_("HHC255I Unexpected end of file in block header "
                 "at offset %8.8lX in file %s\n"),
@@ -2311,6 +2311,8 @@ BYTE            c;                      /* Character work area       */
 /*-------------------------------------------------------------------*/
 static int fsf_omatape (DEVBLK *dev, BYTE *unitstat)
 {
+    UNREFERENCED(unitstat);
+
     /* Close the current OMA file */
     close (dev->fd);
     dev->fd = -1;
@@ -3032,6 +3034,9 @@ long            num;                    /* Number of bytes to read   */
 OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 long            locblock;               /* Block Id for Locate Block */
+
+    UNREFERENCED(prevcode);
+    UNREFERENCED(ccwseq);
 
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
@@ -3905,7 +3910,7 @@ long            locblock;               /* Block Id for Locate Block */
 
         /* Copy device sense bytes to channel I/O buffer */
         memcpy (iobuf, dev->sense,
-                dev->numsense < num ? dev->numsense : num);
+                dev->numsense < (U32)num ? dev->numsense : (U32)num);
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

@@ -8,7 +8,7 @@ AM_MAINTAINER_MODE
 AM_GNU_GETTEXT([external])
 
 # Initialization
-CFLAGS="-Wall $CFLAGS"
+CFLAGS="-W -Wall $CFLAGS"
 
 # Programs
 AC_PROG_CC

@@ -121,7 +121,7 @@ BYTE    chanstat;                       /* IPL device channel status */
         logmsg (_("HHC105I %s mode IPL failed: CSW status=%2.2X%2.2X\n"),
                 get_arch_mode_string(regs), unitstat, chanstat);
         logmsg (_("HHC106I Sense="));
-        for (i=0; i < dev->numsense; i++)
+        for (i=0; i < (int)dev->numsense; i++)
         {
             logmsg ("%2.2X", dev->sense[i]);
             if ((i & 3) == 3) logmsg(" ");
@@ -482,7 +482,7 @@ U32  pagesize;
         pageaddr += PAGEFRAME_PAGESIZE;
 	pageaddr &= PAGEFRAME_PAGEMASK;
         pagesize = PAGEFRAME_PAGESIZE;
-    } while (rl == pagesize);
+    } while (rl == (int)pagesize);
 
     close(fd);
 

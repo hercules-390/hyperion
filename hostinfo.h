@@ -35,6 +35,8 @@ extern  void  display_hostinfo (FILE *f);
 
 #if defined(WIN32)
 extern  int   get_process_directory(char* dirbuf, size_t bufsiz);
+extern  int is_win32_directory(char* dir);
+extern void convert_win32_directory_to_posix_directory(const char *win32_dir, char *posix_dir);
 #endif /*defined(WIN32)*/
 
 #endif /*!defined(_HOSTINFO_H_)*/

@@ -540,7 +540,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n;                              /* 32-bit operand values     */
 U64     dreg;                           /* Double register work area */
-int     h, i, j, m;                     /* Integer work areas        */
+U32     h, i, j, m;                     /* Integer work areas        */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -622,7 +622,7 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U32     n, n1, n2;                      /* 32-bit operand values     */
-int     i, j;                           /* Integer work areas        */
+U32     i, j;                           /* Integer work areas        */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -1680,6 +1680,8 @@ int     cc;                             /* Condition code            */
 int     ar1 = 4;                        /* Access register number    */
 
     E(inst, execflag, regs);
+
+    UNREFERENCED(inst);
 
     /* Check GR4, GR5 doubleword alligned */
     if ( regs->GR_L(4) & 0x00000007 || regs->GR_L(5) & 0x00000007 )

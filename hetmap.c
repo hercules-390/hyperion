@@ -144,17 +144,17 @@ main( int argc, char *argv[] )
     HETB *hetb;
     int rc;
     int fileno;
-    int blocks;
-    int uminsz;
-    int umaxsz;
-    int ubytes;
-    int cminsz;
-    int cmaxsz;
-    int cbytes;
-    int totblocks;
-    int totubytes;
-    int totcbytes;
-    int opts;
+    U32  blocks;
+    U32  uminsz;
+    U32  umaxsz;
+    U32  ubytes;
+    U32  cminsz;
+    U32  cmaxsz;
+    U32  cbytes;
+    U32  totblocks;
+    U32  totubytes;
+    U32  totcbytes;
+    U32  opts;
 
 #define O_ALL           0xC0
 #define O_FILES         0X80

@@ -173,7 +173,7 @@ char   *scodepage;
             }
         }
 
-        if ( offset >= len ) break;
+        if ( offset >= (U32)len ) break;
 
         memset ( print_chars, 0, sizeof(print_chars) );
         memset ( hex_chars, SPACE, sizeof(hex_chars) );
@@ -181,7 +181,7 @@ char   *scodepage;
         for (xi=0, i=0; i < 16; i++)
         {
             c = *pchar++;
-            if (offset < len) {
+            if (offset < (U32)len) {
                 sprintf(hex_chars+xi, "%2.2X", c);
                 print_chars[i] = '.';
                 if (isprint(c)) print_chars[i] = c;
@@ -605,9 +605,9 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
         return NULL;
     }
     close (fd);
-    if (len < CKDDASD_DEVHDR_SIZE
-     || (memcmp(devhdr.devid, "CKD_P370", 8) != 0
-      && memcmp(devhdr.devid, "CKD_C370", 8) != 0))
+    if (len < (int)CKDDASD_DEVHDR_SIZE
+     || (memcmp(devhdr.devid, "CKD_P370", 8)
+      && memcmp(devhdr.devid, "CKD_C370", 8)))
     {
         fprintf (stderr, "%s CKD header invalid\n", fname);
         free (cif);
@@ -1084,7 +1084,7 @@ int             highcyl;                /* CKD header high cyl number*/
 
     /* Write the device header */
     rc = write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc < CKDDASD_DEVHDR_SIZE)
+    if (rc < (int)CKDDASD_DEVHDR_SIZE)
     {
         fprintf (stderr, "%s device header write error: %s\n",
                 fname, errno ? strerror(errno) : "incomplete");
@@ -1112,7 +1112,7 @@ int             highcyl;                /* CKD header high cyl number*/
 
         /* Write the compressed device header */
         rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-        if (rc < CCKDDASD_DEVHDR_SIZE)
+        if (rc < (int)CCKDDASD_DEVHDR_SIZE)
         {
             fprintf (stderr, "%s compressed device header write error: %s\n",
                     fname, errno ? strerror(errno) : "incomplete");
@@ -1131,7 +1131,7 @@ int             highcyl;                /* CKD header high cyl number*/
 
         /* Write the primary lookup table */
         rc = write (fd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-        if (rc < cdevhdr.numl1tab * CCKD_L1ENT_SIZE)
+        if (rc < (int)(cdevhdr.numl1tab * CCKD_L1ENT_SIZE))
         {
             fprintf (stderr, "%s primary lookup table write error: %s\n",
                     fname, errno ? strerror(errno) : "incomplete");
@@ -1145,7 +1145,7 @@ int             highcyl;                /* CKD header high cyl number*/
 
         /* Write the seondary lookup table */
         rc = write (fd, &l2, CCKD_L2TAB_SIZE);
-        if (rc < CCKD_L2TAB_SIZE)
+        if (rc < (int)CCKD_L2TAB_SIZE)
         {
             fprintf (stderr, "%s secondary lookup table write error: %s\n",
                     fname, errno ? strerror(errno) : "incomplete");
@@ -1263,7 +1263,7 @@ int             highcyl;                /* CKD header high cyl number*/
 
             /* Write the track to the file */
             rc = write (fd, buf, trksize);
-            if (rc != trksize)
+            if (rc != (int)trksize)
             {
                 fprintf (stderr,
                         "%s cylinder %u head %u write error: %s\n",
@@ -1293,7 +1293,7 @@ int             highcyl;                /* CKD header high cyl number*/
             return -1;
         }
         rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-        if (rc < CCKDDASD_DEVHDR_SIZE)
+        if (rc < (int)CCKDDASD_DEVHDR_SIZE)
         {
             fprintf (stderr, "%s compressed device header write error: %s\n",
                     fname, errno ? strerror(errno) : "incomplete");
@@ -1311,7 +1311,7 @@ int             highcyl;                /* CKD header high cyl number*/
             return -1;
         }
         rc = write (fd, &l2, CCKD_L2TAB_SIZE);
-        if (rc < CCKD_L2TAB_SIZE)
+        if (rc < (int)CCKD_L2TAB_SIZE)
         {
             fprintf (stderr, "%s secondary lookup table write error: %s\n",
                     fname, errno ? strerror(errno) : "incomplete");
@@ -1575,7 +1575,7 @@ U32             maxsect;                /* Maximum sector count      */
 
         /* Write the sector to the file */
         rc = write (fd, buf, sectsz);
-        if (rc < sectsz)
+        if (rc < (int)sectsz)
         {
             fprintf (stderr, "%s sector %u write error: %s\n",
                     fname, sectnum,
@@ -1631,6 +1631,8 @@ unsigned long   len2;                   /* Compressed buffer length  */
 BYTE            buf2[256];              /* Compressed buffer         */
 BYTE            buf[65536];             /* Buffer                    */
 
+    UNREFERENCED(lfs);
+
     /* Calculate the size of the level 1 table */
     blkgrps = (sectors / CFBA_BLOCK_NUM) + 1;
     numl1tab = (blkgrps + 255) / 256;
@@ -1662,7 +1664,7 @@ BYTE            buf[65536];             /* Buffer                    */
     memset (&devhdr, 0, CKDDASD_DEVHDR_SIZE);
     memcpy (&devhdr.devid, "FBA_C370", 8);
     rc = write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc < CKDDASD_DEVHDR_SIZE)
+    if (rc < (int)CKDDASD_DEVHDR_SIZE)
     {
         fprintf (stderr, "%s devhdr write error: %s\n",
                  fname, errno ? strerror(errno) : "incomplete");
@@ -1685,7 +1687,7 @@ BYTE            buf[65536];             /* Buffer                    */
     cdevhdr.compress = comp;
     cdevhdr.compress_parm = -1;
     rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-    if (rc < CCKDDASD_DEVHDR_SIZE)
+    if (rc < (int)CCKDDASD_DEVHDR_SIZE)
     {
         fprintf (stderr, "%s cdevhdr write error: %s\n",
                  fname, errno ? strerror(errno) : "incomplete");
@@ -1709,7 +1711,7 @@ BYTE            buf[65536];             /* Buffer                    */
     l2[0].pos = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz +
                 CCKD_L2TAB_SIZE;
     rc = write (fd, &l2, CCKD_L2TAB_SIZE);
-    if (rc < CCKD_L2TAB_SIZE)
+    if (rc < (int)CCKD_L2TAB_SIZE)
     {
         fprintf (stderr, "%s l2tab write error: %s\n",
                  fname, errno ? strerror(errno) : "incomplete");
@@ -1728,14 +1730,14 @@ BYTE            buf[65536];             /* Buffer                    */
         buf[0] = CCKD_COMPRESS_ZLIB;
         CCKD_SET_BUFLEN(buf[0], CKDDASD_TRKHDR_SIZE + len2);
         rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE);
-        if (rc < CKDDASD_TRKHDR_SIZE)
+        if (rc < (int)CKDDASD_TRKHDR_SIZE)
         {
             fprintf (stderr, "%s block header write error: %s\n",
                      fname, errno ? strerror(errno) : "incomplete");
             return -1;
         }
         rc = write (fd, &buf2, len2);
-        if (rc < len2)
+        if (rc < (int)len2)
         {
             fprintf (stderr, "%s block write error: %s\n",
                      fname, errno ? strerror(errno) : "incomplete");
@@ -1749,7 +1751,7 @@ BYTE            buf[65536];             /* Buffer                    */
     else
     {
         rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE);
-        if (rc < CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE)
+        if (rc < (int)(CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE))
         {
             fprintf (stderr, "%s block write error: %s\n",
                      fname, errno ? strerror(errno) : "incomplete");
@@ -1770,7 +1772,7 @@ BYTE            buf[65536];             /* Buffer                    */
         return -1;
     }
     rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-    if (rc < CCKDDASD_DEVHDR_SIZE)
+    if (rc < (int)CCKDDASD_DEVHDR_SIZE)
     {
         fprintf (stderr, "%s cdevhdr rewrite error: %s\n",
                  fname, errno ? strerror(errno) : "incomplete");
@@ -1786,7 +1788,7 @@ BYTE            buf[65536];             /* Buffer                    */
         return -1;
     }
     rc = write (fd, &l2, CCKD_L2TAB_SIZE);
-    if (rc < CCKD_L2TAB_SIZE)
+    if (rc < (int)CCKD_L2TAB_SIZE)
     {
         fprintf (stderr, "%s l2tab rewrite error: %s\n",
                  fname, errno ? strerror(errno) : "incomplete");

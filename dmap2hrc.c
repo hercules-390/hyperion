@@ -127,7 +127,7 @@ int		more_devices;		/* More devices this ctlr?   */
         }
 
         /* Did we finish too soon? */
-        if ((len > 0) && (len < sizeof(DEVMAP_CTLR)))
+        if ((len > 0) && (len < (int)sizeof(DEVMAP_CTLR)))
         {
             fprintf (stderr,
                      "dmap2hrc: incomplete controller record on %s\n",
@@ -159,7 +159,7 @@ int		more_devices;		/* More devices this ctlr?   */
             }
 
             /* Did we finish too soon? */
-            if ((len > 0) && (len < sizeof(DEVMAP_DEV)))
+            if ((len > 0) && (len < (int)sizeof(DEVMAP_DEV)))
             {
                 fprintf (stderr,
                          "dmap2hrc: incomplete device record on %s\n",

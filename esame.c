@@ -226,6 +226,8 @@ DEF_INST(trap2)
 {
     E(inst, execflag, regs);
 
+    UNREFERENCED(inst);
+
     SIE_MODE_XC_SOPEX(regs);
 
     ARCH_DEP(trap_x) (0, execflag, regs, 0);
@@ -3330,11 +3332,11 @@ U64     n;                              /* Integer work areas        */
 /*-------------------------------------------------------------------*/
 DEF_INST(shift_left_single_long)
 {
-int     r1, r3;                         /* Register numbers          */
-int     b2;                             /* effective address base    */
+U32     r1, r3;                         /* Register numbers          */
+U32     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n, n1, n2;                      /* 64-bit operand values     */
-int     i, j;                           /* Integer work areas        */
+U32     i, j;                           /* Integer work areas        */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -4194,6 +4196,8 @@ DEF_INST(test_addressing_mode)
 {
     E(inst, execflag, regs);
 
+    UNREFERENCED(inst);
+
     regs->psw.cc =
 #if defined(FEATURE_ESAME)
                    (regs->psw.amode64 << 1) |
@@ -4213,6 +4217,8 @@ DEF_INST(set_addressing_mode_24)
 VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 
     E(inst, execflag, regs);
+
+    UNREFERENCED(inst);
 
     /* Program check if instruction is located above 16MB */
     if (ia > 0xFFFFFFULL)
@@ -4244,6 +4250,8 @@ VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 
     E(inst, execflag, regs);
 
+    UNREFERENCED(inst);
+
     /* Program check if instruction is located above 2GB */
     if (ia > 0x7FFFFFFFULL)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -4271,6 +4279,8 @@ VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 DEF_INST(set_addressing_mode_64)
 {
     E(inst, execflag, regs);
+
+    UNREFERENCED(inst);
 
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */

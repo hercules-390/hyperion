@@ -509,7 +509,7 @@ static void ARCH_DEP (fetch_cce) (int r2, REGS * regs, REGS * iregs, BYTE * cce,
 /*----------------------------------------------------------------------------*/
 static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, REGS * iregs, BYTE * ch, int offset)
 {
-  if (GR_A (r2 + 1, iregs) <= offset)
+  if (GR_A (r2 + 1, iregs) <= (U32)offset)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -693,6 +693,8 @@ static void ARCH_DEP (search_cce) (int r1, int r2, REGS * regs, REGS * iregs, BY
   BYTE ccce[8];			/* child compression character entry          */
   int i;			/* child character index                      */
 
+  UNREFERENCED(r1);
+
   /* Get the next character when there are children */
   if (CCE_ccs (cce) && ARCH_DEP (fetch_ch) (r2, regs, iregs, &status->next_ch, 0))
     {
@@ -770,6 +772,7 @@ static void ARCH_DEP (search_sd) (int r1, int r2, REGS * regs, REGS * iregs, BYT
   int searched;			/* number of children searched                */
   BOOL y_in_parent;		/* indicator if y bits are in parent          */
 
+  UNREFERENCED(r1);
 
   /* Are there siblings? */
   if (!CCE_mcc (cce))
@@ -865,7 +868,7 @@ static int ARCH_DEP (store_ch) (int r1, REGS * regs, REGS * iregs, BYTE * data, 
 {
 
   /* Check destination size */
-  if (GR_A (r1 + 1, iregs) < length + offset)
+  if (GR_A (r1 + 1, iregs) < length + (U32)offset)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2

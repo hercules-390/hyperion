@@ -558,13 +558,13 @@ void scp_command (BYTE *command, int priomsg)
 /*-------------------------------------------------------------------*/
 DEF_INST(service_call)
 {
-int             r1, r2;                 /* Values of R fields        */
+U32             r1, r2;                 /* Values of R fields        */
 U32             sclp_command;           /* SCLP command code         */
 U32             sccb_real_addr;         /* SCCB real address         */
-int             i, j;                   /* Array subscripts          */
-int             realmb;                 /* Real storage size in MB   */
+U32             i, j;                   /* Array subscripts          */
+U32             realmb;                 /* Real storage size in MB   */
 U32             sccb_absolute_addr;     /* Absolute address of SCCB  */
-int             sccblen;                /* Length of SCCB            */
+U32             sccblen;                /* Length of SCCB            */
 SCCB_HEADER    *sccb;                   /* -> SCCB header            */
 SCCB_SCP_INFO  *sccbscp;                /* -> SCCB SCP information   */
 SCCB_CPU_INFO  *sccbcpu;                /* -> SCCB CPU information   */
@@ -577,22 +577,22 @@ SCCB_CSI_INFO  *sccbcsi;                /* -> SCCB channel subsys inf*/
 U16             offset;                 /* Offset from start of SCCB */
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
 DEVBLK         *dev;                    /* Used to find CHPIDs       */
-int             chpbyte;                /* Offset to byte for CHPID  */
-int             chpbit;                 /* Bit number for CHPID      */
+U32             chpbyte;                /* Offset to byte for CHPID  */
+U32             chpbit;                 /* Bit number for CHPID      */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 #ifdef FEATURE_SYSTEM_CONSOLE
 SCCB_EVENT_MASK*evd_mask;               /* Event mask                */
 SCCB_EVD_HDR   *evd_hdr;                /* Event header              */
-int             evd_len;                /* Length of event data      */
+U32             evd_len;                /* Length of event data      */
 SCCB_EVD_BK    *evd_bk;                 /* Event data                */
 SCCB_MCD_BK    *mcd_bk;                 /* Message Control Data      */
-int             mcd_len;                /* Length of MCD             */
+U32             mcd_len;                /* Length of MCD             */
 SCCB_OBJ_HDR   *obj_hdr;                /* Object Header             */
-int             obj_len;                /* Length of Object          */
-int             obj_type;               /* Object type               */
+U32             obj_len;                /* Length of Object          */
+U32             obj_type;               /* Object type               */
 SCCB_MTO_BK    *mto_bk;                 /* Message Text Object       */
 BYTE           *event_msg;              /* Message Text pointer      */
-int             event_msglen;           /* Message Text length       */
+U32             event_msglen;           /* Message Text length       */
 SCCB_CPI_BK    *cpi_bk;                 /* Control Program Info      */
 #ifndef NO_CYGWIN_STACK_BUG
 BYTE           *message = NULL;         /* Maximum event data buffer
@@ -641,7 +641,7 @@ static BYTE    const5_template = {
         0x30                            /* Text data                 */
         };
 
-int             masklen;                /* Length of event mask      */
+U32             masklen;                /* Length of event mask      */
 U32             old_cp_recv_mask;       /* Masks before write event  */
 U32             old_cp_send_mask;       /*              mask command */
 #endif /*FEATURE_SYSTEM_CONSOLE*/
@@ -649,9 +649,9 @@ U32             old_cp_send_mask;       /*              mask command */
 
 #ifdef FEATURE_EXPANDED_STORAGE
 SCCB_XST_MAP    *sccbxmap;              /* Xstore usability map      */
-int             xstincnum;              /* Number of expanded storage
+U32             xstincnum;              /* Number of expanded storage
                                                          increments  */
-int             xstblkinc;              /* Number of expanded storage
+U32             xstblkinc;              /* Number of expanded storage
                                                blocks per increment  */
 BYTE            *xstmap;                /* Xstore bitmap, zero means
                                                            available */
@@ -1155,7 +1155,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                     event_msg = (BYTE*)(mto_bk+1);
                     event_msglen = obj_len -
                             (sizeof(SCCB_OBJ_HDR) + sizeof(SCCB_MTO_BK));
-                    if (event_msglen < 0)
+                    if ((int)event_msglen < 0)
                     {
                         sccb->reas = SCCB_REAS_BUFF_LEN_ERR;
                         sccb->resp = SCCB_RESP_BUFF_LEN_ERR;

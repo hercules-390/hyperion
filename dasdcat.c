@@ -212,6 +212,10 @@ int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
 int do_cat_nonpds(CIFBLK *cif, DSXTENT *extent, int noext,
  unsigned long optflags)
 {
+ UNREFERENCED(cif);
+ UNREFERENCED(extent);
+ UNREFERENCED(noext);
+ UNREFERENCED(optflags);
  fprintf(stderr, "non-PDS-members not yet supported\n");
  return -1;
 }

@@ -483,14 +483,14 @@ unsigned int  i, offset;
 unsigned char c, e;
 unsigned char print_chars[17];
 
-    for (offset=0; offset < len; )
+    for (offset=0; offset < (U32)len; )
     {
         memset(print_chars,0,sizeof(print_chars));
         logmsg("+%4.4X  ", offset);
         for (i=0; i < 16; i++)
         {
             c = *addr++;
-            if (offset < len) {
+            if (offset < (U32)len) {
                 logmsg("%2.2X", c);
                 print_chars[i] = '.';
                 e = guest_to_host(c);
@@ -598,6 +598,7 @@ static void * serv_ctct(void *arg)
 /*-------------------------------------------------------------------*/
 static int init_xca (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+    UNREFERENCED(argc);
     dev->ctctype = CTC_XCA;
     *cutype = CTC_3088_01;
     logmsg ("HHC831I %4.4X %s mode not implemented\n",
@@ -610,6 +611,7 @@ static int init_xca (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 /*-------------------------------------------------------------------*/
 static int init_lcs (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+    UNREFERENCED(argc);
 #if defined(WIN32)
     dev->ctctype = CTC_LCS;
     *cutype = CTC_3088_60;
@@ -884,6 +886,7 @@ BYTE            c;                      /* Character work area       */
 /*-------------------------------------------------------------------*/
 static int init_claw (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+    UNREFERENCED(argc);
     dev->ctctype = CTC_CLAW;
     *cutype = CTC_3088_61;
     logmsg ("HHC833I %4.4X %s mode not implemented\n",
@@ -896,6 +899,7 @@ static int init_claw (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 /*-------------------------------------------------------------------*/
 static int init_ctcn (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+    UNREFERENCED(argc);
     dev->ctctype = CTC_CTCN;
     *cutype = CTC_3088_08;
     logmsg ("HHC834I %4.4X %s mode not implemented\n",
@@ -1275,6 +1279,7 @@ BYTE            c;                      /* Character work area       */
 /*-------------------------------------------------------------------*/
 static int init_ctci (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+    UNREFERENCED(argc);
 #if defined(WIN32)
     dev->ctctype = CTC_CTCT;
     *cutype = CTC_3088_08;
@@ -1550,6 +1555,7 @@ BYTE            c;                      /* Character work area       */
 /*-------------------------------------------------------------------*/
 static int init_cfc (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+    UNREFERENCED(argc);
     dev->ctctype = CTC_CFC;
     *cutype = CTC_3088_08;
     logmsg ("HHC861I %4.4X %s mode not implemented\n",
@@ -1612,7 +1618,7 @@ U32             stackcmd;               /* VSE IP stack command      */
     if (blklen == 0 && count == 40)
     {
         /* Extract the 32-byte stack identity string */
-        for (i = 0; i < sizeof(stackid)-1 && i < count - 4; i++)
+        for (i = 0; i < (int)(sizeof(stackid)-1) && i < (count - 4); i++)
             stackid[i] = guest_to_host(iobuf[i+4]);
         stackid[i] = '\0';
 
@@ -1638,7 +1644,7 @@ U32             stackcmd;               /* VSE IP stack command      */
     }
 
     /* Check that the block length is valid */
-    if (blklen < sizeof(CTCI_BLKHDR) || blklen > count)
+    if (blklen < (int)sizeof(CTCI_BLKHDR) || blklen > count)
     {
         logmsg ("HHC864I %4.4X Write buffer contains invalid "
                 "block length %u\n",
@@ -1656,7 +1662,7 @@ U32             stackcmd;               /* VSE IP stack command      */
 
         /* Check that remaining block length is sufficient
            to contain a segment header */
-        if (pos + sizeof(CTCI_SEGHDR) > blklen)
+        if (pos + (int)sizeof(CTCI_SEGHDR) > blklen)
         {
             logmsg ("HHC865I %4.4X Write buffer contains incomplete "
                     "segment header at offset %4.4X\n",
@@ -1673,7 +1679,7 @@ U32             stackcmd;               /* VSE IP stack command      */
         seglen = (seg->seglen[0] << 8) | seg->seglen[1];
 
         /* Check that the segment length is valid */
-        if (seglen < sizeof(CTCI_SEGHDR) || pos + seglen > blklen)
+        if (seglen < (int)sizeof(CTCI_SEGHDR) || pos + seglen > blklen)
         {
             logmsg ("HHC866I %4.4X Write buffer contains invalid "
                     "segment length %u at offset %4.4X\n",
@@ -2902,6 +2908,10 @@ static void ctcadpt_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
 int             num;                    /* Number of bytes to move   */
 BYTE            opcode;                 /* CCW opcode with modifier
                                            bits masked off           */
+    UNREFERENCED(flags);
+    UNREFERENCED(chained);
+    UNREFERENCED(prevcode);
+    UNREFERENCED(ccwseq);
 
     /* Intervention required if the device file is not open */
     if (dev->fd < 0 && !IS_CCW_SENSE(code) && !IS_CCW_CONTROL(code))

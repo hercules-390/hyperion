@@ -555,6 +555,8 @@ fd_set                  selset;         /* Read bit map for select   */
 int                     optval;         /* Argument for setsockopt   */
 TID                     httptid;        /* Negotiation thread id     */
 
+    UNREFERENCED(arg);
+
     /* Display thread started message on control panel */
     logmsg (_("HHS019I HTTP listener thread started: "
             "tid="TIDPAT", pid=%d\n"),

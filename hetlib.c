@@ -830,7 +830,7 @@ het_read( HETB *hetb, void *sbuf )
         || Finally read in the chunk data
         */
         rc = fread( tptr, 1, slen, hetb->fd );
-        if( rc != slen )
+        if( rc != (int)slen )
         {
             if( feof( hetb->fd ) )
             {
@@ -1197,7 +1197,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
                     return( HETE_COMPERR );
                 }
 
-                if( tlen < slen )
+                if( (int)tlen < slen )
                 {
                     sbuf = tbuf;
                     slen = tlen;
@@ -1222,7 +1222,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
                     return( HETE_COMPERR );
                 }
 
-                if( tlen < slen )
+                if( (int)tlen < slen )
                 {
                     sbuf = tbuf;
                     slen = tlen;
@@ -1246,7 +1246,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
         /*
         || Last chunk for this block?
         */
-        if( slen <= hetb->chksize )
+        if( slen <= (int)hetb->chksize )
         {
             flags |= HETHDR_FLAGS1_EOR;
             tlen = slen;
@@ -1269,7 +1269,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
         || Write the block
         */
         rc = fwrite( sbuf, 1, tlen, hetb->fd );
-        if( rc != tlen )
+        if( rc != (int)tlen )
         {
             return( HETE_ERROR );
         }
@@ -1446,7 +1446,7 @@ het_locate( HETB *hetb, int block )
     /*
     || Forward space until we reach the desired block
     */
-    while( hetb->cblk < block )
+    while( (int)hetb->cblk < block )
     {
         rc = het_fsb( hetb );
         if( rc < 0 )
@@ -2096,7 +2096,7 @@ het_error( int rc )
     /*
     || Within range?
     */
-    if( rc >= HET_ERRSTR_MAX )
+    if( rc >= (int)HET_ERRSTR_MAX )
     {
         rc = HET_ERRSTR_MAX - 1;
     }

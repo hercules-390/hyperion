@@ -666,6 +666,8 @@ static inline void normal_ef( EXTENDED_FLOAT *fl )
 /*-------------------------------------------------------------------*/
 static inline int overflow_sf( SHORT_FLOAT *fl, REGS *regs )
 {
+    UNREFERENCED(regs);
+
     if (fl->expo > 127) {
         fl->expo &= 0x007F;
         return(PGM_EXPONENT_OVERFLOW_EXCEPTION);
@@ -686,6 +688,8 @@ static inline int overflow_sf( SHORT_FLOAT *fl, REGS *regs )
 /*-------------------------------------------------------------------*/
 static inline int overflow_lf( LONG_FLOAT *fl, REGS *regs )
 {
+    UNREFERENCED(regs);
+
     if (fl->expo > 127) {
         fl->expo &= 0x007F;
         return(PGM_EXPONENT_OVERFLOW_EXCEPTION);
@@ -706,6 +710,8 @@ static inline int overflow_lf( LONG_FLOAT *fl, REGS *regs )
 /*-------------------------------------------------------------------*/
 static inline int overflow_ef( EXTENDED_FLOAT *fl, REGS *regs )
 {
+    UNREFERENCED(regs);
+
     if (fl->expo > 127) {
         fl->expo &= 0x007F;
         return(PGM_EXPONENT_OVERFLOW_EXCEPTION);

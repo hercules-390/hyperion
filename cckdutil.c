@@ -132,7 +132,7 @@ U32               o;                    /* Level 2 table offset      */
     }
 
     rc = read (fd, l1, n * CCKD_L1ENT_SIZE);
-    if (rc != n * CCKD_L1ENT_SIZE)
+    if (rc != (int)(n * CCKD_L1ENT_SIZE))
     {
         ENDMSG (m, "l1tab read error fd %d: %s\n",
                 fd, strerror(errno));
@@ -152,7 +152,7 @@ U32               o;                    /* Level 2 table offset      */
     }
 
     rc = write (fd, l1, n * CCKD_L1ENT_SIZE);
-    if (rc != n * CCKD_L1ENT_SIZE)
+    if (rc != (int)(n * CCKD_L1ENT_SIZE))
     {
         ENDMSG (m, "l1tab write error fd %d: %s\n",
                 fd, strerror(errno));
@@ -361,23 +361,23 @@ int cckd_comp (int fd, FILE *m)
 {
 int             rc;                     /* Return code               */
 off_t           pos;                    /* Current file offset       */
-int             i;                      /* Loop index                */
+U32             i;                      /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 CCKD_L1ENT     *l1=NULL;                /* -> Primary lookup table   */
-int             l1tabsz;                /* Primary lookup table size */
+U32             l1tabsz;                /* Primary lookup table size */
 CCKD_L2ENT      l2;                     /* Secondary lookup table    */
 CCKD_FREEBLK    fb;                     /* Free space block          */
-int             len;                    /* Space  length             */
-int             trksz;                  /* Maximum track size        */
-int             heads;                  /* Heads per cylinder        */
-int             blks;                   /* Number fba blocks         */
-int             trk;                    /* Track number              */
-int             l1x,l2x;                /* Lookup indices            */
-int             freed=0;                /* Total space freed         */
-int             imbedded=0;             /* Imbedded space freed      */
-int             moved=0;                /* Total space moved         */
-int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
+U32             len;                    /* Space  length             */
+U32             trksz;                  /* Maximum track size        */
+U32             heads;                  /* Heads per cylinder        */
+U32             blks;                   /* Number fba blocks         */
+U32             trk;                    /* Track number              */
+U32             l1x,l2x;                /* Lookup indices            */
+U32             freed=0;                /* Total space freed         */
+U32             imbedded=0;             /* Imbedded space freed      */
+U32             moved=0;                /* Total space moved         */
+U32             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
 BYTE            buf[65536];             /* Buffer                    */
 
 /*-------------------------------------------------------------------*/
@@ -393,7 +393,7 @@ restart:
         return -1;
     }
     rc = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (rc < CKDDASD_DEVHDR_SIZE)
+    if (rc < (int)CKDDASD_DEVHDR_SIZE)
     {
         COMPMSG (m, "devhdr read error: %s\n",strerror(errno));
         return -1;
@@ -410,7 +410,7 @@ restart:
         return -1;
     }
     rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-    if (rc < CCKDDASD_DEVHDR_SIZE)
+    if (rc < (int)CCKDDASD_DEVHDR_SIZE)
     {
         COMPMSG (m, "cdevhdr read error: %s\n",strerror(errno));
         return -1;
@@ -439,7 +439,7 @@ restart:
         return -1;
     }
     rc = read (fd, l1, l1tabsz);
-    if (rc < l1tabsz)
+    if (rc < (int)l1tabsz)
     {
         COMPMSG (m, "l1 table read error: %s\n",strerror(errno));
         return -1;
@@ -852,12 +852,11 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
             goto cdsk_return;
         }
 
-        if (cdevhdr.numl1tab < (hdrcyls * heads + 255) / 256
-         || cdevhdr.numl1tab > (hdrcyls * heads + 255) / 256 + 1)
+        if (cdevhdr.numl1tab != (U32)(((hdrcyls * heads) + 255) / 256))
         {
             CDSKMSG (m, "Invalid number of l1 table entries in header: "
                      "%d, expecting %d\n",
-                     cdevhdr.numl1tab, (hdrcyls * heads + 255) / 256);
+                     cdevhdr.numl1tab, ((hdrcyls * heads) + 255) / 256);
             goto cdsk_return;
         }
         cyls = hdrcyls;
@@ -874,7 +873,7 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
         numl1 = (trks + 255) / 256;
         trksz = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
         cyls = heads = -1;
-        if (cdevhdr.numl1tab != numl1)
+        if (cdevhdr.numl1tab != (U32)numl1)
         {
             CDSKMSG (m, "Invalid number of l1 table entries in header: "
                      "%d, expecting %d\n", cdevhdr.numl1tab, numl1);
@@ -885,15 +884,15 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
     l1tabsz = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
 
     /* Perform space checks */
-    if (cdevhdr.size != fst.st_size
-     || cdevhdr.used + cdevhdr.free_total != fst.st_size
-     || cdevhdr.free_largest > cdevhdr.free_total
-     || (cdevhdr.free == 0
-      && (cdevhdr.free_total != 0 || cdevhdr.free_number != 0))
-     || (cdevhdr.free != 0
-      && (cdevhdr.free_total == 0 || cdevhdr.free_number == 0))
-     || (cdevhdr.free_number == 0 && cdevhdr.free_total != 0)
-     || (cdevhdr.free_number != 0 && cdevhdr.free_total ==0))
+    if ((U32)cdevhdr.size != (U32)fst.st_size
+     || (U32)(cdevhdr.used + cdevhdr.free_total) != (U32)fst.st_size
+     || (U32)cdevhdr.free_largest > (U32)cdevhdr.free_total
+     || (!cdevhdr.free
+      && (cdevhdr.free_total || (U32)cdevhdr.free_number != (U32)0))
+     || (cdevhdr.free
+      && (!cdevhdr.free_total || !cdevhdr.free_number))
+     || (!cdevhdr.free_number && cdevhdr.free_total)
+     || (cdevhdr.free_number && !cdevhdr.free_total))
     {
         CDSKMSG (m, "Recoverable header errors found: "
                  "%d %d %d %d %d %d %d\n",
@@ -1047,11 +1046,11 @@ free_space_check:
         rc = read (fd, &fb, CCKD_FREEBLK_SIZE);
         if (rc != CCKD_FREEBLK_SIZE) break;
         if (swapend) cckd_swapend_free (&fb);
-        if (fb.len < CCKD_FREEBLK_SIZE || fsp + fb.len > hipos) break;
+        if ((U32)fb.len < (U32)CCKD_FREEBLK_SIZE || (U32)(fsp + fb.len) > (U32)hipos) break;
         if (fb.pos && (fb.pos <= fsp + fb.len ||
-                       fb.pos > hipos - CCKD_FREEBLK_SIZE)) break;
+                       (U32)fb.pos > (U32)(hipos - CCKD_FREEBLK_SIZE))) break;
         sprintf (msg, "free space at end of the file");
-        if (fsp + fb.len == hipos && (fdflags & O_RDWR)) break;
+        if ((U32)(fsp + fb.len) == (U32)hipos && (fdflags & O_RDWR)) break;
         fsperr = 0;                       /* reset error indicator   */
         cdevhdr2.free_number++;
         cdevhdr2.free_total += fb.len;
@@ -1106,7 +1105,7 @@ space_check:
     /* free spaces */
     if (level >= 0)
     {
-    for (fsp = (off_t)cdevhdr.free, i=0; i < cdevhdr2.free_number;
+    for (fsp = (off_t)cdevhdr.free, i=0; i < (int)cdevhdr2.free_number;
          fsp = (off_t)fb.pos, i++)
     {
         rc = lseek (fd, fsp, SEEK_SET);
@@ -1126,7 +1125,7 @@ space_check:
 #endif /*EXTERNALGUI*/
 
     /* level 2 lookup table and track image spaces */
-    for (i = 0; i < cdevhdr.numl1tab; i++)
+    for (i = 0; i < (int)cdevhdr.numl1tab; i++)
     {
         int valid_l2, valid_trks, invalid_trks;
 
@@ -1134,7 +1133,7 @@ space_check:
          || (shadow && l1[i] == 0xffffffff)) continue;
 
         /* check for valid offset in l1tab entry */
-        if ((off_t)l1[i] < lopos || (off_t)l1[i] > hipos - CCKD_L2TAB_SIZE)
+        if ((off_t)l1[i] < lopos || (off_t)l1[i] > (hipos - CCKD_L2TAB_SIZE))
         {
             CDSKMSG (m, "l1[%d] has bad offset 0x%x\n", i, l1[i]);
             l1errs++;
@@ -1217,8 +1216,8 @@ space_check:
                     valid_l2 = 0;
                     for ( ;
                          spc[s - 1].typ == SPCTAB_TRKIMG &&
-                         spc[s - 1].val >= i * 256 &&
-                         spc[s - 1].val <= i * 256 + 255;
+                         spc[s - 1].val >=  (i * 256) &&
+                         spc[s - 1].val <= ((i * 256) + 255);
                          s--)
                         memset (&spc[s - 1], 0, sizeof (SPCTAB));
                     goto validate_l2;
@@ -1356,14 +1355,14 @@ space_check:
             l2errs++;
             for ( ;
                  spc[s - 1].typ == SPCTAB_TRKIMG &&
-                 spc[s - 1].val >= i * 256 &&
-                 spc[s - 1].val <= i * 256 + 255;
+                 spc[s - 1].val >=  (i * 256) &&
+                 spc[s - 1].val <= ((i * 256) + 255);
                  s--)
                 memset (&spc[s - 1], 0, sizeof (SPCTAB));
             for ( ;
                  rcv[r - 1].typ == SPCTAB_TRKIMG &&
-                 rcv[r - 1].val >= i * 256 &&
-                 rcv[r - 1].val <= i * 256 + 255;
+                 rcv[r - 1].val >=  (i * 256) &&
+                 rcv[r - 1].val <= ((i * 256) + 255);
                  r--)
                 memset (&rcv[r - 1], 0, sizeof (SPCTAB));
             goto bad_l2;
@@ -1554,7 +1553,7 @@ overlap:
         n = gap[i].siz;
         for (j = n; j >= 0; j--)
         {
-            if (n - j < CKDDASD_TRKHDR_SIZE + 8)
+            if (n - j < (int)(CKDDASD_TRKHDR_SIZE + 8))
                 continue;
 
             /* test for possible track header */

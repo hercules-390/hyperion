@@ -187,7 +187,7 @@ int ARCH_DEP(mssf_call) (int r1, int r2, REGS *regs)
 {
 U32     spccb_absolute_addr;            /* Absolute addr of SPCCB    */
 U32     mssf_command;                   /* MSSF command word         */
-int               spccblen;            /* Length of SPCCB            */
+U32               spccblen;            /* Length of SPCCB            */
 SPCCB_HEADER      *spccb;              /* -> SPCCB header            */
 SPCCB_CONFIG_INFO *spccbconfig;        /* -> SPCCB CONFIG info       */
 SPCCB_CPU_INFO    *spccbcpu;           /* -> SPCCB CPU information   */
@@ -367,7 +367,7 @@ DIAG204_PART      *partinfo;           /* Partition info             */
 DIAG204_PART_CPU  *cpuinfo;            /* CPU info                   */
 RADR              abs;                 /* abs addr of data area      */
 U64               dreg;                /* work doubleword            */
-int               i;                   /* loop counter               */
+U32               i;                   /* loop counter               */
 struct rusage     usage;               /* RMF type data              */
 static char       lparname[] = "HERCULES";
 static char       physical[] = "PHYSICAL";

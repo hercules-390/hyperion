@@ -161,7 +161,7 @@ char   *scodepage;
             }
 
             /* Did we finish too soon? */
-            if ((len > 0) && (len < sizeof(AWSTAPE_BLKHDR)))
+            if ((len > 0) && (len < (int)sizeof(AWSTAPE_BLKHDR)))
             {
                 printf ("tapesplt: incomplete block header on %s\n",
                         infilename);
@@ -190,7 +190,7 @@ char   *scodepage;
 
             /* Copy the header to the output file. */
             rc = write(outfd, buf, sizeof(AWSTAPE_BLKHDR));
-            if (rc < sizeof(AWSTAPE_BLKHDR))
+            if (rc < (int)sizeof(AWSTAPE_BLKHDR))
             {
                 printf ("tapesplt: error writing block header to %s: %s\n",
                         outfilename, strerror(errno));
