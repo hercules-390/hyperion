@@ -493,6 +493,7 @@ int     repcnt;                         /* Replication count         */
 
         /* Set residual byte count */
         *residual = count;
+        if (dev->fbalcnum > 0) *more = 1;
 
         /* Set ending status */
         *unitstat |= CSW_CE | CSW_DE;
