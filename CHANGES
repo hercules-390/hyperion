@@ -1,3 +1,4 @@
+15 Dec 2002 Renumbered messages in printer.c and console.c - Jay Maynard
 15 Dec 2002 Streamlining Windows build processing, add P4 support - Volker Bandke
 12 Dec 2002 Main storage addressing cleanup - Jan Jaeger
 09 Dec 2002 Fix windows comiple errors in hsccmd.c - Jim Pierson
