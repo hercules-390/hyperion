@@ -93,14 +93,19 @@ DEVHND ctci_device_hndinfo =
 // CTCI_Init
 //
 
+#define CTC_DEVICES_IN_GROUP   2  // a read and write device
+
 int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
     PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
     PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
-    DEVBLK*         pDEVBLK2 = NULL;    // Paired  DEVBLK
     int             rc = 0;             // Return code
 
     pDEVBLK->devtype = 0x3088;
+
+    // CTC is a group device
+    if(!group_device(pDEVBLK, CTC_DEVICES_IN_GROUP))
+        return 0;
 
     // Housekeeping
     pWrkCTCBLK = malloc( sizeof( CTCBLK ) );
@@ -121,152 +126,92 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         return -1;
     }
 
-    if( !pWrkCTCBLK->fOldFormat )
+    // Allocate the device CTCBLK and copy parsed information.
+
+    pDevCTCBLK = malloc( sizeof( CTCBLK ) );
+
+    if( !pDevCTCBLK )
     {
-        // Allocate the device CTCBLK and copy parsed information.
-
-        pDevCTCBLK = malloc( sizeof( CTCBLK ) );
-
-        if( !pDevCTCBLK )
-        {
-            logmsg( _("HHCCT038E %4.4X: Unable to allocate CTCBLK\n"),
-                    pDEVBLK->devnum );
-            free( pWrkCTCBLK );
-            return -1;
-        }
-
-        memcpy( pDevCTCBLK, pWrkCTCBLK, sizeof( CTCBLK ) );
-
-        // New format has only one device statement for both addresses
-        // We need to dynamically allocate the read device block
-
-        pDevCTCBLK->pDEVBLK[0] = NULL;
-        pDevCTCBLK->pDEVBLK[1] = pDEVBLK;
-
-        AddDevice( &pDevCTCBLK->pDEVBLK[0], pDEVBLK->devnum,
-                   pDEVBLK );
-
-        AddDevice( &pDevCTCBLK->pDEVBLK[1], pDEVBLK->devnum + 1,
-                   pDEVBLK );
-
-        pDevCTCBLK->pDEVBLK[0]->dev_data = pDevCTCBLK;
-        pDevCTCBLK->pDEVBLK[1]->dev_data = pDevCTCBLK;
-
-        SetSIDInfo( pDevCTCBLK->pDEVBLK[0], 0x3088, 0x08, 0x3088, 0x01 );
-        SetSIDInfo( pDevCTCBLK->pDEVBLK[1], 0x3088, 0x08, 0x3088, 0x01 );
-
-        pDevCTCBLK->pDEVBLK[0]->ctctype  = CTC_CTCI;
-        pDevCTCBLK->pDEVBLK[0]->ctcxmode = 1;
-
-        pDevCTCBLK->pDEVBLK[1]->ctctype  = CTC_CTCI;
-        pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
-
-        pDEVBLK2 = pDEVBLK;
-    }
-    else
-    {
-        // Old format has paired device statements
-        // Find device block for paired CTC adapter device number
-        pDEVBLK2 = find_device_by_devnum( pDEVBLK->devnum ^ 0x01 );
-
-        // First pass through?
-        if( !pDEVBLK2 )
-        {
-            // Allocate the CTCBLK
-            pDevCTCBLK = malloc( sizeof( CTCBLK ) );
-
-            if( !pDevCTCBLK )
-            {
-                logmsg( _("HHCCT039E %4.4X: Unable to allocate CTCBLK\n"),
-                        pDEVBLK->devnum );
-                free( pWrkCTCBLK );
-                return -1;
-            }
-
-            memcpy( pDevCTCBLK, pWrkCTCBLK, sizeof( CTCBLK ) );
-
-            pDEVBLK->dev_data = pDevCTCBLK;
-
-            pDevCTCBLK->pDEVBLK[0] = pDEVBLK;
-        }
-        else
-        {
-            // Use CTCBLK from the paired DEVBLK
-            pDevCTCBLK = (PCTCBLK)pDEVBLK2->dev_data;
-
-            pDEVBLK->dev_data  = pDevCTCBLK;
-
-            pDevCTCBLK->pDEVBLK[1] = pDEVBLK;
-        }
-
-        // Update SENSEID information
-        SetSIDInfo( pDEVBLK, 0x3088, 0x08, 0x3088, 0x01 );
-
-        pDEVBLK->ctctype             = CTC_CTCI;
-        pDEVBLK->ctcxmode            = 1;
+        logmsg( _("HHCCT038E %4.4X: Unable to allocate CTCBLK\n"),
+                pDEVBLK->devnum );
+        free( pWrkCTCBLK );
+        return -1;
     }
 
-    if( pDEVBLK2 )
+    memcpy( pDevCTCBLK, pWrkCTCBLK, sizeof( CTCBLK ) );
+
+    // New format has only one device statement for both addresses
+    // We need to dynamically allocate the read device block
+
+    pDevCTCBLK->pDEVBLK[0] = pDEVBLK->group->memdev[0];
+    pDevCTCBLK->pDEVBLK[1] = pDEVBLK->group->memdev[1];
+
+    pDevCTCBLK->pDEVBLK[0]->dev_data = pDevCTCBLK;
+    pDevCTCBLK->pDEVBLK[1]->dev_data = pDevCTCBLK;
+
+    SetSIDInfo( pDevCTCBLK->pDEVBLK[0], 0x3088, 0x08, 0x3088, 0x01 );
+    SetSIDInfo( pDevCTCBLK->pDEVBLK[1], 0x3088, 0x08, 0x3088, 0x01 );
+
+    pDevCTCBLK->pDEVBLK[0]->ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[0]->ctcxmode = 1;
+
+    pDevCTCBLK->pDEVBLK[1]->ctctype  = CTC_CTCI;
+    pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
+
+    pDevCTCBLK->sMTU                = atoi( pDevCTCBLK->szMTU );
+    pDevCTCBLK->iMaxFrameBufferSize = pDevCTCBLK->sMTU + sizeof( IP4FRM );
+
+    initialize_lock( &pDevCTCBLK->Lock );
+    initialize_lock( &pDevCTCBLK->EventLock );
+    initialize_condition( &pDevCTCBLK->Event );
+
+    // Give both Herc devices a reasonable name...
+
+    strlcpy( pDevCTCBLK->pDEVBLK[0]->filename,
+             pDevCTCBLK->szTUNCharName,
+     sizeof( pDevCTCBLK->pDEVBLK[0]->filename ) );
+
+    strlcpy( pDevCTCBLK->pDEVBLK[1]->filename,
+             pDevCTCBLK->szTUNCharName,
+     sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
+
+    rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
+                                 IFF_TUN | IFF_NO_PI,
+                                 &pDevCTCBLK->fd,
+                                 pDevCTCBLK->szTUNDevName );
+
+    if( rc < 0 )
     {
-        // pDEVBLK2 is non-null if:
-        //   Old format and this is the 2nd pass or
-        //   New format unconditionally
+        free( pWrkCTCBLK );
+        return -1;
+    }
 
-        pDevCTCBLK->sMTU                = atoi( pDevCTCBLK->szMTU );
-        pDevCTCBLK->iMaxFrameBufferSize = pDevCTCBLK->sMTU + sizeof( IP4FRM );
+    TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNDevName,
+                        pDevCTCBLK->szDriveIPAddr );
 
-        initialize_lock( &pDevCTCBLK->Lock );
-        initialize_lock( &pDevCTCBLK->EventLock );
-        initialize_condition( &pDevCTCBLK->Event );
+    TUNTAP_SetDestAddr( pDevCTCBLK->szTUNDevName,
+                        pDevCTCBLK->szGuestIPAddr );
 
-        // Give both Herc devices a reasonable name...
+    TUNTAP_SetNetMask ( pDevCTCBLK->szTUNDevName,
+                        pDevCTCBLK->szNetMask );
 
-        strlcpy( pDevCTCBLK->pDEVBLK[0]->filename,
-                 pDevCTCBLK->szTUNCharName,
-         sizeof( pDevCTCBLK->pDEVBLK[0]->filename ) );
-
-        strlcpy( pDevCTCBLK->pDEVBLK[1]->filename,
-                 pDevCTCBLK->szTUNCharName,
-         sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
-
-        rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
-                                     IFF_TUN | IFF_NO_PI,
-                                     &pDevCTCBLK->fd,
-                                     pDevCTCBLK->szTUNDevName );
-
-        if( rc < 0 )
-        {
-            free( pWrkCTCBLK );
-            return -1;
-        }
-
-        TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNDevName,
-                            pDevCTCBLK->szDriveIPAddr );
-
-        TUNTAP_SetDestAddr( pDevCTCBLK->szTUNDevName,
-                            pDevCTCBLK->szGuestIPAddr );
-
-        TUNTAP_SetNetMask ( pDevCTCBLK->szTUNDevName,
-                            pDevCTCBLK->szNetMask );
-
-        TUNTAP_SetMTU     ( pDevCTCBLK->szTUNDevName,
-                            pDevCTCBLK->szMTU );
+    TUNTAP_SetMTU     ( pDevCTCBLK->szTUNDevName,
+                        pDevCTCBLK->szMTU );
 
 #if defined( WIN32 )
-        if( pDevCTCBLK->szMACAddress[0] != '\0' )
-            TUNTAP_SetMACAddr( pDevCTCBLK->szTUNDevName,
-                               pDevCTCBLK->szMACAddress );
+    if( pDevCTCBLK->szMACAddress[0] != '\0' )
+        TUNTAP_SetMACAddr( pDevCTCBLK->szTUNDevName,
+                           pDevCTCBLK->szMACAddress );
 #endif
 
-        TUNTAP_SetFlags   ( pDevCTCBLK->szTUNDevName,
-                            IFF_UP | IFF_RUNNING | IFF_BROADCAST );
+    TUNTAP_SetFlags   ( pDevCTCBLK->szTUNDevName,
+                        IFF_UP | IFF_RUNNING | IFF_BROADCAST );
 
-        // Copy the fd to make panel.c happy
-        pDevCTCBLK->pDEVBLK[0]->fd =
-        pDevCTCBLK->pDEVBLK[1]->fd = pDevCTCBLK->fd;
+    // Copy the fd to make panel.c happy
+    pDevCTCBLK->pDEVBLK[0]->fd =
+    pDevCTCBLK->pDEVBLK[1]->fd = pDevCTCBLK->fd;
 
-        create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK );
-    }
+    create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK );
 
     free( pWrkCTCBLK );
 
@@ -500,7 +445,7 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
     DEVBLK* pDEVBLK2;
     PCTCBLK pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
 
-    pDEVBLK2 = find_device_by_devnum( pDEVBLK->devnum ^ 0x01 );
+    pDEVBLK2 = pDEVBLK->group->memdev[1];
 
     // Close the device file (if not already closed)
     if( pCTCBLK->fd >= 0 )
