@@ -373,7 +373,7 @@ static char       lparname[] = "HERCULES";
 static char       physical[] = "PHYSICAL";
 static U64        diag204tod;          /* last diag204 tod           */
 
-    abs = APPLY_PREFIXING (regs->GR(r1), regs->PX);
+    abs = APPLY_PREFIXING (regs->GR_L(r1), regs->PX);
 
     /* Program check if RMF data is not on a page boundary */
     if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)

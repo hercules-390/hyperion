@@ -1782,7 +1782,10 @@ int     amode64;
     /* make psw valid for esa390 mode */
     dword[3] &= ~0x01;
     rc = s390_load_psw ( regs, dword );
-    if (rc) regs->psw.notesame = 0;
+    /* Set the notesame bit to zero as it has been set, 
+       and set the amode64 bit according to byte 3 */
+    regs->psw.notesame = 0;
+    regs->psw.amode64 = amode64;
 #else /*!defined(FEATURE_ESAME)*/
     rc = ARCH_DEP(load_psw) ( regs, dword );
 #endif /*!defined(FEATURE_ESAME)*/
@@ -1796,11 +1799,8 @@ int     amode64;
     regs->psw.ilc = 4;
 
 #if defined(FEATURE_ESAME)
-    /* Set the notesame bit to zero as it has been set, 
-       and clear the high word of the instruction address,
+    /* Clear the high word of the instruction address,
        as it has not been touched by s390_load_psw */
-    regs->psw.notesame = 0;
-    regs->psw.amode64 = amode64;
     regs->psw.IA_H = 0;
 #endif /*defined(FEATURE_ESAME)*/
 
