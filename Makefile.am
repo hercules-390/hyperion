@@ -98,8 +98,8 @@ cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
 
 tar: dist
 
-if SETUID_HERCIFC
 install-exec-local:
+if SETUID_HERCIFC
 	chown root $(DESTDIR)$(bindir)/hercifc
 	chmod 0751 $(DESTDIR)$(bindir)/hercifc
 	chmod +s $(DESTDIR)$(bindir)/hercifc
