@@ -248,19 +248,19 @@ int sbfpclassify(struct sbfp *op)
 
 int ebfpissnan(struct ebfp *op)
 {
-	return op->exp == 0x7FFF && (op->fracth || op->fractl)
+	return ebfpclassify(op) == FP_NAN
 		&& (op->fracth & 0x0000800000000000L) == 0;
 }
 
 int lbfpissnan(struct lbfp *op)
 {
-	return op->exp == 0x7FF && op->fract
+	return lbfpclassify(op) == FP_NAN
 		&& (op->fract & 0x0008000000000000L) == 0;
 }
 
 int sbfpissnan(struct sbfp *op)
 {
-	return op->exp == 0xFF && op->fract
+	return sbfpclassify(op) == FP_NAN
 		&& (op->fract & 0x00400000) == 0;
 }
 
@@ -356,6 +356,9 @@ void sbfpinfinity(struct sbfp *op, int sign)
  * Since this concerns only a few boundary conditions, few of the programs
  * that are going to use these instructions will care.
  * If you want to do high-precision number-crunching, you'll find a better way.
+ *
+ * This code should deal with FPC bits 0.0 and 1.0 when handling a NaN,
+ * but it doesn't yet.
  */
 
 /*
@@ -365,35 +368,141 @@ void ebfpston(struct ebfp *op)
 {
 	long double h, l;
 
-	h = ldexpl((long double)(op->fracth | 0x1000000000000L), -48);
-	l = ldexpl((long double)op->fractl, -112);
-	if (op->sign) {
-		h = -h;
-		l = -l;
+	switch (ebfpclassify(op)) {
+	case FP_NAN:
+		logmsg("ebfpston: unexpectedly converting a NaN\n");
+		op->v = sqrt(-1);
+		break;
+	case FP_INFINITE:
+		logmsg("ebfpston: unexpectedly converting an Infinite\n");
+		if (op->sign) {
+			op->v = log(0);
+		} else {
+			op->v = 1/0;
+		}
+		break;
+	case FP_ZERO:
+		if (op->sign) {
+			op->v = 1 / log(0);
+		} else {
+			op->v = 0;
+		}
+		break;
+	case FP_SUBNORMAL:
+		/* WARNING:
+		 * This code is probably not correct yet.
+		 * I only did the quick hack of removing unit bit 1.
+		 * Haven't looked at exponent handling yet.
+		 */
+		h = ldexpl((long double)(op->fracth), -48);
+		l = ldexpl((long double)op->fractl, -112);
+		if (op->sign) {
+			h = -h;
+			l = -l;
+		}
+		op->v = ldexpl(h + l, op->exp - 16383);
+		break;
+	case FP_NORMAL:
+		h = ldexpl((long double)(op->fracth | 0x1000000000000L), -48);
+		l = ldexpl((long double)op->fractl, -112);
+		if (op->sign) {
+			h = -h;
+			l = -l;
+		}
+		op->v = ldexpl(h + l, op->exp - 16383);
+		break;
 	}
-	op->v = ldexpl(h + l, op->exp - 16383);
+	//logmsg("exp=%d fracth=%llx fractl=%llx v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
 }
 
 void lbfpston(struct lbfp *op)
 {
 	double t;
 
-	t = ldexp((double)(op->fract | 0x10000000000000L), -52);
-	if (op->sign)
-		t = -t;
-	op->v = ldexp(t, op->exp - 1023);
-	//logmsg("lston exp=%d fract=%llx v=%g\n", op->exp, op->fract, op->v);
+	switch (lbfpclassify(op)) {
+	case FP_NAN:
+		logmsg("lbfpston: unexpectedly converting a NaN\n");
+		op->v = sqrt(-1);
+		break;
+	case FP_INFINITE:
+		logmsg("lbfpston: unexpectedly converting an Infinite\n");
+		if (op->sign) {
+			op->v = log(0);
+		} else {
+			op->v = 1/0;
+		}
+		break;
+	case FP_ZERO:
+		if (op->sign) {
+			op->v = 1 / log(0);
+		} else {
+			op->v = 0;
+		}
+		break;
+	case FP_SUBNORMAL:
+		/* WARNING:
+		 * This code is probably not correct yet.
+		 * I only did the quick hack of removing unit bit 1.
+		 * Haven't looked at exponent handling yet.
+		 */
+		t = ldexp((double)(op->fract), -52);
+		if (op->sign)
+			t = -t;
+		op->v = ldexp(t, op->exp - 1023);
+		break;
+	case FP_NORMAL:
+		t = ldexp((double)(op->fract | 0x10000000000000L), -52);
+		if (op->sign)
+			t = -t;
+		op->v = ldexp(t, op->exp - 1023);
+		break;
+	}
+	//logmsg("exp=%d fract=%llx v=%g\n", op->exp, op->fract, op->v);
 }
 
 void sbfpston(struct sbfp *op)
 {
 	float t;
 
-	t = ldexpf((float)(op->fract | 0x800000), -23);
-	if (op->sign)
-		t = -t;
-	op->v = ldexpf(t, op->exp - 127);
-	//logmsg("sston exp=%d fract=%x v=%g\n", op->exp, op->fract, op->v);
+	switch (sbfpclassify(op)) {
+	case FP_NAN:
+		logmsg("sbfpston: unexpectedly converting a NaN\n");
+		op->v = sqrt(-1);
+		break;
+	case FP_INFINITE:
+		logmsg("sbfpston: unexpectedly converting an Infinite\n");
+		if (op->sign) {
+			op->v = log(0);
+		} else {
+			op->v = 1/0;
+		}
+		break;
+	case FP_ZERO:
+		if (op->sign) {
+			op->v = 1 / log(0);
+		} else {
+			op->v = 0;
+		}
+		break;
+	case FP_SUBNORMAL:
+		/* WARNING:
+		 * This code is probably not correct yet.
+		 * I only did the quick hack of removing unit bit 1.
+		 * Haven't looked at exponent handling yet.
+		 */
+		t = ldexpf((float)(op->fract | 0x800000), -23);
+		if (op->sign)
+			t = -t;
+		op->v = ldexpf(t, op->exp - 127);
+		break;
+	case FP_NORMAL:
+		t = ldexpf((float)(op->fract | 0x800000), -23);
+		if (op->sign)
+			t = -t;
+		op->v = ldexpf(t, op->exp - 127);
+		break;
+	}
+	//logmsg("exp=%d fract=%x v=%g\n", op->exp, op->fract, op->v);
 }
 
 /*
@@ -401,32 +510,90 @@ void sbfpston(struct sbfp *op)
  */
 void ebfpntos(struct ebfp *op)
 {
-	long double f = frexpf(op->v, &(op->exp));
+	long double f;
 
-	op->sign = signbit(op->v);
-	op->exp += 16383 - 1;
-	op->fracth = (U64)ldexp(fabsl(f), 49) & 0xFFFFFFFFFFFFL;
-	op->fractl = (U64)fmodl(ldexp(fabsl(f), 113), pow(2, 64));
+	switch (fpclassify(op->v)) {
+	case FP_NAN:
+		ebfpdnan(op);
+		break;
+	case FP_INFINITE:
+		ebfpinfinity(op, signbit(op->v));
+		break;
+	case FP_ZERO:
+		ebfpzero(op, signbit(op->v));
+		break;
+	case FP_SUBNORMAL:
+		/* This may need special handling, but I don't
+		 * exactly how yet.  I suspect I need to do something
+		 * to deal with the different implied unit bit.
+		 */
+	case FP_NORMAL:
+		f = frexpf(op->v, &(op->exp));
+		op->sign = signbit(op->v);
+		op->exp += 16383 - 1;
+		op->fracth = (U64)ldexp(fabsl(f), 49) & 0xFFFFFFFFFFFFL;
+		op->fractl = (U64)fmodl(ldexp(fabsl(f), 113), pow(2, 64));
+		break;
+	}
+	//logmsg("exp=%d fracth=%llx fractl=%llx v=%Lg\n", op->exp, op->fracth, op->fractl, op->v);
 }
 
 void lbfpntos(struct lbfp *op)
 {
-	double f = frexpf(op->v, &(op->exp));
+	double f = 0;
 
-	op->sign = signbit(op->v);
-	op->exp += 1023 - 1;
-	op->fract = (U64)ldexp(fabs(f), 53) & 0xFFFFFFFFFFFFFL;
-	//logmsg("lntos v=%g exp=%d fract=%llx\n", op->v, op->exp, op->fract);
+	switch (fpclassify(op->v)) {
+	case FP_NAN:
+		lbfpdnan(op);
+		break;
+	case FP_INFINITE:
+		lbfpinfinity(op, signbit(op->v));
+		break;
+	case FP_ZERO:
+		lbfpzero(op, signbit(op->v));
+		break;
+	case FP_SUBNORMAL:
+		/* This may need special handling, but I don't
+		 * exactly how yet.  I suspect I need to do something
+		 * to deal with the different implied unit bit.
+		 */
+	case FP_NORMAL:
+		f = frexpf(op->v, &(op->exp));
+		op->sign = signbit(op->v);
+		op->exp += 1023 - 1;
+		op->fract = (U64)ldexp(fabs(f), 53) & 0xFFFFFFFFFFFFFL;
+		break;
+	}
+	//logmsg("exp=%d fract=%llx v=%g\n", op->exp, op->fract, op->v);
 }
 
 void sbfpntos(struct sbfp *op)
 {
 	float f = frexpf(op->v, &(op->exp));
 
-	op->sign = signbit(op->v);
-	op->exp += 127 - 1;
-	op->fract = (U32)ldexp(fabsf(f), 24) & 0x7FFFFF;
-	//logmsg("sntos v=%g exp=%d fract=%x\n", op->v, op->exp, op->fract);
+	switch (fpclassify(op->v)) {
+	case FP_NAN:
+		sbfpdnan(op);
+		break;
+	case FP_INFINITE:
+		sbfpinfinity(op, signbit(op->v));
+		break;
+	case FP_ZERO:
+		sbfpzero(op, signbit(op->v));
+		break;
+	case FP_SUBNORMAL:
+		/* This may need special handling, but I don't
+		 * exactly how yet.  I suspect I need to do something
+		 * to deal with the different implied unit bit.
+		 */
+	case FP_NORMAL:
+		f = frexpf(op->v, &(op->exp));
+		op->sign = signbit(op->v);
+		op->exp += 127 - 1;
+		op->fract = (U32)ldexp(fabsf(f), 24) & 0x7FFFFF;
+		break;
+	}
+	//logmsg("exp=%d fract=%x v=%g\n", op->exp, op->fract, op->v);
 }
 
 /*
