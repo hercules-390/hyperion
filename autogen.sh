@@ -8,6 +8,7 @@ echo "Output goes to autogen.log"
 rm -f ./autogen.log
 if test ! -e ./ABOUT-NLS; then
   echo -e "\nImplementing NLS"
+  echo -e "\nIf this script seems to hang, press the >ENTER< key once!"
   gettextize --copy --force --no-changelog --intl >> ./autogen.log 2>&1
   echo -e "\n\aIn spite of the confirmation required from you you do NOT have"
   echo -e "to run the indicated program(s), as we will automagically run them"
