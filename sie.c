@@ -131,7 +131,6 @@ int     icode;                          /* Interception code         */
     }
     else
     {
-logmsg("SIE validity intercept\n");
         /* Validity intercept for invalid mode */
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_MODE, GUESTREGS);
@@ -150,11 +149,25 @@ logmsg("SIE validity intercept\n");
     /* Prefered guest indication */
     GUESTREGS->sie_pref = (STATEBK->m & SIE_M_VR) ? 1 : 0;
 
+#if !defined(FEATURE_ESAME)
     /* Reference and Change Preservation Origin */
     FETCH_FW(GUESTREGS->sie_rcpo, STATEBK->rcpo);
+    if(!GUESTREGS->sie_rcpo)
+    {
+        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+          SIE_VI_WHY_RCZER, GUESTREGS);
+        return;
+    }
+#endif /*!defined(FEATURE_ESAME)*/
 
     /* System Control Area Origin */
     FETCH_FW(GUESTREGS->sie_scao, STATEBK->scao);
+    if(GUESTREGS->sie_scao >= sysblk.mainsize)
+    {
+        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+          SIE_VI_WHY_SCADR, GUESTREGS);
+        return;
+    }
 
     /* Load prefix from state descriptor */
     FETCH_FW(GUESTREGS->PX, STATEBK->prefix);
@@ -164,7 +177,6 @@ logmsg("SIE validity intercept\n");
 #else /*defined(FEATURE_ESAME)*/
                      (GUESTREGS->arch_mode == ARCH_900) ? PX_MASK : 0x7FFFF000;
 #endif /*defined(FEATURE_ESAME)*/
-
 
 #if defined(FEATURE_ESAME)
     /* Load main storage origin */
@@ -176,8 +188,16 @@ logmsg("SIE validity intercept\n");
     GUESTREGS->mainsize += 0x100000;
     GUESTREGS->mainsize &= SIE2_MS_MASK;
 
+    if(GUESTREGS->sie_mso > GUESTREGS->mainsize)
+    {
+        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+          SIE_VI_WHY_MSDEF, GUESTREGS);
+        return;
+    }
+
     /* Calculate main storage size */
     GUESTREGS->mainsize -= GUESTREGS->sie_mso;
+
 #else /*!defined(FEATURE_ESAME)*/
     /* Load main storage origin */
     FETCH_HW(GUESTREGS->sie_mso,STATEBK->mso);
@@ -187,6 +207,34 @@ logmsg("SIE validity intercept\n");
     FETCH_HW(GUESTREGS->mainsize,STATEBK->mse);
     GUESTREGS->mainsize = (GUESTREGS->mainsize + 1) << 16;
 #endif /*!defined(FEATURE_ESAME)*/
+
+    /* Validate Guest prefix */
+    if(GUESTREGS->PX >= GUESTREGS->mainsize)
+    {
+        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+          SIE_VI_WHY_PFOUT, GUESTREGS);
+        return;
+    }
+
+    if(GUESTREGS->sie_mso)
+    {
+        /* Preferred guest must have zero MSO */
+        if(GUESTREGS->sie_pref)
+        {
+            SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+              SIE_VI_WHY_MSONZ, GUESTREGS);
+            return;
+        }
+
+        /* MCDS guest must have zero MSO */
+        if(STATEBK->mx & SIE_MX_XC)
+        {
+            SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+              SIE_VI_WHY_MSODS, GUESTREGS);
+            return;
+        }
+
+    }
 
     /* Load expanded storage origin */
     GUESTREGS->sie_xso = STATEBK->xso[0] << 16
