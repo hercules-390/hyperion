@@ -28,6 +28,12 @@ char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             bigend;                 /* 1 = big-endian file       */
 
+#if defined(ENABLE_NLS)
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+#endif
+
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -47,7 +53,7 @@ int             bigend;                 /* 1 = big-endian file       */
     if (fd < 0)
     {
         fprintf (stderr,
-                 "cckdswap: error opening %s: %s\n",
+                 _("cckdswap: error opening %s: %s\n"),
                  fn, strerror(errno));
         return -1;
     }
@@ -56,7 +62,7 @@ int             bigend;                 /* 1 = big-endian file       */
     rc = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc != CKDDASD_DEVHDR_SIZE)
     {
-        fprintf (stderr, "cckdswap: %s read error: %s\n",
+        fprintf (stderr, _("cckdswap: %s read error: %s\n"),
                  fn, strerror(errno));
         return -1;
     }
@@ -64,7 +70,7 @@ int             bigend;                 /* 1 = big-endian file       */
      && memcmp(devhdr.devid, "CKD_S370", 8) != 0)
     {
         fprintf (stderr,
-         "cckdswap: %s is not a compressed ckd file\n",
+         _("cckdswap: %s is not a compressed ckd file\n"),
          fn);
         return -1;
     }
@@ -73,7 +79,7 @@ int             bigend;                 /* 1 = big-endian file       */
     rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
     if (rc != CCKDDASD_DEVHDR_SIZE)
     {
-        fprintf (stderr, "cckdswap: %s read error: %s\n",
+        fprintf (stderr, _("cckdswap: %s read error: %s\n"),
                  fn, strerror(errno));
         return -1;
     }
@@ -85,11 +91,11 @@ int             bigend;                 /* 1 = big-endian file       */
     rc = cckd_swapend (fd, stderr);
     if (rc < 0)
     {
-        fprintf (stderr, "cckdswap: error during swap\n");
+        fprintf (stderr, _("cckdswap: error during swap\n"));
         return -1;
     }
 
-    printf ("cckdswap: %s changed from %s to %s\n", fn,
+    printf (_("cckdswap: %s changed from %s to %s\n"), fn,
             bigend ? "big-endian" : "little-endian",
             bigend ? "little-endian" : "big-endian");
 
@@ -100,11 +106,11 @@ int             bigend;                 /* 1 = big-endian file       */
 
 void syntax ()
 {
-    printf ("usage:  cckdswap cckd-file\n"
+    printf (_("usage:  cckdswap cckd-file\n"
             "\n"
             "     cckd-file    --   name of the compressed ckd\n"
             "                       file which will have its\n"
-            "                       byte order swapped\n");
+            "                       byte order swapped\n"));
     exit (1);
 } /* end function syntax */
 

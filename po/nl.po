@@ -1,11 +1,11 @@
-# SOME DESCRIPTIVE TITLE.
+# NL.PO    Hercules dutch messages
 # This file is put in the public domain.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Jan Jaeger <jj@septa.nl>, 2002.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2002-05-12 13:57+0200\n"
+"POT-Creation-Date: 2002-05-13 19:55+0200\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -25,6 +25,18 @@ msgstr ""
 
 #: panel.c:2241
 msgid "     (no one currently connected)\n"
+msgstr ""
+
+#: cckd2ckd.c:446 cckd2ckd.c:476 cckd2ckd.c:494 cckd2ckd.c:677 cckd2ckd.c:693
+msgid "    null track substituted\n"
+msgstr ""
+
+#: cckd2ckd.c:732
+msgid "    null track substituted       \n"
+msgstr ""
+
+#: cckd2ckd.c:725
+msgid "    track truncated              \n"
 msgstr ""
 
 #: panel.c:1550
@@ -139,6 +151,11 @@ msgstr ""
 msgid "%4.4X:Stat=%2.2X%2.2X Count=%4.4X %s\n"
 msgstr ""
 
+#: cckd2ckd.c:605
+#, c-format
+msgid "%c %3d%% track %6d of %6d"
+msgstr ""
+
 #: panel.c:2012
 #, c-format
 msgid "%d bytes read from %s\n"
@@ -163,6 +180,45 @@ msgstr ""
 #, c-format
 msgid "%sVersion %s\n"
 msgstr "%sVersie %s\n"
+
+#: cckd2ckd.c:473
+#, c-format
+msgid "*** decompress error for track %d: %d\n"
+msgstr ""
+
+#: cckd2ckd.c:674
+#, c-format
+msgid "*** track %d HA validation error !! %2.2x%2.2x%2.2x%2.2x%2.2x\n"
+msgstr ""
+
+#: cckd2ckd.c:717
+#, c-format
+msgid ""
+"*** track %d R%d validation error !! %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+msgstr ""
+
+#: cckd2ckd.c:688
+#, c-format
+msgid ""
+"*** track %d R0 validation error !! %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+msgstr ""
+
+#: cckd2ckd.c:743
+#, c-format
+msgid "*** track %d size mismatch !! size found %d, expected %d\n"
+msgstr ""
+
+#: cckd2ckd.c:443
+#, c-format
+msgid "*** uncompress error for track %d: %d\n"
+msgstr ""
+
+#: cckd2ckd.c:491
+#, c-format
+msgid "*** unknown compression for track %d: %d\n"
+msgstr ""
 
 #: panel.c:2042
 msgid "Address greater than mainstore size. \n"
@@ -675,7 +731,7 @@ msgstr ""
 #: codepage.c:187
 #, c-format
 msgid "HHC050I CodePage conversion table %s is not defined\n"
-msgstr ""
+msgstr "HHC050I CodePage conversie tabel %s is niet gedefinieerd\n"
 
 #: ipl.c:63
 #, c-format
@@ -1555,7 +1611,7 @@ msgstr ""
 #: cpu.c:962
 #, fuzzy, c-format
 msgid "HHC620I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
-msgstr "HHC623I CPU%4.4X thread all gestart\n"
+msgstr "HHC620I CPU%4.4X thread gestart: tid=%8.8lX, pid=%d, prioriteit=%d\n"
 
 #: cpu.c:955
 #, c-format
@@ -1565,7 +1621,7 @@ msgstr ""
 #: cpu.c:984
 #, c-format
 msgid "HHC623I CPU%4.4X thread already started\n"
-msgstr "HHC623I CPU%4.4X thread all gestart\n"
+msgstr "HHC623I CPU%4.4X thread al gestart\n"
 
 #: cpu.c:1032
 #, fuzzy, c-format
@@ -1781,16 +1837,16 @@ msgstr ""
 #: panel.c:1302
 #, c-format
 msgid "Invalid architecture mode %s\n"
-msgstr ""
+msgstr "Ongeldige achitectuur modus %s\n"
 
 #: panel.c:1171 panel.c:1233 panel.c:2443 panel.c:2458
 msgid "Invalid device number\n"
-msgstr ""
+msgstr "Ongeldig apparaat nummer\n"
 
 #: panel.c:1667
 #, c-format
 msgid "Invalid frame address %8.8X\n"
-msgstr ""
+msgstr "Ongeldig frame adres %8.8X\n"
 
 #: panel.c:2623
 msgid "Invalid max device threads value (must be -1 to n)\n"
@@ -1799,17 +1855,17 @@ msgstr ""
 #: panel.c:822
 #, c-format
 msgid "Invalid operand: %s\n"
-msgstr ""
+msgstr "Ongeldig operand: %s\n"
 
 #: panel.c:834
 #, c-format
 msgid "Invalid range: %s\n"
-msgstr ""
+msgstr "Ongeldig bereik: %s\n"
 
 #: panel.c:798
 #, c-format
 msgid "Invalid value: %s\n"
-msgstr ""
+msgstr "Ongeldige waarde: %s\n"
 
 #: panel.c:1531
 #, c-format
@@ -1819,7 +1875,7 @@ msgstr ""
 #: panel.c:2093
 #, c-format
 msgid "Last 'TXT' record had address: %3.3X\n"
-msgstr ""
+msgstr "Laatste 'TXT' record had adres: %3.3X\n"
 
 #: panel.c:2008
 #, c-format
@@ -1853,7 +1909,7 @@ msgstr ""
 
 #: panel.c:2436
 msgid "Missing device number\n"
-msgstr ""
+msgstr "Geen apparaat nummer\n"
 
 #: panel.c:2449
 msgid "No cckd devices found\n"
@@ -1939,12 +1995,12 @@ msgstr ""
 
 #: panel.c:1796
 msgid "Restart key depressed\n"
-msgstr ""
+msgstr "Restart key ingedrukt\n"
 
 #: hostinfo.c:57
 #, c-format
 msgid "Running on %s %s%s %s %s\n"
-msgstr ""
+msgstr "Draaiend op %s %s%s %s %s\n"
 
 #: config.c:673
 msgid "SETPRIO: Hercules not running as setuid root\n"
@@ -2036,6 +2092,97 @@ msgstr ""
 msgid "busy or interrupt pending"
 msgstr ""
 
+#: cckd2ckd.c:354 cckd2ckd.c:541 cckd2ckd.c:549
+#, c-format
+msgid "cckd2ckd: %s close error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:247 cckd2ckd.c:321 cckd2ckd.c:407
+#, c-format
+msgid "cckd2ckd: %s lseek error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:380
+#, c-format
+msgid "cckd2ckd: %s open error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:169 cckd2ckd.c:196 cckd2ckd.c:218 cckd2ckd.c:254 cckd2ckd.c:328
+#: cckd2ckd.c:415
+#, c-format
+msgid "cckd2ckd: %s read error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:390 cckd2ckd.c:513
+#, c-format
+msgid "cckd2ckd: %s write error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:525
+msgid "cckd2ckd: Terminated due to errors\n"
+msgstr ""
+
+#: cckd2ckd.c:304
+#, c-format
+msgid "cckd2ckd: buffer malloc error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:555
+#, c-format
+msgid "cckd2ckd: copy %s\n"
+msgstr ""
+
+#: cckd2ckd.c:160
+#, fuzzy, c-format
+msgid "cckd2ckd: error opening input file %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: cckd2ckd.c:176
+#, c-format
+msgid "cckd2ckd: input file %s is not a compressed ckd file\n"
+msgstr ""
+
+#: cckdcdsk.c:123
+msgid ""
+"cckdcdsk [-level] [-ro] file-name\n"
+"\n"
+"       where level is a digit 0 - 3:\n"
+"         0  --  minimal checking\n"
+"         1  --  normal  checking\n"
+"         3  --  maximal checking\n"
+"\n"
+"       ro open file readonly, no repairs\n"
+msgstr ""
+
+#: cckdcdsk.c:81
+#, fuzzy, c-format
+msgid "cckdcdsk: error opening file %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: cckdswap.c:98
+#, c-format
+msgid "cckdswap: %s changed from %s to %s\n"
+msgstr ""
+
+#: cckdswap.c:73
+#, c-format
+msgid "cckdswap: %s is not a compressed ckd file\n"
+msgstr ""
+
+#: cckdswap.c:65 cckdswap.c:82
+#, c-format
+msgid "cckdswap: %s read error: %s\n"
+msgstr ""
+
+#: cckdswap.c:94
+msgid "cckdswap: error during swap\n"
+msgstr ""
+
+#: cckdswap.c:56
+#, fuzzy, c-format
+msgid "cckdswap: error opening %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
 #: channel.c:1906
 #, c-format
 msgid "channel: Device %4.4X attention completed\n"
@@ -2064,6 +2211,92 @@ msgstr ""
 #: channel.c:2183
 #, c-format
 msgid "channel: Device %4.4X suspended\n"
+msgstr ""
+
+#: ckd2cckd.c:265
+#, c-format
+msgid "ckd2cckd %s CKD header high cylinder incorrect\n"
+msgstr ""
+
+#: ckd2cckd.c:292
+#, c-format
+msgid "ckd2cckd %s exceeds maximum %d CKD files\n"
+msgstr ""
+
+#: ckd2cckd.c:208
+#, c-format
+msgid "ckd2cckd %s read error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:306
+#, c-format
+msgid ""
+"ckd2cckd %s unable to lookup DASD table entry for devtype 0x%2.2x cyls %d\n"
+msgstr ""
+
+#: ckd2cckd.c:229
+#, c-format
+msgid "ckd2cckd: %s CKD file out of sequence\n"
+msgstr ""
+
+#: ckd2cckd.c:212
+#, c-format
+msgid "ckd2cckd: %s CKD header incomplete\n"
+msgstr ""
+
+#: ckd2cckd.c:256
+#, c-format
+msgid "ckd2cckd: %s CKD header inconsistent with file size\n"
+msgstr ""
+
+#: ckd2cckd.c:648 ckd2cckd.c:661
+#, c-format
+msgid "ckd2cckd: %s close error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:198
+#, c-format
+msgid "ckd2cckd: %s fstat error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:429 ckd2cckd.c:450 ckd2cckd.c:586 ckd2cckd.c:604 ckd2cckd.c:623
+#, c-format
+msgid "ckd2cckd: %s lseek error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:189 ckd2cckd.c:323
+#, fuzzy, c-format
+msgid "ckd2cckd: %s open error: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: ckd2cckd.c:471
+#, c-format
+msgid "ckd2cckd: %s read error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:343 ckd2cckd.c:369 ckd2cckd.c:379 ckd2cckd.c:436 ckd2cckd.c:458
+#: ckd2cckd.c:551 ckd2cckd.c:593 ckd2cckd.c:611 ckd2cckd.c:631
+#, c-format
+msgid "ckd2cckd: %s write error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:570
+msgid "ckd2cckd: Terminated due to errors\n"
+msgstr ""
+
+#: ckd2cckd.c:389
+#, c-format
+msgid "ckd2cckd: buffer malloc error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:670
+#, c-format
+msgid "ckd2cckd: copy %s\n"
+msgstr ""
+
+#: ckd2cckd.c:220
+#, c-format
+msgid "ckd2cckd: input file %s is not a ckd file\n"
 msgstr ""
 
 #: ckddasd.c:625
@@ -2136,6 +2369,14 @@ msgstr ""
 #: ckddasd.c:2841
 #, c-format
 msgid "ckddasd: search key %s\n"
+msgstr ""
+
+#: cckd2ckd.c:556
+msgid "completed with errors"
+msgstr ""
+
+#: ckd2cckd.c:671
+msgid "completed with errors            "
 msgstr ""
 
 #: console.c:1406
@@ -2211,6 +2452,16 @@ msgstr ""
 msgid "loadtext rejected: filename missing\n"
 msgstr ""
 
+#: cckd2ckd.c:211
+#, c-format
+msgid "lookup table malloc error: %s\n"
+msgstr ""
+
+#: cckdcdsk.c:92
+#, c-format
+msgid "lseek error: %s\n"
+msgstr ""
+
 #: panel.c:1480 panel.c:1483 panel.c:1486 panel.c:1489 panel.c:1492
 #: panel.c:1495 panel.c:1498 panel.c:1519 panel.c:1521 panel.c:1523
 #: panel.c:1525 panel.c:1527 panel.c:1529 panel.c:1532 panel.c:1535
@@ -2228,6 +2479,11 @@ msgstr ""
 
 #: panel.c:2226
 msgid "pending "
+msgstr ""
+
+#: cckdcdsk.c:99
+#, c-format
+msgid "read error: %s\n"
 msgstr ""
 
 #: panel.c:1947
@@ -2265,6 +2521,11 @@ msgstr ""
 msgid "signal USR2 received for undetermined device\n"
 msgstr ""
 
+#: cckdcdsk.c:107
+#, c-format
+msgid "size %d used %d free %d first 0x%x number %d\n"
+msgstr ""
+
 #: panel.c:1200
 msgid "started"
 msgstr ""
@@ -2275,6 +2536,14 @@ msgstr ""
 
 #: panel.c:1202 panel.c:1876
 msgid "subchannel not enabled"
+msgstr ""
+
+#: cckd2ckd.c:557
+msgid "successful!!         "
+msgstr ""
+
+#: ckd2cckd.c:672
+msgid "successful!!                     "
 msgstr ""
 
 #: tapedev.c:3686
@@ -2288,4 +2557,63 @@ msgstr ""
 
 #: panel.c:1674
 msgid "usable"
+msgstr ""
+
+#: cckd2ckd.c:565
+#, c-format
+msgid ""
+"usage:  cckd2ckd [-options] input-file output-file\n"
+"\n"
+"     input-file   --   input compressed ckd dasd file\n"
+"     output-file  --   output ckd dasd file\n"
+"\n"
+"   options:\n"
+"     -cyl cyls         number cylinders to copy if\n"
+"                       entire file is not to be copied\n"
+"                       0 - copy to last used cylinder\n"
+"     -maxerrs errs     max number of errors before copy\n"
+"                       is terminated; if 0 then errors\n"
+"                       are ignored.  Default is 5\n"
+"     -quiet            quiet mode, don't display status\n"
+"     -validate         validate track images [default]\n"
+"     -novalidate       don't validate track images\n"
+"%s"
+msgstr ""
+
+#: cckdswap.c:109
+msgid ""
+"usage:  cckdswap cckd-file\n"
+"\n"
+"     cckd-file    --   name of the compressed ckd\n"
+"                       file which will have its\n"
+"                       byte order swapped\n"
+msgstr ""
+
+#: ckd2cckd.c:685
+#, c-format
+msgid ""
+"usage:  ckd2cckd [-options] input-file output-file\n"
+"\n"
+"     create a compressed ckd file from a regular ckd file\n"
+"\n"
+"     input-file   --   input ckd dasd file\n"
+"     output-file  --   output compressed ckd dasd file\n"
+"\n"
+"   options:\n"
+"     -compress  n      compression algorithm\n"
+"                         0 = don't compress\n"
+"                         1 = compress using zlib (default)\n"
+"%s     -dontcompress     don't compress track images\n"
+"                       (same as -compress 0)\n"
+"     -maxerrs errs     max number of errors before copy\n"
+"                       is terminated; if 0 then errors\n"
+"                       are ignored.  Default is 5\n"
+"     -nofudge          turn on the `nofudge' bit to disable\n"
+"                       imbedded free space.  note that\n"
+"                       ckd2cckd does not produce any imbedded\n"
+"                       free space itself\n"
+"     -quiet            quiet mode, don't display status\n"
+"     -z       level    zlib compression level: 0=no compression\n"
+"                       1=fastest ... 9=best\n"
+"%s"
 msgstr ""

@@ -31,6 +31,12 @@ int             level=1;                /* Chkdsk level checking     */
 int             ro=0;                   /* 1 = Open readonly         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
+#if defined(ENABLE_NLS)
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+#endif
+
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -72,7 +78,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     if (fd < 0)
     {
         fprintf (stderr,
-                 "cckdcdsk: error opening file %s: %s\n",
+                 _("cckdcdsk: error opening file %s: %s\n"),
                  fn, strerror(errno));
         return -1;
     }
@@ -83,14 +89,14 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     /* print some statistics */
 	if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
 	{
-		fprintf (stderr, "lseek error: %s\n",strerror(errno));
+		fprintf (stderr, _("lseek error: %s\n"),strerror(errno));
 		if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
 	}
 	else
 	{
 		if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < 0)
 		{
-			fprintf (stderr, "read error: %s\n",strerror(errno));
+			fprintf (stderr, _("read error: %s\n"),strerror(errno));
 			if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
 		}
 		else
@@ -98,7 +104,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 			if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
 				cckd_swapend_chdr (&cdevhdr);
 
-			fprintf (stdout, "size %d used %d free %d first 0x%x number %d\n",
+			fprintf (stdout, _("size %d used %d free %d first 0x%x number %d\n"),
 					 cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
 					 cdevhdr.free, cdevhdr.free_number);
 		}
@@ -114,13 +120,13 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 /*-------------------------------------------------------------------*/
 int syntax()
 {
-    fprintf (stderr, "cckdcdsk [-level] [-ro] file-name\n"
+    fprintf (stderr, _("cckdcdsk [-level] [-ro] file-name\n"
                 "\n"
                 "       where level is a digit 0 - 3:\n"
                 "         0  --  minimal checking\n"
                 "         1  --  normal  checking\n"
                 "         3  --  maximal checking\n"
                 "\n"
-                "       ro open file readonly, no repairs\n");
+                "       ro open file readonly, no repairs\n"));
     return -1;
 }

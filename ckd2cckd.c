@@ -81,6 +81,12 @@ int             z=-1;                   /* Compression value         */
 CKDDEV         *ckd;                    /* -> DASD table entry       */
 int             l2empty;                /* 1=level 2 table is empty  */
 
+#if defined(ENABLE_NLS)
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+#endif
+
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -180,7 +186,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         ifd = open (ifile, O_RDONLY|O_BINARY);
         if (ifd < 0)
         {
-            fprintf (stderr, "ckd2cckd: %s open error: %s\n",
+            fprintf (stderr, _("ckd2cckd: %s open error: %s\n"),
                     ifile, strerror(errno));
             return -1;
         }
@@ -189,7 +195,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         rc = fstat (ifd, &statbuf);
         if (rc < 0)
         {
-            fprintf (stderr, "ckd2cckd: %s fstat error: %s\n",
+            fprintf (stderr, _("ckd2cckd: %s fstat error: %s\n"),
                     ifile, strerror(errno));
             return -1;
         }
@@ -199,11 +205,11 @@ int             l2empty;                /* 1=level 2 table is empty  */
         if (rc < CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
-                fprintf (stderr, "ckd2cckd %s read error: %s\n",
+                fprintf (stderr, _("ckd2cckd %s read error: %s\n"),
                         ifile, strerror(errno));
             else
                 fprintf (stderr,
-                        "ckd2cckd: %s CKD header incomplete\n", ifile);
+                        _("ckd2cckd: %s CKD header incomplete\n"), ifile);
             return -1;
         }
 
@@ -211,7 +217,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         if (memcmp(devhdr.devid, "CKD_P370", 8) != 0)
         {
             fprintf (stderr,
-                    "ckd2cckd: input file %s is not a ckd file\n",
+                    _("ckd2cckd: input file %s is not a ckd file\n"),
                     ifile);
             return -1;
         }
@@ -220,7 +226,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         if (devhdr.fileseq != fileseq
             && !(devhdr.fileseq == 0 && fileseq == 1))
         {
-            fprintf (stderr, "ckd2cckd: %s CKD file out of sequence\n",
+            fprintf (stderr, _("ckd2cckd: %s CKD file out of sequence\n"),
                     ifile);
             return -1;
         }
@@ -247,7 +253,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
             || (highcyl != 0 && highcyl != ckdcyls + cyls - 1))
         {
             fprintf (stderr,
-                    "ckd2cckd: %s CKD header inconsistent with file size\n",
+                    _("ckd2cckd: %s CKD header inconsistent with file size\n"),
                     ifile);
             return -1;
         }
@@ -256,7 +262,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         if (highcyl != 0 && highcyl != ckdcyls + cyls - 1)
         {
             fprintf (stderr,
-                    "ckd2cckd %s CKD header high cylinder incorrect\n",
+                    _("ckd2cckd %s CKD header high cylinder incorrect\n"),
                     ifile);
             return -1;
         }
@@ -283,7 +289,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         if (fileseq > CKD_MAXFILES)
         {
             fprintf (stderr,
-                    "ckd2cckd %s exceeds maximum %d CKD files\n",
+                    _("ckd2cckd %s exceeds maximum %d CKD files\n"),
                     ifile, CKD_MAXFILES);
             return -1;
         }
@@ -297,8 +303,8 @@ int             l2empty;                /* 1=level 2 table is empty  */
     ckd = dasd_lookup (DASD_CKDDEV, NULL, devtype, ckdcyls);
     if (ckd == NULL)
     {
-        fprintf (stderr, "ckd2cckd %s unable to lookup DASD "
-                 "table entry for devtype 0x%2.2x cyls %d\n",
+        fprintf (stderr, _("ckd2cckd %s unable to lookup DASD "
+                 "table entry for devtype 0x%2.2x cyls %d\n"),
                  ifile, devtype, ckdcyls);
         return -1;
     }
@@ -314,7 +320,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (ofd < 0)
     {
-        fprintf (stderr, "ckd2cckd: %s open error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s open error: %s\n"),
                  ofile, strerror(errno));
         exit (10);
     }
@@ -334,7 +340,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     rc = write (ofd, &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc != CKDDASD_DEVHDR_SIZE)
     {
-        fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                  ofile, strerror(errno));
         exit (11);
     }
@@ -360,7 +366,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     rc = write (ofd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
     if (rc != CCKDDASD_DEVHDR_SIZE)
     {
-        fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                  ofile, strerror(errno));
         exit (12);
     }
@@ -370,7 +376,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     rc = write (ofd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
     if (rc != cdevhdr.numl1tab * CCKD_L1ENT_SIZE)
     {
-        fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                  ofile, strerror(errno));
         exit (13);
     }
@@ -380,7 +386,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     buf2 = malloc (trksz);
     if (buf == NULL || buf2 == NULL)
     {
-        fprintf (stderr, "ckd2cckd: buffer malloc error: %s\n",
+        fprintf (stderr, _("ckd2cckd: buffer malloc error: %s\n"),
                  strerror(errno));
         exit (14);
     }
@@ -420,14 +426,14 @@ int             l2empty;                /* 1=level 2 table is empty  */
                     rc = lseek (ofd, l2pos, SEEK_SET);
                     if (rc == -1)
                     {
-                        fprintf (stderr, "ckd2cckd: %s lseek error: %s\n",
+                        fprintf (stderr, _("ckd2cckd: %s lseek error: %s\n"),
                                  ofile, strerror(errno));
                         exit (15);
                     }
                     rc = write (ofd, &l2, CCKD_L2TAB_SIZE);
                     if (rc != CCKD_L2TAB_SIZE)
                     {
-                        fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+                        fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                                 ofile, strerror(errno));
                         exit (16);
                     }
@@ -441,7 +447,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
             rc = lseek (ofd, l2pos, SEEK_SET);
             if (rc == -1)
             {
-                fprintf (stderr, "ckd2cckd: %s lseek error: %s\n",
+                fprintf (stderr, _("ckd2cckd: %s lseek error: %s\n"),
                          ofile, strerror(errno));
                 exit (17);
             }
@@ -449,7 +455,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
             rc = write (ofd, &l2, CCKD_L2TAB_SIZE);
             if (rc != CCKD_L2TAB_SIZE)
             {
-                fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+                fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                          ofile, strerror(errno));
                 exit (18);
             }
@@ -462,7 +468,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         if (rc != trksz)
         {
             *sfxptr = '0' + fileseq;
-            fprintf (stderr, "ckd2cckd: %s read error: %s\n",
+            fprintf (stderr, _("ckd2cckd: %s read error: %s\n"),
                      ifile, strerror(errno));
             exit (19);
         }
@@ -542,7 +548,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
             rc = write (ofd, obuf, obuflen);
             if (rc != obuflen)
             {
-                fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+                fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                          ofile, strerror(errno));
                 exit (20);
             }
@@ -561,7 +567,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
         if (maxerrs > 0 && errs > maxerrs)
         {
             fprintf (stderr,
-                     "ckd2cckd: Terminated due to errors\n");
+                     _("ckd2cckd: Terminated due to errors\n"));
             exit (21);
         }
     }
@@ -577,14 +583,14 @@ int             l2empty;                /* 1=level 2 table is empty  */
             rc = lseek (ofd, l2pos, SEEK_SET);
             if (rc == -1)
             {
-                fprintf (stderr, "ckd2cckd: %s lseek error: %s\n",
+                fprintf (stderr, _("ckd2cckd: %s lseek error: %s\n"),
                          ofile, strerror(errno));
                 exit (22);
             }
             rc = write (ofd, &l2, CCKD_L2TAB_SIZE);
             if (rc != CCKD_L2TAB_SIZE)
             {
-                fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+                fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                         ofile, strerror(errno));
                 exit (23);
             }
@@ -595,14 +601,14 @@ int             l2empty;                /* 1=level 2 table is empty  */
     rc = lseek (ofd, CCKD_L1TAB_POS, SEEK_SET);
     if (rc == -1)
     {
-        fprintf (stderr, "ckd2cckd: %s lseek error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s lseek error: %s\n"),
                  ofile, strerror(errno));
         exit (24);
     }
     rc = write (ofd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
     if (rc != cdevhdr.numl1tab * CCKD_L1ENT_SIZE)
     {
-        fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                  ofile, strerror(errno));
         exit (25);
     }
@@ -614,7 +620,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     rc = lseek (ofd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rc == -1)
     {
-        fprintf (stderr, "ckd2cckd: %s lseek error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s lseek error: %s\n"),
                  ofile, strerror(errno));
         exit (26);
     }
@@ -622,7 +628,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     rc = write (ofd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
     if (rc != CCKDDASD_DEVHDR_SIZE)
     {
-        fprintf (stderr, "ckd2cckd: %s write error: %s\n",
+        fprintf (stderr, _("ckd2cckd: %s write error: %s\n"),
                  ofile, strerror(errno));
         exit (27);
     }
@@ -639,7 +645,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
     if (rc < 0)
     {
         fprintf (stderr,
-                "ckd2cckd: %s close error: %s\n",
+                _("ckd2cckd: %s close error: %s\n"),
                 ofile, strerror(errno));
         exit (28);
     }
@@ -652,16 +658,19 @@ int             l2empty;                /* 1=level 2 table is empty  */
         {
             *sfxptr = '0' + i;
             fprintf (stderr,
-                    "ckd2cckd: %s close error: %s\n",
+                    _("ckd2cckd: %s close error: %s\n"),
                     ifile, strerror(errno));
             exit (29);
         }
     }
 
     if (quiet == 0 || errs > 0)
-        printf ("\rckd2cckd: copy %s\n",
-                errs ? "completed with errors            "
-                     : "successful!!                     ");
+    {
+        putchar('\r');
+        printf (_("ckd2cckd: copy %s\n"),
+                errs ? _("completed with errors            ")
+                     : _("successful!!                     "));
+    }
 
     return 0;
 
@@ -673,7 +682,7 @@ int             l2empty;                /* 1=level 2 table is empty  */
 void syntax ()
 {
     char *usage =
-            "usage:  ckd2cckd [-options] input-file output-file\n"
+    printf(_("usage:  ckd2cckd [-options] input-file output-file\n"
             "\n"
             "     create a compressed ckd file from a regular ckd file\n"
             "\n"
@@ -684,9 +693,7 @@ void syntax ()
             "     -compress  n      compression algorithm\n"
             "                         0 = don't compress\n"
             "                         1 = compress using zlib (default)\n"
-#ifdef CCKD_BZIP2
-            "                         2 = compress using bzip2\n"
-#endif
+            "%s"
             "     -dontcompress     don't compress track images\n"
             "                       (same as -compress 0)\n"
             "     -maxerrs errs     max number of errors before copy\n"
@@ -699,11 +706,19 @@ void syntax ()
             "     -quiet            quiet mode, don't display status\n"
             "     -z       level    zlib compression level: 0=no compression\n"
             "                       1=fastest ... 9=best\n"
+            "%s"),
+#ifdef CCKD_BZIP2
+            "                         2 = compress using bzip2\n",
+#else
+            "",
+#endif
 #ifdef CCKD_BZIP2
             "                       or bzip2 blockSize100k value:\n"
             "                       1=fastest ... 9=best\n"
+#else
+            ""
 #endif
-            ;
+            );
     printf (usage);
     exit (30);
 } /* end function syntax */
