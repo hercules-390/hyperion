@@ -1361,7 +1361,7 @@ U16     xcode;                          /* Exception code            */
        is 1, use current SSTD in control register 7 */
         if (!(effective_addr2 & 0x00000004)
             && (effective_addr2 & 0x00000001)
-            && (sasn_d == (regs->CR(3) & CR3_SASN)))
+            && (sasn_d == regs->CR_LHL(3)))
         {
             sstd = regs->CR(7);
         }
@@ -1574,9 +1574,9 @@ RADR    n;                              /* 32-bit operand values     */
     /* If ALET exception or ASCE-type or region translation
        exception, set exception code in R1 bits 48-63, set
        bit 32 of R1, and set condition code 3 */
-    if (cc == 4) {
+    if (cc > 3) {
         regs->GR_L(r1) = 0x80000000 | xcode;
-        regs->psw.cc = 3;
+        cc = 3;
     }
     else
     {
@@ -1615,8 +1615,9 @@ RADR    n;                              /* 32-bit operand values     */
 #else /*!defined(FEATURE_ESAME)*/
         regs->GR_L(r1) = n;
 #endif /*!defined(FEATURE_ESAME)*/
-        regs->psw.cc = cc;
-    }
+    } /* end else(cc) */
+
+    regs->psw.cc = cc;
 
 } /* end DEF_INST(load_real_address) */
 
@@ -4350,7 +4351,7 @@ static char *ordername[] = {    "Unassigned",
                             status = SIGP_STATUS_INVALID_ORDER;
                         sysblk.arch_mode = ARCH_390;
                         regs->psw.notesame = 1;
-                        regs->PX &= 0x7FFFE000;
+                        regs->PX_L &= 0x7FFFE000;
                         set_arch = 1;
                         break;
                     case 1:
@@ -4359,7 +4360,7 @@ static char *ordername[] = {    "Unassigned",
                         sysblk.arch_mode = ARCH_900;
                         regs->psw.notesame = 0;
                         regs->psw.IA_H = 0;
-                        regs->PX_L &= 0xFFFFE000;
+                        regs->PX_G &= 0x7FFFE000;
                         set_arch = 1;
                         break;
 #if defined(FEATURE_HERCULES_DIAGCALLS)
@@ -4981,7 +4982,7 @@ RADR    n;                              /* Real address              */
     PERFORM_SERIALIZATION (regs);
 
     /* Clear general register 0 */
-    regs->GR(0) = 0;
+    GR_A(0, regs) = 0;
 
 }
 

@@ -3381,6 +3381,16 @@ int     n;                              /* Number of bytes in buffer */
         logmsg("SIE: ");
   #endif /*defined(_FEATURE_SIE)*/
 
+#if 0
+#if _GEN_ARCH == 370
+    logmsg("S/370 ");
+#elif _GEN_ARCH == 390
+    logmsg("ESA/390 ");
+#else
+    logmsg("Z/Arch ");
+#endif
+#endif
+
     /* Display the PSW */
     memset (qword, 0x00, sizeof(qword));
     ARCH_DEP(store_psw) (regs, qword);

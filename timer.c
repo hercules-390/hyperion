@@ -176,6 +176,9 @@ struct  timeval tv;                     /* Structure for gettimeofday
            cpu timers */
         obtain_lock (&sysblk.todlock);
 
+        /* Access the diffent register contexts with the intlock held */
+        obtain_lock(&sysblk.intlock);
+
         /* Decrement the CPU timer for each CPU */
 #ifdef _FEATURE_CPU_RECONFIG 
         for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
@@ -285,9 +288,6 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
         /* Release the TOD clock update lock */
         release_lock (&sysblk.todlock);
-
-        /* ZZ Access the diffent register contexts with the intlock held */
-        obtain_lock(&sysblk.intlock);
 
         /* If a CPU timer or clock comparator interrupt condition
            was detected for any CPU, then wake up all waiting CPUs */

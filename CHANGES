@@ -1,3 +1,8 @@
+08 Apr 2001 Small optimization if vstore/vfetch - Jan Jaeger
+08 Apr 2001 Correction to SIGP Set Architecture Mode - Jan Jaeger
+08 Apr 2001 Small optimization of TPI - Jan Jaeger
+08 Apr 2001 Correction to SCHM in 64 bit mode - Jan Jaeger
+08 Apr 2001 Correction to TB in amode 64 - Jan Jaeger
 06 Apr 2001 Read-track released dfwlock too soon when track found
             in dfw queue
 04 Apr 2001 Sense/Set Path Group ID for DASD - Jan Jaeger

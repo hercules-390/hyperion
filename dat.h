@@ -1634,6 +1634,10 @@ RADR    pte;
         raddr = (regs->GR_G(r1) & ZSEGTAB_PTO)
                     + ((regs->GR_G(r2) & 0x000FF000) >> 9);
 
+#if defined(MODEL_DEPENDENT)
+        raddr = APPLY_PREFIXING (raddr, regs->PX);
+#endif /*defined(MODEL_DEPENDENT)*/
+
         /* Fetch the page table entry from real storage, subject
            to normal storage protection mechanisms */
         pte = ARCH_DEP(vfetch8) ( raddr, USE_REAL_ADDR, regs );

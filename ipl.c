@@ -78,9 +78,6 @@ BYTE    chanstat;                       /* IPL device channel status */
     psa->iplpsw[6] = 0;                 /* Byte count = 24 */
     psa->iplpsw[7] = 24;
 
-    /* Set CCW tracing for the IPL device */
-    dev->ccwtrace = 1;
-
     /* Enable the subchannel for the IPL device */
     dev->pmcw.flag5 |= PMCW5_E;
 
@@ -89,9 +86,6 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Execute the IPL channel program */
     ARCH_DEP(execute_ccw_chain) (dev);
-
-    /* Reset CCW tracing for the IPL device */
-    dev->ccwtrace = 0;
 
     /* Clear the interrupt pending and device busy conditions */
     dev->pending = 0;

@@ -1876,6 +1876,7 @@ BYTE    cwork[4];                       /* Character work areas      */
 
     } /* end for(i) */
 
+#if defined(MODEL_DEPENDENT)
     /* If the mask is all zero, we nevertheless access one byte
        from the storage operand, because POP states that an
        access exception may be recognized on the first byte */
@@ -1884,6 +1885,7 @@ BYTE    cwork[4];                       /* Character work areas      */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
         return;
     }
+#endif /*defined(MODEL_DEPENDENT)*/
 
     /* Store result at operand location */
     ARCH_DEP(vstorec) ( cwork, j-1, effective_addr2, b2, regs );
@@ -4264,13 +4266,13 @@ RADR    n;                              /* 64-bit operand values     */
        exception, or if the segment table entry is outside the
        table and the entry address exceeds 2GB, set exception
        code in R1 bits 48-63, set bit 32 of R1, and set cc 3 */
-    if (cc == 4
+    if (cc > 3
         || (cc == 3 && n > 0x7FFFFFFF))
     {
         regs->GR_L(r1) = 0x80000000 | xcode;
         cc = 3;
     }
-    else if (cc == 3)
+    else if (cc == 3) /* && n <= 0x7FFFFFFF */
     {
         /* If segment table entry is outside table and entry
            address does not exceed 2GB, return bits 32-63 of

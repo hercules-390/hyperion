@@ -204,20 +204,14 @@ DEVBLK            *dev;                /* Device block pointer       */
 
     /* Program check if SPCCB is not on a doubleword boundary */
     if ( spccb_absolute_addr & 0x00000007 )
-    {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 3;
-    }
 
     /* Program check if SPCCB is outside main storage */
     if ( spccb_absolute_addr >= regs->mainsize )
-    {
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-        return 3;
-    }
 
-    /*debug*/logmsg("MSSF call %8.8X SPCCB=%8.8X\n",
-    /*debug*/       mssf_command, spccb_absolute_addr);
+//  /*debug*/logmsg("MSSF call %8.8X SPCCB=%8.8X\n",
+//  /*debug*/       mssf_command, spccb_absolute_addr);
 
     /* Point to Service Processor Command Control Block */
     spccb = (SPCCB_HEADER*)(sysblk.mainstor + spccb_absolute_addr);
@@ -230,10 +224,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 
     /* Program check if end of SPCCB falls outside main storage */
     if ( regs->mainsize - spccblen < spccb_absolute_addr )
-    {
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-        return 3;
-    }
 
     /* Obtain the interrupt lock */
     obtain_lock (&sysblk.intlock);
@@ -385,17 +376,11 @@ static U64        diag204tod;          /* last diag204 tod           */
 
     /* Program check if RMF data is not on a page boundary */
     if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)
-    {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return;
-    }
 
     /* Program check if RMF data area is outside main storage */
     if ( abs >= regs->mainsize )
-    {
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-        return;
-    }
 
     /* Test DIAG204 command word */
     switch (regs->GR_L(r2)) {

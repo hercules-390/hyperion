@@ -170,7 +170,7 @@
 
 #if !defined(FEATURE_VECTOR_FACILITY)
  UNDEF_INST(execute_a4xx)
- #if !defined(FEATURE_ESAME)
+ #if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
   UNDEF_INST(execute_a5xx)
  #endif /*!defined(FEATURE_ESAME)*/
 
@@ -206,7 +206,7 @@
 #endif /*!defined(FEATURE_VECTOR_FACILITY)*/
 
 
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
  UNDEF_INST(execute_b9xx)
  UNDEF_INST(execute_e3xx)
  UNDEF_INST(execute_ebxx)
@@ -569,7 +569,7 @@ DEF_INST(execute_e5xx)
 }
 
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_ESAME) && !defined(FEATURE_ESAME_N3_ESA390)
 DEF_INST(execute_a5xx)
 {
     opcode_a5xx[inst[1] & 0x0F][ARCH_MODE](inst, execflag, regs);
@@ -1584,7 +1584,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B256*/ GENx___x___x___ ,
  /*B257*/ GENx___x390x900 (compare_until_substring_equal),      /* CUSE      */
  /*B258*/ GENx___x390x900 (branch_in_subspace_group),           /* BSG       */
- /*B259*/ GENx___x390x___ (invalidate_expanded_storage_block_entry), /* IESBE*/
+ /*B259*/ GENx___x390x900 (invalidate_expanded_storage_block_entry), /* IESBE*/
  /*B25A*/ GENx___x390x900 (branch_and_set_authority),           /* BSA       */
  /*B25B*/ GENx___x___x___ ,                                     /*%PGXIN     */
  /*B25C*/ GENx___x___x___ ,                                     /*%PGXOUT    */

@@ -322,7 +322,7 @@ VADR    effective_addr2;                /* Effective address         */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Program check if M bit one and gpr2 address not on
-       a 32 byte boundary or highorder bit set */
+       a 32 byte boundary or highorder bit set in ESA/390 mode */
     if ((regs->GR_L(1) & CHM_GPR1_M)
      && (regs->GR_L(2) & CHM_GPR2_RESV))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -330,7 +330,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Set the measurement block origin address */
     if (regs->GR_L(1) & CHM_GPR1_M)
     {
-        sysblk.mbo = regs->GR_L(2) & CHM_GPR2_MBO;
+        sysblk.mbo = regs->GR(2);
         sysblk.mbk = (regs->GR_L(1) & CHM_GPR1_MBK) >> 24;
         sysblk.mbm = 1;
     }
@@ -548,43 +548,50 @@ U32     iointid;                        /* I/O interruption ident    */
 
     /* validate operand before taking any action */
     if ( effective_addr2 != 0 )
-        ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1, ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (effective_addr2, b2, 8-1,
+                                                  ACCTYPE_WRITE, regs);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-    /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
-
-    /* Test and clear pending interrupt, set condition code */
-    regs->psw.cc =
-        ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, &iointid, NULL);
-
-    /* Release the interrupt lock */
-    release_lock (&sysblk.intlock);
-
-    /* Store the SSID word and I/O parameter if an interrupt was pending */
-    if (regs->psw.cc)
+    if( IS_IC_IOPENDING )
     {
-        if ( effective_addr2 == 0 )
+        /* Obtain the interrupt lock */
+        obtain_lock (&sysblk.intlock);
+
+        /* Test and clear pending interrupt, set condition code */
+        regs->psw.cc =
+            ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm,
+                                                       &iointid, NULL);
+
+        /* Release the interrupt lock */
+        release_lock (&sysblk.intlock);
+
+        /* Store the SSID word and I/O parameter if an interrupt was pending */
+        if (regs->psw.cc)
         {
-            /* If operand address is zero, store in PSA */
-            psa = (void*)(sysblk.mainstor + regs->PX);
-            STORE_FW(psa->ioid,ioid);
-            STORE_FW(psa->ioparm,ioparm);
+            if ( effective_addr2 == 0 )
+            {
+                /* If operand address is zero, store in PSA */
+                psa = (void*)(sysblk.mainstor + regs->PX);
+                STORE_FW(psa->ioid,ioid);
+                STORE_FW(psa->ioparm,ioparm);
 #if defined(FEATURE_ESAME)
-            STORE_FW(psa->iointid,iointid);
+                STORE_FW(psa->iointid,iointid);
 #endif /*defined(FEATURE_ESAME)*/
-        }
-        else
-        {
-            /* Otherwise store at operand location */
-            dreg = ((U64)ioid << 32) | ioparm;
-            ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+            }
+            else
+            {
+                /* Otherwise store at operand location */
+                dreg = ((U64)ioid << 32) | ioparm;
+                ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+            }
         }
     }
-
+    else
+        regs->psw.cc = 0;
+    
 }
 
 

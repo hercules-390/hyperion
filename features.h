@@ -41,6 +41,7 @@
 #undef LSED_UET_TLR
 #undef LSED_UET_BAKR
 #undef LSED_UET_PC
+#undef CHM_GPR2_RESV
 #undef DEF_INST
 #undef ARCH_DEP
 #undef PSA
@@ -204,6 +205,8 @@ s390_ ## _name
 #define LSED_UET_BAKR	S_LSED_UET_BAKR
 #define LSED_UET_PC	S_LSED_UET_PC
 
+#define CHM_GPR2_RESV   S_CHM_GPR2_RESV
+
 #define PSA	PSA_3XX
 #define PSA_SIZE 4096
 #define IA	IA_L
@@ -278,6 +281,8 @@ s390_ ## _name
 #define LSED_UET_BAKR	Z_LSED_UET_BAKR
 #define LSED_UET_PC	Z_LSED_UET_PC
 
+#define CHM_GPR2_RESV   Z_CHM_GPR2_RESV
+
 #define DEF_INST(_name) \
 ATTR_REGPARM(3) void z900_ ## _name (BYTE inst[], int execflag, REGS *regs)
 
@@ -287,7 +292,7 @@ z900_ ## _name
 #define PSA	PSA_900
 #define PSA_SIZE 8192
 #define IA	IA_G
-#define PX	PX_L
+#define PX	PX_G
 #define CR(_r)	CR_G(_r)
 #define GR(_r)	GR_G(_r)
 #define GR_A(_r, _regs) ((_regs)->psw.amode64 ? (_regs)->GR_G((_r)) : (_regs)->GR_L((_r)))

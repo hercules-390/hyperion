@@ -59,7 +59,7 @@
    marked N3 in the reference are also available
    in ESA/390 mode */
 #if defined(FEATURE_ESAME_INSTALLED)
-// ZZ #define FEATURE_ESAME_N3_ESA390
+ #define FEATURE_ESAME_N3_ESA390
 #endif /*defined(FEATURE_ESAME_INSTALLED)*/
 
 #if defined(_FEATURE_SIE) && defined(FEATURE_STORAGE_KEY_ASSIST)
@@ -96,6 +96,11 @@
  #error Expanded storage cannot be defined with 2K storage keys
 #endif
 
+#if ( defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME) ) \
+ && defined(FEATURE_VECTOR_FACILITY)
+ #error Vector Facility not supported on ESAME capable processors
+#endif
+ 
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2) \
  && !defined(FEATURE_4K_STORAGE_KEYS)
  #error Move page facility cannot be defined with 2K storage keys

@@ -1081,8 +1081,9 @@ typedef struct _MBK {
 #define CHM_GPR1_D	0x00000001	/* Block update Mode	     */
 #define CHM_GPR1_RESV	0x0FFFFFFC	/* Reserved, must be zero    */
 
-#define CHM_GPR2_MBO	0x7FFFFFE0	/* Measurement Block Origin  */
-#define CHM_GPR2_RESV	0x8000001F	/* Reserved, must be zero    */
+/* Measurement Block Origin  */
+#define S_CHM_GPR2_RESV	0x8000001F	/* Reserved, must be zero    */
+#define Z_CHM_GPR2_RESV	0x0000001F	/* Reserved, must be zero    */
 
 /* Definitions for PLO instruction */
 #define PLO_GPR0_FC	0x000000FF	/* Function code mask	     */

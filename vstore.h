@@ -113,7 +113,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Get absolute address of first byte of operand */
     abs1 = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
 
-    if(!(addr & 1) || (abs1 & PAGEFRAME_BYTEMASK) < (PAGEFRAME_PAGESIZE - 2))
+    if(!(addr & 1) || (abs1 & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2))
     {
         STORE_HW(sysblk.mainstor + abs1, value);
         return;
@@ -159,7 +159,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Get absolute address of first byte of operand */
     abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
 
-    if(!(addr & 3) || (abs & PAGEFRAME_BYTEMASK) < (PAGEFRAME_PAGESIZE - 4))
+    if(!(addr & 3) || (abs & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 4))
     {
         STORE_FW(sysblk.mainstor + abs, value);
         return;
@@ -217,7 +217,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Get absolute address of first byte of operand */
     abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
 
-    if(!(addr & 7) || (abs & PAGEFRAME_BYTEMASK) < (PAGEFRAME_PAGESIZE - 8))
+    if(!(addr & 7) || (abs & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 8))
     {
         STORE_DW(sysblk.mainstor + abs, value);
         return;
@@ -340,7 +340,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Get absolute address of first byte of operand */
     abs1 = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
 
-    if(!(addr & 1) || (abs1 & PAGEFRAME_BYTEMASK) < (PAGEFRAME_PAGESIZE - 2))
+    if(!(addr & 1) || (abs1 & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2))
         return CSWAP16(*((U16*)(sysblk.mainstor + abs1)));
 
     /* Calculate address of second byte of operand */
@@ -382,7 +382,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
 
     /* Fetch 4 bytes when operand does not cross page boundary */
-    if(!(addr & 3) || (abs & PAGEFRAME_BYTEMASK) < (PAGEFRAME_PAGESIZE - 4))
+    if(!(addr & 3) || (abs & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 4))
         return CSWAP32(*((U32*)(sysblk.mainstor + abs)));
 
     /* Operand is not fullword aligned and may cross a page boundary */
@@ -442,7 +442,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
 
     /* Fetch 8 bytes when operand does not cross page boundary */
-    if(!(addr & 7) || (abs & PAGEFRAME_BYTEMASK) < (PAGEFRAME_PAGESIZE - 8))
+    if(!(addr & 7) || (abs & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 8))
         return CSWAP64(*((U64*)(sysblk.mainstor + abs)));
 
     /* Calculate page address of last byte of operand */
