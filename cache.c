@@ -391,12 +391,15 @@ static int cache_create (int ix)
 static int cache_destroy (int ix)
 {
     int i;
-    if (cacheblk[ix].magic == CACHE_MAGIC)
+    if (cacheblk[ix].magic == CACHE_MAGIC) {
+        destroy_lock (&cacheblk[ix].lock);
+        destroy_condition (&cacheblk[ix].waitcond);
         if (cacheblk[ix].cache) {
             for (i = 0; i < cacheblk[ix].nbr; i++)
                 cache_release(ix, i, CACHE_FREEBUF);
             free (cacheblk[ix].cache);
         }
+    }
     memset(&cacheblk[ix], 0, sizeof(CACHEBLK));
     return 0;
 }
