@@ -9,6 +9,10 @@
 || ----------------------------------------------------------------------------
 */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "hetlib.h"
 #include "sllib.h"
 #include "hercules.h"
