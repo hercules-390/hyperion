@@ -55,6 +55,7 @@ void logger_init(void);
 
 int log_read(char **buffer, int *msgindex, int block);
 int log_line(int linenumber);
+void log_sethrdcpy(char *filename);
 
 /* Log routing section */
 typedef void LOG_WRITER(void *,unsigned char *);

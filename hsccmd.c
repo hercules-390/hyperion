@@ -115,6 +115,26 @@ int History(int argc, char *argv[], char *cmdline)
 
 
 ///////////////////////////////////////////////////////////////////////
+/* log command - direct log output */
+
+int log_cmd(int argc, char *argv[],char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if(argc > 1)
+    {
+        if(strcasecmp("off",argv[1]))
+            log_sethrdcpy(argv[1]);
+        else
+            log_sethrdcpy(NULL);
+    }
+    else
+        logmsg(_("HHCPNxxxE no argument\n"));
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
 /* start command (or just Enter) - start CPU (or printer device if argument given) */
 
 int start_cmd(int argc, char *argv[], char *cmdline)
@@ -2816,6 +2836,7 @@ CMDTAB Commands[] =
 COMMAND ( "?",         ListAllCommands, "list all commands" )
 COMMAND ( "help",      HelpCommand,   "command specific help\n" )
 COMMAND ( "hst",       History,       "history of commands\n" )
+COMMAND ( "log",       log_cmd,       "Direct log output\n" )
 
 COMMAND ( "quit",      quit_cmd,      "terminate the emulator" )
 COMMAND ( "exit",      quit_cmd,      "(synonym for 'quit')\n" )

@@ -380,3 +380,70 @@ void logger_init(void)
     release_lock(&logger_lock);
 
 }
+
+
+void log_sethrdcpy(char *filename)
+{
+FILE *temp_hrdcpy = logger_hrdcpy;
+FILE *new_hrdcpy;
+int   new_hrdcpyfd;
+
+    if(!filename)
+    {
+        if(!logger_hrdcpy)
+        {
+            logmsg(_("HHCLGxxxI log not active\n"));
+            return;
+        }
+        else
+        {
+            obtain_lock(&logger_lock);
+            logger_hrdcpy = 0;
+	    logger_hrdcpyfd = 0;
+            release_lock(&logger_lock);
+            fprintf(temp_hrdcpy,_("HHCLGxxxI log closed\n"));
+            fclose(temp_hrdcpy);
+            logmsg(_("HHCLGxxxI log closed\n"));
+            return;
+        }
+    }
+    else
+    {
+        new_hrdcpyfd = open(filename, 
+			    O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
+                            S_IRUSR  | S_IWUSR | S_IRGRP);
+        if(new_hrdcpyfd < 0)
+        {
+            logmsg(_("HHCLGxxxE Error opening logfile %s: %s\n"),
+              filename,strerror(errno));
+            return;
+        }
+        else
+        {
+            if(!(new_hrdcpy = fdopen(new_hrdcpyfd,"w")))
+            {
+                logmsg(_("HHCLGxxxE log file fdopen failed for %s: %s\n"),
+                  filename, strerror(errno));
+                return;
+            }
+            else
+            {
+                setvbuf(new_hrdcpy, NULL, _IONBF, 0);
+
+                obtain_lock(&logger_lock);
+                logger_hrdcpy = new_hrdcpy;
+                logger_hrdcpyfd = new_hrdcpyfd;
+                release_lock(&logger_lock);
+
+		if(temp_hrdcpy)
+                {
+                    fprintf(temp_hrdcpy,_("HHCLGxxxI log switched to %s\n"),
+                      filename);
+                    fclose(temp_hrdcpy);
+                }
+            }
+        }
+    }
+}
+
+
