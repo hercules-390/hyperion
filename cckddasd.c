@@ -3578,7 +3578,7 @@ BYTE            buf[65536];             /* Buffer                    */
     }
     else
     {
-        if (cckd_chkdsk (cckd->fd[to_sfx], stdout, 0) < 0)
+        if (cckd_chkdsk (cckd->fd[to_sfx], stdout, 1) < 0)
         {
             logmsg (_("HHCCD173E %4.4X file[%d] not merged, "
                     "file[%d] check failed\n"),
