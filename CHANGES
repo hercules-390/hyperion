@@ -1,3 +1,6 @@
+22 Feb 2002 Allow comments in hercules.rc file (start with #) - Paul Leisy
+22 Feb 2002 Correct BFP behavior in GUEST mode - Paul Leisy
+22 Feb 2002 Fix missing PER in GUEST mode when HOST rupt icept - Paul Leisy
 20 Feb 2002 Print to pipe - Roger Bowler
 19 Feb 2002 Fix pending interrupts on other cpus channelset - Jan Jaeger
 15 Feb 2002 Fix interval timer state retention - Jan Jaeger
