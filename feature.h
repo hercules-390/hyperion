@@ -170,7 +170,7 @@ s370_ ## _name
 #define F_RADR  "%8.8X"
 #else
 #define RADR    U64
-#define F_RADR  "%16.16llX"
+#define F_RADR  "%8.8llX"
 #endif
 #define VADR    U32
 #define F_VADR  "%8.8X"
@@ -266,7 +266,7 @@ s390_ ## _name
 #define F_RADR  "%8.8X"
 #else
 #define RADR    U64
-#define F_RADR  "%16.16llX"
+#define F_RADR  "%8.8llX"
 #endif
 #define VADR    U32
 #define F_VADR  "%8.8X"
