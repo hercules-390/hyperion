@@ -2164,7 +2164,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
 DEF_INST(branch_relative_on_index_high_long)
 {
 int     r1, r3;                         /* Register numbers          */
-U32     i2;                             /* 32-bit operand            */
+S16     i2;                             /* 16-bit immediate offset   */
 S64     i,j;                            /* Integer workareas         */
 
     RIE(inst, regs, r1, r3, i2);
@@ -2182,7 +2182,7 @@ S64     i,j;                            /* Integer workareas         */
     if ( (S64)regs->GR_G(r1) > j )
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
-                                + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
+                                + 2LL*i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
@@ -2205,7 +2205,7 @@ S64     i,j;                            /* Integer workareas         */
 DEF_INST(branch_relative_on_index_low_or_equal_long)
 {
 int     r1, r3;                         /* Register numbers          */
-U32     i2;                             /* 32-bit operand            */
+S16     i2;                             /* 16-bit immediate offset   */
 S64     i,j;                            /* Integer workareas         */
 
     RIE(inst, regs, r1, r3, i2);
@@ -2223,7 +2223,7 @@ S64     i,j;                            /* Integer workareas         */
     if ( (S64)regs->GR_G(r1) <= j )
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
-                                + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
+                                + 2LL*i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
