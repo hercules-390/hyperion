@@ -585,6 +585,54 @@ TID                     httptid;        /* Negotiation thread id     */
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
+
+    /* If the HTTP root directory is not specified,
+       use a reasonable default */
+    if (!sysblk.httproot)
+        {
+#if defined(WIN32)
+        char process_dir[HTTP_PATH_LENGTH];
+        if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
+            sysblk.httproot = strdup(process_dir);
+        else
+#endif /*defined(WIN32)*/
+        sysblk.httproot = strdup(HTTP_ROOT);
+    }
+#if defined(WIN32)
+    if (is_win32_directory(sysblk.httproot))
+    {
+        char  posix_dir[HTTP_PATH_LENGTH];
+        convert_win32_directory_to_posix_directory(sysblk.httproot,posix_dir);
+        free(sysblk.httproot); sysblk.httproot = strdup(posix_dir);
+    }
+#endif /*defined(WIN32)*/
+    /* Convert the specified HTTPROOT value to an absolute path
+       ending with a '/' and save in sysblk.httproot. */
+    {
+        char absolute_httproot_path[HTTP_PATH_LENGTH];
+        char save_working_directory[HTTP_PATH_LENGTH];
+        int  rc;
+        if (!realpath(sysblk.httproot,absolute_httproot_path))
+        {
+            logmsg( _("HHCCF066E Invalid HTTPROOT: %s\n"),
+                   strerror(errno));
+            return NULL;
+        }
+        VERIFY(getcwd(save_working_directory,sizeof(save_working_directory)));
+        rc = chdir(absolute_httproot_path);     // (verify path)
+        VERIFY(!chdir(save_working_directory)); // (restore cwd)
+        if (rc != 0)
+        {
+            logmsg( _("HHCCF066E Invalid HTTPROOT: %s\n"),
+                   strerror(errno));
+            return NULL;
+        }
+        strlcat(absolute_httproot_path,"/",sizeof(absolute_httproot_path));
+        free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
+        TRACE("HTTPROOT = %s\n",sysblk.httproot);// (debug display)
+    }
+
+
     /* Obtain a socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
 
