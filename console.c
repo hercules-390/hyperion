@@ -1271,6 +1271,8 @@ BYTE                    rejmsg[80];     /* Rejection message         */
 /*-------------------------------------------------------------------*/
 /* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
 /*-------------------------------------------------------------------*/
+static int console_cnslcnt;
+
 static void *
 console_connection_handler (void *arg)
 {
@@ -1320,7 +1322,7 @@ BYTE                    unitstat;       /* Status after receive data */
     }
 
     /* Attempt to bind the socket to the port */
-    while (sysblk.cnslcnt  && !sysblk.shutdown)
+    while (console_cnslcnt  && !sysblk.shutdown)
     {
         rc = bind (lsock, server, sizeof(struct sockaddr));
 
@@ -1353,7 +1355,7 @@ BYTE                    unitstat;       /* Status after receive data */
     o_mfd = 0;
 
     /* Handle connection requests and attention interrupts */
-    while (sysblk.cnslcnt) {
+    while (console_cnslcnt) {
 
         /* Initialize the select parameters */
         maxfd = lsock;
@@ -1533,7 +1535,7 @@ BYTE                    unitstat;       /* Status after receive data */
 static int
 console_initialise()
 {
-    if(!(sysblk.cnslcnt++))
+    if(!(console_cnslcnt++))
     {
         if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
                             console_connection_handler, NULL) )
@@ -1555,7 +1557,7 @@ console_remove(DEVBLK *dev)
 
     dev->fd = -1;
 
-    if(!sysblk.cnslcnt--)
+    if(!console_cnslcnt--)
         logmsg(_("console_remove() error\n"));
 
     signal_thread (sysblk.cnsltid, SIGUSR2);
