@@ -17,10 +17,11 @@ HDLPRE hdl_preload[] = {
 
 HDL_DEPENDENCY_SECTION;
 {
-     HDL_DEPENDENCY (HERCULES);
-     HDL_DEPENDENCY (REGS);
-     HDL_DEPENDENCY (DEVBLK);
-     HDL_DEPENDENCY (SYSBLK);
+     /* Define version dependencies that this module requires */
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(REGS);
+     HDL_DEPENDENCY(DEVBLK);
+     HDL_DEPENDENCY(SYSBLK);
 
 } END_DEPENDENCY_SECTION;
 
