@@ -16,6 +16,7 @@ ctc_ctci.c
 ctc_lcs.c
 dasdcat.c
 dasdcopy.c
+dasdinit.c
 dasdutil.c
 dat.h
 esame.c

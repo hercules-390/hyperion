@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-18 17:21-0600\n"
+"POT-Creation-Date: 2002-12-18 17:30-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1651,6 +1651,10 @@ msgstr ""
 #: dasdcopy.c:365
 #, c-format
 msgid "HHCDC009E %s: %s write error %s %d stat=%2.2X\n"
+msgstr ""
+
+#: dasdinit.c:231
+msgid "HHCDI001I DASD initialization successfully completed.\n"
 msgstr ""
 
 #: dasdcat.c:344

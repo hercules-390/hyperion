@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2002-12-18 17:21-0600\n"
+"POT-Creation-Date: 2002-12-18 17:30-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -1649,6 +1649,10 @@ msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
 #: dasdcopy.c:365
 #, c-format
 msgid "HHCDC009E %s: %s write error %s %d stat=%2.2X\n"
+msgstr ""
+
+#: dasdinit.c:231
+msgid "HHCDI001I DASD initialization successfully completed.\n"
 msgstr ""
 
 #: dasdcat.c:344
