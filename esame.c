@@ -425,6 +425,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Update access register b2 */
     regs->AR(b2) = ar;
+    INVALIDATE_AEA(b2, regs);
 
     /* Update general register b2 */
 #if defined(FEATURE_ESAME)
