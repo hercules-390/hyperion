@@ -17,7 +17,6 @@
 /*      Dynamic CPU reconfiguration - Jan Jaeger                     */
 /*      Suppress superflous HHC701I/HHC702I messages - Jan Jaeger    */
 /*      Break syscons output if too long - Jan Jaeger                */
-/*      //Sysplex support: hardware CFCC loader - Jan Jaeger         */
 /*      Added CHSC - CHannel Subsystem Call - Jan Jaeger 2001-05-30  */
 /*-------------------------------------------------------------------*/
 

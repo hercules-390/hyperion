@@ -18,7 +18,6 @@
 /*      Dynamic device attach/detach by Jan Jaeger                   */
 /*      OSTAILOR parameter by Jay Maynard                            */
 /*      PANRATE parameter by Reed H. Petty                           */
-/*      CFCC hardware loader by Jan Jaeger                           */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
 /*-------------------------------------------------------------------*/
 

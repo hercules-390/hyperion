@@ -48,7 +48,6 @@
 23 May 2001 CKD 9345 support - Greg Smith
 21 May 2001 Correct availability of N3 instructions in S/390 mode - Jan Jaeger
 19 May 2001 Compression corrections - Bernard van der Helm
-19 May 2001 Include basic crypto support - Jan Jaeger
 19 May 2001 Correct multiply/divide long - Jan Jaeger
 19 May 2001 Correct RCP host address when nonzero MSO - Paul Leisy
 18 May 2001 Correct CEFBR/CFEBR register use - Jan Jaeger
@@ -359,8 +358,6 @@
 07 Oct 2000 Fix for random bug in MP instruction (Mario Bezzi)
 07 Oct 2000 Treat all 3505 card reader read CCWs the same (Jay Maynard)
 26 Sep 2000 STCRW instruction nullification correction - Jan Jaeger
-16 Sep 2000 Add ses.c containing sysplex specific instructions (Jan Jaeger)
-09 Sep 2000 Add CFCC hardware loader (Jan Jaeger)
 05 Sep 2000 I/O rate meter on graphical panel (Valery Pogonchenko)
 05 Sep 2000 Sense correction for track overflow processing (Valery
             Pogonchenko)
