@@ -3988,8 +3988,9 @@ BYTE    dism;                           /* Disabled int subcl mask   */
     if(regs->sie_state)
     {
     U32 n;
-        for(i = r1, n = 0x8000 >> r1; ; )
+        for(i = r1; ; )
         {
+            n = 0x8000 >> i;
             if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & ((i < 8) ? n >> 8 : n))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
