@@ -8,9 +8,7 @@
 
 #define _ESA390_H
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "htypes.h"
 
 /*-------------------------------------------------------------------*/
 /* Header file containing ESA/390 structure definitions 	     */

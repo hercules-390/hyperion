@@ -10,9 +10,7 @@
 
 #if !defined(NO_ASM_BYTESWAP)
 
-#ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
-#endif
+#include "htypes.h"
 
 extern __inline__ ATTR_REGPARM(1) uint16_t bswap_16(uint16_t x)
 {
