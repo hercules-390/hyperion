@@ -529,8 +529,8 @@ cckd_read_trk_retry:
         /* If the entry is pending write then change it to `updated' */
         if (cckd->cache[fnd].flags & CCKD_CACHE_WRITE)
         {
-            cckd->cache[i].flags &= ~CCKD_CACHE_WRITE;
-            cckd->cache[i].flags |= CCKD_CACHE_UPDATED;
+            cckd->cache[fnd].flags &= ~CCKD_CACHE_WRITE;
+            cckd->cache[fnd].flags |= CCKD_CACHE_UPDATED;
             cckd->writepending--;
         }
 
@@ -910,14 +910,15 @@ int             rc;                     /* Return code               */
     writer = ++cckd->writers;
 
     /* Return without messages if too many already started */
-    if (writer > cckd->writersmax)
+    if (writer > cckd->writersmax
+     && !(cckd->writersmax == 0 && cckd->writepending))
     {
         --cckd->writers;
         release_lock (&cckd->cachelock);
         return;
     }
 
-    devmsg ("%4.4X cckd_writer[%d] thread started: tid="TIDPAT", pid = %d\n",
+    devmsg ("%4.4X:cckddasd: %d writer thread started: tid="TIDPAT", pid = %d\n",
             dev->devnum, writer, thread_id(), getpid());
 
     while (writer <= cckd->writersmax || cckd->writepending)
@@ -966,7 +967,7 @@ int             rc;                     /* Return code               */
         compress = (len < CCKD_COMPRESS_MIN ?
                     CCKD_COMPRESS_NONE : cckd->cdevhdr[cckd->sfn].compress);
 
-        DEVTRACE ("writer[%d] writing track %d\n", writer, cckd->cache[o].trk);
+        DEVTRACE ("cckddasd: %d wrtrk[%2.2d] %d\n", writer, o, cckd->cache[o].trk);
 
         switch (compress) {
 
@@ -1057,9 +1058,13 @@ int             rc;                     /* Return code               */
             " cache entry available\n", writer, o, trk);
             signal_condition (&cckd->cachecond);
         }
+
+        DEVTRACE ("cckddasd: %d wrtrk[%2.2d] %d complete flags:%8.8x\n",
+                  writer, o, cckd->cache[o].trk, cckd->cache[o].flags);
+
     }
 
-    devmsg ("%4.4X cckd_writer[%d] thread stopping: tid="TIDPAT", pid = %d\n",
+    devmsg ("%4.4X:cckddasd: %d writer thread stopping: tid="TIDPAT", pid = %d\n",
             dev->devnum, writer, thread_id(), getpid());
     cckd->writers--;
     if (!cckd->writers) signal_condition(&cckd->termcond);
@@ -1632,7 +1637,7 @@ int             lru=-1;                 /* Least-Recently-Used cache
         if  (lru == - 1 || cckd->l2cache[i].age < cckd->l2cache[lru].age)
             lru = i;
     }
-DEVTRACE("cckd_read_l2 sfx %d l1x %d i %d fnd %d lru %d\n", i,sfx,l1x,fnd,lru);
+
     /* check for level 2 cache hit */
     if (fnd >= 0)
     {
@@ -1641,6 +1646,7 @@ DEVTRACE("cckd_read_l2 sfx %d l1x %d i %d fnd %d lru %d\n", i,sfx,l1x,fnd,lru);
         cckd->l2cache[i].age = ++cckd->cacheage; 
         return 0;
     }
+    DEVTRACE ("cckddasd: l2[%d,%d] cache[%d] miss\n", sfx, l1x, lru);
 
     /* get buffer for level 2 table if there isn't one */
     if (!cckd->l2cache[lru].buf)
@@ -1657,7 +1663,7 @@ DEVTRACE("cckd_read_l2 sfx %d l1x %d i %d fnd %d lru %d\n", i,sfx,l1x,fnd,lru);
         if (cckd->l1[sfx][l1x])
             memset (cckd->l2, 0xff, CCKD_L2TAB_SIZE);
         else memset (cckd->l2, 0, CCKD_L2TAB_SIZE);
-        DEVTRACE("cckddasd: l2[%d,%d], null cache[%d]\n", sfx, l1x, lru);
+        DEVTRACE("cckddasd: l2[%d,%d] cache[%d] null\n", sfx, l1x, lru);
         rc = 0;
     }
     /* read the new level 2 table */
@@ -1666,8 +1672,8 @@ DEVTRACE("cckd_read_l2 sfx %d l1x %d i %d fnd %d lru %d\n", i,sfx,l1x,fnd,lru);
         rc = lseek (cckd->fd[sfx], (off_t)cckd->l1[sfx][cckd->l1x], SEEK_SET);
         rc = read (cckd->fd[sfx], cckd->l2, CCKD_L2TAB_SIZE);
         if (cckd->swapend[sfx]) cckd_swapend_l2 (cckd->l2);
-        DEVTRACE("cckddasd: l2[%d,%d] read pos 0x%x cache[%d]\n",
-                 sfx, l1x, cckd->l1[sfx][l1x], lru);
+        DEVTRACE("cckddasd: l2[%d,%d] cache[%d] read pos 0x%x\n",
+                 sfx, l1x, lru, cckd->l1[sfx][l1x]);
         cckd->l2reads[sfx]++;
         cckd->totl2reads++;
     }
@@ -2915,7 +2921,7 @@ char *gcstates[] = {"critical","severe","moderate","light","none"};
         return;
     }
 
-    devmsg ("%4.4x: gcol[%d] started pid %d tid "TIDPAT"\n",
+    devmsg ("%4.4x:cckddasd: %d garbage collector starting: pid %d tid "TIDPAT"\n",
             dev->devnum, gcol, getpid(), thread_id());
 
     while (gcol <= cckd->gcolsmax)
@@ -2941,8 +2947,8 @@ char *gcstates[] = {"critical","severe","moderate","light","none"};
         if (cckd->cdevhdr[cckd->sfn].free_number > 1800 && gc > 0) gc--;
 
         /* Issue garbage state message */
-        if (gc != oldgc && TRUE)
-            devmsg ("%4.4X gcol[%d] state is %s\n", dev->devnum, gcol, gcstates[gc]);
+        if (gc != oldgc)
+            DEVTRACE ("%4.4X:cckddasd: %d gcol state is %s\n", dev->devnum, gcol, gcstates[gc]);
         oldgc = gc;
 
         /* call the garbage collector */
@@ -2952,8 +2958,7 @@ char *gcstates[] = {"critical","severe","moderate","light","none"};
         wait = gctab[gc].interval;
         if (wait < 1) wait = 5;
 
-        DEVTRACE ( "gcol[%d] waiting %d seconds, max %d\n", gcol, wait,
-                   cckd->gcolsmax);
+        DEVTRACE ("cckddasd: %d gcol waiting %d seconds\n", gcol, wait);
 
         obtain_lock (&cckd->gclock);
         gettimeofday (&now, NULL);
@@ -2962,7 +2967,7 @@ char *gcstates[] = {"critical","severe","moderate","light","none"};
         timed_wait_condition (&cckd->gccond, &cckd->gclock, &tm);
     }
 
-    devmsg ("%4.4x: gcol[%d] stopping pid %d tid "TIDPAT"\n",
+    devmsg ("%4.4x:cckddasd: %d garbage collector stopping: pid %d tid "TIDPAT"\n",
             dev->devnum, gcol, getpid(), thread_id());
 
     cckd->gcols--;
