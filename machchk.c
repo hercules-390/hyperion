@@ -264,7 +264,11 @@ int i;
 
     tid = pthread_self();
 
-    for(i = 0; i < MAX_CPU_ENGINES; i++)
+#ifdef FEATURE_CPU_RECONFIG
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
+#else /*!FEATURE_CPU_RECONFIG*/
+    for (i = 0; i < sysblk.numcpu; i++)
+#endif /*!FEATURE_CPU_RECONFIG*/
     {
         if(sysblk.regs[i].cputid == tid)
         {
