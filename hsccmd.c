@@ -2461,6 +2461,86 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                curpsw[8],curpsw[9],curpsw[10],curpsw[11],
                curpsw[12],curpsw[13],curpsw[14],curpsw[15]);
         logmsg("\n");
+
+        if (sysblk.regs[i]->sie_active)
+        {
+            logmsg( _("HHCPN123I SIE%4.4X: CPUint=%8.8X "
+                      "(State:%8.8X)&(Mask:%8.8X)\n"),
+                sysblk.regs[i]->guestregs->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]->guestregs),
+                sysblk.regs[i]->guestregs->ints_state, sysblk.regs[i]->guestregs->ints_mask
+                );
+            logmsg( _("          SIE%4.4X: Interrupt %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_INTERRUPT(sysblk.regs[i]->guestregs) ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: I/O interrupt %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_IOPENDING                 ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: Clock comparator %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_CLKC(sysblk.regs[i]->guestregs) ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: CPU timer %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_PTIMER(sysblk.regs[i]->guestregs) ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: Interval timer %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_ITIMER(sysblk.regs[i]->guestregs) ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: External call %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_EXTCALL(sysblk.regs[i]->guestregs) ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: Emergency signal %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_EMERSIG(sysblk.regs[i]->guestregs) ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: Machine check interrupt %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_MCKPENDING(sysblk.regs[i]->guestregs) ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: Service signal %spending\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                IS_IC_SERVSIG                    ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: CPU interlock %sheld\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                sysblk.regs[i]->guestregs->mainlock ? "" : _("not ")
+                );
+            logmsg( _("          SIE%4.4X: lock %sheld\n"),
+                sysblk.regs[i]->guestregs->cpuad,
+                test_lock(&sysblk.cpulock[i]) ? "" : _("not ")
+                );
+            if (ARCH_370 == sysblk.arch_mode)
+            {
+                if (0xFFFF == sysblk.regs[i]->guestregs->chanset)
+                    logmsg( _("          SIE%4.4X: No channelset connected\n"),
+                        sysblk.regs[i]->guestregs->cpuad
+                        );
+                else
+                    logmsg( _("          SIE%4.4X: Connected to channelset "
+                              "%4.4X\n"),
+                        sysblk.regs[i]->guestregs->cpuad,sysblk.regs[i]->guestregs->chanset
+                        );
+            }
+            logmsg( _("          SIE%4.4X: state %s\n"),
+                   sysblk.regs[i]->guestregs->cpuad,states[sysblk.regs[i]->guestregs->cpustate]);
+            logmsg( _("          SIE%4.4X: instcount %lld\n"),
+                   sysblk.regs[i]->guestregs->cpuad,(long long)sysblk.regs[i]->guestregs->instcount);
+            logmsg( _("          SIE%4.4X: siocount %lld\n"),
+                   sysblk.regs[i]->guestregs->cpuad,(long long)sysblk.regs[i]->guestregs->siototal);
+            copy_psw(sysblk.regs[i]->guestregs, curpsw);
+            logmsg( _("          SIE%4.4X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
+                   sysblk.regs[i]->guestregs->cpuad,curpsw[0],curpsw[1],curpsw[2],curpsw[3],
+                   curpsw[4],curpsw[5],curpsw[6],curpsw[7]);
+            if (ARCH_900 == sysblk.regs[i]->guestregs->arch_mode)
+            logmsg( _(" %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x"),
+               curpsw[8],curpsw[9],curpsw[10],curpsw[11],
+               curpsw[12],curpsw[13],curpsw[14],curpsw[15]);
+            logmsg("\n");
+        }
     }
 
     logmsg( _("          Config mask %8.8X started mask %8.8X waiting mask %8.8X\n"),
