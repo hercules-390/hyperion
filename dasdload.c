@@ -18,11 +18,11 @@
 /*-------------------------------------------------------------------*/
 /* Internal table sizes                                              */
 /*-------------------------------------------------------------------*/
-#define MAXDBLK 3000                    /* Maximum number of directory
+#define MAXDBLK 10000                   /* Maximum number of directory
                                            blocks per dataset        */
-#define MAXTTR  10000                   /* Maximum number of TTRs
+#define MAXTTR  30000                   /* Maximum number of TTRs
                                            per dataset               */
-#define MAXDSCB 500                     /* Maximum number of DSCBs   */
+#define MAXDSCB 1000                    /* Maximum number of DSCBs   */
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
