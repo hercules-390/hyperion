@@ -1,3 +1,7 @@
+10 Jul 2001 Make Assist ops use PRI addr in AR mode - Paul Leisy
+10 Jul 2001 Load/Store psw use bits 24-31 - Paul Leisy
+10 Jul 2001 Report PIC 06 on PR at end of inst - Paul Leisy
+09 Jul 2001 Fix TRAP so it receives PIC13 in REAL - Paul Leisy
 09 Jul 2001 Fix CUSE and MVST on page cross rupts - Paul Leisy
 09 Jul 2001 Fix UPT so GPR5 updated after store - Paul Leisy
 07 Jul 2001 Fix sporadic access violation at shutdown - Fish
