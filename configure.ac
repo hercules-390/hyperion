@@ -387,7 +387,9 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(int *)
-AC_CHECK_FUNCS(ffs)
+# FIXME: Disabled - because some builtin ffs seem to be causing problem
+#        however, gcc 3.4 will barf on certain march= 
+# AC_CHECK_FUNCS(ffs)
 
 AC_CHECK_SIZEOF(struct sizeoftest,,[#include "conftest.h"])
 
