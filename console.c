@@ -2284,7 +2284,7 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052 == 1)
             {
                 len = sprintf (dev->buf,
-                        "HHCTE006I Enter input for console device %4.4X\r\n",
+                        "HHCTE006A Enter input for console device %4.4X\r\n",
                         dev->devnum);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)
