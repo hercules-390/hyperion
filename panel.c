@@ -876,8 +876,14 @@ struct  timeval tv;                     /* Select timeout structure  */
     pipefd = compat_msgpiper;
     keybfd = STDIN_FILENO;
 
-    /* Set screen output stream to fully buffered */
-    setvbuf (confp, NULL, _IOFBF, 0);
+#if defined(EXTERNALGUI)
+    if(extgui)
+        /* Use no buffering for when an external gui is in control */
+        setvbuf (confp, NULL, _IONBF, 0);
+    else
+#endif
+        /* Set screen output stream to fully buffered */
+        setvbuf (confp, NULL, _IOFBF, 0);
 
     /* Register the system cleanup exit routine */
     atexit (system_cleanup);
