@@ -66,14 +66,14 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
 static __inline__ int cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
- int code;
+ unsigned char code;
  __asm__ __volatile__ (
          "movb    (%2),%%al\n\t"
          "lock;   cmpxchgb %b1,(%3)\n\t"
-         "setnz   %b1\n\t"
+         "setnz   %b0\n\t"
          "movb    %%al,(%2)"
-         : "=bx"(code)
-         : "bx"(new),
+         : "=q"(code)
+         : "q"(new),
            "S"(old),
            "D"(ptr)
          : "ax", "memory");
