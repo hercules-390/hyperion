@@ -1266,18 +1266,12 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
 
 #ifdef OPTION_FAST_INSTFETCH
-#define FAST_INSTRUCTION_FETCH(_dest, _addr, _regs, _pe, _if, _se) \
+#define FAST_INSTRUCTION_FETCH(_dest, _addr, _regs, _pe, _if) \
         { \
-            if ( regs->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
+            if ( regs->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)) \
                && ((_addr) <= (_pe))) \
-            { \
-                if ((_addr) & 0x01) \
-                    goto _se; \
-                (_dest) =  sysblk.mainstor + regs->AI + \
-                         ((_addr) & PAGEFRAME_BYTEMASK); \
-            } \
-            else \
-                goto _if; \
+                (_dest) =  pagestart + ((_addr) & PAGEFRAME_BYTEMASK); \
+            else goto _if; \
         } 
 
 #if !defined(OPTION_FOOTPRINT_BUFFER)
@@ -1285,8 +1279,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         { \
         COUNT_INST ((_inst), (_regs)); \
         (_regs)->ip = (_inst); \
-        (opcode_table[_inst[0]][ARCH_MODE]) \
-                               ((_inst), 0, (_regs)); \
+        (ARCH_DEP(opcode_table)[_inst[0]]) ((_inst), 0, (_regs)); \
         }
 #else
 #define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
@@ -1310,13 +1303,14 @@ _if: \
     ARCH_DEP(instfetch) (regs->inst, regs->psw.IA, regs);  \
     (regs)->instvalid = 1; \
     (_pe) = (regs->psw.IA & ~0x7FF) + (0x800 - 6); \
+    pagestart = sysblk.mainstor + regs->AI; \
     goto _ex; \
     }
 
-#define FAST_UNROLLED_EXECUTE(_regs, _pe, _ip, _if, _ex, _se) \
+#define FAST_UNROLLED_EXECUTE(_regs, _pe, _ip, _if, _ex) \
         { \
             FAST_INSTRUCTION_FETCH((_ip), (_regs)->psw.IA, (_regs), \
-                                 (_pe), _if, _se); \
+                                 (_pe), _if); \
          _ex: \
             FAST_EXECUTE_INSTRUCTION((_ip), 0, (_regs)); \
         }
@@ -1326,7 +1320,7 @@ void ARCH_DEP(run_cpu) (REGS *regs)
 int     tracethis;                      /* Trace this instruction    */
 int     stepthis;                       /* Stop on this instruction  */
 VADR    pageend;
-BYTE    *ip;
+BYTE    *ip, *pagestart = NULL;
 
     /* Set started bit on and wait bit off for this CPU */
     obtain_lock (&sysblk.intlock);
@@ -1344,6 +1338,13 @@ BYTE    *ip;
     ip = regs->inst;
     regs->ip = ip;
 
+    pagestart = sysblk.mainstor + regs->AI; 
+
+#ifdef FEATURE_PER
+    if (PER_MODE(regs))
+        goto slowloop;
+#endif
+
     while (1)
     {
         /* Test for interrupts if it appears that one may be pending */
@@ -1356,14 +1357,8 @@ BYTE    *ip;
 
         /* Fetch the next sequential instruction */
         FAST_INSTRUCTION_FETCH(ip, regs->psw.IA, regs, pageend,
-                            ifetch0, specexception);
+                            ifetch0);
 exec0:
-
-
-#ifndef OPTION_CPU_UNROLL
-        /* Count instruction usage */
-        regs->instcount++;
-#endif
 
         if( IS_IC_TRACE )
         {
@@ -1391,19 +1386,19 @@ exec0:
 
 #ifdef OPTION_CPU_UNROLL
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch1, exec1, specexception);
+                           ifetch1, exec1);
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch2, exec2, specexception);
+                           ifetch2, exec2);
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch3, exec3, specexception);
+                           ifetch3, exec3);
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch4, exec4, specexception);
+                           ifetch4, exec4);
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch5, exec5, specexception);
+                           ifetch5, exec5);
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch6, exec6, specexception);
+                           ifetch6, exec6);
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch7, exec7, specexception);
+                           ifetch7, exec7);
 #endif
 
     }
@@ -1417,10 +1412,44 @@ FAST_IFETCH(regs, pageend, ip, ifetch5, exec5);
 FAST_IFETCH(regs, pageend, ip, ifetch6, exec6);
 FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
 
-specexception:
-    regs->ip = ip;
-    regs->instvalid = 0;
-    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION); 
+#ifdef FEATURE_PER
+slowloop:
+    while (1)
+    {
+        /* Test for interrupts if it appears that one may be pending */
+        if( IC_INTERRUPT_CPU(regs) )
+        {
+            ARCH_DEP(process_interrupt)(regs);
+            if (!regs->cpuonline)
+                 return;
+        }
+
+        /* Clear the instruction validity flag in case an access
+           error occurs while attempting to fetch next instruction */
+        regs->instvalid = 0;
+
+        /* Fetch the next sequential instruction */
+        INSTRUCTION_FETCH(regs->inst, regs->psw.IA, regs);
+
+        /* Set the instruction validity flag */
+        regs->instvalid = 1;
+
+        if( IS_IC_TRACE )
+        {
+            regs->ip = ip;
+            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
+
+    
+            /* Reset instruction trace indicators */
+            tracethis = 0;
+            stepthis = 0;
+        }
+
+        /* Execute the instruction */
+        regs->instcount++;
+        EXECUTE_INSTRUCTION (regs->ip, 0, regs);
+    }
+#endif
 
 } /* end function cpu_thread */
 #else
@@ -1442,6 +1471,11 @@ int     stepthis;                       /* Stop on this instruction  */
     tracethis = 0;
     stepthis = 0;
 
+#ifdef FEATURE_PER
+    if (PER_MODE(regs))
+        goto slowloop;
+#endif
+
     while (1)
     {
         
@@ -1462,11 +1496,6 @@ int     stepthis;                       /* Stop on this instruction  */
 
         /* Set the instruction validity flag */
         regs->instvalid = 1;
-
-#ifndef OPTION_CPU_UNROLL
-        /* Count instruction usage */
-        regs->instcount++;
-#endif
 
         if( IS_IC_TRACE )
         {
@@ -1502,6 +1531,45 @@ int     stepthis;                       /* Stop on this instruction  */
 #endif
 
     }
+
+#ifdef FEATURE_PER
+slowloop:
+    while (1)
+    {
+        /* Test for interrupts if it appears that one may be pending */
+        if( IC_INTERRUPT_CPU(regs) )
+        {
+            ARCH_DEP(process_interrupt)(regs);
+            if (!regs->cpuonline)
+                 return;
+        }
+
+        /* Clear the instruction validity flag in case an access
+           error occurs while attempting to fetch next instruction */
+        regs->instvalid = 0;
+
+        /* Fetch the next sequential instruction */
+        INSTRUCTION_FETCH(regs->inst, regs->psw.IA, regs);
+
+        /* Set the instruction validity flag */
+        regs->instvalid = 1;
+
+        if( IS_IC_TRACE )
+        {
+            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
+
+    
+            /* Reset instruction trace indicators */
+            tracethis = 0;
+            stepthis = 0;
+        }
+
+        /* Execute the instruction */
+        regs->instcount++;
+        EXECUTE_INSTRUCTION (regs->ip, 0, regs);
+    }
+#endif
+
 } /* end function cpu_thread */
 #endif
 

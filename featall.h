@@ -26,10 +26,10 @@
 #define OPTION_NO_INLINE_LOGICAL        /* Performance option        */
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
 #define OPTION_NO_INLINE_IFETCH         /* Performance option        */
-#undef  OPTION_CPU_UNROLL               /* Performance option        */
+#define OPTION_CPU_UNROLL               /* Performance option        */
 #define OPTION_FAST_MOVECHAR            /* Performance option        */
 #define OPTION_FAST_MOVELONG            /* Performance option        */
-#undef  OPTION_FAST_INSTFETCH           /* Performance option        */
+#define OPTION_FAST_INSTFETCH           /* Performance option        */
 #define OPTION_FAST_LOGICAL             /* Performance option        */
 #define OPTION_FAST_PREFIX              /* Performance option        */
 #define OPTION_REDUCED_INVAL            /* Performance option        */

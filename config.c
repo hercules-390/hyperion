@@ -300,6 +300,14 @@ BYTE    c;                              /* Work area for sscanf      */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    /* Gabor Hoffer (performance option) */
+    for (i = 0; i < 256; i++)
+    {
+	s370_opcode_table [i] = opcode_table [i][0];
+	s390_opcode_table [i] = opcode_table [i][1];
+	z900_opcode_table [i] = opcode_table [i][2];
+    }
+
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
 
