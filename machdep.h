@@ -16,52 +16,7 @@
 #if defined(__i686__) | defined(__pentiumpro__)
 
 #define FETCHIBYTE1(_ib, _inst) \
-        { \
-            __asm__("movzbl 1(%%esi),%%eax" : \
-                    "=a" (_ib) : "S" (_inst)); \
-        }
-
-#define fetch_dw(x) fetch_dw_i686(x)
-static __inline__ U64 fetch_dw_i686(void *ptr)
-{
- U64 value;
- __asm__ __volatile__ (
-         "movl    (%1),%%eax\n\t"
-         "movl    4(%1),%%edx\n"
-         "1:\t"
-         "movl    %%eax,%%ebx\n\t"
-         "movl    %%edx,%%ecx\n\t"
-         "lock    cmpxchg8b (%1)\n\t"
-         "jnz     1b\n\t"
-         "bswap   %%eax\n\t"
-         "bswap   %%edx\n\t"
-         "xchgl   %%eax,%%edx"
-       : "=A"(value)
-       : "D"(ptr)
-       : "bx","cx","memory");
- return value;
-}
-
-#define store_dw(x,y) store_dw_i686(x,y)
-static __inline__ void store_dw_i686(void *ptr, U64 value)
-{
- U32 high,low;
- low = value & 0xffffffff;
- high = value >> 32;
- __asm__ __volatile__ (
-         "bswap   %0\n\t"
-         "bswap   %1\n\t"
-         "movl    (%2),%%eax\n\t"
-         "movl    4(%2),%%edx\n"
-         "1:\t"
-         "lock    cmpxchg8b (%2)\n\t"
-         "jnz     1b"
-       : /* no output */
-       : "b"(high),
-         "c"(low),
-         "D"(ptr)
-       : "ax","dx","memory");
-}
+  __asm__("movzbl 1(%%esi),%%eax" : "=a" (_ib) : "S" (_inst));
 
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
@@ -158,6 +113,21 @@ static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, v
    *old2 = u.dw[1];
  }
  return code;
+}
+
+#define fetch_dw(x) fetch_dw_i686(x)
+static __inline__ U64 fetch_dw_i686(void *ptr)
+{
+ U64 value = *(U64 *)ptr;
+ while ( cmpxchg8 (&value, value, (U64 *)ptr) );
+ return CSWAP64 (value);
+}
+
+#define store_dw(x,y) store_dw_i686(x,y)
+static __inline__ void store_dw_i686(void *ptr, U64 value)
+{
+ U64 orig = *(U64 *)ptr;
+ while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
 }
 
 #endif /* defined(__i686__) | defined(__pentiumpro__) */
