@@ -917,7 +917,7 @@ int             f1, f2, f3, f4, f5, f6; /* 3380/3390/9345 factors    */
 int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 
     ckd = cif->devblk.ckdtab;
-    trklen = ckd->r0 ? ckd->r0 : ckd->r1;
+    trklen = ckd->len;
     maxlen = ckd->r1;
     heads = ckd->heads;
     cyls = ckd->cyls;
