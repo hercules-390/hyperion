@@ -1,3 +1,5 @@
+08 Feb 2003 Fix dasdload message verbosity test (was backwards) - Jay
+            Maynard
 08 Feb 2003 Fix eof/intrq mode saving in card reader initialization, add *
             to specify no file loaded - Jay Maynard
 04 Feb 2003 Fix to dasdutil.c convert_tt - Jim Morrison (by Greg)
