@@ -344,7 +344,8 @@ DEVBLK            *dev;                /* Device block pointer       */
     STORAGE_KEY(spccb_absolute_addr) |= STORKEY_CHANGE;
 
     /* Set service signal external interrupt pending */
-    sysblk.servparm = spccb_absolute_addr;
+    sysblk.servparm &= 7;
+    sysblk.servparm |= spccb_absolute_addr;
     ON_IC_SERVSIG; 
 
     /* Release the interrupt lock */
