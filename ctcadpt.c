@@ -29,7 +29,7 @@
 // Declarations
 // ====================================================================
 
-static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] );
+static int      CTCT_Init( DEVBLK *dev, int argc, char *argv[] );
 
 static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
                            BYTE*   pIOBuf,    BYTE* pUnitStat,
@@ -41,7 +41,7 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
 static void*    CTCT_ListenThread( void* argp );
 
-static int      VMNET_Init( DEVBLK *dev, int argc, BYTE *argv[] );
+static int      VMNET_Init( DEVBLK *dev, int argc, char *argv[] );
 
 static int      VMNET_Write( DEVBLK *dev, BYTE *iobuf,
                              U16 count, BYTE *unitstat );
@@ -142,7 +142,7 @@ extern DEVHND lcs_device_hndinfo;
 // Device Initialization Handler (Generic)
 // --------------------------------------------------------------------
 
-int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
+int  CTCX_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 {
     pDEVBLK->devtype = 0x3088;
 
@@ -170,9 +170,9 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 // -------------------------------------------------------------------
 
 void  CTCX_Query( DEVBLK* pDEVBLK,
-                  BYTE**  ppszClass,
+                  char**  ppszClass,
                   int     iBufLen,
-                  BYTE*   pBuffer )
+                  char*   pBuffer )
 {
     *ppszClass = "CTCA";
     snprintf( pBuffer, iBufLen, "%s", pDEVBLK->filename );
@@ -439,21 +439,21 @@ void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 // CTCT_Init
 //
 
-static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
+static int  CTCT_Init( DEVBLK *dev, int argc, char *argv[] )
 {
     int            rc;                 // Return code
     int            mtu;                // MTU size (binary)
     int            lport;              // Listen port (binary)
     int            rport;              // Destination port (binary)
-    BYTE*          listenp;            // Listening port number
-    BYTE*          remotep;            // Destination port number
-    BYTE*          mtusize;            // MTU size (characters)
-    BYTE*          remaddr;            // Remote IP address
+    char*          listenp;            // Listening port number
+    char*          remotep;            // Destination port number
+    char*          mtusize;            // MTU size (characters)
+    char*          remaddr;            // Remote IP address
     struct in_addr ipaddr;             // Work area for IP address
     BYTE           c;                  // Character work area
     TID            tid;                // Thread ID for server
     CTCG_PARMBLK   parm;               // Parameters for the server
-    BYTE           address[20]="";     // temp space for IP address
+    char           address[20]="";     // temp space for IP address
 
     dev->devtype = 0x3088;
 
@@ -998,11 +998,11 @@ static void*  CTCT_ListenThread( void* argp )
 /*-------------------------------------------------------------------*/
 /* Functions to support vmnet written by Willem Konynenberg          */
 /*-------------------------------------------------------------------*/
-static int start_vmnet(DEVBLK *dev, DEVBLK *xdev, int argc, BYTE *argv[])
+static int start_vmnet(DEVBLK *dev, DEVBLK *xdev, int argc, char *argv[])
 {
 int sockfd[2];
 int r, i;
-BYTE *ipaddress;
+char *ipaddress;
 
     if (argc < 2) {
         logmsg (_("HHCCT024E %4.4X: Not enough arguments to start vmnet\n"),
@@ -1056,7 +1056,7 @@ BYTE *ipaddress;
     return 0;
 }
 
-static int VMNET_Init(DEVBLK *dev, int argc, BYTE *argv[])
+static int VMNET_Init(DEVBLK *dev, int argc, char *argv[])
 {
 U16             xdevnum;                /* Pair device devnum        */
 BYTE            c;                      /* tmp for scanf             */
@@ -1336,7 +1336,7 @@ int             lastlen = 2;            /* block length at last pckt */
 
 int             ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
 {
-    BYTE    work[((LCS_ADDR_LEN*3)-0)];
+    char    work[((LCS_ADDR_LEN*3)-0)];
     BYTE    sep;
     int     x, i;
 

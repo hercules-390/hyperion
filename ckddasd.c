@@ -176,7 +176,7 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int ckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int             rc;                     /* Return code               */
 struct stat     statbuf;                /* File information          */
@@ -184,14 +184,14 @@ CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 int             i;                      /* Loop index                */
 int             fileseq;                /* File sequence number      */
-BYTE           *sfxptr;                 /* -> Last char of file name */
-BYTE            sfxchar;                /* Last char of file name    */
+char           *sfxptr;                 /* -> Last char of file name */
+char            sfxchar;                /* Last char of file name    */
 int             heads;                  /* #of heads in CKD file     */
 int             trksize;                /* Track size of CKD file    */
 int             trks;                   /* #of tracks in CKD file    */
 int             cyls;                   /* #of cylinders in CKD file */
 int             highcyl;                /* Highest cyl# in CKD file  */
-BYTE           *cu = NULL;              /* Specified control unit    */
+char           *cu = NULL;              /* Specified control unit    */
 char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
 
@@ -593,8 +593,8 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void ckddasd_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+void ckddasd_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
 
     *class = "DASD";

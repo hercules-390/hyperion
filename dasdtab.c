@@ -139,7 +139,7 @@ static FBADEV fbatab[] = {
 /*-------------------------------------------------------------------*/
 /* Lookup a table entry either by name or type                       */
 /*-------------------------------------------------------------------*/
-void *dasd_lookup (int dtype, BYTE *name, U32 devt, U32 size)
+void *dasd_lookup (int dtype, char *name, U32 devt, U32 size)
 {
 U32 i;                                  /* Loop Index                */
 

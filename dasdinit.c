@@ -139,8 +139,8 @@ U32     sectsize = 0;                   /* Sector size               */
 U16     devtype = 0;                    /* Device type               */
 BYTE    comp = 0xff;                    /* Compression algoritm      */
 BYTE    type = 0;                       /* C=CKD, F=FBA              */
-BYTE    fname[1024];                    /* File name                 */
-BYTE    volser[7];                      /* Volume serial number      */
+char    fname[1024];                    /* File name                 */
+char    volser[7];                      /* Volume serial number      */
 BYTE    c;                              /* Character work area       */
 CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */

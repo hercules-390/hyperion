@@ -681,8 +681,8 @@ U32 doipl;
 void cgibin_debug_device_list(WEBBLK *webblk)
 {
 DEVBLK *dev;
-BYTE   *class;
-BYTE   buf[80];
+char   *class;
+char   buf[80];
 
     html_header(webblk);
 

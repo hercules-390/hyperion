@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
 int             i;                      /* Array subscript           */
 int             len;                    /* Block length              */
 int             prevlen;                /* Previous block length     */
-BYTE           *filename;               /* -> Input file name        */
+char           *filename;               /* -> Input file name        */
 int             infd = -1;              /* Input file descriptor     */
 int             fileno;                 /* Tape file number          */
 int             blkcount;               /* Block count               */

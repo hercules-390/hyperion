@@ -97,7 +97,7 @@ void log_close(void)
 }
 
 /* panel : 0 - No, 1 - Only, 2 - Also */
-void log_write(int panel,BYTE *msg,...)
+void log_write(int panel,char *msg,...)
 {
     char *bfr;
     int rc;
@@ -151,7 +151,7 @@ struct log_capture_data
     size_t sz;
 };
 
-void log_capture_writer(void *vcd,BYTE *msg)
+void log_capture_writer(void *vcd,char *msg)
 {
     struct log_capture_data *cd;
     cd=(struct log_capture_data *)vcd;
@@ -175,7 +175,7 @@ void log_capture_closer(void *vcd)
     return;
 }
 
-BYTE *log_capture(void *(*fun)(void *),void *p)
+char *log_capture(void *(*fun)(void *),void *p)
 {
     struct log_capture_data cd;
     cd.obfr=NULL;

@@ -8,8 +8,8 @@
  * This code is covered by the QPL Licence
  */
 
-static  int     hchan_init_exec(DEVBLK *,int,BYTE **);
-static  int     hchan_init_connect(DEVBLK *,int,BYTE **);
-static  int     hchan_init_int(DEVBLK *,int,BYTE **);
+static  int     hchan_init_exec(DEVBLK *,int,char **);
+static  int     hchan_init_connect(DEVBLK *,int,char **);
+static  int     hchan_init_int(DEVBLK *,int,char **);
 
 #endif

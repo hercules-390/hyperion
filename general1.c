@@ -4077,7 +4077,7 @@ S32     n;                              /* 32-bit operand values     */
 
     /* Multiply R1 register by n, ignore leftmost 32 bits of
        result, and place rightmost 32 bits in R1 register */
-    mul_signed (&n, &(regs->GR_L(r1)), regs->GR_L(r1), n);
+    mul_signed ((U32 *)&n, &(regs->GR_L(r1)), regs->GR_L(r1), n);
 
 }
 

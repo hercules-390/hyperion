@@ -2703,6 +2703,8 @@ U32     x;
     if (fl->short_fract) {
         if (fl->sign) {
             /* less than zero */
+            sq_fl->short_fract = 0;
+            sq_fl->expo = 0;
 
             ARCH_DEP(program_interrupt) (regs, PGM_SQUARE_ROOT_EXCEPTION);
         } else {
@@ -4748,6 +4750,7 @@ U64     msj, lsj;
             /* less than zero */
 
             ARCH_DEP(program_interrupt) (regs, PGM_SQUARE_ROOT_EXCEPTION);
+            return; /* Never reached */
         } else {
             /* normalize operand */
             normal_ef(&fl);

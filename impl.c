@@ -127,7 +127,7 @@ int i;
 
 void* process_rc_file (void* dummy)
 {
-BYTE   *rcname;                         /* hercules.rc name pointer  */
+char   *rcname;                         /* hercules.rc name pointer  */
 
     UNREFERENCED(dummy);
 
@@ -150,7 +150,7 @@ BYTE   *rcname;                         /* hercules.rc name pointer  */
 static int daemon_mode = 0;
 int impl(int argc, char *argv[])
 {
-BYTE   *cfgfile;                        /* -> Configuration filename */
+char   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
 int     arg_error = 0;                  /* 1=Invalid arguments       */
 char   *msgbuf;                         /*                           */

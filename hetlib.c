@@ -887,7 +887,7 @@ het_read( HETB *hetb, void *sbuf )
             case HETHDR_FLAGS1_ZLIB:
                 slen = HETMAX_BLOCKSIZE;
 
-                rc = uncompress( sbuf, &slen, tbuf, tlen );
+                rc = uncompress( sbuf, &slen, (unsigned char *)tbuf, tlen );
                 if( rc != Z_OK )
                 {
                     errno = rc;
@@ -1213,7 +1213,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
             case HETHDR_FLAGS1_ZLIB:
                 tlen = sizeof( tbuf );
 
-                rc = compress2( tbuf, &tlen, sbuf, slen, hetb->level );
+                rc = compress2( (unsigned char *)tbuf, &tlen, sbuf, slen, hetb->level );
                 if( rc != Z_OK )
                 {
                     errno = rc;

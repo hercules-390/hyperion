@@ -39,9 +39,9 @@ int   extgui=0;
 
 int main( int argc, char **argv )
 {
-    BYTE*       pszProgName  = NULL;    // Name of this program
-    BYTE*       pOp          = NULL;    // Operation text
-    BYTE*       pIF          = NULL;    // -> interface name
+    char*       pszProgName  = NULL;    // Name of this program
+    char*       pOp          = NULL;    // Operation text
+    char*       pIF          = NULL;    // -> interface name
     void*       pArg         = NULL;    // -> ifreq or rtentry 
     CTLREQ      ctlreq;                 // Request Buffer
     int         sockfd;                 // Socket descriptor

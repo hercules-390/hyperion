@@ -14,7 +14,7 @@
 /* Definition of a CKD DASD device entry                             */
 /*-------------------------------------------------------------------*/
 typedef struct _CKDDEV {                /* CKD Device table entry    */
-        BYTE   *name;                   /* Device name               */
+        char   *name;                   /* Device name               */
         U16     devt;                   /* Device type               */
         BYTE    model;                  /* Device model              */
         BYTE    class;                  /* Device class              */
@@ -30,7 +30,7 @@ typedef struct _CKDDEV {                /* CKD Device table entry    */
         U16     rpscalc;                /* RPS calculation factor    */
         S16     formula;                /* Space calculation formula */
         U16     f1,f2,f3,f4,f5,f6;      /* Space calculation factors */
-        BYTE   *cu;                     /* Default control unit name */
+        char   *cu;                     /* Default control unit name */
       } CKDDEV;
 #define CKDDEV_SIZE sizeof(CKDDEV)
 
@@ -38,7 +38,7 @@ typedef struct _CKDDEV {                /* CKD Device table entry    */
 /* Definition of a CKD DASD control unit entry                       */
 /*-------------------------------------------------------------------*/
 typedef struct _CKDCU {                 /* CKD Control Unit entry    */
-        BYTE   *name;                   /* Control Unit name         */
+        char   *name;                   /* Control Unit name         */
         U16     devt;                   /* Control Unit type         */
         BYTE    model;                  /* Control Unit model        */
         BYTE    code;                   /* Control Unit code         */
@@ -58,7 +58,7 @@ typedef struct _CKDCU {                 /* CKD Control Unit entry    */
 /* Definition of a FBA DASD device entry                             */
 /*-------------------------------------------------------------------*/
 typedef struct _FBADEV {                /* FBA Device entry          */
-        BYTE   *name;                   /* Device name               */
+        char   *name;                   /* Device name               */
         U16     devt;                   /* Device type               */
         BYTE    class;                  /* Device class              */
         BYTE    type;                   /* Type                      */
@@ -81,7 +81,7 @@ typedef struct _FBADEV {                /* FBA Device entry          */
 /*-------------------------------------------------------------------*/
 /* Dasd table function prototypes                                    */
 /*-------------------------------------------------------------------*/
-void   *dasd_lookup (int, BYTE *, U32   , U32   );
+void   *dasd_lookup (int, char *, U32   , U32   );
 int     dasd_build_ckd_devid (CKDDEV *, CKDCU *, BYTE *);
 int     dasd_build_ckd_devchar (CKDDEV *, CKDCU *, BYTE *, int);
 int     dasd_build_fba_devid (FBADEV *, BYTE *);

@@ -125,7 +125,7 @@ static BYTE buf[ 65535 ];
 /*-------------------------------------------------------------------*/
 /* Subroutine to print tape status                                   */
 /*-------------------------------------------------------------------*/
-static void print_status (BYTE *devname, long stat)
+static void print_status (char *devname, long stat)
 {
     printf (_("HHCTC015I %s status: %8.8lX"), devname, stat);
 
@@ -152,7 +152,7 @@ static void print_status (BYTE *devname, long stat)
 /*                  +1  ==  end-of-tape                              */
 /*                  -1  ==  error                                    */
 /*-------------------------------------------------------------------*/
-static int obtain_status (BYTE *devname, int devfd)
+static int obtain_status (char *devname, int devfd)
 {
 int rc;                                 /* Return code               */
 
@@ -201,8 +201,8 @@ int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
 int             len;                    /* Block length              */
 int             prevlen;                /* Previous block length     */
-BYTE           *devname;                /* -> Tape device name       */
-BYTE           *filename;               /* -> Output file name       */
+char           *devname;                /* -> Tape device name       */
+char           *filename;               /* -> Output file name       */
 int             devfd;                  /* Tape file descriptor      */
 int             outfd = -1;             /* Output file descriptor    */
 int             fileno;                 /* Tape file number          */

@@ -46,7 +46,7 @@ int  extgui = 0;
 /*-------------------------------------------------------------------*/
 static int
 process_member (CIFBLK *cif, int noext, DSXTENT extent[],
-                BYTE *memname, BYTE *ttr)
+                char *memname, BYTE *ttr)
 {
 int             rc;                     /* Return code               */
 int             len;                    /* Record length             */
@@ -56,9 +56,9 @@ int             head;                   /* Head number               */
 int             rec;                    /* Record number             */
 BYTE           *buf;                    /* -> Data block             */
 FILE           *ofp;                    /* Output file pointer       */
-BYTE            ofname[256];            /* Output file name          */
+char            ofname[256];            /* Output file name          */
 int             offset;                 /* Offset of record in buffer*/
-BYTE            card[81];               /* Logical record (ASCIIZ)   */
+char            card[81];               /* Logical record (ASCIIZ)   */
 
     /* Build the output file name */
     memset (ofname, 0, sizeof(ofname));
@@ -171,7 +171,7 @@ int             k;                      /* Userdata halfword count   */
 BYTE           *dirptr;                 /* -> Next byte within block */
 int             dirrem;                 /* Number of bytes remaining */
 PDSDIR         *dirent;                 /* -> Directory entry        */
-BYTE            memname[9];             /* Member name (ASCIIZ)      */
+char            memname[9];             /* Member name (ASCIIZ)      */
 
     /* Load number of bytes in directory block */
     dirptr = dirblk;
@@ -228,9 +228,9 @@ int             cyl;                    /* Cylinder number           */
 int             head;                   /* Head number               */
 int             rec;                    /* Record number             */
 int             trk;                    /* Relative track number     */
-BYTE           *fname;                  /* -> CKD image file name    */
-BYTE           *sfname=NULL;            /* -> CKD shadow file name   */
-BYTE            dsnama[45];             /* Dataset name (ASCIIZ)     */
+char           *fname;                  /* -> CKD image file name    */
+char           *sfname=NULL;            /* -> CKD shadow file name   */
+char            dsnama[45];             /* Dataset name (ASCIIZ)     */
 int             noext;                  /* Number of extents         */
 DSXTENT         extent[16];             /* Extent descriptor array   */
 BYTE           *blkptr;                 /* -> PDS directory block    */

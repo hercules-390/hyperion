@@ -106,14 +106,14 @@ void showf1(    FILE            *fmsg,
                 int             verbose) {
 
         int     i, dsorg, lrecl, blksize, volseq, x, y, num_extents;
-        BYTE    volser[sizeof(f1dscb->ds1dssn) + 1];
-        BYTE    dsn[sizeof(f1dscb->ds1dsnam) + 1];
-        BYTE    txtcredt[9];                            // creation date
-        BYTE    txtexpdt[9] = "(n/a)";                  // expiration date
-        BYTE    txtscr[20];
-        BYTE    txtsyscd[14];
-        BYTE    txtdsorg[5] = "";                       // dsorg text
-        BYTE    txtrecfm[5] = "";                       // recfm text
+        char    volser[sizeof(f1dscb->ds1dssn) + 1];
+        char    dsn[sizeof(f1dscb->ds1dsnam) + 1];
+        char    txtcredt[9];                            // creation date
+        char    txtexpdt[9] = "(n/a)";                  // expiration date
+        char    txtscr[20];
+        char    txtsyscd[14];
+        char    txtdsorg[5] = "";                       // dsorg text
+        char    txtrecfm[5] = "";                       // recfm text
 
     if (verbose > 2) {
         fprintf(fmsg, "showf1 F1 DSCB\n");
@@ -239,8 +239,9 @@ int fbcopy(     FILE            *fout,
         int     rc_copy = 0;
         int     recs_written = 0, lrecl, num_extents;
         int     lstartrack = 0, lstarrec = 0, lstarvalid = 0;
-        BYTE    *buffer, *pascii = NULL;
-        BYTE    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
+        BYTE    *buffer;
+        char    *pascii = NULL;
+        char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
 
     // Kludge to avoid rewriting this code (for now):
     memcpy(&extent, (void *)&(dadsm->f1ext), sizeof(extent));
@@ -834,7 +835,7 @@ int getF1dscb(
                 DSXTENT         *vtocext[],
                 int             verbose) {
 
-        BYTE    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // zASCII dsn
+        char    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // zASCII dsn
         BYTE    edsn[sizeof(f1dscb->ds1dsnam)];         // EBCDIC dsn
         void    *f1key, *f1data;
         int     f1kl, f1dl;

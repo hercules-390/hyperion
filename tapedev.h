@@ -187,8 +187,8 @@ OMATAPE_BLKHDR;
 typedef struct _OMATAPE_DESC
 {
     int     fd;                         /* File Descriptor for file  */
-    BYTE    filename[256];              /* Filename of data file     */
-    BYTE    format;                     /* H=HEADERS,T=TEXT,F=FIXED,X=Tape Mark */
+    char    filename[256];              /* Filename of data file     */
+    char    format;                     /* H=HEADERS,T=TEXT,F=FIXED,X=Tape Mark */
     BYTE    resv;                       /* Reserved for alignment    */
     U16     blklen;                     /* Fixed block length        */
 }
@@ -221,7 +221,7 @@ TAPEMEDIA_HANDLER;
 /*-------------------------------------------------------------------*/
 typedef struct _TAPEAUTOLOADENTRY
 {
-    BYTE  *filename;
+    char  *filename;
     int    argc;
     char **argv;
 }

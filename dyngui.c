@@ -188,7 +188,7 @@ void  UpdateTargetCPU ()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-BYTE*  pszInputBuff    = NULL;                  // ptr to buffer
+char*  pszInputBuff    = NULL;                  // ptr to buffer
 int    nInputBuffSize  = (MAX_COMMAND_LEN+1);   // how big the buffer is
 int    nInputLen       = 0;                     // amount of data it's holding
 
@@ -200,7 +200,7 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
     struct timeval  wait_interval_timeval;
     size_t          nMaxBytesToRead;
     int             nBytesRead;
-    BYTE*           pReadBuffer;
+    char*           pReadBuffer;
     int             rc;
 
     // Wait for keyboard input data to arrive...
@@ -274,7 +274,7 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
 
 ///////////////////////////////////////////////////////////////////////////////
 
-BYTE*  pszCommandBuff    = NULL;                // ptr to buffer
+char*  pszCommandBuff    = NULL;                // ptr to buffer
 int    nCommandBuffSize  = (MAX_COMMAND_LEN+1); // how big the buffer is
 int    nCommandLen       = 0;                   // amount of data it's holding
 
@@ -283,7 +283,7 @@ int    nCommandLen       = 0;                   // amount of data it's holding
 
 void  ProcessInputData ()
 {
-    BYTE*  pNewLineChar;
+    char*  pNewLineChar;
 
     // Ensure our buffer is NULL terminated...
 
@@ -414,9 +414,9 @@ void*  gui_panel_command (char* pszCommand)
         // "parse_args" modifies the original command line (by
         // inserting embedded NULLS as argument delimiters)
 
-        BYTE*  pszCommandWork;
+        char*  pszCommandWork;
         int    nArgs;
-        BYTE*  pszArgPtrArray[MAX_ARGS];
+        char*  pszArgPtrArray[MAX_ARGS];
 
         pszCommandWork = strdup( pszCommand );
         parse_args( pszCommandWork, MAX_ARGS, pszArgPtrArray, &nArgs );
@@ -567,7 +567,7 @@ void  UpdateStatus ()
 #if defined(OPTION_MIPS_COUNTING)
     if (gui_wants_cpupct)
     {
-        BYTE  cpupct[10];
+        char  cpupct[10];
 
         if (CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate)
             strcpy(cpupct,"0");
@@ -862,7 +862,7 @@ void  UpdateRegisters ()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-BYTE  szQueryDeviceBuff[ MAX_DEVICEQUERY_LEN + 1 ]; // (always +1 for safety!)
+char  szQueryDeviceBuff[ MAX_DEVICEQUERY_LEN + 1 ]; // (always +1 for safety!)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send status information messages back to the gui...
@@ -870,7 +870,7 @@ BYTE  szQueryDeviceBuff[ MAX_DEVICEQUERY_LEN + 1 ]; // (always +1 for safety!)
 void  UpdateDeviceStatus ()
 {
     DEVBLK* pDEVBLK;
-    BYTE*   pDEVClass;
+    char*   pDEVClass;
     BYTE    chOnlineStat, chBusyStat, chPendingStat, chOpenStat;
 
     // Process ALL the devices in the entire configuration each time...
@@ -1005,7 +1005,7 @@ void  Initialize ()
 
     // Allocate input stream buffer...
 
-    if (!(pszInputBuff = (BYTE*) malloc( nInputBuffSize )))
+    if (!(pszInputBuff = (char *) malloc( nInputBuffSize )))
     {
         fprintf(stderr,
             _("HHCDG006S malloc pszInputBuff failed: %s\n")
@@ -1018,7 +1018,7 @@ void  Initialize ()
 
     // Allocate command processing buffer...
 
-    if (!(pszCommandBuff = (BYTE*) malloc( nCommandBuffSize )))
+    if (!(pszCommandBuff = (char *) malloc( nCommandBuffSize )))
     {
         fprintf(stderr,
             _("HHCDG007S malloc pszCommandBuff failed: %s\n")

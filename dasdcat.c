@@ -21,10 +21,8 @@ int  extgui = 0;
 #endif
 #endif /*EXTERNALGUI*/
 
-int end_of_track(char *ptr)
+int end_of_track(BYTE *p)
 {
- unsigned char *p = (unsigned char *)ptr;
-
  return p[0] == 0xff && p[1] == 0xff && p[2] == 0xff && p[3] == 0xff
  && p[4] == 0xff && p[5] == 0xff && p[6] == 0xff && p[7] == 0xff;
 }
@@ -38,7 +36,7 @@ int do_cat_cards(BYTE *buf, int len, unsigned long optflags)
  }
 
  while (len) {
- BYTE card[81];
+ char card[81];
  make_asciiz(card, sizeof(card), buf, 72);
  if (optflags & OPT_PDS_WILDCARD) {
  putchar('|');
@@ -101,7 +99,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
 {
  int rc;
  int dirrem;
- BYTE memname[9];
+ char memname[9];
 
  /* Load number of bytes in directory block */
  dirrem = (dirblk[0] << 8) | dirblk[1];
@@ -129,7 +127,7 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
  make_asciiz(memname, sizeof(memname), dirent->pds2name, 8);
 
  if (optflags & OPT_PDS_LISTONLY) {
- BYTE memname_lc[9];
+ char memname_lc[9];
  memcpy(memname_lc, memname, sizeof(memname));
  string_to_lower(memname_lc);
  puts(memname_lc);

@@ -84,7 +84,7 @@ static DEVBLK * find_group_device(DEVGRP *group, U16 devnum)
 // LCS_Init
 //
 
-int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
+int  LCS_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 {
     PLCSBLK     pLCSBLK;
     PLCSDEV     pLCSDev;
@@ -609,8 +609,8 @@ int  LCS_Close( DEVBLK* pDEVBLK )
 // LCS_Query
 //
 
-void  LCS_Query( DEVBLK* pDEVBLK, BYTE** ppszClass,
-                 int     iBufLen, BYTE*  pBuffer )
+void  LCS_Query( DEVBLK* pDEVBLK, char** ppszClass,
+                 int     iBufLen, char*  pBuffer )
 {
     PLCSDEV     pLCSDEV = (PLCSDEV)pDEVBLK->dev_data;
 
@@ -1226,7 +1226,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     int         iLength;
     U16         sFrameType;
     U32         lIPAddress;
-    char        szBuff[2048];
+    BYTE        szBuff[2048];
     char        bReported = 0;
 
     pPort->pid = getpid();
@@ -1719,9 +1719,9 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     U16         sDevNum;
     BYTE        bType;
     U32         lIPAddr      = 0;
-    BYTE*       pszIPAddress = NULL;
-    BYTE*       pszNetAddr   = NULL;
-    BYTE*       pszNetMask   = NULL;
+    char*       pszIPAddress = NULL;
+    char*       pszNetAddr   = NULL;
+    char*       pszNetMask   = NULL;
 
     struct in_addr  addr;               // Work area for addresses
 
@@ -2076,9 +2076,10 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 // --------------------------------------------------------------------
 
 
-#if defined(OPTION_DYNAMIC_LOAD)
-static
-#endif
+/* NOTE : lcs_device_hndinfo is NEVER static as it is referenced by the CTC meta driver */
+// #if defined(OPTION_DYNAMIC_LOAD)
+// static
+// #endif
 DEVHND lcs_device_hndinfo =
 {
         &LCS_Init,                    /* Device Initialisation      */

@@ -249,11 +249,11 @@ int     rc;                             /* Return code               */
 int     rx;                             /* Return code               */
 PSA    *psa;                            /* -> Prefixed storage area  */
 FILE   *fp;
-BYTE    inputline[256];
-BYTE    dirname[256];                   /* dirname of ins file       */
-BYTE   *dirbase;
-BYTE    filename[256];                  /* filename of image file    */
-BYTE    pathname[256];                  /* pathname of image file    */
+char    inputline[256];
+char    dirname[256];                   /* dirname of ins file       */
+char   *dirbase;
+char    filename[256];                  /* filename of image file    */
+char    pathname[256];                  /* pathname of image file    */
 U32     fileaddr;
 
     if(fname == NULL)                   /* Default ipl from DASD     */

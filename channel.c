@@ -69,7 +69,7 @@ BYTE    c;                              /* Character work area       */
     if (addr <= dev->mainlim - 16)
     {
         a = dev->mainstor + addr;
-        j = sprintf (area,
+        j = sprintf ((char *)area,
                 "=>%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
                 " %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
                 a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
@@ -1324,6 +1324,10 @@ BYTE    storkey;                        /* Storage key               */
 BYTE   *ccw;                            /* CCW pointer               */
 
     UNREFERENCED_370(dev);
+    *code=0;
+    *count=0;
+    *flags=0;
+    *addr=0;
 
     /* Channel program check if CCW is not on a doubleword
        boundary or is outside limit of main storage */
@@ -1392,6 +1396,8 @@ BYTE    storkey;                        /* Storage key               */
 
     UNREFERENCED_370(dev);
 
+    *addr = 0;
+    *len = 0;
     /* Channel program check if IDAW is not on correct           @IWZ
        boundary or is outside limit of main storage */
     if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))            /*@IWZ*/

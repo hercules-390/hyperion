@@ -56,7 +56,7 @@ CKDDEV         *ckd=NULL;               /* -> CKD device table entry */
 FBADEV         *fba=NULL;               /* -> FBA device table entry */
 int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
-BYTE            msgbuf[512];            /* Message buffer            */
+char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 
 #if defined(ENABLE_NLS)

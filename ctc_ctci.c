@@ -107,7 +107,7 @@ DEVHND ctci_device_hndinfo =
 
 #define CTC_DEVICES_IN_GROUP   2  // a read and write device
 
-int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
+int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
 {
     PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
     PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
@@ -584,8 +584,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 // CTCI_Query
 // -------------------------------------------------------------------
 
-void  CTCI_Query( DEVBLK* pDEVBLK, BYTE** ppszClass,
-                  int     iBufLen, BYTE*  pBuffer )
+void  CTCI_Query( DEVBLK* pDEVBLK, char** ppszClass,
+                  int     iBufLen, char*  pBuffer )
 {
     PCTCBLK     pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
 
@@ -919,7 +919,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 {
     DEVBLK*  pDEVBLK = pCTCBLK->pDEVBLK[0];
     int      iLength;
-    char     szBuff[2048];
+    BYTE     szBuff[2048];
 
     pCTCBLK->pid = getpid();
 

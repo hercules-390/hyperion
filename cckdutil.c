@@ -42,7 +42,7 @@ int             typ;                    /* Type of space             */
 
 int cdsk_spctab_comp(const void *, const void *);
 int cdsk_rcvtab_comp(const void *, const void *);
-int cdsk_valid_trk (int, BYTE *, int, int, int, BYTE *);
+int cdsk_valid_trk (int, BYTE *, int, int, int, char *);
 int cdsk_recover_trk (int, BYTE *, int, int, int, int, int, int *);
 int cdsk_build_gap (SPCTAB *, int *, SPCTAB *);
 int cdsk_build_gap_long (SPCTAB *, int *, SPCTAB *);
@@ -689,9 +689,9 @@ int             trys;                   /* Nbr recovery trys for trk */
 int             comps = 0;              /* Supported compressions    */
 int             badcomps[] = {0, 0, 0}; /* Bad compression counts    */
 char            msg[256];               /* Message                   */
-BYTE *space[]     = {"none", "devhdr", "cdevhdr", "l1tab", "l2tab",
+char *space[]     = {"none", "devhdr", "cdevhdr", "l1tab", "l2tab",
                      "trkimg", "free_blk", "file_end"};
-BYTE *compression[] = {"none", "zlib", "bzip2"};
+char *compression[] = {"none", "zlib", "bzip2"};
 
 #if defined(HAVE_LIBZ)
     comps |= CCKD_COMPRESS_ZLIB;
@@ -2012,7 +2012,7 @@ unsigned int    v1, v2;                 /* Value for entry           */
 /* Validate a track image                                            */
 /*-------------------------------------------------------------------*/
 int cdsk_valid_trk (int trk, BYTE *buf, int heads, int len, int trksz,
-                    BYTE *msg)
+                    char *msg)
 {
 int             rc;                     /* Return code               */
 int             cyl;                    /* Cylinder                  */
@@ -2025,7 +2025,7 @@ BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
 BYTE            buf2[65536];            /* Uncompressed buffer       */
 int             comps = 0;              /* Supported compressions    */
-BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
+char           *compression[] = {"none", "zlib", "bzip2", "????"};
 
 #if defined(HAVE_LIBZ)
     comps |= CCKD_COMPRESS_ZLIB;
@@ -2088,8 +2088,8 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
         bufp = (BYTE *)&buf2;
         memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
         bufl = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
-        rc = BZ2_bzBuffToBuffDecompress ( &buf2[CKDDASD_TRKHDR_SIZE], &bufl,
-                         &buf[CKDDASD_TRKHDR_SIZE], len, 0, 0);
+        rc = BZ2_bzBuffToBuffDecompress ( (void *)&buf2[CKDDASD_TRKHDR_SIZE], (size_t *)&bufl,
+                         (void *)&buf[CKDDASD_TRKHDR_SIZE], len, 0, 0);
         if (rc != BZ_OK)
         {
             if (msg)

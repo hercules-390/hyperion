@@ -96,21 +96,21 @@ int      i, j;                          /* Indexes                   */
 /*-------------------------------------------------------------------
  * CKD init exit (client side)
  *-------------------------------------------------------------------*/
-int shared_ckd_init (DEVBLK *dev, int argc, BYTE *argv[] )
+int shared_ckd_init (DEVBLK *dev, int argc, char *argv[] )
 {
 int      rc;                            /* Return code               */
 int      i;                             /* Loop index                */
 int      retry;                         /* 1=Connection being retried*/
-BYTE    *ipname;                        /* Remote name or address    */
-BYTE    *port = NULL;                   /* Remote port               */
-BYTE    *rmtnum = NULL;                 /* Remote device number      */
+char    *ipname;                        /* Remote name or address    */
+char    *port = NULL;                   /* Remote port               */
+char    *rmtnum = NULL;                 /* Remote device number      */
 struct   hostent *he;                   /* -> hostent structure      */
-BYTE    *kw;                            /* Argument keyword          */
-BYTE    *op;                            /* Argument operand          */
+char    *kw;                            /* Argument keyword          */
+char    *op;                            /* Argument operand          */
 BYTE     c;                             /* Used for parsing          */
-BYTE    *cu = NULL;                     /* Specified control unit    */
+char    *cu = NULL;                     /* Specified control unit    */
 FWORD    cyls;                          /* Remote number cylinders   */
-BYTE    *p, buf[1024];                  /* Work buffer               */
+char    *p, buf[1024];                  /* Work buffer               */
 
     retry = dev->connecting;
 
@@ -367,22 +367,22 @@ static int shared_ckd_close ( DEVBLK *dev )
 /*-------------------------------------------------------------------
  * FBA init exit (client side)
  *-------------------------------------------------------------------*/
-int shared_fba_init (DEVBLK *dev, int argc, BYTE *argv[] )
+int shared_fba_init (DEVBLK *dev, int argc, char *argv[] )
 {
 int      rc;                            /* Return code               */
 int      i;                             /* Loop index                */
 int      retry;                         /* 1=Connection being retried*/
-BYTE    *ipname;                        /* Remote name or address    */
-BYTE    *port = NULL;                   /* Remote port               */
-BYTE    *rmtnum = NULL;                 /* Remote device number      */
+char    *ipname;                        /* Remote name or address    */
+char    *port = NULL;                   /* Remote port               */
+char    *rmtnum = NULL;                 /* Remote device number      */
 struct   hostent *he;                   /* -> hostent structure      */
-BYTE    *kw;                            /* Argument keyword          */
-BYTE    *op;                            /* Argument operand          */
-BYTE     c;                             /* Work for sscanf           */
+char    *kw;                            /* Argument keyword          */
+char    *op;                            /* Argument operand          */
+char     c;                             /* Work for sscanf           */
 FWORD    origin;                        /* FBA origin                */
 FWORD    numblks;                       /* FBA number blocks         */
 FWORD    blksiz;                        /* FBA block size            */
-BYTE    *p, buf[1024];                  /* Work buffer               */
+char    *p, buf[1024];                  /* Work buffer               */
 
     retry = dev->connecting;
 
@@ -1666,7 +1666,7 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
             memcpy (buf, cbuf, off);
 
         newlen = buflen - off;
-        rc = BZ2_bzBuffToBuffDecompress(buf + off, &newlen, cbuf + off, len - off, 0, 0);
+        rc = BZ2_bzBuffToBuffDecompress((void *)(buf + off), &newlen, (void *)(cbuf + off), len - off, 0, 0);
         if (rc == BZ_OK)
             recvlen = (int)newlen + off;
         else
@@ -2138,7 +2138,7 @@ int      id;                            /* Identifier                */
  * Respond with an error message (server side)
  *-------------------------------------------------------------------*/
 static int serverError (DEVBLK *dev, int ix, int code, int status,
-                        BYTE *msg)
+                        char *msg)
 {
 int rc;                                 /* Return code               */
 int len;                                /* Message length            */
@@ -2154,7 +2154,7 @@ BYTE hdr[SHRD_HDR_SIZE];                /* Header                    */
 
     shrdtrc("server_error %2.2x %2.2x: %s\n", code, status, msg);
 
-    rc = serverSend (dev, ix, hdr, msg, len);
+    rc = serverSend (dev, ix, hdr, (BYTE *)msg, len);
     return rc;
 
 } /* serverError */

@@ -239,7 +239,7 @@ void display_subchannel (DEVBLK *dev)
 /*           start/end/value are returned in saddr, eaddr, newval    */
 /*      -1 = error message issued                                    */
 /*-------------------------------------------------------------------*/
-static int parse_range (BYTE *operand, U64 maxadr, U64 *sadrp,
+static int parse_range (char *operand, U64 maxadr, U64 *sadrp,
                         U64 *eadrp, BYTE *newval)
 {
 U64     opnd1, opnd2;                   /* Address/length operands   */
@@ -247,7 +247,7 @@ U64     saddr, eaddr;                   /* Range start/end addresses */
 int     rc;                             /* Return code               */
 int     n;                              /* Number of bytes altered   */
 int     h1, h2;                         /* Hexadecimal digits        */
-BYTE   *s;                              /* Alteration value pointer  */
+char    *s;                             /* Alteration value pointer  */
 BYTE    delim;                          /* Operand delimiter         */
 BYTE    c;                              /* Character work area       */
 
@@ -412,13 +412,13 @@ REGS    gregs, hgregs;
 /* Prefixes display by Rxxxxx: if draflag is 1                       */
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
-static int ARCH_DEP(display_real) (REGS *regs, RADR raddr, BYTE *buf,
+static int ARCH_DEP(display_real) (REGS *regs, RADR raddr, char *buf,
                                     int draflag)
 {
 RADR    aaddr;                          /* Absolute storage address  */
 int     i, j;                           /* Loop counters             */
 int     n = 0;                          /* Number of bytes in buffer */
-BYTE    hbuf[40];                       /* Hexadecimal buffer        */
+char    hbuf[40];                       /* Hexadecimal buffer        */
 BYTE    cbuf[17];                       /* Character buffer          */
 BYTE    c;                              /* Character work area       */
 
@@ -464,7 +464,7 @@ BYTE    c;                              /* Character work area       */
 /* Display virtual storage (up to 16 bytes, or until end of page)    */
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
-static int ARCH_DEP(display_virt) (REGS *regs, VADR vaddr, BYTE *buf,
+static int ARCH_DEP(display_virt) (REGS *regs, VADR vaddr, char *buf,
                                     int ar, int acctype)
 {
 RADR    raddr;                          /* Real address              */
@@ -597,7 +597,7 @@ char    type;
 /*-------------------------------------------------------------------*/
 /* Process real storage alter/display command                        */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(alter_display_real) (BYTE *opnd, REGS *regs)
+static void ARCH_DEP(alter_display_real) (char *opnd, REGS *regs)
 {
 U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest real storage addr */
@@ -606,7 +606,7 @@ RADR    aaddr;                          /* Absolute storage address  */
 int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
 BYTE    newval[32];                     /* Storage alteration value  */
-BYTE    buf[100];                       /* Message buffer            */
+char    buf[100];                       /* Message buffer            */
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -646,7 +646,7 @@ BYTE    buf[100];                       /* Message buffer            */
 /*-------------------------------------------------------------------*/
 /* Process virtual storage alter/display command                     */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(alter_display_virt) (BYTE *opnd, REGS *regs)
+static void ARCH_DEP(alter_display_virt) (char *opnd, REGS *regs)
 {
 U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest virt storage addr */
@@ -660,7 +660,7 @@ int     n;                              /* Number of bytes in buffer */
 int     arn = 0;                        /* Access register number    */
 U16     xcode;                          /* Exception code            */
 BYTE    newval[32];                     /* Storage alteration value  */
-BYTE    buf[100];                       /* Message buffer            */
+char    buf[100];                       /* Message buffer            */
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -739,7 +739,7 @@ int     ilc;                            /* Instruction length        */
 int     b1=-1, b2=-1, x1;               /* Register numbers          */
 VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
-BYTE    buf[100];                       /* Message buffer            */
+char    buf[100];                       /* Message buffer            */
 int     n;                              /* Number of bytes in buffer */
 
   #if defined(_FEATURE_SIE)
@@ -931,7 +931,7 @@ int     n;                              /* Number of bytes in buffer */
 /*-------------------------------------------------------------------*/
 /* Wrappers for architecture-dependent functions                     */
 /*-------------------------------------------------------------------*/
-void alter_display_real (BYTE *opnd, REGS *regs)
+void alter_display_real (char *opnd, REGS *regs)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)
@@ -951,7 +951,7 @@ void alter_display_real (BYTE *opnd, REGS *regs)
 } /* end function alter_display_real */
 
 
-void alter_display_virt (BYTE *opnd, REGS *regs)
+void alter_display_virt (char *opnd, REGS *regs)
 {
     switch(sysblk.arch_mode) {
 #if defined(_370)

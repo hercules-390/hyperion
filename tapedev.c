@@ -1491,12 +1491,12 @@ int             fd;                     /* TDF file descriptor       */
 struct stat     statbuf;                /* TDF file information      */
 U32             blklen;                 /* Fixed block length        */
 int             tdfpos;                 /* Position in TDF buffer    */
-BYTE           *tdfbuf;                 /* -> TDF file buffer        */
-BYTE           *tdfrec;                 /* -> TDF record             */
-BYTE           *tdffilenm;              /* -> Filename in TDF record */
-BYTE           *tdfformat;              /* -> Format in TDF record   */
-BYTE           *tdfreckwd;              /* -> Keyword in TDF record  */
-BYTE           *tdfblklen;              /* -> Length in TDF record   */
+char           *tdfbuf;                 /* -> TDF file buffer        */
+char           *tdfrec;                 /* -> TDF record             */
+char           *tdffilenm;              /* -> Filename in TDF record */
+char           *tdfformat;              /* -> Format in TDF record   */
+char           *tdfreckwd;              /* -> Keyword in TDF record  */
+char           *tdfblklen;              /* -> Length in TDF record   */
 OMATAPE_DESC   *tdftab;                 /* -> Tape descriptor array  */
 BYTE            c;                      /* Work area for sscanf      */
 
@@ -2819,9 +2819,9 @@ static void ReqAutoMount( DEVBLK *dev )
 {
     char   volser[7];
     BYTE   autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
-    BYTE*  tapemsg;
-    BYTE*  lbltype;
-    BYTE*  eyecatcher =
+    char*  tapemsg;
+    char*  lbltype;
+    char*  eyecatcher =
 "*******************************************************************************";
 
     TRACE( "** ReqAutoMount...\n" );
@@ -3032,7 +3032,7 @@ static void ReqAutoMount( DEVBLK *dev )
 
         if ( unmountreq )
         {
-            BYTE* keep_or_retain = "";
+            char* keep_or_retain = "";
 
             if ( 'K' == tapemsg[0] ) keep_or_retain = "and keep ";
             if ( 'R' == tapemsg[0] ) keep_or_retain = "and retain ";
@@ -3122,7 +3122,7 @@ static void ReqAutoMount( DEVBLK *dev )
 static void load_display (DEVBLK *dev, BYTE *buf, U16 count)
 {
 U16             i;                      /* Array subscript           */
-BYTE            msg1[9], msg2[9];       /* Message areas (ASCIIZ)    */
+char            msg1[9], msg2[9];       /* Message areas (ASCIIZ)    */
 BYTE            fcb;                    /* Format Control Byte       */
 BYTE            tapeloaded;             /* (boolean true/false)      */
 BYTE*           msg;                    /* (work buf ptr)            */
@@ -3924,7 +3924,7 @@ static struct tape_format_entry fmttab[]={
 /*            tapes while it is not on IDRC */
 /*            formated 3480 tapes)          */
 /*  .. TO DO ..                             */
-static int mountnewtape(DEVBLK *dev,int argc,BYTE **argv)
+static int mountnewtape(DEVBLK *dev,int argc,char **argv)
 {
 int        i;                           /* Loop control              */
 regex_t    regwrk;                      /* REGEXP work area          */
@@ -4244,7 +4244,7 @@ static void autoload_tape_entry(DEVBLK *dev,char *fn,char **strtokw)
 /*-------------------------------------------------------------------*/
 /* autoload_init : initialise the Autoloader feature */
 
-static void autoload_init(DEVBLK *dev,int ac,BYTE **av)
+static void autoload_init(DEVBLK *dev,int ac,char **av)
 {
     char        bfr[4096];
     char    *rec;
@@ -4313,7 +4313,7 @@ static void autoload_init(DEVBLK *dev,int ac,BYTE **av)
 
 static int autoload_mount_tape(DEVBLK *dev,int alix)
 {
-    BYTE        **pars;
+    char        **pars;
     int        pcount=1;
     int        i;
     int        rc;
@@ -4405,7 +4405,7 @@ DEVBLK *dev = (DEVBLK*) db;
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int tapedev_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
+static int tapedev_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 U16             cutype;                 /* Control unit type         */
 BYTE            cumodel;                /* Control unit model number */
@@ -4615,7 +4615,7 @@ int             rc;
     if ( !dev->als )
     {
         // No. Just mount whatever tape there is (if any)...
-        rc = mountnewtape( dev, argc, (BYTE**) argv );
+        rc = mountnewtape( dev, argc, argv );
         TRACE( "** tapedev_init_handler: mountnewtape: rc=%d\n", rc );
     }
     else
@@ -4643,8 +4643,8 @@ int             rc;
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void tapedev_query_device ( DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer )
+static void tapedev_query_device ( DEVBLK *dev, char **class,
+                int buflen, char *buffer )
 {
     char dispmsg[256]; dispmsg[0]=0;
 
@@ -4661,7 +4661,7 @@ static void tapedev_query_device ( DEVBLK *dev, BYTE **class,
     }
     else
     {
-        BYTE tapepos[32]; tapepos[0]=0;
+        char tapepos[32]; tapepos[0]=0;
 
         if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
         {

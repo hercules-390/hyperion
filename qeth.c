@@ -32,7 +32,7 @@ static BYTE sense_id_bytes[] = { 0xff,
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int qeth_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 logmsg(D_("dev(%4.4x) experimental driver\n"),dev->devnum);
 
@@ -64,8 +64,8 @@ logmsg(D_("senseidnum=%d\n"),dev->numdevid);
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void qeth_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+static void qeth_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
     *class = "QETH";
 

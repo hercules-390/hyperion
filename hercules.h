@@ -132,7 +132,7 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 #include "dasdtab.h"
 
-#define SPACE           ((BYTE)' ')
+#define SPACE           ' '
 
 /*-------------------------------------------------------------------*/
 /* Windows 32-specific definitions                                   */
@@ -421,9 +421,9 @@ typedef void*THREAD_FUNC(void*);
 /* Prototype definitions for device handler functions                */
 /*-------------------------------------------------------------------*/
 struct _DEVBLK;
-typedef int DEVIF (struct _DEVBLK *dev, int argc, BYTE *argv[]);
-typedef void DEVQF (struct _DEVBLK *dev, BYTE **class, int buflen,
-        BYTE *buffer);
+typedef int DEVIF (struct _DEVBLK *dev, int argc, char *argv[]);
+typedef void DEVQF (struct _DEVBLK *dev, char **class, int buflen,
+        char *buffer);
 typedef void DEVXF (struct _DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
@@ -1123,7 +1123,7 @@ typedef struct _DEVBLK {
         DEVGRP *group;                  /* Device Group              */
 
         int     argc;                   /* Init number arguments     */
-        BYTE  **argv;                   /* Init arguments            */
+        char    **argv;                 /* Init arguments            */
 
         /*  Storage accessible by device                             */
 
@@ -1133,9 +1133,9 @@ typedef struct _DEVBLK {
                                         /* guest storage limit (SIE) */
 
 #if defined(WIN32)
-        BYTE    filename[1024];         /* Windows pathname          */
+        char    filename[1024];         /* Windows pathname          */
 #else
-        BYTE    filename[256];          /* Unix file name            */
+        char    filename[256];          /* Unix file name            */
 #endif
 
         /*  device i/o fields...                                     */
@@ -1435,10 +1435,10 @@ typedef struct _DEVBLK {
 
         /* 3480/3490/3590 Message display */
 
-        BYTE    tapemsg1[9];            /* 1st Host Message          */
-        BYTE    tapemsg2[9];            /* 2nd Host Message          */
-        BYTE    tapesysmsg[32];         /*     Unit Message     (SYS)*/
-        BYTE   *prev_tapemsg;           /* Previously displayed msg  */
+        char    tapemsg1[9];            /* 1st Host Message          */
+        char    tapemsg2[9];            /* 2nd Host Message          */
+        char    tapesysmsg[32];         /*     Unit Message     (SYS)*/
+        char   *prev_tapemsg;           /* Previously displayed msg  */
 
         BYTE    tapedisptype;           /* Type of message display   */
         BYTE    tapedispflags;          /* How the msg is displayed  */
@@ -1475,8 +1475,8 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for dasd (fba and ckd)           */
 
-        BYTE   *dasdsfn;                /* Shadow file name          */
-        BYTE   *dasdsfx;                /* Pointer to suffix char    */
+        char   *dasdsfn;                /* Shadow file name          */
+        char   *dasdsfx;                /* Pointer to suffix char    */
 
 
         /*  Device dependent fields for fbadasd                      */
@@ -1901,21 +1901,21 @@ extern const char* get_arch_mode_string(REGS* regs);
 #include "devtype.h"
 
 /* Functions in module config.c */
-void build_config (BYTE *fname);
+void build_config (char *fname);
 void release_config ();
 DEVBLK *find_device_by_devnum (U16 devnum);
 DEVBLK *find_device_by_subchan (U16 subchan);
 DEVBLK *get_devblk (U16 devnum);
 void ret_devblk (DEVBLK *dev);
 int  attach_device (U16 devnum, char *devtype, int addargc,
-        BYTE *addargv[]);
+        char *addargv[]);
 int  detach_subchan (U16 subchan);
 int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
 int  group_device(DEVBLK *dev, int members);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
-int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
+int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 
 /* Access type parameter passed to translate functions in dat.c */
@@ -2026,7 +2026,7 @@ void update_TOD_clock (void);
 void *timer_update_thread (void *argp);
 
 /* Functions in module service.c */
-void scp_command (BYTE *command, int priomsg);
+void scp_command (char *command, int priomsg);
 int can_signal_quiesce ();
 int signal_quiesce (U16 count, BYTE unit);
 void sclp_reset();
@@ -2035,26 +2035,26 @@ int servc_hresume(void *file);
 
 /* Functions in module ckddasd.c */
 void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);
-int ckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[]);
+int ckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
 int ckddasd_close_device ( DEVBLK *dev );
-void ckddasd_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer);
+void ckddasd_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer);
 int ckddasd_hsuspend ( DEVBLK *dev, void *file );
 int ckddasd_hresume  ( DEVBLK *dev, void *file );
 
 /* Functions in module fbadasd.c */
 void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, int blknum,
         int blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
-int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[]);
+int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[]);
 void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
 int fbadasd_close_device ( DEVBLK *dev );
-void fbadasd_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer);
+void fbadasd_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer);
 int fbadasd_hsuspend ( DEVBLK *dev, void *file );
 int fbadasd_hresume  ( DEVBLK *dev, void *file );
 
@@ -2067,10 +2067,10 @@ int     cfba_read_block (DEVBLK *, int, BYTE *);
 int     cfba_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
 void    cckd_sf_add (DEVBLK *);
 void    cckd_sf_remove (DEVBLK *, int);
-void    cckd_sf_newname (DEVBLK *, BYTE *);
+void    cckd_sf_newname (DEVBLK *, char *);
 void    cckd_sf_stats (DEVBLK *);
 void    cckd_sf_comp (DEVBLK *);
-int     cckd_command(BYTE *, int);
+int     cckd_command(char *, int);
 void    cckd_print_itrace ();
 
 /* Functions in module cckdutil.c */
@@ -2099,8 +2099,8 @@ void display_cregs (REGS *regs);
 void display_aregs (REGS *regs);
 void display_subchannel (DEVBLK *dev);
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
-void alter_display_real (BYTE *opnd, REGS *regs);
-void alter_display_virt (BYTE *opnd, REGS *regs);
+void alter_display_real (char *opnd, REGS *regs);
+void alter_display_virt (char *opnd, REGS *regs);
 void disasm_stor(REGS *regs, char *opnd);
 
 /* Functions in module sr.c */

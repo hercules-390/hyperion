@@ -59,15 +59,15 @@ void log_sethrdcpy(char *filename);
 void log_wakeup(void *arg);
 
 /* Log routing section */
-typedef void LOG_WRITER(void *,unsigned char *);
+typedef void LOG_WRITER(void *,char *);
 typedef void LOG_CLOSER(void *);
 
 int log_open(LOG_WRITER,LOG_CLOSER,void *);
 void log_close(void);
-void log_write(int,unsigned char *,...);
+void log_write(int,char *,...);
 /* End of log routing section */
 
 /* Log routing utility */
-unsigned char *log_capture(void *(*)(void *),void *);
+char *log_capture(void *(*)(void *),void *);
 
 #endif

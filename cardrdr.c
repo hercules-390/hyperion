@@ -36,7 +36,7 @@
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int cardrdr_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+static int cardrdr_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int     i;                              /* Array subscript           */
 int     fc;                             /* File counter              */
@@ -313,8 +313,8 @@ int     fc;                             /* File counter              */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void cardrdr_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+static void cardrdr_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
     *class = "RDR";
 

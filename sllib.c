@@ -229,7 +229,7 @@ sl_atoe( void *dbuf, void *sbuf, int slen )
         dptr[ slen ] = host_to_guest( sptr[ slen ] );
     }
 
-    return( dptr );
+    return( (char *)dptr );
 }
 
 /*==DOC==
@@ -320,7 +320,7 @@ sl_etoa( void *dbuf, void *sbuf, int slen )
         dptr[ slen ] = guest_to_host( sptr[ slen ] );
     }
 
-    return( dptr );
+    return( (char *)dptr );
 }
 
 /*==DOC==

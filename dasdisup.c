@@ -41,7 +41,7 @@ typedef struct _MEMINFO {
 /*-------------------------------------------------------------------*/
 
 /* List of first loads for Open/Close/EOV routines */
-static BYTE *firstload[] = {
+static char *firstload[] = {
         "IGC0001I",                     /* Open (SVC19)              */
         "IGC0002{",                     /* Close (SVC20)             */
         "IGC0002A",                     /* Stow (SVC21)              */
@@ -58,7 +58,7 @@ static BYTE *firstload[] = {
         NULL };                         /* End of list               */
 
 /* List of second loads for Open/Close/EOV routines */
-static BYTE *secondload[] = {
+static char *secondload[] = {
         "IFG019", "IGG019",             /* Open (SVC19)              */
         "IFG020", "IGG020",             /* Close (SVC20)             */
         "IGG021",                       /* Stow (SVC21)              */
@@ -232,7 +232,7 @@ int             k;                      /* Userdata halfword count   */
 BYTE           *dirptr;                 /* -> Next byte within block */
 int             dirrem;                 /* Number of bytes remaining */
 PDSDIR         *dirent;                 /* -> Directory entry        */
-BYTE            memnama[9];             /* Member name (ASCIIZ)      */
+char            memnama[9];             /* Member name (ASCIIZ)      */
 
     UNREFERENCED(cif);
     UNREFERENCED(noext);
@@ -397,11 +397,11 @@ int             trk;                    /* Relative track number     */
 int             xctloff;                /* Offset to XCTL table      */
 int             warn;                   /* 1=Flag TTRL difference    */
 BYTE           *blkptr;                 /* -> Text record data       */
-BYTE            memnama[9];             /* Member name (ASCIIZ)      */
+char            memnama[9];             /* Member name (ASCIIZ)      */
 BYTE            svcnum[3];              /* SVC number (EBCDIC)       */
 BYTE            prefix[3];              /* IGG/IFG prefix (EBCDIC)   */
 BYTE            refname[8];             /* Referred name (EBCDIC)    */
-BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
+char            refnama[9];             /* Referred name (ASCIIZ)    */
 
     /* Extract the member name */
     make_asciiz (memnama, sizeof(memnama), memp->memname, 8);
@@ -608,8 +608,8 @@ int             cyl;                    /* Cylinder number           */
 int             head;                   /* Head number               */
 int             rec;                    /* Record number             */
 int             trk;                    /* Relative track number     */
-BYTE           *fname;                  /* -> CKD image file name    */
-BYTE           *sfname;                 /* -> CKD shadow file name   */
+char           *fname;                  /* -> CKD image file name    */
+char           *sfname;                 /* -> CKD shadow file name   */
 int             noext;                  /* Number of extents         */
 DSXTENT         extent[16];             /* Extent descriptor array   */
 BYTE           *blkptr;                 /* -> PDS directory block    */

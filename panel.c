@@ -298,7 +298,7 @@ static void NP_screen(FILE *confp)
 {
 
     DEVBLK *dev;
-    BYTE *devclass;
+    char *devclass;
     int p, a;
     char c[2];
     char devnam[128];
@@ -425,7 +425,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     REGS *regs;
     BYTE pswwait;                        /* PSW wait state bit        */
     DEVBLK *dev;
-    BYTE *devclass;
+    char *devclass;
     int p, a;
     char ch[2];
     U32 aaddr;
@@ -815,16 +815,16 @@ BYTE    pswwait;                        /* PSW wait state bit        */
 BYTE    redraw_msgs;                    /* 1=Redraw message area     */
 BYTE    redraw_cmd;                     /* 1=Redraw command line     */
 BYTE    redraw_status;                  /* 1=Redraw status line      */
-BYTE    readbuf[MSG_SIZE];              /* Message read buffer       */
+char    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
-BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
+char    cmdline[CMD_SIZE+1];            /* Command line buffer       */
 int     cmdoff = 0;                     /* Cursor position in cmdline*/
 int     cmdlen = 0;                     /* Number of bytes in cmdline*/
 BYTE    c;                              /* Character work area       */
 FILE   *confp;                          /* Console file pointer      */
 struct termios kbattr;                  /* Terminal I/O structure    */
 size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer   */
-BYTE   *kbbuf = NULL;                   /* Keyboard input buffer     */
+char   *kbbuf = NULL;                   /* Keyboard input buffer     */
 int     kblen;                          /* Number of chars in kbbuf  */
 int     pipefd;                         /* Pipe file descriptor      */
 int     keybfd;                         /* Keyboard file descriptor  */

@@ -259,7 +259,6 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 
 #define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
-#define SPACE           ((BYTE)' ')
 
 
 #undef  FIX_QWS_BUG_FOR_MCS_CONSOLES
@@ -475,7 +474,7 @@ int     m, n, x, newlen;
 /* SUBROUTINE TO TRANSLATE A NULL-TERMINATED STRING TO EBCDIC        */
 /*-------------------------------------------------------------------*/
 static BYTE *
-translate_to_ebcdic (BYTE *str)
+translate_to_ebcdic (char *str)
 {
 int     i;                              /* Array subscript           */
 BYTE    c;                              /* Character work area       */
@@ -486,7 +485,7 @@ BYTE    c;                              /* Character work area       */
         str[i] = (isprint(c) ? host_to_guest(c) : SPACE);
     }
 
-    return str;
+    return (BYTE *)str;
 } /* end function translate_to_ebcdic */
 
 
@@ -639,11 +638,11 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
 /*      0=negotiation successful, -1=negotiation error               */
 /*-------------------------------------------------------------------*/
 static int
-negotiate(int csock, BYTE *class, BYTE *model, BYTE *extatr, U16 *devn,BYTE *group)
+negotiate(int csock, BYTE *class, BYTE *model, BYTE *extatr, U16 *devn,char *group)
 {
 int    rc;                              /* Return code               */
-BYTE  *termtype;                        /* Pointer to terminal type  */
-BYTE  *s;                               /* String pointer            */
+char  *termtype;                        /* Pointer to terminal type  */
+char  *s;                               /* String pointer            */
 BYTE   c;                               /* Trailing character        */
 U16    devnum;                          /* Requested device number   */
 BYTE   buf[512];                        /* Telnet negotiation buffer */
@@ -697,7 +696,7 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
         return -1;
     }
     buf[rc-2] = '\0';
-    termtype = buf + sizeof(type_is);
+    termtype = (char *)(buf + sizeof(type_is));
     TNSDEBUG2("DBG009: Received IAC SB TERMINAL_TYPE IS %s IAC SE\n",
             termtype);
 
@@ -1212,12 +1211,12 @@ U16                     devnum;         /* Requested device number   */
 BYTE                    class;          /* D=3270, P=3287, K=3215/1052 */
 BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
 BYTE                    extended;       /* Extended attributes (Y,N) */
-BYTE                    buf[256];       /* Message buffer            */
-BYTE                    conmsg[256];    /* Connection message        */
-BYTE                    devmsg[16];     /* Device message            */
-BYTE                    hostmsg[256];   /* Host ID message           */
-BYTE                    rejmsg[256];    /* Rejection message         */
-BYTE                    group[16];      /* Console group             */
+char                    buf[256];       /* Message buffer            */
+char                    conmsg[256];    /* Connection message        */
+char                    devmsg[16];     /* Device message            */
+char                    hostmsg[256];   /* Host ID message           */
+char                    rejmsg[256];    /* Rejection message         */
+char                    group[16];      /* Console group             */
 
     /* Load the socket address from the thread parameter */
     csock = *csockp;
@@ -1417,7 +1416,7 @@ BYTE                    group[16];      /* Console group             */
         if (class != 'P')  /* do not write connection resp on 3287 */
         {
             len = strlen(buf);
-            rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
+            rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
         }
 
         /* Close the connection and terminate the thread */
@@ -1467,7 +1466,7 @@ BYTE                    group[16];      /* Console group             */
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
         len = strlen(buf);
-        rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
     }
 
     /* Raise attention interrupt for the device */
@@ -1799,7 +1798,7 @@ console_remove(DEVBLK *dev)
 /* INITIALIZE THE 3270 DEVICE HANDLER                                */
 /*-------------------------------------------------------------------*/
 static int
-loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+loc3270_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int ac = 0;
     /*
@@ -1897,8 +1896,8 @@ loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 /* QUERY THE 3270 DEVICE DEFINITION                                  */
 /*-------------------------------------------------------------------*/
 static void
-loc3270_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+loc3270_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
     *class = "DSP";
 
@@ -1909,12 +1908,12 @@ loc3270_query_device (DEVBLK *dev, BYTE **class,
     }
     else
     {
-        BYTE  acc[48];
+        char  acc[48];
 
         if (dev->acc_ipaddr || dev->acc_ipmask)
         {
-            BYTE  ip   [16];
-            BYTE  mask [16];
+            char  ip   [16];
+            char  mask [16];
             struct in_addr  xxxx;
 
             xxxx.s_addr = dev->acc_ipaddr;
@@ -2082,7 +2081,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
 /* INITIALIZE THE 1052/3215 DEVICE HANDLER                           */
 /*-------------------------------------------------------------------*/
 static int
-constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+constty_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int ac=0;
 
@@ -2183,8 +2182,8 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 /* QUERY THE 1052/3215 DEVICE DEFINITION                             */
 /*-------------------------------------------------------------------*/
 static void
-constty_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+constty_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
     *class = "CON";
 
@@ -2196,12 +2195,12 @@ constty_query_device (DEVBLK *dev, BYTE **class,
     }
     else
     {
-        BYTE  acc[48];
+        char  acc[48];
 
         if (dev->acc_ipaddr || dev->acc_ipmask)
         {
-            BYTE  ip   [16];
-            BYTE  mask [16];
+            char  ip   [16];
+            char  mask [16];
             struct in_addr  xxxx;
 
             xxxx.s_addr = dev->acc_ipaddr;
@@ -2967,10 +2966,10 @@ BYTE    stat;                           /* Unit status               */
             /* Display prompting message on console if allowed */
             if (dev->prompt1052)
             {
-                snprintf (dev->buf, dev->bufsize,
+                snprintf ((char *)dev->buf, dev->bufsize,
                         _("HHCTE006A Enter input for console device %4.4X\r\n"),
                         dev->devnum);
-                len = strlen(dev->buf);
+                len = strlen((char *)dev->buf);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)
                 {
@@ -3029,7 +3028,7 @@ BYTE    stat;                           /* Unit status               */
     /*---------------------------------------------------------------*/
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
-        rc = send_packet (dev->fd, "\a", 1, NULL);
+        rc = send_packet (dev->fd, (BYTE *)"\a", 1, NULL);
     /*
         *residual = 0;
     */

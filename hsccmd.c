@@ -188,8 +188,8 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         U16      devnum;
         int      stopprt;
         DEVBLK*  dev;
-        BYTE*    devclass;
-        BYTE     devnam[256];
+        char*    devclass;
+        char     devnam[256];
         int      rc;
         BYTE    c;                      /* Character work area       */
 
@@ -280,8 +280,8 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
         U16      devnum;
         DEVBLK*  dev;
-        BYTE*    devclass;
-        BYTE     devnam[256];
+        char*    devclass;
+        char     devnam[256];
         BYTE    c;                      /* Character work area       */
 
         if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
@@ -567,8 +567,8 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 int scsimount_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
-    BYTE*    tapemsg;
-    BYTE     volname[7];
+    char*    tapemsg;
+    char     volname[7];
     BYTE     mountreq;
     UNREFERENCED(cmdline);
 
@@ -631,9 +631,9 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
             ? TRUE : FALSE;
 
         if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
-            tapemsg = dev->tapemsg2;
+            tapemsg = (char *)dev->tapemsg2;
         else
-            tapemsg = dev->tapemsg1;
+            tapemsg = (char *)dev->tapemsg1;
 
         volname[0]=0; if (*tapemsg && *(tapemsg+1))
             strncpy( volname, tapemsg+1, sizeof(volname)-1 );
@@ -653,7 +653,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
 
 int cckd_cmd(int argc, char *argv[], char *cmdline)
 {
-    BYTE* p = strtok(cmdline+4," \t");
+    char* p = strtok(cmdline+4," \t");
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -1412,8 +1412,8 @@ int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlk
 int devlist_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
-    BYTE*    devclass;
-    BYTE     devnam[1024];
+    char*    devclass;
+    char     devnam[1024];
     DEVBLK** pDevBlkPtr;
     DEVBLK** orig_pDevBlkPtrs;
     size_t   nDevCount, i;
@@ -1550,7 +1550,7 @@ BYTE c;                                 /* Character work area       */
     }
 #endif
 
-    return  attach_device (devnum, argv[2], argc-3, (BYTE**)&argv[3]);
+    return  attach_device (devnum, argv[2], argc-3, &argv[3]);
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -1827,8 +1827,8 @@ int devtmax_cmd(int argc, char *argv[], char *cmdline)
 
 int ShadowFile_cmd(int argc, char *argv[], char *cmdline)
 {
-BYTE   *cmd = (BYTE*) cmdline;          /* Copy of panel command     */
-BYTE   *devascii;                       /* ASCII text device number  */
+char   *cmd = cmdline;                  /* Copy of panel command     */
+char   *devascii;                       /* ASCII text device number  */
 DEVBLK *dev;                            /* -> Device block           */
 U16     devnum;                         /* Device number             */
 BYTE    c;                              /* Character work area       */
@@ -2021,7 +2021,7 @@ BYTE c;                                 /* Character work area       */
     /* Call the device init routine to do the hard work */
     if (argc > 2)
     {
-        if ((dev->hnd->init)(dev, argc-2, (BYTE**)&argv[2]) < 0)
+        if ((dev->hnd->init)(dev, argc-2, &argv[2]) < 0)
         {
             logmsg( _("HHCPN097E Initialization failed for device %4.4X\n"),
                       devnum );
@@ -2044,8 +2044,8 @@ int savecore_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 
-    BYTE   *fname;                      /* -> File name (ASCIIZ)     */
-    BYTE   *loadaddr;                   /* loadcore memory address   */
+    char   *fname;                      /* -> File name (ASCIIZ)     */
+    char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
     U32     aaddr2;                     /* Absolute storage address  */
     int     fd;                         /* File descriptor           */
@@ -2161,9 +2161,9 @@ int loadcore_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs;
 
-    BYTE   *fname;                      /* -> File name (ASCIIZ)     */
+    char   *fname;                      /* -> File name (ASCIIZ)     */
     struct stat statbuff;               /* Buffer for file status    */
-    BYTE   *loadaddr;                   /* loadcore memory address   */
+    char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
     int     len;                        /* Number of bytes read      */
 
@@ -2232,8 +2232,8 @@ REGS *regs;
 
 int loadtext_cmd(int argc, char *argv[], char *cmdline)
 {
-    BYTE   *fname;                      /* -> File name (ASCIIZ)     */
-    BYTE   *loadaddr;                   /* loadcore memory address   */
+    char   *fname;                      /* -> File name (ASCIIZ)     */
+    char   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
     int     fd;                         /* File descriptor           */
     BYTE    buf[80];                    /* Read buffer               */
@@ -2704,10 +2704,10 @@ int process_script_file(char *script_name,int isrcfile)
 {
 FILE   *scrfp;                           /* RC file pointer           */
 size_t  scrbufsize = 1024;               /* Size of RC file  buffer   */
-BYTE   *scrbuf = NULL;                   /* RC file input buffer      */
+char   *scrbuf = NULL;                   /* RC file input buffer      */
 int     scrlen;                          /* length of RC file record  */
 int     scr_pause_amt = 0;               /* seconds to pause RC file  */
-BYTE   *p;                              /* (work)                    */
+char   *p;                              /* (work)                    */
 
 
     /* Check the recursion level - if it exceeds a certain amount
@@ -2942,9 +2942,9 @@ int archmode_cmd(int argc, char *argv[], char *cmdline)
 
 int OnOffCommand(int argc, char *argv[], char *cmdline)
 {
-    BYTE   *cmd = (BYTE*) cmdline;      /* Copy of panel command     */
+    char   *cmd = cmdline;              /* Copy of panel command     */
     int     oneorzero;                  /* 1=x+ command, 0=x-        */
-    BYTE   *onoroff;                    /* "on" or "off"             */
+    char   *onoroff;                    /* "on" or "off"             */
     U32     aaddr;                      /* Absolute storage address  */
     DEVBLK* dev;
     U16     devnum;
@@ -3595,9 +3595,9 @@ COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 // Main panel command processing function...
 
 int    cmd_argc;
-BYTE*  cmd_argv[MAX_ARGS];
+char*  cmd_argv[MAX_ARGS];
 
-int ProcessPanelCommand (const char* pszCmdLine)
+int ProcessPanelCommand (char* pszCmdLine)
 {
     int      rc = -1;
     CMDTAB*  pCmdTab;
@@ -3617,7 +3617,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
 
     /* Parse the command line into its individual arguments...
        Note: original command line now sprinkled with nulls */
-    parse_args ((BYTE*)pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
+    parse_args (pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
 
 #if defined(OPTION_DYNAMIC_LOAD)
     if( system_command )
@@ -3927,12 +3927,12 @@ void *panel_command (void *cmdline)
 #endif
 {
 #define MAX_CMD_LEN (32768)
-    BYTE  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
-    BYTE *pCmdLine;
+    char  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
+    char *pCmdLine;
     unsigned i;
 REGS *regs = sysblk.regs[sysblk.pcpu];
 
-    pCmdLine = (BYTE*)cmdline; ASSERT(pCmdLine);
+    pCmdLine = cmdline; ASSERT(pCmdLine);
     /* every command will be stored in history list */
     history_add(cmdline);
 

@@ -53,7 +53,7 @@
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+int fbadasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 int     rc;                             /* Return code               */
 struct  stat statbuf;                   /* File information          */
@@ -298,8 +298,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-void fbadasd_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+void fbadasd_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
 
     *class = "DASD";

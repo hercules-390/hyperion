@@ -77,7 +77,7 @@ int syntax()
 /* snap - display msg, dump data                                     */
 /*-------------------------------------------------------------------*/
 /* Newline appended to message                                       */
-void snap(BYTE *msg, void *data, int len) {
+void snap(char *msg, void *data, int len) {
 int    x;
 
     if (msg != NULL) 
@@ -167,7 +167,7 @@ int decomptrk(
               int obuflen,        /* output buffer length            */
               int heads,          /* >=0 means CKD, else FBA         */
               int trk,            /* relative track or block number  */
-              BYTE *msg           /* addr of 80 byte msg buf or NULL */
+              char *msg           /* addr of 80 byte msg buf or NULL */
              )
 /* ibuf points at CKDDASD_TRKHDR header followed by track data       */
 /* ibuflen specifies length of TRKHDR and data                       */
@@ -176,7 +176,7 @@ int decomptrk(
 {
 int             rc;                     /* Return code               */
 BYTE           *bufp;                   /* Buffer pointer            */
-int             bufl;                   /* Buffer length             */
+size_t          bufl;                   /* Buffer length             */
 
     memset(obuf, 0x00, obuflen);  /* clear output buffer             */
 
@@ -215,9 +215,9 @@ int             bufl;                   /* Buffer length             */
         memcpy(obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         bufl = obuflen - CKDDASD_TRKHDR_SIZE;
         rc = BZ2_bzBuffToBuffDecompress ( 
-                 &obuf[CKDDASD_TRKHDR_SIZE], 
+                 (char *)&obuf[CKDDASD_TRKHDR_SIZE], 
                  &bufl,
-                 &ibuf[CKDDASD_TRKHDR_SIZE], 
+                 (char *)&ibuf[CKDDASD_TRKHDR_SIZE], 
                  ibuflen, 0, 0);
         if (rc != BZ_OK) {
             if (msg)
@@ -300,7 +300,7 @@ void showtrk(
              int xop              /* 1=dump key & data blks; 0=don't */
              ) {
 BYTE            buf2[64*1024];         /* max uncompressed buffer    */
-BYTE            msg[81];               /* error message buffer       */
+char            msg[81];               /* error message buffer       */
 CKDDASD_RECHDR  *rh;                   /* CCKD COUNT field           */
 BYTE            *bufp;
 int             len;
@@ -338,14 +338,14 @@ int             len;
 /*-------------------------------------------------------------------*/
 /* Based on code in P. J. Plauger's "The Standard C Library"         */
 /* See page 34, in Chapter 2 (ctype.h)                               */
-off_t offtify(BYTE *s) {
+off_t offtify(char *s) {
 
 static const char  xd[] = {"0123456789abcdefABCDEF"};
 static const char  xv[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
                            10, 11, 12, 13, 14, 15, 
                            10, 11, 12, 13, 14, 15};
 off_t              v;
-BYTE               *p;
+char               *p;
 
         p = s;
         if ( (*s == '0') && (*(s+1) == 'x') ) {

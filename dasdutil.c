@@ -17,7 +17,6 @@ extern DEVHND ckddasd_device_hndinfo;
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define SPACE           ((BYTE)' ')
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -36,7 +35,7 @@ SYSBLK sysblk; /* Currently required for shared.c */
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to upper case      */
 /*-------------------------------------------------------------------*/
-void string_to_upper (BYTE *source)
+void string_to_upper (char *source)
 {
 int     i;                              /* Array subscript           */
 
@@ -48,7 +47,7 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to lower case      */
 /*-------------------------------------------------------------------*/
-void string_to_lower (BYTE *source)
+void string_to_lower (char *source)
 {
 int     i;                              /* Array subscript           */
 
@@ -60,7 +59,7 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a string to EBCDIC and pad with blanks      */
 /*-------------------------------------------------------------------*/
-void convert_to_ebcdic (BYTE *dest, int len, BYTE *source)
+void convert_to_ebcdic (BYTE *dest, int len, char *source)
 {
 int     i;                              /* Array subscript           */
 
@@ -79,7 +78,7 @@ int     i;                              /* Array subscript           */
 /* Removes trailing blanks and adds a terminating null.              */
 /* Returns the length of the ASCII string excluding terminating null */
 /*-------------------------------------------------------------------*/
-int make_asciiz (BYTE *dest, int destlen, BYTE *src, int srclen)
+int make_asciiz (char *dest, int destlen, BYTE *src, int srclen)
 {
 int             len;                    /* Result length             */
 
@@ -104,15 +103,15 @@ unsigned int    maxlen = 2048;
 unsigned int    i, xi, offset, startoff = 0;
 BYTE            c;
 BYTE           *pchar;
-BYTE            print_chars[17];
-BYTE            hex_chars[64];
-BYTE            prev_hex[64] = "";
+char            print_chars[17];
+char            hex_chars[64];
+char            prev_hex[64] = "";
 int             firstsame = 0;
 int             lastsame = 0;
 
     set_codepage(NULL);
 
-    pchar = (unsigned char*)addr;
+    pchar = (BYTE *)addr;
 
     for (offset=0; ; )
     {
@@ -493,7 +492,7 @@ int             extsize;                /* Extent size in tracks     */
 /* Return value is a pointer to the CKD image file descriptor        */
 /* structure if successful, or NULL if unsuccessful.                 */
 /*-------------------------------------------------------------------*/
-CIFBLK* open_ckd_image (BYTE *fname, BYTE *sfname, int omode,
+CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
                        int dasdcopy)
 {
 int             fd;                     /* File descriptor           */
@@ -503,11 +502,11 @@ CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 DEVBLK         *dev;                    /* CKD device block          */
 CKDDEV         *ckd;                    /* CKD DASD table entry      */
-BYTE           *rmtdev;                 /* Possible remote device    */
-BYTE           *argv[2];                /* Arguments to              */
+char           *rmtdev;                 /* Possible remote device    */
+char           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*                           */
-BYTE            sfxname[1024];          /* Suffixed file name        */
-BYTE            typname[64];
+char            sfxname[1024];          /* Suffixed file name        */
+char            typname[64];
 
     /* Obtain storage for the file descriptor structure */
     cif = (CIFBLK*) calloc (sizeof(CIFBLK), 1);
@@ -539,7 +538,7 @@ BYTE            typname[64];
         if (sfname == NULL)
         {
             int i;
-            BYTE *s,*suffix;
+            char *s,*suffix;
 
             /* Look for last slash marking end of directory name */
             s = strrchr (fname, '/');
@@ -728,14 +727,14 @@ BYTE            unitstat;               /* Unit status               */
 /* Return value is a pointer to the FBA image file descriptor        */
 /* structure if successful, or NULL if unsuccessful.                 */
 /*-------------------------------------------------------------------*/
-CIFBLK* open_fba_image (BYTE *fname, BYTE *sfname, int omode,
+CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
                         int dasdcopy)
 {
 int             rc;                     /* Return code               */
 CIFBLK         *cif;                    /* FBA image file descriptor */
 DEVBLK         *dev;                    /* FBA device block          */
 FBADEV         *fba;                    /* FBA DASD table entry      */
-BYTE           *argv[2];                /* Arguments to              */
+char           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*  device open              */
 
     /* Obtain storage for the file descriptor structure */
@@ -825,7 +824,7 @@ int             argc=0;                 /*  device open              */
 /*                                                                   */
 /* Return value is 0 if successful, or -1 if error                   */
 /*-------------------------------------------------------------------*/
-int build_extent_array (CIFBLK *cif, BYTE *dsnama, DSXTENT extent[],
+int build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
                         int *noext)
 {
 int             rc;                     /* Return code               */
@@ -838,7 +837,7 @@ FORMAT1_DSCB   *f1dscb;                 /* -> Format 1 DSCB          */
 FORMAT3_DSCB   *f3dscb;                 /* -> Format 3 DSCB          */
 FORMAT4_DSCB   *f4dscb;                 /* -> Format 4 DSCB          */
 BYTE            dsname[44];             /* Dataset name (EBCDIC)     */
-BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
+char            volser[7];              /* Volume serial (ASCIIZ)    */
 
     /* Convert the dataset name to EBCDIC */
     convert_to_ebcdic (dsname, sizeof(dsname), dsnama);
@@ -1112,9 +1111,9 @@ int             fl1, fl2, int1, int2;   /* 3380/3390/9345 calculation*/
 /*              Will be 0xff if device is not to be compressed.      */
 /*-------------------------------------------------------------------*/
 static int
-create_ckd_file (BYTE *fname, int fseqn, U16 devtype, U32 heads,
+create_ckd_file (char *fname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *buf, U32 start, U32 end,
-                U32 volcyls, BYTE *volser, BYTE comp, int dasdcopy)
+                U32 volcyls, char *volser, BYTE comp, int dasdcopy)
 {
 int             rc;                     /* Return code               */
 int             fd;                     /* File descriptor           */
@@ -1476,15 +1475,15 @@ int             x=O_EXCL;               /* Open option               */
 /* Otherwise a single file is created without a suffix.              */
 /*-------------------------------------------------------------------*/
 int
-create_ckd (BYTE *fname, U16 devtype, U32 heads, U32 maxdlen,
-           U32 volcyls, BYTE *volser, BYTE comp, int lfs, int dasdcopy)
+create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
+           U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy)
 {
 int             i;                      /* Array subscript           */
 int             rc;                     /* Return code               */
-BYTE            *s;                     /* String pointer            */
+char            *s;                     /* String pointer            */
 int             fileseq;                /* File sequence number      */
-BYTE            sfname[260];            /* Suffixed name of this file*/
-BYTE            *suffix;                /* -> Suffix character       */
+char            sfname[260];            /* Suffixed name of this file*/
+char            *suffix;                /* -> Suffix character       */
 U32             endcyl;                 /* Last cylinder of this file*/
 U32             cyl;                    /* Cylinder number           */
 U32             cylsize;                /* Cylinder size in bytes    */
@@ -1613,8 +1612,8 @@ U32             trksize;                /* DASD image track length   */
 /*              Will be 0xff if device is not to be compressed.      */
 /*-------------------------------------------------------------------*/
 int
-create_fba (BYTE *fname, U16 devtype, U32 sectsz, U32 sectors,
-            BYTE *volser, BYTE comp, int lfs, int dasdcopy)
+create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
+            char *volser, BYTE comp, int lfs, int dasdcopy)
 {
 int             rc;                     /* Return code               */
 int             fd;                     /* File descriptor           */
@@ -1754,8 +1753,8 @@ int             x=O_EXCL;               /* Open option               */
 /*      comp    Compression algorithm for a compressed device.       */
 /*-------------------------------------------------------------------*/
 int
-create_compressed_fba (BYTE *fname, U16 devtype, U32 sectsz,
-           U32 sectors, BYTE *volser, BYTE comp, int lfs, int dasdcopy)
+create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
+           U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy)
 {
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* Return value from lseek() */

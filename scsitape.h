@@ -942,7 +942,7 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
         /* Display tape status if tracing is active */
         if ( dev->ccwtrace || dev->ccwstep )
         {
-            BYTE  buf[256];
+            char  buf[256];
 
             snprintf
             (
@@ -951,7 +951,7 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
                 "%4.4X filename=%s (%s), sstat=0x%8.8X: %s %s"
 
                 ,dev->devnum
-                ,( (dev->filename[0]) ? (dev->filename) : ((BYTE*)"(undefined)") )
+                ,( (dev->filename[0]) ? (dev->filename) : ("(undefined)") )
                 ,( (dev->fd   <   0 ) ?   ("closed")    : (          "opened"  ) )
                 ,dev->sstat
                 ,STS_ONLINE(dev)      ? "ON-LINE" : "OFF-LINE"

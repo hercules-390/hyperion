@@ -27,7 +27,6 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define SPACE           ((BYTE)' ')
 #define CASERET(s)      case s: return (#s)
 #define XMINF(lvl,format) \
         do { \
@@ -188,10 +187,10 @@ int             i;                      /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Subroutine to return the name of a dataset organization           */
 /*-------------------------------------------------------------------*/
-static BYTE *
-dsorg_name (BYTE *dsorg)
+static char *
+dsorg_name (BYTE  *dsorg)
 {
-static BYTE     name[8];                /* Name of dsorg             */
+static char     name[8];                /* Name of dsorg             */
 
     if (dsorg[0] & DSORG_IS)
         strcpy (name, "IS");
@@ -210,10 +209,10 @@ static BYTE     name[8];                /* Name of dsorg             */
 /*-------------------------------------------------------------------*/
 /* Subroutine to return the name of a record format                  */
 /*-------------------------------------------------------------------*/
-static BYTE *
+static char *
 recfm_name (BYTE *recfm)
 {
-static BYTE     name[8];                /* Name of record format     */
+static char     name[8];                /* Name of record format     */
 
     switch (recfm[0] & RECFM_FORMAT) {
     case RECFM_FORMAT_V:
@@ -243,7 +242,7 @@ static BYTE     name[8];                /* Name of record format     */
 /*-------------------------------------------------------------------*/
 /* Subroutine to return the name of a DASD device from the UCB type  */
 /*-------------------------------------------------------------------*/
-static BYTE *
+static char *
 dasd_name (FWORD ucbtype)
 {
     if (ucbtype[2] != 0x20) return "????";
@@ -361,7 +360,7 @@ int     track;                          /* Relative track number     */
 /*      assumed to have zero origin.  An END card must be present.   */
 /*-------------------------------------------------------------------*/
 static int
-read_ipl_text (BYTE *iplfnm, BYTE *iplbuf, int buflen)
+read_ipl_text (char *iplfnm, BYTE *iplbuf, int buflen)
 {
 int             rc;                     /* Return code               */
 int             ipllen = 0;             /* Length of IPL text        */
@@ -510,7 +509,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 /*      The return value is 0 if successful, -1 if error occurred.   */
 /*-------------------------------------------------------------------*/
 static int
-write_track (CIFBLK *cif, BYTE *ofname, int heads, int trklen,
+write_track (CIFBLK *cif, char *ofname, int heads, int trklen,
              int *usedv, int *reltrk, int *cyl, int *head)
 {
 int             rc;                     /* Return code               */
@@ -572,7 +571,7 @@ int             rc;                     /* Return code               */
 /*      The return value is 0 if successful, -1 if error occurred.   */
 /*-------------------------------------------------------------------*/
 static int
-write_block (CIFBLK *cif, BYTE *ofname, DATABLK *blk, int keylen,
+write_block (CIFBLK *cif, char *ofname, DATABLK *blk, int keylen,
             int datalen, U16 devtype, int heads, int trklen,
             int maxtrk, int *usedv, int *usedr,
             int *trkbal, int *reltrk, int *cyl, int *head, int *rec)
@@ -681,8 +680,8 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 /*      The return value is 0 if successful, -1 if error occurred.   */
 /*-------------------------------------------------------------------*/
 static int
-write_track_zero (CIFBLK *cif, BYTE *ofname, BYTE *volser, U16 devtype,
-            int heads, int trklen, BYTE *iplfnm,
+write_track_zero (CIFBLK *cif, char *ofname, char *volser, U16 devtype,
+            int heads, int trklen, char *iplfnm,
             int *reltrk, int *outcyl, int *outhead)
 {
 int             rc;                     /* Return code               */
@@ -823,7 +822,7 @@ BYTE            buf[4096];              /* Buffer for data block     */
 /*      The return value is 0 if successful, -1 if error occurred.   */
 /*-------------------------------------------------------------------*/
 static int
-update_block (CIFBLK *cif, BYTE *ofname, DATABLK *blk, int cyl,
+update_block (CIFBLK *cif, char *ofname, DATABLK *blk, int cyl,
     int head, int rec, int keylen, int datalen, int heads, int trklen)
 {
 int             rc;                     /* Return code               */
@@ -957,7 +956,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
 /*-------------------------------------------------------------------*/
 static int
 build_format1_dscb (DATABLK *dscbtab[], int dscbnum,
-                BYTE *dsname, BYTE *volser,
+                char *dsname, char *volser,
                 BYTE dsorg, BYTE recfm, int lrecl, int blksz,
                 int keyln, int dirblu, int lasttrk, int lastrec,
                 int trkbal, BYTE units, int spsec,
@@ -1233,7 +1232,7 @@ int             blklen;                 /* Size of data block        */
 /* and nexthead are updated to point past the end of the VTOC.       */
 /*-------------------------------------------------------------------*/
 static int
-write_vtoc (DATABLK *dscbtab[], int numdscb, CIFBLK *cif, BYTE *ofname,
+write_vtoc (DATABLK *dscbtab[], int numdscb, CIFBLK *cif, char *ofname,
             U16 devtype, int reqcyls, int heads, int trklen,
             int vtoctrk, int vtocext,
             int *nxtcyl, int *nxthead, BYTE volvtoc[])
@@ -1265,7 +1264,7 @@ int             prealloc = 0;           /* 1=VTOC is preallocated    */
 BYTE            blankblk[152];          /* Data block for blank DSCB */
 int             curcyl;                 /* Current cylinder in file  */
 int             curhead;                /* Current head in file      */
-BYTE            dsnama[45];             /* Dataset name (ASCIIZ)     */
+char            dsnama[45];             /* Dataset name (ASCIIZ)     */
 
     /* Determine if the VTOC is preallocated */
     prealloc = (vtoctrk != 0 && vtocext != 0);
@@ -1472,7 +1471,7 @@ BYTE            dsnama[45];             /* Dataset name (ASCIIZ)     */
 /*-------------------------------------------------------------------*/
 /* Subroutine to return the name of a text unit                      */
 /*-------------------------------------------------------------------*/
-static BYTE *
+static char *
 tu_name (U16 key)
 {
     switch (key) {
@@ -1537,8 +1536,9 @@ U16     key, num;                       /* Text unit header          */
 int     field;                          /* Field number              */
 int     offset;                         /* Offset into text unit     */
 U16     len;                            /* Field length              */
-BYTE   *name;                           /* Text unit name            */
-BYTE    c, hex[17], chars[9];           /* Character work areas      */
+char   *name;                           /* Text unit name            */
+BYTE    c, chars[9];                    /* Character work areas      */
+char    hex[17];                        /* Character work areas      */
 
     set_codepage(NULL);
 
@@ -1650,7 +1650,7 @@ BYTE    c, hex[17], chars[9];           /* Character work areas      */
 /*      or -1 if an error occurred.                                  */
 /*-------------------------------------------------------------------*/
 static int
-read_xmit_rec (int xfd, BYTE *xfname, BYTE *xbuf, BYTE *ctl)
+read_xmit_rec (int xfd, char *xfname, BYTE *xbuf, BYTE *ctl)
 {
 int             rc;                     /* Return code               */
 int             xreclen = 0;            /* Cumulative record length  */
@@ -1754,7 +1754,7 @@ BYTE            seghdr[2];              /* Segment length and flags  */
 /*      or -1 if an error occurred.                                  */
 /*-------------------------------------------------------------------*/
 static int
-read_vs_rec (int xfd, BYTE *xfname, BYTE *xbuf, int recnum)
+read_vs_rec (int xfd, char *xfname, BYTE *xbuf, int recnum)
 {
 int             rc;                     /* Return code               */
 int             xreclen;                /* Cumulative record length  */
@@ -1848,7 +1848,7 @@ int             len;                    /* String length             */
 U32             filenum;                /* File number               */
 int             bufpos;                 /* Position of TU in buffer  */
 int             bufrem;                 /* Bytes remaining in buffer */
-BYTE            tuutiln[9];             /* Utility name              */
+char            tuutiln[9];             /* Utility name              */
 BYTE            tukeyln;                /* Key length                */
 HWORD           tudsorg;                /* Data set organization     */
 HWORD           turecfm;                /* Record format             */
@@ -1857,7 +1857,7 @@ U16             tublksz;                /* Block size                */
 int             tudirct;                /* Number of directory blocks*/
 U16             tukey;                  /* Text unit key             */
 U16             tunum;                  /* Number of text unit fields*/
-BYTE            tudsnam[45];            /* Data set name             */
+char            tudsnam[45];            /* Data set name             */
 #define MAXNUM  20                      /* Maximum number of fields  */
 U16             fieldlen[MAXNUM];       /* Array of field lengths    */
 BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
@@ -2161,8 +2161,9 @@ DATABLK        *blkp;                   /* -> Copy of directory block*/
 BYTE           *dirptr;                 /* -> Next byte within block */
 int             dirrem;                 /* Number of bytes remaining */
 PDSDIR         *dirent;                 /* -> Directory entry        */
-BYTE            memname[9];             /* Member name (ASCIIZ)      */
-BYTE            c, hex[49], chars[25];  /* Character work areas      */
+char            memname[9];             /* Member name (ASCIIZ)      */
+BYTE            c, chars[25];           /* Character work areas      */
+char            hex[49];                /* Character work areas      */
 
     set_codepage(NULL);
 
@@ -2302,7 +2303,7 @@ BYTE            c, hex[49], chars[25];  /* Character work areas      */
 /* Directory information is listed if infolvl is 3 or greater.       */
 /*-------------------------------------------------------------------*/
 static int
-replace_ttr (BYTE *memname, BYTE *ttrptr, TTRCONV *ttrtab, int numttr)
+replace_ttr (char *memname, BYTE *ttrptr, TTRCONV *ttrtab, int numttr)
 {
 int             i;                      /* Array subscript           */
 
@@ -2347,8 +2348,8 @@ int             i;                      /* Array subscript           */
 /* Return value is 0 if successful, or -1 if error.                  */
 /*-------------------------------------------------------------------*/
 static int
-update_note_list (CIFBLK *cif, BYTE *ofname, int heads, int trklen,
-                int dsstart, BYTE *memname, BYTE *ttrn,
+update_note_list (CIFBLK *cif, char *ofname, int heads, int trklen,
+                int dsstart, char *memname, BYTE *ttrn,
                 TTRCONV *ttrtab, int numttr)
 {
 int             rc;                     /* Return code               */
@@ -2513,7 +2514,7 @@ BYTE            notelist[1024];         /* Note list                 */
 /* contains a TTR which is not found in the TTR conversion table.    */
 /*-------------------------------------------------------------------*/
 static int
-update_dirblk (CIFBLK *cif, BYTE *ofname, int heads, int trklen,
+update_dirblk (CIFBLK *cif, char *ofname, int heads, int trklen,
                 int dsstart, DATABLK *xbuf,
                 TTRCONV *ttrtab, int numttr)
 {
@@ -2526,7 +2527,7 @@ PDSDIR         *dirent;                 /* -> Directory entry        */
 BYTE           *ttrptr;                 /* -> User TTR               */
 int             n;                      /* Number of user TTRs       */
 int             i;                      /* Loop counter              */
-BYTE            memname[9];             /* Member name (ASCIIZ)      */
+char            memname[9];             /* Member name (ASCIIZ)      */
 
     /* Load number of bytes in directory block */
     dirptr = xbuf->kdarea + 8;
@@ -2619,7 +2620,7 @@ BYTE            memname[9];             /* Member name (ASCIIZ)      */
 /*      nxthead Starting head number for next dataset                */
 /*-------------------------------------------------------------------*/
 static int
-process_iebcopy_file (BYTE *xfname, BYTE *ofname, CIFBLK *cif,
+process_iebcopy_file (char *xfname, char *ofname, CIFBLK *cif,
                 U16 devtype, int heads, int trklen,
                 int outcyl, int outhead, int maxtrks,
                 BYTE method,
@@ -2636,7 +2637,7 @@ int             dsstart;                /* Relative track number of
 BYTE           *xbuf;                   /* -> Logical record buffer  */
 int             xreclen;                /* Logical record length     */
 BYTE            xctl;                   /* 0x20=Control record       */
-BYTE            xrecname[8];            /* XMIT control record name  */
+char            xrecname[8];            /* XMIT control record name  */
 int             datarecn = 0;           /* Data record counter       */
 int             datafiln = 0;           /* Data file counter         */
 int             copyfiln = 0;           /* Seq num of file to copy   */
@@ -2725,6 +2726,7 @@ COPYR1         *copyr1;                 /* -> header record 1        */
     /* Read each logical record */
     while (1)
     {
+        xctl=0;
         if (method == METHOD_XMIT)
            rc = read_xmit_rec (xfd, xfname, xbuf, &xctl);
         else if (method == METHOD_VS) {
@@ -2983,7 +2985,7 @@ COPYR1         *copyr1;                 /* -> header record 1        */
 /*      the entries required on an OS/360 IPL volume.                */
 /*-------------------------------------------------------------------*/
 static int
-cvol_initialize (BYTE *ofname, CIFBLK *cif, BYTE *volser,
+cvol_initialize (char *ofname, CIFBLK *cif, char *volser,
                 U16 devtype, int heads, int trklen,
                 int outcyl, int outhead, int extsize,
                 int *lastrec, int *trkbal,
@@ -3008,7 +3010,7 @@ U32             ucbtype;                /* UCB device type           */
 PDSDIR         *catent;                 /* -> Catalog entry          */
 DATABLK         datablk;                /* Data block                */
 #define NUM_SYS1_DATASETS       8       /* Number of SYS1 datasets   */
-static BYTE    *sys1name[NUM_SYS1_DATASETS] =
+static char    *sys1name[NUM_SYS1_DATASETS] =
                 {"DUMP", "IMAGELIB", "LINKLIB", "NUCLEUS",
                 "PARMLIB", "PROCLIB", "SAMPLIB", "SYSJOBQE"};
 
@@ -3282,7 +3284,7 @@ static BYTE    *sys1name[NUM_SYS1_DATASETS] =
 /*      nxthead Starting head number for next dataset                */
 /*-------------------------------------------------------------------*/
 static int
-dip_initialize (BYTE *ofname, CIFBLK *cif,
+dip_initialize (char *ofname, CIFBLK *cif,
                 U16 devtype, int heads, int trklen,
                 int outcyl, int outhead, int extsize,
                 int *lastrec, int *trkbal,
@@ -3434,7 +3436,7 @@ DATABLK         datablk;                /* Data block                */
 /*      nxthead Starting head number for next dataset                */
 /*-------------------------------------------------------------------*/
 static int
-seq_initialize (BYTE *sfname, BYTE *ofname, CIFBLK *cif, U16 devtype,
+seq_initialize (char *sfname, char *ofname, CIFBLK *cif, U16 devtype,
                 int heads, int trklen, int outcyl, int outhead,
                 int extsize, BYTE dsorg, BYTE recfm,
                 int lrecl, int blksz, int keyln,
@@ -3592,7 +3594,7 @@ DATABLK         datablk;                /* Data block                */
 /*      nxthead Starting head number for next dataset                */
 /*-------------------------------------------------------------------*/
 static int
-empty_initialize (BYTE *ofname, CIFBLK *cif, U16 devtype,
+empty_initialize (char *ofname, CIFBLK *cif, U16 devtype,
                 int heads, int trklen, int outcyl, int outhead,
                 int extsize, BYTE dsorg, int dirblks,
                 int *dirblu, int *lastrec, int *trkbal,
@@ -3686,7 +3688,7 @@ DATABLK         datablk;                /* Data block                */
 /*      +1 if end of file, or -1 if error                            */
 /*-------------------------------------------------------------------*/
 static int
-read_ctrl_stmt (FILE *cfp, BYTE *cfname, BYTE *stmt, int sbuflen,
+read_ctrl_stmt (FILE *cfp, char *cfname, char *stmt, int sbuflen,
                 int *pstmtno)
 {
 int             stmtlen;                /* Length of input statement */
@@ -3801,23 +3803,23 @@ static int      stmtno = 0;             /* Statement number          */
 /*      SYS1.LOGREC DIP CYL 1                                        */
 /*-------------------------------------------------------------------*/
 static int
-parse_ctrl_stmt (BYTE *stmt, BYTE *dsname, BYTE *method, BYTE **ifptr,
+parse_ctrl_stmt (char *stmt, char *dsname, BYTE *method, char **ifptr,
                 BYTE *units, int *sppri, int *spsec, int *spdir,
                 BYTE *dsorg, BYTE *recfm,
                 int *lrecl, int *blksz, int *keyln)
 {
-BYTE           *pdsnam;                 /* -> dsname in input stmt   */
-BYTE           *punits;                 /* -> allocation units       */
-BYTE           *psppri;                 /* -> primary space quantity */
-BYTE           *pspsec;                 /* -> secondary space qty.   */
-BYTE           *pspdir;                 /* -> directory space qty.   */
-BYTE           *pdsorg;                 /* -> dataset organization   */
-BYTE           *precfm;                 /* -> record format          */
-BYTE           *plrecl;                 /* -> logical record length  */
-BYTE           *pblksz;                 /* -> block size             */
-BYTE           *pkeyln;                 /* -> key length             */
-BYTE           *pimeth;                 /* -> initialization method  */
-BYTE           *pifile;                 /* -> initialization filename*/
+char           *pdsnam;                 /* -> dsname in input stmt   */
+char           *punits;                 /* -> allocation units       */
+char           *psppri;                 /* -> primary space quantity */
+char           *pspsec;                 /* -> secondary space qty.   */
+char           *pspdir;                 /* -> directory space qty.   */
+char           *pdsorg;                 /* -> dataset organization   */
+char           *precfm;                 /* -> record format          */
+char           *plrecl;                 /* -> logical record length  */
+char           *pblksz;                 /* -> block size             */
+char           *pkeyln;                 /* -> key length             */
+char           *pimeth;                 /* -> initialization method  */
+char           *pifile;                 /* -> initialization filename*/
 BYTE            c;                      /* Character work area       */
 
     /* Parse the input statement */
@@ -4034,16 +4036,16 @@ BYTE            c;                      /* Character work area       */
 /*      by the control statements.                                   */
 /*-------------------------------------------------------------------*/
 static int
-process_control_file (FILE *cfp, BYTE *cfname, BYTE *ofname,
-                CIFBLK *cif, BYTE *volser, U16 devtype, int reqcyls,
+process_control_file (FILE *cfp, char *cfname, char *ofname,
+                CIFBLK *cif, char *volser, U16 devtype, int reqcyls,
                 int heads, int trklen, int outcyl, int outhead)
 {
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
 int             n;                      /* Integer work area         */
-BYTE            dsname[45];             /* Dataset name (ASCIIZ)     */
+char            dsname[45];             /* Dataset name (ASCIIZ)     */
 BYTE            method;                 /* Initialization method     */
-BYTE           *ifname;                 /* ->Initialization file name*/
+char           *ifname;                 /* ->Initialization file name*/
 BYTE            units;                  /* C=CYL, T=TRK              */
 int             sppri;                  /* Primary space quantity    */
 int             spsec;                  /* Secondary space quantity  */
@@ -4053,7 +4055,7 @@ BYTE            recfm;                  /* Record format             */
 int             lrecl;                  /* Logical record length     */
 int             blksz;                  /* Block size                */
 int             keyln;                  /* Key length                */
-BYTE            stmt[256];              /* Control file statement    */
+char            stmt[256];              /* Control file statement    */
 int             stmtno;                 /* Statement number          */
 int             mintrks;                /* Minimum size of dataset   */
 int             maxtrks;                /* Maximum size of dataset   */
@@ -4341,15 +4343,15 @@ int             fsflag = 0;             /* 1=Free space message sent */
 int main (int argc, char *argv[])
 {
 int             rc = 0;                 /* Return code               */
-BYTE           *cfname;                 /* -> Control file name      */
-BYTE           *ofname;                 /* -> Output file name       */
+char           *cfname;                 /* -> Control file name      */
+char           *ofname;                 /* -> Output file name       */
 FILE           *cfp;                    /* Control file pointer      */
 CIFBLK         *cif;                    /* -> CKD image block        */
 CKDDEV         *ckd;                    /* -> CKD table entry        */
-BYTE           *volser;                 /* -> Volume serial (ASCIIZ) */
-BYTE           *sdevtp;                 /* -> Device type (ASCIIZ)   */
-BYTE           *sdevsz;                 /* -> Device size (ASCIIZ)   */
-BYTE           *iplfnm;                 /* -> IPL text file or NULL  */
+char           *volser;                 /* -> Volume serial (ASCIIZ) */
+char           *sdevtp;                 /* -> Device type (ASCIIZ)   */
+char           *sdevsz;                 /* -> Device size (ASCIIZ)   */
+char           *iplfnm;                 /* -> IPL text file or NULL  */
 BYTE            c;                      /* Character work area       */
 U16             devtype;                /* Output device type        */
 int             devcyls;                /* Default device size (cyls)*/
@@ -4363,7 +4365,7 @@ int             outtrklv;               /* Output device track length
 int             reltrk;                 /* Output track number       */
 int             outcyl;                 /* Output cylinder number    */
 int             outhead;                /* Output head number        */
-BYTE            stmt[256];              /* Control file statement    */
+char            stmt[256];              /* Control file statement    */
 int             stmtno;                 /* Statement number          */
 BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */

@@ -14,7 +14,6 @@
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define CARD_LENGTH     80
-#define SPACE           ((BYTE)' ')
 #define HEX40           ((BYTE)0x40)
 
 /*-------------------------------------------------------------------*/
@@ -44,7 +43,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int cardpch_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
+static int cardpch_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int     i;                              /* Array subscript           */
 
@@ -119,8 +118,8 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void cardpch_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+static void cardpch_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
 
     *class = "PCH";

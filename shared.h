@@ -455,8 +455,8 @@ do { \
 } while (0)
 
 int    shared_update_notify (DEVBLK *dev, int block);
-int    shared_ckd_init (DEVBLK *dev, int argc, BYTE *argv[] );
-int    shared_fba_init (DEVBLK *dev, int argc, BYTE *argv[] );
+int    shared_ckd_init (DEVBLK *dev, int argc, char *argv[] );
+int    shared_fba_init (DEVBLK *dev, int argc, char *argv[] );
 void  *shared_server (void *arg);
 int    shared_cmd(int argc, char *argv[], char *cmdline);
 
@@ -493,7 +493,7 @@ static void    serverRequest (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf);
 static int     serverLocate (DEVBLK *dev, int id, int *avail);
 static int     serverId (DEVBLK *dev);
 static int     serverError (DEVBLK *dev, int ix, int code, int status,
-                      BYTE *msg);
+                      char *msg);
 static int     serverSend (DEVBLK *dev, int ix, BYTE *hdr, BYTE *buf,
                       int buflen);
 static int     serverDisconnectable (DEVBLK *dev, int ix);

@@ -299,14 +299,14 @@ U32      key = 0, len = 0;
 U32      started_mask = 0;
 int      i, rc;
 REGS    *regs = NULL;
-U16      devnum;
+U16      devnum=0;
 U16      hw;
 int      devargc;
-BYTE    *devargv[16];
+char    *devargv[16];
 int      devargx=0;
 DEVBLK  *dev = NULL;
 IOINT   *ioq = NULL;
-BYTE     buf[SR_MAX_STRING_LENGTH+1];
+char     buf[SR_MAX_STRING_LENGTH+1];
 
     UNREFERENCED(cmdline);
 

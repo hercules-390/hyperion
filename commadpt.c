@@ -1285,7 +1285,7 @@ static void msg016w017i(DEVBLK *dev,char *dialt,char *kw,char *kv)
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
 /*-------------------------------------------------------------------*/
-static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
+static int commadpt_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
     int i;
     int rc;
@@ -1630,8 +1630,8 @@ static char *commadpt_lnctl_names[]={
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void commadpt_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+static void commadpt_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
     *class = "LINE";
     snprintf(buffer,buflen,"%s STA=%s CN=%s, EIB=%s OP=%s",

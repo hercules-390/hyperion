@@ -59,7 +59,6 @@ static BYTE printer_immed_commands[256]=
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define LINE_LENGTH     150
-#define SPACE           ((BYTE)' ')
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to open the printer file or pipe                       */
@@ -190,7 +189,7 @@ pid_t           pid;                    /* Child process identifier  */
 /* Subroutine to write data to the printer                           */
 /*-------------------------------------------------------------------*/
 static void
-write_buffer (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
+write_buffer (DEVBLK *dev, char *buf, int len, BYTE *unitstat)
 {
 int             rc;                     /* Return code               */
 
@@ -213,7 +212,7 @@ int             rc;                     /* Return code               */
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int printer_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
+static int printer_init_handler (DEVBLK *dev, int argc, char *argv[])
 {
 int     i;                              /* Array subscript           */
 
@@ -280,8 +279,8 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void printer_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+static void printer_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
     *class = "PRT";
     snprintf (buffer, buflen, "%s%s%s",
@@ -429,11 +428,11 @@ BYTE            c;                      /* Print character           */
                 if (dev->buf[i-1] != SPACE) break;
 
             /* Append carriage return and line feed(s) */
-            strcpy (dev->buf + i, eor);
+            strcpy ((char *)(dev->buf + i), eor);
             i += strlen(eor);
 
             /* Write print line */
-            write_buffer (dev, dev->buf, i, unitstat);
+            write_buffer (dev, (char *)dev->buf, i, unitstat);
             if (*unitstat != 0) break;
 
         } /* end if(!data-chaining) */

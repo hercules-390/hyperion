@@ -17,10 +17,8 @@ int  extgui = 0;
 #endif
 #endif /*EXTERNALGUI*/
 
-int end_of_track(char *ptr)
+int end_of_track(BYTE *p)
 {
-    unsigned char *p = (unsigned char *)ptr;
-
     return p[0] == 0xff && p[1] == 0xff && p[2] == 0xff && p[3] == 0xff
         && p[4] == 0xff && p[5] == 0xff && p[6] == 0xff && p[7] == 0xff;
 }
@@ -43,7 +41,7 @@ int list_contents(CIFBLK *cif, char *volser, DSXTENT *extent)
     needsep = 1;
 
     do {
-        char *ptr;
+        BYTE *ptr;
         int rc = read_track(cif, ccyl, chead);
 
 #ifdef EXTERNALGUI

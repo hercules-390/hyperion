@@ -29,18 +29,18 @@ typedef struct _DEVMAP_CTLR {
 typedef struct _DEVMAP_DEV {
         BYTE    highaddr;               /* High order dev addr byte  */
         BYTE    lowaddr;                /* Low order dev addr byte   */
-        BYTE    type[4];        /* Type of device            */
+        char    type[4];        /* Type of device            */
     union {
         struct {                    /* Disk devices:             */
             BYTE filler1[4];        /* filler                    */
             BYTE volser[6];         /* Volume serial             */
             BYTE filler2[2];        /* more filler               */
-            BYTE filename[45];      /* name of file on disk      */
+            char filename[45];      /* name of file on disk      */
             BYTE flags;             /* flag byte                 */
         } disk;
         struct {                    /* Other devices:            */
             BYTE filler1[7];        /* fill bytes                */
-            BYTE filename[50];      /* device filename           */
+            char filename[50];      /* device filename           */
             BYTE flags;             /* flag byte                 */
         } other;
     } parms;
@@ -59,12 +59,12 @@ int main (int argc, char *argv[])
 {
 int             i;                      /* Array subscript           */
 int             len;                    /* Length of actual read     */
-BYTE           *filename;               /* -> Input file name        */
+char           *filename;               /* -> Input file name        */
 int             infd = -1;              /* Input file descriptor     */
 DEVMAP_CTLR     controller;             /* Controller record         */
 DEVMAP_DEV      device;         /* Device record             */
-BYTE        output_type[5];     /* Device type to print      */
-BYTE           *output_filename;    /* -> filename to print      */
+char        output_type[5];     /* Device type to print      */
+char           *output_filename;    /* -> filename to print      */
 int     more_devices;       /* More devices this ctlr?   */
 
 #ifdef EXTERNALGUI

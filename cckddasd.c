@@ -33,7 +33,7 @@ do { \
 /*-------------------------------------------------------------------*/
 int     cckddasd_init(int argc, BYTE *argv[]);
 int     cckddasd_term();
-int     cckddasd_init_handler( DEVBLK *dev, int argc, BYTE *argv[] );
+int     cckddasd_init_handler( DEVBLK *dev, int argc, char *argv[] );
 int     cckddasd_close_device(DEVBLK *dev);
 void    cckddasd_start(DEVBLK *dev);
 void    cckddasd_end(DEVBLK *dev);
@@ -43,9 +43,9 @@ int     cckd_close (DEVBLK *dev, int sfx);
 int     cckd_read (DEVBLK *dev, int sfx, off_t off, void *buf, size_t len);
 int     cckd_write (DEVBLK *dev, int sfx, off_t off, void *buf, size_t len);
 int     cckd_ftruncate(DEVBLK *dev, int sfx, off_t off);
-void   *cckd_malloc(DEVBLK *dev, BYTE *id, size_t size);
-void   *cckd_calloc(DEVBLK *dev, BYTE *id, size_t n, size_t size);
-void    cckd_free(DEVBLK *dev, BYTE *id,void *p);
+void   *cckd_malloc(DEVBLK *dev, char *id, size_t size);
+void   *cckd_calloc(DEVBLK *dev, char *id, size_t n, size_t size);
+void    cckd_free(DEVBLK *dev, char *id,void *p);
 
 int     cckd_read_track(DEVBLK *dev, int trk, BYTE *unitstat);
 int     cckd_update_track(DEVBLK *dev, int trk, int off, 
@@ -92,12 +92,12 @@ int     cckd_trklen(DEVBLK *dev, BYTE *buf);
 int     cckd_null_trk(DEVBLK *dev, BYTE *buf, int trk, int sz0);
 int     cckd_cchh(DEVBLK *dev, BYTE *buf, int trk);
 int     cckd_validate(DEVBLK *dev, BYTE *buf, int trk, int len);
-BYTE   *cckd_sf_name(DEVBLK *dev, int sfx);
+char   *cckd_sf_name(DEVBLK *dev, int sfx);
 int     cckd_sf_init(DEVBLK *dev);
 int     cckd_sf_new(DEVBLK *dev);
 void    cckd_sf_add(DEVBLK *dev);
 void    cckd_sf_remove(DEVBLK *dev, int flag);
-void    cckd_sf_newname(DEVBLK *dev, BYTE *sfn);
+void    cckd_sf_newname(DEVBLK *dev, char *sfn);
 void    cckd_sf_comp(DEVBLK *dev);
 void    cckd_sf_stats(DEVBLK *dev);
 int     cckd_disable_syncio(DEVBLK *dev);
@@ -117,7 +117,7 @@ void    cckd_command_help();
 void    cckd_command_opts();
 void    cckd_command_stats();
 void    cckd_command_debug();
-int     cckd_command(BYTE *op, int cmd);
+int     cckd_command(char *op, int cmd);
 void    cckd_print_itrace();
 
 /*-------------------------------------------------------------------*/
@@ -264,7 +264,7 @@ int cckddasd_term ()
 /*-------------------------------------------------------------------*/
 /* CKD dasd initialization                                           */
 /*-------------------------------------------------------------------*/
-int cckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+int cckddasd_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 DEVBLK         *dev2;                   /* -> device in cckd queue   */
@@ -722,7 +722,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 /*-------------------------------------------------------------------*/
 /* malloc                                                            */
 /*-------------------------------------------------------------------*/
-void *cckd_malloc (DEVBLK *dev, BYTE *id, size_t size)
+void *cckd_malloc (DEVBLK *dev, char *id, size_t size)
 {
 void           *p;                      /* Pointer                   */
 
@@ -743,7 +743,7 @@ void           *p;                      /* Pointer                   */
 /*-------------------------------------------------------------------*/
 /* calloc                                                            */
 /*-------------------------------------------------------------------*/
-void *cckd_calloc (DEVBLK *dev, BYTE *id, size_t n, size_t size)
+void *cckd_calloc (DEVBLK *dev, char *id, size_t n, size_t size)
 {
 void           *p;                      /* Pointer                   */
 
@@ -764,7 +764,7 @@ void           *p;                      /* Pointer                   */
 /*-------------------------------------------------------------------*/
 /* free                                                              */
 /*-------------------------------------------------------------------*/
-void cckd_free (DEVBLK *dev, BYTE *id, void *p)
+void cckd_free (DEVBLK *dev, char *id, void *p)
 {
     cckdtrc ("%s free %p\n", id, p);
     free (p);
@@ -3232,11 +3232,11 @@ int             kl,dl;                  /* Key/Data lengths          */
 /*-------------------------------------------------------------------*/
 /* Return shadow file name                                           */
 /*-------------------------------------------------------------------*/
-BYTE *cckd_sf_name (DEVBLK *dev, int sfx)
+char *cckd_sf_name (DEVBLK *dev, int sfx)
 {
     /* Return base file name if index is 0 */
     if (sfx == 0)
-        return (BYTE *)dev->filename;
+        return dev->filename;
 
     /* Error if no shadow file name specified or number exceeded */
     if (dev->dasdsfn == NULL || sfx > CCKD_MAX_SF)
@@ -3766,7 +3766,7 @@ sf_remove_exit:
 /*-------------------------------------------------------------------*/
 /* Set shadow file name   (sf=)                                      */
 /*-------------------------------------------------------------------*/
-void cckd_sf_newname (DEVBLK *dev, BYTE *sfn)
+void cckd_sf_newname (DEVBLK *dev, char *sfn)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
@@ -3871,7 +3871,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 struct stat     st;                     /* File information          */
 int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
-BYTE           *ost[] = {"  ", "ro", "rd", "rw"};
+char           *ost[] = {"  ", "ro", "rd", "rw"};
 unsigned long long size=0,free=0;       /* Total size, free space    */
 int             freenbr=0;              /* Total number free spaces  */
 
@@ -4528,8 +4528,8 @@ int rc;
     memcpy (to, from, CKDDASD_TRKHDR_SIZE);
     newlen = maxlen - CKDDASD_TRKHDR_SIZE;
     rc = BZ2_bzBuffToBuffDecompress (
-                &to[CKDDASD_TRKHDR_SIZE], &newlen,
-                &from[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
+                (void *)&to[CKDDASD_TRKHDR_SIZE], &newlen,
+                (void *)&from[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
                 0, 0);
     if (rc == BZ_OK)
     {
@@ -4631,8 +4631,8 @@ BYTE *buf;
     buf[0] = CCKD_COMPRESS_BZIP2;
     newlen = 65535 - CKDDASD_TRKHDR_SIZE;
     rc = BZ2_bzBuffToBuffCompress (
-                    &buf[CKDDASD_TRKHDR_SIZE], &newlen,
-                    &from[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
+                    (void *)&buf[CKDDASD_TRKHDR_SIZE], &newlen,
+                    (void *)&from[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
                     parm >= 1 && parm <= 9 ? parm : 5, 0, 0);
     newlen += CKDDASD_TRKHDR_SIZE;
     if (rc != BZ_OK || newlen >= (unsigned int)len)
@@ -4720,9 +4720,9 @@ void cckd_command_debug()
 /*-------------------------------------------------------------------*/
 /* cckd command processor                                            */
 /*-------------------------------------------------------------------*/
-int cckd_command(BYTE *op, int cmd)
+int cckd_command(char *op, int cmd)
 {
-BYTE *kw, *p, c = '\0', buf[256];
+char  *kw, *p, c = '\0', buf[256];
 int   val, opts = 0;
 
     /* Display help for null operand */

@@ -38,7 +38,7 @@
 
 static  U32     servc_cp_recv_mask;     /* Syscons CP receive mask   */
 static  U32     servc_cp_send_mask;     /* Syscons CP send mask      */
-static  BYTE    servc_scpcmdstr[123+1]; /* Operator command string   */
+static  char    servc_scpcmdstr[123+1]; /* Operator command string   */
 static  int     servc_scpcmdtype;       /* Operator command type     */
 
 static  int     servc_signal_quiesce_pending = 0;  /* Signal Quiesce */
@@ -71,7 +71,7 @@ void sclp_reset()
 /*      command Null-terminated ASCII command string                 */
 /*      priomsg 0=SCP command, 1=SCP priority message                */
 /*-------------------------------------------------------------------*/
-void scp_command (BYTE *command, int priomsg)
+void scp_command (char *command, int priomsg)
 {
     /* Error if disabled for priority messages */
     if (priomsg && !(servc_cp_recv_mask & 0x00800000))

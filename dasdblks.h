@@ -296,7 +296,7 @@ typedef struct _DATABLK {
 /* Internal structures used by DASD utility functions                */
 /*-------------------------------------------------------------------*/
 typedef struct _CIFBLK {                /* CKD image file descriptor */
-        BYTE   *fname;                  /* -> CKD image file name    */
+        char   *fname;                  /* -> CKD image file name    */
         int     fd;                     /* CKD image file descriptor */
         int     trksz;                  /* CKD image track size      */
         BYTE   *trkbuf;                 /* -> Track buffer           */
@@ -319,10 +319,10 @@ typedef struct _CIFBLK {                /* CKD image file descriptor */
 /*-------------------------------------------------------------------*/
 
 /* Functions in module dasdutil.c */
-void string_to_upper (BYTE *source);
-void string_to_lower (BYTE *source);
-void convert_to_ebcdic (BYTE *dest, int len, BYTE *source);
-int  make_asciiz (BYTE *dest, int destlen, BYTE *src, int srclen);
+void string_to_upper (char *source);
+void string_to_lower (char *source);
+void convert_to_ebcdic (BYTE *dest, int len, char *source);
+int  make_asciiz (char *dest, int destlen, BYTE *src, int srclen);
 void data_dump (void *addr, int len);
 int  read_track (CIFBLK *cif, int cyl, int head);
 int  rewrite_track (CIFBLK *cif);
@@ -332,24 +332,24 @@ int  search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
         DSXTENT extent[], int *cyl, int *head, int *rec);
 int  convert_tt (int tt, int noext, DSXTENT extent[], int heads,
         int *cyl, int *head);
-CIFBLK* open_ckd_image (BYTE *fname, BYTE *sfname, int omode,
+CIFBLK* open_ckd_image (char *fname, char *sfname, int omode,
         int dasdcopy);
-CIFBLK* open_fba_image (BYTE *fname, BYTE *sfname, int omode,
+CIFBLK* open_fba_image (char *fname, char *sfname, int omode,
         int dasdcopy);
 int  close_ckd_image (CIFBLK *cif);
 #define close_image_file(cif) close_ckd_image((cif))
-int  build_extent_array (CIFBLK *cif, BYTE *dsnama, DSXTENT extent[],
+int  build_extent_array (CIFBLK *cif, char *dsnama, DSXTENT extent[],
         int *noext);
 int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
         int *newused, int *trkbaln, int *physlen, int *kbconst,
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
-int create_ckd (BYTE *fname, U16 devtype, U32 heads, U32 maxdlen,
-        U32 volcyls, BYTE *volser, BYTE comp, int lfs, int dasdcopy);
-int create_fba (BYTE *fname, U16 devtype, U32 sectsz, U32 sectors,
-        BYTE *volser, BYTE comp, int lfs, int dasdcopy);
-int create_compressed_fba (BYTE *fname, U16 devtype, U32 sectsz,
-        U32 sectors, BYTE *volser, BYTE comp, int lfs, int dasdcopy);
+int create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
+        U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy);
+int create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
+        char *volser, BYTE comp, int lfs, int dasdcopy);
+int create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
+        U32 sectors, char *volser, BYTE comp, int lfs, int dasdcopy);
 int get_verbose_util(void);
 void set_verbose_util(int v);
 

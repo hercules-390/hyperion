@@ -61,7 +61,6 @@ typedef struct _DEVARRAY
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define SPACE           ((BYTE)' ')
 
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
@@ -82,14 +81,14 @@ typedef struct _DEVARRAY
 /*-------------------------------------------------------------------*/
 static int  stmt = 0;                   /* Config statement number   */
 #ifdef EXTERNALGUI
-static BYTE buf[1024];                  /* Config statement buffer   */
+static char buf[1024];                  /* Config statement buffer   */
 #else /*!EXTERNALGUI*/
-static BYTE buf[256];                   /* Config statement buffer   */
+static char buf[256];                   /* Config statement buffer   */
 #endif /*EXTERNALGUI*/
-static BYTE *keyword;                   /* -> Statement keyword      */
-static BYTE *operand;                   /* -> First argument         */
+static char *keyword;                   /* -> Statement keyword      */
+static char *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
-static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
+static char *addargv[MAX_ARGS];         /* Additional argument array */
 
 
 /*-------------------------------------------------------------------*/
@@ -110,7 +109,7 @@ static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 /* pargc        Pointer to number of arguments integer result.       */
 /* Returns number of arguments found. (same value as at *pargc)      */
 /*-------------------------------------------------------------------*/
-int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc)
+int parse_args (char* p, int maxargc, char** pargv, int* pargc)
 {
     for (*pargc = 0; *pargc < MAX_ARGS; ++*pargc) addargv[*pargc] = NULL;
 
@@ -284,7 +283,7 @@ int off;
 /* addargv      An array of pointers to each additional argument     */
 /* Returns 0 if successful, -1 if end of file                        */
 /*-------------------------------------------------------------------*/
-static int read_config (BYTE *fname, FILE *fp)
+static int read_config (char *fname, FILE *fp)
 {
 int     i;                              /* Array subscript           */
 int     c;                              /* Character work area       */
@@ -567,54 +566,54 @@ char *config_cnslport = "3270";
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
-void build_config (BYTE *fname)
+void build_config (char *fname)
 {
 int     rc;                             /* Return code               */
 int     i,j;                            /* Array subscript           */
 int     scount;                         /* Statement counter         */
 /* int     cpu; */                      /* CPU number                */
 FILE   *fp;                             /* Configuration file pointer*/
-BYTE   *sserial;                        /* -> CPU serial string      */
-BYTE   *smodel;                         /* -> CPU model string       */
-BYTE   *sversion;                       /* -> CPU version string     */
-BYTE   *smainsize;                      /* -> Main size string       */
-BYTE   *sxpndsize;                      /* -> Expanded size string   */
-BYTE   *snumcpu;                        /* -> Number of CPUs         */
-BYTE   *snumvec;                        /* -> Number of VFs          */
-BYTE   *sarchmode;                      /* -> Architectural mode     */
-BYTE   *sloadparm;                      /* -> IPL load parameter     */
-BYTE   *ssysepoch;                      /* -> System epoch           */
-BYTE   *stzoffset;                      /* -> System timezone offset */
-BYTE   *sdiag8cmd;                      /* -> Allow diagnose 8       */
-BYTE   *stoddrag;                       /* -> TOD clock drag factor  */
-BYTE   *sostailor;                      /* -> OS to tailor system to */
-BYTE   *spanrate;                       /* -> Panel refresh rate     */
-BYTE   *sdevtmax;                       /* -> Max device threads     */
-BYTE   *shercprio;                      /* -> Hercules base priority */
-BYTE   *stodprio;                       /* -> Timer thread priority  */
-BYTE   *scpuprio;                       /* -> CPU thread priority    */
-BYTE   *sdevprio;                       /* -> Device thread priority */
-BYTE   *spgmprdos;                      /* -> Program product OS OK  */
+char   *sserial;                        /* -> CPU serial string      */
+char   *smodel;                         /* -> CPU model string       */
+char   *sversion;                       /* -> CPU version string     */
+char   *smainsize;                      /* -> Main size string       */
+char   *sxpndsize;                      /* -> Expanded size string   */
+char   *snumcpu;                        /* -> Number of CPUs         */
+char   *snumvec;                        /* -> Number of VFs          */
+char   *sarchmode;                      /* -> Architectural mode     */
+char   *sloadparm;                      /* -> IPL load parameter     */
+char   *ssysepoch;                      /* -> System epoch           */
+char   *stzoffset;                      /* -> System timezone offset */
+char   *sdiag8cmd;                      /* -> Allow diagnose 8       */
+char   *stoddrag;                       /* -> TOD clock drag factor  */
+char   *sostailor;                      /* -> OS to tailor system to */
+char   *spanrate;                       /* -> Panel refresh rate     */
+char   *sdevtmax;                       /* -> Max device threads     */
+char   *shercprio;                      /* -> Hercules base priority */
+char   *stodprio;                       /* -> Timer thread priority  */
+char   *scpuprio;                       /* -> CPU thread priority    */
+char   *sdevprio;                       /* -> Device thread priority */
+char   *spgmprdos;                      /* -> Program product OS OK  */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-BYTE   *sasnandlxreuse;         /* -> ASNLXREUSE Optional    */
+char   *sasnandlxreuse;         /* -> ASNLXREUSE Optional    */
 #endif
 #if defined(_FEATURE_ECPSVM)
-BYTE   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
-BYTE   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
+char   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
+char   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
 int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(OPTION_SHARED_DEVICES)
-BYTE   *sshrdport;                      /* -> Shared device port nbr */
+char   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 #ifdef OPTION_IODELAY_KLUDGE
-BYTE   *siodelay;                       /* -> I/O delay value        */
+char   *siodelay;                       /* -> I/O delay value        */
 #endif /*OPTION_IODELAY_KLUDGE*/
 #if defined(OPTION_PTTRACE)
-BYTE   *sptt;                           /* Pthread trace table size  */
+char   *sptt;                           /* Pthread trace table size  */
 #endif /*defined(OPTION_PTTRACE)*/
-BYTE   *scckd;                          /* -> CCKD parameters        */
+char   *scckd;                          /* -> CCKD parameters        */
 #if defined( OPTION_SCSI_TAPE )
-BYTE   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
+char   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
 #endif /* defined( OPTION_SCSI_TAPE ) */
 BYTE    version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
@@ -642,10 +641,10 @@ int     devprio;                        /* Device thread priority    */
 int     asnandlxreuse;          /* ASN And LX Reuse option   */
 #endif
 BYTE    pgmprdos;                       /* Program product OS OK     */
-BYTE   *sdevnum;                        /* -> Device number string   */
-BYTE   *sdevtype;                       /* -> Device type string     */
+char   *sdevnum;                        /* -> Device number string   */
+char   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
-DEVARRAY *devnarray;                    /* Compound device numbers   */
+DEVARRAY *devnarray=NULL;               /* Compound device numbers   */
 size_t  devncount;                      /* size of comp devnum array */
 int     baddev;                         /* devblk attach failed ind  */
 int     devtmax;                        /* Max number device threads */
@@ -661,7 +660,7 @@ int     ptt = 0;                        /* Pthread trace table size  */
 #endif /*OPTION_PTTRACE*/
 BYTE    c;                              /* Work area for sscanf      */
 #if defined(OPTION_LPARNAME)
-BYTE   *lparname;                       /* DIAG 204 lparname         */
+char   *lparname;                       /* DIAG 204 lparname         */
 #endif /*defined(OPTION_LPARNAME)*/
 #ifdef OPTION_SELECT_KLUDGE
 int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
@@ -672,8 +671,8 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            select(). sigh            */
 #endif
 #if defined(OPTION_CONFIG_SYMBOLS)
-BYTE **newargv;
-BYTE **orig_newargv;
+char **newargv;
+char **orig_newargv;
 #endif
 
 #if !defined(OPTION_CONFIG_SYMBOLS)

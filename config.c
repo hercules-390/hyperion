@@ -289,7 +289,7 @@ void ret_devblk(DEVBLK *dev)
 /* Function to build a device configuration block                    */
 /*-------------------------------------------------------------------*/
 int attach_device (U16 devnum, char *type,
-                   int addargc, BYTE *addargv[])
+                   int addargc, char *addargv[])
 {
 DEVBLK *dev;                            /* -> Device block           */
 int     rc;                             /* Return code               */

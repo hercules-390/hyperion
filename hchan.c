@@ -40,7 +40,7 @@
  *       will be attempted at periodic intervals.
  *   The 'ITHREAD' method will spawn a thread using a dynamically loaded module
  */
-static int hchan_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+static int hchan_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
     int rc;
     dev->devtype=0x2880;        /* Temporary until the device is actually initialised */
@@ -80,21 +80,21 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     return(rc);
 }
 
-static  int     hchan_init_exec(DEVBLK *dev,int ac,BYTE **av)
+static  int     hchan_init_exec(DEVBLK *dev,int ac,char **av)
 {
     UNREFERENCED(dev);
     UNREFERENCED(ac);
     UNREFERENCED(av);
     return(0);
 }
-static  int     hchan_init_connect(DEVBLK *dev,int ac,BYTE **av)
+static  int     hchan_init_connect(DEVBLK *dev,int ac,char **av)
 {
     UNREFERENCED(dev);
     UNREFERENCED(ac);
     UNREFERENCED(av);
     return(0);
 }
-static  int     hchan_init_int(DEVBLK *dev,int ac,BYTE **av)
+static  int     hchan_init_int(DEVBLK *dev,int ac,char **av)
 {
     UNREFERENCED(dev);
     UNREFERENCED(ac);
@@ -105,8 +105,8 @@ static  int     hchan_init_int(DEVBLK *dev,int ac,BYTE **av)
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void hchan_query_device (DEVBLK *dev, BYTE **class,
-                int buflen, BYTE *buffer)
+static void hchan_query_device (DEVBLK *dev, char **class,
+                int buflen, char *buffer)
 {
     UNREFERENCED(dev);
         *class="CHAN";

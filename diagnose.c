@@ -25,7 +25,6 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define SPACE   ((BYTE)' ')
 
 #endif /*!defined(_DIAGNOSE_H)*/
 
@@ -33,7 +32,7 @@
 
 void ARCH_DEP(diagf14_call)(int r1, int r3, REGS *regs)
 {
-BYTE name[32+1];
+char name[32+1];
 char entry[64];
 unsigned int  i;
 void (*dllcall)(int, int, REGS *);

@@ -296,17 +296,17 @@ unsigned char host_to_guest (unsigned char byte)
 #if defined(HAVE_ICONV)
 char obyte;
 char *gbyte = &obyte;
-char *hbyte = &byte;
+char *hbyte = (char *)&byte;
 size_t inbytes = 1, outbytes = 1;
 
     if(codepage_h2g)
     {
-        iconv(codepage_h2g, (char **)&hbyte, &inbytes, &gbyte, &outbytes);
+        iconv(codepage_h2g, &hbyte, &inbytes, &gbyte, &outbytes);
         return obyte;
     }
     else
 #endif /*defined(HAVE_ICONV)*/
-        return codepage_conv->h2g[byte];
+        return (unsigned char)codepage_conv->h2g[(unsigned int)byte];
 }
 
 
@@ -315,12 +315,12 @@ unsigned char guest_to_host (unsigned char byte)
 #if defined(HAVE_ICONV)
 char obyte;
 char *hbyte = &obyte;
-char *gbyte = &byte;
+char *gbyte = (char *)&byte;
 size_t inbytes = 1, outbytes = 1;
 
     if(codepage_g2h)
     {
-        iconv(codepage_g2h, (char **)&gbyte, &inbytes, &hbyte, &outbytes);
+        iconv(codepage_g2h, &gbyte, &inbytes, &hbyte, &outbytes);
         return obyte;
     }
     else
