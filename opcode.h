@@ -159,13 +159,24 @@ int used; \
 #endif
 
 
+#if MAX_CPU_ENGINES > 1
 #define UNROLLED_EXECUTE(_regs) \
+    { \
+        if( IS_IC_BRDCSTNCPU ) \
+            longjmp((_regs)->progjmp, SIE_NO_INTERCEPT); \
+        (_regs)->instvalid = 0; \
+        INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
+        (_regs)->instvalid = 1; \
+        EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
+    }
+#else
     { \
         (_regs)->instvalid = 0; \
         INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
         (_regs)->instvalid = 1; \
         EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
     }
+#endif
 
 
 /* The footprint_buffer option saves a copy of the register context

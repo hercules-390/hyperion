@@ -35,7 +35,7 @@
         (((_guestregs)->siebk->v & SIE_V_EXT) \
           && ((_guestregs)->psw.sysmask & PSW_EXTMASK))
 
-#define SIE_I_HOST(_hostregs) SIE_IC_INTERRUPT_CPU(_hostregs)
+#define SIE_I_HOST(_hostregs) IC_INTERRUPT_CPU(_hostregs)
 
 #endif /*!defined(_SIE_C)*/
 
@@ -449,24 +449,22 @@ int ARCH_DEP(sie_run) (REGS *regs)
                && ! SIE_I_HOST(regs) )
             {
 
-#if MAX_CPU_ENGINES > 1
-                /* Perform broadcasted purge of ALB and TLB if requested
-                   synchronize_broadcast() must be called until there are
-                   no more broadcast pending because synchronize_broadcast()
-                   releases and reacquires the mainlock. */
-
-                while (sysblk.brdcstncpu != 0)
+                if( SIE_IC_INTERRUPT_CPU(GUESTREGS) )
                 {
                     obtain_lock (&sysblk.intlock);
-                    synchronize_broadcast(regs, NULL);
-                    release_lock (&sysblk.intlock);
-                }
+#if MAX_CPU_ENGINES > 1
+                    /* Perform broadcasted purge of ALB and TLB if requested
+                       synchronize_broadcast() must be called until there are
+                       no more broadcast pending because synchronize_broadcast()
+                       releases and reacquires the mainlock. */
+
+                    while (sysblk.brdcstncpu != 0)
+                        synchronize_broadcast(regs, NULL);
 #endif /*MAX_CPU_ENGINES > 1*/
 
-                if(OPEN_IC_CPUINT(GUESTREGS))
-                {
-                    obtain_lock(&sysblk.intlock);
-                    ARCH_DEP(perform_external_interrupt) (GUESTREGS);
+                    if( OPEN_IC_CPUINT(GUESTREGS) )
+                        ARCH_DEP(perform_external_interrupt) (GUESTREGS);
+
                     release_lock(&sysblk.intlock);
                 }
 
@@ -483,9 +481,10 @@ int ARCH_DEP(sie_run) (REGS *regs)
 
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
+#if !defined(OPTION_CPU_UNROLL)
                 regs->instcount++;
+#else
 
-#ifdef OPTION_CPU_UNROLL
                 UNROLLED_EXECUTE(GUESTREGS);
                 UNROLLED_EXECUTE(GUESTREGS);
                 UNROLLED_EXECUTE(GUESTREGS);
@@ -499,7 +498,7 @@ int ARCH_DEP(sie_run) (REGS *regs)
 
             }
 
-        if(icode == 0)
+        if(icode == 0 || icode == SIE_NO_INTERCEPT)
         {
             if( SIE_I_EXT(GUESTREGS) )
                 icode = SIE_INTERCEPT_EXTREQ;

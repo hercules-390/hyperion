@@ -5,8 +5,8 @@
 /* Default features						     */
 /*   All existing features MUST be #undef-ed here.		     */
 /*-------------------------------------------------------------------*/
-#define MAX_CPU_ENGINES 	      1 /* Maximum number of engines */
-#undef  SMP_SERIALIZATION		/* Serialize storage for SMP */
+#define MAX_CPU_ENGINES 	     16 /* Maximum number of engines */
+#define SMP_SERIALIZATION		/* Serialize storage for SMP */
 #define VECTOR_SECTION_SIZE	    128 /* Vector section size	     */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
 #define CKD_MAXFILES		      4 /* Max files per CKD volume  */

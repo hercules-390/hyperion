@@ -2060,7 +2060,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B914*/ GENx___x___x900 (load_long_fullword_register),        /*!LGFR      */
  /*B915*/ GENx___x___x___ ,
  /*B916*/ GENx___x___x900 (load_logical_long_fullword_register), /*!LLGFR    */
- /*B917*/ GENx___x___x900 (load_logical_long_thirtyone_register), /*!LLGTR/CLAGR  */
+ /*B917*/ GENx___x___x900 (load_logical_long_thirtyone_register), /*!LLGTR   */
  /*B918*/ GENx___x___x900 (add_long_fullword_register),         /*!AGFR      */
  /*B919*/ GENx___x___x900 (subtract_long_fullword_register),    /*!SGFR      */
  /*B91A*/ GENx___x___x900 (add_logical_long_fullword_register), /*!ALGFR     */

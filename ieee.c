@@ -1342,6 +1342,11 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
 
 /*
  * B3A6 CXGBR - CONVERT FROM FIXED (64 to extended BFP)        [RRE]
+ */
+
+
+#if defined(FEATURE_ESAME)
+/*
  * B3A5 CDGBR - CONVERT FROM FIXED (64 to long BFP)            [RRE]
  */
 DEF_INST(convert_fix64_to_bfp_long_reg)
@@ -1365,7 +1370,9 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
 
 	put_lbfp(&op1, regs->fpr + FPR2I(r1));
 }
+#endif /*defined(FEATURE_ESAME)*/
 
+#if defined(FEATURE_ESAME)
 /*
  * B3A4 CEGBR - CONVERT FROM FIXED (64 to short BFP)           [RRE]
  */
@@ -1390,6 +1397,7 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
 
 	put_sbfp(&op1, regs->fpr + FPR2I(r1));
 }
+#endif /*defined(FEATURE_ESAME)*/
 
 /*
  * B39A CFXBR - CONVERT TO FIXED (extended BFP to 32)          [RRF]
@@ -1518,6 +1526,11 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
 
 /*
  * B3AA CGXBR - CONVERT TO FIXED (extended BFP to 64)          [RRF]
+ */
+
+
+#if defined(FEATURE_ESAME)
+/*
  * B3A9 CGDBR - CONVERT TO FIXED (long BFP to 64)              [RRF]
  */
 DEF_INST(convert_bfp_long_to_fix64_reg)
@@ -1577,7 +1590,9 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
 		regs->psw.cc = op1 > 0 ? 2 : 1;
 	}
 }
+#endif /*defined(FEATURE_ESAME)*/
 
+#if defined(FEATURE_ESAME)
 /*
  * B3A8 CGEBR - CONVERT TO FIXED (short BFP to 64)             [RRF]
  */
@@ -1637,6 +1652,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
 		regs->psw.cc = op1 > 0 ? 2 : 1;
 	}
 }
+#endif /*defined(FEATURE_ESAME)*/
 
 
 /*

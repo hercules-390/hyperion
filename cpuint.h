@@ -202,7 +202,7 @@
 #define IS_IC_DISABLED_WAIT_PSW(_regs) \
              ( ((_regs)->ints_mask & IC_OPEN_MASK) == 0 )
 #define IS_IC_RESTART(_regs)  ((_regs)->ints_state&IC_RESTART)
-//#define IS_IC_BRDCSTNCPU      (sysblk.ints_state&IC_BRDCSTNCPU)
+#define IS_IC_BRDCSTNCPU      (sysblk.ints_state&IC_BRDCSTNCPU)
 #define IS_IC_STORSTAT(_regs) ((_regs)->ints_state&IC_STORSTAT)
 #define IS_IC_IOPENDING       (sysblk.ints_state&IC_IOPENDING)
 #define IS_IC_MCKPENDING      (sysblk.ints_state&IC_MCKPENDING)
@@ -267,7 +267,7 @@
    (((_regs)->ints_state|sysblk.ints_state) & (_regs)->ints_mask)
 
 #define SIE_IC_INTERRUPT_CPU(_regs) \
-   (((_regs)->ints_state|sysblk.ints_state) & (_regs)->ints_mask)
+   (((_regs)->ints_state|(sysblk.ints_state&IC_BRDCSTNCPU)) & (_regs)->ints_mask)
 
 #else /*!INTERRUPTS_FAST_CHECK*/
 

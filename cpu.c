@@ -1176,13 +1176,12 @@ U32     prevmask;
 #else
 void ARCH_DEP(process_interrupt)(REGS *regs)
 {
-U32     prevmask;
-
             /* Obtain the interrupt lock */
             obtain_lock (&sysblk.intlock);
 
             if( OPEN_IC_DEBUG(regs) )
             {
+            U32 prevmask;
                 prevmask = regs->ints_mask;
 	        SET_IC_EXTERNAL_MASK(regs);
 	        SET_IC_IO_MASK(regs);
@@ -1273,6 +1272,7 @@ U32     prevmask;
                     PERFORM_CHKPT_SYNC (regs);
                     ARCH_DEP (initial_cpu_reset) (regs);
 #ifdef OPTION_CPU_UNROLL
+                    release_lock(&sysblk.intlock);
                     longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
                 }
@@ -1284,6 +1284,7 @@ U32     prevmask;
                     PERFORM_CHKPT_SYNC (regs);
                     ARCH_DEP(cpu_reset) (regs);
 #ifdef OPTION_CPU_UNROLL
+                    release_lock(&sysblk.intlock);
                     longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
                 }
@@ -1294,6 +1295,7 @@ U32     prevmask;
                     OFF_IC_STORSTAT(regs);
                     ARCH_DEP(store_status) (regs, 0);
 #ifdef OPTION_CPU_UNROLL
+                    release_lock(&sysblk.intlock);
                     longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
                 }
@@ -1403,6 +1405,8 @@ int     stepthis;                       /* Stop on this instruction  */
 
     while (1)
     {
+if(!regs->cpuonline)
+logmsg("cpu%4.4x not online\n",regs->cpuad);
 #if 0
         U32 oldmask = regs->ints_mask;
 	    SET_IC_EXTERNAL_MASK(regs);
@@ -1449,6 +1453,7 @@ int     stepthis;                       /* Stop on this instruction  */
             stepthis = 0;
 #ifdef OPTION_CPU_UNROLL
             regs->instcount++;
+            EXECUTE_INSTRUCTION (regs->inst, 0, regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
         }

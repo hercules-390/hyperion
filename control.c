@@ -728,7 +728,11 @@ VADR    effective_addr2;                /* Effective address         */
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
 #ifdef FEATURE_HERCULES_DIAGCALLS
-    if (effective_addr2 != 0xF08)
+    if (
+#if defined(_FEATURE_SIE)
+        !sie_state &&
+#endif defined(_FEATURE_SIE)
+                      effective_addr2 != 0xF08)
 #endif
 
     PRIV_CHECK(regs);
