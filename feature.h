@@ -715,7 +715,6 @@ do { \
   if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0) { \
     if ((_regs)->AR((_arn)) == ALET_PRIMARY) (_regs)->aea_ar[(_arn)] = 1; \
     else if ((_regs)->AR((_arn)) == ALET_SECONDARY) (_regs)->aea_ar[(_arn)] = 7; \
-    else if ((_regs)->AR((_arn)) == ALET_HOME) (_regs)->aea_ar[(_arn)] = 13; \
     else (_regs)->aea_ar[(_arn)] = 0; \
   } \
 } while (0)
