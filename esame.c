@@ -403,11 +403,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* And generate a program interrupt */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     }
-#if defined(OPTION_REDUCE_INVAL)
-    INVALIDATE_AIA(regs);
-
-    INVALIDATE_AEA_ALL(regs);
-#endif
 
     /* Check for odd IA in psw */
     if(regs->psw.IA & 0x01)
