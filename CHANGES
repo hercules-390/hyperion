@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+12 Oct 2003 dequeue i/o int fix in device_reset - Jan Jaeger
 11 Oct 2003 Added verbose flag to display_version, and set to FALSE on
             standalone utilities - Jay Maynard
 07 Oct 2003 Shared library fix for dyninst.c - Jan Jaeger

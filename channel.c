@@ -1063,6 +1063,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
 void device_reset (DEVBLK *dev)
 {
     obtain_lock (&dev->lock);
+    DEQUEUE_IO_INTERRUPT(&dev->ioint);
     dev->busy = dev->reserved = dev->pending = dev->pcipending =
     dev->startpending = 0;
     dev->ioactive = DEV_SYS_NONE;
@@ -1101,11 +1102,11 @@ void device_reset (DEVBLK *dev)
     dev->mainlim = sysblk.mainsize - 1;
 #endif
     dev->ioint.dev = dev;
-    dev->ioint.pending = 1;
+    dev->ioint.pending = 0;
     dev->pciioint.dev = dev;
-    dev->pciioint.pcipending = 1;
+    dev->pciioint.pcipending = 0;
     dev->attnioint.dev = dev;
-    dev->attnioint.attnpending = 1;
+    dev->attnioint.attnpending = 0;
     release_lock (&dev->lock);
 } /* end device_reset() */
 
