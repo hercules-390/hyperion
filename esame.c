@@ -5255,7 +5255,7 @@ int     cpu_length;                     /* cpu determined length     */
     cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
     /* Process operands from left to right */
-    for (i = 0; len1 > 0; i++)
+    for (i = 0; len1 > 0; i += 2)
     {
         /* If cpu determined length has been moved, exit with cc=3 */
         if (i >= cpu_length)
@@ -5329,7 +5329,7 @@ U16     pad;                            /* Padding double byte       */
     addr2 = regs->GR(r3) & ADDRESS_MAXWRAP(regs);
 
     /* Process operands from left to right */
-    for (i = 0; len1 > 0 || len2 > 0 ; i++)
+    for (i = 0; len1 > 0 || len2 > 0 ; i += 2)
     {
         /* If 4096 bytes have been compared, exit with cc=3 */
         if (i >= 4096)
