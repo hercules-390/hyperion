@@ -613,47 +613,104 @@ U32 addr = 0;
 void cgibin_ipl(WEBBLK *webblk)
 {
 int i;
+char *value;
 DEVBLK *dev;
+int ipldev;
+int iplcpu;
+int doipl;
 
     html_header(webblk);
 
-    fprintf(webblk->hsock,"<h1>Function not yet implemented</h1>\n");
+    fprintf(webblk->hsock,"<h1>Perform Initial Program Load</h1>\n");
 
-    fprintf(webblk->hsock,"<form method=post>\n"
-                          "<select type=submit name=cpu>\n");
+    if(cgi_variable(webblk,"doipl"))
+        doipl = 1;
+    else
+        doipl = 0;
 
-    for(i = 0;
+    if((value = cgi_variable(webblk,"device")))
+        sscanf(value,"%x",&ipldev);
+    else
+        ipldev = sysblk.ipldev;
+
+    if((value = cgi_variable(webblk,"cpu")))
+        sscanf(value,"%x",&iplcpu);
+    else
+        iplcpu = sysblk.iplcpu;
+
+    if((value = cgi_variable(webblk,"loadparm")))
+    {
+        for(i = 0; i < strlen(value); i++)
+            sysblk.loadparm[i] = host_to_guest((int)value[i]);
+        for(; i < 8; i++)
+            sysblk.loadparm[i] = host_to_guest(' ');
+    }
+
+    /* Validate CPU number */
+    if(
 #if defined(_FEATURE_CPU_RECONFIG)
-        i < MAX_CPU_ENGINES;
+            iplcpu >= MAX_CPU_ENGINES
 #else
-        i < sysblk.numcpu;
+            iplcpu >= sysblk.numcpu
 #endif
-        i++)
-        if(sysblk.regs[i]->cpuonline)
-            fprintf(webblk->hsock,"<option value=%4.4X>CPU%4.4X</option>\n",i,i);
+      || !sysblk.regs[iplcpu]->cpuonline)
+        doipl = 0;
+  
+    if(!doipl)
+    {
+        /* Present IPL parameters */
+        fprintf(webblk->hsock,"<form method=post>\n"
+                              "<select type=submit name=cpu>\n");
 
-    fprintf(webblk->hsock,"</select>\n"
-                          "<select type=submit name=devnum>\n");
+        for(i = 0;
+#if defined(_FEATURE_CPU_RECONFIG)
+            i < MAX_CPU_ENGINES;
+#else
+            i < sysblk.numcpu;
+#endif
+            i++)
+            if(sysblk.regs[i]->cpuonline)
+                fprintf(webblk->hsock,"<option value=%4.4X%s>CPU%4.4X</option>\n",
+                  i, ((sysblk.regs[i]->cpuad == iplcpu) ? " selected" : ""), i);
 
-    for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
-        if(dev->pmcw.flag5 & PMCW5_V)
-            fprintf(webblk->hsock,"<option value=%4.4X>DEV%4.4X</option>\n",
-              dev->devnum, dev->devnum);
+        fprintf(webblk->hsock,"</select>\n"
+                              "<select type=submit name=device>\n");
 
-    fprintf(webblk->hsock,"</select>\n");
+        for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
+            if(dev->pmcw.flag5 & PMCW5_V)
+                fprintf(webblk->hsock,"<option value=%4.4X%s>DEV%4.4X</option>\n",
+                  dev->devnum, ((dev->devnum == ipldev) ? " selected" : ""), dev->devnum);
 
-    fprintf(webblk->hsock,"Loadparm:<input type=text size=8 value=\"%c%c%c%c%c%c%c%c\">\n",
-      guest_to_host(sysblk.loadparm[0]),
-      guest_to_host(sysblk.loadparm[1]),
-      guest_to_host(sysblk.loadparm[2]),
-      guest_to_host(sysblk.loadparm[3]),
-      guest_to_host(sysblk.loadparm[4]),
-      guest_to_host(sysblk.loadparm[5]),
-      guest_to_host(sysblk.loadparm[6]),
-      guest_to_host(sysblk.loadparm[7]));
+        fprintf(webblk->hsock,"</select>\n");
 
-    fprintf(webblk->hsock,"<input type=submit name=doipl value=\"IPL\">\n"
+        fprintf(webblk->hsock,"Loadparm:<input type=text name=loadparm size=8 value=\"%c%c%c%c%c%c%c%c\">\n",
+          guest_to_host(sysblk.loadparm[0]),
+          guest_to_host(sysblk.loadparm[1]),
+          guest_to_host(sysblk.loadparm[2]),
+          guest_to_host(sysblk.loadparm[3]),
+          guest_to_host(sysblk.loadparm[4]),
+          guest_to_host(sysblk.loadparm[5]),
+          guest_to_host(sysblk.loadparm[6]),
+          guest_to_host(sysblk.loadparm[7]));
+
+        fprintf(webblk->hsock,"<input type=submit name=doipl value=\"IPL\">\n"
                           "</form>\n");
+
+    }
+    else
+    {
+        /* Perform IPL function */
+        if( load_ipl(ipldev, sysblk.regs[iplcpu]) )
+        {
+            fprintf(webblk->hsock,"<h3>IPL failed, see the "
+                                  "<a href=\"syslog#bottom\">system log</a> "
+                                  "for details</h3>\n");
+        }
+        else
+        {
+            fprintf(webblk->hsock,"<h3>IPL successfull</h3>\n");
+        }
+    }
 
     html_footer(webblk);
 
@@ -875,8 +932,8 @@ void cgibin_debug_version_info(WEBBLK *webblk)
 /* associates directory filenames with cgibin routines               */
 
 CGITAB cgidir[] = {
-    { "syslog", &cgibin_syslog },
-    { "ipl", &cgibin_ipl },
+    { "tasks/syslog", &cgibin_syslog },
+    { "tasks/ipl", &cgibin_ipl },
     { "debug/registers", &cgibin_debug_registers },
     { "debug/storage", &cgibin_debug_storage },
     { "debug/version_info", &cgibin_debug_version_info },

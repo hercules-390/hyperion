@@ -640,6 +640,8 @@ typedef struct _SYSBLK {
 #endif
         TID     wdtid;                  /* Thread-id for watchdog    */
         BYTE    loadparm[8];            /* IPL load parameter        */
+        U16     ipldev;                 /* IPL device                */
+        U16     iplcpu;                 /* IPL cpu                   */
         U16     numcpu;                 /* Number of CPUs installed  */
         REGS   *regs[MAX_CPU_ENGINES];  /* Registers for each CPU    */
 #if defined(_FEATURE_VECTOR_FACILITY)

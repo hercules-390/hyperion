@@ -1,3 +1,4 @@
+01 Jul 2002 Complete IPL function in web interface - Jan Jaeger
 30 Jun 2002 Fix minor "inet_ntoa" bug in 'connect_client' function
             reported by Mark Gaubatz [Mark.Gaubatz@verizon.net] - Fish
 30 Jun 2002 Fix some minor issues relating to tape device handling contributed

@@ -190,6 +190,10 @@ BYTE    chanstat;                       /* IPL device channel status */
     /* reset load state */
     regs->loadstate = 0;
 
+    /* Save IPL device number and cpu number */
+    sysblk.ipldev = devnum;
+    sysblk.iplcpu = regs->cpuad;
+
     /* Signal the CPU to retest stopped indicator */
     obtain_lock (&sysblk.intlock);
     WAKEUP_CPU (regs->cpuad);
