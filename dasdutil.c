@@ -523,6 +523,7 @@ CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 DEVBLK         *dev;                    /* CKD device block          */
 CKDDEV         *ckd;                    /* CKD DASD table entry      */
+BYTE           *rmtdev;                 /* Possible remote device    */
 BYTE           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*                           */
 BYTE            sfxname[1024];          /* Suffixed file name        */
@@ -543,6 +544,9 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
     dev->dasdcopy = dasdcopy;
+
+    /* If the filename has a `:' then it may be a remote device */
+    rmtdev = strchr(fname, ':');
 
     /* Read the device header so we can determine the device type */
     strcpy (sfxname, fname);
@@ -579,51 +583,58 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
             }
             else
             {
-                if (strlen(sfxname) < 2 || sfname[strlen(sfxname)-2] == '_')
+                if (strlen(sfxname) < 2 || sfxname[strlen(sfxname)-2] != '_')
                     strcat (sfxname, "_1");
                 suffix = sfxname + strlen(sfxname) - 1;
             }
             *suffix = '1';
             fd = open (sfxname, omode);
         }
-        if (fd<0)
+        if (fd < 0 && rmtdev == NULL)
         {
             fprintf (stderr, "HHCDU009E Cannot open %s: %s\n",
                      fname, strerror(errno));
             free (cif);
             return NULL;
         }
-    }
-    len = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
-    if (len < 0)
-    {
-        fprintf (stderr, "HHCDU010E %s read error: %s\n",
-                 fname, strerror(errno));
-        close (fd);
-        free (cif);
-        return NULL;
-    }
-    close (fd);
-    if (len < (int)CKDDASD_DEVHDR_SIZE
-     || (memcmp(devhdr.devid, "CKD_P370", 8)
-      && memcmp(devhdr.devid, "CKD_C370", 8)))
-    {
-        fprintf (stderr, "HHCDU011E %s CKD header invalid\n", fname);
-        free (cif);
-        return NULL;
+        else if (fd < 0) strcpy (sfxname, fname);
     }
 
-    /* Set the device type */
-    ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, 0);
-    if (ckd == NULL)
+    /* If not a possible remote devic, check the dasd header
+       and set the device type */
+    if (fd >= 0)
     {
-        fprintf(stderr, "HHCDU012E DASD table entry not found for "
+        len = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+        if (len < 0)
+        {
+            fprintf (stderr, "HHCDU010E %s read error: %s\n",
+                     fname, strerror(errno));
+            close (fd);
+            free (cif);
+            return NULL;
+        }
+        close (fd);
+        if (len < (int)CKDDASD_DEVHDR_SIZE
+         || (memcmp(devhdr.devid, "CKD_P370", 8)
+          && memcmp(devhdr.devid, "CKD_C370", 8)))
+        {
+            fprintf (stderr, "HHCDU011E %s CKD header invalid\n", fname);
+            free (cif);
+            return NULL;
+        }
+
+        /* Set the device type */
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, 0);
+        if (ckd == NULL)
+        {
+            fprintf(stderr, "HHCDU012E DASD table entry not found for "
                         "devtype 0x%2.2X\n",
-                devhdr.devtype);
-        free (cif);
-        return NULL;
+                    devhdr.devtype);
+            free (cif);
+            return NULL;
+        }
+        dev->devtype = ckd->devt;
     }
-    dev->devtype = ckd->devt;
 
     /* Set the device handlers */
     dev->hnd = &ckddasd_device_hndinfo;

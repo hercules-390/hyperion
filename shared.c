@@ -96,14 +96,15 @@ int      rc;                            /* Return code               */
 int      i;                             /* Loop index                */
 int      retry;                         /* 1=Connection being retried*/
 BYTE    *ipname;                        /* Remote name or address    */
-BYTE    *port;                          /* Remote port               */
-BYTE    *rmtnum;                        /* Remote device number      */
+BYTE    *port = NULL;                   /* Remote port               */
+BYTE    *rmtnum = NULL;                 /* Remote device number      */
 struct   hostent *he;                   /* -> hostent structure      */
 BYTE    *kw;                            /* Argument keyword          */
 BYTE    *op;                            /* Argument operand          */
 BYTE     c;                             /* Used for parsing          */
 BYTE    *cu = NULL;                     /* Specified control unit    */
 FWORD    cyls;                          /* Remote number cylinders   */
+BYTE    *p, buf[1024];                  /* Work buffer               */
 
     retry = dev->connecting;
     dev->connecting = 1;
@@ -111,26 +112,36 @@ FWORD    cyls;                          /* Remote number cylinders   */
     /* Process the arguments */
     if (!retry) {
 
-        if (argc < 1) return -1;
+        if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
+            return -1;
+        strcpy (buf, argv[0]);
 
         /* First argument is `ipname:port:devnum' */
-        ipname = strtok (argv[0], ":");
-        port = strtok (NULL, " :\t");
-        rmtnum = strtok (NULL, " \t");
+        ipname = buf;
+        p = strchr (buf, ':');
+        if (p) {
+            *p = '\0';
+            port = p + 1;
+            p = strchr (port, ':');
+        }
+        if (p) {
+            *p = '\0';
+            rmtnum = p + 1;
+        }
 
         if ( (he = gethostbyname (ipname)) == NULL )
             return -1;
         memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
 
-        if (port) {
+        if (port && strlen(port)) {
             if (sscanf(port, "%hu%c", &dev->rmtport, &c) != 1)
                 return -1;
         } else
             dev->rmtport = SHARED_DEFAULT_PORT;
 
-        if (rmtnum) {
+        if (rmtnum && strlen(rmtnum)) {
             if (strlen (rmtnum) > 4
-             || sscanf (rmtnum, "%hx%c", &dev->rmtnum, &c) != 0)
+             || sscanf (rmtnum, "%hx%c", &dev->rmtnum, &c) != 1)
                 return -1;
         } else
             dev->rmtnum = dev->devnum;
@@ -233,7 +244,9 @@ init_retry:
     dev->ckdhitrk[0] = dev->ckdtrks;
 
     /* Check the device type */
-    if (dev->devtype != fetch_hw (dev->devchar + 3)) {
+    if (dev->devtype == 0)
+        dev->devtype = fetch_hw (dev->devchar + 3);
+    else if (dev->devtype != fetch_hw (dev->devchar + 3)) {
         logmsg (_("HHCSH005S %4.4X Remote device %4.4X is a %4.4X\n"),
                 dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
         return -1;
@@ -294,6 +307,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
+    if (!dev->batch)
     devmsg (_("HHCSH009I %s cyls=%d heads=%d tracks=%d trklen=%d\n"),
             dev->filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
@@ -330,8 +344,8 @@ int      rc;                            /* Return code               */
 int      i;                             /* Loop index                */
 int      retry;                         /* 1=Connection being retried*/
 BYTE    *ipname;                        /* Remote name or address    */
-BYTE    *port;                          /* Remote port               */
-BYTE    *rmtnum;                        /* Remote device number      */
+BYTE    *port = NULL;                   /* Remote port               */
+BYTE    *rmtnum = NULL;                 /* Remote device number      */
 struct   hostent *he;                   /* -> hostent structure      */
 BYTE    *kw;                            /* Argument keyword          */
 BYTE    *op;                            /* Argument operand          */
@@ -339,6 +353,7 @@ BYTE     c;                             /* Work for sscanf           */
 FWORD    origin;                        /* FBA origin                */
 FWORD    numblks;                       /* FBA number blocks         */
 FWORD    blksiz;                        /* FBA block size            */
+BYTE    *p, buf[1024];                  /* Work buffer               */
 
     retry = dev->connecting;
     dev->connecting = 1;
@@ -348,12 +363,22 @@ FWORD    blksiz;                        /* FBA block size            */
 
         kw = op = NULL;
 
-        if (argc < 1) return -1;
+        if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
+            return -1;
+        strcpy (buf, argv[0]);
 
         /* First argument is `ipname:port:devnum' */
-        ipname = strtok (argv[0], ":");
-        port = strtok (NULL, " :\t");
-        rmtnum = strtok (NULL, " \t");
+        ipname = buf;
+        p = strchr (buf, ':');
+        if (p) {
+            *p = '\0';
+            port = p + 1;
+            p = strchr (port, ':');
+        }
+        if (p) {
+            *p = '\0';
+            rmtnum = p + 1;
+        }
 
         if ( (he = gethostbyname (ipname)) == NULL )
             return -1;
@@ -1159,8 +1184,9 @@ HWORD    comp;                          /* Returned compression parm */
         rc = connect (dev->fd, (struct sockaddr *)&server, sizeof(server));
         shrdtrc("connect rc=%d errno=%d\n",rc, errno);
         if (rc >= 0) {
-            logmsg(_("HHCSH030I %4.4X Connected to %s\n"),
-               dev->devnum, dev->filename);
+            if (!dev->batch)
+              logmsg(_("HHCSH030I %4.4X Connected to %s\n"),
+                 dev->devnum, dev->filename);
             /* Request device connection */
             rc = clientRequest (dev, id, 2, SHRD_CONNECT, 0, NULL, NULL);
             if (rc >= 0)

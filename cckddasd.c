@@ -477,6 +477,14 @@ void cckddasd_end (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
+
+    /* Update length if previous image was updated */
+    if (dev->bufupd && dev->bufcur >= 0 && dev->cache >= 0)
+    {
+        dev->buflen = cckd_trklen (dev, dev->buf);
+        cache_setval (CACHE_DEVBUF, dev->cache, dev->buflen);
+    }
+
     dev->bufupd = 0;
 
     cckdtrc ("cckddasd: end i/o bufcur %d cache[%d] waiters %d\n",
@@ -517,6 +525,13 @@ int             cache;                  /* New active cache entry    */
 int             syncio;                 /* Syncio indicator          */
 
     cckd = dev->cckd_ext;
+
+    /* Update length if previous image was updated */
+    if (dev->bufupd && dev->bufcur >= 0 && dev->cache >= 0)
+    {
+        dev->buflen = cckd_trklen (dev, dev->buf);
+        cache_setval (CACHE_DEVBUF, dev->cache, dev->buflen);
+    }
 
     /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
     syncio = dev->syncio_active;
@@ -1065,7 +1080,7 @@ cckd_read_trk_retry:
 
     cache_unlock (CACHE_DEVBUF);
 
-    release_lock (&cckd->iolock);
+    if (!ra) release_lock (&cckd->iolock);
 
     /* Asynchronously schedule readaheads */
     if (!ra && curtrk > 0 && trk > curtrk && trk <= curtrk + 2)
