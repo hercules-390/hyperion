@@ -133,6 +133,7 @@ int
 het_open( HETB **hetb, char *filename, int flags )
 {
     HETB *thetb;
+	char *omode;
     int rc;
     int fd;
 
@@ -167,12 +168,14 @@ het_open( HETB **hetb, char *filename, int flags )
     /*
     || Open the tape file
     */
+    omode = "r+b";
     fd = open( filename, O_RDWR | flags, S_IRUSR | S_IWUSR | S_IRGRP );
     if( fd == -1 && errno == EROFS )
     {
         /*
-        || Retry open if file reside on readonly file system
+        || Retry open if file resides on readonly file system
         */
+        omode = "rb";
         thetb->writeprotect = TRUE;
         fd = open( filename, O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP );
     }
@@ -189,7 +192,7 @@ het_open( HETB **hetb, char *filename, int flags )
     /*
     || Associate stream with file descriptor
     */
-    thetb->fd = fdopen( fd, "r+b" );
+    thetb->fd = fdopen( fd, omode );
     if( thetb->fd == NULL )
     {
         rc = errno;
