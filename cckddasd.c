@@ -2843,7 +2843,8 @@ BYTE           *sfxptr;                 /* -> Last char of file name */
     /* Error if no shadow file name specified */
     if (dev->dasdsfn[0] == '\0')
     {
-        devmsg ("cckddasd: no shadow file name specified%s\n", "");
+        devmsg ("%4.4X:cckddasd: no shadow file name specified\n",
+                dev->devnum);
         return -1;
     }
 
@@ -2903,7 +2904,7 @@ char            sfn[256];               /* Shadow file name          */
         for (dev2 = cckdblk.dev1st; dev2; dev2 = cckd2->devnext)
         {
             cckd2 = dev2->cckd_ext;
-            if (dev2 == dev) continue;
+            if (dev2 == dev || dev2->dasdsfn[0] == '\0') continue;
             for (j = 0; j <= CCKD_MAX_SF; j++)
             {
                 rc = cckd_sf_name (dev2, j, (char *)&sfn2);
