@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+26 Jul 2004 Added ASN_AND_LX_REUSE config statement - Ivan Warren
 25 Jul 2004 cfba fixes (I hope) - Greg Smith
 22 Jul 2004 Fix 370 address lookup for USE_REAL_ADDR - Greg Smith
 22 Jul 2004 Activate ASN-and-LX-reuse facility - Roger Bowler

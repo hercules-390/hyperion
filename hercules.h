@@ -890,6 +890,9 @@ typedef struct _SYSBLK {
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
 // #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+	int	asnandlxreuse;		/* ASN And LX Reuse enable   */
+#endif
 #if defined(OPTION_SHARED_DEVICES)
         TID     shrdtid;                /* Shared device listener    */
         U16     shrdport;               /* Shared device server port */

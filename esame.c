@@ -4524,6 +4524,12 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     if(ARCH_DEP(cipher_message))
         psa->stfl[2] |= STFL_2_MSG_SECURITY;
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+    if(!sysblk.asnandlxreuse)
+    {
+	    psa->stfl[0] &= ~STFL_0_ASN_LX_REUSE;
+    }
+#endif
 
 } /* end DEF_INST(store_facilities_list) */
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/

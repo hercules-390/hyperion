@@ -101,6 +101,10 @@
  #define _FEATURE_MESSAGE_SECURITY_ASSIST
 #endif
 
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+ #define _FEATURE_ASN_AND_LX_REUSE
+#endif
+
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
  #define _VSTORE_C_STATIC static inline

@@ -577,6 +577,9 @@ BYTE   *stodprio;                       /* -> Timer thread priority  */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *sdevprio;                       /* -> Device thread priority */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+BYTE   *sasnandlxreuse;			/* -> ASNLXREUSE Optional    */
+#endif
 #if defined(_FEATURE_ECPSVM)
 BYTE   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
 BYTE   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
@@ -614,6 +617,9 @@ int     hercprio;                       /* Hercules base priority    */
 int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
 int     devprio;                        /* Device thread priority    */
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+int     asnandlxreuse;			/* ASN And LX Reuse option   */
+#endif
 BYTE    pgmprdos;                       /* Program product OS OK     */
 BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
@@ -703,6 +709,10 @@ BYTE **orig_newargv;
     shrdport = 0;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+    asnandlxreuse = 0;	/* ASN And LX Reuse is defaulted to DISABLE */
+#endif
+
 
         /* Cap the default priorities at zero if setuid not available */
 #if !defined(NO_SETUID)
@@ -780,6 +790,9 @@ BYTE **orig_newargv;
         secpsvmlvl = NULL;
         ecpsvmac = 0;
 #endif /*defined(_FEATURE_ECPSVM)*/
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+	sasnandlxreuse = NULL;
+#endif
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -1048,6 +1061,13 @@ BYTE **orig_newargv;
                 /* (will be validated later) */
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+            else if (strcasecmp(keyword,"asn_and_lx_reuse") == 0)
+            {
+		    sasnandlxreuse = operand;
+	    }
+#endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
+
 #if defined(OPTION_SHARED_DEVICES)
             else if (strcasecmp (keyword, "shrdport") == 0)
             {
@@ -1576,6 +1596,28 @@ BYTE **orig_newargv;
             }
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+	if(sasnandlxreuse != NULL)
+	{
+		if(strcasecmp(sasnandlxreuse,"enable")==0)
+		{
+			asnandlxreuse=1;
+		}
+		else 
+		{
+			if(strcasecmp(sasnandlxreuse,"disable")==0)
+			{
+				asnandlxreuse=0;
+			}
+			else {
+				fprintf(stderr, _("HHCCF067S Error in %s line %d: "
+                        	"Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
+                        	fname, stmt, sasnandlxreuse);
+                        	delayed_exit(1);
+			}
+		}
+	}
+#endif
 
 #ifdef OPTION_IODELAY_KLUDGE
         /* Parse I/O delay value */
@@ -1639,6 +1681,10 @@ BYTE **orig_newargv;
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
+
+#if defined(_FEATURE_ASN_AND_LX_REUSE)
+    sysblk.asnandlxreuse=asnandlxreuse;
+#endif
 
     sysblk.diag8cmd = diag8cmd;
 

@@ -111,6 +111,19 @@ a real System/390.  The configuration file is an ASCII text file.
     The following system parameters may be specified:
 
 <dl>
+<a name="ASN_AND_LX_REUSE">
+<dt><code>ASN_AND_LX_REUSE <em>DISABLE|enable</em></code>
+<dd><p>
+    specifies that the ASN And LX Reuse optional facility is to be
+    DISABLED (by default) or ENABLED. This is a ESAME only
+    feature (it is always disabled for S/390 or ESA/390). Set this
+    to <code><em>ENABLE</em></code>&nbsp if the operating system supports
+    this z/Architecture feature and the use of this feature is desired.
+    Set it to <code><em>DISABLE</em></code>&nbsp or do not specify anything
+    if the operating system doesn't support this feature, and it 
+    inadvertently sets CR0 bit 44 to 1, usually leading to unexpected
+    program interrupt when instructions such as LASP are issued.
+    <p>
 
 <a name="CPUSERIAL">
 <dt><code>CPUSERIAL <em>xxxxxx</em></code>
