@@ -31,7 +31,11 @@
  * This code is presently incomplete
  *
  * Instructions:
- * Only a subset of the instructions is actually implemented.
+ * The following instructions are not yet implemented:
+ * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
+ * B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF]
+ * B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRF]
+ * B353 DIEBR - DIVIDE TO INTEGER (short BFP)                  [RRF]
  *
  * Rounding:
  * The native IEEE implementation can be set to apply the rounding
