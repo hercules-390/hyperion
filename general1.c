@@ -715,10 +715,8 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    r1 = inst[1] >> 4;
-
     /* Branch to operand address if r1 mask bit is set */
-    if ((0x08 >> regs->psw.cc) & r1)
+    if ((0x80 >> regs->psw.cc) & inst[1])
     {
         RX(inst, execflag, regs, r1, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
