@@ -261,7 +261,7 @@ noinst_HEADERS  = fishhang.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
     hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
-    if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
+    ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
     ecpsvm.h memrchr.h shared.h hscutl.h hdl.h crypto.h service.h
 

@@ -233,6 +233,8 @@ AC_CHECK_HEADER(inttypes.h,
                                [AC_DEFINE([HAVE_U_INT])],
                                [AC_MSG_ERROR([Unable to find fixed-size data types])] )] )
 
+AC_CHECK_HEADERS(linux/if_tun.h)
+
 # Compiler characteristics
 
 AC_C_BIGENDIAN

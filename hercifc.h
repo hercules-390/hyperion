@@ -9,7 +9,22 @@
 #ifndef __HERCIFC_H_
 #define __HERCIFC_H_
 
-#include "if_tun.h"
+#ifdef  HAVE_LINUX_IF_TUN_H
+#include <linux/if_tun.h>
+#else
+/* Ioctl defines */
+#define TUNSETNOCSUM    _IOW('T', 200, int) 
+#define TUNSETDEBUG     _IOW('T', 201, int) 
+#define TUNSETIFF       _IOW('T', 202, int) 
+#define TUNSETPERSIST   _IOW('T', 203, int) 
+#define TUNSETOWNER     _IOW('T', 204, int)
+
+/* TUNSETIFF ifr flags */
+#define IFF_TUN         0x0001
+#define IFF_TAP         0x0002
+#define IFF_NO_PI       0x1000
+#define IFF_ONE_QUEUE   0x2000
+#endif
 
 #if !defined( WIN32 )
 #include <net/route.h>
