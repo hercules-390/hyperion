@@ -835,7 +835,7 @@ int     n;
         if(GUESTREGS->ip[0] != 0x44)
         {
             if(GUESTREGS->instvalid)
-                memcpy(STATEBK->ipa, GUESTREGS->ip, 6);
+                memcpy(STATEBK->ipa, GUESTREGS->ip, ILC(GUESTREGS->ip[0]));
         }
         else
         {
