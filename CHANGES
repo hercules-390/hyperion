@@ -1,3 +1,4 @@
+22 Apr 2001 cckd2ckd not stopping if -cyl specified - Greg Smith
 22 Apr 2001 add ISKE, RRBE and SSKE to 370 mode  - Valery Pogonchenko
 22 Apr 2001 ckd fix Read Count setting index marker - Valery Pogonchenko
 22 Apr 2001 ckd fix processing multitrack read ops - Valery Pogonchenko

@@ -78,6 +78,7 @@ int             quiet=0;                /* Don't display status      */
 int             valid=1;                /* Validate track images     */
 int             swapend=0;              /* Need to swap byte order   */
 int             maxerrs=5;              /* Max errors allowed        */
+int             limited=0;              /* 1=Limit cyls copied       */
 
     /* Display the program identification message */
     display_version (stderr, "Hercules cckd to ckd copy program ",
@@ -104,6 +105,7 @@ int             maxerrs=5;              /* Max errors allowed        */
                            if (argc < 2) syntax ();
                            argc--; argv++;
                            cyls = atoi (argv[0]);
+                           if (cyls >= 0) limited = 1;
                            break;
                        }
                        syntax ();
@@ -258,6 +260,7 @@ int             maxerrs=5;              /* Max errors allowed        */
     /* process each entry in the primary lookup table */
     for (i = 0; i * 256 < trks || l1[i] != 0; i++)
     {
+        if (limited && i * 256 >= trks) break;
         /* get the secondary lookup table */
         if (i >= cdevhdr.numl1tab || l1[i] == 0)
             memset (&l2, 0, CCKD_L2TAB_SIZE);
@@ -283,6 +286,7 @@ int             maxerrs=5;              /* Max errors allowed        */
 
         {
             trk = i * 256 + j;
+            if (limited && trk >= trks) break;
 
             /* check for new output file */
             if (trk % trks_per_file == 0)
