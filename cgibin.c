@@ -683,13 +683,13 @@ BYTE   buf[80];
 
              fprintf(webblk->hsock,"<tr>"
                                    "<td>%4.4X</td>"
-                                   "<td><a href=\"detail?devnum=%4.4X\">%4.4X</a></td>"
+                                   "<td><a href=\"detail?subchan=%4.4X\">%4.4X</a></td>"
                                    "<td>%s</td>"
                                    "<td>%4.4X</td>"
                                    "<td>%s%s%s</td>"
                                    "</tr>\n",
                                    dev->devnum,
-                                   dev->devnum,dev->subchan,
+                                   dev->subchan,dev->subchan,
                                    class,
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
@@ -709,26 +709,30 @@ void cgibin_debug_device_detail(WEBBLK *webblk)
 {
 DEVBLK *sel, *dev = NULL;
 char *value;
-int devnum;
+int subchan;
 
     html_header(webblk);
 
-    if((value = cgi_variable(webblk,"devnum"))
-      && sscanf(value,"%x",&devnum) == 1)
+    if((value = cgi_variable(webblk,"subchan"))
+      && sscanf(value,"%x",&subchan) == 1)
         for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
-            if((dev->pmcw.flag5 & PMCW5_V)
-              && (dev->devnum == devnum))
+            if(dev->subchan == subchan)
                 break;
 
     fprintf(webblk->hsock,"<h3>Subchannel Details</h3>\n");
 
     fprintf(webblk->hsock,"<form method=post>\n"
-                          "<select type=submit name=devnum>\n");
+                          "<select type=submit name=subchan>\n");
 
     for(sel = sysblk.firstdev; sel; sel = sel->nextdev)
+    {
+        fprintf(webblk->hsock,"<option value=%4.4X%s>Subchannel %4.4X",
+          sel->subchan, ((sel == dev) ? " selected" : ""), sel->subchan);
         if(sel->pmcw.flag5 & PMCW5_V)
-            fprintf(webblk->hsock,"<option value=%4.4X%s>Device %4.4X</option>\n",
-              sel->devnum, ((sel == dev) ? " selected" : ""), sel->devnum);
+            fprintf(webblk->hsock," Device %4.4X</option>\n",sel->devnum);
+        else
+            fprintf(webblk->hsock,"</option>\n");
+    }
 
     fprintf(webblk->hsock,"</select>\n"
                           "<input type=submit value=\"Select / Refresh\">\n"
@@ -737,8 +741,10 @@ int devnum;
     if(dev)
     {
 
-        fprintf(webblk->hsock,"<h3>Path Management Control Word for Subchannel %4.4X</h3>\n"
-                              "<table border>\n",dev->subchan);
+        fprintf(webblk->hsock,"<table border>\n"
+                              "<caption align=left>"
+                              "<h3>Path Management Control Word</h3>"
+                              "</caption>\n");
 
         fprintf(webblk->hsock,"<tr><th colspan=32>Interruption Parameter</th></tr>\n");
 
