@@ -1840,6 +1840,14 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
             nodedata = ARCH_DEP(vfetch4) ( (nodeaddr+4) & ADDRESS_MAXWRAP(regs), AR4, regs );
         }
 
+        /* GR5 must remain UNCHANGED if the execution of a unit of operation
+           is nullified or suppressed! Thus it must ONLY be updated/committed
+           AFTER we've successfully retrieved the node data (since the storage
+           access could cause a program-check thereby nullifying/suppressing
+           the instruction's "current unit of operation")
+        */
+        SET_GR_A(5,regs,index);     // (do AFTER node data is accessed!)
+
         /* Exit with cc0 whenever we reach a node whose codeword is equal
            to our current "highest encountered" codeword value (i.e. any
            node whose codeword matches our current "highest" (GR0) value)
@@ -1850,46 +1858,38 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
             SET_GR_A(2,regs,nodecode);
             SET_GR_A(3,regs,nodedata);
             regs->psw.cc = 0;
-            break;
+            return;
         }
 
         /* Keep resequencing the tree's nodes, moving successively higher
            nodes to the front (beginning of tree)...
         */
-        if ( nodecode > GR_A(0,regs) )
-        {
-            /* This node has a codeword value higher than our currently saved
-               highest encountered codeword value (GR0). Swap our GR0/1 values
-               with this node's values, such that GR0/1 always hold the values
-               from the node with the highest encountered codeword value...
-            */
+        if ( nodecode < GR_A(0,regs) )
+            continue;
 
-            /* Store obsolete GR0 and GR1 values into this node's entry */
+        /* This node has a codeword value higher than our currently saved
+           highest encountered codeword value (GR0). Swap our GR0/1 values
+           with this node's values, such that GR0/1 always hold the values
+           from the node with the highest encountered codeword value...
+        */
+
+        /* Store obsolete GR0 and GR1 values into this node's entry */
 #if defined(FEATURE_ESAME)
-            if ( a64 )
-            {
-                ARCH_DEP(vstore8) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
-                ARCH_DEP(vstore8) ( GR_A(1,regs), (nodeaddr+8) & ADDRESS_MAXWRAP(regs), AR4, regs );
-            }
-            else
+        if ( a64 )
+        {
+            ARCH_DEP(vstore8) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
+            ARCH_DEP(vstore8) ( GR_A(1,regs), (nodeaddr+8) & ADDRESS_MAXWRAP(regs), AR4, regs );
+        }
+        else
 #endif
-            {
-                ARCH_DEP(vstore4) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
-                ARCH_DEP(vstore4) ( GR_A(1,regs), (nodeaddr+4) & ADDRESS_MAXWRAP(regs), AR4, regs );
-            }
-
-            /* Update GR0 and GR1 with the new "highest encountered" values */
-            SET_GR_A(0,regs,nodecode);
-            SET_GR_A(1,regs,nodedata);
+        {
+            ARCH_DEP(vstore4) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
+            ARCH_DEP(vstore4) ( GR_A(1,regs), (nodeaddr+4) & ADDRESS_MAXWRAP(regs), AR4, regs );
         }
 
-        /* GR5 must remain UNCHANGED if the execution of a unit of operation
-           is nullified or suppressed! Thus it must ONLY be updated/committed
-           AFTER we've successfully retrieved the node data (since the storage
-           access could cause a program-check thereby nullifying/suppressing
-           the instruction's "current unit of operation")
-        */
-        SET_GR_A(5,regs,index);     // (do AFTER node data is accessed!)
+        /* Update GR0 and GR1 with the new "highest encountered" values */
+        SET_GR_A(0,regs,nodecode);
+        SET_GR_A(1,regs,nodedata);
     }
 
     /* Commit GR5 with the actual index value we stopped on */

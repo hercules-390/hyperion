@@ -245,7 +245,7 @@ size_t nibytes, nobytes;
 
     ibytes = &ibyte; obytes = &obyte;
     nibytes = nobytes = 1;
-    if(iconv(codepage_g2h, (char**)&ibytes, &nibytes, &obytes, &nobytes) == (size_t)(-1) )
+    if(iconv(codepage_g2h, (const char**)&ibytes, &nibytes, &obytes, &nobytes) == (size_t)(-1) )
     
     {
         iconv_close(codepage_g2h);
@@ -256,7 +256,7 @@ size_t nibytes, nobytes;
 
     ibytes = &ibyte; obytes = &obyte;
     nibytes = nobytes = 1;
-    if(iconv(codepage_h2g, (char**)&ibytes, &nibytes, &obytes, &nobytes) == (size_t)(-1) )
+    if(iconv(codepage_h2g, (const char**)&ibytes, &nibytes, &obytes, &nobytes) == (size_t)(-1) )
     
     {
         iconv_close(codepage_g2h);
@@ -301,7 +301,7 @@ size_t inbytes = 1, outbytes = 1;
 
     if(codepage_h2g)
     {
-        iconv(codepage_h2g, &hbyte, &inbytes, &gbyte, &outbytes);
+        iconv(codepage_h2g, (const char**)&hbyte, &inbytes, &gbyte, &outbytes);
         return obyte;
     }
     else
@@ -320,7 +320,7 @@ size_t inbytes = 1, outbytes = 1;
 
     if(codepage_g2h)
     {
-        iconv(codepage_g2h, &gbyte, &inbytes, &hbyte, &outbytes);
+        iconv(codepage_g2h, (const char**)&gbyte, &inbytes, &hbyte, &outbytes);
         return obyte;
     }
     else

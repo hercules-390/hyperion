@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+06 Mar 2005 Fix a bug in my 64-bit changes to the CFC instruction - Fish
 25 Feb 2005 Another 3480-X'DB' Fix. Tape does not need to be ready
             for a X'DB' to work. Hinted by John Decker - Ivan Warren
 25 Feb 2005 Fix het block count bug introduced by my earlier SCSI changes;

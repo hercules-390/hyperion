@@ -29,12 +29,11 @@
 // ====================================================================
 
 #if !defined( WIN32 )
-static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp );
-#endif // !defined( WIN32 )
+
+static int IFC_IOCtl( int fd, unsigned long int iRequest, char* argp );
 
 static int ifc_fd[2] = { -1, -1 };
 static pid_t ifc_pid = 0;
-
 
 static void tuntap_term(void)
 {
@@ -43,6 +42,7 @@ static void tuntap_term(void)
     ifc_fd[0] = ifc_fd[1] = -1;
     kill(ifc_pid, SIGINT);
 }
+#endif /* !defined( WIN32 ) */
 
 
 // ====================================================================

@@ -242,6 +242,7 @@ int result;
 
 int ptt_pthread_cond_init(COND *cond, void *attr, char *file, int line)
 {
+    UNREFERENCED(attr);
     PTTRACE ("cond init", NULL, cond, file, line, PTT_MAGIC);
     return fthread_cond_init(cond);
 }

@@ -539,19 +539,25 @@ z900_ ## _name
 /* Macros use by Compare and Form Codeword (CFC (B21A)) instruction  */
 /*-------------------------------------------------------------------*/
 
-#undef   CFC_HIGH_BIT
-#undef   CFC_OPERSIZE
+#undef   CFC_A64_OPSIZE
+#undef   CFC_DEF_OPSIZE
+#undef   CFC_MAX_OPSIZE
+#undef   CFC_OPSIZE
 #undef   CFC_GR2_SHIFT
+#undef   CFC_HIGH_BIT
 #undef   AR1
-#define  AR1  (1)                       /* Access Register 1         */
+#define  AR1               ( 1 )        /* Access Register 1         */
+#define  CFC_A64_OPSIZE    ( 6 )        /* amode-64 operand size     */
+#define  CFC_DEF_OPSIZE    ( 2 )        /* non-amode-64 operand size */
+#define  CFC_MAX_OPSIZE    ( CFC_A64_OPSIZE > CFC_DEF_OPSIZE ? CFC_A64_OPSIZE : CFC_DEF_OPSIZE )
 #if defined(FEATURE_ESAME)
-  #define  CFC_HIGH_BIT    ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )
-  #define  CFC_OPERSIZE    ( a64 ?  6 :  2 )
-  #define  CFC_GR2_SHIFT   ( a64 ? 48 : 16 )
+  #define  CFC_OPSIZE      ( a64 ?   CFC_A64_OPSIZE       :   CFC_DEF_OPSIZE       )
+  #define  CFC_GR2_SHIFT   ( a64 ? ( CFC_A64_OPSIZE * 8 ) : ( CFC_DEF_OPSIZE * 8 ) )
+  #define  CFC_HIGH_BIT    ( a64 ?  0x8000000000000000ULL :  0x0000000080000000ULL )
 #else
-  #define  CFC_HIGH_BIT    ( 0x80000000 )
-  #define  CFC_OPERSIZE    (  2 )
-  #define  CFC_GR2_SHIFT   ( 16 )
+  #define  CFC_OPSIZE      ( CFC_DEF_OPSIZE     )
+  #define  CFC_GR2_SHIFT   ( CFC_DEF_OPSIZE * 8 )
+  #define  CFC_HIGH_BIT    (  0x80000000UL      )
 #endif
 
 /*-------------------------------------------------------------------*/
