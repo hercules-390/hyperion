@@ -384,7 +384,7 @@
  UNDEF_INST(convert_fix64_to_bfp_long_reg);
  UNDEF_INST(convert_fix64_to_bfp_short_reg);
  UNDEF_INST(convert_bfp_long_to_fix64_reg);
- UNDEF_INST(convert_bfp_short_to_fix64_reg);                    
+ UNDEF_INST(convert_bfp_short_to_fix64_reg);
  UNDEF_INST(divide_bfp_ext_reg)
  UNDEF_INST(divide_bfp_long)
  UNDEF_INST(divide_bfp_long_reg)
@@ -556,6 +556,7 @@
  UNDEF_INST(cancel_subchannel)
 #endif /*!defined(FEATURE_CANCEL_IO_FACILITY)*/
 
+
 #if !defined(FEATURE_ECPSVM)
  UNDEF_INST(ecpsvm_basic_freex);
  UNDEF_INST(ecpsvm_basic_fretx);
@@ -581,6 +582,76 @@
  UNDEF_INST(ecpsvm_extended_fretx);
  UNDEF_INST(ecpsvm_prefmach_assist);
 #endif /*!defined(FEATURE_ECPSVM)*/
+
+
+#if !defined(FEATURE_LONG_DISPLACEMENT)
+ UNDEF_INST(add_y)
+ UNDEF_INST(add_halfword_y)
+ UNDEF_INST(add_logical_y)
+ UNDEF_INST(and_immediate_y)
+ UNDEF_INST(and_y)
+ UNDEF_INST(compare_y)
+ UNDEF_INST(compare_and_swap_y)
+ UNDEF_INST(compare_double_and_swap_y)
+ UNDEF_INST(compare_halfword_y)
+ UNDEF_INST(compare_logical_y)
+ UNDEF_INST(compare_logical_immediate_y)
+ UNDEF_INST(compare_logical_characters_under_mask_y)
+ UNDEF_INST(convert_to_binary_y)
+ UNDEF_INST(convert_to_decimal_y)
+ UNDEF_INST(exclusive_or_immediate_y)
+ UNDEF_INST(exclusive_or_y)
+ UNDEF_INST(insert_character_y)
+ UNDEF_INST(insert_characters_under_mask_y)
+ UNDEF_INST(load_y)
+ UNDEF_INST(load_access_multiple_y)
+ UNDEF_INST(load_address_y)
+ UNDEF_INST(load_byte)
+ UNDEF_INST(load_byte_long)
+ UNDEF_INST(load_halfword_y)
+ UNDEF_INST(load_multiple_y)
+ UNDEF_INST(load_real_address_y)
+ UNDEF_INST(move_immediate_y)
+ UNDEF_INST(multiply_single_y)
+ UNDEF_INST(or_immediate_y)
+ UNDEF_INST(or_y)
+ UNDEF_INST(store_y)
+ UNDEF_INST(store_access_multiple_y)
+ UNDEF_INST(store_character_y)
+ UNDEF_INST(store_characters_under_mask_y)
+ UNDEF_INST(store_halfword_y)
+ UNDEF_INST(store_multiple_y)
+ UNDEF_INST(subtract_y)
+ UNDEF_INST(subtract_halfword_y)
+ UNDEF_INST(subtract_logical_y)
+ UNDEF_INST(test_under_mask_y)
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if !defined(FEATURE_HEXADECIMAL_FLOATING_POINT) \
+ || !defined(FEATURE_LONG_DISPLACEMENT)
+ UNDEF_INST(load_float_long_y)
+ UNDEF_INST(load_float_short_y)
+ UNDEF_INST(store_float_long_y)
+ UNDEF_INST(store_float_short_y)
+#endif /*!defined(FEATURE_HEXADECIMAL_FLOATING_POINT)
+ || !defined(FEATURE_LONG_DISPLACEMENT) */
+
+
+#if !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
+ UNDEF_INST(cipher_message)
+ UNDEF_INST(cipher_message_with_chaining)
+ UNDEF_INST(compute_intermediate_message_digest)
+ UNDEF_INST(compute_last_message_digest)
+ UNDEF_INST(compute_message_authentication_code)
+#endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
+
+
+#if !defined(FEATURE_DAT_ENHANCEMENT)
+ UNDEF_INST(compare_and_swap_and_purge_long)
+ UNDEF_INST(invalidate_dat_table_entry)
+#endif /*!defined(FEATURE_DAT_ENHANCEMENT)*/
+
 
 /* The following execute_xxxx routines can be optimized by the
    compiler to an indexed jump, leaving the stack frame untouched
@@ -899,6 +970,7 @@ int r1,r3,b2,d2;
     d2 = (inst[2] & 0x0F) << 8 | inst[3];
     logmsg("%-6.6s%d,%d,%d(%d)\n",mnemonic,r1,r3,d2,b2);
 }
+
 void disasm_RSY (BYTE inst[], BYTE mnemonic[])
 {
 int r1,r3,b2,d2;
@@ -2468,7 +2540,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B91B*/ GENx___x___x900 (subtract_logical_long_fullword_register,RRE,"SLGFR"),
  /*B91C*/ GENx___x___x900 (multiply_single_long_fullword_register,RRE,"MSGFR"),
  /*B91D*/ GENx___x___x900 (divide_single_long_fullword_register,RRE,"DSGFR"),
- /*B91E*/ GENx___x390x900 (dummy_instruction,RRE,"KMAC"),
+ /*B91E*/ GENx___x390x900 (compute_message_authentication_code,RRE,"KMAC"),
  /*B91F*/ GENx___x390x900 (load_reversed_register,RRE,"LRVR"),
  /*B920*/ GENx___x___x900 (compare_long_register,RRE,"CGR"),
  /*B921*/ GENx___x___x900 (compare_logical_long_register,RRE,"CLGR"),
@@ -2484,8 +2556,8 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B92B*/ GENx___x___x___ ,
  /*B92C*/ GENx___x___x___ ,
  /*B92D*/ GENx___x___x___ ,
- /*B92E*/ GENx___x390x900 (dummy_instruction,RRE,"KM"),
- /*B92F*/ GENx___x390x900 (dummy_instruction,RRE,"KMC"),
+ /*B92E*/ GENx___x390x900 (cipher_message,RRE,"KM"),
+ /*B92F*/ GENx___x390x900 (cipher_message_with_chaining,RRE,"KMC"),
  /*B930*/ GENx___x___x900 (compare_long_fullword_register,RRE,"CGFR"),
  /*B931*/ GENx___x___x900 (compare_logical_long_fullword_register,RRE,"CLGFR"),
  /*B932*/ GENx___x___x___ ,
@@ -2500,8 +2572,8 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B93B*/ GENx___x___x___ ,
  /*B93C*/ GENx___x___x___ ,
  /*B93D*/ GENx___x___x___ ,
- /*B93E*/ GENx___x390x900 (dummy_instruction,RRE,"KIMD"),
- /*B93F*/ GENx___x390x900 (dummy_instruction,RRE,"KLMD"),
+ /*B93E*/ GENx___x390x900 (compute_intermediate_message_digest,RRE,"KIMD"),
+ /*B93F*/ GENx___x390x900 (compute_last_message_digest,RRE,"KLMD"),
  /*B940*/ GENx___x___x___ ,
  /*B941*/ GENx___x___x___ ,
  /*B942*/ GENx___x___x___ ,
@@ -2576,11 +2648,11 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B987*/ GENx___x___x900 (divide_logical_long_register,RRE,"DLGR"),
  /*B988*/ GENx___x___x900 (add_logical_carry_long_register,RRE,"ALCGR"),
  /*B989*/ GENx___x___x900 (subtract_logical_borrow_long_register,RRE,"SLBGR"),
- /*B98A*/ GENx___x___x900 (dummy_instruction,RRE,"CSPG"),
+ /*B98A*/ GENx___x___x900 (compare_and_swap_and_purge_long,RRE,"CSPG"),
  /*B98B*/ GENx___x___x___ ,
  /*B98C*/ GENx___x___x___ ,
  /*B98D*/ GENx___x390x900 (extract_psw,RRE,"EPSW"),
- /*B98E*/ GENx___x___x900 (dummy_instruction,RRF_R,"IDTE"),
+ /*B98E*/ GENx___x___x900 (invalidate_dat_table_entry,RRF_R,"IDTE"),
  /*B98F*/ GENx___x___x___ ,
  /*B990*/ GENx___x390x900 (translate_two_to_two,RRE,"TRTT"),
  /*B991*/ GENx___x390x900 (translate_two_to_one,RRE,"TRTO"),
@@ -2728,7 +2800,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E303*/ GENx___x___x900 (load_real_address_long,RXE,"LRAG"),
  /*E304*/ GENx___x___x900 (load_long,RXE,"LG"),
  /*E305*/ GENx___x___x___ ,
- /*E306*/ GENx___x___x900 (dummy_instruction,RXY,"CVBY"),
+ /*E306*/ GENx___x___x900 (convert_to_binary_y,RXY,"CVBY"),
  /*E307*/ GENx___x___x___ ,
  /*E308*/ GENx___x___x900 (add_long,RXE,"AG"),
  /*E309*/ GENx___x___x900 (subtract_long,RXE,"SG"),
@@ -2741,7 +2813,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E310*/ GENx___x___x___ ,
  /*E311*/ GENx___x___x___ ,
  /*E312*/ GENx___x___x___ ,
- /*E313*/ GENx___x___x900 (dummy_instruction,RXY,"LRAY"),
+ /*E313*/ GENx___x___x900 (load_real_address_y,RXY,"LRAY"),
  /*E314*/ GENx___x___x900 (load_long_fullword,RXE,"LGF"),
  /*E315*/ GENx___x___x900 (load_long_halfword,RXE,"LGH"),
  /*E316*/ GENx___x___x900 (load_logical_long_fullword,RXE,"LLGF"),
@@ -2760,7 +2832,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E323*/ GENx___x___x___ ,
  /*E324*/ GENx___x___x900 (store_long,RXE,"STG"),
  /*E325*/ GENx___x___x___ ,
- /*E326*/ GENx___x___x900 (dummy_instruction,RXY,"CVDY"),
+ /*E326*/ GENx___x___x900 (convert_to_decimal_y,RXY,"CVDY"),
  /*E327*/ GENx___x___x___ ,
  /*E328*/ GENx___x___x___ ,
  /*E329*/ GENx___x___x___ ,
@@ -2802,22 +2874,22 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E34D*/ GENx___x___x___ ,
  /*E34E*/ GENx___x___x___ ,
  /*E34F*/ GENx___x___x___ ,
- /*E350*/ GENx___x___x900 (dummy_instruction,RXY,"STY"),
- /*E351*/ GENx___x___x900 (dummy_instruction,RXY,"MSY"),
+ /*E350*/ GENx___x___x900 (store_y,RXY,"STY"),
+ /*E351*/ GENx___x___x900 (multiply_single_y,RXY,"MSY"),
  /*E352*/ GENx___x___x___ ,
  /*E353*/ GENx___x___x___ ,
- /*E354*/ GENx___x___x900 (dummy_instruction,RXY,"NY"),
- /*E355*/ GENx___x___x900 (dummy_instruction,RXY,"CLY"),
- /*E356*/ GENx___x___x900 (dummy_instruction,RXY,"OY"),
- /*E357*/ GENx___x___x900 (dummy_instruction,RXY,"XY"),
- /*E358*/ GENx___x___x900 (dummy_instruction,RXY,"LY"),
- /*E359*/ GENx___x___x900 (dummy_instruction,RXY,"CY"),
- /*E35A*/ GENx___x___x900 (dummy_instruction,RXY,"AY"),
- /*E35B*/ GENx___x___x900 (dummy_instruction,RXY,"SY"),
+ /*E354*/ GENx___x___x900 (and_y,RXY,"NY"),
+ /*E355*/ GENx___x___x900 (compare_logical_y,RXY,"CLY"),
+ /*E356*/ GENx___x___x900 (or_y,RXY,"OY"),
+ /*E357*/ GENx___x___x900 (exclusive_or_y,RXY,"XY"),
+ /*E358*/ GENx___x___x900 (load_y,RXY,"LY"),
+ /*E359*/ GENx___x___x900 (compare_y,RXY,"CY"),
+ /*E35A*/ GENx___x___x900 (add_y,RXY,"AY"),
+ /*E35B*/ GENx___x___x900 (subtract_y,RXY,"SY"),
  /*E35C*/ GENx___x___x___ ,
  /*E35D*/ GENx___x___x___ ,
- /*E35E*/ GENx___x___x900 (dummy_instruction,RXY,"ALY"),
- /*E35F*/ GENx___x___x900 (dummy_instruction,RXY,"SLY"),
+ /*E35E*/ GENx___x___x900 (add_logical_y,RXY,"ALY"),
+ /*E35F*/ GENx___x___x900 (subtract_logical_y,RXY,"SLY"),
  /*E360*/ GENx___x___x___ ,
  /*E361*/ GENx___x___x___ ,
  /*E362*/ GENx___x___x___ ,
@@ -2834,18 +2906,18 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E36D*/ GENx___x___x___ ,
  /*E36E*/ GENx___x___x___ ,
  /*E36F*/ GENx___x___x___ ,
- /*E370*/ GENx___x___x900 (dummy_instruction,RXY,"STHY"),
- /*E371*/ GENx___x___x900 (dummy_instruction,RXY,"LAY"),
- /*E372*/ GENx___x___x900 (dummy_instruction,RXY,"STCY"),
- /*E373*/ GENx___x___x900 (dummy_instruction,RXY,"ICY"),
+ /*E370*/ GENx___x___x900 (store_halfword_y,RXY,"STHY"),
+ /*E371*/ GENx___x___x900 (load_address_y,RXY,"LAY"),
+ /*E372*/ GENx___x___x900 (store_character_y,RXY,"STCY"),
+ /*E373*/ GENx___x___x900 (insert_character_y,RXY,"ICY"),
  /*E374*/ GENx___x___x___ ,
  /*E375*/ GENx___x___x___ ,
- /*E376*/ GENx___x___x900 (dummy_instruction,RXY,"LB"),
- /*E377*/ GENx___x___x900 (dummy_instruction,RXY,"LGB"),
- /*E378*/ GENx___x___x900 (dummy_instruction,RXY,"LHY"),
- /*E379*/ GENx___x___x900 (dummy_instruction,RXY,"CHY"),
- /*E37A*/ GENx___x___x900 (dummy_instruction,RXY,"AHY"),
- /*E37B*/ GENx___x___x900 (dummy_instruction,RXY,"SHY"),
+ /*E376*/ GENx___x___x900 (load_byte,RXY,"LB"),
+ /*E377*/ GENx___x___x900 (load_byte_long,RXY,"LGB"),
+ /*E378*/ GENx___x___x900 (load_halfword_y,RXY,"LHY"),
+ /*E379*/ GENx___x___x900 (compare_halfword_y,RXY,"CHY"),
+ /*E37A*/ GENx___x___x900 (add_halfword_y,RXY,"AHY"),
+ /*E37B*/ GENx___x___x900 (subtract_halfword_y,RXY,"SHY"),
  /*E37C*/ GENx___x___x___ ,
  /*E37D*/ GENx___x___x___ ,
  /*E37E*/ GENx___x___x___ ,
@@ -3523,7 +3595,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB11*/ GENx___x___x___ ,
  /*EB12*/ GENx___x___x___ ,
  /*EB13*/ GENx___x___x___ ,
- /*EB14*/ GENx___x___x900 (dummy_instruction,RSY,"CSY"),
+ /*EB14*/ GENx___x___x900 (compare_and_swap_y,RSY,"CSY"),
  /*EB15*/ GENx___x___x___ ,
  /*EB16*/ GENx___x___x___ ,
  /*EB17*/ GENx___x___x___ ,
@@ -3536,7 +3608,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB1E*/ GENx___x___x___ ,
  /*EB1F*/ GENx___x___x___ ,
  /*EB20*/ GENx___x___x900 (compare_logical_characters_under_mask_high,RSE,"CLMH"),
- /*EB21*/ GENx___x___x900 (dummy_instruction,RSY,"CLMY"),
+ /*EB21*/ GENx___x___x900 (compare_logical_characters_under_mask_y,RSY,"CLMY"),
  /*EB22*/ GENx___x___x___ ,
  /*EB23*/ GENx___x___x___ ,
  /*EB24*/ GENx___x___x900 (store_multiple_long,RSE,"STMG"),
@@ -3548,11 +3620,11 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB2A*/ GENx___x___x___ ,
  /*EB2B*/ GENx___x___x___ ,
  /*EB2C*/ GENx___x___x900 (store_characters_under_mask_high,RSE,"STCMH"),
- /*EB2D*/ GENx___x___x900 (dummy_instruction,RSY,"STCMY"),
+ /*EB2D*/ GENx___x___x900 (store_characters_under_mask_y,RSY,"STCMY"),
  /*EB2E*/ GENx___x___x___ ,
  /*EB2F*/ GENx___x___x900 (load_control_long,RSE,"LCTLG"),
  /*EB30*/ GENx___x___x900 (compare_and_swap_long,RSE,"CSG"),
- /*EB31*/ GENx___x___x900 (dummy_instruction,RSY,"CDSY"),
+ /*EB31*/ GENx___x___x900 (compare_double_and_swap_y,RSY,"CDSY"),
  /*EB32*/ GENx___x___x___ ,
  /*EB33*/ GENx___x___x___ ,
  /*EB34*/ GENx___x___x___ ,
@@ -3584,13 +3656,13 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB4E*/ GENx___x___x___ ,
  /*EB4F*/ GENx___x___x___ ,
  /*EB50*/ GENx___x___x___ ,
- /*EB51*/ GENx___x___x900 (dummy_instruction,SIY,"TMY"),
- /*EB52*/ GENx___x___x900 (dummy_instruction,SIY,"MVIY"),
+ /*EB51*/ GENx___x___x900 (test_under_mask_y,SIY,"TMY"),
+ /*EB52*/ GENx___x___x900 (move_immediate_y,SIY,"MVIY"),
  /*EB53*/ GENx___x___x___ ,
- /*EB54*/ GENx___x___x900 (dummy_instruction,SIY,"NIY"),
- /*EB55*/ GENx___x___x900 (dummy_instruction,SIY,"CLIY"),
- /*EB56*/ GENx___x___x900 (dummy_instruction,SIY,"OIY"),
- /*EB57*/ GENx___x___x900 (dummy_instruction,SIY,"XIY"),
+ /*EB54*/ GENx___x___x900 (and_immediate_y,SIY,"NIY"),
+ /*EB55*/ GENx___x___x900 (compare_logical_immediate_y,SIY,"CLIY"),
+ /*EB56*/ GENx___x___x900 (or_immediate_y,SIY,"OIY"),
+ /*EB57*/ GENx___x___x900 (exclusive_or_immediate_y,SIY,"XIY"),
  /*EB58*/ GENx___x___x___ ,
  /*EB59*/ GENx___x___x___ ,
  /*EB5A*/ GENx___x___x___ ,
@@ -3632,7 +3704,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB7E*/ GENx___x___x___ ,
  /*EB7F*/ GENx___x___x___ ,
  /*EB80*/ GENx___x___x900 (insert_characters_under_mask_high,RSE,"ICMH"),
- /*EB81*/ GENx___x___x900 (dummy_instruction,RSY,"ICMY"),
+ /*EB81*/ GENx___x___x900 (insert_characters_under_mask_y,RSY,"ICMY"),
  /*EB82*/ GENx___x___x___ ,
  /*EB83*/ GENx___x___x___ ,
  /*EB84*/ GENx___x___x___ ,
@@ -3647,7 +3719,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB8D*/ GENx___x___x___ ,
  /*EB8E*/ GENx___x390x900 (move_long_unicode,RSE,"MVCLU"),
  /*EB8F*/ GENx___x390x900 (compare_logical_long_unicode,RSE,"CLCLU"),
- /*EB90*/ GENx___x___x900 (dummy_instruction,RSY,"STMY"),
+ /*EB90*/ GENx___x___x900 (store_multiple_y,RSY,"STMY"),
  /*EB91*/ GENx___x___x___ ,
  /*EB92*/ GENx___x___x___ ,
  /*EB93*/ GENx___x___x___ ,
@@ -3655,10 +3727,10 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB95*/ GENx___x___x___ ,
  /*EB96*/ GENx___x___x900 (load_multiple_high,RSE,"LMH"),
  /*EB97*/ GENx___x___x___ ,
- /*EB98*/ GENx___x___x900 (dummy_instruction,RSY,"LMY"),
+ /*EB98*/ GENx___x___x900 (load_multiple_y,RSY,"LMY"),
  /*EB99*/ GENx___x___x___ ,
- /*EB9A*/ GENx___x___x900 (dummy_instruction,RSY,"LAMY"),
- /*EB9B*/ GENx___x___x900 (dummy_instruction,RSY,"STAMY"),
+ /*EB9A*/ GENx___x___x900 (load_access_multiple_y,RSY,"LAMY"),
+ /*EB9B*/ GENx___x___x900 (store_access_multiple_y,RSY,"STAMY"),
  /*EB9C*/ GENx___x___x___ ,
  /*EB9D*/ GENx___x___x___ ,
  /*EB9E*/ GENx___x___x___ ,
@@ -4127,10 +4199,10 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED61*/ GENx___x___x___ ,
  /*ED62*/ GENx___x___x___ ,
  /*ED63*/ GENx___x___x___ ,
- /*ED64*/ GENx___x___x900 (dummy_instruction,RXY,"LEY"),
- /*ED65*/ GENx___x___x900 (dummy_instruction,RXY,"LDY"),
- /*ED66*/ GENx___x___x900 (dummy_instruction,RXY,"STEY"),
- /*ED67*/ GENx___x___x900 (dummy_instruction,RXY,"STDY"),
+ /*ED64*/ GENx___x___x900 (load_float_short_y,RXY,"LEY"),
+ /*ED65*/ GENx___x___x900 (load_float_long_y,RXY,"LDY"),
+ /*ED66*/ GENx___x___x900 (store_float_short_y,RXY,"STEY"),
+ /*ED67*/ GENx___x___x900 (store_float_long_y,RXY,"STDY"),
  /*ED68*/ GENx___x___x___ ,
  /*ED69*/ GENx___x___x___ ,
  /*ED6A*/ GENx___x___x___ ,
