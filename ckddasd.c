@@ -2104,7 +2104,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2237,7 +2237,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2339,7 +2339,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2486,7 +2486,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -2717,7 +2717,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdpos = num;
 
         /* Return unit exception if data length is zero */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
         else
             *unitstat = CSW_CE | CSW_DE;
@@ -3419,7 +3419,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         } /* end if(ckdlcount) */
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;
@@ -3505,7 +3505,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;
@@ -3616,7 +3616,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         } /* end if(ckdlcount) */
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;
@@ -3702,7 +3702,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* If data length is zero, terminate with unit exception */
-        if (dev->ckdcurdl == 0 && count != 0)
+        if (dev->ckdcurdl == 0)
         {
             *unitstat = CSW_CE | CSW_DE | CSW_UX;
             break;

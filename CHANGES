@@ -1,3 +1,6 @@
+23 Mar 2001 Set `unit check' status when EOF CKD record read
+            even if count field is zero - Greg Smith 
+23 Mar 2001 Bypass number of cylinder check in cckdcdsk.c - Greg Smith
 22 Mar 2001 Implement XSTORE in ESAME mode - Jan Jaeger
 22 Mar 2001 Implement fast interrupt processing for MCK and PER - Jan Jaeger
 22 Mar 2001 Correct interruption identification word - Jan Jaeger

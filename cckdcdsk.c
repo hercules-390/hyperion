@@ -382,6 +382,7 @@ char *compression[] = {"none", "zlib", "bzip2"};
 
     for (i = 0; cyltab[i]; i++)
        if (hdrcyls == cyltab[i]) break;
+#if 0
     if (cyltab[i] == 0)
     {
         cdskmsg (m, "Invalid number of cylinders in header: "
@@ -391,6 +392,7 @@ char *compression[] = {"none", "zlib", "bzip2"};
         cdskmsg (m, "and found %d\n", hdrcyls);
         goto cdsk_return;
     }
+#endif
 
     if (cdevhdr.numl1tab < (hdrcyls * heads + 255) / 256
      || cdevhdr.numl1tab > (hdrcyls * heads + 255) / 256 + 1)
