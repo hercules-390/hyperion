@@ -380,11 +380,11 @@ RADR    ag,                             /* Abs Guest addr of TTE     */
     sysblk.mainstor[n++] = 0x32;
     sysblk.mainstor[n++] = regs->psw.pkey;
     STORE_HW(sysblk.mainstor + n,pasn); n += 2;
-    STORE_FW(sysblk.mainstor + n, (regs->psw.amode << 31)
-                                | regs->psw.IA | newregs->psw.prob);
-    n += 4;
     STORE_FW(sysblk.mainstor + n, (newregs->psw.amode << 31)
-                                 | newregs->psw.IA);
+                                | newregs->psw.IA | newregs->psw.prob);
+    n += 4;
+    STORE_FW(sysblk.mainstor + n, (regs->psw.amode << 31)
+                                 | regs->psw.IA);
     n += 4;
 
 #if defined(_FEATURE_SIE)
