@@ -564,8 +564,6 @@ int             len;                    /* Length left to copy       */
     /* Calculate the block index and offset */
     ix = dev->fbarba / CFBA_BLOCK_SIZE;
     off = dev->fbarba % CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
-    cckdtrc ("cfba_read_block rba %lld len %d ix %d offset %d cur %d\n",
-             dev->fbarba, len, ix, off, dev->dasdcur);
 
     /* Read the block group if it's not currently active */
     if (!cckd->active || ix != dev->dasdcur)
@@ -603,8 +601,6 @@ int             len;                    /* Length left to copy       */
 
         /* Copy from the cache buffer to the caller's buffer */
         memcpy (&buf[bufoff], &cckd->active->buf[off], copylen);
-cckdtrc("cfba_read_block copy from blk[%d][%d] to buf[%d] len %d\n",
-ix, off, bufoff, copylen);
         off += copylen;
 
         /* Read the next block group if necessary */
@@ -666,8 +662,6 @@ int             len;                    /* Length left to copy       */
     /* Calculate the block index and offset */
     ix = dev->fbarba / CFBA_BLOCK_SIZE;
     off = dev->fbarba % CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
-    cckdtrc ("cfba_write_block rba %lld len %d ix %d offset %d cur %d\n",
-             dev->fbarba, len, ix, off, dev->dasdcur);
 
     /* Read the block group if it's not currently active */
     if (!cckd->active || ix != dev->dasdcur)
@@ -705,8 +699,6 @@ int             len;                    /* Length left to copy       */
 
         /* Copy to the cache buffer from the caller's buffer */
         memcpy (&cckd->active->buf[off], &buf[bufoff], copylen);
-cckdtrc("cfba_write_block copy to blk[%d][%d] from buf[%d] len %d\n",
-ix, off, bufoff, copylen);
         off += copylen;
 
         /* Update the cache entry flags */

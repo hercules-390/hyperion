@@ -1,3 +1,4 @@
+14 Jun 2002 Remove cfba debugs - Greg Smith
 14 Jun 2002 Set `more' if residual data after fba write - Tomas Masek by Greg Smith
 13 Jun 2002 Another cfba fix (segmentation fault after detach while trace active) - Greg Smith
 13 Jun 2002 READ BACKWARD support for tapes added - Volker Bandke (Original patch: Hax 28 by Hackules)
