@@ -1177,6 +1177,12 @@ typedef struct _DEVBLK {
         BYTE    prevcode;               /* Previous CCW opcode       */
         int     ccwseq;                 /* CCW sequence number       */
 
+        U32     ccwaddr;
+        U16     idapmask;
+        BYTE    idawfmt;
+        BYTE    ccwfmt;
+        BYTE    ccwkey;
+
         /*  device handler function pointers...                      */
 
         struct _DEVHND *hnd;            /* -> Device handlers        */

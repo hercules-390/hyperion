@@ -384,6 +384,11 @@
 #define SR_DEV_ATTNPENDING      0xace30025
 #define SR_DEV_STARTPENDING     0xace30026
 #define SR_DEV_CRWPENDING       0xace30027
+#define SR_DEV_CCWADDR          0xace30028
+#define SR_DEV_IDAPMASK         0xace30029
+#define SR_DEV_IDAWFMT          0xace3002a
+#define SR_DEV_CCWFMT           0xace3002b
+#define SR_DEV_CCWKEY           0xace3002c
 
 #define SR_DEV_MASK             0xfffff000 
 #define SR_DEV_CKD              0xace31000

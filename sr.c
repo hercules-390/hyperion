@@ -252,6 +252,11 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_DEV_PENDING, dev->pending, 1);
         SR_WRITE_VALUE(file, SR_DEV_STARTPENDING, dev->startpending, 1);
         SR_WRITE_VALUE(file, SR_DEV_CRWPENDING, dev->crwpending, 1);
+        SR_WRITE_VALUE(file, SR_DEV_CCWADDR, dev->ccwaddr, sizeof(dev->ccwaddr));
+        SR_WRITE_VALUE(file, SR_DEV_IDAPMASK, dev->idapmask, sizeof(dev->idapmask));
+        SR_WRITE_VALUE(file, SR_DEV_IDAWFMT, dev->idawfmt, sizeof(dev->idawfmt));
+        SR_WRITE_VALUE(file, SR_DEV_CCWFMT, dev->ccwfmt, sizeof(dev->ccwfmt));
+        SR_WRITE_VALUE(file, SR_DEV_CCWKEY, dev->ccwkey, sizeof(dev->ccwkey));
 
         /* Device type specific data */
         SR_WRITE_VALUE(file, SR_DEV_DEVTYPE, dev->devtype, sizeof(dev->devtype));
@@ -1155,6 +1160,31 @@ BYTE     buf[SR_MAX_STRING_LENGTH+1];
             SR_SKIP_NULL_DEV(dev, file, len);
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             dev->crwpending = rc;
+            break;
+
+        case SR_DEV_CCWADDR:
+            SR_SKIP_NULL_DEV(dev, file, len);
+            SR_READ_VALUE(file, len, &dev->ccwaddr, sizeof(dev->ccwaddr));
+            break;
+
+        case SR_DEV_IDAPMASK:
+            SR_SKIP_NULL_DEV(dev, file, len);
+            SR_READ_VALUE(file, len, &dev->idapmask, sizeof(dev->idapmask));
+            break;
+
+        case SR_DEV_IDAWFMT:
+            SR_SKIP_NULL_DEV(dev, file, len);
+            SR_READ_VALUE(file, len, &dev->idawfmt, sizeof(dev->idawfmt));
+            break;
+
+        case SR_DEV_CCWFMT:
+            SR_SKIP_NULL_DEV(dev, file, len);
+            SR_READ_VALUE(file, len, &dev->ccwfmt, sizeof(dev->ccwfmt));
+            break;
+
+        case SR_DEV_CCWKEY:
+            SR_SKIP_NULL_DEV(dev, file, len);
+            SR_READ_VALUE(file, len, &dev->ccwkey, sizeof(dev->ccwkey));
             break;
 
         /* This is the trigger to call the device dependent resume routine */

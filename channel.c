@@ -2446,8 +2446,23 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                     logmsg (_("HHCCP073I Device %4.4X suspended\n"),
                             dev->devnum);
 
-                /* Suspend the device until resume instruction */
+// FIXME: Not a very elegant way to fix the suspend/resume problem
+                dev->ccwaddr = ccwaddr;
+                dev->idapmask = idapmask;
+                dev->idawfmt = idawfmt;
+                dev->ccwfmt = ccwfmt;
+                dev->ccwkey = ccwkey;
+
 resume_suspend:
+
+                ccwaddr = dev->ccwaddr;
+                idapmask = dev->idapmask;
+                idawfmt = dev->idawfmt;
+                ccwfmt = dev->ccwfmt;
+                ccwkey = dev->ccwkey;
+
+                /* Suspend the device until resume instruction */
+
                 while (dev->suspended && (dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
                 {
                     wait_condition (&dev->resumecond, &dev->lock);
