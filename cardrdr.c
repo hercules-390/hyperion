@@ -428,11 +428,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     }
 
     /* Open the device file */
-#ifdef WIN32
     rc = open (dev->filename, O_RDONLY | O_BINARY);
-#else /* WIN32 */
-    rc = open (dev->filename, O_RDONLY);
-#endif /* WIN32 */
     if (rc < 0)
     {
         /* Handle open failure */
