@@ -897,15 +897,17 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
     l1tabsz = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
 
     /* Perform space checks */
-    if ((U32)cdevhdr.size != (U32)fst.st_size
-     || (U32)(cdevhdr.used + cdevhdr.free_total) != (U32)fst.st_size
-     || (U32)cdevhdr.free_largest > (U32)cdevhdr.free_total
-     || (!cdevhdr.free
-      && (cdevhdr.free_total || (U32)cdevhdr.free_number != (U32)0))
-     || (cdevhdr.free
-      && (!cdevhdr.free_total || !cdevhdr.free_number))
-     || (!cdevhdr.free_number && cdevhdr.free_total)
-     || (cdevhdr.free_number && !cdevhdr.free_total))
+    if ((off_t)cdevhdr.size != fst.st_size
+     || (off_t)(cdevhdr.used + cdevhdr.free_total) != fst.st_size
+     || (cdevhdr.free_largest > cdevhdr.free_total - cdevhdr.free_imbed)
+     || (cdevhdr.free == 0
+      && (cdevhdr.free_total != cdevhdr.free_imbed || cdevhdr.free_number != 0))
+     || (cdevhdr.free != 0
+      && (cdevhdr.free_total <= cdevhdr.free_imbed || cdevhdr.free_number == 0))
+     || (cdevhdr.free_number == 0 && cdevhdr.free_total != cdevhdr.free_imbed)
+     || (cdevhdr.free_number != 0 && cdevhdr.free_total <= cdevhdr.free_imbed)
+     || (cdevhdr.free_imbed > cdevhdr.free_total)
+       )
     {
         CDSKMSG (m, "Recoverable header errors found: "
                  "%d %d %d %d %d %d %d\n",
@@ -914,7 +916,7 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
                  (unsigned int)cdevhdr.used,
                  (unsigned int)cdevhdr.free_total,
                  (unsigned int)cdevhdr.free_largest,
-                 (unsigned int)cdevhdr.free,
+                 (unsigned int)cdevhdr.free_imbed,
                  (unsigned int)cdevhdr.free_number);
         hdrerr = 1;
         if (level < 1)

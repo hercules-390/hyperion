@@ -2039,9 +2039,10 @@ size_t          size;
 void cckd_rel_space(DEVBLK *dev, off_t pos, int len, int size)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-off_t           fpos;                   /* Free space offset         */
-int             i, p, n;                /* Free space indexes        */
 int             sfx;                    /* Shadow file index         */
+off_t           ppos, npos;             /* Prev/next free offsets    */
+int             i, p, n;                /* Free space indexes        */
+int             pending;                /* Calculated pending value  */
 
     if (len <= 1 || pos == 0 || pos == 0xffffffff) return;
 
@@ -2055,65 +2056,72 @@ int             sfx;                    /* Shadow file index         */
 
 //  cckd_chk_space(dev);
 
-    /* Increase the size of the free space array if necessary */
-    if (cckd->freeavail < 0)
-    {
-        cckd->freeavail = cckd->freenbr;
-        cckd->freenbr += 1024;
-        cckd->free =
-             realloc ( cckd->free, cckd->freenbr * CCKD_FREEBLK_ISIZE);
-        for (i = cckd->freeavail; i < cckd->freenbr; i++)
-            cckd->free[i].next = i + 1;
-        cckd->free[i-1].next = -1;
-    }
-
-    /* Get a free space entry */
-    i = cckd->freeavail;
-    cckd->freeavail = cckd->free[i].next;
-    cckd->free[i].len = size;
-    if (cckdblk.freepend >= 0)
-        cckd->free[i].pending = cckdblk.freepend;
-    else
-        cckd->free[i].pending = 1 + (1 - cckdblk.fsync);
-
-    /* Update the free space statistics */
-    cckd->cdevhdr[sfx].free_number++;
-    cckd->cdevhdr[sfx].used -= len;
-    cckd->cdevhdr[sfx].free_total += len;
-    cckd->cdevhdr[sfx].free_imbed -= size - len;
-
     /* Scan free space chain */
-    fpos = cckd->cdevhdr[sfx].free;
+    ppos = -1;
+    npos = cckd->cdevhdr[sfx].free;
     for (p = -1, n = cckd->free1st; n >= 0; n = cckd->free[n].next)
     {
-        if (pos < fpos) break;
-        fpos = cckd->free[n].pos;
+        if (pos < npos) break;
+        ppos = npos;
+        npos = cckd->free[n].pos;
         p = n;
     }
 
-    /* Insert the new entry into the chain */
-    cckd->free[i].prev = p;
-    cckd->free[i].next = n;
+    /* Calculate the `pending' value */
+    pending = cckdblk.freepend >= 0 ? cckdblk.freepend : 1 + (1 - cckdblk.fsync);
 
-    /* Update the previous entry */
-    if (p >= 0)
-    {
-        cckd->free[i].pos = cckd->free[p].pos;
-        cckd->free[p].pos = pos;
-        cckd->free[p].next = i;
-    }
+    /* If possible use previous adjacent free space otherwise get an available one */
+    if (p >= 0 && ppos + cckd->free[p].len == pos && cckd->free[p].pending == pending)
+        cckd->free[p].len += size;
     else
     {
-        cckd->free[i].pos = cckd->cdevhdr[sfx].free;
-        cckd->cdevhdr[sfx].free = pos;
-        cckd->free1st = i;
+        /* Increase the size of the free space array if necessary */
+        if (cckd->freeavail < 0)
+        {
+            cckd->freeavail = cckd->freenbr;
+            cckd->freenbr += 1024;
+            cckd->free = realloc ( cckd->free, cckd->freenbr * CCKD_FREEBLK_ISIZE);
+            for (i = cckd->freeavail; i < cckd->freenbr; i++)
+                cckd->free[i].next = i + 1;
+            cckd->free[i-1].next = -1;
+        }
+
+        /* Get an available free space entry */
+        i = cckd->freeavail;
+        cckd->freeavail = cckd->free[i].next;
+        cckd->cdevhdr[sfx].free_number++;
+
+        /* Update the new entry */
+        cckd->free[i].prev = p;
+        cckd->free[i].next = n;
+        cckd->free[i].len = size;
+        cckd->free[i].pending = pending;
+
+        /* Update the previous entry */
+        if (p >= 0)
+        {
+            cckd->free[i].pos = cckd->free[p].pos;
+            cckd->free[p].pos = pos;
+            cckd->free[p].next = i;
+        }
+        else
+        {
+            cckd->free[i].pos = cckd->cdevhdr[sfx].free;
+            cckd->cdevhdr[sfx].free = pos;
+            cckd->free1st = i;
+        }
+
+        /* Update the next entry */
+        if (n >= 0)
+            cckd->free[n].prev = i;
+        else
+            cckd->freelast = i;
     }
 
-    /* Update the next entry */
-    if (n >= 0)
-        cckd->free[n].prev = i;
-    else
-        cckd->freelast = i;
+    /* Update the free space statistics */
+    cckd->cdevhdr[sfx].used -= len;
+    cckd->cdevhdr[sfx].free_total += len;
+    cckd->cdevhdr[sfx].free_imbed -= size - len;
 
 //  cckd_chk_space(dev);
 

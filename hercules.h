@@ -1631,7 +1631,7 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 /* 24 */U32              free_total;    /* Total free space          */
 /* 28 */U32              free_largest;  /* Largest free space        */
 /* 32 */S32              free_number;   /* Number free spaces        */
-/* 36 */S32              free_imbed;    /* [deprecated]              */
+/* 36 */U32              free_imbed;    /* Imbedded free space       */
 /* 40 */FWORD            cyls;          /* Cylinders on device       */
 /* 44 */BYTE             resv1;         /* Reserved                  */
 /* 45 */BYTE             compress;      /* Compression algorithm     */

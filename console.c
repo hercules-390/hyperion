@@ -2020,17 +2020,15 @@ loc3270_hresume(DEVBLK *dev, void *file)
             dev->ewa3270 = rc;
             break;
         case SR_DEV_3270_BUF:
-            if (rbuflen == len)
+            rbuflen = len;
+            rbuf = malloc(len);
+            if (rbuf == NULL)
             {
-                rbuf = malloc(len);
-                if (rbuf == NULL)
-                {
-                    logmsg(_("HHCTE090E %4.4X malloc() failed for resume buf: %s\n"),
-                           dev->devnum, strerror(errno));
-                    return 0;
-                }
-                SR_READ_BUF(file, rbuf, rbuflen);
+                logmsg(_("HHCTE090E %4.4X malloc() failed for resume buf: %s\n"),
+                       dev->devnum, strerror(errno));
+                return 0;
             }
+            SR_READ_BUF(file, rbuf, rbuflen);
             break;
         default:
             SR_READ_SKIP(file, len);

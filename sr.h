@@ -521,7 +521,7 @@ do { \
 #define SR_READ_HDR(_file, _key, _len) \
 do { \
   size_t _rc; \
-  size_t _buf[8]; \
+  BYTE _buf[8]; \
   _rc = SR_READ(_buf, 1, 8, (_file)); \
   if (_rc != 8) SR_READ_ERROR; \
   (_key) = fetch_fw(_buf); \
