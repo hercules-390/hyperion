@@ -793,7 +793,11 @@ int volatile initdone = 0;           /* Initialization complete flag */
 void gui_devlist_status (FILE *confp);
 #endif
 
+#if defined(OPTION_DYNAMIC_LOAD)
+void panel_display_r (void)
+#else
 void panel_display (void)
+#endif
 {
 int     rc;                             /* Return code               */
 int     i, n;                           /* Array subscripts          */
@@ -825,7 +829,6 @@ BYTE    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
 int     cmdoff = 0;                     /* Number of bytes in cmdline*/
-TID     cmdtid;                         /* Command thread identifier */
 BYTE    c;                              /* Character work area       */
 FILE   *confp;                          /* Console file pointer      */
 struct termios kbattr;                  /* Terminal I/O structure    */
@@ -993,19 +996,19 @@ struct  timeval tv;                     /* Select timeout structure  */
                             break;
                         case 'S':                   /* START */
                         case 's':
-                            ASYNCHRONOUS_PANEL_CMD("start");
+                            panel_command("start");
                             break;
                         case 'P':                   /* STOP */
                         case 'p':
-                            ASYNCHRONOUS_PANEL_CMD("stop");
+                            panel_command("stop");
                             break;
                         case 'T':                   /* RESTART */
                         case 't':
-                            ASYNCHRONOUS_PANEL_CMD("restart");
+                            panel_command("restart");
                             break;
                         case 'E':                   /* Ext int */
                         case 'e':
-                            ASYNCHRONOUS_PANEL_CMD("ext");
+                            panel_command("ext");
                             redraw_status = 1;
                             break;
                         case 'O':                   /* Store */
@@ -1089,7 +1092,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             sprintf(NPdevstr, "%x", NPdevaddr[i]);
                             strcpy(cmdline, "ipl ");
                             strcat(cmdline, NPdevstr);
-                            ASYNCHRONOUS_PANEL_CMD(cmdline);
+                            panel_command(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
                             break;
@@ -1110,7 +1113,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             sprintf(NPdevstr, "%x", NPdevaddr[i]);
                             strcpy(cmdline, "i ");
                             strcat(cmdline, NPdevstr);
-                            ASYNCHRONOUS_PANEL_CMD(cmdline);
+                            panel_command(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
                             break;
@@ -1147,7 +1150,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             break;
                         case 4:                     /* IPL - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                                ASYNCHRONOUS_PANEL_CMD("quit");
+                                panel_command("quit");
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
@@ -1319,7 +1322,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             }
                             else
                             {
-                                ASYNCHRONOUS_PANEL_CMD(cmdline);
+                                panel_command(cmdline);
                             }
                         }
                     } else {
@@ -1348,7 +1351,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                                 strcat(NPentered, NPdevstr);
                                 strcat(NPentered, " ");
                                 strcat(NPentered, cmdline);
-                                ASYNCHRONOUS_PANEL_CMD(NPentered);
+                                panel_command(NPentered);
                                 strcpy(NPprompt2, "");
                                 break;
                             default:

@@ -73,6 +73,11 @@
 #include <bzlib.h>
 #endif
 
+#if defined(OPTION_DYNAMIC_LOAD)
+#include <dlfcn.h>
+#include "hdl.h"
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
 #if defined(BUILTIN_MEMRCHR)
 #include "memrchr.h"
 #endif
@@ -146,16 +151,6 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #define HANDLE int
 #define DWORD int       /* will be undefined later */
 #endif
-
-/*-------------------------------------------------------------------*/
-/* Macro for issuing panel commands                                  */
-/*-------------------------------------------------------------------*/
-
-#define SYNCHRONOUS_PANEL_CMD(cmdline) \
-    panel_command((cmdline))
-
-#define ASYNCHRONOUS_PANEL_CMD(cmdline) \
-    create_thread(&cmdtid,&sysblk.detattr,panel_command,(cmdline))
 
 /*-------------------------------------------------------------------*/
 /* Macro definitions for tracing                                     */
@@ -1628,7 +1623,6 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 
 /* Global data areas and functions in module panel.c */
 extern int volatile initdone;    /* Initialization complete flag */
-extern void panel_display (void);
 extern LIST_ENTRY  bind_head;
 extern LOCK        bind_lock;
 extern int bind_device   (DEVBLK* dev, char* spec);
@@ -1677,7 +1671,16 @@ extern int unbind_device (DEVBLK* dev);
 
 
 /* Functions in module panel.c */
+#if defined(OPTION_DYNAMIC_LOAD)
+void *panel_command_r (void *cmdline);
+void *(*panel_command) (void *);
+
+void panel_display_r (void);
+void (*panel_display) (void);
+#else
 void *panel_command (void *cmdline);
+void panel_display (void);
+#endif
 
 /* Functions in module timer.c */
 void update_TOD_clock (void);

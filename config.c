@@ -646,6 +646,18 @@ BYTE **newargv;
         }
         else
         {
+#if defined(OPTION_DYNAMIC_LOAD)
+            if (!strcasecmp (keyword, "ldmod"))
+            {
+                hdl_load(operand);
+
+                for(i = 0; i < addargc; i++)
+                    hdl_load(addargv[i]);
+
+                addargc = 0;
+            }
+            else
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
             if (strcasecmp (keyword, "cpuserial") == 0)
             {
                 sserial = operand;

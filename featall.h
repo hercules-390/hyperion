@@ -42,6 +42,7 @@
 
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 
+#define OPTION_DYNAMIC_LOAD             /* Loadable module support   */
 
 /* Allow for compiler command line overrides */
 #if defined(OPTION_370_MODE) && defined(NO_370_MODE)

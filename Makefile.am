@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4  intl m4  intl m4  intl m4  intl m4  intl m4  intl m4  intl m4 po util html man
+SUBDIRS = intl m4 po util html man
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -71,7 +71,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   httpserv.c cgibin.c devtype.c codepage.c \
 	   ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
 	   logger.c commadpt.c cache.c ecpsvm.c shared.c \
-	   $(MEMRCHR) hscutl.c logmsg.c
+	   $(MEMRCHR) hscutl.c logmsg.c hdl.c hdlmain.c
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
@@ -175,7 +175,7 @@ noinst_HEADERS  = fishhang.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
-    ecpsvm.h memrchr.h shared.h hscutl.h
+    ecpsvm.h memrchr.h shared.h hscutl.h hdl.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \

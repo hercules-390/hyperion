@@ -172,6 +172,11 @@ TID     rctid;                          /* RC file thread identifier */
     /* Display the version identifier */
     display_version (stdout, "Hercules ");
 
+#if defined(OPTION_DYNAMIC_LOAD)
+    /* Initialize the hercules dynalic loader */
+    hdl_main();
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
     bindtextdomain(PACKAGE, LOCALEDIR);

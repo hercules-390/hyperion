@@ -2206,7 +2206,7 @@ BYTE   *p;                              /* (work)                    */
 
         for (p = scrbuf; isspace(*p); p++);
 
-        SYNCHRONOUS_PANEL_CMD(p);
+        panel_command(p);
         script_test_userabort();
         if(scr_aborted)
         {
@@ -2442,6 +2442,70 @@ int aea_cmd(char* cmdline, int argc, char *argv[])
     return 0;
 }
 
+#if defined(OPTION_DYNAMIC_LOAD)
+///////////////////////////////////////////////////////////////////////
+/* ldmod - load a module */
+
+int ldmod_cmd(char* cmdline, int argc, char *argv[])
+{
+    int     i;                          /* Index                     */
+
+    UNREFERENCED(cmdline);
+
+    if(argc <= 1)
+    {
+        logmsg("Usage: %s <module>\n",argv[0]);
+        return -1;
+    }
+
+    for(i = 1; i < argc; i++)
+    {
+        logmsg("HHCHD100I Loading %s\n",argv[i]);
+        hdl_load(argv[i]);
+    }
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* rmmod - delete a module */
+
+int rmmod_cmd(char* cmdline, int argc, char *argv[])
+{
+    int     i;                          /* Index                     */
+
+    UNREFERENCED(cmdline);
+
+    if(argc <= 1)
+    {
+        logmsg("Usage: %s <module>\n",argv[0]);
+        return -1;
+    }
+
+    for(i = 1; i < argc; i++)
+    {
+        logmsg("HHCHD101I Unloading %s\n",argv[i]);
+        hdl_dele(argv[i]);
+    }
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* lsmod - list dynamic modules */
+
+int lsmod_cmd(char* cmdline, int argc, char *argv[])
+{
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
+    hdl_list();
+
+    return 0;
+}
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
 #ifdef FEATURE_ECPSVM
 int evm_cmd(char* cmdline, int argc, char *argv[])
 {
@@ -2542,6 +2606,12 @@ COMMAND ( "pgmtrace",  pgmtrace_cmd,  "trace program interrupts" )
 COMMAND ( "savecore",  savecore_cmd,  "save a core image to file" )
 COMMAND ( "loadcore",  loadcore_cmd,  "load a core image file" )
 COMMAND ( "loadtext",  loadtext_cmd,  "load a text deck file\n" )
+
+#if defined(OPTION_DYNAMIC_LOAD)
+COMMAND ( "ldmod",     ldmod_cmd,     "load a module\n" )
+COMMAND ( "rmmod",     rmmod_cmd,     "delete a module\n" )
+COMMAND ( "lsmod",     lsmod_cmd,     "list dynamic modules\n" )
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
 COMMAND ( "iodelay",   iodelay_cmd,   "display or set I/O delay value" )
@@ -2871,7 +2941,11 @@ int HelpCommand(char* cmdline, int argc, char *argv[])
 
 ///////////////////////////////////////////////////////////////////////
 
+#if defined(OPTION_DYNAMIC_LOAD)
+void *panel_command_r (void *cmdline)
+#else
 void *panel_command (void *cmdline)
+#endif
 {
 #define MAX_CMD_LEN (32768)
     BYTE  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
