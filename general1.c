@@ -3027,7 +3027,7 @@ GREG    len3;
             GR_A(r2, regs) = addr2;
             regs->psw.cc =  3;
             logmsg ("MVCL destructive overlap: ");
-	    ARCH_DEP(display_inst) (regs, regs->inst);
+	    ARCH_DEP(display_inst) (regs, inst);
             return;
         }
     }
