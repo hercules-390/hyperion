@@ -1,3 +1,5 @@
 bin_SCRIPTS = dasdlist
 
-EXTRA_DIST = cckddump.hla  dasdlist  dasdlist.bat  tapeconv.jcl  zzsacard.bin
+pkgdata_DATA = cckddump.hla tapeconv.jcl zzsacard.bin
+
+EXTRA_DIST = dasdlist  dasdlist.bat
