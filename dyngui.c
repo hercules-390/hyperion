@@ -413,7 +413,7 @@ void*  gui_panel_command (char* pszCommand)
         parse_args( pszCommandWork, MAX_ARGS, pszArgPtrArray, &nArgs );
 
 #ifdef OPTION_MIPS_COUNTING
-        if ( strcasecmp( pszArgPtrArray[0], "maxrates" ) == 0 )
+        if ( nArgs && strcasecmp( pszArgPtrArray[0], "maxrates" ) == 0 )
         {
             logmsg( "%s\n", pszCommand );     // (echo command to console)
 
