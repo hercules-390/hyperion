@@ -961,7 +961,7 @@ REGS   *regs;                           /* -> CPU register context   */
 U32     aaddr;                          /* Absolute storage address  */
 U16     devnum;                         /* Device number             */
 U16     newdevn;                        /* Device number             */
-char    *devtype;                       /* Device type               */
+char   *sdevtype;                       /* Device type in char form  */
 DEVBLK *dev;                            /* -> Device block           */
 BYTE    c;                              /* Character work area       */
 int     rc;                             /* Return code               */
@@ -2326,6 +2326,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     /* attach command - configure a device */
     if (memcmp(cmd,"attach",6)==0)
     {
+        U16 dummy;
         devascii = strtok(cmd+6," \t");
         if (devascii == NULL
             || sscanf(devascii, "%hx%c", &devnum, &c) != 1)
@@ -2334,19 +2335,19 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-        devascii = strtok(NULL," \t");
-        if (devascii == NULL
-            || sscanf(devascii, "%hx%c", &devtype, &c) != 1)
+        sdevtype = strtok(NULL," \t");
+        if (sdevtype == NULL
+            || sscanf(sdevtype, "%hx%c", &dummy, &c) != 1)
         {
-            logmsg (_("Device type %s is invalid\n"), devascii);
+            logmsg (_("Device type %s is invalid\n"), sdevtype);
             return NULL;
         }
 
         /* Set up remaining arguments for initialization handler */
-        parse_args (devascii+strlen(devascii)+1, MAX_ARGS, devargv, &devargc);
+        parse_args (sdevtype+strlen(sdevtype)+1, MAX_ARGS, devargv, &devargc);
 
         /* Attach the device */
-        attach_device(devnum, devtype, devargc, devargv);
+        attach_device(devnum, sdevtype, devargc, devargv);
 
         return NULL;
     }
