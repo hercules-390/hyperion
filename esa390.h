@@ -88,9 +88,10 @@ typedef struct _PSW {
 	BYTE	sysmask;		/* System mask		     */
 	BYTE	pkey;			/* Bits 0-3=key, 4-7=zeroes  */
 	BYTE	ilc;			/* Instruction length code   */
-	BYTE	cc;			/* Condition code	     */
+	BYTE	cc;			    /* Condition code	     */
 	U16	intcode;		/* Interruption code	     */
-	DW	ia;			/* Instruction addrress      */
+	DW	ia;			    /* Instruction addrress      */
+        BYTE    zerobyte;       /* bits 24-31                */
 #define IA_G	ia.D
 #define IA_H	ia.F.H.F
 #define IA_L	ia.F.L.F

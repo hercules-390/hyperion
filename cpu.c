@@ -50,7 +50,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                     | (regs->psw.cc << 4)
                     | (regs->psw.fomask << 3) | (regs->psw.domask << 2)
                     | (regs->psw.eumask << 1) | regs->psw.sgmask;
-        addr[3] = 0;
+        addr[3] = regs->psw.zerobyte;
         STORE_FW(addr + 4,regs->psw.IA); addr[4] |= regs->psw.amode << 7;
 #endif /*!defined(FEATURE_ESAME)*/
 #if defined(FEATURE_BCMODE)
@@ -95,6 +95,8 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_PSW_WAIT(regs);
+
+    regs->psw.zerobyte = addr[3];
 
 #if defined(FEATURE_BCMODE)
     if ( regs->psw.ecmode ) {
