@@ -152,6 +152,11 @@ CFLAGS += -DHET_BZIP2
 LFLAGS += -lbz2
 endif
 
+ifeq ($(LINKMAP),no)
+else
+LFLAGS +=  -Xlinker -Map -Xlinker hercules.map
+endif
+
 EXEFILES = hercules \
 	   dasdinit \
 	   dasdisup \
@@ -292,13 +297,6 @@ HEADERS  = feat370.h \
 
 all:  $(EXEFILES)
 
-ifeq ($(LINKMAP),yes)
-hercules:  $(HRC_OBJS)
-	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS) -Xlinker -Map -Xlinker hercules.map
-else
-hercules:  $(HRC_OBJS)
-	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS)
-endif
 
 $(HRC_OBJS): %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ -c $<
