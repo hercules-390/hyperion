@@ -4941,9 +4941,9 @@ int     i1, i2;
         regs->fpr[i1+1] = regs->fpr[i2+1];
 
         /* Low order register */
-        regs->fpr[i1+FPREX] = ((regs->fpr[i2] ^ 0x80000000) & 0x80000000)
-                            | ((regs->fpr[i2] - (14 << 24)) & 0x7F000000)
-                            | (regs->fpr[i2+FPREX] & 0x00FFFFFF);
+        regs->fpr[i1+FPREX] = (regs->fpr[i1] & 0x80000000)
+                           |(((regs->fpr[i1] & 0x7F000000) - 0x0E000000) & 0x7F000000)
+                           |  (regs->fpr[i2+FPREX] & 0x00FFFFFF);
         regs->fpr[i1+FPREX+1] = regs->fpr[i2+FPREX+1];
 
         /* Set condition code */
