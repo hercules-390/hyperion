@@ -6,7 +6,7 @@ Hercules Version 2: System Messages: DL - dasdload</TITLE>
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Hercules Version 2: System Messages: DI - dasdload</h1>
+<h1>Hercules Version 2: System Messages: DL - dasdload</h1>
 <p>
 This page describes the messages for the Hercules S/370,
 ESA/390, and z/Architecture emulator utility program <code>dasdload</code>.
@@ -19,25 +19,12 @@ information messages to be issued.
 <h3>Messages</h3>
 <dl>
 <dt><code><a name="HHCDL001E">
-HHCDL001E 
-</a></code>
-<dd><dl>
-  <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
-  <dt>Issued by
-  <dd>dasdload.c, function 
-  </dl>
-<dt><code><a name="HHCDL001E">
 HHCDL001E Cannot open <em>filename</em>: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The control file named $#@filename@#$ cannot be opened. The error is
-described by $#@error@#$.
+  <dd>The control file named <code><em>filename</em></code> cannot be opened. The error is
+described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
@@ -48,7 +35,7 @@ HHCDL002E Volume serial statement missing from <em>filename</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The control file named $#@filename@#$ does not contain a volume
+  <dd>The control file named <code><em>filename</em></code> does not contain a volume
 serial statement. One is required.
   <dt>Action
   <dd>Supply a volume serial statement and rerun <code>dasdload</code>.
@@ -61,8 +48,8 @@ line <em>lineno</em> is not valid
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The volume serial $#@serial@#$ supplied in line $#@lineno@#$
-of the control file named $#@filename@#$ is not valid. It must be from one
+  <dd>The volume serial <code><em>serial</em></code> supplied in line <code><em>lineno</em></code>
+of the control file named <code><em>filename</em></code> is not valid. It must be from one
 to six characters long.
   <dt>Action
   <dd>Supply a valid volume serial and rerun <code>dasdload</code>.
@@ -75,8 +62,8 @@ line <em>lineno</em> is not recognized
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The device type $#@type@#$ specified in line $#@lineno@#$ of the
-control file named $#@filename@#$ is not a supported CKD device.
+  <dd>The device type <code><em>type</em></code> specified in line <code><em>lineno</em></code> of the
+control file named <code><em>filename</em></code> is not a supported CKD device.
   <dt>Action
   <dd>Specify a supported CKD device type and rerun <code>dasdload</code>.
   <dt>Issued by
@@ -88,8 +75,8 @@ is not a valid cylinder count
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The requested number, $#@count@#$, of cylinders for the volume in
-line $#@lineno@#$ of the control file named $#@filename@#$ is invalid.
+  <dd>The requested number, <code><em>count</em></code>, of cylinders for the volume in
+line <code><em>lineno</em></code> of the control file named <code><em>filename</em></code> is invalid.
 It must be a decimal number.
   <dt>Action
   <dd>Supply a valid cylinder count and rerun <code>dasdload</code>.
@@ -102,8 +89,8 @@ trks/cyl, <em>length</em> bytes/track
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The volume named $#@serial@#$, of type $#@type@#$, is being created,
-with $#@tracks@#$ tracks per cylinder and $#@length@#$ bytes per track.
+  <dd>The volume named <code><em>serial</em></code>, of type <code><em>type</em></code>, is being created,
+with <code><em>tracks</em></code> tracks per cylinder and <code><em>length</em></code> bytes per track.
   <dt>Message level
   <dd>0
   <dt>Issued by
@@ -114,7 +101,7 @@ HHCDL007E Cannot create <em>filename</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The DASD image file named $#@filename@#$ cannot be
+  <dd>The DASD image file named <code><em>filename</em></code> cannot be
 created. A previous message described the problem.
   <dt>Action
   <dd>Correct the reported error and rerun <code>dasdload</code>.
@@ -126,7 +113,7 @@ HHCDL008E Cannot open <em>filename</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The DASD image file named $#@filename@#$ could not
+  <dd>The DASD image file named <code><em>filename</em></code> could not
 be opened. A previous message described the problem.
   <dt>Action
   <dd>Correct the reported error and rerun <code>dasdload</code>.
@@ -138,8 +125,8 @@ HHCDL009I Loading <em>type</em> volume <em>serial</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The newly created volume with serial $#@serial@#$, of
-type $#@type@#$, is being loaded.
+  <dd>The newly created volume with serial <code><em>serial</em></code>, of
+type <code><em>type</em></code>, is being loaded.
   <dt>Message level
   <dd>0
   <dt>Issued by
@@ -151,7 +138,7 @@ HHCDL010E Cannot obtain storage for DSCB pointer array: <em>error</em>
 <dd><dl>
   <dt>Meaning
   <dd>An attempt to obtain storage for the array of DSCB pointers, which
-will populate the VTOC, failed. The error is described by $#@error@#$.
+will populate the VTOC, failed. The error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
@@ -162,8 +149,8 @@ HHCDL011E Invalid statement in <em>filename</em> line <em>lineno</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>An invalid control statement was found at line $#@lineno@#$ of the
-control file named $#@filename@#$.
+  <dd>An invalid control statement was found at line <code><em>lineno</em></code> of the
+control file named <code><em>filename</em></code>.
   <dt>Action
   <dd>Correct the invalid statement and rerun <code>dasdload</code>.
   <dt>Issued by
@@ -175,8 +162,8 @@ head <em>head</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The dataset named $#@dsn@#$ is being created. It begins at
-cylinder $#@cylinder@#$, head $#@head@#$.
+  <dd>The dataset named <code><em>dsn</em></code> is being created. It begins at
+cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>.
   <dt>Message level
   <dd>1
   <dt>Issued by
@@ -187,7 +174,7 @@ HHCDL013I Dataset <em>dsn</em> contains <em>size</em> tracks
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The dataset named $#@dsn@#$ is $#@size@#$ tracks long.
+  <dd>The dataset named <code><em>dsn</em></code> is <code><em>size</em></code> tracks long.
   <dt>Message level
   <dd>2
   <dt>Issued by
@@ -198,8 +185,8 @@ HHCDL014I Free space starts at cyl <em>cylinder</em> head <em>head</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>Free space on the volume begins at cylinder $#@cylinder@#$, head
-$#@head@#$, and extends to the end of the volume.
+  <dd>Free space on the volume begins at cylinder <code><em>cylinder</em></code>, head
+<code><em>head</em></code>, and extends to the end of the volume.
   <dt>Message level
   <dd>1
   <dt>Issued by
@@ -211,7 +198,7 @@ HHCDL015W Volume exceeds <em>cylinders</em>
 <dd><dl>
   <dt>Meaning
   <dd>The amount of space used on the volume exceeds the number
-of cylinders, $#@cylinders@#$, requested in the control file. The number
+of cylinders, <code><em>cylinders</em></code>, requested in the control file. The number
 of cylinders was explicitly requested instead of being allowed to default
 to the size of a full volume for the device type. The volume has
 been extended to accomodate the data written.
@@ -226,8 +213,8 @@ HHCDL016I Total of <em>count</em> cylinders written to <em>filename</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>A total of $#@count@#$ cylinders have been written to the DASD image
-file named $#@filename@#$.
+  <dd>A total of <code><em>count</em></code> cylinders have been written to the DASD image
+file named <code><em>filename</em></code>.
   <dt>Message level
   <dd>0
   <dt>Issued by
@@ -239,7 +226,7 @@ HHCDL017I Updating VTOC pointer <em>pointer</em>
 <dd><dl>
   <dt>Meaning
   <dd>The pointer to the VTOC in the volume label is being updated
-to point to the VTOC, at location $#@pointer@#$.
+to point to the VTOC, at location <code><em>pointer</em></code>.
   <dt>Message level
   <dd>5
   <dt>Issued by
@@ -263,8 +250,8 @@ HHCDL019E Cannot read <em>filename</em> line <em>lineno</em>: <em>error</em>
 <dd><dl>
   <dt>Meaning
   <dd>An error was encountered while trying to read the statement at
-line number $#@lineno@#$ of the control
-file named $#@filename@#$. The error is described by $#@error@#$.
+line number <code><em>lineno</em></code> of the control
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
@@ -275,8 +262,8 @@ HHCDL020E Line too long in <em>filename</em> line <em>lineno</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The line at line number $#@lineno@#$ of the control file named
-$#@filename@#$ is too long to be processed. This error can be caused
+  <dd>The line at line number <code><em>lineno</em></code> of the control file named
+<code><em>filename</em></code> is too long to be processed. This error can be caused
 by failing to terminate the last line with an end-of-line marker.
   <dt>Action
   <dd>Correct the error and rerun <code>dasdload</code>.
@@ -300,7 +287,7 @@ HHCDL022E Invalid initialization method: <em>method</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The method specified to initialize the dataset, $#@method@#$, is
+  <dd>The method specified to initialize the dataset, <code><em>method</em></code>, is
 invalid. It must be one of <code>xmit</code>, <code>vs</code>,
 <code>empty</code>, <code>dip</code>, <code>cvol</code>,
 <code>vtoc</code>, or <code>seq</code>.
@@ -329,7 +316,7 @@ HHCDL024E Invalid allocation units: <em>units</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The allocation unit specified, $#@units@#$, is invalid. It must be
+  <dd>The allocation unit specified, <code><em>units</em></code>, is invalid. It must be
 either <code>cyl</code> or <code>trk</code>.
   <dt>Action
   <dd>Specify a valid allocation unit and rerun <code>dasdload</code>.
@@ -341,7 +328,7 @@ HHCDL025E Invalid primary space: <em>space<em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The primary space requested, $#@space@#$, is not a valid decimal
+  <dd>The primary space requested, <code><em>space</em></code>, is not a valid decimal
 number greater than 0.
   <dt>Action
   <dd>Specify a valid space request and rerun <code>dasdload</code>.
@@ -353,7 +340,7 @@ HHCDL026E Invalid secondary space: <em>space<em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The secondary space requested, $#@space@#$, is not a valid decimal
+  <dd>The secondary space requested, <code><em>space</em></code>, is not a valid decimal
 number greater than 0.
   <dt>Action
   <dd>Specify a valid space request and rerun <code>dasdload</code>.
@@ -365,7 +352,7 @@ HHCDL027E Invalid directory space: <em>space<em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The PDS directory space requested, $#@space@#$, is not a valid decimal
+  <dd>The PDS directory space requested, <code><em>space</em></code>, is not a valid decimal
 number greater than 0.
   <dt>Action
   <dd>Specify a valid space request and rerun <code>dasdload</code>.
@@ -377,7 +364,7 @@ HHCDL028E Invalid dataset organization: <em>dsorg</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The requested dataset organization, $#@dsorg@#$, is invalid. It must
+  <dd>The requested dataset organization, <code><em>dsorg</em></code>, is invalid. It must
 be one of <code>is</code>, <code>ps</code>, <code>da</code>,
 or <code>po</code>.
   <dt>Action
@@ -390,7 +377,7 @@ HHCDL029E Invalid record format: <em>recfm</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The requested record format, $#@recfm@#$, is invalid. It must be one
+  <dd>The requested record format, <code><em>recfm</em></code>, is invalid. It must be one
 of <code>f</code>,
 <code>fb</code>, <code>fbs</code>, <code>v</code>,
 <code>vb</code>, <code>vbs</code>, or <code>u</code>.
@@ -404,7 +391,7 @@ HHCDL030E Invalid logical record length: <em>lrecl</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The requested logical record length, $#@lrecl@#$, is invalid. It
+  <dd>The requested logical record length, <code><em>lrecl</em></code>, is invalid. It
 must be a decimal number between 0 and 32767.
   <dt>Action
   <dd>Specify a valid logical record length and rerun <code>dasdload</code>.
@@ -416,7 +403,7 @@ HHCDL031E Invalid block size: <em>blksize</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The requested block size, $#@blksize@#$, is invalid. It must
+  <dd>The requested block size, <code><em>blksize</em></code>, is invalid. It must
 be a decimal number between 0 and 32767.
   <dt>Action
   <dd>Specify a valid block size and rerun <code>dasdload</code>.
@@ -428,7 +415,7 @@ HHCDL032E Invalid key length: <em>keylen</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The requested key length, $#@keylen@#$, is invalid. It must be a
+  <dd>The requested key length, <code><em>keylen</em></code>, is invalid. It must be a
 decimal number between 0 and 255.
   <dt>Action
   <dd>Specify a valid key length and rerun <code>dasdload</code>.
@@ -440,7 +427,7 @@ HHCDL033E CCHH=<em>cchh</em> not found in extent table
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The absolute track address, $#@cchh@#$, was not found in the table
+  <dd>The absolute track address, <code><em>cchh</em></code>, was not found in the table
 listing the locations occupied by the dataset being loaded. There is
 likely a problem with the input file.
   <dt>Action
@@ -453,9 +440,9 @@ HHCDL034E Cannot open <em>filename</em>: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The file named $#@filename@#$, which was specified as the source
+  <dd>The file named <code><em>filename</em></code>, which was specified as the source
 of IPL text to be written to the volume, could not be opened. The error is
-described by $#@error@#$.
+described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
@@ -467,7 +454,7 @@ HHCDL035E Cannot read <em>filename</em>: <em>error</em>
 <dd><dl>
   <dt>Meaning
   <dd>An error was encountered while reading the IPL text file named
-$#@filename@#$. The error is described by $#@error@#$. If no error
+<code><em>filename</em></code>. The error is described by <code><em>error</em></code>. If no error
 is reported, the file did not contain an integral number of 80-byte card
 images.
   <dt>Action
@@ -481,7 +468,7 @@ HHCDL036E <em>filename</em> is not a valid object file
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The IPL text file named $#@filename@#$ is not a valid object file. A
+  <dd>The IPL text file named <code><em>filename</em></code> is not a valid object file. A
 record read from the file did not contain the required flag in the first
 byte.
   <dt>Action
@@ -495,7 +482,7 @@ HHCDL037I IPL text address=<em>addr</em> length=<em>length</em>
 <dd><dl>
   <dt>Meaning
   <dd>The object code from the current record of the IPL text file will be
-loaded into memory at address $#@address@#$, and is $#@length@#$ bytes long.
+loaded into memory at address <code><em>address</em></code>, and is <code><em>length</em></code> bytes long.
   <dt>Message level
   <dd>5
   <dt>Issued by
@@ -506,8 +493,8 @@ HHCDL038E TXT record in <em>filename</em> has invalid count <em>length</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>A text record in the IPL text file named $#@filename@#$ has
-an invalid length, $#@length@#$. The length cannot exceed 56.
+  <dd>A text record in the IPL text file named <code><em>filename</em></code> has
+an invalid length, <code><em>length</em></code>. The length cannot exceed 56.
   <dt>Action
   <dd>Supply a valid IPL text file and rerun <code>dasdload</code>.
   <dt>Issued by
@@ -518,9 +505,9 @@ HHCDL039E IPL text in <em>filename</em> exceeds <em>buflen</em> bytes
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The IPL text file named $#@filename@#$ is too long to fit in the
+  <dd>The IPL text file named <code><em>filename</em></code> is too long to fit in the
 available space on the volume. The IPL text cannot exceed
-$#@buflen@#$ bytes in length.
+<code><em>buflen</em></code> bytes in length.
   <dt>Action
   <dd>Supply a shorter IPL text file, or specify a volume with a
 larger track size, and rerun <code>dasdload</code>.
@@ -532,7 +519,7 @@ HHCDL040E Input record CCHHR=<em>cchhr</em> exceeds output device track size
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The block to be written at absolute address $#@cchhr@#$ is too large
+  <dd>The block to be written at absolute address <code><em>cchhr</em></code> is too large
 to fit on a track on the disk being loaded.
   <dt>Action
   <dd>Specify a device with a larger track
@@ -557,11 +544,11 @@ supply a valid input file. Rerun <code>dasdload</code>.
   <dd>dasdload.c, function write_block
   </dl>
 <dt><code><a name="HHCDL042E">
-HHCDL042E Input record CCHHR=<em>cchhr> exceeds virtual device track size
+HHCDL042E Input record CCHHR=<em>cchhr</em> exceeds virtual device track size
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The block to be written at absolute address $#@cchhr@#$ is too large
+  <dd>The block to be written at absolute address <code><em>cchhr</em></code> is too large
 to fit on a track on the disk being loaded. In addition,
 this message being issued instead of
 <a href="#HHCDL040E">message HHCDL040E</a> indicates an internal
@@ -579,8 +566,8 @@ read error
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The data at cylinder $#@cylinder@#$, head $#@head@#$ of the
-disk image file named $#@filename@#$ could not be read in order to
+  <dd>The data at cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code> of the
+disk image file named <code><em>filename</em></code> could not be read in order to
 be updated. A previous message described the error.
   <dt>Action
   <dd>Correct the previously reported error and rerun <code>dasdload</code>.
@@ -593,8 +580,8 @@ head <em>head</em> invalid track header <em>header</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The track header $#@header@#$ at cylinder $#@cylinder@#$, head
-$#@head@#$ in the disk image file named $#@filename@#$ contained
+  <dd>The track header <code><em>header</em></code> at cylinder <code><em>cylinder</em></code>, head
+<code><em>head</em></code> in the disk image file named <code><em>filename</em></code> contained
 an address that did not match the actual address.
   <dt>Action
   <dd>Rerun <code>dasdload</code>. If the error persists, report it to the
@@ -608,911 +595,1101 @@ record <em>record</em> record not found
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The record requested for update at cylinder $#@cylinder@#$, head
-$#@head@#$, record $#@record@#$ of the DASD image file named
-$#@filename@#$ was not found.
+  <dd>The record requested for update at cylinder <code><em>cylinder</em></code>, head
+<code><em>head</em></code>, record <code><em>record</em></code> of the DASD image file named
+<code><em>filename</em></code> was not found.
   <dt>Action
   <dd>Rerun <code>dasdload</code>. If the error persists, report it to the
 Hercules development team.
   <dt>Issued by
   <dd>dasdload.c, function update_block
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL046E">
+HHCDL046E Cannot update cyl <em>cylinder</em> head <em>head</em> rec
+<em>record</em>: Unmatched KL/DL
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The record to be written at cylinder <code><em>cylinder</em></code>,
+head <code><em>head</em></code>, record<code><em>head</em></code> does not have the same key or data
+length as the record that already exists at that location. This is not
+allowed for a record update operation.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Rerun <code>dasdload</code>. If the error persists, report it to the
+Hercules development team.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_block
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL047E">
+HHCDL047E <em>filename</em> cyl <em>cylinder</em> head <em>head</em>
+read error
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A read error was encountered when reading the track at
+cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>, in the disk image file named
+<code><em>filename</em></code>. A previous message described the error.
   <dt>Action
-  <dd>
+  <dd>Correct the error reported by the previous message and
+rereun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function update_block
+  </dl>
+<dt><code><a name="HHCDL048I">
+HHCDL048I Updating cyl <em>cylinder</em>
+head <em>head</em> rec <em>record</em> kl <em>keylen</em> dl
+<em>datalen</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The record at cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>, record
+<code><em>record</em></code> is being updated. It has a key length of <code><em>keylen</em></code> and
+data length <code><em>datalen</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_block
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL049E">
+HHCDL049E Cannot obtain storage for DSCB: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain storage to build a DSCB to describe a dataset
+on the volume being loaded failed. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function build_format1_dscb
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL050E">
+HHCDL050E DSCB count exceeds <em>maximum</em>, increase MAXDSCB
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>There are too many datasets on the volume being loaded, and an
+internal structure in <code>dasdload</code> is full.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Increase the value of the symbol <code>MAXDSCB</code> in the
+source program and recompile <code>dasdload</code>, then rerun the program.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function build_format1_dscb
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL051E">
+HHCDL051E Cannot obtain storage for DSCB: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain storage to build a DSCB to describe the VTOC
+on the volume being loaded failed. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function build_format4_dscb
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL052E">
+HHCDL052E DSCB count exceeds <em>maximum</em>, increase MAXDSCB
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>There are too many datasets on the volume being loaded, and an
+internal structure in <code>dasdload</code> is full.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Increase the value of the symbol <code>MAXDSCB</code> in the
+source program and recompile <code>dasdload</code>, then rerun the program.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function build_format4_dscb
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL053E">
+HHCDL053E Cannot obtain storage for DSCB: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain storage to build a DSCB to describe the
+free space on the volume being loaded failed. The error is described
+by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function build_format5_dscb
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL054E">
+HHCDL054E DSCB count exceeds <em>maximum</em>, increase MAXDSCB
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>There are too many datasets on the volume being loaded, and an
+internal structure in <code>dasdload</code> is full.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Increase the value of the symbol <code>MAXDSCB</code> in the
+source program and recompile <code>dasdload</code>, then rerun the program.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function build_format5_dscb
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL055E">
+HHCDL055E VTOC too small, <em>tracks</em> tracks required
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The VTOC allocation of <code><em>tracks</em></code> is too small to hold the VTOC.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Specify at least <code><em>tracks</em></code> tracks for the VTOC and rerun
+<code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function write_vtoc
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL056E">
+HHCDL056E Error reading VTOC cyl <code><em>cylinder</em></code> head <code><em>head</em></code>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The first track of the VTOC could not be read so it could be
+updated. A previous message described the error.
   <dt>Action
-  <dd>
+  <dd>Correct the error reported by the previous message and rerun
+<code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function write_vtoc
+  </dl>
+<dt><code><a name="HHCDL057I">
+HHCDL057I VTOC starts at cyl <em>cylinder</em> head <em>head</em> and is
+<em>tracks</em> tracks
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The VTOC on the volume being loaded starts at
+cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code> and is <code><em>tracks</em></code> tracks long.
   <dt>Message level
-  <dd>
+  <dd>1
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function write_vtoc
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL058I">
+HHCDL058I Format <em>format</em> DSCB CCHHR=<em>cchhr</em>
+(TTR=<em>ttr</em>) <em>dsname</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>The format <code><em>format</em></code> DSCB is located at
+absolute address <code><em>cchhr</em></code>, and relative address within the VTOC
+<code><em>ttr</em></code>. If <code><em>format</em></code> is 1, the dataset described by the DSCB
+is named <code><em>dsname</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function write_vtoc
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL059I">
+HHCDL059I Format 0 DSCB CCHHR <em>cchhr</em> (TTR=<em>ttr</em>)
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>A format 0 (empty) DSCB is located at 
+absolute address <code><em>cchhr</em></code>, and relative address within the VTOC
+<code><em>ttr</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function write_vtoc
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL060E">
+HHCDL060E Error reading track cyl <em>cylinder</em> head <em>head</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered reading the track at cylinder <code><em>cyl</em></code>,
+head <code><em>head</em></code>. A previous message described the error.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error reported by the previous message and rerun
+<code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function write_vtoc
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL061E">
+HHCDL061E Incomplete text unit
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An text unit read from the input file was too short
+to contain a valid header. The input data is probably corrupt.
   <dt>Action
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function next_tu
+  </dl>
+<dt><code><a name="HHCDL062I">
+HHCDL062I <em>position</em> <em>tuname</em> <em>key</em> <em>fields</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The text unit at <code><em>position</em></code> of the input buffer has the name
+<code><em>tuname</em></code> and the numeric key value <code><em>key</em></code>. There are <code><em>fields</em></code>
+fields in the text unit.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function next_tu
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL063E">
+HHCDL063E Too many fields in text unit
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A text unit was read from the input file that had too many fields in
+the header for that type of text unit. The input file is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function next_tu
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL064E">
+HHCDL064E Incomplete text unit
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An text unit read from the input file was too short
+to contain a valid field length. The input data is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function next_tu
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL065E">
+HHCDL065E Incomplete text unit
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An text unit read from the input file was shorter than the length in
+the field header. The input data is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function next_tu
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL066E">
+HHCDL066E <em>filename</em> read error: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when reading the input file named
+<code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_xmit_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL067E">
+HHCDL067E <em>filename</em> invalid segment header: <em>header</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A segment read from the file named <code><em>filename</em></code> has an invalid
+header, <code><em>header</em></code>. The input file is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_xmit_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL068E">
+HHCDL068E <em>filename</em> first segment indicator expected
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A segment read from the file named <code><em>filename</em></code> should
+have the first segment indicator set, but does not. The input file
+is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_xmit_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL069E">
+HHCDL069E <em>filename</em> first segment indicator not expected
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A segment read from the file named <code><em>filename</em></code> should
+not have the first segment indicator set, but does. The input file
+is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_xmit_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL070E">
+HHCDL070E <em>filename</em> control record indicator mismatch
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>There was a
+mismatch between the first segment and the control record. The input file
+is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_xmit_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL071E">
+HHCDL071E <em>filename</em> read error: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when reading a segment from the input
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_xmit_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL072E">
+HHCDL072E <em>filename</em> read error: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when reading a COPYR1 record from the input
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_vs_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL073E">
+HHCDL073E <em>filename</em> read error: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when reading a COPYR2 record from the input
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_vs_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL074E">
+HHCDL074E <em>filename</em> read error: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when reading a data block header from the input
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function read_vs_rec
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL075E">
+HHCDL075E <em>filename</em> read error: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when reading a data block from the input
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_vs_rec
+  </dl>
+<dt><code><a name="HHCDL076I">
+HHCDL076I File number: <em>number</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file being processed is number <code><em>number</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_inmr02
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL077E">
+HHCDL077E Invalid text unit at offset <em>offset</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An invalid text unit was read from position <code><em>offset</em></code>. A previous
+message described the error. The input file is probably corrupt.
   <dt>Action
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_inmr02
+  </dl>
+<dt><code><a name="HHCDL078I">
+HHCDL078I File <em>filenum</em>: DSNAME=<em>dsname</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The dataset name of file number <code><em>filenum</em></code> is <code><em>dsname</em></code>.
   <dt>Message level
-  <dd>
+  <dd>2
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_inmr02
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL079I">
+HHCDL079I DSORG=<em>dsorg</em> RECFM=<em>recfm</em> LRECL=<em>lrecl</em>
+BLKSIZE=<em>blksize</em> KEYLEN=<em>keylen</em> DIRBLKS=<em>dirblks</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>For the dataset listed in the preceding <a
+href="#HHCDL078I">HHCDL078I</a> message, the dataset organization is
+<code><em>dsorg</em></code>, the record format is <code><em>recfm</em></code>, the logical record length
+is <code><em>lrecl</em></code>, the block size is <code><em>blksize</em></code>, the key length is
+<code><em>keylen</em></code>, and the directory block count is <code><em>dirblks</em></code>.
   <dt>Message level
-  <dd>
+  <dd>2
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_inmr02
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL080E">
+HHCDL080E Invalid text unit at offset <em>offset</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An invalid text unit was read from position <code><em>offset</em></code>. A previous
+message described the error. The input file is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_inmrxx
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL081E">
+HHCDL081E COPYR1 record length is invalid
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The length of the COPYR1 record is invalid. The input file is
+probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_copyr1
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL082E">
+HHCDL082E COPYR1 header identifier not correct
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The header identifier of the COPYR1 record is invalid. The input file
+is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_copyr1
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL083E">
+HHCDL083E COPYR1 unload format is unsupported
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The COPYR1 record indicates that the file was unloaded in a
+formatthat is not supported by <code>dasdload</code>. The file may be
+corrupt, or it may simply be in a newer format than is supported by this
+version of <code>dasdload</code>.
   <dt>Action
-  <dd>
+  <dd>Supply a supported input file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_copyr1
+  </dl>
+<dt><code><a name="HHCDL084I">
+HHCDL084I Original dataset: DSORG=<em>dsorg</em>
+RECFM=<em>recfm</em> LRECL=<em>lrecl</em> BLKSIZE=<em>blksize</em>
+KEYLEN=<em>keylen</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>For the original dataset, the dataset organization is
+<code><em>dsorg</em></code>, the record format is <code><em>recfm</em></code>, the logical record length
+is <code><em>lrecl</em></code>, the block size is <code><em>blksize</em></code>, the key length is
+<code><em>keylen</em></code>, and the directory block count is <code><em>dirblks</em></code>.
   <dt>Message level
-  <dd>
+  <dd>2
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_copyr1
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL085I">
+HHCDL085I Dataset was unloaded from device type <em>ucbtype</em>
+(<em>device</em>)
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>The dataset was unloaded from a <code><em>device</em></code> device, with UCB device
+type <code><em>ucbtype</em></code>.
   <dt>Message level
-  <dd>
+  <dd>2
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_copyr1
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL086I">
+HHCDL086I Original device has <em>cylinders</em> cyls and <em>heads</em>
+heads
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>The device listed in the preceding
+<a href="#HHCDL085I">HHCDL085I</a> message has <code><em>cylinders</em></code> cylinders and
+<code><em>heads</em></code> heads.
   <dt>Message level
-  <dd>
+  <dd>2
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_copyr1
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL087E">
+HHCDL087E COPYR2 record length is invalid
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The length of the COPYR2 record just read is not valid. The input
+file is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_copyr2
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL088E">
+HHCDL088E Invalid number of extents <em>extents</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The number of extents reported in the COPYR2 record is invalid,
+either less than 1 or more than 16. The input file is probably corrupt.
   <dt>Action
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_copyr2
+  </dl>
+<dt><code><a name="HHCDL089I">
+HHCDL089I Extent
+<em>extent</em>: Begin CCHH=<em>begcchh</em> End CCHH=<em>endcchh</em>
+Tracks=<em>tracks</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>For extent number <code><em>extent</em></code>, the extent starts at cylinder and
+head <code><em>begcchh</em></code>, and ends at <code><em>endcchh</em></code>, for a total of <code><em>tracks</em></code>
+tracks.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_copyr2
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL090I">
+HHCDL090I End of directory
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>The end of the PDS directory has been reached.
   <dt>Message level
-  <dd>
+  <dd>3
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_dirblk
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL091E">
+HHCDL091E Directory block record length is invalid
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The directory block read from the input file has the wrong length.
+It must be 276 bytes long. The input file is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_dirblk
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL092E">
+HHCDL092E Cannot obtain storage for directory block: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain storage for the directory block being processed
+failed. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_dirblk
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL093E">
+HHCDL093E Number of directory blocks exceeds <em>maxdblk</em>,
+increase MAXDBLK
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The number of directory blocks
+in the dataset being processed exceeds the size of an internal control
+structure. The maximum number is <code><em>maxdblk</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Increase the value of the constant <code>MAXDBLK</code>
+in the program source and recompile <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_dirblk
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL094E">
+HHCDL094E Directory block byte count is invalid
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The length of the current directory block is invalid. The input file
+is probably corrupt.
   <dt>Action
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_dirblk
+  </dl>
+<dt><code><a name="HHCDL095I">
+HHCDL095I </code>(<code>Alias</code>|<code>Member</code>)<code>
+<em>memname</em> TTR=<em>ttr</em><br>
+Userdata=<em>userdata</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The alias or member named <code><em>memname</em></code> is located at
+relative address <code><em>ttr</em></code>. If user data is present, it is printed
+as <code><em>userdata</em></code>.
   <dt>Message level
-  <dd>
+  <dd>3
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_dirblk
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL096I">
+HHCDL096I Member <em>name</em> TTR=<em>oldttr</em> replaced by
+<em>newttr</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>In the directory entry for member <code><em>name</em></code>, the old pointer to the
+mamber <code><em>oldttr</em></code> was replaced by the member's actual relative address
+<code><em>newttr</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function replace_ttr
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL097E">
+HHCDL097E Member <em>name</em> TTR=<em>ttr</em>not found in dataset
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A request was made to update the directory entry for the
+member named <code><em>name</em></code>, but there was no directory entry to update.
   <dt>Action
-  <dd>
+  <dd>This is likely an internal logic error. Report the error
+to the Hercules development team.
+  <dt>Issued by
+  <dd>dasdload.c, function replace_ttr
+  </dl>
+<dt><code><a name="HHCDL098I">
+HHCDL098I Updating note list for member <em>name</em> at
+TTR=<em>ttr</em> CCHHR=<em>cchhr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The note list for the member named <code><em>name</em></code>, at relative address
+<code><em>ttr</em></code>, absolute address <code><em>cchhr</em></code>, is being updated.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_note_list
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL099E">
+HHCDL099E <em>filename</em> cyl <em>cylinder</em> head <em>head</em>
+read error
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to read the track in the DASD image
+file named <code><em>filename</em></code> at cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>,
+failed. A previous error described the failure.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error reported by the previous message and rerun
+<code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_note_list
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL100E">
+HHCDL100E <em>filename</em> cyl <em>cylinder</em> head <em>head</em>
+invalid track header <em>header</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The header, <code><em>header</em></code>, of the track in the DASD image
+file named <code><em>filename</em></code> at cylinder <code><em>cylinder</em></code>, head
+<code><em>head</em></code> did not agree with the actual address of the track. This is
+probably an internal logic error.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Report the error to the Hercules development team.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_note_list
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL101E">
+HHCDL101E <em>filename</em> cyl <em>cylinder</em> head <em>head</em> rec
+<em>record</em> note list record not found
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A request was made to update a note list record at
+cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>, record <code><em>record</em></code>, but the
+record was not found. The input dataset may be corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input dataset and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_note_list
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL102E">
+HHCDL102E Member <em>member</em> note list at cyl <em>cylinder</em> head
+<em>head</em> rec <em>record</em> dlen <em>datalen</em> is too short for
+<em>numttrs</em> TTRs
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The data length <code><em>datalen</em></code> of the note list record for member
+<code><em>member</em></code> at cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>, record
+<code><em>record</em></code>, is too short to contain the requested number, <code><em>numttrs</em></code>,
+of record pointers. The input dataset is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input dataset and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_note_list
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL103E">
+HHCDL103E <em>filename</em> track read error cyl <em>cylinder</em>
+head <em>head</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to read the track in the DASD image
+file named <code><em>filename</em></code> at cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>,
+failed. A previous error described the failure.
   <dt>Action
-  <dd>
+  <dd>Correct the error reported by the previous message and rerun
+<code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function update_note_list
+  </dl>
+<dt><code><a name="HHCDL104I">
+HHCDL104I Updating cyl <em>cylinder</em>
+head <em>head</em> rec <em>record</em> kl <em>keylen</em> dl
+<em>datalen</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The record at cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>, record
+<code><em>record</em></code>, with key length <code><em>keynel</em></code> and data length <code><em>datalen</em></code>
+isbeing updated.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_note_list
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL105E">
+HHCDL105E Directory block byte count is invalid
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The length of the current directory block is invalid. The input file
+is probably corrupt.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Supply a valid input file and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function update_dirblk
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL106E">
+HHCDL106E Cannot open file <em>filename</em>: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to open the IEBCOPY input file named
+<code><em>filename</em></code> failed. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL107E">
+HHCDL107E Cannot obtain input buffer: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain a 64K byte input buffer for
+reaading the IEBCOPY input file failed. The error is described
+by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL108E">
+HHCDL108E Cannot obtain storage for directory block array:<em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain storage for the internal array used
+to store directory blocks failed. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL109E">
+HHCDL109E Cannot obtain storage for TTR table: <code><em>error</em></code>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain storage for the internal array used
+to store track pinters for later conversion failed. The error is described
+by <code><em>error</em></code>.
   <dt>Action
-  <dd>
+  <dd>Correct the error and rerun <code><em>dasdload</em></code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_iebcopy_file
+  </dl>
+<dt><code><a name="HHCDL110I">
+HHCDL110I Processing file <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The input file named <code><em>filename</em></code> is being processed.
   <dt>Message level
-  <dd>
+  <dd>1
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL111I">
+HHCDL111I Control record: <em>recname</em> length <em>length
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>A control record named <code><em>recname</em></code> of length <code><em>length</em></code> has been
+read.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL112I">
+HHCDL112I File number: <em>filenum</em> (</code>(<code>not</code>)<code>
+selected)
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>The data file, number <code><em>filenum</em></code>, was (or was not) selected for
+processing.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL113I">
+HHCDL113I Data record: length <em>length</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>A data record of length <code><em>length</em></code> has been read.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL114E">
+HHCDL114E write error: input record CCHHR=<em>cchhr</em>
+(TTR=<em>ttr</em>) KL=<em>keylen</em> DL=<em>datalen</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered writing the data record at absolute address
+<code><em>cchhr</em></code>, relative address <code><em>ttr</em></code>, with key length
+<code><em>keylen</em></code> and data length <code><em>datalen</em></code>. A
+previous message described the error.
   <dt>Action
-  <dd>
+  <dd>Correct the error described by the
+previous message and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_iebcopy_file
+  </dl>
+<dt><code><a name="HHCDL115I">
+HHCDL115I CCHHR=<em>incchhr</em> (TTR=<em>inttr</em>) KL=<em>keylen</em>
+DL=<em>datalen</em> -> CCHHR=<em>outcchhr</em> (TTR=<em>outttr</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The record at absolute address <code><em>incchhr</em></code>, relative address
+<code><em>inttr</em></code>, with key length <code><em>keylen</em></code> and data length <code><em>datalen</em></code>,
+is being written to the output DASD image at
+absolute address <code><em>outcchhr</em></code>, relative address <code><em>outttr</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function process_iebcopy_file
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL116E">
+HHCDL116E TTR count exceeds <em>maxttr</em>, increase MAXTTR
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The list of relative address pointers exceeds the size of the
+internal array used to contain them, <code><em>maxttr</em></code>.
   <dt>Action
-  <dd>
+  <dd>Increase the constant <code>MAXTTR</code> in the program
+source and recompile <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_iebcopy_file
+  </dl>
+<dt><code><a name="HHCDL117I">
+HHCDL0117I Catalog block at cyl <em>cylinder</em> head <em>head</em> rec
+<em>record</em> 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A catalog record has been written to disk at cylinder
+<code><em>cylinder</em></code>, head <code><em>head</em></code>, and record <code><em>record</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function cvol_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL118I">
+HHCDL0118I Catalog block at cyl <em>cylinder</em> head <em>head</em> rec
+<em>record</em> 
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>A catalog index record has been written to disk at cylinder
+<code><em>cylinder</em></code>, head <code><em>head</em></code>, and record <code><em>record</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function cvol_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL119I">
+HHCDL0119I Catalog block at cyl <em>cylinder</em> head <em>head</em> rec
+<em>record</em> 
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>An empty catalog record has been written to disk at cylinder
+<code><em>cylinder</em></code>, head <code><em>head</em></code>, and record <code><em>record</em></code>.
   <dt>Message level
-  <dd>
+  <dd>4
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function cvol_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL120I">
+HHCDL120I DIP complete at cyl <em>cylinder</em> head <em>head</em>
+record <em>record</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
-  <dt>Action
-  <dd>
+  <dd>The LOGREC dataset has been initialized. The last block written was
+at cylinder <code><em>cylinder<code><em>, head <code><em>head</em></code>, record <code><em>record</em></code>.
   <dt>Message level
-  <dd>
+  <dd>3
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function dip_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL121E">
+HHCDL121E SEQ dsorg must be PS or DA: dsorg=<em>dsorg</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The dataset organization specified for the input dataset
+was <code><em>dsorg</em></code>. It must be either PS or DA, but is not.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Specify a valid dataset organization for sequential file processing,
+or specify the correct processing option for the
+file being loaded, and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function seq_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCD122E">
+HHCDL122E SEQ recfm must be F or FB: recfm=<em>recfm</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The record format specified for the input dataset was <code><em>recfm</em></code>.
+It must be either F or FB, but is not.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Specify a valid record format for sequential file
+processing and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function seq_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCD123E">
+HHCDL123E SEQ invalid lrecl or blksz: lrecl=<em>lrecl</em>
+blksz=<em>blksz</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The logical record length specified for the input dataset was
+<code><em>lrecl</em></code>, and the block size was <code><em>blksz</em></code>. Either the block size was
+not a multiple of the logical record length and the record
+format was specified as FB, or the block size was different
+from the logical record length and the record format was specified as F.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Specify a valid logical record length and block size for sequential file
+processing and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function seq_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCD124E">
+HHCDL124E SEQ keyln must be 0 for blocked files
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>The key length was specified as nonzero and the record
+format was specified as FB. This combination is invalid.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>If a key is required, specify a record format of F. If no key is
+required, specify a key length of 0. Rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function seq_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL125E">
+HHCDL125E Cannot open <em>filename</em>: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when attempting to open the input
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function seq_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL126E">
+HHCDL126E Cannot stat <em>filename</em>: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when attempting to obtain the size of the
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function seq_initialize
   </dl>
-<dt><code><a name="HHCDL001E">
-HHCDL001E 
+<dt><code><a name="HHCDL127E">
+HHCDL127E <em>filename</em> cyl <em>cylinder</em> head <em>head</em>
+read error
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to read the track in the DASD image
+file named <code><em>filename</em></code> at cylinder <code><em>cylinder</em></code>, head <code><em>head</em></code>,
+failed. A previous error described the failure.
   <dt>Action
-  <dd>
-  <dt>Message level
-  <dd>
+  <dd>Correct the error reported by the previous message and rerun
+<code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function seq_initialize
+  </dl>
+<dt><code><a name="HHCDL128E">
+HHCDL128E <em>filename</em> read error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered reading the input
+file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdload</code>.
   <dt>Issued by
-  <dd>dasdload.c, function 
+  <dd>dasdload.c, function seq_initialize
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
@@ -1523,6 +1700,6 @@ If you have a question about Hercules, see the
 <a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 18 December 2002
+<p>Last updated 24 December 2002
 </BODY>
 </HTML>

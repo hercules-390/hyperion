@@ -2834,14 +2834,15 @@ COPYR1         *copyr1;                 /* -> header record 1        */
                         &outtrk, &outcyl, &outhead, &outrec);
             if (rc < 0)
             {
-                XMERRF ("HHCDL114E Input record CCHHR=%4.4X%4.4X%2.2X "
+                XMERRF ("HHCDL114E write error: input record "
+                        "CCHHR=%4.4X%4.4X%2.2X "
                         "(TTR=%4.4X%2.2X) KL=%d DL=%d\n",
                         blkcyl, blkhead, blkrec,
                         blktrk, blkrec, keylen, datalen);
                 return -1;
             }
 
-            XMINFF (4, "HHCDL115ICCHHR=%4.4X%4.4X%2.2X "
+            XMINFF (4, "HHCDL115I CCHHR=%4.4X%4.4X%2.2X "
                         "(TTR=%4.4X%2.2X) KL=%d DL=%d "
                         "-> CCHHR=%4.4X%4.4X%2.2X "
                         "(TTR=%4.4X%2.2X)\n",

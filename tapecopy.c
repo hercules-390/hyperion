@@ -68,7 +68,7 @@ static BYTE buf[65500];
 /*-------------------------------------------------------------------*/
 static void print_status (BYTE *devname, long stat)
 {
-    printf ("%s status: %8.8lX", devname, stat);
+    printf ("HHCTC015I %s status: %8.8lX", devname, stat);
     if (GMT_EOF(stat)) printf (" EOF");
     if (GMT_BOT(stat)) printf (" BOT");
     if (GMT_EOT(stat)) printf (" EOT");
@@ -96,7 +96,7 @@ struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
     rc = ioctl (devfd, MTIOCGET, (char*)&stblk);
     if (rc < 0)
     {
-        printf ("tapecopy: Error reading status of %s: %s\n",
+        printf ("HHCTC016E Error reading status of %s: %s\n",
                 devname, strerror(errno));
         return -1;
     }
@@ -183,7 +183,7 @@ char   *scodepage;
     devfd = open (devname, O_RDONLY|O_BINARY);
     if (devfd < 0)
     {
-        printf ("tapecopy: Error opening %s: %s\n",
+        printf ("HHCTC001E Error opening %s: %s\n",
                 devname, strerror(errno));
         exit (3);
     }
@@ -192,7 +192,7 @@ char   *scodepage;
     rc = ioctl (devfd, MTIOCGET, (char*)&stblk);
     if (rc < 0)
     {
-        printf ("tapecopy: Error reading status of %s: %s\n",
+        printf ("HHCTC002E Error reading status of %s: %s\n",
                 devname, strerror(errno));
         exit (7);
     }
@@ -202,9 +202,9 @@ char   *scodepage;
                 && tapeinfo[i].t_type != stblk.mt_type; i++);
 
     if (tapeinfo[i].t_name != NULL)
-        printf ("%s device type: %s\n", devname, tapeinfo[i].t_name);
+        printf ("HHCTC003I %s device type: %s\n", devname, tapeinfo[i].t_name);
     else
-        printf ("%s device type: 0x%lX\n", devname, stblk.mt_type);
+        printf ("HHCTC003I %s device type: 0x%lX\n", devname, stblk.mt_type);
 
     density = (stblk.mt_dsreg & MT_ST_DENSITY_MASK)
                 >> MT_ST_DENSITY_SHIFT;
@@ -213,9 +213,10 @@ char   *scodepage;
                 && densinfo[i].t_type != density; i++);
 
     if (densinfo[i].t_name != NULL)
-        printf ("%s tape density: %s\n", devname, densinfo[i].t_name);
+        printf ("HHCTC004I %s tape density: %s\n",
+                devname, densinfo[i].t_name);
     else
-        printf ("%s tape density code: 0x%lX\n", devname, density);
+        printf ("HHCTC004I %s tape density code: 0x%lX\n", devname, density);
 
     if (stblk.mt_gstat != 0)
     {
@@ -228,7 +229,7 @@ char   *scodepage;
     rc = ioctl (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf ("tapecopy: Error setting attributes for %s: %s\n",
+        printf ("HHCTC005E Error setting attributes for %s: %s\n",
                 devname, strerror(errno));
         exit (5);
     }
@@ -239,7 +240,7 @@ char   *scodepage;
     rc = ioctl (devfd, MTIOCTOP, (char*)&opblk);
     if (rc < 0)
     {
-        printf ("tapecopy: Error rewinding %s: %s\n",
+        printf ("HHCTC006E Error rewinding %s: %s\n",
                 devname, strerror(errno));
         exit (6);
     }
@@ -251,7 +252,7 @@ char   *scodepage;
                         S_IRUSR | S_IWUSR | S_IRGRP);
         if (outfd < 0)
         {
-            printf ("tapecopy: Error opening %s: %s\n",
+            printf ("HHCTC007E Error opening %s: %s\n",
                     filename, strerror(errno));
             exit (4);
         }
@@ -273,7 +274,7 @@ char   *scodepage;
         len = read (devfd, buf, sizeof(buf));
         if (len < 0)
         {
-            printf ("tapecopy: Error reading %s: %s\n",
+            printf ("HHCTC008E Error reading %s: %s\n",
                     devname, strerror(errno));
             obtain_status (devname, devfd);
             exit (8);
@@ -283,7 +284,8 @@ char   *scodepage;
         if (len == 0)
         {
             /* Print summary of current file */
-            printf ("File %u: Blocks=%u, block size min=%u, max=%u\n",
+            printf ("HHCTC009I File %u: Blocks=%u, block size min=%u, "
+                    "max=%u\n",
                     fileno, blkcount, minblksz, maxblksz);
 
             /* Write tape mark to output file */
@@ -301,7 +303,7 @@ char   *scodepage;
                 rc = write (outfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
                 if (rc < (int)sizeof(AWSTAPE_BLKHDR))
                 {
-                    printf ("tapecopy: Error writing %s: %s\n",
+                    printf ("HHCTC010E Error writing %s: %s\n",
                             filename, strerror(errno));
                     exit (9);
                 } /* end if(rc) */
@@ -317,7 +319,7 @@ char   *scodepage;
             /* Determine whether end of tape has been read */
             rc = obtain_status (devname, devfd);
             if (rc == 0) continue;
-            if (rc > 0) printf ("End of tape\n");
+            if (rc > 0) printf ("HHCTC011I End of tape\n");
             break;
 
         } /* end if(tapemark) */
@@ -337,7 +339,7 @@ char   *scodepage;
             for (i=0; i < 80; i++)
                 labelrec[i] = guest_to_host(buf[i]);
             labelrec[i] = '\0';
-            printf ("%s\n", labelrec);
+            printf ("HHCTC012I %s\n", labelrec);
         }
         else
         {
@@ -360,7 +362,7 @@ char   *scodepage;
             rc = write (outfd, &awshdr, sizeof(AWSTAPE_BLKHDR));
             if (rc < (int)sizeof(AWSTAPE_BLKHDR))
             {
-                printf ("tapecopy: Error writing %s: %s\n",
+                printf ("HHCTC013I Error writing %s: %s\n",
                         filename, strerror(errno));
                 exit (10);
             } /* end if(rc) */
@@ -369,7 +371,7 @@ char   *scodepage;
             rc = write (outfd, buf, len);
             if (rc < len)
             {
-                printf ("tapecopy: Error writing %s: %s\n",
+                printf ("HHCTC014I Error writing %s: %s\n",
                         filename, strerror(errno));
                 exit (11);
             } /* end if(rc) */

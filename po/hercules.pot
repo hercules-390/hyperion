@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-19 08:47-0600\n"
+"POT-Creation-Date: 2002-12-24 15:15-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -55,13 +55,6 @@ msgstr ""
 #: hsccmd.c:1181
 #, c-format
 msgid "%4.4X  synchronous: %12lld asynchronous: %12lld\n"
-msgstr ""
-
-#: ckddasd.c:872
-#, c-format
-msgid ""
-"%4.4X ckddasd: invalid track header for cyl %d head %d  %2.2x%2.2x%2.2x%2.2x%"
-"2.2x\n"
 msgstr ""
 
 #: channel.c:668
@@ -1049,125 +1042,6 @@ msgstr ""
 msgid "HHC290I Error opening %s: %s(%s)\n"
 msgstr ""
 
-#: fbadasd.c:90 fbadasd.c:111
-#, c-format
-msgid "HHC303I Read error in file %s: %s\n"
-msgstr ""
-
-#: fbadasd.c:93 fbadasd.c:114
-#, c-format
-msgid "HHC304I Unexpected end of file in %s\n"
-msgstr ""
-
-#: fbadasd.c:290
-#, c-format
-msgid "HHC311I Seek error in file %s: %s\n"
-msgstr ""
-
-#: fbadasd.c:304
-#, c-format
-msgid "HHC312I Read error in file %s: %s\n"
-msgstr ""
-
-#: fbadasd.c:307
-#, c-format
-msgid "HHC313I Unexpected end of file in %s\n"
-msgstr ""
-
-#: fbadasd.c:334
-#, c-format
-msgid "HHC314I Seek error in file %s: %s\n"
-msgstr ""
-
-#: fbadasd.c:347
-#, c-format
-msgid "HHC315I Write error in file %s: %s\n"
-msgstr ""
-
-#: ckddasd.c:231
-msgid "HHC351I File name missing or invalid\n"
-msgstr ""
-
-#: ckddasd.c:339 fbadasd.c:155
-#, c-format
-msgid "HHC351I parameter %d is invalid: %s\n"
-msgstr ""
-
-#: ckddasd.c:363
-#, c-format
-msgid "HHC352I %s open error: %s\n"
-msgstr ""
-
-#: ckddasd.c:387
-#, c-format
-msgid "HHC353I %s fstat error: %s\n"
-msgstr ""
-
-#: ckddasd.c:397 ckddasd.c:434
-#, c-format
-msgid "HHC354I %s read error: %s\n"
-msgstr ""
-
-#: ckddasd.c:439
-#, c-format
-msgid "HHC355I %s CCKD header incomplete\n"
-msgstr ""
-
-#: ckddasd.c:400
-#, c-format
-msgid "HHC355I %s CKD header incomplete\n"
-msgstr ""
-
-#: ckddasd.c:410
-#, c-format
-msgid "HHC356I %s CKD header invalid\n"
-msgstr ""
-
-#: ckddasd.c:419
-#, c-format
-msgid "HHC356I %s Only 1 CCKD file allowed\n"
-msgstr ""
-
-#: ckddasd.c:450
-#, c-format
-msgid "HHC357I %s CKD file out of sequence\n"
-msgstr ""
-
-#: ckddasd.c:496
-#, c-format
-msgid "HHC358I %s heads=%d trklen=%d, expected heads=%d trklen=%d\n"
-msgstr ""
-
-#: ckddasd.c:509
-#, c-format
-msgid "HHC359I %s CKD header inconsistent with file size\n"
-msgstr ""
-
-#: ckddasd.c:517
-#, c-format
-msgid "HHC360I %s CKD header high cylinder incorrect\n"
-msgstr ""
-
-#: ckddasd.c:543
-#, c-format
-msgid "HHC361I %s exceeds maximum %d CKD files\n"
-msgstr ""
-
-#: ckddasd.c:565
-#, c-format
-msgid "HHC362I %4.4X device type %4.4X not found in dasd table\n"
-msgstr ""
-
-#: ckddasd.c:378
-#, c-format
-msgid "HHC362I %s not in a single file for shadowing\n"
-msgstr ""
-
-#: ckddasd.c:574
-#, c-format
-msgid "HHC363I %4.4X control unit %s not found in dasd table\n"
-msgstr ""
-
 #: panel.c:2058
 #, c-format
 msgid "HHC411I Socket pathname \"%s\" exceeds limit of %d\n"
@@ -1606,6 +1480,257 @@ msgstr ""
 #: cpu.c:1021
 #, c-format
 msgid "HHCCPU006E Cannot create timer thread: %s\n"
+msgstr ""
+
+#: ckddasd.c:231
+msgid "HHCDA001E File name missing or invalid\n"
+msgstr ""
+
+#: ckddasd.c:339
+#, c-format
+msgid "HHCDA002E parameter %d is invalid: %s\n"
+msgstr ""
+
+#: ckddasd.c:350
+#, c-format
+msgid "HHCDA003I opening %s readonly%s\n"
+msgstr ""
+
+#: ckddasd.c:363
+#, c-format
+msgid "HHCDA004E %s open error: %s\n"
+msgstr ""
+
+#: ckddasd.c:378
+#, c-format
+msgid "HHCDA005E %s not in a single file for shadowing\n"
+msgstr ""
+
+#: ckddasd.c:387
+#, c-format
+msgid "HHCDA006E %s fstat error: %s\n"
+msgstr ""
+
+#: ckddasd.c:397
+#, c-format
+msgid "HHCDA007E %s read error: %s\n"
+msgstr ""
+
+#: ckddasd.c:410
+#, c-format
+msgid "HHCDA009E %s CKD header invalid\n"
+msgstr ""
+
+#: ckddasd.c:419
+#, c-format
+msgid "HHCDA010E %s Only 1 CCKD file allowed\n"
+msgstr ""
+
+#: ckddasd.c:434
+#, c-format
+msgid "HHCDA011E %s read error: %s\n"
+msgstr ""
+
+#: ckddasd.c:439
+#, c-format
+msgid "HHCDA012E %s CCKD header incomplete\n"
+msgstr ""
+
+#: ckddasd.c:450
+#, c-format
+msgid "HHCDA013E %s CKD file out of sequence\n"
+msgstr ""
+
+#: ckddasd.c:482
+#, c-format
+msgid "HHCDA014I %s seq=%d cyls=%d-%d\n"
+msgstr ""
+
+#: ckddasd.c:496
+#, c-format
+msgid "HHCDA015E %s heads=%d trklen=%d, expected heads=%d trklen=%d\n"
+msgstr ""
+
+#: ckddasd.c:509
+#, c-format
+msgid "HHCDA016E %s CKD header inconsistent with file size\n"
+msgstr ""
+
+#: ckddasd.c:517
+#, c-format
+msgid "HHCDA017E %s CKD header high cylinder incorrect\n"
+msgstr ""
+
+#: ckddasd.c:543
+#, c-format
+msgid "HHCDA018E %s exceeds maximum %d CKD files\n"
+msgstr ""
+
+#: ckddasd.c:554
+#, c-format
+msgid "HHCDA019I %s cyls=%d heads=%d tracks=%d trklen=%d\n"
+msgstr ""
+
+#: ckddasd.c:565
+#, c-format
+msgid "HHCDA020E %4.4X device type %4.4X not found in dasd table\n"
+msgstr ""
+
+#: ckddasd.c:574
+#, c-format
+msgid "HHCDA021E %4.4X control unit %s not found in dasd table\n"
+msgstr ""
+
+#: ckddasd.c:647
+#, c-format
+msgid "HHCDA022I %4.4X cache hits %d, misses %d\n"
+msgstr ""
+
+#: ckddasd.c:712
+#, c-format
+msgid "HHCDA025E error writing trk %d: lseek error: %s\n"
+msgstr ""
+
+#: ckddasd.c:726
+#, c-format
+msgid "HHCDA026E error writing trk %d: write error: %s\n"
+msgstr ""
+
+#: ckddasd.c:760
+#, c-format
+msgid "HHCDA027E calloc error for cache table size %d: %s\n"
+msgstr ""
+
+#: ckddasd.c:808
+#, c-format
+msgid "HHCDA030E malloc error for cache entry buffer size %d: %s\n"
+msgstr ""
+
+#: ckddasd.c:840
+#, c-format
+msgid "HHCDA032E error reading trk %d: lseek error: %s\n"
+msgstr ""
+
+#: ckddasd.c:853
+#, c-format
+msgid "HHCDA033E error reading trk %d: read error: %s\n"
+msgstr ""
+
+#: ckddasd.c:872
+#, c-format
+msgid ""
+"HHCDA035E %4.4X invalid track header for cyl %d head %d  %2.2x%2.2x%2.2x%2.2x"
+"%2.2x\n"
+msgstr ""
+
+#: ckddasd.c:933
+#, c-format
+msgid "HHCDA036E error writing trk %d: lseek error: %s\n"
+msgstr ""
+
+#: ckddasd.c:946
+#, c-format
+msgid "HHCDA037E error writing trk %d: write error: %s\n"
+msgstr ""
+
+#: ckddasd.c:1207
+msgid "HHCDA042E attempt to read past end of track\n"
+msgstr ""
+
+#: ckddasd.c:1375
+msgid "HHCDA046E attempt to read past end of track\n"
+msgstr ""
+
+#: ckddasd.c:1544
+msgid "HHCDA049E Write KD orientation error\n"
+msgstr ""
+
+#: ckddasd.c:1586
+msgid "HHCDA051E Write data orientation error\n"
+msgstr ""
+
+#: ckddasd.c:1659
+#, c-format
+msgid "HHCDA053E Data chaining not supported for CCW %2.2X\n"
+msgstr ""
+
+#: ckddasd.c:2870
+#, c-format
+msgid "HHCDA055I search key %s\n"
+msgstr ""
+
+#: fbadasd.c:90
+#, c-format
+msgid "HHCDA058E Read error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:93
+#, c-format
+msgid "HHCDA059E Unexpected end of file in %s\n"
+msgstr ""
+
+#: fbadasd.c:111
+#, c-format
+msgid "HHCDA060E Read error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:114
+#, c-format
+msgid "HHCDA061E Unexpected end of file in %s\n"
+msgstr ""
+
+#: fbadasd.c:155
+#, c-format
+msgid "HHCDA062E parameter %d is invalid: %s\n"
+msgstr ""
+
+#: fbadasd.c:290
+#, c-format
+msgid "HHCDA068E Seek error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:304
+#, c-format
+msgid "HHCDA069E Read error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:307
+#, c-format
+msgid "HHCDA070E Unexpected end of file in %s\n"
+msgstr ""
+
+#: fbadasd.c:334
+#, c-format
+msgid "HHCDA071E Seek error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:347
+#, c-format
+msgid "HHCDA072E Write error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:696
+#, c-format
+msgid "HHCDA074E define extent data too short: %d bytes\n"
+msgstr ""
+
+#: fbadasd.c:706
+msgid "HHCDA075E second define extent in chain\n"
+msgstr ""
+
+#: fbadasd.c:717
+#, c-format
+msgid "HHCDA076E invalid file mask %2.2X\n"
+msgstr ""
+
+#: fbadasd.c:758
+#, c-format
+msgid "HHCDA077E invalid extent: first block %d, last block %d,\n"
+msgstr ""
+
+#: ckddasd.c:400
+#, c-format
+msgid "HHCDA08E %s CKD header incomplete\n"
 msgstr ""
 
 #: dasdcopy.c:184
@@ -2689,76 +2814,8 @@ msgstr ""
 msgid "channel: Device %4.4X suspended\n"
 msgstr ""
 
-#: ckddasd.c:647
-#, c-format
-msgid "ckddasd: %4.4X cache hits %d, misses %d\n"
-msgstr ""
-
-#: ckddasd.c:554
-#, c-format
-msgid "ckddasd: %s cyls=%d heads=%d tracks=%d trklen=%d\n"
-msgstr ""
-
-#: ckddasd.c:482
-#, c-format
-msgid "ckddasd: %s seq=%d cyls=%d-%d\n"
-msgstr ""
-
-#: ckddasd.c:1659
-#, c-format
-msgid "ckddasd: Data chaining not supported for CCW %2.2X\n"
-msgstr ""
-
-#: ckddasd.c:1544
-msgid "ckddasd: Write KD orientation error\n"
-msgstr ""
-
-#: ckddasd.c:1586
-msgid "ckddasd: Write data orientation error\n"
-msgstr ""
-
-#: ckddasd.c:1207 ckddasd.c:1325 ckddasd.c:1375
+#: ckddasd.c:1325
 msgid "ckddasd: attempt to read past end of track\n"
-msgstr ""
-
-#: ckddasd.c:760
-#, c-format
-msgid "ckddasd: calloc error for cache table size %d: %s\n"
-msgstr ""
-
-#: ckddasd.c:840
-#, c-format
-msgid "ckddasd: error reading trk %d: lseek error: %s\n"
-msgstr ""
-
-#: ckddasd.c:853
-#, c-format
-msgid "ckddasd: error reading trk %d: read error: %s\n"
-msgstr ""
-
-#: ckddasd.c:712 ckddasd.c:933
-#, c-format
-msgid "ckddasd: error writing trk %d: lseek error: %s\n"
-msgstr ""
-
-#: ckddasd.c:726 ckddasd.c:946
-#, c-format
-msgid "ckddasd: error writing trk %d: write error: %s\n"
-msgstr ""
-
-#: ckddasd.c:808
-#, c-format
-msgid "ckddasd: malloc error for cache entry buffer size %d: %s\n"
-msgstr ""
-
-#: ckddasd.c:350
-#, c-format
-msgid "ckddasd: opening %s readonly%s\n"
-msgstr ""
-
-#: ckddasd.c:2870
-#, c-format
-msgid "ckddasd: search key %s\n"
 msgstr ""
 
 #: hsccmd.c:2412
@@ -2791,25 +2848,6 @@ msgstr ""
 
 #: hsccmd.c:292
 msgid "enabled"
-msgstr ""
-
-#: fbadasd.c:696
-#, c-format
-msgid "fbadasd: define extent data too short: %d bytes\n"
-msgstr ""
-
-#: fbadasd.c:758
-#, c-format
-msgid "fbadasd: invalid extent: first block %d, last block %d,\n"
-msgstr ""
-
-#: fbadasd.c:717
-#, c-format
-msgid "fbadasd: invalid file mask %2.2X\n"
-msgstr ""
-
-#: fbadasd.c:706
-msgid "fbadasd: second define extent in chain\n"
 msgstr ""
 
 #: printer.c:187

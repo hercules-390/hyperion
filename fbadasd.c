@@ -60,7 +60,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        devmsg ("HHC301I File name missing or invalid\n");
+        devmsg ("HHCDA056E File name missing or invalid\n");
         return -1;
     }
 
@@ -75,7 +75,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            devmsg ("HHC302I File %s open error: %s\n",
+            devmsg ("HHCDA057E File %s open error: %s\n",
                     dev->filename, strerror(errno));
             return -1;
         }
@@ -87,10 +87,10 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     {
         /* Handle read error condition */
         if (rc < 0)
-            devmsg (_("HHC303I Read error in file %s: %s\n"),
+            devmsg (_("HHCDA058E Read error in file %s: %s\n"),
                     dev->filename, strerror(errno));
         else
-            devmsg (_("HHC304I Unexpected end of file in %s\n"),
+            devmsg (_("HHCDA059E Unexpected end of file in %s\n"),
                     dev->filename);
         close (dev->fd);
         dev->fd = -1;
@@ -108,10 +108,10 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         {
             /* Handle read error condition */
             if (rc < 0)
-                devmsg (_("HHC303I Read error in file %s: %s\n"),
+                devmsg (_("HHCDA060E Read error in file %s: %s\n"),
                         dev->filename, strerror(errno));
             else
-                devmsg (_("HHC304I Unexpected end of file in %s\n"),
+                devmsg (_("HHCDA061E Unexpected end of file in %s\n"),
                         dev->filename);
             close (dev->fd);
             dev->fd = -1;
@@ -152,7 +152,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
                 continue;
             }
 
-            devmsg (_("HHC351I parameter %d is invalid: %s\n"),
+            devmsg (_("HHCDA062E parameter %d is invalid: %s\n"),
                     i + 1, argv[i]);
             return -1;
         }
@@ -165,7 +165,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            devmsg ("HHC305I File %s fstat error: %s\n",
+            devmsg ("HHCDA063E File %s fstat error: %s\n",
                     dev->filename, strerror(errno));
             close (dev->fd);
             dev->fd = -1;
@@ -183,7 +183,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                devmsg ("HHC306I Invalid device origin block number %s\n",
+                devmsg ("HHCDA064E Invalid device origin block number %s\n",
                         argv[1]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -199,7 +199,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                devmsg ("HHC307I Invalid device block count %s\n",
+                devmsg ("HHCDA065E Invalid device block count %s\n",
                         argv[2]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -209,7 +209,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         }
     }
 
-    devmsg ("fbadasd: %s origin=%d blks=%d\n",
+    devmsg ("HHCDA066I %s origin=%d blks=%d\n",
             dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
@@ -219,7 +219,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        devmsg ("HHC308I %4.4X device type %4.4X not found in dasd table\n",
+        devmsg ("HHCDA067E %4.4X device type %4.4X not found in dasd table\n",
                 dev->devnum, dev->devtype);
         close (dev->fd);
         dev->fd = -1;
@@ -287,7 +287,7 @@ off_t   rcoff;                          /* Return value from lseek() */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        devmsg (_("HHC311I Seek error in file %s: %s\n"),
+        devmsg (_("HHCDA068E Seek error in file %s: %s\n"),
                 dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -301,10 +301,10 @@ off_t   rcoff;                          /* Return value from lseek() */
     {
         /* Handle read error condition */
         if (rc < 0)
-            devmsg (_("HHC312I Read error in file %s: %s\n"),
+            devmsg (_("HHCDA069E Read error in file %s: %s\n"),
                     dev->filename, strerror(errno));
         else
-            devmsg (_("HHC313I Unexpected end of file in %s\n"),
+            devmsg (_("HHCDA070E Unexpected end of file in %s\n"),
                     dev->filename);
 
         /* Set unit check with equipment check */
@@ -331,7 +331,7 @@ off_t   rcoff;                          /* Return value from lseek() */
     if (rcoff < 0)
     {
         /* Handle seek error condition */
-        devmsg (_("HHC314I Seek error in file %s: %s\n"),
+        devmsg (_("HHCDA071E Seek error in file %s: %s\n"),
                 dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -344,7 +344,7 @@ off_t   rcoff;                          /* Return value from lseek() */
     if (rc < len)
     {
         /* Handle write error condition */
-        devmsg (_("HHC315I Write error in file %s: %s\n"),
+        devmsg (_("HHCDA072E Write error in file %s: %s\n"),
                 dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -675,7 +675,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbaorigin
                      + dev->fbaxblkn) * dev->fbablksiz;
 
-        DEVTRACE("fbadasd: Positioning to %8.8llX (%llu)\n",
+        DEVTRACE("HHCDA073I Positioning to %8.8llX (%llu)\n",
                  (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
 
         /* Return normal status */
@@ -693,7 +693,7 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            devmsg(_("fbadasd: define extent data too short: %d bytes\n"),
+            devmsg(_("HHCDA074E define extent data too short: %d bytes\n"),
                     count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -703,7 +703,7 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            devmsg(_("fbadasd: second define extent in chain\n"));
+            devmsg(_("HHCDA075E second define extent in chain\n"));
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -714,7 +714,7 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            devmsg(_("fbadasd: invalid file mask %2.2X\n"),
+            devmsg(_("HHCDA076E invalid file mask %2.2X\n"),
                     dev->fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -755,7 +755,7 @@ int     repcnt;                         /* Replication count         */
             || dev->fbaxlast - dev->fbaxfirst
                 >= dev->fbanumblk - dev->fbaxblkn)
         {
-            devmsg(_("fbadasd: invalid extent: first block %d, last block %d,\n"),
+            devmsg(_("HHCDA077E invalid extent: first block %d, last block %d,\n"),
                     dev->fbaxfirst, dev->fbaxlast);
             devmsg(_("         numblks %d, device size %d\n"),
                     dev->fbaxblkn, dev->fbanumblk);
