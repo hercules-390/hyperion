@@ -853,7 +853,7 @@ ckd_read_track_retry:
         dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
         dev->bufcur = trk;
         dev->bufoff = 0;
-        dev->bufoffhi = dev->ckdtrksz; 
+        dev->bufoffhi = dev->ckdtrksz;
         dev->buflen = ckd_trklen (dev, dev->buf);
         dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
 
@@ -883,7 +883,7 @@ ckd_read_track_retry:
     if (o < 0)
     {
         DEVTRACE (_("HHCDA029I read trk %d no available cache entry, waiting\n"),
-                  trk); 
+                  trk);
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
         goto ckd_read_track_retry;
@@ -901,7 +901,7 @@ ckd_read_track_retry:
     cache_setage (CACHE_DEVBUF, o);
     dev->buf = cache_getbuf(CACHE_DEVBUF, o, dev->ckdtrksz);
     cache_unlock (CACHE_DEVBUF);
-  
+
     /* Set the file descriptor */
     for (f = 0; f < dev->ckdnumfd; f++)
         if (trk < dev->ckdhitrk[f]) break;
@@ -914,7 +914,7 @@ ckd_read_track_retry:
     dev->syncio_active = active;
 
     DEVTRACE (_("HHCDA031I read trk %d reading file %d offset %lld len %d\n"),
-              trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);  
+              trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);
 
     /* Seek to the track image offset */
     offset = (off_t)dev->ckdtrkoff;
@@ -988,7 +988,7 @@ ckd_read_track_retry:
     dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
     dev->bufcur = trk;
     dev->bufoff = 0;
-    dev->bufoffhi = dev->ckdtrksz; 
+    dev->bufoffhi = dev->ckdtrksz;
     dev->buflen = ckd_trklen (dev, dev->buf);
     dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
 
@@ -2290,11 +2290,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Advance to next track */
         rc = mt_advance (dev, unitstat);
         if (rc < 0) break;
-    
+
         /* Read the first count field */
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) break;
-    
+
         /* Skip the key field if present */
         if (dev->ckdcurkl > 0)
                 dev->bufoff += dev->ckdcurkl;
@@ -2308,12 +2308,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (*residual < size) *more = 1;
         else *more = 0;
         *residual -= num;
-    
+
         /* Read the next data field */
         rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
         if (rc < 0) break;
     }
-    
+
     /* Bail out if track overflow produced I/O error */
     if (rc < 0) break;
 
@@ -2389,11 +2389,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Advance to next track */
         rc = mt_advance (dev, unitstat);
         if (rc < 0) break;
-    
+
         /* Read the first count field */
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) break;
-    
+
         /* Skip the key field if present */
         if (dev->ckdcurkl > 0)
                 dev->bufoff += dev->ckdcurkl;
@@ -2407,7 +2407,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (*residual < size) *more = 1;
         else *more = 0;
         *residual -= num;
-    
+
         /* Read the next data field */
         rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
         if (rc < 0) break;
@@ -2763,11 +2763,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Advance to next track */
         rc = mt_advance (dev, unitstat);
         if (rc < 0) break;
-    
+
         /* Read the first count field */
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) break;
-    
+
         /* Skip the key field if present */
         if (dev->ckdcurkl > 0)
                 dev->bufoff += dev->ckdcurkl;
@@ -2781,7 +2781,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         if (*residual < size) *more = 1;
         else *more = 0;
         *residual -= num;
-    
+
         /* Read the next data field */
         rc = ckd_read_data (dev, code, iobuf+offset, unitstat);
         if (rc < 0) break;
@@ -2988,7 +2988,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 break;
             }
 
-            /* Command reject if not Set Special Intercept order, 
+            /* Command reject if not Set Special Intercept order,
                with zero flag byte */
             if (iobuf[0] != 0x1B || iobuf[1] != 0x00)
             {
@@ -3030,7 +3030,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
             break;
         }
-     
+
 
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
@@ -3595,11 +3595,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Advance to next track */
         rc = mt_advance (dev, unitstat);
         if (rc < 0) break;
-    
+
         /* Read the first count field */
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) break;
-    
+
             /* Set offset into buffer for this write */
             offset += size;
 
@@ -3607,7 +3607,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         size = dev->ckdcurdl;
         num = (*residual < size) ? *residual : size;
         *residual -= num;
-    
+
         /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
         if (rc < 0) break;
@@ -3681,11 +3681,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Advance to next track */
         rc = mt_advance (dev, unitstat);
         if (rc < 0) break;
-    
+
         /* Read the first count field */
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) break;
-    
+
             /* Set offset into buffer for this write */
             offset += size;
 
@@ -3693,7 +3693,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         size = dev->ckdcurdl;
         num = (*residual < size) ? *residual : size;
         *residual -= num;
-    
+
         /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
         if (rc < 0) break;
@@ -3792,11 +3792,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Advance to next track */
         rc = mt_advance (dev, unitstat);
         if (rc < 0) break;
-    
+
         /* Read the first count field */
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) break;
-    
+
             /* Set offset into buffer for this write */
             offset += size;
 
@@ -3804,7 +3804,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         size = dev->ckdcurdl;
         num = (*residual < size) ? *residual : size;
         *residual -= num;
-    
+
         /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
         if (rc < 0) break;
@@ -3878,11 +3878,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* Advance to next track */
         rc = mt_advance (dev, unitstat);
         if (rc < 0) break;
-    
+
         /* Read the first count field */
         rc = ckd_read_count (dev, code, &rechdr, unitstat);
         if (rc < 0) break;
-    
+
             /* Set offset into buffer for this write */
             offset += size;
 
@@ -3890,7 +3890,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         size = dev->ckdcurdl;
         num = (*residual < size) ? *residual : size;
         *residual -= num;
-    
+
         /* Write the next data field */
             rc = ckd_write_data (dev, iobuf+offset, num, unitstat);
         if (rc < 0) break;
@@ -4411,8 +4411,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 #if 0
                 if (memcmp (&rechdr, cchhr, 4) != 0)
                 {
-    	            logmsg ("HHCDA999E wrong recordheader: cc hh r=%d %d %d,"
-		                    "should be:cc hh r=%d %d %d\n",
+                    logmsg ("HHCDA999E wrong recordheader: cc hh r=%d %d %d,"
+                            "should be:cc hh r=%d %d %d\n",
                             (rechdr.cyl[0] << 8) | rechdr.cyl[1],
                             (rechdr.head[0] << 8) | rechdr.head[1],
                             rechdr.rec,

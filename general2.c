@@ -1753,21 +1753,6 @@ BYTE    lbyte;                          /* Left result byte of pair  */
 /*              (c) Copyright "Fish" (David B. Trout), 2005          */
 /*-------------------------------------------------------------------*/
 
-#undef   UPT_ALIGN_MASK
-#undef   UPT_SHIFT_MASK
-#undef   UPT_HIGH_BIT
-#undef   AR4
-#define  AR4  (4)                       /* Access Register 4         */
-#if defined(FEATURE_ESAME)
-  #define  UPT_ALIGN_MASK   ( a64 ? 0x000000000000000FULL : 0x0000000000000007ULL )
-  #define  UPT_SHIFT_MASK   ( a64 ? 0xFFFFFFFFFFFFFFF0ULL : 0xFFFFFFFFFFFFFFF8ULL )
-  #define  UPT_HIGH_BIT     ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )
-#else
-  #define  UPT_ALIGN_MASK   ( 0x00000007 )
-  #define  UPT_SHIFT_MASK   ( 0xFFFFFFF8 )
-  #define  UPT_HIGH_BIT     ( 0x80000000 )
-#endif
-
 DEF_INST(update_tree)
 {
 GREG    index;                          /* tree index                */
@@ -1840,19 +1825,19 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 
         /* Retrieve this node's values for closer examination... */
 
-        nodeaddr = ( GR_A(4,regs) + index ) & ADDRESS_MAXWRAP(regs);
+        nodeaddr = regs->GR(4) + index;
 
 #if defined(FEATURE_ESAME)
         if ( a64 )
         {
-            nodecode = ARCH_DEP(vfetch8) ( nodeaddr,     AR4, regs );
-            nodedata = ARCH_DEP(vfetch8) ( nodeaddr + 8, AR4, regs );
+            nodecode = ARCH_DEP(vfetch8) ( (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
+            nodedata = ARCH_DEP(vfetch8) ( (nodeaddr+8) & ADDRESS_MAXWRAP(regs), AR4, regs );
         }
         else
 #endif
         {
-            nodecode = ARCH_DEP(vfetch4) ( nodeaddr,     AR4, regs );
-            nodedata = ARCH_DEP(vfetch4) ( nodeaddr + 4, AR4, regs );
+            nodecode = ARCH_DEP(vfetch4) ( (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
+            nodedata = ARCH_DEP(vfetch4) ( (nodeaddr+4) & ADDRESS_MAXWRAP(regs), AR4, regs );
         }
 
         /* Exit with cc0 whenever we reach a node whose codeword is equal
@@ -1883,14 +1868,14 @@ BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
 #if defined(FEATURE_ESAME)
             if ( a64 )
             {
-                ARCH_DEP(vstore8) ( GR_A(0,regs), nodeaddr,     AR4, regs );
-                ARCH_DEP(vstore8) ( GR_A(1,regs), nodeaddr + 8, AR4, regs );
+                ARCH_DEP(vstore8) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
+                ARCH_DEP(vstore8) ( GR_A(1,regs), (nodeaddr+8) & ADDRESS_MAXWRAP(regs), AR4, regs );
             }
             else
 #endif
             {
-                ARCH_DEP(vstore4) ( GR_A(0,regs), nodeaddr,     AR4, regs );
-                ARCH_DEP(vstore4) ( GR_A(1,regs), nodeaddr + 4, AR4, regs );
+                ARCH_DEP(vstore4) ( GR_A(0,regs), (nodeaddr+0) & ADDRESS_MAXWRAP(regs), AR4, regs );
+                ARCH_DEP(vstore4) ( GR_A(1,regs), (nodeaddr+4) & ADDRESS_MAXWRAP(regs), AR4, regs );
             }
 
             /* Update GR0 and GR1 with the new "highest encountered" values */

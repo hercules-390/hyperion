@@ -41,7 +41,7 @@
 /*                                                                   */
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
- 
+
 
 #include "hercules.h"
 #include "devtype.h"
@@ -71,7 +71,7 @@ int i;
     else
         for (i = 0; i < 16; i++)
             fprintf(webblk->hsock, "CR%1.1X=%16.16llX%s", i,
-                (long long)regs->CR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");           
+                (long long)regs->CR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");
 
     fprintf(webblk->hsock, "</PRE>\n");
 
@@ -100,7 +100,7 @@ int i;
     else
         for (i = 0; i < 16; i++)
             fprintf(webblk->hsock, "GR%1.1X=%16.16llX%s", i,
-                (long long)regs->GR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");           
+                (long long)regs->GR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");
 
     fprintf(webblk->hsock, "</PRE>\n");
 
@@ -114,7 +114,7 @@ int i;
 void cgibin_psw(WEBBLK *webblk)
 {
     REGS *regs;
-    QWORD   qword;                            /* quadword work area      */  
+    QWORD   qword;                            /* quadword work area      */
 
     char *value;
     int autorefresh=0;
@@ -144,7 +144,7 @@ void cgibin_psw(WEBBLK *webblk)
     {
         fprintf(webblk->hsock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
         fprintf(webblk->hsock, "Refresh Interval: ");
-        fprintf(webblk->hsock, "<INPUT type=text size=2 name=\"refresh_interval\" value=%d>\n", 
+        fprintf(webblk->hsock, "<INPUT type=text size=2 name=\"refresh_interval\" value=%d>\n",
            refresh_interval);
     }
     else
@@ -175,12 +175,12 @@ void cgibin_psw(WEBBLK *webblk)
                 qword[8], qword[9], qword[10], qword[11],
                 qword[12], qword[13], qword[14], qword[15]);
     }
- 
+
     if (autorefresh)
     {
         /* JavaScript to cause automatic page refresh */
         fprintf(webblk->hsock, "<script language=\"JavaScript\">\n");
-        fprintf(webblk->hsock, "<!--\nsetTimeout('window.location.replace(\"%s?refresh_interval=%d&refresh=1\")', %d)\n", 
+        fprintf(webblk->hsock, "<!--\nsetTimeout('window.location.replace(\"%s?refresh_interval=%d&refresh=1\")', %d)\n",
                cgi_baseurl(webblk),
                refresh_interval,
                refresh_interval*1000);
@@ -257,7 +257,7 @@ int     msgcount = 22;
     {
         fprintf(webblk->hsock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
         fprintf(webblk->hsock, "Refresh Interval: ");
-        fprintf(webblk->hsock, "<INPUT type=text name=\"refresh_interval\" size=2 value=%d>\n", 
+        fprintf(webblk->hsock, "<INPUT type=text name=\"refresh_interval\" size=2 value=%d>\n",
            refresh_interval);
     }
     else
@@ -276,7 +276,7 @@ int     msgcount = 22;
     fprintf(webblk->hsock, "<INPUT type=hidden name=%srefresh value=1>\n",autorefresh ? "auto" : "no");
     fprintf(webblk->hsock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
     fprintf(webblk->hsock, "</FORM>\n");
-    
+
     if (autorefresh)
     {
         /* JavaScript to cause automatic page refresh */
@@ -285,7 +285,7 @@ int     msgcount = 22;
                "?refresh_interval=%d"
                "&refresh=1"
                "&msgcount=%d"
-               "\")', %d)\n", 
+               "\")', %d)\n",
                cgi_baseurl(webblk),
                refresh_interval,
                msgcount,
@@ -395,9 +395,9 @@ REGS *regs;
 
     fprintf(webblk->hsock,"</select>\n"
                           "<input type=submit name=selcpu value=\"Select\">\n"
-                          "<input type=hidden name=cpu value=%d>\n" 
-                          "<input type=hidden name=select_gr value=%c>\n" 
-                          "<input type=hidden name=select_cr value=%c>\n" 
+                          "<input type=hidden name=cpu value=%d>\n"
+                          "<input type=hidden name=select_gr value=%c>\n"
+                          "<input type=hidden name=select_cr value=%c>\n"
                           "<input type=hidden name=select_ar value=%c>\n",
                           cpu, select_gr?'S':'H',select_cr?'S':'H',select_ar?'S':'H');
     fprintf(webblk->hsock,"Mode: %s\n",get_arch_mode_string(regs));
@@ -408,9 +408,9 @@ REGS *regs;
         fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_gr "
                               "value=\"Select General Registers\">\n"
-                              "<input type=hidden name=cpu value=%d>\n" 
-                              "<input type=hidden name=select_cr value=%c>\n" 
-                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "<input type=hidden name=cpu value=%d>\n"
+                              "<input type=hidden name=select_cr value=%c>\n"
+                              "<input type=hidden name=select_ar value=%c>\n"
                               "</form>\n",cpu,select_cr?'S':'H',select_ar?'S':'H');
     }
     else
@@ -418,9 +418,9 @@ REGS *regs;
         fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_gr "
                               "value=\"Hide General Registers\">\n"
-                              "<input type=hidden name=cpu value=%d>\n" 
-                              "<input type=hidden name=select_cr value=%c>\n" 
-                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "<input type=hidden name=cpu value=%d>\n"
+                              "<input type=hidden name=select_cr value=%c>\n"
+                              "<input type=hidden name=select_ar value=%c>\n"
                               "</form>\n",cpu,select_cr?'S':'H',select_ar?'S':'H');
 
         fprintf(webblk->hsock,"<form method=post>\n"
@@ -439,10 +439,10 @@ REGS *regs;
         fprintf(webblk->hsock,"</table>\n"
                               "<input type=submit name=refresh value=\"Refresh\">\n"
                               "<input type=submit name=alter_gr value=\"Alter\">\n"
-                              "<input type=hidden name=cpu value=%d>\n" 
-                              "<input type=hidden name=select_gr value=S>\n" 
-                              "<input type=hidden name=select_cr value=%c>\n" 
-                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "<input type=hidden name=cpu value=%d>\n"
+                              "<input type=hidden name=select_gr value=S>\n"
+                              "<input type=hidden name=select_cr value=%c>\n"
+                              "<input type=hidden name=select_ar value=%c>\n"
                               "</form>\n",cpu,select_cr?'S':'H',select_ar?'S':'H');
     }
 
@@ -452,9 +452,9 @@ REGS *regs;
         fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_cr "
                               "value=\"Select Control Registers\">\n"
-                              "<input type=hidden name=cpu value=%d>\n" 
-                              "<input type=hidden name=select_gr value=%c>\n" 
-                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "<input type=hidden name=cpu value=%d>\n"
+                              "<input type=hidden name=select_gr value=%c>\n"
+                              "<input type=hidden name=select_ar value=%c>\n"
                               "</form>\n",cpu,select_gr?'S':'H',select_ar?'S':'H');
     }
     else
@@ -462,9 +462,9 @@ REGS *regs;
         fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_cr "
                               "value=\"Hide Control Registers\">\n"
-                              "<input type=hidden name=cpu value=%d>\n" 
-                              "<input type=hidden name=select_gr value=%c>\n" 
-                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "<input type=hidden name=cpu value=%d>\n"
+                              "<input type=hidden name=select_gr value=%c>\n"
+                              "<input type=hidden name=select_ar value=%c>\n"
                               "</form>\n",cpu,select_gr?'S':'H',select_ar?'S':'H');
 
         fprintf(webblk->hsock,"<form method=post>\n"
@@ -483,10 +483,10 @@ REGS *regs;
         fprintf(webblk->hsock,"</table>\n"
                               "<input type=submit name=refresh value=\"Refresh\">\n"
                               "<input type=submit name=alter_cr value=\"Alter\">\n"
-                              "<input type=hidden name=cpu value=%d>\n" 
-                              "<input type=hidden name=select_cr value=S>\n" 
-                              "<input type=hidden name=select_gr value=%c>\n" 
-                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "<input type=hidden name=cpu value=%d>\n"
+                              "<input type=hidden name=select_cr value=S>\n"
+                              "<input type=hidden name=select_gr value=%c>\n"
+                              "<input type=hidden name=select_ar value=%c>\n"
                               "</form>\n",cpu,select_gr?'S':'H',select_ar?'S':'H');
     }
 
@@ -498,9 +498,9 @@ REGS *regs;
             fprintf(webblk->hsock,"<form method=post>\n"
                                   "<input type=submit name=select_ar "
                                   "value=\"Select Access Registers\">\n"
-                                  "<input type=hidden name=cpu value=%d>\n" 
-                                  "<input type=hidden name=select_gr value=%c>\n" 
-                                  "<input type=hidden name=select_cr value=%c>\n" 
+                                  "<input type=hidden name=cpu value=%d>\n"
+                                  "<input type=hidden name=select_gr value=%c>\n"
+                                  "<input type=hidden name=select_cr value=%c>\n"
                                   "</form>\n",cpu,select_gr?'S':'H',select_cr?'S':'H');
         }
         else
@@ -508,11 +508,11 @@ REGS *regs;
             fprintf(webblk->hsock,"<form method=post>\n"
                                   "<input type=submit name=select_ar "
                                   "value=\"Hide Access Registers\">\n"
-                                  "<input type=hidden name=cpu value=%d>\n" 
-                                  "<input type=hidden name=select_gr value=%c>\n" 
-                                  "<input type=hidden name=select_cr value=%c>\n" 
+                                  "<input type=hidden name=cpu value=%d>\n"
+                                  "<input type=hidden name=select_gr value=%c>\n"
+                                  "<input type=hidden name=select_cr value=%c>\n"
                                   "</form>\n",cpu,select_gr?'S':'H',select_cr?'S':'H');
-    
+
             fprintf(webblk->hsock,"<form method=post>\n"
                                   "<table>\n");
             for(i = 0; i < 16; i++)
@@ -524,10 +524,10 @@ REGS *regs;
             fprintf(webblk->hsock,"</table>\n"
                                   "<input type=submit name=refresh value=\"Refresh\">\n"
                                   "<input type=submit name=alter_ar value=\"Alter\">\n"
-                                  "<input type=hidden name=cpu value=%d>\n" 
-                                  "<input type=hidden name=select_gr value=%c>\n" 
-                                  "<input type=hidden name=select_cr value=%c>\n" 
-                                  "<input type=hidden name=select_ar value=S>\n" 
+                                  "<input type=hidden name=cpu value=%d>\n"
+                                  "<input type=hidden name=select_gr value=%c>\n"
+                                  "<input type=hidden name=select_cr value=%c>\n"
+                                  "<input type=hidden name=select_ar value=S>\n"
                                   "</form>\n",cpu,select_gr?'S':'H',select_cr?'S':'H');
         }
     }
@@ -543,10 +543,10 @@ int i, j;
 char *value;
 U32 addr = 0;
 
-    /* INCOMPLETE 
+    /* INCOMPLETE
      * no storage alter
      * no storage type (abs/real/prim virt/sec virt/access reg virt)
-     * no cpu selection for storage other then abs 
+     * no cpu selection for storage other then abs
      */
 
     if((value = cgi_variable(webblk,"alter_a0")))
@@ -623,12 +623,12 @@ U32 doipl;
         iplcpu = sysblk.iplcpu;
 
     if((value = cgi_variable(webblk,"loadparm")))
-	set_loadparm(value);
+    set_loadparm(value);
 
     /* Validate CPU number */
     if(iplcpu >= MAX_CPU)
         doipl = 0;
-  
+
     if(!doipl)
     {
         /* Present IPL parameters */

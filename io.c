@@ -735,13 +735,13 @@ RADR    pfx;                            /* Prefix                    */
     else
     {
 #if defined(_FEATURE_IO_ASSIST)
-        /* If no I/O assisted devices have pending interrupts 
+        /* If no I/O assisted devices have pending interrupts
            then we must intercept */
         SIE_INTERCEPT(regs);
 #endif
         icode = 0;
     }
-    
+
     regs->psw.cc = (icode == 0) ? 0 : 1;
 }
 
@@ -955,7 +955,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
     /* to possibly complete an I/O - to prevent a TIO Busy Loop  */
     if(regs->psw.cc==2)
     {
-	    sched_yield();
+        sched_yield();
     }
 
 }

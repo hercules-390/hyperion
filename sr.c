@@ -971,7 +971,7 @@ char     buf[SR_MAX_STRING_LENGTH+1];
                 if (devargv[i]) free(devargv[i]);
                 devargv[i] = NULL;
             }
-            devnum = devargc = devargx = 0;    
+            devnum = devargc = devargx = 0;
             break;
 
         case SR_DEV_ORB:
@@ -1222,7 +1222,7 @@ char     buf[SR_MAX_STRING_LENGTH+1];
     {
         if (dev->suspended && (dev->pmcw.flag5 & PMCW5_V))
         {
-	    dev->resumesuspended=1;
+        dev->resumesuspended=1;
             switch (sysblk.arch_mode) {
 #if defined(_370)
             case ARCH_370:

@@ -116,7 +116,7 @@ void scp_command (char *command, int priomsg)
 
     /* Set event pending flag in service parameter */
     sysblk.servparm |= SERVSIG_PEND;
-    
+
     /* Set service signal interrupt pending for read event data */
     ON_IC_SERVSIG;
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
@@ -164,7 +164,7 @@ int signal_quiesce (U16 count, BYTE unit)
 
     /* Set event pending flag in service parameter */
     sysblk.servparm |= SERVSIG_PEND;
-    
+
     /* Set service signal interrupt pending for read event data */
     ON_IC_SERVSIG;
     WAKEUP_CPUS_MASK (sysblk.waiting_mask);
@@ -341,10 +341,10 @@ BYTE ARCH_DEP(scpinfo_cfg)[6] = {
                         | SCCB_CFG4_EXTENDED_TRANSLATION
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION)*/
 #if defined(FEATURE_LOAD_REVERSED)
-                        | SCCB_CFG4_LOAD_REVERSED_FACILITY            
+                        | SCCB_CFG4_LOAD_REVERSED_FACILITY
 #endif /*defined(FEATURE_LOAD_REVERSED)*/
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
-                        | SCCB_CFG4_EXTENDED_TRANSLATION_FACILITY2   
+                        | SCCB_CFG4_EXTENDED_TRANSLATION_FACILITY2
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 #if defined(FEATURE_STORE_SYSTEM_INFORMATION)
                         | SCCB_CFG4_STORE_SYSTEM_INFORMATION
@@ -622,7 +622,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
 #if defined(_900) || defined(FEATURE_ESAME)
         /* SIE supports the full address range */
-        sccbscp->maxvm = 0;  
+        sccbscp->maxvm = 0;
         /* realiszm is valid */
         STORE_FW(sccbscp->grzm, 0);
         /* Number of storage increments installed in esame mode */
@@ -849,7 +849,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         sccb->resp = SCCB_RESP_BUFF_LEN_ERR;
                         break;
                     }
-    
+
                     /* Print line unless it is a response prompt */
                     if (!(mto_bk->ltflag[0] & SCCB_MTO_LTFLG0_PROMPT))
                     {
@@ -865,7 +865,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 mcd_len -= obj_len;
                 obj_hdr=(SCCB_OBJ_HDR *)((BYTE*)obj_hdr + obj_len);
             }
-    
+
             /* Indicate Event Processed */
             evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
 
@@ -883,7 +883,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             {
             BYTE systype[9], sysname[9], sysplex[9];
             U64  syslevel;
-            
+
                 for(i = 0; i < 8; i++)
                 {
                     systype[i] = guest_to_host(cpi_bk->system_type[i]);
@@ -963,10 +963,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         event_msglen = strlen(servc_scpcmdstr);
         if (event_msglen == 0)
         {
-	    if(servc_signal_quiesce_pending)
-		{
-		    sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
-		    evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
+        if(servc_signal_quiesce_pending)
+        {
+            sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
+            evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
 
                     /* Set response code X'75F0' if SCCB length exceeded */
                     if ((evd_len + sizeof(SCCB_HEADER)) > sccblen)
@@ -994,22 +994,22 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                     /* Set type in event header */
                     evd_hdr->type = SCCB_EVD_TYPE_SIGQ;
 
-		    STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
-		    sgq_bk->unit = servc_signal_quiesce_unit;
+            STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
+            sgq_bk->unit = servc_signal_quiesce_unit;
 
-		    servc_signal_quiesce_pending = 0;
+            servc_signal_quiesce_pending = 0;
 
                     /* Set response code X'0020' in SCCB header */
                     sccb->reas = SCCB_REAS_NONE;
                     sccb->resp = SCCB_RESP_COMPLETE;
 
                     break;
-	        }
-	    else
+            }
+        else
             {
                 sccb->reas = SCCB_REAS_NO_EVENTS;
                 sccb->resp = SCCB_RESP_NO_EVENTS;
-	    }
+        }
             break;
         }
 

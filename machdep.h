@@ -41,19 +41,19 @@
 #define set_bit(x,y,z) set_bit_i686((y),(z))
 static __inline__ void set_bit_i686(int nr, volatile void * addr)
 {
-	__asm__ __volatile__( LOCK_PREFIX
-		"btsl %1,%0"
-		:"=m" (ADDR)
-		:"Ir" (nr));
+    __asm__ __volatile__( LOCK_PREFIX
+        "btsl %1,%0"
+        :"=m" (ADDR)
+        :"Ir" (nr));
 }
 
 #define clear_bit(x,y,z) clear_bit_i686((y),(z))
 static __inline__ void clear_bit_i686(int nr, volatile void * addr)
 {
-	__asm__ __volatile__( LOCK_PREFIX
-		"btrl %1,%0"
-		:"=m" (ADDR)
-		:"Ir" (nr));
+    __asm__ __volatile__( LOCK_PREFIX
+        "btrl %1,%0"
+        :"=m" (ADDR)
+        :"Ir" (nr));
 }
 
 #define test_bit(x,y,z) test_bit_i686((x),(y),(z))
@@ -78,10 +78,10 @@ static __inline__ void or_bits_i686(int len, int bits, volatile void * addr)
 {
     switch (len) {
     case 4:
-	__asm__ __volatile__( LOCK_PREFIX
-		"orl %1,%0"
-		:"=m" (ADDR)
-		:"Ir" (bits));
+    __asm__ __volatile__( LOCK_PREFIX
+        "orl %1,%0"
+        :"=m" (ADDR)
+        :"Ir" (bits));
         break;
     }
 }
@@ -91,10 +91,10 @@ static __inline__ void and_bits_i686(int len, int bits, volatile void * addr)
 {
     switch (len) {
     case 4:
-	__asm__ __volatile__( LOCK_PREFIX
-		"andl %1,%0"
-		:"=m" (ADDR)
-		:"Ir" (bits));
+    __asm__ __volatile__( LOCK_PREFIX
+        "andl %1,%0"
+        :"=m" (ADDR)
+        :"Ir" (bits));
         break;
     }
 }
@@ -395,23 +395,23 @@ static __inline__ BYTE cmpxchg8_amd64(U64 *old, U64 new, void *ptr) {
 static __inline__ unsigned long
 __cmpxchg_u32(volatile int *p, int old, int new)
 {
-	int prev;
+    int prev;
 
-	__asm__ __volatile__ ("\n\
-1:	lwarx	%0,0,%2 \n\
-	cmpw	0,%0,%3 \n\
-	bne	2f \n\
- 	stwcx.	%4,0,%2 \n\
-	bne-	1b\n"
+    __asm__ __volatile__ ("\n\
+1:  lwarx   %0,0,%2 \n\
+    cmpw    0,%0,%3 \n\
+    bne 2f \n\
+    stwcx.  %4,0,%2 \n\
+    bne-    1b\n"
 #ifdef OPTION_SMP
-"	sync\n"
+"   sync\n"
 #endif /* OPTION_SMP */
 "2:"
-	: "=&r" (prev), "=m" (*p)
-	: "r" (p), "r" (old), "r" (new), "m" (*p)
-	: "cc", "memory");
+    : "=&r" (prev), "=m" (*p)
+    : "r" (p), "r" (old), "r" (new), "m" (*p)
+    : "cc", "memory");
 
-	return prev;
+    return prev;
 }
 
 #define cmpxchg4(x,y,z) cmpxchg4_ppc(x,y,z)

@@ -29,7 +29,7 @@ DEVBLK *dev;                            /* -> device block           */
     /* Specification exception if invalid function code */
     if(regs->GR_L(0) > SIGA_FC_MAX)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        
+
     /* Operand exception if reg 1 bits 0-15 not X'0001' */
     if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
@@ -58,30 +58,30 @@ DEVBLK *dev;                            /* -> device block           */
     if ((dev->scsw.flag2 & SCSW2_Q) == 0)
     {
         release_lock (&dev->lock);
-        regs->psw.cc = 1;  
+        regs->psw.cc = 1;
         return;
     }
 
     switch(regs->GR_L(0)) {
 
     case SIGA_FC_R:
-	if(dev->hnd->siga_r)
+    if(dev->hnd->siga_r)
             regs->psw.cc = (dev->hnd->siga_r) (dev, regs->GR_L(2) );
         else
             regs->psw.cc = 3;
         break;
 
     case SIGA_FC_W:
-	if(dev->hnd->siga_r)
+    if(dev->hnd->siga_r)
             regs->psw.cc = (dev->hnd->siga_w) (dev, regs->GR_L(2) );
         else
             regs->psw.cc = 3;
         break;
 
     case SIGA_FC_S:
-        /* No signalling required for sync requests as we emulate 
+        /* No signalling required for sync requests as we emulate
            a real machine */
-        regs->psw.cc = 0;  
+        regs->psw.cc = 0;
         break;
 
     }

@@ -1235,20 +1235,6 @@ U32     n;                              /* 32-bit operand values     */
 /*              (c) Copyright "Fish" (David B. Trout), 2005          */
 /*-------------------------------------------------------------------*/
 
-#undef   CFC_HIGH_BIT
-#undef   CFC_OPERSIZE
-#undef   CFC_GR2_SHIFT
-#undef   AR1
-#define  AR1  (1)                       /* Access Register 1         */
-#if defined(FEATURE_ESAME)
-  #define  CFC_HIGH_BIT    ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )
-  #define  CFC_OPERSIZE    ( a64 ?  6 :  2 )
-  #define  CFC_GR2_SHIFT   ( a64 ? 48 : 16 )
-#else
-  #define  CFC_HIGH_BIT    ( 0x80000000 )
-  #define  CFC_OPERSIZE    (  2 )
-  #define  CFC_GR2_SHIFT   ( 16 )
-#endif
 #ifndef DID_CFC_OP_TYPEDEF
 #define DID_CFC_OP_TYPEDEF
 typedef struct { U16 a; U16 b; U16 c; } CFC_OP;
@@ -1301,8 +1287,8 @@ BYTE    gr2_shift = CFC_GR2_SHIFT;      /* (work constant; uses a64) */
 
         /* Fetch next chunk of operand data... */
 
-        op1_addr = ( GR_A(1,regs) + index + 0 ) & ADDRESS_MAXWRAP(regs);
-        op3_addr = ( GR_A(3,regs) + index + 0 ) & ADDRESS_MAXWRAP(regs);
+        op1_addr = ( regs->GR(1) + index + 0 ) & ADDRESS_MAXWRAP(regs);
+        op3_addr = ( regs->GR(3) + index + 0 ) & ADDRESS_MAXWRAP(regs);
 
         op1.a = ARCH_DEP(vfetch2) ( op1_addr, AR1, regs );
         op3.a = ARCH_DEP(vfetch2) ( op3_addr, AR1, regs );
@@ -1310,14 +1296,14 @@ BYTE    gr2_shift = CFC_GR2_SHIFT;      /* (work constant; uses a64) */
 #if defined(FEATURE_ESAME)
         if ( a64 )
         {
-            op1_addr = ( GR_A(1,regs) + index + 2 ) & ADDRESS_MAXWRAP(regs);
-            op3_addr = ( GR_A(3,regs) + index + 2 ) & ADDRESS_MAXWRAP(regs);
+            op1_addr = ( regs->GR(1) + index + 2 ) & ADDRESS_MAXWRAP(regs);
+            op3_addr = ( regs->GR(3) + index + 2 ) & ADDRESS_MAXWRAP(regs);
 
             op1.b = ARCH_DEP(vfetch2) ( op1_addr, AR1, regs );
             op3.b = ARCH_DEP(vfetch2) ( op3_addr, AR1, regs );
 
-            op1_addr = ( GR_A(1,regs) + index + 4 ) & ADDRESS_MAXWRAP(regs);
-            op3_addr = ( GR_A(3,regs) + index + 4 ) & ADDRESS_MAXWRAP(regs);
+            op1_addr = ( regs->GR(1) + index + 4 ) & ADDRESS_MAXWRAP(regs);
+            op3_addr = ( regs->GR(3) + index + 4 ) & ADDRESS_MAXWRAP(regs);
 
             op1.c = ARCH_DEP(vfetch2) ( op1_addr, AR1, regs );
             op3.c = ARCH_DEP(vfetch2) ( op3_addr, AR1, regs );

@@ -129,16 +129,16 @@ typedef struct _SCCB_SCP_INFO {
                                            list elements allowed     */
         FWORD   etrtol;                 /* ETR sync check tolerance  */
         BYTE    resv60[3];
-        BYTE    maxvm;                  /* Max guest storage size   
+        BYTE    maxvm;                  /* Max guest storage size
                                            >= 31 and <= 64 (2**pow)-1
-                                           is the max supported 
+                                           is the max supported
                                            guest real size. 0 means
                                            not constrained.          */
         FWORD   grzm;                   /* Addess increment size in
-                                           units of 1M, valid only 
+                                           units of 1M, valid only
                                            if realiszm is zero       */
         DWORD   grnmx;                  /* Maximum increment number
-                                           when it is larger then 
+                                           when it is larger then
                                            64K or when ESAME is on   */
         BYTE    resv8[16];              /* Reserved                  */
     } SCCB_SCP_INFO;
@@ -415,8 +415,8 @@ typedef struct _SCCB_NLS_BK {
 
 /* Signal Quiesce */
 typedef struct _SCCB_SGQ_BK {
-	HWORD   count;                  /* Countdown in units        */
-	BYTE    unit;                   /* Unit type                 */
+    HWORD   count;                  /* Countdown in units        */
+    BYTE    unit;                   /* Unit type                 */
 #define SCCB_SGQ_SEC 0
 #define SCCB_SGQ_MIN 1
 #define SCCB_SGQ_HR  2

@@ -1158,7 +1158,7 @@ int             rc;                     /* Return code               */
         if (HETE_TAPEMARK == rc)
         {
             dev->curfilen++;
-            dev->blockid++;				
+            dev->blockid++;
             return 0;
         }
 

@@ -444,7 +444,7 @@ int     i;                              /* Loop index                */
             free(dev->group);
         }
 
-	dev->group = NULL;
+    dev->group = NULL;
     }
 
     ret_devblk(dev);
@@ -669,7 +669,7 @@ DEVBLK *tmp;
         dev->group->members = members;
         dev->group->acount = 1;
         dev->group->memdev[0] = dev;
-	dev->member = 0;
+    dev->member = 0;
     }
 
     return (dev->group && (dev->group->members == dev->group->acount));

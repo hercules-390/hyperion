@@ -535,6 +535,44 @@ z900_ ## _name
  #define XSTORE_PAGEMASK    0x7FFFF000
 #endif
 
+/*-------------------------------------------------------------------*/
+/* Macros use by Compare and Form Codeword (CFC (B21A)) instruction  */
+/*-------------------------------------------------------------------*/
+
+#undef   CFC_HIGH_BIT
+#undef   CFC_OPERSIZE
+#undef   CFC_GR2_SHIFT
+#undef   AR1
+#define  AR1  (1)                       /* Access Register 1         */
+#if defined(FEATURE_ESAME)
+  #define  CFC_HIGH_BIT    ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )
+  #define  CFC_OPERSIZE    ( a64 ?  6 :  2 )
+  #define  CFC_GR2_SHIFT   ( a64 ? 48 : 16 )
+#else
+  #define  CFC_HIGH_BIT    ( 0x80000000 )
+  #define  CFC_OPERSIZE    (  2 )
+  #define  CFC_GR2_SHIFT   ( 16 )
+#endif
+
+/*-------------------------------------------------------------------*/
+/* Macros use by Update Tree (CFC (0102)) instruction                */
+/*-------------------------------------------------------------------*/
+
+#undef   UPT_ALIGN_MASK
+#undef   UPT_SHIFT_MASK
+#undef   UPT_HIGH_BIT
+#undef   AR4
+#define  AR4  (4)                       /* Access Register 4         */
+#if defined(FEATURE_ESAME)
+  #define  UPT_ALIGN_MASK   ( a64 ? 0x000000000000000FULL : 0x0000000000000007ULL )
+  #define  UPT_SHIFT_MASK   ( a64 ? 0xFFFFFFFFFFFFFFF0ULL : 0xFFFFFFFFFFFFFFF8ULL )
+  #define  UPT_HIGH_BIT     ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )
+#else
+  #define  UPT_ALIGN_MASK   ( 0x00000007 )
+  #define  UPT_SHIFT_MASK   ( 0xFFFFFFF8 )
+  #define  UPT_HIGH_BIT     ( 0x80000000 )
+#endif
+
 /* Macros for accelerated lookup */
 #undef SPACE_BIT
 #undef AR_BIT
