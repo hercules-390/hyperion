@@ -441,4 +441,5 @@ AH_TEMPLATE([_BSD_SOCKLEN_T_],
 AH_TEMPLATE([_INTL_REDIRECT_MACROS],
             [Define to 1 if non-Intel architecture (gettext)])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in intl/Makefile m4/Makefile man/Makefile ])
+

@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  po util html
+SUBDIRS = intl m4 po util html man
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -152,4 +152,5 @@ endif
 
 %.s: %.c
 	$(COMPILE) -S $<
+
 
