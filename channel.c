@@ -763,6 +763,9 @@ void device_thread (DEVBLK *dev)
 
     obtain_lock(&dev->lock);
 
+    /* Get I/O buffer if none exists */
+    if (dev->iobuf == NULL) dev->iobuf = malloc (65536);
+
     while (1)
     {
         if (LOOPER_DIE == dev->loopercmd) break;
@@ -819,6 +822,11 @@ void device_thread (DEVBLK *dev)
     }
 
     dev->tid = 0;
+    if (dev->iobuf != NULL)
+    {
+        free (dev->iobuf);
+        dev->iobuf = NULL;
+    }
     release_lock(&dev->lock);
 
 } /* end function device_thread */
@@ -1351,7 +1359,18 @@ BYTE    area[64];                       /* Message area              */
 DEVXF  *devexec;                        /* -> Execute CCW function   */
 int     ccwseq = 0;                     /* CCW sequence number       */
 int     bufpos = 0;                     /* Position in I/O buffer    */
-BYTE    iobuf[65536];                   /* Channel I/O buffer        */
+/* BYTE iobuf[65536];                   ** Channel I/O buffer        */
+BYTE   *iobuf;                          /* Channel I/O buffer        */
+
+    /* Get an I/O buffer if one doesn't exist */
+    if (dev->iobuf == NULL)
+    {
+        dev->iobuf = malloc (65536);
+        if (dev->iobuf == NULL)
+            logmsg("%4.4X: channel i/o buf malloc failed: %s\n",
+                   dev->devnum, strerror(errno));
+    }
+    iobuf = dev->iobuf;
 
     /* Extract the I/O parameters from the ORB */              /*@IWZ*/
     FETCH_FW(ccwaddr, dev->orb.ccwaddr);                       /*@IWZ*/
@@ -1692,13 +1711,21 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             break;
         }
 
+        /* Check that I/O buffer exists */
+        if (iobuf == NULL)
+        {
+            chanstat = CSW_PROGC;
+            break;
+        }
+
+
         /* For WRITE and CONTROL operations, copy data
            from main storage into channel buffer */
         if (IS_CCW_WRITE(code)
             || (IS_CCW_CONTROL(code) && !IS_CCW_NOP(code)))
         {
             /* Channel program check if data exceeds buffer size */
-            if (bufpos + count > sizeof(iobuf))
+            if (bufpos + count > 65536)
             {
                 chanstat = CSW_PROGC;
                 break;

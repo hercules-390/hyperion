@@ -11,10 +11,10 @@ VERSION  = 2.12n
 DESTDIR  = $(PREFIX)/usr/bin
 
 # For Linux use:
-CFLAGS  = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
+CFLAGS  = -O3 -Wall -march=pentium -fomit-frame-pointer \
 	   -DVERSION=$(VERSION)
 # For older Linux versions use:
-CFLAGS  = -O3 -malign-double -march=pentiumpro -fomit-frame-pointer \
+CFLAGS  = -O3 -march=pentiumpro -fomit-frame-pointer \
 	  -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP \
 	  -DNO_ATTR_REGPARM
 # For Linux/390 use:

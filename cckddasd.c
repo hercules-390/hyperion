@@ -550,12 +550,6 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         {
             buf = dfw->buf;
 
-            /* wakeup dfw if old track was updated */
-            if (cckd->dfwaiting)
-                signal_condition (&cckd->dfwcond);
-
-            release_lock (&cckd->dfwlock);
-
             /* check for readahead miss */
             if (cckd->cache[lru].buf && !cckd->cache[lru].used)
                 cckd->misses++;
@@ -578,6 +572,12 @@ BYTE           *buf,*buf2;              /* Buffers                   */
             {   cckd->cachehits++;
                 if (trk == cckd->curtrk + 1) cckd_readahead (dev, trk);
             }
+
+            /* wakeup dfw if old track was updated */
+            if (cckd->dfwaiting)
+                signal_condition (&cckd->dfwcond);
+
+            release_lock (&cckd->dfwlock);
             release_lock (&cckd->cachelock);
 
             DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d in dfwq %p buf %p\n",

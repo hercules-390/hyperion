@@ -530,6 +530,7 @@ typedef struct _DEVBLK {
 	DEVXF  *devexec;		/* -> Execute CCW function   */
 	DEVCF  *devclos;		/* -> Close device function  */
 	LOCK	lock;			/* Device block lock	     */
+	BYTE   *iobuf;			/* Device I/O Buffer		*/
 	COND	resumecond;		/* Resume condition	     */
 	COND	loopercond;		/* Loop or die condition     */
 	int	loopercmd;		/* Loop or die command	     */

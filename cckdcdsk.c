@@ -1128,7 +1128,8 @@ overlap:
                             }
                         }
                         /* try the next length less than the recovery length */
-                        if (rc != Z_OK && rcv[k].len - (t+1) > CKDDASD_TRKHDR_SIZE)
+                        if (rc != Z_OK && rcv[k].len - (t+1) > CKDDASD_TRKHDR_SIZE
+                          &&rcv[k].len - (t+1) <= maxlen)
                         {
                             buf2len = trksz - CKDDASD_TRKHDR_SIZE;
                             trklen = rcv[k].len - (t+1) - CKDDASD_TRKHDR_SIZE;
@@ -1192,7 +1193,8 @@ overlap:
                             }
                         }
                         /* try the next length less than the recovery length */
-                        if (rc != BZ_OK && rcv[k].len - (t+1) > CKDDASD_TRKHDR_SIZE)
+                        if (rc != BZ_OK && rcv[k].len - (t+1) > CKDDASD_TRKHDR_SIZE
+                          &&rcv[k].len - (t+1) <= maxlen)
                         {
                             buf2len = trksz - CKDDASD_TRKHDR_SIZE;
                             trklen = rcv[k].len - (t+1);
