@@ -958,7 +958,7 @@ typedef struct _PMCW {
 #define PMCW4_Q         0x80            /* QDIO available            */
 #define PMCW4_ISC       0x38            /* Interruption subclass     */
 #define PMCW4_A         0x01            /* Alternate Block Control   */
-#define PMCW4_RESV      0xC6            /* Reserved bits - must be 0 */
+#define PMCW4_RESV      0x76            /* Reserved bits - must be 0 */
 
 /* Bit definitions for PMCW flag byte 5 */
 #define PMCW5_E         0x80            /* Subchannel enabled        */
