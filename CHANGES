@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+14 Feb 2005 Add zArch (64-bit mode) support to UPT (Update Tree)
+            and CFC (Compare and Form Codeword) instructions - Fish
 07 Feb 2005 Make logmsg/p/b functions not macros - Roger Bowler
 05 Feb 2005 CMPSC 64bit fix + typo - Bernard van der Helm
 05 Feb 2005 Begin MSVC compiler support - Roger Bowler

@@ -1232,104 +1232,196 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* B21A CFC   - Compare and Form Codeword                        [S] */
 /*              (c) Copyright Peter Kuschnerus, 1999-2005            */
-/* 64BIT INCOMPLETE                                                  */
+/*              (c) Copyright "Fish" (David B. Trout), 2005          */
 /*-------------------------------------------------------------------*/
+
+#undef   CFC_HIGH_BIT
+#undef   CFC_OPERSIZE
+#undef   CFC_GR2_SHIFT
+#undef   AR1
+#define  AR1  (1)                       /* Access Register 1         */
+#if defined(FEATURE_ESAME)
+  #define  CFC_HIGH_BIT    ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )
+  #define  CFC_OPERSIZE    ( a64 ?  6 :  2 )
+  #define  CFC_GR2_SHIFT   ( a64 ? 48 : 16 )
+#else
+  #define  CFC_HIGH_BIT    ( 0x80000000 )
+  #define  CFC_OPERSIZE    (  2 )
+  #define  CFC_GR2_SHIFT   ( 16 )
+#endif
+#ifndef DID_CFC_OP_TYPEDEF
+#define DID_CFC_OP_TYPEDEF
+typedef struct { U16 a; U16 b; U16 c; } CFC_OP;
+#endif
+
 DEF_INST(compare_and_form_codeword)
 {
 int     b2;                             /* Base of effective addr    */
-VADR    effective_addr2;                /* Effective address         */
-int     cc;                             /* Condition code            */
-int     ar1 = 1;                        /* Access register number    */
-GREG    addr1, addr3;                   /* Operand addresses         */
-U32     work;                           /* 32-bit workarea           */
-U16     index_limit;                    /* Index limit               */
-U16     index;                          /* Index                     */
-U16     temp_hw;                        /* TEMPHW                    */
-U16     op1, op3;                       /* 16-bit operand values     */
-BYTE    operand_control;                /* Operand control bit       */
+int     rc;                             /* memcmp() return code      */
+VADR    op2_effective_addr;             /* (op2 effective address)   */
+VADR    op1_addr, op3_addr;             /* (op1 & op3 fetch addr)    */
+GREG    work_reg;                       /* (register work area)      */
+U16     index, max_index;               /* (operand index values)    */
+CFC_OP  op1, op3, tmp;                  /* (work fields)             */
+BYTE    descending;                     /* (sort-order control bit)  */
+#if defined(FEATURE_ESAME)
+BYTE    a64 = regs->psw.amode64;        /* ("64-bit mode" flag)      */
+#endif
+BYTE    op_size   = CFC_OPERSIZE;       /* (work constant; uses a64) */
+BYTE    gr2_shift = CFC_GR2_SHIFT;      /* (work constant; uses a64) */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, regs, b2, op2_effective_addr);
 
-    /* Check GR1, GR2, GR3 even */
-    if ( regs->GR_L(1) & 1 || regs->GR_L(2) & 1 || regs->GR_L(3) & 1 )
+    /* All operands must be halfword aligned */
+    if (0
+        || GR_A(1,regs) & 1
+        || GR_A(2,regs) & 1
+        || GR_A(3,regs) & 1
+    )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    /* Get index limit and operand-control bit */
-    index_limit = effective_addr2 & 0x7FFE;
-    operand_control = effective_addr2 & 1;
+    /* Initialize "end-of-operand-data" index value... */
+    max_index = op2_effective_addr & 0x7FFE;
 
-    /* Loop until break */
-    for (;;)
+    /* Loop until we either locate where the two operands
+       differ from one another or until we reach the end of
+       the operand data... */
+    do
     {
-        /* Check index limit */
-        index = regs->GR_L(2);
-        if ( index > index_limit )
+        /* Exit w/cc0 (op1==op3) when the end of the operands are reached */
+
+        index = GR_A(2,regs) & 0xFFFF;
+
+        if ( index > max_index )
         {
-            regs->GR_L(2) = regs->GR_L(3) | 0x80000000;
-            regs->psw.cc = 0;
+            regs->psw.cc = 0;   // (operands are equal to each other)
+            SET_GR_A( 2, regs, GR_A(3,regs) | CFC_HIGH_BIT );
             return;
         }
 
-        /* fetch 1st operand */
-        addr1 = (regs->GR_L(1) + index) & ADDRESS_MAXWRAP(regs);
-        op1 = ARCH_DEP(vfetch2) ( addr1, ar1, regs );
+        /* Fetch next chunk of operand data... */
 
-        /* fetch 3rd operand */
-        addr3 = (regs->GR_L(3) + index) & ADDRESS_MAXWRAP(regs);
-        op3 = ARCH_DEP(vfetch2) ( addr3, ar1, regs );
+        op1_addr = ( GR_A(1,regs) + index + 0 ) & ADDRESS_MAXWRAP(regs);
+        op3_addr = ( GR_A(3,regs) + index + 0 ) & ADDRESS_MAXWRAP(regs);
 
-        regs->GR_L(2) += 2;
+        op1.a = ARCH_DEP(vfetch2) ( op1_addr, AR1, regs );
+        op3.a = ARCH_DEP(vfetch2) ( op3_addr, AR1, regs );
 
-        /* Compare oprerands */
-        if ( op1 > op3 )
+#if defined(FEATURE_ESAME)
+        if ( a64 )
         {
-            if ( operand_control )
-            {
-                temp_hw = op3;
-                cc = 1;
-            }
-            else
-            {
-                temp_hw = ~op1;
+            op1_addr = ( GR_A(1,regs) + index + 2 ) & ADDRESS_MAXWRAP(regs);
+            op3_addr = ( GR_A(3,regs) + index + 2 ) & ADDRESS_MAXWRAP(regs);
 
-                /* Exchange GR1 and GR3 */
-                work = regs->GR_L(1);
-                regs->GR_L(1) = regs->GR_L(3);
-                regs->GR_L(3) = work;
+            op1.b = ARCH_DEP(vfetch2) ( op1_addr, AR1, regs );
+            op3.b = ARCH_DEP(vfetch2) ( op3_addr, AR1, regs );
 
-                cc = 2;
-            }
+            op1_addr = ( GR_A(1,regs) + index + 4 ) & ADDRESS_MAXWRAP(regs);
+            op3_addr = ( GR_A(3,regs) + index + 4 ) & ADDRESS_MAXWRAP(regs);
 
-            /* end of loop */
-            break;
+            op1.c = ARCH_DEP(vfetch2) ( op1_addr, AR1, regs );
+            op3.c = ARCH_DEP(vfetch2) ( op3_addr, AR1, regs );
         }
-        else if ( op1 < op3 )
+#endif
+        /* Update GR2 operand index value... (Note: we must do this AFTER
+           we fetch the operand data in case of storage access exceptions) */
+
+        SET_GR_A( 2, regs, GR_A(2,regs) + op_size );
+
+        /* Compare operands; continue while still equal... */
+    }
+    while ( !( rc = memcmp( &op1, &op3, op_size ) ) );
+
+    /* Operands are NOT equal (we found an inequality). Set
+       the condition code, form our codeword, and then exit */
+
+    ASSERT( rc != 0 );     // (we shouldn't be here unless this is true!)
+
+    /* Check to see which sequence the operands should be sorted into so
+       we can know whether or not we need to form our codeword using either
+       the inverse of the higher operand's data (if doing an ascending sort),
+       or the lower operand's data AS-IS (if doing a descending sort). This
+       thus causes either the lower (or higher) operand values (depending on
+       which type of sort we're doing, ascending or descending) to bubble to
+       the top (beginning) of the tree that the UPT (Update Tree) instruction
+       ultimately/eventually updates (which gets built from our codewords).
+    */
+    descending = op2_effective_addr & 1;  // (0==ascending, 1==descending)
+
+    if ( rc < 0 )              // (operand-1 < operand-3)
+    {
+        if ( !descending )     // (ascending; in sequence)
         {
-            if ( operand_control )
-            {
-                temp_hw = op1;
+            regs->psw.cc = 1;  // (cc1 == in sequence)
 
-                /* Exchange GR1 and GR3 */
-                work = regs->GR_L(1);
-                regs->GR_L(1) = regs->GR_L(3);
-                regs->GR_L(3) = work;
+            /* Ascending sort: use inverse of higher operand's data */
 
-                cc = 2;
-            }
-            else
-            {
-                temp_hw = ~op3;
-                cc = 1;
-            }
-
-            /* end of loop */
-            break;
+            tmp.a = ~op3.a;
+            tmp.b = ~op3.b;
+            tmp.c = ~op3.c;
         }
-        /* if equal continue */
+        else                   // (descending; out-of-sequence)
+        {
+            regs->psw.cc = 2;  // (cc2 == out-of-sequence)
+
+            /* Descending sort: use lower operand's data as-is */
+
+            tmp.a = op1.a;
+            tmp.b = op1.b;
+            tmp.c = op1.c;
+
+            /* Swap GR1 & GR3 because out-of-sequence */
+
+            work_reg      =    GR_A(1,regs);
+            SET_GR_A( 1, regs, GR_A(3,regs) );
+            SET_GR_A( 3, regs, work_reg );
+        }
+    }
+    else                       // (operand-1 > operand-3)
+    {
+        if ( !descending )     // (ascending; out-of-sequence)
+        {
+            regs->psw.cc = 2;  // (cc2 == out-of-sequence)
+
+            /* Ascending sort: use inverse of higher operand's data */
+
+            tmp.a = ~op1.a;
+            tmp.b = ~op1.b;
+            tmp.c = ~op1.c;
+
+            /* Swap GR1 & GR3 because out-of-sequence */
+
+            work_reg      =    GR_A(1,regs);
+            SET_GR_A( 1, regs, GR_A(3,regs) );
+            SET_GR_A( 3, regs, work_reg );
+        }
+        else                   // (descending; in sequence)
+        {
+            regs->psw.cc = 1;  // (cc1 == in sequence)
+
+            /* Descending sort: use lower operand's data as-is */
+
+            tmp.a = op3.a;
+            tmp.b = op3.b;
+            tmp.c = op3.c;
+        }
     }
 
-    regs->GR_L(2) = (regs->GR_L(2) << 16) | temp_hw;
-    regs->psw.cc = cc;
+    /* Form a sort/merge codeword to be used to sort the two operands
+       into their proper sequence consisting of a combination of both
+       the index position where the inequality was found (current GR2
+       value) and either the one's complement inverse of the higher
+       operand's data (if doing an ascending sort) or the lower oper-
+       and's data as-is (if doing a descending sort)...
+    */
+#if defined(FEATURE_ESAME)
+    if ( a64 )
+        work_reg = (GREG) tmp.a << 32 | (GREG) tmp.b << 16 | (GREG) tmp.c;
+    else
+#endif
+        work_reg = (GREG) tmp.a;
+
+    SET_GR_A( 2, regs, ( GR_A(2,regs) << gr2_shift ) | work_reg );
 }
 
 
@@ -2740,7 +2832,7 @@ int     cc = 0;                         /* Condition code            */
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    if ( NOCROSS2K(addr1,len)) 
+    if ( NOCROSS2K(addr1,len))
     {
         if ( NOCROSS2K(addr2,len))
         {
@@ -2963,7 +3055,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
     case 15:
         /* Optimized case */
         regs->GR_L(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
-        regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ? 
+        regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ?
                        1 : 2 : 0;
         break;
 

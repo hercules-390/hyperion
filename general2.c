@@ -944,7 +944,7 @@ BYTE    rbyte[4];                       /* Byte work area            */
         if (r3 & 0x8) rbyte[i++] = (regs->GR_L(r1) >> 24) & 0xFF;
         if (r3 & 0x4) rbyte[i++] = (regs->GR_L(r1) >> 16) & 0xFF;
         if (r3 & 0x2) rbyte[i++] = (regs->GR_L(r1) >>  8) & 0xFF;
-        if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;  
+        if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;
 
         if (i)
             ARCH_DEP(vstorec) (rbyte, i-1, effective_addr2, b2, regs);
@@ -1750,77 +1750,165 @@ BYTE    lbyte;                          /* Left result byte of pair  */
 /*-------------------------------------------------------------------*/
 /* 0102 UPT   - Update Tree                                      [E] */
 /*              (c) Copyright Peter Kuschnerus, 1999-2005            */
-/* 64BIT INCOMPLETE                                                  */
+/*              (c) Copyright "Fish" (David B. Trout), 2005          */
 /*-------------------------------------------------------------------*/
+
+#undef   UPT_ALIGN_MASK
+#undef   UPT_SHIFT_MASK
+#undef   UPT_HIGH_BIT
+#undef   AR4
+#define  AR4  (4)                       /* Access Register 4         */
+#if defined(FEATURE_ESAME)
+  #define  UPT_ALIGN_MASK   ( a64 ? 0x000000000000000FULL : 0x0000000000000007ULL )
+  #define  UPT_SHIFT_MASK   ( a64 ? 0xFFFFFFFFFFFFFFF0ULL : 0xFFFFFFFFFFFFFFF8ULL )
+  #define  UPT_HIGH_BIT     ( a64 ? 0x8000000000000000ULL : 0x0000000080000000ULL )
+#else
+  #define  UPT_ALIGN_MASK   ( 0x00000007 )
+  #define  UPT_SHIFT_MASK   ( 0xFFFFFFF8 )
+  #define  UPT_HIGH_BIT     ( 0x80000000 )
+#endif
+
 DEF_INST(update_tree)
 {
-U32     tempword1;                      /* TEMPWORD1                 */
-U32     tempword2;                      /* TEMPWORD2                 */
-U32     tempword3;                      /* TEMPWORD3                 */
-VADR    tempaddress;                    /* TEMPADDRESS               */
-int     cc;                             /* Condition code            */
-int     ar1 = 4;                        /* Access register number    */
+GREG    index;                          /* tree index                */
+GREG    nodecode;                       /* current node's codeword   */
+GREG    nodedata;                       /* current node's other data */
+VADR    nodeaddr;                       /* work addr of current node */
+#if defined(FEATURE_ESAME)
+BYTE    a64 = regs->psw.amode64;        /* 64-bit mode flag          */
+#endif
 
     E(inst, regs);
 
     UNREFERENCED(inst);
 
-    /* Check GR4, GR5 doubleword alligned */
-    if ( regs->GR_L(4) & 0x00000007 || regs->GR_L(5) & 0x00000007 )
+    /*
+    **  GR0, GR1    node values (codeword and other data) of node
+    **              with "highest encountered codeword value"
+    **  GR2, GR3    node values (codeword and other data) from whichever
+    **              node we happened to have encountered that had a code-
+    **              word value equal to our current "highest encountered
+    **              codeword value" (e.g. GR0)  (cc0 only)
+    **  GR4         pointer to one node BEFORE the beginning of the tree
+    **  GR5         current node index (tree displacement to current node)
+    */
+
+    /* Check GR4, GR5 for proper alignment */
+    if (0
+        || ( GR_A(4,regs) & UPT_ALIGN_MASK )
+        || ( GR_A(5,regs) & UPT_ALIGN_MASK )
+    )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    /* Loop until break */
+    /* Bubble the tree by moving successively higher nodes towards the
+       front (beginning) of the tree, only stopping whenever we either:
+
+            1. reach the beginning of the tree, -OR-
+            2. encounter a node with a negative codeword value, -OR-
+            3. encounter a node whose codeword is equal to
+               our current "highest encountered codeword".
+
+       Thus, when we're done, GR0 & GR1 will then contain the node values
+       of the node with the highest encountered codeword value, and all
+       other traversed nodes will have been reordered into descending code-
+       word sequence (i.e. from highest codeword value to lowest codeword
+       value; this is after all an instruction used for sorting/merging).
+    */
+
     for (;;)
     {
-        tempword1 = (regs->GR_L(5) >> 1) & 0xFFFFFFF8;
-        if ( tempword1 == 0 )
+        /* Calculate index value of next node to be examined (half
+           as far from beginning of tree to where we currently are)
+        */
+        index = (GR_A(5,regs) >> 1) & UPT_SHIFT_MASK;
+
+        /* Exit with cc1 when we've gone as far as we can go */
+        if ( !index )
         {
-            regs->GR_L(5) = 0;
-            cc = 1;
+            regs->psw.cc = 1;
             break;
         }
 
-        /* Check bit 0 of GR0 */
-        if ( regs->GR_L(0) & 0x80000000 )
+        /* Exit with cc3 when we encounter a negative codeword value
+           (i.e. any codeword value with its highest-order bit on)
+        */
+        if ( GR_A(0,regs) & UPT_HIGH_BIT )
         {
-            regs->GR_L(5) = tempword1;
-            cc = 3;
+            regs->psw.cc = 3;
             break;
         }
 
-        tempaddress = regs->GR_L(4) + tempword1;
+        /* Retrieve this node's values for closer examination... */
 
-        /* Fetch doubleword from tempaddress to tempword2 and tempword3 */
-        tempaddress &= ADDRESS_MAXWRAP(regs);
-        tempword2 = ARCH_DEP(vfetch4) ( tempaddress, ar1, regs );
-        tempword3 = ARCH_DEP(vfetch4) ( tempaddress + 4, ar1, regs );
+        nodeaddr = ( GR_A(4,regs) + index ) & ADDRESS_MAXWRAP(regs);
 
-
-
-        if ( regs->GR_L(0) == tempword2 )
+#if defined(FEATURE_ESAME)
+        if ( a64 )
         {
-            /* Load GR2 and GR3 from tempword2 and tempword3 */
-            regs->GR_L(2) = tempword2;
-            regs->GR_L(3) = tempword3;
-            regs->GR_L(5) = tempword1;
-            cc = 0;
+            nodecode = ARCH_DEP(vfetch8) ( nodeaddr,     AR4, regs );
+            nodedata = ARCH_DEP(vfetch8) ( nodeaddr + 8, AR4, regs );
+        }
+        else
+#endif
+        {
+            nodecode = ARCH_DEP(vfetch4) ( nodeaddr,     AR4, regs );
+            nodedata = ARCH_DEP(vfetch4) ( nodeaddr + 4, AR4, regs );
+        }
+
+        /* Exit with cc0 whenever we reach a node whose codeword is equal
+           to our current "highest encountered" codeword value (i.e. any
+           node whose codeword matches our current "highest" (GR0) value)
+        */
+        if ( nodecode == GR_A(0,regs) )
+        {
+            /* Load GR2 and GR3 with the equal codeword node's values */
+            SET_GR_A(2,regs,nodecode);
+            SET_GR_A(3,regs,nodedata);
+            regs->psw.cc = 0;
             break;
         }
 
-        if ( regs->GR_L(0) < tempword2 )
+        /* Keep resequencing the tree's nodes, moving successively higher
+           nodes to the front (beginning of tree)...
+        */
+        if ( nodecode > GR_A(0,regs) )
         {
-            /* Store doubleword from GR0 and GR1 to tempaddress */
-            ARCH_DEP(vstore4) ( regs->GR_L(0), tempaddress, ar1, regs );
-            ARCH_DEP(vstore4) ( regs->GR_L(1), tempaddress + 4, ar1, regs );
+            /* This node has a codeword value higher than our currently saved
+               highest encountered codeword value (GR0). Swap our GR0/1 values
+               with this node's values, such that GR0/1 always hold the values
+               from the node with the highest encountered codeword value...
+            */
 
-            /* Load GR0 and GR1 from tempword2 and tempword3 */
-            regs->GR_L(0) = tempword2;
-            regs->GR_L(1) = tempword3;
+            /* Store obsolete GR0 and GR1 values into this node's entry */
+#if defined(FEATURE_ESAME)
+            if ( a64 )
+            {
+                ARCH_DEP(vstore8) ( GR_A(0,regs), nodeaddr,     AR4, regs );
+                ARCH_DEP(vstore8) ( GR_A(1,regs), nodeaddr + 8, AR4, regs );
+            }
+            else
+#endif
+            {
+                ARCH_DEP(vstore4) ( GR_A(0,regs), nodeaddr,     AR4, regs );
+                ARCH_DEP(vstore4) ( GR_A(1,regs), nodeaddr + 4, AR4, regs );
+            }
+
+            /* Update GR0 and GR1 with the new "highest encountered" values */
+            SET_GR_A(0,regs,nodecode);
+            SET_GR_A(1,regs,nodedata);
         }
-    regs->GR_L(5) = tempword1;
+
+        /* GR5 must remain UNCHANGED if the execution of a unit of operation
+           is nullified or suppressed! Thus it must ONLY be updated/committed
+           AFTER we've successfully retrieved the node data (since the storage
+           access could cause a program-check thereby nullifying/suppressing
+           the instruction's "current unit of operation")
+        */
+        SET_GR_A(5,regs,index);     // (do AFTER node data is accessed!)
     }
 
-    regs->psw.cc = cc;
+    /* Commit GR5 with the actual index value we stopped on */
+    SET_GR_A(5,regs,index);
 }
 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
@@ -1839,7 +1927,7 @@ DEF_INST(convert_utf8_to_utf32)
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
   int xlated;                      /* characters translated          */
-  
+
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
 
@@ -1851,12 +1939,12 @@ DEF_INST(convert_utf8_to_utf32)
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
-    
+
   /* Initialize number of translated charachters */
   xlated = 0;
   while(xlated < 4096)
   {
-    /* Check end of source or destination */  
+    /* Check end of source or destination */
     if(srcelen < 1)
     {
       regs->psw.cc = 0;
@@ -1867,10 +1955,10 @@ DEF_INST(convert_utf8_to_utf32)
       regs->psw.cc = 1;
       return;
     }
-    
+
     /* Fetch a byte */
     utf8[0] = ARCH_DEP(vfetchb)(srce, r2, regs);
-    if(utf8[0] < 0x80) 
+    if(utf8[0] < 0x80)
     {
       /* xlate range 00-7f */
       /* 0jklmnop -> 00000000 00000000 00000000 0jklmnop */
@@ -1887,10 +1975,10 @@ DEF_INST(convert_utf8_to_utf32)
         regs->psw.cc = 0;   /* Strange but stated in POP */
         return;
       }
-    
-      /* Get the next byte */      
+
+      /* Get the next byte */
       utf8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
-            
+
       /* xlate range c000-dfff */
       /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
       utf32[1] = 0x00;
@@ -1907,9 +1995,9 @@ DEF_INST(convert_utf8_to_utf32)
         return;
       }
 
-      /* Get the next 2 bytes */      
+      /* Get the next 2 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 1, srce + 1, r2, regs);
-    
+
       /* xlate range e00000-efffff */
       /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
       utf32[1] = 0x00;
@@ -1926,9 +2014,9 @@ DEF_INST(convert_utf8_to_utf32)
         return;
       }
 
-      /* Get the next 3 bytes */      
+      /* Get the next 3 bytes */
       ARCH_DEP(vfetchc)(&utf8[1], 2, srce + 1, r2, regs);
-    
+
       /* xlate range f0000000-f7000000 */
       /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
       utf32[1] = ((utf8[0] & 0x07) << 2) & ((utf8[1] & 0x30) >> 4);
@@ -1941,17 +2029,17 @@ DEF_INST(convert_utf8_to_utf32)
       regs->psw.cc = 2;
       return;
     }
-    
+
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
     SET_GR_A(r1, regs, (dest + 4) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r1 + 1, regs, destlen - 4);
     SET_GR_A(r2, regs, (srce + read) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r2 + 1, regs, srcelen - read);
-    
+
     xlated += read;
   }
-  
+
   /* CPU determined number of characters reached */
   regs->psw.cc = 3;
 }
@@ -1972,7 +2060,7 @@ DEF_INST(convert_utf16_to_utf32)
   BYTE utf32[4];                   /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
   int xlated;                      /* characters translated          */
-  
+
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
 
@@ -1984,12 +2072,12 @@ DEF_INST(convert_utf16_to_utf32)
 
   /* Every valid utf-32 starts with 0x00 */
   utf32[0] = 0x00;
-    
+
   /* Initialize number of translated charachters */
   xlated = 0;
   while(xlated < 4096)
   {
-    /* Check end of source or destination */  
+    /* Check end of source or destination */
     if(srcelen < 2)
     {
       regs->psw.cc = 0;
@@ -2003,7 +2091,7 @@ DEF_INST(convert_utf16_to_utf32)
 
     /* Fetch 2 bytes */
     ARCH_DEP(vfetchc)(utf16, 1, srce, r2, regs);
-    if(utf16[0] <= 0xd7 || utf16[0] >= 0xdc) 
+    if(utf16[0] <= 0xd7 || utf16[0] >= 0xdc)
     {
       /* xlate range 0000-d7fff and dc00-ffff */
       /* abcdefgh ijklmnop -> 00000000 00000000 abcdefgh ijklmnop */
@@ -2023,7 +2111,7 @@ DEF_INST(convert_utf16_to_utf32)
 
       /* Fetch another 2 bytes */
       ARCH_DEP(vfetchc)(&utf16[2], 1, srce, r2, regs);
-      
+
       /* xlate range d800-dbff */
       /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
       /* 000uvwxy = 0000abcde + 1 */
@@ -2033,17 +2121,17 @@ DEF_INST(convert_utf16_to_utf32)
       utf32[3] = utf16[3];
       read = 4;
     }
-    
+
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
     SET_GR_A(r1, regs, (dest + 4) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r1 + 1, regs, destlen - 4);
     SET_GR_A(r2, regs, (srce + read) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r2 + 1, regs, srcelen - read);
-    
+
     xlated += read;
   }
-  
+
   /* CPU determined number of characters reached */
   regs->psw.cc = 3;
 }
@@ -2064,7 +2152,7 @@ DEF_INST(convert_utf32_to_utf8)
   /*BYTE uvwxy;*/                  /* Work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
-  
+
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
 
@@ -2073,13 +2161,13 @@ DEF_INST(convert_utf32_to_utf8)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-  
+
   /* Initialize number of translated charachters */
   xlated = 0;
   write = 0;
   while(xlated < 4096)
   {
-    /* Check end of source or destination */  
+    /* Check end of source or destination */
     if(srcelen < 4)
     {
       regs->psw.cc = 0;
@@ -2119,7 +2207,7 @@ DEF_INST(convert_utf32_to_utf8)
           regs->psw.cc = 1;
           return;
         }
-      
+
     /* xlate range 00000080-000007ff */
         /* 00000000 00000000 00000fgh ijklmnop -> 110fghij 10klmnop */
     utf8[0] = 0xc0 | (utf32[2] << 2) | (utf32[2] >> 6);
@@ -2134,9 +2222,9 @@ DEF_INST(convert_utf32_to_utf8)
           regs->psw.cc = 1;
           return;
         }
-    
+
     /* xlate range 00000800-0000d7ff and 0000dc00-0000ffff */
-    /* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */      
+    /* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */
         utf8[0] = 0xe0 | (utf32[2] >> 4);
     utf8[1] = 0x80 | ((utf32[2] & 0x0f) << 2) | (utf32[3] >> 6);
     utf8[2] = 0x80 | (utf32[3] & 0x3f);
@@ -2145,7 +2233,7 @@ DEF_INST(convert_utf32_to_utf8)
       else
       {
         regs->psw.cc = 2;
-        return; 
+        return;
       }
     }
     else if(utf32[1] >= 0x01 && utf32[1] <= 0x10)
@@ -2156,7 +2244,7 @@ DEF_INST(convert_utf32_to_utf8)
         regs->psw.cc = 1;
         return;
       }
-    
+
       /* xlate range 00010000-0010ffff */
       /* 00000000 000uvwxy efghijkl mnopqrst -> 11110uvw 10xyefgh 10ijklmn 10opqrst */
       utf8[0] = 0xf0 | (utf32[1] >> 2);
@@ -2170,17 +2258,17 @@ DEF_INST(convert_utf32_to_utf8)
       regs->psw.cc = 2;
       return;
     }
-    
+
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf8, write - 1, dest, r1, regs);
     SET_GR_A(r1, regs, (dest + write) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r1 + 1, regs, destlen - write);
     SET_GR_A(r2, regs, (srce + 4) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r2 + 1, regs, srcelen - 4);
-    
+
     xlated += 4;
   }
-  
+
   /* CPU determined number of characters reached */
   regs->psw.cc = 3;
 }
@@ -2202,7 +2290,7 @@ DEF_INST(convert_utf32_to_utf16)
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
   BYTE zabcd;                      /* Work value                     */
-  
+
   RRE(inst, regs, r1, r2);
   ODD2_CHECK(r1, r2, regs);
 
@@ -2211,12 +2299,12 @@ DEF_INST(convert_utf32_to_utf16)
   destlen = GR_A(r1 + 1, regs);
   srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
   srcelen = GR_A(r2 + 1, regs);
-  
+
   /* Initialize number of translated charachters */
   xlated = 0;
   while(xlated < 4096)
   {
-    /* Check end of source or destination */  
+    /* Check end of source or destination */
     if(srcelen < 4)
     {
       regs->psw.cc = 0;
@@ -2230,7 +2318,7 @@ DEF_INST(convert_utf32_to_utf16)
 
     /* Get 4 bytes */
     ARCH_DEP(vfetchc)(utf32, 3, srce, r2, regs);
-    
+
     if(utf32[0] != 0x00)
     {
       regs->psw.cc = 2;
@@ -2252,7 +2340,7 @@ DEF_INST(convert_utf32_to_utf16)
         regs->psw.cc = 1;
         return;
       }
-      
+
       /* xlate range 00010000-0010ffff */
       /* 00000000 000uvwxy efghijkl mnopqrst -> 110110ab cdefghij 110111kl mnopqrst */
       /* 000zabcd = 000uvwxy - 1 */
@@ -2262,23 +2350,23 @@ DEF_INST(convert_utf32_to_utf16)
       utf16[2] = 0xd9 | (utf32[2] & 0x03);
       utf16[3] = utf32[3];
       write = 4;
-    }    
+    }
     else
     {
       regs->psw.cc = 2;
       return;
     }
-    
+
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf16, write - 1, dest, r1, regs);
     SET_GR_A(r1, regs, (dest + write) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r1 + 1, regs, destlen - write);
     SET_GR_A(r2, regs, (srce + 4) & ADDRESS_MAXWRAP(regs));
     SET_GR_A(r2 + 1, regs, srcelen - 4);
-    
+
     xlated += 4;
   }
-  
+
   /* CPU determined number of characters reached */
   regs->psw.cc = 3;
 }
@@ -2289,8 +2377,8 @@ DEF_INST(convert_utf32_to_utf16)
 DEF_INST(search_string_unicode)
 {
   VADR addr1, addr2;                    /* End/start addresses       */
-  int i;                                /* Loop counter              */  
-  int r1, r2;                           /* Values of R fields        */  
+  int i;                                /* Loop counter              */
+  int r1, r2;                           /* Values of R fields        */
   U16 sbyte;                            /* String character          */
   U16 termchar;                         /* Terminating character     */
 
@@ -2348,13 +2436,13 @@ DEF_INST(search_string_unicode)
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_reversed)
 {
-  int b1, b2;                           /* Values of base field      */  
-  int cc = 0;                           /* Condition code            */  
-  BYTE dbyte;                           /* Byte work areas           */  
+  int b1, b2;                           /* Values of base field      */
+  int cc = 0;                           /* Condition code            */
+  BYTE dbyte;                           /* Byte work areas           */
   VADR effective_addr1;
   VADR effective_addr2;                 /* Effective addresses       */
-  int i;                                /* Integer work areas        */  
-  int l;                                /* Lenght byte               */  
+  int i;                                /* Integer work areas        */
+  int l;                                /* Lenght byte               */
   BYTE sbyte;                           /* Byte work areas           */
 
   SS_L(inst, regs, l, b1, effective_addr1, b2, effective_addr2);
