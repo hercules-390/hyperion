@@ -1,3 +1,5 @@
+24 Apr 2003 Set PGID/Sense PGID/Assign/Unassign Corr to Tape Devices
+            (fixes device Boxing when varied on twice) - Ivan Warren
 23 Apr 2003 Shared devices fixes - Greg Smith
 19 Apr 2003 Shared devices - Greg Smith
 18 Apr 2003 270X Poll CCW Implementation
