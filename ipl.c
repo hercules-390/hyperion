@@ -68,6 +68,15 @@ BYTE    chanstat;                       /* IPL device channel status */
         return -1;
     }
 
+    if(sysblk.arch_mode == ARCH_370
+      && dev->chanset != regs->chanset)
+    {
+        logmsg("HHC023I Device not connected to channelset\n");
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("LOAD=0\n");
+#endif /*EXTERNALGUI*/
+        return -1;
+    }
     /* Point to the PSA in main storage */
     psa = (PSA*)(sysblk.mainstor + regs->PX);
 

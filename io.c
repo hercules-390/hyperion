@@ -949,6 +949,9 @@ int     i;
     /* Set channel set connected to current CPU */
     regs->chanset = effective_addr2;
 
+    /* Interrupts may be pending on this channelset */
+    ON_IC_IOPENDING;
+
     release_lock(&sysblk.intlock);
 
     regs->psw.cc = 0;
