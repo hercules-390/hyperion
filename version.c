@@ -32,7 +32,7 @@ static const char *build_options[] = {
 
   "$Header$",
 
-  "CVS tag (if any): $Name$"
+  "$Name$"
 
 };
 
