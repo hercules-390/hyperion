@@ -33,6 +33,10 @@ extern  void  FishHangReport();
 extern  void  FishHangAtExit();
 #endif // defined(FISH_HANG)
 
+#if defined(FEATURE_ECPSVM)
+extern void ecpsvm_showstats(void);
+#endif
+
 /* Added forward declaration to process_script_file ISW20030220-3 */
 int process_script_file(char *,int);
 
@@ -2421,6 +2425,17 @@ int aea_cmd(char* cmdline, int argc, char *argv[])
     return 0;
 }
 
+#ifdef FEATURE_ECPSVM
+int evmstat_cmd(char* cmdline, int argc, char *argv[])
+{
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
+    ecpsvm_showstats();
+    return 0;
+}
+#endif
 ///////////////////////////////////////////////////////////////////////
 // Layout of command routing table...
 
@@ -2531,6 +2546,9 @@ COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/eve
 #endif
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
 COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread" )
+#if defined(FEATURE_ECPSVM)
+COMMAND ( "evmstat",   evmstat_cmd,   "Display ECPS:VM Statistics" )
+#endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
 
@@ -2783,6 +2801,11 @@ CMDHELP ( "script",    "Format: \"script filename [...filename...]\". Sequential
 CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the currently running script.\n"
                        "if no script is running, no action is taken\n"
                        )
+
+#if defined(FEATURE_ECPSVM)
+CMDHELP ( "evmstat",   "Format: \"evmstat\". This command displays ECPS:VM Statistics.\n"
+                       )
+#endif
 
 #if defined(FISH_HANG)
 CMDHELP ( "FishHangReport", "When built with --enable-fthreads --enable-fishhang, a detailed record of\n"

@@ -79,4 +79,14 @@ typedef struct _VMBLOK {
     /* The rest is irrelevant */
 } VMBLOK;
 
+typedef struct _ECPSVM_STAT
+{
+    char *name;
+    U32  call;
+    U32  hit;
+} ECPSVM_STAT;
+
+#define ECPSVM_STAT_DCL(_name) ECPSVM_STAT _name
+#define ECPSVM_STAT_DEF(_name) ._name = { .name = ""#_name"" ,.call=0,.hit=0}
+
 #endif

@@ -1189,6 +1189,12 @@ int     rc;                             /* Return code               */
 int     new_ilc;                        /* New ilc to set            */
 
     RR_SVC(inst, execflag, regs, i);
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_dosvc(regs,i)==0)
+    {
+        return;
+    }
+#endif
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state &&

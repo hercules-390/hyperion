@@ -682,12 +682,14 @@ typedef struct _SYSBLK {
         int     broadcast_count;        /* Broadcast CPU count       */
         COND    broadcast_cond;         /* Broadcast condition       */
         U64     breakaddr;              /* Breakpoint address        */
+#ifdef FEATURE_ECPSVM
 //
         /* ECPS:VM */
         struct {
                 U16 available:1;
                 U16 level;
         } ecpsvm;                       /* ECPS:VM structure         */
+#endif
 
         FILE   *syslog[2];              /* Syslog read/write pipe    */
         int     syslogfd[2];            /*   pairs                   */
@@ -1654,6 +1656,15 @@ void display_subchannel (DEVBLK *dev);
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (BYTE *opnd, REGS *regs);
 void alter_display_virt (BYTE *opnd, REGS *regs);
+
+/* Functions in ecpsvm.c that are not *direct* instructions */
+/* but support functions either used by other instruction   */
+/* functions or from somewhere else                         */
+#ifdef FEATURE_ECPSVM
+int  ecpsvm_dosvc(REGS *regs, int svccode);
+int  ecpsvm_dossm(REGS *regs,VADR ea,int b);
+#endif
+
 
 /* #if defined(OPTION_W32_CTCI)  */
 /* Functions in module w32ctca.c */

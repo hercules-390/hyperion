@@ -4583,6 +4583,18 @@ int     space;
 int     armode;
 
     S(inst, execflag, regs, b2, effective_addr2);
+    /*
+     * ECPS:VM - Before checking for prob/priv 
+     * Check CR6 to see if S-ASSIST is requested
+     *
+     * If we can process it, then do it
+    */
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_dossm(regs,effective_addr2,b2)==0)
+    {
+        return;
+    }
+#endif
 
     PRIV_CHECK(regs);
 

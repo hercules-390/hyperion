@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4 po util html man
+SUBDIRS = intl m4  intl m4 po util html man
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -128,7 +128,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
     README.OSX README.TAPE README.COMMADPT
 
 noinst_HEADERS  = fishhang.h \

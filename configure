@@ -9690,7 +9690,7 @@ _ACEOF
 
 
 
-                                                                                ac_config_files="$ac_config_files Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile intl/Makefile m4/Makefile man/Makefile"
+                                                                                ac_config_files="$ac_config_files Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -10286,9 +10286,9 @@ do
   "html/Makefile" ) CONFIG_FILES="$CONFIG_FILES html/Makefile" ;;
   "po/Makefile.in" ) CONFIG_FILES="$CONFIG_FILES po/Makefile.in" ;;
   "po/Makefile" ) CONFIG_FILES="$CONFIG_FILES po/Makefile" ;;
+  "man/Makefile" ) CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
   "intl/Makefile" ) CONFIG_FILES="$CONFIG_FILES intl/Makefile" ;;
   "m4/Makefile" ) CONFIG_FILES="$CONFIG_FILES m4/Makefile" ;;
-  "man/Makefile" ) CONFIG_FILES="$CONFIG_FILES man/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "default-1" ) CONFIG_COMMANDS="$CONFIG_COMMANDS default-1" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
