@@ -77,7 +77,7 @@ int     more_devices;       /* More devices this ctlr?   */
 
     /* Display the program identification message */
     display_version (stderr,
-                     "P/390 DEVMAP to Hercules conversion program\n");
+                     "P/390 DEVMAP to Hercules conversion program\n", FALSE);
 
     /* The only argument is the DEVMAP file name */
     if (argc == 2 && argv[1] != NULL)

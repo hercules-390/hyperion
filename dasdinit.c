@@ -56,7 +56,7 @@ argexit ( int code, char *m )
 
     switch (code) {
     case 0:
-        fprintf (stderr, "Invalid or supported option: %s\n",
+        fprintf (stderr, "Invalid or unsupported option: %s\n",
                  m ? m : "(null)");
         break;
     case 1:
@@ -81,7 +81,7 @@ argexit ( int code, char *m )
     default:
 
         display_version (stderr,
-                     "Hercules DASD image file creation program\n");
+                     "Hercules DASD image file creation program\n", FALSE);
 
         fprintf (stderr,
 

@@ -633,7 +633,7 @@ int             nmem = 0;               /* Number of array entries   */
 
     /* Display the program identification message */
     display_version (stderr,
-                     "Hercules IEHIOSUP program ");
+                     "Hercules IEHIOSUP program ", FALSE);
 
     /* Check the number of arguments */
     if (argc < 2 || argc > 3)

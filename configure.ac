@@ -603,18 +603,21 @@ AC_ARG_ENABLE(custom,
               [AC_DEFINE_UNQUOTED([CUSTOM_BUILD_STRING], "${enableval}") ])
 
 dnl This is ugly. The object is to get the value of PKGDATADIR into
-dnl config.h, but this is the only way I've found to do so. The incantation
-dnl "${prefix}/share" is needed because ${datadir} doesn't expand to the
+dnl config.h, but this is the only way I've found to do so. All of this
+dnl rigamarole is needed because ${datadir} doesn't expand to the
 dnl desired data directory. If there's a better way to get there, PLEASE
 dnl replace this. --JRM
 
-dnl If DEST is set, we're doing an RPM build, and we want to use that
+dnl If DESTPREFIX is set, we're doing an RPM build, and we want to use that
 dnl value. If it's not set, and prefix is set and not equal to NONE, then
 dnl we'll use that. If prefix is NONE, then default to /usr/local.
+dnl Note: This prefix has /share/locale, /share/$PACKAGE, or /lib/$PACKAGE
+dnl appended in the next step, so it must NOT have those components included
+dnl in $DESTPREFIX itself.
 
 if test "x${DESTPREFIX}" = "x"; then
   if test "x$prefix" = "xNONE"; then
-    DESTPREFIX="/usr/local/share"
+    DESTPREFIX="/usr/local"
   else
     DESTPREFIX="${prefix}"
   fi
@@ -626,7 +629,10 @@ LOCALEDIR="${DESTPREFIX}/share/locale"
 AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
 MODULESDIR="${DESTPREFIX}/lib/${PACKAGE}"
 AC_DEFINE_UNQUOTED([MODULESDIR], "${MODULESDIR}")
-AC_MSG_NOTICE([Package destination directory prefix is ${DESTPREFIX}])
+AC_MSG_NOTICE([Package destination directory prefixes:])
+AC_MSG_NOTICE([Data:      ${PKGDATADIR}])
+AC_MSG_NOTICE([Locale:    ${LOCALEDIR}])
+AC_MSG_NOTICE([Libraries: ${MODULESDIR}])
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
             [Define if your gcc does not support __attribute__((regparm(n)))])

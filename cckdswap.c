@@ -43,7 +43,7 @@ int             bigend;                 /* 1 = big-endian file       */
 #endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules cckd swap-endian program ");
+    display_version (stderr, "Hercules cckd swap-endian program ", FALSE);
 
     if (argc != 2) syntax ();
     fn = argv[1];

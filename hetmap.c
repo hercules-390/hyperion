@@ -175,7 +175,7 @@ main( int argc, char *argv[] )
     opts = O_ALL;
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET map program ");
+    display_version (stderr, "Hercules HET map program ", FALSE);
 
     while( TRUE )
     {

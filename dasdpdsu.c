@@ -246,7 +246,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 #endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules PDS unload program ");
+    display_version (stderr, "Hercules PDS unload program ", FALSE);
 
     /* Check the number of arguments */
     if (argc < 3 || argc > 5)

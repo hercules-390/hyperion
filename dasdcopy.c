@@ -106,7 +106,7 @@ size_t          fba_bytes_remaining;    /* FBA bytes to be copied    */
         if (strcmp(argv[0], "-v") == 0)
         {
              snprintf (msgbuf, 512, _("Hercules %s copy program "), pgm);
-             display_version (stderr, msgbuf);
+             display_version (stderr, msgbuf, FALSE);
              return 0;
         }
         else if (strcmp(argv[0], "-h") == 0)

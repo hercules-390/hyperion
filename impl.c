@@ -166,10 +166,10 @@ TID     rctid;                          /* RC file thread identifier */
 #endif // defined(FISH_HANG)
 
     if(isatty(STDERR_FILENO))
-        display_version (stderr, "Hercules ");
+        display_version (stderr, "Hercules ", TRUE);
     else
         if(isatty(STDOUT_FILENO))
-            display_version (stdout, "Hercules ");
+            display_version (stdout, "Hercules ", TRUE);
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
@@ -191,7 +191,7 @@ TID     rctid;                          /* RC file thread identifier */
     usleep(100000);     /* wait a bit before issuing messages */
 
     /* Display the version identifier */
-    display_version (stdout, "Hercules ");
+    display_version (stdout, "Hercules ", TRUE);
 
 #if defined(OPTION_DYNAMIC_LOAD)
     /* Initialize the hercules dynamic loader */

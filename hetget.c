@@ -631,7 +631,7 @@ main( int argc, char *argv[] )
 #endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET extract files program ");
+    display_version (stderr, "Hercules HET extract files program ", FALSE);
 
     /*
     || Process option switches

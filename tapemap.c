@@ -72,7 +72,7 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 #endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules tape map program ");
+    display_version (stderr, "Hercules tape map program ", FALSE);
 
     /* The only argument is the tape image file name */
     if (argc == 2 && argv[1] != NULL)

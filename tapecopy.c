@@ -161,7 +161,7 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 #endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules tape copy program ");
+    display_version (stderr, "Hercules tape copy program ", FALSE);
 
     /* The first argument is the tape device name */
     if (argc > 1 && argv[1] != NULL && strlen(argv[1]) > 5

@@ -67,7 +67,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
                        else return syntax ();
                        break;
             case 'v':  if (argv[0][2] != '\0') return syntax ();
-                       display_version (stderr, "Hercules cckd chkdsk program ");
+                       display_version
+                         (stderr, "Hercules cckd chkdsk program ", FALSE);
                        return 0;
             default:   return syntax ();
         }

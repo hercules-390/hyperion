@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 #endif /*EXTERNALGUI*/
 
     /* Display program info message */
-    display_version (stderr, "Hercules DASD list program ");
+    display_version (stderr, "Hercules DASD list program ", FALSE);
 
     if (argc < 2) {
         fprintf(stderr, "Usage: dasdls dasd_image [sf=shadow-file-name]...\n");

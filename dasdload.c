@@ -4378,7 +4378,7 @@ int             lfs = 0;                /* 1 = Large file            */
 
     /* Display the program identification message */
     display_version (stderr,
-                     "Hercules DASD loader program ");
+                     "Hercules DASD loader program ", FALSE);
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)

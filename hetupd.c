@@ -279,7 +279,7 @@ main( int argc, char *argv[] )
     d_hetb = NULL;
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET copy/update program ");
+    display_version (stderr, "Hercules HET copy/update program ", FALSE);
 
     while( TRUE )
     {

@@ -425,7 +425,7 @@ int             imglen=0;               /* track length              */
         switch(argv[0][1]) {
             case 'v':  if (argv[0][2] != '\0') return syntax ();
                        display_version (stderr, 
-                              "Hercules CCKD diagnostic program\n");
+                              "Hercules CCKD diagnostic program\n", FALSE);
                        return 0;
             case 'd':  if (argv[0][2] != '\0') return syntax ();
                        cmd_devhdr = 1;
