@@ -95,7 +95,7 @@ struct sbfp {
 	float	v;
 };
 
-#ifndef 
+#ifndef HAVE_SQRTL
 #define sqrtl(x) sqrt(x)
 #endif
 
