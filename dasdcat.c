@@ -92,7 +92,6 @@ int process_dirblk(CIFBLK *cif, int noext, DSXTENT extent[], BYTE *dirblk,
  int rc;
  int dirrem;
  BYTE memname[9];
- int wildcard = 0;
 
  /* Load number of bytes in directory block */
  dirrem = (dirblk[0] << 8) | dirblk[1];

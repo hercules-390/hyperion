@@ -186,6 +186,23 @@ The following system parameters may be specified:
 	(possibly related to the cygwin Pthreads implementation) on Windows systems.
 	<p>The default for Windows is <code>8</code>. The default for all other systems
 	is <code>0</code>.
+<dt><code>PGMPRDOS RESTRICTED &#124 LICENSED</code>
+<dd>specifies whether or not Hercules will run licensed program product ESA
+    or z/Architecture operating systems.  Specify <code>RESTRICTED</code> to
+    make Hercules emulate an IFL (Integrated Facility for Linux) CPU. With
+    this specified, licensed ESA or z/Architecture OSes will refuse to
+    start. OS/390 and z/OS will enter an A7A wait state, with reason code 7,
+    at IPL time.  Specify <code>LICENSED</code> to allow these operating
+    systems to run normally. This parameter has no effect on Linux/390,
+    Linux for z/Series, or any 370-mode OS.
+    <p><b>NOTE: It is <em>YOUR</em> responsibility to comply with the terms
+    of your license for the software you intend to run on Hercules. If you
+    specify LICENSED and run a licensed operating system in violation of
+    that license, then don't come after the Hercules developers when the
+    vendor sends his lawyers after you.</b>
+    <p><code>RESTRICTED</code> is the default. Specifying
+    <code>LICENSED</code> will produce a message at Hercules startup to
+    remind you of your responsibility to comply with software license terms.
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any system
@@ -562,6 +579,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 27 January 2002
+<p>Last updated 3 February 2002
 </BODY>
 </HTML>

@@ -996,9 +996,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Set response code X'0010' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
         sccb->resp = SCCB_RESP_INFO;
-#if defined(OPTION_LPP_RESTRICT)
-        sccb->resp |= 4;
-#endif
+
+        /* OR in program product OS restriction flag. */
+        sccb->resp |= sysblk.pgmprdos;
 
         break;
 

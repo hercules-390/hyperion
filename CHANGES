@@ -1,3 +1,4 @@
+03 Feb 2002 Added PGMPRDOS config parameter - Jay Maynard
 03 Feb 2002 Performance tweaks - Greg Smith
 01 Feb 2002 CTCI-W32 (Win32 CTCA protocol using WinPcap) - Fish
 31 Jan 2002 Fix PER in guest for OPTION_CPU_UNROLL - Paul Leisy

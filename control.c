@@ -4815,7 +4815,7 @@ static char *ordername[] = {    "Unassigned",
         case SIGP_IPR:
             channelset_reset(tregs);
             /* fallthrough*/
-#endif defined(FEATURE_S370_CHANNEL)
+#endif /* defined(FEATURE_S370_CHANNEL) */
         case SIGP_INITRESET:
             if(tregs->cpuonline)
             {
@@ -4833,7 +4833,7 @@ static char *ordername[] = {    "Unassigned",
         case SIGP_PR:
             channelset_reset(tregs);
             /* fallthrough*/
-#endif defined(FEATURE_S370_CHANNEL)
+#endif /* defined(FEATURE_S370_CHANNEL) */
         case SIGP_RESET:
             /* Signal CPU reset function */
             tregs->sigpreset = 1;

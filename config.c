@@ -274,6 +274,7 @@ BYTE   *sostailor;                      /* -> OS to tailor system to */
 BYTE   *spanrate;                       /* -> Panel refresh rate     */
 BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
+BYTE   *spgmprdos;                      /* -> Program product OS OK  */
 BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
 U32     serial;                         /* CPU serial number         */
@@ -290,6 +291,7 @@ int     toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
 int     panrate;                        /* Panel refresh rate        */
 int     cpuprio;                        /* CPU thread priority       */
+BYTE    pgmprdos;                       /* Program product OS OK     */
 BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
@@ -343,6 +345,7 @@ BYTE    c;                              /* Work area for sscanf      */
     ostailor = OS_NONE;
     panrate = PANEL_REFRESH_RATE_SLOW;
     cpuprio = 15;
+    pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax = MAX_DEVICE_THREADS;
 
     /* Read records from the configuration file */
@@ -378,6 +381,7 @@ BYTE    c;                              /* Work area for sscanf      */
         spanrate = NULL;
         scpuprio = NULL;
         sdevtmax = NULL;
+        spgmprdos = NULL;
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -462,6 +466,10 @@ BYTE    c;                              /* Work area for sscanf      */
                 scpuprio = operand;
             }
             else if (strcasecmp (keyword, "devtmax") == 0)
+            {
+                sdevtmax = operand;
+            }
+            else if (strcasecmp (keyword, "pgmprdos") == 0)
             {
                 sdevtmax = operand;
             }
@@ -662,7 +670,7 @@ BYTE    c;                              /* Work area for sscanf      */
 		    ))
             {
                 logmsg( "HHC014I Error in %s line %d: "
-                        "%s is not a valid system epoch\npatch the config.c to expand the table\n",
+                        "%s is not a valid system epoch\npatch config.c to expand the table\n",
                         fname, stmt, ssysepoch);
                 exit(1);
             }
@@ -767,6 +775,30 @@ BYTE    c;                              /* Work area for sscanf      */
             {
                 logmsg( "HHC016I Error in %s line %d: "
                         "Invalid Max device threads %s\n",
+                        fname, stmt, sdevtmax);
+                exit(1);
+            }
+        }
+
+        /* Parse program product OS allowed */
+        if (spgmprdos != NULL)
+        {
+            if (strcasecmp (spgmprdos, "LICENSED") == 0)
+            {
+                pgmprdos = PGM_PRD_OS_LICENSED;
+                logmsg( "HHC046W PGMPRDOS LICENSED specified. Licensed program "
+                        "product OSes will run properly.\n       You are "
+                        "responsible for meeting all conditions\n        "
+                        "of your license for the software you will run.");
+            }
+            else if (strcasecmp (spgmprdos, "RESTRICTED") == 0)
+            {
+                pgmprdos = PGM_PRD_OS_RESTRICTED;
+            }
+            else
+            {
+                logmsg( "HHC047I Error in %s line %d: "
+                        "Invalid program product OS permission %s\n",
                         fname, stmt, sdevtmax);
                 exit(1);
             }
@@ -912,6 +944,9 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Set the system OS tailoring value */
     sysblk.pgminttr = ostailor;
+    
+    /* Set the system program product OS restriction flag */
+    sysblk.pgmprdos = pgmprdos;
 
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;

@@ -102,10 +102,6 @@ static const char *build_info[] = {
     "No HET BZIP2 support",
 #endif
 
-#if defined(OPTION_LPP_RESTRICT)
-    "Licensed Program Product restrictions",
-#endif
-
   " "
 
 };

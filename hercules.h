@@ -683,6 +683,7 @@ typedef struct _SYSBLK {
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
 
         int     cpuprio;                /* CPU thread priority       */
+        int     pgmprdos;               /* Program product OS flag   */
 #if !defined(NO_SETUID)
         uid_t   ruid, euid, suid;
         gid_t   rgid, egid, sgid;
@@ -737,6 +738,13 @@ typedef struct _SYSBLK {
 #else
 #define OS_LINUX        0x78FFFFFFF7DE7FD6ULL   /* Linux             */
 #endif
+
+/* Definitions for program product OS restriction flag. This flag is ORed
+   with the SCLP READ CPU INFO response code. A 4 here makes the CPU look
+   like an IFL (Integrated Facility for Linux) engine, which cannot run
+   licensed ESA/390 or z/Architecture OSes. */
+#define PGM_PRD_OS_RESTRICTED 4                 /* Restricted        */
+#define PGM_PRD_OS_LICENSED   0                 /* Licensed          */
 
 #ifndef WIN32
 #define MAX_DEVICE_THREADS 0
