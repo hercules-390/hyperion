@@ -1,3 +1,4 @@
+28 Jan 2002 PER fix for BCTR and move #endif for FEATURE_PER2 - Paul Leisy
 27 Jan 2002 Documentation updates for TCP/IP and Socket Readers - Roger Bowler
 25 Jan 2002 Include Malcolm Beattie's dasdcat program - Roger Bowler
 25 Jan 2002 More PER fixes for PR and addr wrap fix for MVCL - Paul Leisy
