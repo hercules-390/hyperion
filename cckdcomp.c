@@ -26,6 +26,8 @@ int             rc;                     /* Return code               */
 char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             level=-1;               /* Level for chkdsk          */
+int             force=0;                /* 1=Compress if OPENED set  */
+CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -34,9 +36,6 @@ int             level=-1;               /* Level for chkdsk          */
         argc--;
     }
 #endif /*EXTERNALGUI*/
-
-    /* Display the program identification message */
-    display_version (stderr, "Hercules cckd compress program ");
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
@@ -47,9 +46,15 @@ int             level=-1;               /* Level for chkdsk          */
         {
             case '0':
             case '1':
+            case '2':
             case '3':  if (argv[0][2] != '\0') return syntax ();
                        level = (argv[0][1] & 0xf);
                        break;
+            case 'f':  if (argv[0][2] != '\0') return syntax ();
+                       force = 1;
+            case 'v':  if (argv[0][2] != '\0') return syntax ();
+                       display_version (stderr, "Hercules cckd compress program ");
+                       return 0;
             default:   return syntax ();
         }
     }
@@ -64,6 +69,29 @@ int             level=-1;               /* Level for chkdsk          */
                  "cckdcomp: error opening file %s: %s\n",
                  fn, strerror(errno));
         return -1;
+    }
+
+    /* Check CCKD_OPENED bit if -f not specified */
+    if (!force)
+    {
+        if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+        {
+            fprintf (stderr, _("cckdcomp: lseek error: %s\n"),strerror(errno));
+            close (fd);
+            return -1;
+        }
+        if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < CCKDDASD_DEVHDR_SIZE)
+        {
+            fprintf (stderr, _("cckdcomp: read error: %s\n"),strerror(errno));
+            close (fd);
+            return -1;
+        }
+        if (cdevhdr.options & CCKD_OPENED)
+        {
+            fprintf (stderr, _("cckdcomp: OPENED bit is on, use `-f'\n"));
+            close (fd);
+            return -1;
+        }
     }
 
     /* call chkdsk() if level was specified */
@@ -93,12 +121,17 @@ int             level=-1;               /* Level for chkdsk          */
 
 int syntax()
 {
-    fprintf (stderr, "cckdcomp [-level] file-name\n"
+    fprintf (stderr, "\ncckdcomp [-v] [-f] [-level] file-name\n"
                 "\n"
-                "       where level is a digit 0 - 3\n"
-                "       specifying the cckdcdsk level:\n"
-                "         0  --  minimal checking\n"
-                "         1  --  normal  checking\n"
-                "         3  --  maximal checking\n");
+                "          -v      display version and exit\n"
+                "\n"
+                "          -f      force check even if OPENED bit is on\n"
+                "\n"
+                "        chkdsk level is a digit 0 - 3:\n"
+                "          -0  --  minimal checking\n"
+                "          -1  --  normal  checking\n"
+                "          -3  --  maximal checking\n"
+                "         default  don't check\n"
+                "\n");
     return -1;
 }
