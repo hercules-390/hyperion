@@ -308,45 +308,40 @@ void*  gui_panel_command (char* pszCommand)
 {
     void* (*next_panel_command_handler)(char* pszCommand);
 
-    // Ignore any null "commands" that may be erroneously passed to us
-
-    if (!pszCommand)    // (do we have a command to work with?)
-        return NULL;    // (nope. ignore)
-
     // Special GUI commands start with ']'. At the moment, all these special
     // gui commands tell us is what status information it's interested in...
 
-    if (strncasecmp(pszCommandBuff,"]GREGS=",7) == 0)
+    if (strncasecmp(pszCommand,"]GREGS=",7) == 0)
     {
-        gui_wants_gregs = atoi(pszCommandBuff+7);
+        gui_wants_gregs = atoi(pszCommand+7);
         return NULL;
     }
 
-    if (strncasecmp(pszCommandBuff,"]CREGS=",7) == 0)
+    if (strncasecmp(pszCommand,"]CREGS=",7) == 0)
     {
-        gui_wants_cregs = atoi(pszCommandBuff+7);
+        gui_wants_cregs = atoi(pszCommand+7);
         return NULL;
     }
 
-    if (strncasecmp(pszCommandBuff,"]AREGS=",7) == 0)
+    if (strncasecmp(pszCommand,"]AREGS=",7) == 0)
     {
-        gui_wants_aregs = atoi(pszCommandBuff+7);
+        gui_wants_aregs = atoi(pszCommand+7);
         return NULL;
     }
 
-    if (strncasecmp(pszCommandBuff,"]FREGS=",7) == 0)
+    if (strncasecmp(pszCommand,"]FREGS=",7) == 0)
     {
-        gui_wants_fregs = atoi(pszCommandBuff+7);
+        gui_wants_fregs = atoi(pszCommand+7);
         return NULL;
     }
 
-    if (strncasecmp(pszCommandBuff,"]DEVLIST=",9) == 0)
+    if (strncasecmp(pszCommand,"]DEVLIST=",9) == 0)
     {
-        gui_wants_devlist = atoi(pszCommandBuff+9);
+        gui_wants_devlist = atoi(pszCommand+9);
         return NULL;
     }
 
-    if (strncasecmp(pszCommandBuff,"]MAINSTOR=",10) == 0)
+    if (strncasecmp(pszCommand,"]MAINSTOR=",10) == 0)
     {
         fprintf(fStatusStream,"MAINSTOR=%d\n",(U32)pTargetCPU_REGS->mainstor);
         fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)my_sysblk_ptr->mainsize);
@@ -354,9 +349,9 @@ void*  gui_panel_command (char* pszCommand)
     }
 
 #if defined(OPTION_MIPS_COUNTING)
-    if (strncasecmp(pszCommandBuff,"]CPUPCT=",8) == 0)
+    if (strncasecmp(pszCommand,"]CPUPCT=",8) == 0)
     {
-        gui_wants_cpupct = atoi(pszCommandBuff+8);
+        gui_wants_cpupct = atoi(pszCommand+8);
         return NULL;
     }
 #endif
