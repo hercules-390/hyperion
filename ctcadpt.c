@@ -165,9 +165,8 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
-#ifdef HAVE_LINUX_IF_TUN_H
-#include <linux/if_tun.h>
-#endif
+
+#include "if_tun.h"
 
 #define HERCIFC_CMD "hercifc"           /* Interface config command  */
 
@@ -652,7 +651,7 @@ BYTE            c;                      /* Character work area       */
             return -1;
         }
         dev->fd = fd;
-#ifdef HAVE_LINUX_IF_TUN_H
+
         if ((strncasecmp(utsbuf.sysname, "linux", 5) == 0) &&
             (strncmp(utsbuf.machine, "s390", 4) != 0) &&
             (strncmp(utsbuf.release, "2.4", 3) == 0))
@@ -664,23 +663,22 @@ BYTE            c;                      /* Character work area       */
             struct ifreq ifr;
     
             memset(&ifr, 0, sizeof(ifr));
-	    /* Note: Normally it might make more sense to include a
-	       copy of the necessary kernel header for this, but
-	       unfortunately there are two incompatible sets of
-	       constants for the kernel interface, and backward
-	       compatibility was not preserved. */
-
             ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+
+            /* First try the value from the header that we ship (2.4.8) */
+
             if (ioctl(fd, TUNSETIFF, &ifr) != 0)
-            {
-                logmsg ("HHC853I %4.4X setting net device param failed: %s\n",
-                    dev->devnum, strerror(errno));
-                ctcadpt_close_device(dev);
-                return -1;
-            }
+
+              /* If it failed with EBADF, try with the pre-2.4.5 value */
+              if (errno != EBADF || ioctl(fd, ('T' << 8) | 202, &ifr) != 0)
+                {
+                  logmsg ("HHC853I %4.4X setting net device param failed: %s\n",
+                          dev->devnum, strerror(errno));
+                  ctcadpt_close_device(dev);
+                  return -1;
+                }
 	    strcpy(dev->netdevname, ifr.ifr_name);
         } else
-#endif /* HAVE_LINUX_IF_TUN_H */
 	  {
             /* Other OS: Simply use basename of the device */
             char *p = strrchr(dev->filename, '/');
