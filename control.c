@@ -1857,8 +1857,9 @@ U16     updated = 0;                    /* Updated control regs      */
 #if defined(_FEATURE_SIE)
     if (SIE_MODE(regs))
     {
+        U16 cr_mask = fetch_hw (regs->siebk->lctl_ctl);
         for (i = 0; i < n; i++)
-            if (test_bit(2, 15 - ((r1 + i) & 0xF), &regs->siebk->lctl_ctl))
+            if (cr_mask & BIT(15 - ((r1 + i) & 0xF)))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
     }
 #endif /*defined(_FEATURE_SIE)*/
