@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Messages: LG - Log functions</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages: LG - Log functions</h1>
+<p>
+This page describes messages related to the log funtions of the Hercules S/370,
+ESA/390, and z/Architecture emulator.
+<h3>Messages</h3>
+<dl>
+<dt><code><a name="HHCLG001E">
+HHCLG001E Error redirecting stdout: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The stdout stream could not be redirected to the system logger,
+the error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_thread 
+  </dl>
+<dt><code><a name="HHCLG002E">
+HHHCLG002E Error reading syslog pipe: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error occurred while reading the syslog pipe.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_thread
+  </dl>
+<dt><code><a name="HHCLG003E">
+HHCLG003E Error writing hardcopy log: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The error as indicated by <code><em>error</em></code> occurred while writeing the hardcopy log.
+  <dt>Issued by
+  <dd>logger.c, function logger_thread
+  </dl>
+<dt><code><a name="HHCLG004E">
+HHCLG004E Error duplicating stderr: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Stdout could not be redirected to stderr.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+<dt><code><a name="HHCLG005E">
+HHCLG005E Error duplicating stdout: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Stderr could not be redirected to stdout.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+<dt><code><a name="HHCLG006E">
+HHCLG006E Duplicate error redirecting hardcopy log: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The error described by <code><em>error</em></code> occurred whilst redirecting the hardcopy log.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+<dt><code><a name="HHCLG007S">
+HHCLG007S Hardcopy log fdopen failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to open a stream for the hardcopy log failed.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+<dt><code><a name="HHCLG008S">
+HHCLG008S logbuffer malloc failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An instorage buffer for the system log could not be obtained.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+<dt><code><a name="HHCLG009S">
+HHCLG009S Syslog message pipe creation failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create the pipe for the system logger failed.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+<dt><code><a name="HHCHT010S">
+HHCLG010S Syslog write message pipe open failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to open a stream for the logger pipe failed.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+<dt><code><a name="HHCHT011S">
+HHCLG011S Syslog read message pipe open failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to open a stream for the logger pipe failed.
+The error is described by <code><em>error</em></code>.
+  <dt>Issued by
+  <dd>logger.c, function logger_init
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 16 December 2002
+</BODY>
+</HTML>
