@@ -551,36 +551,31 @@ static char *pgmintname[] = {
 
 
 #if defined(_FEATURE_PER)
-#if defined(FEATURE_BCMODE)
-    if ( realregs->psw.ecmode || realregs->sie_state )
-#endif /*defined(FEATURE_BCMODE)*/
+    /* Handle PER or concurrent PER event */
+    if( OPEN_IC_PERINT(realregs) )
     {
-        /* Handle PER or concurrent PER event */
-        if( OPEN_IC_PERINT(realregs) )
-        {
-            if( IS_IC_TRACE )
-                logmsg("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n",
-                  regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
-                  (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
+        if( IS_IC_TRACE )
+            logmsg("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n",
+              regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
+              (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
 
-            regs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
-            /* Positions 14 and 15 contain zeros if a storage alteration
-               event was not indicated */
-            if( !(OPEN_IC_PERINT(realregs) & IC_PER_SA)
-              || (OPEN_IC_PERINT(realregs) & IC_PER_STURA) )
-                realregs->perc &= 0xFFFC;
+        regs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
+        /* Positions 14 and 15 contain zeros if a storage alteration
+           event was not indicated */
+        if( !(OPEN_IC_PERINT(realregs) & IC_PER_SA)
+          || (OPEN_IC_PERINT(realregs) & IC_PER_STURA) )
+            realregs->perc &= 0xFFFC;
 
-            STORE_HW(psa->perint, realregs->perc);
+        STORE_HW(psa->perint, realregs->perc);
 
-            STORE_W(psa->peradr, realregs->peradr);
+        STORE_W(psa->peradr, realregs->peradr);
 
-            if( IS_IC_PER_SA(regs) && ACCESS_REGISTER_MODE(&realregs->psw) )
-                psa->perarid = regs->peraid;
+        if( IS_IC_PER_SA(regs) && ACCESS_REGISTER_MODE(&realregs->psw) )
+            psa->perarid = regs->peraid;
 
-            /* Reset PER pending indication */
-            OFF_IC_PER(realregs);
+        /* Reset PER pending indication */
+        OFF_IC_PER(realregs);
 
-        }
     }
 #endif /*defined(_FEATURE_PER)*/
 
