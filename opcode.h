@@ -1060,7 +1060,6 @@ do { \
 #undef SIE_LOGICAL_TO_ABS
 #undef SIE_INTERCEPT
 #undef SIE_TRANSLATE
-#undef SIE_ONLY_INSTRUCTION
 
 
 #if defined(_FEATURE_SIE)
@@ -1116,18 +1115,12 @@ do { \
 	  USE_PRIMARY_SPACE, (_regs)->hostregs, (_acctype), 0); \
 } while(0)
 
-#define SIE_ONLY_INSTRUCTION(_regs) \
-    if(!(_regs)->sie_state) \
-	ARCH_DEP(program_interrupt)((_regs), PGM_OPERATION_EXCEPTION);
-
 #else /*!defined(_FEATURE_SIE)*/
 
 #define SIE_TRANSLATE_ADDR(_parms...)
 #define SIE_LOGICAL_TO_ABS(_parms...)
 #define SIE_INTERCEPT(_parms...)
 #define SIE_TRANSLATE(_parms...)
-#define SIE_ONLY_INSTRUCTION(_regs) \
-	ARCH_DEP(program_interrupt)((_regs), PGM_OPERATION_EXCEPTION)
 
 #endif /*!defined(_FEATURE_SIE)*/
 
