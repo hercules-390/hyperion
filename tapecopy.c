@@ -69,7 +69,7 @@ static struct mt_tape_info densinfo[] = {
     {0x8C, "EXB-8505 compressed"},
     {0x90, "EXB-8205 compressed"},
     {0, NULL}};
-static BYTE buf[65500];
+static BYTE buf[65535];
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to print tape status                                   */

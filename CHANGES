@@ -1,3 +1,4 @@
+08 Mar 2003 Increased max block size to 64k-1 for tapecopy - Ivan Warren
 08 Mar 2003 Set Byte 1 Bit 3 on IntReq for D/T 3505 to prevent
             Reader tasks from dying and filling ERDS + set
             sense size to 4 - Ivan Warren
