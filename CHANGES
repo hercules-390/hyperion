@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+17 Auf 2003 Re-instated fast dev lookup as a cache facility
+            Thanks Fish for the suggestions - Ivan Warren
 17 Aug 2003 Disabled Fast devnum & subchan lookup because of
             some incompatibilities / reported by yvangamache - Ivan Warren
 16 Aug 2003 fix tt32stats command when OPTION_DYNAMIC_LOAD - Fish

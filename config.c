@@ -1753,8 +1753,9 @@ int deconfigure_cpu(REGS *regs)
 } /* end function deconfigure_cpu */
 
 
+/* 4 next functions used for fast device lookup cache management */
 #if defined(OPTION_FAST_DEVLOOKUP)
-void AddDevnumFastLookup(DEVBLK *dev,U16 devnum)
+static void AddDevnumFastLookup(DEVBLK *dev,U16 devnum)
 {
     unsigned int Channel;
     if(sysblk.devnum_fl==NULL)
@@ -1769,21 +1770,27 @@ void AddDevnumFastLookup(DEVBLK *dev,U16 devnum)
         memset(sysblk.devnum_fl[Channel],0,sizeof(DEVBLK *)*256);
     }
     sysblk.devnum_fl[Channel][devnum & 0xff]=dev;
+}
+static void AddSubchanFastLookup(DEVBLK *dev,U16 subchan)
+{
+    unsigned int schw;
+#if 0
+    logmsg("DEBUG : ASFL Adding %d\n",subchan);
+#endif
     if(sysblk.subchan_fl==NULL)
     {
         sysblk.subchan_fl=(DEVBLK ***)malloc(sizeof(DEVBLK **)*256);
         memset(sysblk.subchan_fl,0,sizeof(DEVBLK **)*256);
     }
-    /* Not 'Channel', just reusing the variable to hold MSB of subchan # */
-    Channel=(dev->subchan & 0xff00)>>8;
-    if(sysblk.subchan_fl[Channel]==NULL)
+    schw=(subchan & 0xff00)>>8;
+    if(sysblk.subchan_fl[schw]==NULL)
     {
-        sysblk.subchan_fl[Channel]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
-        memset(sysblk.subchan_fl[Channel],0,sizeof(DEVBLK *)*256);
+        sysblk.subchan_fl[schw]=(DEVBLK **)malloc(sizeof(DEVBLK *)*256);
+        memset(sysblk.subchan_fl[schw],0,sizeof(DEVBLK *)*256);
     }
-    sysblk.subchan_fl[Channel][dev->subchan & 0xff]=dev;
+    sysblk.subchan_fl[schw][subchan & 0xff]=dev;
 }
-void DelDevnumFastLookup(U16 devnum)
+static void DelDevnumFastLookup(U16 devnum)
 {
     unsigned int Channel;
     if(sysblk.devnum_fl==NULL)
@@ -1796,6 +1803,23 @@ void DelDevnumFastLookup(U16 devnum)
         return;
     }
     sysblk.devnum_fl[Channel][devnum & 0xff]=NULL;
+}
+static void DelSubchanFastLookup(U16 subchan)
+{
+    unsigned int schw;
+#if 0
+    logmsg("DEBUG : DSFL Removing %d\n",subchan);
+#endif
+    if(sysblk.subchan_fl==NULL)
+    {
+        return;
+    }
+    schw=(subchan & 0xff00)>>8;
+    if(sysblk.subchan_fl[schw]==NULL)
+    {
+        return;
+    }
+    sysblk.subchan_fl[schw][subchan & 0xff]=NULL;
 }
 #endif
 
@@ -1868,9 +1892,6 @@ DEVBLK**dvpp;
 
     /* Mark device valid */
     dev->pmcw.flag5 |= PMCW5_V;
-#if defined(OPTION_FAST_DEVLOOKUP)
-    AddDevnumFastLookup(dev,devnum);
-#endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
@@ -1885,11 +1906,10 @@ void ret_devblk(DEVBLK *dev)
 {
     /* Mark device invalid */
     dev->pmcw.flag5 &= ~PMCW5_V;
-
 #if defined(OPTION_FAST_DEVLOOKUP)
+    DelSubchanFastLookup(dev->subchan);
     DelDevnumFastLookup(dev->devnum);
 #endif
-
     release_lock(&dev->lock);
 }
 
@@ -2046,10 +2066,6 @@ DEVBLK *dev;                            /* -> Device block           */
 
     /* Disable the device */
     dev->pmcw.flag5 &= ~PMCW5_E;
-#if defined(OPTION_FAST_DEVLOOKUP)
-    DelDevnumFastLookup(olddevn);
-    AddDevnumFastLookup(dev,newdevn);
-#endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
@@ -2074,68 +2090,85 @@ DEVBLK *dev;                            /* -> Device block           */
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the device number           */
 /*-------------------------------------------------------------------*/
-#if !defined(OPTION_FAST_DEVLOOKUP)
 DEVBLK *find_device_by_devnum (U16 devnum)
 {
 DEVBLK *dev;
-
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        if (dev->devnum == devnum && dev->pmcw.flag5 & PMCW5_V) break;
-
-    return dev;
-
-} /* end function find_device_by_devnum */
-#else
-DEVBLK *find_device_by_devnum (U16 devnum)
-{
-DEVBLK *dev;
+#if defined(OPTION_FAST_DEVLOOKUP)
 DEVBLK **devtab;
 int Chan;
 
     Chan=(devnum & 0xff00)>>8;
-    if(sysblk.devnum_fl==NULL)
+    if(sysblk.devnum_fl!=NULL)
     {
-        return NULL;
+        devtab=sysblk.devnum_fl[(devnum & 0xff00)>>8];
+        if(devtab!=NULL)
+        {
+            dev=devtab[devnum & 0xff];
+            if(dev && dev->pmcw.flag5 & PMCW5_V)
+            {
+                return dev;
+            }
+            else
+            {
+                DelDevnumFastLookup(devnum);
+            }
+        }
     }
-    devtab=sysblk.devnum_fl[(devnum & 0xff00)>>8];
-    if(devtab==NULL)
-    {
-        return NULL;
-    }
-    dev=devtab[devnum & 0xff];
-    return(dev);
-} /* end function find_device_by_devnum */
+
 #endif
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        if (dev->devnum == devnum && dev->pmcw.flag5 & PMCW5_V) break;
+#if defined(OPTION_FAST_DEVLOOKUP)
+    if(dev)
+    {
+        AddDevnumFastLookup(dev,devnum);
+    }
+#endif
+    return dev;
+} /* end function find_device_by_devnum */
 
 
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the subchannel number       */
 /*-------------------------------------------------------------------*/
-#if defined(OPTION_FAST_DEVLOOKUP)
 DEVBLK *find_device_by_subchan (U16 subchan)
 {
     DEVBLK *dev;
-    if(sysblk.subchan_fl[(subchan & 0xff00)<<8]==NULL)
+#if defined(OPTION_FAST_DEVLOOKUP)
+#if 0
+    logmsg("DEBUG : FDBS FL Looking for %d\n",subchan);
+#endif
+    if(sysblk.subchan_fl!=NULL)
     {
-        return NULL;
+        if(sysblk.subchan_fl[(subchan & 0xff00)>>8]!=NULL)
+        {
+            dev=sysblk.subchan_fl[(subchan & 0xff00)>>8][subchan & 0xff];
+            if(dev)
+            {
+                return dev;
+            }
+        }
     }
-    dev=sysblk.subchan_fl[(subchan & 0xff00)<<8][subchan & 0xff];
-    return dev;
-} /* end function find_device_by_subchan */
-
-#else // FAST LOOKUP
-DEVBLK *find_device_by_subchan (U16 subchan)
-{
-DEVBLK *dev;
-
+#endif
+#if 0
+    logmsg("DEBUG : FDBS SL Looking for %d\n",subchan);
+#endif
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         if (dev->subchan == subchan) break;
 
-    return dev;
-
-} /* end function find_device_by_subchan */
+#if defined(OPTION_FAST_DEVLOOKUP)
+    if(dev)
+    {
+        AddSubchanFastLookup(dev,subchan);
+    }
+    else
+    {
+        DelSubchanFastLookup(subchan);
+    }
 #endif
 
+    return dev;
+} /* end function find_device_by_subchan */
 
 #endif /*!defined(_GEN_ARCH)*/
 
