@@ -485,7 +485,7 @@ int             extsize;                /* Extent size in tracks     */
         end = (ecyl * heads) + etrk;
         extsize = end - start + 1;
 
-        if (trk <= extsize)
+        if (trk < extsize)
         {
             trk += start;
             *cyl = trk / heads;
