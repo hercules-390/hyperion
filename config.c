@@ -920,24 +920,36 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
 #if defined(_FEATURE_ECPSVM)
         /* Parse ECPS:VM level */
-        if(secpsvmlevel != NULL)
+        while(1)        /* Dummy while loop for break support */
         {
-            if(strcasecmp(secpsvmlevel,"no")==0)
+            ecpsvmavail=0;
+            ecpsvmlevel=0;
+            if(secpsvmlevel != NULL)
             {
-                ecpsvmavail=0;
-            }
-            else
-            {
+                if(strcasecmp(secpsvmlevel,"no")==0)
+                {
+                    ecpsvmavail=0;
+                    break;
+                }
+                if(strcasecmp(secpsvmlevel,"yes")==0)
+                {
+                    ecpsvmavail=1;
+                    ecpsvmlevel=20;
+                    break;
+                }
                 ecpsvmavail=1;
                 if (sscanf(secpsvmlevel, "%d%c", &ecpsvmlevel, &c) != 1)
                 {
-                    fprintf(stderr, _("HHCCF051S Error in %s line %d: "
-                            "Invalid ECPS:VM value : %s\n"),
+                    fprintf(stderr, _("HHCCF051W Error in %s line %d: "
+                            "Invalid ECPS:VM value : %s. NO Assumed\n"),
                             fname, stmt, secpsvmlevel);
-                    delayed_exit(1);
+                    ecpsvmavail=0;
+                    ecpsvmlevel=0;
+                    break;
                 }
-            }
-        }
+            } /* End if secpsvmlevel!=NULL */
+            break;
+        } /* End Dummy while loop */
         sysblk.ecpsvm.available=ecpsvmavail;
         sysblk.ecpsvm.level=ecpsvmlevel;
 #endif /*defined(_FEATURE_ECPSVM)*/

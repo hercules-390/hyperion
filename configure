@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE BUILD_HERCIFC_TRUE BUILD_HERCIFC_FALSE MKINSTALLDIRS MSGFMT GMSGFMT XGETTEXT MSGMERGE RANLIB ac_ct_RANLIB CPP EGREP ALLOCA GLIBC21 LIBICONV LTLIBICONV INTLBISON USE_NLS BUILD_INCLUDED_LIBINTL USE_INCLUDED_LIBINTL CATOBJEXT INTLOBJS DATADIRNAME INSTOBJEXT GENCAT INTL_LIBTOOL_SUFFIX_PREFIX INTLLIBS LIBINTL LTLIBINTL POSUB BUILD_FTHREADS_TRUE BUILD_FTHREADS_FALSE BUILD_FISHHANG_TRUE BUILD_FISHHANG_FALSE SETUID_HERCIFC_TRUE SETUID_HERCIFC_FALSE LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE BUILD_HERCIFC_TRUE BUILD_HERCIFC_FALSE MKINSTALLDIRS MSGFMT GMSGFMT XGETTEXT MSGMERGE RANLIB ac_ct_RANLIB CPP EGREP ALLOCA GLIBC21 LIBICONV LTLIBICONV INTLBISON USE_NLS BUILD_INCLUDED_LIBINTL USE_INCLUDED_LIBINTL CATOBJEXT INTLOBJS DATADIRNAME INSTOBJEXT GENCAT INTL_LIBTOOL_SUFFIX_PREFIX INTLLIBS LIBINTL LTLIBINTL POSUB BUILD_FTHREADS_TRUE BUILD_FTHREADS_FALSE BUILD_FISHHANG_TRUE BUILD_FISHHANG_FALSE USE_BUILTIN_MEMRCHR_TRUE USE_BUILTIN_MEMRCHR_FALSE SETUID_HERCIFC_TRUE SETUID_HERCIFC_FALSE LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -8877,6 +8877,7 @@ presetting ac_cv_c_bigendian=no (or yes) will help" >&2;}
 esac
 
 
+
 # GCC only seems to support regparm on i386 right now, but that could
 # change in the future.
 echo "$as_me:$LINENO: checking whether gcc supports __attribute__((regparm(n)))" >&5
@@ -9071,7 +9072,112 @@ _ACEOF
 
 fi
 
+
 # Library functions
+
+# Check for presence of memrchr in system
+
+for ac_func in memrchr
+do
+as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $ac_func" >&5
+echo $ECHO_N "checking for $ac_func... $ECHO_C" >&6
+if eval "test \"\${$as_ac_var+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func (); below.
+    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    <limits.h> exists even on freestanding compilers.  */
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char $ac_func ();
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+char (*f) () = $ac_func;
+#endif
+#ifdef __cplusplus
+}
+#endif
+
+int
+main ()
+{
+return f != $ac_func;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  eval "$as_ac_var=yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+eval "$as_ac_var=no"
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_var'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_var'}'`" >&6
+if test `eval echo '${'$as_ac_var'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+ have_memrchr=yes
+else
+  have_memrchr=no
+fi
+done
+
+if test $have_memrchr = no; then
+    cat >>confdefs.h <<\_ACEOF
+#define BUILTIN_MEMRCHR 1
+_ACEOF
+
+fi
+
+
+if test x$have_memrchr = xno; then
+  USE_BUILTIN_MEMRCHR_TRUE=
+  USE_BUILTIN_MEMRCHR_FALSE='#'
+else
+  USE_BUILTIN_MEMRCHR_TRUE='#'
+  USE_BUILTIN_MEMRCHR_FALSE=
+fi
+
 
 
 
@@ -9690,6 +9796,8 @@ _ACEOF
 
 
 
+
+
                                                                                 ac_config_files="$ac_config_files Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -9821,6 +9929,13 @@ if test -z "${BUILD_FISHHANG_TRUE}" && test -z "${BUILD_FISHHANG_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"BUILD_FISHHANG\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"BUILD_FISHHANG\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_BUILTIN_MEMRCHR_TRUE}" && test -z "${USE_BUILTIN_MEMRCHR_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_BUILTIN_MEMRCHR\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_BUILTIN_MEMRCHR\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -10455,6 +10570,8 @@ s,@BUILD_FTHREADS_TRUE@,$BUILD_FTHREADS_TRUE,;t t
 s,@BUILD_FTHREADS_FALSE@,$BUILD_FTHREADS_FALSE,;t t
 s,@BUILD_FISHHANG_TRUE@,$BUILD_FISHHANG_TRUE,;t t
 s,@BUILD_FISHHANG_FALSE@,$BUILD_FISHHANG_FALSE,;t t
+s,@USE_BUILTIN_MEMRCHR_TRUE@,$USE_BUILTIN_MEMRCHR_TRUE,;t t
+s,@USE_BUILTIN_MEMRCHR_FALSE@,$USE_BUILTIN_MEMRCHR_FALSE,;t t
 s,@SETUID_HERCIFC_TRUE@,$SETUID_HERCIFC_TRUE,;t t
 s,@SETUID_HERCIFC_FALSE@,$SETUID_HERCIFC_FALSE,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t

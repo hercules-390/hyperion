@@ -165,6 +165,7 @@ AC_CHECK_HEADER(inttypes.h,
 
 AC_C_BIGENDIAN
 
+
 # GCC only seems to support regparm on i386 right now, but that could
 # change in the future.
 AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
@@ -275,7 +276,15 @@ if test $het_bzip2 = yes; then
   AC_DEFINE(HET_BZIP2)
 fi
 
+
 # Library functions
+
+# Check for presence of memrchr in system
+AC_CHECK_FUNCS(memrchr,[have_memrchr=yes],[have_memrchr=no])
+if test $have_memrchr = no; then
+    AC_DEFINE(BUILTIN_MEMRCHR)
+fi
+AM_CONDITIONAL(USE_BUILTIN_MEMRCHR, [test x$have_memrchr = xno])
 
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
 AC_CHECK_FUNCS(strsignal)
@@ -440,7 +449,9 @@ AH_TEMPLATE([_BSD_SOCKLEN_T_],
             [Define missing macro on apple darwin (osx) platform])
 AH_TEMPLATE([_INTL_REDIRECT_MACROS],
             [Define to 1 if non-Intel architecture (gettext)])
+AH_TEMPLATE([BUILTIN_MEMRCHR],
+            [Define to use built-in memrchr implementation])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile ])
 
 

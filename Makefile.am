@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4 po util html man
+SUBDIRS = intl m4  intl m4  intl m4 po util html man
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -27,8 +27,9 @@ EXTRA_PROGRAMS=hercifc
 fthreads_sources=fthreads.c
 fishhang_sources=fishhang.c
 fishio_sources=w32chan.c
+memrchr_sources=memrchr.c
 
-EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources)
+EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources)
 
 if BUILD_FTHREADS
 FTHREADS=$(fthreads_sources)
@@ -42,6 +43,12 @@ else
 FTHREADS=
 FISHHANG=
 FISHIO=
+endif
+
+if USE_BUILTIN_MEMRCHR
+MEMRCHR=memrchr.c
+else
+MEMRCHR=
 endif
 
 hercules_SOURCES = hostinfo.c w32ctca.c \
@@ -63,7 +70,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
            httpserv.c cgibin.c devtype.c codepage.c \
            ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
-           logger.c commadpt.c cache.c ecpsvm.c
+           logger.c commadpt.c cache.c ecpsvm.c $(MEMRCHR)
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
@@ -128,7 +135,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
     README.OSX README.TAPE README.COMMADPT
 
 noinst_HEADERS  = fishhang.h \
@@ -138,7 +145,7 @@ noinst_HEADERS  = fishhang.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
-    ecpsvm.h
+    ecpsvm.h memrchr.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \

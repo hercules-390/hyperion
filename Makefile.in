@@ -113,6 +113,8 @@ SETUID_HERCIFC_TRUE = @SETUID_HERCIFC_TRUE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+USE_BUILTIN_MEMRCHR_FALSE = @USE_BUILTIN_MEMRCHR_FALSE@
+USE_BUILTIN_MEMRCHR_TRUE = @USE_BUILTIN_MEMRCHR_TRUE@
 USE_INCLUDED_LIBINTL = @USE_INCLUDED_LIBINTL@
 USE_NLS = @USE_NLS@
 VERSION = @VERSION@
@@ -155,7 +157,7 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4 po util html man
+SUBDIRS = intl m4  intl m4  intl m4 po util html man
 @BUILD_HERCIFC_FALSE@HERCIFC = 
 
 @BUILD_HERCIFC_TRUE@HERCIFC = hercifc
@@ -174,8 +176,9 @@ EXTRA_PROGRAMS = hercifc
 fthreads_sources = fthreads.c
 fishhang_sources = fishhang.c
 fishio_sources = w32chan.c
+memrchr_sources = memrchr.c
 
-EXTRA_hercules_SOURCES = $(fthreads_sources) $(fishhang_sources) $(fishio_sources)
+EXTRA_hercules_SOURCES = $(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources)
 @BUILD_FTHREADS_FALSE@FTHREADS = 
 
 @BUILD_FTHREADS_TRUE@FTHREADS = $(fthreads_sources)
@@ -184,6 +187,9 @@ EXTRA_hercules_SOURCES = $(fthreads_sources) $(fishhang_sources) $(fishio_source
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@FISHHANG = $(fishhang_sources)
 @BUILD_FTHREADS_FALSE@FISHIO = 
 @BUILD_FTHREADS_TRUE@FISHIO = $(fishio_sources)
+@USE_BUILTIN_MEMRCHR_FALSE@MEMRCHR = 
+
+@USE_BUILTIN_MEMRCHR_TRUE@MEMRCHR = memrchr.c
 
 hercules_SOURCES = hostinfo.c w32ctca.c \
 	   impl.c config.c panel.c version.c \
@@ -204,7 +210,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
            httpserv.c cgibin.c devtype.c codepage.c \
            ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
-           logger.c commadpt.c cache.c ecpsvm.c
+           logger.c commadpt.c cache.c ecpsvm.c $(MEMRCHR)
 
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
@@ -283,7 +289,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
     README.OSX README.TAPE README.COMMADPT
 
 
@@ -294,7 +300,7 @@ noinst_HEADERS = fishhang.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
-    ecpsvm.h
+    ecpsvm.h memrchr.h
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -534,10 +540,12 @@ am__hercules_SOURCES_DIST = hostinfo.c w32ctca.c impl.c config.c panel.c \
 	cckdutil.c dasdtab.c parser.c hetlib.c ieee.c sockdev.c \
 	machdep.h fthreads.c fishhang.c w32chan.c httpserv.c cgibin.c \
 	devtype.c codepage.c ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c \
-	hscmisc.c logger.c commadpt.c cache.c ecpsvm.c
+	hscmisc.c logger.c commadpt.c cache.c ecpsvm.c memrchr.c
 am__objects_5 = w32chan.$(OBJEXT)
 @BUILD_FTHREADS_TRUE@am__objects_6 = $(am__objects_5)
 @BUILD_FTHREADS_FALSE@am__objects_6 =
+@USE_BUILTIN_MEMRCHR_TRUE@am__objects_7 = memrchr.$(OBJEXT)
+@USE_BUILTIN_MEMRCHR_FALSE@am__objects_7 =
 am_hercules_OBJECTS = hostinfo.$(OBJEXT) w32ctca.$(OBJEXT) \
 	impl.$(OBJEXT) config.$(OBJEXT) panel.$(OBJEXT) \
 	version.$(OBJEXT) ipl.$(OBJEXT) assist.$(OBJEXT) dat.$(OBJEXT) \
@@ -559,7 +567,7 @@ am_hercules_OBJECTS = hostinfo.$(OBJEXT) w32ctca.$(OBJEXT) \
 	devtype.$(OBJEXT) codepage.$(OBJEXT) ctc_ctci.$(OBJEXT) \
 	ctc_lcs.$(OBJEXT) tuntap.$(OBJEXT) hsccmd.$(OBJEXT) \
 	hscmisc.$(OBJEXT) logger.$(OBJEXT) commadpt.$(OBJEXT) \
-	cache.$(OBJEXT) ecpsvm.$(OBJEXT)
+	cache.$(OBJEXT) ecpsvm.$(OBJEXT) $(am__objects_7)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 hercules_LDADD = $(LDADD)
 hercules_DEPENDENCIES =
@@ -642,19 +650,19 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/ieee.Po ./$(DEPDIR)/impl.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/io.Po ./$(DEPDIR)/ipl.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/logger.Po ./$(DEPDIR)/machchk.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/opcode.Po ./$(DEPDIR)/panel.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/parser.Po ./$(DEPDIR)/plo.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/printer.Po ./$(DEPDIR)/qdio.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/service.Po ./$(DEPDIR)/sie.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/sllib.Po ./$(DEPDIR)/sockdev.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/stack.Po ./$(DEPDIR)/tapecopy.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/tapedev.Po ./$(DEPDIR)/tapemap.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/tapesplt.Po ./$(DEPDIR)/timer.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/trace.Po ./$(DEPDIR)/tuntap.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/vector.Po ./$(DEPDIR)/version.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/vm.Po ./$(DEPDIR)/vstore.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/w32chan.Po ./$(DEPDIR)/w32ctca.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/xstore.Po
+@AMDEP_TRUE@	./$(DEPDIR)/memrchr.Po ./$(DEPDIR)/opcode.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/panel.Po ./$(DEPDIR)/parser.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/plo.Po ./$(DEPDIR)/printer.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/qdio.Po ./$(DEPDIR)/service.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/sie.Po ./$(DEPDIR)/sllib.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/sockdev.Po ./$(DEPDIR)/stack.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tapecopy.Po ./$(DEPDIR)/tapedev.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tapemap.Po ./$(DEPDIR)/tapesplt.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/timer.Po ./$(DEPDIR)/trace.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tuntap.Po ./$(DEPDIR)/vector.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/version.Po ./$(DEPDIR)/vm.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/vstore.Po ./$(DEPDIR)/w32chan.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/w32ctca.Po ./$(DEPDIR)/xstore.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -901,6 +909,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ipl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logger.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/machchk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memrchr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opcode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@

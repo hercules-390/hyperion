@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Define to use built-in memrchr implementation */
+#undef BUILTIN_MEMRCHR
+
 /* Define to enable bzip2 compression in emulated DASDs */
 #undef CCKD_BZIP2
 
@@ -143,6 +146,9 @@
 
 /* Define to 1 if you have the `mempcpy' function. */
 #undef HAVE_MEMPCPY
+
+/* Define to 1 if you have the `memrchr' function. */
+#undef HAVE_MEMRCHR
 
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
