@@ -274,6 +274,8 @@ fi
 
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl)
 
+AC_CHECK_FUNC(InitializeCriticalSectionAndSpinCount)
+
 # If we have setresuid AND getresuid, we can do setuid stuff
 AC_CHECK_FUNCS([setresuid getresuid],
                [enable_setuid=true],[enable_setuid=false;break])
