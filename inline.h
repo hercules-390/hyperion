@@ -30,7 +30,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
 _LOGICAL_C_STATIC RADR ARCH_DEP(logical_to_abs) (VADR addr, int arn,
                    REGS *regs, int acctype, BYTE akey);
 
-#if defined(_FEATURE_SIE)
+#if defined(_FEATURE_SIE) && ARCH_MODE != ARCH_900
 _LOGICAL_C_STATIC RADR s390_logical_to_abs (U32 addr, int arn, REGS *regs,
                            int acctype, BYTE akey);
 _DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,

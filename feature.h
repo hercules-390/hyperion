@@ -89,21 +89,17 @@
 #undef F_AREG
 #undef STORE_W
 #undef FETCH_W
-#if defined(OPTION_AIA_BUFFER)
 #undef VI
 #undef AI
-#endif /*defined(OPTION_AIA_BUFFER)*/
-#if defined(OPTION_AEA_BUFFER)
 #undef AE
 #undef VE
-#endif /*defined(OPTION_AEA_BUFFER)*/
 #undef SIEBK
 #undef ZPB
 #undef TLB_STD
 #undef TLB_VADDR
 #undef TLB_PTE
 
-#if !defined(NO_ATTR_REGPARM) && !defined(PROFILE_CPU)
+#if !defined(NO_ATTR_REGPARM)
 #define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
 #else
 #define ATTR_REGPARM(n) /* nothing */
@@ -186,14 +182,10 @@ s370_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
-#if defined(OPTION_AIA_BUFFER)
 #define VI	VI_L
 #define AI	AI_L
-#endif /*defined(OPTION_AIA_BUFFER)*/
-#if defined(OPTION_AEA_BUFFER)
 #define AE(_r)	AE_L(_r)
 #define VE(_r)	VE_L(_r)
-#endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
 #define TLB_STD   TLB_STD_L
@@ -211,8 +203,8 @@ void (ATTR_REGPARM(3) s390_ ## _name) (BYTE inst[], int execflag, REGS *regs)
 s390_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
-    ((((addr)&0x7FFFF000)==0)?((addr)&0xFFF)|pfx:\
-    (((addr)&0x7FFFF000)==pfx)?(addr)&0xFFF:(addr))
+    (((U32)((addr)&0x7FFFF000)==(U32)0)    ?((addr)&0xFFF)|(pfx):\
+     ((U32)((addr)&0x7FFFF000)==(U32)(pfx))?((addr)&0xFFF):(addr))
 
 #define AMASK   AMASK_L
 
@@ -286,14 +278,10 @@ s390_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
-#if defined(OPTION_AIA_BUFFER)
 #define VI	VI_L
 #define AI	AI_L
-#endif /*defined(OPTION_AIA_BUFFER)*/
-#if defined(OPTION_AEA_BUFFER)
 #define AE(_r)	AE_L(_r)
 #define VE(_r)	VE_L(_r)
-#endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
 #define TLB_STD   TLB_STD_L
@@ -305,8 +293,8 @@ s390_ ## _name
 #define ARCH_MODE   ARCH_900
 
 #define APPLY_PREFIXING(addr,pfx) \
-    ((((addr)&0xFFFFFFFFFFFFE000ULL)==0)?((addr)&0x1FFF)|pfx:\
-    (((addr)&0xFFFFFFFFFFFFE000ULL)==pfx)?(addr)&0x1FFF:(addr))
+    (((U64)((addr)&0xFFFFFFFFFFFFE000ULL)==(U64)0)?((addr)&0x1FFF)|(pfx):\
+    ((U64)((addr)&0xFFFFFFFFFFFFE000ULL)==(U64)(pfx))?(addr)&0x1FFF:(addr))
 
 #define AMASK   AMASK_G
 
@@ -381,14 +369,10 @@ z900_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_DW
 #define FETCH_W FETCH_DW
-#if defined(OPTION_AIA_BUFFER)
 #define VI	VI_G
 #define AI	AI_G
-#endif /*defined(OPTION_AIA_BUFFER)*/
-#if defined(OPTION_AEA_BUFFER)
 #define AE(_r)	AE_G(_r)
 #define VE(_r)	VE_G(_r)
-#endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE2BK
 #define ZPB                     ZPB2
 #define TLB_STD   TLB_STD_G

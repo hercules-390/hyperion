@@ -6,7 +6,6 @@
 /*   All existing features MUST be #undef-ed here.                   */
 /*-------------------------------------------------------------------*/
 #define MAX_CPU_ENGINES               2 /* Maximum number of engines */
-#undef  SMP_SERIALIZATION               /* Serialize storage for SMP */
 #define OPTION_370_MODE                 /* Generate S/370 support    */
 #define OPTION_390_MODE                 /* Generate ESA/390 support  */
 #define OPTION_900_MODE                 /* Generate ESAME support    */
@@ -20,21 +19,13 @@
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate         */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate         */
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
-#define OPTION_AIA_BUFFER               /* Instruction addr cache    */
-#define OPTION_AEA_BUFFER               /* Effective addr cache      */
 #undef  OPTION_NO_INLINE_DAT            /* Performance option        */
 #define OPTION_NO_INLINE_LOGICAL        /* Performance option        */
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
 #define OPTION_NO_INLINE_IFETCH         /* Performance option        */
-#define OPTION_CPU_UNROLL               /* Performance option        */
 #define OPTION_FAST_MOVECHAR            /* Performance option        */
 #define OPTION_FAST_MOVELONG            /* Performance option        */
-#define OPTION_FAST_INSTFETCH           /* Performance option        */
-#define OPTION_FAST_LOGICAL             /* Performance option        */
 #define OPTION_FAST_PREFIX              /* Performance option        */
-#define OPTION_REDUCED_INVAL            /* Performance option        */
-#define OPTION_FAST_INTCOND             /* Ea CPU has intcond COND   */
-#define OPTION_SYNCIO                   /* Synchronous I/O option    */
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 #define OPTION_IODELAY_LINUX_DEFAULT 800/* Default if OSTAILOR LINUX */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */

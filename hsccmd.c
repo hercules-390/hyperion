@@ -229,8 +229,6 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     return 0;
 }
 
-#if MAX_CPU_ENGINES > 1
-
 ///////////////////////////////////////////////////////////////////////
 /* startall command - start all CPU's */
 
@@ -281,8 +279,6 @@ int stopall_cmd(char* cmdline, int argc, char *argv[])
 
     return 0;
 }
-
-#endif /*MAX_CPU_ENGINES > 1*/
 
 ///////////////////////////////////////////////////////////////////////
 /* quiet command - quiet PANEL */
@@ -1181,7 +1177,6 @@ BYTE c;                                 /* Character work area       */
     return 0;
 }
 
-#ifdef OPTION_SYNCIO
 
 ///////////////////////////////////////////////////////////////////////
 /* syncio command - list syncio devices statistics */
@@ -1223,8 +1218,6 @@ int syncio_cmd(char* cmdline, int argc, char *argv[])
 
     return 0;
 }
-
-#endif
 
 ///////////////////////////////////////////////////////////////////////
 /* devtmax command - display or set max device threads */
@@ -1861,10 +1854,6 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
             sysblk.regs[i].cpuad,
             IS_IC_EMERSIG(sysblk.regs + i) ? "" : _("not ")
             );
-        logmsg( _("          CPU%4.4X: CPU %swaiting for interlock\n"),
-            sysblk.regs[i].cpuad,
-            sysblk.regs[i].mainsync ? "" : _("not ")
-            );
         logmsg( _("          CPU%4.4X: CPU interlock %sheld\n"),
             sysblk.regs[i].cpuad,
             sysblk.regs[i].mainlock ? "" : _("not ")
@@ -1891,11 +1880,9 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     logmsg( _("          Started mask %8.8X waiting mask %8.8X\n"),
         sysblk.started_mask, sysblk.waitmask
         );
-#if MAX_CPU_ENGINES > 1
     logmsg( _("          Broadcast count %d code %d\n"),
         sysblk.broadcast_count, sysblk.broadcast_code
         );
-#endif
     logmsg( _("          Machine check interrupt %spending\n"),
         IS_IC_MCKPENDING ? "" : _("not ")
         );
@@ -2484,10 +2471,8 @@ COMMAND ( "cpu",       cpu_cmd,       "define target cpu for panel display and c
 
 COMMAND ( "start",     start_cmd,     "start CPU (or printer device if argument given)" )
 COMMAND ( "stop",      stop_cmd,      "stop CPU (or printer device if argument given)\n" )
-#if MAX_CPU_ENGINES > 1
 COMMAND ( "startall",  startall_cmd,  "start all CPU's" )
 COMMAND ( "stopall",   stopall_cmd,   "stop all CPU's\n" )
-#endif
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
 COMMAND ( ".reply",    g_cmd,         "scp command" )
@@ -2548,9 +2533,7 @@ COMMAND ( "toddrag",   toddrag_cmd,   "display or set TOD clock drag factor" )
 #ifdef PANEL_REFRESH_RATE
 COMMAND ( "panrate",   panrate_cmd,   "display or set rate at which console refreshes" )
 #endif
-#ifdef OPTION_SYNCIO
 COMMAND ( "syncio",    syncio_cmd,    "display syncio devices statistics" )
-#endif
 #if defined(OPTION_INSTRUCTION_COUNTING)
 COMMAND ( "icount",    icount_cmd,    "display instruction counts" )
 #endif
@@ -2912,12 +2895,6 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
  #define TSPLUS_CMD \
   "t+=trace, s+=step, t+devn=CCW trace, s+devn=CCW step\n"
 #endif /*OPTION_CKD_KEY_TRACING*/
-
-#if MAX_CPU_ENGINES > 1
- #define STSPALL_CMD "startall/stopall=start/stop all CPUs\n"
-#else
- #define STSPALL_CMD
-#endif /*MAX_CPU_ENGINES>1*/
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
  #define SYSCONS_CMD ".xxx=scp command, !xxx=scp priority messsage\n"

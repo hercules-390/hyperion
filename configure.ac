@@ -143,17 +143,13 @@ if test x$build_fthreads != xtrue; then
                      *cygwin*)
                        # Alternate pthreads location for older cygwin
                        AC_MSG_NOTICE([Looking for pthread.h in /usr/Pthreads])
-                       CFLAGS_SAVE="$CFLAGS"
                        CFLAGS="$CFLAGS -I/usr/Pthreads"
                        AC_CHECK_HEADER(pthread.h,
                                        [],
-                                       [CFLAGS="$CFLAGS_SAVE"
-                                        AC_DEFINE([NOTHREAD])
-                                        AC_MSG_WARN([Unable to find pthread.h, disabling threads]) ])
+                                       [AC_MSG_ERROR([Unable to find pthread.h]) ])
                        ;;
                      *)
-                       AC_MSG_WARN([Unable to find pthread.h, disabling threads])
-                       AC_DEFINE([NOTHREAD])
+                       AC_MSG_ERROR([Unable to find pthread.h])
                        ;;
                    esac])
 fi
@@ -302,17 +298,6 @@ fi
 
 # User-definable settings
 
-AC_ARG_ENABLE(profiling,
-              AC_HELP_STRING([--enable-profiling], [enable execution profiling]),
-              [case "${enableval}" in
-                yes)
-                  enable_profiling=true
-                  CFLAGS="-pg -DPROFILE_CPU $CFLAGS"
-                ;;
-                no) ;;
-                *) AC_MSG_ERROR([bad value ${enableval} for --enable-profiling]) ;;
-               esac])
-
 AC_ARG_ENABLE(debug,
               AC_HELP_STRING([--enable-debug], [enable debugging (TRACE/VERIFY/ASSERT macros)]),
               [case "${enableval}" in
@@ -357,7 +342,7 @@ if test x$auto_optimize = xtrue; then
           i586|i686)
             if test "$GCC" = "yes"; then
                 OFLAGS="-O3 -march=$host_cpu $OFLAGS"
-                if test x$enable_profiling != xtrue && test x$debug != xtrue; then
+                if test x$debug != xtrue; then
                   OFLAGS="-fomit-frame-pointer $OFLAGS"
                 fi
             else

@@ -206,28 +206,12 @@ int used; \
 
 #endif
 
-
-#define UNROLLED_EXECUTE(_regs) \
-do { \
-    (_regs)->instvalid = 0; \
-    INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
-    (_regs)->instvalid = 1; \
-    EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
-} while(0)
-
-
 /* Main storage access locking 
    This routine will ensure that a given CPU 
    has exclusive access to main storage and hence
    will be able to perform as what appears as an
    interlocked update to other CPU's - Jan Jaeger */
 
-/* OBTAIN_MAINLOCK() may cause a retry of the instruction */
-
-#if MAX_CPU_ENGINES == 1
- #define OBTAIN_MAINLOCK(_regs)
- #define RELEASE_MAINLOCK(_regs)
-#else
 #define OBTAIN_MAINLOCK(_register_context) \
 do { \
     obtain_lock(&sysblk.mainlock); \
@@ -239,42 +223,94 @@ do { \
     (_register_context)->mainlock = 0; \
     release_lock(&sysblk.mainlock); \
 } while(0)
-#endif
-
 
 /* The footprint_buffer option saves a copy of the register context
    every time an instruction is executed.  This is for problem
    determination only, as it severely impacts performance.	 *JJ */
 
-#if !defined(OPTION_FOOTPRINT_BUFFER)
-
-#define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
-do { \
-    COUNT_INST((_instruction), (_regs)); \
-    opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
-} while(0)
-
-#else /*defined(OPTION_FOOTPRINT_BUFFER)*/
-
-#define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
+#if defined(OPTION_FOOTPRINT_BUFFER)
+#define FOOTPRINT(_regs) \
 do { \
     sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]] = *(_regs); \
-    memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_instruction),6); \
+    memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_inst),6); \
     sysblk.footprptr[(_regs)->cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
+} while(0)
+#endif
+
+#if !defined(FOOTPRINT)
+#define FOOTPRINT(_regs)
+#endif
+
+/* Instruction fetching */
+#define INSTRUCTION_FETCH(_dest, _addr, _regs) \
+do { \
+    if( (_regs)->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
+      && ((_addr) & 0x7FF) <= (0x800 - 6)) \
+    { \
+        if((_addr) & 0x01) \
+            ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
+        memcpy ((_dest), (_regs)->mainstor + (_regs)->AI + \
+                    ((_addr) & PAGEFRAME_BYTEMASK) , 6); \
+    } \
+    else \
+        ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)); \
+} while(0)
+
+#define FAST_INSTRUCTION_FETCH(_dest, _addr, _regs, _pe, _if) \
+do { \
+    if ( (_regs)->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)) \
+      && (_addr) <= (_pe)) \
+      (_dest) =  pagestart + ((_addr) & PAGEFRAME_BYTEMASK); \
+    else goto _if; \
+} while(0)
+
+#define FAST_IFETCH(_regs, _pe, _ip, _if, _ex) \
+do { \
+_if: \
+    (_regs)->instvalid = 0; \
+    (_ip) = (_regs)->inst; \
+    (_regs)->ip = (_ip); \
+    ARCH_DEP(instfetch) ((_regs)->inst, (_regs)->psw.IA, (_regs));  \
+    (regs)->instvalid = 1; \
+    (_pe) = ((_regs)->psw.IA & ~0x7FF) + (0x800 - 6); \
+    pagestart = (_regs)->mainstor + (_regs)->AI; \
+    goto _ex; \
+} while(0)
+
+/* Instruction execution */
+#define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
+do { \
+    FOOTPRINT((_regs)); \
     COUNT_INST((_instruction), (_regs)); \
     opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
 } while(0)
 
-#endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
+#define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
+do { \
+    FOOTPRINT ((_regs)); \
+    COUNT_INST ((_inst), (_regs)); \
+    (_regs)->ip = (_inst); \
+    (ARCH_DEP(opcode_table)[_inst[0]]) ((_inst), 0, (_regs)); \
+} while(0)
 
-#if defined(OPTION_CPU_UNROLL)
+/* Unrolled execution */
+#define UNROLLED_EXECUTE(_regs) \
+do { \
+    (_regs)->instvalid = 0; \
+    INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
+    (_regs)->instvalid = 1; \
+    EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
+} while(0)
+
+#define FAST_UNROLLED_EXECUTE(_regs, _pe, _ip, _if, _ex) \
+do { \
+    FAST_INSTRUCTION_FETCH((_ip), (_regs)->psw.IA, (_regs), (_pe), _if); \
+_ex: \
+    FAST_EXECUTE_INSTRUCTION((_ip), 0, (_regs)); \
+} while(0)
+
 #define RETURN_INTCHECK(_regs) \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
-#else
-#define RETURN_INTCHECK(_regs) \
-        return
-#endif
-
 
 #define ODD_CHECK(_r, _regs) \
     if( (_r) & 1 ) \
@@ -530,81 +566,11 @@ do { \
 
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
-
-#if defined(OPTION_AIA_BUFFER)
-
-#undef	INSTRUCTION_FETCH
-#undef	INVALIDATE_AIA
-
-#define INSTRUCTION_FETCH(_dest, _addr, _regs) \
-do { \
-    if( (_regs)->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
-      && ((_addr) & 0x7FF) <= (0x800 - 6)) \
-    { \
-        if((_addr) & 0x01) \
-            ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
-        memcpy ((_dest), (_regs)->mainstor + (_regs)->AI + \
-                    ((_addr) & PAGEFRAME_BYTEMASK) , 6); \
-    } \
-    else \
-        ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)); \
-} while(0)
-
 #define INVALIDATE_AIA(_regs) \
     (_regs)->VI = 1
 
-#else /*!defined(OPTION_AIA_BUFFER)*/
-
-#define INSTRUCTION_FETCH(_dest, _addr, _regs) \
-    ARCH_DEP(instfetch) ((_dest), (_addr), (_regs))
-
-#define INVALIDATE_AIA(_regs)
-
-#endif /*!defined(OPTION_AIA_BUFFER)*/
-
-
-#if defined(OPTION_AEA_BUFFER)
-
-#if !defined(OPTION_FAST_LOGICAL)
-#define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)	      \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((_arn))) &&	    \
-    ((_arn) >= 0) &&						      \
-    (((_regs)->aekey[(_arn)] == (_akey)) || (_akey) == 0) &&	      \
-    ((_regs)->aeacc[(_arn)] >= (_acctype)) ?			      \
-    ((_acctype) == ACCTYPE_READ) ?				      \
-    (STORAGE_KEY((_regs)->AE((_arn)), (_regs)) |= STORKEY_REF,		      \
-	((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
-    (STORAGE_KEY((_regs)->AE((_arn)), (_regs)) |= (STORKEY_REF | STORKEY_CHANGE), \
-	((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
-    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
-
-#define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey)	      \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((_arn))) &&	    \
-    ((_arn) >= 0) &&						      \
-    (((_regs)->aekey[(_arn)] == (_akey)) || (_akey) == 0) &&	      \
-    ((_regs)->aeacc[(_arn)] >= (_acctype)) ?			      \
-    ((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK))  :  \
-    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
-
-#define INVALIDATE_AEA(_arn, _regs) \
-	(_regs)->VE((_arn)) = 1
-
-#define INVALIDATE_AEA_ALL(_regs) \
-do { \
-    int i; \
-    for(i = 0; i < 16; i++) \
-    		(_regs)->VE(i) = 1; \
-} while(0)
-
-#else
-
-#if defined(OPTION_REDUCED_INVAL)
 #define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
 #define MAXAEA 256
-#else
-#define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xf)
-#define MAXAEA 16
-#endif
 
 #define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)       \
     (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((AEIND(_addr)))) &&      \
@@ -643,21 +609,6 @@ do { \
     for(i = 0; i < MAXAEA; i++) \
         (_regs)->VE(i) = 1; \
 } while(0)
-#endif
-
-#else /*!defined(OPTION_AEA_BUFFER)*/
-
-#define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
-
-#define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey) \
-    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
-
-#define INVALIDATE_AEA(_arn, _regs)
-
-#define INVALIDATE_AEA_ALL(_regs)
-
-#endif /*!defined(OPTION_AEA_BUFFER)*/
 
 #define INST_UPDATE_PSW(_regs, _len, _execflag) \
 	{ \
@@ -1261,24 +1212,7 @@ do { \
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
 
-#undef PERFORM_SERIALIZATION
-#if MAX_CPU_ENGINES > 1 && defined(SMP_SERIALIZATION)
-	/* In order to syncronize mainstorage access we need to flush
-	   the cache on all processors, this needs special case when
-	   running on an SMP machine, as the physical CPU's actually
-	   need to perform this function.  This is accomplished by
-	   obtaining and releasing a mutex lock, which is intended to
-	   serialize storage access */
-#define PERFORM_SERIALIZATION(_regs) \
-	{ \
-	    obtain_lock(&regs->serlock); \
-	    release_lock(&regs->serlock); \
-	}
-#else  /*!SERIALIZATION*/
 #define PERFORM_SERIALIZATION(_regs)
-#endif /*SERIALIZATION*/
-
-
 #define PERFORM_CHKPT_SYNC(_regs)
 
 

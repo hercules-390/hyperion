@@ -84,7 +84,7 @@ int i;
             {
                 /* If the cpu is running but not executing
                    instructions then it must be malfunctioning */
-                if(sysblk.regs[i].instcount == savecount[i])
+                if(sysblk.regs[i].instcount == (U64)savecount[i])
                 {
                     if(!try_obtain_lock(&sysblk.intlock))
                     {
@@ -117,9 +117,6 @@ int main (int argc, char *argv[])
 BYTE   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
 int     arg_error = 0;                  /* 1=Invalid arguments       */
-#ifdef PROFILE_CPU
-TID paneltid;
-#endif
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -267,26 +264,8 @@ TID paneltid;
     }
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
-#ifndef PROFILE_CPU
     /* Activate the control panel */
     panel_display ();
-#else
-    if(sysblk.regs[0].cpuonline)
-        return -1;
-    sysblk.regs[0].cpuonline = 1;
-    sysblk.regs[0].cpustate = CPUSTATE_STARTING;
-    sysblk.regs[0].cputid = thread_id();
-    sysblk.regs[0].arch_mode = sysblk.arch_mode;
-    if ( create_thread (&paneltid, &sysblk.detattr,
-                        panel_display, NULL) )
-    {
-        fprintf (stderr,
-                "HHCIN006S Cannot create panel thread: %s\n",
-                strerror(errno));
-        exit(1);
-    }
-    cpu_thread(&sysblk.regs[0]);
-#endif
 
     return 0;
 } /* end function main */

@@ -189,15 +189,12 @@ U32     xdmg = 0;
 RADR    fsta = 0;
 
     /* Release mainlock if held */
-#if MAX_CPU_ENGINES > 1
-    /* Unlock the main storage lock if held */
     if (regs->mainlock)
         RELEASE_MAINLOCK(regs);
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(regs->sie_active && regs->guestregs->mainlock)
         RELEASE_MAINLOCK(regs->guestregs);
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
-#endif /*MAX_CPU_ENGINES > 1*/
 
     /* Exit SIE when active */
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)

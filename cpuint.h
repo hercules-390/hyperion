@@ -1,6 +1,3 @@
-#define INTERRUPTS_FAST_CHECK
-
-#ifdef INTERRUPTS_FAST_CHECK
 /**********************************************************************
  Interrupts_State & Interrupts_Mask bits definition (Initial_Mask=C00E)
  Machine check, PER and external interrupt subclass bit positions
@@ -318,9 +315,3 @@ do { \
 
 #define SIE_IC_INTERRUPT_CPU(_regs) \
    (((_regs)->ints_state|(sysblk.ints_state&IC_SIE_INT)) & ((_regs)->ints_mask|IC_PER_MASK))
-
-#else /*!INTERRUPTS_FAST_CHECK*/
-
-#error INTERRUPTS_FAST_CHECK must be defined
-
-#endif /*!INTERRUPTS_FAST_CHECK*/

@@ -556,7 +556,6 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     if ((addr & 0x7FF) <= (0x800 - 6))
     {
         abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
-#if defined(OPTION_AIA_BUFFER)
 #if defined(FEATURE_PER)
         if( !EN_IC_PER(regs) )
 #endif /*defined(FEATURE_PER)*/
@@ -568,14 +567,12 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         else
             INVALIDATE_AIA(regs);
 #endif /*defined(FEATURE_PER)*/
-#endif /*defined(OPTION_AIA_BUFFER)*/
         memcpy (dest, regs->mainstor+abs, 6);
         return;
     }
 
     /* Fetch first two bytes of instruction */
     abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
-#if defined(OPTION_AIA_BUFFER)
 #if defined(FEATURE_PER)
     if( !EN_IC_PER(regs) )
 #endif /*defined(FEATURE_PER)*/
@@ -587,7 +584,6 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         else
             INVALIDATE_AIA(regs);
 #endif /*defined(FEATURE_PER)*/
-#endif /*defined(OPTION_AIA_BUFFER)*/
     memcpy (dest, regs->mainstor+abs, 2);
 
     /* Return if two-byte instruction */

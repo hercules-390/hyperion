@@ -455,7 +455,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
                 }
                 break;
             case 4:
-                aaddr = APPLY_PREFIXING (NPaddress, regs->PX);
+                aaddr = APPLY_PREFIXING ((U32)NPaddress, regs->PX);
                 if (aaddr > regs->mainlim)
                     break;
                 curreg[i] = 0;
@@ -1020,7 +1020,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             break;
                         case 'O':                   /* Store */
                         case 'o':
-                            NPaaddr = APPLY_PREFIXING (NPaddress, regs->PX);
+                            NPaaddr = APPLY_PREFIXING ((U32)NPaddress, regs->PX);
                             if (NPaaddr > regs->mainlim)
                                 break;
                             regs->mainstor[NPaaddr] = 0;
@@ -1543,9 +1543,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                 /* Display the PSW and instruction counter for CPU 0 */
                 fprintf (confp,
                     "%s"
-#if MAX_CPU_ENGINES > 1
                     "CPU%4.4X "
-#endif
                     "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
                        " %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X"
                     " %c%c%c%c%c%c%c%c instcount=%llu"
@@ -1554,9 +1552,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     extgui ? ("STATUS=") :
 #endif /*EXTERNALGUI*/
                     (ANSI_ROW24_COL1 ANSI_YELLOW_RED),
-#if MAX_CPU_ENGINES > 1
                     regs->cpuad,
-#endif
                     curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                     curpsw[4], curpsw[5], curpsw[6], curpsw[7],
                     curpsw[8], curpsw[9], curpsw[10], curpsw[11],

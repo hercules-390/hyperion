@@ -1003,16 +1003,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     initialize_lock (&sysblk.mainlock);
     initialize_lock (&sysblk.intlock);
     initialize_lock (&sysblk.sigplock);
-#if MAX_CPU_ENGINES == 1 || !defined(OPTION_FAST_INTCOND)
-    initialize_condition (&sysblk.intcond);
-#endif
-#if MAX_CPU_ENGINES > 1
     initialize_condition (&sysblk.broadcast_cond);
-#ifdef SMP_SERIALIZATION
-    for(i = 0; i < MAX_CPU_ENGINES; i++)
-        initialize_lock (&sysblk.regs[i].serlock);
-#endif /*SMP_SERIALIZATION*/
-#endif /*MAX_CPU_ENGINES > 1*/
     initialize_detach_attr (&sysblk.detattr);
 #if defined(OPTION_CPU_UTILIZATION)
     for(i = 0; i < MAX_CPU_ENGINES; i++)
@@ -1144,9 +1135,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         sysblk.regs[cpu].vf = &sysblk.vf[cpu];
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
         initialize_condition (&sysblk.regs[cpu].intcond);
-#endif
 
 #if defined(_FEATURE_SIE)
         sysblk.sie_regs[cpu] = sysblk.regs[cpu];
@@ -1323,9 +1312,10 @@ int configure_cpu(REGS *regs)
                 regs->cpuad, strerror(errno));
         return -1;
     }
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+
+    /* Wait for CPU thread to initialize */
     wait_condition (&regs->intcond, &sysblk.intlock);
-#endif
+
     return 0;
 } /* end function configure_cpu */
 

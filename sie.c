@@ -176,11 +176,8 @@ int     icode = 0;                      /* Interception code         */
 
     release_lock(&sysblk.intlock);
 
-#if defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AIA(GUESTREGS);
-
     INVALIDATE_AEA_ALL(GUESTREGS);
-#endif
 
     /* Set host program interrupt routine */
     GUESTREGS->sie_hostpi = (SIEFN)&ARCH_DEP(program_interrupt);
@@ -741,7 +738,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                     obtain_lock(&sysblk.intlock);
 
-#if MAX_CPU_ENGINES > 1
                     /* Perform broadcasted purge of ALB and TLB if requested
                        synchronize_broadcast() must be called until there are
                        no more broadcast pending because synchronize_broadcast()
@@ -749,7 +745,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                     while ((IS_IC_BROADCAST(regs)))
                         ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
-#endif /*MAX_CPU_ENGINES > 1*/
 
                     if( OPEN_IC_EXTPENDING(GUESTREGS) )
                         ARCH_DEP(perform_external_interrupt) (GUESTREGS);
@@ -799,7 +794,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             sysblk.waitmask |= regs->cpumask;
 
                             timed_wait_condition
-                                 (&INTCOND, &sysblk.intlock, &waittime);
+                                 (&regs->intcond, &sysblk.intlock, &waittime);
 
                             sysblk.waitmask &= ~regs->cpumask;
                         }
@@ -834,7 +829,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 regs->instcount++;
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
-#if defined(OPTION_CPU_UNROLL)
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
 #endif
@@ -848,7 +842,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                 }
-#endif
             } while( !SIE_I_HOST(regs) );
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)

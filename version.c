@@ -71,12 +71,8 @@ static const char *build_info[] = {
     "Windows CTCI-W32 support",
 #endif
 
-#if defined(NOTHREAD)
-    "No threading support",
-#else
-    #if defined(OPTION_FTHREADS)
-        "Using fthreads instead of pthreads",
-    #endif
+#if defined(OPTION_FTHREADS)
+    "Using fthreads instead of pthreads",
 #endif
 
 #if !defined(EXTERNALGUI) && defined(WIN32)

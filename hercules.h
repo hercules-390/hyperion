@@ -207,7 +207,6 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 /*-------------------------------------------------------------------*/
 /* Macro definitions for thread functions                            */
 /*-------------------------------------------------------------------*/
-#ifndef NOTHREAD
 #ifdef WIN32
 #define HAVE_STRUCT_TIMESPEC
 #endif
@@ -314,27 +313,6 @@ typedef void*THREAD_FUNC(void*);
 #define thread_id() \
         pthread_self()
 #endif // defined(OPTION_FTHREADS)
-#else
-typedef int                             TID;
-typedef int                             LOCK;
-typedef int                             COND;
-typedef int                             ATTR;
-#define initialize_lock(plk)            *(plk)=0
-#define obtain_lock(plk)                *(plk)=1
-#define try_obtain_lock(plk)            *(plk)=1
-#define release_lock(plk)               *(plk)=0
-#define test_lock(plk)                  (*(plk)!=0)
-#define initialize_condition(pcond)     *(pcond)=0
-#define signal_condition(pcond)         *(pcond)=1
-#define broadcast_condition(pcond)      *(pcond)=1
-#define wait_condition(pcond,plk)       *(pcond)=1
-#define timed_wait_condition(pcond,plk,timeout) *(pcond)=1
-#define initialize_detach_attr(pat)     *(pat)=1
-#define create_thread(ptid,pat,fn,arg)  (*(ptid)=0,fn(arg),0)
-#define signal_thread(tid,signo)        raise(signo)
-#define thread_id()                     0
-#define exit_thread(exitvar_ptr)        (exit(0)) /* (should not ever be used with NOTHREAD!) */
-#endif
 
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
@@ -406,33 +384,14 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      mc;                     /* Monitor Code              */
         DW      ea;                     /* Exception address         */
         DW      et;                     /* Execute Target address    */
-#if defined(OPTION_AIA_BUFFER)
         DW      ai;                     /* Absolute instruction addr */
         DW      vi;                     /* Virtual instruction addr  */
-#endif /*defined(OPTION_AIA_BUFFER)*/
-#if defined(OPTION_AEA_BUFFER)
-#if !defined(OPTION_FAST_LOGICAL)
-        DW      ae[16];                 /* Absolute effective addr   */
-        DW      ve[16];                 /* Virtual effective addr    */
-        BYTE    aekey[16];              /* Storage Key               */
-        int     aeacc[16];              /* Access type               */
-#else
-#if defined(OPTION_REDUCED_INVAL)
         DW      ae[256];                /* Absolute effective addr   */
         DW      ve[256];                /* Virtual effective addr    */
         BYTE    aekey[256];             /* Storage Key               */
         int     aeacc[256];             /* Access type               */
         int     aearn[256];             /* Address room              */
-#else
-        DW      ae[16];                 /* Absolute effective addr   */
-        DW      ve[16];                 /* Virtual effective addr    */
-        BYTE    aekey[16];              /* Storage Key               */
-        int     aeacc[16];              /* Access type               */
-        int     aearn[16];              /* Address room              */
-#endif
         int     aenoarn;                /* no access mode           */
-#endif
-#endif /*defined(OPTION_AEA_BUFFER)*/
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
 #define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
@@ -461,18 +420,14 @@ typedef struct _REGS {                  /* Processor registers       */
 #define ET_L    et.F.L.F
 #define PX_G    px.D
 #define PX_L    px.F.L.F
-#if defined(OPTION_AIA_BUFFER)
 #define AI_G    ai.D
 #define AI_L    ai.F.L.F
 #define VI_G    vi.D
 #define VI_L    vi.F.L.F
-#endif /*defined(OPTION_AIA_BUFFER)*/
-#if defined(OPTION_AEA_BUFFER)
 #define AE_G(_r)    ae[(_r)].D
 #define AE_L(_r)    ae[(_r)].F.L.F
 #define VE_G(_r)    ve[(_r)].D
 #define VE_L(_r)    ve[(_r)].F.L.F
-#endif /*defined(OPTION_AEA_BUFFER)*/
         U32     ar[16];                 /* Access registers          */
 #define AR(_r)  ar[(_r)]
         U32     fpr[32];                /* Floating point registers  */
@@ -528,27 +483,14 @@ typedef struct _REGS {                  /* Processor registers       */
                 cpuonline:1,            /* 1=CPU is online           */
                 loadstate:1,            /* 1=CPU is in load state    */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
-#ifndef INTERRUPTS_FAST_CHECK
-                cpuint:1,               /* 1=There is an interrupt
-                                             pending for this CPU    */
-                itimer_pending:1,       /* 1=Interrupt is pending for
-                                             the interval timer      */
-                restart:1,              /* 1=Restart interrpt pending*/
-                extcall:1,              /* 1=Extcall interrpt pending*/
-                emersig:1,              /* 1=Emersig interrpt pending*/
-                ptpend:1,               /* 1=CPU timer int pending   */
-                ckpend:1,               /* 1=Clock comp int pending  */
-                storstat:1,             /* 1=Stop and store status   */
-#endif /*INTERRUPTS_FAST_CHECK*/
+                mainlock:1,             /* 1=Mainlock held           */
+                ghostregs:1,            /* 1=Ghost registers (panel) */
                 hostint:1,              /* Host generated interrupt  */
-                instfe:1,               /* Instruction fetch active  */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1,           /* 1=SIGP initial cpu reset  */
                 instvalid:1;            /* 1=Inst field is valid     */
-#ifdef INTERRUPTS_FAST_CHECK
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
-#endif /*INTERRUPTS_FAST_CHECK*/
         BYTE    malfcpu                 /* Malfuction alert flags    */
                     [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
         BYTE    emercpu                 /* Emergency signal flags    */
@@ -558,20 +500,6 @@ typedef struct _REGS {                  /* Processor registers       */
         BYTE    *ip;                    /* Pointer to Last-fetched
                                            instruction (inst might
                                            not be uptodate           */
-// #if MAX_CPU_ENGINES > 1
-        unsigned int                    /* Flags                     */
-                mainlock:1,             /* MAINLOCK held indicator   */
-                mainsync:1,             /* MAINLOCK sync wait        */
-                ghostregs:1;            /* Ghost registers (panel)   */
-// #ifdef SMP_SERIALIZATION
-                /* Locking and unlocking the serialisation lock causes
-                   the processor cache to be flushed this is used to
-                   mimic the S/390 serialisation operation.  To avoid
-                   contention, each S/390 CPU has its own lock       */
-        LOCK    serlock;                /* Serialization lock        */
-// #endif /*SMP_SERIALIZATION*/
-// #endif /*MAX_CPU_ENGINES > 1*/
-
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS *vf;                     /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
@@ -581,9 +509,7 @@ typedef struct _REGS {                  /* Processor registers       */
 
         jmp_buf archjmp;                /* longjmp destination to
                                            switch architecture mode  */
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
         COND    intcond;                /* CPU interrupt condition   */
-#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
         U32     cpumask;                /* CPU mask                  */
     } REGS;
 
@@ -597,7 +523,6 @@ typedef struct _REGS {                  /* Processor registers       */
 #define ALL_CPUS                0xffffffff
 
 /* Macros to signal interrupt condition to a CPU[s] */
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
 #define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)].intcond)
 #define WAKEUP_WAITING_CPU(mask,statemask) \
  { int i; \
@@ -618,13 +543,6 @@ typedef struct _REGS {                  /* Processor registers       */
       && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
         signal_condition(&sysblk.regs[i].intcond); \
  }
-#define INTCOND       regs->intcond
-#else /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
-#define WAKEUP_CPU(cpu)               broadcast_condition(&sysblk.intcond)
-#define WAKEUP_WAITING_CPU(m,s)       WAKEUP_CPU(0)
-#define WAKEUP_WAITING_CPUS(m,s)      WAKEUP_CPU(0)
-#define INTCOND       sysblk.intcond
-#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 
 /* Macros to queue/dequeue a device on the I/O interrupt queue */
 #define QUEUE_IO_INTERRUPT(dev) \
@@ -731,9 +649,6 @@ typedef struct _SYSBLK {
         U32     footprptr[MAX_CPU_ENGINES];
 #endif
         LOCK    mainlock;               /* Main storage lock         */
-#if MAX_CPU_ENGINES == 1 || !defined(OPTION_FAST_INTCOND)
-        COND    intcond;                /* Interrupt condition       */
-#endif /* MAX_CPU_ENGINES == 1 || !defined(OPTION_FAST_INTCOND) */
         LOCK    intlock;                /* Interrupt lock            */
         LOCK    sigplock;               /* Signal processor lock     */
         ATTR    detattr;                /* Detached thread attribute */
@@ -770,14 +685,6 @@ typedef struct _SYSBLK {
         BYTE    scpcmdstr[123+1];       /* Operator command string   */
         int     scpcmdtype;             /* Operator command type     */
         unsigned int                    /* Flags                     */
-#ifndef INTERRUPTS_FAST_CHECK
-                iopending:1,            /* 1=I/O interrupt pending   */
-                mckpending:1,           /* 1=MCK interrupt pending   */
-                extpending:1,           /* 1=EXT interrupt pending   */
-                intkey:1,               /* 1=Interrupt key pending   */
-                servsig:1,              /* 1=Service signal pending  */
-                crwpending:1,           /* 1=Channel report pending  */
-#endif /*INTERRUPTS_FAST_CHECK*/
                 sigintreq:1,            /* 1=SIGINT request pending  */
                 insttrace:1,            /* 1=Instruction trace       */
                 inststep:1,             /* 1=Instruction step        */
@@ -785,9 +692,7 @@ typedef struct _SYSBLK {
                 inststop:1,             /* 1 = stop on program check */ /*VMA*/
                 vmactive:1,             /* 1 = vma active            */ /*VMA*/
                 mschdelay:1;            /* 1 = delay MSCH instruction*/ /*LNX*/
-#ifdef INTERRUPTS_FAST_CHECK
         U32     ints_state;             /* Common Interrupts Status  */
-#endif /*INTERRUPTS_FAST_CHECK*/
         U32     waitmask;               /* Mask for waiting CPUs     */
         U32     started_mask;           /* Mask for started CPUs     */
         int     broadcast_code;         /* Broadcast code            */
