@@ -1,3 +1,3 @@
 #!/bin/sh
 
-aclocal && autoconf && automake --foreign --add-missing
+aclocal && autoconf && automake --add-missing
