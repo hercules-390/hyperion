@@ -1,3 +1,4 @@
+19 Jul 2002 Fix to cpu utilization percentage - Greg Smith
 17 Jul 2002 New utility dasdcopy.c; replaces ckd2cckd and cckd2ckd and
             adds fba2cfba and cfba2fba function - Greg Smith
 16 Jul 2002 New 'hmccmds.c' source module #included by 'panel.c'. - Fish

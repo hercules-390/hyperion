@@ -1005,10 +1005,6 @@ BYTE    c;                              /* Work area for sscanf      */
     initialize_lock (&sysblk.sigplock);
     initialize_condition (&sysblk.broadcast_cond);
     initialize_detach_attr (&sysblk.detattr);
-#if defined(OPTION_CPU_UTILIZATION)
-    for(i = 0; i < MAX_CPU_ENGINES; i++)
-        initialize_lock (&sysblk.regs[i]->accum_wait_time_lock);
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 #if defined(OPTION_W32_CTCI)
     tt32_init(sysblk.msgpipew);
 #endif /* defined(OPTION_W32_CTCI) */

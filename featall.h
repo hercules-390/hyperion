@@ -38,7 +38,6 @@
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#define OPTION_CPU_UTILIZATION          /* Track CPU Utilization     */
 #undef  OPTION_TRUNCATE_KLUDGE          /* fdatasync()/ftruncate()
                                            problem workaround (linux)*/
 /*********************************************************************/

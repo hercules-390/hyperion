@@ -393,6 +393,9 @@ typedef struct _REGS {                  /* Processor registers       */
         U32     mipsrate;               /* Instructions/millisecond  */
         U32     siocount;               /* SIO/SSCH counter          */
         U32     siosrate;               /* IOs per second            */
+        double  cpupct;                 /* Percent CPU busy          */
+        U64     waittod;                /* Time of day last wait (us)*/
+        U64     waittime;               /* Wait time (us) in interval*/ 
         TLBE    tlb[256];               /* Translation lookaside buf */
         TID     cputid;                 /* CPU thread identifier     */
         DW      gr[16];                 /* General registers         */
@@ -538,13 +541,6 @@ typedef struct _REGS {                  /* Processor registers       */
                                            switch architecture mode  */
         COND    intcond;                /* CPU interrupt condition   */
         U32     cpumask;                /* CPU mask                  */
-#if defined(OPTION_CPU_UTILIZATION)
-        LOCK            accum_wait_time_lock;
-        struct timeval  accum_wait_time_from;
-        struct timeval  accum_wait_time_to;
-        struct timeval  accum_wait_time_begwait;
-        struct timeval  accum_wait_time;
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
     } REGS;
 
 /* Definitions for CPU state */
@@ -1514,10 +1510,6 @@ extern int extgui;              /* external gui present */
 /*-------------------------------------------------------------------*/
 extern const char* arch_name[];
 extern const char* get_arch_mode_string(REGS* regs);
-#if defined(OPTION_CPU_UTILIZATION)
-extern int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
-extern int timeval_add (struct timeval *dif_timeval, struct timeval *accum_timeval);
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
 /*-------------------------------------------------------------------*/
 /* Function prototypes                                               */

@@ -1178,6 +1178,15 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     /* This is where a stopped CPU will wait */
     if (regs->cpustate == CPUSTATE_STOPPED)
     {
+#ifdef OPTION_MIPS_COUNTING
+        struct timeval tv;
+        U64    now;
+
+        gettimeofday (&tv, NULL);
+        ADJUST_TOD (tv, regs->lasttod);
+        regs->waittod = (U64)tv.tv_sec;
+        regs->waittod = regs->waittod * 1000000 + tv.tv_usec;
+#endif
         /* Wait until there is work to do */
         sysblk.waitmask |= regs->cpumask;
         sysblk.started_mask &= ~regs->cpumask;
@@ -1185,28 +1194,23 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         if (extgui && regs == sysblk.regs[sysblk.pcpu])
                     logmsg("MAN=1\n");
 #endif /*EXTERNALGUI*/
-#if defined(OPTION_CPU_UTILIZATION)
-        obtain_lock ( &regs->accum_wait_time_lock );
-        memset ( &regs->accum_wait_time_from,    0, sizeof(struct timeval) );
-        memset ( &regs->accum_wait_time_to,      0, sizeof(struct timeval) );
-        memset ( &regs->accum_wait_time,         0, sizeof(struct timeval) );
-        release_lock ( &regs->accum_wait_time_lock );
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
         while (regs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&regs->intcond, &sysblk.intlock);
         }
-#if defined(OPTION_CPU_UTILIZATION)
-        obtain_lock  ( &regs->accum_wait_time_lock );
-        gettimeofday ( &regs->accum_wait_time_from, NULL );
-        release_lock ( &regs->accum_wait_time_lock );
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 #ifdef EXTERNALGUI
         if (extgui && regs == sysblk.regs[sysblk.pcpu])
             logmsg("MAN=0\n");
 #endif /*EXTERNALGUI*/
         sysblk.started_mask |= regs->cpumask;
         sysblk.waitmask &= ~regs->cpumask;
+#ifdef OPTION_MIPS_COUNTING
+        gettimeofday (&tv, NULL);
+        ADJUST_TOD (tv, regs->lasttod);
+        now = (U64)tv.tv_sec;
+        now = now * 1000000 + tv.tv_usec;
+        regs->waittime += now - regs->waittod;
+#endif
         /* Purge the lookaside buffers */
         ARCH_DEP(purge_tlb) (regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -1222,11 +1226,10 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     /* Test for wait state */
     if (regs->psw.wait)
     {
-#if defined(OPTION_CPU_UTILIZATION)
-        int timedout = 1;
-        struct timespec wakuptime;
-        struct timeval elapsed_wait_time;
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
+#ifdef OPTION_MIPS_COUNTING
+        struct timeval tv;
+        U64            now;
+#endif
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
@@ -1245,64 +1248,25 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         INVALIDATE_AEA_ALL(regs);
 
         /* Wait for I/O, external or restart interrupt */
+#ifdef OPTION_MIPS_COUNTING
+        gettimeofday (&tv, NULL);
+        ADJUST_TOD (tv, regs->lasttod);
+        regs->waittod = (U64)tv.tv_sec;
+        regs->waittod = regs->waittod * 1000000 + tv.tv_usec;
+#endif
         sysblk.waitmask |= regs->cpumask;
-#if !defined(OPTION_CPU_UTILIZATION)
         wait_condition (&regs->intcond, &sysblk.intlock);
-#else /*defined(OPTION_CPU_UTILIZATION)*/
-        timedout = 1;
-        do
-        {
-            obtain_lock  ( &regs->accum_wait_time_lock );
-            gettimeofday ( &regs->accum_wait_time_begwait, NULL );
-            if ( !regs->accum_wait_time_from.tv_sec )
-                /* (First time waiting) */
-                memcpy ( &regs->accum_wait_time_from, &regs->accum_wait_time_begwait, sizeof(struct timeval) );
-            release_lock ( &regs->accum_wait_time_lock );
-
-            wakuptime.tv_sec  = regs->accum_wait_time_begwait.tv_sec;
-            wakuptime.tv_nsec = (regs->accum_wait_time_begwait.tv_usec + 500000) * 1000;
-
-            if (wakuptime.tv_nsec > 1000000000)
-            {
-                wakuptime.tv_sec++;
-                wakuptime.tv_nsec -= 1000000000;
-            }
-
-            timedout = timed_wait_condition (&regs->intcond, &sysblk.intlock, &wakuptime);
-
-            obtain_lock  ( &regs->accum_wait_time_lock );
-            gettimeofday ( &regs->accum_wait_time_to, NULL );
-            ASSERT ( regs->accum_wait_time_begwait.tv_sec );
-            VERIFY ( timeval_subtract ( &regs->accum_wait_time_begwait, &regs->accum_wait_time_to, &elapsed_wait_time ) == 0 );
-            if ( regs->accum_wait_time_from.tv_sec )
-                VERIFY ( timeval_add ( &elapsed_wait_time, &regs->accum_wait_time ) == 0 );
-            else
-            {
-                /* (times were reset while we were waiting) */
-                memcpy ( &regs->accum_wait_time_from, &regs->accum_wait_time_begwait, sizeof(struct timeval) );
-                memcpy ( &regs->accum_wait_time, &elapsed_wait_time, sizeof(struct timeval) );
-            }
-            release_lock ( &regs->accum_wait_time_lock );
-        }
-        while (timedout);
-#endif /*defined(!OPTION_CPU_UTILIZATION)*/
         sysblk.waitmask &= ~regs->cpumask;
+#ifdef OPTION_MIPS_COUNTING
+        gettimeofday (&tv, NULL);
+        ADJUST_TOD (tv, regs->lasttod);
+        now = (U64)tv.tv_sec;
+        now = now * 1000000 + tv.tv_usec;
+        regs->waittime += now - regs->waittod;
+#endif
         release_lock (&sysblk.intlock);
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /* end if(wait) */
-#if defined(OPTION_CPU_UTILIZATION)
-    else
-    {
-        obtain_lock  ( &regs->accum_wait_time_lock );
-        gettimeofday ( &regs->accum_wait_time_to, NULL );
-        if ( !regs->accum_wait_time_from.tv_sec )
-        {
-            /* (First time running) */
-            memcpy ( &regs->accum_wait_time_from, &regs->accum_wait_time_to, sizeof(struct timeval) );
-        }
-        release_lock ( &regs->accum_wait_time_lock );
-    }
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
@@ -1334,22 +1298,10 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             if (extgui && regs == sysblk.regs[sysblk.pcpu])
                         logmsg("MAN=1\n");
 #endif /*EXTERNALGUI*/
-#if defined(OPTION_CPU_UTILIZATION)
-            obtain_lock ( &regs->accum_wait_time_lock );
-            memset ( &regs->accum_wait_time_from,    0, sizeof(struct timeval) );
-            memset ( &regs->accum_wait_time_to,      0, sizeof(struct timeval) );
-            memset ( &regs->accum_wait_time,         0, sizeof(struct timeval) );
-            release_lock ( &regs->accum_wait_time_lock );
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
             }
-#if defined(OPTION_CPU_UTILIZATION)
-            obtain_lock  ( &regs->accum_wait_time_lock );
-            gettimeofday ( &regs->accum_wait_time_from, NULL );
-            release_lock ( &regs->accum_wait_time_lock );
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 #ifdef EXTERNALGUI
             if (extgui && regs == sysblk.regs[sysblk.pcpu])
                 logmsg("MAN=0\n");
@@ -1623,9 +1575,6 @@ void ARCH_DEP(run_cpu) (REGS *pregs)
 
     /* Initialize copied locks and conditions */
     initialize_condition (&regs.intcond);
-#if defined(OPTION_CPU_UTILIZATION)
-    initialize_lock (&regs.accum_wait_time_lock);
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
     /* Set started bit on and wait bit off for this CPU */
     sysblk.started_mask |= regs.cpumask;
@@ -1801,53 +1750,5 @@ const char* get_arch_mode_string(REGS* regs)
     if (!regs) return arch_name[sysblk.arch_mode];
     else return arch_name[regs->arch_mode];
 }
-
-#if defined(OPTION_CPU_UTILIZATION)
-
-int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval)
-{
-    struct timeval begtime;
-    struct timeval endtime;
-
-    ASSERT ( beg_timeval -> tv_sec >= 0  &&  beg_timeval -> tv_usec >= 0 );
-    ASSERT ( end_timeval -> tv_sec >= 0  &&  end_timeval -> tv_usec >= 0 );
-
-    memcpy(&begtime,beg_timeval,sizeof(struct timeval));
-    memcpy(&endtime,end_timeval,sizeof(struct timeval));
-
-    dif_timeval->tv_sec = endtime.tv_sec - begtime.tv_sec;
-
-    if (endtime.tv_usec >= begtime.tv_usec)
-    {
-        dif_timeval->tv_usec = endtime.tv_usec - begtime.tv_usec;
-    }
-    else
-    {
-        dif_timeval->tv_sec--;
-        dif_timeval->tv_usec = (endtime.tv_usec + 1000000) - begtime.tv_usec;
-    }
-
-    return ((dif_timeval->tv_sec < 0 || dif_timeval->tv_usec < 0) ? -1 : 0);
-}
-
-int timeval_add (struct timeval *dif_timeval, struct timeval *accum_timeval)
-{
-    ASSERT ( dif_timeval   -> tv_sec >= 0  &&  dif_timeval   -> tv_usec >= 0 );
-    ASSERT ( accum_timeval -> tv_sec >= 0  &&  accum_timeval -> tv_usec >= 0 );
-
-    accum_timeval->tv_sec  += dif_timeval->tv_sec;
-    accum_timeval->tv_usec += dif_timeval->tv_usec;
-
-    if (accum_timeval->tv_usec > 1000000)
-    {
-        int nsec = accum_timeval->tv_usec / 1000000;
-        accum_timeval->tv_sec  += nsec;
-        accum_timeval->tv_usec -= nsec * 1000000;
-    }
-
-    return ((accum_timeval->tv_sec < 0 || accum_timeval->tv_usec < 0) ? -1 : 0);
-}
-
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
 #endif /*!defined(_GEN_ARCH)*/
