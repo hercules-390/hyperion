@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+11 Mar 2003 CLC performance improvement - Ivan Warren
 10 Mar 2004 Changed MAXTTR in DASDLOAD.C to 50000 - Volker Bandke
 08 Mar 2004 Optimised non crossing/non overlap MVCs with length
             2,4,8,12 and 16 - Ivan Warren

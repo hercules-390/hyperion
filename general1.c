@@ -1504,10 +1504,9 @@ VADR    ea1, ea2;                       /* Effective addresses       */
     /* `Survey says ...' 94% of all CLC calls are 8 bytes or less and
      * that those 8 bytes fall within a 0x800 boundary for both ops.
      */
-    if (l < 8
-     && (ea1 & 0x7FF) <= 0x7FF - l && (ea2 & 0x7FF) <= 0x7FF - l)
+    if ((ea1 & 0x7FF) <= 0x7FF - l && (ea2 & 0x7FF) <= 0x7FF - l)
     {
-        U64   value1, value2;
+	int rc;
         BYTE *main1, *main2;
 
         //NOTE: we use the memcpy/CSWAP64 technique to get the 8 byte
@@ -1519,16 +1518,52 @@ VADR    ea1, ea2;                       /* Effective addresses       */
         //  require alignment when working with, in this case, 8 byte
         //  values.  U64 should be 8 byte aligned.  The compiler for
         //  other arches should (and do) optimize this.
+	//NOTE3 : (Added by ISW 20040311)
+	//  memcpy removed.
+	//  Alignement issue raised in NOTE2 needs to be re-addressed.
+	//  Doing 'natural' integer comparison yields a significant
+	//  performance gain. For archs requiring integers to be aligned
+	//  on their boundaries some configure & run time tests need to be
+	//  added.
 
         main1 = LOGICAL_TO_ABS (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey)
               + regs->mainstor;
-        memcpy (&value1, main1, 8);
-        value1 = CSWAP64(value1) >> ((7 - l) << 3);
         main2 = LOGICAL_TO_ABS (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey)
               + regs->mainstor;
-        memcpy (&value2, main2, 8);
-        value2 = CSWAP64(value2) >> ((7 - l) << 3);
-        regs->psw.cc = value1 < value2 ? 1 : value1 > value2 ? 2 : 0;
+	switch(l)
+	{
+		case 0:
+			rc=*main1-*main2;
+			break;
+		case 1:
+			{
+				U16 v1,v2;
+				v1=CSWAP16(*(U16 *)main1);
+				v2=CSWAP16(*(U16 *)main2);
+				rc=v1-v2;
+			}
+			break;
+		case 3:
+			{
+				U32 v1,v2;
+				v1=CSWAP32(*(U32 *)main1);
+				v2=CSWAP32(*(U32 *)main2);
+				rc=v1-v2;
+			}
+			break;
+		case 7:
+			{
+				U64 v1,v2;
+				v1=CSWAP64(*(U64 *)main1);
+				v2=CSWAP64(*(U64 *)main2);
+				rc=v1-v2;
+			}
+			break;
+		default:
+			rc=memcmp(main1,main2,l+1);
+			break;
+	}
+        regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
     }
     else
     {
