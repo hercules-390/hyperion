@@ -52,26 +52,26 @@ HDL_REGISTER_SECTION;
 {
     HDL_REGISTER( panel_command,           panel_command_r );
     HDL_REGISTER( panel_display,           panel_display_r );
-    HDL_REGISTER( config_command,          *NULL           );
-    HDL_REGISTER( daemon_task,             *NULL           );
-    HDL_REGISTER( debug_cpu_state,         *NULL           );
-    HDL_REGISTER( debug_device_state,      *NULL           );
-    HDL_REGISTER( debug_program_interrupt, *NULL           );
-    HDL_REGISTER( debug_diagnose,          *NULL           );
+    HDL_REGISTER( config_command,          UNRESOLVED           );
+    HDL_REGISTER( daemon_task,             UNRESOLVED           );
+    HDL_REGISTER( debug_cpu_state,         UNRESOLVED           );
+    HDL_REGISTER( debug_device_state,      UNRESOLVED           );
+    HDL_REGISTER( debug_program_interrupt, UNRESOLVED           );
+    HDL_REGISTER( debug_diagnose,          UNRESOLVED           );
 
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
-    HDL_REGISTER( s390_cipher_message,                      *NULL );
-    HDL_REGISTER( s390_cipher_message_with_chaining,        *NULL );
-    HDL_REGISTER( s390_compute_intermediate_message_digest, *NULL );
-    HDL_REGISTER( s390_compute_last_message_digest,         *NULL );
-    HDL_REGISTER( s390_compute_message_authentication_code, *NULL );
+    HDL_REGISTER( s390_cipher_message,                      UNRESOLVED );
+    HDL_REGISTER( s390_cipher_message_with_chaining,        UNRESOLVED );
+    HDL_REGISTER( s390_compute_intermediate_message_digest, UNRESOLVED );
+    HDL_REGISTER( s390_compute_last_message_digest,         UNRESOLVED );
+    HDL_REGISTER( s390_compute_message_authentication_code, UNRESOLVED );
 #endif /*defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 #if defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)
-    HDL_REGISTER( z900_cipher_message,                      *NULL );
-    HDL_REGISTER( z900_cipher_message_with_chaining,        *NULL );
-    HDL_REGISTER( z900_compute_intermediate_message_digest, *NULL );
-    HDL_REGISTER( z900_compute_last_message_digest,         *NULL );
-    HDL_REGISTER( z900_compute_message_authentication_code, *NULL );
+    HDL_REGISTER( z900_cipher_message,                      UNRESOLVED );
+    HDL_REGISTER( z900_cipher_message_with_chaining,        UNRESOLVED );
+    HDL_REGISTER( z900_compute_intermediate_message_digest, UNRESOLVED );
+    HDL_REGISTER( z900_compute_last_message_digest,         UNRESOLVED );
+    HDL_REGISTER( z900_compute_message_authentication_code, UNRESOLVED );
 #endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 }
