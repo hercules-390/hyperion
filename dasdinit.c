@@ -204,9 +204,9 @@ int     lfs = 0;                        /* 1 = Build large file      */
             || sscanf(argv[4], "%u%c", &requested_size, &c) != 1)
             argexit(4);
 
-        /* Use requested size only if compression not specified */
-        if (0xff == comp || (type == 'F' && requested_size > size))
-            size = requested_size;
+        /* Use requested size only if no compression or FBA */
+        if (0xff == comp || type == 'F') size = requested_size;
+
         altcylflag = 0;
     }
 

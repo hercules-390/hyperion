@@ -1579,7 +1579,7 @@ overlap:
                     (long long)gap[i].pos, gap[i].siz, strerror(errno));
             goto cdsk_return;
         }
-        CDSKMSG (m, "track recovery for gap at pos 0x%llx length %lld\n",
+        CDSKMSG (m, "recovery for gap at pos 0x%llx length %lld\n",
                  (long long)gap[i].pos, gap[i].siz);
 
         /* search for track images in the gap */
@@ -1626,26 +1626,22 @@ overlap:
             if (gap[i].siz - j < trksz) maxlen = gap[i].siz - j;
             else maxlen = trksz;
 
-            CDSKMSG (m, "trying to recover %s %d at offset 0x%llx\n   "
-                        "max length %d compression %s\n",
-                     ckddasd ? "track" : "block",
+            CDSKMSG (m, "%s %d at 0x%llx maxlen %d comp %s: ",
+                     ckddasd ? "trk" : "blk",
                      trk, (long long)(gap[i].pos + j), maxlen,
-                     compression[gapbuf[j]]);
+                     compression[gapbuf[j] & ~CCKD_COMPRESS_STRESSED]);
 
             /* Try to recover the track at the space in the gap */
             trklen = cdsk_recover_trk (trk, &gapbuf[j], heads, maxlen, trksz);
 
             /* continue if track couldn't be uncompressed or isn't valid */
             if (trklen < 0)
-            {   CDSKMSG (m, "unable to recover %s %d at offset 0x%llx\n",
-                         ckddasd ? "track" : "block", trk,
-                         (long long)(gap[i].pos + j));
+            {
+                if (m) fprintf (m,"not recovered here\n");
                 j++; continue;
             }
 
-            CDSKMSG (m, "%s %d recovered, offset 0x%llx length %ld\n",
-                     ckddasd ? "track" : "block", trk,
-                     (long long)(gap[i].pos + j), trklen);
+            if (m) fprintf (m,"recovered!! len %ld\n", trklen);
 
             /* enter the recovered track into the space table */
             spc[s].pos = gap[i].pos + j;
@@ -2134,27 +2130,31 @@ BYTE            buf2[65536];            /* Uncompress/Decompress buf */
     {
         if ((buf[0] & ~CCKD_COMPRESS_STRESSED) == CCKD_COMPRESS_ZLIB)
         {
+            len = 65536;
             rc = uncompress (&buf2[CKDDASD_TRKHDR_SIZE], (uLongf *)&len,
                              &buf[CKDDASD_TRKHDR_SIZE], i);
+//fprintf (stderr,"len=%d rc=%d\n",i,rc);
             if (rc == Z_OK)
             {
                 rc = cdsk_valid_trk (trk, (BYTE *)&buf2, heads,
                           len + CKDDASD_TRKHDR_SIZE, trksz, NULL);
                 if (rc == len + CKDDASD_TRKHDR_SIZE)
-                    return rc;
+                    return CKDDASD_TRKHDR_SIZE + i;
             }
         }
 #ifdef CCKD_BZIP2
         else if ((buf[0] & ~CCKD_COMPRESS_STRESSED) == CCKD_COMPRESS_BZIP2)
         {
+            len = 65536;
             rc = BZ2_bzBuffToBuffDecompress ( &buf2[CKDDASD_TRKHDR_SIZE], &len,
                              &buf[CKDDASD_TRKHDR_SIZE], i, 0, 0);
+//fprintf (stderr,"len=%d rc=%d\n",i,rc);
             if (rc == BZ_OK)
             {
                 rc = cdsk_valid_trk (trk, (BYTE *)&buf2, heads,
                           len + CKDDASD_TRKHDR_SIZE, trksz, NULL);
                 if (rc == len + CKDDASD_TRKHDR_SIZE)
-                    return rc;
+                    return CKDDASD_TRKHDR_SIZE + i;
             }
         }
 #endif

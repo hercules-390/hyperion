@@ -539,7 +539,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 /*-------------------------------------------------------------------*/
 /* Compressed fba read block(s)                                      */
 /*-------------------------------------------------------------------*/
-int cfba_read_block (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
+int cfba_read_block (DEVBLK *dev, BYTE *buf, int rdlen, BYTE *unitstat)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             ix;                     /* New block group index     */
@@ -548,8 +548,10 @@ CCKD_CACHE     *active;                 /* New active cache entry    */
 int             syncio;                 /* Saved `syncio_active' bit */
 int             bufoff;                 /* Offset into caller's buf  */
 int             copylen;                /* Length to copy            */
+int             len;                    /* Length left to copy       */
 
     cckd = dev->cckd_ext;
+    len = rdlen;
 
     /* Command reject if seek position is outside volume */
     if ((dev->fbarba + len - 1) / dev->fbablksiz >= dev->fbanumblk)
@@ -561,9 +563,9 @@ int             copylen;                /* Length to copy            */
 
     /* Calculate the block index and offset */
     ix = dev->fbarba / CFBA_BLOCK_SIZE;
-    off = dev->fbarba % CFBA_BLOCK_SIZE;
+    off = dev->fbarba % CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
     cckdtrc ("cfba_read_block rba %lld len %d ix %d offset %d cur %d\n",
-             (long long int)dev->fbarba, len, ix, off, dev->dasdcur);
+             dev->fbarba, len, ix, off, dev->dasdcur);
 
     /* Read the block group if it's not currently active */
     if (!cckd->active || ix != dev->dasdcur)
@@ -594,15 +596,15 @@ int             copylen;                /* Length to copy            */
     for (bufoff = 0; len; len -= copylen, bufoff += copylen)
     {
         /* Calculate the length we can copy */
-        if (CFBA_BLOCK_SIZE - off >= len)
+        if (CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE - off >= len)
             copylen = len;
         else
-            copylen = CFBA_BLOCK_SIZE - off;
+            copylen = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE - off;
 
         /* Copy from the cache buffer to the caller's buffer */
-        memcpy (&buf[bufoff],
-                &cckd->active->buf[off + CKDDASD_TRKHDR_SIZE],
-                copylen);
+        memcpy (&buf[bufoff], &cckd->active->buf[off], copylen);
+cckdtrc("cfba_read_block copy from blk[%d][%d] to buf[%d] len %d\n",
+ix, off, bufoff, copylen);
         off += copylen;
 
         /* Read the next block group if necessary */
@@ -614,7 +616,7 @@ int             copylen;                /* Length to copy            */
             cckd->active = active;
             dev->dasdcur = ix;
             if (*unitstat) return -1;
-            off = 0;
+            off = CKDDASD_TRKHDR_SIZE;
         }
     }
 
@@ -622,16 +624,16 @@ int             copylen;                /* Length to copy            */
     dev->syncio_active = syncio;
 
     /* Update the current fba rba */
-    dev->fbarba += len;
+    dev->fbarba += rdlen;
 
-    return len;
+    return rdlen;
 } /* end function cfba_read_block */
 
 
 /*-------------------------------------------------------------------*/
 /* Compressed fba write block(s)                                     */
 /*-------------------------------------------------------------------*/
-int cfba_write_block (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
+int cfba_write_block (DEVBLK *dev, BYTE *buf, int wrlen, BYTE *unitstat)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             ix;                     /* New block group index     */
@@ -640,8 +642,10 @@ CCKD_CACHE     *active;                 /* New active cache entry    */
 int             syncio;                 /* Saved `syncio_active' bit */
 int             bufoff;                 /* Offset into caller's buf  */
 int             copylen;                /* Length to copy            */
+int             len;                    /* Length left to copy       */
 
     cckd = dev->cckd_ext;
+    len = wrlen;
 
     /* Command reject if seek position is outside volume */
     if ((dev->fbarba + len - 1) / dev->fbablksiz >= dev->fbanumblk)
@@ -661,15 +665,15 @@ int             copylen;                /* Length to copy            */
 
     /* Calculate the block index and offset */
     ix = dev->fbarba / CFBA_BLOCK_SIZE;
-    off = dev->fbarba % CFBA_BLOCK_SIZE;
+    off = dev->fbarba % CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
     cckdtrc ("cfba_write_block rba %lld len %d ix %d offset %d cur %d\n",
-             (long long int)dev->fbarba, len, ix, off, dev->dasdcur);
+             dev->fbarba, len, ix, off, dev->dasdcur);
 
     /* Read the block group if it's not currently active */
     if (!cckd->active || ix != dev->dasdcur)
     {
         *unitstat = 0;
-        active = cckd_read_trk (dev, (int)ix, 0, unitstat);
+        active = cckd_read_trk (dev, ix, 0, unitstat);
         if (active == NULL)
         {
             if (cckd->active)
@@ -694,15 +698,15 @@ int             copylen;                /* Length to copy            */
     for (bufoff = 0; len; len -= copylen, bufoff += copylen)
     {
         /* Calculate the length we can copy */
-        if (CFBA_BLOCK_SIZE - off >= len)
+        if (CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE - off >= len)
             copylen = len;
         else
-            copylen = CFBA_BLOCK_SIZE - off;
+            copylen = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE - off;
 
         /* Copy to the cache buffer from the caller's buffer */
-        memcpy (&cckd->active->buf[off + CKDDASD_TRKHDR_SIZE],
-                &buf[bufoff],
-                copylen);
+        memcpy (&cckd->active->buf[off], &buf[bufoff], copylen);
+cckdtrc("cfba_write_block copy to blk[%d][%d] from buf[%d] len %d\n",
+ix, off, bufoff, copylen);
         off += copylen;
 
         /* Update the cache entry flags */
@@ -713,11 +717,11 @@ int             copylen;                /* Length to copy            */
         {
             ix++;
             *unitstat = 0;
-            active = cckd_read_trk (dev, (int)ix, 0, unitstat);
+            active = cckd_read_trk (dev, ix, 0, unitstat);
             if (*unitstat) return -1;
             cckd->active = active;
             dev->dasdcur = ix;
-            off = 0;
+            off = CKDDASD_TRKHDR_SIZE;
         }
     }
 
@@ -725,9 +729,9 @@ int             copylen;                /* Length to copy            */
     dev->syncio_active = syncio;
 
     /* Update the current fba rba */
-    dev->fbarba += len;
+    dev->fbarba += wrlen;
 
-    return len;
+    return wrlen;
 } /* end function cfba_write_block */
 
 
@@ -3814,7 +3818,7 @@ void cckd_command_help()
              "rat=<n>\t\tSet number tracks to read ahead\t\t(0 .. 16)\n"
              "wr=<n>\t\tSet number writer threads\t\t(1 .. 9)\n"
              "gcint=<n>\tSet garbage collector interval (sec)\t(1 .. 60)\n"
-             "gcparm=<n>\tSet garbage collector parameter\t\t(-4 .. 4)\n"
+             "gcparm=<n>\tSet garbage collector parameter\t\t(-8 .. 8)\n"
              "\t\t    (least agressive ... most aggressive)\n"
              "trace=<n>\tSet trace table size\t\t\t(0 .. 200000)\n"
             );
@@ -4070,7 +4074,7 @@ int   val, i, opts = 0;
         }
         else if (strcasecmp (kw, "gcparm") == 0)
         {
-            if (val < -4 || val > 8 || c != '\0')
+            if (val < -8 || val > 8 || c != '\0')
             {
                 cckdmsg ("Invalid value for gcparm=\n");
                 return -1;

@@ -1713,12 +1713,12 @@ BYTE            buf[65536];             /* Buffer                    */
 
     /* Write the 1st block group */
     memset (&buf, 0, CKDDASD_DEVHDR_SIZE + CFBA_BLOCK_SIZE);
-    convert_to_ebcdic (&buf[CKDDASD_DEVHDR_SIZE], 4, "VOL1");
-    convert_to_ebcdic (&buf[CKDDASD_DEVHDR_SIZE+4], 6, volser);
+    convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz], 4, "VOL1");
+    convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz+4], 6, volser);
     len2 = sizeof(buf2);
     rc = compress2 (&buf2[0], &len2, &buf[CKDDASD_TRKHDR_SIZE],
                     CFBA_BLOCK_SIZE, -1);
-    if (rc == Z_OK)
+    if (comp && rc == Z_OK)
     {
         buf[0] = CCKD_COMPRESS_ZLIB;
         rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE);

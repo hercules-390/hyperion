@@ -1,3 +1,4 @@
+12 Jun 2002 cfba/cckd/ckd fixes - Greg Smith
 05 Jun 2002 Increase 3270 buffer to 64K as adding IAC bytes may cause overflow - Jan Jaeger
 02 Jun 2002 Created "hercnls.h" module and fixed some typos/warnings - Fish
 30 May 2002 Preliminary cfba (compressed fba) support - Greg Smith

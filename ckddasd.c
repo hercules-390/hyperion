@@ -650,7 +650,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
     /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
     active = dev->syncio_active;
-    if (dev->ckdtrkof || (cyl == 0 && head == 0))
+    if (dev->ckdtrkof || (cyl <= 0 && head <= 0))
         dev->syncio_active = 0;
 
     DEVTRACE ("ckddasd: read trk %d cur trk %d\n",
@@ -703,7 +703,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     }
 
     /* Return on special case when called by the close handler */
-    if (cyl == -1 && head == -1) return 0;
+    if (cyl < 0 && head < 0) return 0;
 
     /* Calculate the track number */
     trk = cyl * dev->ckdheads + head;
