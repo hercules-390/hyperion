@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2003-01-30 20:54-0600\n"
+"POT-Creation-Date: 2003-01-30 21:01-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -3141,6 +3141,141 @@ msgstr ""
 msgid "HHCTE009I Client %s connected to %4.4X device %4.4X\n"
 msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
+#: tuntap.c:101
+#, fuzzy, c-format
+msgid "HHCTU001E Can not determine operating system: %s\n"
+msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+
+#: tuntap.c:112
+#, fuzzy, c-format
+msgid "HHCTU002E Error opening TUN/TAP device: %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: tuntap.c:136
+#, fuzzy, c-format
+msgid "HHCTU003E Error setting TUN/TAP mode: %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: tuntap.c:157
+#, fuzzy, c-format
+msgid "HHCTU004E Invalid TUN/TAP device name: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:194
+#, fuzzy, c-format
+msgid "HHCTU005E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:204
+#, fuzzy, c-format
+msgid "HHCTU006E %s: Invalid IP address: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:230
+#, fuzzy, c-format
+msgid "HHCTU007E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:240
+#, fuzzy, c-format
+msgid "HHCTU008E %s: Invalid destination address: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:266
+#, fuzzy, c-format
+msgid "HHCTU009E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:276
+#, fuzzy, c-format
+msgid "HHCTU010E %s: Invalid net mask: %s.\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:303
+#, fuzzy, c-format
+msgid "HHCTU011E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:312
+#, fuzzy, c-format
+msgid "HHCTU012E %s: Invalid null or empty MTU.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:321
+#, fuzzy, c-format
+msgid "HHCTU013E %s: Invalid MTU: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:350
+#, fuzzy, c-format
+msgid "HHCTU014E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:359
+#, fuzzy, c-format
+msgid "HHCTU015E %s: Invalid MAC address: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:387
+#, fuzzy, c-format
+msgid "HHCTU016E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:416
+#, fuzzy, c-format
+msgid "HHCTU017E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:429
+#, fuzzy, c-format
+msgid "HHCTU018E %s: Invalid destiniation address: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:440
+#, fuzzy, c-format
+msgid "HHCTU019E %s: Invalid net mask: %s.\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:452
+#, fuzzy, c-format
+msgid "HHCTU020E %s: Invalid gateway address: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:480
+#, fuzzy, c-format
+msgid "HHCTU021E Invalid net device name specified: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:493
+#, fuzzy, c-format
+msgid "HHCTU022E %s: Invalid destiniation address: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:504
+#, fuzzy, c-format
+msgid "HHCTU023E %s: Invalid net mask: %s.\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: tuntap.c:515
+#, fuzzy, c-format
+msgid "HHCTU024E %s: Invalid gateway address: %s.\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: tuntap.c:563
+#, fuzzy, c-format
+msgid "HHCTU025E Call to socketpair failed: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: tuntap.c:577
+#, fuzzy, c-format
+msgid "HHCTU026E Call to fork failed: %s\n"
+msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+
+#: tuntap.c:593
+#, fuzzy, c-format
+msgid "HHCTU027E execl error on %s: %s.\n"
+msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
+
 #: dasdcopy.c:101
 #, c-format
 msgid "Hercules %s copy program "
@@ -3174,87 +3309,6 @@ msgstr "Draaiend op %s %s%s %s %s\n"
 #: cpu.c:487 hscmisc.c:596
 msgid "SIE: "
 msgstr ""
-
-#: tuntap.c:101
-#, c-format
-msgid "TUN001E Can not determine operating system: %s\n"
-msgstr ""
-
-#: tuntap.c:112
-#, fuzzy, c-format
-msgid "TUN002E Error opening TUN/TAP device: %s: %s\n"
-msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
-
-#: tuntap.c:136
-#, c-format
-msgid "TUN003E Error setting TUN/TAP mode: %s: %s\n"
-msgstr ""
-
-#: tuntap.c:157
-#, fuzzy, c-format
-msgid "TUN004E Invalid TUN/TAP device name: %s\n"
-msgstr "Ongeldig apparaat nummer\n"
-
-#: tuntap.c:194 tuntap.c:230 tuntap.c:266 tuntap.c:303 tuntap.c:350
-#: tuntap.c:387 tuntap.c:416 tuntap.c:480
-#, c-format
-msgid "TUN005E Invalid net device name specified: %s\n"
-msgstr ""
-
-#: tuntap.c:204
-#, fuzzy, c-format
-msgid "TUN006E %s: Invalid IP address: %s.\n"
-msgstr "Ongeldig frame adres %8.8X\n"
-
-#: tuntap.c:240
-#, c-format
-msgid "TUN007E %s: Invalid destination address: %s.\n"
-msgstr ""
-
-#: tuntap.c:429 tuntap.c:493
-#, c-format
-msgid "TUN007E %s: Invalid destiniation address: %s.\n"
-msgstr ""
-
-#: tuntap.c:276 tuntap.c:440 tuntap.c:504
-#, c-format
-msgid "TUN008E %s: Invalid net mask: %s.\n"
-msgstr ""
-
-#: tuntap.c:312
-#, c-format
-msgid "TUN009E %s: Invalid null or empty MTU.\n"
-msgstr ""
-
-#: tuntap.c:321
-#, c-format
-msgid "TUN010E %s: Invalid MTU: %s.\n"
-msgstr ""
-
-#: tuntap.c:359
-#, fuzzy, c-format
-msgid "TUN011E %s: Invalid MAC address: %s.\n"
-msgstr "Ongeldig frame adres %8.8X\n"
-
-#: tuntap.c:452 tuntap.c:515
-#, fuzzy, c-format
-msgid "TUN012E %s: Invalid gateway address: %s.\n"
-msgstr "Ongeldig frame adres %8.8X\n"
-
-#: tuntap.c:563
-#, c-format
-msgid "TUN100E Call to socketpair failed: %s\n"
-msgstr ""
-
-#: tuntap.c:577
-#, c-format
-msgid "TUN101E Call to fork failed: %s\n"
-msgstr ""
-
-#: tuntap.c:593
-#, fuzzy, c-format
-msgid "TUN102E execl error on %s: %s.\n"
-msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
 
 #: hsccmd.c:2458
 msgid "add shadow file"

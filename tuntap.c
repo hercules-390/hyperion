@@ -98,7 +98,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
 
     if( uname( &utsbuf ) != 0 )
     {
-        logmsg( _("TUN001E Can not determine operating system: %s\n"),
+        logmsg( _("HHCTU001E Can not determine operating system: %s\n"),
                 strerror( errno ) );
         
         return -1;
@@ -109,7 +109,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
     
     if( fd < 0 )
     {
-        logmsg( _("TUN002E Error opening TUN/TAP device: %s: %s\n"),
+        logmsg( _("HHCTU002E Error opening TUN/TAP device: %s: %s\n"),
                 pszTUNDevice, strerror( errno ) );
         
         return -1;
@@ -133,7 +133,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             ( errno != EINVAL || 
               TUNTAP_IOCtl( fd, ('T' << 8) | 202, (char*)&ifr ) != 0 )  )
         {
-            logmsg( _("TUN003E Error setting TUN/TAP mode: %s: %s\n"),
+            logmsg( _("HHCTU003E Error setting TUN/TAP mode: %s: %s\n"),
                     pszTUNDevice, strerror( errno ) );
             return -1;
         }
@@ -154,7 +154,7 @@ int             TUNTAP_CreateInterface( char* pszTUNDevice,
             strncpy( pszNetDevName, ++p, IFNAMSIZ );
         else 
         {
-            logmsg( _("TUN004E Invalid TUN/TAP device name: %s\n"),
+            logmsg( _("HHCTU004E Invalid TUN/TAP device name: %s\n"),
                     pszTUNDevice );
             return -1;
         }
@@ -191,7 +191,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU005E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -201,7 +201,7 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     if( !pszIPAddr  || 
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
-        logmsg( _("TUN006E %s: Invalid IP address: %s.\n"),
+        logmsg( _("HHCTU006E %s: Invalid IP address: %s.\n"),
                 pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
         return -1;
     }
@@ -227,7 +227,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU007E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -237,7 +237,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
     if( !pszDestAddr  || 
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        logmsg( _("TUN007E %s: Invalid destination address: %s.\n"),
+        logmsg( _("HHCTU008E %s: Invalid destination address: %s.\n"),
                 pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
             return -1;
     }
@@ -263,7 +263,7 @@ int             TUNTAP_SetNetMask( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU009E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -273,7 +273,7 @@ int             TUNTAP_SetNetMask( char*   pszNetDevName,
     if( !pszNetMask  || 
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        logmsg( _("TUN008E %s: Invalid net mask: %s.\n"),
+        logmsg( _("HHCTU010E %s: Invalid net mask: %s.\n"),
                 pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
             return -1;
     }
@@ -300,7 +300,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU011E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -309,7 +309,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( !pszMTU  || !*pszMTU )
     {
-        logmsg( _("TUN009E %s: Invalid null or empty MTU.\n"),
+        logmsg( _("HHCTU012E %s: Invalid null or empty MTU.\n"),
                 pszNetDevName );
         return -1;
     }
@@ -318,7 +318,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     if( iMTU < 46 || iMTU > 65536 )
     {
-        logmsg( _("TUN010E %s: Invalid MTU: %s.\n"),
+        logmsg( _("HHCTU013E %s: Invalid MTU: %s.\n"),
                 pszNetDevName, pszMTU );
         return -1;
     }
@@ -347,7 +347,7 @@ int             TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU014E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -356,7 +356,7 @@ int             TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     if( !pszMACAddr || ParseMAC( pszMACAddr, mac ) != 0 )
     {
-        logmsg( _("TUN011E %s: Invalid MAC address: %s.\n"),
+        logmsg( _("HHCTU015E %s: Invalid MAC address: %s.\n"),
                 pszNetDevName, !pszMACAddr ? "NULL" : pszMACAddr );
             return -1;
     }
@@ -384,7 +384,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
 
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU016E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -413,7 +413,7 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
     
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU017E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -426,7 +426,7 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
     if( !pszDestAddr  || 
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        logmsg( _("TUN007E %s: Invalid destiniation address: %s.\n"),
+        logmsg( _("HHCTU018E %s: Invalid destiniation address: %s.\n"),
                 pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
         return -1;
     }
@@ -437,7 +437,7 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
     if( !pszNetMask  || 
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        logmsg( _("TUN008E %s: Invalid net mask: %s.\n"),
+        logmsg( _("HHCTU019E %s: Invalid net mask: %s.\n"),
                 pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
         return -1;
     }
@@ -449,7 +449,7 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
 
         if( !inet_aton( pszGWAddr, &sin->sin_addr ) )
         {
-            logmsg( _("TUN012E %s: Invalid gateway address: %s.\n"),
+            logmsg( _("HHCTU020E %s: Invalid gateway address: %s.\n"),
                     pszNetDevName, !pszGWAddr ? "NULL" : pszGWAddr );
             return -1;
         }
@@ -477,7 +477,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     
     if( !pszNetDevName || !*pszNetDevName )
     {
-        logmsg( _("TUN005E Invalid net device name specified: %s\n"),
+        logmsg( _("HHCTU021E Invalid net device name specified: %s\n"),
                 pszNetDevName ? pszNetDevName : "(null pointer)" );
         return -1;
     }
@@ -490,7 +490,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     if( !pszDestAddr  || 
         !inet_aton( pszDestAddr, &sin->sin_addr ) )
     {
-        logmsg( _("TUN007E %s: Invalid destiniation address: %s.\n"),
+        logmsg( _("HHCTU022E %s: Invalid destiniation address: %s.\n"),
                 pszNetDevName, !pszDestAddr ? "NULL" : pszDestAddr );
         return -1;
     }
@@ -501,7 +501,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     if( !pszNetMask  || 
         !inet_aton( pszNetMask, &sin->sin_addr ) )
     {
-        logmsg( _("TUN008E %s: Invalid net mask: %s.\n"),
+        logmsg( _("HHCTU023E %s: Invalid net mask: %s.\n"),
                 pszNetDevName, !pszNetMask ? "NULL" : pszNetMask );
         return -1;
     }
@@ -512,7 +512,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     if( !pszGWAddr  || 
         !inet_aton( pszGWAddr, &sin->sin_addr ) )
     {
-        logmsg( _("TUN012E %s: Invalid gateway address: %s.\n"),
+        logmsg( _("HHCTU024E %s: Invalid gateway address: %s.\n"),
                 pszNetDevName, !pszGWAddr ? "NULL" : pszGWAddr );
         return -1;
     }
@@ -560,7 +560,7 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
     {
         if( socketpair( AF_UNIX, SOCK_STREAM, 0, sysblk.ifcfd ) < 0 ) 
         {
-            logmsg( _("TUN100E Call to socketpair failed: %s\n"),
+            logmsg( _("HHCTU025E Call to socketpair failed: %s\n"),
                     strerror( errno ) );
             return -1;
         }
@@ -574,7 +574,7 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
 
         if( ifc_pid < 0 )
         {
-            logmsg( _("TUN101E Call to fork failed: %s\n"),
+            logmsg( _("HHCTU026E Call to fork failed: %s\n"),
                     strerror( errno ) );
             return -1;
         }
@@ -590,7 +590,7 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
             rc = execlp( pszCfgCmd, pszCfgCmd, NULL );
             
             // The exec function returns only if unsuccessful
-            logmsg( _("TUN102E execl error on %s: %s.\n"),
+            logmsg( _("HHCTU027E execl error on %s: %s.\n"),
                     pszCfgCmd, strerror( errno ) );
             
             exit( 127 );
