@@ -2093,7 +2093,7 @@ U64     n;                              /* 64-bit operand value      */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
-    FW_CHECK(effective_addr2, regs);
+    DW_CHECK(effective_addr2, regs);
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
@@ -2159,7 +2159,7 @@ U64     n1, n2;                         /* 64-bit operand values     */
 
     ODD2_CHECK(r1, r3, regs);
 
-    DW_CHECK(effective_addr2, regs);
+    QW_CHECK(effective_addr2, regs);
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
@@ -3824,6 +3824,9 @@ BYTE    rwork[128];                     /* Register work areas       */
         /* Update register number, wrapping from 15 to 0 */
         i++; i &= 15;
     }
+
+    SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
 
 } /* end DEF_INST(load_control_long) */
 #endif /*defined(FEATURE_ESAME)*/

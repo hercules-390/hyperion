@@ -106,12 +106,6 @@ typedef struct _PSW {
 	((p)->space==0 && (p)->armode==1)
 #define HOME_SPACE_MODE(p) \
 	((p)->space==1 && (p)->armode==1)
-#define ESAMEARCH(_regs) \
-	((_regs)->arch_mode >= ESA_900)
-#define ESAMEMODE(_psw) \
-	((_psw)->notesame == 0)
-#define AMODE64(_psw) \
-	((_psw)->notesame == 0 && (_psw)->amode64)
 
 /* Structure definition for translation-lookaside buffer entry */
 typedef struct _TLBE {

@@ -201,6 +201,10 @@ int used; \
 	if( (_value) & 7 ) \
 	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
+#define QW_CHECK(_value, _regs) \
+	if( (_value) & 15 ) \
+	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
+
 #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 
 	/* Program check if r1 is not 0, 2, 4, or 6 */
@@ -1073,8 +1077,8 @@ void clear_subchan (REGS *regs, DEVBLK *dev);
 int  halt_subchan (REGS *regs, DEVBLK *dev);
 int  haltio (REGS *regs, DEVBLK *dev, BYTE ibyte);
 int  resume_subchan (REGS *regs, DEVBLK *dev);
-int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid, U32 *ioparm,
-	BYTE *csw);
+int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
+        U32 *ioparm, U32 *iointid, BYTE *csw);
 void io_reset (void);
 int  device_attention (DEVBLK *dev, BYTE unitstat);
 int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);

@@ -59,7 +59,7 @@
    marked N3 in the reference are also available
    in ESA/390 mode */
 #if defined(FEATURE_ESAME_INSTALLED)
- #define FEATURE_ESAME_N3_ESA390
+// ZZ #define FEATURE_ESAME_N3_ESA390
 #endif /*defined(FEATURE_ESAME_INSTALLED)*/
 
 #if defined(_FEATURE_SIE) && defined(FEATURE_STORAGE_KEY_ASSIST)

@@ -248,6 +248,7 @@ typedef struct _REGS {			/* Processor registers	     */
 #define GR_LA24(_r) gr[(_r)].F.L.A.A	 /* 24 bit addr, bits 40-63  */
 #define GR_LA8(_r) gr[(_r)].F.L.A.B	 /* 24 bit addr, unused bits */
 #define GR_LHLCL(_r) gr[(_r)].F.L.H.L.B.L   /* Character, bits 56-63 */
+#define GR_LHLCH(_r) gr[(_r)].F.L.H.L.B.H   /* Character, bits 48-55 */
 #define CR_G(_r)   cr[(_r)].D		 /* Bits 0-63		     */
 #define CR_H(_r)   cr[(_r)].F.H.F	 /* Fullword bits 0-31	     */
 #define CR_HHH(_r) cr[(_r)].F.H.H.H.H	 /* Halfword bits 0-15	     */
@@ -442,8 +443,8 @@ typedef struct _SYSBLK {
 		extpending:1,		/* 1=EXT interrupt pending   */
 		intkey:1,		/* 1=Interrupt key pending   */
 		servsig:1,		/* 1=Service signal pending  */
-#endif /*INTERRUPTS_FAST_CHECK*/
 		crwpending:1,		/* 1=Channel report pending  */
+#endif /*INTERRUPTS_FAST_CHECK*/
 		sigpbusy:1,		/* 1=Signal facility in use  */
 		sigintreq:1,		/* 1=SIGINT request pending  */
 		insttrace:1,		/* 1=Instruction trace	     */
@@ -470,6 +471,7 @@ typedef struct _SYSBLK {
 // #endif /*defined(FEATURE_HARDWARE_LOADER)*/
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
+#define IMAP_START sysblk.imap01
 	U64 imap01[256];
 	U64 imapa4[256];
 	U64 imapa5[16];
@@ -486,6 +488,23 @@ typedef struct _SYSBLK {
 	U64 imapec[256];
 	U64 imaped[256];
 	U64 imapxx[256];
+#define IMAP_SIZE \
+	    ( sizeof(sysblk.imap01) \
+	    + sizeof(sysblk.imapa4) \
+	    + sizeof(sysblk.imapa5) \
+	    + sizeof(sysblk.imapa6) \
+	    + sizeof(sysblk.imapa7) \
+	    + sizeof(sysblk.imapb2) \
+	    + sizeof(sysblk.imapb3) \
+	    + sizeof(sysblk.imapb9) \
+	    + sizeof(sysblk.imapc0) \
+	    + sizeof(sysblk.imape3) \
+	    + sizeof(sysblk.imape4) \
+	    + sizeof(sysblk.imape5) \
+	    + sizeof(sysblk.imapeb) \
+	    + sizeof(sysblk.imapec) \
+	    + sizeof(sysblk.imaped) \
+	    + sizeof(sysblk.imapxx) )
 #endif
 
     } SYSBLK;

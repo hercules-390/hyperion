@@ -1832,7 +1832,7 @@ U16     xcode;                          /* Exception code            */
         /* Set interrupt flag and interval timer interrupt pending
            if the interval timer went from positive to negative */
         if (itimer < 0 && olditimer >= 0)
-            ON_IC_ITIMER_PENDING(regs);
+            ON_IC_ITIMER(regs);
 
         /* Release the TOD clock update lock */
         release_lock (&sysblk.todlock);

@@ -1541,8 +1541,8 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B22B*/ GENx___x390x900 (set_storage_key_extended),           /* SSKE      */
  /*B22C*/ GENx370x390x900 (test_block),                         /* TB        */
  /*B22D*/ GENx370x390x900 (divide_float_ext_reg),               /* DXR       */
- /*B22E*/ GENx___x390x___ (page_in),                            /* PGIN      */
- /*B22F*/ GENx___x390x___ (page_out),                           /* PGOUT     */
+ /*B22E*/ GENx___x390x900 (page_in),                            /* PGIN      */
+ /*B22F*/ GENx___x390x900 (page_out),                           /* PGOUT     */
  /*B230*/ GENx___x390x900 (clear_subchannel),                   /* CSCH      */
  /*B231*/ GENx___x390x900 (halt_subchannel),                    /* HSCH      */
  /*B232*/ GENx___x390x900 (modify_subchannel),                  /* MSCH      */

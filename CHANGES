@@ -1,3 +1,8 @@
+22 Mar 2001 Implement XSTORE in ESAME mode - Jan Jaeger
+22 Mar 2001 Implement fast interrupt processing for MCK and PER - Jan Jaeger
+22 Mar 2001 Correct interruption identification word - Jan Jaeger
+22 Mar 2001 Correct interrupt mask setting in LCTL/LTCLG - Jan Jaeger
+22 Mar 2001 Correct SSM/STOSM spec exc in ESAME mode - Jan Jaeger
 21 Mar 2001 Correct cache invalidation in PR - Greg Smith
 20 Mar 2001 Correction to 64 bit SIGP initial_cpu_reset - Jan Jaeger
 18 Mar 2001 Correction to stack types in ESAME mode - Jan Jaeger

@@ -63,8 +63,8 @@ U32     xaddr;                          /* Expanded storage address  */
     xaddr <<= XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
-    maddr = ARCH_DEP(logical_to_abs) (regs->GR_L(r1) & ADDRESS_MAXWRAP(regs),
-         USE_REAL_ADDR, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    maddr = ARCH_DEP(logical_to_abs) (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
+         USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
     maddr &= XSTORE_PAGEMASK;
 
     /* Copy data from expanded to main */
@@ -128,7 +128,7 @@ U32     xaddr;                          /* Expanded storage address  */
     xaddr <<= XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
-    maddr = ARCH_DEP(logical_to_abs) (regs->GR_L(r1) & ADDRESS_MAXWRAP(regs),
+    maddr = ARCH_DEP(logical_to_abs) (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
          USE_REAL_ADDR, regs, ACCTYPE_READ, regs->psw.pkey);
     maddr &= XSTORE_PAGEMASK;
 

@@ -898,11 +898,8 @@ int     r1, r2;                         /* Values of R fields        */
     /* Extract the address-space control bits from the PSW */
     regs->psw.cc = (regs->psw.armode << 1) | (regs->psw.space);
 
-    /* Clear bits 16-23 of the general purpose register */
-    regs->GR_L(r1) &= 0xFFFF00FF;
-
     /* Insert address-space mode into register bits 22-23 */
-    regs->GR_L(r1) |= regs->psw.cc << 8;
+    regs->GR_LHLCH(r1) = regs->psw.cc;
 
 }
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
@@ -926,8 +923,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Insert PSW key into bits 24-27 of general register 2
        and set bits 28-31 of general register 2 to zero */
-    regs->GR_L(2) &= 0xFFFFFF00;
-    regs->GR_L(2) |= (regs->psw.pkey & 0xF0);
+    regs->GR_LHLCL(2) = regs->psw.pkey & 0xF0;
 
 }
 
@@ -1477,6 +1473,9 @@ BYTE    rwork[64];                      /* Register work areas       */
         /* Update register number, wrapping from 15 to 0 */
         i++; i &= 15;
     }
+
+    SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
 
 } /* end DEF_INST(load_control) */
 
@@ -2631,6 +2630,9 @@ U16     xcode;                          /* Exception code            */
     memcpy(&regs->psw, &newregs.psw, sizeof(newregs.psw));
     INVALIDATE_AIA(regs);
     INVALIDATE_AEA_ALL(regs);
+    SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
+    SET_IC_IO_MASK(regs);
 
     /* Set the main storage reference and change bits */
     STORAGE_KEY(alsed) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -3332,7 +3334,6 @@ int     ssevent = 0;                    /* 1=space switch event      */
         PERFORM_SERIALIZATION (regs);
         PERFORM_CHKPT_SYNC (regs);
     }
-    SET_IC_EXTERNAL_MASK(regs);
 }
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
@@ -3419,9 +3420,9 @@ U64     dreg;                           /* Clock value               */
     /* reset the clock comparator pending flag according to
        the setting of the tod clock */
     if( (sysblk.todclk + regs->todoffset) > regs->clkc )
-        ON_IC_CKPEND(regs);
+        ON_IC_CLKC(regs);
     else
-        OFF_IC_CKPEND(regs);
+        OFF_IC_CLKC(regs);
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -3481,9 +3482,9 @@ U64     dreg;                           /* Timer value               */
 
     /* reset the cpu timer pending flag according to its value */
     if( (S64)regs->ptimer < 0 )
-        ON_IC_PTPEND(regs);
+        ON_IC_PTIMER(regs);
     else
-        OFF_IC_PTPEND(regs);
+        OFF_IC_PTIMER(regs);
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -3978,6 +3979,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->psw.sysmask = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
     SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
 
     INVALIDATE_AIA(regs);
@@ -3993,7 +3995,11 @@ VADR    effective_addr2;                /* Effective address         */
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
     /* For ECMODE, bits 0 and 2-4 of system mask must be zero */
-    if (regs->psw.ecmode && (regs->psw.sysmask & 0xB8) != 0)
+    if (
+#if defined(FEATURE_BCMODE)
+        regs->psw.ecmode &&
+#endif /*defined(FEATURE_BCMODE)*/
+                            (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
 }
@@ -4560,9 +4566,9 @@ U64     dreg;                           /* Double word workarea      */
 
     /* reset the cpu timer pending flag according to its value */
     if( (S64)regs->ptimer < 0 )
-        ON_IC_PTPEND(regs);
+        ON_IC_PTIMER(regs);
     else
-        OFF_IC_PTPEND(regs);
+        OFF_IC_PTIMER(regs);
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -4783,6 +4789,7 @@ VADR    effective_addr1;                /* Effective address         */
     regs->psw.sysmask &= i2;
 
     SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
 
 }
@@ -4813,6 +4820,7 @@ VADR    effective_addr1;                /* Effective address         */
     regs->psw.sysmask |= i2;
 
     SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
 
     INVALIDATE_AIA(regs);
@@ -4828,7 +4836,11 @@ VADR    effective_addr1;                /* Effective address         */
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
     /* For ECMODE, bits 0 and 2-4 of system mask must be zero */
-    if (regs->psw.ecmode && (regs->psw.sysmask & 0xB8) != 0)
+    if (
+#if defined(FEATURE_BCMODE)
+        regs->psw.ecmode &&
+#endif /*defined(FEATURE_BCMODE)*/
+                            (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
 }

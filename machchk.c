@@ -55,8 +55,7 @@ void machine_check_crwpend()
 {
     /* Signal waiting CPUs that an interrupt may be pending */
     obtain_lock (&sysblk.intlock);
-    sysblk.crwpending = 1;
-    ON_IC_MCKPENDING;
+    ON_IC_CHANRPT;
     signal_condition (&sysblk.intcond);
     release_lock (&sysblk.intlock);
 
@@ -89,7 +88,7 @@ int rc = 0;
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* If there is a crw pending and we are enabled for the channel
        report interrupt subclass then process the interrupt */
-    if(sysblk.crwpending && (regs->CR(14) & CR14_CHANRPT))
+    if( OPEN_IC_CHANRPT(regs) )
     {
         *mcic =  MCIC_CP |
                MCIC_WP |
@@ -116,13 +115,13 @@ int rc = 0;
                MCIC_CC ;
         *xdmg = 0;
         *fsta = 0;
-        sysblk.crwpending = 0;
+        OFF_IC_CHANRPT;
         rc = 1;
     }
 
-    if(!sysblk.crwpending)
+    if(!IS_IC_CHANRPT)
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-        OFF_IC_MCKPENDING;
+        OFF_IC_CHANRPT;
 
     return rc;
 } /* end function present_mck_interrupt */

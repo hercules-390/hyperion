@@ -536,6 +536,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 U64     dreg;                           /* Double register work area */
 U32     ioid;                           /* I/O interruption address  */
 U32     ioparm;                         /* I/O interruption parameter*/
+U32     iointid;                        /* I/O interruption ident    */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -558,7 +559,7 @@ U32     ioparm;                         /* I/O interruption parameter*/
 
     /* Test and clear pending interrupt, set condition code */
     regs->psw.cc =
-        ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, NULL);
+        ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, &iointid, NULL);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
@@ -572,6 +573,9 @@ U32     ioparm;                         /* I/O interruption parameter*/
             psa = (void*)(sysblk.mainstor + regs->PX);
             STORE_FW(psa->ioid,ioid);
             STORE_FW(psa->ioparm,ioparm);
+#if defined(FEATURE_ESAME)
+            STORE_FW(psa->iointid,iointid);
+#endif /*defined(FEATURE_ESAME)*/
         }
         else
         {

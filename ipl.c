@@ -182,7 +182,7 @@ int             i;                      /* Array subscript           */
     /* Clear pending interrupts and indicators */
     regs->loadstate = 0;
     regs->sigpreset = 0;
-    OFF_IC_ITIMER_PENDING(regs);
+    OFF_IC_ITIMER(regs);
     OFF_IC_RESTART(regs);
     OFF_IC_EXTCALL(regs);
     regs->extccpu = 0;

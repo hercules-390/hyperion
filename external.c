@@ -151,10 +151,10 @@ int     rc;
     regs->psw.intcode = code;
 
 
-#if !defined(FEATURE_ESAME)
+#if defined(FEATURE_BCMODE)
     /* For ECMODE, store external interrupt code at PSA+X'86' */
     if ( regs->psw.ecmode )
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_BCMODE)*/
         STORE_HW(psa->extint,code);
 
 #if defined(_FEATURE_SIE)
@@ -271,7 +271,7 @@ U16     cpuad;                          /* Originating CPU address   */
     if ((sysblk.todclk + regs->todoffset) > regs->clkc
         && sysblk.insttrace == 0
         && sysblk.inststep == 0
-        && (regs->CR(0) & CR0_XM_CLKC))
+        && OPEN_IC_CLKC(regs) )
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
@@ -282,7 +282,7 @@ U16     cpuad;                          /* Originating CPU address   */
 
     /* External interrupt if CPU timer is negative */
     if ((S64)regs->ptimer < 0
-        && (regs->CR(0) & CR0_XM_PTIMER))
+        && OPEN_IC_CLKC(regs) )
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
@@ -294,7 +294,7 @@ U16     cpuad;                          /* Originating CPU address   */
 
     /* External interrupt if interval timer interrupt is pending */
 #if defined(FEATURE_INTERVAL_TIMER)
-    if (OPEN_IC_ITIMER_PENDING(regs)
+    if (OPEN_IC_ITIMER(regs)
 #if defined(_FEATURE_SIE)
         && !(regs->sie_state
           && (regs->siebk->m & SIE_M_ITMOF))
@@ -305,7 +305,7 @@ U16     cpuad;                          /* Originating CPU address   */
         {
             logmsg ("External interrupt: Interval timer\n");
         }
-        OFF_IC_ITIMER_PENDING(regs);
+        OFF_IC_ITIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
     }
 #endif /*FEATURE_INTERVAL_TIMER*/

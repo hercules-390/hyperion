@@ -170,9 +170,9 @@ int     icode;                          /* Interception code         */
 
     /* Reset the CPU timer pending flag according to its value */
     if( (S64)GUESTREGS->ptimer < 0 )
-        ON_IC_PTPEND(GUESTREGS);
+        ON_IC_PTIMER(GUESTREGS);
     else
-        OFF_IC_PTPEND(GUESTREGS);
+        OFF_IC_PTIMER(GUESTREGS);
 
     /* Load the TOD clock offset for this guest */
     FETCH_DW(GUESTREGS->sie_epoch, STATEBK->epoch);
@@ -185,9 +185,9 @@ int     icode;                          /* Interception code         */
     /* Reset the clock comparator pending flag according to
        the setting of the TOD clock */
     if( (sysblk.todclk + GUESTREGS->todoffset) > GUESTREGS->clkc )
-        ON_IC_CKPEND(GUESTREGS);
+        ON_IC_CLKC(GUESTREGS);
     else
-        OFF_IC_CKPEND(GUESTREGS);
+        OFF_IC_CLKC(GUESTREGS);
 
     /* Load TOD Programmable Field */
     FETCH_HW(GUESTREGS->todpr, STATEBK->todpf);
@@ -267,7 +267,7 @@ int     icode;                          /* Interception code         */
         /* Set interrupt flag and interval timer interrupt pending
            if the interval timer went from positive to negative */
         if (itimer < 0 && olditimer >= 0)
-            ON_IC_ITIMER_PENDING(GUESTREGS);
+            ON_IC_ITIMER(GUESTREGS);
     }
 #endif /*!defined(FEATURE_ESAME)*/
 

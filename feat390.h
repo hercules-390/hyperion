@@ -3,7 +3,7 @@
 
 /* This file MUST NOT contain #undef statements */
 #define FEATURE_ESAME_INSTALLED
-#define FEATURE_ESAME_N3_ESA390
+#undef  FEATURE_ESAME_N3_ESA390
 
 #define FEATURE_4K_STORAGE_KEYS
 #define FEATURE_ACCESS_REGISTERS

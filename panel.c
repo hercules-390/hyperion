@@ -887,6 +887,9 @@ int     fd;                             /* File descriptor           */
 int     len;                            /* Number of bytes read      */
 BYTE   *loadparm;                       /* -> IPL parameter (ASCIIZ) */
 BYTE   *archmode;                       /* -> architecture mode      */
+#if defined(OPTION_INSTRUCTION_COUNTING)
+BYTE   *iclear;                         /* -> icount option          */
+#endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
 BYTE    buf[100];                       /* Message buffer            */
 int     n;                              /* Number of bytes in buffer */
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
@@ -936,7 +939,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
 #endif /*PANEL_REFRESH_RATE*/
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
- #define ICOUNT_CMD "icount = display instruction counters\n"
+ #define ICOUNT_CMD "icount [clear] = display instruction counters\n"
 #else
  #define ICOUNT_CMD
 #endif
@@ -1055,105 +1058,111 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     /* icount command - display instruction counts */
     if (memcmp(cmd,"icount",6)==0)
     {
-        int i1, i2;
-        for(i1 = 0; i1 < 256; i1++)
+        iclear = strtok (cmd + 6, " \t");
+        if(iclear != NULL && !strcasecmp(icount, "clear"))
+            memset(IMAP_FIRST,0,IMAP_SIZE);
+        else
         {
-            switch(i1) {
-                case 0x01:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imap01[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imap01[i2]);
-                    break;
-                case 0xA4:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imapa4[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapa4[i2]);
-                    break;
-                case 0xA5:
-                    for(i2 = 0; i2 < 16; i2++)
-                        if(sysblk.imapa5[i2])
-                            logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapa5[i2]);
-                    break;
-                case 0xA6:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imapa6[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapa6[i2]);
-                    break;
-                case 0xA7:
-                    for(i2 = 0; i2 < 16; i2++)
-                        if(sysblk.imapa7[i2])
-                            logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapa7[i2]);
-                    break;
-                case 0xB2:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imapb2[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapb2[i2]);
-                    break;
-                case 0xB3:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imapb3[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapb3[i2]);
-                    break;
-                case 0xB9:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imapb9[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapb9[i2]);
-                    break;
-                case 0xC0:
-                    for(i2 = 0; i2 < 16; i2++)
-                        if(sysblk.imapc0[i2])
-                            logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapc0[i2]);
-                    break;
-                case 0xE3:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imape3[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imape3[i2]);
-                    break;
-                case 0xE4:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imape4[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imape4[i2]);
-                    break;
-                case 0xE5:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imape5[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imape5[i2]);
-                    break;
-                case 0xEB:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imapeb[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapeb[i2]);
-                    break;
-                case 0xEC:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imapec[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imapec[i2]);
-                    break;
-                case 0xED:
-                    for(i2 = 0; i2 < 256; i2++)
-                        if(sysblk.imaped[i2])
-                            logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
-                                i1, i2, sysblk.imaped[i2]);
-                    break;
-                default:
-                    if(sysblk.imapxx[i1])
-                        logmsg("INST=%2.2X  \tCOUNT=%llu\n",
-                            i1, sysblk.imapxx[i1]);
-                    break;
+            int i1, i2;
+            for(i1 = 0; i1 < 256; i1++)
+            {
+                switch(i1) {
+                    case 0x01:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imap01[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imap01[i2]);
+                        break;
+                    case 0xA4:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imapa4[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapa4[i2]);
+                        break;
+                    case 0xA5:
+                        for(i2 = 0; i2 < 16; i2++)
+                            if(sysblk.imapa5[i2])
+                                logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapa5[i2]);
+                        break;
+                    case 0xA6:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imapa6[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapa6[i2]);
+                        break;
+                    case 0xA7:
+                        for(i2 = 0; i2 < 16; i2++)
+                            if(sysblk.imapa7[i2])
+                                logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapa7[i2]);
+                        break;
+                    case 0xB2:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imapb2[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapb2[i2]);
+                        break;
+                    case 0xB3:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imapb3[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapb3[i2]);
+                        break;
+                    case 0xB9:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imapb9[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapb9[i2]);
+                        break;
+                    case 0xC0:
+                        for(i2 = 0; i2 < 16; i2++)
+                            if(sysblk.imapc0[i2])
+                                logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapc0[i2]);
+                        break;
+                    case 0xE3:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imape3[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imape3[i2]);
+                        break;
+                    case 0xE4:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imape4[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imape4[i2]);
+                        break;
+                    case 0xE5:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imape5[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imape5[i2]);
+                        break;
+                    case 0xEB:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imapeb[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapeb[i2]);
+                        break;
+                    case 0xEC:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imapec[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imapec[i2]);
+                        break;
+                    case 0xED:
+                        for(i2 = 0; i2 < 256; i2++)
+                            if(sysblk.imaped[i2])
+                                logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                                    i1, i2, sysblk.imaped[i2]);
+                        break;
+                    default:
+                        if(sysblk.imapxx[i1])
+                            logmsg("INST=%2.2X  \tCOUNT=%llu\n",
+                                i1, sysblk.imapxx[i1]);
+                        break;
+                }
             }
         }
         return NULL;
@@ -1201,13 +1210,13 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
 		         sysblk.ints_state, regs[i].ints_mask);
             logmsg("CPU%4.4X: Clock comparator %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_CKPEND(sysblk.regs+i) ? "" : "not ");
+		         IS_IC_CLKC(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: CPU timer %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_PTPEND(sysblk.regs+i) ? "" : "not ");
+		         IS_IC_PTIMER(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: Interval timer %spending\n",
                 sysblk.regs[i].cpuad,
-		         IS_IC_ITIMER_PENDING(sysblk.regs+i) ? "" : "not ");
+		         IS_IC_ITIMER(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: External call %spending\n",
                 sysblk.regs[i].cpuad,
 		         IS_IC_EXTCALL(sysblk.regs+i) ? "" : "not ");

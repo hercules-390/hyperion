@@ -484,10 +484,10 @@ static char *pgmintname[] = {
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-#if !defined(FEATURE_ESAME)
+#if defined(FEATURE_BCMODE)
     /* For ECMODE, store extended interrupt information in PSA */
     if ( realregs->psw.ecmode )
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_BCMODE)*/
     {
         /* Store the program interrupt code at PSA+X'8C' */
         psa->pgmint[0] = 0;
@@ -643,10 +643,11 @@ int     rc;                             /* Return code               */
 PSA    *psa;                            /* -> Prefixed storage area  */
 U32     ioparm;                         /* I/O interruption parameter*/
 U32     ioid;                           /* I/O interruption address  */
+U32     iointid;                        /* I/O interruption ident    */
 DWORD   csw;                            /* CSW for S/370 channels    */
 
     /* Test and clear pending I/O interrupt */
-    rc = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, csw);
+    rc = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, &iointid, csw);
 
     /* Exit if no interrupt was presented */
     if (rc == 0) return;
@@ -684,9 +685,19 @@ DWORD   csw;                            /* CSW for S/370 channels    */
     /* Store the I/O interruption parameter at PSA+X'BC' */
     STORE_FW(psa->ioparm, ioparm);
 
+#if defined(FEATURE_ESAME)
+    /* Store the I/O interruption identification word at PSA+X'C0' */
+    STORE_FW(psa->iointid, iointid);
+#endif /*defined(FEATURE_ESAME)*/
+
     /* Trace the I/O interrupt */
     if (sysblk.insttrace || sysblk.inststep)
+#if !defined(FEATURE_ESAME)
         logmsg ("I/O interrupt code=%8.8X parm=%8.8X\n", ioid, ioparm);
+#else /*defined(FEATURE_ESAME)*/
+        logmsg ("I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n",
+          ioid, ioparm, iointid);
+#endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
@@ -880,6 +891,19 @@ U32     prevmask;
 
     while (1)
     {
+#if 0
+        U32 oldmask = regs->ints_mask;
+	    SET_IC_EXTERNAL_MASK(regs);
+	    SET_IC_IO_MASK(regs);
+	    SET_IC_MCK_MASK(regs);
+            if( oldmask != regs->ints_mask)
+            {
+                logmsg("Interrupt mask error oldmask=%8.8x, newmask=%8.8x\n",
+                  oldmask,regs->ints_mask);
+                ARCH_DEP(display_inst) (regs, regs->instvalid ? regs->inst : NULL);
+            }
+#endif
+        
         /* Test for interrupts if it appears that one may be pending */
         if( IC_INTERRUPT_CPU(regs) )
         {
@@ -1062,11 +1086,6 @@ U32     prevmask;
 
         /* Count instruction usage */
         regs->instcount++;
-
-        /* Turn on trace for specific instructions */
-//      if (regs->inst[0] == 0xB2 && regs->inst[1] == 0x50) tracethis = 1; /*CSP*/
-//      if (regs->inst[0] == 0xB2 && regs->inst[1] == 0x14) sysblk.inststep = 1; /*SIE*/
-//      if (regs->inst[0] == 0xC0) tracethis = 1;
 
         if( IS_IC_TRACE )
             {

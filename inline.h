@@ -599,7 +599,9 @@ U32	ssaste[16];			/* Subspace ASTE	     */
        storage (note: the ASTE cannot cross a page boundary) */
     ssaste[0] = ARCH_DEP(fetch_fullword_absolute) (ssasteo, regs);
     ssaste[2] = ARCH_DEP(fetch_fullword_absolute) (ssasteo+8, regs);
+#if defined(FEATURE_ESAME)
     ssaste[3] = ARCH_DEP(fetch_fullword_absolute) (ssasteo+12, regs);
+#endif /*defined(FEATURE_ESAME)*/
     ssaste[5] = ARCH_DEP(fetch_fullword_absolute) (ssasteo+20, regs);
 
     /* ASTE validity exception if subspace ASTE invalid bit is one */

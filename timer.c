@@ -74,11 +74,11 @@ REGS	       *regs;			/* -> CPU register context   */
 	/* Signal clock comparator interrupt if needed */
         if((sysblk.todclk + regs->todoffset) > regs->clkc)
         {
-            ON_IC_CKPEND(regs);
+            ON_IC_CLKC(regs);
             intflag = 1;
         }
         else
-            OFF_IC_CKPEND(regs);
+            OFF_IC_CLKC(regs);
 
 #if defined(_FEATURE_SIE)
         /* If running under SIE also check the SIE copy */
@@ -86,9 +86,9 @@ REGS	       *regs;			/* -> CPU register context   */
         {
 	    /* Signal clock comparator interrupt if needed */
             if((sysblk.todclk + regs->guestregs->todoffset) > regs->guestregs->clkc)
-                ON_IC_CKPEND(regs->guestregs);
+                ON_IC_CLKC(regs->guestregs);
             else
-                OFF_IC_CKPEND(regs->guestregs);
+                OFF_IC_CLKC(regs->guestregs);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -193,9 +193,9 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
             /* Set interrupt flag if the CPU timer is negative */
             if ((S64)regs->ptimer < 0)
-                ON_IC_PTPEND(regs);
+                ON_IC_PTIMER(regs);
             else
-                OFF_IC_PTPEND(regs);
+                OFF_IC_PTIMER(regs);
 
 #if defined(_FEATURE_SIE)
             /* When running under SIE also update the SIE copy */
@@ -207,9 +207,9 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
                 /* Set interrupt flag if the CPU timer is negative */
                 if ((S64)regs->guestregs->ptimer < 0)
-                    ON_IC_PTPEND(regs->guestregs);
+                    ON_IC_PTIMER(regs->guestregs);
                 else
-                    OFF_IC_PTPEND(regs->guestregs);
+                    OFF_IC_PTIMER(regs->guestregs);
 
                 if((regs->guestregs->siebk->m & SIE_M_370)
                   && !(regs->guestregs->siebk->m & SIE_M_ITMOF))
@@ -237,7 +237,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                     /* Set interrupt flag and interval timer interrupt pending
                        if the interval timer went from positive to negative */
                     if (itimer < 0 && olditimer >= 0)
-                        ON_IC_ITIMER_PENDING(regs->guestregs);
+                        ON_IC_ITIMER(regs->guestregs);
 
                     /* The residu field in the state descriptor needs
                        to be ajusted with the amount of CPU time spend, minus
@@ -275,7 +275,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                if the interval timer went from positive to negative */
             if (itimer < 0 && olditimer >= 0)
             {
-                ON_IC_ITIMER_PENDING(regs);
+                ON_IC_ITIMER(regs);
                 intflag = 1;
             }
         } /*if(regs->arch_mode == ARCH_370)*/

@@ -739,7 +739,7 @@ DEVBLK *dev;                            /* -> Device control block   */
     } /* end for(dev) */
 
     /* No crws pending anymore */
-    sysblk.crwpending = 0;
+    OFF_IC_CHANRPT;
 
     /* Signal console thread to redrive select */
     signal_thread (sysblk.cnsltid, SIGHUP);
@@ -1910,7 +1910,7 @@ int     i;                              /* Interruption subclass     */
     i = (dev->pmcw.flag4 & PMCW4_ISC) >> 3;
 
     /* Test interruption subclass mask bit in CR6 */
-    if ((regs->CR(6) & (0x80000000 >> i)) == 0)
+    if ((regs->CR_L(6) & (0x80000000 >> i)) == 0)
         return 0;
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
@@ -1931,7 +1931,7 @@ int     i;                              /* Interruption subclass     */
 /* Note: The caller MUST hold the interrupt lock (sysblk.intlock).   */
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
-                                    U32 *ioparm, BYTE *csw)
+                                  U32 *ioparm, U32 *iointid, BYTE *csw)
 {
 DEVBLK *dev;                            /* -> Device control block   */
 
@@ -1975,6 +1975,9 @@ DEVBLK *dev;                            /* -> Device control block   */
     /* Extract the I/O address and interrupt parameter */
     *ioid = 0x00010000 | dev->subchan;
     FETCH_FW(*ioparm,dev->pmcw.intparm);
+#if defined(FEATURE_ESAME)
+    *iointid = (dev->pmcw.flag4 & PMCW4_ISC) << 24;
+#endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Reset the interrupt pending flag for the device */
