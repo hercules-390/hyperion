@@ -2696,9 +2696,11 @@ int ProcessPanelCommand (const char* pszCmdLine)
        Note: original command line now sprinkled with nulls */
     parse_args((BYTE*)pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
 
+#if defined(OPTION_DYNAMIC_LOAD)
     if( system_command )
         if( (rc = system_command(cmd_argc, (char**)cmd_argv,pszSaveCmdLine) ) )
             return rc;
+#endif
 
     /* Route standard formatted commands from our routing table... */
     if (cmd_argc)
