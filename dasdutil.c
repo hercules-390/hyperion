@@ -1147,6 +1147,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 BYTE           *pos;                    /* -> Next position in buffer*/
+int             len = 0;                /* Length used in track      */
 int             keylen = 4;             /* Length of keys            */
 int             ipl1len = 24;           /* Length of IPL1 data       */
 int             ipl2len = 144;          /* Length of IPL2 data       */
@@ -1390,9 +1391,11 @@ int             x=O_EXCL;               /* Open option               */
                 memcpy (pos, eighthexFF, 8);
                 pos += 8;
 
+                len = comp == 0xff ? (int)trksize : (int)(pos - buf);
+
                 /* Write the track to the file */
-                rc = write (fd, buf, trksize);
-                if (rc != (int)trksize)
+                rc = write (fd, buf, len);
+                if (rc != len)
                 {
                     fprintf (stderr,
                             "HHCDU035E %s cylinder %u head %u "
@@ -1433,7 +1436,7 @@ int             x=O_EXCL;               /* Open option               */
             return -1;
         }
 
-        l2[0].len = l2[0].size = trksize;
+        l2[0].len = l2[0].size = len;
 
         /* Rewrite the secondary lookup table */
         rc = lseek (fd, CCKD_L1TAB_POS + cdevhdr.numl1tab * CCKD_L1ENT_SIZE, SEEK_SET);

@@ -1,3 +1,4 @@
+01 Feb 2003 Fix dasdinit wrong trk 0 size - Greg Smith + sidmuc
 31 Jan 2003 Command reject if path assignment is not supported (non-3480
             ASSIGN/UNASSIGN CCW opcodes 0xB7 & 0xC7 only in tapedev.c)
             imhotepio <freige@fibertel.com.ar> [freige@fibertel.com.ar]
