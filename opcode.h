@@ -1487,6 +1487,8 @@ do { \
  *   exposures when running with root access.
  */
 
+#if defined(HAVE_SETRESUID)
+
 #define _SETMODE_INIT \
 do { \
     getresuid(&sysblk.ruid,&sysblk.euid,&sysblk.suid); \
@@ -1510,6 +1512,43 @@ do { \
     setresuid(sysblk.ruid,sysblk.ruid,sysblk.ruid); \
     setresgid(sysblk.rgid,sysblk.rgid,sysblk.rgid); \
 } while(0)
+
+#elif defined(HAVE_SETREUID)
+
+#define _SETMODE_INIT \
+do { \
+    sysblk.ruid = getuid(); \
+    sysblk.euid = geteuid(); \
+    sysblk.rgid = getgid(); \
+    sysblk.egid = getegid(); \
+    setreuid(sysblk.euid, sysblk.ruid); \
+    setregid(sysblk.egid, sysblk.rgid); \
+} while (0)
+
+#define _SETMODE_ROOT \
+do { \
+    setreuid(sysblk.ruid, sysblk.euid); \
+    setregid(sysblk.rgid, sysblk.egid); \
+} while (0)
+
+#define _SETMODE_USER \
+do { \
+    setregid(sysblk.egid, sysblk.rgid); \
+    setreuid(sysblk.euid, sysblk.ruid); \
+} while (0)
+
+#define _SETMODE_TERM \
+do { \
+    setuid(sysblk.ruid); \
+    setgid(sysblk.rgid); \
+} while (0)
+
+#else
+
+#error Do not know how to swap effective UID/GID without setreuid or setresuid
+
+#endif
+
 
 #define SETMODE(_func) _SETMODE_ ## _func
 
