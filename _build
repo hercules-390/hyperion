@@ -7,6 +7,8 @@
 # !                                                                               !
 # ! Use:  build [i586 | i686] [fthreads | nofthreads]                             !
 # !                                                                               !
+# ! Defaults:  build `uname -m` fthreads                                          !
+# !                                                                               !
 # +-------------------------------------------------------------------------------+
 if ! test -f configure
 then
@@ -33,10 +35,10 @@ then
       HOST_OPT=--host=${HOST_ARCH}-pc-cygwin
       BUILD_OPT=--build=${HOST_ARCH}-pc-cygwin
       FTHREAD=yes
-   elif [ $1 = nofthread ]
+   elif [ $1 = nofthread -o $1 = pthread ]
    then
       FTHREAD=no
-   elif [ $1 = fthread ]
+   elif [ $1 = fthread -o $1 = nopthread ]
    then
       FTHREAD=yes
    else
@@ -48,11 +50,15 @@ then
    HOST_ARCH=$1
    HOST_OPT=--host=${HOST_ARCH}-pc-cygwin
    BUILD_OPT=--build=${HOST_ARCH}-pc-cygwin
-   if [ $2 = fthread ]
+   if [ $2 = fthread -o $2 = nopthread ]
    then
       FTHREAD=yes
-   else
+   elif [ $2 = pthread -o $2 = nofthread ]
+   then
       FTHREAD=no
+   else
+      echo "Invalid second parameter: $2"
+      exit
    fi
 fi
 if [ $FTHREAD = yes ]
@@ -63,10 +69,10 @@ else
 fi
 mkdir -p ${HOST_ARCH}_${FDIR}
 cd ${HOST_ARCH}_${FDIR}
-../configure --prefix=${THIS_DIR}/${HOST_ARCH}_${FDIR} ${HOST_OPT} ${BUILD_OPT} --enable-fthreads=${FTHREAD}
+../configure --prefix=`pwd` ${HOST_OPT} ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${HOST_ARCH}"
 if [ $? = 0 ]
 then
-   make && make install
+   make && make install-strip
 else
    echo "./configure script failed with RC=" $?
 fi
