@@ -4979,8 +4979,8 @@ int     pgm_check;
     /* Get register content */
     get_ef(&from_fl, regs->fpr + FPR2I(r2));
 
-    /* Rounding */
-    to_fl.short_fract = (from_fl.ms_fract + 0x0000000080000000ULL) >> 32;
+    /* Rounding (herc ms fract is 12 digits) */
+    to_fl.short_fract = (from_fl.ms_fract + 0x0000000000800000ULL) >> 24;
     to_fl.sign = from_fl.sign;
     to_fl.expo = from_fl.expo;
 
@@ -5401,7 +5401,7 @@ S32     fix;
             fl.ms_fract = fix;
         }
         fl.ls_fract = 0;
-        fl.expo = 78;
+        fl.expo = 76;  /* 64 + 12 (Herc ms fract is 12 digits) */
 
         /* Normalize result */
         normal_ef(&fl);
