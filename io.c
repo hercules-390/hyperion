@@ -698,7 +698,7 @@ DEVBLK *dev;                            /* -> device block           */
         return;
     }
 
-    /* Perform halt subchannel and set condition code */
+    /* Perform cancel subchannel and set condition code */
     regs->psw.cc = cancel_subchan (regs, dev);
 
 }
