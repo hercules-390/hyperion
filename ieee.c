@@ -655,7 +655,7 @@ static void get_ebfp(struct ebfp *op, U32 *fpr)
     op->sign = (fpr[0] & 0x80000000) != 0;
     op->exp = (fpr[0] & 0x7FFF0000) >> 16;
     op->fracth = (((U64)fpr[0] & 0x0000FFFF) << 32) | fpr[1];
-    op->fractl = ((U64)fpr[4] << 32) | fpr[5];
+    op->fractl = ((U64)fpr[FPREX] << 32) | fpr[FPREX+1];
 }
 
 static void get_lbfp(struct lbfp *op, U32 *fpr)
@@ -709,8 +709,8 @@ static void put_ebfp(struct ebfp *op, U32 *fpr)
 {
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<16) | (op->fracth>>32);
     fpr[1] = op->fracth & 0xFFFFFFFF;
-    fpr[4] = op->fractl>>32;
-    fpr[5] = op->fractl & 0xFFFFFFFF;
+    fpr[FPREX] = op->fractl>>32;
+    fpr[FPREX+1] = op->fractl & 0xFFFFFFFF;
 }
 
 static void put_lbfp(struct lbfp *op, U32 *fpr)
