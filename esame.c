@@ -260,18 +260,17 @@ U16     flags;                          /* Flags in parmfield        */
 U16     psw_offset;                     /* Offset to new PSW         */
 U16     ar_offset;                      /* Offset to new AR          */
 U16     gr_offset;                      /* Offset to new GR          */
-FWORD   ar;                             /* Copy of new AR            */
+U32     ar;                             /* Copy of new AR            */
 #if defined(FEATURE_ESAME)
 U16     grd_offset;                     /* Offset of disjoint GR_H   */
 BYTE    psw[16];                        /* Copy of new PSW           */
-DWORD   gr;                             /* Copy of new GR            */
+U64     gr;                             /* Copy of new GR            */
 #else /*!defined(FEATURE_ESAME)*/
 BYTE    psw[8];                         /* Copy of new PSW           */
-FWORD   gr;                             /* Copy of new GR            */
+U32     gr;                             /* Copy of new GR            */
 #endif /*!defined(FEATURE_ESAME)*/
 PSW     save_psw;                       /* Saved copy of current PSW */
 RADR    abs;                            /* Absolute address of parm  */
-int     i;
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -283,8 +282,13 @@ int     i;
             ACCTYPE_INSTFETCH, regs->psw.pkey);
     FETCH_HW(flags, sysblk.mainstor + abs);
 
+#if defined(FEATURE_ESAME)
     /* Bits 0-12 must be zero */
     if(flags & 0xFFF8)
+#else /*!defined(FEATURE_ESAME)*/
+    /* All flag bits must be zero in ESA/390 mode */
+    if(flags)
+#endif /*!defined(FEATURE_ESAME)*/
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the offset to the new psw */
@@ -312,66 +316,38 @@ int     i;
     }
 #endif /*defined(FEATURE_ESAME)*/
 
-    /* Fetch the PSW from the instruction address space */
-#if defined(FEATURE_ESAME)
-    for(i = 0; i < (flags & 0x0004) ? 16 : 8; i++)
-#else /*!defined(FEATURE_ESAME)*/
-    for(i = 0; i < 8; i++)
-#endif /*defined(FEATURE_ESAME)*/
-    {
-        abs = LOGICAL_TO_ABS (pl_addr - 2 + psw_offset + i, 0, regs,
-            ACCTYPE_INSTFETCH, regs->psw.pkey);
-        psw[i] = sysblk.mainstor[abs];
-    }
 
-    /* Fetch the new ar from the instruction address space */
-    for(i = 0; i < 4; i++)
-    {
-        abs = LOGICAL_TO_ABS (pl_addr - 2 + ar_offset + i, 0, regs,
-            ACCTYPE_INSTFETCH, regs->psw.pkey);
-        ar[i] = sysblk.mainstor[abs];
-    }
-
-    /* Fetch the new gr from the instruction address space */
+    /* Fetch the PSW from the operand address + psw offset */
 #if defined(FEATURE_ESAME)
-    if(flags & 0x0002)
-    {
-        if(flags & 0x0001)
-        {
-            /* Fetch GR disjoint */
-            for(i = 0; i < 4; i++)
-            {
-                abs = LOGICAL_TO_ABS (pl_addr - 2 + gr_offset + i, 0, regs,
-                    ACCTYPE_INSTFETCH, regs->psw.pkey);
-                gr[i+4] = sysblk.mainstor[abs];
-            }
-            for(i = 0; i < 4; i++)
-            {
-                abs = LOGICAL_TO_ABS (pl_addr - 2 + grd_offset + i, 0, regs,
-                    ACCTYPE_INSTFETCH, regs->psw.pkey);
-                gr[i] = sysblk.mainstor[abs];
-            }
-        }
-        else
-        {
-            for(i = 0; i < 8; i++)
-            {
-                abs = LOGICAL_TO_ABS (pl_addr - 2 + gr_offset + i, 0, regs,
-                    ACCTYPE_INSTFETCH, regs->psw.pkey);
-                gr[i] = sysblk.mainstor[abs];
-            }
-        }
-    }
+    if(flags & 0x0004)
+        ARCH_DEP(vfetchc) (psw, 15, effective_addr2 + psw_offset, b2, regs);
     else
 #endif /*defined(FEATURE_ESAME)*/
-    {
-        for(i = 0; i < 4; i++)
-        {
-            abs = LOGICAL_TO_ABS (pl_addr - 2 + gr_offset + i, 0, regs,
-                ACCTYPE_INSTFETCH, regs->psw.pkey);
-            gr[i] = sysblk.mainstor[abs];
-        }
-    }
+        ARCH_DEP(vfetchc) (psw, 7, effective_addr2 + psw_offset, b2, regs);
+
+
+    /* Fetch new AR (B2) from operand address + AR offset */
+    ar = ARCH_DEP(vfetch4) (effective_addr2 + ar_offset, b2, regs);
+
+
+    /* Fetch the new gr from operand address + GPR offset */
+#if defined(FEATURE_ESAME)
+    if(flags & 0x0002)
+        gr = ARCH_DEP(vfetch8) (effective_addr2 + gr_offset, b2, regs);
+    else
+#endif /*defined(FEATURE_ESAME)*/
+        gr = ARCH_DEP(vfetch4) (effective_addr2 + gr_offset, b2, regs);
+
+
+    /* Save current PSW */
+    save_psw = regs->psw;
+
+
+    /* Use bits 16-23, 32-63 of psw in operand, other bits from old psw */
+    psw[0] = save_psw.sysmask;
+    psw[1] = save_psw.pkey | 0x08 | save_psw.mach | save_psw.wait | save_psw.prob;
+    psw[3] = 0;
+
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     if(regs->sie_state
@@ -380,25 +356,16 @@ int     i;
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
-    /* Save current PSW */
-    save_psw = regs->psw;
 
-    /* Specification exception when setting home 
+    /* Privileged Operation exception when setting home 
        space mode in problem state */
     if(!REAL_MODE(&regs->psw)
       && regs->psw.prob
       && ((psw[2] & 0xC0) == 0xC0) )
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    /* Make bits 12 and 31 valid, as these are ignored by RP */
-#if defined(FEATURE_ESAME)
-    psw[1] &= ~(0x08);
-#else /*!defined(FEATURE_ESAME)*/
-    psw[1] |= 0x08;
-    psw[3] &= ~(0x01);
-#endif /*!defined(FEATURE_ESAME)*/
-
-    if( ARCH_DEP(load_psw) (regs, psw) )
+ 
+    if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
     {
         /* restore the psw */
         regs->psw = save_psw;
@@ -406,11 +373,14 @@ int     i;
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     }
 
-    regs->psw.prob = save_psw.prob;
-    regs->psw.wait = save_psw.wait;
-    regs->psw.mach = save_psw.mach;
-    regs->psw.sysmask = save_psw.sysmask;
-    regs->psw.pkey = save_psw.pkey;
+    /* Check for odd IA in psw */
+    if(regs->psw.IA & 0x01)
+    {
+        /* restore the psw */
+        regs->psw = save_psw;
+        /* And generate a program interrupt */
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
 
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
@@ -418,20 +388,44 @@ int     i;
     SET_IC_PSW_WAIT(regs);
 
     /* Update access register b2 */
-    FETCH_FW(regs->AR(b2), ar);
+    regs->AR(b2) = ar;
 
     /* Update general register b2 */
 #if defined(FEATURE_ESAME)
     if(flags & 0x0002)
-        FETCH_DW(regs->GR_G(b2), gr);
+        regs->GR_G(b2) = gr;
     else
 #endif /*defined(FEATURE_ESAME)*/
-        FETCH_FW(regs->GR_L(b2), gr);
+        regs->GR_L(b2) = gr;
 
     /* Space switch event when switching into or
-       out of home space mode */
-    if(HOME_SPACE_MODE(&(regs->psw)) ^ HOME_SPACE_MODE(&save_psw))
+       out of home space mode AND space-switch-event on in CR1 or CR13 */
+    if((HOME_SPACE_MODE(&(regs->psw)) ^ HOME_SPACE_MODE(&save_psw))
+     && ((regs->CR(1) & SSEVENT_BIT) || (regs->CR(13) & SSEVENT_BIT)))
+    {
+        if (HOME_SPACE_MODE(&(regs->psw)))
+        {
+            /* When switching into home-space mode, set the
+               translation exception address equal to the primary
+               ASN, with the high-order bit set equal to the value
+               of the primary space-switch-event control bit */
+            regs->TEA = regs->CR_LHL(4);
+            if (regs->CR(1) & SSEVENT_BIT)
+                regs->TEA |= TEA_SSEVENT;
+        }
+        else
+        {
+            /* When switching out of home-space mode, set the
+               translation exception address equal to zero, with
+               the high-order bit set equal to the value of the
+               home space-switch-event control bit */
+            regs->TEA = 0;
+            if (regs->CR(13) & SSEVENT_BIT)
+                regs->TEA |= TEA_SSEVENT;
+        }
+
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
+    }
 
 } /* end DEF_INST(resume_program) */
 #endif /*defined(FEATURE_RESUME_PROGRAM)*/

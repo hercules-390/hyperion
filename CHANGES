@@ -1,5 +1,7 @@
+08 May 2001 Fixes for RP instruction - Paul Leisy
+08 May 2001 Fix gr15 in TRAP instruction - Paul Leisy
 07 May 2001 CMPSC fix - Bernard van der Helm
-07 May 2001 Correct false data exception in CVDG - Jan Jaegerr
+07 May 2001 Correct false data exception in CVDG - Jan Jaeger
 06 May 2001 Fix to Lock Page - Jan Jaeger
 06 May 2001 Complete Storage Key Assist - Jan Jaeger
 06 May 2001 Complete Move Page Facility 2 - Jan Jaeger

@@ -260,6 +260,9 @@ int  i;
                 tsaa1 = tsaa2;
         }
  
+    /* Load the Trap Control Block Address in gr15 */
+    regs->GR_L(15) = duct11;
+    
     /* Set the Trap program address as a 31 bit instruction address */
 #if defined(FEATURE_ESAME)
     regs->psw.amode64 = 0; 
