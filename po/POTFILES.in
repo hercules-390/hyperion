@@ -14,6 +14,7 @@ cpu.c
 ctcadpt.c
 ctc_ctci.c
 ctc_lcs.c
+dasdcat.c
 dasdcopy.c
 dasdutil.c
 dat.h

@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-18 15:30-0600\n"
+"POT-Creation-Date: 2002-12-18 17:21-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1651,6 +1651,29 @@ msgstr ""
 #: dasdcopy.c:365
 #, c-format
 msgid "HHCDC009E %s: %s write error %s %d stat=%2.2X\n"
+msgstr ""
+
+#: dasdcat.c:344
+#, c-format
+msgid "HHCDT001E failed to open image %s\n"
+msgstr ""
+
+#: dasdcat.c:34
+#, c-format
+msgid "HHCDT002E Can't make 80 column card images from block length %d\n"
+msgstr ""
+
+#: dasdcat.c:117
+msgid "HHCDT003E Directory block byte count is invalid\n"
+msgstr ""
+
+#: dasdcat.c:219
+msgid "HHCDT004E non-PDS-members not yet supported\n"
+msgstr ""
+
+#: dasdcat.c:249
+#, c-format
+msgid "HHCDT005E unknown dataset name option: '%c'\n"
 msgstr ""
 
 #: httpserv.c:561
