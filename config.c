@@ -424,12 +424,6 @@ BYTE    c;                              /* Work area for sscanf      */
             }
             else if (strcasecmp (keyword, "cfccimage") == 0)
             {
-#if defined(_FEATURE_HARDWARE_LOADER)
-                /* Set the CFCC image file name in the system block */
-                strncpy(sysblk.hwl_fname,operand,sizeof(sysblk.hwl_fname));
-#else /*!defined(_FEATURE_HARDWARE_LOADER)*/
-                logmsg( "HHC019I Hardware Loader Support not configured\n");
-#endif /*!defined(_FEATURE_HARDWARE_LOADER)*/
             }
             else if (strcasecmp (keyword, "archmode") == 0)
             {

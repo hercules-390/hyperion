@@ -314,10 +314,6 @@ typedef struct _SCCB_EVD_HDR {
 #define SCCB_EVD_TYPE_OPCMD     0x01    /* Operator command          */
 #define SCCB_EVD_TYPE_MSG       0x02    /* Message from Control Pgm  */
 #define SCCB_EVD_TYPE_PRIOR     0x09    /* Priority message/command  */
-// #if defined(FEATURE_HARDWARE_LOADER)
-#define SCCB_EVD_TYPE_HARDWARE  0x0C    /* Hardware load request     */
-#define SCCB_EVENT_HWL_MASK             0x00100000
-// #endif /*defined(FEATURE_HARDWARE_LOADER)*/
         BYTE    flag;
 #define SCCB_EVD_FLAG_PROC      0x80    /* Event successful          */
         HWORD   resv;                   /* Reserved for future use   */
@@ -414,28 +410,6 @@ typedef struct _SCCB_NLS_BK {
         HWORD   dcpgid;                 /* CPGID for DBCS (def 037)  */
         HWORD   dcpsgid;                /* CPSGID for DBCS (def 637) */
     } SCCB_NLS_BK;
-
-// #if defined(FEATURE_HARDWARE_LOADER)
-/* Hardware load request */
-typedef struct _SCCB_HWL_BK {
-        BYTE    type;
-#define SCCB_HWL_TYPE_LOAD      0x00    /* Load request              */
-#define SCCB_HWL_TYPE_RESET     0x01    /* Reset request             */
-#define SCCB_HWL_TYPE_INFO      0x02    /* Load info request         */
-        BYTE    arch;
-#define SCCB_HWL_ARCH_390       0x00    /* ESA/390 Format request    */
-#define SCCB_HWL_ARCH_900       0x01    /* z/Architecture format     */
-        FWORD   resv2[2];
-//      DWORD   hwl;                    /* ZZ Maybe for ESAME??? *JJ */
-        FWORD   hwl;                    /* Pointer to HWL structure  */
-        FWORD   resv3[2];
-//      DWORD   sto;                    /* ZZ Maybe for ESAME??? *JJ */
-        FWORD   sto;                    /* Segment Table Origin      */
-        FWORD   resv4[3];
-        FWORD   size;                   /* Length in pages           */
-    } SCCB_HWL_BK;
-
-// #endif /*defined(FEATURE_HARDWARE_LOADER)*/
 
 // #endif /*FEATURE_SYSTEM_CONSOLE*/
 
@@ -546,223 +520,6 @@ void scp_command (BYTE *command, int priomsg)
 
 #endif /*!defined(_SERVICE_C)*/
 
-#if defined(FEATURE_HARDWARE_LOADER)
-
-
-void ARCH_DEP(hwl_thread)(SCCB_HWL_BK *hwl_bk)
-{
-int servpendok = 0;
-
-    switch(hwl_bk->type) {
-
-    /* INFO request returns the required region size in Mb */
-    case SCCB_HWL_TYPE_INFO:
-        {
-        struct stat st;
-
-            if(! stat(sysblk.hwl_fname, &st) )
-            {
-            U32     size;
-
-                size = st.st_size;
-                size += 0x000FFFFF;
-                size &= 0xFFF00000;
-                size >>= 12;
-
-                STORE_FW(hwl_bk->size,size);
-            }
-            else
-                logmsg("HHChwlI Hardware loader %s: %s\n",
-                                            sysblk.hwl_fname,strerror(errno));
-        }
-        break;
-
-    /* Load request will load the image into fixed virtual storage
-       the Segment Table Origin is listed in the hwl_bk */
-    case SCCB_HWL_TYPE_LOAD:
-        {
-        CREG sto;
-        int fd;
-
-            fd = open (sysblk.hwl_fname, O_RDONLY|O_BINARY);
-            if (fd < 0)
-            {
-                logmsg ("HHChwlI %s open error: %s\n",
-                    sysblk.hwl_fname, strerror(errno));
-                break;
-            }
-//          else
-//              logmsg("HHChwlI Loading %s\n",sysblk.hwl_fname);
-
-            /* Segment Table Origin */
-            FETCH_FW(sto,hwl_bk->sto);
-#if defined(FEATURE_ESAME)
-            sto &= ASCE_TO;
-#else /*!defined(FEATURE_ESAME)*/
-            sto &= STD_STO;
-#endif /*!defined(FEATURE_ESAME)*/
-
-            for( ; ; sto += sizeof(sto))
-            {
-#if defined(FEATURE_ESAME)
-            DWORD *ste;
-#else /*!defined(FEATURE_ESAME)*/
-            FWORD *ste;
-#endif /*!defined(FEATURE_ESAME)*/
-            CREG pto, pti;
-
-                /* Fetch segment table entry and calc Page Table Origin */
-                if( sto >= sysblk.mainsize)
-                    goto eof;
-#if defined(FEATURE_ESAME)
-                ste = (DWORD*)(sysblk.mainstor + sto);
-#else /*!defined(FEATURE_ESAME)*/
-                ste = (FWORD*)(sysblk.mainstor + sto);
-#endif /*!defined(FEATURE_ESAME)*/
-                FETCH_W(pto, ste);
-                if( pto & SEGTAB_INVALID )
-                    goto eof;
-#if defined(FEATURE_ESAME)
-		pto &= ZSEGTAB_PTO;
-#else /*!defined(FEATURE_ESAME)*/
-                pto &= SEGTAB_PTO;
-#endif /*!defined(FEATURE_ESAME)*/
-
-                for(pti = 0; pti < 256 ; pti++, pto += sizeof(pto))
-                {
-#if defined(FEATURE_ESAME)
-                DWORD *pte;
-#else /*!defined(FEATURE_ESAME)*/
-                FWORD *pte;
-#endif /*!defined(FEATURE_ESAME)*/
-                CREG pgo;
-                BYTE *page;
-
-                    /* Fetch Page Table Entry to get page origin */
-                    if( pto >= sysblk.mainsize)
-                        goto eof;
-#if defined(FEATURE_ESAME)
-                    pte = (DWORD*)(sysblk.mainstor + pto);
-#else /*!defined(FEATURE_ESAME)*/
-                    pte = (FWORD*)(sysblk.mainstor + pto);
-#endif /*!defined(FEATURE_ESAME)*/
-                    FETCH_W(pgo, pte);
-                    if( pgo & PAGETAB_INVALID )
-                        goto eof;
-#if defined(FEATURE_ESAME)
-                    pgo &= ZPGETAB_PFRA;
-#else /*!defined(FEATURE_ESAME)*/
-                    pgo &= PAGETAB_PFRA;
-#endif /*!defined(FEATURE_ESAME)*/
-
-                    /* Read page into main storage */
-                    if( pgo >= sysblk.mainsize)
-                        goto eof;
-                    page = sysblk.mainstor + pgo;
-                    if( !read(fd, page, STORAGE_KEY_PAGESIZE) ) 
-                        goto eof;
-                    STORAGE_KEY(pgo) |= (STORKEY_REF|STORKEY_CHANGE);
-                }
-            }
-           eof:
-           close(fd);
-
-        }
-        break;
-
-    }
-
-    do {
-        sleep(1);
-        obtain_lock(&sysblk.intlock);
-        if(!IS_IC_SERVSIG)
-        {
-            sysblk.servparm = 1;
-            ON_IC_SERVSIG;
-            servpendok = 1;
-            sysblk.hwl_tid = 0;
-            signal_condition (&sysblk.intcond);
-        }
-        release_lock(&sysblk.intlock);
-    } while(!servpendok);
-}
-
-
-int s390_hwl_request (U32 sclp_command, SCCB_HWL_BK *hwl_bk);
-int ARCH_DEP(hwl_request)(U32 sclp_command, SCCB_HWL_BK *hwl_bk)
-{
-static SCCB_HWL_BK static_hwl_bk;
-static int hwl_pending;
-
-    if(sclp_command == SCLP_READ_EVENT_DATA)
-    {
-    int pending_req = hwl_pending;
-
-        /* Return no data if the hardware loader thread is still active */
-        if(sysblk.hwl_tid)
-            return 0;
-
-        /* Update the hwl_bk copy in the SCCB */
-        if(hwl_pending)
-            *hwl_bk = static_hwl_bk;
-
-        /* Reset the pending flag */
-        hwl_pending = 0;
-
-        /* Return true if a request was pending */
-        return pending_req;
-
-    }
-
-    switch(hwl_bk->type) {
-
-    case SCCB_HWL_TYPE_INFO:
-    case SCCB_HWL_TYPE_LOAD:
-
-        /* Return error if the hwl thread is already active */
-        if( sysblk.hwl_tid )
-            return -1;
-
-        /* Take a copy of the hwl_bk in the SCCB */
-        static_hwl_bk = *hwl_bk;
-
-        /* Reset pending flag */
-        hwl_pending = 0;
-
-        /* Create the hwl thread */
-        if( create_thread(&sysblk.hwl_tid, &sysblk.detattr,
-            ARCH_DEP(hwl_thread), &static_hwl_bk) )
-            return -1;
-
-        /* Set pending flag */
-        hwl_pending = 1;
-
-        return 0;
-
-
-    case SCCB_HWL_TYPE_RESET:
-
-        /* Kill the hwl thread if it is active */
-        if( sysblk.hwl_tid )
-        {
-            signal_thread(sysblk.hwl_tid, SIGKILL);
-            sysblk.hwl_tid = 0;
-            hwl_pending = 0;
-        }
-        return 0;
-
-
-    default:
-        logmsg("HHChwlI Unknown hardware loader request type %2.2X\n",
-                                                        hwl_bk->type);
-        return -1;
-
-    }
-
-}
-
-#endif /*defined(FEATURE_HARDWARE_LOADER)*/
-
 // #endif /*FEATURE_SYSTEM_CONSOLE*/
 
 #if defined(FEATURE_SERVICE_PROCESSOR)
@@ -853,13 +610,6 @@ int             masklen;                /* Length of event mask      */
 U32             old_cp_recv_mask;       /* Masks before write event  */
 U32             old_cp_send_mask;       /*              mask command */
 #endif /*FEATURE_SYSTEM_CONSOLE*/
-
-
-#if defined(FEATURE_HARDWARE_LOADER)
-
-SCCB_HWL_BK    *hwl_bk;                 /* -> Hardware loader block  */
-
-#endif /*defined(FEATURE_HARDWARE_LOADER)*/
 
 
 #ifdef FEATURE_EXPANDED_STORAGE
@@ -1409,37 +1159,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             break;
 
 
-#if defined(FEATURE_HARDWARE_LOADER)
-        case SCCB_EVD_TYPE_HARDWARE:
-
-            /* Indicate Event Processed */
-            evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
-
-            hwl_bk = (SCCB_HWL_BK*)(evd_hdr+1);
-
-#if defined(FEATURE_ESAME)
-	    if( (hwl_bk->arch == SCCB_HWL_ARCH_390 ?
-                s390_hwl_request (sclp_command, hwl_bk) :
-                ARCH_DEP(hwl_request)(sclp_command, hwl_bk) ))
-#else /*!defined(FEATURE_ESAME)*/
-            if( ARCH_DEP(hwl_request)(sclp_command, hwl_bk) )
-#endif /*!defined(FEATURE_ESAME)*/
-            {
-                /* Set response code X'0040' in SCCB header */
-                sccb->reas = SCCB_REAS_NONE;
-                sccb->resp = SCCB_RESP_BACKOUT;
-            }
-            else
-            {
-                /* Set response code X'0020' in SCCB header */
-                sccb->reas = SCCB_REAS_NONE;
-                sccb->resp = SCCB_RESP_COMPLETE;
-            }
-
-            break;
-#endif /*defined(FEATURE_HARDWARE_LOADER)*/
-
-
         default:
 
             /* Set response code X'73F0' in SCCB header */
@@ -1476,38 +1195,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Point to SCCB data area following SCCB header */
         evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
-
-#if defined(FEATURE_HARDWARE_LOADER)
-        hwl_bk = (SCCB_HWL_BK*)(evd_hdr+1);
-
-        if( ARCH_DEP(hwl_request)(sclp_command, hwl_bk) )
-        {
-            /* Zero all fields */
-            memset (evd_hdr, 0, sizeof(SCCB_EVD_HDR));
-
-            /* Set length in event header */
-            evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_HWL_BK);
-            STORE_HW(evd_hdr->totlen, evd_len);
-
-            /* Set type in event header */
-            evd_hdr->type = SCCB_EVD_TYPE_HARDWARE;
-
-            /* Update SCCB length field if variable request */
-            if (sccb->type & SCCB_TYPE_VARIABLE)
-            {
-                /* Set new SCCB length */
-                sccblen = evd_len + sizeof(SCCB_HEADER);
-                STORE_HW(sccb->length, sccblen);
-                sccb->type &= ~SCCB_TYPE_VARIABLE;
-            }
-        
-            /* Set response code X'0020' in SCCB header */
-            sccb->reas = SCCB_REAS_NONE;
-            sccb->resp = SCCB_RESP_COMPLETE;
-            break;
-        }
-#endif /*defined(FEATURE_HARDWARE_LOADER)*/
-
 
         /* Set response code X'60F0' if no outstanding events */
         event_msglen = strlen(sysblk.scpcmdstr);
@@ -1625,14 +1312,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Initialize sclp send and receive masks */
         sysblk.sclp_recv_mask = SCCB_EVENT_SUPP_RECV_MASK;
         sysblk.sclp_send_mask = SCCB_EVENT_SUPP_SEND_MASK;
-
-#if defined(FEATURE_HARDWARE_LOADER)
-        if(strlen(sysblk.hwl_fname))
-        {
-            sysblk.sclp_recv_mask |= SCCB_EVENT_HWL_MASK;
-            sysblk.sclp_send_mask |= SCCB_EVENT_HWL_MASK;
-        }
-#endif /*defined(FEATURE_HARDWARE_LOADER)*/
 
         /* Clear any pending command */
         sysblk.scpcmdstr[0] = '\0';

@@ -208,7 +208,6 @@ HRC_OBJS = impl.o \
 	   xstore.o \
 	   cmpsc.o \
 	   sie.o \
-	   ses.o \
 	   timer.o \
 	   esame.o \
 	   cckddasd.o \

@@ -50,7 +50,7 @@ HRC_OBJS = impl.o config.o panel.o version.o \
 	   ipl.o assist.o dat.o \
 	   stack.o cpu.o vstore.o \
 	   general1.o general2.o plo.o \
-           control.o io.o crypto.o \
+           control.o io.o \
 	   decimal.o service.o opcode.o \
 	   diagnose.o diagmssf.o vm.o \
 	   channel.o ckddasd.o fbadasd.o \
@@ -58,7 +58,7 @@ HRC_OBJS = impl.o config.o panel.o version.o \
 	   printer.o console.o external.o \
 	   float.o ctcadpt.o trace.o \
 	   machchk.o vector.o xstore.o \
-	   cmpsc.o sie.o ses.o timer.o \
+	   cmpsc.o sie.o timer.o \
 	   esame.o cckddasd.o cckdcdsx.o \
 	   parser.o hetlib.o ieee.o
 

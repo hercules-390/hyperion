@@ -43,10 +43,6 @@
  #define _FEATURE_VECTOR_FACILITY
 #endif
 
-#if defined(FEATURE_HARDWARE_LOADER)
- #define _FEATURE_HARDWARE_LOADER
-#endif
-
 #if defined(FEATURE_CHANNEL_SUBSYSTEM)
  #define _FEATURE_CHANNEL_SUBSYSTEM
 #endif

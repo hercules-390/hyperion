@@ -465,11 +465,6 @@ typedef struct _SYSBLK {
 	int	msgpiper;		/* Message pipe read handle  */
 	U64	pgminttr;		/* Program int trace mask    */
 	int	pcpu;			/* Tgt CPU panel cmd & displ */
-// #if defined(FEATURE_HARDWARE_LOADER)
-	TID	hwl_tid;		/* Thread id of the hardware
-					   loader		 *JJ */
-	BYTE	hwl_fname[256]; 	/* CFCC core image	 *JJ */
-// #endif /*defined(FEATURE_HARDWARE_LOADER)*/
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
 #define IMAP_FIRST sysblk.imap01

@@ -986,21 +986,6 @@ do { \
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
 
-#if defined(FEATURE_CRYPTO)
-
-#if !defined(_CRDEFS)
-
-#define _CRDEFS
-
-#define COP_CHECK(_regs) \
-	if(!((_regs)->CR(0) & CR0_CRYPTO) ) \
-	    ARCH_DEP(program_interrupt)((_regs), PGM_CRYPTO_OPERATION_EXCEPTION)
-
-#endif /*!defined(_CRDEFS)*/
-
-#endif /*defined(FEATURE_CRYPTO)*/
-
-
 #if defined(FEATURE_VECTOR_FACILITY)
 
 #if !defined(_VFDEFS)

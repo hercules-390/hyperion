@@ -435,42 +435,6 @@
 #endif /*!defined(_FEATURE_SIE)*/
 
 
-#if !defined(FEATURE_STRUCTURED_EXTERNAL_STORAGE)
- UNDEF_INST(ses_opcode_0105)
- UNDEF_INST(ses_opcode_0106)
- UNDEF_INST(ses_opcode_0108)
- UNDEF_INST(ses_opcode_0109)
- UNDEF_INST(ses_opcode_B260)
- UNDEF_INST(ses_opcode_B261)
- UNDEF_INST(ses_opcode_B264)
- UNDEF_INST(ses_opcode_B265)
- UNDEF_INST(ses_opcode_B266)
- UNDEF_INST(ses_opcode_B267)
- UNDEF_INST(ses_opcode_B268)
- UNDEF_INST(ses_opcode_B272)
- UNDEF_INST(ses_opcode_B27A)
- UNDEF_INST(ses_opcode_B27B)
- UNDEF_INST(ses_opcode_B27C)
- UNDEF_INST(ses_opcode_B27E)
- UNDEF_INST(ses_opcode_B27F)
- UNDEF_INST(ses_opcode_B2A4)
- UNDEF_INST(ses_opcode_B2A8)
- UNDEF_INST(ses_opcode_B2F1)
- UNDEF_INST(ses_opcode_B2F6)
-#endif /*!defined(FEATURE_STRUCTURED_EXTERNAL_STORAGE)*/
-
-
-#if !defined(FEATURE_CRYPTO)
- UNDEF_INST(crypto_opcode_B269)
- UNDEF_INST(crypto_opcode_B26A)
- UNDEF_INST(crypto_opcode_B26B)
- UNDEF_INST(crypto_opcode_B26C)
- UNDEF_INST(crypto_opcode_B26D)
- UNDEF_INST(crypto_opcode_B26E)
- UNDEF_INST(crypto_opcode_B26F)
-#endif /*!defined(FEATURE_CRYPTO)*/
-
-
 #if !defined(FEATURE_EXTENDED_TRANSLATION)
  UNDEF_INST(translate_extended)
  UNDEF_INST(convert_unicode_to_utf8)
@@ -959,11 +923,11 @@ zz_func opcode_01xx[256][GEN_MAXARCH] = {
  /*0102*/ GENx___x390x900 (update_tree),                        /* UPT       */
  /*0103*/ GENx___x___x___ ,
  /*0104*/ GENx___x___x___ ,
- /*0105*/ GENx___x390x900 (ses_opcode_0105),                    /* CMSG      */
- /*0106*/ GENx___x390x900 (ses_opcode_0106),                    /* TMSG      */
+ /*0105*/ GENx___x___x___ ,                                     /* CMSG      */
+ /*0106*/ GENx___x___x___ ,                                     /* TMSG      */
  /*0107*/ GENx___x390x900 (set_clock_programmable_field),       /* SCKPF     */
- /*0108*/ GENx___x390x900 (ses_opcode_0108),                    /* TMPS      */
- /*0109*/ GENx___x390x900 (ses_opcode_0109),                    /* CMPS      */
+ /*0108*/ GENx___x___x___ ,                                     /* TMPS      */
+ /*0109*/ GENx___x___x___ ,                                     /* CMPS      */
  /*010A*/ GENx___x___x___ ,
  /*010B*/ GENx___x390x900 (test_addressing_mode),               /*!TAM       */
  /*010C*/ GENx___x390x900 (set_addressing_mode_24),             /*!SAM24     */
@@ -1612,25 +1576,25 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B25D*/ GENx___x390x900 (compare_logical_string),             /* CLST      */
  /*B25E*/ GENx___x390x900 (search_string),                      /* SRST      */
  /*B25F*/ GENx___x390x900 (channel_subsystem_call),             /*%CHSC      */
- /*B260*/ GENx___x390x900 (ses_opcode_B260),                    /* Sysplex   */
- /*B261*/ GENx___x390x900 (ses_opcode_B261),                    /* Sysplex   */
+ /*B260*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B261*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B262*/ GENx___x390x900 (lock_page),                          /* LKPG      */
  /*B263*/ GENx___x390x900 (compression_call),                   /* CMPSC     */
- /*B264*/ GENx___x390x900 (ses_opcode_B264),                    /* Sysplex   */
- /*B265*/ GENx___x390x900 (ses_opcode_B265),                    /* Sysplex   */
- /*B266*/ GENx___x390x900 (ses_opcode_B266),                    /* Sysplex   */
- /*B267*/ GENx___x390x900 (ses_opcode_B267),                    /* Sysplex   */
- /*B268*/ GENx___x390x900 (ses_opcode_B268),                    /* Sysplex   */
- /*B269*/ GENx___x390x900 (crypto_opcode_B269),                 /* Crypto    */
- /*B26A*/ GENx___x390x900 (crypto_opcode_B26A),                 /* Crypto    */
- /*B26B*/ GENx___x390x900 (crypto_opcode_B26B),                 /* Crypto    */
- /*B26C*/ GENx___x390x900 (crypto_opcode_B26C),                 /* Crypto    */
- /*B26D*/ GENx___x390x900 (crypto_opcode_B26D),                 /* Crypto    */
- /*B26E*/ GENx___x390x900 (crypto_opcode_B26E),                 /* Crypto    */
- /*B26F*/ GENx___x390x900 (crypto_opcode_B26F),                 /* Crypto    */
+ /*B264*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B265*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B266*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B267*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B268*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B269*/ GENx___x___x___ ,                                     /* Crypto    */
+ /*B26A*/ GENx___x___x___ ,                                     /* Crypto    */
+ /*B26B*/ GENx___x___x___ ,                                     /* Crypto    */
+ /*B26C*/ GENx___x___x___ ,                                     /* Crypto    */
+ /*B26D*/ GENx___x___x___ ,                                     /* Crypto    */
+ /*B26E*/ GENx___x___x___ ,                                     /* Crypto    */
+ /*B26F*/ GENx___x___x___ ,                                     /* Crypto    */
  /*B270*/ GENx___x___x___ ,                                     /*%SPCS      */
  /*B271*/ GENx___x___x___ ,                                     /*%STPCS     */
- /*B272*/ GENx___x390x900 (ses_opcode_B272),                    /* Sysplex   */
+ /*B272*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B273*/ GENx___x___x___ ,                                     /*%SIGA      */
  /*B274*/ GENx___x___x___ ,
  /*B275*/ GENx___x___x___ ,
@@ -1638,12 +1602,12 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B277*/ GENx___x390x900 (resume_program),                     /* RP        */
  /*B278*/ GENx___x390x900 (store_clock_extended),               /* STCKE     */
  /*B279*/ GENx___x390x900 (set_address_space_control_x),        /* SACF      */
- /*B27A*/ GENx___x390x900 (ses_opcode_B27A),                    /* Sysplex   */
- /*B27B*/ GENx___x390x900 (ses_opcode_B27B),                    /* TFF/Sysplx*/
- /*B27C*/ GENx___x390x900 (ses_opcode_B27C),                    /* Sysplex   */
+ /*B27A*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B27B*/ GENx___x___x___ ,                                     /* TFF/Sysplx*/
+ /*B27C*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27D*/ GENx___x390x900 (store_system_information),           /* STSI      */
- /*B27E*/ GENx___x390x900 (ses_opcode_B27E),                    /* Sysplex   */
- /*B27F*/ GENx___x390x900 (ses_opcode_B27F),                    /* Sysplex   */
+ /*B27E*/ GENx___x___x___ ,                                     /* Sysplex   */
+ /*B27F*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B280*/ GENx___x___x___ ,                                     /*#LN L      */
  /*B281*/ GENx___x___x___ ,                                     /*#LN S      */
  /*B282*/ GENx___x___x___ ,                                     /*#EXP L     */
@@ -1680,11 +1644,11 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2A1*/ GENx___x___x___ ,
  /*B2A2*/ GENx___x___x___ ,
  /*B2A3*/ GENx___x___x___ ,
- /*B2A4*/ GENx___x390x900 (ses_opcode_B2A4),                    /* Sysplex   */
+ /*B2A4*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2A5*/ GENx___x390x900 (translate_extended),                 /* TRE       */
  /*B2A6*/ GENx___x390x900 (convert_unicode_to_utf8),            /* CUUTF     */
  /*B2A7*/ GENx___x390x900 (convert_utf8_to_unicode),            /* CUTFU     */
- /*B2A8*/ GENx___x390x900 (ses_opcode_B2A8),                    /* Sysplex   */
+ /*B2A8*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2A9*/ GENx___x___x___ ,
  /*B2AA*/ GENx___x___x___ ,
  /*B2AB*/ GENx___x___x___ ,
@@ -1757,12 +1721,12 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B2EE*/ GENx___x___x___ ,
  /*B2EF*/ GENx___x___x___ ,
  /*B2F0*/ GENx370x390x900 (inter_user_communication_vehicle),   /* IUCV      */
- /*B2F1*/ GENx___x390x900 (ses_opcode_B2F1),                    /* Sysplex   */
+ /*B2F1*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2F2*/ GENx___x___x___ ,
  /*B2F3*/ GENx___x___x___ ,
  /*B2F4*/ GENx___x___x___ ,
  /*B2F5*/ GENx___x___x___ ,
- /*B2F6*/ GENx___x390x900 (ses_opcode_B2F6),                    /* Sysplex   */
+ /*B2F6*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B2F7*/ GENx___x___x___ ,
  /*B2F8*/ GENx___x___x___ ,
  /*B2F9*/ GENx___x___x___ ,
