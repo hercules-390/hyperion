@@ -643,12 +643,8 @@ int             rc;                     /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    /* Immediately return if fake writing */
-    if (dev->ckdfakewr)
-        return len;
-
     /* Error if opened read-only */
-    if (dev->ckdrdonly)
+    if (dev->ckdrdonly && cckd->sfn == 0)
     {
         ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -2739,7 +2735,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc, hrc=0;              /* Return codes              */
 
     cckd = dev->cckd_ext;
-    if (dev->ckdrdonly) return 0;
+    if (dev->ckdrdonly && cckd->sfn == 0) return 0;
 
     /* Write the compressed device header */
     rc = cckd_write_chdr (dev);
@@ -3191,9 +3187,8 @@ char            sfn[256];               /* Shadow file name          */
         if (rc < 0) return -1;
 
         /* try to open the shadow file read-write then read-only */
-        if (!dev->ckdrdonly)
-            cckd->fd[cckd->sfn] = open (sfn, O_RDWR|O_BINARY);
-        if (dev->ckdrdonly || cckd->fd[cckd->sfn] < 0)
+        cckd->fd[cckd->sfn] = open (sfn, O_RDWR|O_BINARY);
+        if (cckd->fd[cckd->sfn] < 0)
         {
             cckd->fd[cckd->sfn] = open (sfn, O_RDONLY|O_BINARY);
             if (cckd->fd[cckd->sfn] < 0) break;
@@ -3213,7 +3208,7 @@ char            sfn[256];               /* Shadow file name          */
     cckd->sfn--;
 
     /* If the last file was opened read-only then create a new one   */
-    if (cckd->open[cckd->sfn] == CCKD_OPEN_RO && !dev->ckdrdonly)
+    if (cckd->open[cckd->sfn] == CCKD_OPEN_RO)
     {
         rc = cckd_sf_new (dev);
         if (rc < 0) return -1;
@@ -3454,7 +3449,7 @@ BYTE            buf[65536];             /* Buffer                    */
         return;
     }
 
-    if (!cckd->sfn)
+    if (cckd->sfn == 0)
     {
         logmsg (_("HHCCD171E %4.4X file[%d] cannot remove base file\n"),
                 dev->devnum,cckd->sfn);
@@ -3487,8 +3482,10 @@ BYTE            buf[65536];             /* Buffer                    */
 
     /* Attempt to re-open the `to' file read-write */
     close (cckd->fd[newsfx]);
+    cckd->fd[newsfx] = -1;
     cckd_sf_name (dev, newsfx, (char *)&sfn);
-    cckd->fd[newsfx] = open (sfn, O_RDWR|O_BINARY);
+    if (newsfx > 0 || !dev->ckdrdonly)
+        cckd->fd[newsfx] = open (sfn, O_RDWR|O_BINARY);
     if (cckd->fd[newsfx] < 0)
     {
         cckd->fd[newsfx] = open (sfn, O_RDONLY|O_BINARY);

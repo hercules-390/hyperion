@@ -338,12 +338,6 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             }
         }
 
-        /* If `readonly' and shadow files (`sf=') were specified,
-           then turn off the readonly bit.  Might as well make
-           sure the `fakewrite' bit is off, too.               */
-        if (dev->dasdsfn[0] != '\0' && !dev->batch)
-            dev->ckdrdonly = dev->ckdfakewr = 0;
-
         /* If shadow file, only one base file is allowed */
         if (fileseq > 1 && dev->dasdsfn[0] != '\0')
         {
@@ -4137,7 +4131,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Check for write operation on a read only disk */
-        if ( (dev->ckdrdonly && !dev->ckdfakewr)
+        if ( (dev->ckdrdonly && !dev->ckdfakewr && !dev->dasdsfn[0])
              &&  ((dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRITE
                || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_FORMAT
                || (dev->ckdloper & CKDOPER_CODE) == CKDOPER_WRTTRK)
