@@ -2334,16 +2334,16 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-        devtype = strtok(NULL," \t");
+        devascii = strtok(NULL," \t");
+        if (devascii == NULL
+            || sscanf(devascii, "%hx%c", &devtype, &c) != 1)
+        {
+            logmsg (_("Device type %s is invalid\n"), devascii);
+            return NULL;
+        }
 
         /* Set up remaining arguments for initialization handler */
-#if 0 // ndef EXTERNALGUI
-        for (devargc = 0; devargc < MAX_ARGS &&
-            (devargv[devargc] = strtok(NULL," \t")) != NULL;
-            devargc++);
-#else /*EXTERNALGUI*/
-        parse_args (devtype+strlen(devtype)+1, MAX_ARGS, devargv, &devargc);
-#endif /*!EXTERNALGUI*/
+        parse_args (devascii+strlen(devascii)+1, MAX_ARGS, devargv, &devargc);
 
         /* Attach the device */
         attach_device(devnum, devtype, devargc, devargv);
