@@ -1449,9 +1449,6 @@ console_initialise()
 static void
 console_remove(DEVBLK *dev)
 {
-    /* Obtain the device lock */
-    obtain_lock (&dev->lock);
-
     if(dev->fd > 2)
         close (dev->fd);
     dev->fd = -1;
@@ -1459,9 +1456,6 @@ console_remove(DEVBLK *dev)
     /* Reset device dependent flags */
     dev->connected = 0;
     dev->console = 0;
-
-    /* Release the device lock */
-    release_lock (&dev->lock);
 
     if(!sysblk.cnslcnt--)
         logmsg(_("console_remove() error\n"));
@@ -1550,9 +1544,6 @@ loc3270_close_device ( DEVBLK *dev )
 static int
 constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
-    /* Obtain the device lock */
-    obtain_lock (&dev->lock);
-
     /* Indicate that this is a console device */
     dev->console = 1;
 
@@ -1585,9 +1576,6 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->devid[5] = dev->devtype & 0xFF;
     dev->devid[6] = 0x00;
     dev->numdevid = 7;
-
-    /* Release the device lock */
-    release_lock (&dev->lock);
 
     return console_initialise();
 

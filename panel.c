@@ -134,6 +134,8 @@ U32 NPaaddr;
 //
 FILE   *compat_msgpipew;                /* Message pipe write handle */
 int     compat_msgpiper;                /* Message pipe read handle  */
+int     compat_shutdown;                /* Shutdown flag             */
+
 
 static void panel_compat_thread(void *arg)
 {
@@ -143,7 +145,7 @@ int  msgcnt;
 
     UNREFERENCED(arg);
 
-    while(1) 
+    while(!compat_shutdown) 
         if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
             fwrite(msgbuf,msgcnt,1,compat_msgpipew);
 
@@ -152,9 +154,9 @@ int  msgcnt;
 
 static void panel_compat_init()
 {
-TID compat_tid;
 ATTR compat_attr;
 int rc, pfd[2];
+TID compat_tid;
 
     rc = pipe (pfd);
     if (rc < 0)
@@ -164,6 +166,7 @@ int rc, pfd[2];
         exit(1);
     }
 
+    compat_shutdown = 0;
     compat_msgpiper = pfd[0];
     compat_msgpipew = fdopen (pfd[1], "w");
     if (compat_msgpipew == NULL)
@@ -715,6 +718,8 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 static void panel_cleanup(void *unused __attribute__ ((unused)) )
 {
 struct termios kbattr;                  /* Terminal I/O structure    */
+
+    compat_shutdown = 1;
 
     /* Restore the terminal mode */
     tcgetattr (STDIN_FILENO, &kbattr);
