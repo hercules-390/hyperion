@@ -7,6 +7,7 @@
  * THDER,THDR by Roger Bowler, 19 July 2003.
  * LXDBR,LXDB,LXEBR,LXEB by Roger Bowler, 13 Nov 2004.
  * LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR by Roger Bowler, 15 Nov 2004.
+ * MXDBR,MXDB,MDEBR,MDEB by Roger Bowler, 16 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -3816,6 +3817,65 @@ DEF_INST(multiply_bfp_long)
 }
 
 /*
+ * B30C MDEBR - MULTIPLY (short to long BFP)                   [RRE]
+ */
+DEF_INST(multiply_bfp_short_to_long_reg)
+{
+    int r1, r2;
+    struct sbfp op1, op2;
+    struct lbfp lb1, lb2;
+    int pgm_check;
+
+    RRE(inst, regs, r1, r2);
+    //logmsg("MDEBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+
+    lengthen_short_to_long(&op1, &lb1, regs);
+    lengthen_short_to_long(&op2, &lb2, regs);
+
+    pgm_check = multiply_lbfp(&lb1, &lb2, regs);
+
+    put_lbfp(&lb1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_bfp_short_to_long_reg) */
+
+/*
+ * ED0C MDEB  - MULTIPLY (short to long BFP)                   [RXE]
+ */
+DEF_INST(multiply_bfp_short_to_long)
+{
+    int r1, b2;
+    VADR effective_addr2;
+    struct sbfp op1, op2;
+    struct lbfp lb1, lb2;
+    int pgm_check;
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    //logmsg("MDEB r1=%d b2=%d\n", r1, b2);
+    BFPINST_CHECK(regs);
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    vfetch_sbfp(&op2, effective_addr2, b2, regs);
+
+    lengthen_short_to_long(&op1, &lb1, regs);
+    lengthen_short_to_long(&op2, &lb2, regs);
+
+    pgm_check = multiply_lbfp(&lb1, &lb2, regs);
+
+    put_lbfp(&lb1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_bfp_short_to_long) */
+
+/*
  * MULTIPLY (short)
  */
 static int multiply_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
@@ -3942,8 +4002,6 @@ DEF_INST(multiply_bfp_short)
 }
 
 /*
- * B30C MDEBR - MULTIPLY (short to long BFP)                   [RRE]
- * ED0C MDEB  - MULTIPLY (short to long BFP)                   [RXE]
  * B31E MADBR - MULTIPLY AND ADD (long BFP)                    [RRF]
  * ED1E MADB  - MULTIPLY AND ADD (long BFP)                    [RXF]
  * B30E MAEBR - MULTIPLY AND ADD (short BFP)                   [RRF]

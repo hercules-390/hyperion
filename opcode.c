@@ -440,6 +440,8 @@
  UNDEF_INST(multiply_bfp_long_to_ext)
  UNDEF_INST(multiply_bfp_long)
  UNDEF_INST(multiply_bfp_long_reg)
+ UNDEF_INST(multiply_bfp_short_to_long_reg)
+ UNDEF_INST(multiply_bfp_short_to_long)
  UNDEF_INST(multiply_bfp_short)
  UNDEF_INST(multiply_bfp_short_reg)
  UNDEF_INST(round_bfp_long_to_short_reg)
@@ -2435,7 +2437,7 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B309*/ GENx___x390x900 (compare_bfp_short_reg,RRE,"CEBR"),
  /*B30A*/ GENx___x390x900 (add_bfp_short_reg,RRE,"AEBR"),
  /*B30B*/ GENx___x390x900 (subtract_bfp_short_reg,RRE,"SEBR"),
- /*B30C*/ GENx___x390x900 (dummy_instruction,RRE,"MDEBR"),
+ /*B30C*/ GENx___x390x900 (multiply_bfp_short_to_long_reg,RRE,"MDEBR"),
  /*B30D*/ GENx___x390x900 (divide_bfp_short_reg,RRE,"DEBR"),
  /*B30E*/ GENx___x390x900 (dummy_instruction,RRF_R,"MAEBR"),
  /*B30F*/ GENx___x390x900 (dummy_instruction,RRF_R,"MSEBR"),
@@ -4286,7 +4288,7 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED09*/ GENx___x390x900 (compare_bfp_short,RXE,"CEB"),
  /*ED0A*/ GENx___x390x900 (add_bfp_short,RXE,"AEB"),
  /*ED0B*/ GENx___x390x900 (subtract_bfp_short,RXE,"SEB"),
- /*ED0C*/ GENx___x390x900 (dummy_instruction,RXE,"MDEB"),
+ /*ED0C*/ GENx___x390x900 (multiply_bfp_short_to_long,RXE,"MDEB"),
  /*ED0D*/ GENx___x390x900 (divide_bfp_short,RXE,"DEB"),
  /*ED0E*/ GENx___x390x900 (dummy_instruction,RXF,"MAEB"),
  /*ED0F*/ GENx___x390x900 (dummy_instruction,RXF,"MSEB"),
