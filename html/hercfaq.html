@@ -1,307 +1,623 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD>
-<TITLE>Hercules Version 2: Frequently-Asked Questions</TITLE>
+<TITLE>
+    Hercules Version 2: Frequently-Asked Questions
+</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY TEXT="#000000" LINK="#0000A0" VLINK="#008040" BGCOLOR="#ffffcc"
-         ALINK="#000000">
-<H1>Hercules Version 2: Frequently-Asked Questions</H1>
-<P><HR></P>
-<H4>What is Hercules?</H4>
-<P>Hercules is a software implementation of the System/370, ESA/390
-and z/Architecture
-hardware which runs under Linux on several hardware platforms including the
-Intel Pentium PC, and under Windows NT and Windows 2000.</P>
-<H4>So what exactly does that mean?</H4>
-<P>It means that your PC can emulate an IBM mainframe processor. The
-mainframe can range from a 360 to a z900 - running in "System/370" mode,
-"ESA/390" mode, or "z/Architecture" mode.
-Hercules executes S/370, ESA/390, and z/Architecture instructions and channel
-programs.  It emulates mainframe I/O devices by using PC devices.  For
-example, 3390 DASD devices are emulated by large files on your hard disk,
-and local 3270 screens are emulated by tn3270 sessions. (Note: Not all 370
-and 390 features have been implemented in Hercules. See the list of
-particulars later in this document.  Also, certain non-standard models,
-360/20s, and the 360/67 virtual memory mode are not emulated.)</P>
-<P>Hercules implements only the raw S/370, ESA/390, and z/Architecture
-instruction set; it
-does not provide any operating system facilities. This means that you need
-to provide an operating system or standalone program which Hercules can load
-from an emulated disk or tape device. You will have to write the operating
-system or standalone program yourself, unless you can manage to obtain a
-license from IBM to run one of their operating systems on your PC, or use
-IBM programs and operating systems which have been placed in the public
-domain. </P>
-<H4>Is it functional enough to run production work?</H4>
-<P>No. At the moment it's a system programmer's toy, though it's rapidly
-becoming good enough to run a wide range of software without problems. </P>
-<H4>Can it run z/OS, z/VM, VSE/ESA, Linux/390 and Linux for zSeries?</H4>
-<P>Yes. Hercules is a software implementation of the architecture, and so
-it is capable of running Linux, z/OS, VSE/ESA, and z/VM, as well as older
-versions of these OS's.</P>
-<H4>What IBM operating systems can I run legally?</H4>
-<P>Linux/390 and Linux for zSeries can be run as there are no
-licensing issues involved.</P>
-<P>OS/360 (PCP, MFT and MVT), as far as I know. OS/360 is in the public
-domain. The status of OSes for which IBM did not charge a license fee is
-somewhat murky; these include MVS 3.8, VM/370 release 6, and DOS/VS release
-34. OS/390 and other ESA versions of OS's are definitely licensed to a
-particular machine. Therefore, in practice you cannot run any ESA operating
-system on your PC unless you can obtain a license from IBM allowing you to
-do so. It is believed that there are, however, three legal ways you could
-run z/OS, z/VM, or VSE/ESA under Hercules: </P>
-<OL>
-<LI>Running under Linux on the Pentium processor of a P/390 which is
-licensed to run the OS. </LI>
-<LI>Running under Linux/390 on a mainframe which is licensed to run the OS.
-</LI>
-<LI>Running under the terms of a disaster recovery provision of the OS
-license (but I really don't recommend depending on Hercules to be your
-disaster recovery solution!). </LI></OL>
-<H4>What other programs will run under Hercules? </H4>
-<P>Any program which uses the S/370, ESA/390, or z/Architecture
-instruction set, as
-implemented in Hercules. Some special utilities in the form of standalone
-programs are known to run well. I can particularly recommend Jan Jaeger's
-excellent standalone editor (ZZSA) which is included in the Hercules
-distribution, or it can be downloaded from <A
-HREF="http://www.cbttape.org/~jjaeger">http://www.cbttape.org/~jjaeger</A>;
-I use it regularly to look at DASD while debugging an OS installation, which
-is just what it's designed to do. Note: ZZSA runs in ESA/390 mode.
-See Jan Jaeger's website for more information and special
-logon procedures.</P>
-<H4>Where can I obtain OS/360?</H4>
-<P>1. Rick Fochtman's OS/360 archive CD is now obtainable by download from
-these locations: </P>
-<UL>
-<LI><A HREF="http://www.cyberdynesys.com/os360.tgz">http://www.cyberdynesys.com/os360.tgz</A> </LI>
-<LI><A HREF="ftp://ftp.ox.ac.uk/pub/linux/hercos360/os360.tar.gz">ftp://ftp.ox.ac.uk/pub/linux/hercos360/os360.tar.gz</A> </LI></UL>
-<P>2. If you are interested in obtaining a copy of the CD itself, contact
-Rick Fochtman at <EM>rfochtman </EM>@<EM> ync.net</EM>. </P>
-<P>You can use the <CODE>dasdload</CODE> and <CODE>dasdisup</CODE> programs
-(see the <A HREF="hercload.html">Creating Hercules DASD</A> document) to
-build an OS/360 IPL volume from the unloaded files on the archive CD. </P>
-<P>3. Alternatively, you can download the <A
-HREF="mftr33.tar.gz">mftr33.tar.gz</A> package which contains a minimal MFT
-system on a 3330 image, with some minimal documentation. The configuration
-is that of a 370/145 with 2 megabytes of main storage, running OS/MFT
-Release 21.0, with several volumes of pre-loaded DASD. 2 program partitions
-(P0 and P1) have been genned. There is no working TOD clock, and no SMF.
-Volume DLIB01 which is specified does not exist in the zipped file, but can
-be created using a plf file with the CDROM of OS/360. DLIB01 can be
-commented-out from the config (cnf) file if desired. The mftr33 package also
-includes the IPL text and program for the standalone IBCDASD program as file
-"ibcdasdi.rdr" which can be used if desired.</P>
-<H4>Where can I find documentation?</H4>
-<P>I've produced a document describing how to build an OS/360 system on
-Hercules, called "OS/360 on Hercules". It can be found at <A
-HREF="http://www.conmicro.cx/hercos360">http://www.conmicro.cx/hercos360</A>.
+    ALINK="#000000">
+<H1>
+    Hercules Version 2: Frequently-Asked Questions
+</H1>
+<P>
+<HR>
 </P>
-<P>The <A HREF="hercload.html">Creating Hercules DASD</A> document describes
-various methods of creating and loading virtual DASD volumes. </P>
-<P>Malcolm Beattie has also produced two useful documents on 3270s and TSO:
-<BR> "Guide to Using 3270 Consoles and Terminals for Hercules" at <A
-HREF="http://users.ox.ac.uk/~mbeattie/hercules/3270.html">http://users.ox.ac.uk/~mbeattie/hercules/3270.html</A>
+<TABLE>
+<TR><TD><A HREF="#1.01">1.01</A></TD><TD>What is Hercules?</TD></TR>
+<TR><TD><A HREF="#1.02">1.02</A></TD><TD>So what exactly does that mean?</TD></TR>
+<TR><TD><A HREF="#1.03">1.03</A></TD><TD>Is it functional enough to run production work?</TD></TR>
+<TR><TD><A HREF="#1.04">1.04</A></TD><TD>What are the licensing restrictions for Hercules?</TD></TR>
+<TR><TD>&nbsp;</TD></TR>
+<TR><TD><A HREF="#2.01">2.01</A></TD><TD>Can it run OS/390, VM/ESA, VSE/ESA?</TD></TR>
+<TR><TD><A HREF="#2.02">2.02</A></TD><TD>What operating systems can I run legally?</TD></TR>
+<TR><TD><A HREF="#2.03">2.03</A></TD><TD>What other programs will run under Hercules?</TD></TR>
+<TR><TD><A HREF="#2.04">2.04</A></TD><TD>Where can I obtain OS/360 ?</TD></TR>
+<TR><TD><A HREF="#2.05">2.05</A></TD><TD>Where can I obtain MVS ?</TD></TR>
+<TR><TD><A HREF="#2.06">2.06</A></TD><TD>Where can I obtain VM/370 ?</TD></TR>
+<TR><TD><A HREF="#2.07">2.07</A></TD><TD>Where can I obtain DOS/VS ?</TD></TR>
+<TR><TD><A HREF="#2.08">2.08</A></TD><TD>Where can I obtain Linux/390 ?</TD></TR>
+<TR><TD><A HREF="#2.09">2.09</A></TD><TD>Where can I find documentation?</TD></TR>
+<TR><TD>&nbsp;</TD></TR>
+<TR><TD><A HREF="#3.01">3.01</A></TD><TD>What PC hardware do I need to run Hercules?</TD></TR>
+<TR><TD><A HREF="#3.02">3.02</A></TD><TD>What PC software do I need to run Hercules?</TD></TR>
+<TR><TD><A HREF="#3.03">3.03</A></TD><TD>What sort of MIPS rate can I expect?</TD></TR>
+<TR><TD><A HREF="#3.04">3.04</A></TD><TD>Which C compiler should I use to build Hercules?</TD></TR>
+<TR><TD><A HREF="#3.05">3.05</A></TD><TD>Why do I get an unexpected fixed-point divide exception (program check 0009 or abend 0C9) on a CVB instruction?</TD></TR>
+<TR><TD><A HREF="#3.06">3.06</A></TD><TD>Do you plan to port Hercules to other platforms?</TD></TR>
+<TR><TD>&nbsp;</TD></TR>
+<TR><TD><A HREF="#4.01">4.01</A></TD><TD>How can I create a virtual DASD volume?</TD></TR>
+<TR><TD><A HREF="#4.02">4.02</A></TD><TD>Can I read a tape which was created on a mainframe?</TD></TR>
+<TR><TD><A HREF="#4.03">4.03</A></TD><TD>Can I attach a PC tape drive to Hercules?</TD></TR>
+<TR><TD><A HREF="#4.04">4.04</A></TD><TD>Can I process mainframe tapes with Hercules?</TD></TR>
+<TR><TD><A HREF="#4.05">4.05</A></TD><TD>Can I create Assembler programs without a mainframe?</TD></TR>
+<TR><TD>&nbsp;</TD></TR>
+<TR><TD><A HREF="#5.01">5.01</A></TD><TD>What architectural features are implemented?</TD></TR>
+<TR><TD>&nbsp;</TD></TR>
+<TR><TD><A HREF="#6.01">6.01</A></TD><TD>Who are the Herculeans?</TD></TR>
+<TR><TD>&nbsp;</TD></TR>
+<TR><TD><A HREF="#7.01">7.01</A></TD><TD>Where can I obtain technical support?</TD></TR>
+</TABLE>
+<P>
+<HR>
 </P>
-<P>"Guide to Installing TSO Under MVT on Hercules" at <A
-HREF="http://users.ox.ac.uk/~mbeattie/hercules/tso.html">http://users.ox.ac.uk/~mbeattie/hercules/tso.html</A>
+<H4><A NAME="1.01">1.01</A>
+    What is Hercules?
+</H4>
+<P>
+    Hercules is a software implementation of the System/370, ESA/390 and
+    z/Architecture hardware which runs under Linux on several hardware
+    platforms including the Intel Pentium PC, and under Windows NT and
+    Windows 2000.
 </P>
-<P>For adding multiple 3270 terminals to TCAM, see the document by Mike Ross
-at <A
-HREF="http://www.corestore.org/hercules.html">http://www.corestore.org/hercules.html</A>
+<H4><A NAME="1.02">1.02</A>
+    So what exactly does that mean?
+</H4>
+<P>
+    It means that your PC can emulate an IBM mainframe processor. The
+    mainframe can range from a 360 to a z900 - running in "System/370" mode,
+    "ESA/390" mode, or "z/Architecture" mode.
 </P>
-<H4>What are the licensing restrictions for Hercules?</H4>
-
-<P>Hercules is a copyright work which has been made generally
-available, subject to the terms of the
+<P>
+    Hercules executes S/370, ESA/390, and z/Architecture instructions
+    and channel programs.  It emulates mainframe I/O devices by using
+    PC devices.  For example, 3390 DASD devices are emulated by large
+    files on your hard disk, and local 3270 screens are emulated by tn3270
+    sessions. (Note: Not all 370 and 390 features have been implemented
+    in Hercules. See the list of particulars later in this document.
+    Also, certain non-standard models, 360/20s, and the 360/67 virtual
+    memory mode are not emulated.)
+</P>
+<P>
+    Hercules implements only the raw S/370, ESA/390, and z/Architecture
+    instruction set; it does not provide any operating system facilities.
+    This means that you need to provide an operating system or standalone
+    program which Hercules can load from an emulated disk or tape device.
+    You will have to write the operating system or standalone program
+    yourself, unless you can manage to obtain a license from IBM to run
+    one of their operating systems on your PC, or use IBM programs and
+    operating systems which have been placed in the public domain.
+</P>
+<H4><A NAME="1.03">1.03</A>
+    Is it functional enough to run production work?
+</H4>
+<P>
+    No. At the moment it's a system programmer's toy, though it's rapidly
+    becoming good enough to run a wide range of software without problems. 
+</P>
+<H4><A NAME="1.04">1.04</A>
+    What are the licensing restrictions for Hercules?
+</H4>
+<P>
+    Hercules is a copyright work which has been made generally
+    available, subject to the terms of the
 <A HREF="herclic.html">Q Public License</A>.
-In essence this allows free use and distribution of the program for
-personal and commercial use.  You may not distribute modified copies
-of the program, but you may distribute your own patches along with
-the program, provided that you also grant the maintainer permission
-to include those patches in future versions of the program.  You may
-not copy any portion of the source code for use in any other program.</p>
-<P>Hercules is <EM>not</EM>, repeat, <EM>not</EM> GPL software! The GNU
-General Public License is a Unix/Linux software licensing agreement, which
-we, the authors, will not participate in. We believe that the QPL, which has
-been certified as compliant with the <a
-href="http://www.opensource.org">Open Source Definition</a>, provides the
-benefits and protections of open source for both users and developers,
-without the political baggage that has come to be associated with the GPL.</P>
-<H4>What PC hardware do I need to run Hercules?</H4>
-<P>It depends how fast you want it to run. A Pentium 200 with 32Mb RAM is
-probably the minimum practical requirement; 500+ MHz with 128Mb RAM would be
-much better. Hercules doesn't use any fancy graphics, but it does need a
-fast processor to achieve a reasonable MIPS rate.
+    In essence this allows free use and distribution of the program for
+    personal and commercial use.  You may not distribute modified copies
+    of the program, but you may distribute your own patches along with
+    the program, provided that you also grant the maintainer permission
+    to include those patches in future versions of the program.  You may
+    not copy any portion of the source code for use in any other program.
+</p>
+<P>
+    Hercules is <EM>not</EM>, repeat, <EM>not</EM> GPL software! The GNU
+    General Public License is a Unix/Linux software licensing agreement,
+    which we, the authors, will not participate in. We believe that the
+    QPL, which has been certified as compliant with the 
+<a href="http://www.opensource.org">Open Source Definition</a>,
+    provides the benefits and protections of open source for both users and
+    developers, without the political baggage that has come to be associated
+    with the GPL.
 </P>
-<P>If you can afford a multiprocessor system, so much the better. Hercules
-makes extensive use of multithreading to overlap I/O with CPU activity, so
-you should find that a dual or quad Pentium 200 system will outperform a
-uniprocessor Pentium 450. My development system is a Compaq ProLiant 6000
-with four Pentium Pro 200s, and response time is quite satisfactory. </P>
-<P>Hercules does not depend on the Pentium architecture. I've built and run
-it successfully on a 500 MHz Alpha 21164, and others have run it on SPARC
-and S/390 (!) Linux systems. (One guy has even run OS/360 under Hercules
-under Linux/390 under Hercules under Linux/390 under VM/ESA!) The only
-weirdness about building the package on an Alpha is that you'll get compiler
-warnings about "unsigned long value, unsigned long long format". You can
-ignore these. </P>
-<P>You will need enough Linux swap space to accommodate your S/390 real
-storage (main storage plus expanded storage). For maximum throughput, you
-should set your main and expanded storage sizes high enough to eliminate
-S/390 paging. S/390 storage is allocated out of Linux virtual storage, so if
-you can provide enough RAM to eliminate Linux paging as well, then so much
-the better. </P>
-<P>You also need enough hard disk space to accommodate the emulated DASD. A
-virtual "3330 model 1" disk drive will need about 100 megabytes of space for
-emulation (a 3330-11 will need about 200 megabytes). A 3380 "single density"
-model will need about 650MB, and a 3390 model 2 needs about 2GB. If you use
-the <a href="cckddasd.html">compressed CKD DASD feature</a>, these sizes will
-shrink dramatically, usually to about 20 to 30 percent of the original
-size.</P>
-<H4><A NAME="software">What PC software do I need to run Hercules? </A></H4>
-<P>1. You need a Linux system with POSIX threads (pthread) support. I will
-only provide support for Linux 2.2.x or later kernels with glibc2 (libc6) as
-supplied in popular distributions such as Red Hat 6.0 or later and SuSE
-Linux 6.1 or later. My development system runs Red Hat 6.1. You can also run
-under Windows NT or Windows 2000, though Hercules isn't quite as polished on
-that platform.</P>
-<P>2. A recent version of the GNU C compiler (GCC), normally
-distributed with Linux. See the notes below on this compiler. If you
-wish to rebuild the Windows version, you will need the <a
-href="http://sources.redhat.com/cygwin">Cygwin</a> tools from Red
-Hat.</P>
-<P>3. You will also need tn3270 client software for the virtual 3270
-console.  The tn3270 client can run on the same machine as Hercules, or
-on any Unix or Windows box with a TCP/IP connection to the Hercules
-machine.</P>
-<P>The supported and recommended tn3270 clients for Hercules are:
+<P>
+<HR>
+</P>
+<H4><A NAME="2.01">2.01</A>
+    Can it run OS/390, VM/ESA, VSE/ESA?
+</H4>
+<P>
+    Yes. Hercules is a software implementation of ESA/390, and so it is
+    capable of running OS/390, VSE/ESA, and VM/ESA, as well as older
+    versions of these OS's.
+</P>
+<H4><A NAME="2.02">2.02</A>
+    What operating systems can I run legally?
+</H4>
+<P>
+    Most 3rd party operating systems like Linux/390, z/Linux and TELPAR
+    are covered under their own <em>free</em> license and can therefore
+    run under Hercules without any legal problems.
+</P>
+<P>
+    <em>OS/360</em> (PCP, MFT and MVT) is in the public domain, as far
+    as we know. The status of OSes for which IBM did not charge a license
+    fee is somewhat murky; these include <em>MVS</em> 3.8, <em>VM/370</em>
+    release 6, and <em>DOS/VS</em> release 34.
+</P>
+<P>
+    The legal status outside the USA, where something like public domain or
+    software without copyright doesn't exist, is "copyrighted software
+    provided at no charge". It is a known fact that vendors like
+    <em>amdahl</em>, <em>Hitachi</em>, <em>Nixdorf</em> and others
+    modified those operating systems, and distributed them as their own
+    OS for their own hardware, without asking IBM for permission. But
+    law had been changed over that time, so its not clear if the same
+    legal status applies in <b>your</b> country right now.
+</P>
+<P>
+    Rick Fochtman managed to optain a letter from IBM that he is allowed
+    to distribute OS/360. Try to ask your salesdroid for a similar letter
+    for VM/370, MVS 3.8j or DOS/VS next time he wants to sell you a major
+    upgrade.
+</P>
+<P>
+    OS/390 and other ESA versions of OS's are definitely licensed to a
+    particular machine. Therefore, in practice you cannot run any classic
+    ESA operating system on your PC unless you can obtain a license from
+    IBM allowing you to do so. It is believed that there are, however,
+    three legal ways you could run OS/390, VM/ESA, or VSE/ESA under
+    Hercules:
+</P>
+<OL>
+<LI>
+    Running under Linux on the Pentium processor of a P/390 which is
+    licensed to run the OS. 
+</LI>
+<LI>
+    Running under Linux/390 on a mainframe which is licensed to run the OS.
+</LI>
+<LI>
+    Running under the terms of a disaster recovery provision of the OS
+    license (but I really don't recommend depending on Hercules to be your
+    disaster recovery solution!). 
+</LI>
+</OL>
+<H4><A NAME="2.03">2.03</A>
+    What other programs will run under Hercules?
+</H4>
+<P>
+    Any program which uses the S/370, ESA/390, or z/Architecture instruction
+    set, as implemented in Hercules. Some special utilities in the form of
+    standalone programs are known to run well. I can particularly recommend
+    Jan Jaeger's excellent standalone editor (ZZSA) which is included in the
+    Hercules distribution, or it can be downloaded from 
+<A HREF="http://home.worldonline.nl/~jjaeger">http://home.worldonline.nl/~jjaeger</A>;
+    I use it regularly to look at DASD while debugging an OS installation,
+    which is just what it's designed to do. Note: ZZSA runs in ESA/390 mode.
+    See Jan Jaeger's website for more information and special logon procedures.
+</P>
+<H4><A NAME="2.04">2.04</A>
+    Where can I obtain OS/360 ?
+</H4>
+<P>
+    1. Rick Fochtman's OS/360 archive CD is now obtainable by download
+    from these locations: 
+</P>
+<UL>
+<LI>
+<A HREF="http://www.cyberdynesys.com/os360.tgz">http://www.cyberdynesys.com/os360.tgz</A>
+</LI>
+<LI>
+<A HREF="ftp://ftp.ox.ac.uk/pub/linux/hercos360/os360.tar.gz">ftp://ftp.ox.ac.uk/pub/linux/hercos360/os360.tar.gz</A>
+</LI>
+<LI>
+<A HREF="ftp://source.rfc822.org/pub/mirror/hercules/hercos360/os360.tar.gz">ftp://source.rfc822.org/pub/mirror/hercules/hercos360/os360.tar.gz</A>
+</LI>
+<LI>
+<A HREF="http://open360.copyleft.de/pub/os360-cdrom-1999-325.tar.gz">http://open360.copyleft.de/pub/os360-cdrom-1999-325.tar.gz</A>
+</LI>
+</UL>
+<P>
+    2. If you are interested in obtaining a copy of the CD itself,
+    contact Rick Fochtman at <EM>rfochtman</EM>@<EM>ync.net</EM>. 
+</P>
+<P>
+    3. Alternatively, you can download the 
+<A HREF="http://open360.copyleft.de/download.xml">OS/360 Y2K Starter</A>
+    package which contains a full featured MVT system on a 3330 image,
+    with some minimal documentation. The configuration is that of a
+    370/158 with 4 megabytes of main storage, running OS/MVT Release
+    21.0. The same site also offers a MVTDBL volume and a
+    <EM>Builder</EM> package for those who like to participate in
+    OS/360 nucleus hacking.
+</P>
+<H4><A NAME="2.05">2.05</A>
+    Where can I obtain MVS 3.8 ?
+</H4>
+<P>
+    The Original MVS 3.8 distribution as it was first used came from
+</P>
+<UL><LI>
+<A HREF="ftp://ftp.cbttape.org/pub/cbttape/mvs38/">ftp://ftp.cbttape.org/pub/cbttape/mvs38/</A>
+</LI></UL>
+    who advise using the mirrors at
+<UL>
+<LI><A HREF="ftp://ftp.ox.ac.uk/pub/linux/mvs38j/">ftp://ftp.ox.ac.uk/pub/linux/mvs38j/</A></LI>
+<LI><A HREF="http://source.rfc822.org/pub/mirror/hercules/mvs38j/">http://source.rfc822.org/pub/mirror/hercules/mvs38j/</A></LI>
+<LI><A HREF="ftp://source.rfc822.org/pub/mirror/hercules/mvs38j/">ftp://source.rfc822.org/pub/mirror/hercules/mvs38j/</A></LI>
+</UL>
+<P>
+    Several people have generated a functional MVS system from this archive :
+</P>
+<UL>
+<LI><A HREF="http://jaymoseley.terrashare.com/">Jay Moseley from Terrashare</A></LI>
+<LI><A HREF="http://www.bsp-gmbh.com/hercules/">Volker Bandke from BSP GmbH</A></LI>
+<LI><A HREF="http://www.schaefernet.de/hercules/">Wolfgang Sch&auml;fer from Sch&auml;fernet</A></LI>
+</UL>
+<H4><A NAME="2.06">2.05</A>
+    Where can I obtain VM/370 ?
+</H4>
+<P>
+    Bob Abeles started a VM/370 web site at:
+</P>
+<UL><LI>
+<A HREF="http://www.archaelogic.com/vm370/">http://www.archaelogic.com/vm370</A> 
+</LI></UL>
+<P>
+    Right now it's in an embryonic state. If anyone has material that
+    they'd like to contribute, please send it to me. I'm looking for
+    FAQ material, command summaries, how-to's, personal experiences and
+    anecdotes, machine room photos, and just about anything else you
+    think might be of interest.
+</P>
+<H4><A NAME="2.07">2.07</A>
+    Where can I obtain DOS/VS ?
+</H4>
+<P>
+    I've put the DOS/VS r34 install tape on my site. It'll expand to a 21
+    MB AWSTAPE file, dosrel34.aws. You need the <EM>Coverletter</EM> to
+    install it. Read the relevant postings of the Hercules mailing list
+    first, as the install process is quite obscure.
+</P>
+<P>
+    You can grab those files at :
+</P>
+<UL>
+<LI><A HREF="http://www.conmicro.cx/hercules/dosrel34.zip">http://www.conmicro.cx/hercules/dosrel34.zip</A></LI>
+<LI><A HREF="http://www.conmicro.cx/hercules/dosrel34coverletter.pdf">http://www.conmicro.cx/hercules/dosrel34coverletter.pdf</A></LI>
+<LI><A HREF="http://open360.copyleft.de/dos34/install.mails">http://open360.copyleft.de/dos34/install.mails</A></LI>
+</UL>
+<H4><A NAME="2.08">2.08</A>
+    Where can I obtain Linux/390 ?
+</H4>
+<P>
+    The process of downloading and installing Linux/390 is best
+    described by the 
+<A HREF="http://linas.org/linux/i370-howto.html">Getting Started with Linux/390</A>
+    document. Take a look at,
+<A HREF="http://www.cozx.com/~dpitts/gcc.html">David Pitts' GCC/EGCS Compiler Page</A>
+    if you need GCC and GNU utils for OS/390 to bootstrap Linux from source.
+</P>
+<H4><A NAME="2.09">2.09</A>
+    Where can I find documentation?
+</H4>
+<P>
+    The 
+<A HREF="hercload.html">Creating Hercules DASD</A>
+    document describes various methods of creating and loading virtual
+    DASD volumes. 
+</P>
+<P>
+    I've produced a document describing how to build an OS/360 system
+    on Hercules, called "OS/360 on Hercules". It can be found at 
+</P>
+<UL><LI>                
+<A HREF="http://www.conmicro.cx/hercos360/">http://www.conmicro.cx/hercos360/hercos360/</A>.
+</LI></UL>
+<P>
+    This will build an MVT system without TCAM/TSO, but with two 3270
+    consoles. You will need Malcolm Beattie's "Guide to Using 3270
+    Consoles and Terminals for Hercules" with this MVT version.
+</P>
+<UL><LI>                
+<A HREF="http://users.ox.ac.uk/~mbeattie/hercules/3270.html">http://users.ox.ac.uk/~mbeattie/hercules/3270.html</A>
+</LI></UL>
+<P>
+    The N.U.D.E guides can be found at :
+</P>
+<UL><LI>                
+    <a href="http://www.kiyoinc.com/hercdoc.html">http://www.kiyoinc.com/hercdoc.html</A>.
+</LI></UL>
+<P>
+    IBM provides only current documentation, ...<br/>
+    but many things haven't changed since 1964 :
+</P>
+<UL><LI>                
+<a href="http://www.s390.ibm.com/bookmgr-cgi/bookmgr.cmd/LIBRARY">IBM BookManager(r) BookServer Library</a>
+</LI></UL>
+<HR>
+</P>
+<H4><A NAME="3.01">3.01</A>
+    What PC hardware do I need to run Hercules?
+</H4>
+<P>
+    It depends how fast you want it to run. A Pentium 200 with 32Mb RAM is
+    probably the minimum practical requirement; 500+ MHz with 128Mb RAM would
+    be much better. Hercules doesn't use any fancy graphics, but it does
+    need a fast processor to achieve a reasonable MIPS rate.
+</P>
+<P>
+    If you can afford a multiprocessor system, so much the better. Hercules
+    makes extensive use of multithreading to overlap I/O with CPU activity, so
+    you should find that a dual or quad Pentium 200 system will outperform a
+    uniprocessor Pentium 450. My development system is a Compaq ProLiant 6000
+    with four Pentium Pro 200s, and response time is quite satisfactory. 
+</P>
+<P>
+    Hercules does not depend on the Pentium architecture. I've built and run
+    it successfully on a 500 MHz Alpha 21164, and others have run it on SPARC
+    and S/390 (!) Linux systems. (One guy has even run OS/360 under Hercules
+    under Linux/390 under Hercules under Linux/390 under VM/ESA!) The only
+    weirdness about building the package on an Alpha is that you'll get
+    compiler warnings about "unsigned long value, unsigned long long format".
+    You can ignore these. 
+</P>
+<P>
+    You will need enough Linux swap space to accommodate your S/390 real
+    storage (main storage plus expanded storage). For maximum throughput, you
+    should set your main and expanded storage sizes high enough to eliminate
+    S/390 paging. S/390 storage is allocated out of Linux virtual storage,
+    so if you can provide enough RAM to eliminate Linux paging as well,
+    then so much the better. 
+</P>
+<P>
+    You also need enough hard disk space to accommodate the emulated DASD. A
+    virtual "3330 model 1" disk drive will need about 100 megabytes of space
+    for emulation (a 3330-11 will need about 200 megabytes). A 3380 "single
+    density" model will need about 650MB, and a 3390 model 2 needs about 2GB.
+    If you use the 
+<a href="cckddasd.html">compressed CKD DASD feature</a>,
+    these sizes will shrink dramatically, usually to about 20 to 30 percent
+    of the original size.
+</P>
+<H4><A NAME="3.02">3.02</A>
+    What PC software do I need to run Hercules?
+</H4>
+<P>
+    1. You need a Linux system with POSIX threads (pthread) support. I will
+    only provide support for Linux 2.2.x kernels with glibc2 (libc6) as
+    supplied in popular distributions such as Red Hat 6.0 or later and
+    SuSE Linux 6.1 or later. My development system runs Red Hat 6.1.
+    You can also run under Windows NT or Windows 2000, though Hercules
+    isn't quite as polished on that platform.
+</P>
+<P>
+    2. An egcs C compiler, normally distributed with Linux. See the notes
+    below on this compiler. If you wish to rebuild the Windows version,
+    you will need the 
+<a href="http://sources.redhat.com/cygwin">Cygwin</a>
+    tools from Red Hat.
+</P>
+<P>
+    3. You will also need tn3270 client software for the virtual 3270
+    console.  The tn3270 client can run on the same machine as Hercules, or
+    on any Unix or Windows box with a TCP/IP connection to the Hercules
+    machine.
+</P>
+<P>
+    The supported and recommended tn3270 clients for Hercules are:
 <dl>
-<dt><B>x3270 for Unix</B>
-<dd>x3270 is included with most Linux distributions, or you can
-download it from
-<a HREF="http://www.geocities.com/SiliconValley/Peaks/7814">
-www.geocities.com/SiliconValley/Peaks/7814</A>
-<dt><B>Vista tn3270 for Windows</B>
-<dd>Vista tn3270 can be obtained from
-<a HREF="http://www.tombrennansoftware.com">
-www.tombrennansoftware.com</a>.  The very modest license fee charged
-for this excellent 3270 emulator helps to support an independent
-software developer.
+<dt>
+<B>
+    x3270 for Unix
+</B>
+<dd>
+    x3270 is included with most Linux distributions, or you can
+    download it from
+<a HREF="http://www.geocities.com/SiliconValley?Peaks/7814">www.geocities.com/SiliconValley/Peaks/7814</A>
+<dt>
+<B>
+    Vista tn3270 for Windows
+</B>
+<dd>
+    Vista tn3270 can be obtained from
+<a HREF="http://www.tombrennansoftware.com">www.tombrennansoftware.com</a>.
+    The very modest license fee charged for this excellent 3270 emulator
+    helps to support an independent software developer.
 </dl>
-<P>Other tn3270 clients, such as QWS3270, IBM Personal Communications,
-Attachmate Extra, or Dynacomm Elite should also work in most cases, but
-be aware that some tn3270 clients have bugs which make them unusable
-as OS/360 or MVS consoles.</P>
-<H4>What sort of MIPS rate can I expect?</H4>
-<P>Thanks to the performance enhancements which began around release 1.60,
-as a result of work by Mike Noel, Juergen Dobrinski, Valery Pogonchenko, and
-Jan Jaeger, you should now see an execution speed of around 0.8 to 1 MIPS,
-even on a Pentium 200.  That's enough to run OS/360 (MFT or MVT) with a
-response time similar to that of a 3033 from the 1970's. It's also fast
-enough to run VSE/ESA with an acceptable response time. If you want to run
-OS/390 instead of OS/360 (assuming you can do so legally), you'd better get
-a gigahertz or so Pentium III.  On a fast dual Pentium III it's now not
-unusual to see 10 MIPS or better.</P>
-<P>Typical I/O rates of around 50 EXCP/second are reported on average
-hardware, with rates over 500/second achievable with hardware RAID. </P>
-<H4>Which C compiler should I use to build Hercules?</H4>
-<P>You <EM>must</EM> use GCC 2.9x, previously known as EGCS. I am
-using the version that came with Red Hat 6.1 and it seems to work
-OK. The version number reported by the Linux command <code>cc
--v</code> is: egcs-2.91.66 19990314/Linux (egcs-1.1.2 release). If
-your compiler is version 2.9 or higher, it's EGCS-based, and should
-work fine, as EGCS version 1 is just another name for gcc version
-2.9.</P>
-<P>Older versions of gcc are known to produce incorrect code for some 64-bit
-(unsigned long) integer operations. I have had reports that earlier versions
-of egcs produce strange results too. </P>
-<P>If you have both an old gcc and egcs compilers installed, use the CC
-parameter on the "make" command to force it to choose the correct compiler:
-<BR> <CODE>make CC=egcs</CODE> ...</P>
-<p>Red Hat 7.0 ships with two versions of gcc. If you don't do anything
-special, you get gcc 2.96, which will not compile the Linux kernel, so they
-included 2.91 as well as <code>kgcc</code>. If you encounter problems when
-building Hercules with the 2.96 compiler, try <code>make CC=kgcc</code>
-instead. I would appreciate reports as to how well the 2.96 compiler works,
-as it is a development snapshot, and lots of folks, including the GCC
-development team and Linus Torvalds, were very unhappy that Red Hat included
-it in their distribution.</p>
-<H4>Why do I get an unexpected fixed-point divide exception (program check
-0009 or abend 0C9) on a CVB instruction?</H4>
-<P>You are using an old gcc compiler. You must use the newer egcs-based
-compiler instead. See previous question for the required compiler level.
+<P>
+    Other tn3270 clients, such as QWS3270, IBM Personal Communications,
+    Attachmate Extra, or Dynacomm Elite should also work in most cases, but
+    be aware that some tn3270 clients have bugs which make them unusable
+    as OS/360 or MVS consoles.
 </P>
-<H4>Do you plan to port Hercules to other platforms?</H4>
-<P>No. I do not have the resources to support more than one operating
-system. </P>
-<P>If you want to make Hercules run on Solaris, Linux 2.0.x, or whatever,
-then by all means go ahead. I welcome reports of any bugs or problems you
-find, but I probably won't fix problems if it means introducing
-platform-specific code, and I will not be able to test new releases against
-other platforms. Folks who have gotten it compiled on the BSDs report that
-the hardest part is removing the Linux-specific tape support. Hercules is
-part of the FreeBSD packages collection.</P>
-<p>There is ongoing work to make Hercules run under Windows 98, NT, and
-2000. The source code has support for these platforms included, and there is
-a Win32 makefile as makefile.w32.</p>
-<P>The Hercules code is not intended to be specific to Intel hardware, so if
-you find any issues or faults related to running on other hardware (SPARC,
-Alpha, PPC, ...) under Linux 2.2, then I'm likely to be receptive to fixing
-that sort of problem. Issues related to Unix variants are less likely
-to be fixed. </P>
-<H4>How can I create a virtual DASD volume?</H4>
-<P>The <A HREF="hercload.html">Creating Hercules DASD</A> document describes
-various methods of creating and loading virtual DASD volumes. </P>
-<H4>Can I read a tape which was created on a mainframe?</H4>
-<P>Yes, indirectly. The mainframe tape must be converted to AWSTAPE format
-and then downloaded to your PC. The <B><I>tapeconv.jcl</B></I> file in the
-Hercules directory contains a sample program which you can run under OS/390
-on your mainframe system. It reads a file from tape and converts it to
-AWSTAPE format. Download the AWSTAPE file to your PC (making sure to choose
-<EM>binary</EM> format for the download), and then add the downloaded
-filename to the Hercules configuration file as a virtual tape device. You
-will then be able to read the tape file from the virtual tape drive located
-on your PC.</P>
-<EM><P>Note: the "tapeconv" program will not correctly process input tapes
-whose block size exceeds 32760!</EM> One symptom of this may be the message
-"<CODE>ADRY011E I/O ERROR - DEVICE NOT ATTACHED.0000,NA,00...00,0000"</CODE>
-when attempting to restore from tape originally created using the default
-DF/DSS block size. The solution is to recreate the dump tape with
-DCB=BLKSIZE=32760. </P>
-<H4>Can I attach a PC tape drive to Hercules?</H4>
-<P>Yes. Hercules can read and write tapes on SCSI drives on Linux systems. I
-have tested this with 4mm DAT, QIC-1000, and 9-track drives. The Cygwin
-libraries that support Hercules on Windows do not provide support for SCSI
-tapes.</P>
-<H4>Can I process mainframe tapes with Hercules?</H4>
-<P>Yes.  It is possible to obtain 9-track open reel drives and 3480-type
-cartridge drives which attach to the SCSI bus.  Hercules makes these
-appear to the operating system as channel-attached 3420 or 3480 devices,
-making it possible to read and write real mainframe tapes. </P>
-<H4>Can I create Assembler programs without a mainframe?</H4>
-<P>Yes. If you want to write Assembler (BAL) programs to run on Hercules,
-but you don't have access to a mainframe, then there are two interesting
-products which you can run on your PC to assemble programs: </P>
+<H4><A NAME="3.03">3.03</A>
+    What sort of MIPS rate can I expect?
+</H4>
+<P>
+    With the performance enhancements which began around release 1.60,
+    thanks to work by Juergen Dobrinski, Valery Pogonchenko, and Jan Jaeger,
+    you should now see an execution speed of around 0.8 to 1 MIPS, even on a
+    Pentium 200.  That's enough to run OS/360 (MFT or MVT) with a response
+    time similar to that of a 3033 from the 1970's. It's also fast enough to
+    run VSE/ESA with an acceptable response time. If you want to run OS/390
+    instead of OS/360, you'd better get a gigahertz or so Pentium III.  On a
+    fast dual Pentium III it's now not unusual to see 5 MIPS or better.
+</P>
+<P>
+    Typical I/O rates of around 50 EXCP/second are reported on average
+    hardware, with rates over 500/second achievable with hardware RAID. 
+</P>
+<H4><A NAME="3.04">3.04</A>
+    Which C compiler should I use to build Hercules?
+</H4>
+<P>
+    You <EM>must</EM> use the egcs C compiler. I am using the version that
+    came with Red Hat 6.1 and it seems to work OK. The version number reported
+    by the Linux command <code>cc -v</code> is: egcs-2.91.66 19990314/Linux
+    (egcs-1.1.2 release). If your compiler is version 2.9 or higher, it's
+    EGCS-based, and should work fine, as EGCS version 1 is just another name
+    for gcc version 2.9.
+</P>
+<P>
+    The older gcc compiler is known to produce incorrect code for some 64-bit
+    (unsigned long) integer operations. I have had reports that earlier
+    versions of egcs produce strange results too. 
+</P>
+<P>
+    If you have both an old gcc and egcs compilers installed, use the CC
+    parameter on the "make" command to force it to choose the correct compiler:
+<BR>
+<CODE>make CC=egcs</CODE> ...
+</P>
+<p>
+    Red Hat 7.0 ships with two versions of gcc. If you don't do anything
+    special, you get gcc 2.96, which will not compile the Linux kernel, so
+    they included 2.91 as well as <code>kgcc</code>. If you encounter
+    problems when building Hercules with the 2.96 compiler, try
+<code>make CC=kgcc</code>
+    instead. I would appreciate reports as to how well the 2.96 compiler works,
+    as it is a development snapshot, and lots of folks, including the GCC
+    development team ad Linus Torvalds, were very unhappy that Red Hat included
+    it in their distribution.
+</p>
+<H4><A NAME="3.05">3.05</A>
+    Why do I get an unexpected fixed-point divide exception (program check 
+    0009 or abend 0C9) on a CVB instruction?
+</H4>
+<P>
+    You are using an old gcc compiler. You must use the newer egcs-based
+    compiler instead. See previous question for the required compiler level.
+</P>
+<H4><A NAME="3.06">3.06</A>
+    Do you plan to port Hercules to other platforms?
+</H4>
+<P>
+    Not really, no. We simply do not have the resources to support more than
+    one operating system.
+</P>
+<P>
+    It should be noted however that we do make efforts to ensure Hercules
+    builds and run on several different operating system platforms (mostly
+    just Linux, Windows and Apple right now), but we of course simply cannot
+    guarantee that it will run on every operating system platform out there.
+</P>
+<P>
+    If you want to make Hercules run on FreeBSD, Solaris, Linux 2.0.x, or
+    whatever, then by all means go ahead. I welcome reports of any bugs or
+    problems you find, but I probably won't fix problems if it means introducing
+    platform-specific code, and I will not be able to test new releases against
+    other platforms. Folks who have gotten it compiled on the BSDs report that
+    the hardest part is removing the Linux-specific tape support. 
+</P>
+<P>
+    The Hercules code is not intended to be specific to Intel hardware, so if
+    you find any issues or faults related to running on other hardware (SPARC,
+    Alpha, PPC, ...) under Linux 2.2, then I'm likely to be receptive to fixing
+    that sort of problem. Issues related to Unix variants are less likely
+    to be fixed however.
+</P>
+<P>
+<HR>
+</P>
+<H4><A NAME="4.01">4.01</A>
+    How can I create a virtual DASD volume?
+</H4>
+<P>
+    The 
+<A HREF="hercload.html">
+    Creating Hercules DASD
+</A>
+    document describes
+    various methods of creating and loading virtual DASD volumes. 
+</P>
+<H4><A NAME="4.02">4.02</A>
+    Can I read a tape which was created on a mainframe?
+</H4>
+<P>
+    Yes, indirectly. The mainframe tape must be converted to AWSTAPE format
+    and then downloaded to your PC. The 
+<B><I>tapeconv.jcl</I></B>
+    file in the
+    Hercules directory contains a sample program which you can run under OS/390
+    on your mainframe system. It reads a file from tape and converts it to
+    AWSTAPE format. Download the AWSTAPE file to your PC (making sure to choose
+<EM>binary</EM>
+    format for the download), and then add the downloaded
+    filename to the Hercules configuration file as a virtual tape device. You
+    will then be able to read the tape file from the virtual tape drive located
+    on your PC.
+</P>
+<P>
+<EM>
+    Note: the "tapeconv" program will not correctly process input tapes
+    whose block size exceeds 32760!
+</EM>
+    One symptom of this may be the message "
+<CODE>ADRY011E I/O ERROR - DEVICE NOT ATTACHED.0000,NA,00...00,0000"</CODE>
+    when attempting to restore from tape originally created using the default
+    DF/DSS block size. The solution is to recreate the dump tape with
+    DCB=BLKSIZE=32760. 
+</P>
+<H4><A NAME="4.03">4.03</A>
+    Can I attach a PC tape drive to Hercules?
+</H4>
+<P>
+    Yes. Hercules can read and write tapes on SCSI drives. I have tested this
+    with 4mm DAT, QIC-1000, and 9-track drives. 
+</P>
+<H4><A NAME="4.04">4.04</A>
+    Can I process mainframe tapes with Hercules?
+</H4>
+<P>
+    Yes.  It is possible to obtain 9-track open reel drives and 3480-type
+    cartridge drives which attach to the SCSI bus.  Hercules makes these
+    appear to the operating system as channel-attached 3420 or 3480 devices,
+    making it possible to read and write real mainframe tapes. 
+</P>
+<H4><A NAME="4.05">4.05</A>
+    Can I create Assembler programs without a mainframe?
+</H4>
+<P>
+    Yes. If you want to write Assembler (BAL) programs to run on Hercules,
+    but you don't have access to a mainframe, then there are two interesting
+    products which you can run on your PC to assemble programs: 
+</P>
 <DL>
-<DT>The "Tachyon 390 Cross Assembler" (<A
-HREF="http://www.tachyonsoft.com/tachyon">
-http://www.tachyonsoft.com/tachyon</A>) </DT>
-<DD>With this assembler you can produce S/390-compatible object decks using
-your Linux or Windows PC. A high degree of HLASM compatibility, coupled with
-the ability to perform complex assemblies at lightning speed, make this a
-product which is well worth looking at. I have tried this assembler and it
-is truly amazing. </DD>
-<DT>The "Dignus Systems/C Compiler" (<A HREF="http://www.dignus.com/">
-http://www.dignus.com</A>) </DT>
-<DD>This is a C compiler which runs under Windows or Linux and generates
-mainframe assembler code which you can then assemble using the Tachyon
-assembler. </DD>
+<DT>
+    The "Tachyon 390 Cross Assembler" (
+<A HREF="http://www.tachyonsoft.com/tachyon">http://www.tachyonsoft.com/tachyon</A>
+    ) 
+</DT>
+<DD>
+    With this assembler you can produce S/390-compatible object decks using
+    your Linux or Windows PC. A high degree of HLASM compatibility, coupled with
+    the ability to perform complex assemblies at lightning speed, make this a
+    product which is well worth looking at. I have tried this assembler and it
+    is truly amazing. 
+</DD>
+<DT>
+    The "Dignus Systems/C Compiler" (
+<A HREF="http://www.dignus.com/">http://www.dignus.com</A>
+    ) 
+</DT>
+<DD>
+    This is a C compiler which runs under Windows or Linux and generates
+    mainframe assembler code which you can then assemble using the Tachyon
+    assembler. 
+</DD>
 </DL>
-<P>Sam Golob wrote a fascinating review of these two products in the
-September 1999 issue of NaSPA Technical Support magazine. </P>
-<H4>What architectural features are implemented?</H4>
+<P>
+    Sam Golob wrote a fascinating review of these two products in the
+    September 1999 issue of NaSPA Technical Support magazine. 
+</P>
+<P>
+<HR>
+</P>
+<H4><A NAME="5.01">5.01</A>
+    What architectural features are implemented?
+</H4>
 <P>The following standard features have been implemented: </P>
 <UL>
 <LI>Address-Limit Checking </LI>
@@ -406,24 +722,24 @@ architectural level sets to the degree necessary to run all OS/390
 versions through 2.10 and known versions of z/OS in both ARCHLVL 1
 and ARCHLVL 2 mode, and Linux and z/VM in both ESA/390 and
 z/Architecture mode.</p>
-<H4>What z/Architecture features are implemented?</H4>
-<P>z/Architecture includes as standard all of the features of ESA/390,
-except vector operations, which is not part of the z/Architecture.
-It also includes new standard features such as 5-level DAT, 64-bit
-addressing, IDAW format-2, and many new instructions.
-<H4>Who are the Herculeans?</H4>
-
+<P>
+<HR>
+</P>
+<H4><A NAME="6.01">6.01</A>
+    Who are the Herculeans?
+</H4>
 <P>The following people are among those who have contributed to this
-project, either as coders or as testers or both:
+project, either as coders or as testers or both:</P>
+<P></P>
 <sl>
 <li><A HREF="http://perso.wanadoo.fr/rbowler">Roger Bowler</A>
 (original author)
 <li><A HREF="http://www.conmicro.cx/">Jay Maynard</A> (current
 maintainer)
 <li><A HREF="http://www.cbttape.org/~jjaeger">Jan Jaeger</A>
-<li>Volker Bandke
+<li><A HREF="http://www.bsp-gmbh.com/hercules">Volker Bandke</A>
 <li>David Barth
-<li>Malcolm Beattie
+<li><A HREF="http://users.ox.ac.uk/~mbeattie/hercules/">Malcolm Beattie</A>
 <li>Mario Bezzi
 <li>Vic Cross
 <li>Juergen Dobrinski
@@ -460,14 +776,15 @@ maintainer)
 <li>John Summerfield
 <li>Mark Szlaga
 <li>Adam Thornton
-<li>David "Fish" Trout
+<li><A HREF="http://home.sprintmail.com/~dtrout/Hercules/hercgui-index.html">"Fish" (David B. Trout)</A>
 <li>Ronen Tzur
 <li>Bernard van der Helm
 <li>Kris Van Hees
 <li>Ivan Warren
 <li>Matt Zimmerman
 </sl></p>
-<P>And thanks for support and encouragement from:
+<P>And thanks for support and encouragement from:</P>
+<P></P>
 <sl>
 <li>Tim Alpaerts
 <li>Bertus Bekker
@@ -487,14 +804,66 @@ maintainer)
 <li>Mark S. Waterbury
 </sl></P>
 <P>If anyone feels they have been unfairly omitted from either of these
-lists, please let me (Jay Maynard) know. </P>
-<P align="center"><HR WIDTH="15%" noshade></p>
-<p><IMG SRC="gifs/note.gif" alt="Note:">If you have any
-comments and questions, join the Hercules discussion group at <A
-HREF="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</A>
+lists, please let me (Jay Maynard) know.</P>
+<P>
+<HR>
 </P>
-<P ALIGN="CENTER"><hr width="15%" noshade><A
-HREF="index.html"><IMG SRC="gifs/back.gif" BORDER=0 ALT="back"></A></P>
-<P><small>
-Last updated 1 February 2003</P></BODY>
+<H4><A NAME="7.01">7.01</A>
+    Where can I obtain technical support?
+</H4>
+<P>
+  If your question and/or concern is not addressed in this FAQ, please
+  post your question to the Hercules-390 forum:
+</P>
+<blockquote><pre>
+<b>Files and archives at:</b>
+  <a href="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</a>
+
+<b>Community email addresses:</b>
+  Post message: <a href="mailto:hercules-390@yahoogroups.com?subject=Hercules Question">hercules-390@yahoogroups.com</a>
+  Subscribe:    <a href="mailto:hercules-390-subscribe@yahoogroups.com?subject=Subscribe">hercules-390-subscribe@yahoogroups.com</a>
+  Unsubscribe:  <a href="mailto:hercules-390-unsubscribe@yahoogroups.com?subject=Unsubscribe">hercules-390-unsubscribe@yahoogroups.com</a>
+  List owner:   <a href="mailto:hercules-390-owner@yahoogroups.com?subject=Hercules">hercules-390-owner@yahoogroups.com</a>
+</pre></blockquote>
+<P>
+  The Hercules-390 forum is in fact your primary source for Hercules support,
+  and you are strongly encouraged to subscribe. We have a vibrant, active
+  community of over 3200+ members, many of which are very knowledgeable in
+  many different areas of mainframe technology, both from a hardware point
+  of view as well as from an operating system and software point of view.
+</P>
+<P>
+  In addition to the main Hercules-390 forum, other more specialized Hercules
+  forums also exist to provide more focused support for a variety of popular
+  IBM mainframe operating systems, such as DOS, VM, and MVS.
+</P>
+<P>
+<SMALL>
+  <I>
+  * Note! the use of Yahoo! as host for the Hercules-390 and related forums
+  should in no way be interpreted as an endorsement of the Yahoo! service.
+  </I>
+</SMALL>
+</P>
+<P align="center">
+<HR WIDTH="15%" noshade>
+</P>
+<p>
+<IMG SRC="gifs/note.gif" alt="Note:">
+    If you have any comments and questions, please join the Hercules discussion
+    group at 
+<A HREF="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</A>
+</P>
+<P ALIGN="CENTER">
+<hr width="15%" noshade>
+<A HREF="hercules.html">
+<IMG SRC="gifs/back.gif" BORDER=0 ALT="back">
+</A>
+</P>
+<P>
+<small>
+    Last updated Mon Sep 29 06:38:05 PST 2003 by Fish
+</small>
+</P>
+</BODY>
 </HTML>
