@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+14 Dec 2004 Bug in utf xlations, cc3 was never reached - Bernard van der Helm
 10 Dec 2004 ppc assembler assists for cmpxchg1, cmpxchg4 - Greg Smith
 08 Dec 2004 dasdinit -linux option support - Greg Smith
 06 Dec 2004 Keep crx in sync with INST_SPACE - Jan Jaeger
