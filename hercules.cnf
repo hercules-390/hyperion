@@ -12,7 +12,7 @@ LOADPARM  0120....      # IPL parameter
 OSTAILOR  LINUX         # OS tailoring
 PANRATE   FAST          # Panel refresh rate
 ARCHMODE  ESA/390       # Architecture mode S/370, ESA/390 or ESAME
-CFCCIMAGE cfcc_level8   # Coupling Code core image file
+CFCCIMAGE /proc/cfcc    # Linux/390 CFCC loader interface
 
 # .-----------------------Device number
 # |     .-----------------Device type
