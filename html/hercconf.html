@@ -365,6 +365,13 @@ the device record is:
         reading the last card in the file.  If eof is not specified,
         then end of file results in unit check status with intervention
         required in the sense bytes.
+    <dt><code>intrq</code>
+    <dd>this option results in the exact opposite behavior as the eof
+        option described just above (i.e. if specified, it results in
+        a unit check status with intervention required sense bytes
+        being presented after reading the last card in the file, and
+        if not specified, results in a unit exception status after
+        the last card is read).
     <dt><code>multifile</code>
     <dd>specifies, when multiple input files are entered, to
         automatically open the next input file and continue reading
