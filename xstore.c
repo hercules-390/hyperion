@@ -405,7 +405,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
            protection applies to the first operand */
         if (prot)
         {
-            regs->TEA = vaddr1 | stid | 0x00000004;
+            regs->TEA = vaddr1 | stid | TEA_PROT_AP;
             regs->excarid = (ACCESS_REGISTER_MODE(&regs->psw)) ? r1 : 0;
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
         }
@@ -503,16 +503,23 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     return;
 
 mvpg_progck:
-    /* If page translation exception and condition code option
-       in register 0 bit 23 is set, return condition code */
+    /* If page translation exception (PTE invalid) and condition code
+        option in register 0 bit 23 is set, return condition code */
     if ((regs->GR_L(0) & 0x00000100)
-        && xcode == PGM_PAGE_TRANSLATION_EXCEPTION)
+        && xcode == PGM_PAGE_TRANSLATION_EXCEPTION
+        && rc == 2)
     {
         regs->psw.cc = cc;
         return;
     }
 
     /* Otherwise generate program check */
+    /* (Bit 29 of TEA is on for PIC 11 & operand ID also stored) */
+    if (xcode == PGM_PAGE_TRANSLATION_EXCEPTION)
+    {
+        regs->TEA |= TEA_MVPG;
+        regs->opndrid = (r1 << 4) | r2;
+    }
     ARCH_DEP(program_interrupt) (regs, xcode);
 } /* end function move_page */
 
