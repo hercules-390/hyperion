@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+01 Jul 2004 Minor performance update macro ILC - Bernard van der Helm
 29 Jun 2004 exilc.pat - Remove execflag check from INST_UPDATE_PSW - Greg
 29 Jun 2004 noilc.pat - Calculate ILC on demand - Greg Smith
 27 Jun 2004 pr.pat - Performance tweak for PR - Greg Smith
