@@ -78,7 +78,7 @@ static const char *build_info[] = {
     #endif
 #endif
 
-#if !defined(EXTERNALGUI)
+#if !defined(EXTERNALGUI) && defined(WIN32)
     "No external GUI support",
 #endif
 #if defined(OPTION_HTTP_SERVER)
