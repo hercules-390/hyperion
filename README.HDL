@@ -283,6 +283,9 @@ END_RESOLVER_SECTION;
     The final section is called once, when the module is unloaded
     or when hercules terminates.
 
+    A dll can reject being unloaded by returning a non-zero value 
+    in the final section.
+
     The final section is intended to be used to perform cleanup or
     indicate cleanup action to be taken.  It may set a shutdown
     flag that is used within this dll that all local functions

@@ -97,11 +97,11 @@ void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
 /*-------------------------------------------------------------------*/
 
 #define HDL_FINAL_SECTION                               \
-void HDL_FINI()                                         \
+int HDL_FINI()                                         \
 {
 
 #define END_FINAL_SECTION                               \
-}
+return 0; }
 
 /*-------------------------------------------------------------------*/
 

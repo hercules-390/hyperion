@@ -392,7 +392,7 @@ char *modname;
     {
         if(tmpdll->hdldepc == dllent->hdldepc)
         {
-            logmsg("HHCHD015E DLL %s is duplicate of %s\n",
+            logmsg("HHCHD016E DLL %s is duplicate of %s\n",
               dllent->name, tmpdll->name);
             dlclose(dllent->dll);
             free(dllent);
@@ -491,6 +491,18 @@ char *modname;
                 return -1;
             }
            
+            /* Call dll close routine */
+            if((*dllent)->hdlfini)
+            {
+            int rc;
+                
+                if((rc = ((*dllent)->hdlfini)()))
+                {
+                    logmsg("HHCHD017E Unload of %s rejected by final section\n",(*dllent)->name);
+                    return rc;
+                }
+            }
+
             modent = (*dllent)->modent;
             while(modent)
             {
@@ -508,10 +520,6 @@ char *modname;
 
             /* remove current entry from chain */
             *dllent = (*dllent)->dllnext;
-
-            /* Call dll close routine */
-            if(tmpdll->hdlfini)
-                (tmpdll->hdlfini)();
 
 //          dlclose(tmpdll->dll);
 
