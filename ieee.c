@@ -72,6 +72,8 @@
 /* devised to only do the feholdexcept */
 /* when appropriate, it is there for   */
 /* all host architectures              */
+
+#ifndef WIN32
 #define FECLEAREXCEPT(_e) \
 do { \
     fenv_t __fe; \
@@ -79,6 +81,9 @@ do { \
     fegetenv(&__fe); \
     feholdexcept(&__fe); \
 } while(0)
+#else
+#define FECLEAREXCEPT(_e) feclearexcept((_e))
+#endif
 
 
 #include "hercules.h"
