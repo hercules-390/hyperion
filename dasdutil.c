@@ -1,4 +1,4 @@
-/* DASDUTIL.C   (c) Copyright Roger Bowler, 1999-2004                */
+/* DASDUTIL.C   (c) Copyright Roger Bowler, 1999-2005                */
 /*              Hercules DASD Utilities: Common subroutines          */
 
 /*-------------------------------------------------------------------*/

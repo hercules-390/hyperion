@@ -1,4 +1,4 @@
-/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2004                   */
+/* CGIBIN.C     (c)Copyright Jan Jaeger, 2002-2005                   */
 /*              HTTP cgi-bin routines                                */
 
 /* This file contains all cgi routines that may be executed on the   */

@@ -1,5 +1,5 @@
-/* Code borrowed from dasdpdsu Copyright 1999-2004 Roger Bowler      */
-/* Changes and additions Copyright 2001-2004, James M. Morrison      */
+/* Code borrowed from dasdpdsu Copyright 1999-2005 Roger Bowler      */
+/* Changes and additions Copyright 2001-2005, James M. Morrison      */
 
 /*-------------------------------------------------------------------*/
 /*                                                                   */
@@ -1096,8 +1096,8 @@ int main(int argc, char **argv) {
         CIFBLK          *cif;
         int             dsn_recs_written = 0, bail, dsorg, rc;
 
-    fprintf(stderr, "dasdseq %s Copyright 1999-2004 Roger Bowler\n"
-        "Portions Copyright 2001-2004 James M. Morrison\n", VERSION);
+    fprintf(stderr, "dasdseq %s Copyright 1999-2005 Roger Bowler\n"
+        "Portions Copyright 2001-2005 James M. Morrison\n", VERSION);
     if (debug) fprintf(stderr, "DEBUG enabled\n");
 
 //  Parse command line

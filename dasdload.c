@@ -1,4 +1,4 @@
-/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2004                */
+/* DASDLOAD.C   (c) Copyright Roger Bowler, 1999-2005                */
 /*              Hercules DASD Utilities: DASD image loader           */
 
 /*-------------------------------------------------------------------*/

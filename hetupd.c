@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETUPD.C     (c) Copyright Leland Lucius, 2000-2004
+|| HETUPD.C     (c) Copyright Leland Lucius, 2000-2005
 ||              Released under terms of the Q Public License.
 ||
 || Copy/update Hercules Emulated Tapes while allowing various modifications

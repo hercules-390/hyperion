@@ -1,11 +1,11 @@
-/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2004                */
+/* GENERAL1.C   (c) Copyright Roger Bowler, 1994-2005                */
 /*              ESA/390 CPU Emulator                                 */
 /*              Instructions A-M                                     */
 
-/*              (c) Copyright Peter Kuschnerus, 1999-2004 (UPT & CFC)*/
+/*              (c) Copyright Peter Kuschnerus, 1999-2005 (UPT & CFC)*/
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2004      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements all general instructions of the            */
@@ -1215,7 +1215,7 @@ U32     n;                              /* 32-bit operand values     */
 
 /*-------------------------------------------------------------------*/
 /* B21A CFC   - Compare and Form Codeword                        [S] */
-/*              (c) Copyright Peter Kuschnerus, 1999-2004            */
+/*              (c) Copyright Peter Kuschnerus, 1999-2005            */
 /* 64BIT INCOMPLETE                                                  */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_and_form_codeword)

@@ -1,4 +1,4 @@
-/* CRYPTO.H     (c) Copyright Jan Jaeger, 2000-2004                  */
+/* CRYPTO.H     (c) Copyright Jan Jaeger, 2000-2005                  */
 /*              Cryptographic instructions                           */
 
 #if defined(_FEATURE_MESSAGE_SECURITY_ASSIST)

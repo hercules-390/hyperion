@@ -1,4 +1,4 @@
-/* SR.C         (c)Copyright Greg Smith, 2004                        */
+/* SR.C         (c)Copyright Greg Smith, 2005                        */
 /*              Suspend/Resume a Hercules session                    */
 
 #define _HERCULES_SR_C

@@ -2,7 +2,7 @@
 /* Implementation of functions used in hercules that */
 /* may be missing on some platform ports, or other   */
 /* convenient miscellaneous global utility functions */
-/* (c) 2003-2004 Ivan Warren & Others                */
+/* (c) 2003-2005 Ivan Warren & Others                */
 /* Released under the Q Public License               */
 /* This file is portion of the HERCULES S/370, S/390 */
 /*                           z/Architecture emulator */

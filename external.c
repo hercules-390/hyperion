@@ -1,8 +1,8 @@
-/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2004                */
+/* EXTERNAL.C   (c) Copyright Roger Bowler, 1999-2005                */
 /*              ESA/390 External Interrupt and Timer                 */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2004      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements external interrupt, timer, and signalling  */

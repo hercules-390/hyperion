@@ -1,4 +1,4 @@
-/* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2004                  */
+/* DEVTYPE.H    (c) Copyright Jan Jaeger, 1999-2005                  */
 /*              Hercules Device Definitions                          */
 
 #if !defined(_DEVICES_H)

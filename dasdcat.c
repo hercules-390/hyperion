@@ -1,8 +1,8 @@
 /*
  * dasdcat
  *
- * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2004
- * Changes and additions Copyright 2000-2004 by Malcolm Beattie
+ * Vast swathes copied from dasdpdsu.c (c) Copyright Roger Bowler, 1999-2005
+ * Changes and additions Copyright 2000-2005 by Malcolm Beattie
  */
 #include "hercules.h"
 #include "dasdblks.h"

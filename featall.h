@@ -1,4 +1,4 @@
-/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2004                  */
+/* FEATALL.H    (c) Copyright Jan Jaeger, 2000-2005                  */
 /*              Architecture-dependent macro definitions             */
 
 /*-------------------------------------------------------------------*/

@@ -1,14 +1,14 @@
-/* VM.C         (c) Copyright Roger Bowler, 2000-2004                */
+/* VM.C         (c) Copyright Roger Bowler, 2000-2005                */
 /*              ESA/390 VM Diagnose calls and IUCV instruction       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2004      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2005      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements miscellaneous diagnose functions           */
 /* described in SC24-5670 VM/ESA CP Programming Services             */
 /* and SC24-5855 VM/ESA CP Diagnosis Reference.                      */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"

@@ -1,4 +1,4 @@
-/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004                       */
+/* LOADPARM.C   (c) Copyright Jan Jaeger, 2004-2005                  */
 /*              SCLP / MSSF loadparm                                 */
 
 #include "hercules.h"

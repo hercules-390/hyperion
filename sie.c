@@ -1,4 +1,4 @@
-/* SIE.C        (c) Copyright Jan Jaeger, 1999-2004                  */
+/* SIE.C        (c) Copyright Jan Jaeger, 1999-2005                  */
 /*              Interpretive Execution                               */
 
 /*      This module contains the SIE instruction as                  */
@@ -8,7 +8,7 @@
 /*      Enterprise Systems Architecture / Extended Configuration     */
 /*      Principles of Operation, SC24-5594-02 and SC24-5965-00       */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 
 // #define SIE_DEBUG
 

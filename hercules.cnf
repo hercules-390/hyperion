@@ -82,7 +82,7 @@
   000C    3505    ./util/zzsacard.bin
   000D    3525    punch00d.txt ascii
   000E    1403    print00e.txt crlf
-  001F    3270
+  001F    1052-C
 #         The following statements are examples. Some of them require
 #         user tailoring before being used.
 # 0580    3420    ickdsf.ipl

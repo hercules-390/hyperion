@@ -1,4 +1,4 @@
-/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2004          */
+/* FEAT390.H    (c) Copyright Jan Jaeger, 2000-2005          */
 /*      ESA/390 feature definitions              */
 
 /* This file MUST NOT contain #undef statements */

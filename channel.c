@@ -1,4 +1,4 @@
-/* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2004                */
+/* CHANNEL.C    (c) Copyright Roger Bowler, 1999-2005                */
 /*              ESA/390 Channel Emulator                             */
 
 /*-------------------------------------------------------------------*/
@@ -12,7 +12,7 @@
 /*      Fix program check on NOP due to addressing - Jan Jaeger      */
 /*      Fix program check on TIC as first ccw on RSCH - Jan Jaeger   */
 /*      Fix PCI intermediate status flags             - Jan Jaeger   */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2005      */
 /*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
 /*      Incorrect-length-indication-suppression - Jan Jaeger         */
 /*-------------------------------------------------------------------*/

@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------*/
 /* Hercules Communication Line Driver                                */
-/* (c) 1999-2004 Roger Bowler & Others                               */
+/* (c) 1999-2005 Roger Bowler & Others                               */
 /* Use of this program is governed by the QPL License                */
 /* Original Author : Ivan Warren                                     */
 /* Prime Maintainer : Ivan Warren                                    */

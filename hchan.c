@@ -1,5 +1,5 @@
-/* GCHAN.C       (c) Copyright Ivan Warren, 2004                     */
-/* Based on work (c)Roger Bowler, Jan Jaeger & Others 1999-2004      */
+/* GCHAN.C       (c) Copyright Ivan Warren, 2005                     */
+/* Based on work (c)Roger Bowler, Jan Jaeger & Others 1999-2005      */
 /*              Generic channel device handler                       */
 /* This code is covered by the QPL Licence                           */
 /**CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION*CAUTION****/

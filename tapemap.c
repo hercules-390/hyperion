@@ -1,4 +1,4 @@
-/* TAPEMAP.C   (c) Copyright Jay Maynard, 2000-2004                  */
+/* TAPEMAP.C   (c) Copyright Jay Maynard, 2000-2005                  */
 /*              Map AWSTAPE format tape image                        */
 
 /*-------------------------------------------------------------------*/

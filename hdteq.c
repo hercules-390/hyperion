@@ -1,4 +1,4 @@
-/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2004                  */
+/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2005                  */
 /*              Hercules Dynamic Loader                              */
 
 
@@ -33,6 +33,9 @@ static DTEQ dteq[] = {
     { "1052",   "3270" },
     { "3215",   "3270" },
     { "3287",   "3270" },
+
+    { "1052-C", "1052c" },
+    { "3215-C", "1052c" },
 
     { "1442",   "3505" },
     { "2501",   "3505" },

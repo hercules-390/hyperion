@@ -1,4 +1,4 @@
-/* SHARED.C     (c)Copyright Greg Smith, 2002-2004                   */
+/* SHARED.C     (c)Copyright Greg Smith, 2002-2005                   */
 /*              Shared Device Server                                 */
 
 #define _HERCULES_SHARED_C

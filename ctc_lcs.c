@@ -2,7 +2,7 @@
 // Hercules LAN Channel Station Support
 // ====================================================================
 //
-// Copyright (C) 2002-2004 by James A. Pierson
+// Copyright (C) 2002-2005 by James A. Pierson
 //
 
 //#if !defined(__APPLE__)
