@@ -266,5 +266,6 @@ int sl_vol( SLLABEL *, char *, char * );
 int sl_ds1( SLLABEL *, int type, char *, char *, int, int, char *, int );
 int sl_ds2( SLLABEL *, int type, char *, int, int, char *, char *, char * );
 int sl_usr( SLLABEL *, int type, int num, char * );
+const char *sl_error( int rc );
 
 #endif /* defined( _SLLIB_H_ ) */

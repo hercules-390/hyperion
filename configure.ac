@@ -13,6 +13,7 @@ CFLAGS="-W -Wall $CFLAGS"
 
 # Programs
 AC_PROG_CC
+AC_PROG_LIBTOOL
 
 # OS-specific settings that we can't figure out any other way (yet)
 

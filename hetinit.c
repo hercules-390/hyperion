@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
+#include "sllib.h"
+
 /*
 || Local constant data
 */
@@ -47,6 +49,17 @@ usage( char *name )
 }
 
 /*
+|| Subroutine to convert a null-terminated string to upper case
+*/
+void het_string_to_upper (char *source)
+{
+int i;
+
+    for (i = 0; source[i] != '\0'; i++)
+        source[i] = toupper(source[i]);
+}
+
+/*
 || Standard main() function
 */
 int
@@ -61,6 +74,15 @@ main( int argc, char *argv[] )
     char *o_filename;
     char *o_owner;
     char *o_volser;
+    char *scodepage;
+
+    if( !sysblk.codepage )
+    {
+        if( ( scodepage = getenv( "HERCULES_CP" ) ) )
+            set_codepage( scodepage );
+        else
+            set_codepage( "default" );
+    }
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -154,6 +176,12 @@ main( int argc, char *argv[] )
         }
     }
 
+    if( o_volser )
+        het_string_to_upper( o_volser );
+
+    if( o_owner )
+        het_string_to_upper( o_owner );
+
     rc = het_open( &hetb, o_filename, HETOPEN_CREATE );
     if( rc < 0 )
     {
@@ -170,7 +198,13 @@ main( int argc, char *argv[] )
 
     if( o_iehinitt )
     {
-        sl_vol1( &lab, o_volser, o_owner );
+        rc = sl_vol1( &lab, o_volser, o_owner );
+        if( rc < 0 )
+        {
+            printf( "%s\n", sl_error(rc) );
+            goto exit;
+        }
+
         rc = het_write( hetb, &lab, sizeof( lab ) );
         if( rc < 0 )
         {
@@ -178,7 +212,13 @@ main( int argc, char *argv[] )
             goto exit;
         }
 
-        sl_hdr1( &lab, SL_INITDSN, NULL, 0, 0, NULL, 0 );
+        rc = sl_hdr1( &lab, SL_INITDSN, NULL, 0, 0, NULL, 0 );
+        if( rc < 0 )
+        {
+            printf( "%s\n", sl_error(rc) );
+            goto exit;
+        }
+
         rc = het_write( hetb, &lab, sizeof( lab ) );
         if( rc < 0 )
         {

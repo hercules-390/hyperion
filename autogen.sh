@@ -23,8 +23,11 @@ if test ! -e ./ABOUT-NLS; then
   echo " hurt anything if you do."
   echo ""
 
-  echo -e "Implementing NLS..."
-  gettextize --copy --force --no-changelog --intl >> ./autogen.log 2>&1
+  echo -e "libtoolizing..."
+  libtoolize --copy --force --ltdl                >> ./autogen.log 2>&1
+
+  echo -e "gettextizing..."
+  gettextize --copy --force --intl --no-changelog >> ./autogen.log 2>&1
 
   echo -e "\a"
   echo "In spite of the confirmation required from you,"
@@ -42,8 +45,8 @@ if test ! -e ./ABOUT-NLS; then
 fi
 
 aclocal -I m4 >>./autogen.log 2>&1
-autoconf      >>./autogen.log 2>&1
 autoheader    >>./autogen.log 2>&1
 automake      >>./autogen.log 2>&1
+autoconf      >>./autogen.log 2>&1
 
 echo "Completed successfully"

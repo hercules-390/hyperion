@@ -9,13 +9,10 @@
 || ----------------------------------------------------------------------------
 */
 
-#include <time.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-
+#include "hercules.h"
 #include "sllib.h"
+
+SYSBLK sysblk; /* Currently only used for codepage mapping */
 
 /*
 || Local constant data
@@ -73,7 +70,7 @@ sl_ranges[] =
 /*
 || Text descriptions for errors
 */
-static const char *sl_errstr[] = 
+static const char *sl_errstr[] =
 {
     "No error",
     "Block size out of range",
@@ -81,7 +78,7 @@ static const char *sl_errstr[] =
     "Invalid expiration date",
     "Missing or invalid job name",
     "Missing or invalid record length",
-    "Owner string too long",
+    "Owner string invalid or too long",
     "Missing or invalid record format",
     "Missing or invalid step name",
     "Invalid recording technique",
@@ -95,12 +92,13 @@ static const char *sl_errstr[] =
 #define SL_ERRSTR_MAX ( sizeof( sl_errstr) / sizeof( sl_errstr[ 0 ] ) )
 
 /*
-|| Valid characters for a volume serial (well...kinda strict)
+|| Valid characters for a Standard Label  (from: SC26-4565-01
+|| "MVS/DFP 3.3: Using Magnetic Tape Labels and File Structure")
 */
 static const char
-volser_cset[] =
+sl_cset[] =
 {
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"%&'()*+,-./:;<=>?"
 };
 
 /*
@@ -145,72 +143,24 @@ valfm[] =
 };
 #define VALFMCNT ( sizeof( valfm ) / sizeof( valfm[ 0 ] ) )
 
-/*
-|| EBCDIC -> ASCII translation table
-*/
-static const unsigned char
-sl_etoatab[] =
-{
-    "\x00\x01\x02\x03\xA6\x09\xA7\x7F\xA9\xB0\xB1\x0B\x0C\x0D\x0E\x0F"
-    "\x10\x11\x12\x13\xB2\xB4\x08\xB7\x18\x19\x1A\xB8\xBA\x1D\xBB\x1F"
-    "\xBD\xC0\x1C\xC1\xC2\x0A\x17\x1B\xC3\xC4\xC5\xC6\xC7\x05\x06\x07"
-    "\xC8\xC9\x16\xCB\xCC\x1E\xCD\x04\xCE\xD0\xD1\xD2\x14\x15\xD3\xFC"
-    "\x20\xD4\x83\x84\x85\xA0\xD5\x86\x87\xA4\xD6\x2E\x3C\x28\x2B\xD7"
-    "\x26\x82\x88\x89\x8A\xA1\x8C\x8B\x8D\xD8\x21\x24\x2A\x29\x3B\x5E"
-    "\x2D\x2F\xD9\x8E\xDB\xDC\xDD\x8F\x80\xA5\x7C\x2C\x25\x5F\x3E\x3F"
-    "\xDE\x90\xDF\xE0\xE2\xE3\xE4\xE5\xE6\x60\x3A\x23\x40\x27\x3D\x22"
-    "\xE7\x61\x62\x63\x64\x65\x66\x67\x68\x69\xAE\xAF\xE8\xE9\xEA\xEC"
-    "\xF0\x6A\x6B\x6C\x6D\x6E\x6F\x70\x71\x72\xF1\xF2\x91\xF3\x92\xF4"
-    "\xF5\x7E\x73\x74\x75\x76\x77\x78\x79\x7A\xAD\xA8\xF6\x5B\xF7\xF8"
-    "\x9B\x9C\x9D\x9E\x9F\xB5\xB6\xAC\xAB\xB9\xAA\xB3\xBC\x5D\xBE\xBF"
-    "\x7B\x41\x42\x43\x44\x45\x46\x47\x48\x49\xCA\x93\x94\x95\xA2\xCF"
-    "\x7D\x4A\x4B\x4C\x4D\x4E\x4F\x50\x51\x52\xDA\x96\x81\x97\xA3\x98"
-    "\x5C\xE1\x53\x54\x55\x56\x57\x58\x59\x5A\xFD\xEB\x99\xED\xEE\xEF"
-    "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\xFE\xFB\x9A\xF9\xFA\xFF"
-};
-
-/*
-|| ASCII -> EBCDIC translation table
-*/
-static const unsigned char
-sl_atoetab[] =
-{
-    "\x00\x01\x02\x03\x37\x2D\x2E\x2F\x16\x05\x25\x0B\x0C\x0D\x0E\x0F"
-    "\x10\x11\x12\x13\x3C\x3D\x32\x26\x18\x19\x1A\x27\x22\x1D\x35\x1F"
-    "\x40\x5A\x7F\x7B\x5B\x6C\x50\x7D\x4D\x5D\x5C\x4E\x6B\x60\x4B\x61"
-    "\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xF9\x7A\x5E\x4C\x7E\x6E\x6F"
-    "\x7C\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xD1\xD2\xD3\xD4\xD5\xD6"
-    "\xD7\xD8\xD9\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xAD\xE0\xBD\x5F\x6D"
-    "\x79\x81\x82\x83\x84\x85\x86\x87\x88\x89\x91\x92\x93\x94\x95\x96"
-    "\x97\x98\x99\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\xC0\x6A\xD0\xA1\x07"
-    "\x68\xDC\x51\x42\x43\x44\x47\x48\x52\x53\x54\x57\x56\x58\x63\x67"
-    "\x71\x9C\x9E\xCB\xCC\xCD\xDB\xDD\xDF\xEC\xFC\xB0\xB1\xB2\xB3\xB4"
-    "\x45\x55\xCE\xDE\x49\x69\x04\x06\xAB\x08\xBA\xB8\xB7\xAA\x8A\x8B"
-    "\x09\x0A\x14\xBB\x15\xB5\xB6\x17\x1B\xB9\x1C\x1E\xBC\x20\xBE\xBF"
-    "\x21\x23\x24\x28\x29\x2A\x2B\x2C\x30\x31\xCA\x33\x34\x36\x38\xCF"
-    "\x39\x3A\x3B\x3E\x41\x46\x4A\x4F\x59\x62\xDA\x64\x65\x66\x70\x72"
-    "\x73\xE1\x74\x75\x76\x77\x78\x80\x8C\x8D\x8E\xEB\x8F\xED\xEE\xEF"
-    "\x90\x9A\x9B\x9D\x9F\xA0\xAC\xAE\xAF\xFD\xFE\xFB\x3F\xEA\xFA\xFF"
-};
-
 /*==DOC==
 
     NAME
             sl_atoe - Translate input buffer from ASCII to EBCDIC
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             char *sl_atoe( void *dbuf, void *sbuf, int slen )
-        
+
     DESCRIPTION
             Translates, and optionally copies, "sbuf" from ASCII to
             EBCDIC for "slen" characters.
-            
+
             If "dbuf" is specified as NULL, then "sbuf" is translated in
-            place.  Otherwise, "dbuf" specifies the buffer where the 
+            place.  Otherwise, "dbuf" specifies the buffer where the
             translated characters will be stored.
-            
+
     RETURN VALUE
             The return value will be either "sbuf" or "dbuf" depending on
             whether "dbuf" was passed as NULL.
@@ -244,7 +194,7 @@ sl_atoetab[] =
                 {
                     printf( "%02x ", ascii[ i ] );
                 }
-                
+
                 printf( "\nebcdic string: " );
 
                 for( i = 0 ; i < len ; i++ )
@@ -266,7 +216,7 @@ sl_atoe( void *dbuf, void *sbuf, int slen )
 {
     unsigned char *sptr;
     unsigned char *dptr;
-    
+
     sptr = sbuf;
     dptr = dbuf;
 
@@ -278,7 +228,7 @@ sl_atoe( void *dbuf, void *sbuf, int slen )
     while( slen > 0 )
     {
         slen--;
-        dptr[ slen ] = sl_atoetab[ sptr[ slen ] ];
+        dptr[ slen ] = host_to_guest( sptr[ slen ] );
     }
 
     return( dptr );
@@ -288,20 +238,20 @@ sl_atoe( void *dbuf, void *sbuf, int slen )
 
     NAME
             sl_etoa - Translate input buffer from EBCDIC to ASCII
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             char *sl_etoa( void *dbuf, void *sbuf, int slen )
-        
+
     DESCRIPTION
             Translates, and optionally copies, "sbuf" from EBCDIC to
             ASCII for "slen" characters.
-            
+
             If "dbuf" is specified as NULL, then "sbuf" is translated in
-            place.  Otherwise, "dbuf" specifies the buffer where the 
+            place.  Otherwise, "dbuf" specifies the buffer where the
             translated characters will be stored.
-            
+
     RETURN VALUE
             The return value will be either "sbuf" or "dbuf" depending on
             whether "dbuf" was passed as NULL.
@@ -335,7 +285,7 @@ sl_atoe( void *dbuf, void *sbuf, int slen )
                 {
                     printf( "%02x ", ebcdic[ i ] );
                 }
-                
+
                 printf( "\nascii string: " );
 
                 for( i = 0 ; i < len ; i++ )
@@ -357,7 +307,7 @@ sl_etoa( void *dbuf, void *sbuf, int slen )
 {
     unsigned char *sptr;
     unsigned char *dptr;
-    
+
     sptr = sbuf;
     dptr = dbuf;
 
@@ -369,7 +319,7 @@ sl_etoa( void *dbuf, void *sbuf, int slen )
     while( slen > 0 )
     {
         slen--;
-        dptr[ slen ] = sl_etoatab[ sptr[ slen ] ];
+        dptr[ slen ] = guest_to_host( sptr[ slen ] );
     }
 
     return( dptr );
@@ -379,12 +329,12 @@ sl_etoa( void *dbuf, void *sbuf, int slen )
 
     NAME
             sl_islabel - Determines if passed data represents a standard label
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             int sl_islabel( SLLABEL *dlab, void *buf, int len )
-        
+
     DESCRIPTION
             This function performs several tests to determine if the "buf"
             parameter points to a valid standard label.  The "len" parameter
@@ -417,7 +367,7 @@ sl_etoa( void *dbuf, void *sbuf, int slen )
                     ( sl_islabel( NULL, &sllab, sizeof( sllab ) ? "" : " not" ) );
 
                 sl_vol1( &sllab, "HET001", "HERCULES" );
-                
+
                 printf( "Label is: %s valid\n",
                     ( sl_islabel( NULL, &sllab, sizeof( sllab ) ? "" : " not" ) );
 
@@ -472,7 +422,7 @@ sl_islabel( SLLABEL *lab, void *buf, int len )
             }
         }
     }
-    
+
     return( FALSE );
 }
 
@@ -480,20 +430,20 @@ sl_islabel( SLLABEL *lab, void *buf, int len )
 
     NAME
             sl_istype - Verifies data is of specified standard label type
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             int sl_istype( void *buf, int type, int num )
-        
+
     DESCRIPTION
             This function verifies that the data pointed to by the "buf"
-            parameter contains a standard label as determined by the "type" 
+            parameter contains a standard label as determined by the "type"
             and "num" parameters.
-            
+
             The "type" parameter can be one of the "SLT_*" defines found in
             the "sllib.h" header file.
-            
+
             The "num" parameter further defines the type and is usually 1
             or 2.  However, 0 may be specified to only test using the "type"
             parameter.
@@ -520,7 +470,7 @@ sl_islabel( SLLABEL *lab, void *buf, int len )
                 SLLABEL sllab = { 0 };
 
                 sl_vol1( &sllab, "HET001", "HERCULES" );
-                
+
                 printf( "Label is%s a VOL1\n",
                     ( sl_istype( &sllab, SLT_VOL, 1 ) ? "" : " not" ) );
 
@@ -547,7 +497,7 @@ sl_istype( void *buf, int type, int num )
     */
     if( memcmp( buf, sl_elabs[ type ], 3 ) == 0 )
     {
-        if( ( num == 0 ) || ( ptr[ 3 ] == ( ( (unsigned char) '\xF0' ) + num ) ) ) 
+        if( ( num == 0 ) || ( ptr[ 3 ] == ( ( (unsigned char) '\xF0' ) + num ) ) )
         {
             return( TRUE );
         }
@@ -571,12 +521,12 @@ sl_istype( void *buf, int type, int num )
 
     NAME
             sl_fmtdate - Converts dates to/from SL format
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             char *sl_fmtdate( char *dest, char *src, int fromto )
-        
+
     DESCRIPTION
             Converts the "src" date from or to the SL format and places the
             result at the "dest" location.  If the "src" parameter is specified
@@ -584,15 +534,15 @@ sl_istype( void *buf, int type, int num )
 
             The "fromto" parameter controls the type of conversion.  Specify
             FALSE to convert to SL format and TRUE from convert from SL format.
-            
+
             When converting to the SL format, the "src" parameter must contain
             a valid Julian date in one of the following formats:
                 YYDDD
                 YY.DDD
                 YYYYDDD
                 YYYY.DDD
-                
-    RETURN VALUE    
+
+    RETURN VALUE
             If "src" contains an invalid date, then NULL will be returned.
             Otherwise, the "dest" value is returned.
 
@@ -671,7 +621,7 @@ sl_fmtdate( char *dest, char *src, int fromto )
             strftime( sbuf, sizeof( sbuf ), "%Y%j", localtime( &curtime ) );
             src = sbuf;
         }
-    
+
         /*
         || Base initial guess at format on length of src date
         */
@@ -680,34 +630,34 @@ sl_fmtdate( char *dest, char *src, int fromto )
             case 5:
                 ptr = "%2u%3u";
             break;
-            
+
             case 6:
                 ptr = "%2u.%3u";
             break;
-            
+
             case 7:
                 ptr = "%4u%3u";
             break;
-            
+
             case 8:
                 ptr = "%4u.%3u";
             break;
-            
+
             default:
                 return( NULL );
             break;
         }
-        
+
         /*
         || Convert src to "tm" format
         */
-        ret = sscanf( src, ptr, &tm.tm_year, &tm.tm_yday );             
-        if( ret != 2 || tm.tm_yday < 1 || tm.tm_yday > 366 )                
-        {                                 
+        ret = sscanf( src, ptr, &tm.tm_year, &tm.tm_yday );
+        if( ret != 2 || tm.tm_yday < 1 || tm.tm_yday > 366 )
+        {
             return( NULL );
-        }                                                                  
-        tm.tm_yday--;                                                      
-                                                                           
+        }
+        tm.tm_yday--;
+
         /*
         || Now, convert to SL tape format
         */
@@ -736,12 +686,12 @@ sl_fmtdate( char *dest, char *src, int fromto )
 
     NAME
             sl_fmtlab - Transforms an SL label from raw to cooked format
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             void sl_fmtlab( SLFMT *fmt, SLLABEL *lab )
-        
+
     DESCRIPTION
             Converts the SL label specified by "lab" into a "cooked" format
             that's easier to process.  Text descriptions are supplied for
@@ -772,7 +722,7 @@ sl_fmtdate( char *dest, char *src, int fromto )
                 int i;
 
                 sl_vol1( &sllab, "HET001", "HERCULES" );
-                
+
                 sl_fmtlab( &slfmt, &sllab );
 
                 for( i = 0 ; slfmt.key[ i ] != NULL ; i++ )
@@ -879,28 +829,28 @@ sl_fmtlab( SLFMT *fmt, SLLABEL *lab )
 
     NAME
             sl_vol - Generate a volume label
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             int sl_vol( SLLABEL *lab,
                         char *volser,
                         char *owner )
-        
+
     DESCRIPTION
             This function builds a volume label based on the parameters
             provided and places it at the location pointed to by the "lab"
             parameter in EBCDIC.
-            
+
             The remaining parameters correspond to fields within the label
             and are converted to EBCDIC before storing.
-            
+
             The "owner" parameter may be specified as NULL, in which case
             blanks are supplied.
 
     RETURN VALUE
             The return value will be >= 0 if no errors are detected.
-            
+
             If an error is detected, then the return value will be < 0 and
             will be one of the following:
 
@@ -928,7 +878,7 @@ sl_fmtlab( SLFMT *fmt, SLLABEL *lab )
                 int i;
 
                 sl_vol( &sllab, "HET001", "HERCULES" );
-                
+
                 sl_fmtlab( &slfmt, &sllab );
 
                 for( i = 0 ; slfmt.key[ i ] != NULL ; i++ )
@@ -975,26 +925,26 @@ sl_vol( SLLABEL *lab,
     }
 
     len = strlen( volser );
-    if( ( len > 6 ) || ( (int)strspn( volser, volser_cset ) != len ) )
+    if( ( len > 6 ) || ( (int)strspn( volser, sl_cset ) != len ) )
     {
         return( SLE_VOLSER );
     }
 
     memcpy( lab->slvol.volser, volser, len );
-    
+
     /*
     || Owner
     */
     if( owner != NULL )
     {
         len = strlen( owner );
-        if( len > 10 )
+        if( ( len > 10 ) ||  ( (int)strspn( owner, sl_cset ) != len ) )
         {
             return( SLE_OWNER );
         }
         memcpy( lab->slvol.owner, owner, len );
     }
-    
+
     /*
     || Convert to EBCDIC
     */
@@ -1007,7 +957,7 @@ sl_vol( SLLABEL *lab,
 
     NAME
             sl_ds1 - Generate a data set label 1
-        
+
     SYNOPSIS
             #include "sllib.h"
 
@@ -1019,17 +969,17 @@ sl_vol( SLLABEL *lab,
                         int dsseq,
                         char *expdt,
                         int blocks )
-        
+
     DESCRIPTION
             This function builds a data set label 1 based on the parameters
             provided and places it at the location pointed to by the "lab"
             parameter in EBCDIC.
-            
+
             The "type" parameter must be "SLT_HDR", "SLT_EOF", or "SLT_EOV".
-            
+
             The remaining parameters correspond to fields within the label
             and are converted to EBCDIC before storing.
-            
+
             The "dsn" parameter may be set to "SL_INITDSN" if "SLT_HDR" is
             specified for the "type" parameter.  This will create an IEHINITT
             format HDR1 label.
@@ -1038,7 +988,7 @@ sl_vol( SLLABEL *lab,
 
     RETURN VALUE
             The return value will be >= 0 if no errors are detected.
-            
+
             If an error is detected, then the return value will be < 0 and
             will be one of the following:
 
@@ -1074,7 +1024,7 @@ sl_vol( SLLABEL *lab,
                         1,
                         "2001.321",
                         289 );
-                
+
                 sl_fmtlab( &slfmt, &sllab );
 
                 for( i = 0 ; slfmt.key[ i ] != NULL ; i++ )
@@ -1104,7 +1054,7 @@ sl_ds1( SLLABEL *lab,
     int len;
     int ndx;
     char wbuf[ 80 ];
-    
+
     /*
     || Initialize
     */
@@ -1145,7 +1095,7 @@ sl_ds1( SLLABEL *lab,
         len = 17;
     }
     memcpy( lab->slds1.dsid, &dsn[ ndx ], len );
-    
+
     /*
     || GDG generation and version
     */
@@ -1250,7 +1200,7 @@ sl_ds1( SLLABEL *lab,
 
     NAME
             sl_ds2 - Generate a data set label 2
-        
+
     SYNOPSIS
             #include "sllib.h"
 
@@ -1262,14 +1212,14 @@ sl_ds1( SLLABEL *lab,
                         char *jobname,
                         char *stepname,
                         char *trtch )
-        
+
     DESCRIPTION
             This function builds a data set label 2 based on the parameters
             provided and places it at the location pointed to by the "lab"
             parameter in EBCDIC.
-            
+
             The "type" parameter must be "SLT_HDR", "SLT_EOF", or "SLT_EOV".
-            
+
             The remaining parameters correspond to fields within the label
             and are converted to EBCDIC before storing.
 
@@ -1280,13 +1230,13 @@ sl_ds1( SLLABEL *lab,
                 FB      FBS     VB      VBS
                 FBA     FBSA    VBA     VBSA
                 FBM     FBSM    VBM     VBSM
-            
+
             The "trtch" parameter may be blank or one of the following:
                 T       C       E       ET      P
 
     RETURN VALUE
             The return value will be >= 0 if no errors are detected.
-            
+
             If an error is detected, then the return value will be < 0 and
             will be one of the following:
 
@@ -1296,7 +1246,7 @@ sl_ds1( SLLABEL *lab,
             SLE_BLKSIZE         Block size out of range
             SLE_JOBNAME         Missing or invalid job name
             SLE_STEPNAME        Missing or invalid step name
-            SLE_TRTCH           Invalid recording technique 
+            SLE_TRTCH           Invalid recording technique
 
     NOTES
             This routine is normally accessed using the supplied "sl_hdr1",
@@ -1326,7 +1276,7 @@ sl_ds1( SLLABEL *lab,
                         "HERCJOB",
                         "HERCSTEP",
                         "P" );
-                
+
                 sl_fmtlab( &slfmt, &sllab );
 
                 for( i = 0 ; slfmt.key[ i ] != NULL ; i++ )
@@ -1355,7 +1305,7 @@ sl_ds2( SLLABEL *lab,
     int i;
     int len;
     char wbuf[ 80 ];
-    
+
     /*
     || Initialize
     */
@@ -1399,7 +1349,7 @@ sl_ds2( SLLABEL *lab,
     lab->slds2.recfm[ 0 ]   = valfm[ i ].f;
     lab->slds2.blkattr[ 0 ] = valfm[ i ].b;
     lab->slds2.ctrl[ 0 ]    = valfm[ i ].c;
-        
+
     /*
     || Block size
     */
@@ -1441,7 +1391,7 @@ sl_ds2( SLLABEL *lab,
                 }
             }
         break;
-        
+
         case 'V':
             if( valfm[ i ].b == ' ' )
             {
@@ -1500,12 +1450,12 @@ sl_ds2( SLLABEL *lab,
     }
     sprintf( wbuf, "%-8.8s/%-8.8s", jobname, stepname );
     memcpy( lab->slds2.jobid, wbuf, 17 );
-        
+
     /*
     || Density
     */
     lab->slds2.den[ 0 ] = '0';
-    
+
     /*
     || Dataset position
     */
@@ -1527,7 +1477,7 @@ sl_ds2( SLLABEL *lab,
             case 'T': case 'C': case 'P': case ' ':
                 lab->slds2.trtch[ 0 ] = trtch[ 0 ];
             break;
-            
+
             case 'E':
                 lab->slds2.trtch[ 0 ] = trtch[ 0 ];
                 if( len == 2 )
@@ -1539,19 +1489,19 @@ sl_ds2( SLLABEL *lab,
                     lab->slds2.trtch[ 1 ] = trtch[ 1 ];
                 }
             break;
-            
+
             default:
                 return( SLE_TRTCH );
             break;
         }
     }
-    
+
     /*
     || Device serial number
     */
     sprintf( wbuf, "%06u", rand() );
     memcpy( lab->slds2.devser, wbuf, 6 );
-    
+
     /*
     || Checkpoint dataset identifier
     */
@@ -1569,7 +1519,7 @@ sl_ds2( SLLABEL *lab,
 
     NAME
             sl_usr - Generate a user label
-        
+
     SYNOPSIS
             #include "sllib.h"
 
@@ -1577,21 +1527,21 @@ sl_ds2( SLLABEL *lab,
                         int type,
                         int num,
                         char *data )
-        
+
     DESCRIPTION
             This function builds a user label based on the parameters provided
             and places it at the location pointed to by the "lab" parameter in
             EBCDIC.
-            
+
             The "type" parameter must be "SLT_UHL" or "SLT_UTL" and the "num"
             parameter must be 1 through 8.
-            
+
             The remaining parameter corresponds to fields within the label
             and is converted to EBCDIC before storing.
 
     RETURN VALUE
             The return value will be >= 0 if no errors are detected.
-            
+
             If an error is detected, then the return value will be < 0 and
             will be one of the following:
 
@@ -1618,7 +1568,7 @@ sl_ds2( SLLABEL *lab,
                         SLT_EOF,
                         6,
                         "Hercules Emulated Tape" );
-                
+
                 sl_fmtlab( &slfmt, &sllab );
 
                 for( i = 0 ; slfmt.key[ i ] != NULL ; i++ )
@@ -1641,7 +1591,7 @@ sl_usr( SLLABEL *lab,
         char *data )
 {
     int len;
-    
+
     /*
     || Initialize
     */
@@ -1692,16 +1642,16 @@ sl_usr( SLLABEL *lab,
 
     NAME
             sl_error - Returns a text message for an SL error code
-        
+
     SYNOPSIS
             #include "sllib.h"
 
             char *sl_error( int rc )
-        
+
     DESCRIPTION
             Simply returns a pointer to a string that describes the error
             code passed in the "rc" parameter.
-            
+
     RETURN VALUE
             The return value is always valid and no errors are returned.
 
@@ -1735,7 +1685,7 @@ sl_error( int rc )
     {
         rc = 0;
     }
-    
+
     /*
     || Turn it into an index
     */

@@ -182,7 +182,7 @@ cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c \
 hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetinit_SOURCES = hetinit.c hetlib.c sllib.c hostinfo.c version.c \
+hetinit_SOURCES = hetinit.c hetlib.c codepage.c sllib.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 hetmap_SOURCES = hetmap.c hetlib.c sllib.c hostinfo.c version.c \
@@ -251,19 +251,21 @@ if SETUID_HERCIFC
 endif
 if USE_DLLTOOL
 #  USE_DLLTOOL implies Cygwin which implies external gui
-	cp $(DYNINST_DLL) $(DESTDIR)$(bindir)/
-	cp $(DYNGUI_DLL) $(DESTDIR)$(bindir)/
+	mv  $(DESTDIR)$(bindir)/$(DYNINST)$(EXEEXT) $(DESTDIR)$(bindir)/$(DYNINST_DLL)
+	mv  $(DESTDIR)$(bindir)/$(DYNGUI)$(EXEEXT)  $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
 endif
 
 uninstall-local:
 if USE_DLLTOOL
 #  USE_DLLTOOL implies Cygwin which implies external gui
-	rm -f dyngui.dll
-	rm -f dyngui.res
-	rm -f dyninst.dll
-	rm -f hercules.a
-	rm -f hercules.def
-	rm -f hercules.exp
+	rm -f $(DESTDIR)$(bindir)/$(DYNINST_DLL)
+	rm -f $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
+	rm -f                     $(DYNINST_DLL)
+	rm -f                     $(DYNGUI_DLL)
+	rm -f                     $(DYNGUI).res
+	rm -f                     $(HERCULES_A)
+	rm -f                     $(HERCULES_EXP)
+	rm -f                     hercules.def
 endif
 
 %.s: %.c
