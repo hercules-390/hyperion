@@ -229,6 +229,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
                   pDevCTCBLK->szTUNDevName);
     }
 
+#if !defined(__APPLE__)
     if( !pDevCTCBLK->szMACAddress[0] )   // (if MAC address unspecified)
     {
         // Build a default MAC addr based on the guest (destination) ip
@@ -310,6 +311,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, char *argv[] )
     );
 
     VERIFY( TUNTAP_SetMACAddr ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szMACAddress  ) == 0 );
+#endif /*!defined(__APPLE__) */
 
     VERIFY( TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNDevName, pDevCTCBLK->szDriveIPAddr ) == 0 );
 

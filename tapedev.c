@@ -3989,7 +3989,9 @@ union
 
     /* Initialize device dependent fields */
     dev->fd                = -1;
+#if defined(OPTION_SCSI_TAPE)
     dev->sstat             = GMT_DR_OPEN( -1 );
+#endif /* defined(OPTION_SCSI_TAPE) */
     dev->omadesc           = NULL;
     dev->omafiles          = 0;
     dev->curfilen          = 1;
@@ -4669,7 +4671,11 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
                 dev->curfilen, dev->nxtblkpos );
         }
 
-        if ( TAPEDEVT_SCSITAPE != dev->tapedevt || !STS_NOT_MOUNTED(dev) )
+        if ( TAPEDEVT_SCSITAPE != dev->tapedevt 
+#if defined(OPTION_SCSI_TAPE)
+        || !STS_NOT_MOUNTED(dev)
+#endif /* defined(OPTION_SCSI_TAPE) */
+        )
         {
             // Not a SCSI tape,  -or-  mounted SCSI tape...
 

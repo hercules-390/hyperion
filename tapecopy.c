@@ -11,21 +11,19 @@
 #if defined(HAVE_CONFIG_H)
 #include <config.h>   /* (need 1st to set build flags appropriately) */
 #endif
+#include "hercules.h"
 #include "featall.h"  /* (need 2nd to set OPTION_SCSI_TAPE correctly)*/
 
 /*-------------------------------------------------------------------*/
 /* (if no SCSI tape support generated, do nothing)                   */
 /*-------------------------------------------------------------------*/
 #if !defined(OPTION_SCSI_TAPE)
-int sysblk;
-int main (int argc, char *argv[])
+int main ()
 {
-    printf( _("SCSI tape not supported with this build\n") );
+    printf( _("HHCTC017E SCSI tape not supported with this build\n") );
     return 0;
 }
 #else
-
-#include "hercules.h"
 
 /*-------------------------------------------------------------------*/
 /* External GUI flag...                                              */
