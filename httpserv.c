@@ -117,7 +117,7 @@ CGIVAR *cgivar;
         }
         free(webblk);
     }
-    pthread_exit(NULL);
+    exit_thread(NULL);
 }
 
 

@@ -244,6 +244,8 @@ typedef void*THREAD_FUNC(void*);
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
 #define create_device_thread(ptid,pat,fn,arg) \
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
+#define exit_thread(_code) \
+        pthread_exit((_code))
 #if !defined(WIN32)
 #define signal_thread(tid,signo) \
         pthread_kill(tid,signo)
