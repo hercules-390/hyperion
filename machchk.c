@@ -271,10 +271,9 @@ int i;
             if (dev->tid == tid) break;
         if( dev == NULL)
             logmsg("signal USR2 received for undetermined device\n");
-#if 0
         else
-            logmsg("signal USR2 received for device %4.4X\n",dev->devnum);
-#endif
+            if(dev->ccwtrace)
+                logmsg("signal USR2 received for device %4.4X\n",dev->devnum);
         return;
     }
 

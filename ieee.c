@@ -2516,6 +2516,100 @@ DEF_INST(load_negative_bfp_short_reg)
 }
 
 /*
+ * B343 LCXBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
+ */
+DEF_INST(load_complement_bfp_ext_reg)
+{
+	int r1, r2;
+	struct ebfp op;
+
+	RRE(inst, execflag, regs, r1, r2);
+	//logmsg("LCXBR r1=%d r2=%d\n", r1, r2);
+	BFPINST_CHECK(regs);
+	BFPREGPAIR2_CHECK(r1, r2, regs);
+
+	get_ebfp(&op, regs->fpr + FPR2I(r2));
+
+	op.sign = !op.sign;
+
+	switch (ebfpclassify(&op)) {
+	case FP_ZERO:
+		regs->psw.cc = 0;
+		break;
+	case FP_NAN:
+		regs->psw.cc = 3;
+		break;
+	default:
+		regs->psw.cc = 2;
+		break;
+	}
+
+	put_ebfp(&op, regs->fpr + FPR2I(r1));
+}
+
+/*
+ * B313 LCDBR - LOAD COMPLEMENT (long BFP)                     [RRE]
+ */
+DEF_INST(load_complement_bfp_long_reg)
+{
+	int r1, r2;
+	struct lbfp op;
+
+	RRE(inst, execflag, regs, r1, r2);
+	//logmsg("LCDBR r1=%d r2=%d\n", r1, r2);
+	BFPINST_CHECK(regs);
+
+	get_lbfp(&op, regs->fpr + FPR2I(r2));
+
+	op.sign = !op.sign;
+
+	switch (lbfpclassify(&op)) {
+	case FP_ZERO:
+		regs->psw.cc = 0;
+		break;
+	case FP_NAN:
+		regs->psw.cc = 3;
+		break;
+	default:
+		regs->psw.cc = 2;
+		break;
+	}
+
+	put_lbfp(&op, regs->fpr + FPR2I(r1));
+}
+
+/*
+ * B303 LCEBR - LOAD COMPLEMENT (short BFP)                    [RRE]
+ */
+DEF_INST(load_complement_bfp_short_reg)
+{
+	int r1, r2;
+	struct sbfp op;
+
+	RRE(inst, execflag, regs, r1, r2);
+	//logmsg("LCEBR r1=%d r2=%d\n", r1, r2);
+	BFPINST_CHECK(regs);
+
+	get_sbfp(&op, regs->fpr + FPR2I(r2));
+
+	op.sign = !op.sign;
+
+	switch (sbfpclassify(&op)) {
+	case FP_ZERO:
+		regs->psw.cc = 0;
+		break;
+	case FP_NAN:
+		regs->psw.cc = 3;
+		break;
+	default:
+		regs->psw.cc = 2;
+		break;
+	}
+
+	put_sbfp(&op, regs->fpr + FPR2I(r1));
+}
+
+/*
  * B340 LPXBR - LOAD POSITIVE (extended BFP)                   [RRE]
  */
 DEF_INST(load_positive_bfp_ext_reg)
