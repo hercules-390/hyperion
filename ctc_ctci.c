@@ -965,11 +965,10 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // maintained. Old format statements have the tun character device
     // name as the second argument on Linux, or CTCI-W32 as the first
     // argument on Windows.
-    if( ( strncasecmp( argv[1], "/", 1 ) == 0 ) ||
-        ( strncasecmp( argv[0], "ctci-w32", 8 ) == 0 ) )
+    if( ( strncasecmp( argv[0], "/", 1 ) == 0 ) ||
+        ( strncasecmp( pDEVBLK->typname, "ctci-w32", 8 ) == 0 ) )
     {
         pCTCBLK->fOldFormat = 1;
-        argc--; argv++;
     }
     
     // Parse any optional arguments if not old format

@@ -1503,7 +1503,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         argv[i] = argv[i - 1];
 
     argc++;
-    argv[0] = "LCS";
+    argv[0] = pDEVBLK->typname;
 
     // Parse the optional arguments
     while( 1 )

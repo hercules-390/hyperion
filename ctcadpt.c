@@ -121,7 +121,7 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
             return -1;
         free(pDEVBLK->typname);
         pDEVBLK->typname = strdup(argv[0]);
-        return (pDEVBLK->hnd->init)( pDEVBLK, argc, argv );
+        return (pDEVBLK->hnd->init)( pDEVBLK, --argc, ++argv );
     }
     return -1;
 }
@@ -421,12 +421,6 @@ static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->ctctype = CTC_CTCT;
 
     SetSIDInfo( dev, 0x3088, 0x08, 0x3088, 0x01 );
-
-    if( strcasecmp( argv[0], "CTCT" ) == 0 )
-    {
-        // Shift past emulation type
-        argc--; argv++;
-    }
 
     // Check for correct number of arguments
     if (argc != 4)
