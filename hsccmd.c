@@ -2836,7 +2836,7 @@ CMDTAB Commands[] =
 COMMAND ( "?",         ListAllCommands, "list all commands" )
 COMMAND ( "help",      HelpCommand,   "command specific help\n" )
 COMMAND ( "hst",       History,       "history of commands\n" )
-COMMAND ( "log",       log_cmd,       "Direct log output\n" )
+COMMAND ( "log",       log_cmd,       "direct log output\n" )
 
 COMMAND ( "quit",      quit_cmd,      "terminate the emulator" )
 COMMAND ( "exit",      quit_cmd,      "(synonym for 'quit')\n" )

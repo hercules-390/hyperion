@@ -392,7 +392,7 @@ int   new_hrdcpyfd;
     {
         if(!logger_hrdcpy)
         {
-            logmsg(_("HHCLGxxxI log not active\n"));
+            logmsg(_("HHCLG014E log not active\n"));
             return;
         }
         else
@@ -401,9 +401,9 @@ int   new_hrdcpyfd;
             logger_hrdcpy = 0;
 	    logger_hrdcpyfd = 0;
             release_lock(&logger_lock);
-            fprintf(temp_hrdcpy,_("HHCLGxxxI log closed\n"));
+            fprintf(temp_hrdcpy,_("HHCLG015I log closed\n"));
             fclose(temp_hrdcpy);
-            logmsg(_("HHCLGxxxI log closed\n"));
+            logmsg(_("HHCLG015I log closed\n"));
             return;
         }
     }
@@ -414,7 +414,7 @@ int   new_hrdcpyfd;
                             S_IRUSR  | S_IWUSR | S_IRGRP);
         if(new_hrdcpyfd < 0)
         {
-            logmsg(_("HHCLGxxxE Error opening logfile %s: %s\n"),
+            logmsg(_("HHCLG016E Error opening logfile %s: %s\n"),
               filename,strerror(errno));
             return;
         }
@@ -422,7 +422,7 @@ int   new_hrdcpyfd;
         {
             if(!(new_hrdcpy = fdopen(new_hrdcpyfd,"w")))
             {
-                logmsg(_("HHCLGxxxE log file fdopen failed for %s: %s\n"),
+                logmsg(_("HHCLG017S log file fdopen failed for %s: %s\n"),
                   filename, strerror(errno));
                 return;
             }
@@ -437,7 +437,7 @@ int   new_hrdcpyfd;
 
 		if(temp_hrdcpy)
                 {
-                    fprintf(temp_hrdcpy,_("HHCLGxxxI log switched to %s\n"),
+                    fprintf(temp_hrdcpy,_("HHCLG018I log switched to %s\n"),
                       filename);
                     fclose(temp_hrdcpy);
                 }
