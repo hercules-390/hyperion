@@ -3435,6 +3435,14 @@ int count_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
 
+    if (argc > 1 && strcasecmp(argv[1],"clear") == 0)
+    {
+        for (i = 0; i < MAX_CPU; i++)
+            if (IS_CPU_ONLINE(i))
+                sysblk.regs[i]->instcount = 0;
+        for (i = 0; i < OPTION_COUNTING; i++)
+            sysblk.count[i] = 0;
+    }
     for (i = 0; i < MAX_CPU; i++)
         if (IS_CPU_ONLINE(i))
             instcount += sysblk.regs[i]->instcount;
