@@ -1,3 +1,5 @@
+22 May 2003 Add CPUVERID config statement to set version code - Jan Jaeger
+22 May 2003 Add DIAG8CMD config statement to enable diag 8 commands - Jan Jaeger
 21 May 2003 Fix spec exception in LPSW on incorrect amode settings - Jan Jaeger
 19 May 2003 Close all FDs before forking hercifc - Ivan Warren
 18 May 2003 Fix incorrect amask in LPSW in 64 bit mode - Jan Jaeger
