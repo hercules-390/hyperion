@@ -62,10 +62,6 @@ VADR    effective_addr1,
 
     PRIV_CHECK(regs);
 
-    /* Specification exception if operands are not on word boundary */
-    if ((effective_addr1 & 0x00000003) || (effective_addr2 & 0x00000003))
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-
     /*INCOMPLETE: NO ACTION IS TAKEN, THE SVC IS UNASSISTED
                   AND MVS WILL HAVE TO HANDLE THE SITUATION*/
 
@@ -89,6 +85,7 @@ VADR    lit_addr;                       /* Virtual address of lock
 U32     lock;                           /* Lock value                */
 U32     lcpa;                           /* Logical CPU address       */
 VADR    newia;                          /* Unsuccessful branch addr  */
+int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -103,19 +100,22 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
+    if (ACCESS_REGISTER_MODE(&regs->psw))
+        acc_mode = USE_PRIMARY_SPACE;
+
     /* Load ASCB address from first operand location */
-    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, acc_mode, regs );
 
     /* Load locks held bits from second operand location */
-    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, acc_mode, regs );
 
     /* Fetch our logical CPU address from PSALCPUA */
-    lcpa = ARCH_DEP(vfetch4) ( PSALCPUA, 0, regs );
+    lcpa = ARCH_DEP(vfetch4) ( effective_addr2 - 4, acc_mode, regs );
 
     lock_addr = (ascb_addr + ASCBLOCK) & ADDRESS_MAXWRAP(regs);
 
     /* Fetch the local lock from the ASCB */
-    lock = ARCH_DEP(vfetch4) ( lock_addr, 0, regs );
+    lock = ARCH_DEP(vfetch4) ( lock_addr, acc_mode, regs );
 
     /* Obtain the local lock if not already held by any CPU */
     if (lock == 0
@@ -123,14 +123,14 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     {
         /* Store the unchanged value into the second operand to
            ensure suppression in the event of an access exception */
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Store our logical CPU address in ASCBLOCK */
-        ARCH_DEP(vstore4) ( lcpa, lock_addr, 0, regs );
+        ARCH_DEP(vstore4) ( lcpa, lock_addr, acc_mode, regs );
 
         /* Set the local lock held bit in the second operand */
         hlhi_word |= PSALCLLI;
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Set register 13 to zero to indicate lock obtained */
         regs->GR_L(13) = 0;
@@ -140,9 +140,9 @@ VADR    newia;                          /* Unsuccessful branch addr  */
         /* Fetch the lock interface table address from the
            second word of the second operand, and load the
            new instruction address and amode from LITOLOC */
-        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, b2, regs ) + LITOLOC;
+        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, acc_mode, regs ) + LITOLOC;
         lit_addr &= ADDRESS_MAXWRAP(regs);
-        newia = ARCH_DEP(vfetch4) ( lit_addr, 0, regs );
+        newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
         regs->GR_L(12) = regs->psw.IA;
@@ -180,6 +180,7 @@ U32     lock;                           /* Lock value                */
 U32     susp;                           /* Lock suspend queue        */
 U32     lcpa;                           /* Logical CPU address       */
 VADR    newia;                          /* Unsuccessful branch addr  */
+int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -192,20 +193,23 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
+    if (ACCESS_REGISTER_MODE(&regs->psw))
+        acc_mode = USE_PRIMARY_SPACE;
+
     /* Load ASCB address from first operand location */
-    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, acc_mode, regs );
 
     /* Load locks held bits from second operand location */
-    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, acc_mode, regs );
 
     /* Fetch our logical CPU address from PSALCPUA */
-    lcpa = ARCH_DEP(vfetch4) ( PSALCPUA, 0, regs );
+    lcpa = ARCH_DEP(vfetch4) ( effective_addr2 - 4, acc_mode, regs );
 
     /* Fetch the local lock and the suspend queue from the ASCB */
     lock_addr = (ascb_addr + ASCBLOCK) & ADDRESS_MAXWRAP(regs);
     susp_addr = (ascb_addr + ASCBLSWQ) & ADDRESS_MAXWRAP(regs);
-    lock = ARCH_DEP(vfetch4) ( lock_addr, 0, regs );
-    susp = ARCH_DEP(vfetch4) ( susp_addr, 0, regs );
+    lock = ARCH_DEP(vfetch4) ( lock_addr, acc_mode, regs );
+    susp = ARCH_DEP(vfetch4) ( susp_addr, acc_mode, regs );
 
     /* Test if this CPU holds the local lock, and does not hold
        any CMS lock, and the local lock suspend queue is empty */
@@ -215,14 +219,14 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     {
         /* Store the unchanged value into the second operand to
            ensure suppression in the event of an access exception */
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Set the local lock to zero */
-        ARCH_DEP(vstore4) ( 0, lock_addr, 0, regs );
+        ARCH_DEP(vstore4) ( 0, lock_addr, acc_mode, regs );
 
         /* Clear the local lock held bit in the second operand */
         hlhi_word &= ~PSALCLLI;
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Set register 13 to zero to indicate lock released */
         regs->GR_L(13) = 0;
@@ -232,9 +236,9 @@ VADR    newia;                          /* Unsuccessful branch addr  */
         /* Fetch the lock interface table address from the
            second word of the second operand, and load the
            new instruction address and amode from LITRLOC */
-        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, b2, regs ) + LITRLOC;
+        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, acc_mode, regs ) + LITRLOC;
         lit_addr &= ADDRESS_MAXWRAP(regs);
-        newia = ARCH_DEP(vfetch4) ( lit_addr, 0, regs );
+        newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
         regs->GR_L(12) = regs->psw.IA;
@@ -268,6 +272,7 @@ VADR    lock_addr;                      /* Lock address              */
 int     lock_arn;                       /* Lock access register      */
 U32     lock;                           /* Lock value                */
 VADR    newia;                          /* Unsuccessful branch addr  */
+int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -286,14 +291,17 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
+    if (ACCESS_REGISTER_MODE(&regs->psw))
+        acc_mode = USE_PRIMARY_SPACE;
+
     /* Load ASCB address from first operand location */
-    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, acc_mode, regs );
 
     /* Load locks held bits from second operand location */
-    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, acc_mode, regs );
 
     /* Fetch the lock addressed by general register 11 */
-    lock = ARCH_DEP(vfetch4) ( lock_addr, lock_arn, regs );
+    lock = ARCH_DEP(vfetch4) ( lock_addr, acc_mode, regs );
 
     /* Obtain the lock if not held by any ASCB, and if this CPU
        holds the local lock and does not hold a CMS lock */
@@ -302,14 +310,14 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     {
         /* Store the unchanged value into the second operand to
            ensure suppression in the event of an access exception */
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Store the ASCB address in the CMS lock */
-        ARCH_DEP(vstore4) ( ascb_addr, lock_addr, lock_arn, regs );
+        ARCH_DEP(vstore4) ( ascb_addr, lock_addr, acc_mode, regs );
 
         /* Set the CMS lock held bit in the second operand */
         hlhi_word |= PSACMSLI;
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Set register 13 to zero to indicate lock obtained */
         regs->GR_L(13) = 0;
@@ -319,9 +327,9 @@ VADR    newia;                          /* Unsuccessful branch addr  */
         /* Fetch the lock interface table address from the
            second word of the second operand, and load the
            new instruction address and amode from LITOCMS */
-        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, b2, regs ) + LITOCMS;
+        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, acc_mode, regs ) + LITOCMS;
         lit_addr &= ADDRESS_MAXWRAP(regs);
-        newia = ARCH_DEP(vfetch4) ( lit_addr, 0, regs );
+        newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
         regs->GR_L(12) = regs->psw.IA;
@@ -358,6 +366,7 @@ int     lock_arn;                       /* Lock access register      */
 U32     lock;                           /* Lock value                */
 U32     susp;                           /* Lock suspend queue        */
 VADR    newia;                          /* Unsuccessful branch addr  */
+int     acc_mode = 0;                   /* access mode to use        */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -374,15 +383,18 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
+    if (ACCESS_REGISTER_MODE(&regs->psw))
+        acc_mode = USE_PRIMARY_SPACE;
+
     /* Load ASCB address from first operand location */
-    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, b1, regs );
+    ascb_addr = ARCH_DEP(vfetch4) ( effective_addr1, acc_mode, regs );
 
     /* Load locks held bits from second operand location */
-    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    hlhi_word = ARCH_DEP(vfetch4) ( effective_addr2, acc_mode, regs );
 
     /* Fetch the CMS lock and the suspend queue word */
-    lock = ARCH_DEP(vfetch4) ( lock_addr, lock_arn, regs );
-    susp = ARCH_DEP(vfetch4) ( lock_addr + 4, lock_arn, regs );
+    lock = ARCH_DEP(vfetch4) ( lock_addr, acc_mode, regs );
+    susp = ARCH_DEP(vfetch4) ( lock_addr + 4, acc_mode, regs );
 
     /* Test if current ASCB holds this lock, the locks held indicators
        show a CMS lock is held, and the lock suspend queue is empty */
@@ -392,14 +404,14 @@ VADR    newia;                          /* Unsuccessful branch addr  */
     {
         /* Store the unchanged value into the second operand to
            ensure suppression in the event of an access exception */
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Set the CMS lock to zero */
-        ARCH_DEP(vstore4) ( 0, lock_addr, lock_arn, regs );
+        ARCH_DEP(vstore4) ( 0, lock_addr, acc_mode, regs );
 
         /* Clear the CMS lock held bit in the second operand */
         hlhi_word &= ~PSACMSLI;
-        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, b2, regs );
+        ARCH_DEP(vstore4) ( hlhi_word, effective_addr2, acc_mode, regs );
 
         /* Set register 13 to zero to indicate lock released */
         regs->GR_L(13) = 0;
@@ -409,9 +421,9 @@ VADR    newia;                          /* Unsuccessful branch addr  */
         /* Fetch the lock interface table address from the
            second word of the second operand, and load the
            new instruction address and amode from LITRCMS */
-        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, b2, regs ) + LITRCMS;
+        lit_addr = ARCH_DEP(vfetch4) ( effective_addr2 + 4, acc_mode, regs ) + LITRCMS;
         lit_addr &= ADDRESS_MAXWRAP(regs);
-        newia = ARCH_DEP(vfetch4) ( lit_addr, 0, regs );
+        newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
         regs->GR_L(12) = regs->psw.IA;
