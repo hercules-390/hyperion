@@ -623,7 +623,7 @@ static char *pgmintname[] = {
             psa->excarid = regs->excarid;
             if(regs->TEA | TEA_MVPG)    
                 psa->opndrid = regs->opndrid;
-            regs->opndrid = 0;
+            realregs->opndrid = 0;
         }
 
 #if defined(FEATURE_ESAME)
@@ -672,7 +672,7 @@ static char *pgmintname[] = {
             STORE_FW(psa->tea, regs->TEA);
         }
 #endif /*!defined(FEATURE_ESAME)*/
-        regs->TEA = 0;
+        realregs->TEA = 0;
 
         /* Store Data exception code in PSA */
         if (code == PGM_DATA_EXCEPTION)
