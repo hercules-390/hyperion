@@ -50,14 +50,17 @@ END_DEPENDENCY_SECTION;
 
 HDL_REGISTER_SECTION;
 {
-    HDL_REGISTER( panel_command,           panel_command_r );
-    HDL_REGISTER( panel_display,           panel_display_r );
-    HDL_REGISTER( config_command,          UNRESOLVED      );
-    HDL_REGISTER( daemon_task,             UNRESOLVED      );
-    HDL_REGISTER( debug_cpu_state,         UNRESOLVED      );
-    HDL_REGISTER( debug_device_state,      UNRESOLVED      );
-    HDL_REGISTER( debug_program_interrupt, UNRESOLVED      );
-    HDL_REGISTER( debug_diagnose,          UNRESOLVED      );
+    HDL_REGISTER( panel_command,              panel_command_r );
+    HDL_REGISTER( panel_display,              panel_display_r );
+    HDL_REGISTER( config_command,             UNRESOLVED      );
+    HDL_REGISTER( daemon_task,                UNRESOLVED      );
+    HDL_REGISTER( debug_cpu_state,            UNRESOLVED      );
+    HDL_REGISTER( debug_device_state,         UNRESOLVED      );
+    HDL_REGISTER( debug_program_interrupt,    UNRESOLVED      );
+    HDL_REGISTER( debug_diagnose,             UNRESOLVED      );
+    HDL_REGISTER( debug_sclp_unknown_command, UNRESOLVED      );
+    HDL_REGISTER( debug_sclp_unknown_event,   UNRESOLVED      );
+    HDL_REGISTER( debug_chsc_unknown_request, UNRESOLVED      );
 
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
     HDL_REGISTER( s390_cipher_message,                      UNRESOLVED );

@@ -1715,6 +1715,9 @@ void *(*debug_cpu_state) (REGS *);
 void *(*debug_device_state) (DEVBLK *);
 void *(*debug_program_interrupt) (REGS *, int);
 void *(*debug_diagnose) (U32, int, int, REGS *);
+void *(*debug_sclp_unknown_command) (void *, REGS *);
+void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
+void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
 
 #else
 void *panel_command (void *cmdline);

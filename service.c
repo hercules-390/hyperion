@@ -1237,10 +1237,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         default:
 
-#if 0
-            logmsg(_("HHC799I Unknown event received type = %2.2X\n"),
-              evd_hdr->type);
-#endif
+            if( HDC(debug_sclp_unknown_event, evd_hdr, sccb, regs) )
+                break;
+
             /* Set response code X'73F0' in SCCB header */
             sccb->reas = SCCB_REAS_SYNTAX_ERROR;
             sccb->resp = SCCB_RESP_SYNTAX_ERROR;
@@ -1584,23 +1583,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     default:
 
-#if 0
-        logmsg(_("Invalid service call command word:%8.8X SCCB=%8.8X\n"),
-            sclp_command, sccb_absolute_addr);
-
-        logmsg("SCCB data area:\n");
-        for(i = 0; i < sccblen; i++)
-        {
-            logmsg("%2.2X",regs->mainstor[sccb_real_addr + i]);
-            if(i % 32 == 31)
-                logmsg("\n");
-            else
-                if(i % 4 == 3)
-                    logmsg(" ");
-        }
-        if(i % 32 != 0)
-            logmsg("\n");
-#endif    
+        if( HDC(debug_sclp_unknown_command, sccb, regs) )
+            break;
 
         /* Set response code X'01F0' for invalid SCLP command */
         sccb->reas = SCCB_REAS_INVALID_CMD;
@@ -1648,8 +1632,6 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
     RRE(inst, execflag, regs, r1, r2);
 
-// ZZDEBUG logmsg("CHSC: "); ARCH_DEP(display_inst) (regs, regs->inst);
-
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -1676,6 +1658,9 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
         /* process various requests here */
 
         default:
+
+            if( HDC(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
+                break;
 
             ARCH_DEP(validate_operand) (n, r1, 0, ACCTYPE_WRITE, regs);
             /* Set response field length */
