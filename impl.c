@@ -165,6 +165,9 @@ TID     rctid;                          /* RC file thread identifier */
     FishHangInit(__FILE__,__LINE__);
 #endif // defined(FISH_HANG)
 
+    /* Initialize 'hostinfo' BEFORE display_version is called */
+    init_hostinfo();
+
     if(isatty(STDERR_FILENO))
         display_version (stderr, "Hercules ", TRUE);
     else
@@ -229,8 +232,6 @@ TID     rctid;                          /* RC file thread identifier */
 #if defined(BUILTIN_STRERROR_R)
     strerror_r_init();
 #endif /* defined(BUILTIN_STRERROR_R) */
-
-    init_hostinfo();
 
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))

@@ -31,6 +31,9 @@ HOST_INFO  hostinfo;                /* Host system information       */
 /*-------------------------------------------------------------------*/
 void init_hostinfo ()
 {
+    static int bDidThisOnceAlready = 0;
+    if (bDidThisOnceAlready) return;
+    bDidThisOnceAlready = 1;
 #if defined(WIN32)
     {
         CRITICAL_SECTION cs;
@@ -58,6 +61,8 @@ void init_hostinfo ()
 void display_hostinfo (FILE *f)
 {
     struct utsname uname_info;
+
+    init_hostinfo();    /* (ensure hostinfo is initialized first!) */
 
     uname(&uname_info);
 
