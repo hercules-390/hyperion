@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Messages: HT - HTTP Server</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages: HT - HTTP Server</h1>
+<p>
+This page describes the Dynamic Loader messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator.
+<h3>Messages</h3>
+<dl>
+<dt><code><a name="HHCHD001E">
+HHCHD001E registration alloc failed for <em>entry</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Storage could not be obtained to register entrypoint <code><em>entry</em></code>
+  <dt>Issued by
+  <dd>hdl.c, function hdl_fent 
+  </dl>
+<dt><code><a name="HHCHD002E">
+HHCHD002E cannot allocate memory for DLL descriptor: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Initialisation of the dynamic loader environment failed due 
+to the error described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_main
+  </dl>
+<dt><code><a name="HHCHD003E">
+HHCHD003E unable to open hercules as DLL: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The main hercules load module could not be opened by the dynamic loader.
+The dynamic loader error is described by <code><em>error</em></code>
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_main
+  </dl>
+<dt><code><a name="HHCHD004I">
+HHCHD004I No initializer in <em>module</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The initializer in DLL named <code><em>module</em></code> could not be found.  The error is described by <code><em>error</em></code>
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_main
+  </dl>
+<dt><code><a name="HHCHD005E">
+HHCHD005E <em>module</em> already loaded.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to load an already loaded module.
+  <dt>Action
+  <dd>Unload to module first.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_load
+  </dl>
+<dt><code><a name="HHCHD006S">
+HHCHD006S cannot allocate memory for DLL descriptor: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Initialisation of the dynamic loader environment failed due 
+to the error described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_load
+  </dl>
+<dt><code><a name="HHCHD007E">
+HHCHD007E unable to open DLL <em>module</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The DLL named <code><em>module</em></code> could not be opened.
+The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Ensure that the correct module is specified and is accessible.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_load
+  </dl>
+<dt><code><a name="HHCHD008I">
+HHCHD008I No initializer in <em>module</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The initializer in DLL named <code><em>module</em></code> could not be found.  The error is described by <code><em>error</em></code>
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_load
+  </dl>
+<dt><code><a name="HHCHD009E">
+HHCHD009E <em>module</em> not loaded
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to unload a module that was not loaded.
+  <dt>Action
+  <dd>No action required.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_dele
+  </dl>
+<dt><code><a name="HHCHD100I">
+HHCHD100I Loading <em>module</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Module <code><em>module</em></code> is being loaded.
+  <dt>Action
+  <dd>No action requred
+  <dt>Issued by
+  <dd>hsccmd.c, function ldmod_cmd
+  </dl>
+<dt><code><a name="HHCHD100I">
+HHCHD101I Unloading <em>module</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Module <code><em>module</em></code> is being unloaded.
+  <dt>Action
+  <dd>No action requred
+  <dt>Issued by
+  <dd>hsccmd.c, function rmmod_cmd
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 6 June 2003    
+</BODY>
+</HTML>
