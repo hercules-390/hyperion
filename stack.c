@@ -385,7 +385,7 @@ int     i;                              /* Array subscript           */
 
     /* [5.12.3] Special operation exception if ASF is not enabled,
        or if DAT is off, or if not primary-space mode or AR-mode */
-    if (ASF_ENABLED(regs) == 0
+    if (!ASF_ENABLED(regs)
         || REAL_MODE(&regs->psw)
         || regs->psw.space == 1)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
@@ -804,7 +804,7 @@ VADR    bsea;                           /* Backward stack entry addr */
 
     /* [5.12.4] Special operation exception if ASF is not enabled,
        or if DAT is off, or if in secondary-space mode */
-    if (ASF_ENABLED(regs) == 0
+    if (!ASF_ENABLED(regs)
         || REAL_MODE(&regs->psw)
         || SECONDARY_SPACE_MODE(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);

@@ -562,7 +562,7 @@ U32	ssaste[16];			/* Subspace ASTE	     */
     /* Return the original STD unchanged if the address-space function
        control (CR0 bit 15) is zero, or if the subspace-group control
        (bit 22 of the STD) is zero */
-    if (ASF_ENABLED(regs) == 0
+    if (!ASF_ENABLED(regs)
 	|| (std & SSGROUP_BIT) == 0)
 	return std;
 

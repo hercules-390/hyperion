@@ -51,7 +51,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     RRE(inst, execflag, regs, r1, r2);
 
     /* Special operation exception if ASF is not enabled */
-    if (ASF_ENABLED(regs) == 0)
+    if (!ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
@@ -297,7 +297,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Special operation exception if DAT is off or ASF not enabled */
     if (REAL_MODE(&(regs->psw))
-        || ASF_ENABLED(regs) == 0)
+        || !ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
 #ifdef FEATURE_TRACING
@@ -842,7 +842,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     if (REAL_MODE(&regs->psw)
         || SECONDARY_SPACE_MODE(&regs->psw)
-        || ASF_ENABLED(regs) == 0)
+        || !ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Load the extraction code from low-order byte of R2 register */
@@ -1737,7 +1737,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 
     if (REAL_MODE(&regs->psw)
         || SECONDARY_SPACE_MODE(&regs->psw)
-        || ASF_ENABLED(regs) == 0)
+        || !ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     ODD_CHECK(r1, regs);
@@ -2044,7 +2044,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* [5.5.3.1] Load the linkage table designation */
-    if (ASF_ENABLED(regs) == 0)
+    if (!ASF_ENABLED(regs))
     {
         /* Obtain the LTD from control register 5 */
         ltd = regs->CR_L(5);
@@ -2211,7 +2211,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            is obtained by ASN translation.  For ESAME, and for
            ESA/390 when ASF control is enabled, the ASTE is loaded
            using the ASTE real address from the entry table */
-        if (ASF_ENABLED(regs) == 0)
+        if (!ASF_ENABLED(regs))
         {
             /* Perform ASN translation to obtain ASTE */
             xcode = ARCH_DEP(translate_asn) (pasn, regs, &pasteo, aste);
@@ -2725,7 +2725,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     prob = regs->GR_L(r2) & 0x00000001;
 
     /* [5.5.3.1] Load the linkage table designation */
-    if (ASF_ENABLED(regs) == 0)
+    if (!ASF_ENABLED(regs))
     {
         /* Obtain the LTD from control register 5 */
         ltd = regs->CR_L(5);
@@ -3255,7 +3255,7 @@ int     ssevent = 0;                    /* 1=space switch event      */
 
     /* Special operation exception if setting AR mode
        and address-space function control bit is zero */
-    if (mode == 2 && ASF_ENABLED(regs) == 0)
+    if (mode == 2 && !ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Specification exception if mode is invalid */
@@ -4863,7 +4863,7 @@ int     protect;                        /* 1=ALE or page protection  */
     RRE(inst, execflag, regs, r1, r2);
 
     /* Program check if ASF control bit is zero */
-    if (ASF_ENABLED(regs) == 0)
+    if (!ASF_ENABLED(regs))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Set condition code 0 if ALET value is 0 */

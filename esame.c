@@ -799,6 +799,7 @@ DEF_INST(divide_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 U64     n;
+U32     d;
 
     RRE(inst, execflag, regs, r1, r2);
 
@@ -806,13 +807,15 @@ U64     n;
 
     n = ((U64)regs->GR_L(r1) << 32) | regs->GR_L(r1 + 1);
 
-    if(regs->GR_L(r2) == 0
-      || (n / regs->GR_L(r2)) > 0xFFFFFFFF)
+    d = regs->GR_L(r2);
+
+    if(d == 0
+      || (n / d) > 0xFFFFFFFF)
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
     /* Divide signed registers */
-    regs->GR_L(r1) = n % regs->GR_L(r2);
-    regs->GR_L(r1 + 1) = n / regs->GR_L(r2);
+    regs->GR_L(r1) = n % d;
+    regs->GR_L(r1 + 1) = n / d;
 
 } /* end DEF_INST(divide_logical_register) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
@@ -825,25 +828,26 @@ U64     n;
 DEF_INST(divide_logical_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
-U64     r, q;
+U64     r, q, d;
 
     RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
+    d = regs->GR_G(r2);
+
     if (regs->GR_G(r1) == 0)            /* check for the simple case */
     {
-      if(regs->GR_G(r2) == 0)
+      if(d == 0)
           ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
       /* Divide signed registers */
-      regs->GR_G(r1) = regs->GR_G(r1 + 1) % regs->GR_G(r2);
-      regs->GR_G(r1 + 1) = regs->GR_G(r1 + 1) / regs->GR_G(r2);
+      regs->GR_G(r1) = regs->GR_G(r1 + 1) % d;
+      regs->GR_G(r1 + 1) = regs->GR_G(r1 + 1) / d;
     }
     else
     {
-      if (div_logical_long(&r, &q, regs->GR_G(r1), regs->GR_G(r1 + 1),
-                           regs->GR_G(r2) ) )
+      if (div_logical_long(&r, &q, regs->GR_G(r1), regs->GR_G(r1 + 1), d) )
           ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
       else 
       {
@@ -863,8 +867,11 @@ DEF_INST(add_logical_carry_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     carry = 0;
+U64     n;
 
     RRE(inst, execflag, regs, r1, r2);
+
+    n = regs->GR_G(r2);
 
     /* Add the carry to operand */
     if(regs->psw.cc & 2)
@@ -875,7 +882,7 @@ int     carry = 0;
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
                                       regs->GR_G(r1),
-                                      regs->GR_G(r2)) | carry;
+                                      n) | carry;
 } /* end DEF_INST(add_logical_carry_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -888,8 +895,11 @@ DEF_INST(subtract_logical_borrow_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     borrow = 0;
+U64     n;
 
     RRE(inst, execflag, regs, r1, r2);
+
+    n = regs->GR_G(r2);
 
     /* Subtract the borrow from operand */
     if(!(regs->psw.cc & 2))
@@ -900,7 +910,7 @@ int     borrow = 0;
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
                                       regs->GR_G(r1),
-                                      regs->GR_G(r2)) & ~borrow;
+                                      n) & ~borrow;
 
 } /* end DEF_INST(subtract_logical_borrow_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -977,8 +987,11 @@ DEF_INST(add_logical_carry_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     carry = 0;
+U32     n;
 
     RRE(inst, execflag, regs, r1, r2);
+
+    n = regs->GR_L(r2);
 
     /* Add the carry to operand */
     if(regs->psw.cc & 2)
@@ -989,7 +1002,7 @@ int     carry = 0;
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical(&(regs->GR_L(r1)),
                                  regs->GR_L(r1),
-                                 regs->GR_L(r2)) | carry;
+                                 n) | carry;
 } /* end DEF_INST(add_logical_carry_register) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
 
@@ -1002,8 +1015,11 @@ DEF_INST(subtract_logical_borrow_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 int     borrow = 0;
+U32     n;
 
     RRE(inst, execflag, regs, r1, r2);
+
+    n = regs->GR_L(r2);
 
     /* Subtract the borrow from operand */
     if(!(regs->psw.cc & 2))
@@ -1014,7 +1030,7 @@ int     borrow = 0;
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical(&(regs->GR_L(r1)),
                                  regs->GR_L(r1),
-                                 regs->GR_L(r2)) & ~borrow;
+                                 n) & ~borrow;
 
 } /* end DEF_INST(subtract_logical_borrow_register) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
