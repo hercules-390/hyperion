@@ -30,13 +30,16 @@ if test ! -e autoconf/ltmain.sh; then
   fi    
 
   # Now deal with a minor breakage in GNU libtoolize on OS X: it
-  #  puts the ltmain.sh file in the current directory, not the
+  #  puts the autoconf input files in the current directory, not the
   #  autoconf subdirectory where it belongs. Since other platforms
-  #  probably get this right, we'll only do the move if it exists
+  #  probably get this right, we'll only clean this up if they're found
   #  in the current directory.
 
   if test -e ./ltmain.sh; then
     mv ltmain.sh autoconf
+    # The next two files are an older version than the ones autoconf
+    #  installed, so get rid of them
+    rm -f config.guess config.sub
   fi
 
 fi
