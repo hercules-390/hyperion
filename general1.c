@@ -919,10 +919,10 @@ U16     i2;                             /* 16-bit operand values     */
     if ((0x08 >> regs->psw.cc) & r1)
     {
         /* Calculate the relative branch address */
-        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
+        regs->psw.IA = ((likely(!regs->execflag) ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs)
+        if( unlikely(EN_IC_PER_SB(regs))
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
