@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //         fthreads.h           Fish's WIN32 version of pthreads
 ////////////////////////////////////////////////////////////////////////////////////
-// (c) Copyright "Fish" (David B. Trout), 2001. Released under the Q Public License
+// (c) Copyright "Fish" (David B. Trout), 2001, 2002. Released under the Q Public License
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,10 +48,20 @@ struct FT_COND_VAR		// fthread "condition variable" structure
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
+
+struct FT_MUTEX			// fthread "mutex" structure
+{
+	FT_W32_CRITICAL_SECTION  MutexLock;		// (lock for accessing this data)
+	FT_W32_CRITICAL_SECTION  TheirLock;		// (the actual user's lock)
+	FT_W32_DWORD             dwLockOwner;	// (thread-id of who owns it)
+	int                      nLockedCount;	// (#of times lock acquired)
+};
+
+////////////////////////////////////////////////////////////////////////////////////
 // fthread typedefs...
 
 typedef struct FT_COND_VAR       fthread_cond_t;	// "condition variable"
-typedef FT_W32_CRITICAL_SECTION  fthread_mutex_t;	// "mutex"
+typedef struct FT_MUTEX          fthread_mutex_t;	// "mutex"
 typedef FT_W32_DWORD             fthread_t;			// "thread id"
 typedef FT_W32_HANDLE            fthread_attr_t;	// "thread attribute" (not used)
 typedef void* (*PFT_THREAD_FUNC)(void*);			// "thread function" ptr
@@ -72,10 +82,6 @@ fthread_kill	// (nop)
 int
 fthread_create
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
 	fthread_t*       pdwThreadID,
 	fthread_attr_t*  dummy1,
 	PFT_THREAD_FUNC  pfnThreadFunc,
@@ -106,11 +112,7 @@ fthread_exit
 int
 fthread_mutex_init
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_mutex_t*  pLock
+	fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -119,11 +121,7 @@ fthread_mutex_init
 int
 fthread_mutex_lock
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_mutex_t*  pLock
+	fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -132,11 +130,7 @@ fthread_mutex_lock
 int
 fthread_mutex_trylock
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_mutex_t*  pLock
+	fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +139,7 @@ fthread_mutex_trylock
 int
 fthread_mutex_unlock
 (
-	fthread_mutex_t*  pLock
+	fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -154,11 +148,7 @@ fthread_mutex_unlock
 int
 fthread_cond_init
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_cond_t*  pCond
+	fthread_cond_t*  pFT_COND_VAR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -167,11 +157,7 @@ fthread_cond_init
 int
 fthread_cond_signal
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_cond_t*  pCond
+	fthread_cond_t*  pFT_COND_VAR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -180,11 +166,7 @@ fthread_cond_signal
 int
 fthread_cond_broadcast
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_cond_t*  pCond
+	fthread_cond_t*  pFT_COND_VAR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -193,12 +175,8 @@ fthread_cond_broadcast
 int
 fthread_cond_wait
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_cond_t*   pCond,
-	fthread_mutex_t*  pLock
+	fthread_cond_t*   pFT_COND_VAR,
+	fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -207,12 +185,8 @@ fthread_cond_wait
 int
 fthread_cond_timedwait
 (
-#ifdef FISH_HANG
-	char*  pszFile,
-	int    nLine,
-#endif
-	fthread_cond_t*   pCond,
-	fthread_mutex_t*  pLock,
+	fthread_cond_t*   pFT_COND_VAR,
+	fthread_mutex_t*  pFT_MUTEX,
 	struct timespec*  pTimeTimeout
 );
 
