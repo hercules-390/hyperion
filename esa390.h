@@ -1161,256 +1161,260 @@ typedef struct _MBK {
 
 #define VAC_MASK 0x00FFFFFFFFFFFFFFULL  /* Vector Activity Count mask*/
 
-/* SIE Format 1 State Descriptor Block */
-typedef struct _SIE1BK {        /* SIE State Descriptor      */
-/*000*/ BYTE  v;            /* Intervention requests     */
-#define SIE_V_WAIT  0x10        /* Wait/Run bit          */
-#define SIE_V_EXTCALL   0x08        /* External call pending     */
-#define SIE_V_STOP  0x04        /* SIE Stop control      */
-#define SIE_V_IO    0x02        /* I/O Interrupt pending     */
-#define SIE_V_EXT   0x01        /* EXT Interrupt pending     */
-/*001*/ BYTE  s;            /* State controls        */
-#define SIE_S_T     0x80        /* Interval timer irpt pend  */
-#define SIE_S_RETENTION 0x40        /* SIE State retained        */
-#define SIE_S_EXP_TIMER 0x02        /* Expedite timer enabled    */
-#define SIE_S_EXP_RUN   0x01        /* Expedite run enabled      */
-/*002*/ BYTE  mx;           /* Machine mode control      */
-#define SIE_MX_XC   0x01        /* XC mode guest         */
-/*003*/ BYTE  m;            /* Mode controls         */
-#define SIE_M_VCC   0x40        /* Vector change control     */
-#define SIE_M_XA    0x20        /* XA mode guest         */
-#define SIE_M_370   0x10        /* 370 mode guest        */
-#define SIE_M_VR    0x08        /* V=R mode guest        */
-#define SIE_M_ITMOF 0x04        /* Guest ival timer disabled */
-#define SIE_M_GPE   0x01        /* Guest per enhancement     */
-/*004*/ FWORD prefix;           /* Guest prefix register     */
-/*008*/ HWORD mso;          /* Main Storage Origin       */
-/*00A*/ HWORD mse;          /* Main Storage Extent       */
+/* SIE Format 1 State Descriptor Block                               */
+typedef struct _SIE1BK {                /* SIE State Descriptor      */
+/*000*/ BYTE  v;                        /* Intervention requests     */
+#define SIE_V_WAIT      0x10            /* Wait/Run bit              */
+#define SIE_V_EXTCALL   0x08            /* External call pending     */
+#define SIE_V_STOP      0x04            /* SIE Stop control          */
+#define SIE_V_IO        0x02            /* I/O Interrupt pending     */
+#define SIE_V_EXT       0x01            /* EXT Interrupt pending     */
+/*001*/ BYTE  s;                        /* State controls            */
+#define SIE_S_T         0x80            /* Interval timer irpt pend  */
+#define SIE_S_RETENTION 0x40            /* SIE State retained        */
+#define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
+#define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
+/*002*/ BYTE  mx;                       /* Machine mode control      */
+#define SIE_MX_XC       0x01            /* XC mode guest             */
+/*003*/ BYTE  m;                        /* Mode controls             */
+#define SIE_M_VCC       0x40            /* Vector change control     */
+#define SIE_M_XA        0x20            /* XA mode guest             */
+#define SIE_M_370       0x10            /* 370 mode guest            */
+#define SIE_M_VR        0x08            /* V=R mode guest            */
+#define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
+#define SIE_M_GPE       0x01            /* Guest per enhancement     */
+/*004*/ FWORD prefix;                   /* Guest prefix register     */
+/*008*/ HWORD mso;                      /* Main Storage Origin       */
+/*00A*/ HWORD mse;                      /* Main Storage Extent       */
 /*00C*/ FWORD resv0cf;
-/*010*/ FWORD gr14;         /* Guest gr 14           */
-/*014*/ FWORD gr15;         /* Guest gr 15           */
-/*018*/ DWORD psw;          /* Guest PSW             */
+/*010*/ FWORD gr14;                     /* Guest gr 14               */
+/*014*/ FWORD gr15;                     /* Guest gr 15               */
+/*018*/ DWORD psw;                      /* Guest PSW                 */
 /*020*/ FWORD resv20f;
-/*024*/ FWORD residue;          /* Residue counter       */
-/*028*/ DWORD cputimer;         /* CPU timer             */
-/*030*/ DWORD clockcomp;        /* Clock comparator      */
-/*038*/ DWORD epoch;            /* Guest/Host epoch diff.    */
-/*040*/ FWORD svc_ctl;          /* SVC Controls          */
-#define SIE_SVC0_ALL    0x80        /* Intercept all SVCs        */
-#define SIE_SVC0_1N 0x40        /* Intercept SVC 1n      */
-#define SIE_SVC0_2N 0x20        /* Intercept SVC 2n      */
-#define SIE_SVC0_3N 0x10        /* Intercept SVC 3n      */
-/*044*/ HWORD lctl_ctl;         /* LCTL Control          */
-#define SIE_LCTL0_CR0   0x80        /* Intercept LCTL 0      */
-#define SIE_LCTL0_CR1   0x40        /* Intercept LCTL 1      */
-#define SIE_LCTL0_CR2   0x20        /* Intercept LCTL 2      */
-#define SIE_LCTL0_CR3   0x10        /* Intercept LCTL 3      */
-#define SIE_LCTL0_CR4   0x08        /* Intercept LCTL 4      */
-#define SIE_LCTL0_CR5   0x04        /* Intercept LCTL 5      */
-#define SIE_LCTL0_CR6   0x02        /* Intercept LCTL 6      */
-#define SIE_LCTL0_CR7   0x01        /* Intercept LCTL 7      */
-#define SIE_LCTL1_CR8   0x80        /* Intercept LCTL 8      */
-#define SIE_LCTL1_CR9   0x40        /* Intercept LCTL 9      */
-#define SIE_LCTL1_CR10  0x20        /* Intercept LCTL 10         */
-#define SIE_LCTL1_CR11  0x10        /* Intercept LCTL 11         */
-#define SIE_LCTL1_CR12  0x08        /* Intercept LCTL 12         */
-#define SIE_LCTL1_CR13  0x04        /* Intercept LCTL 13         */
-#define SIE_LCTL1_CR14  0x02        /* Intercept LCTL 14         */
-#define SIE_LCTL1_CR15  0x01        /* Intercept LCTL 15         */
-/*046*/ HWORD cpuad;            /* Virtual CPU address       */
-/*048*/ DWORD ic;           /* Interception Controls     */
-#define SIE_IC0_OPEREX  0x80        /* Intercept operation exc.  */
-#define SIE_IC0_PRIVOP  0x40        /* Intercept priv. op. exc.  */
-#define SIE_IC0_PGMALL  0x20        /* Intercept program ints    */
-#define SIE_IC0_TS1 0x08        /* Intercept TS cc1      */
-#define SIE_IC0_CS1 0x04        /* Intercept CS cc1      */
-#define SIE_IC0_CDS1    0x02        /* Intercept CDS cc1         */
-#define SIE_IC0_IPTECSP 0x01        /* Intercept IPTE or CSP     */
-#define SIE_IC1_LPSW    0x40        /* Intercept LPSW        */
-#define SIE_IC1_PXLB    0x20        /* Intercept PTLB or PALB    */
-#define SIE_IC1_SSM 0x10        /* Intercept SSM         */
-#define SIE_IC1_BSA 0x08        /* Intercept BSA         */
-#define SIE_IC1_STCTL   0x04        /* Intercept STCTL       */
-#define SIE_IC1_STNSM   0x02        /* Intercept STNSM       */
-#define SIE_IC1_STOSM   0x01        /* Intercept STOSM       */
-#define SIE_IC2_STCK    0x80        /* Intercept STCK        */
-#define SIE_IC2_ISKE    0x40        /* Intercept ISK/ISKE        */
-#define SIE_IC2_SSKE    0x20        /* Intercept SSK/SSKE        */
-#define SIE_IC2_RRBE    0x10        /* Intercept RRB/RRBE        */
-#define SIE_IC2_PC  0x08        /* Intercept PC          */
-#define SIE_IC2_PT  0x04        /* Intercept PT          */
-#define SIE_IC2_TPROT   0x02        /* Intercept TPROT       */
-#define SIE_IC2_LASP    0x01        /* Intercept LASP        */
-#define SIE_IC3_VACSV   0x80        /* Intercept VACSV       */
-#define SIE_IC3_SPT 0x40        /* Intercept SPT and STPT    */
-#define SIE_IC3_SCKC    0x20        /* Intercept SCKC and STCKC  */
-#define SIE_IC3_VACRS   0x10        /* Intercept VACRS       */
-#define SIE_IC3_PR  0x08        /* Intercept PR          */
-#define SIE_IC3_BAKR    0x04        /* Intercept BAKR        */
-#define SIE_IC3_PGX 0x02        /* Intercept PGIN/PGOUT      */
-/*050*/ BYTE  c;            /* Interception Code         */
-#define SIE_C_INST     4        /* Instruction interception  */
-#define SIE_C_PGMINT       8        /* Program interruption      */
-#define SIE_C_PGMINST     12        /* Program/instruction int   */
-#define SIE_C_EXTREQ      16        /* External request      */
-#define SIE_C_EXTINT      20        /* External interruption     */
-#define SIE_C_IOREQ   24        /* I/O request           */
-#define SIE_C_WAIT    28        /* Wait state            */
-#define SIE_C_VALIDITY    32        /* Validity          */
-#define SIE_C_STOPREQ     40        /* Stop request          */
-#define SIE_C_OPEREXC     44        /* Operation Exception       */
-/*051*/ BYTE  f;            /* Interception Status       */
-#define SIE_F_IN    0x80        /* Intercept format 2        */
-#define SIE_F_IF    0x02        /* Instruction fetch PER     */
-#define SIE_F_EX    0x01        /* Icept for target of EX    */
-/*052*/ HWORD lhcpu;            /* Last Host CPU addr        */
-/*054*/ HWORD todpf;            /* TOD programmable field    */
-/*056*/ HWORD ipa;          /* Instruction parameter A   */
-/*058*/ FWORD ipb;          /* Instruction parameter B   */
-/*05C*/ FWORD ipc;          /* Instruction parameter C   */
-/*060*/ FWORD rcpo;         /* RCP area origin       */
-#define SIE_RCPO0_SKA   0x80        /* Storage Key Assist        */
-#define SIE_RCPO0_SKAIP 0x40        /* SKA in progress           */
-#define SIE_RCPO2_RCPBY 0x10        /* RCP Bypass                */
-/*064*/ FWORD scao;         /* SCA area origin       */
-/*068*/ FWORD subchtabo;        /* Subchannel table origin   */
+/*024*/ FWORD residue;                  /* Residue counter           */
+/*028*/ DWORD cputimer;                 /* CPU timer                 */
+/*030*/ DWORD clockcomp;                /* Clock comparator          */
+/*038*/ DWORD epoch;                    /* Guest/Host epoch diff.    */
+/*040*/ FWORD svc_ctl;                  /* SVC Controls              */
+#define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
+#define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
+#define SIE_SVC0_2N     0x20            /* Intercept SVC 2n          */
+#define SIE_SVC0_3N     0x10            /* Intercept SVC 3n          */
+/*044*/ HWORD lctl_ctl;                 /* LCTL Control              */
+#define SIE_LCTL0_CR0   0x80            /* Intercept LCTL 0          */
+#define SIE_LCTL0_CR1   0x40            /* Intercept LCTL 1          */
+#define SIE_LCTL0_CR2   0x20            /* Intercept LCTL 2          */
+#define SIE_LCTL0_CR3   0x10            /* Intercept LCTL 3          */
+#define SIE_LCTL0_CR4   0x08            /* Intercept LCTL 4          */
+#define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
+#define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
+#define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+#define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
+#define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
+#define SIE_LCTL1_CR10  0x20            /* Intercept LCTL 10         */
+#define SIE_LCTL1_CR11  0x10            /* Intercept LCTL 11         */
+#define SIE_LCTL1_CR12  0x08            /* Intercept LCTL 12         */
+#define SIE_LCTL1_CR13  0x04            /* Intercept LCTL 13         */
+#define SIE_LCTL1_CR14  0x02            /* Intercept LCTL 14         */
+#define SIE_LCTL1_CR15  0x01            /* Intercept LCTL 15         */
+/*046*/ HWORD cpuad;                    /* Virtual CPU address       */
+/*048*/ FWORD ic;                       /* Interception Controls     */
+#define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
+#define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
+#define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
+#define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
+#define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
+#define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
+#define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+#define SIE_IC1_LPSW    0x40            /* Intercept LPSW            */
+#define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
+#define SIE_IC1_SSM     0x10            /* Intercept SSM             */
+#define SIE_IC1_BSA     0x08            /* Intercept BSA             */
+#define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
+#define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
+#define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+#define SIE_IC2_STCK    0x80            /* Intercept STCK            */
+#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
+#define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
+#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE        */
+#define SIE_IC2_PC      0x08            /* Intercept PC              */
+#define SIE_IC2_PT      0x04            /* Intercept PT              */
+#define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
+#define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+#define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
+#define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
+#define SIE_IC3_SCKC    0x20            /* Intercept SCKC and STCKC  */
+#define SIE_IC3_VACRS   0x10            /* Intercept VACRS           */
+#define SIE_IC3_PR      0x08            /* Intercept PR              */
+#define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
+#define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
+/*04C*/ FWORD ec;                       /* Execution Controls        */
+#define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+/*050*/ BYTE  c;                        /* Interception Code         */
+#define SIE_C_INST         4            /* Instruction interception  */
+#define SIE_C_PGMINT       8            /* Program interruption      */
+#define SIE_C_PGMINST     12            /* Program/instruction int   */
+#define SIE_C_EXTREQ      16            /* External request          */
+#define SIE_C_EXTINT      20            /* External interruption     */
+#define SIE_C_IOREQ       24            /* I/O request               */
+#define SIE_C_WAIT        28            /* Wait state                */
+#define SIE_C_VALIDITY    32            /* Validity                  */
+#define SIE_C_STOPREQ     40            /* Stop request              */
+#define SIE_C_OPEREXC     44            /* Operation Exception       */
+/*051*/ BYTE  f;                        /* Interception Status       */
+#define SIE_F_IN        0x80            /* Intercept format 2        */
+#define SIE_F_IF        0x02            /* Instruction fetch PER     */
+#define SIE_F_EX        0x01            /* Icept for target of EX    */
+/*052*/ HWORD lhcpu;                    /* Last Host CPU addr        */
+/*054*/ HWORD todpf;                    /* TOD programmable field    */
+/*056*/ HWORD ipa;                      /* Instruction parameter A   */
+/*058*/ FWORD ipb;                      /* Instruction parameter B   */
+/*05C*/ FWORD ipc;                      /* Instruction parameter C   */
+/*060*/ FWORD rcpo;                     /* RCP area origin           */
+#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
+#define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
+#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+/*064*/ FWORD scao;                     /* SCA area origin           */
+/*068*/ FWORD subchtabo;                /* Subchannel table origin   */
 /*06C*/ FWORD resv6Cf;
-/*070*/ HWORD tch_ctl;          /* Test Channel control      */
+/*070*/ HWORD tch_ctl;                  /* Test Channel control      */
 /*072*/ HWORD resv72h;
-/*074*/ FWORD iopassthru;       /* I/O passthru control      */
-/*078*/ BYTE  xslim[3];         /* Extended stor upper lim   */
+/*074*/ FWORD iopassthru;               /* I/O passthru control      */
+/*078*/ BYTE  xslim[3];                 /* Extended stor upper lim   */
 /*07B*/ BYTE  resv7Bb;
 /*07C*/ FWORD resv7Cf;
-/*080*/ FWORD cr[16];           /* Guest Control registers   */
-/*0C0*/ BYTE  ip[34];           /* Interruption parameters   */
-#define SIE_IP_PSA_OFFSET   0x40    /* Offset of the IP field
-                       relative to the ipfields
-                       in the PSA            */
-/*0E2*/ BYTE  xso[3];           /* Expanded storage origin   */
-/*0E5*/ BYTE  xsl[3];           /* Expanded storage limit    */
+/*080*/ FWORD cr[16];                   /* Guest Control registers   */
+/*0C0*/ BYTE  ip[34];                   /* Interruption parameters   */
+#define SIE_IP_PSA_OFFSET   0x40        /* Offset of the IP field
+                                           relative to the ipfields
+                                               in the PSA            */
+/*0E2*/ BYTE  xso[3];                   /* Expanded storage origin   */
+/*0E5*/ BYTE  xsl[3];                   /* Expanded storage limit    */
 /*0E8*/ BYTE  resvE8b[24];
 } SIE1BK;
 
 
-/* SIE Format 2 State Descriptor Block */
-typedef struct _SIE2BK {        /* SIE State Descriptor      */
-/*000*/ BYTE  v;            /* Intervention requests     */
-#define SIE_V_WAIT  0x10        /* Wait/Run bit          */
-#define SIE_V_EXTCALL   0x08        /* External call pending     */
-#define SIE_V_STOP  0x04        /* SIE Stop control      */
-#define SIE_V_IO    0x02        /* I/O Interrupt pending     */
-#define SIE_V_EXT   0x01        /* EXT Interrupt pending     */
-/*001*/ BYTE  s;            /* State controls        */
-#define SIE_S_T     0x80        /* Interval timer irpt pend  */
-#define SIE_S_RETENTION 0x40        /* SIE State retained        */
-#define SIE_S_EXP_TIMER 0x02        /* Expedite timer enabled    */
-#define SIE_S_EXP_RUN   0x01        /* Expedite run enabled      */
-/*002*/ BYTE  mx;           /* Machine mode control      */
-#define SIE_MX_XC   0x01        /* XC mode guest         */
+/* SIE Format 2 State Descriptor Block                               */
+typedef struct _SIE2BK {                /* SIE State Descriptor      */
+/*000*/ BYTE  v;                        /* Intervention requests     */
+#define SIE_V_WAIT      0x10            /* Wait/Run bit              */
+#define SIE_V_EXTCALL   0x08            /* External call pending     */
+#define SIE_V_STOP      0x04            /* SIE Stop control          */
+#define SIE_V_IO        0x02            /* I/O Interrupt pending     */
+#define SIE_V_EXT       0x01            /* EXT Interrupt pending     */
+/*001*/ BYTE  s;                        /* State controls            */
+#define SIE_S_T         0x80            /* Interval timer irpt pend  */
+#define SIE_S_RETENTION 0x40            /* SIE State retained        */
+#define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
+#define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
+/*002*/ BYTE  mx;                       /* Machine mode control      */
+#define SIE_MX_XC       0x01            /* XC mode guest             */
 #define SIE_MX_ESAME    0x08            /* ESAME mode guest          */
-/*003*/ BYTE  m;            /* Mode controls         */
-#define SIE_M_VCC   0x40        /* Vector change control     */
-#define SIE_M_XA    0x20        /* XA mode guest         */
-#define SIE_M_370   0x10        /* 370 mode guest        */
-#define SIE_M_VR    0x08        /* V=R mode guest        */
-#define SIE_M_ITMOF 0x04        /* Guest ival timer disabled */
-#define SIE_M_GPE   0x01        /* Guest per enhancement     */
-/*004*/ FWORD prefix;           /* Guest prefix register     */
+/*003*/ BYTE  m;                        /* Mode controls             */
+#define SIE_M_VCC       0x40            /* Vector change control     */
+#define SIE_M_XA        0x20            /* XA mode guest             */
+#define SIE_M_370       0x10            /* 370 mode guest            */
+#define SIE_M_VR        0x08            /* V=R mode guest            */
+#define SIE_M_ITMOF     0x04            /* Guest ival timer disabled */
+#define SIE_M_GPE       0x01            /* Guest per enhancement     */
+/*004*/ FWORD prefix;                   /* Guest prefix register     */
 /*008*/ FWORD resv008f;
 /*00C*/ FWORD resv00cf;
 /*010*/ DWORD resv010d;
 /*018*/ DWORD resv018d;
 /*020*/ DWORD resv020d;
-/*028*/ DWORD cputimer;         /* CPU timer             */
-/*030*/ DWORD clockcomp;        /* Clock comparator      */
-/*038*/ DWORD epoch;            /* Guest/Host epoch diff.    */
-/*040*/ FWORD svc_ctl;          /* SVC Controls          */
-#define SIE_SVC0_ALL    0x80        /* Intercept all SVCs        */
-#define SIE_SVC0_1N 0x40        /* Intercept SVC 1n      */
-#define SIE_SVC0_2N 0x20        /* Intercept SVC 2n      */
-#define SIE_SVC0_3N 0x10        /* Intercept SVC 3n      */
-/*044*/ HWORD lctl_ctl;         /* LCTL Control          */
-#define SIE_LCTL0_CR0   0x80        /* Intercept LCTL 0      */
-#define SIE_LCTL0_CR1   0x40        /* Intercept LCTL 1      */
-#define SIE_LCTL0_CR2   0x20        /* Intercept LCTL 2      */
-#define SIE_LCTL0_CR3   0x10        /* Intercept LCTL 3      */
-#define SIE_LCTL0_CR4   0x08        /* Intercept LCTL 4      */
-#define SIE_LCTL0_CR5   0x04        /* Intercept LCTL 5      */
-#define SIE_LCTL0_CR6   0x02        /* Intercept LCTL 6      */
-#define SIE_LCTL0_CR7   0x01        /* Intercept LCTL 7      */
-#define SIE_LCTL1_CR8   0x80        /* Intercept LCTL 8      */
-#define SIE_LCTL1_CR9   0x40        /* Intercept LCTL 9      */
-#define SIE_LCTL1_CR10  0x20        /* Intercept LCTL 10         */
-#define SIE_LCTL1_CR11  0x10        /* Intercept LCTL 11         */
-#define SIE_LCTL1_CR12  0x08        /* Intercept LCTL 12         */
-#define SIE_LCTL1_CR13  0x04        /* Intercept LCTL 13         */
-#define SIE_LCTL1_CR14  0x02        /* Intercept LCTL 14         */
-#define SIE_LCTL1_CR15  0x01        /* Intercept LCTL 15         */
-/*046*/ HWORD cpuad;            /* Virtual CPU address       */
-/*048*/ DWORD ic;           /* Interception Controls     */
-#define SIE_IC0_OPEREX  0x80        /* Intercept operation exc.  */
-#define SIE_IC0_PRIVOP  0x40        /* Intercept priv. op. exc.  */
-#define SIE_IC0_PGMALL  0x20        /* Intercept program ints    */
-#define SIE_IC0_TS1 0x08        /* Intercept TS cc1      */
-#define SIE_IC0_CS1 0x04        /* Intercept CS cc1      */
-#define SIE_IC0_CDS1    0x02        /* Intercept CDS cc1         */
-#define SIE_IC0_IPTECSP 0x01        /* Intercept IPTE or CSP     */
-#define SIE_IC1_LPSW    0x40        /* Intercept LPSW/LPSWE      */
-#define SIE_IC1_PXLB    0x20        /* Intercept PTLB or PALB    */
-#define SIE_IC1_SSM 0x10        /* Intercept SSM         */
-#define SIE_IC1_BSA 0x08        /* Intercept BSA         */
-#define SIE_IC1_STCTL   0x04        /* Intercept STCTL       */
-#define SIE_IC1_STNSM   0x02        /* Intercept STNSM       */
-#define SIE_IC1_STOSM   0x01        /* Intercept STOSM       */
-#define SIE_IC2_STCK    0x80        /* Intercept STCK        */
-#define SIE_IC2_ISKE    0x40        /* Intercept ISK/ISKE        */
-#define SIE_IC2_SSKE    0x20        /* Intercept SSK/SSKE        */
-#define SIE_IC2_RRBE    0x10        /* Intercept RRB/RRBE        */
-#define SIE_IC2_PC  0x08        /* Intercept PC          */
-#define SIE_IC2_PT  0x04        /* Intercept PT          */
-#define SIE_IC2_TPROT   0x02        /* Intercept TPROT       */
-#define SIE_IC2_LASP    0x01        /* Intercept LASP        */
-#define SIE_IC3_VACSV   0x80        /* Intercept VACSV       */
-#define SIE_IC3_SPT 0x40        /* Intercept SPT and STPT    */
-#define SIE_IC3_SCKC    0x20        /* Intercept SCKC and STCKC  */
-#define SIE_IC3_VACRS   0x10        /* Intercept VACRS       */
-#define SIE_IC3_PR  0x08        /* Intercept PR          */
-#define SIE_IC3_BAKR    0x04        /* Intercept BAKR        */
-#define SIE_IC3_PGX 0x02        /* Intercept PGIN/PGOUT      */
-/*050*/ BYTE  c;            /* Interception Code         */
-#define SIE_C_INST     4        /* Instruction interception  */
-#define SIE_C_PGMINT       8        /* Program interruption      */
-#define SIE_C_PGMINST     12        /* Program/instruction int   */
-#define SIE_C_EXTREQ      16        /* External request      */
-#define SIE_C_EXTINT      20        /* External interruption     */
-#define SIE_C_IOREQ   24        /* I/O request           */
-#define SIE_C_WAIT    28        /* Wait state            */
-#define SIE_C_VALIDITY    32        /* Validity          */
-#define SIE_C_STOPREQ     40        /* Stop request          */
-#define SIE_C_OPEREXC     44        /* Operation Exception       */
-/*051*/ BYTE  f;            /* Interception Status       */
-#define SIE_F_IN    0x80        /* Intercept format 2        */
-#define SIE_F_IF    0x02        /* Instruction fetch PER     */
-#define SIE_F_EX    0x01        /* Icept for target of EX    */
-/*052*/ HWORD lhcpu;            /* Last Host CPU addr        */
+/*028*/ DWORD cputimer;                 /* CPU timer                 */
+/*030*/ DWORD clockcomp;                /* Clock comparator          */
+/*038*/ DWORD epoch;                    /* Guest/Host epoch diff.    */
+/*040*/ FWORD svc_ctl;                  /* SVC Controls              */
+#define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
+#define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
+#define SIE_SVC0_2N     0x20            /* Intercept SVC 2n          */
+#define SIE_SVC0_3N     0x10            /* Intercept SVC 3n          */
+/*044*/ HWORD lctl_ctl;                 /* LCTL Control              */
+#define SIE_LCTL0_CR0   0x80            /* Intercept LCTL 0          */
+#define SIE_LCTL0_CR1   0x40            /* Intercept LCTL 1          */
+#define SIE_LCTL0_CR2   0x20            /* Intercept LCTL 2          */
+#define SIE_LCTL0_CR3   0x10            /* Intercept LCTL 3          */
+#define SIE_LCTL0_CR4   0x08            /* Intercept LCTL 4          */
+#define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
+#define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
+#define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+#define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
+#define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
+#define SIE_LCTL1_CR10  0x20            /* Intercept LCTL 10         */
+#define SIE_LCTL1_CR11  0x10            /* Intercept LCTL 11         */
+#define SIE_LCTL1_CR12  0x08            /* Intercept LCTL 12         */
+#define SIE_LCTL1_CR13  0x04            /* Intercept LCTL 13         */
+#define SIE_LCTL1_CR14  0x02            /* Intercept LCTL 14         */
+#define SIE_LCTL1_CR15  0x01            /* Intercept LCTL 15         */
+/*046*/ HWORD cpuad;                    /* Virtual CPU address       */
+/*048*/ FWORD ic;                       /* Interception Controls     */
+#define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
+#define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
+#define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
+#define SIE_IC0_TS1     0x08            /* Intercept TS cc1          */
+#define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
+#define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
+#define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+#define SIE_IC1_LPSW    0x40            /* Intercept LPSW/LPSWE      */
+#define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
+#define SIE_IC1_SSM     0x10            /* Intercept SSM             */
+#define SIE_IC1_BSA     0x08            /* Intercept BSA             */
+#define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
+#define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
+#define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+#define SIE_IC2_STCK    0x80            /* Intercept STCK            */
+#define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
+#define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
+#define SIE_IC2_RRBE    0x10            /* Intercept RRB/RRBE        */
+#define SIE_IC2_PC      0x08            /* Intercept PC              */
+#define SIE_IC2_PT      0x04            /* Intercept PT              */
+#define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
+#define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+#define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
+#define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
+#define SIE_IC3_SCKC    0x20            /* Intercept SCKC and STCKC  */
+#define SIE_IC3_VACRS   0x10            /* Intercept VACRS           */
+#define SIE_IC3_PR      0x08            /* Intercept PR              */
+#define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
+#define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
+/*04C*/ FWORD ec;                       /* Execution Controls        */
+#define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+/*050*/ BYTE  c;                        /* Interception Code         */
+#define SIE_C_INST         4            /* Instruction interception  */
+#define SIE_C_PGMINT       8            /* Program interruption      */
+#define SIE_C_PGMINST     12            /* Program/instruction int   */
+#define SIE_C_EXTREQ      16            /* External request          */
+#define SIE_C_EXTINT      20            /* External interruption     */
+#define SIE_C_IOREQ       24            /* I/O request               */
+#define SIE_C_WAIT        28            /* Wait state                */
+#define SIE_C_VALIDITY    32            /* Validity                  */
+#define SIE_C_STOPREQ     40            /* Stop request              */
+#define SIE_C_OPEREXC     44            /* Operation Exception       */
+/*051*/ BYTE  f;                        /* Interception Status       */
+#define SIE_F_IN        0x80            /* Intercept format 2        */
+#define SIE_F_IF        0x02            /* Instruction fetch PER     */
+#define SIE_F_EX        0x01            /* Icept for target of EX    */
+/*052*/ HWORD lhcpu;                    /* Last Host CPU addr        */
 /*054*/ HWORD resv054h;
-/*056*/ HWORD ipa;          /* Instruction parameter A   */
+/*056*/ HWORD ipa;                      /* Instruction parameter A   */
 #define vi_who  ipa[0]
 #define vi_when ipa[1]
 #define vi_why  ipb
 #define vi_zero ipb+2
-/*058*/ FWORD ipb;          /* Instruction parameter B   */
-/*05C*/ FWORD ipc;          /* Instruction parameter C   */
-/*060*/ FWORD rcpo;         /* RCP area origin       */
-#define SIE_RCPO0_SKA   0x80        /* Storage Key Assist        */
-#define SIE_RCPO0_SKAIP 0x40        /* SKA in progress           */
-#define SIE_RCPO2_RCPBY 0x10        /* RCP Bypass                */
-/*064*/ FWORD scao;         /* SCA area origin       */
+/*058*/ FWORD ipb;                      /* Instruction parameter B   */
+/*05C*/ FWORD ipc;                      /* Instruction parameter C   */
+/*060*/ FWORD rcpo;                     /* RCP area origin           */
+#define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
+#define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
+#define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
+/*064*/ FWORD scao;                     /* SCA area origin           */
 /*068*/ FWORD resv068f;
 /*06C*/ HWORD todpfh;                   /* TOD pf high half          */
-/*06E*/ HWORD todpf;            /* TOD programmable field    */
+/*06E*/ HWORD todpf;                    /* TOD programmable field    */
 /*070*/ FWORD resv070f;
-/*074*/ FWORD iopct;            /* I/O interpretation cntl 2 */
+/*074*/ FWORD iopct;                    /* I/O interpretation cntl 2 */
 /*078*/ FWORD resv078f;
 /*07C*/ FWORD resv07cf;
 /*080*/ DWORD mso;                      /* Main Storage Origin       */
@@ -1418,14 +1422,14 @@ typedef struct _SIE2BK {        /* SIE State Descriptor      */
                                            The actual guest machine
                                            size is (mse+1)-mso       */
 #define SIE2_MS_MASK    0xFFFFFFFFFFF00000ULL
-/*090*/ QWORD psw;                      /* Guest PSW             */
-/*0A0*/ DWORD gr14;         /* Guest gr 14           */
-/*0A8*/ DWORD gr15;         /* Guest gr 15           */
+/*090*/ QWORD psw;                      /* Guest PSW                 */
+/*0A0*/ DWORD gr14;                     /* Guest gr 14               */
+/*0A8*/ DWORD gr15;                     /* Guest gr 15               */
 /*0B0*/ DWORD recv0b0d;
 /*0B8*/ HWORD recv0b8d;
-/*0BA*/ BYTE  xso[3];           /* Expanded storage origin   */
-/*0BD*/ BYTE  xsl[3];           /* Expanded storage limit    */
-/*0C0*/ BYTE  ip[52];           /* Interruption parameters   */
+/*0BA*/ BYTE  xso[3];                   /* Expanded storage origin   */
+/*0BD*/ BYTE  xsl[3];                   /* Expanded storage limit    */
+/*0C0*/ BYTE  ip[52];                   /* Interruption parameters   */
 #define SIE_IP_PSA_OFFSET       0x40    /* Offset of the IP field 
                                            relative to the ipfields
                                            in the PSA for ESAME guest*/
