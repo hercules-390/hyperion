@@ -158,7 +158,6 @@ PMCW    pmcw;                           /* Path management ctl word  */
         || (pmcw.flag25 & PMCW25_VISC)
         || (pmcw.flag27 & PMCW27_I)
 #endif
-        || (pmcw.flag25 & PMCW25_RESV)
         || (pmcw.flag26 != 0)
         || (pmcw.flag27 & PMCW27_RESV))
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
@@ -232,7 +231,8 @@ PMCW    pmcw;                           /* Path management ctl word  */
 
     /* Update zone, VISC, I and S bit */
     dev->pmcw.zone = pmcw.zone;
-    dev->pmcw.flag25 = pmcw.flag25;
+    dev->pmcw.flag25 &= ~(PMCW25_VISC);
+    dev->pmcw.flag25 |= (pmcw.flag25 & PMCW25_VISC);
     dev->pmcw.flag26 = pmcw.flag26;
     dev->pmcw.flag27 = pmcw.flag27;
 

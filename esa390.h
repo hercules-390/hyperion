@@ -976,7 +976,12 @@ typedef struct _PMCW {
 
 /* Bit definitions for PMCW flag byte 25 */
 #define PMCW25_VISC     0x1F            /* Guest ISC                 */
-#define PMCW25_RESV     0xE0            /* Reserved bits - must be 0 */
+#define PMCW25_TYPE     0xE0            /* Subchannel Type           */
+#define PMCW25_TYPE_0   0x00            /* I/O Subchannel            */
+#define PMCW25_TYPE_1   0x20            /* CHSC subchannel           */
+#define PMCW25_TYPE_2   0x40            /* Message subchannel        */
+#define PMCW25_TYPE_3   0x60            /* ADM subchannel            */
+
 
 /* Bit definitions for PMCW flag byte 27 */
 #define PMCW27_I        0x80            /* Interrupt Interlock Cntl  */
