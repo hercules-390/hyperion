@@ -106,8 +106,6 @@ CGIVAR *cgivar;
         fclose(webblk->hsock);
         if(webblk->user) free(webblk->user);
         if(webblk->request) free(webblk->request);
-        if(webblk->get_arg) free(webblk->get_arg);
-        if(webblk->post_arg) free(webblk->post_arg);
         cgivar = webblk->cgivar;
         while(cgivar)
         {
@@ -475,7 +473,8 @@ static void *http_request(FILE *hsock)
     if(webblk->request_type == REQTYPE_POST
       && webblk->content_length != 0)
     {
-        if((pointer = webblk->post_arg = malloc(webblk->content_length + 1)))
+    char *post_arg;
+        if((pointer = post_arg = malloc(webblk->content_length + 1)))
         {
         int i;
             for(i = 0; i < webblk->content_length; i++)
@@ -485,7 +484,8 @@ static void *http_request(FILE *hsock)
                     pointer++;
             } 
             *pointer = '\0';
-            http_interpret_variable_string(webblk, webblk->post_arg, REQTYPE_POST);
+            http_interpret_variable_string(webblk, post_arg, REQTYPE_POST);
+            free(post_arg);
         }
     }
 
@@ -500,9 +500,8 @@ static void *http_request(FILE *hsock)
 
     /* anything following a ? in the URL is part of the get arguments */
     if ((pointer=strchr(url,'?'))) {
-        webblk->get_arg = strdup(pointer+1);
         *pointer = 0;
-        http_interpret_variable_string(webblk, webblk->get_arg, REQTYPE_GET);
+        http_interpret_variable_string(webblk, pointer + 1, REQTYPE_GET);
     }
 
     while(url[0] == '/' && url[1] == '/')
