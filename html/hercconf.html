@@ -110,14 +110,14 @@ The following system parameters may be specified:
 <dd>specifies the number of emulated vector facilities. Default is one per
     CPU. Only available by default in ESA/390 mode.
 <dt><code>CPUPRIO <em>nn</em></code>
-<dd>specifies priority of the CPU thread.  Default is a nice value of 15, 
-    which means a low priority such that I/O can be scheduled and completed
-    in favour of CPU cycles being burned.  
-<dd>On Multi CPU systems, a real CPU can be 'dedicated' to Hercules, by
-    giving the CPU thread a very high dispatching priority (-20).
-    Hercules needs to be a setuid root program to allow it to
-    reset is dispatching priority to a high (negative) value.
-    (ie. chown root.root hercules; chmod +s hercules)
+<dd>is only valid when Hercules is run on a *ix (Linux/Unix) host and
+    specifies the priority of the CPU thread. Default is a nice value of
+    15, which means a low priority such that I/O can be scheduled and
+    completed in favour of CPU cycles being burned. On Multi-CPU systems,
+    a real CPU can be 'dedicated' to Hercules, by giving the CPU thread a
+    very high dispatching priority (-20). Note that Hercules needs to be a
+    setuid root program to allow it to reset its dispatching priority to a
+    high (negative) value (ie. chown root.root hercules; chmod +s hercules)
 <dt><code>LOADPARM <em>xxxxxxxx</em></code>
 <dd>specifies the eight-character IPL parameter which is used
     by some operating systems to select system parameters
@@ -502,14 +502,20 @@ the device record is:
     arguments depend on the emulation type.  The following emulation
     types are defined:
     <dl>
-    <p><dt><b>CTCI</b>
+    <p><dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)<p>
     <dd>A point-to-point IP connection with the TCP/IP stack of the
         driving system on which Hercules is running.  See the
-        <a href="herctcp.html">Hercules TCP/IP</a> page for details.
-    <P><dt><b>CTCT</b>
-    <dd>An emulated CTCA to another Hercules system. This is the only
-        type of CTCA currently supported under Windows. Four arguments
-        are required:
+        <a href="herctcp.html">Hercules TCP/IP</a> page for details.<p>
+        (Note: The CTCI protocol is only for the Linux version of
+        Hercules. For Windows, use the CTCI-W32 protocol instead).
+    <p><dt><b>CTCI-W32</b>  &nbsp; &nbsp; (modified Channel to Channel link to Win32 TCP/IP stack)<p>
+    <dd>A modified Win32 version of the CTCI protocol for the Windows
+    crowd. See Fish's
+        <a href="http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html">CTCI-W32</a>
+        page for details.
+    <P><dt><b>CTCT</b> &nbsp; &nbsp; (Channel to Channel Emulation via TCP connection)<p>
+    <dd>An emulated CTCA to another Hercules system. Four arguments
+        are required:<p>
         <dl>
             <dt><code><em>lport</em></code>
             <dd>specifies the local TCP port. This is the TCP port that
