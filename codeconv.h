@@ -1,4 +1,4 @@
-/* CODECONV.H	(c) Copyright Roger Bowler, 1999-2001		     */
+/* CODECONV.H	(c) Copyright Roger Bowler, 1999-2002		     */
 /*		ASCII/EBCDIC translation tables 		     */
 
 unsigned char

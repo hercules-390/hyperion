@@ -63,6 +63,7 @@ CC = @CC@
 DEPDIR = @DEPDIR@
 EXEEXT = @EXEEXT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+MAINT = @MAINT@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -71,7 +72,7 @@ am__quote = @am__quote@
 install_sh = @install_sh@
 
 EXTRA_DIST = cckddasd.html  hercinst.html  hercnew.html \
-	hercconf.html  herclic.html   herctcp.html \
+	hercconf.html  herclic.html  hercrdr.html  herctcp.html \
 	hercfaq.html   hercload.html  index.html hercules.css
 
 subdir = html
@@ -83,10 +84,10 @@ DIST_COMMON = Makefile.am Makefile.in
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  html/Makefile
-Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
 	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status

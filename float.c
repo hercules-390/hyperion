@@ -1,4 +1,4 @@
-/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2001            */
+/* FLOAT.C      (c) Copyright Peter Kuschnerus, 2000-2002            */
 /*              ESA/390 Hex Floatingpoint Instructions               */
 
 /*-------------------------------------------------------------------*/
@@ -10,7 +10,7 @@
 /* Incorporated all floating point instructions from cpu.c in order  */
 /* to implement revised instruction decoding.                        */
 /*                                               Jan Jaeger 01/07/00 */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2002      */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/

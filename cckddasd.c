@@ -1,4 +1,4 @@
-/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2001                */
+/* CCKDDASD.C   (c) Copyright Roger Bowler, 1999-2002                */
 /*       ESA/390 Compressed CKD Direct Access Storage Device Handler */
 
 /*-------------------------------------------------------------------*/

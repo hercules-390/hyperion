@@ -1,8 +1,8 @@
 /*
  * dasdls
  *
- * Copyright 2000-2001 by Malcolm Beattie
- * Based on code copyright by Roger Bowler, 1999-2001
+ * Copyright 2000-2002 by Malcolm Beattie
+ * Based on code copyright by Roger Bowler, 1999-2002
  */
 #include "hercules.h"
 #include "dasdblks.h"

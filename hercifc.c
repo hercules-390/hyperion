@@ -1,4 +1,4 @@
-/* HERCIFC.C    (c) Copyright Roger Bowler, 2000-2001                */
+/* HERCIFC.C    (c) Copyright Roger Bowler, 2000-2002                */
 /*              Hercules interface configuration program             */
 
 /*-------------------------------------------------------------------*/

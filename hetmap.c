@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETMAP.C     (c) Copyright Leland Lucius, 2000-2001
+|| HETMAP.C     (c) Copyright Leland Lucius, 2000-2002
 ||              Released under terms of the Q Public License.
 ||
 || Displays information about the structure of a Hercules Emulated Tape. 

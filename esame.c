@@ -1,4 +1,4 @@
-/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2001                  */
+/* ESAME.C      (c) Copyright Jan Jaeger, 2000-2002                  */
 /*              ESAME (z/Architecture) instructions                  */
 
 /*-------------------------------------------------------------------*/

@@ -1,9 +1,9 @@
-/* OPCODE.C     (c) Copyright Jan Jaeger, 2000-2001                  */
+/* OPCODE.C     (c) Copyright Jan Jaeger, 2000-2002                  */
 /*              Instruction decoding functions                       */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2001      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2002      */
 
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2002      */
 
 
 #include "feature.h"

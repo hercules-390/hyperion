@@ -4,7 +4,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| HETLIB.H     (c) Copyright Leland Lucius, 2000-2001
+|| HETLIB.H     (c) Copyright Leland Lucius, 2000-2002
 ||              Released under terms of the Q Public License.
 ||
 || Header for the Hercules Emulated Tape library.

@@ -1,4 +1,4 @@
-/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2001                */
+/* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2002                */
 /*              ESA/390 Tape Device Handler                          */
 
 /*-------------------------------------------------------------------*/

@@ -1,4 +1,4 @@
-/* CCKDEND.C    (c) Copyright Roger Bowler, 1999-2001                */
+/* CCKDEND.C    (c) Copyright Roger Bowler, 1999-2002                */
 /*       ESA/390 Compressed CKD Endian routines                      */
 
 /*-------------------------------------------------------------------*/

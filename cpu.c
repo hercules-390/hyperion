@@ -1,8 +1,8 @@
-/* CPU.C        (c) Copyright Roger Bowler, 1994-2001                */
+/* CPU.C        (c) Copyright Roger Bowler, 1994-2002                */
 /*              ESA/390 CPU Emulator                                 */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2001      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2002      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2002      */
 
 /*-------------------------------------------------------------------*/
 /* This module implements the CPU instruction execution function of  */

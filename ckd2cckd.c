@@ -1,4 +1,4 @@
-/* CKD2CCKD.C   (c) Copyright Roger Bowler, 1999-2001                */
+/* CKD2CCKD.C   (c) Copyright Roger Bowler, 1999-2002                */
 /*       Copy a regular CKD Direct Access Storage Device file to     */
 /*       a compressed CKD Direct Access Storage Device file.         */
 

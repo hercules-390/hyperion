@@ -1,4 +1,4 @@
-/* CARDPCH.C    (c) Copyright Roger Bowler, 1999-2001                */
+/* CARDPCH.C    (c) Copyright Roger Bowler, 1999-2002                */
 /*              ESA/390 Card Punch Device Handler                    */
 
 /*-------------------------------------------------------------------*/

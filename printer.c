@@ -1,4 +1,4 @@
-/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2001                */
+/* PRINTER.C    (c) Copyright Roger Bowler, 1999-2002                */
 /*              ESA/390 Line Printer Device Handler                  */
 
 /*-------------------------------------------------------------------*/

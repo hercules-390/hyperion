@@ -1,7 +1,7 @@
 /*
 || ----------------------------------------------------------------------------
 ||
-|| SLLIB.C      (c) Copyright Leland Lucius, 2000-2001
+|| SLLIB.C      (c) Copyright Leland Lucius, 2000-2002
 ||              Released under terms of the Q Public License.
 ||
 || Library for managing Standard Label tapes.

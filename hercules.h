@@ -1,8 +1,8 @@
-/* HERCULES.H   (c) Copyright Roger Bowler, 1999-2001                */
+/* HERCULES.H   (c) Copyright Roger Bowler, 1999-2002                */
 /*              ESA/390 Emulator Header File                         */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2001      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2002      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2002      */
 
 /*-------------------------------------------------------------------*/
 /* Header file containing Hercules internal data structures          */

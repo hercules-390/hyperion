@@ -1,4 +1,4 @@
-/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2001                */
+/* ASSIST.C     (c) Copyright Roger Bowler, 1999-2002                */
 /*              ESA/390 MVS Assist Routines                          */
 
 /*-------------------------------------------------------------------*/
@@ -8,7 +8,7 @@
 
 /*              Instruction decode rework - Jan Jaeger               */
 /*              Correct address wraparound - Jan Jaeger              */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2002      */
 /*              Add dummy assist instruction - Jay Maynard,          */
 /*                  suggested by Brandon Hill                        */
 
