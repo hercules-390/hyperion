@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+05 Oct 2004 no_ffs.pat - Remove ffs ia32 assembler assist - Greg Smith
 01 Oct 2004 Fix segfault when IPLing with IPL CPU offline - Ivan Warren
 29 Sep 2004 Fix load/store multiple change (21 Sep 2004) to actually
             improve performance - Greg Smith

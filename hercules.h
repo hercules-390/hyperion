@@ -694,19 +694,26 @@ typedef struct _REGS {                  /* Processor registers       */
 
 #define WAKEUP_CPU_MASK(_mask) \
  do { \
-   if ((_mask)) \
-     signal_condition(&sysblk.regs[ffs((_mask))]->intcond); \
+   int i; \
+   U32 mask = (_mask); \
+   for (i = 0; mask; i++) { \
+     if (mask & 1) \
+     { \
+       signal_condition(&sysblk.regs[i]->intcond); \
+       break; \
+     } \
+     mask >>= 1; \
+   } \
  } while (0)
 
 #define WAKEUP_CPUS_MASK(_mask) \
  do { \
-   int i, n; \
+   int i; \
    U32 mask = (_mask); \
    for (i = 0; mask; i++) { \
-     n = ffs(mask); \
-     i += n; \
-     signal_condition(&sysblk.regs[i]->intcond); \
-     mask >>= (n+1); \
+     if (mask & 1) \
+       signal_condition(&sysblk.regs[i]->intcond); \
+     mask >>= 1; \
    } \
  } while (0)
 

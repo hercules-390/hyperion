@@ -81,18 +81,6 @@ static __inline__ int test_bit_i686(int len, int nr, volatile void *addr)
     }
 }
 
-/* find first 1 bit in a 32 bit word.  `x' must be non-zero. */
-#define ffs(x) ffs_i686((x))
-static __inline__ unsigned long ffs_i686(unsigned long word)
-{
-	__asm__("bsfl %1,%0"
-		:"=r" (word)
-		:"rm" (word));
-	return word;
-}
-/* Following simulates builtin FFS (so that it doesn't get redefined afterwards */
-#define HAVE_FFS    1
-
 #define or_bits(x,y,z) or_bits_i686((x),(y),(z))
 static __inline__ void or_bits_i686(int len, int bits, volatile void * addr)
 {
@@ -455,19 +443,6 @@ static __inline__ int test_bit(int len, int nr, volatile void * addr)
         break;
     }
     return 0;
-}
-#endif
-
-#ifndef HAVE_FFS
-static __inline__ unsigned long ffs(U32 word)
-{
-    unsigned long i = 0;
-    while ((word & 1) == 0)
-    {
-        i++;
-        word >>= 1;
-    }
-    return i;
 }
 #endif
 

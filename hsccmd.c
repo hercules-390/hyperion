@@ -318,7 +318,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
 int startall_cmd(int argc, char *argv[], char *cmdline)
 {
-    int n, i;
+    int i;
     U32 mask;
 
     UNREFERENCED(cmdline);
@@ -329,11 +329,12 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
     mask = (~sysblk.started_mask) & sysblk.config_mask;
     for (i = 0; mask; i++)
     {
-        n = ffs(mask);
-        i += n;
-        sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
-        signal_condition(&sysblk.regs[i]->intcond);
-        mask >>= (n+1);
+        if (mask & 1)
+        {
+            sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
+            signal_condition(&sysblk.regs[i]->intcond);
+        }
+        mask >>= 1;
     }
 
     release_lock (&sysblk.intlock);
@@ -346,7 +347,7 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 
 int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
-    int n, i;
+    int i;
     U32 mask;
 
     UNREFERENCED(cmdline);
@@ -358,12 +359,13 @@ int stopall_cmd(int argc, char *argv[], char *cmdline)
     mask = sysblk.started_mask;
     for (i = 0; mask; i++)
     {
-        n = ffs(mask);
-        i += n;
-        sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
-        ON_IC_INTERRUPT(sysblk.regs[i]);
-        signal_condition(&sysblk.regs[i]->intcond);
-        mask >>= (n+1);
+        if (mask & 1)
+        {
+            sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT(sysblk.regs[i]);
+            signal_condition(&sysblk.regs[i]->intcond);
+        }
+        mask >>= 1;
     }
 
     release_lock (&sysblk.intlock);
