@@ -35,7 +35,7 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 [have_libbz2=yes],[have_libbz2=no])
 
 # Headers
-AC_CHECK_HEADERS(byteswap.h linux/if_tun.h)
+AC_CHECK_HEADERS(byteswap.h linux/if_tun.h inttypes.h)
 
 # Types
 # AC_CHECK_SIZEOF(double)
