@@ -69,6 +69,7 @@ int             valid=1;                /* Validate track images     */
 int             swapend=0;              /* Need to swap byte order   */
 int             maxerrs=5;              /* Max errors allowed        */
 int             limited=0;              /* 1=Limit cyls copied       */
+int             lfs=0;                  /* 1=Large File supported    */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -129,6 +130,15 @@ int             limited=0;              /* 1=Limit cyls copied       */
                            break;
                        }
                        syntax ();
+
+#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
+            case 'l':  if (abbrev(argv[0], "-lfs"))
+                       {
+                           lfs = 1;
+                           break;
+                       }
+                       syntax ();
+#endif
 
             default:   syntax ();
         }
@@ -225,7 +235,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
             memset (&l2, 0, CCKD_L2TAB_SIZE);
         else
         {
-            rc = lseek (ifd, l1[i], SEEK_SET);
+            rc = lseek (ifd, (off_t)l1[i], SEEK_SET);
             if (rc == -1)
             {
                 fprintf (stderr, "cckd2ckd: %s lseek error: %s\n",
@@ -253,7 +263,10 @@ int             limited=0;              /* 1=Limit cyls copied       */
     /* perform some file calculations */
     trks = cyls * heads;
     bytes_per_cyl = trksz * heads;
-    cyls_per_file = (2147483647 - CKDDASD_DEVHDR_SIZE) /
+    if (lfs)
+        cyls_per_file = cyls;
+    else
+        cyls_per_file = (2147483647 - CKDDASD_DEVHDR_SIZE) /
                      bytes_per_cyl;
     trks_per_file = cyls_per_file * heads;
     files = (trks + trks_per_file - 1) / trks_per_file;
@@ -296,7 +309,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
             memset (&l2, 0, CCKD_L2TAB_SIZE);
         else
         {
-            rc = lseek (ifd, l1[i], SEEK_SET);
+            rc = lseek (ifd, (off_t)l1[i], SEEK_SET);
             if (rc == -1)
             {
                 fprintf (stderr, "cckd2ckd: %s lseek error: %s\n",
@@ -382,7 +395,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
             }
             else
             {
-                rc = lseek (ifd, l2[j].pos, SEEK_SET);
+                rc = lseek (ifd, (off_t)l2[j].pos, SEEK_SET);
                 if (rc == -1)
                 {
                     fprintf (stderr, "cckd2ckd: %s lseek error: %s\n",
@@ -557,7 +570,11 @@ void syntax ()
             "                       are ignored.  Default is 5\n"
             "     -quiet            quiet mode, don't display status\n"
             "     -validate         validate track images [default]\n"
-            "     -novalidate       don't validate track images\n");
+            "     -novalidate       don't validate track images\n"
+#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
+            "     -lfs              build a large ckd file\n"
+#endif
+           );
     exit (21);
 } /* end function syntax */
 

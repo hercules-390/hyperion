@@ -39,6 +39,7 @@ where:
   -z         build compressed dasd image file using zlib
   -bz2       build compressed dasd image file using bzip2
   -0         build compressed dasd image file with no compression
+  -lfs       build large uncompressed ckd file (>2G)
   -a         build dasd image file that includes alternate cylinders
              (option ignored if size is manually specified)
 
@@ -142,7 +143,8 @@ The current list of device types and models supported is:
 <p>
 <h5>Volumes exceeding 2GB</h5>
 <p>
-For CKD volumes which exceed 2GB, such as the 3390-3, the DASDINIT
+For CKD volumes which exceed 2GB, such as the 3390-3, and the
+<b>-lfs</b> parameter is not specified, the DASDINIT
 program will create multiple files by appending the characters
 <b><i>_1</b></i>, <b>_2</b></i>, <b>_3</b></i> etc.
 to the file name specified on the command line.  These characters
@@ -153,7 +155,9 @@ to the end of the name. Each file contains a whole number of cylinders.
 logical volume. Specify the full name of just the first file in the
 Hercules configuration file (e.g. "<i>filename</i>_1").
 <p>
-The DASDINIT program cannot create FBA volumes exceeding 2GB.
+The DASDINIT program cannot create FBA volumes exceeding 2GB
+unless the <b>-lfs</b> parameter is specified and <i>large file size</i>
+is supported on your platform..
 
 <h5>Examples</h5>
 <p>
@@ -188,7 +192,14 @@ of 3339 cylinders with volume serial number WORK03:
 </pre>
 Because this volume exceeds 2GB, DASDINIT will create two files
 with <b><i>triple_1.a88</b></i> containing cylinders 0-2518 and
-<b><i>triple_2.a88</b></i> containing cylinders 2519-3339.
+<b><i>triple_2.a88</b></i> containing cylinders 2519-3339.  If you
+specify
+<pre>
+    dasdinit -lfs triple.a88 3390-3 work03
+</pre>
+then DASDINIT will create a single file <b><i>triple.a88</i></b>
+containing all the cylinders.  Your platform must support <i>large
+file size</i> to specify the <b>-lfs</b> option.
 
 <h4>Formatting the empty DASD volume</h4>
 <p>
@@ -250,6 +261,8 @@ where
     <dd>build compressed dasd image file using bzip2
     <dt><code><i>-0</i></code>
     <dd>build compressed dasd image file with no compression
+    <dt><code><i>-lfs</i></code>
+    <dd>build a large dasd image file (can exceed 2G)
     <dt><code><i>-a</i></code>
     <dd>build dasd image file that includes alternate cylinders
 

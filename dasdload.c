@@ -2355,7 +2355,7 @@ BYTE            notelist[1024];         /* Note list                 */
 
     /* Seek to start of track header */
     rc = read_track (cif, cyl, head);
-    if (rc < CKDDASD_TRKHDR_SIZE)
+    if (rc < 0)
     {
         XMERRF ("%s cyl %d head %d read error\n",
                 ofname, cyl, head);
@@ -4305,6 +4305,7 @@ BYTE            stmt[256];              /* Control file statement    */
 int             stmtno;                 /* Statement number          */
 BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
+int             lfs = 0;                /* 1 = Large file            */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -4331,6 +4332,10 @@ int             altcylflag = 0;         /* Alternate cylinders flag  */
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
+#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
+        else if (strcmp("lfs", &argv[1][1]) == 0)
+            lfs = 1;
+#endif
         else argexit(0);
     }
 
@@ -4439,7 +4444,7 @@ int             altcylflag = 0;         /* Alternate cylinders flag  */
 
     /* Create the output file */
     rc = create_ckd (ofname, devtype, outheads, outmaxdl, reqcyls,
-                     volser, comp);
+                     volser, comp, lfs);
     if (rc < 0)
     {
         XMERRF ("Cannot create %s\n", ofname);

@@ -64,6 +64,9 @@ argexit ( int code )
 "  -bz2       build compressed dasd image file using bzip2\n"
 #endif
 "  -0         build compressed dasd image file with no compression\n"
+#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
+"  -lfs       build a large (uncompressed) dasd file\n"
+#endif
 "  -a         build dasd image file that includes alternate cylinders\n"
 "             (option ignored if size is manually specified)\n\n"
 
@@ -102,6 +105,7 @@ BYTE    volser[7];                      /* Volume serial number      */
 BYTE    c;                              /* Character work area       */
 CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */
+int     lfs = 0;                        /* 1 = Build large file      */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -128,6 +132,10 @@ FBADEV *fba;                            /* -> FBA device table entry */
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
+#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
+        else if (strcmp("lfs", &argv[1][1]) == 0)
+            lfs = 1;
+#endif
         else argexit(0);
     }
 
@@ -212,9 +220,9 @@ FBADEV *fba;                            /* -> FBA device table entry */
     /* Create the device */
 
     if (type == 'C')
-        create_ckd (fname, devtype, heads, maxdlen, size, volser, comp);
+        create_ckd (fname, devtype, heads, maxdlen, size, volser, comp, lfs);
     else
-        create_fba (fname, devtype, sectsize, size, volser, comp);
+        create_fba (fname, devtype, sectsize, size, volser, comp, lfs);
 
     /* Display completion message */
 

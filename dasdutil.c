@@ -7,12 +7,12 @@
 
 #include "hercules.h"
 #include "dasdblks.h"
+#include "devtype.h"
 
 /*-------------------------------------------------------------------*/
 /* External references         (defined in ckddasd.c)                */
 /*-------------------------------------------------------------------*/
-extern int ckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] );
-extern int ckddasd_close_device ( DEVBLK *dev );
+extern DEVHND ckddasd_device_hndinfo;
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -188,153 +188,48 @@ int             lastsame = 0;
 int read_track (CIFBLK *cif, int cyl, int head)
 {
 int             rc;                     /* Return code               */
-int             i;                      /* Loop index                */
-int             len;                    /* Record length             */
-off_t           seekpos;                /* Seek position for lseek   */
-CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
 DEVBLK         *dev;                    /* -> CKD device block       */
+BYTE            unitstat;               /* Unit status               */
 
     /* Exit if required track is already in buffer */
     if (cif->curcyl == cyl && cif->curhead == head)
         return 0;
 
-    /* Write out the track buffer if it has been modified */
-    rc = rewrite_track (cif);
-    if (rc < 0) return -1;
-
-    if (verbose)
-    {
-       /* Issue progress message */
-       fprintf (stdout,
-               "Reading cyl %d head %d\n",
-               cyl, head);
-    }
-
     dev = &cif->devblk;
 
-    /* Determine which file contains the requested cylinder */
-    for (i = 0; cyl > dev->ckdhicyl[i]; i++)
+    if (cif->trkmodif)
     {
-        if (dev->ckdhicyl[i] == 0 || i == dev->ckdnumfd - 1)
-            break;
+        cif->trkmodif = 0;
+        if (verbose) /* Issue progress message */
+           fprintf (stdout, "Reading cyl %d head %d\n",
+                    cif->curcyl, cif->curhead);
+        rc = (dev->ckdupdtrk)(dev, NULL, cif->trksz, &unitstat);
+        if (rc < 0)
+        {
+            fprintf (stderr, "%s read track error: stat=%2.2X\n",
+                    cif->fname, unitstat);
+            return -1;
+        }
     }
-    dev->ckdtrkfn = i;
 
-    /* Set the device file descriptor to the selected file */
-    cif->fd = dev->fd = dev->ckdfd[i];
+    if (verbose) /* Issue progress message */
+       fprintf (stdout, "Reading cyl %d head %d\n", cyl, head);
 
-    /* Seek to start of track header */
-    seekpos = CKDDASD_DEVHDR_SIZE
-            + ((((cyl - dev->ckdlocyl[i]) * dev->ckdheads) + head)
-                * dev->ckdtrksz);
-
-    rc = ckd_lseek (dev, cif->fd, seekpos, SEEK_SET);
-    if (rc == -1)
+    rc = (dev->ckdrdtrk)(dev, cyl, head, &unitstat);
+    if (rc < 0)
     {
-        fprintf (stderr,
-                "%s lseek error: %s\n",
-                cif->fname, strerror(errno));
+        fprintf (stderr, "%s read track error: stat=%2.2X\n",
+                cif->fname, unitstat);
         return -1;
     }
 
-    /* Read the track */
-    len = ckd_read (dev, cif->fd, cif->trkbuf, cif->trksz);
-    if (len < 0)
-    {
-        fprintf (stderr,
-                "%s read error: %s\n",
-                cif->fname, strerror(errno));
-        return -1;
-    }
-
-    /* Validate the track header */
-    trkhdr = (CKDDASD_TRKHDR*)(cif->trkbuf);
-    if (trkhdr->bin != 0
-        || trkhdr->cyl[0] != (cyl >> 8)
-        || trkhdr->cyl[1] != (cyl & 0xFF)
-        || trkhdr->head[0] != (head >> 8)
-        || trkhdr->head[1] != (head & 0xFF))
-    {
-        fprintf (stderr, "Invalid track header\n");
-        return -1;
-    }
-
-    /* Set current cylinder and head */
+    /* Set current buf, cylinder and head */
+    cif->trkbuf = dev->buf;
     cif->curcyl = cyl;
     cif->curhead = head;
 
     return 0;
 } /* end function read_track */
-
-/*-------------------------------------------------------------------*/
-/* Subroutine to rewrite current track if buffer was modified        */
-/* Input:                                                            */
-/*      cif     -> CKD image file descriptor structure               */
-/*                                                                   */
-/* Return value is 0 if successful, -1 if error                      */
-/*-------------------------------------------------------------------*/
-int rewrite_track (CIFBLK *cif)
-{
-int             rc;                     /* Return code               */
-int             i;                      /* Loop index                */
-int             len;                    /* Record length             */
-off_t           seekpos;                /* Seek position for lseek   */
-DEVBLK         *dev;                    /* -> CKD device block       */
-
-    /* Exit if track buffer has not been modified */
-    if (cif->trkmodif == 0)
-        return 0;
-
-    if (verbose)
-    {
-       /* Issue progress message */
-       fprintf (stdout,
-               "Writing cyl %d head %d\n",
-               cif->curcyl, cif->curhead);
-    }
-
-    dev = &cif->devblk;
-
-    /* Determine which file contains the requested cylinder */
-    for (i = 0; cif->curcyl > dev->ckdhicyl[i]; i++)
-    {
-        if (dev->ckdhicyl[i] == 0 || i == dev->ckdnumfd - 1)
-            break;
-    }
-    dev->ckdtrkfn = i;
-
-    /* Set the device file descriptor to the selected file */
-    cif->fd = dev->fd = dev->ckdfd[i];
-
-    /* Seek to start of track header */
-    seekpos = CKDDASD_DEVHDR_SIZE
-            + ((((cif->curcyl - dev->ckdlocyl[i]) * dev->ckdheads) + cif->curhead)
-                * dev->ckdtrksz);
-
-    rc = ckd_lseek (dev, cif->fd, seekpos, SEEK_SET);
-    if (rc == -1)
-    {
-        fprintf (stderr,
-                "%s lseek error: %s\n",
-                cif->fname, strerror(errno));
-        return -1;
-    }
-
-    /* Write the track */
-    len = ckd_write (dev, cif->fd, cif->trkbuf, cif->trksz);
-    if (len < cif->trksz)
-    {
-        fprintf (stderr,
-                "%s write error: %s\n",
-                cif->fname, strerror(errno));
-        return -1;
-    }
-
-    /* Reset the track modified flag */
-    cif->trkmodif = 0;
-
-    return 0;
-} /* end function rewrite_track */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a block from the CKD DASD image                */
@@ -704,6 +599,9 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
     }
     dev->devtype = ckd->devt;
 
+    /* Set the device handlers */
+    dev->hnd = &ckddasd_device_hndinfo;
+
     /* If the end of the filename is a valid device address then
        use that as the device number, otherwise default to 0x0000 */
     sfxptr = strrchr (fname, '/');
@@ -722,8 +620,8 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
         argc++;
     }
 
-    /* Call the CKD device handler initialization function */
-    rc = ckddasd_init_handler(dev, argc, argv);
+    /* Call the device handler initialization function */
+    rc = (dev->hnd->init)(dev, argc, argv);
     if (rc < 0)
     {
         fprintf (stderr, "CKD initialization failed for %s\n", fname);
@@ -748,17 +646,6 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
                cif->fname, cif->heads, cif->trksz);
     }
 
-    /* Obtain the track buffer */
-    cif->trkbuf = malloc (cif->trksz);
-    if (cif->trkbuf == NULL)
-    {
-        fprintf (stderr,
-                "Cannot obtain storage for track buffer: %s\n",
-                strerror(errno));
-        free (cif);
-        return NULL;
-    }
-
     /* Indicate that the track buffer is empty */
     cif->curcyl = -1;
     cif->curhead = -1;
@@ -780,18 +667,28 @@ int close_ckd_image (CIFBLK *cif)
 {
 int             rc;                     /* Return code               */
 DEVBLK         *dev;                    /* -> CKD device block       */
+BYTE            unitstat;               /* Unit status               */
 
-    /* Rewrite the track buffer if it has been modified */
-    rc = rewrite_track (cif);
-    if (rc < 0) return -1;
+    dev = &cif->devblk;
+
+    /* Write the last track if modified */
+    if (cif->trkmodif)
+    {
+        if (verbose) /* Issue progress message */
+           fprintf (stdout, "Reading cyl %d head %d\n",
+                    cif->curcyl, cif->curhead);
+        rc = (dev->ckdupdtrk)(dev, NULL, cif->trksz, &unitstat);
+        if (rc < 0)
+        {
+            fprintf (stderr, "%s write track error: stat=%2.2X\n",
+                    cif->fname, unitstat);
+        }
+    }
 
     /* Close the CKD image file */
-    dev = &cif->devblk;
-    rc = ckddasd_close_device(dev);
-    if (rc < 0) return -1;
+    (dev->hnd->close)(dev);
 
-    /* Release the track buffer and the file descriptor structure */
-    free (cif->trkbuf);
+    /* Release the file descriptor structure */
     free (cif);
 
     return 0;
@@ -1430,7 +1327,7 @@ int             highcyl;                /* CKD header high cyl number*/
 /*-------------------------------------------------------------------*/
 int
 create_ckd (BYTE *fname, U16 devtype, U32 heads,
-            U32 maxdlen, U32 volcyls, BYTE *volser, BYTE comp)
+            U32 maxdlen, U32 volcyls, BYTE *volser, BYTE comp, int lfs)
 {
 int             i;                      /* Array subscript           */
 int             rc;                     /* Return code               */
@@ -1459,7 +1356,7 @@ U32             trksize;                /* DASD image track length   */
     /* Compute minimum and maximum number of cylinders */
     cylsize = trksize * heads;
     mincyls = 1;
-    if (comp == 0xff)
+    if (comp == 0xff && !lfs)
     {
         maxcpif = 0x80000000 / cylsize;
         maxcyls = maxcpif * CKD_MAXFILES;
@@ -1567,7 +1464,7 @@ U32             trksize;                /* DASD image track length   */
 /*-------------------------------------------------------------------*/
 int
 create_fba (BYTE *fname, U16 devtype,
-            U32 sectsz, U32 sectors, BYTE *volser, BYTE comp)
+            U32 sectsz, U32 sectors, BYTE *volser, BYTE comp, int lfs)
 {
 int             rc;                     /* Return code               */
 int             fd;                     /* File descriptor           */
@@ -1581,7 +1478,7 @@ U32             maxsect;                /* Maximum sector count      */
     maxsect = 0x80000000 / sectsz;
 
     /* Check for valid number of sectors */
-    if (sectors < minsect || sectors > maxsect)
+    if (sectors < minsect || (!lfs && sectors > maxsect))
     {
         fprintf (stderr,
                 "Sector count %u is outside range %u-%u\n",

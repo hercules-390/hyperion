@@ -39,6 +39,9 @@ esac
 
 AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
 
+# System Services
+AC_SYS_LARGEFILE
+
 # Libraries
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(socket, connect)

@@ -58,12 +58,13 @@ A regular CKD file contains a 512 byte <i>header</i> followed by <i>track
 images</i>, each taking the same amount of space: the maximum track size.
 The offset of a track image can be readily calculated by the track number:
 <center>
-<code>offset = 512 + trk * maxtrksz</code>
+<code>offset = 512 + trk * maxtrksz </code>
 </center>
 </a>
 <p>
 A <b>cckd</b> file can take significantly less file space than a regular
 CKD file because
+<p>
 <ul><li>A track image only occupies its <i>length</i> in the file and
         not the <i>maximum track size</i>
     <li>A track image may be compressed, reducing its <i>length</i>
@@ -227,18 +228,15 @@ as much as anything...
 <p>
 When a CKD dasd emulation file is initialized, function <code>ckddasd_init_handler</code>
 in <code>ckddasd.c</code> is called.  After <code>ckddasd_init_handler</code>
-has completed its initialization, if the file is a <b>cckd</b> file, or if
-<i>shadowing</i> was specified, function <code>cckddasd_init_handler</code>
-in <code>cckddasd.c</code> is called.
+has completed its initialization, if the file is a <b>cckd</b> file, function
+<code>cckddasd_init_handler</code> in <code>cckddasd.c</code> is called.
 <p>
 <code>cckddasd_init_handler</code> obtains a <i>cckd extension</i> and stores
 its address in field <code>cckd_ext</code> in the <code>DEVBLK</code> (the
 control block that represents the device).
 <p>
 The compressed device header (<code>CCKDDASD_DEVHDR</code>) and <code>L1TAB</code>
-for the file is read; however, if the file is a regular file, a dummy
-<code>CCKD_DEVHDR</code> is built (all zeroes) and a dummy <code>L1TAB</code>
-is built (all 0xff's).
+for the file is read.
 <p>
 If shadow files exist, they are opened and their <code>CCKD_DEVHDR</code>s and
 <code>L1TAB</code>s are read.  If the last file opened could only be opened read-only,
@@ -252,209 +250,37 @@ current file, which is opened read-write.
 <b>File I/O</b>
 <p>
 In the course of executing a channel program, routines in <code>ckddasd.c</code>
-normally call the <i>lseek</i>, <i>read</i>, and <i>write</i> c library routines.
-These routines (as we all know;-) perform the following functions:
+will call the <i>generic</i> routines <code>read_track</code> and
+<code>update_track</code>.  These generic routines have their addresses
+stored in the <code>DEVBLK</code> fields <code>ckdrdtrk</code> and <code>
+ckdupdtrk</code>.  For regular ckd dasd images these are <code>ckd_read_track
+</code> and <code>ckd_write_track</code> and for cckd dasd images these are
+<code>cckd_read_track</code> and <code>cckd_write_track</code>.
 <p>
-<table border=0>
-<tr><td align="left" valign="top"><b>lseek</b></td>
-     <td>Sets the current file offset to the specified value</td>
-<tr><td align="left" valign="top"><b>read </b></td>
-    <td>Reads the specified number of bytes from the current file offset
-        to a buffer and increments the current file offset accordingly</td>
-<tr><td align="left" valign="top"><b>write</b></td>
-    <td>Writes the specified number of bytes from a buffer to the current
-        file offset and increments the current file offset accordingly</td>
-</table>
+The read_track routine is called when a <i>track switch</i> occurs.  A track
+switch can switch back to the same track.  The routine is responsible for
+scheduling the previous active track to be written, if it has been modified and
+the write has not already been committed.  The new track is read (or retrieved
+from cache), and the buffer address containing the track image is placed in
+the <code>DEVBLK</code> field <code>buf</code>.  <code>DEVBLK</code> field
+<code>bufoff</code> is set to the offset in the buffer of the track image and
+<code>DEVBLK</code> field <code>bufoffhi</code> is set to the end offset of
+the image in the buffer.  In this way, <code>buf</buf> can contain multiple
+track images.  Both <code>ckd_read_track</code> and <code>cckd_read_track</code>
+place a single track image in the device buffer.
 <p>
-If the <i>cckd extension</i> is present, however, routines <i>cckd_lseek</i>,
-<i>cckd_read</i> and <i>cckd_write</i> in <code>cckddasd.c</code> are called instead.
+The update_track routine is called when the contents of the track image buffer
+is updated, and passes the offset into the buffer where the update began and its
+length.  The update_track routine may either immediately write the updated
+contents of the buffer or remember the portion of the buffer that has been updated
+and write later.  The ckd_update_routine will write the updated data immediately
+if the options <i>nofulltrk</i> or <i>nolazywrite</i> was specified for the device,
+otherwise, the updated data will be written at the next track switch.  The
+cckd_update_track routine will schedule the track image to be written sometime
+after a track switch, or 5 seconds.
 <p>
-Routines <i>cckd_read</i> and <i>cckd_write</i> are not very interesting,
-they merely copy data to/from the caller's buffer from/to the <i>active</i>
-uncompressed track image buffer.  <i>cckd_write</i>, it should be noted,
-sets a bit indicating that the active track image has been <i>updated</i>.
-All the interesting work results from <i>cckd_lseek</i> being called...
-<p>
-<b>Track Switching</b>
-<p>
-From the offset passed to <i>cckd_lseek</i> by <code>ckddasd.c</code>, using
-the formula described <a href="#formula1">above</a>, the requested track can
-be calculated using:
-<center>
-<code>trk = (offset - 512) / maxtrksz</code>
-</center>
-If the calculated track number is the same as the <i>current</i> track number,
-then the new offset is noted and the function returns.  Otherwise, an event
-known as a <i>track switch</i> occurs, and high-level function <i>cckd_read_trk</i>
-is called to make the new track the <i>active</i> track and the new track number
-the <i>current</i> track number.
-<p>
-<b>cckd_read_trk</b>
-<p>
-Function <i>cckd_read_trk</i> scans the <i>track cache</i> array to see if the new track
-image is cached.  (By default, a cylinder's worth of track images are cached).
-If the new track is found to be cached, then the <i>timestamp</i> in the cache entry
-is updated, and the track image pointed to by the cache entry is made <i>active</i>
-(this is known as a <i>cache hit</i>).
-Otherwise, the cache entry with the oldest <i>timestamp</i> (called the
-<i>least recently used</i> or <i>lru</i> entry) is <i>stolen</i>.
-<p>
-If the <i>stolen</i> cache entry has had it's track image buffer updated
-(by <i>cckd_write</i>), then high-level routine <i>cckd_write_trk</i> is
-called to place the buffer on the <i>deferred write queue</i> and a new
-buffer is obtained.
-<p>
-If writes have previously occurred for the file, then the <i>deferred write queue</i>
-is scanned to see if the new track image has been queued to be written.  If the
-new track image is in the <i>deferred write queue</i> then the current <i>lru</i>
-buffer is discarded and replaced with buffer scheduled to be written and
-<i>cckd_read_trk</i> returns, counting the encounter as a <i>cache hit</i> since
-no physical i/o to be performed.  (Also, a cache bit, called the <i>writing</i>
-bit is turned on, indicating that if this cache entry is later stolen, then
-a new buffer must be obtained).
-<p>
-Otherwise, low-level routine <i>cckd_read_trkimg</i> is called to physically
-read the track image; the image is uncompressed (if necessary), and the cache entry
-<i>timestamp</i> is updated.
-<p>
-If <i>cckd_read_trk</i> was called by the i/o thread (ie by <i>cckd_lseek</i>),
-and the new track number is one more than the <i>current</i> track number,
-function <i>cckd_readahead</i> is called to asynchronously read 1 or more
-following track images, if those track images are not already in the
-<i>track cache</i> and <i>readahead</i> is enabled.  <i>cckd_readahead</i>
-signals 1 or more readahead threads, implemented in function <i>cckd_ra</i>.
-<i>cckd_ra</i>, when signalled, calls <i>cckd_read_trk</i> to read the requested
-track.  <b>Note</b> readahead is currently <i>disabled</i> for windows32 due
-to some, as yet unknown, problem in the pthreads implementation.
-<p>
-If the <i>stolen</i> cache entry had had its track image buffer updated (and
-<i>cckd_write_trk</i> was called), then the <i>deferred-write-thread</i> is
-signalled to actually begin the process of writing the old updated track image.
-We see that the updated track image is not sheduled to be written until <i>after</i>
-the new track image has been read and the readahead threads have been signalled.
-Further, we see that an updated track image is not scheduled to be written until
-its cache entry has been stolen; hence the moniker <i>very-lazy-write</i>.
-<p>
-After all this, <i>cckd_read_trk</i> returns, and the new track image buffer
-is made <i>active</i> and the new track number is made <i>current</i>.
-<p>
-<b>cckd_write_trk</b>
-<p>
-Function <i>cckd_write_trk</i> is called by <i>cckd_read_trk</i> whenever
-a <i>stolen</i> cache entry's track image buffer has been updated.
-The function obtains a <i>deferred-write</i> entry and places the
-entry at the head of the <i>deferred-write</i> queue.  If this is the
-first time that <i>cckd_write_trk</i> has been called for the device
-(ie the first write), then a bit is set on in the <code>CCKDDASD_DEVHDR</code>
-indicating that writes have occurred for the file, and the <i>deferred-write</i>
-threads and the <i>garbage collection</i> thread  are created.
-It is the responsibility of the caller of <i>cckd_write_trk</i> to
-actually signal the <i>deferred-write</i> thread (<i>cckd_dfw</i>) to initiate
-the write process.
-<p>
-<b>cckd_dfw</b>
-<p>
-Function <i>cckd_dfw</i> is a high-level routine that actually causes a
-track image to be written.  It pops an entry off the <i>deferred-write</i>
-queue, compresses the track image, calls the low-level routine
-<i>cckd_write_trkimg</i> to perform the physical i/o, and releases the
-track image buffer (unless the track is still in the <i>track cache</i>,
-then the <i>updated</i> bit is turned off).
-<p>
-<i>cckd_dfw</i> will also <i>throttle</i> the <i>deferred-write</i> queue if
-it becomes too large; this causes the callers of <i>cckd_write_trk</i>
-(eg <i>cckd_read_trk</i>) to be suspended until the queue drops below its threshold.
-<p>
-More than one <i>deferred-write</i> thread can be created, by specifying a parameter
-on the device statement.  The benefits, if any, of multiple threads has not
-yet been shown.
-<p>
-<b>High level vs Low level routines</b>
-<p>
-It has been casually mentioned above that <i>cckd_read_trk</i>, <i>cckd_write_trk</i>
-and <i>cckd_dfw</i> are <i>high-level</i> routines and <i>cckd_read_trkimg</i>
-and <i>cckd_write_trkimg</i> are <i>low-level</i> routines.  In this context,
-<i>high-level</i> routines have no dependcy on the underlying file structure
-while the <i>low-level</i> routines do.  The <i>high-level</i> routines are
-thread-aware while the <i>low-level</i> routines are not.
-<p>
-<b>The Low level routines</b>
-<p>
-There are low level routines to read and write each of the components
-of the <b>cckd</b> file structure (headers, l1tabs, l2tabs, track images,
-and free spaces); each are cognizant of the base file and shadow files, if
-any.  These routines consist of the following functions
-<table>
-<tr><td>&nbsp <td valign="top"><b>cckd_read_chdr    <td>read the compressed header
-<tr><td>&nbsp <td valign="top"><b>cckd_write_chdr   <td>write the compressed header
-<tr><td>&nbsp <td valign="top"><b>cckd_read_l1      <td>read the primary lookup table
-<tr><td>&nbsp <td valign="top"><b>cckd_write_l1     <td>write the primary lookup table
-<tr><td>&nbsp <td valign="top"><b>cckd_write_l1ent  <td>write a primary lookup table entry
-<tr><td>&nbsp <td valign="top"><b>cckd_read_fsp     <td>read the free space chain
-<tr><td>&nbsp <td valign="top"><b>cckd_write_fsp    <td>write the free space chain
-<tr><td>&nbsp <td valign="top"><b>cckd_read_l2      <td>read a secondary lookup table
-<tr><td>&nbsp <td valign="top"><b>cckd_write_l2     <td>write a secondary lookup table
-<tr><td>&nbsp <td valign="top"><b>cckd_read_l2ent   <td>read a secondary lookup table entry
-<tr><td>&nbsp <td valign="top"><b>cckd_write_l2ent  <td>write a secondary lookup table entry
-<tr><td>&nbsp <td valign="top"><b>cckd_read_trkimg  <td>read a track image
-<tr><td>&nbsp <td valign="top"><b>cckd_write_trkimg <td>write a track image
-</table>
-All writes occur to the <i>current</i> file.  The compressed header and the primary
-lookup table are kept in storage, so they are read once.  Free space is read when the
-first write occurs for the file and is written when the file is closed.
-Secondary lookup tables are <i>cached</i>, so <i>cckd_read_l2</i> doesn't necessarily
-perform physical file i/o.  The <i>base</i> file can be a regular CKD file.
-<p>
-<b>Shadow file routines</b>
-<p>
-The routines that manipulate the shadow files are
-<table>
-<tr><td>&nbsp <td valign="top"><b>cckd_sf_name</b>   <td>generates a file name for a given shadow
-                                                         or base file
-<tr><td>&nbsp <td valign="top"><b>cckd_sf_init</b>   <td>performs shadow file initialization
-<tr><td>&nbsp <td valign="top"><b>cckd_sf_new</b>    <td>creates a new shadow file
-<tr><td>&nbsp <td valign="top"><b>cckd_sf_add</b>    <td>adds a shadow file (<b>sf+</b> panel command)
-<tr><td>&nbsp <td valign="top"><b>cckd_sf_remove</b> <td>removes a shadow file, with or without
-                                                         backwards merge (<b>sf-</b> panel command)
-<tr><td>&nbsp <td valign="top"><b>cckd_sf_newname</b><td>sets a new shadow file name if shadowing
-                                                         is not currently active
-                                                         (<b>sf=</b> panel command)
-<tr><td>&nbsp <td valign="top"><b>cckd_sf_stats</b>  <td>display base and shadow file statistics
-                                                         (<b>sfd</b> panel command)
-</table>
-
-<p>
-<b>The garbage collector</b>
-<p>
-
-The garbage collection thread is created when the first write occurs to
-the file.  The garbage collection thread is only active for the <i>current</i>
-file.  When a new track image is written, the space it previously occupied in
-the file is freed, and new space is acquired.  The garbage collector moves
-track images and secondary lookup tables to combine free spaces and tends to
-move free space towards the end of the file so it can drop off.  The garbage
-collector also schedules track images to be written if they haven't been referenced
-in some amount of time.
-
-<p>
-<b>Byte order</b>
-<p>
-
-As described above, a number of fields in the various blocks that comprise the
-spaces in a compressed CKD Dasd emulation file contain offsets and lengths that
-are more than 1 byte in length.  Values in multiple bytes may be stored in
-either <i>little-endian</i> or <i>big-endian</i> byte order.  For example,
-<b>Intel</b> architecture stores values in little-endian byte order and <b>S390</b>
-architecture stores values in big-endian byte order.  Consider the value <code>0x00010203</code>;
-stored in little-endian byte order, we would see "<code>03020100</code>"; stored in big-endian
-byte order, we would see "<code>00010203</code>".  The values in the compressed CKD Dasd emulation
-file are stored in byte order of the host machine; a bit in the <code>CCKDDASD_DEVHDR</code>
-indicates which order its values are stored.  If a file is opened with the wrong
-byte order, then the initialization routine will automatically reverse all the values
-before continuing.
-<p>
-If a base file or shadow is read-only and contains the wrong byte order, then the fields are
-automatically converted when the blocks are read.
+These routines alone are responsible for reading and writing to the ckd
+disk image, either compressed or uncompressed.
 
 <hr noshade>
 <p><h3><a NAME="quickstart">Quick Start</a></h3>
@@ -569,26 +395,6 @@ representing the emulated dasd.  The following data is displayed:
 </table>
 
 <p>
-<b>Special note when using shadowing for regular CKD files</b>
-<p>
-
-You can use shadow files with regular CKD files providing that the regular
-CKD file is contained in a single file (since only 1 base file is supported)
-and if the <b>sf=</b> option was specified on the device initialization statement.
-If shadowing is active for a regular CKD file, then all i/o for the file is
-performed by the cckd code.  Interestingly, if shadowing is specified for a
-regular CKD file, but the CKD file is opened read-write, and no <b>sf+</b>
-command is issued to create a shadow file, then the regular CKD file is processed
-as a cckd file, with asynchronous readaheads, deferred writes and garbage collection
-(all the garbage collector does in this case is schedule updated track images for
-write after a specified amount of time).  The final caveat is that cckd files, and
-by extension shadow files, are always the size of the device type, while regular
-CKD files can be less.  For example, you can specify a 100 cylinder 3390 regular
-CKD file, but with shadowing, the file size will appear to be 1113 cylinders
-(the size of a 3390-1 device).  The device may have to be varied offline and back
-online to the operating system (or the equivalent) for the new space to be recognized.
-However, if you do write data to the newly provided space, then a backwards merge
-cannot be performed (<b>sf-</b>).
 
 <hr noshade>
 <p><h3><a NAME="options">CKD Options</a></h3>
@@ -801,26 +607,11 @@ that you start using <i>shadow</i> files.  If you use regular CKD files, then yo
 <tr><td valign="top"><b>Q.</b><td>
              Is a 3390 model 9 supported ?
 <tr><td valign="top"><b>A.</b><td>
-             The short answer is "no".  Long answer, "sort of".
-             A 3390-9 should compress to a file size less than
-             the 2G limit.  However, the compressed dasd program
-             "hooks" into <code>ckddasd.c</code> by replacing
-             the lseek, read and write library calls with a call
-             to an intermediate function.  The file offset parameter
-             passed to lseek is a 32-bit signed number.  For a
-             compressed file, the cckd code treats this number as
-             unsigned (for SEEK_SET) and uses this number to
-             calculate the dasd track and offset.  That is, for a
-             compressed file, the file offset maintained by
-             <code>ckddasd.c</code> is just a number that indicates
-             a track and the offset into the track.  That means
-             that the largest offset is 4G-1, which is not a problem
-             for a 3390-3 but only references about half of a 3390-9.
-             It would be possible to modify <code>ckddasd.c</code>
-             to use <code>long long</code> when dealing with file
-             offsets, but I wanted to minimize changes to
-             <code>ckddasd.c</code> and this change seemed a
-             little too intrusive.
+             Yes, maybe.  A 3390-9 is a little over 8G in size.
+             A cckd file cannot exceed 2G on a system that does
+             not support large files, otherwise it cannot exceed
+             4G.  If the data on the 3390-9 compresses to below
+             these limits then the answer is Yes.
 <br><br>
 
 <tr><td valign="top"><b>Q.</b><td>
@@ -1177,6 +968,6 @@ Let me know at <a href="mailto:gsmith@nc.rr.com"><em>gsmith</em>&#064;<em>nc.rr.
 <p>
 greg smith
 
-<p><small>Last updated 11 January 2001</small>
+<p><small>Last updated  1 May 2002</small>
 </BODY>
 </HTML>

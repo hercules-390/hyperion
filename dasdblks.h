@@ -341,8 +341,8 @@ int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
 int create_ckd (BYTE *fname, U16 devtype, U32 heads,
-        U32 maxdlen, U32 volcyls, BYTE *volser, BYTE comp);
+        U32 maxdlen, U32 volcyls, BYTE *volser, BYTE comp, int lfs);
 int create_fba (BYTE *fname, U16 devtype,
-        U32 sectsz, U32 sectors, BYTE *volser, BYTE comp);
+        U32 sectsz, U32 sectors, BYTE *volser, BYTE comp, int lfs);
 int get_verbose_util(void);
 void set_verbose_util(int v);

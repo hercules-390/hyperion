@@ -333,7 +333,8 @@ typedef void DEVXF (struct _DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
 typedef int DEVCF (struct _DEVBLK *dev);
-
+typedef int CKDRT (struct _DEVBLK *, int, int, BYTE *);
+typedef int CKDUT (struct _DEVBLK *, BYTE *, int, BYTE *);
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
@@ -912,17 +913,23 @@ typedef struct _DEVBLK {
 
         int     fd;                     /* File desc / socket number */
         FILE   *fh;                     /* associated File handle    */
-        BYTE   *buf;                    /* -> Device data buffer     */
-        int     bufsize;                /* Device data buffer size   */
         bind_struct* bs;                /* -> bind_struct if socket-
                                            device, NULL otherwise    */
+
+        /*  device buffer management fields                          */
+        BYTE   *buf;                    /* -> Device data buffer     */
+        int     bufsize;                /* Device data buffer size   */
+        int     bufoff;                 /* Offset into data buffer   */
+        int     bufoffhi;               /* Highest offset allowed    */
+        int     bufupdlo;               /* Lowest offset updated     */
+        int     bufupdhi;               /* Highest offset updated    */
+        int     bufupd;                 /* 1=Buffer updated          */
 
         /*  device i/o scheduling fields...                          */
 
         TID     tid;                    /* Thread-id executing CCW   */
         int     priority;               /* I/O q scehduling priority */
         struct _DEVBLK *nextioq;        /* -> next device in I/O q   */
-
         struct _DEVBLK *iointq;         /* -> next device in I/O
                                            interrupt queue           */
         /*  fields used during ccw execution...                      */
@@ -965,13 +972,10 @@ typedef struct _DEVBLK {
         /*  control flags...                                         */
 
         unsigned int                    /* Flags                     */
-#ifdef OPTION_SYNCIO
-                nosyncio:1,             /* 1=No synchronous I/Os     */
-                syncio:1,               /* 1=Synchronous I/Os allowed*/
-#endif /*OPTION_SYNCIO*/
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
 #endif /*OPTION_CKD_KEY_TRACING*/
+                syncio:1,               /* 1=Synchronous I/Os allowed*/
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
@@ -984,18 +988,14 @@ typedef struct _DEVBLK {
         int     busy;                   /* 1=Device busy             */
         int     pcipending;             /* 1=PCI interrupt pending   */
         int     crwpending;             /* 1=CRW pending             */
-#ifdef OPTION_SYNCIO
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/
-#endif /*OPTION_SYNCIO*/
 
         /*  Synchronous I/O                                          */
 
-#ifdef OPTION_SYNCIO
         U32     syncio_addr;            /* Synchronous i/o ccw addr  */
         U64     syncios;                /* Number synchronous I/Os   */
         U64     asyncios;               /* Number asynchronous I/Os  */
-#endif /*OPTION_SYNCIO*/
 
         /*  Device dependent fields for console                      */
 
@@ -1109,31 +1109,26 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for ckddasd                      */
 
+        CKDRT  *ckdrdtrk;               /* -> Read track routine     */
+        CKDUT  *ckdupdtrk;              /* -> Update track routine   */
         int     ckdnumfd;               /* Number of CKD image files */
         int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
-        U16     ckdlocyl[CKD_MAXFILES]; /* Lowest cylinder number
-                                           in each CKD image file    */
-        U16     ckdhicyl[CKD_MAXFILES]; /* Highest cylinder number
+        int     ckdhitrk[CKD_MAXFILES]; /* Highest track number
                                            in each CKD image file    */
         CKDDEV *ckdtab;                 /* Device table entry        */
-        CKDCU  *ckdcu;                  /* Control unit entry        */ 
-        BYTE   *ckdtrkbuf;              /* Track image buffer        */
-        int     ckdtrkfd;               /* Track image fd            */
-        int     ckdtrkfn;               /* Track image file nbr      */
-        off_t   ckdtrkpos;              /* Track image offset        */
-        off_t   ckdcurpos;              /* Current offset            */
-        off_t   ckdlopos;               /* Write low offset          */
-        off_t   ckdhipos;               /* Write high offset         */
-        U16     ckdcyls;                /* Number of cylinders       */
-        U16     ckdtrks;                /* Number of tracks          */
-        U16     ckdheads;               /* #of heads per cylinder    */
-        U16     ckdtrksz;               /* Track size                */
-        U16     ckdcurcyl;              /* Current cylinder          */
-        U16     ckdcurhead;             /* Current head              */
-        BYTE    ckdcurrec;              /* Current record id         */
-        BYTE    ckdcurkl;               /* Current record key length */
-        BYTE    ckdorient;              /* Current orientation       */
-        BYTE    ckdcuroper;             /* Curr op: read=6, write=5  */
+        CKDCU  *ckdcu;                  /* Control unit entry        */
+        U64     ckdtrkoff;              /* Track image file offset   */
+        int     ckdcyls;                /* Number of cylinders       */
+        int     ckdtrks;                /* Number of tracks          */
+        int     ckdheads;               /* #of heads per cylinder    */
+        int     ckdtrksz;               /* Track size                */
+        int     ckdcurcyl;              /* Current cylinder          */
+        int     ckdcurhead;             /* Current head              */
+        int     ckdcurtrk;              /* Current track             */
+        int     ckdcurrec;              /* Current record id         */
+        int     ckdcurkl;               /* Current record key length */
+        int     ckdorient;              /* Current orientation       */
+        int     ckdcuroper;             /* Curr op: read=6, write=5  */
         U16     ckdcurdl;               /* Current record data length*/
         U16     ckdrem;                 /* #of bytes from current
                                            position to end of field  */
@@ -1155,6 +1150,7 @@ typedef struct _DEVBLK {
         int     ckdcachenbr;            /* Cache table size          */
         int     ckdcachehits;           /* Cache hits                */
         int     ckdcachemisses;         /* Cache misses              */
+        U64     ckdcacheage;            /* Cache aging counter       */
         BYTE    ckdsfn[256];            /* Shadow file name          */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
@@ -1174,10 +1170,9 @@ typedef struct _DEVBLK {
                 ckdkyeq:1,              /* 1=Search Key Equal        */
                 ckdwckd:1,              /* 1=Write R0 or Write CKD   */
                 ckdtrkof:1,             /* 1=Track ovfl on this blk  */
-                ckdlazywrt:1,           /* 1=Lazy write on trk update*/
-                ckdnoftio:1,            /* 1=No full track i/o       */
+                ckdnolazywr:1,          /* 1=Perform updates now     */
                 ckdrdonly:1,            /* 1=Open read only          */
-                ckdfakewrt:1;           /* 1=Fake successful write
+                ckdfakewr:1;            /* 1=Fake successful write
                                              for read only file      */
     } DEVBLK;
 
@@ -1232,7 +1227,9 @@ typedef struct _CKDDASD_RECHDR {        /* Record header             */
 typedef struct _CKDDASD_CACHE {         /* Cache entry               */
         int     trk;                    /* Track number              */
         BYTE   *buf;                    /* Buffer address            */
-        struct timeval  tv;             /* Time last used            */
+        int     fd;                     /* Track fd                  */
+        U64     age;                    /* Entry age                 */
+        U64     off;                    /* Entry offset              */
     } CKDDASD_CACHE;
 
 #define CKDDASD_DEVHDR_SIZE     sizeof(CKDDASD_DEVHDR)
@@ -1317,7 +1314,7 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
         int              sfx;           /* Cached l2tab file index   */
         int              l1x;           /* Cached l2tab index        */
         BYTE            *buf;           /* Cached buffer address     */
-        struct timeval   tv;            /* Time last used            */
+        U64              age;           /* Cache entry age           */
         unsigned int     active:1,      /* Cache entry is active     */
                          used:1,        /* Cache entry was used      */
                          updated:1,     /* Cache buf was updated     */
@@ -1367,9 +1364,6 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
                                            queue gets this large     */
 
 typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
-        unsigned int     curpos;        /* Current ckd file position */
-        unsigned int     trkpos;        /* Current track position    */
-        int              curtrk;        /* Current track             */
         unsigned int     writeinit:1,   /* Write threads init'd      */
                          gcinit:1,      /* Garbage collection init'd */
                          threading:1,   /* Threading is active       */
@@ -1418,6 +1412,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 #endif
         COND             rtcond;        /* Read track condition      */
         LOCK             cachelock;     /* Cache lock                */
+        U64              cacheage;      /* Cache aging value         */
         CCKD_CACHE      *cache;         /* Cache pointer             */
         CCKD_CACHE      *active;        /* Active cache entry        */
         BYTE            *cachebuf[CCKD_MAX_RA+1];/* Buffers for read */
@@ -1547,19 +1542,24 @@ void *timer_update_thread (void *argp);
 void scp_command (BYTE *command, int priomsg);
 
 /* Functions in module ckddasd.c */
-off_t   ckd_lseek (DEVBLK *, int, off_t, int);
-ssize_t ckd_read (DEVBLK *, int, void *, size_t);
-ssize_t ckd_write (DEVBLK *, int, const void *, size_t);
+void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);
+int ckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[]);
+void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
+int ckddasd_close_device ( DEVBLK *dev );
+void ckddasd_query_device (DEVBLK *dev, BYTE **class,
+                int buflen, BYTE *buffer);
 
+/* Functions in module fbadasd.c */
 void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, U32 blknum,
         U32 blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
 
 /* Functions in module cckddasd.c */
 DEVIF   cckddasd_init_handler;
 int     cckddasd_close_device (DEVBLK *);
-off_t   cckd_lseek(DEVBLK *, int, off_t, int);
-ssize_t cckd_read(DEVBLK *, int, char *, size_t);
-ssize_t cckd_write(DEVBLK *, int, const void *, size_t);
+int     cckd_read_track (DEVBLK *, int, int, BYTE *);
+int     cckd_update_track (DEVBLK *, BYTE *, int, BYTE *);
 void    cckd_sf_add (DEVBLK *);
 void    cckd_sf_remove (DEVBLK *, int);
 void    cckd_sf_newname (DEVBLK *, BYTE *);
@@ -1567,7 +1567,7 @@ void    cckd_sf_stats (DEVBLK *);
 void    cckd_sf_comp (DEVBLK *);
 void    cckd_print_itrace (DEVBLK *);
 
-/* Functions in module cckutil.c */
+/* Functions in module cckdutil.c */
 int     cckd_swapend (int, FILE *);
 void    cckd_swapend_chdr (CCKDDASD_DEVHDR *);
 void    cckd_swapend_l1 (CCKD_L1ENT *, int);
