@@ -282,7 +282,7 @@ U16     cpuad;                          /* Originating CPU address   */
 
     /* External interrupt if CPU timer is negative */
     if ((S64)regs->ptimer < 0
-        && OPEN_IC_CLKC(regs) )
+        && OPEN_IC_PTIMER(regs) )
     {
         if (sysblk.insttrace || sysblk.inststep)
         {

@@ -1,3 +1,4 @@
+18 Apr 2001 Fix CPU TIMER interrupt processing - Jan Jaeger
 17 Apr 2001 Device I/O thread throttling - Greg Smith & Fish
 17 Apr 2001 Fix ISKE rcp index - Paul Leisy
 16 Apr 2001 `-malign-double' removed from makefile - Greg Smith
