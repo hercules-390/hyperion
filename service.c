@@ -561,7 +561,7 @@ DEF_INST(service_call)
 U32             r1, r2;                 /* Values of R fields        */
 U32             sclp_command;           /* SCLP command code         */
 U32             sccb_real_addr;         /* SCCB real address         */
-U32             i, j;                   /* Array subscripts          */
+U32             i;                      /* Array subscripts          */
 U32             realmb;                 /* Real storage size in MB   */
 U32             sccb_absolute_addr;     /* Absolute address of SCCB  */
 U32             sccblen;                /* Length of SCCB            */
@@ -1172,25 +1172,13 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                     /* Print line unless it is a response prompt */
                     if (!(mto_bk->ltflag[0] & SCCB_MTO_LTFLG0_PROMPT))
                     {
-                        for (i = 0, j = 0; i < event_msglen; i++)
+                        for (i = 0; i < event_msglen; i++)
                         {
-                            message[j++] = isprint(guest_to_host(event_msg[i])) ?
+                            message[i] = isprint(guest_to_host(event_msg[i])) ?
                                 guest_to_host(event_msg[i]) : 0x20;
-                                /* Break the line if too long */
-                                if(j > 79)
-                                {
-                                    message[j] = '\0';
-                                    logmsg ("%s\n", message);
-                                    j = 0;
-                                }
                         }
-                        message[j] = '\0';
-                        if(j > 0)
-                            logmsg ("%s\n", message);
-#if 0
-   if(!memcmp(message," IEA190I",8)) { regs->cpustate = CPUSTATE_STOPPING;
-                                       ON_IC_CPU_NOT_STARTED(regs); }
-#endif
+                        message[i] = '\0';
+                        logmsg ("%s\n", message);
                     }
                 }
                 mcd_len -= obj_len;
