@@ -282,12 +282,12 @@ int i;
     i = pttracex++;
     if (pttracex >= pttracen) pttracex = 0;
     RELEASE_PTTLOCK;
-    pttrace[i].tid = thread_id();
-    strcpy(pttrace[i].type, type);
+    pttrace[i].tid   = thread_id();
+    pttrace[i].type  = type;
     pttrace[i].data1 = data1;
     pttrace[i].data2 = data2;
-    strcpy(pttrace[i].file, file);
-    pttrace[i].line = line;
+    pttrace[i].file  = file;
+    pttrace[i].line  = line;
     gettimeofday(&pttrace[i].tv,NULL);
     if (result) pttrace[i].result = *result;
     else pttrace[i].result = -99; /* magic number */
@@ -295,27 +295,32 @@ int i;
 
 void ptt_pthread_print ()
 {
-int i, n;
 PTT_TRACE *p;
-char result[8];
+int   i;
+char  result[8];
+char *tbuf;
 
     if (pttrace == NULL) return;
     OBTAIN_PTTLOCK;
     p = pttrace;
     pttrace = NULL;
     RELEASE_PTTLOCK;
-    i = n = pttracex;
+    i = pttracex;
     do
-    {   if (p[i].tid) {
+    {
+        if (p[i].tid)
+        {
+            tbuf = ctime((time_t *)&p[i].tv.tv_sec);
+            tbuf[19] = '\0';
             sprintf(result, "%d", p[i].result);
-//          if (p[i].result == -99) result[0] = '\0';
-            logmsg ("%8.8x %-12.12s %8.8x %8.8x %-12.12s %4d %ld" "." "%6.6ld %s\n",
+            if (p[i].result == -99) result[0] = '\0';
+            logmsg ("%8.8x %-12.12s %8.8x %8.8x %-12.12s %4d %s" "." "%6.6ld %s\n",
                 (U32)p[i].tid, p[i].type, (U32)p[i].data1,
                 (U32)p[i].data2, p[i].file, p[i].line,
-                p[i].tv.tv_sec,p[i].tv.tv_usec, result); }
-        i++;
-        if (i >= pttracen) i = 0;
-    } while (i != n);
+                tbuf + 11, p[i].tv.tv_usec, result);
+        }
+        if (++i >= pttracen) i = 0;
+    } while (i != pttracex);
     memset (p, 0, PTT_TRACE_SIZE * pttracen);
     pttracex = 0;
     pttrace = p;

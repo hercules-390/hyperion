@@ -40,10 +40,10 @@ void ptt_pthread_print ();
 
 typedef struct _PTT_TRACE {
         TID          tid;               /* Thead id                   */
-        char         type[12];          /* Trace type                 */
+        char        *type;              /* Trace type                 */
         void        *data1;             /* Data 1                     */
         void        *data2;             /* Data 2                     */
-        char         file[16];          /* File name                  */
+        char        *file;              /* File name                  */
         int          line;              /* Line number                */
         struct timeval tv;              /* Time of day                */
         int          result;            /* Result                     */
