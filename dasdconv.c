@@ -136,6 +136,7 @@ find_input_record (BYTE *buf, BYTE **ppbuf, int *plen,
                 BYTE *pkl, BYTE **pkp, U16 *pdl, BYTE **pdp,
                 U32 *pcc, U32 *phh, BYTE *prn)
 {
+UNREFERENCED(buf);
 H30CKD_RECHDR  *hrec;                   /* Input record header       */
 U16             dlen;                   /* Data length               */
 BYTE            klen;                   /* Key length                */
@@ -380,11 +381,12 @@ BYTE            rec;                    /* Record number             */
 /*      volser  Volume serial number                                 */
 /*-------------------------------------------------------------------*/
 static void
-create_ckd_file (int ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
+convert_ckd_file (int ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
                 BYTE *ofname, int fseqn, U16 devtype, U32 heads,
                 U32 trksize, BYTE *obuf, U32 start, U32 end,
                 U32 volcyls, BYTE *volser)
 {
+UNREFERENCED(volser);
 int             rc;                     /* Return code               */
 int             ofd;                    /* Output file descriptor    */
 CKDDASD_DEVHDR  devhdr;                 /* Output device header      */
@@ -561,7 +563,7 @@ U32             offset;                 /* Current input file offset */
 
             /* Write the track to the file */
             rc = write (ofd, obuf, trksize);
-            if (rc < trksize)
+            if (rc < 0 || (U32)rc < trksize)
             {
                 fprintf (stderr,
                         "%s cylinder %u head %u write error: %s\n",
@@ -588,7 +590,7 @@ U32             offset;                 /* Current input file offset */
             "%u cylinders successfully written to file %s\n",
             cyl - start, ofname);
 
-} /* end function create_ckd_file */
+} /* end function convert_ckd_file */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to create an AWSCKD DASD image                         */
@@ -610,7 +612,7 @@ U32             offset;                 /* Current input file offset */
 /* Otherwise a single file is created without a suffix.              */
 /*-------------------------------------------------------------------*/
 static void
-create_ckd (int ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
+convert_ckd (int ifd, BYTE *ifname, int itrklen, BYTE *itrkbuf,
             BYTE *ofname, U16 devtype, U32 heads,
             U32 maxdlen, U32 volcyls, BYTE *volser)
 {
@@ -710,7 +712,7 @@ U32             trksize;                /* AWSCKD image track length */
             endcyl = volcyls - 1;
 
         /* Create an AWSCKD image file */
-        create_ckd_file (ifd, ifname, itrklen, itrkbuf,
+        convert_ckd_file (ifd, ifname, itrklen, itrkbuf,
                         sfname, fileseq, devtype, heads, trksize,
                         obuf, cyl, endcyl, volcyls, volser);
     }
@@ -718,7 +720,7 @@ U32             trksize;                /* AWSCKD image track length */
     /* Release the output track buffer */
     free (obuf);
 
-} /* end function create_ckd */
+} /* end function convert_ckd */
 
 /*-------------------------------------------------------------------*/
 /* DASDCONV program main entry point                                 */
@@ -739,7 +741,7 @@ BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
     /* Display the program identification message */
     display_version (stderr,
                      "Hercules DASD CKD image conversion program\n",
-                     MSTRING(VERSION), __DATE__, __TIME__);
+                     FALSE);
 
     /* Check the number of arguments */
 #ifdef EXTERNALGUI
@@ -785,7 +787,7 @@ BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
     } /* end switch(devtype) */
 
     /* Create the device */
-    create_ckd (ifd, ifname, itrklen, itrkbuf,
+    convert_ckd (ifd, ifname, itrklen, itrkbuf,
                 ofname, devtype, heads, maxdlen, volcyls, volser);
 
     /* Release the input buffer and close the input file */
