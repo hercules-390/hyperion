@@ -594,6 +594,7 @@ negotiate(int csock, BYTE *class, BYTE *model, BYTE *extatr, U16 *devn,BYTE *gro
 int    rc;                              /* Return code               */
 BYTE  *termtype;                        /* Pointer to terminal type  */
 BYTE  *s;                               /* String pointer            */
+BYTE   c;                               /* Trailing character        */
 U16    devnum;                          /* Requested device number   */
 BYTE   buf[512];                        /* Telnet negotiation buffer */
 static BYTE do_term[] = { IAC, DO, TERMINAL_TYPE };
@@ -664,7 +665,7 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
         group[0]=0;
     }
 
-    if (s != NULL && sscanf (s, "@%hx", &devnum) == 1)
+    if (s != NULL && sscanf (s, "@%hx%c", &devnum,&c) == 1)
     {
         *devn = devnum;
         group[0]=0;
