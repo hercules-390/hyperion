@@ -177,7 +177,7 @@ static TapeDeviceDepSenseFunction build_senseX;
 
 static BYTE TapeCommands3410[256]=
  /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
-  { 0,1,1,3,2,0,0,5,0,0,0,0,1,0,0,5,  /* 00 */
+  { 0,1,1,1,2,0,0,5,0,0,0,0,1,0,0,5,  /* 00 */
     0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1,  /* 10 */
     0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1,  /* 20 */
     0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1,  /* 30 */
@@ -215,7 +215,7 @@ static BYTE TapeCommands3420[256]=
 
 static BYTE TapeCommands3422[256]=
  /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
-  { 0,1,1,3,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
+  { 0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
     0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,  /* 10 */
     0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,  /* 20 */
     0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,  /* 30 */
@@ -234,7 +234,7 @@ static BYTE TapeCommands3422[256]=
 
 static BYTE TapeCommands3430[256]=
  /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
-  { 0,1,1,3,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
+  { 0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
     0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,  /* 10 */
     0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,  /* 20 */
     0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,  /* 30 */
@@ -323,15 +323,6 @@ static int TapeDevtypeList[]={0x3410,0,1,0,0,
                               0x9347,5,0,0,5,
                               0x9348,5,0,0,5,
                               0x8809,5,0,0,5,
-/* Following 5 devices commented out - Really not sure how to handle those
-   Hopefully, should be able to lay my hands on the 9347 manual fairly
-   w
-   soon
-                              0x9347,X,
-                              0x9348,X,
-                              0x8809,X,
-                              0x1111,X,
-*/
                               0x0000,0,0,0,0}; /* End Marker */
 
 static TapeDeviceDepSenseFunction *TapeSenseTable[]={
@@ -4440,6 +4431,26 @@ int             rc;
             dev->numdevid=0;
             dev->numsense = 9;
             break;
+        case 0x3422:
+            cutype = 0x3422;
+            cumodel = 0x01;
+            devmodel = 0x01;
+            devclass = 0x80;
+            devtcode = 0x20;
+            sctlfeat = 0x00000000;
+            dev->numdevid = 7;
+            dev->numsense = 32;
+            break;
+        case 0x3430:
+            cutype = 0x3422;
+            cumodel = 0x01;
+            devmodel = 0x01;
+            devclass = 0x80;
+            devtcode = 0x20;
+            sctlfeat = 0x00000000;
+            dev->numdevid = 7;
+            dev->numsense = 32;
+            break;
         default:
             logmsg(_("Unsupported device type specified %4.4x\n"),dev->devtype);
             cutype = dev->devtype; /* don't know what to do really */
@@ -5553,6 +5564,8 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(9347, tapedev_device_hndinfo );
     HDL_DEVICE(9348, tapedev_device_hndinfo );
     HDL_DEVICE(8809, tapedev_device_hndinfo );
+    HDL_DEVICE(3422, tapedev_device_hndinfo );
+    HDL_DEVICE(3430, tapedev_device_hndinfo );
 }
 END_DEVICE_SECTION;
 #endif

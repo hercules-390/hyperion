@@ -505,6 +505,7 @@ BYTE           *rmtdev;                 /* Possible remote device    */
 BYTE           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*                           */
 BYTE            sfxname[1024];          /* Suffixed file name        */
+BYTE            typname[64];
 
     /* Obtain storage for the file descriptor structure */
     cif = (CIFBLK*) calloc (sizeof(CIFBLK), 1);
@@ -612,6 +613,8 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
             return NULL;
         }
         dev->devtype = ckd->devt;
+        snprintf(typname,64,"%4.4X",dev->devtype);
+        dev->typname=typname;   /* Makes HDL Happy */
     }
 
     /* Set the device handlers */
