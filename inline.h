@@ -106,10 +106,17 @@ static inline int add_signed(U32 *result, U32 op1, U32 op2)
 {
     *result = (S32)op1 + (S32)op2;
 
-    return (((S32)op1 < 0 && (S32)op2 < 0 && (S32)*result >= 0)
+
+    return	((S32)*result >  0) ?
+		    ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 2 :
+		((S32)*result <  0) ?
+		    ((S32)op1 >= 0 && (S32)op2 >= 0) ? 3 : 1 :
+		    ((S32)op1 <  0 && (S32)op2 <  0) ? 3 : 0;
+		    
+/*    return (((S32)op1 < 0 && (S32)op2 < 0 && (S32)*result >= 0)
       || ((S32)op1 >= 0 && (S32)op2 >= 0 && (S32)*result < 0)) ? 3 :
                                               (S32)*result < 0 ? 1 :
-                                              (S32)*result > 0 ? 2 : 0;
+                                              (S32)*result > 0 ? 2 : 0; */
 }
         
 
@@ -117,10 +124,16 @@ static inline int sub_signed(U32 *result, U32 op1, U32 op2)
 {
     *result = (S32)op1 - (S32)op2;
 
-    return (((S32)op1 < 0 && (S32)op2 >= 0 && (S32)*result >= 0)
+    return 	((S32)*result >  0) ? 
+		    ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 2 :
+		((S32)*result <  0) ?
+    		    ((S32)op1 >= 0 && (S32)op2 <  0) ? 3 : 1 :
+		    ((S32)op1 <  0 && (S32)op2 >= 0) ? 3 : 0;
+
+/*    return (((S32)op1 < 0 && (S32)op2 >= 0 && (S32)*result >= 0)
       || ((S32)op1 >= 0 && (S32)op2 < 0 && (S32)*result < 0)) ? 3 :
                                              (S32)*result < 0 ? 1 :
-                                             (S32)*result > 0 ? 2 : 0;
+                                             (S32)*result > 0 ? 2 : 0; */
 }
 
 
