@@ -47,7 +47,8 @@ EXEFILES = hercules hercifc \
            hetget hetinit hetmap hetupd \
            dmap2hrc
 DYNFILES = dyninst hdteq \
-           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525
+           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525 \
+	   hdt1052c
 
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
@@ -70,6 +71,7 @@ hdt1403_OBJ  = printer.o
 hdt2703_OBJ  = commadpt.o
 hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
 hdt3270_OBJ  = console.o
+hdt1052c_OBJ = con1052c.o
 hdt3420_OBJ  = tapedev.o hetlib.o
 hdt3505_OBJ  = cardrdr.o sockdev.o
 hdt3525_OBJ  = cardpch.o
@@ -166,11 +168,10 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h crypto.h \
            sockdev.h history.h sr.h
 
-all:	   $(EXEFILES) $(DYNFILES)
-
+all:	  $(EXEFILES) $(DYNFILES)
 
 hercules: $(hercules_OBJ)
-	$(CC) -o hercules $(hercules_OBJ) $(LFLAGS)
+	  $(CC) -o hercules $(hercules_OBJ) $(LFLAGS)
 
 $(hercules_OBJ): %.o: %.c $(HEADERS)
 	  $(CC) $(CFLAGS) -o $@ -c $<
@@ -264,6 +265,9 @@ hdt3088:  $(hdt3088_OBJ)
 
 hdt3270:  $(hdt3270_OBJ)
 	  $(CC) -o hdt3270 $(hdt3270_OBJ) $(LFLAGS) -shared
+
+hdt1052c: $(hdt1052c_OBJ)
+	  $(CC) -o hdt1052c $(hdt1052c_OBJ) $(LFLAGS) -shared
 
 hdt3420:  $(hdt3420_OBJ)
 	  $(CC) -o hdt3420 $(hdt3420_OBJ) $(LFLAGS) -shared
