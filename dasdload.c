@@ -4303,7 +4303,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
     rc = read_track (cif, 0, 0);
     if (rc < 0)
     {
-        XMERRF ("HHCDL018E Cannot read to VOL1 record\n");
+        XMERRF ("HHCDL018E Cannot read VOL1 record\n");
         return -1;
     }
 

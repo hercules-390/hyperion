@@ -1,0 +1,1528 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Messages: DL - dasdload</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages: DI - dasdload</h1>
+<p>
+This page describes the messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator utility program <code>dasdload</code>.
+<p>
+Information messages (<code>I</code> suffix) from <code>dasdload</code>
+have an associated message level. They are only issued if the third
+argument to <code>dasdload</code>, the verbosity level, is no lower than the
+message level. The default verbosity level is 1, which causes level 0 and 1
+information messages to be issued.
+<h3>Messages</h3>
+<dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E Cannot open <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The control file named $#@filename@#$ cannot be opened. The error is
+described by $#@error@#$.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL002E">
+HHCDL002E Volume serial statement missing from <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The control file named $#@filename@#$ does not contain a volume
+serial statement. One is required.
+  <dt>Action
+  <dd>Supply a volume serial statement and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL003E">
+HHCDL003E Volume serial <em>serial</em> in <em>filename</em>
+line <em>lineno</em> is not valid
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The volume serial $#@serial@#$ supplied in line $#@lineno@#$
+of the control file named $#@filename@#$ is not valid. It must be from one
+to six characters long.
+  <dt>Action
+  <dd>Supply a valid volume serial and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL004E">
+HHCDL004E Device type <em>type</em> in <em>filename</em>
+line <em>lineno</em> is not recognized
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device type $#@type@#$ specified in line $#@lineno@#$ of the
+control file named $#@filename@#$ is not a supported CKD device.
+  <dt>Action
+  <dd>Specify a supported CKD device type and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL005E">
+HHCDL005E <em>count</em> in <em>filename</em> line <em>lineno</em>
+is not a valid cylinder count
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested number, $#@count@#$, of cylinders for the volume in
+line $#@lineno@#$ of the control file named $#@filename@#$ is invalid.
+It must be a decimal number.
+  <dt>Action
+  <dd>Supply a valid cylinder count and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL006I">
+HHCDL006I Creating <em>type</em> volume <em>serial</em>: <em>tracks</em>
+trks/cyl, <em>length</em> bytes/track
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The volume named $#@serial@#$, of type $#@type@#$, is being created,
+with $#@tracks@#$ tracks per cylinder and $#@length@#$ bytes per track.
+  <dt>Message level
+  <dd>0
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL007E">
+HHCDL007E Cannot create <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The DASD image file named $#@filename@#$ cannot be
+created. A previous message described the problem.
+  <dt>Action
+  <dd>Correct the reported error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL008E">
+HHCDL008E Cannot open <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The DASD image file named $#@filename@#$ could not
+be opened. A previous message described the problem.
+  <dt>Action
+  <dd>Correct the reported error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL009I">
+HHCDL009I Loading <em>type</em> volume <em>serial</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The newly created volume with serial $#@serial@#$, of
+type $#@type@#$, is being loaded.
+  <dt>Message level
+  <dd>0
+  <dt>Issued by
+  <dd>dasdload.c, function main
+  </dl>
+<dt><code><a name="HHCDL010E">
+HHCDL010E Cannot obtain storage for DSCB pointer array: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain storage for the array of DSCB pointers, which
+will populate the VTOC, failed. The error is described by $#@error@#$.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL011E">
+HHCDL011E Invalid statement in <em>filename</em> line <em>lineno</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An invalid control statement was found at line $#@lineno@#$ of the
+control file named $#@filename@#$.
+  <dt>Action
+  <dd>Correct the invalid statement and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL012I">
+HHCDL012I Creating dataset <em>dsn</em> at cyl <em>cylinder</em>
+head <em>head</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The dataset named $#@dsn@#$ is being created. It begins at
+cylinder $#@cylinder@#$, head $#@head@#$.
+  <dt>Message level
+  <dd>1
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL013I">
+HHCDL013I Dataset <em>dsn</em> contains <em>size</em> tracks
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The dataset named $#@dsn@#$ is $#@size@#$ tracks long.
+  <dt>Message level
+  <dd>2
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL014I">
+HHCDL014I Free space starts at cyl <em>cylinder</em> head <em>head</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Free space on the volume begins at cylinder $#@cylinder@#$, head
+$#@head@#$, and extends to the end of the volume.
+  <dt>Message level
+  <dd>1
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL015W">
+HHCDL015W Volume exceeds <em>cylinders</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The amount of space used on the volume exceeds the number
+of cylinders, $#@cylinders@#$, requested in the control file. The number
+of cylinders was explicitly requested instead of being allowed to default
+to the size of a full volume for the device type. The volume has
+been extended to accomodate the data written.
+  <dt>Action
+  <dd>Specify more cylinders in the control file, or allow the number to
+default.
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL016I">
+HHCDL016I Total of <em>count</em> cylinders written to <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A total of $#@count@#$ cylinders have been written to the DASD image
+file named $#@filename@#$.
+  <dt>Message level
+  <dd>0
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL017I">
+HHCDL017I Updating VTOC pointer <em>pointer</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The pointer to the VTOC in the volume label is being updated
+to point to the VTOC, at location $#@pointer@#$.
+  <dt>Message level
+  <dd>5
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL018E">
+HHCDL018E Cannot read VOL1 record
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to read the volume label failed. A previous message
+described the error.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function process_control_file
+  </dl>
+<dt><code><a name="HHCDL019E">
+HHCDL019E Cannot read <em>filename</em> line <em>lineno</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered while trying to read the statement at
+line number $#@lineno@#$ of the control
+file named $#@filename@#$. The error is described by $#@error@#$.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL020E">
+HHCDL020E Line too long in <em>filename</em> line <em>lineno</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The line at line number $#@lineno@#$ of the control file named
+$#@filename@#$ is too long to be processed. This error can be caused
+by failing to terminate the last line with an end-of-line marker.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL021E">
+HHCDL021E DSNAME or initialization method missing
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Either the dataset name, or the method to be used to initialize it,
+is missing from the control file. Both are required.
+  <dt>Action
+  <dd>Supply the missing value and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL022E">
+HHCDL022E Invalid initialization method: <em>method</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The method specified to initialize the dataset, $#@method@#$, is
+invalid. It must be one of <code>xmit</code>, <code>vs</code>,
+<code>empty</code>, <code>dip</code>, <code>cvol</code>,
+<code>vtoc</code>, or <code>seq</code>.
+  <dt>Action
+  <dd>Correct the initialization method and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL023E">
+HHCDL023E Initialization file name missing
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A dataset was specified as being initialized by either the
+<code>xmit</code>, <em>vs</em>, or <em>seq</em> initialization
+methods, but no source file was specified to provide the data to be loaded.
+  <dt>Action
+  <dd>Specify a source file name, or specify the
+<code>empty</code> dataset initialization method if the dataset is not to
+be loaded.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL024E">
+HHCDL024E Invalid allocation units: <em>units</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The allocation unit specified, $#@units@#$, is invalid. It must be
+either <code>cyl</code> or <code>trk</code>.
+  <dt>Action
+  <dd>Specify a valid allocation unit and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL025E">
+HHCDL025E Invalid primary space: <em>space<em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The primary space requested, $#@space@#$, is not a valid decimal
+number greater than 0.
+  <dt>Action
+  <dd>Specify a valid space request and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL026E">
+HHCDL026E Invalid secondary space: <em>space<em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The secondary space requested, $#@space@#$, is not a valid decimal
+number greater than 0.
+  <dt>Action
+  <dd>Specify a valid space request and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL027E">
+HHCDL027E Invalid directory space: <em>space<em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The PDS directory space requested, $#@space@#$, is not a valid decimal
+number greater than 0.
+  <dt>Action
+  <dd>Specify a valid space request and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL028E">
+HHCDL028E Invalid dataset organization: <em>dsorg</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested dataset organization, $#@dsorg@#$, is invalid. It must
+be one of <code>is</code>, <code>ps</code>, <code>da</code>,
+or <code>po</code>.
+  <dt>Action
+  <dd>Specify a valid dataset organization and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL029E">
+HHCDL029E Invalid record format: <em>recfm</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested record format, $#@recfm@#$, is invalid. It must be one
+of <code>f</code>,
+<code>fb</code>, <code>fbs</code>, <code>v</code>,
+<code>vb</code>, <code>vbs</code>, or <code>u</code>.
+  <dt>Action
+  <dd>Specify a valid record format and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL030E">
+HHCDL030E Invalid logical record length: <em>lrecl</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested logical record length, $#@lrecl@#$, is invalid. It
+must be a decimal number between 0 and 32767.
+  <dt>Action
+  <dd>Specify a valid logical record length and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL031E">
+HHCDL031E Invalid block size: <em>blksize</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested block size, $#@blksize@#$, is invalid. It must
+be a decimal number between 0 and 32767.
+  <dt>Action
+  <dd>Specify a valid block size and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL032E">
+HHCDL032E Invalid key length: <em>keylen</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested key length, $#@keylen@#$, is invalid. It must be a
+decimal number between 0 and 255.
+  <dt>Action
+  <dd>Specify a valid key length and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function parse_ctrl_stmt
+  </dl>
+<dt><code><a name="HHCDL033E">
+HHCDL033E CCHH=<em>cchh</em> not found in extent table
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The absolute track address, $#@cchh@#$, was not found in the table
+listing the locations occupied by the dataset being loaded. There is
+likely a problem with the input file.
+  <dt>Action
+  <dd>Correct the input file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function calculate_ttr
+  </dl>
+<dt><code><a name="HHCDL034E">
+HHCDL034E Cannot open <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file named $#@filename@#$, which was specified as the source
+of IPL text to be written to the volume, could not be opened. The error is
+described by $#@error@#$.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_ipl_text
+  </dl>
+<dt><code><a name="HHCDL035E">
+HHCDL035E Cannot read <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered while reading the IPL text file named
+$#@filename@#$. The error is described by $#@error@#$. If no error
+is reported, the file did not contain an integral number of 80-byte card
+images.
+  <dt>Action
+  <dd>Correct the reported error, or supply a valid IPL text file
+consisting of 80-byte card images, and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_ipl_text
+  </dl>
+<dt><code><a name="HHCDL036E">
+HHCDL036E <em>filename</em> is not a valid object file
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The IPL text file named $#@filename@#$ is not a valid object file. A
+record read from the file did not contain the required flag in the first
+byte.
+  <dt>Action
+  <dd>Supply a valid object file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_ipl_text
+  </dl>
+<dt><code><a name="HHCDL037I">
+HHCDL037I IPL text address=<em>addr</em> length=<em>length</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The object code from the current record of the IPL text file will be
+loaded into memory at address $#@address@#$, and is $#@length@#$ bytes long.
+  <dt>Message level
+  <dd>5
+  <dt>Issued by
+  <dd>dasdload.c, function read_ipl_text
+  </dl>
+<dt><code><a name="HHCDL038E">
+HHCDL038E TXT record in <em>filename</em> has invalid count <em>length</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A text record in the IPL text file named $#@filename@#$ has
+an invalid length, $#@length@#$. The length cannot exceed 56.
+  <dt>Action
+  <dd>Supply a valid IPL text file and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_ipl_text
+  </dl>
+<dt><code><a name="HHCDL039E">
+HHCDL039E IPL text in <em>filename</em> exceeds <em>buflen</em> bytes
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The IPL text file named $#@filename@#$ is too long to fit in the
+available space on the volume. The IPL text cannot exceed
+$#@buflen@#$ bytes in length.
+  <dt>Action
+  <dd>Supply a shorter IPL text file, or specify a volume with a
+larger track size, and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function read_ipl_text
+  </dl>
+<dt><code><a name="HHCDL040E">
+HHCDL040E Input record CCHHR=<em>cchhr</em> exceeds output device track size
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The block to be written at absolute address $#@cchhr@#$ is too large
+to fit on a track on the disk being loaded.
+  <dt>Action
+  <dd>Specify a device with a larger track
+size and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function write_block
+  </dl>
+<dt><code><a name="HHCDL041E">
+HHCDL041E Dataset exceeds extent size:
+reltrk=<em>track</em>, maxtrk=<em>maxtrk</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The data to be written to the dataset is too large for the space
+requested for it. If the space request was allowed to default, the input
+file is corrupt.
+  <dt>Action
+  <dd>If the space request was made explicitly, request more space. If the
+request was defaulted,
+supply a valid input file. Rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function write_block
+  </dl>
+<dt><code><a name="HHCDL042E">
+HHCDL042E Input record CCHHR=<em>cchhr> exceeds virtual device track size
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The block to be written at absolute address $#@cchhr@#$ is too large
+to fit on a track on the disk being loaded. In addition,
+this message being issued instead of
+<a href="#HHCDL040E">message HHCDL040E</a> indicates an internal
+inconsistency in the way Hercules computes the space available on a track.
+  <dt>Action
+  <dd>Specify a device with a larger track
+size and rerun <code>dasdload</code>. Report the inconsistenct
+to the Hercules development team.
+  <dt>Issued by
+  <dd>dasdload.c, function write_block
+  </dl>
+<dt><code><a name="HHCDL043E">
+HHCDL043E <em>filename</em> cyl <em>cylinder</em> head <em>head</em>
+read error
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The data at cylinder $#@cylinder@#$, head $#@head@#$ of the
+disk image file named $#@filename@#$ could not be read in order to
+be updated. A previous message described the error.
+  <dt>Action
+  <dd>Correct the previously reported error and rerun <code>dasdload</code>.
+  <dt>Issued by
+  <dd>dasdload.c, function update_block
+  </dl>
+<dt><code><a name="HHCDL044E">
+HHCDL044E <em>filename</em> cyl <em>cylinder</em>
+head <em>head</em> invalid track header <em>header</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The track header $#@header@#$ at cylinder $#@cylinder@#$, head
+$#@head@#$ in the disk image file named $#@filename@#$ contained
+an address that did not match the actual address.
+  <dt>Action
+  <dd>Rerun <code>dasdload</code>. If the error persists, report it to the
+Hercules development team.
+  <dt>Issued by
+  <dd>dasdload.c, function update_block
+  </dl>
+<dt><code><a name="HHCDL045E">
+HHCDL045E <em>filename</em> cyl <em>cylinder</em> head <em>head</em>
+record <em>record</em> record not found
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The record requested for update at cylinder $#@cylinder@#$, head
+$#@head@#$, record $#@record@#$ of the DASD image file named
+$#@filename@#$ was not found.
+  <dt>Action
+  <dd>Rerun <code>dasdload</code>. If the error persists, report it to the
+Hercules development team.
+  <dt>Issued by
+  <dd>dasdload.c, function update_block
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+<dt><code><a name="HHCDL001E">
+HHCDL001E 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>
+  <dt>Action
+  <dd>
+  <dt>Message level
+  <dd>
+  <dt>Issued by
+  <dd>dasdload.c, function 
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 18 December 2002
+</BODY>
+</HTML>
