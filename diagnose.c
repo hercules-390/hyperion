@@ -442,8 +442,12 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
     /* Diagnose xxx: Invalid function code                           */
     /*---------------------------------------------------------------*/
+
+        if( HDC(debug_diagnose, code, r1, r2, regs) )
+            return;
+
 #if defined(FEATURE_S370_CHANNEL) && defined(OPTION_NOP_MODEL158_DIAGNOSE)
-      if((sysblk.cpuid >> 16 & 0xFFFF) != 0x0158)
+        if((sysblk.cpuid >> 16 & 0xFFFF) != 0x0158)
 #endif
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         return;

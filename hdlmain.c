@@ -38,6 +38,7 @@ HDL_REGISTER_SECTION;
 
     HDL_REGISTER(debug_cpu_state, *NULL);
     HDL_REGISTER(debug_program_interrupt, *NULL);
+    HDL_REGISTER(debug_diagnose, *NULL);
 
 } END_REGISTER_SECTION;
 
@@ -52,6 +53,7 @@ HDL_RESOLVER_SECTION;
 
     HDL_RESOLVE(debug_cpu_state);
     HDL_RESOLVE(debug_program_interrupt);
+    HDL_RESOLVE(debug_diagnose);
 
 } END_RESOLVER_SECTION;
 

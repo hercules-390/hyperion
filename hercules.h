@@ -168,7 +168,8 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
     #define HDC(_func, _args...) \
     ((_func) ? (_func) (_args) : (NULL))
 #else
-    #define HDC(_func, _args...)
+    #define HDC(_func, _args...) \
+    (NULL)
 #endif
 
 
@@ -1696,6 +1697,7 @@ int (*config_command) (int argc, BYTE *argv[]);
 
 void *(*debug_cpu_state) (REGS *);
 void *(*debug_program_interrupt) (REGS *, int);
+void *(*debug_diagnose) (U32, int, int, REGS *);
 
 #else
 void *panel_command (void *cmdline);
