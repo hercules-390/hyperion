@@ -4,16 +4,38 @@ AC_CONFIG_AUX_DIR(autoconf)
 AM_INIT_AUTOMAKE(hercules,2.17.b6)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
-AM_GNU_GETTEXT()
 
-AC_CANONICAL_HOST
+##------------------------------------------------------------
+## Begin JAP unwanted "-g -O2" optimization flags fix...
+##
+## AM_GNU_GETTEXT()
+## 
+## AC_CANONICAL_HOST
+## 
+## # Initialization
+## CFLAGS="-W -Wall $CFLAGS"
+## 
+## # Programs
+## AC_PROG_CC
+## AC_PROG_LIBTOOL
+## 
 
 # Initialization
 CFLAGS="-W -Wall $CFLAGS"
 
-# Programs
-AC_PROG_CC
+# Programs  (Note use "HC_PROG_CC" and not "AC_PROG_CC". We now
+#            have our own "hercules.m4" macro defined in the
+#            autoconf directory that fixes an undesired compiler
+#            optimization flags issue)
+
+HC_PROG_CC
 AC_PROG_LIBTOOL
+AM_GNU_GETTEXT()
+
+##
+## End JAP unwanted "-g -O2" optimization flags fix...
+##------------------------------------------------------------
+
 
 # OS-specific settings that we can't figure out any other way (yet)
 
@@ -534,5 +556,5 @@ AH_TEMPLATE([OPTION_DYNAMIC_LOAD],
 AH_TEMPLATE([HDL_USE_LIBTOOL],
             [Define to cause dynamic loader use use libtool instead of dlopen])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile m4/Makefile ])
 
