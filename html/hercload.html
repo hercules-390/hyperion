@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: Creating DASD</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+
+<h1>Creating Hercules DASD</h1>
+
+This page describes various ways of creating and loading DASD
+volumes for use with Hercules.
+
+<h2>Using pre-built DASD images</h2>
+<p>
+If you can obtain one of the IBM Application Development CDs
+which are supplied for use with the P/390, you will find that
+these contain pre-built DASD image files which simply need to be
+unzipped onto your hard drive.  These images can be directly
+read by Hercules.  However, you cannot legally use this method because
+the software on the CD is licensed for use only on the P/390
+system that it was shipped with.
+
+<h2>Restoring DASD from full-volume dumps</h2>
+
+<h4>Creating an empty DASD volume</h4>
+<p>
+The dasdinit program must first be run from the Unix shell prompt to
+create a file containing an empty DASD volume.
+<p>
+The format of the dasdinit command is:
+<p><code>dasdinit <em>filename devtype volser size</em></code>
+<p>
+where
+<dl>
+    <dt><code><em>filename</em></code>
+    <dd>is the name of the DASD image file to be created
+    <dt><code><em>devtype</em></code>
+    <dd>is the emulated device type (2311, 2314, 3330, 3340, 3350, 3375,
+        3380, or 3390 for CKD volumes; 3310 or 3370 for FBA volumes)
+    <dt><code><em>volser</em></code>
+    <dd>is the volume serial number of the DASD volume
+    <dt><code><em>size</em></code>
+    <dd>is the emulated size in cylinders for CKD devices, or in
+        512-byte blocks for FBA devices
+</dl>
+
+<h5>Volumes exceeding 2GB</h5>
+<p>
+For CKD volumes which exceed 2GB, such as the 3390-3, the DASDINIT
+program will create multiple files by appending the characters
+<b><i>_1 _2</b></i> etc.
+to the file name specified on the command line.  Each file contains a
+whole number of cylinders.  Hercules CKD support recognizes the files
+as belonging to a single logical volume. Specify the full name of just the
+first file in the Hercules configuration file.
+<p>
+The DASDINIT program cannot create FBA volumes exceeding 2GB.
+
+<h5>Examples</h5>
+<p>
+To create a 3330 CKD volume of 411 cylinders with volume
+serial number WORK01 in a file called
+<b><i>work01.151</b></i>:
+<pre><code>dasdinit work01.151 3330 work01 411</code></pre>
+<p>
+To create a 3370 FBA volume of 920115 sectors with volume
+serial number DOSRES in a file called
+<b><i>dosres.140</b></i>:
+<pre><code>dasdinit dosres.140 3370 dosres 920115</code></pre>
+<p>
+To create a 3390 CKD volume of 3339 cylinders with volume
+serial number WORK02:
+<pre><code>dasdinit work02.A88 3390 work02 3339</code></pre>
+Because this volume exceeds 2GB, DASDINIT will create two files:
+<b><i>work02_1.A88</b></i> contains cylinders 0-2518
+<b><i>work02_2.A88</b></i> contains cylinders 2519-3339
+
+<h4>Formatting the empty DASD volume</h4>
+<p>
+After creating a DASD volume you can format it with a program
+such as standalone IBCDASDI or ICKDSF.
+<p>
+Here is an example of the IBCDASDI control statements required
+to initialize a 3330 volume:
+<pre><code>
+WORK01 JOB  'INITIALIZE 3330 WORK VOLUME'
+       MSG   TODEV=1052,TOADDR=009
+       DADEF TODEV=3330,TOADDR=151,IPL=NO,VOLID=WORK01,BYPASS=YES
+       VLD   NEWVOLID=WORK01,OWNERID=HERCULES
+       VTOCD STRTADR=1,EXTENT=5
+       END
+</code></pre>
+<p>
+To run IBCDASDI, place the above statements in a file called
+<b><i>init3330.txt</i></b> and start Hercules in S/370 mode with
+a configuration file containing these statements:
+<pre><code>
+001234 3145 02 0 1052 1 ........
+0009   1052
+000A   1442    ibcdasdi.rdr
+000C   1442    init3330.txt
+0151   3330    work01.151
+</code></pre>
+After IPLing from card reader device 00A, connect a telnet client
+to port 1052, and press enter.  At the IBCDASDI prompt, enter:
+<pre><code>input=1442 00c</code></pre>
+
+<h4>Loading the new DASD volume</h4>
+<p>
+Next you need to create a full volume dump file on your mainframe
+and convert it to AWSTAPE format using the <b><i>tapeconv.jcl</i></b>
+job in the Hercules source directory.  The AWSTAPE file can then
+be downloaded in binary format to your PC where it can be defined
+as a virtual tape drive in the Hercules configuration file.
+<p>
+A standalone program can now be IPLed into Hercules to restore the
+volume image from the virtual tape onto the formatted virtual DASD
+volume.
+
+<h2>Building a DASD volume from unloaded PDS files</h2>
+<p>
+The dasdload program can be run from the Unix shell prompt to
+create a new DASD image file and load it with data from unloaded
+PDS files.
+<p>
+The format of the dasdload command is:
+<p><code>dasdload <em>ctlfile outfile msglevel</em></code>
+<p>
+where
+<dl>
+    <dt><code><em>ctlname</em></code>
+    <dd>is the name of the control file which specifies the datasets
+        that are to be loaded onto the newly-created volume
+    <dt><code><em>outfile</em></code>
+    <dd>is the name of the DASD image file to be created
+    <dt><code><em>msglevel</em></code>
+    <dd>is a number from 0 to 5 which controls the level of detail
+        of the messages issued during the load.
+</dl>
+
+<h4>Control file</h4>
+<p>
+The control file required by the dasdload program is an ASCII text
+file consisting of a <em>volume statement</em> followed by one
+<em>dataset statement</em> for each dataset to be created.
+<p>
+The format of the volume statement is:
+<p><code><em>volser devtype</em> [<em>cyls</em> [<em>ipltext</em>] ]</code>
+<p>where:
+<dl>
+<dt><code><em>volser</em></code>
+<dd>is the volume serial number for the newly-created volume
+<dt><code><em>devtype</em></code>
+<dd>is the emulated device type (2311, 2314, 3330, 3340, 3350, 3375,
+    3380, or 3390) for the new volume.  FBA device types are not supported
+    by the dasdload program.
+<dt><code><em>cyls</em></code>
+<dd>is the size of the new volume in cylinders.
+    If <code><em>cyls</em></code> is coded as <code>*</code>
+    or is omitted, then the default size for the device type is used.
+    If <code><em>cyls</em></code> is <code>0</code>,
+    then the volume will contain the minimum number of cylinders
+    needed to contain the requested datasets.
+<dt><code><em>ipltext</em></code>
+<dd>is an optional parameter specifying the name of a file
+    containing the IPL text which will be written to the volume.
+    The file must be in the form of an object deck containing
+    fixed length 80-byte EBCDIC records in the same format as
+    expected by IBCDASDI or ICKDSF.
+</dl>
+<p>
+The format of a dataset statement is:
+<p><code><em>dsname method units pri sec dir dsorg recfm
+lrecl blksize keylen</em></code>
+<p>where:
+<dl>
+<dt><code><em>dsname</em></code>
+<dd>is the dataset name
+<dt><code><em>method</em></code>
+<dd>is the dataset loading method which can be one of the following:
+    <dl>
+    <dt><code>XMIT <em>filename</em></code>
+    <dd>the dataset is loaded from an unloaded PDS created by
+        the TSO XMIT command
+    <dt><code>EMPTY</code>
+    <dd>the dataset is initialized with an end of file record
+        (if DSORG is PS) or an empty PDS directory (if DSORG is PO)
+    <dt><code>DIP</code>
+    <dd>the dataset is initialized with a LOGREC header record
+    <dt><code>CVOL</code>
+    <dd>the dataset is initialized as an OS SYSCTLG containing
+        the minimum entries needed to IPL an OS/360 system
+    <dt><code>VTOC</code>
+    <dd>specifies the size and location of the VTOC.  A dataset
+        name must be coded on this statement, although it is not
+        used.  If no VTOC statement is present, the VTOC will be
+        placed after the last dataset on the volume and the size
+        of the VTOC will be the minimum number of tracks necessary.
+    </dl>
+<dt><code><em>units</em></code>
+<dd>is the space allocation units: <code>TRK</code> or <code>CYL</code>.
+<dt><code><em>pri</em></code>
+<dd>is the space allocation primary quantity
+<dt><code><em>sec</em></code>
+<dd>is the space allocation secondary quantity
+<dt><code><em>dir</em></code>
+<dd>is the number of directory blocks
+<dt><code><em>dsorg</em></code>
+<dd>is the dataset organization: <code>PS</code>, <code>PO</code>,
+    <code>DA</code>, or <code>IS</code>,
+<dt><code><em>recfm</em></code>
+<dd>is the record format: <code>FB</code>, <code>FBS</code>,
+    <code>V</code>, <code>VB</code>, <code>VBS</code>,
+    or <code>U</code>.
+<dt><code><em>lrecl</em></code>
+<dd>is the logical record length
+<dt><code><em>blksize</em></code>
+<dd>is the block size
+<dt><code><em>keylen</em></code>
+<dd>is the key length
+</dl>
+<p>All parameters except dsname and method are optional.
+Defaults of zero are supplied for DCB parameters.  For datasets
+loaded with the XMIT method, the DCB parameters are taken from
+the unloaded PDS, and the minimum space allocation required to
+load the dataset is used unless a larger quantity is specified.
+If space allocation is omitted, the default is TRK 1 0 0.
+If CYL is specified without any primary quantity then the default
+space allocation is 1 cylinder or the minimum number of cylinders
+required to load the dataset, whichever is larger.
+
+<h4>Examples</h4>
+<p>
+To create a 2314 volume in a file called <b><i>sysres.230</i></b>
+using the control file <b><i>sysres.plf</i></b> with message level 2:
+<pre><code>dasdload sysres.plf sysres.230 2</pre></code>
+
+<p>
+An example control file is shown below:
+<code><pre>#
+# Pack layout file for MFT system residence volume
+#
+sysres 2314 * ieaipl00.rdr
+sys1.parmlib    xmit    /cdrom/os360/reslibs/parmlib.xmi
+sys1.imagelib   xmit    /cdrom/os360/reslibs/imagelib.xmi
+sysctlg         cvol    trk 1 0 0       ps f 256 256 8
+sysvtoc         vtoc    trk 5
+sys1.logrec     dip     trk 1 0 0
+sys1.nucleus    xmit    /cdrom/os360/reslibs/nucleus.xmi cyl
+sys1.svclib     xmit    /cdrom/os360/reslibs/svclib.xmi cyl
+sys1.sysjobqe   empty   cyl 2 0 0       da f 176 176 0
+sys1.dump       empty   cyl 10 0 0      ps u 0 3625 0
+</pre></code>
+
+<p>
+<em>Note: the DASDLOAD program cannot create volumes exceeding
+2GB in size.</em>
+
+<h3>Fixing the XCTL tables in SVCLIB</h3>
+<p>
+On an OS/360 system, the Open/Close/EOV modules in SYS1.SVCLIB have
+XCTL tables embedded within them.  These tables contain TTRs
+pointing to other modules, and these TTRs need to be adjusted after
+loading SVCLIB to DASD.  OS/360 provides a program called IEHIOSUP
+to perform this function, but the catch is that you can't run
+IEHIOSUP until you have the system up and running, and you can't IPL
+until you have fixed the XCTL tables.
+To solve this problem, Hercules provides a program called dasdisup
+which can be run from the Unix command line after running dasdload.
+<p>
+The format of the dasdisup command is:
+<p><code>dasdisup <em>outfile</em></code>
+<p>
+where
+<dl>
+    <dt><code><em>outfile</em></code>
+    <dd>is the name of the DASD image file to be updated
+</dl>
+<p>
+<em>Note: do not use this procedure except on OS/360 IPL volumes;
+other operating systems do not have XCTL tables.</em>
+
+
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+
+<p><center><hr width=15% noshade>
+<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+
+<small>
+<p>Last updated 29 October 2000
+</BODY>
+</HTML>

@@ -1,0 +1,37 @@
+#
+# Sample configuration file for Hercules ESA/390 emulator
+#
+
+CPUSERIAL 002623        # CPU serial number
+CPUMODEL  3090          # CPU model number
+MAINSIZE  64            # Main storage size in megabytes
+XPNDSIZE  0             # Expanded storage size in megabytes
+CNSLPORT  3270          # TCP port number to which consoles connect
+NUMCPU    1             # Number of CPUs
+LOADPARM  0120....      # IPL parameter
+OSTAILOR  LINUX         # OS tailoring
+PANRATE   FAST          # Panel refresh rate
+ARCHMODE  ESA/390       # Architecture mode S/370, ESA/390 or ESAME
+CFCCIMAGE cfcc_level8   # Coupling Code core image file
+
+# .-----------------------Device number
+# |     .-----------------Device type
+# |     |       .---------File name and parameters
+# |     |       |
+# V     V       V
+#---    ----    --------------------
+000C    3505    adrdmprs.rdr
+000D    3525    punch00d.txt ascii
+000E    1403    print00e.txt crlf
+001F    3270
+0580    3420    ickdsf.ipl
+0120    3380    mvsv5r.120
+0121    3380    mvsv5d.121
+0122    3380    mvswk1.122
+0140    9336    dosres.140
+0141    9336    syswk1.141
+0200    3270
+0201    3270
+0202    3270
+0300    3370    sysres.300
+0700    3270

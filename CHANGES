@@ -1,0 +1,567 @@
+22 Feb 2001 S/370 interval timer fixes - Mark Gaubatz
+22 Feb 2001 64 bit Interpretive Execution (SIE) - Jan Jaeger
+22 Feb 2001 Corrections to load_psw and store_psw - Jan Jaeger
+22 Feb 2001 Improved address wrapping - Leland Lucius
+20 Feb 2001 64 bit opcodes for PLO - Jan Jaeger
+19 Feb 2001 Correction IPTE - Jan Jaeger
+17 Feb 2001 Corrections to ISKE/IVSK/LCTL/RRBE/STCTL - Roger Bowler
+16 Feb 2001 Fix ITF problem on 3390 compressed DASD - Greg Smith
+16 Feb 2001 Fix to interception for paging exceptions in SIE - Paul Leisly
+16 Feb 2001 IEEE float - Willem Konynenberg
+16 Feb 2001 Further 64 bit panel updates - Roger Bowler
+16 Feb 2001 Fix to LRA/LRAG - Roger Bowler
+15 Feb 2001 64 bit fixes for CKSM, CLCLE, CUSE, CUUTF, CUTFU, TRE - Jan Jaeger
+15 Feb 2001 Call s390_load_psw in LPSW in ESAME mode - Jan Jaeger
+15 Feb 2001 Additional checking in load_psw in ESAME mode - Roger Bowler
+14 Feb 2001 LPM fixes and display subchannel command - Nobumichi Kozawa
+14 Feb 2001 64 bit support for panel.c - Roger Bowler
+14 Feb 2001 Fix amode64 in load_psw - Ulrich Weigand
+14 Feb 2001 64 bit correction to SRST - Jan Jaeger
+14 Feb 2001 Correction to DL - Jan Jaeger
+13 Feb 2001 Fix RLL/RLLG - Jan Jaeger
+13 Feb 2001 Multiply logical (ML/MLR/MLG/MLGR) instructions - Vic Cross
+13 Feb 2001 Correction to DL - Vic Cross
+13 Feb 2001 Corrections to BRXHG and BRXLG - Jan Jaeger
+13 Feb 2001 Add LGH instruction - Jan Jaeger
+13 Feb 2001 Patch machine check for z/Arch compliance - Jan Jaeger
+12 Feb 2001 Patch store status for z/Arch compliance - Jan Jaeger
+11 Feb 2001 Correction to LRAG - Jan Jaeger
+11 Feb 2001 Allow use of environment variables to override filenames
+            of hercules.rc hercules.cnf and hercifc - Jan Jaeger
+11 Feb 2001 Various floating additions inclusing EFPC/SRNM 
+            instructions, and data exception code specs - Roger Bowler
+11 Feb 2001 Correction to pgmint instruction nullification - Jan Jaeger
+10 Feb 2001 NLS support - Roger Bowler
+09 Feb 2001 LFPC/SFPC/STFPC IEEE floating point instructions - Jan Jaeger
+09 Feb 2001 Extended translation fac. 2 (PKA/PKU/UNPKA/UNPKU) - Roger Bowler
+09 Feb 2001 Divide logical (DL/DLR/DLG/DLGR) instructions - Vic Cross
+09 Feb 2001 Display instruction operands - Roger Bowler
+09 Feb 2001 Fix to load_psw - Roger Bowler
+08 Feb 2001 Add hercules.rc initialization file - Willem Konynenberg
+08 Feb 2001 Fix SIE host interrupt IA backup - Jan Jaeger
+08 Feb 2001 Fix SSKE RCP index error - Jan Jaeger
+08 Feb 2001 TP instruction - Roger Bowler
+06 Feb 2001 Tape datachaining patch - Brandon Hill
+06 Feb 2001 Patch to bypass Cygwin stack problem (service.c) - Greg Smith
+06 Feb 2001 Fixes for windows port - Volker Bandke
+06 Feb 2001 SSK/ISK/RRB fix for 2K storage keys - Valery Pogonchenko/Jan Jaeger
+06 Feb 2001 TRAP2 TRAP4 and RP instructions - Jan Jaeger
+04 Feb 2001 Varous fixes for panel.c - Roger Bowler
+04 Feb 2001 Interval Timer fix - Bob Abeles
+04 Feb 2001 Deconfigure CPU's in release_config() - Greg Smith
+04 Feb 2001 Change panel break command to 64 bit - Jan Jaeger
+03 Feb 2001 Add ALCGR, SLBGR, ALCG, SLBG, ALCR, SLCR, ALC, SLB,
+            AGF, ALGF, SGF, SGFR, AGFR, RRL, RRLG, MSGF, MSGFR,
+            SLGFR instructions - Jan Jaeger
+03 Feb 2001 Fix MVCLE instruction where op2 len > op1 len - Jan Jaeger
+03 Feb 2001 Fix various sign/casting problems in esame.c - Jan Jaeger
+03 Feb 2001 Change constant type in cmpsc.c to prevent warning - Jan Jaeger
+03 Feb 2001 Fix S/370 interval timer - Valery Pogonchenko/Jay Maynard
+03 Feb 2001 Correct sign on LLILH - Jan Jaeger
+01 Feb 2001 Timer update correction - Valery Pogonchenko
+01 Feb 2001 Documentation update - Roger Bowler
+01 Feb 2001 Latest compressed CKD DASD release - Greg Smith
+01 Feb 2001 Fixes to Divide Single instructions - Jan Jaeger
+01 Feb 2001 64 bit fix to PLO instruction - Jan Jaeger
+01 Feb 2001 64 bit fix to IPTE instruction - Jan Jaeger
+01 Feb 2001 64 bit fix to SPX instruction - Jan Jaeger
+01 Feb 2001 64 bit fix to LKPG instruction - Jan Jaeger
+01 Feb 2001 Minor modification to SIGP instruction - Jan Jaeger
+01 Feb 2001 Fix 64 bit binary math instructions - Jan Jaeger
+31 Jan 2001 EPSW instruction - Roger Bowler
+31 Jan 2001 Check unupdated instruction address for SAM24/31 - Roger Bowler
+31 Jan 2001 ESAME DUCT format changes and BSA instruction - Roger Bowler
+31 Jan 2001 ESAME ASN authorization and ALET translation - Roger Bowler
+31 Jan 2001 Eliminate ASN tran.spec.exception for ESAME - Roger Bowler
+29 Jan 2001 Correction to ESAME DAT - Jan Jaeger
+29 Jan 2001 Fix MVCL/CLCL/MVCLE/CLCLE in 64 bit mode - Jan Jaeger
+29 Jan 2001 Fix BAL/BAS type instructions in 64bit mode - Jan Jaeger
+29 Jan 2001 Fix program interruption type in SAM24 and SAM31 - Jan Jaeger
+29 Jan 2001 Correct typo in LMD 
+29 Jan 2001 ALGF/ALGFR instructions - Jan Jaeger
+29 Jan 2001 Fix all relative instructions when target of execute - Jan Jaeger
+29 Jan 2001 DSG/DSGF/DSGR/DSGFR instructions - Jan Jaeger
+29 Jan 2001 EDMK ESAME fix - Jan Jaeger
+28 Jan 2001 ASN translation patch - Roger Bowler
+28 Jan 2001 Dummy SVC assist instruction - Jay Maynard/Brandon Hill
+28 Jan 2001 Extended floating point - Peter Kuschnerus
+28 Jan 2001 HET format tape support - Leland Lucius
+28 Jan 2001 Unloaded tape drive support - Brandon Hill
+27 Jan 2001 ESAME subspace replacement - Roger Bowler
+26 Jan 2001 ESAME BSG/BAKR/PC/PR/PT instructions - Roger Bowler
+24 Jan 2001 ESAME linkage stack operations - Roger Bowler
+21 Jan 2001 EREGG instruction - Roger Bowler
+20 Jan 2001 ESAME low-address protection - Roger Bowler
+20 Jan 2001 Fix zero block length in ctcadpt.c - Roger Bowler
+20 Jan 2001 LMD instruction - Roger Bowler
+20 Jan 2001 Fix TB instruction in ESAME mode - Roger Bowler
+20 Jan 2001 ESAME translation exception address - Roger Bowler
+16 Jan 2001 Fix zero track overflow record - Roger Bowler
+14 Jan 2001 ESAME DAT - Roger Bowler
+11 Jan 2001 Format-2 2K/4K IDAW - Roger Bowler
+11 Jan 2001 Add RRF/RXF/RSI instruction formats - Roger Bowler
+11 Jan 2001 ESAME DAT table bit definitions - Roger Bowler
+11 Jan 2001 ESAME interrupt codes - Roger Bowler
+08 Jan 2001 Fix to ESTA and MSTA - Mario Bezzi
+07 Jan 2001 Fix zero CCW count in ctcadpt.c - Roger Bowler
+07 Jan 2001 Added BRASL, LARL, ESEA, STRAG, STPQ, LPQ, LLILH, LLILL,
+            LLIHH, LLIHL, LLGH and LLGC instructions - Jan Jaeger
+07 Jan 2001 Corrected LLGT and LLGTR instructions - Jan Jaeger
+07 Jan 2001 Added 64 bit I/O and translation definitions - Jan Jaeger
+05 Jan 2001 Reworked cmpsc.c - Bernard van der Helm
+04 Jan 2001 Fix read-only aws tape - Roger Bowler
+03 Jan 2001 Fix integrity problem in cckddasd.c - Greg Smith
+02 Jan 2001 Fix multi architecture support in cmpsc.c - Jan Jaeger
+02 Jan 2001 Fix psw ia backup during PSA access by SIE - Jan Jaeger
+01 Jan 2001 Universal TUN/TAP Driver Networking support - Roger Bowler
+01 Jan 2001 Fix HHC002I message in config.c - Roger Bowler
+01 Jan 2001 Add OSTAILER VSE option - Roger Bowler
+28 Dec 2000 Fix 4K storage key support for S/370 mode when using
+            2K page tables - Jan Jaeger
+27 Dec 2000 2K/4K storage key support for SSK/SSKE/ISK/ISKE/RRB/RRBE
+            instructions - Jan Jaeger
+24 Dec 2000 Fully functional CMPSC instruction by Bernard van der Helm
+23 Dec 2000 Various fixes to SIE - Jan Jaeger
+23 Dec 2000 Multiple architecture support for SIE - Jan Jaeger
+23 Dec 2000 Add OPTION_NO_DEVICE_THREAD
+18 Dec 2000 Compressed CKD DASD release 2 - Greg Smith
+18 Dec 2000 Fix deadlock in SIE host interrupt processing - Jan Jaeger
+17 Dec 2000 Corrections to load reverse - Jan Jaeger
+15 Dec 2000 Improved data typing - Jan Jaeger
+13 Dec 2000 Add Load Reverse Facility (Jan Jaeger)
+10 Dec 2000 Add Linux/390 interrupt patch
+09 Dec 2000 Corrections to buffer positions in console.c - Roger Bowler
+09 Dec 2000 Add absolute effective address buffer option (Jan Jaeger)
+09 Dec 2000 Add absolute instruction address buffer option (Jan Jaeger)
+03 Dec 2000 ALS-1 and ALS-2 support completion (Roger Bowler and Jan Jaeger)
+02 Dec 2000 Included lates float fixes from Peter Kuschnerus
+02 Dec 2000 Fix orienting bug in CKD DASD search CCW processing (Bob Abeles)
+02 Dec 2000 Extended Translation (TRE,CUUTF,CUTFU instructions) - Roger Bowler
+30 Nov 2000 Optimize vfetch and vstore operations - Jan Jaeger
+25 Nov 2000 Add FETCH_xW and STORE_xW macros to optimize storage
+            access and provide atomic store/fetch operations
+22 Nov 2000 Optimize conditional branch instructions - Jan Jaeger
+22 Nov 2000 Remove -fPIC compiler option (performance) - Jan Jaeger
+20 Nov 2000 Revised instruction counting feature and
+            icount panel command - Jan Jaeger
+15 Nov 2000 Small fix to CHI - Jan Jaeger
+11 Nov 2000 Prevent ESAME mode when ESA/390 is specifed - Jan Jaeger
+5  Nov 2000 Added various new instructions in A5xx range - Jan Jaeger
+29 Oct 2000 Correct AXR and SXR instruction results when significance
+            exception raised (Peter Kuschnerus, with help from Mario Bezzi)
+29 Oct 2000 Correct CD and CDR instruction condition code logic (Peter
+            Kuschnerus)
+29 Oct 2000 Do not generate support for square root instructions in 370 mode
+            (Peter Kuschnerus)
+28 Oct 2000 Added 64 Bit instructions - Jan Jaeger
+21 Oct 2000 z/Architecture support - Jan Jaeger
+14 Oct 2000 Some 64 Bit definitions - Jan Jaeger
+07 Oct 2000 Add multi-architecture infrastructure in order
+            to support multiple architectures - Jan Jaeger
+07 Oct 2000 Compressed CKD DASD support (Greg Smith)
+07 Oct 2000 DASD I/O optimizations (Greg Smith and Malcolm Beattie)
+07 Oct 2000 Fix for random bug in MP instruction (Mario Bezzi)
+07 Oct 2000 Treat all 3505 card reader read CCWs the same (Jay Maynard)
+26 Sep 2000 STCRW instruction nullification correction - Jan Jaeger
+16 Sep 2000 Add ses.c containing sysplex specific instructions (Jan Jaeger)
+09 Sep 2000 Add CFCC hardware loader (Jan Jaeger)
+05 Sep 2000 I/O rate meter on graphical panel (Valery Pogonchenko)
+05 Sep 2000 Sense correction for track overflow processing (Valery
+            Pogonchenko)
+05 Sep 2000 Another fix for 64K segment length checking in 370 DAT (Jay
+            Maynard, found by Mario Bezzi)
+04 Sep 2000 Win32 portability changes (John Kozak)
+04 Sep 2000 Fix for 64K segment length checking in 370 DAT (Jay Maynard,
+            found by Mario Bezzi)
+04 Sep 2000 Fix for TPI storing interrupt code when no interrupt pending
+            (Jay Maynard, found by Greg Smith)
+03 Sep 2000 Printer support for skip to channel 9 and 12 (Roger Bowler)
+03 Sep 2000 Panel refresh rate command and PANRATE parameter (Reed Petty)
+31 Aug 2000 Fix storage protection override on fetch (Jan Jaeger)
+29 Aug 2000 ESA/390 (VM dataspace) SIE support (Jan Jaeger)
+21 Aug 2000 Bugfix for MXR instruction (by Peter Kuschnerus)
+19 Aug 2000 SIE Vector support (Jan Jaeger)
+12 Aug 2000 Add CONCS, DISCS and RCHP instructions (Jan Jaeger)
+12 Aug 2000 Add S/370 Mode support to SIE (Jan Jaeger)
+08 Aug 2000 Fix flags on intermediate subchannel status (Jan Jaeger)
+08 Aug 2000 Break SYSCONS output lines when too long (Jan Jaeger)
+04 Aug 2000 Floating point instructions SQDR and SQER (by Peter Kuschnerus)
+04 Aug 2000 Add Lock Page instruction (Jan Jaeger)
+03 Aug 2000 Simplify logmsg and DEVTRACE macro definitions (Jay Maynard)
+03 Aug 2000 Prevent incorrect length indication on CONTROL NOP CCW (Jay
+            Maynard)
+01 Aug 2000 Complete 370 HIO processing (Jay Maynard)
+29 Jul 2000 Interpretive Execution (SIE) (Jan Jaeger)
+29 Jul 2000 Set Address Limit (SAL) instruction (Jan Jaeger)
+25 Jul 2000 Correct nullification of TPI and TSCH (Jan Jaeger)
+25 Jul 2000 Add device locking to MSCH (Jan Jaeger)
+25 Jul 2000 Correct TPROT instruction (Jan Jaeger)
+22 Jul 2000 Correct address wrapping on assist instructions (Jan Jaeger)
+22 Jul 2000 Change interrupt logic to use longjmp on all interrupts (Jan
+            Jaeger)
+22 Jul 2000 Clear remainder of ASTE when loading ASTE with ASF=0
+            in translace_asn (Jan Jaeger)
+22 Jul 2000 Add PLO instruction (Jan Jaeger)
+22 Jul 2000 Fix CLCL interruption problem (Jan Jaeger)
+19 Jul 2000 Make ED and EDMK perform a trial run (Jan Jaeger)
+16 Jul 2000 Fix address wraparound in MVO (Jan Jaeger)
+15 Jul 2000 Fix CR15 corruption in form_stack_entry,
+            fix nullification in form_stack_entry and
+            unstack_registers (Jan Jaeger)
+10 Jul 2000 Fix loss of interrupts in PR (Jan Jaeger)
+22 Jul 2000 Track overflow processing fixes (by Jay Maynard, suggested by
+            Valery Pogonchenko)
+21 Jul 2000 Added TOD clock update to STCK, STCKE, DIAG 204, and TRACE
+            processing (by Jay Maynard)
+19 Jul 2000 Added support for 3340 and 3375 DASD (by Jay Maynard, with help
+            from Rick Fochtman and David Cole)
+18 Jul 2000 Corrected interval timer update increment (by Jay Maynard)
+18 Jul 2000 Fixed READ DEVICE CHARACTERISTICS alternate track values for
+            3380 and 3390 DASD (by petermac@ase.com.au)
+10 Jul 2000 Skeletal CMPSC instruction (by Bernard van der Helm)
+07 Jul 2000 float.c optimization for new instruction decode
+            and execution (by Peter Kuschnerus)
+07 Jul 2000 Fix program check on TIC ccw (by Jan Jaeger)
+07 Jul 2000 Fix program check on NOP ccw (by Jan Jaeger)
+05 Jul 2000 Instruction decode & execution restructure (by Jan Jaeger)
+05 Jul 2000 Added -fomit-frame-pointer to compiles for improved performance
+            (by Jan Jaeger)
+04 Jul 2000 Fix STCKE instruction (by Bernard van der Helm)
+04 Jul 2000 Added track overflow processing for CKD DASD (by Jay Maynard)
+04 Jul 2000 Makefile change to allow RPM building with RPM_BUILD_ROOT
+            (by David Barth)
+04 Jul 2000 Added NetBSD build definitions to makefile (by Soren Jorvang)
+04 Jul 2000 Moved version definition to version.h and removed makefile
+            dependency for source modules (by Jay Maynard)
+04 Jul 2000 Package change: tarball now explodes into hercules-<version>
+            subdirectory (by Jay Maynard, suggested by Soren Jorvang)
+23 Jun 2000 Fix backward going TOD clock (by Jan Jaeger)
+23 Jun 2000 Suppress superflous HHC701/HHC702 messages (by Jan Jaeger)
+23 Jun 2000 Rework cpu.c to decode instructions by macro (by Jan Jaeger)
+23 Jun 2000 Bypass bug in IBM telnet client (by Jan Jaeger)
+18 Jun 2000 3270 CCW processing improvements (by Jan Jaeger)
+18 Jun 2000 OSTAILOR generalization, and new pgmtrace panel command
+            (by Jan Jaeger)
+18 Jun 2000 VM IUCV instruction correction and DIAGNOSE improvements
+            (by Jan Jaeger)
+18 Jun 2000 CPU timer and clock comparator improvements
+            (by Jan Jaeger, after a suggestion by Willem Koynenberg)
+18 Jun 2000 3480 READ BLOCK ID and LOCATE CCW support (by Brandon Hill)
+18 Jun 2000 Networking support via virtual CTCA (by Willem Koynenberg)
+18 Jun 2000 Restructured CPU execution, by function call instead of
+            switch statement (by Mike Noel)
+18 Jun 2000 Support for IEBCOPY sequential output datasets in dasdload
+            (by Ronen Tzur)
+18 Jun 2000 New dasdls command lists the VTOC of a CKD DASD volume
+            (by Malcolm Beattie)
+18 Jun 2000 New AWSTAPE handling commands: tapesplt, tapemap (by Jay Maynard)
+18 Jun 2000 make install target to install in /usr/bin (by Jay Maynard)
+03 Jun 2000 Still more multiprocessor improvements (by Jan Jaeger)
+03 Jun 2000 Dynamic CPU reconfiguration (by Jan Jaeger)
+03 Jun 2000 Basic vector facility (by Jan Jaeger)
+03 Jun 2000 Floating point version 6 (by Peter Kuschnerus)
+03 Jun 2000 READ AND RESET BUFFERED LOG CCW (X'A4') support (by Jay Maynard)
+03 Jun 2000 WRITE SPECIAL CKD CCW (X'01') support (by Jay Maynard)
+03 Jun 2000 FBA DASD model reporting fixes (by Jay Maynard)
+21 May 2000 More multiprocessor improvements (by Jan Jaeger)
+21 May 2000 New startall/stopall panel commands (by Jan Jaeger)
+21 May 2000 STIDP stores processor address in first digit of CPU id
+            (by Roger Bowler)
+21 May 2000 Correction to IPTE instruction for S/370 (by Jay Maynard)
+21 May 2000 Dummy HIO instruction for S/370 (by Jay Maynard)
+21 May 2000 Support for emulated 0671 FBA DASD (by Jay Maynard)
+21 May 2000 FBA device reserve/release CCW support (by Jay Maynard)
+21 May 2000 New OSTAILOR configuration option allows selective suppression
+            of program check messages (by Jay Maynard)
+14 May 2000 Multiprocessor locking improvements (by Jan Jaeger)
+14 May 2000 Machine check and channel report word (by Jan Jaeger)
+14 May 2000 Store Channel Report Word (STCRW) instruction (by Jan Jaeger)
+14 May 2000 New attach/detach/define commands to allow dynamic addition
+            and deletion of devices from the configuration (by Jan Jaeger)
+14 May 2000 Compare and Swap and Purge (CSP) instruction (by Jan Jaeger)
+14 May 2000 Broadcasted purging (by Jan Jaeger)
+14 May 2000 Fix LASP instruction SASN authorization using wrong AX if bits
+            29-31 are 010 and SASN \= PASN (by Mario Bezzi)
+14 May 2000 Fix SAC instruction special operation exception setting secondary
+            space mode when ASF=0 (by Mario Bezzi)
+14 May 2000 Remove intdrag option and replace drag command by toddrag command
+14 May 2000 New extpending flag to improve performance (originally contributed
+            by Valery Pogonchenko and enhanced by Jan Jaeger)
+14 May 2000 Allow longer host name in console connected message
+            (by Jay Maynard)
+14 May 2000 Floating point version 5 including fixes by Mario Bezzi
+            (contributed by Peter Kuschnerus)
+30 Apr 2000 Missing interrupt after CSCH instruction
+30 Apr 2000 S/370 DAT support (contributed by Jay Maynard)
+30 Apr 2000 Tape device sense byte improvements (by Jan Jaeger)
+30 Apr 2000 Read Buffered Log (CCW X'24') for tape devices (by Jan Jaeger)
+30 Apr 2000 Reject Sense ID CCW for 3420 tape devices (by Jan Jaeger)
+30 Apr 2000 Suppress unprintable character in HMC messages (by Jan Jaeger)
+30 Apr 2000 Suppress attention interrupt if subchannel not enabled
+            (by Roger Bowler)
+30 Apr 2000 New interrupt drag factor to improve performance (by Roger Bowler)
+30 Apr 2000 New toddrag and intdrag config options and drag control panel
+            command allow drag factors to be set (by Roger Bowler)
+30 Apr 2000 Light optimization on CPU critical path (by Valery Pogonchenko)
+30 Apr 2000 Eliminate fetch protection override in S/370 mode
+            (by Valery Pogonchenko)
+22 Apr 2000 Support for CKD DASD volumes exceeding 2GB such as 3390-3
+            (by Roger Bowler)
+22 Apr 2000 3274-1D SELECT RB/RMP/RBP/WRT commands (by Roger Bowler)
+22 Apr 2000 Support for 3270 14-bit SBA addressing and inbound SFE order
+            (by Roger Bowler)
+22 Apr 2000 Command reject if Write Structured Field CCW issued to a
+            3270 without extended attributes (by Roger Bowler)
+22 Apr 2000 Fix missing CSW_IL indication when CCW count exhausted
+            (by Roger Bowler)
+22 Apr 2000 Do not set unit exception if CCW count is zero (by Jan Jaeger)
+22 Apr 2000 Suppress space switch event program check messages (by Jan Jaeger)
+22 Apr 2000 Branch tracing and cross memory tracing for
+            BALR, BASR, BASSM, BAKR, BSA, BSG, SSAR, PC, PT, PR instructions
+            (by Jan Jaeger)
+22 Apr 2000 New diagnose instruction to stop CPU (by Jan Jaeger)
+22 Apr 2000 Drag factor option slows down TOD clock, to decrease overhead
+            on very slow machines (by Jan Jaeger)
+22 Apr 2000 Correction to PR instruction (by Jan Jaeger)
+22 Apr 2000 Correction to LASP instruction (by Jan Jaeger)
+22 Apr 2000 Make CLCLE/MVCLE/CKSM instructions conditional features
+            (by Jan Jaeger)
+22 Apr 2000 Enable channel measurement mode (by Jan Jaeger)
+22 Apr 2000 Modify program_check() to handle shadow registers correctly
+            (by Jan Jaeger)
+22 Apr 2000 Change DAT to favour PSTD in TEA, to give reduction in page
+            fault path length (by Jan Jaeger)
+22 Apr 2000 Avoid clearing registers at CPU reset (by Jan Jaeger)
+22 Apr 2000 Leave GPR, AR and FPR intact during CPU reset for SADUMP
+            (by Jan Jaeger)
+22 Apr 2000 Zeroize field for called space identification in PC stack entry
+            (by Jan Jaeger)
+22 Apr 2000 New CCW X'8D' (Write Update Key and Data) required by STOW
+            (by Jan Jaeger)
+22 Apr 2000 Fix for 0B7 abend in D M=CHP command (by Jan Jaeger)
+22 Apr 2000 Floating point version 4 including fixes by Valery Pogonchenko
+            (contributed by Peter Kuschnerus)
+22 Apr 2000 Fix incorrect second operand address in MVCIN instruction
+            (by Roger Bowler)
+22 Apr 2000 Correct sign of zero result in SRP instruction
+            (by Roger Bowler)
+22 Apr 2000 Erase Gap (CCW X'17') for tape devices (by Roger Bowler)
+22 Apr 2000 Activate MIPS counter on control panel (by Dutch Owen)
+22 Apr 2000 Suppress tracing of ISK, SCK, and DP instructions
+30 Mar 2000 Fix program check 0032 due to wrong stack entry being updated
+30 Mar 2000 Fix wrong SSTD loaded by LASP instruction (found by Jan Jaeger)
+30 Mar 2000 Bypass main storage lock in single CP configuration (by Jan Jaeger)
+30 Mar 2000 Fix incorrect condition code in PGIN instruction (by Jan Jaeger)
+30 Mar 2000 Corrections to expanded storage instructions (by Jan Jaeger)
+30 Mar 2000 New STCPS and SCHM instructions (by Jan Jaeger)
+30 Mar 2000 Set more appropriate sense bytes for tape errors
+28 Mar 2000 Fix incorrect unit exception on SCSI tape FSB/BSB CCW
+            (reported by Daniel Rudin)
+28 Mar 2000 Fix unit check on AWSTAPE write (reported by Axel Schwarzer)
+28 Mar 2000 Close SCSI tape after tape is ejected
+28 Mar 2000 Detect tapemark during SCSI tape FSB/BSB CCW
+28 Mar 2000 Suppress HMC response prompt (by Jan Jaeger)
+28 Mar 2000 Expanded storage support (by Jan Jaeger)
+28 Mar 2000 Move Page Facility 2
+28 Mar 2000 Correct signed length error in MVCK/MVCS/MVCP (by Jan Jaeger)
+28 Mar 2000 Undetected CC=3 in SRP instruction
+28 Mar 2000 Wrong remainder in DP instruction when dividend is less
+            than divisor
+28 Mar 2000 Specification exception in DP instruction should have higher
+            priority than data exception
+22 Mar 2000 FBA minidisk support
+22 Mar 2000 Additional diagnose functions
+22 Mar 2000 Allow real storage frames to be marked unusable (by Jan Jaeger)
+18 Mar 2000 Address wraparound improvement (contributed by Jan Jaeger)
+18 Mar 2000 Floating point version 3 (contributed by Peter Kuschnerus)
+18 Mar 2000 Correction to SLDA/SRA instructions (contributed by Jan Jaeger)
+18 Mar 2000 Recognize tabs and end-of-file character in ASCII cardrdr files
+18 Mar 2000 Hercules-specific diagnose instructions (contributed by Jay
+            Maynard)
+18 Mar 2000 Correct missing timer interrupt when interval timer goes from
+            zero to negative (thanks to Valery Pogonchenko)
+18 Mar 2000 Enable HMC system console in S/370 mode
+18 Mar 2000 Correct sign propagation in multiply instruction
+18 Mar 2000 Reduce CPU thread priority (thanks to Steve Gay and Reed H.Petty)
+01 Mar 2000 Add BSF/FSF/BSB/FSB CCW support for tape devices
+01 Mar 2000 Allow final short block in OMA fixed block files
+01 Mar 2000 Allow processing of read-only AWSTAPE files and SCSI tapes
+01 Mar 2000 Skeleton ctcadpt module for future 3088 support
+01 Mar 2000 Correctly nullify IC/NI/OI/XI/CLM/STCM/ICM/TRT instructions
+            on page translation exception (thanks to Jan Jaeger)
+01 Mar 2000 Improved floating point support (contributed by Peter Kuschnerus)
+01 Mar 2000 Correct shift result when shift count exceeds 31 (thanks to
+            Glen Herrmannsfeldt and Jay Maynard)
+01 Mar 2000 Fix incorrect MVCL cc=3 when destination length is 1
+19 Feb 2000 Prevent incorrect length indication on 3270 Select CCW
+19 Feb 2000 2K storage protection for S/370
+19 Feb 2000 Prevent wait for console port (thanks to Malcolm Beattie)
+19 Feb 2000 Allow keyword parameters in configuration file
+19 Feb 2000 New sysepoch and tzoffset parameters (thanks to Jay Maynard)
+19 Feb 2000 Adjust TRACE and DIAG204 for extended TOD (thanks to Jan Jaeger)
+19 Feb 2000 Set TOD clock in SCK instruction (thanks to Jan Jaeger)
+15 Feb 2000 3270 read buffer fix for OS/360 NIP
+15 Feb 2000 Floating point instructions (contributed by Peter Kuschnerus)
+15 Feb 2000 Remove 32-bit pointer dependency from dasdload for Alpha
+15 Feb 2000 HMC system console support (contributed by Jan Jaeger)
+15 Feb 2000 Correct condition code after decimal overflow (thanks to Jan Jaeger)
+15 Feb 2000 Set reference and change bits for PSA access (thanks to Jan Jaeger)
+15 Feb 2000 New CRLF option for printer and card punch (default is now LF)
+10 Feb 2000 Remove interval timer debugging message
+10 Feb 2000 Fix hung console resulting from attention interrupt fix in 1.49
+10 Feb 2000 Seek and Set Sector (CCW=27) for Itel 7330 DASD controller
+10 Feb 2000 Correct SIGP handling of non-existent CPUs (thanks to Jan Jaeger)
+10 Feb 2000 Extended TOD clock bit in processor features (thanks to Jan Jaeger)
+10 Feb 2000 Alternate control panel help text (contributed by Dutch Owen)
+10 Feb 2000 Card reader end of file option (thanks to Dutch Owen)
+10 Feb 2000 Card reader ASCII/EBCDIC auto-detection
+10 Feb 2000 Fix SIGP RESTART to target correct CPU (thanks to Jan Jaeger)
+10 Feb 2000 Allow VTOC size and location to be specified for dasdload.
+05 Feb 2000 Alternate control panel (contributed by Dutch Owen)
+05 Feb 2000 Present attention interrupt when console connects
+05 Feb 2000 Fix dasdload CVOL logic (thanks to Jay Maynard)
+05 Feb 2000 Fix dasdload initialization of empty PDS
+05 Feb 2000 Allow device size to be specified for dasdload
+            Note: the volser record in the pack layout file must
+            be changed to specify the device type and cylinder count;
+            the device type is no longer specified on the command line.
+05 Feb 2000 Add dummy Set Clock instruction (does nothing except set cc 0)
+31 Jan 2000 Fix dasdload to handle note lists (prevent 32D abend)
+31 Jan 2000 I/O interrupt performance enhancement
+31 Jan 2000 Correctly detect overflow in signed Add/Subtract instructions
+31 Jan 2000 Fix track overflow problem
+31 Jan 2000 3270 Read Modified CCW
+23 Jan 2000 Allow tn3270 or telnet client to connect to specific device number
+23 Jan 2000 Align control panel instruction counter (thanks to Mario Bezzi)
+23 Jan 2000 Ensure panel display does not corrupt TEA (by Jan Jaeger)
+23 Jan 2000 STIDP incorrectly propagates high order bit of CPU model
+            (fixed by Jan Jaeger)
+23 Jan 2000 Fix byte-ordering problem with CKD DASD header on non-Intel
+            machines (reported by Adam Thornton)
+23 Jan 2000 STIDC instruction
+23 Jan 2000 Extended TOD clock (STCKE and SCKPF instructions)
+23 Jan 2000 3211 Load FCB and Diagnostic Read CCW
+23 Jan 2000 3270 Read Buffer CCW
+23 Jan 2000 Fix console.c to inhibit input while console has status pending
+11 Jan 2000 HSCH instruction
+11 Jan 2000 SIGP instruction
+11 Jan 2000 Suppress tracing of page faults
+11 Jan 2000 Display control registers and access registers after program check
+11 Jan 2000 Add regs parameter to program_check function calls
+11 Jan 2000 New panel command to perform store status function
+11 Jan 2000 Suppress tracing of CCW file protect and end of cylinder errors
+08 Jan 2000 Make MVCL/CLCL interruptible (contributed by Jan Jaeger)
+08 Jan 2000 Diagnose 204 (contributed by Jan Jaeger)
+08 Jan 2000 Read Channel Subsystem Info (contributed by Jan Jaeger)
+08 Jan 2000 Fix incorrect register count in TRACE instruction
+08 Jan 2000 Correct nullification of STM/LM/LAM/STAM/STCTL/LCTL/STCM and SS
+            instructions whose operands cross a page boundary
+08 Jan 2000 Suppression on Protection with Virtual-Address enhancement
+08 Jan 2000 Select correct address space for MVCS/MVCP (fixed by Jan Jaeger)
+08 Jan 2000 Correct registers after CLCL/CLCLE with non-zero condition code
+08 Jan 2000 Defer clock comparator interrupt while instruction stepping
+08 Jan 2000 Remove 32K limit on data chained write CCWs for non-CKD devices
+08 Jan 2000 Correct overrun error on data chained write for FBA DASD
+01 Jan 2000 Support for 9336 FBA DASD
+01 Jan 2000 Read Replicated Data command for FBA DASD
+01 Jan 2000 Prevent recursive program check after instruction fetch error
+01 Jan 2000 Operand tracing for MVCL/CLCL and RRE instructions
+27 Dec 1999 New control panel command: devlist
+27 Dec 1999 Write Update Data (X'85') CCW for CKD devices
+27 Dec 1999 Makefile changed to use $(CC) instead of cc
+27 Dec 1999 Fix dat.c to prevent ASN translation specification exception
+            (program check X'0017') if subspace group facility is installed
+            and ASF is one
+27 Dec 1999 Fix cpu.c to clear ILC before fetching instruction to prevent PSW
+            being backed up if access error occurs during instruction fetch
+27 Dec 1999 Correct program check ILC when instruction is nullified
+27 Dec 1999 Obtain CPU model number for STIDP from configuration file
+            (contributed by Jay Maynard)
+            Note: if upgrading from an earlier release, you must change
+            your hercules.cnf file to add a valid CPU model number after the
+            CPU serial number
+27 Dec 1999 Prevent wait after devinit (thanks to Jay Maynard)
+27 Dec 1999 Open printer with O_SYNC to ensure buffers flushed
+            (suggested by Daniel Seagraves)
+27 Dec 1999 Fix xmem.c to prevent loop in program_call when loading 4-word ETE
+            (thanks to Jan Jaeger)
+27 Dec 1999 Improved TLB lookup (contributed by Jan Jaeger)
+16 Dec 1999 New makefile builds both S/370 and ESA/390 executables:
+            hercules-370 and hercules-390 (contributed by Jay Maynard)
+16 Dec 1999 3480 Set Path Group Id and Unassign CCWs
+            (contributed by Jan Jaeger)
+16 Dec 1999 CFC and UPT instructions (contributed by Peter Kuschnerus)
+16 Dec 1999 Card punch support
+16 Dec 1999 Erase (X'11') CCW for CKD devices
+16 Dec 1999 Correct setting of translation exception address
+16 Dec 1999 Correct file mode when opening printer file
+16 Dec 1999 Correct condition code for shift arithmetic instructions
+07 Dec 1999 Set reference and change bits correctly for main storage accesses
+            by channel, dat, xmem, stack, block, and service modules (thanks
+            to Jan Jaeger)
+07 Dec 1999 New devinit command (contributed by Jay Maynard)
+07 Dec 1999 Reject control panel virtual storage display command if CR1=0
+07 Dec 1999 Fix dasdload to correctly write EOF record for empty file
+            and to correctly fill block overhead fields in format4 DSCB.
+07 Dec 1999 Diagnose functions MSSFCALL and SCPEND (contributed by Jan Jaeger)
+07 Dec 1999 Corrections to service.c and assist.c (contributed by Jan Jaeger)
+07 Dec 1999 Alpha platform portability definitions (contributed by Jay Maynard)
+07 Dec 1999 3480 Assign CCW (thanks to Rick McKelvy)
+30 Nov 1999 New DASDISUP program performs OS/360 IEHIOSUP function
+30 Nov 1999 Correct SCSW handling for suspend/resume
+30 Nov 1999 Forward space file CCW for tape devices
+30 Nov 1999 3480 load display CCW (contributed by Jan Jaeger)
+            and sense path group id CCW (thanks to Rick McKelvy)
+30 Nov 1999 Correct handling of OMA tape headers to correctly recognize
+            tape mark and to align headers to 16-byte boundary
+30 Nov 1999 EBCDIC character translation of CCW data displays
+30 Nov 1999 Fix command reject for CKD read commands outside the domain
+            of a locate record
+24 Nov 1999 Concurrent sense
+24 Nov 1999 I/O initial status interruption
+24 Nov 1999 Channel program suspend/resume function and RSCH instruction
+24 Nov 1999 Read Device Characteristics CCW for 3480
+24 Nov 1999 Fix incorrect command reject on Sense Subsystem Status CCW
+24 Nov 1999 Increase 3270 write buffer size to prevent console I/O error
+            when using Zap function of ZZSA
+24 Nov 1999 Fix very nasty error in dat.c causing wrong bytes to
+            be fetched or stored when operand crosses page boundary
+24 Nov 1999 Remove temporary fix to ckddasd.c introduced in 1.37
+22 Nov 1999 New panel commands to allow storage alteration
+22 Nov 1999 Fix incorrect I/O parameter on attention interrupt (Jan Jaeger)
+22 Nov 1999 Clear PMCW correctly during I/O reset
+22 Nov 1999 Change 3270 control unit type to 3274-1D (Jan Jaeger)
+22 Nov 1999 Fix restart command broken by 1.37
+19 Nov 1999 Storage range display
+19 Nov 1999 EBCDIC character translation of storage displays
+19 Nov 1999 New breakpoint command (contributed by Dan Horak)
+19 Nov 1999 Messages go to log file as well as screen if stdout is redirected
+19 Nov 1999 Fix missing interrupt caused by channel.c failing to obtain device
+            lock before setting interrupt pending
+19 Nov 1999 Fix incorrect cond code 1 in attention SCSW built by console.c
+19 Nov 1999 New Read Channel Path Information service call
+19 Nov 1999 Temporary fix to ckddasd.c multitrack search
+19 Nov 1999 Addition of Read Device Characteristics and Sense Subsystem
+            Status commands for CKD devices
+19 Nov 1999 New DASDPDSU program to unload PDS members from a CKD volume
+12 Nov 1999 Clear subchannel instruction
+12 Nov 1999 Correct fault causing control panel display corruption
+09 Nov 1999 Improved control panel user interface
+09 Nov 1999 New control panel commands: start, stop, restart, ipl, loadparm
+09 Nov 1999 New loadcore command to load disk image files
+09 Nov 1999 S/370 interval timer
+09 Nov 1999 Allow 31-bit mode linkage in lock instructions
+09 Nov 1999 Support for PCI in ESA/390 mode as well as S/370 mode
+09 Nov 1999 Correct problem causing false channel protection checks
+29 Oct 1999 New DASDLOAD program to create a CKD volume from unloaded PDS files
+29 Oct 1999 Correct CKD module to prevent record not found error on
+            multitrack Read Count CCW
+26 Oct 1999 Correct handling of REWIND command for AWSTAPE files
+26 Oct 1999 Correct nasty bug in Subtract Logical instruction (thanks
+            to Roland Goetschi for finding this bug)
+26 Oct 1999 Ensure unique TOD clock values for Store Clock
+26 Oct 1999 Correction to unstacking process for PR instruction
+26 Oct 1999 Implementation of Read Multiple CKD command
+18 Oct 1999 Support for virtual tapes in OMA (Optical Media Attach) format
+18 Oct 1999 SCSI tape support (read-only)
+18 Oct 1999 Minor corrections to CKD DASD support

@@ -1,0 +1,485 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: Configuration File</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: Configuration File</h1>
+<p>
+This page describes the configuration file for the Hercules S/370,
+ESA/390, and z/Architecture emulator.
+<p>
+The configuration file <b><i>hercules.cnf</b></i> contains the
+processor and device layout.  It is roughly equivalent to the IOCDS on
+a real System/390.  The configuration file is an ASCII text file.
+<h3>Example configuration file</h3>
+<pre><code>#
+# System parameters
+#
+
+CPUSERIAL 000611
+CPUMODEL  3090
+MAINSIZE  64
+XPNDSIZE  0
+CNSLPORT  3270
+NUMCPU    1
+NUMVEC    1
+ARCHMODE  ESA/390
+LOADPARM  0120....
+SYSEPOCH  1900
+TZOFFSET  -0500
+OSTAILOR  OS/390
+PANRATE   FAST
+
+#
+# Device definitions
+#
+
+000A    1442    adrdmprs.rdr
+000C    3505    jcl.txt ascii trunc
+000D    3525    pch00d.txt ascii
+000E    1403    prt00e.txt
+001F    3270
+0120    3380    mvsv5r.120
+0121    3380    mvsv5d.121
+0122    3380    mvswk1.122
+0140    3370    dosres.140
+0141    3370    syswk1.141
+0200    3270
+0201    3270
+0202    3270
+0300    3370    sysres.300
+0400    3088    CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0
+0401    3088    CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0
+0580    3420    ickdsf.ipl
+0581    3420    /dev/st0
+0582    3420    /cdrom/tapes/uaa196.tdf
+</pre></code>
+<h3>Comment lines</h3>
+<p>
+Blank lines, and lines beginning with a pound sign ('#' - "hash" to
+Europeans) or an asterisk, are treated as comments.
+<h3>System parameters</h3>
+<p>
+System parameters may appear in any order but they must precede all
+device records.  Each system parameter must be on a separate line.
+The following system parameters may be specified:
+<dl>
+<dt><code>CPUSERIAL <em>xxxxxx</em></code>
+<dd>specifies the 6 hexadecimal digit CPU serial
+    number stored by the STIDP instruction
+<dt><code>CPUMODEL <em>xxxx</em></code>
+<dd>specifies the 4 hexadecimal digit CPU model number
+    stored by the STIDP instruction
+<dt><code>MAINSIZE <em>nnnn</em></code>
+<dd>specifies the main storage size in megabytes, where
+    <code><em>nnnn</em></code> is a decimal number
+    in the range is 2 to 256
+<dt><code>XPNDSIZE <em>nnnn</em></code>
+<dd>specifies the expanded storage size in megabytes, where
+    <code><em>nnnn</em></code> is a decimal number
+    in the range is 0 to 1024
+<dt><code>CNSLPORT <em>nnnn</em></code>
+<dd>specifies the port number (in decimal) to which tn3270 and
+    telnet clients will connect
+<dt><code>NUMCPU <em>nn</em></code>
+<dd>specifies the number of emulated CPUs.
+    <em>Note:</em>
+    Multiprocessor emulation is only available when the definition of
+    the compile-time variable <code>MAX_CPU_ENGINES</code>
+    in the file <em><b>hercules.h</b></em> has a value of more than 1.
+    Multiprocessor emulation works best
+    if your system has more than physical CPU, but you can
+    emulate multiple CPUs even on a uniprocessor system
+    and you may still achieve a small performance benefit.
+    There is no point in specifying NUMCPU greater than 1 unless
+    your operating system is able to support multiple CPUs, and
+    if you do not need multiprocessor emulation then setting
+    MAX_CPU_ENGINES to 1 at compile time may improve performance.
+<dt><code>NUMVEC <em>nn</em></code>
+<dd>specifies the number of emulated vector facilities. Default is one per
+    CPU. Only available by default in ESA/390 mode.
+<dt><code>LOADPARM <em>xxxxxxxx</em></code>
+<dd>specifies the eight-character IPL parameter which is used
+    by some operating systems to select system parameters
+<dt><code>SYSEPOCH <em>yyyy</em></code>
+<dd>specifies the base date for the TOD clock.  Use the default
+    value (1900) for all systems except OS/360.
+    OS/360 expects the base date to be 1960, but specifying this
+    value causes an error because OS/360 regards 2000 as an invalid
+    date.  For OS/360, <code>SYSEPOCH 1988</code> is recommended.
+    This makes the year 2000 appear to be 1972.
+<dt><code>TZOFFSET &plusmn;<em>hhmm</em></code>
+<dd>specifies the hours and minutes by which the TOD clock will
+    be offset from the current system time.  For GMT, use the
+    default value (0000).  For timezones west of Greenwich, specify
+    a negative value (example: <code>-0500</code> for US Eastern Standard
+    Time, <code>-0800</code> for US Pacific Standard Time).
+    For timezones east of Greenwich, specify a positive value
+    (example: <code>+0100</code> for Central European Time,
+    <code>+0930</code> for South Australian Time).
+<dt><code>TODDRAG <em>nn</em></code>
+<dd>specifies the TOD clock drag factor.  This parameter can be used
+    to slow down the TOD clock by a factor of <em>nn</em>, which can
+    improve the performance of some operating systems which consume
+    significant amounts of CPU time processing timer interrupts.
+    <em>Use of the TODDRAG parameter is no longer recommended.</em>
+<dt><code>OSTAILOR OS/390 &#124; VM &#124; VSE &#124; LINUX</code>
+<dd>specifies the intended operating system.  The effect of this
+    parameter is to reduce control panel message traffic by
+    selectively suppressing trace messages for program checks
+    which are considered normal in the specified environment.
+<dt><code>PANRATE SLOW &#124 FAST &#124 <em>nn</em></code>
+<dd>specifies the panel refresh rate, in milliseconds between refreshes. SLOW
+    is the same as 500, and FAST is the same as 50. A value less than the
+    Linux system clock tick interval (10 on Intel, 1 on Alpha), or more than
+    5000, will be rejected. SLOW is the default.
+<dt><code>CFCCIMAGE <em>xxxxx</em></code>
+<dd>specifies the name of the file containing the coupling-facility
+    control code image which will be loaded by the service processor
+    in a VM/ESA environment.
+<dt><code>ARCHMODE S/370 &#124 ESA/390 &#124 ESAME</code>
+<dd>specifies the initial architecture mode.
+    Use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
+    Use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
+    Linux/390, and ZZSA.
+    Use <code>ESAME</code> for z/OS and zLinux.
+    When ESAME is specified, the machine will always IPL in ESA/390 mode,
+    but is capable of being switched into z/Architecture mode after IPL.
+    This is handled automatically by all z/Architecture operating systems.
+</dl>
+<p>
+A comment preceded by a pound sign may be appended to any system
+parameter statement.
+<h3>Device records</h3>
+<p>
+The remaining statements in the configuration file are device records.
+There must be one device record for each I/O device.  The format of
+the device record is:
+<p><code><em>devnum devtype</em> [<em>arguments</em>]</code>
+<p>where:
+<dl>
+<dt><code><em>devnum</em></code>
+<dd>is a 1 to 4 digit hexadecimal number, in the range 0000 to FFFF
+    (for ESA/390) or 0000 to 0FFF (for S/370).  The device number uniquely
+    identifies each device to the operating system.
+<dt><code><em>devtype</em></code>
+<dd>is the device type.  Valid device types are:
+    <table border cellpadding=5 align=center>
+    <tr><th>Device type</th>
+        <th>Description</th>
+        <th>Emulated by</th>
+    </tr>
+    <tr><td>3270</td>
+        <td><a href="#loc3270">Local non-SNA 3270</a></td>
+        <td>TN3270 client connection</td>
+    </tr>
+    <tr><td>1052, 3215</td>
+        <td><a href="#conprkb">Console printer-keyboards</a></td>
+        <td>Telnet client connection</td>
+    </tr>
+    <tr><td>1442, 2501, 3505</td>
+        <td><a href="#cardrdr">Card readers</a></td>
+        <td>Disk file (ASCII or EBCDIC)</td>
+    </tr>
+    <tr><td>3525</td>
+        <td><a href="#cardpch">Card punch</a></td>
+        <td>Disk file (ASCII or EBCDIC)</td>
+    </tr>
+    <tr><td>1403, 3211</td>
+        <td><a href="#printer">Line printers</a></td>
+        <td>Disk file (ASCII)</td>
+    </tr>
+    <tr><td>3420, 3480</td>
+        <td><a href="#tapedev">Tape drives</a></td>
+        <td>Disk file, CDROM, or SCSI tape</td>
+    </tr>
+    <tr><td>3088</td>
+        <td><a href="#ctca">Channel-to-channel adapters</a></td>
+        <td>TCP socket</td>
+    </tr>
+    <tr><td>3310, 3370, 9336<br>0671</td>
+        <td><a href="#fbadasd">FBA direct access storage devices</a></td>
+        <td>Disk file</td>
+    </tr>
+    <tr><td>2311, 2314, 3330<br>3340, 3350, 3375<br>3380, 3390</td>
+        <td><a href="#ckddasd">CKD direct access storage devices</a></td>
+        <td>Disk file</td>
+    </tr>
+    </table>
+<dt><code><em>arguments</em></code>
+<dd>is a list of parameters whose meaning depends on the device type.
+    The arguments required for each class of device are shown below.
+</dl>
+<h3>Arguments required for each device type</h3>
+<dl>
+<p>
+<a name="loc3270">
+<dt><em>Local non-SNA 3270 devices</em>
+<dd>No arguments are required for this device type.  To use this
+    device, a tn3270 client must connect to the host Linux machine
+    via the port number specified in the CNSLPORT parameter.
+    A valid tn3270 device type, such as IBM-3278, must be used.
+    If your tn3270 client software allows you to specify a device
+    type suffix (for example, IBM-3278@001F) then you can use the
+    suffix to connect the client to a specific device number.
+    If no suffix is specified, then the client will be connected
+    to the first available 3270 device.
+<p>
+<a name="conprkb">
+<dt><em>Console printer-keyboard devices</em>
+<dd>No arguments are required for this device type.  To use this
+    device, a telnet client must connect to the host Linux machine
+    via the port number specified in the CNSLPORT parameter.
+    If your telnet client software allows you to specify a device
+    type suffix (for example, ansi@0009) then you can use the
+    suffix to connect the client to a specific device number.
+    If no suffix is specified, then the client will be connected
+    to the first available 1052 or 3215 device.
+<p>
+<a name="cardrdr">
+<dt><em>Card reader devices</em>
+<dd>The argument specifies the name of a file containing card images.
+    Additional arguments may be specified after the file name:
+    <p>
+    <dl>
+    <dt><code>ebcdic</code>
+    <dd>specifies that the file contains fixed length 80-byte EBCDIC
+        records with no line-end delimiters.
+    <dt><code>ascii</code>
+    <dd>specifies that the file contains variable length lines of
+        ASCII characters delimited by line feeds or carriage return
+        line feed sequences at the end of each line.
+    <dt><code>trunc</code>
+    <dd>specifies, for ASCII files, that lines longer than 80
+        characters are truncated instead of producing a unit check
+        error.
+    <dt><code>eof</code>
+    <dd>specifies that unit exception status is presented after
+        reading the last card in the file.  If <code>eof</code> is not
+        specified, then end of file results in unit check status
+        with intervention required in the sense bytes.
+    </dl>
+    <p>
+    If neither <code>ebcdic</code> nor <code>ascii</code> is
+    specified, then the device handler attempts to detect the
+    format of the card image file when the device is first accessed.
+<p>
+<a name="cardpch">
+<dt><em>Card punch devices</em>
+<dd>The argument specifies the name of a file to which the punched
+    output will be written.
+    Additional arguments may be specified after the file name:
+    <p>
+    <dl>
+    <dt><code>ascii</code>
+    <dd>specifies that the file will be written as variable length
+        lines of ASCII characters delimited by line feeds or
+        carriage return line feed sequences at the end of each line.
+        Trailing blanks are removed from each line.
+        If the <code>ascii</code> argument is not specified, the
+        file is written as fixed length 80-byte EBCDIC records with
+        no line-end delimiters.
+    <dt><code>crlf</code>
+    <dd>specifies, for ASCII files, that carriage return line feed
+        sequences are written at the end of each line.
+        If the <code>crlf</code> argument is not specified, then
+        line-feeds only are written at the end of each line.
+    </dl>
+<p>
+<a name="printer">
+<dt><em>Line printer devices</em>
+<dd>The argument specifies the name of a file to which the printer
+    output will be written.  The output is written in the form of
+    variable length lines of ASCII characters delimited by line
+    feeds or by carriage return line feed sequences.  Trailing
+    blanks are removed from each line.  Carriage control characters
+    are translated to blank lines or ASCII form feed characters.
+    If the file exists it will be overwritten.
+    Additional arguments may be specified after the file name:
+    <p>
+    <dl>
+    <dt><code>crlf</code>
+    <dd>specifies, for ASCII files, that carriage return line feed
+        sequences are written at the end of each line.
+        If the <code>crlf</code> argument is not specified, then
+        line-feeds only are written at the end of each line.
+    </dl>
+<p>
+<a name="tapedev">
+<dt><em>Emulated tape devices</em>
+<dd>Four types of emulation are supported:
+    <dl>
+    <p><dt><b>SCSI tapes</b>
+    <dd>The argument specifies the tape device name (usually
+        <b><i>/dev/st0</i></b>).  SCSI tapes are read and written
+        using variable length EBCDIC blocks and filemarks exactly
+        like a mainframe tape volume.
+    <p><dt><b>Optical Media Attach (OMA) virtual files</b>
+    <dd>These are read-only files which usually reside on CDROM.
+        OMA virtual tapes consist of one CDROM file corresponding
+        to each physical file of the emulated tape.  An ASCII text
+        file called the tape descriptor file (TDF) specifies the
+        names of the files which make up the virtual tape.
+        The argument specifies the name of the tape descriptor
+        file (for example <b><i>/cdrom/tapes/uaa196.tdf</i></b>)
+        <p>Each file on the virtual tape can be in one of three
+        formats:
+        <dl>
+            <dt><code>TEXT</code>
+            <dd><b><i>TEXT</i></b> files consist of variable length
+                ASCII records delimited by carriage return line feed
+                sequences at the end of each record.  Each record is
+                translated to EBCDIC and presented to the program as
+                one physical tape block.
+            <dt><code>FIXED <em>nnnnn</em></code>
+            <dd><b><i>FIXED</i></b> files consist of fixed length
+                EBCDIC blocks of the specified length
+                (<code><em>nnnnn</em></code>)
+            <dt><code>HEADERS</code>
+            <dd><b><i>HEADERS</i></b> files consist of variable
+                length EBCDIC blocks.  Each block is preceded by a
+                12-byte header.
+        </dl>
+        <p>If you have any IBM manuals in Bookmanager format on CDROM,
+        you can see some examples of TDF files in the
+        <b><i>\TAPES</i></b> directory on the CDROM.
+    <p><dt><b>AWSTAPE files</b>
+    <dd>These contain a complete tape in one file.  AWSTAPE files
+        consist of variable length EBCDIC blocks.  Each block is
+        preceded by a 6-byte header.  Filemarks are represented by
+        a 6-byte header with no data.  This is the same format as is
+        used by the P/390.
+        The argument specifies the location of the AWSTAPE file
+        (for example <b><i>ickdsf.ipl</i></b>)
+    <p><dt><b>HET files</b>
+    <dd>These contain a complete tape in one file and have the same
+        structure as the AWSTAPE format with the added ability to have
+        compressed data.
+        The first argument specifies the location of the HET file.  The
+        filename must end with ".het" to be recognized by Hercules as an
+        HET file.
+        (for example <b><i>023178.het</i></b>)
+        <p>Additional arguments that allow you to control various HET settings
+        are:
+        <dl>
+            <dt><code>AWSTAPE</code>
+            <dd>The <b><i>AWSTAPE</i></b> argument causes HET files to
+                be written in AWSTAPE format.  This basically, disables
+                the additional features provided by the HET format.
+            <dt><code>COMPRESS=<em>n</em></code>
+            <dt><code>IDRC=<em>n</em></code>
+            <dd><b><i>COMPRESS</i></b> and <b><i>IDRC</i></b> control
+                whether compression should be used when writing to HET
+                files.  The value <code><em>n</em></code> can be <b>1</b>
+                to turn on compression (the default) or <b>0</b> to turn
+                it off.  <b><i>IDRC</i></b> is a currently a synonym for
+                <b><i>COMPRESS</i></b>, but may be used in the future to
+                control other emulated tape drive features.
+            <dt><code>METHOD=<em>n</em></code>
+            <dd>The <b><i>METHOD</i></b> option allows you to specify
+                which compression method to use.  You may specify
+                <b><i>1</i></b> for ZLIB compression or <b><i>2</i></b>
+                for BZIP2 compression.  The default is <b><i>1</i></b>.
+            <dt><code>LEVEL=<em>n</em></code>
+            <dd>The <b><i>LEVEL</i></b> option controls the level of
+                compression.  It ranges from <b><i>1</i></b> for fastest
+                compression to <b><i>9</i></b> for best compression.
+                The default is <b><i>4</i></b>.
+            <dt><code>CHUNKSIZE=<em>nnnnn</em></code>
+            <dd>The <b><i>CHUNKSIZE</i></b> option allows you to create
+                                HET files that contain different chunk sizes.  The AWSTAPE
+                                (and therefore the HET) format allows each tape block to be
+                                logically broken up into smaller chunks.  For instance, if
+                                your S/3x0 application creates tapes with a block size of
+                                27998, those blocks would be broken down into
+                                <code><em>nnnnn</em></code> sized chunks.  To be honest, I
+                                can't think of a reason you'd want to change this since
+                                decreasing it may reduce compression performance, but it's
+                                there if you want it.  The range is from <b><i>4096</i></b>
+                                to <b><i>65535</i></b>.  The latter being the default.
+        </dl>
+    </dl>
+<p>
+<a name="ctca">
+<dt><em>Channel-to-channel adapters</em>
+<dd>The first argument defines the emulation type, and the remaining
+    arguments depend on the emulation type.  The following emulation
+    types are defined:
+    <dl>
+    <p><dt><b>CTCI</b>
+    <dd>A point-to-point IP connection with the TCP/IP stack of the
+        driving system on which Hercules is running.  See the
+        <a href="herctcp.html">Hercules TCP/IP</a> page for details.
+    </dl>
+    <p>If the first parameter is not one of the recognized CTC emulation
+    types, then the driver will operate as in Hercules Version 1, using
+    Willem Konynenberg's vmnet package, as described in Axel Schwarzer's
+    <a href="http://www.kiyoinc.com/herc3088.html">CTCA 3088</a> document.
+<p>
+<a name="fbadasd">
+<dt><em>FBA DASD devices</em>
+<dd>The argument specifies the name of a file which contains the FBA
+    DASD image.  The file consists of fixed length 512-byte records,
+    each of which represents one physical block of the emulated disk.
+    <p>
+    To allow access to a minidisk within a full-pack FBA DASD image
+    file, two additional arguments may be specified after the file
+    name:
+    <p>
+    <dl>
+    <dt><code><em>origin</em></code>
+    <dd>specifies the relative block number within the DASD image
+        file at which the minidisk begins.  The number must be less
+        than the number of blocks in the file.  The default origin
+        is zero.
+    <dt><code><em>numblks</em></code>
+    <dd>specifies the number of 512-byte blocks in the minidisk.
+        This number must not exceed the number of blocks in the file
+        minus the origin.
+        If omitted, or if specified as an asterisk, then the minidisk
+        continues to the end of the DASD image file.
+    </dl>
+<p>
+<a name="ckddasd">
+<dt><em>CKD DASD devices</em>
+<dd>The argument specifies the name of a file containing the disk CKD
+    DASD image.  The file consists of a 512-byte device header record
+    followed by fixed length track images.  The length of each track
+    image depends on the emulated device type, and is always rounded
+    up to the next multiple of 512 bytes.
+    <p>
+    Volumes larger than 2GB (for example, the 3390 model 3)
+    are supported by spreading the data across more than one file.
+    Each file contains a whole number of cylinders.  The first file
+    (which contains cylinders 0-2518 in the case of a 3390) usually
+    has _1 as the last two characters of its name.  The ckddasd driver
+    allocates the remaining files by replacing the last character of
+    the file name by the characters 2, 3, etc.
+    <p>
+    <em>When CKD DASD images are spread across multiple files, you must
+    specify only the first file name (the file with suffix _1) in the
+    configuration statement!</em>
+    <p>
+    Alternatively, the argument may specify the name of a file containing
+    a compressed CKD DASD image.  The CKD driver will automatically detect
+    whether the file contains a regular CKD image or a compressed CKD
+    image.  Refer to the <a href="cckddasd.html">CCKD</a> page for details
+    of how to create and use compressed CKD DASD images.
+</dl>
+<p>
+A comment preceded by a pound sign may be appended to any device
+definition statement.
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 01 February 2001
+</BODY>
+</HTML>

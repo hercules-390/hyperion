@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# This command prints a track from a CKD DASD image file.
+# It uses the GNU Octal Dump (od) command to firstly obtain
+# the device geometry from the CKD header, and secondly to
+# print the track in hexadecimal format.
+#
+filename=$1
+cyl=$2
+head=$3
+
+if [ -z $filename ]; then
+    echo "Usage: dasdlist filename [cyl head]"
+    exit 1
+fi
+
+if [ ! -e $filename ]; then
+    echo "File $filename does not exist"
+    exit 1
+fi
+
+#
+# Check the first 8 bytes of the header for valid CKD DASD image file
+#
+ckdid=`od -An -s --read-bytes=8 $filename`
+if [ $ckdid != "CKD_P370" ]; then
+    echo "File $filename is not a CKD DASD image file"
+    exit 2
+fi
+
+#
+# The next 8 bytes contain the tracks/cyl and track length constants
+#
+heads=`od -An -tu4 --skip-bytes=8 --read-bytes=4 $filename`
+trklen=`od -An -tu4 --skip-bytes=12 --read-bytes=4 $filename`
+
+echo "$filename $(($heads)) trks/cyl, $(($trklen)) bytes/trk"
+
+#
+# If cylinder number is not given then exit
+#
+if [ -z $cyl ] || [ -z $head ]; then
+    echo "To dump a track specify dasdlist $filename cyl head"
+    exit 0
+fi
+
+#
+# Calculate the offset to the requested cylinder and track
+#
+offset=$((512+(($cyl*$heads)+$head)*$trklen))
+num=$(($trklen))
+
+#
+# Dump the requested track
+#
+echo "$filename Cyl $(($cyl)) Head $(($head))"
+echo "od -Ax -tx1 --skip-bytes=$offset --read-bytes=$num $filename"
+od -Ax -tx1 --skip-bytes=$offset --read-bytes=$num $filename

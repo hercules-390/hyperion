@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>Hercules Version 2:
+TCP/IP networking with Hercules</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+
+<h1>TCP/IP networking with Hercules</h1>
+<p>
+This page describes how to set up TCP/IP connectivity between
+a Hercules machine and the outside world.
+<p>
+Since Hercules runs as a user process under the control of a driving
+system (usually Linux/x86 or Windows), it does not have direct
+access to the driving system's network adapter.  This presents a
+problem in establishing connectivity between the network and the
+TCP/IP stack of an operating system running under Hercules.
+<p>
+But thanks to a technique originally demonstrated by
+Willem Konynenberg, it is possible to establish a virtual
+point-to-point link between the TCP/IP stack running under
+Hercules and the TCP/IP stack of the driving system.  The
+driving system is then used as a router to pass IP frames
+between the Hercules TCP/IP stack and the rest of the network,
+as shown in the following diagram:
+<p>
+<code><pre>
+        +--------------------------------+
+        |     Linux/x86 Driving System   |
+        |                                |
+        +-------------+                  |
+        |  Hercules   |                  +--------+
+        |-------------|                  |  eth0  |
+        |   OS/390    |      TCP/IP ------------------> Network
+        |   TCP/IP    |                  |10.1.2.1|
+        |-------------|         |        +--------+
+        |    CTCA     |         |        |
+        |192.168.200.1|         |        |
+        +------|------+   192.168.200.2  |
+        |  /dev/tun0          tun0       |
+        |      |                |        |
+        |      +----------------+        |
+        |       Virtual CTC link         |
+        |                                |
+        +--------------------------------+
+</pre></code>
+<p>
+The virtual CTC link is provided by the Universal TUN/TAP driver
+developed by Maxim Krasnyansky.  This driver creates a tunnel
+which appears to Hercules as a character device (/dev/tun0) and
+to the driving system as a virtual network interface (tun0).
+The Hercules 3088 driver makes the /dev/tun0 device appear as
+a CTCA (Channel to Channel Adapter) to the S/390 operating system
+running under Hercules.  Each end of the link has its own IP
+address which is distinct from the IP address of the driving
+system's real network adapter.
+<p>
+The Universal TUN/TAP driver can be used if the driving system is
+Linux, Solaris, or FreeBSD.  A Windows NT/2000 version of TUN/TAP
+has been proposed, but does not exist yet at the time of writing.
+
+<h2>Installing the Universal TUN/TAP Driver</h2>
+<p>
+If you are using Linux 2.4, you can skip this
+section, because the TUN/TAP driver is included as a standard
+feature of the kernel in Linux 2.4 and later.
+<p>
+Users of Linux 2.2, Solaris, or FreeBSD can install the TUN/TAP
+driver using the following procedure:
+<ol>
+<li>Download the file tun-1.0.tar.gz from
+    <a href="http://vtun.sourceforge.net/tun">
+    http://vtun.sourceforge.net/tun</a>
+<li>Build the driver using the following commands:
+    <code>
+    <br>tar xvzf tun-1.0.tar.gz
+    <br>cd tun-1.0
+    <br>configure
+    <br>make
+    <br>su </code>(enter the root password when prompted)<code>
+    <br>make install
+    <br>chgrp <em>xxxxx</em> /dev/tun*
+        </code>(where <em>xxxxx</em> is the group under which
+                you run Hercules)<code>
+    <br>chmod g+w /dev/tun*
+    <br>chmod o-r /dev/tun*
+    </code>
+<li>For Linux, edit the file <b><i>/etc/conf.modules</i></b>
+    and add the following line:
+    <br><code>alias char-major-90 tun</code>
+    <br>This causes the TUN/TAP driver to be loaded automatically
+    when the /dev/tun device is opened by Hercules.
+</ol>
+
+<h2>Enabling IP forwarding</h2>
+<p>
+You must ensure that your kernel is enabled for IP forwarding.
+Popular Linux distributions usually have a configuration option
+to enable IP forwarding or routing:
+<ul>
+<li>For RedHat, specify <code>net.ipv4.ip_forward=1</code> in
+    the <i><b>/etc/sysctl.conf</b></i> file.
+<li>For SuSE, specify <code>IP_FORWARD="yes"</code> in
+    the <i><b>/etc/rc.config</b></i> file.
+<li>If you cannot find this option in your distribution, the following
+    command should work on any Linux 2.x kernel:
+    <br><code>echo "1" > /proc/sys/net/ipv4/ip_forward</code>
+</ul>
+<p>
+Client systems which connect to TCP/IP applications running in
+the Hercules machine need to have a routing entry which defines
+the driving system as the gateway into the Hercules system.  An
+example route definition for a Unix client system is shown below:
+<code><pre>
+route add 192.168.200.1 gw 10.1.2.1
+</pre></code>
+<p>
+For a Windows client, go to Settings -> Control Panel -> Network ->
+Configuration -> TCP/IP -> Properties -> Gateway
+and add the driving system's IP address to the list of gateways.
+
+<h2>Defining the link in Hercules</h2>
+<p>
+You must define a pair of CTC devices in the Hercules configuration
+file.  The devices must be defined using an adjacent pair of even/odd
+device numbers such as 0A00 and 0A01, as in this example:
+<p><code>
+<br>0A00 3088 CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0
+<br>0A01 3088 CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0
+</code>
+<p>
+Two IP addresses must be assigned, one for the driving system's
+end of the link, and one for the Hercules end of the link.  For
+this example I have chosen 192.168.200.1 for the Hercules IP
+address, and 192.168.200.2 for the driving system's IP address.
+Since this is a point-to-point link, any addresses may be chosen,
+provided that the network part of the address (192.168.200 in
+this example) does not conflict with any existing network
+addresses used in your IP network.
+<p>
+In the above example, 1500 is the maximum transmission unit (MTU)
+size, and 255.255.255.0 is the netmask.
+
+<h2>Configuring the TUN interface</h2>
+<p>
+The tun0 network interface in the driving system must be configured
+as a point-to-point link.  Because of the design of the TUN/TAP driver
+(the tun0 network interface does not exist until Hercules has opened
+the /dev/tun0 device), a special program called hercifc is provided
+to configure the tun0 network interface.  This program is launched
+automatically by Hercules 3088 CTC device initialization.
+<p>
+The Hercules <b><i>make install</i></b> procedure installs the
+hercifc program into /usr/bin with an owner of root and setuid
+file permissions which allow anyone to execute the program.  You
+may wish to alter the file permissions so that the hercifc program
+can only be executed by a userid in a particular group:
+    <code>
+    <br>su </code>(enter the root password when prompted)<code>
+    <br>chgrp <em>xxxxx</em> /usr/bin/hercifc
+        </code>(where <em>xxxxx</em> is the group under which
+                you run Hercules)<code>
+    <br>chmod o-rwx /usr/bin/hercifc
+    <br>exit
+    </code>
+
+<h2>Configuring the Hercules TCP/IP stack</h2>
+<h4>TCP/IP for VSE</h4>
+<p>
+This is an example of the configuration statements which you need
+to include in the IPINIT00.L member of PRD1.BASE:
+<pre>
+SET IPADDR   = 192.168.200.001
+SET MASK     = 255.255.255.000
+DEFINE LINK,ID=CTCA00,TYPE=CTCA,DEV=(A00,A01),MTU=1500
+DEFINE ROUTE,ID=LINUX,LINKID=CTCA00,IPADDR=0.0.0.0
+</pre>
+<p>
+The CTC devices should be defined to VSE using the following
+statements in the $IPLxxx.PROC procedure in IJSYSRS.SYSLIB:
+<pre>
+ADD A00:A01,CTCA,EML
+</pre>
+
+<h4>TCP/IP for MVS</h4>
+<p>
+This is an example of the configuration statements which you need
+to include in the TCPIP.PROFILE dataset:
+<pre>
+DEVICE CTCDEV1 CTC A00
+LINK CTCLINK1 CTC 0 CTCDEV1
+HOME 192.168.200.1 CTCLINK1
+GATEWAY
+; Network      First Hop     Link Name Size   Subnet Mask  Subnet Value
+192.168.200.2  =             CTCLINK1  1500   HOST
+DEFAULTNET     192.168.200.2 CTCLINK1  1500   0
+START CTCDEV1
+</pre>
+<p>
+The CTC devices A00 and A01 should be defined to MVS as device
+type 3088 in the IODF.
+
+<h4>Linux for S/390</h4>
+<p>
+This is an example of the network definitions which you need
+in a Linux/390 system running under Hercules:
+<pre>
+ifconfig ctc0 192.168.200.1 pointopoint 192.168.200.2 mtu 1500
+route add defaultroute gw 192.168.200.2
+</pre>
+<p>
+Linux/390 will autodetect the CTC devices A00 and A01
+at startup and will assign the interface name ctc0.
+
+<p><center><hr width=15% noshade>
+<a href="hercconf.html"><img src="gifs/back.gif" border=0></a>
+</center>
+
+<small>
+<p>Last updated 01 February 2000
+</BODY>
+</HTML>

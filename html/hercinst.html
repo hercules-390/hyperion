@@ -1,0 +1,229 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: Installation and Operation</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+
+<h1>Installing and Operating Hercules Version 2</h1>
+
+<h2>Installation Procedure</h2>
+<h3>Building from source</h3>
+<p>These instructions apply to the Linux version. Volker Bandke has
+instructions on how to build the Win32 version at <a
+href="http://www.bsp-gmbh.com/hercules/nude_w32.html">http://www.bsp-gmbh.com/hercules/nude_w32.html</a>.
+<ol>
+<li>Download the distribution file
+<a href="hercules-2.12.tar.gz">hercules-2.12.tar.gz</a>
+<p>
+<em>Notes:</em>
+<ol>
+<li>By downloading this file you agree to the terms
+    of the <a href="herclic.html">Q Public Licence</a>.
+<li>IE4 may report "problem with security settings or file does
+    not exist" when downloading this file.  I do not know why.
+    If you experience this problem, use IE5 or Netscape Navigator
+    instead.
+</ol>
+<p>
+<li>Use these commands to unzip the distribution file:
+<pre>tar xvzf ../hercules-2.12.tar.gz
+cd hercules-2.12</pre>
+<li>Build the executable files:
+<br><code>make </code>[<code>HOST_ARCH=<i>arch</i></code>]<br>
+The <code>HOST_ARCH</code> argument is optional. It specifies the machine
+architecture, for setting options on the C compiler. Possible values are:
+<ul>
+<li><code>i386</code>: Intel 386 and above. No architecture optimizations
+are done.
+<li><code>i586</code>: Pentium and above. If specified, the resulting
+package will not run on 386 or 486 systems.
+<li><code>i686</code>: Pentium Pro and Pentium II. If specified, the
+resulting package will not run on 386, 486, or Pentium systems.
+<li>Anything else will remove the Intel-specific compiler flag.
+</ul>
+The default is i586, since most Hercules users appear to be running
+Pentiums. If building for an Intel-based system, you must not give HOST_ARCH
+an undefined value, as this will cause Hercules to break in weird and
+wonderful ways. If, on the other hand, you are building for a non-Intel
+platform, you must give HOST_ARCH a non-Intel value.
+<li>Install the programs: as root,
+<br><code>make install</code>
+</ol>
+
+<em>Important:</em>
+You must use the egcs compiler and the glibc2 library.
+Refer to the <a href="hercfaq.html#software">
+Hercules Frequently-Asked Questions</a> page for required
+compiler and other software levels.
+
+<h3>Installing prebuilt RPMs:</h3>
+<ol>
+<li>Download the RPM file you want:
+<ul>
+<li><a href="hercules-2.12-1.i686.rpm">hercules-2.12-1.i686.rpm</a>: Intel
+Pentium Pro/Pentium II
+<li><a href="hercules-2.12-1.i586.rpm">hercules-2.12-1.i586.rpm</a>: Intel
+Pentium
+<li><a href="hercules-2.12-1.i386.rpm">hercules-2.12-1.i386.rpm</a>: Intel 386
+<li><a href="hercules-2.12-1.alpha.rpm">hercules-2.12-1.alpha.rpm</a>: Alpha
+(all flavors)
+</ul>
+<li>Install the RPM:
+<br><code>rpm -Uvh</code> <i>RPMfile</i>
+</ol>
+This will leave the Hercules executables in /usr/bin, where you can run them
+from anywhere. Sample configuration files will be placed in /etc/hercules,
+and the IPLable card deck for the ZZSA standalone utility will be placed in
+/var/share/hercules.
+
+<h2>Configuration Procedure</h2>
+<p>
+You will need to amend the configuration file
+<em><b>hercules.cnf</b></em> to reflect your device layout and intended
+mode of operation (S/370, ESA/390, or z/Architecture).
+See the <a href="hercconf.html">Hercules Configuration File</a> page for
+a complete description.
+
+<h2>Creating DASD volumes</h2>
+<p>
+The <a href="hercload.html">Creating Hercules DASD</a> page
+describes various methods of creating and loading virtual DASD
+volumes. The compressed CKD DASD support is described in <a
+href="cckddasd.html">this page</a>.
+
+<h2>Operating Procedure</h2>
+<p>
+<em>Note: If you intend to run any licensed software on your PC
+using Hercules, it is your responsibility to ensure that you do not
+violate the software vendor's licensing terms.</em>
+
+<h4>Loading a standalone program or operating system</h4>
+<p>
+To start Hercules enter this command at the Unix shell prompt:
+<pre><code>hercules [-f <em>filename</em>] [&gt; <em>logfile</em>]</code></pre>
+where <code><em>filename</em></code> is the name of the configuration
+file
+(the default is <b><em>hercules.cnf</em></b>),
+and <code><em>logfile</em></code> is an optional log file which will
+receive a copy of all messages displayed on the control panel.
+
+<p>
+Next connect a tn3270 client to the console port (normally port 3270).
+The client will be connected to the first 3270 device address specified
+in the configuration file (this should be the master console address).
+If your master console is a 1052 or 3215, connect a telnet client
+instead of a tn3270 client.
+
+<p>
+Now you can enter an ipl command from the control panel.
+
+
+<h4>Panel commands</h4>
+<p>
+<pre>
+cpu <em>n</em>   Set target CPU for subsequent commands
+psw     Display program status word
+gpr     Display general-purpose registers
+fpr     Display floating-point registers
+cr      Display control registers
+ar      Display access registers
+pr      Display prefix register
+
+r<em>x</em>      Display 64 bytes starting at real address x
+r<em>x.n</em>    Display n bytes starting at real address x
+r<em>x-y</em>    Display real storage locations x to y
+v<em>x</em>      Display 64 bytes starting at virtual address x
+v<em>x.n</em>    Display n bytes starting at virtual address x
+v<em>x-y</em>    Display virtual storage locations x to y
+f-<em>x</em>     Mark storage frame at address x unusable
+f+<em>x</em>     Mark storage frame at address x usable
+
+r<em>x</em>=<em>hexvalue</em>   Alter real storage location x
+v<em>x</em>=<em>hexvalue</em>   Alter virtual storage location x
+
+t+      Turn on CPU instruction tracing
+t-      Turn off CPU instruction tracing
+s+      Turn on CPU single-step mode
+s-      Turn off CPU single-step mode
+g       Go (turn off CPU single-step mode and start CPU)
+
+b<em>x</em>      Set breakpoint at address x
+b-      Clear breakpoint
+
+t+<em>xxxx</em>  Turn on CCW tracing for device number xxxx
+t-<em>xxxx</em>  Turn off CCW tracing for device number xxxx
+s+<em>xxxx</em>  Turn on CCW single-step mode for device number xxxx
+s-<em>xxxx</em>  Turn off CCW single-step mode for device number xxxx
+i<em>xxxx</em>   Generate an I/O attention interrupt for device number xxxx
+k<em>xxxx</em>   Print CCKD internal trace for device number xxxx
+ds<em>xxxx</em>  Display subchannel status for device number xxxx
+
+archmode S/370|ESA/390|ESAME  Set architecture mode
+loadparm [<em>xxxxxxxx</em>]  Display or set the IPL parameter
+loadcore <em>xxxxxxxx</em>    Load core image from file xxxxxxxx
+ipl <em>xxxx</em>             IPL from device number xxxx
+
+ext      Generate an external interrupt
+stop     Stop CPU
+start    Start CPU
+stopall  Stop all CPUs
+startall Start all CPUs
+restart  Generate a restart interrupt and start CPU
+store    Store status
+ipending Display pending interrupts
+quit|exit Terminate Hercules
+
+devlist  Display configured devices
+attach <em>xxxx</em> <em>type</em> [ <em>args</em> ]  Create device xxxx
+detach <em>xxxx</em>  Delete device xxxx
+define <em>xxxx</em> <em>yyyy</em>  Rename device number xxxx to yyyy
+devinit <em>xxxx</em> [ <em>args</em> ]  Reinitialize device xxxx
+
+.<em>text</em>   Enter an SCP command via the HMC system console
+!<em>text</em>   Enter an SCP priority message via the HMC system console
+
+toddrag [<em>n</em>]  Display or set TOD clock drag factor
+
+pgmtrace <em>n</em>   Turn on program interrupt tracing for interrupt code n
+pgmtrace -<em>n</em>  Turn off program interrupt tracing for interrupt code n
+
+panrate slow &#124 fast &#124 <em>n</em>   Set panel refresh rate to n milliseconds
+</pre>
+
+<p>
+The <em>attach</em> and <em>detach</em> commands are used to dynamically
+add or remove devices from the configuration,
+and the <em>define</em> command can be used to alter the device number
+of an existing device.
+<p>
+The <em>devinit</em> command can be used to reopen an existing device.
+The <em>args</em> (if specified) override the arguments
+specified in the configuration file for this device.
+The device type cannot be changed and must not be specified.
+This command can be used to rewind a tape, to mount a new tape or
+disk image file on an existing device, to load a new card deck
+into a reader, or to close and reopen a printer or punch device.
+<p>
+In single-step mode, pressing the enter key will advance to the
+next instruction.
+<p>
+There is also an alternate semi-graphical control panel.  Press Esc to
+switch between the command line format and the semi-graphical format.
+Press ? to obtain help in either control panel.
+
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+
+<p><center><hr width=15% noshade>
+<a href="hercules.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+
+<small>
+<p>Last updated 13 February 2001
+</BODY>
+</HTML>
