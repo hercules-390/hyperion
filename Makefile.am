@@ -100,3 +100,6 @@ install-exec-local:
 	chmod +s $(DESTDIR)$(bindir)/hercifc
 	rm hercifc
 endif
+
+%.s: %.c
+	$(COMPILE) -S $<
