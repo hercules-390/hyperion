@@ -514,9 +514,9 @@ DEF_INST(ecpsvm_free_ccwstor)
 DEF_INST(ecpsvm_locate_vblock)
 {
     U32  vdev;
-    U16  vchix;
-    U16  vcuix;
-    U16  vdvix;
+    U32  vchix;
+    U32  vcuix;
+    U32  vdvix;
     VADR vchtbl;
     VADR vch;
     VADR vcu;
@@ -1750,9 +1750,9 @@ DEF_INST(ecpsvm_dispatch_main)
 /******************************************************/
 DEF_INST(ecpsvm_locate_rblock)
 {
-    U16 chix;           /* offset of RCH in RCH Array */
-    U16 cuix;           /* Offset of RCU in RCU Array */
-    U16 dvix;           /* Offset of RDV in RDV Array */
+    U32 chix;           /* offset of RCH in RCH Array */
+    U32 cuix;           /* Offset of RCU in RCU Array */
+    U32 dvix;           /* Offset of RDV in RDV Array */
     VADR rchixtbl;      /* RCH Index Table */
     VADR rchtbl;        /* RCH Array */
     VADR rcutbl;        /* RCU Array */
@@ -1779,7 +1779,7 @@ DEF_INST(ecpsvm_locate_rblock)
     /* Obtain the RCH offset */
     chix=EVM_LH(rchixtbl+((rdev & 0xf00) >> 7));
 
-    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n"),chix);
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n"),chix));
 
     /* Check if Bit 0 set (no RCH) */
     if(chix & 0x8000)
@@ -1823,7 +1823,7 @@ DEF_INST(ecpsvm_locate_rblock)
             return;
         }
     }
-    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n"),cuix);
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n"),cuix));
     rcutbl=EVM_L(arioct+8);
     rcublk=rcutbl+cuix;
     dvix=EVM_LH(rcublk+0x28+((rdev & 0x00f)<<1));
@@ -1844,8 +1844,8 @@ DEF_INST(ecpsvm_locate_rblock)
         */
         return;
     }
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n"),dvix));
     dvix<<=3;
-    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n"),dvix);
     rdvtbl=EVM_L(arioct+12);
     rdvblk=rdvtbl+dvix;
     DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"),rchblk,rcublk,rdvblk));
