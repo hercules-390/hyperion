@@ -110,23 +110,35 @@ hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 	   machchk.c vector.c xstore.c \
 	   cmpsc.c sie.c timer.c \
 	   esame.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c \
-	   parser.c hetlib.c ieee.c \
+	   parser.c hetlib.c ieee.c eightxff.c \
 	   machdep.h $(FTHREADS)
 
 
 hercifc_SOURCES = hercifc.c version.c
 
-dasdinit_SOURCES = dasdinit.c dasdutil.c version.c
+dasdinit_SOURCES = dasdinit.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdisup_SOURCES = dasdisup.c dasdutil.c version.c
 
-dasdload_SOURCES = dasdload.c dasdutil.c version.c
+dasdisup_SOURCES = dasdisup.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdls_SOURCES = dasdls.c dasdutil.c version.c
 
-dasdcat_SOURCES = dasdcat.c dasdutil.c version.c
+dasdload_SOURCES = dasdload.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c
+
+dasdls_SOURCES = dasdls.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+
+
+dasdcat_SOURCES = dasdcat.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+
+
+dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+
 
 tapecopy_SOURCES = tapecopy.c version.c
 
@@ -134,15 +146,15 @@ tapemap_SOURCES = tapemap.c version.c
 
 tapesplt_SOURCES = tapesplt.c version.c
 
-cckdcdsk_SOURCES = cckdcdsk.c cckdend.c version.c
+cckdcdsk_SOURCES = cckdcdsk.c cckdend.c version.c eightxff.c
 
-cckdcomp_SOURCES = cckdcomp.c cckdcdsx.c cckdend.c version.c
+cckdcomp_SOURCES = cckdcomp.c cckdcdsx.c cckdend.c version.c eightxff.c
 
-ckd2cckd_SOURCES = ckd2cckd.c version.c
+ckd2cckd_SOURCES = ckd2cckd.c version.c eightxff.c
 
-cckd2ckd_SOURCES = cckd2ckd.c cckdend.c version.c
+cckd2ckd_SOURCES = cckd2ckd.c cckdend.c version.c eightxff.c
 
-cckdswap_SOURCES = cckdswap.c cckdend.c version.c
+cckdswap_SOURCES = cckdswap.c cckdend.c version.c eightxff.c
 
 hetget_SOURCES = hetget.c hetlib.c sllib.c version.c
 
@@ -191,66 +203,79 @@ EXTRA_PROGRAMS = hercifc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
 am_cckd2ckd_OBJECTS = cckd2ckd.$(OBJEXT) cckdend.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT)
 cckd2ckd_OBJECTS = $(am_cckd2ckd_OBJECTS)
 cckd2ckd_LDADD = $(LDADD)
 cckd2ckd_DEPENDENCIES =
 cckd2ckd_LDFLAGS =
 am_cckdcdsk_OBJECTS = cckdcdsk.$(OBJEXT) cckdend.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT)
 cckdcdsk_OBJECTS = $(am_cckdcdsk_OBJECTS)
 cckdcdsk_LDADD = $(LDADD)
 cckdcdsk_DEPENDENCIES =
 cckdcdsk_LDFLAGS =
 am_cckdcomp_OBJECTS = cckdcomp.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-	cckdend.$(OBJEXT) version.$(OBJEXT)
+	cckdend.$(OBJEXT) version.$(OBJEXT) eightxff.$(OBJEXT)
 cckdcomp_OBJECTS = $(am_cckdcomp_OBJECTS)
 cckdcomp_LDADD = $(LDADD)
 cckdcomp_DEPENDENCIES =
 cckdcomp_LDFLAGS =
 am_cckdswap_OBJECTS = cckdswap.$(OBJEXT) cckdend.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT)
 cckdswap_OBJECTS = $(am_cckdswap_OBJECTS)
 cckdswap_LDADD = $(LDADD)
 cckdswap_DEPENDENCIES =
 cckdswap_LDFLAGS =
-am_ckd2cckd_OBJECTS = ckd2cckd.$(OBJEXT) version.$(OBJEXT)
+am_ckd2cckd_OBJECTS = ckd2cckd.$(OBJEXT) version.$(OBJEXT) \
+	eightxff.$(OBJEXT)
 ckd2cckd_OBJECTS = $(am_ckd2cckd_OBJECTS)
 ckd2cckd_LDADD = $(LDADD)
 ckd2cckd_DEPENDENCIES =
 ckd2cckd_LDFLAGS =
 am_dasdcat_OBJECTS = dasdcat.$(OBJEXT) dasdutil.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdcat_OBJECTS = $(am_dasdcat_OBJECTS)
 dasdcat_LDADD = $(LDADD)
 dasdcat_DEPENDENCIES =
 dasdcat_LDFLAGS =
 am_dasdinit_OBJECTS = dasdinit.$(OBJEXT) dasdutil.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdinit_OBJECTS = $(am_dasdinit_OBJECTS)
 dasdinit_LDADD = $(LDADD)
 dasdinit_DEPENDENCIES =
 dasdinit_LDFLAGS =
 am_dasdisup_OBJECTS = dasdisup.$(OBJEXT) dasdutil.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdisup_OBJECTS = $(am_dasdisup_OBJECTS)
 dasdisup_LDADD = $(LDADD)
 dasdisup_DEPENDENCIES =
 dasdisup_LDFLAGS =
 am_dasdload_OBJECTS = dasdload.$(OBJEXT) dasdutil.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdload_OBJECTS = $(am_dasdload_OBJECTS)
 dasdload_LDADD = $(LDADD)
 dasdload_DEPENDENCIES =
 dasdload_LDFLAGS =
 am_dasdls_OBJECTS = dasdls.$(OBJEXT) dasdutil.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdls_OBJECTS = $(am_dasdls_OBJECTS)
 dasdls_LDADD = $(LDADD)
 dasdls_DEPENDENCIES =
 dasdls_LDFLAGS =
 am_dasdpdsu_OBJECTS = dasdpdsu.$(OBJEXT) dasdutil.$(OBJEXT) \
-	version.$(OBJEXT)
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdpdsu_OBJECTS = $(am_dasdpdsu_OBJECTS)
 dasdpdsu_LDADD = $(LDADD)
 dasdpdsu_DEPENDENCIES =
@@ -289,8 +314,8 @@ hercifc_LDFLAGS =
 @BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
 @BUILD_FTHREADS_TRUE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
 @BUILD_FTHREADS_TRUE@	parser.$(OBJEXT) hetlib.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	ieee.$(OBJEXT) fthreads.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	w32chan.$(OBJEXT)
+@BUILD_FTHREADS_TRUE@	ieee.$(OBJEXT) eightxff.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT) w32chan.$(OBJEXT)
 @BUILD_FTHREADS_FALSE@am_hercules_OBJECTS = w32ctca.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	impl.$(OBJEXT) config.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	panel.$(OBJEXT) version.$(OBJEXT) \
@@ -315,7 +340,7 @@ hercifc_LDFLAGS =
 @BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	parser.$(OBJEXT) hetlib.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	ieee.$(OBJEXT)
+@BUILD_FTHREADS_FALSE@	ieee.$(OBJEXT) eightxff.$(OBJEXT)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 hercules_LDADD = $(LDADD)
 hercules_DEPENDENCIES =
@@ -382,26 +407,26 @@ depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/dasdutil.Po $(DEPDIR)/dat.Po \
 @AMDEP_TRUE@	$(DEPDIR)/decimal.Po $(DEPDIR)/diagmssf.Po \
 @AMDEP_TRUE@	$(DEPDIR)/diagnose.Po $(DEPDIR)/dmap2hrc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/esame.Po $(DEPDIR)/external.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fbadasd.Po $(DEPDIR)/float.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fthreads.Po $(DEPDIR)/general1.Po \
-@AMDEP_TRUE@	$(DEPDIR)/general2.Po $(DEPDIR)/hercifc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetget.Po $(DEPDIR)/hetinit.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetlib.Po $(DEPDIR)/hetmap.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetupd.Po $(DEPDIR)/ieee.Po \
-@AMDEP_TRUE@	$(DEPDIR)/impl.Po $(DEPDIR)/io.Po $(DEPDIR)/ipl.Po \
-@AMDEP_TRUE@	$(DEPDIR)/machchk.Po $(DEPDIR)/opcode.Po \
-@AMDEP_TRUE@	$(DEPDIR)/panel.Po $(DEPDIR)/parser.Po \
-@AMDEP_TRUE@	$(DEPDIR)/plo.Po $(DEPDIR)/printer.Po \
-@AMDEP_TRUE@	$(DEPDIR)/service.Po $(DEPDIR)/sie.Po \
-@AMDEP_TRUE@	$(DEPDIR)/sllib.Po $(DEPDIR)/stack.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tapecopy.Po $(DEPDIR)/tapedev.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tapemap.Po $(DEPDIR)/tapesplt.Po \
-@AMDEP_TRUE@	$(DEPDIR)/timer.Po $(DEPDIR)/trace.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vector.Po $(DEPDIR)/version.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vm.Po $(DEPDIR)/vstore.Po \
-@AMDEP_TRUE@	$(DEPDIR)/w32chan.Po $(DEPDIR)/w32ctca.Po \
-@AMDEP_TRUE@	$(DEPDIR)/xstore.Po
+@AMDEP_TRUE@	$(DEPDIR)/eightxff.Po $(DEPDIR)/esame.Po \
+@AMDEP_TRUE@	$(DEPDIR)/external.Po $(DEPDIR)/fbadasd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/float.Po $(DEPDIR)/fthreads.Po \
+@AMDEP_TRUE@	$(DEPDIR)/general1.Po $(DEPDIR)/general2.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hercifc.Po $(DEPDIR)/hetget.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetinit.Po $(DEPDIR)/hetlib.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetmap.Po $(DEPDIR)/hetupd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ieee.Po $(DEPDIR)/impl.Po $(DEPDIR)/io.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ipl.Po $(DEPDIR)/machchk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/opcode.Po $(DEPDIR)/panel.Po \
+@AMDEP_TRUE@	$(DEPDIR)/parser.Po $(DEPDIR)/plo.Po \
+@AMDEP_TRUE@	$(DEPDIR)/printer.Po $(DEPDIR)/service.Po \
+@AMDEP_TRUE@	$(DEPDIR)/sie.Po $(DEPDIR)/sllib.Po \
+@AMDEP_TRUE@	$(DEPDIR)/stack.Po $(DEPDIR)/tapecopy.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapedev.Po $(DEPDIR)/tapemap.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapesplt.Po $(DEPDIR)/timer.Po \
+@AMDEP_TRUE@	$(DEPDIR)/trace.Po $(DEPDIR)/vector.Po \
+@AMDEP_TRUE@	$(DEPDIR)/version.Po $(DEPDIR)/vm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vstore.Po $(DEPDIR)/w32chan.Po \
+@AMDEP_TRUE@	$(DEPDIR)/w32ctca.Po $(DEPDIR)/xstore.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -600,6 +625,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/diagmssf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/diagnose.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dmap2hrc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/eightxff.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/esame.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/external.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fbadasd.Po@am__quote@

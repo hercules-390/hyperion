@@ -18,7 +18,6 @@ int cckd_chkdsk(int, FILE *, int);
 int cckd_comp (int, FILE *);
 #ifndef CCKD_COMP_NOMAIN
 int syntax ();
-BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being

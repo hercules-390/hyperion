@@ -82,7 +82,6 @@ void    cckd_gc_combine (DEVBLK *, int, int, int);
 int     cckd_gc_len (DEVBLK *, BYTE *, off_t, int, int);
 void    cckd_print_itrace(DEVBLK *);
 
-extern  char eighthexFF[];
 BYTE    cckd_empty_l2tab[CCKD_L2TAB_SIZE];  /* Empty Level 2 table   */
 
 /*-------------------------------------------------------------------*/
@@ -342,7 +341,8 @@ int             i;                      /* Index                     */
     }
 
     /* write some statistics */
-    cckd_sf_stats (dev);
+    if (!dev->batch)
+        cckd_sf_stats (dev);
 
     /* free the cckd extension */
     dev->cckd_ext= NULL;
@@ -778,7 +778,7 @@ int             i;                      /* Loop index                */
     cckd = dev->cckd_ext;
 
     if (!cckd->threading || dev->ckdcachenbr < cckd->max_ra + 2 ||
-        cckd->max_ra < 1) return;
+        cckd->max_ra < 1 || dev->batch) return;
 
     /* initialize */
     memset ( ra, 0, sizeof (ra));

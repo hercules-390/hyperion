@@ -42,22 +42,28 @@ hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 	   machchk.c vector.c xstore.c \
 	   cmpsc.c sie.c timer.c \
 	   esame.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c \
-	   parser.c hetlib.c ieee.c \
+	   parser.c hetlib.c ieee.c eightxff.c \
 	   machdep.h $(FTHREADS)
 
 hercifc_SOURCES = hercifc.c version.c
 
-dasdinit_SOURCES = dasdinit.c dasdutil.c version.c
+dasdinit_SOURCES = dasdinit.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdisup_SOURCES = dasdisup.c dasdutil.c version.c
+dasdisup_SOURCES = dasdisup.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdload_SOURCES = dasdload.c dasdutil.c version.c
+dasdload_SOURCES = dasdload.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdls_SOURCES = dasdls.c dasdutil.c version.c
+dasdls_SOURCES = dasdls.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdcat_SOURCES = dasdcat.c dasdutil.c version.c
+dasdcat_SOURCES = dasdcat.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
-dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c
+dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c eightxff.c \
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
 tapecopy_SOURCES = tapecopy.c version.c
 
@@ -65,15 +71,15 @@ tapemap_SOURCES = tapemap.c version.c
 
 tapesplt_SOURCES = tapesplt.c version.c
 
-cckdcdsk_SOURCES = cckdcdsk.c cckdend.c version.c
+cckdcdsk_SOURCES = cckdcdsk.c cckdend.c version.c eightxff.c
 
-cckdcomp_SOURCES = cckdcomp.c cckdcdsx.c cckdend.c version.c
+cckdcomp_SOURCES = cckdcomp.c cckdcdsx.c cckdend.c version.c eightxff.c
 
-ckd2cckd_SOURCES = ckd2cckd.c version.c
+ckd2cckd_SOURCES = ckd2cckd.c version.c eightxff.c
 
-cckd2ckd_SOURCES = cckd2ckd.c cckdend.c version.c
+cckd2ckd_SOURCES = cckd2ckd.c cckdend.c version.c eightxff.c
 
-cckdswap_SOURCES = cckdswap.c cckdend.c version.c
+cckdswap_SOURCES = cckdswap.c cckdend.c version.c eightxff.c
 
 hetget_SOURCES = hetget.c hetlib.c sllib.c version.c
 

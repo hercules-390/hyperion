@@ -28,8 +28,7 @@ int valid_trk (int, unsigned char *, int, int);
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
 /*-------------------------------------------------------------------*/
-BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-int          errs = 0;
+int         errs = 0;
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being

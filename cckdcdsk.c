@@ -54,9 +54,6 @@ int syntax ();
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
 /*-------------------------------------------------------------------*/
-
-BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
@@ -155,8 +152,6 @@ int syntax()
                 "       ro open file readonly, no repairs\n");
     return -1;
 }
-#else
-extern BYTE eighthexFF[8];
 #endif
 
 /*-------------------------------------------------------------------*/
