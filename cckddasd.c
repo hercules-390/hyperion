@@ -810,8 +810,7 @@ int             maxlen;                 /* Size for cache entry      */
     dev->bufcur   = blkgrp;
     dev->bufoff   = 0;
     dev->bufoffhi = CFBA_BLOCK_SIZE;
-    dev->buflen   = cache_getval (CACHE_DEVBUF, dev->cache)
-                  - CKDDASD_TRKHDR_SIZE;
+    dev->buflen   = CFBA_BLOCK_SIZE;
     cache_setval  (CACHE_DEVBUF, dev->cache, dev->buflen);
     dev->bufsize  = cache_getlen (CACHE_DEVBUF, dev->cache);
     dev->comp     = cbuf[0] & CCKD_COMPRESS_MASK;
