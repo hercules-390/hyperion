@@ -149,6 +149,35 @@ The following system parameters may be specified:
     When ESAME is specified, the machine will always IPL in ESA/390 mode,
     but is capable of being switched into z/Architecture mode after IPL.
     This is handled automatically by all z/Architecture operating systems.
+<dt><code>DEVTMAX -1 &#124 0 &#124 1-n</code>
+<dd>specifies the maximum number of device threads allowed.
+    <p>Specify <code>-1</code> to cause 'one time only' temporary threads to be
+	created to service each I/O request to a device. Once the I/O request is
+	complete, the thread exits. Subsequent I/O to the same device will cause
+	another worker thread to be created again.
+    <p>Specify <code>0</code> to cause an unlimited number of 'semi-permanent'
+	threads to be created on an 'as-needed' basis. With this option, a thread
+	is created to service an I/O request for a device if one doesn't already
+	exist, but once the I/O is complete, the thread enters an idle state waiting
+	for new work. If a new I/O request for the device arrives before the timeout
+	period expires, the existing thread will be reused. The timeout value is
+	currently hard coded at 5 minutes. Note that this option can cause one thread
+	(or possibly more) to be created for each device defined in your
+	configuration. Specifying <code>0</code> means there is no limit to the
+	number of threads that can be created.
+	<p>Specify a value from <code>1</code> to <code>n</code> to set an upper limit
+	to the number of threads that can be created to service any I/O request to
+	any device. Like the <code>0</code> option, each thread, once done servicing
+	an I/O request, enters an idle state. If a new request arrives before the
+	timeout period expires, the thread is reused. If all threads are busy when
+	a new I/O request arrives however, a new thread is created <i>only</i> if the
+	specified maximum has not yet been reached. If the specified maximum number
+	of threads has already been reached, then the I/O request is placed in a queue
+	and will be serviced by the first available thread (i.e. by whichever thread
+	becomes idle first). This option was created to address a threading issue
+	(possibly related to the cygwin Pthreads implementation) on Windows systems.
+	<p>The default for Windows is <code>8</code>. The default for all other systems
+	is <code>0</code>.
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any system
@@ -483,6 +512,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 01 February 2001
+<p>Last updated 20 April 2001
 </BODY>
 </HTML>
