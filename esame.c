@@ -5107,7 +5107,7 @@ BYTE    dvalue, tvalue;
         /* Adjust source addr, destination addr and length */
         addr1++; addr1 &= ADDRESS_MAXWRAP(regs);
         addr2 += 2; addr2 &= ADDRESS_MAXWRAP(regs);
-        len--;
+        len -= 2;
 
         /* Update the registers */
         GR_A(r1, regs) = addr1;
