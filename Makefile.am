@@ -5,7 +5,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4  intl m4  intl m4  po util html
+SUBDIRS = intl m4  po util html
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
