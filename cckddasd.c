@@ -86,7 +86,7 @@ void    cckd_sf_stats (DEVBLK *);
 void    cckd_sf_comp (DEVBLK *);
 void    cckd_gcol ();
 int     cckd_gc_percolate (DEVBLK *, int, int);
-void    cckd_print_itrace(DEVBLK *);
+void    cckd_print_itrace();
 
 /*-------------------------------------------------------------------*/
 /* Definitions for sense data format codes and message codes         */
@@ -2512,7 +2512,7 @@ int             t;                      /* Calculated track          */
             dev->devnum, trk,
             buf, buf[0], buf[1], buf[2], buf[3], buf[4]);
 
-    cckd_print_itrace (dev);
+    cckd_print_itrace ();
 
     return -1;
 } /* end function cckd_cchh_rcd */
@@ -3278,6 +3278,10 @@ int             gctab[5]= {             /* default gcol parameters   */
             /* call the garbage collector */
             rc = cckd_gc_percolate (dev, (int)size , hi);
 
+            /* Sync the file if any data moved */
+            if (rc > 0)
+                rc = fdatasync (cckd->fd[cckd->sfn]);
+
         } /* for each cckd device */
 
         /* wait a bit */
@@ -3427,7 +3431,7 @@ BYTE            buf[65536];             /* Buffer                    */
                             dev->devnum, (long long)(fpos + flen + b));
                     devmsg ("%4.4X:cckddasd: %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                             dev->devnum, buf[b+0], buf[b+1],buf[b+2], buf[b+3], buf[b+4]);
-                    cckd_print_itrace (dev);
+                    cckd_print_itrace ();
                     goto cckd_gc_perc_error;
                 }
                 len = l2.len;
@@ -3462,7 +3466,7 @@ cckd_gc_perc_error:
 /*-------------------------------------------------------------------*/
 /* Print internal trace                                              */
 /*-------------------------------------------------------------------*/
-void cckd_print_itrace(DEVBLK *dev)
+void cckd_print_itrace()
 {
 #ifdef CCKD_ITRACEMAX
 int             start, i;               /* Start index, index        */
@@ -3478,7 +3482,6 @@ int             start, i;               /* Start index, index        */
             cckdmsg ("%s", &cckdblk.itrace[i]);
         i+=128;
     } while (i != start);
-    fflush (dev->msgpipew);
     sleep (2);
 #endif
 }

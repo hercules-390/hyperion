@@ -2541,16 +2541,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
 /*********************************************************************/
     /* k command - print out cckd internal trace */
-    if (cmd[0] == 'k'
-        && sscanf(cmd+1, "%hx%c", &devnum, &c) == 1)
+    if (strcmp(cmd, "k") == 0)
     {
-        dev = find_device_by_devnum (devnum);
-        if (dev == NULL)
-        {
-            logmsg (_("Device number %4.4X not found\n"), devnum);
-            return NULL;
-        }
-        cckd_print_itrace (dev);
+        cckd_print_itrace ();
         return NULL;
     }
 
