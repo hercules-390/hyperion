@@ -52,9 +52,7 @@ do { \
 #endif /*!defined(FEATURE_ADDRESS_LIMIT_CHECKING)*/
 
 #if !defined(_CHANNEL_C)
-
 #define _CHANNEL_C
-#define CTC_LCS         2               /* LCS device                */ /*LCS*/
 
 /*-------------------------------------------------------------------*/
 /* FORMAT I/O BUFFER DATA                                            */

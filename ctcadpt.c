@@ -3,17 +3,17 @@
 // ====================================================================
 //
 // Copyright (C) James A. Pierson, 2002
-//		 Roger Bowler, 2000-2002
+//       Roger Bowler, 2000-2002
 //
 // vmnet     (C) Copyright Willem Konynenberg, 2000-2002
-// CTCT	     (C) Copyright Vic Cross, 2001-2002
+// CTCT      (C) Copyright Vic Cross, 2001-2002
 //
 
-// Notes: 
+// Notes:
 //   This module contains the remaining CTC emulation modes that
 //   have not been moved to seperate modules. There is also logic
-//   to allow old style 3088 device definitions for compatibility 
-//   and may be removed in a future release.  
+//   to allow old style 3088 device definitions for compatibility
+//   and may be removed in a future release.
 //
 //   Please read README.NETWORKING for more info.
 //
@@ -29,37 +29,43 @@
 // Declarations
 // ====================================================================
 
-static int	CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] );
-static void	CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount, 
-                           BYTE*   pIOBuf,    BYTE* pUnitStat, 
-                           U16*    pResidual, BYTE* pMore );
-static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount, 
-                            BYTE*   pIOBuf,    BYTE* pUnitStat, 
+static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] );
+
+static void CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
+                       BYTE*   pIOBuf,    BYTE* pUnitStat,
+                       U16*    pResidual, BYTE* pMore );
+
+static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
+                            BYTE*   pIOBuf,    BYTE* pUnitStat,
                             U16*    pResidual );
+
 static void*    CTCT_ListenThread( void* argp );
 
 static int      VMNET_Init( DEVBLK *dev, int argc, BYTE *argv[] );
-static int      VMNET_Write( DEVBLK *dev, BYTE *iobuf, 
+
+static int      VMNET_Write( DEVBLK *dev, BYTE *iobuf,
                              U16 count, BYTE *unitstat );
-static int      VMNET_Read( DEVBLK *dev, BYTE *iobuf, 
+
+static int      VMNET_Read( DEVBLK *dev, BYTE *iobuf,
                             U16 count, BYTE *unitstat );
 
 // --------------------------------------------------------------------
-// Definitions for CTC general data blocks                           
+// Definitions for CTC general data blocks
 // --------------------------------------------------------------------
 
-typedef struct _CTCG_PARMBLK 
+typedef struct _CTCG_PARMBLK
 {
     int                 listenfd;
     struct sockaddr_in  addr;
     DEVBLK*             dev;
-} CTCG_PARMBLK;
+}
+CTCG_PARMBLK;
 
 // --------------------------------------------------------------------
 // Device Handler Information Block
 // --------------------------------------------------------------------
 
-DEVHND ctcadpt_device_hndinfo = 
+DEVHND ctcadpt_device_hndinfo =
 {
     &CTCX_Init,
     &CTCX_ExecuteCCW,
@@ -68,7 +74,7 @@ DEVHND ctcadpt_device_hndinfo =
     NULL, NULL, NULL, NULL
 };
 
-DEVHND ctct_device_hndinfo = 
+DEVHND ctct_device_hndinfo =
 {
     &CTCT_Init,
     &CTCX_ExecuteCCW,
@@ -77,7 +83,7 @@ DEVHND ctct_device_hndinfo =
     NULL, NULL, NULL, NULL
 };
 
-DEVHND vmnet_device_hndinfo = 
+DEVHND vmnet_device_hndinfo =
 {
     &VMNET_Init,
     &CTCX_ExecuteCCW,
@@ -88,7 +94,6 @@ DEVHND vmnet_device_hndinfo =
 
 extern DEVHND ctci_device_hndinfo;
 extern DEVHND lcs_device_hndinfo;
-
 extern DEVENT device_handler_table[];
 
 // ====================================================================
@@ -99,29 +104,29 @@ extern DEVENT device_handler_table[];
 // Device Initialization Handler (Generic)
 // --------------------------------------------------------------------
 
-int             CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
+int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
     // Allow for depreciated 3088 device type
     if( strcasecmp( pDEVBLK->typname, "3088" ) == 0 )
     {
-	// The first argument is the device emulation type
-	if( argc < 1 )
-	{
-	    logmsg( _("CTC008E %4.4X: Incorrect number of parameters\n"),
-		    pDEVBLK->devnum );
-	    return -1;
-	}
+        // The first argument is the device emulation type
+        if( argc < 1 )
+        {
+            logmsg( _("CTC008E %4.4X: Incorrect number of parameters\n"),
+                pDEVBLK->devnum );
+            return -1;
+        }
 
-	// Replace typname in DEVBLK with actual type.
-	if( strcasecmp( argv[0], "CTCI"     ) == 0 ||
-	    strcasecmp( argv[0], "CTCI-W32" ) == 0 )
-	    pDEVBLK->typname = "CTCI";
-	else if( strcasecmp( argv[0], "CTCT" ) == 0 )
-	    pDEVBLK->typname = "CTCT";
-	else if( strcasecmp( argv[0], "LCS" ) == 0 )
-	    pDEVBLK->typname = "LCS";
-	else
-	    pDEVBLK->typname = "VMNET";
+        // Replace typname in DEVBLK with actual type.
+        if( strcasecmp( argv[0], "CTCI"     ) == 0 ||
+            strcasecmp( argv[0], "CTCI-W32" ) == 0 )
+            pDEVBLK->typname = "CTCI";
+        else if( strcasecmp( argv[0], "CTCT" ) == 0 )
+            pDEVBLK->typname = "CTCT";
+        else if( strcasecmp( argv[0], "LCS" ) == 0 )
+            pDEVBLK->typname = "LCS";
+        else
+            pDEVBLK->typname = "VMNET";
     }
 
     // A little slight of hand here...
@@ -131,16 +136,16 @@ int             CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
     // of DEVBLK, substitute the proper handler entries for
     // this device.
 
-    if( strcasecmp( pDEVBLK->typname, "CTCI" ) == 0 )
-	pDEVBLK->hnd = &ctci_device_hndinfo;
+    if     ( strcasecmp( pDEVBLK->typname, "CTCI" ) == 0 )
+        pDEVBLK->hnd = &ctci_device_hndinfo;
     else if( strcasecmp( pDEVBLK->typname, "CTCT"  ) == 0 )
-	pDEVBLK->hnd = &ctct_device_hndinfo;
+        pDEVBLK->hnd = &ctct_device_hndinfo;
     else if( strcasecmp( pDEVBLK->typname, "LCS"   ) == 0 )
-	pDEVBLK->hnd = &lcs_device_hndinfo;
+        pDEVBLK->hnd = &lcs_device_hndinfo;
     else if( strcasecmp( pDEVBLK->typname, "VMNET" ) == 0 )
-	pDEVBLK->hnd = &vmnet_device_hndinfo;
+        pDEVBLK->hnd = &vmnet_device_hndinfo;
     else
-	return -1;
+        return -1;
 
     // Now call the proper device init function
     return (pDEVBLK->hnd->init)( pDEVBLK, argc, argv );
@@ -150,10 +155,10 @@ int             CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 // Query the device definition (Generic)
 // -------------------------------------------------------------------
 
-void            CTCX_Query( DEVBLK* pDEVBLK, 
-                            BYTE**  ppszClass,
-                            int     iBufLen, 
-                            BYTE*   pBuffer )
+void  CTCX_Query( DEVBLK* pDEVBLK,
+                  BYTE**  ppszClass,
+                  int     iBufLen,
+                  BYTE*   pBuffer )
 {
     *ppszClass = "CTCA";
     snprintf( pBuffer, iBufLen, "%s", pDEVBLK->filename );
@@ -163,13 +168,12 @@ void            CTCX_Query( DEVBLK* pDEVBLK,
 // Close the device (Generic)
 // -------------------------------------------------------------------
 
-int             CTCX_Close( DEVBLK* pDEVBLK )
+int  CTCX_Close( DEVBLK* pDEVBLK )
 {
     // Close the device file (if not already closed)
     if( pDEVBLK->fd >= 0 )
     {
         close( pDEVBLK->fd );
-
         pDEVBLK->fd = -1;           // indicate we're now closed
     }
 
@@ -180,12 +184,12 @@ int             CTCX_Close( DEVBLK* pDEVBLK )
 // Execute a Channel Command Word (Generic)
 // -------------------------------------------------------------------
 
-void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode, 
-                                 BYTE    bFlags,  BYTE  bChained, 
-                                 U16     sCount,  BYTE  bPrevCode, 
-                                 int     iCCWSeq, BYTE* pIOBuf, 
-                                 BYTE*   pMore,   BYTE* pUnitStat, 
-                                 U16*    pResidual )
+void  CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
+                       BYTE    bFlags,  BYTE  bChained,
+                       U16     sCount,  BYTE  bPrevCode,
+                       int     iCCWSeq, BYTE* pIOBuf,
+                       BYTE*   pMore,   BYTE* pUnitStat,
+                       U16*    pResidual )
 {
     int             iNum;               // Number of bytes to move
     BYTE            bOpCode;            // CCW opcode with modifier
@@ -197,8 +201,8 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
     UNREFERENCED( iCCWSeq   );
 
     // Intervention required if the device file is not open
-    if( pDEVBLK->fd < 0 && 
-        !IS_CCW_SENSE( bCode ) && 
+    if( pDEVBLK->fd < 0 &&
+        !IS_CCW_SENSE( bCode ) &&
         !IS_CCW_CONTROL( bCode ) )
     {
         pDEVBLK->sense[0] = SENSE_IR;
@@ -225,13 +229,13 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         bOpCode = bCode;
 
     // Process depending on CCW bOpCode
-    switch (bOpCode) 
+    switch (bOpCode)
     {
     case 0x01:  // 0MMMMM01  WRITE
         //------------------------------------------------------------
         // WRITE
         //------------------------------------------------------------
-    
+
         // Return normal status if CCW count is zero
         if( sCount == 0 )
         {
@@ -240,13 +244,13 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         }
 
         // Write data and set unit status and residual byte count
-        switch( pDEVBLK->ctctype ) 
+        switch( pDEVBLK->ctctype )
         {
         case CTC_CTCT:
             CTCT_Write( pDEVBLK, sCount, pIOBuf, pUnitStat, pResidual );
             break;
         case CTC_VMNET:
-            *pResidual = sCount - VMNET_Write( pDEVBLK, pIOBuf, 
+            *pResidual = sCount - VMNET_Write( pDEVBLK, pIOBuf,
                                                sCount,  pUnitStat );
             break;
         }
@@ -268,13 +272,13 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
 
         // Read data and set unit status and residual byte count
-        switch( pDEVBLK->ctctype ) 
+        switch( pDEVBLK->ctctype )
         {
         case CTC_CTCT:
             CTCT_Read( pDEVBLK, sCount, pIOBuf, pUnitStat, pResidual, pMore );
             break;
         case CTC_VMNET:
-            *pResidual = sCount - VMNET_Read( pDEVBLK, pIOBuf, 
+            *pResidual = sCount - VMNET_Read( pDEVBLK, pIOBuf,
                                               sCount,  pUnitStat );
             break;
         }
@@ -284,7 +288,7 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
         // CONTROL
         // -----------------------------------------------------------
-        
+
         *pUnitStat = CSW_CE | CSW_DE;
         break;
 
@@ -292,7 +296,7 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
         // CONTROL NO-OPERATON
         // -----------------------------------------------------------
-      
+
         *pUnitStat = CSW_CE | CSW_DE;
         break;
 
@@ -334,7 +338,7 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
         // PREPARE (PREP)
         // -----------------------------------------------------------
-        
+
         *pUnitStat = CSW_CE | CSW_DE;
 
         break;
@@ -343,7 +347,7 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
         // SENSE COMMAND BYTE
         // -----------------------------------------------------------
-      
+
         *pUnitStat = CSW_CE | CSW_DE;
         break;
 
@@ -351,7 +355,7 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
       // -----------------------------------------------------------
       // SENSE
       // -----------------------------------------------------------
-      
+
         // Command reject if in basic mode
         if( pDEVBLK->ctcxmode == 0 )
         {
@@ -361,12 +365,12 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         }
 
         // Calculate residual byte count
-        iNum = ( sCount < pDEVBLK->numsense ) ? 
+        iNum = ( sCount < pDEVBLK->numsense ) ?
             sCount : pDEVBLK->numsense;
 
         *pResidual = sCount - iNum;
 
-        if( sCount < pDEVBLK->numsense ) 
+        if( sCount < pDEVBLK->numsense )
             *pMore = 1;
 
         // Copy device sense bytes to channel I/O buffer
@@ -384,14 +388,14 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
         // -----------------------------------------------------------
         // SENSE ID
         // -----------------------------------------------------------
-      
+
         // Calculate residual byte count
-        iNum = ( sCount < pDEVBLK->numdevid ) ? 
+        iNum = ( sCount < pDEVBLK->numdevid ) ?
             sCount : pDEVBLK->numdevid;
 
         *pResidual = sCount - iNum;
 
-        if( sCount < pDEVBLK->numdevid ) 
+        if( sCount < pDEVBLK->numdevid )
             *pMore = 1;
 
         // Copy device identifier bytes to channel I/O buffer
@@ -399,18 +403,17 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
         // Return unit status
         *pUnitStat = CSW_CE | CSW_DE;
-        
+
         break;
 
     default:
         // ------------------------------------------------------------
-        // INVALID OPERATION                                         
+        // INVALID OPERATION
         // ------------------------------------------------------------
 
         // Set command reject sense byte, and unit check status
         pDEVBLK->sense[0] = SENSE_CR;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
-
     }
 }
 
@@ -422,7 +425,7 @@ void            CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 // CTCT_Init
 //
 
-static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
+static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
 {
     int            rc;                 // Return code
     int            mtu;                // MTU size (binary)
@@ -444,8 +447,8 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
 
     if( strcasecmp( argv[0], "CTCT" ) == 0 )
     {
-	// Shift past emulation type
-	argc--; argv++;
+        // Shift past emulation type
+        argc--; argv++;
     }
 
     // Check for correct number of arguments
@@ -459,8 +462,8 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
     // The first argument is the listening port number
     listenp = *argv++;
 
-    if( strlen( listenp ) > 5 || 
-        sscanf( listenp, "%u%c", &lport, &c ) != 1 || 
+    if( strlen( listenp ) > 5 ||
+        sscanf( listenp, "%u%c", &lport, &c ) != 1 ||
         lport < 1024 || lport > 65534 )
     {
         logmsg( _("CTC014E %4.4X: Invalid port number: %s\n"),
@@ -493,8 +496,8 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
     // The third argument is the destination port number
     remotep = *argv++;
 
-    if( strlen( remotep ) > 5 || 
-        sscanf( remotep, "%u%c", &rport, &c ) != 1 || 
+    if( strlen( remotep ) > 5 ||
+        sscanf( remotep, "%u%c", &rport, &c ) != 1 ||
         rport < 1024 || rport > 65534 )
     {
         logmsg( _("CTC014E %4.4X: Invalid port number: %s\n"),
@@ -505,8 +508,8 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
     // The fourth argument is the maximum transmission unit (MTU) size
     mtusize = *argv;
 
-    if( strlen( mtusize ) > 5 || 
-        sscanf( mtusize, "%u%c", &mtu, &c ) != 1 || 
+    if( strlen( mtusize ) > 5 ||
+        sscanf( mtusize, "%u%c", &mtu, &c ) != 1 ||
         mtu < 46 || mtu > 65536 )
     {
         logmsg( _("CTC006E %4.4X: Invalid MTU size %s\n"),
@@ -545,8 +548,8 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
     parm.addr.sin_port        = htons(lport);
     parm.addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    rc = bind( parm.listenfd, 
-               (struct sockaddr *)&parm.addr, 
+    rc = bind( parm.listenfd,
+               (struct sockaddr *)&parm.addr,
                sizeof( parm.addr ) );
     if( rc < 0 )
     {
@@ -561,8 +564,8 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
     parm.addr.sin_family = AF_INET;
     parm.addr.sin_port   = htons(rport);
     parm.addr.sin_addr   = ipaddr;
-    rc = connect( parm.listenfd, 
-                  (struct sockaddr *)&parm.addr, 
+    rc = connect( parm.listenfd,
+                  (struct sockaddr *)&parm.addr,
                   sizeof( parm.addr ) );
 
     // if connection was not successful, start a server
@@ -578,6 +581,7 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
         close( parm.listenfd );
 
         parm.listenfd = socket( AF_INET, SOCK_STREAM, 0 );
+
         if( parm.listenfd < 0 )
         {
             logmsg( _("CTC016E %4.4X: Error creating socket: %s\n"),
@@ -588,13 +592,13 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
 
         // set up the listening port
         memset( &(parm.addr), 0, sizeof( parm.addr ) );
-        
+
         parm.addr.sin_family      = AF_INET;
         parm.addr.sin_port        = htons(lport);
         parm.addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-        if( bind( parm.listenfd, 
-                  (struct sockaddr *)&parm.addr, 
+        if( bind( parm.listenfd,
+                  (struct sockaddr *)&parm.addr,
                   sizeof( parm.addr ) ) < 0 )
         {
             logmsg( _("CTC017E %4.4X: Error binding to socket: %s\n"),
@@ -635,9 +639,9 @@ static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
 // CTCT_Write
 //
 
-static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount, 
-                            BYTE*   pIOBuf,    BYTE* pUnitStat, 
-                            U16*    pResidual )
+static void  CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
+                         BYTE*   pIOBuf,    BYTE* pUnitStat,
+                         U16*    pResidual )
 {
     PCTCIHDR   pFrame;                  // -> Frame header
     PCTCISEG   pSegment;                // -> Segment in buffer
@@ -655,10 +659,9 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
     {
         logmsg( _("CTC100W %4.4X Write CCW count %u is invalid\n"),
                 pDEVBLK->devnum, sCount );
-        
+
         pDEVBLK->sense[0] = SENSE_DC;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
-
         return;
     }
 
@@ -673,10 +676,11 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
     if( sOffset == 0 && sCount == 40 )
     {
         // Extract the 32-byte stack identity string
-        for( i = 0; 
-             i < sizeof( szStackID ) - 1 && i < sCount - 4; 
+        for( i = 0;
+             i < sizeof( szStackID ) - 1 && i < sCount - 4;
              i++)
             szStackID[i] = guest_to_host( pIOBuf[i+4] );
+
         szStackID[i] = '\0';
 
         // Extract the stack command word
@@ -688,7 +692,6 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         *pUnitStat = CSW_CE | CSW_DE;
         *pResidual = 0;
-
         return;
     }
 
@@ -698,15 +701,14 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Return normal status and discard the packet
         *pUnitStat = CSW_CE | CSW_DE;
         *pResidual = 0;
-
         return;
     }
 
-#if 0 
+#if 0
     // Notes: It appears that TurboLinux has gotten sloppy in their
     //        ways. They are now giving us buffer sizes that are
     //        greater than the CCW count, but the segment size
-    //        is within the count. 
+    //        is within the count.
     // Check that the frame offset is valid
     if( sOffset < sizeof( CTCIHDR ) || sOffset > sCount )
     {
@@ -716,7 +718,6 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         pDEVBLK->sense[0] = SENSE_CR;
         *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
-
         return;
     }
 #endif
@@ -725,8 +726,8 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
     *pResidual -= sizeof( CTCIHDR );
 
     // Process each segment in the buffer
-    for( iPos  = sizeof( CTCIHDR ); 
-         iPos  < sOffset; 
+    for( iPos  = sizeof( CTCIHDR );
+         iPos  < sOffset;
          iPos += sSegLen )
     {
         // Check that the segment is fully contained within the block
@@ -738,7 +739,6 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
-
             return;
         }
 
@@ -749,7 +749,7 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         FETCH_HW( sSegLen, pSegment->hwLength );
 
         // Check that the segment length is valid
-        if( ( sSegLen        < sizeof( CTCISEG ) ) || 
+        if( ( sSegLen        < sizeof( CTCISEG ) ) ||
             ( iPos + sSegLen > sOffset           ) ||
             ( iPos + sSegLen > sCount            ) )
         {
@@ -759,7 +759,6 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
             pDEVBLK->sense[0] = SENSE_DC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
-
             return;
         }
 
@@ -781,12 +780,11 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
         if( rc < 0 )
         {
             logmsg( _("CTC104E %4.4X: Error writing to %s: %s\n"),
-                    pDEVBLK->devnum, pDEVBLK->filename, 
+                    pDEVBLK->devnum, pDEVBLK->filename,
                     strerror( errno ) );
 
             pDEVBLK->sense[0] = SENSE_EC;
             *pUnitStat        = CSW_CE | CSW_DE | CSW_UC;
-
             return;
         }
 
@@ -811,9 +809,9 @@ static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
 // CTCT_Read
 //
 
-static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount, 
-                           BYTE*   pIOBuf,    BYTE* pUnitStat, 
-                           U16*    pResidual, BYTE* pMore )
+static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
+                        BYTE*   pIOBuf,    BYTE* pUnitStat,
+                        U16*    pResidual, BYTE* pMore )
 {
     PCTCIHDR    pFrame   = NULL;       // -> Frame header
     PCTCISEG    pSegment = NULL;       // -> Segment in buffer
@@ -823,36 +821,36 @@ static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
     static struct timeval tv;          // Timeout time for 'select'
 
-    
+
     // Limit how long we should wait for data to come in
     FD_ZERO( &rfds );
-    FD_SET( pDEVBLK->fd, &rfds ); 
+    FD_SET( pDEVBLK->fd, &rfds );
 
     tv.tv_sec  = CTC_READ_TIMEOUT_SECS;
     tv.tv_usec = 0;
 
     iRetVal = select( pDEVBLK->fd + 1, &rfds, NULL, NULL, &tv );
 
-    switch( iRetVal ) 
+    switch( iRetVal )
     {
-        case 0:
-            *pUnitStat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
-            pDEVBLK->sense[0] = 0;
+    case 0:
+        *pUnitStat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
+        pDEVBLK->sense[0] = 0;
+        return;
+
+    case -1:
+        if( errno == EINTR )
             return;
 
-        case -1:
-            if( errno == EINTR )
-                return;
+        logmsg( _("CTC105E %4.4X: Error reading from %s: %s\n"),
+                pDEVBLK->devnum, pDEVBLK->filename, strerror( errno ) );
 
-            logmsg( _("CTC105E %4.4X: Error reading from %s: %s\n"),
-                    pDEVBLK->devnum, pDEVBLK->filename, strerror( errno ) );
+        pDEVBLK->sense[0] = SENSE_EC;
+        *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
+        return;
 
-            pDEVBLK->sense[0] = SENSE_EC;
-            *pUnitStat = CSW_CE | CSW_DE | CSW_UC;
-            return;
-
-        default:
-            break;
+    default:
+        break;
     }
 
     // Read an IP packet from the TUN device
@@ -881,7 +879,7 @@ static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
     // Fix-up Segment pointer
     pSegment = (PCTCISEG)( pIOBuf + sizeof( CTCIHDR ) );
-    
+
     // Initialize segment
     memset( pSegment, 0, iLength + sizeof( CTCISEG ) );
 
@@ -900,15 +898,15 @@ static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     // Fix-up frame pointer and terminate block
     pFrame = (PCTCIHDR)( pIOBuf + sizeof( CTCIHDR ) + iLength );
     STORE_HW( pFrame->hwOffset, 0x0000 );
-        
+
     // Calculate #of bytes returned including two slack bytes
     iLength += sizeof( CTCIHDR ) + sizeof( CTCISEG ) + 2;
-        
+
     if( sCount < iLength )
     {
         *pMore     = 1;
         *pResidual = 0;
-        
+
         iLength    = sCount;
     }
     else
@@ -916,7 +914,7 @@ static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
         *pMore      = 0;
         *pResidual -= iLength;
     }
-    
+
     // Set unit status
     *pUnitStat = CSW_CE | CSW_DE;
 }
@@ -925,7 +923,7 @@ static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
 // CTCT_ListenThread
 //
 
-static void*    CTCT_ListenThread( void* argp )
+static void*  CTCT_ListenThread( void* argp )
 {
     int          connfd;
     socklen_t    servlen;
@@ -939,10 +937,10 @@ static void*    CTCT_ListenThread( void* argp )
     for( ; ; )
     {
         servlen = sizeof(parm.addr);
-        
+
         // await a connection
-        connfd = accept( parm.listenfd, 
-                         (struct sockaddr *)&parm.addr, 
+        connfd = accept( parm.listenfd,
+                         (struct sockaddr *)&parm.addr,
                          &servlen );
 
         sprintf( str, "%s:%d",
@@ -1311,17 +1309,17 @@ int             lastlen = 2;            /* block length at last pckt */
 //
 // Output:
 //      ppDEVBLK  Address of a pointer to receive the new DEVBLK addr
-// 
+//
 
-void            AddDevice( DEVBLK**    ppDEVBLK, 
-                           U16         sDevNum,  
-			   const char* szDevType,
-			   DEVHND*     pDevHnd )
+void  AddDevice( DEVBLK**    ppDEVBLK,
+                 U16         sDevNum,
+                 const char* szDevType,
+                 DEVHND*     pDevHnd )
 {
-    DEVBLK*  pDev;                      // -> Device block
-    DEVBLK** ppDev;                     // -> Device block address
-    DEVENT*  pDevEntry  = NULL;
-    int      fNewDEVBLK = 0;            // 1=Newly created devblk
+    DEVBLK*   pDev;                     // -> Device block
+    DEVBLK**  ppDev;                    // -> Device block address
+    DEVENT*   pDevEntry  = NULL;
+    int       fNewDEVBLK = 0;           // 1=Newly created devblk
 
     // Check whether device number has already been defined
     if( find_device_by_devnum( sDevNum ) != NULL )
@@ -1337,7 +1335,7 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
     if( !pDevEntry )
     {
         logmsg ( _("CTC950E AddDevice internal error (%s).\n" ),
-		 szDevType );
+         szDevType );
         return;
     }
 
@@ -1351,7 +1349,7 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
         {
             // Obtain a device block
             pDev = (DEVBLK*)malloc( sizeof( DEVBLK ) );
-            
+
             if( pDev == NULL )
             {
                 logmsg( _("HHC037I Cannot obtain device block "
@@ -1365,26 +1363,25 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
             // Indicate a newly allocated devblk
             fNewDEVBLK = 1;
 
-	    // Initialize the device lock and conditions
-	    initialize_lock( &pDev->lock );
-	    initialize_condition( &pDev->resumecond );
-    
+            // Initialize the device lock and conditions
+            initialize_lock( &pDev->lock );
+            initialize_condition( &pDev->resumecond );
+
             // Assign new subchannel number
             pDev->subchan = sysblk.highsubchan++;
-
         }
 
-	// Obtain the device lock
-	obtain_lock( &pDev->lock );
+        // Obtain the device lock
+        obtain_lock( &pDev->lock );
     }
     else
         pDev = *ppDEVBLK;
-    
+
     // Initialize the device block
     if( pDevHnd != NULL )
-	pDev->hnd      = pDevHnd;
+        pDev->hnd = pDevHnd;
     else
-	pDev->hnd      = pDevEntry->hnd;
+        pDev->hnd = pDevEntry->hnd;
 
     pDev->msgpipew = sysblk.msgpipew;
     pDev->cpuprio  = sysblk.cpuprio;
@@ -1396,7 +1393,7 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
 
     pDev->devtype  = pDevEntry->type;
     pDev->typname  = pDevEntry->name;
-  
+
     pDev->fd = -1;
 
     // Initialize the path management control word
@@ -1412,7 +1409,7 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
     if( fNewDEVBLK )
     {
         // Search for the last device block on the chain
-        for( ppDev   = &(sysblk.firstdev); 
+        for( ppDev   = &(sysblk.firstdev);
              *ppDev != NULL;
              ppDev   = &((*ppDev)->nextdev) );
 
@@ -1431,8 +1428,8 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
 
     if( *ppDEVBLK == NULL )
     {
-	// Release device lock
-	release_lock( &pDev->lock );
+        // Release device lock
+        release_lock( &pDev->lock );
     }
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
@@ -1453,10 +1450,12 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
 // binary equivalent.
 //
 // Input:
-//      pszMACAddr   Pointer to string containing a MAC Address
+//      pszMACAddr   Pointer to string containing a MAC Address in the
+//                   format "xx-xx-xx-xx-xx-xx" or "xx:xx:xx:xx:xx:xx".
 //
 // Output:
-//      pbMACAddr    Pointer to a BYTE array to receive the MAC Address.
+//      pbMACAddr    Pointer to a BYTE array to receive the MAC Address
+//                   that MUST be at least LCS_ADDR_LEN bytes long.
 //
 // Returns:
 //      0 on success, -1 otherwise
@@ -1464,61 +1463,41 @@ void            AddDevice( DEVBLK**    ppDEVBLK,
 
 int             ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
 {
-    int         i;
-    char        c;
-    BYTE*       p;
-    BYTE        bVal;
+    BYTE    work[((LCS_ADDR_LEN*3)-0)];
+    BYTE    sep;
+    int     x, i;
 
-    i = 0;
-    p = pbMACAddr;
-
-    while( ( *pszMACAddr != '\0' ) && ( i < LCS_ADDR_LEN ) )
+    if (strlen(pszMACAddr) != ((LCS_ADDR_LEN*3)-1)
+        || (LCS_ADDR_LEN > 1 &&
+            *(pszMACAddr+2) != '-' &&
+            *(pszMACAddr+2) != ':')
+    )
     {
-        bVal = 0;
-        c    = *pszMACAddr++;
-        
-        if( isdigit( c ) )
-            bVal = c - '0';
-        else if( c >= 'a' && c <= 'f' )
-            bVal = c - 'a' + 10;
-        else if( c >= 'A' && c <= 'F' )
-            bVal = c - 'A' + 10;
-        else 
-        {
-            errno = EINVAL;
-            return -1;
-        }
-        
-        bVal <<= 4;
-        
-        c = *pszMACAddr;
-        
-        if( isdigit( c ) )
-            bVal |= c - '0';
-        else if( c >= 'a' && c <= 'f' )
-            bVal |= c - 'a' + 10;
-        else if( c >= 'A' && c <= 'F' )
-            bVal |= c - 'A' + 10;
-        else if( c == ':' || c == '-' || c == 0 )
-            bVal >>= 4;
-        else 
-        {
-            errno = EINVAL;
-            return -1;
-        }
-        
-        if( c != 0 )
-            pszMACAddr++;
-        
-        *p++ = (BYTE)( bVal & 0377 );
-        
-        i++;
-        
-        // We might get a colon here - not required.
-        if( *pszMACAddr == ':' || *pszMACAddr == '-' ) 
-            pszMACAddr++;
+        errno = EINVAL;
+        return -1;
     }
-    
+
+    strncpy(work,pszMACAddr,((LCS_ADDR_LEN*3)-1));
+    work[((LCS_ADDR_LEN*3)-1)] = sep = *(pszMACAddr+2);
+
+    for (i=0; i < LCS_ADDR_LEN; i++)
+    {
+        if
+        (0
+            || !isxdigit(work[(i*3)+0])
+            || !isxdigit(work[(i*3)+1])
+            ||  sep  !=  work[(i*3)+2]
+        )
+        {
+            errno = EINVAL;
+            return -1;
+        }
+
+        work[(i*3)+2] = 0;
+        sscanf(&work[(i*3)+0],"%x",&x);
+        *(pbMACAddr+i) = x;
+    }
+
     return 0;
 }
 
@@ -1526,10 +1505,10 @@ int             ParseMAC( char* pszMACAddr, BYTE* pbMACAddr )
 // packet_trace
 // ---------------------------------------------------------------------
 //
-// Subroutine to trace the contents of a buffer 
+// Subroutine to trace the contents of a buffer
 //
 
-void            packet_trace( BYTE* pAddr, int iLen )
+void  packet_trace( BYTE* pAddr, int iLen )
 {
     int           offset;
     unsigned int  i;
@@ -1547,25 +1526,25 @@ void            packet_trace( BYTE* pAddr, int iLen )
         {
             c = *pAddr++;
 
-            if( offset < iLen ) 
+            if( offset < iLen )
             {
                 logmsg("%2.2X", c);
 
                 print_chars[i] = '.';
                 e = guest_to_host( c );
 
-                if( isprint( e ) ) 
+                if( isprint( e ) )
                     print_chars[i] = e;
-                if( isprint( c ) ) 
+                if( isprint( c ) )
                     print_chars[i] = c;
             }
-            else 
+            else
             {
                 logmsg( "  " );
             }
 
             offset++;
-            if( ( offset & 3 ) == 0 ) 
+            if( ( offset & 3 ) == 0 )
             {
                 logmsg( " " );
             }

@@ -1,3 +1,11 @@
+27 Dec 2002 Added comprehensive details to README.CVS document - Fish
+27 Dec 2002 Fix bug ctc logic to accept MAC addr in lieu of IP addr - Fish
+27 Dec 2002 Fix warning about IFC_IOCtl in tuntap.c - Fish
+27 Dec 2002 obtain_lock not needed to signal_condition in ctc logic - Fish 
+27 Dec 2002 Use sched_yield (not usleep) if can't enqueue ctc frame - Fish
+27 Dec 2002 Rewrote ParseMAC function to fix subtle bug - Fish
+27 Dec 2002 Fixed tt32stats command to work with new LCS CTC logic - Fish
+27 Dec 2002 Un-tabbed ctc source modules - Fish
 15 Dec 2002 Renumbered messages in printer.c and console.c - Jay Maynard
 15 Dec 2002 Streamlining Windows build processing, add P4 support - Volker Bandke
 12 Dec 2002 Main storage addressing cleanup - Jan Jaeger

@@ -28,7 +28,9 @@
 // Declarations
 // ====================================================================
 
+#if !defined( WIN32 )
 static int      IFC_IOCtl( int fd, int iRequest, char* argp );
+#endif // !defined( WIN32 )
 
 // ====================================================================
 // Primary Module Entry Points
@@ -199,9 +201,12 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     if( !pszIPAddr  || 
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
-        logmsg( _("TUN006E %s: Invalid IP address: %s.\n"),
-                pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
+        if (TUNTAP_SetMACAddr( pszNetDevName, pszIPAddr ) != 0)
+        {
+            logmsg( _("TUN006E %s: Invalid IP address: %s.\n"),
+                    pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
             return -1;
+        }
     }
 
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&ifreq );
@@ -520,6 +525,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
     return TUNTAP_IOCtl( 0, SIOCDELRT, (char*)&rtentry );
 }
 
+#if !defined( WIN32 )
 // ====================================================================
 // HercIFC Helper Functions
 // ====================================================================
@@ -604,4 +610,5 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
     return 0;
 }
 
+#endif // !defined( WIN32 )
 

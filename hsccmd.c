@@ -394,9 +394,9 @@ int tt32stats_cmd(char* cmdline, int argc, char *argv[])
         return -1;
     }
 
-    if (CTC_CTCI_W32 != dev->ctctype)
+    if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
     {
-        logmsg( _("Device %4.4X is not a CTCI-W32 device\n"), devnum );
+        logmsg( _("Device %4.4X is not a CTCI or LCS device\n"), devnum );
         return -1;
     }
 
@@ -1277,7 +1277,7 @@ int devtmax_cmd(char* cmdline, int argc, char *argv[])
     )
     {
         signal_condition (&sysblk.ioqcond);
-        sleep (1);
+        sched_yield();
     }
 
     logmsg( _("Max device threads %d current %d most %d "
