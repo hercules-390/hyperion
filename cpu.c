@@ -50,7 +50,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                        | (regs->psw.progmask)
                        ) << 8
                      )
-                   | (0)
+                   | regs->psw.zerobyte
                    )
                  );
         STORE_FW ( addr + 4,
@@ -83,6 +83,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                        ) << 8
                      )
                    | (regs->psw.amode64 ? 0x01 : 0)
+                   | regs->psw.zerobyte
                    )
                  );
         STORE_FW ( addr + 4, regs->psw.amode ? 0x80000000 : 0 );
