@@ -1829,11 +1829,139 @@ DEF_INST(convert_utf32_to_utf8)
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf8_to_utf32)
 {
-  int r1, r2;                           /* Values of R fields        */
-  
-  RRE(inst, regs, r1, r2);
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-}
+int     r1, r2;                         /* Register numbers          */
+int     i;                              /* Loop counter              */
+int     cc = 0;                         /* Condition code            */
+VADR    addr1, addr2;                   /* Operand addresses         */
+GREG    len1, len2;                     /* Operand lengths           */
+U16     uvwxy;                          /* Unicode work area         */
+U16     unicode[2];                     /* Unicode character         */
+GREG    n;                              /* Number of UTF-8 bytes - 1 */
+BYTE    utf[4];                         /* UTF-8 bytes               */
+
+    RRE(inst, regs, r1, r2);
+
+    ODD2_CHECK(r1, r2, regs);
+
+    /* Determine the destination and source addresses */
+    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+
+    /* Load operand lengths from bits 0-31 of R1+1 and R2+1 */
+    len1 = GR_A(r1+1, regs);
+    len2 = GR_A(r2+1, regs);
+
+    if (len1 == 0 && len2 > 0)
+        cc = 1;
+
+    /* Process operands from left to right */
+    for (i = 0; len1 > 0 && len2 > 0; i++)
+    {
+        /* If 4096 characters have been converted, exit with cc=3 */
+        if (i >= 4096)
+        {
+            cc = 3;
+            break;
+        }
+
+        /* Fetch first UTF-8 byte from source operand */
+        utf[0] = ARCH_DEP(vfetchb) ( addr2, r2, regs );
+
+        /* Convert UTF-8 to Unicode */
+        if (utf[0] < (BYTE)0x80)
+        {
+            /* Convert 00-7F to Unicode 0000-007F */
+            n = 0;
+	    unicode[0] = 0;
+            unicode[1] = utf[0];
+        }
+        else if ((utf[0] & 0xE0) == 0xC0)
+        {
+            /* Exit if fewer than 2 bytes remain in source operand */
+            n = 1;
+            if (len2 <= n) break;
+
+            /* Fetch two UTF-8 bytes from source operand */
+            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* Convert C0xx-DFxx to Unicode */
+	    unicode[0] = 0;
+            unicode[1] = ((U16)(utf[0] & 0x1F) << 6)
+                        | ((U16)(utf[1] & 0x3F));
+        }
+        else if ((utf[0] & 0xF0) == 0xE0)
+        {
+            /* Exit if fewer than 3 bytes remain in source operand */
+            n = 2;
+            if (len2 <= n) break;
+
+            /* Fetch three UTF-8 bytes from source operand */
+            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* Convert E0xxxx-EFxxxx to Unicode */
+	    unicode[0] = 0;
+            unicode[1] = ((U16)(utf[0]) << 12)
+                        | ((U16)(utf[1] & 0x3F) << 6)
+                        | ((U16)(utf[2] & 0x3F));
+        }
+        else if ((utf[0] & 0xF8) == 0xF0)
+        {
+            /* Exit if fewer than 4 bytes remain in source operand */
+            n = 3;
+            if (len2 <= n) break;
+
+            /* Fetch four UTF-8 bytes from source operand */
+            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
+
+            /* Convert F0xxxxxx-F7xxxxxx to Unicode surrogate pair */
+            uvwxy = ((((U16)(utf[0] & 0x07) << 2)
+                        | ((U16)(utf[1] & 0x30) >> 4)) - 1) & 0x0F;
+            unicode[0] = 0xD800 | (uvwxy << 6) | ((U16)(utf[1] & 0x0F) << 2)
+                        | ((U16)(utf[2] & 0x30) >> 4);
+            unicode[1] = 0xDC00 | ((U16)(utf[2] & 0x0F) << 6)
+                        | ((U16)(utf[3] & 0x3F));
+        }
+        else
+        {
+            /* Invalid UTF-8 byte 80-BF or F8-FF, exit with cc=2 */
+            cc = 2;
+            break;
+        }
+
+        /* Store the result bytes in the destination operand */
+        /* Exit if fewer than 4 bytes remain in destination */
+        if (len1 < 4)
+        {
+            cc = 1;
+            break;
+        }
+
+        /* Store Unicode surrogate pair in destination */
+        ARCH_DEP(vstore4) ( unicode, addr1, r1, regs );
+        addr1 += 4;
+        addr1 &= ADDRESS_MAXWRAP(regs);
+        len1 -= 4;
+
+
+        /* Update operand 2 address and length */
+        addr2 += n + 1;
+        addr2 &= ADDRESS_MAXWRAP(regs);
+        len2 -= n + 1;
+
+        /* Update the registers */
+        GR_A(r1, regs) = addr1;
+        GR_A(r1+1, regs) = len1;
+        GR_A(r2, regs) = addr2;
+        GR_A(r2+1, regs) = len2;
+
+        if (len1 == 0)
+            cc = 1;
+
+    } /* end for(i) */
+
+    regs->psw.cc = cc;
+
+} /* end convert_utf8_to_utf32 */
 
 /*-------------------------------------------------------------------*/
 /* B9B1 STSTU - Search String Unicode                          [RRE] */
