@@ -367,6 +367,24 @@ int opcode, extop;
             default:
                 assign_opcode(opcode, opcode_table, save_table);
 
+#if 0
+/* ZZ FIXME:  also fixup the following such that online instruction
+   replacement works properly */
+                /* Gabor Hoffer (performance option) */
+                for (i = 0; i < 256; i++)
+                {
+#if defined(_370)
+                    s370_opcode_table [i] = opcode_table [i][ARCH_370];
+#endif
+#if defined(_390)
+                    s390_opcode_table [i] = opcode_table [i][ARCH_390];
+#endif
+#if defined(_900)
+                    z900_opcode_table [i] = opcode_table [i][ARCH_900];
+#endif
+                }
+#endif
+
         }
 
     }
