@@ -463,6 +463,7 @@ U16     xcode;                          /* Exception code            */
     /* Set the reference and change bits in the storage key */
     STORAGE_KEY(aaddr) |= STORKEY_REF;
     if (acctype == ACCTYPE_WRITE)
+    {
         STORAGE_KEY(aaddr) |= STORKEY_CHANGE;
 
 #if defined(FEATURE_PER)
@@ -475,6 +476,7 @@ U16     xcode;                          /* Exception code            */
             )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
+    }
 
     /* Return absolute address */
     return aaddr;
