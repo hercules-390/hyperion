@@ -165,8 +165,12 @@ typedef pthread_attr_t                  ATTR;
 typedef void*THREAD_FUNC(void*);
 #define create_thread(ptid,pat,fn,arg) \
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
+#if !defined(WIN32)
 #define signal_thread(tid,signo) \
         pthread_kill(tid,signo)
+#else // defined(WIN32)
+#define signal_thread(tid,signo)
+#endif // !defined(WIN32)
 #define thread_id() \
         pthread_self()
 #else
