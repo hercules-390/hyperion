@@ -7,7 +7,7 @@ REM ! Desc: build Hercules with various options.  Windows bat front end         
 REM !                                                                               !
 REM +-------------------------------------------------------------------------------+
 REM !
-REM ! Last Change: '$Id$'
+REM ! Change Log: '$Log$
 REM !
 REM +-------------------------------------------------------------------------------
 echo off
