@@ -1,3 +1,7 @@
+10 Jul 2001 CUSE setting wrong cc & unused bits not cleared - Paul Leisy
+10 Jul 2001 RP setting PROB bit in PSW - Paul Leisy
+10 Jul 2001 BSG builds incorrect trace entry - Paul Leisy
+10 Jul 2001 TRAP not set PRI mode, form_stack_entry miss PIC 04 - Paul Leisy
 10 Jul 2001 switch PIC 07 and PIC 06 priority on MP - Paul Leisy
 10 Jul 2001 EREG missing INVALIDATE_AEA - Paul Leisy
 10 Jul 2001 PIC 04(ALE) and PIC 05(STE/PTE) wrong priority - Paul Leisy
