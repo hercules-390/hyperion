@@ -64,24 +64,20 @@
 /* Definitions for 3480 commands                                     */
 /*-------------------------------------------------------------------*/
 /* Format control byte for Load Display command */
-#define FCB_FS                  0xE0    /* Format control bits...    */
-#define FCB_FS_NODISP           0x60    /* Do not display messages   */
+#define FCB_FS                  0xE0    /* Function Select bits...   */
 #define FCB_FS_READYGO          0x00    /* Display msg until motion  */
-#define FCB_FS_UNMOUNT          0x20    /* Display msg until unld    */
-                                        /* no-op if no tape loaded   */
+#define FCB_FS_UNMOUNT          0x20    /* Display msg until unloaded*/
 #define FCB_FS_MOUNT            0x40    /* Display msg until loaded  */
-                                        /* no-op if tape loaded in dr*/
-#define FCB_FS_UMOUNTMOUNT      0xE0    /* Display msg 1 Until       */
-                                        /* Tape is unloaded, then    */
-                                        /* msg 2 until tape is loaded*/
-                                        /* msg 1 not displayed if    */
-                                        /* no tape is loaded in drive*/
-#define FCB_AM                  0x10    /* Alternate messages        */
-#define FCB_BM                  0x08    /* Blinking message          */
-#define FCB_DM                  0x04    /* Display low/high message  */
-#define FCB_RESV                0x02    /* Reserved                  */
+#define FCB_FS_NOP              0x60    /* No-op                     */
+#define FCB_FS_UMOUNTMOUNT      0xE0    /* Display msg 1 until tape  */
+                                        /* is unloaded, then msg 2   */
+                                        /* until tape is loaded      */
+#define FCB_AM                  0x10    /* Alternate between msg 1/2 */
+#define FCB_BM                  0x08    /* Blink message             */
+#define FCB_M2                  0x04    /* Display only message 2    */
+#define FCB_RESV                0x02    /* (reserved)                */
 #define FCB_AL                  0x01    /* Activate AutoLoader on    */
-                                        /* Mount/Unmount msgs        */
+                                        /* mount/unmount messages    */
 
 /* Path state byte for Sense Path Group ID command */
 #define SPG_PATHSTAT            0xC0    /* Pathing status bits...    */

@@ -1382,28 +1382,40 @@ typedef struct _DEVBLK {
         BYTE    tapedevt;               /* Hercules tape device type */
         struct _TAPEMEDIA_HANDLER *tmh; /* Tape Media Handling       */
                                         /* dispatcher                */
-        /* Autoloader feature */
+
+        /* ---------- Autoloader feature --------------------------- */
         struct _TAPEAUTOLOADENTRY *als;  /* Autoloader stack         */
         int     alss;                    /* Autoloader stack size    */
         int     alsix;                   /* Current Autoloader index */
-        char    **al_argv;               /* ARGV in autoloader       */
+        char  **al_argv;                 /* ARGV in autoloader       */
         int     al_argc;                 /* ARGC in autoloader       */
-        /* end autoloader feature */
+        /* ---------- end Autoloader feature ----------------------- */
+
         /* 3480/3490/3590 Message display */
+
         BYTE    tapemsg1[9];            /* 1st 3480 Message          */
         BYTE    tapemsg2[9];            /* 2nd 3480 Message          */
+        BYTE   *prev_tapemsg;           /* Previously displayed msg  */
+
         BYTE    tapedisptype;           /* Type of message display   */
-#define TAPEDISPLAY_IDLE 0              /* Display SYSTEM message    */
-#define TAPEDISPLAY_MOUNT 1             /* A Mount Message is on     */
-#define TAPEDISPLAY_UNMOUNT 2           /* An Unmount display is on  */
-#define TAPEDISPLAY_UMOUNTMOUNT 3       /* A Unmount then mount msg  */
-#define TAPEDISPLAY_WAITACT 4           /* Display until motion      */
         BYTE    tapedispflags;          /* How the msg is displayed  */
-#define TAPEDISPFLG_ALTERNATE 0x80      /* Alternate msgs 1 & 2      */
-#define TAPEDISPFLG_BLINKING  0x40      /* Selected msg blinks       */
-#define TAPEDISPFLG_MSG2      0x20      /* Display msg 2 instead of 1*/
-#define TAPEDISPFLG_AUTOLOAD  0x10      /* Autoloader index req      */
-#define TAPEDISPFLG_REQMOUNT  0x08      /* Pass through Mount Req Rtn*/
+
+#define TAPEDISPTYP_IDLE           0    /* "READY" or "NT RDY" (SYS) */
+#define TAPEDISPTYP_LOCATING       1    /* Locate in progress  (SYS) */
+#define TAPEDISPTYP_ERASING        2    /* DSE in progress     (SYS) */
+#define TAPEDISPTYP_REWINDING      3    /* Rewind in progress  (SYS) */
+#define TAPEDISPTYP_UNLOADING      4    /* Unload in progress  (SYS) */
+#define TAPEDISPTYP_MOUNT          5    /* Mount Message active      */
+#define TAPEDISPTYP_UNMOUNT        6    /* Unmount message active    */
+#define TAPEDISPTYP_UMOUNTMOUNT    7    /* Unmount/Mount msg active  */
+#define TAPEDISPTYP_WAITACT        8    /* Display until motion      */
+#define TAPEDISPTYP_CLEAN          9    /* Cleaning recommended      */
+
+#define TAPEDISPFLG_ALTERNATE   0x80    /* Alternate msgs 1 & 2      */
+#define TAPEDISPFLG_BLINKING    0x40    /* Selected msg blinks       */
+#define TAPEDISPFLG_MESSAGE2    0x20    /* Display msg 2 instead of 1*/
+#define TAPEDISPFLG_AUTOLOADER  0x10    /* Autoloader request        */
+#define TAPEDISPFLG_REQAUTOMNT  0x08    /* ReqAutoMount has work     */
 
        /* Device dependent fields for Comm Line                      */
         struct _COMMADPT *commadpt;     /* Single structure pointer  */

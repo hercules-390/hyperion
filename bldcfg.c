@@ -292,7 +292,7 @@ int     c;                              /* Character work area       */
 int     stmtlen;                        /* Statement length          */
 int     lstarted;                       /* Indicate if non-whitespace*/
 char   *cnfline;
-char	*buf1;
+char    *buf1;
                                         /* has been seen yet in line */
 
     while (1)
@@ -355,24 +355,24 @@ char	*buf1;
 
         /* Parse the statement just read */
 #if defined(OPTION_CONFIG_SYMBOLS)
-	/* Perform variable substitution */
-	/* First, set some 'dynamic' symbols to their own values */
-	set_symbol("CUU","$(CUU)");
-	set_symbol("cuu","$(cuu)");
-	set_symbol("CCUU","$(CCUU)");
-	set_symbol("ccuu","$(ccuu)");
-	buf1=resolve_symbol_string(buf);
-	if(buf1!=NULL)
-	{
-		if(strlen(buf1)>sizeof(buf))
-		{
-			fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
-			    fname, stmt);
-			free(buf1);
-			delayed_exit(1);
-		}
-		strcpy(buf,buf1);
-	}
+    /* Perform variable substitution */
+    /* First, set some 'dynamic' symbols to their own values */
+    set_symbol("CUU","$(CUU)");
+    set_symbol("cuu","$(cuu)");
+    set_symbol("CCUU","$(CCUU)");
+    set_symbol("ccuu","$(ccuu)");
+    buf1=resolve_symbol_string(buf);
+    if(buf1!=NULL)
+    {
+        if(strlen(buf1)>sizeof(buf))
+        {
+            fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
+                fname, stmt);
+            free(buf1);
+            delayed_exit(1);
+        }
+        strcpy(buf,buf1);
+    }
 #endif
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
@@ -1007,7 +1007,7 @@ BYTE **orig_newargv;
                         fname, stmt);
                     delayed_exit(1);
                 }
-		/*
+        /*
                 subval=resolve_symbol_string(addargv[0]);
                 if(subval!=NULL)
                 {
@@ -1016,11 +1016,11 @@ BYTE **orig_newargv;
                 }
                 else
                 {
-		*/
+        */
                     set_symbol(operand,addargv[0]);
-		/*
+        /*
                 }
-		*/
+        */
                 addargc--;
             }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) */
@@ -1972,13 +1972,21 @@ BYTE **orig_newargv;
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         free(devnarray);
 
-		/*
+        // Programming Note (mostly for myself!): while it is proper to
+        // abort Hercules startup for control file statement errors, it
+        // is NOT proper to do so for any device statement errors. If a
+        // device fails to initialize (due to statement (syntax) error,
+        // file not found, etc), the error is simply logged to the Herc
+        // log file but Hercules startup is NOT to be aborted. This was
+        // supposedly decided/determined back in 2003/03/20 by a change
+        // that Jan made but which I was unaware of. Sorry!  --  Fish
+        /*
         if (baddev)
         {
             // (error message already issued)
             delayed_exit(1); // (abort startup)
         }
-		*/
+        */
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))

@@ -143,11 +143,13 @@ a real System/390.  The configuration file is an ASCII text file.
     detect when a new tape is mounted.
     <p>
     "no" (the default) indicates the option is disabled, forcing all SCSI
-    tape mounts to be done manually via an appropriate <code>devnit</code>
+    tape mounts to be done manually via an appropriate <code>devinit</code>
     command.
     <p>
-    The <code>scsimount</code> panel may also be used to display and/or modify
-    this value on demand once Hercules has been started.
+    The <code>scsimount</code> panel command may also be used to display
+    and/or modify this value on demand once Hercules has been started. Note
+    too that the <code>scsimount</code> panel command also lists any mounts
+    and/or dismounts that may still be pending.
     <p>
     <i>
     <b>Note:</b> enabling this option may negatively impact Hercules performance

@@ -561,7 +561,9 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 int scsimount_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
+    BYTE*    tapemsg;
     BYTE     volname[7];
+    BYTE     mountreq;
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -592,7 +594,7 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         logmsg( _("SCSI auto-mount queries = every %d seconds (when needed)\n"),
             sysblk.auto_scsi_mount_secs );
     else
-        logmsg( _("SCSI auto-mount queries are currently disabled.\n") );
+        logmsg( _("SCSI auto-mount queries are disabled.\n") );
 
     // Scan the device list looking for SCSI tape devices
     // with outstanding mount requests...
@@ -601,18 +603,39 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
     {
         if (0
             || !dev->allocated
-            || TAPEDEVT_SCSITAPE != dev->tapedevt
+            ||  TAPEDEVT_SCSITAPE != dev->tapedevt
+            || !dev->tdparms.displayfeat
             || !dev->stape_mountmon_tid
+            || (1
+                && TAPEDISPTYP_MOUNT       != dev->tapedisptype
+                && TAPEDISPTYP_UNMOUNT     != dev->tapedisptype
+                && TAPEDISPTYP_UMOUNTMOUNT != dev->tapedisptype
+               )
         )
             continue;
 
-        volname[0]=0;
+        mountreq =
+            ( TAPEDISPTYP_MOUNT == dev->tapedisptype )
+            ||
+            (
+                TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+                &&
+                ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
+            )
+            ? TRUE : FALSE;
 
-        if ( 'M' == dev->tapemsg1[0] && dev->tapemsg1[1] )
-            memcpy( volname, dev->tapemsg1+1, 6 ); volname[6]=0;
+        if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
+            tapemsg = dev->tapemsg2;
+        else
+            tapemsg = dev->tapemsg1;
 
-        logmsg( _("HHCCF069I Mount for volume %6.6s pending on drive %4.4X\n"),
-            volname, dev->devnum );
+        volname[0]=0; if (*tapemsg && *(tapemsg+1))
+            strncpy( volname, tapemsg+1, sizeof(volname)-1 );
+        volname[sizeof(volname)-1]=0;
+
+        logmsg( _("HHCCF069I %s of volume \"%6.6s\" pending on drive %4.4X = %s\n"),
+            mountreq ? "Mount" : "Dismount",
+            volname, dev->devnum, dev->filename );
     }
 
     return 0;

@@ -1,5 +1,11 @@
-#### Don't forget to change the version number in configure.ac! ####
 
+####   Don't forget to change the version number in configure.ac!   ####
+
+05 Sep 2004 tapedev.c/scsiptape.h: blockid s/b maintained by media handlers,
+            minor tweak to when scsi automount thread started, fthreads.h:
+            change default fthreads mutex type from recursive to errorcheck
+            to prevent unintended introduction of deadlock situations due
+            to difference between Windows/Linux's threading model - Fish
 05 Sep 2004 1. Fix deadlock introduced by me in scsitape.h, 2. rescind
             30 Jul 2004 bldcfg.c fix that I'm told is actually contrary
             to a change/decision made by Jan back on 2003/03/20 that I

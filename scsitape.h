@@ -56,8 +56,6 @@ int             i;                      /* Array subscript           */
 struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 int save_errno;
 
-//  obtain_lock( &dev->lock );
-
     ASSERT( dev->fd < 0 );  // (sanity check)
     dev->sstat = GMT_DR_OPEN( -1 );
 
@@ -86,7 +84,6 @@ int save_errno;
     {
         logmsg (_("HHCTA024E Error opening %s; errno=%d: %s\n"),
                 dev->filename, errno, strerror(errno));
-//      release_lock( &dev->lock );
         build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
         return -1; // (FATAL error; device cannot be opened)
     }
@@ -130,7 +127,6 @@ int save_errno;
 
     TRACE( "** open_scsitape: exit\n" );
 
-//  release_lock( &dev->lock );
     return rc;
 } /* end function open_scsitape */
 
@@ -785,8 +781,6 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 /*-------------------------------------------------------------------*/
 static void update_status_scsitape( DEVBLK* dev, int no_trace )
 {
-//  obtain_lock( &dev->lock );
-
     if ( dev->fd < 0 )
     {
         TRACE( "** update_status_scsitape: fd < 0\n" );
@@ -812,9 +806,10 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
                 TRACE( "** update_status_scsitape: ioctl(MTIOCGET) failed\n" );
             }
             errno = save_errno;
-            // (Don't bother issuing an error message if the problem
-            //  was simply that there isn't/wasn't any tape mounted)
-            if ( ENOMEDIUM != errno )
+            // Don't bother issuing an error message if the problem
+            // was simply that there isn't/wasn't any tape mounted,
+            // of if the device is simply busy or not opened yet...
+            if ( ENOMEDIUM != errno && EBUSY != errno && EACCES != errno )
                 logmsg (_("HHCTA022E Error reading status of %s; errno=%d: %s\n"),
                     dev->filename, errno, strerror(errno));
             // Set "door open" status to force closing of tape file
@@ -882,14 +877,22 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
         }
     }
 
-    // If no tape is currently mounted on this device, kick off
-    // the tape mount monitoring thread (if it doesn't already
-    // still exist) that will monitor for tape mounts...
+    // If no tape is currently mounted on this device,
+    // kick off the tape mount monitoring thread that
+    // will monitor for tape mounts (if it doesn't al-
+    // ready still exist)...
+
+    // Note that we only do this if the drive does NOT
+    // have a message display (tdparms.displayfeat).
+    // (If the drive has a message display, the auto-
+    // mount handling logic in tapedev.c kicks off the
+    // thread there so we don't need to do it here).
 
     if (1
+        &&  !dev->tdparms.displayfeat
         &&   STS_NOT_MOUNTED( dev )
-        &&   sysblk.auto_scsi_mount_secs
         &&  !dev->stape_mountmon_tid
+        &&   sysblk.auto_scsi_mount_secs
     )
     {
         TRACE( "** update_status_scsitape: creating mount monitoring thread...\n" );
@@ -908,17 +911,17 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
 
     TRACE( "** update_status_scsitape: exit\n" );
 
-//  release_lock( &dev->lock );
 } /* end function update_status_scsitape */
 
 /*-------------------------------------------------------------------*/
 /* SCSI tape tape-mount monitoring thread (monitors for tape mounts) */
 /* Auto-started by 'update_status_scsitape' when it notices there is */
-/* no tape mounted on whatever device it's checking the status of... */
+/* no tape mounted on whatever device it's checking the status of,   */
+/* or by the ReqAutoMount function for unsatisfied mount requests.   */
 /*-------------------------------------------------------------------*/
 static void *scsi_tapemountmon_thread( void *db )
 {
-    int tape_was_mounted;
+    BYTE tape_was_mounted;
     DEVBLK* dev = db;
     int priority, rc;
 
@@ -943,16 +946,13 @@ static void *scsi_tapemountmon_thread( void *db )
 
     while
     (1
-        &&  STS_NOT_MOUNTED( dev )  // while tape not mounted and
-        &&  !sysblk.shutdown        // it's not time to shutdown
+        &&   sysblk.auto_scsi_mount_secs            // if feature is enabled
+        &&  !sysblk.shutdown                        // and not time to shutdown
+        && (!dev->tdparms.displayfeat ||            // and tape has no display
+            TAPEDISPTYP_MOUNT == dev->tapedisptype) // or mount is still pending
+        &&  STS_NOT_MOUNTED( dev )                  // and tape still not mounted
     )
     {
-        if ( !sysblk.auto_scsi_mount_secs )
-        {
-            TRACE( "** scsi_tapemountmon_thread: disable detected; exiting...\n" );
-            break;
-        }
-
         release_lock( &dev->lock );
         TRACE( "** scsi_tapemountmon_thread: sleeping for %d seconds...\n",
             sysblk.auto_scsi_mount_secs );
@@ -968,54 +968,40 @@ static void *scsi_tapemountmon_thread( void *db )
 
         if ( dev->fd < 0 )
         {
-            // Tape device is still offline; keep
-            // trying to open it until it's ready.
-            // (Note that 'open_scsitape' calls
-            //  'update_status_scsitape' for us)
-//          release_lock( &dev->lock );
+            // Tape device is still offline; keep trying to open it
+            // until it's ready. (Note: 'open_scsitape' automatically
+            // calls 'update_status_scsitape' for us)
+
             TRACE( "** scsi_tapemountmon_thread: calling 'open_scsitape'...\n" );
             open_scsitape( dev, NULL, 0 );
             TRACE( "** scsi_tapemountmon_thread: back from 'open_scsitape'...\n" );
-//          obtain_lock( &dev->lock );
         }
         else
         {
-            // The DRIVE is ready, but there's still
-            // not any tape mounted; keep retrieving
-            // the status until we know it's mounted.
-//          release_lock( &dev->lock );
+            // The DRIVE is ready, but there's still not any tape mounted;
+            // keep retrieving the status until we know it's mounted...
+
             TRACE( "** scsi_tapemountmon_thread: calling 'update_status_scsitape'...\n" );
             update_status_scsitape( dev, 1 );
             TRACE( "** scsi_tapemountmon_thread: back from 'update_status_scsitape'...\n" );
-//          obtain_lock( &dev->lock );
         }
     }
 
-    // Either the tape has finally been mounted,
-    // or else it's time to shutdown...
+    // Finish up...
 
     tape_was_mounted =
         ( !sysblk.shutdown && !STS_NOT_MOUNTED( dev ) );
 
-    // Notify the 'update_status_scsitape' function
-    // that we're done doing our job so it can know
-    // to start us back up again if this tape drive
-    // ever has its tape unloaded again... (or if it
-    // ever goes 'offline' again)
-
-    dev->stape_mountmon_tid = 0;  // (we're going away)
-
-    // Finish up...
-
     if ( tape_was_mounted )
     {
-        // Set drive to variable length block processing mode...
+        // Set drive to variable length block processing mode, etc...
+
         TRACE( "** scsi_tapemountmon_thread: calling 'finish_scsitape_tapemount'...\n" );
         if ( finish_scsitape_tapemount( dev, NULL, 0 ) == 0 )
         {
-            // Notify the guest that the tape has now been
-            // succcessfully loaded by presenting them with
-            // an unsolicited device attention interrupt.
+            // Notify the guest that the tape has now been loaded by
+            // presenting an unsolicited device attention interrupt...
+
             TRACE( "** scsi_tapemountmon_thread: calling 'device_attention'...\n" );
             release_lock( &dev->lock );
             device_attention( dev, CSW_DE );
@@ -1032,6 +1018,12 @@ static void *scsi_tapemountmon_thread( void *db )
         ,getpid()
         ,dev->devnum
     );
+
+    // Notify the 'update_status_scsitape' function that we are done
+    // so it can know to start us back up again if this tape drive ever
+    // has its tape unloaded again...
+
+    dev->stape_mountmon_tid = 0;  // (we're going away)
 
     release_lock( &dev->lock );
 

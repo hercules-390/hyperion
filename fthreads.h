@@ -334,7 +334,7 @@ int  fthread_cond_timedwait
 
 #define  FTHREAD_MUTEX_ERRORCHECK   0x4F6E6365                  // "Once" in ASCII
 #define  FTHREAD_MUTEX_RECURSIVE    0x4D616E79                  // "Many" in ASCII
-#define  FTHREAD_MUTEX_DEFAULT      FTHREAD_MUTEX_RECURSIVE
+#define  FTHREAD_MUTEX_DEFAULT      FTHREAD_MUTEX_ERRORCHECK
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Initialize a "mutex" attribute...
