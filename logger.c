@@ -258,10 +258,15 @@ void logger_init(void)
        as the log file. */
     if(!isatty(STDOUT_FILENO) && !isatty(STDERR_FILENO))
     {
-        sysblk.hrdcpyfd = dup(STDERR_FILENO);
         /* Ignore standard output to the extent that it is 
            treated as standard error */ 
-        dup2(STDERR_FILENO,STDOUT_FILENO);
+        sysblk.hrdcpyfd = dup(STDOUT_FILENO);
+        if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
+        {
+            fprintf(stderr, _("HHCLG004E Error duplicating stderr: %s\n"),
+              strerror(errno));
+            exit(1);
+        }
     }
     else
     {
@@ -339,8 +344,8 @@ void logger_init(void)
 
     setvbuf (sysblk.syslog[LOG_WRITE], NULL, _IOLBF, 0);
 
-    if ( create_thread (&logger_tid, &logger_attr,
-                                    logger_thread, NULL) )
+    if ( create_device_thread (&logger_tid, &logger_attr,
+                                logger_thread, NULL) )
     {
         fprintf(stderr, _("HHCLG012E Cannot create logger thread: %s\n"),
           strerror(errno));

@@ -1,3 +1,6 @@
+17 Jul 2003 make console threads high priority, remove trylock - Fish
+17 Jul 2003 logger_init: 1) consistent stdxxx dup'ing,
+            2) make logger_thread high priority - Fish
 17 Jul 2003 Bugfix: destroy LOCK & COND in cache_destroy - Fish
 16 Jul 2003 Allow specifying a native block device as an FBA
             * Linux only, <2Gb Only - Ivan Warren

@@ -801,15 +801,10 @@ BYTE            buf[32];                /* tn3270 write buffer       */
     /* Close the connection if an error occurred */
     if (rc & CSW_UC)
     {
-        int locked = ((try_obtain_lock(&dev->lock) == 0) ? 1 : 0);
-
         dev->connected = 0;
         close (dev->fd);
         dev->fd = -1;
         dev->sense[0] = SENSE_DC;
-
-        if (locked)
-            release_lock (&dev->lock);
 
         return (CSW_UC);
     }
@@ -1349,8 +1344,8 @@ BYTE                    unitstat;       /* Status after receive data */
             }
 
             /* Create a thread to complete the client connection */
-            if ( create_thread (&tidneg, &sysblk.detattr,
-                                connect_client, &csock) )
+            if ( create_device_thread (&tidneg, &sysblk.detattr,
+                                       connect_client, &csock) )
             {
                 TNSERROR("connect_client create_thread: %s\n",
                         strerror(errno));
@@ -1450,8 +1445,8 @@ console_initialise()
 {
     if(!(sysblk.cnslcnt++))
     {
-        if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
-                            console_connection_handler, NULL) )
+        if ( create_device_thread (&sysblk.cnsltid, &sysblk.detattr,
+                                   console_connection_handler, NULL) )
         {
             logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
                     strerror(errno));
@@ -1465,17 +1460,12 @@ console_initialise()
 static void
 console_remove(DEVBLK *dev)
 {
-    int locked = ((try_obtain_lock(&dev->lock) == 0) ? 1 : 0);
-
     dev->connected = 0;
     dev->console = 0;
 
     if(dev->fd > 2)
         close (dev->fd);
     dev->fd = -1;
-
-    if (locked)
-        release_lock (&dev->lock);
 
     if(!sysblk.cnslcnt--)
         logmsg(_("console_remove() error\n"));
