@@ -22,6 +22,7 @@
 /* Added the HFP-extension-facility (26 additional instructions).    */
 /* Added the AFP-Registers-facility (additional float registers).    */
 /*                                         Peter Kuschnerus 13/12/00 */
+/* Long Displacement Facility: LDY,LEY,STDY,STEY   R.Bowler 29/06/03 */
 /*-------------------------------------------------------------------*/
 
 
@@ -4738,7 +4739,7 @@ U64     msj, lsj;
             /* done iteration when xi, xj equal or differ by 1 */
             for (;;) {
                 xj = (div_U128(mmsa, msa, xi) + xi) >> 1;
-                
+
                 if ((xj == xi) || (abs(xj - xi) == 1)) {
                     break;
                 }
@@ -6035,6 +6036,89 @@ int     pgm_check;
     }
 }
 #endif /* FEATURE_HFP_EXTENSIONS */
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* ED64 LEY   - Load Floating Point Short (Long Displacement)  [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_float_short_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+    HFPREG_CHECK(r1, regs);
+
+    /* Update first 32 bits of register from operand address */
+    regs->fpr[FPR2I(r1)] = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* ED65 LDY   - Load Floating Point Long (Long Displacement)   [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_float_long_y)
+{
+int     r1;                             /* Value of R field          */
+int     i1;                             /* Index of r1 in fpr array  */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U64     dreg;                           /* Double word workarea      */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+
+    /* Fetch value from operand address */
+    dreg = ARCH_DEP(vfetch8) (effective_addr2, b2, regs);
+
+    /* Update register contents */
+    regs->fpr[i1] = dreg >> 32;
+    regs->fpr[i1+1] = dreg;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* ED66 STEY  - Store Floating Point Short (Long Displacement) [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_float_short_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+    HFPREG_CHECK(r1, regs);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) (regs->fpr[FPR2I(r1)], effective_addr2, b2, regs);
+}
+
+
+/*-------------------------------------------------------------------*/
+/* ED67 STDY  - Store Floating Point Long (Long Displacement)  [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_float_long_y)
+{
+int     r1;                             /* Value of R field          */
+int     i1;                             /* Index of r1 in fpr array  */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U64     dreg;                           /* Double word workarea      */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+    HFPREG_CHECK(r1, regs);
+    i1 = FPR2I(r1);
+
+    /* Store register contents at operand address */
+    dreg = ((U64)regs->fpr[i1] << 32)
+         | regs->fpr[i1+1];
+    ARCH_DEP(vstore8) (dreg, effective_addr2, b2, regs);
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
 
 #endif /* FEATURE_HEXADECIMAL_FLOATING_POINT */
 
