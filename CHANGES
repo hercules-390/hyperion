@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+04 Apr 2004 Undo change 14 May - Bernard van der Helm
 24 Mar 2004 More of Greg's CLC improvements + no direct SK manipulation
             when dealing with non-crossing MVCs - Ivan Warren
 18 Mar 2004 re-enable ECPS:VM + VTIMER fix - Ivan Warren
