@@ -13,13 +13,17 @@ At this time, value 20 should be set (works perfect with VM/370 R6 PLC 29)
 
 **********
 
-To see the VM Assists statistics, a new panel command has been added :
+New panel command : 'evm'
 
-evmstats
+Subcommands :
 
-It reports, the number of calls made to CP/VM Assists, and indicates the
-supported/unsupported features as well as the count of assist calls that did
-actually work.
+evm stats : Shows ECPS:VM Call/Hit statistics
+evm enable/disable feature : Enable/Disable named feature
+evm help : (guess)
+evm debug [feature|ALL|CPASSIST|VMASSIST] : Turn on debugging messages for a specific feature
+evm nodebug [feature|ALL|CPASSIST|VMASSIST] : Turn off...
+
+NOTE : evm disable does NOT entirelly disables CP ASSISTS. If it did (i.e. generate a program interrupt whenever a E6xx instruction is invoked) VM would abend immediatelly. Rather, ommit the ECPS:VM statement in the configuration file.
 
 **********
 
