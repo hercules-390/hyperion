@@ -77,14 +77,6 @@ void    cckd_sf_stats (DEVBLK *);
 void    cckd_gcol (DEVBLK *);
 void    cckd_gc_combine (DEVBLK *, int, int, int);
 int     cckd_gc_len (DEVBLK *, BYTE *, off_t, int, int);
-void    cckd_swapend (DEVBLK *);
-void    cckd_swapend_chdr (CCKDDASD_DEVHDR *);
-void    cckd_swapend_l1 (CCKD_L1ENT *, int);
-void    cckd_swapend_l2 (CCKD_L2ENT *);
-void    cckd_swapend_free (CCKD_FREEBLK *);
-void    cckd_swapend4 (char *);
-void    cckd_swapend2 (char *);
-int     cckd_endian ();
 void    cckd_print_itrace(DEVBLK *);
 
 extern  char eighthexFF[];
@@ -1417,11 +1409,15 @@ int             fend,mend;              /* Byte order indicators     */
     {
         if (cckd->open[sfx] == CCKD_OPEN_RW)
         {
-            cckd_swapend (dev);
+            rc = cckd_swapend (cckd->fd[sfx], sysblk.msgpipew);
             rc = lseek (cckd->fd[sfx], CKDDASD_DEVHDR_SIZE, SEEK_SET);
             rc = read (cckd->fd[sfx], &cckd->cdevhdr[sfx], CCKDDASD_DEVHDR_SIZE);
         }
-        else cckd->swapend[sfx] = 1;
+        else
+        {
+            cckd->swapend[sfx] = 1;
+            cckd_swapend_chdr (&cckd->cdevhdr[sfx]);
+        }
     }
 
     return 0;
@@ -1720,14 +1716,12 @@ int             lru=-1;                 /* Least-Recently-Used cache
     {
         rc = lseek (cckd->fd[sfx], cckd->l1[sfx][cckd->l1x], SEEK_SET);
         rc = read (cckd->fd[sfx], cckd->l2, CCKD_L2TAB_SIZE);
+        if (cckd->swapend[sfx]) cckd_swapend_l2 (cckd->l2);
         DEVTRACE("cckddasd: l2[%d,%d] read pos 0x%x cache[%d]\n",
                  sfx, l1x, cckd->l1[sfx][l1x], lru);
         cckd->l2reads[sfx]++;
         cckd->totl2reads++;
     }
-
-    /* get fields in correct byte order (read-only files only) */
-    if (cckd->swapend[sfx]) cckd_swapend_l2 (cckd->l2);
 
     return rc;
 
@@ -3281,168 +3275,6 @@ int             trk;                    /* Track number              */
     return 0;
 
 } /* end function cckd_gc_len */
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian                                                       */
-/*-------------------------------------------------------------------*/
-void cckd_swapend (DEVBLK *dev)
-{
-CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int               i;                    /* Index                     */
-int               sfx;                  /* File index                */
-CCKDDASD_DEVHDR   cdevhdr;              /* Compressed ckd header     */
-CCKD_L1ENT       *l1;                   /* Level 1 table             */
-CCKD_L2ENT        l2[256];              /* Level 2 table             */
-CCKD_FREEBLK      free1;                /* Free block                */
-
-    cckd = dev->cckd_ext;
-    sfx = cckd->sfn;
-
-    /* fix the compressed ckd header */
-
-    lseek (cckd->fd[sfx], CKDDASD_DEVHDR_SIZE, SEEK_SET);
-    read (cckd->fd[sfx], &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-    cckd_swapend_chdr (&cdevhdr);
-    lseek (cckd->fd[sfx], CKDDASD_DEVHDR_SIZE, SEEK_SET);
-    write (cckd->fd[sfx], &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-
-    /* fix the level 1 table */
-
-    l1 = malloc (cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-    lseek (cckd->fd[sfx], CCKD_L1TAB_POS, SEEK_SET);
-    read (cckd->fd[sfx], l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-    cckd_swapend_l1 (l1, cdevhdr.numl1tab);
-    lseek (cckd->fd[sfx], CCKD_L1TAB_POS, SEEK_SET);
-    write (cckd->fd[sfx], l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
-
-    /* fix the level 2 tables */
-
-    for (i=0; i<cdevhdr.numl1tab; i++)
-    {
-        if (l1[i] && l1[i] != 0xffffffff)
-        {
-            lseek (cckd->fd[sfx], l1[i], SEEK_SET);
-            read (cckd->fd[sfx], &l2, CCKD_L2TAB_SIZE);
-            cckd_swapend_l2 ((CCKD_L2ENT *)&l2);
-            lseek (cckd->fd[sfx], l1[i], SEEK_SET);
-            write (cckd->fd[sfx], &l2, CCKD_L2TAB_SIZE);
-        }
-    }
-    free (l1);
-
-    /* fix the free chain */
-    for (i = cdevhdr.free; i; i = free1.pos)
-    {
-        lseek (cckd->fd[sfx], i, SEEK_SET);
-        read (cckd->fd[sfx], &free1, CCKD_FREEBLK_SIZE);
-        cckd_swapend_free (&free1);
-        lseek (cckd->fd[sfx], i, SEEK_SET);
-        write (cckd->fd[sfx], &free1, CCKD_FREEBLK_SIZE);
-    }
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - compressed device header                            */
-/*-------------------------------------------------------------------*/
-void cckd_swapend_chdr (CCKDDASD_DEVHDR *cdevhdr)
-{
-    /* fix the compressed ckd header */
-    cdevhdr->options ^= CCKD_BIGENDIAN;
-    cckd_swapend4 ((char *) &cdevhdr->numl1tab);
-    cckd_swapend4 ((char *) &cdevhdr->numl2tab);
-    cckd_swapend4 ((char *) &cdevhdr->size);
-    cckd_swapend4 ((char *) &cdevhdr->used);
-    cckd_swapend4 ((char *) &cdevhdr->free);
-    cckd_swapend4 ((char *) &cdevhdr->free_total);
-    cckd_swapend4 ((char *) &cdevhdr->free_largest);
-    cckd_swapend4 ((char *) &cdevhdr->free_number);
-    cckd_swapend4 ((char *) &cdevhdr->free_imbed);
-    cckd_swapend2 ((char *) &cdevhdr->compress_parm);
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - level 1 table                                       */
-/*-------------------------------------------------------------------*/
-void cckd_swapend_l1 (CCKD_L1ENT *l1, int n)
-{
-int i;                                  /* Index                     */
-
-    for (i=0; i<n; i++)
-        cckd_swapend4 ((char *) &l1[i]);
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - level 2 table                                       */
-/*-------------------------------------------------------------------*/
-void cckd_swapend_l2 (CCKD_L2ENT *l2)
-{
-int i;                                  /* Index                     */
-
-    for (i=0; i<256; i++)
-    {
-        cckd_swapend4 ((char *) &l2[i].pos);
-        cckd_swapend2 ((char *) &l2[i].len);
-        cckd_swapend2 ((char *) &l2[i].size);
-    }
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - free space entry                                    */
-/*-------------------------------------------------------------------*/
-void cckd_swapend_free (CCKD_FREEBLK *free)
-{
-    cckd_swapend4 ((char *) &free->pos);
-    cckd_swapend4 ((char *) &free->len);
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - 4 bytes                                             */
-/*-------------------------------------------------------------------*/
-void cckd_swapend4 (char *c)
-{
- char temp[4];
-
-    memcpy (&temp, c, 4);
-    c[0] = temp[3];
-    c[1] = temp[2];
-    c[2] = temp[1];
-    c[3] = temp[0];
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - 2 bytes                                             */
-/*-------------------------------------------------------------------*/
-void cckd_swapend2 (char *c)
-{
- char temp[2];
-
-    memcpy (&temp, c, 2);
-    c[0] = temp[1];
-    c[1] = temp[0];
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Are we little or big endian?  From Harbison&Steele.               */
-/*-------------------------------------------------------------------*/
-int cckd_endian()
-{
-union
-{
-    long l;
-    char c[sizeof (long)];
-}   u;
-
-    u.l = 1;
-    return (u.c[sizeof (long) - 1] == 1);
-}
 
 
 /*-------------------------------------------------------------------*/

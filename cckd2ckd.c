@@ -24,9 +24,6 @@ int abbrev (char *, char *);
 void status (int, int);
 int null_trk (int, unsigned char *, int);
 int valid_trk (int, unsigned char *, int, int);
-int chk_endian ();
-void swapend4 (unsigned char *);
-void swapend2 (unsigned char *);
 
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
@@ -193,12 +190,12 @@ int             limited=0;              /* 1=Limit cyls copied       */
     }
 
     /* check the byte order of the file vs the machine */
-    if (((cdevhdr.options & CCKD_BIGENDIAN) != 0 && chk_endian() == 0) ||
-        ((cdevhdr.options & CCKD_BIGENDIAN) == 0 && chk_endian() != 0))
+    if (((cdevhdr.options & CCKD_BIGENDIAN) != 0 && cckd_endian() == 0) ||
+        ((cdevhdr.options & CCKD_BIGENDIAN) == 0 && cckd_endian() != 0))
         swapend = 1;
+    if (swapend) cckd_swapend_chdr (&cdevhdr);
 
     /* get area for primary lookup table and read it in */
-    if (swapend) swapend4 ((unsigned char *)&cdevhdr.numl1tab);
     l1 = malloc (cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
     if (l1 == NULL)
     {
@@ -213,9 +210,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                  ifile, strerror(errno));
         exit (6);
     }
-    if (swapend)
-        for (i = 0; i < cdevhdr.numl1tab; i++)
-            swapend4 ((unsigned char *)&l1[i]);
+    if (swapend) cckd_swapend_l1 (l1, cdevhdr.numl1tab);
 
     /* get number of cylinders if not specified */
     if (cyls == -1)
@@ -322,13 +317,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                          ifile, strerror(errno));
                 exit (11);
             }
-            if (swapend) /* fix byte order if necessary */
-                for (j = 0; j< 256; j++)
-                {
-                    swapend4 ((unsigned char *)&l2[j].pos);
-                    swapend2 ((unsigned char *)&l2[j].len);
-                    swapend2 ((unsigned char *)&l2[j].size);
-                }
+            if (swapend) cckd_swapend_l2 ((CCKD_L2ENT *)&l2);
         }
 
         /* process each entry in the secondary lookup table */
@@ -727,50 +716,6 @@ int             kl,dl;                  /* Key/Data lengths          */
 
     return sz;
 } /* end function valid_trk */
-
-
-/*-------------------------------------------------------------------*/
-/* Are we little or big endian?  From Harbison&Steele.               */
-/*-------------------------------------------------------------------*/
-int chk_endian()
-{
-union
-{
-    long l;
-    char c[sizeof (long)];
-}   u;
-
-    u.l = 1;
-    return (u.c[sizeof (long) - 1] == 1);
-} /* end function chk_endian */
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - 4 bytes                                             */
-/*-------------------------------------------------------------------*/
-void swapend4 (unsigned char *c)
-{
- char temp[4];
-
-    memcpy (&temp, c, 4);
-    c[0] = temp[3];
-    c[1] = temp[2];
-    c[2] = temp[1];
-    c[3] = temp[0];
-}
-
-
-/*-------------------------------------------------------------------*/
-/* Swap endian - 2 bytes                                             */
-/*-------------------------------------------------------------------*/
-void swapend2 (unsigned char *c)
-{
- char temp[2];
-
-    memcpy (&temp, c, 2);
-    c[0] = temp[1];
-    c[1] = temp[0];
-}
 
 #else /* NO_CCKD */
 

@@ -21,7 +21,7 @@ endif
 bin_PROGRAMS = hercules $(HERCIFC) \
 	   dasdinit dasdisup dasdload dasdls dasdpdsu \
 	   tapecopy tapemap tapesplt \
-	   cckd2ckd cckdcdsk ckd2cckd cckdcomp \
+	   cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap \
 	   hetget hetinit hetmap hetupd \
 	   dmap2hrc
 
@@ -38,7 +38,7 @@ hercules_SOURCES = impl.c config.c panel.c version.c \
 	   float.c ctcadpt.c trace.c \
 	   machchk.c vector.c xstore.c \
 	   cmpsc.c sie.c timer.c \
-	   esame.c cckddasd.c cckdcdsx.c \
+	   esame.c cckddasd.c cckdcdsx.c cckdend.c \
 	   parser.c hetlib.c ieee.c \
 	   machdep.h $(FTHREADS)
 
@@ -60,13 +60,15 @@ tapemap_SOURCES = tapemap.c version.c
 
 tapesplt_SOURCES = tapesplt.c version.c
 
-cckdcdsk_SOURCES = cckdcdsk.c version.c
+cckdcdsk_SOURCES = cckdcdsk.c cckdend.c version.c
 
-cckdcomp_SOURCES = cckdcomp.c cckdcdsx.c version.c
+cckdcomp_SOURCES = cckdcomp.c cckdcdsx.c cckdend.c version.c
 
 ckd2cckd_SOURCES = ckd2cckd.c version.c
 
-cckd2ckd_SOURCES = cckd2ckd.c version.c
+cckd2ckd_SOURCES = cckd2ckd.c cckdend.c version.c
+
+cckdswap_SOURCES = cckdswap.c cckdend.c version.c
 
 hetget_SOURCES = hetget.c hetlib.c sllib.c version.c
 
@@ -85,7 +87,7 @@ noinst_HEADERS  = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
     codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
     sllib.h htypes.h fthreads.h w32chan.h linklist.h
 
-cckd: cckd2ckd cckdcdsk ckd2cckd cckdcomp
+cckd: cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap
 
 tar: dist
 

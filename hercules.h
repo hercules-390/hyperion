@@ -1386,5 +1386,23 @@ int     cckddasd_close_device (DEVBLK *);
 off_t   cckd_lseek(DEVBLK *, int, off_t, int);
 ssize_t cckd_read(DEVBLK *, int, char *, size_t);
 ssize_t cckd_write(DEVBLK *, int, const void *, size_t);
+void    cckd_sf_add (DEVBLK *);
+void    cckd_sf_remove (DEVBLK *, int);
+void    cckd_sf_newname (DEVBLK *, BYTE *);
+void    cckd_sf_stats (DEVBLK *);
+void    cckd_print_itrace (DEVBLK *);
+
+/* Functions in module cckdcdsk.c */
+int     cckd_chkdsk(int, FILE *, int);
+
+/* Functions in module cckdend.c */
+int     cckd_swapend (int, FILE *);
+void    cckd_swapend_chdr (CCKDDASD_DEVHDR *);
+void    cckd_swapend_l1 (CCKD_L1ENT *, int);
+void    cckd_swapend_l2 (CCKD_L2ENT *);
+void    cckd_swapend_free (CCKD_FREEBLK *);
+void    cckd_swapend4 (char *);
+void    cckd_swapend2 (char *);
+int     cckd_endian ();
 
 #endif /*!defined(_HERCULES_H)*/

@@ -148,6 +148,15 @@ int             moved=0;                /* Total space moved         */
     rc = lseek (fd, 0, SEEK_SET);
     rc = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
     rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+
+    /* Check the endianess of the file */
+    if (((cdevhdr.options & CCKD_BIGENDIAN) != 0 && cckd_endian() == 0) ||
+        ((cdevhdr.options & CCKD_BIGENDIAN) == 0 && cckd_endian() != 0))
+    {
+        rc = cckd_swapend (fd, m);
+        rc = lseek (fd, CCKD_L1TAB_POS, SEEK_SET);
+    }
+
     if (cdevhdr.free_number == 0)
     {
         compmsg (m, "file has no free space%s\n", "");

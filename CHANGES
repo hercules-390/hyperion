@@ -1,3 +1,4 @@
+17 Oct 2001 Big-endian support and endian conversion - Greg Smith
 16 Oct 2001 OPTION_BUFFERED_RDR - Fish
 16 Oct 2001 Hot Reader support (sockdev = socket devices) - Fish
             (mostly Malcolm Beattie's inspiration; implemented by me)

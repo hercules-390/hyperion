@@ -203,6 +203,8 @@ int             x,y;                    /* Lookup table indices      */
 int             rcvtrks;                /* Nbr trks to be recovered  */
 int             fdflags;                /* File flags                */
 int             shadow=0;               /* 1 = Shadow file           */
+int             swapend=0;              /* 1 = Wrong endianess       */
+int             fend,mend;              /* Byte order indicators     */
 char            msg[256];               /* Message                   */
 int  cyls2311[]   = {200, 0};
 int  cyls2314[]   = {200, 0};
@@ -384,25 +386,36 @@ char *compression[] = {"none", "zlib", "bzip2"};
     }
 
 /*-------------------------------------------------------------------*/
+/* Check the endianess of the compressed CKD file                    */
+/*-------------------------------------------------------------------*/
+    fend = ((cdevhdr.options & CCKD_BIGENDIAN) != 0);
+    mend = cckd_endian ();
+    if (fend != mend)
+    {
+        if (fdflags & O_RDWR)
+        {
+            cdskmsg (m, "converting file(%d) to %s\n",
+               fd, mend ? "big-endian" : "little-endian");
+            rc = cckd_swapend (fd, m);
+            if (rc == -1) goto cdsk_return;
+            rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
+            rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+        }
+        else
+        {
+            swapend = 1;
+            cckd_swapend_chdr (&cdevhdr);
+        }
+    }
+
+/*-------------------------------------------------------------------*/
 /* Perform checks on the compressed device header.  The following    */
 /* fields *must* be correct or the chkdsk function terminates:       */
-/*      options bit CCKD_BIGENDIAN                                   */
 /*      numl1tab                                                     */
 /*      cyls                                                         */
 /* In this circumstance, the compressed header will need to be       */
 /* manually repaired -- see cckdfix.c for a sample                   */
 /*-------------------------------------------------------------------*/
-
-    /* check byte-order */
-    if ((cdsk_chk_endian() && !(cdevhdr.options & CCKD_BIGENDIAN))
-     || (!cdsk_chk_endian() && (cdevhdr.options & CCKD_BIGENDIAN)))
-    {
-        cdskmsg (m, "Invalid byte order bit in header: "
-                 "expected %s and found %s\n",
-                 cdsk_chk_endian() ? "`big-endian'" : "`little-endian'",
-                 cdsk_chk_endian() ? "`little-endian'" : "`big-endian'");
-        goto cdsk_return;
-    }
 
     /* Check number of cylinders */
     hdrcyls = ((U32)(cdevhdr.cyls[3]) << 24)
@@ -470,6 +483,7 @@ char *compression[] = {"none", "zlib", "bzip2"};
              (int) fd, l1tabsz, strerror(errno));
         goto cdsk_return;
     }
+    if (swapend) cckd_swapend_l1 (l1, cdevhdr.numl1tab);
 
 /*-------------------------------------------------------------------*/
 /* Set space boundaries                                              */
@@ -538,6 +552,7 @@ char *compression[] = {"none", "zlib", "bzip2"};
         if (rc == -1) break;
         rc = read (fd, &fb, CCKD_FREEBLK_SIZE);
         if (rc != CCKD_FREEBLK_SIZE) break;
+        if (swapend) cckd_swapend_free (&fb);
         if (fb.len < CCKD_FREEBLK_SIZE || fsp + fb.len > hipos) break;
         if (fb.pos && (fb.pos <= fsp + fb.len ||
                        fb.pos > hipos - CCKD_FREEBLK_SIZE)) break;
@@ -626,6 +641,7 @@ space_check:
     {
         rc = lseek (fd, fsp, SEEK_SET);
         rc = read (fd, &fb, CCKD_FREEBLK_SIZE);
+        if (swapend) cckd_swapend_free (&fb);
         spc[s].pos = fsp;
         spc[s].len = spc[s].siz = fb.len;
         spc[s++].typ = SPCTAB_FREE;
@@ -692,6 +708,8 @@ space_check:
             l2errs++;
             goto bad_l2;
         }
+
+        if (swapend) cckd_swapend_l2 ((CCKD_L2ENT *)&l2);
 
         /* validate each level 2 entry */
         valid_l2 = 1;
@@ -1602,21 +1620,6 @@ unsigned int    v1, v2;                 /* Value for entry           */
     if (x->typ == SPCTAB_L2TAB) return -1;
     else return 1;
 } /* end function cdsk_rcvtab_comp */
-
-/*-------------------------------------------------------------------*/
-/* Are we little or big endian?  From Harbison&Steele.               */
-/*-------------------------------------------------------------------*/
-int cdsk_chk_endian()
-{
-union
-{
-    long l;
-    char c[sizeof (long)];
-}   u;
-
-    u.l = 1;
-    return (u.c[sizeof (long) - 1] == 1);
-}
 
 /*-------------------------------------------------------------------*/
 /* Validate a track image                                            */
