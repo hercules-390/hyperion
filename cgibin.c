@@ -407,8 +407,9 @@ REGS *regs;
         i < sysblk.numcpu;
 #endif
         i++)
-        fprintf(webblk->hsock,"<option value=%d%s>CPU%4.4X</option>\n",
-            i,i==cpu?" selected":"",i);
+        if(sysblk.regs[i].cpuonline)
+            fprintf(webblk->hsock,"<option value=%d%s>CPU%4.4X</option>\n",
+              i,i==cpu?" selected":"",i);
 
     fprintf(webblk->hsock,"</select>\n"
                           "<input type=submit name=selcpu value=\"Select\">\n"
@@ -416,12 +417,10 @@ REGS *regs;
                           "<input type=hidden name=select_gr value=%c>\n" 
                           "<input type=hidden name=select_cr value=%c>\n" 
                           "<input type=hidden name=select_ar value=%c>\n",
-//                        "</form>\n",
                           cpu, select_gr?'S':'H',select_cr?'S':'H',select_ar?'S':'H');
-
     fprintf(webblk->hsock,"Mode: %s\n",get_arch_mode_string(regs));
+    fprintf(webblk->hsock,"</form>\n");
 
-        fprintf(webblk->hsock,"</form>\n");
     if(!select_gr)
     {
         fprintf(webblk->hsock,"<form>\n"
