@@ -107,7 +107,11 @@
 typedef void (ATTR_REGPARM(2) (*zz_func)) (BYTE inst[], REGS *regs);
 
 extern BYTE     ilc_table[];
+#if 0
 #define ILC(_b) ilc_table[(_b)]
+#else
+#define ILC(_b) ((_b) < 0x40 ? 2 : (_b) >= 0x40 && (_b) < 0xc0 ? 4 : 6)
+#endif
 
 /* Gabor Hoffer (performance option) */
 extern zz_func s370_opcode_table[];

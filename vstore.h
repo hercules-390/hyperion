@@ -584,16 +584,13 @@ BYTE   *ia;                             /* Instruction address       */
 int     ilc, len = 0;                   /* Lengths for page crossing */
 VADR    mask;                           /* Mask for page crossing    */
 
+    /* Make sure addresses are wrapped */
+    addr &= ADDRESS_MAXWRAP(regs);
+    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+
     /* Program check if instruction address is odd */
     if ( unlikely(addr & 0x01) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-
-    /* Perform address wrapping if not EXecuted */
-    if (likely(!regs->instvalid))
-    {
-        addr &= ADDRESS_MAXWRAP(regs);
-        regs->psw.IA = addr;
-    }
 
 #if defined(FEATURE_PER)
     /* Save the address address used to fetch the instruction */

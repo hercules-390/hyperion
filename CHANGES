@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+27 Jun 2004 if.pat - Minor tweaks to instfetch - Greg Smith
 26 Jun 2004 gen.pat - Performance tweaks to L,LM,SLA,SLR,ST,STM - Greg Smith
 26 Jun 2004 tlbx2.pat - Fix real mode bug in tlbx.pat - Greg Smith
 26 Jun 2004 iawrap2.pat - Fix performance bug in iawrap.pat - Greg Smith
