@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = \"3.00\"
+VERSION  = \"3.02\"
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -40,7 +40,7 @@ CFLAGS  += -DOPTION_DYNAMIC_LOAD
 CFLAGS  += -DOPTION_CONFIG_SYMBOLS 
 
 EXEFILES = hercules hercifc \
-           dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
+           dasdinit dasdisup dasdload dasdconv dasdls dasdcat dasdpdsu dasdseq \
            tapecopy tapemap tapesplt \
            cckdcdsk cckdcomp cckddiag cckdswap \
            cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
@@ -88,6 +88,10 @@ dasdisup_OBJ = dasdisup.o dasdutil.o codepage.o hostinfo.o version.o \
                cache.o shared.o logmsg.o hsys.o pttrace.o
 
 dasdload_OBJ = dasdload.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o pttrace.o
+
+dasdconv_OBJ = dasdconv.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
                cache.o shared.o logmsg.o hsys.o pttrace.o
 
@@ -187,6 +191,9 @@ dasdisup: $(dasdisup_OBJ)
 
 dasdload: $(dasdload_OBJ)
 	  $(CC) -o dasdload $(dasdload_OBJ) $(LFLAGS)
+
+dasdconv: $(dasdconv_OBJ)
+	  $(CC) -o dasdconv $(dasdconv_OBJ) $(LFLAGS)
 
 dasdls:   $(dasdls_OBJ)
 	  $(CC) -o dasdls $(dasdls_OBJ) $(LFLAGS)
