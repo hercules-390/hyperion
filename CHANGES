@@ -1,3 +1,5 @@
+15 Apr 2001 featall.h: #define OPTION_NO_IEEE_SUPPORT for WIN32 builds
+            (<fenv.h> has not been ported by CygWin yet)
 13 Apr 2001 Correction to CVDG - Jan Jaeger
 09 Apr 2001 Fix intlock access in clock and timer routines - Jan Jaeger
 08 Apr 2001 Small optimization of vstore/vfetch - Jan Jaeger

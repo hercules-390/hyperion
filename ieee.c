@@ -55,7 +55,7 @@
 #include "opcode.h"
 #include "inline.h"
 
-#if defined (FEATURE_BINARY_FLOATING_POINT) && !defined(OPTION_NO_IEEE_SUPPORT)
+#if defined(FEATURE_BINARY_FLOATING_POINT) && !defined(OPTION_NO_IEEE_SUPPORT)
 
 #include <math.h>
 #include <fenv.h>
