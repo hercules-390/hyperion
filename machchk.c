@@ -315,7 +315,7 @@ int i;
         return;
     }
     
-    if(MACHMASK(&regs->psw))
+    if(regs->psw.mach)
     {
 #if defined(_FEATURE_SIE)
         logmsg(_("HHCCP017I CPU%4.4X: Machine check due to host error: %s\n"),

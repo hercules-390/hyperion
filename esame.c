@@ -123,7 +123,7 @@ DEF_INST(store_fpc)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     BFPINST_CHECK(regs);
 
@@ -144,7 +144,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     tmp_fpc;
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     BFPINST_CHECK(regs);
 
@@ -168,7 +168,7 @@ DEF_INST(set_fpc)
 {
 int     r1, unused;                     /* Values of R fields        */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, execflag, regs, r1, unused);
 
     BFPINST_CHECK(regs);
 
@@ -190,7 +190,7 @@ DEF_INST(extract_fpc)
 {
 int     r1, unused;                     /* Values of R fields        */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, execflag, regs, r1, unused);
 
     BFPINST_CHECK(regs);
 
@@ -210,7 +210,7 @@ DEF_INST(set_rounding_mode)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     BFPINST_CHECK(regs);
 
@@ -228,13 +228,13 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(trap2)
 {
-    E(inst, regs);
+    E(inst, execflag, regs);
 
     UNREFERENCED(inst);
 
     SIE_MODE_XC_SOPEX(regs);
 
-    ARCH_DEP(trap_x) (0, regs, 0);
+    ARCH_DEP(trap_x) (0, execflag, regs, 0);
 
 } /* end DEF_INST(trap2) */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
@@ -249,11 +249,11 @@ DEF_INST(trap4)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     SIE_MODE_XC_SOPEX(regs);
 
-    ARCH_DEP(trap_x) (1, regs, effective_addr2);
+    ARCH_DEP(trap_x) (1, execflag, regs, effective_addr2);
 
 } /* end DEF_INST(trap4) */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
@@ -290,10 +290,10 @@ RADR    abs;                            /* Absolute address of parm  */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     /* Determine the address of the parameter list */
-    pl_addr = !regs->execflag ? regs->psw.IA : (regs->ET + 4);
+    pl_addr = !execflag ? regs->psw.IA : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
     abs = LOGICAL_TO_ABS (pl_addr, 0, regs,
@@ -388,7 +388,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Use bits 16-23, 32-63 of psw in operand, other bits from old psw */
     psw[0] = save_psw.sysmask;
-    psw[1] = save_psw.pkey | 0x08 | save_psw.states;
+    psw[1] = save_psw.pkey | 0x08 | save_psw.mach<<2 | save_psw.wait<<1 | save_psw.prob;
     psw[3] = 0;
 
 
@@ -402,7 +402,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Privileged Operation exception when setting home
        space mode in problem state */
     if(!REAL_MODE(&regs->psw)
-      && PROBSTATE(&regs->psw)
+      && regs->psw.prob
       && ((psw[2] & 0xC0) == 0xC0) )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
@@ -434,7 +434,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
 #if defined(FEATURE_ESAME)
-        regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
+        regs->psw.notesame = 0;
 #endif /*defined(FEATURE_ESAME)*/
     }
 
@@ -512,6 +512,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
 
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
+
     RETURN_INTCHECK(regs);
 
 } /* end DEF_INST(resume_program) */
@@ -531,7 +533,7 @@ VADR    effective_addr2;                /* effective address         */
 U32     op;                             /* Operand                   */
 #endif /*defined(FEATURE_TRACING)*/
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -576,7 +578,7 @@ int     ovf;                            /* 1=overflow                */
 int     dxf;                            /* 1=data exception          */
 BYTE    dec[16];                        /* Packed decimal operand    */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Fetch 16-byte packed decimal operand */
     ARCH_DEP(vfetchc) ( dec, 16-1, effective_addr2, b2, regs );
@@ -614,7 +616,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 BYTE    dec[16];                        /* Packed decimal result     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load signed value of register */
     bin = (S64)(regs->GR_G(r1));
@@ -641,7 +643,7 @@ VADR    effective_addr2;                /* Effective Address         */
 U32     m;
 U64     p;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -670,7 +672,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective Address         */
 U64     m, ph, pl;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -697,7 +699,7 @@ DEF_INST(multiply_logical_register)
 int     r1, r2;                         /* Values of R fields        */
 U64     p;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -721,7 +723,7 @@ DEF_INST(multiply_logical_long_register)
 int     r1, r2;                         /* Values of R fields        */
 U64     ph, pl;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -748,7 +750,7 @@ VADR    effective_addr2;                /* Effective Address         */
 U32     d;
 U64     n;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -780,7 +782,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective Address         */
 U64     d, r, q;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -821,7 +823,7 @@ int     r1, r2;                         /* Values of R fields        */
 U64     n;
 U32     d;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -850,7 +852,7 @@ DEF_INST(divide_logical_long_register)
 int     r1, r2;                         /* Values of R fields        */
 U64     r, q, d;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -889,7 +891,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     carry = 0;
 U64     n;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     n = regs->GR_G(r2);
 
@@ -917,7 +919,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     borrow = 2;
 U64     n;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     n = regs->GR_G(r2);
 
@@ -948,7 +950,7 @@ VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 int     carry = 0;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -979,7 +981,7 @@ VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 int     borrow = 2;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -1009,7 +1011,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     carry = 0;
 U32     n;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     n = regs->GR_L(r2);
 
@@ -1037,7 +1039,7 @@ int     r1, r2;                         /* Values of R fields        */
 int     borrow = 2;
 U32     n;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     n = regs->GR_L(r2);
 
@@ -1068,7 +1070,7 @@ VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 int     carry = 0;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1099,7 +1101,7 @@ VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 int     borrow = 2;
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1130,7 +1132,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1160,7 +1162,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1188,7 +1190,7 @@ DEF_INST(divide_single_long_register)
 int     r1, r2;                         /* Values of R fields        */
 U64     n;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -1216,7 +1218,7 @@ DEF_INST(divide_single_long_fullword_register)
 int     r1, r2;                         /* Values of R fields        */
 U32     n;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -1245,7 +1247,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     regs->GR_G(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
@@ -1263,7 +1265,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     regs->GR_G(r1) = ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
@@ -1282,7 +1284,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 QWORD   qwork;                          /* Quadword work area        */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1314,7 +1316,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 QWORD   qwork;                          /* Quadword work area        */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -1345,7 +1347,7 @@ int     r1, r2;                         /* Values of R fields        */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -1375,7 +1377,7 @@ DEF_INST(extract_psw)
 int     r1, r2;                         /* Values of R fields        */
 QWORD   currpsw;                        /* Work area for PSW         */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
 #if defined(_FEATURE_ZSIE)
     if(SIE_STATB(regs, IC1, LPSW))
@@ -1405,7 +1407,7 @@ DEF_INST(extract_and_set_extended_authority)
 {
 int     r1, unused;                     /* Value of R field          */
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, execflag, regs, r1, unused);
 
     PRIV_CHECK(regs);
 
@@ -1436,9 +1438,9 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand values     */
 
-    RIL(inst, regs, r1, opcd, i2);
+    RIL(inst, execflag, regs, r1, opcd, i2);
 
-    GR_A(r1, regs) = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
+    GR_A(r1, regs) = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 
 } /* end DEF_INST(load_address_relative_long) */
@@ -1455,7 +1457,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_HHH(r1) = i2;
 
@@ -1473,7 +1475,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_HHL(r1) = i2;
 
@@ -1491,7 +1493,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_LHH(r1) = i2;
 
@@ -1509,7 +1511,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_LHL(r1) = i2;
 
@@ -1527,7 +1529,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_HHH(r1) &= i2;
 
@@ -1548,7 +1550,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_HHL(r1) &= i2;
 
@@ -1569,7 +1571,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_LHH(r1) &= i2;
 
@@ -1590,7 +1592,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_LHL(r1) &= i2;
 
@@ -1611,7 +1613,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_HHH(r1) |= i2;
 
@@ -1632,7 +1634,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_HHL(r1) |= i2;
 
@@ -1653,7 +1655,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_LHH(r1) |= i2;
 
@@ -1674,7 +1676,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_LHL(r1) |= i2;
 
@@ -1695,7 +1697,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2 << 48;
 
@@ -1713,7 +1715,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2 << 32;
 
@@ -1731,7 +1733,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2 << 16;
 
@@ -1749,7 +1751,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     regs->GR_G(r1) = (U64)i2;
 
@@ -1767,13 +1769,13 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand values     */
 
-    RIL(inst, regs, r1, opcd, i2);
+    RIL(inst, execflag, regs, r1, opcd, i2);
 
     /* Branch if R1 mask bit is set */
     if ((0x08 >> regs->psw.cc) & r1)
     {
         /* Calculate the relative branch address */
-        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
+        regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -1800,7 +1802,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U32     i2;                             /* 32-bit operand values     */
 
-    RIL(inst, regs, r1, opcd, i2);
+    RIL(inst, execflag, regs, r1, opcd, i2);
 
 #if defined(FEATURE_ESAME)
     if(regs->psw.amode64)
@@ -1813,7 +1815,7 @@ U32     i2;                             /* 32-bit operand values     */
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
     /* Set instruction address to the relative branch address */
-    regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
+    regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 
 #if defined(FEATURE_PER)
@@ -1844,7 +1846,7 @@ int     cc = 0;                         /* Condition code            */
 BYTE    rbyte[4],                       /* Register bytes            */
         vbyte;                          /* Virtual storage byte      */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Set register bytes by mask */
     i = 0;
@@ -1883,7 +1885,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i;                              /* Integer work area         */
 BYTE    rbyte[4];                       /* Register bytes from mask  */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     switch (r3) {
 
@@ -1938,7 +1940,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
                        0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
                        0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000};
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     switch (r3) {
 
@@ -1988,7 +1990,7 @@ int     r1, r3;                         /* Register numbers          */
 U32     i2;                             /* 32-bit operand            */
 S64     i,j;                            /* Integer workareas         */
 
-    RIE(inst, regs, r1, r3, i2);
+    RIE(inst, execflag, regs, r1, r3, i2);
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2002,7 +2004,7 @@ S64     i,j;                            /* Integer workareas         */
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
     {
-        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
+        regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -2029,7 +2031,7 @@ int     r1, r3;                         /* Register numbers          */
 U32     i2;                             /* 32-bit operand            */
 S64     i,j;                            /* Integer workareas         */
 
-    RIE(inst, regs, r1, r3, i2);
+    RIE(inst, execflag, regs, r1, r3, i2);
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2043,7 +2045,7 @@ S64     i,j;                            /* Integer workareas         */
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
     {
-        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
+        regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -2071,7 +2073,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
     i = (S64)regs->GR_G(r3);
@@ -2112,7 +2114,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S64     i, j;                           /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
     i = regs->GR_G(r3);
@@ -2154,7 +2156,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U64     old;                            /* old value                 */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     DW_CHECK(effective_addr2, regs);
 
@@ -2213,7 +2215,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U64     old1, old2;                     /* old value                 */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -2276,7 +2278,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
@@ -2306,7 +2308,7 @@ DEF_INST(branch_on_count_long_register)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR_G(r2) & ADDRESS_MAXWRAP(regs);
@@ -2339,7 +2341,7 @@ DEF_INST(compare_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -2358,7 +2360,7 @@ DEF_INST(compare_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -2380,7 +2382,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2405,7 +2407,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2430,7 +2432,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2455,7 +2457,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2480,7 +2482,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2491,7 +2493,7 @@ U32     n;                              /* 32-bit operand values     */
                                  (S32)n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_fullword) */
@@ -2509,7 +2511,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2520,7 +2522,7 @@ U64     n;                              /* 64-bit operand values     */
                                       n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long) */
@@ -2538,7 +2540,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2563,7 +2565,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2588,7 +2590,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2599,7 +2601,7 @@ U32     n;                              /* 32-bit operand values     */
                                 (S32)n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_fullword) */
@@ -2617,7 +2619,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -2628,7 +2630,7 @@ U64     n;                              /* 64-bit operand values     */
                                      n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long) */
@@ -2643,7 +2645,7 @@ DEF_INST(subtract_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Subtract signed operands and set condition code */
     regs->psw.cc = sub_signed_long(&(regs->GR_G(r1)),
@@ -2651,7 +2653,7 @@ int     r1, r2;                         /* Values of R fields        */
                                      regs->GR_G(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_register) */
@@ -2666,7 +2668,7 @@ DEF_INST(subtract_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Subtract signed operands and set condition code */
     regs->psw.cc = sub_signed_long(&(regs->GR_G(r1)),
@@ -2674,7 +2676,7 @@ int     r1, r2;                         /* Values of R fields        */
                                 (S32)regs->GR_L(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_long_fullword_register) */
@@ -2689,7 +2691,7 @@ DEF_INST(add_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc = add_signed_long(&(regs->GR_G(r1)),
@@ -2697,7 +2699,7 @@ int     r1, r2;                         /* Values of R fields        */
                                      regs->GR_G(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_register) */
@@ -2712,7 +2714,7 @@ DEF_INST(add_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc = add_signed_long(&(regs->GR_G(r1)),
@@ -2720,7 +2722,7 @@ int     r1, r2;                         /* Values of R fields        */
                                 (S32)regs->GR_L(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_fullword_register) */
@@ -2735,14 +2737,14 @@ DEF_INST(load_positive_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Condition code 3 and program check if overflow */
     if ( regs->GR_G(r2) == 0x8000000000000000ULL )
     {
         regs->GR_G(r1) = regs->GR_G(r2);
         regs->psw.cc = 3;
-        if ( FOMASK(&regs->psw) )
+        if ( regs->psw.fomask )
             ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
@@ -2767,7 +2769,7 @@ DEF_INST(load_positive_long_fullword_register)
 int     r1, r2;                         /* Values of R fields        */
 S64     gpr2l;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     gpr2l = (S32)regs->GR_L(r2);
 
@@ -2788,7 +2790,7 @@ DEF_INST(load_negative_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Load negative value of second operand and set cc */
     (S64)regs->GR_G(r1) = (S64)regs->GR_G(r2) > 0 ?
@@ -2810,7 +2812,7 @@ DEF_INST(load_negative_long_fullword_register)
 int     r1, r2;                         /* Values of R fields        */
 S64     gpr2l;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     gpr2l = (S32)regs->GR_L(r2);
 
@@ -2831,7 +2833,7 @@ DEF_INST(load_and_test_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Copy second operand and set condition code */
     regs->GR_G(r1) = regs->GR_G(r2);
@@ -2851,7 +2853,7 @@ DEF_INST(load_and_test_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Copy second operand and set condition code */
     (S64)regs->GR_G(r1) = (S32)regs->GR_L(r2);
@@ -2871,14 +2873,14 @@ DEF_INST(load_complement_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Condition code 3 and program check if overflow */
     if ( regs->GR_G(r2) == 0x8000000000000000ULL )
     {
         regs->GR_G(r1) = regs->GR_G(r2);
         regs->psw.cc = 3;
-        if ( FOMASK(&regs->psw) )
+        if ( regs->psw.fomask )
             ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
@@ -2902,7 +2904,7 @@ DEF_INST(load_complement_long_fullword_register)
 int     r1, r2;                         /* Values of R fields        */
 S64     gpr2l;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     gpr2l = (S32)regs->GR_L(r2);
 
@@ -2928,7 +2930,7 @@ U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     /* AND register bits 0-15 with immediate operand */
     h1 = i2 & regs->GR_HHH(r1);
@@ -2959,7 +2961,7 @@ U16     i2;                             /* 16-bit operand values     */
 U16     h1;                             /* 16-bit operand values     */
 U16     h2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     /* AND register bits 16-31 with immediate operand */
     h1 = i2 & regs->GR_HHL(r1);
@@ -2988,12 +2990,12 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
     {
-        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
+        regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -3020,7 +3022,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3044,7 +3046,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -3065,7 +3067,7 @@ DEF_INST(compare_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_G(r1) < regs->GR_L(r2) ? 1 :
@@ -3083,7 +3085,7 @@ DEF_INST(load_logical_long_thirtyone_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     regs->GR_G(r1) = regs->GR_L(r2) & 0x7FFFFFFF;
 
@@ -3099,7 +3101,7 @@ DEF_INST(compare_logical_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_G(r1) < regs->GR_G(r2) ? 1 :
@@ -3120,7 +3122,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3144,7 +3146,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost five bits of operand address as shift count */
     n = effective_addr2 & 0x1F;
@@ -3168,7 +3170,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3191,7 +3193,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3215,7 +3217,7 @@ VADR    effective_addr2;                /* effective address         */
 U64     n, n1, n2;                      /* 64-bit operand values     */
 U32     i, j;                           /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3242,7 +3244,7 @@ U32     i, j;                           /* Integer work areas        */
     if (j)
     {
         regs->psw.cc = 3;
-        if ( FOMASK(&regs->psw) )
+        if ( regs->psw.fomask )
             ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
@@ -3266,7 +3268,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 U64     n;                              /* Integer work areas        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
@@ -3295,7 +3297,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -3318,7 +3320,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3338,7 +3340,7 @@ DEF_INST(multiply_single_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
     (S64)regs->GR_G(r1) *= (S32)regs->GR_L(r2);
@@ -3355,7 +3357,7 @@ DEF_INST(multiply_single_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
     (S64)regs->GR_G(r1) *= (S64)regs->GR_G(r2);
@@ -3374,7 +3376,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     /* Load operand into register */
     (S64)regs->GR_G(r1) = (S16)i2;
@@ -3393,7 +3395,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit immediate op       */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc = add_signed_long(&(regs->GR_G(r1)),
@@ -3401,7 +3403,7 @@ U16     i2;                             /* 16-bit immediate op       */
                                 (S16)i2);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_long_halfword_immediate) */
@@ -3418,7 +3420,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     /* Multiply register by operand ignoring overflow  */
     (S64)regs->GR_G(r1) *= (S16)i2;
@@ -3437,7 +3439,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI(inst, regs, r1, opcd, i2);
+    RI(inst, execflag, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -3456,7 +3458,7 @@ DEF_INST(and_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* AND second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_G(r1) &= regs->GR_G(r2) ) ? 1 : 0;
@@ -3473,7 +3475,7 @@ DEF_INST(or_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* OR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_G(r1) |= regs->GR_G(r2) ) ? 1 : 0;
@@ -3490,7 +3492,7 @@ DEF_INST(exclusive_or_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* XOR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_G(r1) ^= regs->GR_G(r2) ) ? 1 : 0;
@@ -3510,7 +3512,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3533,7 +3535,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3556,7 +3558,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -3576,7 +3578,7 @@ DEF_INST(load_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_G(r1) = regs->GR_G(r2);
@@ -3593,7 +3595,7 @@ DEF_INST(load_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_G(r1) = regs->GR_L(r2);
@@ -3610,7 +3612,7 @@ DEF_INST(load_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Copy second operand to first operand */
     (S64)regs->GR_G(r1) = (S32)regs->GR_L(r2);
@@ -3627,7 +3629,7 @@ DEF_INST(add_logical_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
@@ -3646,7 +3648,7 @@ DEF_INST(add_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Add unsigned operands and set condition code */
     regs->psw.cc = add_logical_long(&(regs->GR_G(r1)),
@@ -3665,7 +3667,7 @@ DEF_INST(subtract_logical_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
@@ -3684,7 +3686,7 @@ DEF_INST(subtract_logical_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
@@ -3709,7 +3711,7 @@ int     i, d;                           /* Integer work areas        */
 BYTE    rworkh[64], rworkl[64];         /* High and low halves of new
                                            values to be loaded       */
 
-    SS(inst, regs, r1, r3, b2, effective_addr2,
+    SS(inst, execflag, regs, r1, r3, b2, effective_addr2,
                                         b4, effective_addr4);
 
     /* Calculate the number of bytes to be loaded from each operand */
@@ -3752,7 +3754,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Character work areas      */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate the number of bytes to be loaded */
     d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
@@ -3789,7 +3791,7 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                     /* Register work areas       */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate the number of bytes to be loaded */
     d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 8;
@@ -3826,7 +3828,7 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                      /* Register work areas       */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -3868,22 +3870,21 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                     /* Register work areas       */
-int     inval = 0;                      /* Invalidation flag         */
+int     inval = 0;                      /* Invalidation flag        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
     FW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_ZSIE)
-    if ( SIE_MODE(regs) )
+    if(SIE_STATE(regs))
     {
     U32 n;
         for(i = r1; ; )
         {
             n = 0x8000 >> i;
-//FIXME: can we use the test_bit function here ?? (see machdep.h)
             if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & ((i < 8) ? n >> 8 : n))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
@@ -3970,7 +3971,7 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                      /* Register work areas       */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Copy control registers into work area */
     for ( i = r1, d = 0; ; )
@@ -4004,7 +4005,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i, d;                           /* Integer work area         */
 BYTE    rwork[64];                      /* Register work area        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Copy register contents into work area */
     for ( i = r1, d = 0; ; )
@@ -4035,7 +4036,7 @@ DEF_INST(load_using_real_address_long)
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Unsigned work             */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
 
@@ -4061,7 +4062,7 @@ DEF_INST(store_using_real_address_long)
 int     r1, r2;                         /* Values of R fields        */
 RADR    n;                              /* Unsigned work             */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
 
@@ -4093,7 +4094,7 @@ RADR    n;                              /* Unsigned work             */
 /*-------------------------------------------------------------------*/
 DEF_INST(test_addressing_mode)
 {
-    E(inst, regs);
+    E(inst, execflag, regs);
 
     UNREFERENCED(inst);
 
@@ -4115,7 +4116,7 @@ DEF_INST(set_addressing_mode_24)
 {
 VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 
-    E(inst, regs);
+    E(inst, execflag, regs);
 
     UNREFERENCED(inst);
 
@@ -4147,7 +4148,7 @@ DEF_INST(set_addressing_mode_31)
 {
 VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 
-    E(inst, regs);
+    E(inst, execflag, regs);
 
     UNREFERENCED(inst);
 
@@ -4177,7 +4178,7 @@ VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 /*-------------------------------------------------------------------*/
 DEF_INST(set_addressing_mode_64)
 {
-    E(inst, regs);
+    E(inst, execflag, regs);
 
     UNREFERENCED(inst);
 
@@ -4204,7 +4205,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore8) ( regs->GR_G(r1), effective_addr2, b2, regs );
@@ -4228,7 +4229,7 @@ int     protect;                        /* 1=ALE or page protection  */
 int     stid;                           /* Segment table indication  */
 RADR    n;                              /* 64-bit operand values     */
 
-    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -4256,7 +4257,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
@@ -4275,7 +4276,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     (S64)regs->GR_G(r1) = (S32)ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -4294,7 +4295,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     (S64)regs->GR_G(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -4313,7 +4314,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -4332,7 +4333,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs )
@@ -4353,7 +4354,7 @@ U64     effective_addr2;                /* Effective address         */
 QWORD   qword;
 int     rc;
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -4405,7 +4406,7 @@ int     stid;                           /* Segment table indication  */
 int     cc;                             /* Condition code            */
 RADR    n;                              /* 64-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -4489,7 +4490,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 PSA    *psa;                            /* -> Prefixed storage area  */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -4525,7 +4526,7 @@ DEF_INST(load_reversed_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_G(r1) = bswap_64(regs->GR_G(r2));
@@ -4542,7 +4543,7 @@ DEF_INST(load_reversed_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_L(r1) = bswap_32(regs->GR_L(r2));
@@ -4561,7 +4562,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_G(r1) = bswap_64(ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ));
@@ -4580,7 +4581,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = bswap_32(ARCH_DEP(vfetch4) ( effective_addr2, b2, regs ));
@@ -4599,7 +4600,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_LHL(r1) = bswap_16(ARCH_DEP(vfetch2) ( effective_addr2, b2, regs ));
@@ -4617,7 +4618,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore8) ( bswap_64(regs->GR_G(r1)), effective_addr2, b2, regs );
@@ -4636,7 +4637,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore4) ( bswap_32(regs->GR_L(r1)), effective_addr2, b2, regs );
@@ -4655,7 +4656,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore2) ( bswap_16(regs->GR_LHL(r1)), effective_addr2, b2, regs );
@@ -4677,7 +4678,7 @@ BYTE    source[33];                     /* 32 digits + implied sign  */
 BYTE    result[16];                     /* 31-digit packed result    */
 int     i, j;                           /* Array subscripts          */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, execflag, regs, len, b1, addr1, b2, addr2);
 
     /* Program check if operand length (len+1) exceeds 32 bytes */
     if (len > 31)
@@ -4716,7 +4717,7 @@ BYTE    source[66];                     /* 32 digits + implied sign  */
 BYTE    result[16];                     /* 31-digit packed result    */
 int     i, j;                           /* Array subscripts          */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, execflag, regs, len, b1, addr1, b2, addr2);
 
     /* Program check if byte count (len+1) exceeds 64 or is odd */
     if (len > 63 || (len & 1) == 0)
@@ -4757,7 +4758,7 @@ BYTE    source[16];                     /* 31-digit packed operand   */
 int     i, j;                           /* Array subscripts          */
 int     cc;                             /* Condition code            */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, execflag, regs, len, b1, addr1, b2, addr2);
 
     /* Program check if operand length (len+1) exceeds 32 bytes */
     if (len > 31)
@@ -4809,7 +4810,7 @@ BYTE    source[16];                     /* 31-digit packed operand   */
 int     i, j;                           /* Array subscripts          */
 int     cc;                             /* Condition code            */
 
-    SS_L(inst, regs, len, b1, addr1, b2, addr2);
+    SS_L(inst, execflag, regs, len, b1, addr1, b2, addr2);
 
     /* Program check if byte count (len+1) exceeds 64 or is odd */
     if (len > 63 || (len & 1) == 0)
@@ -4861,7 +4862,7 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 BYTE    svalue, dvalue, tvalue;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -4933,7 +4934,7 @@ GREG    len;
 BYTE    svalue;
 BYTE    dvalue, tvalue;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -5005,7 +5006,7 @@ GREG    len;
 U16     svalue;
 BYTE    dvalue, tvalue;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -5078,7 +5079,7 @@ VADR    addr1, addr2, trtab;            /* Effective addresses       */
 GREG    len;
 U16     svalue, dvalue, tvalue;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -5157,7 +5158,7 @@ U16     odbyte;                         /* Operand double byte       */
 U16     pad;                            /* Padding double byte       */
 int     cpu_length;                     /* cpu determined length     */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -5241,7 +5242,7 @@ U16     dbyte1, dbyte3;                 /* Operand double bytes      */
 U16     pad;                            /* Padding double byte       */
 int     cpu_length;                     /* cpu determined length     */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -5325,7 +5326,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load sign-extended byte from operand address */
     (S32)regs->GR_L(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
@@ -5344,7 +5345,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load sign-extended byte from operand address */
     (S64)regs->GR_G(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
@@ -5364,7 +5365,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -5376,7 +5377,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_y) */
@@ -5394,7 +5395,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
     (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -5406,7 +5407,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_halfword_y) */
@@ -5424,7 +5425,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -5450,7 +5451,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    rbyte;                          /* Result byte               */
 
-    SIY(inst, regs, i2, b1, effective_addr1);
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -5479,7 +5480,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -5502,7 +5503,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -5527,7 +5528,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of comparand from operand address */
     (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -5552,7 +5553,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -5576,7 +5577,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    cbyte;                          /* Compare byte              */
 
-    SIY(inst, regs, i2, b1, effective_addr1);
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     cbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -5603,7 +5604,7 @@ int     cc = 0;                         /* Condition code            */
 BYTE    rbyte[4],                       /* Register bytes            */
         vbyte;                          /* Virtual storage byte      */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Set register bytes by mask */
     i = 0;
@@ -5642,7 +5643,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U32     old;                            /* old value                 */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -5701,7 +5702,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U64     old, new;                       /* old, new values           */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -5766,7 +5767,7 @@ int     ovf;                            /* 1=overflow                */
 int     dxf;                            /* 1=data exception          */
 BYTE    dec[8];                         /* Packed decimal operand    */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Fetch 8-byte packed decimal operand */
     ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
@@ -5808,7 +5809,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 BYTE    dec[16];                        /* Packed decimal result     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load value of register and sign-extend to 64 bits */
     bin = (S64)((S32)(regs->GR_L(r1)));
@@ -5834,7 +5835,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    rbyte;                          /* Result byte               */
 
-    SIY(inst, regs, i2, b1, effective_addr1);
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -5863,7 +5864,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -5885,7 +5886,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Insert character in r1 register */
     regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
@@ -5914,7 +5915,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
                        0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
                        0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000};
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     switch (r3) {
 
@@ -5964,7 +5965,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -5986,7 +5987,7 @@ VADR    effective_addr2;                /* effective address         */
 int     n, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work area        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -6029,7 +6030,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
     GR_A(r1, regs) = effective_addr2;
@@ -6048,7 +6049,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of register from operand address */
     (S32)regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -6069,7 +6070,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Character work areas      */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate the number of bytes to be loaded */
     d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
@@ -6104,7 +6105,7 @@ int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);
 
@@ -6122,7 +6123,7 @@ BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
-    SIY(inst, regs, i2, b1, effective_addr1);
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
 
     /* Store immediate operand at operand address */
     ARCH_DEP(vstoreb) ( i2, effective_addr1, b1, regs );
@@ -6142,7 +6143,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -6165,7 +6166,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    rbyte;                          /* Result byte               */
 
-    SIY(inst, regs, i2, b1, effective_addr1);
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -6194,7 +6195,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -6216,7 +6217,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
@@ -6238,7 +6239,7 @@ VADR    effective_addr2;                /* effective address         */
 int     n, d;                           /* Integer work area         */
 BYTE    rwork[64];                      /* Register work area        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -6273,7 +6274,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store rightmost byte of R1 register at operand address */
     ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
@@ -6294,7 +6295,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i;                              /* Integer work area         */
 BYTE    rbyte[4];                       /* Byte work area            */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     switch (r3) {
 
@@ -6339,7 +6340,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Store rightmost 2 bytes of R1 register at operand address */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
@@ -6360,7 +6361,7 @@ VADR    effective_addr2;                /* effective address         */
 int     n, d;                           /* Integer work area         */
 BYTE    rwork[64];                      /* Register work area        */
 
-    RSY(inst, regs, r1, r3, b2, effective_addr2);
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
     /* Copy register contents into work area */
     for ( n = r1, d = 0; ; )
@@ -6393,7 +6394,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -6405,7 +6406,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_y) */
@@ -6423,7 +6424,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
     (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -6435,7 +6436,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_halfword_y) */
@@ -6453,7 +6454,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RXY(inst, regs, r1, b2, effective_addr2);
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -6479,7 +6480,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    tbyte;                          /* Work byte                 */
 
-    SIY(inst, regs, i2, b1, effective_addr1);
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     tbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );

@@ -86,9 +86,9 @@ int i;
 //          obtain_lock (&sysblk.cpulock[i]);
             if (IS_CPU_ONLINE(i)
              && sysblk.regs[i]->cpustate == CPUSTATE_STARTED
-             && (!WAITSTATE(&sysblk.regs[i]->psw)
+             && (!sysblk.regs[i]->psw.wait
 #if defined(_FEATURE_WAITSTATE_ASSIST)
-             && !(sysblk.regs[i]->sie_active && WAITSTATE(&sysblk.regs[i]->guestregs->psw))
+             && !(SIE_STATE(sysblk.regs[i]) && sysblk.regs[i]->guestregs->psw.wait)
 #endif
                                            ))
             {

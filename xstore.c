@@ -21,12 +21,14 @@ int     r1, r2;                         /* Values of R fields        */
 RADR    maddr;                          /* Main storage address      */
 U32     xaddr;                          /* Expanded storage address  */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
 
+#if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC3, PGX))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Cannot perform xstore page movement in XC mode */
@@ -37,7 +39,8 @@ U32     xaddr;                          /* Expanded storage address  */
     /* expanded storage block number */
     xaddr = regs->GR_L(r2);
 
-    if(SIE_MODE(regs))
+#if defined(_FEATURE_SIE)
+    if(SIE_STATE(regs))
     {
         xaddr += regs->sie_xso;
         if(xaddr >= regs->sie_xsl)
@@ -46,6 +49,7 @@ U32     xaddr;                          /* Expanded storage address  */
             return;
         }
     }
+#endif /*defined(_FEATURE_SIE)*/
 
     /* If the expanded storage block is not configured then
        terminate with cc3 */
@@ -84,12 +88,14 @@ int     r1, r2;                         /* Values of R fields        */
 RADR    maddr;                          /* Main storage address      */
 U32     xaddr;                          /* Expanded storage address  */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
 
+#if defined(_FEATURE_SIE)
     if(SIE_STATB(regs, IC3, PGX))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Cannot perform xstore page movement in XC mode */
@@ -100,7 +106,8 @@ U32     xaddr;                          /* Expanded storage address  */
     /* expanded storage block number */
     xaddr = regs->GR_L(r2);
 
-    if(SIE_MODE(regs))
+#if defined(_FEATURE_SIE)
+    if(SIE_STATE(regs))
     {
         xaddr += regs->sie_xso;
         if(xaddr >= regs->sie_xsl)
@@ -109,6 +116,7 @@ U32     xaddr;                          /* Expanded storage address  */
             return;
         }
     }
+#endif /*defined(_FEATURE_SIE)*/
 
     /* If the expanded storage block is not configured then
        terminate with cc3 */
@@ -145,7 +153,7 @@ DEF_INST(invalidate_expanded_storage_block_entry)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
 
@@ -210,7 +218,7 @@ U32     xpblk1 = 0, xpblk2 = 0;         /* Expanded storage block#   */
 BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
 #if defined(_FEATURE_SIE)
     if(SIE_STATNB(regs, EC0, MVPG))
@@ -228,7 +236,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
         /* Priviliged operation exception if in problem state, and
            the specified key is not permitted by the PSW key mask */
-        if ( PROBSTATE(&regs->psw)
+        if ( regs->psw.prob
             && ((regs->CR(3) << (akey >> 4)) & 0x80000000) == 0 )
             ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
@@ -256,7 +264,11 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     vaddr2 &= XSTORE_PAGEMASK;
 
     /* Obtain the real or expanded address of each operand */
-    if ( !REAL_MODE(&regs->psw) || SIE_MODE(regs) )
+    if (!REAL_MODE(&regs->psw)
+#if defined(_FEATURE_SIE)
+        || SIE_STATE(regs)
+#endif /*defined(_FEATURE_SIE)*/
+                              )
     {
         /* Translate the second operand address to a real address */
         if(!REAL_MODE(&regs->psw))
@@ -274,7 +286,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-        if(SIE_MODE(regs)  && !regs->sie_pref)
+        if(SIE_STATE(regs)  && !regs->sie_pref)
         {
         int sie_stid;
         U16 sie_xcode;
@@ -282,7 +294,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
-                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r2 > 0) ?
+                (SIE_STATB(regs, MX, XC) && regs->psw.armode && r2 > 0) ?
                     r2 :
                     USE_PRIMARY_SPACE,
                     regs->hostregs, ACCTYPE_SIE, &raddr2, &sie_xcode,
@@ -310,7 +322,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             {
                 xpblk2 = (pte2 & ZPGETAB_PFRA) >> 12;
 #if defined(_FEATURE_SIE)
-                if(SIE_MODE(regs))
+                if(SIE_STATE(regs))
                 {
                     /* Add expanded storage origin for this guest */
                     xpblk2 += regs->sie_xso;
@@ -377,7 +389,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-        if(SIE_MODE(regs)  && !regs->sie_pref)
+        if(SIE_STATE(regs)  && !regs->sie_pref)
         {
         int sie_stid;
         U16 sie_xcode;
@@ -385,7 +397,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
-                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r1 > 0) ?
+                (SIE_STATB(regs, MX, XC) && regs->psw.armode && r1 > 0) ?
                     r1 :
                     USE_PRIMARY_SPACE,
                     regs->hostregs, ACCTYPE_SIE, &raddr1, &sie_xcode,
@@ -413,7 +425,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             {
                 xpblk1 = (pte1 & ZPGETAB_PFRA) >> 12;
 #if defined(_FEATURE_SIE)
-                if(SIE_MODE(regs))
+                if(SIE_STATE(regs))
                 {
                     /* Add expanded storage origin for this guest */
                     xpblk1 += regs->sie_xso;

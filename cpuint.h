@@ -150,32 +150,32 @@
 
 #define IC_MASK(_regs) \
  ( ( IC_INITIAL_MASK ) \
- | ( ECMODE(&(_regs)->psw) \
+ | ( (_regs)->psw.ecmode \
      ? ( ((_regs)->psw.sysmask & PSW_IOMASK) ? BIT(IC_IO) : 0 ) \
      : ( ((_regs)->psw.sysmask & 0xFE) ? BIT(IC_IO) : 0 ) \
    ) \
- | ( MACHMASK(&(_regs)->psw) ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
+ | ( (_regs)->psw.mach ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
  | ( PER_MODE(_regs) ? (((_regs)->CR(9) >> IC_CR9_SHIFT) & IC_PER_MASK) : 0 ) \
  | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? ((_regs)->CR(0) & IC_EXTPENDING) : 0 ) \
- | ( WAITSTATE(&(_regs)->psw) ? BIT(IC_PSW_WAIT) : 0 ) \
+ | ( (_regs)->psw.wait ? BIT(IC_PSW_WAIT) : 0 ) \
  )
 
 #define IC_ECMODE_MASK(_regs) \
  ( ( IC_INITIAL_MASK ) \
  | ( ((_regs)->psw.sysmask & PSW_IOMASK) ? BIT(IC_IO) : 0 ) \
- | ( MACHMASK(&(_regs)->psw) ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
+ | ( (_regs)->psw.mach ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
  | ( PER_MODE(_regs) ? (((_regs)->CR(9) >> IC_CR9_SHIFT) & IC_PER_MASK) : 0 ) \
  | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? ((_regs)->CR(0) & IC_EXTPENDING) : 0 ) \
- | ( WAITSTATE(&(_regs)->psw) ? BIT(IC_PSW_WAIT) : 0 ) \
+ | ( (_regs)->psw.wait ? BIT(IC_PSW_WAIT) : 0 ) \
  )
 
 #define IC_BCMODE_MASK(_regs) \
  ( ( IC_INITIAL_MASK ) \
  | ( ((_regs)->psw.sysmask & 0xFE) ? BIT(IC_IO) : 0 ) \
- | ( MACHMASK(&(_regs)->psw) ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
+ | ( (_regs)->psw.mach ? ((_regs)->CR(14) & IC_MCKPENDING) : 0 ) \
  | ( PER_MODE(_regs) ? (((_regs)->CR(9) >> IC_CR9_SHIFT) & IC_PER_MASK) : 0 ) \
  | ( ((_regs)->psw.sysmask & PSW_EXTMASK) ? ((_regs)->CR(0) & IC_EXTPENDING) : 0 ) \
- | ( WAITSTATE(&(_regs)->psw) ? BIT(IC_PSW_WAIT) : 0 ) \
+ | ( (_regs)->psw.wait ? BIT(IC_PSW_WAIT) : 0 ) \
  )
 
 #define SET_IC_ECMODE_MASK(_regs) \

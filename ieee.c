@@ -835,7 +835,7 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
     int r1, r2;
     struct lbfp op2;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("THDR r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -860,7 +860,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
     struct sbfp op2;
     struct lbfp lbfp_op2;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("THDER r1=%d r2=%d\n", r1, r2);
     HFPREG2_CHECK(r1, r2, regs);
 
@@ -884,7 +884,7 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
 /* The following instructions are not yet implemented */
 #define UNDEF_INST(_x) \
         DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,regs); }
+        (inst,execflag,regs); }
 /*
  * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
  */
@@ -992,7 +992,7 @@ DEF_INST(add_bfp_ext_reg)
     struct ebfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("AXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -1091,7 +1091,7 @@ DEF_INST(add_bfp_long_reg)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("ADBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1117,7 +1117,7 @@ DEF_INST(add_bfp_long)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("ADB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -1215,7 +1215,7 @@ DEF_INST(add_bfp_short_reg)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("AEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1241,7 +1241,7 @@ DEF_INST(add_bfp_short)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("AEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -1321,7 +1321,7 @@ DEF_INST(compare_bfp_ext_reg)
     struct ebfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("CXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -1400,7 +1400,7 @@ DEF_INST(compare_bfp_long_reg)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("CDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1424,7 +1424,7 @@ DEF_INST(compare_bfp_long)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("CDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -1502,7 +1502,7 @@ DEF_INST(compare_bfp_short_reg)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("CEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1526,7 +1526,7 @@ DEF_INST(compare_bfp_short)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("CEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -1549,7 +1549,7 @@ DEF_INST(compare_and_signal_bfp_ext_reg)
     struct ebfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("KXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -1573,7 +1573,7 @@ DEF_INST(compare_and_signal_bfp_long_reg)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("KDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1597,7 +1597,7 @@ DEF_INST(compare_and_signal_bfp_long)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("KDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -1620,7 +1620,7 @@ DEF_INST(compare_and_signal_bfp_short_reg)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("KEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1644,7 +1644,7 @@ DEF_INST(compare_and_signal_bfp_short)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("KEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -1671,7 +1671,7 @@ DEF_INST(convert_fix32_to_bfp_long_reg)
     struct lbfp op1;
     S32 op2;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("CDFBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1696,7 +1696,7 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
     struct sbfp op1;
     S32 op2;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("CEFBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1727,7 +1727,7 @@ DEF_INST(convert_fix64_to_bfp_long_reg)
     struct lbfp op1;
     S64 op2;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("CDGBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1754,7 +1754,7 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
     struct sbfp op1;
     S64 op2;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("CEGBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1785,7 +1785,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     struct lbfp op2;
     int pgm_check;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    RRF_M(inst, execflag, regs, r1, r2, m3);
     //logmsg("CFDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1849,7 +1849,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     struct sbfp op2;
     int pgm_check;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    RRF_M(inst, execflag, regs, r1, r2, m3);
     //logmsg("CFEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1918,7 +1918,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     struct lbfp op2;
     int pgm_check;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    RRF_M(inst, execflag, regs, r1, r2, m3);
     //logmsg("CGDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -1984,7 +1984,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     struct sbfp op2;
     int pgm_check;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    RRF_M(inst, execflag, regs, r1, r2, m3);
     //logmsg("CGEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2124,7 +2124,7 @@ DEF_INST(divide_bfp_ext_reg)
     struct ebfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("DXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2226,7 +2226,7 @@ DEF_INST(divide_bfp_long_reg)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("DDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2252,7 +2252,7 @@ DEF_INST(divide_bfp_long)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("DDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -2353,7 +2353,7 @@ DEF_INST(divide_bfp_short_reg)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("DEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2379,7 +2379,7 @@ DEF_INST(divide_bfp_short)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("DEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -2407,7 +2407,7 @@ DEF_INST(extract_floating_point_control_register)
 {
     int r1, unused;
 
-    RRE(inst, regs, r1, unused);
+    RRE(inst, execflag, regs, r1, unused);
     //logmsg("EFPC r1=%d\n", r1);
 
     regs->GR_L(r1) = regs->fpc;
@@ -2422,7 +2422,7 @@ DEF_INST(load_and_test_bfp_ext_reg)
     struct ebfp op;
     int pgm_check = 0;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LTXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2462,7 +2462,7 @@ DEF_INST(load_and_test_bfp_long_reg)
     struct lbfp op;
     int pgm_check = 0;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LTDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2501,7 +2501,7 @@ DEF_INST(load_and_test_bfp_short_reg)
     struct sbfp op;
     int pgm_check = 0;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LTEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2546,7 +2546,7 @@ DEF_INST(load_fp_int_short_reg)
 
     struct sbfp op;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    RRF_M(inst, execflag, regs, r1, r2, m3);
     //logmsg("FIEBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     get_sbfp(&op, regs->fpr + FPR2I(r2));
@@ -2602,7 +2602,7 @@ DEF_INST(load_fp_int_long_reg)
 
     struct lbfp op;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    RRF_M(inst, execflag, regs, r1, r2, m3);
     //logmsg("FIDBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     get_lbfp(&op, regs->fpr + FPR2I(r2));
@@ -2659,7 +2659,7 @@ DEF_INST(load_fp_int_ext_reg)
 
     struct ebfp op;
 
-    RRF_M(inst, regs, r1, r2, m3);
+    RRF_M(inst, execflag, regs, r1, r2, m3);
     //logmsg("FIXBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     get_ebfp(&op, regs->fpr + FPR2I(r2));
@@ -2723,7 +2723,7 @@ DEF_INST(loadlength_bfp_short_to_long_reg)
     struct lbfp op1;
     struct sbfp op2;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LDEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2762,7 +2762,7 @@ DEF_INST(loadlength_bfp_short_to_long)
     struct lbfp op1;
     struct sbfp op2;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("LDEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -2799,7 +2799,7 @@ DEF_INST(load_negative_bfp_ext_reg)
     int r1, r2;
     struct ebfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LNXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2831,7 +2831,7 @@ DEF_INST(load_negative_bfp_long_reg)
     int r1, r2;
     struct lbfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LNDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2862,7 +2862,7 @@ DEF_INST(load_negative_bfp_short_reg)
     int r1, r2;
     struct sbfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LNEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2893,7 +2893,7 @@ DEF_INST(load_complement_bfp_ext_reg)
     int r1, r2;
     struct ebfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LCXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -2925,7 +2925,7 @@ DEF_INST(load_complement_bfp_long_reg)
     int r1, r2;
     struct lbfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LCDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2956,7 +2956,7 @@ DEF_INST(load_complement_bfp_short_reg)
     int r1, r2;
     struct sbfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LCEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -2987,7 +2987,7 @@ DEF_INST(load_positive_bfp_ext_reg)
     int r1, r2;
     struct ebfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LPXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3019,7 +3019,7 @@ DEF_INST(load_positive_bfp_long_reg)
     int r1, r2;
     struct lbfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LPDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3050,7 +3050,7 @@ DEF_INST(load_positive_bfp_short_reg)
     int r1, r2;
     struct sbfp op;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LPEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3088,7 +3088,7 @@ DEF_INST(round_bfp_long_to_short_reg)
     struct lbfp op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("LEDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3209,7 +3209,7 @@ DEF_INST(multiply_bfp_ext_reg)
     struct ebfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("MXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3310,7 +3310,7 @@ DEF_INST(multiply_bfp_long_reg)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("MDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3336,7 +3336,7 @@ DEF_INST(multiply_bfp_long)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("MDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -3441,7 +3441,7 @@ DEF_INST(multiply_bfp_short_reg)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("MEEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3467,7 +3467,7 @@ DEF_INST(multiply_bfp_short)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("MEEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -3536,7 +3536,7 @@ DEF_INST(squareroot_bfp_ext_reg)
     struct ebfp op;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("SQXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3590,7 +3590,7 @@ DEF_INST(squareroot_bfp_long_reg)
     struct lbfp op;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("SQDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3615,7 +3615,7 @@ DEF_INST(squareroot_bfp_long)
     struct lbfp op;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("SQDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -3668,7 +3668,7 @@ DEF_INST(squareroot_bfp_short_reg)
     struct sbfp op;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("SQEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3693,7 +3693,7 @@ DEF_INST(squareroot_bfp_short)
     struct sbfp op;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("SQEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -3721,7 +3721,7 @@ DEF_INST(subtract_bfp_ext_reg)
     struct ebfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("SXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
@@ -3748,7 +3748,7 @@ DEF_INST(subtract_bfp_long_reg)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("SDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3775,7 +3775,7 @@ DEF_INST(subtract_bfp_long)
     struct lbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("SDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -3801,7 +3801,7 @@ DEF_INST(subtract_bfp_short_reg)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
     //logmsg("SEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
 
@@ -3828,7 +3828,7 @@ DEF_INST(subtract_bfp_short)
     struct sbfp op1, op2;
     int pgm_check;
 
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
     //logmsg("SEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
 
@@ -3857,7 +3857,7 @@ DEF_INST(testdataclass_bfp_short)
     int bit;
 
     // parse instruction
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
     //logmsg("TCEB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
@@ -3900,7 +3900,7 @@ DEF_INST(testdataclass_bfp_long)
     int bit;
 
     // parse instruction
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
     //logmsg("TCDB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);
@@ -3942,7 +3942,7 @@ DEF_INST(testdataclass_bfp_ext)
     int bit;
 
     // parse instruction
-    RXE(inst, regs, r1, b2, effective_addr2);
+    RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
     //logmsg("TCXB r1=%d b2=%d\n", r1, b2);
     BFPINST_CHECK(regs);

@@ -182,7 +182,6 @@ struct _ECPSVM_SASTATS
 #define INITSIESTATE(_regs)       \
     do {                          \
         SIE_STATE(&(_regs)) = 0;  \
-        (_regs).sie_mode = 0;     \
     } while(0)
 #else
 #define INITSIESTATE(_regs)
@@ -196,7 +195,10 @@ struct _ECPSVM_SASTATS
         regs->psw.IA=_regs.psw.IA; \
         regs->psw.cc=_regs.psw.cc; \
         regs->psw.pkey=_regs.psw.pkey; \
-        regs->psw.progmask=_regs.psw.progmask;
+        regs->psw.domask=_regs.psw.domask; \
+        regs->psw.fomask=_regs.psw.fomask; \
+        regs->psw.eumask=_regs.psw.eumask; \
+        regs->psw.sgmask=_regs.psw.sgmask;
 
 #define SASSIST_PROLOG( _instname ) \
     VADR amicblok; \
@@ -209,7 +211,7 @@ struct _ECPSVM_SASTATS
     BYTE micevma2; \
     BYTE micevma3; \
     BYTE micevma4; \
-    if(!PROBSTATE(&regs->psw)) \
+    if(!regs->psw.prob) \
     { \
           return(1); \
     } \
@@ -269,7 +271,7 @@ struct _ECPSVM_SASTATS
 int     b1, b2; \
 VADR    effective_addr1, \
         effective_addr2; \
-     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2); \
+     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2); \
      PRIV_CHECK(regs); \
      if(!sysblk.ecpsvm.available) \
      { \
@@ -833,12 +835,15 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         rregs.psw.pkey=wregs.psw.pkey;
         /* Indicate Translation + I/O + Ext + Ecmode + Problem + MC */
         rregs.psw.sysmask=0x07; /* I/O + EXT + Trans */
-        rregs.psw.states = BIT(PSW_EC_BIT)         /* ECMODE */
-                         | BIT(PSW_PROB_BIT)       /* Problem state */
-                         | BIT(PSW_MACH_BIT);      /* MC Enabled */
+        rregs.psw.ecmode=1;     /* ECMODE */
+        rregs.psw.prob=1;       /* Problem state */
+        rregs.psw.mach=1;       /* MC Enabled */
         rregs.psw.intcode=0;    /* Clear intcode */
         rregs.psw.ilc=0;
-        rregs.psw.progmask=wregs.psw.progmask;
+        rregs.psw.domask=wregs.psw.domask;
+        rregs.psw.fomask=wregs.psw.fomask;
+        rregs.psw.eumask=wregs.psw.eumask;
+        rregs.psw.sgmask=wregs.psw.sgmask;
 
         NCR0=EVM_L(CPCREG0);    /* Assume for now */
         NCR1=EVM_L(vmb+VMSEG);  /* Ditto          */
@@ -903,7 +908,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                     /* Cannot allow ISK/SSK in shared sys VM */
                     B_VMMCR6|=VMMNOSK;
                 }
-                if(PROBSTATE(&wregs.psw))
+                if(wregs.psw.prob)
                 {
                     B_VMMCR6|=VMMPROB;
                 }
@@ -2009,13 +2014,13 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     UNREFERENCED(micblok);
     UNREFERENCED(regs);
     /* Check for a switch from BC->EC or EC->BC */
-    if(ECMODE(&oldr->psw)!=ECMODE(&newr->psw))
+    if(oldr->psw.ecmode!=newr->psw.ecmode)
     {
         DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New and Old PSW have a EC/BC transition\n")));
         return(1);
     }
     /* Check if PER or DAT is being changed */
-    if(ECMODE(&newr->psw))
+    if(newr->psw.ecmode)
     {
         if((newr->psw.sysmask & 0x44) != (oldr->psw.sysmask & 0x44))
         {
@@ -2026,7 +2031,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     /* Check if a Virtual interrupt is pending and new interrupts are being enabled */
     if(micpend & 0x80)
     {
-        if(ECMODE(&newr->psw))
+        if(newr->psw.ecmode)
         {
             if(((~oldr->psw.sysmask) & 0x03) & newr->psw.sysmask)
             {
@@ -2043,12 +2048,12 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
             }
         }
     }
-    if(WAITSTATE(&newr->psw))
+    if(newr->psw.wait)
     {
         DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW is a WAIT PSW\n")));
         return(1);
     }
-    if(ECMODE(&newr->psw))
+    if(newr->psw.ecmode)
     {
         if(newr->psw.sysmask & 0xb8)
         {
@@ -2160,7 +2165,10 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     vpregs.psw.IA=regs->psw.IA;                   /* Instruction Address */
     vpregs.psw.cc=regs->psw.cc;                   /* Condition Code      */
     vpregs.psw.pkey=regs->psw.pkey;               /* Protection Key      */
-    vpregs.psw.progmask=regs->psw.progmask;       /* Program Mask        */
+    vpregs.psw.domask=regs->psw.domask;           /* Dec Overflow        */
+    vpregs.psw.fomask=regs->psw.fomask;           /* Fixed Pt Overflow   */
+    vpregs.psw.eumask=regs->psw.eumask;           /* Exponent Underflow  */
+    vpregs.psw.sgmask=regs->psw.sgmask;           /* Significance        */
     vpregs.psw.intcode=svccode;                   /* SVC Interrupt code  */
     DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC OLD VIRT "));
     DEBUG_SASSISTX(SVC,display_psw(&vpregs));
@@ -2179,7 +2187,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
 
     ARCH_DEP(store_psw) (&vpregs, (BYTE *)&psa->svcold);
 
-    if(ECMODE(&vpregs.psw))
+    if(vpregs.psw.ecmode)
     {
         /* Also set SVC interrupt code */
         /* and ILC                     */
@@ -2291,7 +2299,7 @@ int     ecpsvm_virttmr_ext(REGS *regs)
         DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not pending\n"));
         return(1);
     }
-    if(!PROBSTATE(&regs->psw))
+    if(!(regs->psw.prob))
     {
         DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not dispatching a VM\n"));
         return(1);

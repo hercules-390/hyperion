@@ -1058,7 +1058,7 @@ DEF_INST(compression_call)
   int r1;
   int r2;
 
-  RRE(inst, regs, r1, r2);
+  RRE(inst, execflag, regs, r1, r2);
 
 #ifdef OPTION_CMPSC_DEBUGLVL
   logmsg("CMPSC: compression call\n");

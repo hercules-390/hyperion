@@ -107,7 +107,7 @@
 
 
 #if defined(FEATURE_LINKAGE_STACK)
-void ARCH_DEP(trap_x) (int trap_is_trap4, REGS *regs, U32 trap_operand)
+void ARCH_DEP(trap_x) (int trap_is_trap4, int execflag, REGS *regs, U32 trap_operand)
 {
 RADR ducto;
 U32  duct11;
@@ -211,7 +211,7 @@ int  i;
 
     trap_flags = regs->psw.ilc << 16;
 
-    if(regs->execflag)
+    if(execflag)
         trap_flags |= TRAP0_EXECUTE;
 
     if(trap_is_trap4)
@@ -298,9 +298,11 @@ int  i;
     regs->psw.AMASK = AMASK31;
     regs->psw.IA = trap_ia;
     /* set PSW to primary space */
-    regs->psw.asc = 0;
+    regs->psw.space = 0;
+    regs->psw.armode = 0;
     INVALIDATE_AIA(regs);
     INVALIDATE_AEA_ALL(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 }
 
 /*-------------------------------------------------------------------*/
@@ -355,7 +357,7 @@ U16     xcode;                          /* Exception code            */
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs)  && !regs->sie_pref)
+    if(SIE_STATE(regs)  && !regs->sie_pref)
     {
     int sie_stid;
     U16 sie_xcode;
@@ -488,7 +490,7 @@ U16     xcode;                          /* Exception code            */
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs)  && !regs->sie_pref)
+    if(SIE_STATE(regs)  && !regs->sie_pref)
     {
     int sie_stid;
     U16 sie_xcode;

@@ -462,7 +462,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                                                            available */
 #endif /*FEATURE_EXPANDED_STORAGE*/
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
 
@@ -1291,7 +1291,7 @@ U16     req;                                    /* Request code      */
 CHSC_REQ *chsc_req;                             /* Request structure */
 CHSC_RSP *chsc_rsp;                             /* Response structure*/
 
-    RRE(inst, regs, r1, r2);
+    RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
 

@@ -458,7 +458,7 @@ void  UpdateStatus ()
         || prev_cpustate   != pTargetCPU_REGS->cpustate
         || (prev_instcount != (
 #if defined(_FEATURE_SIE)
-                SIE_MODE(pTargetCPU_REGS) ?  pTargetCPU_REGS->hostregs->instcount :
+                SIE_STATE(pTargetCPU_REGS) ?  pTargetCPU_REGS->hostregs->instcount :
 #endif
                 pTargetCPU_REGS->instcount)
            )
@@ -472,7 +472,7 @@ void  UpdateStatus ()
         prev_cpustate = pTargetCPU_REGS->cpustate;
         prev_instcount = (
 #if defined(_FEATURE_SIE)
-            SIE_MODE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
+            SIE_STATE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
 #endif
             pTargetCPU_REGS->instcount);
     }
@@ -536,10 +536,10 @@ void  UpdateCPUStatus ()
         ,wait_bit                                      ? 'W' : '.'
         ,pTargetCPU_REGS->loadstate                    ? 'L' : '.'
         ,pTargetCPU_REGS->checkstop                    ? 'C' : '.'
-        ,PROBSTATE(&pTargetCPU_REGS->psw)              ? 'P' : '.'
+        ,pTargetCPU_REGS->psw.prob                     ? 'P' : '.'
         ,
 #if        defined(_FEATURE_SIE)
-        SIE_MODE(pTargetCPU_REGS)                      ? 'S' : '.'
+        SIE_STATE(pTargetCPU_REGS)                     ? 'S' : '.'
 #else  // !defined(_FEATURE_SIE)
                                                                '.'
 #endif //  defined(_FEATURE_SIE)
@@ -551,7 +551,7 @@ void  UpdateCPUStatus ()
 #endif //  defined(_900)
         ,(long long)(
 #if       defined(_FEATURE_SIE)
-        SIE_MODE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
+        SIE_STATE(pTargetCPU_REGS) ? pTargetCPU_REGS->hostregs->instcount :
 #endif // defined(_FEATURE_SIE)
         pTargetCPU_REGS->instcount)
     );

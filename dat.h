@@ -573,7 +573,7 @@ U16     xcode;                          /* ALET tran.exception code  */
     #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || (regs->sie_active
         && (regs->guestregs->siebk->mx & SIE_MX_XC)
-        && AR_BIT(&regs->guestregs->psw))
+        && regs->guestregs->psw.armode)
     #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         )
     {
@@ -582,7 +582,7 @@ U16     xcode;                          /* ALET tran.exception code  */
     #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
         /* Obtain guest ALET if guest is XC guest in AR mode */
         (regs->sie_active && (regs->guestregs->siebk->mx & SIE_MX_XC)
-         && AR_BIT(&regs->guestregs->psw))
+         && regs->guestregs->psw.armode)
           ? regs->guestregs->AR(arn) :
         /* else if in SIE mode but not an XC guest in AR mode
            then the ALET will be zero */
@@ -1492,7 +1492,7 @@ tran_excp_addr:
 #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || (regs->sie_active
         && (regs->guestregs->siebk->mx & SIE_MX_XC)
-        && AR_BIT(&regs->guestregs->psw))
+        && regs->guestregs->psw.armode)
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
        )
        regs->excarid = (arn < 0 ? 0 : arn);
@@ -1554,7 +1554,7 @@ RADR ptemask;
 #endif /* defined(FEATURE_S390_DAT) */
 
 #if defined(FEATURE_ESAME)
-    ptemask = (RADR)ZPGETAB_PFRA;
+    ptemask = ZPGETAB_PFRA;
     pte = pfra & ptemask;
 #endif /* defined(FEATURE_ESAME) */
 
@@ -1833,7 +1833,7 @@ U16     xcode;                          /* Exception code            */
         goto vabs_addr_excp;
 
 #if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs)  && !regs->sie_pref)
+    if(SIE_STATE(regs)  && !regs->sie_pref)
     {
     int sie_stid;
     U16 sie_xcode;
@@ -1841,7 +1841,7 @@ U16     xcode;                          /* Exception code            */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-              ((regs->siebk->mx & SIE_MX_XC) && AR_BIT(&regs->psw) && arn > 0) ?
+              ((regs->siebk->mx & SIE_MX_XC) && regs->psw.armode && arn > 0) ?
                 arn :
                 USE_PRIMARY_SPACE,
                 regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
@@ -1946,8 +1946,7 @@ U16     xcode;                          /* Exception code            */
             acctype = ACCTYPE_WRITE;
 
 #if defined(FEATURE_ACCESS_REGISTERS)
-        if ( !ACCESS_REGISTER_MODE(&regs->psw)
-         ||  (arn > 0 && regs->AR(arn) == 0) )
+        if ( !regs->armode || (arn > 0 && regs->AR(arn) == 0) )
 #endif
             arn = 0;
 

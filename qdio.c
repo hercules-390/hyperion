@@ -21,7 +21,7 @@ int     b2;
 RADR    effective_addr2;
 DEVBLK *dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 

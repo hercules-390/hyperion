@@ -516,7 +516,7 @@ int  size;
         tte->format = TRACE_F2_PC_FMT;
         tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
         STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
-        STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw)); 
+        STORE_DW(tte->retna, regs->psw.IA_G | regs->psw.prob); 
     }
     else
 #endif /*defined(FEATURE_ESAME)*/
@@ -528,7 +528,7 @@ int  size;
         tte->format = TRACE_F1_PC_FMT;
         tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
         STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
-        STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw)); 
+        STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | regs->psw.prob); 
     }
 
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
@@ -566,7 +566,7 @@ int  size;
         tte->pswkey = regs->psw.pkey | TRACE_F1_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
         STORE_FW(tte->retna, (newregs->psw.amode << 31)
-                                | newregs->psw.IA_L | PROBSTATE(&newregs->psw));
+                                | newregs->psw.IA_L | newregs->psw.prob);
         STORE_FW(tte->newia, (regs->psw.amode << 31)
                                  | regs->psw.IA_L);
     }
@@ -582,7 +582,7 @@ int  size;
         tte->pswkey = regs->psw.pkey | TRACE_F2_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
         STORE_FW(tte->retna, (newregs->psw.amode << 31)
-                                | newregs->psw.IA_L | PROBSTATE(&newregs->psw));
+                                | newregs->psw.IA_L | newregs->psw.prob);
         STORE_FW(tte->newia, (regs->psw.amode << 31)
                                  | regs->psw.IA_L);
     }
@@ -597,7 +597,7 @@ int  size;
         tte->pswkey = regs->psw.pkey | TRACE_F3_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
         STORE_FW(tte->retna, (newregs->psw.amode << 31)
-                                | newregs->psw.IA_L | PROBSTATE(&newregs->psw));
+                                | newregs->psw.IA_L | newregs->psw.prob);
         STORE_DW(tte->newia, regs->psw.IA_G);
     }
     else
@@ -610,7 +610,7 @@ int  size;
         tte->format = TRACE_F4_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F4_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
-        STORE_FW(tte->retna,  newregs->psw.IA_L | PROBSTATE(&newregs->psw));
+        STORE_FW(tte->retna,  newregs->psw.IA_L | newregs->psw.prob);
         STORE_FW(tte->newia, (regs->psw.amode << 31)
                                  | regs->psw.IA_L);
     }
@@ -624,7 +624,7 @@ int  size;
         tte->format = TRACE_F5_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F5_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
-        STORE_FW(tte->retna,  newregs->psw.IA_L | PROBSTATE(&newregs->psw));
+        STORE_FW(tte->retna,  newregs->psw.IA_L | newregs->psw.prob);
         STORE_FW(tte->newia, regs->psw.IA_L);
     }
     else
@@ -637,7 +637,7 @@ int  size;
         tte->format = TRACE_F6_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F6_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
-        STORE_FW(tte->retna,  newregs->psw.IA_L | PROBSTATE(&newregs->psw));
+        STORE_FW(tte->retna,  newregs->psw.IA_L | newregs->psw.prob);
         STORE_DW(tte->newia, regs->psw.IA_G);
     }
     else
@@ -650,7 +650,7 @@ int  size;
         tte->format = TRACE_F7_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F7_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
-        STORE_DW(tte->retna,  newregs->psw.IA_G | PROBSTATE(&newregs->psw));
+        STORE_DW(tte->retna,  newregs->psw.IA_G | newregs->psw.prob);
         STORE_FW(tte->newia, (regs->psw.amode << 31)
                                  | regs->psw.IA_L);
     }
@@ -664,7 +664,7 @@ int  size;
         tte->format = TRACE_F8_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F8_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
-        STORE_DW(tte->retna,  newregs->psw.IA_G | PROBSTATE(&newregs->psw));
+        STORE_DW(tte->retna,  newregs->psw.IA_G | newregs->psw.prob);
         STORE_FW(tte->newia, regs->psw.IA_L);
     }
     else
@@ -677,7 +677,7 @@ int  size;
         tte->format = TRACE_F9_PR_FMT;
         tte->pswkey = regs->psw.pkey | TRACE_F9_PR_FM2;
         STORE_HW(tte->newpasn, newregs->CR_LHL(4));
-        STORE_DW(tte->retna,  newregs->psw.IA_G | PROBSTATE(&newregs->psw));
+        STORE_DW(tte->retna,  newregs->psw.IA_G | newregs->psw.prob);
         STORE_DW(tte->newia, regs->psw.IA_L);
     }
 #endif /*defined(FEATURE_ESAME)*/

@@ -47,7 +47,7 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -93,7 +93,7 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -138,7 +138,7 @@ VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 PMCW    pmcw;                           /* Path management ctl word  */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -271,7 +271,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 BYTE    chpid;
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -306,7 +306,7 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -350,7 +350,7 @@ DEF_INST(set_address_limit)
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -371,7 +371,7 @@ DEF_INST(set_channel_monitor)
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -392,7 +392,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(_FEATURE_IO_ASSIST)
     /* Virtual use of I/O Assist features must be intercepted */
-    if(SIE_MODE(regs)
+    if(SIE_STATE(regs)
       && ( (regs->GR_L(1) & CHM_GPR1_ZONE)
         || (regs->GR_L(1) & CHM_GPR1_A) ))
         SIE_INTERCEPT(regs);
@@ -420,7 +420,7 @@ VADR    effective_addr2;                /* Effective address         */
 #if defined(_FEATURE_IO_ASSIST)
     else
     {
-    int zone = SIE_MODE(regs) ? regs->siebk->zone :
+    int zone = SIE_STATE(regs) ? regs->siebk->zone :
                                ((regs->GR_L(1) & CHM_GPR1_ZONE) >> 16);
 
         /* Set the measurement block origin address */
@@ -451,7 +451,7 @@ VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 ORB     orb;                            /* Operation request block   */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -528,7 +528,7 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 BYTE    work[32];                       /* Work area                 */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -556,7 +556,7 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* Integer work area         */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -590,7 +590,7 @@ VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 SCHIB   schib;                          /* Subchannel information blk*/
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -653,7 +653,7 @@ U32     iointid;                        /* I/O interruption ident    */
 int     icode;                          /* Intercept code            */
 RADR    pfx;                            /* Prefix                    */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -756,7 +756,7 @@ DEVBLK *dev;                            /* -> device block           */
 IRB     irb;                            /* Interruption response blk */
 int     cc;                             /* Condition Code            */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -816,7 +816,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -870,7 +870,7 @@ ORB     orb;                            /* Operation request blk @IZW*/
 VADR    ccwaddr;                        /* CCW address for start I/O */
 BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
     if((inst[1])!=0x02)
     {
@@ -928,7 +928,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -964,7 +964,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -1002,12 +1002,12 @@ BYTE    channelid;
 U16     tch_ctl;
 #endif /*defined(_FEATURE_SIE)*/
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(!SIE_MODE(regs))
+    if(!SIE_STATE(regs))
     {
 #endif /*defined(_FEATURE_SIE)*/
         /* Test for pending interrupt and set condition code */
@@ -1037,7 +1037,7 @@ DEF_INST(store_channel_id)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -1060,7 +1060,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i;
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -1123,7 +1123,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i;
 
-    S(inst, regs, b2, effective_addr2);
+    S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 

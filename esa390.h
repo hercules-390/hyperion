@@ -71,104 +71,55 @@ typedef union {
                } DWORD_U;
 
 /* Internal-format PSW structure definition */
-typedef struct  _PSW {
-        BYTE     sysmask;               /* System mask      (0 -  7) */
-        BYTE     pkey;                  /* PSW Key          (8 - 11) */
-        BYTE     states;                /* EC,M,W,P bits   (12 - 15) */
-        BYTE     asc;                   /* Address space control     */
-                                        /*                 (16 - 17) */
-        BYTE     cc;                    /* Condition code  (18 - 19) */
-        BYTE     progmask;              /* Program mask    (20 - 23) */
-        BYTE     zerobyte;              /* Zeroes          (24 - 31) */
-                                        /* or (esame)      (24 - 30) */
-        BYTE                            /* Addressing mode (31 - 32) */
-                 amode64:1,             /* 64-bit addressing         */
-                 amode:1;               /* 31-bit addressing         */
-        DW       ia;                    /* Instruction addrress      */
-                                        /*                 (33 - 63) */
-                                        /* or (esame)      (64 -127) */
-        DW       amask;                 /* Address wraparound mask   */
-        BYTE     ilc;                   /* Instruction length code   */
-        BYTE     unused;                /* (alignment)               */
-        U16      intcode;               /* Interruption code         */
-    } PSW;                              /* 28 bytes                  */
+typedef struct _PSW {
+        unsigned int
+                prob:1,                 /* 1=Problem state           */
+                wait:1,                 /* 1=Wait state              */
+                mach:1,                 /* 1=Machine check enabled   */
+                ecmode:1,               /* 1=ECMODE, 0=BCMODE        */
+#define notesame ecmode
+                sgmask:1,               /* Significance mask         */
+                eumask:1,               /* Exponent underflow mask   */
+                domask:1,               /* Decimal overflow mask     */
+                fomask:1,               /* Fixed-point overflow mask */
+                armode:1,               /* Access-register mode      */
+                space:1,                /* Secondary-space mode      */
+                amode:1,                /* Addressing mode 31        */
+                amode64:1;              /* Addressing mode 64        */
+        BYTE    sysmask;                /* System mask               */
+        BYTE    pkey;                   /* Bits 0-3=key, 4-7=zeroes  */
+        BYTE    ilc;                    /* Instruction length code   */
+        BYTE    cc;                     /* Condition code            */
+        U16     intcode;                /* Interruption code         */
+        DW      ia;                     /* Instruction addrress      */
+        BYTE    zerobyte;               /* bits 24-31                */
+#define IA_G    ia.D
+#define IA_H    ia.F.H.F
+#define IA_L    ia.F.L.F
+#define IA_LA24 ia.F.L.A.A
+        DW      amask;                  /* Address wraparound mask   */
+#define AMASK_G amask.D
+#define AMASK_L amask.F.L.F
+#define AMASK24 0x00FFFFFF
+#define AMASK31 0x7FFFFFFF
+#define AMASK64 0xFFFFFFFFFFFFFFFFULL
+    } PSW;
 
-#define IA_G     ia.D
-#define IA_H     ia.F.H.F
-#define IA_L     ia.F.L.F
-#define IA_LA24  ia.F.L.A.A
-
-#define AMASK_G  amask.D
-#define AMASK_L  amask.F.L.F
-#define AMASK24  0x00FFFFFF
-#define AMASK31  0x7FFFFFFF
-#define AMASK64  0xFFFFFFFFFFFFFFFFULL
-
-/* System mask                 (0 -  7) */
+/* Bit definitions for ECMODE PSW system mask */
 #define PSW_PERMODE     0x40            /* Program event recording   */
 #define PSW_DATMODE     0x04            /* Dynamic addr translation  */
 #define PSW_IOMASK      0x02            /* I/O interrupt mask        */
 #define PSW_EXTMASK     0x01            /* External interrupt mask   */
 
-/* PSW key mask                (8 - 11) */
-#define PSW_KEYMASK     0xF0            /* PSW key mask              */
-
-/*                            (12 - 15) */
-#define PSW_EC_BIT         3    /* 0x08    ECMODE                    */
-#define PSW_MACH_BIT       2    /* 0x04    Machine check mask        */
-#define PSW_WAIT_BIT       1    /* 0x02    Wait state                */
-#define PSW_PROB_BIT       0    /* 0x01    Problem state             */
-#define PSW_NOTESAME_BIT   PSW_EC_BIT
-
-/* Address space control      (16 - 17) */                                  
-#define PSW_ASCMASK     0xC0            /* Address space control mask*/
-#define PSW_SPACE_BIT      7    /* 0x80    Space mode bit            */
-#define PSW_AR_BIT         6    /* 0x40    Access register mode bit  */
-#define PSW_PRIMARY_SPACE_MODE     0x00 /* Primary-space mode        */
-#define PSW_SECONDARY_SPACE_MODE   0x80 /* Secondary-space mode      */
-#define PSW_ACCESS_REGISTER_MODE   0x40 /* Access-register mode      */
-#define PSW_HOME_SPACE_MODE        0xC0 /* Home-space mode           */
-
-/* Condition code             (18 - 19) */
-#define PSW_CCMASK      0x30            /* Condition code mask       */
-
-/* Program mask               (20 - 23) */
-#define PSW_PROGMASK    0x0F            /* Program-mask bits         */
-#define PSW_FOBIT          3    /* 0x08    Fixed-point overflow bit  */
-#define PSW_DOBIT          2    /* 0x04    Decimal overflow bit      */
-#define PSW_EUBIT          1    /* 0x02    Exponent underflow bit    */
-#define PSW_SGBIT          0    /* 0x01    Significance bit          */
-
-/* Address mode               (31 - 32) */
-#define PSW_AMODE64_BIT    0            /* Extended addressing  (31) */
-#define PSW_AMODE31_BIT    7            /* Basic addressing     (32) */
-
-/* Macros for testing address space control mode */
-#define SPACE_BIT(p) \
-        (((p)->asc & BIT(PSW_SPACE_BIT)) != 0)
-#define AR_BIT(p) \
-        (((p)->asc & BIT(PSW_AR_BIT)) != 0)
+/* Macros for testing addressing mode */
 #define PRIMARY_SPACE_MODE(p) \
-        ((p)->asc == PSW_PRIMARY_SPACE_MODE)
+        ((p)->space==0 && (p)->armode==0)
 #define SECONDARY_SPACE_MODE(p) \
-        ((p)->asc == PSW_SECONDARY_SPACE_MODE)
+        ((p)->space==1 && (p)->armode==0)
 #define ACCESS_REGISTER_MODE(p) \
-        ((p)->asc == PSW_ACCESS_REGISTER_MODE)
+        ((p)->space==0 && (p)->armode==1)
 #define HOME_SPACE_MODE(p) \
-        ((p)->asc == PSW_HOME_SPACE_MODE)
-
-/* Macros for testing states (EC, M, W, P bits) */
-#define ECMODE(p)    (((p)->states & BIT(PSW_EC_BIT))       != 0)
-#define NOTESAME(p)  (((p)->states & BIT(PSW_NOTESAME_BIT)) != 0)
-#define MACHMASK(p)  (((p)->states & BIT(PSW_MACH_BIT))     != 0)
-#define WAITSTATE(p) (((p)->states & BIT(PSW_WAIT_BIT))     != 0)
-#define PROBSTATE(p) (((p)->states & BIT(PSW_PROB_BIT))     != 0)
-
-/* Macros for testing program mask */
-#define FOMASK(p)             (test_bit (1, PSW_FOBIT, &(p)->progmask))
-#define DOMASK(p)             (test_bit (1, PSW_DOBIT, &(p)->progmask))
-#define EUMASK(p)             (test_bit (1, PSW_EUBIT, &(p)->progmask))
-#define SGMASK(p)             (test_bit (1, PSW_SGBIT, &(p)->progmask))
+        ((p)->space==1 && (p)->armode==1)
 
 /* Structure definition for translation-lookaside buffer entry */
 typedef struct _TLBE {
