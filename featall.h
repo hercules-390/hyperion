@@ -19,11 +19,10 @@
 #define OPTION_AEA_BUFFER		/* Effective addr cache      */
 #define OPTION_NO_INLINE_DAT		/* Performance option	     */
 #undef  OPTION_NO_INLINE_VSTORE 	/* Performance option	     */
-#undef	OPTION_NO_LINUX_INTERRUPT_PATCH /* Linux performance	     */
 #undef  OPTION_FOOTPRINT_BUFFER  /* 256 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
-#define OPTION_NO_DEVICE_THREAD 	/* Separate threads for I/O  */
+#undef  OPTION_NO_DEVICE_THREAD 	/* Separate threads for I/O  */
 #undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
 #undef  OPTION_NO_IEEE_SUPPORT          /* No/downlevel IEEE support */
 
@@ -48,6 +47,8 @@
 #undef FEATURE_DUAL_ADDRESS_SPACE
 #undef FEATURE_EMULATE_VM
 #undef FEATURE_ESAME
+#undef FEATURE_ESAME_INSTALLED
+#undef FEATURE_ESAME_N3_ESA390
 #undef FEATURE_EXPANDED_STORAGE
 #undef FEATURE_EXTENDED_STORAGE_KEYS
 #undef FEATURE_EXTENDED_TOD_CLOCK
@@ -61,6 +62,7 @@
 #undef FEATURE_HFP_EXTENSIONS
 #undef FEATURE_HYPERVISOR
 #undef FEATURE_IMMEDIATE_AND_RELATIVE
+#undef FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION
 #undef FEATURE_INTERPRETIVE_EXECUTION
 #undef FEATURE_INTERVAL_TIMER
 #undef FEATURE_LINKAGE_STACK

@@ -42,6 +42,7 @@ static void sigint_handler (int signo)
 
     /* Activate instruction stepping */
     sysblk.inststep = 1;
+    ON_IC_TRACE;
     return;
 } /* end function sigint_handler */
 

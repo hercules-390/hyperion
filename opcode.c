@@ -452,21 +452,47 @@
 #endif /*!defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 
 
-#if !defined(FEATURE_LOAD_REVERSED)
- UNDEF_INST(load_reversed_long_register)
+#if !defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_ESAME_N3_ESA390)
  UNDEF_INST(load_reversed_register)
- UNDEF_INST(load_reversed_long)
  UNDEF_INST(load_reversed)
- UNDEF_INST(load_reversed_high)
- UNDEF_INST(store_reversed_long)
+ UNDEF_INST(load_reversed_half)
  UNDEF_INST(store_reversed)
- UNDEF_INST(store_reversed_high)
-#endif /*!defined(FEATURE_LOAD_REVERSED)*/
+ UNDEF_INST(store_reversed_half)
+ #if !defined(FEATURE_ESAME)
+ UNDEF_INST(load_reversed_long_register)
+ UNDEF_INST(store_reversed_long)
+ #endif /*!defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_LOAD_REVERSED) && !defined(FEATURE_ESAME_N3_ESA390)*/
 
 
 #if !defined(FEATURE_SERVICE_PROCESSOR)
  UNDEF_INST(service_call)
 #endif /*!defined(FEATURE_SERVICE_PROCESSOR)*/
+
+
+#if !defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)
+ UNDEF_INST(add_logical_carry);
+ UNDEF_INST(add_logical_carry_register);
+ UNDEF_INST(branch_relative_and_save_long);
+ UNDEF_INST(branch_relative_on_condition_long);
+ UNDEF_INST(divide_logical);
+ UNDEF_INST(divide_logical_register);
+ UNDEF_INST(extract_psw);
+ UNDEF_INST(load_address_relative_long);
+ UNDEF_INST(multiply_logical);
+ UNDEF_INST(multiply_logical_register);
+ UNDEF_INST(rotate_left_single_logical);
+ UNDEF_INST(set_addressing_mode_24);
+ UNDEF_INST(set_addressing_mode_31);
+ UNDEF_INST(subtract_logical_borrow);
+ UNDEF_INST(subtract_logical_borrow_register);
+ UNDEF_INST(test_addressing_mode);
+#endif /*!defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME)*/
+
+
+#if !defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME_INSTALLED) && !defined(FEATURE_ESAME)
+ UNDEF_INST(store_facilities_list);
+#endif /*!defined(FEATURE_ESAME_N3_ESA390) && !defined(FEATURE_ESAME_INSTALLED)*/
 
 
 #if !defined(FEATURE_CANCEL_IO_FACILITY)
@@ -891,9 +917,9 @@ zz_func opcode_01xx[256][GEN_MAXARCH] = {
  /*0108*/ GENx___x390x900 (ses_opcode_0108),                    /* TMPS      */
  /*0109*/ GENx___x390x900 (ses_opcode_0109),                    /* CMPS      */
  /*010A*/ GENx___x___x___ ,
- /*010B*/ GENx___x___x900 (test_addressing_mode),               /*!TAM       */
- /*010C*/ GENx___x___x900 (set_addressing_mode_24),             /*!SAM24     */
- /*010D*/ GENx___x___x900 (set_addressing_mode_31),             /*!SAM31     */
+ /*010B*/ GENx___x390x900 (test_addressing_mode),               /*!TAM       */
+ /*010C*/ GENx___x390x900 (set_addressing_mode_24),             /*!SAM24     */
+ /*010D*/ GENx___x390x900 (set_addressing_mode_31),             /*!SAM31     */
  /*010E*/ GENx___x___x900 (set_addressing_mode_64),             /*!SAM64     */
  /*010F*/ GENx___x___x___ ,
  /*0110*/ GENx___x___x___ ,
@@ -2106,7 +2132,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B98A*/ GENx___x___x___ ,
  /*B98B*/ GENx___x___x___ ,
  /*B98C*/ GENx___x___x___ ,
- /*B98D*/ GENx___x___x900 (extract_psw),                        /*!EPSW      */
+ /*B98D*/ GENx___x390x900 (extract_psw),                        /*!EPSW      */
  /*B98E*/ GENx___x___x___ ,
  /*B98F*/ GENx___x___x___ ,
  /*B990*/ GENx___x___x900 (dummy_instruction),                  /*!TRTT      */
@@ -2115,10 +2141,10 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B993*/ GENx___x___x900 (dummy_instruction),                  /*!TROO      */
  /*B994*/ GENx___x___x___ ,
  /*B995*/ GENx___x___x___ ,
- /*B996*/ GENx___x___x900 (multiply_logical_register),          /*!MLR       */
- /*B997*/ GENx___x___x900 (divide_logical_register),            /*!DLR       */
- /*B998*/ GENx___x___x900 (add_logical_carry_register),         /*!ALCR      */
- /*B999*/ GENx___x___x900 (subtract_logical_borrow_register),   /*!SLBR      */
+ /*B996*/ GENx___x390x900 (multiply_logical_register),          /*!MLR       */
+ /*B997*/ GENx___x390x900 (divide_logical_register),            /*!DLR       */
+ /*B998*/ GENx___x390x900 (add_logical_carry_register),         /*!ALCR      */
+ /*B999*/ GENx___x390x900 (subtract_logical_borrow_register),   /*!SLBR      */
  /*B99A*/ GENx___x___x___ ,
  /*B99B*/ GENx___x___x___ ,
  /*B99C*/ GENx___x___x___ ,
@@ -2227,12 +2253,12 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
 // #if defined(FEATURE_ESAME)
 
 zz_func opcode_c0xx[16][GEN_MAXARCH] = {
- /*C0x0*/ GENx___x___x900 (load_address_relative_long),         /*!LARL      */
+ /*C0x0*/ GENx___x390x900 (load_address_relative_long),         /*!LARL      */
  /*C0x1*/ GENx___x___x___ ,
  /*C0x2*/ GENx___x___x___ ,
  /*C0x3*/ GENx___x___x___ ,
- /*C0x4*/ GENx___x___x900 (branch_relative_on_condition_long),  /*!BRCL      */
- /*C0x5*/ GENx___x___x900 (branch_relative_and_save_long),      /*!BRASL     */
+ /*C0x4*/ GENx___x390x900 (branch_relative_on_condition_long),  /*!BRCL      */
+ /*C0x5*/ GENx___x390x900 (branch_relative_and_save_long),      /*!BRASL     */
  /*C0x6*/ GENx___x___x___ ,
  /*C0x7*/ GENx___x___x___ ,
  /*C0x8*/ GENx___x___x___ ,
@@ -2263,7 +2289,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E30B*/ GENx___x___x900 (subtract_logical_long),              /*!SLG       */
  /*E30C*/ GENx___x___x900 (multiply_single_long),               /*!MSG       */
  /*E30D*/ GENx___x___x900 (divide_single_long),                 /*!DSG       */
- /*E30E*/ GENx___x___x900 (dummy_instruction),                  /*!CVBG      */
+ /*E30E*/ GENx___x___x900 (convert_to_binary_long),             /*!CVBG      */
  /*E30F*/ GENx___x___x900 (load_reversed_long),                 /*!LRVG      */
  /*E310*/ GENx___x___x___ ,
  /*E311*/ GENx___x___x___ ,
@@ -2280,7 +2306,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E31C*/ GENx___x___x900 (multiply_single_long_fullword),      /*!MSGF      */
  /*E31D*/ GENx___x___x900 (divide_single_long_fullword),        /*!DSGF      */
  /*E31E*/ GENx___x390x900 (load_reversed),                      /*!LRV       */
- /*E31F*/ GENx___x___x900 (load_reversed_half),                 /*!LRVH      */
+ /*E31F*/ GENx___x390x900 (load_reversed_half),                 /*!LRVH      */
  /*E320*/ GENx___x___x900 (compare_long),                       /*!CG        */
  /*E321*/ GENx___x___x900 (compare_logical_long),               /*!CLG       */
  /*E322*/ GENx___x___x___ ,
@@ -2295,7 +2321,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E32B*/ GENx___x___x___ ,
  /*E32C*/ GENx___x___x___ ,
  /*E32D*/ GENx___x___x___ ,
- /*E32E*/ GENx___x___x900 (dummy_instruction),                  /*!CVDG      */
+ /*E32E*/ GENx___x___x900 (convert_to_decimal_long),            /*!CVDG      */
  /*E32F*/ GENx___x___x900 (store_reversed_long),                /*!STRVG     */
  /*E330*/ GENx___x___x900 (compare_long_fullword),              /*!CGF       */
  /*E331*/ GENx___x___x900 (compare_logical_long_fullword),      /*!CLGF      */
@@ -2312,7 +2338,7 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E33C*/ GENx___x___x___ ,
  /*E33D*/ GENx___x___x___ ,
  /*E33E*/ GENx___x390x900 (store_reversed),                     /*!STRV      */
- /*E33F*/ GENx___x___x900 (store_reversed_half),                /*!STRVH     */
+ /*E33F*/ GENx___x390x900 (store_reversed_half),                /*!STRVH     */
  /*E340*/ GENx___x___x___ ,
  /*E341*/ GENx___x___x___ ,
  /*E342*/ GENx___x___x___ ,
@@ -2399,10 +2425,10 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
  /*E393*/ GENx___x___x___ ,
  /*E394*/ GENx___x___x___ ,
  /*E395*/ GENx___x___x___ ,
- /*E396*/ GENx___x___x900 (multiply_logical),                   /*!ML        */
- /*E397*/ GENx___x___x900 (divide_logical),                     /*!DL        */
- /*E398*/ GENx___x___x900 (add_logical_carry),                  /*!ALC       */
- /*E399*/ GENx___x___x900 (subtract_logical_borrow),            /*!SLB       */
+ /*E396*/ GENx___x390x900 (multiply_logical),                   /*!ML        */
+ /*E397*/ GENx___x390x900 (divide_logical),                     /*!DL        */
+ /*E398*/ GENx___x390x900 (add_logical_carry),                  /*!ALC       */
+ /*E399*/ GENx___x390x900 (subtract_logical_borrow),            /*!SLB       */
  /*E39A*/ GENx___x___x___ ,
  /*E39B*/ GENx___x___x___ ,
  /*E39C*/ GENx___x___x___ ,
@@ -2786,7 +2812,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB0C*/ GENx___x___x900 (shift_right_single_logical_long),    /*!SRLG      */
  /*EB0D*/ GENx___x___x900 (shift_left_single_logical_long),     /*!SLLG      */
  /*EB0E*/ GENx___x___x___ ,
- /*EB0F*/ GENx___x___x900 (dummy_instruction),                  /*!TRACG     */
+ /*EB0F*/ GENx___x___x900 (trace_long),                         /*!TRACG     */
  /*EB10*/ GENx___x___x___ ,
  /*EB11*/ GENx___x___x___ ,
  /*EB12*/ GENx___x___x___ ,
@@ -2800,7 +2826,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB1A*/ GENx___x___x___ ,
  /*EB1B*/ GENx___x___x___ ,
  /*EB1C*/ GENx___x___x900 (rotate_left_single_logical_long),    /*!RLLG      */
- /*EB1D*/ GENx___x___x900 (rotate_left_single_logical),         /*!RLL       */
+ /*EB1D*/ GENx___x390x900 (rotate_left_single_logical),         /*!RLL       */
  /*EB1E*/ GENx___x___x___ ,
  /*EB1F*/ GENx___x___x___ ,
  /*EB20*/ GENx___x___x900 (compare_logical_characters_under_mask_high), /*!CLMH */

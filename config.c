@@ -150,6 +150,7 @@ int     stmtlen;                        /* Statement length          */
     return 0;
 } /* end function read_config */
 
+
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
@@ -838,6 +839,7 @@ int configure_cpu(REGS *regs)
         return -1;
     regs->cpuonline = 1;
     regs->cpustate = CPUSTATE_STARTING;
+    ON_IC_CPU_NOT_STARTED(regs);
     regs->arch_mode = sysblk.arch_mode;
     if ( create_thread (&(regs->cputid), &sysblk.detattr, cpu_thread, regs) )
     {
@@ -852,6 +854,7 @@ int configure_cpu(REGS *regs)
     return 0;
 } /* end function configure_cpu */
 
+
 /*-------------------------------------------------------------------*/
 /* Function to remove a CPU from the configuration                   */
 /* This routine MUST be called with the intlock held                 */
@@ -862,6 +865,7 @@ int deconfigure_cpu(REGS *regs)
     {
         regs->cpuonline = 0;
         regs->cpustate = CPUSTATE_STOPPING;
+        ON_IC_CPU_NOT_STARTED(regs);
 
         /* Wake up CPU as it may be waiting */
         signal_condition (&sysblk.intcond);
@@ -872,6 +876,7 @@ int deconfigure_cpu(REGS *regs)
         return -1;
     
 } /* end function deconfigure_cpu */
+
 
 #if !defined(OPTION_NO_DEVICE_THREAD)
 /*-------------------------------------------------------------------*/
@@ -891,7 +896,18 @@ void device_loop (DEVBLK *dev)
 	/* It's LOOPER_EXEC */
 	dev->loopercmd = LOOPER_WAIT;
 	release_lock(&dev->lock);
-	ARCH_DEP(execute_ccw_chain)(dev);
+        switch(sysblk.arch_mode) {
+            case ARCH_370:
+	        s370_execute_ccw_chain (dev);
+                break;
+            case ARCH_900:
+	        z900_execute_ccw_chain (dev);
+                break;
+            case ARCH_390:
+            default:
+	        s390_execute_ccw_chain (dev);
+                break;
+        }
     }
     release_lock(&dev->lock);
 
@@ -900,6 +916,7 @@ void device_loop (DEVBLK *dev)
     free(dev);
 } /* end function device_loop */
 #endif /*!defined(OPTION_NO_DEVICE_THREAD)*/
+
 
 /*-------------------------------------------------------------------*/
 /* Function to build a device configuration block                    */
@@ -1141,6 +1158,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     return 0;
 } /* end function attach_device */
 
+
 /*-------------------------------------------------------------------*/
 /* Function to delete a device configuration block                   */
 /*-------------------------------------------------------------------*/
@@ -1251,6 +1269,7 @@ DEVBLK *dev;                            /* -> Device block           */
     return 0;
 } /* end function define_device */
 
+
 /*-------------------------------------------------------------------*/
 /* Function to find an unused device block entry                     */
 /*-------------------------------------------------------------------*/
@@ -1265,6 +1284,7 @@ DEVBLK *dev;
 
 } /* end function find_unused_device */
 
+
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the device number           */
 /*-------------------------------------------------------------------*/
@@ -1278,6 +1298,7 @@ DEVBLK *dev;
     return dev;
 
 } /* end function find_device_by_devnum */
+
 
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the subchannel number       */

@@ -1010,7 +1010,7 @@ read_term DS   0H
 
           TM   pr.DCBOFLGS,DCBOFOPN  did the print file open
           BNO  noprint2                nope
-          CLOSE pr.IHADCB,MF=(E,openl)
+          CLOSE pr.IHADCB,MODE=31,MF=(E,openl)
 noprint2  DS   0H
 
 */* ----------------------------------------------------------------

@@ -14,6 +14,7 @@
 /*      Fix PCI intermediate status flags             - Jan Jaeger   */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
 /*      64-bit IDAW support - Roger Bowler v209                  @IWZ*/
+/*      Incorrect-length-indication-suppression - Jan Jaeger         */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -540,7 +541,7 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
 
     /* Signal waiting CPUs that an interrupt may be pending */
     obtain_lock (&sysblk.intlock);
-    sysblk.iopending = 1;
+    ON_IC_IOPENDING;
     signal_condition (&sysblk.intcond);
     release_lock (&sysblk.intlock);
 
@@ -632,7 +633,7 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
 
     /* Signal waiting CPUs that an interrupt may be pending */
     obtain_lock (&sysblk.intlock);
-    sysblk.iopending = 1;
+    ON_IC_IOPENDING;
     signal_condition (&sysblk.intcond);
     release_lock (&sysblk.intlock);
 
@@ -830,7 +831,7 @@ BYTE    storkey;                        /* Storage key               */
 
     /* Channel program check if IDAW is not on correct           @IWZ
        boundary or is outside limit of main storage */
-    if ((idawaddr & ((idawfmt == 2)? 0x07 : 0x03))             /*@IWZ*/
+    if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))            /*@IWZ*/
         || idawaddr >= sysblk.mainsize)
     {
         *chanstat = CSW_PROGC;
@@ -932,7 +933,7 @@ int     idaseq;                         /* IDA sequence number       */
 RADR    idadata;                        /* IDA data address      @IWZ*/
 U16     idalen;                         /* IDA data length           */
 BYTE    storkey;                        /* Storage key               */
-int     i, firstpage, lastpage;         /* 4K page numbers           */
+RADR    page,startpage,endpage;         /* Storage key pages         */
 BYTE    readcmd;                        /* 1=READ, SENSE, or RDBACK  */
 BYTE    area[64];                       /* Data display area         */
 
@@ -1009,7 +1010,7 @@ BYTE    area[64];                       /* Data display area         */
             iobuf += idalen;
 
             /* Increment to next IDAW address */
-            idawaddr += 4;
+            idawaddr += (idawfmt == 1) ? 4 : 8;
 
         } /* end for(idaseq) */
 
@@ -1025,28 +1026,27 @@ BYTE    area[64];                       /* Data display area         */
         /* Channel protection check if any data is fetch protected,
            or if location is store protected and command is READ,
            READ BACKWARD, or SENSE */
-        firstpage = (addr & STORAGE_KEY_PAGEMASK)
-                                >> STORAGE_KEY_PAGESHIFT;
-        lastpage = ((addr + count - 1) & STORAGE_KEY_PAGEMASK)
-                                >> STORAGE_KEY_PAGESHIFT;
-        for (i = firstpage; i <= lastpage;
-                                i += STORAGE_KEY_PAGESIZE >> 10)
+        startpage = addr;
+        endpage = addr + count;
+        for (page = startpage & STORAGE_KEY_PAGEMASK;
+                          page < endpage; page += STORAGE_KEY_PAGESIZE)
         {
-            storkey = sysblk.storkeys[i];
+            storkey = STORAGE_KEY(page);
             if (ccwkey != 0 && (storkey & STORKEY_KEY) != ccwkey
                 && ((storkey & STORKEY_FETCH) || readcmd))
             {
                 *chanstat = CSW_PROTC;
                 return;
             }
-        } /* end for(i) */
+        } /* end for(page) */
 
         /* Set the main storage reference and change bits */
-        for (i = firstpage; i <= lastpage; i++)
+        for (page = startpage & STORAGE_KEY_PAGEMASK;
+                          page < endpage; page += STORAGE_KEY_PAGESIZE)
         {
-            sysblk.storkeys[i] |=
+            STORAGE_KEY(page) |=
                 (readcmd ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
-        } /* end for(i) */
+        } /* end for(page) */
 
         /* Copy data between main storage and channel buffer */
         if (readcmd)
@@ -1125,7 +1125,7 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);
-    sysblk.iopending = 1;
+    ON_IC_IOPENDING;
     signal_condition (&sysblk.intcond);
     release_lock (&sysblk.intlock);
 
@@ -1343,7 +1343,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
         /* Signal waiting CPUs that interrupt is pending */
         obtain_lock (&sysblk.intlock);
-        sysblk.iopending = 1;
+        ON_IC_IOPENDING;
         signal_condition (&sysblk.intcond);
         release_lock (&sysblk.intlock);
     }
@@ -1495,7 +1495,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
                     /* Signal waiting CPUs that interrupt is pending */
                     obtain_lock (&sysblk.intlock);
-                    sysblk.iopending = 1;
+                    ON_IC_IOPENDING;
                     signal_condition (&sysblk.intcond);
                     release_lock (&sysblk.intlock);
 
@@ -1590,7 +1590,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Signal waiting CPUs that an interrupt is pending */
             obtain_lock (&sysblk.intlock);
-            sysblk.iopending = 1;
+            ON_IC_IOPENDING;
             signal_condition (&sysblk.intcond);
             release_lock (&sysblk.intlock);
 
@@ -1697,7 +1697,15 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                for non-NOP CCWs */
             if (((flags & CCW_FLAGS_CD)
                 || (flags & CCW_FLAGS_SLI) == 0)
-                && (code != 0x03))
+                && (code != 0x03)
+#if defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
+                /* Suppress incorrect length indication if 
+                   CCW format is one and SLI mode is indicated
+                   in the ORB */
+                && !((dev->orb.flag5 & ORB5_F)
+                  && (dev->orb.flag5 & ORB5_U))
+#endif /*defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)*/
+                        )
                 chanstat |= CSW_IL;
         }
 
@@ -1848,7 +1856,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);
-    sysblk.iopending = 1;
+    ON_IC_IOPENDING;
     signal_condition (&sysblk.intcond);
     release_lock (&sysblk.intlock);
 
@@ -1928,7 +1936,7 @@ int ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 DEVBLK *dev;                            /* -> Device control block   */
 
     /* Turn off the I/O interrupt pending flag */
-    sysblk.iopending = 0;
+    OFF_IC_IOPENDING;
 
     /* Find a device with pending interrupt */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -1938,7 +1946,7 @@ DEVBLK *dev;                            /* -> Device control block   */
             && (dev->pmcw.flag5 & PMCW5_V))
         {
             /* Turn on the I/O interrupt pending flag */
-            sysblk.iopending = 1;
+            ON_IC_IOPENDING;
 
             /* Exit loop if enabled for interrupts from this device */
             if (ARCH_DEP(interrupt_enabled)(regs, dev))

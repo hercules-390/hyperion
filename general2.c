@@ -1211,10 +1211,10 @@ int     rc;                             /* Return code               */
     /* Point to PSA in main storage */
     psa = (void*)(sysblk.mainstor + px);
 
-#if !defined(FEATURE_ESAME)
+#if defined(FEATURE_BCMODE)
     /* For ECMODE, store SVC interrupt code at PSA+X'88' */
     if ( regs->psw.ecmode )
-#endif /*!defined(FEATURE_ESAME)*/
+#endif /*defined(FEATURE_BCMODE)*/
     {
         psa->svcint[0] = 0;
         psa->svcint[1] = regs->psw.ilc;

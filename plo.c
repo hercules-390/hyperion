@@ -12,7 +12,8 @@
 
 
 #if defined(FEATURE_PERFORM_LOCKED_OPERATION)
-int ARCH_DEP(plo_cl) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_cl) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U32 op2,
     op4;
@@ -41,7 +42,8 @@ U32 op2,
 }
 
 
-int ARCH_DEP(plo_clg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_clg) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op1c,
     op2,
@@ -101,7 +103,8 @@ VADR op4addr;
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_clgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_clgr) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op2,
     op4;
@@ -132,7 +135,8 @@ U64 op2,
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_clx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_clx) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 BYTE op1c[16],
      op2[16],
@@ -188,7 +192,8 @@ VADR op4addr;
 #endif /*defined(FEATURE_ESAME)*/
 
 
-int ARCH_DEP(plo_cs) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_cs) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U32 op2;
 
@@ -217,7 +222,8 @@ U32 op2;
 }
 
 
-int ARCH_DEP(plo_csg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csg) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op1c,
     op1r,
@@ -253,7 +259,8 @@ U64 op1c,
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_csgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csgr) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op2;
 
@@ -284,7 +291,8 @@ U64 op2;
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_csx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csx) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 BYTE op1c[16],
      op1r[16],
@@ -320,7 +328,8 @@ BYTE op1c[16],
 #endif /*defined(FEATURE_ESAME)*/
 
 
-int ARCH_DEP(plo_dcs) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_dcs) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U32 op2,
     op4;
@@ -367,7 +376,8 @@ U32 op2,
 }
 
 
-int ARCH_DEP(plo_dcsg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_dcsg) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op1c,
     op1r,
@@ -454,7 +464,8 @@ VADR op4addr;
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_dcsgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_dcsgr) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op2,
     op4;
@@ -503,7 +514,8 @@ U64 op2,
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_dcsx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_dcsx) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 BYTE op1c[16],
      op1r[16],
@@ -586,7 +598,8 @@ VADR op4addr;
 #endif /*defined(FEATURE_ESAME)*/
 
 
-int ARCH_DEP(plo_csst) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csst) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U32 op2;
 
@@ -620,7 +633,8 @@ U32 op2;
 }
 
 
-int ARCH_DEP(plo_csstg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csstg) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op1c,
     op1r,
@@ -683,7 +697,8 @@ VADR op4addr;
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_csstgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csstgr) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op2;
 
@@ -719,7 +734,8 @@ U64 op2;
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_csstx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csstx) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 BYTE op1c[16],
      op1r[16],
@@ -778,7 +794,8 @@ VADR op4addr;
 #endif /*defined(FEATURE_ESAME)*/
 
 
-int ARCH_DEP(plo_csdst) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csdst) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U32 op2,
     op3,
@@ -863,7 +880,8 @@ VADR op4addr,
 }
 
 
-int ARCH_DEP(plo_csdstg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csdstg) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op1c,
     op1r,
@@ -952,7 +970,8 @@ VADR op4addr,
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_csdstgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csdstgr) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op2,
     op3,
@@ -1031,7 +1050,8 @@ VADR op4addr,
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_csdstx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_csdstx) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 BYTE op1c[16],
      op1r[16],
@@ -1112,7 +1132,8 @@ VADR op4addr,
 #endif /*defined(FEATURE_ESAME)*/
 
 
-int ARCH_DEP(plo_cstst) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_cstst) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U32 op2,
     op3,
@@ -1222,7 +1243,8 @@ VADR op4addr,
 }
 
 
-int ARCH_DEP(plo_cststg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_cststg) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op1c,
     op1r,
@@ -1336,7 +1358,8 @@ VADR op4addr,
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_cststgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_cststgr) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 U64 op2,
     op3,
@@ -1436,7 +1459,8 @@ VADR op4addr,
 
 
 #if defined(FEATURE_ESAME)
-int ARCH_DEP(plo_cststx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4, REGS *regs)
+int ARCH_DEP(plo_cststx) (int r1, int r3, VADR effective_addr2, int b2,
+                              VADR effective_addr4, int b4, REGS *regs)
 {
 BYTE op1c[16],
      op1r[16],

@@ -239,7 +239,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     obtain_lock (&sysblk.intlock);
 
     /* If a service signal is pending then we cannot process the request */
-    if( sysblk.servsig == 1 ) {
+    if( IS_IC_SERVSIG ) {
         release_lock (&sysblk.intlock);
         return 2;   /* Service Processor Busy */
     }
@@ -354,7 +354,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 
     /* Set service signal external interrupt pending */
     sysblk.servparm = spccb_absolute_addr;
-    sysblk.extpending = sysblk.servsig = 1; 
+    ON_IC_SERVSIG; 
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
@@ -384,7 +384,7 @@ static U64        diag204tod;          /* last diag204 tod           */
     abs = APPLY_PREFIXING (regs->GR(r1), regs->PX);
 
     /* Program check if RMF data is not on a page boundary */
-    if ( (abs & STORAGE_KEY_BYTEMASK) != 0x000)
+    if ( (abs & PAGEFRAME_BYTEMASK) != 0x000)
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         return;

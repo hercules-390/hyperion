@@ -759,6 +759,7 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
     if (cmdlen == 0)
     {
         regs->cpustate = CPUSTATE_STOPPED;
+        ON_IC_CPU_NOT_STARTED(regs);
         return 0;
     }
 

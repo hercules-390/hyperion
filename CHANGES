@@ -1,3 +1,32 @@
+05 Mar 2001 Correction to RP - Peter Stammbach
+05 Mar 2001 Correction to DIAG204 - Jan Jaeger
+05 Mar 2001 64 Bit fix to program_return_unstack - Jan Jaeger
+05 Mar 2001 SIE corrections to EPSW and STFL - Jan Jaeger
+05 Mar 2001 ESAME SIE SKA fix for SSKE/RRBE/ISKE - Jan Jaeger
+04 Mar 2001 Multi architecture debug format enhancements - Peter Stammbach
+03 Mar 2001 Correct store_psw during SIE interception - Jan Jaeger
+03 Mar 2001 Correct trap control block - Roger Bowler
+02 Mar 2001 Correction storage key updates by subchannels - Jan Jaeger
+01 Mar 2001 Correction to TRAP2/TRAP4 - Paul Leisy
+01 Mar 2001 Fix restart in ESAME mode - Jan Jaeger
+01 Mar 2001 Correction to SIGP set architecture mode - Jan Jaeger
+01 Mar 2001 SIE guest/host storage mapping corrections - Jan Jaeger
+01 Mar 2001 Multi architecture fix for device threads - Juergen Dobrinski
+28 Feb 2001 Correction to SIE interception parameters - Jan Jaeger
+28 Feb 2001 Move Lock Page logic from dat.h to control.c - Jan Jaeger
+27 Feb 2001 Add instructions marked N3 to ESA/390 - Jan Jaeger
+27 Feb 2001 CVDG/CVBG instructions - Roger Bowler/Jan Jaeger
+26 Feb 2001 Fix CDSG nullification on pagefault - Jan Jaeger
+26 Feb 2001 Modification to 64 bit SIE - Jan Jaeger
+25 Feb 2001 Fix PC/PT ltd origin in 64 bit mode - Jan Jaeger
+25 Feb 2001 Improved interrupt processing - Valery Pogonchenko
+25 Feb 2001 Fix private space bit to apply to real spaces - Jan Jaeger
+25 Feb 2001 Add (incomplete) TRACG instruction - Jan Jaeger
+25 Feb 2001 Correction to access register unstacking - Peter Stammbach
+24 Feb 2001 Correction to 64bit IDAW's - Peter Stammbach
+24 Feb 2001 cckd patches  - Greg Smith
+24 Feb 2001 Incorrect-Length-Indication-Suppression facility - Jan Jaeger
+24 Feb 2001 Correction to interval timer Fix 
 22 Feb 2001 S/370 interval timer fixes - Mark Gaubatz
 22 Feb 2001 64 bit Interpretive Execution (SIE) - Jan Jaeger
 22 Feb 2001 Corrections to load_psw and store_psw - Jan Jaeger

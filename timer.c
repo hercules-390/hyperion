@@ -73,12 +73,12 @@ REGS	       *regs;			/* -> CPU register context   */
 
 	/* Signal clock comparator interrupt if needed */
         if((sysblk.todclk + regs->todoffset) > regs->clkc)
-#if defined(OPTION_NO_LINUX_INTERRUPT_PATCH)
-            regs->cpuint =
-#endif
-                           regs->ckpend = intflag = 1;
+        {
+            ON_IC_CKPEND(regs);
+            intflag = 1;
+        }
         else
-            regs->ckpend = 0;
+            OFF_IC_CKPEND(regs);
 
 #if defined(_FEATURE_SIE)
         /* If running under SIE also check the SIE copy */
@@ -86,12 +86,9 @@ REGS	       *regs;			/* -> CPU register context   */
         {
 	    /* Signal clock comparator interrupt if needed */
             if((sysblk.todclk + regs->guestregs->todoffset) > regs->guestregs->clkc)
-#if defined(OPTION_NO_LINUX_INTERRUPT_PATCH)
-                regs->guestregs->cpuint =
-#endif
-                                          regs->guestregs->ckpend = 1;
+                ON_IC_CKPEND(regs->guestregs);
             else
-                regs->guestregs->ckpend = 0;
+                OFF_IC_CKPEND(regs->guestregs);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -196,12 +193,9 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
             /* Set interrupt flag if the CPU timer is negative */
             if ((S64)regs->ptimer < 0)
-#if defined(OPTION_NO_LINUX_INTERRUPT_PATCH)
-                regs->cpuint = 
-#endif
-                               regs->ptpend = intflag = 1;
+                ON_IC_PTPEND(regs);
             else
-                regs->ptpend = 0;
+                OFF_IC_PTPEND(regs);
 
 #if defined(_FEATURE_SIE)
             /* When running under SIE also update the SIE copy */
@@ -213,12 +207,9 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
                 /* Set interrupt flag if the CPU timer is negative */
                 if ((S64)regs->guestregs->ptimer < 0)
-#if defined(OPTION_NO_LINUX_INTERRUPT_PATCH)
-                    regs->guestregs->cpuint =
-#endif
-                                              regs->guestregs->ptpend = 1;
+                    ON_IC_PTPEND(regs->guestregs);
                 else
-                    regs->guestregs->ptpend = 0;
+                    OFF_IC_PTPEND(regs->guestregs);
 
                 if((regs->guestregs->siebk->m & SIE_M_370)
                   && !(regs->guestregs->siebk->m & SIE_M_ITMOF))
@@ -246,7 +237,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                     /* Set interrupt flag and interval timer interrupt pending
                        if the interval timer went from positive to negative */
                     if (itimer < 0 && olditimer >= 0)
-                        regs->guestregs->cpuint = regs->guestregs->itimer_pending = 1;
+                        ON_IC_ITIMER_PENDING(regs->guestregs);
 
                     /* The residu field in the state descriptor needs
                        to be ajusted with the amount of CPU time spend, minus
@@ -274,7 +265,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                tick interval. See 370 POO page 4-29. (ESA doesn't
                even have an interval timer.) */
 #ifdef OPTION_MIPS_COUNTING
-            itimer -= 77 * itimer_diff;
+            itimer -= itimer_diff;
 #else
             itimer -= 76800 / CLK_TCK;
 #endif
@@ -283,7 +274,10 @@ struct  timeval tv;                     /* Structure for gettimeofday
             /* Set interrupt flag and interval timer interrupt pending
                if the interval timer went from positive to negative */
             if (itimer < 0 && olditimer >= 0)
-                regs->cpuint = regs->itimer_pending = intflag = 1;
+            {
+                ON_IC_ITIMER_PENDING(regs);
+                intflag = 1;
+            }
         } /*if(regs->arch_mode == ARCH_370)*/
 #endif /*_FEATURE_INTERVAL_TIMER*/
 

@@ -20,13 +20,13 @@
 /* TRAP support added                                     Jan Jaeger */
 /*-------------------------------------------------------------------*/
 
+// #define  STACK_DEBUG
+
 #include "hercules.h"
 
 #include "opcode.h"
 
 #include "inline.h"
-
-#undef  STACK_DEBUG
 
 /*-------------------------------------------------------------------*/
 /* Linkage stack macro definitions                                   */
@@ -111,6 +111,7 @@ void ARCH_DEP(trap_x) (int trap_is_trap4, int execflag, REGS *regs, U32 trap_ope
 RADR ducto;
 U32  duct11;
 U32  tcba;
+RADR atcba;
 #if defined(FEATURE_ESAME)
 int  notesame_save;
 U32  tcba0;
@@ -124,7 +125,7 @@ QWORD trap_psw;
 int  i;
 
     if(!PRIMARY_SPACE_MODE(&(regs->psw)) 
-      && !HOME_SPACE_MODE(&(regs->psw)))
+      && !ACCESS_REGISTER_MODE(&(regs->psw)))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Obtain the DUCT origin from control register 2 */
@@ -143,21 +144,29 @@ int  i;
     /* Isolate the Trap Control Block Address */
     tcba = duct11 & DUCT11_TCBA;
 
-    /* Program check if Trap Control Block address is invalid */
-    if (tcba + 24 >= regs->mainsize)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    /* Obtain the absolute address of the trap control block */
+    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_WRITE);
 
 #if defined(FEATURE_ESAME)
     /* Fetch word 0 of the TCB */
-    tcba0 = ARCH_DEP(fetch_fullword_absolute) (tcba, regs);
+    tcba0 = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
 #endif /*defined(FEATURE_ESAME)*/
 
-    /* Fetch word 3 of the TCB */
-    tsao = ARCH_DEP(fetch_fullword_absolute) (tcba + 12, regs)
-                                                     & 0x7FFFFFF8;
+    /* Advance to offset +12 */
+    tcba += 12; atcba += 12;
+    if((atcba & PAGEFRAME_BYTEMASK) < 12)
+        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_WRITE);
 
     /* Fetch word 3 of the TCB */
-    trap_ia = ARCH_DEP(fetch_fullword_absolute) (tcba + 20, regs);
+    tsao = ARCH_DEP(fetch_fullword_absolute)(atcba, regs) & 0x7FFFFFF8;
+
+    /* Advance to offset +20 */
+    tcba += 8; atcba += 8;
+    if((atcba & PAGEFRAME_BYTEMASK) == 0)
+        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_WRITE);
+
+    /* Fetch word 3 of the TCB */
+    trap_ia = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
 
     /* Use abs_stack_addr as it conforms to trap save area access */
     tsaa1 = tsaa2 = ARCH_DEP(abs_stack_addr) (tsao, regs, ACCTYPE_WRITE);
@@ -391,7 +400,7 @@ int     i;                              /* Array subscript           */
     memcpy (&lsed, sysblk.mainstor+absold, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-    logmsg ("stack: Current stack entry at %8.8X\n", lsea);
+    logmsg ("stack: Current stack entry at " F_VADR "\n", lsea);
     logmsg ("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed.uet, lsed.si, lsed.rfs[0],
             lsed.rfs[1], lsed.nes[0], lsed.nes[1]);
@@ -414,7 +423,7 @@ int     i;                              /* Array subscript           */
         FETCH_FSHA(fsha, sysblk.mainstor + abs);
 
 #ifdef STACK_DEBUG
-        logmsg ("stack: Forward section header addr %8.8X\n", fsha);
+        logmsg ("stack: Forward section header addr " F_VADR "\n", fsha);
 #endif /*STACK_DEBUG*/
 
         /* Stack full exception if forward address is not valid */
@@ -477,7 +486,7 @@ int     i;                              /* Array subscript           */
                         regs, ACCTYPE_WRITE);
 
 #ifdef STACK_DEBUG
-    logmsg ("stack: New stack entry at %8.8X\n", lsea);
+    logmsg ("stack: New stack entry at " F_VADR "\n", lsea);
 #endif /*STACK_DEBUG*/
 
     /* Store general registers 0-15 in bytes 0-63 (ESA/390)
@@ -489,16 +498,16 @@ int     i;                              /* Array subscript           */
         STORE_DW(sysblk.mainstor + abs, regs->GR_G(i));
 
       #ifdef STACK_DEBUG
-        logmsg ("stack: GPR%d=%16.16llX stored at V:%8.8X A:%8.8X\n",
-                i, regs->GR_G(i), lsea, abs);
+        logmsg ("stack: GPR%d=" F_GREG " stored at V:" F_VADR
+                " A:" F_RADR "\n", i, regs->GR_G(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 #else /*!defined(FEATURE_ESAME)*/
         /* Store the 32-bit general register in the stack entry */
         STORE_FW(sysblk.mainstor + abs, regs->GR_L(i));
 
       #ifdef STACK_DEBUG
-        logmsg ("stack: GPR%d=%8.8X stored at V:%8.8X A:%8.8llX\n",
-                i, regs->GR_L(i), lsea, abs);
+        logmsg ("stack: GPR%d=" F_GREG " stored at V:" F_VADR
+                " A:" F_RADR "\n", i, regs->GR_L(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 #endif /*!defined(FEATURE_ESAME)*/
 
@@ -521,8 +530,8 @@ int     i;                              /* Array subscript           */
         STORE_FW(sysblk.mainstor + abs, regs->AR(i));
 
       #ifdef STACK_DEBUG
-        logmsg ("stack: AR%d=%8.8X stored at V:%8.8X A:%8.8llX\n",
-                i, regs->AR(i), lsea, abs);
+        logmsg ("stack: AR%d=" F_AREG " stored at V:" F_VADR 
+                " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 
         /* Update the virtual and absolute addresses */
@@ -544,8 +553,8 @@ int     i;                              /* Array subscript           */
 
   #ifdef STACK_DEBUG
     logmsg ("stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
-            "EAX=%2.2X%2.2X PASN=%2.2X%2.2X "
-            "stored at V:%8.8X A:%8.8llX\n",
+            "EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
+            "stored at V:" F_VADR " A:" F_RADR "\n",
             sysblk.mainstor[abs], sysblk.mainstor[abs+1],
             sysblk.mainstor[abs+2], sysblk.mainstor[abs+3],
             sysblk.mainstor[abs+4], sysblk.mainstor[abs+5],
@@ -598,7 +607,7 @@ int     i;                              /* Array subscript           */
 
   #ifdef STACK_DEBUG
     logmsg ("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-            "stored at V:%8.8X A:%8.8llX\n",
+            "stored at V:" F_VADR " A:" F_RADR "\n",
             sysblk.mainstor[abs], sysblk.mainstor[abs+1],
             sysblk.mainstor[abs+2], sysblk.mainstor[abs+3],
             sysblk.mainstor[abs+4], sysblk.mainstor[abs+5],
@@ -676,7 +685,7 @@ int     i;                              /* Array subscript           */
 
   #ifdef STACK_DEBUG
     logmsg ("stack: PSW2=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-            "stored at V:%8.8X A:%8.8X\n",
+            "stored at V:" F_VADR " A:" F_RADR "\n",
             sysblk.mainstor[abs], sysblk.mainstor[abs+1],
             sysblk.mainstor[abs+2], sysblk.mainstor[abs+3],
             sysblk.mainstor[abs+4], sysblk.mainstor[abs+5],
@@ -709,8 +718,8 @@ int     i;                              /* Array subscript           */
         STORE_FW(sysblk.mainstor + abs, regs->AR(i));
 
       #ifdef STACK_DEBUG
-        logmsg ("stack: AR%d=%8.8lX stored at V:%8.8X A:%8.8X\n",
-                i, regs->AR(i), lsea, abs);
+        logmsg ("stack: AR%d=" F_AREG " stored at V:" F_VADR 
+                " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 
         /* Update the virtual and absolute addresses */
@@ -738,7 +747,7 @@ int     i;                              /* Array subscript           */
     memcpy (sysblk.mainstor+abs, &lsed2, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-    logmsg ("stack: New stack entry at %8.8X\n", lsea);
+    logmsg ("stack: New stack entry at " F_VADR "\n", lsea);
     logmsg ("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed2.uet, lsed2.si, lsed2.rfs[0],
             lsed2.rfs[1], lsed2.nes[0], lsed2.nes[1]);
@@ -749,7 +758,7 @@ int     i;                              /* Array subscript           */
     memcpy (sysblk.mainstor+absold, &lsed, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-    logmsg ("stack: Previous stack entry updated at A:%8.8llX\n",
+    logmsg ("stack: Previous stack entry updated at A:" F_RADR "\n",
             absold);
     logmsg ("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsed.uet, lsed.si, lsed.rfs[0],
@@ -760,7 +769,7 @@ int     i;                              /* Array subscript           */
     regs->CR(15) = lsea & CR15_LSEA;
 
 #ifdef STACK_DEBUG
-    logmsg ("stack: CR15=%8.8X\n", regs->CR(15));
+    logmsg ("stack: CR15=" F_CREG "\n", regs->CR(15));
 #endif /*STACK_DEBUG*/
 
 } /* end function ARCH_DEP(form_stack_entry) */
@@ -814,7 +823,7 @@ VADR    bsea;                           /* Backward stack entry addr */
     memcpy (lsedptr, sysblk.mainstor+abs, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-    logmsg ("stack: Stack entry located at %8.8X\n", lsea);
+    logmsg ("stack: Stack entry located at " F_VADR "\n", lsea);
     logmsg ("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n",
             lsedptr->uet, lsedptr->si, lsedptr->rfs[0],
             lsedptr->rfs[1], lsedptr->nes[0], lsedptr->nes[1]);
@@ -850,7 +859,7 @@ VADR    bsea;                           /* Backward stack entry addr */
         memcpy (lsedptr, sysblk.mainstor+abs, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-        logmsg ("stack: Stack entry located at %8.8X\n", lsea);
+        logmsg ("stack: Stack entry located at " F_VADR "\n", lsea);
         logmsg ("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
                 "nes=%2.2X%2.2X\n",
                 lsedptr->uet, lsedptr->si, lsedptr->rfs[0],
@@ -1058,7 +1067,7 @@ int     i;                              /* Array subscript           */
                         regs, ACCTYPE_READ);
 
   #ifdef STACK_DEBUG
-    logmsg ("stack: Unstacking registers %d-%d from %8.8X\n",
+    logmsg ("stack: Unstacking registers %d-%d from " F_VADR "\n",
             r1, r2, lsea);
   #endif /*STACK_DEBUG*/
 
@@ -1083,18 +1092,16 @@ int     i;                              /* Array subscript           */
             }
 
           #ifdef STACK_DEBUG
-            logmsg ("stack: GPR%d=%16.16llX "
-                    "loaded from V:%8.8X A:%8.8X\n",
-                    i, regs->GR(i), lsea, abs);
+            logmsg ("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
+                    " A:" F_RADR "\n", i, regs->GR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
     #else /*!defined(FEATURE_ESAME)*/
             /* For ESA/390, load a 32-bit general register */
             FETCH_FW(regs->GR_L(i), sysblk.mainstor + abs);
 
           #ifdef STACK_DEBUG
-            logmsg ("stack: GPR%d=%8.8X "
-                    "loaded from V:%8.8X A:%8.8llX\n",
-                    i, regs->GR_L(i), lsea, abs);
+            logmsg ("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
+                    " A:" F_RADR "\n", i, regs->GR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
     #endif /*!defined(FEATURE_ESAME)*/
         }
@@ -1112,7 +1119,7 @@ int     i;                              /* Array subscript           */
 
 #if defined(FEATURE_ESAME)
     /* For ESAME, skip the next 96 bytes of the state entry */
-    lsea += 96;
+    lsea += 96; abs += 96;
 
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) < 96)
@@ -1130,9 +1137,8 @@ int     i;                              /* Array subscript           */
             FETCH_FW(regs->AR(i),sysblk.mainstor + abs);
 
           #ifdef STACK_DEBUG
-            logmsg ("stack: AR%d=%8.8X "
-                    "loaded from V:%8.8X A:%8.8llX\n",
-                    i, regs->AR(i), lsea, abs);
+            logmsg ("stack: AR%d=" F_AREG " loaded from V:" F_VADR
+                    " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
         }
 
@@ -1173,7 +1179,7 @@ int     i;                              /* Array subscript           */
 /*      In the event of any stack error, this function generates     */
 /*      a program check and does not return.                         */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(program_return_unstack) (REGS *regs, U32 *lsedap)
+int ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap)
 {
 QWORD   newpsw;                         /* New PSW                   */
 LSED    lsed;                           /* Linkage stack entry desc. */
@@ -1226,8 +1232,8 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
       #ifdef STACK_DEBUG
         logmsg ("stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
-                "EAX=%2.2X%2.2X PASN=%2.2X%2.2X "
-                "loaded from V:%8.8X A:%8.8llX\n",
+                "EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
+                "loaded from V:" F_VADR " A:" F_RADR "\n",
                 sysblk.mainstor[abs], sysblk.mainstor[abs+1],
                 sysblk.mainstor[abs+2], sysblk.mainstor[abs+3],
                 sysblk.mainstor[abs+4], sysblk.mainstor[abs+5],
@@ -1263,7 +1269,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
   #ifdef STACK_DEBUG
     logmsg ("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-            "loaded from V:%8.8X A:%8.8llX\n",
+            "loaded from V:" F_VADR " A:" F_RADR "\n",
             sysblk.mainstor[abs], sysblk.mainstor[abs+1],
             sysblk.mainstor[abs+2], sysblk.mainstor[abs+3],
             sysblk.mainstor[abs+4], sysblk.mainstor[abs+5],
@@ -1310,7 +1316,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     regs->CR(15) = lsep & CR15_LSEA;
 
 #ifdef STACK_DEBUG
-    logmsg ("stack: CR15=%8.8X\n", regs->CR(15));
+    logmsg ("stack: CR15=" F_CREG "\n", regs->CR(15));
 #endif /*STACK_DEBUG*/
 
     /* Return the entry type of the unstacked state entry */

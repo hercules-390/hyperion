@@ -213,6 +213,7 @@ U32             n;                      /* 32-bit operand value      */
     /* Diagnose F00: Hercules normal mode                            */
     /*---------------------------------------------------------------*/
         sysblk.inststep = 0;
+        SET_IC_TRACE;
         break;
 
     case 0xF04:
@@ -220,6 +221,7 @@ U32             n;                      /* 32-bit operand value      */
     /* Diagnose F04: Hercules single step mode                       */
     /*---------------------------------------------------------------*/
         sysblk.inststep = 1;
+        ON_IC_TRACE;
         break;
 
     case 0xF08:
@@ -257,6 +259,7 @@ U32             n;                      /* 32-bit operand value      */
     /* Diagnose F10: Hercules CPU stop                               */
     /*---------------------------------------------------------------*/
         regs->cpustate = CPUSTATE_STOPPING;
+        ON_IC_CPU_NOT_STARTED(regs);
         break;
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
 

@@ -493,7 +493,7 @@ void scp_command (BYTE *command, int priomsg)
 
     /* If a service signal is pending then reject the command
        with message indicating that service processor is busy */
-    if (sysblk.servsig)
+    if (IS_IC_SERVSIG)
     {
         logmsg ("HHC706I Service Processor busy\n");
 
@@ -511,7 +511,7 @@ void scp_command (BYTE *command, int priomsg)
 
     /* Set service signal interrupt pending for read event data */
     sysblk.servparm = 1;
-    sysblk.extpending = sysblk.servsig = 1;
+    ON_IC_SERVSIG;
     signal_condition (&sysblk.intcond);
 
     /* Release the interrupt lock */
@@ -623,10 +623,11 @@ int servpendok = 0;
     do {
         sleep(1);
         obtain_lock(&sysblk.intlock);
-        if(!sysblk.servsig)
+        if(!IS_IC_SERVSIG)
         {
             sysblk.servparm = 1;
-            sysblk.extpending = sysblk.servsig = servpendok = 1;
+            ON_IC_SERVSIG;
+            servpendok = 1;
             sysblk.hwl_tid = 0;
             signal_condition (&sysblk.intcond);
         }
@@ -866,7 +867,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* If a service signal is pending then return condition
            code 2 to indicate that service processor is busy */
-        if (sysblk.servsig)
+        if (IS_IC_SERVSIG)
         {
             release_lock (&sysblk.intlock);
             regs->psw.cc = 2;
@@ -1323,7 +1324,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         message[j] = '\0';
                         if(j > 0)
                             logmsg ("%s\n", message);
-// if(!memcmp(message,"*IEE479W",8)) regs->cpustate = CPUSTATE_STOPPING;
+// if(!memcmp(message,"*IEE479W",8)) { regs->cpustate = CPUSTATE_STOPPING;
+//                                     ON_IC_CPU_NOT_STARTED(regs); }
                     }
                 }
                 mcd_len -= obj_len;
@@ -1789,7 +1791,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     /* Set service signal external interrupt pending */
     sysblk.servparm = sccb_absolute_addr;
-    sysblk.extpending = sysblk.servsig = 1;
+    ON_IC_SERVSIG;
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);

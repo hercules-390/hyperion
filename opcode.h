@@ -351,7 +351,6 @@ int used; \
 		ARCH_DEP(program_interrupt) ((_regs), PGM_SPECIFICATION_EXCEPTION); \
 	    memcpy ((_dest), sysblk.mainstor + (_regs)->AI + \
 				    ((_addr) & PAGEFRAME_BYTEMASK) , 6); \
-	    STORAGE_KEY((_regs)->AI) |= STORKEY_REF; \
 	} \
 	else \
 	    ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)); \
@@ -1082,13 +1081,15 @@ int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 
 
 /* Functions in module cpu.c */
-void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr);
 #if defined(_FEATURE_SIE)
+void s370_store_psw (REGS *regs, BYTE *addr);
 int  s370_load_psw (REGS *regs, BYTE *addr);
-#endif /*!defined(_FEATURE_SIE)*/
+#endif /*defined(_FEATURE_SIE)*/
 #if defined(_FEATURE_ZSIE)
 int  s390_load_psw (REGS *regs, BYTE *addr);
-#endif /*!defined(_FEATURE_ZSIE)*/
+void s390_store_psw (REGS *regs, BYTE *addr);
+#endif /*defined(_FEATURE_ZSIE)*/
+void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr);
 int  ARCH_DEP(load_psw) (REGS *regs, BYTE *addr);
 
 #if defined(_FEATURE_SIE)
@@ -1116,9 +1117,9 @@ void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
 
 /* Functions in module external.c */
 void ARCH_DEP(perform_external_interrupt) (REGS *regs);
-void ARCH_DEP(store_status) (REGS *ssreg, U32 aaddr);
+void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
 void synchronize_broadcast (REGS *regs, U32 *type);
-void store_status (REGS *ssreg, U32 aaddr);
+void store_status (REGS *ssreg, RADR aaddr);
 
 
 /* Functions in module ipl.c */
@@ -1162,7 +1163,7 @@ void ARCH_DEP(stack_modify) (VADR lsea, U32 m1, U32 m2, REGS *regs);
 void ARCH_DEP(stack_extract) (VADR lsea, int r1, int code, REGS *regs);
 void ARCH_DEP(unstack_registers) (int gtype, VADR lsea, int r1,
 	int r2, REGS *regs);
-int  ARCH_DEP(program_return_unstack) (REGS *regs, U32 *lsedap);
+int  ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap);
 
 
 /* Functions in module trace.c */
@@ -1175,30 +1176,54 @@ CREG  ARCH_DEP(trace_pt) (U16 pasn, GREG gpr2, REGS *regs);
 
 
 /* Functions in module plo.c */
-int ARCH_DEP(plo_cl) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_clg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_clgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_clx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cs) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcs) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcsg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcsgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_dcsx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csst) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csstg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csstgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csstx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdst) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdstg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdstgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_csdstx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cstst) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cststg) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cststgr) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
-int ARCH_DEP(plo_cststx) (int r1, int r3, VADR effective_addr2, int b2, VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_cl) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_clg) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_clgr) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_clx) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_cs) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csg) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csgr) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csx) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_dcs) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_dcsg) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_dcsgr) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_dcsx) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csst) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csstg) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csstgr) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csstx) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csdst) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csdstg) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csdstgr) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_csdstx) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_cstst) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_cststg) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_cststgr) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
+int ARCH_DEP(plo_cststx) (int r1, int r3, VADR effective_addr2, int b2,
+                            VADR effective_addr4, int b4,  REGS *regs);
 
 
 /* Instruction functions in opcode.c */
@@ -1632,6 +1657,9 @@ DEF_INST(set_rounding_mode);
 DEF_INST(trap2);
 DEF_INST(trap4);
 DEF_INST(resume_program);
+DEF_INST(trace_long);
+DEF_INST(convert_to_binary_long);
+DEF_INST(convert_to_decimal_long);
 DEF_INST(multiply_logical);
 DEF_INST(multiply_logical_long);
 DEF_INST(multiply_logical_register);

@@ -6,7 +6,7 @@ CKDDASD_DEVHDR  devhdr;
 CCKDDASD_DEVHDR cdevhdr;
 int             heads, cyls, devt;
 
-        fd = open (argv[1], O_RDWR);
+        fd = open (argv[1], O_RDWR|O_BINARY);
         if (fd < 0) return 1;
 
         read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);

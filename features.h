@@ -20,7 +20,7 @@
  #include "feat370.h"
 #elif	  _GEN_ARCH == 390
  #include "feat390.h"
-#else  /* _GEN_ARCH >= 900 */
+#else  /* _GEN_ARCH = 900 */
  #include "feat900.h"
 #endif
 #include  "featchk.h"
@@ -44,16 +44,24 @@
 #undef PX
 #undef CR
 #undef GR
+#undef GR_A
 #undef MONCODE
 #undef TEA
 #undef DXC
 #undef ET 
+#undef PX_MASK
+#undef RSTOLD
+#undef RSTNEW
 #undef RADR
-#undef GR_A
+#undef F_RADR
 #undef VADR
+#undef F_VADR
 #undef GREG
+#undef F_GREG
 #undef CREG
+#undef F_CREG
 #undef AREG
+#undef F_AREG
 #undef STORE_W
 #undef FETCH_W
 #if defined(OPTION_AIA_BUFFER)
@@ -63,9 +71,8 @@
 #if defined(OPTION_AEA_BUFFER)
 #undef AE
 #undef VE
-#undef SIE_IP_PSA_OFFSET
-#undef SIEBK
 #endif /*defined(OPTION_AEA_BUFFER)*/
+#undef SIEBK
 /* The default mode is 900, basic ESAME */
 
 #if !defined(_GEN_ARCH)
@@ -116,15 +123,24 @@ s370_ ## _name
 #define TEA	EA_L
 #define DXC     tea
 #define ET 	ET_L
+#define PX_MASK 0x7FFFF000
+#define RSTOLD  iplccw1
+#define RSTNEW  iplpsw
 #if !defined(_FEATURE_ZSIE)
 #define RADR	U32
+#define F_RADR  "%8.8X"
 #else
 #define RADR	U64
+#define F_RADR  "%16.16llX"
 #endif
 #define VADR	U32
+#define F_VADR  "%8.8X"
 #define GREG	U32
+#define F_GREG  "%8.8X"
 #define CREG	U32
+#define F_CREG  "%8.8X"
 #define AREG	U32
+#define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #if defined(OPTION_AIA_BUFFER)
@@ -135,7 +151,6 @@ s370_ ## _name
 #define AE(_r)	AE_L(_r)
 #define VE(_r)	VE_L(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
-#define SIE_IP_PSA_OFFSET       SIE1_IP_PSA_OFFSET
 #define SIEBK                   SIE1BK
 
 #elif _GEN_ARCH == 390
@@ -182,15 +197,24 @@ s390_ ## _name
 #define TEA	EA_L
 #define DXC     tea
 #define ET 	ET_L
+#define PX_MASK 0x7FFFF000
+#define RSTNEW  iplpsw
+#define RSTOLD  iplccw1
 #if !defined(_FEATURE_ZSIE)
 #define RADR	U32
+#define F_RADR  "%8.8X"
 #else
 #define RADR	U64
+#define F_RADR  "%16.16llX"
 #endif
 #define VADR	U32
+#define F_VADR  "%8.8X"
 #define GREG	U32
+#define F_GREG  "%8.8X"
 #define CREG	U32
+#define F_CREG  "%8.8X"
 #define AREG	U32
+#define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
 #if defined(OPTION_AIA_BUFFER)
@@ -201,7 +225,6 @@ s390_ ## _name
 #define AE(_r)	AE_L(_r)
 #define VE(_r)	VE_L(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
-#define SIE_IP_PSA_OFFSET       SIE1_IP_PSA_OFFSET
 #define SIEBK                   SIE1BK
 
 #elif _GEN_ARCH == 900
@@ -248,11 +271,19 @@ z900_ ## _name
 #define TEA	EA_G
 #define DXC     dataexc
 #define ET 	ET_G
+#define PX_MASK 0x7FFFE000
+#define RSTOLD  rstold
+#define RSTNEW  rstnew
 #define RADR	U64
+#define F_RADR  "%16.16llX"
 #define VADR	U64
+#define F_VADR  "%16.16llX"
 #define GREG	U64
+#define F_GREG  "%16.16llX"
 #define CREG	U64
+#define F_CREG  "%16.16llX"
 #define AREG	U32
+#define F_AREG  "%8.8X"
 #define STORE_W STORE_DW
 #define FETCH_W FETCH_DW
 #if defined(OPTION_AIA_BUFFER)
@@ -263,7 +294,6 @@ z900_ ## _name
 #define AE(_r)	AE_G(_r)
 #define VE(_r)	VE_G(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
-#define SIE_IP_PSA_OFFSET       SIE2_IP_PSA_OFFSET
 #define SIEBK                   SIE2BK
 
 #else

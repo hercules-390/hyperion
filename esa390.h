@@ -330,7 +330,7 @@ typedef struct _TLBE {
 #define ALET_ALEN	0x0000FFFF	/* Access-list entry number  */
 
 /* Access-list designation bit definitions */
-#if FEATURE_ALD_FORMAT == 0
+#if FEATURE_ALD_FORMAT == 0 || defined(FEATURE_ESAME)
 #define ALD_ALO 	0x7FFFFF80	/* Access-list origin (fmt0) */
 #define ALD_ALL 	0x0000007F	/* Access-list length (fmt0) */
 #define ALD_ALL_SHIFT	3		/* Length units are 2**3     */
@@ -572,8 +572,8 @@ typedef struct _PSA_3XX {		/* Prefixed storage area     */
 
 /* ESAME Prefixed storage area structure definition */
 typedef struct _PSA_900 {		/* Prefixed storage area     */
-/*0000*/ DWORD iplpsw;			/* IPL PSW, Restart new PSW  */
-/*0008*/ DWORD iplccw1;			/* IPL CCW1, Restart old PSW */
+/*0000*/ DWORD iplpsw;			/* IPL PSW                   */
+/*0008*/ DWORD iplccw1;			/* IPL CCW1                  */
 /*0010*/ DWORD iplccw2;			/* IPL CCW2		     */
 /*0018*/ BYTE  resv0018[104];           /* Reserved                  */
 /*0080*/ FWORD extparm;			/* External interrupt param  */
@@ -1220,6 +1220,8 @@ typedef struct _SIE1BK { 		/* SIE State Descriptor      */
 /*05C*/	FWORD ipc;			/* Instruction parameter C   */
 /*060*/	FWORD rcpo;			/* RCP area origin	     */
 #define SIE_RCPO0_SKA	0x80		/* Storage Key Assist	     */
+#define SIE_RCPO0_SKAIP 0x40		/* SKA in progress           */
+#define SIE_RCPO2_RCPBY 0x10		/* RCP Bypass                */
 /*064*/	FWORD scao;			/* SCA area origin	     */
 /*068*/	FWORD subchtabo;		/* Subchannel table origin   */
 /*06C*/	FWORD resv6Cf;
@@ -1231,7 +1233,7 @@ typedef struct _SIE1BK { 		/* SIE State Descriptor      */
 /*07C*/	FWORD resv7Cf;
 /*080*/	FWORD cr[16];			/* Guest Control registers   */
 /*0C0*/	BYTE  ip[34];			/* Interruption parameters   */
-#define SIE1_IP_PSA_OFFSET	0x40	/* Offset of the IP field
+#define SIE_IP_PSA_OFFSET	0x40	/* Offset of the IP field
 					   relative to the ipfields
 					   in the PSA		     */
 /*0E2*/	BYTE  xso[3];			/* Expanded storage origin   */
@@ -1347,6 +1349,8 @@ typedef struct _SIE2BK { 		/* SIE State Descriptor      */
 /*05C*/	FWORD ipc;			/* Instruction parameter C   */
 /*060*/	FWORD rcpo;			/* RCP area origin	     */
 #define SIE_RCPO0_SKA	0x80		/* Storage Key Assist	     */
+#define SIE_RCPO0_SKAIP 0x40		/* SKA in progress           */
+#define SIE_RCPO2_RCPBY 0x10		/* RCP Bypass                */
 /*064*/	FWORD scao;			/* SCA area origin	     */
 /*068*/	FWORD resv068f;
 /*06C*/	HWORD todpfh;                   /* TOD pf high half          */
@@ -1368,7 +1372,7 @@ typedef struct _SIE2BK { 		/* SIE State Descriptor      */
 /*0BA*/	BYTE  xso[3];			/* Expanded storage origin   */
 /*0BD*/	BYTE  xsl[3];			/* Expanded storage limit    */
 /*0C0*/	BYTE  ip[52];			/* Interruption parameters   */
-#define SIE2_IP_PSA_OFFSET      0x08    /* Offset of the IP field 
+#define SIE_IP_PSA_OFFSET       0x40    /* Offset of the IP field 
                                            relative to the ipfields
                                            in the PSA for ESAME guest*/
 /*0F4*/ BYTE  resv0f4b[6];

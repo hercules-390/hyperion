@@ -52,7 +52,7 @@ int             level=-1;               /* Level for chkdsk          */
     fn = argv[0];
 
     /* open the file */
-    fd = open (fn, O_RDWR);
+    fd = open (fn, O_RDWR|O_BINARY);
     if (fd < 0)
     {
         fprintf (stderr,

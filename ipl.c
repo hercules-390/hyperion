@@ -32,7 +32,8 @@ BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
 
     /* Reset external interrupts */
-    sysblk.extpending = sysblk.servsig = sysblk.intkey = 0;
+    OFF_IC_SERVSIG;
+    OFF_IC_INTKEY;
 
     /* Perform initial reset on the IPL CPU */
     ARCH_DEP(initial_cpu_reset) (regs);
@@ -158,6 +159,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Set the CPU into the started state */
     regs->cpustate = CPUSTATE_STARTED;
+    OFF_IC_CPU_NOT_STARTED(regs);
 
     /* reset load state */
     regs->loadstate = 0;
@@ -180,17 +182,19 @@ int             i;                      /* Array subscript           */
     /* Clear pending interrupts and indicators */
     regs->loadstate = 0;
     regs->sigpreset = 0;
-    regs->itimer_pending = 0;
-    regs->restart = 0;
-    regs->extcall = 0;
+    OFF_IC_ITIMER_PENDING(regs);
+    OFF_IC_RESTART(regs);
+    OFF_IC_EXTCALL(regs);
     regs->extccpu = 0;
-    regs->emersig = 0;
+    OFF_IC_EMERSIG(regs);
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         regs->emercpu[i] = 0;
-    regs->storstat = 0;
-    regs->cpuint = 0;
+    OFF_IC_STORSTAT(regs);
+    OFF_IC_CPUINT(regs);
     regs->instvalid = 0;
     regs->instcount = 0;
+
+    SET_IC_INITIAL_MASK(regs);
 
     /* Clear the translation exception identification */
     regs->EA_G = 0;
@@ -207,6 +211,7 @@ int             i;                      /* Array subscript           */
 
     /* Put the CPU into the stopped state */
     regs->cpustate = CPUSTATE_STOPPED;
+    ON_IC_CPU_NOT_STARTED(regs);
 
 #if defined(_FEATURE_SIE)
    if(regs->guestregs)
@@ -214,6 +219,7 @@ int             i;                      /* Array subscript           */
         ARCH_DEP(cpu_reset)(regs->guestregs);
         /* CPU state of SIE copy cannot be controlled */
         regs->guestregs->cpustate = CPUSTATE_STARTED;
+        OFF_IC_CPU_NOT_STARTED(regs->guestregs);
    }
 #endif /*defined(_FEATURE_SIE)*/
 

@@ -92,9 +92,15 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
     regs->psw.wait = (addr[1] & 0x02) >> 1;
     regs->psw.prob = addr[1] & 0x01;
 
+    SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
+    SET_IC_PSW_WAIT(regs);
+
 #if defined(FEATURE_BCMODE)
     if ( regs->psw.ecmode ) {
 #endif /*defined(FEATURE_BCMODE)*/
+
+        SET_IC_ECIO_MASK(regs);
 
         /* Processing for EC mode PSW */
         regs->psw.space = (addr[2] & 0x80) >> 7;
@@ -187,6 +193,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 
 #if defined(FEATURE_BCMODE)
     } else {
+        SET_IC_BCIO_MASK(regs);
 
         /* Processing for S/370 BC mode PSW */
         regs->psw.space = 0;
@@ -340,7 +347,9 @@ static char *pgmintname[] = {
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         ) )
     {
-// /*DEBUG*/ logmsg("program_int() passing to guest code=%4.4X\n",code);
+#if defined(SIE_DEBUG)
+        logmsg("program_int() passing to guest code=%4.4X\n",code);
+#endif /*defined(SIE_DEBUG)*/
         realregs->guestregs->TEA = realregs->TEA;
         realregs->guestregs->excarid = realregs->excarid;
         (realregs->guestregs->sie_guestpi) (realregs->guestregs, code);
@@ -410,7 +419,9 @@ static char *pgmintname[] = {
         if(realregs->sie_state)
             logmsg("SIE: ");
 #endif /*defined(_FEATURE_SIE)*/
-// /*DEBUG*/  logmsg (MSTRING(_GEN_ARCH) " ");
+#if defined(SIE_DEBUG)
+        logmsg (MSTRING(_GEN_ARCH) " ");
+#endif /*defined(SIE_DEBUG)*/
         logmsg ("CPU%4.4X: %s CODE=%4.4X ILC=%d\n", realregs->cpuad,
                 pgmintname[ (code - 1) & 0x3F], code, realregs->psw.ilc);
         ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
@@ -556,10 +567,10 @@ static char *pgmintname[] = {
     {
 #endif /*defined(_FEATURE_SIE)*/
 
-        /* Store current PSW at PSA+X'28' */
+        /* Store current PSW at PSA+X'28' or PSA+X'150' for ESAME */
         ARCH_DEP(store_psw) (realregs, psa->pgmold);
 
-        /* Load new PSW from PSA+X'68' */
+        /* Load new PSW from PSA+X'68' or PSA+X'1D0' for ESAME */
         if ( ARCH_DEP(load_psw) (realregs, psa->pgmnew) )
         {
 #if defined(_FEATURE_SIE)
@@ -571,6 +582,7 @@ static char *pgmintname[] = {
                 logmsg ("CPU%4.4X: Program interrupt loop: ",regs->cpuad);
                 display_psw (regs);
                 realregs->cpustate = CPUSTATE_STOPPING;
+                ON_IC_CPU_NOT_STARTED(realregs);
             }
         }
 
@@ -601,18 +613,21 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     /* Point to PSA in main storage */
     psa = (PSA*)(sysblk.mainstor + regs->PX);
 
-    /* Store current PSW at PSA+X'8' */
-    ARCH_DEP(store_psw) (regs, psa->iplccw1);
+    /* Store current PSW at PSA+X'8' or PSA+X'120' for ESAME  */
+    ARCH_DEP(store_psw) (regs, psa->RSTOLD);
 
-    /* Load new PSW from PSA+X'0' */
-    rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
+    /* Load new PSW from PSA+X'0' or PSA+X'1A0' for ESAME */
+    rc = ARCH_DEP(load_psw) (regs, psa->RSTNEW);
 
     release_lock(&sysblk.intlock);
 
     if ( rc )
         ARCH_DEP(program_interrupt)(regs, rc);
     else
+    {
         regs->cpustate = CPUSTATE_STARTED;
+        OFF_IC_CPU_NOT_STARTED(regs);
+    }
 
     longjmp (regs->progjmp, SIE_INTERCEPT_RESTART);
 } /* end function restart_interrupt */
@@ -674,10 +689,10 @@ DWORD   csw;                            /* CSW for S/370 channels    */
         logmsg ("I/O interrupt code=%8.8X parm=%8.8X\n", ioid, ioparm);
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
-    /* Store current PSW at PSA+X'38' */
+    /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
     ARCH_DEP(store_psw) ( regs, psa->iopold );
 
-    /* Load new PSW from PSA+X'78' */
+    /* Load new PSW from PSA+X'78' or PSA+X'1F0' for ESAME */
     rc = ARCH_DEP(load_psw) ( regs, psa->iopnew );
 
     release_lock(&sysblk.intlock);
@@ -816,7 +831,8 @@ void *cpu_thread (REGS *regs)
     release_lock(&sysblk.intlock);
 
     /* Establish longjmp destination to switch architecture mode */
-    setjmp(regs->archjmp);
+    if( setjmp(regs->archjmp) < SIE_NO_INTERCEPT)
+        logmsg("Interception error\n");
 
     /* Switch from architecture mode if appropriate */
     if(sysblk.arch_mode != regs->arch_mode)
@@ -853,40 +869,36 @@ void ARCH_DEP(run_cpu) (REGS *regs)
 int     tracethis;                      /* Trace this instruction    */
 int     stepthis;                       /* Stop on this instruction  */
 int     shouldbreak;                    /* 1=Stop at breakpoint      */
+U32     prevmask;
 
     /* Establish longjmp destination for program check */
     setjmp(regs->progjmp);
 
+    /* Reset instruction trace indicators */
+    tracethis = 0;
+    stepthis = 0;
+
     while (1)
     {
-        /* Reset instruction trace indicators */
-        tracethis = 0;
-        stepthis = 0;
-
         /* Test for interrupts if it appears that one may be pending */
-        if ((sysblk.mckpending && regs->psw.mach)
-            || ((regs->psw.sysmask & PSW_EXTMASK)
-              && (sysblk.extpending || regs->cpuint
-#if !defined(OPTION_NO_LINUX_INTERRUPT_PATCH)
-               || (regs->ptpend && (regs->CR(0) & CR0_XM_PTIMER))
-               || (regs->ckpend && (regs->CR(0) & CR0_XM_CLKC))
-#endif
-                ))
-            || regs->restart
-#ifndef FEATURE_BCMODE
-            || (sysblk.iopending && (regs->psw.sysmask & PSW_IOMASK))
-#else /*FEATURE_BCMODE*/
-            ||  (sysblk.iopending &&
-              (regs->psw.sysmask & (regs->psw.ecmode ? PSW_IOMASK : 0xFE)))
-#endif /*FEATURE_BCMODE*/
-            || regs->psw.wait
-#if MAX_CPU_ENGINES > 1
-            || sysblk.brdcstncpu != 0
-#endif /*MAX_CPU_ENGINES > 1*/
-            || regs->cpustate != CPUSTATE_STARTED)
+        if( IC_INTERRUPT_CPU(regs) )
         {
             /* Obtain the interrupt lock */
             obtain_lock (&sysblk.intlock);
+
+            if( OPEN_IC_DEBUG(regs) )
+            {
+                prevmask = regs->ints_mask;
+	        SET_IC_EXTERNAL_MASK(regs);
+	        SET_IC_IO_MASK(regs);
+	        SET_IC_MCK_MASK(regs);
+	        if(prevmask != regs->ints_mask)
+		{
+	            logmsg("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n",
+		       prevmask, regs->ints_mask);
+		       ARCH_DEP(display_inst) (regs, regs->inst);
+		}
+	    }
 
 #if MAX_CPU_ENGINES > 1
             /* Perform broadcasted purge of ALB and TLB if requested
@@ -902,7 +914,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             {
                 /* If a machine check is pending and we are enabled for
                    machine checks then take the interrupt */
-                if (sysblk.mckpending && regs->psw.mach)
+                if (OPEN_IC_MCKPENDING(regs))
                 {
                     PERFORM_SERIALIZATION (regs);
                     PERFORM_CHKPT_SYNC (regs);
@@ -911,7 +923,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
                 /* If enabled for external interrupts, invite the
                    service processor to present a pending interrupt */
-                if (regs->psw.sysmask & PSW_EXTMASK)
+                if ( OPEN_IC_EXTPENDING(regs) )
                 {
                     PERFORM_SERIALIZATION (regs);
                     PERFORM_CHKPT_SYNC (regs);
@@ -921,14 +933,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
                 /* If an I/O interrupt is pending, and this CPU is
                    enabled for I/O interrupts, invite the channel
                    subsystem to present a pending interrupt */
-                if (sysblk.iopending &&
-#ifdef FEATURE_BCMODE
-                    (regs->psw.sysmask &
-                        (regs->psw.ecmode ? PSW_IOMASK : 0xFE))
-#else /*!FEATURE_BCMODE*/
-                    (regs->psw.sysmask & PSW_IOMASK)
-#endif /*!FEATURE_BCMODE*/
-                   )
+                if( OPEN_IC_IOPENDING(regs) )
                 {
                     PERFORM_SERIALIZATION (regs);
                     PERFORM_CHKPT_SYNC (regs);
@@ -983,19 +988,19 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
                 }
 
                 /* Store status at absolute location 0 if requested */
-                if (regs->storstat)
+                if (IS_IC_STORSTAT(regs))
                 {
-                    regs->storstat = 0;
+                    OFF_IC_STORSTAT(regs);
                     ARCH_DEP(store_status) (regs, 0);
                 }
             } /* end if(cpustate == STOPPING) */
 
             /* Perform restart interrupt if pending */
-            if (regs->restart)
+            if (IS_IC_RESTART(regs))
             {
                 PERFORM_SERIALIZATION (regs);
                 PERFORM_CHKPT_SYNC (regs);
-                regs->restart = 0;
+                OFF_IC_RESTART(regs);
                 ARCH_DEP(restart_interrupt) (regs);
             } /* end if(restart) */
 
@@ -1018,17 +1023,12 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             if (regs->psw.wait)
             {
                 /* Test for disabled wait PSW and issue message */
-#ifdef FEATURE_BCMODE
-                if( (regs->psw.sysmask &
-                    (regs->psw.ecmode ?
-                        (PSW_IOMASK | PSW_EXTMASK) : 0xFF)) == 0)
-#else /*!FEATURE_BCMODE*/
-                if( (regs->psw.sysmask & (PSW_IOMASK | PSW_EXTMASK)) == 0)
-#endif /*!FEATURE_BCMODE*/
+                if( IS_IC_DISABLED_WAIT_PSW(regs) )
                 {
                     logmsg ("CPU%4.4X: Disabled wait state\n",regs->cpuad);
                     display_psw (regs);
                     regs->cpustate = CPUSTATE_STOPPING;
+                    ON_IC_CPU_NOT_STARTED(regs);
                 }
 
                 INVALIDATE_AIA(regs);
@@ -1064,26 +1064,36 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 //      if (regs->inst[0] == 0xB2 && regs->inst[1] == 0x14) sysblk.inststep = 1; /*SIE*/
 //      if (regs->inst[0] == 0xC0) tracethis = 1;
 
-        /* Test for breakpoint */
-        shouldbreak = sysblk.instbreak
-                        && (regs->psw.IA == sysblk.breakaddr);
-
-        /* Display the instruction */
-        if (sysblk.insttrace || sysblk.inststep || shouldbreak
-            || tracethis || stepthis)
-        {
-            ARCH_DEP(display_inst) (regs, regs->inst);
-            if (sysblk.inststep || stepthis || shouldbreak)
+        if( IS_IC_TRACE )
             {
-                /* Put CPU into stopped state */
-                regs->cpustate = CPUSTATE_STOPPED;
 
-                /* Wait for start command from panel */
-                obtain_lock (&sysblk.intlock);
-                while (regs->cpustate == CPUSTATE_STOPPED)
-                    wait_condition (&sysblk.intcond, &sysblk.intlock);
-                release_lock (&sysblk.intlock);
+            /* Test for breakpoint */
+            shouldbreak = sysblk.instbreak
+                            && (regs->psw.IA == sysblk.breakaddr);
+
+            /* Display the instruction */
+            if (sysblk.insttrace || sysblk.inststep || shouldbreak
+                || tracethis || stepthis)
+            {
+                ARCH_DEP(display_inst) (regs, regs->inst);
+                if (sysblk.inststep || stepthis || shouldbreak)
+                {
+                    /* Put CPU into stopped state */
+                    regs->cpustate = CPUSTATE_STOPPED;
+                    ON_IC_CPU_NOT_STARTED(regs);
+    
+                    /* Wait for start command from panel */
+                    obtain_lock (&sysblk.intlock);
+                    while (regs->cpustate == CPUSTATE_STOPPED)
+                        wait_condition (&sysblk.intcond, &sysblk.intlock);
+                    release_lock (&sysblk.intlock);
+                }
             }
+    
+            /* Reset instruction trace indicators */
+            tracethis = 0;
+            stepthis = 0;
+
         }
 
         /* Execute the instruction */

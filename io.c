@@ -54,11 +54,11 @@ DEVBLK *dev;                            /* -> device block           */
     SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( (regs->GR_L(1) >> 16) != 0x0001 )
+    if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1) & 0xFFFF);
+    dev = find_device_by_subchan (regs->GR_LHL(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
@@ -94,11 +94,11 @@ DEVBLK *dev;                            /* -> device block           */
     SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( (regs->GR_L(1) >> 16) != 0x0001 )
+    if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1) & 0xFFFF);
+    dev = find_device_by_subchan (regs->GR_LHL(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
@@ -145,11 +145,11 @@ PMCW    pmcw;                           /* Path management ctl word  */
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( (regs->GR_L(1) >> 16) != 0x0001 )
+    if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1) & 0xFFFF);
+    dev = find_device_by_subchan (regs->GR_LHL(1));
 
     /* Condition code 3 if subchannel does not exist */
     if (dev == NULL)
@@ -259,11 +259,11 @@ DEVBLK *dev;                            /* -> device block           */
     SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( (regs->GR_L(1) >> 16) != 0x0001 )
+    if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1) & 0xFFFF);
+    dev = find_device_by_subchan (regs->GR_LHL(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */
@@ -369,16 +369,18 @@ ORB     orb;                            /* Operation request block   */
         || orb.ccwaddr[0] & 0x80)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
+#if !defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
     /* Program check if incorrect length suppression */
     if (orb.flag7 & ORB7_L)
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+#endif /*!defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)*/
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( (regs->GR_L(1) >> 16) != 0x0001 )
+    if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1) & 0xFFFF);
+    dev = find_device_by_subchan (regs->GR_LHL(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, is not enabled, or no path available */
@@ -489,11 +491,11 @@ SCHIB   schib;                          /* Subchannel information blk*/
     SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( (regs->GR_L(1) >> 16) != 0x0001 )
+    if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1) & 0xFFFF);
+    dev = find_device_by_subchan (regs->GR_LHL(1));
 
     /* Set condition code 3 if subchannel does not exist */
     if (dev == NULL)
@@ -601,11 +603,11 @@ IRB     irb;                            /* Interruption response blk */
     FW_CHECK(effective_addr2, regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
-    if ( (regs->GR_L(1) >> 16) != 0x0001 )
+    if ( regs->GR_LHH(1) != 0x0001 )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Locate the device block for this subchannel */
-    dev = find_device_by_subchan (regs->GR_L(1) & 0xFFFF);
+    dev = find_device_by_subchan (regs->GR_LHL(1));
 
     /* Condition code 3 if subchannel does not exist,
        is not valid, or is not enabled */

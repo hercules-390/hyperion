@@ -8,6 +8,8 @@
 /* ESAME low-address protection 	 v208d Roger Bowler 20/01/01 */
 /* ESAME subspace replacement		 v208e Roger Bowler 27/01/01 */
 
+// #define INLINE_STORE_FETCH_ADDR_CHECK
+
 _DAT_C_STATIC U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
 					       U32 *asteo, U32 aste[]);
 _DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
@@ -293,7 +295,7 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 			int private, REGS *regs)
 {
-#if defined (FEATURE_ESAME)
+#if defined (ZZ_INCOMPLETE_BYPASS_BUG_FEATURE_ESAME)
     /* For ESAME, low-address protection applies to locations
        0-511 (0000-01FF) and 4096-4607 (1000-11FF) */
     if (addr & 0xFFFFFFFFFFFFEE00ULL)
@@ -392,6 +394,11 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
 static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
 							    REGS *regs)
 {
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+    if(addr > regs->mainsize - 8)
+	ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
+
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
 
     /* Set the main storage reference bit */
@@ -414,6 +421,11 @@ static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
 static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
 							    REGS *regs)
 {
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+    if(addr > regs->mainsize - 4)
+	ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
+
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
 
     /* Set the main storage reference bit */
@@ -435,6 +447,11 @@ static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
 static inline U16 ARCH_DEP(fetch_halfword_absolute) (RADR addr,
 							    REGS *regs)
 {
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+    if(addr > regs->mainsize - 2)
+	ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
+
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
 
     /* Set the main storage reference bit */
@@ -455,6 +472,11 @@ static inline U16 ARCH_DEP(fetch_halfword_absolute) (RADR addr,
 static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
 						  RADR addr, REGS *regs)
 {
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+    if(addr > regs->mainsize - 8)
+	ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
+
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
 
     /* Set the main storage reference and change bits */
@@ -475,6 +497,11 @@ static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
 static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 						  RADR addr, REGS *regs)
 {
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+    if(addr > regs->mainsize - 4)
+	ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
+
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
 
     /* Set the main storage reference and change bits */

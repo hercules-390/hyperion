@@ -128,7 +128,7 @@ int             maxerrs=5;              /* Max errors allowed        */
     ifile = argv[0]; ofile = argv[1];
 
     /* open the input file */
-    ifd = open (ifile, O_RDONLY);
+    ifd = open (ifile, O_RDONLY|O_BINARY);
     if (ifd < 0)
     {
         fprintf (stderr,
@@ -284,7 +284,8 @@ int             maxerrs=5;              /* Max errors allowed        */
                     devhdr.highcyl[0] = 0;
                 }
                 /* open the output file */
-                ofd = open (ofile, O_WRONLY | O_CREAT | O_EXCL,
+                ofd = open (ofile,
+                            O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
                             S_IRUSR | S_IWUSR | S_IRGRP);
                 if (ofd < 0)
                 {

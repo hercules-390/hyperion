@@ -168,6 +168,7 @@ asn_asx_tran_excp:
 } /* end function translate_asn */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
+
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* Perform ASN authorization process                                 */
@@ -261,6 +262,7 @@ auth_addr_excp:
     return 1;
 } /* end function authorize_asn */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+
 
 #if defined(FEATURE_ACCESS_REGISTERS)
 /*-------------------------------------------------------------------*/
@@ -487,6 +489,7 @@ ext_auth_excp:
 } /* end function translate_alet */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
+
 #if defined(FEATURE_ACCESS_REGISTERS)
 /*-------------------------------------------------------------------*/
 /* Purge the ART lookaside buffer                                    */
@@ -501,6 +504,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
   #endif /*defined(_FEATURE_SIE)*/
 } /* end function purge_alb */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+
 
 /*-------------------------------------------------------------------*/
 /* Determine effective ASCE or STD                                   */
@@ -658,6 +662,7 @@ U16     xcode;                          /* ALET tran.exception code  */
     return 0;
 } /* end function load_address_space_designator */
 
+
 /*-------------------------------------------------------------------*/
 /* Translate a 31-bit virtual address to a real address              */
 /*                                                                   */
@@ -739,7 +744,7 @@ _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
                         int *prot, int *pstid, U32 *xpblk, BYTE *xpkey)
 {
 RADR    sto = 0;                        /* Segment table origin      */
-RADR    pto;                            /* Page table origin         */
+RADR    pto = 0;                        /* Page table origin         */
 int     private = 0;                    /* 1=Private address space   */
 int     protect = 0;                    /* 1=Page prot, 2=ALE prot   */
 int     stid;                           /* Address space indication  */
@@ -935,7 +940,6 @@ TLBE   *tlbp;                           /* -> TLB entry              */
     if (acctype == ACCTYPE_LRA
     #if defined(FEATURE_LOCK_PAGE)
        || acctype == ACCTYPE_LOCKPAGE
-       || acctype == ACCTYPE_UNLKPAGE
     #endif /*defined(FEATURE_LOCK_PAGE)*/
        )
         tlbp = NULL;
@@ -1025,41 +1029,24 @@ TLBE   *tlbp;                           /* -> TLB entry              */
             tlbp->valid = 1;
         }
 
-#if defined(FEATURE_LOCK_PAGE)
-        switch(acctype) {
-        case ACCTYPE_LOCKPAGE:
-            if(pte & PAGETAB_PGLOCK)
-                regs->psw.cc = 1;
-            else
-            {
-                ARCH_DEP(store_fullword_absolute)(pte |
-                                PAGETAB_PGLOCK, pto, regs);
-                regs->psw.cc = 0;
-            }
-            break;
-
-        case ACCTYPE_UNLKPAGE:
-            if(pte & PAGETAB_PGLOCK)
-            {
-                ARCH_DEP(store_fullword_absolute)(pte &
-                               ~PAGETAB_PGLOCK, pto, regs);
-                regs->psw.cc = 0;
-            }
-            else
-                regs->psw.cc = 1;
-            break;
-        } /* end switch(acctype) */
-#endif /*defined(FEATURE_LOCK_PAGE)*/
-
     } /* end if(!TLB) */
 
     /* Set the protection indicator if page protection is active */
     if (pte & PAGETAB_PROT)
         protect = 1;
 
+#if defined(FEATURE_LOCK_PAGE)
+    if(acctype != ACCTYPE_LOCKPAGE)
+#endif /*defined(FEATURE_LOCK_PAGE)*/
     /* [3.11.3.5] Combine the page frame real address with the byte
        index of the virtual address to form the real address */
-    *raddr = (pte & PAGETAB_PFRA) | (vaddr & 0xFFF);
+        *raddr = (pte & PAGETAB_PFRA) | (vaddr & 0xFFF);
+#if defined(FEATURE_LOCK_PAGE)
+    else
+    /* In the case of lock page, return the address of the 
+       pagetable entry */
+        *raddr = pto;
+#endif /*defined(FEATURE_LOCK_PAGE)*/
 
 #endif /*defined(FEATURE_S390_DAT)*/
 
@@ -1087,6 +1074,9 @@ U16     sx, px;                         /* Segment and page index,
     if (*xcode != 0)
         goto tran_alet_excp;
 
+    /* Extract the private space bit from the ASCE */
+    private = asce & ASCE_P;
+
 //  logmsg("asce=%16.16llX\n",asce);
 
     /* If ASCE indicates a real-space then real addr = virtual addr */
@@ -1102,9 +1092,6 @@ U16     sx, px;                         /* Segment and page index,
     }
     else
     {
-        /* Extract the private space bit from the ASCE */
-        private = asce & ASCE_P;
-
         /* Extract the table origin, type, and length from the ASCE,
            and set the table offset to zero */
         rto = asce & ASCE_TO;
@@ -1349,34 +1336,15 @@ U16     sx, px;                         /* Segment and page index,
         if ((ste & ZSEGTAB_P) || (pte & ZPGETAB_P))
             protect = 1;
 
-        /* Combine the page frame real address with the byte index
-           of the virtual address to form the real address */
-        *raddr = (pte & ZPGETAB_PFRA) | (vaddr & 0xFFF);
-
 #if defined(FEATURE_LOCK_PAGE)
-        switch(acctype) {
-        case ACCTYPE_LOCKPAGE:
-            if(pte & PAGETAB_PGLOCK)
-                regs->psw.cc = 1;
-            else
-            {
-                ARCH_DEP(store_doubleword_absolute)(pte |
-                                PAGETAB_PGLOCK, pto, regs);
-                regs->psw.cc = 0;
-            }
-            break;
-
-        case ACCTYPE_UNLKPAGE:
-            if(pte & PAGETAB_PGLOCK)
-            {
-                ARCH_DEP(store_doubleword_absolute)(pte &
-                               ~PAGETAB_PGLOCK, pto, regs);
-                regs->psw.cc = 0;
-            }
-            else
-                regs->psw.cc = 1;
-            break;
-        } /* end switch(acctype) */
+        if(acctype != ACCTYPE_LOCKPAGE)
+#endif /*defined(FEATURE_LOCK_PAGE)*/
+            /* Combine the page frame real address with the byte index
+               of the virtual address to form the real address */
+            *raddr = (pte & ZPGETAB_PFRA) | (vaddr & 0xFFF);
+#if defined(FEATURE_LOCK_PAGE)
+        else
+            *raddr = pto;
 #endif /*defined(FEATURE_LOCK_PAGE)*/
 
     } /* end if(ASCE_R) */
@@ -1545,6 +1513,7 @@ tran_excp_addr:
 
 } /* end function translate_addr */
 
+
 /*-------------------------------------------------------------------*/
 /* Purge the translation lookaside buffer                            */
 /*-------------------------------------------------------------------*/
@@ -1562,6 +1531,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
     }
 #endif /*defined(_FEATURE_SIE)*/
 } /* end function purge_tlb */
+
 
 /*-------------------------------------------------------------------*/
 /* Invalidate page table entry                                       */
@@ -1860,7 +1830,7 @@ U16     xcode;                          /* Exception code            */
         /* Set interrupt flag and interval timer interrupt pending
            if the interval timer went from positive to negative */
         if (itimer < 0 && olditimer >= 0)
-            regs->cpuint = regs->itimer_pending = 1;
+            ON_IC_ITIMER_PENDING(regs);
 
         /* Release the TOD clock update lock */
         release_lock (&sysblk.todlock);

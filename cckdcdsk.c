@@ -94,9 +94,9 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
     /* open the file */
     if (ro)
-        fd = open (fn, O_RDONLY);
+        fd = open (fn, O_RDONLY|O_BINARY);
     else
-    fd = open (fn, O_RDWR);
+    fd = open (fn, O_RDWR|O_BINARY);
     if (fd < 0)
     {
         fprintf (stderr,

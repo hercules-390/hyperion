@@ -55,7 +55,8 @@ void machine_check_crwpend()
 {
     /* Signal waiting CPUs that an interrupt may be pending */
     obtain_lock (&sysblk.intlock);
-    sysblk.mckpending = sysblk.crwpending = 1;
+    sysblk.crwpending = 1;
+    ON_IC_MCKPENDING;
     signal_condition (&sysblk.intcond);
     release_lock (&sysblk.intlock);
 
@@ -121,7 +122,7 @@ int rc = 0;
 
     if(!sysblk.crwpending)
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
-        sysblk.mckpending = 0;
+        OFF_IC_MCKPENDING;
 
     return rc;
 } /* end function present_mck_interrupt */

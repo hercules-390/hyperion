@@ -12,6 +12,7 @@
 #include "features.h"
 
 #if !defined(_HERCULES_H)
+#include "cpuint.h"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -319,6 +320,7 @@ typedef struct _REGS {			/* Processor registers	     */
 	unsigned int			/* Flags		     */
 		cpuonline:1,		/* 1=CPU is online	     */
 		loadstate:1,		/* 1=CPU is in load state    */
+#ifndef INTERRUPTS_FAST_CHECK
 		cpuint:1,		/* 1=There is an interrupt
 					     pending for this CPU    */
 		itimer_pending:1,	/* 1=Interrupt is pending for
@@ -329,10 +331,15 @@ typedef struct _REGS {			/* Processor registers	     */
 		ptpend:1,		/* 1=CPU timer int pending   */
 		ckpend:1,		/* 1=Clock comp int pending  */
 		storstat:1,		/* 1=Stop and store status   */
+#endif /*INTERRUPTS_FAST_CHECK*/
 		sigpreset:1,		/* 1=SIGP cpu reset received */
 		sigpireset:1,		/* 1=SIGP initial cpu reset  */
 		panelregs:1,		/* 1=Disallow program checks */
 		instvalid:1;		/* 1=Inst field is valid     */
+#ifdef INTERRUPTS_FAST_CHECK
+	U32	ints_state;		/* CPU Interrupts Status     */
+	U32	ints_mask;		/* Respective Interrupts Mask*/
+#endif /*INTERRUPTS_FAST_CHECK*/
 	BYTE	emercpu 		/* Emergency signal flags    */
 		    [MAX_CPU_ENGINES];	/* for each CPU (1=pending)  */
 	U16	extccpu;		/* CPU causing external call */
@@ -429,17 +436,22 @@ typedef struct _SYSBLK {
 	BYTE	scpcmdstr[123+1];	/* Operator command string   */
 	int	scpcmdtype;		/* Operator command type     */
 	unsigned int			/* Flags		     */
+#ifndef INTERRUPTS_FAST_CHECK
 		iopending:1,		/* 1=I/O interrupt pending   */
 		mckpending:1,		/* 1=MCK interrupt pending   */
 		extpending:1,		/* 1=EXT interrupt pending   */
+		intkey:1,		/* 1=Interrupt key pending   */
+		servsig:1,		/* 1=Service signal pending  */
+#endif /*INTERRUPTS_FAST_CHECK*/
 		crwpending:1,		/* 1=Channel report pending  */
 		sigpbusy:1,		/* 1=Signal facility in use  */
-		servsig:1,		/* 1=Service signal pending  */
-		intkey:1,		/* 1=Interrupt key pending   */
 		sigintreq:1,		/* 1=SIGINT request pending  */
 		insttrace:1,		/* 1=Instruction trace	     */
 		inststep:1,		/* 1=Instruction step	     */
 		instbreak:1;		/* 1=Have breakpoint	     */
+#ifdef INTERRUPTS_FAST_CHECK
+	U32	ints_state;		/* Common Interrupts Status  */
+#endif /*INTERRUPTS_FAST_CHECK*/
 // #if MAX_CPU_ENGINES > 1
 	U32	brdcstpalb;		/* purge_alb() pending	     */
 	U32	brdcstptlb;		/* purge_tlb() pending	     */
@@ -975,9 +987,8 @@ void panel_display (void);
 #define ACCTYPE_STACK		8	/* Linkage stack operations  */
 #define ACCTYPE_BSG		9	/* Branch in Subspace Group  */
 #define ACCTYPE_LOCKPAGE       10	/* Lock page		     */
-#define ACCTYPE_UNLKPAGE       11	/* Unlock page		     */
-#define ACCTYPE_SIE	       12	/* SIE host translation      */
-#define ACCTYPE_STRAG	       13	/* Store real address	     */
+#define ACCTYPE_SIE	       11	/* SIE host translation      */
+#define ACCTYPE_STRAG	       12	/* Store real address	     */
 
 /* Special value for arn parameter for translate functions in dat.c */
 #define USE_REAL_ADDR		(-1)	/* Real address 	     */

@@ -916,7 +916,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             "b addr = set breakpoint, b- = delete breakpoint\n"
             "i devn=I/O attention interrupt, ext=external interrupt\n"
             "ds devn=display subchannel\n"
-            "ipending = display pending interrupts\n"
+            "ipending [{+|-}debug] = display pending interrupts\n"
             "pgmtrace [-]intcode = trace program interrupts\n"
             "stop=stop CPU, start=start CPU, restart=PSW restart\n"
             STSPALL_CMD
@@ -942,6 +942,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     if (strcmp(cmd,"g") == 0)
     {
         sysblk.inststep = 0;
+        SET_IC_TRACE;
         strcpy (cmd, "start");
     }
 
@@ -954,6 +955,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
 
         /* Restart the CPU if it is in the stopped state */
         regs->cpustate = CPUSTATE_STARTED;
+        OFF_IC_CPU_NOT_STARTED(regs);
 
         /* Signal stopped CPUs to retest stopped indicator */
         signal_condition (&sysblk.intcond);
@@ -968,6 +970,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     if (strcmp(cmd,"stop") == 0)
     {
         regs->cpustate = CPUSTATE_STOPPING;
+        ON_IC_CPU_NOT_STARTED(regs);
         return NULL;
     }
 
@@ -1120,6 +1123,15 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     /* ipending command - display pending interrupts */
     if (memcmp(cmd,"ipending",8)==0)
     {
+        cmdarg = strtok(cmd+8," \t");
+        if (cmdarg != NULL && (memcmp(cmdarg+1,"debug",5) != 0 
+	    		    || (*cmdarg!='+' && *cmdarg!='-')))
+	{
+            logmsg ("ipending expects {+|-}debug as operand."
+		        " %s is invalid\n", cmdarg);
+	    cmdarg=NULL;
+        }
+
 #ifdef _FEATURE_CPU_RECONFIG
         for(i = 0; i < MAX_CPU_ENGINES; i++)
           if(sysblk.regs[i].cpuonline)
@@ -1127,25 +1139,46 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         for(i = 0; i < sysblk.numcpu; i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
         {
+            if(cmdarg != NULL)
+	    {
+	        logmsg("Interrupt checking debug mode set to ");
+	        if(*cmdarg=='+')
+		{
+		    ON_IC_DEBUG(sysblk.regs+i);
+		    logmsg("ON\n");
+		}
+		else
+		{
+		    OFF_IC_DEBUG(sysblk.regs+i);
+		    logmsg("OFF\n");
+		}
+	    }
 // /*DEBUG*/logmsg("CPU%4.4X: Any cpu interrupt %spending\n",
 // /*DEBUG*/    sysblk.regs[i].cpuad, sysblk.regs[i].cpuint ? "" : "not ");
+            logmsg("CPU%4.4X: CPUint=%8.8X (r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n",
+                sysblk.regs[i].cpuad, IC_INTERRUPT_CPU(sysblk.regs+i),
+		         sysblk.regs[i].ints_state,
+		         sysblk.ints_state, regs[i].ints_mask);
             logmsg("CPU%4.4X: Clock comparator %spending\n",
-                sysblk.regs[i].cpuad, sysblk.regs[i].ckpend ? "" : "not ");
+                sysblk.regs[i].cpuad,
+		         IS_IC_CKPEND(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: CPU timer %spending\n",
-                sysblk.regs[i].cpuad, sysblk.regs[i].ptpend ? "" : "not ");
+                sysblk.regs[i].cpuad,
+		         IS_IC_PTPEND(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: Interval timer %spending\n",
-                sysblk.regs[i].cpuad, sysblk.regs[i].itimer_pending ? "" : "not ");
+                sysblk.regs[i].cpuad,
+		         IS_IC_ITIMER_PENDING(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: External call %spending\n",
-                sysblk.regs[i].cpuad, sysblk.regs[i].extcall ? "" : "not ");
+                sysblk.regs[i].cpuad,
+		         IS_IC_EXTCALL(sysblk.regs+i) ? "" : "not ");
             logmsg("CPU%4.4X: Emergency signal %spending\n",
-                sysblk.regs[i].cpuad, sysblk.regs[i].emersig ? "" : "not ");
+                sysblk.regs[i].cpuad,
+		         IS_IC_EMERSIG(sysblk.regs+i) ? "" : "not ");
         }
-        logmsg("External interrupt %spending\n",
-                                sysblk.extpending ? "" : "not ");
         logmsg("Machine check interrupt %spending\n",
-                                sysblk.mckpending ? "" : "not ");
+                                IS_IC_MCKPENDING ? "" : "not ");
         logmsg("I/O interrupt %spending\n",
-                                sysblk.iopending ? "" : "not ");
+                                IS_IC_IOPENDING ? "" : "not ");
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
             if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
@@ -1277,6 +1310,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         if (cmd[0]=='t' && cmd[2]=='\0')
         {
             sysblk.insttrace = oneorzero;
+	    SET_IC_TRACE;
             logmsg ("Instruction tracing is now %s\n", onoroff);
             return NULL;
         }
@@ -1285,6 +1319,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         if (cmd[0]=='s' && cmd[2]=='\0')
         {
             sysblk.inststep = oneorzero;
+	    SET_IC_TRACE;
             logmsg ("Instruction stepping is now %s\n", onoroff);
             return NULL;
         }
@@ -1370,7 +1405,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         obtain_lock (&sysblk.intlock);
 
         /* Indicate that a restart interrupt is pending */
-        regs->restart = 1;
+        ON_IC_RESTART(regs);
 
         /* Ensure that a stopped CPU will recognize the restart */
         if (regs->cpustate == CPUSTATE_STOPPED)
@@ -1406,12 +1441,14 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         {
             logmsg ("Deleting breakpoint\n");
             sysblk.instbreak = 0;
+            SET_IC_TRACE;
             return NULL;
         }
 
         if (sscanf(cmd+1, "%llx%c", &sysblk.breakaddr, &c) == 1)
         {
             sysblk.instbreak = 1;
+            ON_IC_TRACE;
             logmsg ("Setting breakpoint at %16.16llX\n", sysblk.breakaddr);
             return NULL;
         }
@@ -1445,7 +1482,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     if (strcmp(cmd,"ext") == 0)
     {
         obtain_lock(&sysblk.intlock);
-        sysblk.extpending = sysblk.intkey = 1;
+        ON_IC_INTKEY;
         release_lock(&sysblk.intlock);
         logmsg ("Interrupt key depressed\n");
         return NULL;

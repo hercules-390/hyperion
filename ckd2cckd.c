@@ -162,7 +162,7 @@ int             z=-1;                   /* Compression value         */
     for (fileseq = 1;;)
     {
         /* Open the CKD image file */
-        ifd = open (ifile, O_RDONLY);
+        ifd = open (ifile, O_RDONLY|O_BINARY);
         if (ifd < 0)
         {
             fprintf (stderr, "ckd2cckd: %s open error: %s\n",
@@ -319,7 +319,7 @@ int             z=-1;                   /* Compression value         */
     trks = cyls * heads;
 
     /* Open the output file */
-    ofd = open (ofile, O_WRONLY | O_CREAT | O_EXCL,
+    ofd = open (ofile, O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
                 S_IRUSR | S_IWUSR | S_IRGRP);
     if (ofd < 0)
     {
