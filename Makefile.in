@@ -157,7 +157,7 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4  intl m4 po util html man
+SUBDIRS = intl m4  intl m4  intl m4  intl m4  intl m4 po util html man
 @BUILD_HERCIFC_FALSE@HERCIFC = 
 
 @BUILD_HERCIFC_TRUE@HERCIFC = hercifc
@@ -210,37 +210,45 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
            httpserv.c cgibin.c devtype.c codepage.c \
            ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
-           logger.c commadpt.c cache.c ecpsvm.c $(MEMRCHR)
+           logger.c commadpt.c cache.c ecpsvm.c shared.c \
+           $(MEMRCHR) hscutl.c
 
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
 dasdinit_SOURCES = dasdinit.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 dasdisup_SOURCES = dasdisup.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 dasdload_SOURCES = dasdload.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 dasdls_SOURCES = dasdls.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 dasdcat_SOURCES = dasdcat.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+            $(FTHREADS) $(FISHHANG)
 
 
 dasdseq_SOURCES = dasdseq.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 tapecopy_SOURCES = tapecopy.c codepage.c hostinfo.c version.c
@@ -254,27 +262,33 @@ cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c
 cckdcomp_SOURCES = cckdcomp.c cckdutil.c dasdtab.c hostinfo.c version.c
 
 cckddiag_SOURCES = cckddiag.c cckddasd.c cckdutil.c ckddasd.c codepage.c cache.c \
-	dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c $(FTHREADS) $(FISHHANG)
+	dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c shared.c \
+        $(FTHREADS) $(FISHHANG)
 
 
 ckd2cckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 fba2cfba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 cfba2fba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 cckd2ckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 dasdcopy_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+           $(FTHREADS) $(FISHHANG)
 
 
 cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c
@@ -289,7 +303,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
     README.OSX README.TAPE README.COMMADPT
 
 
@@ -300,7 +314,7 @@ noinst_HEADERS = fishhang.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
-    ecpsvm.h memrchr.h
+    ecpsvm.h memrchr.h shared.h hscutl.h
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -338,7 +352,7 @@ PROGRAMS = $(bin_PROGRAMS)
 
 am__cckd2ckd_SOURCES_DIST = dasdcopy.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am__objects_1 = fthreads.$(OBJEXT)
 @BUILD_FTHREADS_TRUE@am__objects_2 = $(am__objects_1)
 @BUILD_FTHREADS_FALSE@am__objects_2 =
@@ -351,7 +365,7 @@ am_cckd2ckd_OBJECTS = dasdcopy.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 cckd2ckd_OBJECTS = $(am_cckd2ckd_OBJECTS)
 cckd2ckd_LDADD = $(LDADD)
 cckd2ckd_DEPENDENCIES =
@@ -370,12 +384,12 @@ cckdcomp_DEPENDENCIES =
 cckdcomp_LDFLAGS =
 am__cckddiag_SOURCES_DIST = cckddiag.c cckddasd.c cckdutil.c ckddasd.c \
 	codepage.c cache.c dasdtab.c dasdutil.c fbadasd.c hostinfo.c \
-	version.c fthreads.c fishhang.c
+	version.c shared.c fthreads.c fishhang.c
 am_cckddiag_OBJECTS = cckddiag.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) ckddasd.$(OBJEXT) codepage.$(OBJEXT) \
 	cache.$(OBJEXT) dasdtab.$(OBJEXT) dasdutil.$(OBJEXT) \
 	fbadasd.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 cckddiag_OBJECTS = $(am_cckddiag_OBJECTS)
 cckddiag_LDADD = $(LDADD)
 cckddiag_DEPENDENCIES =
@@ -388,120 +402,120 @@ cckdswap_DEPENDENCIES =
 cckdswap_LDFLAGS =
 am__cfba2fba_SOURCES_DIST = dasdcopy.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_cfba2fba_OBJECTS = dasdcopy.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 cfba2fba_OBJECTS = $(am_cfba2fba_OBJECTS)
 cfba2fba_LDADD = $(LDADD)
 cfba2fba_DEPENDENCIES =
 cfba2fba_LDFLAGS =
 am__ckd2cckd_SOURCES_DIST = dasdcopy.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_ckd2cckd_OBJECTS = dasdcopy.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 ckd2cckd_OBJECTS = $(am_ckd2cckd_OBJECTS)
 ckd2cckd_LDADD = $(LDADD)
 ckd2cckd_DEPENDENCIES =
 ckd2cckd_LDFLAGS =
 am__dasdcat_SOURCES_DIST = dasdcat.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdcat_OBJECTS = dasdcat.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdcat_OBJECTS = $(am_dasdcat_OBJECTS)
 dasdcat_LDADD = $(LDADD)
 dasdcat_DEPENDENCIES =
 dasdcat_LDFLAGS =
 am__dasdcopy_SOURCES_DIST = dasdcopy.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdcopy_OBJECTS = dasdcopy.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdcopy_OBJECTS = $(am_dasdcopy_OBJECTS)
 dasdcopy_LDADD = $(LDADD)
 dasdcopy_DEPENDENCIES =
 dasdcopy_LDFLAGS =
 am__dasdinit_SOURCES_DIST = dasdinit.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdinit_OBJECTS = dasdinit.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdinit_OBJECTS = $(am_dasdinit_OBJECTS)
 dasdinit_LDADD = $(LDADD)
 dasdinit_DEPENDENCIES =
 dasdinit_LDFLAGS =
 am__dasdisup_SOURCES_DIST = dasdisup.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdisup_OBJECTS = dasdisup.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdisup_OBJECTS = $(am_dasdisup_OBJECTS)
 dasdisup_LDADD = $(LDADD)
 dasdisup_DEPENDENCIES =
 dasdisup_LDFLAGS =
 am__dasdload_SOURCES_DIST = dasdload.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdload_OBJECTS = dasdload.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdload_OBJECTS = $(am_dasdload_OBJECTS)
 dasdload_LDADD = $(LDADD)
 dasdload_DEPENDENCIES =
 dasdload_LDFLAGS =
 am__dasdls_SOURCES_DIST = dasdls.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdls_OBJECTS = dasdls.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdls_OBJECTS = $(am_dasdls_OBJECTS)
 dasdls_LDADD = $(LDADD)
 dasdls_DEPENDENCIES =
 dasdls_LDFLAGS =
 am__dasdpdsu_SOURCES_DIST = dasdpdsu.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdpdsu_OBJECTS = dasdpdsu.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdpdsu_OBJECTS = $(am_dasdpdsu_OBJECTS)
 dasdpdsu_LDADD = $(LDADD)
 dasdpdsu_DEPENDENCIES =
 dasdpdsu_LDFLAGS =
 am__dasdseq_SOURCES_DIST = dasdseq.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_dasdseq_OBJECTS = dasdseq.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 dasdseq_OBJECTS = $(am_dasdseq_OBJECTS)
 dasdseq_LDADD = $(LDADD)
 dasdseq_DEPENDENCIES =
@@ -514,12 +528,12 @@ dmap2hrc_DEPENDENCIES =
 dmap2hrc_LDFLAGS =
 am__fba2cfba_SOURCES_DIST = dasdcopy.c dasdutil.c codepage.c hostinfo.c \
 	version.c cache.c ckddasd.c cckddasd.c cckdutil.c dasdtab.c \
-	fbadasd.c fthreads.c fishhang.c
+	fbadasd.c shared.c fthreads.c fishhang.c
 am_fba2cfba_OBJECTS = dasdcopy.$(OBJEXT) dasdutil.$(OBJEXT) \
 	codepage.$(OBJEXT) hostinfo.$(OBJEXT) version.$(OBJEXT) \
 	cache.$(OBJEXT) ckddasd.$(OBJEXT) cckddasd.$(OBJEXT) \
 	cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) fbadasd.$(OBJEXT) \
-	$(am__objects_2) $(am__objects_4)
+	shared.$(OBJEXT) $(am__objects_2) $(am__objects_4)
 fba2cfba_OBJECTS = $(am_fba2cfba_OBJECTS)
 fba2cfba_LDADD = $(LDADD)
 fba2cfba_DEPENDENCIES =
@@ -540,7 +554,8 @@ am__hercules_SOURCES_DIST = hostinfo.c w32ctca.c impl.c config.c panel.c \
 	cckdutil.c dasdtab.c parser.c hetlib.c ieee.c sockdev.c \
 	machdep.h fthreads.c fishhang.c w32chan.c httpserv.c cgibin.c \
 	devtype.c codepage.c ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c \
-	hscmisc.c logger.c commadpt.c cache.c ecpsvm.c memrchr.c
+	hscmisc.c logger.c commadpt.c cache.c ecpsvm.c shared.c \
+	memrchr.c hscutl.c
 am__objects_5 = w32chan.$(OBJEXT)
 @BUILD_FTHREADS_TRUE@am__objects_6 = $(am__objects_5)
 @BUILD_FTHREADS_FALSE@am__objects_6 =
@@ -567,7 +582,8 @@ am_hercules_OBJECTS = hostinfo.$(OBJEXT) w32ctca.$(OBJEXT) \
 	devtype.$(OBJEXT) codepage.$(OBJEXT) ctc_ctci.$(OBJEXT) \
 	ctc_lcs.$(OBJEXT) tuntap.$(OBJEXT) hsccmd.$(OBJEXT) \
 	hscmisc.$(OBJEXT) logger.$(OBJEXT) commadpt.$(OBJEXT) \
-	cache.$(OBJEXT) ecpsvm.$(OBJEXT) $(am__objects_7)
+	cache.$(OBJEXT) ecpsvm.$(OBJEXT) shared.$(OBJEXT) \
+	$(am__objects_7) hscutl.$(OBJEXT)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 hercules_LDADD = $(LDADD)
 hercules_DEPENDENCIES =
@@ -646,14 +662,15 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/hetinit.Po ./$(DEPDIR)/hetlib.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/hetmap.Po ./$(DEPDIR)/hetupd.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/hostinfo.Po ./$(DEPDIR)/hsccmd.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hscmisc.Po ./$(DEPDIR)/httpserv.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ieee.Po ./$(DEPDIR)/impl.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/io.Po ./$(DEPDIR)/ipl.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/logger.Po ./$(DEPDIR)/machchk.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/memrchr.Po ./$(DEPDIR)/opcode.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/panel.Po ./$(DEPDIR)/parser.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/plo.Po ./$(DEPDIR)/printer.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/qdio.Po ./$(DEPDIR)/service.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hscmisc.Po ./$(DEPDIR)/hscutl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/httpserv.Po ./$(DEPDIR)/ieee.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/impl.Po ./$(DEPDIR)/io.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ipl.Po ./$(DEPDIR)/logger.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/machchk.Po ./$(DEPDIR)/memrchr.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/opcode.Po ./$(DEPDIR)/panel.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/parser.Po ./$(DEPDIR)/plo.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/printer.Po ./$(DEPDIR)/qdio.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/service.Po ./$(DEPDIR)/shared.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/sie.Po ./$(DEPDIR)/sllib.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/sockdev.Po ./$(DEPDIR)/stack.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/tapecopy.Po ./$(DEPDIR)/tapedev.Po \
@@ -902,6 +919,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hostinfo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hsccmd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscmisc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscutl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/httpserv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ieee.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/impl.Po@am__quote@
@@ -917,6 +935,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/printer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qdio.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/service.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shared.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sie.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sllib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sockdev.Po@am__quote@

@@ -77,6 +77,10 @@
 #include "memrchr.h"
 #endif
 
+/* Include supplemental functions used in hercules but missing */
+/* on some ported platforms                                    */
+#include "hscutl.h"
+
 /* Include LOCALE.H - Otherwise impl.c will not compile when
  * CFLAGS does not contain -O[x] (libtinl.h only includes locale.h
  * when __OPTIMIZE__ is defined) and impl.c uses LC_xxx macros 

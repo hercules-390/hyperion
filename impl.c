@@ -184,6 +184,10 @@ TID     rctid;                          /* RC file thread identifier */
     FishHangInit(__FILE__,__LINE__);
 #endif // defined(FISH_HANG)
 
+#if defined(BUILTIN_STRERROR_R)
+    strerror_r_init();
+#endif /* defined(BUILTIN_STRERROR_R) */
+
     init_hostinfo();
 
     /* Get name of configuration file or default to hercules.cnf */

@@ -286,6 +286,8 @@ if test $have_memrchr = no; then
 fi
 AM_CONDITIONAL(USE_BUILTIN_MEMRCHR, [test x$have_memrchr = xno])
 
+AC_CHECK_FUNCS(strerror_r,,[AC_DEFINE(BUILTIN_STRERROR_R)])
+
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
 AC_CHECK_FUNCS(strsignal)
 AC_CHECK_FUNC(InitializeCriticalSectionAndSpinCount)
@@ -451,7 +453,9 @@ AH_TEMPLATE([_INTL_REDIRECT_MACROS],
             [Define to 1 if non-Intel architecture (gettext)])
 AH_TEMPLATE([BUILTIN_MEMRCHR],
             [Define to use built-in memrchr implementation])
+AH_TEMPLATE([BUILTIN_STRERROR_R],
+            [Define to use built-in strerror_r implementation])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile m4/Makefile ])
 
 

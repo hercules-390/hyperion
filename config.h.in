@@ -3,6 +3,9 @@
 /* Define to use built-in memrchr implementation */
 #undef BUILTIN_MEMRCHR
 
+/* Define to use built-in strerror_r implementation */
+#undef BUILTIN_STRERROR_R
+
 /* Define to enable bzip2 compression in emulated DASDs */
 #undef CCKD_BZIP2
 
@@ -198,6 +201,9 @@
 
 /* Define to 1 if you have the `strdup' function. */
 #undef HAVE_STRDUP
+
+/* Define to 1 if you have the `strerror_r' function. */
+#undef HAVE_STRERROR_R
 
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
