@@ -633,6 +633,11 @@ U16     xcode;                          /* ALET tran.exception code  */
             *pstid = TEA_ST_ARMODE;
             *pasd = ASTE_AS_DESIGNATOR(aste);
 
+#if defined(FEATURE_PER2)
+            if( EN_IC_PER_SA(regs) )
+                regs->peraid = arn > 0 ? arn : 0;
+#endif /*defined(FEATURE_PER2)*/
+
         } /* end switch(alet) */
 
     } /* end if(ACCESS_REGISTER_MODE) */
@@ -1665,6 +1670,29 @@ RADR    pte;
 } /* end function invalidate_pte */
 
 #endif /*!defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C) */
+
+#if defined(FEATURE_PER2)
+/* ZZTEMP: FIXME: This is a bad way of checking SA PER events for
+   virtual storage, but for the moment it will have to do */
+static inline int ARCH_DEP(check_sa_per2) (VADR addr, int arn, int acctype,  REGS *regs)
+{
+RADR std;
+int stid = 0;
+int protect = 0;
+
+    if(ARCH_DEP(load_address_space_designator) (arn, regs, acctype,
+      &std, &stid, &protect))
+        return 0;
+
+    if(!(std & SAEVENT_BIT))
+        return 0;
+
+    regs->perc |= stid;
+
+    return 0;
+}
+#endif /*defined(FEATURE_PER2)*/
+
 #if !defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C) 
 /*-------------------------------------------------------------------*/
 /* Convert logical address to absolute address and check protection  */
@@ -1803,9 +1831,12 @@ U16     xcode;                          /* Exception code            */
 
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
-          && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
-          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#if defined(FEATURE_PER2)
+          && ((REAL_MODE(&regs->psw) ||
+            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+              && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
@@ -1819,9 +1850,12 @@ U16     xcode;                          /* Exception code            */
 
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
-          && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
-          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#if defined(FEATURE_PER2)
+          && ((REAL_MODE(&regs->psw) ||
+            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+              && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
@@ -2013,9 +2047,12 @@ int     aeind;
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
-          && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
-          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#if defined(FEATURE_PER2)
+          && ((REAL_MODE(&regs->psw) ||
+            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+              && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
         break;
@@ -2027,9 +2064,12 @@ int     aeind;
             goto vabs_prot_excp;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
-          && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
-          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#if defined(FEATURE_PER2)
+          && ((REAL_MODE(&regs->psw) ||
+            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+              && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 

@@ -572,6 +572,9 @@ static char *pgmintname[] = {
 
             STORE_W(psa->peradr, realregs->peradr);
 
+            if( IS_IC_PER_SA(regs) && ACCESS_REGISTER_MODE(&realregs->psw) )
+                psa->perarid = regs->peraid;
+
             /* Reset PER pending indication */
             OFF_IC_PER(realregs);
 
