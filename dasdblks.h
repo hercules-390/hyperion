@@ -306,6 +306,7 @@ typedef struct _CIFBLK {                /* CKD image file descriptor */
                                            currently in track buffer */
         int     trkmodif;               /* 1=Track has been modified */
         int     heads;                  /* Tracks per cylinder       */
+        DEVBLK  devblk;                 /* Device Block              */
     } CIFBLK;
 
 /*-------------------------------------------------------------------*/
@@ -331,7 +332,7 @@ int  search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
         DSXTENT extent[], int *cyl, int *head, int *rec);
 int  convert_tt (int tt, int noext, DSXTENT extent[], int heads,
         int *cyl, int *head);
-CIFBLK* open_ckd_image (BYTE *fname, int omode);
+CIFBLK* open_ckd_image (BYTE *fname, BYTE *sfname, int omode);
 int  close_ckd_image (CIFBLK *cif);
 int  build_extent_array (CIFBLK *cif, BYTE *dsnama, DSXTENT extent[],
         int *noext);
