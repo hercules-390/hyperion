@@ -1,4 +1,8 @@
 ECPS:VM : Extended Control Program Support : VM/370
+               - AND -
+Extended VM Assists - Partial Privop Simulation And Virtual Interval Timer
+
+     - PARTIAL IMPLEMENTATION DOCUMENTATION -
 
 *************************
 
@@ -13,17 +17,25 @@ VM/SP 6 (with or without HPO option)
 --- VM/XA SF, VM/XA SP, VM/ESA and z/VM do NOT use these Assists,
     but rely on the SIE instruction to perform some of these functions.
 
+A VM/SP Guest (or VM/370 Guest with 4K Storage key updates) running under
+[z/]VM[/[XA|ESA]] can theorically use the VM and CP Assists. This implementation
+is not finalized yet (see BUGS section)
+
 ************************
 
 How to enable VM Assists :
 
 In the HERCULES.CNF file, in the configuration section :
 
-ECPS:VM NO|n (where n is the requested level.)
+ECPS:VM YES|NO|n (where n is the requested level.)
 
-n Doesn't affect the operations of the assist but how it is reported to VM. 
+If "YES" is specified, the most appropriate level is returned (Level 20)
 
-At this time, value 20 should be set (works perfect with VM/370 R6 PLC 29)
+n Doesn't affect the operations of the assist but what level is reported to
+        the program.
+
+    - CAUTION - Use the 'n' form is not recommended, and is only provided
+                for engineering use.
 
 **********
 
@@ -48,7 +60,7 @@ the evm command is NOT case sensitive
 
 **********
 
-Seeing if the assist is used by VM :
+Determining if the assist is used by VM :
 
 Use the 2 following CLASS A commands :
 
@@ -67,6 +79,34 @@ ASSIST ON SVC TMR
 
 ***********
 
+Technical information
+
+the CP Assists provides The VM SCP with various microcoded instructions to shorten the supervisor pathlength. All microcoded instructions are priviledged instructions and have an opcode of E6xx. They are native representation of what the SCP would do in a similar case. For all cases where the assist is not able to resolve a situation, the E6XX instructions resolve to a no-op, thus leaving the responsability of the task to the original CP Code.
+
+The VM Assists alters the behaviour of certain priviledged instructions when executed in problem state (controled by the Problem State bit in the PSW) either by completely simulating the instruction (when feasable), Branching directly to the CP support module for that instruction (therefore bypassing Program interruption processing and instruction decoding), or generating a Program interruption otherwise.
+
+The VM Virtual Interval Timer assist allows updating of a Virtual Machine virtual interval timer directly by the microcode.
+
+Both CP And VM Assists are controled by real Control Register 6 which control availability, and behaviour of the assists.
+
+************
+
+Troubleshooting
+
+In the event that a certain CP or VM Assist disrupts normal operations, it is possible to selectivelly disable each discrete component. The best method is to disable ALL VM and CP Assists (Except STEVL and SSM if done prior to IPL) and to enable each feature until the problem occurs. If it is unknown whether the problem lies in the VM or CP Assist, it is also possible to enable/disable the entire group of assists.
+
+See the EVM ENA|DISA Commands.
+
+EVM STA allows to see how often each assist is invoked. The hit and hit ration makes it possible to determine how effective the assists are.
+
+A Low hit ratio may be normal in some situations (for example, the LPSW Hit ration will be very low when running VM under VM, because most PSW switches cannot be resolved by the assist)
+
+A Low invocation count simply shows that in THAT particular situation, the related assist is not used often (For example, there are very few LCTLs when running CMS).
+
+Some assists are just invoked once at IPL (STEVL). This is normal behaviour.
+
+************
+
 Implemented Assists :
 
 CP ASSISTS :
@@ -82,26 +122,29 @@ Virtual Interval Timer
 LPSW Simulation
 SSM Simulation
 SVC Simulation
+LCTL Simulation
 
 Non-Implemented assists :
 
 CP ASSISTS :
 FREE/FRET : (Original (up to level 19)
             CP Storage Management - replaced by FREEX/FRETX)
-CCWGN, DFCCW, DNCCW, UXCCW : CCW/CSW Translation assists
-LCSPG : Locate Changed Shared Page
-VIPT, VIST : Virtual Translation Page/Segment Invalidation
-LINK/RETURN (SVC 8/SVC 12)
-Prefered Machine Assists
+CCWGN, DFCCW, DNCCW, UXCCW : CCW/CSW Translation assists (Soon)
+LCSPG : Locate Changed Shared Page (Soon)
+VIPT, VIST : Virtual Translation Page/Segment Invalidation (Soon)
+LINK/RETURN (SVC 8/SVC 12) (Soon)
+Prefered Machine Assists (Insufficient information)
 .. Maybe others ...
 
 VM ASSISTS :
-SIO
-DIAG
-IUCV
-STxSM
-ISK/SSK
-LRA
+V=R Shadow Table Bypass assists (Including LRA instruction)
+        (note : The V=R Shadow Table Bypass assist is a feature which requires the guest program
+        to be aware of the feature (Page 0 Relocation))
+SIO (In progress - Partial sim)
+DIAG (In progress - Partial sim)
+IUCV (In Progress - Partial sim - VM/SP4 or later only)
+STxSM (Almost never invoked - ECMODE Only)
+ISK/SSK/ISKE/SSKE/IVSK (Extended Key Ops assist)
 VM Assists for MVS
 .. Maybe others ...
 
