@@ -538,9 +538,7 @@ msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 msgid ""
 "HHCDA035E %4.4X invalid track header for cyl %d head %d  %2.2x%2.2x%2.2x%2.2x"
 "%2.2x\n"
-msgstr ""
-"%4.4X ckddasd: Kopfdaten ungültig für Zyl.  %d Spur %d  %2.2x%2.2x%2.2x%2.2x%"
-"2.2x\n"
+msgstr "%4.4X ckddasd: Kopfdaten ungültig für Zyl.  %d Spur %d  %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 
 #: ckddasd.c:1266
 #, c-format
@@ -4480,9 +4478,7 @@ msgstr "Versionsdaten\n"
 #~ msgid ""
 #~ "HHCDL044E %s cyl %d head %d invalid track header %2.2X%2.2X%2.2X%2.2X%"
 #~ "2.2X\n"
-#~ msgstr ""
-#~ "%4.4X ckddasd: Kopfdaten ungültig für Zyl.  %d Spur %d  %2.2x%2.2x%2.2x%"
-#~ "2.2x%2.2x\n"
+#~ msgstr "%4.4X ckddasd: Kopfdaten ungültig für Zyl.  %d Spur %d  %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 
 #, fuzzy
 #~ msgid "HHCDL047E %s cyl %d head %d read error\n"
@@ -4568,9 +4564,7 @@ msgstr "Versionsdaten\n"
 #~ msgid ""
 #~ "HHCDL100E %s cyl %d head %d invalid track header %2.2X%2.2X%2.2X%2.2X%"
 #~ "2.2X\n"
-#~ msgstr ""
-#~ "%4.4X ckddasd: Kopfdaten ungültig für Zyl.  %d Spur %d  %2.2x%2.2x%2.2x%"
-#~ "2.2x%2.2x\n"
+#~ msgstr "%4.4X ckddasd: Kopfdaten ungültig für Zyl.  %d Spur %d  %2.2x%2.2x%2.2x%2.2x%2.2x\n"
 
 #, fuzzy
 #~ msgid "HHCDL103E %s track read error cyl %d head %d\n"

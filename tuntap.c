@@ -14,7 +14,7 @@
 // This abstraction layer is an attempt to create a common API set
 // that works on all platforms with (hopefully) equal results.
 
-#if !defined(__APPLE__) 
+//#if !defined(__APPLE__) 
 #include "hercules.h"
 #include "tuntap.h"
 #include "devtype.h"
@@ -637,4 +637,4 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
 }
 
 #endif // !defined( WIN32 )
-#endif /* !defined(__APPLE__) */
+//#endif /* !defined(__APPLE__) */

@@ -94,6 +94,10 @@ extern void     packet_trace( BYTE *addr, int len );
 #define FRAME_TYPE_ARP  0x0806
 #define FRAME_TYPE_SNA  0x80D5
 
+#if !(defined(IFHWADDRLEN))             // Only predefined on Linux
+#define IFHWADDRLEN 6                   // Ethernet MAC address length
+#endif /* !(defined(IFHWADDRLEN)) */
+
 typedef uint8_t MAC[IFHWADDRLEN];       // Data Type for MAC Addresses
 
 // ---------------------------------------------------------------------

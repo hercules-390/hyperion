@@ -5,7 +5,7 @@
 // Copyright (C) 2002-2003 by James A. Pierson
 //
 
-#if !defined(__APPLE__)
+//#if !defined(__APPLE__)
 
 #include "hercules.h"
 #include "devtype.h"
@@ -16,7 +16,9 @@
 //#include "css_sdc.h"
 #include "opcode.h"
 
+#if defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
+#endif /* defined(HAVE_GETOPT_LONG) */
 
 #include "if_tun.h"
 
@@ -1123,6 +1125,8 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     strcpy( ifr.ifr_name, pPort->szNetDevName );
 
+    /* Not all systems can return the hardware address of an interface. */
+#if defined(SIOCGIFHWADDR)
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
         logmsg( _("HHCLC008E ioctl error on device %s: %s.\n"),
@@ -1132,6 +1136,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSHDR pHeader )
     }
 
     memcpy( pReply->MAC_Address, ifr.ifr_hwaddr.sa_data, IFHWADDRLEN );
+#endif /* defined(SIOCGIFHWADDR) */
 
     // FIXME: Really should read /proc/net/dev and report the stats
 }
@@ -1521,8 +1526,10 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     // Parse the optional arguments
     while( 1 )
     {
-        int     iOpt;
         int     c;
+
+#if defined(HAVE_GETOPT_LONG)
+        int     iOpt;
 
         static struct option options[] =
         {
@@ -1535,6 +1542,9 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
         c = getopt_long( argc, argv,
                          "n:o:m:d", options, &iOpt );
+#else /* defined(HAVE_GETOPT_LONG) */
+        c = getopt( argc, argv, "n:o:m:d" );
+#endif /* defined(HAVE_GETOPT_LONG) */
 
         if( c == -1 )
             break;
@@ -1976,4 +1986,4 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 
     return pszBuff;
 }
-#endif /* !defined(__APPLE__) */
+//#endif /* !defined(__APPLE__) */

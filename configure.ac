@@ -361,7 +361,7 @@ AM_CONDITIONAL(USE_BUILTIN_MEMRCHR, [test x$have_memrchr = xno])
 AC_CHECK_FUNCS(strerror_r,,[AC_DEFINE(BUILTIN_STRERROR_R)])
 
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
-AC_CHECK_FUNCS(strsignal)
+AC_CHECK_FUNCS(strsignal getopt_long)
 AC_CHECK_FUNC(InitializeCriticalSectionAndSpinCount)
 
 # If we have setresuid AND getresuid, we can do setuid stuff

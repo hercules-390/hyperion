@@ -9,7 +9,7 @@
 // linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2003
 //
 
-#if !defined(__APPLE__)
+//#if !defined(__APPLE__)
 
 #include "hercules.h"
 #include "devtype.h"
@@ -19,7 +19,10 @@
 #include "hercifc.h"
 
 #include "opcode.h"
+
+#if defined(HAVE_GETOPT_LONG)
 #include <getopt.h>
+#endif /* defined(HAVE_GETOPT_LONG) */
 
 // ====================================================================
 // Declarations
@@ -970,8 +973,10 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Parse any optional arguments if not old format
     while( !pCTCBLK->fOldFormat )
     {
-        int     iOpt;
         int     c;
+
+#if defined(HAVE_GETOPT_LONG)
+        int     iOpt;
 
         static struct option options[] =
         {
@@ -988,6 +993,9 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         c = getopt_long( argc, argv,
                  "n:k:i:t:s:m:d",
                  options, &iOpt );
+#else /* defined(HAVE_GETOPT_LONG) */
+        c = getopt( argc, argv, "n:k:i:t:s:m:d");
+#endif /* defined(HAVE_GETOPT_LONG) */
 
         if( c == -1 ) // No more options found
             break;
@@ -1320,4 +1328,4 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
     return 0;
 }
-#endif /* !defined(__APPLE__) */
+//#endif /* !defined(__APPLE__) */
