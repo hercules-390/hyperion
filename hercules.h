@@ -683,6 +683,12 @@ typedef struct _SYSBLK {
         COND    broadcast_cond;         /* Broadcast condition       */
         U64     breakaddr;              /* Breakpoint address        */
 //
+        /* ECPS:VM */
+        struct {
+                U16 available:1;
+                U16 level;
+        } ecpsvm;                       /* ECPS:VM structure         */
+
         FILE   *syslog[2];              /* Syslog read/write pipe    */
         int     syslogfd[2];            /*   pairs                   */
         FILE   *hrdcpy;                 /* Hardcopy log or zero      */

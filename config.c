@@ -262,6 +262,7 @@ BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
 BYTE   *scodepage;                      /* -> Code page              */
+BYTE   *secpsvmlevel;                   /* -> ECPS:VM level (or 'no')*/
 #if defined(OPTION_HTTP_SERVER)
 BYTE   *shttpport;                      /* -> HTTP port number       */
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -293,6 +294,8 @@ BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
 int     devtmax;                        /* Max number device threads */
+int     ecpsvmavail;                    /* ECPS:VM Available flag    */
+int     ecpsvmlevel;                    /* ECPS:VM declared level    */
 #ifdef OPTION_IODELAY_KLUDGE
 int     iodelay=-1;                     /* I/O delay value           */
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -361,6 +364,8 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     cpuprio = 15;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax = MAX_DEVICE_THREADS;
+    ecpsvmavail = 0;
+    ecpsvmlevel = 20;
 #if defined(OPTION_HTTP_SERVER)
     httpport = 0;
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -400,6 +405,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         sdevtmax = NULL;
         spgmprdos = NULL;
         scodepage = NULL;
+        secpsvmlevel = NULL;
 #if defined(OPTION_HTTP_SERVER)
         shttpport = NULL;
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -497,6 +503,11 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             else if (strcasecmp (keyword, "codepage") == 0)
             {
                 scodepage = operand;
+            }
+            /* ECPS:VM support */
+            else if(strcasecmp(keyword, "ecps:vm") == 0)
+            {
+                secpsvmlevel=operand;
             }
 #ifdef OPTION_IODELAY_KLUDGE
             else if (strcasecmp (keyword, "iodelay") == 0)
@@ -890,6 +901,28 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 delayed_exit(1);
             }
         }
+
+        /* Parse ECPS:VM level */
+        if(secpsvmlevel != NULL)
+        {
+            if(strcasecmp(secpsvmlevel,"no")==0)
+            {
+                ecpsvmavail=0;
+            }
+            else
+            {
+                ecpsvmavail=1;
+                if (sscanf(secpsvmlevel, "%d%c", &ecpsvmlevel, &c) != 1)
+                {
+                    fprintf(stderr, _("HHCCF051S Error in %s line %d: "
+                            "Invalid ECPS:VM value : %s\n"),
+                            fname, stmt, secpsvmlevel);
+                    delayed_exit(1);
+                }
+            }
+        }
+        sysblk.ecpsvm.available=ecpsvmavail;
+        sysblk.ecpsvm.level=ecpsvmlevel;
 
 #if defined(OPTION_HTTP_SERVER)
         /* Parse http port number operand */

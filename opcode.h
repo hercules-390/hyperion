@@ -126,6 +126,7 @@ extern zz_func opcode_e3xx[][GEN_MAXARCH];
 extern zz_func opcode_e4xx[][GEN_MAXARCH];
 extern zz_func v_opcode_e4xx[][GEN_MAXARCH];
 extern zz_func opcode_e5xx[][GEN_MAXARCH];
+extern zz_func opcode_e6xx[][GEN_MAXARCH];
 extern zz_func opcode_ebxx[][GEN_MAXARCH];
 extern zz_func opcode_ecxx[][GEN_MAXARCH];
 extern zz_func opcode_edxx[][GEN_MAXARCH];
@@ -2139,6 +2140,31 @@ DEF_INST(translate_one_to_two);
 DEF_INST(translate_one_to_one);
 DEF_INST(move_long_unicode);
 DEF_INST(compare_logical_long_unicode);
+
+/* Instructions in ecpsvm.c */
+DEF_INST(ecpsvm_basic_freex);
+DEF_INST(ecpsvm_basic_fretx);
+DEF_INST(ecpsvm_lock_page);
+DEF_INST(ecpsvm_unlock_page);
+DEF_INST(ecpsvm_decode_next_ccw);
+DEF_INST(ecpsvm_free_ccwstor);
+DEF_INST(ecpsvm_locate_vblock);
+DEF_INST(ecpsvm_disp1);
+DEF_INST(ecpsvm_tpage);
+DEF_INST(ecpsvm_tpage_lock);
+DEF_INST(ecpsvm_inval_segtab);
+DEF_INST(ecpsvm_inval_ptable);
+DEF_INST(ecpsvm_decode_first_ccw);
+DEF_INST(ecpsvm_dispatch_main);
+DEF_INST(ecpsvm_locate_rblock);
+DEF_INST(ecpsvm_comm_ccwproc);
+DEF_INST(ecpsvm_unxlate_ccw);
+DEF_INST(ecpsvm_disp2);
+DEF_INST(ecpsvm_store_level);
+DEF_INST(ecpsvm_loc_chgshrpg);
+DEF_INST(ecpsvm_extended_freex);
+DEF_INST(ecpsvm_extended_fretx);
+DEF_INST(ecpsvm_prefmach_assist);
 
 
 /* Instructions in ieee.c */
