@@ -3176,7 +3176,7 @@ zz_func opcode_ebxx[256][GEN_MAXARCH] = {
  /*EB29*/ GENx___x___x___ ,
  /*EB2A*/ GENx___x___x___ ,
  /*EB2B*/ GENx___x___x___ ,
- /*EB2C*/ GENx___x___x900 (store_characters_under_mask_high,RSE,"STMCH"),
+ /*EB2C*/ GENx___x___x900 (store_characters_under_mask_high,RSE,"STCMH"),
  /*EB2D*/ GENx___x___x___ ,
  /*EB2E*/ GENx___x___x___ ,
  /*EB2F*/ GENx___x___x900 (load_control_long,RSE,"LCTLG"),

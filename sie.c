@@ -218,13 +218,6 @@ int     icode;                          /* Interception code         */
 
     FETCH_HW(lhcpu, STATEBK->lhcpu);
 
-    /* End operation in case of a validity check */
-    if(gpv)
-    {
-        STATEBK->c = SIE_C_VALIDITY;
-        return;
-    }
-
     /* If this is not the last host cpu that dispatched this state
        descriptor then clear the guest TLB entries */
     if((regs->cpuad != lhcpu)
@@ -288,6 +281,10 @@ int     icode;                          /* Interception code         */
             ON_IC_ITIMER(GUESTREGS);
     }
 #endif /*!defined(FEATURE_ESAME)*/
+
+    /* Early exceptions associated with the guest PSW */
+    if(gpv)
+        ARCH_DEP(program_interrupt) (GUESTREGS, gpv);
 
     if(GUESTREGS->arch_mode == ARCH_390)
         icode = s390_sie_run (regs);
