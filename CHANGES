@@ -1,3 +1,6 @@
+16 Oct 2001 OPTION_BUFFERED_RDR - Fish
+16 Oct 2001 Hot Reader support (sockdev = socket devices) - Fish
+            (mostly Malcolm Beattie's inspiration; implemented by me)
 13 Oct 2001 synchronize_broadcast fix for SMP - Greg Smith
 12 Oct 2001 Win32 fthreads (finally!) - Fish
 11 Oct 2001 Remove Cygwin warnings displaying TID - Greg Smith
@@ -865,4 +868,3 @@
 18 Oct 1999 Support for virtual tapes in OMA (Optical Media Attach) format
 18 Oct 1999 SCSI tape support (read-only)
 18 Oct 1999 Minor corrections to CKD DASD support
-

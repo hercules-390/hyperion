@@ -704,6 +704,43 @@ typedef struct _SYSBLK {
 #endif
 
 /*-------------------------------------------------------------------*/
+/* LIST_ENTRY structure     (must manually define here since         */
+/*                           <windows.h> hasn't been #included)      */
+/*-------------------------------------------------------------------*/
+
+#include "linklist.h"       // (linked list structure and macros)
+
+typedef struct _LIST_ENTRY
+{
+    struct  _LIST_ENTRY*  Flink;    // ptr to next link in chain
+    struct  _LIST_ENTRY*  Blink;    // ptr to previous link in chain
+}
+LIST_ENTRY, *PLIST_ENTRY;
+
+/*-------------------------------------------------------------------*/
+/* Bind structure for "Socket Devices"                               */
+/*-------------------------------------------------------------------*/
+
+struct _DEVBLK;             // (forward reference)
+
+typedef struct _bind_struct
+{
+    LIST_ENTRY bind_link;   // (just a link in the chain)
+
+    struct _DEVBLK* dev;    // ptr to corresponding device block
+    char* spec;             // socket_spec for listening socket
+    int sd;                 // listening socket to use in select
+
+    // Note: following two fields malloc'ed! remember to free!
+
+    char* clientname;       // connected client's hostname
+                            // (Note: could be NULL)
+    char* clientip;         // connected client's IP address
+                            // (Note: could be NULL)
+}
+bind_struct;
+
+/*-------------------------------------------------------------------*/
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 typedef struct _DEVBLK {
@@ -722,6 +759,8 @@ typedef struct _DEVBLK {
         struct _DEVBLK *iointq;         /* -> next device in I/O
                                            interrupt queue           */
 #endif
+        bind_struct* bs;                /* -> bind_struct if socket-
+                                           device, NULL otherwise    */
         int     priority;               /* Device priority           */
         unsigned int                    /* Flags                     */
                 pending:1,              /* 1=Interrupt pending       */
@@ -753,6 +792,8 @@ typedef struct _DEVBLK {
         TID     tid;                    /* Thread-id executing CCW   */
         BYTE   *buf;                    /* -> Device data buffer     */
         int     bufsize;                /* Device data buffer size   */
+        BYTE   *bufpos;                 /* Current buffer position   */
+        int     bufrem;                 /* Bytes remaining in buffer */
 #ifdef EXTERNALGUI
         BYTE    filename[1024];         /* Unix file name            */
 #else /*!EXTERNALGUI*/
@@ -771,7 +812,7 @@ typedef struct _DEVBLK {
                                            in keyboard read buffer   */
         /* Device dependent fields for cardrdr */
         unsigned int                    /* Flags                     */
-                multifile:1,    /* 1=auto-open next i/p file */
+                multifile:1,            /* 1=auto-open next i/p file */
                 rdreof:1,               /* 1=Unit exception at EOF   */
                 ebcdic:1,               /* 1=Card deck is EBCDIC     */
                 ascii:1,                /* 1=Convert ASCII to EBCDIC */
@@ -915,7 +956,7 @@ typedef struct _DEVBLK {
         int     ckdcachenbr;            /* Cache table size          */
         int     ckdcachehits;           /* Cache hits                */
         int     ckdcachemisses;         /* Cache misses              */
-        BYTE    ckdsfn[256];    /* Shadow file n        ame    */
+        BYTE    ckdsfn[256];            /* Shadow file name          */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
     } DEVBLK;
@@ -1229,7 +1270,11 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 
 /* Global data areas and functions in module panel.c */
 extern int initdone;    /* Initialization complete flag */
-void panel_display (void);
+extern void panel_display (void);
+extern LIST_ENTRY  bind_head;
+extern LOCK        bind_lock;
+extern int bind_device   (DEVBLK* dev, char* spec);
+extern int unbind_device (DEVBLK* dev);
 
 /* Access type parameter passed to translate functions in dat.c */
 #define ACCTYPE_READ            1       /* Read operand data         */

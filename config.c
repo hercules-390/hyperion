@@ -833,6 +833,8 @@ BYTE    c;                              /* Work area for sscanf      */
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
 #endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+    InitializeListHead(&bind_head);
+    initialize_lock(&bind_lock);
 
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock

@@ -156,7 +156,7 @@ For Example:
 
 #define CONTAINING_RECORD(address,type,field)                      \
                                                                    \
-	( (type*) ((PCHAR)(address) - (PCHAR)(&((type*)0)->field)) )
+	( (type*) ((char*)(address) - (char*)(&((type*)0)->field)) )
 
 
 //////////////////////////////////////////////////////////////////////////////////////////

@@ -155,6 +155,7 @@ fthread_create
 #else
 		_fthreadmsg("fthread_create: MyCreateThread failed\n");
 #endif
+        free (pCallTheirThreadParms);
 		errno = EAGAIN;
 		return -1;
 	}
