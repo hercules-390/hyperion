@@ -2105,7 +2105,7 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
 
     /* validate record 0 */
     memcpy (cchh2, &bufp[5], 4); cchh2[0] &= 0x7f; /* fix for ovflow */
-    if (memcmp (cchh, cchh2, 4) != 0 ||  bufp[9] != 0 ||
+    if (/* memcmp (cchh, cchh2, 4) != 0 ||*/  bufp[9] != 0 ||
         bufp[10] != 0 || bufp[11] != 0 || bufp[12] != 8)
     {
         if (msg)
@@ -2126,9 +2126,11 @@ BYTE            buf2[65536];            /* Uncompressed buffer       */
         memcpy (cchh2, &bufp[sz], 4); cchh2[0] &= 0x7f;
 
         /* fix for funny formatted vm disks */
+        /*
         if (r == 1) memcpy (cchh, cchh2, 4);
+        */
 
-        if (memcmp (cchh, cchh2, 4) != 0 || bufp[sz+4] == 0 ||
+        if (/*memcmp (cchh, cchh2, 4) != 0 ||*/ bufp[sz+4] == 0 ||
             sz + 8 + kl + dl >= bufl)
         {
              if (msg)

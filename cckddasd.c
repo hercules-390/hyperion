@@ -3275,7 +3275,7 @@ int             kl,dl;                  /* Key/Data lengths          */
 
     /* validate record 0 */
     memcpy (cchh2, &buf[5], 4); cchh2[0] &= 0x7f; /* fix for ovflow */
-    if (memcmp (cchh, cchh2, 4) != 0 || buf[9]  != 0 ||
+    if (/* memcmp (cchh, cchh2, 4) != 0 || */ buf[9]  != 0 ||
         buf[10] != 0 || buf[11] != 0 || buf[12] != 8)
     {
         cckdtrc ("cckddasd: validation failed: bad r0%s\n","");
@@ -3292,9 +3292,11 @@ int             kl,dl;                  /* Key/Data lengths          */
         memcpy (cchh2, &buf[sz], 4); cchh2[0] &= 0x7f;
 
         /* fix for funny formatted vm disks */
+        /*
         if (r == 1) memcpy (cchh, cchh2, 4);
+        */
 
-        if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] == 0 ||
+        if (/*memcmp (cchh, cchh2, 4) != 0 ||*/ buf[sz+4] == 0 ||
             sz + 8 + kl + dl >= len)
         {
             cckdtrc ("cckddasd: validation failed: bad r%d "
