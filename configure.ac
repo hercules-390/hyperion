@@ -16,17 +16,17 @@ AC_PROG_CC
 # OS-specific settings that we can't figure out any other way (yet)
 
 case "$host_os" in
-	linux*)
-		build_hercifc=true
-		;;
+        linux*)
+                build_hercifc=true
+                ;;
         *cygwin*)
-		build_hercifc=false
-		AC_DEFINE([WIN32])
-		AC_DEFINE([NO_SIGABEND_HANDLER])
-		;;
-	*)
-		build_hercifc=false
-		;;
+                build_hercifc=false
+                AC_DEFINE([WIN32])
+                AC_DEFINE([NO_SIGABEND_HANDLER])
+                ;;
+        *)
+                build_hercifc=false
+                ;;
 esac
 
 # Arch-specific settings that we can't figure out any other way (yet)
@@ -89,7 +89,7 @@ AC_ARG_ENABLE(fishhang,
                 yes)
                   fishhang=true
                   CFLAGS="-DFISH_HANG $CFLAGS"
-		  AC_DEFINE([FISH_HANG])
+                  AC_DEFINE([FISH_HANG])
                   ;;
                 no) fishhang=false ;;
                 *) AC_MSG_ERROR([bad value ${enableval} for --enable-fishhang]) ;;
@@ -176,16 +176,62 @@ AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
                   CFLAGS="$SAVE_CFLAGS"
                 fi])
 
+if test x$ac_cv_attr_regparm = xyes; then
+   case "$host_os" in
+        *cygwin*)
+                AC_CACHE_CHECK([for cygwin regparm bug],
+                               [ac_cv_attr_regparm_cygwin_bug],
+                               [AC_TRY_RUN([
+/* from Fish */
+
+typedef struct _REGS
+{
+        int a, b, c, d;
+        char e[4000];
+}
+REGS;
+
+__attribute__ ((regparm(3))) int func1 (int a, int b, int c, REGS *regs);
+__attribute__ ((regparm(3))) int func2 (int a, int b, int c, REGS *regs);
+
+int main ( int argc, char *argv[] )
+{
+        REGS* regs = 0;
+        exit(func1 (1, 2, 3, regs));
+}
+
+__attribute__ ((regparm(3))) int func1 (int a, int b, int c, REGS *regs)
+{
+        REGS iregs;
+        return func2 (a, b, c, &iregs);
+}
+
+__attribute__ ((regparm(3))) int func2 (int a, int b, int c, REGS *regs)
+{
+        return ((a == 1 && b == 2 && c == 3) ? 0 : 1);
+}
+],
+        ac_cv_attr_regparm_cygwin_bug=no,
+        ac_cv_attr_regparm_cygwin_bug=yes,
+        true)])
+        ;;
+   esac
+
+   if test x$ac_cv_attr_regparm_cygwin_bug = xyes; then
+      ac_cv_attr_regparm=no
+   fi
+fi
+
 if test x$ac_cv_attr_regparm != xyes; then
   AC_DEFINE(NO_ATTR_REGPARM)
 fi
 
 case "$host_cpu" in
-	  i486|i586|i686) ;;
-  	  *)
+          i486|i586|i686) ;;
+          *)
             # byteswap assembler routines are i486+-only
             AC_DEFINE(NO_ASM_BYTESWAP)
-	    ;;
+            ;;
 esac
 
 AC_ARG_ENABLE(cckd-bzip2,
@@ -252,7 +298,7 @@ AC_ARG_ENABLE(debug,
                 yes)
                   debug=true
                   CFLAGS="-g $CFLAGS"
-		  AC_DEFINE([DEBUG])
+                  AC_DEFINE([DEBUG])
                   ;;
                 no) debug=false ;;
                 *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
@@ -284,19 +330,19 @@ AC_ARG_ENABLE(optimization,
 
 if test x$auto_optimize = xtrue; then
   case "$host_cpu" in
-	  i586|i686)
-	    if test "$GCC" = "yes"; then
-		OFLAGS="-O3 -march=$host_cpu $OFLAGS"
+          i586|i686)
+            if test "$GCC" = "yes"; then
+                OFLAGS="-O3 -march=$host_cpu $OFLAGS"
                 if test x$enable_profiling != xtrue && test x$debug != xtrue; then
                   OFLAGS="-fomit-frame-pointer $OFLAGS"
                 fi
-	    else
+            else
                 OFLAGS="-O2 $OFLAGS"
-	    fi
-	    ;;
-	  *)
-	    OFLAGS="-O2 $OFLAGS"
-	    ;;
+            fi
+            ;;
+          *)
+            OFLAGS="-O2 $OFLAGS"
+            ;;
   esac
 fi
 
@@ -348,15 +394,15 @@ fi
 AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
-	    [Define if your gcc does not support __attribute__((regparm(n)))])
+            [Define if your gcc does not support __attribute__((regparm(n)))])
 AH_TEMPLATE([NO_ASM_BYTESWAP],
-	    [Define to disable assembler routines for byte swapping])
+            [Define to disable assembler routines for byte swapping])
 AH_TEMPLATE([NO_IEEE_SUPPORT],
-	    [Define to disable IEEE floating point support])
+            [Define to disable IEEE floating point support])
 AH_TEMPLATE([CCKD_BZIP2],
-	    [Define to enable bzip2 compression in emulated DASDs])
+            [Define to enable bzip2 compression in emulated DASDs])
 AH_TEMPLATE([HET_BZIP2],
-	    [Define to enable bzip2 compression in emulated tapes])
+            [Define to enable bzip2 compression in emulated tapes])
 AH_TEMPLATE([EXTERNALGUI],
             [Define to build interface to external Windows GUI])
 AH_TEMPLATE([HAVE_U_INT],

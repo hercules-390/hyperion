@@ -1,3 +1,4 @@
+15 Jun 2002 configure.ac: Cygwin stack bug workaround - Matt and Fish
 15 Jun 2002 cfba chkdsk fix - Greg Smith
 15 Jun 2002 ckd internal trace support - Greg Smith
 14 Jun 2002 Remove cfba debugs - Greg Smith
