@@ -748,36 +748,29 @@ DEVBLK *dev;                            /* -> Device control block   */
 
 
 /*-------------------------------------------------------------------*/
-/* Run as a separate thread for each device to run execute_ccw_chain */
-/*                                                                   */
-/* code courtesy of Malcome Beattie                                  */
-/*                                                                   */
-/* Dynamic thread create/drop added         25 Mar 2001 - Jan Jaeger */
-/* Dynamic thread create/drop fixed         01 Apr 2001 - Fish       */
+/* Execute a queued I/O                                              */
 /*-------------------------------------------------------------------*/
-void device_thread (DEVBLK *dev)
+void device_thread ()
 {
+    DEVBLK         *dev;
     struct timespec waittime;
     struct timeval  now;
     int             timedout;
 
-    obtain_lock(&dev->lock);
+    obtain_lock(&sysblk.ioqlock);
 
-    /* Get I/O buffer if none exists */
-    if (dev->iobuf == NULL) dev->iobuf = malloc (65536);
+    sysblk.devtnbr++;
+    if (sysblk.devtnbr > sysblk.devthwm)
+        sysblk.devthwm = sysblk.devtnbr;
 
     while (1)
     {
-        if (LOOPER_DIE == dev->loopercmd) break;
-
-        if (LOOPER_EXEC == dev->loopercmd)
+        while ((dev=sysblk.ioq) != NULL)
         {
-            /* We have work to do... */
-
-            /* Release the device lock. The 'execute_ccw_chain'
-               function will obtain the lock if it needs to. */
-
-            release_lock(&dev->lock);
+            sysblk.ioq = dev->nextioq;
+            if (sysblk.ioq && sysblk.devtwait)
+                signal_condition(&sysblk.ioqcond);
+            release_lock (&sysblk.ioqlock);
 
             switch (sysblk.arch_mode)
             {
@@ -787,47 +780,30 @@ void device_thread (DEVBLK *dev)
                 case ARCH_390: s390_execute_ccw_chain (dev); break;
             }
 
-            obtain_lock(&dev->lock);
+            obtain_lock(&sysblk.ioqlock);
         }
 
-        /* The 'execute_ccw_chain' function sets loopercmd to LOOPER_WAIT when it's
-           done executing a channel program after setting the 'pending' flag. Thus,
-           if loopercmd is not LOOPER_WAIT at this point, then it means the interrupt
-           has already been cleared and we've been given more work and thus do not
-           need to wait.
-        */
+        if (sysblk.devtmax < 0
+         || (sysblk.devtmax > 0 && sysblk.devtnbr > sysblk.devtmax))
+            break;
 
-        if (LOOPER_WAIT == dev->loopercmd)
-        {
-            gettimeofday(&now, NULL);
+        gettimeofday(&now, NULL);
+        waittime.tv_sec = now.tv_sec + MAX_DEVICE_THREAD_IDLE_SECS;
+        waittime.tv_nsec = now.tv_usec * 1000;
 
-            waittime.tv_sec = now.tv_sec + MAX_DEVICE_THREAD_IDLE_SECS;
-            waittime.tv_nsec = now.tv_usec * 1000;
+        /* Wait for work to arrive or timer to expire... */
 
-            /* Wait for work to arrive or timer to expire... */
+        sysblk.devtwait++;
+        timedout = timed_wait_condition
+                         (&sysblk.ioqcond, &sysblk.ioqlock, &waittime);
+        sysblk.devtwait--;
 
-            timedout = timed_wait_condition (&dev->loopercond, &dev->lock, &waittime);
-
-            /*  If we timed out AND loopercmd is LOOPER_WAIT
-                (set by execute_ccw_chain), then we should exit. */
-
-            /*  Note regarding the below test: even if we timed out, we could have been
-                given more work just before our timer expired. Thus we only exit when a
-                timeout occurs AND loopercmd is still LOOPER_WAIT. If loopercmd is *NOT*
-                LOOPER_WAIT when we wake up, then someone must have given us work to do.
-            */
-
-            if (timedout && LOOPER_WAIT == dev->loopercmd) break;
-        }
+        /*  If we timed out AND ioq is NULL then we should exit */
+        if (timedout && sysblk.ioq == NULL) break;
     }
 
-    dev->tid = 0;
-    if (dev->iobuf != NULL)
-    {
-        free (dev->iobuf);
-        dev->iobuf = NULL;
-    }
-    release_lock(&dev->lock);
+    sysblk.devtnbr--;
+    release_lock (&sysblk.ioqlock);
 
 } /* end function device_thread */
 
@@ -1238,6 +1214,9 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
 {
+TID     tid;                            /* Device thread thread id   */
+DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
+
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
 
@@ -1288,33 +1267,47 @@ int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
     memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
                         sizeof(dev->pmcw.intparm));            /*@IWZ*/
 
-#if !defined(OPTION_NO_DEVICE_THREAD)
-    dev->loopercmd = LOOPER_EXEC;
-    if(dev->tid)
-        signal_condition(&dev->loopercond);
+    if (sysblk.devtmax >= 0)
+    {
+        /* Queue the I/O request */
+        obtain_lock (&sysblk.ioqlock);
+
+        /* Insert the device into the I/O queue */
+        for (previoq = NULL, ioq = sysblk.ioq; ioq; ioq = ioq->nextioq)
+        {
+            if (dev->priority > ioq->priority) break;
+            previoq = ioq;
+        }
+        dev->nextioq = ioq;
+        if (previoq) previoq->nextioq = dev;
+        else sysblk.ioq = dev;
+//      dev->nextioq = sysblk.ioq;
+//      sysblk.ioq = dev;
+
+        /* Signal a device thread if one is waiting, otherwise create
+           a device thread if the maximum number hasn't been created */
+        if (sysblk.devtwait)
+            signal_condition(&sysblk.ioqcond);
+        else if (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)
+            create_thread(&tid, &sysblk.detattr, device_thread, NULL);
+        else
+            sysblk.devtunavail++;
+
+        release_lock (&sysblk.ioqlock);
+    }
     else
     {
         /* Execute the CCW chain on a separate thread */
         if ( create_thread (&dev->tid, &sysblk.detattr,
-                                                  device_thread, dev) )
+                            ARCH_DEP(execute_ccw_chain), dev) )
         {
-            release_lock (&dev->lock);
             logmsg ("HHC760I %4.4X create_thread error: %s",
                     dev->devnum, strerror(errno));
+            release_lock (&dev->lock);
             return 2;
         }
     }
-#else /*defined(OPTION_NO_DEVICE_THREAD)*/
-    /* Execute the CCW chain on a separate thread */
-    if ( create_thread (&dev->tid, &sysblk.detattr,
-                                ARCH_DEP(execute_ccw_chain), dev) )
-    {
-        release_lock (&dev->lock);
-        logmsg ("HHC760I %4.4X create_thread error: %s",
-                dev->devnum, strerror(errno));
-        return 2;
-    }
-#endif /*defined(OPTION_NO_DEVICE_THREAD)*/
+
     release_lock (&dev->lock);
 
     /* Return with condition code zero */
@@ -1359,18 +1352,7 @@ BYTE    area[64];                       /* Message area              */
 DEVXF  *devexec;                        /* -> Execute CCW function   */
 int     ccwseq = 0;                     /* CCW sequence number       */
 int     bufpos = 0;                     /* Position in I/O buffer    */
-/* BYTE iobuf[65536];                   ** Channel I/O buffer        */
-BYTE   *iobuf;                          /* Channel I/O buffer        */
-
-    /* Get an I/O buffer if one doesn't exist */
-    if (dev->iobuf == NULL)
-    {
-        dev->iobuf = malloc (65536);
-        if (dev->iobuf == NULL)
-            logmsg("%4.4X: channel i/o buf malloc failed: %s\n",
-                   dev->devnum, strerror(errno));
-    }
-    iobuf = dev->iobuf;
+BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     /* Extract the I/O parameters from the ORB */              /*@IWZ*/
     FETCH_FW(ccwaddr, dev->orb.ccwaddr);                       /*@IWZ*/
@@ -1959,7 +1941,6 @@ BYTE   *iobuf;                          /* Channel I/O buffer        */
     /* Set the interrupt pending flag for this device */
     dev->busy = 0;
     dev->pending = 1;
-    dev->loopercmd = LOOPER_WAIT;
 
     /* Signal console thread to redrive select */
     if (dev->console)

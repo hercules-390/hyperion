@@ -430,6 +430,14 @@ typedef struct _SYSBLK {
 	int	panrate;		/* Panel refresh rate	     */
 	struct _DEVBLK *firstdev;	/* -> First device block     */
 	U16	highsubchan;		/* Highest subchannel + 1    */
+        struct _DEVBLK *ioq;            /* I/O queue                 */
+        LOCK    ioqlock;                /* I/O queue lock            */
+        COND    ioqcond;                /* I/O queue condition       */
+        int     devtwait;               /* Device threads waiting    */
+        int     devtnbr;                /* Number of device threads  */
+        int     devtmax;                /* Max device threads        */
+        int     devthwm;                /* High water mark           */
+        int     devtunavail;            /* Count thread unavailable  */
 	RADR	addrlimval;		/* Address limit value (SAL) */
 	U32	servparm;		/* Service signal parameter  */
 	U32	cp_recv_mask;		/* Syscons CP receive mask   */
@@ -518,6 +526,12 @@ typedef struct _SYSBLK {
 #define OS_VM		0x7FFFFFFFF7DE7FFCULL	/* VM		     */
 #define OS_LINUX	0x78FFFFFFF7DE7FD6ULL	/* Linux	     */
 
+#ifndef WIN32
+#define MAX_DEVICE_THREADS 0
+#else
+#define MAX_DEVICE_THREADS 8
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Device configuration block					     */
 /*-------------------------------------------------------------------*/
@@ -530,11 +544,10 @@ typedef struct _DEVBLK {
 	DEVXF  *devexec;		/* -> Execute CCW function   */
 	DEVCF  *devclos;		/* -> Close device function  */
 	LOCK	lock;			/* Device block lock	     */
-	BYTE   *iobuf;			/* Device I/O Buffer		*/
 	COND	resumecond;		/* Resume condition	     */
-	COND	loopercond;		/* Loop or die condition     */
-	int	loopercmd;		/* Loop or die command	     */
 	struct _DEVBLK *nextdev;	/* -> next device block      */
+        struct _DEVBLK *nextioq;        /* -> next device in I/O q   */
+        int     priority;               /* Device priority           */
 	unsigned int			/* Flags		     */
 		pending:1,		/* 1=Interrupt pending	     */
 		busy:1, 		/* 1=Device busy	     */

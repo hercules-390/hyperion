@@ -845,6 +845,7 @@ void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
 void    cckd_print_itrace (DEVBLK *);
 
+void    device_thread();
 
 int herc_system (char *command)
 {
@@ -1696,7 +1697,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"exit") == 0)
     {
         sysblk.msgpipew = stderr;
-        devascii = strtok(cmd+4," \t");
+        devascii = strtok(cmd+5," \t");
         if (devascii == NULL || strcmp("now",devascii))
             release_config();
         exit(0);
@@ -1984,6 +1985,37 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             return NULL;
         }
         display_subchannel(dev);
+        return NULL;
+    }
+
+
+    /* devtmax command - display or set max device threads */
+    if (memcmp(cmd,"devtmax",7)==0)
+    {
+        TID tid;
+        int devtmax = -2;
+        sscanf(cmd+7, "%d", &devtmax);
+
+        if (devtmax >= -1) sysblk.devtmax = devtmax;
+        logmsg ("Max device threads %d current %d most %d "
+                "waiting %d total I/Os queued %d\n",
+                sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
+                sysblk.devtwait, sysblk.devtunavail);
+
+        /* Create a new device thread if the I/O queue is not NULL
+           and more threads can be created */
+        if ((sysblk.devtnbr < sysblk.devtmax || sysblk.devtmax == 0)
+          && sysblk.ioq != NULL)
+            create_thread(&tid, &sysblk.detattr, device_thread, NULL);
+
+        /* Terminate threads while the number of threads exceeds
+           the maximum and threads are waiting */
+        while (sysblk.devtnbr > sysblk.devtmax && sysblk.devtmax != 0
+            && sysblk.devtwait)
+        {
+            signal_condition(&sysblk.ioqcond);
+            sleep (1);
+        }
         return NULL;
     }
 

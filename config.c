@@ -264,6 +264,7 @@ BYTE   *stzoffset;                      /* -> System timezone offset */
 BYTE   *stoddrag;                       /* -> TOD clock drag factor  */
 BYTE   *sostailor;                      /* -> OS to tailor system to */
 BYTE   *spanrate;                       /* -> Panel refresh rate     */
+BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
 U32     serial;                         /* CPU serial number         */
@@ -283,6 +284,7 @@ BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
 U16     devtype;                        /* Device type               */
+int     devtmax;                        /* Max number device threads */
 BYTE    c;                              /* Work area for sscanf      */
 
     /* Clear the system configuration block */
@@ -315,6 +317,7 @@ BYTE    c;                              /* Work area for sscanf      */
     archmode = ARCH_390;
     ostailor = OS_NONE;
     panrate = PANEL_REFRESH_RATE_SLOW;
+    devtmax = MAX_DEVICE_THREADS;
 
     /* Read records from the configuration file */
     for (scount = 0; ; scount++)
@@ -347,6 +350,7 @@ BYTE    c;                              /* Work area for sscanf      */
         stoddrag = NULL;
         sostailor = NULL;
         spanrate = NULL;
+        sdevtmax = NULL;
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -431,6 +435,10 @@ BYTE    c;                              /* Work area for sscanf      */
             else if (strcasecmp (keyword, "archmode") == 0)
             {
                 sarchmode = operand;
+            }
+            else if (strcasecmp (keyword, "devtmax") == 0)
+            {
+                sdevtmax = operand;
             }
             else
             {
@@ -690,6 +698,19 @@ BYTE    c;                              /* Work area for sscanf      */
             }
         }
 
+        /* Parse Maximum number of device threads */
+        if (sdevtmax != NULL)
+        {
+            if (sscanf(sdevtmax, "%d%c", &devtmax, &c) != 1
+                || devtmax < -1)
+            {
+                logmsg( "HHC016I Error in %s line %d: "
+                        "Invalid Max device threads %s\n",
+                        fname, stmt, sdevtmax);
+                exit(1);
+            }
+        }
+
     } /* end for(scount) */
 
     /* Obtain main storage */
@@ -764,6 +785,8 @@ BYTE    c;                              /* Work area for sscanf      */
 #endif /*SMP_SERIALIZATION*/
 #endif /*MAX_CPU_ENGINES > 1*/
     initialize_detach_attr (&sysblk.detattr);
+    initialize_lock (&sysblk.ioqlock);
+    initialize_condition (&sysblk.ioqcond);
 
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock
@@ -789,6 +812,11 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
+
+    /* Set max number device threads */
+    sysblk.devtmax = devtmax;
+    sysblk.devtwait = sysblk.devtnbr =
+    sysblk.devthwm  = sysblk.devtunavail = 0;
 
     /* Initialize the CPU registers */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
@@ -1109,7 +1137,6 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         /* Initialize the device lock and conditions */
         initialize_lock (&dev->lock);
         initialize_condition (&dev->resumecond);
-        initialize_condition (&dev->loopercond);
 
         /* Assign new subchannel number */
         dev->subchan = sysblk.highsubchan++;
@@ -1243,11 +1270,6 @@ DEVBLK *dev;                            /* -> Device block           */
             signal_thread (sysblk.cnsltid, SIGHUP);
         }
     }
-
-    /* Signal the device thread to exit */
-    dev->loopercmd = LOOPER_DIE;
-    if(dev->tid)
-        signal_condition(&dev->loopercond);
 
     /* Release device lock */
     release_lock(&dev->lock);
