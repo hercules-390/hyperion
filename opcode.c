@@ -1536,9 +1536,9 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B226*/ GENx370x390x900 (extract_primary_asn),                /* EPAR      */
  /*B227*/ GENx370x390x900 (extract_secondary_asn),              /* ESAR      */
  /*B228*/ GENx370x390x900 (program_transfer),                   /* PT        */
- /*B229*/ GENx___x390x900 (insert_storage_key_extended),        /* ISKE      */
- /*B22A*/ GENx___x390x900 (reset_reference_bit_extended),       /* RRBE      */
- /*B22B*/ GENx___x390x900 (set_storage_key_extended),           /* SSKE      */
+ /*B229*/ GENx370x390x900 (insert_storage_key_extended),        /* ISKE      */
+ /*B22A*/ GENx370x390x900 (reset_reference_bit_extended),       /* RRBE      */
+ /*B22B*/ GENx370x390x900 (set_storage_key_extended),           /* SSKE      */
  /*B22C*/ GENx370x390x900 (test_block),                         /* TB        */
  /*B22D*/ GENx370x390x900 (divide_float_ext_reg),               /* DXR       */
  /*B22E*/ GENx___x390x900 (page_in),                            /* PGIN      */

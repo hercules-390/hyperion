@@ -1457,8 +1457,15 @@ CKDDASD_TRKHDR  trkhdr;                 /* CKD track header          */
            command; or if this is the second end of track in this
            channel program without an intervening read of the home
            address or data area and without an intervening write,
-           sense, or control command */
-        if (code == 0x47 || code == 0x9D || dev->ckdxmark)
+
+           sense, or control command --
+           -- except when multitrack READ or SEARCH [KEY?] command
+           operates outside the domain of a locate record */
+        if (code == 0x47 || code == 0x9D
+            || (dev->ckdxmark
+                && !((dev->ckdlcount == 0)
+                     && ( (IS_CCW_READ(code) && (code&0x80))
+                         || code==0xA9 || code==0xC9 || code==0xE9) )))
         {
             ckd_build_sense (dev, 0, SENSE1_NRF, 0, 0, 0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -2054,7 +2061,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
     /* Reset index marker flag if sense or control command,
        or any write command (other search ID or search key),
-       or any read command except read sector */
+       or any read command except read sector --
+       -- and except single track Read Count */
     if (IS_CCW_SENSE(code) || IS_CCW_CONTROL(code)
         || (IS_CCW_WRITE(code)
             && (code & 0x7F) != 0x31
@@ -2064,7 +2072,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             && (code & 0x7F) != 0x49
             && (code & 0x7F) != 0x69)
         || (IS_CCW_READ(code)
-            &&  code         != 0x12     /*TEST!!*/
+            &&  code         != 0x12
             && (code & 0x7F) != 0x22))
         dev->ckdxmark = 0;
 

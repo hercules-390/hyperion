@@ -1,3 +1,6 @@
+22 Apr 2001 add ISKE, RRBE and SSKE to 370 mode  - Valery Pogonchenko
+22 Apr 2001 ckd fix Read Count setting index marker - Valery Pogonchenko
+22 Apr 2001 ckd fix processing multitrack read ops - Valery Pogonchenko
 22 Apr 2001 cmpsc fixes for expansion - Greg Smith
 22 Apr 2001 Correct prefix alignment for ESA/390 
             guest in 64 bit mode SIE - Jan Jaeger
