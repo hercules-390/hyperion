@@ -2989,11 +2989,18 @@ DEF_INST(load)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+U32    *p;                              /* Mainstor pointer          */
 
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
-    regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    if ((effective_addr2 & 3) == 0)
+    {
+        p = MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        regs->GR_L(r1) = fetch_fw(p);
+    }
+    else
+        regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 }
 
 
@@ -3183,28 +3190,27 @@ DEF_INST(load_multiple)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, d;                           /* Integer work areas        */
-BYTE    rwork[64];                      /* Character work areas      */
+int     i, n;                           /* Integer work areas        */
+U32    *p;                              /* Mainstor pointer          */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate the number of bytes to be loaded */
-    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
+    /* Calculate number of regs to fetch */
+    n = (r1 <= r3 ? r3 - r1 : (r3 + 16) - r1) + 1;
 
-    /* Fetch new register contents from operand address */
-    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
-
-    /* Load registers from work area */
-    for ( i = r1, d = 0; ; )
+    /* If a boundary is not crossed then fetch from mainstor */
+    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
     {
-        /* Load one register from work area */
-        FETCH_FW(regs->GR_L(i), rwork + d); d += 4;
-
-        /* Instruction is complete when r3 register is done */
-        if ( i == r3 ) break;
-
-        /* Update register number, wrapping from 15 to 0 */
-        i++; i &= 15;
+        p = MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        for (i = 0; i < n; i++)
+            regs->GR_L((r1 + i) & 0xF) = fetch_fw (p++);
+    }
+    /* Otherwise fetch 4 bytes at a time */
+    else
+    {
+        ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
+        for (i = 0; i < n; i++)
+            regs->GR_L((r1 + i) & 0x0F) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
     }
 }
 

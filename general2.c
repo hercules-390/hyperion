@@ -664,6 +664,14 @@ U32     i, j;                           /* Integer work areas        */
     /* Use rightmost six bits of operand address as shift count */
     n = effective_addr2 & 0x3F;
 
+    /* Fast path if no possible overflow */
+    if (regs->GR_L(r1) < 0x10000 && n < 16)
+    {
+        regs->GR_L(r1) <<= n;
+        regs->psw.cc = regs->GR_L(r1) ? 2 : 0;
+        return;
+    }
+
     /* Load the numeric and sign portions from the R1 register */
     n1 = regs->GR_L(r1) & 0x7FFFFFFF;
     n2 = regs->GR_L(r1) & 0x80000000;
@@ -829,11 +837,18 @@ DEF_INST(store)
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+U32    *p;                              /* Mainstor pointer          */
 
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Store register contents at operand address */
-    ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
+    if ((effective_addr2 & 3) == 0)
+    {
+        p = MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_FW (p, regs->GR_L(r1));
+    }
+    else
+        ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
 }
 
 
@@ -1071,26 +1086,30 @@ DEF_INST(store_multiple)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     n, d;                           /* Integer work area         */
-BYTE    rwork[64];                      /* Register work area        */
+int     i, n;                           /* Integer work area         */
+U32    *p;                              /* Mainstor pointer          */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Copy register contents into work area */
-    for ( n = r1, d = 0; ; )
+    /* Calculate number of regs to store */
+    n = (r1 <= r3 ? r3 - r1 : (r3 + 16) - r1) + 1;
+
+    /* If a boundary is not crossed then store into mainstor */
+    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
     {
-        /* Copy contents of one register to work area */
-        STORE_FW(rwork + d, regs->GR_L(n)); d += 4;
-
-        /* Instruction is complete when r3 register is done */
-        if ( n == r3 ) break;
-
-        /* Update register number, wrapping from 15 to 0 */
-        n++; n &= 15;
+        p = MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        for (i = 0; i < n; i++)
+            STORE_FW (p++, regs->GR_L((r1 + i) & 0xF));
     }
-
-    /* Store register contents at operand address */
-    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
+    /* Otherwise store 4 bytes at a time */
+    else
+    {
+        ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1,
+                                   ACCTYPE_WRITE, regs);
+        for (i = 0; i < n; i++)
+            ARCH_DEP(vstore4)(regs->GR_L((r1 + i) & 0x0F),
+                              effective_addr2 + (i*4), b2, regs);
+    }
 }
 
 
@@ -1179,10 +1198,16 @@ int     r1, r2;                         /* Values of R fields        */
     RR(inst, regs, r1, r2);
 
     /* Subtract unsigned operands and set condition code */
-    regs->psw.cc =
+    if (likely(r1 == r2))
+    {
+        regs->psw.cc = 2;
+        regs->GR_L(r1) = 0;
+    }
+    else
+        regs->psw.cc =
             sub_logical (&(regs->GR_L(r1)),
-                    regs->GR_L(r1),
-                    regs->GR_L(r2));
+                           regs->GR_L(r1),
+                           regs->GR_L(r2));
 }
 
 
