@@ -596,7 +596,8 @@ do { \
 
 #define MADDR(_addr, _arn, _regs, _acctype, _akey) \
  ( \
-       likely( \
+       likely((_arn) != USE_REAL_ADDR) \
+   &&  likely( \
               ((_regs)->CR((_regs)->aea_crx) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
            || ((_regs)->aea_common[(_regs)->aea_crx] & (_regs)->tlb.common[TLBIX(_addr)]) \
              ) \
