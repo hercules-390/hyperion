@@ -1,25 +1,259 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</TITLE>
+Hercules Version 2: System Messages: RD - Card Reader Emulation</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</h1>
+<h1>Hercules Version 2: System Messages: RD - Card Reader Emulation</h1>
 <p>
-This page describes the terminal emulation messages for the Hercules S/370,
+This page describes the card reader emulation messages for the Hercules S/370,
 ESA/390, and z/Architecture emulator.
 <h3>Messages</h3>
 <dl>
-<dt><code><a name="HHCTE001I">
-HHCTE001I text
+<dt><code><a name="HHCRD001E">
+HHCRD001E Out of memory
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>A request to allocate memory for the list of files to be read failed.
   <dt>Issued by
-  <dd>console.c
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD002E">
+HHCRD002E File name too long (max=<em>max</em>): &quot;<em>filename</em>&quot;
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file name specified by <code><em>filename</em></code>
+is too long. The maximum length is <code><em>max</em></code>.
+  <dt>Action
+  <dd>Specify a shorter name.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD003E">
+HHCRD003E Unable to access file &quot;<em>filename</em>&quot;: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file specified by <code><em>filename</em></code> could not
+be accessed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD004E">
+HHCRD004E Out of memory
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A request to allocate memory for the list of files to be read failed.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD005E">
+HHCRD005E Specify 'ascii' or 'ebcdic' (or neither) but not both
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Both of the character set translation options <code>ascii</code>
+and <code>ebcdic</code> were specified. At most one is allowed.
+  <dt>Action
+  <dd>Select only one character set translation option.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD006E">
+HHCRD006E Only one filename (sock_spec) allowed for socket devices
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>More than one filename argument was given for a socket card reader
+device. Only one is allowed. This error can also result if an option name
+is misspelled.
+  <dt>Action
+  <dd>Remove the extraneous filenames, or correct the misspelled options.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD007I">
+HHCRD007I Defaulting to 'ascii' for socket device <em>address</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The socket card reader device
+at address <code><em>address</em></code> has been set to ASCII mode, since
+neither translation option was specified. The socket card reader
+device cannot automatically select the translation option.
+  <dt>Action
+  <dd>If you wish to read cards without translation from ASCII
+to EBCDIC, you must specify the <code>ebcdic</code> option on the reader
+definition.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD008W">
+HHCRD008W 'multifile' option ignored: only one file specified
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Only one file was specified for input to the
+card reader, and the <code>multifile</code> option was specified. This
+option is meaningless with only one input file. The option has been ignored.
+  <dt>Action
+  <dd>If you wish to read more than one input file without signalling
+end-of-file or intervention required between them, they must all
+be specified on the same reader definition. If you only wish
+to process one file, omit the <code>multifile</code> option.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD009E">
+HHCRD009E File name too long (max=<em>max</em>): &quot;<em>filename</em>&quot;
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file name specified by <code><em>filename</em></code>
+is too long. The maximum length is <code><em>max</em></code>.
+  <dt>Action
+  <dd>Specify a shorter name.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD010E">
+HHCRD010E Unable to access file &quot;<em>filename</em>&quot;: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file specified by <code><em>filename</em></code> could not
+be accessed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_init_handler
+  </dl>
+<dt><code><a name="HHCRD011E">
+HHCRD011E Close error on file &quot;<em>filename</em>&quot;: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to close the file specified by <code><em>filename</em></code>
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_close_device
+  </dl>
+<dt><code><a name="HHCRD012I">
+HHCRD012I <em>ipaddr</em> (<em>hostname</em>) disconnected from device
+<em>address</em> (<em>socketspec</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The client on the host named <code><em>hostname</em></code>,
+with the IP address <code><em>ipaddr</em></code>, has disconnected
+from the socket card reader device at address
+<code><em>address</em></code>, specified
+by <code><em>socketspec</em></code>.
+  <dt>Issued by
+  <dd>cardrdr.c, function cardrdr_close_device
+  </dl>
+<dt><code><a name="HHCRD013E">
+HHCRD013E Error opening file <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file named <code><em>filename</em></code> could not be
+opened for reading. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function open_cardrdr
+  </dl>
+<dt><code><a name="HHCRD014E">
+HHCRD014E Error reading file <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered while attempting to
+read the first 160 bytes of the file named <code><em>filename</em></code> 
+in order to determine its character set. The error is described by
+<code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function open_cardrdr
+  </dl>
+<dt><code><a name="HHCRD015E">
+HHCRD015E Seek error in file <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered while attempting to
+return to the beginnning of file named <code><em>filename</em></code> 
+after determining its character set. The error is described by
+<code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function open_cardrdr
+  </dl>
+<dt><code><a name="HHCRD016E">
+HHCRD016E Error reading file <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered while attempting to read an EBCDIC card image
+from the file named <code><em>filename</em></code>. The error is
+described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function read_ebcdic
+  </dl>
+<dt><code><a name="HHCRD017E">
+HHCRD017E Unexpected end of file on <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>Too few characters were read from the file named
+<code><em>filename</em></code>. The autopad option was not specified.
+  <dt>Action
+  <dd>Either ensure that all records in the file are 80 bytes long, or
+specify the autopad option on the reader definition.
+  <dt>Issued by
+  <dd>cardrdr.c, function read_ebcdic
+  </dl>
+<dt><code><a name="HHCRD018E">
+HHCRD018E Error reading file <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered while attempting to read an ASCII card image
+from the file named <code><em>filename</em></code>. The error is
+described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>cardrdr.c, function read_ascii
+  </dl>
+<dt><code><a name="HHCRD019E">
+HHCRD019E Card image exceeds <em>size</em> bytes in file <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A line in the file named <code><em>filename</em></code> is too long
+to fit on one card. The trunc option was not specified. The maximum length
+is <code><em>size</em></code> bytes.
+  <dt>Action
+  <dd>Either ensure that all lines in the file are less than 
+<code><em>size</em></code> bytes long, or specify the trunc option on the
+reader definition.
+  <dt>Issued by
+  <dd>cardrdr.c, function read_ascii
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
@@ -30,6 +264,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 15 December 2002
+<p>Last updated 16 December 2002
 </BODY>
 </HTML>

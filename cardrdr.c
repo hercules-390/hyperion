@@ -55,7 +55,7 @@ int     fc;                             /* File counter              */
 
     if (!dev->more_files)
     {
-        logmsg (_("HHC403I Out of memory\n"));
+        logmsg (_("HHCRD001E Out of memory\n"));
         return -1;
     }
 
@@ -153,14 +153,14 @@ int     fc;                             /* File counter              */
 
         if (strlen(argv[i]) > sizeof(dev->filename)-1)
         {
-            logmsg (_("HHC401I File name too long (max=%ud): \"%s\"\n"),
+            logmsg (_("HHCRD002E File name too long (max=%ud): \"%s\"\n"),
                 (unsigned int)sizeof(dev->filename)-1,argv[i]);
             return -1;
         }
 
         if (access(argv[i], R_OK | F_OK) != 0)
         {
-            logmsg (_("HHC402I Unable to access file \"%s\": %s\n"),
+            logmsg (_("HHCRD003E Unable to access file \"%s\": %s\n"),
                 argv[i], strerror(errno));
             return -1;
         }
@@ -170,7 +170,7 @@ int     fc;                             /* File counter              */
 
         if (!dev->more_files)
         {
-            logmsg (_("HHC403I Out of memory\n"));
+            logmsg (_("HHCRD004E Out of memory\n"));
             return -1;
         }
 
@@ -183,7 +183,7 @@ int     fc;                             /* File counter              */
 
     if (dev->ebcdic && dev->ascii)
     {
-        logmsg (_("HHC403I Specify 'ascii' or 'ebcdic' (or neither) but"
+        logmsg (_("HHCRD005E Specify 'ascii' or 'ebcdic' (or neither) but"
                   " not both\n"));
         return -1;
     }
@@ -192,7 +192,7 @@ int     fc;                             /* File counter              */
     {
         if (fc)
         {
-            logmsg (_("HHC403I Only one filename (sock_spec) allowed for"
+            logmsg (_("HHCRD006E Only one filename (sock_spec) allowed for"
                       " socket devices\n"));
             return -1;
         }
@@ -207,7 +207,7 @@ int     fc;                             /* File counter              */
 
         if (!dev->ebcdic && !dev->ascii)
         {
-            logmsg (_("HHC403I Defaulting to 'ascii' for socket device"
+            logmsg (_("HHCRD007I Defaulting to 'ascii' for socket device"
                       " %4.4X\n"),dev->devnum);
             dev->ascii = 1;
         }
@@ -215,7 +215,7 @@ int     fc;                             /* File counter              */
 
     if (dev->multifile && !fc)
     {
-        logmsg (_("HHC403I 'multifile' option ignored: only one file"
+        logmsg (_("HHCRD008W 'multifile' option ignored: only one file"
                   " specified\n"));
         dev->multifile = 0;
     }
@@ -228,7 +228,7 @@ int     fc;                             /* File counter              */
 
         if (strlen(argv[0]) > sizeof(dev->filename)-1)
         {
-            logmsg (_("HHC401I File name too long (max=%ud): \"%s\"\n"),
+            logmsg (_("HHCRD009E File name too long (max=%ud): \"%s\"\n"),
                 (unsigned int)sizeof(dev->filename)-1,argv[0]);
             return -1;
         }
@@ -237,7 +237,7 @@ int     fc;                             /* File counter              */
         {
             if (access(argv[0], R_OK | F_OK) != 0)
             {
-                logmsg (_("HHC402I Unable to access file \"%s\": %s\n"),
+                logmsg (_("HHCRD010E Unable to access file \"%s\": %s\n"),
                     argv[0], strerror(errno));
                 return -1;
             }
@@ -312,7 +312,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
 
     if (dev->fh && fclose(dev->fh) != 0)
     {
-        logmsg (_("HHC419E Close error on file \"%s\": %s\n"),
+        logmsg (_("HHCRD011E Close error on file \"%s\": %s\n"),
             dev->filename, strerror(errno));
         dev->fd = -1;
         dev->fh = NULL;
@@ -321,7 +321,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
 
     if (dev->bs)
     {
-        logmsg (_("HHC420I %s (%s) disconnected from device %4.4X (%s)\n"),
+        logmsg (_("HHCRD012I %s (%s) disconnected from device %4.4X (%s)\n"),
             dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
     }
 
@@ -450,7 +450,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     if (rc < 0)
     {
         /* Handle open failure */
-        logmsg (_("HHC404I Error opening file %s: %s\n"),
+        logmsg (_("HHCRD013E Error opening file %s: %s\n"),
                 dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -474,7 +474,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         if (len < 0)
         {
             /* Handle read error condition */
-            logmsg (_("HHC405I Error reading file %s: %s\n"),
+            logmsg (_("HHCRD014E Error reading file %s: %s\n"),
                     dev->filename, strerror(errno));
 
             /* Close the file */
@@ -507,7 +507,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         if (rc < 0)
         {
             /* Handle seek error condition */
-            logmsg (_("HHC406I Seek error in file %s: %s\n"),
+            logmsg (_("HHCRD015E Seek error in file %s: %s\n"),
                     dev->filename, strerror(errno));
 
             /* Close the file */
@@ -574,10 +574,10 @@ int     rc;                             /* Return code               */
     if (rc < CARD_SIZE)
     {
         if (rc < 0)
-            logmsg (_("HHC407I Error reading file %s: %s\n"),
+            logmsg (_("HHCRD016E Error reading file %s: %s\n"),
                     dev->filename, strerror(errno));
         else
-            logmsg (_("HHC408I Unexpected end of file on %s\n"),
+            logmsg (_("HHCRD017E Unexpected end of file on %s\n"),
                     dev->filename);
 
         /* Set unit check with equipment check */
@@ -641,7 +641,7 @@ BYTE    c;                              /* Input character           */
         /* Handle read error condition */
         if (rc < 0)
         {
-            logmsg (_("HHC409I Error reading file %s: %s\n"),
+            logmsg (_("HHCRD018E Error reading file %s: %s\n"),
                     dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
@@ -669,7 +669,7 @@ BYTE    c;                              /* Input character           */
             /* Ignore excess characters if trunc option specified */
             if (dev->trunc) continue;
 
-            logmsg (_("HHC410I Card image exceeds %d bytes in file %s\n"),
+            logmsg (_("HHCRD019E Card image exceeds %d bytes in file %s\n"),
                     CARD_SIZE, dev->filename);
 
             /* Set unit check with data check */

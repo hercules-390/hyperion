@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2002-12-15 10:58-0600\n"
+"POT-Creation-Date: 2002-12-16 10:36-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -941,11 +941,6 @@ msgid ""
 "2.2X\n"
 msgstr ""
 
-#: console.c:1418
-#, c-format
-msgid "HHC135I Cannot create console thread: %s\n"
-msgstr ""
-
 #: cpu.c:1021
 #, c-format
 msgid "HHC136I Cannot create timer thread: %s\n"
@@ -1435,73 +1430,6 @@ msgstr ""
 msgid "HHC363I %4.4X control unit %s not found in dasd table\n"
 msgstr ""
 
-#: cardrdr.c:156 cardrdr.c:231
-#, c-format
-msgid "HHC401I File name too long (max=%ud): \"%s\"\n"
-msgstr "HHC401I Bestandsnaam \"%2$s\" te lang (maximum=%1$ud)\n"
-
-#: cardrdr.c:163 cardrdr.c:240
-#, c-format
-msgid "HHC402I Unable to access file \"%s\": %s\n"
-msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
-
-#: cardrdr.c:218
-#, fuzzy
-msgid "HHC403I 'multifile' option ignored: only one file specified\n"
-msgstr "HHC403I 'multifile' optie niet gebruikt\n"
-
-#: cardrdr.c:210
-#, fuzzy, c-format
-msgid "HHC403I Defaulting to 'ascii' for socket device %4.4X\n"
-msgstr "HHC403I standaard waarde 'ascii' aan socket apparaat %4.4X toegekend\n"
-
-#: cardrdr.c:195
-msgid "HHC403I Only one filename (sock_spec) allowed for socket devices\n"
-msgstr "HHC403I Maar een bestandsnaam toegestaan voor socket apparaten\n"
-
-#: cardrdr.c:58 cardrdr.c:173
-msgid "HHC403I Out of memory\n"
-msgstr "HHC403I Niet genoeg geheugen\n"
-
-#: cardrdr.c:186
-msgid "HHC403I Specify 'ascii' or 'ebcdic' (or neither) but not both\n"
-msgstr "HHC403I Specificeer 'ascii' of 'ebcdic' (of niets) maar niet beide\n"
-
-#: cardrdr.c:453
-#, c-format
-msgid "HHC404I Error opening file %s: %s\n"
-msgstr "HHC404I Fout %2$s bij openen van bestand \"%1$s\"\n"
-
-#: cardrdr.c:477
-#, c-format
-msgid "HHC405I Error reading file %s: %s\n"
-msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: cardrdr.c:510
-#, c-format
-msgid "HHC406I Seek error in file %s: %s\n"
-msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
-
-#: cardrdr.c:577
-#, c-format
-msgid "HHC407I Error reading file %s: %s\n"
-msgstr "HHC407I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: cardrdr.c:580
-#, c-format
-msgid "HHC408I Unexpected end of file on %s\n"
-msgstr "HHC40I Onverwacht einde van bestand \"%s\"\n"
-
-#: cardrdr.c:644
-#, c-format
-msgid "HHC409I Error reading file %s: %s\n"
-msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: cardrdr.c:672
-#, c-format
-msgid "HHC410I Card image exceeds %d bytes in file %s\n"
-msgstr "HHC410I Ponskaart %d bytes te groot in bestand \"%s\"\n"
-
 #: panel.c:2052
 #, c-format
 msgid "HHC411I Socket pathname \"%s\" exceeds limit of %d\n"
@@ -1512,29 +1440,14 @@ msgstr ""
 msgid "HHC412I Error creating socket for %s: %s\n"
 msgstr ""
 
-#: printer.c:40
-#, c-format
-msgid "HHC413I Error opening file %s: %s\n"
-msgstr ""
-
 #: panel.c:2076 panel.c:2168
 #, c-format
 msgid "HHC413I Failed to bind or listen on socket %s: %s\n"
 msgstr ""
 
-#: printer.c:187
-#, c-format
-msgid "HHC414I %4.4X Error writing to %s: %s\n"
-msgstr ""
-
 #: panel.c:2126
 #, c-format
 msgid "HHC414I Failed to determine IP address from %s\n"
-msgstr ""
-
-#: printer.c:56
-#, c-format
-msgid "HHC415I %4.4X device initialization error: pipe: %s\n"
 msgstr ""
 
 #: panel.c:1930
@@ -1545,11 +1458,6 @@ msgstr ""
 #: panel.c:1939
 #, c-format
 msgid "HHC415I bind_device safe_strdup() failed for device %4.4X\n"
-msgstr ""
-
-#: printer.c:65
-#, c-format
-msgid "HHC416I %4.4X device initialization error: fork: %s\n"
 msgstr ""
 
 #: panel.c:1997
@@ -1577,16 +1485,6 @@ msgstr ""
 msgid "HHC417I Failed to determine port number from %s\n"
 msgstr ""
 
-#: printer.c:74
-#, c-format
-msgid "HHC417I pipe receiver (pid=%d) starting for %4.4X\n"
-msgstr ""
-
-#: printer.c:86
-#, c-format
-msgid "HHC418I %4.4X dup2 error: %s\n"
-msgstr ""
-
 #: panel.c:2299
 #, c-format
 msgid "HHC418I Connect to device %4.4X (%s) failed: %s\n"
@@ -1606,30 +1504,10 @@ msgid ""
 "pending\n"
 msgstr ""
 
-#: cardrdr.c:315
-#, c-format
-msgid "HHC419E Close error on file \"%s\": %s\n"
-msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
-
-#: printer.c:100
-#, c-format
-msgid "HHC419I %4.4X dup2 error: %s\n"
-msgstr ""
-
-#: printer.c:109
-#, c-format
-msgid "HHC420I %4.4X dup2 error: %s\n"
-msgstr ""
-
 #: panel.c:2325
 #, c-format
 msgid "HHC420I %s (%s) connected to device %4.4X (%s)\n"
 msgstr ""
-
-#: cardrdr.c:324
-#, c-format
-msgid "HHC420I %s (%s) disconnected from device %4.4X (%s)\n"
-msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
 #: panel.c:2330
 #, c-format
@@ -1639,11 +1517,6 @@ msgstr ""
 #: cardpch.c:54
 msgid "HHC421I File name missing or invalid\n"
 msgstr "HHC421I Bestandsnaam niet opgegeven of ongeldig\n"
-
-#: printer.c:152
-#, c-format
-msgid "HHC422I %4.4X Unable to execute %s: %s\n"
-msgstr ""
 
 #: panel.c:2018
 #, c-format
@@ -1664,11 +1537,6 @@ msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
 #, c-format
 msgid "HHC423I Error writing to %s: %s\n"
 msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: printer.c:146
-#, c-format
-msgid "HHC423I pipe receiver (pid=%d) terminating for %4.4X\n"
-msgstr ""
 
 #: hsccmd.c:215
 #, c-format
@@ -1714,35 +1582,6 @@ msgstr ""
 #: panel.c:752
 #, c-format
 msgid "HHC432E: RC file open failed: %s\n"
-msgstr ""
-
-#: console.c:1238
-#, c-format
-msgid "HHC601I Waiting for port %u to become free\n"
-msgstr ""
-
-#: console.c:1258
-#, c-format
-msgid "HHC602I Waiting for console connection on port %u\n"
-msgstr ""
-
-#: console.c:693
-#, c-format
-msgid "HHC603I Device %4.4X connection closed by client %s\n"
-msgstr ""
-
-#: console.c:1146
-#, c-format
-msgid "HHC604I Client %s connected to %4.4X device %4.4X\n"
-msgstr ""
-
-#: console.c:856
-#, c-format
-msgid "HHC606I Device %4.4X connection closed by client %s\n"
-msgstr ""
-
-#: console.c:1403
-msgid "HHC609I Console connection thread terminated\n"
 msgstr ""
 
 #: timer.c:284
@@ -1828,10 +1667,190 @@ msgstr ""
 msgid "HHC760I %4.4X create_thread error: %s"
 msgstr "HHC760I %4.4X create_thread fout: %s"
 
+#: printer.c:187
+#, fuzzy, c-format
+msgid "HHCPR003E %4.4X Error writing to %s: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: printer.c:40
+#, fuzzy, c-format
+msgid "HHCPR004E Error opening file %s: %s\n"
+msgstr "HHC404I Fout %2$s bij openen van bestand \"%1$s\"\n"
+
+#: printer.c:56
+#, c-format
+msgid "HHCPR005E %4.4X device initialization error: pipe: %s\n"
+msgstr ""
+
+#: printer.c:65
+#, c-format
+msgid "HHCPR006E %4.4X device initialization error: fork: %s\n"
+msgstr ""
+
+#: printer.c:74
+#, c-format
+msgid "HHCPR007I pipe receiver (pid=%d) starting for %4.4X\n"
+msgstr ""
+
+#: printer.c:86
+#, fuzzy, c-format
+msgid "HHCPR008E %4.4X dup2 error: %s\n"
+msgstr "HHC760I %4.4X create_thread fout: %s"
+
+#: printer.c:100
+#, fuzzy, c-format
+msgid "HHCPR009E %4.4X dup2 error: %s\n"
+msgstr "HHC760I %4.4X create_thread fout: %s"
+
+#: printer.c:109
+#, fuzzy, c-format
+msgid "HHCPR010E %4.4X dup2 error: %s\n"
+msgstr "HHC760I %4.4X create_thread fout: %s"
+
+#: printer.c:146
+#, c-format
+msgid "HHCPR011I pipe receiver (pid=%d) terminating for %4.4X\n"
+msgstr ""
+
+#: printer.c:152
+#, fuzzy, c-format
+msgid "HHCPR012E %4.4X Unable to execute %s: %s\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: cardrdr.c:58
+#, fuzzy
+msgid "HHCRD001E Out of memory\n"
+msgstr "HHC403I Niet genoeg geheugen\n"
+
+#: cardrdr.c:156
+#, fuzzy, c-format
+msgid "HHCRD002E File name too long (max=%ud): \"%s\"\n"
+msgstr "HHC401I Bestandsnaam \"%2$s\" te lang (maximum=%1$ud)\n"
+
+#: cardrdr.c:163
+#, fuzzy, c-format
+msgid "HHCRD003E Unable to access file \"%s\": %s\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: cardrdr.c:173
+#, fuzzy
+msgid "HHCRD004E Out of memory\n"
+msgstr "HHC403I Niet genoeg geheugen\n"
+
+#: cardrdr.c:186
+#, fuzzy
+msgid "HHCRD005E Specify 'ascii' or 'ebcdic' (or neither) but not both\n"
+msgstr "HHC403I Specificeer 'ascii' of 'ebcdic' (of niets) maar niet beide\n"
+
+#: cardrdr.c:195
+#, fuzzy
+msgid "HHCRD006E Only one filename (sock_spec) allowed for socket devices\n"
+msgstr "HHC403I Maar een bestandsnaam toegestaan voor socket apparaten\n"
+
+#: cardrdr.c:210
+#, fuzzy, c-format
+msgid "HHCRD007I Defaulting to 'ascii' for socket device %4.4X\n"
+msgstr "HHC403I standaard waarde 'ascii' aan socket apparaat %4.4X toegekend\n"
+
+#: cardrdr.c:218
+#, fuzzy
+msgid "HHCRD008W 'multifile' option ignored: only one file specified\n"
+msgstr "HHC403I 'multifile' optie niet gebruikt\n"
+
+#: cardrdr.c:231
+#, fuzzy, c-format
+msgid "HHCRD009E File name too long (max=%ud): \"%s\"\n"
+msgstr "HHC401I Bestandsnaam \"%2$s\" te lang (maximum=%1$ud)\n"
+
+#: cardrdr.c:240
+#, fuzzy, c-format
+msgid "HHCRD010E Unable to access file \"%s\": %s\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: cardrdr.c:315
+#, fuzzy, c-format
+msgid "HHCRD011E Close error on file \"%s\": %s\n"
+msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
+
+#: cardrdr.c:324
+#, fuzzy, c-format
+msgid "HHCRD012I %s (%s) disconnected from device %4.4X (%s)\n"
+msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
+
+#: cardrdr.c:453
+#, fuzzy, c-format
+msgid "HHCRD013E Error opening file %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: cardrdr.c:477
+#, fuzzy, c-format
+msgid "HHCRD014E Error reading file %s: %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: cardrdr.c:510
+#, fuzzy, c-format
+msgid "HHCRD015E Seek error in file %s: %s\n"
+msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+
+#: cardrdr.c:577
+#, fuzzy, c-format
+msgid "HHCRD016E Error reading file %s: %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: cardrdr.c:580
+#, fuzzy, c-format
+msgid "HHCRD017E Unexpected end of file on %s\n"
+msgstr "HHC40I Onverwacht einde van bestand \"%s\"\n"
+
+#: cardrdr.c:644
+#, fuzzy, c-format
+msgid "HHCRD018E Error reading file %s: %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: cardrdr.c:672
+#, fuzzy, c-format
+msgid "HHCRD019E Card image exceeds %d bytes in file %s\n"
+msgstr "HHC410I Ponskaart %d bytes te groot in bestand \"%s\"\n"
+
 #: console.c:1200
 #, fuzzy, c-format
 msgid "HHCTE001I Console connection thread started: tid=%8.8lX, pid=%d\n"
 msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
+
+#: console.c:1238
+#, c-format
+msgid "HHCTE002W Waiting for port %u to become free\n"
+msgstr ""
+
+#: console.c:1258
+#, c-format
+msgid "HHCTE003I Waiting for console connection on port %u\n"
+msgstr ""
+
+#: console.c:1403
+#, fuzzy
+msgid "HHCTE004I Console connection thread terminated\n"
+msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
+
+#: console.c:1418
+#, c-format
+msgid "HHCTE005E Cannot create console thread: %s\n"
+msgstr ""
+
+#: console.c:693
+#, c-format
+msgid "HHCTE007I Device %4.4X connection closed by client %s\n"
+msgstr ""
+
+#: console.c:856
+#, c-format
+msgid "HHCTE008I Device %4.4X connection closed by client %s\n"
+msgstr ""
+
+#: console.c:1146
+#, fuzzy, c-format
+msgid "HHCTE009I Client %s connected to %4.4X device %4.4X\n"
+msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
 #: hsccmd.c:1560
 #, fuzzy, c-format
@@ -3016,6 +3035,12 @@ msgid ""
 "%s%s     -0                don't compress track images\n"
 "     -blks  n          size of output file\n"
 msgstr ""
+
+#~ msgid "HHC405I Error reading file %s: %s\n"
+#~ msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#~ msgid "HHC407I Error reading file %s: %s\n"
+#~ msgstr "HHC407I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
 #, fuzzy
 #~ msgid "HHC620I CPU%4.4X thread started: tid="

@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-15 11:07-0600\n"
+"POT-Creation-Date: 2002-12-16 10:36-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1430,72 +1430,6 @@ msgstr ""
 msgid "HHC363I %4.4X control unit %s not found in dasd table\n"
 msgstr ""
 
-#: cardrdr.c:156 cardrdr.c:231
-#, c-format
-msgid "HHC401I File name too long (max=%ud): \"%s\"\n"
-msgstr ""
-
-#: cardrdr.c:163 cardrdr.c:240
-#, c-format
-msgid "HHC402I Unable to access file \"%s\": %s\n"
-msgstr ""
-
-#: cardrdr.c:218
-msgid "HHC403I 'multifile' option ignored: only one file specified\n"
-msgstr ""
-
-#: cardrdr.c:210
-#, c-format
-msgid "HHC403I Defaulting to 'ascii' for socket device %4.4X\n"
-msgstr ""
-
-#: cardrdr.c:195
-msgid "HHC403I Only one filename (sock_spec) allowed for socket devices\n"
-msgstr ""
-
-#: cardrdr.c:58 cardrdr.c:173
-msgid "HHC403I Out of memory\n"
-msgstr ""
-
-#: cardrdr.c:186
-msgid "HHC403I Specify 'ascii' or 'ebcdic' (or neither) but not both\n"
-msgstr ""
-
-#: cardrdr.c:453
-#, c-format
-msgid "HHC404I Error opening file %s: %s\n"
-msgstr ""
-
-#: cardrdr.c:477
-#, c-format
-msgid "HHC405I Error reading file %s: %s\n"
-msgstr ""
-
-#: cardrdr.c:510
-#, c-format
-msgid "HHC406I Seek error in file %s: %s\n"
-msgstr ""
-
-#: cardrdr.c:577
-#, c-format
-msgid "HHC407I Error reading file %s: %s\n"
-msgstr ""
-
-#: cardrdr.c:580
-#, c-format
-msgid "HHC408I Unexpected end of file on %s\n"
-msgstr ""
-
-#: cardrdr.c:644
-#, c-format
-msgid "HHC409I Error reading file %s: %s\n"
-msgstr ""
-
-#: cardrdr.c:672
-#, c-format
-msgid "HHC410I Card image exceeds %d bytes in file %s\n"
-msgstr ""
-
 #: panel.c:2052
 #, c-format
 msgid "HHC411I Socket pathname \"%s\" exceeds limit of %d\n"
@@ -1506,29 +1440,14 @@ msgstr ""
 msgid "HHC412I Error creating socket for %s: %s\n"
 msgstr ""
 
-#: printer.c:40
-#, c-format
-msgid "HHC413I Error opening file %s: %s\n"
-msgstr ""
-
 #: panel.c:2076 panel.c:2168
 #, c-format
 msgid "HHC413I Failed to bind or listen on socket %s: %s\n"
 msgstr ""
 
-#: printer.c:187
-#, c-format
-msgid "HHC414I %4.4X Error writing to %s: %s\n"
-msgstr ""
-
 #: panel.c:2126
 #, c-format
 msgid "HHC414I Failed to determine IP address from %s\n"
-msgstr ""
-
-#: printer.c:56
-#, c-format
-msgid "HHC415I %4.4X device initialization error: pipe: %s\n"
 msgstr ""
 
 #: panel.c:1930
@@ -1539,11 +1458,6 @@ msgstr ""
 #: panel.c:1939
 #, c-format
 msgid "HHC415I bind_device safe_strdup() failed for device %4.4X\n"
-msgstr ""
-
-#: printer.c:65
-#, c-format
-msgid "HHC416I %4.4X device initialization error: fork: %s\n"
 msgstr ""
 
 #: panel.c:1997
@@ -1571,16 +1485,6 @@ msgstr ""
 msgid "HHC417I Failed to determine port number from %s\n"
 msgstr ""
 
-#: printer.c:74
-#, c-format
-msgid "HHC417I pipe receiver (pid=%d) starting for %4.4X\n"
-msgstr ""
-
-#: printer.c:86
-#, c-format
-msgid "HHC418I %4.4X dup2 error: %s\n"
-msgstr ""
-
 #: panel.c:2299
 #, c-format
 msgid "HHC418I Connect to device %4.4X (%s) failed: %s\n"
@@ -1600,29 +1504,9 @@ msgid ""
 "pending\n"
 msgstr ""
 
-#: cardrdr.c:315
-#, c-format
-msgid "HHC419E Close error on file \"%s\": %s\n"
-msgstr ""
-
-#: printer.c:100
-#, c-format
-msgid "HHC419I %4.4X dup2 error: %s\n"
-msgstr ""
-
-#: printer.c:109
-#, c-format
-msgid "HHC420I %4.4X dup2 error: %s\n"
-msgstr ""
-
 #: panel.c:2325
 #, c-format
 msgid "HHC420I %s (%s) connected to device %4.4X (%s)\n"
-msgstr ""
-
-#: cardrdr.c:324
-#, c-format
-msgid "HHC420I %s (%s) disconnected from device %4.4X (%s)\n"
 msgstr ""
 
 #: panel.c:2330
@@ -1632,11 +1516,6 @@ msgstr ""
 
 #: cardpch.c:54
 msgid "HHC421I File name missing or invalid\n"
-msgstr ""
-
-#: printer.c:152
-#, c-format
-msgid "HHC422I %4.4X Unable to execute %s: %s\n"
 msgstr ""
 
 #: panel.c:2018
@@ -1657,11 +1536,6 @@ msgstr ""
 #: cardpch.c:34
 #, c-format
 msgid "HHC423I Error writing to %s: %s\n"
-msgstr ""
-
-#: printer.c:146
-#, c-format
-msgid "HHC423I pipe receiver (pid=%d) terminating for %4.4X\n"
 msgstr ""
 
 #: hsccmd.c:215
@@ -1791,6 +1665,146 @@ msgstr ""
 #: channel.c:1752 channel.c:1770
 #, c-format
 msgid "HHC760I %4.4X create_thread error: %s"
+msgstr ""
+
+#: printer.c:187
+#, c-format
+msgid "HHCPR003E %4.4X Error writing to %s: %s\n"
+msgstr ""
+
+#: printer.c:40
+#, c-format
+msgid "HHCPR004E Error opening file %s: %s\n"
+msgstr ""
+
+#: printer.c:56
+#, c-format
+msgid "HHCPR005E %4.4X device initialization error: pipe: %s\n"
+msgstr ""
+
+#: printer.c:65
+#, c-format
+msgid "HHCPR006E %4.4X device initialization error: fork: %s\n"
+msgstr ""
+
+#: printer.c:74
+#, c-format
+msgid "HHCPR007I pipe receiver (pid=%d) starting for %4.4X\n"
+msgstr ""
+
+#: printer.c:86
+#, c-format
+msgid "HHCPR008E %4.4X dup2 error: %s\n"
+msgstr ""
+
+#: printer.c:100
+#, c-format
+msgid "HHCPR009E %4.4X dup2 error: %s\n"
+msgstr ""
+
+#: printer.c:109
+#, c-format
+msgid "HHCPR010E %4.4X dup2 error: %s\n"
+msgstr ""
+
+#: printer.c:146
+#, c-format
+msgid "HHCPR011I pipe receiver (pid=%d) terminating for %4.4X\n"
+msgstr ""
+
+#: printer.c:152
+#, c-format
+msgid "HHCPR012E %4.4X Unable to execute %s: %s\n"
+msgstr ""
+
+#: cardrdr.c:58
+msgid "HHCRD001E Out of memory\n"
+msgstr ""
+
+#: cardrdr.c:156
+#, c-format
+msgid "HHCRD002E File name too long (max=%ud): \"%s\"\n"
+msgstr ""
+
+#: cardrdr.c:163
+#, c-format
+msgid "HHCRD003E Unable to access file \"%s\": %s\n"
+msgstr ""
+
+#: cardrdr.c:173
+msgid "HHCRD004E Out of memory\n"
+msgstr ""
+
+#: cardrdr.c:186
+msgid "HHCRD005E Specify 'ascii' or 'ebcdic' (or neither) but not both\n"
+msgstr ""
+
+#: cardrdr.c:195
+msgid "HHCRD006E Only one filename (sock_spec) allowed for socket devices\n"
+msgstr ""
+
+#: cardrdr.c:210
+#, c-format
+msgid "HHCRD007I Defaulting to 'ascii' for socket device %4.4X\n"
+msgstr ""
+
+#: cardrdr.c:218
+msgid "HHCRD008W 'multifile' option ignored: only one file specified\n"
+msgstr ""
+
+#: cardrdr.c:231
+#, c-format
+msgid "HHCRD009E File name too long (max=%ud): \"%s\"\n"
+msgstr ""
+
+#: cardrdr.c:240
+#, c-format
+msgid "HHCRD010E Unable to access file \"%s\": %s\n"
+msgstr ""
+
+#: cardrdr.c:315
+#, c-format
+msgid "HHCRD011E Close error on file \"%s\": %s\n"
+msgstr ""
+
+#: cardrdr.c:324
+#, c-format
+msgid "HHCRD012I %s (%s) disconnected from device %4.4X (%s)\n"
+msgstr ""
+
+#: cardrdr.c:453
+#, c-format
+msgid "HHCRD013E Error opening file %s: %s\n"
+msgstr ""
+
+#: cardrdr.c:477
+#, c-format
+msgid "HHCRD014E Error reading file %s: %s\n"
+msgstr ""
+
+#: cardrdr.c:510
+#, c-format
+msgid "HHCRD015E Seek error in file %s: %s\n"
+msgstr ""
+
+#: cardrdr.c:577
+#, c-format
+msgid "HHCRD016E Error reading file %s: %s\n"
+msgstr ""
+
+#: cardrdr.c:580
+#, c-format
+msgid "HHCRD017E Unexpected end of file on %s\n"
+msgstr ""
+
+#: cardrdr.c:644
+#, c-format
+msgid "HHCRD018E Error reading file %s: %s\n"
+msgstr ""
+
+#: cardrdr.c:672
+#, c-format
+msgid "HHCRD019E Card image exceeds %d bytes in file %s\n"
 msgstr ""
 
 #: console.c:1200
