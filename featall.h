@@ -52,11 +52,10 @@
 /* #define OPTION_FTHREADS */           /* Fish pthreads replacement */
 
 
-/* OPTION_FISHIO only possible with OPTION_FTHREADS, but can't
-   be used with OPTION_SYNCIO as the two are mutually exclusive. */
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+/* OPTION_FISHIO only possible with OPTION_FTHREADS */
+#if defined(OPTION_FTHREADS)
   #define OPTION_FISHIO
-#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#else // !defined(OPTION_FTHREADS)
   #undef OPTION_FISHIO
 #endif
 
