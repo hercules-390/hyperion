@@ -71,6 +71,9 @@
 #define DXC_DIVBYZERO	(0x40)
 #define DXC_INVALID	(0x80)
 
+#ifndef FE_INEXACT
+#define FE_INEXACT 0x00
+#endif
 
 struct ebfp {
 	char	sign;
