@@ -514,9 +514,9 @@ void scp_command (BYTE *command, int priomsg)
     /* Obtain the interrupt lock */
     obtain_lock (&sysblk.intlock);
 
-    /* If a service signal is pending then reject the command
-       with message indicating that service processor is busy */
-    if (IS_IC_SERVSIG && (sysblk.servparm & 1))
+    /* If an event buffer available signal is pending then reject the
+       command with message indicating that service processor is busy */
+    if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND))
     {
         logmsg ("HHC706I Service Processor busy\n");
 
@@ -533,7 +533,7 @@ void scp_command (BYTE *command, int priomsg)
     sysblk.scpcmdstr[sizeof(sysblk.scpcmdstr)-1] = '\0';
 
     /* Set event pending flag in service parameter */
-    sysblk.servparm |= 1;
+    sysblk.servparm |= SERVSIG_PEND;
     
     /* Set service signal interrupt pending for read event data */
     if (!IS_IC_SERVSIG)
@@ -705,7 +705,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* If a service signal is pending then return condition
            code 2 to indicate that service processor is busy */
-        if (IS_IC_SERVSIG)
+        if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_ADDR))
         {
             release_lock (&sysblk.intlock);
             regs->psw.cc = 2;
@@ -1630,7 +1630,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     }
 
     /* Set service signal external interrupt pending */
-    sysblk.servparm &= ~7;
+    sysblk.servparm &= ~SERVSIG_ADDR;
     sysblk.servparm |= sccb_absolute_addr;
     ON_IC_SERVSIG;
 

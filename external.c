@@ -371,7 +371,7 @@ U16     cpuad;                          /* Originating CPU address   */
         )
     {
         /* Apply prefixing if the parameter is a storage address */
-        if ( (sysblk.servparm & ~0x00000007) )
+        if ( (sysblk.servparm & SERVSIG_ADDR) )
             sysblk.servparm =
                 APPLY_PREFIXING (sysblk.servparm, regs->PX);
 

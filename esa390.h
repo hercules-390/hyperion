@@ -172,6 +172,9 @@ typedef struct _TLBE {
 #define CR0_PC_FAST	0x00000008	/* PC fast control	  390*/
 #define CR0_CRYPTO	0x00000004	/* Crypto control	ESAME*/
 
+#define SERVSIG_PEND    0x00000001      /* Event buffer pending      */
+#define SERVSIG_ADDR    0xFFFFFFF8      /* Parameter address         */
+
 /* Bit definitions for control register 1 */
 /* CR1 is the primary segment table descriptor or primary ASCE */
 

@@ -230,7 +230,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     obtain_lock (&sysblk.intlock);
 
     /* If a service signal is pending then we cannot process the request */
-    if( IS_IC_SERVSIG ) {
+    if( IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_ADDR)) {
         release_lock (&sysblk.intlock);
         return 2;   /* Service Processor Busy */
     }
@@ -344,7 +344,7 @@ DEVBLK            *dev;                /* Device block pointer       */
     STORAGE_KEY(spccb_absolute_addr) |= STORKEY_CHANGE;
 
     /* Set service signal external interrupt pending */
-    sysblk.servparm &= 7;
+    sysblk.servparm &= ~SERVSIG_ADDR;
     sysblk.servparm |= spccb_absolute_addr;
     ON_IC_SERVSIG; 
 
