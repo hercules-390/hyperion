@@ -2315,18 +2315,18 @@ int ecpsvm_dosio(REGS *regs,int b2,VADR e2)
 }
 int ecpsvm_dostnsm(REGS *regs,int b1,VADR effective_addr1,int imm2)
 {
+    SASSIST_PROLOG(STNSM);
     UNREFERENCED(b1);
     UNREFERENCED(effective_addr1);
     UNREFERENCED(imm2);
-    SASSIST_PROLOG(STNSM);
     return(1);
 }
 int ecpsvm_dostosm(REGS *regs,int b1,VADR effective_addr1,int imm2)
 {
+    SASSIST_PROLOG(STOSM);
     UNREFERENCED(b1);
     UNREFERENCED(effective_addr1);
     UNREFERENCED(imm2);
-    SASSIST_PROLOG(STOSM);
     return(1);
 }
 
@@ -2899,13 +2899,13 @@ ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd)
 }
 void ecpsvm_command(int ac,char **av)
 {
+    ECPSVM_CMDENT *ce;
     logmsg("HHCEV011I ECPS:VM Command processor invoked\n");
     if(ac==1)
     {
         logmsg("HHCEV008E NO EVM subcommand. Type \"evm help\" for a list of valid subcommands\n");
         return;
     }
-    ECPSVM_CMDENT *ce;
     ce=ecpsvm_getcmdent(av[1]);
     if(ce==NULL)
     {
