@@ -144,6 +144,7 @@ DEF_INST(ecpsvm_dispatch_main)
 /******************************************************/
 /* SCNRU Instruction : Scan Real Unit                 */
 /* Invoked by DMKSCN                                  */
+/* E60D                                               */
 /* SCNRU D1(B1,I1),D2(B2,I2)                          */
 /*                                                    */
 /* Operations                                         */
@@ -204,6 +205,10 @@ DEF_INST(ecpsvm_dispatch_main)
 /*                                                    */
 /* Note : no access exception is generated for        */
 /*        the second operand.                         */
+/*                                                    */
+/* Note : as of yet, for any other situation than     */
+/*        finding all 3 control blocks, SCNRU acts    */
+/*        as a NO-OP                                  */
 /******************************************************/
 DEF_INST(ecpsvm_locate_rblock)
 {
@@ -231,10 +236,10 @@ DEF_INST(ecpsvm_locate_rblock)
     DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n",effective_addr1,arioct));
 
     /* Get the Channel Index Table */
-    FETCH_FW(rchixtbl,sysblk.mainstor+arioct);
+    FETCH_FW(rchixtbl,regs->mainstor+arioct);
 
     /* Obtain the RCH offset */
-    FETCH_HW(chix,sysblk.mainstor+rchixtbl+((rdev & 0xf00) >> 7 ));
+    FETCH_HW(chix,regs->mainstor+rchixtbl+((rdev & 0xf00) >> 7 ));
 
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n",chix);
 
@@ -254,17 +259,17 @@ DEF_INST(ecpsvm_locate_rblock)
     }
 
     /* Obtain the RCH Table pointer */
-    FETCH_FW(rchtbl,sysblk.mainstor+arioct+4);
+    FETCH_FW(rchtbl,regs->mainstor+arioct+4);
 
     /* Add the RCH Index offset */
     rchblk=rchtbl+chix;
 
     /* Try to obtain RCU index with bits 8-12 of the device */
-    FETCH_HW(cuix,sysblk.mainstor+rchblk+0x20+((rdev & 0xf8 )>> 2));
+    FETCH_HW(cuix,regs->mainstor+rchblk+0x20+((rdev & 0xf8 )>> 2));
     if(cuix & 0x8000)
     {
         /* Try with bits 8-11 */
-        FETCH_HW(cuix,sysblk.mainstor+rchblk+0x20+((rdev & 0xf0) >> 2));
+        FETCH_HW(cuix,regs->mainstor+rchblk+0x20+((rdev & 0xf0) >> 2));
         if(cuix & 0x8000)
         {
             // logmsg("HHCEV300D : ECPS:VM SCNRU : NO CONTROL UNIT\n");
@@ -279,14 +284,14 @@ DEF_INST(ecpsvm_locate_rblock)
         }
     }
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n",cuix);
-    FETCH_FW(rcutbl,sysblk.mainstor+arioct+8);
+    FETCH_FW(rcutbl,regs->mainstor+arioct+8);
     rcublk=rcutbl+cuix;
-    FETCH_HW(dvix,sysblk.mainstor+rcublk+0x28+((rdev & 0xf)<<1));
+    FETCH_HW(dvix,regs->mainstor+rcublk+0x28+((rdev & 0xf)<<1));
     dvix<<=3;
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n",dvix);
-    if(sysblk.mainstor[rcublk+5]&0x40)
+    if(regs->mainstor[rcublk+5]&0x40)
     {
-        FETCH_FW(rcublk,sysblk.mainstor+rcublk+0x10);
+        FETCH_FW(rcublk,regs->mainstor+rcublk+0x10);
     }
     if(dvix & 0x8000)
     {
@@ -300,7 +305,7 @@ DEF_INST(ecpsvm_locate_rblock)
         */
         return;
     }
-    FETCH_FW(rdvtbl,sysblk.mainstor+arioct+12);
+    FETCH_FW(rdvtbl,regs->mainstor+arioct+12);
     rdvblk=rdvtbl+dvix;
     DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n",rchblk,rcublk,rdvblk));
     regs->GR_L(6)=rchblk;
@@ -358,25 +363,25 @@ DEF_INST(ecpsvm_extended_freex)
     /* E1 = @ of MAXSIZE (maximum # of DW allocatable by FREEX from subpools) */
     /*      followed by subpool pointers                                      */
     /* E2 = @ of subpool indices                                              */
-    FETCH_FW(maxdw,sysblk.mainstor+effective_addr1);
+    FETCH_FW(maxdw,regs->mainstor+effective_addr1);
     if(regs->GR_L(0)>maxdw)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : FREEX request beyond subpool capacity\n"));
         return;
     }
     /* Fetch subpool index */
-    spix=sysblk.mainstor[spixtbl+numdw];
+    spix=regs->mainstor[spixtbl+numdw];
     DEBUG_ASSIST(logmsg("HHCEV300D : Subpool index = %X\n",spix));
     /* Fetch value */
-    FETCH_FW(freeblock,sysblk.mainstor+maxsztbl+4+spix);
+    FETCH_FW(freeblock,regs->mainstor+maxsztbl+4+spix);
     DEBUG_ASSIST(logmsg("HHCEV300D : Value in subpool table = %6.6X\n",freeblock));
     if(freeblock==0)
     {
         /* Can't fullfill request here */
         return;
     }
-    FETCH_FW(nextblk,sysblk.mainstor+freeblock);
-    STORE_FW(sysblk.mainstor+maxsztbl+4+spix,nextblk);
+    FETCH_FW(nextblk,regs->mainstor+freeblock);
+    STORE_FW(regs->mainstor+maxsztbl+4+spix,nextblk);
     DEBUG_ASSIST(logmsg("HHCEV300D : New Value in subpool table = %6.6X\n",nextblk));
     regs->GR_L(1)=freeblock;
     regs->psw.cc=0;
@@ -405,34 +410,34 @@ DEF_INST(ecpsvm_extended_fretx)
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n"));
         return;
     }
-    FETCH_FW(maxdw,sysblk.mainstor+maxsztbl);
+    FETCH_FW(maxdw,regs->mainstor+maxsztbl);
     if(numdw>maxdw)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n",numdw,maxdw));
         return;
     }
-    FETCH_FW(cortbl,sysblk.mainstor+fretl);
+    FETCH_FW(cortbl,regs->mainstor+fretl);
     cortbe=cortbl+((block & 0xfff000)>>8);
-    if(memcmp(sysblk.mainstor+cortbe,sysblk.mainstor+fretl+4,4)!=0)
+    if(memcmp(regs->mainstor+cortbe,regs->mainstor+fretl+4,4)!=0)
 
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n"));
         return;
     }
-    if(sysblk.mainstor[cortbe+8]!=0x02)
+    if(regs->mainstor[cortbe+8]!=0x02)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n"));
         return;
     }
-    spix=sysblk.mainstor[fretl+11+numdw];
-    FETCH_FW(prevblk,sysblk.mainstor+maxsztbl+4+spix);
+    spix=regs->mainstor[fretl+11+numdw];
+    FETCH_FW(prevblk,regs->mainstor+maxsztbl+4+spix);
     if(prevblk==block)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n"));
         return;
     }
-    STORE_FW(sysblk.mainstor+maxsztbl+4+spix,block);
-    STORE_FW(sysblk.mainstor+block,prevblk);
+    STORE_FW(regs->mainstor+maxsztbl+4+spix,block);
+    STORE_FW(regs->mainstor+block,prevblk);
     BR14;
     return;
 }
