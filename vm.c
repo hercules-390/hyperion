@@ -770,7 +770,7 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
     }
 
     /* Obtain the command string from storage */
-    ARCH_DEP(vfetchc) (buf, cmdlen-1, cmdaddr, r1, regs);
+    ARCH_DEP(vfetchc) (buf, cmdlen-1, cmdaddr, USE_REAL_ADDR, regs);
 
     /* Display the command on the console */
     for (i = 0; i < cmdlen; i++)
@@ -791,13 +791,13 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
 
         if (resplen <= maxrlen)
         {
-            ARCH_DEP(vstorec) (resp, resplen-1, respadr, r1+1, regs);
+            ARCH_DEP(vstorec) (resp, resplen-1, respadr, USE_REAL_ADDR, regs);
             regs->GR_L(r2+1) = resplen;
             cc = 0;
         }
         else
         {
-            ARCH_DEP(vstorec) (resp, maxrlen-1, respadr, r1+1, regs);
+            ARCH_DEP(vstorec) (resp, maxrlen-1, respadr, USE_REAL_ADDR, regs);
             regs->GR_L(r2+1) = resplen - maxrlen;
             cc = 1;
         }
