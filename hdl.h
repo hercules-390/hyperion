@@ -114,17 +114,17 @@ void HDL_FINI()                                         \
     hdl_nent( STRINGMAC(_name), &(_ep) )
 
 
-struct _HDLVRS;
+struct _HDLDEP;
 struct _MODENT; 
 struct _DLLENT;
 
 
-typedef struct _HDLVRS {
-    struct _HDLVRS *next;
+typedef struct _HDLDEP {
+    struct _HDLDEP *next;
     char *name;
     char *version;
     int  size;
-} HDLVRS;
+} HDLDEP;
 
 
 typedef struct _HDLPRE {

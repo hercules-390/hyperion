@@ -13,7 +13,7 @@ static DLLENT *hdl_dll;                 /* dll chain           */
 static LOCK   hdl_lock;
 static DLLENT *hdl_cdll;             /* current dll (hdl_lock) */
 
-static HDLVRS *hdl_version;            /* Version codes in hdlmain */
+static HDLDEP *hdl_depend;            /* Version codes in hdlmain */
 
 /* hdl_list - list all entry points */
 void hdl_list()
@@ -42,30 +42,30 @@ MODENT *modent;
 
 void hdl_dlst()
 {
-HDLVRS *version_entry;
+HDLDEP *depent;
 
-    for(version_entry = hdl_version;
-      version_entry;
-      version_entry = version_entry->next)
+    for(depent = hdl_depend;
+      depent;
+      depent = depent->next)
         logmsg("dependency(%s) version(%s) size(%d)\n",
-          version_entry->name,version_entry->version,version_entry->size);
+          depent->name,depent->version,depent->size);
 }
 
 
 /* hdl_dadd - add depency */
 static int hdl_dadd(char *name, char *version, int size)
 {
-HDLVRS **newvrs;
+HDLDEP **newdep;
 
-    for (newvrs = &(hdl_version);
-        *newvrs;
-         newvrs = &((*newvrs)->next));
+    for (newdep = &(hdl_depend);
+        *newdep;
+         newdep = &((*newdep)->next));
 
-    (*newvrs) = malloc(sizeof(HDLVRS));
-    (*newvrs)->next = NULL;
-    (*newvrs)->name = strdup(name);
-    (*newvrs)->version = strdup(version);
-    (*newvrs)->size = size;
+    (*newdep) = malloc(sizeof(HDLDEP));
+    (*newdep)->next = NULL;
+    (*newdep)->name = strdup(name);
+    (*newdep)->version = strdup(version);
+    (*newdep)->size = size;
 
     return 0;
 }
@@ -74,25 +74,25 @@ HDLVRS **newvrs;
 /* hdl_dchk - depency check */
 static int hdl_dchk(char *name, char *version, int size)
 {
-HDLVRS *version_entry;
+HDLDEP *depent;
 
-    for(version_entry = hdl_version;
-      version_entry && strcmp(name,version_entry->name);
-      version_entry = version_entry->next);
+    for(depent = hdl_depend;
+      depent && strcmp(name,depent->name);
+      depent = depent->next);
 
-    if(version_entry)
+    if(depent)
     {
-        if(strcmp(version,version_entry->version))
+        if(strcmp(version,depent->version))
         {
             logmsg("HHCHDxxxI Dependency check failed for %s, version(%s) expected(%s)\n",
-               name,version,version_entry->version);
+               name,version,depent->version);
             return -1;
         }
 
-        if(size != version_entry->size)
+        if(size != depent->size)
         {
             logmsg("HHCHDxxxI Dependency check failed for %s, size(%d) expected(%d)\n",
-               name,size,version_entry->size);
+               name,size,depent->size);
             return -1;
         }
     }
