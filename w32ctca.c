@@ -26,6 +26,7 @@ int w32ctca_dummy = 0;
 #include <ctype.h>
 #include "logger.h"
 #include "w32ctca.h"
+#include <sys/cygwin.h> // need cygwin32_conv_to_full_win32_path
 
 #if !defined( IFNAMSIZ )
 #define IFNAMSIZ 16
@@ -80,28 +81,12 @@ ptuntap32_set_debug_output_func g_tt32_pfn_set_debug_output_func = NULL;
 CRITICAL_SECTION  g_tt32_lock;              // (lock for accessing above variables)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// One-time initialization... (called by Herc startup)
 
 BOOL tt32_loaddll();    // (forward reference)
 
-//
-//
-//
-
 void            tt32_init()
 {
-    InitializeCriticalSection(&g_tt32_lock);
-
-    if (!g_tt32_dllname[0])
-    {
-        char* tt32_dllname;
-
-        if (!(tt32_dllname = getenv("HERCULES_IFC")))
-            tt32_dllname = DEF_TT32_DLLNAME;
-
-        strncpy(g_tt32_dllname,tt32_dllname,sizeof(g_tt32_dllname));
-    }
-
+    InitializeCriticalSection( &g_tt32_lock );
 }
 
 //
@@ -180,10 +165,7 @@ int             display_tt32_stats( int fd )
     memset(&stats,0,sizeof(stats));
     stats.dwStructSize = sizeof(stats);
 
-    /* ZZ FIXME: Temp workaround of bug in TunTap32.dll's 
-       "CTunTap::GetIFaceStats" function. Remove once fixed. */
-//  if (g_tt32_pfn_get_stats(fd,&stats) < (int)(sizeof(stats))) return -1;
-        g_tt32_pfn_get_stats(fd,&stats);
+    g_tt32_pfn_get_stats(fd,&stats);
 
     logmsg
     (
@@ -238,15 +220,17 @@ void __cdecl tt32_output_debug_string(const char* debug_string)
 
 BOOL tt32_loaddll()
 {
-static int tt32_init_done = 0;
+    char*  pszDLLName;
+    TCHAR  szErrMsgBuff          [ MAX_ERR_MSG_LEN ];
+    char   tt32_dllname_in_buff  [ MAX_PATH ];
+    char   tt32_dllname_out_buff [ MAX_PATH ] = {0};
+    static int tt32_init_done = 0;
 
     if(!tt32_init_done)
     {
         tt32_init();
         tt32_init_done = 1;
     }
-
-    TCHAR szErrMsgBuff[MAX_ERR_MSG_LEN];
 
     EnterCriticalSection(&g_tt32_lock);
 
@@ -256,17 +240,56 @@ static int tt32_init_done = 0;
         return TRUE;
     }
 
+    // First, determine the name of the DLL we should try loading...
+
+    if ( !( pszDLLName = getenv( "HERCULES_IFC" ) ) )
+        pszDLLName = DEF_TT32_DLLNAME;
+
+    ASSERT( pszDLLName && *pszDLLName );
+
+    // Then check to see if the "name" contains path information or not...
+
+    if ( strchr( pszDLLName, '/' ) || strchr( pszDLLName, '\\' ) )
+    {
+        // It's already a path...
+        strlcpy( tt32_dllname_in_buff, pszDLLName, sizeof(tt32_dllname_in_buff) );
+    }
+    else
+    {
+        // It's not a path, so make it one...
+        strlcpy( tt32_dllname_in_buff, MODULESDIR, sizeof(tt32_dllname_in_buff) );
+        strlcat( tt32_dllname_in_buff,     "/"   , sizeof(tt32_dllname_in_buff) );
+        strlcat( tt32_dllname_in_buff, pszDLLName, sizeof(tt32_dllname_in_buff) );
+    }
+
+    // Now convert it to a full Win32 path...
+
+    cygwin32_conv_to_full_win32_path( tt32_dllname_in_buff, tt32_dllname_out_buff );
+
+    // Finally, copy it to our global home for it...
+
+    strlcpy( g_tt32_dllname, tt32_dllname_out_buff, sizeof(g_tt32_dllname) );
+
     ASSERT(g_tt32_dllname[0]);
 
     g_tt32_hmoddll = LoadLibraryEx( g_tt32_dllname, NULL, LOAD_WITH_ALTERED_SEARCH_PATH );
 
     if (!g_tt32_hmoddll)
     {
-        DWORD dwLastError = GetLastError();
-        LeaveCriticalSection(&g_tt32_lock);
-        logmsg("** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld: %s\n",
-            g_tt32_dllname,dwLastError,FormatLastErrorMessage(dwLastError,szErrMsgBuff,MAX_ERR_MSG_LEN));
-        return FALSE;
+        // Try again WITHOUT the path this time...
+
+        strlcpy( g_tt32_dllname, pszDLLName, sizeof(g_tt32_dllname) );
+
+        g_tt32_hmoddll = LoadLibraryEx( g_tt32_dllname, NULL, LOAD_WITH_ALTERED_SEARCH_PATH );
+
+        if (!g_tt32_hmoddll)
+        {
+            DWORD dwLastError = GetLastError();
+            LeaveCriticalSection(&g_tt32_lock);
+            logmsg("** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld: %s\n",
+                g_tt32_dllname,dwLastError,FormatLastErrorMessage(dwLastError,szErrMsgBuff,MAX_ERR_MSG_LEN));
+            return FALSE;
+        }
     }
 
     g_tt32_pfn_copyright_string =

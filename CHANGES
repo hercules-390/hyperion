@@ -1,6 +1,9 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+09 Mar 2005 Fix get/setpriority to use 'id_t' type - Fish
+06 Mar 2005 w32ctca.c: always search the defined modules dir first
+            (/usr/local/lib/hercules) when loading TunTap32.dll - Fish
 06 Mar 2005 Fix a bug in my 64-bit changes to the CFC instruction - Fish
 25 Feb 2005 Another 3480-X'DB' Fix. Tape does not need to be ready
             for a X'DB' to work. Hinted by John Decker - Ivan Warren

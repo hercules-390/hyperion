@@ -36,8 +36,8 @@
 /*      The following functional equivalents are provided for the     */
 /*      CYGWIN environment:                                           */
 /*                                                                    */
-/*      int getpriority(int which, int who);                          */
-/*      int setpriority(int which, int who, int prio);                */
+/*      int getpriority(int which, id_t who);                         */
+/*      int setpriority(int which, id_t who, int prio);               */
 /*                                                                    */
 /*                                                                    */
 /**********************************************************************/
@@ -60,7 +60,7 @@
 
 /**********************************************************************/
 /*                                                                    */
-/*      int getpriority(int which , int who );                        */
+/*      int getpriority(int which , id_t who );                       */
 /*                                                                    */
 /*      Notes:                                                        */
 /*                                                                    */
@@ -72,7 +72,7 @@
 /**********************************************************************/
 
 inline int
-getpriority_process(int who)
+getpriority_process(id_t who)
 {
 
     HANDLE process;
@@ -96,7 +96,7 @@ getpriority_process(int who)
 
 
 inline int
-getpriority_thread(int who)
+getpriority_thread(id_t who)
 {
 
     HANDLE thread;
@@ -121,7 +121,7 @@ getpriority_thread(int who)
 
 
 inline int
-getpriority_user(int who)
+getpriority_user(id_t who)
 {
     if (who)
        return EINVAL;
@@ -130,7 +130,7 @@ getpriority_user(int who)
 
 
 int
-getpriority(int which , int who )
+getpriority(int which , id_t who )
 {
     switch (which) {
       case PRIO_PROCESS:
@@ -146,7 +146,7 @@ getpriority(int which , int who )
 
 /**********************************************************************/
 /*                                                                    */
-/*      int setpriority(int which , int who , int prio );             */
+/*      int setpriority(int which , id_t who , int prio );            */
 /*                                                                    */
 /*      Notes:                                                        */
 /*                                                                    */
@@ -158,7 +158,7 @@ getpriority(int which , int who )
 /**********************************************************************/
 
 inline int
-setpriority_process(int who , int prio )
+setpriority_process(id_t who , int prio )
 {
 
     HANDLE process;
@@ -183,7 +183,7 @@ setpriority_process(int who , int prio )
 
 
 inline int
-setpriority_thread(int who , int prio )
+setpriority_thread(id_t who , int prio )
 {
 
     HANDLE thread;
@@ -209,7 +209,7 @@ setpriority_thread(int who , int prio )
 
 
 inline int
-setpriority_user(int who , int prio )
+setpriority_user(id_t who , int prio )
 {
     if (who)
        return EINVAL;
@@ -219,7 +219,7 @@ setpriority_user(int who , int prio )
 
 
 int
-setpriority(int which , int who , int prio )
+setpriority(int which , id_t who , int prio )
 {
     switch (which) {
       case PRIO_PROCESS:

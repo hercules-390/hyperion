@@ -37,8 +37,13 @@ void kill_all_symbols(void);
 #define PRIO_PGRP    1
 #define PRIO_USER    2
 
-int getpriority(int, int);
-int setpriority(int, int, int);
+#ifndef HAVE_ID_T
+#define HAVE_ID_T
+  typedef unsigned long id_t;
+#endif
+
+int getpriority(int, id_t);
+int setpriority(int, id_t, int);
 
 #endif /*defined(__CYGWIN__)*/
 

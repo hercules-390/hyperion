@@ -113,6 +113,8 @@ esac
 # System Services
 AC_SYS_LARGEFILE
 
+AC_CHECK_TYPES( id_t )
+
 # Libraries
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(socket, connect)
