@@ -1,3 +1,9 @@
+03 Aug 2001 Fix CLST condition code when 2nd op = end char - Paul Leisy
+03 Aug 2001 LCXR was not making true zero - Paul Leisy
+03 Aug 2001 Fix BSG so excarid is correct on PIC 2B - Paul Leisy
+03 Aug 2001 Fix TRAP so TEA bit 29 not set on key prot - Paul Leisy
+03 Aug 2001 RP missing AND with ADDRESS_MAXWRAP - Paul Leisy
+03 Aug 2001 CVB missing AND with ADDRESS_MAXWRAP - Paul Leisy
 01 Aug 2001 PLO not saving ALET from parm list in AR when zero - Paul Leisy
 01 Aug 2001 Fix CUTFU condition code when len1 = 0 - Paul Leisy
 01 Aug 2001 Add stor-prot-override to TRAP accesses - Paul Leisy
