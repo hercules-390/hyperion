@@ -45,27 +45,28 @@ EXEFILES = hercules hercifc \
            cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
            hetget hetinit hetmap hetupd \
            dmap2hrc dyninst \
-           hdt1403 hdt3270 hdt3420 hdt3505 hdt3525 hdteq
+           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525 hdteq
 
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
 	   html zzsa.cnf zzsacard.bin
 
-hercules_OBJ = hostinfo.o w32ctca.o impl.o config.o panel.o \
+hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                version.o ipl.o assist.o dat.o stack.o cpu.o \
                vstore.o general1.o general2.o plo.o control.o \
                io.o decimal.o service.o opcode.o diagnose.o \
                diagmssf.o vm.o channel.o ckddasd.o fbadasd.o \
-               crypto.o external.o float.o ctcadpt.o trace.o \
+               crypto.o external.o float.o trace.o \
                machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o \
                timer.o esame.o cckddasd.o cckdutil.o dasdtab.o \
                parser.o ieee.o httpserv.o \
-               cgibin.o devtype.o codepage.o ctc_ctci.o ctc_lcs.o \
-               tuntap.o hsccmd.o hscmisc.o logger.o \
+               cgibin.o codepage.o \
+               hsccmd.o hscmisc.o logger.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
                hscutl.o
 hdt1403_OBJ  = printer.o
 hdt2703_OBJ  = commadpt.o
+hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
 hdt3270_OBJ  = console.o
 hdt3420_OBJ  = tapedev.o hetlib.o
 hdt3505_OBJ  = cardrdr.o sockdev.o
@@ -255,6 +256,9 @@ hdt1403:  $(hdt1403_OBJ)
 
 hdt2703:  $(hdt2703_OBJ)
 	  $(CC) -o hdt2703 $(hdt2703_OBJ) $(LFLAGS) -shared
+
+hdt3088:  $(hdt3088_OBJ)
+	  $(CC) -o hdt3088 $(hdt3088_OBJ) $(LFLAGS) -shared
 
 hdt3270:  $(hdt3270_OBJ)
 	  $(CC) -o hdt3270 $(hdt3270_OBJ) $(LFLAGS) -shared
