@@ -2066,6 +2066,10 @@ DEVBLK *dev;                            /* -> Device block           */
 
     /* Disable the device */
     dev->pmcw.flag5 &= ~PMCW5_E;
+#if defined(OPTION_FAST_DEVLOOKUP)
+    DelSubchanFastLookup(olddevn);
+    DelSubchanFastLookup(newdevn);
+#endif
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
@@ -2104,7 +2108,7 @@ int Chan;
         if(devtab!=NULL)
         {
             dev=devtab[devnum & 0xff];
-            if(dev && dev->pmcw.flag5 & PMCW5_V)
+            if(dev && dev->pmcw.flag5 & PMCW5_V && dev->devnum==devnum)
             {
                 return dev;
             }
