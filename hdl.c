@@ -40,8 +40,20 @@ MODENT *modent;
 }
 
 
+void hdl_dlst()
+{
+HDLVRS *version_entry;
+
+    for(version_entry = hdl_version;
+      version_entry;
+      version_entry = version_entry->next)
+        logmsg("dependency(%s) version(%s) size(%d)\n",
+          version_entry->name,version_entry->version,version_entry->size);
+}
+
+
 /* hdl_dadd - add depency */
-int hdl_dadd(char *name, char *version, int size)
+static int hdl_dadd(char *name, char *version, int size)
 {
 HDLVRS **newvrs;
 
@@ -59,20 +71,8 @@ HDLVRS **newvrs;
 }
 
 
-void hdl_dlst()
-{
-HDLVRS *version_entry;
-
-    for(version_entry = hdl_version;
-      version_entry;
-      version_entry = version_entry->next)
-        logmsg("dependency(%s) version(%s) size(%d)\n",
-          version_entry->name,version_entry->version,version_entry->size);
-}
-
-
 /* hdl_dchk - depency check */
-int hdl_dchk(char *name, char *version, int size)
+static int hdl_dchk(char *name, char *version, int size)
 {
 HDLVRS *version_entry;
 
@@ -213,7 +213,7 @@ MODENT *modent = NULL;
 
 
 /* hdl_regi - register entry point */
-void hdl_regi(char *name, void *fep)
+static void hdl_regi(char *name, void *fep)
 {
 MODENT *modent;
 
