@@ -1,9 +1,9 @@
 /*-------------------------------------------------------------------*/
-/* Hercules                                                          */
+/* Hercules Communication Line Driver                                */
 /* (c) 1999-2003 Roger Bowler & Others                               */
 /* Use of this program is governed by the QPL License                */
-/* Communication Line Driver                                         */
-/* Inital release by : Ivan Warren                                   */
+/* Original Author : Ivan Warren                                     */
+/* Prime Maintainer : Ivan Warren                                    */
 /*-------------------------------------------------------------------*/
 #include "hercules.h"
 #include "commadpt.h"

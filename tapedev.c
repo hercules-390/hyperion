@@ -1,6 +1,8 @@
 /* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2003                */
 /* JCS - minor changes by John Summerfield                           */
 /*              ESA/390 Tape Device Handler                          */
+/* Original Author : Roger Bowler                                    */
+/* Prime Maintainer : Ivan Warren                                    */
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
