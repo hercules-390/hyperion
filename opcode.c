@@ -1956,7 +1956,7 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B27A*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27B*/ GENx___x___x___ ,                                     /* TFF/Sysplx*/
  /*B27C*/ GENx___x___x___ ,                                     /* Sysplex   */
- /*B27D*/ GENx___x390x900 (store_system_information,S,"STSI"),
+ /*B27D*/ GENx370x390x900 (store_system_information,S,"STSI"),
  /*B27E*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B27F*/ GENx___x___x___ ,                                     /* Sysplex   */
  /*B280*/ GENx___x___x___ ,                                     /*#LN L      */

@@ -17,5 +17,7 @@
 #define FEATURE_S370_CHANNEL
 #define FEATURE_CHANNEL_SWITCHING
 
+/* Hercules special */
+#define FEATURE_STORE_SYSTEM_INFORMATION
 #endif /*defined(OPTION_370_MODE)*/
 /* end of FEAT370.H */
