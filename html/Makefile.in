@@ -81,7 +81,7 @@ include_sources = include/header.htmlpart include/footer.htmlpart
 
 include_pkgdatadir = $(pkgdatadir)/include
 
-include_pkgdata_DATA = $(include_sources)
+dist_include_pkgdata_DATA = $(include_sources)
 
 images_sources = images/hercules.jpg \
         images/dial1.gif       images/loadu.gif       images/startd.gif  \
@@ -96,16 +96,17 @@ images_sources = images/hercules.jpg \
 
 images_pkgdatadir = $(pkgdatadir)/images
 
-images_pkgdata_DATA = $(images_sources)
+dist_images_pkgdata_DATA = $(images_sources)
 subdir = html
 mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 DIST_SOURCES =
-DATA = $(dist_pkgdata_DATA) $(images_pkgdata_DATA) \
-	$(include_pkgdata_DATA)
+DATA = $(dist_images_pkgdata_DATA) $(dist_include_pkgdata_DATA) \
+	$(dist_pkgdata_DATA)
 
-DIST_COMMON = $(dist_pkgdata_DATA) Makefile.am Makefile.in
+DIST_COMMON = $(dist_images_pkgdata_DATA) $(dist_include_pkgdata_DATA) \
+	$(dist_pkgdata_DATA) Makefile.am Makefile.in
 all: all-am
 
 .SUFFIXES:
@@ -117,6 +118,40 @@ Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.s
 	  CONFIG_HEADERS= CONFIG_LINKS= \
 	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
 uninstall-info-am:
+install-dist_images_pkgdataDATA: $(dist_images_pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(images_pkgdatadir)
+	@list='$(dist_images_pkgdata_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(images_pkgdatadir)/$$f"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(images_pkgdatadir)/$$f; \
+	done
+
+uninstall-dist_images_pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_images_pkgdata_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(images_pkgdatadir)/$$f"; \
+	  rm -f $(DESTDIR)$(images_pkgdatadir)/$$f; \
+	done
+install-dist_include_pkgdataDATA: $(dist_include_pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(include_pkgdatadir)
+	@list='$(dist_include_pkgdata_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(include_pkgdatadir)/$$f"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(include_pkgdatadir)/$$f; \
+	done
+
+uninstall-dist_include_pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_include_pkgdata_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(include_pkgdatadir)/$$f"; \
+	  rm -f $(DESTDIR)$(include_pkgdatadir)/$$f; \
+	done
 install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
 	@$(NORMAL_INSTALL)
 	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)
@@ -134,40 +169,6 @@ uninstall-dist_pkgdataDATA:
 	  echo " rm -f $(DESTDIR)$(pkgdatadir)/$$f"; \
 	  rm -f $(DESTDIR)$(pkgdatadir)/$$f; \
 	done
-install-images_pkgdataDATA: $(images_pkgdata_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(images_pkgdatadir)
-	@list='$(images_pkgdata_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(images_pkgdatadir)/$$f"; \
-	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(images_pkgdatadir)/$$f; \
-	done
-
-uninstall-images_pkgdataDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(images_pkgdata_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(images_pkgdatadir)/$$f"; \
-	  rm -f $(DESTDIR)$(images_pkgdatadir)/$$f; \
-	done
-install-include_pkgdataDATA: $(include_pkgdata_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(include_pkgdatadir)
-	@list='$(include_pkgdata_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(include_pkgdatadir)/$$f"; \
-	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(include_pkgdatadir)/$$f; \
-	done
-
-uninstall-include_pkgdataDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(include_pkgdata_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(include_pkgdatadir)/$$f"; \
-	  rm -f $(DESTDIR)$(include_pkgdatadir)/$$f; \
-	done
 tags: TAGS
 TAGS:
 
@@ -178,6 +179,7 @@ top_distdir = ..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
+	$(mkinstalldirs) $(distdir)/images $(distdir)/include
 	@for file in $(DISTFILES); do \
 	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
@@ -198,7 +200,7 @@ check: check-am
 all-am: Makefile $(DATA)
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir) $(DESTDIR)$(images_pkgdatadir) $(DESTDIR)$(include_pkgdatadir)
+	$(mkinstalldirs) $(DESTDIR)$(images_pkgdatadir) $(DESTDIR)$(include_pkgdatadir) $(DESTDIR)$(pkgdatadir)
 
 install: install-am
 install-exec: install-exec-am
@@ -239,8 +241,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_pkgdataDATA install-images_pkgdataDATA \
-	install-include_pkgdataDATA
+install-data-am: install-dist_images_pkgdataDATA \
+	install-dist_include_pkgdataDATA install-dist_pkgdataDATA
 
 install-exec-am:
 
@@ -258,19 +260,21 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-generic
 
-uninstall-am: uninstall-dist_pkgdataDATA uninstall-images_pkgdataDATA \
-	uninstall-include_pkgdataDATA uninstall-info-am
+uninstall-am: uninstall-dist_images_pkgdataDATA \
+	uninstall-dist_include_pkgdataDATA uninstall-dist_pkgdataDATA \
+	uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic distclean \
 	distclean-generic distdir dvi dvi-am info info-am install \
 	install-am install-data install-data-am \
-	install-dist_pkgdataDATA install-exec install-exec-am \
-	install-images_pkgdataDATA install-include_pkgdataDATA \
-	install-info install-info-am install-man install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	uninstall uninstall-am uninstall-dist_pkgdataDATA \
-	uninstall-images_pkgdataDATA uninstall-include_pkgdataDATA \
+	install-dist_images_pkgdataDATA \
+	install-dist_include_pkgdataDATA install-dist_pkgdataDATA \
+	install-exec install-exec-am install-info install-info-am \
+	install-man install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic uninstall uninstall-am \
+	uninstall-dist_images_pkgdataDATA \
+	uninstall-dist_include_pkgdataDATA uninstall-dist_pkgdataDATA \
 	uninstall-info-am
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
