@@ -1,3 +1,4 @@
+09 Jan 2003 Correct & enable DAS for S/370 - Jan Jaeger
 08 Jan 2003 Add dummy fix page S/370 MVS assist - Jan Jaeger
 07 Jan 2003 Updated cckd utilities (cckddump & cckdload) - Greg Smith
 07 Jan 2003 Fix/recover possible cckd corruption - Greg Smith

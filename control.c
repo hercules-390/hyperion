@@ -1298,6 +1298,7 @@ BYTE    storkey;
 #endif /*defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
 
+#if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* B223 IVSK  - Insert Virtual Storage Key                     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -1389,6 +1390,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
     }
 
 } /* end DEF_INST(insert_virtual_storage_key) */
+#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2004,6 +2006,7 @@ VADR    lsea;                           /* Linkage stack entry addr  */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
 
 
+#if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* DA   MVCP  - Move to Primary                                 [SS] */
 /*-------------------------------------------------------------------*/
@@ -2062,8 +2065,10 @@ GREG    l;                              /* Unsigned workarea         */
     regs->psw.cc = cc;
 
 }
+#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
+#if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* DB   MVCS  - Move to Secondary                               [SS] */
 /*-------------------------------------------------------------------*/
@@ -2121,6 +2126,7 @@ GREG    l;                              /* Unsigned workarea         */
     regs->psw.cc = cc;
 
 }
+#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
 /*-------------------------------------------------------------------*/
@@ -2155,6 +2161,7 @@ int     k, l;                           /* Integer workarea          */
 }
 
 
+#if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* D9   MVCK  - Move with Key                                   [SS] */
 /*-------------------------------------------------------------------*/
@@ -2201,6 +2208,7 @@ GREG    l;                              /* Unsigned workarea         */
     regs->psw.cc = cc;
 
 }
+#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
 /*-------------------------------------------------------------------*/

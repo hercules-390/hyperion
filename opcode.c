@@ -146,14 +146,18 @@
 
 
 #if !defined(FEATURE_DUAL_ADDRESS_SPACE)
- UNDEF_INST(insert_address_space_control)
- UNDEF_INST(set_secondary_asn)
  UNDEF_INST(extract_primary_asn)
  UNDEF_INST(extract_secondary_asn)
+ UNDEF_INST(insert_address_space_control)
+ UNDEF_INST(insert_virtual_storage_key)
+ UNDEF_INST(load_address_space_parameters)
+ UNDEF_INST(move_to_primary)
+ UNDEF_INST(move_to_secondary)
+ UNDEF_INST(move_with_key)
  UNDEF_INST(program_call)
  UNDEF_INST(program_transfer)
  UNDEF_INST(set_address_space_control_x)
- UNDEF_INST(load_address_space_parameters)
+ UNDEF_INST(set_secondary_asn)
 #endif /*!defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
