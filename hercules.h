@@ -2086,11 +2086,6 @@ int     cckd_comp (int, FILE *);
 int     cckd_chkdsk(int, FILE *, int);
 
 /* Functions in module hscmisc.c */
-#ifdef OPTION_PTTRACE
-int herc_kill(TID tid, int sig, char* file, int line);
-#else
-int herc_kill(TID tid, int sig);
-#endif
 int herc_system (char* command);
 void do_shutdown();
 void display_regs (REGS *regs);

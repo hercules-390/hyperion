@@ -394,4 +394,46 @@ char *tbuf;
     pttracex = 0;
     pttrace = p;
 }
+
 #endif
+
+/*-------------------------------------------------------------------*/
+/* Hercules thread signalling function...                            */
+/*-------------------------------------------------------------------*/
+#if defined( OPTION_PTTRACE )
+int  herc_kill( TID  tid, int  sig, char* file, int line )
+#else
+int  herc_kill( TID  tid, int  sig)
+#endif
+{
+#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE ) && defined( OPTION_PTTRACE )
+    if ( SIGUSR2 == sig &&
+        equal_threads( sysblk.cnsltid, tid ) )
+    {
+        BYTE c=0;
+        VERIFY( write( sysblk.cnslwpipe, &c, 1 ) == 1 );
+        return 0;
+    }
+    if ( SIGUSR2 == sig &&
+        equal_threads( sysblk.socktid, tid ) )
+    {
+        BYTE c=0;
+        VERIFY( write( sysblk.sockwpipe, &c, 1 ) == 1 );
+        return 0;
+    }
+#endif
+    // Call the appropriate "thread kill" (signal_thread) function
+#if defined( OPTION_PTTRACE )
+    // Note: 'ptt_pthread_kill' is somewhat of a misnomer
+    // since it DOES call the appropriate thread kill function
+    // (pthread_kill or fthread_kill) depending on what build
+    // of Herc this is (i.e. OPTION_FTHREADS or not).
+    return ptt_pthread_kill( tid, sig, file, line );
+#else
+  #if defined(OPTION_FTHREADS)
+    return fthread_kill( tid, sig );
+  #else
+    return pthread_kill( tid, sig );
+  #endif
+#endif
+}

@@ -114,21 +114,21 @@ dasdseq_OBJ  = dasdseq.o dasdutil.o codepage.o hostinfo.o version.o  \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
                cache.o shared.o logmsg.o hsys.o pttrace.o
 
-tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o logmsg.o pttrace.o
+tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
 
-tapemap_OBJ  = tapemap.o codepage.o hostinfo.o version.o logmsg.o pttrace.o
+tapemap_OBJ  = tapemap.o codepage.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
 
-tapesplt_OBJ = tapesplt.o codepage.o hostinfo.o version.o logmsg.o pttrace.o
+tapesplt_OBJ = tapesplt.o codepage.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
 
-cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o
+cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
 
-cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o
+cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
 
 cckddiag_OBJ = cckddiag.o cckddasd.o cckdutil.o ckddasd.o codepage.o \
                dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o \
                shared.o logmsg.o hsys.o pttrace.o
 
-cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o
+cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o pttrace.o hsys.o
 
 cckd2ckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
@@ -162,7 +162,7 @@ hetmap_OBJ   = hetmap.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
 hetupd_OBJ   = hetupd.o hetlib.o sllib.o codepage.o hostinfo.o version.o \
                logmsg.o hsys.o pttrace.o
 
-dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o
+dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
 dyninst_OBJ = dyninst.o
 

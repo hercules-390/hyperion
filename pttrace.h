@@ -72,3 +72,10 @@ typedef struct _PTT_TRACE {
   if (!pttnothreads) \
     ptt_pthread_trace(_a,_b,_c,_d,_e,_f)
 #endif /* defined( _PTTHREAD_H_ ) */
+
+#ifdef OPTION_PTTRACE
+int herc_kill(TID tid, int sig, char* file, int line);
+#else
+int herc_kill(TID tid, int sig);
+#endif
+
