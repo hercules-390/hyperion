@@ -50,15 +50,7 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
     FishHangAtExit();
 #endif
 
-    sysblk.msgpipew = stderr;
-
-#if defined(OPTION_FISHIO)
-    ios_msgpipew = sysblk.msgpipew;
-#endif
-
-#if defined(OPTION_W32_CTCI)
-    g_tt32_msgpipew = sysblk.msgpipew;
-#endif
+    sysblk.syslog[LOG_WRITE] = stderr;
 
     if (argc < 2 || strcasecmp("now",argv[1]))
         release_config();
@@ -1126,13 +1118,11 @@ int k_cmd(char* cmdline, int argc, char *argv[])
             if (i >= (128 * CKDTRACE)) i = 0;
 
             if (dev->ckdtrace[i] != '\0')
-                fprintf(dev->msgpipew, "%s", &dev->ckdtrace[i]);
+                logmsg("%s", &dev->ckdtrace[i]);
 
             i += 128;
         }
         while (i != start);
-
-        fflush (dev->msgpipew);
 
         sleep (2);
     }

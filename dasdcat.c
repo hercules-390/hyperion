@@ -57,8 +57,6 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
  BYTE *buf;
  char   *scodepage;
 
-    /* set_codepage() uses the logmsg macro which requires msgpipew */
-    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
     {
         if((scodepage = getenv("HERCULES_CP")))

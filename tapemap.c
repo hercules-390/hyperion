@@ -64,8 +64,6 @@ BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 char   *scodepage;
 
-    /* set_codepage() uses the logmsg macro which requires msgpipew */
-    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
     {
         if((scodepage = getenv("HERCULES_CP")))

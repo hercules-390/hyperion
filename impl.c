@@ -20,6 +20,9 @@ extern  void  FishHangReport();
 extern  void  FishHangAtExit();
 #endif // defined(FISH_HANG)
 
+/* forward define process_script_file (ISW20030220-3) */
+int process_script_file(char *,int);
+
 /*-------------------------------------------------------------------*/
 /* Signal handler for SIGINT signal                                  */
 /*-------------------------------------------------------------------*/
@@ -110,6 +113,29 @@ int i;
 
 
 /*-------------------------------------------------------------------*/
+/* Process .RC file thread                                           */
+/*-------------------------------------------------------------------*/
+
+void* process_rc_file (void* dummy)
+{
+BYTE   *rcname;                         /* hercules.rc name pointer  */
+
+    UNREFERENCED(dummy);
+
+    /* Obtain the name of the hercules.rc file or default */
+
+    if(!(rcname = getenv("HERCULES_RC")))
+        rcname = "hercules.rc";
+
+    /* Run the script processor for this file */
+
+    process_script_file(rcname,1);
+
+    return NULL;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
@@ -117,6 +143,19 @@ int main (int argc, char *argv[])
 BYTE   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
 int     arg_error = 0;                  /* 1=Invalid arguments       */
+int     daemon_mode = 0;                /*                           */
+char   *msgbuf;                         /*                           */
+int     msgnum;                         /*                           */
+int     msgcnt;                         /*                           */
+TID     rctid;                          /* RC file thread identifier */
+
+    /* Clear the system configuration block */
+    memset (&sysblk, 0, sizeof(SYSBLK));
+
+    logger_init();
+
+    /* Display the version identifier */
+    display_version (stdout, "Hercules ");
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -143,15 +182,15 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
     if(!(cfgfile = getenv("HERCULES_CNF")))
         cfgfile = "hercules.cnf";
 
-    /* Display the version identifier */
-    display_version (stderr, "Hercules ");
-
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "f:")) != EOF)
+    while ((c = getopt(argc, argv, "f:d")) != EOF)
     {
         switch (c) {
         case 'f':
             cfgfile = optarg;
+            break;
+        case 'd':
+            daemon_mode = 1;
             break;
         default:
             arg_error = 1;
@@ -266,8 +305,17 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
     }
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
+    /* Start up the RC file processing thread */
+    create_thread(&rctid,&sysblk.detattr,process_rc_file,NULL);
+
     /* Activate the control panel */
-    panel_display ();
+    if(!daemon_mode)
+        panel_display ();
+    else
+        while(1)
+            if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
+                if(isatty(STDERR_FILENO))
+                    fwrite(msgbuf,msgcnt,1,stderr);
 
     return 0;
 } /* end function main */

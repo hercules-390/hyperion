@@ -93,23 +93,8 @@ pid_t           pid;                    /* Child process identifier  */
         /* Close the original descriptor now duplicated to STDIN */
         close (pipefd[0]);
 
-        /* Redirect STDOUT to the control panel message pipe */
-        rc = dup2 (fileno(sysblk.msgpipew), STDOUT_FILENO);
-        if (rc != STDOUT_FILENO)
-        {
-            logmsg (_("HHCPR009E %4.4X dup2 error: %s\n"),
-                    dev->devnum, strerror(errno));
-            _exit(127);
-        }
-
-        /* Redirect STDERR to the control panel message pipe */
-        rc = dup2 (fileno(sysblk.msgpipew), STDERR_FILENO);
-        if (rc != STDERR_FILENO)
-        {
-            logmsg (_("HHCPR010E %4.4X dup2 error: %s\n"),
-                    dev->devnum, strerror(errno));
-            _exit(127);
-        }
+        /* Redirect stderr (screen) to hercules log task */
+        dup2(STDOUT_FILENO, STDERR_FILENO);
 
         /* Relinquish any ROOT authority before calling shell */
         SETMODE(TERM);
@@ -131,9 +116,6 @@ pid_t           pid;                    /* Child process identifier  */
                 0
 #endif /*EXTERNALGUI*/
                 );
-
-            fclose(stderr);
-            fclose(sysblk.msgpipew);
 
             rc = system (cmdline);
         }

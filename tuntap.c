@@ -584,8 +584,7 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
         if( ifc_pid == 0 )
         {
             dup2( sysblk.ifcfd[1], STDIN_FILENO  );
-            dup2( fileno( sysblk.msgpipew ), STDOUT_FILENO );
-            dup2( fileno( sysblk.msgpipew ), STDERR_FILENO );
+            dup2( STDOUT_FILENO, STDERR_FILENO );
             
             // Execute the interface configuration command
             rc = execlp( pszCfgCmd, pszCfgCmd, NULL );

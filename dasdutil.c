@@ -62,8 +62,6 @@ void convert_to_ebcdic (BYTE *dest, int len, BYTE *source)
 char   *scodepage;
 int     i;                              /* Array subscript           */
 
-    /* set_codepage() uses the logmsg macro which requires msgpipew */
-    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
     {
         if((scodepage = getenv("HERCULES_CP")))
@@ -90,8 +88,6 @@ int make_asciiz (BYTE *dest, int destlen, BYTE *src, int srclen)
 int             len;                    /* Result length             */
 char   *scodepage;
 
-    /* set_codepage() uses the logmsg macro which requires msgpipew */
-    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
     {
         if((scodepage = getenv("HERCULES_CP")))
@@ -126,8 +122,6 @@ int             firstsame = 0;
 int             lastsame = 0;
 char   *scodepage;
 
-    /* set_codepage() uses the logmsg macro which requires msgpipew */
-    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
     {
         if((scodepage = getenv("HERCULES_CP")))
@@ -545,7 +539,6 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
 
     /* Initialize the devblk */
     dev = &cif->devblk;
-    dev->msgpipew = stderr;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
     dev->dasdcopy = dasdcopy;
@@ -764,7 +757,6 @@ int             argc=0;                 /*  device open              */
 
     /* Initialize the devblk */
     dev = &cif->devblk;
-    dev->msgpipew = stderr;
     if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
     dev->batch = 1;
     dev->dasdcopy = dasdcopy;

@@ -50,9 +50,6 @@ extern  void  FishHangAtExit();
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
-/* forward define process_script_file (ISW20030220-3) */
-int process_script_file(char *,int);
-
 
 /*=NP================================================================*/
 /* Global data for new panel display                                 */
@@ -165,6 +162,57 @@ BYTE*   devclass;
 char    devnam[256];
 int     stat_online, stat_busy, stat_pend, stat_open;
 #endif /*EXTERNALGUI*/
+
+#if 1
+//
+FILE   *compat_msgpipew;                /* Message pipe write handle */
+int     compat_msgpiper;                /* Message pipe read handle  */
+
+static void panel_compat_thread(void *arg)
+{
+char *msgbuf;
+int  msgnum;
+int  msgcnt;
+
+    UNREFERENCED(arg);
+
+    while(1) 
+        if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
+            fwrite(msgbuf,msgcnt,1,compat_msgpipew);
+
+}
+
+
+static void panel_compat_init()
+{
+TID compat_tid;
+ATTR compat_attr;
+int rc, pfd[2];
+
+    rc = pipe (pfd);
+    if (rc < 0)
+    {
+        logmsg(_("HHCLG013S Message pipe creation failed: %s\n"),
+                strerror(errno));
+        exit(1);
+    }
+
+    compat_msgpiper = pfd[0];
+    compat_msgpipew = fdopen (pfd[1], "w");
+    if (compat_msgpipew == NULL)
+    {
+        compat_msgpipew = stderr;
+        logmsg(_("HHCLG014S Message pipe open failed: %s\n"),
+                strerror(errno));
+        exit(1);
+    }
+    setvbuf (compat_msgpipew, NULL, _IOLBF, 0);
+
+    initialize_detach_attr (&compat_attr);
+
+    create_thread(&compat_tid, &compat_attr, panel_compat_thread, NULL);
+}
+#endif
 
 /*=NP================================================================*/
 /*  Initialize the NP data                                           */
@@ -713,32 +761,6 @@ struct termios kbattr;                  /* Terminal I/O structure    */
 } /* end function system_cleanup */
 
 /*-------------------------------------------------------------------*/
-/* Process .RC file thread                                           */
-/*-------------------------------------------------------------------*/
-
-int rc_thread_done = 0;                 /* 1 = RC file processed     */
-
-void* process_rc_file (void* dummy)
-{
-BYTE   *rcname;                         /* hercules.rc name pointer  */
-
-    UNREFERENCED(dummy);
-
-    /* Obtain the name of the hercules.rc file or default */
-
-    if(!(rcname = getenv("HERCULES_RC")))
-        rcname = "hercules.rc";
-
-    /* Run the script processor for this file */
-
-    process_script_file(rcname,1);
-
-    rc_thread_done = 1;
-
-    return NULL;
-}
-
-/*-------------------------------------------------------------------*/
 /* Panel display thread                                              */
 /*                                                                   */
 /* This function runs on the main thread.  It receives messages      */
@@ -807,10 +829,8 @@ int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
 int     cmdoff = 0;                     /* Number of bytes in cmdline*/
 TID     cmdtid;                         /* Command thread identifier */
-TID     rctid;                          /* RC file thread identifier */
 BYTE    c;                              /* Character work area       */
 FILE   *confp;                          /* Console file pointer      */
-FILE   *logfp;                          /* Log file pointer          */
 struct termios kbattr;                  /* Terminal I/O structure    */
 size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer   */
 BYTE   *kbbuf = NULL;                   /* Keyboard input buffer     */
@@ -820,6 +840,10 @@ int     keybfd;                         /* Keyboard file descriptor  */
 int     maxfd;                          /* Highest file descriptor   */
 fd_set  readset;                        /* Select file descriptors   */
 struct  timeval tv;                     /* Select timeout structure  */
+
+#if 1
+    panel_compat_init();
+#endif
 
     /* Display thread started message on control panel */
     logmsg (_("HHCPN001I Control panel thread started: "
@@ -844,29 +868,13 @@ struct  timeval tv;                     /* Select timeout structure  */
         return;
     }
 
-    /* If stdout is not redirected, then write screen output
-       to stdout and do not produce a log file.  If stdout is
-       redirected, then write screen output to stderr and
-       write the logfile to stdout */
-    if (isatty(STDOUT_FILENO))
-    {
-        confp = stdout;
-        logfp = NULL;
-    }
-    else
-    {
-        confp = stderr;
-        logfp = stdout;
-        /* Logfile should be unbuffered to be always in sync */
-        setvbuf(logfp, NULL, _IONBF, 0);
-    }
+    /* Set up the input file descriptors */
+    confp = stderr;
+    pipefd = compat_msgpiper;
+    keybfd = STDIN_FILENO;
 
     /* Set screen output stream to fully buffered */
     setvbuf (confp, NULL, _IOFBF, 0);
-
-    /* Set up the input file descriptors */
-    pipefd = sysblk.msgpiper;
-    keybfd = STDIN_FILENO;
 
     /* Register the system cleanup exit routine */
     atexit (system_cleanup);
@@ -899,9 +907,6 @@ struct  timeval tv;                     /* Select timeout structure  */
 
     /* Wait for system to finish coming up */
     while (!initdone) sleep(1);
-
-    /* Start up the RC file processing thread */
-    create_thread(&rctid,&sysblk.detattr,process_rc_file,NULL);
 
     /* Process messages and commands */
     while (1)
@@ -1301,10 +1306,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                             }
                             else
                             {
-                                if (rc_thread_done)
-                                {
-                                    ASYNCHRONOUS_PANEL_CMD(cmdline);
-                                }
+                                ASYNCHRONOUS_PANEL_CMD(cmdline);
                             }
                         }
                     } else {
@@ -1408,17 +1410,6 @@ struct  timeval tv;                     /* Select timeout structure  */
 
             /* Exit if read was unsuccessful */
             if (rc < 1) break;
-
-            /* Copy the message to the log file if present */
-            if (logfp != NULL)
-            {
-                fprintf (logfp, "%.*s\n", readoff, readbuf);
-                if (ferror(logfp))
-                {
-                    fclose (logfp);
-                    logfp = NULL;
-                }
-            }
 
             /* Copy message to circular buffer and empty read buffer */
 #if defined(EXTERNALGUI) && !defined(OPTION_HTTP_SERVER)

@@ -1388,7 +1388,6 @@ void  AddDevice( DEVBLK**    ppDEVBLK,
     else
         pDev->hnd = pDevEntry->hnd;
 
-    pDev->msgpipew = sysblk.msgpipew;
     pDev->cpuprio  = sysblk.cpuprio;
     pDev->devnum   = sDevNum;
     pDev->chanset  = sDevNum >> 12;

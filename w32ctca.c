@@ -24,6 +24,7 @@ int w32ctca_dummy = 0;
 #include <stdio.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include "logger.h"
 #include "w32ctca.h"
 
 #if !defined( IFNAMSIZ )
@@ -36,14 +37,6 @@ int w32ctca_dummy = 0;
 // Debugging
 
 LPCTSTR FormatLastErrorMessage(DWORD dwLastError, LPTSTR pszErrMsgBuff, DWORD dwBuffSize);
-
-#define logmsg(fmt...) \
-do \
-{ \
-    fprintf(g_tt32_msgpipew, fmt); \
-    fflush(g_tt32_msgpipew); \
-} \
-while(0)
 
 #define IsEventSet(hEventHandle) (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
 
@@ -84,7 +77,6 @@ ptuntap32_get_stats             g_tt32_pfn_get_stats             = NULL;
 ptuntap32_set_debug_output_func g_tt32_pfn_set_debug_output_func = NULL;
 
 CRITICAL_SECTION  g_tt32_lock;              // (lock for accessing above variables)
-FILE*             g_tt32_msgpipew = NULL;   // (so we can issue msgs to Herc console)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // One-time initialization... (called by Herc startup)
@@ -95,11 +87,9 @@ BOOL tt32_loaddll();    // (forward reference)
 //
 //
 
-void            tt32_init( FILE*  msgpipew )
+void            tt32_init()
 {
     InitializeCriticalSection(&g_tt32_lock);
-
-    g_tt32_msgpipew = msgpipew;
 
     if (!g_tt32_dllname[0])
     {

@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4 po util html man
+SUBDIRS = intl m4 po util html man
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -62,7 +62,8 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   parser.c hetlib.c ieee.c sockdev.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
            httpserv.c cgibin.c devtype.c codepage.c \
-           ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c
+           ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
+           logger.c
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
@@ -127,7 +128,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES README.NETWORKING \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES README.NETWORKING \
     README.OSX
 
 noinst_HEADERS  = fishhang.h \
@@ -136,7 +137,7 @@ noinst_HEADERS  = fishhang.h \
     hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
-    ctcadpt.h hercifc.h tuntap.h tapedev.h
+    ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \

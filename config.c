@@ -169,7 +169,7 @@ int     lstarted;                       /* Indicate if non-whitespace*/
             /* Check for I/O error */
             if (ferror(fp))
             {
-                logmsg(_("HHCCF001S Error reading file %s line %d: %s\n"),
+                fprintf(stderr, _("HHCCF001S Error reading file %s line %d: %s\n"),
                     fname, stmt, strerror(errno));
                 delayed_exit(1);
             }
@@ -192,7 +192,7 @@ int     lstarted;                       /* Indicate if non-whitespace*/
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
             {
-                logmsg(_("HHCCF002S File %s line %d is too long\n"),
+                fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
                     fname, stmt);
                 delayed_exit(1);
             }
@@ -243,8 +243,6 @@ int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
 int     scount;                         /* Statement counter         */
 int     cpu;                            /* CPU number                */
-int     pfd[2];                         /* Message pipe handles      */
-DEVBLK *dev;                            /* -> Device block           */
 FILE   *fp;                             /* Configuration file pointer*/
 BYTE   *sserial;                        /* -> CPU serial string      */
 BYTE   *smodel;                         /* -> CPU model string       */
@@ -308,9 +306,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            select(). sigh            */
 #endif
 
-    /* Clear the system configuration block */
-    memset (&sysblk, 0, sizeof(SYSBLK));
-
     SET_IC_INITIAL_STATE;
 
     /* Gabor Hoffer (performance option) */
@@ -323,9 +318,6 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
-
-    /* Direct logmsg output to stderr during initialization */
-    sysblk.msgpipew = stderr;
 
 #ifdef OPTION_SELECT_KLUDGE
     /* Reserve some fd's to be used later for the message pipes */
@@ -342,7 +334,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     fp = fopen (fname, "r");
     if (fp == NULL)
     {
-        logmsg(_("HHCCF003S Cannot open file %s: %s\n"),
+        fprintf(stderr, _("HHCCF003S Cannot open file %s: %s\n"),
                 fname, strerror(errno));
         delayed_exit(1);
     }
@@ -379,7 +371,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         /* Read next record from the configuration file */
         if ( read_config (fname, fp) )
         {
-            logmsg(_("HHCCF004S No device records in file %s\n"),
+            fprintf(stderr, _("HHCCF004S No device records in file %s\n"),
                     fname);
             delayed_exit(1);
         }
@@ -522,7 +514,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                         sysblk.httpauth = 1;
                     else if(strcasecmp(addargv[0],"noauth"))
                     {
-                        logmsg(_("HHCCF005S Error in %s line %d: "
+                        fprintf(stderr, _("HHCCF005S Error in %s line %d: "
                         "Unrecognized argument %s\n"),
                         fname, stmt, addargv[0]);
                         delayed_exit(1);
@@ -536,7 +528,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                         sysblk.httppass = strdup(addargv[2]);
                     else
                     {
-                        logmsg(_("HHCCF006S Error in %s line %d: "
+                        fprintf(stderr, _("HHCCF006S Error in %s line %d: "
                         "Userid, but no password given %s\n"),
                         fname, stmt, addargv[1]);
                         delayed_exit(1);
@@ -551,7 +543,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                     sysblk.httproot = strdup(operand);
                 else
                 {
-                    logmsg(_("HHCCF007S Error in %s line %d: "
+                    fprintf(stderr, _("HHCCF007S Error in %s line %d: "
                     "Missing argument.\n"),
                         fname, stmt);
                     delayed_exit(1);
@@ -564,7 +556,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             }
             else
             {
-                logmsg(_("HHCCF008S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF008S Error in %s line %d: "
                         "Unrecognized keyword %s\n"),
                         fname, stmt, keyword);
                 delayed_exit(1);
@@ -573,7 +565,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             /* Check for one and only one operand */
             if (operand == NULL || addargc != 0)
             {
-                logmsg(_("HHCCF009S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF009S Error in %s line %d: "
                         "Incorrect number of operands\n"),
                         fname, stmt);
                 delayed_exit(1);
@@ -607,7 +599,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             else
 #endif
             {
-                logmsg(_("HHCCF010S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF010S Error in %s line %d: "
                         "Unknown or unsupported ARCHMODE specification %s\n"),
                         fname, stmt, sarchmode);
                 delayed_exit(1);
@@ -625,7 +617,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (strlen(sserial) != 6
                 || sscanf(sserial, "%x%c", &serial, &c) != 1)
             {
-                logmsg(_("HHCCF011S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF011S Error in %s line %d: "
                         "%s is not a valid serial number\n"),
                         fname, stmt, sserial);
                 delayed_exit(1);
@@ -638,7 +630,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (strlen(smodel) != 4
                 || sscanf(smodel, "%hx%c", &model, &c) != 1)
             {
-                logmsg(_("HHCCF012S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU model\n"),
                         fname, stmt, smodel);
                 delayed_exit(1);
@@ -651,7 +643,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(smainsize, "%hu%c", &mainsize, &c) != 1
                 || mainsize < 2 || mainsize > 1024)
             {
-                logmsg(_("HHCCF013S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF013S Error in %s line %d: "
                         "Invalid main storage size %s\n"),
                         fname, stmt, smainsize);
                 delayed_exit(1);
@@ -664,7 +656,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(sxpndsize, "%hu%c", &xpndsize, &c) != 1
                 || xpndsize > 1024)
             {
-                logmsg(_("HHCCF014S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
                         fname, stmt, sxpndsize);
                 delayed_exit(1);
@@ -677,7 +669,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(scnslport, "%hu%c", &cnslport, &c) != 1
                 || cnslport == 0)
             {
-                logmsg(_("HHCCF015S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF015S Error in %s line %d: "
                         "Invalid console port number %s\n"),
                         fname, stmt, scnslport);
                 delayed_exit(1);
@@ -689,7 +681,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         {
             if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
             {
-                logmsg(_("HHCCF016S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
                         "Invalid CPU thread priority %s\n"),
                         fname, stmt, scpuprio);
                 delayed_exit(1);
@@ -711,7 +703,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
                 || numcpu < 1 || numcpu > MAX_CPU_ENGINES)
             {
-                logmsg(_("HHCCF018S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF018S Error in %s line %d: "
                         "Invalid number of CPUs %s\n"),
                         fname, stmt, snumcpu);
                 delayed_exit(1);
@@ -725,7 +717,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(snumvec, "%hu%c", &numvec, &c) != 1
                 || numvec > MAX_CPU_ENGINES)
             {
-                logmsg(_("HHCCF019S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF019S Error in %s line %d: "
                         "Invalid number of VFs %s\n"),
                         fname, stmt, snumvec);
                 delayed_exit(1);
@@ -740,7 +732,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         {
             if (strlen(sloadparm) > 8)
             {
-                logmsg(_("HHCCF021S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF021S Error in %s line %d: "
                         "Load parameter %s exceeds 8 characters\n"),
                         fname, stmt, sloadparm);
                 delayed_exit(1);
@@ -762,7 +754,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                  && (sysepoch != 1970)
                     ))
             {
-                logmsg(_("HHCCF022S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF022S Error in %s line %d: "
                         "%s is not a valid system epoch.\n"
                         "Patch config.c to expand the table\n"),
                         fname, stmt, ssysepoch);
@@ -777,7 +769,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 || sscanf(stzoffset, "%d%c", &tzoffset, &c) != 1
                 || (tzoffset < -2359) || (tzoffset > 2359))
             {
-                logmsg(_("HHCCF023S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF023S Error in %s line %d: "
                         "%s is not a valid timezone offset\n"),
                         fname, stmt, stzoffset);
                 delayed_exit(1);
@@ -791,7 +783,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(stoddrag, "%u%c", &toddrag, &c) != 1
                 || toddrag < 1 || toddrag > 10000)
             {
-                logmsg(_("HHCCF024S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF024S Error in %s line %d: "
                         "Invalid TOD clock drag factor %s\n"),
                         fname, stmt, stoddrag);
                 delayed_exit(1);
@@ -815,7 +807,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                     if (sscanf(spanrate, "%u%c", &panrate, &c) != 1
                         || panrate < (1000/CLK_TCK) || panrate > 5000)
                     {
-                        logmsg(_("HHCCF025S Error in %s line %d: "
+                        fprintf(stderr, _("HHCCF025S Error in %s line %d: "
                                 "Invalid panel refresh rate %s\n"),
                                 fname, stmt, spanrate);
                         delayed_exit(1);
@@ -854,7 +846,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             }
             else
             {
-                logmsg(_("HHCCF026S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF026S Error in %s line %d: "
                         "Unknown OS tailor specification %s\n"),
                         fname, stmt, sostailor);
                 delayed_exit(1);
@@ -867,7 +859,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(sdevtmax, "%d%c", &devtmax, &c) != 1
                 || devtmax < -1)
             {
-                logmsg(_("HHCCF027S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF027S Error in %s line %d: "
                         "Invalid maximum device threads %s\n"),
                         fname, stmt, sdevtmax);
                 delayed_exit(1);
@@ -892,7 +884,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             }
             else
             {
-                logmsg(_("HHCCF028S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF028S Error in %s line %d: "
                         "Invalid program product OS permission %s\n"),
                         fname, stmt, spgmprdos);
                 delayed_exit(1);
@@ -906,7 +898,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             if (sscanf(shttpport, "%hu%c", &httpport, &c) != 1
                 || httpport == 0 || (httpport < 1024 && httpport != 80) )
             {
-                logmsg(_("HHCCF029S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF029S Error in %s line %d: "
                         "Invalid HTTP port number %s\n"),
                         fname, stmt, shttpport);
                 delayed_exit(1);
@@ -920,7 +912,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         {
             if (sscanf(siodelay, "%d%c", &iodelay, &c) != 1)
             {
-                logmsg(_("HHCCF030S Error in %s line %d: "
+                fprintf(stderr, _("HHCCF030S Error in %s line %d: "
                         "Invalid I/O delay value: %s\n"),
                         fname, stmt, siodelay);
                 delayed_exit(1);
@@ -941,7 +933,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     sysblk.mainstor = malloc(sysblk.mainsize);
     if (sysblk.mainstor == NULL)
     {
-        logmsg(_("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
+        fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
                 mainsize, strerror(errno));
         delayed_exit(1);
     }
@@ -950,7 +942,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     sysblk.storkeys = malloc(sysblk.mainsize / STORAGE_KEY_UNITSIZE);
     if (sysblk.storkeys == NULL)
     {
-        logmsg(_("HHCCF032S Cannot obtain storage key array: %s\n"),
+        fprintf(stderr, _("HHCCF032S Cannot obtain storage key array: %s\n"),
                 strerror(errno));
         delayed_exit(1);
     }
@@ -973,7 +965,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
-            logmsg(_("HHCCF033S Cannot obtain %dMB expanded storage: "
+            fprintf(stderr, _("HHCCF033S Cannot obtain %dMB expanded storage: "
                     "%s\n"),
                     xpndsize, strerror(errno));
             delayed_exit(1);
@@ -1010,12 +1002,11 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         initialize_lock (&sysblk.regs[i].accum_wait_time_lock);
 #endif /*defined(OPTION_CPU_UTILIZATION)*/
 #if defined(OPTION_W32_CTCI)
-    tt32_init(sysblk.msgpipew);
+    tt32_init();
 #endif /* defined(OPTION_W32_CTCI) */
 #if defined(OPTION_FISHIO)
     InitIOScheduler                         // initialize i/o scheduler...
         (
-            sysblk.msgpipew,                // (for issuing msgs to Herc console)
             sysblk.arch_mode,               // (for calling execute_ccw_chain)
             DEVICE_THREAD_PRIORITY,         // (for calling fthread_create)
             MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
@@ -1154,7 +1145,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
         if (sdevnum == NULL || sdevtype == NULL)
         {
-            logmsg(_("HHCCF035S Error in %s line %d: "
+            fprintf(stderr, _("HHCCF035S Error in %s line %d: "
                     "Missing device number or device type\n"),
                     fname, stmt);
             delayed_exit(1);
@@ -1163,15 +1154,19 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         if (strlen(sdevnum) > 4
             || sscanf(sdevnum, "%hx%c", &devnum, &c) != 1)
         {
-            logmsg(_("HHCCF036S Error in %s line %d: "
+            fprintf(stderr, _("HHCCF036S Error in %s line %d: "
                     "%s is not a valid device number\n"),
                     fname, stmt, sdevnum);
             delayed_exit(1);
         }
 
         /* Build the device configuration block */
+#if 1
+        attach_device (devnum, sdevtype, addargc, addargv);
+#else
         if (attach_device (devnum, sdevtype, addargc, addargv))
             delayed_exit(1);
+#endif
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))
@@ -1185,46 +1180,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         close(dummyfd[i]);
 #endif
 
-    /* Create the message pipe */
-    rc = pipe (pfd);
-    if (rc < 0)
-    {
-        logmsg(_("HHCCF037S Message pipe creation failed: %s\n"),
-                strerror(errno));
-        delayed_exit(1);
-    }
-
-    sysblk.msgpiper = pfd[0];
-#ifndef FLUSHLOG
-    sysblk.msgpipew = fdopen (pfd[1], "w");
-#else
-    sysblk.msgpipew = fopen("logfile", "w");
-#endif
-    if (sysblk.msgpipew == NULL)
-    {
-        sysblk.msgpipew = stderr;
-        logmsg(_("HHCCF038S Message pipe open failed: %s\n"),
-                strerror(errno));
-        delayed_exit(1);
-    }
-    setvbuf (sysblk.msgpipew, NULL, _IOLBF, 0);
-
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-        dev->msgpipew = sysblk.msgpipew;
-    cckdblk.msgpipew = sysblk.msgpipew;
-
-#if defined(OPTION_FISHIO)
-    ios_msgpipew = sysblk.msgpipew;
-#endif // defined(OPTION_FISHIO)
-#if defined(OPTION_W32_CTCI)
-    g_tt32_msgpipew = sysblk.msgpipew;
-#endif // defined(OPTION_W32_CTCI)
-
-    /* Display the version identifier on the control panel */
-    display_version (sysblk.msgpipew, "Hercules ");
     if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
     {
-        logmsg(_("HHCCF039W PGMPRDOS LICENSED specified.\n"
+        logmsg(_("\nHHCCF039W PGMPRDOS LICENSED specified.\n"
                 "           Licensed program product operating systems are "
                 "enabled.\n           You are "
                 "responsible for meeting all conditions of your\n"
@@ -1406,7 +1364,6 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
 
     /* Initialize the device block */
     dev->hnd = devent->hnd;
-    dev->msgpipew = sysblk.msgpipew;
     dev->cpuprio = sysblk.cpuprio;
     dev->devnum = devnum;
     dev->chanset = devnum >> 12;

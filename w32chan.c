@@ -20,6 +20,7 @@ int dummy = 0;
 #include <stdarg.h>     // (need "va_list", etc)
 #include <stdio.h>      // (need "FILE", "vfprintf", etc)
 #include <malloc.h>     // (need "malloc", etc)
+#include "logger.h"
 #include "fthreads.h"   // (need "fthread_create")
 #include "w32chan.h"    // (function prototypes for this module)
 #include "linklist.h"   // (linked list macros)
@@ -59,12 +60,6 @@ int dummy = 0;
 
 #endif // defined(FISH_HANG)
 
-#define logmsg(fmt...)           \
-{                                \
-    fprintf(ios_msgpipew, fmt);  \
-    fflush(ios_msgpipew);        \
-}
-
 #define IsEventSet(hEventHandle) (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
 
 /////////////////////////////////////////////////////////////////////////////
@@ -91,7 +86,6 @@ int dummy = 0;
 /////////////////////////////////////////////////////////////////////////////
 // i/o scheduler variables...  (some private, some externally visible)
 
-FILE*  ios_msgpipew           = NULL;
 int    ios_arch_mode          = 0;
 int    ios_devthread_priority = THREAD_PRIORITY_NORMAL;
 int    ios_devthread_timeout  = 30;
@@ -111,14 +105,12 @@ int  ios_devtunavail = 0;   // #of times 'idle' thread unavailable
 
 void  InitIOScheduler
 (
-    FILE*  msgpipew,        // (for issuing msgs to Herc console)
     int    arch_mode,       // (for calling execute_ccw_chain)
     int    devt_priority,   // (for calling fthread_create)
     int    devt_timeout,    // (MAX_DEVICE_THREAD_IDLE_SECS)
     long   devt_max         // (maximum #of device threads allowed)
 )
 {
-    ios_msgpipew           = msgpipew;
     ios_arch_mode          = arch_mode;
     ios_devthread_priority = devt_priority;
     ios_devthread_timeout  = devt_timeout;

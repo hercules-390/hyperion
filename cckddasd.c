@@ -12,7 +12,7 @@
 #define cckdtrc(format, a...) \
 do { \
  if (dev && (dev->ccwtrace||dev->ccwstep)) \
-  fprintf((dev)->msgpipew, "%4.4X:" format, dev->devnum, a); \
+  logmsg("%4.4X:" format, dev->devnum, a); \
  if (cckdblk.itracen > 0) \
  {int n; \
   if (cckdblk.itracex >= 128 * cckdblk.itracen) \
@@ -158,7 +158,6 @@ int             i;                      /* Index                     */
     initialize_condition (&cckdblk.writecond);
 
     /* Initialize some variables */
-    cckdblk.msgpipew   = stderr;
     cckdblk.writerprio = 16;
     cckdblk.ranbr      = CCKD_DEFAULT_RA_SIZE;
     cckdblk.ramax      = CCKD_DEFAULT_RA;
@@ -256,8 +255,6 @@ int             fdflags;                /* File flags                */
     /* Initialize the global cckd block if necessary */
     if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)))
         cckddasd_init (0, NULL);
-    if (dev->msgpipew != cckdblk.msgpipew)
-        cckdblk.msgpipew = dev->msgpipew;
 
     /* Initialize locks and conditions */
     initialize_lock (&cckd->filelock);
@@ -272,7 +269,7 @@ int             fdflags;                /* File flags                */
     cckd->open[0] = (fdflags & O_RDWR) ? CCKD_OPEN_RW : CCKD_OPEN_RO;
 
     /* call the chkdsk function */
-    rc = cckd_chkdsk (cckd->fd[0], dev->msgpipew, 0);
+    rc = cckd_chkdsk (cckd->fd[0], stdout, 0);
     if (rc < 0) return -1;
 
     /* Perform initial read */
@@ -2079,7 +2076,7 @@ int             fend,mend;              /* Byte order indicators     */
     {
         if (cckd->open[sfx] == CCKD_OPEN_RW)
         {
-            rc = cckd_swapend (cckd->fd[sfx], dev->msgpipew);
+            rc = cckd_swapend (cckd->fd[sfx], stdout);
             if (rc < 0) return -1;
             return cckd_read_chdr (dev);
         }
@@ -3435,7 +3432,7 @@ char            sfn[256];               /* Shadow file name          */
         else cckd->open[cckd->sfn] = CCKD_OPEN_RW;
 
         /* Call the chkdsk function */
-        rc = cckd_chkdsk (cckd->fd[cckd->sfn], dev->msgpipew, 0);
+        rc = cckd_chkdsk (cckd->fd[cckd->sfn], stdout, 0);
         if (rc < 0) return -1;
 
         /* Perform initial read */
@@ -3724,7 +3721,7 @@ BYTE            buf[65536];             /* Buffer                    */
     }
     else
     {
-        rc = cckd_chkdsk (cckd->fd[sfx[1]], dev->msgpipew, 0);
+        rc = cckd_chkdsk (cckd->fd[sfx[1]], stdout, 0);
         if (rc < 0)
         {
             devmsg ("%4.4X:cckddasd: file[%d] not merged, "
@@ -3964,7 +3961,7 @@ BYTE            buf[65536];             /* Buffer                    */
         /* Validate the merge */
         cckd_harden (dev);
         if (err)
-            cckd_chkdsk (cckd->fd[sfx[1]], dev->msgpipew, 2);
+            cckd_chkdsk (cckd->fd[sfx[1]], stdout, 2);
         cckd_read_init (dev);
 
     } /* if merge */
@@ -4073,7 +4070,7 @@ int             rc;                     /* Return code               */
     cckd_harden (dev);
 
     /* Call the compress function */
-    rc = cckd_comp (cckd->fd[cckd->sfn], dev->msgpipew);
+    rc = cckd_comp (cckd->fd[cckd->sfn], stdout);
 
     /* Perform initial read */
     rc = cckd_read_init (dev);

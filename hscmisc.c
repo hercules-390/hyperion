@@ -864,9 +864,8 @@ int pid, status;
     {
         char *argv[4];
 
-        dup2(sysblk.msgpiper, STDIN_FILENO);
-        dup2(fileno(sysblk.msgpipew), STDOUT_FILENO);
-        dup2(fileno(sysblk.msgpipew), STDERR_FILENO);
+        /* Redirect stderr (screen) to hercules log task */
+        dup2(STDOUT_FILENO, STDERR_FILENO);
 
         /* Drop ROOT authority (saved uid) */
         SETMODE(TERM);

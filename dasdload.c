@@ -1521,8 +1521,6 @@ BYTE   *name;                           /* Text unit name            */
 BYTE    c, hex[17], chars[9];           /* Character work areas      */
 char   *scodepage;
 
-    /* set_codepage() uses the logmsg macro which requires msgpipew */
-    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
     {
         if((scodepage = getenv("HERCULES_CP")))
@@ -2154,8 +2152,6 @@ BYTE            memname[9];             /* Member name (ASCIIZ)      */
 BYTE            c, hex[49], chars[25];  /* Character work areas      */
 char   *scodepage;
 
-    /* set_codepage() uses the logmsg macro which requires msgpipew */
-    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
     {
         if((scodepage = getenv("HERCULES_CP")))

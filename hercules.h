@@ -31,6 +31,8 @@
 
 #if !defined(_HERCULES_H)
 
+#include "logger.h"
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,40 +144,13 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 /*-------------------------------------------------------------------*/
 /* Macro definitions for tracing                                     */
 /*-------------------------------------------------------------------*/
-#ifndef FLUSHLOG
-#define logmsg(a...) \
-    do { \
-        fprintf(sysblk.msgpipew, a); \
-    } while(0)
-#define devmsg(a...) \
-    do { \
-        fprintf(dev->msgpipew, a); \
-    } while(0)
-#define cckdmsg(a...) \
-    do { \
-        fprintf(cckdblk.msgpipew, a); \
-    } while(0)
-#else
-#define logmsg(a...) \
-    do { \
-        fprintf(sysblk.msgpipew, a); \
-        fflush(sysblk.msgpipew); \
-    } while(0)
-#define devmsg(a...) \
-    do { \
-        fprintf(dev->msgpipew, a); \
-        fflush(dev->msgpipew); \
-    } while(0)
-#define cckdmsg(a...) \
-    do { \
-        fprintf(cckdblk.msgpipew, a); \
-        fflush(cckdblk.msgpipew); \
-    } while(0)
-#endif
+#define devmsg(a...) logmsg(a)
+#define cckdmsg(a...) logmsg(a)
+
 #define DEVTRACE(format, a...) \
     do { \
         if(dev->ccwtrace||dev->ccwstep) \
-            fprintf(dev->msgpipew, "%4.4X:" format, dev->devnum, a); \
+            logmsg("%4.4X:" format, dev->devnum, a); \
     } while(0)
 
 /* Debugging */
@@ -706,8 +681,12 @@ typedef struct _SYSBLK {
         int     broadcast_count;        /* Broadcast CPU count       */
         COND    broadcast_cond;         /* Broadcast condition       */
         U64     breakaddr;              /* Breakpoint address        */
-        FILE   *msgpipew;               /* Message pipe write handle */
-        int     msgpiper;               /* Message pipe read handle  */
+//
+        FILE   *syslog[2];              /* Syslog read/write pipe    */
+        int     syslogfd[2];            /*   pairs                   */
+        FILE   *hrdcpy;                 /* Hardcopy log or zero      */
+        int     hrdcpyfd;               /* Hardcopt fd or -1         */
+//
         U64     pgminttr;               /* Program int trace mask    */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
 
@@ -859,7 +838,6 @@ struct _DEVDATA;                                /* Forward reference */
 typedef struct _DEVBLK {
         struct _DEVBLK *nextdev;        /* -> next device block      */
         LOCK    lock;                   /* Device block lock         */
-        FILE   *msgpipew;               /* Message pipe write handle */
 
         /*  device identification                                    */
 
@@ -1417,7 +1395,6 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 
 typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         BYTE             id[8];         /* "CCKDBLK "                */
-        FILE            *msgpipew;      /* Message pipe write handle */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         int              batch:1;       /* 1=called in batch mode    */
         LOCK             l2cachelock;   /* L2 cache lock             */
