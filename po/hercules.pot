@@ -1,16 +1,18 @@
 # SOME DESCRIPTIVE TITLE.
-# This file is put in the public domain.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: hercules 2.16\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "POT-Creation-Date: 2002-05-12 13:57+0200\n"
-"PO-Revision-Date: 2002-05-10 16:16+0200\n"
-"Last-Translator: Jan Jaeger <jj@septa.nl>\n"
-"Language-Team: none <test@li.org>\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: fbadasd.c:638
@@ -162,7 +164,7 @@ msgstr ""
 #: version.c:148
 #, c-format
 msgid "%sVersion %s\n"
-msgstr "%sVersie %s\n"
+msgstr ""
 
 #: panel.c:2042
 msgid "Address greater than mainstore size. \n"
@@ -1142,7 +1144,7 @@ msgstr ""
 
 #: ckddasd.c:207
 msgid "HHC351I File name missing or invalid\n"
-msgstr "HHC351I Bestandsnaam niet opgegeven of ongeldig\n"
+msgstr ""
 
 #: ckddasd.c:316
 #, c-format
@@ -1227,68 +1229,68 @@ msgstr ""
 #: cardrdr.c:148 cardrdr.c:217
 #, c-format
 msgid "HHC401I File name too long (max=%ud): \"%s\"\n"
-msgstr "HHC401I Bestandsnaam \"%2$s\" te lang (maximum=%1$ud)\n"
+msgstr ""
 
 #: cardrdr.c:155 cardrdr.c:226
 #, c-format
 msgid "HHC402I Unable to access file \"%s\": %s\n"
-msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+msgstr ""
 
 #: cardrdr.c:205
 msgid "HHC403I 'multifile' option ignored\n"
-msgstr "HHC403I 'multifile' optie niet gebruikt\n"
+msgstr ""
 
 #: cardrdr.c:186
 msgid "HHC403I Only one filename (sock_spec) allowed for socket devices\n"
-msgstr "HHC403I Maar een bestandsnaam toegestaan voor socket apparaten\n"
+msgstr ""
 
 #: cardrdr.c:59 cardrdr.c:165
 msgid "HHC403I Out of memory\n"
-msgstr "HHC403I Niet genoeg geheugen\n"
+msgstr ""
 
 #: cardrdr.c:178
 msgid "HHC403I Specify 'ascii' or 'ebcdic' (or neither) but not both\n"
-msgstr "HHC403I Specificeer 'ascii' of 'ebcdic' (of niets) maar niet beide\n"
+msgstr ""
 
 #: cardrdr.c:198
 #, c-format
 msgid "HHC403I defaulting to 'ascii' for socket device %4.4X\n"
-msgstr "HHC403I standaard waarde 'ascii' aan socket apparaat %4.4X toegekend\n"
+msgstr ""
 
 #: cardrdr.c:437
 #, c-format
 msgid "HHC404I Error opening file %s: %s\n"
-msgstr "HHC404I Fout %2$s bij openen van bestand \"%1$s\"\n"
+msgstr ""
 
 #: cardrdr.c:461
 #, c-format
 msgid "HHC405I Error reading file %s: %s\n"
-msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+msgstr ""
 
 #: cardrdr.c:494
 #, c-format
 msgid "HHC406I Seek error in file %s: %s\n"
-msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+msgstr ""
 
 #: cardrdr.c:561
 #, c-format
 msgid "HHC407I Error reading file %s: %s\n"
-msgstr "HHC407I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+msgstr ""
 
 #: cardrdr.c:564
 #, c-format
 msgid "HHC408I Unexpected end of file on %s\n"
-msgstr "HHC40I Onverwacht einde van bestand \"%s\"\n"
+msgstr ""
 
 #: cardrdr.c:628
 #, c-format
 msgid "HHC409I Error reading file %s: %s\n"
-msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+msgstr ""
 
 #: cardrdr.c:656
 #, c-format
 msgid "HHC410I Card image exceeds %d bytes in file %s\n"
-msgstr "HHC410I Ponskaart %d bytes te groot in bestand \"%s\"\n"
+msgstr ""
 
 #: panel.c:4665
 #, c-format
@@ -1397,7 +1399,7 @@ msgstr ""
 #: cardrdr.c:299
 #, c-format
 msgid "HHC419E Close error on file \"%s\": %s\n"
-msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
+msgstr ""
 
 #: printer.c:100
 #, c-format
@@ -1417,7 +1419,7 @@ msgstr ""
 #: cardrdr.c:308
 #, c-format
 msgid "HHC420I %s (%s) disconnected from device %4.4X (%s)\n"
-msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
+msgstr ""
 
 #: panel.c:4943
 #, c-format
@@ -1426,7 +1428,7 @@ msgstr ""
 
 #: cardpch.c:54
 msgid "HHC421I File name missing or invalid\n"
-msgstr "HHC421I Bestandsnaam niet opgegeven of ongeldig\n"
+msgstr ""
 
 #: printer.c:152
 #, c-format
@@ -1441,17 +1443,17 @@ msgstr ""
 #: cardpch.c:89
 #, c-format
 msgid "HHC422I Invalid argument: %s\n"
-msgstr "HHC422I Optie %s niet geldig\n"
+msgstr ""
 
 #: cardpch.c:164
 #, c-format
 msgid "HHC423I Error opening file %s: %s\n"
-msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+msgstr ""
 
 #: cardpch.c:34
 #, c-format
 msgid "HHC423I Error writing to %s: %s\n"
-msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+msgstr ""
 
 #: printer.c:146
 #, c-format
@@ -1553,9 +1555,9 @@ msgid "HHC612I Timer thread ended\n"
 msgstr ""
 
 #: cpu.c:962
-#, fuzzy, c-format
+#, c-format
 msgid "HHC620I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
-msgstr "HHC623I CPU%4.4X thread all gestart\n"
+msgstr ""
 
 #: cpu.c:955
 #, c-format
@@ -1565,17 +1567,17 @@ msgstr ""
 #: cpu.c:984
 #, c-format
 msgid "HHC623I CPU%4.4X thread already started\n"
-msgstr "HHC623I CPU%4.4X thread all gestart\n"
+msgstr ""
 
 #: cpu.c:1032
-#, fuzzy, c-format
+#, c-format
 msgid "HHC624I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
-msgstr "HHC624I CPU%4.4X thread geeindigd: tid=%8.8lX, pid=%d\n"
+msgstr ""
 
 #: cpu.c:968
 #, c-format
 msgid "HHC630I CPU%4.4X Architecture Mode %s\n"
-msgstr "HHC630I CPU%4.4X Architectuur Modus %s\n"
+msgstr ""
 
 #: cpu.c:1021
 #, c-format
@@ -1585,27 +1587,27 @@ msgstr ""
 #: panel.c:2985
 #, c-format
 msgid "HHC650I Control panel thread started: tid=%8.8lX, pid=%d\n"
-msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
+msgstr ""
 
 #: service.c:1425
 msgid "HHC701I SYSCONS interface active\n"
-msgstr "HHC701I SYSCONS interface actief\n"
+msgstr ""
 
 #: service.c:1427
 msgid "HHC702I SYSCONS interface inactive\n"
-msgstr "HHC702I SYSCONS interface inactief\n"
+msgstr ""
 
 #: service.c:496
 msgid "HHC703I SCP not receiving priority messages\n"
-msgstr "HHC703I SCP ontvangt geen prioriteits berichten\n"
+msgstr ""
 
 #: service.c:503
 msgid "HHC704I SCP not receiving commands\n"
-msgstr "HHC704I SCP ontvangt geen commando's\n"
+msgstr ""
 
 #: service.c:510
 msgid "HHC705I No SCP command\n"
-msgstr "HHC705I Geen SCP commando\n"
+msgstr ""
 
 #: service.c:521
 msgid "HHC706I Service Processor busy\n"
@@ -1619,7 +1621,7 @@ msgstr ""
 #: channel.c:1694 channel.c:1712
 #, c-format
 msgid "HHC760I %4.4X create_thread error: %s"
-msgstr "HHC760I %4.4X create_thread fout: %s"
+msgstr ""
 
 #: panel.c:1953
 #, c-format
@@ -1713,7 +1715,7 @@ msgstr ""
 
 #: channel.c:371
 msgid "HIO modification executed CC=1\n"
-msgstr "HIO modificatie uitgevoerd CC=1\n"
+msgstr ""
 
 #: panel.c:2720
 #, c-format
@@ -1985,7 +1987,7 @@ msgstr ""
 
 #: channel.c:287
 msgid "TIO modification executed CC=1\n"
-msgstr "TIO modificatie uitgevoerd CC=1\n"
+msgstr ""
 
 #: panel.c:1600
 #, c-format
