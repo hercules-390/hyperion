@@ -1644,6 +1644,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work areas       */
+BYTE    dism;                           /* Disabled int subcl mask   */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -1676,6 +1677,9 @@ BYTE    rwork[64];                      /* Register work areas       */
 
     INVALIDATE_AEA_ALL(regs);
 
+    /* Save disabled I/O subclasses */
+    dism = ~regs->CR_LHHCH(6);
+
     /* Load control registers from work area */
     for ( i = r1, d = 0; ; )
     {
@@ -1687,6 +1691,14 @@ BYTE    rwork[64];                      /* Register work areas       */
 
         /* Update register number, wrapping from 15 to 0 */
         i++; i &= 15;
+    }
+
+    /* Force I/O interrupt check when enabling an I/O subclass */
+    if(dism & regs->CR_LHHCH(6))
+    {
+        obtain_lock(&sysblk.intlock);
+        ON_IC_IOPENDING;
+        release_lock(&sysblk.intlock);
     }
 
     SET_IC_EXTERNAL_MASK(regs);
