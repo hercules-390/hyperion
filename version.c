@@ -79,7 +79,9 @@ static const char *build_info[] = {
 #endif
 #if defined(OPTION_DYNAMIC_LOAD)
     "With Dynamic loading support",
+#if defined(MODULESDIR)
     "Loadable module default base directory is "MODULESDIR,
+#endif
 #else
     "Without Dynamic loading support",
 #endif
@@ -95,7 +97,9 @@ static const char *build_info[] = {
 
 #if defined(OPTION_HTTP_SERVER)
     "HTTP Server support",
+#if defined(PKGDATADIR)
     "HTTP document default root directory is "PKGDATADIR,
+#endif
 #endif
 
 #if defined(NO_IEEE_SUPPORT)
