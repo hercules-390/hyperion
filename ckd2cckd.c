@@ -29,7 +29,6 @@ int chk_endian ();
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
 /*-------------------------------------------------------------------*/
-BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 int          errs = 0;
 
 #ifdef EXTERNALGUI
