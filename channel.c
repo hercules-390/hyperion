@@ -227,6 +227,9 @@ int testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
 {
 int     cc;                             /* Condition code            */
 PSA_3XX *psa;                           /* -> Prefixed storage area  */
+/* ISW20030812 - Added 1 line */
+IOINT *ioint=NULL;
+/* ISW20030812 - END */
 
     UNREFERENCED(ibyte);
 
@@ -255,11 +258,17 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
             {
                 memcpy (psa->csw, dev->pcicsw, 8);
                 dev->pcipending = 0;
+                /* ISW20030812 - Added 1 line */
+                ioint=&dev->pciioint;
+                /* ISW20030812 - END */
             }
             else
             {
                 memcpy (psa->csw, dev->csw, 8);
                 dev->pending = 0;
+                /* ISW20030812 - Added 1 line */
+                ioint=&dev->ioint;
+                /* ISW20030812 - END */
             }
 
             /* Signal console thread to redrive select */
@@ -294,6 +303,14 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     }
 
     release_lock (&dev->lock);
+    /* ISW20030812 - Added 6 lines */
+    if(ioint)
+    {
+        obtain_lock (&sysblk.intlock);
+        DEQUEUE_IO_INTERRUPT(ioint);
+        release_lock (&sysblk.intlock);
+    }
+    /* ISW20030812 - END */
 
     /* Return the condition code */
     return cc;
@@ -560,6 +577,11 @@ int     cc;                             /* Condition code            */
 
         /* Return condition code 0 to indicate status was pending */
         release_lock (&dev->lock);
+        /* ISW20030812 - Added 3 lines */
+        obtain_lock(&sysblk.intlock);
+        DEQUEUE_IO_INTERRUPT(&dev->pciioint);
+        release_lock(&sysblk.intlock);
+        /* ISW20030812 - END */
         return 0;
 
     } /* end if(pcipending) */
@@ -656,6 +678,11 @@ int     cc;                             /* Condition code            */
     dev->pending = 0;
 
     release_lock (&dev->lock);
+    /* ISW20030812 - Added 3 lines */
+    obtain_lock(&sysblk.intlock);
+    DEQUEUE_IO_INTERRUPT(&dev->ioint);
+    release_lock(&sysblk.intlock);
+    /* ISW20030812 - END */
 
     /* Return the condition code */
     return cc;

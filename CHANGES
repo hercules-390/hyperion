@@ -1,5 +1,9 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+11 Aug 2003 Dequeued IOINT struct off of sysblk.iointq during
+            TIO/TSCH to prevent incorrect PCI/Final irpt reordering.
+            OS360/MVT Now IPLs correctly.
+            All changed marked with "ISW20030812" - Ivan Warren
 08 Aug 2003 2.17.b2: fixed incorrectly typed thread functions - Fish
             all thread functions s/b "void *thread(void *arg)", not
             void thread(void *arg) or void *thread() or anything else
