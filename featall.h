@@ -41,6 +41,11 @@
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
+#define OPTION_SCSI_TAPE                /* SCSI tape support         */
+
+#if defined(__APPLE__)                  /* (Apple-only options)      */
+#undef OPTION_SCSI_TAPE                  /* No SCSI tape support     */
+#endif
 
 /* (dynamic load option & max cpu engines handled in configure.ac)   */
 // #define OPTION_DYNAMIC_LOAD          /* Hercules Dynamic Loader   */
@@ -48,7 +53,7 @@
 
 #ifdef WIN32                            /* (Windows-only options)    */
   /* (Note: OPTION_FISHIO only possible with OPTION_FTHREADS)        */
-  #if defined(OPTION_FTHREADS)          
+  #if defined(OPTION_FTHREADS)
     #define OPTION_FISHIO               /* Use Fish's I/O scheduler  */
   #else
     #undef  OPTION_FISHIO               /* Use Herc's I/O scheduler  */

@@ -8,11 +8,17 @@
 /* prints a summary of the tape files and blocksizes.                */
 /*-------------------------------------------------------------------*/
 
-#if defined(__APPLE__)
+#if defined(HAVE_CONFIG_H)
+#include <config.h>   /* (need 1st to set build flags appropriately) */
+#endif
+#include "featall.h"  /* (need 2nd to set OPTION_SCSI_TAPE correctly)*/
+
+#if !defined(OPTION_SCSI_TAPE)
 int sysblk;
 int main (int argc, char *argv[])
 {
-       return 0;
+    printf( _("SCSI tape not supported with this build\n") );
+    return 0;
 }
 #else
 
@@ -389,4 +395,5 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     return 0;
 
 } /* end function main */
-#endif /* defined(__APPLE__) */
+
+#endif /* defined(OPTION_SCSI_TAPE) */

@@ -23,9 +23,11 @@ a real System/390.  The configuration file is an ASCII text file.
     #     Hercules emulator configuration file         #
     ####################################################
 
+
     #
-    # <a href="#system_parameters">System parameters</a>
+    #   <a href="#system_parameters">System parameters</a>
     #
+
 
     <a href="#ARCHMODE">ARCHMODE</a>   ESA/390
     <a href="#OSTAILOR">OSTAILOR</a>   OS/390
@@ -58,9 +60,13 @@ a real System/390.  The configuration file is an ASCII text file.
 
     <a href="#DIAG8CMD">DIAG8CMD</a>   disable
 
+    <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>   no
+
+
     #
-    # <a href="#device_definitions">Device definitions</a>
+    #   <a href="#device_definitions">Device definitions</a>
     #
+
 
     000A      <a href="#1442">1442</a>    adrdmprs.rdr
     000C      <a href="#3505">3505</a>    jcl.txt     ascii  trunc
@@ -88,9 +94,9 @@ a real System/390.  The configuration file is an ASCII text file.
     0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
 
     0580      <a href="#3420">3420</a>    ickdsf.ipl
-    0581      <a href="#3420">3420</a>    /dev/st0
+    0581      <a href="#3420">3420</a>    /dev/nst0   # SCSI
     0582      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
-    0583-0587 <a href="#3420">3420</a>  * maxsizeM=170 eotmargin=131072
+    0583-0587 <a href="#3420">3420</a>    * maxsizeM=170 eotmargin=131072
 </pre></code>
 </td></tr></table>
 </blockquote></blockquote>
@@ -111,6 +117,7 @@ a real System/390.  The configuration file is an ASCII text file.
     The following system parameters may be specified:
 
 <dl>
+
 <a name="ASN_AND_LX_REUSE">
 <dt><code>ASN_AND_LX_REUSE <em>DISABLE|enable</em></code>
 <dd><p>
@@ -120,9 +127,33 @@ a real System/390.  The configuration file is an ASCII text file.
     to <code><em>ENABLE</em></code>&nbsp if the operating system supports
     this z/Architecture feature and the use of this feature is desired.
     Set it to <code><em>DISABLE</em></code>&nbsp or do not specify anything
-    if the operating system doesn't support this feature, and it 
+    if the operating system doesn't support this feature, and it
     inadvertently sets CR0 bit 44 to 1, usually leading to unexpected
     program interrupt when instructions such as LASP are issued.
+    <p>
+
+<a name="AUTO_SCSI_MOUNT">
+<dt><code>AUTO_SCSI_MOUNT <em>no</code> &nbsp;| <code>1-99</em></code>
+<dd><p>
+    specifies whether automatic detection of SCSI tape mounts are to be
+    enabled or not.
+    <p>
+    A value from 1 to 99 seconds inclusive enables the option
+    and causes periodic queries of the SCSI tape drive to automatically
+    detect when a new tape is mounted.
+    <p>
+    "no" (the default) indicates the option is disabled, forcing all SCSI
+    tape mounts to be done manually via an appropriate <code>devnit</code>
+    command.
+    <p>
+    The <code>scsimount</code> panel may also be used to display and/or modify
+    this value on demand once Hercules has been started.
+    <p>
+    <i>
+    <b>Note:</b> enabling this option may negatively impact Hercules performance
+    depending on how the host operating system (Windows, Linux, etc) handles
+    SCSI attached tape drive status queries.
+    </i>
     <p>
 
 <a name="CPUSERIAL">
@@ -1165,9 +1196,11 @@ a real System/390.  The configuration file is an ASCII text file.
     <dt><b>SCSI tapes</b>
     <dd><p>
         The argument specifies the tape device name (usually
-        <b><i>/dev/st0</i></b>).  SCSI tapes are read and written
+        <b><i>/dev/nst0</i></b>).  SCSI tapes are read and written
         using variable length EBCDIC blocks and filemarks exactly
-        like a mainframe tape volume.
+        like a mainframe tape volume. &nbsp;(See also the
+        <a href="#AUTO_SCSI_MOUNT">AUTO_SCSI_MOUNT</a>
+        configuration option).
         <p>
 
     <dt><b>Optical Media Attach (OMA) virtual files</b>
@@ -1381,7 +1414,7 @@ a real System/390.  The configuration file is an ASCII text file.
         A modified Win32 version of the CTCI protocol for the Windows
         crowd. Note that the protocol name (CTCI) is the same,
         even though the actual implementation is very different. See Fish's
-        <a href="http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html">CTCI-W32</a>
+        <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
         page for further details and information.
         <p>
 
@@ -1442,7 +1475,7 @@ a real System/390.  The configuration file is an ASCII text file.
         <dd><p>
             If these arguments are specified, they must precede the required
             arguments. See Fish's
-            <a href="http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html">CTCI-W32</a>
+            <a href="http://www.softdevlabs.com/Hercules/ctci-w32-index.html">CTCI-W32</a>
             page for further details and information.
             <p>
 

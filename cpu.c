@@ -1618,7 +1618,7 @@ QWORD   qword;                            /* quadword work area      */
 } /* end function display_psw */
 
 const char* arch_name[GEN_MAXARCH] =
-    {
+{
 #if defined(_370)
         _ARCH_370_NAME,
 #endif
@@ -1628,61 +1628,12 @@ const char* arch_name[GEN_MAXARCH] =
 #if defined(_900)
         _ARCH_900_NAME
 #endif
-    };
+};
 
 const char* get_arch_mode_string(REGS* regs)
 {
     if (!regs) return arch_name[sysblk.arch_mode];
     else return arch_name[regs->arch_mode];
-        }
-
-#if defined(OPTION_CPU_UTILIZATION)
-
-int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval)
-{
-    struct timeval begtime;
-    struct timeval endtime;
-    ASSERT ( beg_timeval -> tv_sec >= 0  &&  beg_timeval -> tv_usec >= 0 );
-    ASSERT ( end_timeval -> tv_sec >= 0  &&  end_timeval -> tv_usec >= 0 );
-
-    memcpy(&begtime,beg_timeval,sizeof(struct timeval));
-    memcpy(&endtime,end_timeval,sizeof(struct timeval));
-
-    dif_timeval->tv_sec = endtime.tv_sec - begtime.tv_sec;
-
-    if (endtime.tv_usec >= begtime.tv_usec)
-    {
-        dif_timeval->tv_usec = endtime.tv_usec - begtime.tv_usec;
-    }
-    else
-    {
-        dif_timeval->tv_sec--;
-        dif_timeval->tv_usec = (endtime.tv_usec + 1000000) - begtime.tv_usec;
-    }
-
-    return ((dif_timeval->tv_sec < 0 || dif_timeval->tv_usec < 0) ? -1 : 0);
 }
-
-int timeval_add (struct timeval *dif_timeval, struct timeval *accum_timeval)
-        {
-    ASSERT ( dif_timeval   -> tv_sec >= 0  &&  dif_timeval   -> tv_usec >= 0 );
-    ASSERT ( accum_timeval -> tv_sec >= 0  &&  accum_timeval -> tv_usec >= 0 );
-
-    accum_timeval->tv_sec  += dif_timeval->tv_sec;
-    accum_timeval->tv_usec += dif_timeval->tv_usec;
-
-    if (accum_timeval->tv_usec > 1000000)
-    {
-        int nsec = accum_timeval->tv_usec / 1000000;
-        accum_timeval->tv_sec  += nsec;
-        accum_timeval->tv_usec -= nsec * 1000000;
-    }
-
-    return ((accum_timeval->tv_sec < 0 || accum_timeval->tv_usec < 0) ? -1 : 0);
-}
-
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
 #endif /*!defined(_GEN_ARCH)*/
-
-

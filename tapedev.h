@@ -1,6 +1,8 @@
 #ifndef __TAPEDEV_H__
 #define __TAPEDEV_H__
+
 #include "hercules.h"
+
 /*-------------------------------------------------------------------*/
 /* Definitions for 3420/3480 sense bytes                             */
 /*-------------------------------------------------------------------*/
@@ -23,42 +25,43 @@
 /*-------------------------------------------------------------------*/
 /* ISW : Internal code to build Device Dependent Sense               */
 /*-------------------------------------------------------------------*/
-#define TAPE_BSENSE_TAPEUNLOADED   0      /* I/O Attempted but no tape loaded */
-#define TAPE_BSENSE_TAPELOADFAIL   1      /* I/O and load failed */
-#define TAPE_BSENSE_READFAIL   2      /* Error reading block */
-#define TAPE_BSENSE_WRITEFAIL 3      /* Error writing block */
-#define TAPE_BSENSE_BADCOMMAND     4      /* The CCW code is not known */
-                                          /* or sequence error */
-#define TAPE_BSENSE_INCOMPAT       5      /* The CCW code is known but is */
-                                          /* not unsupported */
-#define TAPE_BSENSE_WRITEPROTECT   6      /* The Write CCW code was issued */
-                                          /* to a read-only media */
-#define TAPE_BSENSE_EMPTYTAPE      7      /* A read was issued but the tape */
-                                          /* is empty */
-#define TAPE_BSENSE_ENDOFTAPE      8      /* A read was issued past the end 
-                                             of the tape or a write was issued
-                         and there is no space left */
-#define TAPE_BSENSE_LOADPTERR      9      /* A BSF/BSR/RdBW was attempted at 
-                         BOT */
-#define TAPE_BSENSE_FENCED         10     /* Media damaged - unload/reload
-                         required */
-#define TAPE_BSENSE_BADALGORITHM   11     /* Bad compression - 
-                         HET tape compressed with an 
-                         unsuported method */
-#define TAPE_BSENSE_TAPEUNLOADED2  12     /* Sucessful Rewind Unload operation */
-#define TAPE_BSENSE_STATUSONLY     13     /* No exception occured */
-#define TAPE_BSENSE_LOCATEERR      14     /* Cannot find a block or TM */
-#define TAPE_BSENSE_READTM         15     /* A Tape Mark was read */
-/* #define TAPE_BSENSE_WRITEPASSEOT   16     *//* Tape has passed the EOT marker on a write operation */
-/* WRITEPASSEOT retired : checked in STATUSONLY when code is a tape motion write op (write/wtm/erg) */
-#define TAPE_BSENSE_BLOCKSHORT     17     /* Short Tape block */
-#define TAPE_BSENSE_ITFERROR       18     /* Interface error (scsi tape driver unexpected err) */
-#define TAPE_BSENSE_REWINDFAILED   19     /* Rewind operation failed */
-#define TAPE_BSENSE_UNSOLICITED    20     /* Sense without UC        */
+#define TAPE_BSENSE_TAPEUNLOADED   0    /* I/O Attempted but no tape loaded */
+#define TAPE_BSENSE_TAPELOADFAIL   1    /* I/O and load failed       */
+#define TAPE_BSENSE_READFAIL       2    /* Error reading block       */
+#define TAPE_BSENSE_WRITEFAIL      3    /* Error writing block       */
+#define TAPE_BSENSE_BADCOMMAND     4    /* The CCW code is not known
+                                          or sequence error          */
+#define TAPE_BSENSE_INCOMPAT       5    /* The CCW code is known
+                                           but is not unsupported    */
+#define TAPE_BSENSE_WRITEPROTECT   6    /* Write CCW code was issued
+                                           to a read-only media      */
+#define TAPE_BSENSE_EMPTYTAPE      7    /* A read was issued but the
+                                           tape is empty             */
+#define TAPE_BSENSE_ENDOFTAPE      8    /* A read was issued past the
+                                           end of the tape or a write
+                                           was issued and there is no
+                                           space left on the tape    */
+#define TAPE_BSENSE_LOADPTERR      9    /* BSF/BSR/RdBW attempted
+                                           from BOT                  */
+#define TAPE_BSENSE_FENCED         10   /* Media damaged - unload
+                                           or /reload required       */
+#define TAPE_BSENSE_BADALGORITHM   11   /* Bad compression - HET
+                                           tape compressed with an
+                                           unsuported method         */
+#define TAPE_BSENSE_TAPEUNLOADED2  12   /* Rewind Unload success     */
+#define TAPE_BSENSE_STATUSONLY     13   /* No exception occured      */
+#define TAPE_BSENSE_LOCATEERR      14   /* Can't find block or TM    */
+#define TAPE_BSENSE_READTM         15   /* A Tape Mark was read      */
+
+#define TAPE_BSENSE_BLOCKSHORT     17   /* Short Tape block */
+#define TAPE_BSENSE_ITFERROR       18   /* Interface error (SCSI
+                                           driver unexpected err)    */
+#define TAPE_BSENSE_REWINDFAILED   19   /* Rewind operation failed   */
+#define TAPE_BSENSE_UNSOLICITED    20   /* Sense without UC          */
+
 /*-------------------------------------------------------------------*/
 /* Definitions for 3480 commands                                     */
 /*-------------------------------------------------------------------*/
-
 /* Format control byte for Load Display command */
 #define FCB_FS                  0xE0    /* Format control bits...    */
 #define FCB_FS_NODISP           0x60    /* Do not display messages   */
@@ -113,11 +116,22 @@
 #define TAPEDEVT_HET            4       /* HET format disk file      */
 
 /*-------------------------------------------------------------------*/
-/* Structure definition for tape block headers                       */
+/* Fish - macros for checking SCSI tape device-independent status    */
 /*-------------------------------------------------------------------*/
+#define STS_TAPEMARK(dev)       GMT_SM      ( (dev)->sstat )
+#define STS_EOF(dev)            GMT_EOF     ( (dev)->sstat )
+#define STS_BOT(dev)            GMT_BOT     ( (dev)->sstat )
+#define STS_EOT(dev)            GMT_EOT     ( (dev)->sstat )
+#define STS_EOD(dev)            GMT_EOD     ( (dev)->sstat )
+#define STS_WR_PROT(dev)        GMT_WR_PROT ( (dev)->sstat )
+#define STS_ONLINE(dev)         GMT_ONLINE  ( (dev)->sstat )
+#define STS_NOT_MOUNTED(dev)    GMT_DR_OPEN ( (dev)->sstat )
 
+/*-------------------------------------------------------------------*/
+/* Structure definition for HET/AWS/OMA tape block headers           */
+/*-------------------------------------------------------------------*/
 /*
- * The integer fields in the HET, AWSTAPE and OMATAPE headers are 
+ * The integer fields in the HET, AWSTAPE and OMATAPE headers are
  * encoded in the Intel format (i.e. the bytes of the integer are held
  * in reverse order).  For this reason the integers are defined as byte
  * arrays, and the bytes are fetched individually in order to make
@@ -140,60 +154,77 @@
  *   that the next header starts on a 16-byte boundary
  *
  */
+typedef struct _AWSTAPE_BLKHDR
+{
+    HWORD   curblkl;                    /* Length of this block      */
+    HWORD   prvblkl;                    /* Length of previous block  */
+    BYTE    flags1;                     /* Flags byte 1 (see below)  */
+    BYTE    flags2;                     /* Flags byte 2              */
 
-typedef struct _AWSTAPE_BLKHDR {
-        HWORD   curblkl;                /* Length of this block      */
-        HWORD   prvblkl;                /* Length of previous block  */
-        BYTE    flags1;                 /* Flags byte 1              */
-        BYTE    flags2;                 /* Flags byte 2              */
-    } AWSTAPE_BLKHDR;
+    /* Definitions for AWSTAPE_BLKHDR flags byte 1 */
+#define  AWSTAPE_FLAG1_NEWREC     0x80  /* Start of new record       */
+#define  AWSTAPE_FLAG1_TAPEMARK   0x40  /* Tape mark                 */
+#define  AWSTAPE_FLAG1_ENDREC     0x20  /* End of record             */
+}
+AWSTAPE_BLKHDR;
 
-/* Definitions for AWSTAPE_BLKHDR flags byte 1 */
-#define AWSTAPE_FLAG1_NEWREC    0x80    /* Start of new record       */
-#define AWSTAPE_FLAG1_TAPEMARK  0x40    /* Tape mark                 */
-#define AWSTAPE_FLAG1_ENDREC    0x20    /* End of record             */
-
-typedef struct _OMATAPE_BLKHDR {
-        FWORD   curblkl;                /* Length of this block      */
-        FWORD   prvhdro;                /* Offset of previous block
+typedef struct _OMATAPE_BLKHDR
+{
+    FWORD   curblkl;                    /* Length of this block      */
+    FWORD   prvhdro;                    /* Offset of previous block
                                            header from start of file */
-        FWORD   omaid;                  /* OMA identifier (contains
+    FWORD   omaid;                      /* OMA identifier (contains
                                            ASCII characters "@HDF")  */
-        FWORD   resv;                   /* Reserved                  */
-    } OMATAPE_BLKHDR;
+    FWORD   resv;                       /* Reserved                  */
+}
+OMATAPE_BLKHDR;
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for OMA tape descriptor array                */
 /*-------------------------------------------------------------------*/
-typedef struct _OMATAPE_DESC {
-        int     fd;                     /* File Descriptor for the file */
-        BYTE    filename[256];          /* Filename of data file     */
-        BYTE    format;                 /* H=HEADERS,T=TEXT,F=FIXED,X=Tape Mark */
-        BYTE    resv;                   /* Reserved for alignment    */
-        U16     blklen;                 /* Fixed block length        */
-    } OMATAPE_DESC;
+typedef struct _OMATAPE_DESC
+{
+    int     fd;                         /* File Descriptor for file  */
+    BYTE    filename[256];              /* Filename of data file     */
+    BYTE    format;                     /* H=HEADERS,T=TEXT,F=FIXED,X=Tape Mark */
+    BYTE    resv;                       /* Reserved for alignment    */
+    U16     blklen;                     /* Fixed block length        */
+}
+OMATAPE_DESC;
 
-typedef struct _TAPEMEDIA_HANDLER {
-    int (* open)(DEVBLK *,BYTE *unitstat,BYTE code);
-    void (* close)(DEVBLK *);
-    int (* read)(DEVBLK *,BYTE *buf,BYTE *unitstat,BYTE code);
-    int (* write)(DEVBLK *,BYTE *buf,U16 blklen,BYTE *unitstat,BYTE code);
-    int (* rewind)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* bsb)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* fsb)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* bsf)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* fsf)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* wtm)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* dse)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* erg)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* tapeloaded)(DEVBLK *,BYTE *unitstat,BYTE code);
-    int (* passedeot)(DEVBLK *);
-} TAPEMEDIA_HANDLER;
+/*-------------------------------------------------------------------*/
+/* Tape media I/O function vector table layout                       */
+/*-------------------------------------------------------------------*/
+typedef struct _TAPEMEDIA_HANDLER
+{
+    int  (*open)       (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    void (*close)      (DEVBLK*);
+    int  (*read)       (DEVBLK*, BYTE *buf,             BYTE *unitstat, BYTE code);
+    int  (*write)      (DEVBLK*, BYTE *buf, U16 blklen, BYTE *unitstat, BYTE code);
+    int  (*rewind)     (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*bsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*fsb)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*bsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*fsf)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*wtm)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*dse)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*erg)        (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*tapeloaded) (DEVBLK*,                        BYTE *unitstat, BYTE code);
+    int  (*passedeot)  (DEVBLK*);
+}
+TAPEMEDIA_HANDLER;
 
-typedef struct _TAPEAUTOLOADENTRY {
-    BYTE *filename;
-    int  argc;
+/*-------------------------------------------------------------------*/
+/* Tape Auto-Loader table entry                                      */
+/*-------------------------------------------------------------------*/
+typedef struct _TAPEAUTOLOADENTRY
+{
+    BYTE  *filename;
+    int    argc;
     char **argv;
-} TAPEAUTOLOADENTRY;
+}
+TAPEAUTOLOADENTRY;
 
-#endif
+#define  AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS   (5)
+
+#endif // __TAPEDEV_H__

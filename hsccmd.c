@@ -540,6 +540,48 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
 #endif /*OPTION_IODELAY_KLUDGE*/
 
+#if defined( OPTION_SCSI_TAPE )
+///////////////////////////////////////////////////////////////////////
+/* scsimount command - display or adjust the SCSI auto-mount option */
+
+int scsimount_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(cmdline);
+
+    if (argc > 1)
+    {
+        if ( strcasecmp( argv[1], "no" ) == 0 )
+        {
+            sysblk.auto_scsi_mount_secs = 0;
+        }
+        else
+        {
+            int auto_scsi_mount_secs; BYTE c;
+            if ( sscanf( argv[1], "%d%c", &auto_scsi_mount_secs, &c ) != 1
+                || auto_scsi_mount_secs <= 0 || auto_scsi_mount_secs > 99 )
+            {
+                logmsg
+                (
+                    _( "HHCCF068E Invalid value: %s; Enter \"help scsimount\" for help.\n" )
+
+                    ,argv[1]
+                );
+                return 0;
+            }
+            sysblk.auto_scsi_mount_secs = auto_scsi_mount_secs;
+        }
+    }
+
+    if ( sysblk.auto_scsi_mount_secs )
+        logmsg( _("SCSI auto-mount queries = every %d seconds (when needed)\n"),
+            sysblk.auto_scsi_mount_secs );
+    else
+        logmsg( _("SCSI auto-mount queries are disabled.\n") );
+
+    return 0;
+}
+#endif /* defined( OPTION_SCSI_TAPE ) */
+
 ///////////////////////////////////////////////////////////////////////
 /* cckd command */
 
@@ -3353,6 +3395,10 @@ COMMAND ( "define",    define_cmd,    "rename device" )
 COMMAND ( "devinit",   devinit_cmd,   "reinitialize device" )
 COMMAND ( "devlist",   devlist_cmd,   "list all devices\n" )
 
+#if defined( OPTION_SCSI_TAPE )
+COMMAND ( "scsimount", scsimount_cmd, "automatic SCSI tape mounts\n" )
+#endif /* defined( OPTION_SCSI_TAPE ) */
+
 COMMAND ( "sh",        sh_cmd,        "shell command" )
 COMMAND ( "cache",     cache_cmd,     "cache command" )
 COMMAND ( "cckd",      cckd_cmd,      "cckd command" )
@@ -3571,6 +3617,16 @@ CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need hel
                        "the format of the command and its various required or optional\n"
                        "parameters and is not meant to replace reading the documentation.\n"
                        )
+
+#if defined( OPTION_SCSI_TAPE )
+CMDHELP ( "scsimount", "Format:  \"scsimount  [ no | 1-99 ]\".\n"
+                       "Displays or modifies the automatic SCSI tape mounts option.\n"
+                       "\"no\" disables automatic SCSI tape mount detection. 1-99 seconds\n"
+                       "enables it and specifies how often to query SCSI tape drives to detect\n"
+                       "when a tape has been mounted. NOTE! enabling this option may negatively\n"
+                       "impact Hercules performance depending on how your host operating system\n"
+                       "(Windows, Linux, etc) processes SCSI attached tape drive status queries.\n")
+#endif /* defined( OPTION_SCSI_TAPE ) */
 
 CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"
                        "list of last ten commands entered from command line\n"

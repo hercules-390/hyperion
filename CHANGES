@@ -1,5 +1,8 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+30 Jul 2004 SCSI tape mods part 1: Auto-detect SCSI tape mounts - Fish
+30 Jul 2004 Fix bug in bldcfg that was causing device initialization
+            failures to not abort Herc statup as they should -- Fish
 30 Jul 2004 Make config symbol sub more generalized - Ivan Warren
 30 Jul 2004 SIE Perf boost patch correction for pending irpts - Ivan Warren
 28 Jul 2004 Remove opctab from run_cpu stack - Greg Smith

@@ -351,12 +351,8 @@ typedef void*THREAD_FUNC(void*);
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
 #define exit_thread(_code) \
         pthread_exit((_code))
-//#if !defined(WIN32) // (there's no reason for this that I can see! pthreads supports thread signaling! Fish)
 #define signal_thread(tid,signo) \
         pthread_kill(tid,signo)
-//#else // defined(WIN32)
-//#define signal_thread(tid,signo)
-//#endif // !defined(WIN32)
 #define thread_id() \
         pthread_self()
 #endif // defined(OPTION_FTHREADS)
@@ -759,9 +755,7 @@ typedef struct _SYSBLK {
                                            8-63=TOD clock bits 0-55  */
         S64     todoffset;              /* Difference in microseconds
                                            between TOD and Unix time */
-// #ifdef OPTION_TODCLOCK_DRAG_FACTOR
         U64     todclock_init;          /* TOD clock value at start  */
-// #endif /* OPTION_TODCLOCK_DRAG_FACTOR */
         U64     todclock_prev;          /* TOD clock previous value  */
         U64     todclock_diff;          /* TOD clock difference      */
         LOCK    todlock;                /* TOD clock update lock     */
@@ -805,6 +799,10 @@ typedef struct _SYSBLK {
         int     toddrag;                /* TOD clock drag factor     */
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */
+#if defined(OPTION_SCSI_TAPE)
+        int     auto_scsi_mount_secs;   /* Check for SCSI tape mount
+                                           frequency; 0 == disabled  */
+#endif
         struct _DEVBLK *firstdev;       /* -> First device block     */
 #if defined(OPTION_FAST_DEVLOOKUP)
         struct _DEVBLK ***devnum_fl;    /* 1st level table for fast  */
@@ -880,16 +878,14 @@ typedef struct _SYSBLK {
         int     cpuprio;                /* CPU thread priority       */
         int     devprio;                /* Device thread priority    */
         int     pgmprdos;               /* Program product OS flag   */
-// #if defined(OPTION_HTTP_SERVER)
         TID     httptid;                /* HTTP listener thread id   */
         U16     httpport;               /* HTTP port number or zero  */
         int     httpauth;               /* HTTP auth required flag   */
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
-// #endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-	int	asnandlxreuse;		/* ASN And LX Reuse enable   */
+        int     asnandlxreuse;          /* ASN And LX Reuse enable   */
 #endif
 #if defined(OPTION_SHARED_DEVICES)
         TID     shrdtid;                /* Shared device listener    */
@@ -1238,7 +1234,7 @@ typedef struct _DEVBLK {
                 pcipending:1,           /* 1=PCI interrupt pending   */
                 attnpending:1,          /* 1=ATTN interrupt pending  */
                 startpending:1,         /* 1=startio pending         */
-		resumesuspended:1;      /* 1=Hresuming suspended dev */
+                resumesuspended:1;      /* 1=Hresuming suspended dev */
 #define IOPENDING(_dev) ((_dev)->pending || (_dev)->pcipending || (_dev)->attnpending)
         int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */
@@ -1355,14 +1351,14 @@ typedef struct _DEVBLK {
             U16 compress:1;             /* 1=Compression enabled     */
             U16 method:3;               /* Compression method        */
             U16 level:4;                /* Compression level         */
-        U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
-        U16 displayfeat:1;          /* Device has a display      */
+            U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
+            U16 displayfeat:1;          /* Device has a display      */
                                         /* feature installed         */
             U16 deonirq:1;              /* DE on IRQ on tape motion  */
                                         /* MVS 3.8j workaround       */
-        U16 logical_readonly;       /* Tape is forced READ ONLY  */
+            U16 logical_readonly;       /* Tape is forced READ ONLY  */
             U16 chksize;                /* Chunk size                */
-            size_t maxsize;              /* Maximum allowed TAPE file
+            size_t maxsize;             /* Maximum allowed TAPE file
                                            size                      */
             size_t eotmargin;           /* Amount of space left
                                            before reporting EOT      */
@@ -1377,16 +1373,21 @@ typedef struct _DEVBLK {
                                         /* NOTE : flag cleared by    */
                                         /*        sense command only */
                                         /*        or a device init   */
-        BYTE    tapedevt;               /* Tape device type          */
-    struct _TAPEMEDIA_HANDLER *tmh; /* Tape Media Handling       */
+#if defined(OPTION_SCSI_TAPE)
+        U32     sstat;                  /* Generic SCSI tape device-
+                                           independent status field  */
+        TID     stape_mountmon_tid;     /* Tape-mount monitor thread */
+#endif
+        BYTE    tapedevt;               /* Hercules tape device type */
+        struct _TAPEMEDIA_HANDLER *tmh; /* Tape Media Handling       */
                                         /* dispatcher                */
-    /* Autoloader feature */
-    struct _TAPEAUTOLOADENTRY *als;  /* Autoloader stack         */
-    int     alss;                    /* Autoloader stack size    */
-    int     alsix;                   /* Current Autoloader index */
-    char    **al_argv;               /* ARGV in autoloader       */
-    int     al_argc;                 /* ARGC in autoloader       */
-    /* end autoloader feature */
+        /* Autoloader feature */
+        struct _TAPEAUTOLOADENTRY *als;  /* Autoloader stack         */
+        int     alss;                    /* Autoloader stack size    */
+        int     alsix;                   /* Current Autoloader index */
+        char    **al_argv;               /* ARGV in autoloader       */
+        int     al_argc;                 /* ARGC in autoloader       */
+        /* end autoloader feature */
         /* 3480/3490/3590 Message display */
         BYTE    tapemsg1[9];            /* 1st 3480 Message          */
         BYTE    tapemsg2[9];            /* 2nd 3480 Message          */
@@ -1471,7 +1472,7 @@ typedef struct _DEVBLK {
         BYTE    ckdreserved1;           /* Alignment                 */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
-        U32                            /* Flags                     */
+        U32                             /* Flags                     */
                 ckd3990:1,              /* 1=Control unit is 3990    */
                 ckdxtdef:1,             /* 1=Define Extent processed */
                 ckdsetfm:1,             /* 1=Set File Mask processed */

@@ -8,16 +8,17 @@
 /*                                                                   */
 /* Change log:                                                       */
 /*                                                                   */
-/* dd/mm/yy  Description...                                          */
+/* mm/dd/yy  Description...                                          */
 /* --------  ------------------------------------------------------- */
 /*                                                                   */
-/* 22/06/03  Created.                                                */
-/* 29/05/04  Minor fix to UpdateTargetCPU, remove max MIPS rate      */
+/* 06/22/03  Created.                                                */
+/* 05/29/04  Minor fix to UpdateTargetCPU, remove max MIPS rate      */
 /*           check in UpdateCPUStatus (trust Herc to be correct),    */
 /*           use Herc-calculate MIPS/SIOS rate.                      */
-/* 01/06/04  Minor fix to detect switching to a different displayed  */
+/* 06/01/04  Minor fix to detect switching to a different displayed  */
 /*           (target) CPU when no other status has otherwise changed.*/
-/* 09/06/04  Minor fix to UpdateDeviceStatus for terminal devices.   */
+/* 06/09/04  Minor fix to UpdateDeviceStatus for terminal devices.   */
+/* 07/28/04  Minor fix to UpdateDeviceStatus for non-terminal devices*/
 /*                                                                   */
 /*********************************************************************/
 
@@ -900,7 +901,7 @@ void  UpdateDeviceStatus ()
                                                                               chPendingStat =
                                                                               chOpenStat    = '0';
 
-        if ((!pDEVBLK->console && pDEVBLK->filename[0]) ||
+        if ((!pDEVBLK->console && pDEVBLK->fd >= 0) ||
             ( pDEVBLK->console && pDEVBLK->connected))                        chOnlineStat  = '1';
         if (pDEVBLK->busy)                                                    chBusyStat    = '1';
         if (IOPENDING(pDEVBLK))                                               chPendingStat = '1';

@@ -72,9 +72,9 @@ typedef struct _DEVARRAY
 /*-------------------------------------------------------------------*/
 /* Now defined in hsys.c */
 #if 0
-#ifdef EXTERNALGUI
-int extgui = 0;             /* 1=external gui active                */
-#endif /*EXTERNALGUI*/
+ #ifdef EXTERNALGUI
+ int extgui = 0;             /* 1=external gui active                */
+ #endif /*EXTERNALGUI*/
 #endif
 
 /*-------------------------------------------------------------------*/
@@ -162,55 +162,54 @@ int off;
 
     if (sysblk.mainstor == NULL)
 #else
-    /*
-               Windows "double memory consumption" bug fix
-               (which should work on all other systems too)
+    /*     Windows "double memory consumption" bug fix
+           (which should work on all other systems too)
 
-        =============================================================
-        From: golden_dog98 [golden_dog98@yahoo.com]
-        Sent: Monday, July 07, 2003 1:08 AM
-        To: hercules-390@yahoogroups.com
-        Subject: [hercules-390] To "Fish" (was: "Re: How can I use all my
-        physical memory")
+    =============================================================
+    From: golden_dog98 [golden_dog98@yahoo.com]
+    Sent: Monday, July 07, 2003 1:08 AM
+    To: hercules-390@yahoogroups.com
+    Subject: [hercules-390] To "Fish" (was: "Re: How can I use all my
+    physical memory")
 
-        This problem is caused by how CYGWIN allocates memory under Windows 
-        2000.  In malloc.cc, malloc() calls sYSMALLOc() to allocate chunks of 
-        memory.  sYSMALLOc calls mmap() with flags MAP_PRIVATE and 
-        MAP_ANONYMOUS.  mmap() calls mmap64() with the same flags.  Around 
-        line 540 of mmap.cc, mmap64() checks to see if MAP_PRIVATE is set and 
-        if has_working_copy_on_write() is true (which it is for Win2000) and 
-        sets access to FILE_MAP_COPY.  mmap64() then calls 
-        fhandler_disk_file::mmap() in mmap.cc.  Because access is set to 
-        FILE_MAP_COPY, protect is set to PAGE_WRITECOPY when CreateFileMapping
-        () is called.  Then MapViewOfFileEx() is called with access set to 
-        FILE_MAP_COPY.  This allocates the storage with "copy on write 
-        acess", which essentially doubles the storage usage.  See 
-        http://msdn.microsoft.com/library/default.asp?url=/library/en-
-        us/fileio/base/mapviewoffileex.asp.
+    This problem is caused by how CYGWIN allocates memory under Windows
+    2000.  In malloc.cc, malloc() calls sYSMALLOc() to allocate chunks of
+    memory.  sYSMALLOc calls mmap() with flags MAP_PRIVATE and
+    MAP_ANONYMOUS.  mmap() calls mmap64() with the same flags.  Around
+    line 540 of mmap.cc, mmap64() checks to see if MAP_PRIVATE is set and
+    if has_working_copy_on_write() is true (which it is for Win2000) and
+    sets access to FILE_MAP_COPY.  mmap64() then calls
+    fhandler_disk_file::mmap() in mmap.cc.  Because access is set to
+    FILE_MAP_COPY, protect is set to PAGE_WRITECOPY when CreateFileMapping
+    () is called.  Then MapViewOfFileEx() is called with access set to
+    FILE_MAP_COPY.  This allocates the storage with "copy on write
+    acess", which essentially doubles the storage usage.  See
+    http://msdn.microsoft.com/library/default.asp?url=/library/en-
+    us/fileio/base/mapviewoffileex.asp.
 
-        I changed line 1299 of Hercules' config.c to fix the problem:
+    I changed line 1299 of Hercules' config.c to fix the problem:
 
-            sysblk.mainstor = mmap(0, sysblk.mainsize + 8192, PROT_READ | 
-        PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+        sysblk.mainstor = mmap(0, sysblk.mainsize + 8192, PROT_READ |
+    PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
 
-        I also had to include at the top of config.c:
+    I also had to include at the top of config.c:
 
-        #include <sys/mmap.h>
+    #include <sys/mmap.h>
 
-        I tested this with a 512MB system and all went well....
+    I tested this with a 512MB system and all went well....
 
-        Mark D.
-        =============================================================
+    Mark D.
+    =============================================================
     */
 #if !defined(MAP_ANONYMOUS)    /* (see NOTE just below) */
+    /*
+     ***   NOTE: we can't use the "HAVE_MMAP" test above    ***
+     ***   because of a "Unix-ism" bug in autoconf that     ***
+     ***   causes mmap tests to always fail on Windows      ***
+     ***   systems as explained in the below Cygwin post    ***
+     ***   mailing list post:
 
-    /*  ***  NOTE: we can't use the "HAVE_MMAP" test above  ***
-        ***  because of a "Unix-ism" bug in autoconf that   ***
-        ***  causes mmap tests to always fail on Windows    ***
-        ***  systems as explained in the below Cygwin post  ***
-        ***  mailing list post:
-
-         http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
+        http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
     */
     sysblk.mainstor = malloc(sysblk.mainsize + 8192);
 /* ISW20030828-1 : Check for MALLOC result */
@@ -227,7 +226,7 @@ int off;
                 mainsize, strerror(errno));
         delayed_exit(1);
     }
-    
+
     /* Trying to get mainstor aligned to the next 4K boundary - Greg */
     off = (int)sysblk.mainstor & 0xFFF;
     sysblk.mainstor += off ? 4096 - off : 0;
@@ -275,7 +274,6 @@ int off;
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 }
-
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
@@ -327,9 +325,9 @@ char	*buf1;
             /* Ignore nulls and carriage returns */
             if (c == '\0' || c == '\r') continue;
 
-        /* Check if it is a white space and no other character yet */
-        if(!lstarted && isspace(c)) continue;
-        lstarted=1;
+            /* Check if it is a white space and no other character yet */
+            if(!lstarted && isspace(c)) continue;
+            lstarted=1;
 
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
@@ -471,32 +469,32 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
         cuu1=strtoul(grps,&strptr,16);
         switch(*strptr)
         {
-            case 0:     /* Single CUU */
-                cuu2=cuu1;
-                break;
-            case '-':   /* CUU Range */
-                cuu2=strtoul(&strptr[1],&strptr,16);
-                if(*strptr!=0)
-                {
-                    fprintf(stderr,_("HHCCF053E Incorrect second device number in device range near character %c\n"),*strptr);
-                    free(dgrs);
-                    return(0);
-                }
-                break;
-            case '.':   /* CUU Count */
-                cuu2=cuu1+strtoul(&strptr[1],&strptr,10);
-                cuu2--;
-                if(*strptr!=0)
-                {
-                    fprintf(stderr,_("HHCCF054E Incorrect Device count near character %c\n"),*strptr);
-                    free(dgrs);
-                    return(0);
-                }
-                break;
-            default:
-                fprintf(stderr,_("HHCCF055E Incorrect device address specification near character %c\n"),*strptr);
+        case 0:     /* Single CUU */
+            cuu2=cuu1;
+            break;
+        case '-':   /* CUU Range */
+            cuu2=strtoul(&strptr[1],&strptr,16);
+            if(*strptr!=0)
+            {
+                fprintf(stderr,_("HHCCF053E Incorrect second device number in device range near character %c\n"),*strptr);
                 free(dgrs);
                 return(0);
+            }
+            break;
+        case '.':   /* CUU Count */
+            cuu2=cuu1+strtoul(&strptr[1],&strptr,10);
+            cuu2--;
+            if(*strptr!=0)
+            {
+                fprintf(stderr,_("HHCCF054E Incorrect Device count near character %c\n"),*strptr);
+                free(dgrs);
+                return(0);
+            }
+            break;
+        default:
+            fprintf(stderr,_("HHCCF055E Incorrect device address specification near character %c\n"),*strptr);
+            free(dgrs);
+            return(0);
         }
         /* Check cuu1 <= cuu2 */
         if(cuu1>cuu2)
@@ -599,7 +597,7 @@ BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *sdevprio;                       /* -> Device thread priority */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-BYTE   *sasnandlxreuse;			/* -> ASNLXREUSE Optional    */
+BYTE   *sasnandlxreuse;         /* -> ASNLXREUSE Optional    */
 #endif
 #if defined(_FEATURE_ECPSVM)
 BYTE   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
@@ -616,6 +614,9 @@ BYTE   *siodelay;                       /* -> I/O delay value        */
 BYTE   *sptt;                           /* Pthread trace table size  */
 #endif /*defined(OPTION_PTTRACE)*/
 BYTE   *scckd;                          /* -> CCKD parameters        */
+#if defined( OPTION_SCSI_TAPE )
+BYTE   *sauto_scsi_mount;               /* Auto SCSI tape mounts     */
+#endif /* defined( OPTION_SCSI_TAPE ) */
 BYTE    version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
@@ -639,7 +640,7 @@ int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
 int     devprio;                        /* Device thread priority    */
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-int     asnandlxreuse;			/* ASN And LX Reuse option   */
+int     asnandlxreuse;          /* ASN And LX Reuse option   */
 #endif
 BYTE    pgmprdos;                       /* Program product OS OK     */
 BYTE   *sdevnum;                        /* -> Device number string   */
@@ -731,25 +732,24 @@ BYTE **orig_newargv;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-    asnandlxreuse = 0;	/* ASN And LX Reuse is defaulted to DISABLE */
+    asnandlxreuse = 0;  /* ASN And LX Reuse is defaulted to DISABLE */
 #endif
 
-
-        /* Cap the default priorities at zero if setuid not available */
+    /* Cap the default priorities at zero if setuid not available */
 #if !defined(NO_SETUID)
-        if (sysblk.suid != 0)
-        {
+    if (sysblk.suid != 0)
+    {
 #endif /*!defined(NO_SETUID)*/
-            if (hercprio < 0)
-                hercprio = 0;
-            if (todprio < 0)
-                todprio = 0;
-            if (cpuprio < 0)
-                cpuprio = 0;
-            if (devprio < 0)
-                devprio = 0;
+        if (hercprio < 0)
+            hercprio = 0;
+        if (todprio < 0)
+            todprio = 0;
+        if (cpuprio < 0)
+            cpuprio = 0;
+        if (devprio < 0)
+            devprio = 0;
 #if !defined(NO_SETUID)
-        }
+    }
 #endif /*!defined(NO_SETUID)*/
 
 
@@ -812,7 +812,7 @@ BYTE **orig_newargv;
         ecpsvmac = 0;
 #endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-	sasnandlxreuse = NULL;
+        sasnandlxreuse = NULL;
 #endif
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
@@ -825,8 +825,11 @@ BYTE **orig_newargv;
 #endif /*OPTION_PTTRACE*/
         scckd = NULL;
 #if defined(OPTION_LPARNAME)
-    lparname = NULL;
+        lparname = NULL;
 #endif /*defined(OPTION_LPARNAME)*/
+#if defined( OPTION_SCSI_TAPE )
+        sauto_scsi_mount = NULL;
+#endif /* defined( OPTION_SCSI_TAPE ) */
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -1089,8 +1092,8 @@ BYTE **orig_newargv;
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
             else if (strcasecmp(keyword,"asn_and_lx_reuse") == 0)
             {
-		    sasnandlxreuse = operand;
-	    }
+                sasnandlxreuse = operand;
+            }
 #endif /* defined(_FEATURE_ASN_AND_LX_REUSE) */
 
 #if defined(OPTION_SHARED_DEVICES)
@@ -1110,6 +1113,13 @@ BYTE **orig_newargv;
                lparname = operand;
             }
 #endif /*defined(OPTION_LPARNAME)*/
+
+#if defined( OPTION_SCSI_TAPE )
+            else if (strcasecmp (keyword, "auto_scsi_mount") == 0)
+            {
+               sauto_scsi_mount = operand;
+            }
+#endif /* defined( OPTION_SCSI_TAPE ) */
 
             else
             {
@@ -1447,25 +1457,24 @@ BYTE **orig_newargv;
         {
             switch (toupper((char)spanrate[0]))
             {
-                case 'F': /* fast */
-                    panrate = PANEL_REFRESH_RATE_FAST;
-                    break;
-                case 'S': /* slow */
-                    panrate = PANEL_REFRESH_RATE_SLOW;
-                    break;
-                default:
-                    if (sscanf(spanrate, "%u%c", &panrate, &c) != 1
-                        || panrate < (1000/CLK_TCK) || panrate > 5000)
-                    {
-                        fprintf(stderr, _("HHCCF025S Error in %s line %d: "
-                                "Invalid panel refresh rate %s\n"),
-                                fname, stmt, spanrate);
-                        delayed_exit(1);
-                    }
+            case 'F': /* fast */
+                panrate = PANEL_REFRESH_RATE_FAST;
+                break;
+            case 'S': /* slow */
+                panrate = PANEL_REFRESH_RATE_SLOW;
+                break;
+            default:
+                if (sscanf(spanrate, "%u%c", &panrate, &c) != 1
+                    || panrate < (1000/CLK_TCK) || panrate > 5000)
+                {
+                    fprintf(stderr, _("HHCCF025S Error in %s line %d: "
+                            "Invalid panel refresh rate %s\n"),
+                            fname, stmt, spanrate);
+                    delayed_exit(1);
+                }
             }
         }
 #endif /*PANEL_REFRESH_RATE*/
-
 
         /* Parse OS tailoring operand */
         if (sostailor != NULL)
@@ -1622,26 +1631,26 @@ BYTE **orig_newargv;
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 #if defined(_FEATURE_ASN_AND_LX_REUSE)
-	if(sasnandlxreuse != NULL)
-	{
-		if(strcasecmp(sasnandlxreuse,"enable")==0)
-		{
-			asnandlxreuse=1;
-		}
-		else 
-		{
-			if(strcasecmp(sasnandlxreuse,"disable")==0)
-			{
-				asnandlxreuse=0;
-			}
-			else {
-				fprintf(stderr, _("HHCCF067S Error in %s line %d: "
-                        	"Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
-                        	fname, stmt, sasnandlxreuse);
-                        	delayed_exit(1);
-			}
-		}
-	}
+    if(sasnandlxreuse != NULL)
+    {
+        if(strcasecmp(sasnandlxreuse,"enable")==0)
+        {
+            asnandlxreuse=1;
+        }
+        else
+        {
+            if(strcasecmp(sasnandlxreuse,"disable")==0)
+            {
+                asnandlxreuse=0;
+            }
+            else {
+                fprintf(stderr, _("HHCCF067S Error in %s line %d: "
+                            "Incorrect keyword %s for the ASN_AND_LX_REUSE statement.\n"),
+                            fname, stmt, sasnandlxreuse);
+                            delayed_exit(1);
+            }
+        }
+    }
 #endif
 
 #ifdef OPTION_IODELAY_KLUDGE
@@ -1681,6 +1690,37 @@ BYTE **orig_newargv;
         set_lparname(lparname);
 #endif /*defined(OPTION_LPARNAME)*/
 
+#if defined( OPTION_SCSI_TAPE )
+        /* Parse automatic SCSI tape mounts operand */
+        if ( sauto_scsi_mount )
+        {
+            if ( strcasecmp( sauto_scsi_mount, "no" ) == 0 )
+            {
+                sysblk.auto_scsi_mount_secs = 0;
+            }
+            else
+            {
+                int auto_scsi_mount_secs;
+                if ( sscanf( sauto_scsi_mount, "%d%c", &auto_scsi_mount_secs, &c ) != 1
+                    || auto_scsi_mount_secs <= 0 || auto_scsi_mount_secs > 99 )
+                {
+                    fprintf
+                    (
+                        stderr,
+
+                        _( "HHCCF068S Error in %s line %d: Invalid Auto_SCSI_Mount value: %s\n" )
+
+                        ,fname
+                        ,stmt
+                        ,sauto_scsi_mount
+                    );
+                    delayed_exit(1);
+                }
+                sysblk.auto_scsi_mount_secs = auto_scsi_mount_secs;
+            }
+            sauto_scsi_mount = NULL;
+        }
+#endif /* defined( OPTION_SCSI_TAPE ) */
     } /* end for(scount) */
 
 
@@ -1932,6 +1972,12 @@ BYTE **orig_newargv;
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         free(devnarray);
 
+        if (baddev)
+        {
+            // (error message already issued)
+            delayed_exit(1); // (abort startup)
+        }
+
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))
             break;
@@ -1973,4 +2019,3 @@ BYTE **orig_newargv;
 
 
 #endif /*!defined(_GEN_ARCH)*/
-

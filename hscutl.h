@@ -82,4 +82,9 @@ size_t
 strlcat(char *dst, const char *src, size_t siz);
 #endif
 
+/* Subtract/add gettimeofday struct timeval */
+//#include <sys/time.h> // (you'll need this too)
+int timeval_subtract (struct timeval *beg_timeval, struct timeval *end_timeval, struct timeval *dif_timeval);
+int timeval_add      (struct timeval *dif_timeval, struct timeval *accum_timeval);
+
 #endif /* __HSCUTL_H__ */

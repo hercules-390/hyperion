@@ -1,6 +1,7 @@
 /* HSCUTL.C */
 /* Implementation of functions used in hercules that */
-/* may be missing on some platform ports             */
+/* may be missing on some platform ports, or other   */
+/* convenient miscellaneous global utility functions */
 /* (c) 2003-2004 Ivan Warren & Others                */
 /* Released under the Q Public License               */
 /* This file is portion of the HERCULES S/370, S/390 */
@@ -493,3 +494,61 @@ void kill_all_symbols(void)
 }
 
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+
+/* Subtract 'beg_timeval' from 'end_timeval' yielding 'dif_timeval' */
+/* Return code: success == 0, error == -1 (difference was negative) */
+
+int timeval_subtract
+(
+    struct timeval *beg_timeval,
+    struct timeval *end_timeval,
+    struct timeval *dif_timeval
+)
+{
+    struct timeval begtime;
+    struct timeval endtime;
+    ASSERT ( beg_timeval -> tv_sec >= 0  &&  beg_timeval -> tv_usec >= 0 );
+    ASSERT ( end_timeval -> tv_sec >= 0  &&  end_timeval -> tv_usec >= 0 );
+
+    memcpy(&begtime,beg_timeval,sizeof(struct timeval));
+    memcpy(&endtime,end_timeval,sizeof(struct timeval));
+
+    dif_timeval->tv_sec = endtime.tv_sec - begtime.tv_sec;
+
+    if (endtime.tv_usec >= begtime.tv_usec)
+    {
+        dif_timeval->tv_usec = endtime.tv_usec - begtime.tv_usec;
+    }
+    else
+    {
+        dif_timeval->tv_sec--;
+        dif_timeval->tv_usec = (endtime.tv_usec + 1000000) - begtime.tv_usec;
+    }
+
+    return ((dif_timeval->tv_sec < 0 || dif_timeval->tv_usec < 0) ? -1 : 0);
+}
+
+/* Add 'dif_timeval' to 'accum_timeval' (use to accumulate elapsed times) */
+/* Return code: success == 0, error == -1 (accum_timeval result negative) */
+
+int timeval_add
+(
+    struct timeval *dif_timeval,
+    struct timeval *accum_timeval
+)
+{
+    ASSERT ( dif_timeval   -> tv_sec >= 0  &&  dif_timeval   -> tv_usec >= 0 );
+    ASSERT ( accum_timeval -> tv_sec >= 0  &&  accum_timeval -> tv_usec >= 0 );
+
+    accum_timeval->tv_sec  += dif_timeval->tv_sec;
+    accum_timeval->tv_usec += dif_timeval->tv_usec;
+
+    if (accum_timeval->tv_usec > 1000000)
+    {
+        int nsec = accum_timeval->tv_usec / 1000000;
+        accum_timeval->tv_sec  += nsec;
+        accum_timeval->tv_usec -= nsec * 1000000;
+    }
+
+    return ((accum_timeval->tv_sec < 0 || accum_timeval->tv_usec < 0) ? -1 : 0);
+}

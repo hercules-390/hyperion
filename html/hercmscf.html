@@ -894,14 +894,24 @@ The error is described by <code><em>error</em></code>.
   <dt>Issued by
   <dd>config.c, function build_config
   </dl>
-</dl>
 <dt><code><a name="HHCCF067S">
-HHCCF065S Incorrect keyword <em>keyword</em> for the ASN_AND_LX_REUSE statement
+HHCCF067S Incorrect keyword <em>keyword</em> for the ASN_AND_LX_REUSE statement
 </a></code>
 <dd><dl>
   <dt>Meaning
   <dd>The keyword specified for the ASN_AND_LX_REUSE statement is not
   <em>ENABLE</em> or <em>DISABLE</em>
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>bldcfg.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF068S">
+HHCCF068S Error in <em>filename</em> line <em>lineno</em>: Invalid Auto_SCSI_Mount value: <em>value</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The automatic SCSI tape mount value is not "NO" nor a value between 1 and 99 seconds inclusive.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by

@@ -20,7 +20,8 @@ int dummy = 0;
 #include <stdarg.h>     // (need "va_list", etc)
 #include <stdio.h>      // (need "FILE", "vfprintf", etc)
 #include <malloc.h>     // (need "malloc", etc)
-#include "logger.h"
+#include <sys/time.h>   // (need "struct timeval" for hscutl.h)
+#include "logger.h"     // (need "logmsg" macro and functions)
 #include "fthreads.h"   // (need "fthread_create")
 #include "w32chan.h"    // (function prototypes for this module)
 #include "linklist.h"   // (linked list macros)
