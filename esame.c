@@ -402,6 +402,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
  
+#if defined(FEATURE_ESAME)
     if(flags & 0x0004) 
     {
         if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
@@ -415,11 +416,14 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
     }
     else
+#endif /*defined(FEATURE_ESAME)*/
     {
         if( s390_load_psw(regs, psw) )
         {
+#if defined(FEATURE_ESAME)
             /* Do not check amode64 bit (force to zero) */
             psw[3] &= ~0x01;
+#endif /*defined(FEATURE_ESAME)*/
             /* restore the psw */
             regs->psw = save_psw;
             /* And generate a program interrupt */
