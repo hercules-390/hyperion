@@ -454,7 +454,6 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         }
     }
     regs = sysblk.regs + sysblk.pcpu;
-    /* ZZ FIXME: There should be a check here if the addressed cpu is online */
 
 #if defined(OPTION_MIPS_COUNTING)
     fprintf(confp, ANSI_WHT_BLU);
@@ -872,20 +871,6 @@ struct  timeval tv;                     /* Select timeout structure  */
     {
         /* Set target CPU for commands and displays */
         regs = sysblk.regs + sysblk.pcpu;
-        /* If the requested CPU is offline, then take the first available CPU*/
-        if(!regs->cpuonline)
-          /* regs = first online CPU
-           * sysblk.pcpu = number of online CPUs
-           */
-          for(regs = 0, sysblk.pcpu = 0, i = 0 ;
-              i < MAX_CPU_ENGINES ; ++i )
-            if (sysblk.regs[i].cpuonline) {
-              if (!regs)
-                regs = sysblk.regs + i;
-              ++sysblk.pcpu;
-            }
-
-        if (!regs) regs = sysblk.regs;
 
 #if defined(_FEATURE_SIE)
         /* Point to SIE copy in SIE state */
@@ -1489,8 +1474,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                 else
                 fprintf (confp,
                     ANSI_ROW24_COL1 ANSI_YELLOW_RED
-                    "CPU Offline"
-                    ANSI_ERASE_EOL);
+                    "CPU%4.4X Offline"
+                    ANSI_ERASE_EOL,
+                    regs->cpuad);
             } /* end if(redraw_status) */
 
             if (redraw_cmd)
