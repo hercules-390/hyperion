@@ -278,7 +278,10 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         else
             raddr2 = vaddr2;
 
-    raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
+        if(rc != 0 && rc != 2)
+            goto mvpg_progck;
+
+        raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
 
         if (raddr2 > regs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
@@ -378,7 +381,10 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         else
             raddr1 = vaddr1;
 
-    raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
+        if(rc != 0 && rc != 2)
+            goto mvpg_progck;
+
+        raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
 
         if (raddr1 > regs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
