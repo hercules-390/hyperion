@@ -308,11 +308,261 @@ int msgcount = 22;
 }
 
 
+zz_cgibin cgibin_debug_registers(WEBBLK *webblk)
+{
+int i, cpu = 0;
+int select_gr, select_cr, select_ar;
+char *value;
+REGS *regs;
+
+    if((value = cgi_variable(webblk,"cpu")))
+        cpu = atoi(value);
+
+    if((value = cgi_variable(webblk,"select_gr")) && *value == 'S')
+        select_gr = 1;
+    else
+        select_gr = 0;
+
+    if((value = cgi_variable(webblk,"select_cr")) && *value == 'S')
+        select_cr = 1;
+    else
+        select_cr = 0;
+
+    if((value = cgi_variable(webblk,"select_ar")) && *value == 'S')
+        select_ar = 1;
+    else
+        select_ar = 0;
+
+    /* Validate cpu number */
+#if defined(_FEATURE_CPU_RECONFIG)
+    if(cpu < 0 || cpu > MAX_CPU_ENGINES
+       || !sysblk.regs[cpu].cpuonline)
+#else
+    if(cpu < 0 || cpu > sysblk.numcpu)
+#endif
+        for(cpu = 0;
+#if defined(_FEATURE_CPU_RECONFIG)
+            cpu < MAX_CPU_ENGINES;
+#else
+            cpu < sysblk.numcpu;
+#endif
+                cpu++)
+            if(sysblk.regs[cpu].cpuonline)
+                break;
+
+    regs = sysblk.regs + cpu;
+
+    if((value = cgi_variable(webblk,"alter_gr")) && *value == 'A')
+    {
+        for(i = 0; i < 16; i++)
+        {
+        char regname[16];
+            sprintf(regname,"alter_gr%d",i);
+            if((value = cgi_variable(webblk,regname)))
+            {
+                if(regs->arch_mode != ARCH_900)
+                    sscanf(value,"%x",&(regs->GR_L(i)));
+                else
+                    sscanf(value,"%llx",&(regs->GR_G(i)));
+            }
+        }
+    }
+
+    if((value = cgi_variable(webblk,"alter_cr")) && *value == 'A')
+    {
+        for(i = 0; i < 16; i++)
+        {
+        char regname[16];
+            sprintf(regname,"alter_cr%d",i);
+            if((value = cgi_variable(webblk,regname)))
+            {
+                if(regs->arch_mode != ARCH_900)
+                    sscanf(value,"%x",&(regs->CR_L(i)));
+                else
+                    sscanf(value,"%llx",&(regs->CR_G(i)));
+            }
+        }
+    }
+
+    if((value = cgi_variable(webblk,"alter_ar")) && *value == 'A')
+    {
+        for(i = 0; i < 16; i++)
+        {
+        char regname[16];
+            sprintf(regname,"alter_ar%d",i);
+            if((value = cgi_variable(webblk,regname)))
+                sscanf(value,"%x",&(regs->AR(i)));
+        }
+    }
+
+    html_header(webblk);
+
+    fprintf(webblk->hsock,"<form method=post>\n"
+                          "<select type=submit name=cpu>\n");
+
+    for(i = 0;
+#if defined(_FEATURE_CPU_RECONFIG)
+        i < MAX_CPU_ENGINES;
+#else
+        i < sysblk.numcpu;
+#endif
+        i++)
+        fprintf(webblk->hsock,"<option value=%d%s>CPU%4.4X</option>\n",
+            i,i==cpu?" selected":"",i);
+
+    fprintf(webblk->hsock,"</select>\n"
+                          "<input type=submit name=selcpu value=\"Select\">\n"
+                          "<input type=hidden name=cpu value=%d>\n" 
+                          "<input type=hidden name=select_gr value=%c>\n" 
+                          "<input type=hidden name=select_cr value=%c>\n" 
+                          "<input type=hidden name=select_ar value=%c>\n",
+//                        "</form>\n",
+                          cpu, select_gr?'S':'H',select_cr?'S':'H',select_ar?'S':'H');
+
+    fprintf(webblk->hsock,"Mode: %s\n",get_arch_mode_string(regs));
+
+        fprintf(webblk->hsock,"</form>\n");
+    if(!select_gr)
+    {
+        fprintf(webblk->hsock,"<form>\n"
+                              "<input type=submit name=select_gr "
+                              "value=\"Select General Registers\">\n"
+                              "<input type=hidden name=cpu value=%d>\n" 
+                              "<input type=hidden name=select_cr value=%c>\n" 
+                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "</form>\n",cpu,select_cr?'S':'H',select_ar?'S':'H');
+    }
+    else
+    {
+        fprintf(webblk->hsock,"<form>\n"
+                              "<input type=submit name=select_gr "
+                              "value=\"Hide General Registers\">\n"
+                              "<input type=hidden name=cpu value=%d>\n" 
+                              "<input type=hidden name=select_cr value=%c>\n" 
+                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "</form>\n",cpu,select_cr?'S':'H',select_ar?'S':'H');
+
+        fprintf(webblk->hsock,"<form method=post>\n"
+                              "<table>\n");
+        for(i = 0; i < 16; i++)
+        {
+            if(regs->arch_mode != ARCH_900)
+                fprintf(webblk->hsock,"%s<td>GR%d</td><td><input type=text name=alter_gr%d size=8 "
+                  "value=%8.8X></td>\n%s",
+                  (i&3)==0?"<tr>\n":"",i,i,regs->GR_L(i),((i&3)==3)?"</tr>\n":"");
+            else
+                fprintf(webblk->hsock,"%s<td>GR%d</td><td><input type=text name=alter_gr%d size=16 "
+                  "value=%16.16llX></td>\n%s",
+                  (i&3)==0?"<tr>\n":"",i,i,regs->GR_G(i),((i&3)==3)?"</tr>\n":"");
+        }
+        fprintf(webblk->hsock,"</table>\n"
+                              "<input type=submit name=refresh value=\"Refresh\">\n"
+                              "<input type=submit name=alter_gr value=\"Alter\">\n"
+                              "<input type=hidden name=cpu value=%d>\n" 
+                              "<input type=hidden name=select_gr value=S>\n" 
+                              "<input type=hidden name=select_cr value=%c>\n" 
+                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "</form>\n",cpu,select_cr?'S':'H',select_ar?'S':'H');
+    }
+
+
+    if(!select_cr)
+    {
+        fprintf(webblk->hsock,"<form>\n"
+                              "<input type=submit name=select_cr "
+                              "value=\"Select Control Registers\">\n"
+                              "<input type=hidden name=cpu value=%d>\n" 
+                              "<input type=hidden name=select_gr value=%c>\n" 
+                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "</form>\n",cpu,select_gr?'S':'H',select_ar?'S':'H');
+    }
+    else
+    {
+        fprintf(webblk->hsock,"<form>\n"
+                              "<input type=submit name=select_cr "
+                              "value=\"Hide Control Registers\">\n"
+                              "<input type=hidden name=cpu value=%d>\n" 
+                              "<input type=hidden name=select_gr value=%c>\n" 
+                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "</form>\n",cpu,select_gr?'S':'H',select_ar?'S':'H');
+
+        fprintf(webblk->hsock,"<form method=post>\n"
+                              "<table>\n");
+        for(i = 0; i < 16; i++)
+        {
+            if(regs->arch_mode != ARCH_900)
+                fprintf(webblk->hsock,"%s<td>CR%d</td><td><input type=text name=alter_cr%d size=8 "
+                  "value=%8.8X></td>\n%s",
+                  (i&3)==0?"<tr>\n":"",i,i,regs->CR_L(i),((i&3)==3)?"</tr>\n":"");
+            else
+                fprintf(webblk->hsock,"%s<td>CR%d</td><td><input type=text name=alter_cr%d size=16 "
+                  "value=%16.16llX></td>\n%s",
+                  (i&3)==0?"<tr>\n":"",i,i,regs->CR_G(i),((i&3)==3)?"</tr>\n":"");
+        }
+        fprintf(webblk->hsock,"</table>\n"
+                              "<input type=submit name=refresh value=\"Refresh\">\n"
+                              "<input type=submit name=alter_cr value=\"Alter\">\n"
+                              "<input type=hidden name=cpu value=%d>\n" 
+                              "<input type=hidden name=select_cr value=S>\n" 
+                              "<input type=hidden name=select_gr value=%c>\n" 
+                              "<input type=hidden name=select_ar value=%c>\n" 
+                              "</form>\n",cpu,select_gr?'S':'H',select_ar?'S':'H');
+    }
+
+
+    if(regs->arch_mode != ARCH_370)
+    {
+        if(!select_ar)
+        {
+            fprintf(webblk->hsock,"<form>\n"
+                                  "<input type=submit name=select_ar "
+                                  "value=\"Select Access Registers\">\n"
+                                  "<input type=hidden name=cpu value=%d>\n" 
+                                  "<input type=hidden name=select_gr value=%c>\n" 
+                                  "<input type=hidden name=select_cr value=%c>\n" 
+                                  "</form>\n",cpu,select_gr?'S':'H',select_cr?'S':'H');
+        }
+        else
+        {
+            fprintf(webblk->hsock,"<form>\n"
+                                  "<input type=submit name=select_ar "
+                                  "value=\"Hide Access Registers\">\n"
+                                  "<input type=hidden name=cpu value=%d>\n" 
+                                  "<input type=hidden name=select_gr value=%c>\n" 
+                                  "<input type=hidden name=select_cr value=%c>\n" 
+                                  "</form>\n",cpu,select_gr?'S':'H',select_cr?'S':'H');
+    
+            fprintf(webblk->hsock,"<form method=post>\n"
+                                  "<table>\n");
+            for(i = 0; i < 16; i++)
+            {
+                fprintf(webblk->hsock,"%s<td>AR%d</td><td><input type=text name=alter_ar%d size=8 "
+                  "value=%8.8X></td>\n%s",
+                  (i&3)==0?"<tr>\n":"",i,i,regs->AR(i),((i&3)==3)?"</tr>\n":"");
+            }
+            fprintf(webblk->hsock,"</table>\n"
+                                  "<input type=submit name=refresh value=\"Refresh\">\n"
+                                  "<input type=submit name=alter_ar value=\"Alter\">\n"
+                                  "<input type=hidden name=cpu value=%d>\n" 
+                                  "<input type=hidden name=select_gr value=%c>\n" 
+                                  "<input type=hidden name=select_cr value=%c>\n" 
+                                  "<input type=hidden name=select_ar value=S>\n" 
+                                  "</form>\n",select_gr?'S':'H',select_cr?'S':'H',cpu);
+        }
+    }
+
+    html_footer(webblk);
+
+    return NULL;
+}
+
+
 /* The following table is the cgi-bin directory, which               */
 /* associates directory filenames with cgibin routines               */
 
 CGITAB cgidir[] = {
     { "syslog", (void*)&cgibin_syslog },
+    { "debug/registers", (void*)&cgibin_debug_registers },
     { "registers/general", (void*)&cgibin_reg_general },
     { "registers/control", (void*)&cgibin_reg_control },
     { "registers/psw", (void*)&cgibin_psw },
