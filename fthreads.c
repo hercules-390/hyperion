@@ -314,8 +314,7 @@ fthread_create
     fthread_t*       pdwThreadID,
     fthread_attr_t*  dummy1,
     PFT_THREAD_FUNC  pfnThreadFunc,
-    void*            pvThreadArgs,
-    int              nThreadPriority
+    void*            pvThreadArgs
 )
 {
     FT_CALL_THREAD_PARMS*  pCallTheirThreadParms;
@@ -351,18 +350,6 @@ fthread_create
 #endif
         free (pCallTheirThreadParms);
         return (errno = EAGAIN);
-    }
-
-    if (nThreadPriority != THREAD_PRIORITY_NORMAL)
-    {
-        if (!SetThreadPriority(hWin32ThreadFunc,nThreadPriority))
-        {
-#ifdef FISH_HANG
-            TRACE("fthread_create: SetThreadPriority failed; %s(%d)\n",pszFile,nLine);
-#else
-            TRACE("fthread_create: SetThreadPriority failed\n");
-#endif
-        }
     }
 
     CloseHandle(hWin32ThreadFunc);

@@ -12,6 +12,7 @@
 /* for isatty()                                                      */
 
 #include "hercules.h" 
+#include "opcode.h"             /* Required for SETMODE macro        */
 
 static ATTR  logger_attr;
 static COND  logger_cond;
@@ -182,6 +183,15 @@ int bytes_read;
 
     UNREFERENCED(arg);
 
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+
+    /* Set device thread priority; ignore any errors */
+    setpriority(PRIO_PROCESS, 0, sysblk.devprio);
+
+    /* Back to user mode */
+    SETMODE(USER);
+
     if(dup2(logger_syslogfd[LOG_WRITE],STDOUT_FILENO) == -1)
     {
         if(logger_hrdcpy)
@@ -349,8 +359,7 @@ void logger_init(void)
 
     setvbuf (logger_syslog[LOG_WRITE], NULL, _IOLBF, 0);
 
-    if ( create_device_thread (&logger_tid, &logger_attr,
-                                logger_thread, NULL) )
+    if (create_thread (&logger_tid, &logger_attr, logger_thread, NULL))
     {
         fprintf(stderr, _("HHCLG012E Cannot create logger thread: %s\n"),
           strerror(errno));

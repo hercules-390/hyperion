@@ -63,7 +63,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                cgibin.o codepage.o \
                hsccmd.o hscmisc.o logger.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
-               hscutl.o
+               hscutl.o hscutl2.o
 hdt1403_OBJ  = printer.o
 hdt2703_OBJ  = commadpt.o
 hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o

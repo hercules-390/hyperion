@@ -233,29 +233,32 @@ the file named <code><em>filename</em></code> must be a valid nonzero decimal nu
   </dl>
 <dt><code><a name="HHCCF016S">
 HHCCF016S Error in <em>filename</em> line <em>lineno</em>:
-Invalid CPU thread priority <em>priority</em>
+Invalid <em>threadname</em> thread priority <em>priority</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The CPU thread priority <code><em>priority</em></code> specified on the
-<code>CPUPRIO</code> configuration statement at line number <code><em>lineno</em></code> of
-the file named <code><em>filename</em></code> must be a valid decimal number.
+  <dd>The thread priority <code><em>priority</em></code> specified on
+      the <code><em>xxx</em>PRIO</code> configuration statement at line
+      number <code><em>lineno</em></code> of the file named
+      <code><em>filename</em></code> must be a valid decimal number.
   <dt>Action
-  <dd>Correct the CPU thread priority and restart Hercules.
+  <dd>Correct the priority on the statement and restart Hercules.
   <dt>Issued by
   <dd>config.c, function build_config
   </dl>
 <dt><code><a name="HHCCF017W">
-HHCCF017W Hercules is not running as setuid root, cannot raise CPU priority
+HHCCF017W Hercules is not running as setuid root, cannot raise
+          <em>threadname</em> priority
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>A negative value for the CPU thread priority parameter
-<code>CPUPRIO</code> was specified, but Hercules is not running as the
-root user (either directly or via the setuid mechanism).
-This parameter value would cause the priority of the CPU execution thread
-to be raised above the normal level if Hercules were running
-as root. Since it is not, however, the parameter will have no effect.
+  <dd>A negative value for the <em>threadname</em> thread priority
+      parameter <code><em>xxx</em>PRIO</code> was specified, but
+      Hercules is not running as the root user (either directly or via
+      the setuid mechanism).  This parameter value would cause the
+      priority of the CPU execution thread to be raised above the normal
+      level if Hercules were running as root. Since it is not, however,
+      the parameter will have no effect.
   <dt>Action
   <dd>Either specify a positive value to lower the CPU thread priority,
 zero to not alter the priority, or omit the statement entirely
@@ -785,7 +788,7 @@ HHCCF055E Incorrect device address specification near character <em>c</em>
   <dd>config.c, function parse_devnums
   </dl>
 <dt><code><a name="HHCCF056E">
-HHCCF056E Incorrect device address range. <em>CUU1</em>&gt<em>CUU2</em>
+HHCCF056E Incorrect device address range. <em>CUU1</em>&gt;<em>CUU2</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
@@ -850,6 +853,48 @@ HHCCF063W Specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keywor
   <dt>Issued by
   <dd>config.c
   </dl>
+<dt><code><a name="HHCCF064W">
+HHCCF064W Hercules set priority <em>priority</em> failed: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+      <dd>An attempt to change the priority of the Hercules process to
+          <code><em>priority</em></code> failed.  The error is described
+          by <code><em>error</em></code>.  The process priority has not
+          been changed.  Hercules overall performance may be impaired as
+          a result.
+  <dt>Action
+      <dd>If performance problems are noted, correct the error and
+          restart Hercules.
+  <dt>Issued by
+      <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF065I">
+HHCCF065I Hercules: tid=<em>threadid</em>, pid=<em>processid</em>,
+          pgid=<em>processgroupid</em>, priority=<em>priority</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+      <dd>Hercules thread id is <code><em>threadid</em></code>, its
+      process id is <code><em>processid</em></code>, its process group
+      id is <code><em>processgroupid</em></code> and its execution
+      priority is <code><em>priority</em></code>.
+  <dt>Issued by
+      <dd>config.c, function build_config
+  </dl>
+<dt><code><a name="HHCCF066E">
+HHCCF066E Cannot create timer thread: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+      <dd>An attempt to create the thread used for timing functions has
+      failed.  Hercules will continue, but successful execution is
+      unlikely.  The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function build_config
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
@@ -859,6 +904,6 @@ If you have a question about Hercules, see the
 <a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 16 December 2002
+<p>Last updated 17 August 2003
 </BODY>
 </HTML>

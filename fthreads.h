@@ -90,8 +90,7 @@ fthread_create
     fthread_t*       pdwThreadID,
     fthread_attr_t*  dummy1,
     PFT_THREAD_FUNC  pfnThreadFunc,
-    void*            pvThreadArgs,
-    int              nThreadPriority
+    void*            pvThreadArgs
 );
 
 ////////////////////////////////////////////////////////////////////////////////////

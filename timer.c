@@ -298,9 +298,21 @@ struct  timeval tv;                     /* Structure for gettimeofday
                                            and select function calls */
   UNREFERENCED(argp);
 
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+
+    /* Set CPU thread priority */
+    if (setpriority(PRIO_PROCESS, 0, sysblk.todprio))
+        logmsg (_("HHCTT001W Timer thread set priority %d failed: %s\n"),
+                sysblk.todprio, strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+
     /* Display thread started message on control panel */
-    logmsg (_("HHCCP012I Timer thread started: tid="TIDPAT", pid=%d\n"),
-            thread_id(), getpid());
+    logmsg (_("HHCTT002I Timer thread started: tid="TIDPAT", pid=%d, "
+            "priority=%d\n"),
+            thread_id(), getpid(), getpriority(PRIO_PROCESS,0));
 
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
     /* Get current time */
@@ -405,7 +417,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
     } /* end while */
 
-    logmsg (_("HHCCP013I Timer thread ended\n"));
+    logmsg (_("HHCTT003I Timer thread ended\n"));
 
     return NULL;
 

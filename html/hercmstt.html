@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD>
+<TITLE>
+Hercules Version 2: System Messages: TT - TOD Clock and Timer Services
+</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages:
+TT - TOD Clock and Timer Services</h1>
+<p>This page describes the TOD Clock and Timer Services messages for the
+Hercules S/370, ESA/390, and z/Architecture emulator.
+<h3>Messages</h3>
+<dl>
+<dt><code><a name="HHCTT001W">
+HHCTT001W Timer thread set priority <em>priority</em> failed:
+          <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+      <dd>An attempt to change the priority of the timer thread to
+          <code><em>priority</em></code> failed.  The error is described
+          by <code><em>error</em></code>.  The thread priority has not
+          been changed.  Hercules overall performance may be impaired as
+          a result.
+  <dt>Action
+      <dd>If performance problems are noted, correct the error and
+          restart Hercules.
+  <dt>Issued by
+      <dd>timer.c, function timer_update_thread
+  </dl>
+<dt><code><a name="HHCTT002I">
+HHCTT002I Timer thread started:
+          tid=<em>threadid</em>, pid=<em>processid</em>,
+          priority=<em>priority</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+      <dd>The thread for timing functions has been started.  Its thread
+          id is <code><em>threadid</em></code>, its process id is
+          <code><em>processid</em></code> and the thread priority is
+          <code><em>priority</em></code>.
+  <dt>Issued by
+      <dd>timer.c, function timer_update_thread
+  </dl>
+<dt><code><a name="HHCTT003I">
+HHCTT003I Timer thread ended
+</a></code>
+<dd><dl>
+  <dt>Meaning
+      <dd>The thread for timing functions has ended.
+  <dt>Issued by
+      <dd>timer.c, function timer_update_thread
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 17 August 2003
+</BODY>
+</HTML>

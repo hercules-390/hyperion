@@ -35,7 +35,10 @@ a real System/390.  The configuration file is an ASCII text file.
     DIAG8CMD  disable
     NUMCPU    1
     NUMVEC    1
+    HERCPRIO  0
     CPUPRIO   15
+    DEVPRIO   8
+    TODPRIO   -20
     ARCHMODE  ESA/390
     LOADPARM  0120....
     SYSEPOCH  1900
@@ -162,15 +165,29 @@ The following system parameters may be specified:
 <dt><code>NUMVEC <em>nn</em></code>
 <dd>specifies the number of emulated vector facilities. Default is one per
     CPU. Only available by default in ESA/390 mode.
+<dt><code>HERCPRIO <em>nn</em></code>
+<dd>specifies the process priority for Hercules.  The default is 0.  See
+    "Process Priorities" below for more information.
 <dt><code>CPUPRIO <em>nn</em></code>
-<dd>is only valid when Hercules is run on a *ix (Linux/Unix) host and
-    specifies the priority of the CPU thread. Default is a nice value of
-    15, which means a low priority such that I/O can be scheduled and
-    completed in favour of CPU cycles being burned. On Multi-CPU systems,
-    a real CPU can be 'dedicated' to Hercules, by giving the CPU thread a
-    very high dispatching priority (-20). Note that Hercules needs to be a
-    setuid root program to allow it to reset its dispatching priority to a
-    high (negative) value (ie. chown root.root hercules; chmod +s hercules)
+<dd>specifies the priority of the CPU thread.  Default is a nice value
+    of 15, which means a low priority such that I/O can be scheduled and
+    completed in favour of CPU cycles being burned. On Multi-CPU
+    systems, a real CPU can be "dedicated" to Hercules, by giving the
+    CPU thread a very high dispatching priority (-20).  See "Thread
+    Priorities" below for more information.
+    <b>Caution: </b> CPUPRIO should not have a higher dispatching
+    priority than the TOD Clock and timer thread.
+    </ol>
+<dt><code>DEVPRIO <em>nn</em></code>
+<dd>specifies the priority of the device threads.  The default value is
+    8.  See "Thread Priorities" below for more information.
+    <b>Caution: </b> DEVPRIO should not have a higher dispatching
+    priority than the TOD Clock and timer thread.
+<dt><code>TODPRIO <em>nn</em></code>
+<dd>specifies the priority of the TOD Clock and timer thread.  The
+    default value is -20.  See "Thread Priorities" below for more
+    information.  <b>Caution: </b> TODPRIO should be given a dispatching
+    priority equal to or higher than any other thread within Hercules.
 <dt><code>LOADPARM <em>xxxxxxxx</em></code>
 <dd>specifies the eight-character IPL parameter which is used
     by some operating systems to select system parameters
@@ -303,6 +320,137 @@ The search order is the default DLL search path. Most systems also support absol
 <p>
 A comment preceded by a pound sign may be appended to any system
 parameter statement.
+
+<h4>Process and Thread Priorities</h4>
+<dl>
+<dt> <dd>
+<h5>Process Priorities</h5>
+<dl><dt><dd>
+<P><B>Note: </B>Under Linux, a process is a thread and thread priority information
+applies instead.
+<P>For Windows, the following conversions are used for translating Unix
+process priorities to Windows process priority classes:
+<BR>
+<BR>
+<table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
+<TR>
+<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
+<TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
+<TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
+<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority Class</TH>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Realtime</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">High</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Low</TD>
+</TR></TABLE>
+</dl><dt><dd>
+
+<h5>Thread Priorities</h5>
+<dl><dt><dd>
+<P>On a *ix (Linux/Unix) host, Hercules needs to be a setuid root
+program to allow it to reset its dispatching priority to a high
+(negative) value
+(i.e., <code>chown root.root hercules; chmod +s hercules</code>).
+<P>For Windows, the following conversions are used for translating
+Linux/Unix thread priorities to Windows thread priorities:
+<P>
+<table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
+<TR>
+<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
+<TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
+<TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
+<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority</TH>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16
+</TD><TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Time Critical</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD
+><TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Highest</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">19</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Lowest</TD>
+</TR><TR>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">&nbsp;</TD>
+<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Idle</TD>
+</TR></TABLE>
+</dl>
+</dl>
+
 <h3>Device records</h3>
 <p>
 The remaining statements in the configuration file are device records.
@@ -958,6 +1106,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 6 June 2003
+<p>Last updated 17 August 2003
 </BODY>
 </HTML>

@@ -12,6 +12,7 @@
             problem initially reported by Jay Jaeger(cube1us) - Ivan Warren
 18 Aug 2003 Re-instated fast dev lookup as a cache facility
             Thanks Fish for the suggestions - Ivan Warren
+17 Aug 2003 Added HERCPRIO, DEVPRIO and TODPRIO - Mark L. Gaubatz
 17 Aug 2003 Disabled Fast devnum & subchan lookup because of
             some incompatibilities / reported by yvangamache - Ivan Warren
 16 Aug 2003 fix tt32stats command when OPTION_DYNAMIC_LOAD - Fish

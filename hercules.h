@@ -238,8 +238,6 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #undef DWORD
 #endif
 #if defined(OPTION_FTHREADS)
-#define NORMAL_THREAD_PRIORITY  0  /* THREAD_PRIORITY_NORMAL */
-#define DEVICE_THREAD_PRIORITY  1  /* THREAD_PRIORITY_ABOVE_NORMAL */
 typedef fthread_t         TID;
 typedef fthread_mutex_t   LOCK;
 typedef fthread_cond_t    COND;
@@ -247,8 +245,7 @@ typedef fthread_attr_t    ATTR;
 
 #if defined(FISH_HANG)
 
-    #define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
-    #define create_device_thread(ptid,pat,fn,arg)  fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
+    #define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg))
 
     #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk))
     #define destroy_lock(plk)                      fthread_mutex_destroy(__FILE__,__LINE__,(plk))
@@ -267,8 +264,7 @@ typedef fthread_attr_t    ATTR;
 
 #else // !defined(FISH_HANG)
 
-    #define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
-    #define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
+    #define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg))
 
     #define initialize_lock(plk)                   fthread_mutex_init((plk))
     #define destroy_lock(plk)                      fthread_mutex_destroy((plk))
@@ -326,8 +322,6 @@ typedef pthread_attr_t                  ATTR;
         pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED)
 typedef void*THREAD_FUNC(void*);
 #define create_thread(ptid,pat,fn,arg) \
-        pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
-#define create_device_thread(ptid,pat,fn,arg) \
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
 #define exit_thread(_code) \
         pthread_exit((_code))
@@ -743,7 +737,10 @@ typedef struct _SYSBLK {
         U64     pgminttr;               /* Program int trace mask    */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
 
+        int     hercprio;               /* Hercules process priority */
+        int     todprio;                /* TOD Clock thread priority */
         int     cpuprio;                /* CPU thread priority       */
+        int     devprio;                /* Device thread priority    */
         int     pgmprdos;               /* Program product OS flag   */
 // #if defined(OPTION_HTTP_SERVER)
         TID     httptid;                /* HTTP listener thread id   */
@@ -807,6 +804,13 @@ typedef struct _SYSBLK {
             + sizeof(sysblk.imaped) \
             + sizeof(sysblk.imapxx) )
 #endif
+
+#if defined(OPTION_MIPS_COUNTING)
+        /* Merged Counters for all CPUs                              */
+        U64     instcount;              /* Instruction counter       */
+        U32     mipsrate;               /* Instructions/millisecond  */
+        U32     siosrate;               /* IOs per second            */
+#endif /*defined(OPTION_MIPS_COUNTING)*/
 
     } SYSBLK;
 
@@ -978,6 +982,7 @@ typedef struct _DEVBLK {
         IOINT   pciioint;               /* PCI i/o interrupt
                                                queue entry           */
         int     cpuprio;                /* CPU thread priority       */
+        int     devprio;                /* Device thread priority    */
 
         /*  fields used during ccw execution...                      */
         BYTE    chained;                /* Command chain and data chain

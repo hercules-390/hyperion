@@ -266,6 +266,7 @@ hercules_SOURCES = version.c   \
                    ecpsvm.c    \
                    shared.c    \
                    hscutl.c    \
+                   hscutl2.c   \
                    logmsg.c    \
                    hdl.c       \
                    hdlmain.c   \

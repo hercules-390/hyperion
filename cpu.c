@@ -996,7 +996,6 @@ static void (* run_cpu[GEN_MAXARCH]) (REGS *regs) =
 
 void *cpu_thread (REGS *regs)
 {
-#ifndef WIN32
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
@@ -1014,10 +1013,6 @@ void *cpu_thread (REGS *regs)
             "priority=%d\n"),
             regs->cpuad, thread_id(), getpid(),
             getpriority(PRIO_PROCESS,0));
-#else
-    logmsg (_("HHCCP002I CPU%4.4X thread started: tid="TIDPAT", pid=%d\n"),
-            regs->cpuad, thread_id(), getpid());
-#endif
 
     logmsg (_("HHCCP003I CPU%4.4X architecture mode %s\n"),
         regs->cpuad,get_arch_mode_string(regs));
@@ -1041,20 +1036,7 @@ void *cpu_thread (REGS *regs)
         return NULL;
     }
 
-    if(!sysblk.numcpu)
-    {
-        sysblk.numcpu++;
-        /* Start the TOD clock and CPU timer thread */
-        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
-                            timer_update_thread, NULL) )
-        {
-            logmsg (_("HHCCP006E Cannot create timer thread: %s\n"),
-                    strerror(errno));
-            release_lock(&sysblk.intlock);
-            return NULL;
-        }
-    }
-    else
+    /* Increment number of CPUs online */
         sysblk.numcpu++;
 
     /* Perform initial cpu reset */

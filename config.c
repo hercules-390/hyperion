@@ -19,6 +19,7 @@
 /*      OSTAILOR parameter by Jay Maynard                            */
 /*      PANRATE parameter by Reed H. Petty                           */
 /*      CPUPRIO parameter by Jan Jaeger                              */
+/*      HERCPRIO, TODPRIO, DEVPRIO parameters by Mark L. Gaubatz     */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2003      */
 /*-------------------------------------------------------------------*/
 
@@ -435,7 +436,10 @@ BYTE   *stoddrag;                       /* -> TOD clock drag factor  */
 BYTE   *sostailor;                      /* -> OS to tailor system to */
 BYTE   *spanrate;                       /* -> Panel refresh rate     */
 BYTE   *sdevtmax;                       /* -> Max device threads     */
+BYTE   *shercprio;                      /* -> Hercules base priority */
+BYTE   *stodprio;                       /* -> Timer thread priority  */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
+BYTE   *sdevprio;                       /* -> Device thread priority */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
 #if defined(_FEATURE_ECPSVM)
 BYTE   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
@@ -474,7 +478,10 @@ int     diag8cmd;                       /* Allow diagnose 8 commands */
 int     toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
 int     panrate;                        /* Panel refresh rate        */
+int     hercprio;                       /* Hercules base priority    */
+int     todprio;                        /* Timer thread priority     */
 int     cpuprio;                        /* CPU thread priority       */
+int     devprio;                        /* Device thread priority    */
 BYTE    pgmprdos;                       /* Program product OS OK     */
 BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
@@ -547,7 +554,10 @@ BYTE **orig_newargv;
 #endif
     ostailor = OS_NONE;
     panrate = PANEL_REFRESH_RATE_SLOW;
+    hercprio = 0;
+    todprio = -20;                      /* TOD clock is REALTIME     */
     cpuprio = 15;
+    devprio = 8;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax = MAX_DEVICE_THREADS;
 #if defined(_FEATURE_ECPSVM)
@@ -608,7 +618,10 @@ BYTE **orig_newargv;
         stoddrag = NULL;
         sostailor = NULL;
         spanrate = NULL;
+        shercprio = NULL;
+        stodprio = NULL;
         scpuprio = NULL;
+        sdevprio = NULL;
         sdevtmax = NULL;
         spgmprdos = NULL;
 #if defined(_FEATURE_ECPSVM)
@@ -721,9 +734,21 @@ BYTE **orig_newargv;
             {
                 sversion = operand;
             }
+            else if (strcasecmp (keyword, "hercprio") == 0)
+            {
+                shercprio = operand;
+            }
+            else if (strcasecmp (keyword, "todprio") == 0)
+            {
+                stodprio = operand;
+            }
             else if (strcasecmp (keyword, "cpuprio") == 0)
             {
                 scpuprio = operand;
+            }
+            else if (strcasecmp (keyword, "devprio") == 0)
+            {
+                sdevprio = operand;
             }
             else if (strcasecmp (keyword, "devtmax") == 0)
             {
@@ -969,9 +994,50 @@ BYTE **orig_newargv;
             }
         }
 
+        /* Parse Hercules priority operand */
+        if (shercprio != NULL)
+            if (sscanf(shercprio, "%d%c", &hercprio, &c) != 1)
+            {
+                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                        "Invalid Hercules process group thread priority %s\n"),
+                        fname, stmt, shercprio);
+                delayed_exit(1);
+            }
+
+#if !defined(NO_SETUID)
+        if(sysblk.suid != 0 && hercprio < 0)
+        {
+            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
+                    "cannot raise Hercules process group thread priority\n"));
+            hercprio = 0;               /* Set priority to Normal     */
+        }
+#endif /*!defined(NO_SETUID)*/
+
+        sysblk.hercprio = hercprio;
+
+        /* Parse TOD Clock priority operand */
+        if (stodprio != NULL)
+            if (sscanf(stodprio, "%d%c", &todprio, &c) != 1)
+            {
+                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                        "Invalid TOD Clock thread priority %s\n"),
+                        fname, stmt, stodprio);
+                delayed_exit(1);
+            }
+
+#if !defined(NO_SETUID)
+        if(sysblk.suid != 0 && todprio < 0)
+        {
+            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
+                    "cannot raise TOD Clock thread priority\n"));
+            todprio = 0;                /* Set priority to Normal     */
+        }
+#endif /*!defined(NO_SETUID)*/
+
+        sysblk.todprio = todprio;
+
         /* Parse CPU thread priority operand */
         if (scpuprio != NULL)
-        {
             if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
             {
                 fprintf(stderr, _("HHCCF016S Error in %s line %d: "
@@ -982,13 +1048,32 @@ BYTE **orig_newargv;
 
 #if !defined(NO_SETUID)
         if(sysblk.suid != 0 && cpuprio < 0)
+        {
             logmsg(_("HHCCF017W Hercules is not running as setuid root, "
                     "cannot raise CPU priority\n"));
+            cpuprio = 0;                /* Set priority to Normal     */
+        }
 #endif /*!defined(NO_SETUID)*/
 
-        }
-        else
             sysblk.cpuprio = cpuprio;
+
+        /* Parse Device thread priority operand */
+        if (sdevprio != NULL)
+            if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
+            {
+                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                        "Invalid device thread priority %s\n"),
+                        fname, stmt, sdevprio);
+                delayed_exit(1);
+            }
+
+#if !defined(NO_SETUID)
+        if(sysblk.suid != 0 && devprio < 0)
+            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
+                    "cannot raise device thread priority\n"));
+#endif /*!defined(NO_SETUID)*/
+
+        sysblk.devprio = devprio;
 
         /* Parse number of CPUs operand */
         if (snumcpu != NULL)
@@ -1318,6 +1403,24 @@ BYTE **orig_newargv;
     } /* end for(scount) */
 
 
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+
+    /* Set Hercules base priority */
+    if (setpriority(PRIO_PGRP, 0, hercprio))
+        logmsg (_("HHCCF064W Hercules set priority %d failed: %s\n"),
+                hercprio, strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+
+    /* Display Hercules thread information on control panel */
+    logmsg (_("HHCCF065I Hercules: tid="TIDPAT", pid=%d, pgid=%d, "
+              "priority=%d\n"),
+            thread_id(), getpid(), getpgid(0),
+            getpriority(PRIO_PGRP,0));
+
+
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
 //  sysblk.mainstor = malloc(sysblk.mainsize);
@@ -1456,7 +1559,6 @@ BYTE **orig_newargv;
     InitIOScheduler                         // initialize i/o scheduler...
         (
             sysblk.arch_mode,               // (for calling execute_ccw_chain)
-            DEVICE_THREAD_PRIORITY,         // (for calling fthread_create)
             MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
             devtmax                         // (maximum #of device threads allowed)
         );
@@ -1908,6 +2010,7 @@ DEVBLK**dvpp;
     obtain_lock (&dev->lock);
 
     dev->cpuprio = sysblk.cpuprio;
+    dev->devprio = sysblk.devprio;
     dev->hnd = NULL;
     dev->devnum = devnum;
     dev->chanset = devnum >> 12;

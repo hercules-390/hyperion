@@ -75,19 +75,6 @@ number.
   <dt>Issued by
   <dd>cpu.c, function cpu_thread
   </dl>
-<dt><code><a name="HHCCP006E">
-HHCCP006E Cannot create timer thread: <em>error</em>
-</a></code>
-<dd><dl>
-  <dt>Meaning
-  <dd>An attempt to create the thread used for
-timing functions has failed. Hercules will continue, but
-successful execution is unlikely. The error is described by <code><em>error</em></code>.
-  <dt>Action
-  <dd>Correct the error and restart Hercules.
-  <dt>Issued by
-  <dd>cpu.c, function cpu_thread
-  </dl>
 <dt><code><a name="HHCCP007I">
 HHCCP007I CPU<em>number</em> architecture mode set to <em>mode</em>
 </a></code>
@@ -148,27 +135,6 @@ system.
   <dt>Issued by
   <dd>cpu.c, function process_interrupt
   </dl>
-<dt><code><a name="HHCCP012I">
-HHCCP012I Timer thread started:
-tid=<em>threadid</em>, pid=<em>processid</em>
-</a></code>
-<dd><dl>
-  <dt>Meaning
-  <dd>The thread for timing functions has been
-started. Its thread id is <code><em>threadid</em></code>, and its process id is
-<code><em>processid</em></code>.
-  <dt>Issued by
-  <dd>timer.c, function timer_update_thread
-  </dl>
-<dt><code><a name="HHCCP013I">
-HHCCP013I Timer thread ended
-</a></code>
-<dd><dl>
-  <dt>Meaning
-  <dd>The thread for timing functions has ended.
-  <dt>Issued by
-  <dd>timer.c, function timer_update_thread
-  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
@@ -178,6 +144,6 @@ If you have a question about Hercules, see the
 <a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 16 December 2002
+<p>Last updated 17 August 2003
 </BODY>
 </HTML>

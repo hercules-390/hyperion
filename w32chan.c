@@ -88,7 +88,6 @@ int dummy = 0;
 // i/o scheduler variables...  (some private, some externally visible)
 
 int    ios_arch_mode          = 0;
-int    ios_devthread_priority = THREAD_PRIORITY_NORMAL;
 int    ios_devthread_timeout  = 30;
 
 LIST_ENTRY        ThreadListHeadListEntry;  // anchor for DEVTHREADPARMS linked list
@@ -107,13 +106,11 @@ int  ios_devtunavail = 0;   // #of times 'idle' thread unavailable
 void  InitIOScheduler
 (
     int    arch_mode,       // (for calling execute_ccw_chain)
-    int    devt_priority,   // (for calling fthread_create)
     int    devt_timeout,    // (MAX_DEVICE_THREAD_IDLE_SECS)
     long   devt_max         // (maximum #of device threads allowed)
 )
 {
     ios_arch_mode          = arch_mode;
-    ios_devthread_priority = devt_priority;
     ios_devthread_timeout  = devt_timeout;
     ios_devtmax            = devt_max;
 
@@ -376,9 +373,9 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
     pThreadParms->dwThreadID = 0;
 
 #ifdef FISH_HANG
-    if (fthread_create(__FILE__,__LINE__,&dwThreadID,NULL,DeviceThread,pThreadParms,ios_devthread_priority) != 0)
+    if (fthread_create(__FILE__,__LINE__,&dwThreadID,NULL,DeviceThread,pThreadParms) != 0)
 #else
-    if (fthread_create(&dwThreadID,NULL,DeviceThread,pThreadParms,ios_devthread_priority) != 0)
+    if (fthread_create(&dwThreadID,NULL,DeviceThread,pThreadParms) != 0)
 #endif
     {
         logmsg(_("HHC760I fthread_create(DeviceThread) failed; device=%4.4X, strerror=\"%s\"\n"),

@@ -18,7 +18,6 @@ extern void  InitIOScheduler    // initialize i/o scheduler vars
 
 (
     int    arch_mode,       // (for calling execute_ccw_chain)
-    int    devt_priority,   // (for calling fthread_create)
     int    devt_timeout,    // (maximum device thread wait time)
     long   devt_max         // (maximum #of device threads allowed)
 );
