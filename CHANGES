@@ -11,12 +11,14 @@
             (Detected by Mark Drummond) - Ivan Warren
 16 Jan 2004 Performance Enhancement: REGS on run_cpu stack - Greg Smith
 16 Jan 2004 Performance Enhancement: instfetch - Greg Smith
-19 Dec 2003 Correct Keyboard Shortcuts for pseudo-graphical Console - Volker Bandke, code by Marian Gasparovic
+19 Dec 2003 Correct Keyboard Shortcuts for pseudo-graphical Console - Volker
+            Bandke, code by Marian Gasparovic
 17 Dec 2003 Correct structure size boundaries for ARM compiles - Ivan Warren
 12 Dec 2003 Clear tlb every 2^16 invalidations instead of 2^8 - Greg Smith
 05 Dec 2003 Move IS_IC_TRACE check to slowloop in run_cpu - Greg Smith
 05 Dec 2003 Clear regs->ve every 2^20 invalidations instead of 2^12 - Greg Smith
-05 Dec 2003 Add "filename completion" shortcut via TAB character to panel.c - Volker Bandke, original code by Marian Gasparovic
+05 Dec 2003 Add "filename completion" shortcut via TAB character to panel.c -
+            Volker Bandke, original code by Marian Gasparovic
 01 Dec 2003 Signal Quiesce (shutdown) & ssd command - Jan Jaeger
 29 Nov 2003 Fix race condition in console.c recv_3270_data causing 100%
             CPU utilization, zero MIPS" Hercules hang symptom (version
