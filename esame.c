@@ -4982,12 +4982,8 @@ BYTE    svalue, dvalue, tvalue;
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && !(len & 0xfff))
-        {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+        if((len != 0) && (!(addr1 & 0xfff) && !addr2 & 0xfff))
             break;
-        }
 
     } /* end while */
 
@@ -5053,12 +5049,8 @@ BYTE    dvalue, tvalue;
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && !(len & 0xfff))
-        {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+        if((len != 0) && (!(addr1 & 0xfff) && !addr2 & 0xfff))
             break;
-        }
 
     } /* end while */
 
@@ -5126,12 +5118,8 @@ BYTE    dvalue, tvalue;
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && !(len & 0xfff))
-        {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+        if((len != 0) && (!(addr1 & 0xfff) && !addr2 & 0xfff))
             break;
-        }
 
     } /* end while */
 
@@ -5198,12 +5186,8 @@ U16     svalue, dvalue, tvalue;
         regs->psw.cc = len ? 3 : 0;
 
         /* exit on the cpu determined number of bytes */
-        if((len != 0) && !(len & 0xfff))
-        {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+        if((len != 0) && (!(addr1 & 0xfff) && !addr2 & 0xfff))
             break;
-        }
 
     } /* end while */
 
