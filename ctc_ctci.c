@@ -445,8 +445,6 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
     DEVBLK* pDEVBLK2;
     PCTCBLK pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
 
-    pDEVBLK2 = pDEVBLK->group->memdev[1];
-
     // Close the device file (if not already closed)
     if( pCTCBLK->fd >= 0 )
     {
@@ -457,8 +455,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
         pCTCBLK->fd = -1;
         pDEVBLK->fd = -1;           // indicate we're now closed
 
-        if( pDEVBLK2 )              // if paired device exists,
-            pDEVBLK2->fd = -1;      // then it's now closed too.
+	if(pDEVBLK->group && pDEVBLK->group->memdev[pDEVBLK->member == 1 ? 1 : 0])
+	    pDEVBLK->group->memdev[pDEVBLK->member == 1 ? 1 : 0]->fd = -1;
 
         pCTCBLK->fCloseInProgress = 0;
     }
