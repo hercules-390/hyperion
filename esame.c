@@ -390,6 +390,14 @@ int     i;
       && ((psw[2] & 0xC0) == 0xC0) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
+    /* Make bits 12 and 31 valid, as these are ignored by RP */
+#if defined(FEATURE_ESAME)
+    psw[1] &= ~(0x08);
+#else /*!defined(FEATURE_ESAME)*/
+    psw[1] |= 0x08;
+    psw[3] &= ~(0x01);
+#endif /*!defined(FEATURE_ESAME)*/
+
     if( ARCH_DEP(load_psw) (regs, psw) )
     {
         /* restore the psw */
