@@ -251,7 +251,7 @@ int    nConsectutiveHardCopyWriteErrors = 0;
                           (logger_bufsize - logger_currmsg);
 
         nBytesActuallyRead =
-            read(logmsgfd[LOGMSG_READPIPE], pBuffer, nMaxBytesToRead)
+            read(logmsgfd[LOGMSG_READPIPE], pBuffer, nMaxBytesToRead);
 
         if (nBytesActuallyRead < 0 || ferror(flogmsg[LOGMSG_READPIPE]))
         {
