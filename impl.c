@@ -51,7 +51,7 @@ int i;
 
 #ifndef WIN32
     /* Set watchdog priority just below cpu priority
-       such that it will not invalidly detect an 
+       such that it will not invalidly detect an
        inoperable cpu */
     if(sysblk.cpuprio >= 0)
         setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1);
@@ -68,7 +68,7 @@ int i;
             if(sysblk.regs[i].cpustate == CPUSTATE_STARTED
               && !sysblk.regs[i].psw.wait)
             {
-                /* If the cpu is running but not executing 
+                /* If the cpu is running but not executing
                    instructions then it must be malfunctioning */
                 if(sysblk.regs[i].instcount == savecount[i])
                 {
@@ -138,9 +138,18 @@ TID paneltid;
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
         fprintf (stderr,
-                "HHC031I Cannot register SIGINT handler: %s\n",
+                "HHC131I Cannot register SIGINT handler: %s\n",
                 strerror(errno));
         exit(1);
+    }
+
+    /* Ignore the SIGPIPE signal, otherwise Hercules may terminate with
+       Broken Pipe error if the printer driver writes to a closed pipe */
+    if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
+    {
+        fprintf (stderr,
+                "HHC132I Cannot suppress SIGPIPE signal: %s\n",
+                strerror(errno));
     }
 
 #if !defined(NO_SIGABEND_HANDLER)
@@ -157,7 +166,7 @@ TID paneltid;
          || sigaction(SIGUSR2, &sa, NULL) )
         {
             fprintf (stderr,
-                    "HHC031I Cannot register SIG ILL/FPE/SEGV/BUS handler: %s\n",
+                    "HHC133I Cannot register SIGILL/FPE/SEGV/BUS/USR handler: %s\n",
                     strerror(errno));
             exit(1);
         }
@@ -168,7 +177,7 @@ TID paneltid;
                         watchdog_thread, NULL) )
     {
         fprintf (stderr,
-                "HHC033I Cannot watchdog thread: %s\n",
+                "HHC134I Cannot create watchdog thread: %s\n",
                 strerror(errno));
         exit(1);
     }
@@ -179,7 +188,7 @@ TID paneltid;
                         console_connection_handler, NULL) )
     {
         fprintf (stderr,
-                "HHC032I Cannot create console thread: %s\n",
+                "HHC135I Cannot create console thread: %s\n",
                 strerror(errno));
         exit(1);
     }
@@ -189,7 +198,7 @@ TID paneltid;
                         timer_update_thread, NULL) )
     {
         fprintf (stderr,
-                "HHC033I Cannot create timer thread: %s\n",
+                "HHC136I Cannot create timer thread: %s\n",
                 strerror(errno));
         exit(1);
     }
@@ -208,7 +217,7 @@ TID paneltid;
                         panel_display, NULL) )
     {
         fprintf (stderr,
-                "HHC033I Cannot create panel thread: %s\n",
+                "HHC137I Cannot create panel thread: %s\n",
                 strerror(errno));
         exit(1);
     }
