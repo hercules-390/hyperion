@@ -5861,7 +5861,7 @@ BYTE    dec[16];                        /* Packed decimal result     */
     RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
     /* Load value of register and sign-extend to 64 bits */
-    bin = (S64)(regs->GR_L(r1));
+    bin = (S64)((S32)(regs->GR_L(r1)));
 
     /* Convert to 16-byte packed decimal number */
     binary_to_packed (bin, dec);
