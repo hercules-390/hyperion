@@ -4441,6 +4441,9 @@ BYTE ARCH_DEP(stfl_data)[4] = {
 #if defined(FEATURE_DAT_ENHANCEMENT)
                  | STFL_0_IDTE_INSTALLED
 #endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+                 | STFL_0_ASN_LX_REUSE
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
                  ,
                  0
                  ,
@@ -4458,6 +4461,9 @@ BYTE ARCH_DEP(stfl_data)[4] = {
 #if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
                  | STFL_2_HFP_MULT_ADD_SUB
 #endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
+                 | STFL_2_TRAN_FAC3
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
                  ,
                  0 };
 

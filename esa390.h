@@ -81,7 +81,7 @@ typedef struct  _PSW {
         BYTE     progmask;              /* Program mask    (20 - 23) */
         BYTE     zerobyte;              /* Zeroes          (24 - 31) */
                                         /* or (esame)      (24 - 30) */
-	U32      zeroword;              /* esame only      (32 - 63) */
+        U32      zeroword;              /* esame only      (32 - 63) */
         BYTE                            /* Addressing mode (31 - 32) */
                  amode64:1,             /* 64-bit addressing         */
                  amode:1;               /* 31-bit addressing         */
@@ -1234,6 +1234,8 @@ typedef struct _MBK {
                                            when segtab invalidated   */
 #define STFL_0_IDTE_SC_REGTAB   0x04    /* IDTE selective clearing
                                            when regtab invalidated   */
+#define STFL_0_ASN_LX_REUSE     0x02    /* ASN-and-LX reuse facility
+                                           is installed              */
 #define STFL_2_TRAN_FAC2        0x80    /* Extended translation
                                            facility 2 is installed   */
 #define STFL_2_MSG_SECURITY     0x40    /* Message security assist
@@ -1244,6 +1246,8 @@ typedef struct _MBK {
                                            has high performance      */
 #define STFL_2_HFP_MULT_ADD_SUB 0x08    /* HFP multiply-add/subtract
                                            facility is installed     */
+#define STFL_2_TRAN_FAC3        0x02    /* Extended translation
+                                           facility 3 is installed   */
 
 /* Bit definitions for the Vector Facility */
 #define VSR_M    0x0001000000000000ULL  /* Vector mask mode bit      */
