@@ -4,11 +4,19 @@
 
 VERSION  = 2.14a
 
+
+# Change the following to yes/no to
+# generate a link map for debugging
+
+LINKMAP=no
+
+
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
 #   overridden in the make command line, as in "PREFIX=/foo make install"
 #   (the directory is only used when installing).
 DESTDIR  = $(PREFIX)/usr/bin
+
 
 # Architecture processing:
 ifndef HOST_ARCH
@@ -127,8 +135,13 @@ HEADERS  = feat370.h feat390.h feat900.h featall.h featchk.h features.h \
 
 all:	   $(EXEFILES)
 
+ifeq ($(LINKMAP),yes)
+hercules:  $(HRC_OBJS)
+	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS) -Xlinker -Map -Xlinker hercules.map
+else
 hercules:  $(HRC_OBJS)
 	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS)
+endif
 
 $(HRC_OBJS): %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ -c $<

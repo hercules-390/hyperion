@@ -3,7 +3,23 @@
 # modified to build hercules under windows (VB)
 # modified to build external GUI compatible version under Windows (Fish)
 # modified to be useful (hopefully) for Linux AND windows (VB)
+# Added LINKMAP option (Fish)
 #
+
+
+#### VERSION #####
+
+ifndef VER
+VER=2.14a
+endif
+
+
+# Change the following to yes/no to
+# generate a link map for debugging
+
+LINKMAP=no
+
+
 
 WIN=NO
 THEOS=$(OSTYPE)
@@ -13,10 +29,6 @@ endif
 
 ifndef HOST_ARCH
 HOST_ARCH=pentium
-endif
-
-ifndef VER
-VER=2.13h
 endif
 
 VERSION  = $(VER)_$(HOST_ARCH)
@@ -280,8 +292,13 @@ HEADERS  = feat370.h \
 
 all:  $(EXEFILES)
 
+ifeq ($(LINKMAP),yes)
+hercules:  $(HRC_OBJS)
+	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS) -Xlinker -Map -Xlinker hercules.map
+else
 hercules:  $(HRC_OBJS)
 	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS)
+endif
 
 $(HRC_OBJS): %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ -c $<
