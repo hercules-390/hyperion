@@ -63,10 +63,10 @@ HDLDEP **newdep;
          newdep = &((*newdep)->next));
 
     (*newdep) = malloc(sizeof(HDLDEP));
-    (*newdep)->next = NULL;
-    (*newdep)->name = strdup(name);
+    (*newdep)->next    = NULL;
+    (*newdep)->name    = strdup(name);
     (*newdep)->version = strdup(version);
-    (*newdep)->size = size;
+    (*newdep)->size    = size;
 
     return 0;
 }
@@ -139,9 +139,7 @@ void *fep;
             }
 
             modent->fep = fep;
-
             modent->name = strdup(name);
-
             modent->count = 1;
 
             /* Owning dll */
@@ -221,9 +219,7 @@ MODENT *modent;
     modent = malloc(sizeof(MODENT));
 
     modent->fep = fep;
-
     modent->name = strdup(name);
-
     modent->count = 0;
 
     /* Owning dll */
@@ -269,6 +265,12 @@ HDLPRE *preload;
     }
 
     hdl_cdll->name = strdup("*Hercules");
+
+    // ZZ FIXME: Win32-specific file name handling: If no file name
+    // extension is specified in the file name parameter, the default
+    // library extension ".dll" is appended. However, the file name
+    // string can include a trailing point character (.) to indicate
+    // that the module name has no extension.
 
     if(!(hdl_cdll->dll = dlopen(NULL, RTLD_NOW )))
     {
@@ -336,11 +338,17 @@ char *modname;
 
     modname = (modname = strrchr(name,'/')) ? ++modname : name;
 
+    // ZZ FIXME: Win32-specific file name handling: If no file name
+    // extension is specified in the file name parameter, the default
+    // library extension ".dll" is appended. However, the file name
+    // string can include a trailing point character (.) to indicate
+    // that the module name has no extension.
+
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        if(!strcmp(modname,dllent->name))
+        if(strfilenamecmp(modname,dllent->name) == 0)
         {
-            logmsg("HHCHD005E %s already loaded\n",modname);
+            logmsg("HHCHD005E %s already loaded\n",dllent->name);
             return -1;
         }
     }
@@ -437,7 +445,7 @@ char *modname;
 }
 
 
-/* hdl_load - unload a dll
+/* hdl_dele - unload a dll
  */
 int hdl_dele(char *name)
 {
@@ -451,9 +459,13 @@ char *modname;
 
     for(dllent = &(hdl_dll); *dllent; dllent = &((*dllent)->dllnext))
     {
-        if(!((*dllent)->flags & HDL_LOAD_NOUNLOAD)
-          && !strcmp(modname,(*dllent)->name))
+        if(strfilenamecmp(modname,(*dllent)->name) == 0)
         {
+            if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
+            {
+                logmsg("HHCHD015E Unloading of %s not allowed\n",(*dllent)->name);
+                return -1;
+            }
            
             modent = (*dllent)->modent;
             while(modent)
@@ -504,10 +516,9 @@ char *modname;
 
     release_lock(&hdl_lock);
 
-    logmsg("HHCHD009E %s not unloaded\n",modname);
+    logmsg("HHCHD009E %s not found\n",modname);
 
     return -1;
 }
-
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/

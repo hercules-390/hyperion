@@ -163,7 +163,7 @@ int             tt32_ioctl( int fd, int iRequest, char* argp )
 
 const char*     tt32_get_default_iface()
 {
-    if (!tt32_loaddll()) return NULL;
+    if (!tt32_loaddll()) return "00-00-5E-80-00-00";
     return g_tt32_pfn_get_default_iface();
 }
 
@@ -180,7 +180,10 @@ int             display_tt32_stats( int fd )
     memset(&stats,0,sizeof(stats));
     stats.dwStructSize = sizeof(stats);
 
-    if (g_tt32_pfn_get_stats(fd,&stats) < (int)(sizeof(stats))) return -1;
+    /* ZZ FIXME: Temp workaround of bug in TunTap32.dll's 
+       "CTunTap::GetIFaceStats" function. Remove once fixed. */
+//  if (g_tt32_pfn_get_stats(fd,&stats) < (int)(sizeof(stats))) return -1;
+        g_tt32_pfn_get_stats(fd,&stats);
 
     logmsg
     (

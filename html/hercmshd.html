@@ -50,7 +50,8 @@ HHCHD004I No initializer in <em>module</em>: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The initializer in DLL named <code><em>module</em></code> could not be found.  The error is described by <code><em>error</em></code>
+  <dd>The initializer in DLL named <code><em>module</em></code> could not be found.
+  The error is described by <code><em>error</em></code>
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
@@ -85,7 +86,7 @@ HHCHD007E unable to open DLL <em>module</em>: <em>error</em>
 <dd><dl>
   <dt>Meaning
   <dd>The DLL named <code><em>module</em></code> could not be opened.
-The error is described by <code><em>error</em></code>.
+   The error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Ensure that the correct module is specified and is accessible.
   <dt>Issued by
@@ -96,18 +97,92 @@ HHCHD008I No initializer in <em>module</em>: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>The initializer in DLL named <code><em>module</em></code> could not be found.  The error is described by <code><em>error</em></code>
+  <dd>The initializer in DLL named <code><em>module</em></code> could not be found.
+  The error is described by <code><em>error</em></code>
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by
   <dd>hdl.c, function hdl_load
   </dl>
 <dt><code><a name="HHCHD009E">
-HHCHD009E <em>module</em> not unloaded
+HHCHD009E <em>module</em> not found
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>An attempt was made to unload a module that was not loaded or could not be unloaded.
+  <dd>An attempt was made to unload a module that was not loaded.
+  <dt>Action
+  <dd>No action required.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_dele
+  </dl>
+<dt><code><a name="HHCHD010I">
+HHCHD010I Dependency check failed for <em>module</em>, version(<em>vers_actual</em>) expected(<em>vers_exp</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The version of the module's required dependency does not match the version of the dependency
+  in the module that contains the dependency.
+  <dt>Action
+  <dd>No action required.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_dchk
+  </dl>
+<dt><code><a name="HHCHD011I">
+HHCHD011I Dependency check failed for <em>module</em>, size(<em>size_actual</em>) expected(<em>size_exp</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The size of the module's required dependency does not match the size of the dependency
+  in the module that contains the dependency.
+  <dt>Action
+  <dd>No action required.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_dchk
+  </dl>
+<dt><code><a name="HHCHD012E">
+HHCHD012E No depency section in <em>module</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The module being loaded does not contain the required dependency section.
+  The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Rebuild the module with the required HDL_DEPENDENCY_SECTION defined.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_main
+  </dl>
+<dt><code><a name="HHCHD013E">
+HHCHD013E No depency section in <em>module</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The module being loaded does not contain the required dependency section.
+  The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Rebuild the module with the required HDL_DEPENDENCY_SECTION defined.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_load
+  </dl>
+<dt><code><a name="HHCHD014E">
+HHCHD014E Dependency check failed for module <em>module</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>One or more required dependencies were not satisfied. The preceding
+  HHCHD010I and/or HHCHD011I message(s) identifies which of the dependencies failed
+  and the reason why.
+  <dt>Action
+  <dd>If the module was not loaded, rebuild the module using the same version of
+  the required dependency as the module that contains the dependency and try again.
+  <dt>Issued by
+  <dd>hdl.c, function hdl_load
+  </dl>
+<dt><code><a name="HHCHD015E">
+HHCHD015E Unloading of <em>module</em> not allowed
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to unload a module that was not allowed to be unloaded.
   <dt>Action
   <dd>No action required.
   <dt>Issued by

@@ -1,3 +1,10 @@
+26 Jun 2003 Fix Win32 hdl case-sensitivity bug - Fish
+26 Jun 2003 TT32 CTCI fixes: 1) fix ACCESS_VIOLATION caused by NULL ptr
+            being returned by 'tt32_get_default_iface', 2) 'tt32stats_cmd'
+            temporarily fixed by fixing bug in 'CTCI_Init' and adding temp
+            workaround code to 'display_tt32_stats' function to work around
+            bug in TunTap32.dll, 3) add some code to try and resolve bogus
+            "HHCCT048E" message being issued at close/shutdown.
 25 Jun 2003 shared device version/release checking - Greg Smith
 25 Jun 2003 micro performance update in branch on condition - Bernard van der Helm
 25 Jun 2003 Fix unlikely but serious fthreads bug in wait_condition - Fish

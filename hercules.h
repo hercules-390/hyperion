@@ -150,6 +150,26 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #define HANDLE int
 #define DWORD int       /* will be undefined later */
 #endif
+/*
+**                  File name comparisons
+**               ('strcmp' vs. 'strcasecmp')
+**
+** On Windows, file names are not case sensitive. While the case
+** of the file name may be preserved by the file system (and thus
+** show file names in both upper/lower case in directory listings
+** for example), the file system itself is NOT case-sensitive. File
+** names "Foo", "foo", "fOo", "FoO", etc, all refer to the same file.
+** On other platforms however (e.g. *nix), the file system IS case
+** sensitive. File names "Foo", "foo", "fOo", "FoO", etc, all refer
+** to different files on such systems. Thus we define a 'strfilecmp'
+** macro to be used for filename comparisons and define it to be
+** strcasecmp on Win32 platforms and strcmp for other platforms.
+*/
+#ifdef WIN32
+#define strfilenamecmp(s1,s2)  strcasecmp((s1),(s2))
+#else
+#define strfilenamecmp(s1,s2)  strcmp((s1),(s2))
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Macro definitions for tracing                                     */

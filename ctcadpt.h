@@ -199,8 +199,9 @@ struct  _CTCBLK
         fOldFormat:1,                     // Old Config Format
         fCreated:1,                       // Interface Created
         fStarted:1,                       // Startup Received
-        fDataPending:1;                   // Data is pending for
+        fDataPending:1,                   // Data is pending for
                                           //   read device
+        fCloseInProgress:1;               // Close in progress
 
     int         iKernBuff;                // Kernel buffer in K bytes.
     int         iIOBuff;                  // I/O buffer in K bytes.

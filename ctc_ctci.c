@@ -114,8 +114,11 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         SetSIDInfo( pDevCTCBLK->pDEVBLK[0], 0x3088, 0x08, 0x3088, 0x01 );
         SetSIDInfo( pDevCTCBLK->pDEVBLK[1], 0x3088, 0x08, 0x3088, 0x01 );
 
-        pDEVBLK->ctctype    = CTC_CTCI;
-        pDEVBLK->ctcxmode   = 1;
+        pDevCTCBLK->pDEVBLK[0]->ctctype  = CTC_CTCI;
+        pDevCTCBLK->pDEVBLK[0]->ctcxmode = 1;
+
+        pDevCTCBLK->pDEVBLK[1]->ctctype  = CTC_CTCI;
+        pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
 
         pDevPair = pDEVBLK;
     }
@@ -451,6 +454,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
     // Close the device file (if not already closed)
     if( pCTCBLK->fd >= 0 )
     {
+        pCTCBLK->fCloseInProgress = 1;
+
         TUNTAP_Close( pCTCBLK->fd );
 
         pCTCBLK->fd = -1;
@@ -458,6 +463,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
 
         if( pDevPair )              // if paired device exists,
             pDevPair->fd = -1;      // then it's now closed too.
+
+        pCTCBLK->fCloseInProgress = 0;
     }
 
     return 0;
@@ -808,10 +815,20 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         // Check for error condition
         if( iLength < 0 )
         {
-            if( pCTCBLK->fd != -1 )
+            if( !pCTCBLK->fCloseInProgress )
+            {
                 logmsg( _("HHCCT048E %4.4X: Error reading from %s: %s\n"),
                     pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                     strerror( errno ) );
+                sleep(1);
+                continue;
+            }
+
+            // Wait for close to complete
+            while ( pCTCBLK->fCloseInProgress && pCTCBLK->fd != -1 )
+            {
+                sched_yield();  // (give it time to complete)
+            }
 
             break;
         }
@@ -948,7 +965,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         pCTCBLK->fOldFormat = 1;
         argc--; argv++;
     }
-	
+    
     // Parse any optional arguments if not old format
     while( !pCTCBLK->fOldFormat )
     {

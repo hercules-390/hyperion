@@ -48,6 +48,7 @@
 #define  MAX_COMMAND_LEN          ( 1024 )
 
 SYSBLK*  my_sysblk_ptr        = NULL;   // (ptr to Herc's SYSBLK structure)
+int*     my_initdone_ptr      = NULL;   // (ptr to Herc's 'initdone' flag)
 FILE*    fInputStream         = NULL;   // (stdin stream)
 FILE*    fStatusStream        = NULL;   // (stderr stream)
 int      nInputStreamFileNum  =  -1;    // (file descriptor for stdin stream)
@@ -414,8 +415,11 @@ void  UpdateStatus ()
     {
         BYTE  cpupct[10];
 
-        snprintf(cpupct,sizeof(cpupct),
-            "%1.0f",(100.0 * pTargetCPU_REGS->cpupct));
+        if (CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate)
+            strcpy(cpupct,"0");
+        else
+            snprintf(cpupct,sizeof(cpupct),
+                "%1.0f",(100.0 * pTargetCPU_REGS->cpupct));
 
         if (isdigit(cpupct[0]))
         {
@@ -857,37 +861,40 @@ void gui_panel_cleanup()
 
 void*  gui_debug_cpu_state ( REGS* pREGS )
 {
-    static BOOL bStopped = 0;
-    static BOOL bLoading = 0;
+    static BOOL bLoading = FALSE;
+    static BOOL bStopped = FALSE;
 
-    if (pREGS != pTargetCPU_REGS)
+    if (pTargetCPU_REGS && pREGS != pTargetCPU_REGS)
         return NULL;
 
-    if (bStopped != (CPUSTATE_STOPPED == pREGS->cpustate))
+    if (bLoading != (pREGS->loadstate ? TRUE : FALSE))
     {
-        bStopped  = (CPUSTATE_STOPPED == pREGS->cpustate);
-        fprintf(stdout,"MAN=%c\n",bStopped ? '1' : '0');
+        bLoading  = (pREGS->loadstate ? TRUE : FALSE);
+        fprintf(stdout,"LOAD=%c\n", bLoading ? '1' : '0');
     }
 
-    if (bLoading != pREGS->loadstate)
+    if (bStopped != ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE))
     {
-        bLoading  = pREGS->loadstate;
-        fprintf(stdout,"LOAD=%c\n",bLoading ? '1' : '0');
+        bStopped  = ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE);
+        fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
     }
 
     return NULL;    // (I have no idea why this is a void* func)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Our Hercules "panel_display" override...
-// or "daemon_task" in daemon mode
+// Our Hercules "panel_display" AND/OR "daemon_task" override...
 
 void gui_panel_display ()
 {
     logmsg(_("HHCHGnnnI dyngui.dll initiated\n"));
 
-    Initialize();           // (allocate buffers, etc)
-    ProcessingLoop();       // (primary processing loop)
+    Initialize();               // (allocate buffers, etc)
+
+    while (!*my_initdone_ptr)   // (wait for system to
+        sched_yield();          //  finish coming up...)
+
+    ProcessingLoop();           // (primary processing loop)
 }
 
 /*****************************************************************************\
@@ -935,8 +942,8 @@ HDL_REGISTER_SECTION;       // ("Register" our entry-points)
 //             entry-point      entry-point
 //             name             value
 
-HDL_REGISTER ( panel_display,   gui_panel_display   );
-HDL_REGISTER ( daemon_task,     gui_panel_display   );
+HDL_REGISTER ( panel_display,   gui_panel_display   );// (Yep! We override EITHER!)
+HDL_REGISTER ( daemon_task,     gui_panel_display   );// (Yep! We override EITHER!)
 HDL_REGISTER ( debug_cpu_state, gui_debug_cpu_state );
 HDL_REGISTER ( panel_command,   gui_panel_command   );
 
@@ -958,9 +965,10 @@ HDL_RESOLVER_SECTION;       // ("Resolve" needed entry-points)
 //            that we call
 HDL_RESOLVE ( panel_command );
 
-//                    Our pointer-    Registered entry-
-//                    variable name   point value name
-HDL_RESOLVE_PTRVAR (  my_sysblk_ptr,  sysblk            );
+//                    Our pointer-     Registered entry-
+//                    variable name    point value name
+HDL_RESOLVE_PTRVAR (  my_sysblk_ptr,     sysblk         );
+HDL_RESOLVE_PTRVAR (  my_initdone_ptr,   initdone       );
 
 END_RESOLVER_SECTION;
 
