@@ -188,7 +188,7 @@ static BYTE TapeCommands3410[256]=
 
 static BYTE TapeCommands3420[256]=
  /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
-  { 0,1,1,3,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
+  { 0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
     0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1,  /* 10 */
     0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1,  /* 20 */
     0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1,  /* 30 */
@@ -3315,7 +3315,10 @@ static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
                             *unitstat=CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
                             break;
                             case 0x0f:
+                            /*
                             *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+                            */
+                            *unitstat=CSW_UC | CSW_DE | CSW_CUE;
                             break;
                             default:
                             *unitstat=CSW_CE | CSW_UC | CSW_DE;
@@ -3325,7 +3328,10 @@ static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
                         dev->sense[1]=SENSE1_TAPE_TUB;
                         break;
                 case TAPE_BSENSE_TAPEUNLOADED2: /* RewUnld op */
+                        *unitstat=CSW_UC | CSW_DE | CSW_CUE;
+                        /*
                         *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+                        */
                         dev->sense[0]=SENSE_IR;
                         dev->sense[1]=SENSE1_TAPE_TUB;
                         break;
