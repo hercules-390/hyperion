@@ -5258,7 +5258,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
             return;
         }
-        dev->blockid = 0;
+        if(dev->tapedevt==TAPEDEVT_SCSITAPE)
+        {
+            dev->blockid = 0;
+        }
     }
 
     /* Process depending on CCW opcode */
