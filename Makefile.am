@@ -253,8 +253,9 @@ dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 endif
 endif
 
-EXTRA_DIST = autoconf/config.rpath RELEASE.NOTES CHANGES README.COMMADPT README.CVS README.ECPSVM \
-             README.HDL README.NETWORKING README.OSX README.TAPE hercules.cnf
+EXTRA_DIST = autoconf/config.rpath RELEASE.NOTES CHANGES README.COMMADPT \
+             README.CVS README.ECPSVM README.HDL README.NETWORKING \
+             README.OSX README.TAPE hercules.cnf cckdfix.c
 
 noinst_HEADERS  = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \

@@ -317,7 +317,7 @@ cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 
-hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c \
+hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 
@@ -325,11 +325,11 @@ hetinit_SOURCES = hetinit.c hetlib.c codepage.c sllib.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 
-hetmap_SOURCES = hetmap.c hetlib.c sllib.c hostinfo.c version.c \
+hetmap_SOURCES = hetmap.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 
-hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c \
+hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 
@@ -337,8 +337,9 @@ dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
-             README.HDL README.NETWORKING README.OSX README.TAPE hercules.cnf
+EXTRA_DIST = autoconf/config.rpath RELEASE.NOTES CHANGES README.COMMADPT \
+             README.CVS README.ECPSVM README.HDL README.NETWORKING \
+             README.OSX README.TAPE hercules.cnf cckdfix.c
 
 
 noinst_HEADERS = fishhang.h \
@@ -346,7 +347,7 @@ noinst_HEADERS = fishhang.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
     hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
-    if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
+    ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
     ecpsvm.h memrchr.h shared.h hscutl.h hdl.h crypto.h service.h
 
@@ -818,8 +819,8 @@ hercules_OBJECTS = $(am_hercules_OBJECTS)
 @OPTION_DYNAMIC_LOAD_TRUE@@USE_DLLTOOL_TRUE@	hercules.exp
 @OPTION_DYNAMIC_LOAD_TRUE@@USE_DLLTOOL_FALSE@hercules_DEPENDENCIES =
 am_hetget_OBJECTS = hetget.$(OBJEXT) hetlib.$(OBJEXT) sllib.$(OBJEXT) \
-	hostinfo.$(OBJEXT) version.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_3) logmsg.$(OBJEXT)
+	hostinfo.$(OBJEXT) version.$(OBJEXT) codepage.$(OBJEXT) \
+	$(am__objects_1) $(am__objects_3) logmsg.$(OBJEXT)
 hetget_OBJECTS = $(am_hetget_OBJECTS)
 hetget_LDADD = $(LDADD)
 hetget_DEPENDENCIES =
@@ -833,15 +834,15 @@ hetinit_LDADD = $(LDADD)
 hetinit_DEPENDENCIES =
 hetinit_LDFLAGS =
 am_hetmap_OBJECTS = hetmap.$(OBJEXT) hetlib.$(OBJEXT) sllib.$(OBJEXT) \
-	hostinfo.$(OBJEXT) version.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_3) logmsg.$(OBJEXT)
+	hostinfo.$(OBJEXT) version.$(OBJEXT) codepage.$(OBJEXT) \
+	$(am__objects_1) $(am__objects_3) logmsg.$(OBJEXT)
 hetmap_OBJECTS = $(am_hetmap_OBJECTS)
 hetmap_LDADD = $(LDADD)
 hetmap_DEPENDENCIES =
 hetmap_LDFLAGS =
 am_hetupd_OBJECTS = hetupd.$(OBJEXT) hetlib.$(OBJEXT) sllib.$(OBJEXT) \
-	hostinfo.$(OBJEXT) version.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_3) logmsg.$(OBJEXT)
+	hostinfo.$(OBJEXT) version.$(OBJEXT) codepage.$(OBJEXT) \
+	$(am__objects_1) $(am__objects_3) logmsg.$(OBJEXT)
 hetupd_OBJECTS = $(am_hetupd_OBJECTS)
 hetupd_LDADD = $(LDADD)
 hetupd_DEPENDENCIES =
@@ -975,7 +976,7 @@ $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(srcdir)/configure.ac $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.ac m4/codeset.m4 m4/gettext.m4 m4/glibc21.m4 m4/iconv.m4 m4/isc-posix.m4 m4/lcmessage.m4 m4/lib-ld.m4 m4/lib-link.m4 m4/lib-prefix.m4 m4/progtest.m4
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.ac m4/codeset.m4 m4/gettext.m4 m4/glibc21.m4 m4/iconv.m4 m4/intdiv0.m4 m4/inttypes-pri.m4 m4/inttypes.m4 m4/inttypes_h.m4 m4/isc-posix.m4 m4/lcmessage.m4 m4/lib-ld.m4 m4/lib-link.m4 m4/lib-prefix.m4 m4/progtest.m4 m4/stdint_h.m4 m4/uintmax_t.m4 m4/ulonglong.m4
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 
 config.h: stamp-h1
