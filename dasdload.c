@@ -30,9 +30,13 @@
 #define SPACE           ((BYTE)' ')
 #define CASERET(s)      case s: return (#s)
 #define XMINF(lvl,format) \
-        ((infolvl<lvl)?0:fprintf(stdout, _(format)))
+        do { \
+        if(infolvl<lvl) fprintf(stdout, _(format)); \
+        } while(0)
 #define XMINFF(lvl,format,a...) \
-        ((infolvl<lvl)?0:fprintf(stdout, _(format), ## a))
+        do { \
+        if(infolvl<lvl) fprintf(stdout, _(format), ## a); \
+        } while(0)
 #define XMERR(format) \
         fprintf(stdout, _(format))
 #define XMERRF(format,a...) \
@@ -2164,7 +2168,7 @@ char   *scodepage;
     /* Check for end of directory */
     if (blklen == 12 && memcmp(xbuf, twelvehex00, 12) == 0)
     {
-        XMINFF (3, "HHCDL090I End of directory\n");
+        XMINF (3, "HHCDL090I End of directory\n");
         return 1;
     }
 
@@ -2246,7 +2250,7 @@ char   *scodepage;
         k = dirent->pds2indc & PDS2INDC_LUSR;
 
         /* Print the user data */
-        if (k > 0) XMINFF (3, "Userdata=");
+        if (k > 0) XMINF (3, "Userdata=");
         memset (hex, '\0', sizeof(hex));
         memset (chars, '\0', sizeof(chars));
         for (i = 0, j = 0; i < k*2; i++, j++)
@@ -4304,7 +4308,7 @@ int             fsflag = 0;             /* 1=Free space message sent */
     rc = read_track (cif, 0, 0);
     if (rc < 0)
     {
-        XMERRF ("HHCDL018E Cannot read VOL1 record\n");
+        XMERR ("HHCDL018E Cannot read VOL1 record\n");
         return -1;
     }
 
