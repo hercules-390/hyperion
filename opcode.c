@@ -639,11 +639,11 @@
 
 
 #if !defined(FEATURE_MESSAGE_SECURITY_ASSIST)
- UNDEF_INST(cipher_message)
- UNDEF_INST(cipher_message_with_chaining)
- UNDEF_INST(compute_intermediate_message_digest)
- UNDEF_INST(compute_last_message_digest)
- UNDEF_INST(compute_message_authentication_code)
+ UNDEF_INST(cipher_message_r)
+ UNDEF_INST(cipher_message_with_chaining_r)
+ UNDEF_INST(compute_intermediate_message_digest_r)
+ UNDEF_INST(compute_last_message_digest_r)
+ UNDEF_INST(compute_message_authentication_code_r)
 #endif /*!defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 
@@ -2540,7 +2540,7 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B91B*/ GENx___x___x900 (subtract_logical_long_fullword_register,RRE,"SLGFR"),
  /*B91C*/ GENx___x___x900 (multiply_single_long_fullword_register,RRE,"MSGFR"),
  /*B91D*/ GENx___x___x900 (divide_single_long_fullword_register,RRE,"DSGFR"),
- /*B91E*/ GENx___x390x900 (compute_message_authentication_code,RRE,"KMAC"),
+ /*B91E*/ GENx___x390x900 (compute_message_authentication_code_r,RRE,"KMAC"),
  /*B91F*/ GENx___x390x900 (load_reversed_register,RRE,"LRVR"),
  /*B920*/ GENx___x___x900 (compare_long_register,RRE,"CGR"),
  /*B921*/ GENx___x___x900 (compare_logical_long_register,RRE,"CLGR"),
@@ -2556,8 +2556,8 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B92B*/ GENx___x___x___ ,
  /*B92C*/ GENx___x___x___ ,
  /*B92D*/ GENx___x___x___ ,
- /*B92E*/ GENx___x390x900 (cipher_message,RRE,"KM"),
- /*B92F*/ GENx___x390x900 (cipher_message_with_chaining,RRE,"KMC"),
+ /*B92E*/ GENx___x390x900 (cipher_message_r,RRE,"KM"),
+ /*B92F*/ GENx___x390x900 (cipher_message_with_chaining_r,RRE,"KMC"),
  /*B930*/ GENx___x___x900 (compare_long_fullword_register,RRE,"CGFR"),
  /*B931*/ GENx___x___x900 (compare_logical_long_fullword_register,RRE,"CLGFR"),
  /*B932*/ GENx___x___x___ ,
@@ -2572,8 +2572,8 @@ zz_func opcode_b9xx[256][GEN_MAXARCH] = {
  /*B93B*/ GENx___x___x___ ,
  /*B93C*/ GENx___x___x___ ,
  /*B93D*/ GENx___x___x___ ,
- /*B93E*/ GENx___x390x900 (compute_intermediate_message_digest,RRE,"KIMD"),
- /*B93F*/ GENx___x390x900 (compute_last_message_digest,RRE,"KLMD"),
+ /*B93E*/ GENx___x390x900 (compute_intermediate_message_digest_r,RRE,"KIMD"),
+ /*B93F*/ GENx___x390x900 (compute_last_message_digest_r,RRE,"KLMD"),
  /*B940*/ GENx___x___x___ ,
  /*B941*/ GENx___x___x___ ,
  /*B942*/ GENx___x___x___ ,

@@ -1,3 +1,4 @@
+28 Jun 2003 Loadable crypto support (US export regulations) - Jan Jaeger
 27 Jun 2003 Allow unload reject in hdl final processing - Jan Jaeger
 27 Jun 2003 Support dynamic loadable cgi routines - Jan Jaeger
 27 Jun 2003 Panel.c + hsccmd.c: clear/reset screen before exiting - Fish

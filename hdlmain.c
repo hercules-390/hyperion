@@ -6,6 +6,24 @@
 
 #include "httpmisc.h"
 
+#include "crypto.h"
+
+
+#if !defined(_GEN_ARCH)
+
+
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "hdlmain.c"
+#endif 
+
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "hdlmain.c"
+#endif 
+
+
 #if defined(OPTION_DYNAMIC_LOAD)
 
 
@@ -40,6 +58,22 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_device_state,      *NULL           );
     HDL_REGISTER( debug_program_interrupt, *NULL           );
     HDL_REGISTER( debug_diagnose,          *NULL           );
+
+#if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
+    HDL_REGISTER( s390_cipher_message,                      *NULL );
+    HDL_REGISTER( s390_cipher_message_with_chaining,        *NULL );
+    HDL_REGISTER( s390_compute_intermediate_message_digest, *NULL );
+    HDL_REGISTER( s390_compute_last_message_digest,         *NULL );
+    HDL_REGISTER( s390_compute_message_authentication_code, *NULL );
+#endif /*defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)*/
+#if defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)
+    HDL_REGISTER( z900_cipher_message,                      *NULL );
+    HDL_REGISTER( z900_cipher_message_with_chaining,        *NULL );
+    HDL_REGISTER( z900_compute_intermediate_message_digest, *NULL );
+    HDL_REGISTER( z900_compute_last_message_digest,         *NULL );
+    HDL_REGISTER( z900_compute_message_authentication_code, *NULL );
+#endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
+
 }
 END_REGISTER_SECTION;
 
@@ -54,6 +88,22 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE( debug_device_state      );
     HDL_RESOLVE( debug_program_interrupt );
     HDL_RESOLVE( debug_diagnose          );
+
+#if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
+    HDL_RESOLVE( s390_cipher_message                      );
+    HDL_RESOLVE( s390_cipher_message_with_chaining        );
+    HDL_RESOLVE( s390_compute_intermediate_message_digest );
+    HDL_RESOLVE( s390_compute_last_message_digest         );
+    HDL_RESOLVE( s390_compute_message_authentication_code );
+#endif /*defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)*/
+#if defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)
+    HDL_RESOLVE( z900_cipher_message                      );
+    HDL_RESOLVE( z900_cipher_message_with_chaining        );
+    HDL_RESOLVE( z900_compute_intermediate_message_digest );
+    HDL_RESOLVE( z900_compute_last_message_digest         );
+    HDL_RESOLVE( z900_compute_message_authentication_code );
+#endif /*defined(_900_FEATURE_MESSAGE_SECURITY_ASSIST)*/
+
 }
 END_RESOLVER_SECTION;
 
@@ -66,3 +116,7 @@ END_FINAL_SECTION;
 
 
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
+
+#endif /*!defined(_GEN_ARCH)*/
+

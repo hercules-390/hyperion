@@ -20,6 +20,8 @@
 
 #include "inline.h"
 
+#include "crypto.h"
+
 #if !defined(_LONG_MATH)
 #define _LONG_MATH
 /* These routines need to go into inline.h *JJ */
@@ -4606,7 +4608,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
                  | STFL_2_TRAN_FAC2
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
-                 | STFL_2_MSG_SECURITY
+                 | (ARCH_DEP(cipher_message) ? STFL_2_MSG_SECURITY : 0)
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 #if defined(FEATURE_LONG_DISPLACEMENT)
                  | STFL_2_LONG_DISPL_INST

@@ -97,6 +97,10 @@
  #define _FEATURE_EXTERNAL_INTERRUPT_ASSIST
 #endif
 
+#if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
+ #define _FEATURE_MESSAGE_SECURITY_ASSIST
+#endif
+
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
  #define _VSTORE_C_STATIC static inline
@@ -179,6 +183,7 @@
 #if defined(_900) && !defined(_390)
  #error OPTION_390_MODE must be enabled for OPTION_900_MODE
 #endif
+
 
 #else /*!defined(FEATCHK_CHECK_ALL)*/
 
@@ -296,6 +301,19 @@
 #if defined(FEATURE_PER2) && !defined(FEATURE_PER)
  #error FEATURE_PER must be defined when using FEATURE_PER2
 #endif
+
+
+#if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
+ #if defined(_370)
+  #define _370_FEATURE_MESSAGE_SECURITY_ASSIST
+ #endif
+ #if defined(_390)
+  #define _390_FEATURE_MESSAGE_SECURITY_ASSIST
+ #endif
+ #if defined(_900)
+  #define _900_FEATURE_MESSAGE_SECURITY_ASSIST
+ #endif
+#endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
 
 
 #endif /*!defined(FEATALL_CHECKALL)*/

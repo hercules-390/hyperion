@@ -9,6 +9,10 @@
 /* and function prototypes.                                          */
 /*-------------------------------------------------------------------*/
 
+#if !defined(EXTERN)
+ #define EXTERN extern
+#endif
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

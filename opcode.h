@@ -1703,11 +1703,11 @@ DEF_INST(compression_call);
 
 
 /* Instructions in crypto.c */
-DEF_INST(cipher_message);
-DEF_INST(cipher_message_with_chaining);
-DEF_INST(compute_intermediate_message_digest);
-DEF_INST(compute_last_message_digest);
-DEF_INST(compute_message_authentication_code);
+DEF_INST(cipher_message_r);
+DEF_INST(cipher_message_with_chaining_r);
+DEF_INST(compute_intermediate_message_digest_r);
+DEF_INST(compute_last_message_digest_r);
+DEF_INST(compute_message_authentication_code_r);
 
 
 /* Instructions in control.c */

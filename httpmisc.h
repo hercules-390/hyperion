@@ -1,6 +1,9 @@
 /* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2003                   */
 /*              HTTP Server                                          */
 
+#if !defined(_HTTPMISC_H)
+#define _HTTPMISC_H
+
 
 #if !defined(PKGDATADIR)
  #define HTTP_ROOT   "/usr/local/share/hercules/"
@@ -84,3 +87,5 @@ int html_include(WEBBLK *webblk, char *filename);
 
 char *http_variable(WEBBLK *webblk, char *name, int type);
 void *http_server (void *arg);
+
+#endif /*!defined(_HTTPMISC_H)*/
