@@ -2430,7 +2430,7 @@ BYTE    stat;                           /* Unit status               */
             {
                 len = sprintf (dev->buf,
                         _("HHCTE006A Enter input for console device %4.4X%c\n"),
-                        '\r',dev->devnum);
+                        dev->devnum,'\r');
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)
                 {
