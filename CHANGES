@@ -1,3 +1,4 @@
+04 Feb 2003 Correct condition code on SLB instructions - Jan Jaeger
 01 Feb 2003 Add changes for Mac OS X support - Paul Scott
 01 Feb 2003 Fix dasdinit wrong trk 0 size - Greg Smith + sidmuc
 31 Jan 2003 Command reject if path assignment is not supported (non-3480

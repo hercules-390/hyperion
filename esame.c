@@ -1011,7 +1011,7 @@ U64     n;
 DEF_INST(subtract_logical_borrow_long_register)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     borrow = 0;
+int     borrow = 2;
 U64     n;
 
     RRE(inst, execflag, regs, r1, r2);
@@ -1022,12 +1022,12 @@ U64     n;
     if(!(regs->psw.cc & 2))
         borrow = sub_logical_long(&(regs->GR_G(r1)),
                                     regs->GR_G(r1),
-                                    1) & 2;
+                                    1);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
                                       regs->GR_G(r1),
-                                      n) & ~borrow;
+                                      n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1074,7 +1074,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* 64-bit operand values     */
-int     borrow = 0;
+int     borrow = 2;
 
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
@@ -1085,12 +1085,12 @@ int     borrow = 0;
     if(!(regs->psw.cc & 2))
         borrow = sub_logical_long(&(regs->GR_G(r1)),
                                     regs->GR_G(r1),
-                                    1) & 2;
+                                    1);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical_long(&(regs->GR_G(r1)),
                                       regs->GR_G(r1),
-                                      n) & ~borrow;
+                                      n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1131,7 +1131,7 @@ U32     n;
 DEF_INST(subtract_logical_borrow_register)
 {
 int     r1, r2;                         /* Values of R fields        */
-int     borrow = 0;
+int     borrow = 2;
 U32     n;
 
     RRE(inst, execflag, regs, r1, r2);
@@ -1142,12 +1142,12 @@ U32     n;
     if(!(regs->psw.cc & 2))
         borrow = sub_logical(&(regs->GR_L(r1)),
                                regs->GR_L(r1),
-                               1) & 2;
+                               1);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical(&(regs->GR_L(r1)),
                                  regs->GR_L(r1),
-                                 n) & ~borrow;
+                                 n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow_register) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
@@ -1194,7 +1194,7 @@ int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
-int     borrow = 0;
+int     borrow = 2;
 
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
@@ -1205,12 +1205,12 @@ int     borrow = 0;
     if(!(regs->psw.cc & 2))
         borrow = sub_logical(&(regs->GR_L(r1)),
                                regs->GR_L(r1),
-                               1) & 2;
+                               1);
 
     /* Subtract unsigned operands and set condition code */
     regs->psw.cc = sub_logical(&(regs->GR_L(r1)),
                                  regs->GR_L(r1),
-                                 n) & ~borrow;
+                                 n) & (borrow|1);
 
 } /* end DEF_INST(subtract_logical_borrow) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
