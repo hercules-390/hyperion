@@ -1,4 +1,5 @@
-09 Dec 2002 Fix for windows/hsccmd.c - Jim Pierson
+12 Dec 2002 Main storage addressing cleanup - Jan Jaeger
+09 Dec 2002 Fix windows comiple errors in hsccmd.c - Jim Pierson
 05 Dec 2002 Various fixes and roll back of 30/6 performance mods - Jan Jaeger
 26 Nov 2002 Missing devtype.c FBA entries - Greg Smith and Ivan
 23 Nov 2002 Remove cckd/het zlib dependency - Greg Smith

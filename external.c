@@ -150,7 +150,7 @@ int     rc;
                                                             )
     {
         /* Point to SIE copy of PSA in state descriptor */
-        psa = (void*)(regs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
+        psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
         STORAGE_KEY(regs->sie_state, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else

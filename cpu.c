@@ -558,7 +558,7 @@ static char *pgmintname[] = {
            rather then the PSA, except for the operation exception */
         if(code != PGM_OPERATION_EXCEPTION)
         {
-            psa = (void*)(regs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
+            psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
             /* Set the main storage reference and change bits */
             STORAGE_KEY(regs->sie_state, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         }
