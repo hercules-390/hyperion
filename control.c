@@ -3329,8 +3329,6 @@ int     ssevent = 0;                    /* 1=space switch event      */
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
-    RRE(inst, regs, r1, r2);
-
     SIE_MODE_XC_OPEX(regs);
 
 #if defined(_FEATURE_SIE)
