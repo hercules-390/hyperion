@@ -1,0 +1,2 @@
+bash _build
+pause
