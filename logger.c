@@ -198,6 +198,7 @@ int bytes_read;
 
     release_lock(&logger_lock);
 
+    /* ZZ FIXME:  We must empty the read pipe before we terminate */
     while(logger_active)
     {
         bytes_read = read(sysblk.syslogfd[LOG_READ],logger_buffer + logger_currmsg,
