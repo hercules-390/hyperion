@@ -405,9 +405,10 @@ static int detach_devblk (DEVBLK *dev)
                     detach_devblk(dev->group->memdev[i]);
                 }
             }
+
+            free(dev->group);
         }
 
-        free(dev->group);
 	dev->group = NULL;
     }
 
