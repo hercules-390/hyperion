@@ -38,11 +38,6 @@ void * hdl_nent(char *, void*);         /* Find next in chain        */
 
 /*-------------------------------------------------------------------*/
 
-/* Cygwin back-link support */
-#if defined(WIN32)
-static void * (*hdl_fent_l)(char *) __attribute__ ((unused)) ;
-#endif
-
 #define HDL_DEPC hdl_depc
 #define HDL_RESO hdl_reso
 #define HDL_INIT hdl_init
@@ -84,17 +79,9 @@ void HDL_INIT(int (*hdl_init_regi)(char *, void *) __attribute__ ((unused)) ) \
 
 /*-------------------------------------------------------------------*/
 
-/* Cygwin back-link support */
-#if defined(WIN32)
-#define HDL_RESOLVER_SECTION                                            \
-void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
-{                                                                       \
-    hdl_fent_l = hdl_reso_fent
-#else
 #define HDL_RESOLVER_SECTION                                            \
 void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
 {
-#endif
 
 #define HDL_RESOLVE(_name)                              \
     (_name) = (hdl_reso_fent)(STRINGMAC(_name))
@@ -117,14 +104,8 @@ void HDL_FINI()                                         \
 
 /*-------------------------------------------------------------------*/
 
-/* Cygwin back-link support */
-#if defined(WIN32)
-#define HDL_FINDSYM(_name)                              \
-    hdl_fent_l( (_name) )
-#else
 #define HDL_FINDSYM(_name)                              \
     hdl_fent( (_name) )
-#endif
 
 #define HDL_FINDNXT(_name, _ep)                         \
     hdl_nent( STRINGMAC(_name), &(_ep) )
