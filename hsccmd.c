@@ -3115,9 +3115,17 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     logmsg ("\n");
 
     logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
-            "    cr[13] %16.16llx\n    cr[-1] %16.16llx\n",
-            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13),regs->CR_G(USE_INST_SPACE));
+            "    cr[13] %16.16llx\n",
+            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
 
+    logmsg ("    cr[r]  %16.16llx\n",
+            regs->CR_G(CR_ASD_REAL));
+
+    for(i = 0; i < 16; i++)
+        if(regs->aea_ar[i] > 15)
+            logmsg ("    alb[%d] %16.16llx\n",
+                    regs->alb[i]);
+    
     if (regs->sie_active)
     {
         regs = regs->guestregs;
@@ -3142,8 +3150,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         logmsg ("\n");
 
         logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
-                "    cr[13] %16.16llx\n    cr[-1] %16.16llx\n",
-            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13),regs->CR_G(USE_INST_SPACE));
+                "    cr[13] %16.16llx\n",
+                regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
+
+        logmsg ("    cr[r]  %16.16llx\n",
+                regs->CR_G(CR_ASD_REAL));
+
+        for(i = 0; i < 16; i++)
+            if(regs->aea_ar[i] > 15)
+                logmsg ("    alb[%d] %16.16llx\n",
+                        regs->alb[i]);
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);

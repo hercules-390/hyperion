@@ -473,7 +473,10 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      gr[16];                 /* General registers         */
 
         DW      cr_special[1];          /* Negative Index into cr    */
+#define CR_ASD_REAL     -1
         DW      cr[16];                 /* Control registers         */
+#define CR_ALB_OFFSET   16
+        DW      alb[16];                /* Accesslist Lookaside cr   */
 
         U32     ar[16];                 /* Access registers          */
         U32     fpr[32];                /* Floating point registers  */
@@ -666,11 +669,12 @@ typedef struct _REGS {                  /* Processor registers       */
         BYTE    aea_mode;               /* aea addressing mode       */
         int     aea_crx;                /* cr index (s370 mode)      */
 
-        int     aea_ar_special[5];      /* ZZ Negative index into ar */
+        int     aea_ar_special[5];      /* Negative index into ar    */
         int     aea_ar[16];             /* arn to cr number          */
 
-        BYTE    aea_common_special[1];
+        BYTE    aea_common_special[1];  /* real asd                  */
         BYTE    aea_common[16];         /* 1=asd is not private      */
+        BYTE    aea_common_alb[16];     /* alb pseudo registers      */
 
      /* TLB - Translation lookaside buffer                           */
 

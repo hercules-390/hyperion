@@ -1170,12 +1170,13 @@ int i;
     }
 
     /* Initialize accelerated lookup fields */
-    regs->CR_G(USE_INST_SPACE) = ~0;
-    regs->aea_crx                     = USE_INST_SPACE;
+    regs->CR_G(CR_ASD_REAL) = TLB_REAL_ASD;
+
+    regs->aea_crx                     = CR_ASD_REAL;
     for(i = 0; i < 16; i++)
-        regs->aea_ar[i]               = USE_INST_SPACE;
-    regs->aea_ar[USE_INST_SPACE]      = USE_INST_SPACE;
-    regs->aea_ar[USE_REAL_ADDR]       = USE_INST_SPACE;
+        regs->aea_ar[i]               = CR_ASD_REAL;
+    regs->aea_ar[USE_INST_SPACE]      = CR_ASD_REAL;
+    regs->aea_ar[USE_REAL_ADDR]       = CR_ASD_REAL;
     regs->aea_ar[USE_PRIMARY_SPACE]   =  1;
     regs->aea_ar[USE_SECONDARY_SPACE] =  7;
     regs->aea_ar[USE_HOME_SPACE]      = 13;
