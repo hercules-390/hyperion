@@ -612,6 +612,10 @@ VADR    newia;                          /* New instruction address   */
     if ( r1 != 0 )
     {
 #if defined(FEATURE_ESAME)
+#if defined(OPTION_OS390_BSM_KLUDGE)
+        if (!(r2 == 0 && (regs->GR_LHLCL(r1) & 0x1)
+           && regs->GR_L(1) < 0x1000 && regs->GR_L(1) >= 0xc00))
+#endif
         regs->GR_LHLCL(r1) &= 0xFE;
         if ( regs->psw.amode64 )
             regs->GR_LHLCL(r1) |= 0x01;
