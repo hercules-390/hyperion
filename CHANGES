@@ -1,3 +1,4 @@
+26 Oct 2001 Fix EX page cross, add INVALIDATA_AIA() - Juergen Dobrinski
 25 Oct 2001 updated hercconf.html with new 'sockdev' reader option - Fish
 25 Oct 2001 minor extgui tweak to better detect when cpu stopped - Fish
 25 Oct 2001 rearranged DEVBLK structure (I hope it's better) - Fish
