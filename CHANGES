@@ -1,3 +1,4 @@
+09 May 2003 Update dasdtab.c 3380 entries - Jesper by Greg Smith
 05 May 2003 Write zeroes at end of file to increase its size if ftruncate
             doesn't work - Greg Smith, suggested by Andy Kane
 05 May 2003 Meaningful error messages for invalid or unsupported parms
