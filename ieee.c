@@ -6,6 +6,7 @@
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * THDER,THDR by Roger Bowler, 19 July 2003.
  * LXDBR,LXDB,LXEBR,LXEB by Roger Bowler, 13 Nov 2004.
+ * LDXBR,LEXBR added by Roger Bowler, 15 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -3211,11 +3212,6 @@ DEF_INST(load_positive_bfp_short_reg)
 }
 
 /*
- * B345 LDXBR - LOAD ROUNDED (extended to long BFP)             [RRE]
- * B346 LEXBR - LOAD ROUNDED (long to short BFP)                [RRE]
- */
-
-/*
  * B344 LEDBR - LOAD ROUNDED (long to short BFP)                [RRE]
  */
 DEF_INST(round_bfp_long_to_short_reg)
@@ -3260,7 +3256,106 @@ DEF_INST(round_bfp_long_to_short_reg)
     }
 
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
-}
+
+} /* end DEF_INST(round_bfp_long_to_short_reg) */
+
+/*
+ * B345 LDXBR - LOAD ROUNDED (extended to long BFP)             [RRE]
+ */
+DEF_INST(round_bfp_ext_to_long_reg)
+{
+    int r1, r2, raised;
+    struct lbfp op1;
+    struct ebfp op2;
+    int pgm_check;
+
+    RRE(inst, regs, r1, r2);
+    //logmsg("LDXBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    get_ebfp(&op2, regs->fpr + FPR2I(r2));
+
+    switch (ebfpclassify(&op2)) {
+    case FP_ZERO:
+        lbfpzero(&op1, op2.sign);
+        break;
+    case FP_NAN:
+        if (ebfpissnan(&op2)) {
+            ieee_exception(FE_INVALID, regs);
+            lbfpstoqnan(&op1);
+        }
+        break;
+    case FP_INFINITE:
+        lbfpinfinity(&op1, op2.sign);
+        break;
+    default:
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
+        ebfpston(&op2);
+        op1.v = op2.v;
+        lbfpntos(&op1);
+        raised = fetestexcept(FE_ALL_EXCEPT);
+        if (raised) {
+            pgm_check = ieee_exception(raised, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        break;
+    }
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(round_bfp_ext_to_long_reg) */
+
+/*
+ * B346 LEXBR - LOAD ROUNDED (extended to short BFP)            [RRE]
+ */
+DEF_INST(round_bfp_ext_to_short_reg)
+{
+    int r1, r2, raised;
+    struct sbfp op1;
+    struct ebfp op2;
+    int pgm_check;
+
+    RRE(inst, regs, r1, r2);
+    //logmsg("LEXBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    get_ebfp(&op2, regs->fpr + FPR2I(r2));
+
+    switch (ebfpclassify(&op2)) {
+    case FP_ZERO:
+        sbfpzero(&op1, op2.sign);
+        break;
+    case FP_NAN:
+        if (ebfpissnan(&op2)) {
+            ieee_exception(FE_INVALID, regs);
+            sbfpstoqnan(&op1);
+        }
+        break;
+    case FP_INFINITE:
+        sbfpinfinity(&op1, op2.sign);
+        break;
+    default:
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
+        ebfpston(&op2);
+        op1.v = op2.v;
+        sbfpntos(&op1);
+        raised = fetestexcept(FE_ALL_EXCEPT);
+        if (raised) {
+            pgm_check = ieee_exception(raised, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        break;
+    }
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(round_bfp_ext_to_short_reg) */
 
 /*
  * MULTIPLY (extended)

@@ -2330,6 +2330,8 @@ DEF_INST(load_positive_bfp_ext_reg);
 DEF_INST(load_positive_bfp_long_reg);
 DEF_INST(load_positive_bfp_short_reg);
 DEF_INST(round_bfp_long_to_short_reg);
+DEF_INST(round_bfp_ext_to_long_reg);
+DEF_INST(round_bfp_ext_to_short_reg);
 DEF_INST(multiply_bfp_ext_reg);
 DEF_INST(multiply_bfp_long_reg);
 DEF_INST(multiply_bfp_long);
