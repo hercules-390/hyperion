@@ -1859,7 +1859,7 @@ CREG    pte;                            /* Page Table Entry          */
 int     private;                        /* 1=Private address space   */
 int     protect;                        /* 1=ALE or page protection  */
 int     stid;                           /* Segment table indication  */
-U16     xcode;                          /* Exception code            */
+U16     xcode = 0;                      /* Exception code            */
 
     RRE(inst, execflag, regs, r1, r2);
 
@@ -1877,8 +1877,9 @@ U16     xcode;                          /* Exception code            */
     OBTAIN_MAINLOCK(regs);
 
     /* Return condition code 3 if translation exception */
-    if (!ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_PTE,
-                &rpte, &xcode, &private, &protect, &stid))
+    ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_PTE,
+                &rpte, &xcode, &private, &protect, &stid);
+    if (xcode == 0)
     {
         rpte = APPLY_PREFIXING (rpte, regs->PX);
 
@@ -2268,6 +2269,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* [5.5.3.1] Load the linkage table designation */
     if (!ASF_ENABLED(regs))
     {
+        /* Special operation exception if in AR mode */
+        if (ACCESS_REGISTER_MODE(&(regs->psw)))
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
         /* Obtain the LTD from control register 5 */
         ltd = regs->CR_L(5);
     }
