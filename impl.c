@@ -222,6 +222,11 @@ TID     rctid;                          /* RC file thread identifier */
         } /* end switch(c) */
     } /* end while */
 
+#ifdef EXTERNALGUI
+    if(extgui) 
+        daemon_mode = 0;
+#endif /*EXTERNALGUI*/
+
     /* The getopt function sets the external variable optind
        to the index in argv of the first non-option argument.
        There should not be any non-option arguments */
