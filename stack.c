@@ -147,18 +147,15 @@ int  i;
     /* Isolate the Trap Control Block Address */
     tcba = duct11 & DUCT11_TCBA;
 
-    /* Obtain the absolute address of the trap control block */
-    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
-
 #if defined(FEATURE_ESAME)
     /* Fetch word 0 of the TCB */
+    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
     tcba0 = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Advance to offset +12 */
-    tcba += 12; atcba += 12;
-    if((atcba & PAGEFRAME_BYTEMASK) < 12)
-        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
+    tcba += 12;
+    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
 
     /* Fetch word 3 of the TCB */
     tsao = ARCH_DEP(fetch_fullword_absolute)(atcba, regs) & 0x7FFFFFF8;
