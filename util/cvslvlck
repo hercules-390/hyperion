@@ -1,22 +1,31 @@
 #!/usr/bin/perl -w
 
-#    Facility    required special	download URL
+#  This perl script checks the user's system for the required levels of
+#  software required to build Hercules from the CVS repository
+
+use strict;
+
+#    Facility, required level, special flag, download URL
 
 my @req = qw(
-     autoconf    2.50		0	http://www.gnu.org/directory/autoconf.html
-     automake    1.5		0	http://www.gnu.org/directory/automake.html
-     flex        2.5		0	http://www.gnu.org/directory/flex.html
-     gawk        3.0		0	http://www.gnu.org/directory/gawk.html
-     gcc         2.95		0	http://www.gnu.org/directory/gcc.html
-     gettext     0.11		0	http://www.gnu.org/directory/gettext.html
-     grep        2.5		0	http://www.gnu.org/directory/grep.html
-     libiconv    1.8		1	http://www.gnu.org/directory/libiconv.html
-     libintl     0.10		1	http://www.gnu.org/directory/gettext.html
-     m4          0.0		1	http://www.gnu.org/directory/GNU/gnum4.html
-     make        3.79		0	http://www.gnu.org/directory/make.html
-     perl        5.6		1	http://www.gnu.org/directory/perl/html
-     sed         3.02		0	http://www.gnu.org/directory/sed.html
+     cvs         0      1  http://www.cvshome.org
+     autoconf    2.50	0  http://www.gnu.org/directory/autoconf.html
+     automake    1.5	0  http://www.gnu.org/directory/automake.html
+     flex        2.5	0  http://www.gnu.org/directory/flex.html
+     gawk        3.0	0  http://www.gnu.org/directory/gawk.html
+     gcc         2.95	0  http://www.gnu.org/directory/gcc.html
+     gettext     0.11	0  http://www.gnu.org/directory/gettext.html
+     grep        2.5	0  http://www.gnu.org/directory/grep.html
+     libiconv    1.8	1  http://www.gnu.org/directory/libiconv.html
+     libintl     0.10	1  http://www.gnu.org/directory/gettext.html
+     m4          0.0	1  http://www.gnu.org/directory/GNU/gnum4.html
+     make        3.79	0  http://www.gnu.org/directory/make.html
+     perl        5.6	1  http://www.gnu.org/directory/perl/html
+     sed         3.02	0  http://www.gnu.org/directory/sed.html
 );
+my $cvsroot = ":pserver:anonymous\@cvs.conmicro.cx:/usr/cvs/hercules";
+my $msg;
+my $instversion;
 system "clear";
 sayintro();
 for (my $i = 0; $i < @req; $i += 4) {
@@ -27,64 +36,120 @@ for (my $i = 0; $i < @req; $i += 4) {
 	if ($special) {
 		weird($facility, $level, $url);
 	} else {
-		my @resp = `$facility --version`;
-		chomp $resp[0];
-		my $instversion = getvers($resp[0]);
-		my $msg = ckvers($level, $instversion);
-		print "$msg\t$facility requires $level, found $instversion\n";
-		print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		if (present($facility, $url)) {
+			my @resp = `$facility --version`;
+			chomp $resp[0];
+			$instversion = getvers($resp[0]);
+			$msg = ckvers($level, $instversion);
+			print "$msg\t$facility requires $level, found $instversion\n";
+			print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		}
 	}
 	print "\n";
+}
+print "Do you wish to set CVSROOT for this userid? (y, n, default y)\n";
+print "New CVS users are recommended to reply y to this prompt.\n";
+my $ans = <STDIN>;
+chomp $ans;
+$ans = substr($ans, 0, 1);
+$ans = lc $ans;
+if ($ans eq 'y' || $ans eq '') {
+	die "HOME environment variable not set" if ! exists $ENV{'HOME'};
+	my $home = $ENV{'HOME'};		# root nonsense, ~ doesn't work right
+	unless (open PROFILE, "> $home/.profile") {die "Open $home/.profile failed: $!"};
+	print PROFILE "CVSROOT=$cvsroot ; export CVSROOT\n";
+	close PROFILE;
+	print "Updated $home/.profile for CVSROOT\n";
+	print "To use updated CVSROOT value, open new session or logout/login\n";
+	# Sorry, I can't figure out how to set CVSROOT in current session
+	# I tried system, exec, creating a shell script ... nada
+} else {
+	print "Hercules CVSROOT=$cvsroot\n";
 }
 exit 0;
 
 sub weird {
 	my ($facility, $level, $url) = @_;
+	if ($facility eq 'cvs') {
+		if (present('cvs', $url)) {
+			my @resp = `cvs --version`;
+			chomp $resp[1];
+			my $instversion = getvers($resp[1]);
+			my $msg = ckvers($level, $instversion);
+			print "$msg\t$facility (informational), found $instversion\n";
+		} else {
+			print "INSTALL\tcvs\n";
+			print "URL: $url\n";
+		}
+		return;
+	}
 	if ($facility eq 'libiconv') {
-		my @resp = `iconv --version`;
-		chomp $resp[0];
-		my $instversion = getvers($resp[0]);
-		my $msg = ckvers($level, $instversion);
-		print "$msg\t$facility requires $level, found $instversion\n";
+		if (present('iconv', $url)) {
+			my @resp = `iconv --version`;
+			chomp $resp[0];
+			my $instversion = getvers($resp[0]);
+			my $msg = ckvers($level, $instversion);
+			print "$msg\t$facility requires $level, found $instversion\n";
+		}
 		print "\tFor first-time Libiconv installs, a recompile and reinstall of gettext\n";
 		print "\tis recommended.  Source: libiconv-1.8/README\n";
 		print "\tURL: $url\n" if $msg eq 'UPGRADE';
 		return;
 	}
 	if ($facility eq 'perl') {
-		my @resp = `perl --version`;
-		chomp $resp[1];
-		my $instversion = getvers($resp[1]);
-		my $msg = ckvers($level, $instversion);
-		print "$msg\t$facility requires $level, found $instversion\n";
-		print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		if (present($facility, $url)) {
+			my @resp = `perl --version`;
+			chomp $resp[1];
+			my $instversion = getvers($resp[1]);
+			my $msg = ckvers($level, $instversion);
+			print "$msg\t$facility requires $level, found $instversion\n";
+			print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		}
 		return;
 	}
 	if ($facility eq 'libintl') {
-		print "\tLibintl is included in the gettext source tarball.\n";
 		my @filelist = glob '/lib/libc.so.*';
 		if (@filelist) {
 			print "OK\tYou are running on a glibc system ($filelist[0] exists)\n";
-			print "\tgettext--0.11.5/PACKAGING says libintl is not installed on glibc systems.\n";
+			print "\tgettext-0.11.5/PACKAGING says libintl is not installed on glibc systems.\n";
 		} else {
-			print "DUNNO\tSorry, I have no idea what to tell you....\n";
-			print "\tURL: $url\n";
+			print "\tWARNING: I have no personal experience with non-glibc systems\n";
+			print "\t         so take this result as my best guess.\n";
+			my @libintl = glob '/lib/libintl.so.*';
+			if (@libintl) {
+				foreach my $lib (@libintl) {
+					my $msg = ckvers($level, $instversion);
+					if ($msg eq 'OK') {
+						print "OK\t$facility requires $level, found $instversion\n";
+						return;
+					}
+					print "UPGRADE?\t$facility requires $level\n";
+					print "INSTALL\tLibintl is included in the gettext source tarball.\n";
+					print "\tURL: $url\n";
+					return;
+				}
+			} else {
+				print "INSTALL\tLibintl is included in the gettext source tarball.\n";
+				print "\tURL: $url\n";
+			}
 		}
 		return;
 	}
 	if ($facility eq 'm4') {			# m4 --version: GNU m4 1.4o
-		my $resp = `m4 --version`;
-		chomp $resp;
-		my $msg = 'HUH?   ';
-		my $instversion = "DUNNO";
-		if ($resp =~ /GNU m4 (\d+.\d+)/) {
-			$instversion = '';
-			$instversion = $1 if defined $1;
-			$instversion = "$1.$2" if defined $1 && defined $2;
-			$msg = ckvers($level, $instversion);
+		if (present($facility, $url)) {
+			my $resp = `m4 --version`;
+			chomp $resp;
+			my $msg = 'HUH?   ';
+			my $instversion = "DUNNO";
+			if ($resp =~ /GNU m4 (\d+.\d+)/) {
+				$instversion = '';
+				$instversion = $1 if defined $1;
+				$instversion = "$1.$2" if defined $1 && defined $2;
+				$msg = ckvers($level, $instversion);
+			}
+			print "$msg\t$facility requires $level, found $instversion\n";
+			print "\tURL: $url\n" if $msg eq 'UPGRADE';
 		}
-		print "$msg\t$facility requires $level, found $instversion\n";
-		print "\tURL: $url\n" if $msg eq 'UPGRADE';
 		return;
 	}
 	print "ERROR $facility flagged as special, not found\n";
@@ -112,7 +177,7 @@ sub ckvers {
 		if ( (exists $rv[$i]) 
 		  && (exists $iv[$i]) 
 		  && ($iv[$i] > $rv[$i]) ) {
-			return 'OK     ';
+			return 'OK';
 		}
 		if ( (exists $rv[$i]) 
 		  && (exists $iv[$i]) 
@@ -120,7 +185,7 @@ sub ckvers {
 			return 'UPGRADE';
 		}
 	}
-	return 'OK     ';
+	return 'OK';
 }
 
 sub sayintro {
@@ -133,5 +198,15 @@ sub sayintro {
 	print "these things, beware that GNU m4 must be fully installed before GNU Autoconf is \n";
 	print "even configured.\n";
 	print "-----------------------------------------------------------------------------------\n\n";
+}
+
+sub present {
+	my ($facility, $url) = @_;
+	my @present = `which $facility 2>/dev/null`;
+	if (! @present) {
+		print "INSTALL\t$facility not found\n";
+		print "\tURL: $url\n";
+	}
+	return scalar @present;
 }
 
