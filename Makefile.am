@@ -420,7 +420,7 @@ endif
 
   hercules_LDFLAGS      = $(HLDFLAGS)
 
-  hercules_DEPENDENCIES = $(HDEPS)
+  hercules_DEPENDENCIES = libherc.la libhercs.la $(HDEPS)
 
 #
 # side binaries
