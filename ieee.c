@@ -9,6 +9,7 @@
  * LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR by Roger Bowler, 15 Nov 2004.
  * MXDBR,MXDB,MDEBR,MDEB by Roger Bowler, 16 Nov 2004.
  * MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB by Roger Bowler, 17 Nov 2004.
+ * DIEBR,DIDBR framework by Roger Bowler, 17 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -169,6 +170,8 @@ struct sbfp {
 #define divide_ebfp ARCH_DEP(divide_ebfp)
 #define divide_lbfp ARCH_DEP(divide_lbfp)
 #define divide_sbfp ARCH_DEP(divide_sbfp)
+#define divint_lbfp ARCH_DEP(divint_lbfp)
+#define divint_sbfp ARCH_DEP(divint_sbfp)
 #define load_test_ebfp ARCH_DEP(load_test_ebfp)
 #define load_test_lbfp ARCH_DEP(load_test_lbfp)
 #define load_test_sbfp ARCH_DEP(load_test_sbfp)
@@ -2657,11 +2660,87 @@ DEF_INST(divide_bfp_short)
         program_interrupt(regs, pgm_check);
     }
 }
+/*
+ * DIVIDE TO INTEGER (long)
+ */
+static int divint_lbfp(struct lbfp *op1, struct lbfp *op2,
+                        struct lbfp *op3, int mode, REGS *regs)
+{
+    /* DIVIDE TO INTEGER not yet implemented */
+    UNREFERENCED(op1); UNREFERENCED(op2); UNREFERENCED(op3); UNREFERENCED(mode);
+    program_interrupt(regs, PGM_OPERATION_EXCEPTION);
+    return 0;
+} /* end function divint_lbfp */
+ 
+/*
+ * B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRF]
+ */
+DEF_INST(divide_integer_bfp_long_reg)
+{
+    int r1, r2, r3, m4;
+    struct lbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+    //logmsg("DIDBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
+    BFPINST_CHECK(regs);
+    if (r1 == r2 || r2 == r3 || r1 == r3) {
+        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+
+    pgm_check = divint_lbfp(&op1, &op2, &op3, m4, regs);
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+    put_lbfp(&op3, regs->fpr + FPR2I(r3));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(divide_integer_bfp_long_reg) */
 
 /*
- * B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRE]
- * B353 DIEBR - DIVIDE TO INTEGER (short BFP)                  [RXE]
+ * DIVIDE TO INTEGER (short)
  */
+static int divint_sbfp(struct sbfp *op1, struct sbfp *op2,
+                        struct sbfp *op3, int mode, REGS *regs)
+{
+    /* DIVIDE TO INTEGER not yet implemented */
+    UNREFERENCED(op1); UNREFERENCED(op2); UNREFERENCED(op3); UNREFERENCED(mode);
+    program_interrupt(regs, PGM_OPERATION_EXCEPTION);
+    return 0;
+} /* end function divint_sbfp */
+
+/*
+ * B353 DIEBR - DIVIDE TO INTEGER (short BFP)                  [RRF]
+ */
+DEF_INST(divide_integer_bfp_short_reg)
+{
+    int r1, r2, r3, m4;
+    struct sbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+    //logmsg("DIEBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
+    BFPINST_CHECK(regs);
+    if (r1 == r2 || r2 == r3 || r1 == r3) {
+        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+
+    pgm_check = divint_sbfp(&op1, &op2, &op3, m4, regs);
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+    put_sbfp(&op3, regs->fpr + FPR2I(r3));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(divide_integer_bfp_short_reg) */
 
 /*
  * B38C EFPC  - EXTRACT FPC                                    [RRE]
@@ -2800,7 +2879,6 @@ DEF_INST(load_and_test_bfp_short_reg)
 DEF_INST(load_fp_int_short_reg)
 {
     int r1, r2, m3, raised, pgm_check;
-
     struct sbfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -2856,7 +2934,6 @@ DEF_INST(load_fp_int_short_reg)
 DEF_INST(load_fp_int_long_reg)
 {
     int r1, r2, m3, raised, pgm_check;
-
     struct lbfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -2912,7 +2989,6 @@ DEF_INST(load_fp_int_long_reg)
 DEF_INST(load_fp_int_ext_reg)
 {
     int r1, r2, m3, raised, pgm_check;
-
     struct ebfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -4124,7 +4200,8 @@ DEF_INST(multiply_subtract_bfp_long_reg)
     get_lbfp(&op3, regs->fpr + FPR2I(r3));
 
     multiply_lbfp(&op2, &op3, regs);
-    pgm_check = subtract_lbfp(&op1, &op2, regs);
+    op1.sign = !(op1.sign);
+    pgm_check = add_lbfp(&op1, &op2, regs);
 
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
@@ -4152,7 +4229,8 @@ DEF_INST(multiply_subtract_bfp_long)
     get_lbfp(&op3, regs->fpr + FPR2I(r3));
 
     multiply_lbfp(&op2, &op3, regs);
-    pgm_check = subtract_lbfp(&op1, &op2, regs);
+    op1.sign = !(op1.sign);
+    pgm_check = add_lbfp(&op1, &op2, regs);
 
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 
@@ -4179,7 +4257,8 @@ DEF_INST(multiply_subtract_bfp_short_reg)
     get_sbfp(&op3, regs->fpr + FPR2I(r3));
 
     multiply_sbfp(&op2, &op3, regs);
-    pgm_check = subtract_sbfp(&op1, &op2, regs);
+    op1.sign = !(op1.sign);
+    pgm_check = add_sbfp(&op1, &op2, regs);
 
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
@@ -4207,7 +4286,8 @@ DEF_INST(multiply_subtract_bfp_short)
     get_sbfp(&op3, regs->fpr + FPR2I(r3));
 
     multiply_sbfp(&op2, &op3, regs);
-    pgm_check = subtract_sbfp(&op1, &op2, regs);
+    op1.sign = !(op1.sign);
+    pgm_check = add_sbfp(&op1, &op2, regs);
 
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 

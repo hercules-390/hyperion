@@ -414,6 +414,8 @@
  UNDEF_INST(divide_bfp_long_reg)
  UNDEF_INST(divide_bfp_short)
  UNDEF_INST(divide_bfp_short_reg)
+ UNDEF_INST(divide_integer_bfp_long_reg)
+ UNDEF_INST(divide_integer_bfp_short_reg)
  UNDEF_INST(load_and_test_bfp_ext_reg)
  UNDEF_INST(load_and_test_bfp_long_reg)
  UNDEF_INST(load_and_test_bfp_short_reg)
@@ -2516,7 +2518,7 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B350*/ GENx___x390x900 (convert_float_long_to_bfp_short_reg,RRF_M,"TBEDR"),
  /*B351*/ GENx___x390x900 (convert_float_long_to_bfp_long_reg,RRF_M,"TBDR"),
  /*B352*/ GENx___x___x___ ,
- /*B353*/ GENx___x390x900 (dummy_instruction,RRF_RM,"DIEBR"),
+ /*B353*/ GENx___x390x900 (divide_integer_bfp_short_reg,RRF_RM,"DIEBR"),
  /*B354*/ GENx___x___x___ ,
  /*B355*/ GENx___x___x___ ,
  /*B356*/ GENx___x___x___ ,
@@ -2524,7 +2526,7 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B358*/ GENx___x390x900 (convert_bfp_short_to_float_long_reg,RRE,"THDER"),
  /*B359*/ GENx___x390x900 (convert_bfp_long_to_float_long_reg,RRE,"THDR"),
  /*B35A*/ GENx___x___x___ ,
- /*B35B*/ GENx___x390x900 (dummy_instruction,RRF_RM,"DIDBR"),
+ /*B35B*/ GENx___x390x900 (divide_integer_bfp_long_reg,RRF_RM,"DIDBR"),
  /*B35C*/ GENx___x___x___ ,
  /*B35D*/ GENx___x___x___ ,
  /*B35E*/ GENx___x___x___ ,

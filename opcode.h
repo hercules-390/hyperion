@@ -2311,6 +2311,8 @@ DEF_INST(divide_bfp_long_reg);
 DEF_INST(divide_bfp_long);
 DEF_INST(divide_bfp_short_reg);
 DEF_INST(divide_bfp_short);
+DEF_INST(divide_integer_bfp_long_reg);
+DEF_INST(divide_integer_bfp_short_reg);
 DEF_INST(extract_floating_point_control_register);
 DEF_INST(load_and_test_bfp_ext_reg);
 DEF_INST(load_and_test_bfp_long_reg);
