@@ -196,7 +196,7 @@ char   *command;
 char *value;
 int autorefresh = 0;
 int refresh_interval = 5;
-int msgcount = 0;
+int msgcount = 22;
 
     if ((command = cgi_variable(webblk,"command")))
         panel_command(command);
