@@ -2927,4 +2927,43 @@ void ecpsvm_command(int ac,char **av)
     ce->fun(ac-1,av+1);
     logmsg("HHCEV011I ECPS:VM Command processor complete\n");
 }
+/* NOTE : THE FOLLOWING 2 ROUTINES ARE ONLY DEFINED TO ELEVIATE A COMPILER WARNING */
+/*        DO NOT INVOKE THEM. IF IT IS NECESSARY TO PERFORM S/390 OR z/Arch DAT    */
+/*        THEN IT WILL BE NECESSARY TO PERFORM ARCH_DEP AUTO INCLUSION             */
+/*        AND THE NECESSARY ROUTINES WILL BE AUTOMATICALLY DEFINED                 */
+
+static int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
+               int acctype, RADR *raddr, U16 *xcode, int *priv,
+               int *prot, int *pstid)
+{
+    abort();
+    UNREFERENCED(vaddr);
+    UNREFERENCED(arn);
+    UNREFERENCED(regs);
+    UNREFERENCED(acctype);
+    UNREFERENCED(raddr);
+    UNREFERENCED(xcode);
+    UNREFERENCED(priv);
+    UNREFERENCED(prot);
+    UNREFERENCED(pstid);
+    return(0);
+}
+static int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
+               int acctype, RADR *raddr, U16 *xcode, int *priv,
+               int *prot, int *pstid)
+{
+    abort();
+    UNREFERENCED(vaddr);
+    UNREFERENCED(arn);
+    UNREFERENCED(regs);
+    UNREFERENCED(acctype);
+    UNREFERENCED(raddr);
+    UNREFERENCED(xcode);
+    UNREFERENCED(priv);
+    UNREFERENCED(prot);
+    UNREFERENCED(pstid);
+    return(0);
+}
+
+
 #endif /* ifdef FEATURE_ECPSVM */
