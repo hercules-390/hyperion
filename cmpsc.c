@@ -271,7 +271,7 @@ static void ARCH_DEP(print_ece)(int r2, REGS *regs, BYTE *ece, int index);
 #else
 #define FETCH_ECE       _FETCH_ECE
 #endif
-#define _FETCH_ECE(r2, regs, cce, index) \
+#define _FETCH_ECE(r2, regs, ece, index) \
   ARCH_DEP(vfetchc)((ece), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs))
 
 /*----------------------------------------------------------------------------*/
@@ -1085,13 +1085,13 @@ DEF_INST(compression_call)
   if(r1 & 0x01 || r2 & 0x01 || !GR0_cdss(regs) || GR0_cdss(regs) > 5)
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
 
-  /* Initialize itermediate registers using COMMITREGS the other way round */
-  COMMITREGS(&iregs, regs, r1, r2);
-
 #if (__GEN_ARCH == 900)
   /* In z/Archtecture we need the 64bit flag */
   iregs.psw.amode64 = regs->psw.amode64;
 #endif /* (__GEN_ARCH == 900) */
+
+  /* Initialize intermediate registers using COMMITREGS the other way round */
+  COMMITREGS(&iregs, regs, r1, r2);
 
   /* Now go to the requested function */
   if(GR0_e(regs))

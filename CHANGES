@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+05 Feb 2005 CMPSC 64bit fix + typo - Bernard van der Helm
 05 Feb 2005 Begin MSVC compiler support - Roger Bowler
 13 Jan 2005 Optmization to instruction fetch for unrolled execute - Greg Smith
 13 Jan 2005 AMD64 assembler assists - Bob Deblier by Greg
