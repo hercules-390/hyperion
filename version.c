@@ -36,9 +36,6 @@ static const char *build_options[] = {
 
 };
 
-static const char CVS_header[] = "$Header$";
-static const char CVS_tag[] = "$Name$";
-
 /*-------------------------------------------------------------------*/
 /* Display version and copyright                                     */
 /*-------------------------------------------------------------------*/
