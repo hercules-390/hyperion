@@ -319,7 +319,7 @@ static int cardrdr_close_device ( DEVBLK *dev )
         return -1;
     }
 
-    if (dev->bs)
+    if (dev->bs && (dev->bs->clientip || dev->bs->clientname))
     {
         logmsg (_("HHCRD012I %s (%s) disconnected from device %4.4X (%s)\n"),
             dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);

@@ -1,3 +1,12 @@
+04 Dec 2003 CTCI_Init (ctc_ctci.c): malloc working CTCBLK to work around
+            gcc 3.x bug caused by large vars allocated on stack - Fish
+03 Dec 2003 Fix fthreads to behave as pthreads does regarding return codes
+            (conform to SUS (Single UNIX Specification) rather than DCE
+            (Distributed Computing Environment) semantics; affected CTCI
+            logic's 'timed_wait_condition' return code tests) - Fish
+03 Dec 2003 Fix to 'unbind_device' to remove listening socket from panel
+            thread's select list before closing it. - Fish
+03 Dec 2003 Added ARCHMODE to other "IPL failure" messages too - Fish
 27 Dec 2002 Added comprehensive details to README.CVS document - Fish
 27 Dec 2002 Fix bug ctc logic to accept MAC addr in lieu of IP addr - Fish
 27 Dec 2002 Fix warning about IFC_IOCtl in tuntap.c - Fish

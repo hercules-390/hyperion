@@ -74,7 +74,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
     // Housekeeping
     pLCSBLK = malloc( sizeof( LCSBLK ) );
-    if( pLCSBLK == NULL )
+    if( !pLCSBLK )
     {
         logmsg( _("LCS001E %4.4X unable to allocate LCSBLK\n"),
                 pDEVBLK->devnum );
@@ -140,7 +140,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
     // puke if a subsequent device number is specified in the config file
     // that already exists because of the OAT.
 
-    for( pDev = pLCSBLK->pDevices; pDev != NULL; pDev = pDev->pNext )
+    for( pDev = pLCSBLK->pDevices; pDev; pDev = pDev->pNext )
     {
         // The DEVBLK that was passed as an argument needs to be used last
         // to maintain the proper order in the device list. Each slot in the
@@ -149,12 +149,12 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         // the original DEVBLK is used (a non-NULL pointer telling AddDevice
         // to use the existing DEVBLK).
 
-        if( pDev->pNext == NULL && pDev->bMode != LCSDEV_MODE_IP )
+        if( !pDev->pNext && pDev->bMode != LCSDEV_MODE_IP )
             pDev->pDEVBLK[0] = pDEVBLK;
 
         AddDevice( &pDev->pDEVBLK[0], pDev->sAddr, "LCS", &lcs_device_hndinfo );
 
-        if( pDev->pDEVBLK[0] == NULL )
+        if( !pDev->pDEVBLK[0] )
         // FIXME! - Need to emit an error message here.
             continue;
 
@@ -173,13 +173,13 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         // If this is an IP Passthru address, we need a write address
         if( pDev->bMode == LCSDEV_MODE_IP )
         {
-            if( pDev->pNext == NULL )
+            if( !pDev->pNext )
                 pDev->pDEVBLK[1] = pDEVBLK;
 
             AddDevice( &pDev->pDEVBLK[1], pDev->sAddr + 1,
                "LCS", &lcs_device_hndinfo );
 
-            if( pDev->pDEVBLK[1] == NULL )
+            if( !pDev->pDEVBLK[1] )
             {
                 // FIXME! - Need to emit an error message here.
 
@@ -544,15 +544,13 @@ int  LCS_Close( DEVBLK* pDEVBLK )
     if( pLCSDEV->pDEVBLK[1] == pDEVBLK )
         pLCSDEV->pDEVBLK[1] = NULL;
 
-    if( pLCSDEV->pDEVBLK[0] == NULL &&
-        pLCSDEV->pDEVBLK[1] == NULL )
+    if( !pLCSDEV->pDEVBLK[0] &&
+        !pLCSDEV->pDEVBLK[1] )
     {
         PLCSDEV  pDev   = NULL;
         PLCSDEV* ppPrev = &pLCSBLK->pDevices;
 
-        for( pDev = pLCSBLK->pDevices;
-             pDev != NULL;
-             pDev = pDev->pNext )
+        for( pDev = pLCSBLK->pDevices; pDev; pDev = pDev->pNext )
         {
             if( pDev == pLCSDEV )
             {
@@ -570,16 +568,12 @@ int  LCS_Close( DEVBLK* pDEVBLK )
         }
     }
 
-    if( pLCSBLK->pDevices == NULL )
+    if( !pLCSBLK->pDevices )
     {
-        if( pLCSBLK->pszTUNDevice   != NULL )
-            free( pLCSBLK->pszTUNDevice );
-        if( pLCSBLK->pszOATFilename != NULL )
-            free( pLCSBLK->pszOATFilename );
-        if( pLCSBLK->pszIPAddress   != NULL )
-            free( pLCSBLK->pszIPAddress );
-        if( pLCSBLK->pszMACAddress  != NULL )
-            free( pLCSBLK->pszMACAddress );
+        if( pLCSBLK->pszTUNDevice   ) free( pLCSBLK->pszTUNDevice   );
+        if( pLCSBLK->pszOATFilename ) free( pLCSBLK->pszOATFilename );
+        if( pLCSBLK->pszIPAddress   ) free( pLCSBLK->pszIPAddress   );
+        if( pLCSBLK->pszMACAddress  ) free( pLCSBLK->pszMACAddress  );
 
         free( pLCSBLK );
     }
@@ -989,9 +983,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
         TUNTAP_SetFlags( pPort->szNetDevName,
                          IFF_UP | IFF_RUNNING | IFF_BROADCAST );
 
-        for( pRoute = pPort->pRoutes;
-             pRoute != NULL;
-             pRoute = pRoute->pNext )
+        for( pRoute = pPort->pRoutes; pRoute; pRoute = pRoute->pNext )
         {
             TUNTAP_AddRoute( pPort->szNetDevName,
                              pRoute->pszNetAddr,
@@ -1219,9 +1211,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
         pDevMatch = NULL;
 
         // Attempt to find the device that this frame belongs to
-        for( pDev  = pPort->pLCSBLK->pDevices;
-             pDev != NULL;
-             pDev  = pDev->pNext )
+        for( pDev = pPort->pLCSBLK->pDevices; pDev; pDev = pDev->pNext )
         {
             // Only process devices that are on this port
             if( pDev->bPort == pPort->bPort )
@@ -1361,9 +1351,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
     memset( pPort->szNetDevName, 0, IFNAMSIZ );
     memset( pPort->szMACAddress, 0, 32 );
 
-    for( pRoute = pPort->pRoutes;
-         pRoute != NULL;
-         pRoute = pPort->pRoutes )
+    for( pRoute = pPort->pRoutes; pRoute; pRoute = pPort->pRoutes )
     {
         pPort->pRoutes = pRoute->pNext;
         free( pRoute );
@@ -1648,7 +1636,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
     // Open the configuration file
     fp = fopen( pszOATName, "r" );
-    if( fp == NULL )
+    if( !fp )
     {
         logmsg( _("HHC003I Cannot open file %s: %s\n"),
                 pszOATName, strerror( errno ) );
@@ -1658,12 +1646,12 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     for( ; ; )
     {
         // Read next record from the OAT file
-        if( ReadOAT( pszOATName, fp, szBuff ) == NULL )
+        if( !ReadOAT( pszOATName, fp, szBuff ) )
         {
             return 0;
         }
 
-        if( pszStatement != NULL )
+        if( pszStatement )
             free( pszStatement );
 
         pszStatement = strdup( szBuff );
@@ -1695,7 +1683,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
         if( strcasecmp( pszKeyword, "HWADD" ) == 0 )
         {
-            if( pszOperand == NULL ||
+            if( !pszOperand        ||
                 argc       != 1    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
@@ -1721,7 +1709,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         }
         else if( strcasecmp( pszKeyword, "ROUTE" ) == 0 )
         {
-            if( pszOperand == NULL ||
+            if( !pszOperand        ||
                 argc       != 2    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
@@ -1750,7 +1738,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
             pPort = &pLCSBLK->Port[sPort];
 
-            if( pPort->pRoutes == NULL )
+            if( !pPort->pRoutes )
             {
                 pPort->pRoutes = malloc( sizeof( LCSRTE ) );
                 pRoute = pPort->pRoutes;
@@ -1758,7 +1746,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             else
             {
                 for( pRoute = pPort->pRoutes;
-                     pRoute->pNext != NULL;
+                     pRoute->pNext;
                      pRoute = pRoute->pNext );
 
                 pRoute->pNext = malloc( sizeof( LCSRTE ) );
@@ -1771,7 +1759,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         }
         else
         {
-            if( pszKeyword == NULL || pszOperand == NULL )
+            if( !pszKeyword || !pszOperand )
             {
                 logmsg( _("LCS011E Error in %s: "
                           "Missing device number or mode\n"),
@@ -1881,7 +1869,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 return -1;
             }
 
-            if( pLCSBLK->pDevices == NULL )
+            if( !pLCSBLK->pDevices )
             {
                 pLCSBLK->pDevices = malloc( sizeof( LCSDEV ) );
                 pDev = pLCSBLK->pDevices;
@@ -1889,7 +1877,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             else
             {
                 for( pDev = pLCSBLK->pDevices;
-                     pDev->pNext != NULL;
+                     pDev->pNext;
                      pDev = pDev->pNext );
 
                 pDev->pNext = malloc( sizeof( LCSDEV ) );

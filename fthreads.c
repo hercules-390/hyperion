@@ -326,8 +326,7 @@ fthread_create
 #else
         _fthreadmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
 #endif
-        errno = ENOMEM;
-        return -1;
+        return (errno = EAGAIN);
     }
 
     pCallTheirThreadParms->pfnTheirThreadFunc = pfnThreadFunc;
@@ -344,8 +343,7 @@ fthread_create
         _fthreadmsg("fthread_create: MyCreateThread failed\n");
 #endif
         free (pCallTheirThreadParms);
-        errno = EAGAIN;
-        return -1;
+        return (errno = EAGAIN);
     }
 
     if (nThreadPriority != THREAD_PRIORITY_NORMAL)
@@ -449,15 +447,16 @@ fthread_mutex_trylock
     fthread_mutex_t*  pFT_MUTEX
 )
 {
-    // Note: POSIX defines success as 0, failure as !0
-    return !TryEnterFT_MUTEX
+    return ((TryEnterFT_MUTEX
     (
 #ifdef FISH_HANG
         pszFile,
         nLine,
 #endif
         pFT_MUTEX
-    );
+    ))
+    ?
+    (0) : (errno = EBUSY));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -515,8 +514,7 @@ fthread_cond_init
 #else
     _fthreadmsg("fthread_cond_init failure\n");
 #endif
-    errno = EAGAIN;
-    return -1;
+    return (errno = EAGAIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -532,7 +530,7 @@ fthread_cond_signal
     fthread_cond_t*  pFT_COND_VAR
 )
 {
-    if (!pFT_COND_VAR) { errno = EINVAL; return -1; }
+    if (!pFT_COND_VAR) return (errno = EINVAL);
 
     // Wait for everyone to finish receiving prior signal..
 
@@ -574,7 +572,7 @@ fthread_cond_broadcast
     fthread_cond_t*  pFT_COND_VAR
 )
 {
-    if (!pFT_COND_VAR) { errno = EINVAL; return -1; }
+    if (!pFT_COND_VAR) return (errno = EINVAL);
 
     // Wait for everyone to finish receiving prior signal..
 
@@ -617,7 +615,9 @@ fthread_cond_wait
     fthread_mutex_t*  pFT_MUTEX
 )
 {
-    if (!pFT_COND_VAR || !pFT_MUTEX) { errno = EINVAL; return -1; }
+    FT_W32_DWORD  dwWaitRetCode;
+
+    if (!pFT_COND_VAR || !pFT_MUTEX) return (errno = EINVAL);
 
     // Release lock (and thus any potential signalers)...
 
@@ -654,11 +654,22 @@ fthread_cond_wait
 
         // Wait for signal transmission...
 
-        MyWaitForSingleObject(pFT_COND_VAR->hSigXmitEvent,INFINITE);
+        dwWaitRetCode = MyWaitForSingleObject(pFT_COND_VAR->hSigXmitEvent,INFINITE);
 
         // Our condition was signalled...
+        // Or there was an error...
 
         MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
+
+        if (WAIT_OBJECT_0 != dwWaitRetCode)
+        {
+#ifdef FISH_HANG
+            _fthreadmsg("fthread_cond_wait: Invalid handle; %s(%d)\n",pszFile,nLine);
+#else
+            _fthreadmsg("fthread_cond_wait: Invalid handle\n");
+#endif
+            return (errno = EINVAL);
+        }
 
         // Make sure signal still being transmitted...
 
@@ -719,7 +730,7 @@ fthread_cond_timedwait
     struct timeval  TimeNow;
     FT_W32_DWORD  dwWaitRetCode, dwWaitMilliSecs;
 
-    if (!pFT_COND_VAR || !pFT_MUTEX) { errno = EINVAL; return -1; }
+    if (!pFT_COND_VAR || !pFT_MUTEX) return (errno = EINVAL);
 
     // Release lock (and thus any potential signalers)...
 
@@ -776,16 +787,9 @@ fthread_cond_timedwait
 
         // Our condition was signalled...
         // Or we got tired of waiting for it...
+        // Or there was an error...
 
         MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-        // Make sure signal still being transmitted...
-
-        if (IsEventSet(pFT_COND_VAR->hSigXmitEvent)) break;
-
-        // If signal no longer being transmitted, then
-        // some other waiter received it; keep waiting
-        // for another signal...
 
         if (WAIT_OBJECT_0 != dwWaitRetCode)
         {
@@ -821,19 +825,23 @@ fthread_cond_timedwait
             );
 
             if (WAIT_TIMEOUT == dwWaitRetCode)
-            {
-                errno = EAGAIN;     // (timeout)
-                return -1;
-            }
+                return (errno = ETIMEDOUT);     // (timeout)
 
 #ifdef FISH_HANG
             _fthreadmsg("fthread_cond_timedwait: Invalid handle; %s(%d)\n",pszFile,nLine);
 #else
             _fthreadmsg("fthread_cond_timedwait: Invalid handle\n");
 #endif
-            errno = EINVAL;
-            return -1;
+            return (errno = EINVAL);
         }
+
+        // Make sure signal still being transmitted...
+
+        if (IsEventSet(pFT_COND_VAR->hSigXmitEvent)) break;
+
+        // If signal no longer being transmitted, then
+        // some other waiter received it; keep waiting
+        // for another signal...
     }
 
     // Indicate we received the signal...

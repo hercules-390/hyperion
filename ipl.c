@@ -169,8 +169,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
     if ( rc )
     {
-        logmsg (_("HHCCP030E IPL failed: Invalid IPL PSW: "
+        logmsg (_("HHCCP030E %s mode IPL failed: Invalid IPL PSW: "
                 "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
+                get_arch_mode_string(regs),
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
@@ -320,8 +321,9 @@ U32     fileaddr;
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
     if ( rc )
     {
-        logmsg (_("HHCCP032E IPL failed: Invalid IPL PSW: "
+        logmsg (_("HHCCP032E %s mode IPL failed: Invalid IPL PSW: "
                 "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
+                get_arch_mode_string(regs),
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
