@@ -617,9 +617,13 @@ HHCCF042E Device type <em>type</em> not recognized
 <dd><dl>
   <dt>Meaning
   <dd>An attempt was made to define a device of type <code><em>type</em></code>. This
-device type is not supported by Hercules.
+  device type is not supported by Hercules. It may also indicate that the system was
+  unable to load the device handler for the specified device type.
   <dt>Action
-  <dd>Specify a supported device type.
+  <dd>Specify a supported device type. If the device type is supported, make sure the
+  the system can load the load modules necessary for device operations. Either use
+  the LD_LIBRARY_PATH environment variable or use ldconfig(8) to customize your library
+  search path.
   <dt>Issued by
   <dd>config.c, function attach_device
   </dl>
