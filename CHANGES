@@ -1,3 +1,4 @@
+16 Jul 2002 New 'hmccmds.c' source module #included by 'panel.c'. - Fish
 14 Jul 2002 UNTABBED all .c/.h source files (NO EMBEDDED TABS, please!) - Fish
 14 Jul 2002 ** MAJOR CLEANUP ** Added -W compile option to see ALL warnings and
             corrected most signed/unisgned and unreferenced warnings; only

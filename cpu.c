@@ -995,8 +995,6 @@ void *cpu_thread (REGS *regs)
     else
         sysblk.numcpu++;
 
-    initdone = 1;  /* now safe for panel_display function to proceed */
-
     /* Perform initial cpu reset */
     initial_cpu_reset (regs);
 
@@ -1013,6 +1011,8 @@ void *cpu_thread (REGS *regs)
         logmsg (_("HHC631I CPU%4.4X Architecture Mode set to %s\n"),
             regs->cpuad,get_arch_mode_string(regs));
     }
+
+    initdone = 1;  /* now safe for panel_display function to proceed */
 
     /* Execute the program in specified mode */
     run_cpu[regs->arch_mode] (regs);

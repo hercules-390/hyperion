@@ -5482,7 +5482,7 @@ echo "${ECHO_T}$LINGUAS" >&6
 
 
 # Initialization
-CFLAGS="-Wall $CFLAGS"
+CFLAGS="-W -Wall $CFLAGS"
 
 # Programs
 ac_ext=c

@@ -25,8 +25,9 @@ fthreads_sources=fthreads.c
 fishhang_sources=fishhang.c
 fishio_sources=w32chan.c
 gabor_sources=cpu-inst.c
+hmccmds_sources=hmccmds.c
 
-EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(gabor_sources)
+EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(gabor_sources) $(hmccmds_sources)
 
 if BUILD_FTHREADS
 FTHREADS=$(fthreads_sources)

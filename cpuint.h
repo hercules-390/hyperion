@@ -302,8 +302,8 @@ do { \
 #define OFF_IC_MALFALT(_regs)  ((_regs)->ints_state&=~CR0_XM_MALFALT)
 #define OFF_IC_EMERSIG(_regs)  ((_regs)->ints_state&=~CR0_XM_EMERSIG)
 //#define OFF_IC_TRACE           (sysblk.ints_state&=~IC_DEBUG_BIT)
-#define OFF_IC_DEBUG(_regs)    {(_regs)->ints_mask&=~IC_DEBUG_BIT; \
-                                (_regs)->ints_state&=~IC_DEBUG_BIT; }
+#define OFF_IC_DEBUG(_regs) do { (_regs)->ints_mask&=~IC_DEBUG_BIT; \
+                                 (_regs)->ints_state&=~IC_DEBUG_BIT; } while (0)
 #define OFF_IC_PER(_regs) ((_regs)->ints_state&=~IC_PER_MASK)
 #define OFF_IC_PER_SB(_regs)    ((_regs)->ints_state&=~IC_PER_SB)
 #define OFF_IC_PER_IF(_regs)    ((_regs)->ints_state&=~IC_PER_IF)
