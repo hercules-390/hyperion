@@ -202,7 +202,7 @@ BYTE    c;                              /* Character work area       */
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
             if (h1 < 0 || h2 < 0 || n >= 32)
             {
-                logmsg (_("Invalid value: %s\n"), s);
+                logmsg (_("HHCPN143E Invalid value: %s\n"), s);
                 return -1;
             }
             newval[n++] = (h1 << 4) | h2;
@@ -226,7 +226,7 @@ BYTE    c;                              /* Character work area       */
             /* Ending address or length is specified */
             if (rc != 3 || !(delim == '-' || delim == '.'))
             {
-                logmsg (_("Invalid operand: %s\n"), operand);
+                logmsg (_("HHCPN144E Invalid operand: %s\n"), operand);
                 return -1;
             }
             eaddr = (delim == '.') ? saddr + opnd2 - 1 : opnd2;
@@ -238,7 +238,7 @@ BYTE    c;                              /* Character work area       */
     /* Check for valid range */
     if (saddr > maxadr || eaddr > maxadr || eaddr < saddr)
     {
-        logmsg (_("Invalid range: %s\n"), operand);
+        logmsg (_("HHCPN145E Invalid range: %s\n"), operand);
         return -1;
     }
 

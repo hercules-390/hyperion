@@ -481,6 +481,7 @@ static char *pgmintname[] = {
                         (&sysblk.footprregs[realregs->cpuad][n],
                         sysblk.footprregs[realregs->cpuad][n].inst);
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
+        logmsg(_("HHCCP014I "));
 #if defined(_FEATURE_SIE)
         if(realregs->sie_state)
             logmsg(_("SIE: "));
@@ -590,7 +591,8 @@ static char *pgmintname[] = {
     if( OPEN_IC_PERINT(realregs) )
     {
         if( IS_IC_TRACE )
-            logmsg(_("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n"),
+            logmsg(_("HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X "
+                     "addr=" F_VADR "\n"),
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
               (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
 
@@ -747,7 +749,8 @@ static char *pgmintname[] = {
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
-                logmsg (_("CPU%4.4X: Program interrupt loop: "),realregs->cpuad);
+                logmsg (_("HHCCP016I CPU%4.4X: Program interrupt loop: "),
+                          realregs->cpuad);
                 display_psw (realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
                 ON_IC_CPU_NOT_STARTED(realregs);
@@ -920,7 +923,8 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-        logmsg (_("Machine Check code=%16.16llu\n"), (long long)mcic);
+        logmsg (_("HHCCP022I Machine Check code=%16.16llu\n"),
+                  (long long)mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -1266,7 +1270,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 /* Test for disabled wait PSW and issue message */
                 if( IS_IC_DISABLED_WAIT_PSW(regs) )
                 {
-                    logmsg (_("HHCCP011I CPU%4.4X: Disabled wait state\n"),
+                    logmsg (_("HHCCP011I CPU%4.4X: Disabled wait state\n"
+                              "          "),
                            regs->cpuad);
                     display_psw (regs);
                     regs->cpustate = CPUSTATE_STOPPING;

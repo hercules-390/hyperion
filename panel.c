@@ -716,7 +716,7 @@ struct termios kbattr;                  /* Terminal I/O structure    */
             ANSI_WHITE_BLACK
             "\n");
     fprintf (stderr,
-            "Hercules terminated\n");
+            "HHCIN007I Hercules terminated\n");
 
 } /* end function system_cleanup */
 

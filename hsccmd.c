@@ -107,13 +107,13 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
         if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
         {
-            logmsg( _("Invalid device number\n") );
+            logmsg( _("HHCPN015E Invalid device number\n") );
             return -1;
         }
 
         if (!(dev = find_device_by_devnum (devnum)))
         {
-            logmsg( _("Device number %4.4X not found\n"), devnum );
+            logmsg( _("HHCPN016E Device number %4.4X not found\n"), devnum );
             return -1;
         }
 
@@ -121,7 +121,8 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
         if (strcasecmp(devclass,"PRT"))
         {
-            logmsg( _("Device %4.4X is not a printer device\n"), devnum );
+            logmsg( _("HHCPN017E Device %4.4X is not a printer device\n"),
+                      devnum );
             return -1;
         }
 
@@ -133,14 +134,20 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
         if (rc) dev->stopprt = stopprt;
 
-        logmsg( _("HHC425%c Printer %4.4X %s\n"),
-                (rc ? 'E' : 'I'),
-                devnum,
-                rc == 0 ? _("started") :
-                rc == 1 ? _("busy or interrupt pending") :
-                rc == 3 ? _("subchannel not enabled") :
-                _("attention request rejected")
-            );
+        switch (rc) {
+            case 0: logmsg(_("HHCPN018I Printer %4.4X started\n"), devnum);
+                    break;
+            case 1: logmsg(_("HHCPN019E Printer %4.4X not started: "
+                             "busy or interrupt pending\n"), devnum);
+                    break;
+            case 2: logmsg(_("HHCPN020E Printer %4.4X not started: "
+                             "attention request rejected\n"), devnum);
+                    break;
+            case 3: logmsg(_("HHCPN021E Printer %4.4X not started: "
+                             "subchannel not enabled\n"), devnum);
+                    break;
+        }
+                    
     }
 
     return 0;
@@ -192,13 +199,13 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
         if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
         {
-            logmsg( _("Invalid device number\n") );
+            logmsg( _("HHCPN022E Invalid device number\n") );
             return -1;
         }
 
         if (!(dev = find_device_by_devnum (devnum)))
         {
-            logmsg( _("Device number %4.4X not found\n"), devnum );
+            logmsg( _("HHCPN023E Device number %4.4X not found\n"), devnum );
             return -1;
         }
 
@@ -206,13 +213,14 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
         if (strcasecmp(devclass,"PRT"))
         {
-            logmsg( _("Device %4.4X is not a printer device\n"), devnum );
+            logmsg( _("HHCPN024E Device %4.4X is not a printer device\n"),
+                      devnum );
             return -1;
         }
 
         dev->stopprt = 1;
 
-        logmsg( _("HHC424I Printer %4.4X stopped\n"), devnum );
+        logmsg( _("HHCPN025I Printer %4.4X stopped\n"), devnum );
     }
 
     return 0;
@@ -284,12 +292,13 @@ int quiet_cmd(char* cmdline, int argc, char *argv[])
 #ifdef EXTERNALGUI
     if (extgui)
     {
-        logmsg( _("Ignored. (external GUI active)\n") );
+        logmsg( _("HHCPN026W Ignored. (external GUI active)\n") );
         return 0;
     }
 #endif /*EXTERNALGUI*/
     sysblk.npquiet = !sysblk.npquiet;
-    logmsg( _("Automatic refresh %s.\n"), sysblk.npquiet ? _("disabled") : _("enabled") );
+    logmsg( _("HHCPN027I Automatic refresh %s.\n"),
+              sysblk.npquiet ? _("disabled") : _("enabled") );
     return 0;
 }
 
@@ -304,19 +313,19 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg( "tod = %16.16llX\n",
+    logmsg( "HHCPN028I tod = %16.16llX\n",
         (long long)(sysblk.todclk + regs->todoffset) << 8
         );
 
-    logmsg( "ckc = %16.16llX\n", (long long)regs->clkc << 8 );
-    logmsg( "cpt = %16.16llX\n", (long long)regs->ptimer );
+    logmsg( "          ckc = %16.16llX\n", (long long)regs->clkc << 8 );
+    logmsg( "          cpt = %16.16llX\n", (long long)regs->ptimer );
 
     if (regs->arch_mode == ARCH_370)
     {
         U32 itimer;
         PSA_3XX *psa = (void*) (regs->mainstor + regs->PX);
         FETCH_FW(itimer, psa->inttimer);
-        logmsg( "itm = %8.8X\n", itimer );
+        logmsg( "          itm = %8.8X\n", itimer );
     }
 
     return 0;
@@ -337,12 +346,12 @@ int iodelay_cmd(char* cmdline, int argc, char *argv[])
         BYTE    c;                      /* Character work area       */
 
         if (sscanf(argv[1], "%d%c", &iodelay, &c) != 1)
-            logmsg( _("Invalid I/O delay value: %s\n"), argv[1] );
+            logmsg( _("HHCPN029E Invalid I/O delay value: %s\n"), argv[1] );
         else
             sysblk.iodelay = iodelay;
     }
 
-    logmsg( _("I/O delay = %d\n"), sysblk.iodelay );
+    logmsg( _("HHCPN030I I/O delay = %d\n"), sysblk.iodelay );
 
     return 0;
 }
@@ -378,25 +387,26 @@ int tt32stats_cmd(char* cmdline, int argc, char *argv[])
 
     if (argc < 2)
     {
-        logmsg( _("Missing device number\n") );
+        logmsg( _("HHCPN031E Missing device number\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN032E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
     if (!(dev = find_device_by_devnum (devnum)))
     {
-        logmsg( _("Device number %4.4X not found\n"), devnum );
+        logmsg( _("HHCPN033E Device number %4.4X not found\n"), devnum );
         return -1;
     }
 
     if (CTC_CTCI != dev->ctctype && CTC_LCS != dev->ctctype)
     {
-        logmsg( _("Device %4.4X is not a CTCI or LCS device\n"), devnum );
+        logmsg( _("HHCPN034E Device %4.4X is not a CTCI or LCS device\n"),
+                  devnum );
         return -1;
     }
 
@@ -426,7 +436,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     /* Command is valid only when CPU is stopped */
     if (regs->cpustate != CPUSTATE_STOPPED)
     {
-        logmsg( _("store status rejected: CPU not stopped\n") );
+        logmsg( _("HHCPN035E store status rejected: CPU not stopped\n") );
         return -1;
     }
 
@@ -455,7 +465,7 @@ int toddrag_cmd(char* cmdline, int argc, char *argv[])
             sysblk.toddrag = toddrag;
     }
 
-    logmsg( _("TOD clock drag factor = %d\n"), sysblk.toddrag );
+    logmsg( _("HHCPN036I TOD clock drag factor = %d\n"), sysblk.toddrag );
 
     return 0;
 }
@@ -488,7 +498,8 @@ int panrate_cmd(char* cmdline, int argc, char *argv[])
         }
     }
 
-    logmsg( _("Panel refresh rate = %d millisecond(s)\n"), sysblk.panrate );
+    logmsg( _("HHCPN037I Panel refresh rate = %d millisecond(s)\n"),
+              sysblk.panrate );
 
     return 0;
 }
@@ -603,7 +614,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg( _("Restart key depressed\n") );
+    logmsg( _("HHCPN038I Restart key depressed\n") );
 
     /* Obtain the interrupt lock */
     obtain_lock (&sysblk.intlock);
@@ -663,13 +674,13 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("Missing argument\n") );
+        logmsg( _("HHCPN039E Missing argument\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%llx%c", &sysblk.breakaddr, &c) == 1)
     {
-        logmsg( _("Setting breakpoint at %16.16llX\n"),
+        logmsg( _("HHCPN040I Setting breakpoint at %16.16llX\n"),
             (long long)sysblk.breakaddr
             );
         sysblk.instbreak = 1;
@@ -687,7 +698,7 @@ int bdelete_cmd(char* cmdline, int argc, char *argv[])
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-    logmsg( _("Deleting breakpoint\n") );
+    logmsg( _("HHCPN041I Deleting breakpoint\n") );
     sysblk.instbreak = 0;
     SET_IC_TRACE;
     return 0;
@@ -709,34 +720,42 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("Missing device number\n") );
+        logmsg( _("HHCPN042E Missing device number\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN043E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
     if (!(dev = find_device_by_devnum (devnum)))
     {
-        logmsg( _("Device number %4.4X not found\n"), devnum );
+        logmsg( _("HHCPN044E Device number %4.4X not found\n"), devnum );
         return -1;
     }
 
     rc = device_attention (dev, CSW_ATTN);
 
-    logmsg( _("Device %4.4X %s\n"),
-            devnum,
-            rc == 0 ? _("attention request raised") :
-            rc == 1 ? _("busy or interrupt pending") :
-            rc == 3 ? _("subchannel not enabled") :
-            _("attention request rejected")
-        );
-
+    switch (rc) {
+        case 0: logmsg(_("HHCPN045I Device %4.4X attention request raised\n"),
+                         devnum);
+                break;
+        case 1: logmsg(_("HHCPN046E Device %4.4X busy or interrupt pending\n"),
+                         devnum);
+                break;
+        case 2: logmsg(_("HHCPN047E Device %4.4X attention request rejected\n"),
+                         devnum);
+                break;
+        case 3: logmsg(_("HHCPN048E Device %4.4X subchannel not enabled\n"),
+                         devnum);
+                break;
+    }
+                    
     if (rc == 3 && CPUSTATE_STOPPED == regs->cpustate)
-        logmsg( _("(Are you sure you didn't mean 'ipl %4.4X' instead?)\n"), devnum );
+        logmsg( _("HHCPN049W Are you sure you didn't mean 'ipl %4.4X' "
+                  "instead?\n"), devnum );
 
     return rc;
 }
@@ -754,7 +773,7 @@ int ext_cmd(char* cmdline, int argc, char *argv[])
 
     ON_IC_INTKEY;
 
-    logmsg( _("Interrupt key depressed\n") );
+    logmsg( _("HHCPN050I Interrupt key depressed\n") );
 
     /* Signal waiting CPUs that an interrupt is pending */
     WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
@@ -790,7 +809,7 @@ BYTE c;                                 /* Character work area       */
     }
 
     /* Display IPL parameter */
-    logmsg( "LOADPARM=%c%c%c%c%c%c%c%c\n",
+    logmsg( "HHCPN051I LOADPARM=%c%c%c%c%c%c%c%c\n",
             guest_to_host(sysblk.loadparm[0]),
             guest_to_host(sysblk.loadparm[1]),
             guest_to_host(sysblk.loadparm[2]),
@@ -817,7 +836,7 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("Missing device number\n") );
+        logmsg( _("HHCPN052E Missing device number\n") );
         return -1;
     }
 
@@ -825,7 +844,7 @@ BYTE c;                                 /* Character work area       */
         if(sysblk.regs[i].cpuonline
             && sysblk.regs[i].cpustate != CPUSTATE_STOPPED)
         {
-            logmsg( _("ipl rejected: All CPU's must be stopped\n") );
+            logmsg( _("HHCPN053E ipl rejected: All CPU's must be stopped\n") );
             return -1;
         }
 
@@ -851,13 +870,13 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("Missing argument\n") );
+        logmsg( _("HHCPN054E Missing argument\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%x%c", &cpu, &c) != 1)
     {
-        logmsg( _("Target CPU %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN055E Target CPU %s is invalid\n"), argv[1] );
         return -1;
     }
 
@@ -868,7 +887,7 @@ BYTE c;                                 /* Character work area       */
     if(cpu < 0 || cpu > sysblk.numcpu)
 #endif /*!_FEATURE_CPU_RECONFIG*/
     {
-        logmsg( _("CPU%4.4X not configured\n"), cpu );
+        logmsg( _("HHCPN056E CPU%4.4X not configured\n"), cpu );
         return -1;
     }
 
@@ -960,13 +979,13 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 3)
     {
-        logmsg( _("Missing argument(s)\n") );
+        logmsg( _("HHCPN057E Missing argument(s)\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN059E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
@@ -993,13 +1012,13 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("Missing device number\n") );
+        logmsg( _("HHCPN060E Missing device number\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN061E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
@@ -1018,19 +1037,19 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 3)
     {
-        logmsg( _("Missing argument(s)\n") );
+        logmsg( _("HHCPN062E Missing argument(s)\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN063E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
     if (sscanf(argv[2], "%hx%c", &newdevn, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[2] );
+        logmsg( _("HHCPN064E Device number %s is invalid\n"), argv[2] );
         return -1;
     }
 
@@ -1049,19 +1068,21 @@ BYTE    c;                              /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("Missing argument(s)\n") );
+        logmsg( _("HHCPN065E Missing argument(s)\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%x%c", &rupt_num, &c) != 1)
     {
-        logmsg( _("Program interrupt number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN066E Program interrupt number %s is invalid\n"),
+                  argv[1] );
         return -1;
     }
 
     if ((abs_rupt_num = abs(rupt_num)) < 1 || abs_rupt_num > 0x40)
     {
-        logmsg( _("Program interrupt number out of range (%4.4X)\n"), abs_rupt_num );
+        logmsg( _("HHCPN067E Program interrupt number out of range (%4.4X)\n"),
+                  abs_rupt_num );
         return -1;
     }
 
@@ -1095,7 +1116,7 @@ int k_cmd(char* cmdline, int argc, char *argv[])
         if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1
             || !(dev = find_device_by_devnum (devnum)) || !dev->cckd_ext)
         {
-            logmsg( "Doh !!\n" );
+            logmsg( _("HHCPN068E Device number %s is invalid\n"), argv[1]);
             return -1;
         }
 
@@ -1136,19 +1157,19 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 2)
     {
-        logmsg( _("Missing device number\n") );
+        logmsg( _("HHCPN069E Missing device number\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN070E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
     if (!(dev = find_device_by_devnum (devnum)))
     {
-        logmsg( _("Device number %4.4X not found\n"), devnum );
+        logmsg( _("HHCPN071E Device number %4.4X not found\n"), devnum );
         return -1;
     }
 
@@ -1178,7 +1199,8 @@ int syncio_cmd(char* cmdline, int argc, char *argv[])
 
         found = 1;
 
-        logmsg( _("%4.4X  synchronous: %12lld asynchronous: %12lld\n"),
+        logmsg( _("HHCPN072I %4.4X  synchronous: %12lld "
+                  "asynchronous: %12lld\n"),
                 dev->devnum, (long long)dev->syncios,
                 (long long)dev->asyncios
             );
@@ -1188,9 +1210,10 @@ int syncio_cmd(char* cmdline, int argc, char *argv[])
     }
 
     if (!found)
-        logmsg( _("No synchronous I/O devices found\n") );
+        logmsg( _("HHCPN073I No synchronous I/O devices found\n") );
     else
-        logmsg( _("TOTAL synchronous: %12lld asynchronous: %12lld  %3lld%%\n"),
+        logmsg( _("HHCPN074I TOTAL synchronous: %12lld "
+                  "asynchronous: %12lld  %3lld%%\n"),
                (long long)syncios, (long long)asyncios,
                (long long)((syncios * 100) / (syncios + asyncios + 1))
             );
@@ -1230,13 +1253,14 @@ int devtmax_cmd(char* cmdline, int argc, char *argv[])
         ios_devtmax = devtmax;
     else
     {
-        logmsg( _("Invalid max device threads value (must be -1 to n)\n") );
+        logmsg( _("HHCPN075E Invalid max device threads value "
+                  "(must be -1 to n)\n") );
         return -1;
     }
 
     TrimDeviceThreads();    /* (enforce newly defined threshold) */
 
-    logmsg( _("Max device threads: %d, current: %d, most: %d, "
+    logmsg( _("HHCPN076I Max device threads: %d, current: %d, most: %d, "
             "waiting: %d, max exceeded: %d\n"),
             ios_devtmax, ios_devtnbr, ios_devthwm,
             (int)ios_devtwait, ios_devtunavail
@@ -1257,7 +1281,8 @@ int devtmax_cmd(char* cmdline, int argc, char *argv[])
         sysblk.devtmax = devtmax;
     else
     {
-        logmsg( _("Invalid max device threads value (must be -1 to n)\n") );
+        logmsg( _("HHCPN077E Invalid max device threads value "
+                  "(must be -1 to n)\n") );
         return -1;
     }
 
@@ -1280,7 +1305,7 @@ int devtmax_cmd(char* cmdline, int argc, char *argv[])
         sched_yield();
     }
 
-    logmsg( _("Max device threads %d current %d most %d "
+    logmsg( _("HHCPN078E Max device threads %d current %d most %d "
             "waiting %d total I/Os queued %d\n"),
             sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
             sysblk.devtwait, sysblk.devtunavail
@@ -1314,20 +1339,21 @@ BYTE c;                                 /* Character work area       */
         devascii = strtok(cmd+3," \t");
         if (devascii == NULL || strcmp (devascii, "") == 0)
         {
-            logmsg( _("Missing device number\n") );
+            logmsg( _("HHCPN079E Missing device number\n") );
             return -1;
         }
         if (strcmp (devascii, "*") == 0)
         {
             if (action == '=')
             {
-                logmsg( _("Invalid device number\n") );
+                logmsg( _("HHCPN080E Invalid device number\n") );
                 return -1;
             }
             for (dev=sysblk.firstdev; dev && !dev->cckd_ext; dev=dev->nextdev);
+                /* nothing */
             if (!dev)
             {
-                logmsg( _("No cckd devices found\n") );
+                logmsg( _("HHCPN081E No cckd devices found\n") );
                 return -1;
             }
             scan = 1;
@@ -1336,18 +1362,20 @@ BYTE c;                                 /* Character work area       */
         {
             if (sscanf (devascii, "%hx%c", &devnum, &c) != 1)
             {
-                logmsg( _("Invalid device number\n") );
+                logmsg( _("HHCPN082E Invalid device number\n") );
                 return -1;
             }
             dev = find_device_by_devnum (devnum);
             if (dev == NULL)
             {
-                logmsg( _("Device number %4.4X not found\n"), devnum );
+                logmsg( _("HHCPN083E Device number %4.4X not found\n"),
+                          devnum );
                 return -1;
             }
             if (dev->cckd_ext == NULL)
             {
-                logmsg( _("Device number %4.4X is not a cckd device\n"), devnum );
+                logmsg( _("HHCPN084E Device number %4.4X "
+                          "is not a cckd device\n"), devnum );
                 return -1;
             }
         }
@@ -1357,12 +1385,14 @@ BYTE c;                                 /* Character work area       */
         /* Perform the action */
         do {
             n++;
-            if (scan) logmsg( _("Processing device %4.4X\n"), dev->devnum );
+            if (scan) logmsg( _("HHCPN085I Processing device %4.4X\n"),
+                                dev->devnum );
 
             switch (action) {
             case '+': if (devascii != NULL)
                       {
-                          logmsg( _("Unexpected operand: %s\n"), devascii );
+                          logmsg( _("HHCPN086E Unexpected operand: %s\n"),
+                                    devascii );
                           return -1;
                       }
                       cckd_sf_add (dev);
@@ -1375,7 +1405,8 @@ BYTE c;                                 /* Character work area       */
                           cckd_sf_remove (dev, 0);
                       else
                       {
-                          logmsg( _("Operand must be `merge' or `nomerge'\n") );
+                          logmsg( _("HHCPN087E Operand must be "
+                                    "`merge' or `nomerge'\n") );
                           return -1;
                       }
                       break;
@@ -1383,12 +1414,14 @@ BYTE c;                                 /* Character work area       */
             case '=': if (devascii != NULL)
                           cckd_sf_newname (dev, devascii);
                       else
-                          logmsg( _("Shadow file name not specified\n") );
+                          logmsg( _("HHCPN088E Shadow file name "
+                                    "not specified\n") );
                       break;
 
             case 'c': if (devascii != NULL)
                       {
-                          logmsg( _("Unexpected operand: %s\n"), devascii );
+                          logmsg( _("HHCPN089E Unexpected operand: %s\n"),
+                                    devascii );
                           return -1;
                       }
                       cckd_sf_comp (dev);
@@ -1396,13 +1429,15 @@ BYTE c;                                 /* Character work area       */
 
             case 'd': if (devascii != NULL)
                       {
-                          logmsg( _("Unexpected operand: %s\n"), devascii );
+                          logmsg( _("HHCPN090E Unexpected operand: %s\n"),
+                                    devascii );
                           return -1;
                       }
                       cckd_sf_stats (dev);
                       break;
 
-            default:  logmsg( _("Command must be `sf+', `sf-', `sf=' or `sfd'\n") );
+            default:  logmsg( _("HHCPN091E Command must be `sf+', `sf-', "
+                                "`sf=', `sfc', or `sfd'\n") );
                       return -1;
             }
 
@@ -1415,7 +1450,7 @@ BYTE c;                                 /* Character work area       */
 
         } while (dev);
 
-        if (scan) logmsg( _("%d devices processed\n"), n );
+        if (scan) logmsg( _("HHCPN092I %d devices processed\n"), n );
 
         return 0;
     }
@@ -1435,19 +1470,19 @@ BYTE c;                                 /* Character work area       */
 
     if (argc < 3)
     {
-        logmsg( _("Missing argument(s)\n") );
+        logmsg( _("HHCPN093E Missing argument(s)\n") );
         return -1;
     }
 
     if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
     {
-        logmsg( _("Device number %s is invalid\n"), argv[1] );
+        logmsg( _("HHCPN094E Device number %s is invalid\n"), argv[1] );
         return -1;
     }
 
     if (!(dev = find_device_by_devnum (devnum)))
     {
-        logmsg( _("Device number %4.4X not found\n"), devnum );
+        logmsg( _("HHCPN095E Device number %4.4X not found\n"), devnum );
         return -1;
     }
 
@@ -1459,7 +1494,8 @@ BYTE c;                                 /* Character work area       */
         || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         release_lock (&dev->lock);
-        logmsg( _("Device %4.4X busy or interrupt pending\n"), devnum );
+        logmsg( _("HHCPN096E Device %4.4X busy or interrupt pending\n"),
+                  devnum );
         return -1;
     }
 
@@ -1474,9 +1510,10 @@ BYTE c;                                 /* Character work area       */
     {
         if ((dev->hnd->init)(dev, argc-2, (BYTE**)&argv[2]) < 0)
         {
-            logmsg( _("Initialization failed for device %4.4X\n"), devnum );
+            logmsg( _("HHCPN097E Initialization failed for device %4.4X\n"),
+                      devnum );
         } else {
-            logmsg( _("Device %4.4X initialized\n"), devnum );
+            logmsg( _("HHCPN098I Device %4.4X initialized\n"), devnum );
         }
     }
 
@@ -1505,7 +1542,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     if (argc < 2)
     {
-        logmsg( _("savecore rejected: filename missing\n") );
+        logmsg( _("HHCPN099E savecore rejected: filename missing\n") );
         return -1;
     }
 
@@ -1526,7 +1563,8 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     }
     else if (sscanf(loadaddr, "%x", &aaddr) !=1)
     {
-        logmsg( _("savecore: invalid starting address: %s \n"), loadaddr );
+        logmsg( _("HHCPN100E savecore: invalid starting address: %s \n"),
+                  loadaddr );
         return -1;
     }
 
@@ -1544,36 +1582,40 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     }
     else if (sscanf(loadaddr, "%x", &aaddr2) !=1)
     {
-        logmsg( _("savecore: invalid ending address: %s \n"), loadaddr );
+        logmsg( _("HHCPN101E savecore: invalid ending address: %s \n"),
+                  loadaddr );
         return -1;
     }
 
     /* Command is valid only when CPU is stopped */
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
-        logmsg( _("savecore rejected: CPU not stopped\n") );
+        logmsg( _("HHCPN102E savecore rejected: CPU not stopped\n") );
         return -1;
     }
 
     if (aaddr >= aaddr2)
     {
-        logmsg( _("HHCxxxI invalid range: %8.8X-%8.8X\n"), aaddr, aaddr2 );
+        logmsg( _("HHCPN103E invalid range: %8.8X-%8.8X\n"), aaddr, aaddr2 );
         return -1;
     }
 
     /* Save the file from absolute storage */
-    logmsg( _("Saveing location %8.8X-%8.8X to %s\n"), aaddr, aaddr2, fname );
+    logmsg( _("HHCPN104I Saving locations %8.8X-%8.8X to %s\n"),
+              aaddr, aaddr2, fname );
 
     if ((fd = open(fname, O_CREAT|O_WRONLY|O_EXCL|O_BINARY, S_IREAD|S_IWRITE|S_IRGRP)) < 0)
     {
-        logmsg( _("HHCxxxI savecore: %s: %s\n"), fname, strerror(errno) );
+        logmsg( _("HHCPN105E savecore error creating %s: %s\n"),
+                  fname, strerror(errno) );
         return -1;
     }
 
     if ((len = write(fd, regs->mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
-        logmsg( _("HHCxxxI savecore error writing to %s: %s\n"), fname, strerror(errno) );
+        logmsg( _("HHCPN106E savecore error writing to %s: %s\n"),
+                  fname, strerror(errno) );
     else if((U32)len < (aaddr2 - aaddr) + 1)
-        logmsg( _("HHCxxxI savecore: unable to save %d bytes\n"),
+        logmsg( _("HHCPN107E savecore: unable to save %d bytes\n"),
             ((aaddr2 - aaddr) + 1) - len
             );
 
@@ -1599,7 +1641,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     if (argc < 2)
     {
-        logmsg( _("loadcore rejected: filename missing\n") );
+        logmsg( _("HHCPN108E loadcore rejected: filename missing\n") );
         return -1;
     }
 
@@ -1607,7 +1649,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     if (stat(fname, &statbuff) < 0)
     {
-        logmsg( _("Cannot open %s: %s\n"),
+        logmsg( _("HHCPN109E Cannot open %s: %s\n"),
             fname, strerror(errno)
             );
         return -1;
@@ -1620,7 +1662,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            logmsg( _("invalid address: %s \n"), loadaddr );
+            logmsg( _("HHCPN110E invalid address: %s \n"), loadaddr );
             return -1;
         }
     }
@@ -1628,16 +1670,16 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     /* Command is valid only when CPU is stopped */
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
-        logmsg( _("loadcore rejected: CPU not stopped\n") );
+        logmsg( _("HHCPN111E loadcore rejected: CPU not stopped\n") );
         return -1;
     }
 
     /* Read the file into absolute storage */
-    logmsg( _("Loading %s to location %x \n"), fname, aaddr );
+    logmsg( _("HHCPN112I Loading %s to location %x \n"), fname, aaddr );
 
     len = load_main(fname, aaddr);
 
-    logmsg( _("%d bytes read from %s\n"), len, fname );
+    logmsg( _("HHCPN113I %d bytes read from %s\n"), len, fname );
 
     return 0;
 }
@@ -1660,7 +1702,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     if (argc < 2)
     {
-        logmsg( _("loadtext rejected: filename missing\n") );
+        logmsg( _("HHCPN114E loadtext rejected: filename missing\n") );
         return -1;
     }
 
@@ -1673,28 +1715,28 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
         if (sscanf(loadaddr, "%x", &aaddr) !=1)
         {
-            logmsg( _("invalid address: %s \n"), loadaddr );
+            logmsg( _("HHCPN115E invalid address: %s \n"), loadaddr );
             return -1;
         }
     }
 
     if (aaddr > regs->mainlim)
     {
-        logmsg( _("Address greater than mainstore size. \n") );
+        logmsg( _("HHCPN116E Address greater than mainstore size\n") );
         return -1;
     }
 
     /* Command is valid only when CPU is stopped */
     if (CPUSTATE_STOPPED != regs->cpustate)
     {
-        logmsg( _("loadtext rejected: CPU not stopped\n") );
+        logmsg( _("HHCPN117E loadtext rejected: CPU not stopped\n") );
         return -1;
     }
 
     /* Open the specified file name */
     if ((fd = open (fname, O_RDONLY | O_BINARY)) < 0)
     {
-        logmsg( _("Cannot open %s: %s\n"),
+        logmsg( _("HHCPN118E Cannot open %s: %s\n"),
             fname, strerror(errno)
             );
         return -1;
@@ -1705,7 +1747,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
         /* Read 80 bytes into buffer */
         if ((len = read (fd, buf, 80)) < 0)
         {
-            logmsg( _("Cannot read %s: %s\n"),
+            logmsg( _("HHCPN119E Cannot read %s: %s\n"),
                     fname, strerror(errno)
                 );
             close (fd);
@@ -1729,8 +1771,8 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     /* Close file and issue status message */
     close (fd);
-    logmsg( _("Finished loading TEXT deck file\n") );
-    logmsg( _("Last 'TXT' record had address: %3.3X\n"), n );
+    logmsg( _("HHCPN120I Finished loading TEXT deck file\n") );
+    logmsg( _("          Last 'TXT' record had address: %3.3X\n"), n );
 
     return 0;
 }
@@ -1759,7 +1801,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
         if (strcasecmp(cmdarg,"+debug") != 0 &&
             strcasecmp(cmdarg,"-debug") != 0)
         {
-            logmsg( _("ipending expects {+|-}debug as operand."
+            logmsg( _("HHCPN121E ipending expects {+|-}debug as operand."
                 " %s is invalid\n"), cmdarg
                 );
             cmdarg = NULL;
@@ -1775,7 +1817,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     {
         if (cmdarg)
         {
-            logmsg( _("Interrupt checking debug mode set to ") );
+            logmsg( _("HHCPN122I Interrupt checking debug mode set to ") );
 
             if ('+' == *cmdarg)
             {
@@ -1790,40 +1832,41 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
         }
 // /*DEBUG*/logmsg( _("CPU%4.4X: Any cpu interrupt %spending\n"),
 // /*DEBUG*/    sysblk.regs[i].cpuad, sysblk.regs[i].cpuint ? "" : _("not ") );
-        logmsg( _("CPU%4.4X: CPUint=%8.8X (r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n"),
+        logmsg( _("HHCPN123I CPU%4.4X: CPUint=%8.8X "
+                  "(r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n"),
             sysblk.regs[i].cpuad, IC_INTERRUPT_CPU(sysblk.regs + i),
             sysblk.regs[i].ints_state,
             sysblk.ints_state, regs[i].ints_mask
             );
-        logmsg( _("CPU%4.4X: Clock comparator %spending\n"),
+        logmsg( _("          CPU%4.4X: Clock comparator %spending\n"),
             sysblk.regs[i].cpuad,
             IS_IC_CLKC(sysblk.regs + i) ? "" : _("not ")
             );
-        logmsg( _("CPU%4.4X: CPU timer %spending\n"),
+        logmsg( _("          CPU%4.4X: CPU timer %spending\n"),
             sysblk.regs[i].cpuad,
             IS_IC_PTIMER(sysblk.regs + i) ? "" : _("not ")
             );
-        logmsg( _("CPU%4.4X: Interval timer %spending\n"),
+        logmsg( _("          CPU%4.4X: Interval timer %spending\n"),
             sysblk.regs[i].cpuad,
             IS_IC_ITIMER(sysblk.regs + i) ? "" : _("not ")
             );
-        logmsg( _("CPU%4.4X: External call %spending\n"),
+        logmsg( _("          CPU%4.4X: External call %spending\n"),
             sysblk.regs[i].cpuad,
             IS_IC_EXTCALL(sysblk.regs + i) ? "" : _("not ")
             );
-        logmsg( _("CPU%4.4X: Emergency signal %spending\n"),
+        logmsg( _("          CPU%4.4X: Emergency signal %spending\n"),
             sysblk.regs[i].cpuad,
             IS_IC_EMERSIG(sysblk.regs + i) ? "" : _("not ")
             );
-        logmsg( _("CPU%4.4X: CPU %swaiting for interlock\n"),
+        logmsg( _("          CPU%4.4X: CPU %swaiting for interlock\n"),
             sysblk.regs[i].cpuad,
             sysblk.regs[i].mainsync ? "" : _("not ")
             );
-        logmsg( _("CPU%4.4X: CPU interlock %sheld\n"),
+        logmsg( _("          CPU%4.4X: CPU interlock %sheld\n"),
             sysblk.regs[i].cpuad,
             sysblk.regs[i].mainlock ? "" : _("not ")
             );
-        logmsg( _("CPU%4.4X: CPU state is %s\n"),
+        logmsg( _("          CPU%4.4X: CPU state is %s\n"),
             sysblk.regs[i].cpuad,
             states[sysblk.regs[i].cpustate]
             );
@@ -1831,70 +1874,71 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
         if (ARCH_370 == sysblk.arch_mode)
         {
             if (0xFFFF == sysblk.regs[i].chanset)
-                logmsg( _("CPU%4.4X: No channelset connected\n"),
+                logmsg( _("          CPU%4.4X: No channelset connected\n"),
                     sysblk.regs[i].cpuad
                     );
             else
-                logmsg( _("CPU%4.4X: Connected to channelset %4.4X\n"),
+                logmsg( _("          CPU%4.4X: Connected to channelset "
+                          "%4.4X\n"),
                     sysblk.regs[i].cpuad,sysblk.regs[i].chanset
                     );
         }
     }
 
-    logmsg( _("Started mask %8.8X waiting mask %8.8X\n"),
+    logmsg( _("          Started mask %8.8X waiting mask %8.8X\n"),
         sysblk.started_mask, sysblk.waitmask
         );
 #if MAX_CPU_ENGINES > 1
-    logmsg( _("Broadcast mask %8.8X code %d\n"),
+    logmsg( _("          Broadcast mask %8.8X code %d\n"),
         sysblk.broadcast_mask, sysblk.broadcast_code
         );
 #endif
-    logmsg( _("Machine check interrupt %spending\n"),
+    logmsg( _("          Machine check interrupt %spending\n"),
         IS_IC_MCKPENDING ? "" : _("not ")
         );
-    logmsg( _("Service signal %spending\n"),
+    logmsg( _("          Service signal %spending\n"),
         IS_IC_SERVSIG ? "" : _("not ")
         );
-    logmsg( _("Signaling facility %sbusy\n"),
+    logmsg( _("          Signaling facility %sbusy\n"),
         test_lock(&sysblk.sigplock) ? "" : _("not ")
         );
-    logmsg( _("TOD lock %sheld\n"),
+    logmsg( _("          TOD lock %sheld\n"),
         test_lock(&sysblk.todlock) ? "" : _("not ")
         );
-    logmsg( _("Main lock %sheld\n"),
+    logmsg( _("          Main lock %sheld\n"),
         test_lock(&sysblk.mainlock) ? "" : _("not ")
         );
-    logmsg( _("Int lock %sheld\n"),
+    logmsg( _("          Int lock %sheld\n"),
         test_lock(&sysblk.intlock) ? "" : _("not ")
         );
 #if !defined(OPTION_FISHIO)
-    logmsg( _("Ioq lock %sheld\n"),
+    logmsg( _("          Ioq lock %sheld\n"),
         test_lock(&sysblk.ioqlock) ? "" : _("not ")
         );
 #endif
-    logmsg( _("I/O interrupt %spending\n"),
+    logmsg( _("          I/O interrupt %spending\n"),
         IS_IC_IOPENDING ? "" : _("not ")
         );
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("DEV%4.4X: I/O pending\n"), dev->devnum );
+            logmsg( _("          DEV%4.4X: I/O pending\n"), dev->devnum );
         if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("DEV%4.4X: PCI pending\n"), dev->devnum );
+            logmsg( _("          DEV%4.4X: PCI pending\n"), dev->devnum );
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("DEV%4.4X: CRW pending\n"), dev->devnum );
+            logmsg( _("          DEV%4.4X: CRW pending\n"), dev->devnum );
         if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
-            logmsg( _("DEV%4.4X: lock held\n"), dev->devnum );
+            logmsg( _("          DEV%4.4X: lock held\n"), dev->devnum );
     }
 
-    logmsg( _("I/O interrupt queue: ") );
+    logmsg( _("          I/O interrupt queue: ") );
 
     if (!sysblk.iointq)
         logmsg( _("(NULL)\n") );
 
     for (dev = sysblk.iointq; dev; dev = dev->iointq)
-        logmsg( _("DEV%4.4X\n"), dev->devnum );
+        logmsg( _("          DEV%4.4X\n"), dev->devnum );
 
     return 0;
 }
@@ -1913,10 +1957,11 @@ int icount_cmd(char* cmdline, int argc, char *argv[])
     if (argc > 1 && !strcasecmp(argv[1], "clear"))
     {
         memset(IMAP_FIRST,0,IMAP_SIZE);
-        logmsg( _("Instruction counts reset to zero.\n") );
+        logmsg( _("HHCPN124I Instruction counts reset to zero.\n") );
         return 0;
     }
 
+    logmsg(_("HHCPN125I Instruction count display:\n"));
     for (i1 = 0; i1 < 256; i1++)
     {
         switch (i1)
@@ -1924,96 +1969,96 @@ int icount_cmd(char* cmdline, int argc, char *argv[])
             case 0x01:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imap01[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imap01[i2]);
                 break;
             case 0xA4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa4[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapa4[i2]);
                 break;
             case 0xA5:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa5[i2])
-                        logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapa5[i2]);
                 break;
             case 0xA6:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapa6[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapa6[i2]);
                 break;
             case 0xA7:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapa7[i2])
-                        logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapa7[i2]);
                 break;
             case 0xB2:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb2[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapb2[i2]);
                 break;
             case 0xB3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb3[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapb3[i2]);
                 break;
             case 0xB9:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapb9[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapb9[i2]);
                 break;
             case 0xC0:
                 for(i2 = 0; i2 < 16; i2++)
                     if(sysblk.imapc0[i2])
-                        logmsg("INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2Xx%1.1X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapc0[i2]);
                 break;
             case 0xE3:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape3[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imape3[i2]);
                 break;
             case 0xE4:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape4[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imape4[i2]);
                 break;
             case 0xE5:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imape5[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imape5[i2]);
                 break;
             case 0xEB:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapeb[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapeb[i2]);
                 break;
             case 0xEC:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imapec[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imapec[i2]);
                 break;
             case 0xED:
                 for(i2 = 0; i2 < 256; i2++)
                     if(sysblk.imaped[i2])
-                        logmsg("INST=%2.2X%2.2X\tCOUNT=%llu\n",
+                        logmsg("          INST=%2.2X%2.2X\tCOUNT=%llu\n",
                             i1, i2, sysblk.imaped[i2]);
                 break;
             default:
                 if(sysblk.imapxx[i1])
-                    logmsg("INST=%2.2X  \tCOUNT=%llu\n",
+                    logmsg("          INST=%2.2X  \tCOUNT=%llu\n",
                         i1, sysblk.imapxx[i1]);
                 break;
         }
@@ -2034,7 +2079,8 @@ int archmode_cmd(char* cmdline, int argc, char *argv[])
 
     if (argc < 2)
     {
-        logmsg( _("Architecture mode = %s\n"), get_arch_mode_string(NULL) );
+        logmsg( _("HHCPN126I Architecture mode = %s\n"),
+                  get_arch_mode_string(NULL) );
         return 0;
     }
 
@@ -2042,7 +2088,8 @@ int archmode_cmd(char* cmdline, int argc, char *argv[])
         if (sysblk.regs[i].cpuonline
             && CPUSTATE_STOPPED != sysblk.regs[i].cpustate)
         {
-            logmsg( _("All CPU's must be stopped to change architecture\n") );
+            logmsg( _("HHCPN127E All CPU's must be stopped to change "
+                      "architecture\n") );
             return -1;
         }
 #if defined(_370)
@@ -2061,7 +2108,7 @@ int archmode_cmd(char* cmdline, int argc, char *argv[])
     else
 #endif
     {
-        logmsg( _("Invalid architecture mode %s\n"), argv[1] );
+        logmsg( _("HHCPN128E Invalid architecture mode %s\n"), argv[1] );
         return -1;
     }
 
@@ -2072,7 +2119,8 @@ int archmode_cmd(char* cmdline, int argc, char *argv[])
     /* Indicate if z/Architecture is supported */
     sysblk.arch_z900 = sysblk.arch_mode != ARCH_390;
 
-    logmsg( _("Architecture successfully set to %s mode.\n"), get_arch_mode_string(NULL) );
+    logmsg( _("HHCPN129I Architecture successfully set to %s mode.\n"),
+              get_arch_mode_string(NULL) );
 
     return 0;
 }
@@ -2109,13 +2157,13 @@ BYTE c;                                 /* Character work area       */
     {
         if (aaddr > regs->mainlim)
         {
-            logmsg( _("Invalid frame address %8.8X\n"), aaddr );
+            logmsg( _("HHCPN130E Invalid frame address %8.8X\n"), aaddr );
             return -1;
         }
         STORAGE_KEY(aaddr, regs) &= ~(STORKEY_BADFRM);
         if (!oneorzero)
             STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
-        logmsg( _("Frame %8.8X marked %s\n"), aaddr,
+        logmsg( _("HHCPN131I Frame %8.8X marked %s\n"), aaddr,
                 oneorzero ? _("usable") : _("unusable")
             );
         return 0;
@@ -2128,7 +2176,7 @@ BYTE c;                                 /* Character work area       */
     {
         sysblk.insttrace = oneorzero;
         SET_IC_TRACE;
-        logmsg( _("Instruction tracing is now %s\n"), onoroff );
+        logmsg( _("HHCPN132I Instruction tracing is now %s\n"), onoroff );
         return 0;
     }
 
@@ -2139,7 +2187,7 @@ BYTE c;                                 /* Character work area       */
     {
         sysblk.inststep = oneorzero;
         SET_IC_TRACE;
-        logmsg( _("Instruction stepping is now %s\n"), onoroff );
+        logmsg( _("HHCPN133I Instruction stepping is now %s\n"), onoroff );
         return 0;
     }
 
@@ -2154,7 +2202,7 @@ BYTE c;                                 /* Character work area       */
             if (dev->devchar[10] == 0x20)
                 dev->ckdkeytrace = oneorzero;
         }
-        logmsg( _("CKD KEY trace is now %s\n"), onoroff );
+        logmsg( _("HHCPN134I CKD KEY trace is now %s\n"), onoroff );
         return 0;
     }
 
@@ -2169,26 +2217,26 @@ BYTE c;                                 /* Character work area       */
         dev = find_device_by_devnum (devnum);
         if (dev == NULL)
         {
-            logmsg( _("Device number %4.4X not found\n"), devnum );
+            logmsg( _("HHCPN135E Device number %4.4X not found\n"), devnum );
             return -1;
         }
 
         if (cmd[0] == 't')
         {
             dev->ccwtrace = oneorzero;
-            logmsg( _("CCW tracing is now %s for device %4.4X\n"),
+            logmsg( _("HHCPN136I CCW tracing is now %s for device %4.4X\n"),
                 onoroff, devnum
                 );
         } else {
             dev->ccwstep = oneorzero;
-            logmsg( _("CCW stepping is now %s for device %4.4X\n"),
+            logmsg( _("HHCPN137I CCW stepping is now %s for device %4.4X\n"),
                 onoroff, devnum
                 );
         }
         return 0;
     }
 
-    logmsg( _("Unrecognized +/- command.\n") );
+    logmsg( _("HHCPN138E Unrecognized +/- command.\n") );
     return -1;
 }
 
@@ -2374,7 +2422,8 @@ int ProcessPanelCommand (const char* pszCmdLine)
     }
 
     /* Error: unknown/unsupported command... */
-    logmsg( _("Command \"%s\" not found; enter '?' for list.\n"), cmd_argv[0] );
+    logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
+              cmd_argv[0] );
 
     /* Free our saved copy */
     free(pszSaveCmdLine);
@@ -2393,7 +2442,7 @@ int ListAllCommands(char* cmdline, int argc, char *argv[])
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg( _("Valid panel commands are...\n \n") );
+    logmsg( _("HHCPN140I Valid panel commands are...\n \n") );
     logmsg( "  %-9.9s    %s \n \n", "Command", "Description..." );
     logmsg( "  %-9.9s    %s \n \n", "-------", "-----------------------------------------------" );
 
@@ -2570,7 +2619,7 @@ int HelpCommand(char* cmdline, int argc, char *argv[])
 
     if (argc < 2)
     {
-        logmsg( _("Missing argument\n") );
+        logmsg( _("HHCPN141E Missing argument\n") );
         return -1;
     }
 
@@ -2583,7 +2632,7 @@ int HelpCommand(char* cmdline, int argc, char *argv[])
         }
     }
 
-    logmsg( _("No additional help available.\n") );
+    logmsg( _("HHCPN142I No additional help available.\n") );
     return -1;
 }
 
