@@ -2385,16 +2385,24 @@ DEF_INST(program_call)
 {
 int     b2;                             /* Base of effective addr    */
 U32     pcnum;                          /* Program call number       */
+U32     pctea;                          /* TEA in case of program chk*/
 VADR    effective_addr2;                /* Effective address         */
 RADR    abs;                            /* Absolute address          */
 BYTE   *main;                           /* Mainstor address          */
 RADR    pstd;                           /* Primary STD or ASCE       */
 U32     oldpstd;                        /* Old Primary STD or ASCE   */
-U32     ltd;                            /* Linkage table designation */
+U32     ltdesig;                        /* Linkage table designation
+                                           (LTD or LFTD)             */
 U32     pasteo;                         /* Primary ASTE origin       */
 RADR    lto;                            /* Linkage table origin      */
 U32     ltl;                            /* Linkage table length      */
 U32     lte;                            /* Linkage table entry       */
+RADR    lfto;                           /* Linkage first table origin*/
+U32     lftl;                           /* Linkage first table length*/
+U32     lfte;                           /* Linkage first table entry */
+RADR    lsto;                           /* Linkage second table orig */
+U32     lstl;                           /* Linkage second table leng */
+U32     lste[2];                        /* Linkage second table entry*/
 RADR    eto;                            /* Entry table origin        */
 U32     etl;                            /* Entry table length        */
 U32     ete[8];                         /* Entry table entry         */
@@ -2433,23 +2441,35 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (!ASN_AND_LX_REUSE_ENABLED(regs))
     {
         /* When ASN-and-LX-reuse is not installed or not enabled, the
-           PC number is the low-order 20 bits of the operand address */
+           PC number is the low-order 20 bits of the operand address 
+           and the translation exception identification is the 20-bit
+           PC number with 12 high order zeroes appended to the left */
         pcnum = effective_addr2 & (PC_LX | PC_EX);
+        pctea = pcnum;
     }
-    else
+    else /* ASN_AND_LX_REUSE_ENABLED */
     {
         /* When ASN-and-LX-reuse is installed and enabled by CR0,
            the PC number is loaded from the low-order 20 bits of the
            operand address (bits 44-63) if bit 44 is zero, otherwise
            a 31-bit PC number is constructed using bits 32-43 (LFX1)
            of the operand address concatenated with bits 45-63 (LFX2,
-           LSX,EX) of the operand address */
+           LSX,EX) of the operand address.  The translation exception
+           identification is either the 20 bit PC number with 12 high
+           order zeroes, or, if bit 44 is one, is the entire 32 bits
+           of the effective address including the 1 in bit 44 */
         if ((effective_addr2 & PC_BIT44) == 0)
+        {
             pcnum = effective_addr2 & (PC_LFX2 | PC_LSX | PC_EX);
+            pctea = pcnum;
+        }
         else
+        {
             pcnum = ((effective_addr2 & PC_LFX1) >> 1)
                     | (effective_addr2 & (PC_LFX2 | PC_LSX | PC_EX));
-    }
+            pctea = effective_addr2 & 0xFFFFFFFF;
+        }
+    } /* end ASN_AND_LX_REUSE_ENABLED */
 
     /* Special operation exception if DAT is off, or if
        in secondary space mode or home space mode */
@@ -2467,7 +2487,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (ACCESS_REGISTER_MODE(&(regs->psw)))
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
         /* Obtain the LTD from control register 5 */
-        ltd = regs->CR_L(5);
+        ltdesig = regs->CR_L(5);
     }
     else
     {
@@ -2489,9 +2509,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         aste[6] = ARCH_DEP(fetch_fullword_absolute) (abs+24, regs);
 #endif /*defined(FEATURE_ESAME)*/
 
-        /* Load LTD from primary ASTE word 3 or 6 */
-        ltd = ASTE_LT_DESIGNATOR(aste);
+        /* Load LTD or LFTD from primary ASTE word 3 or 6 */
+        ltdesig = ASTE_LT_DESIGNATOR(aste);
     }
+
+    /* Note: When ASN-and-LX-reuse is installed and enabled 
+       by CR0, ltdesig is an LFTD, otherwise it is an LTD */
 
 #ifdef FEATURE_TRACING
     /* Form trace entry if ASN tracing is active */
@@ -2501,56 +2524,138 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Special operation exception if subsystem linkage
        control bit in linkage table designation is zero */
-    if ((ltd & LTD_SSLINK) == 0)
+    if ((ltdesig & LTD_SSLINK) == 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* [5.5.3.2] Linkage table lookup */
-
-    /* Extract the linkage table origin and length from the LTD */
-    lto = ltd & LTD_LTO;
-    ltl = ltd & LTD_LTL;
-
-    /* Program check if linkage index is outside the linkage table */
-    if (ltl < ((pcnum & PC_LX) >> 13))
+    if (!ASN_AND_LX_REUSE_ENABLED(regs))
     {
-        regs->TEA = pcnum;
-        ARCH_DEP(program_interrupt) (regs, PGM_LX_TRANSLATION_EXCEPTION);
+        /* Extract the linkage table origin and length from the LTD */
+        lto = ltdesig & LTD_LTO;
+        ltl = ltdesig & LTD_LTL;
+
+        /* Program check if linkage index is outside the linkage table */
+        if (ltl < ((pcnum & PC_LX) >> 13))
+        {
+            regs->TEA = pctea;
+            ARCH_DEP(program_interrupt) (regs, PGM_LX_TRANSLATION_EXCEPTION);
+        }
+
+        /* Calculate the address of the linkage table entry */
+        lto += (pcnum & PC_LX) >> 6;
+        lto &= 0x7FFFFFFF;
+
+        /* Program check if linkage table entry is outside real storage */
+        if (lto > regs->mainlim)
+            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
+        /* Fetch linkage table entry from real storage.  All bytes
+           must be fetched concurrently as observed by other CPUs */
+        lto = APPLY_PREFIXING (lto, regs->PX);
+        lte = ARCH_DEP(fetch_fullword_absolute)(lto, regs);
+
+        /* Program check if the LX invalid bit is set */
+        if (lte & LTE_INVALID)
+        {
+            regs->TEA = pctea;
+            ARCH_DEP(program_interrupt) (regs, PGM_LX_TRANSLATION_EXCEPTION);
+        }
+
+        /* Extract the entry table origin and length from the LTE */
+        eto = lte & LTE_ETO;
+        etl = lte & LTE_ETL;
+         
     }
-
-    /* Calculate the address of the linkage table entry */
-    lto += (pcnum & PC_LX) >> 6;
-    lto &= 0x7FFFFFFF;
-
-    /* Program check if linkage table entry is outside real storage */
-    if (lto > regs->mainlim)
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-
-    /* Fetch linkage table entry from real storage.  All bytes
-       must be fetched concurrently as observed by other CPUs */
-    lto = APPLY_PREFIXING (lto, regs->PX);
-    lte = ARCH_DEP(fetch_fullword_absolute)(lto, regs);
-
-    /* Program check if linkage entry invalid bit is set */
-    if (lte & LTE_INVALID)
+    else /* ASN_AND_LX_REUSE_ENABLED */
     {
-        regs->TEA = pcnum;
-        ARCH_DEP(program_interrupt) (regs, PGM_LX_TRANSLATION_EXCEPTION);
-    }
+        /* Extract the linkage first table origin and length from the LFTD */
+        lfto = ltdesig & LFTD_LFTO;
+        lftl = ltdesig & LFTD_LFTL;
+
+        /* If the linkage first index would cause us to exceed the total
+           length of the linkage first table, then generate a program check.
+           We compare the LFX1 (which is now in bits 1-12 of the 32-bit PC
+           number) with the 8 bit LFTL. This implies that the first 4 bits
+           of the LFX1 (originally in bits 32-35 of the operand address)
+           must always be 0. The LFX1 was loaded from bits 32-43 of the
+           operand address if bit 44 was 1, otherwise the LFX1 is zero. */
+        if (lftl < (pcnum >> 19))
+        {
+            regs->TEA = pctea;
+            ARCH_DEP(program_interrupt) (regs, PGM_LFX_TRANSLATION_EXCEPTION);
+        }
+
+        /* Calculate the address of the linkage first table entry
+           (it is always a 31-bit address even in ESAME) */
+        lfto += (pcnum & ((PC_LFX1>>1)|PC_LFX2)) >> 11;
+        lfto &= 0x7FFFFFFF;
+
+        /* Program check if linkage first table entry outside real storage */
+        if (lfto > regs->mainlim)
+            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
+        /* Fetch linkage first table entry from real storage.  All bytes
+           must be fetched concurrently as observed by other CPUs */
+        lfto = APPLY_PREFIXING (lfto, regs->PX);
+        lfte = ARCH_DEP(fetch_fullword_absolute)(lfto, regs);
+
+        /* Program check if the LFX invalid bit is set */
+        if (lfte & LFTE_INVALID)
+        {
+            regs->TEA = pctea;
+            ARCH_DEP(program_interrupt) (regs, PGM_LFX_TRANSLATION_EXCEPTION);
+        }
+
+        /* Extract the linkage second table origin from the LFTE */
+        lsto = lfte & LFTE_LSTO;
+
+        /* Calculate the address of the linkage second table entry
+           (it is always a 31-bit address even in ESAME) */
+        lsto += (pcnum & PC_LSX) >> 6;
+        lsto &= 0x7FFFFFFF;
+
+        /* Program check if linkage second table entry outside real storage */
+        if (lsto > regs->mainlim)
+            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
+        /* Fetch linkage second table entry from real storage.  All bytes
+           must be fetched concurrently as observed by other CPUs */
+        abs = APPLY_PREFIXING (lsto, regs->PX);
+        main = FETCH_MAIN_ABSOLUTE (abs, regs, 2 * 4);
+        lste[0] = fetch_fw (main);
+        lste[1] = fetch_fw (main + 4);
+
+        /* Program check if the LSX invalid bit is set */
+        if (lste[0] & LSTE0_INVALID)
+        {
+            regs->TEA = pctea;
+            ARCH_DEP(program_interrupt) (regs, PGM_LSX_TRANSLATION_EXCEPTION);
+        }
+
+        /* Program check if LSTESN is non-zero and R15 bits 0-31 != LSTESN */
+        if (lste[1] != 0 && regs->GR_L(15) != lste[1])
+        {
+            regs->TEA = pctea;
+            ARCH_DEP(program_interrupt) (regs, PGM_LSTE_SEQUENCE_EXCEPTION);
+        }
+
+        /* Extract the entry table origin and length from the LSTE */
+        eto = lste[0] & LSTE0_ETO;
+        etl = lste[0] & LSTE0_ETL;
+
+    } /* end ASN_AND_LX_REUSE_ENABLED */
 
     /* [5.5.3.3] Entry table lookup */
-
-    /* Extract the entry table origin and length from the LTE */
-    eto = lte & LTE_ETO;
-    etl = lte & LTE_ETL;
 
     /* Program check if entry index is outside the entry table */
     if (etl < ((pcnum & PC_EX) >> 2))
     {
-        regs->TEA = pcnum;
+        regs->TEA = pctea;
         ARCH_DEP(program_interrupt) (regs, PGM_EX_TRANSLATION_EXCEPTION);
     }
 
-    /* Calculate the starting address of the entry table entry */
+    /* Calculate the starting address of the entry table entry 
+       (it is always a 31-bit address even in ESAME) */
     eto += (pcnum & PC_EX) << (ASF_ENABLED(regs) ? 5 : 4);
     eto &= 0x7FFFFFFF;
 
@@ -2961,7 +3066,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-}
+} /* end DEF_INST(program_call) */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
