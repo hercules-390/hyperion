@@ -306,6 +306,8 @@ U32     aste_addr;                      /* Real address of ASTE      */
 U32     abs;                            /* Absolute address          */
 int     i;                              /* Array subscript           */
 
+    regs->dat.protect = 0;
+
     /* [5.8.4.3] Check the reserved bits in the ALET */
     if ( alet & ALET_RESV )
         goto alet_spec_excp;
@@ -723,10 +725,7 @@ U16     pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
 TLBE   *tlbp;                           /* -> TLB entry              */
 
-    regs->dat.private = regs->dat.protect = regs->dat.raddr = 0;
-#if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
-#endif
+    regs->dat.private = regs->dat.protect = 0;
 
     /* Load the effective segment table descriptor */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
@@ -883,10 +882,7 @@ RADR    pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
 TLBE   *tlbp;                           /* -> TLB entry              */
 
-    regs->dat.private = regs->dat.protect = regs->dat.raddr = 0;
-#if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
-#endif
+    regs->dat.private = regs->dat.protect = 0;
 
     /* [3.11.3.1] Load the effective segment table descriptor */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
@@ -1027,10 +1023,7 @@ U16     sx, px;                         /* Segment and page index,
                                            + 3 low-order zero bits   */
 TLBE   *tlbp;                           /* -> TLB entry              */
 
-    regs->dat.private = regs->dat.protect = regs->dat.raddr = 0;
-#if defined(_FEATURE_SIE)
-    if(SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
-#endif
+    regs->dat.private = regs->dat.protect = 0;
 
     /* Load the address space control element */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
@@ -1791,6 +1784,7 @@ RADR    aaddr;                          /* Absolute address          */
         goto vabs_addr_excp;
 
 #if defined(_FEATURE_SIE)
+    if(SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
 
