@@ -68,10 +68,14 @@ BYTE    c;                              /* Character work area       */
     dev->fd = open (dev->filename, O_RDWR|O_BINARY);
     if (dev->fd < 0)
     {
-        fprintf (stderr,
-                "HHC302I File %s open error: %s\n",
-                dev->filename, strerror(errno));
-        return -1;
+        dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
+        if (dev->fd < 0)
+        {
+            fprintf (stderr,
+                    "HHC302I File %s open error: %s\n",
+                    dev->filename, strerror(errno));
+            return -1;
+        }
     }
 
     /* Determine the device size */

@@ -2528,14 +2528,43 @@ long            len;                    /* Uncompressed trk length   */
     /* make the previous file active */
     cckd->sfn--;
 
+    /* Verify the integrity of the new active file by calling the
+       chkdsk function.  This is especially important if the
+       preceding file was created by cckddump program and made
+       writable for the merge */
+    rc = cckd_chkdsk (cckd->fd[sfx-1], sysblk.msgpipew, 1);
+    if (rc < 0)
+    {
+        logmsg ("cckddasd: cannot remove shadow file [%d], "
+                "file [%d] failed chkdsk\n",
+                sfx, sfx-1);
+        cckd->sfn++;
+        release_lock (&cckd->filelock);
+        return;         
+    }
+
+    /* Re-read the compressed device header, in case chkdsk
+       rebuilt the free space */
+    rc = cckd_read_chdr (dev);
+    if (rc < 0)
+    {
+        logmsg ("cckddasd: cannot remove shadow file [%d], "
+                "file [%d] read cckd devhdr failed\n",
+                sfx, sfx-1);
+        cckd->sfn++;
+        release_lock (&cckd->filelock);
+        return;         
+    }
+
     /* perform backwards merge to a compressed file */
     if (merge && cckd->cdevhdr[sfx-1].size)
     {
+        DEVTRACE ("cckddasd: sfrem merging to compressed file [%d] %s\n",
+                  sfx-1, sfn);
+        cckd->cdevhdr[cckd->sfn].options |= CCKD_OPENED;
         buf = malloc (dev->ckdtrksz);
         for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
         {
-            DEVTRACE ("cckddasd: sfrem merging to compressed file [%d] %s\n", sfx-1, sfn);
-
             /* get the level 2 tables */
             rc = cckd_read_l2 (dev, sfx, i);
             memcpy (&l2, cckd->l2, CCKD_L2TAB_SIZE);

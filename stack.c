@@ -301,7 +301,7 @@ U16     xcode;                          /* Exception code            */
 
     /* Convert to real address using home segment table */
     rc = ARCH_DEP(translate_addr) (vaddr, 0, regs, ACCTYPE_STACK,
-                &raddr, &xcode, &private, &protect, &stid, NULL, NULL);
+                &raddr, &xcode, &private, &protect, &stid);
     if (rc != 0)
         ARCH_DEP(program_interrupt) (regs, xcode);
 

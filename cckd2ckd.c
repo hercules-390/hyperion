@@ -158,12 +158,18 @@ int             limited=0;              /* 1=Limit cyls copied       */
 
     /* read the CKD device header */
     rc = read (ifd, &devhdr, CKDDASD_DEVHDR_SIZE);
+    if (rc != CKDDASD_DEVHDR_SIZE)
+    {
+        fprintf (stderr, "cckd2ckd: %s read error: %s\n",
+                 ifile, strerror(errno));
+        exit (2);
+    }
     if (memcmp(devhdr.devid, "CKD_C370", 8) != 0)
     {
         fprintf (stderr,
          "cckd2ckd: input file %s is not a compressed ckd file\n",
          ifile);
-        exit (2);
+        exit (3);
     }
     memcpy (devhdr.devid, "CKD_P370", 8);
 
@@ -179,6 +185,12 @@ int             limited=0;              /* 1=Limit cyls copied       */
 
     /* read the compressed CKD device header */
     rc = read (ifd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+    if (rc != CCKDDASD_DEVHDR_SIZE)
+    {
+        fprintf (stderr, "cckd2ckd: %s read error: %s\n",
+                 ifile, strerror(errno));
+        exit (4);
+    }
 
     /* check the byte order of the file vs the machine */
     if (((cdevhdr.options & CCKD_BIGENDIAN) != 0 && chk_endian() == 0) ||
@@ -188,7 +200,19 @@ int             limited=0;              /* 1=Limit cyls copied       */
     /* get area for primary lookup table and read it in */
     if (swapend) swapend4 ((unsigned char *)&cdevhdr.numl1tab);
     l1 = malloc (cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
+    if (l1 == NULL)
+    {
+        fprintf (stderr, "lookup table malloc error: %s\n",
+                 strerror(errno));
+        exit (5);
+    } 
     rc = read (ifd, l1, cdevhdr.numl1tab * CCKD_L1ENT_SIZE);
+    if (rc != cdevhdr.numl1tab * CCKD_L1ENT_SIZE)
+    {
+        fprintf (stderr, "cckd2ckd: %s read error: %s\n",
+                 ifile, strerror(errno));
+        exit (6);
+    }
     if (swapend)
         for (i = 0; i < cdevhdr.numl1tab; i++)
             swapend4 ((unsigned char *)&l1[i]);
@@ -214,7 +238,19 @@ int             limited=0;              /* 1=Limit cyls copied       */
         else
         {
             rc = lseek (ifd, l1[i], SEEK_SET);
+            if (rc == -1)
+            {
+                fprintf (stderr, "cckd2ckd: %s lseek error: %s\n",
+                         ifile, strerror(errno));
+                exit (7);
+            }
             rc = read (ifd, &l2, CCKD_L2TAB_SIZE);
+            if (rc != CCKD_L2TAB_SIZE)
+            {
+                fprintf (stderr, "cckd2ckd: %s read error: %s\n",
+                         ifile, strerror(errno));
+                exit (8);
+            }
         }
         /* find the last used entry in the level 2 table */
         for (j = 255; j > 0; j--)
@@ -256,6 +292,12 @@ int             limited=0;              /* 1=Limit cyls copied       */
     /* get buffers */
     buf = malloc (trksz);
     buf2 = malloc (trksz);
+    if (buf == NULL || buf2 == NULL)
+    {
+        fprintf (stderr, "cckd2ckd: buffer malloc error: %s\n",
+                 strerror(errno));
+        exit (9);
+    }
 
     /* process each entry in the primary lookup table */
     for (i = 0; i * 256 < trks || l1[i] != 0; i++)
@@ -267,7 +309,19 @@ int             limited=0;              /* 1=Limit cyls copied       */
         else
         {
             rc = lseek (ifd, l1[i], SEEK_SET);
+            if (rc == -1)
+            {
+                fprintf (stderr, "cckd2ckd: %s lseek error: %s\n",
+                         ifile, strerror(errno));
+                exit (10);
+            }
             rc = read (ifd, &l2, CCKD_L2TAB_SIZE);
+            if (rc != CCKD_L2TAB_SIZE)
+            {
+                fprintf (stderr, "cckd2ckd: %s read error: %s\n",
+                         ifile, strerror(errno));
+                exit (11);
+            }
             if (swapend) /* fix byte order if necessary */
                 for (j = 0; j< 256; j++)
                 {
@@ -279,9 +333,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
 
         /* process each entry in the secondary lookup table */
         for (j = 0;
-
              j < 256 && (i * 256 + j < trks || (l1[i] != 0 && l2[j].pos != 0));
-
              j++)
 
         {
@@ -300,7 +352,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                         fprintf (stderr,
                                  "cckd2ckd: %s close error: %s\n",
                                  ofile, strerror(errno));
-                        exit(3);
+                        exit(12);
                     }
                     *sfxptr = '0' + fileseq;
                 }
@@ -326,8 +378,9 @@ int             limited=0;              /* 1=Limit cyls copied       */
                     fprintf (stderr,
                              "cckd2ckd: %s open error: %s\n",
                              ofile, strerror(errno));
-                    exit (4);
+                    exit (13);
                 }
+
                 /* write the devhdr */
                 rc = write (ofd, &devhdr, CKDDASD_DEVHDR_SIZE);
                 if (rc != CKDDASD_DEVHDR_SIZE)
@@ -335,7 +388,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                     fprintf (stderr,
                              "cckd2ckd: %s write error: %s\n",
                              ofile, strerror(errno));
-                    exit (5);
+                    exit (14);
                 }
             }
 
@@ -348,7 +401,21 @@ int             limited=0;              /* 1=Limit cyls copied       */
             else
             {
                 rc = lseek (ifd, l2[j].pos, SEEK_SET);
+                if (rc == -1)
+                {
+                    fprintf (stderr, "cckd2ckd: %s lseek error: %s\n",
+                             ifile, strerror(errno));
+                    exit (15);
+                }
+
                 rc = read (ifd, buf, l2[j].len);
+                if (rc != l2[j].len)
+                {
+                    fprintf (stderr, "cckd2ckd: %s read error: %s\n",
+                             ifile, strerror(errno));
+                    exit (16);
+                }
+
                 /* uncompress the track image */
                 compress = buf[0];
                 buf[0] = 0;
@@ -444,7 +511,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                 fprintf (stderr,
                          "cckd2ckd: %s write error: %s\n",
                          ofile, strerror(errno));
-                exit (6);
+                exit (17);
             }
 
             /* update status information */
@@ -455,7 +522,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
             {
                 fprintf (stderr,
                          "cckd2ckd: Terminated due to errors\n");
-                exit (7);
+                exit (18);
             }
         }
     }
@@ -472,7 +539,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
         fprintf (stderr,
                  "cckd2ckd: %s close error: %s\n",
                  ofile, strerror(errno));
-        exit(8);
+        exit(19);
     }
     rc = close (ifd);
     if (rc < 0)
@@ -480,7 +547,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
         fprintf (stderr,
                  "cckd2ckd: %s close error: %s\n",
                  ifile, strerror(errno));
-        exit(9);
+        exit(20);
     }
 
     if (quiet == 0 || errs > 0)
@@ -509,7 +576,7 @@ void syntax ()
             "     -quiet            quiet mode, don't display status\n"
             "     -validate         validate track images [default]\n"
             "     -novalidate       don't validate track images\n");
-    exit (9);
+    exit (21);
 } /* end function syntax */
 
 int abbrev (char *tst, char *cmp)
@@ -615,10 +682,11 @@ int             kl,dl;                  /* Key/Data lengths          */
     {
         kl = buf[sz+5];
         dl = buf[sz+6] * 256 + buf[sz+7];
+
         /* fix for track overflow bit */
         memcpy (cchh2, &buf[sz], 4); cchh2[0] &= 0x7f;
-        /* fix for funny formatted vm disks */
 
+        /* fix for funny formatted vm disks */
         if (r == 1) memcpy (cchh, cchh2, 4);
 
         if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] == 0 ||

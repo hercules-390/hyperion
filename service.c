@@ -419,10 +419,14 @@ typedef struct _SCCB_HWL_BK {
 #define SCCB_HWL_TYPE_LOAD      0x00    /* Load request              */
 #define SCCB_HWL_TYPE_RESET     0x01    /* Reset request             */
 #define SCCB_HWL_TYPE_INFO      0x02    /* Load info request         */
-        BYTE    resv1;
+        BYTE    arch;
+#define SCCB_HWL_ARCH_390       0x00    /* ESA/390 Format request    */
+#define SCCB_HWL_ARCH_900       0x01    /* z/Architecture format     */
         FWORD   resv2[2];
+//      DWORD   hwl;                    /* ZZ Maybe for ESAME??? *JJ */
         FWORD   hwl;                    /* Pointer to HWL structure  */
         FWORD   resv3[2];
+//      DWORD   sto;                    /* ZZ Maybe for ESAME??? *JJ */
         FWORD   sto;                    /* Segment Table Origin      */
         FWORD   resv4[3];
         FWORD   size;                   /* Length in pages           */
@@ -557,7 +561,7 @@ int servpendok = 0;
        the Segment Table Origin is listed in the hwl_bk */
     case SCCB_HWL_TYPE_LOAD:
         {
-        U32 sto;
+        CREG sto;
         int fd;
 
             fd = open (sysblk.hwl_fname, O_RDONLY|O_BINARY);
@@ -572,36 +576,64 @@ int servpendok = 0;
 
             /* Segment Table Origin */
             FETCH_FW(sto,hwl_bk->sto);
+#if defined(FEATURE_ESAME)
+            sto &= ASCE_TO;
+#else /*!defined(FEATURE_ESAME)*/
             sto &= STD_STO;
+#endif /*!defined(FEATURE_ESAME)*/
 
-            for( ; ; sto += 4)
+            for( ; ; sto += sizeof(sto))
             {
+#if defined(FEATURE_ESAME)
+            DWORD *ste;
+#else /*!defined(FEATURE_ESAME)*/
             FWORD *ste;
-            U32 pto, pti;
+#endif /*!defined(FEATURE_ESAME)*/
+            CREG pto, pti;
 
                 /* Fetch segment table entry and calc Page Table Origin */
                 if( sto >= sysblk.mainsize)
                     goto eof;
+#if defined(FEATURE_ESAME)
+                ste = (DWORD*)(sysblk.mainstor + sto);
+#else /*!defined(FEATURE_ESAME)*/
                 ste = (FWORD*)(sysblk.mainstor + sto);
-                FETCH_FW(pto, ste);
+#endif /*!defined(FEATURE_ESAME)*/
+                FETCH_W(pto, ste);
                 if( pto & SEGTAB_INVALID )
                     goto eof;
+#if defined(FEATURE_ESAME)
+		pto &= ZSEGTAB_PTO;
+#else /*!defined(FEATURE_ESAME)*/
                 pto &= SEGTAB_PTO;
+#endif /*!defined(FEATURE_ESAME)*/
 
-                for(pti = 0; pti < 256 ; pti++, pto += 4)
+                for(pti = 0; pti < 256 ; pti++, pto += sizeof(pto))
                 {
+#if defined(FEATURE_ESAME)
+                DWORD *pte;
+#else /*!defined(FEATURE_ESAME)*/
                 FWORD *pte;
-                U32 pgo;
+#endif /*!defined(FEATURE_ESAME)*/
+                CREG pgo;
                 BYTE *page;
 
                     /* Fetch Page Table Entry to get page origin */
                     if( pto >= sysblk.mainsize)
                         goto eof;
+#if defined(FEATURE_ESAME)
+                    pte = (DWORD*)(sysblk.mainstor + pto);
+#else /*!defined(FEATURE_ESAME)*/
                     pte = (FWORD*)(sysblk.mainstor + pto);
-                    FETCH_FW(pgo, pte);
+#endif /*!defined(FEATURE_ESAME)*/
+                    FETCH_W(pgo, pte);
                     if( pgo & PAGETAB_INVALID )
                         goto eof;
+#if defined(FEATURE_ESAME)
+                    pgo &= ZPGETAB_PFRA;
+#else /*!defined(FEATURE_ESAME)*/
                     pgo &= PAGETAB_PFRA;
+#endif /*!defined(FEATURE_ESAME)*/
 
                     /* Read page into main storage */
                     if( pgo >= sysblk.mainsize)
@@ -636,6 +668,7 @@ int servpendok = 0;
 }
 
 
+int s390_hwl_request (U32 sclp_command, SCCB_HWL_BK *hwl_bk);
 int ARCH_DEP(hwl_request)(U32 sclp_command, SCCB_HWL_BK *hwl_bk)
 {
 static SCCB_HWL_BK static_hwl_bk;
@@ -1012,7 +1045,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
 //                      | SCCB_CFG0_INITIATE_RESET
 //                      | SCCB_CFG0_STORE_CHANNEL_SUBSYS_CHARACTERISTICS
-//                      | SCCB_CFG0_MVPG_FOR_ALL_GUESTS
+#if defined(FEATURE_MOVE_PAGE_FACILITY_2)
+                        | SCCB_CFG0_MVPG_FOR_ALL_GUESTS
+#endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
 //                      | SCCB_CFG0_FAST_SYNCHRONOUS_DATA_MOVER
                         ;
         sccbscp->cfg[1] = 0
@@ -1356,7 +1391,13 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
             hwl_bk = (SCCB_HWL_BK*)(evd_hdr+1);
 
+#if defined(FEATURE_ESAME)
+	    if( (hwl_bk->arch == SCCB_HWL_ARCH_390 ?
+                s390_hwl_request (sclp_command, hwl_bk) :
+                ARCH_DEP(hwl_request)(sclp_command, hwl_bk) ))
+#else /*!defined(FEATURE_ESAME)*/
             if( ARCH_DEP(hwl_request)(sclp_command, hwl_bk) )
+#endif /*!defined(FEATURE_ESAME)*/
             {
                 /* Set response code X'0040' in SCCB header */
                 sccb->reas = SCCB_REAS_NONE;

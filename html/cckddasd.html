@@ -606,13 +606,14 @@ file (or on the <i>attach</i> panel command).
 <tr><td valign="top" align="left">readonly<br>rdonly<br>ro<br><td align="center">X<td align="center"> X
     <td>Causes the CKD file image to be opened <i>read-only</i>.  Attempts to write to
         the emulated device will cause an I/O error unless option <i>fakewrite</i> is
-        also specified.  You should <em>not</em> specify <i>readonly</i> for shadowed
-        file images.
+        also specified.  If <i>readonly</i> is specified for shadowed
+        file images, then the base file will be opened readonly and a shadow file will be
+        created if one doesn't exist.
 <tr><td valign="top" align="left">fakewrite<br>fakewrt<br>fw<br>
     <td align="center">X<td align="center"> X
     <td>Writes to a <i>readonly</i> file will be considered successful even though no write
         actually occurred.  This option is only meaningful if <i>readonly</i> is also specified.
-        You should <em>not</em> specify <i>fakewrite</i> for shadowed file images.
+        <i>Fakewrite</i> is ignored for shadowed file images.
 <tr><td valign="top" align="left">cache=<i>n</i><td align="center">X<td align="center">X
     <td>Specifies the number of track images that will be cached.  The default is the number
         of tracks per cylinder for the device.  [For <b>cckd</b> files, the default is the

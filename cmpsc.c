@@ -742,10 +742,10 @@ static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 
     }
 
   /* Calculate clear mask */
-  clear_mask = ~(0xFFFF >> (16 - GR0_symbol_size (iregs)) << (24 - GR0_symbol_size (iregs)) >> GR1_cbn (iregs));
+  clear_mask = ~(0x0000FFFF >> (16 - GR0_symbol_size (iregs)) << (24 - GR0_symbol_size (iregs)) >> GR1_cbn (iregs));
 
   /* Calculate set mask */
-  set_mask = index_symbol << (24 - GR0_symbol_size (iregs)) >> GR1_cbn (iregs);
+  set_mask = ((U32) index_symbol) << (24 - GR0_symbol_size (iregs)) >> GR1_cbn (iregs);
 
   /* Get the storage */
   if (set_mask & 0xFF)
@@ -761,7 +761,7 @@ static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 
   if (set_mask & 0xFF)
     {
       work[2] &= clear_mask & 0xFF;
-      work[2] &= set_mask & 0xFF;
+      work[2] |= set_mask & 0xFF;
     }
 
   /* Set the storage */

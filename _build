@@ -1,2 +1,1 @@
-#!/bin/bash
 make -f makefile.w32 HOST_ARCH=`uname -m` DEST=/bin install

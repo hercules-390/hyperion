@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = 2.12n
+VERSION  = 2.13a
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -11,12 +11,12 @@ VERSION  = 2.12n
 DESTDIR  = $(PREFIX)/usr/bin
 
 # For Linux use:
-#CFLAGS  = -O3 -Wall -march=pentium -fomit-frame-pointer \
-#	   -DVERSION=$(VERSION)
+CFLAGS  = -O3 -Wall -march=pentium -fomit-frame-pointer \
+	   -DVERSION=$(VERSION)
 # For older Linux versions use:
-CFLAGS  = -O3 -march=pentiumpro -fomit-frame-pointer \
-	  -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP \
-	  -DNO_ATTR_REGPARM
+#CFLAGS  = -O3 -march=pentiumpro -fomit-frame-pointer \
+#	  -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP \
+#	  -DNO_ATTR_REGPARM
 # For Linux/390 use:
 #CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP\
 #	  -DNO_ATTR_REGPARM

@@ -886,17 +886,17 @@ BYTE    cwork[4];                       /* Character work areas      */
 
     } /* end for(i) */
 
-#if defined(MODEL_DEPENDENT)
     /* If the mask is all zero, we nevertheless access one byte
        from the storage operand, because POP states that an
        access exception may be recognized on the first byte */
     if (j == 0)
     {
+#if defined(MODEL_DEPENDENT)
 // /*debug*/logmsg ("Model dependent STCM use\n");
         ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
+#endif /*defined(MODEL_DEPENDENT)*/
         return;
     }
-#endif /*defined(MODEL_DEPENDENT)*/
 
     /* Store result at operand location */
     ARCH_DEP(vstorec) ( cwork, j-1, effective_addr2, b2, regs );

@@ -113,8 +113,10 @@
 
 #if !defined(FEATURE_MOVE_PAGE_FACILITY_2)
  UNDEF_INST(move_page)
+#if !defined(FEATURE_EXPANDED_STORAGE)
  UNDEF_INST(invalidate_expanded_storage_block_entry)
- #endif /*!defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
+#endif /*!defined(FEATURE_EXPANDED_STORAGE)*/
+#endif /*!defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
 
 
 #if !defined(FEATURE_BASIC_STORAGE_KEYS)

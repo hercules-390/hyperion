@@ -3191,7 +3191,7 @@ REGS    wrkregs = *regs;                /* Working copy of CPU regs  */
     wrkregs.panelregs = 1;
 
     rc = ARCH_DEP(translate_addr) (vaddr, arn, &wrkregs, acctype,
-                &raddr, &xcode, &private, &protect, siptr, NULL, NULL);
+                &raddr, &xcode, &private, &protect, siptr);
     if (rc) return xcode;
 
     *raptr = raddr;

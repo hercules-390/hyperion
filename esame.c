@@ -509,7 +509,7 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
         oreg = dreg;
 
         /* Check for valid low-order digit or sign */
-        if (i < 7)
+        if (i < 15)
         {
             /* Check for valid low-order digit */
             if (d > 9)
@@ -1876,16 +1876,16 @@ BYTE    cwork[4];                       /* Character work areas      */
 
     } /* end for(i) */
 
-#if defined(MODEL_DEPENDENT)
     /* If the mask is all zero, we nevertheless access one byte
        from the storage operand, because POP states that an
        access exception may be recognized on the first byte */
     if (j == 0)
     {
+#if defined(MODEL_DEPENDENT)
         ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
+#endif /*defined(MODEL_DEPENDENT)*/
         return;
     }
-#endif /*defined(MODEL_DEPENDENT)*/
 
     /* Store result at operand location */
     ARCH_DEP(vstorec) ( cwork, j-1, effective_addr2, b2, regs );
@@ -4087,7 +4087,7 @@ RADR    n;                              /* 64-bit operand values     */
 
     /* Translate virtual address to real address */
     if (ARCH_DEP(translate_addr) (effective_addr2, b2, regs, ACCTYPE_STRAG,
-        &n, &xcode, &private, &protect, &stid, NULL, NULL))
+        &n, &xcode, &private, &protect, &stid))
         ARCH_DEP(program_interrupt) (regs, xcode);
 
     /* Store register contents at operand address */
@@ -4259,8 +4259,7 @@ RADR    n;                              /* 64-bit operand values     */
 
     /* Translate the effective address to a real address */
     cc = ARCH_DEP(translate_addr) (effective_addr2, b2, regs,
-            ACCTYPE_LRA, &n, &xcode, &private, &protect, &stid,
-            NULL, NULL);
+            ACCTYPE_LRA, &n, &xcode, &private, &protect, &stid);
 
     /* If ALET exception or ASCE-type or region translation
        exception, or if the segment table entry is outside the

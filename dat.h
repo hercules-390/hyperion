@@ -680,9 +680,6 @@ U16     xcode;                          /* ALET tran.exception code  */
 /*      prot    Pointer to field to receive protection indicator     */
 /*      pstid   Pointer to field to receive indication of which      */
 /*              address space was used for the translation           */
-/*      xpblk   Pointer to field to receive expanded storage         */
-/*              block number, or NULL                                */
-/*      xpkey   Pointer to field to receive expanded storage key     */
 /*                                                                   */
 /* Output:                                                           */
 /*      The return value is set to facilitate the setting of the     */
@@ -705,11 +702,6 @@ U16     xcode;                          /* ALET tran.exception code  */
 /*          ASCE-type or region-translation error: real address      */
 /*          is not set; exception code is X'0038' through X'003B'.   */
 /*          The LRA instruction converts this to condition code 3.   */
-/*      5 = Page table entry invalid and xpblk pointer is not NULL   */
-/*          and page exists in expanded storage; xpblk field is set  */
-/*          to the expanded storage block number and xpkey field     */
-/*          is set to the protection key of the block.  This is      */
-/*          used by the MVPG instruction.                            */
 /*                                                                   */
 /*      The private indicator is set to 1 if translation was         */
 /*      successful and the STD indicates a private address space;    */
@@ -741,7 +733,7 @@ U16     xcode;                          /* ALET tran.exception code  */
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
            REGS *regs, int acctype, RADR *raddr, U16 *xcode, int *priv,
-                        int *prot, int *pstid, U32 *xpblk, BYTE *xpkey)
+                        int *prot, int *pstid)
 {
 RADR    sto = 0;                        /* Segment table origin      */
 RADR    pto = 0;                        /* Page table origin         */
@@ -938,10 +930,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
     /* Only a single entry in the TLB will be looked up, namely the
        entry indexed by bits 12-19 of the virtual address */
     if (acctype == ACCTYPE_LRA
-    #if defined(FEATURE_LOCK_PAGE)
-       || acctype == ACCTYPE_LOCKPAGE
-    #endif /*defined(FEATURE_LOCK_PAGE)*/
-       )
+       || acctype == ACCTYPE_PTE)
         tlbp = NULL;
     else
         tlbp = &(regs->tlb[(vaddr >> 12) & 0xFF]);
@@ -1028,25 +1017,21 @@ TLBE   *tlbp;                           /* -> TLB entry              */
             tlbp->common = (ste & SEGTAB_COMMON) ? 1 : 0;
             tlbp->valid = 1;
         }
-
+    
     } /* end if(!TLB) */
 
     /* Set the protection indicator if page protection is active */
     if (pte & PAGETAB_PROT)
         protect = 1;
 
-#if defined(FEATURE_LOCK_PAGE)
-    if(acctype != ACCTYPE_LOCKPAGE)
-#endif /*defined(FEATURE_LOCK_PAGE)*/
+    if(acctype != ACCTYPE_PTE)
     /* [3.11.3.5] Combine the page frame real address with the byte
        index of the virtual address to form the real address */
         *raddr = (pte & PAGETAB_PFRA) | (vaddr & 0xFFF);
-#if defined(FEATURE_LOCK_PAGE)
     else
     /* In the case of lock page, return the address of the 
        pagetable entry */
         *raddr = pto;
-#endif /*defined(FEATURE_LOCK_PAGE)*/
 
 #endif /*defined(FEATURE_S390_DAT)*/
 
@@ -1083,6 +1068,9 @@ U16     sx, px;                         /* Segment and page index,
     if (asce & ASCE_R)
     {
 //      logmsg("asce type = real\n");
+
+        if(acctype == ACCTYPE_PTE)
+            goto tran_spec_excp;
 
         /* Addressing exception if outside main storage */
         if (vaddr >= regs->mainsize)
@@ -1336,16 +1324,12 @@ U16     sx, px;                         /* Segment and page index,
         if ((ste & ZSEGTAB_P) || (pte & ZPGETAB_P))
             protect = 1;
 
-#if defined(FEATURE_LOCK_PAGE)
-        if(acctype != ACCTYPE_LOCKPAGE)
-#endif /*defined(FEATURE_LOCK_PAGE)*/
+        if(acctype != ACCTYPE_PTE)
             /* Combine the page frame real address with the byte index
                of the virtual address to form the real address */
             *raddr = (pte & ZPGETAB_PFRA) | (vaddr & 0xFFF);
-#if defined(FEATURE_LOCK_PAGE)
         else
             *raddr = pto;
-#endif /*defined(FEATURE_LOCK_PAGE)*/
 
     } /* end if(ASCE_R) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1399,24 +1383,12 @@ seg_tran_invalid:
     goto tran_excp_addr;
 
 page_tran_invalid:
-#ifdef FEATURE_EXPANDED_STORAGE
-    /* If page is valid in expanded storage, and expanded storage
-       block number is requested, return the block number and key */
-    #if 0 /* Do not yet know how to find the block number */
-    if ((pte & PAGETAB_ESVALID) && xpblk != NULL)
-    {
-        *xpblk = 0;
-        *xpkey = pte & 0xFF;
-        if (pte & PAGETAB_PROT)
-            protect = 1;
-        if (protect) *prot = protect;
-        return 5;
-    }
-    #endif/* Do not yet know how to find the block number */
-#endif /*FEATURE_EXPANDED_STORAGE*/
     *xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
     *raddr = pto;
-    cc = 2;
+    if(acctype != ACCTYPE_PTE)
+        cc = 2;
+    else
+	return 0;
     goto tran_excp_addr;
 
 #if !defined(FEATURE_ESAME)
@@ -1618,7 +1590,7 @@ RADR    pte;
 
         /* Set the page invalid bit in the page table entry,
            again subject to storage protection mechansims */
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2)
+#if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
         if(ibyte == 0x59)
             pte &= ~PAGETAB_ESVALID;
         else
@@ -1644,7 +1616,7 @@ RADR    pte;
 
         /* Set the page invalid bit in the page table entry,
            again subject to storage protection mechansims */
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2)
+#if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
         if(ibyte == 0x59)
             pte &= ~ZPGETAB_ESVALID;
         else
@@ -1752,7 +1724,7 @@ U16     xcode;                          /* Exception code            */
         raddr = addr;
     else {
         if (ARCH_DEP(translate_addr) (addr, arn, regs, acctype, &raddr,
-                        &xcode, &private, &protect, &stid, NULL, NULL))
+                        &xcode, &private, &protect, &stid))
             goto vabs_prog_check;
     }
 
@@ -1776,12 +1748,12 @@ U16     xcode;                          /* Exception code            */
                 arn :
                 USE_PRIMARY_SPACE,
                 regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
-                &sie_private, &protect, &sie_stid, NULL, NULL))
+                &sie_private, &protect, &sie_stid))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
                 USE_PRIMARY_SPACE,
                 regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
-                &sie_private, &protect, &sie_stid, NULL, NULL))
+                &sie_private, &protect, &sie_stid))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             (regs->sie_hostpi) (regs->hostregs, sie_xcode);
 

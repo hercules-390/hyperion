@@ -429,7 +429,6 @@ BYTE    c;                              /* Work area for sscanf      */
                 strncpy(sysblk.hwl_fname,operand,sizeof(sysblk.hwl_fname));
 #else /*!defined(_FEATURE_HARDWARE_LOADER)*/
                 logmsg( "HHC019I Hardware Loader Support not configured\n");
-                exit(1);
 #endif /*!defined(_FEATURE_HARDWARE_LOADER)*/
             }
             else if (strcasecmp (keyword, "archmode") == 0)
@@ -576,7 +575,6 @@ BYTE    c;                              /* Work area for sscanf      */
             }
 #else /*!_FEATURE_VECTOR_FACILITY*/
             logmsg( "HHC019I Vector Facility Support not configured\n");
-            exit(1);
 #endif /*!_FEATURE_VECTOR_FACILITY*/
         }
 
@@ -756,7 +754,6 @@ BYTE    c;                              /* Work area for sscanf      */
         }
 #else /*!_FEATURE_EXPANDED_STORAGE*/
         logmsg( "HHC024I Expanded storage support not installed\n");
-        exit(1);
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 

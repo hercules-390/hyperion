@@ -63,7 +63,7 @@ U32     xaddr;                          /* Expanded storage address  */
     xaddr <<= XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
-    maddr = ARCH_DEP(logical_to_abs) (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
+    maddr = LOGICAL_TO_ABS (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
          USE_REAL_ADDR, regs, ACCTYPE_WRITE, 0);
     maddr &= XSTORE_PAGEMASK;
 
@@ -75,8 +75,10 @@ U32     xaddr;                          /* Expanded storage address  */
     regs->psw.cc = 0;
 
 } 
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
+#if defined(FEATURE_EXPANDED_STORAGE)
 /*-------------------------------------------------------------------*/
 /* B22F PGOUT - Page out to expanded storage                   [RRE] */
 /*-------------------------------------------------------------------*/
@@ -128,7 +130,7 @@ U32     xaddr;                          /* Expanded storage address  */
     xaddr <<= XSTORE_PAGESHIFT;
 
     /* Obtain abs address, verify access and set ref/change bits */
-    maddr = ARCH_DEP(logical_to_abs) (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
+    maddr = LOGICAL_TO_ABS (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
          USE_REAL_ADDR, regs, ACCTYPE_READ, regs->psw.pkey);
     maddr &= XSTORE_PAGEMASK;
 
@@ -143,7 +145,7 @@ U32     xaddr;                          /* Expanded storage address  */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2)
+#if defined(FEATURE_MOVE_PAGE_FACILITY_2) && defined(FEATURE_EXPANDED_STORAGE)
 /*-------------------------------------------------------------------*/
 /* B259 IESBE - Invalidate Expanded Storage Blk Entry          [RRE] */
 /*-------------------------------------------------------------------*/
@@ -171,24 +173,10 @@ int     r1, r2;                         /* Values of R fields        */
     PERFORM_SERIALIZATION (regs);
 
 }
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
-/*-------------------------------------------------------------------*/
-/* Subroutine to locate page in expanded storage                     */
-/*                                                                   */
-/* Input:                                                            */
-/*      pteadr  Real address of page table entry                     */
-/*      regs    Pointer to the CPU register context                  */
-/* Output:                                                           */
-/*      xpblkn  Expanded storage block number if valid               */
-/* Return value:                                                     */
-/*      Returns 1 if page is valid in expanded storage, else 0.      */
-/*-------------------------------------------------------------------*/
-static inline int locate_expanded_page (U32 pteadr, U32 *xpblkn, REGS *regs)
-{
-    return 0;
-} /* end function locate_expanded_page */
-
+#if defined(FEATURE_MOVE_PAGE_FACILITY_2)
 /*-------------------------------------------------------------------*/
 /* Move Page (Facility 2)                                            */
 /*                                                                   */
@@ -209,19 +197,22 @@ DEF_INST(move_page)
 {
 int     r1, r2;                         /* Register values           */
 int     rc;                             /* Return code               */
-U32     vaddr1, vaddr2;                 /* Virtual addresses         */
-U32     raddr1, raddr2;                 /* Real addresses            */
-U32     aaddr1 = 0, aaddr2 = 0;         /* Absolute addresses        */
-int     xpvalid1 = 0, xpvalid2 = 0;     /* 1=Operand in expanded stg */
-U32     xpblk1, xpblk2;                 /* Expanded storage block#   */
+int     cc = 0;				/* Condition code            */
+VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
+RADR    raddr1, raddr2;                 /* Real addresses            */
+RADR    aaddr1 = 0, aaddr2 = 0;         /* Absolute addresses        */
 int     priv = 0;                       /* 1=Private address space   */
 int     prot = 0;                       /* 1=Protected page          */
 int     stid;                           /* Segment table indication  */
-U32     xaddr;                          /* Address causing exception */
 U16     xcode;                          /* Exception code            */
 BYTE    akey;                           /* Access key in register 0  */
 BYTE    akey1, akey2;                   /* Access keys for operands  */
-BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
+#if defined(FEATURE_EXPANDED_STORAGE)
+int     xpvalid1 = 0, xpvalid2 = 0;     /* 1=Operand in expanded stg */
+CREG    pte1 = 0, pte2 = 0;             /* Page table entry          */
+U32     xpblk1 = 0, xpblk2 = 0;         /* Expanded storage block#   */
+BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
     RRE(inst, execflag, regs, r1, r2);
 
@@ -229,10 +220,7 @@ BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
        not all zero, or if bits 20 and 21 are both ones */
     if ((regs->GR_L(0) & 0x0000F000) != 0
         || (regs->GR_L(0) & 0x00000C00) == 0x00000C00)
-    {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-        return 3;
-    }
 
     /* Use PSW key as access key for both operands */
     akey1 = akey2 = regs->psw.pkey;
@@ -247,10 +235,7 @@ BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
            the specified key is not permitted by the PSW key mask */
         if ( regs->psw.prob
             && ((regs->CR(3) << (akey >> 4)) & 0x80000000) == 0 )
-        {
             ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
-            return 3;
-        }
 
         /* If register 0 bit 20 is one, use R0 key for operand 1 */
         if (regs->GR_L(0) & 0x00000800)
@@ -262,8 +247,8 @@ BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
     }
 
     /* Determine the logical addresses of each operand */
-    vaddr1 = regs->GR_L(r1) & ADDRESS_MAXWRAP(regs);
-    vaddr2 = regs->GR_L(r2) & ADDRESS_MAXWRAP(regs);
+    vaddr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    vaddr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
     /* Isolate the page addresses of each operand */
     vaddr1 &= XSTORE_PAGEMASK;
@@ -274,52 +259,157 @@ BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
     {
         /* Translate the second operand address to a real address */
         rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ, &raddr2,
-                        &xcode, &priv, &prot, &stid, &xpblk2, &xpkey2);
+                        &xcode, &priv, &prot, &stid);
 
-        /* If page is invalid in real storage but valid in expanded
-           storage then xpblk2 now contains expanded storage block# */
-        if (rc == 5) xpvalid2 = 1;
+	raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
+
+        SIE_TRANSLATE(&raddr2,ACCTYPE_READ,regs);
+
+#if defined(FEATURE_EXPANDED_STORAGE)
+        if(rc == 2)
+        {
+	    FETCH_W(pte2,sysblk.mainstor + raddr2);
+            /* If page is invalid in real storage but valid in expanded
+               storage then xpblk2 now contains expanded storage block# */
+            if(pte2 & PAGETAB_ESVALID)
+            {
+                xpblk2 = pte2 & ZPGETAB_PFRA >> 12;
+#if defined(_FEATURE_SIE)
+                if(regs->sie_state)
+                {
+                    /* Add expanded storage origin for this guest */
+                    xpblk2 += regs->sie_xso;
+                    /* If the block lies beyond this guests limit
+                       then we must terminate the instruction */
+                    if(xpblk2 >= regs->sie_xsl)
+                    {
+                        cc = 2;
+                        goto mvpg_progck;
+                    }
+                }
+#endif /*defined(_FEATURE_SIE)*/
+
+                /* If the expanded storage block does not exist
+                   then terminate the instruction */
+                if (xpblk2 >= sysblk.xpndsize)
+                {
+                    cc = 2;
+                    goto mvpg_progck;
+                }
+
+                rc = 0;
+                xpvalid2 = 1;
+                xpkey2 = sysblk.mainstor[raddr2 +
+#if defined(FEATURE_ESAME)
+                                                  2048
+#else /*!defined(FEATURE_ESAME)*/
+                /* For ESA/390 mode, the XPTE lies directly beyond 
+                   the PTE, and each entry is 12 bytes long, we must
+                   therefor add 1024 + 8 times the page index */
+	                             1024 + ((vaddr1 & 0x000FF000) >> 9)
+#endif /*!defined(FEATURE_ESAME)*/
+                                                      ];
+/*DEBUG*/ logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X\n",pte2,xpkey2);
+            }
+            else
+            {
+                cc = 2;
+                goto mvpg_progck;
+            }
+        }
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
         /* Program check if second operand is not valid
            in either main storage or expanded storage */
-        if (rc != 0 && xpvalid2 == 0)
+        if (rc)
         {
-            xaddr = vaddr2;
+	    cc = 2;
             goto mvpg_progck;
-        }
+	}
 
         /* Translate the first operand address to a real address */
         rc = ARCH_DEP(translate_addr) (vaddr1, r1, regs, ACCTYPE_WRITE, &raddr1,
-                        &xcode, &priv, &prot, &stid, &xpblk1, &xpkey1);
+                        &xcode, &priv, &prot, &stid);
 
-        /* If page is invalid in real storage but valid in expanded
-           storage then xpblk1 now contains expanded storage block# */
-        if (rc == 5) xpvalid1 = 1;
+	raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
+
+        SIE_TRANSLATE(&raddr1,ACCTYPE_READ,regs);
+
+#if defined(FEATURE_EXPANDED_STORAGE)
+        if(rc == 2)
+        {
+	    FETCH_W(pte1,sysblk.mainstor + raddr1);
+            /* If page is invalid in real storage but valid in expanded
+               storage then xpblk1 now contains expanded storage block# */
+            if(pte1 & PAGETAB_ESVALID)
+            {
+                xpblk1 = pte1 & ZPGETAB_PFRA >> 12;
+#if defined(_FEATURE_SIE)
+                if(regs->sie_state)
+                {
+                    /* Add expanded storage origin for this guest */
+                    xpblk1 += regs->sie_xso;
+                    /* If the block lies beyond this guests limit
+                       then we must terminate the instruction */
+                    if(xpblk1 >= regs->sie_xsl)
+                    {
+                        cc = 1;
+                        goto mvpg_progck;
+                    }
+                }
+#endif /*defined(_FEATURE_SIE)*/
+
+                /* If the expanded storage block does not exist
+                   then terminate the instruction */
+                if (xpblk1 >= sysblk.xpndsize)
+                {
+                    cc = 1;
+                    goto mvpg_progck;
+                }
+
+                rc = 0;
+                xpvalid1 = 1;
+                xpkey1 = sysblk.mainstor[raddr2 +
+#if defined(FEATURE_ESAME)
+                                                  2048
+#else /*!defined(FEATURE_ESAME)*/
+                /* For ESA/390 mode, the XPTE lies directly beyond 
+                   the PTE, and each entry is 12 bytes long, we must
+                   therefor add 1024 + 8 times the page index */
+	                             1024 + ((vaddr1 & 0x000FF000) >> 9)
+#endif /*!defined(FEATURE_ESAME)*/
+                                                      ];
+/*DEBUG*/ logmsg("MVPG pte1 = " F_CREG ", xkey1 = %2.2X\n",pte1,xpkey1);
+            }
+            else
+            {
+                cc = 1;
+                goto mvpg_progck;
+            }
+        }
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
         /* Program check if operand not valid in main or expanded */
-        if (rc != 0 && xpvalid1 == 0)
+        if (rc)
         {
-            xaddr = vaddr1;
+	    cc = 1;
             goto mvpg_progck;
-        }
+	}
 
         /* Program check if page protection or access-list controlled
            protection applies to the first operand */
         if (prot)
-        {
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
-            return 3;
-        }
 
     } /* end if(!REAL_MODE) */
 
+#if defined(FEATURE_EXPANDED_STORAGE)
     /* Program check if both operands are in expanded storage, or
        if first operand is in expanded storage and the destination
        reference intention (register 0 bit 22) is set to one */
     if ((xpvalid1 && xpvalid2)
         || (xpvalid1 && (regs->GR_L(0) & 0x00000200)))
     {
-        xaddr = vaddr1;
         xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
         goto mvpg_progck;
     }
@@ -329,42 +419,44 @@ BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
     {
         /* Perform protection check on expanded storage block */
         if (akey1 != 0 && akey1 != (xpkey1 & STORKEY_KEY))
-        {
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
-            return 3;
-        }
     }
     else
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Obtain absolute address of main storage block,
            check protection, and set reference and change bits */
-        aaddr1 = ARCH_DEP(logical_to_abs) (vaddr1, r1, regs,
+        aaddr1 = LOGICAL_TO_ABS (vaddr1, r1, regs,
                                 ACCTYPE_WRITE, akey1);
     }
 
+#if defined(FEATURE_EXPANDED_STORAGE)
     if (xpvalid2)
     {
         /* Perform protection check on expanded storage block */
-        if (akey1 != 0 && (xpkey1 & STORKEY_FETCH)
-            && akey1 != (xpkey1 & STORKEY_KEY))
-        {
+        if (akey2 != 0 && (xpkey2 & STORKEY_FETCH)
+            && akey2 != (xpkey2 & STORKEY_KEY))
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
-            return 3;
-        }
     }
     else
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Obtain absolute address of main storage block,
            check protection, and set reference bit */
-        aaddr2 = ARCH_DEP(logical_to_abs) (vaddr2, r2, regs,
+        aaddr2 = LOGICAL_TO_ABS (vaddr2, r2, regs,
                                 ACCTYPE_READ, akey2);
     }
 
+#if defined(FEATURE_EXPANDED_STORAGE)
     /* Perform page movement */
     if (xpvalid2)
     {
         /* Set the main storage reference and change bits */
         STORAGE_KEY(aaddr1) |= (STORKEY_REF | STORKEY_CHANGE);
+
+	/* Set Expanded Storage reference bit in the PTE */
+        STORE_W(sysblk.mainstor + raddr2, pte2 | PAGETAB_ESREF);
+        
 
         /* Move 4K bytes from expanded storage to main storage */
         memcpy (sysblk.mainstor + aaddr1,
@@ -376,12 +468,16 @@ BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
         /* Set the main storage reference bit */
         STORAGE_KEY(aaddr2) |= STORKEY_REF;
 
+	/* Set Expanded Storage reference and change bits in the PTE */
+        STORE_W(sysblk.mainstor + raddr1, pte1 | PAGETAB_ESREF | PAGETAB_ESCHA);
+
         /* Move 4K bytes from main storage to expanded storage */
         memcpy (sysblk.xpndstor + (xpblk1 << XSTORE_PAGESHIFT),
                 sysblk.mainstor + aaddr2,
                 XSTORE_PAGESIZE);
     }
     else
+#endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Set the main storage reference and change bits */
         STORAGE_KEY(aaddr1) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -394,18 +490,21 @@ BYTE    xpkey1, xpkey2;                 /* Expanded storage keys     */
     }
 
     /* Return condition code zero */
-    return 0;
+    regs->psw.cc = 0;
+    return;
 
 mvpg_progck:
     /* If page translation exception and condition code option
        in register 0 bit 23 is set, return condition code */
     if ((regs->GR_L(0) & 0x00000100)
         && xcode == PGM_PAGE_TRANSLATION_EXCEPTION)
-        return (xaddr == vaddr2 ? 2 : 1);
+    {
+        regs->psw.cc = cc;
+        return;
+    }
 
     /* Otherwise generate program check */
     ARCH_DEP(program_interrupt) (regs, xcode);
-    return 3;
 } /* end function move_page */
 
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/

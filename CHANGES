@@ -1,3 +1,29 @@
+07 May 2001 CMPSC fix - Bernard van der Helm
+07 May 2001 Correct false data exception in CVDG - Jan Jaegerr
+06 May 2001 Fix to Lock Page - Jan Jaeger
+06 May 2001 Complete Storage Key Assist - Jan Jaeger
+06 May 2001 Complete Move Page Facility 2 - Jan Jaeger
+04 May 2001 Correct fbadasd.c syntax error - Greg Smith
+04 May 2001 Correct RRB/RRBE rcpkey - Paul Leisy
+03 May 2001 Try to open FBA emulated device readonly if open for
+            readwrite failed.  Allows Linux/390 to be installed
+            from cdrom - Greg Smith
+03 May 2001 Allow `readonly' to be specified for shadowed ckd or cckd
+            devices.  Base file will be opened O_RDONLY. - Greg Smith
+03 May 2001 Enablement of ISKE/RRBE/SSKE in S/370 mode - Valery Pogonchenko
+03 May 2001 Correction to oldpsw during ifetch - Jan Jaeger
+30 Apr 2001 Correct SIE guest interrupt subclass enablement - Jan Jaeger
+28 Apr 2001 Temporarily intercept move page (SIE) - Jan Jaeger
+28 Apr 2001 Add move page to z/Arch - Jan Jaeger
+28 Apr 2001 Fix RRBE RCP index error - Paul Leisy
+27 Apr 2001 Fix STCM(G) with zero mask - Paul Leisy
+26 Apr 2001 Change unsupported config statements erros to warnings - Jan Jaeger
+26 Apr 2001 Correct old psw during ifetch exception - Paul Leisy
+26 Apr 2001 Correct setting of fetch bit in SSKE under SIE - Paul Leisy
+24 Apr 2001 Fixed ckd2cckd bug for multi-file ckd disks - Greg Smith
+24 Apr 2001 Added error detection code to ckd2cckd and cckd2ckd - Greg Smith
+24 Apr 2001 Fixed potential errors in cckd backwards merge (sf-) - Greg Smith
+24 Apr 2001 Reduced CCKD_MAX_DFWQ_DEPTH to 8 for WIN32 otherwise 32 - Greg Smith
 22 Apr 2001 cckd2ckd not stopping if -cyl specified - Greg Smith
 22 Apr 2001 add ISKE, RRBE and SSKE to 370 mode  - Valery Pogonchenko
 22 Apr 2001 ckd fix Read Count setting index marker - Valery Pogonchenko

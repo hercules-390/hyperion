@@ -277,6 +277,10 @@ typedef struct _TLBE {
 #define ZPGETAB_PFRA	0xFFFFFFFFFFFFF000ULL /* Page frame real addr*/
 #define ZPGETAB_I	0x400		/* Invalid page 	     */
 #define ZPGETAB_P	0x200		/* Protected page	     */
+#define ZPGETAB_ESVALID 0x100	        /* Valid in expanded storage */
+#define ZPGETAB_ESREF   0x080           /* ES Referenced             */
+#define ZPGETAB_ESCHA   0x040           /* ES Changed                */
+#define ZPGETAB_ESLCK   0x020           /* ES Locked                 */
 #define ZPGETAB_RESV	0x900		/* Reserved bits - must be 0 */
 
 /* Segment table designation bit definitions (ESA/390 mode) */
@@ -300,6 +304,9 @@ typedef struct _TLBE {
 #define PAGETAB_INVALID 0x00000400	/* Invalid page 	     */
 #define PAGETAB_PROT	0x00000200	/* Protected page	     */
 #define PAGETAB_ESVALID 0x00000100	/* Valid in expanded storage */
+#define PAGETAB_ESREF   0x00000080      /* ES Referenced             */
+#define PAGETAB_ESCHA   0x00000040      /* ES Changed                */
+#define PAGETAB_ESLCK   0x00000020      /* ES Locked                 */
 #define PAGETAB_PGLOCK	0x00000001	/* Page lock (LKPG)	     */
 #define PAGETAB_RESV	0x80000900	/* Reserved bits - must be 0 */
 

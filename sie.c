@@ -436,6 +436,10 @@ int ARCH_DEP(sie_run) (REGS *regs)
 {
     int icode;
 
+    SET_IC_EXTERNAL_MASK(GUESTREGS);
+    SET_IC_MCK_MASK(GUESTREGS);
+    SET_IC_IO_MASK(GUESTREGS);
+
     do {
         if(!(icode = setjmp(GUESTREGS->progjmp)))
             while(! SIE_I_WAIT(GUESTREGS)

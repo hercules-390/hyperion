@@ -328,6 +328,12 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             }
         }
 
+        /* If `readonly' and shadow files (`sf=') were specified,
+           then turn off the readonly bit.  Might as well make
+           sure the `fakewrite' bit is off, too.               */
+        if (dev->ckdsfn[0] != '\0')
+            dev->ckdrdonly = dev->ckdfakewrt = 0;
+
         /* If shadow file, only one base file is allowed */
         if (fileseq > 1 && dev->ckdsfn[0] != '\0')
         {

@@ -906,7 +906,12 @@ typedef struct _CCKD_CACHE {		/* Cache structure           */
                                            threads: 1 - 9            */
 #define CCKD_MAX_DFW           9        /* Number of deferred write
                                            threads: 1 - 9            */
-#define CCKD_MAX_DFWQ_DEPTH    64       /* Track reads will be locked
+#ifdef WIN42
+#define CCKD_MAX_DFWQ_DEPTH    8
+#else
+#define CCKD_MAX_DFWQ_DEPTH    32
+#endif
+                                        /* Track reads will be locked
                                            when the deferred-write-
                                            queue gets this large     */
 
@@ -1036,7 +1041,7 @@ void panel_display (void);
 #define ACCTYPE_IVSK		7	/* Insert Virtual Storage Key*/
 #define ACCTYPE_STACK		8	/* Linkage stack operations  */
 #define ACCTYPE_BSG		9	/* Branch in Subspace Group  */
-#define ACCTYPE_LOCKPAGE       10	/* Lock page		     */
+#define ACCTYPE_PTE            10	/* Return PTE raddr          */
 #define ACCTYPE_SIE	       11	/* SIE host translation      */
 #define ACCTYPE_STRAG	       12	/* Store real address	     */
 

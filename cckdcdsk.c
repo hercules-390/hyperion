@@ -698,9 +698,9 @@ space_check:
 
             /* consistency check on level 2 table entry */
             if (trk >= trks ||  l2[j].pos < lopos ||
-                l2[j].pos + l2[j].size > hipos ||
+                l2[j].pos + l2[j].len > hipos ||
                 l2[j].len <= CKDDASD_TRKHDR_SIZE ||
-                l2[j].len > l2[j].size || l2[j].size > trksz)
+                l2[j].len > trksz)
             {
                 sprintf(msg, "l2tab inconsistency track %d", trk);
             bad_trk:
@@ -722,8 +722,8 @@ space_check:
                     goto validate_l2;
                 }
                 cdskmsg (m, "%s\n"
-                   "  l2[%d,%d] offset 0x%x len %d size %d\n",
-                   msg, i, j, l2[j].pos, l2[j].len, l2[j].size);
+                   "  l2[%d,%d] offset 0x%x len %d\n",
+                   msg, i, j, l2[j].pos, l2[j].len);
                 trkerrs++;
                 invalid_trks++;
                 if (fdflags & O_RDWR)

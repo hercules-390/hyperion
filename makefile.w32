@@ -15,7 +15,7 @@ ifndef HOST_ARCH
 HOST_ARCH=pentium
 endif
 
-VERSION  = 2.12_$(HOST_ARCH)
+VERSION  = 2.13_$(HOST_ARCH)
 
 #   Set the default directory where you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be

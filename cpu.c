@@ -399,6 +399,18 @@ static char *pgmintname[] = {
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
     }
 
+    /* The OLD PSW must be incremented on the following 
+       exceptions during instfetch */
+    if(!realregs->instvalid &&
+      (  code == PGM_PROTECTION_EXCEPTION
+      || code == PGM_ADDRESSING_EXCEPTION
+      || code == PGM_SPECIFICATION_EXCEPTION
+      || code == PGM_TRANSLATION_SPECIFICATION_EXCEPTION ))
+    {
+            realregs->psw.IA += realregs->psw.ilc;
+            realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
+    }
+        
     /* Store the interrupt code in the PSW */
     realregs->psw.intcode = code;
 
