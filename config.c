@@ -571,6 +571,25 @@ BYTE **orig_newargv;
     shrdport = 0;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
 
+
+        /* Cap the default priorities at zero if setuid not available */
+#if !defined(NO_SETUID)
+        if (sysblk.suid != 0)
+        {
+#endif /*!defined(NO_SETUID)*/
+            if (hercprio < 0)
+                hercprio = 0;
+            if (todprio < 0)
+                todprio = 0;
+            if (cpuprio < 0)
+                cpuprio = 0;
+            if (devprio < 0)
+                devprio = 0;
+#if !defined(NO_SETUID)
+        }
+#endif /*!defined(NO_SETUID)*/
+
+
     /* Read records from the configuration file */
     for (scount = 0; ; scount++)
     {
@@ -1061,6 +1080,24 @@ BYTE **orig_newargv;
 #endif /*!defined(NO_SETUID)*/
 
             sysblk.cpuprio = cpuprio;
+
+        /* Parse Device thread priority operand */
+        if (sdevprio != NULL)
+            if (sscanf(sdevprio, "%d%c", &devprio, &c) != 1)
+            {
+                fprintf(stderr, _("HHCCF016S Error in %s line %d: "
+                        "Invalid device thread priority %s\n"),
+                        fname, stmt, sdevprio);
+                delayed_exit(1);
+            }
+
+#if !defined(NO_SETUID)
+        if(sysblk.suid != 0 && devprio < 0)
+            logmsg(_("HHCCF017W Hercules is not running as setuid root, "
+                    "cannot raise device thread priority\n"));
+#endif /*!defined(NO_SETUID)*/
+
+        sysblk.devprio = devprio;
 
         /* Parse Device thread priority operand */
         if (sdevprio != NULL)
