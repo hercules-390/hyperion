@@ -402,12 +402,29 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
  
-    if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
+    if(flags & 0x0004) 
     {
-        /* restore the psw */
-        regs->psw = save_psw;
-        /* And generate a program interrupt */
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
+        {
+            /* Do not check esame bit (force to zero) */
+            psw[1] &= ~0x08;
+            /* restore the psw */
+            regs->psw = save_psw;
+            /* And generate a program interrupt */
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
+    }
+    else
+    {
+        if( s390_load_psw(regs, psw) )
+        {
+            /* Do not check amode64 bit (force to zero) */
+            psw[3] &= ~0x01;
+            /* restore the psw */
+            regs->psw = save_psw;
+            /* And generate a program interrupt */
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+        }
     }
 
     /* load_psw() has set the ILC to zero.  This needs to
