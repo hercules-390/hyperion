@@ -94,13 +94,11 @@ and FishPack DLLs on Windows[1].
 
 The configuration statement for CTCI is as follows:
 
-     <devnum> 3088 CTCI [options] <guestip> <hostip>
+     <devnum1-devnum2> CTCI [options] <guestip> <hostip>
 
 where:
 
-     <devnum>   is the first address of the CTCI device.
-                Since CTCI uses paired addressing, this *must* be
-                an even number.
+     <devnum1-devnum2>   is the address pair of the CTCI device.
 
      <guestip>  is the IP address of the Hercules (guest OS) side.
 
@@ -173,13 +171,12 @@ any ethernet frame.
 
 The configuration statement for LCS is as follows:
 
-     <devnum> LCS [options] [<guestip>]
+     <devnum1-devnum2> LCS [options] [<guestip>]
 
 where:
 
-     <devnum>   is the first address of the LCS device.
-                Since LCS uses paired addressing, this *must* be
-                an even number.
+     <devnum1-devnum2>   is the address pair of the LCS device.
+                This pair must be an even-odd address.
 
      [<guestip>] is an optional IP address of the Hercules
                 (guest OS) side. Note: This is only used to
@@ -250,6 +247,9 @@ where:
      Dev   is the base device address
      Mode  is the operation mode - IP or SNA
      Port  is the virtual (relative) adapter number.
+
+When the device is specifies the odd address of the pair,
+then the read/write functions of the pair will be swapped.
 
 For IP modes, the entry specific information is as follows:
 

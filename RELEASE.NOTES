@@ -1,4 +1,25 @@
 
+                     Version 3.xx RELEASE NOTES
+
+- CTC and LCS devices now ++MUST++ specify all addresses on the configuration
+  statement. 
+  Example:
+    0A00-0A01  LCS .....
+    0B00-0B01  CTCI ....
+
+    or
+
+    0A00-0A03  LCS -oat hercules.oat
+
+    or
+
+    0A00    LCS -oat hercules.oat
+    0A01    LCS
+    0A02    LCS
+    0A03    LCS
+
+---
+
                      Version 3.00 RELEASE NOTES
 
 
