@@ -31,11 +31,6 @@
 #define SIE_I_STOP(_guestregs) \
         ((_guestregs)->siebk->v & SIE_V_STOP)
 
-#define SIE_I_IO(_guestregs) \
-        (((_guestregs)->siebk->v & SIE_V_IO) \
-           && ((_guestregs)->psw.sysmask \
-                 & ((_guestregs)->psw.ecmode ? PSW_IOMASK : 0xFE) ))
-
 #define SIE_I_EXT(_guestregs) \
         (((_guestregs)->siebk->v & SIE_V_EXT) \
           && ((_guestregs)->psw.sysmask & PSW_EXTMASK))
@@ -43,6 +38,18 @@
 #define SIE_I_HOST(_hostregs) SIE_IC_INTERRUPT_CPU(_hostregs)
 
 #endif /*!defined(_SIE_C)*/
+
+#undef SIE_I_IO
+#if !defined(FEATURE_ESAME)
+#define SIE_I_IO(_guestregs) \
+        (((_guestregs)->siebk->v & SIE_V_IO) \
+           && ((_guestregs)->psw.sysmask \
+                 & ((_guestregs)->psw.ecmode ? PSW_IOMASK : 0xFE) ))
+#else /*defined(FEATURE_ESAME)*/
+#define SIE_I_IO(_guestregs) \
+        (((_guestregs)->siebk->v & SIE_V_IO) \
+           && ((_guestregs)->psw.sysmask & PSW_IOMASK ))
+#endif /*defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
 
@@ -271,9 +278,6 @@ int     icode;                          /* Interception code         */
     }
 #endif /*!defined(FEATURE_ESAME)*/
 
-    INVALIDATE_AIA (regs);
-    INVALIDATE_AEA_ALL (regs);
-
     if(GUESTREGS->arch_mode == ARCH_390)
         icode = s390_sie_run (regs);
     else
@@ -416,10 +420,6 @@ int     n;
             memcpy(STATEBK->ipa, GUESTREGS->exinst, exilc);
         }
     }
-
-    INVALIDATE_AIA (regs);
-    INVALIDATE_AEA_ALL (regs);
-
 }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
