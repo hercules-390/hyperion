@@ -885,7 +885,8 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     memset( pSegment, 0, iLength + sizeof( CTCISEG ) );
 
     // Update next frame offset
-    STORE_HW( pFrame->hwOffset, iLength + sizeof( CTCIHDR ) );
+    STORE_HW( pFrame->hwOffset, 
+              iLength + sizeof( CTCIHDR ) + sizeof( CTCISEG ) );
 
     // Store segment length
     STORE_HW( pSegment->hwLength, iLength + sizeof( CTCISEG ) );
@@ -897,7 +898,8 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
     memcpy( pSegment->bData, pDEVBLK->buf, iLength );
 
     // Fix-up frame pointer and terminate block
-    pFrame = (PCTCIHDR)( pIOBuf + sizeof( CTCIHDR ) + iLength );
+    pFrame = (PCTCIHDR)( pIOBuf + sizeof( CTCIHDR ) + 
+                         sizeof( CTCISEG ) + iLength );
     STORE_HW( pFrame->hwOffset, 0x0000 );
 
     // Calculate #of bytes returned including two slack bytes
@@ -992,7 +994,7 @@ int r, i;
 BYTE *ipaddress;
 
     if (argc < 2) {
-        logmsg (_("HHCCT024E 4.4X: Not enough arguments to start vmnet\n"),
+        logmsg (_("HHCCT024E %4.4X: Not enough arguments to start vmnet\n"),
                         dev->devnum);
         return -1;
     }
