@@ -464,7 +464,8 @@ PSA     *sspsa;                         /* -> Store status area      */
 
 #if defined(FEATURE_ESAME)
     /* For store status at address, we must ajust the PSA offset */
-    if(aaddr)
+    /* ZZ THIS TEST IS NOT CONCLUSIVE */
+    if(aaddr != 0 && aaddr != ssreg->PX)
         aaddr -= 512 + 4096 ;
 #endif 
 
