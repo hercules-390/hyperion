@@ -87,6 +87,7 @@ static BYTE *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 
+
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
 /* is modified in-place by inserting null characters at the end of   */
@@ -142,6 +143,129 @@ void delayed_exit (int exit_code)
     usleep(100000);
     exit(exit_code);
 }
+
+
+/* storage configuration routine. To be moved *JJ */
+static void config_storage(int mainsize, int xpndsize)
+{
+    /* Obtain main storage */
+    sysblk.mainsize = mainsize * 1024 * 1024;
+
+#if defined(NO_CYGWIN_MALLOC_BUG) || !defined(WIN32)
+    sysblk.mainstor = malloc(sysblk.mainsize + 8192);
+
+    if (sysblk.mainstor == NULL)
+#else
+    /*
+               Windows "double memory consumption" bug fix
+               (which should work on all other systems too)
+
+        =============================================================
+        From: golden_dog98 [golden_dog98@yahoo.com]
+        Sent: Monday, July 07, 2003 1:08 AM
+        To: hercules-390@yahoogroups.com
+        Subject: [hercules-390] To "Fish" (was: "Re: How can I use all my
+        physical memory")
+
+        This problem is caused by how CYGWIN allocates memory under Windows 
+        2000.  In malloc.cc, malloc() calls sYSMALLOc() to allocate chunks of 
+        memory.  sYSMALLOc calls mmap() with flags MAP_PRIVATE and 
+        MAP_ANONYMOUS.  mmap() calls mmap64() with the same flags.  Around 
+        line 540 of mmap.cc, mmap64() checks to see if MAP_PRIVATE is set and 
+        if has_working_copy_on_write() is true (which it is for Win2000) and 
+        sets access to FILE_MAP_COPY.  mmap64() then calls 
+        fhandler_disk_file::mmap() in mmap.cc.  Because access is set to 
+        FILE_MAP_COPY, protect is set to PAGE_WRITECOPY when CreateFileMapping
+        () is called.  Then MapViewOfFileEx() is called with access set to 
+        FILE_MAP_COPY.  This allocates the storage with "copy on write 
+        acess", which essentially doubles the storage usage.  See 
+        http://msdn.microsoft.com/library/default.asp?url=/library/en-
+        us/fileio/base/mapviewoffileex.asp.
+
+        I changed line 1299 of Hercules' config.c to fix the problem:
+
+            sysblk.mainstor = mmap(0, sysblk.mainsize + 8192, PROT_READ | 
+        PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+
+        I also had to include at the top of config.c:
+
+        #include <sys/mmap.h>
+
+        I tested this with a 512MB system and all went well....
+
+        Mark D.
+        =============================================================
+    */
+#if !defined(MAP_ANONYMOUS)    /* (see NOTE just below) */
+
+    /*  ***  NOTE: we can't use the "HAVE_MMAP" test above  ***
+        ***  because of a "Unix-ism" bug in autoconf that   ***
+        ***  causes mmap tests to always fail on Windows    ***
+        ***  systems as explained in the below Cygwin post  ***
+        ***  mailing list post:
+
+         http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
+    */
+    sysblk.mainstor = malloc(sysblk.mainsize + 8192);
+/* ISW20030828-1 : Check for MALLOC result */
+    if (sysblk.mainstor == NULL)
+#else /* !defined(MAP_ANONYMOUS) */
+    sysblk.mainstor = mmap(0, sysblk.mainsize + 8192,
+        PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+/* ISW20030828-1 : Check for MMAP result */
+    if (sysblk.mainstor == ((void *)-1))
+#endif /* !defined(MAP_ANONYMOUS) */
+#endif /* NO_CYGWIN_MALLOC_BUG */
+    {
+        fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
+                mainsize, strerror(errno));
+        delayed_exit(1);
+    }
+
+    /* Obtain main storage key array */
+    sysblk.storkeys = malloc(sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+    if (sysblk.storkeys == NULL)
+    {
+        fprintf(stderr, _("HHCCF032S Cannot obtain storage key array: %s\n"),
+                strerror(errno));
+        delayed_exit(1);
+    }
+
+    /* Initial power-on reset for main storage */
+    memset(sysblk.mainstor,0,sysblk.mainsize);
+    memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+
+#if 0   /*DEBUG-JJ-20/03/2000*/
+    /* Mark selected frames invalid for debugging purposes */
+    for (i = 64 ; i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE); i += 2)
+        if (i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE) - 64)
+            sysblk.storkeys[i] = STORKEY_BADFRM;
+        else
+            sysblk.storkeys[i++] = STORKEY_BADFRM;
+#endif
+
+    if (xpndsize != 0)
+    {
+#ifdef _FEATURE_EXPANDED_STORAGE
+
+        /* Obtain expanded storage */
+        sysblk.xpndsize = xpndsize * (1024*1024 / XSTORE_PAGESIZE);
+        sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
+        if (sysblk.xpndstor == NULL)
+        {
+            fprintf(stderr, _("HHCCF033S Cannot obtain %dMB expanded storage: "
+                    "%s\n"),
+                    xpndsize, strerror(errno));
+            delayed_exit(1);
+        }
+        /* Initial power-on reset for expanded storage */
+        memset(sysblk.xpndstor,0,sysblk.xpndsize * XSTORE_PAGESIZE);
+#else /*!_FEATURE_EXPANDED_STORAGE*/
+        logmsg(_("HHCCF034W Expanded storage support not installed\n"));
+#endif /*!_FEATURE_EXPANDED_STORAGE*/
+    } /* end if(sysblk.xpndsize) */
+}
+
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
@@ -460,8 +584,8 @@ BYTE    version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
-U16     mainsize;                       /* Main storage size (MB)    */
-U16     xpndsize;                       /* Expanded storage size (MB)*/
+int     mainsize;                       /* Main storage size (MB)    */
+int     xpndsize;                       /* Expanded storage size (MB)*/
 U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
 #if defined(OPTION_SHARED_DEVICES)
@@ -1004,7 +1128,7 @@ BYTE **orig_newargv;
         /* Parse main storage size operand */
         if (smainsize != NULL)
         {
-            if (sscanf(smainsize, "%hu%c", &mainsize, &c) != 1
+            if (sscanf(smainsize, "%u%c", &mainsize, &c) != 1
                 || mainsize < 2 || mainsize > 1024)
             {
                 fprintf(stderr, _("HHCCF013S Error in %s line %d: "
@@ -1017,7 +1141,7 @@ BYTE **orig_newargv;
         /* Parse expanded storage size operand */
         if (sxpndsize != NULL)
         {
-            if (sscanf(sxpndsize, "%hu%c", &xpndsize, &c) != 1
+            if (sscanf(sxpndsize, "%u%c", &xpndsize, &c) != 1
                 || xpndsize > 1024)
             {
                 fprintf(stderr, _("HHCCF014S Error in %s line %d: "
@@ -1509,116 +1633,7 @@ BYTE **orig_newargv;
             thread_id(), getpid(), getpgid(0),
             getpriority(PRIO_PGRP,0));
 
-
-    /* Obtain main storage */
-    sysblk.mainsize = mainsize * 1024 * 1024;
-    /*
-               Windows "double memory consumption" bug fix
-               (which should work on all other systems too)
-
-        =============================================================
-        From: golden_dog98 [golden_dog98@yahoo.com]
-        Sent: Monday, July 07, 2003 1:08 AM
-        To: hercules-390@yahoogroups.com
-        Subject: [hercules-390] To "Fish" (was: "Re: How can I use all my
-        physical memory")
-
-        This problem is caused by how CYGWIN allocates memory under Windows 
-        2000.  In malloc.cc, malloc() calls sYSMALLOc() to allocate chunks of 
-        memory.  sYSMALLOc calls mmap() with flags MAP_PRIVATE and 
-        MAP_ANONYMOUS.  mmap() calls mmap64() with the same flags.  Around 
-        line 540 of mmap.cc, mmap64() checks to see if MAP_PRIVATE is set and 
-        if has_working_copy_on_write() is true (which it is for Win2000) and 
-        sets access to FILE_MAP_COPY.  mmap64() then calls 
-        fhandler_disk_file::mmap() in mmap.cc.  Because access is set to 
-        FILE_MAP_COPY, protect is set to PAGE_WRITECOPY when CreateFileMapping
-        () is called.  Then MapViewOfFileEx() is called with access set to 
-        FILE_MAP_COPY.  This allocates the storage with "copy on write 
-        acess", which essentially doubles the storage usage.  See 
-        http://msdn.microsoft.com/library/default.asp?url=/library/en-
-        us/fileio/base/mapviewoffileex.asp.
-
-        I changed line 1299 of Hercules' config.c to fix the problem:
-
-            sysblk.mainstor = mmap(0, sysblk.mainsize, PROT_READ | 
-        PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
-
-        I also had to include at the top of config.c:
-
-        #include <sys/mmap.h>
-
-        I tested this with a 512MB system and all went well....
-
-        Mark D.
-        =============================================================
-    */
-#if !defined(MAP_ANONYMOUS)    /* (see NOTE just below) */
-
-    /*  ***  NOTE: we can't use the "HAVE_MMAP" test above  ***
-        ***  because of a "Unix-ism" bug in autoconf that   ***
-        ***  causes mmap tests to always fail on Windows    ***
-        ***  systems as explained in the below Cygwin post  ***
-        ***  mailing list post:
-
-         http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
-    */
-    sysblk.mainstor = malloc(sysblk.mainsize);
-/* ISW20030828-1 : Check for MALLOC result */
-    if (sysblk.mainstor == NULL)
-#else /* !defined(MAP_ANONYMOUS) */
-    sysblk.mainstor = mmap(0, sysblk.mainsize,
-        PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
-/* ISW20030828-1 : Check for MMAP result */
-    if (sysblk.mainstor == ((void *)-1))
-#endif /* !defined(MAP_ANONYMOUS) */
-    {
-        fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
-                mainsize, strerror(errno));
-        delayed_exit(1);
-    }
-
-    /* Obtain main storage key array */
-    sysblk.storkeys = malloc(sysblk.mainsize / STORAGE_KEY_UNITSIZE);
-    if (sysblk.storkeys == NULL)
-    {
-        fprintf(stderr, _("HHCCF032S Cannot obtain storage key array: %s\n"),
-                strerror(errno));
-        delayed_exit(1);
-    }
-
-    /* Initial power-on reset for main storage */
-    memset(sysblk.mainstor,0,sysblk.mainsize);
-    memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
-
-#if 0   /*DEBUG-JJ-20/03/2000*/
-    /* Mark selected frames invalid for debugging purposes */
-    for (i = 64 ; i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE); i += 2)
-        if (i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE) - 64)
-            sysblk.storkeys[i] = STORKEY_BADFRM;
-        else
-            sysblk.storkeys[i++] = STORKEY_BADFRM;
-#endif
-
-    if (xpndsize != 0)
-    {
-#ifdef _FEATURE_EXPANDED_STORAGE
-
-        /* Obtain expanded storage */
-        sysblk.xpndsize = xpndsize * (1024*1024 / XSTORE_PAGESIZE);
-        sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
-        if (sysblk.xpndstor == NULL)
-        {
-            fprintf(stderr, _("HHCCF033S Cannot obtain %dMB expanded storage: "
-                    "%s\n"),
-                    xpndsize, strerror(errno));
-            delayed_exit(1);
-        }
-        /* Initial power-on reset for expanded storage */
-        memset(sysblk.xpndstor,0,sysblk.xpndsize * XSTORE_PAGESIZE);
-#else /*!_FEATURE_EXPANDED_STORAGE*/
-        logmsg(_("HHCCF034W Expanded storage support not installed\n"));
-#endif /*!_FEATURE_EXPANDED_STORAGE*/
-    } /* end if(sysblk.xpndsize) */
+    config_storage(mainsize, xpndsize);
 
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;
