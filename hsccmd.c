@@ -2617,6 +2617,22 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     return 0;
 }
 
+#if defined(SIE_DEBUG_PERFMON)
+///////////////////////////////////////////////////////////////////////
+/* spm - SIE performance monitor table */
+
+int spm_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    sie_perfmon_disp();
+
+    return 0;
+}
+#endif
+
 #if defined(OPTION_COUNTING)
 ///////////////////////////////////////////////////////////////////////
 /* count - display counts */
@@ -2871,6 +2887,9 @@ COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands" )
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
 COMMAND ( "tlb",       tlb_cmd,       "Display TLB tables" )
+#if defined(SIE_DEBUG_PERFMON)
+COMMAND ( "spm",       spm_cmd,       "SIE performance monitor" )
+#endif
 #if defined(OPTION_COUNTING)
 COMMAND ( "count",     count_cmd,     "Display counts" )
 #endif

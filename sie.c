@@ -54,6 +54,133 @@ static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
 
 #define SIE_I_HOST(_hostregs) IC_INTERRUPT_CPU(_hostregs)
 
+#if defined(SIE_DEBUG_PERFMON)
+#define SIE_PERF_MAXNEG 0x1F
+static int sie_perfmon[0x41 + SIE_PERF_MAXNEG];
+#define SIE_PERFMON(_code) \
+    do { \
+        sie_perfmon[(_code) + SIE_PERF_MAXNEG] ++; \
+    } while(0)
+#define SIE_PERF_PGMINT \
+    (code <= 0 ? code : (((code-1) & 0x3F)+1))
+void *sie_perfmon_disp()
+{
+static char *dbg_name[] = {
+        /* -31 */       "SIE re-dispatch state descriptor",
+        /* -30 */       "SIE exit",
+        /* -29 */       "SIE run",
+        /* -28 */       "SIE runloop 1",
+        /* -27 */       "SIE runloop 2",
+        /* -26 */       "SIE interrupt check",
+        /* -25 */       "SIE execute instruction",
+        /* -24 */       "SIE unrolled execute",
+        /* -23 */       NULL,
+        /* -22 */       NULL,
+        /* -21 */       NULL,
+        /* -20 */       NULL,
+        /* -19 */       NULL,
+        /* -18 */       NULL,
+        /* -17 */       "SIE intercept I/O instruction",
+        /* -16 */       "SIE intercept I/O interrupt pending",
+        /* -15 */       "SIE intercept I/O interrupt",
+        /* -14 */       "SIE intercept PER interrupt",
+        /* -13 */       "SIE validity check",
+        /* -12 */       "SIE intercept external interrupt pending",
+        /* -11 */       "SIE intercept machine check interrupt",
+        /* -10 */       "SIE intercept restart interrupt",
+        /* -9 */        "SIE intercept stop request",
+        /* -8 */        "SIE intercept virtual machine wait",
+        /* -7 */        "SIE intercept I/O interrupt request",
+        /* -6 */        "SIE intercept external interrupt request",
+        /* -5 */        "SIE intercept instruction completion",
+        /* -4 */        "SIE intercept instruction",
+        /* -3 */        "SIE host program interrupt",
+        /* -2 */        "SIE host interrupt",
+        /* -1 */        "SIE no intercept",
+        /*  0 */        "SIE entry",
+        /* 01 */        "SIE intercept Operation exception",
+        /* 02 */        "SIE intercept Privileged-operation exception",
+        /* 03 */        "SIE intercept Execute exception",
+        /* 04 */        "SIE intercept Protection exception",
+        /* 05 */        "SIE intercept Addressing exception",
+        /* 06 */        "SIE intercept Specification exception",
+        /* 07 */        "SIE intercept Data exception",
+        /* 08 */        "SIE intercept Fixed-point-overflow exception",
+        /* 09 */        "SIE intercept Fixed-point-divide exception",
+        /* 0A */        "SIE intercept Decimal-overflow exception",
+        /* 0B */        "SIE intercept Decimal-divide exception",
+        /* 0C */        "SIE intercept HFP-exponent-overflow exception",
+        /* 0D */        "SIE intercept HFP-exponent-underflow exception",
+        /* 0E */        "SIE intercept HFP-significance exception",
+        /* 0F */        "SIE intercept HFP-floating-point-divide exception",
+        /* 10 */        "SIE intercept Segment-translation exception",
+        /* 11 */        "SIE intercept Page-translation exception",
+        /* 12 */        "SIE intercept Translation-specification exception",
+        /* 13 */        "SIE intercept Special-operation exception",
+        /* 14 */        "SIE intercept Pseudo-page-fault exception",
+        /* 15 */        "SIE intercept Operand exception",
+        /* 16 */        "SIE intercept Trace-table exception",
+        /* 17 */        "SIE intercept ASN-translation exception",
+        /* 18 */        "SIE intercept Page access exception",
+        /* 19 */        "SIE intercept Vector/Crypto operation exception",
+        /* 1A */        "SIE intercept Page state exception",
+        /* 1B */        "SIE intercept Page transition exception",
+        /* 1C */        "SIE intercept Space-switch event",
+        /* 1D */        "SIE intercept Square-root exception",
+        /* 1E */        "SIE intercept Unnormalized-operand exception",
+        /* 1F */        "SIE intercept PC-translation specification exception",
+        /* 20 */        "SIE intercept AFX-translation exception",
+        /* 21 */        "SIE intercept ASX-translation exception",
+        /* 22 */        "SIE intercept LX-translation exception",
+        /* 23 */        "SIE intercept EX-translation exception",
+        /* 24 */        "SIE intercept Primary-authority exception",
+        /* 25 */        "SIE intercept Secondary-authority exception",
+        /* 26 */        "SIE intercept Page-fault-assist exception",
+        /* 27 */        "SIE intercept Control-switch exception",
+        /* 28 */        "SIE intercept ALET-specification exception",
+        /* 29 */        "SIE intercept ALEN-translation exception",
+        /* 2A */        "SIE intercept ALE-sequence exception",
+        /* 2B */        "SIE intercept ASTE-validity exception",
+        /* 2C */        "SIE intercept ASTE-sequence exception",
+        /* 2D */        "SIE intercept Extended-authority exception",
+        /* 2E */        NULL,
+        /* 2F */        NULL,
+        /* 30 */        "SIE intercept Stack-full exception",
+        /* 31 */        "SIE intercept Stack-empty exception",
+        /* 32 */        "SIE intercept Stack-specification exception",
+        /* 33 */        "SIE intercept Stack-type exception",
+        /* 34 */        "SIE intercept Stack-operation exception",
+        /* 35 */        NULL,
+        /* 36 */        NULL,
+        /* 37 */        NULL,
+        /* 38 */        "SIE intercept ASCE-type exception",
+        /* 39 */        "SIE intercept Region-first-translation exception",
+        /* 3A */        "SIE intercept Region-second-translation exception",
+        /* 3B */        "SIE intercept Region-third-translation exception",
+        /* 3C */        NULL,
+        /* 3D */        NULL,
+        /* 3E */        NULL,
+        /* 3F */        NULL,
+        /* 40 */        "SIE intercept Monitor event" };
+
+    if(sie_perfmon[SIE_PERF_ENTER+SIE_PERF_MAXNEG])
+    {
+        int i;
+        for(i = 0; i < 0x61; i++)
+            if(sie_perfmon[i])
+                logmsg("%9u: %s\n",sie_perfmon[i],dbg_name[i]);
+        logmsg("%9u: Average instructions/SIE invocation\n",
+            (sie_perfmon[SIE_PERF_EXEC+SIE_PERF_MAXNEG] +
+             sie_perfmon[SIE_PERF_EXEC_U+SIE_PERF_MAXNEG]*7) /
+            sie_perfmon[SIE_PERF_ENTER+SIE_PERF_MAXNEG]);
+    }
+    else
+        logmsg("No SIE performance data\n");
+}
+#else
+#define SIE_PERFMON(_code)
+#endif
+
 #endif /*!defined(_SIE_C)*/
 
 #undef SIE_I_WAIT
@@ -98,6 +225,8 @@ int     icode = 0;                      /* Interception code         */
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
+
+    SIE_PERFMON(SIE_PERF_ENTER);
 
     if(!regs->psw.amode || !PRIMARY_SPACE_MODE(&(regs->psw)))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
@@ -405,6 +534,8 @@ int     icode = 0;                      /* Interception code         */
          if((regs->cpuad != lhcpu)
            || (GUESTREGS->sie_state != effective_addr2))
     {
+        SIE_PERFMON(SIE_PERF_ENTER_F);
+
         /* Absolute address of state descriptor block */
         GUESTREGS->sie_state = effective_addr2;
 
@@ -533,6 +664,9 @@ int     n;
     ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->instvalid ?
                                         GUESTREGS->inst : NULL);
 #endif /*defined(SIE_DEBUG)*/
+
+    SIE_PERFMON(SIE_PERF_EXIT);
+    SIE_PERFMON(SIE_PERF_PGMINT);
 
     /* Indicate we have left SIE mode */
     regs->sie_active = 0;
@@ -710,6 +844,8 @@ int ARCH_DEP(run_sie) (REGS *regs)
 {
     int icode;
 
+    SIE_PERFMON(SIE_PERF_RUNSIE);
+
     SET_IC_EXTERNAL_MASK(GUESTREGS);
     SET_IC_MCK_MASK(GUESTREGS);
     SET_IC_IO_MASK(GUESTREGS);
@@ -720,9 +856,12 @@ int ARCH_DEP(run_sie) (REGS *regs)
 #endif /*defined(_FEATURE_PER)*/
 
     do {
+        SIE_PERFMON(SIE_PERF_RUNLOOP_1);
         if(!(icode = setjmp(GUESTREGS->progjmp)))
             do
             {
+                SIE_PERFMON(SIE_PERF_RUNLOOP_2);
+
                 if(
                     SIE_I_STOP(GUESTREGS)
                  || SIE_I_EXT(GUESTREGS)
@@ -732,6 +871,8 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 if( SIE_IC_INTERRUPT_CPU(GUESTREGS) )
                 {
+                    SIE_PERFMON(SIE_PERF_INTCHECK);
+
                     /* Process PER program interrupts */
                     if( OPEN_IC_PERINT(GUESTREGS) )
                         ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
@@ -826,6 +967,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->inst);
 #endif /*defined(SIE_DEBUG)*/
 
+                SIE_PERFMON(SIE_PERF_EXEC);
                 regs->instcount++;
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
@@ -833,6 +975,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 if (!PER_MODE(GUESTREGS))
 #endif
                 {
+                    SIE_PERFMON(SIE_PERF_EXEC_U);
                     regs->instcount += 7;
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);

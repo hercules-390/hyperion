@@ -1801,6 +1801,17 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 #define SIE_INTERCEPT_IOINTP   (-16)    /* I/O Interruption pending  */
 #define SIE_INTERCEPT_IOINST   (-17)    /* I/O Instruction           */
 
+#if defined(SIE_DEBUG_PERFMON)
+#define SIE_PERF_ENTER          0       /* SIE performance monitor   */
+#define SIE_PERF_ENTER_F       -31      /* Enter Fast (retain state) */
+#define SIE_PERF_EXIT          -30      /* SIE exit                  */
+#define SIE_PERF_RUNSIE        -29      /* run_sie entered           */
+#define SIE_PERF_RUNLOOP_1     -28      /* run_sie runloop 1         */
+#define SIE_PERF_RUNLOOP_2     -27      /* run_sue runloop 2         */
+#define SIE_PERF_INTCHECK      -26      /* run_sie intcheck          */
+#define SIE_PERF_EXEC          -25      /* run_sie execute inst      */
+#define SIE_PERF_EXEC_U        -24      /* run_sie unrolled exec     */
+#endif /*defined(SIE_DEBUG_PERFMON)*/
 
 /* Functions in module panel.c */
 #if defined(OPTION_DYNAMIC_LOAD)
