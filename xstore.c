@@ -255,16 +255,47 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     vaddr2 &= XSTORE_PAGEMASK;
 
     /* Obtain the real or expanded address of each operand */
-    if (!REAL_MODE(&regs->psw))
+    if (!REAL_MODE(&regs->psw)
+#if defined(_FEATURE_SIE)
+        || regs->sie_state
+#endif /*defined(_FEATURE_SIE)*/
+                              )
     {
         /* Translate the second operand address to a real address */
-        rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ, &raddr2,
-                        &xcode, &priv, &prot, &stid);
+        if(!REAL_MODE(&regs->psw))
+            rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ,
+                        &raddr2, &xcode, &priv, &prot, &stid);
+        else
+            raddr2 = vaddr2;
 
 	raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
 
-        if (raddr2 < regs->mainsize)
-            SIE_TRANSLATE(&raddr2,ACCTYPE_READ,regs);
+#if defined(_FEATURE_SIE)
+        if(raddr2 < regs->mainsize && regs->sie_state  && !regs->sie_pref)
+        {
+        U32 sie_stid;
+        U16 sie_xcode;
+        int sie_private;
+
+#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+            if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
+                ((regs->siebk->mx & SIE_MX_XC) && regs->psw.armode && r2 > 0) ?
+                    r2 :
+                    USE_PRIMARY_SPACE,
+                    regs->hostregs, ACCTYPE_SIE, &raddr2, &sie_xcode,
+                    &sie_private, &prot, &sie_stid))
+#else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+            if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
+                    USE_PRIMARY_SPACE,
+                    regs->hostregs, ACCTYPE_SIE, &raddr2, &sie_xcode,
+                    &sie_private, &prot, &sie_stid))
+#endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+                (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+
+            /* Convert host real address to host absolute address */
+            raddr2 = APPLY_PREFIXING (raddr2, regs->hostregs->PX);
+        }
+#endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
@@ -328,13 +359,42 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Reset protection indication before calling translate_addr() */
         prot = 0;
         /* Translate the first operand address to a real address */
-        rc = ARCH_DEP(translate_addr) (vaddr1, r1, regs, ACCTYPE_WRITE, &raddr1,
-                        &xcode, &priv, &prot, &stid);
+        if(!REAL_MODE(&regs->psw))
+            rc = ARCH_DEP(translate_addr) (vaddr1, r1, regs, ACCTYPE_WRITE,
+                        &raddr1, &xcode, &priv, &prot, &stid);
+        else
+            raddr1 = vaddr1;
 
 	raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
 
         if (raddr1 < regs->mainsize)
             SIE_TRANSLATE(&raddr1,ACCTYPE_READ,regs);
+#if defined(_FEATURE_SIE)
+        if(raddr1 < regs->mainsize && regs->sie_state  && !regs->sie_pref)
+        {
+        U32 sie_stid;
+        U16 sie_xcode;
+        int sie_private;
+
+#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+            if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
+                ((regs->siebk->mx & SIE_MX_XC) && regs->psw.armode && r1 > 0) ?
+                    r1 :
+                    USE_PRIMARY_SPACE,
+                    regs->hostregs, ACCTYPE_SIE, &raddr1, &sie_xcode,
+                    &sie_private, &prot, &sie_stid))
+#else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+            if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
+                    USE_PRIMARY_SPACE,
+                    regs->hostregs, ACCTYPE_SIE, &raddr1, &sie_xcode,
+                    &sie_private, &prot, &sie_stid))
+#endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+                (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+
+            /* Convert host real address to host absolute address */
+            raddr1 = APPLY_PREFIXING (raddr1, regs->hostregs->PX);
+        }
+#endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
