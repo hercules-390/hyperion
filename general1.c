@@ -3371,7 +3371,9 @@ GREG    len3;
                address will be backed up, and the instruction will
                be re-executed.  This is consistent with operation
                under a hypervisor such as LPAR or VM.                *JJ */
-            if ((len1 > 255) && !(addr1 & 0xFFF))
+            if ( (len1 > 255) && !(addr1 & 0xFFF) &&
+                (OPEN_IC_EXTPENDING(regs) ||
+                 OPEN_IC_IOPENDING(regs)) )
             {
                 regs->psw.IA -= regs->psw.ilc;
                 regs->psw.IA &= ADDRESS_MAXWRAP(regs);
@@ -3413,7 +3415,7 @@ GREG    len3;
         return;
     }
 
-    if ((len1 >= 256) && (len2 >= 256) &&
+    while ((len1 >= 256) && (len2 >= 256) &&
                   ((addr1 & PAGEFRAME_PAGEMASK) ==
                    ((addr1 + 255) & PAGEFRAME_PAGEMASK)) &&
                   ((addr2 & PAGEFRAME_PAGEMASK) ==
@@ -3429,30 +3431,38 @@ GREG    len3;
 #if defined(FEATURE_PER2)
           && ((REAL_MODE(&regs->psw) ||
             ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
-              && PER_RANGE_CHECK2(addr1, addr1+len1, regs->CR(10), regs->CR(11)) )
+              && PER_RANGE_CHECK2(addr1, addr1+255, regs->CR(10), regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
+        addr1 += 256;
+        addr2 += 256;
+        addr1 &= ADDRESS_MAXWRAP(regs);
+        addr1 &= ADDRESS_MAXWRAP(regs);
+        len1 -= 256;
+        len2 -= 256;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1 + 256;
-        regs->GR_LA24(r1+1) -= 256;
-        if (r1 != r2)
-        {
-            GR_A(r2, regs) = addr2 + 256;
-            regs->GR_LA24(r2+1) -= 256;
-        }
-        if (regs->GR_LA24(r1+1) ||
-            regs->GR_LA24(r2+1))
+        GR_A(r1, regs) = addr1;
+        GR_A(r2, regs) = addr2;
+        regs->GR_LA24(r1+1) = len1;
+        regs->GR_LA24(r2+1) = len2;
+
+        /* The instruction can be interrupted when a CPU determined
+           number of bytes have been processed.  The instruction
+           address will be backed up, and the instruction will
+           be re-executed.  This is consistent with operation
+           under a hypervisor such as LPAR or VM.                *JJ */
+        if ((regs->GR_LA24(r1+1) || regs->GR_LA24(r2+1)) &&
+            (OPEN_IC_EXTPENDING(regs) ||
+             OPEN_IC_IOPENDING(regs)) )
         {
             regs->psw.IA -= regs->psw.ilc;
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            return;
         }
-        else
-            regs->psw.cc = cc;
-        return;
     }
 
 #endif
@@ -3488,7 +3498,9 @@ GREG    len3;
            address will be backed up, and the instruction will
            be re-executed.  This is consistent with operation
            under a hypervisor such as LPAR or VM.                *JJ */
-        if ((len1 > 255) && !(addr1 & 0xFFF))
+        if ((len1 > 255) && !(addr1 & 0xFFF) &&
+            (OPEN_IC_EXTPENDING(regs) ||
+             OPEN_IC_IOPENDING(regs)) )
         {
             regs->psw.IA -= regs->psw.ilc;
             regs->psw.IA &= ADDRESS_MAXWRAP(regs);
