@@ -1167,6 +1167,7 @@ int  resume_subchan (REGS *regs, DEVBLK *dev);
 int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
         U32 *ioparm, U32 *iointid, BYTE *csw);
 void io_reset (void);
+int  chp_reset(BYTE chpid);
 int  device_attention (DEVBLK *dev, BYTE unitstat);
 int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 

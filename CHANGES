@@ -1,3 +1,4 @@
+16 Jun 2001 Add missing obtain_lock(devlock) to halt function - Fish
 16 Jun 2001 Correctons to LPGFR/LNGFR/LCGFR - Jan Jaeger
 16 Jun 2001 Fix index-symbol translation - Bernard van der Helm
 16 Jun 2001 TLB implementation for z/Architecture - Jan Jaeger

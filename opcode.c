@@ -430,7 +430,6 @@
 
 
 #if !defined(_FEATURE_SIE)
- UNDEF_INST(reset_channel_path)
  UNDEF_INST(connect_channel_set)
  UNDEF_INST(disconnect_channel_set)
 #endif /*!defined(_FEATURE_SIE)*/

@@ -24,13 +24,34 @@
 /* Return pending channel report                                     */
 /*                                                                   */
 /* Returns zero if no device has CRW pending.  Otherwise returns     */
-/* the channel report word for the first device which has a CRW      */
-/* pending, and resets the CRW for that device.                      */
+/* the channel report word for the first channel path or device      */
+/* which has a CRW pending, and resets the CRW for that device.      */
 /*-------------------------------------------------------------------*/
 U32 channel_report()
 {
 DEVBLK *dev;
+U32 i,j;
 
+    /* Scan for channel path reset CRW's */
+    for(i = 0; i < 8; i++)
+    {
+        if(sysblk.chp_reset[i])
+        {
+            obtain_lock(&sysblk.intlock);
+            for(j = 0; j < 32; j++)
+            {
+                if(sysblk.chp_reset[i] & (0x80000000 >> j))
+                {
+                    sysblk.chp_reset[i] &= ~(0x80000000 >> j);
+                    release_lock(&sysblk.intlock);
+                    return CRW_SOL | CRW_CHPID | CRW_AR | CRW_INIT | ((i*32)+j);
+                }
+            }
+            release_lock(&sysblk.intlock);
+        }
+    }
+
+    /* Scan for subchannel alert CRW's */
     for(dev = sysblk.firstdev; dev!= NULL; dev = dev->nextdev)
     {
         if(dev->crwpending)

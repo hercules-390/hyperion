@@ -417,6 +417,7 @@ typedef struct _SYSBLK {
 	int	panrate;		/* Panel refresh rate	     */
 	struct _DEVBLK *firstdev;	/* -> First device block     */
 	U16	highsubchan;		/* Highest subchannel + 1    */
+        U32     chp_reset[8];           /* Channel path reset masks  */
         struct _DEVBLK *ioq;            /* I/O queue                 */
         LOCK    ioqlock;                /* I/O queue lock            */
         COND    ioqcond;                /* I/O queue condition       */

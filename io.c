@@ -222,7 +222,6 @@ PMCW    pmcw;                           /* Path management ctl word  */
 }
 
 
-#if defined(_FEATURE_SIE)
 /*-------------------------------------------------------------------*/
 /* B23B RCHP  - Reset Channel Path                               [S] */
 /*-------------------------------------------------------------------*/
@@ -230,17 +229,28 @@ DEF_INST(reset_channel_path)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+BYTE    chpid;
 
     S(inst, execflag, regs, b2, effective_addr2);
-
-    SIE_ONLY_INSTRUCTION(regs);
 
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
 
+    chpid = effective_addr2 & 0xFF;
+
+    if( !(regs->psw.cc = chp_reset(chpid)) )
+    {
+        obtain_lock(&sysblk.intlock);
+        sysblk.chp_reset[chpid/32] |= 0x80000000 >> (chpid % 32);
+        ON_IC_CHANRPT;
+        signal_condition (&sysblk.intcond);
+        release_lock (&sysblk.intlock);
+    }
+
+    RETURN_INTCHECK(regs);
+
 }
-#endif /*defined(_FEATURE_SIE)*/
 
 
 /*-------------------------------------------------------------------*/

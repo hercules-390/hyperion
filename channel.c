@@ -21,6 +21,20 @@
 
 #include "opcode.h"
 
+#undef CHADDRCHK
+#if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
+#define CHADDRCHK(_addr,_dev)                   \
+  (   ((_addr) >= sysblk.mainsize)              \
+    || ((dev->orb.flag5 & ORB5_A)               \
+      && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
+        && ((_addr) < sysblk.addrlimval))       \
+      || (((_dev)->pmcw.flag5 & PMCW5_LM_HIGH)  \
+        && ((_addr) >= sysblk.addrlimval)) ) ))
+#else /*!defined(FEATURE_ADDRESS_LIMIT_CHECKING)*/
+#define CHADDRCHK(_addr,_dev) \
+        ((_addr) >= sysblk.mainsize)
+#endif /*!defined(FEATURE_ADDRESS_LIMIT_CHECKING)*/
+
 #if !defined(_CHANNEL_C)
 
 #define _CHANNEL_C
@@ -708,6 +722,68 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
 } /* end function resume_subchan */
 // #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
+void
+device_reset (DEVBLK *dev)
+{
+    obtain_lock (&dev->lock);
+
+    dev->pending = 0;
+    if(dev->busy)
+        signal_condition(&dev->resumecond);
+    dev->busy = 0;
+    dev->readpending = 0;
+    dev->pcipending = 0;
+    dev->crwpending = 0;
+    dev->pmcw.intparm[0] = 0;
+    dev->pmcw.intparm[1] = 0;
+    dev->pmcw.intparm[2] = 0;
+    dev->pmcw.intparm[3] = 0;
+    dev->pmcw.flag4 &= ~PMCW4_ISC;
+    dev->pmcw.flag5 &= ~(PMCW5_E | PMCW5_LM | PMCW5_MM | PMCW5_D);
+    dev->pmcw.pnom = 0;
+    dev->pmcw.lpum = 0;
+    dev->pmcw.mbi[0] = 0;
+    dev->pmcw.mbi[1] = 0;
+    dev->pmcw.flag27 &= ~PMCW27_S;
+    memset (&dev->scsw, 0, sizeof(SCSW));
+    memset (&dev->pciscsw, 0, sizeof(SCSW));
+    memset (dev->sense, 0, sizeof(dev->sense));
+    memset (dev->pgid, 0, sizeof(dev->pgid));
+
+    release_lock (&dev->lock);
+
+} /* end device_reset() */
+
+
+int
+chp_reset(BYTE chpid)
+{
+DEVBLK *dev;                            /* -> Device control block   */
+int i;
+int operational = 3;
+
+    /* Reset each device in the configuration */
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    {
+        for(i = 0; i < 8; i++)
+        { 
+            if((chpid == dev->pmcw.chpid[i])
+              && (dev->pmcw.pim & dev->pmcw.pam & dev->pmcw.pom & (0x80 >> i)) )
+            {
+                operational = 0;
+                device_reset(dev);
+            }
+        }
+    }
+
+    /* Signal console thread to redrive select */
+    signal_thread (sysblk.cnsltid, SIGHUP);
+
+    return operational;
+
+} /* end function chp_reset */
+
+
 /*-------------------------------------------------------------------*/
 /* I/O RESET                                                         */
 /* Resets status of all devices ready for IPL.  Note that device     */
@@ -721,33 +797,7 @@ DEVBLK *dev;                            /* -> Device control block   */
 
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-    {
-        obtain_lock (&dev->lock);
-
-        dev->pending = 0;
-        dev->busy = 0;
-        dev->readpending = 0;
-        dev->pcipending = 0;
-        dev->crwpending = 0;
-        dev->pmcw.intparm[0] = 0;
-        dev->pmcw.intparm[1] = 0;
-        dev->pmcw.intparm[2] = 0;
-        dev->pmcw.intparm[3] = 0;
-        dev->pmcw.flag4 &= ~PMCW4_ISC;
-        dev->pmcw.flag5 &= ~(PMCW5_E | PMCW5_LM | PMCW5_MM | PMCW5_D);
-        dev->pmcw.pnom = 0;
-        dev->pmcw.lpum = 0;
-        dev->pmcw.mbi[0] = 0;
-        dev->pmcw.mbi[1] = 0;
-        dev->pmcw.flag27 &= ~PMCW27_S;
-        memset (&dev->scsw, 0, sizeof(SCSW));
-        memset (&dev->pciscsw, 0, sizeof(SCSW));
-        memset (dev->sense, 0, sizeof(dev->sense));
-        memset (dev->pgid, 0, sizeof(dev->pgid));
-
-        release_lock (&dev->lock);
-
-    } /* end for(dev) */
+        device_reset(dev);
 
     /* No crws pending anymore */
     OFF_IC_CHANRPT;
@@ -825,6 +875,7 @@ void device_thread ()
 /* FETCH A CHANNEL COMMAND WORD FROM MAIN STORAGE                    */
 /*-------------------------------------------------------------------*/
 static void ARCH_DEP(fetch_ccw) (
+                        DEVBLK *dev,    /* -> Device block           */
                         BYTE ccwkey,    /* Bits 0-3=key, 4-7=zeroes  */
                         BYTE ccwfmt,    /* CCW format (0 or 1)   @IWZ*/
                         U32 ccwaddr,    /* Main storage addr of CCW  */
@@ -839,7 +890,7 @@ BYTE   *ccw;                            /* CCW pointer               */
 
     /* Channel program check if CCW is not on a doubleword
        boundary or is outside limit of main storage */
-    if ((ccwaddr & 0x00000007) || ccwaddr >= sysblk.mainsize)
+    if ( (ccwaddr & 0x00000007) || CHADDRCHK(ccwaddr, dev) )
     {
         *chanstat = CSW_PROGC;
         return;
@@ -884,6 +935,7 @@ BYTE   *ccw;                            /* CCW pointer               */
 /* FETCH AN INDIRECT DATA ADDRESS WORD FROM MAIN STORAGE             */
 /*-------------------------------------------------------------------*/
 static void ARCH_DEP(fetch_idaw) (
+                        DEVBLK *dev,    /* -> Device block           */
                         BYTE code,      /* CCW operation code        */
                         BYTE ccwkey,    /* Bits 0-3=key, 4-7=zeroes  */
                         BYTE idawfmt,   /* IDAW format (1 or 2)  @IWZ*/
@@ -904,7 +956,7 @@ BYTE    storkey;                        /* Storage key               */
     /* Channel program check if IDAW is not on correct           @IWZ
        boundary or is outside limit of main storage */
     if ((idawaddr & ((idawfmt == 2) ? 0x07 : 0x03))            /*@IWZ*/
-        || idawaddr >= sysblk.mainsize)
+        || CHADDRCHK(idawaddr, dev) )
     {
         *chanstat = CSW_PROGC;
         return;
@@ -960,7 +1012,7 @@ BYTE    storkey;                        /* Storage key               */
 
     /* Channel program check if IDAW data
        location is outside main storage */
-    if (idaw > sysblk.mainsize)
+    if ( CHADDRCHK(idaw, dev) )
     {
         *chanstat = CSW_PROGC;
         return;
@@ -1027,7 +1079,7 @@ BYTE    area[64];                       /* Data display area         */
         for (idaseq = 0; idacount > 0; idaseq++)
         {
             /* Fetch the IDAW and set IDA pointer and length */
-            ARCH_DEP(fetch_idaw) (code, ccwkey, idawfmt,       /*@IWZ*/
+            ARCH_DEP(fetch_idaw) (dev, code, ccwkey, idawfmt,  /*@IWZ*/
                         idapmask, idaseq, idawaddr,            /*@IWZ*/
                         &idadata, &idalen, chanstat);
 
@@ -1089,7 +1141,7 @@ BYTE    area[64];                       /* Data display area         */
     } else {                            /* Non-IDA data addressing */
 
         /* Channel program check if data is outside main storage */
-        if (addr > sysblk.mainsize || sysblk.mainsize - count < addr)
+        if ( CHADDRCHK(addr, dev) || CHADDRCHK(addr + (count - 1), dev) )
         {
             *chanstat = CSW_PROGC;
             return;
@@ -1425,7 +1477,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     {
         mbaddr = sysblk.mbo;
         mbaddr += (dev->pmcw.mbi[0] << 8 | dev->pmcw.mbi[1]) << 5;
-        if ((mbaddr < sysblk.mainsize)
+        if ( !CHADDRCHK(mbaddr, dev)
             && (((STORAGE_KEY(mbaddr) & STORKEY_KEY) == sysblk.mbk)
                 || (sysblk.mbk == 0)))
         {
@@ -1439,8 +1491,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                check or protection check, and set the subchannel
                measurement-block-update-enable to zero */
             dev->pmcw.flag5 &= ~PMCW5_MM_MBU;
-            dev->esw.scl0 |= (mbaddr < sysblk.mainsize) ?
-                SCL0_ESF_MBPTK : SCL0_ESF_MBPGK;
+            dev->esw.scl0 |= !CHADDRCHK(mbaddr, dev) ?
+                                 SCL0_ESF_MBPTK : SCL0_ESF_MBPGK;
             /*INCOMPLETE*/
         }
     }
@@ -1484,6 +1536,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         /* Test for attention status from device */
         if (dev->scsw.flag3 & SCSW3_SC_ALERT)
         {
+            /* Obtain the device lock */
+            obtain_lock (&dev->lock);
+
             dev->pending = 1;
 
             /* Reset device busy indicator */
@@ -1569,6 +1624,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         /* Test for halt subchannel request */
         if (dev->scsw.flag2 & SCSW2_AC_HALT)
         {
+            /* Obtain the device lock */
+            obtain_lock (&dev->lock);
+
             /* [15.4.2] Perform halt function signaling and completion */
             dev->scsw.flag2 &= ~SCSW2_AC_HALT;
             dev->scsw.flag3 |= SCSW3_SC_PEND;
@@ -1613,7 +1671,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         unitstat = 0;
 
         /* Fetch the next CCW */
-        ARCH_DEP(fetch_ccw) (ccwkey, ccwfmt, ccwaddr, &opcode, &addr,
+        ARCH_DEP(fetch_ccw) (dev, ccwkey, ccwfmt, ccwaddr, &opcode, &addr,
                     &flags, &count, &chanstat);
 
         /* Point to the CCW in main storage */
@@ -1754,8 +1812,16 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                     logmsg ("channel: Device %4.4X suspended\n",
                             dev->devnum);
 
-                while ((dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
+                while (dev->busy && (dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
                     wait_condition (&dev->resumecond, &dev->lock);
+
+                /* If the device has been reset then simply return */
+                if(!dev->busy)
+                {
+                    
+                    release_lock (&dev->lock);
+                    return NULL;
+                }
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
                     logmsg ("channel: Device %4.4X resumed\n",
