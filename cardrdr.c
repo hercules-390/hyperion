@@ -145,8 +145,8 @@ int     fc;                             /* File counter              */
 
         if (strlen(argv[i]) > sizeof(dev->filename)-1)
         {
-            logmsg ("HHC401I File name too long (max=%d): \"%s\"\n",
-                sizeof(dev->filename)-1,argv[i]);
+            logmsg ("HHC401I File name too long (max=%ud): \"%s\"\n",
+                (unsigned int)sizeof(dev->filename)-1,argv[i]);
             return -1;
         }
 
@@ -214,8 +214,8 @@ int     fc;                             /* File counter              */
 
         if (strlen(argv[0]) > sizeof(dev->filename)-1)
         {
-            logmsg ("HHC401I File name too long (max=%d): \"%s\"\n",
-                sizeof(dev->filename)-1,argv[0]);
+            logmsg ("HHC401I File name too long (max=%ud): \"%s\"\n",
+                (unsigned int)sizeof(dev->filename)-1,argv[0]);
             return -1;
         }
 

@@ -667,7 +667,7 @@ int     i;
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            logmsg ("R%1.1X=%16.16llX%s", i, regs->GR_G(i),
+            logmsg ("R%1.1X=%16.16llX%s", i, (long long)regs->GR_G(i),
                 ((i & 0x03) == 0x03) ? "\n" : " ");
 
 } /* end function display_regs */
@@ -685,7 +685,7 @@ int     i;
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            logmsg ("C%1.1X=%16.16llX%s", i, regs->CR_G(i),
+            logmsg ("C%1.1X=%16.16llX%s", i, (long long)regs->CR_G(i),
                 ((i & 0x03) == 0x03) ? "\n" : " ");
 
 } /* end function display_cregs */
@@ -1567,9 +1567,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     /* clocks command - display tod clkc and cpu timer */
     if(memcmp(cmd,"clocks",6)==0)
     {
-        logmsg("tod = %16.16llX\n",(sysblk.todclk + regs->todoffset) << 8);
-        logmsg("ckc = %16.16llX\n",regs->clkc << 8);
-        logmsg("cpt = %16.16llX\n",regs->ptimer);
+        logmsg("tod = %16.16llX\n",
+            (long long)(sysblk.todclk + regs->todoffset) << 8);
+        logmsg("ckc = %16.16llX\n",(long long)regs->clkc << 8);
+        logmsg("cpt = %16.16llX\n",(long long)regs->ptimer);
         if(regs->arch_mode == ARCH_370)
         {
         U32 itimer;
@@ -1767,7 +1768,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     if (strcmp(cmd,"pr") == 0)
     {
         if(regs->arch_mode == ARCH_900)
-            logmsg ("Prefix=%16.16llX\n", regs->PX_G);
+            logmsg ("Prefix=%16.16llX\n", (long long)regs->PX_G);
         else
             logmsg ("Prefix=%8.8X\n", regs->PX_L);
         return NULL;
@@ -1840,7 +1841,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         {
             sysblk.instbreak = 1;
             ON_IC_TRACE;
-            logmsg ("Setting breakpoint at %16.16llX\n", sysblk.breakaddr);
+            logmsg ("Setting breakpoint at %16.16llX\n",
+                (long long)sysblk.breakaddr);
             return NULL;
         }
     }
@@ -2641,13 +2643,15 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             if(!dev->syncio) continue;
             i++;
             logmsg ("%4.4X  synchronous: %12lld asynchronous: %12lld\n",
-                    dev->devnum, dev->syncios, dev->asyncios);
+                    dev->devnum, (long long)dev->syncios,
+                    (long long)dev->asyncios);
             syncios += dev->syncios; asyncios += dev->asyncios;
         } /* end for(dev) */
         if (i == 0) { logmsg ("No synchronous I/O devices found\n"); }
         else
             logmsg ("TOTAL synchronous: %12lld asynchronous: %12lld  %3lld%%\n",
-                   syncios, asyncios, (syncios * 100) / (syncios + asyncios + 1));
+                   (long long)syncios, (long long)asyncios,
+                   (long long)((syncios * 100) / (syncios + asyncios + 1)));
         return NULL;
     }
 #endif
@@ -3702,9 +3706,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                     ' ',
 #endif
 #if defined(_FEATURE_SIE)
-                    regs->sie_state ?  regs->hostregs->instcount :
+                    regs->sie_state ?  (long long) regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
-                    regs->instcount,
+                    (long long)regs->instcount,
 #ifdef EXTERNALGUI
                     extgui ? "\n" :
 #endif /*EXTERNALGUI*/
@@ -4017,7 +4021,7 @@ BYTE    c;                              /* Character work area       */
     if (draflag)
     {
       #if defined(FEATURE_ESAME)
-        n = sprintf (buf, "R:%16.16llX:", raddr);
+        n = sprintf (buf, "R:%16.16llX:", (long long)raddr);
       #else /*!defined(FEATURE_ESAME)*/
         n = sprintf (buf, "R:%8.8X:", (U32)raddr);
       #endif /*!defined(FEATURE_ESAME)*/
@@ -4064,7 +4068,7 @@ int     stid;                           /* Segment table indication  */
 U16     xcode;                          /* Exception code            */
 
   #if defined(FEATURE_ESAME)
-    n = sprintf (buf, "V:%16.16llX:", vaddr);
+    n = sprintf (buf, "V:%16.16llX:", (long long)vaddr);
   #else /*!defined(FEATURE_ESAME)*/
     n = sprintf (buf, "V:%8.8X:", vaddr);
   #endif /*!defined(FEATURE_ESAME)*/
@@ -4185,7 +4189,7 @@ BYTE    buf[100];                       /* Message buffer            */
             xcode = ARCH_DEP(virt_to_real) (&raddr, &stid, vaddr, arn,
                                             regs, ACCTYPE_LRA);
           #if defined(FEATURE_ESAME)
-            n = sprintf (buf, "V:%16.16llX ", vaddr);
+            n = sprintf (buf, "V:%16.16llX ", (long long)vaddr);
           #else /*!defined(FEATURE_ESAME)*/
             n = sprintf (buf, "V:%8.8X ", vaddr);
           #endif /*!defined(FEATURE_ESAME)*/
@@ -4199,7 +4203,7 @@ BYTE    buf[100];                       /* Message buffer            */
                 n += sprintf (buf+n, "(AR%2.2d)", arn);
             if (xcode == 0)
           #if defined(FEATURE_ESAME)
-                n += sprintf (buf+n, " R:%16.16llX", raddr);
+                n += sprintf (buf+n, " R:%16.16llX", (long long)raddr);
           #else /*!defined(FEATURE_ESAME)*/
                 n += sprintf (buf+n, " R:%8.8X", (U32)raddr);
           #endif /*!defined(FEATURE_ESAME)*/
@@ -4640,7 +4644,7 @@ int unix_socket (char* path)
     if (strlen (path) > sizeof(addr.sun_path) - 1)
     {
         logmsg ("HHC411I Socket pathname \"%s\" exceeds limit of %ul\n",
-            path, sizeof(addr.sun_path) - 1);
+            path, (unsigned long int)sizeof(addr.sun_path) - 1);
         return -1;
     }
 

@@ -896,7 +896,7 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-        logmsg ("Machine Check code=%16.16llu\n", mcic);
+        logmsg ("Machine Check code=%16.16llu\n", (long long)mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);

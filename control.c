@@ -4696,7 +4696,7 @@ static char *ordername[] = {    "Unassigned",
         logmsg ("CPU%4.4X: SIGP CPU%4.4X %s PARM %16.16llX\n",
                 regs->cpuad, cpad,
                 order > MAX_SIGPORDER ? ordername[0] : ordername[order],
-                parm);
+                (long long)parm);
 #endif /*defined(FEATURE_ESAME)*/
 
     /* [4.9.2.1] Claim the use of the CPU signaling and response

@@ -71,8 +71,8 @@ U32               o;                    /* Level 2 table offset      */
     rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rc == -1)
     {
-        ENDMSG (m, "lseek error fd %d offset %d: %s\n",
-                fd, CKDDASD_DEVHDR_SIZE, strerror(errno));
+        ENDMSG (m, "lseek error fd %d offset %ud: %s\n",
+                fd, (unsigned int)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
 
@@ -89,8 +89,8 @@ U32               o;                    /* Level 2 table offset      */
     rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rc == -1)
     {
-        ENDMSG (m, "lseek error fd %d offset %d: %s\n",
-                fd, CKDDASD_DEVHDR_SIZE, strerror(errno));
+        ENDMSG (m, "lseek error fd %d offset %ud: %s\n",
+                fd, (unsigned int)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
 
@@ -116,16 +116,16 @@ U32               o;                    /* Level 2 table offset      */
     l1 = malloc (n * CCKD_L1ENT_SIZE);
     if (l1 == NULL)
     {
-        ENDMSG (m, "l1tab malloc error fd %d size %d: %s\n",
-               fd, n * CCKD_L1ENT_SIZE, strerror(errno));
+        ENDMSG (m, "l1tab malloc error fd %d size %ud: %s\n",
+               fd, (unsigned int)(n * CCKD_L1ENT_SIZE), strerror(errno));
         return -1;
     }
 
     rc = lseek (fd, CCKD_L1TAB_POS, SEEK_SET);
     if (rc == -1)
     {
-        ENDMSG (m, "lseek error fd %d offset %d: %s\n",
-                fd, CCKD_L1TAB_POS, strerror(errno));
+        ENDMSG (m, "lseek error fd %d offset %ud: %s\n",
+                fd, (unsigned int)CCKD_L1TAB_POS, strerror(errno));
         free (l1);
         return -1;
     }
@@ -144,8 +144,8 @@ U32               o;                    /* Level 2 table offset      */
     rc = lseek (fd, CCKD_L1TAB_POS, SEEK_SET);
     if (rc == -1)
     {
-        ENDMSG (m, "lseek error fd %d offset %d: %s\n",
-                fd, CCKD_L1TAB_POS, strerror(errno));
+        ENDMSG (m, "lseek error fd %d offset %ud: %s\n",
+                fd, (unsigned int)CCKD_L1TAB_POS, strerror(errno));
         free (l1);
         return -1;
     }

@@ -1395,7 +1395,7 @@ BYTE    area[64];                       /* Data display area         */
                     logmsg (                                   /*@IWZ*/
                         "%4.4X:IDAW=%16.16llX Len=%4.4hX\n"    /*@IWZ*/
                         "%4.4X:---------------------%s\n",     /*@IWZ*/
-                        dev->devnum, (U64)idadata, idalen,     /*@IWZ*/
+                        dev->devnum, (long long)idadata, idalen, /*@IWZ*/
                         dev->devnum, area);                    /*@IWZ*/
                 }
             }

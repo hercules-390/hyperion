@@ -340,7 +340,7 @@ U16     cpuad;                          /* Originating CPU address   */
         if (sysblk.insttrace || sysblk.inststep)
         {
             logmsg ("External interrupt: CPU timer=%16.16llX\n",
-                    regs->ptimer);
+                    (long long)regs->ptimer);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
     }

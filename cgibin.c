@@ -67,8 +67,8 @@ int i;
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            fprintf(webblk->hsock, "CR%1.1X=%16.16llX%s", i, regs->CR_G(i),
-                ((i & 0x03) == 0x03) ? "\n" : " ");           
+            fprintf(webblk->hsock, "CR%1.1X=%16.16llX%s", i,
+                (long long)regs->CR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");           
 
     fprintf(webblk->hsock, "</PRE>\n");
 
@@ -93,8 +93,8 @@ int i;
                 ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
-            fprintf(webblk->hsock, "GR%1.1X=%16.16llX%s", i, regs->GR_G(i),
-                ((i & 0x03) == 0x03) ? "\n" : " ");           
+            fprintf(webblk->hsock, "GR%1.1X=%16.16llX%s", i,
+                (long long)regs->GR_G(i), ((i & 0x03) == 0x03) ? "\n" : " ");           
 
     fprintf(webblk->hsock, "</PRE>\n");
 
@@ -450,7 +450,7 @@ REGS *regs;
             else
                 fprintf(webblk->hsock,"%s<td>GR%d</td><td><input type=text name=alter_gr%d size=16 "
                   "value=%16.16llX></td>\n%s",
-                  (i&3)==0?"<tr>\n":"",i,i,regs->GR_G(i),((i&3)==3)?"</tr>\n":"");
+                  (i&3)==0?"<tr>\n":"",i,i,(long long)regs->GR_G(i),((i&3)==3)?"</tr>\n":"");
         }
         fprintf(webblk->hsock,"</table>\n"
                               "<input type=submit name=refresh value=\"Refresh\">\n"
@@ -494,7 +494,7 @@ REGS *regs;
             else
                 fprintf(webblk->hsock,"%s<td>CR%d</td><td><input type=text name=alter_cr%d size=16 "
                   "value=%16.16llX></td>\n%s",
-                  (i&3)==0?"<tr>\n":"",i,i,regs->CR_G(i),((i&3)==3)?"</tr>\n":"");
+                  (i&3)==0?"<tr>\n":"",i,i,(long long)regs->CR_G(i),((i&3)==3)?"</tr>\n":"");
         }
         fprintf(webblk->hsock,"</table>\n"
                               "<input type=submit name=refresh value=\"Refresh\">\n"
