@@ -4,6 +4,18 @@
 /* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2004      */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
 
+/*-------------------------------------------------------------------*/
+/* This module contains procedures for creating entries in the       */
+/* system trace table as described in the manuals:                   */
+/* SA22-7201 ESA/390 Principles of Operation                         */
+/* SA22-7832 z/Architecture Principles of Operation                  */
+/*-------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------*/
+/* Additional credits:                                               */
+/*      ASN-and-LX-reuse facility - Roger Bowler            July 2004*/
+/*-------------------------------------------------------------------*/
+
 #include "hercules.h"
 
 #include "opcode.h"
@@ -15,6 +27,9 @@
 #if !defined(_TRACE_H)
 #define _TRACE_H
 
+/*-------------------------------------------------------------------*/
+/* Format definitions for trace table entries                        */
+/*-------------------------------------------------------------------*/
 typedef struct _TRACE_F1_BR {
 FWORD   newia24;                        /* Bits 0-7 are zeros        */
 } TRACE_F1_BR;
@@ -259,6 +274,53 @@ HWORD   pcnum_lo;
 DWORD   retna;
 } TRACE_F2_PC;
 
+typedef struct _TRACE_F3_PC {
+BYTE    format;
+#define TRACE_F3_PC_FMT 0x21
+BYTE    pswkey_pcnum_hi;
+HWORD   pcnum_lo;
+FWORD   retna;
+} TRACE_F3_PC;
+
+typedef struct _TRACE_F4_PC {
+BYTE    format;
+#define TRACE_F4_PC_FMT 0x22
+BYTE    pswkey_pcnum_hi;
+HWORD   pcnum_lo;
+DWORD   retna;
+} TRACE_F4_PC;
+
+typedef struct _TRACE_F5_PC {
+BYTE    format;
+#define TRACE_F5_PC_FMT 0x22
+BYTE    pswkey;
+#define TRACE_F5_PC_FM2 0x08 
+HWORD   resv;
+FWORD   retna;
+FWORD   pcnum;
+} TRACE_F5_PC;
+
+typedef struct _TRACE_F6_PC {
+BYTE    format;
+#define TRACE_F6_PC_FMT 0x22
+BYTE    pswkey;
+#define TRACE_F6_PC_FM2 0x0A 
+HWORD   resv;
+FWORD   retna;
+FWORD   pcnum;
+} TRACE_F6_PC;
+
+typedef struct _TRACE_F7_PC {
+BYTE    format;
+#define TRACE_F7_PC_FMT 0x23
+BYTE    pswkey;
+#define TRACE_F7_PC_FM2 0x0E 
+HWORD   resv;
+DWORD   retna;
+FWORD   pcnum;
+} TRACE_F7_PC;
+
+
 typedef struct _TRACE_F1_TR {
 BYTE    format;
 #define TRACE_F1_TR_FMT 0x70
@@ -284,6 +346,19 @@ DWORD   reg[16];
 
 #endif /*!defined(_TRACE_H)*/
 
+/*-------------------------------------------------------------------*/
+/* Reserve space for a new trace entry                               */
+/*                                                                   */
+/* Input:                                                            */
+/*      size    Number of bytes required for trace entry             */
+/*      regs    Pointer to the CPU register context                  */
+/* Output:                                                           */
+/*      abs_guest  Guest absolute address of trace entry (if SIE)    */
+/* Return value:                                                     */
+/*      Absolute address of new trace entry                          */
+/*                                                                   */
+/*      This function does not return if a program check occurs.     */
+/*-------------------------------------------------------------------*/
 static inline RADR ARCH_DEP(get_trace_entry) (RADR *abs_guest, int size, REGS *regs)
 {
 RADR    n;                              /* Addr of trace table entry */
@@ -324,6 +399,17 @@ RADR    n;                              /* Addr of trace table entry */
 } /* end function ARCH_DEP(get_trace_entry) */
 
 
+/*-------------------------------------------------------------------*/
+/* Commit a new trace entry                                          */
+/*                                                                   */
+/* Input:                                                            */
+/*      abs_guest  Guest absolute address of trace entry (if SIE)    */
+/*      raddr   Absolute address of trace entry                      */
+/*      size    Number of bytes reserved for trace entry             */
+/*      regs    Pointer to the CPU register context                  */
+/* Return value:                                                     */
+/*      Updated value for CR12 after committing the trace entry      */
+/*-------------------------------------------------------------------*/
 static inline CREG ARCH_DEP(set_trace_entry) (RADR abs_guest, RADR raddr, int size, REGS *regs)
 {
 #if defined(_FEATURE_SIE)
@@ -339,7 +425,7 @@ RADR abs_host;
     raddr = abs_guest + (raddr - abs_host);
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Convert trace entry absolue address back to real address */
+    /* Convert trace entry absolute address back to real address */
     raddr = APPLY_PREFIXING (raddr, regs->PX);
 
     /* Return updated value of control register 12 */
@@ -400,7 +486,7 @@ int  size;
     
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);
     
-} /* end function ARCH_DEP(set_trace_entry) */
+} /* end function ARCH_DEP(trace_br) */
 
 
 #if defined(FEATURE_SUBSPACE_GROUP)
@@ -493,7 +579,7 @@ int  size;
 /* Form implicit PC trace entry                                      */
 /*                                                                   */
 /* Input:                                                            */
-/*      pcnum   Destination PC number                                */
+/*      pcnum   Low order 32 bits of PC instruction operand          */
 /*      regs    Pointer to the CPU register context                  */
 /* Return value:                                                     */
 /*      Updated value for CR12 after adding new trace entry          */
@@ -505,12 +591,93 @@ CREG ARCH_DEP(trace_pc) (U32 pcnum, REGS *regs)
 RADR raddr;
 RADR ag;
 int  size;
+int  eamode;
 
     regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+    eamode = regs->psw.amode64;
 
 #if defined(FEATURE_ESAME)
+    if (ASN_AND_LX_REUSE_ENABLED(regs))
+    {
+        if ((pcnum & PC_BIT44) && regs->psw.amode64 && regs->psw.IA_H)
+        {
+            /* In 64-bit mode, regardless of resulting mode, when
+               ASN-and-LX-reuse is enabled, 32-bit PC number is used,
+               and bits 0-31 of return address are not all zeros */
+            TRACE_F7_PC *tte;
+            size = sizeof(TRACE_F7_PC);
+            raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
+            tte = (void*)regs->mainstor + raddr;
+            tte->format = TRACE_F7_PC_FMT;
+            tte->pswkey = regs->psw.pkey | TRACE_F7_PC_FM2 | eamode;
+            STORE_HW(tte->resv, 0x0000);
+            STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw));
+            STORE_FW(tte->pcnum, pcnum);
+        }
+        else
+        if ((pcnum & PC_BIT44) && regs->psw.amode64)
+        {
+            /* In 64-bit mode, regardless of resulting mode, when
+               ASN-and-LX-reuse is enabled, 32-bit PC number is used,
+               and bits 0-31 of return address are all zeros */
+            TRACE_F6_PC *tte;
+            size = sizeof(TRACE_F6_PC);
+            raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
+            tte = (void*)regs->mainstor + raddr;
+            tte->format = TRACE_F6_PC_FMT;
+            tte->pswkey = regs->psw.pkey | TRACE_F6_PC_FM2 | eamode;
+            STORE_HW(tte->resv, 0x0000);
+            STORE_FW(tte->retna, regs->psw.IA_L | PROBSTATE(&regs->psw));
+            STORE_FW(tte->pcnum, pcnum);
+        }
+        else
+        if ((pcnum & PC_BIT44))
+        {
+            /* In 24-bit or 31-bit mode, regardless of resulting mode, when
+               ASN-and-LX-reuse is enabled and 32-bit PC number is used */
+            TRACE_F5_PC *tte;
+            size = sizeof(TRACE_F5_PC);
+            raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
+            tte = (void*)regs->mainstor + raddr;
+            tte->format = TRACE_F5_PC_FMT;
+            tte->pswkey = regs->psw.pkey | TRACE_F5_PC_FM2 | eamode;
+            STORE_HW(tte->resv, 0x0000);
+            STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw));
+            STORE_FW(tte->pcnum, pcnum);
+        }
+        else
+        if(regs->psw.amode64)
+        {
+            /* In 64-bit mode, regardless of resulting mode, when
+               ASN-and-LX-reuse is enabled and 20-bit PC number is used */
+            TRACE_F4_PC *tte;
+            size = sizeof(TRACE_F4_PC);
+            raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
+            tte = (void*)regs->mainstor + raddr;
+            tte->format = TRACE_F4_PC_FMT;
+            tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
+            STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
+            STORE_DW(tte->retna, regs->psw.IA_G | PROBSTATE(&regs->psw));
+        }
+        else
+        {
+            /* In 24-bit or 31-bit mode, regardless of resulting mode, when
+               ASN-and-LX-reuse is enabled and 20-bit PC number is used */
+            TRACE_F3_PC *tte;
+            size = sizeof(TRACE_F3_PC);
+            raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
+            tte = (void*)regs->mainstor + raddr;
+            tte->format = TRACE_F3_PC_FMT;
+            tte->pswkey_pcnum_hi = regs->psw.pkey | ((pcnum & 0xF0000) >> 16);
+            STORE_HW(tte->pcnum_lo, pcnum & 0x0FFFF);
+            STORE_FW(tte->retna, (regs->psw.amode << 31) | regs->psw.IA_L | PROBSTATE(&regs->psw));
+        }
+    } /* end ASN_AND_LX_REUSE_ENABLED */
+    else
     if(regs->psw.amode64)
     {
+        /* In 64-bit mode, regardless of resulting mode,
+           when ASN-and-LX-reuse is not enabled */
         TRACE_F2_PC *tte;
         size = sizeof(TRACE_F2_PC);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
@@ -523,6 +690,8 @@ int  size;
     else
 #endif /*defined(FEATURE_ESAME)*/
     {
+        /* In 24-bit or 31-bit mode, regardless of resulting mode,
+           when ASN-and-LX-reuse is not enabled */
         TRACE_F1_PC *tte;
         size = sizeof(TRACE_F1_PC);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
