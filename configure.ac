@@ -116,7 +116,13 @@ rm -f conftest*
 
 # Headers
 AC_CHECK_HEADERS(byteswap.h)
-AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
+case "$host_os" in
+        *cygwin*)
+                ;;
+        *)
+                AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
+                ;;
+esac
 
 if test x$build_fthreads != xtrue; then
   AC_CHECK_HEADER(pthread.h,
