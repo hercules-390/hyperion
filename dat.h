@@ -1456,7 +1456,7 @@ tran_excp_addr:
         if ((std & STD_STO) == (regs->CR(1) & STD_STO))
             regs->TEA |= TEA_ST_PRIMARY;
         else if ((std & STD_STO) == (regs->CR(7) & STD_STO))
-            regs->TEA |= TEA_ST_SECNDRY | TEA_SECADDR;
+            regs->TEA |= TEA_ST_SECNDRY;
         else if ((std & STD_STO) == (regs->CR(13) & STD_STO))
             regs->TEA |= TEA_ST_HOME;
         else
@@ -1466,7 +1466,7 @@ tran_excp_addr:
         if((stid == TEA_ST_SECNDRY)
           && (PRIMARY_SPACE_MODE(&regs->psw)
             || SECONDARY_SPACE_MODE(&regs->psw)))
-            regs->TEA |= stid | TEA_SECADDR;
+            regs->TEA |= TEA_ST_SECNDRY | TEA_SECADDR;
         else
             regs->TEA |= stid;
 #endif /*!defined(FEATURE_ESAME)*/

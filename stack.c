@@ -120,6 +120,7 @@ U32  tcba0;
 U32  tsao;
 RADR tsaa1,
      tsaa2;
+VADR lastbyte;
 U32  trap_ia;
 U32  trap_flags;
 QWORD trap_psw;
@@ -169,11 +170,18 @@ int  i;
     /* Fetch word 3 of the TCB */
     trap_ia = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
 
+    /* Calculate last byte stored */
+    lastbyte = tsao + 95 
+#if defined(FEATURE_ESAME)
+                         + ((tcba0 & TCB0_R) ? 64 : 0)
+#endif /*defined(FEATURE_ESAME)*/
+                                                       ;
+
     /* Use abs_stack_addr as it conforms to trap save area access */
     tsaa1 = tsaa2 = ARCH_DEP(abs_stack_addr) (tsao, regs, ACCTYPE_WRITE);
-    if((tsaa1 & PAGEFRAME_PAGEMASK) != ((tsaa1 + 255) & PAGEFRAME_PAGEMASK))
+    if((tsaa1 & PAGEFRAME_PAGEMASK) != (lastbyte & PAGEFRAME_PAGEMASK))
     {
-        tsao = (tsao + 255) & PAGEFRAME_PAGEMASK;
+        tsao = lastbyte & PAGEFRAME_PAGEMASK;
         tsaa2 = ARCH_DEP(abs_stack_addr) (tsao, regs, ACCTYPE_WRITE);
     }
 
@@ -390,13 +398,6 @@ VADR    fsha;                           /* Forward section hdr addr  */
 VADR    bsea = 0;                       /* Backward stack entry addr */
 RADR    absea = 0;                      /* Absolute address of bsea  */
 int     i;                              /* Array subscript           */
-
-    /* [5.12.3] Special operation exception if ASF is not enabled,
-       or if DAT is off, or if not primary-space mode or AR-mode */
-    if (!ASF_ENABLED(regs)
-        || REAL_MODE(&regs->psw)
-        || regs->psw.space == 1)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* [5.12.3.1] Locate space for a new linkage stack entry */
 

@@ -25,7 +25,7 @@
 #define OPTION_FAST_MOVECHAR    	/* Performance option	     */
 #define OPTION_FAST_MOVELONG    	/* Performance option	     */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
-#undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
+#define  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
 #undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
 

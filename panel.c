@@ -1335,7 +1335,8 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     {
         toddrag = 0;
         sscanf(cmd+7, "%d", &toddrag);
-        if (toddrag > 0 && toddrag <= 10000) sysblk.toddrag = toddrag;
+        if (toddrag > 0 && toddrag <= 10000)
+            sysblk.toddrag = toddrag;
         logmsg ("TOD clock drag factor = %d\n", sysblk.toddrag);
         return NULL;
     }

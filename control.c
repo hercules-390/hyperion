@@ -219,7 +219,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       #endif /*defined(FEATURE_ESAME)*/
         {
             regs->psw.IA = duct_reta & DUCT_IA31;
-            regs->psw.amode = (duct_reta & DUCT_AM31) ? AMASK31 : AMASK24;
+            regs->psw.amode = (duct_reta & DUCT_AM31) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         }
 
@@ -549,6 +549,13 @@ VADR    n = 0;                          /* Work area                 */
     if(regs->sie_state && (regs->siebk->ic[3] & SIE_IC3_BAKR))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
+
+    /* [5.12.3]/ Fig 10-2 Special operation exception if ASF is not enabled,
+       or if DAT is off, or if not primary-space mode or AR-mode */
+    if (!ASF_ENABLED(regs)
+        || REAL_MODE(&regs->psw)
+        || regs->psw.space == 1)
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Obtain the return address and addressing mode from
        the R1 register, or use updated PSW if R1 is zero */
@@ -2515,6 +2522,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     else
 #if defined(FEATURE_LINKAGE_STACK)
     { /* stacking PC */
+
+        /* ESA/390 POP Fig 10-17 8.B.11 */
+        if (!ASF_ENABLED(regs))
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
         /* Set the called-space identification */
         csi = (pasn == 0) ? 0 : pasn << 16 | (aste[5] & 0x0000FFFF);

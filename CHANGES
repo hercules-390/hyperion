@@ -1,3 +1,7 @@
+03 Jun 2001 Fix TRAP save area access - Paul Leisy
+03 Jun 2001 Fix priority of interruptions in stacking PC - Jan Jaeger
+03 Jun 2001 Fix priority of interruptions in BAKR - Paul Leisy
+03 Jun 2001 Fix typo in setting amode in BSA - Paul Leisy
 02 Jun 2001 Moved IEEE option from featall.h to makefile.w32 - Jan Jaeger
 02 Jun 2001 Correct tea on asx translation exception in PC - Paul Leisy
 02 Jun 2001 Fix update of GR5 in UPT - Paul Leisy
