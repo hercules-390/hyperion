@@ -674,8 +674,11 @@ U32     n1, n2;                         /* 32 Bit work               */
     /* Obtain 2nd operand address from r2 */
     n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP(regs);
 
+#if defined(MODEL_DEPENDENT_CS)
     /* some models always store, so validate as a store operand, if desired */
-//  ARCH_DEP(validate_operand) (n2, r2, 3, ACCTYPE_WRITE, regs);
+    ARCH_DEP(validate_operand) (n2, r2, 3, ACCTYPE_WRITE, regs);
+#endif /*defined(MODEL_DEPENDENT_CS)*/
+
     /* Load second operand from operand address  */
     n1 = ARCH_DEP(vfetch4) ( n2, r2, regs );
 
