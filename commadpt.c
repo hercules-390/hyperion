@@ -185,7 +185,7 @@ static void commadpt_clean_device(DEVBLK *dev)
         dev->commadpt=NULL;
         if(dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D %4.4X:clean : Control block freed\n"),
+                logmsg("HHCCA300D %4.4X:clean : Control block freed\n",
                         dev->devnum);
         }
     }
@@ -193,8 +193,7 @@ static void commadpt_clean_device(DEVBLK *dev)
     {
         if(dev->ccwtrace)
         {
-                logmsg(_("HHCCA300D %4.4X:clean : Control block not freed : not allocated\n"),
-                        dev->devnum);
+                logmsg("HHCCA300D %4.4X:clean : Control block not freed : not allocated\n",dev->devnum);
         }
     }
     return;
@@ -289,7 +288,7 @@ static int commadpt_connout(COMMADPT *ca)
         {
             strerror_r(errno,wbfr,256);
             intmp.s_addr=ca->rhost;
-            logmsg("HHCCA001I %4.4X:Connect out to %s:%d failed during initial status : %s\n",
+            logmsg(_("HHCCA001I %4.4X:Connect out to %s:%d failed during initial status : %s\n"),
                     ca->devnum,
                     inet_ntoa(intmp),
                     ca->rport,
@@ -487,7 +486,7 @@ static void commadpt_thread(void *vca)
 
     init_signaled=0;
     
-    logmsg("HHCCA002I %4.4X:Line Communication thread "TIDPAT" started\n",devnum,thread_id());
+    logmsg(_("HHCCA002I %4.4X:Line Communication thread "TIDPAT" started\n"),devnum,thread_id());
 
     /* Determine if we should listen */
     /* if this is a DIAL=OUT only line, no listen is necessary */
@@ -497,7 +496,7 @@ static void commadpt_thread(void *vca)
         ca->lfd=socket(AF_INET,SOCK_STREAM,0);
         if(ca->lfd<0)
         {
-            logmsg("HHCCA003E %4.4X:Cannot obtain socket for incoming calls : %s\n",devnum,strerror(errno));
+            logmsg(_("HHCCA003E %4.4X:Cannot obtain socket for incoming calls : %s\n"),devnum,strerror(errno));
             ca->have_cthread=0;
             release_lock(&ca->lock);
             return;
@@ -523,7 +522,7 @@ static void commadpt_thread(void *vca)
             {
                 if(errno==EADDRINUSE)
                 {
-                    logmsg("HHCCA004W %4.4X:Waiting 5 seconds for port %d to become available\n",devnum,ca->lport);
+                    logmsg(_("HHCCA004W %4.4X:Waiting 5 seconds for port %d to become available\n"),devnum,ca->lport);
                     /*
                      * Check for a shutdown condition on entry
                      */
@@ -574,7 +573,7 @@ static void commadpt_thread(void *vca)
                 }
                 else
                 {
-                    logmsg("HHCCA018E %4.4X:Bind failed : %s\n",devnum,strerror(errno));
+                    logmsg(_("HHCCA018E %4.4X:Bind failed : %s\n"),devnum,strerror(errno));
                     ca_shutdown=1;
                     break;
                 }
@@ -588,7 +587,7 @@ static void commadpt_thread(void *vca)
         if(!ca_shutdown)
         {
             listen(ca->lfd,10);
-            logmsg("HHCCA005I %4.4X:Listening on port %d for incoming TCP connections\n",
+            logmsg(_("HHCCA005I %4.4X:Listening on port %d for incoming TCP connections\n"),
                     devnum,
                     ca->lport);
             ca->listening=1;
@@ -624,7 +623,10 @@ static void commadpt_thread(void *vca)
                 maxfd=maxfd<ca->lfd?ca->lfd:maxfd;
         }
         seltv=NULL;
-        /* logmsg("%4.4X:cthread - Entry - DevExec = %s\n",devnum,commadpt_pendccw_text[ca->curpending]); */
+        if(ca->dev->ccwtrace)
+        {
+                logmsg("HHCCA300D %4.4X:cthread - Entry - DevExec = %s\n",devnum,commadpt_pendccw_text[ca->curpending]);
+        }
         writecont=0;
         switch(ca->curpending)
         {
@@ -852,7 +854,7 @@ static void commadpt_thread(void *vca)
 
         if(rc==-1)
         {
-            logmsg("HHCCA006T %4.4X:Select failed : %s\n",devnum,strerror(errno));
+            logmsg(_("HHCCA006T %4.4X:Select failed : %s\n"),devnum,strerror(errno));
             break;
         }
 
@@ -917,7 +919,7 @@ static void commadpt_thread(void *vca)
             {
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg("%4.4X:cthread - inbound socket data\n",devnum);
+                        logmsg("HHCCA300D %4.4X:cthread - inbound socket data\n",devnum);
                 }
                 commadpt_read(ca);
                 ca->curpending=COMMADPT_PEND_IDLE;
@@ -945,7 +947,7 @@ static void commadpt_thread(void *vca)
                     }
                     else
                     {
-                        logmsg("HHCCA007W %4.4X:Outgoing call failed during %s command : %s\n",devnum,commadpt_pendccw_text[ca->curpending],strerror(soerr));
+                        logmsg(_("HHCCA007W %4.4X:Outgoing call failed during %s command : %s\n"),devnum,commadpt_pendccw_text[ca->curpending],strerror(soerr));
                         if(ca->curpending==COMMADPT_PEND_ENABLE)
                         {
                             /* Ensure top of the loop doesn't restart a new call */
@@ -975,7 +977,7 @@ static void commadpt_thread(void *vca)
         {
             if(FD_ISSET(ca->lfd,&rfd))
             {
-                logmsg("HHCCA008I %4.4X:cthread - Incoming Call\n",devnum);
+                logmsg(_("HHCCA008I %4.4X:cthread - Incoming Call\n"),devnum);
                 tempfd=accept(ca->lfd,NULL,0);
                 if(tempfd<0)
                 {
@@ -1036,7 +1038,7 @@ static void commadpt_thread(void *vca)
     /*        lock is released, because back          */
     /*        notification was made while holding     */
     /*        the lock                                */
-    logmsg("HHCCA009I %4.4X:BSC utility thread terminated\n",ca->devnum);
+    logmsg(_("HHCCA009I %4.4X:BSC utility thread terminated\n"),ca->devnum);
     release_lock(&ca->lock);
     return;
 }
@@ -1109,7 +1111,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         rc=commadpt_alloc_device(dev);
         if(rc<0)
         {
-                logmsg("HHCCL010I %4.4X:initialisation not performed\n",
+                logmsg(_("HHCCL010I %4.4X:initialisation not performed\n"),
                         dev->devnum);
             return(-1);
         }
@@ -1134,13 +1136,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
             pc=parser(ptab,argv[i],&res);
             if(pc<0)
             {
-                logmsg("HHCCA011E %4.4X:Error parsing %s\n",dev->devnum,argv[i]);
+                logmsg(_("HHCCA011E %4.4X:Error parsing %s\n"),dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
             if(pc==0)
             {
-                logmsg("HHCCA012E %4.4X:Unrecognized parameter %s\n",dev->devnum,argv[i]);
+                logmsg(_("HHCCA012E %4.4X:Unrecognized parameter %s\n"),dev->devnum,argv[i]);
                 errcnt++;
                 continue;
             }
@@ -1151,7 +1153,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     if(rc<0)
                     {
                         errcnt++;
-                        logmsg("HHCCA013E %4.4X:Incorrect local port specification %s\n",dev->devnum,res.text);
+                        logmsg(_("HHCCA013E %4.4X:Incorrect local port specification %s\n"),dev->devnum,res.text);
                         break;
                     }
                     dev->commadpt->lport=rc;
@@ -1165,7 +1167,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     rc=commadpt_getaddr(&dev->commadpt->lhost,res.text);
                     if(rc!=0)
                     {
-                        logmsg("HHCCA013E %4.4X:Incorrect local host specification %s\n",dev->devnum,res.text);
+                        logmsg(_("HHCCA013E %4.4X:Incorrect local host specification %s\n"),dev->devnum,res.text);
                         errcnt++;
                     }
                     break;
@@ -1174,7 +1176,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     if(rc<0)
                     {
                         errcnt++;
-                        logmsg("HHCCA013E %4.4X:Incorrect remote port specification %s\n",dev->devnum,res.text);
+                        logmsg(_("HHCCA013E %4.4X:Incorrect remote port specification %s\n"),dev->devnum,res.text);
                         break;
                     }
                     dev->commadpt->rport=rc;
@@ -1188,7 +1190,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     rc=commadpt_getaddr(&dev->commadpt->rhost,res.text);
                     if(rc!=0)
                     {
-                        logmsg("HHCCA013E %4.4X:Incorrect remote host specification %s\n",dev->devnum,res.text);
+                        logmsg(_("HHCCA013E %4.4X:Incorrect remote host specification %s\n"),dev->devnum,res.text);
                         errcnt++;
                     }
                     break;
@@ -1218,7 +1220,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                         dev->commadpt->dialout=1;
                         break;
                     }
-                    logmsg("HHCCA014E %4.4X:Incorrect switched/dial specification %s; defaulting to DIAL=OUT\n",dev->devnum,res.text);
+                    logmsg(_("HHCCA014E %4.4X:Incorrect switched/dial specification %s; defaulting to DIAL=OUT\n"),dev->devnum,res.text);
                     dev->commadpt->dialin=0;
                     dev->commadpt->dialout=0;
                     break;
@@ -1267,17 +1269,17 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
             case 0: /* DIAL = NO */
                 if(dev->commadpt->lport==0)
                 {
-                    logmsg("HHCCA015E %4.4X:Missing parameter : DIAL=%s and LPORT not specified\n",dev->devnum,dialt);
+                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and LPORT not specified\n"),dev->devnum,dialt);
                     errcnt++;
                 }
                 if(dev->commadpt->rport==0)
                 {
-                    logmsg("HHCCA015E %4.4X:Missing parameter : DIAL=%s and RPORT not specified\n",dev->devnum,dialt);
+                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and RPORT not specified\n"),dev->devnum,dialt);
                     errcnt++;
                 }
                 if(dev->commadpt->rhost==INADDR_NONE)
                 {
-                    logmsg("HHCCA015E %4.4X:Missing parameter : DIAL=%s and RHOST not specified\n",dev->devnum,dialt);
+                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and RHOST not specified\n"),dev->devnum,dialt);
                     errcnt++;
                 }
                 break;
@@ -1285,53 +1287,53 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
             case 3: /* DIAL = INOUT */
                 if(dev->commadpt->lport==0)
                 {
-                    logmsg("HHCCA015E %4.4X:Missing parameter : DIAL=%s and LPORT not specified\n",dev->devnum,dialt);
+                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and LPORT not specified\n"),dev->devnum,dialt);
                     errcnt++;
                 }
                 if(dev->commadpt->rport!=0)
                 {
-                    logmsg("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RPORT=%d specified\n",dev->devnum,dialt,dev->commadpt->rport);
-                    logmsg("HHCCA017I %4.4X:RPORT parameter ignored\n",dev->devnum);
+                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RPORT=%d specified\n"),dev->devnum,dialt,dev->commadpt->rport);
+                    logmsg(_("HHCCA017I %4.4X:RPORT parameter ignored\n"),dev->devnum);
                 }
                 if(dev->commadpt->rhost!=INADDR_NONE)
                 {
                     in_temp.s_addr=dev->commadpt->rhost;
-                    logmsg("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RHOST=%s specified\n",dev->devnum,dialt,inet_ntoa(in_temp));
-                    logmsg("HHCCA017I %4.4X:RHOST parameter ignored\n",dev->devnum);
+                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RHOST=%s specified\n"),dev->devnum,dialt,inet_ntoa(in_temp));
+                    logmsg(_("HHCCA017I %4.4X:RHOST parameter ignored\n"),dev->devnum);
                     dev->commadpt->rhost=INADDR_NONE;
                 }
                 break;
             case 2: /* DIAL = OUT */
                 if(dev->commadpt->lport!=0)
                 {
-                    logmsg("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and LPORT=%d specified\n",dev->devnum,dialt,dev->commadpt->lport);
-                    logmsg("HHCCA017I %4.4X:LPORT parameter ignored\n",dev->devnum);
+                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and LPORT=%d specified\n"),dev->devnum,dialt,dev->commadpt->lport);
+                    logmsg(_("HHCCA017I %4.4X:LPORT parameter ignored\n"),dev->devnum);
                     dev->commadpt->lport=0;
                 }
                 if(dev->commadpt->rport!=0)
                 {
-                    logmsg("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RPORT=%d specified\n",dev->devnum,dialt,dev->commadpt->rport);
-                    logmsg("HHCCA017I %4.4X:RPORT parameter ignored\n",dev->devnum);
+                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RPORT=%d specified\n"),dev->devnum,dialt,dev->commadpt->rport);
+                    logmsg(_("HHCCA017I %4.4X:RPORT parameter ignored\n"),dev->devnum);
                     dev->commadpt->rport=0;
                 }
                 if(dev->commadpt->lhost!=INADDR_ANY)    /* Actually it's more like INADDR_NONE */
                 {
-                    logmsg("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and LHOST=%d specified\n",dev->devnum,dialt,dev->commadpt->lhost);
-                    logmsg("HHCCA017I %4.4X:LHOST parameter ignored\n",dev->devnum);
+                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and LHOST=%d specified\n"),dev->devnum,dialt,dev->commadpt->lhost);
+                    logmsg(_("HHCCA017I %4.4X:LHOST parameter ignored\n"),dev->devnum);
                     dev->commadpt->lhost=INADDR_ANY;
                 }
                 if(dev->commadpt->rhost!=INADDR_NONE)
                 {
                     in_temp.s_addr=dev->commadpt->rhost;
-                    logmsg("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RHOST=%s specified\n",dev->devnum,dialt,inet_ntoa(in_temp));
-                    logmsg("HHCCA017I %4.4X:RHOST parameter ignored\n",dev->devnum);
+                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RHOST=%s specified\n"),dev->devnum,dialt,inet_ntoa(in_temp));
+                    logmsg(_("HHCCA017I %4.4X:RHOST parameter ignored\n"),dev->devnum);
                     dev->commadpt->rhost=INADDR_NONE;
                 }
                 break;
         }
         if(errcnt>0)
         {
-            logmsg("HHCCA018I %4.4X:Initialisation failed due to previous errors\n",dev->devnum);
+            logmsg(_("HHCCA018I %4.4X:Initialisation failed due to previous errors\n"),dev->devnum);
             return -1;
         }
         in_temp.s_addr=dev->commadpt->lhost;
@@ -1380,7 +1382,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         commadpt_wait(dev);
         if(dev->commadpt->curpending!=COMMADPT_PEND_IDLE)
         {
-            logmsg("HHCCA019E %4.4x : BSC comm thread did not initialise\n",dev->devnum);
+            logmsg(_("HHCCA019E %4.4x : BSC comm thread did not initialise\n"),dev->devnum);
             /* Release the CA lock */
             release_lock(&dev->commadpt->lock);
             return -1;
