@@ -75,6 +75,7 @@ else
 HERCULES_EXP=
 HERCULES_A=
 hercules_LDFLAGS = -rdynamic
+hercules_LDADD = $(LDADD)
 endif
 
 hercules_SOURCES = hostinfo.c w32ctca.c \

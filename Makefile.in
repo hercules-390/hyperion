@@ -107,7 +107,7 @@ install_sh = @install_sh@
 AUTOMAKE_OPTIONS = foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  po util html man intl m4
+SUBDIRS = po util html man intl m4
 
 @BUILD_HERCIFC_TRUE@HERCIFC = hercifc
 @BUILD_HERCIFC_FALSE@HERCIFC = 
@@ -156,6 +156,7 @@ EXTRA_hercules_SOURCES = $(fthreads_sources) $(fishhang_sources) $(fishio_source
 @USE_DLLTOOL_TRUE@HERCULES_A = hercules.a
 @USE_DLLTOOL_FALSE@HERCULES_A = 
 @USE_DLLTOOL_TRUE@hercules_LDADD = $(LDADD) $(HERCULES_EXP)
+@USE_DLLTOOL_FALSE@hercules_LDADD = $(LDADD)
 @USE_DLLTOOL_TRUE@dyninst_LDADD = $(LDADD) $(HERCULES_A)
 @USE_DLLTOOL_TRUE@dyngui_LDADD = $(LDADD) $(HERCULES_A) dyngui.res
 @USE_DLLTOOL_TRUE@hercules_LDFLAGS = --export-dynamic
