@@ -670,10 +670,34 @@ DEF_INST(cancel_subchannel)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+DEVBLK *dev;                            /* -> device block           */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
-    logmsg("xsch: INCOMPLETE\n");
+    PRIV_CHECK(regs);
+
+    SIE_INTERCEPT(regs);
+
+    /* Program check if reg 1 bits 0-15 not X'0001' */
+    if ( regs->GR_LHH(1) != 0x0001 )
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+
+    /* Locate the device block for this subchannel */
+    dev = find_device_by_subchan (regs->GR_LHL(1));
+
+    /* Condition code 3 if subchannel does not exist,
+       is not valid, or is not enabled */
+    if (dev == NULL
+        || (dev->pmcw.flag5 & PMCW5_V) == 0
+        || (dev->pmcw.flag5 & PMCW5_E) == 0)
+    {
+        regs->psw.cc = 3;
+        return;
+    }
+
+    /* Perform halt subchannel and set condition code */
+    regs->psw.cc = cancel_subchan (regs, dev);
+
 }
 #endif /*defined(FEATURE_CANCEL_IO_FACILITY)*/
 #endif /*defined(FEATURE_CHANNEL_SUBSYSTEM)*/

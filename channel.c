@@ -362,6 +362,41 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
 
 // #ifdef FEATURE_CHANNEL_SUBSYSTEM
 /*-------------------------------------------------------------------*/
+/* CANCEL SUBCHANNEL                                                 */
+/*-------------------------------------------------------------------*/
+/* Input                                                             */
+/*      regs    -> CPU register context                              */
+/*      dev     -> Device control block                              */
+/* Return value                                                      */
+/*      The return value is the condition code for the XSCH          */
+/*      0=start function cancelled (not yet implemented)             */
+/*      1=status pending (no action taken)                           */
+/*      2=function not applicable                                    */
+/*-------------------------------------------------------------------*/
+int cancel_subchan (REGS *regs, DEVBLK *dev)
+{
+int     cc;                             /* Condition code            */
+
+    /* Obtain the device lock */
+    obtain_lock (&dev->lock);
+
+    /* Check pending status */
+    if ((dev->pciscsw.flag3 & SCSW3_SC_PEND)
+      || (dev->scsw.flag3 & SCSW3_SC_PEND))
+        cc = 1;
+     else
+        /* cc = cancel_start_function() */
+        cc = 2;
+    
+    /* Release the device lock */
+    release_lock (&dev->lock);
+
+    /* Return the condition code */
+    return cc;
+
+} /* end function test_subchan */
+
+/*-------------------------------------------------------------------*/
 /* TEST SUBCHANNEL                                                   */
 /*-------------------------------------------------------------------*/
 /* Input                                                             */
