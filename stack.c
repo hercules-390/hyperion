@@ -183,6 +183,10 @@ int  i;
         tsao = lastbyte & PAGEFRAME_PAGEMASK;
         tsaa2 = ARCH_DEP(abs_trap_addr) (tsao, regs, ACCTYPE_WRITE);
     }
+    STORAGE_KEY(tsaa1) |= STORKEY_CHANGE;
+    if (tsaa1 != tsaa2)
+        STORAGE_KEY(tsaa2) |= STORKEY_CHANGE;
+
 
 #if defined(FEATURE_ESAME)
     /* Special operation exception if P == 0 and EA == 1 */
@@ -351,7 +355,7 @@ U16     xcode;                          /* Exception code            */
     {
         protect = 0; /* clear ALE, PTE protect flag */
         /* Check Key protection for store */
-        if (acctype == ACCTYPE_WRITE
+        if (acctype == ACCTYPE_WRITE 
             && ((STORAGE_KEY(aaddr) & STORKEY_KEY) != regs->psw.pkey))
             goto trap_prot;
 
@@ -361,10 +365,8 @@ U16     xcode;                          /* Exception code            */
             && ((STORAGE_KEY(aaddr) & STORKEY_KEY) != regs->psw.pkey))
             goto trap_prot;
     }
-    /* Set the reference and change bits in the storage key */
+    /* Set the reference bits in the storage key */
     STORAGE_KEY(aaddr) |= STORKEY_REF;
-    if (acctype == ACCTYPE_WRITE)
-        STORAGE_KEY(aaddr) |= STORKEY_CHANGE;
 
     /* Return absolute address */
     return aaddr;
