@@ -570,17 +570,21 @@ cckd_read_trk_retry:
 
         /* If synchronous I/O and we need to wait for a read or
            write to complete then return with syncio_retry bit on */
-        if (dev->syncio_active
-         && cckdblk.cache[fnd].flags & (CCKD_CACHE_READING | CCKD_CACHE_WRITING))
+        if (dev->syncio_active)
         {
-            cckdtrc ("cckddasd: %d rdtrk[%d] %d syncio %s\n",
-                      ra, fnd, trk,
-                      cckdblk.cache[fnd].flags & CCKD_CACHE_READING ?
-                      "reading" : "writing");
-            dev->syncio_retry = 1;
-            release_lock (&cckdblk.cachelock);
-            return NULL;
-        }
+            if(cckdblk.cache[fnd].flags & (CCKD_CACHE_READING | CCKD_CACHE_WRITING))
+            {
+                cckdtrc ("cckddasd: %d rdtrk[%d] %d syncio %s\n",
+                         ra, fnd, trk,
+                         cckdblk.cache[fnd].flags & CCKD_CACHE_READING ?
+                         "reading" : "writing");
+                cckdblk.stats_synciomisses++;
+                dev->syncio_retry = 1;
+                release_lock (&cckdblk.cachelock);
+                return NULL;
+            }
+            else cckdblk.stats_syncios++;
+        }    
 
         /* Inactivate the old entry */
         if (cckd->active && cckd->active != &cckdblk.cache[fnd])
@@ -648,6 +652,7 @@ cckd_read_trk_retry:
     {
         cckdtrc ("cckddasd: %d rdtrk[%d] %d syncio cache miss\n",
                    ra, lru, trk);
+        cckdblk.stats_synciomisses++;
         dev->syncio_retry = 1;
         release_lock (&cckdblk.cachelock);
         return NULL;
@@ -726,7 +731,7 @@ cckd_read_trk_retry:
               ra, lru, trk, len2);
 
     /* uncompress the track image */
-    switch (buf2[0]) {
+    switch (buf2[0] & ~CCKD_COMPRESS_STRESSED) {
 
     case CCKD_COMPRESS_NONE:
         memcpy (buf, &buf2, len2);
@@ -1036,6 +1041,7 @@ BYTE            compress;               /* Compression algorithm     */
 int             parm;                   /* Compression parameter     */
 TID             tid;                    /* Writer thead id           */
 int             rc;                     /* Return code               */
+BYTE            stressed;               /* Trk written under stress  */
 BYTE           *comp[] = {"none", "zlib", "bzip2"};
 
     cckd = dev->cckd_ext;
@@ -1116,14 +1122,17 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
         parm = cckd->cdevhdr[cckd->sfn].compress_parm;
 
         /* Stress adjustments */
-        if (cckdblk.writepending >= CCKD_STRESS_LEVEL1)
+        if ((cckdblk.cache[o].flags & CCKD_CACHE_WRITEWAIT)
+         || cckdblk.cachewaiting
+         || cckdblk.writepending > cckdblk.cachenbr >> 2)
         {
+            stressed = CCKD_COMPRESS_STRESSED;
             cckdblk.stats_stresswrites++;
             if (len < CCKD_STRESS_MINLEN)
                 compress = CCKD_COMPRESS_NONE;
             else
                 compress = CCKD_STRESS_COMP;
-            if (cckdblk.writepending < CCKD_STRESS_LEVEL2)
+            if (cckdblk.writepending < cckdblk.cachenbr >> 1)
                 parm = CCKD_STRESS_PARM1;
             else
                 parm = CCKD_STRESS_PARM2;
@@ -1131,6 +1140,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
              && cckd->cdevhdr[cckd->sfn].compress_parm < parm)
                 parm = cckd->cdevhdr[cckd->sfn].compress_parm;
         }
+        else stressed = 0;
 
         cckdtrc ("cckddasd: %d wrtrk[%d] %d comp %s parm %d\n",
                   writer, o, cckdblk.cache[o].trk, comp[compress], parm);
@@ -1139,7 +1149,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
 
         case CCKD_COMPRESS_ZLIB:
             memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
-            buf2[0] = CCKD_COMPRESS_ZLIB;
+            buf2[0] = CCKD_COMPRESS_ZLIB | stressed;
             len2 = 65535 - CKDDASD_TRKHDR_SIZE;
             rc = compress2 (&buf2[CKDDASD_TRKHDR_SIZE], &len2,
                             &buf[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
@@ -1162,7 +1172,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
 #ifdef CCKD_BZIP2
         case CCKD_COMPRESS_BZIP2:
             memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
-            buf2[0] = CCKD_COMPRESS_BZIP2;
+            buf2[0] = CCKD_COMPRESS_BZIP2 | stressed;
             len2 = 65535 - CKDDASD_TRKHDR_SIZE;
             rc = BZ2_bzBuffToBuffCompress (
                             &buf2[CKDDASD_TRKHDR_SIZE], (unsigned int *)&len2,
@@ -2003,6 +2013,7 @@ cckd_read_l2_retry:
         cckdtrc ("cckddasd: l2[%d,%d] cache[%d] hit\n", sfx, l1x, fnd);
         cckdblk.l2cache[fnd].age = ++cckdblk.cacheage;
         cckdblk.l2cache[fnd].flags = CCKD_CACHE_ACTIVE;
+        cckdblk.stats_l2cachehits++;
         release_lock (&cckdblk.l2cachelock);
         cckd->sfx = sfx;
         cckd->l1x = l1x;
@@ -2048,6 +2059,7 @@ cckd_read_l2_retry:
     cckdblk.l2cache[lru].l1x = l1x;
     cckdblk.l2cache[lru].age = ++cckdblk.cacheage;
     cckdblk.l2cache[lru].flags = CCKD_CACHE_ACTIVE;
+    cckdblk.stats_l2cachemisses++;
     release_lock (&cckdblk.l2cachelock);
 
     /* check for null table */
@@ -2082,6 +2094,7 @@ cckd_read_l2_retry:
                  sfx, lru, l1x, (long long)cckd->l1[sfx][l1x]);
         cckd->l2reads[sfx]++;
         cckd->totl2reads++;
+        cckdblk.stats_l2reads++;
     }
 
     cckd->sfx = sfx;
@@ -2314,6 +2327,8 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
         }
         cckd->reads[sfx]++;
         cckd->totreads++;
+        cckdblk.stats_reads++;
+        cckdblk.stats_readbytes += rc;
     }
     else rc = cckd_null_trk (dev, buf, trk, l2.len);
 
@@ -2355,6 +2370,9 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
     sfx = cckd->sfn;
     l1x = trk >> 8;
     l2x = trk & 0xff;
+
+    cckdtrc ("cckddasd: file[%d] trk %d write trkimg len %d\n",
+             sfx, trk, len);
 
     /* Validate the new track image */
     rc = cckd_cchh (dev, buf, trk);
@@ -2403,6 +2421,8 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
                  sfx, trk, (long long)l2.pos, len);
         cckd->writes[sfx]++;
         cckd->totwrites++;
+        cckdblk.stats_writes++;
+        cckdblk.stats_writebytes += rc;
     }
 
     /* update the level 2 entry */
@@ -2412,7 +2432,7 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
     /* release the previous space */
     cckd_rel_space (dev, oldl2.pos, oldl2.len);
 
-    cckdtrc ("cckddasd: file[%d] trk %d written offset 0x%llx len %d\n",
+    cckdtrc ("cckddasd: file[%d] trk %d write complete offset 0x%llx len %d\n",
               sfx, trk, (long long)l2.pos, l2.len);
 
     return 0;
@@ -2553,9 +2573,11 @@ int             t;                      /* Calculated track          */
     head = (buf[3] << 8) + buf[4];
     t = cyl * dev->ckdheads + head;
 
-    if (buf[0] <= CCKD_COMPRESS_MAX && cyl < dev->ckdcyls &&
-        head < dev->ckdheads && (trk == -1 || t == trk))
-            return t;
+    if ((buf[0] & ~CCKD_COMPRESS_STRESSED) <= CCKD_COMPRESS_MAX
+     && cyl < dev->ckdcyls
+     && head < dev->ckdheads
+     && (trk == -1 || t == trk))
+        return t;
 
     devmsg ("%4.4X:cckddasd: invalid trk hdr trk %d "
             "buf %p %2.2x%2.2x%2.2x%2.2x%2.2x\n",
@@ -3303,8 +3325,9 @@ int             gctab[5]= {             /* default gcol parameters   */
 
     while (gcol <= cckdblk.gcolmax)
     {
-        /* Schedule any updated tracks to be written */
         release_lock (&cckdblk.gclock);
+
+        /* Schedule any updated tracks to be written */
         obtain_lock (&cckdblk.cachelock);
         cckd_flush_cache (NULL);
 
@@ -3315,8 +3338,8 @@ int             gctab[5]= {             /* default gcol parameters   */
             wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
             cckdblk.writewaiting--;
         }
-
         release_lock (&cckdblk.cachelock);
+
         obtain_lock (&cckdblk.gclock);
 
         /* Perform collection on each device */
@@ -3342,6 +3365,7 @@ int             gctab[5]= {             /* default gcol parameters   */
             /* Adjust the state based on the number of free spaces */
             if (cckd->cdevhdr[cckd->sfn].free_number >  800 && gc > 0) gc--;
             if (cckd->cdevhdr[cckd->sfn].free_number > 1800 && gc > 0) gc--;
+            if (cckd->cdevhdr[cckd->sfn].free_number > 3000)           gc = 0;
 
             if (gc) hi = FALSE;
             else hi = TRUE;
@@ -3355,13 +3379,13 @@ int             gctab[5]= {             /* default gcol parameters   */
             /* call the garbage collector */
             rc = cckd_gc_percolate (dev, (int)size , hi);
 
-            /* Sync or harden the file */
-            obtain_lock (&cckd->filelock);
-//          if (cckd->cdevhdr[cckd->sfn].free_number)
+            /* Sync the file */
+            if (cckdblk.gcolwait >= 5)
+            {
+                obtain_lock (&cckd->filelock);
                 rc = fdatasync (cckd->fd[cckd->sfn]);
-//          else
-//              rc = cckd_harden (dev);
-            release_lock (&cckd->filelock);
+                release_lock (&cckd->filelock);
+            }
 
         } /* for each cckd device */
 
@@ -3536,8 +3560,7 @@ BYTE            buf[65536];             /* Buffer                    */
     sfx = cckd->sfn;
     cckdtrc ("cckddasd: gcperc moved %d 1st 0x%x nbr %d\n",
              moved, cckd->cdevhdr[sfx].free, cckd->cdevhdr[sfx].free_number);
-
-    return moved;
+   return moved;
 
 cckd_gc_perc_error:
 
@@ -3591,7 +3614,22 @@ void cckd_command_opts()
 /*-------------------------------------------------------------------*/
 void cckd_command_stats()
 {
-    cckdmsg("garbage collector\tmoves .....%10lld\tKbytes ....%10lld\n",
+    cckdmsg("reads....%10lld Kbytes...%10lld writes...%10lld Kbytes...%10lld\n"
+            "readaheads%9lld misses...%10lld syncios..%10lld misses...%10lld\n"
+            "switches.%10lld l2 reads.%10lld              stress writes...%10lld\n"
+            "cachehits%10lld misses...%10lld l2 hits..%10lld misses...%10lld\n"
+            "waits               write....%10lld read.....%10lld cache....%10lld\n"
+            "garbage collector   moves....%10lld Kbytes...%10lld\n",
+            cckdblk.stats_reads, cckdblk.stats_readbytes >> 10,
+            cckdblk.stats_writes, cckdblk.stats_writebytes >> 10,
+            cckdblk.stats_readaheads, cckdblk.stats_readaheadmisses,
+            cckdblk.stats_syncios, cckdblk.stats_synciomisses,
+            cckdblk.stats_switches, cckdblk.stats_l2reads,
+            cckdblk.stats_stresswrites,
+            cckdblk.stats_cachehits, cckdblk.stats_cachemisses,
+            cckdblk.stats_l2cachehits, cckdblk.stats_l2cachemisses,
+            cckdblk.stats_writewaits, cckdblk.stats_readwaits,
+            cckdblk.stats_cachewaits,
             cckdblk.stats_gcolmoves, cckdblk.stats_gcolbytes >> 10);
 }
 
@@ -3599,17 +3637,17 @@ void cckd_command_stats()
 /*-------------------------------------------------------------------*/
 /* cckd command processor                                            */
 /*-------------------------------------------------------------------*/
-void cckd_command(BYTE *op)
+int cckd_command(BYTE *op, int cmd)
 {
 BYTE *kw, *p, c = '\0';
-int   val, i;
+int   val, i, opts = 0;
 
     /* Display help for null operand */
     if (op == NULL)
     {
-        if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)) == 0)
+        if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)) == 0 && cmd)
             cckd_command_help();
-        return;
+        return 0;
     }
 
     /* Initialize the global cckd block if necessary */
@@ -3633,16 +3671,22 @@ int   val, i;
 
         /* Parse the keyword */
         if (strcasecmp (kw, "stats") == 0)
+        {
+            if (!cmd) return 0;
             cckd_command_stats ();
+        }
         else if (strcasecmp (kw, "opts") == 0)
+        {
+            if (!cmd) return 0;
             cckd_command_opts();
+        }
         else if (strcasecmp (kw, "cache") == 0)
         {
             val = val << 4;
             if (val < CCKD_MIN_CACHE || val > CCKD_MAX_CACHE || c != '\0')
             {
                 cckdmsg ("Invalid value for cache= (%d)\n", val);
-                op = NULL;
+                return -1;
             }
             else
             {
@@ -3664,7 +3708,7 @@ int   val, i;
 
                 cckdblk.cachenbr = val;
                 release_lock (&cckdblk.cachelock);
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "l2cache") == 0)
@@ -3673,7 +3717,7 @@ int   val, i;
             if (val < CCKD_MIN_L2CACHE || val > CCKD_MAX_L2CACHE || c != '\0')
             {
                 cckdmsg ("Invalid value for l2cache=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
@@ -3695,7 +3739,7 @@ int   val, i;
 
                 cckdblk.l2cachenbr = val;
                 release_lock (&cckdblk.l2cachelock);
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "ra") == 0)
@@ -3703,12 +3747,12 @@ int   val, i;
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA || c != '\0')
             {
                 cckdmsg ("Invalid value for ra=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
                 cckdblk.ramax = val;
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "raq") == 0)
@@ -3716,12 +3760,12 @@ int   val, i;
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
                 cckdmsg ("Invalid value for raq=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
                 cckdblk.ranbr = val;
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "rat") == 0)
@@ -3729,12 +3773,12 @@ int   val, i;
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
                 cckdmsg ("Invalid value for rat=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
                 cckdblk.readaheads = val;
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "wr") == 0)
@@ -3742,12 +3786,12 @@ int   val, i;
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER || c != '\0')
             {
                 cckdmsg ("Invalid value for wr=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
                 cckdblk.writermax = val;
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "gcint") == 0)
@@ -3755,12 +3799,12 @@ int   val, i;
             if (val < 1 || val > 60 || c != '\0')
             {
                 cckdmsg ("Invalid value for gcint=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
                 cckdblk.gcolwait = val;
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "gcparm") == 0)
@@ -3768,12 +3812,12 @@ int   val, i;
             if (val < -4 || val > 4 || c != '\0')
             {
                 cckdmsg ("Invalid value for gcparm=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
                 cckdblk.gcolparm = val;
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else if (strcasecmp (kw, "trace") == 0)
@@ -3781,7 +3825,7 @@ int   val, i;
             if (val < 0 || val > CCKD_MAX_TRACE || c != '\0')
             {
                 cckdmsg ("Invalid value for trace=\n");
-                op = NULL;
+                return -1;
             }
             else
             {
@@ -3806,15 +3850,19 @@ int   val, i;
                         cckdmsg ("calloc() failed for trace table: %s\n",
                                  strerror(errno));
                 }
-                cckd_command_opts();
+                opts = 1;
             }
         }
         else
         {
+            if (!cmd) return -1;
             cckd_command_help ();
             op = NULL;
         }
     }
+
+    if (cmd && opts) cckd_command_opts();
+    return 0;
 }
 
 

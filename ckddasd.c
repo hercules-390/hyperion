@@ -239,7 +239,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             strcasecmp ("fulltrkio",   argv[i]) == 0 ||
             strcasecmp ("ftio",        argv[i]) == 0)
         {
-            dev->ckdnolazywr = 1;
+            dev->ckdnolazywr = 0;
             continue;
         }
         if (strcasecmp ("nofulltrackio", argv[i]) == 0 ||
@@ -289,7 +289,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         if (strcasecmp ("nosyncio", argv[i]) == 0 ||
             strcasecmp ("nosyio",   argv[i]) == 0)
         {
-            dev->syncio = 1;
+            dev->syncio = 0;
             continue;
         }
         if (strcasecmp ("syncio", argv[i]) == 0 ||

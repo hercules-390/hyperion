@@ -1305,9 +1305,8 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #define CCKD_COMPRESS_BZIP2    2
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_BZIP2
 #endif
+#define CCKD_COMPRESS_STRESSED 0x80
 
-#define CCKD_STRESS_LEVEL1     8
-#define CCKD_STRESS_LEVEL2     16
 #define CCKD_STRESS_MINLEN     4096
 #define CCKD_STRESS_COMP       CCKD_COMPRESS_ZLIB
 #define CCKD_STRESS_PARM1      4
@@ -1443,22 +1442,24 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         COND             termcond;      /* Termination condition     */
         int              l2cachenbr;    /* Size of level 2 cache     */
         int              cachenbr;      /* Size of cache             */
+        U64              stats_switches;       /* Switches           */
+        U64              stats_cachehits;      /* Cache hits         */
+        U64              stats_cachemisses;    /* Cache misses       */
         U64              stats_readaheads;     /* Readaheads         */
         U64              stats_readaheadmisses;/* Readahead misses   */
-        U64              stats_switches;       /* Switches           */
+        U64              stats_syncios;        /* Synchronous i/os   */
+        U64              stats_synciomisses;   /* Missed syncios     */
         U64              stats_readwaits;      /* Waits for read     */
         U64              stats_writewaits;     /* Waits for write    */
         U64              stats_cachewaits;     /* Waits for cache    */
+        U64              stats_stresswrites;   /* Writes under stress*/
+        U64              stats_l2cachehits;    /* L2 cache hits      */
+        U64              stats_l2cachemisses;  /* L2 cache misses    */
+        U64              stats_l2reads;        /* L2 reads           */
         U64              stats_reads;          /* Number reads       */
         U64              stats_readbytes;      /* Bytes read         */
         U64              stats_writes;         /* Number writes      */
         U64              stats_writebytes;     /* Bytes written      */
-        U64              stats_stresswrites;   /* Writes under stress*/
-        U64              stats_cachehits;      /* Cache hits         */
-        U64              stats_cachemisses;    /* Cache misses       */
-        U64              stats_l2cachehits;    /* L2 cache hits      */
-        U64              stats_l2cachemisses;  /* L2 cache misses    */
-        U64              stats_l2reads;        /* L2 reads           */
         U64              stats_gcolmoves;      /* Spaces moved       */
         U64              stats_gcolbytes;      /* Bytes moved        */
         char            *itrace;        /* Internal trace table      */
@@ -1630,7 +1631,7 @@ void    cckd_sf_remove (DEVBLK *, int);
 void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
 void    cckd_sf_comp (DEVBLK *);
-void    cckd_command(BYTE *);
+int     cckd_command(BYTE *, int);
 void    cckd_print_itrace ();
 
 /* Functions in module cckdutil.c */

@@ -1071,6 +1071,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             "define olddevn newdevn = rename device\n"
             "devtmax[=n] = report or set maximum device threads\n"
             "              (-1=per i/o, 0=unlimited, 1-n=limit)\n"
+            "cckd = display/set cckd options. Enter `cckd help' for help\n"
             SYSCONS_CMD
             "sh xxx = shell command\n"
             "f-addr=mark frame unusable, f+addr=mark frame usable\n"
@@ -2720,7 +2721,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     if (memcmp(cmd,"cckd", 4) == 0)
     {
         devascii = strtok(cmd+4," \t");
-        cckd_command(devascii);
+        cckd_command(devascii, 1);
         return NULL;
     }
 

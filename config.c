@@ -907,7 +907,8 @@ BYTE    c;                              /* Work area for sscanf      */
 
         /* Parse cckd value value */
         if (scckd)
-            cckd_command (scckd);
+            if (cckd_command (scckd, 0))
+                exit(1);
 
     } /* end for(scount) */
 

@@ -1201,10 +1201,10 @@ space_check:
                 }
 
                 /* consistency check on track header */
-                if (buf[0] > CCKD_COMPRESS_MAX ||
-                    (buf[1] * 256 + buf[2]) >= cyls ||
-                    (buf[3] * 256 + buf[4]) >= heads ||
-                    (buf[1] * 256 + buf[2]) * heads +
+                if ((buf[0] & ~CCKD_COMPRESS_STRESSED) > CCKD_COMPRESS_MAX
+                 || (buf[1] * 256 + buf[2]) >= cyls
+                 || (buf[3] * 256 + buf[4]) >= heads
+                 || (buf[1] * 256 + buf[2]) * heads +
                     (buf[3] * 256 + buf[4]) != trk)
                 {
                     sprintf (msg, "track %d invalid header "
@@ -1226,7 +1226,7 @@ space_check:
                              trk, strerror(errno));
                     goto bad_trk;
                 }
-                switch (buf[0])
+                switch (buf[0] & ~CCKD_COMPRESS_STRESSED)
                 {
                     case CCKD_COMPRESS_NONE:
                         trkbuf = buf;
@@ -1510,9 +1510,9 @@ overlap:
         {
             /* test for possible track header */
             if (!(gap[i].siz - j > CKDDASD_TRKHDR_SIZE &&
-                  gapbuf[j] <= CCKD_COMPRESS_MAX &&
-                  (gapbuf[j+1] << 8) + gapbuf[j+2] < cyls &&
-                  (gapbuf[j+3] << 8) + gapbuf[j+4] < heads))
+                  (gapbuf[j] & ~CCKD_COMPRESS_STRESSED) <= CCKD_COMPRESS_MAX
+               && (gapbuf[j+1] << 8) + gapbuf[j+2] < cyls
+               && (gapbuf[j+3] << 8) + gapbuf[j+4] < heads))
             {   j++; continue;
             }
 
@@ -2008,7 +2008,7 @@ unsigned int    len;                    /* Uncompress length         */
 BYTE            buf2[65536];            /* Uncompress/Decompress buf */
 
     /* Special case for no compression */
-    if (buf[0] == CCKD_COMPRESS_NONE)
+    if ((buf[0] & ~CCKD_COMPRESS_STRESSED) == CCKD_COMPRESS_NONE)
         return cdsk_valid_trk (trk, buf, heads, maxlen, maxlen, NULL);
 
     /* Build the track header */
@@ -2017,7 +2017,7 @@ BYTE            buf2[65536];            /* Uncompress/Decompress buf */
 
     for (i = CKDDASD_TRKHDR_SIZE + 8; i < maxlen; i++)
     {
-        if (buf[0] == CCKD_COMPRESS_ZLIB)
+        if ((buf[0] & ~CCKD_COMPRESS_STRESSED) == CCKD_COMPRESS_ZLIB)
         {
             rc = uncompress (&buf2[CKDDASD_TRKHDR_SIZE], (uLongf *)&len,
                              &buf[CKDDASD_TRKHDR_SIZE], i);
@@ -2031,7 +2031,7 @@ printf ("trk %d buf %p len %d uncompress ok\n",trk,buf,i);
             }
         }
 #ifdef CCKD_BZIP2
-        else if (buf[0] == CCKD_COMPRESS_BZIP2)
+        else if ((buf[0] & ~CCKD_COMPRESS_STRESSED) == CCKD_COMPRESS_BZIP2)
         {
             rc = BZ2_bzBuffToBuffDecompress ( &buf2[CKDDASD_TRKHDR_SIZE], &len,
                              &buf[CKDDASD_TRKHDR_SIZE], i, 0, 0);
