@@ -118,7 +118,7 @@ con1052_query_device (DEVBLK *dev, char **class,
     *class = "CON";
 
     snprintf(buffer, buflen,
-        "*Console prefix(%s)%s",
+        "*syscons cmdpref(%s)%s",
         dev->filename,
         !dev->prompt1052 ? " noprompt" : "");
 
@@ -131,8 +131,7 @@ con1052_query_device (DEVBLK *dev, char **class,
 static int
 con1052_close_device ( DEVBLK *dev )
 {
-    free(dev->dev_data);
-    dev->dev_data = NULL;
+    UNREFERENCED(dev);
 
     return 0;
 } /* end function con1052_close_device */
@@ -186,8 +185,6 @@ BYTE    c;                              /* Print character           */
             if (!isprint(c) && c != 0x0a && c != 0x0d) c = SPACE;
             iobuf[len] = c;
         } /* end for(len) */
-
-        ASSERT(len == num);
 
         /* Perform end of record processing if not data-chaining,
            and append carriage return and newline if required */
