@@ -997,7 +997,12 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(gregs);
 /* 1 LINE CHANGED ISW20040727 - was '}' only */
                 } while( !SIE_I_HOST(regs) );
-            } while( !SIE_I_HOST(regs) );
+            } while( unlikely(!SIE_I_HOST(regs)
+			    && !SIE_I_WAIT(GUESTREGS)
+			    && !SIE_I_EXT(GUESTREGS)
+			    && !SIE_I_IO(GUESTREGS)
+			    && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
+
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)
         {
