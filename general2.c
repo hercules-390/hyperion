@@ -844,12 +844,13 @@ U32    *p;                              /* Mainstor pointer          */
     /* Store register contents at operand address */
     if ((effective_addr2 & 3) == 0)
     {
-        p = MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_FW (p, regs->GR_L(r1));
     }
     else
         ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(store) */
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -1097,7 +1098,7 @@ U32    *p;                              /* Mainstor pointer          */
     /* If a boundary is not crossed then store into mainstor */
     if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
     {
-        p = MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
         for (i = 0; i < n; i++)
             STORE_FW (p++, regs->GR_L((r1 + i) & 0xF));
     }
@@ -1110,7 +1111,8 @@ U32    *p;                              /* Mainstor pointer          */
             ARCH_DEP(vstore4)(regs->GR_L((r1 + i) & 0x0F),
                               effective_addr2 + (i*4), b2, regs);
     }
-}
+
+} /* end DEF_INST(store_multiple) */
 
 
 /*-------------------------------------------------------------------*/

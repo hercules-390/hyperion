@@ -3004,12 +3004,13 @@ U32    *p;                              /* Mainstor pointer          */
     /* Load R1 register from second operand */
     if ((effective_addr2 & 3) == 0)
     {
-        p = MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
         regs->GR_L(r1) = fetch_fw(p);
     }
     else
         regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(load) */
 
 
 /*-------------------------------------------------------------------*/
@@ -3209,7 +3210,7 @@ U32    *p;                              /* Mainstor pointer          */
     /* If a boundary is not crossed then fetch from mainstor */
     if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
     {
-        p = MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+        p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
         for (i = 0; i < n; i++)
             regs->GR_L((r1 + i) & 0xF) = fetch_fw (p++);
     }
@@ -3220,7 +3221,8 @@ U32    *p;                              /* Mainstor pointer          */
         for (i = 0; i < n; i++)
             regs->GR_L((r1 + i) & 0x0F) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
     }
-}
+
+} /* end DEF_INST(load_multiple) */
 
 
 /*-------------------------------------------------------------------*/
