@@ -74,22 +74,22 @@ msgstr ""
 #: hsccmd.c:1817
 #, fuzzy, c-format
 msgid "          CPU%4.4X: CPU interlock %sheld\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1821
 #, fuzzy, c-format
 msgid "          CPU%4.4X: CPU state is %s\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1801
 #, fuzzy, c-format
 msgid "          CPU%4.4X: CPU timer %spending\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1797
 #, fuzzy, c-format
 msgid "          CPU%4.4X: Clock comparator %spending\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1833
 #, fuzzy, c-format
@@ -99,17 +99,17 @@ msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
 #: hsccmd.c:1813
 #, fuzzy, c-format
 msgid "          CPU%4.4X: Emergency signal %spending\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1809
 #, fuzzy, c-format
 msgid "          CPU%4.4X: External call %spending\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1805
 #, fuzzy, c-format
 msgid "          CPU%4.4X: Interval timer %spending\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1829
 #, fuzzy, c-format
@@ -154,7 +154,7 @@ msgstr "CPU%4.4X: CPU Status: %s\n"
 #: hsccmd.c:1886
 #, fuzzy, c-format
 msgid "          DEV%4.4X: suspended\n"
-msgstr "CPU%4.4X: CPU Status: %s\n"
+msgstr ""
 
 #: hsccmd.c:1869
 #, c-format
