@@ -57,7 +57,7 @@ int html_include(WEBBLK *webblk, char *filename)
     int ret;
 
     strncpy(fullname,sysblk.httproot,1024);
-    inclfile = fopen(strncat(fullname,filename,1024),"r");
+    inclfile = fopen(strncat(fullname,filename,sizeof(fullname)-(strlen(fullname)-1)),"r");
 
     if (!inclfile)
     {
@@ -281,7 +281,7 @@ static void http_verify_path(WEBBLK *webblk, char *path)
     char resolved_path[1024];
     int i;
 
-    realpath(sysblk.httproot,resolved_base); strncat(resolved_base,"/",1024);
+    realpath(sysblk.httproot,resolved_base); strncat(resolved_base,"/",sizeof(resolved_base)-(strlen(resolved_path)-1));
     realpath(path,resolved_path);
 
     for (i = 0; path[i]; i++)
@@ -364,7 +364,7 @@ static void http_download(WEBBLK *webblk, char *filename)
     CONTYP *mime_type = mime_types;
 
     strncpy(fullname,sysblk.httproot,1024);
-    strncat(fullname,filename,1024);
+    strncat(fullname,filename,sizeof(fullname)-(strlen(fullname)-1));
 
     http_verify_path(webblk,fullname);
 
