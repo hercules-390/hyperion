@@ -26,6 +26,7 @@ int hdl_load(char *, int);              /* load dll                  */
 #define HDL_LOAD_NOUNLOAD    0x00000002 /* Module cannot be unloaded */
 #define HDL_LOAD_FORCE       0x00000004 /* Override dependency check */
 #define HDL_LOAD_NOMSG       0x00000008 /* Do not issue not found msg*/
+#define HDL_LOAD_WAS_FORCED  0x00000010 /* Module load was forced    */
 
 int hdl_dele(char *);                   /* Unload dll                */
 void hdl_list();                        /* list all loaded modules   */

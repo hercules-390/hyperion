@@ -24,7 +24,19 @@ MODENT *modent;
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         logmsg("dll type = %s",(dllent->flags & HDL_LOAD_MAIN) ? "main" : "load");
-        logmsg(", name = %s\n",dllent->name);
+        logmsg(", name = %s",dllent->name);
+
+        if (dllent->flags & (HDL_LOAD_NOUNLOAD | HDL_LOAD_WAS_FORCED))
+        {
+            logmsg(", flags = (%s%s%s)"
+                ,(dllent->flags & HDL_LOAD_NOUNLOAD)   ? "nounload" : ""
+                ,(dllent->flags & HDL_LOAD_NOUNLOAD) &&
+                 (dllent->flags & HDL_LOAD_WAS_FORCED) ? ", "       : ""
+                ,(dllent->flags & HDL_LOAD_WAS_FORCED) ? "forced"   : ""
+                );
+        }
+
+        logmsg("\n");
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
         {
@@ -399,6 +411,7 @@ char *modname;
             free(dllent);
             return -1;
         }
+        dllent->flags |= HDL_LOAD_WAS_FORCED;
     }
 
     dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);
@@ -423,6 +436,7 @@ char *modname;
                 release_lock(&hdl_lock);
                 return -1;
             }
+            dllent->flags |= HDL_LOAD_WAS_FORCED;
         }
     }
 
