@@ -10,7 +10,6 @@
 21 Sep 2004 Performance enhancement for BCR, BRC, BRCL -
             inspired by Bernard by Greg Smith
 21 Sep 2004 Fix CKD sense codes - Tomas by Greg Smith
->>>>>>> 1.667
 19 Sep 2004 Fix/enhance SCSI tape display/mount msgs - Fish
 15 Sep 2004 Enable pentium4 specifics for gcc. Fixes
                 - SIGFPE in CFEBR (due to possible bug in feclearexcept)
