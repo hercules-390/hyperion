@@ -14,7 +14,7 @@
 // This abstraction layer is an attempt to create a common API set
 // that works on all platforms with (hopefully) equal results.
 
-#if !defined(__APPLE__) 
+//#if !defined(__APPLE__) 
 #include "hercules.h"
 #include "tuntap.h"
 #include "devtype.h"
@@ -262,7 +262,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
 // 
 // TUNTAP_SetNetMask
 // 
-
+#if !defined(__APPLE__)
 int             TUNTAP_SetNetMask( char*   pszNetDevName,
                                    char*   pszNetMask )
 {
@@ -294,6 +294,7 @@ int             TUNTAP_SetNetMask( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCSIFNETMASK, (char*)&ifreq );
 }
+#endif /* !defined(__APPLE__) */
 
 // 
 // TUNTAP_SetMTU
@@ -308,7 +309,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 
     memset( &ifreq, 0, sizeof( struct ifreq ) );
 
-    sin = (struct sockaddr_in*)&ifreq.ifr_netmask;
+    sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
     sin->sin_family = AF_INET;
 
@@ -345,7 +346,7 @@ int             TUNTAP_SetMTU( char*   pszNetDevName,
 // 
 // TUNTAP_SetMACAddr
 // 
-
+#if !defined(__APPLE__)
 int             TUNTAP_SetMACAddr( char*   pszNetDevName,
                                    char*   pszMACAddr )
 {
@@ -379,6 +380,7 @@ int             TUNTAP_SetMACAddr( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCSIFHWADDR, (char*)&ifreq );
 }
+#endif /* !defined(__APPLE__) */
 
 // 
 // TUNTAP_SetFlags
@@ -392,7 +394,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
 
     memset( &ifreq, 0, sizeof( struct ifreq ) );
 
-    sin = (struct sockaddr_in*)&ifreq.ifr_netmask;
+    sin = (struct sockaddr_in*)&ifreq.ifr_addr;
 
     sin->sin_family = AF_INET;
 
@@ -413,7 +415,7 @@ int             TUNTAP_SetFlags ( char*   pszNetDevName,
 // 
 // TUNTAP_AddRoute
 // 
-
+#if !defined(__APPLE__)
 int             TUNTAP_AddRoute( char*   pszNetDevName,
                                  char*   pszDestAddr,
                                  char*   pszNetMask,
@@ -473,11 +475,12 @@ int             TUNTAP_AddRoute( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCADDRT, (char*)&rtentry );
 }
+#endif /* !defined(__APPLE__) */
 
 // 
 // TUNTAP_DelRoute
 // 
-
+#if !defined(__APPLE__)
 int             TUNTAP_DelRoute( char*   pszNetDevName,
                                  char*   pszDestAddr,
                                  char*   pszNetMask,
@@ -535,6 +538,7 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
 
     return TUNTAP_IOCtl( 0, SIOCDELRT, (char*)&rtentry );
 }
+#endif /* !defined(__APPLE__) */
 
 #if !defined( WIN32 )
 // ====================================================================
@@ -560,9 +564,14 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
     if( iRequest == SIOCADDRT ||
         iRequest == SIOCDELRT )
     {
+#if !defined(__APPLE__)
       strcpy( ctlreq.szIFName, ((struct rtentry*)argp)->rt_dev );
       memcpy( &ctlreq.iru.rtentry, argp, sizeof( struct rtentry ) );
       ((struct rtentry*)argp)->rt_dev = NULL;
+#else /* !defined(__APPLE__) */
+      logmsg(_("HHCTU028E Unsupported call to %s a network route on OS X\n"),
+                ((iRequest=SIOCADDRT) ? "add" : "delete"));
+#endif /* !defined(__APPLE__) */
     }
     else
     {
@@ -637,4 +646,4 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
 }
 
 #endif // !defined( WIN32 )
-#endif /* !defined(__APPLE__) */
+//#endif /* !defined(__APPLE__) */

@@ -101,11 +101,13 @@ int main( int argc, char **argv )
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 
+#if !defined(__APPLE__)
         case SIOCSIFNETMASK:
             pOp  = "SIOCSIFNETMASK";
             pArg = &ctlreq.iru.ifreq;
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
+#endif /* !defined(__APPLE__) */
 
         case SIOCSIFFLAGS:
             pOp  = "SIOCSIFFLAGS";
@@ -119,11 +121,13 @@ int main( int argc, char **argv )
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 
+#if !defined(__APPLE__)
         case SIOCSIFHWADDR:
             pOp  = "SIOCSIFHWADDR";
             pArg = &ctlreq.iru.ifreq;
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
+#endif /* !defined(__APPLE__) */
 
         case SIOCADDMULTI:
             pOp  = "SIOCADDMULTI";
@@ -137,6 +141,7 @@ int main( int argc, char **argv )
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 
+#if !defined(__APPLE__)
         case SIOCADDRT:
             pOp  = "SIOCADDRT";
             pArg = &ctlreq.iru.rtentry;
@@ -150,6 +155,7 @@ int main( int argc, char **argv )
             pIF  = ctlreq.szIFName;
             ctlreq.iru.rtentry.rt_dev = ctlreq.szIFName;
             break;
+#endif /* !defined(__APPLE__) */
 
         case CTLREQ_OP_DONE:
             close( STDIN_FILENO  );

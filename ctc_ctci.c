@@ -9,7 +9,7 @@
 // linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2004
 //
 
-#if !defined(__APPLE__)
+//#if !defined(__APPLE__)
 
 #include "hercules.h"
 #include "devtype.h"
@@ -1370,4 +1370,4 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
     return 0;
 }
-#endif /* !defined(__APPLE__) */
+//#endif /* !defined(__APPLE__) */

@@ -5,7 +5,7 @@
 // Copyright (C) 2002-2004 by James A. Pierson
 //
 
-#if !defined(__APPLE__)
+//#if !defined(__APPLE__)
 
 #include "hercules.h"
 #include "devtype.h"
@@ -2131,4 +2131,4 @@ END_DEVICE_SECTION;
 #endif
 
 
-#endif /* !defined(__APPLE__) */
+//#endif /* !defined(__APPLE__) */
