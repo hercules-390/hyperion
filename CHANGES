@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+19 Aug 2003 Fix dasdtab to provide correct model numbers for
+            sense ID on 3340-1 (35M) and 3340-2 (70M) - Ivan Warren
 19 Aug 2003 Removed W32 only symbol from linux build in ctcadpt - Ivan Warren
 19 Aug 2003 Fixed nested lock issue in LCS freezing on Linux - Ivan Warren
 19 Aug 2003 Fixed herc crash when "attach" CTCI with no parm - Jim Pierson
