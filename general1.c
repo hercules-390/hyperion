@@ -2367,7 +2367,7 @@ BYTE    dec[8];                         /* Packed decimal operand    */
     if (ovf)
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
 
-}
+} /* end DEF_INST(convert_to_binary) */
 
 
 /*-------------------------------------------------------------------*/
@@ -2375,48 +2375,24 @@ BYTE    dec[8];                         /* Packed decimal operand    */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_to_decimal)
 {
-int     r1;                             /* Values of R fields        */
+S64     bin;                            /* 64-bit signed binary value*/
+int     r1;                             /* Value of R1 field         */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     dreg;                           /* 64-bit result accumulator */
-int     i;                              /* Loop counter              */
-int     d;                              /* Decimal digit             */
-U32     n;                              /* Absolute value to convert */
+BYTE    dec[16];                        /* Packed decimal result     */
 
     RX(inst, execflag, regs, r1, b2, effective_addr2);
 
-    /* Load absolute value and generate sign */
-    if (regs->GR_L(r1) < 0x80000000)
-    {
-        /* Value is positive */
-        n = regs->GR_L(r1);
-        dreg = 0x0C;
-    }
-    else if (regs->GR_L(r1) > 0x80000000 )
-    {
-        /* Value is negative */
-        n = -((S32)(regs->GR_L(r1)));
-        dreg = 0x0D;
-    }
-    else
-    {
-        /* Special case when R1 is maximum negative value */
-        n = 0;
-        dreg = 0x2147483648DULL;
-    }
+    /* Load value of register and sign-extend to 64 bits */
+    bin = (S64)(regs->GR_L(r1));
 
-    /* Generate decimal digits */
-    for (i = 4; n != 0; i += 4)
-    {
-        d = n % 10;
-        n /= 10;
-        dreg |= (U64)d << i;
-    }
+    /* Convert to 16-byte packed decimal number */
+    binary_to_packed (bin, dec);
 
-    /* Store packed decimal result at operand address */
-    ARCH_DEP(vstore8) ( dreg, effective_addr2, b2, regs );
+    /* Store low 8 bytes of result at operand address */
+    ARCH_DEP(vstorec) ( dec+8, 8-1, effective_addr2, b2, regs );
 
-}
+} /* end DEF_INST(convert_to_decimal) */
 
 
 #if defined(FEATURE_ACCESS_REGISTERS)
