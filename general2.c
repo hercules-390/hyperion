@@ -2375,7 +2375,12 @@ DEF_INST(translate_and_test_reversed)
       else
 #endif
       if(regs->psw.amode)
-        regs->GR_L(1) = effective_addr1;
+      {
+        /* Note: TRTR differs from TRT in 31 bit mode.
+           TRTR leaves bit 32 unchanged, TRT clears bit 32 */
+        regs->GR_L(1) &= 0x80000000;
+        regs->GR_L(1) |= effective_addr1;
+      }
       else
         regs->GR_LA24(1) = effective_addr1;
 
@@ -2392,7 +2397,7 @@ DEF_INST(translate_and_test_reversed)
     } /* end if(sbyte) */
 
     /* Decrement first operand address */
-    effective_addr1--;  /* The only difference with TRT ;-) */
+    effective_addr1--; /* Another difference with TRT */
     effective_addr1 &= ADDRESS_MAXWRAP(regs);
 
   } /* end for(i) */
