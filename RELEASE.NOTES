@@ -4,8 +4,12 @@
 - CTC and LCS devices now ++MUST++ specify all addresses on the configuration
   statement. 
   Example:
-    0A00-0A01  LCS .....
-    0B00-0B01  CTCI ....
+    0A00.2     LCS .....
+    0B00.2     CTCI ....
+
+    or
+
+    0A00.4     LCS -oat hercules.oat
 
     or
 
