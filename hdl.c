@@ -100,7 +100,7 @@ HDLDEV *hndent;
     {
         for(hndent = dllent->hndent; hndent; hndent = hndent->next)
         {
-            if(!strcmp(devname,hndent->name))
+            if(!strcasecmp(devname,hndent->name))
             {
                 return hndent->hnd;
             }
