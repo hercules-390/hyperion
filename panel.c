@@ -2341,7 +2341,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             (devargv[devargc] = strtok(NULL," \t")) != NULL;
             devargc++);
 #else /*EXTERNALGUI*/
-        parse_args (devascii+strlen(devascii)+1, MAX_ARGS, devargv, &devargc);
+        parse_args (devtype+strlen(devtype)+1, MAX_ARGS, devargv, &devargc);
 #endif /*!EXTERNALGUI*/
 
         /* Attach the device */

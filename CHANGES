@@ -1,3 +1,4 @@
+04 May 2002 Fix attach command bug since no on else has - Fish
 01 May 2002 3390-9 and large file support - Greg Smith
 01 May 2002 CodePage support - Jan Jaeger
 29 Apr 2002 Fix fthreads "trylock" for REAL this time - Fish
