@@ -676,6 +676,10 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
     DEVTRACE ("ckddasd: read trk %d cur trk %d\n", trk, dev->dasdcur);
 
+    /* Reset buffer offsets */
+    dev->bufoff = 0;
+    dev->bufoffhi = dev->ckdtrksz;
+
     /* Return if reading the same track image */
     if (trk >= 0 && trk == dev->dasdcur && dev->buf) return 0;
 
@@ -732,10 +736,6 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
     /* Return on special case when called by the close handler */
     if (cyl < 0 && head < 0) return 0;
-
-    /* Reset buffer offsets */
-    dev->bufoff = 0;
-    dev->bufoffhi = dev->ckdtrksz;
 
     /* Command reject if seek position is outside volume */
     if (cyl >= dev->ckdcyls || head >= dev->ckdheads)
