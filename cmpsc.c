@@ -933,7 +933,7 @@ static int ARCH_DEP(store_ch)(int r1, REGS *regs, REGS *iregs, BYTE *data, int l
 {
 
   /* Check destination size */
-  if(GR_A(r1 + 1, iregs) < length + (U32) offset)
+  if(GR_A(r1 + 1, iregs) < length + (U32) offset -1)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
