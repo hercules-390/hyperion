@@ -237,11 +237,66 @@ There is also an alternate semi-graphical control panel.  Press Esc to
 switch between the command line format and the semi-graphical format.
 Press ? to obtain help in either control panel.
 
+
+<h4>The &nbsp;<u>hercules.rc</u> &nbsp;(run-commands)&nbsp; file:</h4>
+<p>
+Hercules also supports the ability to automatically execute panel commands
+upon startup via the 'run-commands' file. If the run-commands file
+is found to exist when Hercules starts, each line contained within it is
+read and interpreted as a panel command exactly as if the command were
+entered from the HMC system console.
+<p>
+The default filename for the run-commands file is "hercules.rc", but may be
+overridden by setting the "<tt>HERCULES_RC</tt>" environment variable to the
+desired filename.
+<p>
+Except for the 'pause' command (see paragraph further below), each command
+read from the run-commands file is logged to the console preceded by a '> '
+(greater-than sign) character so you can easily distinguish between panel
+commands entered from the keyboard from those entered via the .rc file.
+<p>
+Lines starting with '<tt>#</tt>' are treated as "silent comments" and are
+thus not logged to the console. Line starting with '<tt>*</tt>' however are
+treated as "loud comments" and <i>will</i> be logged.
+<p>
+In addition to being able to execute any valid panel command (including the
+'sh' shell command) via the run-commands file, an additional
+'<tt><b>pause <i>nnn</i></b></tt>' command is supported in order to introduce
+a brief delay before reading and processing the next line in the file. The
+value <tt><i>nnn</i></tt> can be any number from 1 to 999 and specifies the
+number of seconds to delay before reading the next line. Creative use of the
+run-commands file can completely automate Hercules startup.
+
 <p><center><hr width=15% noshade></center>
 <p>
-If you have a question about Hercules, see the
-<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<h2>Technical Support</h2>
+If you have a question about Hercules, please refer to the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page first.
+If your question and/or concern is not addressed in the FAQ, please feel
+free to post your question to the
+Hercules-390 forum:
+<blockquote><pre>
+<b>Community email addresses:</b>
+  Post message: <a href="mailto:hercules-390@yahoogroups.com?subject=Hercules Question">hercules-390@yahoogroups.com</a>
+  Subscribe:    <a href="mailto:hercules-390-subscribe@yahoogroups.com?subject=Subscribe">hercules-390-subscribe@yahoogroups.com</a>
+  Unsubscribe:  <a href="mailto:hercules-390-unsubscribe@yahoogroups.com?subject=Unsubscribe">hercules-390-unsubscribe@yahoogroups.com</a>
+  List owner:   <a href="mailto:hercules-390-owner@yahoogroups.com?subject=Hercules">hercules-390-owner@yahoogroups.com</a>
 
+<b>Files and archives at:</b>
+  <a href="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</a>
+</pre></blockquote><p>
+The <b><u>Hercules-390 forum</u></b> is in fact your <u>primary source for Hercules support</u>,
+and you are strongly encouraged to subscribe. We have a vibrant, active
+community of over 2200+ members, many of which are very knowledgeable in
+many different areas of mainframe technology, both from a hardware point of
+view as well as from an operating system and software point of view.
+<p>
+In addition to the main Hercules-390 forum, other more specialized Hercules forums
+also exist to provide more focused support for a variety of popular IBM mainframe
+operating systems, such as DOS/VS, VM (VM/370, VM/SP, and VM/ESA), and MVS.
+<p>
+<small><i>Note! the use of Yahoo! as host for the Hercules-390 and related forums
+should in no way be interpreted as an endorsement of the Yahoo! service.</i><small>
 <p><center><hr width=15% noshade>
 <a href="index.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
