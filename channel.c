@@ -1216,6 +1216,7 @@ int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
 {
 TID     tid;                            /* Device thread thread id   */
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
+int     rc;                             /* Return code               */
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
@@ -1289,7 +1290,17 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         if (sysblk.devtwait)
             signal_condition(&sysblk.ioqcond);
         else if (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)
-            create_thread(&tid, &sysblk.detattr, device_thread, NULL);
+        {
+            rc = create_thread(&tid,&sysblk.detattr,device_thread,NULL);
+            if (rc != 0 && sysblk.devtnbr == 0)
+            {
+                logmsg ("HHC760I %4.4X create_thread error: %s",
+                        dev->devnum, strerror(errno));
+                release_lock (&sysblk.ioqlock);
+                release_lock (&dev->lock);
+                return 2;
+            }
+        }
         else
             sysblk.devtunavail++;
 
