@@ -825,6 +825,45 @@ void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
 void    cckd_print_itrace (DEVBLK *);
 
+
+int herc_system (char *command)
+{
+extern char **environ;
+int pid, status;
+
+    if (command == 0)
+        return 1;
+
+    pid = fork();
+
+    if (pid == -1)
+        return -1;
+
+    if (pid == 0) {
+        char *argv[4];
+
+        dup2(sysblk.msgpiper, STDIN_FILENO);
+        dup2(fileno(sysblk.msgpipew), STDOUT_FILENO);
+        dup2(fileno(sysblk.msgpipew), STDERR_FILENO);
+
+        argv[0] = "sh";
+        argv[1] = "-c";
+        argv[2] = command;
+        argv[3] = 0;
+        execve("/bin/sh", argv, environ);
+
+        exit(127);
+    }
+    do {
+        if (waitpid(pid, &status, 0) == -1) {
+            if (errno != EINTR)
+                return -1;
+        } else
+            return status;
+    } while(1);
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Execute a panel command                                           */
 /*-------------------------------------------------------------------*/
@@ -1282,7 +1321,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
 
     if (cmd[0] == '@')
     {
-        system(cmd + 1);
+        herc_system(cmd + 1);
         return NULL;
     }
 
