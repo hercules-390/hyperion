@@ -208,11 +208,19 @@ TID     rctid;                          /* RC file thread identifier */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "f:d")) != EOF)
+    while ((c = getopt(argc, argv, "f:l:d")) != EOF)
     {
+    char *dllname, *strtok_str;
+
         switch (c) {
         case 'f':
             cfgfile = optarg;
+            break;
+        case 'l':
+            for(dllname = strtok_r(optarg,", ",&strtok_str);
+                dllname;
+                dllname = strtok_r(NULL,", ",&strtok_str))
+                hdl_load(dllname, HDL_LOAD_DEFAULT);
             break;
         case 'd':
             daemon_mode = 1;
