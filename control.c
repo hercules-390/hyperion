@@ -730,7 +730,7 @@ VADR    effective_addr2;                /* Effective address         */
 #ifdef FEATURE_HERCULES_DIAGCALLS
     if (
 #if defined(_FEATURE_SIE)
-        !sie_state &&
+        !regs->sie_state &&
 #endif defined(_FEATURE_SIE)
                       effective_addr2 != 0xF08)
 #endif
