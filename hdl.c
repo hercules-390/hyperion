@@ -401,7 +401,7 @@ DLLENT *dllent, *tmpdll;
 MODENT *modent;
 char *modname;
 
-    modname = (modname = strrchr(name,'/')) ? ++modname : name;
+    modname = (modname = strrchr(name,'/')) ? modname+1 : name;
 
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
@@ -530,7 +530,7 @@ DLLENT **dllent, *tmpdll;
 MODENT *modent, *tmpmod;
 char *modname;
 
-    modname = (modname = strrchr(name,'/')) ? ++modname : name;
+    modname = (modname = strrchr(name,'/')) ? modname+1 : name;
 
     obtain_lock(&hdl_lock);
 
