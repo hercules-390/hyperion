@@ -217,8 +217,18 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
         }
     }
 
+    /* Following line added to not exclude call to */
+    /* build_config when NO_SIGABEND_HANDLER       */
+    /* is set - ISW 20030313                       */
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
+
     /* Build system configuration */
     build_config (cfgfile);
+
+    /* Following line added to not exclude call to */
+    /* build_config when NO_SIGABEND_HANDLER       */
+    /* is set - ISW 20030313                       */
+#if !defined(NO_SIGABEND_HANDLER)
 
     /* Start the watchdog */
     if ( create_thread (&sysblk.wdtid, &sysblk.detattr,

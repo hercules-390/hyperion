@@ -1,3 +1,5 @@
+13 Mar 2003 Call build_config even if NO_SIGABEND_HANDLER is defined - Ivan Warren
+13 Mar 2003 Define extgui in dasdseq for Windows build - Ivan Warren
 13 Mar 2003 AEA invalidation reduction - Greg Smith
 13 Mar 2003 Gabor performance patch - optimize AEA invalidation - Greg Smith
 08 Mar 2003 Remove panel/socketdevice dependency - Jan Jaeger
