@@ -4967,7 +4967,7 @@ BYTE    svalue, dvalue, tvalue;
         }
 
         /* Store destination value */
-        ARCH_DEP(vstoreb) (dvalue, addr2, r2, regs);
+        ARCH_DEP(vstoreb) (dvalue, addr1, r1, regs);
 
         /* Adjust source addr, destination addr and length */
         addr1++; addr1 &= ADDRESS_MAXWRAP(regs);
@@ -5035,7 +5035,7 @@ BYTE    dvalue, tvalue;
         }
 
         /* Store destination value */
-        ARCH_DEP(vstore2) (dvalue, addr2, r2, regs);
+        ARCH_DEP(vstore2) (dvalue, addr1, r1, regs);
 
         /* Adjust source addr, destination addr and length */
         addr1 += 2; addr1 &= ADDRESS_MAXWRAP(regs);
@@ -5105,7 +5105,7 @@ BYTE    dvalue, tvalue;
         }
 
         /* Store destination value */
-        ARCH_DEP(vstoreb) (dvalue, addr2, r2, regs);
+        ARCH_DEP(vstoreb) (dvalue, addr1, r1, regs);
 
         /* Adjust source addr, destination addr and length */
         addr1++; addr1 &= ADDRESS_MAXWRAP(regs);
@@ -5174,7 +5174,7 @@ U16     svalue, dvalue, tvalue;
         }
 
         /* Store destination value */
-        ARCH_DEP(vstore2) (dvalue, addr2, r2, regs);
+        ARCH_DEP(vstore2) (dvalue, addr1, r1, regs);
 
         /* Adjust source addr, destination addr and length */
         addr1 += 2; addr1 &= ADDRESS_MAXWRAP(regs);
