@@ -451,7 +451,7 @@ case "$host_os" in
 #define ENDMSG(m, format, a...) \
    if(m!=NULL) fprintf (m, "cckdend: " format, ## a)
 
-int func1(FILE *m, FILE *fd) {
+int func1(FILE *m, int fd) {
     ENDMSG (m, "cdevhdr write error fd %d: %s\n",
             fd, strerror(1));
     return 0;
