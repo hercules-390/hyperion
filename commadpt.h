@@ -38,10 +38,13 @@ typedef struct _COMMADPT
     int pipe[2];                /* pipe used for I/O to thread signaling    */
     COMMADPT_RING inbfr;        /* Input buffer ring                        */
     COMMADPT_RING outbfr;       /* Output buffer ring                       */
+    COMMADPT_RING pollbfr;      /* Ring used for POLL data                  */
     COMMADPT_RING rdwrk;        /* Inbound data flow work ring              */
     U16  devnum;                /* devnum copy from DEVBLK                  */
     BYTE dialdata[32];          /* Dial data information                    */
     U16  dialcount;             /* data count for dial                      */
+    BYTE pollix;                /* Next POLL Index                          */
+    U16  pollused;              /* Count of Poll data used during Poll      */
     U32
         enabled:1,              /* An ENABLE CCW has been sucesfully issued */
         connect:1,              /* A connection exists with the remote peer */
@@ -65,6 +68,8 @@ typedef struct _COMMADPT
         in_textmode:1,          /* Input buffer processing : text mode      */
         in_xparmode:1,          /* Input buffer processing : transparent    */
         gotdle:1,               /* DLE Received in inbound flow             */
+        pollsm:1,               /* Issue Status Modifier on POLL Exit       */
+        badpoll:1,              /* Bad poll data (>7 Bytes before ENQ)      */
         callissued:1,           /* The connect out for the DIAL/ENABLE      */
                                 /* has already been issued                  */
         readcomp:1;             /* Data in the read buffer completes a read */
@@ -83,9 +88,10 @@ enum {
     COMMADPT_PEND_DIAL,         /* A DIAL CCW is running                    */
     COMMADPT_PEND_DISABLE,      /* A DISABLE CCW is running                 */
     COMMADPT_PEND_PREPARE,      /* A PREPARE CCW is running                 */
-    COMMADPT_PEND_TINIT,        /* A PREPARE CCW is running                 */
-    COMMADPT_PEND_CLOSED,       /* A PREPARE CCW is running                 */
-    COMMADPT_PEND_SHUTDOWN      /* A PREPARE CCW is running                 */
+    COMMADPT_PEND_POLL,         /* A POLL CCW Is Running                    */
+    COMMADPT_PEND_TINIT,        /*                                          */
+    COMMADPT_PEND_CLOSED,       /*                                          */
+    COMMADPT_PEND_SHUTDOWN      /*                                          */
 } commadpt_pendccw;
 
 #define COMMADPT_PEND_TEXT static char *commadpt_pendccw_text[]={\

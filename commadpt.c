@@ -214,6 +214,7 @@ static int commadpt_alloc_device(DEVBLK *dev)
     memset(dev->commadpt,0,sizeof(COMMADPT));
     commadpt_ring_init(&dev->commadpt->inbfr,4096);
     commadpt_ring_init(&dev->commadpt->outbfr,4096);
+    commadpt_ring_init(&dev->commadpt->pollbfr,4096);
     commadpt_ring_init(&dev->commadpt->rdwrk,65536);
     dev->commadpt->dev=dev;
     return 0;
@@ -416,6 +417,33 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     ca->rhost=destip;
     return(commadpt_connout(ca));
 }
+/*-------------------------------------------------------------------*/
+/* Communication Thread - Read socket data (after POLL request       */
+/*-------------------------------------------------------------------*/
+static int commadpt_read_poll(COMMADPT *ca)
+{
+    BYTE b;
+    int rc;
+    while((rc=read(ca->sfd,&b,1))>0)
+    {
+        if(b==0x32)
+        {
+            continue;
+        }
+        if(b==0x37)
+        {
+            return(1);
+        }
+    }
+    if(rc>0)
+    {
+        /* Store POLL IX in bfr followed by byte */
+        commadpt_ring_push(&ca->inbfr,ca->pollix);
+        commadpt_ring_push(&ca->inbfr,b);
+        return(2);
+    }
+    return(0);
+}
 
 /*-------------------------------------------------------------------*/
 /* Communication Thread - Read socket data                           */
@@ -469,6 +497,8 @@ static void commadpt_thread(void *vca)
     int maxfd;                  /* highest FD for select             */
     int ca_shutdown;            /* Thread shutdown internal flag     */
     int init_signaled;          /* Thread initialisation signaled    */
+    int pollact;                /* A Poll Command is in progress     */
+    int i;                      /* Ye Old Loop Counter               */
 
     /*---------------------END OF DECLARES---------------------------*/
 
@@ -487,6 +517,8 @@ static void commadpt_thread(void *vca)
     init_signaled=0;
     
     logmsg(_("HHCCA002I %4.4X:Line Communication thread "TIDPAT" started\n"),devnum,thread_id());
+
+    pollact=0;  /* Initialise Poll activity flag */
 
     /* Determine if we should listen */
     /* if this is a DIAL=OUT only line, no listen is necessary */
@@ -654,6 +686,62 @@ static void commadpt_thread(void *vca)
                 FD_SET(ca->sfd,&rfd);
                 maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
                 break;
+            case COMMADPT_PEND_POLL:
+                /* Poll active check - provision for write contention */
+                /* pollact will be reset when NON syn data is received*/
+                /* or when the read times out                         */
+                /* Also prevents WRITE from exiting early             */
+                if(!pollact && !writecont)
+                {
+                    int gotenq;
+
+                    pollact=1;
+                    gotenq=0;
+                    /* Send SYN+SYN */
+                    commadpt_ring_push(&ca->outbfr,0x32);
+                    commadpt_ring_push(&ca->outbfr,0x32);
+                    /* Fill the Output ring with POLL Data */
+                    /* Up to 7 chars or ENQ                */
+                    for(i=0;i<7;i++)
+                    {
+                        if(!ca->pollbfr.havedata)
+                        {
+                            break;
+                        }
+                        ca->pollused++;
+                        b=commadpt_ring_pop(&ca->pollbfr);
+                        if(b!=0x2D)
+                        {
+                            commadpt_ring_push(&ca->outbfr,b);
+                        }
+                        else
+                        {
+                            gotenq=1;
+                            break;
+                        }
+                    }
+                    if(!gotenq)
+                    {
+                        ca->badpoll=1;
+                        ca->curpending=COMMADPT_PEND_IDLE;
+                        signal_condition(&ca->ipc);
+                        break;
+                    }
+                    b=commadpt_ring_pop(&ca->pollbfr);
+                    ca->pollix=b;
+                    /* Prepare to read - 3 secs timeout */
+                    tv.tv_sec=3;
+                    tv.tv_usec=0;
+                }
+                if(!writecont)
+                {
+                    /* Set tv value (have been set earlier) */
+                    seltv=&tv;
+                    /* Set to read data still               */
+                    FD_SET(ca->sfd,&rfd);
+                    maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
+                }
+                /* DO NOT BREAK - Continue with WRITE processing */
             case COMMADPT_PEND_WRITE:
                 if(!writecont)
                 {
@@ -692,7 +780,7 @@ static void commadpt_thread(void *vca)
                         FD_SET(ca->sfd,&wfd);
                         maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
                 }
-                if(!writecont)
+                if(!writecont && !pollact)
                 {
                         ca->curpending=COMMADPT_PEND_IDLE;
                         signal_condition(&ca->ipc);
@@ -861,6 +949,7 @@ static void commadpt_thread(void *vca)
         /* Select timed out */
         if(rc==0)
         {
+            pollact=0;  /* Poll not active */
             if(ca->dev->ccwtrace)
             {
                 logmsg("HHCCA300D %4.4X:cthread - Select TIME OUT\n",devnum);
@@ -917,14 +1006,44 @@ static void commadpt_thread(void *vca)
         {
             if(FD_ISSET(ca->sfd,&rfd))
             {
+                int dopoll;
+                dopoll=0;
                 if(ca->dev->ccwtrace)
                 {
                         logmsg("HHCCA300D %4.4X:cthread - inbound socket data\n",devnum);
                 }
-                commadpt_read(ca);
-                ca->curpending=COMMADPT_PEND_IDLE;
-                signal_condition(&ca->ipc);
-                continue;
+                if(pollact)
+                {
+                    switch(commadpt_read_poll(ca))
+                    {
+                        case 0: /* Only SYNs received */
+                                /* Continue the timeout */
+                            dopoll=1;
+                            break;
+                        case 1: /* EOT Received */
+                            /* Send next poll sequence */
+                            pollact=0;
+                            dopoll=1;
+                            break;
+                        case 2: /* Something else received */
+                            /* Index byte already stored in inbfr */
+                            /* read the remaining data and return */
+                            ca->pollsm=1;
+                            dopoll=0;
+                            break;
+                        default:
+                            /* Same as 0 */
+                            dopoll=1;
+                            break;
+                    }
+                }
+                if(!dopoll)
+                {
+                    commadpt_read(ca);
+                    ca->curpending=COMMADPT_PEND_IDLE;
+                    signal_condition(&ca->ipc);
+                    continue;
+                }
             }
         }
         if(ca->sfd>=0)
@@ -1613,6 +1732,53 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                         logmsg("HHCCA300D %4.4X Set Mode : %s\n",dev->devnum,iobuf[0]&0x40 ? "EIB":"NO EIB");
                 }
                 dev->commadpt->eibmode=(iobuf[0]&0x40)?1:0;
+                break;
+        /*---------------------------------------------------------------*/
+        /* POLL Command                                                  */
+        /*---------------------------------------------------------------*/
+        case 0x09:
+                /* Transparent Write Wait State test */
+                if(dev->commadpt->xparwwait)
+                {
+                    *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                    dev->sense[0]=SENSE_CR;
+                    return;
+                }
+                /* Save POLL data */
+                commadpt_ring_flush(&dev->commadpt->pollbfr);
+                commadpt_ring_pushbfr(&dev->commadpt->pollbfr,iobuf,count);
+                /* Set some utility variables */
+                dev->commadpt->pollused=0;
+                dev->commadpt->badpoll=0;
+                /* Tell thread */
+                dev->commadpt->curpending=COMMADPT_PEND_POLL;
+                commadpt_wakeup(dev->commadpt,0);
+                commadpt_wait(dev);
+                /* Flush the output & poll rings */
+                commadpt_ring_flush(&dev->commadpt->outbfr);
+                commadpt_ring_flush(&dev->commadpt->pollbfr);
+                /* Check for HALT */
+                if(dev->commadpt->haltpending)
+                {
+                    *unitstat=CSW_CE|CSW_DE|CSW_UX;
+                    dev->commadpt->haltpending=0;
+                    break;
+                }
+                /* Check for bad poll data */
+                if(dev->commadpt->badpoll)
+                {
+                    *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                    dev->sense[0]=0x08;
+                    dev->sense[1]=0x84;
+                    break;
+                }
+                /* Determine remaining length */
+                *residual=count-dev->commadpt->pollused;
+                /* Determine if SM should be set (succesfull or unsucessfull POLLs) */
+                /* exhausting poll data when all stations reported NO data          */
+                /* does not set Status Modifier                                     */
+                *unitstat=CSW_CE|CSW_DE|(dev->commadpt->pollsm?CSW_SM:0);
+                /* NOTE : The index byte (and rest) are in the Input Ring */
                 break;
 
         /*---------------------------------------------------------------*/
