@@ -827,6 +827,8 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     /* Load registers from the stack entry */
     ARCH_DEP(unstack_registers) (0, lsea, r1, r2, regs);
 
+    INVALIDATE_AEA_ALL(regs);
+
 }
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
 
