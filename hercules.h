@@ -508,7 +508,7 @@ typedef struct _REGS {                  /* Processor registers       */
 /* Macros to signal interrupt condition to a CPU[s] */
 #define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)].intcond)
 #define WAKEUP_WAITING_CPU(mask,statemask) \
- { int i; \
+ do { int i; \
    for (i = 0; i < MAX_CPU_ENGINES; i++) \
      if ((sysblk.regs[i].cpustate & (statemask)) \
       && (sysblk.regs[i].cpumask  & (mask)) \
@@ -517,19 +517,19 @@ typedef struct _REGS {                  /* Processor registers       */
         signal_condition(&sysblk.regs[i].intcond); \
         break; \
       } \
- }
+ } while(0)
 #define WAKEUP_WAITING_CPUS(mask,statemask) \
- { int i; \
+ do { int i; \
    for (i = 0; i < MAX_CPU_ENGINES; i++) \
      if ((sysblk.regs[i].cpustate & (statemask)) \
       && (sysblk.regs[i].cpumask  & (mask)) \
       && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
         signal_condition(&sysblk.regs[i].intcond); \
- }
+ } while (0)
 
 /* Macros to queue/dequeue a device on the I/O interrupt queue */
 #define QUEUE_IO_INTERRUPT(dev) \
- { \
+ do { \
    if (sysblk.iointq == NULL) \
    { \
      sysblk.iointq = (dev); \
@@ -544,20 +544,23 @@ typedef struct _REGS {                  /* Processor registers       */
      } \
      else \
      { \
-     DEVBLK *prev; \
-     for (prev = sysblk.iointq; prev->iointq != NULL; prev = prev->iointq) \
-       if (prev->iointq == (dev) \
-          || prev->iointq->priority > dev->priority) break; \
-     if (prev->iointq != (dev)) \
-     { \
-       (dev)->iointq = prev->iointq; \
-       prev->iointq = (dev); \
+       DEVBLK *prev; \
+       for (prev = sysblk.iointq; prev->iointq != NULL; prev = prev->iointq) \
+         if (prev->iointq == (dev) \
+            || prev->iointq->priority > dev->priority) break; \
+       if (prev->iointq != (dev)) \
+       { \
+         (dev)->iointq = prev->iointq; \
+         prev->iointq = (dev); \
+       } \
      } \
    } \
-   } \
- }
+   ON_IC_IOPENDING; \
+   WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED); \
+ } while (0)
+
 #define DEQUEUE_IO_INTERRUPT(dev) \
- { \
+ do { \
    if ((dev) == sysblk.iointq) \
      sysblk.iointq = (dev)->iointq; \
    else { \
@@ -565,7 +568,54 @@ typedef struct _REGS {                  /* Processor registers       */
      for (prev = sysblk.iointq; prev && prev->iointq != (dev); prev = prev->iointq); \
      if (prev) prev->iointq = (dev)->iointq; \
    } \
- }
+   if (sysblk.iointq == NULL) \
+     OFF_IC_IOPENDING; \
+ } while (0)
+
+/* Macros manipulating device state bits */
+#define IS_DEV_BUSY(_dev) \
+        (((_dev)->state & DEV_BUSY) != 0)
+#define IS_DEV_PENDING(_dev) \
+        (((_dev)->state & DEV_PENDING) != 0)
+#define IS_DEV_PENDING_PCI(_dev) \
+        (((_dev)->state & DEV_PENDING_PCI) != 0)
+#define IS_DEV_PENDING_ANY(_dev) \
+        (((_dev)->state & (DEV_PENDING|DEV_PENDING_PCI)) != 0)
+#define IS_DEV_BUSY_OR_PENDING(_dev) \
+        (((_dev)->state & (DEV_BUSY|DEV_PENDING)) != 0)
+
+#define ON_DEV_BUSY(_dev) \
+        or_bits( &(_dev)->state, DEV_BUSY)
+#define ON_DEV_PENDING(_dev) \
+        do { \
+          or_bits( &(_dev)->state, DEV_PENDING); \
+          QUEUE_IO_INTERRUPT((_dev)); \
+        } while (0)
+#define ON_DEV_PENDING_PCI(_dev) \
+        do { \
+          or_bits( &(_dev)->state, DEV_PENDING_PCI); \
+          QUEUE_IO_INTERRUPT((_dev)); \
+        } while (0)
+
+#define OFF_DEV_BUSY(_dev) \
+        and_bits( &(_dev)->state, ~DEV_BUSY)
+#define OFF_DEV_PENDING(_dev) \
+        do { \
+          and_bits( &(_dev)->state, ~DEV_PENDING); \
+          if (!(IS_DEV_PENDING_ANY((_dev)))) \
+            DEQUEUE_IO_INTERRUPT((_dev)); \
+        } while (0)
+#define OFF_DEV_PENDING_PCI(_dev) \
+        do { \
+          and_bits( &(_dev)->state, ~DEV_PENDING_PCI); \
+          if (!(IS_DEV_PENDING_ANY((_dev)))) \
+            DEQUEUE_IO_INTERRUPT((_dev)); \
+        } while (0)
+#define OFF_DEV_PENDING_ALL(_dev) \
+        do { \
+          and_bits( &(_dev)->state, ~(DEV_PENDING|DEV_PENDING_PCI)); \
+          DEQUEUE_IO_INTERRUPT((_dev)); \
+        } while (0)
 
 // #if defined(FEATURE_REGION_RELOCATE)
 /*-------------------------------------------------------------------*/
@@ -965,9 +1015,11 @@ typedef struct _DEVBLK {
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1;             /* 1=Channel will merge data
                                              chained write CCWs      */
-        int     pending;                /* 1=Interrupt pending       */
-        int     busy;                   /* 1=Device busy             */
-        int     pcipending;             /* 1=PCI interrupt pending   */
+        U32     state;                  /* Device state - serialized
+                                            by intlock.              */
+#define DEV_BUSY           0x80000000   /*   Device is busy          */
+#define DEV_PENDING        0x40000000   /*   Interrupt pending       */
+#define DEV_PENDING_PCI    0x20000000   /*   PCI interrupt pending   */
         int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/

@@ -608,8 +608,8 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
          if ((dev->console && dev->connected) ||
                   (strlen(dev->filename) > 0))
                        online = 1;
-         if (dev->busy) busy = 1;
-         if (dev->pending) pend = 1;
+         if (IS_DEV_BUSY(dev)) busy = 1;
+         if (IS_DEV_PENDING(dev)) pend = 1;
          if (dev->fd > 2) open = 1;
          if (online != NPonline[a - 1]) {
               fprintf(confp, ANSI_CURSOR, p, 40);
@@ -1763,8 +1763,8 @@ void gui_devlist_status (FILE *confp)
         if ((dev->console && dev->connected) ||
             (strlen(dev->filename) > 0))
             stat_online = 1;
-        if (dev->busy) stat_busy = 1;
-        if (dev->pending) stat_pend = 1;
+        if (IS_DEV_BUSY(dev)) stat_busy = 1;
+        if (IS_DEV_PENDING(dev)) stat_pend = 1;
         if (dev->fd > 2) stat_open = 1;
 
         fprintf(confp, "DEV=%4.4X %4.4X %-4.4s %d%d%d%d %s\n",

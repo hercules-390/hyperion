@@ -1074,13 +1074,19 @@ BYTE                    rejmsg[80];     /* Rejection message         */
             dev->readpending = 0;
             dev->rlen3270 = 0;
             dev->keybdrem = 0;
-            dev->busy = 0;
-            dev->pending = 0;
-            dev->pcipending = 0;
-            memset (&dev->scsw, 0, sizeof(SCSW));
-            memset (&dev->pciscsw, 0, sizeof(SCSW));
 
             release_lock (&dev->lock);
+
+            /* Reset interrupt related fields */
+            obtain_lock (&sysblk.intlock);
+
+            memset (&dev->scsw, 0, sizeof(SCSW));
+            memset (&dev->pciscsw, 0, sizeof(SCSW));
+            OFF_DEV_BUSY(dev);
+            OFF_DEV_PENDING_ALL(dev);
+
+            release_lock (&sysblk.intlock);
+
             break;
         }
 
@@ -1268,8 +1274,8 @@ BYTE                    unitstat;       /* Status after receive data */
         {
             if (dev->console
                 && dev->connected
-                && (dev->busy == 0 || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                && dev->pending == 0
+                && (IS_DEV_BUSY(dev) == 0 || (dev->scsw.flag3 & SCSW3_AC_SUSP))
+                && IS_DEV_PENDING(dev) == 0
                 && (dev->pmcw.flag5 & PMCW5_V)
 // NOT S/370    && (dev->pmcw.flag5 & PMCW5_E)
                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
@@ -1331,8 +1337,8 @@ BYTE                    unitstat;       /* Status after receive data */
             if (dev->console
                 && dev->connected
                 && FD_ISSET (dev->fd, &readset)
-                && (dev->busy == 0 || (dev->scsw.flag3 & SCSW3_AC_SUSP))
-                && dev->pending == 0
+                && (IS_DEV_BUSY(dev) == 0 || (dev->scsw.flag3 & SCSW3_AC_SUSP))
+                && IS_DEV_PENDING(dev) == 0
                 && (dev->pmcw.flag5 & PMCW5_V)
 // NOT S/370    && (dev->pmcw.flag5 & PMCW5_E)
                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)

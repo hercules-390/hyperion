@@ -733,9 +733,8 @@ BYTE   buf[80];
                                    class,
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
-                                   (dev->busy ? "busy " : ""),
-                                   ((dev->pending || dev->pcipending) ?
-                                     "pending " : ""));
+                                   (IS_DEV_BUSY(dev) ? "busy " : ""),
+                                   (IS_DEV_PENDING_ANY(dev) ? "pending " : ""));
         }
 
     fprintf(webblk->hsock,"</table>\n");

@@ -935,8 +935,8 @@ int devlist_cmd(char* cmdline, int argc, char *argv[])
         logmsg( "%4.4X %4.4X %s %s%s%s\n",
                 dev->devnum, dev->devtype, devnam,
                 (dev->fd > 2 ? _("open ") : ""),
-                (dev->busy ? _("busy ") : ""),
-                ((dev->pending || dev->pcipending) ? _("pending ") : "")
+                (IS_DEV_BUSY(dev) ? _("busy ") : ""),
+                (IS_DEV_PENDING_ANY(dev) ? _("pending ") : "")
             );
 
         if (dev->bs)
@@ -1450,14 +1450,17 @@ BYTE c;                                 /* Character work area       */
     obtain_lock (&dev->lock);
 
     /* Reject if device is busy or interrupt pending */
-    if (dev->busy || dev->pending
+    obtain_lock (&sysblk.intlock);
+    if (IS_DEV_BUSY(dev) || IS_DEV_PENDING(dev)
         || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
+        release_lock (&sysblk.intlock);
         release_lock (&dev->lock);
         logmsg( _("HHCPN096E Device %4.4X busy or interrupt pending\n"),
                   devnum );
         return -1;
     }
+    release_lock (&sysblk.intlock);
 
     /* Close the existing file, if any */
     if (dev->fd < 0 || dev->fd > 2)
@@ -1876,9 +1879,9 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
-        if (dev->pending && (dev->pmcw.flag5 & PMCW5_V))
+        if (IS_DEV_PENDING(dev) && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: I/O pending\n"), dev->devnum );
-        if (dev->pcipending && (dev->pmcw.flag5 & PMCW5_V))
+        if (IS_DEV_PENDING_PCI(dev) && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: PCI pending\n"), dev->devnum );
         if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
             logmsg( _("          DEV%4.4X: CRW pending\n"), dev->devnum );

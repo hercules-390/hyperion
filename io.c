@@ -188,22 +188,28 @@ PMCW    pmcw;                           /* Path management ctl word  */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
+    /* Obtain the device lock */
+    obtain_lock (&dev->lock);
+
+    /* Obtain the intlock too */
+    obtain_lock (&sysblk.intlock);
+
     /* Condition code 1 if subchannel is status pending
        with other than intermediate status */
     if ((dev->scsw.flag3 & SCSW3_SC_PEND)
       && !(dev->scsw.flag3 & SCSW3_SC_INTER))
     {
         regs->psw.cc = 1;
+        release_lock (&sysblk.intlock);
+        release_lock (&dev->lock);
         return;
     }
 
-    /* Obtain the device lock */
-    obtain_lock (&dev->lock);
-
     /* Condition code 2 if subchannel is busy */
-    if (dev->busy || dev->pending)
+    if (IS_DEV_BUSY(dev) || IS_DEV_PENDING(dev))
     {
         regs->psw.cc = 2;
+        release_lock (&sysblk.intlock);
         release_lock (&dev->lock);
         return;
     }
@@ -253,6 +259,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Set device priority from the interruption subclass bits */
     dev->priority = (dev->pmcw.flag4 & PMCW4_ISC) >> 3;
 
+    release_lock (&sysblk.intlock);
     release_lock (&dev->lock);
 
     /* Set condition code 0 */

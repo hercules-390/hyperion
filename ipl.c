@@ -100,12 +100,14 @@ BYTE    chanstat;                       /* IPL device channel status */
     /* Build the operation request block */                    /*@IWZ*/
     memset (&dev->orb, 0, sizeof(ORB));                        /*@IWZ*/
 
+    ON_DEV_BUSY(dev);
+
     /* Execute the IPL channel program */
     ARCH_DEP(execute_ccw_chain) (dev);
 
     /* Clear the interrupt pending and device busy conditions */
-    dev->pending = 0;
-    dev->busy = 0;
+    OFF_DEV_BUSY(dev);
+    OFF_DEV_PENDING(dev);
     dev->scsw.flag2 = 0;
     dev->scsw.flag3 = 0;
 
