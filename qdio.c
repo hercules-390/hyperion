@@ -54,7 +54,39 @@ DEVBLK *dev;                            /* -> device block           */
 
     /* ZZ INCOMPLETE: 
        This code will never be reached as no devices support QDIO yet */
-    regs->psw.cc = 1;  /* Device not QDIO active */
+
+    /* Obtain the device lock */
+    obtain_lock (&dev->lock);
+
+    /* Check that device is QDIO active */
+    if ((dev->scsw.flag2 & SCSW2_Q) == 0)
+    {
+        release_lock (&dev->lock);
+        regs->psw.cc = 1;  
+        return;
+    }
+
+    switch(regs->GR_L(0)) {
+
+    case SIGA_FC_R:
+        /* ZZ INCOMPLETE */
+        regs->psw.cc = 0;  
+        break;
+
+    case SIGA_FC_W:
+        /* ZZ INCOMPLETE */
+        regs->psw.cc = 0;  
+        break;
+
+    case SIGA_FC_S:
+        /* No signalling required for sync requests as we emulate 
+           a real machine */
+        regs->psw.cc = 0;  
+        break;
+
+    }
+
+    release_lock (&dev->lock);
 
 }
 #endif /*defined(FEATURE_QUEUED_DIRECT_IO)*/
