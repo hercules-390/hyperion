@@ -516,6 +516,12 @@ static char *pgmintname[] = {
         && (regs->siebk->ic[0] & SIE_IC0_OPEREX))
       && !(code == PGM_PRIVILEGED_OPERATION_EXCEPTION
         && (regs->siebk->ic[0] & SIE_IC0_PRIVOP))
+#ifdef FEATURE_BASIC_FP_EXTENSIONS
+      && !(code == PGM_DATA_EXCEPTION
+        && (regs->dxc == 1 || regs->dxc == 2)
+        && (regs->CR(0) & CR0_AFP)
+        && !(regs->hostregs->CR(0) & CR0_AFP))
+#endif /*FEATURE_BASIC_FP_EXTENSIONS*/
       /* Or all exceptions if requested as such */
       && !(regs->siebk->ic[0] & SIE_IC0_PGMALL) )
     )
@@ -627,6 +633,7 @@ static char *pgmintname[] = {
            )
             psa->excarid = regs->excarid;
             psa->opndrid = regs->opndrid;
+            regs->opndrid = 0;
 
 #if defined(FEATURE_ESAME)
         /* Store the translation exception address at PSA+168 */
