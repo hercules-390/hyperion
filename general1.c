@@ -780,6 +780,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
+    {
         regs->psw.IA = effective_addr2;
 
 #if defined(FEATURE_PER)
@@ -791,6 +792,7 @@ VADR    effective_addr2;                /* Effective address         */
             )
             ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
+    }
 
 }
 
