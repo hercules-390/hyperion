@@ -143,6 +143,27 @@ int bytes_returned;
 }
 
 
+static void logger_term(void *arg __attribute__ ((unused)) )
+{
+
+    obtain_lock(&logger_lock);
+
+    /* Redirect all output to stderr */
+    dup2(STDERR_FILENO, STDOUT_FILENO);
+
+    /* Mark logger inactive */
+    logger_active = 0;
+
+    /* Send the logger a message to wake it up */
+    fprintf(sysblk.syslog[LOG_WRITE], _("HHCLG014I logger thread terminating\n") );
+
+    /* Wait for the logger to terminate */
+    wait_condition(&logger_cond, &logger_lock);
+
+    release_lock(&logger_lock);
+}
+
+
 static void logger_thread(void *arg)
 {
 int bytes_read;
@@ -158,6 +179,9 @@ int bytes_read;
     }
     setvbuf (stdout, NULL, _IOLBF, 0);
     
+    /* call logger_term on system shutdown */
+    hdl_adsc(logger_term, NULL);
+
     obtain_lock(&logger_lock);
 
     logger_active = 1;
@@ -319,25 +343,4 @@ void logger_init(void)
 
     release_lock(&logger_lock);
 
-}
-
-
-void logger_term()
-{
-
-    obtain_lock(&logger_lock);
-
-    /* Redirect all output to stderr */
-    dup2(STDERR_FILENO, STDOUT_FILENO);
-
-    /* Mark logger inactive */
-    logger_active = 0;
-
-    /* Send the logger a message to wake it up */
-    fprintf(sysblk.syslog[LOG_WRITE], _("HHCLG014I logger thread terminating\n") );
-
-    /* Wait for the logger to terminate */
-    wait_condition(&logger_cond, &logger_lock);
-
-    release_lock(&logger_lock);
 }

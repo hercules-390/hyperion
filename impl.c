@@ -408,16 +408,10 @@ void system_shutdown (void)
                  
     sysblk.shutdown = 1;
 
-    /* ZZ FIXME: logger_term() should really be the last thing to do
-                 as currently not all termination messages go to 
-                 a redirected log, however the logger termination 
-                 still has a problem where msgs could be lost during
-                 termination (ie left in a buffer, not written to
-                 the hardcopy log).
-                 hdl_adsc(logger_term, NULL) should be added to the 
-                 logger init routine */
-    logger_term();
-
+    /* Call all termination routines in LIFO order */
+    /* ZZ FIXME: this should really be done after release_config()  
+                 but the logger may discard some messages still
+                 buffered */
     hdl_shut();
 
     release_config();
