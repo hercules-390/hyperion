@@ -14,5 +14,5 @@ echo off
 SET ANSI_FLAG=Y
 SET BASH_OPT=+e +x
 bash %BASH_OPT% _build.tail
-bash %BASH_OPT% _build
+bash %BASH_OPT% _build -c p4 -p 1 -f
 pause

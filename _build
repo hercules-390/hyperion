@@ -38,6 +38,9 @@
 # +-------------------------------------------------------------------+
 # !
 # ! Change Log: '$Log$
+# ! Change Log: 'Revision 1.19  2003/10/06 19:51:24  vbandke
+# ! Change Log: 'Add support for Linux build.  Add support for -p flag (number of processors)
+# ! Change Log: '
 # ! Change Log: 'Revision 1.18  2003/08/26 11:53:08  vbandke
 # ! Change Log: 'remove reference to ABOUT-NLS.  Add option -f to forece generation of ./configure
 # ! Change Log: '
