@@ -37,6 +37,10 @@
 #undef SAEVENT_BIT
 #undef SSEVENT_BIT
 #undef SSGROUP_BIT
+#undef LSED_UET_HDR
+#undef LSED_UET_TLR
+#undef LSED_UET_BAKR
+#undef LSED_UET_PC
 #undef DEF_INST
 #undef ARCH_DEP
 #undef PSA
@@ -193,6 +197,11 @@ s390_ ## _name
 #define SSEVENT_BIT	STD_SSEVENT
 #define SSGROUP_BIT	STD_GROUP
 
+#define LSED_UET_HDR	S_LSED_UET_HDR
+#define LSED_UET_TLR	S_LSED_UET_TLR
+#define LSED_UET_BAKR	S_LSED_UET_BAKR
+#define LSED_UET_PC	S_LSED_UET_PC
+
 #define PSA	PSA_3XX
 #define IA	IA_L
 #define PX	PX_L
@@ -260,6 +269,11 @@ s390_ ## _name
 #define SAEVENT_BIT	ASCE_S
 #define SSEVENT_BIT	ASCE_X
 #define SSGROUP_BIT	ASCE_G
+
+#define LSED_UET_HDR	Z_LSED_UET_HDR
+#define LSED_UET_TLR	Z_LSED_UET_TLR
+#define LSED_UET_BAKR	Z_LSED_UET_BAKR
+#define LSED_UET_PC	Z_LSED_UET_PC
 
 #define DEF_INST(_name) \
 ATTR_REGPARM(3) void z900_ ## _name (BYTE inst[], int execflag, REGS *regs)
