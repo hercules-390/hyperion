@@ -5607,25 +5607,7 @@ U64     lsfract;
             shift = ((78 - fl.expo) * 4);
             lsfract = fl.long_fract << (64 - shift);
             fl.long_fract >>= shift;
-            if (fl.expo == 72) {
-                if (fl.sign) {
-                    /* negative */
-                    if (fl.long_fract > 0x80000000UL) {
-                        /* exeeds range by value */
-                        regs->GR_L(r1) = 0x80000000UL;
-                        regs->psw.cc = 3;
-                        return;
-                    }
-                } else {
-                    /* positive */
-                    if (fl.long_fract > 0x7FFFFFFFUL) {
-                        /* exeeds range by value */
-                        regs->GR_L(r1) = 0x7FFFFFFFUL;
-                        regs->psw.cc = 3;
-                        return;
-                    }
-                }
-            }
+
             if (m3 == 1) {
                 /* biased round to nearest */
                 if (lsfract & 0x8000000000000000ULL) {
@@ -5649,6 +5631,25 @@ U64     lsfract;
                 if ((fl.sign == NEG)
                 && lsfract) {
                     fl.long_fract++;
+                }
+            }
+            if (fl.expo == 72) {
+                if (fl.sign) {
+                    /* negative */
+                    if (fl.long_fract > 0x80000000UL) {
+                        /* exeeds range by value */
+                        regs->GR_L(r1) = 0x80000000UL;
+                        regs->psw.cc = 3;
+                        return;
+                    }
+                } else {
+                    /* positive */
+                    if (fl.long_fract > 0x7FFFFFFFUL) {
+                        /* exeeds range by value */
+                        regs->GR_L(r1) = 0x7FFFFFFFUL;
+                        regs->psw.cc = 3;
+                        return;
+                    }
                 }
             }
         } else if (fl.expo == 64) {
