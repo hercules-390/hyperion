@@ -676,7 +676,7 @@ BYTE   buf[80];
                           "<th>Type</th>"
                           "<th>Status</th></tr>\n");
 
-    for(dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
         if(dev->pmcw.flag5 & PMCW5_V)
         {
              (dev->hnd->query)(dev, &class, sizeof(buf), buf);

@@ -230,8 +230,9 @@ char *value;
 char *strtok_str;
 CGIVAR **cgivar;
 
-    for(cgivar = &(webblk->cgivar); *cgivar != NULL;
-        cgivar = &((*cgivar)->next));
+    for (cgivar = &(webblk->cgivar);
+        *cgivar;
+         cgivar = &((*cgivar)->next));
 
     for (name = strtok_r(qstring,"&; ",&strtok_str);
          name; 
@@ -256,7 +257,7 @@ CGIVAR **cgivar;
 static void http_dump_cgi_variables(WEBBLK *webblk)
 {
     CGIVAR *cv;
-    for(cv = webblk->cgivar; cv != NULL; cv = cv->next)
+    for(cv = webblk->cgivar; cv; cv = cv->next)
         logmsg("HHS020D cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n",
           cv, cv->name, cv->value, cv->type);
 }
@@ -266,7 +267,7 @@ static void http_dump_cgi_variables(WEBBLK *webblk)
 char *http_variable(WEBBLK *webblk, char *name, int type)
 {
     CGIVAR *cv;
-    for(cv = webblk->cgivar; cv != NULL; cv = cv->next)
+    for(cv = webblk->cgivar; cv; cv = cv->next)
         if((cv->type & type) && !strcmp(name,cv->name))
             return cv->value;
     return NULL;
@@ -497,8 +498,8 @@ static void *http_request(FILE *hsock)
 
     /* anything following a ? in the URL is part of the get arguments */
     if ((pointer=strchr(url,'?'))) {
-        *pointer = 0;
-        http_interpret_variable_string(webblk, pointer + 1, VARTYPE_GET);
+        *pointer++ = 0;
+        http_interpret_variable_string(webblk, pointer, VARTYPE_GET);
     }
 
     while(url[0] == '/' && url[1] == '/')
@@ -521,7 +522,7 @@ static void *http_request(FILE *hsock)
     http_dump_cgi_variables(webblk);
 #endif
 
-    for(cgient = cgidir; cgient->path != NULL; cgient++)
+    for(cgient = cgidir; cgient->path; cgient++)
     {
         if(!strcmp(cgient->path, url))
         {
