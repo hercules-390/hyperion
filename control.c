@@ -2679,7 +2679,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
                to the old primary ASN, with the high-order bit set if
                the old primary space-switch-event control bit is one */
             regs->TEA = regs->CR(4) & CR4_PASN;
-            if (regs->CR(1) & SSEVENT_BIT)
+            if( (regs->CR(1) & SSEVENT_BIT) || OPEN_IC_PERINT(regs) )
                 regs->TEA |= TEA_SSEVENT;
 
             /* Indicate space-switch event required */
@@ -2824,7 +2824,7 @@ int     rc;                             /* return code from load_psw */
                    to old primary ASN, and set high-order bit if old
                    primary space-switch-event control bit is one */
                 newregs.TEA = regs->CR_LHL(4);
-                if (newregs.CR(1) & SSEVENT_BIT)
+                if( (newregs.CR(1) & SSEVENT_BIT) || OPEN_IC_PERINT(regs) )
                     newregs.TEA |= TEA_SSEVENT;
 
                 /* Indicate space-switch event required */
@@ -2922,7 +2922,10 @@ int     rc;                             /* return code from load_psw */
 
     /* Generate space switch event if required */
     if (ssevent)
+    {
+        regs->psw.ilc = 2;
         ARCH_DEP(program_interrupt) (&newregs, PGM_SPACE_SWITCH_EVENT);
+    }
 
     if (rc) /* if new psw has bad format */
         ARCH_DEP(program_interrupt) (&newregs, rc);

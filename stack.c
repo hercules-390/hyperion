@@ -1323,7 +1323,6 @@ LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 RADR    abs;                            /* Absolute address          */
 int     permode;                        /* 1=PER mode is set in PSW  */
-int     saveilc;                        /* ILC across load_psw()     */
 U16     pkm;                            /* PSW key mask              */
 U16     sasn;                           /* Secondary ASN             */
 U16     eax;                            /* Extended AX               */
@@ -1434,12 +1433,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     /* Load new PSW using the bytes extracted from the stack entry */
     /* The rc will be checked by calling routine for PIC 06        */
-    saveilc = regs->psw.ilc;
     *rc = ARCH_DEP(load_psw) (regs, newpsw);
-
-    /* Restore the ILC if load_psw was successfull */
-    if(!rc)
-        regs->psw.ilc = saveilc;
 
     /* Restore the PER mode bit from the current PSW */
     if (permode)

@@ -366,7 +366,7 @@ static char *pgmintname[] = {
 
     /* If this is a concurrent PER event then we must add the PER
        bit to the interrupts code */
-    if( OPEN_IC_PERINT(regs) )
+    if( OPEN_IC_PERINT(realregs) )
         pcode |= PGM_PER_EVENT;
 
     /* Perform serialization and checkpoint synchronization */
@@ -561,20 +561,20 @@ static char *pgmintname[] = {
         STORE_HW(psa->pgmint + 2, pcode);
 
         /* Handle PER or concurrent PER event */
-        if( OPEN_IC_PERINT(regs) )
+        if( OPEN_IC_PERINT(realregs) )
         {
             if( IS_IC_TRACE )
                 logmsg("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n",
-                  regs->cpuad, pcode, IS_IC_PER(regs) >> 16,
-                  (regs->psw.IA - regs->psw.ilc) & ADDRESS_MAXWRAP(regs) );
+                  regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
+                  (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
 
-            regs->perc = OPEN_IC_PERINT(regs) >> ((32 - IC_CR9_SHIFT) - 16);
-            STORE_HW(psa->perint, regs->perc);
+            regs->perc = OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
+            STORE_HW(psa->perint, realregs->perc);
 
-            STORE_W(psa->peradr, regs->peradr);
+            STORE_W(psa->peradr, realregs->peradr);
 
             /* Reset PER pending indication */
-            OFF_IC_PER(regs);
+            OFF_IC_PER(realregs);
 
         }
 
