@@ -1678,8 +1678,8 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         int              batch:1;       /* 1=called in batch mode    */
 
-        int              comps;         /* Supported compressions    */
-        int              comp;          /* Override compression      */
+        BYTE             comps;         /* Supported compressions    */
+        BYTE             comp;          /* Override compression      */
         int              compparm;      /* Override compression parm */
 
         LOCK             gclock;        /* Garbage collector lock    */
@@ -1753,6 +1753,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
                          fbadasd:1,     /* 1=FBA dasd                */
                          ioactive:1,    /* 1=Channel program active  */
+                         bufused:1,     /* 1=newbuf was used         */
                          updated:1,     /* 1=Update occurred         */
                          merging:1,     /* 1=File merge in progress  */
                          stopping:1;    /* 1=Device is closing       */
@@ -1768,6 +1769,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         CCKD_L2ENT      *l2;            /* Active level 2 table      */
         int              l2active;      /* Active level 2 cache entry*/
         int              active;        /* Active cache entry        */
+        BYTE            *newbuf;        /* Uncompressed buffer       */
         CCKD_FREEBLK    *free;          /* Internal free space chain */
         int              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */

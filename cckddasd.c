@@ -196,7 +196,7 @@ int             i;                      /* Index                     */
 #ifdef CCKD_BZIP2
     cckdblk.comps     |= CCKD_COMPRESS_BZIP2;
 #endif
-    cckdblk.comp       = -1;
+    cckdblk.comp       = 0xff;
     cckdblk.compparm   = -1;
 
     /* Initialize the readahead queue */
@@ -365,6 +365,7 @@ int             i;                      /* Index                     */
     }
     cckd_purge_cache (dev); cckd_purge_l2 (dev);
     dev->bufcur = dev->cache = -1;
+    if (cckd->newbuf) free (cckd->newbuf);
     release_lock (&cckd->iolock);
 
     /* Remove the device from the cckd queue */
@@ -578,7 +579,6 @@ int             syncio;                 /* Syncio indicator          */
                 return -1;
             }
             cache_setbuf (CACHE_DEVBUF, dev->cache, newbuf, dev->ckdtrksz);
-            free (dev->buf);
             dev->buf     = newbuf;
             dev->buflen  = cckd_trklen (dev, newbuf);
             cache_setval (CACHE_DEVBUF, dev->cache, dev->buflen);
@@ -776,7 +776,6 @@ int             maxlen;                 /* Size for cache entry      */
                 return -1;
             }
             cache_setbuf (CACHE_DEVBUF, dev->cache, newbuf, maxlen);
-            free (cbuf);
             cbuf = newbuf;
             dev->buf     = newbuf + CKDDASD_TRKHDR_SIZE;
             dev->buflen  = CFBA_BLOCK_SIZE;
@@ -1420,7 +1419,7 @@ int             comp;                   /* Compression algorithm     */
 int             parm;                   /* Compression parameter     */
 TID             tid;                    /* Writer thead id           */
 U32             flag;                   /* Cache flag                */
-char           *compress[] = {"none", "zlib", "bzip2"};
+static char    *compress[] = {"none", "zlib", "bzip2"};
 BYTE            buf2[65536];            /* Compress buffer           */
 
 #ifndef WIN32
@@ -1487,7 +1486,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
         buf = cache_getbuf(CACHE_DEVBUF, o, 0);
         len = cckd_trklen (dev, buf);
         comp = len < CCKD_COMPRESS_MIN ? CCKD_COMPRESS_NONE
-             : cckdblk.comp < 0 ? cckd->cdevhdr[cckd->sfn].compress
+             : cckdblk.comp == 0xff ? cckd->cdevhdr[cckd->sfn].compress
              : cckdblk.comp;
         parm = cckdblk.compparm < 0
              ? cckd->cdevhdr[cckd->sfn].compress_parm
@@ -2315,8 +2314,6 @@ int             i;                      /* Index                     */
             {
                 logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD125E file[%d] free space read error, offset %llx: %d,%d,%d %s\n"),
                        sfx, (long long)fpos, rc, CCKD_FREEBLK_SIZE, errno, strerror(errno));
-cckd_print_itrace();
-sleep(600);
                 return -1;
             }
             cckd->free[i].prev = i - 1;
@@ -3055,8 +3052,8 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 U16             cyl;                    /* Cylinder                  */
 U16             head;                   /* Head                      */
 int             t;                      /* Calculated track          */
-int             badcomp=0;              /* 1=Unsupported compression */
-char           *comp[] = {"none", "zlib", "bzip2"};
+BYTE            badcomp=0;              /* 1=Unsupported compression */
+static char    *comp[] = {"none", "zlib", "bzip2"};
 
     cckd = dev->cckd_ext;
 
@@ -4139,7 +4136,7 @@ int             gcol;                   /* Identifier                */
 int             rc;                     /* Return code               */
 DEVBLK         *dev;                    /* -> device block           */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-long long       size, free;             /* File size, free           */
+long long       size, fsiz;             /* File size, free size      */
 struct timeval  now;                    /* Time-of-day               */
 struct timespec tm;                     /* Time-of-day to wait       */
 int             gc;                     /* Garbage collection state  */
@@ -4189,6 +4186,14 @@ int             gctab[5]= {             /* default gcol parameters   */
                 continue;
             }
 
+            /* Free newbuf if it hasn't been used */
+            if (!cckd->ioactive && !cckd->bufused && cckd->newbuf)
+            {
+                free (cckd->newbuf);
+                cckd->newbuf = NULL;
+            }
+            cckd->bufused = 0;
+
             /* If OPENED bit not on then flush if updated */
             if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
             {
@@ -4199,11 +4204,11 @@ int             gctab[5]= {             /* default gcol parameters   */
 
             /* Determine garbage state */
             size = (long long)cckd->cdevhdr[cckd->sfn].size;
-            free = (long long)cckd->cdevhdr[cckd->sfn].free_total;
-            if      (free >= (size = size/2)) gc = 0;
-            else if (free >= (size = size/2)) gc = 1;
-            else if (free >= (size = size/2)) gc = 2;
-            else if (free >= (size = size/2)) gc = 3;
+            fsiz = (long long)cckd->cdevhdr[cckd->sfn].free_total;
+            if      (fsiz >= (size = size/2)) gc = 0;
+            else if (fsiz >= (size = size/2)) gc = 1;
+            else if (fsiz >= (size = size/2)) gc = 2;
+            else if (fsiz >= (size = size/2)) gc = 3;
             else gc = 4;
 
             /* Adjust the state based on the number of free spaces */
@@ -4535,16 +4540,33 @@ CCKDDASD_EXT *cckd;
 BYTE *cckd_uncompress (DEVBLK *dev, BYTE *from, int len, int maxlen,
                        int trk)
 {
-BYTE           *to = NULL;                /* Uncompressed buffer     */
+CCKDDASD_EXT   *cckd;
+BYTE           *to;                       /* Uncompressed buffer     */
 int             newlen;                   /* Uncompressed length     */
-int             comp;                     /* Compression type        */
-char           *compress[] = {"none", "zlib", "bzip2"};
+BYTE            comp;                     /* Compression type        */
+static char    *compress[] = {"none", "zlib", "bzip2"};
+
+    cckd = dev->cckd_ext;
 
     cckdtrc ("cckddasd: uncompress comp %d len %d maxlen %d trk %d\n",
              from[0] & CCKD_COMPRESS_MASK, len, maxlen, trk);
 
-    /* Uncompress the track image */
+    /* Extract compression type */
     comp = (from[0] & CCKD_COMPRESS_MASK);
+
+    /* Get a buffer to uncompress into */
+    if (comp != CCKD_COMPRESS_NONE && cckd->newbuf == NULL)
+    {
+        cckd->newbuf = malloc (maxlen);
+        if (cckd->newbuf == NULL)
+        {
+            logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD190E uncompress %d malloc() error: %s\n"),
+                   trk, strerror(errno));
+            return NULL;
+        }
+    }
+
+    /* Uncompress the track image */
     switch (comp) {
 
     case CCKD_COMPRESS_NONE:
@@ -4552,21 +4574,11 @@ char           *compress[] = {"none", "zlib", "bzip2"};
         to = from;
         break;
     case CCKD_COMPRESS_ZLIB:
-        to = calloc (maxlen, 1);
-        if (to == NULL) {
-            logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD190E uncompress %d calloc() error: %s\n"),
-                   trk, strerror(errno));
-            return NULL;
-        }
+        to = cckd->newbuf;
         newlen = cckd_uncompress_zlib (dev, to, from, len, maxlen);
         break;
     case CCKD_COMPRESS_BZIP2:
-        to = calloc (maxlen, 1);
-        if (to == NULL) {
-            logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD191E uncompress %d calloc() error: %s\n"),
-                   trk, strerror(errno));
-            return NULL;
-        }
+        to = cckd->newbuf;
         newlen = cckd_uncompress_bzip2 (dev, to, from, len, maxlen);
         break;
     default:
@@ -4574,51 +4586,69 @@ char           *compress[] = {"none", "zlib", "bzip2"};
         break;
     }
 
+    /* Validate the uncompressed track image */
     newlen = cckd_validate (dev, to, trk, newlen);
 
-    if (newlen < 0 && (to == NULL || to == from)) {
-        to = calloc (maxlen, 1);
-        if (to == NULL) {
-            logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD192E uncompress %d calloc() error: %s\n"),
+    /* Return if successful */
+    if (newlen > 0)
+    {
+        if (to != from)
+        {
+            cckd->newbuf = from;
+            cckd->bufused = 1;
+        }
+        return to;
+    }
+
+    /* Get a buffer now if we haven't gotten one */
+    if (cckd->newbuf == NULL)
+    {
+        cckd->newbuf = malloc (maxlen);
+        if (cckd->newbuf == NULL)
+        {
+            logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD192E uncompress %d malloc() error: %s\n"),
                    trk, strerror(errno));
             return NULL;
         }
     }
 
     /* Try each uncompression routine in turn */
-    if (newlen < 0)
+
+    /* uncompressed */
+    newlen = cckd_trklen (dev, from);
+    newlen = cckd_validate (dev, from, trk, newlen);
+    if (newlen > 0)
+        return from;
+
+    /* zlib compression */
+    to = cckd->newbuf;
+    newlen = cckd_uncompress_zlib (dev, to, from, len, maxlen);
+    newlen = cckd_validate (dev, to, trk, newlen);
+    if (newlen > 0)
     {
-        newlen = cckd_trklen (dev, from);
-        newlen = cckd_validate (dev, from, trk, newlen);
-        if (newlen > 0) {
-            free (to);
-            to = from;
-        }
-    }
-    if (newlen < 0)
-    {
-        newlen = cckd_uncompress_zlib (dev, to, from, len, maxlen);
-        newlen = cckd_validate (dev, to, trk, newlen);
-    }
-    if (newlen < 0)
-    {
-        newlen = cckd_uncompress_bzip2 (dev, to, from, len, maxlen);
-        newlen = cckd_validate (dev, to, trk, newlen);
+        cckd->newbuf = from;
+        cckd->bufused = 1;
+        return to;
     }
 
-    /* Handle error condition */
-    if (newlen < 0)
+    /* bzip2 compression */
+    to = cckd->newbuf;
+    newlen = cckd_uncompress_bzip2 (dev, to, from, len, maxlen);
+    newlen = cckd_validate (dev, to, trk, newlen);
+    if (newlen > 0)
     {
-        logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD193E uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n"),
-                trk, from[0], from[1], from[2], from[3], from[4]);
-        if (comp & ~cckdblk.comps)
-            logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD194E %s compression not supported\n"),
+        cckd->newbuf = from;
+        cckd->bufused = 1;
+        return to;
+    }
+
+    /* Unable to uncompress */
+    logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD193E uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n"),
+            trk, from[0], from[1], from[2], from[3], from[4]);
+    if (comp & ~cckdblk.comps)
+        logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD194E %s compression not supported\n"),
                 compress[comp]);
-        free (to);
-        to = NULL;
-    }
-
-    return to;
+    return NULL;
 }
 
 int cckd_uncompress_zlib (DEVBLK *dev, BYTE *to, BYTE *from, int len, int maxlen)
@@ -4814,8 +4844,8 @@ void cckd_command_opts()
     logmsg ("comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,"
              "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n"
              "\tfreepend=%d,fsync=%d,ftruncwa=%d,trace=%d\n",
-             cckdblk.comp, cckdblk.compparm,
-             cckdblk.ramax,
+             cckdblk.comp == 0xff ? -1 : cckdblk.comp,
+             cckdblk.compparm, cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
              cckdblk.wrmax, cckdblk.gcwait,
              cckdblk.gcparm, cckdblk.nostress, cckdblk.freepend,
@@ -4915,7 +4945,7 @@ int   val, opts = 0;
             }
             else
             {
-                cckdblk.comp = val;
+                cckdblk.comp = val < 0 ? 0xff : val;
                 opts = 1;
             }
         }

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+04 May 2004 cckdbuf.pat - cckd fixes - Greg Smith
 17 Apr 2004 Correct merged PER guest interrupt propagation - Jan Jaeger
 10 Apr 2004 Use signal shutdown on quit - Jan Jaeger
 09 Apr 2004 PMCW QDIO bit no longer reserved - Jan Jaeger
