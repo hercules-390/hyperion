@@ -5458,46 +5458,632 @@ VADR    effective_addr2;                /* Effective address         */
 }
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E35A AY    - Add (Long Displacement)                        [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_y)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
+        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E37A AHY   - Add Halfword (Long Displacement)               [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_halfword_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load 2 bytes from operand address */
+    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
+        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E35E ALY   - Add Logical (Long Displacement)                [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(add_logical_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Add signed operands and set condition code */
+    regs->psw.cc =
+            add_logical (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB54 NIY   - And Immediate (Long Displacement)              [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_immediate_y)
+{
+BYTE    i2;                             /* Immediate byte of opcode  */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+BYTE    rbyte;                          /* Result byte               */
+
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
+
+    /* Fetch byte from operand address */
+    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+
+    /* AND with immediate operand */
+    rbyte &= i2;
+
+    /* Store result at operand address */
+    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
+
+    /* Set condition code */
+    regs->psw.cc = rbyte ? 1 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E354 NY    - And (Long Displacement)                        [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(and_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* AND second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E359 CY    - Compare (Long Displacement)                    [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_y)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S32)regs->GR_L(r1) < (S32)n ? 1 :
+            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E379 CHY   - Compare Halfword (Long Displacement)           [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_halfword_y)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of comparand from operand address */
+    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+    /* Compare signed operands and set condition code */
+    regs->psw.cc =
+            (S32)regs->GR_L(r1) < (S32)n ? 1 :
+            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E355 CLY   - Compare Logical (Long Displacement)            [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Compare unsigned operands and set condition code */
+    regs->psw.cc = regs->GR_L(r1) < n ? 1 :
+                   regs->GR_L(r1) > n ? 2 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB55 CLIY  - Compare Logical Immediate (Long Displacement)  [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_immediate_y)
+{
+BYTE    i2;                             /* Immediate byte            */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+BYTE    cbyte;                          /* Compare byte              */
+
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
+
+    /* Fetch byte from operand address */
+    cbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+
+    /* Compare with immediate operand and set condition code */
+    regs->psw.cc = (cbyte < i2) ? 1 :
+                   (cbyte > i2) ? 2 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB57 XIY   - Exclusive Or Immediate (Long Displacement)     [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(exclusive_or_immediate_y)
+{
+BYTE    i2;                             /* Immediate operand         */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+BYTE    rbyte;                          /* Result byte               */
+
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
+
+    /* Fetch byte from operand address */
+    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+
+    /* XOR with immediate operand */
+    rbyte ^= i2;
+
+    /* Store result at operand address */
+    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
+
+    /* Set condition code */
+    regs->psw.cc = rbyte ? 1 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E357 XY    - Exclusive Or (Long Displacement)               [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(exclusive_or_y)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* XOR second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? 1 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E373 ICY   - Insert Character (Long Displacement)           [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_character_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Insert character in r1 register */
+    regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E358 LY    - Load (Long Displacement)                       [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load R1 register from second operand */
+    regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E371 LAY   - Load Address (Long Displacement)               [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_address_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load operand address into register */
+    GR_A(r1, regs) = effective_addr2;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E378 LHY   - Load Halfword (Long Displacement)              [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_halfword_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load rightmost 2 bytes of register from operand address */
+    (S32)regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB52 MVIY  - Move Immediate (Long Displacement)             [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(move_immediate_y)
+{
+BYTE    i2;                             /* Immediate operand         */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
+
+    /* Store immediate operand at operand address */
+    ARCH_DEP(vstoreb) ( i2, effective_addr1, b1, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E351 MSY   - Multiply Single (Long Displacement)            [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_single_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Multiply signed operands ignoring overflow */
+    (S32)regs->GR_L(r1) *= (S32)n;
+
+} /* end DEF_INST(multiply_single) */
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB56 OIY   - Or Immediate (Long Displacement)               [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(or_immediate_y)
+{
+BYTE    i2;                             /* Immediate operand byte    */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+BYTE    rbyte;                          /* Result byte               */
+
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
+
+    /* Fetch byte from operand address */
+    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+
+    /* OR with immediate operand */
+    rbyte |= i2;
+
+    /* Store result at operand address */
+    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
+
+    /* Set condition code */
+    regs->psw.cc = rbyte ? 1 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E356 OY    - Or (Long Displacement)                         [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(or_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* OR second operand with first and set condition code */
+    regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E350 STY   - Store (Long Displacement)                      [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_y)
+{
+int     r1;                             /* Values of R fields        */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E372 STCY  - Store Character (Long Displacement)            [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_character_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Store rightmost byte of R1 register at operand address */
+    ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E370 STHY  - Store Halfword (Long Displacement)             [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_halfword_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Store rightmost 2 bytes of R1 register at operand address */
+    ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E35B SY    - Subtract (Long Displacement)                   [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc =
+            sub_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
+        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E37B SHY   - Subtract Halfword (Long Displacement)          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_halfword_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load 2 bytes from operand address */
+    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+
+    /* Subtract signed operands and set condition code */
+    regs->psw.cc =
+            sub_signed (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+
+    /* Program check if fixed-point overflow */
+    if ( regs->psw.cc == 3 && regs->psw.fomask )
+        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E35F SLY   - Subtract Logical (Long Displacement)           [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(subtract_logical_y)
+{
+int     r1;                             /* Value of R field          */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U32     n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Load second operand from operand address */
+    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Subtract unsigned operands and set condition code */
+    regs->psw.cc =
+            sub_logical (&(regs->GR_L(r1)),
+                    regs->GR_L(r1),
+                    n);
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB51 TMY   - Test under Mask (Long Displacement)            [SIY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(test_under_mask_y)
+{
+BYTE    i2;                             /* Immediate operand         */
+int     b1;                             /* Base of effective addr    */
+VADR    effective_addr1;                /* Effective address         */
+BYTE    tbyte;                          /* Work byte                 */
+
+    SIY(inst, execflag, regs, i2, b1, effective_addr1);
+
+    /* Fetch byte from operand address */
+    tbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+
+    /* AND with immediate operand mask */
+    tbyte &= i2;
+
+    /* Set condition code according to result */
+    regs->psw.cc =
+            ( tbyte == 0 ) ? 0 :            /* result all zeroes */
+            ((tbyte^i2) == 0) ? 3 :         /* result all ones   */
+            1 ;                             /* result mixed      */
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
 /* The following long displacement instructions are not yet implemented */
 #if defined(FEATURE_LONG_DISPLACEMENT)
- UNDEF_INST(add_y)
- UNDEF_INST(add_halfword_y)
- UNDEF_INST(add_logical_y)
- UNDEF_INST(and_immediate_y)
- UNDEF_INST(and_y)
- UNDEF_INST(compare_y)
+#define UNDEF_INST(_x) \
+        DEF_INST(_x) { ARCH_DEP(operation_exception) \
+        (inst,execflag,regs); }
  UNDEF_INST(compare_and_swap_y)
  UNDEF_INST(compare_double_and_swap_y)
- UNDEF_INST(compare_halfword_y)
- UNDEF_INST(compare_logical_y)
- UNDEF_INST(compare_logical_immediate_y)
  UNDEF_INST(compare_logical_characters_under_mask_y)
  UNDEF_INST(convert_to_binary_y)
  UNDEF_INST(convert_to_decimal_y)
- UNDEF_INST(exclusive_or_immediate_y)
- UNDEF_INST(exclusive_or_y)
- UNDEF_INST(insert_character_y)
  UNDEF_INST(insert_characters_under_mask_y)
- UNDEF_INST(load_y)
  UNDEF_INST(load_access_multiple_y)
- UNDEF_INST(load_address_y)
- UNDEF_INST(load_halfword_y)
  UNDEF_INST(load_multiple_y)
  UNDEF_INST(load_real_address_y)
- UNDEF_INST(move_immediate_y)
- UNDEF_INST(multiply_single_y)
- UNDEF_INST(or_immediate_y)
- UNDEF_INST(or_y)
- UNDEF_INST(store_y)
  UNDEF_INST(store_access_multiple_y)
- UNDEF_INST(store_character_y)
  UNDEF_INST(store_characters_under_mask_y)
- UNDEF_INST(store_halfword_y)
  UNDEF_INST(store_multiple_y)
- UNDEF_INST(subtract_y)
- UNDEF_INST(subtract_halfword_y)
- UNDEF_INST(subtract_logical_y)
- UNDEF_INST(test_under_mask_y)
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 #if !defined(_GEN_ARCH)
