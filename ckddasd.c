@@ -672,7 +672,7 @@ int             active;                 /* 1=Synchronous I/O active  */
 
 #ifdef OPTION_SYNCIO
     active = dev->syncio_active;
-    if (dev->ckdtrkof)
+    if (dev->ckdtrkof || offset == CKDDASD_DEVHDR_SIZE)
         dev->syncio_active = 0;
 #endif
     if (dev->cckd_ext == NULL)
