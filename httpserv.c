@@ -1,4 +1,4 @@
-/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002                        */
+/* HTTPSERV.C   (c)Copyright Jan Jaeger, 2002-2003                   */
 /*              HTTP Server                                          */
 
 /* This file contains all code required for the HTTP server,         */

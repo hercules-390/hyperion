@@ -1,4 +1,4 @@
-/* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002                        */
+/* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2003                   */
 /*              HTTP Server                                          */
 
 

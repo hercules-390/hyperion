@@ -1,4 +1,4 @@
-/* CCKDSWAP.C   (c) Copyright Roger Bowler, 1999-2002                */
+/* CCKDSWAP.C   (c) Copyright Roger Bowler, 1999-2003                */
 /*       Swap the `endianess' of a compressed CKD file.              */
 
 /*-------------------------------------------------------------------*/

@@ -1,4 +1,4 @@
-/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2002                  */
+/* CODEPAGE.C   (c) Copyright Jan Jaeger, 1999-2003                  */
 /*              Code Page conversion                                 */
 
 #include "hercules.h"

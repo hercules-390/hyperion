@@ -2,8 +2,8 @@
 // Hercules Interface Configuration Program
 // ====================================================================
 //
-// Copyright    (C) Copyright Roger Bowler, 2000-2002
-//              (C) Copyright James A. Pierson, 2002
+// Copyright    (C) Copyright Roger Bowler, 2000-2003
+//              (C) Copyright James A. Pierson, 2002-2003
 //
 // Based on code originally written by Roger Bowler
 // Modified to communicate via unix sockets.

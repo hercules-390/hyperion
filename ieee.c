@@ -17,7 +17,7 @@
  */
 
 /*
- * Based very loosely on float.c by Peter Kuschnerus, (c) 2000-2002.
+ * Based very loosely on float.c by Peter Kuschnerus, (c) 2000-2003.
  */
 
 /*

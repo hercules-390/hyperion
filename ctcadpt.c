@@ -2,11 +2,11 @@
 // Hercules Channel-to-Channel Emulation Support
 // ====================================================================
 //
-// Copyright (C) James A. Pierson, 2002
-//       Roger Bowler, 2000-2002
+// Copyright (C) James A. Pierson, 2002-2003
+//       Roger Bowler, 2000-2003
 //
-// vmnet     (C) Copyright Willem Konynenberg, 2000-2002
-// CTCT      (C) Copyright Vic Cross, 2001-2002
+// vmnet     (C) Copyright Willem Konynenberg, 2000-2003
+// CTCT      (C) Copyright Vic Cross, 2001-2003
 //
 
 // Notes:

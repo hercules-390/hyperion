@@ -1,5 +1,5 @@
-/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2002                */
-/*              (c) Copyright "Fish" (David B. Trout), 2002          */
+/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2003                */
+/*              (c) Copyright "Fish" (David B. Trout), 2002-2003     */
 /*              Execute Hercules System Commands                     */
 /*                                                                   */
 /*   Released under the Q Public License (http://www.conmicro.cx/    */

@@ -2,8 +2,8 @@
 // Hercules Interface Control Program
 // ====================================================================
 //
-// Copyright    (C) Copyright Roger Bowler, 2000-2002
-//              (C) Copyright James A. Pierson, 2002
+// Copyright    (C) Copyright Roger Bowler, 2000-2003
+//              (C) Copyright James A. Pierson, 2002-2003
 //
 
 #ifndef __HERCIFC_H_
