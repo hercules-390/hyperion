@@ -180,7 +180,8 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #define DEVTRACE(format, a...) \
     do { \
         if(dev->ccwtrace||dev->ccwstep) \
-            logmsg("%4.4X:" format, dev->devnum, a); \
+            logmsg("%4.4X:",dev->devnum); \
+            logmsg(format, a); \
     } while(0)
 
 /* Debugging */

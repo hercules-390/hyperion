@@ -1304,7 +1304,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     rc = read (pipefd, &c, 1);
                     if (rc < 1) {
                         fprintf (stderr,
-                                "HHCPN006E message pipe read: %s\n",
+                                _("HHCPN006E message pipe read: %s\n"),
                                 strerror(errno));
                         break;
                     }

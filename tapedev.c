@@ -1430,7 +1430,7 @@ BYTE            buf[100];               /* Status string (ASCIIZ)    */
         if (GMT_D_1600(stat)) strcat (buf, " 1600");
         if (GMT_D_800(stat)) strcat (buf, " 800");
         if (GMT_DR_OPEN(stat)) strcat (buf, " NOTAPE");
-        logmsg ("HHCTA023I %s\n", buf);
+        logmsg (_("HHCTA023I %s\n"), buf);
     }
 
     /* If tape has been ejected, then close the file because

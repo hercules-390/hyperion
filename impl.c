@@ -255,7 +255,7 @@ TID     rctid;                          /* RC file thread identifier */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
         fprintf (stderr,
-                "HHCIN001S Cannot register SIGINT handler: %s\n",
+                _("HHCIN001S Cannot register SIGINT handler: %s\n"),
                 strerror(errno));
         exit(1);
     }
@@ -265,7 +265,7 @@ TID     rctid;                          /* RC file thread identifier */
     if ( signal (SIGPIPE, SIG_IGN) == SIG_ERR )
     {
         fprintf (stderr,
-                "HHCIN002E Cannot suppress SIGPIPE signal: %s\n",
+                _("HHCIN002E Cannot suppress SIGPIPE signal: %s\n"),
                 strerror(errno));
     }
 
@@ -287,8 +287,8 @@ TID     rctid;                          /* RC file thread identifier */
          || sigaction(SIGUSR2, &sa, NULL) )
         {
             fprintf (stderr,
-                    "HHCIN003S Cannot register SIGILL/FPE/SEGV/BUS/USR "
-                    "handler: %s\n",
+                  _("HHCIN003S Cannot register SIGILL/FPE/SEGV/BUS/USR "
+                    "handler: %s\n"),
                     strerror(errno));
             exit(1);
         }
@@ -304,7 +304,7 @@ TID     rctid;                          /* RC file thread identifier */
                         watchdog_thread, NULL) )
     {
         fprintf (stderr,
-                "HHCIN004S Cannot create watchdog thread: %s\n",
+              _("HHCIN004S Cannot create watchdog thread: %s\n"),
                 strerror(errno));
         exit(1);
     }
@@ -336,7 +336,7 @@ TID     rctid;                          /* RC file thread identifier */
                             http_server, NULL) )
         {
             fprintf (stderr,
-                    "HHCIN005S Cannot create http_server thread: %s\n",
+                  _("HHCIN005S Cannot create http_server thread: %s\n"),
                     strerror(errno));
             exit(1);
         }
@@ -350,7 +350,7 @@ TID     rctid;                          /* RC file thread identifier */
                             shared_server, NULL) )
         {
             fprintf (stderr,
-                    "HHCIN006S Cannot create shared_server thread: %s\n",
+                  _("HHCIN006S Cannot create shared_server thread: %s\n"),
                     strerror(errno));
             exit(1);
         }
@@ -365,7 +365,7 @@ TID     rctid;                          /* RC file thread identifier */
                 if ( create_thread (&tid, &sysblk.detattr, *dev->hnd->init, dev) )
                 {
                     fprintf (stderr,
-                            "HHCIN007S Cannot create %4.4X connection thread: %s\n",
+                          _("HHCIN007S Cannot create %4.4X connection thread: %s\n"),
                             dev->devnum, strerror(errno));
                     exit(1);
                 }

@@ -895,11 +895,11 @@ void Cleanup()
 
 void gui_panel_display ()
 {
-    logmsg("HHCDG001I dyngui.dll - " DYNGUI_PRODUCT " - version " DYNGUI_VERSION " initiated\n");
+    logmsg(_("HHCDG001I dyngui.dll - " DYNGUI_PRODUCT " - version " DYNGUI_VERSION " initiated\n"));
     logmsg(DYNGUI_COPYRIGHT ", " DYNGUI_COMPANY "\n");
     Initialize();               // (allocate buffers, etc)
     ProcessingLoop();           // (primary processing loop)
-    logmsg("HHCDG002I dyngui.dll terminated\n");
+    logmsg(_("HHCDG002I dyngui.dll terminated\n"));
     Cleanup();                  // (de-allocate resources)
 }
 

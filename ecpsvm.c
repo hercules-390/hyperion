@@ -212,18 +212,18 @@ struct _ECPSVM_SASTATS
     } \
     if(!sysblk.ecpsvm.available) \
     { \
-          DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled in configuration\n")); \
+          DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled in configuration\n"))); \
           return(1); \
     } \
     if(!ecpsvm_sastats._instname.enabled) \
     { \
-          DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled by command\n")); \
+          DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled by command\n"))); \
           return(1); \
     } \
     CR6=regs->CR_L(6); \
     if(!(CR6 & ECPSVM_CR6_VMASSIST)) \
     { \
-        DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : EVMA Disabled by guest\n")); \
+        DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : EVMA Disabled by guest\n"))); \
         return(1); \
     } \
     /* Increment call now (don't count early misses) */ \
@@ -233,7 +233,7 @@ struct _ECPSVM_SASTATS
     /* Then set ref bit by calling LOG_TO_ABS */ \
     if((amicblok & 0x007ff) > 0x7e0) \
     { \
-        DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n",amicblok)); \
+        DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n"),amicblok)); \
         return(1); \
     } \
     amicblok=LOGICAL_TO_ABS(amicblok,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
@@ -255,11 +255,11 @@ struct _ECPSVM_SASTATS
     /* Load the Virtual PSW in a temporary REGS structure */ \
     INITSIESTATE(vpregs); \
     ARCH_DEP(load_psw) (&vpregs,&regs->mainstor[vpswa]); \
-    DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" CR6= %8.8X\n",CR6)); \
-    DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" MICVTMR= %8.8X\n",micblok.MICVTMR)); \
-    DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" VPSWA= %8.8X Virtual ",vpswa)); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" CR6= %8.8X\n"),CR6)); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" MICVTMR= %8.8X\n"),micblok.MICVTMR)); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" VPSWA= %8.8X Virtual "),vpswa)); \
     DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
-    DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" Real ")); \
+    DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" Real "))); \
     DEBUG_SASSISTX(_instname,display_psw(regs));
 
 #define ECPSVM_PROLOG(_inst) \
@@ -270,13 +270,13 @@ VADR    effective_addr1, \
      PRIV_CHECK(regs); \
      if(!sysblk.ecpsvm.available) \
      { \
-          DEBUG_CPASSISTX(_inst,logmsg("HHCEV300D : CPASSTS "#_inst" ECPS:VM Disabled in configuration ")); \
+          DEBUG_CPASSISTX(_inst,logmsg(_("HHCEV300D : CPASSTS "#_inst" ECPS:VM Disabled in configuration "))); \
           ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION); \
      } \
      PRIV_CHECK(regs); /* No problem state please */ \
      if(!ecpsvm_cpstats._inst.enabled) \
      { \
-          DEBUG_CPASSISTX(_inst,logmsg("HHCEV300D : CPASSTS "#_inst" Disabled by command")); \
+          DEBUG_CPASSISTX(_inst,logmsg(_("HHCEV300D : CPASSTS "#_inst" Disabled by command"))); \
           return; \
      } \
      if(!(regs->CR_L(6) & 0x02000000)) \
@@ -284,7 +284,7 @@ VADR    effective_addr1, \
         return; \
      } \
      ecpsvm_cpstats._inst.call++; \
-    DEBUG_CPASSISTX(_inst,logmsg("HHCEV300D : "#_inst" called\n"));
+    DEBUG_CPASSISTX(_inst,logmsg(_("HHCEV300D : "#_inst" called\n")));
 
 
 /* DISPx Utility macros */
@@ -356,10 +356,10 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
     U32  lockcount;
     RADR cortbl;
 
-    DEBUG_CPASSISTX(LCKPG,logmsg("HHCEV300D : LKPG coreptr = "F_RADR" Frame = "F_RADR"\n",cortab,pg));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG coreptr = "F_RADR" Frame = "F_RADR"\n"),cortab,pg));
     cortbl=EVM_L(cortab);
     corte=cortbl+((pg & 0xfff000)>>8);
-    DEBUG_CPASSISTX(LCKPG,logmsg("HHCEV300D : LKPG corete = %6.6X\n",corte));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG corete = %6.6X\n"),corte));
     corcode=EVM_IC(corte+8);
     if(corcode & 0x80)
     {
@@ -373,7 +373,7 @@ static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
         EVM_STC(corcode,corte+8);
     }
     EVM_ST(lockcount,corte+4);
-    DEBUG_CPASSISTX(LCKPG,logmsg("HHCEV300D : LKPG Page locked. Count = %6.6X\n",lockcount));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG Page locked. Count = %6.6X\n"),lockcount));
     return;
 }
 /* E602 LCKPG Instruction */
@@ -390,7 +390,7 @@ DEF_INST(ecpsvm_lock_page)
     ptr_pl=effective_addr1;
     pg=effective_addr2;
 
-    DEBUG_CPASSISTX(LCKPG,logmsg("HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n",pg,ptr_pl));
+    DEBUG_CPASSISTX(LCKPG,logmsg(_("HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
 
     ecpsvm_lockpage1(regs,ptr_pl,pg);
     regs->psw.cc=0;
@@ -417,13 +417,13 @@ DEF_INST(ecpsvm_unlock_page)
     ptr_pl=effective_addr1;
     pg=effective_addr2;
 
-    DEBUG_CPASSISTX(ULKPG,logmsg("HHCEV300D : ULKPG PAGE=%6.6X, PTRPL=%6.6X\n",pg,ptr_pl));
+    DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG PAGE=%6.6X, PTRPL=%6.6X\n"),pg,ptr_pl));
 
     corsz=EVM_L(ptr_pl);
     cortbl=EVM_L(ptr_pl+4);
     if((pg+4095)>corsz)
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg("HHCEV300D : ULKPG Page beyond core size of %6.6X\n",corsz));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG Page beyond core size of %6.6X\n"),corsz));
         return;
     }
     corte=cortbl+((pg & 0xfff000)>>8);
@@ -435,18 +435,18 @@ DEF_INST(ecpsvm_unlock_page)
     }
     else
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg("HHCEV300D : ULKPG Attempting to unlock page that is not locked\n"));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG Attempting to unlock page that is not locked\n")));
         return;
     }
     if(lockcount==0)
     {
         corcode &= ~(0x80|0x02);
         EVM_STC(corcode,corte+8);
-        DEBUG_CPASSISTX(ULKPG,logmsg("HHCEV300D : ULKPG now unlocked\n"));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG now unlocked\n")));
     }
     else
     {
-        DEBUG_CPASSISTX(ULKPG,logmsg("HHCEV300D : ULKPG Page still locked. Count = %6.6X\n",lockcount));
+        DEBUG_CPASSISTX(ULKPG,logmsg(_("HHCEV300D : ULKPG Page still locked. Count = %6.6X\n"),lockcount));
     }
     EVM_ST(lockcount,corte+4);
     CPASSIST_HIT(ULKPG);
@@ -482,7 +482,7 @@ DEF_INST(ecpsvm_locate_vblock)
     vchix=EVM_LH(vchtbl+((vdev & 0xf00)>>7));   /* Get Index */
     if(vchix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU Virtual Device %4.4X has no VCHAN block\n",vdev));
+        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU Virtual Device %4.4X has no VCHAN block\n"),vdev));
         return;
     }
     vch=EVM_L(effective_addr2)+vchix;
@@ -490,7 +490,7 @@ DEF_INST(ecpsvm_locate_vblock)
     vcuix=EVM_LH(vch+8+((vdev & 0xf0)>>3));
     if(vcuix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU Virtual Device %4.4X has no VCU block\n",vdev));
+        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU Virtual Device %4.4X has no VCU block\n"),vdev));
         return;
     }
     vcu=EVM_L(effective_addr2+4)+vcuix;
@@ -498,11 +498,11 @@ DEF_INST(ecpsvm_locate_vblock)
     vdvix=EVM_LH(vcu+8+((vdev & 0xf)<<1));
     if(vdvix & 0x8000)
     {
-        DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU Virtual Device %4.4X has no VDEV block\n",vdev));
+        DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU Virtual Device %4.4X has no VDEV block\n"),vdev));
         return;
     }
     vdv=EVM_L(effective_addr2+8)+vdvix;
-    DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n",
+    DEBUG_CPASSISTX(SCNVU,logmsg(_("HHCEV300D SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n"),
                 vdev,
                 vch,
                 vcu,
@@ -863,7 +863,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                 {
                     /* CP Say this is NOT good */
                     /* Take exit 28 */
-                    logmsg("HHCEV004W : Abend condition detected in DISP2 instr\n");
+                    logmsg(_("HHCEV004W : Abend condition detected in DISP2 instr\n"));
                     regs->psw.IA=EVM_L(el+28);
                     return(0);
                 }
@@ -1055,7 +1055,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_IC_PER_MASK(regs);
         SET_IC_IO_MASK(regs);
         /* Dispatch..... */
-        DEBUG_CPASSISTX(DISP2,logmsg("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
+        DEBUG_CPASSISTX(DISP2,logmsg(_("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
         DEBUG_CPASSISTX(DISP2,display_regs(regs));
         DEBUG_CPASSISTX(DISP2,display_cregs(regs));
         return(2);      /* OK - Perform INTCHECK */
@@ -1120,7 +1120,7 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     cc=ecpsvm_int_lra(regs,pgadd,raddr);
     if(cc!=0)
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : Tranbring : LRA cc = %d\n",cc));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Tranbring : LRA cc = %d\n"),cc));
         return(1);
     }
     /* Get the core table entry from the Real address */
@@ -1129,25 +1129,25 @@ static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
     corcode=EVM_IC(cortab+8);
     if(!(corcode & 0x08))
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : Page not shared - OK %d\n",cc));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Page not shared - OK %d\n"),cc));
         return(0);      /* Page is NOT shared.. All OK */
     }
 #if defined(FEATURE_2K_STORAGE_KEYS)
     pg1=(*raddr & 0xfff000);
     pg2=pg1+0x800;
-    DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : Checking 2K Storage keys @"F_RADR" & "F_RADR"\n",pg1,pg2));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Checking 2K Storage keys @"F_RADR" & "F_RADR"\n"),pg1,pg2));
     if((STORAGE_KEY(pg1,regs) & STORKEY_CHANGE) ||
             (STORAGE_KEY(pg2,regs) & STORKEY_CHANGE))
     {
 #else
-    DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : Checking 4K Storage keys @"F_RADR"\n",*raddr));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Checking 4K Storage keys @"F_RADR"\n"),*raddr));
     if(STORAGE_KEY(*raddr,regs) & STORKEY_CHANGE)
     {
 #endif
-        DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : Page shared and changed\n"));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Page shared and changed\n")));
         return(1);      /* Page shared AND changed */
     }
-    DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : Page shared but not changed\n"));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : Page shared but not changed\n")));
     return(0);  /* All done */
 }
 /* TRBRG : Translate a page address */
@@ -1166,11 +1166,11 @@ DEF_INST(ecpsvm_tpage)
     int rc;
     RADR raddr;
     ECPSVM_PROLOG(TRBRG);
-    DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : TRANBRNG\n"));
+    DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : TRANBRNG\n")));
     rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
     if(rc)
     {
-        DEBUG_CPASSISTX(TRBRG,logmsg("HHCEV300D : TRANBRNG - Back to CP\n"));
+        DEBUG_CPASSISTX(TRBRG,logmsg(_("HHCEV300D : TRANBRNG - Back to CP\n")));
         return; /* Something not right : NO OP */
     }
     regs->psw.cc=0;
@@ -1188,11 +1188,11 @@ DEF_INST(ecpsvm_tpage_lock)
     int rc;
     RADR raddr;
     ECPSVM_PROLOG(TRLOK);
-    DEBUG_CPASSISTX(TRLOK,logmsg("HHCEV300D : TRANLOCK\n"));
+    DEBUG_CPASSISTX(TRLOK,logmsg(_("HHCEV300D : TRANLOCK\n")));
     rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
     if(rc)
     {
-        DEBUG_CPASSISTX(TRLOK,logmsg("HHCEV300D : TRANLOCK - Back to CP\n"));
+        DEBUG_CPASSISTX(TRLOK,logmsg(_("HHCEV300D : TRANLOCK - Back to CP\n")));
         return; /* Something not right : NO OP */
     }
     /*
@@ -1705,7 +1705,7 @@ DEF_INST(ecpsvm_locate_rblock)
     /* And the DMKRIO tables addresses */
     arioct=effective_addr2;
 
-    DEBUG_CPASSISTX(SCNRU,logmsg("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n",effective_addr1,arioct));
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n"),effective_addr1,arioct));
 
     /* Get the Channel Index Table */
     rchixtbl= EVM_L(effective_addr2);
@@ -1713,12 +1713,12 @@ DEF_INST(ecpsvm_locate_rblock)
     /* Obtain the RCH offset */
     chix=EVM_LH(rchixtbl+((rdev & 0xf00) >> 7));
 
-    // logmsg("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n",chix);
+    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n"),chix);
 
     /* Check if Bit 0 set (no RCH) */
     if(chix & 0x8000)
     {
-        // logmsg("HHCEV300D : ECPS:VM SCNRU : NO CHANNEL\n");
+        // logmsg(_("HHCEV300D : ECPS:VM SCNRU : NO CHANNEL\n"));
         /*
         regs->GR_L(6)=~0;
         regs->GR_L(7)=~0;
@@ -1744,7 +1744,7 @@ DEF_INST(ecpsvm_locate_rblock)
         cuix=EVM_LH(rchblk+0x20+((rdev & 0xf0)>>2));
         if(cuix & 0x8000)
         {
-            // logmsg("HHCEV300D : ECPS:VM SCNRU : NO CONTROL UNIT\n");
+            // logmsg(_("HHCEV300D : ECPS:VM SCNRU : NO CONTROL UNIT\n"));
             /*
             regs->GR_L(6)=rchblk;
             regs->GR_L(7)=~0;
@@ -1755,19 +1755,19 @@ DEF_INST(ecpsvm_locate_rblock)
             return;
         }
     }
-    // logmsg("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n",cuix);
+    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n"),cuix);
     rcutbl=EVM_L(arioct+8);
     rcublk=rcutbl+cuix;
     dvix=EVM_LH(rcublk+0x28+((rdev & 0x00f)<<1));
     dvix<<=3;
-    // logmsg("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n",dvix);
+    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n"),dvix);
     if(EVM_IC(rcublk+5)&0x40)
     {
         rcublk=EVM_L(rcublk+0x10);
     }
     if(dvix & 0x8000)
     {
-        // logmsg("HHCEV300D : ECPS:VM SCNRU : NO RDEVBLOK\n");
+        // logmsg(_("HHCEV300D : ECPS:VM SCNRU : NO RDEVBLOK\n"));
         /*
         regs->GR_L(6)=rchblk;
         regs->GR_L(7)=rcublk;
@@ -1779,7 +1779,7 @@ DEF_INST(ecpsvm_locate_rblock)
     }
     rdvtbl=EVM_L(arioct+12);
     rdvblk=rdvtbl+dvix;
-    DEBUG_CPASSISTX(SCNRU,logmsg("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n",rchblk,rcublk,rdvblk));
+    DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"),rchblk,rcublk,rdvblk));
     regs->GR_L(6)=rchblk;
     regs->GR_L(7)=rcublk;
     regs->GR_L(8)=rdvblk;
@@ -1823,7 +1823,7 @@ DEF_INST(ecpsvm_store_level)
 {
     ECPSVM_PROLOG(STEVL);
     EVM_ST(sysblk.ecpsvm.level,effective_addr1);
-    DEBUG_CPASSISTX(STEVL,logmsg("HHCEV300D : ECPS:VM STORE LEVEL %d called\n",sysblk.ecpsvm.level));
+    DEBUG_CPASSISTX(STEVL,logmsg(_("HHCEV300D : ECPS:VM STORE LEVEL %d called\n"),sysblk.ecpsvm.level));
     CPASSIST_HIT(STEVL);
 }
 /* LCSPG : Locate Changed Shared Page */
@@ -1863,27 +1863,27 @@ DEF_INST(ecpsvm_extended_freex)
     numdw=regs->GR_L(0);
     spixtbl=effective_addr2;
     maxsztbl=effective_addr1;
-    DEBUG_CPASSISTX(FREEX,logmsg("HHCEV300D : ECPS:VM FREEX DW = %4.4X\n",numdw));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : ECPS:VM FREEX DW = %4.4X\n"),numdw));
     if(numdw==0)
     {
         return;
     }
-    DEBUG_CPASSISTX(FREEX,logmsg("HHCEV300D : MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n",maxsztbl,spixtbl));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n"),maxsztbl,spixtbl));
     /* E1 = @ of MAXSIZE (maximum # of DW allocatable by FREEX from subpools) */
     /*      followed by subpool pointers                                      */
     /* E2 = @ of subpool indices                                              */
     maxdw=EVM_L(maxsztbl);
     if(regs->GR_L(0)>maxdw)
     {
-        DEBUG_CPASSISTX(FREEX,logmsg("HHCEV300D : FREEX request beyond subpool capacity\n"));
+        DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : FREEX request beyond subpool capacity\n")));
         return;
     }
     /* Fetch subpool index */
     spix=EVM_IC(spixtbl+numdw);
-    DEBUG_CPASSISTX(FREEX,logmsg("HHCEV300D : Subpool index = %X\n",spix));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : Subpool index = %X\n"),spix));
     /* Fetch value */
     freeblock=EVM_L(maxsztbl+4+spix);
-    DEBUG_CPASSISTX(FREEX,logmsg("HHCEV300D : Value in subpool table = %6.6X\n",freeblock));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : Value in subpool table = %6.6X\n"),freeblock));
     if(freeblock==0)
     {
         /* Can't fullfill request here */
@@ -1891,7 +1891,7 @@ DEF_INST(ecpsvm_extended_freex)
     }
     nextblk=EVM_L(freeblock);
     EVM_ST(nextblk,maxsztbl+4+spix);
-    DEBUG_CPASSISTX(FREEX,logmsg("HHCEV300D : New Value in subpool table = %6.6X\n",nextblk));
+    DEBUG_CPASSISTX(FREEX,logmsg(_("HHCEV300D : New Value in subpool table = %6.6X\n"),nextblk));
     regs->GR_L(1)=freeblock;
     regs->psw.cc=0;
     BR14;
@@ -1921,35 +1921,35 @@ int ecpsvm_do_fretx(REGS *regs,VADR block,U16 numdw,VADR maxsztbl,VADR fretl)
     U32 cortbe; /* Core table Page entry for fretted block */
     U32 prevblk;
     BYTE spix;
-    DEBUG_CPASSISTX(FRETX,logmsg("HHCEV300D : X fretx called AREA=%6.6X, DW=%4.4X\n",regs->GR_L(1),regs->GR_L(0)));
+    DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : X fretx called AREA=%6.6X, DW=%4.4X\n"),regs->GR_L(1),regs->GR_L(0)));
     if(numdw==0)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n"));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n")));
         return(1);
     }
     maxdw=EVM_L(maxsztbl);
     if(numdw>maxdw)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n",numdw,maxdw));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n"),numdw,maxdw));
         return(1);
     }
     cortbl=EVM_L(fretl);
     cortbe=cortbl+((block & 0xfff000)>>8);
     if(EVM_L(cortbe)!=EVM_L(fretl+4))
     {
-        DEBUG_CPASSISTX(FRETX,logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n"));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n")));
         return(1);
     }
     if(EVM_IC(cortbe+8)!=0x02)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n"));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n")));
         return(1);
     }
     spix=EVM_IC(fretl+11+numdw);
     prevblk=EVM_L(maxsztbl+4+spix);
     if(prevblk==block)
     {
-        DEBUG_CPASSISTX(FRETX,logmsg("HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n"));
+        DEBUG_CPASSISTX(FRETX,logmsg(_("HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n")));
         return(1);
     }
     EVM_ST(block,maxsztbl+4+spix);
@@ -2015,7 +2015,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     /* Check for a switch from BC->EC or EC->BC */
     if(oldr->psw.ecmode!=newr->psw.ecmode)
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : New and Old PSW have a EC/BC transition\n"));
+        DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New and Old PSW have a EC/BC transition\n")));
         return(1);
     }
     /* Check if PER or DAT is being changed */
@@ -2023,7 +2023,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
     {
         if((newr->psw.sysmask & 0x44) != (oldr->psw.sysmask & 0x44))
         {
-            DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : New PSW Enables DAT or PER\n"));
+            DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW Enables DAT or PER\n")));
             return(1);
         }
     }
@@ -2034,7 +2034,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
         {
             if(((~oldr->psw.sysmask) & 0x03) & newr->psw.sysmask)
             {
-                DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : New PSW Enables interrupts and MICPEND (EC)\n"));
+                DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW Enables interrupts and MICPEND (EC)\n")));
                 return(1);
             }
         }
@@ -2042,27 +2042,27 @@ int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, 
         {
             if(~oldr->psw.sysmask & newr->psw.sysmask)
             {
-                DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : New PSW Enables interrupts and MICPEND (BC)\n"));
+                DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW Enables interrupts and MICPEND (BC)\n")));
                 return(1);
             }
         }
     }
     if(newr->psw.wait)
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : New PSW is a WAIT PSW\n"));
+        DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW is a WAIT PSW\n")));
         return(1);
     }
     if(newr->psw.ecmode)
     {
         if(newr->psw.sysmask & 0xb8)
         {
-            DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : New PSW sysmask incorrect\n"));
+            DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW sysmask incorrect\n")));
             return(1);
         }
     }
     if(newr->psw.IA & 0x01)
     {
-        DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : New PSW has ODD IA\n"));
+        DEBUG_SASSISTX(LPSW,logmsg(_("HHCEV300D : New PSW has ODD IA\n")));
         return(1);
     }
     return(0);
@@ -2599,7 +2599,7 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
             {
                 strcat(nname,"+");
             }
-            logmsg("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n",
+            logmsg(_("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n"),
                     nname,
                     ar[i].call,
                     ar[i].hit,
@@ -2616,7 +2616,7 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
     {
         logmsg(sep);
     }
-    logmsg("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n",
+    logmsg(_("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n"),
             "Total",
             callt,
             hitt,
@@ -2626,21 +2626,21 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
     logmsg(sep);
     if(haveunsup)
     {
-        logmsg("HHCEV004I * : Unsupported, - : Disabled, %% - Debug\n");
+        logmsg(_("HHCEV004I * : Unsupported, - : Disabled, %% - Debug\n"));
     }
     if(notshown)
     {
-        logmsg("HHCEV005I %d Entr%s not shown (never invoked)\n",notshown,notshown==1?"y":"ies");
+        logmsg(_("HHCEV005I %d Entr%s not shown (never invoked)\n"),notshown,notshown==1?"y":"ies");
     }
     if(unsupcc)
     {
         if(unsupcc==1)
         {
-                logmsg("HHCEV006I 1 call was made to an unsupported function\n");
+                logmsg(_("HHCEV006I 1 call was made to an unsupported function\n"));
         }
         else
         {
-            logmsg("HHCEV006I %d calls where made to unsupported functions\n",unsupcc);
+            logmsg(_("HHCEV006I %d calls where made to unsupported functions\n"),unsupcc);
         }
     }
     return;
@@ -2655,7 +2655,7 @@ void ecpsvm_showstats(int ac,char **av)
     UNREFERENCED(ac);
     UNREFERENCED(av);
     logmsg(sep);
-    logmsg("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n","VM ASSIST","Calls","Hits","Ratio");
+    logmsg(_("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n"),"VM ASSIST","Calls","Hits","Ratio");
     logmsg(sep);
     ar=malloc(sizeof(ecpsvm_sastats));
     memcpy(ar,&ecpsvm_sastats,sizeof(ecpsvm_sastats));
@@ -2664,7 +2664,7 @@ void ecpsvm_showstats(int ac,char **av)
     ecpsvm_showstats2(ar,asize);
     free(ar);
     logmsg(sep);
-    logmsg("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n","CP ASSIST","Calls","Hits","Ratio");
+    logmsg(_("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n"),"CP ASSIST","Calls","Hits","Ratio");
     logmsg(sep);
     ar=malloc(sizeof(ecpsvm_cpstats));
     memcpy(ar,&ecpsvm_cpstats,sizeof(ecpsvm_cpstats));
@@ -2682,7 +2682,7 @@ static void ecpsvm_helpcmdlist(void)
     for(i=0;ecpsvm_cmdtab[i].name;i++)
     {
         ce=&ecpsvm_cmdtab[i];
-        logmsg("HHCEV010I : %s : %s\n",ce->name,ce->expl);
+        logmsg(_("HHCEV010I : %s : %s\n"),ce->name,ce->expl);
     }
     return;
 }
@@ -2697,11 +2697,11 @@ void ecpsvm_helpcmd(int ac,char **av)
     ce=ecpsvm_getcmdent(av[1]);
     if(ce==NULL)
     {
-        logmsg("HHCEV011E Unknown subcommand %s - valid subcommands are :\n",av[1]);
+        logmsg(_("HHCEV011E Unknown subcommand %s - valid subcommands are :\n"),av[1]);
         ecpsvm_helpcmdlist();
         return;
     }
-    logmsg("HHCEV012I : %s : %s",ce->name,ce->help);
+    logmsg(_("HHCEV012I : %s : %s"),ce->name,ce->help);
     return;
 }
 
@@ -2749,21 +2749,21 @@ void ecpsvm_enadisaall(char *fclass,ECPSVM_STAT *tbl,size_t count,int onoff,int 
         if(onoff>=0)
         {
             es->enabled=onoff;
-            logmsg("HHCEV015I ECPS:VM %s feature %s %s\n",fclass,es->name,enadisa);
+            logmsg(_("HHCEV015I ECPS:VM %s feature %s %s\n"),fclass,es->name,enadisa);
         }
         if(debug>=0)
         {
             es->debug=debug;
-            logmsg("HHCEV015I ECPS:VM %s feature %s Debug %s\n",fclass,es->name,debugonoff);
+            logmsg(_("HHCEV015I ECPS:VM %s feature %s Debug %s\n"),fclass,es->name,debugonoff);
         }
     }
     if(onoff>=0)
     {
-        logmsg("HHCEV016I All ECPS:VM %s features %s\n",fclass,enadisa);
+        logmsg(_("HHCEV016I All ECPS:VM %s features %s\n"),fclass,enadisa);
     }
     if(debug>=0)
     {
-        logmsg("HHCEV016I All ECPS:VM %s features Debug %s\n",fclass,debugonoff);
+        logmsg(_("HHCEV016I All ECPS:VM %s features Debug %s\n"),fclass,debugonoff);
     }
 }
 
@@ -2791,7 +2791,7 @@ void ecpsvm_enable_disable(int ac,char **av,int onoff,int debug)
         if(debug>=0)
         {
             sysblk.ecpsvm.debug=debug;
-            logmsg("HHCEV013I ECPS:VM Global Debug %s\n",debugonoff);
+            logmsg(_("HHCEV013I ECPS:VM Global Debug %s\n"),debugonoff);
         }
         return;
     }
@@ -2819,17 +2819,17 @@ void ecpsvm_enable_disable(int ac,char **av,int onoff,int debug)
             if(onoff>=0)
             {
                 es->enabled=onoff;
-                logmsg("HHCEV014I ECPS:VM %s feature %s %s\n",fclass,es->name,enadisa);
+                logmsg(_("HHCEV014I ECPS:VM %s feature %s %s\n"),fclass,es->name,enadisa);
             }
             if(debug>=0)
             {
                 es->debug=onoff;
-                logmsg("HHCEV014I ECPS:VM %s feature %s Debug %s\n",fclass,es->name,debugonoff);
+                logmsg(_("HHCEV014I ECPS:VM %s feature %s Debug %s\n"),fclass,es->name,debugonoff);
             }
         }
         else
         {
-            logmsg("HHCEV014I Unknown ECPS:VM feature %s; Ignored\n",av[i]);
+            logmsg(_("HHCEV014I Unknown ECPS:VM feature %s; Ignored\n"),av[i]);
         }
     }
 }
@@ -2856,24 +2856,24 @@ void ecpsvm_level(int ac,char **av)
     int lvl;
     if(sysblk.ecpsvm.available)
     {
-        logmsg("HHCEV016I Current reported ECPS:VM Level is %d\n",sysblk.ecpsvm.level);
+        logmsg(_("HHCEV016I Current reported ECPS:VM Level is %d\n"),sysblk.ecpsvm.level);
     }
     else
     {
-        logmsg("HHCEV016I Current reported ECPS:VM Level is %d\n",sysblk.ecpsvm.level);
-        logmsg("HHCEV017I But ECPS:VM is currently disabled\n");
+        logmsg(_("HHCEV016I Current reported ECPS:VM Level is %d\n"),sysblk.ecpsvm.level);
+        logmsg(_("HHCEV017I But ECPS:VM is currently disabled\n"));
     }
     if(ac>1)
     {
         lvl=atoi(av[1]);
-        logmsg("HHCEV016I Level reported to guest program is now %d\n",lvl);
+        logmsg(_("HHCEV016I Level reported to guest program is now %d\n"),lvl);
         sysblk.ecpsvm.level=lvl;
     }
     if(sysblk.ecpsvm.level!=20)
     {
-          logmsg("HHCEV017W WARNING ! current level (%d) is not supported\n",sysblk.ecpsvm.level);
-          logmsg("HHCEV018W WARNING ! Unpredictable results may occur\n");
-          logmsg("HHCEV019I The microcode support level is 20\n");
+          logmsg(_("HHCEV017W WARNING ! current level (%d) is not supported\n"),sysblk.ecpsvm.level);
+          logmsg(_("HHCEV018W WARNING ! Unpredictable results may occur\n"));
+          logmsg(_("HHCEV019I The microcode support level is 20\n"));
     }
 }
 
@@ -2912,20 +2912,20 @@ ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd)
 void ecpsvm_command(int ac,char **av)
 {
     ECPSVM_CMDENT *ce;
-    logmsg("HHCEV011I ECPS:VM Command processor invoked\n");
+    logmsg(_("HHCEV011I ECPS:VM Command processor invoked\n"));
     if(ac==1)
     {
-        logmsg("HHCEV008E NO EVM subcommand. Type \"evm help\" for a list of valid subcommands\n");
+        logmsg(_("HHCEV008E NO EVM subcommand. Type \"evm help\" for a list of valid subcommands\n"));
         return;
     }
     ce=ecpsvm_getcmdent(av[1]);
     if(ce==NULL)
     {
-        logmsg("HHCEV008E Unknown EVM subcommand %s\n",av[1]);
+        logmsg(_("HHCEV008E Unknown EVM subcommand %s\n"),av[1]);
         return;
     }
     ce->fun(ac-1,av+1);
-    logmsg("HHCEV011I ECPS:VM Command processor complete\n");
+    logmsg(_("HHCEV011I ECPS:VM Command processor complete\n"));
 }
 /* NOTE : THE FOLLOWING 2 ROUTINES ARE ONLY DEFINED TO ELEVIATE A COMPILER WARNING */
 /*        DO NOT INVOKE THEM. IF IT IS NECESSARY TO PERFORM S/390 OR z/Arch DAT    */

@@ -66,7 +66,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        logmsg ("HHCDA056E File name missing or invalid\n");
+        logmsg (_("HHCDA056E File name missing or invalid\n"));
         return -1;
     }
 
@@ -97,7 +97,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            logmsg ("HHCDA058E File %s open error: %s\n",
+            logmsg (_("HHCDA058E File %s open error: %s\n"),
                     dev->filename, strerror(errno));
             return -1;
         }
@@ -188,7 +188,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            logmsg ("HHCDA064E File %s fstat error: %s\n",
+            logmsg (_("HHCDA064E File %s fstat error: %s\n"),
                     dev->filename, strerror(errno));
             close (dev->fd);
             dev->fd = -1;
@@ -200,7 +200,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             rc=ioctl(dev->fd,BLKGETSIZE,&statbuf.st_size);
             if(rc<0)
             {
-                logmsg ("HHCDA082E File %s IOCTL BLKGETSIZE error: %s\n",
+                logmsg (_("HHCDA082E File %s IOCTL BLKGETSIZE error: %s\n"),
                         dev->filename, strerror(errno));
                 close (dev->fd);
                 dev->fd = -1;
@@ -230,7 +230,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                logmsg ("HHCDA065E Invalid device origin block number %s\n",
+                logmsg (_("HHCDA065E Invalid device origin block number %s\n"),
                         argv[1]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -246,7 +246,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                logmsg ("HHCDA066E Invalid device block count %s\n",
+                logmsg (_("HHCDA066E Invalid device block count %s\n"),
                         argv[2]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -257,7 +257,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     }
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
-    logmsg ("HHCDA067I %s origin=%d blks=%d\n",
+    logmsg (_("HHCDA067I %s origin=%d blks=%d\n"),
             dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
@@ -267,7 +267,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        logmsg ("HHCDA068E %4.4X device type %4.4X not found in dasd table\n",
+        logmsg (_("HHCDA068E %4.4X device type %4.4X not found in dasd table\n"),
                 dev->devnum, dev->devtype);
         close (dev->fd);
         dev->fd = -1;
@@ -551,7 +551,7 @@ fba_read_blkgrp_retry:
         cache_setage(CACHE_DEVBUF, dev->cache);
         cache_unlock(CACHE_DEVBUF);
 
-        DEVTRACE ("HHCDA071I read blkgrp %d cache hit, using cache[%d]\n",
+        DEVTRACE (_("HHCDA071I read blkgrp %d cache hit, using cache[%d]\n"),
                   blkgrp, i);
 
         dev->cachehits++;
@@ -576,7 +576,7 @@ fba_read_blkgrp_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        DEVTRACE ("HHCDA072I read blkgrp %d no available cache entry, waiting\n",
+        DEVTRACE (_("HHCDA072I read blkgrp %d no available cache entry, waiting\n"),
                   blkgrp); 
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
@@ -584,7 +584,7 @@ fba_read_blkgrp_retry:
     }
 
     /* Cache miss */
-    DEVTRACE ("HHCDA073I read blkgrp %d cache miss, using cache[%d]\n",
+    DEVTRACE (_("HHCDA073I read blkgrp %d cache miss, using cache[%d]\n"),
               blkgrp, o);
 
     dev->cachemisses++;
@@ -600,7 +600,7 @@ fba_read_blkgrp_retry:
     offset = (off_t)(blkgrp * FBA_BLKGRP_SIZE);
     len = fba_blkgrp_len (dev, blkgrp);
 
-    DEVTRACE ("HHCDA074I read blkgrp %d offset %lld len %d\n",
+    DEVTRACE (_("HHCDA074I read blkgrp %d offset %lld len %d\n"),
               blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp));  
 
     /* Seek to the block group offset */
@@ -1051,7 +1051,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbaorigin
                      + dev->fbaxblkn) * dev->fbablksiz;
 
-        DEVTRACE("HHCDA077I Positioning to %8.8llX (%llu)\n",
+        DEVTRACE(_("HHCDA077I Positioning to %8.8llX (%llu)\n"),
                  (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
 
         /* Return normal status */

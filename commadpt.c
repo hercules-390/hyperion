@@ -49,13 +49,13 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
     {
         return;
     }
-    logmsg("HHCCA300D %4.4X:%s : Status = TEXT=%s, TRANS=%s, TWS=%s\n",
+    logmsg(_("HHCCA300D %4.4X:%s : Status = TEXT=%s, TRANS=%s, TWS=%s\n"),
             dev->devnum,
             txt,
             dev->commadpt->in_textmode?"YES":"NO",
             dev->commadpt->in_xparmode?"YES":"NO",
             dev->commadpt->xparwwait?"YES":"NO");
-    logmsg("HHCCA300D %4.4X:%s : Dump of %d (%x) byte(s)\n",dev->devnum,txt,sz,sz);
+    logmsg(_("HHCCA300D %4.4X:%s : Dump of %d (%x) byte(s)\n"),dev->devnum,txt,sz,sz);
     for(i=0;i<sz;i++)
     {
         if(i%16==0)
@@ -64,7 +64,7 @@ static void logdump(char *txt,DEVBLK *dev,BYTE *bfr,size_t sz)
             {
                 logmsg("\n");
             }
-            logmsg("HHCCA300D %4.4X:%s : %4.4X:",dev->devnum,txt,i);
+            logmsg(_("HHCCA300D %4.4X:%s : %4.4X:"),dev->devnum,txt,i);
         }
         if(i%4==0)
         {
@@ -191,7 +191,7 @@ static void commadpt_clean_device(DEVBLK *dev)
         dev->commadpt=NULL;
         if(dev->ccwtrace)
         {
-                logmsg("HHCCA300D %4.4X:clean : Control block freed\n",
+                logmsg(_("HHCCA300D %4.4X:clean : Control block freed\n"),
                         dev->devnum);
         }
     }
@@ -199,7 +199,7 @@ static void commadpt_clean_device(DEVBLK *dev)
     {
         if(dev->ccwtrace)
         {
-                logmsg("HHCCA300D %4.4X:clean : Control block not freed : not allocated\n",dev->devnum);
+                logmsg(_("HHCCA300D %4.4X:clean : Control block not freed : not allocated\n"),dev->devnum);
         }
     }
     return;
@@ -337,7 +337,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
             /* EON MUST be last data byte */
             if(ca->dev->ccwtrace)
             {
-                logmsg("HHCCA300D %4.4x : Found data beyond EON\n",ca->devnum);
+                logmsg(_("HHCCA300D %4.4x : Found data beyond EON\n"),ca->devnum);
             }
             incdata=1;
             break;
@@ -352,8 +352,8 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
                         incdata=1;
                         if(ca->dev->ccwtrace)
                         {
-                            logmsg("HHCCA300D %4.4x : Found incorrect IP address section at position %d\n",ca->devnum,dotcount+1);
-                            logmsg("HHCCA300D %4.4x : %d greater than 255\n",ca->devnum,cur);
+                            logmsg(_("HHCCA300D %4.4x : Found incorrect IP address section at position %d\n"),ca->devnum,dotcount+1);
+                            logmsg(_("HHCCA300D %4.4x : %d greater than 255\n"),ca->devnum,cur);
                         }
                         break;
                     }
@@ -367,7 +367,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
                     incdata=1;
                     if(ca->dev->ccwtrace)
                     {
-                        logmsg("HHCCA300D %4.4x : Too many separators in dial data\n",ca->devnum);
+                        logmsg(_("HHCCA300D %4.4x : Too many separators in dial data\n"),ca->devnum);
                     }
                     break;
                 }
@@ -384,7 +384,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
                 incdata=1;
                 if(ca->dev->ccwtrace)
                 {
-                    logmsg("HHCCA300D %4.4x : Incorrect dial data byte %2.2x\n",ca->devnum,ca->dialdata[i]);
+                    logmsg(_("HHCCA300D %4.4x : Incorrect dial data byte %2.2x\n"),ca->devnum,ca->dialdata[i]);
                 }
                 break;
             default:
@@ -405,7 +405,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     {
         if(ca->dev->ccwtrace)
         {
-            logmsg("HHCCA300D %4.4x : Not enough separators (only %d found) in dial data\n",ca->devnum,dotcount);
+            logmsg(_("HHCCA300D %4.4x : Not enough separators (only %d found) in dial data\n"),ca->devnum,dotcount);
         }
         return -1;
     }
@@ -413,7 +413,7 @@ static int     commadpt_initiate_userdial(COMMADPT *ca)
     {
         if(ca->dev->ccwtrace)
         {
-            logmsg("HHCCA300D %4.4x : Destination TCP port %d exceeds maximum of 65535\n",ca->devnum,cur);
+            logmsg(_("HHCCA300D %4.4x : Destination TCP port %d exceeds maximum of 65535\n"),ca->devnum,cur);
         }
         return -1;
     }
@@ -685,7 +685,7 @@ static void commadpt_thread(void *vca)
         seltv=NULL;
         if(ca->dev->ccwtrace)
         {
-                logmsg("HHCCA300D %4.4X:cthread - Entry - DevExec = %s\n",devnum,commadpt_pendccw_text[ca->curpending]);
+                logmsg(_("HHCCA300D %4.4X:cthread - Entry - DevExec = %s\n"),devnum,commadpt_pendccw_text[ca->curpending]);
         }
         writecont=0;
         switch(ca->curpending)
@@ -778,7 +778,7 @@ static void commadpt_thread(void *vca)
                         b=commadpt_ring_pop(&ca->outbfr);
                         if(ca->dev->ccwtrace)
                         {
-                                logmsg("HHCCA300D %4.4X:Writing 1 byte in socket : %2.2X\n",ca->devnum,b);
+                                logmsg(_("HHCCA300D %4.4X:Writing 1 byte in socket : %2.2X\n"),ca->devnum,b);
                         }
                         rc=write(ca->sfd,&b,1);
                         if(rc!=1)
@@ -953,13 +953,13 @@ static void commadpt_thread(void *vca)
 
         if(ca->dev->ccwtrace)
         {
-                logmsg("HHCCA300D %4.4X:cthread - Select IN maxfd = %d / Devexec = %s\n",devnum,maxfd,commadpt_pendccw_text[ca->curpending]);
+                logmsg(_("HHCCA300D %4.4X:cthread - Select IN maxfd = %d / Devexec = %s\n"),devnum,maxfd,commadpt_pendccw_text[ca->curpending]);
         }
         rc=select(maxfd,&rfd,&wfd,&xfd,seltv);
 
         if(ca->dev->ccwtrace)
         {
-                logmsg("HHCCA300D %4.4X:cthread - Select OUT rc=%d\n",devnum,rc);
+                logmsg(_("HHCCA300D %4.4X:cthread - Select OUT rc=%d\n"),devnum,rc);
         }
         /* Get the CA lock back */
         obtain_lock(&ca->lock);
@@ -976,7 +976,7 @@ static void commadpt_thread(void *vca)
             pollact=0;  /* Poll not active */
             if(ca->dev->ccwtrace)
             {
-                logmsg("HHCCA300D %4.4X:cthread - Select TIME OUT\n",devnum);
+                logmsg(_("HHCCA300D %4.4X:cthread - Select TIME OUT\n"),devnum);
             }
             /* Reset Call issued flag */
             ca->callissued=0;
@@ -994,7 +994,7 @@ static void commadpt_thread(void *vca)
             {
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg("HHCCA300D %4.4X:cthread - IPC Pipe closed\n",devnum);
+                        logmsg(_("HHCCA300D %4.4X:cthread - IPC Pipe closed\n"),devnum);
                 }
                 /* Pipe closed : terminate thread & release CA */
                 ca_shutdown=1;
@@ -1002,7 +1002,7 @@ static void commadpt_thread(void *vca)
             }
             if(ca->dev->ccwtrace)
             {
-                logmsg("HHCCA300D %4.4X:cthread - IPC Pipe Data ; code = %d\n",devnum,pipecom); 
+                logmsg(_("HHCCA300D %4.4X:cthread - IPC Pipe Data ; code = %d\n"),devnum,pipecom); 
             }
             switch(pipecom)
             {
@@ -1034,7 +1034,7 @@ static void commadpt_thread(void *vca)
                 dopoll=0;
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg("HHCCA300D %4.4X:cthread - inbound socket data\n",devnum);
+                        logmsg(_("HHCCA300D %4.4X:cthread - inbound socket data\n"),devnum);
                 }
                 if(pollact)
                 {
@@ -1076,7 +1076,7 @@ static void commadpt_thread(void *vca)
             {
                 if(ca->dev->ccwtrace)
                 {
-                        logmsg("HHCCA300D %4.4X:cthread - socket write available\n",devnum); 
+                        logmsg(_("HHCCA300D %4.4X:cthread - socket write available\n"),devnum); 
                 }
                 switch(ca->curpending)
                 {
@@ -1262,7 +1262,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
     } res;
         if(dev->ccwtrace)
         {
-                logmsg("HHCCA300D %4.4X:Initialisation starting\n",dev->devnum);
+                logmsg(_("HHCCA300D %4.4X:Initialisation starting\n"),dev->devnum);
         }
 
         if(dev->commadpt!=NULL)
@@ -1278,7 +1278,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         }
         if(dev->ccwtrace)
         {
-                logmsg("HHCCA300D %4.4X:Initialisation : Control block allocated\n",dev->devnum);
+                logmsg(_("HHCCA300D %4.4X:Initialisation : Control block allocated\n"),dev->devnum);
         }
         errcnt=0;
         /*
@@ -1605,7 +1605,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 {
     if(dev->ccwtrace)
     {
-        logmsg("HHCCA300D %4.4X:Closing down\n",dev->devnum);
+        logmsg(_("HHCCA300D %4.4X:Closing down\n"),dev->devnum);
     }
 
     /* Obtain the CA lock */
@@ -1638,7 +1638,7 @@ static int commadpt_close_device ( DEVBLK *dev )
 
     if(dev->ccwtrace)
     {
-        logmsg("HHCCA300D %4.4X:Closed down\n",dev->devnum);
+        logmsg(_("HHCCA300D %4.4X:Closed down\n"),dev->devnum);
     }
     return 0;
 }
@@ -1667,7 +1667,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
      */
     if(dev->ccwtrace)
     {
-        logmsg("HHCCA300D %4.4X:CCW Exec - Entry code = %x\n",dev->devnum,code);
+        logmsg(_("HHCCA300D %4.4X:CCW Exec - Entry code = %x\n"),dev->devnum,code);
     }
     obtain_lock(&dev->commadpt->lock);
     switch (code) {
@@ -1778,7 +1778,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 *unitstat=CSW_CE|CSW_DE;
                 if(dev->ccwtrace)
                 {
-                        logmsg("HHCCA300D %4.4X Set Mode : %s\n",dev->devnum,iobuf[0]&0x40 ? "EIB":"NO EIB");
+                        logmsg(_("HHCCA300D %4.4X Set Mode : %s\n"),dev->devnum,iobuf[0]&0x40 ? "EIB":"NO EIB");
                 }
                 dev->commadpt->eibmode=(iobuf[0]&0x40)?1:0;
                 break;

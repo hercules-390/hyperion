@@ -62,7 +62,7 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
     FishHangAtExit();
 #endif
 
-    fprintf(stderr, "HHCIN007I Hercules terminated\n");
+    fprintf(stderr, _("HHCIN007I Hercules terminated\n"));
     fflush(stderr);
 
     exit(0);
@@ -314,7 +314,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg( "HHCPN028I tod = %16.16llX\n",
+    logmsg( _("HHCPN028I tod = %16.16llX\n"),
         (long long)(sysblk.todclk + regs->todoffset) << 8
         );
 
@@ -810,7 +810,7 @@ BYTE c;                                 /* Character work area       */
     }
 
     /* Display IPL parameter */
-    logmsg( "HHCPN051I LOADPARM=%c%c%c%c%c%c%c%c\n",
+    logmsg( _("HHCPN051I LOADPARM=%c%c%c%c%c%c%c%c\n"),
             guest_to_host(sysblk.loadparm[0]),
             guest_to_host(sysblk.loadparm[1]),
             guest_to_host(sysblk.loadparm[2]),
@@ -2452,9 +2452,9 @@ int ldmod_cmd(char* cmdline, int argc, char *argv[])
 
     for(i = 1; i < argc; i++)
     {
-        logmsg("HHCHD100I Loading %s ...\n",argv[i]);
+        logmsg(_("HHCHD100I Loading %s ...\n"),argv[i]);
         if(!hdl_load(argv[i], 0))
-            logmsg("HHCHD101I Module %s loaded\n",argv[i]);
+            logmsg(_("HHCHD101I Module %s loaded\n"),argv[i]);
     }
 
     return 0;
@@ -2477,9 +2477,9 @@ int rmmod_cmd(char* cmdline, int argc, char *argv[])
 
     for(i = 1; i < argc; i++)
     {
-        logmsg("HHCHD102I Unloading %s ...\n",argv[i]);
+        logmsg(_("HHCHD102I Unloading %s ...\n"),argv[i]);
         if(!hdl_dele(argv[i]))
-            logmsg("HHCHD103I Module %s unloaded\n",argv[i]);
+            logmsg(_("HHCHD103I Module %s unloaded\n"),argv[i]);
     }
 
     return 0;

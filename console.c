@@ -277,7 +277,7 @@ struct sockaddr_in *sin;
 
         if(!hostent)
         {
-            logmsg("HHCGI001I Unable to determine IP address from %s\n",
+            logmsg(_("HHCGI001I Unable to determine IP address from %s\n"),
                 host);
             free(sin);
             return NULL;
@@ -298,7 +298,7 @@ struct sockaddr_in *sin;
 
             if(!servent)
             {
-                logmsg("HHCGI002I Unable to determine port number from %s\n",
+                logmsg(_("HHCGI002I Unable to determine port number from %s\n"),
                     host);
                 free(sin);
                 return NULL;
@@ -312,7 +312,7 @@ struct sockaddr_in *sin;
     }
     else
     {
-        logmsg("HHCGI003E Invalid parameter: %s\n",
+        logmsg(_("HHCGI003E Invalid parameter: %s\n"),
             host_serv);
         free(sin);
         return NULL;
@@ -1316,7 +1316,7 @@ BYTE                    unitstat;       /* Status after receive data */
     /* Prepare the sockaddr structure for the bind */
     if(!( server = get_inet_socket(console_cnslport) ))
     {
-        logmsg("HHCTE010E CNSLPORT statement invalid: %s\n",
+        logmsg(_("HHCTE010E CNSLPORT statement invalid: %s\n"),
             console_cnslport);
         return NULL;
     }
@@ -2407,8 +2407,8 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052 == 1)
             {
                 len = sprintf (dev->buf,
-                        "HHCTE006A Enter input for console device %4.4X\r\n",
-                        dev->devnum);
+                        _("HHCTE006A Enter input for console device %4.4X%c\n"),
+                        '\r',dev->devnum);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)
                 {

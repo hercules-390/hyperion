@@ -156,14 +156,14 @@ HDLDEP *depent;
     {
         if(strcmp(version,depent->version))
         {
-            logmsg("HHCHD010I Dependency check failed for %s, version(%s) expected(%s)\n",
+            logmsg(_("HHCHD010I Dependency check failed for %s, version(%s) expected(%s)\n"),
                name,version,depent->version);
             return -1;
         }
 
         if(size != depent->size)
         {
-            logmsg("HHCHD011I Dependency check failed for %s, size(%d) expected(%d)\n",
+            logmsg(_("HHCHD011I Dependency check failed for %s, size(%d) expected(%d)\n"),
                name,size,depent->size);
             return -1;
         }
@@ -204,7 +204,7 @@ void *fep;
         {
             if(!(modent = malloc(sizeof(MODENT))))
             {
-                logmsg("HHCHD001E registration malloc failed for %s\n",
+                logmsg(_("HHCHD001E registration malloc failed for %s\n"),
                   name);
                 return NULL;
             }
@@ -325,7 +325,7 @@ HDLPRE *preload;
 
     if(!(hdl_cdll = hdl_dll = malloc(sizeof(DLLENT))))
     {
-        fprintf(stderr, "HHCHD002E cannot allocate memory for DLL descriptor: %s\n",
+        fprintf(stderr, _("HHCHD002E cannot allocate memory for DLL descriptor: %s\n"),
           strerror(errno));
         exit(1);
     }
@@ -334,7 +334,7 @@ HDLPRE *preload;
 
     if(!(hdl_cdll->dll = dlopen(NULL, RTLD_NOW )))
     {
-        fprintf(stderr, "HHCHD003E unable to open hercules as DLL: %s\n",
+        fprintf(stderr, _("HHCHD003E unable to open hercules as DLL: %s\n"),
           dlerror());
         exit(1);
     }
@@ -343,14 +343,14 @@ HDLPRE *preload;
 
     if(!(hdl_cdll->hdldepc = dlsym(hdl_cdll->dll,HDL_DEPC_Q)))
     {
-        fprintf(stderr, "HHCHD012E No depency section in %s: %s\n",
+        fprintf(stderr, _("HHCHD012E No depency section in %s: %s\n"),
           hdl_cdll->name, dlerror());
         exit(1);
     }
 
     if(!(hdl_cdll->hdlinit = dlsym(hdl_cdll->dll,HDL_INIT_Q)))
     {
-        fprintf(stderr, "HHCHD004I No registration section in %s: %s\n",
+        fprintf(stderr, _("HHCHD004I No registration section in %s: %s\n"),
           hdl_cdll->name, dlerror());
         exit(1);
     }
@@ -400,14 +400,14 @@ char *modname;
     {
         if(strfilenamecmp(modname,dllent->name) == 0)
         {
-            logmsg("HHCHD005E %s already loaded\n",dllent->name);
+            logmsg(_("HHCHD005E %s already loaded\n"),dllent->name);
             return -1;
         }
     }
 
     if(!(dllent = malloc(sizeof(DLLENT))))
     {
-        logmsg("HHCHD006S cannot allocate memory for DLL descriptor: %s\n",
+        logmsg(_("HHCHD006S cannot allocate memory for DLL descriptor: %s\n"),
           strerror(errno));
         return -1;
     }
@@ -417,7 +417,7 @@ char *modname;
     if(!(dllent->dll = dlopen(name, RTLD_NOW)))
     {
         if(!(flags & HDL_LOAD_NOMSG))
-            logmsg("HHCHD007E unable to open DLL %s: %s\n",
+            logmsg(_("HHCHD007E unable to open DLL %s: %s\n"),
               name,dlerror());
         free(dllent);
         return -1;
@@ -427,7 +427,7 @@ char *modname;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        logmsg("HHCHD013E No depency section in %s: %s\n",
+        logmsg(_("HHCHD013E No depency section in %s: %s\n"),
           dllent->name, dlerror());
         dlclose(dllent->dll);
         free(dllent);
@@ -438,7 +438,7 @@ char *modname;
     {
         if(tmpdll->hdldepc == dllent->hdldepc)
         {
-            logmsg("HHCHD016E DLL %s is duplicate of %s\n",
+            logmsg(_("HHCHD016E DLL %s is duplicate of %s\n"),
               dllent->name, tmpdll->name);
             dlclose(dllent->dll);
             free(dllent);
@@ -449,7 +449,7 @@ char *modname;
 
     if(!(dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q)))
     {
-        logmsg("HHCHD008I No registration section in %s: %s\n",
+        logmsg(_("HHCHD008I No registration section in %s: %s\n"),
           dllent->name, dlerror());
         if(!(flags & HDL_LOAD_FORCE))
         {
@@ -473,7 +473,7 @@ char *modname;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            logmsg("HHCHD014E Dependency check failed for module %s\n",
+            logmsg(_("HHCHD014E Dependency check failed for module %s\n"),
               dllent->name);
             if(!(flags & HDL_LOAD_FORCE))
             {
@@ -533,7 +533,7 @@ char *modname;
         {
             if((*dllent)->flags & (HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD))
             {
-                logmsg("HHCHD015E Unloading of %s not allowed\n",(*dllent)->name);
+                logmsg(_("HHCHD015E Unloading of %s not allowed\n"),(*dllent)->name);
                 return -1;
             }
            
@@ -544,7 +544,7 @@ char *modname;
                 
                 if((rc = ((*dllent)->hdlfini)()))
                 {
-                    logmsg("HHCHD017E Unload of %s rejected by final section\n",(*dllent)->name);
+                    logmsg(_("HHCHD017E Unload of %s rejected by final section\n"),(*dllent)->name);
                     return rc;
                 }
             }
@@ -594,7 +594,7 @@ char *modname;
 
     release_lock(&hdl_lock);
 
-    logmsg("HHCHD009E %s not found\n",modname);
+    logmsg(_("HHCHD009E %s not found\n"),modname);
 
     return -1;
 }

@@ -241,7 +241,7 @@ BYTE            memnama[9];             /* Member name (ASCIIZ)      */
     dirrem = (dirptr[0] << 8) | dirptr[1];
     if (dirrem < 2 || dirrem > 256)
     {
-        fprintf (stdout, "HHCDS003E Directory block byte count is invalid\n");
+        fprintf (stdout, _("HHCDS003E Directory block byte count is invalid\n"));
         return -1;
     }
 
@@ -286,7 +286,7 @@ BYTE            memnama[9];             /* Member name (ASCIIZ)      */
             if (secondload[i] == NULL)
             {
                 fprintf (stdout,
-                        "HHCDS018I %s %s skipped\n",
+                        _("HHCDS018I %s %s skipped\n"),
                         memnama,
                         ((dirent->pds2indc & PDS2INDC_ALIAS) ?
                         "Alias" : "Member"));
@@ -299,7 +299,7 @@ BYTE            memnama[9];             /* Member name (ASCIIZ)      */
         if (n >= MAX_MEMBERS)
         {
             fprintf (stdout,
-                    "HHCDS004E Number of members exceeds MAX_MEMBERS\n");
+                    _("HHCDS004E Number of members exceeds MAX_MEMBERS\n"));
             return -1;
         }
 
@@ -308,7 +308,7 @@ BYTE            memnama[9];             /* Member name (ASCIIZ)      */
                 < 1)
         {
             fprintf (stdout,
-                    "HHCDS005E Member %s TTR count is zero\n", memnama);
+                    _("HHCDS005E Member %s TTR count is zero\n"), memnama);
             return -1;
         }
 
@@ -337,7 +337,7 @@ BYTE            memnama[9];             /* Member name (ASCIIZ)      */
         if ((dirent->pds2usrd[8] & 0x01) == 0 || totlen != txtlen)
         {
             fprintf (stdout,
-                    "HHCDS006W Member %s is not single text record\n",
+                    _("HHCDS006W Member %s is not single text record\n"),
                     memnama);
             memtab[n].multitxt = 1;
         }
@@ -346,8 +346,8 @@ BYTE            memnama[9];             /* Member name (ASCIIZ)      */
         if (totlen > 255*8)
         {
             fprintf (stdout,
-                    "HHCDS007W Member %s size %4.4X "
-                    "exceeds X\'7F8\' bytes\n",
+                    _("HHCDS007W Member %s size %4.4X "
+                    "exceeds X\'7F8\' bytes\n"),
                     memnama, totlen);
         }
 
@@ -355,8 +355,8 @@ BYTE            memnama[9];             /* Member name (ASCIIZ)      */
         if (totlen & 0x7)
         {
             fprintf (stdout,
-                    "HHCDS008W Member %s size %4.4X "
-                    "is not a multiple of 8\n",
+                    _("HHCDS008W Member %s size %4.4X "
+                    "is not a multiple of 8\n"),
                     memnama, totlen);
         }
 
@@ -409,14 +409,14 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
     /* Skip the member if it is an alias */
     if (memp->alias)
     {
-        fprintf (stdout, "HHCDS009I Alias %s skipped\n", memnama);
+        fprintf (stdout, _("HHCDS009I Alias %s skipped\n"), memnama);
         return 0;
     }
 
     /* Skip the member if it has no XCTL table */
     if (memp->notable)
     {
-        fprintf (stdout, "HHCDS010I Member %s skipped\n", memnama);
+        fprintf (stdout, _("HHCDS010I Member %s skipped\n"), memnama);
         return 0;
     }
 
@@ -424,7 +424,7 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
     if (memp->multitxt)
     {
         fprintf (stdout,
-                "HHCDS011E Member %s has multiple text records\n",
+                _("HHCDS011E Member %s has multiple text records\n"),
                 memnama);
         return -1;
     }
@@ -436,14 +436,14 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
     if (rc < 0)
     {
         fprintf (stdout,
-                "HHCDS012E Member %s has invalid TTR %4.4X%2.2X\n",
+                _("HHCDS012E Member %s has invalid TTR %4.4X%2.2X\n"),
                 memnama, trk, rec);
         return -1;
     }
 
     fprintf (stdout,
-            "HHCDS013I Processing member %s text record TTR=%4.4X%2.2X "
-            "CCHHR=%4.4X%4.4X%2.2X\n",
+            _("HHCDS013I Processing member %s text record TTR=%4.4X%2.2X "
+            "CCHHR=%4.4X%4.4X%2.2X\n"),
             memnama, trk, rec, cyl, head, rec);
 
     /* Read the text record */
@@ -452,7 +452,7 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
     if (rc != 0)
     {
         fprintf (stdout,
-                "HHCDS014E Member %s error reading TTR %4.4X%2.2X\n",
+                _("HHCDS014E Member %s error reading TTR %4.4X%2.2X\n"),
                 memnama, trk, rec);
         return -1;
     }
@@ -461,8 +461,8 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
     if (len < 8 || len > 1024 || (len & 0x7))
     {
         fprintf (stdout,
-                "HHCDS015E Member %s TTR %4.4X%2.2X "
-                "text record length %4.4X is not valid\n",
+                _("HHCDS015E Member %s TTR %4.4X%2.2X "
+                "text record length %4.4X is not valid\n"),
                 memnama, trk, rec, len);
         return -1;
     }
@@ -471,9 +471,9 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
     if (len != memp->dwdsize * 8)
     {
         fprintf (stdout,
-                "HHCDS016E Member %s TTR %4.4X%2.2X "
+                _("HHCDS016E Member %s TTR %4.4X%2.2X "
                 "text record length %4.4X does not match "
-                "length %4.4X in directory\n",
+                "length %4.4X in directory\n"),
                 memnama, trk, rec, len, memp->dwdsize * 8);
         return -1;
     }
@@ -516,8 +516,8 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
         if (xctloff >= len - 10)
         {
             fprintf (stdout,
-                    "HHCDS017E Member %s TTR %4.4X%2.2X "
-                    "XCTL table improperly terminated\n",
+                    _("HHCDS017E Member %s TTR %4.4X%2.2X "
+                    "XCTL table improperly terminated\n"),
                     memnama, trk, rec);
             return -1;
         }
@@ -538,7 +538,7 @@ BYTE            refnama[9];             /* Referred name (ASCIIZ)    */
 
         /* Display XCTL table entry */
         fprintf (stdout,
-                "HHCDS019I In member %s: %s TTRL=%2.2X%2.2X%2.2X%2.2X",
+                _("HHCDS019I In member %s: %s TTRL=%2.2X%2.2X%2.2X%2.2X"),
                 memnama, refnama,
                 blkptr[xctloff+2], blkptr[xctloff+3],
                 blkptr[xctloff+4], blkptr[xctloff+5]);
@@ -615,6 +615,12 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
 
+#if defined(ENABLE_NLS)
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+#endif
+
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -648,7 +654,7 @@ int             nmem = 0;               /* Number of array entries   */
     if (memtab == NULL)
     {
         fprintf (stdout,
-                "HHCDS001E Cannot obtain storage for member array: %s\n",
+                _("HHCDS001E Cannot obtain storage for member array: %s\n"),
                 strerror(errno));
         return -1;
     }
@@ -700,7 +706,7 @@ int             nmem = 0;               /* Number of array entries   */
     } /* end while */
 
     fprintf (stdout,
-            "HHCDS002I End of directory: %d members selected\n",
+            _("HHCDS002I End of directory: %d members selected\n"),
             nmem);
 
 #ifdef EXTERNALGUI

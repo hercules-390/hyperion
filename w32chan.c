@@ -181,7 +181,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum)
 
     if (!pIORequest)
     {
-        logmsg("HHC762I malloc(DEVIOREQUEST) failed; device=%4.4X, strerror=\"%s\"\n",
+        logmsg(_("HHC762I malloc(DEVIOREQUEST) failed; device=%4.4X, strerror=\"%s\"\n"),
             wDevNum,strerror(errno));
         return 2;
     }
@@ -243,7 +243,7 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum)
 
             if (ios_devtmax && ios_devtnbr >= ios_devtmax)  // max threads already created?
             {
-                logmsg("HHC765I *WARNING* max device threads exceeded.\n");
+                logmsg(_("HHC765I *WARNING* max device threads exceeded.\n"));
                 ios_devtunavail++;          // (count occurrences)
             }
 
@@ -340,7 +340,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms)
     {
-        logmsg("HHC761I malloc(DEVTHREADPARMS) failed; device=%4.4X, strerror=\"%s\"\n",
+        logmsg(_("HHC761I malloc(DEVTHREADPARMS) failed; device=%4.4X, strerror=\"%s\"\n"),
             wDevNum,strerror(errno));
         return NULL;    // (error)
     }
@@ -349,7 +349,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hShutdownEvent)
     {
-        logmsg("HHC763I CreateEvent(hShutdownEvent) failed; device=%4.4X, strerror=\"%s\"\n",
+        logmsg(_("HHC763I CreateEvent(hShutdownEvent) failed; device=%4.4X, strerror=\"%s\"\n"),
             wDevNum,strerror(errno));
         free(pThreadParms);
         return NULL;    // (error)
@@ -359,7 +359,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
     if (!pThreadParms->hRequestQueuedEvent)
     {
-        logmsg("HHC764I CreateEvent(hRequestQueuedEvent) failed; device=%4.4X, strerror=\"%s\"\n",
+        logmsg(_("HHC764I CreateEvent(hRequestQueuedEvent) failed; device=%4.4X, strerror=\"%s\"\n"),
             wDevNum,strerror(errno));
         MyCloseHandle(pThreadParms->hShutdownEvent);
         free(pThreadParms);
@@ -380,7 +380,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
     if (fthread_create(&dwThreadID,NULL,DeviceThread,pThreadParms,ios_devthread_priority) != 0)
 #endif
     {
-        logmsg("HHC760I fthread_create(DeviceThread) failed; device=%4.4X, strerror=\"%s\"\n",
+        logmsg(_("HHC760I fthread_create(DeviceThread) failed; device=%4.4X, strerror=\"%s\"\n"),
             wDevNum,strerror(errno));
         MyCloseHandle(pThreadParms->hShutdownEvent);
         MyCloseHandle(pThreadParms->hRequestQueuedEvent);

@@ -568,7 +568,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    logmsg ("HHCSH019I %s origin=%d blks=%d\n",
+    logmsg (_("HHCSH019I %s origin=%d blks=%d\n"),
             dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     dev->connecting = 0;
