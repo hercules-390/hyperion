@@ -833,7 +833,12 @@ int     n;                              /* Number of bytes in buffer */
     /* Display storage at first storage operand location */
     if (b1 >= 0)
     {
-        if (REAL_MODE(&regs->psw))
+        if(REAL_MODE(&regs->psw)
+        /* ISW20040202 - Don't do display_real when running under SIE */
+#if defined(_FEATURE_SIE)
+           && (!regs->sie_state)
+#endif
+          )
             n = ARCH_DEP(display_real) (regs, addr1, buf, 1);
         else
             n = ARCH_DEP(display_virt) (regs, addr1, buf, b1,
@@ -846,11 +851,16 @@ int     n;                              /* Number of bytes in buffer */
     /* Display storage at second storage operand location */
     if (b2 >= 0)
     {
-        if (REAL_MODE(&regs->psw)
+        if(
+        /* ISW20040202 - Don't do display_real when running under SIE */
+#if defined(_FEATURE_SIE)
+           (!regs->sie_state) &&
+#endif
+            (REAL_MODE(&regs->psw)
             || (opcode == 0xB2 && inst[1] == 0x4B) /*LURA*/
             || (opcode == 0xB2 && inst[1] == 0x46) /*STURA*/
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
-            || (opcode == 0xB9 && inst[1] == 0x25)) /*STURG*/
+            || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
             n = ARCH_DEP(display_real) (regs, addr2, buf, 1);
         else
             n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,
