@@ -169,14 +169,14 @@ int main( int argc, char **argv )
             continue;
         }
             
-        rc = ioctl( sockfd, ctlreq.iCtlOp, pArg );
-
         sprintf( szMsgBuffer,
                  _("HHCIF006I %s: Doing %s on %s: %s\n"),
                  pszProgName, pOp, pIF, strerror( errno ) );
 
         write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
     
+        rc = ioctl( sockfd, ctlreq.iCtlOp, pArg );
+
         if( rc < 0 )
         {
             sprintf( szMsgBuffer,

@@ -14,7 +14,6 @@
 // This abstraction layer is an attempt to create a common API set
 // that works on all platforms with (hopefully) equal results.
 
-//#if !defined(__APPLE__) 
 #include "hercules.h"
 #include "tuntap.h"
 #include "devtype.h"
@@ -569,23 +568,23 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
     // Select string to represent ioctl request for debugging.
     switch (iRequest) {
     case SIOCSIFADDR:
-        request_name="SIOCSIFADDR";
+        request_name="SIOCSIFADDR"; break;
     case SIOCSIFDSTADDR:
-        request_name="SIOCSIFDSTADDR";
+        request_name="SIOCSIFDSTADDR"; break;
     case SIOCSIFMTU:
-        request_name="SIOCSIFMTU";
+        request_name="SIOCSIFMTU"; break;
     case SIOCSIFFLAGS:
-        request_name="SIOCSIFFLAGS";
+        request_name="SIOCSIFFLAGS"; break;
     case SIOCSIFNETMASK:
-        request_name="SIOCSIFNETMASK";
+        request_name="SIOCSIFNETMASK"; break;
 #if !defined(__APPLE__)
     case SIOCSIFHWADDR:
-        request_name="SIOCSIFHWADDR";
+        request_name="SIOCSIFHWADDR"; break;
 #endif /* !defined(__APPLE__) */
     case SIOCADDRT:
-        request_name="SIOCADDRT";
+        request_name="SIOCADDRT"; break;
     case SIOCDELRT:
-        request_name="SIOCDELRT";
+        request_name="SIOCDELRT"; break;
     default:
         sprintf(unknown_request,"Unknown (0x%x)",iRequest);
         request_name=unknown_request;
@@ -680,4 +679,3 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 }
 
 #endif // !defined( WIN32 )
-//#endif /* !defined(__APPLE__) */
