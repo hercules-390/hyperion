@@ -573,11 +573,12 @@ int     icode = 0;                      /* Interception code         */
 
         /* Get PSA pointer and ensure PSA is paged in */
         if(GUESTREGS->sie_pref)
+        {
             GUESTREGS->sie_psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->PX);
+            GUESTREGS->sie_px = GUESTREGS->PX;
+        }
         else
         {
-        RADR sie_px;
-    
             if (ARCH_DEP(translate_addr) (GUESTREGS->sie_mso + GUESTREGS->PX,
                                           USE_PRIMARY_SPACE, regs, ACCTYPE_SIE))
             {
@@ -589,9 +590,9 @@ int     icode = 0;                      /* Interception code         */
             }
     
             /* Convert host real address to host absolute address */
-            sie_px = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
+            GUESTREGS->sie_px = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
             
-            if (regs->dat.protect || sie_px > regs->mainlim)
+            if (regs->dat.protect || GUESTREGS->sie_px > regs->mainlim)
             {
                 SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
                   SIE_VI_WHY_PFACC, GUESTREGS);
@@ -600,7 +601,7 @@ int     icode = 0;                      /* Interception code         */
                 return;
             }
     
-            GUESTREGS->sie_psa = (PSA_3XX*)(GUESTREGS->mainstor + sie_px);
+            GUESTREGS->sie_psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->sie_px);
     
         }
     

@@ -237,7 +237,7 @@ do { \
 
 #if defined(_FEATURE_SIE)
   #define SIE_MODE(_register_context) \
-          ((_register_context)->sie_mode)
+          unlikely((_register_context)->sie_mode)
   #define SIE_STATE(_register_context) \
           ((_register_context)->sie_state)
   #define SIE_FEATB(_regs, _feat_byte, _feat_name) \
@@ -1120,9 +1120,9 @@ do { \
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)   \
   ( \
-    ((_regs)->arch_mode == ARCH_390) \
+    (((_regs)->arch_mode == ARCH_390) \
     ? s390_logical_to_main((_addr), (_arn), (_regs), _parms) \
-    : z900_logical_to_main((_addr), (_arn), (_regs), _parms), \
+    : z900_logical_to_main((_addr), (_arn), (_regs), _parms)), \
     (_regs)->dat.aaddr \
   )
 

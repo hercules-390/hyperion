@@ -543,8 +543,9 @@ static char *pgmintname[] = {
     /* Absolute address of prefix page */
     px = realregs->PX;
 
-    /* If under SIE translate to host absolute */
-    SIE_TRANSLATE(&px, ACCTYPE_WRITE, realregs);
+    /* If under SIE use translated to host absolute prefix */
+    if(SIE_MODE(regs))
+        px = regs->sie_px;
 
 #if defined(_FEATURE_SIE)
     if(!SIE_MODE(regs) ||
