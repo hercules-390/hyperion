@@ -30,41 +30,6 @@
 #endif /*!defined(_DIAGNOSE_H)*/
 
 #if defined(OPTION_DYNAMIC_LOAD) && defined(FEATURE_HERCULES_DIAGCALLS)
-//  Diagnose F14 - dll interface
-//
-//  Purpose:
-//
-//  Allow external routines to be called from OS running under hercules
-//  external routines must reside in hercules dll's
-//
-//
-//  Instruction:
-//
-//    Format:
-//
-//    83 r1 r3 d2(b2)
-//
-//    r1: register containing real address of external routine name to be
-//        called this routine name is defined as CL32, and is subject to
-//        EBCDIC to ASCII translation under control of hercules codepages.
-//        This parameter must be 32 byte aligned.
-//
-//    r3: register containing user parameter.
-//
-//    d2(b2): 0xF14
-//
-//
-//  External routine:
-//
-//    void xxxx_diagf14_routine_name(int r1, int r3, REGS *regs);
-//
-//    xxxx_diagf14_ prefix to routine_name 
-//    xxxx being either s370, s390 or z900 depending on architecture mode.
-//
-//    The instruction is subject to machine malfunction checking.
-//    The external routine may be interrupted when an extended wait or loop
-//    occurs.
-//
 
 void ARCH_DEP(diagf14_call)(int r1, int r3, REGS *regs)
 {
