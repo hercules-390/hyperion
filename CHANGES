@@ -120,6 +120,11 @@
 13 Mar 2003 Define extgui in dasdseq for Windows build - Ivan Warren
 13 Mar 2003 AEA invalidation reduction - Greg Smith
 13 Mar 2003 Gabor performance patch - optimize AEA invalidation - Greg Smith
+13 Mar 2003 detab dasdseq.c - Jim Morrison
+13 Mar 2003 New dasdseq.c and man/dasdseq.1 - Jim Morrison
+10 Mar 2003 New man/cckddiag.1 manpage - Jim Morrison
+10 Mar 2003 New man/Makefile.am (manpage support) - Jim Morrison
+10 Mar 2003 New man/cckd.4 manpage - Jim Morrison
 08 Mar 2003 Remove panel/socketdevice dependency - Jan Jaeger
 08 Mar 2003 Increased tape max blk sz to 64K-1 in hercules for
             DFDSS support - Ivan Warren
@@ -127,7 +132,11 @@
 08 Mar 2003 Set Byte 1 Bit 3 on IntReq for D/T 3505 to prevent
             Reader tasks from dying and filling ERDS + set
             sense size to 4 - Ivan Warren
+08 Mar 2003 correct decomptrk() no-compression cckddiag - Jim Morrison
+07 Mar 2003 correct cckddiag build for Win - Jim Morrison
+06 Mar 2003 Add cckddiag to build - Jim Morrison
 06 Mar 2003 Relax numl1tab check - Greg Smith
+03 Mar 2003 New cckddiag command; CCKD diagnostic tool - Jim Morrison
 03 Mar 2003 Relax CCKD track validation algorithm - Ivan Warren
 02 Mar 2003 Set ref and change bits on store status - Jan Jaeger
 01 Mar 2003 IA32 assemler reduction - Greg Smith
