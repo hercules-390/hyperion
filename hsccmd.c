@@ -3092,20 +3092,40 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("aea mode   %2.2x crx   %2.2x\n",regs->aea_mode,regs->aea_crx);
+    logmsg ("aea mode   %2.2x",regs->aea_mode);
+    if(regs->aea_crx > 0)
+        logmsg(" crx   %2.2x\n",regs->aea_crx);
+    else
+        logmsg(" crx   %2d\n",regs->aea_crx);
 
     logmsg ("aea ar    ");
-    for (i = 0; i < 21; i++) logmsg(" %2.2x",regs->aea_ar[i]);
+    for (i = -5; i < 16; i++)
+         if(regs->aea_ar[i] > 0)
+            logmsg(" %2.2x",regs->aea_ar[i]);
+        else
+            logmsg(" %2d",regs->aea_ar[i]);
     logmsg ("\n");
 
-    logmsg ("aea common");
-    for (i = 0; i < 17; i++) logmsg(" %2.2x",regs->aea_common[i]);
+    logmsg ("aea common            ");
+    for (i = -1; i < 16; i++)
+        if(regs->aea_common[i] > 0)
+            logmsg(" %2.2x",regs->aea_common[i]);
+        else
+            logmsg(" %2d",regs->aea_common[i]);
     logmsg ("\n");
 
     logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
-            "    cr[13] %16.16llx\n    cr[16] %16.16llx\n",
-            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13),regs->CR_G(16));
+            "    cr[13] %16.16llx\n",
+            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
 
+    logmsg ("    cr[r]  %16.16llx\n",
+            regs->CR_G(CR_ASD_REAL));
+
+    for(i = 0; i < 16; i++)
+        if(regs->aea_ar[i] > 15)
+            logmsg ("    alb[%d] %16.16llx\n",
+                    regs->alb[i]);
+    
     if (regs->sie_active)
     {
         regs = regs->guestregs;
@@ -3114,16 +3134,32 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         logmsg ("aea mode   %2.2x crx   %2.2x\n",regs->aea_mode,regs->aea_crx);
 
         logmsg ("aea ar    ");
-        for (i = 0; i < 21; i++) logmsg(" %2.2x",regs->aea_ar[i]);
+        for (i = -5; i < 16; i++)
+        if(regs->aea_ar[i] > 0)
+            logmsg(" %2.2x",regs->aea_ar[i]);
+        else
+            logmsg(" %2d",regs->aea_ar[i]);
         logmsg ("\n");
 
-        logmsg ("aea common");
-        for (i = 0; i < 17; i++) logmsg(" %2.2x",regs->aea_common[i]);
+        logmsg ("aea common            ");
+        for (i = -1; i < 16; i++)
+        if(regs->aea_common[i] > 0)
+            logmsg(" %2.2x",regs->aea_common[i]);
+        else
+            logmsg(" %2d",regs->aea_common[i]);
         logmsg ("\n");
 
         logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
-                "    cr[13] %16.16llx\n    cr[16] %16.16llx\n",
-            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13),regs->CR_G(16));
+                "    cr[13] %16.16llx\n",
+                regs->CR_G(1),regs->CR_G(7),regs->CR_G(13));
+
+        logmsg ("    cr[r]  %16.16llx\n",
+                regs->CR_G(CR_ASD_REAL));
+
+        for(i = 0; i < 16; i++)
+            if(regs->aea_ar[i] > 15)
+                logmsg ("    alb[%d] %16.16llx\n",
+                        regs->alb[i]);
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);
@@ -3204,14 +3240,14 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     logmsg ("  ix              asd            vaddr              pte   id c p r w ky       main\n");
     for (i = 0; i < TLBN; i++)
     {
-        logmsg("%s%3.3x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d %1d %1d %2.2x %p\n",
+        logmsg("%s%3.3x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d %1d %1d %2.2x %8.8x\n",
          ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
          i,regs->tlb.TLB_ASD_G(i),
          ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
          regs->tlb.TLB_PTE_G(i),(int)(regs->tlb.TLB_VADDR_G(i) & bytemask),
          regs->tlb.common[i],regs->tlb.protect[i],
          (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
-         regs->tlb.skey[i],regs->tlb.main[i]);
+         regs->tlb.skey[i],regs->tlb.main[i] - regs->mainstor);
         matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
     }
     logmsg("%d tlbID matches\n", matches);

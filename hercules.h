@@ -471,7 +471,13 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      px;                     /* Prefix register           */
         PSW     psw;                    /* Program status word       */
         DW      gr[16];                 /* General registers         */
-        DW      cr[16+1];               /* Control registers         */
+
+        DW      cr_special[1];          /* Negative Index into cr    */
+#define CR_ASD_REAL     -1
+        DW      cr[16];                 /* Control registers         */
+#define CR_ALB_OFFSET   16
+        DW      alb[16];                /* Accesslist Lookaside cr   */
+
         U32     ar[16];                 /* Access registers          */
         U32     fpr[32];                /* Floating point registers  */
         U32     fpc;                    /* IEEE Floating Point
@@ -661,9 +667,16 @@ typedef struct _REGS {                  /* Processor registers       */
      /* Mainstor address lookup accelerator                          */
 
         BYTE    aea_mode;               /* aea addressing mode       */
-        BYTE    aea_crx;                /* cr index (s370 mode)      */
-        BYTE    aea_ar[21];             /* arn to cr number          */
-        BYTE    aea_common[16+1];       /* 1=asd is not private      */
+        int     aea_crx;                /* cr index (s370 mode)      */
+
+        int     aea_ar_special[5];      /* Negative index into ar    */
+        int     aea_ar[16];             /* arn to cr number          */
+
+        BYTE    aea_common_special[1];  /* real asd                  */
+        BYTE    aea_common[16];         /* 1=asd is not private      */
+        BYTE    aea_common_alb[16];     /* alb pseudo registers      */
+
+        BYTE    aea_aleprot[16];        /* ale protected             */
 
      /* TLB - Translation lookaside buffer                           */
 
@@ -1944,11 +1957,11 @@ int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 #define ACCTYPE_STRAG      0xE0            /* STRAG instruction      */
 
 /* Special value for arn parameter for translate functions in dat.c */
-#define USE_INST_SPACE          (16)    /* Instruction space virtual */
-#define USE_REAL_ADDR           (17)    /* Real address              */
-#define USE_PRIMARY_SPACE       (18)    /* Primary space virtual     */
-#define USE_SECONDARY_SPACE     (19)    /* Secondary space virtual   */
-#define USE_HOME_SPACE          (20)    /* Home space virtual        */
+#define USE_INST_SPACE          (-1)    /* Instruction space virtual */
+#define USE_REAL_ADDR           (-2)    /* Real address              */
+#define USE_PRIMARY_SPACE       (-3)    /* Primary space virtual     */
+#define USE_SECONDARY_SPACE     (-4)    /* Secondary space virtual   */
+#define USE_HOME_SPACE          (-5)    /* Home space virtual        */
 
 /* Interception codes used by longjmp/SIE */
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */

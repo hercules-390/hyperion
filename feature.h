@@ -582,6 +582,7 @@ z900_ ## _name
 #define SET_AEA_COMMON(_regs) \
 do { \
   (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+  (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
 } while (0)
 
 #define SET_AEA_MODE(_regs) \
@@ -593,7 +594,7 @@ do { \
     if (((_regs)->aea_mode & PSW_PERMODE) != 0 && EN_IC_PER_SA((_regs))) \
       ARCH_DEP(invalidate_tlb)((_regs),~ACC_WRITE); \
   } \
-  (_regs)->aea_crx = (_regs)->aea_mode & 0x0F ? 1 : 16; \
+  (_regs)->aea_crx = (_regs)->aea_mode & 0x0F ? 1 : CR_ASD_REAL; \
 } while (0)
 
 #define TEST_SET_AEA_MODE(_regs) \
@@ -619,7 +620,12 @@ do { \
        ((_acctype) == ACCTYPE_WRITE_SKP) \
         ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
            MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-        :  MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+        : ( ( \
+              *(_regs)->tlb.storkey[TLBIX(_addr)] |= \
+              ( ((_acctype) & ACC_WRITE) ? (STORKEY_REF|STORKEY_CHANGE) : (STORKEY_REF) ) \
+            ) , \
+           MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+           ) \
      ) \
    : ( \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
@@ -661,29 +667,34 @@ do { \
 #define SET_AEA_MODE(_regs) \
 do { \
   int i; \
-  BYTE inst_cr = (_regs)->aea_ar[16]; \
+  int inst_cr = (_regs)->aea_ar[USE_INST_SPACE]; \
   BYTE oldmode = (_regs)->aea_mode; \
   (_regs)->aea_mode = AEA_MODE((_regs)); \
   switch ((_regs)->aea_mode & 0x0F) { \
-    case 0: \
-      memset((_regs)->aea_ar, 16, 17); \
+    case 0: /* REAL */ \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->aea_ar[i] = CR_ASD_REAL; \
       break; \
-    case 1: \
-      memset((_regs)->aea_ar,  1, 17); \
+    case 1: /* PRIM */ \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->aea_ar[i] = 1; \
       break; \
-    case 2: \
-      memset((_regs)->aea_ar,  1, 17); \
+    case 2: /* AR */ \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->aea_ar[i] = 1; \
       for (i = 1; i < 16; i++) { \
         if ((_regs)->AR(i) == ALET_SECONDARY) (_regs)->aea_ar[i] = 7; \
         else if ((_regs)->AR(i) != ALET_PRIMARY) (_regs)->aea_ar[i] = 0; \
       } \
       break; \
-    case 3: \
-      memset((_regs)->aea_ar,  7, 16); \
-      (_regs)->aea_ar[16] = 1; \
+    case 3: /* SEC */ \
+      (_regs)->aea_ar[USE_INST_SPACE] = 1; \
+      for(i = 0; i < 16; i++) \
+          (_regs)->aea_ar[i] = 7; \
       break; \
-    case 4: \
-      memset((_regs)->aea_ar, 13, 17); \
+    case 4: /* HOME */ \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->aea_ar[i] = 13; \
       break; \
   } \
   if (inst_cr != (_regs)->aea_ar[USE_INST_SPACE]) \
@@ -735,7 +746,12 @@ do { \
        ((_acctype) == ACCTYPE_WRITE_SKP) \
         ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
           MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-        : MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+        : ( ( \
+              *(_regs)->tlb.storkey[TLBIX(_addr)] |= \
+              ( ((_acctype) & ACC_WRITE) ? (STORKEY_REF|STORKEY_CHANGE) : (STORKEY_REF) ) \
+            ) , \
+          MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+          ) \
      ) \
    : ( \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \

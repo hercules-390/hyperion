@@ -635,7 +635,7 @@ int     len = 0;                        /* Lengths for page crossing */
         {
             memcpy (dest, ia, 4);
             addr = (addr + len) & ADDRESS_MAXWRAP(regs);
-            ia = MADDR(addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+            ia = MADDR(addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
             memcpy(dest + len, ia, 4);
         }
         else
