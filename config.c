@@ -340,6 +340,8 @@ int     rc;                             /* Return code               */
                     "for device %4.4X: %s\n"),
                     dev->devnum, strerror(errno));
 
+            free(dev->typname);
+
             ret_devblk(dev);
 
             return 1;
