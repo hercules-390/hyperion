@@ -118,7 +118,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                 intmask |= regs->cpumask;
             }
         }
-        else
+        else if (IS_IC_CLKC(regs))
             OFF_IC_CLKC(regs);
 
 #if defined(_FEATURE_SIE)
@@ -151,7 +151,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                 intmask |= regs->cpumask;
             }
         }
-        else
+        else if(IS_IC_PTIMER(regs))
             OFF_IC_PTIMER(regs);
 
 #if defined(_FEATURE_SIE)

@@ -1502,6 +1502,8 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
 #endif /*defined(FEATURE_ESAME)*/
 
+    obtain_lock(&sysblk.intlock);
+
     /* Load new PSW using the bytes extracted from the stack entry */
     /* The rc will be checked by calling routine for PIC 06        */
     *rc = ARCH_DEP(load_psw) (regs, newpsw);
@@ -1514,6 +1516,8 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     /* restore PER masks which could have been wiped out by load_psw */
     SET_IC_PER_MASK(regs);
+
+    release_lock(&sysblk.intlock);
 
     /* [5.12.4.4] Pass back the absolute address of the entry
        descriptor of the preceding linkage stack entry.  The

@@ -137,8 +137,6 @@ int     rc;
     /* reset the cpuint indicator */
     RESET_IC_CPUINT(regs);
 
-    release_lock(&sysblk.intlock);
-
 #if defined(_FEATURE_SIE)
     /* Set the main storage reference and change bits */
     if(regs->sie_state
@@ -198,8 +196,13 @@ int     rc;
         rc = ARCH_DEP(load_psw) (regs, psa->extnew);
 
         if ( rc )
+        {
+            release_lock(&sysblk.intlock);
             ARCH_DEP(program_interrupt)(regs, rc);
+        }
     }
+
+    release_lock(&sysblk.intlock);
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state

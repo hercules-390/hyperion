@@ -1724,21 +1724,23 @@ int     amode64;
     PERFORM_CHKPT_SYNC (regs);
 
     /* Fetch new PSW from operand address */
-    ARCH_DEP(vfetchc) ( dword, 8-1, effective_addr2, b2, regs );
+    STORE_DW ( dword, ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ) );
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
+    obtain_lock(&sysblk.intlock);
 #if defined(FEATURE_ESAME)
     /* save amode64 flag */
     amode64 = dword[3] & 0x01;
     /* make psw valid for esa390 mode */
     dword[3] &= ~0x01;
-    if ( ( rc = s390_load_psw ( regs, dword ) ) )
-    {
-        regs->psw.notesame = 0;
+    rc = s390_load_psw ( regs, dword );
+    if (rc) regs->psw.notesame = 0;
 #else /*!defined(FEATURE_ESAME)*/
-    if ( ( rc = ARCH_DEP(load_psw) ( regs, dword ) ) )
-    {
+    rc = ARCH_DEP(load_psw) ( regs, dword );
 #endif /*!defined(FEATURE_ESAME)*/
+    release_lock(&sysblk.intlock);
+    if (rc)
+    {
         ARCH_DEP(program_interrupt) (regs, rc);
     }
 

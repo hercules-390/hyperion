@@ -166,7 +166,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     psa = (PSA*)(regs->mainstor + regs->PX);
 
     /* Load IPL PSW from PSA+X'0' */
+    obtain_lock(&sysblk.intlock);
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
+    release_lock(&sysblk.intlock);
     if ( rc )
     {
         logmsg (_("HHCCP030E %s mode IPL failed: Invalid IPL PSW: "
@@ -318,7 +320,9 @@ U32     fileaddr;
     psa = (PSA*)(regs->mainstor + regs->PX);
 
     /* Load IPL PSW from PSA+X'0' */
+    obtain_lock(&sysblk.intlock);
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
+    release_lock(&sysblk.intlock);
     if ( rc )
     {
         logmsg (_("HHCCP032E %s mode IPL failed: Invalid IPL PSW: "

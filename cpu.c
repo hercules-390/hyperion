@@ -737,6 +737,8 @@ static char *pgmintname[] = {
     {
 #endif /*defined(_FEATURE_SIE)*/
 
+        obtain_lock(&sysblk.intlock);
+
         /* Store current PSW at PSA+X'28' or PSA+X'150' for ESAME */
         ARCH_DEP(store_psw) (realregs, psa->pgmold);
 
@@ -745,7 +747,10 @@ static char *pgmintname[] = {
         {
 #if defined(_FEATURE_SIE)
             if(realregs->sie_state)
+            {
+                release_lock(&sysblk.intlock); 
                 longjmp(realregs->progjmp, pcode);
+            }
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
@@ -756,6 +761,8 @@ static char *pgmintname[] = {
                 ON_IC_CPU_NOT_STARTED(realregs);
             }
         }
+
+        release_lock(&sysblk.intlock);
 
         longjmp(realregs->progjmp, SIE_NO_INTERCEPT);
 
@@ -885,8 +892,6 @@ DWORD   csw;                            /* CSW for S/370 channels    */
 #endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
-    release_lock(&sysblk.intlock);
-
 #if defined(_FEATURE_IO_ASSIST)
     if(icode == SIE_NO_INTERCEPT)
 #endif
@@ -898,8 +903,13 @@ DWORD   csw;                            /* CSW for S/370 channels    */
         rc = ARCH_DEP(load_psw) ( regs, psa->iopnew );
 
         if ( rc )
+        {
+            release_lock(&sysblk.intlock);
             ARCH_DEP(program_interrupt) (regs, rc);
+        }
     }
+    
+    release_lock(&sysblk.intlock);
 
     longjmp(regs->progjmp, icode);
 

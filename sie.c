@@ -127,6 +127,8 @@ int     icode = 0;                      /* Interception code         */
     /* Direct pointer to state descriptor block */
     STATEBK = (void*)(regs->mainstor + effective_addr2);
 
+    obtain_lock(&sysblk.intlock);
+
 #if defined(FEATURE_ESAME)
     if(STATEBK->mx & SIE_MX_ESAME)
     {
@@ -146,6 +148,7 @@ int     icode = 0;                      /* Interception code         */
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_370NI, GUESTREGS);
         STATEBK->c = SIE_C_VALIDITY;
+        release_lock(&sysblk.intlock);
         return;
 #endif
     }
@@ -166,9 +169,12 @@ int     icode = 0;                      /* Interception code         */
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_MODE, GUESTREGS);
         STATEBK->c = SIE_C_VALIDITY;
+        release_lock(&sysblk.intlock);
         return;
     }
 #endif /*!defined(FEATURE_ESAME)*/
+
+    release_lock(&sysblk.intlock);
 
 #if defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AIA(GUESTREGS);

@@ -403,6 +403,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       && ((psw[2] & 0xC0) == 0xC0) )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
+    obtain_lock(&sysblk.intlock);
  
 #if defined(FEATURE_ESAME)
     if(flags & 0x0004) 
@@ -411,6 +412,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         psw[1] &= ~0x08;
         if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
         {
+            release_lock(&sysblk.intlock);
             /* restore the psw */
             regs->psw = save_psw;
             /* And generate a program interrupt */
@@ -426,6 +428,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_ESAME)*/
         if( s390_load_psw(regs, psw) )
         {
+            release_lock(&sysblk.intlock);
             /* restore the psw */
             regs->psw = save_psw;
             /* And generate a program interrupt */
@@ -435,6 +438,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.notesame = 0;
 #endif /*defined(FEATURE_ESAME)*/
     }
+
+    release_lock(&sysblk.intlock);
 
     /* load_psw() has set the ILC to zero.  This needs to
        be reset to 4 for an eventual PER event */
@@ -4445,7 +4450,9 @@ int     rc;
     ARCH_DEP(vfetchc) ( qword, 16-1, effective_addr2, b2, regs );
 
     /* Load updated PSW */
+    obtain_lock(&sysblk.intlock);
     rc = ARCH_DEP(load_psw) ( regs, qword );
+    release_lock(&sysblk.intlock);
     if ( rc )
         ARCH_DEP(program_interrupt) (regs, rc);
 
