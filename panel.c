@@ -3461,13 +3461,13 @@ struct  timeval tv;                     /* Select timeout structure  */
             }
 
             /* Copy message to circular buffer and empty read buffer */
-#ifdef EXTERNALGUI
+#if defined(EXTERNALGUI) && !defined(OPTION_HTTP_SERVER)
             if (!extgui)
 #endif /*EXTERNALGUI*/
             memcpy (msgbuf + (msgslot * MSG_SIZE), readbuf, MSG_SIZE);
             readoff = 0;
 
-#ifdef EXTERNALGUI
+#if defined(EXTERNALGUI) && !defined(OPTION_HTTP_SERVER)
             if (!extgui)
             {
 #endif /*EXTERNALGUI*/
@@ -3484,7 +3484,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
             /* Set the display update indicator */
             redraw_msgs = 1;
-#ifdef EXTERNALGUI
+#if defined(EXTERNALGUI) && !defined(OPTION_HTTP_SERVER)
             }
 #endif /*EXTERNALGUI*/
         }
