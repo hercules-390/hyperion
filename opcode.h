@@ -656,23 +656,14 @@ do { \
 
 /* RR register to register */
 #undef RR
-#if defined(FETCHIBYTE1)
 #define RR(_inst, _execflag, _regs, _r1, _r2) \
         { \
             register U32 ib; \
-            FETCHIBYTE1(ib, (_inst)) \
+	    ib=(_inst)[1]; \
             (_r1) = ib >> 4; \
             (_r2) = ib & 0x0F; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
         }
-#else
-#define RR(_inst, _execflag, _regs, _r1, _r2) \
-        { \
-            (_r1) = (_inst)[1] >> 4; \
-            (_r2) = (_inst)[1] & 0x0F; \
-            INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-        }
-#endif
 
 /* RR special format for SVC instruction */
 #undef RR_SVC

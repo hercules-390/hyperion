@@ -15,9 +15,6 @@
 /*-------------------------------------------------------------------*/
 #if defined(__i686__) | defined(__pentiumpro__) 
 
-#define FETCHIBYTE1(_ib, _inst) \
-  __asm__("movzbl 1(%%esi),%%eax" : "=a" (_ib) : "S" (_inst));
-
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */

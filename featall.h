@@ -19,9 +19,9 @@
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate         */
 #define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 #undef  OPTION_NO_INLINE_DAT            /* Performance option        */
-#define OPTION_NO_INLINE_LOGICAL        /* Performance option        */
+#undef  OPTION_NO_INLINE_LOGICAL        /* Performance option        */
 #undef  OPTION_NO_INLINE_VSTORE         /* Performance option        */
-#define OPTION_NO_INLINE_IFETCH         /* Performance option        */
+#undef  OPTION_NO_INLINE_IFETCH         /* Performance option        */
 #define OPTION_FAST_MOVECHAR            /* Performance option        */
 #define OPTION_FAST_MOVELONG            /* Performance option        */
 #define OPTION_FAST_PREFIX              /* Performance option        */

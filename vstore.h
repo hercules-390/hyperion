@@ -53,7 +53,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Copy data to real storage in either one or two parts
        depending on whether operand crosses a page boundary */
-    if (addr2 == (addr & PAGEFRAME_PAGEMASK)) {
+    if (likely(addr2 == (addr & PAGEFRAME_PAGEMASK))) {
         addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
         MEMCPY (regs->mainstor+addr, src, len+1);
     } else {
@@ -103,7 +103,7 @@ _VSTORE_C_STATIC void ARCH_DEP(vstoreb) (BYTE value, VADR addr,
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
+_VSTORE_C_STATIC void ARCH_DEP(vstore2_full) (U16 value, VADR addr, int arn,
                                                             REGS *regs)
 {
 VADR    addr2;                          /* Address of second byte    */
@@ -136,6 +136,20 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     regs->mainstor[abs2] = value & 0xFF;
 
 } /* end function ARCH_DEP(vstore2) */
+/* vstore2 accelerator - Simple case only (better inline candidate) */
+_VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
+                                                            REGS *regs)
+{
+    /* Most common case : Aligned & not crossing page boundary */
+    if(likely(!(addr & 0x01)) || ((addr & 0x7ff) <= 0x7fe))
+    {
+        register RADR abs;
+        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+        STORE_HW(regs->mainstor + abs, value);
+        return;
+    }
+    ARCH_DEP(vstore2_full)(value,addr,arn,regs);
+}
 
 /*-------------------------------------------------------------------*/
 /* Store a four-byte integer into virtual storage operand            */
@@ -150,7 +164,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
+_VSTORE_C_STATIC void ARCH_DEP(vstore4_full) (U32 value, VADR addr, int arn,
                                                             REGS *regs)
 {
 int     i;                              /* Loop counter              */
@@ -197,7 +211,22 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     } /* end for */
 
-} /* end function ARCH_DEP(vstore4) */
+} /* end function ARCH_DEP(vstore4_full) */
+
+/* vstore4 accelerator - Simple case only (better inline candidate) */
+_VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
+                                                            REGS *regs)
+{
+    /* Most common case : Aligned & not crossing page boundary */
+    if(likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc))
+    {
+        register RADR abs;
+        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+        STORE_FW(regs->mainstor + abs, value);
+        return;
+    }
+    ARCH_DEP(vstore4_full)(value,addr,arn,regs);
+}
 
 /*-------------------------------------------------------------------*/
 /* Store an eight-byte integer into virtual storage operand          */
@@ -212,7 +241,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 /*      causes an addressing, translation, or protection             */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
+_VSTORE_C_STATIC void ARCH_DEP(vstore8_full) (U64 value, VADR addr, int arn,
                                                             REGS *regs)
 {
 int     i;                              /* Loop counter              */
@@ -259,6 +288,19 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     } /* end for */
 
 } /* end function ARCH_DEP(vstore8) */
+_VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
+                                                            REGS *regs)
+{
+    /* Most common case : Aligned & not crossing page boundary */
+    if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8))
+    {
+        register RADR abs;
+        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+        STORE_DW(regs->mainstor + abs, value);
+        return;
+    }
+    ARCH_DEP(vstore8_full)(value,addr,arn,regs);
+}
 
 /*-------------------------------------------------------------------*/
 /* Fetch a 1 to 256 character operand from virtual storage           */
@@ -296,7 +338,7 @@ int     intaccess = 0;                  /* Access interval timer     */
 
 #ifdef FEATURE_INTERVAL_TIMER
     /* Check for interval timer access */
-    if (addr == 80)
+    if (unlikely(addr == 80))
         if (len == 3)
           {
             intaccess = 1;
@@ -308,7 +350,7 @@ int     intaccess = 0;                  /* Access interval timer     */
     /* Copy data from real storage in either one or two parts
        depending on whether operand crosses a page boundary
        (Page boundary set at 800 to catch FPO crosser too) */
-    if (addr2 == (addr & ~0x7FF)) {
+    if (likely(addr2 == (addr & ~0x7FF))) {
         addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
         MEMCPY (dest, regs->mainstor+addr, len+1);
     } else {
@@ -322,7 +364,7 @@ int     intaccess = 0;                  /* Access interval timer     */
 
 #ifdef FEATURE_INTERVAL_TIMER
     /* Release todlock, if held */
-    if (intaccess)
+    if (unlikely(intaccess))
       {
         release_lock( &sysblk.todlock );
         intaccess = 0;
@@ -367,7 +409,7 @@ _VSTORE_C_STATIC BYTE ARCH_DEP(vfetchb) (VADR addr, int arn,
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
+_VSTORE_C_STATIC U16 ARCH_DEP(vfetch2_full) (VADR addr, int arn, REGS *regs)
 {
 VADR    addr2;                          /* Address of second byte    */
 RADR    abs1, abs2;                     /* Absolute addresses        */
@@ -393,6 +435,16 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Return integer value of operand */
     return (regs->mainstor[abs1] << 8) | regs->mainstor[abs2];
 } /* end function ARCH_DEP(vfetch2) */
+_VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
+{
+    if(likely(!(addr & 0x01)) || ((addr & 0x7ff) !=0x7ff ))
+    {
+        register RADR abs;
+        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
+        return(fetch_hw(regs->mainstor + abs));
+    }
+    return(ARCH_DEP(vfetch2_full)(addr,arn,regs));
+}
 
 /*-------------------------------------------------------------------*/
 /* Fetch a four-byte integer operand from virtual storage            */
@@ -408,7 +460,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
+_VSTORE_C_STATIC U32 ARCH_DEP(vfetch4_full) (VADR addr, int arn, REGS *regs)
 {
 int     i;                              /* Loop counter              */
 U32     value;                          /* Accumulated value         */
@@ -465,7 +517,25 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     } /* end for */
     return value;
 
-} /* end function ARCH_DEP(vfetch4) */
+} /* end function ARCH_DEP(vfetch4_full) */
+_VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
+{
+    if(likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc ))
+    {
+        register RADR abs;
+        abs=LOGICAL_TO_ABS(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
+#if defined(FEATURE_INTERVAL_TIMER)
+        if(abs!=80)
+        {
+#endif
+            return(fetch_fw(regs->mainstor + abs));
+#if defined(FEATURE_INTERVAL_TIMER)
+        }
+        return(ARCH_DEP(vfetch4_full)(addr,arn,regs));
+#endif
+    }
+    return(ARCH_DEP(vfetch4_full)(addr,arn,regs));
+}
 
 /*-------------------------------------------------------------------*/
 /* Fetch an eight-byte integer operand from virtual storage          */
@@ -481,7 +551,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-_VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
+_VSTORE_C_STATIC U64 ARCH_DEP(vfetch8_full) (VADR addr, int arn, REGS *regs)
 {
 int     i;                              /* Loop counter              */
 U64     value;                          /* Accumulated value         */
@@ -525,7 +595,16 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     return value;
 
 } /* end function ARCH_DEP(vfetch8) */
-
+_VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
+{
+    if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8 ))
+    {
+        register RADR abs;
+        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+        return fetch_dw(regs->mainstor + abs);
+    }
+    return ARCH_DEP(vfetch8_full)(addr,arn,regs);
+}
 #endif
 
 #if !defined(OPTION_NO_INLINE_IFETCH) | defined(_VSTORE_C)

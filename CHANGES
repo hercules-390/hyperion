@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+30 Jan 2004 vfetch/vstore, RR format Optimisation 
+            re-instate static/inline for IFETCH & LOGICAL - Ivan Warren
 21 Jan 2004 Correct 'unloaded' tape processing - Ivan Warren
 20 Jan 2004 Fix references to regs->inst to regs->ip - Greg Smith
 19 Jan 2004 Return 'Already at BOT' sense on BSF when at BOT 
