@@ -1,4 +1,5 @@
-16 Nov 2001 Add LCEBR/LCDBR/LCXBR ieee float instructions - Jan Jaeger
+18 Nov 2001 Change OSTAILOR LINUX to reflect IEEE support - Jan Jaeger
+18 Nov 2001 Add LCEBR/LCDBR/LCXBR IEEE float instructions - Jan Jaeger
 16 Nov 2001 Reduce timer.c pthreads calls and logic isolation - Greg Smith
 16 Nov 2001 Correct storage keys after ipl from cdrom - Jan Jaeger
 16 Nov 2001 Added savecore command - Jan Jaeger
