@@ -4114,7 +4114,9 @@ int             rc;
             devmodel = 0x31; /* Model D31 */
             devclass = 0x80;
             devtcode = 0x80;
-            sctlfeat = 0x00000200;
+            sctlfeat = 0x000002C0; /* Support Logical Write Protect */
+                                   /* Autoloader installed */
+                                   /* IDRC Supported */
             dev->numdevid = 7;
             dev->numsense = 24;
             haverdc=1;
@@ -4125,7 +4127,9 @@ int             rc;
             devmodel = 0x50;
             devclass = 0x80;
             devtcode = 0x80; /* Valid for 3490 too */
-            sctlfeat = 0x00000200; /* Support Logical Write Protect */
+            sctlfeat = 0x000002C0; /* Support Logical Write Protect */
+                                   /* Autoloader installed */
+                                   /* IDRC Supported */
             dev->numdevid = 7;
             dev->numsense = 32;
             haverdc=1;
@@ -4136,7 +4140,9 @@ int             rc;
             devmodel = 0x50;
             devclass = 0x80;
             devtcode = 0x80; /* Valid for 3590 too */
-            sctlfeat = 0x00000200; /* Support Logical Write Protect */
+            sctlfeat = 0x000002C0; /* Support Logical Write Protect */
+                                   /* Autoloader installed */
+                                   /* IDRC Supported */
             dev->numdevid = 7;
             dev->numsense = 32;
             haverdc=1;
