@@ -83,9 +83,9 @@
 /* dictor: compression dictionary or expansion dictionary                     */
 /* sttoff: symbol-translation-table offset                                    */
 /*----------------------------------------------------------------------------*/
-#define GR1_cbn(regs)		(((regs) -> GR_L(1) & 0x00000007))
+#define GR1_cbn(regs)		(((regs)->GR_L(1) & 0x00000007))
 #define GR1_dictor(regs)	(GR_A(1, regs) & ((GREG) 0xFFFFFFFFFFFFF000ULL))
-#define GR1_sttoff(regs)	(((regs) -> GR_L(1) & 0x00000FF8) << 4)
+#define GR1_sttoff(regs)	(((regs)->GR_L(1) & 0x00000FF8) << 4)
 
 /*----------------------------------------------------------------------------*/
 /* Format-0 Sibling Descriptors macro's (SD0)                                 */
@@ -214,7 +214,7 @@
 /*----------------------------------------------------------------------------*/
 /* The next macro sets the compressed bit number in GR1                       */
 /*----------------------------------------------------------------------------*/
-#define GR1_setcbn(regs, cbn)	((regs) -> GR_L(1) = ((regs) -> GR_L(1) & 0xFFFFFFF8) | ((cbn) & 0x00000007))
+#define GR1_setcbn(regs, cbn)	((regs)->GR_L(1) = ((regs)->GR_L(1) & 0xFFFFFFF8) | ((cbn) & 0x00000007))
 
 /*----------------------------------------------------------------------------*/
 /* After a succesful compression of characters to an index symbol or a        */
@@ -253,12 +253,12 @@
 /*----------------------------------------------------------------------------*/
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
 #define FETCH_CCE		ARCH_DEP(print_cce)
-static void ARCH_DEP(print_cce)(int r2, REGS * regs, REGS * iregs, BYTE * cce, int index);
+static void ARCH_DEP(print_cce)(int r2, REGS *regs, BYTE *cce, int index);
 #else
 #define FETCH_CCE		_FETCH_CCE
 #endif
-#define _FETCH_CCE(r2, regs, iregs, cce, index) \
-  ARCH_DEP(vfetchc)((cce), 7, (GR1_dictor((iregs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs))
+#define _FETCH_CCE(r2, regs, cce, index) \
+  ARCH_DEP(vfetchc)((cce), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs))
 
 /*----------------------------------------------------------------------------*/
 /* Fetch expansion character entry. The main idea is that in normal           */
@@ -267,12 +267,12 @@ static void ARCH_DEP(print_cce)(int r2, REGS * regs, REGS * iregs, BYTE * cce, i
 /*----------------------------------------------------------------------------*/
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
 #define FETCH_ECE		ARCH_DEP(print_ece)
-static void ARCH_DEP(print_ece)(int r2, REGS * regs, REGS * iregs, BYTE * ece, int index);
+static void ARCH_DEP(print_ece)(int r2, REGS *regs, BYTE *ece, int index);
 #else
 #define FETCH_ECE		_FETCH_ECE
 #endif
-#define _FETCH_ECE(r2, regs, iregs, cce, index) \
-  ARCH_DEP(vfetchc)((ece), 7, (GR1_dictor((iregs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs))
+#define _FETCH_ECE(r2, regs, cce, index) \
+  ARCH_DEP(vfetchc)((ece), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs))
 
 /*----------------------------------------------------------------------------*/
 /* Fetch sibling descriptor. The main idea is that in normal compilation we   */
@@ -280,15 +280,15 @@ static void ARCH_DEP(print_ece)(int r2, REGS * regs, REGS * iregs, BYTE * ece, i
 /*----------------------------------------------------------------------------*/
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
 #define FETCH_SD		ARCH_DEP(print_sd)
-static void ARCH_DEP(print_sd)(int r2, REGS * regs, REGS * iregs, BYTE * sd, int index);
+static void ARCH_DEP(print_sd)(int r2, REGS *regs, BYTE *sd, int index);
 #else
 #define FETCH_SD		_FETCH_SD
 #endif
-#define _FETCH_SD(r2, regs, iregs, sd, index) \
+#define _FETCH_SD(r2, regs, sd, index) \
 { \
-  ARCH_DEP(vfetchc)((sd), 7, (GR1_dictor((iregs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs)); \
-  if(GR0_f1(iregs)) \
-    ARCH_DEP(vfetchc)(&(sd)[8], 7, (GR1_dictor((iregs)) + GR0_dctsz((iregs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), r2, (regs)); \
+  ARCH_DEP(vfetchc)((sd), 7, (GR1_dictor((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), (r2), (regs)); \
+  if(GR0_f1(regs)) \
+    ARCH_DEP(vfetchc)(&(sd)[8], 7, (GR1_dictor((regs)) + GR0_dctsz((regs)) + (index) * 8) & ADDRESS_MAXWRAP((regs)), r2, (regs)); \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -391,7 +391,7 @@ static void ARCH_DEP(compress)(int r1, int r2, REGS *regs, REGS *iregs)
         return;
 
       /* Get the alphabet entry */
-      FETCH_CCE(r2, regs, iregs, cce, next_ch);
+      FETCH_CCE(r2, regs, cce, next_ch);
 
       /* We always match the alpabet entry, so set last match */
       ADJUSTREGS(r2, regs, iregs, 1);
@@ -482,7 +482,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
         {
 
           /* Get the Expansion character entry */
-          FETCH_ECE(r2, regs, iregs, ece, index_symbol);
+          FETCH_ECE(r2, regs, ece, index_symbol);
 
           /* Reset child counter */
           written = 0;
@@ -503,7 +503,7 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 
               /* Get the preceeding entry */
               pptr = ECE_pptr(ece);
-              FETCH_ECE(r2, regs, iregs, ece, pptr);
+              FETCH_ECE(r2, regs, ece, pptr);
 
               /* Check for processing entry 128 */
               if(++entries > 127)
@@ -541,12 +541,12 @@ static void ARCH_DEP(expand)(int r1, int r2, REGS *regs, REGS *iregs)
 /* print_cce (compression character entry). This function is only compiled in */
 /* debugging mode. See the setting of debugging on top of this file.          */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(print_cce)(int r2, REGS *regs, REGS *iregs, BYTE *cce, int index)
+static void ARCH_DEP(print_cce)(int r2, REGS *regs, BYTE *cce, int index)
 {
   int i;
   int prt_detail;
 
-  _FETCH_CCE(r2, regs, iregs, cce, index);
+  _FETCH_CCE(r2, regs, cce, index);
 
   logmsg("fetch_cce: index %04X\n", index);
   logmsg("  cce    : ");
@@ -612,12 +612,12 @@ static int ARCH_DEP(fetch_ch)(int r2, REGS *regs, REGS *iregs, BYTE *ch, int off
 /* print_ece (expansion character entry). This function is only compiled in   */
 /* debugging mode. See the setting of debugging on top of this file.          */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(print_ece)(int r2, REGS *regs, REGS *iregs, BYTE *ece, int index)
+static void ARCH_DEP(print_ece)(int r2, REGS *regs, BYTE *ece, int index)
 {
   int i;
   int prt_detail;
 
-  _FETCH_ECE(r2, regs, iregs, ece, index);
+  _FETCH_ECE(r2, regs, ece, index);
 
   logmsg("fetch_ece: index %04X\n", index);
   logmsg("  ece    : ");
@@ -699,14 +699,14 @@ static int ARCH_DEP(fetch_is)(int r2, REGS *regs, REGS *iregs, U16 *index_symbol
 /* print_sd (sibling descriptor). This function is only compiled in debugging */
 /* mode. See the setting of debugging on top of this file.                    */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP(print_sd)(int r2, REGS *regs, REGS *iregs, BYTE *sd, int index)
+static void ARCH_DEP(print_sd)(int r2, REGS *regs, BYTE *sd, int index)
 {
   int i;
   int prt_detail;
 
-  _FETCH_SD(r2, regs, iregs, sd, index);
+  _FETCH_SD(r2, regs, sd, index);
 
-  if(GR0_f1(iregs))
+  if(GR0_f1(regs))
     {
       logmsg("fetch_sd1: index %04X\n", index);
       logmsg("  sd1    : ");
@@ -802,7 +802,7 @@ static enum cmpsc_status ARCH_DEP(search_cce)(int r2, REGS *regs, REGS *iregs, B
             }
 
           /* Found a child get the character entry */
-          FETCH_CCE(r2, regs, iregs, ccce, CCE_cptr(cce) + i);
+          FETCH_CCE(r2, regs, ccce, CCE_cptr(cce) + i);
 
           /* Check if additional extension characters match */
           if(ARCH_DEP(test_ec)(r2, regs, iregs, ccce))
@@ -860,24 +860,24 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
     {
 
       /* Get the sibling descriptor */
-      FETCH_SD(r2, regs, iregs, sd, CCE_cptr(cce) + sd_ptr);
+      FETCH_SD(r2, regs, sd, CCE_cptr(cce) + sd_ptr);
 
       /* Check all children in sibling descriptor */
-      for(i = 0; i < SD_scs(iregs, sd); i++)
+      for(i = 0; i < SD_scs(regs, sd); i++)
         {
 
           /* Stop searching when child tested and no consecutive child character */
-          if(!search_siblings && !SD_ccc(iregs, sd, i))
+          if(!search_siblings && !SD_ccc(regs, sd, i))
             return(write_index_symbol);
 
-          if(*next_ch == SD_sc(iregs, sd, i))
+          if(*next_ch == SD_sc(regs, sd, i))
             {
 
               /* Child is tested, so stop searching for siblings*/
               search_siblings = FALSE;
 
               /* Check if child should not be examined */
-              if(!SD_ecb(iregs, sd, i, cce, y_in_parent))
+              if(!SD_ecb(regs, sd, i, cce, y_in_parent))
                 {
 
                   /* No need to examine child, found the last match */
@@ -889,7 +889,7 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
                 }
 
               /* Found a child get the character entry */
-              FETCH_CCE(r2, regs, iregs, ccce, CCE_cptr(cce) + sd_ptr + i + 1);
+              FETCH_CCE(r2, regs, ccce, CCE_cptr(cce) + sd_ptr + i + 1);
 
               /* Check if additional extension characters match */
               if(ARCH_DEP(test_ec)(r2, regs, iregs, ccce))
@@ -913,16 +913,16 @@ static enum cmpsc_status ARCH_DEP(search_sd)(int r2, REGS *regs, REGS *iregs, BY
         }
 
       /* Next sibling follows last possible child */
-      sd_ptr += SD_scs(iregs, sd) + 1;
+      sd_ptr += SD_scs(regs, sd) + 1;
 
       /* test for searching child 261 */
-      TESTCH261(regs, searched, SD_scs(iregs, sd));
+      TESTCH261(regs, searched, SD_scs(regs, sd));
 
       /* We get the next sibling descriptor, no y bits in parent for him */
       y_in_parent = FALSE;
 
     }
-  while(search_siblings && SD_msc(iregs, sd));
+  while(search_siblings && SD_msc(regs, sd));
   return(write_index_symbol);
 }
 
@@ -973,11 +973,11 @@ static void ARCH_DEP(store_is)(int r1, int r2, REGS *regs, REGS *iregs, U16 inde
   BYTE work[3];			/* work bytes                                 */
 
   /* Check if symbol translation is requested */
-  if(GR0_st(iregs))
+  if(GR0_st(regs))
     {
 
       /* Get the interchange symbol */
-      ARCH_DEP(vfetchc)(work, 1, (GR1_dictor(iregs) + GR1_sttoff(iregs) + index_symbol * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
+      ARCH_DEP(vfetchc)(work, 1, (GR1_dictor(regs) + GR1_sttoff(regs) + index_symbol * 2) & ADDRESS_MAXWRAP(regs), r2, regs);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
       logmsg("store_is : %04X -> %02X%02X\n", index_symbol, work[0], work[1]);
@@ -1087,6 +1087,11 @@ DEF_INST(compression_call)
 
   /* Initialize itermediate registers using COMMITREGS the other way round */
   COMMITREGS(&iregs, regs, r1, r2);
+
+#if (_GEN_ARCH == _ARCHMODE3)
+  /* In z/Archtecture we need the 64bit flag */
+  iregs.psw.amode64 = regs->psw.amode64;
+#endif /* (_GEN_ARCH == _ARCHMODE3) */
 
   /* Now go to the requested function */
   if(GR0_e(regs))
