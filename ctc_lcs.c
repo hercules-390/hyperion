@@ -1496,8 +1496,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     // argv[0];
 
     // Don't allow us to exceed the allocated storage (sanity check)
-    if( argc > 11 )
-        argc = 11;
+    if( argc > 10 )
+        argc = 10;
 
     for( i = argc; i > 0; i-- )
         argv[i] = argv[i - 1];

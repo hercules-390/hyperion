@@ -970,6 +970,26 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     {
         pCTCBLK->fOldFormat = 1;
     }
+    else
+    {
+        // Build new argv list.
+        // getopt_long used to work on old format configuration statements
+        // because LCS was the first argument passed to the device
+        // initialization routine (and was interpreted by getopt*
+        // as the program name and ignored). Now that argv[0] is a valid
+        // argument, we need to shift the arguments and insert a dummy
+        // argv[0];
+
+        // Don't allow us to exceed the allocated storage (sanity check)
+        if( argc > 10 )
+            argc = 10;
+
+        for( i = argc; i > 0; i-- )
+            argv[i] = argv[i - 1];
+
+        argc++;
+        argv[0] = pDEVBLK->typname;
+    }
     
     // Parse any optional arguments if not old format
     while( !pCTCBLK->fOldFormat )
