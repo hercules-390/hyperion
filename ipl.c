@@ -292,10 +292,6 @@ int load_ipl (U16 devnum, REGS *regs)
 
 void initial_cpu_reset(REGS *regs)
 {
-    /* Reset to basic mode if in ESAME */
-    if(sysblk.arch_mode > ARCH_390)
-        sysblk.arch_mode = ARCH_390;
-
     /* Perform initial CPU reset */
     switch(sysblk.arch_mode) {
         case ARCH_370:
@@ -305,6 +301,7 @@ void initial_cpu_reset(REGS *regs)
             s390_initial_cpu_reset (regs);
             break;
     }
+    regs->arch_mode = sysblk.arch_mode;
 }
 
 

@@ -1,3 +1,4 @@
+20 Mar 2001 Correction to 64 bit SIGP initial_cpu_reset - Jan Jaeger
 18 Mar 2001 Correction to stack types in ESAME mode - Jan Jaeger
 18 Mar 2001 Correct LRA/LRAG segment table entry address on cc 3 - Jan Jaeger
 18 Mar 2001 Correct address types in move char instructions - Jan Jaeger
