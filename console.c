@@ -1380,15 +1380,13 @@ char                    group[16];      /* Console group             */
         /* Send connection rejection message to client */
         if (class != 'K')
         {
-            snprintf (buf, sizeof(buf),
+            len = snprintf (buf, sizeof(buf),
                         "\xF5\x40\x11\x40\x40\x1D\x60%s"
                         "\x11\xC1\x50\x1D\x60%s"
                         "\x11\xC2\x60\x1D\x60%s",
                         translate_to_ebcdic(conmsg),
                         translate_to_ebcdic(hostmsg),
                         translate_to_ebcdic(rejmsg));
-
-            len = strlen(buf);
 
             if (len < sizeof(buf))
             {
@@ -1410,12 +1408,11 @@ char                    group[16];      /* Console group             */
         }
         else
         {
-            snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n", conmsg, hostmsg, rejmsg);
+            len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n%s\r\n", conmsg, hostmsg, rejmsg);
         }
 
         if (class != 'P')  /* do not write connection resp on 3287 */
         {
-            len = strlen(buf);
             rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
         }
 
@@ -1432,13 +1429,11 @@ char                    group[16];      /* Console group             */
     /* Send connection message to client */
     if (class != 'K')
     {
-        snprintf (buf, sizeof(buf),
+        len = snprintf (buf, sizeof(buf),
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
                     "\x11\xC1\x50\x1D\x60%s",
                     translate_to_ebcdic(conmsg),
                     translate_to_ebcdic(hostmsg));
-
-        len = strlen(buf);
 
         if (len < sizeof(buf))
         {
@@ -1460,12 +1455,11 @@ char                    group[16];      /* Console group             */
     }
     else
     {
-        snprintf (buf, sizeof(buf), "%s\r\n%s\r\n", conmsg, hostmsg);
+        len = snprintf (buf, sizeof(buf), "%s\r\n%s\r\n", conmsg, hostmsg);
     }
 
     if (class != 'P')  /* do not write connection resp on 3287 */
     {
-        len = strlen(buf);
         rc = send_packet (csock, (BYTE *)buf, len, "CONNECTION RESPONSE");
     }
 
