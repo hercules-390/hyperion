@@ -43,7 +43,7 @@ int process_script_file(char *,int);
 ///////////////////////////////////////////////////////////////////////
 /* quit or exit command - terminate the emulator */
 
-int quit_cmd(char* cmdline, int argc, char *argv[])
+int quit_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
 
@@ -73,7 +73,7 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* start command (or just Enter) - start CPU (or printer device if argument given) */
 
-int start_cmd(char* cmdline, int argc, char *argv[])
+int start_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -161,7 +161,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* g command - turn off single stepping and start CPU */
 
-int g_cmd(char* cmdline, int argc, char *argv[])
+int g_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -170,13 +170,13 @@ int g_cmd(char* cmdline, int argc, char *argv[])
     sysblk.inststep = 0;
     SET_IC_TRACE;
 
-    return  start_cmd(NULL,0,NULL);
+    return  start_cmd(0,NULL,NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////
 /* stop command - stop CPU (or printer device if argument given) */
 
-int stop_cmd(char* cmdline, int argc, char *argv[])
+int stop_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -234,7 +234,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* startall command - start all CPU's */
 
-int startall_cmd(char* cmdline, int argc, char *argv[])
+int startall_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
     unsigned i;
@@ -259,7 +259,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* stopall command - stop all CPU's */
 
-int stopall_cmd(char* cmdline, int argc, char *argv[])
+int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
     unsigned i;
 
@@ -285,7 +285,7 @@ int stopall_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* quiet command - quiet PANEL */
 
-int quiet_cmd(char* cmdline, int argc, char *argv[])
+int quiet_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -306,7 +306,7 @@ int quiet_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* clocks command - display tod clkc and cpu timer */
 
-int clocks_cmd(char* cmdline, int argc, char *argv[])
+int clocks_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -337,7 +337,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* iodelay command - display or set I/O delay value */
 
-int iodelay_cmd(char* cmdline, int argc, char *argv[])
+int iodelay_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
@@ -362,7 +362,7 @@ int iodelay_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* cckd command */
 
-int cckd_cmd(char* cmdline, int argc, char *argv[])
+int cckd_cmd(int argc, char *argv[], char *cmdline)
 {
     BYTE* p = strtok(cmdline+4," \t");
 
@@ -377,7 +377,7 @@ int cckd_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* tt32stats command - display CTCI-W32 statistics */
 
-int tt32stats_cmd(char* cmdline, int argc, char *argv[])
+int tt32stats_cmd(int argc, char *argv[], char *cmdline)
 {
     int      rc = 0;
     U16      devnum;
@@ -426,7 +426,7 @@ int tt32stats_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* store command - store CPU status at absolute zero */
 
-int store_cmd(char* cmdline, int argc, char *argv[])
+int store_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -452,7 +452,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* toddrag command - display or set TOD clock drag factor */
 
-int toddrag_cmd(char* cmdline, int argc, char *argv[])
+int toddrag_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
@@ -478,7 +478,7 @@ int toddrag_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* panrate command - display or set rate at which console refreshes */
 
-int panrate_cmd(char* cmdline, int argc, char *argv[])
+int panrate_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
 
@@ -510,7 +510,7 @@ int panrate_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* shell command */
 
-int sh_cmd(char* cmdline, int argc, char *argv[])
+int sh_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -520,7 +520,7 @@ int sh_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* gpr command - display general purpose registers */
 
-int gpr_cmd(char* cmdline, int argc, char *argv[])
+int gpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -534,7 +534,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* fpr command - display floating point registers */
 
-int fpr_cmd(char* cmdline, int argc, char *argv[])
+int fpr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -548,7 +548,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* cr command - display control registers */
 
-int cr_cmd(char* cmdline, int argc, char *argv[])
+int cr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -562,7 +562,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* ar command - display access registers */
 
-int ar_cmd(char* cmdline, int argc, char *argv[])
+int ar_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -576,7 +576,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* pr command - display prefix register */
 
-int pr_cmd(char* cmdline, int argc, char *argv[])
+int pr_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -593,7 +593,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* psw command - display program status word */
 
-int psw_cmd(char* cmdline, int argc, char *argv[])
+int psw_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -607,7 +607,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* restart command - generate restart interrupt */
 
-int restart_cmd(char* cmdline, int argc, char *argv[])
+int restart_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -641,7 +641,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* r command - display or alter real storage */
 
-int r_cmd(char* cmdline, int argc, char *argv[])
+int r_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -654,7 +654,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* v command - display or alter virtual storage */
 
-int v_cmd(char* cmdline, int argc, char *argv[])
+int v_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -667,7 +667,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* b command - set breakpoint */
 
-int bset_cmd(char* cmdline, int argc, char *argv[])
+int bset_cmd(int argc, char *argv[], char *cmdline)
 {
 BYTE c;                                 /* Character work area       */
 
@@ -694,7 +694,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* b- command - delete breakpoint */
 
-int bdelete_cmd(char* cmdline, int argc, char *argv[])
+int bdelete_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -708,7 +708,7 @@ int bdelete_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* i command - generate I/O attention interrupt for device */
 
-int i_cmd(char* cmdline, int argc, char *argv[])
+int i_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 BYTE c;                                 /* Character work area       */
@@ -764,7 +764,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* ext command - generate external interrupt */
 
-int ext_cmd(char* cmdline, int argc, char *argv[])
+int ext_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -787,7 +787,7 @@ int ext_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* loadparm xxxxxxxx command - set IPL parameter */
 
-int loadparm_cmd(char* cmdline, int argc, char *argv[])
+int loadparm_cmd(int argc, char *argv[], char *cmdline)
 {
 BYTE c;                                 /* Character work area       */
 
@@ -827,7 +827,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* ipl xxxx command - IPL from device xxxx */
 
-int ipl_cmd(char* cmdline, int argc, char *argv[])
+int ipl_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 BYTE c;                                 /* Character work area       */
@@ -861,7 +861,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* cpu command - define target cpu for panel display and commands */
 
-int cpu_cmd(char* cmdline, int argc, char *argv[])
+int cpu_cmd(int argc, char *argv[], char *cmdline)
 {
 BYTE c;                                 /* Character work area       */
 
@@ -901,7 +901,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* FishHangReport - verify/debug proper Hercules LOCK handling...    */
 
-int FishHangReport_cmd(char* cmdline, int argc, char *argv[])
+int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -918,7 +918,7 @@ int FishHangReport_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* devlist command - list devices */
 
-int devlist_cmd(char* cmdline, int argc, char *argv[])
+int devlist_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
     BYTE    *devclass;
@@ -971,7 +971,7 @@ int devlist_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* attach command - configure a device */
 
-int attach_cmd(char* cmdline, int argc, char *argv[])
+int attach_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum /* , dummy_devtype */;
 BYTE c;                                 /* Character work area       */
@@ -1004,7 +1004,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* detach command - remove device */
 
-int detach_cmd(char* cmdline, int argc, char *argv[])
+int detach_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum;
 BYTE c;                                 /* Character work area       */
@@ -1029,7 +1029,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* define command - rename a device */
 
-int define_cmd(char* cmdline, int argc, char *argv[])
+int define_cmd(int argc, char *argv[], char *cmdline)
 {
 U16  devnum, newdevn;
 BYTE c;                                 /* Character work area       */
@@ -1060,7 +1060,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* pgmtrace command - trace program interrupts */
 
-int pgmtrace_cmd(char* cmdline, int argc, char *argv[])
+int pgmtrace_cmd(int argc, char *argv[], char *cmdline)
 {
 int abs_rupt_num, rupt_num;
 BYTE    c;                              /* Character work area       */
@@ -1100,7 +1100,7 @@ BYTE    c;                              /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* k command - print out cckd internal trace */
 
-int k_cmd(char* cmdline, int argc, char *argv[])
+int k_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -1114,7 +1114,7 @@ int k_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* ds - display subchannel */
 
-int ds_cmd(char* cmdline, int argc, char *argv[])
+int ds_cmd(int argc, char *argv[], char *cmdline)
 {
 DEVBLK*  dev;
 U16      devnum;
@@ -1149,7 +1149,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* syncio command - list syncio devices statistics */
 
-int syncio_cmd(char* cmdline, int argc, char *argv[])
+int syncio_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*   dev;
     U64       syncios = 0, asyncios = 0;
@@ -1194,7 +1194,7 @@ int syncio_cmd(char* cmdline, int argc, char *argv[])
 void *device_thread(void *arg);
 #endif /* !defined(OPTION_FISHIO) */
 
-int devtmax_cmd(char* cmdline, int argc, char *argv[])
+int devtmax_cmd(int argc, char *argv[], char *cmdline)
 {
     int devtmax = -2;
 
@@ -1273,7 +1273,7 @@ int devtmax_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* sf commands - shadow file add/remove/set/compress/display */
 
-int ShadowFile_cmd(char* cmdline, int argc, char *argv[])
+int ShadowFile_cmd(int argc, char *argv[], char *cmdline)
 {
 BYTE   *cmd = (BYTE*) cmdline;      /* Copy of panel command     */
 BYTE   *devascii;                   /* ASCII text device number  */
@@ -1414,7 +1414,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* devinit command - assign/open a file for a configured device */
 
-int devinit_cmd(char* cmdline, int argc, char *argv[])
+int devinit_cmd(int argc, char *argv[], char *cmdline)
 {
 DEVBLK*  dev;
 U16      devnum;
@@ -1481,7 +1481,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* savecore filename command - save a core image to file */
 
-int savecore_cmd(char* cmdline, int argc, char *argv[])
+int savecore_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -1581,7 +1581,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* loadcore filename command - load a core image file */
 
-int loadcore_cmd(char* cmdline, int argc, char *argv[])
+int loadcore_cmd(int argc, char *argv[], char *cmdline)
 {
 REGS *regs = sysblk.regs + sysblk.pcpu;
 
@@ -1641,7 +1641,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* loadtext filename command - load a text deck file */
 
-int loadtext_cmd(char* cmdline, int argc, char *argv[])
+int loadtext_cmd(int argc, char *argv[], char *cmdline)
 {
     BYTE   *fname;                      /* -> File name (ASCIIZ)     */
     BYTE   *loadaddr;                   /* loadcore memory address   */
@@ -1734,7 +1734,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* ipending command - display pending interrupts */
 
-int ipending_cmd(char* cmdline, int argc, char *argv[])
+int ipending_cmd(int argc, char *argv[], char *cmdline)
 {
     BYTE   *cmdarg;                     /* -> Command argument       */
     DEVBLK *dev;                        /* -> Device block           */
@@ -1911,7 +1911,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 ///////////////////////////////////////////////////////////////////////
 /* icount command - display instruction counts */
 
-int icount_cmd(char* cmdline, int argc, char *argv[])
+int icount_cmd(int argc, char *argv[], char *cmdline)
 {
     int i1, i2;
 
@@ -2038,7 +2038,7 @@ static int scr_aborted=0;          /* Script abort flag */
 static int scr_uaborted=0;          /* Script user abort flag */
 TID scr_tid=0;
 
-int cscript_cmd(char* cmdline, int argc, char *argv[])
+int cscript_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2050,7 +2050,7 @@ int cscript_cmd(char* cmdline, int argc, char *argv[])
     return 0;
 }
 
-int script_cmd(char* cmdline, int argc, char *argv[])
+int script_cmd(int argc, char *argv[], char *cmdline)
 {
 
     int i;
@@ -2237,7 +2237,7 @@ BYTE   *p;                              /* (work)                    */
 ///////////////////////////////////////////////////////////////////////
 /* archmode command - set architecture mode */
 
-int archmode_cmd(char* cmdline, int argc, char *argv[])
+int archmode_cmd(int argc, char *argv[], char *cmdline)
 {
     unsigned i;
 
@@ -2294,7 +2294,7 @@ int archmode_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* x+ and x- commands - turn switches on or off */
 
-int OnOffCommand(char* cmdline, int argc, char *argv[])
+int OnOffCommand(int argc, char *argv[], char *cmdline)
 {
     BYTE   *cmd = (BYTE*) cmdline;      /* Copy of panel command     */
     int     oneorzero;                  /* 1=x+ command, 0=x-        */
@@ -2409,7 +2409,7 @@ BYTE c;                                 /* Character work area       */
 ///////////////////////////////////////////////////////////////////////
 /* aea - display aea tables */
 
-int aea_cmd(char* cmdline, int argc, char *argv[])
+int aea_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
     int     matches = 0;                /* Number aeID matches       */
@@ -2438,7 +2438,7 @@ int aea_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* ldmod - load a module */
 
-int ldmod_cmd(char* cmdline, int argc, char *argv[])
+int ldmod_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
 
@@ -2463,7 +2463,7 @@ int ldmod_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* rmmod - delete a module */
 
-int rmmod_cmd(char* cmdline, int argc, char *argv[])
+int rmmod_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
 
@@ -2488,7 +2488,7 @@ int rmmod_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* lsmod - list dynamic modules */
 
-int lsmod_cmd(char* cmdline, int argc, char *argv[])
+int lsmod_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2502,7 +2502,7 @@ int lsmod_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 /* lsdep - list module dependencies */
 
-int lsdep_cmd(char* cmdline, int argc, char *argv[])
+int lsdep_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2518,7 +2518,7 @@ int lsdep_cmd(char* cmdline, int argc, char *argv[])
 /* evm - ECPS:VM command */
 
 #ifdef FEATURE_ECPSVM
-int evm_cmd_1(char* cmdline, int argc, char *argv[])
+int evm_cmd_1(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2528,7 +2528,7 @@ int evm_cmd_1(char* cmdline, int argc, char *argv[])
     ecpsvm_command(argc,argv);
     return 0;
 }
-int evm_cmd(char* cmdline, int argc, char *argv[])
+int evm_cmd(int argc, char *argv[], char *cmdline)
 {
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -2541,7 +2541,7 @@ int evm_cmd(char* cmdline, int argc, char *argv[])
 ///////////////////////////////////////////////////////////////////////
 // Layout of command routing table...
 
-typedef int CMDFUNC(char* cmdline, int argc, char *argv[]);
+typedef int CMDFUNC(int argc, char *argv[], char *cmdline);
 
 typedef struct _CMDTAB
 {
@@ -2558,8 +2558,8 @@ CMDTAB;
 ///////////////////////////////////////////////////////////////////////
 // Define all panel command here...
 
-int  ListAllCommands (char* cmdline, int argc, char *argv[]);  /*(forward reference)*/
-int  HelpCommand     (char* cmdline, int argc, char *argv[]);  /*(forward reference)*/
+int  ListAllCommands (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
+int  HelpCommand     (int argc, char *argv[], char *cmdline);  /*(forward reference)*/
 
 CMDTAB Commands[] =
 {
@@ -2684,7 +2684,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
     {
         /* (enter) - start CPU (ignore if not instruction stepping) */
         if (sysblk.inststep)
-            rc = start_cmd(NULL,0,NULL);
+            rc = start_cmd(0,NULL,NULL);
         return rc;
     }
 
@@ -2702,7 +2702,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
         {
             if (!strcasecmp(cmd_argv[0],pCmdTab->pszCommand))
             {
-                rc = pCmdTab->pfnCommand(pszSaveCmdLine,cmd_argc,(char**)cmd_argv);
+                rc = pCmdTab->pfnCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
                 free(pszSaveCmdLine);
                 return rc;
             }
@@ -2719,7 +2719,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
         || !strncasecmp(pszSaveCmdLine,"sfd",3)
     )
     {
-        rc = ShadowFile_cmd(pszSaveCmdLine,cmd_argc,(char**)cmd_argv);
+        rc = ShadowFile_cmd(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
         free(pszSaveCmdLine);
         return rc;
     }
@@ -2727,7 +2727,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
     /* x+ and x- commands - turn switches on or off */
     if ('+' == pszSaveCmdLine[1] || '-' == pszSaveCmdLine[1])
     {
-        rc = OnOffCommand(pszSaveCmdLine,cmd_argc,(char**)cmd_argv);
+        rc = OnOffCommand(cmd_argc,(char**)cmd_argv,pszSaveCmdLine);
         free(pszSaveCmdLine);
         return rc;
     }
@@ -2745,7 +2745,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
 ///////////////////////////////////////////////////////////////////////
 /* ? command - list all commands */
 
-int ListAllCommands(char* cmdline, int argc, char *argv[])
+int ListAllCommands(int argc, char *argv[], char *cmdline)
 {
     CMDTAB* pCmdTab;
 
@@ -2940,7 +2940,7 @@ CMDHELP ( NULL, NULL )         /* (end of table) */
 ///////////////////////////////////////////////////////////////////////
 /* help command - display additional help for a given command */
 
-int HelpCommand(char* cmdline, int argc, char *argv[])
+int HelpCommand(int argc, char *argv[], char *cmdline)
 {
     HELPTAB* pHelpTab;
 

@@ -457,7 +457,7 @@ int    shared_update_notify (DEVBLK *dev, int block);
 int    shared_ckd_init (DEVBLK *dev, int argc, BYTE *argv[] );
 int    shared_fba_init (DEVBLK *dev, int argc, BYTE *argv[] );
 void  *shared_server (void *arg);
-int    shared_cmd(char* cmdline, int argc, char *argv[]);
+int    shared_cmd(int argc, char *argv[], char *cmdline);
 
 #ifdef _HERCULES_SHARED_C
 static int     shared_ckd_close ( DEVBLK *dev );

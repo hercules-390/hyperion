@@ -145,7 +145,7 @@
                   Release the cache entry.  If flag is CACHE_FREEBUF
                   then the object buffer is also freed.
 
-      int         cache_cmd(char* cmdline, int argc, char *argv[]);
+      int         cache_cmd(int argc, char *argv[], char *cmdline);
                   Interface with the cache command processor.  This
                   interface is subject to change.
 
@@ -266,7 +266,7 @@ int         cache_getlen(int ix, int i);
 int         cache_getval(int ix, int i);
 int         cache_setval(int ix, int i, int val);
 int         cache_release(int ix, int i, int flag);
-int         cache_cmd(char* cmdline, int argc, char *argv[]);
+int         cache_cmd(int argc, char *argv[], char *cmdline);
 
 #ifdef _HERCULES_CACHE_C
 static int  cache_create (int ix);

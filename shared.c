@@ -2811,7 +2811,7 @@ TID                     tid;            /* Negotiation thread id     */
 /*-------------------------------------------------------------------
  * Shared device command processor
  *-------------------------------------------------------------------*/
-int shared_cmd(char* cmdline, int argc, char *argv[])
+int shared_cmd(int argc, char *argv[], char *cmdline)
 {
     char buf[256];
     char *kw, *op, c;
@@ -2957,7 +2957,7 @@ void *shared_server (void *arg)
  logmsg (_("HHCSH999E OPTION_SHARED_DEVICES not defined"));
  return NULL;
 }
-int shared_cmd(char* cmdline, int argc, char *argv[]);
+int shared_cmd(int argc, char *argv[], char *cmdline);
  UNREFERENCED(cmdline);
  UNREFERENCED(argc);
  UNREFERENCED(argv);
