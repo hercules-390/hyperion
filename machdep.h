@@ -209,6 +209,42 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
  while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
 }
 
+#define MEMCPY(_to, _from, _n)                \
+ do {                                         \
+  void *to, *from; int n;                     \
+  int d0, d1;                                 \
+  to = (_to); from = (_from); n = (_n);       \
+  __asm__ __volatile__ (                      \
+         "cld\n\t"                            \
+         "movl    %0,%%edx\n\t"               \
+         "shrl    $2,%0\n\t"                  \
+         "rep     movsl\n\t"                  \
+         "movl    %%edx,%0\n\t"               \
+         "andl    $3,%0\n\t"                  \
+         "rep     movsb"                      \
+         : "=&c"(n), "=&D" (d0), "=&S" (d1)   \
+         : "1"(to), "2"(from), "0"(n)         \
+         : "edx", "memory");                  \
+} while (0)
+
+#define MEMSET(_to, _c, _n)                   \
+do {                                          \
+  void *to; int c, n;                         \
+  int d0;                                     \
+  to = (_to); c = (_c); n = (_n);             \
+  __asm__ __volatile__ (                      \
+         "cld\n\t"                            \
+         "movl    %0,%%edx\n\t"               \
+         "shrl    $2,%%ecx\n\t"               \
+         "rep     stosl\n\t"                  \
+         "movl    %%edx,%0\n\t"               \
+         "andl    $3,%0\n\t"                  \
+         "rep     stosb\n\t"                  \
+         : "=&c"(n), "=&D" (d0)               \
+         : "1"(to), "ax"(c), "0"(n)           \
+         : "edx", "memory");                  \
+} while (0)
+
 #endif /* defined(__i686__) | defined(__pentiumpro__) */
 
 /*-------------------------------------------------------------------*/
@@ -331,6 +367,14 @@ static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volati
  }
  return code;
 }
+#endif
+
+#ifndef MEMCPY
+#define MEMCPY(_to, _from, _n) memcpy((_to), (_from), (_n))
+#endif
+
+#ifndef MEMSET
+#define MEMSET(_to, _c, _n) memset((_to), (_c), (_n))
 #endif
 
 #endif /* _HERCULES_MACHDEP_H */

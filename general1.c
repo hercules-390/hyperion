@@ -1539,47 +1539,34 @@ DEF_INST(compare_logical_characters_under_mask)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U32     n;                              /* 32-bit operand values     */
+int     i, j;                           /* Integer work areas        */
 int     cc = 0;                         /* Condition code            */
-BYTE    sbyte,
-        dbyte;                          /* Byte work areas           */
-int     i;                              /* Integer work areas        */
+BYTE    rbyte[4],                       /* Register bytes            */
+        vbyte;                          /* Virtual storage byte      */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
-    /* Load value from register */
-    n = regs->GR_L(r1);
+    /* Set register bytes by mask */
+    i = 0;
+    if (r3 & 0x8) rbyte[i++] = (regs->GR_L(r1) >> 24) & 0xFF;
+    if (r3 & 0x4) rbyte[i++] = (regs->GR_L(r1) >> 16) & 0xFF;
+    if (r3 & 0x2) rbyte[i++] = (regs->GR_L(r1) >>  8) & 0xFF;
+    if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;
 
-    /* if mask is zero, access rupts recognized for 1 byte */
-    if (r3 == 0)
-            sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+    /* Perform access check if mask is 0 */
+    if (!r3) ARCH_DEP(vfetchb) (effective_addr2, b2, regs);
 
-    /* Compare characters in register with operand characters */
-    for ( i = 0; i < 4; i++ )
+    /* Compare byte by byte */
+    for (j = 0; j < i && !cc; j++)
     {
-        /* Test mask bit corresponding to this character */
-        if ( r3 & 0x08 )
-        {
-            /* Fetch character from register and operand */
-            dbyte = n >> 24;
-            sbyte = ARCH_DEP(vfetchb) ( effective_addr2++, b2, regs );
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
+        vbyte = ARCH_DEP(vfetchb) (effective_addr2++, b2, regs);
+        if (rbyte[j] != vbyte)
+            cc = rbyte[j] < vbyte ? 1 : 2;
+    }
 
-            /* Compare bytes, set condition code if unequal */
-            if ( dbyte != sbyte )
-            {
-                cc = (dbyte < sbyte) ? 1 : 2;
-                break;
-            } /* end if */
-        }
-
-        /* Shift mask and register for next byte */
-        r3 <<= 1;
-        n <<= 8;
-
-    } /* end for(i) */
-
-    /* Update the condition code */
     regs->psw.cc = cc;
+
 }
 
 
@@ -2554,6 +2541,38 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Obtain current access key from PSW */
     akey = regs->psw.pkey;
 
+    /* Performance assist if source and destination are the same;
+       this means we set the source/destination to zero */
+    if (effective_addr1 == effective_addr2 && b1 == b2)
+    {
+        abs1 = LOGICAL_TO_ABS_SKP (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+
+        /* Calculate page addresses of rightmost operand bytes */
+        npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
+        npv1 &= ~0x7FF;
+
+        /* Translate next page addresses if page boundary crossed */
+        if (npv1 != (effective_addr1 & ~0x7FF))
+            npa1 = LOGICAL_TO_ABS_SKP (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+
+        /* all operands and page crossers valid, now alter ref & chg bits */
+        STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        if (!npa1)
+        {
+            memset (regs->mainstor + abs1, 0, l + 1);
+        }
+        else
+        {
+            int l1;
+            STORAGE_KEY(npa1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+            l1 = 0x800 - (effective_addr1 & 0x7FF);
+            memset (regs->mainstor + abs1, 0, l1);
+            memset (regs->mainstor + npa1, 0 , l + 1 - l1);
+        }
+        regs->psw.cc = 0;
+        return;
+    }
+
     /* Translate addresses of leftmost operand bytes */
     abs1 = LOGICAL_TO_ABS_SKP (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
@@ -2697,67 +2716,66 @@ VADR    effective_addr2;                /* Effective address         */
 /*-------------------------------------------------------------------*/
 DEF_INST(insert_characters_under_mask)
 {
-int     r1, r3;                         /* Register numbers          */
-int     b2;                             /* effective address base    */
-VADR    effective_addr2;                /* effective address         */
-int     cc = 0;                         /* Condition code            */
-BYTE    tbyte;                          /* Byte work areas           */
-int     h, i;                           /* Integer work areas        */
-U64     dreg;                           /* Double register work area */
+int    r1, r3;                          /* Register numbers          */
+int    b2;                              /* effective address base    */
+VADR   effective_addr2;                 /* effective address         */
+int    i;                               /* Integer work area         */
+BYTE   vbyte[4];                        /* Fetched storage bytes     */
+U32    n;                               /* Fetched value             */
+static const int                        /* Length-1 to fetch by mask */
+       icmlen[16] = {0, 0, 0, 1, 0, 1, 1, 2, 0, 1, 1, 2, 1, 2, 2, 3};
+static const unsigned int               /* Turn reg bytes off by mask*/
+       icmmask[16] = {0xFFFFFFFF, 0xFFFFFF00, 0xFFFF00FF, 0xFFFF0000,
+                      0xFF00FFFF, 0xFF00FF00, 0xFF0000FF, 0xFF000000,
+                      0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
+                      0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000};
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
-    /* If the mask is all zero, we must nevertheless load one
-       byte from the storage operand, because POP requires us
-       to recognize an access exception on the first byte */
-    if ( r3 == 0 )
-    {
-        tbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-        regs->psw.cc = 0;
-        return;
-    }
+    switch (r3) {
 
-    /* Load existing register value into 64-bit work area */
-    dreg = regs->GR_L(r1);
+    case 7:
+        /* Optimized case */
+        vbyte[0] = 0;
+        ARCH_DEP(vfetchc) (vbyte + 1, 2, effective_addr2, b2, regs);
+        n = fetch_fw (vbyte);
+        regs->GR_L(r1) = (regs->GR_L(r1) & 0xFF000000) | n;
+        regs->psw.cc = n ? n & 0x00800000 ?
+                       1 : 2 : 0;
+        break;
 
-    /* Insert characters into register from operand address */
-    for ( i = 0, h = 0; i < 4; i++ )
-    {
-        /* Test mask bit corresponding to this character */
-        if ( r3 & 0x08 )
-        {
-            /* Fetch the source byte from the operand */
-            tbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+    case 15:
+        /* Optimized case */
+        regs->GR_L(r1) = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
+        regs->psw.cc = regs->GR_L(r1) ? regs->GR_L(r1) & 0x80000000 ? 
+                       1 : 2 : 0;
+        break;
 
-            /* If this is the first byte fetched then test the
-               high-order bit to determine the condition code */
-            if ( (r3 & 0xF0) == 0 )
-                h = (tbyte & 0x80) ? 1 : 2;
+    default:
+        memset (vbyte, 0, 4);
+        ARCH_DEP(vfetchc)(vbyte, icmlen[r3], effective_addr2, b2, regs);
 
-            /* If byte is non-zero then set the condition code */
-            if ( tbyte != 0 )
-                 cc = h;
+        /* If mask was 0 then we still had to fetch, according to POP.
+           If so, set the fetched byte to 0 to force zero cc */
+        if (!r3) vbyte[0] = 0;
 
-            /* Insert the byte into the register */
-            dreg &= 0xFFFFFFFF00FFFFFFULL;
-            dreg |= (U32)tbyte << 24;
+        n = fetch_fw (vbyte);
+        regs->psw.cc = n ? n & 0x80000000 ?
+                       1 : 2 : 0;
 
-            /* Increment the operand address */
-            effective_addr2++;
-            effective_addr2 &= ADDRESS_MAXWRAP(regs);
-        }
+        /* Turn off the reg bytes we are going to set */
+        regs->GR_L(r1) &= icmmask[r3];
 
-        /* Shift mask and register for next byte */
-        r3 <<= 1;
-        dreg <<= 8;
+        /* Set bytes one at a time according to the mask */
+        i = 0;
+        if (r3 & 0x8) regs->GR_L(r1) |= vbyte[i++] << 24;
+        if (r3 & 0x4) regs->GR_L(r1) |= vbyte[i++] << 16;
+        if (r3 & 0x2) regs->GR_L(r1) |= vbyte[i++] << 8;
+        if (r3 & 0x1) regs->GR_L(r1) |= vbyte[i];
+        break;
 
-    } /* end for(i) */
+    } /* switch (r3) */
 
-    /* Load the register with the updated value */
-    regs->GR_L(r1) = dreg >> 32;
-
-    /* Set condition code */
-    regs->psw.cc = cc;
 }
 
 
@@ -3247,7 +3265,9 @@ GREG    len3;
 
             abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE,
                                    regs->psw.pkey);
-            memset(regs->mainstor+abs1, pad, len3);
+            // FIXME: ia32 assembler assists works only with 0 pad
+            if (pad) memset(regs->mainstor+abs1, pad, len3);
+            else memset(regs->mainstor+abs1, pad, len3);
 
 #if defined(FEATURE_PER)
             if( EN_IC_PER_SA(regs)

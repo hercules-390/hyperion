@@ -863,45 +863,45 @@ DEF_INST(store_characters_under_mask)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U32     n;                              /* 32-bit operand values     */
-int     i, j;                           /* Integer work areas        */
-BYTE    cwork[4];                       /* Character work areas      */
+int     i;                              /* Integer work area         */
+BYTE    rbyte[4];                       /* Byte work area            */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
-    /* Load value from register */
-    n = regs->GR_L(r1);
+    switch (r3) {
 
-    /* Copy characters from register to work area */
-    for ( i = 0, j = 0; i < 4; i++ )
-    {
-        /* Test mask bit corresponding to this character */
-        if ( r3 & 0x08 )
-        {
-            /* Copy character from register to work area */
-            cwork[j++] = n >> 24;
-        }
+    case 7:
+        /* Optimized case */
+        store_fw(rbyte, regs->GR_L(r1));
+        ARCH_DEP(vstorec) (rbyte+1, 2, effective_addr2, b2, regs);
+        break;
 
-        /* Shift mask and register for next byte */
-        r3 <<= 1;
-        n <<= 8;
+    case 15:
+        /* Optimized case */
+        ARCH_DEP(vstore4) (regs->GR_L(r1), effective_addr2, b2, regs);
+        break;
 
-    } /* end for(i) */
+    default:
+        /* Extract value from register by mask */
+        i = 0;
+        if (r3 & 0x8) rbyte[i++] = (regs->GR_L(r1) >> 24) & 0xFF;
+        if (r3 & 0x4) rbyte[i++] = (regs->GR_L(r1) >> 16) & 0xFF;
+        if (r3 & 0x2) rbyte[i++] = (regs->GR_L(r1) >>  8) & 0xFF;
+        if (r3 & 0x1) rbyte[i++] = (regs->GR_L(r1)      ) & 0xFF;  
 
-    /* If the mask is all zero, we nevertheless access one byte
-       from the storage operand, because POP states that an
-       access exception may be recognized on the first byte */
-    if (j == 0)
-    {
+        if (i)
+            ARCH_DEP(vstorec) (rbyte, i-1, effective_addr2, b2, regs);
 #if defined(MODEL_DEPENDENT_STCM)
-// /*debug*/logmsg ("Model dependent STCM use\n");
-        ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
-#endif /*defined(MODEL_DEPENDENT_STCM)*/
-        return;
-    }
+        /* If the mask is all zero, we nevertheless access one byte
+           from the storage operand, because POP states that an
+           access exception may be recognized on the first byte */
+        else
+            ARCH_DEP(validate_operand) (effective_addr2, b2, 0,
+                                        ACCTYPE_WRITE, regs);
+#endif
+        break;
 
-    /* Store result at operand location */
-    ARCH_DEP(vstorec) ( cwork, j-1, effective_addr2, b2, regs );
+    } /* switch (r3) */
 }
 
 

@@ -664,7 +664,7 @@ do { \
     if ((_regs)->aeID == PAGEFRAME_PAGESIZE) \
     { \
         (_regs)->aeID = 1; \
-        memset((_regs)->ve, 0, 256*sizeof(DW)); \
+        MEMSET((_regs)->ve, 0, 256*sizeof(DW)); \
     } \
 } while (0)
 

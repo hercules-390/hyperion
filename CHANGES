@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+26 Nov 2003 Performance enhancements for CLM/ICM/STCM and XC - Greg Smith
+26 Nov 2003 ia32 assists for virtual store memcpy - Greg Smith
 26 Nov 2003 console.c: ignore "Negotiate About Window Size" from telnet
             client so e.g. WinNT telnet client works - Greg Price by Fish
 26 Nov 2003 Add missing 'filename' initialization for CTCI devices - Fish

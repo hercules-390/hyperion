@@ -1511,7 +1511,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
     regs->tlbID = ++regs->tlbID & 0xFF;
     if (!regs->tlbID)
     {
-        memset (regs->tlb, 0, sizeof(regs->tlb));
+        MEMSET (regs->tlb, 0, sizeof(regs->tlb));
         regs->tlbID = 1;
     }
     INVALIDATE_AIA(regs);
@@ -1523,7 +1523,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
         regs->guestregs->tlbID = ++regs->guestregs->tlbID & 0xFF;
         if (!regs->guestregs->tlbID)
         {
-            memset (regs->guestregs->tlb, 0, sizeof(regs->guestregs->tlb));
+            MEMSET (regs->guestregs->tlb, 0, sizeof(regs->guestregs->tlb));
             regs->guestregs->tlbID = 1;
         }
         INVALIDATE_AIA(regs->guestregs);

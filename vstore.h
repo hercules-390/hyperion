@@ -55,7 +55,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
        depending on whether operand crosses a page boundary */
     if (addr2 == (addr & PAGEFRAME_PAGEMASK)) {
         addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
-        memcpy (regs->mainstor+addr, src, len+1);
+        MEMCPY (regs->mainstor+addr, src, len+1);
     } else {
         len1 = addr2 - addr;
         len2 = len - len1 + 1;
@@ -64,8 +64,8 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         /* both pages are accessable, so set ref & change bits */
         STORAGE_KEY(addr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         STORAGE_KEY(addr2, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-        memcpy (regs->mainstor+addr, src, len1);
-        memcpy (regs->mainstor+addr2, src+len1, len2);
+        MEMCPY (regs->mainstor+addr, src, len1);
+        MEMCPY (regs->mainstor+addr2, src+len1, len2);
     }
 } /* end function ARCH_DEP(vstorec) */
 
@@ -310,14 +310,14 @@ int     intaccess = 0;                  /* Access interval timer     */
        (Page boundary set at 800 to catch FPO crosser too) */
     if (addr2 == (addr & ~0x7FF)) {
         addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
-        memcpy (dest, regs->mainstor+addr, len+1);
+        MEMCPY (dest, regs->mainstor+addr, len+1);
     } else {
         len1 = addr2 - addr;
         len2 = len - len1 + 1;
         addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
         addr2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
-        memcpy (dest, regs->mainstor+addr, len1);
-        memcpy (dest+len1, regs->mainstor+addr2, len2);
+        MEMCPY (dest, regs->mainstor+addr, len1);
+        MEMCPY (dest+len1, regs->mainstor+addr2, len2);
     }
 
 #ifdef FEATURE_INTERVAL_TIMER
