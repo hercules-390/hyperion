@@ -880,6 +880,7 @@ void *cpu_thread (REGS *regs)
         return NULL;
     }
     sysblk.numcpu++;
+    initdone = 1;  /* now safe for panel_display function to proceed */
 #if MAX_CPU_ENGINES > 1
     if (sysblk.brdcstncpu != 0)
         sysblk.brdcstncpu++;

@@ -2154,6 +2154,9 @@ struct termios kbattr;                  /* Terminal I/O structure    */
 /* of high message activity.  For this reason a separate thread is   */
 /* created to process all commands entered.                          */
 /*-------------------------------------------------------------------*/
+
+int volatile initdone = 0;           /* Initialization complete flag */
+
 void panel_display (void)
 {
 int     rc;                             /* Return code               */
@@ -2285,6 +2288,9 @@ struct  timeval tv;                     /* Select timeout structure  */
 #endif /*EXTERNALGUI*/
     redraw_status = 1;
 
+    /* Wait for system to finish coming up */
+    while (!initdone) sleep(1);
+
     /* Process messages and commands */
     while (1)
     {
@@ -2293,7 +2299,13 @@ struct  timeval tv;                     /* Select timeout structure  */
         /* If the requested CPU is offline, then take the first available CPU*/
         if(!regs->cpuonline)
             for(sysblk.pcpu = 0, regs = sysblk.regs + sysblk.pcpu;
-                !regs->cpuonline; regs = sysblk.regs + ++sysblk.pcpu);
+                !regs->cpuonline && sysblk.pcpu < sysblk.numcpu;
+                regs = sysblk.regs + ++sysblk.pcpu);
+
+        if (sysblk.pcpu >= sysblk.numcpu)
+            /* No CPUs are online! The 'quit' or 'exit'
+               command must have been issued; exit loop. */
+            break;
 
 #if defined(_FEATURE_SIE)
         /* Point to SIE copy in SIE state */

@@ -1014,7 +1014,8 @@ int  deconfigure_cpu (REGS *regs);
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 #endif /*EXTERNALGUI*/
 
-/* Functions in module panel.c */
+/* Global data areas and functions in module panel.c */
+extern int initdone;    /* Initialization complete flag */
 void panel_display (void);
 
 /* Access type parameter passed to translate functions in dat.c */

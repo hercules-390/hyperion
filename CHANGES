@@ -1,3 +1,4 @@
+07 Jul 2001 Fix sporadic access violation at shutdown - Fish
 20 Jun 2001 CMPSC armode fix - Bernard van der Helm
 20 Jun 2001 CTCT CTC over TCP/IP support - Vic Cross
 20 Jun 2001 Remove subchannel enabled check from console - Jan Jaeger
