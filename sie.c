@@ -430,6 +430,20 @@ int     n;
 #if defined(FEATURE_PER)
         if(code & PGM_PER_EVENT)
             STATEBK->f |= SIE_F_IF;
+        /* Handle PER or concurrent PER event */
+        if( OPEN_IC_PERINT(GUESTREGS) )
+        {
+        PSA *psa;   
+            regs->perc |= OPEN_IC_PERINT(GUESTREGS) >> ((32 - IC_CR9_SHIFT) - 16);
+            /* Point to PSA fields in state descriptor */
+            psa = (void*)(sysblk.mainstor + GUESTREGS->sie_state + SIE_IP_PSA_OFFSET);
+            STORE_HW(psa->perint, GUESTREGS->perc);
+            STORE_W(psa->peradr, GUESTREGS->peradr);
+            STATEBK->f |= SIE_F_IF;
+
+            /* Reset PER pending indication */
+            OFF_IC_PER(GUESTREGS);
+        }
 #endif /*defined(FEATURE_PER)*/
 
         /* Update interception parameters in the state descriptor */
