@@ -1472,11 +1472,7 @@ tran_excp_addr:
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Set the exception access identification */
-#if defined(FEATURE_ESAME)
-    if ((stid & TEA_ST_ARMODE)
-#else
     if (ACCESS_REGISTER_MODE(&regs->psw)
-#endif
 #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || (regs->sie_active
         && (regs->guestregs->siebk->mx & SIE_MX_XC)

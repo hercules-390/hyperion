@@ -59,7 +59,7 @@
 DEF_INST(start_interpretive_execution)
 {
 int     b2;                             /* Values of R fields        */
-VADR    effective_addr2;                /* address of state desc.    */
+RADR    effective_addr2;                /* address of state desc.    */
 int     gpv;                            /* guest psw validity        */
 int     n;                              /* Loop counter              */
 U16     lhcpu;                          /* Last Host CPU address     */

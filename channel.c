@@ -663,7 +663,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     /* Set condition code 1 if subchannel has status pending */
     if (dev->scsw.flag3 & SCSW3_SC_PEND)
     {
-        logmsg ("%4.4X: Resume subchannel: cc=1\n", dev->devnum);
+//      logmsg ("%4.4X: Resume subchannel: cc=1\n", dev->devnum);
         release_lock (&dev->lock);
         return 1;
     }
@@ -675,7 +675,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
         || (dev->scsw.flag2 & SCSW2_AC_RESUM)
         || (dev->scsw.flag0 & SCSW0_S) == 0)
     {
-        logmsg ("%4.4X: Resume subchannel: cc=2\n", dev->devnum);
+//      logmsg ("%4.4X: Resume subchannel: cc=2\n", dev->devnum);
         release_lock (&dev->lock);
         return 2;
     }
