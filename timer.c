@@ -237,7 +237,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         if(regs->sie_active)
         {
             if(SIE_STATB(regs->guestregs, M, 370)
-              && !SIE_STATB(regs->guestregs, M, ITMOF))
+              && SIE_STATNB(regs->guestregs, M, ITMOF))
             {
                 /* Decrement the location 80 timer */
                 FETCH_FW(itimer,regs->guestregs->sie_psa->inttimer);

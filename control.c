@@ -1362,7 +1362,7 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
 #if defined(_FEATURE_ZSIE)
       || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
-      ) && !SIE_STATB(regs, RCPO2, RCPBY))
+      ) && !SIE_FEATB(regs, RCPO2, RCPBY))
     {
         /* guest absolute to host absolute addr or PTE addr in case of rc2 */
         sr = SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
@@ -4322,7 +4322,7 @@ RADR    n;                              /* Absolute storage addr     */
 
                 if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                 && !SIE_STATB(regs, RCPO0, SKA)
+                 && !SIE_FEATB(regs, RCPO0, SKA)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                    )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -4521,7 +4521,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 
                 if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                  && !(SIE_STATB(regs, RCPO0, SKA)
+                  && !(SIE_FEATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                     || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -5805,8 +5805,7 @@ int     protect;                        /* 1=ALE or page protection  */
     if (ARCH_DEP(translate_alet) (regs->AR(r1), regs->GR_LHH(r2),
                         ACCTYPE_TAR,
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                        SIE_STATB(regs, MX, XC)
-                          ? regs->hostregs :
+                        SIE_STATB(regs, MX, XC) ? regs->hostregs :
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
                           regs,
                         &asteo, aste, &protect))

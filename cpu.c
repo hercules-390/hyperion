@@ -516,7 +516,7 @@ static char *pgmintname[] = {
       (
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
          !(code == PGM_PROTECTION_EXCEPTION
-           && (!SIE_STATB(regs, EC2, PROTEX)
+           && (!SIE_FEATB(regs, EC2, PROTEX)
              || realregs->hostint))
 #else /*!defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
          code != PGM_PROTECTION_EXCEPTION
@@ -529,13 +529,13 @@ static char *pgmintname[] = {
 #endif /*FEATURE_VECTOR_FACILITY*/
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       && !(code == PGM_ALEN_TRANSLATION_EXCEPTION
-        && SIE_STATB(regs, MX, XC))
+        && SIE_FEATB(regs, MX, XC))
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
       /* And conditional for the following exceptions */
       && !(code == PGM_OPERATION_EXCEPTION
-        && SIE_STATB(regs, IC0, OPEREX))
+        && SIE_FEATB(regs, IC0, OPEREX))
       && !(code == PGM_PRIVILEGED_OPERATION_EXCEPTION
-        && SIE_STATB(regs, IC0, PRIVOP))
+        && SIE_FEATB(regs, IC0, PRIVOP))
 #ifdef FEATURE_BASIC_FP_EXTENSIONS
       && !(code == PGM_DATA_EXCEPTION
         && (regs->dxc == 1 || regs->dxc == 2)
@@ -543,7 +543,7 @@ static char *pgmintname[] = {
         && !(regs->hostregs->CR(0) & CR0_AFP))
 #endif /*FEATURE_BASIC_FP_EXTENSIONS*/
       /* Or all exceptions if requested as such */
-      && !SIE_STATB(regs, IC0, PGMALL) )
+      && !SIE_FEATB(regs, IC0, PGMALL) )
     )
     {
 #endif /*defined(_FEATURE_SIE)*/

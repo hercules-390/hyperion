@@ -143,10 +143,10 @@ int     rc;
     /* Set the main storage reference and change bits */
     if(SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       && !SIE_STATB(regs, S, EXP_TIMER)
+                       && !SIE_FEATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       && !SIE_STATB(regs, EC0, EXTA)
+                       && !SIE_FEATB(regs, EC0, EXTA)
 #endif
                                                             )
     {
@@ -183,10 +183,10 @@ int     rc;
 #if defined(_FEATURE_SIE)
     if(!SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       || SIE_STATB(regs, S, EXP_TIMER)
+                       || SIE_FEATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       || SIE_STATB(regs, EC0, EXTA)
+                       || SIE_FEATB(regs, EC0, EXTA)
 #endif
                                                             )
 #endif /*defined(_FEATURE_SIE)*/
@@ -209,10 +209,10 @@ int     rc;
 #if defined(_FEATURE_SIE)
     if(SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       && !SIE_STATB(regs, S, EXP_TIMER)
+                       && !SIE_FEATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       && !SIE_STATB(regs, EC0, EXTA)
+                       && !SIE_FEATB(regs, EC0, EXTA)
 #endif
                                                             )
         longjmp (regs->progjmp, SIE_INTERCEPT_EXT);
