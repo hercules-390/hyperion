@@ -3520,7 +3520,9 @@ int     n;                              /* Number of bytes in buffer */
     n += sprintf (buf+n, "INST=%2.2X%2.2X", inst[0], inst[1]);
     if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", inst[2], inst[3]);
     if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", inst[4], inst[5]);
-    logmsg ("%s\n", buf);
+    logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
+    DISASM_INSTRUCTION(inst);
+    
 
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 

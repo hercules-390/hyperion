@@ -9,63 +9,79 @@
 #define _OPCODE_H
 
 
-#define GEN_MAXARCH	3
+#define GEN_MAXARCH	3+2
 
 
 #define GENx___x___x___ \
     { \
 	&s370_operation_exception, \
 	&s390_operation_exception, \
-	&z900_operation_exception \
+	&z900_operation_exception, \
+        (void*)&disasm_none, \
+        (void*)&"?????" \
     }
 
-#define GENx370x___x___(_name) \
+#define GENx370x___x___(_name,_format,_mnemonic) \
     { \
 	&s370_ ## _name, \
 	&s390_operation_exception, \
-	&z900_operation_exception \
+	&z900_operation_exception, \
+        (void*)&disasm_ ## _format, \
+        (void*)& ## _mnemonic \
     }
 
-#define GENx___x390x___(_name) \
+#define GENx___x390x___(_name,_format,_mnemonic) \
     { \
 	&s370_operation_exception, \
 	&s390_ ## _name, \
-	&z900_operation_exception \
+	&z900_operation_exception, \
+        (void*)&disasm_ ## _format, \
+        (void*)& ## _mnemonic \
     }
 
-#define GENx370x390x___(_name) \
+#define GENx370x390x___(_name,_format,_mnemonic) \
     { \
 	&s370_ ## _name, \
 	&s390_ ## _name, \
-	&z900_operation_exception \
+	&z900_operation_exception, \
+        (void*)&disasm_ ## _format, \
+        (void*)& ## _mnemonic \
     }
 
-#define GENx___x___x900(_name) \
+#define GENx___x___x900(_name,_format,_mnemonic) \
     { \
 	&s370_operation_exception, \
 	&s390_operation_exception, \
-	&z900_ ## _name \
+	&z900_ ## _name, \
+        (void*)&disasm_ ## _format, \
+        (void*)& ## _mnemonic \
     }
 
-#define GENx370x___x900(_name) \
+#define GENx370x___x900(_name,_format,_mnemonic) \
     { \
 	&s370_ ## _name, \
 	&s390_operation_exception, \
-	&z900_ ## _name \
+	&z900_ ## _name, \
+        (void*)&disasm_ ## _format, \
+        (void*)& ## _mnemonic \
     }
 
-#define GENx___x390x900(_name) \
+#define GENx___x390x900(_name,_format,_mnemonic) \
     { \
 	&s370_operation_exception, \
 	&s390_ ## _name, \
-	&z900_ ## _name \
+	&z900_ ## _name, \
+        (void*)&disasm_ ## _format, \
+        (void*)& ## _mnemonic \
     }
 
-#define GENx370x390x900(_name) \
+#define GENx370x390x900(_name,_format,_mnemonic) \
     { \
 	&s370_ ## _name, \
 	&s390_ ## _name, \
-	&z900_ ## _name \
+	&z900_ ## _name, \
+        (void*)&disasm_ ## _format, \
+        (void*)& ## _mnemonic \
     }
 
 
@@ -89,6 +105,14 @@ extern zz_func opcode_e5xx[][GEN_MAXARCH];
 extern zz_func opcode_ebxx[][GEN_MAXARCH];
 extern zz_func opcode_ecxx[][GEN_MAXARCH];
 extern zz_func opcode_edxx[][GEN_MAXARCH];
+
+
+#define DISASM_INSTRUCTION(_inst) \
+    disasm_table((_inst), 0)
+
+typedef void (*func) ();
+
+extern void disasm_table (BYTE inst[], BYTE mnemonic[]);
 
 
 #if defined(OPTION_INSTRUCTION_COUNTING)

@@ -7,6 +7,7 @@
 05 Jul 2001 Add ARCHMODE to HHC105I IPL failure message - Fish
 05 Jul 2001 Add multifile parameter to card reader definition - Fish
 05 Jul 2001 Increase panel command buffer length to 32K - Fish
+21 Jun 2001 Add disassembly function - Jan Jaeger
 20 Jun 2001 CMPSC armode fix - Bernard van der Helm
 20 Jun 2001 CTCT CTC over TCP/IP support - Vic Cross
 20 Jun 2001 Remove subchannel enabled check from console - Jan Jaeger

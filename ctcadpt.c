@@ -357,8 +357,6 @@ BYTE           *remotep;                /* Destination port number   */
 BYTE           *mtusize;                /* MTU size (characters)     */
 BYTE           *remaddr;                /* Remote IP address         */
 struct in_addr  ipaddr;                 /* Work area for IP address  */
-pid_t           pid;                    /* Process identifier        */
-int             pxc;                    /* Process exit code         */
 BYTE            c;                      /* Character work area       */
 TID             tid;                    /* Thread ID for server      */
 CTCG_PARMBLK    parm;                   /* Parameters for the server */

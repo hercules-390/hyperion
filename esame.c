@@ -4075,7 +4075,7 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
-/* E502 STRAG - Store Real Address                             [RXE] */
+/* E502 STRAG - Store Real Address                             [SSE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_real_address)
 {
