@@ -859,29 +859,29 @@ The format of the device record is:
             <dt><code><em> -n devname or --dev devname</em></code>
             <dd>
             where <em>devname</em> is:
-            </p><dl>
-                  [*nix] the name of the TUN/TAP special character device,
+            <dl>
+              <dt>*nix
+              <dd>the name of the TUN/TAP special character device,
                    normally /dev/net/tun.
-               </dl>
-               </p><dl>
-
-                  [Windows] is either the IP or MAC address of the driving
+            </dl>
+            <dl>
+              <dt>[Windows]
+              <dd>is either the IP or MAC address of the driving
                   systems network card. TunTap32 will automatically select
                   the first network card it finds if this option is
                   omitted, this may not be desirable for some users.
-              </dl>
-              <dt><code><em>-o filename or --oat filename</em></code>
-              <dd>
-                  where <em>filename</em> specifies the filename of the Address
-             Translation file. If this option is specified, the optional
-             <i>--mac</i> and <em>guestip</em> entries are ignored in preference to
-             statements in the OAT. (See <a href=#OAT>below</a> for the format of the OAT)
-                <dt><code><em>-m MAC Address or --mac MAC address</em></code>
-                <dd>
-                    where <em>MAC Address</em> is the optional hardware address of
-                    the interface in the format: xx:xx:xx:xx:xx:xx. If you use the
-                    <i>--oat</i> option, do not specify an address here.
-
+            </dl>
+            <dt><code><em>-o filename or --oat filename</em></code>
+            <dd>
+            where <em>filename</em> specifies the filename of the Address
+            Translation file. If this option is specified, the optional
+            <i>--mac</i> and <em>guestip</em> entries are ignored in preference to
+            statements in the OAT. (See <a href=#OAT>below</a> for the format of the OAT)
+            <dt><code><em>-m MAC Address or --mac MAC address</em></code>
+            <dd>
+            where <em>MAC Address</em> is the optional hardware address of
+            the interface in the format: xx:xx:xx:xx:xx:xx. If you use the
+            <i>--oat</i> option, do not specify an address here.
             <dt><code><em>guestip</em></code>
             <dd>
             is an optional IP address of the Hercules
@@ -1128,6 +1128,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 3 October 2003
+<p>Last updated 29 November 2003
 </BODY>
 </HTML>
