@@ -5302,7 +5302,7 @@ DEF_INST(convert_fixed_to_float_short_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
 LONG_FLOAT fl;
-S32     fix;
+S64     fix;
 
     RRE(inst, execflag, regs, r1, r2);
     HFPREG_CHECK(r1, regs);
@@ -5310,6 +5310,8 @@ S32     fix;
 
     /* get fixed value */
     fix = regs->GR_L(r2);
+    if (fix &  0x0000000080000000)
+        fix |= 0xFFFFFFFF00000000;
 
     if (fix) {
         if (fix < 0) {
@@ -5343,7 +5345,7 @@ DEF_INST(convert_fixed_to_float_long_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
 LONG_FLOAT fl;
-S32     fix;
+S64     fix;
 
     RRE(inst, execflag, regs, r1, r2);
     HFPREG_CHECK(r1, regs);
@@ -5351,6 +5353,8 @@ S32     fix;
 
     /* get fixed value */
     fix = regs->GR_L(r2);
+    if (fix &  0x0000000080000000)
+        fix |= 0xFFFFFFFF00000000;
 
     if (fix) {
         if (fix < 0) {
@@ -5383,7 +5387,7 @@ DEF_INST(convert_fixed_to_float_ext_reg)
 int     r1, r2;                         /* Values of R fields        */
 int     i1;
 EXTENDED_FLOAT fl;
-S32     fix;
+S64     fix;
 
     RRE(inst, execflag, regs, r1, r2);
     HFPODD_CHECK(r1, regs);
@@ -5391,6 +5395,8 @@ S32     fix;
 
     /* get fixed value */
     fix = regs->GR_L(r2);
+    if (fix &  0x0000000080000000)
+        fix |= 0xFFFFFFFF00000000;
 
     if (fix) {
         if (fix < 0) {
