@@ -13,6 +13,7 @@
 /*      PKA/PKU/UNPKA/UNPKU instructions - Roger Bowler              */
 /*      Divide logical instructions - Vic Cross                      */
 /*      Long displacement facility - Roger Bowler            June2003*/
+/*      DAT enhancement facility - Roger Bowler              July2004*/
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -924,6 +925,80 @@ U64     n;
 
 } /* end DEF_INST(subtract_logical_borrow_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
+
+
+#if defined(FEATURE_DAT_ENHANCEMENT)
+/*-------------------------------------------------------------------*/
+/* B98A CSPG  - Compare and Swap and Purge Long                [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_swap_and_purge_long)
+{
+int     r1, r2;                         /* Values of R fields        */
+U64     n2;                             /* Virtual address of op2    */
+BYTE   *main2;                          /* Mainstor address of op2   */
+U64     old;                            /* Old value                 */
+
+    RRE(inst, regs, r1, r2);
+
+    PRIV_CHECK(regs);
+
+    ODD_CHECK(r1, regs);
+
+#if defined(_FEATURE_SIE)
+    if(SIE_STATB(regs,IC0, IPTECSP))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
+
+#if defined(_FEATURE_SIE)
+    if(SIE_MODE(regs) && regs->sie_scao)
+    {
+        STORAGE_KEY(regs->sie_scao, regs) |= STORKEY_REF;
+        if(regs->mainstor[regs->sie_scao] & 0x80)
+            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+    }
+#endif /*defined(_FEATURE_SIE)*/
+
+    /* Perform serialization before starting operation */
+    PERFORM_SERIALIZATION (regs);
+
+    /* Obtain 2nd operand address from r2 */
+    n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFF8ULL & ADDRESS_MAXWRAP(regs);
+    main2 = MADDR (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+
+    old = CSWAP64 (regs->GR_G(r1));
+
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r1+1)), main2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
+
+    if (regs->psw.cc == 0)
+    {
+        /* Perform requested funtion specified as per request code in r2 */
+        if (regs->GR_L(r2) & 3)
+        {
+            obtain_lock (&sysblk.intlock);
+            ARCH_DEP(synchronize_broadcast)(regs, regs->GR_L(r2) & 3, 0);
+            release_lock (&sysblk.intlock);
+        }
+    }
+    else
+    {
+        /* Otherwise yield */
+        regs->GR_G(r1) = CSWAP64(old);
+        if (sysblk.cpus > 1)
+            sched_yield();
+    }
+
+    /* Perform serialization after completing operation */
+    PERFORM_SERIALIZATION (regs);
+
+} /* end DEF_INST(compare_and_swap_and_purge_long) */
+#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
 
 
 #if defined(FEATURE_ESAME)
