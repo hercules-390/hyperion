@@ -35,7 +35,6 @@ dasdtab.c
 dasdutil.c
 dat.c
 decimal.c
-devtype.c
 diagmssf.c
 diagnose.c
 dmap2hrc.c

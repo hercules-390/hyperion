@@ -131,10 +131,7 @@ dynamic_sources       = dyngui.c \
                         dyninst.c \
                         hdteq.c
 
-extra_dynamic_sources = dynguib.h \
-                        dynguip.h \
-                        dynguiv.h \
-                        dyngui.rc
+extra_dynamic_sources = dyngui.rc
 
 dyndev_sources        = commadpt.c \
                         console.c \
@@ -144,9 +141,25 @@ dyndev_sources        = commadpt.c \
                         tapedev.c hetlib.c \
                         ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
 
+# The following includes the dummy source files for the *.dll modules. The
+# build process fails if these are not present, even though they are never
+# referenced directly nor used for anything. If that failing is ever
+# corrected, please remove this bit of kludgery. -- JRM 22 Aug 2003
+
+extra_dyn_src_kludge  = dyngui.dll.c \
+                        dyninst.dll.c \
+                        hdteq.dll.c \
+                        hdt1403.dll.c \
+                        hdt2703.dll.c \
+                        hdt3088.dll.c \
+                        hdt3270.dll.c \
+                        hdt3420.dll.c \
+                        hdt3505.dll.c \
+                        hdt3525.dll.c
+
 if OPTION_DYNAMIC_LOAD
   DYNSRC          =
-  EXTRA_DYNSRC    =
+  EXTRA_DYNSRC    = $(extra_dyn_src_kludge)
   DYNDEVSRC       =
   STADEVSRC       =
   dyngui_SOURCES  =  dyngui.c
@@ -171,7 +184,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3525_LDFLAGS = -shared
 else
   DYNSRC          = $(dynamic_sources)
-  EXTRA_DYNSRC    = $(extra_dynamic_sources)
+  EXTRA_DYNSRC    = $(extra_dynamic_sources) $(extra_dyn_src_kludge)
   DYNDEVSRC       = $(dyndev_sources)
   STADEVSRC       = $(DYNDEVSRC)
 endif
@@ -427,7 +440,11 @@ noinst_HEADERS = fishhang.h \
                  hscutl.h   \
                  hdl.h      \
                  crypto.h   \
-                 service.h
+                 service.h  \
+                 sockdev.h  \
+                 dynguib.h  \
+                 dynguip.h  \
+                 dynguiv.h
 
 #########################################################
 #           B U I L D   R U L E S  . . .
