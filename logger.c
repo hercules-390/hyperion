@@ -163,6 +163,9 @@ static void logger_term(void *arg __attribute__ ((unused)) )
         wait_condition(&logger_cond, &logger_lock);
 
         release_lock(&logger_lock);
+
+        /* Wait for the logger to terminate */
+//      pthread_join(logger_tid, NULL);
     }
 }
 
