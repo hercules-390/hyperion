@@ -252,8 +252,8 @@ else
 fi
 
 AC_ARG_ENABLE(external-gui,
-              AC_HELP_STRING([--enable-external-gui],
-                             [Interface to external Windows GUI]),
+              AC_HELP_STRING([--disable-external-gui],
+                             [Disable interface to external Windows GUI]),
               [case "${enableval}" in
                  yes) build_external_gui=true ;;
                  no) build_external_gui=false ;;
