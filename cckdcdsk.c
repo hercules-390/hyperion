@@ -133,9 +133,9 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
             if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
                 cckd_swapend_chdr (&cdevhdr);
 
-            fprintf (stdout, _("size %d used %d free %d first 0x%x number %d\n"),
+            fprintf (stdout, _("size %d used %d free %d imbed %d first 0x%x number %d\n"),
                      cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
-                     cdevhdr.free, cdevhdr.free_number);
+                     cdevhdr.free_imbed, cdevhdr.free, cdevhdr.free_number);
         }
     }
 

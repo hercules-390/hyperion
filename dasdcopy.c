@@ -367,10 +367,18 @@ int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
         if (rc < 0)
         {
             fprintf (stderr, _("HHCDC008E %s: %s read error %s %d "
-                               "stat=%2.2X\n"),
-                     pgm, ifile, ckddasd ? "track" : "block", i, unitstat);
-            close_image_file(icif); close_image_file(ocif);
-            return -1;
+                               "stat=%2.2X, null %s substituted\n"),
+                     pgm, ifile, ckddasd ? "track" : "block", i, unitstat,
+                     ckddasd ? "track" : "block");
+            if (ckddasd)
+                nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
+            else
+                memset (idev->buf, 0, FBA_BLKGRP_SIZE);
+            if (!quiet)
+            {
+                printf (_("  %3d%% %7d of %d"), 0, 0, n);
+                status (i, n);
+            }
         }
 
         /* Write the track or block just read */

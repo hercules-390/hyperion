@@ -1737,11 +1737,16 @@ typedef char CCKD_TRACE[128];           /* Trace entry               */
 #define CCKD_L2TAB_SIZE        ((ssize_t)sizeof(CCKD_L2TAB))
 #define CCKD_FREEBLK_SIZE      8
 #define CCKD_FREEBLK_ISIZE     ((ssize_t)sizeof(CCKD_FREEBLK))
-#define CCKD_FREE_MIN_SIZE     96
 #define CCKD_CACHE_SIZE        ((ssize_t)sizeof(CCKD_CACHE))
+
+/* Flag bits */
+#define CCKD_SIZE_EXACT         0x01    /* Space obtained is exact   */
+#define CCKD_SIZE_ANY           0x02    /* Space can be any size     */
 
 /* adjustable values */
 
+#define CCKD_FREE_MIN_SIZE     96       /* Minimum free space size   */
+#define CCKD_FREE_MIN_INCR     32       /* Added for each 1024 spaces*/
 #define CCKD_COMPRESS_MIN      512      /* Track images smaller than
                                            this won't be compressed  */
 #define CCKD_MAX_SF            8        /* Maximum number of shadow
@@ -1820,6 +1825,7 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
 
         int              freepend;      /* Number freepend cycles    */
         int              nostress;      /* 1=No stress writes        */
+        int              linuxnull;     /* 1=Always check nulltrk    */
         int              fsync;         /* 1=Perform fsync()         */
         int              ftruncwa;      /* 1=ftruncate() workaround  */
         COND             termcond;      /* Termination condition     */
@@ -1875,6 +1881,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         int              l2active;      /* Active level 2 cache entry*/
         int              active;        /* Active cache entry        */
         BYTE            *newbuf;        /* Uncompressed buffer       */
+        unsigned int     freemin;       /* Minimum free space size   */
         CCKD_FREEBLK    *free;          /* Internal free space chain */
         int              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */
