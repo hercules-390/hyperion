@@ -429,6 +429,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_ESAME)*/
         regs->GR_L(b2) = gr;
 
+#ifdef FEATURE_TRACING
+    /* Update trace table address if branch tracing is on */
+    if (regs->CR(12) & CR12_BRTRACE)
+        regs->CR(12) = newcr12;
+#endif /*FEATURE_TRACING*/
+
     /* Space switch event when switching into or
        out of home space mode AND space-switch-event on in CR1 or CR13 */
     if((HOME_SPACE_MODE(&(regs->psw)) ^ HOME_SPACE_MODE(&save_psw))
@@ -457,12 +463,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 	regs->psw.ilc = 4;
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
-
-#ifdef FEATURE_TRACING
-    /* Update trace table address if branch tracing is on */
-    if (regs->CR(12) & CR12_BRTRACE)
-        regs->CR(12) = newcr12;
-#endif /*FEATURE_TRACING*/
 
     RETURN_INTCHECK(regs);
 
