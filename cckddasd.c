@@ -5119,12 +5119,12 @@ CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
     cckdblk.itrace = NULL;
     sleep (1);
     p = cckdblk.itracep;
+    if (p >= cckdblk.itracex) p = i;
     do
     {
-        if (p >= cckdblk.itracex) p = i;
         if (p[0] != '\0')
             logmsg ("%s", (char *)p);
-        ++p;
+        if (++p >= cckdblk.itracex) p = i;
     } while (p != cckdblk.itracep);
     memset (i, 0, cckdblk.itracen * sizeof(CCKD_TRACE));
     cckdblk.itracep = i;
