@@ -85,14 +85,14 @@ HDLDEP *depent;
     {
         if(strcmp(version,depent->version))
         {
-            logmsg("HHCHDxxxI Dependency check failed for %s, version(%s) expected(%s)\n",
+            logmsg("HHCHD010I Dependency check failed for %s, version(%s) expected(%s)\n",
                name,version,depent->version);
             return -1;
         }
 
         if(size != depent->size)
         {
-            logmsg("HHCHDxxxI Dependency check failed for %s, size(%d) expected(%d)\n",
+            logmsg("HHCHD011I Dependency check failed for %s, size(%d) expected(%d)\n",
                name,size,depent->size);
             return -1;
         }
@@ -281,7 +281,7 @@ HDLPRE *preload;
 
     if(!(hdl_cdll->hdldepc = dlsym(hdl_cdll->dll,HDL_DEPC_Q)))
     {
-        fprintf(stderr, "HHCHDxxxE No depency section in %s: %s\n",
+        fprintf(stderr, "HHCHD012E No depency section in %s: %s\n",
           hdl_cdll->name, dlerror());
         close(sysblk.syslogfd[LOG_WRITE]); /* ZZ FIXME: shutdown */
         exit(1);
@@ -367,7 +367,7 @@ char *modname;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        logmsg("HHCHDxxxE No depency section in %s: %s\n",
+        logmsg("HHCHD013E No depency section in %s: %s\n",
           dllent->name, dlerror());
         free(dllent);
         return -1;
@@ -397,7 +397,7 @@ char *modname;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            logmsg("HHCHDxxxE Dependency check failed for module %s\n",
+            logmsg("HHCHD014E Dependency check failed for module %s\n",
               dllent->name);
             if(!(flags & HDL_LOAD_FORCE))
             {
@@ -504,7 +504,7 @@ char *modname;
 
     release_lock(&hdl_lock);
 
-    logmsg("HHCHD009E %s not loaded\n",modname);
+    logmsg("HHCHD009E %s not unloaded\n",modname);
 
     return -1;
 }
