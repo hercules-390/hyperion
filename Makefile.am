@@ -110,31 +110,32 @@ if OPTION_DYNAMIC_LOAD
   DYNSRC         =
   LTDL           = ltdl.c
 
-  DYNMOD_LDFLAGS = -module         \
+  DYNMOD_LD_FLAGS = -module         \
                    -no-undefined   \
                    $(XSTATIC)      \
                    -export-dynamic \
                    -avoid-version
 
-#  DYNMOD_LDADD   = libherc.la  \
+#  DYNMOD_LD_ADD   = libherc.la  \
 #                   libhercs.la    \
 #                   libhercu.la    \
 #                   $(LDADD)       \
 #                   $(LIBFTHREADS)
 
-  DYNMOD_LDADD   = libherc.la  \
+  DYNMOD_LD_ADD   = libherc.la  \
                    libhercs.la \
                    $(LDADD)
 
-  LIB_LDFLAGS    = -export-dynamic  \
+  LIB_LD_FLAGS    = -export-dynamic  \
                    $(XSTATIC)       \
                    -no-undefined    \
                    -avoid-version
 else
   DYNSRC         = $(dyndev_SRC)
   LTDL           =
-  DYNMOD_LDFLAGS =
-  LIB_LDFLAGS    = $(XSTATIC)    \
+  DYNMOD_LD_FLAGS =
+  DYNMOD_LD_ADD =
+  LIB_LD_FLAGS    = $(XSTATIC)    \
                    -no-undefined \
                    -avoid-version
 endif
@@ -189,49 +190,49 @@ if OPTION_DYNAMIC_LOAD
 # For each module:
 #
 #   ModuleName_la_SOURCES      = <list of source files>
-#   ModuleName_la_LDFLAGS      = $(DYNMOD_LDFLAGS) (see above)
+#   ModuleName_la_LDFLAGS      = $(DYNMOD_LD_FLAGS) (see above)
 #   ModuleName_la_LIBADD       = libherc.la (the Core Hercules Shared Library)
 #   ModuleName_la_DEPENDENCIES = libherc.la (may not be necessary)
 #
   dyngui_la_SOURCES  = dyngui.c
-  dyngui_la_LDFLAGS  = $(DYNMOD_LDFLAGS)
-  dyngui_la_LIBADD   = $(DYNMOD_LDADD)
+  dyngui_la_LDFLAGS  = $(DYNMOD_LD_FLAGS)
+  dyngui_la_LIBADD   = $(DYNMOD_LD_ADD)
 
   dyninst_la_SOURCES = dyninst.c
-  dyninst_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  dyninst_la_LIBADD  = $(DYNMOD_LDADD)
+  dyninst_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  dyninst_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdteq_la_SOURCES   = hdteq.c 
-  hdteq_la_LDFLAGS   = $(DYNMOD_LDFLAGS)
-  hdteq_la_LIBADD    = $(DYNMOD_LDADD)
+  hdteq_la_LDFLAGS   = $(DYNMOD_LD_FLAGS)
+  hdteq_la_LIBADD    = $(DYNMOD_LD_ADD)
 
   hdt1403_la_SOURCES = printer.c 
-  hdt1403_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  hdt1403_la_LIBADD  = $(DYNMOD_LDADD)
+  hdt1403_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt1403_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt2703_la_SOURCES = commadpt.c 
-  hdt2703_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  hdt2703_la_LIBADD  = $(DYNMOD_LDADD)
+  hdt2703_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt2703_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt3088_la_SOURCES = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c 
-  hdt3088_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  hdt3088_la_LIBADD  = $(DYNMOD_LDADD)
+  hdt3088_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt3088_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt3270_la_SOURCES = console.c 
-  hdt3270_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  hdt3270_la_LIBADD  = $(DYNMOD_LDADD)
+  hdt3270_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt3270_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt3420_la_SOURCES = tapedev.c
-  hdt3420_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  hdt3420_la_LIBADD  = $(DYNMOD_LDADD) libherct.la
+  hdt3420_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt3420_la_LIBADD  = $(DYNMOD_LD_ADD) libherct.la
 
   hdt3505_la_SOURCES = cardrdr.c sockdev.c 
-  hdt3505_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  hdt3505_la_LIBADD  = $(DYNMOD_LDADD)
+  hdt3505_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt3505_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt3525_la_SOURCES = cardpch.c 
-  hdt3525_la_LDFLAGS = $(DYNMOD_LDFLAGS)
-  hdt3525_la_LIBADD  = $(DYNMOD_LDADD)
+  hdt3525_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt3525_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 endif
 
@@ -240,7 +241,7 @@ if BUILD_FTHREADS
                            $(FISHHANG) \
                            $(FHOSTINFO)
 
-  libfthreads_la_LDFLAGS = $(LIB_LDFLAGS)
+  libfthreads_la_LDFLAGS = $(LIB_LD_FLAGS)
 
   libfthreads_la_LIBADD  = $(LDADD)
 
@@ -252,7 +253,7 @@ endif
 
   libhercs_la_SOURCES = hsys.c
 
-  libhercs_la_LDFLAGS = $(LIB_LDFLAGS)
+  libhercs_la_LDFLAGS = $(LIB_LD_FLAGS)
 
   libhercs_la_LIBADD  = $(LDADD)
 
@@ -263,7 +264,7 @@ endif
   libherct_la_SOURCES = sllib.c \
                         hetlib.c
 
-  libherct_la_LDFLAGS = $(LIB_LDFLAGS)
+  libherct_la_LDFLAGS = $(LIB_LD_FLAGS)
 
   libherct_la_LIBADD  = $(LDADD)
 
@@ -280,7 +281,7 @@ endif
                         dasdutil.c  \
                         shared.c 
 
-  libhercd_la_LDFLAGS = $(LIB_LDFLAGS)
+  libhercd_la_LDFLAGS = $(LIB_LD_FLAGS)
 
   libhercd_la_LIBADD  = $(LDADD)
 
@@ -299,7 +300,7 @@ endif
                         parser.c    \
                         $(LTDL)
 
-  libhercu_la_LDFLAGS = $(LIB_LDFLAGS)
+  libhercu_la_LDFLAGS = $(LIB_LD_FLAGS)
 
   libhercu_la_LIBADD  = $(LDADD)
 
@@ -359,7 +360,7 @@ endif
                              $(dyndev_SRC)   \
                              ltdl.c
 
-  libherc_la_LDFLAGS = $(LIB_LDFLAGS) 
+  libherc_la_LDFLAGS = $(LIB_LD_FLAGS) 
 
   libherc_la_LIBADD = libhercs.la    \
                       libhercu.la    \
@@ -425,94 +426,94 @@ endif
 # side binaries
 #
 
-tools_LDFLGS =
+tools_LD_FLAGS =
 tools_ADDLIBS = $(HERCLIBS2) $(LDADD)
 
 if BUILD_HERCIFC
 hercifc_SOURCES       = hercifc.c
 hercifc_LDADD         = $(LDADD)
-hercifc_LDFLAGS       = $(tools_LDFLGS)
+hercifc_LDFLAGS       = $(tools_LD_FLAGS)
 endif
 
 dasdinit_SOURCES      = dasdinit.c 
 dasdinit_LDADD        = $(tools_ADDLIBS)   
-dasdinit_LDFLAGS      = $(tools_LDFLGS)
+dasdinit_LDFLAGS      = $(tools_LD_FLAGS)
 
 dasdisup_SOURCES      = dasdisup.c
 dasdisup_LDADD        = $(tools_ADDLIBS)   
-dasdisup_LDFLAGS      = $(tools_LDFLGS)
+dasdisup_LDFLAGS      = $(tools_LD_FLAGS)
 
 dasdload_SOURCES      = dasdload.c
 dasdload_LDADD        = $(tools_ADDLIBS)   
-dasdload_LDFLAGS      = $(tools_LDFLGS)
+dasdload_LDFLAGS      = $(tools_LD_FLAGS)
 
 dasdls_SOURCES        = dasdls.c
 dasdls_LDADD          = $(tools_ADDLIBS)   
-dasdls_LDFLAGS        = $(tools_LDFLGS)
+dasdls_LDFLAGS        = $(tools_LD_FLAGS)
 
 dasdcat_SOURCES       = dasdcat.c
 dasdcat_LDADD         = $(tools_ADDLIBS)   
-dasdcat_LDFLAGS       = $(tools_LDFLGS)
+dasdcat_LDFLAGS       = $(tools_LD_FLAGS)
 
 dasdpdsu_SOURCES      = dasdpdsu.c
 dasdpdsu_LDADD        = $(tools_ADDLIBS)   
-dasdpdsu_LDFLAGS      = $(tools_LDFLGS)
+dasdpdsu_LDFLAGS      = $(tools_LD_FLAGS)
 
 dasdseq_SOURCES       = dasdseq.c 
 dasdseq_LDADD         = $(tools_ADDLIBS)   
-dasdseq_LDFLAGS       = $(tools_LDFLGS)
+dasdseq_LDFLAGS       = $(tools_LD_FLAGS)
 
 tapecopy_SOURCES      = tapecopy.c
 tapecopy_LDADD        = $(tools_ADDLIBS)   
-tapecopy_LDFLAGS      = $(tools_LDFLGS)
+tapecopy_LDFLAGS      = $(tools_LD_FLAGS)
 
 tapemap_SOURCES       = tapemap.c
 tapemap_LDADD         = $(tools_ADDLIBS)   
-tapemap_LDFLAGS       = $(tools_LDFLGS)
+tapemap_LDFLAGS       = $(tools_LD_FLAGS)
 
 tapesplt_SOURCES      = tapesplt.c
 tapesplt_LDADD        = $(tools_ADDLIBS)   
-tapesplt_LDFLAGS      = $(tools_LDFLGS)
+tapesplt_LDFLAGS      = $(tools_LD_FLAGS)
 
 cckdcdsk_SOURCES      = cckdcdsk.c
 cckdcdsk_LDADD        = $(tools_ADDLIBS)   
-cckdcdsk_LDFLAGS      = $(tools_LDFLGS)
+cckdcdsk_LDFLAGS      = $(tools_LD_FLAGS)
 
 cckdcomp_SOURCES      = cckdcomp.c
 cckdcomp_LDADD        = $(tools_ADDLIBS)   
-cckdcomp_LDFLAGS      = $(tools_LDFLGS)
+cckdcomp_LDFLAGS      = $(tools_LD_FLAGS)
 
 cckddiag_SOURCES      = cckddiag.c
 cckddiag_LDADD        = $(tools_ADDLIBS)   
-cckddiag_LDFLAGS      = $(tools_LDFLGS)
+cckddiag_LDFLAGS      = $(tools_LD_FLAGS)
 
 dasdcopy_SOURCES      = dasdcopy.c
 dasdcopy_LDADD        = $(tools_ADDLIBS)   
-dasdcopy_LDFLAGS      = $(tools_LDFLGS)
+dasdcopy_LDFLAGS      = $(tools_LD_FLAGS)
 
 cckdswap_SOURCES      = cckdswap.c
 cckdswap_LDADD        = $(tools_ADDLIBS)   
-cckdswap_LDFLAGS      = $(tools_LDFLGS)
+cckdswap_LDFLAGS      = $(tools_LD_FLAGS)
 
 hetget_SOURCES        = hetget.c
 hetget_LDADD          = $(tools_ADDLIBS)   
-hetget_LDFLAGS        = $(tools_LDFLGS)
+hetget_LDFLAGS        = $(tools_LD_FLAGS)
 
 hetinit_SOURCES       = hetinit.c
 hetinit_LDADD         = $(tools_ADDLIBS)   
-hetinit_LDFLAGS       = $(tools_LDFLGS)
+hetinit_LDFLAGS       = $(tools_LD_FLAGS)
 
 hetmap_SOURCES        = hetmap.c
 hetmap_LDADD          = $(tools_ADDLIBS)   
-hetmap_LDFLAGS        = $(tools_LDFLGS)
+hetmap_LDFLAGS        = $(tools_LD_FLAGS)
 
 hetupd_SOURCES        = hetupd.c
 hetupd_LDADD          = $(tools_ADDLIBS)   
-hetupd_LDFLAGS        = $(tools_LDFLGS)
+hetupd_LDFLAGS        = $(tools_LD_FLAGS)
 
 dmap2hrc_SOURCES      = dmap2hrc.c
 dmap2hrc_LDADD        = $(tools_ADDLIBS)   
-dmap2hrc_LDFLAGS      = $(tools_LDFLGS)
+dmap2hrc_LDFLAGS      = $(tools_LD_FLAGS)
 
 #
 # files that are not 'built' per-se
