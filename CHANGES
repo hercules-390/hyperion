@@ -1,3 +1,11 @@
+20 Aug 2001 LKPG setting wrong cc - Paul Leisy
+20 Aug 2001 Just set cc when r1=r2 for CUSE - Paul Leisy
+20 Aug 2001 CUUTF wrong cc when len1 = 0 and len2 = 1 - Paul Leisy
+20 Aug 2001 Fix SQXR div by 0 and others and SQDR hang - Paul Leisy
+20 Aug 2001 Fix RP so ILC is correct for PIC 1C - Paul Leisy
+20 Aug 2001 PLO needs INVALIDATE_AEA() when in AR mode - Paul Leisy
+20 Aug 2001 CLM should get access rupts if mask = 0 - Paul Leisy
+20 Aug 2001 PC was missing PIC 13 - Paul Leisy
 06 Aug 2001 Machine check/checkstop/malfunction alert support
             for host exception/loop/wait errors - Jan Jaeger
 03 Aug 2001 Fix CLST condition code when 2nd op = end char - Paul Leisy
