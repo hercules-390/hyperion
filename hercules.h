@@ -1269,7 +1269,7 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 #endif /*EXTERNALGUI*/
 
 /* Global data areas and functions in module panel.c */
-extern int initdone;    /* Initialization complete flag */
+extern int volatile initdone;    /* Initialization complete flag */
 extern void panel_display (void);
 extern LIST_ENTRY  bind_head;
 extern LOCK        bind_lock;

@@ -666,8 +666,8 @@ void disasm_ ## _table (BYTE inst[], BYTE unused[]) \
 { \
 func disasm_fn; \
 BYTE* mnemonic; \
-    mnemonic = (void*)opcode_ ## _table ## [inst ## _route ## ][GEN_MAXARCH-1]; \
-    disasm_fn = (void*)opcode_ ## _table ## [inst ## _route ## ][GEN_MAXARCH-2]; \
+    mnemonic = (void*)opcode_ ## _table [inst _route ][GEN_MAXARCH-1]; \
+    disasm_fn = (void*)opcode_ ## _table [inst _route ][GEN_MAXARCH-2]; \
     disasm_fn(inst, mnemonic); \
 }
 
