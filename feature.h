@@ -577,15 +577,12 @@ do { \
   int i; \
   BYTE oldmode = (_regs)->aea_mode; \
   (_regs)->aea_mode = AEA_MODE((_regs)); \
-  if ((_regs)->aea_mode & 0x0F) \
-      (_regs)->aea_crx = 1; \
-  else \
-      (_regs)->aea_crx = 16; \
-  if ((oldmode & PSW_PERMODE) == 0 && ((_regs)->aea_mode & PSW_PERMODE) != 0) { \
+  if (oldmode != (_regs)->aea_mode) { \
     INVALIDATE_AIA((_regs)); \
-    if (EN_IC_PER_SA((_regs))) \
+    if (((_regs)->aea_mode & PSW_PERMODE) != 0 && EN_IC_PER_SA((_regs))) \
       ARCH_DEP(invalidate_tlb)((_regs),~ACC_WRITE); \
   } \
+  (_regs)->aea_crx = (_regs)->aea_mode & 0x0F ? 1 : 16; \
 } while (0)
 
 #define TEST_SET_AEA_MODE(_regs) \
