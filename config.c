@@ -275,6 +275,9 @@ BYTE   *spanrate;                       /* -> Panel refresh rate     */
 BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
+#ifdef OPTION_IODELAY_KLUDGE
+BYTE   *siodelay;                       /* -> I/O delay value        */
+#endif /*OPTION_IODELAY_KLUDGE*/
 BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
 U32     serial;                         /* CPU serial number         */
@@ -297,6 +300,9 @@ BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
 U16     devtype;                        /* Device type               */
 int     devtmax;                        /* Max number device threads */
+#ifdef OPTION_IODELAY_KLUDGE
+int     iodelay=0;                      /* I/O delay value           */
+#endif /*OPTION_IODELAY_KLUDGE*/
 BYTE    c;                              /* Work area for sscanf      */
 
     /* Clear the system configuration block */
@@ -382,6 +388,9 @@ BYTE    c;                              /* Work area for sscanf      */
         scpuprio = NULL;
         sdevtmax = NULL;
         spgmprdos = NULL;
+#ifdef OPTION_IODELAY_KLUDGE
+        siodelay = NULL;
+#endif /*OPTION_IODELAY_KLUDGE*/
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -473,6 +482,12 @@ BYTE    c;                              /* Work area for sscanf      */
             {
                 spgmprdos = operand;
             }
+#ifdef OPTION_IODELAY_KLUDGE
+            else if (strcasecmp (keyword, "iodelay") == 0)
+            {
+                siodelay = operand;
+            }
+#endif /*OPTION_IODELAY_KLUDGE*/
             else
             {
                 logmsg( "HHC006I Error in %s line %d: "
@@ -805,6 +820,20 @@ BYTE    c;                              /* Work area for sscanf      */
             }
         }
 
+#ifdef OPTION_IODELAY_KLUDGE
+        /* Parse I/O delay value */
+        if (siodelay != NULL)
+        {
+            if (sscanf(siodelay, "%d%c", &iodelay, &c) != 1)
+            {
+                logmsg( "HHC012I Error in %s line %d: "
+                        "Invalid I/O delay value: %s\n",
+                        fname, stmt, siodelay);
+                exit(1);
+            }
+        }
+#endif /*OPTION_IODELAY_KLUDGE*/
+
     } /* end for(scount) */
 
 
@@ -949,6 +978,11 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Set the system program product OS restriction flag */
     sysblk.pgmprdos = pgmprdos;
+
+#ifdef OPTION_IODELAY_KLUDGE
+    /* Set I/O delay value */
+    sysblk.iodelay = iodelay;
+#endif /*OPTION_IODELAY_KLUDGE*/
 
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;

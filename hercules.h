@@ -685,6 +685,9 @@ typedef struct _SYSBLK {
 
         int     cpuprio;                /* CPU thread priority       */
         int     pgmprdos;               /* Program product OS flag   */
+#ifdef OPTION_IODELAY_KLUDGE
+        int     iodelay;                /* I/O delay kludge for linux*/
+#endif /*OPTION_IODELAY_KLUDGE*/
 #if !defined(NO_SETUID)
         uid_t   ruid, euid, suid;
         gid_t   rgid, egid, sgid;

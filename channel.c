@@ -25,10 +25,14 @@
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
 
-#if defined(OPTION_IODELAY) && OPTION_IODELAY > 0
-#define IODELAY() usleep(OPTION_IODELAY)
+#ifdef OPTION_IODELAY_KLUDGE
+#define IODELAY(_dev) \
+do { \
+  if (sysblk.iodelay > 0 && (_dev)->devchar[10] == 0x20) \
+    usleep(sysblk.iodelay); \
+} while (0)
 #else
-#define IODELAY()
+#define IODELAY(_dev)
 #endif
 
 #undef CHADDRCHK
@@ -1554,7 +1558,11 @@ int     rc;                             /* Return code               */
      */
 
 #ifdef OPTION_SYNCIO
-    if (dev->syncio)
+    if (dev->syncio
+#ifdef OPTION_IODELAY_KLUDGE
+     && sysblk.iodelay < 1
+#endif /*OPTION_IODELAY_KLUDGE*/
+                    )
     {
         /* Attempt synchronous I/O */
         dev->syncio_active = 1;
@@ -1786,7 +1794,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             logmsg ("channel: Device %4.4X initial status interrupt\n",
                 dev->devnum);
 
-        IODELAY();
+        IODELAY(dev);
 
         /* Signal waiting CPUs that interrupt is pending */
         obtain_lock (&sysblk.intlock);
@@ -1814,7 +1822,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Release the device lock */
             release_lock (&dev->lock);
 
-            IODELAY();
+            IODELAY(dev);
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
@@ -1878,7 +1886,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Release the device lock */
             release_lock (&dev->lock);
 
-            IODELAY();
+            IODELAY(dev);
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
@@ -1926,7 +1934,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Release the device lock */
             release_lock (&dev->lock);
 
-            IODELAY();
+            IODELAY(dev);
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
@@ -2080,7 +2088,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                     /* Release the device lock */
                     release_lock (&dev->lock);
 
-                    IODELAY();
+                    IODELAY(dev);
 
                     /* Signal waiting CPUs that interrupt is pending */
                     obtain_lock (&sysblk.intlock);
@@ -2198,7 +2206,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Release the device lock */
             release_lock (&dev->lock);
 
-            IODELAY();
+            IODELAY(dev);
 
             /* Signal waiting CPUs that an interrupt is pending */
             obtain_lock (&sysblk.intlock);
@@ -2500,7 +2508,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
     /* Release the device lock */
     release_lock (&dev->lock);
 
-    IODELAY();
+    IODELAY(dev);
 
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);

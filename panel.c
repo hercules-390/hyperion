@@ -2502,6 +2502,24 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 #endif /* defined(OPTION_W32_CTCI) */
 
+#ifdef OPTION_IODELAY_KLUDGE
+/*********************************************************************/
+    /* iodelay command - display or set I/O delay value */
+    if (memcmp(cmd,"iodelay",7)==0)
+    {
+        int iodelay = 0;
+        if (cmd[7] == '=' || cmd[7] == ' ')
+        {
+            if (sscanf(cmd+8, "%d%c", &iodelay, &c) != 1)
+                logmsg( "Invalid I/O delay value: %s\n", cmd+8);
+            else
+                sysblk.iodelay = iodelay;
+        }
+        logmsg ("I/O delay = %d\n", sysblk.iodelay);
+        return NULL;
+    }
+#endif /*OPTION_IODELAY_KLUDGE*/
+
 /*********************************************************************/
     /* Ignore just enter */
     if (cmd[0] == '\0')

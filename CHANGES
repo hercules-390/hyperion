@@ -1,3 +1,4 @@
+22 Feb 2002 IODELAY kludge for linux - Greg Smith
 22 Feb 2002 Allow comments in hercules.rc file (start with #) - Paul Leisy
 22 Feb 2002 Correct BFP behavior in GUEST mode - Paul Leisy
 22 Feb 2002 Fix missing PER in GUEST mode when HOST rupt icept - Paul Leisy
