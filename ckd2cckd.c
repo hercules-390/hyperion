@@ -672,7 +672,8 @@ int             l2empty;                /* 1=level 2 table is empty  */
 /*-------------------------------------------------------------------*/
 void syntax ()
 {
-    printf ("usage:  ckd2cckd [-options] input-file output-file\n"
+    char *usage =
+            "usage:  ckd2cckd [-options] input-file output-file\n"
             "\n"
             "     create a compressed ckd file from a regular ckd file\n"
             "\n"
@@ -702,7 +703,8 @@ void syntax ()
             "                       or bzip2 blockSize100k value:\n"
             "                       1=fastest ... 9=best\n"
 #endif
-           );
+            ;
+    printf (usage);
     exit (30);
 } /* end function syntax */
 
