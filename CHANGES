@@ -1,3 +1,5 @@
+11 Oct 2001 SMP performance - phase 3 - synchronize_broadcast enhanced -
+            Greg Smith
 11 Oct 2001 SMP performance - phase 2 - intcond for each CPU - Greg Smith
 11 Oct 2001 SMP performance - phase 1 - remove usleep(1) by default from
             CS instructions - Greg Smith

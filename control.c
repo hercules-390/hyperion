@@ -686,26 +686,8 @@ U32     n1, n2;                         /* 32 Bit work               */
         RELEASE_MAINLOCK(regs);
 
         /* Perform requested funtion specified as per request code in r2 */
-        if (regs->GR_L(r2) & 0x00000001)
-        {
-#if defined(_FEATURE_SIE)
-            if(regs->sie_state && !regs->sie_scao)
-                ARCH_DEP(purge_tlb) (regs);
-            else
-#endif /*defined(_FEATURE_SIE)*/
-                BROADCAST_PTLB(regs);
-        }
-
-        if (regs->GR_L(r2) & 0x00000002)
-        {
-#if defined(_FEATURE_SIE)
-            if(regs->sie_state && !regs->sie_scao)
-                ARCH_DEP(purge_alb) (regs);
-            else
-#endif /*defined(_FEATURE_SIE)*/
-                BROADCAST_PALB(regs);
-        }
-
+        if (regs->GR_L(r2) & 3)
+            ARCH_DEP(synchronize_broadcast)(regs, regs->GR_L(r2) & 3, 0);
     }
     else
     {
@@ -716,9 +698,6 @@ U32     n1, n2;                         /* 32 Bit work               */
         /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
     }
-
-    /* Wait for all CPU's to perform the requested action */
-    SYNCHRONIZE_BROADCAST(regs);
 
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
@@ -1416,16 +1395,8 @@ int     r1, r2;                         /* Values of R fields        */
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    RELEASE_MAINLOCK(regs);
-
-    /* Inform other CPU's */
-    BROADCAST_PTLB(regs);
-
-    /* Wait for all CPU's to perform the requested action */
-    SYNCHRONIZE_BROADCAST(regs);
-
-    /* Perform serialization after operation */
-    PERFORM_SERIALIZATION (regs);
+    /* Mainlock now released by `invalidate_pte' */
+//  RELEASE_MAINLOCK(regs);
 
 }
 

@@ -805,7 +805,7 @@ BYTE    c;                              /* Work area for sscanf      */
     initialize_condition (&sysblk.intcond);
 #endif
 #if MAX_CPU_ENGINES > 1
-    initialize_condition (&sysblk.brdcstcond);
+    initialize_condition (&sysblk.broadcast_cond);
 #ifdef SMP_SERIALIZATION
     for(i = 0; i < MAX_CPU_ENGINES; i++)
         initialize_lock (&sysblk.regs[i].serlock);

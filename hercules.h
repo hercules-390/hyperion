@@ -383,8 +383,6 @@ typedef struct _REGS {                  /* Processor registers       */
         U16     extccpu;                /* CPU causing external call */
         BYTE    inst[6];                /* Last-fetched instruction  */
 // #if MAX_CPU_ENGINES > 1
-        U32     brdcstpalb;             /* purge_alb() pending       */
-        U32     brdcstptlb;             /* purge_tlb() pending       */
         unsigned int                    /* Flags                     */
                 mainlock:1,             /* MAINLOCK held indicator   */
                 mainsync:1;             /* MAINLOCK sync wait        */
@@ -544,12 +542,16 @@ typedef struct _SYSBLK {
         U32     ints_state;             /* Common Interrupts Status  */
 #endif /*INTERRUPTS_FAST_CHECK*/
         U32     waitmask;               /* Mask for waiting CPUs     */
-// #if MAX_CPU_ENGINES > 1
-        U32     brdcstpalb;             /* purge_alb() pending       */
-        U32     brdcstptlb;             /* purge_tlb() pending       */
-        int     brdcstncpu;             /* number of CPUs waiting    */
-        COND    brdcstcond;             /* Broadcast condition       */
-// #endif /*MAX_CPU_ENGINES > 1*/
+        U32     started_mask;           /* Mask for started CPUs     */
+        int     broadcast_code;         /* Broadcast code            */
+#define BROADCAST_PTLB 1                /* Broadcast purge tlb       */
+#define BROADCAST_PALB 2                /* Broadcast purge alb       */
+#define BROADCAST_ITLB 4                /* Broadcast invalidate tlb  */
+        U64     broadcast_pfra;         /* Broadcast pfra            */
+#if MAX_CPU_ENGINES > 1
+        U32     broadcast_mask;         /* Broadcast CPU mask        */
+        COND    broadcast_cond;         /* Broadcast condition       */
+#endif /* MAX_CPU_ENGINES > 1 */
         U64     breakaddr;              /* Breakpoint address        */
         FILE   *msgpipew;               /* Message pipe write handle */
         int     msgpiper;               /* Message pipe read handle  */

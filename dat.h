@@ -1559,9 +1559,6 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
                                                     int r2, REGS *regs)
 {
-#if MAX_CPU_ENGINES == 1 || defined(_FEATURE_SIE)
-int     i;                              /* Array subscript           */
-#endif /*MAX_CPU_ENGINES == 1 || defined(_FEATURE_SIE)*/
 RADR    raddr;                          /* Addr of page table entry  */
 RADR    pte;
 
@@ -1659,25 +1656,11 @@ RADR    pte;
     }
 #endif /*defined(FEATURE_ESAME)*/
 
+    /* Release mainlock before calling synchronize broadcast */
+    RELEASE_MAINLOCK(regs);
 
-/* Invalidation takes place by means of broadcast if maxcpuengines > 1
-   This happens in the IPTE instruction routine, unless this is 
-   a single engine guest under SIE */
-#if MAX_CPU_ENGINES == 1 || defined(_FEATURE_SIE)
-#if MAX_CPU_ENGINES > 1
-    if(regs->sie_state && !regs->sie_scao)
-#endif /*MAX_CPU_ENGINES > 1*/
-        /* Clear the TLB of any entries with matching PFRA */
-        for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)); i++)
-        {
-            if ((regs->tlb[i].TLB_PTE & PAGETAB_PFRA) == (pte & PAGETAB_PFRA)
-                && regs->tlb[i].valid)
-            {
-                regs->tlb[i].valid = 0;
-// /*debug*/logmsg ("dat: TLB entry %d invalidated\n", i); /*debug*/
-            }
-        } /* end for(i) */
-#endif /*MAX_CPU_ENGINES == 1 || defined(_FEATURE_SIE)*/
+    /* Invalidate TLB entries */
+    ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_ITLB, pte & PAGETAB_PFRA);
 
 } /* end function invalidate_pte */
 

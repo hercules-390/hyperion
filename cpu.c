@@ -911,11 +911,8 @@ void *cpu_thread (REGS *regs)
     }
     sysblk.numcpu++;
     sysblk.waitmask &= ~regs->cpumask;
+    sysblk.started_mask |= regs->cpumask;
     initdone = 1;  /* now safe for panel_display function to proceed */
-#if MAX_CPU_ENGINES > 1
-    if (sysblk.brdcstncpu != 0)
-        sysblk.brdcstncpu++;
-#endif /*MAX_CPU_ENGINES > 1*/
 
     /* Perform initial cpu reset */
     initial_cpu_reset (regs);
@@ -980,8 +977,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                synchronize_broadcast() must be called until there are
                no more broadcast pending because synchronize_broadcast()
                releases and reacquires the mainlock. */
-            while (sysblk.brdcstncpu != 0)
-                ARCH_DEP(synchronize_broadcast)(regs);
+            while (IS_IC_BROADCAST(regs))
+                ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
 #endif /*MAX_CPU_ENGINES > 1*/
 
             /* Take interrupts if CPU is not stopped */
@@ -1038,6 +1035,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                        the number of CPU's in the configuration.  */
 
                     sysblk.numcpu--;
+                    sysblk.started_mask &= ~regs->cpumask;
 
 #ifdef FEATURE_VECTOR_FACILITY
                     /* Mark Vector Facility offline */
@@ -1103,11 +1101,18 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             {
                 /* Wait until there is work to do */
                 sysblk.waitmask |= regs->cpumask;
+                sysblk.started_mask &= ~regs->cpumask;
                 while (regs->cpustate == CPUSTATE_STOPPED)
                 {
                     wait_condition (&INTCOND, &sysblk.intlock);
                 }
+                sysblk.started_mask |= regs->cpumask;
                 sysblk.waitmask &= ~regs->cpumask;
+                /* Purge the lookaside buffers */
+                ARCH_DEP(purge_tlb) (regs);
+#if defined(FEATURE_ACCESS_REGISTERS)
+                ARCH_DEP(purge_alb) (regs);
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
                 release_lock (&sysblk.intlock);
                 /* If the architecture mode has changed we must adapt */
                 if(sysblk.arch_mode != regs->arch_mode)

@@ -471,8 +471,8 @@ int ARCH_DEP(run_sie) (REGS *regs)
                        no more broadcast pending because synchronize_broadcast()
                        releases and reacquires the mainlock. */
 
-                    while (sysblk.brdcstncpu != 0)
-                        ARCH_DEP(synchronize_broadcast)(regs);
+                    while ((IS_IC_BROADCAST(regs)))
+                        ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
 #endif /*MAX_CPU_ENGINES > 1*/
 
                     if( OPEN_IC_CPUINT(GUESTREGS) )

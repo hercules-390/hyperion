@@ -206,11 +206,6 @@ do { \
 #if MAX_CPU_ENGINES == 1
  #define OBTAIN_MAINLOCK(_regs)
  #define RELEASE_MAINLOCK(_regs)
- #define BROADCAST_PTLB(_regs) \
-         ARCH_DEP(purge_tlb)((_regs))
- #define BROADCAST_PALB(_regs) \
-         ARCH_DEP(purge_alb)((_regs))
- #define SYNCHRONIZE_BROADCAST(_regs)
 #else
 #define OBTAIN_MAINLOCK(_register_context) \
 do { \
@@ -222,27 +217,6 @@ do { \
 do { \
     (_register_context)->mainlock = 0; \
     pthread_mutex_unlock(&sysblk.mainlock); \
-} while(0)
-
-#define BROADCAST_PTLB(_regs) \
-do { \
-    pthread_mutex_lock(&sysblk.intlock); \
-    sysblk.brdcstptlb++; \
-    pthread_mutex_unlock(&sysblk.intlock); \
-} while(0)
-
-#define BROADCAST_PALB(_regs) \
-do { \
-    pthread_mutex_lock(&sysblk.intlock); \
-    sysblk.brdcstpalb++; \
-    pthread_mutex_unlock(&sysblk.intlock); \
-} while(0)
-
-#define SYNCHRONIZE_BROADCAST(_regs) \
-do { \
-    pthread_mutex_lock(&sysblk.intlock); \
-    ARCH_DEP(synchronize_broadcast)((_regs)); \
-    pthread_mutex_unlock(&sysblk.intlock); \
 } while(0)
 #endif
 
@@ -1626,7 +1600,7 @@ void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module external.c */
-void ARCH_DEP(synchronize_broadcast) (REGS *regs);
+void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, U64 pfra);
 void ARCH_DEP(perform_external_interrupt) (REGS *regs);
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
 void store_status (REGS *ssreg, U64 aaddr);

@@ -166,11 +166,8 @@ int     r1, r2;                         /* Values of R fields        */
     /* Invalidate page table entry */
     ARCH_DEP(invalidate_pte) (inst[1], r1, r2, regs);
 
-    /* Release mainstore interlock */
-    RELEASE_MAINLOCK(regs);
-
-    /* Inform other cpu's */
-    BROADCAST_PTLB(regs);
+    /* Mainlock now released by `invalidate_pte' */
+//  RELEASE_MAINLOCK(regs);
 
     /* Perform serialization after operation */
     PERFORM_SERIALIZATION (regs);

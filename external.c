@@ -30,7 +30,6 @@
 #include "inline.h"
 
 
-#if MAX_CPU_ENGINES > 1
 /*-------------------------------------------------------------------*/
 /* Synchronize broadcast request                                     */
 /* Input:                                                            */
@@ -43,79 +42,87 @@
 /* The CPU issuing the broadcast request will wait until             */
 /* all other CPU's have performed the requested action.         *JJ  */
 /*                                                                   */
-
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(synchronize_broadcast) (REGS *regs)
+void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, U64 pfra)
 {
 int     i;                              /* Array subscript           */
 
-    /* Initiate synchronization if this is the initiating CPU */
-    if (sysblk.brdcstncpu == 0)
+#if MAX_CPU_ENGINES > 1
+    if (code > 0)
     {
-        /* Set number of CPU's to synchronize */
-        sysblk.brdcstncpu = sysblk.numcpu;
-
-        ON_IC_BRDCSTNCPU;
-
-        /* Redrive all stopped CPU's */
-#ifdef _FEATURE_CPU_RECONFIG 
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
-          if(sysblk.regs[i].cpuonline)
-#else /*!_FEATURE_CPU_RECONFIG*/
-        for (i = 0; i < sysblk.numcpu; i++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
-            if (sysblk.regs[i].cpustate == CPUSTATE_STOPPED)
-                sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
-        WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
-
-    }
-
-    /* If this CPU is the last to enter, then signal the
-       requesting CPU's that the synchronization is complete */
-    if (--sysblk.brdcstncpu == 0)
-    {
-        OFF_IC_BRDCSTNCPU;
-        signal_condition (&sysblk.brdcstcond);
-    }
+        obtain_lock (&sysblk.intlock);
+        while (IS_IC_BROADCAST_ON)
+            if (IS_IC_BROADCAST(regs))
+                ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
     else
     {
-        /* Wait for all CPU's to synchronize */
-        regs->mainsync = 1;
-        wait_condition (&sysblk.brdcstcond, &sysblk.intlock);
-        regs->mainsync = 0;
+                release_lock (&sysblk.intlock);
+#ifdef OPTION_CS_USLEEP
+                usleep (1);
+#endif
+                obtain_lock (&sysblk.intlock);
     }
-
-    
-    /* When running under SIE we must address
-       the host register context for the purpose
-       of synchronisation */
-
-#if defined(FEATURE_ACCESS_REGISTERS)
-    /* Purge ALB if requested */
-    if (sysblk.brdcstpalb != regs->brdcstpalb)
-    {
-        ARCH_DEP(purge_alb) (
-#if defined(_FEATURE_SIE)
-                             regs->sie_state ? regs->hostregs :
-#endif /*defined(_FEATURE_SIE)*/
-                                                                regs);
-        regs->brdcstpalb = sysblk.brdcstpalb;
+        ON_IC_BROADCAST;
+        sysblk.broadcast_mask = sysblk.started_mask;
+        sysblk.broadcast_code = code;
+        sysblk.broadcast_pfra = pfra;
     }
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+#else /* MAX_CPU_ENGINES > 1 */
+    sysblk.broadcast_code = code;
+    sysblk.broadcast_pfra = pfra;
+#endif /* MAX_CPU_ENGINES > 1 */
 
-    /* Purge TLB if requested */
-    if (sysblk.brdcstptlb != regs->brdcstptlb)
-    {
+    /* Purge TLB */
+    if (sysblk.broadcast_code & BROADCAST_PTLB)
         ARCH_DEP(purge_tlb) (
 #if defined(_FEATURE_SIE)
                              regs->sie_state ? regs->hostregs :
 #endif /*defined(_FEATURE_SIE)*/
                                                                 regs);
-        regs->brdcstptlb = sysblk.brdcstptlb;
+
+#if defined(FEATURE_ACCESS_REGISTERS)
+    /* Purge ALB */
+    if (sysblk.broadcast_code & BROADCAST_PALB)
+        ARCH_DEP(purge_alb) (
+#if defined(_FEATURE_SIE)
+                             regs->sie_state ? regs->hostregs :
+#endif /*defined(_FEATURE_SIE)*/
+                                                                regs);
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+
+    /* Invalidate TLB entries */
+    if (sysblk.broadcast_code & BROADCAST_ITLB)
+        for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)); i++)
+            if ((regs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
+              && regs->tlb[i].valid)
+                    regs->tlb[i].valid = 0;
+
+#if MAX_CPU_ENGINES > 1
+    /* Wait for the other cpus */
+    sysblk.broadcast_mask &= ~regs->cpumask;
+    if (code > 0)
+    {
+        if (sysblk.broadcast_mask != 0)
+        {
+            WAKEUP_WAITING_CPUS(ALL_CPUS, CPUSTATE_STARTED);
+            wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
     }
+        else OFF_IC_BROADCAST;
+        release_lock (&sysblk.intlock);
+    }
+    else
+    {
+        if (sysblk.broadcast_mask == 0)
+        {
+            OFF_IC_BROADCAST;
+            broadcast_condition (&sysblk.broadcast_cond);
+        }
+        else
+            wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
+    }
+#endif /*MAX_CPU_ENGINES > 1*/
 
 } /* end function synchronize_broadcast */
-#endif /*MAX_CPU_ENGINES > 1*/
 
 
 /*-------------------------------------------------------------------*/
