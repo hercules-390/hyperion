@@ -30,7 +30,7 @@ static const char *build_options[] = {
   CUSTOM_BUILD_STRING,
 #endif
 
-  "$Header$",
+  "Id: /usr/cvs/hercules/hercules/version.c,v 1.7 2001/10/23 03:15:30 mdz Exp $",
 
   "$Name$"
 
