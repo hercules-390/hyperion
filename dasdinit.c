@@ -464,7 +464,7 @@ U32             trksize;                /* DASD image track length   */
         maxcyls = maxcpif * CKD_MAXFILES;
     }
     else
-        maxcpif = maxcyls = cylsize;
+        maxcpif = maxcyls = volcyls;
     if (maxcyls > 65536) maxcyls = 65536;
 
     /* Check for valid number of cylinders */
