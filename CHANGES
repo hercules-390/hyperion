@@ -1,3 +1,4 @@
+13 Jun 2002 Another cfba fix (segmentation fault after detach while trace active) - Greg Smith
 13 Jun 2002 READ BACKWARD support for tapes added - Volker Bandke (Original patch: Hax 28 by Hackules)
 12 Jun 2002 cfba/cckd/ckd fixes - Greg Smith
 05 Jun 2002 Increase 3270 buffer to 64K as adding IAC bytes may cause overflow - Jan Jaeger

@@ -905,7 +905,7 @@ cckd_read_trk_retry:
             goto cckd_read_trk_retry;
         }
     }
-    else
+    else if (cckdblk.cache[lru].dev != NULL)
     {
         cckdtrc ("cckddasd: %d rdtrk[%d] %d dropping %4.4X:%d from cache\n",
            ra, lru, trk, cckdblk.cache[lru].dev->devnum, cckdblk.cache[lru].trk);
