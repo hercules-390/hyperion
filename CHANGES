@@ -1,4 +1,6 @@
-28 Sep 2001 Fix MVCL bugs with new fast path code - Paul leisy
+02 Oct 2001 Fix MVPG to work in pageable guest - Paul Leisy
+02 Oct 2001 Fix TRAP to work in pageable guest - Paul Leisy
+28 Sep 2001 Fix MVCL bugs with new fast path code - Paul Leisy
 28 Sep 2001 Restore change bit fixes to vstore.h - Paul Leisy
 17 Sep 2001 Minor corrections to CEFR, CDFR, CXFR and MVPG - Jan Jaeger
 13 Sep 2001 CXR setting wrong cc when fract=0 but char not - Paul Leisy
