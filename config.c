@@ -311,6 +311,8 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
+    SET_IC_INITIAL_STATE;
+
     /* Gabor Hoffer (performance option) */
     for (i = 0; i < 256; i++)
     {
@@ -1247,8 +1249,10 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #endif /*_FEATURE_VECTOR_FACILITY*/
 
 #ifndef PROFILE_CPU
+    obtain_lock (&sysblk.intlock);
     for(i = 0; i < numcpu; i++)
         configure_cpu(sysblk.regs + i);
+    release_lock (&sysblk.intlock);
 #endif
     /* close configuration file */
     rc = fclose(fp);
@@ -1299,6 +1303,7 @@ int     cpu;
 
 /*-------------------------------------------------------------------*/
 /* Function to start a new CPU thread                                */
+/* Caller MUST own the intlock                                       */
 /*-------------------------------------------------------------------*/
 int configure_cpu(REGS *regs)
 {
@@ -1318,6 +1323,9 @@ int configure_cpu(REGS *regs)
                 regs->cpuad, strerror(errno));
         return -1;
     }
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+    wait_condition (&regs->intcond, &sysblk.intlock);
+#endif
     return 0;
 } /* end function configure_cpu */
 

@@ -1248,10 +1248,7 @@ int     new_ilc;                        /* New ilc to set            */
     ARCH_DEP(store_psw) ( regs, psa->svcold );
 
     /* Load new PSW from PSA+X'60' */
-    obtain_lock(&sysblk.intlock);
-    rc = ARCH_DEP(load_psw) ( regs, psa->svcnew );
-    release_lock(&sysblk.intlock);
-    if ( rc )
+    if ( (rc = ARCH_DEP(load_psw) ( regs, psa->svcnew ) ) )
         ARCH_DEP(program_interrupt) (regs, rc);
 
     /* load_psw() has set the ILC to zero.  This needs to

@@ -35,7 +35,8 @@
 /* Input:                                                            */
 /*      regs    A pointer to the CPU register context                */
 /*                                                                   */
-/* The intlock MUST be held when calling synchronize_broadcast()     */
+/* The intlock MUST be held when `code' is zero otherwise            */
+/* the intlock MUST NOT be held                                      */
 /*                                                                   */
 /* Signals all other CPU's to perform a requested function           */
 /* synchronously, such as purging the ALB and TLB buffers.           */
@@ -47,6 +48,7 @@ void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, U64 pfra)
 {
 U32     i;                              /* Array subscript           */
 REGS   *realregs;                       /* Real REGS if guest        */
+REGS   *tregs;                          /* Target regs               */
 
     realregs =
 #if defined(_FEATURE_SIE)
@@ -54,73 +56,77 @@ REGS   *realregs;                       /* Real REGS if guest        */
 #endif /*defined(_FEATURE_SIE)*/
                                                   regs;
 
-#if MAX_CPU_ENGINES > 1
+    /* Signal the other (if any) CPU's */
     if (code > 0)
     {
         obtain_lock (&sysblk.intlock);
-        while (IS_IC_BROADCAST_ON)
-            if (IS_IC_BROADCAST(realregs))
-                ARCH_DEP(synchronize_broadcast)(realregs, 0, 0);
-            else
-            {
-                release_lock (&sysblk.intlock);
-                sched_yield();
-                obtain_lock (&sysblk.intlock);
-            }
-        ON_IC_BROADCAST;
-        sysblk.broadcast_mask = sysblk.started_mask;
+
+        /* Wait for outstanding broadcasts to complete */
+        while (sysblk.broadcast_count)
+            ARCH_DEP(synchronize_broadcast)(realregs, 0, 0);
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
+        {
+            tregs = sysblk.regs + i;
+
+            if (tregs->cpuad == realregs->cpuad
+             || (tregs->cpumask & sysblk.started_mask) == 0)
+                continue;
+
+            ON_IC_BROADCAST(tregs);
+            sysblk.broadcast_count++;
+        }
         sysblk.broadcast_code = code;
         sysblk.broadcast_pfra = pfra;
+        if (sysblk.broadcast_count)
+            WAKEUP_WAITING_CPUS(ALL_CPUS, CPUSTATE_STARTED);
     }
-#else /* MAX_CPU_ENGINES > 1 */
-    sysblk.broadcast_code = code;
-    sysblk.broadcast_pfra = pfra;
-#endif /* MAX_CPU_ENGINES > 1 */
 
-    /* Purge TLB */
-    if (sysblk.broadcast_code & BROADCAST_PTLB)
-        ARCH_DEP(purge_tlb) (realregs);
+    /* Perform the requested functions */
+    if (code != 0 || IS_IC_BROADCAST(realregs))
+    {
+        /* Purge TLB */
+        if (sysblk.broadcast_code & BROADCAST_PTLB)
+            ARCH_DEP(purge_tlb) (realregs);
 
 #if defined(FEATURE_ACCESS_REGISTERS)
-    /* Purge ALB */
-    if (sysblk.broadcast_code & BROADCAST_PALB)
-        ARCH_DEP(purge_alb) (realregs);
+        /* Purge ALB */
+        if (sysblk.broadcast_code & BROADCAST_PALB)
+            ARCH_DEP(purge_alb) (realregs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
-    /* Invalidate TLB entries */
-    if (sysblk.broadcast_code & BROADCAST_ITLB)
-    {
-        for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)); i++)
-            if ((regs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
-              && regs->tlb[i].valid)
+        /* Invalidate TLB entries */
+        if (sysblk.broadcast_code & BROADCAST_ITLB)
+        {
+            for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)); i++)
+                if ((regs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
+                  && regs->tlb[i].valid)
                     regs->tlb[i].valid = 0;
-        for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)) && realregs != regs; i++)
-            if ((realregs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
-              && realregs->tlb[i].valid)
+            for (i = 0; i < (sizeof(realregs->tlb)/sizeof(TLBE)) && realregs != regs; i++)
+                if ((realregs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
+                  && realregs->tlb[i].valid)
                     realregs->tlb[i].valid = 0;
+        }
     }
 
-#if MAX_CPU_ENGINES > 1
     /* Wait for the other cpus */
-    sysblk.broadcast_mask &= ~realregs->cpumask;
-    if (code > 0)
+    if (code != 0)
     {
-        if (sysblk.broadcast_mask != 0)
-        {
-            WAKEUP_WAITING_CPUS(ALL_CPUS, CPUSTATE_STARTED);
+        if (sysblk.broadcast_count)
             wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
-        }
-        OFF_IC_BROADCAST;
         release_lock (&sysblk.intlock);
     }
     else
     {
-        if (sysblk.broadcast_mask == 0)
-            broadcast_condition (&sysblk.broadcast_cond);
-        else
+        if (IS_IC_BROADCAST(realregs))
+        {
+            OFF_IC_BROADCAST(realregs);
+            sysblk.broadcast_count--;
+        }
+        if (sysblk.broadcast_count)
             wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
+        else
+            broadcast_condition (&sysblk.broadcast_cond);
     }
-#endif /*MAX_CPU_ENGINES > 1*/
 
 } /* end function synchronize_broadcast */
 

@@ -403,8 +403,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       && ((psw[2] & 0xC0) == 0xC0) )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    obtain_lock(&sysblk.intlock);
- 
 #if defined(FEATURE_ESAME)
     if(flags & 0x0004) 
     {
@@ -412,7 +410,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         psw[1] &= ~0x08;
         if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
         {
-            release_lock(&sysblk.intlock);
             /* restore the psw */
             regs->psw = save_psw;
             /* And generate a program interrupt */
@@ -428,7 +425,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_ESAME)*/
         if( s390_load_psw(regs, psw) )
         {
-            release_lock(&sysblk.intlock);
             /* restore the psw */
             regs->psw = save_psw;
             /* And generate a program interrupt */
@@ -438,8 +434,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.notesame = 0;
 #endif /*defined(FEATURE_ESAME)*/
     }
-
-    release_lock(&sysblk.intlock);
 
     /* load_psw() has set the ILC to zero.  This needs to
        be reset to 4 for an eventual PER event */
@@ -457,7 +451,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_ECIO_MASK(regs);
-    SET_IC_PSW_WAIT(regs);
+    SET_IC_PSW_WAIT_MASK(regs);
 
     /* Update access register b2 */
     regs->AR(b2) = ar;
@@ -2274,6 +2268,7 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
+U64     old;                            /* old value                 */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -2286,11 +2281,12 @@ RADR    abs2;                           /* absolute address          */
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
                            ACCTYPE_WRITE, regs->psw.pkey);
 
+    old = CSWAP64(regs->GR_G(r1));
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg8 (&regs->GR_G(r1), regs->GR_G(r3), regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg8 (&old, CSWAP64(regs->GR_G(r3)), regs->mainstor + abs2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -2300,6 +2296,7 @@ RADR    abs2;                           /* absolute address          */
 
     if (regs->psw.cc == 1)
     {
+        regs->GR_G(r1) = CSWAP64(old);
 #if defined(_FEATURE_ZSIE)
         if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1)))
         {
@@ -2328,6 +2325,7 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
+U64     old1, old2;                     /* old value                 */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -2342,13 +2340,15 @@ RADR    abs2;                           /* absolute address          */
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
                            ACCTYPE_WRITE, regs->psw.pkey);
 
+    old1 = CSWAP64(regs->GR_G(r1));
+    old2 = CSWAP64(regs->GR_G(r1+1));
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg16 (&regs->GR_G(r1), &regs->GR_G(r1+1),
-                              regs->GR_G(r3), regs->GR_G(r3+1),
+    regs->psw.cc = cmpxchg16 (&old1, &old2,
+                              CSWAP64(regs->GR_G(r3)), CSWAP64(regs->GR_G(r3+1)),
                               regs->mainstor + abs2);
 
     /* Release main-storage access lock */
@@ -2359,6 +2359,8 @@ RADR    abs2;                           /* absolute address          */
 
     if (regs->psw.cc == 1)
     {
+        regs->GR_G(r1) = CSWAP64(old1);
+        regs->GR_G(r1+1) = CSWAP64(old2);
 #if defined(_FEATURE_ZSIE)
         if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
         {
@@ -4450,10 +4452,7 @@ int     rc;
     ARCH_DEP(vfetchc) ( qword, 16-1, effective_addr2, b2, regs );
 
     /* Load updated PSW */
-    obtain_lock(&sysblk.intlock);
-    rc = ARCH_DEP(load_psw) ( regs, qword );
-    release_lock(&sysblk.intlock);
-    if ( rc )
+    if ( ( rc = ARCH_DEP(load_psw) ( regs, qword ) ) )
         ARCH_DEP(program_interrupt) (regs, rc);
 
     /* load_psw() has set the ILC to zero.  This needs to

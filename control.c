@@ -675,6 +675,7 @@ DEF_INST(compare_and_swap_and_purge)
 int     r1, r2;                         /* Values of R fields        */
 U64     n2;                             /* virtual address of op2    */
 RADR    abs2;                           /* absolute address of op2   */
+U32     old;                            /* old value                 */
 
     RRE(inst, execflag, regs, r1, r2);
 
@@ -703,11 +704,13 @@ RADR    abs2;                           /* absolute address of op2   */
     n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP(regs);
     abs2 = LOGICAL_TO_ABS (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
+    old = CSWAP32 (regs->GR_L(r1));
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
     /* Attempt to exchange the values */
-    regs->psw.cc = cmpxchg4 (&regs->GR_L(r1), regs->GR_L(r1+1), regs->mainstor + abs2);
+    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r1+1)), regs->mainstor + abs2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -721,6 +724,7 @@ RADR    abs2;                           /* absolute address of op2   */
     else
     {
         /* Otherwise yield */
+        regs->GR_L(r1) = CSWAP32(old);
         if (sysblk.numcpu > 1)
             sched_yield();
     }
@@ -1727,7 +1731,6 @@ int     amode64;
     STORE_DW ( dword, ARCH_DEP(vfetch8) ( effective_addr2, b2, regs ) );
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
-    obtain_lock(&sysblk.intlock);
 #if defined(FEATURE_ESAME)
     /* save amode64 flag */
     amode64 = dword[3] & 0x01;
@@ -1738,7 +1741,6 @@ int     amode64;
 #else /*!defined(FEATURE_ESAME)*/
     rc = ARCH_DEP(load_psw) ( regs, dword );
 #endif /*!defined(FEATURE_ESAME)*/
-    release_lock(&sysblk.intlock);
     if (rc)
     {
         ARCH_DEP(program_interrupt) (regs, rc);

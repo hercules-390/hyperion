@@ -341,6 +341,42 @@ do { \
 
 #include "machdep.h"
 
+/* Bit manipulation macros; if HAVE_CMPXCHG is defined then
+   the routines are architecture dependent but SMP safe */
+#ifdef HAVE_CMPXCHG
+
+#define set_bits(_ptr, _mask, _bits) \
+do { \
+ U32 old = *(U32 *)(_ptr); \
+ while ( cmpxchg4 (&old, (old & (_mask)) | (_bits), (U32 *)(_ptr)) ); \
+} while (0)
+
+#define or_bits(_ptr, _bits) \
+do { \
+ U32 old = *(U32 *)(_ptr); \
+ while ( cmpxchg4 (&old, old | (_bits), (U32 *)(_ptr)) ); \
+} while (0)
+
+#define and_bits(_ptr, _mask) \
+do { \
+ U32 old = *(U32 *)(_ptr); \
+ while ( cmpxchg4 (&old, old & (_mask), (U32 *)(_ptr)) ); \
+} while (0)
+
+#else /* HAVE_CMPXCHG */
+
+#define set_bits(_ptr, _mask, _bits) \
+do { \
+ *(U32 *)(_ptr) &= (_mask); \
+ *(U32 *)(_ptr) |= (_bits); \
+} while (0)
+
+#define or_bits(_ptr, _bits)  *(U32 *)(_ptr) |= (_bits)
+
+#define and_bits(_ptr, _mask) *(U32 *)(_ptr) &= (_mask)
+
+#endif /* HAVE_CMPXCHG */
+
 #endif /*!defined(_OPCODE_H)*/
 
 

@@ -1892,8 +1892,8 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
         sysblk.started_mask, sysblk.waitmask
         );
 #if MAX_CPU_ENGINES > 1
-    logmsg( _("          Broadcast mask %8.8X code %d\n"),
-        sysblk.broadcast_mask, sysblk.broadcast_code
+    logmsg( _("          Broadcast count %d code %d\n"),
+        sysblk.broadcast_count, sysblk.broadcast_code
         );
 #endif
     logmsg( _("          Machine check interrupt %spending\n"),

@@ -105,7 +105,7 @@ int     armode;
 
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
-    SET_IC_PSW_WAIT(regs);
+    SET_IC_PSW_WAIT_MASK(regs);
     SET_IC_PER_MASK(regs);
 
     regs->psw.zerobyte = addr[3];
@@ -1063,6 +1063,11 @@ void *cpu_thread (REGS *regs)
 
     /* Perform initial cpu reset */
     initial_cpu_reset (regs);
+
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+    /* Signal cpu is started */
+    signal_condition (&regs->intcond);
+#endif
 
     /* release the intlock */
     release_lock(&sysblk.intlock);

@@ -795,10 +795,8 @@ typedef struct _SYSBLK {
 #define BROADCAST_PALB 2                /* Broadcast purge alb       */
 #define BROADCAST_ITLB 4                /* Broadcast invalidate tlb  */
         U64     broadcast_pfra;         /* Broadcast pfra            */
-#if MAX_CPU_ENGINES > 1
-        U32     broadcast_mask;         /* Broadcast CPU mask        */
+        int     broadcast_count;        /* Broadcast CPU count       */
         COND    broadcast_cond;         /* Broadcast condition       */
-#endif /* MAX_CPU_ENGINES > 1 */
         U64     breakaddr;              /* Breakpoint address        */
         FILE   *msgpipew;               /* Message pipe write handle */
         int     msgpiper;               /* Message pipe read handle  */
