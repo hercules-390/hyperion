@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-AUTOMAKE_OPTIONS=foreign
+AUTOMAKE_OPTIONS=foreign 1.5
 
 SUBDIRS = . util html
 
