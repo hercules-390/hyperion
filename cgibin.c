@@ -186,7 +186,7 @@ void cgibin_psw(WEBBLK *webblk)
 void cgibin_syslog(WEBBLK *webblk)
 {
 int     msgcnt;
-int     msgnum = -1;
+int     msgnum;
 char   *msgbuf;
 
 char   *command;
