@@ -2300,7 +2300,7 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B31B*/ GENx___x390x900 (subtract_bfp_long_reg,RRE,"SDBR"),
  /*B31C*/ GENx___x390x900 (multiply_bfp_long_reg,RRE,"MDBR"),
  /*B31D*/ GENx___x390x900 (divide_bfp_long_reg,RRE,"DDBR"),
- /*B31E*/ GENx___x390x900 (dummy_instruction,RRF_R,"MAEBR"),
+ /*B31E*/ GENx___x390x900 (dummy_instruction,RRF_R,"MADBR"),
  /*B31F*/ GENx___x390x900 (dummy_instruction,RRF_R,"MSDBR"),
  /*B320*/ GENx___x___x___ ,
  /*B321*/ GENx___x___x___ ,
