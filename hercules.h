@@ -148,13 +148,6 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #include "debug.h"
 
 /*-------------------------------------------------------------------*/
-/* Convenience macro                                                 */
-/*-------------------------------------------------------------------*/
-#ifndef AUTO_RETRY_IF_EINTR
-#define AUTO_RETRY_IF_EINTR(expr)   do{(expr);}while(EINTR==errno)
-#endif
-
-/*-------------------------------------------------------------------*/
 /* Macro definitions for tracing                                     */
 /*-------------------------------------------------------------------*/
 #define devmsg(a...) logmsg(a)

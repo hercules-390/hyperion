@@ -250,11 +250,8 @@ int    nConsectutiveHardCopyWriteErrors = 0;
                                                               SSIZE_MAX :
                           (logger_bufsize - logger_currmsg);
 
-        AUTO_RETRY_IF_EINTR
-        (
-            nBytesActuallyRead =
-                read(logmsgfd[LOGMSG_READPIPE], pBuffer, nMaxBytesToRead)
-        );
+        nBytesActuallyRead =
+            read(logmsgfd[LOGMSG_READPIPE], pBuffer, nMaxBytesToRead)
 
         if (nBytesActuallyRead < 0 || ferror(flogmsg[LOGMSG_READPIPE]))
         {

@@ -763,10 +763,7 @@ int     firstmsgn = 0;                  /* Number of first message to
         tv.tv_sec = sysblk.panrate / 1000;
         tv.tv_usec = (sysblk.panrate * 1000) % 1000000;
 
-        AUTO_RETRY_IF_EINTR
-        (
-            rc = select (maxfd + 1, &readset, NULL, NULL, &tv)
-        );
+        rc = select (maxfd + 1, &readset, NULL, NULL, &tv)
 
         if (rc < 0 )
         {
