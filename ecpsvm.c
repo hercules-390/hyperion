@@ -1,5 +1,45 @@
-/* ECPS:VM Implementation */
-/* (c) Ivan Warren 2003   */
+/***********************************************************/
+/* ECPS:VM Support                                         */
+/* (c) 2003 Ivan Warren                                    */
+/*                                                         */
+/* General guidelines about E6XX instruction class         */
+/* this is an implementation of ECPS:VM Level 20, 21 or 22 */
+/*                                                         */
+/* General rule is : Only do what is safe to do. In doubt, */
+/*                   give control to CP back (and act as   */
+/*                   a NO-OP). All instructions have this  */
+/*                   behaviour, therefore allowing only    */
+/*                   partial implementation, or bypassing  */
+/*                   tricky cases                          */
+/*                                                         */
+/* NOTE : VM/370 Rel 6 seems to have a slight bug in       */
+/*        handling CP ASSIST. Although it does report      */
+/*        CPASSIST is ON (CP QUERY CPASSIST : CPASSIST ON) */
+/*        CR 6, Bit 7 is not set after IPL. However,       */
+/*        doing a CP SET CPASSIST ON after IPL does set    */
+/*        CR6, Bit 7, thus activating CP ASSIST instrs     */
+/*        Therefore, on VM/370 Rel 6, an additional        */
+/*        CP¨SET CPASSIST ON (Class A command) should be   */
+/*        issued to activate the support                   */
+/*                                                         */
+/* NOTE : ECPS:VM is only available for S/370 architecture */
+/*                                                         */
+/* In order for CP ASSIST to be active, a CONFIGURATION    */
+/* statement is added : ECPS:VM lvl|no                     */
+/* lvl is the ASSIST level (20 is recommended)             */
+/* no means CP ASSIST is disabled (default)                */
+/*                                                         */
+/* Currently supported CP ASSIST instructions :            */
+/* +-----+-------+----------------------------------------+*/
+/* |opc  | Mnemo | Function                               |*/
+/* +-----+-------+----------------------------------------+*/
+/* |E60E | SCNRU | Scan Real Unit control blocks          |*/
+/* |E612 | STLVL | Store ECPS:VM Level                    |*/
+/* |E614 | FREEX | Allocate CP FREE Storage from subpool  |*/
+/* |E615 | FRETX | Release CP FREE Storage to subpool     |*/
+/* +-----+-------+----------------------------------------+*/
+/*                                                         */
+/***********************************************************/
 
 #include "hercules.h"
 
