@@ -1,3 +1,5 @@
+19 Jun 2001 Prevent msg HHC611I during machine check - Jan Jaeger
+19 Jun 2001 Enhance MVCL cc3 diagostics - Jan Jaeger
 18 Jun 2001 Add missing obtain_lock(devlock) to halt function - Fish
 18 Jun 2001 Reset channel path function - Jan Jaeger
 17 Jun 2001 Address limit checking - Jan Jaeger

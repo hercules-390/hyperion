@@ -1044,6 +1044,9 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 {
                     OFF_IC_STORSTAT(regs);
                     ARCH_DEP(store_status) (regs, 0);
+                    logmsg ("HHC611I CPU%4.4X store status completed.\n",
+                        regs->cpuad);
+
 #ifdef OPTION_CPU_UNROLL
                     release_lock(&sysblk.intlock);
                     longjmp(regs->progjmp, SIE_NO_INTERCEPT);

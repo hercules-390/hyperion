@@ -411,10 +411,6 @@ PSA     *sspsa;                         /* -> Store status area      */
     for (i = 0; i < 16; i++)
         STORE_W(sspsa->storecr[i],ssreg->CR(i));
 
-    logmsg ("HHC611I CPU%4.4X status stored "
-            "at absolute location " F_RADR "\n",
-            ssreg->cpuad, aaddr);
-
 } /* end function store_status */
 
 
