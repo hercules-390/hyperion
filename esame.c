@@ -2199,7 +2199,9 @@ U64     old;                            /* old value                 */
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
                            ACCTYPE_WRITE, regs->psw.pkey);
 
+    /* Get old value */
     old = CSWAP64(regs->GR_G(r1));
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
@@ -2258,11 +2260,12 @@ U64     old1, old2;                     /* old value                 */
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
                            ACCTYPE_WRITE, regs->psw.pkey);
 
+    /* Get old values */
     old1 = CSWAP64(regs->GR_G(r1));
     old2 = CSWAP64(regs->GR_G(r1+1));
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
-
 
     /* Attempt to exchange the values */
     regs->psw.cc = cmpxchg16 (&old1, &old2,
@@ -5665,6 +5668,128 @@ int     i;                              /* Integer work areas        */
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
+/* EB14 CSY   - Compare and Swap (Long Displacement)           [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_and_swap_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+RADR    abs2;                           /* absolute address          */
+U32     old;                            /* old value                 */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    FW_CHECK(effective_addr2, regs);
+
+    /* Perform serialization before starting operation */
+    PERFORM_SERIALIZATION (regs);
+
+    /* Get operand absolute address */
+    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
+                           ACCTYPE_WRITE, regs->psw.pkey);
+
+    /* Get old value */
+    old = CSWAP32(regs->GR_L(r1));
+
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg4 (&old, CSWAP32(regs->GR_L(r3)), regs->mainstor + abs2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
+
+    /* Perform serialization after completing operation */
+    PERFORM_SERIALIZATION (regs);
+
+    if (regs->psw.cc == 1)
+    {
+        regs->GR_L(r1) = CSWAP32(old);
+#if defined(_FEATURE_SIE)
+        if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        {
+            if( !OPEN_IC_PERINT(regs) )
+                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+            else
+                longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+        }
+        else
+#endif /*defined(_FEATURE_SIE)*/
+            if (sysblk.numcpu > 1)
+                sched_yield();
+    }
+
+} /* end DEF_INST(compare_and_swap_y) */
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB31 CDSY  - Compare Double and Swap (Long Displacement)    [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_double_and_swap_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+RADR    abs2;                           /* absolute address          */
+U64     old, new;                       /* old, new values           */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    ODD2_CHECK(r1, r3, regs);
+
+    DW_CHECK(effective_addr2, regs);
+
+    /* Perform serialization before starting operation */
+    PERFORM_SERIALIZATION (regs);
+
+    /* Get operand absolute address */
+    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
+                           ACCTYPE_WRITE, regs->psw.pkey);
+
+    /* Get old, new values */
+    old = CSWAP64(((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1));
+    new = CSWAP64(((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1));
+
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
+
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg8 (&old, new, regs->mainstor + abs2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
+
+    /* Perform serialization after completing operation */
+    PERFORM_SERIALIZATION (regs);
+
+    if (regs->psw.cc == 1)
+    {
+        regs->GR_L(r1) = CSWAP64(old) >> 32;
+        regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
+#if defined(_FEATURE_SIE)
+        if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        {
+            if( !OPEN_IC_PERINT(regs) )
+                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+            else
+                longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+        }
+        else
+#endif /*defined(_FEATURE_SIE)*/
+            if (sysblk.numcpu > 1)
+                sched_yield();
+    }
+
+} /* end DEF_INST(compare_double_and_swap_y) */
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
 /* E306 CVBY  - Convert to Binary (Long Displacement)          [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_to_binary_y)
@@ -6014,6 +6139,84 @@ BYTE    rwork[64];                      /* Character work areas      */
     }
 
 } /* end DEF_INST(load_multiple_y) */
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* E313 LRAY  - Load Real Address (Long Displacement)          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(load_real_address_y)
+{
+int     r1;                             /* Register number           */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+U16     xcode;                          /* Exception code            */
+int     private;                        /* 1=Private address space   */
+int     protect;                        /* 1=ALE or page protection  */
+int     stid;                           /* Segment table indication  */
+int     cc;                             /* Condition code            */
+RADR    n;                              /* 32-bit operand values     */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    SIE_MODE_XC_OPEX(regs);
+
+    PRIV_CHECK(regs);
+
+    /* Translate the effective address to a real address */
+    cc = ARCH_DEP(translate_addr) (effective_addr2, b2, regs,
+            ACCTYPE_LRA, &n, &xcode, &private, &protect, &stid);
+
+    /* If ALET exception or ASCE-type or region translation
+       exception, set exception code in R1 bits 48-63, set
+       bit 32 of R1, and set condition code 3 */
+    if (cc > 3) {
+        regs->GR_L(r1) = 0x80000000 | xcode;
+        cc = 3;
+    }
+    else
+    {
+        /* Set r1 and condition code as returned by translate_addr */
+#if defined(FEATURE_ESAME)
+        if (regs->psw.amode64 && cc != 3)
+        {
+            regs->GR_G(r1) = n;
+        }
+        else
+        {
+            if (n <= 0x7FFFFFFF)
+            {
+                regs->GR_L(r1) = n;
+            }
+            else
+            {
+                /* Special handling if in 24-bit or 31-bit mode
+                   and the returned address exceeds 2GB, or if
+                   cc=3 and the returned address exceeds 2GB */
+                if (cc == 0)
+                {
+                    /* Real address exceeds 2GB */
+                    ARCH_DEP(program_interrupt) (regs,
+                                PGM_SPECIAL_OPERATION_EXCEPTION);
+                }
+
+                /* Condition code is 1, 2, or 3, and the returned
+                   table entry address exceeds 2GB.  Convert to
+                   condition code 3 and return the exception code
+                   which will be X'0010' or X'0011' */
+                regs->GR_L(r1) = 0x80000000 | xcode;
+                cc = 3;
+            } /* end else(n) */
+        } /* end else(amode) */
+#else /*!defined(FEATURE_ESAME)*/
+        regs->GR_L(r1) = n;
+#endif /*!defined(FEATURE_ESAME)*/
+    } /* end else(cc) */
+
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(load_real_address_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6407,16 +6610,6 @@ BYTE    tbyte;                          /* Work byte                 */
 } /* end DEF_INST(test_under_mask_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
-
-/* The following long displacement instructions are not yet implemented */
-#if defined(FEATURE_LONG_DISPLACEMENT)
-#define UNDEF_INST(_x) \
-        DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,execflag,regs); }
- UNDEF_INST(compare_and_swap_y)
- UNDEF_INST(compare_double_and_swap_y)
- UNDEF_INST(load_real_address_y)
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 #if !defined(_GEN_ARCH)
 
