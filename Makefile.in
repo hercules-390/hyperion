@@ -1575,8 +1575,8 @@ uninstall-info: uninstall-info-recursive
 @USE_DLLTOOL_TRUE@	rm  -f                         dyngui.dll
 @USE_DLLTOOL_TRUE@	mv           dyngui$(EXEEXT)   dyngui.dll
 
-@USE_DLLTOOL_TRUE@dyngui.res: dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
-@USE_DLLTOOL_TRUE@	windres -DHAVE_CONFIG_H  --include-dir=. -i dyngui.rc -o dyngui.res -O coff
+@USE_DLLTOOL_TRUE@dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
+@USE_DLLTOOL_TRUE@	windres -DHAVE_CONFIG_H --include-dir=. -i dyngui.rc -o dyngui.res -O coff
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \

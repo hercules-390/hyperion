@@ -1,0 +1,58 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+// dyngui.rc  --  defines the Windows resources to be linked into the product
+//                (c) Copyright "Fish" (David B. Trout), 2003
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#if defined(HAVE_CONFIG_H)
+#include <config.h>         // (needed 1st to set DEBUG flag appropriately)
+#endif
+#include "dynguip.h"        // (product defines)
+#include "dynguiv.h"        // (version defines)
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+1 VERSIONINFO
+
+FILEVERSION    VERMAJOR_NUM, VERINTER_NUM, VERMINOR_NUM, BUILDCOUNT_NUM
+PRODUCTVERSION VERMAJOR_NUM, VERINTER_NUM, VERMINOR_NUM, BUILDCOUNT_NUM
+
+FILEFLAGSMASK  0x3f
+FILEOS         0x4
+FILETYPE       0x2
+
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+
+// Standard/Required Attributes...
+
+      VALUE "FileDescription", PRODUCT                "\0"
+      VALUE "FileVersion",     VERSION                "\0"
+      VALUE "ProductName",     PRODUCT                "\0"
+      VALUE "ProductVersion",  VERSION                "\0"
+      VALUE "CompanyName",     COMPANY                "\0"
+      VALUE "LegalCopyright",  COPYRIGHT " " COMPANY  "\0"
+      VALUE "Comments",        "(none)"               "\0"
+
+// Custom Attributes...
+
+      VALUE "Product URL",     PRODUCT_URL            "\0"
+      VALUE "Product Email",   PRODUCT_EMAIL          "\0"
+      VALUE "Hercules URL",    HERCULES_URL           "\0"
+      VALUE "Hercules Email",  HERCULES_EMAIL         "\0"
+
+#if defined(DEBUG) || defined(_DEBUG)
+      VALUE "SpecialBuild",    "DEBUG version"        "\0"
+#endif
+
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END
+
+/////////////////////////////////////////////////////////////////////////////////////////

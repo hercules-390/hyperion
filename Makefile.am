@@ -216,7 +216,7 @@ dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 	rm  -f                         dyngui.dll
 	mv           dyngui$(EXEEXT)   dyngui.dll
 
-dyngui.res: dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
+dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 	windres -DHAVE_CONFIG_H --include-dir=. -i dyngui.rc -o dyngui.res -O coff
 endif
 

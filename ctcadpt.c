@@ -970,6 +970,8 @@ static void*  CTCT_ListenThread( void* argp )
         // see the possibility for bad things to occur (eg if another
         // Hercules tries to connect).  This will also be fixed RSN.
     }
+
+    return NULL;    // make compiler happy
 }
 
 // ====================================================================

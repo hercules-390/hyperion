@@ -430,8 +430,6 @@ void  UpdateStatus ()
                 ,cpupct
             );
         }
-        else        // (debug...)
-            TRACE("*** CPUPCT=%s\n",cpupct);
     }
 #endif
 
