@@ -3292,13 +3292,22 @@ static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
         switch(ERCode)
         {
                 case TAPE_BSENSE_TAPEUNLOADED:
-                        *unitstat=CSW_CE | CSW_UC;
+                        switch(ccwcode)
+                        {
+                            case 0x01:
+                            case 0x02:
+                            case 0x0C:
+                            *unitstat=CSW_CE | CSW_UC;
+                            break;
+                            case 0x0f:
+                            *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+                            break;
+                            default:
+                            *unitstat=CSW_CE | CSW_UC | CSW_DE;
+                            break;
+                        }
                         dev->sense[0]=SENSE_IR;
                         dev->sense[1]=SENSE1_TAPE_TUB;
-                        if(ccwcode==0x0f)
-                        {
-                                *unitstat|=CSW_DE|CSW_CUE;
-                        }
                         break;
                 case TAPE_BSENSE_TAPEUNLOADED2: /* RewUnld op */
                         *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
