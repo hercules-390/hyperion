@@ -563,7 +563,7 @@ int             copylen;                /* Length to copy            */
     ix = dev->fbarba / CFBA_BLOCK_SIZE;
     off = dev->fbarba % CFBA_BLOCK_SIZE;
     cckdtrc ("cfba_read_block rba %lld len %d ix %d offset %d cur %d\n",
-             dev->fbarba, len, ix, off, dev->dasdcur);
+             (long long int)dev->fbarba, len, ix, off, dev->dasdcur);
 
     /* Read the block group if it's not currently active */
     if (!cckd->active || ix != dev->dasdcur)
@@ -663,7 +663,7 @@ int             copylen;                /* Length to copy            */
     ix = dev->fbarba / CFBA_BLOCK_SIZE;
     off = dev->fbarba % CFBA_BLOCK_SIZE;
     cckdtrc ("cfba_write_block rba %lld len %d ix %d offset %d cur %d\n",
-             dev->fbarba, len, ix, off, dev->dasdcur);
+             (long long int)dev->fbarba, len, ix, off, dev->dasdcur);
 
     /* Read the block group if it's not currently active */
     if (!cckd->active || ix != dev->dasdcur)
@@ -2390,7 +2390,7 @@ off_t           rcoff;                  /* lseek() return value      */
         return -1;
     }
     cckdtrc ("cckddasd: file[%d] l2[%d] written offset 0x%llx\n",
-             sfx, l1x, l2pos);
+             sfx, l1x, (long long unsigned int)l2pos);
 
     /* Check if level 1 table needs to be updated */
     if ((U32)l2pos != cckd->l1[sfx][l1x])

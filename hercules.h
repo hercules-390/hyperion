@@ -67,16 +67,12 @@
 #include <bzlib.h>
 #endif
 
-#if defined(ENABLE_NLS)
- #include <libintl.h>
- #define _(_string) gettext(_string)
-#else
- #define _(_string) (_string)
- #define N_(_string) (_string)
- #define textdomain(_domain)
- #define bindtextdomain(_package, _directory)
+#ifndef _POSIX_SYNCHRONIZED_IO
+/* If fdatasync is not necessarily available, fsync will do fine */
+#define fdatasync(fd) fsync(fd)
 #endif
 
+#include "hercnls.h"
 #include "version.h"
 #include "hetlib.h"
 #include "codepage.h"

@@ -10,16 +10,7 @@
 #include <config.h>
 #endif
 
-#if defined(ENABLE_NLS)
- #include <libintl.h>
- #define _(_string) gettext(_string)
-#else
- #define _(_string) (_string)
- #define N_(_string) (_string)
- #define textdomain(_domain)
- #define bindtextdomain(_package, _directory)
-#endif
-
+#include "hercnls.h"
 #include "feature.h"
 #include "hostinfo.h"
 #include "version.h"
@@ -114,6 +105,10 @@ static const char *build_info[] = {
 
 #if !defined(HET_BZIP2)
     "No HET BZIP2 support",
+#endif
+
+#if defined(ENABLE_NLS)
+    "Native Language Support",
 #endif
 
   " "

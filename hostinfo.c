@@ -8,16 +8,22 @@
 /* functions to set/query host system information                    */
 /*-------------------------------------------------------------------*/
 
-#include "hercules.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-#include "hostinfo.h"
-
-HOST_INFO  hostinfo;                /* Host system information       */
+#include "hercnls.h"
 
 #if defined(WIN32)
 #define _WIN32_WINNT 0x0403
 #include <windows.h>
 #endif /*defined(WIN32)*/
+
+#include <sys/utsname.h>
+
+#include "hostinfo.h"
+
+HOST_INFO  hostinfo;                /* Host system information       */
 
 /*-------------------------------------------------------------------*/
 /* initialize host system information                                */

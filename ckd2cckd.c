@@ -681,8 +681,11 @@ int             l2empty;                /* 1=level 2 table is empty  */
 /*-------------------------------------------------------------------*/
 void syntax ()
 {
-    char *usage =
-    printf(_("usage:  ckd2cckd [-options] input-file output-file\n"
+    char usage[3000];
+
+    snprintf(usage,3000,_(
+
+            "usage:  ckd2cckd [-options] input-file output-file\n"
             "\n"
             "     create a compressed ckd file from a regular ckd file\n"
             "\n"
@@ -706,15 +709,20 @@ void syntax ()
             "     -quiet            quiet mode, don't display status\n"
             "     -z       level    zlib compression level: 0=no compression\n"
             "                       1=fastest ... 9=best\n"
-            "%s"),
+            "%s"
+            ),
 #ifdef CCKD_BZIP2
-            "                         2 = compress using bzip2\n",
+            _(
+            "                         2 = compress using bzip2\n"
+            ),
 #else
             "",
 #endif
 #ifdef CCKD_BZIP2
+            _(
             "                       or bzip2 blockSize100k value:\n"
             "                       1=fastest ... 9=best\n"
+            )
 #else
             ""
 #endif

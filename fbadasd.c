@@ -662,7 +662,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbaxblkn) * dev->fbablksiz;
 
         DEVTRACE("fbadasd: Positioning to %8.8llX (%llu)\n",
-                 dev->fbarba, dev->fbarba);
+                 (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
