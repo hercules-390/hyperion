@@ -1325,6 +1325,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     if( dev->chanset >= MAX_CPU_ENGINES )
         dev->chanset = MAX_CPU_ENGINES - 1;
     dev->devtype = devent->type;
+    dev->typname = devent->name;
     dev->fd = -1;
 
     /* Initialize the path management control word */

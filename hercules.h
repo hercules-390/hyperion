@@ -871,6 +871,7 @@ typedef struct _DEVBLK {
         U16     devtype;                /* Device type               */
         U16     chanset;                /* Channel Set to which this   
                                            device is connected S/370 */
+        char    *typname;               /* Device type name          */
 
 #if defined(WIN32)
         BYTE    filename[1024];         /* Windows pathname          */
