@@ -1043,7 +1043,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     return -1;
                 }
             }
-#else // !defined( WIN32 )
+#endif // defined( WIN32 )
             // This is the file name of the special TUN/TAP character device
             if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
             {
@@ -1051,7 +1051,6 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     pDEVBLK->devnum, optarg );
                 return -1;
             }
-#endif // defined( WIN32 )
             strcpy( pCTCBLK->szTUNCharName, optarg );
             break;
 
@@ -1294,7 +1293,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 strcpy( pCTCBLK->szTUNCharName, *argv );
 
                 // Kludge: This may look strange at first, but with
-                // TunTap32, only the last byte of the "driver IP
+                // TunTap32, only the last 3 bytes of the "driver IP
                 // address" is actually used. It's purpose is to
                 // generate a unique MAC for the virtual interface.
                 // Thus, having the same address for the adapter and
