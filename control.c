@@ -2918,6 +2918,14 @@ int     rc;                             /* return code from load_psw */
     lsedp->nes[1] = 0;
 
 #if defined(FEATURE_PER)
+
+    /* Copy PER info from working copy to real copy of registers */
+    if (IS_IC_PER_SA(&newregs))
+    {
+        ON_IC_PER_SA(regs);
+        regs->perc = newregs.perc;
+    }
+
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
