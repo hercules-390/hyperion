@@ -2413,7 +2413,7 @@ DEF_INST(convert_utf32_to_utf8)
     GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
     GR_A(r2 + 1, regs) = srcelen - 4;
     
-    xlated += read;
+    xlated += 4;
   }
   
   /* CPU determined number of characters reached */
@@ -2510,7 +2510,7 @@ DEF_INST(convert_utf32_to_utf16)
     GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
     GR_A(r2 + 1, regs) = srcelen - 4;
     
-    xlated += read;
+    xlated += 4;
   }
   
   /* CPU determined number of characters reached */
