@@ -18,8 +18,11 @@
 #endif
 
 int hdl_load(char *, int);           		/* load dll          */
-#define HDL_LOAD_FORCE 0x00000001               /* Override depchk   */
-#define HDL_LOAD_NOMSG 0x00000002
+#define HDL_LOAD_DEFAULT     0x00000000
+#define HDL_LOAD_MAIN        0x00000001
+#define HDL_LOAD_NOUNLOAD    0x00000002
+#define HDL_LOAD_FORCE       0x00000004         /* Override depchk   */
+#define HDL_LOAD_NOMSG       0x00000008
 int hdl_dele(char *);                           /* unload dll        */
 void hdl_list();                          /* list all loaded modules */
 
@@ -120,6 +123,12 @@ typedef struct _HDL_VRS {
 } HDL_VRS;
 
 
+typedef struct _HDL_PRE {
+    char *name;
+    int  flag;
+} HDL_PRE;
+
+
 typedef struct _MODENT {
     void (*fep)();                           /* Function entry point */
     char *name;                                     /* Function name */
@@ -132,7 +141,7 @@ typedef struct _MODENT {
 typedef struct _DLLENT {
     char *name;
     void *dll;
-    int type;
+    int flags;
 #define DLL_TYPE_MAIN 0
 #define DLL_TYPE_LOAD 1
     int (*hdldepc)(void *);                  /* hdl_depc             */
