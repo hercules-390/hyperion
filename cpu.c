@@ -1294,8 +1294,7 @@ FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
 
 specexception:
     regs->instvalid = 0; \
-    ARCH_DEP(program_interrupt)(&sysblk.regs[0], 
-             PGM_SPECIFICATION_EXCEPTION); 
+    ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION); 
 
 } /* end function cpu_thread */
 #else
