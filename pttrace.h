@@ -9,7 +9,7 @@
 #define OBTAIN_PTTLOCK \
  do { \
    if (!pttnolock) fthread_mutex_lock(&pttlock); \
- }
+ } while (0)
 #define RELEASE_PTTLOCK \
  do { \
    if (!pttnolock) fthread_mutex_unlock(&pttlock); \
