@@ -664,6 +664,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)
         {
+            /* Check PER first, higher priority */
+            if( OPEN_IC_PERINT(GUESTREGS) )
+                ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
+
             if( SIE_I_EXT(GUESTREGS) )
                 icode = SIE_INTERCEPT_EXTREQ;
             else
