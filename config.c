@@ -2030,6 +2030,8 @@ DEVBLK**dvpp;
     dev->ioint.pending = 1;
     dev->pciioint.dev = dev;
     dev->pciioint.pcipending = 1;
+    dev->attnioint.dev = dev;
+    dev->attnioint.attnpending = 1;
 
     /* Initialize storage view */
     dev->mainstor = sysblk.mainstor;

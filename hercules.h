@@ -916,7 +916,8 @@ typedef struct _IOINT {
         struct _DEVBLK *dev;            /* -> Device block           */
         int     priority;               /* Device priority           */
         int     pending:1,              /* 1=Normal interrupt        */
-                pcipending:1;           /* 1=PCI interrupt           */
+                pcipending:1,           /* 1=PCI interrupt           */
+                attnpending:1;          /* 1=ATTN interrupt          */
     } IOINT;
 
 struct _DEVDATA;                                /* Forward reference */
@@ -992,6 +993,8 @@ typedef struct _DEVBLK {
                                                queue entry           */
         IOINT   pciioint;               /* PCI i/o interrupt
                                                queue entry           */
+        IOINT   attnioint;              /* ATTN i/o interrupt
+                                               queue entry           */
         int     cpuprio;                /* CPU thread priority       */
         int     devprio;                /* Device thread priority    */
 
@@ -1024,8 +1027,10 @@ typedef struct _DEVBLK {
         PMCW    pmcw;                   /* Path management ctl word  */
         SCSW    scsw;                   /* Subchannel status word(XA)*/
         SCSW    pciscsw;                /* PCI subchannel status word*/
+        SCSW    attnscsw;               /* ATTNsubchannel status word*/
         BYTE    csw[8];                 /* Channel status word(S/370)*/
         BYTE    pcicsw[8];              /* PCI channel status word   */
+        BYTE    attncsw[8];             /* ATTN channel status word  */
         ESW     esw;                    /* Extended status word      */
         BYTE    ecw[32];                /* Extended control word     */
         U32     numsense;               /* Number of sense bytes     */
@@ -1074,6 +1079,7 @@ typedef struct _DEVBLK {
                 suspended:1,            /* 1=Channel pgm suspended   */
                 pending:1,              /* 1=I/O interrupt pending   */
                 pcipending:1,           /* 1=PCI interrupt pending   */
+                attnpending:1,          /* 1=ATTN interrupt pending  */
                 startpending:1;         /* 1=startio pending         */
 
         int     crwpending;             /* 1=CRW pending             */

@@ -8,7 +8,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 # (gettextize/libtoolize adds intl & m4 subdirectories)
 
-SUBDIRS = intl m4  \
+SUBDIRS = intl m4    \
           po util html man
 
 LDADD = @LIBINTL@
@@ -131,7 +131,10 @@ dynamic_sources       = dyngui.c \
                         dyninst.c \
                         hdteq.c
 
-extra_dynamic_sources = dyngui.rc
+extra_dynamic_sources = dynguib.h \
+                        dynguip.h \
+                        dynguiv.h \
+                        dyngui.rc
 
 dyndev_sources        = commadpt.c \
                         console.c \
@@ -141,25 +144,9 @@ dyndev_sources        = commadpt.c \
                         tapedev.c hetlib.c \
                         ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
 
-# The following includes the dummy source files for the *.dll modules. The
-# build process fails if these are not present, even though they are never
-# referenced directly nor used for anything. If that failing is ever
-# corrected, please remove this bit of kludgery. -- JRM 22 Aug 2003
-
-extra_dyn_src_kludge  = dyngui.dll.c \
-                        dyninst.dll.c \
-                        hdteq.dll.c \
-                        hdt1403.dll.c \
-                        hdt2703.dll.c \
-                        hdt3088.dll.c \
-                        hdt3270.dll.c \
-                        hdt3420.dll.c \
-                        hdt3505.dll.c \
-                        hdt3525.dll.c
-
 if OPTION_DYNAMIC_LOAD
   DYNSRC          =
-  EXTRA_DYNSRC    = $(extra_dyn_src_kludge)
+  EXTRA_DYNSRC    =
   DYNDEVSRC       =
   STADEVSRC       =
   dyngui_SOURCES  =  dyngui.c
@@ -184,7 +171,7 @@ if OPTION_DYNAMIC_LOAD
   hdt3525_LDFLAGS = -shared
 else
   DYNSRC          = $(dynamic_sources)
-  EXTRA_DYNSRC    = $(extra_dynamic_sources) $(extra_dyn_src_kludge)
+  EXTRA_DYNSRC    = $(extra_dynamic_sources)
   DYNDEVSRC       = $(dyndev_sources)
   STADEVSRC       = $(DYNDEVSRC)
 endif
@@ -381,7 +368,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-EXTRA_DIST = autoconf/config.rpath \
+EXTRA_DIST = autoconf/config.rpath   \
              hercules.cnf          \
              cckdfix.c             \
              README.COMMADPT       \
@@ -440,11 +427,7 @@ noinst_HEADERS = fishhang.h \
                  hscutl.h   \
                  hdl.h      \
                  crypto.h   \
-                 service.h  \
-                 sockdev.h  \
-                 dynguib.h  \
-                 dynguip.h  \
-                 dynguiv.h
+                 service.h
 
 #########################################################
 #           B U I L D   R U L E S  . . .
@@ -577,17 +560,6 @@ if USE_DLLTOOL
 	rm -f                                          $(DESTDIR)$(bindir)/$(HDT3525_DLL)
 	mv -f $(DESTDIR)$(bindir)/$(HDT3525)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT3525_DLL)
 	rm -f $(DESTDIR)$(bindir)/$(HDT3525_DLL)$(EXEEXT)
-else
-	mv -f $(DESTDIR)$(bindir)/$(DYNGUI)$(EXEEXT)   $(DESTDIR)$(libdir)/$(DYNGUI)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(DYNINST)$(EXEEXT)  $(DESTDIR)$(libdir)/$(DYNINST)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDTEQ)$(EXEEXT)    $(DESTDIR)$(libdir)/$(HDTEQ)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDT1403)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT1403)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDT2703)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT2703)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3088)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3088)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3270)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3270)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3420)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3420)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3505)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3505)$(EXEEXT)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3525)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3525)$(EXEEXT)
 endif
 endif
 
@@ -618,17 +590,6 @@ if USE_DLLTOOL
 	rm -f                     $(HDT3505_DLL)
 	rm -f $(DESTDIR)$(bindir)/$(HDT3525_DLL)
 	rm -f                     $(HDT3525_DLL)
-else
-	rm -f $(DESTDIR)$(libdir)/$(DYNGUI)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(DYNINST)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDTEQ)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDT1403)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDT2703)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDT3088)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDT3270)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDT3420)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDT3505)$(EXEEXT)
-	rm -f $(DESTDIR)$(libdir)/$(HDT3525)$(EXEEXT)
 endif
 endif
 

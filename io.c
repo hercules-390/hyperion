@@ -202,7 +202,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     }
 
     /* Condition code 2 if subchannel is busy */
-    if (dev->busy || dev->pending || dev->pcipending)
+    if (dev->busy || dev->pending || dev->pcipending || dev->attnpending)
     {
         regs->psw.cc = 2;
         release_lock (&dev->lock);

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+24 Aug 2003 fix for Asynch I/O Status stacking race condition - Ivan Warren
 24 Aug 2003 Add modpath configuration statement - Jan Jaeger
 22 Aug 2003 Remove setpriority from execute_ccw_chain and instead
             move it directly into the device thread itself - Fish
