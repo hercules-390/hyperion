@@ -890,8 +890,7 @@ DWORD   csw;                            /* CSW for S/370 channels    */
 #endif
     {
         /* Point to PSA in main storage */
-        pfx = regs->PX;
-        SIE_TRANSLATE(&pfx, ACCTYPE_SIE, regs);
+        pfx = SIE_MODE(regs) ? regs->sie_px : regs->PX;
         psa = (void*)(regs->mainstor + pfx);
         STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     }

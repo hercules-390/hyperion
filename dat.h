@@ -794,6 +794,7 @@ U32     ptl;                            /* Page table length         */
         tlbix = TLBIX(vaddr);
 
     if (tlbix >= 0
+// && 0
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
         && !(regs->tlb.common[tlbix] && regs->dat.private) )
@@ -888,6 +889,7 @@ U32     ptl;                            /* Page table length         */
             regs->dat.protect |= 1;
         #endif /*FEATURE_SEGMENT_PROTECTION*/
 
+#if 1
         /* Place the translated address in the TLB */
         if (tlbix >= 0)
         {
@@ -911,6 +913,7 @@ U32     ptl;                            /* Page table length         */
                 regs->tlb.main[tlbix^1]      = NULL;
             }
         }
+#endif
     } /* end if(!TLB) */
 
     /* Combine the page frame real address with the byte
@@ -956,6 +959,7 @@ U32     ptl;                            /* Page table length         */
         tlbix = TLBIX(vaddr);
 
     if (tlbix >= 0
+// && 0
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
         && !(regs->tlb.common[tlbix] && regs->dat.private) )
@@ -1033,6 +1037,7 @@ U32     ptl;                            /* Page table length         */
         if (pte & PAGETAB_PROT)
             regs->dat.protect |= 1;
 
+#if 1
         /* [3.11.4.2] Place the translated address in the TLB */
         if (tlbix >= 0)
         {
@@ -1044,6 +1049,7 @@ U32     ptl;                            /* Page table length         */
             regs->tlb.protect[tlbix]   = regs->dat.protect;
             regs->tlb.main[tlbix]       = NULL;
         }
+#endif
 
     } /* end if(!TLB) */
 
@@ -1094,6 +1100,7 @@ U16     sx, px;                         /* Segment and page index,
         tlbix = TLBIX(vaddr);
 
     if (tlbix >= 0
+// && 0
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
         && !(regs->tlb.common[tlbix] && regs->dat.private) )
@@ -1362,6 +1369,7 @@ U16     sx, px;                         /* Segment and page index,
         if ((ste & ZSEGTAB_P) || (pte & ZPGETAB_P))
             regs->dat.protect |= 1;
 
+#if 1
         /* [3.11.4.2] Place the translated address in the TLB */
         if (tlbix >= 0)
         {
@@ -1373,6 +1381,7 @@ U16     sx, px;                         /* Segment and page index,
             regs->tlb.acc[tlbix]       = 0;
             regs->tlb.main[tlbix]      = NULL;
         }
+#endif
 
     }
 
@@ -1394,7 +1403,7 @@ U16     sx, px;                         /* Segment and page index,
    when performing translation for the control panel */
 address_excp:
 //    logmsg("dat.c: addressing exception: %8.8X %8.8X %4.4X %8.8X\n",
-//        regs->CR(0),std,pte,vaddr);
+//        regs->CR(0),regs->dat.asd,pte,vaddr);
     regs->dat.xcode = PGM_ADDRESSING_EXCEPTION;
     goto tran_prog_check;
 
@@ -1544,7 +1553,6 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
     if(regs->guestregs)
     {
         INVALIDATE_AIA(regs->guestregs);
-        regs->guestregs->tlbID = ++regs->guestregs->tlbID;
         if (((++regs->guestregs->tlbID) & TLBID_BYTEMASK) == 0)
         {
             memset (&regs->guestregs->tlb.vaddr, 0, TLBN * sizeof(DW));
@@ -1617,16 +1625,9 @@ int  i;
 #if defined(_FEATURE_SIE)
     /* Also invalidate the guest registers in the SIE copy */
     if(regs->guestregs)
-    {
-        INVALIDATE_AIA(regs->guestregs);
-        if (mask == 0)
-            memset(&regs->guestregs->tlb.acc, 0, TLBN);
-        else
-            for (i = 0; i < TLBN; i++)
-                if ((regs->guestregs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->guestregs->tlbID)
-                    regs->guestregs->tlb.acc[i] &= mask;
-    }
+        ARCH_DEP(invalidate_tlb) (regs->guestregs, mask);
 #endif /*defined(_FEATURE_SIE)*/
+
 } /* end function invalidate_tlb */
 
 
@@ -1642,36 +1643,25 @@ int i;
         ARCH_DEP(invalidate_tlb)(regs, 0);
         return;
     }
-
-    INVALIDATE_AIA_MAIN(regs, main);
-    for (i = 0; i < TLBN; i++)
-        if (MAINADDR(regs->tlb.main[i], regs->tlb.TLB_VADDR(i)) == main)
-        {
-            regs->tlb.acc[i] = 0;
-#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
-            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-                regs->tlb.acc[i^1] = 0;
-#endif
-        }
-
-#if defined(_FEATURE_SIE)
-    /* Also clear the guest registers in the SIE copy */
-    if (regs->guestregs)
+    else
     {
-        INVALIDATE_AIA_MAIN(regs->guestregs, main);
+        INVALIDATE_AIA_MAIN(regs, main);
         for (i = 0; i < TLBN; i++)
-            if (MAINADDR(regs->guestregs->tlb.main[i],
-                         regs->guestregs->tlb.TLB_VADDR(i)) == main)
+            if (MAINADDR(regs->tlb.main[i], regs->tlb.TLB_VADDR(i)) == main)
             {
-                regs->guestregs->tlb.acc[i] = 0;
+                regs->tlb.acc[i] = 0;
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
-                if ((regs->guestregs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-                    regs->guestregs->tlb.acc[i^1] = 0;
+                if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+                    regs->tlb.acc[i^1] = 0;
 #endif
             }
+    
+#if defined(_FEATURE_SIE)
+        /* Also clear the guest registers in the SIE copy */
+        if (regs->guestregs)
+            ARCH_DEP(invalidate_tlbe)(regs->guestregs, main);
+#endif
     }
-#endif /*defined(_FEATURE_SIE)*/
-
 } /* end function purge_tlbe */
 
 
@@ -1887,6 +1877,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         /* Setup `real' TLB entry (for MADDR) */
         regs->tlb.TLB_ASD(ix)   = TLB_REAL_ASD;
         regs->tlb.TLB_VADDR(ix) = addr & TLBID_PAGEMASK;
+        regs->tlb.TLB_PTE(ix)   = addr & TLBID_PAGEMASK;
         regs->tlb.acc[ix]       =
         regs->tlb.common[ix]    =
         regs->tlb.protect[ix]   = 0;
@@ -1924,6 +1915,12 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
 
+        regs->dat.protect |= regs->hostregs->dat.protect;
+        regs->tlb.protect[ix] |= regs->hostregs->dat.protect;
+
+        if ( REAL_MODE(&regs->psw) || (arn == USE_REAL_ADDR) )
+            regs->tlb.TLB_PTE(ix)   = addr & TLBID_PAGEMASK;
+
         /* Convert host real address to host absolute address */
         regs->hostregs->dat.aaddr = aaddr =
               APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
@@ -1936,6 +1933,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
     /* Check protection and set reference and change bits */
     regs->dat.storkey = &(STORAGE_KEY(aaddr, regs));
+
     if (acctype & ACC_READ)
     {
         /* Program check if fetch protected location */
@@ -1972,7 +1970,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
             goto vabs_prot_excp;
 
         /* Set the reference and change bits in the storage key */
-        if (acctype == ACCTYPE_WRITE)
+        if (acctype & ACC_WRITE)
             *regs->dat.storkey |= (STORKEY_REF | STORKEY_CHANGE);
 
 #if 1
@@ -1981,7 +1979,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         regs->tlb.storkey[ix]    = regs->dat.storkey;
         regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
         if ((addr >= PSA_SIZE || regs->dat.private) && !EN_IC_PER_SA(regs))
-            regs->tlb.acc[ix]   |= (ACC_WRITE|ACC_READ|ACC_CHECK);
+            regs->tlb.acc[ix]   |= (ACC_READ|ACC_CHECK|(acctype & ACC_WRITE));
         else
             regs->tlb.acc[ix]   |= ACC_READ;
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);

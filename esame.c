@@ -4120,7 +4120,7 @@ U16     updated = 0;                    /* Updated control regs      */
     if (test_bit(2, regs->aea_ar[USE_INST_SPACE], &updated))
         INVALIDATE_AIA(regs);
     if (test_bit(2, 9, &updated) && EN_IC_PER_SA(regs))
-        ARCH_DEP(invalidate_tlb)(regs,~ACC_WRITE);
+        ARCH_DEP(invalidate_tlb)(regs,~(ACC_WRITE|ACC_CHECK));
 
     RETURN_INTCHECK(regs);
 

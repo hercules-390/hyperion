@@ -592,7 +592,7 @@ do { \
   if (oldmode != (_regs)->aea_mode) { \
     INVALIDATE_AIA((_regs)); \
     if (((_regs)->aea_mode & PSW_PERMODE) != 0 && EN_IC_PER_SA((_regs))) \
-      ARCH_DEP(invalidate_tlb)((_regs),~ACC_WRITE); \
+      ARCH_DEP(invalidate_tlb)((_regs),~(ACC_WRITE|ACC_CHECK)); \
   } \
   (_regs)->aea_crx = (_regs)->aea_mode & 0x0F ? 1 : CR_ASD_REAL; \
 } while (0)
@@ -618,7 +618,6 @@ do { \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
        (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-   /* *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), */ \
        MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
@@ -696,7 +695,7 @@ do { \
   if ((oldmode & PSW_PERMODE) == 0 && ((_regs)->aea_mode & PSW_PERMODE) != 0) { \
     INVALIDATE_AIA((_regs)); \
     if (EN_IC_PER_SA((_regs))) \
-      ARCH_DEP(invalidate_tlb)((_regs),~ACC_WRITE); \
+      ARCH_DEP(invalidate_tlb)((_regs),~(ACC_WRITE|ACC_CHECK)); \
   } \
 } while (0)
 
@@ -738,7 +737,6 @@ do { \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
        (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-   /* *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), */ \
        MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \

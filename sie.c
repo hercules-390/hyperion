@@ -791,6 +791,7 @@ int     n;
 #if defined(FEATURE_BINARY_FLOATING_POINT)
     regs->fpc =  GUESTREGS->fpc;
 #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+    SET_AEA_MODE(regs);
 
     /* Zeroize the interruption parameters */
     memset(STATEBK->ipa, 0, 10);
