@@ -54,7 +54,7 @@ int     cckd_flush_cache_scan(int *answer, int ix, int i, void *data);
 void    cckd_flush_cache_all();
 void    cckd_purge_cache(DEVBLK *dev);
 int     cckd_purge_cache_scan(int *answer, int ix, int i, void *data);
-void    cckd_writer();
+void    cckd_writer(void *arg);
 int     cckd_writer_scan(int *o, int ix, int i, void *data);
 off_t   cckd_get_space(DEVBLK *dev, unsigned int len);
 void    cckd_rel_space(DEVBLK *dev, off_t pos, int len);
@@ -1329,7 +1329,10 @@ TID             tid;                    /* Writer thread id          */
         if (cckdblk.wrwaiting)
             signal_condition (&cckdblk.wrcond);
         else if (cckdblk.wrs < cckdblk.wrmax)
-            create_thread (&tid, NULL, cckd_writer, NULL);
+        {
+            rc = create_thread (&tid, NULL, cckd_writer, (void *)cckdblk.wrs + 1);
+            if (rc == 0) cckdblk.wrs++;
+        }
     }
     release_lock (&cckdblk.wrlock);
 }
@@ -1405,10 +1408,11 @@ DEVBLK         *dev = data;             /* -> device block           */
 /*-------------------------------------------------------------------*/
 /* Writer thread                                                     */
 /*-------------------------------------------------------------------*/
-void cckd_writer()
+void cckd_writer(void *arg)
 {
 DEVBLK         *dev;                    /* Device block              */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             rc;                     /* Return code               */
 int             writer;                 /* Writer identifier         */
 int             o;                      /* Cache entry found         */
 U16             devnum;                 /* Device number             */
@@ -1431,15 +1435,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
 #endif
 
     obtain_lock (&cckdblk.wrlock);
-    writer = ++cckdblk.wrs;
-
-    /* Return without messages if too many already started */
-    if (writer > cckdblk.wrmax && cckdblk.wrpending == 0)
-    {
-        --cckdblk.wrs;
-        release_lock (&cckdblk.wrlock);
-        return;
-    }
+    writer = (int)arg;
 
     if (!cckdblk.batch)
     logmsg (_("HHCCD002I Writer thread %d started: tid="TIDPAT", pid=%d\n"),
@@ -1476,7 +1472,10 @@ BYTE            buf2[65536];            /* Compress buffer           */
             if (cckdblk.wrwaiting)
                 signal_condition (&cckdblk.wrcond);
             else if (cckdblk.wrs < cckdblk.wrmax)
-                create_thread (&tid, NULL, cckd_writer, NULL);
+            {
+                rc = create_thread (&tid, NULL, cckd_writer, (void *)cckdblk.wrs + 1);
+                if (rc == 0) cckdblk.wrs++;
+            }
         }
         release_lock (&cckdblk.wrlock);
 

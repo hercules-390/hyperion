@@ -3082,7 +3082,13 @@ int     rc;                             /* return code from load_psw */
     PERFORM_CHKPT_SYNC (regs);
 
     /* Create a working copy of the CPU registers */
-    newregs = *regs;
+    if (sizeof(unsigned int) == sizeof(BYTE *)
+     && (unsigned int)regs + sizeof(REGS) == (unsigned int)(&regs->tlb) + sizeof(TLB)) {
+        memcpy(&newregs, regs, sizeof(REGS)-sizeof(TLB));
+        MEMSET(&newregs.tlb.vaddr, 0, TLBN * sizeof(DW));
+    }
+    else
+        newregs = *regs;
 
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);
