@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+06 Sep 2004 emulated positioning error fix for read blockid - Fish
 05 Sep 2004 tapedev.c/scsiptape.h: blockid s/b maintained by media handlers,
             minor tweak to when scsi automount thread started, fthreads.h:
             change default fthreads mutex type from recursive to errorcheck

@@ -57,6 +57,7 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 int save_errno;
 
     ASSERT( dev->fd < 0 );  // (sanity check)
+    dev->fd = -1;
     dev->sstat = GMT_DR_OPEN( -1 );
 
     /* Open the SCSI tape device */
@@ -67,7 +68,7 @@ int save_errno;
         TRACE( "** open_scsitape: back from 'open'\n" );
     }
     errno = save_errno;
-    if (rc < 0 && errno == EROFS)
+    if (rc < 0 && EROFS == errno )
     {
         dev->readonly = 1;
         TRACE( "** open_scsitape: retrying 'open'...\n" );
@@ -691,7 +692,8 @@ struct mtop opblk;
 
     if ( rc >= 0 )
     {
-        logmsg (_("HHCTA077I Tape %4.4X unloaded\n"),dev->devnum);
+        if ( dev->ccwtrace || dev->ccwstep )
+            logmsg (_("HHCTA077I Tape %4.4X unloaded\n"),dev->devnum);
         close( dev->fd ); // (required for REW UNLD)
         dev->fd=-1;
         dev->sstat = GMT_DR_OPEN( -1 );
@@ -759,8 +761,9 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
         return -1; /* (fatal error) */
     }
 
-    //  I question the sanity of this!  Thus I've disabled it. (Fish)
-#if 0
+#if 0  // ZZ FIXME: if we don't need (and I don't believe we do)
+       //           then delete this code...
+
     /* Rewind the tape back to load point */
     opblk.mt_op = MTREW;
     opblk.mt_count = 1;
@@ -806,12 +809,20 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
                 TRACE( "** update_status_scsitape: ioctl(MTIOCGET) failed\n" );
             }
             errno = save_errno;
+
             // Don't bother issuing an error message if the problem
             // was simply that there isn't/wasn't any tape mounted,
             // of if the device is simply busy or not opened yet...
-            if ( ENOMEDIUM != errno && EBUSY != errno && EACCES != errno )
+
+            if (!     // (if NOT one of the below errors...)
+            (0
+                || ENOMEDIUM == errno
+                || EBUSY     == errno
+                || EACCES    == errno
+            ))
                 logmsg (_("HHCTA022E Error reading status of %s; errno=%d: %s\n"),
                     dev->filename, errno, strerror(errno));
+
             // Set "door open" status to force closing of tape file
             stblk.mt_gstat = GMT_DR_OPEN( -1 );
         }
@@ -837,12 +848,12 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
             TRACE( "** update_status_scsitape: back from 'close'...\n" );
             dev->fd = -1;
         }
-        dev->sstat = GMT_DR_OPEN( -1 );
-        dev->curfilen = 1;
+        dev->sstat     = GMT_DR_OPEN( -1 );
+        dev->curfilen  = 1;
         dev->nxtblkpos = 0;
         dev->prvblkpos = -1;
-        dev->blockid = 0;
-        dev->poserror = 0;
+        dev->blockid   = 0;
+        dev->poserror  = 0;
     }
 
     if ( !no_trace )

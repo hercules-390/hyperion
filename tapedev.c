@@ -2863,12 +2863,12 @@ static void ReqAutoMount( DEVBLK *dev )
         {
             if ( 'M' == tapemsg[0] )
                 logmsg(_("AutoMount: %s%s tape volume \"%s\" being autoloaded onto drive %4.4X = %s\n"),
-                    ascii ? "ASCII" : "",
+                    ascii ? "ASCII " : "",
                     stdlbled ? "standard labeled" : "unlabeled",
                     volser, dev->devnum, dev->filename);
             else
                 logmsg(_("AutoMount: %s%s scratch tape being autoloaded onto drive %4.4X = %s\n"),
-                    ascii ? "ASCII" : "",
+                    ascii ? "ASCII " : "",
                     stdlbled ? "standard labeled" : "unlabeled",
                     dev->devnum, dev->filename);
         }
@@ -2889,21 +2889,32 @@ static void ReqAutoMount( DEVBLK *dev )
             if ( 'M' == tapemsg[0] )
                 logmsg(_("%s\nAUTOMOUNT: Mount for %s%s tape volume \"%s\" requested on drive %4.4X = %s\n%s\n"),
                     eyecatcher,
-                    ascii ? "ASCII" : "",
+                    ascii ? "ASCII " : "",
                     stdlbled ? "standard labeled" : "unlabeled",
                     volser, dev->devnum, dev->filename,
                     eyecatcher );
             else
                 logmsg(_("%s\nAUTOMOUNT: %s%s scratch tape requested on drive %4.4X = %s\n%s\n"),
                     eyecatcher,
-                    ascii ? "ASCII" : "",
+                    ascii ? "ASCII " : "",
                     stdlbled ? "standard labeled" : "unlabeled",
                     dev->devnum, dev->filename,
                     eyecatcher );
         }
-        else // (unload)
+        else // (dismount)
         {
-            ;                   // (todo)
+            BYTE* keep_or_retain = "";
+
+            if ( 'K' == tapemsg[0] ) keep_or_retain = "and keep ";
+            if ( 'R' == tapemsg[0] ) keep_or_retain = "and retain ";
+
+            logmsg(_("%s\nAUTOMOUNT: Unmount %srequested for %s%s tape volume \"%s\" on drive %4.4X = %s\n%s\n"),
+                eyecatcher,
+                keep_or_retain,
+                ascii ? "ASCII " : "",
+                stdlbled ? "standard labeled" : "unlabeled",
+                volser, dev->devnum, dev->filename,
+                eyecatcher );
         }
     }
 
@@ -2921,8 +2932,7 @@ static void ReqAutoMount( DEVBLK *dev )
     // then the function that monitors the status of the SCSI tape will
     // kick off the thread instead whenever it notices there's no tape
     // mounted. (But if the drive has a display (which it obviously must
-    // or else we wouldn;t have even been called) then we kick off the
-    // thread here)...
+    // or we wouldn't even be here) then we kick off the thread here)...
 
     if (1
         &&  TAPEDEVT_SCSITAPE == dev->tapedevt
@@ -2956,6 +2966,7 @@ static void load_display (DEVBLK *dev, BYTE *buf, U16 count)
 U16             i;                      /* Array subscript           */
 BYTE            msg1[9], msg2[9];       /* Message areas (ASCIIZ)    */
 BYTE            fcb;                    /* Format Control Byte       */
+BYTE            tapeloaded;             /* (boolean true/false)      */
 
     if ( !count )
         return;
@@ -2976,6 +2987,10 @@ BYTE            fcb;                    /* Format Control Byte       */
 
     msg1[ sizeof(msg1) - 1 ] = 0;
     msg2[ sizeof(msg2) - 1 ] = 0;
+
+    tapeloaded =
+        ( dev->tmh->tapeloaded( dev, NULL, 0 ) &&
+          strcmp( dev->filename, TAPE_UNLOADED ) != 0 );
 
     switch ( fcb & FCB_FS )  // (high-order 3 bits)
     {
@@ -3006,15 +3021,14 @@ BYTE            fcb;                    /* Format Control Byte       */
 
         dev->tapedispflags = 0;
 
-        if ( dev->tmh->tapeloaded( dev, NULL, 0 ) &&
-            strcmp( dev->filename, TAPE_UNLOADED ) != 0 )
-        {
-            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
+        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
+        if ( tapeloaded )
+        {
             dev->tapedisptype  = TAPEDISPTYP_UNMOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            if ( dev->ccwtrace )
+            if ( dev->ccwtrace || dev->ccwstep )
                 logmsg(_("HHCTA099I %4.4X: Tape Unmount Request: \"%s\"\n"),
                     dev->devnum, dev->tapemsg1 );
         }
@@ -3032,13 +3046,12 @@ BYTE            fcb;                    /* Format Control Byte       */
 
         strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
-        if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) ||
-            strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
+        if ( !tapeloaded )
         {
             dev->tapedisptype  = TAPEDISPTYP_MOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            if ( dev->ccwtrace )
+            if ( dev->ccwtrace || dev->ccwstep )
                 logmsg(_("HHCTA099I %4.4X: Tape Mount Request: \"%s\"\n"),
                     dev->devnum, dev->tapemsg1 );
         }
@@ -3074,13 +3087,12 @@ BYTE            fcb;                    /* Format Control Byte       */
         strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
         strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
 
-        if ( dev->tmh->tapeloaded( dev, NULL, 0 ) &&
-            strcmp( dev->filename, TAPE_UNLOADED ) != 0 )
+        if ( tapeloaded )
         {
             dev->tapedisptype  = TAPEDISPTYP_UMOUNTMOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
 
-            if ( dev->ccwtrace )
+            if ( dev->ccwtrace || dev->ccwstep )
                 logmsg(_("HHCTA099I %4.4X: Tape Demount/Mount Request: \"%s\", \"%s\"\n"),
                     dev->devnum, dev->tapemsg1, dev->tapemsg2 );
         }
@@ -3089,9 +3101,7 @@ BYTE            fcb;                    /* Format Control Byte       */
             dev->tapedisptype  = TAPEDISPTYP_MOUNT;
             dev->tapedispflags = TAPEDISPFLG_MESSAGE2 | TAPEDISPFLG_REQAUTOMNT;
 
-            strlcpy( dev->tapemsg2, msg2, sizeof(dev->tapemsg2) );
-
-            if ( dev->ccwtrace )
+            if ( dev->ccwtrace || dev->ccwstep )
                 logmsg(_("HHCTA099I %4.4X: Tape Mount Request: \"%s\"\n"),
                     dev->devnum, dev->tapemsg2 );
         }
@@ -3781,24 +3791,25 @@ union
     {
         logmsg (_("HHCTA998I Device %4.4X : %s is a %s\n"),dev->devnum,dev->filename,fmttab[i].descr);
     }
+
     /* Initialize device dependent fields */
-    dev->fd = -1;
-    dev->sstat = GMT_DR_OPEN( -1 );
-    dev->omadesc = NULL;
-    dev->omafiles = 0;
-    dev->curfilen = 1;
-    dev->nxtblkpos = 0;
-    dev->prvblkpos = -1;
-    dev->curblkrem = 0;
-    dev->curbufoff = 0;
-    dev->readonly = 0;
-    dev->hetb = NULL;
-    dev->tdparms.compress = HETDFLT_COMPRESS;
-    dev->tdparms.method = HETDFLT_METHOD;
-    dev->tdparms.level = HETDFLT_LEVEL;
-    dev->tdparms.chksize = HETDFLT_CHKSIZE;
-    dev->tdparms.maxsize=0; /* No MAX Size */
-    dev->tdparms.eotmargin=128*1024; /* 128 EOT MARGIN Default */
+    dev->fd                = -1;
+    dev->sstat             = GMT_DR_OPEN( -1 );
+    dev->omadesc           = NULL;
+    dev->omafiles          = 0;
+    dev->curfilen          = 1;
+    dev->nxtblkpos         = 0;
+    dev->prvblkpos         = -1;
+    dev->curblkrem         = 0;
+    dev->curbufoff         = 0;
+    dev->readonly          = 0;
+    dev->hetb              = NULL;
+    dev->tdparms.compress  = HETDFLT_COMPRESS;
+    dev->tdparms.method    = HETDFLT_METHOD;
+    dev->tdparms.level     = HETDFLT_LEVEL;
+    dev->tdparms.chksize   = HETDFLT_CHKSIZE;
+    dev->tdparms.maxsize   = 0;        // no max size     (default)
+    dev->tdparms.eotmargin = 128*1024; // 128K EOT margin (default)
 
     /* Process remaining parameters */
     for (i = 1; i < argc; i++)
@@ -3886,6 +3897,7 @@ union
         } // end switch (parser (&ptab[0], argv[i], &res))
     } // end for (i = 1; i < argc; i++)
 
+#if defined(OPTION_SCSI_TAPE)
     // If this is a SCSI tape, open the device file (which also
     // obtains our starting tape status value, which itself kicks
     // off the tape mount monitoring thread if approrpriate)...
@@ -3899,6 +3911,7 @@ union
         }
         TRACE( "** mountnewtape: open_scsitape success\n" );
     }
+#endif
 
     /* Adjust the display if necessary */
     if(dev->tdparms.displayfeat)
@@ -4628,9 +4641,10 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             return;
         }
         break;
-    default:
+    default: /* Should NOT occur! */
+        ASSERT(0);
         build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
-        break; /* Should NOT occur */
+        break;
     } // end switch(drc)
 
     if ((1==drc || 5==drc) && (dev->fd < 0 || TAPEDEVT_SCSITAPE == dev->tapedevt))
@@ -4890,16 +4904,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         if (count < len) *more = 1;
 
         /* Copy Block Id to channel I/O buffer... */
-
-        // ZZ FIXME: I hope this is right: if the current position is
-        // unknown (invalid) due to a previous positioning error, then
-        // return a known-to-be-invalid position value...
-
-        if (dev->poserror)
-        {
-            memset( blockid, 0xFF, 8 );
-        }
-        else
         {
 #if defined(OPTION_SCSI_TAPE)
             struct  mtpos  mtpos;
@@ -4920,15 +4924,26 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 // Either this is not a scsi tape, or else the MTIOCPOS
                 // call failed; use our emulated blockid value...
 
-                blockid[0] = 0x01;
-                blockid[1] = (dev->blockid >> 16) & 0x3F;
-                blockid[2] = (dev->blockid >> 8 ) & 0xFF;
-                blockid[3] = (dev->blockid      ) & 0xFF;
+                // ZZ FIXME: I hope this is right: if the current position is
+                // unknown (invalid) due to a previous positioning error, then
+                // return a known-to-be-invalid position value...
 
-                blockid[4] = 0x01;
-                blockid[5] = (dev->blockid >> 16) & 0x3F;
-                blockid[6] = (dev->blockid >> 8 ) & 0xFF;
-                blockid[7] = (dev->blockid      ) & 0xFF;
+                if (dev->poserror)
+                {
+                    memset( blockid, 0xFF, 8 );
+                }
+                else
+                {
+                    blockid[0] = 0x01;
+                    blockid[1] = (dev->blockid >> 16) & 0x3F;
+                    blockid[2] = (dev->blockid >> 8 ) & 0xFF;
+                    blockid[3] = (dev->blockid      ) & 0xFF;
+
+                    blockid[4] = 0x01;
+                    blockid[5] = (dev->blockid >> 16) & 0x3F;
+                    blockid[6] = (dev->blockid >> 8 ) & 0xFF;
+                    blockid[7] = (dev->blockid      ) & 0xFF;
+                }
 #if defined(OPTION_SCSI_TAPE)
             }
             else
@@ -5082,15 +5097,17 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Block to seek */
+        ASSERT( count >= sizeof(locblock) );
         memcpy( (BYTE*)&locblock, iobuf, sizeof(locblock) );
 
+        /* Check for invalid/reserved Format Mode bits */
         if (0x00C00000 == (locblock & 0x00C00000))
         {
             build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
             break;
         }
 
-        locblock &= 0x003FFFFF;
+        locblock &= 0x003FFFFF;   // (Logical Block Number)
 
         /* Calculate residual byte count */
         len = sizeof(locblock);
@@ -5106,6 +5123,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         );
 
         {
+#if defined(OPTION_SCSI_TAPE)
             struct  mtop   mtop;
 
             mtop.mt_op    = MTSEEK;
@@ -5113,6 +5131,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
             if (TAPEDEVT_SCSITAPE != dev->tapedevt
                 || (rc = ioctl( dev->fd, MTIOCTOP, (char*) &mtop )) < 0 )
+#endif
             {
                 rc=dev->tmh->rewind(dev,unitstat,code);
                 if(rc<0)
