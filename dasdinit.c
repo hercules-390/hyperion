@@ -17,7 +17,7 @@
 /*              (this program will not overwrite an existing file)   */
 /* devtype      is the emulated device type.                         */
 /*              CKD: 2311, 2314, 3330, 3350, 3380, 3390, 9345        */
-/*              FBA: 3310, 3370                                      */
+/*              FBA: 3310, 3370, 9336                                */
 /* model        is the device model number and implies the device    */
 /*              size.  If specified, then size cannot be specified.  */
 /* volser       is the volume serial number (1-6 characters)         */
@@ -57,8 +57,8 @@ argexit ( int code )
        "\t           -0   build compressed device with no compression\n"
        "\tfilename = name of file to be created\n"
        "\tdevtype  = 2311, 2314, 3330, 3340, 3350, 3375, 3380, "
-       "3390, 9345(CKD)\n"
-       "\t           3310, 3370 (FBA)\n"
+       "3390, 9345 (CKD)\n"
+       "\t           3310, 3370, 9336 (FBA)\n"
        "\tmodel    = device model number, implies device size\n"
        "\tvolser   = volume serial number (1-6 characters)\n"
        "\tsize     = volume size in cylinders (CKD devices)\n"
@@ -693,6 +693,7 @@ U32     m3370[] = {0};
 U32     m3375[] = {1,  959, 0};
 U32     m3380[] = {1,  885, 2, 1770,  3, 2655, 0};
 U32     m3390[] = {1, 1113, 2, 2226,  3, 3339, 9, 10017, 0};
+U32     m9336[] = {0};
 U32     m9345[] = {1, 1440, 2, 2156,  0};
 
 
@@ -841,6 +842,12 @@ U32     m9345[] = {1, 1440, 2, 2156,  0};
         type = 'F';
         sectsize = 512;
         m = m3370;
+        break;
+
+    case 0x9336:
+        type = 'F';
+        sectsize = 512;
+        m = m9336;
         break;
 
     default:
