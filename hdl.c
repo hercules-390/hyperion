@@ -241,7 +241,7 @@ MODENT *modent = NULL;
         {
             for(modent = dllent->modent; modent; modent = modent->modnext)
             {
-                if(modent->fep == fep)
+                if((modent->fep == fep) && !strcmp(modent->name,name))
                     break;
             }
     
