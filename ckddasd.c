@@ -704,7 +704,7 @@ int             i,o,f;                  /* Indexes                   */
 int             active;                 /* 1=Synchronous I/O active  */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
-    DEVTRACE ("HHCDA024I read trk %d cur trk %d\n", trk, dev->bufcur);
+    DEVTRACE (_("HHCDA024I read trk %d cur trk %d\n"), trk, dev->bufcur);
 
     /* Calculate cylinder and head */
     cyl = trk / dev->ckdheads;
@@ -733,7 +733,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
             return -1;
         }
 
-        DEVTRACE ("HHCDA025I read track: updating track %d\n",
+        DEVTRACE (_("HHCDA025I read track: updating track %d\n"),
                   dev->bufcur);
 
         dev->bufupd = 0;
@@ -805,7 +805,7 @@ ckd_read_track_retry:
         cache_setage(CACHE_DEVBUF, dev->cache);
         cache_unlock(CACHE_DEVBUF);
 
-        DEVTRACE ("HHCDA028I read trk %d cache hit, using cache[%d]\n",
+        DEVTRACE (_("HHCDA028I read trk %d cache hit, using cache[%d]\n"),
                   trk, i);
 
         dev->cachehits++;
@@ -842,7 +842,7 @@ ckd_read_track_retry:
     /* Wait if no available cache entry */
     if (o < 0)
     {
-        DEVTRACE ("HHCDA029I read trk %d no available cache entry, waiting\n",
+        DEVTRACE (_("HHCDA029I read trk %d no available cache entry, waiting\n"),
                   trk); 
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
@@ -850,7 +850,7 @@ ckd_read_track_retry:
     }
 
     /* Cache miss */
-    DEVTRACE ("HHCDA030I read trk %d cache miss, using cache[%d]\n",
+    DEVTRACE (_("HHCDA030I read trk %d cache miss, using cache[%d]\n"),
               trk, o);
 
     dev->cachemisses++;
@@ -873,7 +873,7 @@ ckd_read_track_retry:
 
     dev->syncio_active = active;
 
-    DEVTRACE ("HHCDA031I read trk %d reading file %d offset %lld len %d\n",
+    DEVTRACE (_("HHCDA031I read trk %d reading file %d offset %lld len %d\n"),
               trk, f+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);  
 
     /* Seek to the track image offset */
@@ -910,7 +910,7 @@ ckd_read_track_retry:
     }
 
     /* Validate the track header */
-    DEVTRACE ("HHCDA034I read trk %d trkhdr %2.2x %2.2x%2.2x %2.2x%2.2x\n",
+    DEVTRACE (_("HHCDA034I read trk %d trkhdr %2.2x %2.2x%2.2x %2.2x%2.2x\n"),
        trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]);
     trkhdr = (CKDDASD_TRKHDR *)dev->buf;
     if ((trkhdr->bin != 0
@@ -1116,7 +1116,7 @@ static int ckd_seek ( DEVBLK *dev, int cyl, int head,
 {
 int             rc;                     /* Return code               */
 
-    DEVTRACE("HHCDA038I seeking to cyl %d head %d\n", cyl, head);
+    DEVTRACE(_("HHCDA038I seeking to cyl %d head %d\n"), cyl, head);
 
     /* Read the track image */
     rc = ckd_read_cchh (dev, cyl, head, unitstat);
@@ -1155,8 +1155,8 @@ int             head;                   /* Next head for multitrack  */
     if (dev->ckdlcount == 0 &&
         (dev->ckdfmask & CKDMASK_SKCTL) == CKDMASK_SKCTL_INHSMT)
     {
-        DEVTRACE("HHCDA039E MT advance error: "
-                 "locate record %d file mask %2.2X\n",
+        DEVTRACE(_("HHCDA039E MT advance error: "
+                 "locate record %d file mask %2.2X\n"),
                  dev->ckdlcount, dev->ckdfmask);
        if (dev->ckdtrkof)
             ckd_build_sense (dev, 0, SENSE1_FP | SENSE1_IE, 0, 0, 0);
@@ -1187,7 +1187,7 @@ int             head;                   /* Next head for multitrack  */
         head = 0;
         cyl++;
     }
-    DEVTRACE("HHCDA040I MT advance to cyl %d head %d\n", cyl, head);
+    DEVTRACE(_("HHCDA040I MT advance to cyl %d head %d\n"), cyl, head);
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
@@ -1239,7 +1239,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         && code != 0x9D)
         skipr0 = 1;
 
-    DEVTRACE ("HHCDA041I read count orientation is %s\n",
+    DEVTRACE (_("HHCDA041I read count orientation is %s\n"),
               orient[dev->ckdorient]);
 
     /* If orientation is at End-Of_Track then a multi-track advance
@@ -1285,7 +1285,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         dev->ckdcurdl = (rechdr->dlen[0] << 8) + rechdr->dlen[1];
         dev->ckdtrkof = (rechdr->cyl[0] == 0xFF) ? 0 : rechdr->cyl[0] >> 7;
 
-        DEVTRACE("HHCDA043I cyl %d head %d record %d kl %d dl %d of %d\n",
+        DEVTRACE(_("HHCDA043I cyl %d head %d record %d kl %d dl %d of %d\n"),
                 dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
                 dev->ckdcurkl, dev->ckdcurdl, dev->ckdtrkof);
 
@@ -1373,7 +1373,7 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (rc < 0) return rc;
     }
 
-    DEVTRACE("HHCDA044I read key %d bytes\n", dev->ckdcurkl);
+    DEVTRACE(_("HHCDA044I read key %d bytes\n"), dev->ckdcurkl);
 
     /* Read key field */
     if (dev->ckdcurkl > 0)
@@ -1423,7 +1423,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
     if (dev->ckdorient == CKDORIENT_COUNT)
         dev->bufoff += dev->ckdcurkl;
 
-    DEVTRACE("HHCDA045I read data %d bytes\n", dev->ckdcurdl);
+    DEVTRACE(_("HHCDA045I read data %d bytes\n"), dev->ckdcurdl);
 
     /* Read data field */
     if (dev->ckdcurdl > 0)
@@ -1549,14 +1549,14 @@ int             ckdlen;                 /* Count+key+data length     */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < ckdlen) buf[len++] = '\0';
 
-    DEVTRACE("HHCDA047I writing cyl %d head %d record %d kl %d dl %d\n",
+    DEVTRACE(_("HHCDA047I writing cyl %d head %d record %d kl %d dl %d\n"),
             dev->ckdcurcyl, dev->ckdcurhead, recnum, keylen, datalen);
 
     /* Set track overflow flag if called for */
     if (trk_ovfl)
     {
-        DEVTRACE("HHCDA048I setting track overflow flag for "
-                 "cyl %d head %d record %d\n",
+        DEVTRACE(_("HHCDA048I setting track overflow flag for "
+                 "cyl %d head %d record %d\n"),
                  dev->ckdcurcyl, dev->ckdcurhead, recnum);
         buf[0] |= 0x80;
     }
@@ -1613,7 +1613,7 @@ int             kdlen;                  /* Key+data length           */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < kdlen) buf[len++] = '\0';
 
-    DEVTRACE("HHCDA050I updating cyl %d head %d record %d kl %d dl %d\n",
+    DEVTRACE(_("HHCDA050I updating cyl %d head %d record %d kl %d dl %d\n"),
             dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurkl, dev->ckdcurdl);
 
@@ -1656,7 +1656,7 @@ int             rc;                     /* Return code               */
     /* Pad the I/O buffer with zeroes if necessary */
     while (len < dev->ckdcurdl) buf[len++] = '\0';
 
-    DEVTRACE("HHCDA052I updating cyl %d head %d record %d dl %d\n",
+    DEVTRACE(_("HHCDA052I updating cyl %d head %d record %d dl %d\n"),
             dev->ckdcurcyl, dev->ckdcurhead, dev->ckdcurrec,
             dev->ckdcurdl);
 
@@ -2834,7 +2834,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Extract the file mask from the I/O buffer */
         dev->ckdfmask = iobuf[0];
-        DEVTRACE("HHCDA054I set file mask %2.2X\n", dev->ckdfmask);
+        DEVTRACE(_("HHCDA054I set file mask %2.2X\n"), dev->ckdfmask);
 
         /* Command reject if file mask is invalid */
         if ((dev->ckdfmask & CKDMASK_RESV) != 0)
