@@ -45,7 +45,7 @@ char *str_loadparm()
 }
 
 
-static BYTE lparname[8] = {0XC8, 0XC5, 0XD9, 0XC3, 0XE4, 0XD3, 0XC5, 0XE2};
+static BYTE lparname[8] = {0xC8, 0xC5, 0xD9, 0xC3, 0xE4, 0xD3, 0xC5, 0xE2};
                           /* HERCULES */
 
 void set_lparname(char *name)
