@@ -400,6 +400,7 @@ int     deq=0;                          /* Device may be dequeued    */
 int cancel_subchan (REGS *regs, DEVBLK *dev)
 {
 int     cc;                             /* Condition code            */
+DEVBLK *tmp;
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
@@ -408,9 +409,47 @@ int     cc;                             /* Condition code            */
     if ((dev->pciscsw.flag3 & SCSW3_SC_PEND)
       || (dev->scsw.flag3 & SCSW3_SC_PEND))
         cc = 1;
-     else
-        /* cc = cancel_start_function() */
+    else
+    {
         cc = 2;
+#if !defined(OPTION_FISHIO)
+        obtain_lock(&sysblk.ioqlock);
+        /* If there are devices on the i/o queue, then try and find dev */
+        if(sysblk.ioq != NULL)
+        {
+            /* special case for head of queue */
+            if(sysblk.ioq == dev)
+            {
+                /* Remove device from the i/o queue */
+                sysblk.ioq = dev->nextioq;
+                cc = 0;
+            }
+            else
+            {
+                /* Search for device on i/o queue */
+                for(tmp = sysblk.ioq; tmp->nextioq != NULL && tmp->nextioq != dev; tmp = tmp->nextioq);
+                /* Remove from queue if found */
+                if(tmp->nextioq == dev)
+                {
+                    tmp->nextioq = tmp->nextioq->nextioq;
+                    cc = 0;
+                }
+            }
+
+            /* Reset the device */
+            if(!cc)
+            {
+                dev->busy = 0;
+                if (dev->scsw.flag3 & SCSW3_AC_SUSP)
+                    signal_condition (&dev->resumecond);
+                /* Reset the scsw */
+                dev->scsw.flag2 &= ~(SCSW2_AC_RESUM | SCSW2_FC_START | SCSW2_AC_START);
+                dev->scsw.flag3 &= ~(SCSW3_AC_SUSP);
+            }
+        release_lock(&sysblk.ioqlock);
+#endif /*!defined(OPTION_FISHIO)*/
+        }
+    }
     
     /* Release the device lock */
     release_lock (&dev->lock);
