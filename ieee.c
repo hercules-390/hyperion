@@ -6,7 +6,7 @@
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * THDER,THDR by Roger Bowler, 19 July 2003.
  * LXDBR,LXDB,LXEBR,LXEB by Roger Bowler, 13 Nov 2004.
- * LDXBR,LEXBR added by Roger Bowler, 15 Nov 2004.
+ * LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR by Roger Bowler, 15 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -1752,6 +1752,29 @@ DEF_INST(compare_and_signal_bfp_short)
 /*
  * B396 CXFBR - CONVERT FROM FIXED (32 to extended BFP)        [RRE]
  */
+DEF_INST(convert_fix32_to_bfp_ext_reg)
+{
+    int r1, r2;
+    struct ebfp op1;
+    S32 op2;
+
+    RRE(inst, regs, r1, r2);
+    //logmsg("CXFBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    op2 = regs->GR_L(r2);
+
+    if (op2) {
+        op1.v = (long double)op2;
+        ebfpntos(&op1);
+    } else {
+        ebfpzero(&op1, 0);
+    }
+
+    put_ebfp(&op1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(convert_fix32_to_bfp_ext_reg) */
 
 /*
  * B395 CDFBR - CONVERT FROM FIXED (32 to long BFP)            [RRE]
@@ -1803,10 +1826,34 @@ DEF_INST(convert_fix32_to_bfp_short_reg)
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 }
 
+#if defined(FEATURE_ESAME)
 /*
  * B3A6 CXGBR - CONVERT FROM FIXED (64 to extended BFP)        [RRE]
  */
+DEF_INST(convert_fix64_to_bfp_ext_reg)
+{
+    int r1, r2;
+    struct ebfp op1;
+    S64 op2;
 
+    RRE(inst, regs, r1, r2);
+    //logmsg("CXGBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    op2 = regs->GR_G(r2);
+
+    if (op2) {
+        op1.v = (long double)op2;
+        ebfpntos(&op1);
+    } else {
+        ebfpzero(&op1, 0);
+    }
+
+    put_ebfp(&op1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(convert_fix64_to_bfp_ext_reg) */
+#endif /*defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_ESAME)
 /*
@@ -1865,6 +1912,67 @@ DEF_INST(convert_fix64_to_bfp_short_reg)
 /*
  * B39A CFXBR - CONVERT TO FIXED (extended BFP to 32)          [RRF]
  */
+DEF_INST(convert_bfp_ext_to_fix32_reg)
+{
+    int r1, r2, m3, raised;
+    S32 op1;
+    struct ebfp op2;
+    int pgm_check;
+
+    RRF_M(inst, regs, r1, r2, m3);
+    //logmsg("CFXBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    get_ebfp(&op2, regs->fpr + FPR2I(r2));
+
+    switch (ebfpclassify(&op2)) {
+    case FP_NAN:
+        pgm_check = ieee_exception(FE_INVALID, regs);
+        regs->psw.cc = 3;
+        regs->GR_L(r1) = 0x80000000;
+        if (regs->fpc & FPC_MASK_IMX) {
+            pgm_check = ieee_exception(FE_INEXACT, regs);
+            if (pgm_check) {
+                ebfpston(&op2);logmsg("INEXACT\n");
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        break;
+    case FP_ZERO:
+        regs->psw.cc = 0;
+        regs->GR_L(r1) = 0;
+        break;
+    case FP_INFINITE:
+        pgm_check = ieee_exception(FE_INVALID, regs);
+        regs->psw.cc = 3;
+        if (op2.sign) {
+            regs->GR_L(r1) = 0x80000000;
+        } else {
+            regs->GR_L(r1) = 0x7FFFFFFF;
+        }
+        if (regs->fpc & FPC_MASK_IMX) {
+            pgm_check = ieee_exception(FE_INEXACT, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        break;
+    default:
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
+        ebfpston(&op2);
+        op1 = (S32)op2.v;
+        raised = fetestexcept(FE_ALL_EXCEPT);
+        if (raised) {
+            pgm_check = ieee_exception(raised, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        regs->GR_L(r1) = op1;
+        regs->psw.cc = op1 > 0 ? 2 : 1;
+    }
+} /* end DEF_INST(convert_bfp_ext_to_fix32_reg) */
 
 /*
  * B399 CFDBR - CONVERT TO FIXED (long BFP to 32)              [RRF]
@@ -1993,10 +2101,72 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     }
 }
 
+#if defined(FEATURE_ESAME)
 /*
  * B3AA CGXBR - CONVERT TO FIXED (extended BFP to 64)          [RRF]
  */
+DEF_INST(convert_bfp_ext_to_fix64_reg)
+{
+    int r1, r2, m3, raised;
+    S64 op1;
+    struct ebfp op2;
+    int pgm_check;
 
+    RRF_M(inst, regs, r1, r2, m3);
+    //logmsg("CGXBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    get_ebfp(&op2, regs->fpr + FPR2I(r2));
+
+    switch (ebfpclassify(&op2)) {
+    case FP_NAN:
+        pgm_check = ieee_exception(FE_INVALID, regs);
+        regs->psw.cc = 3;
+        regs->GR_G(r1) = 0x8000000000000000ULL;
+        if (regs->fpc & FPC_MASK_IMX) {
+            pgm_check = ieee_exception(FE_INEXACT, regs);
+            if (pgm_check) {
+                ebfpston(&op2);logmsg("INEXACT\n");
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        break;
+    case FP_ZERO:
+        regs->psw.cc = 0;
+        regs->GR_G(r1) = 0;
+        break;
+    case FP_INFINITE:
+        pgm_check = ieee_exception(FE_INVALID, regs);
+        regs->psw.cc = 3;
+        if (op2.sign) {
+            regs->GR_G(r1) = 0x8000000000000000ULL;
+        } else {
+            regs->GR_G(r1) = 0x7FFFFFFFFFFFFFFFULL;
+        }
+        if (regs->fpc & FPC_MASK_IMX) {
+            pgm_check = ieee_exception(FE_INEXACT, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        break;
+    default:
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
+        ebfpston(&op2);
+        op1 = (S64)op2.v;
+        raised = fetestexcept(FE_ALL_EXCEPT);
+        if (raised) {
+            pgm_check = ieee_exception(raised, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+        regs->GR_G(r1) = op1;
+        regs->psw.cc = op1 > 0 ? 2 : 1;
+    }
+} /* end DEF_INST(convert_bfp_ext_to_fix64_reg) */
+#endif /*defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_ESAME)
 /*

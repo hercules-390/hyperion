@@ -1,7 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-15 Nov 2004 LDXBR,LEXBR instructions - Roger Bowler
+15 Nov 2004 LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR instructions - Roger Bowler
 14 Nov 2004 Fix AR-mode translation when alet is 2 - Greg Smith
 13 Nov 2004 LXEB,LXEBR,LXDB,LXDBR instructions - Roger Bowler
 01 Nov 2004 Simplify ALRF integration in LASP (Suggested by RB) - Ivan Warren
