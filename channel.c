@@ -1089,6 +1089,7 @@ void device_reset (DEVBLK *dev)
 #endif
     memset (&dev->scsw, 0, sizeof(SCSW));
     memset (&dev->pciscsw, 0, sizeof(SCSW));
+    memset (&dev->attnscsw, 0, sizeof(SCSW));
 
     dev->readpending = 0;
     dev->crwpending = 0;
