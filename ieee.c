@@ -3,9 +3,9 @@
  * ieee.c
  * Binary (IEEE) Floating Point Instructions
  * Copyright (c) 2001 Willem Konynenberg <wfk@xos.nl>
+ * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * Licensed under the Q Public License
- * For details, see
- * http://www.trolltech.com/products/download/freelicense/license.html
+ * For details, see html/herclic.html
  */
 
 /*
@@ -139,6 +139,9 @@ struct sbfp {
 #define subtract_ebfp ARCH_DEP(subtract_ebfp)
 #define subtract_lbfp ARCH_DEP(subtract_lbfp)
 #define subtract_sbfp ARCH_DEP(subtract_sbfp)
+#define testdataclass_ebfp ARCH_DEP(testdataclass_ebfp)
+#define testdataclass_lbfp ARCH_DEP(testdataclass_lbfp)
+#define testdataclass_sbfp ARCH_DEP(testdataclass_sbfp)
 
 /*
  * Convert from C IEEE exception to Pop IEEE exception
@@ -3203,10 +3206,133 @@ DEF_INST(subtract_bfp_short)
 }
 
 /*
- * ED12 TCXB  - TEST DATA CLASS (extended BFP)                 [RXE]
- * ED11 TCDB  - TEST DATA CLASS (long BFP)                     [RXE]
- * ED10 TCEB  - TEST DATA CLASS (short BFP)                    [RXE]
+ * ED10 TCEB   - TEST DATA CLASS (short BFP)                   [RXE]
+ * Per Jessen, Willem Konynenberg, 20 September 2001
  */
+DEF_INST(testdataclass_bfp_short)
+{
+	int r1, b2;
+	VADR effective_addr2;
+	struct sbfp op1;
+	int bit;
+
+	// parse instruction
+	RXE(inst, execflag, regs, r1, b2, effective_addr2);
+
+	//logmsg("TCEB r1=%d b2=%d\n", r1, b2);
+	BFPINST_CHECK(regs);
+
+	// retrieve first operand.
+	get_sbfp(&op1, regs->fpr + FPR2I(r1));
+
+	switch ( sbfpclassify(&op1) )
+	{ 
+	case FP_ZERO:
+		bit=20+op1.sign; break;
+	case FP_NORMAL:
+		bit=22+op1.sign; break;
+	case FP_SUBNORMAL:
+		bit=24+op1.sign; break;
+	case FP_INFINITE:
+		bit=26+op1.sign; break;
+	case FP_NAN:
+		if ( !sbfpissnan(&op1) ) bit=28+op1.sign; 
+		else                     bit=30+op1.sign; 
+		break;
+	default:
+		bit=0; break;
+	}
+
+	bit=31-bit;
+	regs->psw.cc = (effective_addr2>>bit) & 1;
+}
+
+
+/*
+ * ED11 TCDB   - TEST DATA CLASS (long BFP)                   [RXE]
+ * Per Jessen, Willem Konynenberg, 20 September 2001
+ */
+DEF_INST(testdataclass_bfp_long)
+{
+	int r1, b2;
+	VADR effective_addr2;
+	struct lbfp op1;
+	int bit;
+
+	// parse instruction
+	RXE(inst, execflag, regs, r1, b2, effective_addr2);
+
+	//logmsg("TCDB r1=%d b2=%d\n", r1, b2);
+	BFPINST_CHECK(regs);
+
+	// retrieve first operand.
+	get_lbfp(&op1, regs->fpr + FPR2I(r1));
+
+	switch ( lbfpclassify(&op1) )
+	{ 
+	case FP_ZERO:
+		bit=20+op1.sign; break;
+	case FP_NORMAL:
+		bit=22+op1.sign; break;
+	case FP_SUBNORMAL:
+		bit=24+op1.sign; break;
+	case FP_INFINITE:
+		bit=26+op1.sign; break;
+	case FP_NAN:
+		if ( !lbfpissnan(&op1) ) bit=28+op1.sign; 
+		else                     bit=30+op1.sign; 
+		break;
+	default:
+		bit=0; break;
+	}
+
+	bit=31-bit;
+	regs->psw.cc = (effective_addr2>>bit) & 1;
+}
+
+/*
+ * ED12 TCXB   - TEST DATA CLASS (extended BFP)               [RXE]
+ * Per Jessen, Willem Konynenberg, 20 September 2001
+ */
+DEF_INST(testdataclass_bfp_ext)
+{
+	int r1, b2;
+	VADR effective_addr2;
+	struct ebfp op1;
+	int bit;
+
+	// parse instruction
+	RXE(inst, execflag, regs, r1, b2, effective_addr2);
+
+	//logmsg("TCXB r1=%d b2=%d\n", r1, b2);
+	BFPINST_CHECK(regs);
+	BFPREGPAIR2_CHECK( r1, 0, regs );
+
+	// retrieve first operand.
+	get_ebfp(&op1, regs->fpr + FPR2I(r1));
+
+	switch ( ebfpclassify(&op1) )
+	{ 
+	case FP_ZERO:
+		bit=20+op1.sign; break;
+	case FP_NORMAL:
+		bit=22+op1.sign; break;
+	case FP_SUBNORMAL:
+		bit=24+op1.sign; break;
+	case FP_INFINITE:
+		bit=26+op1.sign; break;
+	case FP_NAN:
+		if ( !ebfpissnan(&op1) ) bit=28+op1.sign; 
+		else                     bit=30+op1.sign; 
+		break;
+	default:
+		bit=0; break;
+	}
+
+	bit=31-bit;
+	regs->psw.cc = (effective_addr2>>bit) & 1;
+}
+
 #endif	/* FEATURE_BINARY_FLOATING_POINT */
 
 #if !defined(_GEN_ARCH)

@@ -2315,5 +2315,8 @@ DEF_INST(subtract_bfp_long_reg);
 DEF_INST(subtract_bfp_long);
 DEF_INST(subtract_bfp_short_reg);
 DEF_INST(subtract_bfp_short);
+DEF_INST(testdataclass_bfp_short);
+DEF_INST(testdataclass_bfp_long);
+DEF_INST(testdataclass_bfp_ext);
 
 /* end of OPCODE.H */

@@ -395,6 +395,9 @@
  UNDEF_INST(subtract_bfp_long_reg)
  UNDEF_INST(subtract_bfp_short)
  UNDEF_INST(subtract_bfp_short_reg)
+ UNDEF_INST(testdataclass_bfp_short)
+ UNDEF_INST(testdataclass_bfp_long)
+ UNDEF_INST(testdataclass_bfp_ext)
 #endif /*!defined(FEATURE_BINARY_FLOATING_POINT)*/
 
 
@@ -3672,9 +3675,9 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED0D*/ GENx___x390x900 (divide_bfp_short,RXE,"DEB"),
  /*ED0E*/ GENx___x___x___ ,
  /*ED0F*/ GENx___x___x___ ,
- /*ED10*/ GENx___x___x___ ,
- /*ED11*/ GENx___x___x___ ,
- /*ED12*/ GENx___x___x___ ,
+ /*ED10*/ GENx___x390x900 (testdataclass_bfp_short,RXE,"TCEB"),
+ /*ED11*/ GENx___x390x900 (testdataclass_bfp_long,RXE,"TCDB"),
+ /*ED12*/ GENx___x390x900 (testdataclass_bfp_ext,RXE,"TCXB"),
  /*ED13*/ GENx___x___x___ ,
  /*ED14*/ GENx___x390x900 (squareroot_bfp_short,RXE,"SQEB"),
  /*ED15*/ GENx___x390x900 (squareroot_bfp_long,RXE,"SQDB"),
