@@ -463,10 +463,6 @@ BYTE    c;                              /* Work area for sscanf      */
             {
                 sostailor = operand;
             }
-            else if (strcasecmp (keyword, "cfccimage") == 0)
-            {
-                addargc = 0;
-            }
             else if (strcasecmp (keyword, "archmode") == 0)
             {
                 sarchmode = operand;
