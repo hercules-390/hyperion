@@ -2051,6 +2051,10 @@ DEF_INST(pack_ascii);
 DEF_INST(pack_unicode);
 DEF_INST(unpack_ascii);
 DEF_INST(unpack_unicode);
+DEF_INST(translate_two_to_two);
+DEF_INST(translate_two_to_one);
+DEF_INST(translate_one_to_two);
+DEF_INST(translate_one_to_one);
 
 
 /* Instructions in ieee.c */

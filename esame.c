@@ -4925,6 +4925,339 @@ int     cc;                             /* Condition code            */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 
 
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+/*-------------------------------------------------------------------*/
+/* B993 TROO  - Translate One to One                           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(translate_one_to_one)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+VADR    addr1, addr2, trtab;            /* Effective addresses       */
+GREG    len; 
+BYTE    svalue, dvalue, tvalue;
+int     cc = 3;
+
+
+    RRE(inst, execflag, regs, r1, r2);
+
+    ODD_CHECK(r1, regs);
+
+    /* Determine length */
+    len = GR_A(r1 + 1,regs);
+
+    /* Determine destination, source and translate table address */
+    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
+
+    /* Determine test value */
+    tvalue = regs->GR_LHLCL(0);
+
+    while(len)
+    {
+        svalue = ARCH_DEP(vfetchb) (addr2, r2, regs);
+
+        /* Fetch value from translation table */
+        dvalue = ARCH_DEP(vfetchb) (trtab + svalue, 1, regs);
+
+        /* If the testvalue was found then exit with cc1 */
+        if(dvalue == tvalue)
+        {
+            cc = 1;
+            break;
+        }
+
+        /* Store destination value */
+        ARCH_DEP(vstoreb) (dvalue, addr2, r2, regs);
+
+        /* Adjust source addr, destination addr and length */
+        addr1++; addr1 &= ADDRESS_MAXWRAP(regs);
+        addr2++; addr2 &= ADDRESS_MAXWRAP(regs);
+        len--;
+
+        /* Update the registers */
+        GR_A(r1, regs) = addr1;
+        GR_A(r1 + 1, regs) = len;
+        GR_A(r2, regs) = addr2;
+
+        /* Set cc0 when all values have been processed */
+        cc = len ? 3 : 0;
+
+        /* exit with cc3 on the cpu determined number of bytes */
+        if((len != 0) && !(len & 0xfff))
+        {
+            cc = 3;
+            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            break;
+        }
+
+    } /* end while */
+
+    /* Update the registers */
+    GR_A(r1, regs) = addr1;
+    GR_A(r1 + 1, regs) = len;
+    GR_A(r2, regs) = addr2;
+
+    /* Set condition code */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(translate_one_to_one) */
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
+
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+/*-------------------------------------------------------------------*/
+/* B992 TROT  - Translate One to Two                           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(translate_one_to_two)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+VADR    addr1, addr2, trtab;            /* Effective addresses       */
+GREG    len; 
+BYTE    svalue;
+BYTE    dvalue, tvalue;
+int     cc = 3;
+
+
+    RRE(inst, execflag, regs, r1, r2);
+
+    ODD_CHECK(r1, regs);
+
+    /* Determine length */
+    len = GR_A(r1 + 1,regs);
+
+    /* Determine destination, source and translate table address */
+    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~7;
+
+    /* Determine test value */
+    tvalue = regs->GR_LHL(0);
+
+    while(len)
+    {
+        svalue = ARCH_DEP(vfetchb) (addr2, r2, regs);
+
+        /* Fetch value from translation table */
+        dvalue = ARCH_DEP(vfetch2) (trtab + (2 * svalue), 1, regs);
+
+        /* If the testvalue was found then exit with cc1 */
+        if(dvalue == tvalue)
+        {
+            cc = 1;
+            break;
+        }
+
+        /* Store destination value */
+        ARCH_DEP(vstore2) (dvalue, addr2, r2, regs);
+
+        /* Adjust source addr, destination addr and length */
+        addr1 += 2; addr1 &= ADDRESS_MAXWRAP(regs);
+        addr2++; addr2 &= ADDRESS_MAXWRAP(regs);
+        len--;
+
+        /* Update the registers */
+        GR_A(r1, regs) = addr1;
+        GR_A(r1 + 1, regs) = len;
+        GR_A(r2, regs) = addr2;
+
+        /* Set cc0 when all values have been processed */
+        cc = len ? 3 : 0;
+
+        /* exit with cc3 on the cpu determined number of bytes */
+        if((len != 0) && !(len & 0xfff))
+        {
+            cc = 3;
+            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            break;
+        }
+
+    } /* end while */
+
+    /* Update the registers */
+    GR_A(r1, regs) = addr1;
+    GR_A(r1 + 1, regs) = len;
+    GR_A(r2, regs) = addr2;
+
+    /* Set condition code */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(translate_one_to_two) */
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
+
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+/*-------------------------------------------------------------------*/
+/* B991 TRTO  - Translate Two to One                           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(translate_two_to_one)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+VADR    addr1, addr2, trtab;            /* Effective addresses       */
+GREG    len; 
+U16     svalue;
+BYTE    dvalue, tvalue;
+int     cc = 3;
+
+
+    RRE(inst, execflag, regs, r1, r2);
+
+    ODD_CHECK(r1, regs);
+
+    /* Determine length */
+    len = GR_A(r1 + 1,regs);
+
+    ODD_CHECK(len, regs);
+
+    /* Determine destination, source and translate table address */
+    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
+
+    /* Determine test value */
+    tvalue = regs->GR_LHLCL(0);
+
+    while(len)
+    {
+        svalue = ARCH_DEP(vfetch2) (addr2, r2, regs);
+
+        /* Fetch value from translation table */
+        dvalue = ARCH_DEP(vfetchb) (trtab + svalue, 1, regs);
+
+        /* If the testvalue was found then exit with cc1 */
+        if(dvalue == tvalue)
+        {
+            cc = 1;
+            break;
+        }
+
+        /* Store destination value */
+        ARCH_DEP(vstoreb) (dvalue, addr2, r2, regs);
+
+        /* Adjust source addr, destination addr and length */
+        addr1++; addr1 &= ADDRESS_MAXWRAP(regs);
+        addr2 += 2; addr2 &= ADDRESS_MAXWRAP(regs);
+        len--;
+
+        /* Update the registers */
+        GR_A(r1, regs) = addr1;
+        GR_A(r1 + 1, regs) = len;
+        GR_A(r2, regs) = addr2;
+
+        /* Set cc0 when all values have been processed */
+        cc = len ? 3 : 0;
+
+        /* exit with cc3 on the cpu determined number of bytes */
+        if((len != 0) && !(len & 0xfff))
+        {
+            cc = 3;
+            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            break;
+        }
+
+    } /* end while */
+
+    /* Update the registers */
+    GR_A(r1, regs) = addr1;
+    GR_A(r1 + 1, regs) = len;
+    GR_A(r2, regs) = addr2;
+
+    /* Set condition code */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(translate_two_to_one) */
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
+
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+/*-------------------------------------------------------------------*/
+/* B990 TRTT  - Translate Two to Two                           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(translate_two_to_two)
+{
+int     r1, r2;                         /* Values of R fields        */
+
+VADR    addr1, addr2, trtab;            /* Effective addresses       */
+GREG    len; 
+U16     svalue, dvalue, tvalue; 
+int     cc = 3;
+
+    RRE(inst, execflag, regs, r1, r2);
+
+    ODD_CHECK(r1, regs);
+
+    /* Determine length */
+    len = GR_A(r1 + 1,regs);
+
+    ODD_CHECK(len, regs);
+
+    /* Determine destination, source and translate table address */
+    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    trtab = regs->GR(1) & ADDRESS_MAXWRAP(regs) & ~0xfff;
+
+    /* Determine test value */
+    tvalue = regs->GR_LHL(0);
+
+    while(len)
+    {
+        svalue = ARCH_DEP(vfetch2) (addr2, r2, regs);
+
+        /* Fetch value from translation table */
+        dvalue = ARCH_DEP(vfetch2) (trtab + (2 * svalue), 1, regs);
+
+        /* If the testvalue was found then exit with cc1 */
+        if(dvalue == tvalue)
+        {
+            cc = 1;
+            break;
+        }
+
+        /* Store destination value */
+        ARCH_DEP(vstore2) (dvalue, addr2, r2, regs);
+
+        /* Adjust source addr, destination addr and length */
+        addr1 += 2; addr1 &= ADDRESS_MAXWRAP(regs);
+        addr2 += 2; addr2 &= ADDRESS_MAXWRAP(regs);
+        len -= 2;
+
+        /* Update the registers */
+        GR_A(r1, regs) = addr1;
+        GR_A(r1 + 1, regs) = len;
+        GR_A(r2, regs) = addr2;
+
+        /* Set cc0 when all values have been processed */
+        cc = len ? 3 : 0;
+
+        /* exit with cc3 on the cpu determined number of bytes */
+        if((len != 0) && !(len & 0xfff))
+        {
+            cc = 3;
+            regs->psw.IA -= regs->psw.ilc;
+            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+            break;
+        }
+
+    } /* end while */
+
+    /* Update the registers */
+    GR_A(r1, regs) = addr1;
+    GR_A(r1 + 1, regs) = len;
+    GR_A(r2, regs) = addr2;
+
+    /* Set condition code */
+    regs->psw.cc = cc;
+
+} /* end DEF_INST(translate_two_to_two) */
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)
