@@ -1805,7 +1805,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     if (!dev->connected && !IS_CCW_SENSE(code))
     {
         dev->sense[0] = SENSE_IR;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        /* *unitstat = CSW_CE | CSW_DE | CSW_UC; */
+        *unitstat = CSW_UC; /* *ISW3274DR* (as per GA23-0218-11 3.1.3.2.2 Table 5-5) */
         return;
     }
 
