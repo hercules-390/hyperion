@@ -1,3 +1,4 @@
+15 Nov 2002 Add extended translation facility 2 to ESA/390 mode - Jan Jaeger
 14 Nov 2002 Corrections to opcode table and disassembler - Jan Jaeger
 14 Nov 2002 New CTC and LCS emulation - Jim Pierson
 14 Nov 2002 Add SVCA to z/Architecture mode - Jan Jaeger
