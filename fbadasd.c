@@ -16,7 +16,11 @@
 #include "devtype.h"
 
 #if !defined(WIN32) && !defined(__APPLE__)
-#include <linux/fs.h>
+/* Note : "man sd" says to include 'linux/fs.h' - But including kernel
+ * headers in 'user space' is really a no-no.. Hopefully, it's
+ * duplicated somewhere else.
+ */
+#include <sys/mount.h>
 #endif
 
 /*-------------------------------------------------------------------*/
