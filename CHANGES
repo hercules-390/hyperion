@@ -1,6 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
-05 Jun 2004 ASN-and-LX-reuse facility changes for ESTA - Roger Bowler
+05 Jun 2004 ASN-and-LX-reuse facility changes for ESTA,BAKR - Roger Bowler
 05 Jun 2004 Added CU14, CU24 - Bernard van der Helm
 04 Jun 2004 Fix startall bug (thanks Greg) - Fish
 04 Jun 2004 Framework for ASN-and-LX-reuse facility,EPAIR,ESAIR - Roger Bowler

@@ -108,6 +108,14 @@
 
 
 #if defined(FEATURE_LINKAGE_STACK)
+/*-------------------------------------------------------------------*/
+/* Subroutine called by the TRAP2 and TRAP4 instructions             */
+/*                                                                   */
+/* Input:                                                            */
+/*      trap4   0=TRAP2 instruction, 1=TRAP4 instruction             */
+/*      regs    Pointer to the CPU register context                  */
+/*      operand Effective address if TRAP4                           */
+/*-------------------------------------------------------------------*/
 void ARCH_DEP(trap_x) (int trap_is_trap4, REGS *regs, U32 trap_operand)
 {
 RADR ducto;
@@ -859,6 +867,29 @@ int     i;                              /* Array subscript           */
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) == 0x000)
         abs = abs2;
+
+  #if defined(FEATURE_ASN_AND_LX_REUSE)
+    /* If ASN-and-LX-reuse is installed and active, store
+       the SASTEIN (CR3 bits 0-31) in bytes 176-179, and
+       store the PASTEIN (CR4 bits 0-31) in bytes 180-183 */
+    if (regs->CR(0) & CR0_ASN_LX_REUS)
+    {
+        STORE_FW(regs->mainstor + abs, regs->CR_H(3));
+        STORE_FW(regs->mainstor + abs + 4, regs->CR_H(4));
+
+      #ifdef STACK_DEBUG
+        logmsg (_("stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
+                "PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
+                "stored at V:" F_VADR " A:" F_RADR "\n"),
+                regs->mainstor[abs], regs->mainstor[abs+1],
+                regs->mainstor[abs+2], regs->mainstor[abs+3],
+                regs->mainstor[abs+4], regs->mainstor[abs+5],
+                regs->mainstor[abs+6], regs->mainstor[abs+7],
+                lsea, abs);
+      #endif /*STACK_DEBUG*/
+
+    } /* end if(CR0_ASN_LX_REUS) */
+  #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
     /* Skip bytes 176-223 of the new stack entry */
     lsea += 48;
