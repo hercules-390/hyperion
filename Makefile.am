@@ -8,7 +8,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 # (gettextize/libtoolize adds intl & m4 subdirectories)
 
-SUBDIRS = intl m4    \
+SUBDIRS =    \
           po util html man
 
 LDADD = @LIBINTL@
@@ -368,7 +368,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-EXTRA_DIST = autoconf/config.rpath   \
+EXTRA_DIST =   \
              hercules.cnf          \
              cckdfix.c             \
              README.COMMADPT       \

@@ -169,57 +169,19 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-dist_pkgdata_DATA = cckddasd.html hercinst.html hercnew.html \
-        hercconf.html herclic.html  hercrdr.html  herctcp.html \
-        hercfaq.html  hercload.html index.html    hercules.css \
-        hercules.html tasks.html    fishgui.html  hercmsg.html \
-        hercmscf.html hercmscp.html hercmsct.html hercmsda.html \
-        hercmsdc.html hercmsdg.html hercmsdi.html hercmsdl.html hercmsds.html \
-        hercmsdt.html hercmsdu.html hercmshe.html hercmshg.html \
-        hercmshm.html hercmsht.html hercmshu.html hercmsif.html \
-        hercmsin.html hercmslc.html hercmspn.html hercmspr.html \
-        hercmspu.html hercmsrd.html hercmssd.html hercmsta.html \
-        hercmstc.html hercmste.html hercmstm.html hercmsts.html \
-        hercmstt.html hercmstu.html hercmslg.html hercmsca.html
-
-
-include_sources = include/header.htmlpart include/footer.htmlpart
-
-include_pkgdatadir = $(pkgdatadir)/include
-
-dist_include_pkgdata_DATA = $(include_sources)
-
-images_sources = images/hercules.jpg \
-        images/dial1.gif       images/loadu.gif       images/startd.gif  \
-        images/dial2.gif       images/manonu.gif      images/startu.gif  \
-        images/dial3.gif       images/poweroffd.gif   images/stopd.gif   \
-        images/dial4.gif       images/poweroffu.gif   images/stopu.gif   \
-        images/interruptd.gif  images/poweronond.gif  images/stored.gif  \
-        images/interruptu.gif  images/powerononu.gif  images/storeu.gif  \
-        images/loadd.gif       images/restartd.gif    images/sysonu.gif  \
-        images/loadonu.gif     images/restartu.gif    images/waitonu.gif \
-        images/osi-certified-60x50.jpg
-
-
-images_pkgdatadir = $(pkgdatadir)/images
-
-dist_images_pkgdata_DATA = $(images_sources)
-subdir = html
+EXTRA_DIST = codeset.m4 gettext.m4 glibc21.m4 iconv.m4 intdiv0.m4 inttypes.m4 inttypes_h.m4 inttypes-pri.m4 isc-posix.m4 lcmessage.m4 lib-ld.m4 lib-link.m4 lib-prefix.m4 progtest.m4 stdint_h.m4 uintmax_t.m4 ulonglong.m4
+subdir = m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 DIST_SOURCES =
-DATA = $(dist_images_pkgdata_DATA) $(dist_include_pkgdata_DATA) \
-	$(dist_pkgdata_DATA)
-
-DIST_COMMON = $(dist_images_pkgdata_DATA) $(dist_include_pkgdata_DATA) \
-	$(dist_pkgdata_DATA) Makefile.am Makefile.in
+DIST_COMMON = Makefile.am Makefile.in
 all: all-am
 
 .SUFFIXES:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  html/Makefile
+	  $(AUTOMAKE) --gnu  m4/Makefile
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
 
@@ -232,60 +194,6 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-dist_images_pkgdataDATA_INSTALL = $(INSTALL_DATA)
-install-dist_images_pkgdataDATA: $(dist_images_pkgdata_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(images_pkgdatadir)
-	@list='$(dist_images_pkgdata_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(dist_images_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(images_pkgdatadir)/$$f"; \
-	  $(dist_images_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(images_pkgdatadir)/$$f; \
-	done
-
-uninstall-dist_images_pkgdataDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(dist_images_pkgdata_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(images_pkgdatadir)/$$f"; \
-	  rm -f $(DESTDIR)$(images_pkgdatadir)/$$f; \
-	done
-dist_include_pkgdataDATA_INSTALL = $(INSTALL_DATA)
-install-dist_include_pkgdataDATA: $(dist_include_pkgdata_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(include_pkgdatadir)
-	@list='$(dist_include_pkgdata_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(dist_include_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(include_pkgdatadir)/$$f"; \
-	  $(dist_include_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(include_pkgdatadir)/$$f; \
-	done
-
-uninstall-dist_include_pkgdataDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(dist_include_pkgdata_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(include_pkgdatadir)/$$f"; \
-	  rm -f $(DESTDIR)$(include_pkgdatadir)/$$f; \
-	done
-dist_pkgdataDATA_INSTALL = $(INSTALL_DATA)
-install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)
-	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " $(dist_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(pkgdatadir)/$$f"; \
-	  $(dist_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(pkgdatadir)/$$f; \
-	done
-
-uninstall-dist_pkgdataDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
-	  f="`echo $$p | sed -e 's|^.*/||'`"; \
-	  echo " rm -f $(DESTDIR)$(pkgdatadir)/$$f"; \
-	  rm -f $(DESTDIR)$(pkgdatadir)/$$f; \
-	done
 tags: TAGS
 TAGS:
 
@@ -298,7 +206,6 @@ top_distdir = ..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
-	$(mkinstalldirs) $(distdir)/images $(distdir)/include
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -327,10 +234,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(DATA)
+all-am: Makefile
 
 installdirs:
-	$(mkinstalldirs) $(DESTDIR)$(images_pkgdatadir) $(DESTDIR)$(include_pkgdatadir) $(DESTDIR)$(pkgdatadir)
 
 install: install-am
 install-exec: install-exec-am
@@ -372,8 +278,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_images_pkgdataDATA \
-	install-dist_include_pkgdataDATA install-dist_pkgdataDATA
+install-data-am:
 
 install-exec-am:
 
@@ -399,22 +304,16 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_images_pkgdataDATA \
-	uninstall-dist_include_pkgdataDATA uninstall-dist_pkgdataDATA \
-	uninstall-info-am
+uninstall-am: uninstall-info-am
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am info info-am install install-am install-data \
-	install-data-am install-dist_images_pkgdataDATA \
-	install-dist_include_pkgdataDATA install-dist_pkgdataDATA \
-	install-exec install-exec-am install-info install-info-am \
-	install-man install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am uninstall uninstall-am \
-	uninstall-dist_images_pkgdataDATA \
-	uninstall-dist_include_pkgdataDATA uninstall-dist_pkgdataDATA \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
