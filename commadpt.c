@@ -1937,7 +1937,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 if(dev->commadpt->datalostcond)
                 {
                         dev->commadpt->datalostcond=0;
-                        commadpt_read_flush(&dev->commadpt->inbfr);
+                        commadpt_ring_flush(&dev->commadpt->inbfr);
                         *residual=count;
                         *unitstat=CSW_CE|CSW_DE;
                         break;
