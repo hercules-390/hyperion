@@ -55,10 +55,16 @@ struct _ECPSVM_CPSTATS
     ECPSVM_STAT_DCL(SVC);
     ECPSVM_STAT_DCL(SSM);
     ECPSVM_STAT_DCL(LPSW);
+    ECPSVM_STAT_DCL(STNSM);
+    ECPSVM_STAT_DCL(STOSM);
+    ECPSVM_STAT_DCL(SIO);
 } ecpsvm_sastats={
     ECPSVM_STAT_DEF(SVC),
     ECPSVM_STAT_DEF(SSM),
     ECPSVM_STAT_DEF(LPSW),
+    ECPSVM_STAT_DEFU(STNSM),
+    ECPSVM_STAT_DEFU(STOSM),
+    ECPSVM_STAT_DEFU(SIO),
 };
 struct _ECPSVM_SASTATS
 {
@@ -100,8 +106,8 @@ struct _ECPSVM_SASTATS
     ECPSVM_STAT_DEFU(FCCWS),
     ECPSVM_STAT_DEFU(CCWGN),
     ECPSVM_STAT_DEFU(UXCCW),
-    ECPSVM_STAT_DEFU(TRBRG),
-    ECPSVM_STAT_DEFU(TRLOK),
+    ECPSVM_STAT_DEF(TRBRG),
+    ECPSVM_STAT_DEF(TRLOK),
     ECPSVM_STAT_DEFU(VIST),
     ECPSVM_STAT_DEFU(VIPT),
     ECPSVM_STAT_DEF(STEVL),
@@ -152,41 +158,47 @@ struct _ECPSVM_SASTATS
         regs->psw.sgmask=_regs.psw.sgmask;
 
 #define SASSIST_PROLOG( _instname ) \
-    VADR micblok; \
+    VADR amicblok; \
     VADR vpswa; \
     REGS vpregs; \
     BYTE  micpend; \
+    U32   CR6; \
+    ECPSVM_MICBLOK micblok; \
+    BYTE micevma; \
     if(!sysblk.ecpsvm.available) \
     { \
-          DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled in configuration ")); \
+          DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST "#_instname" ECPS:VM Disabled in configuration\n")); \
           return(1); \
     } \
-    micblok=regs->CR_L(6) & 0x00fffff8; \
     if(!regs->psw.prob) \
     { \
-        return(1);      /* Priviledge stats */ \
+          return(1); \
     } \
-    DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST "#_instname" Problem State\n")); \
-    if(!(regs->CR_L(6) & 0x80000000)) \
+    CR6=regs->CR_L(6); \
+    if(!(CR6 & ECPSVM_CR6_VMASSIST)) \
     { \
-        return(1);      /* VM Assist not enabled */ \
+        DEBUG_ASSIST(logmsg("HHCEV300D : EVMA Disabled by guest\n")); \
+        return(1); \
     } \
+    amicblok=CR6 & ECPSVM_CR6_MICBLOK; \
     /* Ensure MICBLOK resides on a single page */ \
     /* Then set ref bit by calling LOG_TO_ABS */ \
-    if((micblok & PAGEFRAME_BYTEMASK) > 0xfe0) \
+    if((amicblok & 0x007ff) > 0x7e0) \
     { \
-        DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n",micblok)); \
+        DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST "#_instname" Micblok @ %6.6X crosses page frame\n",amicblok)); \
         return(1); \
     } \
     /* Increment call now (don't count early misses) */ \
     ecpsvm_sastats._instname.call++; \
-    micblok=LOGICAL_TO_ABS(micblok,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
-    /* Load the Virtual PSW Address */ \
-    FETCH_FW(vpswa,regs->mainstor+micblok+8); \
-    /* Load MICPEND */ \
-    micpend=vpswa >> 24; \
-    /* keep PSW address portion */ \
-    vpswa &=ADDRESS_MAXWRAP(regs); \
+    amicblok=LOGICAL_TO_ABS(amicblok,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
+    /* Load the micblok copy */ \
+    FETCH_FW(micblok.MICRSEG,regs->mainstor+amicblok); \
+    FETCH_FW(micblok.MICCREG,regs->mainstor+amicblok+4); \
+    FETCH_FW(micblok.MICVPSW,regs->mainstor+amicblok+8); \
+    FETCH_FW(micblok.MICACF,regs->mainstor+amicblok+12); \
+    micpend=(micblok.MICVPSW >> 24); \
+    vpswa=micblok.MICVPSW & ADDRESS_MAXWRAP(regs); \
+    micevma=(micblok.MICACF >> 24); \
     /* Set ref bit on page where Virtual PSW is stored */ \
     vpswa=LOGICAL_TO_ABS(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     /* Load the Virtual PSW in a temporary REGS structure */ \
@@ -226,24 +238,18 @@ DEF_INST(ecpsvm_basic_fretx)
     ECPSVM_PROLOG(FRET);
     DEBUG_ASSIST(logmsg("HHCEV300D : fretx called\n"));
 }
-DEF_INST(ecpsvm_lock_page)
+
+static void ecpsvm_lockpage1(REGS *regs,RADR cortab,RADR pg)
 {
-    VADR ptr_pl;
-    VADR pg;
-    VADR cortbl;
-    VADR corte;
     BYTE corcode;
+    VADR corte;
     U32  lockcount;
+    RADR cortbl;
 
-    ECPSVM_PROLOG(LCKPG);
-
-    ptr_pl=effective_addr1;
-    pg=effective_addr2;
-
-    DEBUG_ASSIST(logmsg("HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n",pg,ptr_pl));
-
-    cortbl=EVM_L(ptr_pl);
+    DEBUG_ASSIST(logmsg("HHCEV300D : LKPG coreptr = "F_RADR" Frame = "F_RADR"\n",cortab,pg));
+    cortbl=EVM_L(cortab);
     corte=cortbl+((pg & 0xfff000)>>8);
+    DEBUG_ASSIST(logmsg("HHCEV300D : LKPG corete = %6.6X\n",corte));
     corcode=EVM_IC(corte+8);
     if(corcode & 0x80)
     {
@@ -257,9 +263,24 @@ DEF_INST(ecpsvm_lock_page)
         EVM_STC(corcode,corte+8);
     }
     EVM_ST(lockcount,corte+4);
+    DEBUG_ASSIST(logmsg("HHCEV300D : LKPG Page locked. Count = %6.6X\n",lockcount));
+    return;
+}
+DEF_INST(ecpsvm_lock_page)
+{
+    VADR ptr_pl;
+    VADR pg;
+
+    ECPSVM_PROLOG(LCKPG);
+
+    ptr_pl=effective_addr1;
+    pg=effective_addr2;
+
+    DEBUG_ASSIST(logmsg("HHCEV300D : LKPG PAGE=%6.6X, PTRPL=%6.6X\n",pg,ptr_pl));
+
+    ecpsvm_lockpage1(regs,ptr_pl,pg);
     regs->psw.cc=0;
     BR14;
-    DEBUG_ASSIST(logmsg("HHCEV300D : LKPG Page locked. Count = %6.6X\n",lockcount));
     CPASSIST_HIT(LCKPG);
     return;
 }
@@ -334,15 +355,91 @@ DEF_INST(ecpsvm_disp1)
     ECPSVM_PROLOG(DISP1);
     DEBUG_ASSIST(logmsg("HHCEV300D : DISP 1\n"));
 }
+static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
+{
+    int cc;
+    U16 xcode;
+    int private;
+    int protect;
+    int stid;
+    int corcode;
+#if defined(FEATURE_2K_STORAGE_KEYS)
+    RADR pg1,pg2;
+#endif
+    VADR cortab;
+    cc = ARCH_DEP(translate_addr) (pgadd , USE_PRIMARY_SPACE,  regs,
+                  ACCTYPE_LRA, raddr , &xcode, &private, &protect, &stid);
+    if(cc!=0)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : Tranbring : LRA cc = %d\n",cc));
+        return(1);
+    }
+    /* Get the core table entry from the Real address */
+    cortab=EVM_L( cortabad );
+    cortab+=((*raddr) & 0xfff000) >> 8;
+    corcode=EVM_IC(cortab+8);
+    if(!(corcode & 0x08))
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : Page not shared - OK %d\n",cc));
+        return(0);      /* Page is NOT shared.. All OK */
+    }
+#if defined(FEATURE_2K_STORAGE_KEYS)
+    pg1=(*raddr & 0xfff000);
+    pg2=pg1+0x800;
+    DEBUG_ASSIST(logmsg("HHCEV300D : Checking 2K Storage keys @"F_RADR" & "F_RADR"\n",pg1,pg2));
+    if((STORAGE_KEY(pg1,regs) & STORKEY_CHANGE) ||
+            (STORAGE_KEY(pg2,regs) & STORKEY_CHANGE))
+    {
+#else
+    DEBUG_ASSIST(logmsg("HHCEV300D : Checking 4K Storage keys @"F_RADR"\n",*raddr));
+    if(STORAGE_KEY(*raddr,regs) & STORKEY_CHANGE)
+    {
+#endif
+        DEBUG_ASSIST(logmsg("HHCEV300D : Page shared and changed\n"));
+        return(1);      /* Page shared AND changed */
+    }
+    DEBUG_ASSIST(logmsg("HHCEV300D : Page shared but not changed\n"));
+    return(0);  /* All done */
+}
 DEF_INST(ecpsvm_tpage)
 {
+    int rc;
+    RADR raddr;
     ECPSVM_PROLOG(TRBRG);
     DEBUG_ASSIST(logmsg("HHCEV300D : TRANBRNG\n"));
+    rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
+    if(rc)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : TRANBRNG - Back to CP\n"));
+        return; /* Something not right : NO OP */
+    }
+    regs->psw.cc=0;
+    regs->GR_L(2)=raddr;
+    regs->psw.IA = effective_addr2 & ADDRESS_MAXWRAP(regs);
+    CPASSIST_HIT(TRBRG);
+    return;
 }
 DEF_INST(ecpsvm_tpage_lock)
 {
+    int rc;
+    RADR raddr;
     ECPSVM_PROLOG(TRLOK);
     DEBUG_ASSIST(logmsg("HHCEV300D : TRANLOCK\n"));
+    rc=ecpsvm_tranbrng(regs,effective_addr1,regs->GR_L(1),&raddr);
+    if(rc)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : TRANLOCK - Back to CP\n"));
+        return; /* Something not right : NO OP */
+    }
+    /*
+     * Lock the page in Core Table
+     */
+    ecpsvm_lockpage1(regs,effective_addr1,raddr);
+    regs->psw.cc=0;
+    regs->GR_L(2)=raddr;
+    regs->psw.IA = effective_addr2 & ADDRESS_MAXWRAP(regs);
+    CPASSIST_HIT(TRLOK);
+    return;
 }
 DEF_INST(ecpsvm_inval_segtab)
 {
@@ -361,7 +458,6 @@ DEF_INST(ecpsvm_decode_first_ccw)
 }
 DEF_INST(ecpsvm_dispatch_main)
 {
-    VMBLOK      *vmb;
     ECPSVM_PROLOG(DISP0);
     DEBUG_ASSIST(logmsg("HHCEV300D : DISP 0\n"));
 }
@@ -682,28 +778,36 @@ DEF_INST(ecpsvm_prefmach_assist)
 #define DEBUG_ASSIST(x)
 #endif
 /**********************************/
-/* VM ASSIST                      */
+/* VM ASSISTS                     */
 /**********************************/
 
-/********************************************************/
-/* Why I can't use vfetchX/vstoreX accesses from here : */
-/*   The PSW key is set according to the virtual machine*/
-/*   provided PSW Key. But the assist is going to access*/
-/*   real storage for it's own purpose.                 */
-/*   if the Virtual Machine has set a certain key, then */
-/*   attempting to fetch from a storage area with fetch */
-/*   control protection or to store from an area with   */
-/*   a different storage key will yield a protection    */
-/*   exception.                                         */
-/*   Protection exception should only occur             */
-/*   when the target addresses of the instruction       */
-/*   are really protected                               */
-/********************************************************/
+/******************************************************************/
+/* LPSW/SSM/STxSM :                                               */
+/* Not sure about the current processing ..                       */
+/* *MAYBE* we need to invoke DMKDSPCH when the newly loaded PSW   */
+/* does not need further checking. Now.. I wonder what the point  */
+/* is to return to CP anyway, as we have entirelly validated the  */
+/* new PSW (i.e. for most of it, this is essentially a BRANCH     */
+/* However...                                                     */
+/* Maybe we should call DMKDSPCH (from the DMKPRVMA list)         */
+/* only if re-enabling bits (and no Int pending)                  */
+/*                                                                */
+/* For the time being, we do THIS :                               */
+/* If the new PSW 'disables' bits or enables bit but MICPEND=0    */
+/* we just update the VPSW and continue                           */
+/* Same for LPSW.. But we also update the IA                      */
+/* If we encounter ANY issue, we just return to caller (which will*/
+/* generate a PRIVOP) thus invoking CP like for non-EVMA          */
+/******************************************************************/
 
-/* Check psw Transition validity */
+/******************************************************************/
+/* Check psw Transition validity                                  */
+/******************************************************************/
 /* NOTE : oldr/newr Only have the PSW field valid (the rest is not initialised) */
-int     ecpsvm_check_pswtrans(REGS *regs,VADR micblok, BYTE micpend, REGS *oldr, REGS *newr)
+int     ecpsvm_check_pswtrans(REGS *regs,ECPSVM_MICBLOK *micblok, BYTE micpend, REGS *oldr, REGS *newr)
 {
+    UNREFERENCED(micblok);
+    UNREFERENCED(regs);
     /* Check for a switch from BC->EC or EC->BC */
     if(oldr->psw.ecmode!=newr->psw.ecmode)
     {
@@ -713,9 +817,9 @@ int     ecpsvm_check_pswtrans(REGS *regs,VADR micblok, BYTE micpend, REGS *oldr,
     /* Check if PER or DAT is being changed */
     if(newr->psw.ecmode)
     {
-        DEBUG_ASSIST(logmsg("HHCEV300D : New PSW Enables DAT or PER\n"));
         if((newr->psw.sysmask & 0x44) != (oldr->psw.sysmask & 0x44))
         {
+            DEBUG_ASSIST(logmsg("HHCEV300D : New PSW Enables DAT or PER\n"));
             return(1);
         }
     }
@@ -759,7 +863,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,VADR micblok, BYTE micpend, REGS *oldr,
     }
     return(0);
 }
-int     ecpsvm_dossm(REGS *regs,VADR effective_addr2,int b2)
+int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
 {
     BYTE  reqmask;
     RADR  cregs;
@@ -770,14 +874,13 @@ int     ecpsvm_dossm(REGS *regs,VADR effective_addr2,int b2)
 
 
     /* Reject if V PSW is in problem state */
-    if(vpregs.psw.prob)
+    if(CR6 & ECPSVM_CR6_VIRTPROB)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SSM reject : V PB State\n"));
         return(1);
     }
     /* Get CR0 - set ref bit on  fetched CR0 (already done in prolog for MICBLOK) */
-    FETCH_FW(cregs,&regs->mainstor[micblok+4]);
-    LOGICAL_TO_ABS(cregs,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+    cregs=LOGICAL_TO_ABS(micblok.MICCREG,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
     FETCH_FW(creg0,&regs->mainstor[cregs]);
 
     /* Reject if V CR0 specifies SSM Suppression */
@@ -800,7 +903,7 @@ int     ecpsvm_dossm(REGS *regs,VADR effective_addr2,int b2)
     /* While we are at it, set the IA in the V PSW */
     npregs.psw.IA=regs->psw.IA;
 
-    if(ecpsvm_check_pswtrans(regs,micblok,micpend,&vpregs,&npregs))       /* Check PSW transition capability */
+    if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&npregs))       /* Check PSW transition capability */
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SSM Reject : New PSW too complex\n"));
         return(1); /* Something in the NEW PSW we can't handle.. let CP do it */
@@ -827,10 +930,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
         DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SVC Reject : SVC 76\n"));
         return(1);
     }
-#if defined(_FEATURE_SIE)
-    newr.sie_state=0;
-#endif
-    if(regs->CR_L(6) & 0x08000000)
+    if(CR6 & ECPSVM_CR6_SVCINHIB)
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SVC Reject : SVC Assist Inhibit\n"));
         return(1);      /* SVC SASSIST INHIBIT ON */
@@ -840,6 +940,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     psa=(PSA_3XX *)&regs->mainstor[LOGICAL_TO_ABS((VADR)0 , USE_PRIMARY_SPACE, regs, ACCTYPE_READ, 0)];
                                                                                          /* Use all around access key 0 */
                                                                                          /* Also sets reference bit     */
+    INITSIESTATE(newr);
     ARCH_DEP(load_psw) (&newr, (BYTE *)&psa->svcnew);   /* Ref bit set above */
     DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SVC NEW VIRT "));
     DEBUG_ASSIST(display_psw(&newr));
@@ -855,9 +956,9 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SVC OLD VIRT "));
     DEBUG_ASSIST(display_psw(&vpregs));
 
-    if(ecpsvm_check_pswtrans(regs,micblok,micpend,&vpregs,&newr))       /* Check PSW transition capability */
+    if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&newr))       /* Check PSW transition capability */
     {
-        DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SVC Reject : Cannot make transition to new PSW from microcode\n"));
+        DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SVC Reject : Cannot make transition to new PSW\n"));
         return(1); /* Something in the NEW PSW we can't handle.. let CP do it */
     }
     /* Store the OLD SVC PSW */
@@ -888,7 +989,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     return(0);
 }
 /* LPSW Assist */
-int ecpsvm_lpsw(REGS *regs,VADR e2,int b2)
+int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
 {
     VADR nlpsw;
     REGS nregs;
@@ -903,7 +1004,7 @@ int ecpsvm_lpsw(REGS *regs,VADR e2,int b2)
     nlpsw=LOGICAL_TO_ABS(e2,b2,regs,ACCTYPE_READ,regs->psw.pkey);
     INITSIESTATE(nregs);
     ARCH_DEP(load_psw) (&nregs,regs->mainstor+nlpsw);
-    if(ecpsvm_check_pswtrans(regs,micblok,micpend,&vpregs,&nregs))
+    if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&nregs))
     {
         DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST LPSW Rejected - Cannot make PSW transition\n"));
         return(1);
@@ -921,6 +1022,17 @@ int ecpsvm_lpsw(REGS *regs,VADR e2,int b2)
     return(0);
 }
 
+/* SIO/SIOF Assist */
+int ecpsvm_dosio(BYTE *inst,REGS *regs,int b2,VADR e2)
+{
+    SASSIST_PROLOG(SIO);
+    if(inst[1]>1)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST - RIO Not supported\n"));
+        return(1);      /* RIO is a NOGO */
+    }
+    return(1);
+}
 static char *ecpsvm_stat_sep="HHCEV003I +-----------+----------+----------+-------+\n";
 
 static int ecpsvm_sortstats(const void *a,const void *b)
@@ -930,7 +1042,16 @@ static int ecpsvm_sortstats(const void *a,const void *b)
     eb=(ECPSVM_STAT *)b;
     return(eb->call-ea->call);
 }
-    
+int ecpsvm_dostnsm(REGS *regs,int b1,VADR effective_addr1,int imm2)
+{
+    SASSIST_PROLOG(STNSM);
+    return(1);
+}
+int ecpsvm_dostosm(REGS *regs,int b1,VADR effective_addr1,int imm2)
+{
+    SASSIST_PROLOG(STOSM);
+    return(1);
+}
 
 static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
 {
