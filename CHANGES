@@ -1,3 +1,7 @@
+27 Jun 2003 Added addt'l instructions/info to autogen.sh - Fish
+27 Jun 2003 Added README.HDL to EXTRA_DIST in makefile.am - Fish
+27 Jun 2003 Updated makefile.am to add Windows resource definitions
+            to dyngui.dll - Fish
 27 Jun 2003 Framework for ALS4 features - Roger Bowler
 26 Jun 2003 Check for physical shared object when loading dll - Jan Jaeger
 26 Jun 2003 Fix Win32 hdl case-sensitivity bug - Fish

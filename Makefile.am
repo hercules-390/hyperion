@@ -69,7 +69,7 @@ HERCULES_EXP=hercules.exp
 HERCULES_A=hercules.a
 hercules_LDADD = $(LDADD) $(HERCULES_EXP)
 dyninst_LDADD = $(LDADD) $(HERCULES_A)
-dyngui_LDADD = $(LDADD) $(HERCULES_A)
+dyngui_LDADD = $(LDADD) $(HERCULES_A) dyngui.res
 hercules_LDFLAGS = --export-dynamic
 else
 HERCULES_EXP=
@@ -196,9 +196,10 @@ dyninst_LDFLAGS = -shared
 
 dyngui_SOURCES = dyngui.c
 dyngui_LDFLAGS = -shared
+EXTRA_dyngui_SOURCES=dynguib.h dynguip.h dynguiv.h dyngui.rc
 
 if USE_DLLTOOL
-hercules.def: $(am_hercules_OBJECTS)
+hercules.def: $(am_hercules_OBJECTS) dyngui.res
 	dlltool --export-all-symbols --output-def hercules.def $(am_hercules_OBJECTS)
 
 hercules.exp: hercules.def
@@ -214,10 +215,14 @@ dyninst.dll$(EXEEXT): dyninst$(EXEEXT)
 dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 	rm  -f                         dyngui.dll
 	mv           dyngui$(EXEEXT)   dyngui.dll
+
+dyngui.res: dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
+	windres -DHAVE_CONFIG_H --include-dir=. -i dyngui.rc -o dyngui.res -O coff
 endif
 
-EXTRA_DIST = autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
-    README.OSX README.TAPE README.COMMADPT
+EXTRA_DIST = CHANGES README.COMMADPT README.CVS README.ECPSVM \
+             README.HDL README.NETWORKING README.OSX README.TAPE \
+             hercules.cnf autoconf/config.rpath
 
 noinst_HEADERS  = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \

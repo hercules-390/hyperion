@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* DYNGUI.C     Hercules External GUI Interface module               */
+/* DYNGUI.C     Hercules External GUI Interface DLL                  */
 /*              (c) Copyright "Fish" (David B. Trout), 2003          */
 /*                                                                   */
 /* Primary contact:   Fish   [fish@infidels.com]                     */

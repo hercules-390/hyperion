@@ -210,7 +210,7 @@ EXTRA_hercules_SOURCES = $(fthreads_sources) $(fishhang_sources) $(fishio_source
 @USE_DLLTOOL_TRUE@HERCULES_A = hercules.a
 @USE_DLLTOOL_TRUE@hercules_LDADD = $(LDADD) $(HERCULES_EXP)
 @USE_DLLTOOL_TRUE@dyninst_LDADD = $(LDADD) $(HERCULES_A)
-@USE_DLLTOOL_TRUE@dyngui_LDADD = $(LDADD) $(HERCULES_A)
+@USE_DLLTOOL_TRUE@dyngui_LDADD = $(LDADD) $(HERCULES_A) dyngui.res
 @USE_DLLTOOL_FALSE@hercules_LDFLAGS = -rdynamic
 @USE_DLLTOOL_TRUE@hercules_LDFLAGS = --export-dynamic
 
@@ -219,7 +219,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   ipl.c assist.c dat.c \
 	   stack.c cpu.c vstore.c \
 	   general1.c general2.c plo.c \
-	   control.c io.c \
+	   control.c crypto.c io.c \
 	   decimal.c service.c opcode.c \
 	   diagnose.c diagmssf.c vm.c \
 	   channel.c ckddasd.c fbadasd.c \
@@ -356,9 +356,11 @@ dyninst_LDFLAGS = -shared
 
 dyngui_SOURCES = dyngui.c
 dyngui_LDFLAGS = -shared
+EXTRA_dyngui_SOURCES = dynguib.h dynguip.h dynguiv.h dyngui.rc
 
-EXTRA_DIST = autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
-    README.OSX README.TAPE README.COMMADPT
+EXTRA_DIST = CHANGES README.COMMADPT README.CVS README.ECPSVM \
+             README.HDL README.NETWORKING README.OSX README.TAPE \
+             hercules.cnf autoconf/config.rpath
 
 
 noinst_HEADERS = fishhang.h \
@@ -689,7 +691,7 @@ dmap2hrc_DEPENDENCIES =
 dmap2hrc_LDFLAGS =
 am_dyngui_OBJECTS = dyngui.$(OBJEXT)
 dyngui_OBJECTS = $(am_dyngui_OBJECTS)
-@USE_DLLTOOL_TRUE@dyngui_DEPENDENCIES = hercules.a
+@USE_DLLTOOL_TRUE@dyngui_DEPENDENCIES = hercules.a dyngui.res
 @USE_DLLTOOL_FALSE@dyngui_DEPENDENCIES =
 dyngui_dll_SOURCES = dyngui.dll.c
 dyngui_dll_OBJECTS = dyngui.dll.$(OBJEXT)
@@ -726,16 +728,17 @@ hercifc_DEPENDENCIES =
 hercifc_LDFLAGS =
 am__hercules_SOURCES_DIST = hostinfo.c w32ctca.c impl.c config.c panel.c \
 	version.c ipl.c assist.c dat.c stack.c cpu.c vstore.c \
-	general1.c general2.c plo.c control.c io.c decimal.c service.c \
-	opcode.c diagnose.c diagmssf.c vm.c channel.c ckddasd.c \
-	fbadasd.c tapedev.c cardrdr.c cardpch.c printer.c console.c \
-	external.c float.c ctcadpt.c trace.c machchk.c vector.c \
-	xstore.c cmpsc.c sie.c qdio.c timer.c esame.c cckddasd.c \
-	cckdutil.c dasdtab.c parser.c hetlib.c ieee.c sockdev.c \
-	machdep.h fthreads.c fishhang.c w32chan.c httpserv.c cgibin.c \
-	devtype.c codepage.c ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c \
-	hscmisc.c logger.c commadpt.c cache.c ecpsvm.c shared.c \
-	memrchr.c hscutl.c logmsg.c hdl.c hdlmain.c hercules.exp
+	general1.c general2.c plo.c control.c crypto.c io.c decimal.c \
+	service.c opcode.c diagnose.c diagmssf.c vm.c channel.c \
+	ckddasd.c fbadasd.c tapedev.c cardrdr.c cardpch.c printer.c \
+	console.c external.c float.c ctcadpt.c trace.c machchk.c \
+	vector.c xstore.c cmpsc.c sie.c qdio.c timer.c esame.c \
+	cckddasd.c cckdutil.c dasdtab.c parser.c hetlib.c ieee.c \
+	sockdev.c machdep.h fthreads.c fishhang.c w32chan.c httpserv.c \
+	cgibin.c devtype.c codepage.c ctc_ctci.c ctc_lcs.c tuntap.c \
+	hsccmd.c hscmisc.c logger.c commadpt.c cache.c ecpsvm.c \
+	shared.c memrchr.c hscutl.c logmsg.c hdl.c hdlmain.c \
+	hercules.exp
 am__objects_5 = w32chan.$(OBJEXT)
 @BUILD_FTHREADS_TRUE@am__objects_6 = $(am__objects_5)
 @BUILD_FTHREADS_FALSE@am__objects_6 =
@@ -748,25 +751,26 @@ am_hercules_OBJECTS = hostinfo.$(OBJEXT) w32ctca.$(OBJEXT) \
 	version.$(OBJEXT) ipl.$(OBJEXT) assist.$(OBJEXT) dat.$(OBJEXT) \
 	stack.$(OBJEXT) cpu.$(OBJEXT) vstore.$(OBJEXT) \
 	general1.$(OBJEXT) general2.$(OBJEXT) plo.$(OBJEXT) \
-	control.$(OBJEXT) io.$(OBJEXT) decimal.$(OBJEXT) \
-	service.$(OBJEXT) opcode.$(OBJEXT) diagnose.$(OBJEXT) \
-	diagmssf.$(OBJEXT) vm.$(OBJEXT) channel.$(OBJEXT) \
-	ckddasd.$(OBJEXT) fbadasd.$(OBJEXT) tapedev.$(OBJEXT) \
-	cardrdr.$(OBJEXT) cardpch.$(OBJEXT) printer.$(OBJEXT) \
-	console.$(OBJEXT) external.$(OBJEXT) float.$(OBJEXT) \
-	ctcadpt.$(OBJEXT) trace.$(OBJEXT) machchk.$(OBJEXT) \
-	vector.$(OBJEXT) xstore.$(OBJEXT) cmpsc.$(OBJEXT) sie.$(OBJEXT) \
-	qdio.$(OBJEXT) timer.$(OBJEXT) esame.$(OBJEXT) \
-	cckddasd.$(OBJEXT) cckdutil.$(OBJEXT) dasdtab.$(OBJEXT) \
-	parser.$(OBJEXT) hetlib.$(OBJEXT) ieee.$(OBJEXT) \
-	sockdev.$(OBJEXT) $(am__objects_2) $(am__objects_4) \
-	$(am__objects_6) httpserv.$(OBJEXT) cgibin.$(OBJEXT) \
-	devtype.$(OBJEXT) codepage.$(OBJEXT) ctc_ctci.$(OBJEXT) \
-	ctc_lcs.$(OBJEXT) tuntap.$(OBJEXT) hsccmd.$(OBJEXT) \
-	hscmisc.$(OBJEXT) logger.$(OBJEXT) commadpt.$(OBJEXT) \
-	cache.$(OBJEXT) ecpsvm.$(OBJEXT) shared.$(OBJEXT) \
-	$(am__objects_7) hscutl.$(OBJEXT) logmsg.$(OBJEXT) \
-	hdl.$(OBJEXT) hdlmain.$(OBJEXT) $(am__objects_8)
+	control.$(OBJEXT) crypto.$(OBJEXT) io.$(OBJEXT) \
+	decimal.$(OBJEXT) service.$(OBJEXT) opcode.$(OBJEXT) \
+	diagnose.$(OBJEXT) diagmssf.$(OBJEXT) vm.$(OBJEXT) \
+	channel.$(OBJEXT) ckddasd.$(OBJEXT) fbadasd.$(OBJEXT) \
+	tapedev.$(OBJEXT) cardrdr.$(OBJEXT) cardpch.$(OBJEXT) \
+	printer.$(OBJEXT) console.$(OBJEXT) external.$(OBJEXT) \
+	float.$(OBJEXT) ctcadpt.$(OBJEXT) trace.$(OBJEXT) \
+	machchk.$(OBJEXT) vector.$(OBJEXT) xstore.$(OBJEXT) \
+	cmpsc.$(OBJEXT) sie.$(OBJEXT) qdio.$(OBJEXT) timer.$(OBJEXT) \
+	esame.$(OBJEXT) cckddasd.$(OBJEXT) cckdutil.$(OBJEXT) \
+	dasdtab.$(OBJEXT) parser.$(OBJEXT) hetlib.$(OBJEXT) \
+	ieee.$(OBJEXT) sockdev.$(OBJEXT) $(am__objects_2) \
+	$(am__objects_4) $(am__objects_6) httpserv.$(OBJEXT) \
+	cgibin.$(OBJEXT) devtype.$(OBJEXT) codepage.$(OBJEXT) \
+	ctc_ctci.$(OBJEXT) ctc_lcs.$(OBJEXT) tuntap.$(OBJEXT) \
+	hsccmd.$(OBJEXT) hscmisc.$(OBJEXT) logger.$(OBJEXT) \
+	commadpt.$(OBJEXT) cache.$(OBJEXT) ecpsvm.$(OBJEXT) \
+	shared.$(OBJEXT) $(am__objects_7) hscutl.$(OBJEXT) \
+	logmsg.$(OBJEXT) hdl.$(OBJEXT) hdlmain.$(OBJEXT) \
+	$(am__objects_8)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 @USE_DLLTOOL_TRUE@hercules_DEPENDENCIES = hercules.exp
 @USE_DLLTOOL_FALSE@hercules_DEPENDENCIES =
@@ -847,46 +851,46 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/codepage.Po ./$(DEPDIR)/commadpt.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/config.Po ./$(DEPDIR)/console.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/control.Po ./$(DEPDIR)/cpu.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ctc_ctci.Po ./$(DEPDIR)/ctc_lcs.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ctcadpt.Po ./$(DEPDIR)/dasdcat.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dasdcopy.Po ./$(DEPDIR)/dasdinit.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dasdisup.Po ./$(DEPDIR)/dasdload.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dasdls.Po ./$(DEPDIR)/dasdpdsu.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dasdseq.Po ./$(DEPDIR)/dasdtab.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dasdutil.Po ./$(DEPDIR)/dat.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/decimal.Po ./$(DEPDIR)/devtype.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/diagmssf.Po ./$(DEPDIR)/diagnose.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dmap2hrc.Po ./$(DEPDIR)/dyngui.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dyngui.dll.Po ./$(DEPDIR)/dyninst.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dyninst.dll.Po ./$(DEPDIR)/ecpsvm.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/esame.Po ./$(DEPDIR)/external.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/fbadasd.Po ./$(DEPDIR)/fishhang.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/float.Po ./$(DEPDIR)/fthreads.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/general1.Po ./$(DEPDIR)/general2.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hdl.Po ./$(DEPDIR)/hdlmain.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hercifc.Po ./$(DEPDIR)/hetget.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hetinit.Po ./$(DEPDIR)/hetlib.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hetmap.Po ./$(DEPDIR)/hetupd.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hostinfo.Po ./$(DEPDIR)/hsccmd.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hscmisc.Po ./$(DEPDIR)/hscutl.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/httpserv.Po ./$(DEPDIR)/ieee.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/impl.Po ./$(DEPDIR)/io.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ipl.Po ./$(DEPDIR)/logger.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/logmsg.Po ./$(DEPDIR)/machchk.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/memrchr.Po ./$(DEPDIR)/opcode.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/panel.Po ./$(DEPDIR)/parser.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/plo.Po ./$(DEPDIR)/printer.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/qdio.Po ./$(DEPDIR)/service.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/shared.Po ./$(DEPDIR)/sie.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/sllib.Po ./$(DEPDIR)/sockdev.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/stack.Po ./$(DEPDIR)/tapecopy.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/tapedev.Po ./$(DEPDIR)/tapemap.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/tapesplt.Po ./$(DEPDIR)/timer.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/trace.Po ./$(DEPDIR)/tuntap.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/vector.Po ./$(DEPDIR)/version.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/vm.Po ./$(DEPDIR)/vstore.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/w32chan.Po ./$(DEPDIR)/w32ctca.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/xstore.Po
+@AMDEP_TRUE@	./$(DEPDIR)/crypto.Po ./$(DEPDIR)/ctc_ctci.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ctc_lcs.Po ./$(DEPDIR)/ctcadpt.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dasdcat.Po ./$(DEPDIR)/dasdcopy.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dasdinit.Po ./$(DEPDIR)/dasdisup.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dasdload.Po ./$(DEPDIR)/dasdls.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dasdpdsu.Po ./$(DEPDIR)/dasdseq.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dasdtab.Po ./$(DEPDIR)/dasdutil.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dat.Po ./$(DEPDIR)/decimal.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/devtype.Po ./$(DEPDIR)/diagmssf.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/diagnose.Po ./$(DEPDIR)/dmap2hrc.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dyngui.Po ./$(DEPDIR)/dyngui.dll.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dyninst.Po ./$(DEPDIR)/dyninst.dll.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ecpsvm.Po ./$(DEPDIR)/esame.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/external.Po ./$(DEPDIR)/fbadasd.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/fishhang.Po ./$(DEPDIR)/float.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/fthreads.Po ./$(DEPDIR)/general1.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/general2.Po ./$(DEPDIR)/hdl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hdlmain.Po ./$(DEPDIR)/hercifc.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hetget.Po ./$(DEPDIR)/hetinit.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hetlib.Po ./$(DEPDIR)/hetmap.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hetupd.Po ./$(DEPDIR)/hostinfo.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hsccmd.Po ./$(DEPDIR)/hscmisc.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/hscutl.Po ./$(DEPDIR)/httpserv.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ieee.Po ./$(DEPDIR)/impl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/io.Po ./$(DEPDIR)/ipl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/logger.Po ./$(DEPDIR)/logmsg.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/machchk.Po ./$(DEPDIR)/memrchr.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/opcode.Po ./$(DEPDIR)/panel.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/parser.Po ./$(DEPDIR)/plo.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/printer.Po ./$(DEPDIR)/qdio.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/service.Po ./$(DEPDIR)/shared.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/sie.Po ./$(DEPDIR)/sllib.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/sockdev.Po ./$(DEPDIR)/stack.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tapecopy.Po ./$(DEPDIR)/tapedev.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tapemap.Po ./$(DEPDIR)/tapesplt.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/timer.Po ./$(DEPDIR)/trace.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tuntap.Po ./$(DEPDIR)/vector.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/version.Po ./$(DEPDIR)/vm.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/vstore.Po ./$(DEPDIR)/w32chan.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/w32ctca.Po ./$(DEPDIR)/xstore.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -899,13 +903,13 @@ DIST_SOURCES = $(am__cckd2ckd_SOURCES_DIST) $(am__cckdcdsk_SOURCES_DIST) \
 	$(am__dasdisup_SOURCES_DIST) $(am__dasdload_SOURCES_DIST) \
 	$(am__dasdls_SOURCES_DIST) $(am__dasdpdsu_SOURCES_DIST) \
 	$(am__dasdseq_SOURCES_DIST) $(am__dmap2hrc_SOURCES_DIST) \
-	$(dyngui_SOURCES) dyngui.dll.c $(dyninst_SOURCES) dyninst.dll.c \
-	$(am__fba2cfba_SOURCES_DIST) $(hercifc_SOURCES) \
-	$(am__hercules_SOURCES_DIST) $(EXTRA_hercules_SOURCES) \
-	$(am__hetget_SOURCES_DIST) $(am__hetinit_SOURCES_DIST) \
-	$(am__hetmap_SOURCES_DIST) $(am__hetupd_SOURCES_DIST) \
-	$(am__tapecopy_SOURCES_DIST) $(am__tapemap_SOURCES_DIST) \
-	$(am__tapesplt_SOURCES_DIST)
+	$(dyngui_SOURCES) $(EXTRA_dyngui_SOURCES) dyngui.dll.c \
+	$(dyninst_SOURCES) dyninst.dll.c $(am__fba2cfba_SOURCES_DIST) \
+	$(hercifc_SOURCES) $(am__hercules_SOURCES_DIST) \
+	$(EXTRA_hercules_SOURCES) $(am__hetget_SOURCES_DIST) \
+	$(am__hetinit_SOURCES_DIST) $(am__hetmap_SOURCES_DIST) \
+	$(am__hetupd_SOURCES_DIST) $(am__tapecopy_SOURCES_DIST) \
+	$(am__tapemap_SOURCES_DIST) $(am__tapesplt_SOURCES_DIST)
 HEADERS = $(noinst_HEADERS)
 
 
@@ -920,7 +924,7 @@ DIST_COMMON = $(noinst_HEADERS) ABOUT-NLS INSTALL Makefile.am \
 	autoconf/install-sh autoconf/missing autoconf/mkinstalldirs \
 	config.h.in configure configure.ac
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckddiag_SOURCES) $(cckdswap_SOURCES) $(cfba2fba_SOURCES) $(ckd2cckd_SOURCES) $(dasdcat_SOURCES) $(dasdcopy_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dasdseq_SOURCES) $(dmap2hrc_SOURCES) $(dyngui_SOURCES) dyngui.dll.c $(dyninst_SOURCES) dyninst.dll.c $(fba2cfba_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(EXTRA_hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
+SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckddiag_SOURCES) $(cckdswap_SOURCES) $(cfba2fba_SOURCES) $(ckd2cckd_SOURCES) $(dasdcat_SOURCES) $(dasdcopy_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dasdseq_SOURCES) $(dmap2hrc_SOURCES) $(dyngui_SOURCES) $(EXTRA_dyngui_SOURCES) dyngui.dll.c $(dyninst_SOURCES) dyninst.dll.c $(fba2cfba_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(EXTRA_hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -1103,6 +1107,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/console.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crypto.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctc_ctci.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctc_lcs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ctcadpt.Po@am__quote@
@@ -1553,7 +1558,7 @@ uninstall-info: uninstall-info-recursive
 
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-@USE_DLLTOOL_TRUE@hercules.def: $(am_hercules_OBJECTS)
+@USE_DLLTOOL_TRUE@hercules.def: $(am_hercules_OBJECTS) dyngui.res
 @USE_DLLTOOL_TRUE@	dlltool --export-all-symbols --output-def hercules.def $(am_hercules_OBJECTS)
 
 @USE_DLLTOOL_TRUE@hercules.exp: hercules.def
@@ -1569,6 +1574,9 @@ uninstall-info: uninstall-info-recursive
 @USE_DLLTOOL_TRUE@dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
 @USE_DLLTOOL_TRUE@	rm  -f                         dyngui.dll
 @USE_DLLTOOL_TRUE@	mv           dyngui$(EXEEXT)   dyngui.dll
+
+@USE_DLLTOOL_TRUE@dyngui.res: dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
+@USE_DLLTOOL_TRUE@	windres -DHAVE_CONFIG_H  --include-dir=. -i dyngui.rc -o dyngui.res -O coff
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
