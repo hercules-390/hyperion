@@ -64,15 +64,20 @@ int i;
     /* Set watchdog priority just below cpu priority
        such that it will not invalidly detect an 
        inoperable cpu */
-    if(sysblk.cpuprio > 0)
+    if(sysblk.cpuprio >= 0)
         setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1);
 #endif
 
     while(1)
     {
-        for(i = 0; i < MAX_CPU_ENGINES; i++)
+#ifdef FEATURE_CPU_RECONFIG
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
+#else /*!FEATURE_CPU_RECONFIG*/
+        for (i = 0; i < sysblk.numcpu; i++)
+#endif /*!FEATURE_CPU_RECONFIG*/
         {
-            if(sysblk.regs[i].cpustate == CPUSTATE_STARTED)
+            if(sysblk.regs[i].cpustate == CPUSTATE_STARTED
+              && !sysblk.regs[i].psw.wait)
             {
                 /* If the cpu is running but not executing 
                    instructions then it must be malfunctioning */
