@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #endif
 #define uint8_t u_int8_t
-#define uint16_t u_int6_t
+#define uint16_t u_int16_t
 #define uint32_t u_int32_t
 #define uint64_t u_int64_t
 #else
