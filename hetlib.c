@@ -1182,7 +1182,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
     int rc;
     int flags;
     unsigned long tlen;
-    char tbuf[ HETMAX_BLOCKSIZE ];
+    char tbuf[ ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12) ];
 
     /*
     || Validate
