@@ -17,7 +17,7 @@
 /*   "Unusual" build options...   */
 /*--------------------------------*/
 
-static const char *build_options[] = {
+static const char *build_info[] = {
 
 #if defined(DEBUG)
     "**DEBUG**",
@@ -26,22 +26,23 @@ static const char *build_options[] = {
 #if defined(WIN32)
     "Win32 (Windows) build",
 #else
-    #if defined(HAVE_LINUX_IF_TUN_H)
-        "Have <linux/if_tun.h>",
+    #if defined(NO_SETUID)
+        "No setuid support"
+    #else
+      "Using "
+      #if defined(HAVE_SETRESUID)
+          "setresuid()"
+      #elif defined(HAVE_SETREUID)
+          "setreuid()"
+      #else
+          "(UNKNOWN)"
+      #endif
+      " for setting privileges",
     #endif
-    #if !defined(HAVE_SETRESUID) || !defined(HAVE_SETREUID) || defined(NO_SETUID)
-        "No "
-        #if !defined(HAVE_SETRESUID)
-            "SETRESUID "
-        #endif
-        #if !defined(HAVE_SETREUID)
-            "SETREUID "
-        #endif
-        #if defined(NO_SETUID)
-            "SETUID "
-        #endif
-        "support",
-    #endif
+#endif
+
+#if defined(HAVE_LINUX_IF_TUN_H)
+    "Linux TUN driver support",
 #endif
 
 #if defined(NOTHREAD)
@@ -80,6 +81,10 @@ static const char *build_options[] = {
     CUSTOM_BUILD_STRING,
 #endif
 
+#if defined(__DATE__) && defined(__TIME__)
+  "Build date: " __DATE__ " " __TIME__,
+#endif
+
   "$Id$",
 
   "$Name$"
@@ -97,11 +102,11 @@ void display_version (FILE *f, char *prog, char *version,
     fprintf (f, "%sVersion %s build at %s %s\nBuild information:\n",
              prog, version, date, time);
 
-    if (sizeof(build_options) == 0)
+    if (sizeof(build_info) == 0)
       fprintf(f, "  (none)\n");
     else
-      for( i = 0 ; i < sizeof(build_options) / sizeof(build_options[0]) ; ++i )
-	fprintf(f, "  %s\n", build_options[i]);
+      for( i = 0 ; i < sizeof(build_info) / sizeof(build_info[0]) ; ++i )
+	fprintf(f, "  %s\n", build_info[i]);
 
     fprintf(f, "%s\n", HERCULES_COPYRIGHT);
 } /* end function display_version */
