@@ -1037,28 +1037,41 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     /* Look for an available console device */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
+        /* Obtain the device lock */
+        obtain_lock (&dev->lock);
+
         /* Loop if the device is invalid */
         if(!(dev->pmcw.flag5 & PMCW5_V))
+        {
+            release_lock (&dev->lock);
             continue;
+        }
 
         /* Loop if non-matching device type */
         if (class == 'D' && dev->devtype != 0x3270)
+        {
+            release_lock (&dev->lock);
             continue;
-
+        }
         if (class == 'P' && dev->devtype != 0x3287)
+        {
+            release_lock (&dev->lock);
             continue;
-
+        }
         if (class == 'K' && dev->devtype != 0x1052
             && dev->devtype != 0x3215)
+        {
+            release_lock (&dev->lock);
             continue;
+        }
 
         /* Loop if a specific device number was requested and
            this device is not the requested device number */
         if (devnum != 0xFFFF && dev->devnum != devnum)
+        {
+            release_lock (&dev->lock);
             continue;
-
-        /* Obtain the device lock */
-        obtain_lock (&dev->lock);
+        }
 
         /* Test for available device */
         if (dev->connected == 0)
@@ -1267,6 +1280,9 @@ BYTE                    unitstat;       /* Status after receive data */
         /* Include the socket for each connected console */
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         {
+            /* Obtain the device lock */
+            obtain_lock (&dev->lock);
+
             if (dev->console
                 && dev->connected
                 && (!dev->busy || (dev->scsw.flag3 & SCSW3_AC_SUSP))
@@ -1278,6 +1294,10 @@ BYTE                    unitstat;       /* Status after receive data */
                 FD_SET (dev->fd, &readset);
                 if (dev->fd > maxfd) maxfd = dev->fd;
             }
+
+            /* Release the device lock */
+            release_lock (&dev->lock);
+
         } /* end for(dev) */
 
         /* Wait for a file descriptor to become ready */
@@ -1296,7 +1316,8 @@ BYTE                    unitstat;       /* Status after receive data */
         {
             if (errno == EINTR) continue;
             TNSERROR("select: %s\n", strerror(errno));
-            break;
+//          break;
+            continue;   // (low occurrence; ignore for now; Fish)
         }
 
         /* If a client connection request has arrived then accept it */
@@ -1428,6 +1449,9 @@ console_initialise()
 static void
 console_remove(DEVBLK *dev)
 {
+    /* Obtain the device lock */
+    obtain_lock (&dev->lock);
+
     if(dev->fd > 2)
         close (dev->fd);
     dev->fd = -1;
@@ -1435,6 +1459,9 @@ console_remove(DEVBLK *dev)
     /* Reset device dependent flags */
     dev->connected = 0;
     dev->console = 0;
+
+    /* Release the device lock */
+    release_lock (&dev->lock);
 
     if(!sysblk.cnslcnt--)
         logmsg(_("console_remove() error\n"));
@@ -1523,6 +1550,8 @@ loc3270_close_device ( DEVBLK *dev )
 static int
 constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
+    /* Obtain the device lock */
+    obtain_lock (&dev->lock);
 
     /* Indicate that this is a console device */
     dev->console = 1;
@@ -1556,6 +1585,9 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->devid[5] = dev->devtype & 0xFF;
     dev->devid[6] = 0x00;
     dev->numdevid = 7;
+
+    /* Release the device lock */
+    release_lock (&dev->lock);
 
     return console_initialise();
 

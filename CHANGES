@@ -1,3 +1,4 @@
+28 Jun 2003 Fix "console: select: Bad file number" - Fish
 28 Jun 2003 Updated hercinst.html with panel command info - Fish
 28 Jun 2003 Loadable crypto support (US export regulations) - Jan Jaeger
 27 Jun 2003 Allow unload reject in hdl final processing - Jan Jaeger

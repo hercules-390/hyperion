@@ -160,7 +160,7 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  po util html man
+SUBDIRS = po util html man intl m4
 @BUILD_HERCIFC_FALSE@HERCIFC = 
 
 @BUILD_HERCIFC_TRUE@HERCIFC = hercifc
@@ -358,9 +358,8 @@ dyngui_SOURCES = dyngui.c
 dyngui_LDFLAGS = -shared
 EXTRA_dyngui_SOURCES = dynguib.h dynguip.h dynguiv.h dyngui.rc
 
-EXTRA_DIST = CHANGES README.COMMADPT README.CVS README.ECPSVM \
-             README.HDL README.NETWORKING README.OSX README.TAPE \
-             hercules.cnf autoconf/config.rpath
+EXTRA_DIST = autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
+             README.HDL README.NETWORKING README.OSX README.TAPE hercules.cnf
 
 
 noinst_HEADERS = fishhang.h \
