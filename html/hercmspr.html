@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Messages: PR - Printer Emulation</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages: PR - Printer Emulation</h1>
+<p>
+This page describes the printer emulation messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator.
+<h3>Messages</h3>
+<dl>
+<dt><code><a name="HHCPR001E">
+HHCPR001E File name missing or invalid for printer <em>address</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>There was no file name specified for the printer
+at address <code><em>address</em></code>, or
+else there was one specified, but it was too long.
+  <dt>Action
+  <dd>Correct the error in the Hercules configuration file. The
+device may be made available by specifying a filename with the
+<code>devinit</code> command.
+  <dt>Issued by
+  <dd>printer.c, function printer_init_handler
+  </dl>
+<dt><code><a name="HHCPR002E">
+HHCPR002E Invalid argument for printer <em>address</em>: <em>argument</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An invalid argument was specified on the definition of the printer
+at address <code><em>address</em></code>.
+  <dt>Action
+  <dd>Correct or remove the invalid argument.
+  <dt>Issued by
+  <dd>printer.c, function printer_init_handler
+  </dl>
+<dt><code><a name="HHCPR003E">
+HHCPR003E <em>address</em> Error writing to <em>filename</em>:
+<em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when writing output for the printer
+at address <code><em>address</em></code> to the file named
+<code><em>filename</em></code>. The error is described
+by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function write_buffer
+  </dl>
+<dt><code><a name="HHCPR004E">
+HHCPR004E Error opening file <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when opening the file named
+<code><em>filename</em></code>. The error is described
+by <code><em>error</em>/code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR005E">
+HHCPR005E <em>address</em> device initialization error: pipe: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when opening a pipe for the printer
+at address <code><em>address</em></code>. The error is described
+by <code><em>error</em>/code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR006E">
+HHCPR006E <em>address</em> device initialization error: fork: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when starting the program
+to process the output from the printer
+at address <code><em>address</em></code>. The error is described
+by <code><em>error</em>/code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR007I">
+HHCPR007I pipe receiver (pid=<em>processid</em>)
+starting for <em>address</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The program to process the output from the printer
+at address <code><em>address</code></em> is starting. Its process id
+is <code><em>processid</em></code>.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR008E">
+HHCPR008E <em>address</em> dup2 error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file descriptor for stdin could not be
+duplicated for the program to process the output from the printer
+at address <code><em>address</em></code>. The error is described
+by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR009E">
+HHCPR009E <em>address</em> dup2 error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file descriptor for stdout could not be
+duplicated for the program to process the output from the printer
+at address <code><em>address</em></code>. The error is described
+by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR010E">
+HHCPR010E <em>address</em> dup2 error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file descriptor for stderr could not be
+duplicated for the program to process the output from the printer
+at address <code><em>address</em></code>. The error is described
+by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR011I">
+HHCPR011I pipe receiver (pid=<em>processid</em>)
+terminating for <em>address</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The program to process the output from the printer
+at address <code><em>address</code></em> has ended sucessfully. Its process id
+was <code><em>processid</em></code>.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+<dt><code><a name="HHCPR012E">
+HHCPR012E <em>address</em> Unable to execute <em>program</em>:
+<em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The program named <code><em>program</em></code> to process the
+output from the printer at address <code><em>address</em></code> could not
+be started. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>printer.c, function open_printer
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 15 December 2002
+</BODY>
+</HTML>
