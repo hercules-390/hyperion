@@ -535,9 +535,11 @@ int     n;
             psa = (void*)(sysblk.mainstor + GUESTREGS->sie_state + SIE_IP_PSA_OFFSET);
             STORE_HW(psa->perint, GUESTREGS->perc);
             STORE_W(psa->peradr, GUESTREGS->peradr);
-
-            STATEBK->f |= SIE_F_IF;
         }
+
+        if (IS_IC_PER_IF(GUESTREGS))
+            STATEBK->f |= SIE_F_IF;
+
 #endif /*defined(_FEATURE_PER)*/
 
         /* Update interception parameters in the state descriptor */
