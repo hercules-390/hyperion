@@ -223,7 +223,8 @@ PMCW    pmcw;                           /* Path management ctl word  */
     memcpy (dev->pmcw.intparm, pmcw.intparm, sizeof(FWORD));
 
     /* Update the ISC and A fields */
-    dev->pmcw.flag4 = pmcw.flag4;
+    dev->pmcw.flag4 &= ~(PMCW4_ISC | PMCW4_A);
+    dev->pmcw.flag4 |= (pmcw.flag4 & (PMCW4_ISC | PMCW4_A));
 
     /* Update the path management (LPM and POM) fields */
     dev->pmcw.lpm = pmcw.lpm;
