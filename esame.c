@@ -332,23 +332,28 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Fetch the PSW from the operand address + psw offset */
 #if defined(FEATURE_ESAME)
     if(flags & 0x0004)
-        ARCH_DEP(vfetchc) (psw, 15, effective_addr2 + psw_offset, b2, regs);
+        ARCH_DEP(vfetchc) (psw, 15, (effective_addr2 + psw_offset)
+                           & ADDRESS_MAXWRAP(regs), b2, regs);
     else
 #endif /*defined(FEATURE_ESAME)*/
-        ARCH_DEP(vfetchc) (psw, 7, effective_addr2 + psw_offset, b2, regs);
+        ARCH_DEP(vfetchc) (psw, 7, (effective_addr2 + psw_offset)
+                           & ADDRESS_MAXWRAP(regs), b2, regs);
 
 
     /* Fetch new AR (B2) from operand address + AR offset */
-    ar = ARCH_DEP(vfetch4) (effective_addr2 + ar_offset, b2, regs);
+    ar = ARCH_DEP(vfetch4) ((effective_addr2 + ar_offset)
+                            & ADDRESS_MAXWRAP(regs), b2, regs);
 
 
     /* Fetch the new gr from operand address + GPR offset */
 #if defined(FEATURE_ESAME)
     if(flags & 0x0002)
-        gr = ARCH_DEP(vfetch8) (effective_addr2 + gr_offset, b2, regs);
+        gr = ARCH_DEP(vfetch8) ((effective_addr2 + gr_offset)
+                                & ADDRESS_MAXWRAP(regs), b2, regs);
     else
 #endif /*defined(FEATURE_ESAME)*/
-        gr = ARCH_DEP(vfetch4) (effective_addr2 + gr_offset, b2, regs);
+        gr = ARCH_DEP(vfetch4) ((effective_addr2 + gr_offset)
+                                & ADDRESS_MAXWRAP(regs), b2, regs);
 
 #if defined(FEATURE_TRACING)
 #if defined(FEATURE_ESAME)
