@@ -142,8 +142,6 @@ typedef struct _DLLENT {
     char *name;
     void *dll;
     int flags;
-#define DLL_TYPE_MAIN 0
-#define DLL_TYPE_LOAD 1
     int (*hdldepc)(void *);                  /* hdl_depc             */
     int (*hdlreso)(void *);                  /* hdl_reso             */
     int (*hdlinit)(void *);                  /* hdl_init             */
