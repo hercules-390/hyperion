@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+16 Nov 2004 MXDBR,MXDB instructions - Roger Bowler
 15 Nov 2004 LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR instructions - Roger Bowler
 14 Nov 2004 Fix AR-mode translation when alet is 2 - Greg Smith
 13 Nov 2004 LXEB,LXEBR,LXDB,LXDBR instructions - Roger Bowler

@@ -3629,6 +3629,67 @@ DEF_INST(multiply_bfp_ext_reg)
 }
 
 /*
+ * B307 MXDBR - MULTIPLY (long to extended BFP)                [RRE]
+ */
+DEF_INST(multiply_bfp_long_to_ext_reg)
+{
+    int r1, r2;
+    struct lbfp op1, op2;
+    struct ebfp eb1, eb2;
+    int pgm_check;
+
+    RRE(inst, regs, r1, r2);
+    //logmsg("MXDBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+
+    lengthen_long_to_ext(&op1, &eb1, regs);
+    lengthen_long_to_ext(&op2, &eb2, regs);
+
+    pgm_check = multiply_ebfp(&eb1, &eb2, regs);
+
+    put_ebfp(&eb1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_bfp_long_to_ext_reg) */
+
+/*
+ * ED07 MXDB  - MULTIPLY (long to extended BFP)                [RXE]
+ */
+DEF_INST(multiply_bfp_long_to_ext)
+{
+    int r1, b2;
+    VADR effective_addr2;
+    struct lbfp op1, op2;
+    struct ebfp eb1, eb2;
+    int pgm_check;
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    //logmsg("MXDB r1=%d b2=%d\n", r1, b2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    vfetch_lbfp(&op2, effective_addr2, b2, regs);
+
+    lengthen_long_to_ext(&op1, &eb1, regs);
+    lengthen_long_to_ext(&op2, &eb2, regs);
+
+    pgm_check = multiply_ebfp(&eb1, &eb2, regs);
+
+    put_ebfp(&eb1, regs->fpr + FPR2I(r1));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(multiply_bfp_long_to_ext) */
+
+/*
  * MULTIPLY (long)
  */
 static int multiply_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
@@ -3753,11 +3814,6 @@ DEF_INST(multiply_bfp_long)
         program_interrupt(regs, pgm_check);
     }
 }
-
-/*
- * B307 MXDBR - MULTIPLY (long to extended BFP)                [RRE]
- * ED07 MXDB  - MULTIPLY (long to extended BFP)                [RXE]
- */
 
 /*
  * MULTIPLY (short)

@@ -2337,6 +2337,8 @@ DEF_INST(round_bfp_long_to_short_reg);
 DEF_INST(round_bfp_ext_to_long_reg);
 DEF_INST(round_bfp_ext_to_short_reg);
 DEF_INST(multiply_bfp_ext_reg);
+DEF_INST(multiply_bfp_long_to_ext_reg);
+DEF_INST(multiply_bfp_long_to_ext);
 DEF_INST(multiply_bfp_long_reg);
 DEF_INST(multiply_bfp_long);
 DEF_INST(multiply_bfp_short_reg);
