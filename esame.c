@@ -571,93 +571,35 @@ U32     op;                             /* Operand                   */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_to_binary_long)
 {
-int     r1;                             /* Values of R fields        */
+U64     dreg;                           /* 64-bit result accumulator */
+int     r1;                             /* Value of R1 field         */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U64     dreg;                           /* 64-bit result accumulator */
-int     i;                              /* Loop counter              */
-int     h, d;                           /* Decimal digits            */
-BYTE    sbyte;                          /* Source operand byte       */
-int     ovf = 0;                        /* Overflow indicator        */
-U64     oreg = 0;                       /* 64 bit overflow work reg  */
+int     ovf;                            /* 1=overflow                */
+int     dxf;                            /* 1=data exception          */
+BYTE    dec[16];                        /* Packed decimal operand    */
 
     RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
-    /* Initialize binary result */
-    dreg = 0;
+    /* Fetch 16-byte packed decimal operand */
+    ARCH_DEP(vfetchc) ( dec, 16-1, effective_addr2, b2, regs );
 
-    /* Convert digits to binary */
-    for (i = 0; i < 16; i++)
+    /* Convert 16-byte packed decimal to 64-bit signed binary */
+    packed_to_binary (dec, 16-1, &dreg, &ovf, &dxf);
+
+    /* Data exception if invalid digits or sign */
+    if (dxf)
     {
-        /* Load next byte of operand */
-        sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-
-        /* Isolate high-order and low-order digits */
-        h = (sbyte & 0xF0) >> 4;
-        d = sbyte & 0x0F;
-
-        /* Check for valid high-order digit */
-        if (h > 9)
-        {
-            regs->dxc = DXC_DECIMAL;
-            ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-        }
-
-        /* Accumulate high-order digit into result */
-        dreg *= 10;
-        dreg += h;
-
-        /* Set overflow indicator if an overflow has occurred */
-        if(dreg < oreg)
-            ovf = 1;
-
-        /* Save current value */
-        oreg = dreg;
-
-        /* Check for valid low-order digit or sign */
-        if (i < 15)
-        {
-            /* Check for valid low-order digit */
-            if (d > 9)
-            {
-                regs->dxc = DXC_DECIMAL;
-                ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-            }
-
-            /* Accumulate low-order digit into result */
-            dreg *= 10;
-            dreg += d;
-        }
-        else
-        {
-            /* Check for valid sign */
-            if (d < 10)
-            {
-                regs->dxc = DXC_DECIMAL;
-                ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
-            }
-        }
-
-        /* Increment operand address */
-        effective_addr2++;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);
-
-    } /* end for(i) */
-
-    /* Result is negative if sign is X'B' or X'D' */
-    if (d == 0x0B || d == 0x0D)
-    {
-        if( (S64)dreg == -1LL )
-            ovf = 1;
-        (S64)dreg = -((S64)dreg);
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
     }
 
-    /* Store result into R1 register */
-    regs->GR_G(r1) = dreg;
-
-    /* Program check if overflow */
-    if ( ovf )
+    /* Exception if overflow (operation suppressed, R1 unchanged) */
+    if (ovf)
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
+
+    /* Store 64-bit result into R1 register */
+    regs->GR_G(r1) = dreg;
 
 } /* end DEF_INST(convert_to_binary_long) */
 #endif /*defined(FEATURE_ESAME)*/
