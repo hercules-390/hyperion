@@ -91,8 +91,8 @@ typedef struct _DLLENT {                /* DLL entry                 */
     struct _DLLENT *dllnext;            /* Next entry in chain       */
 } DLLENT;
 
-
-#define HDL_DEFAULT_PATH     "hercules" /* default mod. search path  */
+                                        /* default mod. search path  */
+#define HDL_DEFAULT_PATH     "/usr/lib/hercules" 
 
 
 int hdl_load(char *, int);              /* load dll                  */
