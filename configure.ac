@@ -443,9 +443,7 @@ case "$host_os" in
       darwin*)
           AC_CACHE_CHECK([for OS X gcc preprocessor string concatenation bug],
                          [ac_cv_darwin_gcc_cpp_bug],
-                         [SAVE_CFLAGS="$CFLAGS"
-                          CFLAGS="-Wall -Werror"
-                          if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null \
+                         [if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null \
                              2>&1
 #if __GNUC__ == 3 && __GNUC_MINOR__ == 1
 yes
