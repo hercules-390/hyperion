@@ -1791,7 +1791,8 @@ overlap:
             l1[rcv[i].val] = pos;
             spc[s].typ = SPCTAB_L2TAB;
             spc[s].pos = pos;
-            spc[s].len = spc[s++].siz = CCKD_L2TAB_SIZE;
+            spc[s].len = spc[s].siz = CCKD_L2TAB_SIZE;
+            ++s;
         }
     }
 
