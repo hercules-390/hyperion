@@ -1435,7 +1435,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
             if (redraw_status && !sysblk.npquiet)
             {
-                if(regs->cpuonline)
+                if(sysblk.regs[sysblk.pcpu].cpuonline)
                 /* Display the PSW and instruction counter for CPU 0 */
                 fprintf (confp,
                     "%s"
