@@ -220,6 +220,13 @@ int     lstarted;                       /* Indicate if non-whitespace*/
         /* Parse the statement just read */
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
+#if defined(OPTION_DYNAMIC_LOAD)
+        if(config_statement)
+        {
+            if( config_statement(addargc, addargv) )
+            continue;
+        }
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
         /* Move the first two arguments to separate variables */
 

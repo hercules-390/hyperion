@@ -1682,6 +1682,8 @@ void panel_display_r (void);
 void (*panel_display) (void);
 
 void (*daemon_task) (void);
+
+int (*config_statement) (int argc, BYTE *argv[]);
 #else
 void *panel_command (void *cmdline);
 void panel_display (void);

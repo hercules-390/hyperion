@@ -31,6 +31,7 @@ HDL_REGISTER_SECTION;
     /* Register re-bindable entry point with resident version, or NULL */
     HDL_REGISTER(panel_command,panel_command_r);
     HDL_REGISTER(panel_display,panel_display_r);
+    HDL_REGISTER(config_statement,*NULL);
     HDL_REGISTER(daemon_task,*NULL);
 
 } END_REGISTER_SECTION;
