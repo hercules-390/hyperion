@@ -1746,7 +1746,7 @@ U16     xcode;                          /* Exception code            */
             goto vabs_prog_check;
     }
 
-    if ((acctype == ACCTYPE_WRITE) && protect)
+    if (protect && ((acctype == ACCTYPE_WRITE) || (acctype == ACCTYPE_WRITE_SKP)))
         goto vabs_prot_excp;
 
     /* Convert real address to absolute address */
@@ -1810,6 +1810,15 @@ U16     xcode;                          /* Exception code            */
         /* Set the reference and change bits in the storage key */
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
         break;
+
+    case ACCTYPE_WRITE_SKP:
+        /* Program check if store protected location */
+        if (ARCH_DEP(is_store_protected) (addr, STORAGE_KEY(aaddr), akey,
+                                private, protect, regs))
+            goto vabs_prot_excp;
+
+        break;
+
     } /* end switch */
 
 #if defined(FEATURE_INTERVAL_TIMER)
@@ -1871,7 +1880,7 @@ vabs_addr_excp:
 vabs_prot_excp:
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
     regs->TEA = addr & STORAGE_KEY_PAGEMASK;
-    if (protect && acctype == ACCTYPE_WRITE)
+    if (protect && ((acctype == ACCTYPE_WRITE) || (acctype == ACCTYPE_WRITE_SKP)))
     {
         regs->TEA |= TEA_PROT_AP;
   #if defined(FEATURE_ESAME)
