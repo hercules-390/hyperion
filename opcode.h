@@ -2220,6 +2220,9 @@ DEF_INST(subtract_y);
 DEF_INST(subtract_halfword_y);
 DEF_INST(subtract_logical_y);
 DEF_INST(test_under_mask_y);
+DEF_INST(compare_and_swap_and_purge_long);
+DEF_INST(invalidate_dat_table_entry);
+
 
 
 /* Instructions in ecpsvm.c */
