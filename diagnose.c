@@ -71,7 +71,7 @@ void ARCH_DEP(diagf14_call)(int r1, int r3, REGS *regs)
 BYTE name[32+1];
 char entry[64];
 unsigned int  i;
-void (*dllcall)(int, REGS *);
+void (*dllcall)(int, int, REGS *);
 
 static char *prefix[] = {
 #if defined(_370)
