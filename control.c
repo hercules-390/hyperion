@@ -1679,6 +1679,7 @@ U16     xcode;                          /* Exception code            */
     if (!ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_LOCKPAGE,
                 &raddr, &xcode, &private, &protect, &stid, NULL, NULL))
     {
+        raddr = APPLY_PREFIXING (raddr, regs->PX);
 
         pte =
 #if defined(FEATURE_ESAME)

@@ -519,19 +519,7 @@ typedef struct _SYSBLK {
 #define OS_LINUX	0x78FFFFFFF7DE7FD6ULL	/* Linux	     */
 
 /*-------------------------------------------------------------------*/
-/* Device thread related definitions                                 */
-/*-------------------------------------------------------------------*/
-
-#define LOOPER_WAIT 0		/* device_thread is idle & awaiting work */
-#define LOOPER_EXEC 1		/* device_thread is busy (work pending)  */
-#define LOOPER_DIE  2		/* device_thread requested to end itself */
-
-#define MAX_DEVICE_THREAD_IDLE_SECS 300 /* Max seconds device_thread
-                                           will remain idle before
-										   automatically exiting.    */
-
-/*-------------------------------------------------------------------*/
-/* Device configuration block					                     */
+/* Device configuration block					     */
 /*-------------------------------------------------------------------*/
 typedef struct _DEVBLK {
 	U16	subchan;		/* Subchannel number	     */
@@ -734,6 +722,10 @@ typedef struct _DEVBLK {
 	void   *cckd_ext;		/* -> Compressed ckddasd
 					   extension otherwise NULL  */
     } DEVBLK;
+
+#define LOOPER_WAIT 0
+#define LOOPER_EXEC 1
+#define LOOPER_DIE  2
 
 /*-------------------------------------------------------------------*/
 /* Structure definitions for CKD headers			     */

@@ -221,7 +221,7 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 			int private, REGS *regs)
 {
-#if defined (ZZ_INCOMPLETE_BYPASS_BUG_FEATURE_ESAME)
+#if defined (FEATURE_ESAME)
     /* For ESAME, low-address protection applies to locations
        0-511 (0000-01FF) and 4096-4607 (1000-11FF) */
     if (addr & 0xFFFFFFFFFFFFEE00ULL)

@@ -382,7 +382,7 @@ LSED    lsed2;                          /* New entry descriptor      */
 U16     rfs;                            /* Remaining free space      */
 VADR    fsha;                           /* Forward section hdr addr  */
 VADR    bsea = 0;                       /* Backward stack entry addr */
-RADR    absea = 0;                      /* Absolute address of bsea  */
+RADR    absea;                          /* Absolute address of bsea  */
 int     i;                              /* Array subscript           */
 
     /* [5.12.3] Special operation exception if ASF is not enabled,
@@ -770,6 +770,11 @@ int     i;                              /* Array subscript           */
             lsed.rfs[1], lsed.nes[0], lsed.nes[1]);
 #endif /*STACK_DEBUG*/
 
+// logmsg("cr15: " F_VADR " cr15_n: " F_VADR " section_size = %d\n",
+//   regs->CR(15), lsea, lsea - regs->CR(15));
+if((regs->CR(15) & PAGEFRAME_PAGEMASK) != ((lsea + 8) & PAGEFRAME_PAGEMASK))
+  logmsg("abs1:" F_VADR " abs2:" F_VADR "\n",abs,abs2);
+    if(abs2 == 0)
     /* [5.12.3.4] Update control register 15 */
     regs->CR(15) = lsea & CR15_LSEA;
 
@@ -851,6 +856,10 @@ VADR    bsea;                           /* Backward stack entry addr */
         abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
         FETCH_BSEA(bsea,sysblk.mainstor + abs);
 
+#ifdef STACK_DEBUG
+        logmsg ("stack: Stack entry located at " F_VADR "\n", bsea);
+#endif /*STACK_DEBUG*/
+
         /* Stack empty exception if backward address is not valid */
         if ((bsea & LSHE_BVALID) == 0)
             ARCH_DEP(program_interrupt) (regs, PGM_STACK_EMPTY_EXCEPTION);
@@ -864,7 +873,6 @@ VADR    bsea;                           /* Backward stack entry addr */
         memcpy (lsedptr, sysblk.mainstor+abs, sizeof(LSED));
 
 #ifdef STACK_DEBUG
-        logmsg ("stack: Stack entry located at " F_VADR "\n", lsea);
         logmsg ("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
                 "nes=%2.2X%2.2X\n",
                 lsedptr->uet, lsedptr->si, lsedptr->rfs[0],
@@ -1054,22 +1062,29 @@ void ARCH_DEP(unstack_registers) (int gtype, VADR lsea,
                                 int r1, int r2, REGS *regs)
 {
 RADR    abs, abs2 = 0;                  /* Absolute address          */
+VADR    firstbyte,                      /* First byte to be fetched  */
+        lastbyte;                       /* Last byte to be fetched   */
 int     i;                              /* Array subscript           */
 
     /* Point back to byte 0 of the state entry */
     lsea -= LSSE_SIZE - sizeof(LSED);
     LSEA_WRAP(lsea);
 
+    /* Determine first and last byte to fetch from the state entry */
+    firstbyte = lsea + ((r1 > r2) ? 0 : r1) * LSSE_REGSIZE;
+    lastbyte = lsea + (LSSE_SIZE - 69) + (((r1 > r2) ? 15 : r2) * 4);
+
+    lsea = firstbyte;
+
     /* Obtain absolute address of the state entry */
     abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
     /* If the state entry crosses a page boundary, obtain the
        absolute address of the second page of the stack entry */
-    if(((lsea + (LSSE_SIZE - 1)) & PAGEFRAME_PAGEMASK)
-                                != (lsea & PAGEFRAME_PAGEMASK))
+    if( (firstbyte & PAGEFRAME_PAGEMASK)
+                                != (lastbyte & PAGEFRAME_PAGEMASK))
         abs2 = ARCH_DEP(abs_stack_addr)
-                        ((lsea + (LSSE_SIZE - 1)) & PAGEFRAME_PAGEMASK,
-                        regs, ACCTYPE_READ);
+                 (lastbyte & PAGEFRAME_PAGEMASK, regs, ACCTYPE_READ);
 
   #ifdef STACK_DEBUG
     logmsg ("stack: Unstacking registers %d-%d from " F_VADR "\n",
@@ -1078,7 +1093,7 @@ int     i;                              /* Array subscript           */
 
     /* Load general registers from bytes 0-63 (for ESA/390), or
        bytes 0-127 (for ESAME) of the state entry */
-    for (i = 0; i < 16; i++)
+    for (i = ((r1 > r2) ? 0 : r1); i <= 15; i++)
     {
         /* Load the general register from the stack entry */
         if ((r1 <= r2 && i >= r1 && i <= r2)
@@ -1133,7 +1148,7 @@ int     i;                              /* Array subscript           */
 
     /* Load access registers from bytes 64-127 (for ESA/390), or
        bytes 224-280 (for ESAME) of the state entry */
-    for (i = 0; i < 16; i++)
+    for (i = 0; i <= ((r1 > r2) ? 15 : r2); i++)
     {
         /* Load the access register from the stack entry */
         if ((r1 <= r2 && i >= r1 && i <= r2)
@@ -1145,6 +1160,8 @@ int     i;                              /* Array subscript           */
             logmsg ("stack: AR%d=" F_AREG " loaded from V:" F_VADR
                     " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
+if(abs == 0)
+  logmsg("error: abs = 0\n");
         }
 
         /* Update the virtual and absolute addresses */

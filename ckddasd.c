@@ -89,6 +89,31 @@
 #define CKDORIENT_KEY           3       /* Oriented after key field  */
 #define CKDORIENT_DATA          4       /* Oriented after data field */
 
+/* Path state byte for Sense Path Group ID command */
+#define SPG_PATHSTAT            0xC0    /* Pathing status bits...    */
+#define SPG_PATHSTAT_RESET      0x00    /* ...reset                  */
+#define SPG_PATHSTAT_RESV       0x40    /* ...reserved bit setting   */
+#define SPG_PATHSTAT_UNGROUPED  0x80    /* ...ungrouped              */
+#define SPG_PATHSTAT_GROUPED    0xC0    /* ...grouped                */
+#define SPG_PARTSTAT            0x30    /* Partitioning status bits..*/
+#define SPG_PARTSTAT_IENABLED   0x00    /* ...implicitly enabled     */
+#define SPG_PARTSTAT_RESV       0x10    /* ...reserved bit setting   */
+#define SPG_PARTSTAT_DISABLED   0x20    /* ...disabled               */
+#define SPG_PARTSTAT_XENABLED   0x30    /* ...explicitly enabled     */
+#define SPG_PATHMODE            0x08    /* Path mode bit...          */
+#define SPG_PATHMODE_SINGLE     0x00    /* ...single path mode       */
+#define SPG_PATHMODE_RESV       0x08    /* ...reserved bit setting   */
+#define SPG_RESERVED            0x07    /* Reserved bits, must be 0  */
+
+/* Function control byte for Set Path Group ID command */
+#define SPG_SET_MULTIPATH       0x80    /* Set multipath mode        */
+#define SPG_SET_COMMAND         0x60    /* Set path command bits...  */
+#define SPG_SET_ESTABLISH       0x00    /* ...establish group        */
+#define SPG_SET_DISBAND         0x20    /* ...disband group          */
+#define SPG_SET_RESIGN          0x40    /* ...resign from group      */
+#define SPG_SET_COMMAND_RESV    0x60    /* ...reserved bit setting   */
+#define SPG_SET_RESV            0x1F    /* Reserved bits, must be 0  */
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Diagnostic Control subcommand byte            */
 /*-------------------------------------------------------------------*/
@@ -669,6 +694,9 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     dev->devchar[56] = 0xFF;	// real CU type code
     dev->devchar[57] = 0xFF;	// real device type code
     dev->numdevchar = 64;
+
+    /* Clear the DPA */
+    memset(dev->pgid, 0, sizeof(dev->pgid));
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
@@ -4581,6 +4609,56 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Copy device identifier bytes to channel I/O buffer */
         memcpy (iobuf, dev->devid, num);
+
+        /* Return unit status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    case 0x34:
+    /*---------------------------------------------------------------*/
+    /* SENSE PATH GROUP ID                                           */
+    /*---------------------------------------------------------------*/
+
+        /* Calculate residual byte count */
+        num = (count < 12) ? count : 12;
+        *residual = count - num;
+        if (count < 12) *more = 1;
+
+        /* Byte 0 is the path group state byte */
+        iobuf[0] = SPG_PATHSTAT_RESET
+                | SPG_PARTSTAT_IENABLED
+                | SPG_PATHMODE_SINGLE;
+
+        /* Bytes 1-11 contain the path group identifier */
+        memcpy (iobuf+1, dev->pgid, 11);
+
+        /* Return unit status */
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    case 0xAF:
+    /*---------------------------------------------------------------*/
+    /* SET PATH GROUP ID                                             */
+    /*---------------------------------------------------------------*/
+
+        /* Calculate residual byte count */
+        num = (count < 12) ? count : 12;
+        *residual = count - num;
+
+        /* Control information length must be at least 12 bytes */
+        if (count < 12)
+        {
+            dev->sense[0] = SENSE_CR;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
+        /* Byte 0 is the path group state byte */
+        if ((iobuf[0] & SPG_SET_COMMAND) == SPG_SET_ESTABLISH)
+        {
+            /* Bytes 1-11 contain the path group identifier */
+            memcpy (dev->pgid, iobuf+1, 11);
+        }
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;

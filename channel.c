@@ -1104,9 +1104,10 @@ BYTE    area[64];                       /* Data display area         */
            or if location is store protected and command is READ,
            READ BACKWARD, or SENSE */
         startpage = addr;
-        endpage = addr + count;
+        endpage = addr + (count - 1);
         for (page = startpage & STORAGE_KEY_PAGEMASK;
-                          page < endpage; page += STORAGE_KEY_PAGESIZE)
+             page <= (endpage | STORAGE_KEY_BYTEMASK);
+             page += STORAGE_KEY_PAGESIZE)
         {
             storkey = STORAGE_KEY(page);
             if (ccwkey != 0 && (storkey & STORKEY_KEY) != ccwkey
@@ -1119,7 +1120,8 @@ BYTE    area[64];                       /* Data display area         */
 
         /* Set the main storage reference and change bits */
         for (page = startpage & STORAGE_KEY_PAGEMASK;
-                          page < endpage; page += STORAGE_KEY_PAGESIZE)
+             page <= (endpage | STORAGE_KEY_BYTEMASK);
+             page += STORAGE_KEY_PAGESIZE)
         {
             STORAGE_KEY(page) |=
                 (readcmd ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);

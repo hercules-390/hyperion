@@ -2932,6 +2932,9 @@ union
         dev->numdevchar = 64;
     }
 
+    /* Clear the DPA */
+    memset(dev->pgid, 0, sizeof(dev->pgid));
+
     /* Request the channel to merge data chained write CCWs into
        a single buffer before passing data to the device handler */
     dev->cdwmerge = 1;

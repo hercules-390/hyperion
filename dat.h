@@ -1855,7 +1855,7 @@ U16     xcode;                          /* Exception code            */
         regs->VE(arn) = addr & STORAGE_KEY_PAGEMASK;
         regs->aekey[arn] = akey;
         regs->aeacc[arn] = acctype;
-        if((addr < 4096) && !private)
+        if((addr < PSA_SIZE) && !private)
         {
             if(akey == 0)
                 regs->aeacc[arn] = ACCTYPE_READ;
