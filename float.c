@@ -4729,7 +4729,7 @@ U64     msj, lsj;
             for (;;) {
                 xj = (div_U128(mmsa, msa, xi) + xi) >> 1;
 
-                if (xj == xi) {
+                if ((xj & 0xFFFFFFFFFFFFFFFE) == (xi & 0xFFFFFFFFFFFFFFFE)) {
                     break;
                 }
                 xi = xj;
