@@ -506,7 +506,7 @@ BYTE    c;                              /* Work area for sscanf      */
         if (smainsize != NULL)
         {
             if (sscanf(smainsize, "%hu%c", &mainsize, &c) != 1
-                || mainsize < 2 || mainsize > 256)
+                || mainsize < 2 || mainsize > 1024)
             {
                 logmsg( "HHC009I Error in %s line %d: "
                         "Invalid main storage size %s\n",
@@ -636,7 +636,7 @@ BYTE    c;                              /* Work area for sscanf      */
         /* Parse panel refresh rate operand */
         if (spanrate != NULL)
         {
-            switch (toupper((char)spanrate[0])) 
+            switch (toupper((char)spanrate[0]))
             {
                 case 'F': /* fast */
                     panrate = PANEL_REFRESH_RATE_FAST;
@@ -973,7 +973,7 @@ int deconfigure_cpu(REGS *regs)
     }
     else
         return -1;
-    
+
 } /* end function deconfigure_cpu */
 
 
