@@ -1565,7 +1565,7 @@ int             ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
             break;
 
         case 'm':
-            if( ParseMAC( optarg, mac ) == 0 )
+            if( ParseMAC( optarg, mac ) != 0 )
             {
                 logmsg( _("LCS003E %4.4X invalid MAC address %s\n"),
                         pDEVBLK->devnum, optarg );
