@@ -773,7 +773,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
            fraction and lengthen the result to 56 bits */
         fract = (U64)(op->fract | 0x8000000000000) << 4;
 
-        /* The binary exponent is equal to the characteristic - 1023
+        /* The binary exponent is equal to the biased exponent - 1023
            and we subtract another 1 to account for the implied 1. */
         exp = op->exp - 1024;
 
