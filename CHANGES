@@ -1,3 +1,4 @@
+30 Aug 2002 Fix MVCL to update regs prior to possible program check - Greg Smith
 26 Aug 2002 Added "noprompt" option to turn off input prompting for 1052/3215
             consoles - Jay Maynard
 25 Aug 2002 Fix cckd free space chain corruption when freeing space
