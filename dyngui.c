@@ -6,15 +6,6 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/* Compile this DLL in the same directory that Herc was already      */
-/*         previously built in using the following options:          */
-/*                                                                   */
-/*    gcc -DHAVE_CONFIG_H  -DEXTERNALGUI  -I.  -W                    */
-/*        -fomit-frame-pointer  -O3  -march=i686  -Wall              */
-/*        -shared  -o  dyngui.dll  dyngui.c  hercules.a  -lintl      */
-/*                                                                   */
-/*********************************************************************/
-/*                                                                   */
 /* Change log:                                                       */
 /*                                                                   */
 /* dd/mm/yy  Description...                                          */
