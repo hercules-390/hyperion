@@ -302,6 +302,13 @@ static int init_ctct (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 /*-------------------------------------------------------------------*/
 static int init_ctci (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+#if defined(WIN32)
+    dev->ctctype = CTC_CTCT;
+    *cutype = CTC_3088_08;
+    logmsg ("HHC835I %4.4X %s mode not implemented\n",
+            dev->devnum, argv[0]);
+    return -1;
+#else  /* !defined(WIN32) */
 int             rc;                     /* Return code               */
 int             fd;                     /* File descriptor           */
 int             mtu;                    /* MTU size (binary)         */
@@ -599,6 +606,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     return 0;
+#endif /* defined(WIN32) */
 } /* end function init_ctci */
 
 /*-------------------------------------------------------------------*/
