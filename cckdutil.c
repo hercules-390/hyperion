@@ -589,8 +589,8 @@ unsigned int    maxdlen;                /* Max data length for device*/
 unsigned int    trksz, hdrtrksz;        /* Track size                */
 off_t           hipos, lopos;           /* Valid high/low offsets    */
 off_t           pos;                    /* File offset               */
-int             fsperr=0, l1errs=0, l2errs=0, trkerrs=0, othererrs = 0;
-                                        /* Error indicators          */
+int             hdrerr=0, fsperr=0, l1errs=0, l2errs=0, trkerrs=0,
+                othererrs = 0;          /* Error indicators          */
 off_t           fsp;                    /* Free space offset         */
 CCKD_FREEBLK    fb;                     /* Free space block          */
 int             n;                      /* Size of space tables      */
@@ -625,7 +625,6 @@ char *compression[] = {"none", "zlib", "bzip2"};
 /*-------------------------------------------------------------------*/
 /* Read the device header.                                           */
 /*-------------------------------------------------------------------*/
-
     rc = fstat (fd, &fst);
     if (rc < 0)
     {
@@ -787,6 +786,33 @@ char *compression[] = {"none", "zlib", "bzip2"};
 
     l1tabsz = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
 
+    /* Perform space checks */
+    if (cdevhdr.size != fst.st_size
+     || cdevhdr.used + cdevhdr.free_total != fst.st_size
+     || cdevhdr.free_largest > cdevhdr.free_total
+     || (cdevhdr.free == 0
+      && (cdevhdr.free_total != 0 || cdevhdr.free_number != 0))
+     || (cdevhdr.free != 0
+      && (cdevhdr.free_total == 0 || cdevhdr.free_number == 0))
+     || (cdevhdr.free_number == 0 && cdevhdr.free_total != 0)
+     || (cdevhdr.free_number != 0 && cdevhdr.free_total ==0))
+    {
+        CDSKMSG (m, "Recoverable header errors found: "
+                 "%d %d %d %d %d %d %d\n",
+                 (unsigned int)fst.st_size,
+                 (unsigned int)cdevhdr.size,
+                 (unsigned int)cdevhdr.used,
+                 (unsigned int)cdevhdr.free_total,
+                 (unsigned int)cdevhdr.free_largest,
+                 (unsigned int)cdevhdr.free,
+                 (unsigned int)cdevhdr.free_number);
+        hdrerr = 1;
+        if (level < 1)
+        {   level = 1;
+            CDSKMSG (m, "forcing check level %d\n", level);
+        }
+    }
+
 /*-------------------------------------------------------------------*/
 /* Read the primary lookup table                                     */
 /* We *must* be able to successfully read this table, too            */
@@ -906,6 +932,10 @@ free_space_check:
     if (cdevhdr.options & CCKD_OPENED)
     {   fsperr = 1;
         sprintf (msg, "file not closed");
+    }
+    else if (hdrerr)
+    {   fsperr = 1;
+        sprintf (msg, "header errors");
     }
     else fsperr = 0;
 
@@ -1270,8 +1300,9 @@ space_check:
 /*-------------------------------------------------------------------*/
 
     othererrs = r || l1errs || l2errs || trkerrs;
-    if (memcmp (&cdevhdr.CCKD_FREEHDR, &cdevhdr2.CCKD_FREEHDR,
-        CCKD_FREEHDR_SIZE) || othererrs)
+    if ((level >= 0
+      && memcmp (&cdevhdr.CCKD_FREEHDR, &cdevhdr2.CCKD_FREEHDR, CCKD_FREEHDR_SIZE))
+     || othererrs)
         fsperr = 1;
 
 /*-------------------------------------------------------------------*/

@@ -2679,6 +2679,13 @@ int             add = 0;                /* Add the shadow file back  */
         free (buf);
         cckd_write_l2 (dev);
         cckd_write_l1 (dev);
+        cckd_write_chdr (dev);
+        cckd_harden (dev);
+        cckd_chkdsk (cckd->fd[sfx-1], dev->msgpipew, 1);
+        cckd_read_chdr (dev);
+        cckd_harden (dev);
+        cckd->cdevhdr[cckd->sfn].options |= CCKD_OPENED;
+        cckd_write_chdr (dev);
     } /* merge to compressed file */
 
     /* merge to a regular ckd file */
