@@ -45,4 +45,4 @@ DEVENT device_handler_table[] = {
     /* Communications devices */
     { 0x3088, &ctcadpt_device_hndinfo },
 
-    { NULL, NULL } };
+    { 0, NULL } };

@@ -50,7 +50,7 @@
 #if defined(OPTION_HTTP_SERVER)
 
 
-zz_cgibin cgibin_reg_control(WEBBLK *webblk)
+void cgibin_reg_control(WEBBLK *webblk)
 {
 int i;
 
@@ -73,11 +73,10 @@ int i;
 
     html_footer(webblk);
 
-    return NULL;
 }
 
 
-zz_cgibin cgibin_reg_general(WEBBLK *webblk)
+void cgibin_reg_general(WEBBLK *webblk)
 {
 int i;
 
@@ -100,13 +99,12 @@ int i;
 
     html_footer(webblk);
 
-    return NULL;
 }
 
 
 void store_psw (REGS *regs, BYTE *addr);
 
-zz_cgibin cgibin_psw(WEBBLK *webblk)
+void cgibin_psw(WEBBLK *webblk)
 {
     REGS *regs = sysblk.regs + sysblk.pcpu;
     QWORD   qword;                            /* quadword work area      */  
@@ -181,13 +179,12 @@ zz_cgibin cgibin_psw(WEBBLK *webblk)
 
     html_footer(webblk);
 
-    return NULL;
 }
 
 
 void get_msgbuf(BYTE **msgbuf, int *msgslot, int *nummsgs, int *msg_size, int *max_msgs);
 
-zz_cgibin cgibin_syslog(WEBBLK *webblk)
+void cgibin_syslog(WEBBLK *webblk)
 {
 BYTE   *msgbuf;                         /* Circular message buffer   */
 int     msgslot;                        /* Next available buffer slot*/
@@ -305,11 +302,10 @@ int msgcount = 22;
 
     html_footer(webblk);
 
-    return NULL;
 }
 
 
-zz_cgibin cgibin_debug_registers(WEBBLK *webblk)
+void cgibin_debug_registers(WEBBLK *webblk)
 {
 int i, cpu = 0;
 int select_gr, select_cr, select_ar;
@@ -553,11 +549,10 @@ REGS *regs;
 
     html_footer(webblk);
 
-    return NULL;
 }
 
 
-zz_cgibin cgibin_debug_storage(WEBBLK *webblk)
+void cgibin_debug_storage(WEBBLK *webblk)
 {
 int i, j;
 char *value;
@@ -611,11 +606,10 @@ U32 addr = 0;
                           "</form>\n");
     html_footer(webblk);
 
-    return NULL;
 }
 
 
-zz_cgibin cgibin_ipl(WEBBLK *webblk)
+void cgibin_ipl(WEBBLK *webblk)
 {
 int i;
 DEVBLK *dev;
@@ -662,11 +656,10 @@ DEVBLK *dev;
 
     html_footer(webblk);
 
-    return NULL;
 }
 
 
-zz_cgibin cgibin_debug_version_info(WEBBLK *webblk)
+void cgibin_debug_version_info(WEBBLK *webblk)
 {
     html_header(webblk);
 
@@ -677,7 +670,6 @@ zz_cgibin cgibin_debug_version_info(WEBBLK *webblk)
 
     html_footer(webblk);
 
-    return NULL;
 }
 
 
@@ -685,14 +677,14 @@ zz_cgibin cgibin_debug_version_info(WEBBLK *webblk)
 /* associates directory filenames with cgibin routines               */
 
 CGITAB cgidir[] = {
-    { "syslog", (void*)&cgibin_syslog },
-    { "ipl", (void*)&cgibin_ipl },
-    { "debug/registers", (void*)&cgibin_debug_registers },
-    { "debug/storage", (void*)&cgibin_debug_storage },
-    { "debug/version_info", (void*)&cgibin_debug_version_info },
-    { "registers/general", (void*)&cgibin_reg_general },
-    { "registers/control", (void*)&cgibin_reg_control },
-    { "registers/psw", (void*)&cgibin_psw },
+    { "syslog", &cgibin_syslog },
+    { "ipl", &cgibin_ipl },
+    { "debug/registers", &cgibin_debug_registers },
+    { "debug/storage", &cgibin_debug_storage },
+    { "debug/version_info", &cgibin_debug_version_info },
+    { "registers/general", &cgibin_reg_general },
+    { "registers/control", &cgibin_reg_control },
+    { "registers/psw", &cgibin_psw },
     { NULL, NULL } };
 
 #endif /*defined(OPTION_HTTP_SERVER)*/
