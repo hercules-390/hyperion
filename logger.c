@@ -12,6 +12,12 @@
 /* for isatty()                                                      */
 
 #include "hercules.h" 
+/*
+ ISW : CygWin : SSIZE_MAX defined in limits.h
+*/
+#ifdef WIN32
+#include <limits.h>
+#endif
 
 ATTR logger_attr;
 COND logger_cond;

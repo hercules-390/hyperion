@@ -33,5 +33,6 @@ extern DEVHND ckddasd_device_hndinfo;
 extern DEVHND fbadasd_device_hndinfo;
 extern DEVHND loc3270_device_hndinfo;
 extern DEVHND ctcadpt_device_hndinfo;
+extern DEVHND comadpt_device_hndinfo;
 
 #endif /*!defined(_DEVICES_H)*/

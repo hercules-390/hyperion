@@ -334,16 +334,28 @@ int     deq=0;                          /* Device may be dequeued    */
     /* Test device status and set condition code */
     if (dev->busy)
     {
-        /* Set condition code 2 if device is busy */
-        cc = 2;
+        /* Invoke the provided halt_device routine @ISW */
+        /* if it has been provided by the handler  @ISW */
+        /* code at init                            @ISW */
+        if(dev->halt_device!=NULL)              /* @ISW */
+        {                                       /* @ISW */
+            dev->halt_device(dev);              /* @ISW */
+            cc=0;                               /* @ISW */
+        }                                       /* @ISW */
+        else
+        {
 
-        /* Tell channel and device to halt */
-        dev->scsw.flag2 |= SCSW2_FC_HALT;
+            /* Set condition code 2 if device is busy */
+            cc = 2;
 
-        /* Clear pending interrupts */
-        dev->pending = 0;
-        dev->pcipending = 0;
-        deq = 1;
+            /* Tell channel and device to halt */
+            dev->scsw.flag2 |= SCSW2_FC_HALT;
+
+            /* Clear pending interrupts */
+            dev->pending = 0;
+            dev->pcipending = 0;
+            deq = 1;
+        }
     }
     else if (!(dev->pcipending) && !(dev->pending) && (dev->ctctype != CTC_LCS))
     {
@@ -883,6 +895,13 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             signal_condition (&dev->resumecond);
         }
+        /* Invoke the provided halt_device routine @ISW */
+        /* if it has been provided by the handler  @ISW */
+        /* code at init                            @ISW */
+        if(dev->halt_device!=NULL)              /* @ISW */
+        {                                       /* @ISW */
+            dev->halt_device(dev);              /* @ISW */
+        }                                       /* @ISW */
 #if !defined(NO_SIGABEND_HANDLER)
         else
         {

@@ -57,6 +57,9 @@ DEVENT device_handler_table[] = {
     { "3270", 0x3270, &loc3270_device_hndinfo },
     { "3287", 0x3287, &loc3270_device_hndinfo },
 
+    /* Communication line devices */
+    { "2703", 0x2703, &comadpt_device_hndinfo },
+
 #   if !defined(__APPLE__)
     /* Communications devices */
     { "3088",  0x3088, &ctcadpt_device_hndinfo },
