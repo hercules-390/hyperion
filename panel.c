@@ -1094,8 +1094,11 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     /* stop command - stop CPU */
     if (strcmp(cmd,"stop") == 0)
     {
+        obtain_lock (&sysblk.intlock);
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_CPU_NOT_STARTED(regs);
+        WAKEUP_CPU (regs->cpuad);
+        release_lock (&sysblk.intlock);
         return NULL;
     }
 
@@ -1376,6 +1379,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         {
             sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
             ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
+            WAKEUP_CPU(i);
         }
         release_lock (&sysblk.intlock);
         return NULL;

@@ -1,3 +1,6 @@
+28 Oct 2001 Added WAKEUP_CPU call to stop/stopall commands in panel.c to
+            fix "ipl rejected: All CPU's must be stopped" problem - Fish
+28 Oct 2001 Various fixes to cardrdr.c - Fish
 26 Oct 2001 Fix EX page cross, add INVALIDATA_AIA() - Juergen Dobrinski
 25 Oct 2001 updated hercconf.html with new 'sockdev' reader option - Fish
 25 Oct 2001 minor extgui tweak to better detect when cpu stopped - Fish
