@@ -316,12 +316,12 @@ typedef struct _TLBE {
 
 /* Page table entry bit definitions (ESA/390 mode) */
 #define PAGETAB_PFRA	0x7FFFF000	/* Page frame real address   */
+#define PAGETAB_ESNK    0x00000800      /* ES NK bit                 */
 #define PAGETAB_INVALID 0x00000400	/* Invalid page 	     */
 #define PAGETAB_PROT	0x00000200	/* Protected page	     */
 #define PAGETAB_ESVALID 0x00000100	/* Valid in expanded storage */
-#define PAGETAB_ESREF   0x00000080      /* ES Referenced             */
-#define PAGETAB_ESCHA   0x00000040      /* ES Changed                */
-#define PAGETAB_ESLCK   0x00000020      /* ES Locked                 */
+#define PAGETAB_ESREF   0x00000004      /* ES Referenced             */
+#define PAGETAB_ESCHA   0x00000002      /* ES Changed                */
 #define PAGETAB_PGLOCK	0x00000001	/* Page lock (LKPG)	     */
 #define PAGETAB_RESV	0x80000900	/* Reserved bits - must be 0 */
 
