@@ -25,6 +25,13 @@ HISTORY *backup;             /* used for backuping last removed command */
 char *historyCmdLine;
 int history_requested = 0;
 
+void copy_to_historyCmdLine(char* cmdline)
+{
+  if (historyCmdLine) free(historyCmdLine);
+  historyCmdLine = malloc(strlen(cmdline)+1);
+  strcpy(historyCmdLine, cmdline);
+}
+
 /* initialize environment */
 int history_init() {
   history_lines = NULL;
@@ -135,7 +142,7 @@ int history_relative_line(int x) {
     tmp = tmp->prev;
     x++;
   }
-  strcpy(historyCmdLine, tmp->cmdline);
+  copy_to_historyCmdLine(tmp->cmdline);
   history_ptr = NULL;
 }
 
@@ -158,7 +165,7 @@ int history_absolute_line(x) {
   while (tmp->number != x)
     tmp = tmp->prev;
 
-  strcpy(historyCmdLine, tmp->cmdline);
+  copy_to_historyCmdLine(tmp->cmdline);
   history_ptr = NULL;
 }
 
@@ -167,14 +174,14 @@ int history_next() {
     history_ptr = history_lines_end;
     if (history_ptr == NULL)
       return(-1);
-    strcpy(historyCmdLine, history_ptr->cmdline);
+    copy_to_historyCmdLine(history_ptr->cmdline);
     return(0);
   }
   if (history_ptr->next == NULL)
     history_ptr = history_lines;
   else 
     history_ptr = history_ptr->next;
-  strcpy(historyCmdLine, history_ptr->cmdline);
+  copy_to_historyCmdLine(history_ptr->cmdline);
 }
 
 int history_prev() {
@@ -182,12 +189,12 @@ int history_prev() {
     history_ptr = history_lines_end;
     if (history_ptr == NULL)
       return(-1);
-    strcpy(historyCmdLine, history_ptr->cmdline);
+    copy_to_historyCmdLine(history_ptr->cmdline);
     return(0);
   }
   if (history_ptr->prev == NULL)
     history_ptr = history_lines_end;
   else 
     history_ptr = history_ptr->prev;
-  strcpy(historyCmdLine, history_ptr->cmdline);
+  copy_to_historyCmdLine(history_ptr->cmdline);
 }

@@ -387,6 +387,8 @@ TID     rctid;                          /* RC file thread identifier */
     /* Start up the RC file processing thread */
     create_thread(&rctid,&sysblk.detattr,process_rc_file,NULL);
 
+    history_init();
+
     /* Activate the control panel */
     if(!daemon_mode)
     {

@@ -75,7 +75,6 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
 
 int History(int argc, char *argv[], char *cmdline)
 {
-
     UNREFERENCED(cmdline);
     /* last stored command is for sure command 'hst' so remove it 
        this is the only place where history_remove is called */
@@ -84,7 +83,7 @@ int History(int argc, char *argv[], char *cmdline)
     /* only 'hst' called */
     if (argc == 1) {
       if (history_relative_line(-1) == -1)
-	  history_requested = 0;
+        history_requested = 0;
       return 0;
     }
     /* hst with argument called */
@@ -92,25 +91,26 @@ int History(int argc, char *argv[], char *cmdline)
       int x;
       switch (argv[1][0]) {
       case 'l':
-	history_show();
-	history_requested = 0;
-	break;
+        history_show();
+        history_requested = 0;
+        break;
       default:
-	x = atoi(argv[1]);
-	if (x>0) {
-	  if (history_absolute_line(x) == -1)
-	    history_requested = 0;
-	}
-	else
-	  if (x<0) { 
-	    if (history_relative_line(x) == -1)
-	      history_requested = 0;
-	  }
-	  else {
-	    /* x == 0 */
-	    history_show();
-	    history_requested = 0;
-	  }
+        x = atoi(argv[1]);
+        if (x>0) {
+          if (history_absolute_line(x) == -1)
+            history_requested = 0;
+        }
+        else {
+          if (x<0) { 
+            if (history_relative_line(x) == -1)
+              history_requested = 0;
+          }
+          else {
+            /* x == 0 */
+            history_show();
+            history_requested = 0;
+          }
+        }
       }
     }
     return 0;
@@ -2971,10 +2971,10 @@ CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need hel
                        )
 
 CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"
-	               "list of last ten commands entered from command line\n"
-	               "hst n, where n is a positive number retrieves n-th command from list\n"
-	               "hst n, where n is a negative number retrieves n-th last command\n"
-	               "hst without an argument works exactly as hst -1, it retrieves last command\n") 
+                       "list of last ten commands entered from command line\n"
+                       "hst n, where n is a positive number retrieves n-th command from list\n"
+                       "hst n, where n is a negative number retrieves n-th last command\n"
+                       "hst without an argument works exactly as hst -1, it retrieves last command\n") 
 
 CMDHELP ( "quit",      "Format: \"quit [NOW]\". The optional 'NOW' argument\n"
                        "causes the emulator to immediately terminate without\n"

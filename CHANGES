@@ -1,8 +1,14 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+11 Nov 2003 bumped configure.ac version to 3.00a.2 just for fun - Fish
+11 Nov 2003 fix hst command history logic buffer overflow bug - Fish
+11 Nov 2003 ieee.c floating point fixes: fix bug in FP_INFINITE, FP_NAN,
+            and FP_ZERO handling for CFDBR, CFEBR, CGDBR, and CGEBR,
+            fix int divide by zero crash preceded by msg "lbfpston:
+            unexpectedly converting an Infinite".
 10 Nov 2003 Clear attention interrupt pending during device reset - Greg Smith
 08 Nov 2003 Added command history to panel.c - Volker Bandke, code by Marian Gasparovic
-07 Nov 2003 Added optimisation problem bypass for GCC 2.96 - Ivan Warren
+07 Nov 2003 Added optimization problem bypass for GCC 2.96 - Ivan Warren
 30 Oct 2003 Added crypto functions - Bernard van der Helm / Jan Jaeger
 24 Oct 2003 pttrace.c threads trace patch - Greg
 22 Oct 2003 shared_server tolerates unix socket problems - Greg

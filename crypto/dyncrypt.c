@@ -34,53 +34,53 @@
 /* fc   : Function code                                                       */
 /* m    : Modifier bit                                                        */
 /*----------------------------------------------------------------------------*/
-#define GR0_fc(regs) 		((regs)->GR_L(0) & 0x0000007F)
-#define GR0_m(regs)		(((regs)->GR_L(0) & 0x00000080) ? TRUE : FALSE)
+#define GR0_fc(regs)        ((regs)->GR_L(0) & 0x0000007F)
+#define GR0_m(regs)     (((regs)->GR_L(0) & 0x00000080) ? TRUE : FALSE)
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for compute intermediate message digest                     */
 /*----------------------------------------------------------------------------*/
-#define KIMD_QUERY		0
-#define KIMD_SHA_1		1
-#define KIMD_MAX_FC		1
+#define KIMD_QUERY      0
+#define KIMD_SHA_1      1
+#define KIMD_MAX_FC     1
 #define KIMD_BITS               { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for compute last message digest                             */
 /*----------------------------------------------------------------------------*/
-#define KLMD_QUERY		0
-#define KLMD_SHA_1		1
-#define KLMD_MAX_FC		1
+#define KLMD_QUERY      0
+#define KLMD_SHA_1      1
+#define KLMD_MAX_FC     1
 #define KLMD_BITS               { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for cipher message                                          */
 /*----------------------------------------------------------------------------*/
-#define KM_QUERY		0
-#define KM_DEA			1
-#define KM_TDEA_128		2
-#define KM_TDEA_192		3
-#define KM_MAX_FC		3
+#define KM_QUERY        0
+#define KM_DEA          1
+#define KM_TDEA_128     2
+#define KM_TDEA_192     3
+#define KM_MAX_FC       3
 #define KM_BITS                 { 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for compute message authentication code                     */
 /*----------------------------------------------------------------------------*/
-#define KMAC_QUERY		0
-#define KMAC_DEA		1
-#define KMAC_TDEA_128		2
-#define KMAC_TDEA_192		3
-#define KMAC_MAX_FC		3
+#define KMAC_QUERY      0
+#define KMAC_DEA        1
+#define KMAC_TDEA_128       2
+#define KMAC_TDEA_192       3
+#define KMAC_MAX_FC     3
 #define KMAC_BITS               { 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
 /* Function codes for cipher message with chaining                            */
 /*----------------------------------------------------------------------------*/
-#define KMC_QUERY		0
-#define KMC_DEA			1
-#define KMC_TDEA_128		2
-#define KMC_TDEA_192		3
-#define KMC_MAX_FC		3
+#define KMC_QUERY       0
+#define KMC_DEA         1
+#define KMC_TDEA_128        2
+#define KMC_TDEA_192        3
+#define KMC_MAX_FC      3
 #define KMC_BITS                { 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 /*----------------------------------------------------------------------------*/
@@ -117,7 +117,7 @@
     (md)[18] = ((ctx)->Intermediate_Hash[4] & 0x0000ff00) >> 8; \
     (md)[19] = ((ctx)->Intermediate_Hash[4] & 0x000000ff); \
 }
-#define LOGBYTE(s, v, x)	\
+#define LOGBYTE(s, v, x)    \
 { \
   int i; \
   \
@@ -140,8 +140,8 @@
     logmsg("\n"); \
   } \
 }
-#define PROCESS_MAX		4096
-#define TRUEFALSE(boolean)	((boolean) ? "True" : "False")
+#define PROCESS_MAX     4096
+#define TRUEFALSE(boolean)  ((boolean) ? "True" : "False")
 /*----------------------------------------------------------------------------*/
 /* constants                                                                  */
 /*----------------------------------------------------------------------------*/

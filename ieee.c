@@ -395,7 +395,7 @@ void ebfpston(struct ebfp *op)
 {
     long double h, l;
 #if defined(_ISW_PREVENT_COMPWARN)
-    int dummyzero;
+    long double dummyzero;
 #endif
 
     switch (ebfpclassify(op)) {
@@ -454,7 +454,7 @@ void lbfpston(struct lbfp *op)
 {
     double t;
 #if defined(_ISW_PREVENT_COMPWARN)
-    int dummyzero;
+    double dummyzero;
 #endif
 
     switch (lbfpclassify(op)) {
@@ -507,7 +507,7 @@ void sbfpston(struct sbfp *op)
 {
     float t;
 #if defined(_ISW_PREVENT_COMPWARN)
-    int dummyzero;
+    float dummyzero;
 #endif
 
     switch (sbfpclassify(op)) {
@@ -771,7 +771,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
     case FP_NORMAL:
         /* Insert an implied 1. in front of the 52 bit binary
            fraction and lengthen the result to 56 bits */
-        fract = (U64)(op->fract | 0x8000000000000) << 4;
+        fract = (U64)(op->fract | 0x8000000000000ULL) << 4;
 
         /* The binary exponent is equal to the biased exponent - 1023
            and we subtract another 1 to account for the implied 1. */
@@ -1803,9 +1803,11 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     case FP_ZERO:
         regs->psw.cc = 0;
         regs->GR_L(r1) = 0;
+        break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
@@ -1820,6 +1822,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     default:
         feclearexcept(FE_ALL_EXCEPT);
         lbfpston(&op2);
@@ -1863,9 +1866,11 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     case FP_ZERO:
         regs->psw.cc = 0;
         regs->GR_L(r1) = 0;
+        break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
@@ -1880,6 +1885,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     default:
         feclearexcept(FE_ALL_EXCEPT);
         sbfpston(&op2);
@@ -1930,9 +1936,11 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     case FP_ZERO:
         regs->psw.cc = 0;
         regs->GR_L(r1) = 0;
+        break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
@@ -1947,6 +1955,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     default:
         feclearexcept(FE_ALL_EXCEPT);
         lbfpston(&op2);
@@ -1992,9 +2001,11 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     case FP_ZERO:
         regs->psw.cc = 0;
         regs->GR_L(r1) = 0;
+        break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
         regs->psw.cc = 3;
@@ -2009,6 +2020,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
                 program_interrupt(regs, pgm_check);
             }
         }
+        break;
     default:
         feclearexcept(FE_ALL_EXCEPT);
         sbfpston(&op2);
