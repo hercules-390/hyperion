@@ -1,6 +1,18 @@
 
                      Version 3.xx RELEASE NOTES
 
+
+- support for z990 crypto instructions is conditional on the presence of the
+  glibcrypt library.
+  If hercules is built, the development files for glibcrypt should be available.
+  When hercules is run, the runtime files for glibcrypt should be installed.
+  Depending on the level of glibcrypt used to *build* hercules, the associated
+  level of glibcrypt should also be present on the target machine. On systems
+  supporting shared library versioning, multiple levels of the glibcrypt
+  runtime libraries can be installed simultaneously, ensuring availability
+  of the z990 crypto instructions, regardless of the level of glibcrypt with
+  which hercules was initially built.
+
 - CTC and LCS devices now ++MUST++ specify all addresses on the configuration
   statement. 
   Example:

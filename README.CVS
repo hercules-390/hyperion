@@ -28,6 +28,14 @@ In order to build Hercules from the CVS sources, you must have installed:
      perl        5.6    (or greater!)
      sed         3.02   (or greater!)
 
+The following package(s) is(are) optional
+
+     Package   Version  (or greater!)
+    ----------------------------------
+     libgcrypt   0.4.4  (or greater!)   (for z990 crypto instructions)
+
+* If an optional package is not installed, the resulting build may lack 
+  an optional feature, but should be usable otherwise.
 
 All of these tools can be found at www.gnu.org in source code form, and
 are also widely available in packaged form (RPM, DEB, Solaris packages,
