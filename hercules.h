@@ -1905,6 +1905,7 @@ int     cckd_chkdsk(int, FILE *, int);
 
 /* Functions in module hscmisc.c */
 int herc_system (char* command);
+void do_shutdown();
 void display_regs (REGS *regs);
 void display_fregs (REGS *regs);
 void display_cregs (REGS *regs);
