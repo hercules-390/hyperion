@@ -9,7 +9,8 @@ dist_pkgdata_DATA =   cckddasd.html hercinst.html hercnew.html \
         hercmsin.html hercmslc.html hercmspn.html hercmspr.html \
         hercmspu.html hercmsrd.html hercmssd.html hercmsta.html \
         hercmstc.html hercmste.html hercmstm.html hercmsts.html \
-        hercmstt.html hercmstu.html hercmslg.html hercmsca.html
+        hercmstt.html hercmstu.html hercmslg.html hercmsca.html \
+        hercrnot.html
 
 include_sources = include/header.htmlpart include/footer.htmlpart
 
