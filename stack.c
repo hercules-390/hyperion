@@ -167,6 +167,7 @@ int  i;
 
     /* Fetch word 3 of the TCB */
     trap_ia = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
+    trap_ia &= 0x7FFFFFFF;
 
     /* Calculate last byte stored */
     lastbyte = tsao + 95 
@@ -188,6 +189,11 @@ int  i;
     if(!(tcba0 & TCB0_P) && regs->psw.amode64)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 #endif /*defined(FEATURE_ESAME)*/
+
+  #ifdef FEATURE_TRACING
+    if (regs->CR(12) & CR12_BRTRACE)
+        regs->CR(12) = ARCH_DEP(trace_br) (1, trap_ia, regs);
+  #endif /*FEATURE_TRACING*/
 
     trap_flags = regs->psw.ilc << 16;
 
@@ -278,7 +284,7 @@ int  i;
 #endif /*defined(FEATURE_ESAME)*/
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
-    regs->psw.IA = trap_ia & 0x7FFFFFFF;
+    regs->psw.IA = trap_ia;
     /* set PSW to primary space */
     regs->psw.space = 0;
     regs->psw.armode = 0;
