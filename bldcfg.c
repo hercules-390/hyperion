@@ -294,6 +294,7 @@ int     c;                              /* Character work area       */
 int     stmtlen;                        /* Statement length          */
 int     lstarted;                       /* Indicate if non-whitespace*/
 char   *cnfline;
+char	*buf1;
                                         /* has been seen yet in line */
 
     while (1)
@@ -355,6 +356,26 @@ char   *cnfline;
         cnfline = strdup(buf);
 
         /* Parse the statement just read */
+#if defined(OPTION_CONFIG_SYMBOLS)
+	/* Perform variable substitution */
+	/* First, set some 'dynamic' symbols to their own values */
+	set_symbol("CUU","$(CUU)");
+	set_symbol("cuu","$(cuu)");
+	set_symbol("CCUU","$(CCUU)");
+	set_symbol("ccuu","$(ccuu)");
+	buf1=resolve_symbol_string(buf);
+	if(buf1!=NULL)
+	{
+		if(strlen(buf1)>sizeof(buf))
+		{
+			fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
+			    fname, stmt);
+			free(buf1);
+			delayed_exit(1);
+		}
+		strcpy(buf,buf1);
+	}
+#endif
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 #if defined(OPTION_DYNAMIC_LOAD)

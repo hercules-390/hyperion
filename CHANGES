@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+30 Jul 2004 Make config symbol sub more generalized - Ivan Warren
 30 Jul 2004 SIE Perf boost patch correction for pending irpts - Ivan Warren
 28 Jul 2004 Remove opctab from run_cpu stack - Greg Smith
 28 Jul 2004 Some more SIE perf updates - Ivan Warren P/O Greg Smith
