@@ -8,11 +8,147 @@
 
 #include "hercules.h"
 
+#include "opcode.h"
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define LINE_LENGTH     150
 #define SPACE           ((BYTE)' ')
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to open the printer file or pipe                       */
+/*-------------------------------------------------------------------*/
+static int
+open_printer (DEVBLK *dev)
+{
+int             rc;                     /* Return code               */
+int             fd;                     /* File descriptor           */
+int             pipefd[2];              /* Pipe descriptors          */
+pid_t           pid;                    /* Child process identifier  */
+
+    /* Regular open if 1st char of filename is not vertical bar */
+    if (dev->filename[0] != '|')
+    {
+        fd = open (dev->filename,
+                    O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */,
+                    S_IRUSR | S_IWUSR | S_IRGRP);
+        if (fd < 0)
+        {
+            logmsg ("HHC413I Error opening file %s: %s\n",
+                    dev->filename, strerror(errno));
+            return -1;
+        }
+
+        /* Save file descriptor in device block and return */
+        dev->fd = fd;
+        return 0;
+    }
+
+    /* Filename is in format |xxx, set up pipe to program xxx */
+
+#ifdef WIN32
+    logmsg ("HHC414I %4.4X print to pipe not supported under Windows\n",
+            dev->devnum);
+    return -1;
+#else /*!WIN32*/
+
+    /* Create a pipe */
+    rc = pipe (pipefd);
+    if (rc < 0)
+    {
+        logmsg ("HHC415I %4.4X device initialization error: pipe: %s\n",
+                dev->devnum, strerror(errno));
+        return -1;
+    }
+
+    /* Fork a child process to receive the pipe data */
+    pid = fork();
+    if (pid < 0)
+    {
+        logmsg ("HHC416I %4.4X device initialization error: fork: %s\n",
+                dev->devnum, strerror(errno));
+        return -1;
+    }
+
+    /* The child process executes the pipe receiver program */
+    if (pid == 0)
+    {
+        /* Log start of child process */
+        logmsg ("HHC417I %4.4X pipe receiver (pid=%d) starting\n",
+                dev->devnum, getpid());
+
+        /* Close the write end of the pipe */
+        close (pipefd[1]);
+
+        /* Duplicate the read end of the pipe onto STDIN */
+        if (pipefd[0] != STDIN_FILENO)
+        {
+            rc = dup2 (pipefd[0], STDIN_FILENO);
+            if (rc != STDIN_FILENO)
+            {
+                logmsg ("HHC418I %4.4X dup2 error: %s\n",
+                        dev->devnum, strerror(errno));
+                _exit(127);
+            }
+            /* Close the original descriptor now duplicated to STDIN */
+            close (pipefd[0]);
+
+        } /* end if(pipefd[0] != STDIN_FILENO) */
+
+        /* Redirect STDOUT to the control panel message pipe */
+        rc = dup2 (fileno(sysblk.msgpipew), STDOUT_FILENO);
+        if (rc != STDOUT_FILENO)
+        {
+            logmsg ("HHC419I %4.4X dup2 error: %s\n",
+                    dev->devnum, strerror(errno));
+            _exit(127);
+        }
+
+        /* Redirect STDERR to the control panel message pipe */
+        rc = dup2 (fileno(sysblk.msgpipew), STDERR_FILENO);
+        if (rc != STDERR_FILENO)
+        {
+            logmsg ("HHC420I %4.4X dup2 error: %s\n",
+                    dev->devnum, strerror(errno));
+            _exit(127);
+        }
+
+        /* Relinquish any ROOT authority before calling shell */
+        SETMODE(TERM);
+
+        /* Execute the specified pipe receiver program */
+        rc = system (dev->filename+1);
+        if (rc != 0)
+        {
+            logmsg ("HHC422I %4.4X Unable to execute %s: %s\n",
+                    dev->devnum, dev->filename+1, strerror(errno));
+            close (STDIN_FILENO);
+            _exit(rc);
+        }
+
+        /* Log end of child process */
+        logmsg ("HHC423I %4.4X pipe receiver (pid=%d) terminating\n",
+                dev->devnum, getpid());
+
+        /* The child process terminates using _exit instead of exit
+           to avoid invoking the panel atexit cleanup routine */
+        close (STDIN_FILENO);
+        _exit(0);
+
+    } /* end if(pid==0) */
+
+    /* The parent process continues as the pipe sender */
+
+    /* Close the read end of the pipe */
+    close (pipefd[0]);
+
+    /* Save pipe write descriptor in the device block */
+    dev->fd = pipefd[1];
+
+    return 0;
+#endif /*!WIN32*/
+} /* end function open_printer */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to write data to the printer                           */
@@ -28,8 +164,8 @@ int             rc;                     /* Return code               */
     /* Equipment check if error writing to printer file */
     if (rc < len)
     {
-        logmsg ("HHC414I Error writing to %s: %s\n",
-                dev->filename,
+        logmsg ("HHC414I %4.4X Error writing to %s: %s\n",
+                dev->devnum, dev->filename,
                 (errno == 0 ? "incomplete": strerror(errno)));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -148,21 +284,14 @@ BYTE            c;                      /* Print character           */
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
-        rc = open (dev->filename,
-                    O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */,
-                    S_IRUSR | S_IWUSR | S_IRGRP);
+        rc = open_printer (dev);
         if (rc < 0)
         {
-            /* Handle open failure */
-            logmsg ("HHC413I Error opening file %s: %s\n",
-                    dev->filename, strerror(errno));
-
             /* Set unit check with intervention required */
             dev->sense[0] = SENSE_IR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             return;
         }
-        dev->fd = rc;
     }
 
     /* Process depending on CCW opcode */
