@@ -4004,20 +4004,20 @@ int unbind_device (DEVBLK* dev)
 
 int unix_socket (char* path)
 {
-    struct sockaddr_un sun;
+    struct sockaddr_un addr;
     int sd;
 
     logdebug ("unix_socket(%s)\n", path);
 
-    if (strlen (path) > sizeof(sun.sun_path) - 1)
+    if (strlen (path) > sizeof(addr.sun_path) - 1)
     {
         logmsg ("HHC411I Socket pathname \"%s\" exceeds limit of %ul\n",
-            path, sizeof(sun.sun_path) - 1);
+            path, sizeof(addr.sun_path) - 1);
         return -1;
     }
 
-    sun.sun_family = AF_UNIX;
-    strcpy (sun.sun_path, path); // guaranteed room by above check
+    addr.sun_family = AF_UNIX;
+    strcpy (addr.sun_path, path); // guaranteed room by above check
     sd = socket (PF_UNIX, SOCK_STREAM, 0);
 
     if (sd == -1)
@@ -4031,7 +4031,7 @@ int unix_socket (char* path)
     fchmod (sd, 0700);
 
     if (0
-        || bind (sd, (struct sockaddr*) &sun, sizeof(sun)) == -1
+        || bind (sd, (struct sockaddr*) &addr, sizeof(addr)) == -1
         || listen (sd, 5) == -1
         )
     {
