@@ -139,30 +139,30 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 
         (S64)regs->ptimer -= (S64)sysblk.todclock_diff;
 
-            /* Set interrupt flag if the CPU timer is negative */
-            if ((S64)regs->ptimer < 0)
+        /* Set interrupt flag if the CPU timer is negative */
+        if ((S64)regs->ptimer < 0)
         {
-                ON_IC_PTIMER(regs);
+            ON_IC_PTIMER(regs);
             intmask |= regs->cpumask;
         }
-            else
-                OFF_IC_PTIMER(regs);
+        else
+            OFF_IC_PTIMER(regs);
 
 #if defined(_FEATURE_SIE)
-            /* When running under SIE also update the SIE copy */
-            if(regs->sie_active)
-            {
+        /* When running under SIE also update the SIE copy */
+        if(regs->sie_active)
+        {
             /* Decrement the guest CPU timer */
             (S64)regs->guestregs->ptimer -= (S64)sysblk.todclock_diff;
 
-                /* Set interrupt flag if the CPU timer is negative */
-                if ((S64)regs->guestregs->ptimer < 0)
+            /* Set interrupt flag if the CPU timer is negative */
+            if ((S64)regs->guestregs->ptimer < 0)
             {
-                    ON_IC_PTIMER(regs->guestregs);
+                ON_IC_PTIMER(regs->guestregs);
                 intmask |= regs->cpumask;
             }
-                else
-                    OFF_IC_PTIMER(regs->guestregs);
+            else
+                OFF_IC_PTIMER(regs->guestregs);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -176,7 +176,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 #endif
 
         if(regs->arch_mode == ARCH_370)
-                {
+        {
             /* Point to PSA in main storage */
             psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
 
@@ -193,15 +193,15 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                        tick interval. See 370 POO page 4-29. (ESA doesn't
                        even have an interval timer.) */
 #if defined(OPTION_MIPS_COUNTING) && defined(_FEATURE_SIE)
-                    itimer -= itimer_diff;
+            itimer -= itimer_diff;
 #else
-                    itimer -= 76800 / CLK_TCK;
+            itimer -= 76800 / CLK_TCK;
 #endif
             STORE_FW(psa->inttimer,itimer);
         
-                    /* Set interrupt flag and interval timer interrupt pending
-                       if the interval timer went from positive to negative */
-                    if (itimer < 0 && olditimer >= 0)
+            /* Set interrupt flag and interval timer interrupt pending
+               if the interval timer went from positive to negative */
+            if (itimer < 0 && olditimer >= 0)
             {
                 ON_IC_ITIMER(regs);
                 intmask |= regs->cpumask;
@@ -215,35 +215,35 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if((regs->guestregs->siebk->m & SIE_M_370)
               && !(regs->guestregs->siebk->m & SIE_M_ITMOF))
             {
-            /* Decrement the location 80 timer */
+                /* Decrement the location 80 timer */
                 FETCH_FW(itimer,regs->guestregs->sie_psa->inttimer);
-            olditimer = itimer;
+                olditimer = itimer;
             
 #if defined(OPTION_MIPS_COUNTING)
-            itimer -= itimer_diff;
+                itimer -= itimer_diff;
 #else
-            itimer -= 76800 / CLK_TCK;
+                itimer -= 76800 / CLK_TCK;
 #endif
                 STORE_FW(regs->guestregs->sie_psa->inttimer,itimer);
 
-            /* Set interrupt flag and interval timer interrupt pending
-               if the interval timer went from positive to negative */
-            if (itimer < 0 && olditimer >= 0)
-            {
+                /* Set interrupt flag and interval timer interrupt pending
+                   if the interval timer went from positive to negative */
+                if (itimer < 0 && olditimer >= 0)
+                {
                     ON_IC_ITIMER(regs->guestregs);
-                intmask |= regs->cpumask;
-            }
+                    intmask |= regs->cpumask;
+                }
             }
         }
 #endif /*defined(_FEATURE_SIE)*/
 
-        } /* end for(cpu) */
+    } /* end for(cpu) */
 
     /* If a timer interrupt condition was detected for any CPU
        then wake up those CPUs if they are waiting */
-        WAKEUP_WAITING_CPUS (intmask, CPUSTATE_STARTED);
+    WAKEUP_WAITING_CPUS (intmask, CPUSTATE_STARTED);
 
-        release_lock(&sysblk.intlock);
+    release_lock(&sysblk.intlock);
 
 } /* end function check_timer_event */
 
