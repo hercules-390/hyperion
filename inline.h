@@ -546,7 +546,7 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
 /*	For all other error conditions a program check is generated  */
 /*	and the function does not return.			     */
 /*-------------------------------------------------------------------*/
-static inline U32 ARCH_DEP(subspace_replace) (RADR std, U32 asteo,
+static inline RADR ARCH_DEP(subspace_replace) (RADR std, U32 asteo,
 						U16 *xcode, REGS *regs)
 {
 U32	ducto;				/* DUCT origin		     */
