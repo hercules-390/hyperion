@@ -5218,7 +5218,12 @@ BYTE    shift;
             return;
         } else { /* fl 0, cmp_fl not 0 */
             /* Set condition code */
-            regs->psw.cc = cmp_fl.sign ? 2 : 1;
+            if (cmp_fl.ms_fract
+            || cmp_fl.ls_fract) {
+                regs->psw.cc = cmp_fl.sign ? 2 : 1;
+            } else {
+                regs->psw.cc = 0;
+            }
             return;
         }
     } else {                        /* cmp_fl 0 */
