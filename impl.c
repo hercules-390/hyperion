@@ -221,6 +221,7 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
     /* Build system configuration */
     build_config (cfgfile);
 
+#if !defined(NO_SIGABEND_HANDLER)
     /* Start the watchdog */
     if ( create_thread (&sysblk.wdtid, &sysblk.detattr,
                         watchdog_thread, NULL) )
@@ -230,6 +231,7 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
                 strerror(errno));
         exit(1);
     }
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
 
 #if defined(OPTION_HTTP_SERVER)
     if(sysblk.httpport) {
