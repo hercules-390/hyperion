@@ -1722,12 +1722,6 @@ void *(*debug_diagnose) (U32, int, int, REGS *);
 void *panel_command (void *cmdline);
 void panel_display (void);
 #endif
-extern int volatile initdone;          // __attribute__ ((deprecated));
-/* initdone is deprecated as it only used to signal that
-   at least one cpu is online.  Future versions of hercules
-   will be able to run without any cpu online in order to
-   support remote devices *JJ*/
-
 
 /* Functions in module impl.c */
 void system_cleanup(void);

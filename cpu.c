@@ -1077,8 +1077,6 @@ void *cpu_thread (REGS *regs)
             regs->cpuad,get_arch_mode_string(regs));
     }
 
-    initdone = 1;  /* now safe for panel_display function to proceed */
-
     /* Execute the program in specified mode */
     run_cpu[regs->arch_mode] (regs);
 

@@ -778,8 +778,6 @@ char c;
 /* the PSW periodically and displays it on the screen status line.   */
 /*-------------------------------------------------------------------*/
 
-int volatile initdone = 0;           /* Initialization complete flag */
-
 #if defined(OPTION_DYNAMIC_LOAD)
 void panel_display_r (void)
 #else
@@ -868,9 +866,6 @@ struct  timeval tv;                     /* Select timeout structure  */
     redraw_msgs = 1;
     redraw_cmd = 1;
     redraw_status = 1;
-
-    /* Wait for system to finish coming up */
-    while (!initdone) sleep(1);
 
     /* Process messages and commands */
     while (1)

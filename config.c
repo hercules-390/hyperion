@@ -531,7 +531,7 @@ BYTE **newargv;
     mainsize = 2;
     xpndsize = 0;
     cnslport = 3270;
-    numcpu = 1;
+    numcpu = 0;
     numvec = MAX_CPU_ENGINES;
     memset (loadparm, 0x4B, 8);
     sysepoch = 1900;
@@ -997,7 +997,7 @@ BYTE **newargv;
         if (snumcpu != NULL)
         {
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
-                || numcpu < 1 || numcpu > MAX_CPU_ENGINES)
+                || numcpu < 0 || numcpu > MAX_CPU_ENGINES)
             {
                 fprintf(stderr, _("HHCCF018S Error in %s line %d: "
                         "Invalid number of CPUs %s\n"),

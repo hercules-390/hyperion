@@ -35,6 +35,13 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
 
+    if(!regs->cpuonline)
+    {
+        obtain_lock (&sysblk.intlock);
+        configure_cpu(regs);
+        release_lock(&sysblk.intlock);
+    }
+
     HDC(debug_cpu_state, regs);
 
     /* Reset external interrupts */
@@ -238,6 +245,13 @@ U32     fileaddr;
 
     if(fname == NULL)                   /* Default ipl from DASD     */
         fname = "hercules.ins";         /*   from hercules.ins       */
+
+    if(!regs->cpuonline)
+    {
+        obtain_lock (&sysblk.intlock);
+        configure_cpu(regs);
+        release_lock(&sysblk.intlock);
+    }
 
     HDC(debug_cpu_state, regs);
 
