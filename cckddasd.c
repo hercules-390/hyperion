@@ -3541,7 +3541,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     }
 
     rc = cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
-    logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD158E file[%d] %s added\n"),dev->devnum, cckd->sfn, sfn);
+    logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD158E file[%d] %s added\n"), cckd->sfn, sfn);
     release_lock (&cckd->filelock);
 
     obtain_lock (&cckd->iolock);
