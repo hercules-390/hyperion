@@ -450,7 +450,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_ECIO_MASK(regs);
-    SET_IC_PSW_WAIT(regs);
 
     /* Update access register b2 */
     regs->AR(b2) = ar;

@@ -1811,6 +1811,10 @@ zz_func opcode_a5xx[16][GEN_MAXARCH] = {
 
 // #endif /*defined(FEATURE_ESAME)*/
 
+zz_func s370_opcode_a7xx[16];
+zz_func s390_opcode_a7xx[16];
+zz_func z900_opcode_a7xx[16];
+
 zz_func opcode_a7xx[16][GEN_MAXARCH] = {
  /*A7x0*/ GENx___x390x900 (test_under_mask_high,RI,"TMH"),
  /*A7x1*/ GENx___x390x900 (test_under_mask_low,RI,"TML"),

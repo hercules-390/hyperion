@@ -1062,6 +1062,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             /* Obtain the interrupt lock */
             obtain_lock (&sysblk.intlock);
 
+    INVALIDATE_AIA(regs);
+
 #if MAX_CPU_ENGINES > 1
             /* Perform broadcasted purge of ALB and TLB if requested
                synchronize_broadcast() must be called until there are
@@ -1239,7 +1241,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 
 } /* end function process_interrupt */
 
-void ARCH_DEP(process_trace)(REGS *regs, int tracethis, int stepthis)
+void ARCH_DEP(process_trace)(REGS *regs)
 {
 int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
@@ -1249,11 +1251,10 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
                             && (regs->psw.IA == sysblk.breakaddr);
 
             /* Display the instruction */
-            if (sysblk.insttrace || sysblk.inststep || shouldbreak
-                || tracethis || stepthis)
+    if (sysblk.insttrace || sysblk.inststep || shouldbreak)
             {
                 ARCH_DEP(display_inst) (regs, regs->ip);
-                if (sysblk.inststep || stepthis || shouldbreak)
+        if (sysblk.inststep || shouldbreak)
                 {
                     /* Put CPU into stopped state */
                     regs->cpustate = CPUSTATE_STOPPED;
@@ -1280,175 +1281,358 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             }
 } /* end function process_trace */
 
-
-#define FAST_INSTRUCTION_FETCH(_dest, _addr, _regs, _pe, _if) \
+#define HRR(_inst, _regs, _r1, _r2) \
         { \
-            if ( regs->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)) \
-               && ((_addr) <= (_pe))) \
-                (_dest) =  pagestart + ((_addr) & PAGEFRAME_BYTEMASK); \
-            else goto _if; \
+    register U32 ib; \
+    FETCHIBYTE1(ib, (_inst)) \
+    (_r1) = ib >> 4; \
+    (_r2) = ib & 0x0F; \
+    (_regs).psw.IA += 2; \
+    (_regs).psw.ilc = 2; \
+    (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
         } 
 
-#define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
+#define HRX(_inst, _regs, _r1, _b2, _effective_addr2) \
         { \
-        COUNT_INST ((_inst), (_regs)); \
-        (_regs)->ip = (_inst); \
-        (ARCH_DEP(opcode_table)[_inst[0]]) ((_inst), 0, (_regs)); \
+    U32 temp; \
+    memcpy (&temp, (_inst), 4); \
+    temp = CSWAP32(temp); \
+    (_r1) = (temp >> 20) & 0xf; \
+    (_b2) = (temp >> 16) & 0xf; \
+    (_effective_addr2) = temp & 0xfff; \
+    if((_b2)) \
+    { \
+        (_effective_addr2) += (_regs).GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP(&(_regs)); \
+    } \
+    (_b2) = (temp >> 12) & 0xf; \
+    if((_b2)) \
+    { \
+        (_effective_addr2) += (_regs).GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP(&(_regs)); \
+    } \
+    (_regs).psw.IA += 4; \
+    (_regs).psw.ilc = 4; \
+    (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
         }
 
-#define FAST_IFETCH(_regs, _pe, _ip, _if, _ex) \
+#define HSS_L(_inst, _regs, _l, \
+            _b1, _effective_addr1, _b2, _effective_addr2) \
+{   U32 temp; \
+    int ib4, ib5; \
+    memcpy (&temp, (_inst), 4); \
+    temp = CSWAP32(temp); \
+    (_l) = (temp >> 16) & 0xff; \
+    (_b1) = (temp >> 12) & 0xf; \
+    (_effective_addr1) = temp & 0xfff; \
+    if((_b1) != 0) \
     { \
-_if: \
-    regs->instvalid = 0; \
-    (_ip) = regs->inst; \
-    (_regs)->ip = (_ip); \
-    ARCH_DEP(instfetch) (regs->inst, regs->psw.IA, regs);  \
-    (regs)->instvalid = 1; \
-    (_pe) = (regs->psw.IA & ~0x7FF) + (0x800 - 6); \
-    pagestart = sysblk.mainstor + regs->AI; \
-    goto _ex; \
+        (_effective_addr1) += (_regs).GR((_b1)); \
+        (_effective_addr1) &= ADDRESS_MAXWRAP(&(_regs)); \
+    } \
+    FETCHIBYTE4(ib4, (_inst)); \
+    FETCHIBYTE5(ib5, (_inst)); \
+    (_b2) = ib4 >> 4; \
+    (_effective_addr2) = ((ib4 & 0x0f) << 8) | ib5; \
+    if((_b2) != 0) \
+    { \
+        (_effective_addr2) += (_regs).GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP(&(_regs)); \
+    } \
+    (_regs).psw.IA += 6; \
+    (_regs).psw.ilc = 6; \
+    (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
     }
 
-#define FAST_UNROLLED_EXECUTE(_regs, _pe, _ip, _if, _ex) \
+#define HRS(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
+{   U32 temp; \
+    memcpy (&temp, (_inst), 4); \
+    temp = CSWAP32(temp); \
+    (_r1) = (temp >> 20) & 0xf; \
+    (_r3) = (temp >> 16) & 0xf; \
+    (_b2) = (temp >> 12) & 0xf; \
+    (_effective_addr2) = temp & 0xfff; \
+    if((_b2)) \
         { \
-            FAST_INSTRUCTION_FETCH((_ip), (_regs)->psw.IA, (_regs), \
-                                 (_pe), _if); \
-         _ex: \
-            FAST_EXECUTE_INSTRUCTION((_ip), 0, (_regs)); \
+        (_effective_addr2) += (_regs).GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP(&(_regs)); \
+    } \
+    (_regs).psw.IA += 4; \
+    (_regs).psw.ilc = 4; \
+    (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
         }
+
+#define HSI(_inst, _regs, _i2, _b1, _effective_addr1) \
+{   U32 temp; \
+    memcpy (&temp, (_inst), 4); \
+    temp = CSWAP32(temp); \
+    (_i2) = (temp >> 16) & 0xff; \
+    (_b1) = (temp >> 12) & 0xf; \
+    (_effective_addr1) = temp & 0xfff; \
+    if((_b1) != 0) \
+    { \
+        (_effective_addr1) += (_regs).GR((_b1)); \
+        (_effective_addr1) &= ADDRESS_MAXWRAP(&(_regs)); \
+    } \
+    (_regs).psw.IA += 4; \
+    (_regs).psw.ilc = 4; \
+    (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
+}
+
+#define HRI(_inst, _regs, _r1, _op, _i2) \
+{   U32 temp; \
+    memcpy (&temp, (_inst), 4); \
+    temp = CSWAP32(temp); \
+    (_r1) = (temp >> 20) & 0xf; \
+    (_op) = (temp >> 16) & 0xf; \
+    (_i2) = temp & 0xffff; \
+    (_regs).psw.IA += 4; \
+    (_regs).psw.ilc = 4; \
+    (_regs).psw.IA &= ADDRESS_MAXWRAP(&(_regs)); \
+}
+
+
+#define NEXT_INSTRUCTION \
+{ \
+    if (!(((regs.psw.IA ^ regs.VI) + 6) & (PAGEFRAME_PAGEMASK + 1))) \
+    { \
+        regs.po = (regs.psw.IA & PAGEFRAME_BYTEMASK); \
+        regs.ip = regs.pagestart + (regs.psw.IA & PAGEFRAME_BYTEMASK); \
+        COUNT_INST(regs.ip, &regs); \
+    regs.instcount ++; \
+        goto *instructions[regs.ip[0]]; \
+    } else goto instruction_fetch; \
+}
+
+#define NEXT_INSTRUCTION_FAST(_increment) \
+{ \
+    if ((regs.po += (_increment)) <= PAGEFRAME_PAGESIZE - 6) \
+    { \
+        regs.ip = regs.pagestart + (regs.psw.IA & PAGEFRAME_BYTEMASK); \
+        COUNT_INST(regs.ip, &regs); \
+    regs.instcount ++; \
+        goto *instructions[regs.ip[0]]; \
+    } else goto instruction_fetch; \
+}
+
+#define HLOGICAL_TO_ABS_READ(_addr, _arn, _regs, _akey)           \
+    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) && \
+    ((_arn) >= 0) &&                                                    \
+    (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&   \
+    (((_regs).aenoarn) || ((_regs).aearn[AEIND((_addr))] == (_arn))) && \
+    ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_READ) ?                          \
+            (STORAGE_KEY((_regs).AE((AEIND((_addr))))) |= STORKEY_REF,                 \
+        ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
+        ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_READ, (_akey))
+
+#define HLOGICAL_TO_ABS_WRITE(_addr, _arn, _regs, _akey)           \
+    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) &&      \
+    ((_arn) >= 0) &&                                                  \
+    (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&          \
+    (((_regs).aenoarn) || ((_regs).aearn[AEIND((_addr))] == (_arn))) && \
+    ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_WRITE) ?                          \
+            (STORAGE_KEY((_regs).AE((AEIND((_addr))))) |= (STORKEY_REF | STORKEY_CHANGE), \
+        ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
+        ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_WRITE, (_akey))
+
+#define HFETCHB(_value, _addr, _arn, _regs) \
+{ \
+    RADR abs;\
+    abs = HLOGICAL_TO_ABS_READ((_addr), (_arn), (_regs), (_regs).psw.pkey); \
+    (_value) = sysblk.mainstor[abs]; \
+        }
+
+#define HSTOREB(_value, _addr, _arn, _regs) \
+{ \
+    RADR abs;\
+    abs = HLOGICAL_TO_ABS_WRITE((_addr), (_arn), (_regs), (_regs).psw.pkey); \
+    sysblk.mainstor[abs] = (_value); \
+}
+
+#define HFETCH2(_value, _addr, _arn, _regs) \
+{ \
+    RADR    abs1; \
+    \
+    abs1 = HLOGICAL_TO_ABS_READ((_addr), (_arn), (_regs), (_regs).psw.pkey); \
+    \
+    if(!((_addr) & 1) || (abs1 & 0x000007FF) <= (2048 - 2)) \
+    { (_value) = fetch_hw(sysblk.mainstor + abs1); } \
+    else \
+    { \
+    VADR addr2 = ((_addr) + 1) & ADDRESS_MAXWRAP(&regs); \
+    RADR abs2; \
+        abs2 = HLOGICAL_TO_ABS_READ(addr2, (_arn), (_regs), (_regs).psw.pkey); \
+        (_value) = (U16) (sysblk.mainstor[abs1] << 8) | sysblk.mainstor[abs2]; \
+    } \
+}
+
+#define HSTORE2(_value, _addr, _arn, _regs) \
+{ \
+    RADR    abs1; \
+    \
+    abs1 = HLOGICAL_TO_ABS_WRITE((_addr), (_arn), (_regs), (_regs).psw.pkey); \
+    \
+    if (!((_addr) & 1) || ((_addr) & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2)) \
+    { \
+        STORE_HW(sysblk.mainstor + abs1, (_value)); \
+    } else \
+    { \
+    VADR addr2 = ((_addr) + 1) & ADDRESS_MAXWRAP(&(_regs)); \
+    RADR abs2; \
+    abs2 = HLOGICAL_TO_ABS_WRITE(addr2, (_arn), (_regs), (_regs).psw.pkey); \
+        sysblk.mainstor[abs1] = (_value) >> 8; \
+    sysblk.mainstor[abs2] = (_value) & 0xFF; \
+    } \
+}
+    
+#define HFETCH4(_value, _addr, _arn, _regs) \
+{ \
+    if (!((_addr) & 3) || ((_addr) & 0x000007FF) <= 2048 - 4) \
+    { \
+    RADR abs; \
+    abs = HLOGICAL_TO_ABS_READ((_addr), (_arn), (_regs), (_regs).psw.pkey); \
+    (_value) = fetch_fw(sysblk.mainstor + abs); \
+    } else \
+    (_value) = ARCH_DEP(vfetch4) ( (_addr), (_arn), &(_regs)); \
+        }
+
+#define HSTORE4(_value, _addr, _arn, _regs) \
+{ \
+    if (!((_addr) & 3) || ((_addr) & 0x000007FF) <= 2048 - 4) \
+    { \
+    RADR    abs; \
+    abs = HLOGICAL_TO_ABS_WRITE((_addr), (_arn), (_regs), (_regs).psw.pkey); \
+        STORE_FW(sysblk.mainstor + abs, (_value)); \
+    } else \
+    ARCH_DEP(vstore4) ( (_value), (_addr), (_arn), &(_regs)); \
+    }
 
 /*-------------------------------------------------------------------*/
 /* This is the emulated CPU function                                 */
 /*-------------------------------------------------------------------*/
 
-void ARCH_DEP(run_cpu) (REGS *regs)
-{
-int     tracethis;                      /* Trace this instruction    */
-int     stepthis;                       /* Stop on this instruction  */
-VADR    pageend;
-BYTE    *ip, *pagestart = NULL;
+void ARCH_DEP(run_cpu) (REGS *pregs)
+    {
+    static void *instructions[256];
+    static void *instructions_a7xx[256];
+    REGS        regs;
+#if defined(OPTION_GABOR_PERF)
+#if defined(CPU_INST_CLC) || defined(CPU_INST_LM)
+    BYTE        cwork1[256];
+#endif
+#if defined(CPU_INST_CLC)
+    BYTE        cwork2[256];
+#endif
+#if defined(CPU_INST_ICM)
+    static void *ICM_goto [16] = { NULL, &&ICM_l1, &&ICM_l2, &&ICM_l3, &&ICM_l4,
+                    &&ICM_l5,  &&ICM_l6,  &&ICM_l7, &&ICM_l8,
+                    &&ICM_l9,  &&ICM_l10, &&ICM_l11,&&ICM_l12, 
+                    &&ICM_l13, &&ICM_l14, &&ICM_l15};
+    int r1;
+    U32 n;
+#endif
+#endif /* defined(OPTION_GABOR_PERF) */
+
+    obtain_lock (&sysblk.intlock);
+        
+    /* Copy current register context into a (static) area */
+    memcpy(&regs, pregs, sizeof(REGS));
+    sysblk.regs[regs.cpuad] = &regs;
+#if defined(_FEATURE_SIE)
+    regs.guestregs->hostregs = &regs;
+#endif /*defined(_FEATURE_SIE)*/
+
+    /* Initialize copied locks and conditions */
+    initialize_condition (&regs.intcond);
 
     /* Set started bit on and wait bit off for this CPU */
-    obtain_lock (&sysblk.intlock);
-    sysblk.started_mask |= regs->cpumask;
-    sysblk.waitmask &= ~regs->cpumask;
+    sysblk.started_mask |= regs.cpumask;
+    sysblk.waitmask &= ~regs.cpumask;
+
     release_lock (&sysblk.intlock);
 
+#if defined(OPTION_GABOR_PERF)
+/* include only, the inst array building part */
+#define  GABOR_PERF_IMPLEMENT_TABLE_BUILD_PART
+#include "cpu-inst.c"
+#endif /* defined(OPTION_GABOR_PERF) */
+
+    /* `Intermediate' longjmp for architecture change */
+    if (setjmp(regs.archjmp))
+        {
+        jmp_buf tmpjmp;
+        memcpy (&tmpjmp, pregs->archjmp, sizeof(tmpjmp));
+        memcpy(pregs, &regs, sizeof(REGS));
+        memcpy (pregs->archjmp, &tmpjmp, sizeof(tmpjmp));
+        sysblk.regs[regs.cpuad] = pregs;
+        longjmp (pregs->archjmp, SIE_NO_INTERCEPT);
+        }
+
     /* Establish longjmp destination for program check */
-    setjmp(regs->progjmp);
+    setjmp(regs.progjmp);
 
-    /* Reset instruction trace indicators */
-    tracethis = 0;
-    stepthis = 0;
-    pageend = 0;
-    ip = regs->inst;
-    regs->ip = ip;
-
-    pagestart = sysblk.mainstor + regs->AI; 
-
-#ifdef FEATURE_PER
-    if (PER_MODE(regs))
-        goto slowloop;
+#if defined(OPTION_GABOR_PERF)
+#if defined(CPU_INST_ICM)
+    r1 = n = 0;
 #endif
+#endif /* defined(OPTION_GABOR_PERF) */
 
-    while (1)
+    INVALIDATE_AIA(&regs);
+
+/*-------------------------------------------------------------------*/
+/* Instruction fetch or/and interrupt testing                        */
+/*-------------------------------------------------------------------*/
+instruction_fetch:
+        {
+    if( IC_INTERRUPT_CPU(&regs) )
     {
-        /* Test for interrupts if it appears that one may be pending */
-        if( IC_INTERRUPT_CPU(regs) )
+        ARCH_DEP(process_interrupt)(&regs);
+        /* write back the register context */
+        if (!regs.cpuonline)
         {
-            ARCH_DEP(process_interrupt)(regs);
-            if (!regs->cpuonline)
-                 return;
+            memcpy(pregs, &regs, sizeof(REGS));
+            sysblk.regs[regs.cpuad] = pregs;
+            return;
         }
-
-        /* Fetch the next sequential instruction */
-        FAST_INSTRUCTION_FETCH(ip, regs->psw.IA, regs, pageend,
-                            ifetch0);
-exec0:
-
-        if( IS_IC_TRACE )
-        {
-            regs->ip = ip;
-            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
-
-    
-            /* Reset instruction trace indicators */
-            tracethis = 0;
-            stepthis = 0;
-            regs->instcount++;
-            FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
-            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-        }
-
-        /* Execute the instruction */
-        regs->instcount += 8;
-        FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch1, exec1);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch2, exec2);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch3, exec3);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch4, exec4);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch5, exec5);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch6, exec6);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
-                           ifetch7, exec7);
     }
 
-FAST_IFETCH(regs, pageend, ip, ifetch0, exec0);
-FAST_IFETCH(regs, pageend, ip, ifetch1, exec1);
-FAST_IFETCH(regs, pageend, ip, ifetch2, exec2);
-FAST_IFETCH(regs, pageend, ip, ifetch3, exec3);
-FAST_IFETCH(regs, pageend, ip, ifetch4, exec4);
-FAST_IFETCH(regs, pageend, ip, ifetch5, exec5);
-FAST_IFETCH(regs, pageend, ip, ifetch6, exec6);
-FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
-
-#ifdef FEATURE_PER
-slowloop:
-    while (1)
-    {
-        /* Test for interrupts if it appears that one may be pending */
-        if( IC_INTERRUPT_CPU(regs) )
-        {
-            ARCH_DEP(process_interrupt)(regs);
-            if (!regs->cpuonline)
-                 return;
-        }
-
-        /* Clear the instruction validity flag in case an access
-           error occurs while attempting to fetch next instruction */
-        regs->instvalid = 0;
-
-        /* Fetch the next sequential instruction */
-        INSTRUCTION_FETCH(regs->inst, regs->psw.IA, regs);
-
-        /* Set the instruction validity flag */
-        regs->instvalid = 1;
-
-        if( IS_IC_TRACE )
-        {
-            regs->ip = ip;
-            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
-
+    regs.instvalid = 0;
+    regs.ip = regs.inst;
+    ARCH_DEP(instfetch) (regs.inst, regs.psw.IA, &regs);
+    regs.instvalid = 1;
+    regs.pagestart = sysblk.mainstor + regs.AI;
+    regs.po        = regs.psw.IA & PAGEFRAME_BYTEMASK;
     
-            /* Reset instruction trace indicators */
-            tracethis = 0;
-            stepthis = 0;
+    if (IS_IC_TRACE_OR_PER(&regs))
+    {
+        if (IS_IC_TRACE)
+            ARCH_DEP(process_trace)(&regs);
+        INVALIDATE_AIA(&regs);
         }
 
-        /* Execute the instruction */
-        regs->instcount++;
-        EXECUTE_INSTRUCTION (regs->ip, 0, regs);
+    COUNT_INST(regs.ip, &regs);
+    regs.instcount ++;
+    goto *instructions[regs.ip[0]];
     }
-#endif
 
-} /* end function cpu_thread */
-
+#if defined(OPTION_GABOR_PERF)
+/* include only the inlined instruction implementation part */
+#define  GABOR_PERF_IMPLEMENT_INLINE_PART
+#include "cpu-inst.c"
+/*-------------------------------------------------------------------*/
+/* If the given instruction is not defined as an inlined instruction */
+/* for the Gabor performance option, then we execute the original    */
+/* implementation for that instruction. This way we can mix both the */
+/* Gabor performance option AND the original architecture for any    */
+/* instruction as desired. This lets us to test Gabor's performance  */
+/* option individually for each instruction.                         */
+/*-------------------------------------------------------------------*/
+non_inlined_instruction:
+#endif /* defined(OPTION_GABOR_PERF) */
+    (ARCH_DEP(opcode_table)[regs.ip[0]]) (regs.ip, 0, &regs);
+    NEXT_INSTRUCTION;
+}
+/* end function cpu_thread */
 
 #if !defined(_GEN_ARCH)
 

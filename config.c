@@ -345,6 +345,13 @@ BYTE    c;                              /* Work area for sscanf      */
 #endif
     }
 
+    for (i = 0; i < 16; i++)
+    {
+        s370_opcode_a7xx [i] = opcode_a7xx [i][0];
+        s390_opcode_a7xx [i] = opcode_a7xx [i][1];
+        z900_opcode_a7xx [i] = opcode_a7xx [i][2];
+    }
+
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
 

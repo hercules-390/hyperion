@@ -1853,7 +1853,11 @@ int     aeind;
     } /* end switch */
 
 #if defined(OPTION_AEA_BUFFER)
+#if defined(FEATURE_PER)
     if(arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs) )
+#else
+    if(arn >= 0 && acctype <= ACCTYPE_WRITE)
+#endif
     {
 #if defined(FEATURE_ACCESS_REGISTERS)
         if(ACCESS_REGISTER_MODE(&regs->psw))

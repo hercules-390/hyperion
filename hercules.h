@@ -381,6 +381,7 @@ typedef struct _REGS {                  /* Processor registers       */
                                            8-63=Comparator bits 0-55 */
         S64     todoffset;              /* TOD offset for this CPU   */
         U64     instcount;              /* Instruction counter       */
+        U32     instcount32;            /* Instruction counter 32bit */
         U64     prevcount;              /* Previous instruction count*/
         U32     mipsrate;               /* Instructions/millisecond  */
         U32     siocount;               /* SIO/SSCH counter          */
@@ -395,7 +396,9 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      et;                     /* Execute Target address    */
         DW      ai;                     /* Absolute instruction addr */
         DW      vi;                     /* Virtual instruction addr  */
+        U32     po;                     /* Page offset               */
 #if defined(OPTION_AEA_BUFFER)
+        BYTE   *pagestart;
 #if defined(OPTION_REDUCED_INVAL)
         DW      ae[256];                /* Absolute effective addr   */
         DW      ve[256];                /* Virtual effective addr    */

@@ -2590,6 +2590,8 @@ int     i;                              /* Loop counter              */
 int     cc = 0;                         /* Condition code            */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
+int	fast = 1;
+BYTE	*a1, *a2;
 
     SS_L(inst, execflag, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
@@ -2609,9 +2611,25 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & ~0x7FF))
+    {
         npa1 = LOGICAL_TO_ABS_SKP (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+	fast = 0;
+    }
+
     if (npv2 != (effective_addr2 & ~0x7FF))
+    {
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
+	fast = 0;
+    }
+    
+    if (fast)
+    {
+	a1 = sysblk.mainstor + abs1;
+	a2 = sysblk.mainstor + abs2;
+	for (i = 0; i <= l; i++) if (a1[i] ^= a2[i]) cc = 1; 
+	regs->psw.cc = cc;
+	return;
+    }
 
     /* all operands and page crossers valid, now alter ref & chg bits */
     STORAGE_KEY(abs1) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -2882,13 +2900,15 @@ BYTE    rwork[64];                      /* Register work area        */
         /* Load one access register from work area */
         FETCH_FW(regs->AR(n), rwork + d); d += 4;
 
-        INVALIDATE_AEA(n, regs);
+//        INVALIDATE_AEA(n, regs);
         /* Instruction is complete when r3 register is done */
         if ( n == r3 ) break;
 
         /* Update register number, wrapping from 15 to 0 */
         n++; n &= 15;
     }
+
+    INVALIDATE_AEA_ALL(regs);
 
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -3029,26 +3049,34 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Character work areas      */
+U32	*a;
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
+    if (effective_addr2 < PAGEFRAME_PAGESIZE - 64)
+    {
+	RADR abs;
+	abs = LOGICAL_TO_ABS(effective_addr2, 
+				b2, regs, ACCTYPE_READ, regs->psw.pkey);
+	a = (U32 *) (sysblk.mainstor + abs);
+    } else
+    {
     /* Calculate the number of bytes to be loaded */
     d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
 
     /* Fetch new register contents from operand address */
     ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+	a = (U32 *) rwork;
+    }
 
-    /* Load registers from work area */
-    for ( i = r1, d = 0; ; )
+    a = a - r1;
+    if (r1 <= r3)
+	for (i = r1; i <= r3; i ++) FETCH_FW(regs->GR_L(i), (BYTE *) (a + i));
+    else
     {
-        /* Load one register from work area */
-        FETCH_FW(regs->GR_L(i), rwork + d); d += 4;
-
-        /* Instruction is complete when r3 register is done */
-        if ( i == r3 ) break;
-
-        /* Update register number, wrapping from 15 to 0 */
-        i++; i &= 15;
+	for (i = r1; i < 16; i++) FETCH_FW(regs->GR_L(i), (BYTE *) (a + i));
+	a = a + i;
+	for (i = 0; i <= r3; i++) FETCH_FW(regs->GR_L(i), (BYTE *) (a + i));
     }
 }
 
@@ -3223,12 +3251,9 @@ int     cc;                             /* Condition code            */
 VADR    addr1, addr2;                   /* Operand addresses         */
 GREG    len1, len2;                     /* Operand lengths           */
 GREG    n;                              /* Work area                 */
-BYTE    obyte;                          /* Operand byte              */
 BYTE    pad;                            /* Padding byte              */
-#ifdef OPTION_FAST_MOVELONG
+GREG	l1, l2, l3;
 RADR    abs1, abs2;
-GREG    len3;
-#endif
 
     RR(inst, execflag, regs, r1, r2);
 
@@ -3272,183 +3297,66 @@ GREG    len3;
     /* Set the condition code according to the lengths */
     cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
-#ifdef OPTION_FAST_MOVELONG
+//    logmsg ("MVCL START (addr1/len1  addr2/len2) %.8X/%.6X   %.8X/%.6X \n",
+//			    addr1, len1, addr2, len2);
 
-    if (!len2)
-    {
-        while (len1 > 0)
-        {
-            if (((addr1 & PAGEFRAME_PAGEMASK) !=
-                ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)))
-                len3 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
-            else
-                len3 = len1;
+    l1 = l2 = abs1 = abs2 = 0;
 
-            abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE,
-                                   regs->psw.pkey);
-            memset(sysblk.mainstor+abs1, pad, len3);
-
-#if defined(FEATURE_PER)
-            if( EN_IC_PER_SA(regs)
-#if defined(FEATURE_PER2)
-              && ( REAL_MODE(&regs->psw) ||
-                   ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
-#endif /*defined(FEATURE_PER2)*/
-              && PER_RANGE_CHECK2(addr1, addr1+len3, regs->CR(10), regs->CR(11)) )
-                ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
-
-            len1 -= len3;
-            addr1 += len3;
-            addr1 &= ADDRESS_MAXWRAP(regs);
-
-            /* Update the registers */
-            GR_A(r1, regs) = addr1;
-            regs->GR_LA24(r1+1) = len1;
-
-            /* The instruction can be interrupted when a CPU determined
-               number of bytes have been processed.  The instruction
-               address will be backed up, and the instruction will
-               be re-executed.  This is consistent with operation
-               under a hypervisor such as LPAR or VM.                *JJ */
-            if ( (len1 > 255) && !(addr1 & 0xFFF) &&
-                (OPEN_IC_EXTPENDING(regs) ||
-                 OPEN_IC_IOPENDING(regs)) )
-            {
-                regs->psw.IA -= regs->psw.ilc;
-                regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-                break;
-            }
-        }
-        regs->psw.cc = cc;
-        return;
-    }
-
-    if ((len2) && (len1 == len2) &&
-                  ((addr1 & PAGEFRAME_PAGEMASK) ==
-                   ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)) &&
-                  ((addr2 & PAGEFRAME_PAGEMASK) ==
-                   ((addr2 + len2 - 1) & PAGEFRAME_PAGEMASK)))
-    {
-        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-
-        memcpy(sysblk.mainstor+abs1, sysblk.mainstor+abs2, len1);
-
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
-#if defined(FEATURE_PER2)
-          && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
-#endif /*defined(FEATURE_PER2)*/
-          && PER_RANGE_CHECK2(addr1, addr1+len1, regs->CR(10), regs->CR(11)) )
-            ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
-
-        /* Update the registers */
-        GR_A(r1, regs) = addr1 + len1;
-        GR_A(r2, regs) = addr2 + len2;
-        regs->GR_LA24(r1+1) = 0;
-        regs->GR_LA24(r2+1) = 0;
-        regs->psw.cc = cc;
-        return;
-    }
-
-    while ((len1 >= 256) && (len2 >= 256) &&
-                  ((addr1 & PAGEFRAME_PAGEMASK) ==
-                   ((addr1 + 255) & PAGEFRAME_PAGEMASK)) &&
-                  ((addr2 & PAGEFRAME_PAGEMASK) ==
-                   ((addr2 + 255) & PAGEFRAME_PAGEMASK)))
-    {
-        abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
-        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
-
-        memcpy(sysblk.mainstor+abs1, sysblk.mainstor+abs2, 256);
-
-#if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
-#if defined(FEATURE_PER2)
-          && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
-#endif /*defined(FEATURE_PER2)*/
-          && PER_RANGE_CHECK2(addr1, addr1+255, regs->CR(10), regs->CR(11)) )
-            ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
-
-        addr1 += 256;
-        addr2 += 256;
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        len1 -= 256;
-        len2 -= 256;
-
-        /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r2, regs) = addr2;
-        regs->GR_LA24(r1+1) = len1;
-        regs->GR_LA24(r2+1) = len2;
-
-        /* The instruction can be interrupted when a CPU determined
-           number of bytes have been processed.  The instruction
-           address will be backed up, and the instruction will
-           be re-executed.  This is consistent with operation
-           under a hypervisor such as LPAR or VM.                *JJ */
-        if ((regs->GR_LA24(r1+1) || regs->GR_LA24(r2+1)) &&
-            (OPEN_IC_EXTPENDING(regs) ||
-             OPEN_IC_IOPENDING(regs)) )
-        {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-            return;
-        }
-    }
-
-#endif
-
-    /* Process operands from left to right */
     while (len1 > 0)
+            {
+	if (!l1)
     {
-        /* Fetch byte from source operand, or use padding byte */
-        if (len2 > 0)
-        {
-            obyte = ARCH_DEP(vfetchb) ( addr2, r2, regs );
-            addr2++;
-            addr2 &= ADDRESS_MAXWRAP(regs);
-            len2--;
-        }
-        else
-            obyte = pad;
+	    l1 = PAGEFRAME_PAGESIZE - (addr1 & PAGEFRAME_BYTEMASK);
+	    if (len1 < l1) l1 = len1;
+        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
+    }
 
-        /* Store the byte in the destination operand */
-        ARCH_DEP(vstoreb) ( obyte, addr1, r1, regs );
-        addr1++;
+	if (len2) /* move blocks */
+    {
+	    if (!l2)
+	    {
+		l2 = PAGEFRAME_PAGESIZE - (addr2 & PAGEFRAME_BYTEMASK);
+		if (len2 < l2) l2 = len2;
+        abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+	    }
+
+//	    logmsg ("M addr/len/l (1) %.8X/%.6X/%.4X    (2) : %.8X/%.6X/%.4X\n", 
+//				addr1, len1, l1, addr2, len2, l2);
+
+	    l3 = (l1 < l2) ? l1 : l2;
+      	    memcpy (sysblk.mainstor+abs1, sysblk.mainstor+abs2, l3);
+	    len1  -= l3;
+	    len2  -= l3;
+	    addr1 += l3;
+	    addr2 += l3;
+	    abs1  += l3;
+	    abs2  += l3;
         addr1 &= ADDRESS_MAXWRAP(regs);
-        len1--;
+    	    addr2 &= ADDRESS_MAXWRAP(regs);
+	    l1	  -= l3;
+	    l2	  -= l3;
+	} else /* fill with padding byte */
+        {
+//	    logmsg ("P addr/len/l (1) %.8X/%.6X/%.4X\n", addr1, len1, l1);
 
-        /* Update the registers */
+	    memset (sysblk.mainstor+abs1, pad, l1);
+	    len1  -= l1;
+	    addr1 += l1;
+    	    addr1 &= ADDRESS_MAXWRAP(regs);
+	    l1     = 0;
+	}
+        }
+
+//    logmsg ("MVCL END   (addr1/len1  addr2/len2) %.8X/%.6X   %.8X/%.6X \n\n",
+//			    addr1, len1, addr2, len2);
+
         GR_A(r1, regs) = addr1;
         GR_A(r2, regs) = addr2;
         regs->GR_LA24(r1+1) = len1;
         regs->GR_LA24(r2+1) = len2;
-
-        /* The instruction can be interrupted when a CPU determined
-           number of bytes have been processed.  The instruction
-           address will be backed up, and the instruction will
-           be re-executed.  This is consistent with operation
-           under a hypervisor such as LPAR or VM.                *JJ */
-        if ((len1 > 255) && !(addr1 & 0xFFF) &&
-            (OPEN_IC_EXTPENDING(regs) ||
-             OPEN_IC_IOPENDING(regs)) )
-        {
-            regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-            break;
-        }
-
-    } /* end while(len1) */
 
     regs->psw.cc = cc;
-
+    return;
 }
 
 

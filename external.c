@@ -133,9 +133,6 @@ static void ARCH_DEP(external_interrupt) (int code, REGS *regs)
 PSA     *psa;
 int     rc;
 
-    /* reset the cpuint indicator */
-    RESET_IC_CPUINT(regs);
-
     release_lock(&sysblk.intlock);
 
 #if defined(_FEATURE_SIE)
@@ -389,9 +386,6 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Generate service signal interrupt */
         ARCH_DEP(external_interrupt) (EXT_SERVICE_SIGNAL_INTERRUPT, regs);
     }
-
-    /* reset the cpuint indicator */
-    RESET_IC_CPUINT(regs);
 
 } /* end function perform_external_interrupt */
 

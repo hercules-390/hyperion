@@ -124,6 +124,9 @@ extern zz_func opcode_a5xx[][GEN_MAXARCH];
 extern zz_func v_opcode_a5xx[][GEN_MAXARCH];
 extern zz_func v_opcode_a6xx[][GEN_MAXARCH];
 extern zz_func opcode_a7xx[][GEN_MAXARCH];
+extern zz_func s370_opcode_a7xx[];
+extern zz_func s390_opcode_a7xx[];
+extern zz_func z900_opcode_a7xx[];
 extern zz_func opcode_b2xx[][GEN_MAXARCH];
 extern zz_func opcode_b3xx[][GEN_MAXARCH];
 extern zz_func opcode_b9xx[][GEN_MAXARCH];
@@ -523,9 +526,6 @@ static inline void store_dw(void* storage, U64 value) {
 
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
-#undef	INSTRUCTION_FETCH
-#undef	INVALIDATE_AIA
-
 #define INSTRUCTION_FETCH(_dest, _addr, _regs) \
 do { \
     if( (_regs)->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
@@ -540,8 +540,7 @@ do { \
         ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)); \
 } while(0)
 
-#define INVALIDATE_AIA(_regs) \
-    (_regs)->VI = 1
+#define INVALIDATE_AIA(_regs) { (_regs)->po = 0x1000; (_regs)->VI = 1; }
 
 #if defined(OPTION_AEA_BUFFER)
 
@@ -578,8 +577,8 @@ do { \
 #define INVALIDATE_AEA(_arn, _regs) \
 do { \
     int i; \
-    (_regs)->aenoarn = 0; \
     for(i = 0; i < MAXAEA; i++) \
+	if ((_regs)->aearn[i] == (_arn)) \
         (_regs)->VE(i) = 1; \
 } while(0)
 
@@ -624,7 +623,6 @@ do { \
 
 /* RR register to register */
 #undef RR
-#if defined(OPTION_FETCHIBYTE)
 #define RR(_inst, _execflag, _regs, _r1, _r2) \
 	{ \
             register U32 ib; \
@@ -633,30 +631,14 @@ do { \
 	    (_r2) = ib & 0x0F; \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
 	}
-#else
-#define RR(_inst, _execflag, _regs, _r1, _r2) \
-	{ \
-	    (_r1) = (_inst)[1] >> 4; \
-	    (_r2) = (_inst)[1] & 0x0F; \
-            INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-	}
-#endif
 
 /* RR special format for SVC instruction */
 #undef RR_SVC
-#if defined(OPTION_FETCHIBYTE)
 #define RR_SVC(_inst, _execflag, _regs, _svc) \
 	{ \
             FETCHIBYTE1((_svc), (_inst)) \
             INST_UPDATE_PSW((_regs), 2, (_execflag)); \
 	}
-#else
-#define RR_SVC(_inst, _execflag, _regs, _svc) \
-	{ \
-	    (_svc) = (_inst)[1]; \
-            INST_UPDATE_PSW((_regs), 2, (_execflag)); \
-	}
-#endif
 
 /* RRE register to register with extended op code */
 #undef RRE
