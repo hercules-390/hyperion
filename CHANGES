@@ -1,8 +1,4 @@
-20 Feb 2002 Add OPTION_NOP_MODEL158_DIAGNOSE - Jan Jaeger
-20 Feb 2002 Fix CONCS condition code when not connected - Jan Jaeger
-20 Feb 2002 FreeBSD patches - Mark Daniel Szlaga
-20 Feb 2002 LCTL pending interrupt check when enabling channels - Jan Jaeger
-20 Feb 2002 CONCS Fix check for pending interrupts - Jan Jaeger
+20 Feb 2002 Print to pipe - Roger Bowler
 19 Feb 2002 Fix pending interrupts on other cpus channelset - Jan Jaeger
 15 Feb 2002 Fix interval timer state retention - Jan Jaeger
 13 Feb 2002 Fix TS intercept test - Paul Leisy
