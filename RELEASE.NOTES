@@ -36,6 +36,7 @@
   HHCCF042E will indicate that system is unable to locate necessary loadable
   modules.
 
+
 - ECPS:VM: Do not use ECPS:VM (See README.ECPSVM) in an AP or MP environment
   in VM/370. If AP=YES or MP=YES is coded in DMKSYS and the AP/MP control
   file is used to build the CP nucleus and NUMCPU is set to more than 1 in
@@ -44,5 +45,63 @@
   MP safe, and particularily, attemps VM dispatching without holding necessary
   AP or MP locks.
 
-- Anything else???
 
+- Due to the change in Hercules' "mainstor" memory allocation technique to
+  address a "double memory consumption" bug in Cygwin's malloc implementation,
+  some Windows Hercules users may experience an "out of memory" error whenever
+  Hercules is started with a large MAINSIZE configuration file value:
+
+      "HHCCF031S Cannot obtain nnnMB main storage"
+
+  This error will most likely occur (if it does at all) for those users who
+  have manually adjusted their Cygwin "heap_chunk_in_mb" Windows registry
+  setting value (in order to allow them to specify a large MAINSIZE value
+  when running Hercules). If this problem does occur (i.e. if you DO happen
+  to experience the above mentioned "HHCCF031S Cannot obtain main storage"
+  error with this new release of Hercules), then either REDUCE your "heap_
+  chunk_in_mb" value (yes, that's correct: REDUCE it; i.e. change it to a
+  SMALLER value) or else remove it altogether (so as to let it default).
+
+  Detailed explanation:
+
+  History/background: Cygwin has a built-in limit to the amount of memory
+  that may be allocated in one chunk. If you try 'malloc'ing more than this
+  limit, you will receive an "out of memory" error. Since many Hercules users
+  specify large MAINSIZE values in their configuration file, they sometimes
+  experience this problem.
+
+  The suggested workaround to this "problem" was to add a "heap_chunk_in_mb"
+  registry value to Cygwin's registry settings with a large enough value such
+  that Cygwin would then be able to satisfy Hercules' 'malloc' request for
+  such a large MAINSIZE value.
+
+  This worked fine until sometime around version 1.3.15 of Cygwin, at which
+  time they began using a different 'malloc' technique that unfortunately
+  causes TWICE as much Windows virtual memory to be allocated for any large
+  memory allocation (the technical reasons of which are explained in comments
+  in source member config.c where mainsize is being allocated).
+
+  In order to address this double memory allocation issue in Cygwin's malloc
+  implementation, Hercules was changed to use mmap to allocate its mainstor
+  rather than malloc (which, unlike malloc, does NOT inadvertently allocate
+  twice as Windows virtual storage than was requested), which did indeed re-
+  solve the "double memory allocation" problem.
+
+  Unfortunately however, because Cygwin's malloc and mmap logic each consume
+  completely different portions of Windows' virtual memory, the more memory
+  that is reserved for malloc usage (via using a larger "heap_chunk_in_mb"
+  value), the LESS becomes available for mmap usage!
+
+  Thus, while increasing your "heap_chunk_in_mb" registry value USED to HELP
+  [to allow you to allocate larger amounts of mainstor (MAINSIZE)], it NOW
+  causes the complete OPPOSITE effect: it ends up PREVENTING you from being
+  able to 'mmap' as much storage as you'd like to have!
+
+  Conclusion:
+
+  Therefore, if you are currently using the "heap_chunk_in_mb" registry value
+  setting to allow you to allocate large MAINSIZE values, then starting with
+  version 2.18 of Hercules you need to DESCREASE your "heap_chunk_in_mb" value
+  (or remove it altogether and let it default) in order to leave enough memory
+  remaining for Hercules (Cygwin actually) to be able to satisfy its 'mmap'
+  request for your desired MAINSIZE amount.
