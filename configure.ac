@@ -71,7 +71,6 @@ is_cygwin=false
 case "$host_os" in
         darwin*)
                if test $host_vendor = apple ; then
-                   CPPFLAGS=-traditional-cpp
                    AC_DEFINE([_BSD_SOCKLEN_T_],[int])
                    AC_DEFINE([_INTL_REDIRECT_MACROS])
 ##            Do whatever is necessary to get the following symbol defined
@@ -439,6 +438,38 @@ int main ( int argc, char* argv[] )
 esac
 fi
 
+if test "$GCC" = "yes"; then
+case "$host_os" in
+      darwin*)
+          AC_CACHE_CHECK([for OS X gcc preprocessor string concatenation bug],
+                         [ac_cv_darwin_gcc_cpp_bug],
+                         [SAVE_CFLAGS="$CFLAGS"
+                          CFLAGS="-Wall -Werror"
+                          AC_TRY_COMPILE([#include <stdio.h>
+                                          #include <string.h>],
+                                         [
+#define ENDMSG(m, format, a...) \
+   if(m!=NULL) fprintf (m, "cckdend: " format, ## a)
+
+int func1(FILE *m, FILE *fd) {
+    ENDMSG (m, "cdevhdr write error fd %d: %s\n",
+            fd, strerror(1));
+    return 0;
+}
+],
+                        ac_cv_darwin_gcc_cpp_bug=no,
+                        ac_cv_darwin_gcc_cpp_bug=yes)
+                        CFLAGS="$SAVE_CFLAGS"])
+          ;;
+      *)
+          ac_cv_darwin_gcc_cpp_bug=no
+          ;;
+esac
+
+if test x$ac_cv_darwin_gcc_cpp_bug != xno; then
+  CPPFLAGS="${CPPFLAGS} -traditional-cpp"
+fi
+fi
 
 case "$host_cpu" in
           i486|i586|i686) ;;
