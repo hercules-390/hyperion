@@ -1933,17 +1933,17 @@ int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 
 /* Access type parameter passed to translate functions in dat.c */
 
-#define ACC_READ           0x01
-#define ACC_WRITE          0x02
-#define ACC_SIE            0x04
-#define ACC_PTE            0x08
+#define ACC_CHECK          0x01
+#define ACC_WRITE          STORKEY_CHANGE  /* 0x02 */
+#define ACC_READ           STORKEY_REF     /* 0x04 */
+#define ACC_SIE            0x08
 #define ACC_LKUP          (ACC_READ|ACC_WRITE)
 //TODO: Use ACC_SIE and ACC_PTE for lookup
 
 #define ACCTYPE_HW         0x00            /* Hardware access        */
 #define ACCTYPE_INSTFETCH (0x10|ACC_READ)  /* Instruction fetch      */
 #define ACCTYPE_READ      (0x20|ACC_READ)  /* Read storage           */
-#define ACCTYPE_WRITE_SKP (0x30|ACC_WRITE) /* Write, skip change bit */
+#define ACCTYPE_WRITE_SKP (0x30|ACC_CHECK) /* Write, skip change bit */
 #define ACCTYPE_WRITE     (0x40|ACC_WRITE) /* Write storage          */
 #define ACCTYPE_TAR        0x50            /* TAR instruction        */
 #define ACCTYPE_LRA        0x60            /* LRA instruction        */
@@ -1951,7 +1951,7 @@ int parse_args (char* p, int maxargc, char** pargv, int* pargc);
 #define ACCTYPE_IVSK       0x80            /* IVSK instruction       */
 #define ACCTYPE_STACK      0x90            /* Linkage stack          */
 #define ACCTYPE_BSG        0xA0            /* BSG instruction        */
-#define ACCTYPE_PTE       (0xB0|ACC_PTE)   /* PTE raddr              */
+#define ACCTYPE_PTE        0xB0            /* PTE raddr              */
 #define ACCTYPE_SIE       (0xC0|ACC_SIE)   /* SIE host translation   */
 #define ACCTYPE_SIE_WRITE (0xD0|ACC_SIE)   /* SIE host write         */
 #define ACCTYPE_STRAG      0xE0            /* STRAG instruction      */

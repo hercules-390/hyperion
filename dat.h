@@ -1899,7 +1899,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
     }
 
     if (regs->dat.protect
-     && (acctype == ACCTYPE_WRITE || acctype == ACCTYPE_WRITE_SKP))
+     && (acctype & (ACC_WRITE|ACC_CHECK)))
         goto vabs_prot_excp;
 
     /* Convert real address to absolute address */
@@ -1961,7 +1961,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
 
     }
     else
-    if (acctype & ACC_WRITE)
+    if (acctype & (ACC_WRITE|ACC_CHECK))
     {
         /* Program check if store protected location */
         if (unlikely(ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs)))
@@ -1982,7 +1982,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
         regs->tlb.storkey[ix]    = regs->dat.storkey;
         regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
         if ((addr >= PSA_SIZE || regs->dat.private) && !EN_IC_PER_SA(regs))
-            regs->tlb.acc[ix]   |= (ACC_WRITE|ACC_READ);
+            regs->tlb.acc[ix]   |= (ACC_WRITE|ACC_READ|ACC_CHECK);
         else
             regs->tlb.acc[ix]   |= ACC_READ;
         regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);
@@ -1997,7 +1997,7 @@ int     ix = TLBIX(addr);               /* TLB index                 */
           && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
-    } /* acctype == ACCTYPE_WRITE_SKP || acctype == ACCTYPE_WRITE */
+    } /* acctype & ACC_WRITE|CHECK */
 
     /* Return mainstor address */
     return regs->mainstor + aaddr;
@@ -2008,7 +2008,7 @@ vabs_addr_excp:
 vabs_prot_excp:
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
     regs->TEA = addr & STORAGE_KEY_PAGEMASK;
-    if (regs->dat.protect && ((acctype == ACCTYPE_WRITE) || (acctype == ACCTYPE_WRITE_SKP)))
+    if (regs->dat.protect && (acctype & (ACC_WRITE|ACC_CHECK)) )
     {
         regs->TEA |= TEA_PROT_AP;
   #if defined(FEATURE_ESAME)

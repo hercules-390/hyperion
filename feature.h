@@ -617,15 +617,9 @@ do { \
    &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
-       ((_acctype) == ACCTYPE_WRITE_SKP) \
-        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-           MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-        : ( ( \
-              *(_regs)->tlb.storkey[TLBIX(_addr)] |= \
-              ( ((_acctype) & ACC_WRITE) ? (STORKEY_REF|STORKEY_CHANGE) : (STORKEY_REF) ) \
-            ) , \
-           MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-           ) \
+       (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
+      *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), \
+       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
@@ -743,15 +737,9 @@ do { \
    &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
-       ((_acctype) == ACCTYPE_WRITE_SKP) \
-        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-          MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-        : ( ( \
-              *(_regs)->tlb.storkey[TLBIX(_addr)] |= \
-              ( ((_acctype) & ACC_WRITE) ? (STORKEY_REF|STORKEY_CHANGE) : (STORKEY_REF) ) \
-            ) , \
-          MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-          ) \
+       (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
+      *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), \
+       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
