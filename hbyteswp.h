@@ -12,13 +12,13 @@
 
 #include "htypes.h"
 
-extern __inline__ ATTR_REGPARM(1) uint16_t bswap_16(uint16_t x)
+static __inline__ ATTR_REGPARM(1) uint16_t bswap_16(uint16_t x)
 {
         __asm__("xchgb %b0,%h0" : "=q" (x) :  "0" (x));
         return x;
 }
 
-extern __inline__ ATTR_REGPARM(1) uint32_t bswap_32(uint32_t x)
+static __inline__ ATTR_REGPARM(1) uint32_t bswap_32(uint32_t x)
 {
         __asm__("bswap %0" : "=r" (x) : "0" (x));
         return x;
