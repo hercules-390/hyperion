@@ -903,7 +903,7 @@ het_read( HETB *hetb, void *sbuf )
                 slen = HETMAX_BLOCKSIZE;
 
                 rc = BZ2_bzBuffToBuffDecompress( sbuf,
-                                                 (unsigned int *) &slen,
+                                                 (void *) &slen,
                                                  tbuf,
                                                  tlen,
                                                  0,
@@ -1234,7 +1234,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
                 tlen = sizeof( tbuf );
 
                 rc = BZ2_bzBuffToBuffCompress( tbuf,
-                                               (unsigned int *) &tlen,
+                                               (void *) &tlen,
                                                sbuf,
                                                slen,
                                                hetb->level,

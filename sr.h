@@ -478,7 +478,7 @@
 
 #define SR_WRITE_STRING(_file, _key, _s) \
 do { \
-  int _rc; \
+  size_t _rc; \
   if (strlen((_s)) + 1 > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
   SR_WRITE_HDR((_file), (_key), strlen((_s)) + 1); \
   _rc = SR_WRITE((_s), strlen((_s)) + 1, 1, (_file)); \
@@ -487,7 +487,7 @@ do { \
 
 #define SR_WRITE_BUF(_file, _key, _buf, _len) \
 do { \
-  int _rc; \
+  size_t _rc; \
   if ((_len)) { \
     SR_WRITE_HDR((_file), (_key), (_len)); \
     _rc = SR_WRITE((_buf), (_len), 1, (_file)); \
@@ -498,7 +498,7 @@ do { \
 
 #define SR_WRITE_VALUE(_file, _key, _val, _len) \
 do { \
-  int _rc; \
+  size_t _rc; \
   BYTE _buf[8]; \
   if ((_len) != 1 && (_len) != 2 && (_len) != 4 && (_len) != 8) \
     SR_VALUE_ERROR; \
@@ -515,8 +515,8 @@ do { \
 
 #define SR_READ_HDR(_file, _key, _len) \
 do { \
-  int _rc; \
-  BYTE _buf[8]; \
+  size_t _rc; \
+  size_t _buf[8]; \
   _rc = SR_READ(_buf, 1, 8, (_file)); \
   if (_rc != 8) SR_READ_ERROR; \
   (_key) = fetch_fw(_buf); \
@@ -527,18 +527,20 @@ do { \
 //       and large files.  Just read the data.
 #define SR_READ_SKIP(_file, _len) \
 do { \
-  int _rc, _l = (_len); \
+  size_t _rc; \
+  size_t _l; \
   BYTE _buf[256]; \
+  _l = (_len); \
   while (_l) { \
     _rc = SR_READ(_buf, _l < 256 ? _l : 256, 1, (_file)); \
-    if (_rc < 0) SR_READ_ERROR; \
+    if (_rc == (size_t)-1) SR_READ_ERROR; \
     _l -= _l < 256 ? _l : 256; \
   } \
 } while (0)
 
 #define SR_READ_STRING(_file, _p, _len) \
 do { \
-  int _rc; \
+  size_t _rc; \
   if ((_len) > SR_MAX_STRING_LENGTH) SR_STRING_ERROR; \
   _rc = SR_READ((_p), (_len), 1, (_file)); \
   if (_rc != (_len)) SR_READ_ERROR; \
@@ -546,14 +548,14 @@ do { \
 
 #define SR_READ_BUF(_file, _p, _len) \
 do { \
-  int _rc; \
+  size_t _rc; \
   _rc = SR_READ((_p), (_len), 1, (_file)); \
   if (_rc != (_len)) SR_READ_ERROR; \
 } while (0)
 
 #define SR_READ_VALUE(_file, _len1, _p, _len2) \
 do { \
-  int _rc; \
+  size_t _rc; \
   BYTE _buf[8]; \
   U64 _value; \
   if ((_len1) != 1 && (_len1) != 2 && (_len1) != 4 && (_len1) != 8) \
@@ -561,34 +563,35 @@ do { \
   _rc = SR_READ(_buf, (_len1), 1, (_file)); \
   if (_rc != (_len1)) SR_READ_ERROR; \
   switch ((_len1)) { \
-    case 1: _value = (U64)_buf[0]; break; \
-    case 2: _value = (U64)fetch_hw(_buf); break; \
-    case 4: _value = (U64)fetch_fw(_buf); break; \
-    case 8: _value = (U64)fetch_dw(_buf); break; \
+    case 1: _value = _buf[0]; break; \
+    case 2: _value = fetch_hw(_buf); break; \
+    case 4: _value = fetch_fw(_buf); break; \
+    case 8: _value = fetch_dw(_buf); break; \
+    default: _value=0; break; /* To ward off gcc -Wall */ \
   } \
   switch ((_len2)) { \
   case 1: \
     { \
-      BYTE *_ptr = (BYTE *)(_p); \
-      *_ptr = (BYTE)_value; \
+      BYTE *_ptr = (void *)(_p); \
+      *_ptr = _value & 0xff; \
       break; \
     } \
   case 2: \
     { \
-      U16 *_ptr = (U16 *)(_p); \
-      *_ptr = (U16)_value; \
+      U16 *_ptr = (void *)(_p); \
+      *_ptr = _value & 0xffff; \
       break; \
     } \
   case 4: \
     { \
-      U32 *_ptr = (U32 *)(_p); \
-      *_ptr = (U32)_value; \
+      U32 *_ptr = (void *)(_p); \
+      *_ptr = _value & 0xffffffff; \
       break; \
     } \
   case 8: \
     { \
-      U64 *_ptr = (U64 *)(_p); \
-      *_ptr = (U64)_value; \
+      U64 *_ptr = (void *)(_p); \
+      *_ptr = _value; \
       break; \
     } \
   } \

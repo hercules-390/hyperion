@@ -29,6 +29,7 @@
 
 #include "hercules.h"
 #include "httpmisc.h"
+#include "hostinfo.h"
 
 
 #if defined(OPTION_HTTP_SERVER)

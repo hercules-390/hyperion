@@ -83,7 +83,8 @@
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static struct mt_tape_info tapeinfo[] = MT_TAPE_INFO;
+/* static struct mt_tape_info tapeinfo[] = MT_TAPE_INFO; */
+ /*
 static struct mt_tape_info densinfo[] = {
     {0x01, "NRZI (800 bpi)"},
     {0x02, "PE (1600 bpi)"},
@@ -110,6 +111,7 @@ static struct mt_tape_info densinfo[] = {
     {0x8C, "EXB-8505 compressed"},
     {0x90, "EXB-8205 compressed"},
     {0, NULL}};
+    */
 
 /*---------------------------------------*/
 /* The following table goes hand-in-hand */

@@ -262,16 +262,24 @@ int  i;
     memcpy(regs->mainstor + tsaa1, trap_psw, 8);
     tsaa1 += 8;
     if((tsaa1 & PAGEFRAME_BYTEMASK) == 0)
+    {
         tsaa1 = tsaa2;
+    }
 
 #if defined(FEATURE_ESAME)
     /* If the P bit is one then store the PSW in esame format */
     /* bits 64-127 of PSW at offset +24 */
     if(tcba0 & TCB0_P)
+    {
         memcpy(regs->mainstor + tsaa1, trap_psw + 8, 8);
+    }
     else
+    {
 #endif /*defined(FEATURE_ESAME)*/
         memset(regs->mainstor + tsaa1, 0, 8);
+#if defined(FEATURE_ESAME)
+    }
+#endif /*defined(FEATURE_ESAME)*/
     tsaa1 += 8;
     if((tsaa1 & PAGEFRAME_BYTEMASK) == 0)
         tsaa1 = tsaa2;
@@ -366,11 +374,19 @@ int     protect = 0;                    /* Protection bits           */
 #endif /*defined(_FEATURE_SIE)*/
 
     if(acctype == ACCTYPE_WRITE)
+    {
         if( ARCH_DEP(is_store_protected) (vaddr, STORAGE_KEY(aaddr, regs), regs->psw.pkey, regs) )
+        {
            goto trap_prot;
+        }
+    }
     else
+    {
          if( ARCH_DEP(is_fetch_protected) (vaddr, STORAGE_KEY(aaddr, regs), regs->psw.pkey, regs) )
+         {
              goto trap_prot;
+         }
+    }
 
     /* Set the reference bits in the storage key */
     STORAGE_KEY(aaddr, regs) |= STORKEY_REF;
@@ -435,7 +451,7 @@ int     protect = 0;                    /* Protection bits           */
 
     /* Low-address protection prohibits stores into PSA locations */
     if (acctype == ACCTYPE_WRITE
-        && ARCH_DEP(is_low_address_protected) (vaddr, regs->dat.private, regs))
+        && ARCH_DEP(is_low_address_protected) (vaddr, regs))
     {
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
         regs->TEA = (vaddr & STORAGE_KEY_PAGEMASK) | TEA_ST_HOME;

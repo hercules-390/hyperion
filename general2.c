@@ -131,9 +131,9 @@ int     cc = 0;                         /* Condition code            */
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    if ( (addr1 & 0x7FF) <= 0x7FF - len )
+    if ( NOCROSS2K(addr1,len) )
     {
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
             /* (1) - No boundaries are crossed */
             for (i = 0; i <= len; i++)
@@ -162,7 +162,7 @@ int     cc = 0;                         /* Condition code            */
                        b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
         sk2 = regs->dat.storkey;
 
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
              /* (3) - First operand crosses a boundary */
              for ( i = 0; i < len2; i++)
@@ -1087,7 +1087,7 @@ U32    *p;                              /* Mainstor pointer          */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* If a boundary is not crossed then store into mainstor */
-    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
+    if (NOCROSS2KL(effective_addr2,n*4) )
     {
         p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
         for (n += r1; r1 < n; r1++)
@@ -2027,7 +2027,7 @@ DEF_INST(convert_utf32_to_utf8)
   GREG srcelen;                    /* Source length                  */
   BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE utf8[4];                    /* utf8 character(s)              */
-  BYTE uvwxy;                      /* Work value                     */
+  /*BYTE uvwxy;*/                  /* Work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
   
@@ -2042,6 +2042,7 @@ DEF_INST(convert_utf32_to_utf8)
   
   /* Initialize number of translated charachters */
   xlated = 0;
+  write = 0;
   while(xlated < 4096)
   {
     /* Check end of source or destination */  
@@ -2163,7 +2164,7 @@ DEF_INST(convert_utf32_to_utf16)
   GREG srcelen;                    /* Source length                  */
   BYTE utf16[4];                   /* utf16 character(s)             */
   BYTE utf32[4];                   /* utf32 character(s)             */
-  BYTE uvwxy;                      /* work value                     */
+  /*BYTE uvwxy;*/                  /* work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
   BYTE zabcd;                      /* Work value                     */

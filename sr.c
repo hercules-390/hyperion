@@ -293,16 +293,12 @@ SR_FILE *file;
 U32      key = 0, len = 0;
 U32      started_mask = 0;
 int      i, rc;
-BYTE     byte;
-U16      hw;
-U32      fw;
-U64      dw;
 REGS    *regs = NULL;
 U16      devnum;
+U16      hw;
 int      devargc;
 BYTE    *devargv[16];
-int      devargx;
-BYTE    *devtypnam;
+int      devargx=0;
 DEVBLK  *dev = NULL;
 IOINT   *ioq = NULL;
 BYTE     buf[SR_MAX_STRING_LENGTH+1];
@@ -1226,9 +1222,9 @@ BYTE     buf[SR_MAX_STRING_LENGTH+1];
         } /* If suspended device */
     } /* For each device */
 
-    /* Indicate crw pending for any new devices
+    /* Indicate crw pending for any new devices */
 #if defined(_370)
-    if (sysblk.archmode != ARCH_370)
+    if (sysblk.arch_mode != ARCH_370)
 #endif
     machine_check_crwpend();
 
@@ -1249,9 +1245,11 @@ BYTE     buf[SR_MAX_STRING_LENGTH+1];
 sr_read_error:
     logmsg(_("HHCSR011E read error: %s\n"), strerror(errno));
     goto sr_error_exit;
+    /*
 sr_seek_error:
     logmsg(_("HHCSR012E seek error: %s\n"), strerror(errno));
     goto sr_error_exit;
+    */
 sr_string_error:
     logmsg(_("HHCSR014E string error, incorrect length\n"));
     goto sr_error_exit;

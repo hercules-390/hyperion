@@ -286,7 +286,7 @@ U32     ia;                             /* ia for trace              */
 #endif /*!defined(FEATURE_ESAME)*/
 BYTE    amode;                          /* amode for trace           */
 PSW     save_psw;                       /* Saved copy of current PSW */
-BYTE   *main;                           /* Mainstor address of parm  */
+BYTE   *mn;                             /* Mainstor address of parm  */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
@@ -297,8 +297,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     pl_addr = !regs->execflag ? (regs->psw.IA & ADDRESS_MAXWRAP(regs)) : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
-    main = MADDR (pl_addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(flags, main);
+    mn = MADDR (pl_addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(flags, mn);
 
 #if defined(FEATURE_ESAME)
     /* Bits 0-12 must be zero */
@@ -310,23 +310,23 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the offset to the new psw */
-    main = MADDR (pl_addr + 2, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(psw_offset, main);
+    mn = MADDR (pl_addr + 2, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(psw_offset, mn);
 
     /* Fetch the offset to the new ar */
-    main = MADDR (pl_addr + 4, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(ar_offset, main);
+    mn = MADDR (pl_addr + 4, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(ar_offset, mn);
 
     /* Fetch the offset to the new gr */
-    main = MADDR (pl_addr + 6, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(gr_offset, main);
+    mn = MADDR (pl_addr + 6, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    FETCH_HW(gr_offset, mn);
 
 #if defined(FEATURE_ESAME)
     /* Fetch the offset to the new disjoint gr_h */
     if((flags & 0x0003) == 0x0003)
     {
-        main = MADDR (pl_addr + 8, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
-        FETCH_HW(grd_offset, main);
+        mn = MADDR (pl_addr + 8, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+        FETCH_HW(grd_offset, mn);
     }
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -1013,7 +1013,7 @@ int     ascedt;                         /* ASCE designation type     */
 int     count;                          /* Invalidation counter      */
 int     eiindx;                         /* Eff. invalidation index   */
 U64     asce;                           /* Contents of ASCE          */
-BYTE   *main;                           /* Mainstor address of ASCE  */
+BYTE   *mn;                             /* Mainstor address of ASCE  */
 
     RRF_M(inst, regs, r1, r2, r3);
 
@@ -1079,10 +1079,10 @@ BYTE   *main;                           /* Mainstor address of ASCE  */
         {
             /* Fetch the table entry, set the invalid bit, then
                store only the byte containing the invalid bit */
-            main = MADDR (asceto, USE_REAL_ADDR, regs, ACCTYPE_WRITE, regs->psw.pkey);
-            FETCH_DW(asce, main);
+            mn = MADDR (asceto, USE_REAL_ADDR, regs, ACCTYPE_WRITE, regs->psw.pkey);
+            FETCH_DW(asce, mn);
             asce |= ZSEGTAB_I;
-            main[7] = asce & 0xFF;
+            mn[7] = asce & 0xFF;
 
             /* Calculate the address of the next table entry, noting
                that it is always a 64-bit address regardless of the
@@ -3945,7 +3945,7 @@ U64    *p;                              /* Mainstor pointer          */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* If a boundary is not crossed then load from mainstor */
-    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 8))
+    if (NOCROSS2KL(effective_addr2,n*8))
     {
         p = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
         for (n += r1; r1 < n; r1++)
@@ -4068,7 +4068,7 @@ U64    *p;                              /* Mainstor pointer          */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* If a boundary is not crossed then store into mainstor */
-    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 8))
+    if (NOCROSS2KL(effective_addr2,n*8))
     {
         p = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
         for (n += r1; r1 < n; r1++)

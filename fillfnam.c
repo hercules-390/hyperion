@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "hercules.h"
+#include "fillfnam.h"
 
 char *filterarray;
 
@@ -103,7 +104,6 @@ int tab_pressed(char *cmdlinefull, int *cmdoffset) {
     }
     /* if maximal intersection of filenames is longer then original filename */
     if (strlen(buff) > strlen(filename)) {
-      struct stat buf;
       char *fullfilename;
 
       fullfilename = (char*)malloc(strlen(path) + strlen(buff) + 1);

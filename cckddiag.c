@@ -188,7 +188,7 @@ int             bufl;                   /* Buffer length             */
         memcpy (obuf, ibuf, CKDDASD_TRKHDR_SIZE);
         bufl = obuflen - CKDDASD_TRKHDR_SIZE;
         rc = uncompress(&obuf[CKDDASD_TRKHDR_SIZE], 
-                         (uLongf *)&bufl,
+                         (void *)&bufl,
                          &ibuf[CKDDASD_TRKHDR_SIZE], 
                          ibuflen);
         if (rc != Z_OK) {

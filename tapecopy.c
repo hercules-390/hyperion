@@ -310,6 +310,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         );
 
         EXIT( RC_ERROR_BAD_ARGUMENTS );
+        return(0); /* Make gcc -Wall happy */
     }
 
     /* The second argument is the output file name */
@@ -478,7 +479,9 @@ int64_t         file_bytes;             /* Byte count for curr file  */
                         fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount);
             }
             else
+            {
                 ASSERT( !file_bytes ); // (sanity check)
+            }
 
             /* Reset counters for next file */
             fileno++;
@@ -592,6 +595,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     close (devfd);
 
     EXIT( RC_SUCCESS );
+    return(0);  /* Make -Wall happy */
 
 } /* end function main */
 

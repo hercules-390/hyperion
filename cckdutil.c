@@ -2056,7 +2056,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
         bufp = (BYTE *)&buf2;
         memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
         bufl = sizeof(buf2) - CKDDASD_TRKHDR_SIZE;
-        rc = uncompress (&buf2[CKDDASD_TRKHDR_SIZE], (uLongf *)&bufl,
+        rc = uncompress (&buf2[CKDDASD_TRKHDR_SIZE], (void *)&bufl,
                          &buf[CKDDASD_TRKHDR_SIZE], len);
         if (rc != Z_OK)
         {

@@ -99,7 +99,7 @@ int do_ls_cif(CIFBLK *cif)
     head = (vol1data[13] << 8) | vol1data[14];
     rec = vol1data[15];
 
-    rc = read_block(cif, cyl, head, rec, (unsigned char**)&f4dscb, &len, 0, 0);
+    rc = read_block(cif, cyl, head, rec, (void *)&f4dscb, &len, 0, 0);
     if (rc < 0)
         return -1;
     if (rc > 0) {

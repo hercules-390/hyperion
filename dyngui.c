@@ -634,7 +634,7 @@ void  UpdateStatus ()
 
 void  UpdateCPUStatus ()
 {
-    size_t  i;
+    /* size_t  i; */
 
     // CPU status line...  (PSW, status indicators, and instruction count)
 

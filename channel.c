@@ -2584,8 +2584,8 @@ resume_suspend:
             ))
 	    */
         if ( IS_CCW_WRITE(dev->code) 
-		|| IS_CCW_CONTROL(dev->code)
-		&& (!dev->is_immed))
+		|| ( IS_CCW_CONTROL(dev->code)
+		&& (!dev->is_immed)))
         {
             /* Channel program check if data exceeds buffer size */
             if (bufpos + count > 65536)
@@ -3002,7 +3002,9 @@ int ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
 IOINT  *io;                             /* -> I/O interrupt entry    */
 DEVBLK *dev;                            /* -> Device control block   */
 int     icode = 0;                      /* Intercept code            */
+#if defined(FEATURE_S370_CHANNEL)
 BYTE    *pendcsw;                       /* Pending CSW               */
+#endif
 
     UNREFERENCED_370(ioparm);
     UNREFERENCED_370(iointid);
@@ -3075,16 +3077,18 @@ retry:
     if(io->pcipending)
     {
         pendcsw=dev->pcicsw;
+        memcpy (csw, pendcsw , 8);
     }
     if(io->pending)
     {
         pendcsw=dev->csw;
+        memcpy (csw, pendcsw , 8);
     }
     if(io->attnpending)
     {
         pendcsw=dev->attncsw;
+        memcpy (csw, pendcsw , 8);
     }
-    memcpy (csw, pendcsw , 8);
 
     /* Display the channel status word */
     if (dev->ccwtrace || dev->ccwstep)

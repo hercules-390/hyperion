@@ -193,7 +193,7 @@ int     r1, r2;                         /* Register values           */
 int     rc = 0;                         /* Return code               */
 int     cc = 0;             /* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
-RADR    raddr1, raddr2, xpkeya;         /* Real addresses            */
+RADR    raddr1=0, raddr2=0, xpkeya;     /* Real addresses            */
 BYTE   *main1 = NULL, *main2 = NULL;    /* Mainstor addresses        */
 BYTE   *sk1;                            /* Storage key address       */
 BYTE    akey;                           /* Access key in register 0  */
@@ -492,6 +492,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         {
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
         }
+        sk1=NULL;
     }
     else
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/

@@ -1388,7 +1388,7 @@ int fbadasd_hsuspend(DEVBLK *dev, void *file) {
 /*-------------------------------------------------------------------*/
 int fbadasd_hresume(DEVBLK *dev, void *file)
 {
-int  rc, key, len;
+size_t  rc, key, len;
 BYTE byte;
 
     do {
@@ -1397,14 +1397,14 @@ BYTE byte;
         case SR_DEV_FBA_BUFCUR:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             rc = (dev->hnd->read) ? (dev->hnd->read)(dev, rc, &byte) : -1;
-            if (rc < 0) return -1;
+            if ((int)rc < 0) return -1;
             break;
         case SR_DEV_FBA_BUFOFF:
             SR_READ_VALUE(file, len, &dev->bufoff, sizeof(dev->bufoff));
             break;
         case SR_DEV_FBA_ORIGIN:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            if (rc != dev->fbaorigin)
+            if ((int)rc != dev->fbaorigin)
             {
                 logmsg(_("HHCDA901E %4.4x FBA origin mismatch: %d, expected %d,\n"),
                        rc, dev->fbaorigin);
@@ -1413,7 +1413,7 @@ BYTE byte;
             break;
         case SR_DEV_FBA_NUMBLK:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            if (rc != dev->fbanumblk)
+            if ((int)rc != dev->fbanumblk)
             {
                 logmsg(_("HHCDA902E %4.4x FBA numblk mismatch: %d, expected %d,\n"),
                        rc, dev->fbanumblk);
@@ -1443,7 +1443,7 @@ BYTE byte;
             break;
         case SR_DEV_FBA_BLKSIZ:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
-            if (rc != dev->fbablksiz)
+            if ((int)rc != dev->fbablksiz)
             {
                 logmsg(_("HHCDA903E %4.4x FBA blksiz mismatch: %d, expected %d,\n"),
                        rc, dev->fbablksiz);

@@ -558,7 +558,7 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
 int  CTCI_Close( DEVBLK* pDEVBLK )
 {
-    DEVBLK* pDEVBLK2;
+    /* DEVBLK* pDEVBLK2; */
     PCTCBLK pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
 
     // Close the device file (if not already closed)

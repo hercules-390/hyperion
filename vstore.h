@@ -19,6 +19,14 @@
 /*      S/370 DAT support when running under SIE - Jan Jaeger        */
 /*-------------------------------------------------------------------*/
 
+#define NOCROSS2K(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x7FF - (_len) ) )
+
+#define CROSS2K(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x7FF - (_len) ) )
+
+#define NOCROSS2KL(_addr,_len) likely( ( (int)((_addr) & 0x7FF)) <= ( 0x800 - (_len) ) )
+
+#define CROSS2KL(_addr,_len) unlikely( ( (int)((_addr) & 0x7FF)) > ( 0x800 - (_len) ) )
+
 #if !defined(OPTION_NO_INLINE_VSTORE) || defined(_VSTORE_C)
 
 /*-------------------------------------------------------------------*/
@@ -43,7 +51,7 @@ BYTE   *main1, *main2;                  /* Mainstor addresses        */
 BYTE   *sk1, *sk2;                      /* Storage key addresses     */
 int     len2;                           /* Length to end of page     */
 
-    if ( likely((addr & 0x7FF) <= 0x7FF - len) )
+    if ( NOCROSS2K(addr,len) )
     {
         MEMCPY(MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey),
                src, len + 1);
@@ -136,9 +144,9 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
     /* Most common case : Aligned & not crossing page boundary */
     if (likely(!(addr & 1) || (addr & 0x7FF) != 0x7FF))
     {
-        BYTE *main;
-        main = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        STORE_HW(main, value);
+        BYTE *mn;
+        mn = MADDR (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_HW(mn, value);
     }
     else
         ARCH_DEP(vstore2_full)(value, addr, arn, regs);
@@ -205,9 +213,9 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore4) (U32 value, VADR addr, int arn,
     /* Most common case : Aligned & not crossing page boundary */
     if(likely(!(addr & 0x03)) || ((addr & 0x7ff) <= 0x7fc))
     {
-        BYTE *main;
-        main = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        STORE_FW(main, value);
+        BYTE *mn;
+        mn = MADDR(addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
+        STORE_FW(mn, value);
     }
     else
         ARCH_DEP(vstore4_full)(value,addr,arn,regs);
@@ -284,9 +292,9 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore8) (U64 value, VADR addr, int arn,
     /* Most common case : Aligned & not crossing page boundary */
     if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8))
     {
-        BYTE *main;
-        main=MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
-        STORE_DW(main, value);
+        BYTE *mn;
+        mn=MADDR(addr,arn,regs,ACCTYPE_WRITE,regs->psw.pkey);
+        STORE_DW(mn, value);
     }
     else
         ARCH_DEP(vstore8_full)(value,addr,arn,regs);
@@ -315,7 +323,7 @@ int     len2;                           /* Length to copy on page    */
 
     main1 = MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
 
-    if ( likely((addr & 0x7FF) <= 0x7FF - len))
+    if ( NOCROSS2K(addr,len) )
     {
 #ifdef FEATURE_INTERVAL_TIMER
         if (unlikely(addr == 80))
@@ -360,10 +368,10 @@ int     len2;                           /* Length to copy on page    */
 _VSTORE_C_STATIC BYTE ARCH_DEP(vfetchb) (VADR addr, int arn,
                                          REGS *regs)
 {
-BYTE   *main;                           /* Main storage address      */
+BYTE   *mn;                           /* Main storage address      */
 
-    main = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    return *main;
+    mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    return *mn;
 } /* end function ARCH_DEP(vfetchb) */
 
 /*-------------------------------------------------------------------*/
@@ -402,9 +410,9 @@ _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
 {
     if(likely(!(addr & 0x01)) || ((addr & 0x7ff) !=0x7ff ))
     {
-        BYTE *main;
-        main = MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
-        return fetch_hw(main);
+        BYTE *mn;
+        mn = MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
+        return fetch_hw(mn);
     }
     return(ARCH_DEP(vfetch2_full)(addr,arn,regs));
 }
@@ -471,9 +479,9 @@ _VSTORE_C_STATIC U32 ARCH_DEP(vfetch4) (VADR addr, int arn, REGS *regs)
 #endif
        )
     {
-        BYTE *main;
-        main=MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
-        return fetch_fw(main);
+        BYTE *mn;
+        mn=MADDR(addr,arn,regs,ACCTYPE_READ,regs->psw.pkey);
+        return fetch_fw(mn);
     }
     return(ARCH_DEP(vfetch4_full)(addr,arn,regs));
 }
@@ -550,9 +558,9 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 {
     if(likely(!(addr & 0x07)) || ((addr & 0x7ff) <= 0x7f8 ))
     {
-        BYTE *main;
-        main = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-        return fetch_dw(main);
+        BYTE *mn;
+        mn = MADDR (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+        return fetch_dw(mn);
     }
     return ARCH_DEP(vfetch8_full)(addr,arn,regs);
 }
@@ -579,10 +587,8 @@ _VSTORE_C_STATIC U64 ARCH_DEP(vfetch8) (VADR addr, int arn, REGS *regs)
 _VFETCH_C_STATIC BYTE * ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
                                                             REGS *regs)
 {
-RADR    abs;                            /* Absolute storage address  */
 BYTE   *ia;                             /* Instruction address       */
-int     ilc, len = 0;                   /* Lengths for page crossing */
-VADR    mask;                           /* Mask for page crossing    */
+int     len = 0;                        /* Lengths for page crossing */
 
     /* Make sure addresses are wrapped */
     addr &= ADDRESS_MAXWRAP(regs);
@@ -743,11 +749,11 @@ int     i;                              /* Loop counter              */
     }
 #endif /* FEATURE_INTERVAL_TIMER */
 
-    if ( (addr1 & 0x7FF) <= 0x7FF - len )
+    if ( NOCROSS2K(addr1,len) )
     {
     source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
     dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
              /* (1) - No boundaries are crossed */
              if ( (dest1 < source1 && dest1 + len < source1)
@@ -824,7 +830,7 @@ int     i;                              /* Loop counter              */
                        arn1, regs, ACCTYPE_WRITE_SKP, key1);
         sk2 = regs->dat.storkey;
 
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
              /* (3) - First operand crosses a boundary */
              for ( i = 0; i < len2; i++) *dest1++ = *source1++;
@@ -904,7 +910,7 @@ _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
     MADDR (addr, arn, regs, acctype, regs->psw.pkey);
 
     /* Translate next page if boundary crossed */
-    if ( (addr & 0x7FF) > 0x7FF - len)
+    if ( CROSS2K(addr,len) )
     {
         MADDR ((addr + len) & ADDRESS_MAXWRAP(regs),
                arn, regs, acctype, regs->psw.pkey);

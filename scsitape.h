@@ -54,8 +54,8 @@ static void *scsi_tapemountmon_thread ( void   *devblk );
 static int open_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-int             i;                      /* Array subscript           */
-struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
+/* int             i; */                /* Array subscript           */
+/* struct mtop     opblk; */            /* Area for MTIOCTOP ioctl   */
 int save_errno;
 
     ASSERT( dev->fd < 0 );  // (sanity check)
@@ -157,7 +157,7 @@ static void close_scsitape(DEVBLK *dev)
 static int read_scsitape (DEVBLK *dev, BYTE *buf, BYTE *unitstat,BYTE code)
 {
 int  rc;
-int  save_errno;
+/* int  save_errno; */
 
     rc = read (dev->fd, buf, MAX_BLKLEN);
 
@@ -569,7 +569,7 @@ struct mtop opblk;
 static int bsf_scsitape (DEVBLK *dev, BYTE *unitstat,BYTE code)
 {
 int  rc;
-int  save_errno;
+/* int  save_errno; */
 struct mtop opblk;
 
     /* PROGRAMMING NOTE: There is currently no way to distinguish
@@ -646,7 +646,7 @@ struct mtop opblk;
 static int rewind_scsitape(DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
 int rc;
-int  save_errno;
+/* int  save_errno; */
 struct mtop opblk;
 
     opblk.mt_op    = MTREW;
@@ -905,7 +905,9 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
             }
         }
         else
+        {
             TRACE( "** update_status_scsitape: ioctl(MTIOCGET) success\n" );
+        }
 
         dev->sstat = stblk.mt_gstat;    // (save new status)
     }
@@ -1013,7 +1015,9 @@ static void *scsi_tapemountmon_thread( void *db )
 {
     BYTE tape_was_mounted;
     DEVBLK* dev = db;
-    int priority, rc;
+    int priority;
+    /* int rc; */
+
 
     // Set thread priority BELOW that of the cpu and device threads
     // in order to minimize whatever impact we may have on them...

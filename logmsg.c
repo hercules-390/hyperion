@@ -46,7 +46,7 @@ static int log_route_search(TID t)
         {
             if(t==0)
             {
-                log_routes[i].t=1;
+                log_routes[i].t=(TID)1;
             }
             return(i);
         }

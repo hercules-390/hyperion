@@ -867,7 +867,7 @@ BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
 
     /* Read the format 4 DSCB */
     rc = read_block (cif, cyl, head, rec,
-                    (BYTE**)&f4dscb, &len, NULL, NULL);
+                    (void *)&f4dscb, &len, NULL, NULL);
     if (rc < 0) return -1;
     if (rc > 0)
     {
@@ -908,7 +908,7 @@ BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
 
     /* Read the format 1 DSCB */
     rc = read_block (cif, cyl, head, rec,
-                    (BYTE**)&f1dscb, &len, NULL, NULL);
+                    (void *)&f1dscb, &len, NULL, NULL);
     if (rc < 0) return -1;
     if (rc > 0)
     {
@@ -930,7 +930,7 @@ BYTE            volser[7];              /* Volume serial (ASCIIZ)    */
         head = (f1dscb->ds1ptrds[2] << 8) | f1dscb->ds1ptrds[3];
         rec = f1dscb->ds1ptrds[4];
         rc = read_block (cif, cyl, head, rec,
-                        (BYTE**)&f3dscb, &len, NULL, NULL);
+                        (void *)&f3dscb, &len, NULL, NULL);
         if (rc < 0) return -1;
         if (rc > 0)
         {

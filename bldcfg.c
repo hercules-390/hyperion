@@ -573,7 +573,7 @@ void build_config (BYTE *fname)
 int     rc;                             /* Return code               */
 int     i,j;                            /* Array subscript           */
 int     scount;                         /* Statement counter         */
-int     cpu;                            /* CPU number                */
+/* int     cpu; */                      /* CPU number                */
 FILE   *fp;                             /* Configuration file pointer*/
 BYTE   *sserial;                        /* -> CPU serial string      */
 BYTE   *smodel;                         /* -> CPU model string       */
@@ -991,7 +991,6 @@ BYTE **orig_newargv;
 #if defined(OPTION_CONFIG_SYMBOLS)
             else if (strcasecmp(keyword,"defsym")==0)
             {
-                char *subval;
                 /* Execute this operation immediatelly */
                 if(operand==NULL)
                 {
@@ -1738,7 +1737,7 @@ BYTE **orig_newargv;
     /* Display Hercules thread information on control panel */
     logmsg (_("HHCCF065I Hercules: tid="TIDPAT", pid=%d, pgid=%d, "
               "priority=%d\n"),
-            thread_id(), getpid(), getpgid(0),
+            thread_id(), getpid(), getpgrp(),
             getpriority(PRIO_PGRP,0));
 
     config_storage(mainsize, xpndsize);

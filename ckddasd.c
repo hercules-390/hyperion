@@ -1149,7 +1149,7 @@ int ckddasd_hsuspend(DEVBLK *dev, void *file) {
 /*-------------------------------------------------------------------*/
 int ckddasd_hresume(DEVBLK *dev, void *file)
 {
-int  rc, key, len;
+size_t  rc, key, len;
 BYTE byte;
 
     do {
@@ -1158,7 +1158,7 @@ BYTE byte;
         case SR_DEV_CKD_BUFCUR:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             rc = (dev->hnd->read) ? (dev->hnd->read)(dev, rc, &byte) : -1;
-            if (rc < 0) return -1;
+            if ((int)rc < 0) return -1;
             break;
         case SR_DEV_CKD_BUFOFF:
             SR_READ_VALUE(file, len, &dev->bufoff, sizeof(dev->bufoff));

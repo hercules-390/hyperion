@@ -18,6 +18,10 @@
 #include <config.h>
 #endif
 
+#if !defined(_GNU_SOURCE)
+ #define _GNU_SOURCE                   /* required by strsignal() *JJ */
+#endif
+
 #define UNREFERENCED(x)     ((x)=(x))
 #define UNREFERENCED_370(x) ((x)=(x))
 #define UNREFERENCED_390(x) ((x)=(x))
@@ -28,15 +32,10 @@
 
 #include "feature.h"
 
-#if !defined(_GNU_SOURCE)
- #define _GNU_SOURCE                   /* required by strsignal() *JJ */
-#endif
 
 #include "cpuint.h"
 
 #if !defined(_HERCULES_H)
-
-
 
 #include <unistd.h>
 #include <stdio.h>
@@ -2075,6 +2074,7 @@ void display_subchannel (DEVBLK *dev);
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (BYTE *opnd, REGS *regs);
 void alter_display_virt (BYTE *opnd, REGS *regs);
+void disasm_stor(REGS *regs, char *opnd);
 
 /* Functions in module sr.c */
 int suspend_cmd(int argc, char *argv[],char *cmdline);

@@ -274,9 +274,9 @@ int     cc = 0;                         /* Condition code            */
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    if ( (addr1 & 0x7FF) <= 0x7FF - len )
+    if ( NOCROSS2K(addr1,len ) )
     {
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
             /* (1) - No boundaries are crossed */
             for (i = 0; i <= len; i++)
@@ -305,7 +305,7 @@ int     cc = 0;                         /* Condition code            */
                        b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
         sk2 = regs->dat.storkey;
 
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len ))
         {
              /* (3) - First operand crosses a boundary */
              for ( i = 0; i < len2; i++)
@@ -2723,9 +2723,9 @@ int     cc = 0;                         /* Condition code            */
     sk1 = regs->dat.storkey;
     source1 = MADDR (addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
 
-    if ( (addr1 & 0x7FF) <= 0x7FF - len )
+    if ( NOCROSS2K(addr1,len)) 
     {
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len))
         {
             /* (1) - No boundaries are crossed */
             if (dest1 == source1)
@@ -2762,7 +2762,7 @@ int     cc = 0;                         /* Condition code            */
                        b1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
         sk2 = regs->dat.storkey;
 
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len))
         {
              /* (3) - First operand crosses a boundary */
              for ( i = 0; i < len2; i++)
@@ -3204,7 +3204,7 @@ U32    *p;                              /* Mainstor pointer          */
     n = ((r3 - r1) & 0xF) + 1;
 
     /* If a boundary is not crossed then fetch from mainstor */
-    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
+    if (NOCROSS2KL(effective_addr2,(n*4)))
     {
         p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
         for (n += r1; r1 < n; r1++)
@@ -3440,7 +3440,13 @@ BYTE    pad;                            /* Padding byte              */
     if (len1)
     {
         if (len2)
+        {
             source = MADDR (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+        }
+        else
+        {
+            source=NULL;
+        }
         dest = MADDR (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
     }
 
@@ -3449,13 +3455,13 @@ BYTE    pad;                            /* Padding byte              */
         /* Clear or copy memory */
         if (len2 == 0)
         {
-            len = 0x800 - (addr1 & 0x7FF) < len1 ? 0x800 - (addr1 & 0x7FF) : len1;
+            len = NOCROSS2KL(addr1,len1) ? len1 : (int)(0x800 - (addr1 & 0x7FF));
             memset (dest, pad, len);
         }
         else
         {
-            len3 = 0x800 - (addr1 & 0x7FF) < len1 ? 0x800 - (addr1 & 0x7FF) : len1;
-            len4 = 0x800 - (addr2 & 0x7FF) < len2 ? 0x800 - (addr2 & 0x7FF) : len2;
+            len3 = NOCROSS2KL(addr1,len1) ? len1 : (int)(0x800 - (addr1 & 0x7FF));
+            len4 = NOCROSS2KL(addr2,len2) ? len2 : (int)(0x800 - (addr2 & 0x7FF));
             len = len3 < len4 ? len3 : len4;
             memcpy (dest, source, len);
         }
@@ -3602,6 +3608,13 @@ int     cpu_length;                     /* cpu determined length     */
 #endif /*defined(FEATURE_COMPARE_AND_MOVE_EXTENDED)*/
 
 
+#define MOVE_NUMERIC_BUMP(_d,_s) \
+    do { \
+        *(_d)=( *(_d) & 0xF0) | ( *(_s) & 0x0F); \
+        _d++; \
+        _s++; \
+    } while(0)
+
 /*-------------------------------------------------------------------*/
 /* D1   MVN   - Move Numerics                                   [SS] */
 /*-------------------------------------------------------------------*/
@@ -3632,13 +3645,13 @@ int     i;                              /* Loop counter              */
      *     (c) source boundary crossed first
      */
 
-    if ( (addr1 & 0x7FF) <= 0x7FF - len )
+    if ( NOCROSS2K(addr1,len))
     {
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len))
         {
             /* (1) - No boundaries are crossed */
             for ( i = 0; i <= len; i++)
-                *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                MOVE_NUMERIC_BUMP(dest1,source1);
         }
         else
         {
@@ -3647,10 +3660,10 @@ int     i;                              /* Loop counter              */
             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
                              arn2, regs, ACCTYPE_READ, regs->psw.pkey);
             for ( i = 0; i < len2; i++)
-                *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                MOVE_NUMERIC_BUMP(dest1,source1);
             len2 = len - len2;
             for ( i = 0; i <= len2; i++)
-                *dest1++ = (*dest1 & 0xF0) | (*source2++ & 0x0F);
+                MOVE_NUMERIC_BUMP(dest1,source2);
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
@@ -3662,14 +3675,14 @@ int     i;                              /* Loop counter              */
                        arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
         sk2 = regs->dat.storkey;
 
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
             /* (3) - First operand crosses a boundary */
             for ( i = 0; i < len2; i++)
-                *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                MOVE_NUMERIC_BUMP(dest1,source1);
             len2 = len - len2;
             for ( i = 0; i <= len2; i++)
-                *dest2++ = (*dest2 & 0xF0) | (*source1++ & 0x0F);
+                MOVE_NUMERIC_BUMP(dest2,source1);
         }
         else
         {
@@ -3681,34 +3694,34 @@ int     i;                              /* Loop counter              */
             {
                 /* (4a) - Both operands cross at the same time */
                 for ( i = 0; i < len2; i++)
-                   *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                    MOVE_NUMERIC_BUMP(dest1,source1);
                 len2 = len - len2;
                 for ( i = 0; i <= len2; i++)
-                   *dest2++ = (*dest2 & 0xF0) | (*source2++ & 0x0F);
+                    MOVE_NUMERIC_BUMP(dest2,source2);
             }
             else if (len2 < len3)
             {
                 /* (4b) - First operand crosses first */
                 for ( i = 0; i < len2; i++)
-                   *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                    MOVE_NUMERIC_BUMP(dest1,source1);
                 len2 = len3 - len2;
                 for ( i = 0; i < len2; i++)
-                   *dest2++ = (*dest2 & 0xF0) | (*source1++ & 0x0F);
+                    MOVE_NUMERIC_BUMP(dest2,source1);
                 len2 = len - len3;
                 for ( i = 0; i <= len2; i++)
-                   *dest2++ = (*dest2 & 0xF0) | (*source2++ & 0x0F);
+                    MOVE_NUMERIC_BUMP(dest2,source2);
             }
             else
             {
                 /* (4c) - Second operand crosses first */
                 for ( i = 0; i < len3; i++)
-                   *dest1++ = (*dest1 & 0xF0) | (*source1++ & 0x0F);
+                    MOVE_NUMERIC_BUMP(dest1,source1);
                 len3 = len2 - len3;
                 for ( i = 0; i < len3; i++)
-                   *dest1++ = (*dest1 & 0xF0) | (*source2++ & 0x0F);
+                    MOVE_NUMERIC_BUMP(dest1,source2);
                 len3 = len - len2;
-                for ( i = 0; i <= len3; i++) *dest2++ = *source2++;
-                   *dest2++ = (*dest2 & 0xF0) | (*source2++ & 0x0F);
+                for ( i = 0; i <= len3; i++)
+                    MOVE_NUMERIC_BUMP(dest2,source2);
             }
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
@@ -3850,6 +3863,12 @@ BYTE    dbyte;                          /* Destination operand byte  */
 
 }
 
+#define MOVE_ZONE_BUMP(_d,_s) \
+    do { \
+        *(_d)=( *(_d) & 0x0F) | ( *(_s) & 0xF0); \
+        _d++; \
+        _s++; \
+    } while(0)
 
 /*-------------------------------------------------------------------*/
 /* D3   MVZ   - Move Zones                                      [SS] */
@@ -3881,13 +3900,13 @@ int     i;                              /* Loop counter              */
      *     (c) source boundary crossed first
      */
 
-    if ( (addr1 & 0x7FF) <= 0x7FF - len )
+    if ( NOCROSS2K(addr1,len) )
     {
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
             /* (1) - No boundaries are crossed */
             for ( i = 0; i <= len; i++)
-                *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                MOVE_ZONE_BUMP(dest1,source1);
         }
         else
         {
@@ -3896,10 +3915,10 @@ int     i;                              /* Loop counter              */
             source2 = MADDR ((addr2 + len2) & ADDRESS_MAXWRAP(regs),
                              arn2, regs, ACCTYPE_READ, regs->psw.pkey);
             for ( i = 0; i < len2; i++)
-                *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                MOVE_ZONE_BUMP(dest1,source1);
             len2 = len - len2;
             for ( i = 0; i <= len2; i++)
-                *dest1++ = (*dest1 & 0x0F) | (*source2++ & 0xF0);
+                MOVE_ZONE_BUMP(dest1,source2);
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
@@ -3911,14 +3930,14 @@ int     i;                              /* Loop counter              */
                        arn1, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
         sk2 = regs->dat.storkey;
 
-        if ( (addr2 & 0x7FF) <= 0x7FF - len )
+        if ( NOCROSS2K(addr2,len) )
         {
             /* (3) - First operand crosses a boundary */
             for ( i = 0; i < len2; i++)
-                *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                MOVE_ZONE_BUMP(dest1,source1);
             len2 = len - len2;
             for ( i = 0; i <= len2; i++)
-                *dest2++ = (*dest2 & 0x0F) | (*source1++ & 0xF0);
+                MOVE_ZONE_BUMP(dest2,source1);
         }
         else
         {
@@ -3930,34 +3949,34 @@ int     i;                              /* Loop counter              */
             {
                 /* (4a) - Both operands cross at the same time */
                 for ( i = 0; i < len2; i++)
-                   *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                    MOVE_ZONE_BUMP(dest1,source1);
                 len2 = len - len2;
                 for ( i = 0; i <= len2; i++)
-                   *dest2++ = (*dest2 & 0x0F) | (*source2++ & 0xF0);
+                    MOVE_ZONE_BUMP(dest2,source2);
             }
             else if (len2 < len3)
             {
                 /* (4b) - First operand crosses first */
                 for ( i = 0; i < len2; i++)
-                   *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                    MOVE_ZONE_BUMP(dest1,source1);
                 len2 = len3 - len2;
                 for ( i = 0; i < len2; i++)
-                   *dest2++ = (*dest2 & 0x0F) | (*source1++ & 0xF0);
+                    MOVE_ZONE_BUMP(dest2,source1);
                 len2 = len - len3;
                 for ( i = 0; i <= len2; i++)
-                   *dest2++ = (*dest2 & 0x0F) | (*source2++ & 0xF0);
+                    MOVE_ZONE_BUMP(dest2,source2);
             }
             else
             {
                 /* (4c) - Second operand crosses first */
                 for ( i = 0; i < len3; i++)
-                   *dest1++ = (*dest1 & 0x0F) | (*source1++ & 0xF0);
+                    MOVE_ZONE_BUMP(dest1,source1);
                 len3 = len2 - len3;
                 for ( i = 0; i < len3; i++)
-                   *dest1++ = (*dest1 & 0x0F) | (*source2++ & 0xF0);
+                    MOVE_ZONE_BUMP(dest1,source2);
                 len3 = len - len2;
-                for ( i = 0; i <= len3; i++) *dest2++ = *source2++;
-                   *dest2++ = (*dest2 & 0x0F) | (*source2++ & 0xF0);
+                for ( i = 0; i <= len3; i++)
+                    MOVE_ZONE_BUMP(dest2,source2);
             }
         }
         *sk1 |= (STORKEY_REF | STORKEY_CHANGE);

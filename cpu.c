@@ -246,8 +246,10 @@ REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
 int     code;                           /* pcode without PER ind.    */
 int     ilc;                            /* instruction length        */
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+int     sie_ilc=0;                      /* SIE instruction length    */
+#endif
 #if defined(_FEATURE_SIE)
-int     sie_ilc;                        /* SIE instruction length    */
 int     nointercept;                    /* True for virtual pgmint   */
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(OPTION_FOOTPRINT_BUFFER)

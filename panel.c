@@ -30,6 +30,7 @@
 #include "opcode.h"
 #include "history.h"
 // #include "inline.h"
+#include "fillfnam.h"
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 

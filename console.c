@@ -683,7 +683,7 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
     if (rc < 0) return -1;
 
     /* Ignore Negotiate About Window Size */
-    if (rc >= sizeof(will_naws) &&
+    if (rc >= (int)sizeof(will_naws) &&
         memcmp (buf, will_naws, sizeof(will_naws)) == 0)
     {
         memmove(buf, &buf[sizeof(will_naws)], (rc - sizeof(will_naws)));
@@ -1194,7 +1194,7 @@ connect_client (int *csockp)
 {
 int                     rc;             /* Return code               */
 DEVBLK                 *dev;            /* -> Device block           */
-int                     len;            /* Data length               */
+size_t                  len;            /* Data length               */
 int                     csock;          /* Socket for conversation   */
 struct sockaddr_in      client;         /* Client address structure  */
 socklen_t               namelen;        /* Length of client structure*/
@@ -1385,14 +1385,22 @@ BYTE                    group[16];      /* Console group             */
             len = strlen(buf);
 
             if (len < sizeof(buf))
+            {
                 buf[len++] = IAC;
+            }
             else
+            {
                 ASSERT(FALSE);
+            }
 
             if (len < sizeof(buf))
+            {
                 buf[len++] = EOR_MARK;
+            }
             else
+            {
                 ASSERT(FALSE);
+            }
         }
         else
         {
@@ -1427,14 +1435,22 @@ BYTE                    group[16];      /* Console group             */
         len = strlen(buf);
 
         if (len < sizeof(buf))
+        {
             buf[len++] = IAC;
+        }
         else
+        {
             ASSERT(FALSE);
+        }
 
         if (len < sizeof(buf))
+        {
             buf[len++] = EOR_MARK;
+        }
         else
+        {
             ASSERT(FALSE);
+        }
     }
     else
     {
@@ -1952,7 +1968,7 @@ loc3270_close_device ( DEVBLK *dev )
 static int
 loc3270_hsuspend(DEVBLK *dev, void *file)
 {
-    int rc, len;
+    size_t rc, len;
     BYTE buf[BUFLEN_3270];
 
     if (!dev->connected) return 0;
@@ -1979,7 +1995,7 @@ loc3270_hsuspend(DEVBLK *dev, void *file)
 static int
 loc3270_hresume(DEVBLK *dev, void *file)
 {
-    int rc, key, len, rbuflen = 0, pos = 0;
+    size_t rc, key, len, rbuflen = 0, pos = 0;
     BYTE *rbuf = NULL, buf[BUFLEN_3270];
 
     do {
@@ -1993,7 +2009,7 @@ loc3270_hresume(DEVBLK *dev, void *file)
             dev->ewa3270 = rc;
             break;
         case SR_DEV_3270_BUF:
-            if (rbuflen = len)
+            if (rbuflen == len)
             {
                 rbuf = malloc(len);
                 if (rbuf == NULL)

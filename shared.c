@@ -9,6 +9,9 @@
 
 #define FBA_BLKGRP_SIZE (120*512)
 
+/* Change the following to "define" when Shared FBA support is implemented */
+#undef FBA_SHARED
+
 /*-------------------------------------------------------------------*/
 /* Definitions for sense data format codes and message codes         */
 /*-------------------------------------------------------------------*/
@@ -899,6 +902,7 @@ int             sz;                     /* Size so far               */
     return sz;
 }
 
+#if defined(FBA_SHARED)
 /*-------------------------------------------------------------------
  * Shared fba read block exit (client side)
  *-------------------------------------------------------------------*/
@@ -1060,6 +1064,7 @@ int             rc;                     /* Return code               */
     return len;
 }
 
+
 /*-------------------------------------------------------------------*/
 /* Calculate length of an FBA block group                            */
 /*-------------------------------------------------------------------*/
@@ -1073,6 +1078,8 @@ off_t   offset;                         /* Offset of block group     */
     else
         return FBA_BLKGRP_SIZE;
 }
+
+#endif /* FBA_SHARED */
 
 /*-------------------------------------------------------------------
  * Shared usage exit (client side)

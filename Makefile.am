@@ -605,6 +605,7 @@ noinst_HEADERS = fishhang.h \
                  history.h  \
                  sr.h       \
                  hchan.h    \
+                 fillfnam.h \
                  $(extra_dynamic_SRC)
 
 #########################################################

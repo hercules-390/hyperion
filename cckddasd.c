@@ -637,7 +637,7 @@ int             rc;                     /* Return code               */
 
     /* Read the data */
     rc = read (cckd->fd[sfx], buf, len);
-    if (rc < len)
+    if (rc < (int)len)
     {
         if (rc < 0)
             logmsg (_("HHCCD130E %4.4X file[%d] read error, offset 0x%llx: %s\n"),
@@ -677,7 +677,7 @@ int             rc = 0;                 /* Return code               */
 
     /* Write the data */
     rc = write (cckd->fd[sfx], buf, len);
-    if (rc < len)
+    if (rc < (int)len)
     {
         if (rc < 0)
             logmsg (_("HHCCD130E %4.4X file[%d] write error, offset 0x%llx: %s\n"),
@@ -1816,7 +1816,9 @@ void cckd_chk_space(DEVBLK *dev)
 #if 1
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             sfx;                    /* Shadow file index         */
-int             err = 0, n = 0, total = 0, largest = 0, i, p;
+int             err = 0, n = 0, i, p;
+size_t  largest=0;
+size_t  total=0;
 off_t           fpos;
 
     cckd = dev->cckd_ext;
@@ -1888,10 +1890,11 @@ off_t cckd_get_space(DEVBLK *dev, int len, CCKD_L2ENT *l2)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             i,p,n;                  /* Free space indexes        */
-int             len2, size;             /* Other lengths             */
+int             len2;                   /* Other lengths             */
 off_t           fpos;                   /* Free space offset         */
 unsigned int    flen;                   /* Free space size           */
 int             sfx;                    /* Shadow file index         */
+size_t          size;
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
@@ -1918,8 +1921,8 @@ int             sfx;                    /* Shadow file index         */
     len2 = len + CCKD_FREEBLK_SIZE;
 
     /* Get space at the end if no space is large enough */
-    if (len2 > cckd->cdevhdr[sfx].free_largest
-     && len != cckd->cdevhdr[sfx].free_largest)
+    if (len2 > (int)cckd->cdevhdr[sfx].free_largest
+     && len != (int)cckd->cdevhdr[sfx].free_largest)
     {
         fpos = (off_t)cckd->cdevhdr[sfx].size;
         if ((U64)(fpos + len) > (U64)4294967295ULL)
@@ -1945,7 +1948,7 @@ int             sfx;                    /* Shadow file index         */
     /* Scan free space chain */
     for (i = cckd->free1st; i >= 0; i = cckd->free[i].next)
         if (!cckd->free[i].pending
-         && (len2 <= cckd->free[i].len || len == cckd->free[i].len))
+         && (len2 <= (int)cckd->free[i].len || len == (int)cckd->free[i].len))
             break;
     p = cckd->free[i].prev;
     n = cckd->free[i].next;
@@ -4116,12 +4119,12 @@ int cckd_gc_percolate(DEVBLK *dev, unsigned int size)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
-int             moved = 0;              /* Space moved               */
+size_t          moved = 0;              /* Space moved               */
 int             after = 0, a;           /* New space after old       */
 int             sfx;                    /* File index                */
 int             i, j, l;                /* Indexes                   */
 off_t           fpos, upos;             /* File offsets              */
-int             flen, ulen, len;        /* Lengths                   */
+size_t          flen, ulen, len;        /* Lengths                   */
 int             trk;                    /* Track number              */
 int             l1x,l2x;                /* Table Indexes             */
 CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
@@ -4244,7 +4247,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
             goto cckd_gc_perc_error;
 
         /* Process each space in the buffer */
-        for (i = a = 0; i + CKDDASD_TRKHDR_SIZE <= ulen; i += len)
+        for (i = a = 0; i + CKDDASD_TRKHDR_SIZE <= (int)ulen; i += len)
         {
             /* Check for level 2 table */
             for (j = 0; j < cckd->cdevhdr[sfx].numl1tab; j++)
@@ -4292,7 +4295,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                 if (l2.pos != (U32)(upos + i))
                     goto cckd_gc_perc_space_error;
                 len = (int)l2.size;
-                if (i + l2.len > ulen) break;
+                if (i + l2.len > (int)ulen) break;
 
                 cckdtrc ("gcperc move trk %d at pos 0x%llx len %d\n",
                           trk, (long long)(upos + i), (int)l2.len);

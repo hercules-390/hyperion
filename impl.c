@@ -14,6 +14,8 @@
 #include "devtype.h"
 #include "herc_getopt.h"
 #include "httpmisc.h"
+#include "hostinfo.h"
+#include "history.h"
 
 #if defined(FISH_HANG)
 extern  int   bFishHangAtExit;  // (set to true when shutting down)

@@ -82,14 +82,23 @@ static int hchan_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 
 static  int     hchan_init_exec(DEVBLK *dev,int ac,BYTE **av)
 {
+    UNREFERENCED(dev);
+    UNREFERENCED(ac);
+    UNREFERENCED(av);
     return(0);
 }
 static  int     hchan_init_connect(DEVBLK *dev,int ac,BYTE **av)
 {
+    UNREFERENCED(dev);
+    UNREFERENCED(ac);
+    UNREFERENCED(av);
     return(0);
 }
 static  int     hchan_init_int(DEVBLK *dev,int ac,BYTE **av)
 {
+    UNREFERENCED(dev);
+    UNREFERENCED(ac);
+    UNREFERENCED(av);
     return(0);
 }
 
@@ -99,6 +108,7 @@ static  int     hchan_init_int(DEVBLK *dev,int ac,BYTE **av)
 static void hchan_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
+    UNREFERENCED(dev);
         *class="CHAN";
         snprintf(buffer,buflen,"** CONTROL UNIT OFFLINE **");
 }
@@ -108,6 +118,7 @@ static void hchan_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 static int hchan_close_device ( DEVBLK *dev )
 {
+    UNREFERENCED(dev);
     return 0;
 }
 
@@ -119,12 +130,15 @@ static void hchan_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
-int     rc;                             /* Return code               */
-int     num;                            /* Number of bytes to move   */
 
     UNREFERENCED(flags);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+    UNREFERENCED(chained);
+    UNREFERENCED(count);
+    UNREFERENCED(iobuf);
+    UNREFERENCED(more);
+    UNREFERENCED(residual);
 
     /* Process depending on CCW opcode */
     switch (code) {

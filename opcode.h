@@ -550,20 +550,21 @@ do { \
 
 #define STORKEY_INVALIDATE(_regs, _n) \
  do { \
-   BYTE *main = (_regs)->mainstor + (_n); \
-   ARCH_DEP(invalidate_tlbe)((_regs), main); \
+   BYTE *mn; \
+   mn = (_regs)->mainstor + (_n); \
+   ARCH_DEP(invalidate_tlbe)((_regs), mn); \
    if (sysblk.cpus > 1) { \
      int i; \
      obtain_lock (&sysblk.intlock); \
      for (i = 0; i < HI_CPU; i++) { \
        if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
          if (test_bit(4, i, &sysblk.waiting_mask)) \
-           ARCH_DEP(invalidate_tlbe)(sysblk.regs[i], main); \
+           ARCH_DEP(invalidate_tlbe)(sysblk.regs[i], mn); \
          else { \
            ON_IC_INTERRUPT(sysblk.regs[i]); \
            if (!sysblk.regs[i]->invalidate) { \
              sysblk.regs[i]->invalidate = 1; \
-             sysblk.regs[i]->invalidate_main = main; \
+             sysblk.regs[i]->invalidate_main = mn; \
            } else \
              sysblk.regs[i]->invalidate_main = NULL; \
          } \
@@ -1392,16 +1393,21 @@ int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 
 
 /* Functions in module cpu.c */
-#if defined(_FEATURE_SIE)
+/* define all arch_load|store_psw */
+/* regardless of current architecture (if any) */
+#if defined(_370)
 void s370_store_psw (REGS *regs, BYTE *addr);
 int  s370_load_psw (REGS *regs, BYTE *addr);
-#endif /*defined(_FEATURE_SIE)*/
-#if defined(_FEATURE_ZSIE)
+#endif
+#if defined(_390)
 int  s390_load_psw (REGS *regs, BYTE *addr);
 void s390_store_psw (REGS *regs, BYTE *addr);
 #endif /*defined(_FEATURE_ZSIE)*/
-void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr);
-int  ARCH_DEP(load_psw) (REGS *regs, BYTE *addr);
+#if defined(_900)
+int  z900_load_psw (REGS *regs, BYTE *addr);
+void z900_store_psw (REGS *regs, BYTE *addr);
+#endif
+
 int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP(perform_io_interrupt) (REGS *regs);
 #if defined(_FEATURE_SIE)

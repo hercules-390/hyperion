@@ -306,7 +306,7 @@ U32     all;                            /* Access-list length        */
 U32     ale[4];                         /* Access-list entry         */
 U32     aste_addr;                      /* Real address of ASTE      */
 U32     abs;                            /* Absolute address          */
-BYTE   *main;                           /* Mainstor address          */
+BYTE   *mn;                             /* Mainstor address          */
 int     i;                              /* Array subscript           */
 
     regs->dat.protect = 0;
@@ -356,11 +356,11 @@ int     i;                              /* Array subscript           */
        Each fullword of the ALE must be fetched concurrently as
        observed by other CPUs */
     alo = APPLY_PREFIXING (alo, regs->PX);
-    main = FETCH_MAIN_ABSOLUTE(alo, regs, 16);
+    mn = FETCH_MAIN_ABSOLUTE(alo, regs, 16);
     for (i = 0; i < 4; i++)
     {
-        ale[i] = fetch_fw (main);
-        main += 4;
+        ale[i] = fetch_fw (mn);
+        mn += 4;
     }
 
     /* Check the ALEN invalid bit in the ALE */
@@ -380,15 +380,15 @@ int     i;                              /* Array subscript           */
     abs = APPLY_PREFIXING (aste_addr, regs->PX);
     if (abs > regs->mainlim)
         goto alet_addr_excp;
-    main = FETCH_MAIN_ABSOLUTE(abs, regs, 64);
+    mn = FETCH_MAIN_ABSOLUTE(abs, regs, 64);
 
     /* Fetch the 64-byte ASN second table entry from real storage.
        Each fullword of the ASTE must be fetched concurrently as
        observed by other CPUs.  ASTE cannot cross a page boundary */
     for (i = 0; i < 16; i++)
     {
-        aste[i] = fetch_fw(main);
-        main += 4;
+        aste[i] = fetch_fw(mn);
+        mn += 4;
     }
 
     /* Check the ASX invalid bit in the ASTE */
@@ -485,6 +485,7 @@ ext_auth_excp:
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
 {
+    UNREFERENCED(regs);
 
 } /* end function purge_alb */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -1770,8 +1771,9 @@ RADR    pfra;
 #endif /*!defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C) */
 
 #if defined(FEATURE_PER2)
-static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype,  REGS *regs)
+static inline int ARCH_DEP(check_sa_per2) (int arn, int acctype, REGS *regs)
 {
+    UNREFERENCED(acctype);
     if((regs->dat.asd & SAEVENT_BIT) || !(regs->CR(9) & CR9_SAC))
     {
         regs->peraid = arn > 0 ? arn : 0;

@@ -678,7 +678,7 @@ int getlabel(
         void    *plabel;
 
     if (verbose) fprintf(stderr, "getlabel reading volume label\n");
-    rc = read_block(cif, 0, 0, 3, NULL, NULL, (BYTE **) &plabel, &len);
+    rc = read_block(cif, 0, 0, 3, NULL, NULL, (void *) &plabel, &len);
     if (rc) {
         fprintf(stderr, "getlabel error reading volume label, rc %d\n", rc);
         return 1;
@@ -746,7 +746,7 @@ int getF4dscb(
 
     if (verbose)
         fprintf(stderr, "getF4dscb reading VTOC F4 DSCB\n");
-    rc = read_block(cif, cyl, head, rec, (BYTE **) &f4key, &f4kl, (BYTE **) &f4data, &f4dl);
+    rc = read_block(cif, cyl, head, rec, (void *) &f4key, &f4kl, (void *) &f4data, &f4dl);
     if (rc) {
         fprintf(stderr, "getF4dscb error reading F4 DSCB, rc %d\n", rc);
         return 1;
@@ -868,8 +868,8 @@ int getF1dscb(
     if (verbose)
         fprintf(stderr, "getF1dscb reading F1 DSCB\n");
     rc = read_block(cif, cyl, head, rec, 
-                (BYTE **)&f1key, &f1kl, 
-                (BYTE **) &f1data, &f1dl);
+                (void *)&f1key, &f1kl, 
+                (void *) &f1data, &f1dl);
     if (rc) {
         fprintf(stderr, "getF1dscb error reading F1 DSCB, rc %d\n", rc);
         return 2;
@@ -958,8 +958,8 @@ int getF3dscb(
         fprintf(stderr, "getF3dscb reading F3 DSCB "
                 "cyl %d head %d rec %d\n", cyl, head, rec);
     rc = read_block (cif, cyl, head, rec, 
-                (BYTE **)&f3key, &f3kl, 
-                (BYTE **)&f3data, &f3dl);
+                (void *)&f3key, &f3kl, 
+                (void *)&f3data, &f3dl);
     if (rc) {
         fprintf(stderr, 
                 "getF3dscb error reading F3 DSCB, rc %d\n", rc);

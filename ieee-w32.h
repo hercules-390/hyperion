@@ -131,6 +131,19 @@ do {                                     \
   (ix1) = ew_u.parts.lsw;                \
 } while (0)
 
+int
+fegetenv(fenv_t *f)
+{
+    f=f;
+    return(0);
+}
+
+int
+feholdexcept(fenv_t *f)
+{
+    f=f;
+    return(0);
+}
 
 int
 __fpclassifyf (float x)

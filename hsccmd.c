@@ -49,7 +49,9 @@ int process_script_file(char *,int);
 
 int quit_cmd(int argc, char *argv[],char *cmdline)
 {
+    /*
     TID tid;
+    */
 
     UNREFERENCED(cmdline);
 
@@ -155,6 +157,8 @@ int log_cmd(int argc, char *argv[],char *cmdline)
 int version_cmd(int argc, char *argv[],char *cmdline)
 {
     UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
     display_version (stdout, "Hercules ", TRUE);
     return 0;
 }
@@ -1241,7 +1245,6 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
 
 int loadparm_cmd(int argc, char *argv[], char *cmdline)
 {
-BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -2916,6 +2919,7 @@ BYTE c;                                 /* Character work area       */
         logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
+    regs=sysblk.regs[sysblk.pcpu];
 
     /////////////////////////////////////////////////////
     // f- and f+ commands - mark frames unusable/usable
@@ -3081,7 +3085,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 
 int aia_cmd(int argc, char *argv[], char *cmdline)
 {
-    int     i;                          /* Index                     */
+    /* int     i; */                         /* Index                     */
     REGS   *regs;
 
     UNREFERENCED(argc);

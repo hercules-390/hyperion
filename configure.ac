@@ -31,7 +31,7 @@ CPPFLAGS="-I ./intl"
 #            autoconf directory that fixes an undesired compiler
 #            optimization flags issue)
 
-HC_PROG_CC
+AC_PROG_CC
 
 ##
 ## End JAP unwanted "-g -O2" optimization flags fix...
@@ -86,6 +86,7 @@ case "$host_os" in
                 is_cygwin=true
                 build_hercifc=false
                 use_dlltool=true
+                CFLAGS="$CFLAGS -Wno-format"
                 AC_DEFINE([WIN32])
                 AC_DEFINE([NO_SIGABEND_HANDLER])
                 ;;

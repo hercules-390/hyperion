@@ -161,7 +161,7 @@ int main( int argc, char **argv )
 
         default:
             sprintf( szMsgBuffer,
-                     _("HHCIF004W %s: Unknown request: %8.8X.\n"),
+                     _("HHCIF004W %s: Unknown request: %8.8lX.\n"),
                      pszProgName, ctlreq.iCtlOp );
             
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );

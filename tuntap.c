@@ -554,8 +554,8 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
 static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 {
     char*       pszCfgCmd;     // Interface config command
-    char*       request_name;  // debugging: name of ioctl request
-    char        unknown_request[]="Unknown (0x00000000)";
+    /* char*       request_name; */ // debugging: name of ioctl request
+    /* char        unknown_request[]="Unknown (0x00000000)"; */
     int         rc;
     CTLREQ      ctlreq;
 

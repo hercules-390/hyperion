@@ -73,7 +73,7 @@
 /* when appropriate, it is there for   */
 /* all host architectures              */
 
-#ifndef WIN32
+#ifndef FECLEAREXCEPT
 #define FECLEAREXCEPT(_e) \
 do { \
     fenv_t __fe; \
@@ -81,8 +81,6 @@ do { \
     fegetenv(&__fe); \
     feholdexcept(&__fe); \
 } while(0)
-#else
-#define FECLEAREXCEPT(_e) feclearexcept((_e))
 #endif
 
 

@@ -586,7 +586,6 @@ do { \
 
 #define SET_AEA_MODE(_regs) \
 do { \
-  int i; \
   BYTE oldmode = (_regs)->aea_mode; \
   (_regs)->aea_mode = AEA_MODE((_regs)); \
   if (oldmode != (_regs)->aea_mode) { \
@@ -618,9 +617,9 @@ do { \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
        ((_acctype) == ACCTYPE_WRITE_SKP) \
-        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)] \
-        : (0), \
-       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
+           MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+        :  MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
@@ -736,9 +735,9 @@ do { \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
        ((_acctype) == ACCTYPE_WRITE_SKP) \
-        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)] \
-        : (0), \
-       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
+          MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+        : MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \

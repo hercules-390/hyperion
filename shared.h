@@ -317,6 +317,7 @@
 #define _HERCULES_SHARED_H 1
 
 #define OPTION_SHARED_DEVICES
+#undef FBA_SHARED
 
   /*
    * Differing version levels are not compatible
@@ -468,10 +469,14 @@ static int     shared_ckd_read (DEVBLK *dev, int trk, BYTE *unitstat);
 static int     shared_ckd_write (DEVBLK *dev, int trk, int off,
                       BYTE *buf, int len, BYTE *unitstat);
 static int     shared_ckd_trklen (DEVBLK *dev, BYTE *buf);
+
+#if defined(FBA_SHARED)
 static int     shared_fba_read (DEVBLK *dev, int blkgrp, BYTE *unitstat);
 static int     shared_fba_write (DEVBLK *dev, int blkgrp, int off,
                       BYTE *buf, int len, BYTE *unitstat);
 static int     shared_fba_blkgrp_len (DEVBLK *dev, int blkgrp);
+#endif
+
 static int     shared_used (DEVBLK *dev);
 static void    shared_reserve (DEVBLK *dev);
 static void    shared_release (DEVBLK *dev);

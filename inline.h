@@ -240,7 +240,7 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 /*  1=Low-address protected, 0=Not low-address protected             */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
-                                              int private, REGS *regs)
+                                              REGS *regs)
 {
 #if defined (FEATURE_ESAME)
     /* For ESAME, low-address protection applies to locations
@@ -296,7 +296,7 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
        locations in the prefixed storage area of non-private address
        address spaces, if the low-address control bit in CR0 is set,
        regardless of the access key and storage key */
-    if (ARCH_DEP(is_low_address_protected) (addr, regs->dat.protect, regs))
+    if (ARCH_DEP(is_low_address_protected) (addr, regs))
     return 1;
 
     /* Access-list controlled protection prohibits all stores into

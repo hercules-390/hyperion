@@ -1096,6 +1096,7 @@ sys_dl_open (loader_data, filename)
      lt_user_data loader_data;
      const char *filename;
 {
+  loader_data=loader_data;
   lt_module   module   = dlopen (filename, LT_GLOBAL | LT_LAZY_OR_NOW);
 
   if (!module)
@@ -1113,6 +1114,7 @@ sys_dl_close (loader_data, module)
 {
   int errors = 0;
 
+  loader_data=loader_data;
   if (dlclose (module) != 0)
     {
       LT_DLMUTEX_SETERROR (DLERROR (CANNOT_CLOSE));
@@ -1128,6 +1130,7 @@ sys_dl_sym (loader_data, module, symbol)
      lt_module module;
      const char *symbol;
 {
+  loader_data=loader_data;
   lt_ptr address = dlsym (module, symbol);
 
   if (!address)
@@ -1941,6 +1944,7 @@ presym_init (loader_data)
 {
   int errors = 0;
 
+  loader_data=loader_data;
   LT_DLMUTEX_LOCK ();
 
   preloaded_symbols = 0;
@@ -1980,6 +1984,7 @@ static int
 presym_exit (loader_data)
      lt_user_data loader_data;
 {
+  loader_data=loader_data;
   presym_free_symlists ();
   return 0;
 }
@@ -2030,6 +2035,7 @@ presym_open (loader_data, filename)
   lt_dlsymlists_t *lists;
   lt_module	   module = (lt_module) 0;
 
+  loader_data=loader_data;
   LT_DLMUTEX_LOCK ();
   lists = preloaded_symbols;
 
@@ -2078,6 +2084,7 @@ presym_close (loader_data, module)
      lt_module module;
 {
   /* Just to silence gcc -Wall */
+  loader_data=loader_data;
   module = 0;
   return 0;
 }
@@ -2089,6 +2096,7 @@ presym_sym (loader_data, module, symbol)
      const char *symbol;
 {
   lt_dlsymlist *syms = (lt_dlsymlist*) module;
+  loader_data=loader_data;
 
   ++syms;
   while (syms->address)
@@ -2646,7 +2654,7 @@ foreach_dirinpath (search_path, base_name, func, data1, data2)
      lt_ptr data2;
 {
   int	 result		= 0;
-  int	 filenamesize	= 0;
+  size_t filenamesize	= 0;
   size_t lenbase	= LT_STRLEN (base_name);
   size_t argz_len	= 0;
   char *argz		= 0;
@@ -2763,6 +2771,7 @@ find_handle_callback (filename, data, ignored)
   lt_dlhandle  *handle		= (lt_dlhandle *) data;
   int		notfound	= access (filename, R_OK);
 
+  ignored=ignored;
   /* Bail out if file cannot be read...  */
   if (notfound)
     return 0;
@@ -2806,6 +2815,7 @@ load_deplibs (handle, deplibs)
 #endif
   int	errors = 0;
 
+  deplibs=deplibs;
   handle->depcount = 0;
 
 #if LTDL_DLOPEN_DEPLIBS
@@ -3126,7 +3136,7 @@ try_dlopen (phandle, filename)
       /* canonicalize the module name */
       {
         size_t i;
-        for (i = 0; i < ext - base_name; ++i)
+        for (i = 0; i < (unsigned int)(ext - base_name); ++i)
 	  {
 	    if (isalnum ((int)(base_name[i])))
 	      {
@@ -3978,7 +3988,7 @@ lt_dlpath_insertdir (ppath, before, dir)
   if (before)
     {
       assert (*ppath <= before);
-      assert (before - *ppath <= strlen (*ppath));
+      assert (before - *ppath <= (int)strlen (*ppath));
 
       before = before - *ppath + argz;
     }

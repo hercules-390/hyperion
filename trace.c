@@ -367,7 +367,7 @@ RADR    n;                              /* Addr of trace table entry */
     n = regs->CR(12) & CR12_TRACEEA;
 
     /* Apply low-address protection to trace entry address */
-    if (ARCH_DEP(is_low_address_protected) (n, 0, regs))
+    if (ARCH_DEP(is_low_address_protected) (n, regs))
     {
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
         regs->TEA = (n & STORAGE_KEY_PAGEMASK);
