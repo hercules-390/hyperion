@@ -127,7 +127,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
                        |  (U32)(cdevhdr.cyls[0]);
 
         /* Default to synchronous I/O */
-        dev->syncio = 1;
+//FIXME: syncio is reported to be broken for fba
+//      dev->syncio = 1;
 
         /* process the remaining arguments */
         for (i = 1; i < argc; i++)
