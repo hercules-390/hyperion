@@ -1689,7 +1689,7 @@ int     ar1 = 4;                        /* Access register number    */
         tempword2 = ARCH_DEP(vfetch4) ( tempaddress, ar1, regs );
         tempword3 = ARCH_DEP(vfetch4) ( tempaddress + 4, ar1, regs );
 
-        regs->GR_L(5) = tempword1;
+        
 
         if ( regs->GR_L(0) == tempword2 )
         {
@@ -1697,6 +1697,7 @@ int     ar1 = 4;                        /* Access register number    */
             regs->GR_L(2) = tempword2;
             regs->GR_L(3) = tempword3;
 
+           regs->GR_L(5) = tempword1;
             cc = 0;
             break;
         }
@@ -1711,6 +1712,7 @@ int     ar1 = 4;                        /* Access register number    */
             regs->GR_L(0) = tempword2;
             regs->GR_L(1) = tempword3;
         }
+    regs->GR_L(5) = tempword1;
     }
 
     regs->psw.cc = cc;
