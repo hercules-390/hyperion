@@ -1,3 +1,4 @@
+19 Jul 2003 THDER,THDR instructions - Roger Bowler
 18 Jul 2003 NLS translation updates - Jan Jaeger
 18 Jul 2003 Fix bug in config.c causing segfault on lcs devices - Fish
 18 Jul 2003 Fix race conditions in console detach/close - Jan Jaeger
