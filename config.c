@@ -561,7 +561,7 @@ DEVBLK *dev;                            /* -> Device block           */
 /* }                                                                 */
 /*                                                                   */
 /*                                                                   */
-/* Variable device group:                                            */
+/* Variable device group example:                                    */
 /*                                                                   */
 /* device_init(dev)                                                  */
 /* {                                                                 */
@@ -596,6 +596,7 @@ DEVBLK *dev;                            /* -> Device block           */
 /*   dev->group->memdev[dev->member] == dev                          */
 /*                                                                   */
 /*                                                                   */
+/*                                           Jan Jaeger, 23 Apr 2004 */
 /*-------------------------------------------------------------------*/
 int group_device(DEVBLK *dev, int members)
 {

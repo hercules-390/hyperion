@@ -455,8 +455,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
         pCTCBLK->fd = -1;
         pDEVBLK->fd = -1;           // indicate we're now closed
 
-	if(pDEVBLK->group && pDEVBLK->group->memdev[pDEVBLK->member == 1 ? 1 : 0])
-	    pDEVBLK->group->memdev[pDEVBLK->member == 1 ? 1 : 0]->fd = -1;
+	if(pDEVBLK->group && pDEVBLK->group->memdev[pDEVBLK->member ? 0 : 1])
+	    pDEVBLK->group->memdev[pDEVBLK->member ? 0 : 1]->fd = -1;
 
         pCTCBLK->fCloseInProgress = 0;
     }
