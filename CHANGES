@@ -1,3 +1,4 @@
+11 Jul 2001 "sh" shell command support for Win32 builds - Fish
 11 Jul 2001 UPT fails to detect CC=3 condition - Paul Leisy
 11 Jul 2001 Fix CXFR characteristic and LEXR shift amount - Paul Leisy
 11 Jul 2001 Fix BSA load of CR3 and TAR wrong CC - Paul Leisy

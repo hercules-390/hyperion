@@ -847,6 +847,12 @@ void    cckd_print_itrace (DEVBLK *);
 
 void    device_thread();
 
+#ifdef WIN32
+int herc_system (char* command)
+{
+	return system(command);
+}
+#else // !WIN32
 int herc_system (char *command)
 {
 extern char **environ;
@@ -883,6 +889,7 @@ int pid, status;
             return status;
     } while(1);
 }
+#endif // WIN32
 
 
 /*-------------------------------------------------------------------*/
