@@ -59,13 +59,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-#ifdef FEATURE_TRACING
-    /* Perform tracing */
-    if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
-        newcr12 = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
-                                regs->GR_L(r2), regs);
-#endif /*FEATURE_TRACING*/
-
     /* Load real address of dispatchable unit control table */
     ducto = regs->CR(2) & CR2_DUCTO;
 
@@ -184,6 +177,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.IA = regs->GR_L(r2) & AMASK24;
         }
 
+#ifdef FEATURE_TRACING
+        /* Perform tracing */
+        if (regs->CR(12) & CR12_BRTRACE)
+            newcr12 = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
+                                    regs->GR_L(r2), regs);
+#endif /*FEATURE_TRACING*/
+
     } /* end if(BSA-ba) */
     else
     { /* BSA-ra */
@@ -221,6 +221,15 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.IA = duct_reta & DUCT_IA31;
             regs->psw.amode = (duct_reta & DUCT_AM31) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
+
+#ifdef FEATURE_TRACING
+            /* Perform tracing */
+            if (regs->CR(12) & CR12_BRTRACE)
+                newcr12 = ARCH_DEP(trace_br) (duct_reta & DUCT_AM31,
+                                        duct_reta &DUCT_IA31, regs);
+#endif /*FEATURE_TRACING*/
+
+
         }
 
         /* Restore the PSW key mask from the DUCT */
@@ -260,7 +269,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
 #ifdef FEATURE_TRACING
     /* Update trace table address if branch tracing is on */
-    if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
+    if (regs->CR(12) & CR12_BRTRACE)
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
@@ -658,6 +667,8 @@ U32     n1, n2;                         /* 32 Bit work               */
     /* Obtain 2nd operand address from r2 */
     n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP(regs);
 
+    /* some models always store, so validate as a store operand, if desired */
+//  ARCH_DEP(validate_operand) (n2, r2, 3, ACCTYPE_WRITE, regs);
     /* Load second operand from operand address  */
     n1 = ARCH_DEP(vfetch4) ( n2, r2, regs );
 
