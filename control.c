@@ -4597,7 +4597,7 @@ int     armode;
      * If we can process it, then do it
     */
 #if defined(FEATURE_ECPSVM)
-    if(ecpsvm_dossm(regs,effective_addr2,b2)==0)
+    if(ecpsvm_dossm(regs,b2,effective_addr2)==0)
     {
         return;
     }
