@@ -807,8 +807,6 @@ BYTE    c;                              /* Work area for sscanf      */
 
     } /* end for(scount) */
 
-    /* close configuration file */
-    rc = fclose(fp);
 
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
@@ -1081,6 +1079,8 @@ BYTE    c;                              /* Work area for sscanf      */
     for(i = 0; i < numcpu; i++)
         configure_cpu(sysblk.regs + i);
 #endif
+    /* close configuration file */
+    rc = fclose(fp);
 
 } /* end function build_config */
 
