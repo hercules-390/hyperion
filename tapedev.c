@@ -1378,7 +1378,7 @@ static int bsf_het (DEVBLK *dev, BYTE *unitstat,BYTE code)
 int             rc;                     /* Return code               */
 
     /* Exit if already at BOT */
-    if (dev->blockid == 0)
+    if (dev->curfilen==1 && dev->nxtblkpos == 0)
     {
         build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
         return -1;
