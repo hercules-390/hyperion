@@ -1,7 +1,7 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.17.b7)
+AM_INIT_AUTOMAKE(hercules,2.17.b8)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 

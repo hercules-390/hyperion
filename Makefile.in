@@ -352,6 +352,7 @@ hercules_SOURCES = version.c   \
                    ecpsvm.c    \
                    shared.c    \
                    hscutl.c    \
+                   hscutl2.c   \
                    logmsg.c    \
                    hdl.c       \
                    hdlmain.c   \
@@ -1150,10 +1151,10 @@ am_hercules_OBJECTS = version.$(OBJEXT) hostinfo.$(OBJEXT) \
 	httpserv.$(OBJEXT) cgibin.$(OBJEXT) codepage.$(OBJEXT) \
 	hsccmd.$(OBJEXT) hscmisc.$(OBJEXT) logger.$(OBJEXT) \
 	cache.$(OBJEXT) ecpsvm.$(OBJEXT) shared.$(OBJEXT) \
-	hscutl.$(OBJEXT) logmsg.$(OBJEXT) hdl.$(OBJEXT) \
-	hdlmain.$(OBJEXT) $(am__objects_1) $(am__objects_3) \
-	$(am__objects_5) $(am__objects_7) $(am__objects_8) \
-	$(am__objects_9)
+	hscutl.$(OBJEXT) hscutl2.$(OBJEXT) logmsg.$(OBJEXT) \
+	hdl.$(OBJEXT) hdlmain.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_3) $(am__objects_5) $(am__objects_7) \
+	$(am__objects_8) $(am__objects_9)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 @OPTION_DYNAMIC_LOAD_FALSE@@USE_DLLTOOL_TRUE@hercules_DEPENDENCIES =
 @OPTION_DYNAMIC_LOAD_FALSE@@USE_DLLTOOL_FALSE@hercules_DEPENDENCIES =
@@ -1257,24 +1258,25 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/hetlib.Po ./$(DEPDIR)/hetmap.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/hetupd.Po ./$(DEPDIR)/hostinfo.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/hsccmd.Po ./$(DEPDIR)/hscmisc.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/hscutl.Po ./$(DEPDIR)/httpserv.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ieee.Po ./$(DEPDIR)/impl.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/io.Po ./$(DEPDIR)/ipl.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/logger.Po ./$(DEPDIR)/logmsg.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/machchk.Po ./$(DEPDIR)/memrchr.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/opcode.Po ./$(DEPDIR)/panel.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/parser.Po ./$(DEPDIR)/plo.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/printer.Po ./$(DEPDIR)/qdio.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/service.Po ./$(DEPDIR)/shared.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/sie.Po ./$(DEPDIR)/sllib.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/sockdev.Po ./$(DEPDIR)/stack.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/tapecopy.Po ./$(DEPDIR)/tapedev.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/tapemap.Po ./$(DEPDIR)/tapesplt.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/timer.Po ./$(DEPDIR)/trace.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/tuntap.Po ./$(DEPDIR)/vector.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/version.Po ./$(DEPDIR)/vm.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/vstore.Po ./$(DEPDIR)/w32chan.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/w32ctca.Po ./$(DEPDIR)/xstore.Po
+@AMDEP_TRUE@	./$(DEPDIR)/hscutl.Po ./$(DEPDIR)/hscutl2.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/httpserv.Po ./$(DEPDIR)/ieee.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/impl.Po ./$(DEPDIR)/io.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ipl.Po ./$(DEPDIR)/logger.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/logmsg.Po ./$(DEPDIR)/machchk.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/memrchr.Po ./$(DEPDIR)/opcode.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/panel.Po ./$(DEPDIR)/parser.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/plo.Po ./$(DEPDIR)/printer.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/qdio.Po ./$(DEPDIR)/service.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/shared.Po ./$(DEPDIR)/sie.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/sllib.Po ./$(DEPDIR)/sockdev.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/stack.Po ./$(DEPDIR)/tapecopy.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tapedev.Po ./$(DEPDIR)/tapemap.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tapesplt.Po ./$(DEPDIR)/timer.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/trace.Po ./$(DEPDIR)/tuntap.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/vector.Po ./$(DEPDIR)/version.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/vm.Po ./$(DEPDIR)/vstore.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/w32chan.Po ./$(DEPDIR)/w32ctca.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/xstore.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -1656,6 +1658,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hsccmd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscmisc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscutl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hscutl2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/httpserv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ieee.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/impl.Po@am__quote@
