@@ -1,3 +1,8 @@
+01 Aug 2001 PLO not saving ALET from parm list in AR when zero - Paul Leisy
+01 Aug 2001 Fix CUTFU condition code when len1 = 0 - Paul Leisy
+01 Aug 2001 Add stor-prot-override to TRAP accesses - Paul Leisy
+01 Aug 2001 Fix CE and CDR cc when fraction is zero - Paul Leisy
+01 Aug 2001 Change cpu-determined number for SRST - Paul Leisy
 31 Jul 2001 Square root division by zero fix - Jan Jaeger
 27 Jul 2001 BSA missing INVALIDATA_AEA, not ANDing CR3 - Paul Leisy
 27 Jul 2001 TRAP missing key-ctl protection - Paul Leisy
