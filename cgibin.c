@@ -716,7 +716,8 @@ int devnum;
     if((value = cgi_variable(webblk,"devnum"))
       && sscanf(value,"%x",&devnum) == 1)
         for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
-            if(devnum == dev->devnum)
+            if((dev->pmcw.flag5 & PMCW5_V)
+              && (dev->devnum == devnum))
                 break;
 
     fprintf(webblk->hsock,"<h3>Subchannel Details</h3>\n");
