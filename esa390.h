@@ -1191,20 +1191,24 @@ typedef struct _MBK {
 /* SIE Format 1 State Descriptor Block */
 typedef struct _SIE1BK {                /* SIE State Descriptor      */
 /*000*/ BYTE  v;                        /* Intervention requests     */
+#define SIE_V           v
 #define SIE_V_WAIT      0x10            /* Wait/Run bit              */
 #define SIE_V_EXTCALL   0x08            /* External call pending     */
 #define SIE_V_STOP      0x04            /* SIE Stop control          */
 #define SIE_V_IO        0x02            /* I/O Interrupt pending     */
 #define SIE_V_EXT       0x01            /* EXT Interrupt pending     */
 /*001*/ BYTE  s;                        /* State controls            */
+#define SIE_S           s
 #define SIE_S_T         0x80            /* Interval timer irpt pend  */
 #define SIE_S_RETENTION 0x40            /* SIE State retained        */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
 /*002*/ BYTE  mx;                       /* Machine mode control      */
+#define SIE_MX          mx
 #define SIE_MX_RRF      0x80            /* Region Relocate Installed */
 #define SIE_MX_XC       0x01            /* XC mode guest             */
 /*003*/ BYTE  m;                        /* Mode controls             */
+#define SIE_M           m
 #define SIE_M_VCC       0x40            /* Vector change control     */
 #define SIE_M_XA        0x20            /* XA mode guest             */
 #define SIE_M_370       0x10            /* 370 mode guest            */
@@ -1224,11 +1228,13 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 /*030*/ DWORD clockcomp;                /* Clock comparator          */
 /*038*/ DWORD epoch;                    /* Guest/Host epoch diff.    */
 /*040*/ FWORD svc_ctl;                  /* SVC Controls              */
+#define SIE_SVC0        svc_ctl[0]
 #define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
 #define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
 #define SIE_SVC0_2N     0x20            /* Intercept SVC 2n          */
 #define SIE_SVC0_3N     0x10            /* Intercept SVC 3n          */
 /*044*/ HWORD lctl_ctl;                 /* LCTL Control              */
+#define SIE_LCTL0       lctl_ctl[0]
 #define SIE_LCTL0_CR0   0x80            /* Intercept LCTL 0          */
 #define SIE_LCTL0_CR1   0x40            /* Intercept LCTL 1          */
 #define SIE_LCTL0_CR2   0x20            /* Intercept LCTL 2          */
@@ -1237,6 +1243,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
 #define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
 #define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+#define SIE_LCTL1       lctl_ctl[1]
 #define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
 #define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
 #define SIE_LCTL1_CR10  0x20            /* Intercept LCTL 10         */
@@ -1247,6 +1254,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_LCTL1_CR15  0x01            /* Intercept LCTL 15         */
 /*046*/ HWORD cpuad;                    /* Virtual CPU address       */
 /*048*/ FWORD ic;                       /* Interception Controls     */
+#define SIE_IC0         ic[0]
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
@@ -1254,6 +1262,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
 #define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
 #define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+#define SIE_IC1         ic[1]
 #define SIE_IC1_LPSW    0x40            /* Intercept LPSW            */
 #define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
 #define SIE_IC1_SSM     0x10            /* Intercept SSM             */
@@ -1261,6 +1270,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
 #define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+#define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
 #define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
 #define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
@@ -1269,6 +1279,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
 #define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+#define SIE_IC3         ic[3]
 #define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
 #define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
 #define SIE_IC3_SCKC    0x20            /* Intercept SCKC and STCKC  */
@@ -1277,6 +1288,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
 /*04C*/ FWORD ec;                       /* Execution Controls        */
+#define SIE_EC0         ec[0]
 #define SIE_EC0_EXTA    0x80            /* External Interrupt Assist */
 #define SIE_EC0_INTA    0x40            /* Intervention Bypass Assist*/
 #define SIE_EC0_WAIA    0x20            /* Wait State Assist         */
@@ -1284,9 +1296,12 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
 #define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+#define SIE_EC1         ec[1]
 #define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
 #define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
+#define SIE_EC2         ec[2]
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
+#define SIE_EC3         ec[3]
 #define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
 /*050*/ BYTE  c;                        /* Interception Code         */
 #define SIE_C_INST         4            /* Instruction interception  */
@@ -1304,6 +1319,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
 #define SIE_C_EXP_TIMER   72            /* Expedited Timer Intercept */
 /*051*/ BYTE  f;                        /* Interception Status       */
+#define SIE_F           f
 #define SIE_F_IN        0x80            /* Intercept format 2        */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
@@ -1313,8 +1329,10 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD ipc;                      /* Instruction parameter C   */
 /*060*/ FWORD rcpo;                     /* RCP area origin           */
+#define SIE_RCPO0       rcpo[0]
 #define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
+#define SIE_RCPO2       rcpo[2]
 #define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
 /*064*/ FWORD scao;                     /* SCA area origin           */
 /*068*/ FWORD subchtabo;                /* Subchannel table origin   */
@@ -1344,21 +1362,25 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 /* SIE Format 2 State Descriptor Block */
 typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*000*/ BYTE  v;                        /* Intervention requests     */
+#define SIE_V           v
 #define SIE_V_WAIT      0x10            /* Wait/Run bit              */
 #define SIE_V_EXTCALL   0x08            /* External call pending     */
 #define SIE_V_STOP      0x04            /* SIE Stop control          */
 #define SIE_V_IO        0x02            /* I/O Interrupt pending     */
 #define SIE_V_EXT       0x01            /* EXT Interrupt pending     */
 /*001*/ BYTE  s;                        /* State controls            */
+#define SIE_S           s
 #define SIE_S_T         0x80            /* Interval timer irpt pend  */
 #define SIE_S_RETENTION 0x40            /* SIE State retained        */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
 /*002*/ BYTE  mx;                       /* Machine mode control      */
+#define SIE_MX          mx
 #define SIE_MX_RRF      0x80            /* Region Relocate Installed */
 #define SIE_MX_XC       0x01            /* XC mode guest             */
 #define SIE_MX_ESAME    0x08            /* ESAME mode guest          */
 /*003*/ BYTE  m;                        /* Mode controls             */
+#define SIE_M           m
 #define SIE_M_VCC       0x40            /* Vector change control     */
 #define SIE_M_XA        0x20            /* XA mode guest             */
 #define SIE_M_370       0x10            /* 370 mode guest            */
@@ -1375,11 +1397,13 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*030*/ DWORD clockcomp;                /* Clock comparator          */
 /*038*/ DWORD epoch;                    /* Guest/Host epoch diff.    */
 /*040*/ FWORD svc_ctl;                  /* SVC Controls              */
+#define SIE_SVC0        svc_ctl[0]
 #define SIE_SVC0_ALL    0x80            /* Intercept all SVCs        */
 #define SIE_SVC0_1N     0x40            /* Intercept SVC 1n          */
 #define SIE_SVC0_2N     0x20            /* Intercept SVC 2n          */
 #define SIE_SVC0_3N     0x10            /* Intercept SVC 3n          */
 /*044*/ HWORD lctl_ctl;                 /* LCTL Control              */
+#define SIE_LCTL0       lctl_ctl[0]
 #define SIE_LCTL0_CR0   0x80            /* Intercept LCTL 0          */
 #define SIE_LCTL0_CR1   0x40            /* Intercept LCTL 1          */
 #define SIE_LCTL0_CR2   0x20            /* Intercept LCTL 2          */
@@ -1388,6 +1412,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_LCTL0_CR5   0x04            /* Intercept LCTL 5          */
 #define SIE_LCTL0_CR6   0x02            /* Intercept LCTL 6          */
 #define SIE_LCTL0_CR7   0x01            /* Intercept LCTL 7          */
+#define SIE_LCTL1       lctl_ctl[1]
 #define SIE_LCTL1_CR8   0x80            /* Intercept LCTL 8          */
 #define SIE_LCTL1_CR9   0x40            /* Intercept LCTL 9          */
 #define SIE_LCTL1_CR10  0x20            /* Intercept LCTL 10         */
@@ -1398,6 +1423,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_LCTL1_CR15  0x01            /* Intercept LCTL 15         */
 /*046*/ HWORD cpuad;                    /* Virtual CPU address       */
 /*048*/ FWORD ic;                       /* Interception Controls     */
+#define SIE_IC0         ic[0]
 #define SIE_IC0_OPEREX  0x80            /* Intercept operation exc.  */
 #define SIE_IC0_PRIVOP  0x40            /* Intercept priv. op. exc.  */
 #define SIE_IC0_PGMALL  0x20            /* Intercept program ints    */
@@ -1405,6 +1431,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_IC0_CS1     0x04            /* Intercept CS cc1          */
 #define SIE_IC0_CDS1    0x02            /* Intercept CDS cc1         */
 #define SIE_IC0_IPTECSP 0x01            /* Intercept IPTE or CSP     */
+#define SIE_IC1         ic[1]
 #define SIE_IC1_LPSW    0x40            /* Intercept LPSW/LPSWE      */
 #define SIE_IC1_PXLB    0x20            /* Intercept PTLB or PALB    */
 #define SIE_IC1_SSM     0x10            /* Intercept SSM             */
@@ -1412,6 +1439,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_IC1_STCTL   0x04            /* Intercept STCTL           */
 #define SIE_IC1_STNSM   0x02            /* Intercept STNSM           */
 #define SIE_IC1_STOSM   0x01            /* Intercept STOSM           */
+#define SIE_IC2         ic[2]
 #define SIE_IC2_STCK    0x80            /* Intercept STCK            */
 #define SIE_IC2_ISKE    0x40            /* Intercept ISK/ISKE        */
 #define SIE_IC2_SSKE    0x20            /* Intercept SSK/SSKE        */
@@ -1420,6 +1448,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_IC2_PT      0x04            /* Intercept PT              */
 #define SIE_IC2_TPROT   0x02            /* Intercept TPROT           */
 #define SIE_IC2_LASP    0x01            /* Intercept LASP            */
+#define SIE_IC3         ic[3]
 #define SIE_IC3_VACSV   0x80            /* Intercept VACSV           */
 #define SIE_IC3_SPT     0x40            /* Intercept SPT and STPT    */
 #define SIE_IC3_SCKC    0x20            /* Intercept SCKC and STCKC  */
@@ -1428,6 +1457,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
 /*04C*/ FWORD ec;                       /* Execution Controls        */
+#define SIE_EC0         ec[0]
 #define SIE_EC0_EXTA    0x80            /* External Interrupt Assist */
 #define SIE_EC0_INTA    0x40            /* Intervention Bypass Assist*/
 #define SIE_EC0_WAIA    0x20            /* Wait State Assist         */
@@ -1435,9 +1465,12 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
 #define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+#define SIE_EC1         ec[1]
 #define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
 #define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
+#define SIE_EC2         ec[2]
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
+#define SIE_EC3         ec[3]
 #define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
 /*050*/ BYTE  c;                        /* Interception Code         */
 #define SIE_C_INST         4            /* Instruction interception  */
@@ -1453,6 +1486,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
 #define SIE_C_EXP_TIMER   72            /* Expedited Timer Intercept */
 /*051*/ BYTE  f;                        /* Interception Status       */
+#define SIE_F           f          
 #define SIE_F_IN        0x80            /* Intercept format 2        */
 #define SIE_F_IF        0x02            /* Instruction fetch PER     */
 #define SIE_F_EX        0x01            /* Icept for target of EX    */
@@ -1466,8 +1500,10 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*058*/ FWORD ipb;                      /* Instruction parameter B   */
 /*05C*/ FWORD ipc;                      /* Instruction parameter C   */
 /*060*/ FWORD rcpo;                     /* RCP area origin           */
+#define SIE_RCPO0       rcpo[0]    
 #define SIE_RCPO0_SKA   0x80            /* Storage Key Assist        */
 #define SIE_RCPO0_SKAIP 0x40            /* SKA in progress           */
+#define SIE_RCPO2       rcpo[2]    
 #define SIE_RCPO2_RCPBY 0x10            /* RCP Bypass                */
 /*064*/ FWORD scao;                     /* SCA area origin           */
 /*068*/ FWORD resv068f;

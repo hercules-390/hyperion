@@ -246,7 +246,7 @@ BYTE    pkey;
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Bits 5 and 16 must be zero in XC mode */
-    if( SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC)
+    if( SIE_STATB(regs, MX, XC)
       && ( (regs->psw.sysmask & PSW_DATMODE) || regs->psw.space) )
         return PGM_SPECIFICATION_EXCEPTION;
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -516,7 +516,7 @@ static char *pgmintname[] = {
       (
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
          !(code == PGM_PROTECTION_EXCEPTION
-           && (!(regs->siebk->ec[2] & SIE_EC2_PROTEX)
+           && (!SIE_STATB(regs, EC2, PROTEX)
              || realregs->hostint))
 #else /*!defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
          code != PGM_PROTECTION_EXCEPTION
@@ -529,13 +529,13 @@ static char *pgmintname[] = {
 #endif /*FEATURE_VECTOR_FACILITY*/
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       && !(code == PGM_ALEN_TRANSLATION_EXCEPTION
-        && (regs->siebk->mx & SIE_MX_XC))
+        && SIE_STATB(regs, MX, XC))
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
       /* And conditional for the following exceptions */
       && !(code == PGM_OPERATION_EXCEPTION
-        && (regs->siebk->ic[0] & SIE_IC0_OPEREX))
+        && SIE_STATB(regs, IC0, OPEREX))
       && !(code == PGM_PRIVILEGED_OPERATION_EXCEPTION
-        && (regs->siebk->ic[0] & SIE_IC0_PRIVOP))
+        && SIE_STATB(regs, IC0, PRIVOP))
 #ifdef FEATURE_BASIC_FP_EXTENSIONS
       && !(code == PGM_DATA_EXCEPTION
         && (regs->dxc == 1 || regs->dxc == 2)
@@ -543,7 +543,7 @@ static char *pgmintname[] = {
         && !(regs->hostregs->CR(0) & CR0_AFP))
 #endif /*FEATURE_BASIC_FP_EXTENSIONS*/
       /* Or all exceptions if requested as such */
-      && !(regs->siebk->ic[0] & SIE_IC0_PGMALL) )
+      && !SIE_STATB(regs, IC0, PGMALL) )
     )
     {
 #endif /*defined(_FEATURE_SIE)*/

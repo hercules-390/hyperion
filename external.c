@@ -143,10 +143,10 @@ int     rc;
     /* Set the main storage reference and change bits */
     if(SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       && !(regs->siebk->s & SIE_S_EXP_TIMER)
+                       && !SIE_STATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       && !(regs->siebk->ec[0] & SIE_EC0_EXTA)
+                       && !SIE_STATB(regs, EC0, EXTA)
 #endif
                                                             )
     {
@@ -183,10 +183,10 @@ int     rc;
 #if defined(_FEATURE_SIE)
     if(!SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       || (regs->siebk->s & SIE_S_EXP_TIMER)
+                       || SIE_STATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       || (regs->siebk->ec[0] & SIE_EC0_EXTA)
+                       || SIE_STATB(regs, EC0, EXTA)
 #endif
                                                             )
 #endif /*defined(_FEATURE_SIE)*/
@@ -209,10 +209,10 @@ int     rc;
 #if defined(_FEATURE_SIE)
     if(SIE_STATE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
-                       && !(regs->siebk->s & SIE_S_EXP_TIMER)
+                       && !SIE_STATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
-                       && !(regs->siebk->ec[0] & SIE_EC0_EXTA)
+                       && !SIE_STATB(regs, EC0, EXTA)
 #endif
                                                             )
         longjmp (regs->progjmp, SIE_INTERCEPT_EXT);
@@ -384,8 +384,7 @@ U16     cpuad;                          /* Originating CPU address   */
 #if defined(FEATURE_INTERVAL_TIMER)
     if (OPEN_IC_ITIMER(regs)
 #if defined(_FEATURE_SIE)
-        && !(SIE_STATE(regs)
-          && (regs->siebk->m & SIE_M_ITMOF))
+        && !(SIE_STATB(regs, M, ITMOF))
 #endif /*defined(_FEATURE_SIE)*/
         )
     {

@@ -393,8 +393,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-    if(SIE_STATE(regs)
-      && (regs->siebk->mx & SIE_MX_XC)
+    if(SIE_STATB(regs, MX, XC)
       && (psw[2] & 0x80))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -1384,7 +1383,7 @@ QWORD   currpsw;                        /* Work area for PSW         */
     RRE(inst, execflag, regs, r1, r2);
 
 #if defined(_FEATURE_ZSIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_LPSW))
+    if(SIE_STATB(regs, IC1, LPSW))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_ZSIE)*/
 
@@ -1417,7 +1416,7 @@ int     r1, unused;                     /* Value of R field          */
 
 #if 0
 #if defined(_FEATURE_ZSIE)
-    if(SIE_STATE(regs) && (regs->siebk->lctl_ctl[1] & SIE_LCTL1_CR8))
+    if(SIE_STATB(regs, LCTL1, CR8))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_ZSIE)*/
 #endif
@@ -2190,7 +2189,7 @@ U64     old;                            /* old value                 */
     {
         regs->GR_G(r1) = CSWAP64(old);
 #if defined(_FEATURE_ZSIE)
-        if((SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -2255,7 +2254,7 @@ U64     old1, old2;                     /* old value                 */
         regs->GR_G(r1) = CSWAP64(old1);
         regs->GR_G(r1+1) = CSWAP64(old2);
 #if defined(_FEATURE_ZSIE)
-        if(SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_CS1))
+        if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -3839,7 +3838,7 @@ BYTE    rwork[128];                      /* Register work areas       */
     FW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_ZSIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_STCTL))
+    if(SIE_STATB(regs, IC1, STCTL))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_ZSIE)*/
 
@@ -4368,7 +4367,7 @@ int     rc;
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_ZSIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_LPSW))
+    if(SIE_STATB(regs, IC1, LPSW))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_ZSIE)*/
 
@@ -5680,7 +5679,7 @@ U32     old;                            /* old value                 */
     {
         regs->GR_L(r1) = CSWAP32(old);
 #if defined(_FEATURE_SIE)
-        if((SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -5743,7 +5742,7 @@ U64     old, new;                       /* old, new values           */
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
 #if defined(_FEATURE_SIE)
-        if((SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);

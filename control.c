@@ -58,7 +58,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_BSA))
+    if(SIE_STATB(regs, IC1, BSA))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -582,7 +582,7 @@ VADR    n = 0;                          /* Work area                 */
     SIE_MODE_XC_OPEX(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_BAKR))
+    if(SIE_STATB(regs, IC3, BAKR))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -684,7 +684,7 @@ U32     old;                            /* old value                 */
     ODD_CHECK(r1, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_IPTECSP))
+    if(SIE_STATB(regs,IC0, IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -933,7 +933,7 @@ int     r1, r2;                         /* Values of R fields        */
     if ( REAL_MODE(&(regs->psw))
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       /* Except in XC mode */
-      && !(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC) )
+      && !SIE_STATB(regs, MX, XC)
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
@@ -944,7 +944,7 @@ int     r1, r2;                         /* Values of R fields        */
          && !(regs->CR(0) & CR0_EXT_AUTH)
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
          /* Ignore extraction control in XC mode */
-         && !(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC) )
+         && !SIE_STATB(regs, MX, XC)
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
@@ -1024,14 +1024,14 @@ BYTE    storkey;
 #if defined(_FEATURE_SIE)
     if(SIE_STATE(regs))
     {
-        if(regs->siebk->ic[2] & SIE_IC2_ISKE)
+        if(SIE_STATB(regs, IC2, ISKE))
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
     {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-            if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
-              && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
+            if(SIE_STATB(regs, RCPO0, SKA)
+              && SIE_STATB(regs, RCPO2, RCPBY))
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
@@ -1052,7 +1052,7 @@ BYTE    storkey;
             BYTE rcpkey;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA))
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
@@ -1098,7 +1098,7 @@ BYTE    storkey;
                 {
                     /* In case of storage key assist obtain the
                        key and fetch bit from the PGSTE */
-                    if(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                    if(SIE_STATB(regs, RCPO0, SKA))
                         regs->GR_LHLCL(r1) = storkey | (regs->mainstor[rcpa-1]
                                  & (STORKEY_KEY | STORKEY_FETCH));
                     else
@@ -1178,17 +1178,17 @@ BYTE    storkey;
 #if defined(_FEATURE_SIE)
     if(SIE_STATE(regs))
     {
-        if(regs->siebk->ic[2] & SIE_IC2_ISKE)
+        if(SIE_STATB(regs, IC2, ISKE))
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
     {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-            if(((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+            if((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
               || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
-              ) && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
+              ) && SIE_STATB(regs, RCPO2, RCPBY))
             {
             SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
@@ -1210,7 +1210,7 @@ BYTE    storkey;
             BYTE rcpkey;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                   || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -1234,7 +1234,7 @@ BYTE    storkey;
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                    if(regs->siebk->mx & SIE_MX_XC)
+                    if(SIE_STATB(regs, MX, XC))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -1264,7 +1264,7 @@ BYTE    storkey;
                 {
                     /* In case of storage key assist obtain the
                        key and fetch bit from the PGSTE */
-                    if(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                    if(SIE_STATB(regs, RCPO0, SKA))
                         regs->GR_LHLCL(r1) = storkey | (regs->mainstor[rcpa-1]
                                  & (STORKEY_KEY | STORKEY_FETCH));
                     else
@@ -1358,11 +1358,11 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
        SPGTE rather then causing a host page fault. */
     if(SIE_STATE(regs)
       && !regs->sie_pref
-      && ((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+      && (SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
       || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
-      ) && !(regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
+      ) && !SIE_STATB(regs, RCPO2, RCPBY))
     {
         /* guest absolute to host absolute addr or PTE addr in case of rc2 */
         sr = SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
@@ -1415,7 +1415,7 @@ int     r1, r2;                         /* Values of R fields        */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_IPTECSP))
+    if(SIE_STATB(regs, IC0, IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1494,7 +1494,7 @@ U16     xcode;                          /* Exception code            */
     DW_CHECK(effective_addr1, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[2] & SIE_IC2_LASP))
+    if(SIE_STATB(regs, IC2, LASP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1779,7 +1779,7 @@ int     amode64;
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_LPSW))
+    if(SIE_STATB(regs, IC1, LPSW))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -2361,7 +2361,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     INVALIDATE_AEA_ALL(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[2] & SIE_IC2_PC))
+    if(SIE_STATB(regs, IC2, PC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -2870,7 +2870,7 @@ int     rc;                             /* return code from load_psw */
     SIE_MODE_XC_OPEX(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_PR))
+    if(SIE_STATB(regs, IC3, PR))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -3100,7 +3100,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     INVALIDATE_AEA_ALL(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[2] & SIE_IC2_PT))
+    if(SIE_STATB(regs, IC2, PT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -3332,14 +3332,14 @@ int     r1, r2;                         /* Register values (unused)  */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* This instruction is executed as a no-operation in XC mode */
-    if(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC))
+    if(SIE_STATB(regs, MX, XC))
         return;
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_PXLB))
+    if(SIE_STATB(regs, IC1, PXLB))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -3362,14 +3362,14 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* This instruction is executed as a no-operation in XC mode */
-    if(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC))
+    if(SIE_STATB(regs, MX, XC))
         return;
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_PXLB))
+    if(SIE_STATB(regs, IC1, PXLB))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -3416,14 +3416,14 @@ BYTE    storkey;                        /* Storage key               */
 #if defined(_FEATURE_SIE)
     if(SIE_STATE(regs))
     {
-        if(regs->siebk->ic[2] & SIE_IC2_RRBE)
+        if(SIE_STATB(regs, IC2, RRBE))
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
     {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-            if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
-              && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
+            if(SIE_STATB(regs, RCPO0, SKA)
+              && SIE_STATB(regs, RCPO2, RCPBY))
             {
             SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -3452,7 +3452,7 @@ BYTE    storkey;                        /* Storage key               */
                  stid;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA))
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
@@ -3593,17 +3593,17 @@ BYTE    storkey;                        /* Storage key               */
 #if defined(_FEATURE_SIE)
     if(SIE_STATE(regs))
     {
-        if(regs->siebk->ic[2] & SIE_IC2_RRBE)
+        if(SIE_STATB(regs, IC2, RRBE))
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
     {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-            if(((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+            if((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
               || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
-              ) && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
+              ) && SIE_STATB(regs, RCPO2, RCPBY))
             {
                 SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -3633,7 +3633,7 @@ BYTE    storkey;                        /* Storage key               */
                  stid;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                   || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -3657,7 +3657,7 @@ BYTE    storkey;                        /* Storage key               */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                    if(regs->siebk->mx & SIE_MX_XC)
+                    if(SIE_STATB(regs, MX, XC))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -3789,7 +3789,7 @@ int     ssevent = 0;                    /* 1=space switch event      */
     if ((REAL_MODE(&(regs->psw))
          || (regs->CR(0) & CR0_SEC_SPACE) == 0)
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-         && !(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC))
+         && !SIE_STATB(regs, MX, XC)
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
@@ -3808,9 +3808,8 @@ int     ssevent = 0;                    /* 1=space switch event      */
     if (mode > 3
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Secondary and Home space mode are not supported in XC mode */
-      || (SIE_STATE(regs)
-        && (regs->siebk->mx & SIE_MX_XC)
-        && (mode == 1 || mode == 3) )
+      || SIE_STATB(regs, MX, XC)
+        && (mode == 1 || mode == 3)
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
@@ -3953,7 +3952,7 @@ U64     dreg;                           /* Clock value               */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_SCKC))
+    if(SIE_STATB(regs, IC3, SCKC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -4018,7 +4017,7 @@ U64     dreg;                           /* Timer value               */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_SPT))
+    if(SIE_STATB(regs, IC3, SPT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -4262,14 +4261,14 @@ RADR    n;                              /* Absolute storage addr     */
         INVALIDATE_AIA(regs);
         INVALIDATE_AEA_ALL(regs);
 
-        if(regs->siebk->ic[2] & SIE_IC2_SSKE)
+        if(SIE_STATB(regs, IC2, SSKE))
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
         {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-            if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
-              && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
+            if(SIE_STATB(regs, RCPO0, SKA)
+              && SIE_STATB(regs, RCPO2, RCPBY))
                 { SIE_TRANSLATE(&n, ACCTYPE_SIE, regs); }
             else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -4284,7 +4283,7 @@ RADR    n;                              /* Absolute storage addr     */
             RADR rcpa;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA))
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
@@ -4322,7 +4321,7 @@ RADR    n;                              /* Absolute storage addr     */
 
                 if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                 && !(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                 && !SIE_STATB(regs, RCPO0, SKA)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                    )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -4357,7 +4356,7 @@ RADR    n;                              /* Absolute storage addr     */
                 STORAGE_KEY(rcpa, regs) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 /* Insert key in new storage key */
-                if(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA))
                     regs->mainstor[rcpa-1] = regs->GR_LHLCL(r1)
                                             & (STORKEY_KEY | STORKEY_FETCH);
                 if(!sr)
@@ -4450,17 +4449,17 @@ RADR    n;                              /* Abs frame addr stor key   */
         INVALIDATE_AIA(regs);
         INVALIDATE_AEA_ALL(regs);
 
-        if(regs->siebk->ic[2] & SIE_IC2_SSKE)
+        if(SIE_STATB(regs, IC2, SSKE))
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
         {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-            if (((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+            if ((SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
               || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
-              ) && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
+              ) && SIE_STATB(regs, RCPO2, RCPBY))
                 { SIE_TRANSLATE(&n, ACCTYPE_SIE, regs); }
             else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -4475,7 +4474,7 @@ RADR    n;                              /* Abs frame addr stor key   */
             RADR rcpa;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                   || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -4499,7 +4498,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                    if(regs->siebk->mx & SIE_MX_XC)
+                    if(SIE_STATB(regs, MX, XC))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -4521,7 +4520,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 
                 if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-                  && !((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                  && !(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                     || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -4560,7 +4559,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                 STORAGE_KEY(rcpa, regs) |= (STORKEY_REF|STORKEY_CHANGE);
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 /* Insert key in new storage key */
-                if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
+                if(SIE_STATB(regs, RCPO0, SKA)
 #if defined(_FEATURE_ZSIE)
                     || (regs->hostregs->arch_mode == ARCH_900)
 #endif /*defined(_FEATURE_ZSIE)*/
@@ -4658,13 +4657,13 @@ int     realmode;
     if ( (regs->CR(0) & CR0_SSM_SUPP)
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       /* SSM-suppression is ignored in XC mode */
-      && !(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC))
+      && !SIE_STATB(regs, MX, XC)
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_SSM))
+    if(SIE_STATB(regs, IC1, SSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -4673,8 +4672,7 @@ int     realmode;
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* DAT must be off in XC mode */
-    if(SIE_STATE(regs)
-      && (regs->siebk->mx & SIE_MX_XC)
+    if(SIE_STATB(regs, MX, XC)
       && (regs->psw.sysmask & PSW_DATMODE) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -5218,7 +5216,7 @@ U64     dreg;                           /* Clock value               */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_SCKC))
+    if(SIE_STATB(regs, IC3, SCKC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -5293,7 +5291,7 @@ BYTE    rwork[64];                      /* Register work areas       */
     FW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_STCTL))
+    if(SIE_STATB(regs, IC1, STCTL))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -5384,7 +5382,7 @@ U64     dreg;                           /* Double word workarea      */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_SPT))
+    if(SIE_STATB(regs, IC3, SPT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -5635,7 +5633,7 @@ int     permode;
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_STNSM))
+    if(SIE_STATB(regs, IC1, STNSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -5690,7 +5688,7 @@ int     permode;
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[1] & SIE_IC1_STOSM))
+    if(SIE_STATB(regs, IC1, STOSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -5705,8 +5703,7 @@ int     permode;
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* DAT must be off in XC mode */
-    if(SIE_STATE(regs)
-      && (regs->siebk->mx & SIE_MX_XC)
+    if(SIE_STATB(regs, MX, XC)
       && (regs->psw.sysmask & PSW_DATMODE) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -5807,10 +5804,10 @@ int     protect;                        /* 1=ALE or page protection  */
     if (ARCH_DEP(translate_alet) (regs->AR(r1), regs->GR_LHH(r2),
                         ACCTYPE_TAR,
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                        (SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC))
+                        SIE_STATB(regs, MX, XC)
                           ? regs->hostregs :
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                        regs,
+                          regs,
                         &asteo, aste, &protect))
     {
         regs->psw.cc = 3;
@@ -5839,7 +5836,7 @@ RADR    n;                              /* Real address              */
     PRIV_CHECK(regs);
 
 #if defined(FEATURE_REGION_RELOCATE)
-    if(SIE_STATE(regs) && !regs->sie_pref && !(regs->siebk->mx & SIE_MX_RRF))
+    if(SIE_STATB(regs, MX, RRF) && !regs->sie_pref)
 #endif
         SIE_INTERCEPT(regs);
 
@@ -5908,7 +5905,7 @@ U16     xcode;                          /* Exception code            */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[2] & SIE_IC2_TPROT))
+    if(SIE_STATB(regs, IC2, TPROT))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 

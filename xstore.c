@@ -26,13 +26,13 @@ U32     xaddr;                          /* Expanded storage address  */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_PGX))
+    if(SIE_STATB(regs, IC3, PGX))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Cannot perform xstore page movement in XC mode */
-    if(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC))
+    if(SIE_STATB(regs, MX, XC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -93,13 +93,13 @@ U32     xaddr;                          /* Expanded storage address  */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_PGX))
+    if(SIE_STATB(regs, IC3, PGX))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* Cannot perform xstore page movement in XC mode */
-    if(SIE_STATE(regs) && (regs->siebk->mx & SIE_MX_XC))
+    if(SIE_STATB(regs, MX, XC))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
@@ -158,7 +158,7 @@ int     r1, r2;                         /* Values of R fields        */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && !(regs->siebk->ec[0] & SIE_EC0_MVPG))
+    if(SIE_STATB(regs, EC0, MVPG))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -221,7 +221,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     RRE(inst, execflag, regs, r1, r2);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && !(regs->siebk->ec[0] & SIE_EC0_MVPG))
+    if(SIE_STATB(regs, EC0, MVPG))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -294,7 +294,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
-                ((regs->siebk->mx & SIE_MX_XC) && regs->psw.armode && r2 > 0) ?
+                (SIE_STATB(regs, MX, XC) && regs->psw.armode && r2 > 0) ?
                     r2 :
                     USE_PRIMARY_SPACE,
                     regs->hostregs, ACCTYPE_SIE, &raddr2, &sie_xcode,
@@ -397,7 +397,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
-                ((regs->siebk->mx & SIE_MX_XC) && regs->psw.armode && r1 > 0) ?
+                (SIE_STATB(regs, MX, XC) && regs->psw.armode && r1 > 0) ?
                     r1 :
                     USE_PRIMARY_SPACE,
                     regs->hostregs, ACCTYPE_SIE, &raddr1, &sie_xcode,

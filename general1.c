@@ -1328,7 +1328,7 @@ U32     old;                            /* old value                 */
     {
         regs->GR_L(r1) = CSWAP32(old);
 #if defined(_FEATURE_SIE)
-        if((SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
@@ -1387,7 +1387,7 @@ U64     old, new;                       /* old, new values           */
         regs->GR_L(r1) = CSWAP64(old) >> 32;
         regs->GR_L(r1+1) = CSWAP64(old) & 0xffffffff;
 #if defined(_FEATURE_SIE)
-        if((SIE_STATE(regs) && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        if(SIE_STATB(regs, IC0, CS1))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);

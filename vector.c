@@ -878,7 +878,7 @@ VADR    effective_addr2;                /* Effective address         */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_VACSV))
+    if(SIE_STATB(regs, IC3, VACSV))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -904,7 +904,7 @@ VADR    effective_addr2;                /* Effective address         */
     DW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs) && (regs->siebk->ic[3] & SIE_IC3_VACRS))
+    if(SIE_STATB(regs, IC3, VACRS))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
