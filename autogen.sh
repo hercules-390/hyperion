@@ -1,60 +1,43 @@
-#!/bin/bash
+#!/bin/sh
 
-#
-# A *hopefully* all way around alternate shells...
-#
-test -z "$1" && exec bash $0 "REDRIVE"
+case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
+  *c*,-n*) ECHO_N= ECHO_C='
+' ECHO_T='	' ;;
+  *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
+  *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
+esac
 
+cat <<EOF
+Note: if you do not see a 'All processing sucessfully completed.'
+message when this script completes, then something went wrong and
+you should examine the output to try and determine what it was that
+went wrong.
 
-function handle_failures {
-  printf "FAILED!\n\n"
-  printf "The last 10 lines of 'autogen.log' follows...\n\n"
-  tail autogen.log
-  exit -1
-}
+EOF
 
-trap handle_failures ERR
+rm -f autogen.log
 
-echonl()
-{
-    printf "%s" $*
-}
+echo $ECHO_N "aclocal...    $ECHO_C" && aclocal -I m4 -I autoconf >>./autogen.log 2>&1 && echo "OK.  (25% done)" &&
+echo $ECHO_N "autoheader... $ECHO_C" && autoheader                >>./autogen.log 2>&1 && echo "OK.  (50% done)" &&
+echo $ECHO_N "automake...   $ECHO_C" && automake                  >>./autogen.log 2>&1 && echo "OK.  (75% done)" &&
+echo $ECHO_N "autoconf...   $ECHO_C" && autoconf                  >>./autogen.log 2>&1 && echo "OK.  (100% done)"
 
-echo "Output goes to autogen.log..."
-echo ""
-echo "                        N  O  T  E"
-echo ""
-echo "Note: if you do not see a 'All processing successfully completed.'"
-echo "message when this script completes, then something went wrong and"
-echo "the autogen.log file should be examined to try and determine"
-echo "what it was [that went wrong]."
-echo ""
+R=$?
+if [ "$R" = 0 ]
+then
+      cat <<EOF
 
-#
-# NOTE : All automatic invocation of gettextize/libtoolize removed
-#
+All processing sucessfully completed.
 
-rm -f ./autogen.log
-
-printf "%s" "aclocal...    "
-aclocal -I m4 -I autoconf >>./autogen.log 2>&1
-printf "%b" "OK.   (25% done)\n"
-
-printf "%s" "autoheader... "
-autoheader                >>./autogen.log 2>&1
-printf "%b" "OK.   (50% done)\n"
-
-printf "%s" "automake...   "
-automake                  >>./autogen.log 2>&1
-printf "%b" "OK.   (75% done)\n"
-
-printf "%s" "autoconf...   "
-autoconf                  >>./autogen.log 2>&1
-printf "%b" "OK.   (100% done)\n\n"
-
-echo "All processing successfully completed."
-
-echo ""
-
-echo "You may now run ./configure in order to create a custom Makefile"
-echo "that is suitable for your platform and environment."
+You may now run ./configure in order to create a custom Makefile
+that is suitable for your platform and environment.
+EOF
+      exit 0
+else
+      echo "FAILED!"
+      echo
+      echo "The last 10 lines of "autogen.log" follows..."
+      echo
+      tail autogen.log
+      exit "$R"
+fi
