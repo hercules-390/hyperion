@@ -1,3 +1,4 @@
+03 Oct 2001 Move INVALIDATE_AIA out of optimization - Juergen Dobrinski
 02 Oct 2001 Fix MVPG to work in pageable guest - Paul Leisy
 02 Oct 2001 Fix TRAP to work in pageable guest - Paul Leisy
 28 Sep 2001 Fix MVCL bugs with new fast path code - Paul Leisy
