@@ -897,7 +897,9 @@ typedef struct _SYSBLK {
                 inststop:1,             /* 1 = stop on program check */ /*VMA*/
                 vmactive:1,             /* 1 = vma active            */ /*VMA*/
                 mschdelay:1,            /* 1 = delay MSCH instruction*/ /*LNX*/
-                shutdown:1;             /* 1 = shutdown requested    */
+                shutdown:1,             /* 1 = shutdown requested    */
+                main_clear:1,           /* 1 = mainstor is cleared   */
+                xpnd_clear:1;           /* 1 = xpndstor is cleared   */
         U32     ints_state;             /* Common Interrupts Status  */
         U32     config_mask;            /* Configured CPUs           */
         U32     started_mask;           /* Started CPUs              */

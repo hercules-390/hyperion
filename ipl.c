@@ -104,6 +104,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Set Main Storage Reference and Update bits */
     STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    sysblk.main_clear = sysblk.xpnd_clear = 0;
 
     /* Build the IPL CCW at location 0 */
     psa->iplpsw[0] = 0x02;              /* CCW command = Read */
@@ -334,6 +335,7 @@ U32     fileaddr;
                 HDC(debug_cpu_state, regs);
                 return -1;
             }
+            sysblk.main_clear = sysblk.xpnd_clear = 0;
         }
     } while(rc);
     fclose(fp);
@@ -621,16 +623,20 @@ int load_main(char *fname, RADR startloc)
 /* Function to clear storage */
 void storage_clear()
 {
-    memset(sysblk.mainstor,0,sysblk.mainsize);
-    memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
-
+    if (!sysblk.main_clear)
+    {
+        memset(sysblk.mainstor,0,sysblk.mainsize);
+        memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+        sysblk.main_clear = 1;
+    }
 }
 /* Function to clear expanded storage */
 void xstorage_clear()
 {
-    if(sysblk.xpndsize)
+    if(sysblk.xpndsize && !sysblk.xpnd_clear)
     {
         memset(sysblk.xpndstor,0,sysblk.xpndsize * XSTORE_PAGESIZE);
+        sysblk.xpnd_clear = 1;
     }
 }
 

@@ -157,7 +157,12 @@ int off;
     sysblk.mainsize = mainsize * 1024 * 1024;
 
 #if defined(NO_CYGWIN_MALLOC_BUG) || !defined(WIN32)
-    sysblk.mainstor = malloc(sysblk.mainsize + 8192);
+    sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
+
+    if (sysblk.mainstor != NULL)
+        sysblk.main_clear = 1;
+    else
+        sysblk.mainstor = malloc((size_t)(sysblk.mainsize + 8192));
 
     if (sysblk.mainstor == NULL)
 #else
@@ -210,7 +215,13 @@ int off;
 
         http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
     */
-    sysblk.mainstor = malloc(sysblk.mainsize + 8192);
+    sysblk.mainstor = calloc((size_t)(sysblk.mainsize + 8192), 1);
+
+    if (sysblk.mainstor != NULL)
+        sysblk.main_clear = 1;
+    else
+        sysblk.mainstor = malloc((size_t)(sysblk.mainsize + 8192));
+
 /* ISW20030828-1 : Check for MALLOC result */
     if (sysblk.mainstor == NULL)
 #else /* !defined(MAP_ANONYMOUS) */
@@ -231,7 +242,12 @@ int off;
     sysblk.mainstor += off ? 4096 - off : 0;
 
     /* Obtain main storage key array */
-    sysblk.storkeys = malloc(sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+    sysblk.storkeys = calloc((size_t)(sysblk.mainsize / STORAGE_KEY_UNITSIZE), 1);
+    if (sysblk.storkeys == NULL)
+    {
+        sysblk.main_clear = 0;
+        sysblk.storkeys = malloc((size_t)(sysblk.mainsize / STORAGE_KEY_UNITSIZE));
+    }
     if (sysblk.storkeys == NULL)
     {
         fprintf(stderr, _("HHCCF032S Cannot obtain storage key array: %s\n"),
@@ -257,7 +273,11 @@ int off;
 
         /* Obtain expanded storage */
         sysblk.xpndsize = xpndsize * (1024*1024 / XSTORE_PAGESIZE);
-        sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
+        sysblk.xpndstor = calloc(sysblk.xpndsize, XSTORE_PAGESIZE);
+        if (sysblk.xpndstor)
+            sysblk.xpnd_clear = 1;
+        else
+            sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
         if (sysblk.xpndstor == NULL)
         {
             fprintf(stderr, _("HHCCF033S Cannot obtain %dMB expanded storage: "
@@ -1217,7 +1237,7 @@ char **orig_newargv;
         if (smainsize != NULL)
         {
             if (sscanf(smainsize, "%u%c", &mainsize, &c) != 1
-                || mainsize < 2 || mainsize > 1024)
+             || mainsize < 2)
             {
                 fprintf(stderr, _("HHCCF013S Error in %s line %d: "
                         "Invalid main storage size %s\n"),
