@@ -26,6 +26,9 @@ extern int logger_init ( );             /*   (external reference)    */
 #if defined(FISH_HANG)                  /*   (external reference)    */
 extern void  FishHangInit(char* pszFileCreated, int nLineCreated);
 #endif
+#if !defined(NO_SIGABEND_HANDLER)
+static void watchdog_thread();
+#endif
 
 /* The following field allows the utilities to know whether or not
    they are executing in the context of Hercules itself or whether
