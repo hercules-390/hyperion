@@ -15,6 +15,7 @@
 #define PANEL_REFRESH_RATE		/* Enable panrate feature    */
 #define PANEL_REFRESH_RATE_FAST      50 /* Fast refresh rate	     */
 #define PANEL_REFRESH_RATE_SLOW     500 /* Slow refresh rate	     */
+#define MAX_DEVICE_THREAD_IDLE_SECS 300 /* 5 Minute thread timeout   */
 #define OPTION_AIA_BUFFER		/* Instruction addr cache    */
 #define OPTION_AEA_BUFFER		/* Effective addr cache      */
 #define OPTION_NO_INLINE_DAT		/* Performance option	     */
