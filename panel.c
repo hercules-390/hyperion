@@ -539,6 +539,9 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         mipsrate += sysblk.regs[i].mipsrate;
         siosrate += sysblk.regs[i].siosrate;
     }
+#ifdef OPTION_SHARED_DEVICES
+    siosrate += sysblk.shrdrate;
+#endif
     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
     fprintf(confp, "%2.1d.%2.2d  %5d",
             mipsrate / 1000, (mipsrate % 1000) / 10,
@@ -799,6 +802,9 @@ QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
 BYTE    prvstate = 0xFF;                /* Previous stopped state    */
 U64     prvicount = 0;                  /* Previous instruction count*/
+#if defined(OPTION_SHARED_DEVICES)
+U32     prvscount = 0;                  /* Previous shrdcount        */
+#endif
 BYTE    pswwait;                        /* PSW wait state bit        */
 int     firstmsgn = 0;                  /* Number of first message to
                                            be displayed relative to
@@ -1476,6 +1482,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                   regs->sie_state ?  regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
                   regs->instcount) != prvicount
+#if defined(OPTION_SHARED_DEVICES)
+            || sysblk.shrdcount != prvscount
+#endif
             || regs->cpustate != prvstate)
         {
             redraw_status = 1;
@@ -1486,6 +1495,9 @@ struct  timeval tv;                     /* Select timeout structure  */
 #endif /*defined(_FEATURE_SIE)*/
                         regs->instcount;
             prvstate = regs->cpustate;
+#if defined(OPTION_SHARED_DEVICES)
+            prvscount = sysblk.shrdcount;
+#endif
         }
 
         /* =NP= : Display the screen - traditional or NP */
@@ -1584,6 +1596,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                             mipsrate += sysblk.regs[i].mipsrate;
                             siosrate += sysblk.regs[i].siosrate;
                         }
+#ifdef OPTION_SHARED_DEVICES
+                        siosrate += sysblk.shrdrate;
+#endif
 
                     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
 

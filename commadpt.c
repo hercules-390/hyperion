@@ -2401,5 +2401,5 @@ DEVHND comadpt_device_hndinfo = {
         &commadpt_execute_ccw,
         &commadpt_close_device,
         &commadpt_query_device,
-        NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };

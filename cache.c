@@ -271,6 +271,21 @@ int cache_getlen(int ix, int i)
     return cacheblk[ix].cache[i].len;
 }
 
+int cache_getval(int ix, int i)
+{
+    if (cache_check(ix,i)) return -1;
+    return cacheblk[ix].cache[i].value;
+}
+
+int cache_setval(int ix, int i, int val)
+{
+    int rc;
+    if (cache_check(ix,i)) return -1;
+    rc = cacheblk[ix].cache[i].value;
+    cacheblk[ix].cache[i].value = val;
+    return rc;
+}
+
 int cache_release(int ix, int i, int flag)
 {
     void *buf;

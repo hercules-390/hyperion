@@ -1,3 +1,4 @@
+19 Apr 2003 Shared devices - Greg Smith
 18 Apr 2003 270X Poll CCW Implementation
 16 Apr 2003 Rework channel.c serialization - Greg Smith
 16 Apr 2003 memrchr.[ch] added for Cygwin - Volker Bandke

@@ -15,6 +15,7 @@
       U32       flag;
       int       len;
       void     *buf;
+      int       value;
       U64       age;
     The first 8 bits of the flag indicates if the entry is `busy' or
     not.  If any of the first 8 bits are non-zero then the entry is
@@ -177,7 +178,8 @@ typedef struct _CACHE {                 /* Cache entry               */
       U64       key;                    /* Key                       */
       U32       flag;                   /* Flags                     */
       int       len;                    /* Buffer length             */
-      void     *buf;                    /* Buffer address            */
+      void     *buf;                    /* Buffer address            */	
+      int       value;                  /* Arbitrary value           */
       U64       age;                    /* Age                       */
     } CACHE;
 
@@ -261,6 +263,8 @@ U64         cache_setage(int ix, int i);
 void       *cache_getbuf(int ix, int i, int len);
 void       *cache_setbuf(int ix, int i, void *buf, int len);
 int         cache_getlen(int ix, int i);
+int         cache_getval(int ix, int i);
+int         cache_setval(int ix, int i, int val);
 int         cache_release(int ix, int i, int flag);
 int         cache_cmd(char* cmdline, int argc, char *argv[]);
 
@@ -294,9 +298,11 @@ static void cache_allocbuf(int ix, int i, int len);
 #define   CCKD_CACHE_USED    0x00800000 /* Entry has been used       */
 
 #define   CKD_CACHE_ACTIVE   0x80000000 /* Active entry              */
+#define   FBA_CACHE_ACTIVE   0x80000000 /* Active entry              */
+#define   SHRD_CACHE_ACTIVE  0x80000000 /* Active entry              */
 
-#define   DEVBUF_TYPE_SHARED 0x00000008 /* Shared entry type         */
-#define   DEVBUF_TYPE_COMP   0x00000004 /* CCKD/CFBA entry type      */
+#define   DEVBUF_TYPE_SHARED 0x00000080 /* Shared entry type         */
+#define   DEVBUF_TYPE_COMP   0x00000040 /* CCKD/CFBA entry type      */
 #define   DEVBUF_TYPE_CKD    0x00000002 /* CKD entry type            */
 #define   DEVBUF_TYPE_FBA    0x00000001 /* FBA entry type            */
 
@@ -321,10 +327,18 @@ do { \
 #define CKD_CACHE_SETKEY(_devnum, _trk) \
   ((U64)(((U64)(_devnum) << 32) | (U64)(_trk)))
 
+#define FBA_CACHE_GETKEY(_ix, _devnum, _blkgrp) \
+{ \
+  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF); \
+  (_blkgrp) = (U32)(cache_getkey(CACHE_DEVBUF,(_ix)) & 0xFFFFFFFF); \
+}
+#define FBA_CACHE_SETKEY(_devnum, _blkgrp) \
+  ((U64)(((U64)(_devnum) << 32) | (U64)(_blkgrp)))
+
 #define SHRD_CACHE_GETKEY(_ix, _devnum, _trk) \
 { \
-  (_devnum) = (U16)((cache_getkey(_ix) >> 32) & 0xFFFF); \
-  (_trk) = (U32)(cache_getkey(_ix) & 0xFFFFFFFF); \
+  (_devnum) = (U16)((cache_getkey(CACHE_DEVBUF,(_ix)) >> 32) & 0xFFFF); \
+  (_trk) = (U32)(cache_getkey(CACHE_DEVBUF,(_ix)) & 0xFFFFFFFF); \
 }
 #define SHRD_CACHE_SETKEY(_devnum, _trk) \
   ((U64)(((U64)(_devnum) << 32) | (U64)(_trk)))

@@ -4902,7 +4902,7 @@ DEVHND tapedev_device_hndinfo = {
         &tapedev_execute_ccw,
         &tapedev_close_device,
         &tapedev_query_device,
-        NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 /*

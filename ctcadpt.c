@@ -72,7 +72,7 @@ DEVHND ctcadpt_device_hndinfo =
     &CTCX_ExecuteCCW,
     &CTCX_Close,
     &CTCX_Query,
-    NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 DEVHND ctct_device_hndinfo =
@@ -81,7 +81,7 @@ DEVHND ctct_device_hndinfo =
     &CTCX_ExecuteCCW,
     &CTCX_Close,
     &CTCX_Query,
-    NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 DEVHND vmnet_device_hndinfo =
@@ -90,7 +90,7 @@ DEVHND vmnet_device_hndinfo =
     &CTCX_ExecuteCCW,
     &CTCX_Close,
     &CTCX_Query,
-    NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 extern DEVHND ctci_device_hndinfo;

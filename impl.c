@@ -13,6 +13,7 @@
 #include "opcode.h"
 #include "httpmisc.h"
 #include "hostinfo.h"
+#include "devtype.h"
 
 #if defined(FISH_HANG)
 extern  int   bFishHangAtExit;  // (set to true when shutting down)
@@ -315,6 +316,35 @@ TID     rctid;                          /* RC file thread identifier */
         }
     }
 #endif /*defined(OPTION_HTTP_SERVER)*/
+
+#ifdef OPTION_SHARED_DEVICES
+    /* Start the shared server */
+    if (sysblk.shrdport)
+        if ( create_thread (&sysblk.shrdtid, &sysblk.detattr,
+                            shared_server, NULL) )
+        {
+            fprintf (stderr,
+                    "HHCIN006S Cannot create shared_server thread: %s\n",
+                    strerror(errno));
+            exit(1);
+        }
+
+    /* Retry pending connections */
+    {
+        DEVBLK *dev;
+        TID     tid;
+
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+            if (dev->connecting)
+                if ( create_thread (&tid, &sysblk.detattr, *dev->hnd->init, dev) )
+                {
+                    fprintf (stderr,
+                            "HHCIN007S Cannot create %4.4X connection thread: %s\n",
+                            dev->devnum, strerror(errno));
+                    exit(1);
+                }
+    }
+#endif
 
     /* Start up the RC file processing thread */
     create_thread(&rctid,&sysblk.detattr,process_rc_file,NULL);

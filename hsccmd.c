@@ -51,6 +51,8 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
        messages are written to the screen */
     dup2(STDERR_FILENO,STDOUT_FILENO);
 
+    sysblk.shutdown = 1;
+
     if (!(argc > 1 && !strcasecmp("now",argv[1])))
         usleep(100000);
 
@@ -2517,6 +2519,7 @@ COMMAND ( "devlist",   devlist_cmd,   "list all devices\n" )
 COMMAND ( "sh",        sh_cmd,        "shell command" )
 COMMAND ( "cache",     cache_cmd,     "cache command" )
 COMMAND ( "cckd",      cckd_cmd,      "cckd command" )
+COMMAND ( "shrd",      shared_cmd,    "shrd command" )
 COMMAND ( "quiet",     quiet_cmd,     "toggle automatic refresh of panel display data\n" )
 
 COMMAND ( "b",         bset_cmd,      "set breakpoint" )

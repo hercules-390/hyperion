@@ -1632,6 +1632,7 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 int ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)      /*@IWZ*/
 {
 int     rc;                             /* Return code               */
+int     sysid = 0;                      /* Local system id           */
 #if !defined(OPTION_FISHIO)
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 #endif // !defined(OPTION_FISHIO)
@@ -1712,7 +1713,8 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
      * [4] Original.  Create a thread to execute this I/O
      */
 
-    if (dev->syncio && !dev->ioactive
+    if (dev->syncio && dev->ioactive < 0
+     && (dev->reserved < 0 || dev->reserved == sysid)
 #ifdef OPTION_IODELAY_KLUDGE
      && sysblk.iodelay < 1
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -1721,7 +1723,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
         /* Attempt synchronous I/O */
         dev->syncio_active = 1;
         dev->syncio_retry = 0;
-        dev->ioactive = 1;
+        dev->ioactive = sysid;
         release_lock (&dev->lock);
         switch (sysblk.arch_mode)
         {
@@ -1808,6 +1810,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 /*-------------------------------------------------------------------*/
 void *ARCH_DEP(execute_ccw_chain) (DEVBLK *dev)
 {
+int     sysid = 0;                      /* System Identifier         */
 U32     ccwaddr;                        /* Address of CCW        @IWZ*/
 U16     idapmask;                       /* IDA page size - 1     @IWZ*/
 BYTE    idawfmt;                        /* IDAW format (1 or 2)  @IWZ*/
@@ -1834,22 +1837,18 @@ BYTE    area[64];                       /* Message area              */
 int     bufpos = 0;                     /* Position in I/O buffer    */
 BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
-    /* Wait while some other channel program completes.  This can
-       happen when the device is shared and a remote system is
-       accessing it.  If synchronous i/o is active then the ioactive
-       bit has already been turned on.  Also, if synchronous i/o is
-       being retried then the bit is still on */
+    /* Wait for the device to become available */
     obtain_lock (&dev->lock);
-    if (!dev->syncio_active && !dev->syncio_retry)
-        while (dev->ioactive)
-        {
-            dev->iowaiters++;
-            wait_condition(&dev->iocond, &dev->lock);
-            dev->iowaiters--;
-        }
-    dev->ioactive = 1;
+    while ( (dev->ioactive >= 0 && dev->ioactive != sysid)
+        ||  (dev->reserved >= 0 && dev->reserved != sysid) )
+    {
+        dev->iowaiters++;
+        wait_condition(&dev->iocond, &dev->lock);
+        dev->iowaiters--;
+    }
+    dev->ioactive = sysid;
     release_lock (&dev->lock);
-
+ 
     /* Call the i/o start exit */
     if (!dev->syncio_retry)
         if (dev->hnd->start) (dev->hnd->start) (dev);
@@ -1977,22 +1976,21 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         {
             IODELAY(dev);
 
+            /* Call the i/o end exit */
+            if (dev->hnd->end) (dev->hnd->end) (dev);
+
             obtain_lock (&dev->lock);
 
+            /* Queue the pending interrupt */
             obtain_lock (&sysblk.intlock);
             OFF_DEV_BUSY(dev);
             ON_DEV_PENDING(dev);
             release_lock (&sysblk.intlock);
 
-            /* Call the i/o end exit */
-            if (dev->hnd->end) (dev->hnd->end) (dev);
-
-            /* Turn off the active bit and notify any waiters */
-            if (!dev->reserved)
-            {
-                dev->ioactive = 0;
-                if (dev->iowaiters) signal_condition (&dev->iocond);
-            }
+            /* Make the device inactive and notify any waiters */
+            dev->ioactive = -1;
+            if (dev->reserved < 0 && dev->iowaiters)
+                signal_condition (&dev->iocond);
 
             release_lock (&dev->lock);
 
@@ -2007,6 +2005,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         if (dev->scsw.flag2 & SCSW2_AC_CLEAR)
         {
             IODELAY(dev);
+
+            /* Call the i/o end exit */
+            if (dev->hnd->end) (dev->hnd->end) (dev);
 
             obtain_lock (&dev->lock);
 
@@ -2024,21 +2025,21 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             dev->scsw.flag3 &= ~(SCSW3_AC | SCSW3_SC);
             dev->scsw.flag3 |= SCSW3_SC_PEND;
             store_fw (dev->scsw.ccwaddr, 0);
-//          dev->scsw.ccwaddr[0] = 0;
-//          dev->scsw.ccwaddr[1] = 0;
-//          dev->scsw.ccwaddr[2] = 0;
-//          dev->scsw.ccwaddr[3] = 0;
             dev->scsw.chanstat = 0;
             dev->scsw.unitstat = 0;
             store_hw (dev->scsw.count, 0);
-//          dev->scsw.count[0] = 0;
-//          dev->scsw.count[1] = 0;
 
+            /* Queue the pending interrupt */
             OFF_DEV_BUSY(dev);
             OFF_DEV_PENDING_PCI(dev);
             ON_DEV_PENDING(dev);
 
             release_lock (&sysblk.intlock);
+
+            /* Make the device inactive and notify any waiters */
+            dev->ioactive = -1;
+            if (dev->reserved < 0 && dev->iowaiters)
+                signal_condition (&dev->iocond);
 
             /* For 3270 device, clear any pending input */
             if (dev->devtype == 0x3270)
@@ -2051,16 +2052,6 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             if (dev->console)
             {
                 signal_thread (sysblk.cnsltid, SIGUSR2);
-            }
-
-            /* Call the i/o end exit */
-            if (dev->hnd->end) (dev->hnd->end) (dev);
-
-            /* Turn off the active bit and notify any waiters */
-            if (!dev->reserved)
-            {
-                dev->ioactive = 0;
-                if (dev->iowaiters) signal_condition (&dev->iocond);
             }
 
             release_lock (&dev->lock);
@@ -2077,6 +2068,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         {
             IODELAY(dev);
 
+            /* Call the i/o end exit */
+            if (dev->hnd->end) (dev->hnd->end) (dev);
+
             obtain_lock (&dev->lock);
 
             obtain_lock (&sysblk.intlock);
@@ -2092,6 +2086,11 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             release_lock (&sysblk.intlock);
 
+            /* Make the device inactive and notify any waiters */
+            dev->ioactive = -1;
+            if (dev->reserved < 0 && dev->iowaiters)
+                signal_condition (&dev->iocond);
+
             /* For 3270 device, clear any pending input */
             if (dev->devtype == 0x3270)
             {
@@ -2103,16 +2102,6 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             if (dev->console)
             {
                 signal_thread (sysblk.cnsltid, SIGUSR2);
-            }
-
-            /* Call the i/o end exit */
-            if (dev->hnd->end) (dev->hnd->end) (dev);
-
-            /* Turn off the active bit and notify any waiters */
-            if (!dev->reserved)
-            {
-                dev->ioactive = 0;
-                if (dev->iowaiters) signal_condition (&dev->iocond);
             }
 
             release_lock (&dev->lock);
@@ -2234,12 +2223,10 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             obtain_lock (&dev->lock);
 
-            /* Turn off the active bit and notify any waiters */
-            if (!dev->reserved)
-            {
-                dev->ioactive = 0;
-                if (dev->iowaiters) signal_condition (&dev->iocond);
-            }
+            /* Make the device inactive and notify any waiters */
+            dev->ioactive = -1;
+            if (dev->reserved < 0 && dev->iowaiters)
+                signal_condition (&dev->iocond);
 
             /* Signal console thread to redrive select */
             if (dev->console)
@@ -2301,13 +2288,14 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             obtain_lock (&dev->lock);
 
             /* Wait for any remote channel programs */
-            while (dev->ioactive)
+            while ( (dev->ioactive >= 0 && dev->ioactive != sysid)
+                ||  (dev->reserved >= 0 && dev->reserved != sysid) )
             {
                 dev->iowaiters++;
                 wait_condition(&dev->iocond, &dev->lock);
                 dev->iowaiters--;
             }
-            dev->ioactive = 1;
+            dev->ioactive = sysid;
 
             release_lock (&dev->lock);
 
@@ -2361,8 +2349,6 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             dev->pciscsw.unitstat = 0;
             dev->pciscsw.chanstat = CSW_PCI;
             store_hw (dev->pciscsw.count, 0);
-//          dev->pciscsw.count[0] = 0;
-//          dev->pciscsw.count[1] = 0;
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
             ON_DEV_PENDING_PCI (dev);
@@ -2588,6 +2574,11 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     IODELAY(dev);
 
+    /* Call the i/o end exit */
+    if (dev->hnd->end) (dev->hnd->end) (dev);
+
+    obtain_lock (&dev->lock);
+
     obtain_lock (&sysblk.intlock);
 
 #ifdef FEATURE_S370_CHANNEL
@@ -2639,23 +2630,18 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     release_lock (&sysblk.intlock);
 
-    /* Call the i/o end exit */
-    if (dev->hnd->end) (dev->hnd->end) (dev);
-
-    /* Turn off the active bit and notify any waiters */
-    obtain_lock (&dev->lock);
-    if (!dev->reserved)
-    {
-        dev->ioactive = 0;
-        if (dev->iowaiters) signal_condition (&dev->iocond);
-    }
-    release_lock (&dev->lock);
+    /* Make the device inactive and notify any waiters */
+    dev->ioactive = -1;
+    if (dev->reserved < 0 && dev->iowaiters)
+        signal_condition (&dev->iocond);
 
     /* Signal console thread to redrive select */
     if (dev->console)
     {
         signal_thread (sysblk.cnsltid, SIGUSR2);
     }
+
+    release_lock (&dev->lock);
 
     return NULL;
 

@@ -38,9 +38,7 @@
 #define FBAOPER_WRTVRFY         0x05    /* ...write data and verify  */
 #define FBAOPER_READ            0x06    /* ...read data              */
 
-static int fbadasd_read_block (DEVBLK *, BYTE *, int, BYTE *);
-static int fbadasd_write_block (DEVBLK *, BYTE *, int, BYTE *);
-static int fbadasd_used (DEVBLK *);
+#define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -67,15 +65,28 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     /* Save the file name in the device block */
     strcpy (dev->filename, argv[0]);
 
+    /* Check for possible remote device */
+    if (stat(dev->filename, &statbuf) < 0)
+    {
+        rc = shared_fba_init ( dev, argc, argv);
+        if (rc < 0)
+        {
+            devmsg (_("HHCDA057E %4.4X:File not found or invalid\n"),
+                    dev->devnum);
+            return -1;
+        }
+        else
+            return rc;
+    }
+
     /* Open the device file */
-    if (!dev->ckdrdonly)
-        dev->fd = open (dev->filename, O_RDWR|O_BINARY);
-    if (dev->ckdrdonly || dev->fd < 0)
+    dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+    if (dev->fd < 0)
     {
         dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            devmsg ("HHCDA057E File %s open error: %s\n",
+            devmsg ("HHCDA058E File %s open error: %s\n",
                     dev->filename, strerror(errno));
             return -1;
         }
@@ -87,10 +98,10 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     {
         /* Handle read error condition */
         if (rc < 0)
-            devmsg (_("HHCDA058E Read error in file %s: %s\n"),
+            devmsg (_("HHCDA059E Read error in file %s: %s\n"),
                     dev->filename, strerror(errno));
         else
-            devmsg (_("HHCDA059E Unexpected end of file in %s\n"),
+            devmsg (_("HHCDA060E Unexpected end of file in %s\n"),
                     dev->filename);
         close (dev->fd);
         dev->fd = -1;
@@ -108,10 +119,10 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         {
             /* Handle read error condition */
             if (rc < 0)
-                devmsg (_("HHCDA060E Read error in file %s: %s\n"),
+                devmsg (_("HHCDA061E Read error in file %s: %s\n"),
                         dev->filename, strerror(errno));
             else
-                devmsg (_("HHCDA061E Unexpected end of file in %s\n"),
+                devmsg (_("HHCDA062E Unexpected end of file in %s\n"),
                         dev->filename);
             close (dev->fd);
             dev->fd = -1;
@@ -153,7 +164,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
                 continue;
             }
 
-            devmsg (_("HHCDA062E parameter %d is invalid: %s\n"),
+            devmsg (_("HHCDA063E parameter %d is invalid: %s\n"),
                     i + 1, argv[i]);
             return -1;
         }
@@ -166,7 +177,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            devmsg ("HHCDA063E File %s fstat error: %s\n",
+            devmsg ("HHCDA064E File %s fstat error: %s\n",
                     dev->filename, strerror(errno));
             close (dev->fd);
             dev->fd = -1;
@@ -184,7 +195,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                devmsg ("HHCDA064E Invalid device origin block number %s\n",
+                devmsg ("HHCDA065E Invalid device origin block number %s\n",
                         argv[1]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -200,7 +211,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                devmsg ("HHCDA065E Invalid device block count %s\n",
+                devmsg ("HHCDA066E Invalid device block count %s\n",
                         argv[2]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -209,8 +220,9 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             dev->fbanumblk = numblks;
         }
     }
+    dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
-    devmsg ("HHCDA066I %s origin=%d blks=%d\n",
+    devmsg ("HHCDA067I %s origin=%d blks=%d\n",
             dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
@@ -220,7 +232,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        devmsg ("HHCDA067E %4.4X device type %4.4X not found in dasd table\n",
+        devmsg ("HHCDA068E %4.4X device type %4.4X not found in dasd table\n",
                 dev->devnum, dev->devtype);
         close (dev->fd);
         dev->fd = -1;
@@ -234,10 +246,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     dev->numdevchar = dasd_build_fba_devchar (dev->fbatab,
                                  (BYTE *)&dev->devchar,dev->fbanumblk);
 
-    /* Set the routine addresses for read_block and write_block */
-    dev->fbardblk = &fbadasd_read_block;
-    dev->fbawrblk = &fbadasd_write_block;
-    dev->fbaused = &fbadasd_used;
+    /* Initialize current blkgrp and cache entry */
+    dev->bufcur = dev->cache = -1;
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
@@ -264,100 +274,430 @@ void fbadasd_query_device (DEVBLK *dev, BYTE **class,
 } /* end function fbadasd_query_device */
 
 /*-------------------------------------------------------------------*/
+/* Calculate length of an FBA block group                            */
+/*-------------------------------------------------------------------*/
+static int fba_blkgrp_len (DEVBLK *dev, int blkgrp)
+{
+off_t   offset;                         /* Offset of block group     */
+
+    offset = blkgrp * FBA_BLKGRP_SIZE;
+    if (dev->fbaend - offset < FBA_BLKGRP_SIZE)
+        return (int)(dev->fbaend - offset);
+    else
+        return FBA_BLKGRP_SIZE;
+}
+
+/*-------------------------------------------------------------------*/
+/* Read fba block(s)                                                 */
+/*-------------------------------------------------------------------*/
+static int fba_read (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
+{
+int     rc;                             /* Return code               */
+int     blkgrp;                         /* Block group number        */
+int     blklen;                         /* Length left in block group*/
+int     off;                            /* Device buffer offset      */
+int     bufoff;                         /* Buffer offset             */
+int     copylen;                        /* Length left to copy       */
+
+    /* Command reject if referencing outside the volume */
+    if (dev->fbarba < dev->fbaorigin * dev->fbablksiz
+     || dev->fbarba + len > dev->fbaend)
+    {
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
+    /* Read the block group */
+    blkgrp = dev->fbarba / FBA_BLKGRP_SIZE;
+    rc = (dev->hnd->read) (dev, blkgrp, unitstat);
+    if (rc < 0)
+        return -1;
+
+    off = dev->fbarba % FBA_BLKGRP_SIZE;
+    blklen = dev->buflen - off;
+
+    /* Initialize target buffer offset and length to copy */
+    bufoff = 0;
+    copylen = len;
+
+    /* Access multiple block groups asynchronously */
+    if (dev->syncio_active && copylen > blklen)
+    {
+        dev->syncio_retry = 1;
+        return -1;
+    }
+
+    /* Copy from the device buffer to the target buffer */
+    while (copylen > 0)
+    {
+        int len = copylen < blklen ? copylen : blklen;
+
+        /* Copy to the target buffer */
+        if (buf) memcpy (buf + bufoff, dev->buf + off, len);
+
+        /* Update offsets and lengths */
+        bufoff += len;
+        copylen -= blklen;
+
+        /* Read the next block group if still more to copy */
+        if (copylen > 0)
+        {
+            blkgrp++;
+            off = 0;
+            rc = (dev->hnd->read) (dev, blkgrp, unitstat);
+            if (rc < 0)
+                return -1;
+            blklen = fba_blkgrp_len (dev, blkgrp);
+        }
+    }
+
+    /* Update the rba */
+    dev->fbarba += len;
+
+    return len;
+} /* end function fba_read */
+
+/*-------------------------------------------------------------------*/
+/* Write fba block(s)                                                */
+/*-------------------------------------------------------------------*/
+static int fba_write (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
+{
+int     rc;                             /* Return code               */
+int     blkgrp;                         /* Block group number        */
+int     blklen;                         /* Length left in block group*/
+int     off;                            /* Target buffer offset      */
+int     bufoff;                         /* Source buffer offset      */
+int     copylen;                        /* Length left to copy       */
+
+    /* Command reject if referencing outside the volume */
+    if (dev->fbarba < dev->fbaorigin * dev->fbablksiz
+     || dev->fbarba + len > dev->fbaend)
+    {
+        dev->sense[0] = SENSE_CR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
+    /* Read the block group */
+    blkgrp = dev->fbarba / FBA_BLKGRP_SIZE;
+    rc = (dev->hnd->read) (dev, blkgrp, unitstat);
+    if (rc < 0)
+        return -1;
+
+    off = dev->fbarba % FBA_BLKGRP_SIZE;
+    blklen = dev->buflen - off;
+
+    /* Initialize source buffer offset and length to copy */
+    bufoff = 0;
+    copylen = len;
+
+    /* Access multiple block groups asynchronously */
+    if (dev->syncio_active && copylen > blklen)
+    {
+        dev->syncio_retry = 1;
+        return -1;
+    }
+
+    /* Copy to the device buffer from the target buffer */
+    while (copylen > 0)
+    {
+        int len = copylen < blklen ? copylen : blklen;
+
+        /* Write to the block group */
+        rc = (dev->hnd->write) (dev, blkgrp, off, buf + bufoff,
+                                len, unitstat);
+        if (rc < 0)
+            return -1;
+
+        /* Update offsets and lengths */
+        bufoff += len;
+        copylen -= len;
+        blkgrp++;
+        off = 0;
+        blklen = fba_blkgrp_len (dev, blkgrp);
+    }
+
+    /* Update the rba */
+    dev->fbarba += len;
+
+    return len;
+} /* end function fba_write */
+
+/*-------------------------------------------------------------------*/
+/* FBA read block group exit                                         */
+/*-------------------------------------------------------------------*/
+static
+int fbadasd_read_blkgrp (DEVBLK *dev, int blkgrp, BYTE *unitstat)
+{
+int             rc;                     /* Return code               */
+int             i, o;                   /* Cache indexes             */
+int             len;                    /* Length to read            */
+off_t           offset;                 /* File offsets              */
+
+    /* Return if reading the same block group */
+    if (blkgrp >= 0 && blkgrp == dev->bufcur)
+        return 0;
+
+    /* Write the previous block group if modified */
+    if (dev->bufupd)
+    {
+        /* Retry if synchronous I/O */
+        if (dev->syncio_active)
+        {
+            dev->syncio_retry = 1;
+            return -1;
+        }
+
+        dev->bufupd = 0;
+
+        /* Seek to the old block group offset */
+        offset = (off_t)((dev->bufcur * FBA_BLKGRP_SIZE) + dev->bufupdlo);
+        offset = lseek (dev->fd, offset, SEEK_SET);
+        if (offset < 0)
+        {
+            /* Handle seek error condition */
+            devmsg (_("HHCDA069E error writing blkgrp %d: lseek error: %s\n"),
+                    dev->bufcur, strerror(errno));
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            cache_lock(CACHE_DEVBUF);
+            cache_setflag(CACHE_DEVBUF, dev->cache, ~FBA_CACHE_ACTIVE, 0);
+            cache_unlock(CACHE_DEVBUF);
+            dev->bufupdlo = dev->bufupdhi = 0;
+            dev->bufcur = dev->cache = -1;
+            return -1;
+        }
+
+        /* Write the portion of the block group that was modified */
+        rc = write (dev->fd, dev->buf + dev->bufupdlo,
+                    dev->bufupdhi - dev->bufupdlo);
+        if (rc < dev->bufupdhi - dev->bufupdlo)
+        {
+            /* Handle write error condition */
+            devmsg (_("HHCDA070E error writing blkgrp %d: write error: %s\n"),
+                    dev->bufcur, strerror(errno));
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            cache_lock(CACHE_DEVBUF);
+            cache_setflag(CACHE_DEVBUF, dev->cache, ~FBA_CACHE_ACTIVE, 0);
+            cache_unlock(CACHE_DEVBUF);
+            dev->bufupdlo = dev->bufupdhi = 0;
+            dev->bufcur = dev->cache = -1;
+            return -1;
+        }
+
+        dev->bufupdlo = dev->bufupdhi = 0;
+    }
+
+    cache_lock (CACHE_DEVBUF);
+
+    /* Make the previous cache entry inactive */
+    if (dev->cache >= 0)
+        cache_setflag(CACHE_DEVBUF, dev->cache, ~FBA_CACHE_ACTIVE, 0);
+    dev->bufcur = dev->cache = -1;
+
+    /* Return on special case when called by the close handler */
+    if (blkgrp < 0)
+    {
+        cache_unlock (CACHE_DEVBUF);
+        return 0;
+    }
+
+fba_read_blkgrp_retry:
+
+    /* Search the cache */
+    i = cache_lookup (CACHE_DEVBUF, FBA_CACHE_SETKEY(dev->devnum, blkgrp), &o);
+
+    /* Cache hit */
+    if (i >= 0)
+    {
+        cache_setflag(CACHE_DEVBUF, dev->cache, ~0, FBA_CACHE_ACTIVE);
+        cache_setage(CACHE_DEVBUF, dev->cache);
+        cache_unlock(CACHE_DEVBUF);
+
+        DEVTRACE ("HHCDA071I read blkgrp %d cache hit, using cache[%d]\n",
+                  blkgrp, i);
+
+        dev->cachehits++;
+        dev->cache = i;
+        dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
+        dev->bufcur = blkgrp;
+        dev->bufoff = 0;
+        dev->bufoffhi = fba_blkgrp_len (dev, blkgrp);
+        dev->buflen = fba_blkgrp_len (dev, blkgrp);
+        dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
+        return 0;
+    }
+
+    /* Retry if synchronous I/O */
+    if (dev->syncio_active)
+    {
+        cache_unlock(CACHE_DEVBUF);
+        dev->syncio_retry = 1;
+        return -1;
+    }
+
+    /* Wait if no available cache entry */
+    if (o < 0)
+    {
+        DEVTRACE ("HHCDA072I read blkgrp %d no available cache entry, waiting\n",
+                  blkgrp); 
+        dev->cachewaits++;
+        cache_wait(CACHE_DEVBUF);
+        goto fba_read_blkgrp_retry;
+    }
+
+    /* Cache miss */
+    DEVTRACE ("HHCDA073I read blkgrp %d cache miss, using cache[%d]\n",
+              blkgrp, o);
+
+    dev->cachemisses++;
+
+    /* Make this cache entry active */
+    cache_setkey (CACHE_DEVBUF, o, FBA_CACHE_SETKEY(dev->devnum, blkgrp));
+    cache_setflag(CACHE_DEVBUF, o, 0, FBA_CACHE_ACTIVE|DEVBUF_TYPE_FBA);
+    cache_setage (CACHE_DEVBUF, o);
+    dev->buf = cache_getbuf(CACHE_DEVBUF, o, FBA_BLKGRP_SIZE);
+    cache_unlock (CACHE_DEVBUF);
+
+    /* Get offset and length */
+    offset = (off_t)(blkgrp * FBA_BLKGRP_SIZE);
+    len = fba_blkgrp_len (dev, blkgrp);
+
+    DEVTRACE ("HHCDA074I read blkgrp %d offset %lld len %d\n",
+              blkgrp, (long long)offset, fba_blkgrp_len(dev, blkgrp));  
+
+    /* Seek to the block group offset */
+    offset = lseek (dev->fd, offset, SEEK_SET);
+    if (offset < 0)
+    {
+        /* Handle seek error condition */
+        devmsg (_("HHCDA075E error reading blkgrp %d: lseek error: %s\n"),
+                blkgrp, strerror(errno));
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        cache_lock(CACHE_DEVBUF);
+        cache_release(CACHE_DEVBUF, o, 0);
+        cache_unlock(CACHE_DEVBUF);
+        return -1;
+    }
+
+    /* Read the block group */
+    rc = read (dev->fd, dev->buf, len);
+    if (rc < len)
+    {
+        /* Handle read error condition */
+        devmsg (_("HHCDA076E error reading blkgrp %d: read error: %s\n"),
+           blkgrp, rc < 0 ? strerror(errno) : "end of file");
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        cache_lock(CACHE_DEVBUF);
+        cache_release(CACHE_DEVBUF, o, 0);
+        cache_unlock(CACHE_DEVBUF);
+        return -1;
+    }
+
+    dev->cache = o;
+    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->cache, 0);
+    dev->bufcur = blkgrp;
+    dev->bufoff = 0;
+    dev->bufoffhi = fba_blkgrp_len (dev, blkgrp);
+    dev->buflen = fba_blkgrp_len (dev, blkgrp);
+    dev->bufsize = cache_getlen(CACHE_DEVBUF, dev->cache);
+
+    return 0;
+
+} /* end function fbadasd_read_blkgrp */
+
+/*-------------------------------------------------------------------*/
+/* FBA update block group exit                                       */
+/*-------------------------------------------------------------------*/
+static
+int fbadasd_update_blkgrp (DEVBLK *dev, int blkgrp, int off,
+                          BYTE *buf, int len, BYTE *unitstat)
+{
+int             rc;                     /* Return code               */
+
+    /* Read the block group */
+    if (blkgrp != dev->bufcur)
+    {
+        rc = (dev->hnd->read) (dev, blkgrp, unitstat);
+        if (rc < 0)
+        {
+            dev->bufcur = dev->cache = -1;
+            return -1;
+        }
+    }
+
+    /* Copy to the device buffer */
+    if (buf) memcpy (dev->buf + off, buf, len);
+
+    /* Update high/low offsets */
+    if (!dev->bufupd || off < dev->bufupdlo)
+        dev->bufupdlo = off;
+    if (off + len > dev-> bufupdhi)
+        dev->bufupdhi = off + len;
+
+    /* Indicate block group has been modified */
+    if (!dev->bufupd)
+    {
+        dev->bufupd = 1;
+        shared_update_notify (dev, blkgrp);
+    }
+
+    return len;
+} /* end function fbadasd_update_blkgrp */
+
+/*-------------------------------------------------------------------*/
+/* Channel program end exit                                          */
+/*-------------------------------------------------------------------*/
+static
+void fbadasd_end (DEVBLK *dev)
+{
+BYTE            unitstat;
+
+    /* Forces updated buffer to be written */
+    fbadasd_read_blkgrp (dev, -1, &unitstat);
+}
+
+/*-------------------------------------------------------------------*/
+/* Release cache entries                                             */
+/*-------------------------------------------------------------------*/
+int fbadasd_purge_cache (int *answer, int ix, int i, void *data)
+{
+U16             devnum;                 /* Cached device number      */
+int             blkgrp;                 /* Cached block group        */
+DEVBLK         *dev = data;             /* -> device block           */
+
+    UNREFERENCED(answer);
+    FBA_CACHE_GETKEY(i, devnum, blkgrp);
+    if (dev->devnum == devnum)
+        cache_release (ix, i, CACHE_FREEBUF);
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
 int fbadasd_close_device ( DEVBLK *dev )
 {
+BYTE            unitstat;
+
+    /* Forces updated buffer to be written */
+    fbadasd_read_blkgrp (dev, -1, &unitstat);
+
+    /* Free the cache */
+    cache_lock(CACHE_DEVBUF);
+    cache_scan(CACHE_DEVBUF, fbadasd_purge_cache, dev);
+    cache_unlock(CACHE_DEVBUF);
+
     /* Close the device file */
     close (dev->fd);
     dev->fd = -1;
 
     return 0;
 } /* end function fbadasd_close_device */
-
-/*-------------------------------------------------------------------*/
-/* Read an fba block                                                 */
-/*-------------------------------------------------------------------*/
-static int fbadasd_read_block (DEVBLK *dev, BYTE *buf, int len,
-                               BYTE *unitstat)
-{
-int     rc;                             /* Return code               */
-off_t   rcoff;                          /* Return value from lseek() */
-
-    rcoff = lseek (dev->fd, dev->fbarba, SEEK_SET);
-    if (rcoff < 0)
-    {
-        /* Handle seek error condition */
-        devmsg (_("HHCDA068E Seek error in file %s: %s\n"),
-                dev->filename, strerror(errno));
-
-        /* Set unit check with equipment check */
-        dev->sense[0] = SENSE_EC;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
-
-    rc = read (dev->fd, buf, len);
-    if (rc < len)
-    {
-        /* Handle read error condition */
-        if (rc < 0)
-            devmsg (_("HHCDA069E Read error in file %s: %s\n"),
-                    dev->filename, strerror(errno));
-        else
-            devmsg (_("HHCDA070E Unexpected end of file in %s\n"),
-                    dev->filename);
-
-        /* Set unit check with equipment check */
-        dev->sense[0] = SENSE_EC;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
-
-    dev->fbarba += len;
-
-    return len;
-} /* end function fbadasd_read_block */
-
-/*-------------------------------------------------------------------*/
-/* Write an fba block                                                */
-/*-------------------------------------------------------------------*/
-static int fbadasd_write_block (DEVBLK *dev, BYTE *buf, int len,
-                                BYTE *unitstat)
-{
-int     rc;                             /* Return code               */
-off_t   rcoff;                          /* Return value from lseek() */
-
-    rcoff = lseek (dev->fd, dev->fbarba, SEEK_SET);
-    if (rcoff < 0)
-    {
-        /* Handle seek error condition */
-        devmsg (_("HHCDA071E Seek error in file %s: %s\n"),
-                dev->filename, strerror(errno));
-
-        /* Set unit check with equipment check */
-        dev->sense[0] = SENSE_EC;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
-
-    rc = write (dev->fd, buf, len);
-    if (rc < len)
-    {
-        /* Handle write error condition */
-        devmsg (_("HHCDA072E Write error in file %s: %s\n"),
-                dev->filename, strerror(errno));
-
-        /* Set unit check with equipment check */
-        dev->sense[0] = SENSE_EC;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
-
-    dev->fbarba += len;
-
-    return len;
-} /* end function fbadasd_write_block */
 
 /*-------------------------------------------------------------------*/
 /* Return used blocks                                                */
@@ -423,7 +763,7 @@ int     repcnt;                         /* Replication count         */
         if (count < dev->fbablksiz) *more = 1;
 
         /* Read physical block into channel buffer */
-        rc = (dev->fbardblk) (dev, iobuf, num, unitstat);
+        rc = fba_read (dev, iobuf, num, unitstat);
         if (rc < num) break;
 
         /* Set extent defined flag */
@@ -486,7 +826,7 @@ int     repcnt;                         /* Replication count         */
             /* Write physical block from channel buffer */
             if (num > 0)
             {
-                rc = (dev->fbawrblk) (dev, iobuf, num, unitstat);
+                rc = fba_write (dev, iobuf, num, unitstat);
                 if (rc < num) break;
             }
 
@@ -494,7 +834,7 @@ int     repcnt;                         /* Replication count         */
             if (num < dev->fbablksiz)
             {
                 rem = dev->fbablksiz - num;
-                rc = (dev->fbawrblk) (dev, hexzeroes, rem, unitstat);
+                rc = fba_write (dev, hexzeroes, rem, unitstat);
                 if (rc < rem) break;
             }
 
@@ -551,7 +891,7 @@ int     repcnt;                         /* Replication count         */
             if (num < dev->fbablksiz) *more = 1;
 
             /* Read physical block into channel buffer */
-            rc = (dev->fbardblk) (dev, iobuf, num, unitstat);
+            rc = fba_read (dev, iobuf, num, unitstat);
             if (rc < num) break;
 
             /* Prepare to read next block */
@@ -676,7 +1016,7 @@ int     repcnt;                         /* Replication count         */
                      + dev->fbaorigin
                      + dev->fbaxblkn) * dev->fbablksiz;
 
-        DEVTRACE("HHCDA073I Positioning to %8.8llX (%llu)\n",
+        DEVTRACE("HHCDA077I Positioning to %8.8llX (%llu)\n",
                  (long long unsigned int)dev->fbarba, (long long unsigned int)dev->fbarba);
 
         /* Return normal status */
@@ -694,7 +1034,7 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            devmsg(_("HHCDA074E define extent data too short: %d bytes\n"),
+            devmsg(_("HHCDA078E define extent data too short: %d bytes\n"),
                     count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -704,7 +1044,7 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            devmsg(_("HHCDA075E second define extent in chain\n"));
+            devmsg(_("HHCDA079E second define extent in chain\n"));
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -715,7 +1055,7 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            devmsg(_("HHCDA076E invalid file mask %2.2X\n"),
+            devmsg(_("HHCDA080E invalid file mask %2.2X\n"),
                     dev->fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -756,7 +1096,7 @@ int     repcnt;                         /* Replication count         */
             || dev->fbaxlast - dev->fbaxfirst
                 >= dev->fbanumblk - dev->fbaxblkn)
         {
-            devmsg(_("HHCDA077E invalid extent: first block %d, last block %d,\n"),
+            devmsg(_("HHCDA081E invalid extent: first block %d, last block %d,\n"),
                     dev->fbaxfirst, dev->fbaxlast);
             devmsg(_("         numblks %d, device size %d\n"),
                     dev->fbaxblkn, dev->fbanumblk);
@@ -797,6 +1137,9 @@ int     repcnt;                         /* Replication count         */
             break;
         }
 
+        if (dev->hnd->release) (dev->hnd->release) (dev);
+        dev->reserved = -1;
+
         /* Return sense information */
         goto sense;
 
@@ -812,6 +1155,10 @@ int     repcnt;                         /* Replication count         */
             break;
         }
 
+        /* Reserve device to the ID of the active channel program */
+        if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
+        dev->reserved = dev->ioactive;
+
         /* Return sense information */
         goto sense;
 
@@ -826,6 +1173,10 @@ int     repcnt;                         /* Replication count         */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
         }
+
+        /* Reserve device to the ID of the active channel program */
+        if (dev->hnd->reserve) (dev->hnd->reserve) (dev);
+        dev->reserved = dev->ioactive;
 
         /* Return sense information */
         goto sense;
@@ -917,21 +1268,20 @@ int     blkfactor;                      /* Number of device blocks
 
     /* Seek to start of desired block */
     dev->fbarba = dev->fbaorigin * dev->fbablksiz;
-    dev->fbarba += blknum * blksize;
 
     /* Process depending on operation type */
     switch (type) {
 
     case 0x01:
         /* Write block from I/O buffer */
-        rc = (dev->fbawrblk) (dev, iobuf, blksize, unitstat);
-        if (rc < (int)blksize) return;
+        rc = fba_write (dev, iobuf, blksize, unitstat);
+        if (rc < blksize) return;
         break;
 
     case 0x02:
         /* Read block into I/O buffer */
-        rc = (dev->fbardblk) (dev, iobuf, blksize, unitstat);
-        if (rc < (int)blksize) return;
+        rc = fba_read (dev, iobuf, blksize, unitstat);
+        if (rc < blksize) return;
         break;
 
     } /* end switch(type) */
@@ -942,11 +1292,18 @@ int     blkfactor;                      /* Number of device blocks
 
 } /* end function fbadasd_syncblk_io */
 
-
 DEVHND fbadasd_device_hndinfo = {
-        &fbadasd_init_handler,
-        &fbadasd_execute_ccw,
-        &fbadasd_close_device,
-        &fbadasd_query_device,
-        NULL, NULL, NULL, NULL
+        &fbadasd_init_handler,         /* Device Initialisation      */
+        &fbadasd_execute_ccw,          /* Device CCW execute         */
+        &fbadasd_close_device,         /* Device Close               */
+        &fbadasd_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        &fbadasd_end,                  /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        &fbadasd_end,                  /* Device Suspend channel pgm */
+        &fbadasd_read_blkgrp,          /* Device Read                */
+        &fbadasd_update_blkgrp,        /* Device Write               */
+        &fbadasd_used,                 /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL                           /* Device Release             */
 };

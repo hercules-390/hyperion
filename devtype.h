@@ -14,6 +14,11 @@ typedef struct _DEVHND {
         DEVSF *end;                    /* Device End channel pgm     */
         DEVSF *resume;                 /* Device Resume channel pgm  */
         DEVSF *suspend;                /* Device Suspend channel pgm */
+        DEVRF *read;                   /* Device Read                */
+        DEVWF *write;                  /* Device Write               */
+        DEVUF *used;                   /* Device Query used          */
+        DEVRR *reserve;                /* Device Reserve             */
+        DEVRR *release;                /* Device Release             */
 } DEVHND;
 
 

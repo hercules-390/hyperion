@@ -90,6 +90,7 @@
 #include "hetlib.h"
 #include "codepage.h"
 #include "logger.h"
+#include "shared.h"
 
 /* definition of CLK_TCK is not part of the SUSE 7.2 definition.  Added (VB) */
 #  ifndef CLK_TCK
@@ -315,12 +316,11 @@ typedef void DEVXF (struct _DEVBLK *dev, BYTE code, BYTE flags,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual);
 typedef int DEVCF (struct _DEVBLK *dev);
 typedef void DEVSF (struct _DEVBLK *dev);
-typedef int CKDRT (struct _DEVBLK *, int, int, BYTE *);
-typedef int CKDUT (struct _DEVBLK *, BYTE *, int, BYTE *);
-typedef int CKDUC (struct _DEVBLK *);
-typedef int FBARB (struct _DEVBLK *, BYTE *, int, BYTE *);
-typedef int FBAWB (struct _DEVBLK *, BYTE *, int, BYTE *);
-typedef int FBAUB (struct _DEVBLK *);
+typedef int DEVRF (struct _DEVBLK *dev, int ix, BYTE *unitstat);
+typedef int DEVWF (struct _DEVBLK *dev, int rcd, int off, BYTE *buf, int len,
+        BYTE *unitstat);
+typedef int DEVUF (struct _DEVBLK *dev);
+typedef void DEVRR (struct _DEVBLK *dev);
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
@@ -731,7 +731,8 @@ typedef struct _SYSBLK {
                 instbreak:1,            /* 1=Have breakpoint         */
                 inststop:1,             /* 1 = stop on program check */ /*VMA*/
                 vmactive:1,             /* 1 = vma active            */ /*VMA*/
-                mschdelay:1;            /* 1 = delay MSCH instruction*/ /*LNX*/
+                mschdelay:1,            /* 1 = delay MSCH instruction*/ /*LNX*/
+                shutdown:1;             /* 1 = shutdown requested    */
         U32     ints_state;             /* Common Interrupts Status  */
         U32     waitmask;               /* Mask for waiting CPUs     */
         U32     started_mask;           /* Mask for started CPUs     */
@@ -771,6 +772,16 @@ typedef struct _SYSBLK {
         char   *httppass;               /* HTTP password             */
         char   *httproot;               /* HTTP root                 */
 // #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(OPTION_SHARED_DEVICES)
+        TID     shrdtid;                /* Shared device listener    */
+        U16     shrdport;               /* Shared device server port */
+        U32     shrdrate;               /* IOs per second            */
+        U32     shrdcount;              /* IO count                  */
+        SHRD_TRACE  *shrdtrace;         /* Internal trace table      */
+        SHRD_TRACE  *shrdtracep;        /* Current pointer           */
+        SHRD_TRACE  *shrdtracex;        /* End of trace table        */
+        int          shrdtracen;        /* Number of entries         */
+#endif
         CPCONV *codepage;
         int     ifcfd[2];
         int     ifcpid;
@@ -940,13 +951,29 @@ typedef struct _DEVBLK {
                                            device, NULL otherwise    */
 
         /*  device buffer management fields                          */
+
+        int     bufcur;                 /* Buffer data identifier    */
         BYTE   *buf;                    /* -> Device data buffer     */
-        U32     bufsize;                /* Device data buffer size   */
+        int     bufsize;                /* Device data buffer size   */
+        int     buflen;                 /* Device buffer length used */
         int     bufoff;                 /* Offset into data buffer   */
         int     bufoffhi;               /* Highest offset allowed    */
         int     bufupdlo;               /* Lowest offset updated     */
         int     bufupdhi;               /* Highest offset updated    */
         U32     bufupd;                 /* 1=Buffer updated          */
+
+        /*  device cache management fields                           */
+
+        int     cache;                  /* Current cache index       */
+        int     cachehits;              /* Cache hits                */
+        int     cachemisses;            /* Cache misses              */
+        int     cachewaits;             /* Cache waits               */
+
+        /*  device compression support                               */
+
+        int     comps;                  /* Acceptable compressions   */
+        int     comp;                   /* Compression used          */
+        int     compoff;                /* Offset to compressed data */
 
         /*  device i/o scheduling fields...                          */
 
@@ -1001,6 +1028,8 @@ typedef struct _DEVBLK {
         COND    resumecond;             /* Resume condition          */
         COND    iocond;                 /* I/O active condition      */
         int     iowaiters;              /* Number of I/O waiters     */
+        int     ioactive;               /* System Id active on device*/
+        int     reserved;               /* System Id reserving device*/
 #ifdef WIN32
         struct timeval   lasttod;       /* Last gettimeofday         */
 #endif
@@ -1015,6 +1044,7 @@ typedef struct _DEVBLK {
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
+                connecting:1,           /* 1=Connecting to remote    */
                 batch:1,                /* 1=Called by dasdutil      */
                 dasdcopy:1,             /* 1=Called by dasdcopy      */
                 ccwtrace:1,             /* 1=CCW trace               */
@@ -1029,8 +1059,6 @@ typedef struct _DEVBLK {
         int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */
         int     syncio_retry;           /* 1=Retry I/O asynchronously*/
-        int     ioactive;               /* 1=I/O is active on device */
-        int     reserved;               /* 1=Device is reserved      */
 
         /*  Synchronous I/O                                          */
 
@@ -1040,6 +1068,27 @@ typedef struct _DEVBLK {
 
         /*  Device dependent data (generic)                          */
         void    *dev_data;
+
+        /*  Fields for remote devices                                */
+
+        in_addr_t rmtaddr;              /* Remote address            */
+        U16     rmtport;                /* Remote port number        */
+        U16     rmtnum;                 /* Remote device number      */
+        int     rmtid;                  /* Remote Id                 */
+        DWORD   rmthdr;                 /* Remote header             */
+        int     rmtcomp;                /* Remote compression parm   */
+        int     rmtcomps;               /* Supported compressions    */
+        int     rmtpurgen;              /* Remote purge count        */
+        FWORD  *rmtpurge;               /* Remote purge list         */
+
+#ifdef OPTION_SHARED_DEVICES
+        /*  Fields for device sharing                                */
+        TID     shrdtid;                /* Device thread id          */
+        int     shrdid;                 /* Id for next client        */
+        int     shrdconn;               /* Number connected clients  */
+        int     shrdwait;               /* Signal indicator          */
+        struct _SHRD *shrd[SHARED_MAX_SYS]; /* ->SHRD block          */
+#endif
 
         /*  Device dependent fields for console                      */
 
@@ -1154,18 +1203,15 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for dasd (fba and ckd)           */
 
-        int     dasdcur;                /* Current ckd trk or fba blk*/
         BYTE    dasdsfn[256];           /* Shadow file name          */
 
         /*  Device dependent fields for fbadasd                      */
 
-        FBARB  *fbardblk;               /* -> Read block routine     */
-        FBAWB  *fbawrblk;               /* -> Write block  routine   */
-        FBAUB  *fbaused;                /* -> Used blocks routine    */  
         FBADEV *fbatab;                 /* Device table entry        */
         int     fbaorigin;              /* Device origin block number*/
         int     fbanumblk;              /* Number of blocks in device*/
         off_t   fbarba;                 /* Relative byte offset      */
+        off_t   fbaend;                 /* Last RBA in file          */
         int     fbaxblkn;               /* Offset from start of device
                                            to first block of extent  */
         int     fbaxfirst;              /* Block number within dataset
@@ -1183,9 +1229,6 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for ckddasd                      */
 
-        CKDRT  *ckdrdtrk;               /* -> Read track routine     */
-        CKDUT  *ckdupdtrk;              /* -> Update track routine   */
-        CKDUC  *ckdused;                /* -> Used cyls routine      */
         int     ckdnumfd;               /* Number of CKD image files */
         int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
         int     ckdhitrk[CKD_MAXFILES]; /* Highest track number
@@ -1221,10 +1264,6 @@ typedef struct _DEVBLK {
         BYTE    ckdlaux;                /* Locate record aux byte    */
         BYTE    ckdlcount;              /* Locate record count       */
         BYTE    ckdreserved1;           /* Alignment                 */
-        int     ckdcache;               /* Current cache index       */
-        int     ckdcachehits;           /* Cache hits                */
-        int     ckdcachemisses;         /* Cache misses              */
-        int     ckdcachewaits;          /* Cache waits               */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
         U32                            /* Flags                     */
@@ -1686,10 +1725,10 @@ void fbadasd_query_device (DEVBLK *dev, BYTE **class,
 /* Functions in module cckddasd.c */
 DEVIF   cckddasd_init_handler;
 int     cckddasd_close_device (DEVBLK *);
-int     cckd_read_track (DEVBLK *, int, int, BYTE *);
-int     cckd_update_track (DEVBLK *, BYTE *, int, BYTE *);
-int     cfba_read_block (DEVBLK *, BYTE *, int, BYTE *);
-int     cfba_write_block (DEVBLK *, BYTE *, int, BYTE *);
+int     cckd_read_track (DEVBLK *, int, BYTE *);
+int     cckd_update_track (DEVBLK *, int, int, BYTE *, int, BYTE *);
+int     cfba_read_block (DEVBLK *, int, BYTE *);
+int     cfba_write_block (DEVBLK *, int, int, BYTE *, int, BYTE *);
 void    cckd_sf_add (DEVBLK *);
 void    cckd_sf_remove (DEVBLK *, int);
 void    cckd_sf_newname (DEVBLK *, BYTE *);

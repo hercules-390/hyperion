@@ -268,6 +268,9 @@ BYTE   *secpsvmlevel;                   /* -> ECPS:VM level (or 'no')*/
 #if defined(OPTION_HTTP_SERVER)
 BYTE   *shttpport;                      /* -> HTTP port number       */
 #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(OPTION_SHARED_DEVICES)
+BYTE   *sshrdport;                      /* -> Shared device port nbr */
+#endif /*defined(OPTION_SHARED_DEVICES)*/
 #ifdef OPTION_IODELAY_KLUDGE
 BYTE   *siodelay;                       /* -> I/O delay value        */
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -284,6 +287,9 @@ U16     numvec;                         /* Number of VFs             */
 #if defined(OPTION_HTTP_SERVER)
 U16     httpport;                       /* HTTP port number          */
 #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(OPTION_SHARED_DEVICES)
+U16     shrdport;                       /* Shared device port number */
+#endif /*defined(OPTION_SHARED_DEVICES)*/
 int     archmode;                       /* Architectural mode        */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
@@ -381,6 +387,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #if defined(OPTION_HTTP_SERVER)
     httpport = 0;
 #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(OPTION_SHARED_DEVICES)
+    shrdport = 0;
+#endif /*defined(OPTION_SHARED_DEVICES)*/
 
     /* Read records from the configuration file */
     for (scount = 0; ; scount++)
@@ -423,6 +432,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #if defined(OPTION_HTTP_SERVER)
         shttpport = NULL;
 #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(OPTION_SHARED_DEVICES)
+        sshrdport = NULL;
+#endif /*defined(OPTION_SHARED_DEVICES)*/
 #ifdef OPTION_IODELAY_KLUDGE
         siodelay = NULL;
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -577,6 +589,12 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 }
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
+#if defined(OPTION_SHARED_DEVICES)
+            else if (strcasecmp (keyword, "shrdport") == 0)
+            {
+                sshrdport = operand;
+            }
+#endif /*defined(OPTION_SHARED_DEVICES)*/
             else if (strcasecmp (keyword, "cckd") == 0)
             {
                 scckd = operand;
@@ -969,6 +987,21 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         }
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
+#if defined(OPTION_SHARED_DEVICES)
+        /* Parse shared device port number operand */
+        if (sshrdport != NULL)
+        {
+            if (sscanf(sshrdport, "%hu%c", &shrdport, &c) != 1
+                || shrdport < 1024 )
+            {
+                fprintf(stderr, _("HHCCF029S Error in %s line %d: "
+                        "Invalid SHRDPORT port number %s\n"),
+                        fname, stmt, sshrdport);
+                delayed_exit(1);
+            }
+        }
+#endif /*defined(OPTION_SHARED_DEVICES)*/
+
 #ifdef OPTION_IODELAY_KLUDGE
         /* Parse I/O delay value */
         if (siodelay != NULL)
@@ -1043,6 +1076,10 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 #if defined(OPTION_HTTP_SERVER)
     sysblk.httpport = httpport;
 #endif /*defined(OPTION_HTTP_SERVER)*/
+
+#if defined(OPTION_SHARED_DEVICES)
+    sysblk.shrdport = shrdport;
+#endif /*defined(OPTION_SHARED_DEVICES)*/
 
     /* Build CPU identifier */
     sysblk.cpuid = ((U64)version << 56)
@@ -1435,6 +1472,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->devtype = devent->type;
     dev->typname = devent->name;
     dev->fd = -1;
+    dev->ioactive = dev->reserved = -1;
 
     /* Initialize storage view */
     dev->mainstor = sysblk.mainstor;
@@ -1449,6 +1487,10 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->pmcw.pom = 0xFF;
     dev->pmcw.pam = 0x80;
     dev->pmcw.chpid[0] = dev->devnum >> 8;
+
+#if defined(OPTION_SHARED_DEVICES)
+    dev->shrdwait = -1;
+#endif /*defined(OPTION_SHARED_DEVICES)*/
 
     /* Call the device handler initialization function */
     rc = (dev->hnd->init)(dev, addargc, addargv);

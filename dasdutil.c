@@ -209,6 +209,7 @@ char   *scodepage;
 int read_track (CIFBLK *cif, int cyl, int head)
 {
 int             rc;                     /* Return code               */
+int             trk;                    /* Track number              */
 DEVBLK         *dev;                    /* -> CKD device block       */
 BYTE            unitstat;               /* Unit status               */
 
@@ -224,7 +225,8 @@ BYTE            unitstat;               /* Unit status               */
         if (verbose) /* Issue progress message */
            fprintf (stdout, "HHCDU001I Updating cyl %d head %d\n",
                     cif->curcyl, cif->curhead);
-        rc = (dev->ckdupdtrk)(dev, NULL, cif->trksz, &unitstat);
+        trk = (cif->curcyl * cif->heads) + cif->curhead;
+        rc = (dev->hnd->write)(dev, trk, 0, NULL, cif->trksz, &unitstat);
         if (rc < 0)
         {
             fprintf (stderr, "HHCDU002E %s write track error: stat=%2.2X\n",
@@ -236,7 +238,8 @@ BYTE            unitstat;               /* Unit status               */
     if (verbose) /* Issue progress message */
        fprintf (stdout, "HHCDU003I Reading cyl %d head %d\n", cyl, head);
 
-    rc = (dev->ckdrdtrk)(dev, cyl, head, &unitstat);
+    trk = (cyl * cif->heads) + head;
+    rc = (dev->hnd->read)(dev, trk, &unitstat);
     if (rc < 0)
     {
         fprintf (stderr, "HHCDU004E %s read track error: stat=%2.2X\n",
@@ -647,6 +650,9 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
         return NULL;
     }
 
+    /* Call the device start exit */
+    if (dev->hnd->start) (dev->hnd->start) (dev);
+
     /* Set CIF fields */
     cif->fname = fname;
     cif->fd = dev->fd;
@@ -684,6 +690,7 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
 int close_ckd_image (CIFBLK *cif)
 {
 int             rc;                     /* Return code               */
+int             trk;                    /* Track number              */
 DEVBLK         *dev;                    /* -> CKD device block       */
 BYTE            unitstat;               /* Unit status               */
 
@@ -695,13 +702,17 @@ BYTE            unitstat;               /* Unit status               */
         if (verbose) /* Issue progress message */
            fprintf (stdout, "HHCDU015I Updating cyl %d head %d\n",
                     cif->curcyl, cif->curhead);
-        rc = (dev->ckdupdtrk)(dev, NULL, cif->trksz, &unitstat);
+        trk = (cif->curcyl * cif->heads) + cif->curhead;
+        rc = (dev->hnd->write)(dev, trk, 0, NULL, cif->trksz, &unitstat);
         if (rc < 0)
         {
             fprintf (stderr, "HHCDU016E %s write track error: stat=%2.2X\n",
                     cif->fname, unitstat);
         }
     }
+
+    /* Call the END exit */
+    if (dev->hnd->end) (dev->hnd->end) (dev);
 
     /* Close the CKD image file */
     (dev->hnd->close)(dev);

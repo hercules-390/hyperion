@@ -43,7 +43,7 @@ DEVHND ctci_device_hndinfo =
     &CTCI_ExecuteCCW,
     &CTCI_Close,
     &CTCI_Query,
-    NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 // ====================================================================

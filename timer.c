@@ -346,6 +346,11 @@ struct  timeval tv;                     /* Structure for gettimeofday
             now = now * 1000000 + tv.tv_usec;
             interval = (int)(now - then);
 
+#if defined(OPTION_SHARED_DEVICES)
+            sysblk.shrdrate = sysblk.shrdcount;
+            sysblk.shrdcount = 0;
+#endif
+
             for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
             {
                 /* Point to the CPU register context */

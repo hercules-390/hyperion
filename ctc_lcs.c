@@ -55,7 +55,7 @@ DEVHND lcs_device_hndinfo =
     &LCS_ExecuteCCW,
     &LCS_Close,
     &LCS_Query,
-    NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 // ====================================================================
