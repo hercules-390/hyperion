@@ -1069,8 +1069,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         OFF_IC_CPU_NOT_STARTED(regs);
 
-        /* Signal stopped CPUs to retest stopped indicator */
-        signal_condition (&sysblk.intcond);
+        /* Signal the stopped CPU to retest its stopped indicator */
+        WAKEUP_CPU (regs->cpuad);
 
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
@@ -1343,7 +1343,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         for (i = 0; i < MAX_CPU_ENGINES; i++)
             if(sysblk.regs[i].cpuonline && !regs->checkstop)
                 sysblk.regs[i].cpustate = CPUSTATE_STARTED;
-        signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
         release_lock (&sysblk.intlock);
 #ifdef EXTERNALGUI
         if (extgui) logmsg("MAN=0\n");
@@ -1582,8 +1582,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         regs->checkstop = 0;
 
-        /* Signal waiting CPUs that an interrupt is pending */
-        signal_condition (&sysblk.intcond);
+        /* Signal CPU that an interrupt is pending */
+        WAKEUP_CPU (regs->cpuad);
 
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
@@ -1656,7 +1656,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         ON_IC_INTKEY;
 
         /* Signal waiting CPUs that an interrupt is pending */
-        signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
 
         release_lock(&sysblk.intlock);
         logmsg ("Interrupt key depressed\n");

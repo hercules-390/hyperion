@@ -5,7 +5,7 @@
 /* Default features						     */
 /*   All existing features MUST be #undef-ed here.		     */
 /*-------------------------------------------------------------------*/
-#define MAX_CPU_ENGINES 	      1 /* Maximum number of engines */
+#define MAX_CPU_ENGINES 	      2 /* Maximum number of engines */
 #undef  SMP_SERIALIZATION		/* Serialize storage for SMP */
 #define VECTOR_SECTION_SIZE	    128 /* Vector section size	     */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
@@ -31,6 +31,7 @@
 #define OPTION_REDUCED_INVAL     	/* Performance option	     */
 #define OPTION_FETCHIBYTE       	/* Performance option	     */
 #undef	OPTION_CS_USLEEP			/* Sleep if CS collision         */
+#define OPTION_FAST_INTCOND			/* Ea CPU has intcond COND       */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */

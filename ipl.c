@@ -177,9 +177,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     /* reset load state */
     regs->loadstate = 0;
 
-    /* Signal all CPUs to retest stopped indicator */
+    /* Signal the CPU to retest stopped indicator */
     obtain_lock (&sysblk.intlock);
-    signal_condition (&sysblk.intcond);
+    WAKEUP_CPU (regs->cpuad);
     release_lock (&sysblk.intlock);
 
 #ifdef EXTERNALGUI

@@ -509,7 +509,7 @@ void scp_command (BYTE *command, int priomsg)
     /* Set service signal interrupt pending for read event data */
     sysblk.servparm = 1;
     ON_IC_SERVSIG;
-    signal_condition (&sysblk.intcond);
+    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);

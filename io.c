@@ -244,7 +244,7 @@ BYTE    chpid;
         obtain_lock(&sysblk.intlock);
         sysblk.chp_reset[chpid/32] |= 0x80000000 >> (chpid % 32);
         ON_IC_CHANRPT;
-        signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
         release_lock (&sysblk.intlock);
     }
 

@@ -154,6 +154,8 @@ typedef pthread_attr_t                  ATTR;
 #define initialize_condition(pcond) \
         pthread_cond_init((pcond),NULL)
 #define signal_condition(pcond) \
+        pthread_cond_signal((pcond))
+#define broadcast_condition(pcond) \
         pthread_cond_broadcast((pcond))
 #define wait_condition(pcond,plk) \
         pthread_cond_wait((pcond),(plk))
@@ -183,6 +185,7 @@ typedef int                             ATTR;
 #define release_lock(plk)               *(plk)=0
 #define initialize_condition(pcond)     *(pcond)=0
 #define signal_condition(pcond)         *(pcond)=1
+#define broadcast_condition(pcond)      *(pcond)=1
 #define wait_condition(pcond,plk)       *(pcond)=1
 #define timed_wait_condition(pcond,plk,timeout) *(pcond)=1
 #define initialize_detach_attr(pat)     *(pat)=1
@@ -403,13 +406,50 @@ typedef struct _REGS {                  /* Processor registers       */
 
         jmp_buf archjmp;                /* longjmp destination to
                                            switch architecture mode  */
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+	COND	intcond;				/* CPU interrupt condition   */
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
+	U32	cpumask;				/* CPU mask                 */
     } REGS;
 
 /* Definitions for CPU state */
-#define CPUSTATE_STOPPED        0       /* CPU is stopped            */
-#define CPUSTATE_STOPPING       1       /* CPU is stopping           */
-#define CPUSTATE_STARTED        2       /* CPU is started            */
-#define CPUSTATE_STARTING       3       /* CPU is starting           */
+#define CPUSTATE_STOPPED        1       /* CPU is stopped            */
+#define CPUSTATE_STOPPING       2       /* CPU is stopping           */
+#define CPUSTATE_STARTED        4       /* CPU is started            */
+#define CPUSTATE_STARTING       8       /* CPU is starting           */
+#define CPUSTATE_ALL		  255		/* All CPU states            */
+
+#define	ALL_CPUS		0xffffffff
+
+/* Macros to signal interrupt condition to a CPU[s] */
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+#define	WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)].intcond)
+#define WAKEUP_WAITING_CPU(mask,statemask) \
+ { int i; \
+   for (i = 0; i < MAX_CPU_ENGINES; i++) \
+     if ((sysblk.regs[i].cpustate & (statemask)) \
+      && (sysblk.regs[i].cpumask  & (mask)) \
+      && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
+      { \
+        signal_condition(&sysblk.regs[i].intcond); \
+        break; \
+      } \
+ }
+#define WAKEUP_WAITING_CPUS(mask,statemask) \
+ { int i; \
+   for (i = 0; i < MAX_CPU_ENGINES; i++) \
+     if ((sysblk.regs[i].cpustate & (statemask)) \
+      && (sysblk.regs[i].cpumask  & (mask)) \
+      && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
+        signal_condition(&sysblk.regs[i].intcond); \
+ }
+#define INTCOND       regs->intcond
+#else /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
+#define WAKEUP_CPU(cpu)               broadcast_condition(&sysblk.intcond)
+#define WAKEUP_WAITING_CPU    WAKEUP_CPU(0)
+#define WAKEUP_WAITING_CPUS   WAKEUP_CPU(0)
+#define INTCOND       sysblk.intcond
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
@@ -450,7 +490,9 @@ typedef struct _SYSBLK {
         U32     footprptr[MAX_CPU_ENGINES];
 #endif
         LOCK    mainlock;               /* Main storage lock         */
+#if MAX_CPU_ENGINES == 1 || !defined(OPTION_FAST_INTCOND)
         COND    intcond;                /* Interrupt condition       */
+#endif /* MAX_CPU_ENGINES == 1 || !defined(OPTION_FAST_INTCOND) */
         LOCK    intlock;                /* Interrupt lock            */
         LOCK    sigplock;               /* Signal processor lock     */
         ATTR    detattr;                /* Detached thread attribute */
@@ -501,6 +543,7 @@ typedef struct _SYSBLK {
 #ifdef INTERRUPTS_FAST_CHECK
         U32     ints_state;             /* Common Interrupts Status  */
 #endif /*INTERRUPTS_FAST_CHECK*/
+        U32     waitmask;               /* Mask for waiting CPUs     */
 // #if MAX_CPU_ENGINES > 1
         U32     brdcstpalb;             /* purge_alb() pending       */
         U32     brdcstptlb;             /* purge_tlb() pending       */

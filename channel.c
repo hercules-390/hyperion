@@ -554,7 +554,7 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
         /* Signal waiting CPUs that an interrupt may be pending */
         obtain_lock (&sysblk.intlock);
         ON_IC_IOPENDING;
-        signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
         release_lock (&sysblk.intlock);
     }
 
@@ -652,7 +652,7 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
         /* Signal waiting CPUs that an interrupt may be pending */
         obtain_lock (&sysblk.intlock);
         ON_IC_IOPENDING;
-        signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
         release_lock (&sysblk.intlock);
     }
 
@@ -1275,7 +1275,7 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);
     ON_IC_IOPENDING;
-    signal_condition (&sysblk.intcond);
+    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
     release_lock (&sysblk.intlock);
 
     return 0;
@@ -1531,7 +1531,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         /* Signal waiting CPUs that interrupt is pending */
         obtain_lock (&sysblk.intlock);
         ON_IC_IOPENDING;
-        signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
         release_lock (&sysblk.intlock);
     }
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
@@ -1556,7 +1556,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
             ON_IC_IOPENDING;
-            signal_condition (&sysblk.intcond);
+            WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
@@ -1617,7 +1617,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
             ON_IC_IOPENDING;
-            signal_condition (&sysblk.intcond);
+            WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
@@ -1662,7 +1662,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
             ON_IC_IOPENDING;
-            signal_condition (&sysblk.intcond);
+            WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
 
             if (dev->ccwtrace || dev->ccwstep || tracethis)
@@ -1800,7 +1800,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                     /* Signal waiting CPUs that interrupt is pending */
                     obtain_lock (&sysblk.intlock);
                     ON_IC_IOPENDING;
-                    signal_condition (&sysblk.intcond);
+                    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
                     release_lock (&sysblk.intlock);
 
                     /* Obtain the device lock */
@@ -1909,7 +1909,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Signal waiting CPUs that an interrupt is pending */
             obtain_lock (&sysblk.intlock);
             ON_IC_IOPENDING;
-            signal_condition (&sysblk.intcond);
+            WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
             release_lock (&sysblk.intlock);
 
         } /* end if(CCW_FLAGS_PCI) */
@@ -2187,7 +2187,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);
     ON_IC_IOPENDING;
-    signal_condition (&sysblk.intcond);
+    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
     release_lock (&sysblk.intlock);
 
     return NULL;
@@ -2281,6 +2281,10 @@ DEVBLK *dev;                            /* -> Device control block   */
             /* Exit loop if enabled for interrupts from this device */
             if (ARCH_DEP(interrupt_enabled)(regs, dev))
                 break;
+#if MAX_CPU_ENGINES > 1
+            /* See if another CPU can take this interrupt */
+            WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
+#endif /*MAX_CPU_ENGINES > 1*/
         }
         release_lock (&dev->lock);
     } /* end for(dev) */

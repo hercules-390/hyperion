@@ -22,9 +22,9 @@ void update_TOD_clock(void)
 {
 struct timeval	tv;			/* Current time              */
 U64		dreg;			/* Double register work area */
-int		intflag = 0;		/* Need to signal interrupt  */
 int		cpu;			/* CPU counter               */
 REGS	       *regs;			/* -> CPU register context   */
+U32		intmask = 0;		/* Interrupt CPU mask            */
 
     /* Get current time */
     gettimeofday (&tv, NULL);
@@ -75,7 +75,7 @@ REGS	       *regs;			/* -> CPU register context   */
         if((sysblk.todclk + regs->todoffset) > regs->clkc)
         {
             ON_IC_CLKC(regs);
-            intflag = 1;
+            intmask |= regs->cpumask;
         }
         else
             OFF_IC_CLKC(regs);
@@ -96,8 +96,7 @@ REGS	       *regs;			/* -> CPU register context   */
 
     /* If a CPU timer or clock comparator interrupt condition
        was detected for any CPU, then wake up all waiting CPUs */
-    if (intflag)
-        signal_condition (&sysblk.intcond);
+    WAKEUP_WAITING_CPUS (intmask, CPUSTATE_STARTED);
 
     release_lock(&sysblk.intlock);
 
@@ -129,7 +128,7 @@ int     itimer_diff;                    /* TOD difference in TU      */
 #endif /*defined(_FEATURE_SIE)*/
 int     cpu;                            /* CPU engine number         */
 REGS   *regs;                           /* -> CPU register context   */
-int     intflag = 0;                    /* 1=Interrupt possible      */
+U32     intmask = 0;                    /* 1=Interrupt possible      */
 U64     prev;                           /* Previous TOD clock value  */
 U64     diff;                           /* Difference between new and
                                            previous TOD clock values */
@@ -279,7 +278,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
             if (itimer < 0 && olditimer >= 0)
             {
                 ON_IC_ITIMER(regs);
-                intflag = 1;
+                intmask |= regs->cpumask;
             }
         } /*if(regs->arch_mode == ARCH_370)*/
 #endif /*_FEATURE_INTERVAL_TIMER*/
@@ -291,8 +290,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
         /* If a CPU timer or clock comparator interrupt condition
            was detected for any CPU, then wake up all waiting CPUs */
-        if (intflag)
-            signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPUS (intmask, CPUSTATE_STARTED);
 
         release_lock(&sysblk.intlock);
 

@@ -801,7 +801,9 @@ BYTE    c;                              /* Work area for sscanf      */
     initialize_lock (&sysblk.mainlock);
     initialize_lock (&sysblk.intlock);
     initialize_lock (&sysblk.sigplock);
+#if MAX_CPU_ENGINES == 0 || !defined(OPTION_FAST_INTCOND)
     initialize_condition (&sysblk.intcond);
+#endif
 #if MAX_CPU_ENGINES > 1
     initialize_condition (&sysblk.brdcstcond);
 #ifdef SMP_SERIALIZATION
@@ -888,6 +890,13 @@ BYTE    c;                              /* Work area for sscanf      */
         sysblk.sie_regs[cpu].hostregs = &sysblk.regs[cpu];
         sysblk.regs[cpu].guestregs = &sysblk.sie_regs[cpu];
 #endif /*defined(_FEATURE_SIE)*/
+
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+        initialize_condition (&sysblk.regs[cpu].intcond);
+#endif
+        sysblk.regs[cpu].cpustate = CPUSTATE_STARTED;
+        sysblk.regs[cpu].cpumask = 0x80000000 >> cpu;
+        sysblk.waitmask |= sysblk.regs[cpu].cpumask;
 
     } /* end for(cpu) */
 
@@ -1043,8 +1052,7 @@ int deconfigure_cpu(REGS *regs)
         ON_IC_CPU_NOT_STARTED(regs);
 
         /* Wake up CPU as it may be waiting */
-        signal_condition (&sysblk.intcond);
-
+        WAKEUP_CPU (regs->cpuad);
         return 0;
     }
     else

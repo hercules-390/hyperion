@@ -66,7 +66,7 @@ int     i;                              /* Array subscript           */
 #endif /*!_FEATURE_CPU_RECONFIG*/
             if (sysblk.regs[i].cpustate == CPUSTATE_STOPPED)
                 sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
-        signal_condition (&sysblk.intcond);
+        WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
 
     }
 

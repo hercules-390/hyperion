@@ -82,7 +82,7 @@ void machine_check_crwpend()
     /* Signal waiting CPUs that an interrupt may be pending */
     obtain_lock (&sysblk.intlock);
     ON_IC_CHANRPT;
-    signal_condition (&sysblk.intcond);
+    WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_STARTED);
     release_lock (&sysblk.intlock);
 
 } /* end function machine_check_crwpend */

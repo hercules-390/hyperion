@@ -4905,8 +4905,8 @@ static char *ordername[] = {    "Unassigned",
     /* Release the use of the signalling and response facility */
     sysblk.sigpbusy = 0;
 
-    /* Wake up any CPUs waiting for an interrupt or start */
-    signal_condition (&sysblk.intcond);
+    /* Wake up the target CPU */
+    WAKEUP_CPU (tregs->cpuad);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);

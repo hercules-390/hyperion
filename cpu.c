@@ -910,6 +910,7 @@ void *cpu_thread (REGS *regs)
         return NULL;
     }
     sysblk.numcpu++;
+    sysblk.waitmask &= ~regs->cpumask;
     initdone = 1;  /* now safe for panel_display function to proceed */
 #if MAX_CPU_ENGINES > 1
     if (sysblk.brdcstncpu != 0)
@@ -1013,6 +1014,10 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                     PERFORM_CHKPT_SYNC (regs);
                     ARCH_DEP (perform_io_interrupt) (regs);
                 }
+#if MAX_CPU_ENGINES > 1
+                else if (IS_IC_IOPENDING)
+                    WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
+#endif
 
             } /*if(cpustate == CPU_STARTED)*/
 
@@ -1097,10 +1102,12 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             if (regs->cpustate == CPUSTATE_STOPPED)
             {
                 /* Wait until there is work to do */
+                sysblk.waitmask |= regs->cpumask;
                 while (regs->cpustate == CPUSTATE_STOPPED)
                 {
-                    wait_condition (&sysblk.intcond, &sysblk.intlock);
+                    wait_condition (&INTCOND, &sysblk.intlock);
                 }
+                sysblk.waitmask &= ~regs->cpumask;
                 release_lock (&sysblk.intlock);
                 /* If the architecture mode has changed we must adapt */
                 if(sysblk.arch_mode != regs->arch_mode)
@@ -1129,7 +1136,9 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 INVALIDATE_AEA_ALL(regs);
 
                 /* Wait for I/O, external or restart interrupt */
-                wait_condition (&sysblk.intcond, &sysblk.intlock);
+                sysblk.waitmask |= regs->cpumask;
+                wait_condition (&INTCOND, &sysblk.intlock);
+                sysblk.waitmask &= ~regs->cpumask;
                 release_lock (&sysblk.intlock);
                 longjmp(regs->progjmp, SIE_NO_INTERCEPT);
             } /* end if(wait) */
@@ -1166,8 +1175,10 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     
                     /* Wait for start command from panel */
                     obtain_lock (&sysblk.intlock);
+                    sysblk.waitmask |= regs->cpumask;
                     while (regs->cpustate == CPUSTATE_STOPPED)
-                        wait_condition (&sysblk.intcond, &sysblk.intlock);
+                        wait_condition (&INTCOND, &sysblk.intlock);
+                    sysblk.waitmask &= ~regs->cpumask;
                     release_lock (&sysblk.intlock);
                 }
             }
