@@ -364,6 +364,13 @@ int     icode;                          /* Interception code         */
 
         obtain_lock(&sysblk.todlock);
 
+        /* Set the interval timer pending according to the T bit
+           in the state control */
+        if(STATEBK->s & SIE_S_T)
+            ON_IC_ITIMER(GUESTREGS);
+        else
+            OFF_IC_ITIMER(GUESTREGS);
+
         /* Fetch the residu from the state descriptor */
         FETCH_FW(residue,STATEBK->residue);
 
@@ -470,6 +477,19 @@ int     n;
     /* Save clock comparator */
     GUESTREGS->clkc <<= 8; /* Internal Hercules format */
     STORE_DW(STATEBK->clockcomp, GUESTREGS->clkc);
+
+#if !defined(FEATURE_ESAME)
+    /* If this is a S/370 guest, and the interval timer is enabled
+       then save the timer state control bit */
+    if( (STATEBK->m & SIE_M_370)
+     && !(STATEBK->m & SIE_M_ITMOF))
+    {
+        if(IS_IC_ITIMER(GUESTREGS))
+            STATEBK->s |= SIE_S_T;
+        else
+            STATEBK->s &= ~SIE_S_T;
+    }
+#endif /*!defined(FEATURE_ESAME)*/
 
     /* Save TOD Programmable Field */
     STORE_HW(STATEBK->todpf, GUESTREGS->todpr);
