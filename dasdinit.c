@@ -2,6 +2,7 @@
 /*              Hercules DASD Utilities: DASD image builder          */
 
 /*-------------------------------------------------------------------*/
+/*                                                                   */
 /* This program creates a disk image file and initializes it as      */
 /* a blank FBA or CKD DASD volume.                                   */
 /*                                                                   */
@@ -10,24 +11,118 @@
 /*      dasdinit [-options] filename devtype[-model] volser [size]   */
 /*                                                                   */
 /* options      options:                                             */
+/*                -a    include alternate cylinders                  */
+/*                      (ignored if size specified manually)         */
 /*                -z    build compressed device using zlib           */
 /*                -bz2  build compressed device using bzip2          */
 /*                -0    build compressed device with no compression  */
+/*                                                                   */
 /* filename     is the name of the disk image file to be created     */
 /*              (this program will not overwrite an existing file)   */
+/*                                                                   */
 /* devtype      is the emulated device type.                         */
-/*              CKD: 2311, 2314, 3330, 3350, 3380, 3390, 9345        */
-/*              FBA: 3310, 3370, 9336                                */
+/*              CKD: 2311, 2314, 3330, 3350, 3375, 3380,             */
+/*                   3390, 9345                                      */
+/*              FBA: 3310, 3370, 9332, 9335 9336                     */
+/*                                                                   */
 /* model        is the device model number and implies the device    */
 /*              size.  If specified, then size cannot be specified.  */
+/*                                                                   */
 /* volser       is the volume serial number (1-6 characters)         */
+/*                                                                   */
 /* size         is the size of the device (in cylinders for CKD      */
 /*              devices, or in 512-byte sectors for FBA devices).    */
 /*              Cannot be specified if model is specified.           */ 
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
 #include "dasdblks.h"
+
+typedef struct _tagDASD_INIT_TAB
+{
+    BYTE  type;         /* 'C' == CKD, 'F' == FBA                */
+    U16   devtype;      /* 0x3330, 0x3380, 0x3370, etc.          */
+    BYTE* sdevtype;     /* "3330-11", "3380-K", "3370-B2", etc.  */
+    U32   size;         /* number of primary data cyls or blocks */
+    U32   altsize;      /* number of alternate cyls              */
+}
+DASD_INIT_TAB;
+
+DASD_INIT_TAB  dasd_init_tab[] =
+{
+    { 'C',  0x2311, "2311",           0,  0 },
+    { 'C',  0x2311, "2311-1",       200,  2 },
+
+    { 'C',  0x2314, "2314",           0,  0 },
+    { 'C',  0x2314, "2314-1",       200,  3 },
+
+    { 'C',  0x3330, "3330",           0,  0 },
+    { 'C',  0x3330, "3330-1",       404,  7 },
+    { 'C',  0x3330, "3330-2",       808,  7 },
+    { 'C',  0x3330, "3330-11",      808,  7 },
+
+    { 'C',  0x3340, "3340",           0,  0 },
+    { 'C',  0x3340, "3340-1",       348,  1 },
+    { 'C',  0x3340, "3340-35",      348,  1 },
+    { 'C',  0x3340, "3340-2",       696,  2 },
+    { 'C',  0x3340, "3340-70",      696,  2 },
+
+    { 'C',  0x3350, "3350",           0,  0 },
+    { 'C',  0x3350, "3350-1",       555,  5 },
+
+    { 'C',  0x3375, "3375",           0,  0 },
+    { 'C',  0x3375, "3375-1",       959,  1 },
+
+    { 'C',  0x3380, "3380",           0,  0 },
+    { 'C',  0x3380, "3380-1",       885,  1 },
+    { 'C',  0x3380, "3380-A",       885,  1 },
+    { 'C',  0x3380, "3380-B",       885,  1 },
+    { 'C',  0x3380, "3380-D",       885,  1 },
+    { 'C',  0x3380, "3380-J",       885,  1 },
+    { 'C',  0x3380, "3380-2",      1770,  2 },
+    { 'C',  0x3380, "3380-E",      1770,  2 },
+    { 'C',  0x3380, "3380-K",      2655,  3 },
+    { 'C',  0x3380, "3380-3",      2655,  3 },
+    { 'C',  0x3380, "EMC3380K+",   3339,  3 },
+    { 'C',  0x3380, "EMC3380K++",  3993,  3 },
+
+    { 'C',  0x3390, "3390",           0,  0 },
+    { 'C',  0x3390, "3390-1",      1113,  1 },
+    { 'C',  0x3390, "3390-2",      2226,  1 },
+    { 'C',  0x3390, "3390-3",      3339,  1 },
+    { 'C',  0x3390, "3390-9",     10017,  3 },
+
+    { 'C',  0x9345, "9345",           0,  0 },
+    { 'C',  0x9345, "9345-1",      1440,  0 },
+    { 'C',  0x9345, "9345-2",      2156,  0 },
+
+    { 'F',  0x3310, "3310",           0,  0 },
+    { 'F',  0x3310, "3310-1",    125664,  0 },
+
+    { 'F',  0x3370, "3370",           0,  0 },
+    { 'F',  0x3370, "3370-Al",   558000,  0 },
+    { 'F',  0x3370, "3370-B1",   558000,  0 },
+    { 'F',  0x3370, "3370-A2",   712752,  0 },
+    { 'F',  0x3370, "3370-B2",   712752,  0 },
+
+    { 'F',  0x9332, "9332",           0,  0 },
+    { 'F',  0x9332, "9332-200",  360036,  0 },
+    { 'F',  0x9332, "9332-400",  360036,  0 },
+    { 'F',  0x9332, "9332-600",  554800,  0 },
+
+    { 'F',  0x9335, "9335",           0,  0 },
+    { 'F',  0x9335, "9335-1",    804714,  0 },
+
+    { 'F',  0x9336, "9336",           0,  0 },
+    { 'F',  0x9336, "9336-10",   920115,  0 },
+    { 'F',  0x9336, "9336-20",  1672881,  0 },
+    { 'F',  0x9336, "9336-25",  1672881,  0 },
+
+    { ' ',  0x0000, "",               0,  0 }   /* (end-of-table) */
+};
+
+#define num_dasd_init_tab_entries (sizeof(dasd_init_tab)/sizeof(dasd_init_tab[0]))
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -50,19 +145,34 @@ static void
 argexit ( int code )
 {
     fprintf (stderr,
-       "Syntax:\tdasdinit [-options] filename devtype[-model] "
-       "volser [size]\n"
-       "where:\toptions  = -z   build compressed device using zlib\n"
-       "\t           -bz2 build compressed device using bzip2\n"
-       "\t           -0   build compressed device with no compression\n"
-       "\tfilename = name of file to be created\n"
-       "\tdevtype  = 2311, 2314, 3330, 3340, 3350, 3375, 3380, "
-       "3390, 9345 (CKD)\n"
-       "\t           3310, 3370, 9336 (FBA)\n"
-       "\tmodel    = device model number, implies device size\n"
-       "\tvolser   = volume serial number (1-6 characters)\n"
-       "\tsize     = volume size in cylinders (CKD devices)\n"
-       "\t           or in 512-byte sectors (FBA devices)\n");
+
+"Builds an empty dasd image file:\n\n"
+
+"  dasdinit [-options] filename devtype[-model] volser [size]\n\n"
+
+"where:\n\n"
+
+"  -z         build compressed dasd image file using zlib\n"
+#ifdef CCKD_BZIP2
+"  -bz2       build compressed dasd image file using bzip2\n"
+#endif
+"  -0         build compressed dasd image file with no compression\n"
+"  -a         build dasd image file that includes alternate cylinders\n"
+"             (option ignored if size is manually specified)\n\n"
+
+"  filename   name of dasd image file to be created\n\n"
+
+"  devtype    CKD: 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345\n"
+"             FBA: 3310, 3370, 9332, 9335, 9336\n\n"
+
+"  model      device model (implies size) (opt)\n\n"
+
+"  volser     volume serial number (1-6 characters)\n\n"
+
+"  size       number of CKD cylinders or 512-byte FBA sectors\n"
+"             (required if model not specified else optional)\n"
+
+);
     exit(code);
 } /* end function argexit */
 
@@ -666,38 +776,22 @@ U32             maxsect;                /* Maximum sector count      */
 /*-------------------------------------------------------------------*/
 int main ( int argc, char *argv[] )
 {
+int     altcylflag = 0;                 /* Alternate cylinders flag  */
 U32     i;                              /* Index                     */
 U32     size = 0;                       /* Volume size               */
+U32     altsize = 0;                    /* Alternate cylinders       */
 U32     heads = 0;                      /* Number of tracks/cylinder */
 U32     maxdlen = 0;                    /* Maximum R1 data length    */
 U32     sectsize = 0;                   /* Sector size               */
+U16     devtype = 0;                    /* Device type               */
 BYTE    comp = 0xff;                    /* Compression algoritm      */
-U16     devtype;                        /* Device type               */
-U32     model = 0;                      /* Model number              */
-BYTE    type;                           /* C=CKD, F=FBA              */
-BYTE    fname[256];                     /* File name                 */
+BYTE    type = 0;                       /* C=CKD, F=FBA              */
+BYTE    fname[1024];                    /* File name                 */
 BYTE    volser[7];                      /* Volume serial number      */
 BYTE    c;                              /* Character work area       */
-BYTE   *p = NULL;                       /* Token                     */
-U32    *m;                              /* Pointer to model table    */
-                                        /* Device type model tables.
-                                           Model number followed by
-                                           size. Terminated by zero  */
-U32     m2311[] = {1,  200, 0};
-U32     m2314[] = {1,  200, 0};
-U32     m3310[] = {0};
-U32     m3330[] = {1,  404, 2,  808, 11,  808, 0};
-U32     m3340[] = {1,  348, 2,  696, 35,  348, 70, 696, 0};
-U32     m3350[] = {1,  555, 0};
-U32     m3370[] = {0};
-U32     m3375[] = {1,  959, 0};
-U32     m3380[] = {1,  885, 2, 1770,  3, 2655, 0};
-U32     m3390[] = {1, 1113, 2, 2226,  3, 3339, 9, 10017, 0};
-U32     m9336[] = {0};
-U32     m9345[] = {1, 1440, 2, 2156,  0};
-
 
     /* Display the program identification message */
+
     display_version (stderr,
                      "Hercules DASD image file creation program\n");
 
@@ -710,6 +804,7 @@ U32     m9345[] = {1, 1440, 2, 2156,  0};
 #endif /*EXTERNALGUI*/
 
     /* Process optional arguments */
+
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--) 
     {
         if (strcmp("0", &argv[1][1]) == 0)
@@ -720,33 +815,60 @@ U32     m9345[] = {1, 1440, 2, 2156,  0};
         else if (strcmp("bz2", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif
+        else if (strcmp("a", &argv[1][1]) == 0)
+            altcylflag = 1;
         else argexit(0);
     }
 
     /* Check remaining number of arguments */
+
     if (argc < 4 || argc > 5)
         argexit(5);
 
     /* The first argument is the file name */
-    if (argv[1] == NULL || strlen(argv[1]) == 0
+
+    if (!argv[1] || strlen(argv[1]) == 0
         || strlen(argv[1]) > sizeof(fname)-1)
         argexit(1);
 
     strcpy (fname, argv[1]);
 
-    /* The second argument is the device type.
-       Model number may also be specified */
-    if (argv[2] == NULL)
-        argexit(2);
-    p = strtok (argv[2], "-");
-    if (strlen(p) != 4 || sscanf(p, "%hx%c", &devtype, &c) != 1)
-        argexit(2);
-    p = strtok (NULL, "");
-    if (p != NULL && sscanf(p, "%u%c", &model, &c) != 1)
+    /* The second argument is the device type,
+       with or without the model number. */
+
+    if (!argv[2])
         argexit(2);
 
+    for (i=0; i < num_dasd_init_tab_entries; i++)
+    {
+        if (strcasecmp(dasd_init_tab[i].sdevtype,argv[2]) == 0)
+        {
+            type    = dasd_init_tab[i].type;
+            devtype = dasd_init_tab[i].devtype;
+            size    = dasd_init_tab[i].size;
+            altsize = dasd_init_tab[i].altsize;
+            break;
+        }
+    }
+
+    if (!type)
+        /* Specified model not found */
+        argexit(2);
+
+    /* FBA compression not yet supported */
+
+    if ('F' == type && 0xff != comp)
+        argexit(0);
+
+    /* If compression is specified, they MUST specify a specific
+       model number so we can know the exact device size to use */
+
+    if (0xff != comp && !size)
+        argexit(1);
+
     /* The third argument is the volume serial number */
-    if (argv[3] == NULL || strlen(argv[3]) == 0
+
+    if (!argv[3] || strlen(argv[3]) == 0
         || strlen(argv[3]) > sizeof(volser)-1)
         argexit(3);
 
@@ -754,142 +876,104 @@ U32     m9345[] = {1, 1440, 2, 2156,  0};
     string_to_upper (volser);
 
     /* The fourth argument is the volume size */
-    if (model == 0)
+
+    if (!size && argc < 5)
+        argexit(4);
+
+    if (argc > 4)
     {
-        if (argc < 5)
-            argexit(5);
-        if (argv[4] == NULL || strlen(argv[4]) == 0
-            || sscanf(argv[4], "%u%c", &size, &c) != 1)
-            argexit(4);
-    }
-    else
-        if (argc > 4)
+        U32 requested_size = 0;
+
+        if (argc > 5)
             argexit(5);
 
-    /* Check the device type */
+        if (!argv[4] || strlen(argv[4]) == 0
+            || sscanf(argv[4], "%u%c", &requested_size, &c) != 1)
+            argexit(4);
+
+        /* Use requested size only if compression not specified */
+
+        if (0xff == comp)
+            size = requested_size;
+
+        altcylflag = 0;
+    }
+
+    if (altcylflag)
+        size += altsize;
+
     switch (devtype) {
 
     case 0x2311:
-        type = 'C';
         heads = 10;
         maxdlen = 3625;
-        m = m2311;
         break;
 
     case 0x2314:
-        type = 'C';
         heads = 20;
         maxdlen = 7294;
-        m = m2314;
         break;
 
     case 0x3330:
-        type = 'C';
         heads = 19;
         maxdlen = 13030;
-        m = m3330;
         break;
 
     case 0x3340:
-        type = 'C';
         heads = 12;
         maxdlen = 8368;
-        m = m3340;
         break;
 
     case 0x3350:
-        type = 'C';
         heads = 30;
         maxdlen = 19069;
-        m = m3350;
         break;
 
     case 0x3375:
-        type = 'C';
         heads = 12;
         maxdlen = 35616;
-        m = m3375; 
         break;
 
     case 0x3380:
-        type = 'C';
         heads = 15;
         maxdlen = 47476;
-        m = m3380;
         break;
 
     case 0x3390:
-        type = 'C';
         heads = 15;
         maxdlen = 56664;
-        m = m3390;
         break;
 
     case 0x9345:
-        type = 'C';
         heads = 15;
         maxdlen = 46456;
-        m = m9345;
         break;
 
     case 0x3310:
-        type = 'F';
-        sectsize = 512;
-        m = m3310;
-        break;
-
     case 0x3370:
-        type = 'F';
-        sectsize = 512;
-        m = m3370;
-        break;
-
+    case 0x9332:
+    case 0x9335:
     case 0x9336:
-        type = 'F';
         sectsize = 512;
-        m = m9336;
         break;
 
     default:
-        type = '?';
         fprintf (stderr, "Unknown device type: %4.4X\n", devtype);
         exit(3);
 
     } /* end switch(devtype) */
 
-    /* Derive the size from the model number */
-    if (model > 0)
-    {
-        for (i = 0; m[i] != 0 && size == 0; i+=2)
-            if (model == m[i])
-                size = m[i+1];
-        if (size == 0)
-            argexit(2);
-    }
-    /* If compressed, use cylinders for a device type model */
-    else if (comp != 0xff)
-    {
-        for (i = 0; m[i] != 0; i+=2)
-            if (size <= m[i+1])
-            {
-                size = m[i+1];
-                break;
-            }
-    }
-
-    /* FBA compression not yet supported */
-    if (type == 'F' && comp != 0xff)
-        argexit(0);
-
     /* Create the device */
+
     if (type == 'C')
         create_ckd (fname, devtype, heads, maxdlen, size, volser, comp);
     else
         create_fba (fname, devtype, sectsize, size, volser, comp);
 
     /* Display completion message */
+
     fprintf (stderr, "DASD initialization successfully completed.\n");
+
     return 0;
 
 } /* end function main */
-

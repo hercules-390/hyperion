@@ -30,52 +30,160 @@ The dasdinit program must first be run from the Unix shell prompt to
 create a file containing an empty DASD volume.
 <p>
 The format of the dasdinit command is:
-<p><code>dasdinit <em>filename devtype volser size</em></code>
-<p>
-where
-<dl>
-    <dt><code><em>filename</em></code>
-    <dd>is the name of the DASD image file to be created
-    <dt><code><em>devtype</em></code>
-    <dd>is the emulated device type (2311, 2314, 3330, 3340, 3350, 3375,
-        3380, or 3390 for CKD volumes; 3310 or 3370 for FBA volumes)
-    <dt><code><em>volser</em></code>
-    <dd>is the volume serial number of the DASD volume
-    <dt><code><em>size</em></code>
-    <dd>is the emulated size in cylinders for CKD devices, or in
-        512-byte blocks for FBA devices
-</dl>
+<pre>
+  dasdinit [-options] filename devtype[-model] volser [size]
 
+where:
+
+  -z         build compressed dasd image file using zlib
+  -bz2       build compressed dasd image file using bzip2
+  -0         build compressed dasd image file with no compression
+  -a         build dasd image file that includes alternate cylinders
+             (option ignored if size is manually specified)
+
+  filename   name of dasd image file to be created
+
+  devtype    CKD: 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
+             FBA: 3310, 3370, 9332, 9335, 9336
+
+  model      device model (implies size) (opt)
+
+  volser     volume serial number (1-6 characters)
+
+  size       number of CKD cylinders or 512-byte FBA sectors
+             (required if model not specified else optional)
+</pre>
+<p><br>
+The current list of device types and models supported is:
+<p>
+<pre>
+          CKD DEVICES
+
+                         alt
+    devtype-model  cyls  cyls
+
+    2311             ?
+    2311-1         200    2
+
+    2314             ?
+    2314-1         200    3
+
+    3330             ?
+    3330-1         404    7
+    3330-2         808    7
+    3330-11        808    7
+
+    3340             ?
+    3340-1         348    1
+    3340-35        348    1
+    3340-2         696    2
+    3340-70        696    2
+
+    3350             ?
+    3350-1         555    5
+
+    3375             ?
+    3375-1         959    1
+
+    3380             ?
+    3380-1         885    1
+    3380-A         885    1
+    3380-B         885    1
+    3380-D         885    1
+    3380-J         885    1
+    3380-2        1770    2
+    3380-E        1770    2
+    3380-3        2655    3
+    3380-K        2655    3
+    EMC3380K+     3339    3
+    EMC3380K++    3993    3
+
+    3390             ?
+    3390-1        1113    1
+    3390-2        2226    1
+    3390-3        3339    1
+    3390-9       10017    3
+
+    9345             ?
+    9345-1        1440    0
+    9345-2        2156    0
+
+         FBA DEVICES
+
+    devtype-model  blocks
+
+    3310                ?
+    3310-1         125664
+
+    3370                ?
+    3370-Al        558000
+    3370-B1        558000
+    3370-A2        712752
+    3370-B2        712752
+
+    9332                ?
+    9332-200       360036
+    9332-400       360036
+    9332-600       554800
+
+    9335                ?
+    9335-1         804714
+
+    9336                ?
+    9336-10        920115
+    9336-20       1672881
+    9336-25       1672881
+
+
+(? = user must specufy size)
+</pre>
+<p>
 <h5>Volumes exceeding 2GB</h5>
 <p>
 For CKD volumes which exceed 2GB, such as the 3390-3, the DASDINIT
 program will create multiple files by appending the characters
-<b><i>_1 _2</b></i> etc.
+<b><i>_1, _2, _3</b></i> etc.
 to the file name specified on the command line.  Each file contains a
 whole number of cylinders.  Hercules CKD support recognizes the files
 as belonging to a single logical volume. Specify the full name of just the
-first file in the Hercules configuration file.
+first file in the Hercules configuration file (e.g. "<i>filename</i>_1").
 <p>
 The DASDINIT program cannot create FBA volumes exceeding 2GB.
 
 <h5>Examples</h5>
 <p>
-To create a 3330 CKD volume of 411 cylinders with volume
-serial number WORK01 in a file called
+To create a 3330 model 1 CKD volume consisting of 404 cylinders
+(plus 7 alternate cylinders too)
+with volume serial number WORK01 in a file called
 <b><i>work01.151</b></i>:
-<pre><code>dasdinit work01.151 3330 work01 411</code></pre>
+<pre>
+    dasdinit -a work01.151 3330-1 work01
+</pre>
 <p>
-To create a 3370 FBA volume of 920115 sectors with volume
-serial number DOSRES in a file called
-<b><i>dosres.140</b></i>:
-<pre><code>dasdinit dosres.140 3370 dosres 920115</code></pre>
+To create a compressed 3350 CKD volume consisting of 560 cylinders
+(555 cylinders plus the 5 alternate cylinders)
+with volume serial number SYSRES in a file called
+<b><i>dosvs34.24f</b></i>:
+<pre>
+    dasdinit -a -bz2 dosvs34.24f 3350-1 sysres
+</pre>
 <p>
-To create a 3390 CKD volume of 3339 cylinders with volume
-serial number WORK02:
-<pre><code>dasdinit work02.A88 3390 work02 3339</code></pre>
-Because this volume exceeds 2GB, DASDINIT will create two files:
-<b><i>work02_1.A88</b></i> contains cylinders 0-2518
-<b><i>work02_2.A88</b></i> contains cylinders 2519-3339
+To create a 3370 FBA volume with only 920115 sectors
+(instead of the usual 558000 sectors)
+with volume serial number WORK02 in a file called
+<b><i>mini.work02.140</b></i>:
+<pre>
+    dasdinit mini.work02.140 3370 work02 920115
+</pre>
+<p>
+To create a 3390 model 3 (triple density) CKD volume
+of 3339 cylinders with volume serial number WORK03:
+<pre>
+    dasdinit 3390.triple.a88 3390-3 work03
+</pre>
+Because this volume exceeds 2GB, DASDINIT will create two files
+with <b><i>3390.triple.a88_1</b></i> containing cylinders 0-2518 and
+<b><i>3390.triple.a88_2</b></i> containing cylinders 2519-3339.
 
 <h4>Formatting the empty DASD volume</h4>
 <p>

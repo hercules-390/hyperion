@@ -1,4 +1,5 @@
-05 Feb 2003 Add 9336 FBA device to dasdinit utility - Fish
+05 Feb 2003 dasdinit utility support for specifying alternate cylinders - Fish
+05 Feb 2003 dasdinit utility support for most every device type - Fish
 05 Feb 2002 Asm assists for memory synchronization - Greg Smith
 04 Feb 2002 Fix Ifetch PER flag in State Desc, Fix LCTL intercepts - Paul Leisy
 04 Feb 2002 Fix very minor memory leaks in sockdev logic - Fish
