@@ -175,10 +175,10 @@ char           *kw, *op;                /* Argument keyword/option   */
     }
     if (cckd->l2cachenbr < 1) cckd->l2cachenbr = CCKD_L2CACHE_NBR;
     if (cckd->max_dfwq < 1) cckd->max_dfwq = CCKD_MAX_DFWQ_DEPTH;
-#ifndef WIN32
-    if (cckd->max_ra < 0) cckd->max_ra = 2;
+#ifdef OPTION_CCKD_READAHEAD
+    if (cckd->max_ra < 0) cckd->max_ra = OPTION_CCKD_READAHEAD;
 #else
-    if (cckd->max_ra < 0) cckd->max_ra = 0;
+    if (cckd->max_ra < 0) cckd->max_ra = 2;
 #endif
     if (cckd->max_dfw < 1) cckd->max_dfw = 1;
     if (cckd->max_wt < 1) cckd->max_wt = CCKD_MAX_WRITE_TIME;
@@ -199,7 +199,6 @@ char           *kw, *op;                /* Argument keyword/option   */
     {   /* read-ahead locks, conditions and attributes */
         initialize_lock (&cckd->ralock[i]);
         initialize_condition (&cckd->racond[i]);
-        initialize_detach_attr (&cckd->raattr[i]);
     }
 
     cckd->l1x = cckd->sfx = -1;
@@ -489,7 +488,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
             break;
         }
         /* find the oldest entry that doesn't have an active read */
-        if (!cckd->cache[i].reading &&
+        if (!cckd->cache[i].reading && !cckd->cache[i].active &&
             (lru == - 1 ||
             (cckd->cache[i].tv.tv_sec < cckd->cache[lru].tv.tv_sec ||
             (cckd->cache[i].tv.tv_sec == cckd->cache[lru].tv.tv_sec &&
@@ -505,6 +504,10 @@ BYTE           *buf,*buf2;              /* Buffers                   */
              return NULL;
         }
 
+        /* Mark the entry active */
+        if (cckd->active) cckd->active->active = 0;
+        cckd->cache[fnd].active = 1;
+
         /* if read is in progress then wait for it to finish */
         if (cckd->cache[fnd].reading)
         {   DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d waiting for read\n",
@@ -515,7 +518,11 @@ BYTE           *buf,*buf2;              /* Buffers                   */
             DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d wait complete buf %p\n",
                       ra, fnd, trk, cckd->cache[fnd].buf);
         }
-        else gettimeofday (&cckd->cache[fnd].tv, NULL);
+        else
+        {
+            gettimeofday (&cckd->cache[fnd].tv, NULL);
+            CCKD_ADJUST_TOD (cckd->cache[fnd].tv, cckd->lasttod);
+        }
         DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d cache hit buf %p\n",
                   ra, fnd, trk, cckd->cache[fnd].buf);
         cckd->cachehits++;
@@ -524,8 +531,15 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         return &cckd->cache[fnd];
     }
 
+    /* Mark the entry active if not readahead */
+    if (ra == 0)
+    {
+        if (cckd->active) cckd->active->active = 0;
+        cckd->cache[lru].active = 1;
+    }
+
     /* if readahead, return if the lru entry active */
-    if (ra && &cckd->cache[lru] == cckd->active)
+    else if (cckd->cache[lru].active)
     {   release_lock (&cckd->cachelock);
         return NULL;
     }
@@ -568,6 +582,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
             cckd->cache[lru].used = 0;
             cckd->cache[lru].writing = 1;
             gettimeofday (&cckd->cache[lru].tv, NULL);
+            CCKD_ADJUST_TOD (cckd->cache[lru].tv, cckd->lasttod);
 
             if (!ra)
             {   cckd->cachehits++;
@@ -620,6 +635,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
     cckd->cache[lru].reading = 1;
     cckd->cache[lru].used = 0;
     gettimeofday (&cckd->cache[lru].tv, NULL);
+    CCKD_ADJUST_TOD (cckd->cache[lru].tv, cckd->lasttod);
 
     /* asynchrously schedule readaheads */
     if (!ra && trk == cckd->curtrk + 1)
@@ -762,8 +778,7 @@ int             i;                      /* Loop index                */
             release_lock (&cckd->ralock[i]);
         }
         else
-           create_thread (&cckd->ratid[i], &cckd->raattr[i],
-                          cckd_ra, dev);
+           create_thread (&cckd->ratid[i], NULL, cckd_ra, dev);
     }
 
 } /* end function cckd_readahead */
@@ -783,6 +798,7 @@ int             ra;                     /* Readahead index           */
     obtain_lock (&cckd->cachelock);
     ra = cckd->ra++;
     release_lock (&cckd->cachelock);
+    if (ra >= cckd->max_ra) return;
 
     cckd->rainit[ra] = 1;
 
@@ -1674,6 +1690,7 @@ int             lru=-1;                 /* Least-Recently-Used cache
         DEVTRACE ("cckddasd: l2[%d,%d] cache[%d] hit\n", sfx, l1x, fnd);
         cckd->l2 = (CCKD_L2ENT *)cckd->l2cache[fnd].buf;
         gettimeofday (&cckd->l2cache[fnd].tv, NULL);
+        CCKD_ADJUST_TOD (cckd->l2cache[fnd].tv, cckd->lasttod);
         return 0;
     }
 
@@ -1684,6 +1701,7 @@ int             lru=-1;                 /* Least-Recently-Used cache
     cckd->l2cache[lru].sfx = sfx;
     cckd->l2cache[lru].l1x = l1x;
     gettimeofday (&cckd->l2cache[lru].tv, NULL);
+    CCKD_ADJUST_TOD (cckd->l2cache[lru].tv, cckd->lasttod);
 
     cckd->l2 = (CCKD_L2ENT *)cckd->l2cache[lru].buf;
 

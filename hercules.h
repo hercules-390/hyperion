@@ -954,7 +954,8 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
         int              l1x;           /* Cached l2tab index        */
         BYTE            *buf;           /* Cached buffer address     */
         struct timeval   tv;            /* Time last used            */
-        unsigned int     used:1,        /* Cache entry was used      */
+        unsigned int     active:1,      /* Cache entry is active     */
+                         used:1,        /* Cache entry was used      */
                          updated:1,     /* Cache buf was updated     */
                          reading:1,     /* Cache buf being read      */
                          writing:1,     /* Cache buf being written   */
@@ -1072,6 +1073,9 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         int              max_wt;        /* Max write wait time       */
         LOCK             termlock;      /* Termination lock          */
         COND             termcond;      /* Termination condition     */
+#ifdef WIN32
+        struct timeval   lasttod;       /* Last gettimeofday         */
+#endif
 #ifdef  CCKD_ITRACEMAX
         char            *itrace;        /* Internal trace table      */
         int              itracex;       /* Internal trace index      */
@@ -1082,6 +1086,19 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 #define CCKD_OPEN_RO           1
 #define CCKD_OPEN_RD           2
 #define CCKD_OPEN_RW           3
+
+#ifdef WIN32
+#define CCKD_ADJUST_TOD(tod,lasttod) \
+ { \
+   if ((tod).tv_sec  == (lasttod).tv_sec \
+    && (tod).tv_usec <= (lasttod).tv_usec) \
+     (tod).tv_usec = (lasttod).tv_usec + 1; \
+   (lasttod).tv_sec  = (tod).tv_sec; \
+   (lasttod).tv_usec = (tod).tv_usec; \
+ }
+#else
+#define CCKD_ADJUST_TOD(tod,lasttod)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Global data areas in module config.c                              */
