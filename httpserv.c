@@ -132,12 +132,11 @@ static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
 }
 
 
-static char *http_timestring(time_t t)
+static char *http_timestring(char *time_buff,int buff_size, time_t t)
 {
-    static char buf[80];
     struct tm *tm = localtime(&t);
-    strftime(buf, sizeof(buf)-1, "%a, %d %b %Y %H:%M:%S %Z", tm);
-    return buf;
+    strftime(time_buff, buff_size, "%a, %d %b %Y %H:%M:%S %Z", tm);
+    return time_buff;
 }
 
 
@@ -366,6 +365,7 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 static void http_download(WEBBLK *webblk, char *filename)
 {
     char buffer[1024];
+    char tbuf[80];
     int fd, length;
     char *filetype;
     char fullname[1024] = HTTP_ROOT;
@@ -397,7 +397,8 @@ static void http_download(WEBBLK *webblk, char *filename)
     if(mime_type->type)
         fprintf(webblk->hsock,"Content-Type: %s\n", mime_type->type);
 
-    fprintf(webblk->hsock,"Expires: %s\n", http_timestring(time(NULL)+HTML_STATIC_EXPIRY_TIME));
+    fprintf(webblk->hsock,"Expires: %s\n",
+      http_timestring(tbuf,sizeof(tbuf),time(NULL)+HTML_STATIC_EXPIRY_TIME));
 
     fprintf(webblk->hsock,"Content-Length: %d\n\n", (int)st.st_size);
     while ((length = read(fd, buffer, sizeof(buffer))) > 0)
@@ -537,9 +538,10 @@ static void *http_request(FILE *hsock)
     {
         if(!strcmp(cgient->path, url))
         {
+        char tbuf[80];
             fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n");
-            fprintf(webblk->hsock,"Date: %s\n", http_timestring(time(NULL)));
-
+            fprintf(webblk->hsock,"Date: %s\n",
+              http_timestring(tbuf,sizeof(tbuf),time(NULL)));
             (cgient->cgibin) (webblk);
             http_exit(webblk);
         }
