@@ -5,14 +5,14 @@ REM ! Name: _build.bat                                                          
 REM !                                                                               !
 REM ! Desc: build Hercules with various options.  Windows bat front end             !
 REM !                                                                               !
-REM ! Use: _build [i586 | i686] [fthreads | nofthreads]                             !
-REM !                                                                               !
-REM ! Defaults: _build `uname -m` fthreads                                          !
-REM !                                                                               !
 REM +-------------------------------------------------------------------------------+
 REM !
 REM ! Last Change: '$Id$'
 REM !
 REM +-------------------------------------------------------------------------------
-bash _build %1 %2
+echo off
+SET ANSI_FLAG=Y
+SET BASH_OPT=+e +x
+bash %BASH_OPT% _build.tail
+bash %BASH_OPT% _build
 pause

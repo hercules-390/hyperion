@@ -1,0 +1,6 @@
+#!/bin/bash
+MYCMD=`basename ${0} .tail`
+LOGFILE=`pwd`/${MYCMD}.log
+rm -f ${LOGFILE} >/dev/null 2>&1
+touch ${LOGFILE}
+CMD \/c start "Snapshot Logfile ${LOGFILE}" /i tail -f ${LOGFILE}

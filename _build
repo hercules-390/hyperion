@@ -1,13 +1,13 @@
 #!/bin/bash
 # +-------------------------------------------------------------------+
 # !                                                                   !
-# ! Name: _hercbuild                                                  !
+# ! Name: _build                                                      !
 # !                                                                   !
 # ! Desc: build Hercules with various options                         !
 # !                                                                   !
 # ! Usage:                                                            !
 # !                                                                   !
-# !  >>- build -+------------------------+-+---------------------+->< !
+# !  >>- build -+------------------------+-+---------------------+->  !
 # !             !                        ! !                     !    !
 # !             +- -c --+- i586 -------+-+ +- -t -+-- fthread -+-+    !
 # !                     !              !          !            !      !
@@ -23,11 +23,24 @@
 # !                     !              !                              !
 # !                     +- pentium4 ---+                              !
 # !                                                                   !
-# ! Defaults:  build -c `uname -m` -t f                               !
+# !   >---------+-------+------------------------------------------>  !
+# !             !       !                                             !
+# !             +- -f --+  force rebuilding of configure              !
+# !                                                                   !
+# !                                                                   !
+# !   >---------+-------------------------------------+------------>< !
+# !             !                                     !               !
+# !             +- -p -- number_of_processors (<=8) --+               !
+# !                                                                   !
+# !                                                                   !
+# ! Defaults:  build -c `uname -m` -t f -p 2                          !
 # !                                                                   !
 # +-------------------------------------------------------------------+
 # !
 # ! Change Log: '$Log$
+# ! Change Log: 'Revision 1.18  2003/08/26 11:53:08  vbandke
+# ! Change Log: 'remove reference to ABOUT-NLS.  Add option -f to forece generation of ./configure
+# ! Change Log: '
 # ! Change Log: 'Revision 1.17  2003/08/15 13:56:14  vbandke
 # ! Change Log: 'fixed minor details
 # ! Change Log: '
@@ -37,29 +50,102 @@
 # ! Change Log: 'Revision 1.15  2002/12/15 21:56:03  vbandke
 # ! Change Log: 'Complete rework.  Include support for P4 processor
 # ! Change Log: '
-function lower() {
-if [ "${1}X" = "X" ] ; then
-   RESULT=""
-else
-   RESULT=`echo -E "${1}" | tr [:upper:] [:lower:]`
-fi
-}
 function pause() {
-   echo -e "Press the ENTER key to continue "
+   echo -e -n "${MSG}Press the ${MSGHI}ENTER${MSG} key to continue"
    read dummy
 }
-. set_color_vars
+
+function log() {
+   if [ $# != 0 ] ; then
+      THE_TIME=`date +%H:%M:%S`
+      echo -e "${MSG}${THE_TIME}${DEFAULT} - ${MSGHI}${1}${DEFAULT}"
+      echo -e "${THE_TIME} - ${1}" >>${LOGFILE} 2>&1
+   fi
+   return
+}
+
+function logn() {
+   if [ $# != 0 ] ; then
+      echo -e "           ${MSGHI}${1}${DEFAULT}"
+      echo -e "           ${1}" >>${LOGFILE} 2>&1
+   fi
+   return
+}
+
+function loga() {
+   if [ $# != 0 ] ; then
+      THE_TIME=`date +%H:%M:%S`
+      echo -e "${MSG}${THE_TIME}${DEFAULT} - ${ERRHI}\a${1}${DEFAULT}"
+      echo -e "${THE_TIME} - ${1}" >>${LOGFILE} 2>&1
+   fi
+   return
+}
+
+function lower() {
+   if [ "${1}X" = "X" ] ; then
+      echo ""
+   else
+      echo -E "${1}" | tr [:upper:] [:lower:]
+   fi
+}
+
+function upper() {
+   if [ "${1}X" = "X" ] ; then
+      echo ""
+   else
+      echo -E "${1}" | tr [:lower:] [:upper:]
+   fi
+}
+function abort() {
+    loga "*******************************************************************"
+    loga "*                                                                 *"
+    loga "*                            A B O R T                            *"
+    loga "*                            =========                            *"
+    loga "*                                                                 *"
+    loga "*******************************************************************"
+    logn " "
+    logn "${1}"
+    logn " "
+    logn "Check error messages in logfile ${LOGFILE}"
+    logn " "
+    pause
+    exit
+}
 clear
-echo -e "\n\n${YELLOW}  Building Hercules Binaries from local Source\n${TURQ}"
+. set_color_vars
+if [  ${OSTYPE} = cygwin ] ; then
+   THIS_CYGWIN=`cygcheck -s | grep -i dll\ version:`
+   THIS_CYGWIN=${THIS_CYGWIN##*: }
+   DEFTHREAD=fthreads
+else
+   THIS_CYGWIN=n/a
+   DEFTHREAD=posix
+fi
+MYCMD=`basename ${0}`
+LOGFILE=`pwd`/${MYCMD}.log
+cat >${LOGFILE}<<!EOF!
+*************************************************************************
+*
+* Name: ${LOGFILE}
+*
+* Date: `date`
+*
+* Command line: ${0} ${1} ${2} ${3} ${4} ${5} ${6} ${7} ${8} ${9}
+*
+*************************************************************************
+
+!EOF!
+log "Building Hercules Binaries from Local Source"
 THREAD_SET=false
 CPU_SET=false
+NUMCPU_SET=false
+NUMCPU=2
 AUTO_SET=false
 ANSI_SET=true
 CPU_TYPE=auto
 THREAD_TYPE=fthread
-while getopts :c:fnt: THE_OPT ; do
-   lower ${THE_OPT}
-   THE_OPT=${RESULT}
+while getopts :c:fn:p:t: THE_OPT ; do
+   THE_OPT=`lower ${THE_OPT}`
    case ${THE_OPT} in
       c) CPU_TYPE=${OPTARG}
          CPU_SET=true
@@ -68,30 +154,33 @@ while getopts :c:fnt: THE_OPT ; do
          ;;
       n) ANSI_SET=false
          ;;
+      p) NUMCPU_SET=true
+         NUMCPU=${OPTARG}
+         ;;
       t) THREAD_TYPE=${OPTARG}
          THREAD_SET=true
          ;;
-      :) echo -e "\a${RED}Required information is missing\n"
-         pause
-         exit
+      :) abort "Required information is missing"
          ;;
-     \?) echo -e "\a${RED}Invalid command switch ${WHITE}${OPTARG}${TURQ}\n"
-         echo -e "\n${TURQ}Syntax is\n"
-         echo -e "_hercbuild [-c <cputype>] [-t <threadmodel>] [-n] [-f]"
-         echo -e "             !              !                  !    !"
-         echo -e "             !              !                  !    +--- force rebuild of ./configure"
-         echo -e "             !              !                  +-------- no-ansi, do not"
-         echo -e "             !              !                            use fancy colours"
-         echo -e "             !              +--------------------------- thread model to use"
-         echo -e "             !                                           f or fthread (default)"
-         echo -e "             !                                           p or posix            "
-         echo -e "             +------------------------------------------ target cpu type       "
-         echo -e "                                                         i586 for Pentium      "
-         echo -e "                                                         i686 for Pentium Pro  "
-         echo -e "                                                         p4   for Pentium 4    "
-         echo -e " "
-         echo -e " The default is _build -c `uname -m` -t f"
-         echo -e " "
+     \?) loga    "Invalid command switch ${OPTARG}\n"
+         logn    "Syntax is\n"
+         logn    "_build [-c <cputype>] [-t <threadmodel>] [-n] [-f] [-p number_of_CPUs]"
+         logn    "         !              !                  !    !    !"
+         logn    "         !              !                  !    !    +--- Number of emulated"
+         logn    "         !              !                  !    !         Hercules processors"
+         logn    "         !              !                  !    +-------- force rebuild of configure"
+         logn    "         !              !                  +------------- no-ansi, do not"
+         logn    "         !              !                                 use fancy colours"
+         logn    "         !              +-------------------------------- thread model to use"
+         logn    "         !                                                f or fthread or fish"
+         logn    "         !                                                p or pthread or posix"
+         logn    "         +----------------------------------------------- target cpu type       "
+         logn    "                                                          i586 for Pentium      "
+         logn    "                                                          i686 for Pentium Pro  "
+         logn    "                                                          p4   for Pentium 4    "
+         logn    " "
+         logn    " The default is ${MYCMD} -c `uname -m` -t ${DEFTHREAD} -p 2"
+         logn    " "
          pause
          exit
          ;;
@@ -99,83 +188,164 @@ while getopts :c:fnt: THE_OPT ; do
 done
 if ! ${CPU_SET} ; then
    CPU_TYPE=`uname -m`
-   BUILD_OPT=
    HOST_OPT=
 fi
 
-lower ${CPU_TYPE}
-CPU_TYPE=${RESULT}
+if ! ${NUMCPU_SET} ; then
+   NUMCPU=2
+fi
+
+case ${OSTYPE} in
+   cygwin)  OSTEXT=cygwin
+   ;;
+   linux*)  OSTEXT=linux-gnu
+   ;;
+   *) abort "This script does not work for OSTYPE=${OSTYPE}"
+   ;;
+esac
+
+CPU_TYPE=`lower ${CPU_TYPE}`
+log "CPU type ................................ ${CPU_TYPE}"
 case ${CPU_TYPE} in
    i586 | pentium | athlon)
-                              BUILD_OPT=--build=i586-pc-cygwin
-                              TARG_DIR=i586
+                              HOST_OPT=--host=i586-pc-${OSTEXT}
+                              TARG_CPU=i586
                               ;;
    i686 | pentiumpro)
-                              BUILD_OPT=--build=i686-pc-cygwin
-                              TARG_DIR=i686
+                              HOST_OPT=--host=i686-pc-${OSTEXT}
+                              TARG_CPU=i686
                               ;;
    p4   | pentium4)
-                              TARG_DIR=p4
-                              OPTOPT="-fomit-frame-pointer -O6 -march=pentium4 -mcpu=pentium4 "
-                              OPTOPT=${OPTOPT}" -mmmx -msse -msse2 -minline-all-stringops -mfpmath=sse "
+                              # HOST_OPT=--host=p4-pc-${OSTEXT}
+                              TARG_CPU=p4
+                                       OPTOPT="-fomit-frame-pointer -O3 -march=pentium4 -mcpu=pentium4"
+                              OPTOPT=${OPTOPT}" -mmmx -msse -msse2 -minline-all-stringops -mfpmath=sse"
                               OPTOPT=${OPTOPT}" -maccumulate-outgoing-args"
                               ;;
-   *) echo -e "\a${RED}Invalid CPU type ${WHITE}${CPU_TYPE}${DEFAULT}"
-      pause
-      exit
+   *) abort  "Invalid CPU type ${CPU_TYPE}"
       ;;
 esac
 
-echo -e "${TURQ}Building Hercules binaries for ${WHITE}${CPU_TYPE}${TURQ} processor"
+log "Number of host processors supported ..... ${NUMCPU}"
 if ! ${THREAD_SET} ; then
-   THREAD_TYPE=fthread
+   if [ ${OSTYPE} = cygwin ] ; then
+      THREAD_TYPE=fthread
+   else
+      THREAD_TYPE=pthread
+   fi
 fi
-lower ${THREAD_TYPE}
-THREAD_TYPE=${RESULT}
+
+THREAD_TYPE=`lower ${THREAD_TYPE}`
+log "Threading model being used .............. ${THREAD_TYPE}"
 case ${THREAD_TYPE} in
-   f | fthread | fish )   FTHREAD=yes
+   f | fthread* | fish )  FTHREAD=yes
                           THREAD_TYPE="optimzed thread (Fish)"
                           ;;
-   p | pthread | posix)   FTHREAD=no
+   p | pthread* | posix)  FTHREAD=no
                           THREAD_TYPE="standard thread (posix)"
                          ;;
-   *) echo -e "\a${RED}Invalid thread model ${WHITE}${THREAD_TYPE}${DEFAULT}"
-      pause
-      exit
+   *) abort "Invalid thread model \"${THREAD_TYPE}\""
       ;;
 esac
-echo -e "${TURQ}Hercules will be using the ${THREAD_TYPE} model"
+
+if test -f Makefile ; then
+   log "Cleaning up previous installation"
+   log "make uninstall"
+cat >>${LOGFILE} <<!EOF!
++------------------------------------------------------------------------
+!
+!                   make uninstall
+!                   ==============
+!
++------------------------------------------------------------------------
+!EOF!
+   make uninstall >>${LOGFILE} 2>&1
+   log "make distclean"
+cat >>${LOGFILE} <<!EOF!
++------------------------------------------------------------------------
+!
+!                   make distclean
+!                   ==============
+!
++------------------------------------------------------------------------
+!EOF!
+   make distclean >>${LOGFILE} 2>&1
+fi
 if ! test -f ./configure ; then
-  bash autogen.sh
-  RC=$?
-  if [ ${RC} = 0 ] ; then
-     echo -e "${TURQ}autogen completed successfully"
-  else
-     echo -e "${RED}autogen processing failed"
-     pause
-     exit
-  fi
+  log "Running autogen.sh"
+cat >>${LOGFILE} <<!EOF!
++------------------------------------------------------------------------
+!
+!                   bash autogen.sh
+!                   ===============
+!
++------------------------------------------------------------------------
+!EOF!
+  bash autogen.sh >>${LOGFILE} 2>&1 || abort "autogen processing failed"
+  log "autogen completed successfully"
 fi
-THIS_DIR=${PWD}
-if [ $FTHREAD = yes ]
-then
-   FDIR=fthread
-else
-   FDIR=pthread
+
+logn "./configure ${HOST_OPT}"
+logn "            --enable-fthreads=${FTHREAD}"
+logn "            --enable-custom=\"compiled for ${TARG_CPU}\""
+if [ "${OPTOPT}X" != "X" ] ; then
+   logn "            --enable-optimization=\"${OPTOPT:0:27}\"... "
 fi
-mkdir -p ${TARG_DIR}_${FDIR}
-cd ${TARG_DIR}_${FDIR}
-#../configure --prefix=`pwd` ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${TARG_DIR}"  --enable-optimization="${OPTOPT}"
-../configure                 ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${TARG_DIR}"  --enable-optimization="${OPTOPT}"
-RC=$?
-if [ $RC = 0 ]
-then
-   if test -f version.o
-   then
-      rm -f version.o
+logn "            --enable-multi-cpu=${NUMCPU} "
+cat >>${LOGFILE} <<!EOF!
++------------------------------------------------------------------------
+!
+!                   ./configure
+!                   ===========
+!
++------------------------------------------------------------------------
+!EOF!
+while ! test -f Makefile ; do
+   if [ "${OPTOPT}X" != "X" ] ; then
+       ./configure ${HOST_OPT} \
+                   --enable-fthreads=${FTHREAD} \
+                   --enable-custom="compiled for ${TARG_CPU}" \
+                   --enable-optimization="${OPTOPT}" \
+                   --enable-multi-cpu=${NUMCPU} >>${LOGFILE} 2>&1
+   else
+       ./configure ${HOST_OPT} \
+                   --enable-fthreads=${FTHREAD} \
+                   --enable-custom="compiled for ${TARG_CPU}" \
+                   --enable-multi-cpu=${NUMCPU} >>${LOGFILE} 2>&1
    fi
-   make && make install-strip
-else
-   echo -e "${RED}\a./configure script failed with RC= ${RC}"
+done
+RC=$?
+if [ ${RC} != 0 ] ; then
+ abort "./configure script failed"
 fi
-cd ..
+rm -f version.o 2>/dev/null
+log "make"
+cat >>${LOGFILE} <<!EOF!
++------------------------------------------------------------------------
+!
+!                   make
+!                   ====
+!
++------------------------------------------------------------------------
+!EOF!
+make                >>${LOGFILE} 2>&1 || abort "make failed"
+log "make install-strip"
+cat >>${LOGFILE} <<!EOF!
++------------------------------------------------------------------------
+!
+!                   make install-strip
+!                   ==================
+!
++------------------------------------------------------------------------
+!EOF!
+make install-strip  >>${LOGFILE} 2>&1 || abort "make install-strip failed"
+cat >>${LOGFILE} <<!EOF!
++------------------------------------------------------------------------
+!
+!  Time: `date +%H:%M:%S`
+!
+!                   F I N I T O   ! ! !
+!                   ===================
+!
++------------------------------------------------------------------------
+!EOF!
