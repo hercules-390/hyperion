@@ -2865,8 +2865,10 @@ int     rc;                             /* return code from load_psw */
 
     /* Generate space switch event if required */
     if (ssevent)
+    {     
+        regs->psw.ilc = 2;
         ARCH_DEP(program_interrupt) (&newregs, PGM_SPACE_SWITCH_EVENT);
-
+    }
     if (rc) /* if new psw has bad format */
         ARCH_DEP(program_interrupt) (&newregs, rc);
 
