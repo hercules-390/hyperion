@@ -121,13 +121,13 @@ static void * z900_opcode_table;
 
 static char *prefix[] = {
 #if defined(_370)
-    "s370_opcode_",
+    "s370_dyninst_opcode_",
 #endif
 #if defined(_390)
-    "s390_opcode_",
+    "s390_dyninst_opcode_",
 #endif
 #if defined(_900)
-    "z900_opcode_"
+    "z900_dyninst_opcode_"
 #endif
     };
 
