@@ -9,6 +9,9 @@
 # !                                                                               !
 # ! Defaults:  build `uname -m` fthreads                                          !
 # !                                                                               !
+# ! Last Change: '$Id'
+# !                                                                               !
+# ! Change log: '$Log'
 # +-------------------------------------------------------------------------------+
 if ! test -f configure
 then
