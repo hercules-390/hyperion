@@ -1,4 +1,5 @@
 14 Mar 2003 Increased tbuf in het_write due specs compress2 - Bernard van der Helm
+13 Mar 2003 Tape support update - see README.TAPE - Ivan Warren
 13 Mar 2003 Call build_config even if NO_SIGABEND_HANDLER is defined - Ivan Warren
 13 Mar 2003 Define extgui in dasdseq for Windows build - Ivan Warren
 13 Mar 2003 AEA invalidation reduction - Greg Smith
