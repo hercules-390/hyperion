@@ -810,7 +810,8 @@ int subchan;
                               dev->pmcw.intparm[0], dev->pmcw.intparm[1],
                               dev->pmcw.intparm[2], dev->pmcw.intparm[3]);
 
-        fprintf(webblk->hsock,"<tr><th colspan=2>00</th>"
+        fprintf(webblk->hsock,"<tr><th>Q</th>"
+                              "<th>0</th>"
                               "<th colspan=3>ISC</th>"
                               "<th colspan=2>00</th>"
                               "<th>A</th>"
@@ -822,7 +823,8 @@ int subchan;
                               "<th>V</th>"
                               "<th colspan=16>DEVNUM</th></tr>\n");
 
-        fprintf(webblk->hsock,"<tr><td colspan=2></td>"
+        fprintf(webblk->hsock,"<tr><td>%d</td>"
+                              "<td></td>"
                               "<td colspan=3>%d</td>"
                               "<td colspan=2></td>"
                               "<td>%d</td>"
@@ -833,6 +835,7 @@ int subchan;
                               "<td>%d</td>"
                               "<td>%d</td>"
                               "<td colspan=16>%2.2X%2.2X</td></tr>\n",
+                              ((dev->pmcw.flag4 & PMCW4_Q) >> 7),
                               ((dev->pmcw.flag4 & PMCW4_ISC) >> 3),
                               (dev->pmcw.flag4 & 1),
                               ((dev->pmcw.flag5 >> 7) & 1),
