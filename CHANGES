@@ -1,8 +1,6 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-23 Nov 2004 Improve access register translation - Jan Jaeger
-22 Nov 2004 Fix incorrect protection/access in ar mode - Jan Jaeger
 21 Nov 2004 Correction to TRTR - Roger Bowler
 20 Nov 2004 Add CHSC commands for linux/390 - Jan Jaeger
 19 Nov 2004 Document OSTAILOR QUIET - Ivan Warren

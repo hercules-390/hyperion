@@ -485,16 +485,7 @@ ext_auth_excp:
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
 {
-int i;
-
-    for(i = 0; i < 16; i++)
-        if(regs->aea_ar[i] >= CR_ALB_OFFSET)
-            regs->aea_ar[i] = 0;
-
-    if(regs->guestregs)
-        for(i = 0; i < 16; i++)
-            if(regs->guestregs->aea_ar[i] >= CR_ALB_OFFSET)
-                regs->guestregs->aea_ar[i] = 0;
+    UNREFERENCED(regs);
 
 } /* end function purge_alb */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -615,41 +606,18 @@ U16     eax;                            /* Authorization index       */
             break;
 
         default:
-#if 1
-            /* ALB Lookup */
-            if(regs->aea_ar[arn] >= CR_ALB_OFFSET)
-            {
-                regs->dat.asd = regs->CR(regs->aea_ar[arn]);
-                regs->dat.protect = regs->aea_aleprot[arn];
-                regs->dat.stid = TEA_ST_ARMODE;
-            }
-            else
-#endif
-            {
-                /* Extract the extended AX from CR8 bits 0-15 (32-47) */
-                eax = regs->CR_LHH(8);
+            /* Extract the extended AX from CR8 bits 0-15 (32-47) */
+            eax = regs->CR_LHH(8);
 
-                /* [5.8.4.3] Perform ALET translation to obtain ASTE */
-                if (ARCH_DEP(translate_alet) (alet, eax, acctype,
-                                              regs, &asteo, aste))
-                    /* Exit if ALET translation error */
-                    return regs->dat.xcode;
+            /* [5.8.4.3] Perform ALET translation to obtain ASTE */
+            if (ARCH_DEP(translate_alet) (alet, eax, acctype,
+                                          regs, &asteo, aste))
+                /* Exit if ALET translation error */
+                return regs->dat.xcode;
 
-                /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
-                regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
-                regs->dat.stid = TEA_ST_ARMODE;
-                if(regs->dat.protect & 2)
-                   regs->dat.asd ^= TLB_PROT_ASD;
-            }
-
-#if 1
-            /* Update ALB */
-            regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
-            regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
-            regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
-            regs->aea_aleprot[arn] = regs->dat.protect & 2;
-#endif
-
+            /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
+            regs->dat.stid = TEA_ST_ARMODE;
+            regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
         } /* end switch(alet) */
 
     } /* end if(ACCESS_REGISTER_MODE) */
@@ -782,14 +750,14 @@ U32     ptl;                            /* Page table length         */
     if (tlbix >= 0
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) )
+        && !(regs->tlb.common[tlbix] && regs->dat.private))
     {
         pte = regs->tlb.TLB_PTE(tlbix);
 
         #ifdef FEATURE_SEGMENT_PROTECTION
         /* Set the protection indicator if segment is protected */
         if (regs->tlb.protect[tlbix])
-            regs->dat.protect = regs->tlb.protect[tlbix];
+            regs->dat.protect = 1;
         #endif /*FEATURE_SEGMENT_PROTECTION*/
     }
     else
@@ -871,7 +839,7 @@ U32     ptl;                            /* Page table length         */
         #ifdef FEATURE_SEGMENT_PROTECTION
         /* Set the protection indicator if segment is protected */
         if (ste & SEGTAB_370_PROT)
-            regs->dat.protect |= 1;
+            regs->dat.protect = 1;
         #endif /*FEATURE_SEGMENT_PROTECTION*/
 
         /* Place the translated address in the TLB */
@@ -881,7 +849,7 @@ U32     ptl;                            /* Page table length         */
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
-            regs->tlb.protect[tlbix]   = regs->dat.protect;
+            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
             regs->tlb.acc[tlbix]       = 0;
             regs->tlb.main[tlbix]       = NULL;
 
@@ -937,18 +905,17 @@ U32     ptl;                            /* Page table length         */
 
     /* Only a single entry in the TLB will be looked up, namely the
        entry indexed by bits 12-19 of the virtual address */
-
     if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE)
         tlbix = TLBIX(vaddr);
 
     if (tlbix >= 0
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) )
+        && !(regs->tlb.common[tlbix] && regs->dat.private))
     {
         pte = regs->tlb.TLB_PTE(tlbix);
         if (regs->tlb.protect[tlbix])
-            regs->dat.protect = regs->tlb.protect[tlbix];
+            regs->dat.protect = 1;
     }
     else
     {
@@ -1017,7 +984,7 @@ U32     ptl;                            /* Page table length         */
 
         /* Set the protection indicator if page protection is active */
         if (pte & PAGETAB_PROT)
-            regs->dat.protect |= 1;
+            regs->dat.protect = 1;
 
         /* [3.11.4.2] Place the translated address in the TLB */
         if (tlbix >= 0)
@@ -1027,7 +994,7 @@ U32     ptl;                            /* Page table length         */
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
             regs->tlb.acc[tlbix]       = 0;
-            regs->tlb.protect[tlbix]   = regs->dat.protect;
+            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
             regs->tlb.main[tlbix]       = NULL;
         }
 
@@ -1082,11 +1049,11 @@ U16     sx, px;                         /* Segment and page index,
     if (tlbix >= 0
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
-        && !(regs->tlb.common[tlbix] && regs->dat.private) )
+        && !(regs->tlb.common[tlbix] && regs->dat.private))
     {
         pte = regs->tlb.TLB_PTE(tlbix);
         if (regs->tlb.protect[tlbix])
-            regs->dat.protect = regs->tlb.protect[tlbix];
+            regs->dat.protect = 1;
     }
     else
     {
@@ -1346,7 +1313,7 @@ U16     sx, px;                         /* Segment and page index,
         /* Set protection indicator if page protection is indicated
            in either the segment table or the page table */
         if ((ste & ZSEGTAB_P) || (pte & ZPGETAB_P))
-            regs->dat.protect |= 1;
+            regs->dat.protect = 1;
 
         /* [3.11.4.2] Place the translated address in the TLB */
         if (tlbix >= 0)
@@ -1355,7 +1322,7 @@ U16     sx, px;                         /* Segment and page index,
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
-            regs->tlb.protect[tlbix]   = regs->dat.protect;
+            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
             regs->tlb.acc[tlbix]       = 0;
             regs->tlb.main[tlbix]      = NULL;
         }

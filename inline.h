@@ -76,11 +76,11 @@ _VSTORE_C_STATIC void ARCH_DEP(move_chars) (VADR addr1, int arn1,
 _VSTORE_C_STATIC void ARCH_DEP(validate_operand) (VADR addr, int arn,
                      int len, int acctype, REGS *regs);
 
-#if defined(_FEATURE_SIE) && defined(_370)
+#if defined(_FEATURE_SIE)
 _VFETCH_C_STATIC BYTE * s370_instfetch (BYTE *dest, U32 addr, REGS *regs);
 #endif /*defined(_FEATURE_SIE)*/
 
-#if defined(_FEATURE_ZSIE) && defined(_900)
+#if defined(_FEATURE_ZSIE)
 _VFETCH_C_STATIC BYTE * s390_instfetch (BYTE *dest, U32 addr, REGS *regs);
 #endif /*defined(_FEATURE_ZSIE)*/
 

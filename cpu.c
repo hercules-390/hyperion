@@ -1130,8 +1130,6 @@ int   cpu  = *ptr;
 /*-------------------------------------------------------------------*/
 int cpu_init (int cpu, REGS *regs, REGS *hostregs)
 {
-int i;
-
     obtain_lock (&sysblk.cpulock[cpu]);
 
     regs->cpuad = cpu;
@@ -1170,13 +1168,11 @@ int i;
     }
 
     /* Initialize accelerated lookup fields */
-    regs->CR_G(CR_ASD_REAL) = TLB_REAL_ASD;
-
-    regs->aea_crx                     = CR_ASD_REAL;
-    for(i = 0; i < 16; i++)
-        regs->aea_ar[i]               = CR_ASD_REAL;
-    regs->aea_ar[USE_INST_SPACE]      = CR_ASD_REAL;
-    regs->aea_ar[USE_REAL_ADDR]       = CR_ASD_REAL;
+    regs->CR_G(16) = ~0;
+    regs->aea_crx                     = 16;
+    memset(regs->aea_ar,16,16);
+    regs->aea_ar[USE_INST_SPACE]      = 16;
+    regs->aea_ar[USE_REAL_ADDR]       = 16;
     regs->aea_ar[USE_PRIMARY_SPACE]   =  1;
     regs->aea_ar[USE_SECONDARY_SPACE] =  7;
     regs->aea_ar[USE_HOME_SPACE]      = 13;
