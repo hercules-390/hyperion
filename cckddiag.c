@@ -180,7 +180,7 @@ int             bufl;                   /* Buffer length             */
         memcpy (obuf, ibuf, bufl);
         break;
 
-#ifdef CCKD_COMPRESS_ZLIB
+#ifdef HAVE_LIBZ
     case CCKD_COMPRESS_ZLIB:
         bufp = (BYTE *)obuf;
         memcpy (obuf, ibuf, CKDDASD_TRKHDR_SIZE);

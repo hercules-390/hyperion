@@ -1422,7 +1422,7 @@ int             x=O_EXCL;               /* Open option               */
     {
         cdevhdr.size = cdevhdr.used = CCKD_L1TAB_POS +
                                       cdevhdr.numl1tab * CCKD_L1ENT_SIZE +
-                                      CCKD_L2TAB_SIZE + trksize;
+                                      CCKD_L2TAB_SIZE + len;
 
         /* Rewrite the compressed device header */
         rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
@@ -1893,7 +1893,7 @@ int             x=O_EXCL;               /* Open option               */
     convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz], 4, "VOL1");
     convert_to_ebcdic (&buf[CKDDASD_TRKHDR_SIZE+sectsz+4], 6, volser);
     len2 = sizeof(buf2);
-#ifdef CCKD_COMPRESS_ZLIB
+#ifdef HAVE_LIBZ
     rc = compress2 (&buf2[0], &len2, &buf[CKDDASD_TRKHDR_SIZE],
                     CFBA_BLOCK_SIZE, -1);
     if (comp && rc == Z_OK)
@@ -1919,7 +1919,7 @@ int             x=O_EXCL;               /* Open option               */
                        CKDDASD_TRKHDR_SIZE + len2;
     }
     else
-#endif // defined(CCKD_COMPRESS_ZLIB)
+#endif // defined(HAVE_LIBZ)
     {
         rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE);
         if (rc < (int)(CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE))

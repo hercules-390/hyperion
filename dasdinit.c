@@ -49,9 +49,39 @@ int  extgui = 0;
 /* Subroutine to display command syntax and exit                     */
 /*-------------------------------------------------------------------*/
 static void
-argexit ( int code )
+argexit ( int code, char *m )
 {
-    fprintf (stderr,
+
+    switch (code) {
+    case 0:
+        fprintf (stderr, "Invalid or supported option: %s\n",
+                 m ? m : "(null)");
+        break;
+    case 1:
+        fprintf (stderr, "Invalid or missing filename: %s\n",
+                 m ? m : "(null)");
+        break;
+    case 2:
+        fprintf (stderr, "Invalid or missing device type: %s\n",
+                 m ? m : "(null)");
+        break;
+    case 3:
+        fprintf (stderr, "Invalid or missing volser: %s\n",
+                 m ? m : "(null)");
+        break;
+    case 4:
+        fprintf (stderr, "Invalid or missing size: %s\n",
+                 m ? m : "(null)");
+        break;
+    case 5:
+        fprintf (stderr, "Invalid number of arguments\n");
+        break;
+    default:
+
+        display_version (stderr,
+                     "Hercules DASD image file creation program\n");
+
+        fprintf (stderr,
 
 "Builds an empty dasd image file:\n\n"
 
@@ -59,10 +89,11 @@ argexit ( int code )
 
 "where:\n\n"
 
-#ifdef CCKD_COMPRESS_ZLIB
+"  -v         display version info and help\n"
+#ifdef HAVE_LIBZ
 "  -z         build compressed dasd image file using zlib\n"
 #endif
-#ifdef CCKD_COMPRESS_BZIP2
+#ifdef CCKD_BZIP2
 "  -bz2       build compressed dasd image file using bzip2\n"
 #endif
 "  -0         build compressed dasd image file with no compression\n"
@@ -85,6 +116,8 @@ argexit ( int code )
 "             (required if model not specified else optional)\n"
 
 );
+        break;
+    }
     exit(code);
 } /* end function argexit */
 
@@ -117,20 +150,20 @@ int     lfs = 0;                        /* 1 = Build large file      */
     }
 #endif /*EXTERNALGUI*/
 
-    /* Display the program identification message */
-    display_version (stderr,
-                     "Hercules DASD image file creation program\n");
+    /* Display program identification and help */
+    if (argc <= 1 || (argc == 2 && !strcmp(argv[1], "-v")))
+        argexit(-1, NULL);
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--) 
     {
         if (strcmp("0", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_NONE;
-#ifdef CCKD_COMPRESS_ZLIB
+#ifdef HAVE_LIBZ
         else if (strcmp("z", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_ZLIB;
 #endif
-#ifdef CCKD_COMPRESS_BZIP2
+#ifdef CCKD_BZIP2
         else if (strcmp("bz2", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_BZIP2;
 #endif
@@ -140,19 +173,19 @@ int     lfs = 0;                        /* 1 = Build large file      */
         else if (strcmp("lfs", &argv[1][1]) == 0)
             lfs = 1;
 #endif
-        else argexit(0);
+        else argexit(0, argv[1]);
     }
 
     /* Check remaining number of arguments */
 
     if (argc < 4 || argc > 5)
-        argexit(5);
+        argexit(5, NULL);
 
     /* The first argument is the file name */
 
     if (!argv[1] || strlen(argv[1]) == 0
         || strlen(argv[1]) > sizeof(fname)-1)
-        argexit(1);
+        argexit(1, argv[1]);
 
     strcpy (fname, argv[1]);
 
@@ -160,7 +193,7 @@ int     lfs = 0;                        /* 1 = Build large file      */
        with or without the model number. */
 
     if (!argv[2])
-        argexit(2);
+        argexit(2, argv[2]);
     ckd = dasd_lookup (DASD_CKDDEV, argv[2], 0, 0);
     if (ckd != NULL)
     {
@@ -186,12 +219,12 @@ int     lfs = 0;                        /* 1 = Build large file      */
 
     if (!type)
         /* Specified model not found */
-        argexit(2);
+        argexit(2, argv[2]);
 
     /* The third argument is the volume serial number */
     if (!argv[3] || strlen(argv[3]) == 0
         || strlen(argv[3]) > sizeof(volser)-1)
-        argexit(3);
+        argexit(3, argv[3]);
 
     strcpy (volser, argv[3]);
     string_to_upper (volser);
@@ -199,17 +232,12 @@ int     lfs = 0;                        /* 1 = Build large file      */
     /* The fourth argument is the volume size */
     if (argc > 4)
     {
-        U32 requested_size = 0;
-
         if (argc > 5)
-            argexit(5);
+            argexit(5, NULL);
 
         if (!argv[4] || strlen(argv[4]) == 0
-            || sscanf(argv[4], "%u%c", &requested_size, &c) != 1)
-            argexit(4);
-
-        /* Use requested size only if no compression or FBA */
-        if (0xff == comp || type == 'F') size = requested_size;
+            || sscanf(argv[4], "%u%c", &size, &c) != 1)
+            argexit(4, argv[4]);
 
         altcylflag = 0;
     }

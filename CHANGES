@@ -1,3 +1,12 @@
+05 May 2003 Write zeroes at end of file to increase its size if ftruncate
+            doesn't work - Greg Smith, suggested by Andy Kane
+05 May 2003 Meaningful error messages for invalid or unsupported parms
+            to dasdinit - Greg Smith, suggested by John Summerfield
+05 May 2003 Meaningful error messages for unconfigured compression - Greg Smith,
+            suggestions by John McKown & Davud Booher
+05 May 2003 Allow arbitrary number cckd cylinders - Greg Smith, suggested by
+            Romain Capron
+05 May 2003 Remove cckd zlib dependencies - Greg Smith, suggested by John Summerfield
 28 Apr 2003 Changed 3270 Disconnect/Reconnect status presentation
             logic (should allow terminal disc/recon on MVS) - Ivan Warren
 24 Apr 2003 Set PGID/Sense PGID/Assign/Unassign Corr to Tape Devices

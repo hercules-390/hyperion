@@ -1406,20 +1406,9 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #define CCKD_FREEHDR_SIZE      28
 #define CCKD_FREEHDR_POS       CKDDASD_DEVHDR_SIZE+12
 
-#define CCKD_COMPRESS_NONE     0
-#define CCKD_COMPRESS_ZLIB     1
-#define CCKD_COMPRESS_BZIP2    2
-#ifndef HAVE_LIBZ
-#define CCKD_COMPRESS_MAX      CCKD_COMPRESS_NONE
-#else
-#ifndef CCKD_BZIP2
-#define CCKD_COMPRESS_MAX      CCKD_COMPRESS_ZLIB
-#else
-#define CCKD_COMPRESS_MAX      CCKD_COMPRESS_BZIP2
-#endif  // CCKD_BZIP2 defined
-#endif  // HAVE_LIBZ  defined
-#define CCKD_COMPRESS_MAX_POSSIBLE 2
-
+#define CCKD_COMPRESS_NONE     0x00
+#define CCKD_COMPRESS_ZLIB     0x01
+#define CCKD_COMPRESS_BZIP2    0x02
 #define CCKD_COMPRESS_MASK     0x03
 
 #define CCKD_STRESS_MINLEN     4096
@@ -1510,6 +1499,10 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         BYTE             id[8];         /* "CCKDBLK "                */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         int              batch:1;       /* 1=called in batch mode    */
+
+        int              comps;         /* Supported compressions    */
+        int              comp;          /* Override compression      */
+        int              compparm;      /* Override compression parm */
 
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */

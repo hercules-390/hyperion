@@ -186,6 +186,14 @@ int             i;                      /* Index                     */
     cckdblk.gcparm     = CCKD_DEFAULT_GCOLPARM;
     cckdblk.readaheads = CCKD_DEFAULT_READAHEADS;
     cckdblk.freepend   = CCKD_DEFAULT_FREEPEND;
+#ifdef HAVE_LIBZ
+    cckdblk.comps     |= CCKD_COMPRESS_ZLIB;
+#endif
+#ifdef CCKD_BZIP2
+    cckdblk.comps     |= CCKD_COMPRESS_BZIP2;
+#endif
+    cckdblk.comp       = -1;
+    cckdblk.compparm   = -1;
 
     /* Initialize the readahead queue */
     cckdblk.ra1st = cckdblk.ralast = -1;
@@ -1477,9 +1485,12 @@ BYTE            buf2[65536];            /* Compress buffer           */
         cckd = dev->cckd_ext;
         buf = cache_getbuf(CACHE_DEVBUF, o, 0);
         len = cckd_trklen (dev, buf);
-        comp = len < CCKD_COMPRESS_MIN ?
-               CCKD_COMPRESS_NONE : cckd->cdevhdr[cckd->sfn].compress;
-        parm = cckd->cdevhdr[cckd->sfn].compress_parm;
+        comp = len < CCKD_COMPRESS_MIN ? CCKD_COMPRESS_NONE
+             : cckdblk.comp < 0 ? cckd->cdevhdr[cckd->sfn].compress
+             : cckdblk.comp;
+        parm = cckdblk.compparm < 0
+             ? cckd->cdevhdr[cckd->sfn].compress_parm
+             : cckdblk.compparm;
 
         /* Stress adjustments */
         if ((cache_waiters(CACHE_DEVBUF) || cache_busy(CACHE_DEVBUF) > 90)
@@ -1615,6 +1626,26 @@ struct stat     st;                     /* File status area          */
                 }
             }
             rc = ftruncate (cckd->fd[sfx], sz);
+
+            /* Turns out certain linux file-systems (eg FAT) don't allow
+               us to *increase* the size of the file using ftruncate
+               (which implies `sparse' blocks or whatever).  So try to
+               write zeroes if an error occurred. */
+            if (rc < 0)
+            {
+                BYTE zbuf[1024];
+                unsigned int l = sz - st.st_size;
+                off_t rcoff = lseek (cckd->fd[sfx], (off_t)st.st_size, SEEK_SET);
+                if (rcoff >= 0)
+                {
+                    memset(zbuf, 0, sizeof(zbuf));
+                    do {
+                        rc = write (cckd->fd[sfx], zbuf, l < sizeof(zbuf) ? l : sizeof(zbuf));
+                        l -= sizeof(zbuf);
+                    } while (rc > 0 && l > 0);
+                }
+            }
+
             if (rc < 0)
             {
                 devmsg("%4.4X:cckddasd file[%d] get space ftruncate error, size %llx: %s\n",
@@ -3032,15 +3063,14 @@ char           *comp[] = {"none", "zlib", "bzip2"};
     /* CKD dasd header verification */
     if (cckd->ckddasd)
     {
-        cyl = (buf[1] << 8) + buf[2];
-        head = (buf[3] << 8) + buf[4];
+        cyl = fetch_hw (buf + 1);
+        head = fetch_hw (buf + 3);
         t = cyl * dev->ckdheads + head;
 
-        if (cyl < dev->ckdcyls
-         && head < dev->ckdheads
+        if (cyl < dev->ckdcyls && head < dev->ckdheads
          && (trk == -1 || t == trk))
         {
-            if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX)
+            if (buf[0] & ~cckdblk.comps)
             {
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
@@ -3050,20 +3080,20 @@ char           *comp[] = {"none", "zlib", "bzip2"};
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 } 
-                return t;
             }
-            if (buf[0] <= CCKD_COMPRESS_MAX_POSSIBLE)
+            if (buf[0] & ~cckdblk.comps)
                 badcomp = 1;
+            else
+                return t;
         }
     }
     /* FBA dasd header verification */
     else
     {
-        t = (buf[1] << 24) + (buf[2] << 16) + (buf[3] << 8) + buf[4];
-        if (t < dev->fbanumblk
-         && (trk == -1 || t == trk))
+        t = fetch_fw (buf + 1);
+        if (t < dev->fbanumblk && (trk == -1 || t == trk))
         {
-            if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX)
+            if (buf[0] & ~cckdblk.comps)
             {
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
@@ -3072,10 +3102,11 @@ char           *comp[] = {"none", "zlib", "bzip2"};
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
                 } 
-                return t;
             }
-            if (buf[0] <= CCKD_COMPRESS_MAX_POSSIBLE)
+            if (buf[0] & ~cckdblk.comps)
                 badcomp = 1;
+            else
+                return t;
         }
     }
 
@@ -4563,7 +4594,7 @@ char           *compress[] = {"none", "zlib", "bzip2"};
     {
         devmsg("%4.4X cckddasd: uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                 dev->devnum, trk, from[0], from[1], from[2], from[3], from[4]);
-        if (comp <= CCKD_COMPRESS_MAX_POSSIBLE && comp > CCKD_COMPRESS_MAX)
+        if (comp & ~cckdblk.comps)
             devmsg("%4.4X cckddasd: %s compression not supported\n",
                 dev->devnum, compress[comp]);
         free (to);
@@ -4688,7 +4719,13 @@ BYTE *buf;
     }
     return (int)newlen;
 #else
+
+#if defined(CCKD_BZIP2)
+    return cckd_compress_bzip2 (dev, to, from, len, parm);
+#else
     return cckd_compress_none (dev, to, from, len, parm);
+#endif
+
 #endif
 }
 int cckd_compress_bzip2 (DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm)
@@ -4729,6 +4766,8 @@ void cckd_command_help()
              "help\t\tDisplay help message\n"
              "stats\t\tDisplay cckd statistics\n"
              "opts\t\tDisplay cckd options\n"
+             "comp=<n>\t\tOverride compression\t\t(-1 .. 2)\n"
+             "compparm=<n>\tOverride compression parm\t\t(-1 .. 9)\n"
              "ra=<n>\t\tSet number readahead threads\t\t(1 .. 9)\n"
              "raq=<n>\t\tSet readahead queue size\t\t(0 .. 16)\n"
              "rat=<n>\t\tSet number tracks to read ahead\t\t(0 .. 16)\n"
@@ -4749,9 +4788,10 @@ void cckd_command_help()
 /*-------------------------------------------------------------------*/
 void cckd_command_opts()
 {
-    cckdmsg ("ra=%d,raq=%d,rat=%d,"
+    cckdmsg ("comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,"
              "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n"
              "\tfreepend=%d,fsync=%d,ftruncwa=%d,trace=%d\n",
+             cckdblk.comp, cckdblk.compparm,
              cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
              cckdblk.wrmax, cckdblk.gcwait,
@@ -4842,6 +4882,32 @@ int   val, opts = 0;
         {
             if (!cmd) return 0;
             cckd_command_debug();
+        }
+        else if (strcasecmp (kw, "comp") == 0)
+        {
+            if (val < -1 || (val & ~cckdblk.comps) || c != '\0')
+            {
+                cckdmsg ("Invalid value for comp=\n");
+                return -1;
+            }
+            else
+            {
+                cckdblk.comp = val;
+                opts = 1;
+            }
+        }
+        else if (strcasecmp (kw, "compparm") == 0)
+        {
+            if (val < -1 || val > 9 || c != '\0')
+            {
+                cckdmsg ("Invalid value for compparm=\n");
+                return -1;
+            }
+            else
+            {
+                cckdblk.compparm = val;
+                opts = 1;
+            }
         }
         else if (strcasecmp (kw, "ra") == 0)
         {

@@ -1159,9 +1159,7 @@ int      rc;                            /* Return code               */
 struct   sockaddr_in server;            /* Server descriptor         */
 int      retries = 10;                  /* Number of retries         */
 HWORD    id;                            /* Returned identifier       */
-#ifdef HAVE_LIBZ
 HWORD    comp;                          /* Returned compression parm */
-#endif
 
     do {
 
@@ -1293,9 +1291,11 @@ U16      devnum;                        /* Header device nu          */
 int      len;                           /* Header length             */
 int      id;                            /* Header identifier         */
 int      hdrlen;                        /* Header length + other data*/
+#ifdef HAVE_LIBZ
 int      off;                           /* Offset to compressed data */
 unsigned long newlen;                   /* Compressed length         */
 BYTE     cbuf[65536];                   /* Compress buffer           */
+#endif
 
     /* Make buf, buflen consistent if no additional data to be sent  */
     if (buf == NULL) buflen = 0;
@@ -1972,9 +1972,11 @@ U16      devnum;                        /* Header device number      */
 int      id;                            /* Header identifier         */
 int      len;                           /* Header length             */
 int      hdrlen;                        /* Header length + other data*/
+#ifdef HAVE_LIBZ
 int      off;                           /* Offset to compressed data */
 unsigned long newlen;                   /* Compressed buffer length  */
 BYTE     cbuf[65536];                   /* Compressed buffer         */
+#endif
 
     /* Make buf, buflen consistent if no additional data to be sent  */
     if (buf == NULL) buflen = 0;
