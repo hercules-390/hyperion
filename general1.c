@@ -3362,10 +3362,12 @@ GREG    len3;
 
             len1 -= len3;
             addr1 += len3;
+            addr1 &= ADDRESS_MAXWRAP(regs);
 
             /* Update the registers */
             GR_A(r1, regs) = addr1;
             regs->GR_LA24(r1+1) = len1;
+
             /* The instruction can be interrupted when a CPU determined
                number of bytes have been processed.  The instruction
                address will be backed up, and the instruction will
