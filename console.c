@@ -1111,7 +1111,11 @@ size_t                  n;              /* Work                      */
             " device %4.4X", dev->devnum);
         n = min(n,sizeof(tempbuf)-1);
         tempbuf[n]=0;
+        /* Replace strncat with safe_strcat */
+        /*
         strncat(&conmsg[len],tempbuf,sizeof(conmsg)-len);
+        */
+        safe_strcat(&conmsg[len],sizeof(conmsg)-len,tempbuf);
         len = strlen(conmsg);
     }
     else /* Reject the connection if no available console device */
