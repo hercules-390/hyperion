@@ -3043,6 +3043,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         || !PRIMARY_SPACE_MODE(&(regs->psw)))
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
+    /* Special operation exception if subsystem linkage
+       control bit in CR5 is zero (when ASF is off)*/
+    if (!ASF_ENABLED(regs) && !(regs->CR_L(5) & LTD_SSLINK))
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
     /* Save the primary ASN (CR4) and primary STD (CR1) */
     oldpasn = regs->CR_LHL(4);
     oldpstd = regs->CR(1);
