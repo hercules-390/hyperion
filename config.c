@@ -2,7 +2,7 @@
 /*              Device configuration functions                       */
 
 /*-------------------------------------------------------------------*/
-/* The original configuration builder is now called buildcfg.c       */
+/* The original configuration builder is now called bldcfg.c         */
 /*-------------------------------------------------------------------*/
 
 
