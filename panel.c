@@ -915,6 +915,7 @@ int     i;                              /* Loop counter              */
 int     oneorzero;                      /* 1=x+ command, 0=x-        */
 BYTE   *onoroff;                        /* "on" or "off"             */
 BYTE   *fname;                          /* -> File name (ASCIIZ)     */
+BYTE   *loadaddr;                       /* loadcore memory address   */
 int     fd;                             /* File descriptor           */
 int     len;                            /* Number of bytes read      */
 BYTE   *loadparm;                       /* -> IPL parameter (ASCIIZ) */
@@ -1002,7 +1003,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             "stop=stop CPU, start=start CPU, restart=PSW restart\n"
             STSPALL_CMD
             "store=store status\n"
-            "loadcore filename=load core image from file\n"
+            "loadcore filename [address] = load core image from file\n"
             "loadparm xxxxxxxx=set IPL parameter, ipl devn=IPL\n"
             "archmode xxxxxxxx=set architecture mode\n"
             "devinit devn arg [arg...] = reinitialize device\n"
@@ -1650,6 +1651,23 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
+	loadaddr = strtok (NULL, " \t");
+
+	if (loadaddr == NULL)
+            aaddr = 0;
+	else if (sscanf(loadaddr, "%x", &aaddr) !=1)
+	
+	{
+	    logmsg ("invalid address: %s \n",loadaddr);
+	    return NULL;
+	}
+
+	if (aaddr >= regs->mainsize)
+	{ 
+	    logmsg ("Address greater than mainstore size. \n");
+	    return NULL;
+	}
+
         /* Command is valid only when CPU is stopped */
         if (regs->cpustate != CPUSTATE_STOPPED)
         {
@@ -1667,9 +1685,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         }
 
         /* Read the file into absolute storage */
-        logmsg ("Loading %s\n", fname);
+        logmsg ("Loading %s to location %x \n", fname,aaddr);
 
-        len = read (fd, sysblk.mainstor, regs->mainsize);
+        len = read (fd, sysblk.mainstor + aaddr, regs->mainsize);
         if (len < 0)
         {
             logmsg ("Cannot read %s: %s\n",
