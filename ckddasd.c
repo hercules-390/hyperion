@@ -4515,12 +4515,12 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
         /* Calculate residual byte count */
-        num = (count < 24) ? count : 24;
+        num = (count < 32) ? count : 32;
         *residual = count - num;
-        if (count < 24) *more = 1;
+        if (count < 32) *more = 1;
 
         /* Build the buffered error log in the I/O area */
-        memset (iobuf, 0x00, 24);
+        memset (iobuf, 0x00, 32);
 
         /* Return unit status */
         *unitstat = CSW_CE | CSW_DE;
