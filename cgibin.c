@@ -15,6 +15,10 @@
 /*   This call returns a pointer to the cgi variable requested       */
 /*   or a NULL pointer if the variable is not found                  */
 /*                                                                   */
+/* char *cgi_cookie(WEBBLK *webblk, char *name);                     */
+/*   This call returns a pointer to the cookie requested             */
+/*   or a NULL pointer if the cookie is not found                    */
+/*                                                                   */
 /* char *cgi_username(WEBBLK *webblk);                               */
 /*   Returns the username for which the user has been authenticated  */
 /*   or NULL if not authenticated (refer to auth/noauth parameter    */
@@ -203,6 +207,9 @@ int msgcount = 22;
 
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);
+    else
+        if((value = cgi_cookie(webblk,"msgcount")))
+            msgcount = atoi(value);
 
     if ((value = cgi_variable(webblk,"refresh_interval")))
         refresh_interval = atoi(value);
@@ -215,6 +222,13 @@ int msgcount = 22;
         autorefresh = 1;
 
     html_header(webblk);
+
+    fprintf(webblk->hsock,"<script language=\"JavaScript\">\n"
+                          "<!--\n"
+                          "document.cookie = \"msgcount=%d\";\n"
+                          "//-->\n"
+                          "</script>\n",
+                          msgcount);
 
     fprintf(webblk->hsock, "<H2>Hercules System Log</H2>\n");
     fprintf(webblk->hsock, "<PRE>\n");

@@ -263,25 +263,13 @@ static void http_dump_cgi_variables(WEBBLK *webblk)
 #endif
 
 
-char *cgi_variable(WEBBLK *webblk, char *name)
+char *http_variable(WEBBLK *webblk, char *name, int type)
 {
     CGIVAR *cv;
     for(cv = webblk->cgivar; cv != NULL; cv = cv->next)
-        if(!strcmp(name,cv->name))
+        if((cv->type & type) && !strcmp(name,cv->name))
             return cv->value;
     return NULL;
-}
-
-
-char *cgi_username(WEBBLK *webblk)
-{
-        return webblk->user;
-}
-
-
-char *cgi_baseurl(WEBBLK *webblk)
-{
-        return webblk->baseurl;
 }
 
 
@@ -463,14 +451,12 @@ static void *http_request(FILE *hsock)
                                   strtok_r(NULL," \t\r\n",&strtok_str));
             }
             else
-#if 0
             if(!strcasecmp(pointer,"Cookie:"))
             {
                 if((pointer = strtok_r(NULL,"\r\n",&strtok_str)))
                     http_interpret_variable_string(webblk, pointer, VARTYPE_COOKIE);
             }
             else
-#endif
             if(!strcasecmp(pointer,"Content-Length:"))
             {
                 if((pointer = strtok_r(NULL," \t\r\n",&strtok_str)))

@@ -26,6 +26,22 @@ typedef struct _CGIVAR {
 } CGIVAR;
 
 
+#define cgi_variable(_webblk, _varname) \
+        http_variable((_webblk), (_varname), (VARTYPE_GET|VARTYPE_POST))
+
+
+#define cgi_cookie(_webblk, _varname) \
+        http_variable((_webblk), (_varname), (VARTYPE_COOKIE))
+
+
+#define cgi_username(_webblk) \
+        ((_webblk)->user)
+
+
+#define cgi_baseurl(_webblk) \
+        ((_webblk)->baseurl)
+
+
 typedef struct _CONTYP {
     char *suffix;
     char *type;
@@ -55,14 +71,10 @@ typedef struct _CGITAB {
 } CGITAB;
 
 
-char *cgi_variable(WEBBLK *webblk, char *name);
-char *cgi_username(WEBBLK *webblk);
-char *cgi_baseurl(WEBBLK *webblk);
-
-
 void html_header(WEBBLK *webblk);
 void html_footer(WEBBLK *webblk);
 int html_include(WEBBLK *webblk, char *filename);
 
 
+char *http_variable(WEBBLK *webblk, char *name, int type);
 void *http_server (void *arg);
