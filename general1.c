@@ -1106,11 +1106,11 @@ U32     n;                              /* 32-bit operand value      */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-#if defined(MODEL_DEPENDENT)
+#if defined(MODEL_DEPENDENT_CS)
     /* Some models always store, so validate as a store operand, if desired */
     n = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE,
                                                        regs->psw.pkey);
-#endif /*defined(MODEL_DEPENDENT)*/
+#endif /*defined(MODEL_DEPENDENT_CS)*/
 
     /* Load second operand from operand address  */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1175,11 +1175,11 @@ U32     n1, n2;                         /* 32-bit operand values     */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-#if defined(MODEL_DEPENDENT)
+#if defined(MODEL_DEPENDENT_CS)
     /* Some models always store, so validate as a store operand, if desired */
     n1 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE,
                                                        regs->psw.pkey);
-#endif /*defined(MODEL_DEPENDENT)*/
+#endif /*defined(MODEL_DEPENDENT_CS)*/
 
     /* Load second operand from operand address  */
     n1 = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
