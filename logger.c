@@ -13,18 +13,23 @@
 
 #include "hercules.h" 
 
-static ATTR logger_attr;
-static COND logger_cond;
-static LOCK logger_lock;
-static TID  logger_tid;
+static ATTR  logger_attr;
+static COND  logger_cond;
+static LOCK  logger_lock;
+static TID   logger_tid;
 
 static char *logger_buffer;
-static int  logger_bufsize;
+static int   logger_bufsize;
 
-static int  logger_currmsg;
-static int  logger_wrapped;
+static int   logger_currmsg;
+static int   logger_wrapped;
 
-static int  logger_active;
+static int   logger_active;
+
+static FILE *logger_syslog[2];          /* Syslog read/write pipe    */
+static int   logger_syslogfd[2];        /*   pairs                   */
+static FILE *logger_hrdcpy;             /* Hardcopy log or zero      */
+static int   logger_hrdcpyfd;           /* Hardcopt fd or -1         */
 
 /* Find the index for a specific line number in the log,             */
 /* one being the most recent line                                    */
@@ -158,7 +163,7 @@ fflush(stdout);
         logger_active = 0;
 
         /* Send the logger a message to wake it up */
-        fprintf(sysblk.syslog[LOG_WRITE], _("HHCLG014I logger thread terminating\n") );
+        fprintf(logger_syslog[LOG_WRITE], _("HHCLG014I logger thread terminating\n") );
 
         /* Wait for the logger to terminate */
         wait_condition(&logger_cond, &logger_lock);
@@ -177,10 +182,10 @@ int bytes_read;
 
     UNREFERENCED(arg);
 
-    if(dup2(sysblk.syslogfd[LOG_WRITE],STDOUT_FILENO) == -1)
+    if(dup2(logger_syslogfd[LOG_WRITE],STDOUT_FILENO) == -1)
     {
-        if(sysblk.hrdcpy)
-            fprintf(sysblk.hrdcpy, _("HHCLG001E Error redirecting stdout: %s\n"),
+        if(logger_hrdcpy)
+            fprintf(logger_hrdcpy, _("HHCLG001E Error redirecting stdout: %s\n"),
               strerror(errno));
         exit(1);
     }
@@ -201,19 +206,19 @@ int bytes_read;
     /* ZZ FIXME:  We must empty the read pipe before we terminate */
     while(logger_active)
     {
-        bytes_read = read(sysblk.syslogfd[LOG_READ],logger_buffer + logger_currmsg,
+        bytes_read = read(logger_syslogfd[LOG_READ],logger_buffer + logger_currmsg,
           ((logger_bufsize - logger_currmsg) > SSIZE_MAX ? SSIZE_MAX : logger_bufsize - logger_currmsg));
 
         if(bytes_read == -1)
         {
-            if(sysblk.hrdcpy)
-                fprintf(sysblk.hrdcpy, _("HHCLG002E Error reading syslog pipe: %s\n"),
+            if(logger_hrdcpy)
+                fprintf(logger_hrdcpy, _("HHCLG002E Error reading syslog pipe: %s\n"),
                   strerror(errno));
             bytes_read = 0;
         }
 
-        if(sysblk.hrdcpy && fwrite(logger_buffer + logger_currmsg,bytes_read,1,sysblk.hrdcpy) != 1)
-            fprintf(sysblk.hrdcpy, _("HHCLG003E Error writing hardcopy log: %s\n"),
+        if(logger_hrdcpy && fwrite(logger_buffer + logger_currmsg,bytes_read,1,logger_hrdcpy) != 1)
+            fprintf(logger_hrdcpy, _("HHCLG003E Error writing hardcopy log: %s\n"),
               strerror(errno));
 
         logger_currmsg += bytes_read;
@@ -234,8 +239,8 @@ int bytes_read;
     obtain_lock(&logger_lock);
 
     /* Redirect all msgs to stderr */
-    sysblk.syslog[LOG_WRITE] = stderr;
-    sysblk.syslogfd[LOG_WRITE] = STDERR_FILENO;
+    logger_syslog[LOG_WRITE] = stderr;
+    logger_syslogfd[LOG_WRITE] = STDERR_FILENO;
 
     /* Signal any waiting tasks */
     broadcast_condition(&logger_cond);
@@ -252,7 +257,7 @@ void logger_init(void)
 
     obtain_lock(&logger_lock);
 
-    sysblk.syslog[LOG_WRITE] = stderr;
+    logger_syslog[LOG_WRITE] = stderr;
 
     /* If standard error is redirected, then use standard error
        as the log file. */
@@ -260,7 +265,7 @@ void logger_init(void)
     {
         /* Ignore standard output to the extent that it is 
            treated as standard error */ 
-        sysblk.hrdcpyfd = dup(STDOUT_FILENO);
+        logger_hrdcpyfd = dup(STDOUT_FILENO);
         if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
         {
             fprintf(stderr, _("HHCLG004E Error duplicating stderr: %s\n"),
@@ -272,7 +277,7 @@ void logger_init(void)
     {
         if(!isatty(STDOUT_FILENO))
         {
-            sysblk.hrdcpyfd = dup(STDOUT_FILENO);
+            logger_hrdcpyfd = dup(STDOUT_FILENO);
             if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
             {
                 fprintf(stderr, _("HHCLG004E Error duplicating stderr: %s\n"),
@@ -282,7 +287,7 @@ void logger_init(void)
         }
         if(!isatty(STDERR_FILENO))
         {
-            sysblk.hrdcpyfd = dup(STDERR_FILENO);
+            logger_hrdcpyfd = dup(STDERR_FILENO);
             if(dup2(STDOUT_FILENO,STDERR_FILENO) == -1)
             {
                 fprintf(stderr, _("HHCLG005E Error duplicating stdout: %s\n"),
@@ -292,22 +297,22 @@ void logger_init(void)
         }
     }
 
-    if(sysblk.hrdcpyfd == -1)
+    if(logger_hrdcpyfd == -1)
     {
-        sysblk.hrdcpyfd = 0;
+        logger_hrdcpyfd = 0;
         fprintf(stderr, _("HHCLG006E Duplicate error redirecting hardcopy log: %s\n"),
           strerror(errno));
     }
 
-    if(sysblk.hrdcpyfd)
+    if(logger_hrdcpyfd)
     {
-        if(!(sysblk.hrdcpy = fdopen(sysblk.hrdcpyfd,"w")))
+        if(!(logger_hrdcpy = fdopen(logger_hrdcpyfd,"w")))
         fprintf(stderr, _("HHCLG007S Hardcopy log fdopen failed: %s\n"),
           strerror(errno));
     }
 
-    if(sysblk.hrdcpy)
-        setvbuf(sysblk.hrdcpy, NULL, _IONBF, 0);
+    if(logger_hrdcpy)
+        setvbuf(logger_hrdcpy, NULL, _IONBF, 0);
 
     logger_bufsize = LOG_DEFSIZE;
 
@@ -318,23 +323,23 @@ void logger_init(void)
         exit(1);
     }
 
-    if(pipe(sysblk.syslogfd))
+    if(pipe(logger_syslogfd))
     {
         fprintf(stderr, _("HHCLG009S Syslog message pipe creation failed: %s\n"),
           strerror(errno));
         exit(1);  /* Hercules running without syslog */
     }
 
-    if(!(sysblk.syslog[LOG_WRITE] = fdopen(sysblk.syslogfd[LOG_WRITE],"w")))
+    if(!(logger_syslog[LOG_WRITE] = fdopen(logger_syslogfd[LOG_WRITE],"w")))
     {
-        sysblk.syslog[LOG_WRITE] = stderr;
+        logger_syslog[LOG_WRITE] = stderr;
         fprintf(stderr, _("HHCLG010S Syslog write message pipe open failed: %s\n"),
           strerror(errno));
         exit(1);
     }
 
 #if 0
-    if(!(sysblk.syslog[LOG_READ] = fdopen(sysblk.syslogfd[LOG_READ],"r")))
+    if(!(logger_syslog[LOG_READ] = fdopen(logger_syslogfd[LOG_READ],"r")))
     {
         fprintf(stderr, _("HHCLG011S Syslog read message pipe open failed: %s\n"),
           strerror(errno));
@@ -342,7 +347,7 @@ void logger_init(void)
     }
 #endif
 
-    setvbuf (sysblk.syslog[LOG_WRITE], NULL, _IOLBF, 0);
+    setvbuf (logger_syslog[LOG_WRITE], NULL, _IOLBF, 0);
 
     if ( create_device_thread (&logger_tid, &logger_attr,
                                 logger_thread, NULL) )

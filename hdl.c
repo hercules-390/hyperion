@@ -345,7 +345,6 @@ HDLPRE *preload;
     {
         fprintf(stderr, "HHCHD012E No depency section in %s: %s\n",
           hdl_cdll->name, dlerror());
-        close(sysblk.syslogfd[LOG_WRITE]); /* ZZ FIXME: shutdown */
         exit(1);
     }
 
@@ -353,7 +352,6 @@ HDLPRE *preload;
     {
         fprintf(stderr, "HHCHD004I No registration section in %s: %s\n",
           hdl_cdll->name, dlerror());
-        close(sysblk.syslogfd[LOG_WRITE]); /* ZZ FIXME: shutdown */
         exit(1);
     }
 

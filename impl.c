@@ -167,11 +167,10 @@ TID     rctid;                          /* RC file thread identifier */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
-#if defined(OPTION_DYNAMIC_LOAD)
     /* ensure hdl_shut is called in case of shutdown
        hdl_shut will ensure entries are only called once */
     atexit(hdl_shut);
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
+
 
     logger_init();
 
