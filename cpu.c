@@ -672,6 +672,7 @@ static char *pgmintname[] = {
             STORE_FW(psa->tea, regs->TEA);
         }
 #endif /*!defined(FEATURE_ESAME)*/
+        regs->TEA = 0;
 
         /* Store Data exception code in PSA */
         if (code == PGM_DATA_EXCEPTION)
