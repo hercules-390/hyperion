@@ -2615,7 +2615,7 @@ int             add = 0;                /* Add the shadow file back  */
        chkdsk function.  This is especially important if the
        preceding file was created by cckddump program and made
        writable for the merge */
-    rc = cckd_chkdsk (cckd->fd[sfx-1], sysblk.msgpipew, 1);
+    rc = cckd_chkdsk (cckd->fd[sfx-1], sysblk.msgpipew, 0);
     if (rc < 0)
     {
         logmsg ("cckddasd: cannot remove shadow file [%d], "
