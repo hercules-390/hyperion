@@ -1371,6 +1371,7 @@ DEF_INST(ecpsvm_dispatch_main)
     U32  F_VMVCR0;
     U32  F_VMIOINT;
     U32 F_VMVCR2;
+    U32 DISPCNT;
 
     U16  H_XINTMASK;
 
@@ -1382,6 +1383,8 @@ DEF_INST(ecpsvm_dispatch_main)
     dlist=effective_addr1;
     elist=effective_addr2;
     vmb=regs->GR_L(11);
+    DISPCNT=EVM_L(dlist);
+    DISPCNT++;
     /* Question #1 : Are we currently running a user */
     B_CPSTATUS=EVM_IC(CPSTATUS);
     if((B_CPSTATUS & CPRUN))
@@ -1390,6 +1393,7 @@ DEF_INST(ecpsvm_dispatch_main)
         switch(ecpsvm_disp_runtime(regs,&vmb,dlist,elist))
         {
             case 0: /* Exit taken - success */
+            EVM_ST(DISPCNT,dlist);
             CPASSIST_HIT(DISP0);
             return;
             case 1: /* no-op DISP0 */
@@ -1410,6 +1414,7 @@ DEF_INST(ecpsvm_dispatch_main)
                 /* Clean status - Do exit 36 */
                 regs->GR_L(11)=vmb;
                 regs->psw.IA=EVM_L(elist+36);
+                EVM_ST(DISPCNT,dlist);
                 CPASSIST_HIT(DISP0);
                 return;
             }
@@ -1427,6 +1432,7 @@ DEF_INST(ecpsvm_dispatch_main)
             /* No need to update R11 */
             CPASSIST_HIT(DISP0);
             regs->psw.IA=EVM_L(elist+4);
+            EVM_ST(DISPCNT,dlist);
             return;
         }
     }
@@ -1441,6 +1447,7 @@ DEF_INST(ecpsvm_dispatch_main)
         regs->GR_L(11)=vmb;
         regs->psw.IA=EVM_L(elist+12);
         CPASSIST_HIT(DISP0);
+        EVM_ST(DISPCNT,dlist);
         return;
     }
     /* Check for PER/PPF (CKPEND) */
@@ -1452,6 +1459,7 @@ DEF_INST(ecpsvm_dispatch_main)
         regs->GR_L(11)=vmb;
         regs->psw.IA=EVM_L(elist+16);
         CPASSIST_HIT(DISP0);
+        EVM_ST(DISPCNT,dlist);
         return;
     }
     /* Now, check if we should unstack an external int */
@@ -1494,6 +1502,7 @@ DEF_INST(ecpsvm_dispatch_main)
                     regs->GR_L(6)=F_VMPXINT;        /* Current XINTBLOK */
                     regs->GR_L(11)=vmb;             /* RUNUSER */
                     regs->psw.IA=EVM_L(elist+20);   /* Exit +20 */
+                    EVM_ST(DISPCNT,dlist);
                     CPASSIST_HIT(DISP0);
                     return;
                 }
@@ -1553,6 +1562,7 @@ DEF_INST(ecpsvm_dispatch_main)
                 regs->GR_L(7)=F_VMIOINT;
                 regs->GR_L(11)=vmb;
                 regs->psw.IA=EVM_L(elist+24);   /* Exit +24 */
+                EVM_ST(DISPCNT,dlist);
                 CPASSIST_HIT(DISP0);
                 return;
             }
@@ -1570,6 +1580,7 @@ DEF_INST(ecpsvm_dispatch_main)
         regs->GR_L(11)=vmb;
         regs->psw.IA=EVM_L(elist+28);   /* Exit +28 */
         CPASSIST_HIT(DISP0);
+        EVM_ST(DISPCNT,dlist);
         return;
     }
     /* Take exit 0 (DISPATCH) */
@@ -1577,6 +1588,7 @@ DEF_INST(ecpsvm_dispatch_main)
     regs->GR_L(11)=vmb;
     regs->psw.IA=EVM_L(elist+0);   /* Exit +0 */
     CPASSIST_HIT(DISP0);
+    EVM_ST(DISPCNT,dlist);
     return;
 }
 
