@@ -1,25 +1,271 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</TITLE>
+Hercules Version 2: System Messages: DS - dasdisup</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</h1>
+<h1>Hercules Version 2: System Messages: DS - dasdisup</h1>
 <p>
-This page describes the terminal emulation messages for the Hercules S/370,
-ESA/390, and z/Architecture emulator.
+This page describes the messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator utility program <code>dasdisup</code>.
 <h3>Messages</h3>
 <dl>
-<dt><code><a name="HHCTE001I">
-HHCTE001I text
+<dt><code><a name="HHCDS001E">
+HHCDS001E Cannot obtain storage for member array: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An attempt to obtain storage for the array of SYS1.SVCLIB members
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and rerun <code>dasdisup</code>.
   <dt>Issued by
-  <dd>console.c
+  <dd>dasdisup.c, function main
+  </dl>
+<dt><code><a name="HHCDS002I">
+HHCDS002I End of directory: <em>count</em> members selected
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The end of the SYS1.SVCLIB directory has been reached.
+<code><em>count</em></code> members have been selected for processing.
+  <dt>Issued by
+  <dd>dasdisup.c, function main
+  </dl>
+<dt><code><a name="HHCDS003E">
+HHCDS003E Directory block byte count is invalid
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The length of the directory block read is invalid. The SYS1.SVCLIB
+directory is probably corrupt.
+  <dt>Action
+  <dd>Rebuild SYS1.SVCLIB and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function process_dirblk
+  </dl>
+<dt><code><a name="HHCDS004E">
+HHCDS004E Number of members exceeds MAX_MEMBERS
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>SYS1.SVCLIB has too many members to fit in the array used to store
+their information.
+  <dt>Action
+  <dd>Increase the value of MAX_MEMBERS in <code>dasdisup.c</code> and
+recompile the program, then run it again.
+  <dt>Issued by
+  <dd>dasdisup.c, function process_dirblk
+  </dl>
+<dt><code><a name="HHCDS005E">
+HHCDS005E Member <em>member</em> TTR count is zero
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member named <code><em>member</em></code> has no data associated
+with it. Since aliases have been skipped already, this means
+that the SYS1.SVCLIB directory is corrupt.
+  <dt>Action
+  <dd>Rebuild SYS1.SVCLIB and run <code>dasdisup</code> again.
+  <dt>Issued by
+  <dd>dasdisup.c, function process_dirblk
+  </dl>
+<dt><code><a name="HHCDS006W">
+HHCDS006W Member <em>member</em> is not single text record
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member named <code><em>member</em></code> is not contained in a single
+text record. This is an invalid condition. The member will be skipped
+later, and message <a href="#HHCDS011E">HHCDS011E</a> will be issued.
+  <dt>Action
+  <dd>If this member must be processed, rebuild SYS1.SVCLIB and rerun
+<code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function process_dirblk
+  </dl>
+<dt><code><a name="HHCDS007W">
+HHCDS007W Member <em>member</em> size <em>size</em> exceeds X'7F8' bytes
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member named <code><em>member</em></code> is too long. The maximum length of
+an OS/360 SVC load module is X'7F8' (2040 decimal) bytes. The member will
+be processed, but OS/360 will have problems with it.
+  <dt>Action
+  <dd>Correct the member in SYS1.SVCLIB and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function process_dirblk
+  </dl>
+<dt><code><a name="HHCDS008W">
+HHCDS008W Member <em>member</em> size <em>size</em> is not a multiple of 8
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member named <code><em>member</em></code> is not a multiple of 8 bytes long. Its
+actual size is <code><em>size</em></code>. This is not valid for an OS/360
+load module. OS/360 will issue an ABEND when an attempt is made to
+load the module.
+  <dt>Action
+  <dd>Correct the member in SYS1.SVCLIB and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function process_dirblk
+  </dl>
+<dt><code><a name="HHCDS009I">
+HHCDS009I Alias <em>alias</em> skipped
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The alias named <code><em>alias</em></code> has been skipped, since no processing is
+necessary for it.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS010I">
+HHCDS010I Member <em>member</em> skipped
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member named <code><em>member</em></code> has been skipped, since it does not
+have an XCTL table.
+  <dt>Action
+  <dd>If the member should have an XCTL table, rebuild it
+in SYS1.SVCLIB and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS011E">
+HHCDS011E Member <em>member</em> has multiple text records
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member named <code><em>member</em></code> has multiple text records. This
+is not a valid condition for an OS/360 SVC module. The member will not
+be processed. Message <a href="#HHCDS006W">HHCDS006W</a> was issued for
+this member earlier.
+  <dt>Action
+  <dd>If this member must be processed, rebuild it
+in SYS1.SVCLIB and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS012E">
+HHCDS012E Member <em>member</em> has invalid TTR <em>ttr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The pointer to the text record for the member named <code><em>member</em></code>
+is invalid. The pointer found is <code><em>ttr</em></code>. The member cannot be located
+to be processed. The SYS1.SVCLIB directory is probably corrupt.
+  <dt>Action
+  <dd>Rebuild SYS1.SVCLIB and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS013I">
+HHCDS013I Processing member <em>member</em> text record TTR=<em>ttr</em>
+CCHHR=<em>cchhr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member named <code><em>member</em></code> is being processed. Its relative
+location is <code><em>ttr</em></code>, and its absolute location is <code><em>cchhr</em></code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS014E">
+HHCDS014E Member <em>member</em> error reading TTR <em>ttr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to read the member named <code><em>member</em></code>, at the
+relative location <code><em>ttr</em></code>, failed. The member cannot be processed.
+  <dt>Action
+  <dd>Rebuild SYS1.SVCLIB and rerun <code>dasdisup</code>. If this
+is unsuccessful, rebuild the entire DASD volume. 
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS015E">
+HHCDS015E Member <em>member</em> TTR <em>ttr</em> text record length
+<em>length</em> is not valid 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The length <code><em>length</em></code> of the text record at location <code><em>ttr</em></code>
+of the member named <code><em>member</em></code> is less than 8, greater than 1024,
+or not a multiple of 8. All of these conditions must be met for the
+length to be valid. The member is probably corrupt.
+  <dt>Action
+  <dd>Rebuild the member in SYS1.SVCLIB and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS016E">
+HHCDS016E Member <em>member</em> TTR <em>ttr</em> text record length
+<em>textlength</em> does not match length <em>dirlength</em> in directory
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The length <code><em>textlength</em></code> of the text record at location
+<code><em>ttr</em></code> is not the same as the length <code><em>dirlength</em></code> in the
+directory entry for member <code><em>member</em></code>. Either the member, or the
+directory, is probably corrupt.
+  <dt>Action
+  <dd>Rebuild the member in SYS1.SVCLIB and rerun <code>dasdisup</code>.
+If this does not correct the problem, rebuild SYS1.SVCLIB in its entirety.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS017E">
+HHCDS017E Member <em>member</em> TTR <em>ttr</em> XCTL table
+improperly terminated
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The XCTL table in member <code><em>member</em></code> at location <code><em>ttr</em></code> runs
+past the end of the text record. The member is probably corrupt.
+  <dt>Action
+  <dd>Rebuild the member and rerun <code>dasdisup</code>.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS018I">
+HHCDS018I <em>member</em>
+</code>(<code>Alias</code>|<code>Member</code>)<code> skipped
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The member or alias named <code><em>member</em></code> is not an Open, Close,
+or EOV module, and so does not have an XCTL table that needs to be
+updated. It has been skipped.
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
+  </dl>
+<dt><code><a name="HHCDS019I">
+HHCDS019I In member <em>member</em>: <em>reference</em> TTRL=<em>ttrl</em>
+<em>status</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A reference to the member named <code><em>reference</em></code> in the
+member named <code><em>member</em></code> was found, The referenced member is at the
+location <code><em>ttrl</em></code> in the table. <code><em>status</em></code> is optional; it may
+be one of:
+    <dl>
+    <dt><code>** Member <em>reference</em> not found</code>
+    <dd>The referenced member was not found in
+SYS1.SVCLIB. The reference cannot be updated.
+    <dt><code>replaced by TTRL=<em>newttrl</em> <em>flag</em></code>
+    <dd> The reference was updated to point to the referenced member's
+actual location at <code><em>newttrl</em></code>. If <code><em>flag</em></code> is
+<code>****</code>, the actual length of the referenced member is different
+from the length of the member in the reference pointer.
+    </dl>
+  <dt>Issued by
+  <dd>dasdisup.c, function resolve_xctltab
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
@@ -27,9 +273,9 @@ HHCTE001I text
 If you have a question about Hercules, see the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
 <p><center><hr width=15% noshade>
-<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 15 December 2002
+<p>Last updated 17 December 2002
 </BODY>
 </HTML>

@@ -259,7 +259,7 @@ static void http_dump_cgi_variables(WEBBLK *webblk)
 {
     CGIVAR *cv;
     for(cv = webblk->cgivar; cv; cv = cv->next)
-        logmsg(_("HHS020D cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"),
+        logmsg(_("HHCHT012I cgi_var_dump: pointer(%p) name(%s) value(%s) type(%d)\n"),
           cv, cv->name, cv->value, cv->type);
 }
 #endif
