@@ -18,11 +18,12 @@
 
 #include "inline.h"
 
+#if defined(_FEATURE_SIE)
+
 #if !defined(_SIE_C)
 
 #define _SIE_C
 
-#if defined(_FEATURE_SIE)
 int s370_run_sie (REGS *regs);
 int s390_run_sie (REGS *regs);
 #if defined(_900)
