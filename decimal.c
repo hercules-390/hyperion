@@ -18,6 +18,7 @@
 /* Clear DXC on data exception - Peter Kuschnerus                V209*/
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2003      */
 /* TP instruction - Roger Bowler                            08/02/01 */
+/* packed_to_binary subroutine - Roger Bowler               29/06/03 */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -35,6 +36,112 @@
 /*-------------------------------------------------------------------*/
 #define MAX_DECIMAL_LENGTH      16
 #define MAX_DECIMAL_DIGITS      (((MAX_DECIMAL_LENGTH)*2)-1)
+
+/*-------------------------------------------------------------------*/
+/* Convert packed decimal number to binary                           */
+/*                                                                   */
+/* This subroutine is called by the CVB/CVBY/CVBG instructions.      */
+/* It performs the conversion of a 8-byte or 16-byte packed          */
+/* decimal number into a 64-bit signed binary result.                */
+/* This routine is not architecture-dependent; all of its operands   */
+/* are contained in work areas passed by the architecture-dependent  */
+/* instruction routines which handle all main-storage accesses and   */
+/* possible program checks.                                          */
+/*                                                                   */
+/* Input:                                                            */
+/*      dec     An 8 or 16 byte area containing a copy of the        */
+/*              packed decimal storage operand.                      */
+/*      len     Length-1 (in bytes) of the packed decimal input      */
+/*              (7 for CVB/CVBY or 15 for CVBG).                     */
+/* Output:                                                           */
+/*      result  Points to an U64 field which will receive the        */
+/*              result as a 64-bit signed binary number.             */
+/*      ovf     Points to an int field which will be set to 1 if     */
+/*              the result overflows 63 bits plus sign, else 0.      */
+/*              If overflow occurs, the result field will contain    */
+/*              the rightmost 64 bits of the result.                 */
+/*      dxf     Points to an int field which will be set to 1 if     */
+/*              invalid digits or sign were detected, else 0.        */
+/*              The result field is not set if the dxf is set to 1.  */
+/*-------------------------------------------------------------------*/
+void packed_to_binary (BYTE *dec, int len, U64 *result,
+                        int *ovf, int *dxf)
+{
+U64     dreg;                           /* 64-bit result accumulator */
+int     i;                              /* Loop counter              */
+int     h, d=0;                         /* Decimal digits            */
+U64     oreg = 0;                       /* 64 bit overflow work reg  */
+
+    /* Initialize result flags */
+    *ovf = 0;
+    *dxf = 0;
+
+    /* Initialize 64-bit result accumulator */
+    dreg = 0;
+
+    /* Convert decimal digits to binary */
+    for (i = 0; i <= len; i++)
+    {
+        /* Isolate high-order and low-order digits */
+        h = (dec[i] & 0xF0) >> 4;
+        d = dec[i] & 0x0F;
+
+        /* Data exception if high-order digit is invalid */
+        if (h > 9)
+        {
+            *dxf = 1;
+            return;
+        }
+
+        /* Accumulate high-order digit into result */
+        dreg *= 10;
+        dreg += h;
+
+        /* Set overflow indicator if an overflow has occurred */
+        if(dreg < oreg)
+            *ovf = 1;
+
+        /* Save current value */
+        oreg = dreg;
+
+        /* Check for valid low-order digit or sign */
+        if (i < len)
+        {
+            /* Data exception if low-order digit is invalid */
+            if (d > 9)
+            {
+                *dxf = 1;
+                return;
+            }
+
+            /* Accumulate low-order digit into result */
+            dreg *= 10;
+            dreg += d;
+        }
+        else
+        {
+            /* Data exception if sign is invalid */
+            if (d < 10)
+            {
+                *dxf = 1;
+                return;
+            }
+        }
+
+    } /* end for(i) */
+
+    /* Result is negative if sign is X'B' or X'D' */
+    if (d == 0x0B || d == 0x0D)
+    {
+        if( (S64)dreg == -1LL )
+            *ovf = 1;
+        (S64)dreg = -((S64)dreg);
+    }
+
+    /* Set result field and return */
+    *result = dreg;
+
+} /* end function packed_to_binary */
 
 /*-------------------------------------------------------------------*/
 /* Add two decimal byte strings as unsigned decimal numbers          */
