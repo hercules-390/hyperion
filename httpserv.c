@@ -255,15 +255,6 @@ CGIVAR **cgivar;
 }
 
 
-static void http_load_cgi_variables(WEBBLK *webblk)
-{
-    if(webblk->post_arg)
-        http_interpret_variable_string(webblk, webblk->post_arg, REQTYPE_POST);
-    if(webblk->get_arg)
-        http_interpret_variable_string(webblk, webblk->get_arg, REQTYPE_GET);
-}
-
-
 #if 0
 static void http_dump_cgi_variables(WEBBLK *webblk)
 {
@@ -494,6 +485,7 @@ static void *http_request(FILE *hsock)
                     pointer++;
             } 
             *pointer = '\0';
+            http_interpret_variable_string(webblk, webblk->post_arg, REQTYPE_POST);
         }
     }
 
@@ -510,6 +502,7 @@ static void *http_request(FILE *hsock)
     if ((pointer=strchr(url,'?'))) {
         webblk->get_arg = strdup(pointer+1);
         *pointer = 0;
+        http_interpret_variable_string(webblk, webblk->get_arg, REQTYPE_GET);
     }
 
     while(url[0] == '/' && url[1] == '/')
@@ -527,8 +520,6 @@ static void *http_request(FILE *hsock)
 
     while(*url == '/')
         url++;
-
-    http_load_cgi_variables(webblk);
 
 #if 0
     http_dump_cgi_variables(webblk);
