@@ -856,7 +856,8 @@ int     n;
 /* Execute guest instructions */
 int ARCH_DEP(run_sie) (REGS *regs)
 {
-    int   icode;
+    int   icode;    /* SIE longjmp intercept code      */
+    BYTE  oldv;     /* siebk->v change check reference */
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
@@ -877,6 +878,9 @@ int ARCH_DEP(run_sie) (REGS *regs)
             {
                 SIE_PERFMON(SIE_PERF_RUNLOOP_2);
 
+                /* Keep a copy if SIEBK 'v' field for later checks */
+                oldv=GUESTREGS->siebk->v;
+
                 /* Set `execflag' to 0 in case EXecuted instruction did progjmp */
                 GUESTREGS->execflag = 0;
 
@@ -896,6 +900,12 @@ int ARCH_DEP(run_sie) (REGS *regs)
                         ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
 
                     obtain_lock(&sysblk.intlock);
+
+                    /* Turn off "possible interrupt" flag */
+                    /* Otherwise we come back here every  */
+                    /* time                               */
+                    /* ISW20041224                        */
+                    OFF_IC_INTERRUPT(GUESTREGS);
 
                     /* Perform broadcasted purge of ALB and TLB if requested
                        synchronize_broadcast() must be called until there are
@@ -996,16 +1006,27 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(gregs);
                     UNROLLED_EXECUTE(gregs);
                     UNROLLED_EXECUTE(gregs);
-                } while( unlikely(!SIE_I_HOST(regs)
-                                && !SIE_I_WAIT(GUESTREGS)
-                                && !SIE_I_EXT(GUESTREGS)
-                                && !SIE_I_IO(GUESTREGS)
+                } while( likely(!SIE_I_HOST(regs)
+                                && GUESTREGS->siebk->v==oldv
                                 && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
+                /******************************************/
+                /* ABOVE : Keep executing instructions    */
+                /*         in a tight loop until...       */
+                /*  - A Host Interrupt is made pending    */
+                /*  - An external source changes siebk->v */
+                /*  - A guest interrupt is made pending   */
+                /******************************************/
             } while( unlikely(!SIE_I_HOST(regs)
                             && !SIE_I_WAIT(GUESTREGS)
                             && !SIE_I_EXT(GUESTREGS)
                             && !SIE_I_IO(GUESTREGS)
                             && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
+            /******************************************/
+            /* ABOVE : Remain in SIE until...         */
+            /*  - A Host Interrupt is made pending    */
+            /*  - A Sie defined irpt becomes enabled  */
+            /*  - A guest interrupt is made pending   */
+            /******************************************/
 
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)

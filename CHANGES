@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+24 Dec 2004 sie perf update attempt (again).. Merry Xmas - Ivan Warren
 22 Dec 2004 Fix to cc in CUUTF and CUTFU instruction - Greg
 22 Dec 2004 Fix minor benign glitch in breakpoint cmd - Fish
 22 Dec 2004 Fix to TROT instruction in esame.c - Fish
