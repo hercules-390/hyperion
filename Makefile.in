@@ -812,8 +812,7 @@ DIST_COMMON = $(noinst_HEADERS) ABOUT-NLS INSTALL Makefile.am \
 	Makefile.in aclocal.m4 autoconf/README autoconf/config.guess \
 	autoconf/config.rpath autoconf/config.sub autoconf/depcomp \
 	autoconf/install-sh autoconf/ltmain.sh autoconf/missing \
-	autoconf/mkinstalldirs config.guess config.h.in config.sub \
-	configure configure.ac
+	autoconf/mkinstalldirs config.h.in configure configure.ac
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckddiag_SOURCES) $(cckdswap_SOURCES) $(cfba2fba_SOURCES) $(ckd2cckd_SOURCES) $(dasdcat_SOURCES) $(dasdcopy_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dasdseq_SOURCES) $(dmap2hrc_SOURCES) $(dyngui_SOURCES) $(EXTRA_dyngui_SOURCES) dyngui.dll.c $(dyninst_SOURCES) dyninst.dll.c $(fba2cfba_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(EXTRA_hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
 
