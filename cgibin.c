@@ -44,6 +44,7 @@
  
 
 #include "hercules.h"
+#include "opcode.h"
 #include "httpmisc.h"
 
 #if defined(OPTION_HTTP_SERVER)
@@ -556,12 +557,87 @@ REGS *regs;
 }
 
 
+zz_cgibin cgibin_debug_memory(WEBBLK *webblk)
+{
+int i, j;
+char *value;
+U32 addr = 0;
+
+    /* INCOMPLETE 
+     * no storage alter
+     * no storage type (abs/real/prim virt/sec virt/access reg virt)
+     * no cpu selection for storage other then abs 
+     */
+
+    if((value = cgi_variable(webblk,"alter_a0")))
+        sscanf(value,"%x",&addr);
+
+    addr &= ~0x0F;
+
+    html_header(webblk);
+
+
+    fprintf(webblk->hsock,"<form method=post>\n"
+                          "<table>\n");
+
+    if(addr > sysblk.mainsize || (addr + 128) > sysblk.mainsize)
+        addr = sysblk.mainsize - 128;
+
+    for(i = 0; i < 128;)
+    {
+        if(i == 0)
+            fprintf(webblk->hsock,"<tr>\n"
+                                  "<td><input type=text name=alter_a0 size=8 value=%8.8X>"
+                                  "<input type=hidden name=alter_a1 value=%8.8X></td>\n"
+                                  "<td><input type=submit name=refresh value=\"Refresh\"></td>\n",
+                                  i + addr, i + addr);
+        else
+            fprintf(webblk->hsock,"<tr>\n"
+                                  "<td align=center>%8.8X</td>\n"
+                                  "<td></td>\n",
+                                  i + addr);
+
+	for(j = 0; j < 4; i += 4, j++)
+        {
+        U32 m;
+            FETCH_FW(m,sysblk.mainstor + i + addr);
+            fprintf(webblk->hsock,"<td><input type=text name=alter_m%d size=8 value=%8.8X></td>\n",i,m);
+        }
+
+        fprintf(webblk->hsock,"</tr>\n");
+    }
+
+    fprintf(webblk->hsock,"</table>\n"
+                          "</form>\n");
+    html_footer(webblk);
+
+    return NULL;
+}
+
+
+zz_cgibin cgibin_debug_version_info(WEBBLK *webblk)
+{
+    html_header(webblk);
+
+    fprintf(webblk->hsock,"<h3>Hercules Version Information</h3>\n"
+                          "<pre>\n");
+    display_version(webblk->hsock,"Hercules HTTP Server ");
+    fprintf(webblk->hsock,"</pre>\n");
+
+    html_footer(webblk);
+
+    return NULL;
+}
+
+
 /* The following table is the cgi-bin directory, which               */
 /* associates directory filenames with cgibin routines               */
 
 CGITAB cgidir[] = {
     { "syslog", (void*)&cgibin_syslog },
     { "debug/registers", (void*)&cgibin_debug_registers },
+    { "debug/memory", (void*)&cgibin_debug_memory },
+    { "debug/version_info", (void*)&cgibin_debug_version_info },
     { "registers/general", (void*)&cgibin_reg_general },
     { "registers/control", (void*)&cgibin_reg_control },
     { "registers/psw", (void*)&cgibin_psw },
