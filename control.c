@@ -729,7 +729,7 @@ U32     old;                            /* old value                 */
     {
         /* Otherwise yield */
         regs->GR_L(r1) = CSWAP32(old);
-        if (sysblk.numcpu > 1)
+        if (sysblk.cpus > 1)
             sched_yield();
     }
 
@@ -3912,8 +3912,13 @@ int     cpu;
     /* Update the TOD clock of all CPU's in the configuration
        as we simulate 1 shared TOD clock, and do not support the
        TOD clock sync check */
-    for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        sysblk.regs[cpu].todoffset = sysblk.todoffset;
+    for (cpu = 0; cpu < MAX_CPU; cpu++)
+    {
+        obtain_lock(&sysblk.cpulock[cpu]);
+        if (IS_CPU_ONLINE(cpu))
+            sysblk.regs[cpu]->todoffset = sysblk.todoffset;
+        release_lock(&sysblk.cpulock[cpu]);
+    }
 
     /* Release the TOD clock update lock */
     release_lock (&sysblk.todlock);
@@ -4753,22 +4758,15 @@ static char *ordername[] = {    "Unassigned",
     parm = (r1 & 1) ? regs->GR_L(r1) : regs->GR_L(r1+1);
 
     /* Return condition code 3 if target CPU does not exist */
-#ifdef FEATURE_CPU_RECONFIG
-    if (cpad >= MAX_CPU_ENGINES)
-#else /*!FEATURE_CPU_RECONFIG*/
-    if (cpad >= sysblk.numcpu)
-#endif /*!FEATURE_CPU_RECONFIG*/
+    if (cpad >= MAX_CPU)
     {
         regs->psw.cc = 3;
         return;
     }
 
-    /* Point to the target CPU */
-    tregs = sysblk.regs + cpad;
-
     /* Trace SIGP unless Sense, External Call, Emergency Signal,
        or the target CPU is configured offline */
-    if (order > LOG_SIGPORDER || !tregs->cpuonline)
+    if (order > LOG_SIGPORDER || !IS_CPU_ONLINE(cpad))
 #if !defined(FEATURE_ESAME)
         logmsg ("CPU%4.4X: SIGP CPU%4.4X %s PARM %8.8X\n",
                 regs->cpuad, cpad,
@@ -4802,13 +4800,16 @@ static char *ordername[] = {    "Unassigned",
 #if defined(FEATURE_S370_CHANNEL)
        && order != SIGP_IMPL
 #endif /*defined(FEATURE_S370_CHANNEL)*/
-       && !tregs->cpuonline)
+       && !IS_CPU_ONLINE(cpad))
     {
-        release_lock(&sysblk.sigplock);
         release_lock(&sysblk.intlock);
+        release_lock(&sysblk.sigplock);
         regs->psw.cc = 3;
         return;
     }
+
+    /* Point to the target CPU -- may be NULL if INITRESET or IMPL */
+    tregs = sysblk.regs[cpad];
 
     /* Except for the reset orders, return condition code 2 if the
        target CPU is executing a previous start, stop, restart,
@@ -4819,19 +4820,19 @@ static char *ordername[] = {    "Unassigned",
        && order != SIGP_IPR
 #endif /*defined(FEATURE_S370_CHANNEL)*/
        && order != SIGP_INITRESET)
-        && (tregs->cpustate == CPUSTATE_STOPPING
-            || IS_IC_RESTART(tregs)))
+       && (tregs->cpustate == CPUSTATE_STOPPING
+        || IS_IC_RESTART(tregs)))
     {
-        release_lock(&sysblk.sigplock);
         release_lock(&sysblk.intlock);
+        release_lock(&sysblk.sigplock);
         regs->psw.cc = 2;
         return;
     }
 
     /* If the CPU thread is still starting, ie CPU is still performing
-       the IML process then relect an operator intervening status
+       the IML process then reflect an operator intervening status
        to the caller */
-    if(tregs->cpustate == CPUSTATE_STARTING)
+    if (IS_CPU_ONLINE(cpad) && tregs->cpustate == CPUSTATE_STARTING)
         status |= SIGP_STATUS_OPERATOR_INTERVENING;
     else
         /* Process signal according to order code */
@@ -4952,19 +4953,28 @@ static char *ordername[] = {    "Unassigned",
 #if defined(FEATURE_S370_CHANNEL)
         case SIGP_IMPL:
         case SIGP_IPR:
-            channelset_reset(tregs);
-            /* fallthrough*/
 #endif /* defined(FEATURE_S370_CHANNEL) */
         case SIGP_INITRESET:
-            if(tregs->cpuonline)
+            if (!IS_CPU_ONLINE(cpad))
             {
-                /* Signal initial CPU reset function */
-                tregs->sigpireset = 1;
-                tregs->cpustate = CPUSTATE_STOPPING;
-                ON_IC_INTERRUPT(tregs);
+                configure_cpu(cpad);
+                if (!IS_CPU_ONLINE(cpad))
+                {
+                    status |= SIGP_STATUS_OPERATOR_INTERVENING;
+                    break;
+                }
+                tregs = sysblk.regs[cpad];
             }
-            else
-                configure_cpu(tregs);
+
+#if defined(FEATURE_S370_CHANNEL)
+            if (order == SIGP_IMPL || order == SIGP_IPR)
+                channelset_reset(tregs);
+#endif /* defined(FEATURE_S370_CHANNEL) */
+
+            /* Signal initial CPU reset function */
+            tregs->sigpireset = 1;
+            tregs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_INTERRUPT(tregs);
 
             break;
 
@@ -5095,14 +5105,10 @@ static char *ordername[] = {    "Unassigned",
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
 
-#ifdef FEATURE_CPU_RECONFIG
-            for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-#else /*!FEATURE_CPU_RECONFIG*/
-            for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-#endif /*!FEATURE_CPU_RECONFIG*/
-                if(sysblk.regs[cpu].cpuonline
-                    && sysblk.regs[cpu].cpustate != CPUSTATE_STOPPED
-                    && sysblk.regs[cpu].cpuad != regs->cpuad)
+            for (cpu = 0; cpu < MAX_CPU; cpu++)
+                if (IS_CPU_ONLINE(cpu)
+                 && sysblk.regs[cpu]->cpustate != CPUSTATE_STOPPED
+                 && sysblk.regs[cpu]->cpuad != regs->cpuad)
                     status |= SIGP_STATUS_INCORRECT_STATE;
 
             if(!status)
@@ -5136,6 +5142,7 @@ static char *ordername[] = {    "Unassigned",
                         status |= SIGP_STATUS_INVALID_PARAMETER;
                 }
 
+            sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 #if defined(OPTION_FISHIO)
             ios_arch_mode = sysblk.arch_mode;
 #endif // defined(OPTION_FISHIO)
@@ -5160,7 +5167,8 @@ static char *ordername[] = {    "Unassigned",
     release_lock(&sysblk.sigplock);
 
     /* Wake up the target CPU */
-    WAKEUP_CPU (tregs->cpuad);
+    if (IS_CPU_ONLINE(cpad))
+        WAKEUP_CPU (cpad);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
@@ -5574,10 +5582,10 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
                 sysib122 = (SYSIB122*)(regs->mainstor + n);
                 memset(sysib122, 0x00, sizeof(SYSIB122));
                 STORE_FW(sysib122->cap, STSI_CAPACITY);
-                STORE_HW(sysib122->totcpu, MAX_CPU_ENGINES);
-                STORE_HW(sysib122->confcpu, sysblk.numcpu);
-                STORE_HW(sysib122->sbcpu, MAX_CPU_ENGINES - sysblk.numcpu);
-                memcpy(sysib122->mpfact,mpfact,(MAX_CPU_ENGINES-1)*2);
+                STORE_HW(sysib122->totcpu, MAX_CPU);
+                STORE_HW(sysib122->confcpu, sysblk.cpus);
+                STORE_HW(sysib122->sbcpu, MAX_CPU - sysblk.cpus);
+                memcpy(sysib122->mpfact,mpfact,(MAX_CPU-1)*2);
                 regs->psw.cc = 0;
                 break;
 

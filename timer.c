@@ -96,18 +96,17 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
     obtain_lock (&sysblk.intlock);
 
     /* Check for [1] clock comparator, [2] cpu timer, and
-       [3] interval timer interrupts for each CPU.
-         Note that we do *not* check for the macro
-         _FEATURE_CPU_RECONFIG because we are not running
-         in an ARCH_DEP context */
-    for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
+     * [3] interval timer interrupts for each CPU.
+     */
+    for (cpu = 0; cpu < HI_CPU; cpu++)
     {
         /* Ignore this CPU if it is not started */
-        if((sysblk.regs[cpu].cpumask & sysblk.started_mask) == 0)
+        if (!IS_CPU_ONLINE(cpu)
+         || CPUSTATE_STOPPED == sysblk.regs[cpu]->cpustate)
             continue;
 
         /* Point to the CPU register context */
-        regs = sysblk.regs + cpu;
+        regs = sysblk.regs[cpu];
 
         /*-------------------------------------------*
          * [1] Check for clock comparator interrupt  *
@@ -303,7 +302,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
 
-    /* Set CPU thread priority */
+    /* Set timer thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.todprio))
         logmsg (_("HHCTT001W Timer thread set priority %d failed: %s\n"),
                 sysblk.todprio, strerror(errno));
@@ -327,7 +326,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
     sysblk.todclock_init = sysblk.todclock_init * 1000000 + tv.tv_usec;
 #endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
 
-    while (sysblk.numcpu)
+    while (sysblk.cpus)
     {
         /* Obtain the TOD lock */
         obtain_lock (&sysblk.todlock);
@@ -350,10 +349,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
         msecctr += (int)(diff/4096000);
         if (msecctr > 999)
         {
-            /* Access the diffent register contexts with the intlock held */
-            obtain_lock(&sysblk.intlock);
-
-            /* Get current time, we may have had to wait for the intlock */
+            /* Get current time */
             then = now;
             gettimeofday (&tv, NULL);
             now = (U64)tv.tv_sec;
@@ -365,16 +361,27 @@ struct  timeval tv;                     /* Structure for gettimeofday
             sysblk.shrdcount = 0;
 #endif
 
-            for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
+            for (cpu = 0; cpu < HI_CPU; cpu++)
             {
-                /* Point to the CPU register context */
-                regs = sysblk.regs + cpu;
+                if (!IS_CPU_ONLINE(cpu))
+                    continue;
 
-                /* 0% if no cpu thread or first time thru */
-                if (regs->cputid == 0 || then == 0 || regs->waittod == 0)
+                obtain_lock (&sysblk.cpulock[cpu]);
+
+                if (!IS_CPU_ONLINE(cpu))
+                {
+                    release_lock(&sysblk.cpulock[cpu]);
+                    continue;
+                }
+
+                regs = sysblk.regs[cpu];
+
+                /* 0% if first time thru */
+                if (then == 0 || regs->waittod == 0)
                 {
                     regs->mipsrate = regs->siosrate = 0;
                     regs->cpupct = 0.0;
+                    release_lock(&sysblk.cpulock[cpu]);
                     continue;
                 }
 
@@ -397,13 +404,12 @@ struct  timeval tv;                     /* Structure for gettimeofday
                 regs->waittime = 0;
                 regs->waittod = now;
 
+                release_lock(&sysblk.cpulock[cpu]);
+
             } /* end for(cpu) */
 
             /* Reset the millisecond counter */
             msecctr = 0;
-
-            /* Release the intlock */
-            release_lock(&sysblk.intlock);
 
         } /* end if(msecctr) */
 #endif /*OPTION_MIPS_COUNTING*/
@@ -420,6 +426,8 @@ struct  timeval tv;                     /* Structure for gettimeofday
     } /* end while */
 
     logmsg (_("HHCTT003I Timer thread ended\n"));
+
+    sysblk.todtid = 0;
 
     return NULL;
 

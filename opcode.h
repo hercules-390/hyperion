@@ -257,10 +257,8 @@ do { \
  ?  (BYTE *)((unsigned int)(_ia) ^ (unsigned int)((_addr) & PAGEFRAME_PAGEMASK)) \
  :  (_ia)
 
-#define AIA_LIKELY(c) __builtin_expect((c),1)
-
 #define INSTRUCTION_FETCH(_dest, _addr, _regs, _valid) \
-  AIA_LIKELY((_addr) <= (_regs)->VIE && (_regs)->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
+  likely((_addr) <= (_regs)->VIE && (_regs)->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
   ? IADDR((_regs), (_addr)) \
   : ((_regs)->instvalid = (_valid), \
      ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)) \
@@ -546,12 +544,11 @@ do { \
     (_regs)->VI = 1; \
 } while (0)
 
-#define AEA_LIKELY(c) __builtin_expect((c),1)
 #define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
 #define MAXAEA 256
 
 #define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  AEA_LIKELY (  (_arn) >= 0 \
+  likely (  (_arn) >= 0 \
   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
   &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
@@ -572,7 +569,7 @@ do { \
   :   ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
 
 #define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey) \
-  AEA_LIKELY ( (_arn) >= 0 \
+  likely ( (_arn) >= 0 \
   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
   &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
@@ -1491,7 +1488,7 @@ void s370_program_interrupt (REGS *regs, int code);
 void s390_program_interrupt (REGS *regs, int code);
 #endif /*!defined(_FEATURE_ZSIE)*/
 void ARCH_DEP(program_interrupt) (REGS *regs, int code);
-void *cpu_thread (REGS *regs);
+void *cpu_thread (int *cpu);
 void store_psw (REGS *regs, BYTE *addr);
 void display_psw (REGS *regs);
 
@@ -1537,15 +1534,15 @@ void store_status (REGS *ssreg, U64 aaddr);
 
 
 /* Functions in module ipl.c */
-int  load_ipl (U16 devnum, REGS *regs);
-int  ARCH_DEP(load_ipl) (U16 devnum, REGS *regs);
+int  load_ipl (U16 devnum, int cpu);
+int  ARCH_DEP(load_ipl) (U16 devnum, int cpu);
 void ARCH_DEP(cpu_reset) (REGS *regs);
 void initial_cpu_reset (REGS *regs);
 void ARCH_DEP(initial_cpu_reset) (REGS *regs);
 int load_main(char *fname, RADR startloc);
 int ARCH_DEP(load_main) (char *fname, RADR startloc);
-int load_hmc(char *fname, REGS *regs);
-int ARCH_DEP(load_hmc) (char *fname, REGS *regs);
+int load_hmc(char *fname, int cpu);
+int ARCH_DEP(load_hmc) (char *fname, int cpu);
 
 
 /* Functions in module machchk.c */

@@ -354,10 +354,11 @@ static char *pgmintname[] = {
        which must be used when loading/storing the psw, or backing up
        the instruction address in case of nullification */
 #if defined(_FEATURE_SIE)
-        realregs = regs->sie_state ? sysblk.sie_regs + regs->cpuad
-                                   : sysblk.regs + regs->cpuad;
+        realregs = regs->sie_state
+                 ? sysblk.regs[regs->cpuad]->guestregs
+                 : sysblk.regs[regs->cpuad];
 #else /*!defined(_FEATURE_SIE)*/
-    realregs = sysblk.regs + regs->cpuad;
+    realregs = sysblk.regs[regs->cpuad];
 #endif /*!defined(_FEATURE_SIE)*/
 
     /* Unlock the main storage lock if held */
@@ -983,14 +984,14 @@ RADR    fsta;                           /* Failing storage address   */
     longjmp (regs->progjmp, SIE_INTERCEPT_MCK);
 } /* end function perform_mck_interrupt */
 
-/*-------------------------------------------------------------------*/
-/* CPU instruction execution thread                                  */
-/*-------------------------------------------------------------------*/
+
 #if !defined(_GEN_ARCH)
-void s370_run_cpu (REGS *regs);
-void s390_run_cpu (REGS *regs);
-void z900_run_cpu (REGS *regs);
-static void (* run_cpu[GEN_MAXARCH]) (REGS *regs) =
+
+
+REGS *s370_run_cpu (int cpu, REGS *oldregs);
+REGS *s390_run_cpu (int cpu, REGS *oldregs);
+REGS *z900_run_cpu (int cpu, REGS *oldregs);
+static REGS *(* run_cpu[GEN_MAXARCH]) (int cpu, REGS *oldregs) =
                 {
 #if defined(_370)
                     s370_run_cpu,
@@ -1003,16 +1004,21 @@ static void (* run_cpu[GEN_MAXARCH]) (REGS *regs) =
 #endif
                 };
 
-void *cpu_thread (REGS *regs)
+/*-------------------------------------------------------------------*/
+/* CPU instruction execution thread                                  */
+/*-------------------------------------------------------------------*/
+void *cpu_thread (int *ptr)
 {
+REGS *regs = NULL;
+int   cpu  = *ptr;
 
     /* Set root mode in order to set priority */
     SETMODE(ROOT);
     
     /* Set CPU thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        logmsg (_("HHCCP001W CPU thread set priority %d failed: %s\n"),
-                sysblk.cpuprio, strerror(errno));
+        logmsg (_("HHCCP001W CPU%4.4X thread set priority %d failed: %s\n"),
+                cpu, sysblk.cpuprio, strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
@@ -1020,36 +1026,24 @@ void *cpu_thread (REGS *regs)
     /* Display thread started message on control panel */
     logmsg (_("HHCCP002I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
             "priority=%d\n"),
-            regs->cpuad, thread_id(), getpid(),
+            cpu, thread_id(), getpid(),
             getpriority(PRIO_PROCESS,0));
 
-    logmsg (_("HHCCP003I CPU%4.4X architecture mode %s\n"),
-        regs->cpuad,get_arch_mode_string(regs));
-
-#ifdef FEATURE_VECTOR_FACILITY
-    if (regs->vf->online)
-        logmsg (_("HHCCP004I CPU%4.4X Vector Facility online\n"),
-                regs->cpuad);
-#endif /*FEATURE_VECTOR_FACILITY*/
-
-    /* Add this CPU to the configuration. Also ajust
-       the number of CPU's to perform synchronisation as the
-       synchronization process relies on the number of CPU's
-       in the configuration to accurate */
     obtain_lock(&sysblk.intlock);
-    if(regs->cpustate != CPUSTATE_STARTING)
-    {
-        logmsg(_("HHCCP005E CPU%4.4X thread already started\n"),
-            regs->cpuad);
-        release_lock(&sysblk.intlock);
-        return NULL;
-    }
+
+    /* Signal cpu has started */
+    signal_condition (&sysblk.cpucond);
 
     /* Increment number of CPUs online */
-    if(!sysblk.numcpu)
+    sysblk.cpus++;
+
+    /* Set hi CPU */
+    if (cpu >= sysblk.hicpu)
+        sysblk.hicpu = cpu + 1;
+
+    /* Start the TOD clock and CPU timer thread */
+    if (!sysblk.todtid)
     {
-        sysblk.numcpu++;
-        /* Start the TOD clock and CPU timer thread */
         if ( create_thread (&sysblk.todtid, &sysblk.detattr,
              timer_update_thread, NULL) )
         {
@@ -1059,48 +1053,127 @@ void *cpu_thread (REGS *regs)
             return NULL;
         }
     }
-    else
-    {
-        sysblk.numcpu++;
-    }
-
-    /* Perform initial cpu reset */
-    initial_cpu_reset (regs);
-
-    /* Signal cpu is started */
-    signal_condition (&regs->intcond);
-
-    /* release the intlock */
-    release_lock(&sysblk.intlock);
-
-    /* Establish longjmp destination to switch architecture mode */
-    setjmp(regs->archjmp);
-
-    /* Switch from architecture mode if appropriate */
-    if(sysblk.arch_mode != regs->arch_mode)
-    {
-        regs->arch_mode = sysblk.arch_mode;
-        logmsg (_("HHCCP007I CPU%4.4X architecture mode set to %s\n"),
-            regs->cpuad,get_arch_mode_string(regs));
-    }
 
     /* Execute the program in specified mode */
-    run_cpu[regs->arch_mode] (regs);
+    do {
+        regs = run_cpu[sysblk.arch_mode] (cpu, regs);
+    } while (regs);
 
-    /* Clear all regs */
-    obtain_lock (&sysblk.intlock);
-    initial_cpu_reset (regs);
-    release_lock (&sysblk.intlock);
+    /* Decrement number of CPUs online */
+    sysblk.cpus--;
+
+    /* Reset hi cpu */
+    if (cpu + 1 >= sysblk.hicpu)
+    {
+        int i;
+        for (i = MAX_CPU_ENGINES - 1; i >= 0; i--)
+            if (IS_CPU_ONLINE(i))
+                break;
+        sysblk.hicpu = i + 1;
+    }
+
+    /* Signal cpu has terminated */
+    signal_condition (&sysblk.cpucond);
 
     /* Display thread ended message on control panel */
     logmsg (_("HHCCP008I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n"),
-            regs->cpuad, thread_id(), getpid());
+            cpu, thread_id(), getpid());
 
-    /* Thread exit */
-    regs->cputid = 0;
+    release_lock(&sysblk.intlock);
 
     return NULL;
+}
 
+
+/*-------------------------------------------------------------------*/
+/* Initialize a CPU                                                  */
+/*-------------------------------------------------------------------*/
+int cpu_init (int cpu, REGS *regs)
+{
+    if (!regs->hostregs)
+        obtain_lock (&sysblk.cpulock[cpu]);
+
+    regs->cpuad = cpu;
+    regs->cpumask = 0x80000000 >> cpu;
+
+    regs->configured = 1;
+    regs->arch_mode = sysblk.arch_mode;
+
+    regs->chanset = cpu;
+
+    regs->mainstor = sysblk.mainstor;
+    regs->storkeys = sysblk.storkeys;
+    regs->mainlim = sysblk.mainsize - 1;
+
+    regs->todoffset = sysblk.todoffset;
+
+    initialize_condition (&regs->intcond);
+
+#if defined(_FEATURE_VECTOR_FACILITY)
+    regs->vf = &sysblk.vf[cpu];
+    regs->vf->online = (cpu < sysblk.numvec);
+#endif /*defined(_FEATURE_VECTOR_FACILITY)*/
+
+    regs->tlb = calloc (sizeof(TLBE), TLBN);
+    if (!regs->tlb)
+    {
+        logmsg (_("HHCCPxxxE CPU%4.4X: calloc failed for%s tlb: %s\n"),
+                    cpu, regs->hostregs ? " sie" : "", strerror(errno));
+            return -1;
+    }
+
+    initial_cpu_reset(regs);
+
+    if (!regs->hostregs)
+    {
+#if defined(_FEATURE_SIE)
+        regs->guestregs = calloc(sizeof(REGS), 1);
+        if (!regs->guestregs)
+        {
+            logmsg (_("HHCCPxxxE CPU%4.4X: calloc failed for sie regs: %s\n"),
+                    cpu, strerror(errno));
+            return -1;
+        }
+        regs->guestregs->hostregs = regs;
+        if (cpu_init (cpu, regs->guestregs))
+            return -1;
+#endif /*defined(_FEATURE_SIE)*/
+        regs->cpustate = CPUSTATE_STOPPING;
+        ON_IC_INTERRUPT(regs);
+        sysblk.regs[cpu] = regs;
+        release_lock (&sysblk.cpulock[cpu]);
+    }
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Uninitialize a CPU                                                */
+/*-------------------------------------------------------------------*/
+void *cpu_uninit (int cpu, REGS *regs)
+{
+    if (!regs->hostregs)
+        obtain_lock (&sysblk.cpulock[cpu]);
+
+    if (regs->guestregs)
+    {
+        cpu_uninit (cpu, regs->guestregs);
+        free (regs->guestregs);
+    }
+
+    if (regs->tlb)
+        free (regs->tlb);
+
+    destroy_condition(&regs->intcond);
+
+    if (!regs->hostregs)
+    {
+        sysblk.regs[cpu] = NULL;
+        release_lock (&sysblk.cpulock[cpu]);
+    }
+
+    return NULL;
 }
 
 
@@ -1115,7 +1188,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if( OPEN_IC_DEBUG(regs) )
     {
         U32 prevmask = regs->ints_mask;
-    SET_IC_EXTERNAL_MASK(regs);
+        SET_IC_EXTERNAL_MASK(regs);
         SET_IC_IO_MASK(regs);
         SET_IC_MCK_MASK(regs);
         SET_IC_PER_MASK(regs);
@@ -1142,6 +1215,13 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
        releases and reacquires the mainlock. */
     while (IS_IC_BROADCAST(regs))
         ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
+
+    /* Refresh opcode table */
+    if (regs->reset_opctab)
+    {
+        regs->reset_opctab = 0;
+        MEMCPY(regs->opctab, ARCH_DEP(opcode_table), 256*sizeof(zz_func));
+    }
 
     /* Take interrupts if CPU is not stopped */
     if (regs->cpustate == CPUSTATE_STARTED)
@@ -1185,19 +1265,14 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         regs->cpustate = CPUSTATE_STOPPED;
         sysblk.started_mask &= ~regs->cpumask;
 
-        if (!regs->cpuonline)
+        if (!regs->configured)
         {
-            /* Remove this CPU from the configuration */
-            sysblk.numcpu--;
-
 #ifdef FEATURE_VECTOR_FACILITY
             /* Mark Vector Facility offline */
             regs->vf->online = 0;
 #endif /*FEATURE_VECTOR_FACILITY*/
 
-            release_lock(&sysblk.intlock);
-
-            /* Thread exit */
+            /* Thread exit (note - intlock still held) */
             return;
         }
 
@@ -1359,28 +1434,80 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 /*-------------------------------------------------------------------*/
 /* Run CPU                                                           */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(run_cpu) (REGS *regs)
+REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
+REGS    regs;
 zz_func opcode_table[256];
 
-    /* Set started bit on and wait bit off for this CPU */
-    obtain_lock (&sysblk.intlock);
-    sysblk.started_mask |= regs->cpumask;
-    sysblk.waitmask &= ~regs->cpumask;
-    release_lock (&sysblk.intlock);
+    if (oldregs)
+    {
+        MEMCPY (&regs, oldregs, sizeof(REGS));
+        free (oldregs);
+        sysblk.regs[cpu] = &regs;
+        release_lock(&sysblk.cpulock[cpu]);
+        logmsg (_("HHCCP007I CPU%4.4X architecture mode set to %s\n"),
+                cpu, get_arch_mode_string(&regs));
+    }
+    else
+    {
+        MEMSET (&regs, 0, sizeof(REGS));
 
-    /* Invalidate AIA */
-    INVALIDATE_AIA(regs);
+        if (cpu_init (cpu, &regs))
+            return NULL;
+
+        logmsg (_("HHCCP003I CPU%4.4X architecture mode %s\n"),
+                cpu, get_arch_mode_string(&regs));
+
+#ifdef FEATURE_VECTOR_FACILITY
+        if (regs->vf->online)
+            logmsg (_("HHCCP004I CPU%4.4X Vector Facility online\n"),
+                    cpu);
+#endif /*FEATURE_VECTOR_FACILITY*/
+    }
+
+    /* Set started bit on and wait bit off for this CPU */
+    sysblk.started_mask |= regs.cpumask;
+    sysblk.waitmask &= ~regs.cpumask;
 
     /* Copy the opcode table */
     MEMCPY(opcode_table, ARCH_DEP(opcode_table), sizeof(opcode_table));
+    regs.opctab = opcode_table;
+
+    release_lock (&sysblk.intlock);
+
+    /* Establish longjmp destination for architecture switch */
+    setjmp(regs.archjmp);
+
+    /* Switch architecture mode if appropriate */
+    if(sysblk.arch_mode != regs.arch_mode)
+    {
+        obtain_lock(&sysblk.intlock);
+        regs.arch_mode = sysblk.arch_mode;
+        oldregs = malloc (sizeof(REGS));
+        if (oldregs)
+        {
+            MEMCPY(oldregs, &regs, sizeof(REGS));
+            obtain_lock(&sysblk.cpulock[cpu]);
+        }
+        else
+        {
+            logmsg (_("HHCCPxxxE CPU%4.4X malloc failed for archjmp regs: %s\n"),
+                    cpu, strerror(errno));
+            cpu_uninit (cpu, &regs);
+        }
+        return oldregs;
+    }
+
+    /* Invalidate AIA and AEA */
+    INVALIDATE_AIA(&regs);
+    INVALIDATE_AEA_ALL(&regs);
 
     /* Establish longjmp destination for program check */
-    setjmp(regs->progjmp);
+    setjmp(regs.progjmp);
 
     if (IS_IC_TRACE
 #ifdef FEATURE_PER
-     || PER_MODE(regs)
+     || PER_MODE(&regs)
 #endif
        )
         goto slowloop;
@@ -1388,49 +1515,49 @@ zz_func opcode_table[256];
     while (1)
     {
         /* Test for interrupts if it appears that one may be pending */
-        if( IC_INTERRUPT_CPU_NO_PER(regs) )
+        if( unlikely(IC_INTERRUPT_CPU_NO_PER(&regs)) )
         {
-            ARCH_DEP(process_interrupt)(regs);
-            if (!regs->cpuonline)
-                 return;
+            ARCH_DEP(process_interrupt)(&regs);
+            if (!regs.configured)
+                return cpu_uninit(cpu, &regs);
             if (IS_IC_TRACE) goto slowloop;
         }
 
         do {
-            UNROLLED_EXECUTE(regs, opcode_table);
-            UNROLLED_EXECUTE(regs, opcode_table);
-            UNROLLED_EXECUTE(regs, opcode_table);
+            UNROLLED_EXECUTE(&regs, opcode_table);
+            UNROLLED_EXECUTE(&regs, opcode_table);
+            UNROLLED_EXECUTE(&regs, opcode_table);
 
-            regs->instcount += 8;
+            regs.instcount += 8;
 
-            UNROLLED_EXECUTE(regs, opcode_table);
-            UNROLLED_EXECUTE(regs, opcode_table);
-            UNROLLED_EXECUTE(regs, opcode_table);
-            UNROLLED_EXECUTE(regs, opcode_table);
-            UNROLLED_EXECUTE(regs, opcode_table);
-        } while (!IS_IC_INTERRUPT(regs));
+            UNROLLED_EXECUTE(&regs, opcode_table);
+            UNROLLED_EXECUTE(&regs, opcode_table);
+            UNROLLED_EXECUTE(&regs, opcode_table);
+            UNROLLED_EXECUTE(&regs, opcode_table);
+            UNROLLED_EXECUTE(&regs, opcode_table);
+        } while (!IS_IC_INTERRUPT(&regs));
     }
 
 slowloop:
     while (1)
     {
         /* Test for interrupts if it appears that one may be pending */
-        if( IC_INTERRUPT_CPU(regs) )
+        if( IC_INTERRUPT_CPU(&regs) )
         {
-            ARCH_DEP(process_interrupt)(regs);
-            if (!regs->cpuonline)
-                 return;
+            ARCH_DEP(process_interrupt)(&regs);
+            if (!regs.configured)
+                return cpu_uninit(cpu, &regs);
         }
 
         /* Fetch the next sequential instruction */
-        regs->ip = INSTRUCTION_FETCH(regs->inst, regs->psw.IA, regs, 0);
+        regs.ip = INSTRUCTION_FETCH(regs.inst, regs.psw.IA, &regs, 0);
 
         if( IS_IC_TRACE )
-            ARCH_DEP(process_trace)(regs);
+            ARCH_DEP(process_trace)(&regs);
 
         /* Execute the instruction */
-        regs->instcount++;
-        EXECUTE_INSTRUCTION(regs->ip, 0, regs, opcode_table);
+        regs.instcount++;
+        EXECUTE_INSTRUCTION(regs.ip, 0, &regs, opcode_table);
     }
 
 } /* end function cpu_thread */

@@ -264,21 +264,13 @@ DEVBLK            *dev;                /* Device block pointer       */
             spccbconfig->hex01 = 0x01;
 
             /* Set CPU array count and offset in SPCCB */
-#ifdef FEATURE_CPU_RECONFIG
-            STORE_HW(spccbconfig->toticpu,MAX_CPU_ENGINES);
-#else /*!FEATURE_CPU_RECONFIG*/
-            STORE_HW(spccbconfig->toticpu,sysblk.numcpu);
-#endif /*!FEATURE_CPU_RECONFIG*/
+            STORE_HW(spccbconfig->toticpu,MAX_CPU);
             offset = sizeof(SPCCB_HEADER) + sizeof(SPCCB_CONFIG_INFO);
             STORE_HW(spccbconfig->officpu,offset);
 
             /* Set HSA array count and offset in SPCCB */
             STORE_HW(spccbconfig->tothsa,0);
-#ifdef FEATURE_CPU_RECONFIG
-            offset += sizeof(SPCCB_CPU_INFO) * MAX_CPU_ENGINES;
-#else /*!FEATURE_CPU_RECONFIG*/
-            offset += sizeof(SPCCB_CPU_INFO) * sysblk.numcpu;
-#endif /*!FEATURE_CPU_RECONFIG*/
+            offset += sizeof(SPCCB_CPU_INFO) * MAX_CPU;
             STORE_HW(spccbconfig->offhsa,offset);
 
             /* Move IPL load parameter to SPCCB */
@@ -286,14 +278,10 @@ DEVBLK            *dev;                /* Device block pointer       */
 
             /* Build the CPU information array after the SCP info */
             spccbcpu = (SPCCB_CPU_INFO*)(spccbconfig+1);
-#ifdef FEATURE_CPU_RECONFIG
-            for (i = 0; i < MAX_CPU_ENGINES; i++, spccbcpu++)
-#else /*!FEATURE_CPU_RECONFIG*/
-            for (i = 0; i < sysblk.numcpu; i++, spccbcpu++)
-#endif /*!FEATURE_CPU_RECONFIG*/
+            for (i = 0; i < MAX_CPU; i++, spccbcpu++)
             {
                 memset (spccbcpu, 0, sizeof(SPCCB_CPU_INFO));
-                spccbcpu->cpuaddr = sysblk.regs[i].cpuad;
+                spccbcpu->cpuaddr = i;
                 spccbcpu->todid = 0;
             }
 
@@ -412,7 +400,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         memset(hdrinfo, 0, sizeof(DIAG204_HDR));
         hdrinfo->numpart = 1;
         hdrinfo->flags = DIAG204_PHYSICAL_PRESENT;
-        STORE_HW(hdrinfo->physcpu,sysblk.numcpu);
+        STORE_HW(hdrinfo->physcpu,sysblk.cpus);
         STORE_HW(hdrinfo->offown,sizeof(DIAG204_HDR));
         STORE_DW(hdrinfo->diagstck,dreg);
 
@@ -420,33 +408,29 @@ static U64        diag204tod;          /* last diag204 tod           */
         partinfo = (DIAG204_PART*)(hdrinfo + 1);
         memset(partinfo, 0, sizeof(DIAG204_PART));
         partinfo->partnum = 1;
-        partinfo->virtcpu = sysblk.numcpu;
+        partinfo->virtcpu = sysblk.cpus;
         for(i = 0; i < sizeof(partinfo->partname); i++)
             partinfo->partname[i] = host_to_guest((int)lparname[i]);
 
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
-#ifdef FEATURE_CPU_RECONFIG
-        for(i = 0; i < MAX_CPU_ENGINES;i++)
-          if(sysblk.regs[i].cpuonline)
-#else /*!FEATURE_CPU_RECONFIG*/
-        for(i = 0; i < sysblk.numcpu;i++)
-#endif /*!FEATURE_CPU_RECONFIG*/
-        {
-            memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
-            STORE_HW(cpuinfo->cpaddr,sysblk.regs[i].cpuad);
-            STORE_HW(cpuinfo->relshare,100);
-            dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.numcpu;
-            dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
-            dreg <<= 12;
-            STORE_DW(cpuinfo->totdispatch,dreg);
-            dreg = (U64)(usage.ru_utime.tv_sec) / sysblk.numcpu;
-            dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec );
-            dreg <<= 12;
-            STORE_DW(cpuinfo->effdispatch,dreg);
-            cpuinfo += 1;
-        }
+        for(i = 0; i < MAX_CPU; i++)
+          if (IS_CPU_ONLINE(i))
+          {
+              memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
+              STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
+              STORE_HW(cpuinfo->relshare,100);
+              dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.cpus;
+              dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+              dreg <<= 12;
+              STORE_DW(cpuinfo->totdispatch,dreg);
+              dreg = (U64)(usage.ru_utime.tv_sec) / sysblk.cpus;
+              dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec );
+              dreg <<= 12;
+              STORE_DW(cpuinfo->effdispatch,dreg);
+              cpuinfo += 1;
+          }
 
         /* lpar management */
         getrusage(RUSAGE_CHILDREN,&usage);
@@ -459,7 +443,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
 //      STORE_HW(cpuinfo->cpaddr,0);
-        dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.numcpu;
+        dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.cpus;
         dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
         dreg <<= 12;
         STORE_DW(cpuinfo->totdispatch,dreg);

@@ -409,6 +409,14 @@ typedef void*THREAD_FUNC(void*);
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
 
+#if defined(__GNUC__)
+#define likely(_c)   __builtin_expect((_c),1)
+#define unlikely(_c) __builtin_expect((_c),0)
+#else
+#define likely(_c)   (_c)
+#define unlikely(_c) (_c)
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Prototype definitions for device handler functions                */
 /*-------------------------------------------------------------------*/
@@ -466,14 +474,14 @@ typedef struct _REGS {                  /* Processor registers       */
         struct  timeval lasttod;        /* Last gettimeofday         */
 #endif
         int     tlbID;                  /* Validation identifier     */
-        TLBE    tlb[TLBN];              /* Translation lookaside buf */
-        TID     cputid;                 /* CPU thread identifier     */
+        TLBE   *tlb;                    /* Translation lookaside buf */
         DW      gr[16];                 /* General registers         */
         DW      cr[16];                 /* Control registers         */
         DW      px;                     /* Prefix register           */
         DW      mc;                     /* Monitor Code              */
         DW      ea;                     /* Exception address         */
         DW      et;                     /* Execute Target address    */
+        void   *opctab;                 /* -> opcode table           */
         BYTE   *mi;                     /* Mainstor instruction addr */
         DW      ai;                     /* Absolute instruction addr */
         DW      vi;                     /* Virtual instruction addr  */
@@ -578,12 +586,13 @@ typedef struct _REGS {                  /* Processor registers       */
 
         BYTE    cpustate;               /* CPU stopped/started state */
         unsigned int                    /* Flags                     */
-                cpuonline:1,            /* 1=CPU is online           */
+                configured:1,           /* 1=CPU is online           */
                 loadstate:1,            /* 1=CPU is in load state    */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 mainlock:1,             /* 1=Mainlock held           */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 hostint:1,              /* Host generated interrupt  */
+                reset_opctab:1,         /* 1=Copy new opcode table   */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1,           /* 1=SIGP initial cpu reset  */
                 vtimerint:1,            /* 1=Virtual Timer interrupt */
@@ -625,26 +634,41 @@ typedef struct _REGS {                  /* Processor registers       */
 
 #define ALL_CPUS                0xffffffff
 
+#define IS_CPU_ONLINE(_cpu) \
+  (sysblk.regs[(_cpu)] != NULL)
+
+#if defined(_FEATURE_CPU_RECONFIG)
+ #define MAX_CPU MAX_CPU_ENGINES
+#else
+ #define MAX_CPU sysblk.numcpu
+#endif
+
+#define HI_CPU sysblk.hicpu
+
 /* Macros to signal interrupt condition to a CPU[s] */
-#define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)].intcond)
+#define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)]->intcond)
 #define WAKEUP_WAITING_CPU(mask,statemask) \
- do { int i; \
-   for (i = 0; i < MAX_CPU_ENGINES; i++) \
-     if ((sysblk.regs[i].cpustate & (statemask)) \
-      && (sysblk.regs[i].cpumask  & (mask)) \
-      && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
+ do { \
+   int i; \
+   for (i = 0; i < HI_CPU; i++) \
+     if (IS_CPU_ONLINE(i) \
+      && (sysblk.regs[i]->cpustate & (statemask)) \
+      && (sysblk.regs[i]->cpumask  & (mask)) \
+      && (sysblk.regs[i]->cpumask  & sysblk.waitmask)) \
       { \
-        signal_condition(&sysblk.regs[i].intcond); \
+        signal_condition(&sysblk.regs[i]->intcond); \
         break; \
       } \
  } while(0)
 #define WAKEUP_WAITING_CPUS(mask,statemask) \
- do { int i; \
-   for (i = 0; i < MAX_CPU_ENGINES; i++) \
-     if ((sysblk.regs[i].cpustate & (statemask)) \
-      && (sysblk.regs[i].cpumask  & (mask)) \
-      && (sysblk.regs[i].cpumask  & sysblk.waitmask)) \
-        signal_condition(&sysblk.regs[i].intcond); \
+ do { \
+   int i; \
+   for (i = 0; i < HI_CPU; i++) \
+     if (IS_CPU_ONLINE(i) \
+      && (sysblk.regs[i]->cpustate & (statemask)) \
+      && (sysblk.regs[i]->cpumask  & (mask)) \
+      && (sysblk.regs[i]->cpumask  & sysblk.waitmask)) \
+        signal_condition(&sysblk.regs[i]->intcond); \
  } while (0)
 
 /* Macros to queue/dequeue a device on the I/O interrupt queue */
@@ -725,17 +749,22 @@ typedef struct _SYSBLK {
         TID     wdtid;                  /* Thread-id for watchdog    */
         BYTE    loadparm[8];            /* IPL load parameter        */
         U16     ipldev;                 /* IPL device                */
-        U16     iplcpu;                 /* IPL cpu                   */
-        U16     numcpu;                 /* Number of CPUs installed  */
-        REGS    regs[MAX_CPU_ENGINES];  /* Registers for each CPU    */
+        int     iplcpu;                 /* IPL cpu                   */
+        int     numcpu;                 /* Number of CPUs installed  */
+        int     numvec;                 /* Number vector processors  */
+        int     maxcpu;                 /* Max number of CPUs        */
+        int     cpus;                   /* Number CPUs configured    */
+        int     hicpu;                  /* Hi cpu + 1 configured     */
+        COND    cpucond;                /* CPU config/deconfig cond  */
+        LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
+        TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
+        REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
+        REGS    dummyregs;              /* Regs for unconfigured CPU */
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 #if defined(_FEATURE_SIE)
-        REGS    sie_regs[MAX_CPU_ENGINES];  /* SIE copy of regs      */
-// #if defined(FEATURE_REGION_RELOCATE)
         ZPBLK   zpb[FEATURE_SIE_MAXZONES];  /* SIE Zone Parameter Blk*/
-// #endif /*defined(FEATURE_REGION_RELOCATE)*/
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(OPTION_FOOTPRINT_BUFFER)
         REGS    footprregs[MAX_CPU_ENGINES][OPTION_FOOTPRINT_BUFFER];
@@ -1761,8 +1790,8 @@ int  attach_device (U16 devnum, char *devtype, int addargc,
         BYTE *addargv[]);
 int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
-int  configure_cpu (REGS *regs);
-int  deconfigure_cpu (REGS *regs);
+int  configure_cpu (int cpu);
+int  deconfigure_cpu (int cpu);
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 
@@ -1911,7 +1940,7 @@ int     cckd_chkdsk(int, FILE *, int);
 
 /* Functions in module hscmisc.c */
 int herc_system (char* command);
-void do_shutdown();
+void *do_shutdown(void *);
 void display_regs (REGS *regs);
 void display_fregs (REGS *regs);
 void display_cregs (REGS *regs);

@@ -124,6 +124,10 @@ REGS*   pTargetCPU_REGS  = NULL;    // target CPU for commands and displays
 
 void  UpdateTargetCPU ()
 {
+    // FIXME:  `sysblk.pcpu' is panel target cpu
+    //         `sysblk.cpus' has number online cpu's
+    //         `intlock' or `cpulock[i]' should be held
+
     // Use the requested CPU for our status information
     // unless it's no longer online (enabled), in which case
     // we'll default to the first one we find that's online
@@ -131,9 +135,11 @@ void  UpdateTargetCPU ()
     // Note: sysblk.pcpu   =   number of online CPUs
     //       pTargetCPU_REGS       ->  first online CPU
 
-    pTargetCPU_REGS = sysblk.regs + sysblk.pcpu;
+    if (sysblk.pcpu > MAX_CPU) sysblk.pcpu = 0;
 
-    if (!pTargetCPU_REGS->cpuonline)    // (requested CPU online/available?)
+    pTargetCPU_REGS = sysblk.regs[sysblk.pcpu];
+
+    if (!pTargetCPU_REGS)    // (requested CPU online/available?)
     {
         // Find first available CPU that's online...
 
@@ -141,13 +147,13 @@ void  UpdateTargetCPU ()
         sysblk.pcpu = 0;        // (no cpus currently online)
         pTargetCPU_REGS = NULL;         // (target CPU currently unknown)
 
-        for (i=0; i < MAX_CPU_ENGINES; i++)
+        for (i=0; i < MAX_CPU; i++)
         {
-            if (sysblk.regs[i].cpuonline)
+            if (IS_CPU_ONLINE(i))
             {
                 sysblk.pcpu++;  // (count #of online cpus)
                 if (!pTargetCPU_REGS)
-                     pTargetCPU_REGS = sysblk.regs + i;
+                     pTargetCPU_REGS = sysblk.regs[i];
             }
         }
     }
@@ -156,7 +162,7 @@ void  UpdateTargetCPU ()
     // (We MUST have a CPU + registers to work with!)
 
     if (!pTargetCPU_REGS)
-         pTargetCPU_REGS = sysblk.regs;
+         pTargetCPU_REGS = sysblk.regs[0];
 
     // If SIE is active, use the guest regs rather than the host regs...
 
@@ -557,21 +563,11 @@ void  UpdateCPUStatus ()
     mips_rate = 0;
     sios_rate = 0;
 
-#if       !defined(_FEATURE_CPU_RECONFIG)
-
-    for (i = 0; i < sysblk.numcpu; i++)
-
-#else  //  defined(_FEATURE_CPU_RECONFIG)
-
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
-
-        if(sysblk.regs[i].cpuonline)
-
-#endif // !defined(_FEATURE_CPU_RECONFIG)
-
+    for (i = 0; i < MAX_CPU; i++)
+        if(IS_CPU_ONLINE(i))
         {
-            mips_rate  +=  sysblk.regs[i].mipsrate;
-            sios_rate  +=  sysblk.regs[i].siosrate;
+            mips_rate  +=  sysblk.regs[i]->mipsrate;
+            sios_rate  +=  sysblk.regs[i]->siosrate;
         }
 
 #ifdef OPTION_SHARED_DEVICES

@@ -423,7 +423,7 @@ VADR    effective_addr2,
         /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
 
-        if(regs->psw.cc && sysblk.numcpu > 1)
+        if(regs->psw.cc && sysblk.cpus > 1)
             sched_yield();
 
     }
@@ -1317,7 +1317,7 @@ BYTE    old;                            /* Old value                 */
         }
         else
 #endif /*defined(_FEATURE_SIE)*/
-            if (sysblk.numcpu > 1)
+            if (sysblk.cpus > 1)
                 sched_yield();
     }
 }

@@ -193,6 +193,7 @@ static int     nummsgs = 0;             /* Number of msgs in buffer  */
 FILE   *compat_msgpipew;                /* Message pipe write handle */
 int     compat_msgpiper;                /* Message pipe read handle  */
 int     compat_shutdown;                /* Shutdown flag             */
+TID     compat_tid = 0;
 
 #if defined(OPTION_DYNAMIC_LOAD)
 void *(*panel_command) (void *);
@@ -232,7 +233,6 @@ static void panel_compat_init()
 {
 ATTR compat_attr;
 int rc, pfd[2];
-TID compat_tid;
 
     rc = pipe (pfd);
     if (rc < 0)
@@ -470,7 +470,9 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         return;
         }
     }
-    regs = sysblk.regs + sysblk.pcpu;
+
+    regs = sysblk.regs[sysblk.pcpu];
+    if (!regs) regs = &sysblk.dummyregs;
 
 #if defined(OPTION_MIPS_COUNTING)
     fprintf(confp, ANSI_WHT_BLU);
@@ -581,16 +583,12 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     fprintf(confp, ANSI_CURSOR, 19, 2);
     fprintf(confp, ANSI_YLW_BLK);
 #ifdef OPTION_MIPS_COUNTING
-#ifdef _FEATURE_CPU_RECONFIG
-    for(mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-      if(sysblk.regs[i].cpuonline)
-#else /*!_FEATURE_CPU_RECONFIG*/
-    for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
-    {
-        mipsrate += sysblk.regs[i].mipsrate;
-        siosrate += sysblk.regs[i].siosrate;
-    }
+    for(mipsrate = siosrate = i = 0; i < HI_CPU; i++)
+        if (IS_CPU_ONLINE(i))
+        {
+            mipsrate += sysblk.regs[i]->mipsrate;
+            siosrate += sysblk.regs[i]->siosrate;
+        }
 #ifdef OPTION_SHARED_DEVICES
     siosrate += sysblk.shrdrate;
 #endif
@@ -764,6 +762,7 @@ int i,n;
 char c;
 
     compat_shutdown = 1;
+    log_wakeup(NULL);
 
     /* Restore the terminal mode */
     tcgetattr (STDIN_FILENO, &kbattr);
@@ -904,7 +903,8 @@ struct  timeval tv;                     /* Select timeout structure  */
     while (1)
     {
         /* Set target CPU for commands and displays */
-        regs = sysblk.regs + sysblk.pcpu;
+        regs = sysblk.regs[sysblk.pcpu];
+        if (!regs) regs = &sysblk.dummyregs;
 
 #if defined(_FEATURE_SIE)
         /* Point to SIE copy in SIE state */
@@ -1553,7 +1553,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
             if (redraw_status && !sysblk.npquiet)
             {
-                if(sysblk.regs[sysblk.pcpu].cpuonline)
+                if(IS_CPU_ONLINE(sysblk.pcpu))
                 /* Display the PSW and instruction counter for CPU 0 */
                 fprintf (confp,
                     "%s"

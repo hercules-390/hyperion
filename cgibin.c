@@ -55,7 +55,10 @@ void cgibin_reg_control(WEBBLK *webblk)
 {
 int i;
 
-    REGS *regs = sysblk.regs + sysblk.pcpu;
+    REGS *regs;
+
+    regs = sysblk.regs[sysblk.pcpu];
+    if (!regs) regs = &sysblk.dummyregs;
 
     html_header(webblk);
 
@@ -81,7 +84,10 @@ void cgibin_reg_general(WEBBLK *webblk)
 {
 int i;
 
-    REGS *regs = sysblk.regs + sysblk.pcpu;
+    REGS *regs;
+
+    regs = sysblk.regs[sysblk.pcpu];
+    if (!regs) regs = &sysblk.dummyregs;
 
     html_header(webblk);
 
@@ -107,12 +113,15 @@ void store_psw (REGS *regs, BYTE *addr);
 
 void cgibin_psw(WEBBLK *webblk)
 {
-    REGS *regs = sysblk.regs + sysblk.pcpu;
+    REGS *regs;
     QWORD   qword;                            /* quadword work area      */  
 
     char *value;
     int autorefresh=0;
     int refresh_interval=5;
+
+    regs = sysblk.regs[sysblk.pcpu];
+    if (!regs) regs = &sysblk.dummyregs;
 
     html_header(webblk);
 
@@ -315,23 +324,13 @@ REGS *regs;
         select_ar = 0;
 
     /* Validate cpu number */
-#if defined(_FEATURE_CPU_RECONFIG)
-    if(cpu < 0 || cpu > MAX_CPU_ENGINES
-       || !sysblk.regs[cpu].cpuonline)
-#else
-    if(cpu < 0 || cpu > sysblk.numcpu)
-#endif
-        for(cpu = 0;
-#if defined(_FEATURE_CPU_RECONFIG)
-            cpu < MAX_CPU_ENGINES;
-#else
-            cpu < sysblk.numcpu;
-#endif
-                cpu++)
-            if(sysblk.regs[cpu].cpuonline)
+    if (cpu < 0 || cpu >= MAX_CPU)
+        for (cpu = 0; cpu < MAX_CPU; cpu++)
+            if(IS_CPU_ONLINE(cpu))
                 break;
 
-    regs = sysblk.regs + cpu;
+    regs = sysblk.regs[sysblk.pcpu];
+    if (!regs) regs = &sysblk.dummyregs;
 
     if((value = cgi_variable(webblk,"alter_gr")) && *value == 'A')
     {
@@ -381,14 +380,8 @@ REGS *regs;
     fprintf(webblk->hsock,"<form method=post>\n"
                           "<select type=submit name=cpu>\n");
 
-    for(i = 0;
-#if defined(_FEATURE_CPU_RECONFIG)
-        i < MAX_CPU_ENGINES;
-#else
-        i < sysblk.numcpu;
-#endif
-        i++)
-        if(sysblk.regs[i].cpuonline)
+    for(i = 0; i < MAX_CPU; i++)
+        if(IS_CPU_ONLINE(i))
             fprintf(webblk->hsock,"<option value=%d%s>CPU%4.4X</option>\n",
               i,i==cpu?" selected":"",i);
 
@@ -630,13 +623,7 @@ U32 doipl;
     }
 
     /* Validate CPU number */
-    if(
-#if defined(_FEATURE_CPU_RECONFIG)
-            iplcpu >= MAX_CPU_ENGINES
-#else
-            iplcpu >= sysblk.numcpu
-#endif
-      || !sysblk.regs[iplcpu].cpuonline)
+    if(iplcpu >= MAX_CPU)
         doipl = 0;
   
     if(!doipl)
@@ -645,16 +632,10 @@ U32 doipl;
         fprintf(webblk->hsock,"<form method=post>\n"
                               "<select type=submit name=cpu>\n");
 
-        for(i = 0;
-#if defined(_FEATURE_CPU_RECONFIG)
-            i < MAX_CPU_ENGINES;
-#else
-            i < sysblk.numcpu;
-#endif
-            i++)
-            if(sysblk.regs[i].cpuonline)
+        for(i = 0; i < MAX_CPU; i++)
+            if(IS_CPU_ONLINE(i))
                 fprintf(webblk->hsock,"<option value=%4.4X%s>CPU%4.4X</option>\n",
-                  i, ((sysblk.regs[i].cpuad == iplcpu) ? " selected" : ""), i);
+                  i, ((sysblk.regs[i]->cpuad == iplcpu) ? " selected" : ""), i);
 
         fprintf(webblk->hsock,"</select>\n"
                               "<select type=submit name=device>\n");
@@ -683,7 +664,7 @@ U32 doipl;
     else
     {
         /* Perform IPL function */
-        if( load_ipl(ipldev, sysblk.regs + iplcpu) )
+        if( load_ipl(ipldev, iplcpu) )
         {
             fprintf(webblk->hsock,"<h3>IPL failed, see the "
                                   "<a href=\"syslog#bottom\">system log</a> "

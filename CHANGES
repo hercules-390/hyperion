@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+16 Jan 2004 Performance Enhancement: REGS on run_cpu stack - Greg Smith
 16 Jan 2004 Performance Enhancement: instfetch - Greg Smith
 19 Dec 2003 Correct Keyboard Shortcuts for pseudo-graphical Console - Volker Bandke, code by Marian Gasparovic
 17 Dec 2003 Correct structure size boundaries for ARM compiles - Ivan Warren

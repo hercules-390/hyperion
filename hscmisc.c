@@ -12,49 +12,11 @@
 
 #if !defined(_HSCMISC_C)
 #define _HSCMISC_C
-        
-static int wait_sigq_pending = 0;
 
-static int is_wait_sigq_pending()
+void *do_shutdown(void *ptr)
 {
-int pending;
-
-    obtain_lock(&sysblk.intlock);
-    pending = wait_sigq_pending;
-    release_lock(&sysblk.intlock);
-
-    return pending;
-}
-
-static void wait_sigq_resp()
-{
-int pending, i;
-    /* Wait for all CPU's to stop */
-    do
-    {
-        obtain_lock(&sysblk.intlock);
-        wait_sigq_pending = 0;
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
-            if(sysblk.regs[i].cpustate != CPUSTATE_STOPPED)
-                wait_sigq_pending = 1;
-	pending = wait_sigq_pending;
-        release_lock(&sysblk.intlock);
-
-        if(pending)
-            sleep(1);
-    }
-    while(is_wait_sigq_pending());
-}
-
-static void cancel_wait_sigq()
-{
-    obtain_lock(&sysblk.intlock);
-    wait_sigq_pending = 0;
-    release_lock(&sysblk.intlock);
-}
-
-static void do_shutdown_now()
-{
+    UNREFERENCED(ptr);
+    logmsg(_("HHCIN098I Shutdown initiated\n"));
     system_shutdown();
 #if defined(FISH_HANG)
     FishHangAtExit();
@@ -62,25 +24,7 @@ static void do_shutdown_now()
     fprintf(stderr, _("HHCIN099I Hercules terminated\n"));
     fflush(stderr);
     exit(0);
-}
-
-static void do_shutdown_wait()
-{
-    logmsg(_("HHCIN098I Shutdown initiated\n"));
-    wait_sigq_resp();
-    do_shutdown_now();
-}
-
-void do_shutdown()
-{
-TID tid;
-    if(is_wait_sigq_pending())
-        cancel_wait_sigq();
-    else
-        if(can_signal_quiesce() && !signal_quiesce(0,0))
-            create_thread(&tid, &sysblk.detattr, do_shutdown_wait, NULL);
-        else
-            do_shutdown_now();
+    return NULL;
 }
 
 /*-------------------------------------------------------------------*/

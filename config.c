@@ -1283,6 +1283,7 @@ BYTE **orig_newargv;
                 delayed_exit(1);
             }
         }
+        sysblk.numcpu = numcpu ? numcpu : 1;
 
         /* Parse number of VFs operand */
         if (snumvec != NULL)
@@ -1300,6 +1301,7 @@ BYTE **orig_newargv;
             logmsg(_("HHCCF020W Vector Facility support not configured\n"));
 #endif /*!_FEATURE_VECTOR_FACILITY*/
         }
+        sysblk.numvec = numvec;
 
         /* Parse load parameter operand */
         if (sloadparm != NULL)
@@ -1649,10 +1651,9 @@ BYTE **orig_newargv;
     initialize_lock (&sysblk.sigplock);
     initialize_condition (&sysblk.broadcast_cond);
     initialize_detach_attr (&sysblk.detattr);
-#if defined(OPTION_CPU_UTILIZATION)
-    for(i = 0; i < MAX_CPU_ENGINES; i++)
-        initialize_lock (&sysblk.regs[i].accum_wait_time_lock);
-#endif /*defined(OPTION_CPU_UTILIZATION)*/
+    initialize_condition (&sysblk.cpucond);
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
+        initialize_lock (&sysblk.cpulock[i]);
 
 #if defined(OPTION_FISHIO)
     InitIOScheduler                     // initialize i/o scheduler...
@@ -1761,41 +1762,16 @@ BYTE **orig_newargv;
 #endif
     }
 
-    /* Initialize the CPU registers */
-    obtain_lock (&sysblk.intlock);
-    for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-    {
-        /* Initialize the processor address register for STAP */
-        sysblk.regs[cpu].cpuad = cpu;
-
-        /* And set the CPU mask bit for this cpu */
-        sysblk.regs[cpu].cpumask = 0x80000000 >> cpu;
-
-        /* Initialize storage views (SIE compat) */
-        sysblk.regs[cpu].mainstor = sysblk.mainstor;
-        sysblk.regs[cpu].storkeys = sysblk.storkeys;
-        sysblk.regs[cpu].mainlim = sysblk.mainsize - 1;
-
-        /* Initialize the TOD offset field for this CPU */
-        sysblk.regs[cpu].todoffset = sysblk.todoffset;
-
-        /* Perform initial CPU reset */
-        initial_cpu_reset (sysblk.regs + cpu);
-
-#if defined(_FEATURE_VECTOR_FACILITY)
-        sysblk.regs[cpu].vf = &sysblk.vf[cpu];
-#endif /*defined(_FEATURE_VECTOR_FACILITY)*/
-
-        initialize_condition (&sysblk.regs[cpu].intcond);
-
-#if defined(_FEATURE_SIE)
-        sysblk.sie_regs[cpu] = sysblk.regs[cpu];
-        sysblk.sie_regs[cpu].hostregs = &sysblk.regs[cpu];
-        sysblk.regs[cpu].guestregs = &sysblk.sie_regs[cpu];
-#endif /*defined(_FEATURE_SIE)*/
-
-    } /* end for(cpu) */
-    release_lock (&sysblk.intlock);
+    /* Initialize dummy regs.
+     * Dummy regs are used by the panel or gui when the target cpu
+     * (sysblk.pcpu) is not configured (ie cpu_thread not started).
+     */
+    sysblk.dummyregs.mainstor = sysblk.mainstor;
+    sysblk.dummyregs.storkeys = sysblk.storkeys;
+    sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
+    sysblk.dummyregs.todoffset = sysblk.todoffset;
+    initial_cpu_reset (&sysblk.dummyregs);
+    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
     /* Parse the device configuration statements */
     while(1)
@@ -1892,17 +1868,18 @@ BYTE **orig_newargv;
                 "license.\n\n"));
     }
 
-#ifdef _FEATURE_VECTOR_FACILITY
-    for(i = 0; i < numvec && i < numcpu; i++)
-        sysblk.regs[i].vf->online = 1;
-#endif /*_FEATURE_VECTOR_FACILITY*/
+#ifdef _FEATURE_CPU_RECONFIG
+    sysblk.maxcpu = archmode == ARCH_370 ? numcpu : MAX_CPU_ENGINES;
+#else
+    sysblk.maxcpu = numcpu;
+#endif /*_FEATURE_CPU_RECONFIG*/
 
-#ifndef PROFILE_CPU
+    /* Start the CPUs */
     obtain_lock (&sysblk.intlock);
     for(i = 0; i < numcpu; i++)
-        configure_cpu(sysblk.regs + i);
+        configure_cpu(i);
     release_lock (&sysblk.intlock);
-#endif
+
     /* close configuration file */
     rc = fclose(fp);
 
@@ -1917,14 +1894,11 @@ void release_config()
 DEVBLK *dev;
 int     cpu;
 
-    /* Stop all CPU's */
+    /* Deconfigure all CPU's */
     obtain_lock (&sysblk.intlock);
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if(sysblk.regs[cpu].cpuonline)
-        {
-            sysblk.regs[cpu].cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(sysblk.regs + cpu);
-        }
+        if(IS_CPU_ONLINE(cpu))
+            deconfigure_cpu(cpu);
     release_lock (&sysblk.intlock);
 
 #if defined(OPTION_SHARED_DEVICES)
@@ -1945,13 +1919,6 @@ int     cpu;
     release_lock (&sysblk.ioqlock);
 #endif
 
-    /* Deconfigure all CPU's */
-    obtain_lock (&sysblk.intlock);
-    for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if(sysblk.regs[cpu].cpuonline)
-            deconfigure_cpu(sysblk.regs + cpu);
-    release_lock (&sysblk.intlock);
-
 } /* end function release_config */
 
 
@@ -1959,27 +1926,20 @@ int     cpu;
 /* Function to start a new CPU thread                                */
 /* Caller MUST own the intlock                                       */
 /*-------------------------------------------------------------------*/
-int configure_cpu(REGS *regs)
+int configure_cpu(int cpu)
 {
-    if(regs->cpuonline)
+    if(IS_CPU_ONLINE(cpu))
         return -1;
-    regs->cpuonline = 1;
-    regs->cpustate = CPUSTATE_STARTING;
-    ON_IC_INTERRUPT(regs);
-    regs->arch_mode = sysblk.arch_mode;
-    if ( create_thread (&(regs->cputid), &sysblk.detattr, cpu_thread, regs) )
+
+    if ( create_thread (&sysblk.cputid[cpu], &sysblk.detattr, cpu_thread, &cpu) )
     {
-        regs->cpuonline = 0;
-#ifdef _FEATURE_VECTOR_FACILITY
-        regs->vf->online = 0;
-#endif /*_FEATURE_VECTOR_FACILITY*/
         logmsg(_("HHCCF040E Cannot create CPU%4.4X thread: %s\n"),
-                regs->cpuad, strerror(errno));
+               cpu, strerror(errno));
         return -1;
     }
 
     /* Wait for CPU thread to initialize */
-    wait_condition (&regs->intcond, &sysblk.intlock);
+    wait_condition (&sysblk.cpucond, &sysblk.intlock);
 
     return 0;
 } /* end function configure_cpu */
@@ -1989,20 +1949,25 @@ int configure_cpu(REGS *regs)
 /* Function to remove a CPU from the configuration                   */
 /* This routine MUST be called with the intlock held                 */
 /*-------------------------------------------------------------------*/
-int deconfigure_cpu(REGS *regs)
+int deconfigure_cpu(int cpu)
 {
-    if(regs->cpuonline)
-    {
-        regs->cpuonline = 0;
-        regs->cpustate = CPUSTATE_STOPPING;
-        ON_IC_INTERRUPT(regs);
-
-        /* Wake up CPU as it may be waiting */
-        WAKEUP_CPU (regs->cpuad);
-        return 0;
-    }
-    else
+    if (!IS_CPU_ONLINE(cpu))
         return -1;
+
+    sysblk.regs[cpu]->configured = 0;
+    sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
+    ON_IC_INTERRUPT(sysblk.regs[cpu]);
+
+    /* Wake up CPU as it may be waiting */
+    WAKEUP_CPU (cpu);
+
+    /* Wait for CPU thread to terminate */
+    wait_condition (&sysblk.cpucond, &sysblk.intlock);
+
+    join_thread (sysblk.cputid[cpu], NULL);
+    sysblk.cputid[cpu] = 0;
+
+    return 0;
 
 } /* end function deconfigure_cpu */
 
@@ -2118,8 +2083,8 @@ DEVBLK**dvpp;
     dev->hnd = NULL;
     dev->devnum = devnum;
     dev->chanset = devnum >> 12;
-    if( dev->chanset >= MAX_CPU_ENGINES )
-        dev->chanset = MAX_CPU_ENGINES - 1;
+    if( dev->chanset >= sysblk.numcpu)
+        dev->chanset = sysblk.numcpu > 0 ? sysblk.numcpu - 1 : 0;
     dev->fd = -1;
     dev->ioint.dev = dev;
     dev->ioint.pending = 1;

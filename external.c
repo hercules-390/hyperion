@@ -72,15 +72,16 @@ REGS   *tregs;                          /* Target regs               */
                 ARCH_DEP(synchronize_broadcast) (realregs, 0, 0);
 
             /* Turn broadcast bit on for all started CPUs */
-            for (i = 0; i < MAX_CPU_ENGINES; i++)
-            {
-                tregs = sysblk.regs + i;
-                if (tregs->cpumask & sysblk.started_mask)
+            for (i = 0; i < MAX_CPU; i++)
+                if (IS_CPU_ONLINE(i))
                 {
-                    ON_IC_BROADCAST(tregs);
-                    sysblk.broadcast_count++;
+                    tregs = sysblk.regs[i];
+                    if (tregs->cpumask & sysblk.started_mask)
+                    {
+                        ON_IC_BROADCAST(tregs);
+                        sysblk.broadcast_count++;
+                    }
                 }
-            }
             sysblk.broadcast_code = code;
             sysblk.BROADCAST_PFRA = pfra;
             WAKEUP_WAITING_CPUS(ALL_CPUS, CPUSTATE_STARTED);
@@ -264,7 +265,7 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Find first CPU which generated a malfunction alert */
         for (cpuad = 0; regs->malfcpu[cpuad] == 0; cpuad++)
         {
-            if (cpuad >= MAX_CPU_ENGINES)
+            if (cpuad >= MAX_CPU)
             {
                 OFF_IC_MALFALT(regs);
                 return;
@@ -284,7 +285,7 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Reset emergency signal pending flag if there are
            no other CPUs which generated emergency signal */
         OFF_IC_MALFALT(regs);
-        while (++cpuad < MAX_CPU_ENGINES)
+        while (++cpuad < MAX_CPU)
         {
             if (regs->malfcpu[cpuad])
             {
@@ -304,7 +305,7 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Find first CPU which generated an emergency signal */
         for (cpuad = 0; regs->emercpu[cpuad] == 0; cpuad++)
         {
-            if (cpuad >= MAX_CPU_ENGINES)
+            if (cpuad >= MAX_CPU)
             {
                 OFF_IC_EMERSIG(regs);
                 return;
@@ -324,7 +325,7 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Reset emergency signal pending flag if there are
            no other CPUs which generated emergency signal */
         OFF_IC_EMERSIG(regs);
-        while (++cpuad < MAX_CPU_ENGINES)
+        while (++cpuad < MAX_CPU)
         {
             if (regs->emercpu[cpuad])
             {

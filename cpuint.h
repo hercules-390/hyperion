@@ -172,7 +172,7 @@ do { \
 #define SET_IC_TRACE \
 do { \
   if(sysblk.instbreak || sysblk.inststep || sysblk.insttrace) \
-    or_bits( &sysblk.ints_state, IC_DEBUG_BIT); \
+    ON_IC_TRACE; \
   else \
     and_bits(&sysblk.ints_state,~IC_DEBUG_BIT); \
 } while (0)
@@ -188,30 +188,34 @@ do { \
 #define ON_IC_IOPENDING         do { \
                                  int i; \
                                  or_bits(   &sysblk.ints_state, IC_IOPENDING); \
-                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
-                                  if (sysblk.regs[i].ints_mask & IC_IOPENDING) \
-                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                 for (i = 0; i < HI_CPU; i++) \
+                                  if (IS_CPU_ONLINE(i) \
+                                   && sysblk.regs[i]->ints_mask & IC_IOPENDING) \
+                                   or_bits(  &sysblk.regs[i]->ints_state, IC_INTERRUPT); \
                                 } while (0)
 #define ON_IC_CHANRPT           do { \
                                  int i; \
                                  or_bits(   &sysblk.ints_state, CR14_CHANRPT); \
-                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
-                                  if (sysblk.regs[i].ints_mask & CR14_CHANRPT) \
-                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                 for (i = 0; i < HI_CPU; i++) \
+                                  if (IS_CPU_ONLINE(i) \
+                                   && sysblk.regs[i]->ints_mask & CR14_CHANRPT) \
+                                   or_bits(  &sysblk.regs[i]->ints_state, IC_INTERRUPT); \
                                 } while (0)
 #define ON_IC_INTKEY            do { \
                                  int i; \
                                  or_bits(   &sysblk.ints_state, CR0_XM_INTKEY); \
-                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
-                                  if (sysblk.regs[i].ints_mask & CR0_XM_INTKEY) \
-                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                 for (i = 0; i < HI_CPU; i++) \
+                                  if (IS_CPU_ONLINE(i) \
+                                   && sysblk.regs[i]->ints_mask & CR0_XM_INTKEY) \
+                                   or_bits(  &sysblk.regs[i]->ints_state, IC_INTERRUPT); \
                                 } while (0)
 #define ON_IC_SERVSIG           do { \
                                  int i; \
                                  or_bits(   &sysblk.ints_state, CR0_XM_SERVSIG); \
-                                 for (i = 0; i < MAX_CPU_ENGINES; i++) \
-                                  if (sysblk.regs[i].ints_mask & CR0_XM_SERVSIG) \
-                                   or_bits(  &sysblk.regs[i].ints_state, IC_INTERRUPT); \
+                                 for (i = 0; i < HI_CPU; i++) \
+                                  if (IS_CPU_ONLINE(i) \
+                                   && sysblk.regs[i]->ints_mask & CR0_XM_SERVSIG) \
+                                   or_bits(  &sysblk.regs[i]->ints_state, IC_INTERRUPT); \
                                 } while (0)
 #define ON_IC_ITIMER(_regs)     do { \
                                   U32 state = CR0_XM_ITIMER; \
@@ -249,7 +253,13 @@ do { \
                                     state |= IC_INTERRUPT; \
                                   or_bits( &(_regs)->ints_state, state); \
                                 } while (0)
-#define ON_IC_TRACE             or_bits(   &sysblk.ints_state, IC_DEBUG_BIT|IC_INTERRUPT)
+#define ON_IC_TRACE             do { \
+                                 int i; \
+                                 or_bits(   &sysblk.ints_state, IC_DEBUG_BIT); \
+                                 for (i = 0; i < HI_CPU; i++) \
+                                  if (IS_CPU_ONLINE(i)) \
+                                   or_bits(  &sysblk.regs[i]->ints_state, IC_INTERRUPT); \
+                                } while (0)
 #define ON_IC_DEBUG(_regs)      or_bits( &(_regs)->ints_state, IC_DEBUG_BIT)
 #define ON_IC_PER_SB(_regs)     or_bits( &(_regs)->ints_state, IC_PER_SB&(_regs)->ints_mask)
 #define ON_IC_PER_IF(_regs)     or_bits( &(_regs)->ints_state, IC_PER_IF&(_regs)->ints_mask)

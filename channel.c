@@ -1201,8 +1201,9 @@ int i;
     sclp_reset();
 
     /* Connect each channel set to its home cpu */
-    for(i = 0; i < MAX_CPU_ENGINES; i++)
-        sysblk.regs[i].chanset = i;
+    for (i = 0; i < MAX_CPU; i++)
+        if (IS_CPU_ONLINE(i))
+            sysblk.regs[i]->chanset = i;
 // #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
 
     /* Reset each device in the configuration */

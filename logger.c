@@ -446,4 +446,14 @@ int   new_hrdcpyfd;
     }
 }
 
+/* log_wakeup - Wakeup any blocked threads.  Useful during shutdown. */
+void log_wakeup(void *arg)
+{
+    UNREFERENCED(arg);
 
+    obtain_lock(&logger_lock);
+
+    broadcast_condition(&logger_cond);
+
+    release_lock(&logger_lock);
+}

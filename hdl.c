@@ -32,6 +32,7 @@ extern void *HDL_FINI;
 static DLLENT *hdl_dll;                  /* dll chain                */
 static LOCK   hdl_lock;                  /* loader lock              */
 static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
+static LOCK   hdl_sdlock;                /* shutdown lock            */
 
 static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
@@ -87,6 +88,7 @@ void hdl_shut (void)
 {
 HDLSHD *shdent;
 
+    obtain_lock (&hdl_sdlock);
     for(shdent = hdl_shdlist; shdent; shdent = hdl_shdlist)
     {
         (shdent->shdcall) (shdent->shdarg);
@@ -94,6 +96,7 @@ HDLSHD *shdent;
         hdl_shdlist = shdent->next;
         free(shdent);
     }
+    release_lock (&hdl_sdlock);
 }
 
 
@@ -537,6 +540,7 @@ void hdl_main (void)
 HDLPRE *preload;
 
     initialize_lock(&hdl_lock);
+    initialize_lock(&hdl_sdlock);
 
     dlinit();
 

@@ -543,13 +543,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Set response code X'0300' if SCCB length
            is insufficient to contain SCP info */
-#ifdef FEATURE_CPU_RECONFIG
         if ( sccblen < sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO)
-                + (sizeof(SCCB_CPU_INFO) * MAX_CPU_ENGINES))
-#else /*!FEATURE_CPU_RECONFIG*/
-        if ( sccblen < sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO)
-                + (sizeof(SCCB_CPU_INFO) * sysblk.numcpu))
-#endif /*!FEATURE_CPU_RECONFIG*/
+                + (sizeof(SCCB_CPU_INFO) * MAX_CPU))
         {
             sccb->reas = SCCB_REAS_TOO_SHORT;
             sccb->resp = SCCB_RESP_BLOCK_ERROR;
@@ -592,23 +587,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         STORE_HW(sccbscp->vectpsum, VECTOR_PARTIAL_SUM_NUMBER);
 #endif /*FEATURE_VECTOR_FACILITY*/
 
-#ifdef FEATURE_CPU_RECONFIG
         /* Set CPU array count and offset in SCCB */
-        STORE_HW(sccbscp->numcpu, MAX_CPU_ENGINES);
-#else /*!FEATURE_CPU_RECONFIG*/
-        /* Set CPU array count and offset in SCCB */
-        STORE_HW(sccbscp->numcpu, sysblk.numcpu);
-#endif /*!FEATURE_CPU_RECONFIG*/
+        STORE_HW(sccbscp->numcpu, MAX_CPU);
         offset = sizeof(SCCB_HEADER) + sizeof(SCCB_SCP_INFO);
         STORE_HW(sccbscp->offcpu, offset);
 
         /* Set HSA array count and offset in SCCB */
         STORE_HW(sccbscp->numhsa, 0);
-#ifdef FEATURE_CPU_RECONFIG
-        offset += sizeof(SCCB_CPU_INFO) * MAX_CPU_ENGINES;
-#else /*!FEATURE_CPU_RECONFIG*/
-        offset += sizeof(SCCB_CPU_INFO) * sysblk.numcpu;
-#endif /*!FEATURE_CPU_RECONFIG*/
+        offset += sizeof(SCCB_CPU_INFO) * MAX_CPU;
         STORE_HW(sccbscp->offhsa, offset);
 
         /* Move IPL load parameter to SCCB */
@@ -626,28 +612,20 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Build the CPU information array after the SCP info */
         sccbcpu = (SCCB_CPU_INFO*)(sccbscp+1);
-#ifdef FEATURE_CPU_RECONFIG
-        for (i = 0; i < MAX_CPU_ENGINES; i++, sccbcpu++)
-#else /*!FEATURE_CPU_RECONFIG*/
-        for (i = 0; i < sysblk.numcpu; i++, sccbcpu++)
-#endif /*!FEATURE_CPU_RECONFIG*/
+        for (i = 0; i < MAX_CPU; i++, sccbcpu++)
         {
             memset (sccbcpu, 0, sizeof(SCCB_CPU_INFO));
-            sccbcpu->cpa = sysblk.regs[i].cpuad;
+            sccbcpu->cpa = i;
             sccbcpu->tod = 0;
             memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
 
 #ifdef FEATURE_VECTOR_FACILITY
-#ifndef FEATURE_CPU_RECONFIG
-            if(sysblk.regs[i].vf->online)
-#endif /*!FEATURE_CPU_RECONFIG*/
-              sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_INSTALLED;
-            if(sysblk.regs[i].vf->online)
+            if(IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
+                sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_INSTALLED;
+            if(IS_CPU_ONLINE(i) && sysblk.regs[i]->vf->online)
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_CONNECTED;
-#ifdef FEATURE_CPU_RECONFIG
-            else
+            if(!IS_CPU_ONLINE(i))
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_STANDBY_STATE;
-#endif /*FEATURE_CPU_RECONFIG*/
 #endif /*FEATURE_VECTOR_FACILITY*/
 
         }
@@ -1175,7 +1153,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU_ENGINES)
+        if(i >= MAX_CPU)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -1183,7 +1161,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Add cpu to the configuration */
-        configure_cpu(sysblk.regs + i);
+        configure_cpu(i);
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1195,7 +1173,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU_ENGINES)
+        if(i >= MAX_CPU)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -1203,7 +1181,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Take cpu out of the configuration */
-        deconfigure_cpu(sysblk.regs + i);
+        deconfigure_cpu(i);
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1217,18 +1195,18 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU_ENGINES)
+        if(i >= MAX_CPU || !IS_CPU_ONLINE(i))
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
             break;
         }
 
-        if(sysblk.regs[i].vf->online)
+        if(sysblk.regs[i]->vf->online)
             logmsg(_("CPU%4.4X: Vector Facility configured offline\n"),i);
 
         /* Take the VF out of the configuration */
-        sysblk.regs[i].vf->online = 0;
+        sysblk.regs[i]->vf->online = 0;
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1240,7 +1218,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         i = (sclp_command & SCLP_RESOURCE_MASK) >> SCLP_RESOURCE_SHIFT;
 
         /* Return invalid resource in parm if target does not exist */
-        if(i >= MAX_CPU_ENGINES)
+        if(i >= MAX_CPU)
         {
             sccb->reas = SCCB_REAS_INVALID_RSCP;
             sccb->resp = SCCB_RESP_REJECT;
@@ -1248,18 +1226,18 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Return improper state if associated cpu is offline */
-        if(!sysblk.regs[i].cpuonline)
+        if(!IS_CPU_ONLINE(i))
         {
             sccb->reas = SCCB_REAS_IMPROPER_RSC;
             sccb->resp = SCCB_RESP_REJECT;
             break;
         }
 
-        if(!sysblk.regs[i].vf->online)
+        if(!sysblk.regs[i]->vf->online)
             logmsg(_("CPU%4.4X: Vector Facility configured online\n"),i);
 
         /* Mark the VF online to the CPU */
-        sysblk.regs[i].vf->online = 1;
+        sysblk.regs[i]->vf->online = 1;
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;

@@ -39,7 +39,7 @@ void ptt_trace_init (int n, int init)
 #else
         pthread_mutex_init (&pttlock, NULL);
 #endif
-        pttimer = 0;
+        pttimer = 1;
         pttnothreads = 0;
         pttnoptt = 0;
         pttnolock = 0;

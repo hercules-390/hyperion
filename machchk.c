@@ -287,8 +287,11 @@ int i;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->tid == tid || dev->shrdtid == tid) break;
         if( dev == NULL)
-            logmsg(_("HHCCP020E signal USR2 received for undetermined "
-                     "device\n"));
+        {
+            if (!sysblk.shutdown)
+                logmsg(_("HHCCP020E signal USR2 received for "
+                         "undetermined device\n"));
+        }
         else
             if(dev->ccwtrace)
                 logmsg(_("HHCCP021E signal USR2 received for device "
@@ -296,20 +299,16 @@ int i;
         return;
     }
 
-#ifdef _FEATURE_CPU_RECONFIG
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
-#else /*!_FEATURE_CPU_RECONFIG*/
-    for (i = 0; i < sysblk.numcpu; i++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
+    for (i = 0; i < MAX_CPU; i++)
     {
-        if(sysblk.regs[i].cputid == tid)
+        if(sysblk.cputid[i] == tid)
         {
-            regs = sysblk.regs + i;
+            regs = sysblk.regs[i];
             break;
         }
     }
 
-    if(regs == NULL)
+    if (regs == NULL)
     {
         signal(signo, SIG_DFL);
         raise(signo);
@@ -383,15 +382,11 @@ int i;
         {
             if(!try_obtain_lock(&sysblk.intlock))
             {
-#ifdef _FEATURE_CPU_RECONFIG
-                for (i = 0; i < MAX_CPU_ENGINES; i++)
-#else /*!_FEATURE_CPU_RECONFIG*/
-                for (i = 0; i < sysblk.numcpu; i++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
-                    if(i != regs->cpuad)
+                for (i = 0; i < MAX_CPU; i++)
+                    if (i != regs->cpuad && IS_CPU_ONLINE(i))
                     {
-                        ON_IC_MALFALT(&sysblk.regs[i]);
-                        sysblk.regs[i].malfcpu[regs->cpuad] = 1;
+                        ON_IC_MALFALT(sysblk.regs[i]);
+                        sysblk.regs[i]->malfcpu[regs->cpuad] = 1;
                     }
                 release_lock(&sysblk.intlock);
             }

@@ -24,21 +24,27 @@
 /*-------------------------------------------------------------------*/
 /* Function to run initial CCW chain from IPL device and load IPLPSW */
 /* Returns 0 if successful, -1 if error                              */
+/* intlock MUST be held on entry                                     */
 /*-------------------------------------------------------------------*/
-int ARCH_DEP(load_ipl) (U16 devnum, REGS *regs)
+int ARCH_DEP(load_ipl) (U16 devnum, int cpu)
 {
+REGS   *regs;                           /* -> Regs                   */
 int     rc;                             /* Return code               */
 int     i;                              /* Array subscript           */
-int     cpu;                            /* CPU number                */
 DEVBLK *dev;                            /* -> Device control block   */
 PSA    *psa;                            /* -> Prefixed storage area  */
 BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
 
-    obtain_lock (&sysblk.intlock);
+    /* Configure the cpu if it is not online */
+    if (!IS_CPU_ONLINE(cpu))
+    {
+        configure_cpu(cpu);
+        if (!IS_CPU_ONLINE(cpu))
+            return -1;
+    }
 
-    if(!regs->cpuonline)
-        configure_cpu(regs);
+    regs = sysblk.regs[cpu];
 
     HDC(debug_cpu_state, regs);
 
@@ -50,8 +56,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     ARCH_DEP(initial_cpu_reset) (regs);
 
     /* Perform CPU reset on all other CPUs */
-    for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-        ARCH_DEP(cpu_reset) (sysblk.regs + cpu);
+    for (cpu = 0; cpu < MAX_CPU; cpu++)
+        if (IS_CPU_ONLINE(cpu))
+            ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
 
     /* put cpu in load state */
     regs->loadstate = 1;
@@ -65,10 +72,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     {
         logmsg (_("HHCCP027E Device %4.4X not in configuration\n"),
                 devnum);
-
         HDC(debug_cpu_state, regs);
-
-        release_lock (&sysblk.intlock);
         return -1;
     }
 
@@ -76,10 +80,7 @@ BYTE    chanstat;                       /* IPL device channel status */
       && dev->chanset != regs->chanset)
     {
         logmsg(_("HHCCP028E Device not connected to channelset\n"));
-
         HDC(debug_cpu_state, regs);
-
-        release_lock (&sysblk.intlock);
         return -1;
     }
     /* Point to the PSA in main storage */
@@ -143,10 +144,7 @@ BYTE    chanstat;                       /* IPL device channel status */
             if ((i & 3) == 3) logmsg(" ");
         }
         logmsg ("\n");
-
         HDC(debug_cpu_state, regs);
-
-        release_lock (&sysblk.intlock);
         return -1;
     }
 
@@ -189,10 +187,7 @@ BYTE    chanstat;                       /* IPL device channel status */
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
-
         HDC(debug_cpu_state, regs);
-
-        release_lock (&sysblk.intlock);
         return -1;
     }
 
@@ -212,10 +207,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     /* Signal the CPU to retest stopped indicator */
     WAKEUP_CPU (regs->cpuad);
 
-    release_lock (&sysblk.intlock);
-
     HDC(debug_cpu_state, regs);
-
     return 0;
 } /* end function load_ipl */
 
@@ -237,11 +229,11 @@ BYTE    chanstat;                       /* IPL device channel status */
 /* The location of the image files is relative to the location of   */
 /* the descriptor file.                         Jan Jaeger 10-11-01 */
 /*                                                                  */
-int ARCH_DEP(load_hmc) (char *fname, REGS *regs)
+int ARCH_DEP(load_hmc) (char *fname, int cpu)
 {
+REGS   *regs;                           /* -> Regs                   */
 int     rc;                             /* Return code               */
 int     rx;                             /* Return code               */
-int     cpu;                            /* CPU number                */
 PSA    *psa;                            /* -> Prefixed storage area  */
 FILE   *fp;
 BYTE    inputline[256];
@@ -254,11 +246,15 @@ U32     fileaddr;
     if(fname == NULL)                   /* Default ipl from DASD     */
         fname = "hercules.ins";         /*   from hercules.ins       */
 
-    obtain_lock (&sysblk.intlock);
+    /* Configure the cpu if it is not online */
+    if (!IS_CPU_ONLINE(cpu))
+    {
+        configure_cpu(cpu);
+        if (!IS_CPU_ONLINE(cpu))
+            return -1;
+    }
 
-    if(!regs->cpuonline)
-        configure_cpu(regs);
-
+    regs = sysblk.regs[cpu];
     HDC(debug_cpu_state, regs);
 
     /* Reset external interrupts */
@@ -269,8 +265,8 @@ U32     fileaddr;
     ARCH_DEP(initial_cpu_reset) (regs);
 
     /* Perform CPU reset on all other CPUs */
-    for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-        ARCH_DEP(cpu_reset) (sysblk.regs + cpu);
+    for (cpu = 0; cpu < MAX_CPU; cpu++)
+        ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
 
     /* put cpu in load state */
     regs->loadstate = 1;
@@ -287,7 +283,6 @@ U32     fileaddr;
     if(fp == NULL)
     {
         logmsg(_("HHCCP031E Load from %s failed: %s\n"),fname,strerror(errno));
-        release_lock(&sysblk.intlock);
         return -1;
     }
 
@@ -315,10 +310,7 @@ U32     fileaddr;
             if( ARCH_DEP(load_main) (pathname, fileaddr) < 0 )
             {
                 fclose(fp);
-
                 HDC(debug_cpu_state, regs);
-
-                release_lock(&sysblk.intlock);
                 return -1;
             }
         }
@@ -342,10 +334,7 @@ U32     fileaddr;
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
-
         HDC(debug_cpu_state, regs);
-
-        release_lock(&sysblk.intlock);
         return -1;
     }
 
@@ -361,10 +350,7 @@ U32     fileaddr;
     /* Signal the CPU to retest stopped indicator */
     WAKEUP_CPU (regs->cpuad);
 
-    release_lock (&sysblk.intlock);
-
     HDC(debug_cpu_state, regs);
-
     return 0;
 } /* end function load_hmc */
 /*-------------------------------------------------------------------*/
@@ -385,7 +371,7 @@ int             i;                      /* Array subscript           */
     OFF_IC_EXTCALL(regs);
     regs->extccpu = 0;
     OFF_IC_EMERSIG(regs);
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
+    for (i = 0; i < MAX_CPU; i++)
         regs->emercpu[i] = 0;
     OFF_IC_STORSTAT(regs);
     OFF_IC_CPUINT(regs);
@@ -402,8 +388,11 @@ int             i;                      /* Array subscript           */
     regs->MC_G = 0;
 
     /* Purge the lookaside buffers */
-    regs->tlbID = 255;
-    ARCH_DEP(purge_tlb) (regs);
+    if (regs->tlb)
+    {
+        regs->tlbID = 255;
+        ARCH_DEP(purge_tlb) (regs);
+    }
 #if defined(FEATURE_ACCESS_REGISTERS)
     ARCH_DEP(purge_alb) (regs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -528,38 +517,40 @@ U32  pagesize;
 #endif
 
 
-int load_ipl (U16 devnum, REGS *regs)
+int load_ipl (U16 devnum, int cpu)
 {
     if(sysblk.arch_mode == ARCH_900)
         sysblk.arch_mode = ARCH_390;
+    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 #if defined(OPTION_FISHIO)
     ios_arch_mode = sysblk.arch_mode;
 #endif // defined(OPTION_FISHIO)
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370: return s370_load_ipl(devnum, regs);
+        case ARCH_370: return s370_load_ipl(devnum, cpu);
 #endif
 #if defined(_390)
-        default:       return s390_load_ipl(devnum, regs);
+        default:       return s390_load_ipl(devnum, cpu);
 #endif
     }
     return -1;
 }
 
 
-int load_hmc (char *fname, REGS *regs)
+int load_hmc (char *fname, int cpu)
 {
     if(sysblk.arch_mode == ARCH_900)
         sysblk.arch_mode = ARCH_390;
+    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 #if defined(OPTION_FISHIO)
     ios_arch_mode = sysblk.arch_mode;
 #endif // defined(OPTION_FISHIO)
     switch(sysblk.arch_mode) {
 #if defined(_370)
-        case ARCH_370: return s370_load_hmc(fname, regs);
+        case ARCH_370: return s370_load_hmc(fname, cpu);
 #endif
 #if defined(_390)
-        default:       return s390_load_hmc(fname, regs);
+        default:       return s390_load_hmc(fname, cpu);
 #endif
     }
     return -1;

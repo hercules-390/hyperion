@@ -77,40 +77,37 @@ int i;
         setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1);
 #endif
 
-    while(1)
+    for (i = 0; i < MAX_CPU_ENGINES; i ++) savecount[i] = -1;
+
+    while(!sysblk.shutdown)
     {
-#ifdef _FEATURE_CPU_RECONFIG
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
-#else /*!_FEATURE_CPU_RECONFIG*/
-        for (i = 0; i < sysblk.numcpu; i++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
+        for (i = 0; i < MAX_CPU; i++)
         {
-            if(sysblk.regs[i].cpustate == CPUSTATE_STARTED
-              && (!sysblk.regs[i].psw.wait
+//          obtain_lock (&sysblk.cpulock[i]);
+            if (IS_CPU_ONLINE(i)
+             && sysblk.regs[i]->cpustate == CPUSTATE_STARTED
+             && (!sysblk.regs[i]->psw.wait
 #if defined(_FEATURE_WAITSTATE_ASSIST)
-              && !(sysblk.regs[i].sie_state && sysblk.regs[i].guestregs->psw.wait)
+             && !(sysblk.regs[i]->sie_state && sysblk.regs[i]->guestregs->psw.wait)
 #endif
                                            ))
             {
                 /* If the cpu is running but not executing
                    instructions then it must be malfunctioning */
-                if(sysblk.regs[i].instcount == (U64)savecount[i])
+                if(sysblk.regs[i]->instcount == (U64)savecount[i])
                 {
-                    if(!try_obtain_lock(&sysblk.intlock))
-                    {
-                        /* Send signal to looping CPU */
-                        signal_thread(sysblk.regs[i].cputid, SIGUSR1);
-                        savecount[i] = -1;
-                        release_lock(&sysblk.intlock);
-                    }
+                    /* Send signal to looping CPU */
+                    signal_thread(sysblk.cputid[i], SIGUSR1);
+                    savecount[i] = -1;
                 }
                 else
                     /* Save current instcount */
-                    savecount[i] = sysblk.regs[i].instcount;
+                    savecount[i] = sysblk.regs[i]->instcount;
             }
             else
                 /* mark savecount invalid as CPU not in running state */
                 savecount[i] = -1;
+//          release_lock (&sysblk.cpulock[i]);
         }
         /* Sleep for 20 seconds */
         sleep(20);
@@ -428,8 +425,8 @@ void system_shutdown (void)
                  the function in question has been completed */
                  
     sysblk.shutdown = 1;
-
     release_config();
+    usleep(50000);
 
     /* Call all termination routines in LIFO order */
     hdl_shut();

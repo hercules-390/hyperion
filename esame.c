@@ -2197,7 +2197,7 @@ U64     old;                            /* old value                 */
         }
         else
 #endif /*defined(_FEATURE_ZSIE)*/
-            if (sysblk.numcpu > 1)
+            if (sysblk.cpus > 1)
                 sched_yield();
     }
 
@@ -2262,7 +2262,7 @@ U64     old1, old2;                     /* old value                 */
         }
         else
 #endif /*defined(_FEATURE_ZSIE)*/
-            if (sysblk.numcpu > 1)
+            if (sysblk.cpus > 1)
                 sched_yield();
     }
 
@@ -5687,7 +5687,7 @@ U32     old;                            /* old value                 */
         }
         else
 #endif /*defined(_FEATURE_SIE)*/
-            if (sysblk.numcpu > 1)
+            if (sysblk.cpus > 1)
                 sched_yield();
     }
 
@@ -5750,7 +5750,7 @@ U64     old, new;                       /* old, new values           */
         }
         else
 #endif /*defined(_FEATURE_SIE)*/
-            if (sysblk.numcpu > 1)
+            if (sysblk.cpus > 1)
                 sched_yield();
     }
 
