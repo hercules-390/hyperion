@@ -54,7 +54,7 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
                  in a future version */
     if (!(argc > 1 && !strcasecmp("now",argv[1])))
     {
-        usleep(10000); /* (give time for 'quit' command to be logged) */
+//      usleep(10000); /* (fix by new shutdown sequence) */
         system_shutdown();
     }
 
