@@ -4966,9 +4966,17 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         /* Block to seek */
         len = sizeof(locblock);
+        /*
         locblock =  ((U32)(iobuf[3]) << 24)
                   | ((U32)(iobuf[2]) << 16)
                   | ((U32)(iobuf[1]) <<  8);
+                  */
+        /* Endianness issues with LOCATE BLOCK command */
+        /* suggested by a user who prefers to remain anonymous */
+        /* updated by ISW */
+        locblock =  ((U32)(iobuf[1] & 0x3f) << 16)
+                  | ((U32)(iobuf[2]) << 8)
+                  | ((U32)(iobuf[3]));
 
         /* Calculate residual byte count */
         num = (count < len) ? count : len;

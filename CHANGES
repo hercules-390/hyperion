@@ -1,3 +1,4 @@
+23 May 2003 Locate Block logic fix - Ivan Warren, Suggested by *Anonymous*
 23 May 2003 Provide command response in DIAG 8 resp buffer - Ivan Warren
 22 May 2003 Add CPUVERID config statement to set version code - Jan Jaeger
 22 May 2003 Add DIAG8CMD config statement to enable diag 8 commands - Jan Jaeger
