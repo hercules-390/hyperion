@@ -1,6 +1,8 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+25 Feb 2005 Another 3480-X'DB' Fix. Tape does not need to be ready
+            for a X'DB' to work. Hinted by John Decker - Ivan Warren
 25 Feb 2005 Fix het block count bug introduced by my earlier SCSI changes;
             John Decker (and Andy Styles) by Fish (thanks guys!)
 25 Feb 2005 Remove C99 Struct init from ecpsvm for MSVC support - Ivan Warren
