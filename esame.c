@@ -2268,7 +2268,7 @@ DEF_INST(compare_and_swap_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U64     n;                              /* 64-bit operand value      */
+RADR    abs2;                           /* absolute address          */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -2277,25 +2277,15 @@ U64     n;                              /* 64-bit operand value      */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
+    /* Get operand absolute address */
+    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
+                           ACCTYPE_WRITE, regs->psw.pkey);
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    /* Load second operand from operand address  */
-    n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
-
-    /* Compare operand with R1 register contents */
-    if ( regs->GR_G(r1) == n )
-    {
-        /* If equal, store R3 at operand location and set cc=0 */
-        ARCH_DEP(vstore8) ( regs->GR_G(r3), effective_addr2, b2, regs );
-        regs->psw.cc = 0;
-    }
-    else
-    {
-        /* If unequal, load R1 from operand and set cc=1 */
-        regs->GR_G(r1) = n;
-        regs->psw.cc = 1;
-    }
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg8 (&regs->GR_G(r1), regs->GR_G(r3), regs->mainstor + abs2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -2303,27 +2293,21 @@ U64     n;                              /* 64-bit operand value      */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
-    /* It this is a failed compare and swap
-       and there is more then 1 CPU in the configuration
-       and there is no broadcast synchronization in progress
-       then call the hypervisor to end this timeslice,
-       this to prevent this virtual CPU monopolizing
-       the physical CPU on a spinlock */
-    if(regs->psw.cc && sysblk.numcpu > 1)
-        usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 && defined)OPTION_CS_USLEEP) */
-
-#if defined(_FEATURE_ZSIE)
-    if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
-      && regs->psw.cc == 1)
+    if (regs->psw.cc == 1)
     {
-        if( !OPEN_IC_PERINT(regs) )
-            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#if defined(_FEATURE_ZSIE)
+        if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        {
+            if( !OPEN_IC_PERINT(regs) )
+                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+            else
+                longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+        }
         else
-            longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
-    }
 #endif /*defined(_FEATURE_ZSIE)*/
+            if (sysblk.numcpu > 1)
+                sched_yield();
+    }
 
 } /* end DEF_INST(compare_and_swap_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2338,7 +2322,7 @@ DEF_INST(compare_double_and_swap_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-U64     n1, n2;                         /* 64-bit operand values     */
+RADR    abs2;                           /* absolute address          */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -2349,30 +2333,18 @@ U64     n1, n2;                         /* 64-bit operand values     */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
+    /* Get operand absolute address */
+    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
+                           ACCTYPE_WRITE, regs->psw.pkey);
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    /* Load second operand from operand address  */
-    n1 = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
-    n2 = ARCH_DEP(vfetch8) ( effective_addr2 + 8, b2, regs );
 
-    /* Compare doubleword operand with R1:R1+1 register contents */
-    if ( regs->GR_G(r1) == n1 && regs->GR_G(r1+1) == n2 )
-    {
-        /* If equal, store R3:R3+1 at operand location and set cc=0 */
-        ARCH_DEP(validate_operand) (effective_addr2 + 8, b2, 8-1,
-                                                         ACCTYPE_WRITE, regs);
-        ARCH_DEP(vstore8) ( regs->GR_G(r3), effective_addr2, b2, regs );
-        ARCH_DEP(vstore8) ( regs->GR_G(r3+1), effective_addr2 + 8, b2, regs );
-        regs->psw.cc = 0;
-    }
-    else
-    {
-        /* If unequal, load R1:R1+1 from operand and set cc=1 */
-        regs->GR_G(r1) = n1;
-        regs->GR_G(r1+1) = n2;
-        regs->psw.cc = 1;
-    }
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg16 (&regs->GR_G(r1), &regs->GR_G(r1+1),
+                              regs->GR_G(r3), regs->GR_G(r3+1),
+                              regs->mainstor + abs2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -2380,27 +2352,21 @@ U64     n1, n2;                         /* 64-bit operand values     */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
-    /* It this is a failed compare and swap
-       and there is more then 1 CPU in the configuration
-       and there is no broadcast synchronization in progress
-       then call the hypervisor to end this timeslice,
-       this to prevent this virtual CPU monopolizing
-       the physical CPU on a spinlock */
-    if(regs->psw.cc && sysblk.numcpu > 1)
-        usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
-
-#if defined(_FEATURE_ZSIE)
-    if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
-      && regs->psw.cc == 1)
+    if (regs->psw.cc == 1)
     {
-        if( !OPEN_IC_PERINT(regs) )
-            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#if defined(_FEATURE_ZSIE)
+        if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
+        {
+            if( !OPEN_IC_PERINT(regs) )
+                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+            else
+                longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+        }
         else
-            longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
-    }
 #endif /*defined(_FEATURE_ZSIE)*/
+            if (sysblk.numcpu > 1)
+                sched_yield();
+    }
 
 } /* end DEF_INST(compare_double_and_swap_long) */
 #endif /*defined(FEATURE_ESAME)*/

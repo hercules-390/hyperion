@@ -31,8 +31,6 @@
 
 #if !defined(_HERCULES_H)
 
-#include "machdep.h"
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>

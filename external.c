@@ -64,9 +64,7 @@ REGS   *realregs;                       /* Real REGS if guest        */
             else
             {
                 release_lock (&sysblk.intlock);
-#ifdef OPTION_CS_USLEEP
-                usleep (1L);
-#endif
+                sched_yield();
                 obtain_lock (&sysblk.intlock);
             }
         ON_IC_BROADCAST;

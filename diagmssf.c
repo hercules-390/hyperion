@@ -175,7 +175,7 @@ typedef struct _DIAG204_PART_CPU {
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(scpend_call) (void)
 {
-        usleep(1L);                     /* Just go to the dispatcher
+        sched_yield();                  /* Just go to the dispatcher
                                            for a minimum delay       */
 } /* end function scpend_call */
 

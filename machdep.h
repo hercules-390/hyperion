@@ -2,210 +2,295 @@
 
 /*-------------------------------------------------------------------*/
 /* Header file containing machine specific macros                    */
-/*                                                               */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 
-#undef  HERCULES_MACHINE
+#ifndef _HERCULES_MACHDEP_H
+#define _HERCULES_MACHDEP_H 1
+
+#include "esa390.h"
+
 /*-------------------------------------------------------------------*/
 /* Intel pentiumpro/i686                                             */
 /*-------------------------------------------------------------------*/
 #if defined(__i686__) | defined(__pentiumpro__)
-#define  HERCULES_MACHINE i686
 
-/* Fetching instruction bytes                                        */
-#if defined(OPTION_FETCHIBYTE)
 #define FETCHIBYTE1(_ib, _inst) \
         { \
             __asm__("movzbl 1(%%esi),%%eax" : \
                     "=a" (_ib) : "S" (_inst)); \
         }
-#define FETCHIBYTE2(_ib, _inst) \
-        { \
-            __asm__("movzbl 2(%%esi),%%ebx" : \
-                    "=b" (_ib) : "S" (_inst)); \
-        }
-#define FETCHIBYTE3(_ib, _inst) \
-        { \
-            __asm__("movzbl 3(%%esi),%%eax" : \
-                    "=a" (_ib) : "S" (_inst)); \
-        }
-#endif /*defined(OPTION_FETCHIBYTE)*/
 
-#if 1
-#define COMPARE_AND_SWAP(r1, r3, addr, arn, regs) \
-        { \
-            RADR  abs; \
-            U32   prev=0, old, new; \
-            abs = LOGICAL_TO_ABS ((addr), (arn), (regs), \
-                                ACCTYPE_WRITE, (regs)->psw.pkey); \
-            old = CSWAP32((regs)->GR_L((r1))); \
-            new = CSWAP32((regs)->GR_L((r3))); \
-            __asm__("lock; cmpxchgl %1,%2" \
-                    :"=a"(prev) \
-                    : "q"(new), \
-                      "m"(regs->mainstor[abs]), "0"(old) \
-                    : "memory"); \
-            prev = CSWAP32(prev); \
-            if ((regs)->GR_L((r1)) == prev) \
-            { \
-                (regs)->psw.cc = 0; \
-            } \
-            else \
-            { \
-                (regs)->psw.cc = 1; \
-                (regs)->GR_L((r1)) = prev; \
-            } \
-        }
+#define fetch_dw(x) fetch_dw_i686(x)
+static __inline__ U64 fetch_dw_i686(void *ptr)
+{
+ U64 value;
+ __asm__ __volatile__ (
+         "movl    (%1),%%eax\n\t"
+         "movl    4(%1),%%edx\n"
+         "1:\t"
+         "movl    %%eax,%%ebx\n\t"
+         "movl    %%edx,%%ecx\n\t"
+         "lock    cmpxchg8b (%1)\n\t"
+         "jnz     1b\n\t"
+         "bswap   %%eax\n\t"
+         "bswap   %%edx\n\t"
+         "xchgl   %%eax,%%edx"
+       : "=A"(value)
+       : "D"(ptr)
+       : "bx","cx","memory");
+ return value;
+}
 
-#define COMPARE_DOUBLE_AND_SWAP(r1, r3, addr, arn, regs) \
-        { \
-            RADR  abs; \
-            void *ptr; \
-            U32   temp[4]; \
-            abs = LOGICAL_TO_ABS ((addr), (arn), (regs), \
-                                ACCTYPE_WRITE, (regs)->psw.pkey); \
-            ptr = regs->mainstor + abs; \
-            temp[0] = (regs)->GR_L((r1)); \
-            temp[1] = (regs)->GR_L((r1)+1); \
-            temp[2] = (regs)->GR_L((r3)); \
-            temp[3] = (regs)->GR_L((r3)+1); \
-            __asm__("movl (%1),%%eax\n\t" \
-                    "bswap %%eax\n\t" \
-                    "movl 4(%1),%%edx\n\t" \
-                    "bswap %%edx\n\t" \
-                    "movl 8(%1),%%ebx\n\t" \
-                    "bswap %%ebx\n\t" \
-                    "movl 12(%1),%%ecx\n\t" \
-                    "bswap %%ecx\n\t" \
-                    "lock; cmpxchg8b (%0)\n\t" \
-                    "bswap %%eax\n\t" \
-                    "movl %%eax,(%1)\n\t" \
-                    "bswap %%edx\n\t" \
-                    "movl %%edx,4(%1)\t" \
-                    : /* no output */ \
-                    : "D"(ptr), \
-                      "S"(temp) \
-                    : "ax","dx","bx","cx","memory"); \
-            if ((regs)->GR_L((r1)) == temp[0] && (regs)->GR_L((r1)+1) == temp[1]) \
-            { \
-                (regs)->psw.cc = 0; \
-            } \
-            else \
-            { \
-                (regs)->psw.cc = 1; \
-                (regs)->GR_L((r1)) = temp[0]; \
-                (regs)->GR_L((r1)+1) = temp[1]; \
-            } \
-        }
+#define store_dw(x,y) store_dw_i686(x,y)
+static __inline__ void store_dw_i686(void *ptr, U64 value)
+{
+ U32 high,low;
+ low = value & 0xffffffff;
+ high = value >> 32;
+ __asm__ __volatile__ (
+         "bswap   %0\n\t"
+         "bswap   %1\n\t"
+         "movl    (%2),%%eax\n\t"
+         "movl    4(%2),%%edx\n"
+         "1:\t"
+         "lock    cmpxchg8b (%2)\n\t"
+         "jnz     1b"
+       : /* no output */
+       : "b"(high),
+         "c"(low),
+         "D"(ptr)
+       : "ax","dx","memory");
+}
 
-#define TEST_AND_SET(addr, arn, regs) \
-        { \
-            RADR  abs; \
-            BYTE  old, new=255; \
-            abs = LOGICAL_TO_ABS((addr), (arn), (regs), \
-                                ACCTYPE_WRITE, (regs)->psw.pkey); \
-            old = regs->mainstor[abs]; \
-            __asm__("1:\t" \
-                    "lock; cmpxchgb %b1,%2\n\t" \
-                    "jnz 1b" \
-                    :"=a"(old) \
-                    : "q"(new), "m"(regs->mainstor[abs]), "0"(old) \
-                    : "memory"); \
-            (regs)->psw.cc = old >> 7; \
-        }
+#define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
+static __inline__ int cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+ int code;
+ __asm__ __volatile__ (
+         "movb    (%2),%%al\n\t"
+         "lock;   cmpxchgb %b1,(%3)\n\t"
+         "setnz   %b1\n\t"
+         "movb    %%al,(%2)"
+         : "=bx"(code)
+         : "bx"(new),
+           "S"(old),
+           "D"(ptr)
+         : "ax", "memory");
+ return code;
+}
 
+#define cmpxchg4(x,y,z) cmpxchg4_i686(x,y,z)
+static __inline__ int cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+ int code;
+ __asm__ __volatile__ (
+         "movl    (%2),%%eax\n\t"
+         "bswap   %%eax\n\t"
+         "bswap   %1\n\t"
+         "lock;   cmpxchgl %1,(%3)\n\t"
+         "setnz   %b0\n\t"
+         "bswap   %%eax\n\t"
+         "movl    %%eax,(%2)"
+         : "=q"(code)
+         : "q"(new),
+           "S"(old),
+           "D"(ptr)
+         : "ax", "memory");
+ return code;
+}
+
+#define cmpxchg8(x,y,z) cmpxchg8_i686(x,y,z)
+static __inline__ int cmpxchg8_i686(U64 *old, U64 new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+ int code;
+ U32 high,low;
+ high = new >> 32;
+ low = new & 0xffffffff;
+ __asm__ __volatile__ (
+         "bswap   %1\n\t"
+         "bswap   %2\n\t"
+         "movl    (%3),%%edx\n\t"
+         "movl    4(%3),%%eax\n\t"
+         "bswap   %%edx\n\t"
+         "bswap   %%eax\n\t"
+         "lock;   cmpxchg8b (%4)\n\t"
+         "setnz   %b0\n\t"
+         "bswap   %%edx\n\t"
+         "bswap   %%eax\n\t"
+         "movl    %%edx,(%3)\n\t"
+         "movl    %%eax,4(%3)"
+         : "=b"(code)
+         : "b"(high),
+           "c"(low),
+           "S"(old),
+           "D"(ptr)
+         : "ax", "dx", "memory");
+ return code;
+}
+
+#define cmpxchg16(x1,x2,y1,y2,z) cmpxchg16_i686(x1,x2,y1,y2,z)
+static __inline__ int cmpxchg16_i686(U64 *old1, U64 *old2, U64 new1, U64 new2, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+//FIXME: not smp safe; an attempt is made to minimize the number of cycles
+ int code;
+ union { BYTE buf[32]; U64 dw[4]; } u;
+ u.dw[0] = bswap_64(*old1);
+ u.dw[1] = bswap_64(*old2);
+ u.dw[2] = bswap_64(new1);
+ u.dw[3] = bswap_64(new2);
+ __asm__ __volatile__ (
+         "movl    %1,%0\n\t"
+         "movl    %2,%%ebx\n\t"
+         "movl    $4,%%ecx\n\t"
+         "cld\n\t"
+         "repe    cmpsl\n\t"
+         "jne     1f\n\t"
+         "movl    %%ebx,%2\n\t"
+         "movl    $4,%%ecx\n\t"
+         "rep     movsl\n\t"
+         "xorl    %0,%0\n\t"
+         "jmp     2f\n"
+         "1:\t"
+         "movl    %0,%2\n\t"
+         "movl    %%ebx,%1\n\t"
+         "movl    $4,%%ecx\n\t"
+         "rep     movsl\n\t"
+         "movl    $1,%0\n"
+         "2:"
+       : "=q"(code)
+       : "S"(&u),
+         "D"(ptr)
+       : "bx","cx","memory");
+ if (code == 1) {
+     *old1 = bswap_64(u.dw[0]);
+     *old2 = bswap_64(u.dw[1]); 
+ }
+ return code;
+}
+
+#endif /* defined(__i686__) | defined(__pentiumpro__) */
+
+/*-------------------------------------------------------------------*/
+/* Defaults                                                          */
+/*-------------------------------------------------------------------*/
+
+#ifndef fetch_hw
+static __inline__ U16 fetch_hw(volatile void *ptr) {
+ U16 value;
+ memcpy(&value, (BYTE *)ptr, 2);
+ return CSWAP16(value);
+}
 #endif
 
-#endif /*defined(__i686__) | defined(__pentiumpro__)*/
+#ifndef store_hw
+static __inline__ void store_hw(volatile void *ptr, U16 value) {
+ U16 tmp = CSWAP16(value);
+ memcpy((BYTE *)ptr, &tmp, 2);
+}
+#endif
 
-/*-------------------------------------------------------------------*/
-/* Default for all other architectures                               */
-/*-------------------------------------------------------------------*/
-#if !defined(HERCULES_MACHINE)
+#ifndef fetch_fw
+static __inline__ U32 fetch_fw(volatile void *ptr) {
+ U32 value;
+ memcpy(&value, (BYTE *)ptr, 4);
+ return CSWAP32(value);
+}
+#endif
 
-/* Fetching instruction bytes                                        */
-#if defined(OPTION_FETCHIBYTE)
-#define FETCHIBYTE1(_ib, _inst) \
-        { \
-            (_ib) = (_inst)[1]; \
-        }
-#define FETCHIBYTE2(_ib, _inst) \
-        { \
-            (_ib) = (_inst)[2]; \
-        }
-#define FETCHIBYTE3(_ib, _inst) \
-        { \
-            (_ib) = (_inst)[3]; \
-        }
-#endif /*defined(OPTION_FETCHIBYTE)*/
+#ifndef store_fw
+static __inline__ void store_fw(volatile void *ptr, U32 value) {
+ U32 tmp = CSWAP32(value);
+ memcpy((BYTE *)ptr, &tmp, 4);
+}
+#endif
 
-#endif /*!defined(HERCULES_MACHINE)*/
+#ifndef fetch_dw
+static __inline__ U64 fetch_dw(volatile void *ptr) {
+ U64 value;
+ memcpy(&value, (BYTE *)ptr, 8);
+ return CSWAP64(value);
+}
+#endif
 
-#if !defined(COMPARE_AND_SWAP) 
-#define COMPARE_AND_SWAP(r1, r3, addr, arn, regs) \
-        { \
-            RADR  abs; \
-            U32   temp; \
-            abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
-                                ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
-            memcpy (&temp, &regs->mainstor[abs], 4); \
-            temp = CSWAP32(temp); \
-            if (temp == (regs)->GR_L((r1))) \
-            { \
-                temp = (regs)->GR_L((r3)); \
-                temp = CSWAP32(temp); \
-                memcpy (&regs->mainstor[abs], &temp, 4); \
-                (regs)->psw.cc = 0; \
-                STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE); \
-            } \
-            else \
-            { \
-                (regs)->psw.cc = 1; \
-                STORAGE_KEY(abs, regs) |= STORKEY_REF; \
-                (regs)->GR_L((r1)) = temp; \
-            } \
-        }
-#endif /*!defined(COMPARE_AND_SWAP)*/
+#ifndef store_dw
+static __inline__ void store_dw(volatile void *ptr, U64 value) {
+ U64 tmp = CSWAP64(value);
+ memcpy((BYTE *)ptr, &tmp, 8);
+}
+#endif
 
-#if !defined(COMPARE_DOUBLE_AND_SWAP) 
-#define COMPARE_DOUBLE_AND_SWAP(r1, r3, addr, arn, regs) \
-        { \
-            RADR  abs; \
-            U32   temp1, temp2; \
-            abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
-                                ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
-            memcpy (&temp1, &regs->mainstor[abs], 4); \
-            memcpy (&temp2, &regs->mainstor[abs+4], 4); \
-            temp1 = CSWAP32(temp1); \
-            temp2 = CSWAP32(temp2); \
-            if (temp1 == (regs)->GR_L((r1)) && temp2 == (regs)->GR_L((r1)+1)) \
-            { \
-                temp1 = CSWAP32((regs)->GR_L((r3))); \
-                temp2 = CSWAP32((regs)->GR_L((r3)+1)); \
-                memcpy (&regs->mainstor[abs], &temp1, 4); \
-                memcpy (&regs->mainstor[abs+4], &temp2, 4); \
-                (regs)->psw.cc = 0; \
-                STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE); \
-            } \
-            else \
-            { \
-                (regs)->psw.cc = 1; \
-                STORAGE_KEY(abs, regs) |= STORKEY_REF; \
-                (regs)->GR_L((r1)) = temp1; \
-                (regs)->GR_L((r1)+1) = temp2; \
-            } \
-        }
-#endif /*!defined(COMPARE_AND_SWAP)*/
+#ifndef cmpxchg1
+static __inline__ int cmpxchg1(BYTE *old, BYTE new, volatile void *ptr) {
+ BYTE tmp;
+ int code;
+ if (*old == (tmp = *((BYTE *)ptr)))
+ {
+     *((BYTE *)ptr) = new;
+     code = 0;
+ }
+ else
+ {
+     *old = tmp;
+     code = 1;
+ }
+ return code;
+}
+#endif
 
-#if !defined(TEST_AND_SET)
-#define TEST_AND_SET(addr, arn, regs) \
-        { \
-            RADR  abs; \
-            BYTE  obyte; \
-            abs = LOGICAL_TO_ABS((addr), (arn), (regs), \
-                                ACCTYPE_WRITE, (regs)->psw.pkey); \
-            if ((obyte = regs->mainstor[abs]) != 255) \
-                regs->mainstor[abs] = 255; \
-            (regs)->psw.cc = obyte >> 7; \
-        }
-#endif /*!defined(TEST_AND_SET)*/
+#ifndef cmpxchg4
+static __inline__ int cmpxchg4(U32 *old, U32 new, volatile void *ptr) {
+ U32 tmp;
+ int code;
+ if (CSWAP32(*old) == (tmp = *((U32 *)ptr)))
+ {
+     *((U32 *)ptr) = CSWAP32(new);
+     code = 0;
+ }
+ else
+ {
+     *old = CSWAP32(tmp);
+     code = 1;
+ }
+ return code;
+}
+#endif
+
+#ifndef cmpxchg8
+static __inline__ int cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
+ U64 tmp;
+ int code;
+ if (CSWAP64(*old) == (tmp = *((U64 *)ptr)))
+ {
+     *((U64 *)ptr) = CSWAP64(new);
+     code = 0;
+ }
+ else
+ {
+     *old = CSWAP64(tmp);
+     code = 1;
+ }
+ return code;
+}
+#endif
+
+#ifndef cmpxchg16
+static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
+ int code;
+ if (CSWAP64(*old1) == *((U64 *)ptr) && CSWAP64(*old2) == *((U64 *)(ptr + 8)))
+ {
+     *((U64 *)ptr) = CSWAP64(new1);
+     *((U64 *)(ptr + 8)) = CSWAP64(new2);
+     code = 0;
+ }
+ else
+ {
+     *old1 = CSWAP64(*((U64 *)ptr));
+     *old2 = CSWAP64(*((U64 *)(ptr + 8)));
+     code = 1;
+ }
+ return code;
+}
+#endif
+
+#endif /* _HERCULES_MACHDEP_H */

@@ -33,8 +33,6 @@
 #define OPTION_FAST_LOGICAL             /* Performance option        */
 #define OPTION_FAST_PREFIX              /* Performance option        */
 #define OPTION_REDUCED_INVAL            /* Performance option        */
-#define OPTION_FETCHIBYTE               /* Performance option        */
-#undef  OPTION_CS_USLEEP                /* Sleep if CS collision     */
 #define OPTION_FAST_INTCOND             /* Ea CPU has intcond COND   */
 #define OPTION_SYNCIO                   /* Synchronous I/O option    */
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */

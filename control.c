@@ -673,7 +673,7 @@ VADR    n = 0;                          /* Work area                 */
 DEF_INST(compare_and_swap_and_purge)
 {
 int     r1, r2;                         /* Values of R fields        */
-U32     n1, n2;                         /* 32 Bit work               */
+U64     n2;                             /* virtual address of op2    */
 RADR    abs2;                           /* absolute address of op2   */
 
     RRE(inst, execflag, regs, r1, r2);
@@ -699,38 +699,30 @@ RADR    abs2;                           /* absolute address of op2   */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
-    /* Obtain main-storage access lock */
-    OBTAIN_MAINLOCK(regs);
-
     /* Obtain 2nd operand address from r2 */
     n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP(regs);
     abs2 = LOGICAL_TO_ABS (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
-    /* Load second operand from operand address  */
-    FETCH_FW(n1, regs->mainstor + abs2);
+    /* Obtain main-storage access lock */
+    OBTAIN_MAINLOCK(regs);
 
-    /* Compare operand with R1 register contents */
-    if ( regs->GR_L(r1) == n1 )
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg4 (&regs->GR_L(r1), regs->GR_L(r1+1), regs->mainstor + abs2);
+
+    /* Release main-storage access lock */
+    RELEASE_MAINLOCK(regs);
+
+    if (regs->psw.cc == 0)
     {
-        /* If equal, store R1+1 at operand location and set cc=0 */
-        STORE_FW(regs->mainstor + abs2, regs->GR_L(r1+1));
-        regs->psw.cc = 0;
-
-        /* Release main-storage access lock */
-        RELEASE_MAINLOCK(regs);
-
         /* Perform requested funtion specified as per request code in r2 */
         if (regs->GR_L(r2) & 3)
             ARCH_DEP(synchronize_broadcast)(regs, regs->GR_L(r2) & 3, 0);
     }
     else
     {
-        /* If unequal, load R1 from operand and set cc=1 */
-        regs->GR_L(r1) = n1;
-        regs->psw.cc = 1;
-
-        /* Release main-storage access lock */
-        RELEASE_MAINLOCK(regs);
+        /* Otherwise yield */
+        if (sysblk.numcpu > 1)
+            sched_yield();
     }
 
     /* Perform serialization after completing operation */

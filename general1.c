@@ -1298,6 +1298,7 @@ DEF_INST(compare_and_swap)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
+RADR    abs2;                           /* absolute address          */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -1306,13 +1307,21 @@ VADR    effective_addr2;                /* effective address         */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
+    /* Get operand absolute address */
+    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
+                           ACCTYPE_WRITE, regs->psw.pkey);
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    COMPARE_AND_SWAP(r1, r3, effective_addr2, b2, regs );
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg4 (&regs->GR_L(r1), regs->GR_L(r3), regs->mainstor + abs2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
+
+    /* Perform serialization after completing operation */
+    PERFORM_SERIALIZATION (regs);
 
     if (regs->psw.cc == 1)
     {
@@ -1339,6 +1348,8 @@ DEF_INST(compare_double_and_swap)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
+RADR    abs2;                           /* absolute address          */
+U64     old, new;                       /* old, new values           */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -1349,10 +1360,19 @@ VADR    effective_addr2;                /* effective address         */
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
+    /* Get operand absolute address */
+    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
+                           ACCTYPE_WRITE, regs->psw.pkey);
+
+    /* Get old, new values */
+    old = ((U64)(regs->GR_L(r1)) << 32) | regs->GR_L(r1+1);
+    new = ((U64)(regs->GR_L(r3)) << 32) | regs->GR_L(r3+1);
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    COMPARE_DOUBLE_AND_SWAP(r1, r3, effective_addr2, b2, regs );
+    /* Attempt to exchange the values */
+    regs->psw.cc = cmpxchg8 (&old, new, regs->mainstor + abs2);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
@@ -1362,6 +1382,8 @@ VADR    effective_addr2;                /* effective address         */
 
     if (regs->psw.cc == 1)
     {
+        regs->GR_L(r1) = old >> 32;
+        regs->GR_L(r1+1) = old & 0xffffffff;
 #if defined(_FEATURE_SIE)
         if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1)))
         {

@@ -423,16 +423,8 @@ VADR    effective_addr2,
         /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
 
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
-        /* It this is a failed locked operation
-           and there is more then 1 CPU in the configuration
-           and there is no broadcast synchronization in progress
-           then call the hypervisor to end this timeslice,
-           this to prevent this virtual CPU monopolizing
-           the physical CPU on a spinlock */
         if(regs->psw.cc && sysblk.numcpu > 1)
-            usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
+            sched_yield();
 
     }
 }
@@ -1282,16 +1274,28 @@ DEF_INST(test_and_set)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+RADR    abs2;                           /* Real address              */
+BYTE    old, new;                       /* Old, new values           */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
+    /* Get operand absolute address */
+    abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs,
+                           ACCTYPE_WRITE, regs->psw.pkey);
+
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    TEST_AND_SET(effective_addr2, b2, regs);
+    /* Get old, new values */
+    old = regs->mainstor[abs2];
+    new = 0xff;
+
+    /* Attempt to exchange the values */
+    cmpxchg1(&old, new, regs->mainstor + abs2);
+    regs->psw.cc = old >> 7;
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
