@@ -39,8 +39,6 @@ typedef struct _MEMINFO {
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static BYTE eighthexFF[] =              /* End of directory marker   */
-        {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 /* List of first loads for Open/Close/EOV routines */
 static BYTE *firstload[] = {
@@ -603,6 +601,7 @@ int             head;                   /* Head number               */
 int             rec;                    /* Record number             */
 int             trk;                    /* Relative track number     */
 BYTE           *fname;                  /* -> CKD image file name    */
+BYTE           *sfname;                 /* -> CKD shadow file name   */
 int             noext;                  /* Number of extents         */
 DSXTENT         extent[16];             /* Extent descriptor array   */
 BYTE           *blkptr;                 /* -> PDS directory block    */
@@ -622,16 +621,20 @@ int             nmem = 0;               /* Number of array entries   */
         argc--;
     }
 #endif /*EXTERNALGUI*/
-    if (argc != 2)
+    if (argc <= 2 || argc > 3)
     {
         fprintf (stdout,
-                "Usage: %s ckdfile\n",
+                "Usage: %s ckdfile [sf=shadow-file-name]\n",
                 argv[0]);
         return -1;
     }
 
     /* The first argument is the name of the CKD image file */
     fname = argv[1];
+
+    /* The next argument, if there, is the name of the shadow file */
+    if (argc > 2) sfname = argv[2];
+    else sfname = NULL;
 
     /* Obtain storage for the member information array */
     memtab = (MEMINFO*) malloc (sizeof(MEMINFO) * MAX_MEMBERS);
@@ -644,7 +647,7 @@ int             nmem = 0;               /* Number of array entries   */
     }
 
     /* Open the CKD image file */
-    cif = open_ckd_image (fname, O_RDWR|O_BINARY);
+    cif = open_ckd_image (fname, sfname, O_RDWR|O_BINARY);
     if (cif == NULL) return -1;
 
     /* Build the extent array for the SVCLIB dataset */
