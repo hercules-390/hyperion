@@ -5,6 +5,10 @@
 /* Header file defining the Hercules version number.		     */
 /*-------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #if !defined(VERSION)
 #warning No version specified
 #define	VERSION	Unknown                 /* Unkown version number     */
