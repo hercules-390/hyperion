@@ -1153,7 +1153,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
     default:
 
-        if( HDC(debug_sclp_unknown_command, sccb, regs) )
+        if( HDC(debug_sclp_unknown_command, sclp_command, sccb, regs) )
             break;
 
         /* Set response code X'01F0' for invalid SCLP command */
