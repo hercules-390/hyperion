@@ -955,8 +955,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
 
         /* Parse cckd value value */
         if (scckd)
-            if (cckd_command (scckd, 0))
-                delayed_exit(1);
+            cckd_command (scckd, 0);
 
     } /* end for(scount) */
 
