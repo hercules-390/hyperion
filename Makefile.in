@@ -1,0 +1,915 @@
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+@SET_MAKE@
+
+#
+# Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
+#
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+top_builddir = .
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = @program_transform_name@
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+AMTAR = @AMTAR@
+AWK = @AWK@
+CC = @CC@
+DEPDIR = @DEPDIR@
+EXEEXT = @EXEEXT@
+INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+OBJEXT = @OBJEXT@
+PACKAGE = @PACKAGE@
+VERSION = @VERSION@
+am__include = @am__include@
+am__quote = @am__quote@
+install_sh = @install_sh@
+
+AUTOMAKE_OPTIONS = foreign 1.5
+
+SUBDIRS = . util html
+
+@BUILD_HERCIFC_TRUE@HERCIFC = hercifc
+@BUILD_HERCIFC_FALSE@HERCIFC = 
+
+@BUILD_FTHREADS_TRUE@FTHREADS = fthreads.c w32chan.c
+@BUILD_FTHREADS_FALSE@FTHREADS = 
+
+bin_PROGRAMS = hercules $(HERCIFC) \
+	   dasdinit dasdisup dasdload dasdls dasdpdsu \
+	   tapecopy tapemap tapesplt \
+	   cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap \
+	   hetget hetinit hetmap hetupd \
+	   dmap2hrc
+
+
+hercules_SOURCES = impl.c config.c panel.c version.c \
+	   ipl.c assist.c dat.c \
+	   stack.c cpu.c vstore.c \
+	   general1.c general2.c plo.c \
+           control.c io.c \
+	   decimal.c service.c opcode.c \
+	   diagnose.c diagmssf.c vm.c \
+	   channel.c ckddasd.c fbadasd.c \
+	   tapedev.c cardrdr.c cardpch.c \
+	   printer.c console.c external.c \
+	   float.c ctcadpt.c trace.c \
+	   machchk.c vector.c xstore.c \
+	   cmpsc.c sie.c timer.c \
+	   esame.c cckddasd.c cckdcdsx.c cckdend.c \
+	   parser.c hetlib.c ieee.c \
+	   machdep.h $(FTHREADS)
+
+
+hercifc_SOURCES = hercifc.c version.c
+
+dasdinit_SOURCES = dasdinit.c dasdutil.c version.c
+
+dasdisup_SOURCES = dasdisup.c dasdutil.c version.c
+
+dasdload_SOURCES = dasdload.c dasdutil.c version.c
+
+dasdls_SOURCES = dasdls.c dasdutil.c version.c
+
+dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c
+
+tapecopy_SOURCES = tapecopy.c version.c
+
+tapemap_SOURCES = tapemap.c version.c
+
+tapesplt_SOURCES = tapesplt.c version.c
+
+cckdcdsk_SOURCES = cckdcdsk.c cckdend.c version.c
+
+cckdcomp_SOURCES = cckdcomp.c cckdcdsx.c cckdend.c version.c
+
+ckd2cckd_SOURCES = ckd2cckd.c version.c
+
+cckd2ckd_SOURCES = cckd2ckd.c cckdend.c version.c
+
+cckdswap_SOURCES = cckdswap.c cckdend.c version.c
+
+hetget_SOURCES = hetget.c hetlib.c sllib.c version.c
+
+hetinit_SOURCES = hetinit.c hetlib.c sllib.c version.c
+
+hetmap_SOURCES = hetmap.c hetlib.c sllib.c version.c
+
+hetupd_SOURCES = hetupd.c hetlib.c sllib.c version.c
+
+dmap2hrc_SOURCES = dmap2hrc.c version.c
+
+EXTRA_DIST = hercules.cnf
+
+noinst_HEADERS = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
+    feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
+    codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
+    sllib.h htypes.h fthreads.h w32chan.h linklist.h if_tun.h
+
+subdir = .
+ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
+CONFIG_HEADER = config.h
+CONFIG_CLEAN_FILES =
+@BUILD_HERCIFC_TRUE@bin_PROGRAMS = hercules$(EXEEXT) hercifc$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	dasdinit$(EXEEXT) dasdisup$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	dasdload$(EXEEXT) dasdls$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	dasdpdsu$(EXEEXT) tapecopy$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	tapemap$(EXEEXT) tapesplt$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	cckdswap$(EXEEXT) hetget$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	hetinit$(EXEEXT) hetmap$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	hetupd$(EXEEXT) dmap2hrc$(EXEEXT)
+@BUILD_HERCIFC_FALSE@bin_PROGRAMS = hercules$(EXEEXT) dasdinit$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	dasdisup$(EXEEXT) dasdload$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	dasdls$(EXEEXT) dasdpdsu$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	tapecopy$(EXEEXT) tapemap$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	tapesplt$(EXEEXT) cckd2ckd$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	cckdcdsk$(EXEEXT) ckd2cckd$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	cckdcomp$(EXEEXT) cckdswap$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	hetget$(EXEEXT) hetinit$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	hetmap$(EXEEXT) hetupd$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	dmap2hrc$(EXEEXT)
+PROGRAMS = $(bin_PROGRAMS)
+
+am_cckd2ckd_OBJECTS = cckd2ckd.$(OBJEXT) cckdend.$(OBJEXT) \
+	version.$(OBJEXT)
+cckd2ckd_OBJECTS = $(am_cckd2ckd_OBJECTS)
+cckd2ckd_LDADD = $(LDADD)
+cckd2ckd_DEPENDENCIES =
+cckd2ckd_LDFLAGS =
+am_cckdcdsk_OBJECTS = cckdcdsk.$(OBJEXT) cckdend.$(OBJEXT) \
+	version.$(OBJEXT)
+cckdcdsk_OBJECTS = $(am_cckdcdsk_OBJECTS)
+cckdcdsk_LDADD = $(LDADD)
+cckdcdsk_DEPENDENCIES =
+cckdcdsk_LDFLAGS =
+am_cckdcomp_OBJECTS = cckdcomp.$(OBJEXT) cckdcdsx.$(OBJEXT) \
+	cckdend.$(OBJEXT) version.$(OBJEXT)
+cckdcomp_OBJECTS = $(am_cckdcomp_OBJECTS)
+cckdcomp_LDADD = $(LDADD)
+cckdcomp_DEPENDENCIES =
+cckdcomp_LDFLAGS =
+am_cckdswap_OBJECTS = cckdswap.$(OBJEXT) cckdend.$(OBJEXT) \
+	version.$(OBJEXT)
+cckdswap_OBJECTS = $(am_cckdswap_OBJECTS)
+cckdswap_LDADD = $(LDADD)
+cckdswap_DEPENDENCIES =
+cckdswap_LDFLAGS =
+am_ckd2cckd_OBJECTS = ckd2cckd.$(OBJEXT) version.$(OBJEXT)
+ckd2cckd_OBJECTS = $(am_ckd2cckd_OBJECTS)
+ckd2cckd_LDADD = $(LDADD)
+ckd2cckd_DEPENDENCIES =
+ckd2cckd_LDFLAGS =
+am_dasdinit_OBJECTS = dasdinit.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT)
+dasdinit_OBJECTS = $(am_dasdinit_OBJECTS)
+dasdinit_LDADD = $(LDADD)
+dasdinit_DEPENDENCIES =
+dasdinit_LDFLAGS =
+am_dasdisup_OBJECTS = dasdisup.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT)
+dasdisup_OBJECTS = $(am_dasdisup_OBJECTS)
+dasdisup_LDADD = $(LDADD)
+dasdisup_DEPENDENCIES =
+dasdisup_LDFLAGS =
+am_dasdload_OBJECTS = dasdload.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT)
+dasdload_OBJECTS = $(am_dasdload_OBJECTS)
+dasdload_LDADD = $(LDADD)
+dasdload_DEPENDENCIES =
+dasdload_LDFLAGS =
+am_dasdls_OBJECTS = dasdls.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT)
+dasdls_OBJECTS = $(am_dasdls_OBJECTS)
+dasdls_LDADD = $(LDADD)
+dasdls_DEPENDENCIES =
+dasdls_LDFLAGS =
+am_dasdpdsu_OBJECTS = dasdpdsu.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT)
+dasdpdsu_OBJECTS = $(am_dasdpdsu_OBJECTS)
+dasdpdsu_LDADD = $(LDADD)
+dasdpdsu_DEPENDENCIES =
+dasdpdsu_LDFLAGS =
+am_dmap2hrc_OBJECTS = dmap2hrc.$(OBJEXT) version.$(OBJEXT)
+dmap2hrc_OBJECTS = $(am_dmap2hrc_OBJECTS)
+dmap2hrc_LDADD = $(LDADD)
+dmap2hrc_DEPENDENCIES =
+dmap2hrc_LDFLAGS =
+am_hercifc_OBJECTS = hercifc.$(OBJEXT) version.$(OBJEXT)
+hercifc_OBJECTS = $(am_hercifc_OBJECTS)
+hercifc_LDADD = $(LDADD)
+hercifc_DEPENDENCIES =
+hercifc_LDFLAGS =
+@BUILD_FTHREADS_TRUE@am_hercules_OBJECTS = impl.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	config.$(OBJEXT) panel.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) ipl.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	assist.$(OBJEXT) dat.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	stack.$(OBJEXT) cpu.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	vstore.$(OBJEXT) general1.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	general2.$(OBJEXT) plo.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	control.$(OBJEXT) io.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	decimal.$(OBJEXT) service.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	opcode.$(OBJEXT) diagnose.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	diagmssf.$(OBJEXT) vm.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	channel.$(OBJEXT) ckddasd.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	fbadasd.$(OBJEXT) tapedev.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	cardrdr.$(OBJEXT) cardpch.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	printer.$(OBJEXT) console.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	external.$(OBJEXT) float.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	ctcadpt.$(OBJEXT) trace.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	machchk.$(OBJEXT) vector.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	xstore.$(OBJEXT) cmpsc.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	sie.$(OBJEXT) timer.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	esame.$(OBJEXT) cckddasd.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	cckdcdsx.$(OBJEXT) cckdend.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	parser.$(OBJEXT) hetlib.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	ieee.$(OBJEXT) fthreads.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	w32chan.$(OBJEXT)
+@BUILD_FTHREADS_FALSE@am_hercules_OBJECTS = impl.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	config.$(OBJEXT) panel.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) ipl.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	assist.$(OBJEXT) dat.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	stack.$(OBJEXT) cpu.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	vstore.$(OBJEXT) general1.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	general2.$(OBJEXT) plo.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	control.$(OBJEXT) io.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	decimal.$(OBJEXT) service.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	opcode.$(OBJEXT) diagnose.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	diagmssf.$(OBJEXT) vm.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	channel.$(OBJEXT) ckddasd.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	fbadasd.$(OBJEXT) tapedev.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	cardrdr.$(OBJEXT) cardpch.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	printer.$(OBJEXT) console.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	external.$(OBJEXT) float.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	ctcadpt.$(OBJEXT) trace.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	machchk.$(OBJEXT) vector.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	xstore.$(OBJEXT) cmpsc.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	sie.$(OBJEXT) timer.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	esame.$(OBJEXT) cckddasd.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	cckdcdsx.$(OBJEXT) cckdend.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	parser.$(OBJEXT) hetlib.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	ieee.$(OBJEXT)
+hercules_OBJECTS = $(am_hercules_OBJECTS)
+hercules_LDADD = $(LDADD)
+hercules_DEPENDENCIES =
+hercules_LDFLAGS =
+am_hetget_OBJECTS = hetget.$(OBJEXT) hetlib.$(OBJEXT) sllib.$(OBJEXT) \
+	version.$(OBJEXT)
+hetget_OBJECTS = $(am_hetget_OBJECTS)
+hetget_LDADD = $(LDADD)
+hetget_DEPENDENCIES =
+hetget_LDFLAGS =
+am_hetinit_OBJECTS = hetinit.$(OBJEXT) hetlib.$(OBJEXT) sllib.$(OBJEXT) \
+	version.$(OBJEXT)
+hetinit_OBJECTS = $(am_hetinit_OBJECTS)
+hetinit_LDADD = $(LDADD)
+hetinit_DEPENDENCIES =
+hetinit_LDFLAGS =
+am_hetmap_OBJECTS = hetmap.$(OBJEXT) hetlib.$(OBJEXT) sllib.$(OBJEXT) \
+	version.$(OBJEXT)
+hetmap_OBJECTS = $(am_hetmap_OBJECTS)
+hetmap_LDADD = $(LDADD)
+hetmap_DEPENDENCIES =
+hetmap_LDFLAGS =
+am_hetupd_OBJECTS = hetupd.$(OBJEXT) hetlib.$(OBJEXT) sllib.$(OBJEXT) \
+	version.$(OBJEXT)
+hetupd_OBJECTS = $(am_hetupd_OBJECTS)
+hetupd_LDADD = $(LDADD)
+hetupd_DEPENDENCIES =
+hetupd_LDFLAGS =
+am_tapecopy_OBJECTS = tapecopy.$(OBJEXT) version.$(OBJEXT)
+tapecopy_OBJECTS = $(am_tapecopy_OBJECTS)
+tapecopy_LDADD = $(LDADD)
+tapecopy_DEPENDENCIES =
+tapecopy_LDFLAGS =
+am_tapemap_OBJECTS = tapemap.$(OBJEXT) version.$(OBJEXT)
+tapemap_OBJECTS = $(am_tapemap_OBJECTS)
+tapemap_LDADD = $(LDADD)
+tapemap_DEPENDENCIES =
+tapemap_LDFLAGS =
+am_tapesplt_OBJECTS = tapesplt.$(OBJEXT) version.$(OBJEXT)
+tapesplt_OBJECTS = $(am_tapesplt_OBJECTS)
+tapesplt_LDADD = $(LDADD)
+tapesplt_DEPENDENCIES =
+tapesplt_LDFLAGS =
+
+DEFS = @DEFS@
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
+@AMDEP_TRUE@DEP_FILES = $(DEPDIR)/assist.Po $(DEPDIR)/cardpch.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cardrdr.Po $(DEPDIR)/cckd2ckd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cckdcdsk.Po $(DEPDIR)/cckdcdsx.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cckdcomp.Po $(DEPDIR)/cckddasd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cckdend.Po $(DEPDIR)/cckdswap.Po \
+@AMDEP_TRUE@	$(DEPDIR)/channel.Po $(DEPDIR)/ckd2cckd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ckddasd.Po $(DEPDIR)/cmpsc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/config.Po $(DEPDIR)/console.Po \
+@AMDEP_TRUE@	$(DEPDIR)/control.Po $(DEPDIR)/cpu.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ctcadpt.Po $(DEPDIR)/dasdinit.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdisup.Po $(DEPDIR)/dasdload.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdls.Po $(DEPDIR)/dasdpdsu.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdutil.Po $(DEPDIR)/dat.Po \
+@AMDEP_TRUE@	$(DEPDIR)/decimal.Po $(DEPDIR)/diagmssf.Po \
+@AMDEP_TRUE@	$(DEPDIR)/diagnose.Po $(DEPDIR)/dmap2hrc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/esame.Po $(DEPDIR)/external.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fbadasd.Po $(DEPDIR)/float.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fthreads.Po $(DEPDIR)/general1.Po \
+@AMDEP_TRUE@	$(DEPDIR)/general2.Po $(DEPDIR)/hercifc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetget.Po $(DEPDIR)/hetinit.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetlib.Po $(DEPDIR)/hetmap.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetupd.Po $(DEPDIR)/ieee.Po \
+@AMDEP_TRUE@	$(DEPDIR)/impl.Po $(DEPDIR)/io.Po $(DEPDIR)/ipl.Po \
+@AMDEP_TRUE@	$(DEPDIR)/machchk.Po $(DEPDIR)/opcode.Po \
+@AMDEP_TRUE@	$(DEPDIR)/panel.Po $(DEPDIR)/parser.Po \
+@AMDEP_TRUE@	$(DEPDIR)/plo.Po $(DEPDIR)/printer.Po \
+@AMDEP_TRUE@	$(DEPDIR)/service.Po $(DEPDIR)/sie.Po \
+@AMDEP_TRUE@	$(DEPDIR)/sllib.Po $(DEPDIR)/stack.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapecopy.Po $(DEPDIR)/tapedev.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapemap.Po $(DEPDIR)/tapesplt.Po \
+@AMDEP_TRUE@	$(DEPDIR)/timer.Po $(DEPDIR)/trace.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vector.Po $(DEPDIR)/version.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vm.Po $(DEPDIR)/vstore.Po \
+@AMDEP_TRUE@	$(DEPDIR)/w32chan.Po $(DEPDIR)/xstore.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+DIST_SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) \
+	$(cckdcomp_SOURCES) $(cckdswap_SOURCES) $(ckd2cckd_SOURCES) \
+	$(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) \
+	$(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dmap2hrc_SOURCES) \
+	$(hercifc_SOURCES) $(hercules_SOURCES) $(hetget_SOURCES) \
+	$(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) \
+	$(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
+HEADERS = $(noinst_HEADERS)
+
+
+RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
+	uninstall-info-recursive all-recursive install-data-recursive \
+	install-exec-recursive installdirs-recursive install-recursive \
+	uninstall-recursive check-recursive installcheck-recursive
+DIST_COMMON = $(noinst_HEADERS) ./stamp-h.in INSTALL Makefile.am \
+	Makefile.in aclocal.m4 autoconf/README autoconf/config.guess \
+	autoconf/config.sub autoconf/depcomp autoconf/install-sh \
+	autoconf/missing autoconf/mkinstalldirs config.h.in configure \
+	configure.ac
+DIST_SUBDIRS = $(SUBDIRS)
+SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckdswap_SOURCES) $(ckd2cckd_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dmap2hrc_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
+
+all: config.h
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+
+.SUFFIXES:
+.SUFFIXES: .c .o .obj
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.ac $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --foreign  Makefile
+Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$@ $(SHELL) ./config.status
+
+$(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+	$(SHELL) ./config.status --recheck
+$(srcdir)/configure:  $(srcdir)/configure.ac $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
+
+$(ACLOCAL_M4):  configure.ac 
+	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+config.h: stamp-h
+	@if test ! -f $@; then \
+		rm -f stamp-h; \
+		$(MAKE) stamp-h; \
+	else :; fi
+stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+	@rm -f stamp-h stamp-hT
+	@echo timestamp > stamp-hT 2> /dev/null
+	cd $(top_builddir) \
+	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+	     $(SHELL) ./config.status
+	@mv stamp-hT stamp-h
+$(srcdir)/config.h.in:  $(srcdir)/./stamp-h.in
+	@if test ! -f $@; then \
+		rm -f $(srcdir)/./stamp-h.in; \
+		$(MAKE) $(srcdir)/./stamp-h.in; \
+	else :; fi
+$(srcdir)/./stamp-h.in: $(top_srcdir)/configure.ac $(ACLOCAL_M4) 
+	@rm -f $(srcdir)/./stamp-h.in $(srcdir)/./stamp-h.inT
+	@echo timestamp > $(srcdir)/./stamp-h.inT 2> /dev/null
+	cd $(top_srcdir) && $(AUTOHEADER)
+	@mv $(srcdir)/./stamp-h.inT $(srcdir)/./stamp-h.in
+
+distclean-hdr:
+	-rm -f config.h
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	  ; then \
+	    f=`echo $$p1|sed '$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f"; \
+	   $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f; \
+	  else :; fi; \
+	done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f $(DESTDIR)$(bindir)/$$f"; \
+	  rm -f $(DESTDIR)$(bindir)/$$f; \
+	done
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+cckd2ckd$(EXEEXT): $(cckd2ckd_OBJECTS) $(cckd2ckd_DEPENDENCIES) 
+	@rm -f cckd2ckd$(EXEEXT)
+	$(LINK) $(cckd2ckd_LDFLAGS) $(cckd2ckd_OBJECTS) $(cckd2ckd_LDADD) $(LIBS)
+cckdcdsk$(EXEEXT): $(cckdcdsk_OBJECTS) $(cckdcdsk_DEPENDENCIES) 
+	@rm -f cckdcdsk$(EXEEXT)
+	$(LINK) $(cckdcdsk_LDFLAGS) $(cckdcdsk_OBJECTS) $(cckdcdsk_LDADD) $(LIBS)
+cckdcomp$(EXEEXT): $(cckdcomp_OBJECTS) $(cckdcomp_DEPENDENCIES) 
+	@rm -f cckdcomp$(EXEEXT)
+	$(LINK) $(cckdcomp_LDFLAGS) $(cckdcomp_OBJECTS) $(cckdcomp_LDADD) $(LIBS)
+cckdswap$(EXEEXT): $(cckdswap_OBJECTS) $(cckdswap_DEPENDENCIES) 
+	@rm -f cckdswap$(EXEEXT)
+	$(LINK) $(cckdswap_LDFLAGS) $(cckdswap_OBJECTS) $(cckdswap_LDADD) $(LIBS)
+ckd2cckd$(EXEEXT): $(ckd2cckd_OBJECTS) $(ckd2cckd_DEPENDENCIES) 
+	@rm -f ckd2cckd$(EXEEXT)
+	$(LINK) $(ckd2cckd_LDFLAGS) $(ckd2cckd_OBJECTS) $(ckd2cckd_LDADD) $(LIBS)
+dasdinit$(EXEEXT): $(dasdinit_OBJECTS) $(dasdinit_DEPENDENCIES) 
+	@rm -f dasdinit$(EXEEXT)
+	$(LINK) $(dasdinit_LDFLAGS) $(dasdinit_OBJECTS) $(dasdinit_LDADD) $(LIBS)
+dasdisup$(EXEEXT): $(dasdisup_OBJECTS) $(dasdisup_DEPENDENCIES) 
+	@rm -f dasdisup$(EXEEXT)
+	$(LINK) $(dasdisup_LDFLAGS) $(dasdisup_OBJECTS) $(dasdisup_LDADD) $(LIBS)
+dasdload$(EXEEXT): $(dasdload_OBJECTS) $(dasdload_DEPENDENCIES) 
+	@rm -f dasdload$(EXEEXT)
+	$(LINK) $(dasdload_LDFLAGS) $(dasdload_OBJECTS) $(dasdload_LDADD) $(LIBS)
+dasdls$(EXEEXT): $(dasdls_OBJECTS) $(dasdls_DEPENDENCIES) 
+	@rm -f dasdls$(EXEEXT)
+	$(LINK) $(dasdls_LDFLAGS) $(dasdls_OBJECTS) $(dasdls_LDADD) $(LIBS)
+dasdpdsu$(EXEEXT): $(dasdpdsu_OBJECTS) $(dasdpdsu_DEPENDENCIES) 
+	@rm -f dasdpdsu$(EXEEXT)
+	$(LINK) $(dasdpdsu_LDFLAGS) $(dasdpdsu_OBJECTS) $(dasdpdsu_LDADD) $(LIBS)
+dmap2hrc$(EXEEXT): $(dmap2hrc_OBJECTS) $(dmap2hrc_DEPENDENCIES) 
+	@rm -f dmap2hrc$(EXEEXT)
+	$(LINK) $(dmap2hrc_LDFLAGS) $(dmap2hrc_OBJECTS) $(dmap2hrc_LDADD) $(LIBS)
+hercifc$(EXEEXT): $(hercifc_OBJECTS) $(hercifc_DEPENDENCIES) 
+	@rm -f hercifc$(EXEEXT)
+	$(LINK) $(hercifc_LDFLAGS) $(hercifc_OBJECTS) $(hercifc_LDADD) $(LIBS)
+hercules$(EXEEXT): $(hercules_OBJECTS) $(hercules_DEPENDENCIES) 
+	@rm -f hercules$(EXEEXT)
+	$(LINK) $(hercules_LDFLAGS) $(hercules_OBJECTS) $(hercules_LDADD) $(LIBS)
+hetget$(EXEEXT): $(hetget_OBJECTS) $(hetget_DEPENDENCIES) 
+	@rm -f hetget$(EXEEXT)
+	$(LINK) $(hetget_LDFLAGS) $(hetget_OBJECTS) $(hetget_LDADD) $(LIBS)
+hetinit$(EXEEXT): $(hetinit_OBJECTS) $(hetinit_DEPENDENCIES) 
+	@rm -f hetinit$(EXEEXT)
+	$(LINK) $(hetinit_LDFLAGS) $(hetinit_OBJECTS) $(hetinit_LDADD) $(LIBS)
+hetmap$(EXEEXT): $(hetmap_OBJECTS) $(hetmap_DEPENDENCIES) 
+	@rm -f hetmap$(EXEEXT)
+	$(LINK) $(hetmap_LDFLAGS) $(hetmap_OBJECTS) $(hetmap_LDADD) $(LIBS)
+hetupd$(EXEEXT): $(hetupd_OBJECTS) $(hetupd_DEPENDENCIES) 
+	@rm -f hetupd$(EXEEXT)
+	$(LINK) $(hetupd_LDFLAGS) $(hetupd_OBJECTS) $(hetupd_LDADD) $(LIBS)
+tapecopy$(EXEEXT): $(tapecopy_OBJECTS) $(tapecopy_DEPENDENCIES) 
+	@rm -f tapecopy$(EXEEXT)
+	$(LINK) $(tapecopy_LDFLAGS) $(tapecopy_OBJECTS) $(tapecopy_LDADD) $(LIBS)
+tapemap$(EXEEXT): $(tapemap_OBJECTS) $(tapemap_DEPENDENCIES) 
+	@rm -f tapemap$(EXEEXT)
+	$(LINK) $(tapemap_LDFLAGS) $(tapemap_OBJECTS) $(tapemap_LDADD) $(LIBS)
+tapesplt$(EXEEXT): $(tapesplt_OBJECTS) $(tapesplt_DEPENDENCIES) 
+	@rm -f tapesplt$(EXEEXT)
+	$(LINK) $(tapesplt_LDFLAGS) $(tapesplt_OBJECTS) $(tapesplt_LDADD) $(LIBS)
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/assist.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cardpch.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cardrdr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckd2ckd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckdcdsk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckdcdsx.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckdcomp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckddasd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckdend.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckdswap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/channel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ckd2cckd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ckddasd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmpsc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/console.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/control.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cpu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ctcadpt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdisup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdload.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdls.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdpdsu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdutil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/decimal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/diagmssf.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/diagnose.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dmap2hrc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/esame.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/external.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fbadasd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/float.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/fthreads.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/general1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/general2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hercifc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetget.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetinit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetlib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetmap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetupd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ieee.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/impl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/io.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ipl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/machchk.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/opcode.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/panel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/parser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/plo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/printer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/service.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/sie.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/sllib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/stack.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tapecopy.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tapedev.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tapemap.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tapesplt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/timer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/trace.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vector.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/version.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vm.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vstore.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/w32chan.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/xstore.Po@am__quote@
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+@AMDEP_TRUE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+	$(COMPILE) -c `cygpath -w $<`
+CCDEPMODE = @CCDEPMODE@
+uninstall-info-am:
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+$(RECURSIVE_TARGETS):
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	rev=''; for subdir in $$list; do \
+	  if test "$$subdir" = "."; then :; else \
+	    rev="$$subdir $$rev"; \
+	  fi; \
+	done; \
+	rev="$$rev ."; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS: tags-recursive $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = .
+# Avoid unsightly `./'.
+distdir = $(PACKAGE)-$(VERSION)
+
+GZIP_ENV = --best
+
+distdir: $(DISTFILES)
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+	mkdir $(distdir)
+	$(mkinstalldirs) $(distdir)/autoconf
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$(top_distdir)" \
+	        distdir=../$(distdir)/$$subdir \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
+	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
+	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
+	|| chmod -R a+r $(distdir)
+dist: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+
+# This target untars the dist file and tries a VPATH configuration.  Then
+# it guarantees that the distribution is self-contained by making another
+# tarfile.
+distcheck: dist
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	GZIP=$(GZIP_ENV) gunzip -c $(distdir).tar.gz | $(AMTAR) xf -
+	chmod -R a-w $(distdir); chmod a+w $(distdir)
+	mkdir $(distdir)/=build
+	mkdir $(distdir)/=inst
+	chmod a-w $(distdir)
+	dc_install_base=`CDPATH=: && cd $(distdir)/=inst && pwd` \
+	  && cd $(distdir)/=build \
+	  && ../configure --srcdir=.. --prefix=$$dc_install_base \
+	  && $(MAKE) $(AM_MAKEFLAGS) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
+	  && $(MAKE) $(AM_MAKEFLAGS) check \
+	  && $(MAKE) $(AM_MAKEFLAGS) install \
+	  && $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	  && $(MAKE) $(AM_MAKEFLAGS) uninstall \
+	  && (test `find $$dc_install_base -type f -print | wc -l` -le 1 \
+	     || (echo "Error: files left after uninstall" 1>&2; \
+	         exit 1) ) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dist \
+	  && $(MAKE) $(AM_MAKEFLAGS) distclean \
+	  && rm -f $(distdir).tar.gz \
+	  && (test `find . -type f -print | wc -l` -eq 0 \
+	     || (echo "Error: files left after distclean" 1>&2; \
+	         exit 1) )
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	@echo "$(distdir).tar.gz is ready for distribution" | \
+	  sed 'h;s/./=/g;p;x;p;x'
+check-am: all-am
+check: check-recursive
+all-am: Makefile $(PROGRAMS) $(HEADERS) config.h
+installdirs: installdirs-recursive
+installdirs-am:
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-recursive
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+	@echo "This command is intended for maintainers to use"
+	@echo "it deletes files that may require special tools to rebuild."
+clean: clean-recursive
+
+clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
+
+dist-all: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+distclean: distclean-recursive
+	-rm -f config.status config.cache config.log
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-hdr distclean-tags
+
+dvi: dvi-recursive
+
+dvi-am:
+
+info: info-recursive
+
+info-am:
+
+install-data-am:
+
+install-exec-am: install-binPROGRAMS install-exec-local
+
+install-info: install-info-recursive
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-recursive
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-recursive
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic
+
+uninstall-am: uninstall-binPROGRAMS uninstall-info-am
+
+uninstall-info: uninstall-info-recursive
+
+.PHONY: $(RECURSIVE_TARGETS) GTAGS all all-am check check-am clean \
+	clean-binPROGRAMS clean-generic clean-recursive dist dist-all \
+	distcheck distclean distclean-compile distclean-depend \
+	distclean-generic distclean-hdr distclean-recursive \
+	distclean-tags distdir dvi dvi-am dvi-recursive info info-am \
+	info-recursive install install-am install-binPROGRAMS \
+	install-data install-data-am install-data-recursive \
+	install-exec install-exec-am install-exec-local \
+	install-exec-recursive install-info install-info-am \
+	install-info-recursive install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-info-am \
+	uninstall-info-recursive uninstall-recursive
+
+
+cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
+	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
+	cckdswap$(EXEEXT)
+
+tar: dist
+
+@SETUID_HERCIFC_TRUE@install-exec-local:
+@SETUID_HERCIFC_TRUE@	chown root $(DESTDIR)$(bindir)/hercifc
+@SETUID_HERCIFC_TRUE@	chmod 0751 $(DESTDIR)$(bindir)/hercifc
+@SETUID_HERCIFC_TRUE@	chmod +s $(DESTDIR)$(bindir)/hercifc
+@SETUID_HERCIFC_TRUE@	rm hercifc
+
+%.s: %.c
+	$(COMPILE) -S $<
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:
