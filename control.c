@@ -224,7 +224,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 
         /* Restore the PSW key mask from the DUCT */
-        regs->CR_LHH(3) = duct_pkrp & DUCT_PKM;
+        regs->CR(3) &= 0x0000FFFF;
+        regs->CR(3) |= duct_pkrp & DUCT_PKM;
 
         /* Restore the PSW key from the DUCT */
         regs->psw.pkey = duct_pkrp & DUCT_KEY;
@@ -5128,6 +5129,7 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
     if((regs->GR_L(0) & STSI_GPR0_FC_MASK) == STSI_GPR0_FC_CURRENT)
     {
         regs->GR_L(0) |= STSI_GPR0_FC_BASIC;
+//      regs->GR_L(0) |= STSI_GPR0_FC_LPAR;
         regs->psw.cc = 0;
         return;
     }
@@ -5384,7 +5386,7 @@ int     protect;                        /* 1=ALE or page protection  */
                           ? regs->hostregs :
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
                         regs,
-                        &asteo, aste, &protect));
+                        &asteo, aste, &protect))
     {
         regs->psw.cc = 3;
         return;
