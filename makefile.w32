@@ -267,31 +267,31 @@ dmap2hrc: $(dmap2hrc_OBJ)
 	  $(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
 
 dyninst:  $(dyninst_OBJ) hercules.a
-	  $(CC) -o dyninst $(dyninst_OBJ) $(DFLAGS)
+	  $(CC) -o dyninst.dll $(dyninst_OBJ) $(DFLAGS)
 
 hdt1403:  $(hdt1403_OBJ) hercules.a
-	  $(CC) -o hdt1403 $(hdt1403_OBJ) $(DFLAGS)
+	  $(CC) -o hdt1403.dll $(hdt1403_OBJ) $(DFLAGS)
 
 hdt2703:  $(hdt2703_OBJ) hercules.a
-	  $(CC) -o hdt2703 $(hdt2703_OBJ) $(DFLAGS)
+	  $(CC) -o hdt2703.dll $(hdt2703_OBJ) $(DFLAGS)
 
 hdt3088:  $(hdt3088_OBJ) hercules.a
-	  $(CC) -o hdt3088 $(hdt3088_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3088.dll $(hdt3088_OBJ) $(DFLAGS)
 
 hdt3270:  $(hdt3270_OBJ) hercules.a
-	  $(CC) -o hdt3270 $(hdt3270_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3270.dll $(hdt3270_OBJ) $(DFLAGS)
 
 hdt3420:  $(hdt3420_OBJ) hercules.a
-	  $(CC) -o hdt3420 $(hdt3420_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3420.dll $(hdt3420_OBJ) $(DFLAGS)
 
 hdt3505:  $(hdt3505_OBJ) hercules.a
-	  $(CC) -o hdt3505 $(hdt3505_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3505.dll $(hdt3505_OBJ) $(DFLAGS)
 
 hdt3525:  $(hdt3525_OBJ) hercules.a
-	  $(CC) -o hdt3525 $(hdt3525_OBJ) $(DFLAGS)
+	  $(CC) -o hdt3525.dll $(hdt3525_OBJ) $(DFLAGS)
 
 hdteq:    $(hdteq_OBJ) hercules.a
-	  $(CC) -o hdteq $(hdteq_OBJ) $(DFLAGS)
+	  $(CC) -o hdteq.dll $(hdteq_OBJ) $(DFLAGS)
 
 clean:
 	rm -rf $(EXEFILES) $(DYNFILES) *.o
