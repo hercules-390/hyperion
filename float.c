@@ -1628,7 +1628,11 @@ BYTE    shift;
             return;
         } else { /* fl 0, cmp_fl not 0 */
             /* Set condition code */
-            regs->psw.cc = cmp_fl->sign ? 2 : 1;
+            if (cmp_fl->short_fract) {
+                regs->psw.cc = cmp_fl->sign ? 2 : 1;
+            } else {
+                regs->psw.cc = 0;
+            }
             return;
         }
     } else {                        /* cmp_fl 0 */
@@ -1734,7 +1738,11 @@ BYTE    shift;
             return;
         } else { /* fl 0, cmp_fl not 0 */
             /* Set condition code */
-            regs->psw.cc = cmp_fl->sign ? 2 : 1;
+            if (cmp_fl->long_fract) {
+                regs->psw.cc = cmp_fl->sign ? 2 : 1;
+            } else {
+                regs->psw.cc = 0;
+            }
             return;
         }
     } else {                        /* cmp_fl 0 */
@@ -2298,7 +2306,7 @@ int     i;
 /*-------------------------------------------------------------------*/
 /* Square root of fraction                                           */
 /* This routine uses the Newton-Iteration-Method                     */
-/* The iteration is started with a table look up                     */
+/* The iteration is startet with a table look up                     */
 /*                                                                   */
 /* Input:                                                            */
 /*      a       short fraction expanded to U64                       */
