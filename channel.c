@@ -907,12 +907,18 @@ void channelset_reset(REGS *regs)
 {
 DEVBLK *dev;                            /* -> Device control block   */
 
+    /* Release intlock as it is held by the caller (SIGP) */
+    release_lock(&sysblk.intlock);
+
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         if( regs->chanset == dev->chanset)
             device_reset(dev);
     }
+
+    /* Re-acquire the intlock */
+    obtain_lock(&sysblk.intlock);
 
     /* Signal console thread to redrive select */
     signal_thread (sysblk.cnsltid, SIGUSR2);

@@ -4694,7 +4694,6 @@ static char *ordername[] = {    "Unassigned",
     if (order != SIGP_INITRESET
 #if defined(FEATURE_S370_CHANNEL)
        && order != SIGP_IMPL
-       && order != SIGP_IPR
 #endif /*defined(FEATURE_S370_CHANNEL)*/
        && !tregs->cpuonline)
     {
@@ -4707,7 +4706,12 @@ static char *ordername[] = {    "Unassigned",
     /* Except for the reset orders, return condition code 2 if the
        target CPU is executing a previous start, stop, restart,
        stop and store status, set prefix, or store status order */
-    if ((order != SIGP_RESET && order != SIGP_INITRESET)
+    if ((order != SIGP_RESET
+#if defined(FEATURE_S370_CHANNEL)
+       && order != SIGP_IMPL
+       && order != SIGP_IPR
+#endif /*defined(FEATURE_S370_CHANNEL)*/
+       && order != SIGP_INITRESET)
         && (tregs->cpustate == CPUSTATE_STOPPING
             || IS_IC_RESTART(tregs)))
     {
