@@ -2725,7 +2725,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_PER)*/
 
     /* Generate space switch event if required */
-    if (ssevent)
+    if ( ssevent || (pasn != 0 && IS_IC_PER(regs)) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
 
     /* Perform serialization and checkpoint-synchronization */
@@ -2752,7 +2752,7 @@ U32     aste[16];                       /* ASN second table entry    */
 U32     pasteo;                         /* Primary ASTE origin       */
 U32     sasteo;                         /* Secondary ASTE origin     */
 U16     oldpasn;                        /* Original primary ASN      */
-U16     pasn;                           /* New primary ASN           */
+U16     pasn = 0;                       /* New primary ASN           */
 U16     sasn;                           /* New secondary ASN         */
 U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
@@ -2901,6 +2901,8 @@ int     rc;                             /* return code from load_psw */
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
 
+    regs->psw.ilc = 2;
+
     /* Set the main storage reference and change bits */
     STORAGE_KEY(alsed) |= (STORKEY_REF | STORKEY_CHANGE);
 
@@ -2921,14 +2923,14 @@ int     rc;                             /* return code from load_psw */
 #endif /*defined(FEATURE_PER)*/
 
     /* Generate space switch event if required */
-    if (ssevent)
-    {
-        regs->psw.ilc = 2;
+    if ( ssevent || (pasn != oldpasn && IS_IC_PER(regs)) )
         ARCH_DEP(program_interrupt) (&newregs, PGM_SPACE_SWITCH_EVENT);
-    }
 
     if (rc) /* if new psw has bad format */
+    {
+        regs->psw.ilc = 0;
         ARCH_DEP(program_interrupt) (&newregs, rc);
+    }
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -3111,6 +3113,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             /* Indicate space-switch event required */
             ssevent = 1;
         }
+        else
+        {
+            ssevent = 2; /* maybe, if PER is pending */
+        }
 
         /* Load new primary STD or ASCE into control register 1 */
         regs->CR(1) = pstd;
@@ -3165,7 +3171,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     regs->CR(7) = pstd;
 
     /* Generate space switch event if required */
-    if (ssevent)
+    if ( ssevent == 1 || (ssevent == 2 && IS_IC_PER(regs)) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
 
     /* Perform serialization and checkpoint-synchronization */
@@ -4487,7 +4493,11 @@ int     armode;
 #if defined(OPTION_REDUCED_INVAL)
     if ((realmode  != REAL_MODE(&regs->psw)) ||
         (armode    != (regs->psw.armode == 1)) ||
-        (space     != (regs->psw.space == 1)))
+        (space     != (regs->psw.space == 1))
+#if defined(FEATURE_PER)
+       || PER_MODE(regs)
+#endif /*defined(FEATURE_PER)*/
+         )
         INVALIDATE_AEA_ALL(regs);
 #else
     INVALIDATE_AEA_ALL(regs);
@@ -5533,6 +5543,7 @@ RADR    n;                              /* Unsigned work             */
     {
         ON_IC_PER_SA(regs) ;
         ON_IC_PER_STURA(regs) ;
+        regs->perc &= 0xFFFC;    /* zero STD ID part of PER code */
     }
 #endif /*defined(FEATURE_PER2)*/
 
