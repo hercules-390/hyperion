@@ -67,6 +67,7 @@ typedef struct _FBADEV {                /* FBA Device entry          */
         U32     bpp;                    /* Blocks per access position*/
         U32     size;                   /* Block size                */
         U32     blks;                   /* Number of blocks          */
+        U16     cu;                     /* Default control unit type */
       } FBADEV; 
 #define FBADEV_SIZE sizeof(FBADEV)
 
