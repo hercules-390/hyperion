@@ -1,3 +1,4 @@
+08 Feb 2002 Fix RRB in 370 guest - Paul Leisy
 06 Feb 2002 Fix cckdcdsk space/recovery/gap table malloc() - Greg Smith
 05 Feb 2002 dasdinit utility support for specifying alternate cylinders - Fish
 05 Feb 2002 dasdinit utility support for most every device type - Fish
