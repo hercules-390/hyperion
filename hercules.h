@@ -673,7 +673,10 @@ typedef struct _SYSBLK {
                 sigintreq:1,            /* 1=SIGINT request pending  */
                 insttrace:1,            /* 1=Instruction trace       */
                 inststep:1,             /* 1=Instruction step        */
-                instbreak:1;            /* 1=Have breakpoint         */
+                instbreak:1,            /* 1=Have breakpoint         */
+				inststop:1,        		/* 1 = stop on program check */ /*VMA*/
+				vmactive:1,       		/* 1 = vma active            */ /*VMA*/
+				mschdelay:1;			/* 1 = delay MSCH instruction*/ /*LNX*/
 #ifdef INTERRUPTS_FAST_CHECK
         U32     ints_state;             /* Common Interrupts Status  */
 #endif /*INTERRUPTS_FAST_CHECK*/
@@ -977,9 +980,17 @@ typedef struct _DEVBLK {
         int     ctclastpos;             /* last packet read          */
         int     ctclastrem;             /* last packet read          */
         unsigned int                    /* Flags                     */
-                ctcxmode:1;             /* 0=Basic mode, 1=Extended  */
+                ctcxmode:1,             /* 0=Basic mode, 1=Extended  */
+				lcscmd:1, 		        /* lcs cmd response pending  */ /*LCS*/
+				readpnd:1,         		/* read pending on thread    */ /*LCS*/
+				readstrt:1,     	    /* read thread started       */ /*LCS*/
+				readerr:1;        		/* read error                */ /*LCS*/
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
+		FWORD	ctcipsrc;    			/* LCS source IP address     */ /*LCS*/
+		int lcslen;           			/* LCS read length           */ /*LCS*/
+		int lcscmdlen;        			/* LCS command length        */ /*LCS*/
+		BYTE   *lcsbuf;   				/* -> to lcs command buffer  */ /*LCS*/
 
         /*  Device dependent fields for printer                      */
 
@@ -1016,7 +1027,8 @@ typedef struct _DEVBLK {
             U16 chksize;                /* Chunk size                */
         }       tdparms;                /* HET device parms          */
         unsigned int                    /* Flags                     */
-                readonly:1;             /* 1=Tape is write-protected */
+                readonly:1,             /* 1=Tape is write-protected */
+                longfmt:1;              /* 1=Long record format (DDR)*/ /*DDR*/
         BYTE    tapedevt;               /* Tape device type          */
 
         /*  Device dependent fields for fbadasd                      */

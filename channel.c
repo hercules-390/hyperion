@@ -52,6 +52,7 @@ do { \
 #if !defined(_CHANNEL_C)
 
 #define _CHANNEL_C
+#define CTC_LCS         2               /* LCS device                */ /*LCS*/
 
 /*-------------------------------------------------------------------*/
 /* FORMAT I/O BUFFER DATA                                            */
@@ -271,6 +272,22 @@ if (dev->ccwtrace || dev->ccwstep)
     }
     else
     {
+		/* Set condition code 1 if device is LCS CTC */
+		if ( dev->ctctype == CTC_LCS )
+		{
+			cc = 1;
+			dev->csw[4] = 0;
+			dev->csw[5] = 0;
+			psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+			memcpy (psa->csw, dev->csw, 8);
+			if (dev->ccwtrace)
+			{
+				logmsg("TIO modification executed CC=1\n");
+					display_csw (dev, dev->csw);
+			}
+		}
+		else
+
         /* Set condition code 0 if device is available */
         cc = 0;
     }
@@ -323,7 +340,7 @@ int     deq=0;                          /* Device may be dequeued    */
         dev->pcipending = 0;
         deq = 1;
     }
-    else if (!(dev->pcipending) && !(dev->pending))
+    else if (!(dev->pcipending) && !(dev->pending) && (dev->ctctype != CTC_LCS))
     {
         /* Set condition code 1 */
         cc = 1;
@@ -339,6 +356,22 @@ int     deq=0;                          /* Device may be dequeued    */
     }
     else
     {
+        /* Set cc 1 if interrupt is not pending and LCS CTC */
+        if ( dev->ctctype == CTC_LCS )
+        {
+			cc = 1;
+			dev->csw[4] = 0;
+			dev->csw[5] = 0;
+			psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+			memcpy (psa->csw, dev->csw, 8);
+			if (dev->ccwtrace)
+			{
+				logmsg("HIO modification executed CC=1\n");
+				display_csw (dev, dev->csw);
+			}
+
+		}
+		else
         /* Set condition code 0 if interrupt is pending */
         cc = 0;
     }
