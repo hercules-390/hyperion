@@ -1,3 +1,4 @@
+05 Jan 2002 Make sure that {fthreads,w32chan}.c go into dist - Matt Zimmerman
 02 Jan 2002 Change store of percode in PSA to use realregs->perc - Paul Leisy
 02 Jan 2002 Fix stack and BCT per checks - Paul Leisy
 02 Jan 2002 Don't set STORE PER when operand specified as REAL - Paul Leisy
