@@ -563,7 +563,7 @@ static char *pgmintname[] = {
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
               (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
 
-        regs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
+        realregs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
         /* Positions 14 and 15 contain zeros if a storage alteration
            event was not indicated */
         if( !(OPEN_IC_PERINT(realregs) & IC_PER_SA)
