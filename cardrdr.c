@@ -400,6 +400,11 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
         if (dev->fd == -1)
         {
+            if(dev->rdreof)
+            {
+                *unitstat=CSW_CE|CSW_DE|CSW_UX;
+                return -1;
+            }
             dev->sense[0] = SENSE_IR;
             dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -456,6 +461,11 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     /* Intervention required if device has no file name */
     if (dev->filename[0] == '\0')
     {
+        if(dev->rdreof)
+        {
+            *unitstat=CSW_CE|CSW_DE|CSW_UX;
+            return -1;
+        }
         dev->sense[0] = SENSE_IR;
         dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
