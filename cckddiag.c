@@ -39,12 +39,6 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 #endif
         int     pausesnap = 0;          // 1 = pause after snap (getc)
 
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif /*EXTERNALGUI*/
-
 /*-------------------------------------------------------------------*/
 /* print syntax                                                      */
 /*-------------------------------------------------------------------*/
@@ -359,6 +353,9 @@ BYTE               *p;
         }
 }
 
+FILE* fstate = NULL;             /* state stream for daemon_mode     */
+int is_hercules = 0;             /* 1==Hercules calling, not utility */
+
 /*-------------------------------------------------------------------*/
 /* Main function for CCKD diagnostics                                */
 /*-------------------------------------------------------------------*/
@@ -406,13 +403,11 @@ int             imglen=0;               /* track length              */
     textdomain(PACKAGE);
 #endif
 
-#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        extgui = 1;
+        fstate = stderr;
         argc--;
     }
-#endif /*EXTERNALGUI*/
 
     /* parse the arguments */
     argc--; 

@@ -65,12 +65,8 @@ U32             n;                      /* 32-bit operand value      */
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_CPU_NOT_STARTED(regs);
 
-        /* Release the configuration */
-        release_config();
-
         /* Power Off: exit hercules */
         exit(0);
-
         break;
 
 

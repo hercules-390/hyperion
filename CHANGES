@@ -1,3 +1,19 @@
+31 May 2003 Added -v command line option - Fish
+31 May 2003 Define min/max macros - Fish
+31 May 2003 Replaced all strcpy/strcat w/safe_strcpy & safe_strcat - Fish
+31 May 2003 Replaced all sprintf w/snprintf or [opt builtin] asprintf - Fish
+31 May 2003 Panel.c: long messages now wrap to the next screen line - Fish
+31 May 2003 Added timeout option to logmsg_read function - Fish
+31 May 2003 Fixed ALL warnings except 3 in ieee.c - Fish
+31 May 2003 Modified startup/shutdown to be more predictable/orderly - Fish
+31 May 2003 Threading/debugging macros now in separate #include headers - Fish
+31 May 2003 Rescinded change log entry dated "05 Mar 2002" (bogus Win32 print
+            to pipe handling). Now works identically across all systems - Fish
+31 May 2003 Started on cleaning up panel.c and friends (not done yet) - Fish
+31 May 2003 Broken pipe (EPIPE) in printer.c == INTREQ - Fish
+31 May 2003 Removed all #ifdef's for EXTERNALGUI and renamed 'extgui' flag to
+            'daemon_mode'. Support for external gui daemons now permanent.
+            (Also removed ./configure option for it from configure.ac) - Fish
 29 May 2003 Correction to diagnose 0 to use real address - Jan Jaeger
 28 May 2003 Use unix sockets for localhost shared devices - Greg Smith
 26 May 2003 Yet another round for channel.c locking - Greg Smith
@@ -11,8 +27,8 @@
 18 May 2003 Fix incorrect amask in LPSW in 64 bit mode - Jan Jaeger
 15 May 2003 Fixed cygwin regparm bug check bug in configure.ac:
             __attribute__ ((regparm(3))) in wrong place - Fish
-15 May 2003 Created "destroy_lock" and "destroy_condition" macros;
-            added support destroying locks/conds to fthreads - Fish
+15 May 2003 Created "destroy_lock" and "destroy_condition" macros, and
+            added support for destroying locks/conds to fthreads - Fish
 15 May 2003 Fixed impl.c so FishHang doesn't crash - Fish
 14 May 2003 Update in cmpsc.c store_ch - Scott Blackledge/Bernard van der Helm
 09 May 2003 Update dasdtab.c 3380 entries - Jesper by Greg Smith

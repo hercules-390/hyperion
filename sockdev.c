@@ -6,18 +6,9 @@
 
 #include "opcode.h"
 
-
 /*===================================================================*/
 /*              S o c k e t  D e v i c e s ...                       */
 /*===================================================================*/
-
-// #define DEBUG_SOCKDEV
-
-#ifdef DEBUG_SOCKDEV
-    #define logdebug(args...) logmsg(## args)
-#else
-    #define logdebug(args...) do {} while (0)
-#endif /* DEBUG_SOCKDEV */
 
 /* Linked list of bind structures for bound socket devices */
 
@@ -30,10 +21,12 @@ LOCK        bind_lock;      /* (lock for accessing list) */
 char* safe_strdup (char* str)
 {
     char* newstr;
+    int bufsz;
     if (!str) return NULL;
-    newstr = malloc (strlen (str) + 1);
+    bufsz = strlen(str) + 1;
+    newstr = malloc (bufsz);
     if (!newstr) return NULL;
-    strcpy (newstr, str);   /* (guaranteed room) */
+    safe_strcpy (newstr, bufsz, str);   /* (guaranteed room) */
     return newstr;
 }
 
@@ -49,7 +42,7 @@ int unix_socket (char* path)
     struct sockaddr_un addr;
     int sd;
 
-    logdebug ("unix_socket(%s)\n", path);
+    TRACE ("unix_socket(%s)\n", path);
 
     if (strlen (path) > sizeof(addr.sun_path) - 1)
     {
@@ -59,7 +52,7 @@ int unix_socket (char* path)
     }
 
     addr.sun_family = AF_UNIX;
-    strcpy (addr.sun_path, path); /* guaranteed room by above check */
+    safe_strcpy (addr.sun_path, sizeof(addr.sun_path), path);
     sd = socket (PF_UNIX, SOCK_STREAM, 0);
 
     if (sd == -1)
@@ -101,11 +94,11 @@ int inet_socket (char* spec)
     int one = 1;
     struct sockaddr_in sin;
 
-    logdebug("inet_socket(%s)\n", spec);
+    TRACE("inet_socket(%s)\n", spec);
 
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
-    strcpy(buf, spec);
+    safe_strcpy(buf, sizeof(buf), spec);
     colon = strchr(buf, ':');
 
     if (colon)
@@ -231,7 +224,7 @@ void socket_device_connection_handler (bind_struct* bs)
 
     dev = bs->dev;
 
-    logdebug("socket_device_connection_handler(dev=%4.4X)\n",
+    TRACE("socket_device_connection_handler(dev=%4.4X)\n",
         dev->devnum);
 
     /* Obtain the device lock */
@@ -247,6 +240,7 @@ void socket_device_connection_handler (bind_struct* bs)
         logmsg (_("HHCSD015E Connect to device %4.4X (%s) rejected; "
             "device busy or interrupt pending\n"),
             dev->devnum, bs->spec);
+        close(accept(bs->sd, 0, 0));  /* Should reject */
         return;
     }
 
@@ -362,6 +356,9 @@ void check_socket_devices_for_connections (fd_set* readset)
 }
 
 
+/*-------------------------------------------------------------------*/
+/* socket_thread     (listens for connections to socket devices)     */
+/*-------------------------------------------------------------------*/
 void *socket_thread(void *arg)
 {
 fd_set sockset;
@@ -375,17 +372,14 @@ int rc;
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
-
-    obtain_lock(&bind_lock);
-
-    while(sysblk.socktid)
+    while (sysblk.socktid && !sysblk.shutdown)
     {
-        release_lock(&bind_lock);
+        FD_ZERO (&sockset);
 
         /* Set the file descriptors for select */
-        FD_ZERO (&sockset);
         maxfd = add_socket_devices_to_fd_set (&sockset, maxfd);
 
+        /* Wait for connection requests to arrive... */
 #if defined(WIN32)
         {
             struct timeval tv={0,500000};   /* half a second */
@@ -395,13 +389,12 @@ int rc;
         rc = select ( maxfd+1, &sockset, NULL, NULL, NULL );
 #endif /*!defined(WIN32)*/
 
+        if (sysblk.shutdown) break;
+
         if (rc < 0 )
         {
             if (errno == EINTR)
-            {
-                obtain_lock(&bind_lock);
                 continue;
-            }
             logmsg ( _("HHCSD021E select: %s\n"), strerror(errno));
             break;
         }
@@ -409,17 +402,13 @@ int rc;
         /* Check if any sockets have received new connections */
         check_socket_devices_for_connections (&sockset);
 
-        obtain_lock(&bind_lock);
     } /* end while */
 
     sysblk.socktid = 0;
 
-    release_lock(&bind_lock);
-
     logmsg (_("HHCSD022I Socketdevice listener thread terminated\n"));
 
     return NULL;
-
 }
 
 
@@ -431,7 +420,7 @@ int bind_device (DEVBLK* dev, char* spec)
 {
     bind_struct* bs;
 
-    logdebug("bind_device (%4.4X, %s)\n", dev->devnum, spec);
+    TRACE("bind_device (%4.4X, %s)\n", dev->devnum, spec);
 
     obtain_lock(&bind_lock);
     if(!sysblk.socktid)
@@ -516,7 +505,7 @@ int unbind_device (DEVBLK* dev)
 {
     bind_struct* bs;
 
-    logdebug("unbind_device(%4.4X)\n", dev->devnum);
+    TRACE("unbind_device(%4.4X)\n", dev->devnum);
 
     /* Error if device not bound */
 
@@ -536,26 +525,12 @@ int unbind_device (DEVBLK* dev)
         return 0;   /* (failure) */
     }
 
-    /* IMPORTANT! it's bad form to close a listening socket (and it
-     * happens to crash the Cygwin build) while another thread is still
-     * listening for connections on that socket (i.e. is in its FD_SET
-     * 'select' list). Thus we always issue a message (any message)
-     * immediately AFTER removing the entry from the sockdev (bind_struct)
-     * list and BEFORE closing our listening socket, thereby forcing
-     * the panel thread to rebuild its FD_SET 'select' list. (It wakes up
-     * from its 'select' as a result of our sending it our message and
-     * then before issuing another 'select' before going back to sleep,
-     * it then rebuilds its FD_SET 'select' list based on the current
-     * state of the sockdev (bind_struct) list, and since we just removed
-     * our entry from that list, the panel thread will thus not add our
-     * listening socket to its FD_SET 'select' list and thus we can then
-     * SAFELY close the listening socket).
-     */
-
     /* Remove the entry from our list */
 
     obtain_lock(&bind_lock);
     RemoveListEntry(&bs->bind_link);
+    if (IsListEmpty(&bind_head))    /* (is the bind list now empty?) */
+        sysblk.socktid = 0;         /* (yes, let listen thread exit) */
     release_lock(&bind_lock);
 
     logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
@@ -582,9 +557,5 @@ int unbind_device (DEVBLK* dev)
     free (bs->spec);
     free (bs);
 
-    /* ZZ INCOMPLETE
-       The last socketdevice to be detached should set
-       sysblk.socktid to zero such that the listener
-       thread will terminate */
     return 1;   /* (success) */
 }

@@ -614,7 +614,7 @@ TID                     httptid;        /* Negotiation thread id     */
             sysblk.httpport);
 
     /* Handle http requests */
-    while (TRUE) {
+    while (!sysblk.shutdown) {
 
         /* Initialize the select parameters */
         FD_ZERO (&selset);
@@ -629,6 +629,8 @@ TID                     httptid;        /* Negotiation thread id     */
 #else /*!defined(WIN32)*/
         rc = select ( lsock+1, &selset, NULL, NULL, NULL );
 #endif /*!defined(WIN32)*/
+
+        if (sysblk.shutdown) break;
 
         if (rc == 0) continue;
 

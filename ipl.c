@@ -35,9 +35,12 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
 
-#ifdef EXTERNALGUI
-    if (extgui) logmsg("LOAD=1\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+    if (old_extgui)
+        logmsg("LOAD=1\n");
+    else
+#endif
+    statmsg("LOAD=1\n");
 
     /* Reset external interrupts */
     OFF_IC_SERVSIG;
@@ -62,9 +65,12 @@ BYTE    chanstat;                       /* IPL device channel status */
     {
         logmsg (_("HHCCP027E Device %4.4X not in configuration\n"),
                 devnum);
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+        if (old_extgui)
+            logmsg("LOAD=0\n");
+        else
+#endif
+        statmsg("LOAD=0\n");
         return -1;
     }
 
@@ -72,9 +78,12 @@ BYTE    chanstat;                       /* IPL device channel status */
       && dev->chanset != regs->chanset)
     {
         logmsg(_("HHCCP028E Device not connected to channelset\n"));
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+        if (old_extgui)
+            logmsg("LOAD=0\n");
+        else
+#endif
+        statmsg("LOAD=0\n");
         return -1;
     }
     /* Point to the PSA in main storage */
@@ -131,9 +140,12 @@ BYTE    chanstat;                       /* IPL device channel status */
             if ((i & 3) == 3) logmsg(" ");
         }
         logmsg ("\n");
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+        if (old_extgui)
+            logmsg("LOAD=0\n");
+        else
+#endif
+        statmsg("LOAD=0\n");
         return -1;
     }
 
@@ -176,9 +188,12 @@ BYTE    chanstat;                       /* IPL device channel status */
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+        if (old_extgui)
+            logmsg("LOAD=0\n");
+        else
+#endif
+        statmsg("LOAD=0\n");
         return -1;
     }
 
@@ -201,9 +216,12 @@ BYTE    chanstat;                       /* IPL device channel status */
     WAKEUP_CPU (regs->cpuad);
     release_lock (&sysblk.intlock);
 
-#ifdef EXTERNALGUI
-    if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+    if (old_extgui)
+        logmsg("LOAD=0\n");
+    else
+#endif
+    statmsg("LOAD=0\n");
     return 0;
 } /* end function load_ipl */
 
@@ -242,9 +260,12 @@ U32     fileaddr;
     if(fname == NULL)                   /* Default ipl from DASD     */
         fname = "hercules.ins";         /*   from hercules.ins       */
 
-#ifdef EXTERNALGUI
-    if (extgui) logmsg("LOAD=1\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+    if (old_extgui)
+        logmsg("LOAD=1\n");
+    else
+#endif
+    statmsg("LOAD=1\n");
 
     /* Reset external interrupts */
     OFF_IC_SERVSIG;
@@ -264,7 +285,7 @@ U32     fileaddr;
     io_reset ();
 
     /* remove filename from pathname */
-    strcpy(dirname,fname);
+    safe_strcpy(dirname, sizeof(dirname), fname);
     dirbase = rindex(dirname,'/');
     if(dirbase) *(++dirbase) = '\0';
     
@@ -290,18 +311,21 @@ U32     fileaddr;
                and if no full pathname was specified */
             if(dirbase && *filename != '/')
             {
-                strcpy(pathname,dirname);
-                strcat(pathname,filename);
+                safe_strcpy(pathname, sizeof(pathname), dirname);
+                safe_strcat(pathname, sizeof(pathname), filename);
             }
             else
-                strcpy(pathname,filename);
+                safe_strcpy(pathname, sizeof(pathname), filename);
 
             if( ARCH_DEP(load_main) (pathname, fileaddr) < 0 )
             {
                 fclose(fp);
-#ifdef EXTERNALGUI
-                if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+                if (old_extgui)
+                    logmsg("LOAD=0\n");
+                else
+#endif
+                statmsg("LOAD=0\n");
                 return -1;
             }
         }
@@ -327,9 +351,12 @@ U32     fileaddr;
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
-#ifdef EXTERNALGUI
-        if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+        if (old_extgui)
+            logmsg("LOAD=0\n");
+        else
+#endif
+        statmsg("LOAD=0\n");
         return -1;
     }
 
@@ -348,9 +375,12 @@ U32     fileaddr;
     WAKEUP_CPU (regs->cpuad);
     release_lock (&sysblk.intlock);
 
-#ifdef EXTERNALGUI
-    if (extgui) logmsg("LOAD=0\n");
-#endif /*EXTERNALGUI*/
+#ifdef OPTION_OLD_EXTERNALGUI
+    if (old_extgui)
+        logmsg("LOAD=0\n");
+    else
+#endif
+    statmsg("LOAD=0\n");
     return 0;
 } /* end function load_hmc */
 /*-------------------------------------------------------------------*/

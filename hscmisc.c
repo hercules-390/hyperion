@@ -4,17 +4,14 @@
 
 
 #include "hercules.h"
-
 #include "devtype.h"
-
 #include "opcode.h"
-
 #include "inline.h"
-
 
 #if !defined(_HSCMISC_C)
 #define _HSCMISC_C
 
+#define  DISPLAY_INSTRUCTION_OPERANDS
 /*-------------------------------------------------------------------*/
 /* Display general purpose registers                                 */
 /*-------------------------------------------------------------------*/
@@ -317,7 +314,7 @@ REGS    gregs, hgregs;
     }
 
     hgregs.ghostregs = 1;
-        
+
     if(!(icode = setjmp(gregs.progjmp)))
     {
 //      hgregs.progjmp = gregs.progjmp;
@@ -342,7 +339,7 @@ REGS    gregs, hgregs;
                 return PGM_ADDRESSING_EXCEPTION;
 
             SIE_TRANSLATE(&aaddr, ACCTYPE_SIE, &gregs);
-    
+
             /* Program check if absolute address is outside main storage */
             if (aaddr > gregs.mainlim)
                 return PGM_ADDRESSING_EXCEPTION;
@@ -365,48 +362,90 @@ REGS    gregs, hgregs;
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(display_real) (REGS *regs, RADR raddr, BYTE *buf,
-                                    int draflag)
+                                    size_t bufsz, int draflag)
 {
 RADR    aaddr;                          /* Absolute storage address  */
-int     i, j;                           /* Loop counters             */
-int     n = 0;                          /* Number of bytes in buffer */
+size_t  i;                              /* Loop counters             */
+size_t  n = 0;                          /* Number of bytes in buffer */
+BYTE    h1buf[4];                       /* Hexadecimal buffer        */
 BYTE    hbuf[40];                       /* Hexadecimal buffer        */
 BYTE    cbuf[17];                       /* Character buffer          */
 BYTE    c;                              /* Character work area       */
 
+    if (!buf || !bufsz) return 0;
+
     if (draflag)
     {
       #if defined(FEATURE_ESAME)
-        n = sprintf (buf, "R:%16.16llX:", (long long)raddr);
+        n = snprintf (buf, bufsz,
+            "R:%16.16llX:", (long long)raddr);
       #else /*!defined(FEATURE_ESAME)*/
-        n = sprintf (buf, "R:%8.8X:", (U32)raddr);
+        n = snprintf (buf, bufsz,
+            "R:%8.8X:", (U32)raddr);
       #endif /*!defined(FEATURE_ESAME)*/
+        n = min( n, bufsz-1 );
+        buf[n]=0;
     }
 
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
+
     if (aaddr > regs->mainlim)
     {
-        n += sprintf (buf+n, " Real address is not valid");
+        if (bufsz-n)
+        {
+            size_t n2 = snprintf (buf+n, bufsz-n,
+                " Real address is not valid");
+            n2 = min( n2, bufsz-n-1 );
+            buf[n+n2]=0;
+            n += n2;
+        }
         return n;
     }
 
-    n += sprintf (buf+n, "K:%2.2X=", STORAGE_KEY(aaddr, regs));
-
-    memset (hbuf, SPACE, sizeof(hbuf));
-    memset (cbuf, SPACE, sizeof(cbuf));
-
-    for (i = 0, j = 0; i < 16; i++)
+    if (bufsz-n)
     {
-        c = regs->mainstor[aaddr++];
-        j += sprintf (hbuf+j, "%2.2X", c);
-        if ((aaddr & 0x3) == 0x0) hbuf[j++] = SPACE;
-        c = guest_to_host(c);
-        if (!isprint(c)) c = '.';
-        cbuf[i] = c;
-        if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;
-    } /* end for(i) */
+        size_t n2 = snprintf (buf+n, bufsz-n,
+            "K:%2.2X=", STORAGE_KEY(aaddr, regs));
+        n2 = min( n2, bufsz-n-1 );
+        buf[n+n2]=0;
+        n += n2;
+    }
 
-    n += sprintf (buf+n, "%36.36s %16.16s", hbuf, cbuf);
+    if (bufsz-n)
+    {
+        size_t n2;
+
+        memset (hbuf, SPACE, sizeof(hbuf)-1);
+        memset (cbuf, SPACE, sizeof(cbuf)-1);
+
+        hbuf[sizeof(hbuf)-1]=0;
+        cbuf[sizeof(cbuf)-1]=0;
+
+        for (i=0; i < sizeof(cbuf)-1; i++)
+        {
+            c = regs->mainstor[aaddr++];
+
+            snprintf (h1buf, sizeof(h1buf),
+                "%2.2X%s"
+                ,c
+                ,((aaddr & 0x3) == 0x0) ? " " : ""
+            );
+            safe_strcat(hbuf,sizeof(hbuf),h1buf);
+
+            c = guest_to_host(c);
+            if (!isprint(c)) c = '.';
+            cbuf[i] = c;
+
+            if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;
+
+        } /* end for(i) */
+
+        n2 = snprintf (buf+n, bufsz-n,
+            "%36.36s %16.16s", hbuf, cbuf);
+        n2 = min( n2, bufsz-n-1 );
+        buf[n+n2]=0;
+        n += n2;
+    }
     return n;
 
 } /* end function display_real */
@@ -417,26 +456,39 @@ BYTE    c;                              /* Character work area       */
 /* Returns number of characters placed in display buffer             */
 /*-------------------------------------------------------------------*/
 static int ARCH_DEP(display_virt) (REGS *regs, VADR vaddr, BYTE *buf,
-                                    int ar, int acctype)
+                                    size_t bufsz, int ar, int acctype)
 {
 RADR    raddr;                          /* Real address              */
-int     n;                              /* Number of bytes in buffer */
+size_t  n;                              /* Number of bytes in buffer */
 int     stid;                           /* Segment table indication  */
 U16     xcode;                          /* Exception code            */
 
+    if (!buf || !bufsz) return 0;
+
   #if defined(FEATURE_ESAME)
-    n = sprintf (buf, "V:%16.16llX:", (long long)vaddr);
+    n = snprintf (buf, bufsz, "V:%16.16llX:", (long long)vaddr);
   #else /*!defined(FEATURE_ESAME)*/
-    n = sprintf (buf, "V:%8.8X:", vaddr);
+    n = snprintf (buf, bufsz, "V:%8.8X:", vaddr);
   #endif /*!defined(FEATURE_ESAME)*/
+    n = min( n, bufsz-1 );
+    buf[n]=0;
+
     xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
-    if (xcode == 0)
+    if (bufsz-n)
     {
-        n += ARCH_DEP(display_real) (regs, raddr, buf+n, 0);
+        if (!xcode)
+        {
+            n += ARCH_DEP(display_real) (regs, raddr, buf+n, bufsz-n, 0);
+        }
+        else
+        {
+            size_t n2 = snprintf (buf+n, bufsz-n, " Translation exception %4.4hX",xcode);
+            n2 = min( n2, bufsz-n-1 );
+            buf[n+n2]=0;
+            n += n2;
+        }
     }
-    else
-        n += sprintf (buf+n," Translation exception %4.4hX",xcode);
 
     return n;
 
@@ -484,7 +536,7 @@ BYTE    buf[100];                       /* Message buffer            */
     /* Display real storage */
     for (i = 0; i < 999 && raddr <= eaddr; i++)
     {
-        ARCH_DEP(display_real) (regs, raddr, buf, 1);
+        ARCH_DEP(display_real) (regs, raddr, buf, sizeof(buf), 1);
         logmsg ("%s\n", buf);
         raddr += 16;
     } /* end for(i) */
@@ -505,11 +557,11 @@ RADR    aaddr;                          /* Absolute storage address  */
 int     stid;                           /* Segment table indication  */
 int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
-int     n;                              /* Number of bytes in buffer */
 int     arn = 0;                        /* Access register number    */
 U16     xcode;                          /* Exception code            */
 BYTE    newval[32];                     /* Storage alteration value  */
 BYTE    buf[100];                       /* Message buffer            */
+BYTE    tmp[100];                       /* Message buffer            */
 
     /* Set limit for address range */
   #if defined(FEATURE_ESAME)
@@ -547,28 +599,43 @@ BYTE    buf[100];                       /* Message buffer            */
         {
             xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, vaddr, arn,
                                             regs, ACCTYPE_LRA);
+
           #if defined(FEATURE_ESAME)
-            n = sprintf (buf, "V:%16.16llX ", (long long)vaddr);
-          #else /*!defined(FEATURE_ESAME)*/
-            n = sprintf (buf, "V:%8.8X ", vaddr);
-          #endif /*!defined(FEATURE_ESAME)*/
+            snprintf (buf, sizeof(buf),
+                "V:%16.16llX ", (long long)vaddr);
+          #else
+            snprintf (buf, sizeof(buf),
+                "V:%8.8X ", vaddr);
+          #endif
+
             if (stid == TEA_ST_PRIMARY)
-                n += sprintf (buf+n, "(primary)");
+                safe_strcat(buf,sizeof(buf),"(primary)");
             else if (stid == TEA_ST_SECNDRY)
-                n += sprintf (buf+n, "(secondary)");
+                safe_strcat(buf,sizeof(buf),"(secondary)");
             else if (stid == TEA_ST_HOME)
-                n += sprintf (buf+n, "(home)");
+                safe_strcat(buf,sizeof(buf),"(home)");
             else
-                n += sprintf (buf+n, "(AR%2.2d)", arn);
+            {
+                snprintf (tmp, sizeof(tmp),
+                    "(AR%2.2d)", arn);
+                safe_strcat(buf, sizeof(buf), tmp);
+            }
+
             if (xcode == 0)
+            {
           #if defined(FEATURE_ESAME)
-                n += sprintf (buf+n, " R:%16.16llX", (long long)raddr);
-          #else /*!defined(FEATURE_ESAME)*/
-                n += sprintf (buf+n, " R:%8.8X", (U32)raddr);
-          #endif /*!defined(FEATURE_ESAME)*/
+                snprintf (tmp, sizeof(tmp),
+                    " R:%16.16llX", (long long)raddr);
+          #else
+                snprintf (tmp, sizeof(tmp),
+                    " R:%8.8X", (U32)raddr);
+          #endif
+                safe_strcat(buf,sizeof(buf),tmp);
+            }
+
             logmsg ("%s\n", buf);
         }
-        ARCH_DEP(display_virt) (regs, vaddr, buf, arn, ACCTYPE_LRA);
+        ARCH_DEP(display_virt) (regs, vaddr, buf, sizeof(buf), arn, ACCTYPE_LRA);
         logmsg ("%s\n", buf);
         vaddr += 16;
     } /* end for(i) */
@@ -589,7 +656,7 @@ int     b1=-1, b2=-1, x1;               /* Register numbers          */
 VADR    addr1 = 0, addr2 = 0;           /* Operand addresses         */
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
 BYTE    buf[100];                       /* Message buffer            */
-int     n;                              /* Number of bytes in buffer */
+BYTE    tmp[100];                       /* Message buffer            */
 
   #if defined(_FEATURE_SIE)
     if(regs->sie_state)
@@ -609,15 +676,16 @@ int     n;                              /* Number of bytes in buffer */
     /* Display the PSW */
     memset (qword, 0x00, sizeof(qword));
     ARCH_DEP(store_psw) (regs, qword);
-    n = sprintf (buf,
-                "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
-                qword[0], qword[1], qword[2], qword[3],
-                qword[4], qword[5], qword[6], qword[7]);
+    snprintf (buf, sizeof(buf),
+        "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
+        qword[0], qword[1], qword[2], qword[3],
+        qword[4], qword[5], qword[6], qword[7]);
   #if defined(FEATURE_ESAME)
-        n += sprintf (buf + n,
-                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
-                qword[8], qword[9], qword[10], qword[11],
-                qword[12], qword[13], qword[14], qword[15]);
+    snprintf (tmp, sizeof(tmp),
+        "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X ",
+        qword[8], qword[9], qword[10], qword[11],
+        qword[12], qword[13], qword[14], qword[15]);
+    safe_strcat(buf,sizeof(buf),tmp);
   #endif /*defined(FEATURE_ESAME)*/
 
     /* Exit if instruction is not valid */
@@ -633,9 +701,21 @@ int     n;                              /* Number of bytes in buffer */
     ilc = (opcode < 0x40) ? 2 : (opcode < 0xC0) ? 4 : 6;
 
     /* Display the instruction */
-    n += sprintf (buf+n, "INST=%2.2X%2.2X", inst[0], inst[1]);
-    if (ilc > 2) n += sprintf (buf+n, "%2.2X%2.2X", inst[2], inst[3]);
-    if (ilc > 4) n += sprintf (buf+n, "%2.2X%2.2X", inst[4], inst[5]);
+    snprintf (tmp, sizeof(tmp),
+        "INST=%2.2X%2.2X", inst[0], inst[1]);
+    safe_strcat(buf,sizeof(buf),tmp);
+    if (ilc > 2)
+    {
+        snprintf (tmp, sizeof(tmp),
+            "%2.2X%2.2X", inst[2], inst[3]);
+        safe_strcat(buf,sizeof(buf),tmp);
+    }
+    if (ilc > 4)
+    {
+        snprintf (tmp, sizeof(tmp),
+            "%2.2X%2.2X", inst[4], inst[5]);
+        safe_strcat(buf,sizeof(buf),tmp);
+    }
     logmsg ("%s %s", buf,(ilc<4) ? "        " : (ilc<6) ? "    " : "");
     DISASM_INSTRUCTION(inst);
 
@@ -719,12 +799,12 @@ int     n;                              /* Number of bytes in buffer */
     if (b1 >= 0)
     {
         if (REAL_MODE(&regs->psw))
-            n = ARCH_DEP(display_real) (regs, addr1, buf, 1);
+            ARCH_DEP(display_real) (regs, addr1, buf, sizeof(buf), 1);
         else
-            n = ARCH_DEP(display_virt) (regs, addr1, buf, b1,
-                                (opcode == 0x44 ? ACCTYPE_INSTFETCH :
-                                 opcode == 0xB1 ? ACCTYPE_LRA :
-                                                  ACCTYPE_READ));
+            ARCH_DEP(display_virt) (regs, addr1, buf, sizeof(buf), b1,
+                                  (opcode == 0x44 ? ACCTYPE_INSTFETCH :
+                                   opcode == 0xB1 ? ACCTYPE_LRA :
+                                                    ACCTYPE_READ));
         logmsg ("%s\n", buf);
     }
 
@@ -732,14 +812,14 @@ int     n;                              /* Number of bytes in buffer */
     if (b2 >= 0)
     {
         if (REAL_MODE(&regs->psw)
-            || (opcode == 0xB2 && inst[1] == 0x4B) /*LURA*/
-            || (opcode == 0xB2 && inst[1] == 0x46) /*STURA*/
-            || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
-            || (opcode == 0xB9 && inst[1] == 0x25)) /*STURG*/
-            n = ARCH_DEP(display_real) (regs, addr2, buf, 1);
+            || (opcode == 0xB2 && inst[1] == 0x4B)  /* LURA  */
+            || (opcode == 0xB2 && inst[1] == 0x46)  /* STURA */
+            || (opcode == 0xB9 && inst[1] == 0x05)  /* LURAG */
+            || (opcode == 0xB9 && inst[1] == 0x25)) /* STURG */
+            ARCH_DEP(display_real) (regs, addr2, buf, sizeof(buf), 1);
         else
-            n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,
-                                        ACCTYPE_READ);
+            ARCH_DEP(display_virt) (regs, addr2, buf, sizeof(buf), b2,
+                                    ACCTYPE_READ);
 
         logmsg ("%s\n", buf);
     }

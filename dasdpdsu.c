@@ -25,12 +25,6 @@
 static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int  extgui = 0;
-#endif /*EXTERNALGUI*/
-
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
 /* Input:                                                            */
@@ -62,7 +56,7 @@ BYTE            card[81];               /* Logical record (ASCIIZ)   */
     memset (ofname, 0, sizeof(ofname));
     strncpy (ofname, memname, 8);
     string_to_lower (ofname);
-    strcat (ofname, ".mac");
+    safe_strcat (ofname, sizeof(ofname), ".mac");
 
     /* Open the output file */
     ofp = fopen (ofname, "w");
@@ -214,6 +208,9 @@ BYTE            memname[9];             /* Member name (ASCIIZ)      */
     return 0;
 } /* end function process_dirblk */
 
+FILE* fstate = NULL;             /* state stream for daemon_mode     */
+int is_hercules = 0;             /* 1==Hercules calling, not utility */
+
 /*-------------------------------------------------------------------*/
 /* DASDPDSU main entry point                                         */
 /*-------------------------------------------------------------------*/
@@ -235,13 +232,11 @@ BYTE           *blkptr;                 /* -> PDS directory block    */
 BYTE            dirblk[256];            /* Copy of directory block   */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 
-#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        extgui = 1;
+        fstate = stderr;
         argc--;
     }
-#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr, "Hercules PDS unload program ");
@@ -292,9 +287,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     rc = build_extent_array (cif, dsnama, extent, &noext);
     if (rc < 0) return -1;
 
-#ifdef EXTERNALGUI
     /* Calculate ending relative track */
-    if (extgui)
     {
         int bcyl;  /* Extent begin cylinder     */
         int btrk;  /* Extent begin head         */
@@ -313,9 +306,8 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
             trks += (((ecyl * cif->heads) + etrk) - ((bcyl * cif->heads) + btrk)) + 1;
         }
 
-        fprintf(stderr,"ETRK=%d\n",trks-1);
+        statmsg("ETRK=%d\n",trks-1);
     }
-#endif /*EXTERNALGUI*/
 
     /* Point to the start of the directory */
     trk = 0;
@@ -324,9 +316,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     /* Read the directory */
     while (1)
     {
-#ifdef EXTERNALGUI
-        if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
-#endif /*EXTERNALGUI*/
+        statmsg("CTRK=%d\n",trk);
 
         /* Convert relative track to cylinder and head */
         rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);

@@ -31,11 +31,8 @@ static const char help[] =
     "  -i  create an IEHINITT formatted tape (default: on)\n"
     "  -n  create an NL tape\n";
 
-#ifdef EXTERNALGUI
-/* Special flag to indicate whether or not we're being
-   run under the control of the external GUI facility. */
-int extgui = 0;
-#endif /*EXTERNALGUI*/
+FILE* fstate = NULL;             /* state stream for daemon_mode     */
+int is_hercules = 0;             /* 1==Hercules calling, not utility */
 
 /*
 || Prints usage information
@@ -62,13 +59,11 @@ main( int argc, char *argv[] )
     char *o_owner;
     char *o_volser;
 
-#ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        extgui = 1;
+        fstate = stderr;
         argc--;
     }
-#endif /*EXTERNALGUI*/
 
     hetb = NULL;
 

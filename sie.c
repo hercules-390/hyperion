@@ -949,10 +949,10 @@ RADR    mso,                            /* Main Storage Origin       */
     FETCH_W(esl,zpb.esl);
 
 #if defined(FEATURE_ESAME)
-    if(  (mso & ~ZPB2_MS_VALID)
-      || (msl & ~ZPB2_MS_VALID)
-      || (eso & ~ZPB2_ES_VALID)
-      || (esl & ~ZPB2_ES_VALID) )
+    if(  (mso & (RADR)(~ZPB2_MS_VALID))
+      || (msl & (RADR)(~ZPB2_MS_VALID))
+      || (eso & (RADR)(~ZPB2_ES_VALID))
+      || (esl & (RADR)(~ZPB2_ES_VALID)) )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 #endif /*defined(FEATURE_ESAME)*/
 

@@ -52,6 +52,49 @@
 #include "opcode.h"
 
 /*-------------------------------------------------------------------*/
+/* Internal macro definitions                                        */
+/*-------------------------------------------------------------------*/
+#define DEBUG_LVL       0               /* 1 = status
+                                           2 = headers
+                                           3 = buffers               */
+#if DEBUG_LVL == 0
+ #define TNSDEBUG1(_format, _args...)
+ #define TNSDEBUG2(_format, _args...)
+ #define TNSDEBUG3(_format, _args...)
+#endif
+#if DEBUG_LVL == 1
+#define TNSDEBUG1(_format, _args...) \
+        logmsg("console: " _format, ## _args)
+#define TNSDEBUG2(_format, _args...)
+#define TNSDEBUG3(_format, _args...)
+#endif
+#if DEBUG_LVL == 2
+#define TNSDEBUG1(_format, _args...) \
+        logmsg("console: " _format, ## _args)
+#define TNSDEBUG2(_format, _args...) \
+        logmsg("console: " _format, ## _args)
+#define TNSDEBUG3(_format, _args...)
+#endif
+#if DEBUG_LVL == 3
+#define TNSDEBUG1(_format, _args...) \
+        logmsg("console: " _format, ## _args)
+#define TNSDEBUG2(_format, _args...) \
+        logmsg("console: " _format, ## _args)
+#define TNSDEBUG3(_format, _args...) \
+        logmsg("console: " _format, ## _args)
+#endif
+
+#define TNSERROR(_format,_args...) \
+        logmsg("console: " _format, ## _args)
+
+#define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
+#define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
+#define SPACE           ((BYTE)' ')
+
+
+#undef  FIX_QWS_BUG_FOR_MCS_CONSOLES
+
+/*-------------------------------------------------------------------*/
 /* Telnet command definitions                                        */
 /*-------------------------------------------------------------------*/
 #define BINARY          0       /* Binary Transmission */
@@ -154,49 +197,6 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
                            "\xF8\xF9\x7A\x7B\x7C\x7D\x7E\x7F" };
 
 /*-------------------------------------------------------------------*/
-/* Internal macro definitions                                        */
-/*-------------------------------------------------------------------*/
-#define DEBUG_LVL       0               /* 1 = status
-                                           2 = headers
-                                           3 = buffers               */
-#if DEBUG_LVL == 0
- #define TNSDEBUG1(_format, _args...)
- #define TNSDEBUG2(_format, _args...)
- #define TNSDEBUG3(_format, _args...)
-#endif
-#if DEBUG_LVL == 1
-#define TNSDEBUG1(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG2(_format, _args...)
-#define TNSDEBUG3(_format, _args...)
-#endif
-#if DEBUG_LVL == 2
-#define TNSDEBUG1(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG2(_format, _args...) \
-        logmsg("console: " _format, ## _args) 
-#define TNSDEBUG3(_format, _args...) 
-#endif
-#if DEBUG_LVL == 3
-#define TNSDEBUG1(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG2(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#define TNSDEBUG3(_format, _args...) \
-        logmsg("console: " _format, ## _args)
-#endif
-
-#define TNSERROR(_format,_args...) \
-        logmsg("console: " _format, ## _args)
-
-#define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
-#define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
-#define SPACE           ((BYTE)' ')
-
-
-#undef  FIX_QWS_BUG_FOR_MCS_CONSOLES
-
-/*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static struct utsname hostinfo;         /* Host info for this system */
@@ -209,9 +209,9 @@ static struct utsname hostinfo;         /* Host info for this system */
 static void
 packet_trace(BYTE *addr, int len)
 {
-unsigned int  i, offset;
-unsigned char c;
-unsigned char print_chars[17];
+int  i, offset;
+BYTE c;
+BYTE print_chars[17];
 
     for (offset=0; offset < len; )
     {
@@ -433,7 +433,7 @@ expect (int csock, BYTE *expected, int len, char *caption)
 int     rc;                             /* Return code               */
 BYTE    buf[512];                       /* Receive buffer            */
 #if 1
-/* TCP/IP for MVS returns the server sequence rather then 
+/* TCP/IP for MVS returns the server sequence rather then
    the client sequence during bin negotiation    19/06/00 Jan Jaeger */
 static BYTE do_bin[] = { IAC, DO, BINARY, IAC, WILL, BINARY };
 static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
@@ -447,10 +447,10 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
 #if 1
         /* TCP/IP FOR MVS DOES NOT COMPLY TO RFC 1576 THIS IS A BYPASS */
         if(memcmp(buf, expected, len) != 0
-          && !(len == sizeof(will_bin) 
+          && !(len == sizeof(will_bin)
               && memcmp(expected, will_bin, len) == 0
               && memcmp(buf, do_bin, len) == 0) )
-#else 
+#else
     if (memcmp(buf, expected, len) != 0)
 #endif
     {
@@ -986,7 +986,7 @@ connect_client (int *csockp)
 {
 int                     rc;             /* Return code               */
 DEVBLK                 *dev;            /* -> Device block           */
-int                     len;            /* Data length               */
+size_t                  len;            /* Data length               */
 int                     csock;          /* Socket for conversation   */
 struct sockaddr_in      client;         /* Client address structure  */
 socklen_t               namelen;        /* Length of client structure*/
@@ -1001,6 +1001,7 @@ BYTE                    buf[256];       /* Message buffer            */
 BYTE                    conmsg[80];     /* Connection message        */
 BYTE                    hostmsg[80];    /* Host ID message           */
 BYTE                    rejmsg[80];     /* Rejection message         */
+size_t                  n;              /* Work                      */
 
     /* Load the socket address from the thread parameter */
     csock = *csockp;
@@ -1090,51 +1091,76 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     } /* end for(dev) */
 
     /* Build connection message for client */
-    len = snprintf (hostmsg, sizeof(hostmsg),
-                "running on %s (%s %s)",
-                hostinfo.nodename, hostinfo.sysname,
-                hostinfo.release);
+
+    snprintf (hostmsg, sizeof(hostmsg),
+        "running on %s (%s %s)",
+        hostinfo.nodename, hostinfo.sysname,
+        hostinfo.release);
+
     len = snprintf (conmsg, sizeof(conmsg),
-                "Hercules version %s built at %s %s",
-                VERSION, __DATE__, __TIME__);
+        "Hercules version %s built at %s %s",
+        VERSION, __DATE__, __TIME__);
+    len = min( len, sizeof(conmsg)-1 );
+    conmsg[len]=0;
 
     if (dev != NULL)
-        len += sprintf (conmsg + len, " device %4.4X", dev->devnum);
-
-    /* Reject the connection if no available console device */
-    if (dev == NULL)
+    {
+        /* Append device number to connection message */
+        BYTE tempbuf[16];
+        n = snprintf (tempbuf, sizeof(tempbuf),
+            " device %4.4X", dev->devnum);
+        n = min(n,sizeof(tempbuf)-1);
+        tempbuf[n]=0;
+        strncat(&conmsg[len],tempbuf,sizeof(conmsg)-len);
+        len = strlen(conmsg);
+    }
+    else /* Reject the connection if no available console device */
     {
         /* Build the rejection message */
         if (devnum == 0xFFFF)
-            len = sprintf (rejmsg,
-                    "Connection rejected, no available %s device",
-       (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
+        {
+            n = snprintf (rejmsg, sizeof(rejmsg),
+                "Connection rejected, no available %s device",
+                (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
+            len = min(n,sizeof(rejmsg)-1);
+            rejmsg[len]=0;
+        }
         else
-            len = sprintf (rejmsg,
-                    "Connection rejected, device %4.4X unavailable",
-                    devnum);
+        {
+            n = snprintf (rejmsg, sizeof(rejmsg),
+                "Connection rejected, device %4.4X unavailable",
+                devnum);
+            len = min(n,sizeof(rejmsg)-1);
+            rejmsg[len]=0;
+        }
 
         TNSDEBUG1( "%s\n", rejmsg);
 
         /* Send connection rejection message to client */
         if (class != 'K')
         {
-            len = sprintf (buf,
+            n = snprintf (buf, sizeof(buf),
                         "\xF5\x40\x11\x40\x40\x1D\x60%s"
                         "\x11\xC1\x50\x1D\x60%s"
                         "\x11\xC2\x60\x1D\x60%s",
                         translate_to_ebcdic(conmsg),
                         translate_to_ebcdic(hostmsg),
                         translate_to_ebcdic(rejmsg));
+            len = min(n,sizeof(buf)-1-2);
             buf[len++] = IAC;
             buf[len++] = EOR_MARK;
         }
         else
         {
-            len = sprintf (buf, "%s\r\n%s\r\n%s\r\n", conmsg, hostmsg, rejmsg);
+            n = snprintf (buf, sizeof(buf),
+                "%s\r\n%s\r\n%s\r\n",
+                conmsg, hostmsg, rejmsg);
+            len = min(n,sizeof(buf)-1);
+            buf[len]=0;
         }
+
         if (class != 'P')  /* do not write connection resp on 3287 */
-        rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
+            rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
 
         /* Close the connection and terminate the thread */
         sleep (5);
@@ -1149,25 +1175,32 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     /* Send connection message to client */
     if (class != 'K')
     {
-        len = sprintf (buf,
+        n = snprintf (buf, sizeof(buf),
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
                     "\x11\xC1\x50\x1D\x60%s",
                     translate_to_ebcdic(conmsg),
                     translate_to_ebcdic(hostmsg));
+        len = min(n,sizeof(buf)-1-2);
         buf[len++] = IAC;
         buf[len++] = EOR_MARK;
     }
     else
     {
-        len = sprintf (buf, "%s\r\n%s\r\n", conmsg, hostmsg);
+        n = snprintf (buf, sizeof(buf),
+            "%s\r\n%s\r\n",
+            conmsg, hostmsg);
+        len = min(n,sizeof(buf)-1);
+        buf[len]=0;
     }
+
     if (class != 'P')  /* do not write connection resp on 3287 */
-    rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
+        rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
 
     /* Raise attention interrupt for the device */
+
     if (class != 'P')  /* do not raise attention for  3287 */
-    /* rc = device_attention (dev, CSW_ATTN); *ISW3274DR* - Removed */
-    rc = device_attention (dev, CSW_DE);        /* *ISW3274DR - Added */
+     /* rc = device_attention (dev, CSW_ATTN); *ISW3274DR* - Removed */
+        rc = device_attention (dev, CSW_DE);/* *ISW3274DR* - Added   */
 
     /* Signal connection thread to redrive its select loop */
     signal_thread (sysblk.cnsltid, SIGUSR2);
@@ -1257,7 +1290,7 @@ BYTE                    unitstat;       /* Status after receive data */
             sysblk.cnslport);
 
     /* Handle connection requests and attention interrupts */
-    while (sysblk.cnslcnt) {
+    while (sysblk.cnslcnt && !sysblk.shutdown) {
 
         /* Initialize the select parameters */
         maxfd = lsock;
@@ -1289,6 +1322,8 @@ BYTE                    unitstat;       /* Status after receive data */
 #else /* WIN32 */
         rc = select ( maxfd+1, &readset, NULL, NULL, NULL );
 #endif /* WIN32 */
+
+        if (sysblk.shutdown) break;
 
         if (rc == 0) continue;
 
@@ -1362,7 +1397,7 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* Indicate that data is available at the device */
                 if(dev->rlen3270)
                     dev->readpending = 1;
-  
+
                 /* Release the device lock */
                 release_lock (&dev->lock);
 
@@ -1373,7 +1408,7 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* console: sending 3270 data */
                 /* +0000   F5C2FFEF     */
                 /* console: Packet received length=7 */
-                /* +0000   016CD902 00FFEF */   
+                /* +0000   016CD902 00FFEF */
                 /*         I do not know what is this */
                 /* console: CCUU attention requests raised */
                 if (dev->devtype != 0x3287)
@@ -1400,8 +1435,6 @@ BYTE                    unitstat;       /* Status after receive data */
 
     /* Close the listening socket */
     close (lsock);
-
-    logmsg (_("HHCTE004I Console connection thread terminated\n"));
 
     return NULL;
 
@@ -1538,7 +1571,7 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 
     /* Assume we want to prompt */
     dev->prompt1052 = 1;
-    
+
     /* Is there an argument? */
     if (argc == 1)
     {
@@ -1546,7 +1579,7 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
         if (strcmp(argv[0], "noprompt") == 0)
             dev->prompt1052 = 0;
     }
-    
+
     /* Initialize the device identifier bytes */
     dev->devid[0] = 0xFF;
     dev->devid[1] = dev->devtype >> 8;
@@ -1579,7 +1612,7 @@ constty_query_device (DEVBLK *dev, BYTE **class,
         buffer[0] = '\0';
 
     if (dev->prompt1052 == 0)
-        strcat(buffer,"noprompt");
+        safe_strcat(buffer,buflen,"noprompt");
 
 } /* end function constty_query_device */
 
@@ -1628,7 +1661,7 @@ int     i;
                     *pos = ((buf[i+1] & 0x3F) << 6)
                                  | (buf[i+2] & 0x3F);
         break;
-            
+
     /* The Start Field Extended and Modify Field orders have
        a count byte followed by a variable number of type-
        attribute pairs, and advance the screen position by 1 */
@@ -1890,7 +1923,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         /* Calculate number of bytes to move and residual byte count */
         num = sizeof(buf) / 2;
         num = (count < num) ? count : num;
-        if(cmd == R3270_EAU) 
+        if(cmd == R3270_EAU)
            num = 0;
         *residual = count - num;
 
@@ -1929,7 +1962,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
 
             /* Save the screen position at completion of the write.
                This is necessary in case a Read Buffer command is chained
-               from another write or read, this does not apply for the 
+               from another write or read, this does not apply for the
                write structured field command */
             if(cmd != R3270_WSF)
                 get_screen_pos (&dev->pos3270, iobuf+1, num-1);
@@ -2285,9 +2318,11 @@ BYTE    stat;                           /* Unit status               */
             /* Display prompting message on console if allowed */
             if (dev->prompt1052 == 1)
             {
-                len = sprintf (dev->buf,
+                len = snprintf (dev->buf, dev->bufsize,
                         "HHCTE006A Enter input for console device %4.4X\r\n",
                         dev->devnum);
+                len = min(len,dev->bufsize-1);
+                *(dev->buf+len)=0;
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)
                 {

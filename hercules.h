@@ -83,7 +83,7 @@
 
 /* Include LOCALE.H - Otherwise impl.c will not compile when
  * CFLAGS does not contain -O[x] (libtinl.h only includes locale.h
- * when __OPTIMIZE__ is defined) and impl.c uses LC_xxx macros 
+ * when __OPTIMIZE__ is defined) and impl.c uses LC_xxx macros
  */
 #include <locale.h>
 
@@ -97,7 +97,7 @@
 #include "version.h"
 #include "hetlib.h"
 #include "codepage.h"
-#include "logger.h"
+#include "logger.h"         /* (everybody needs this one) */
 #include "shared.h"
 
 /* definition of CLK_TCK is not part of the SUSE 7.2 definition.  Added (VB) */
@@ -132,21 +132,6 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #define O_BINARY 0
 #endif
 
-#ifdef WIN32
-#define socklen_t int
-#if !defined(OPTION_FTHREADS)
-/* fake loading of <windows.h> and <winsock.h> so we can use         */
-/* pthreads-win32 instead of the native cygwin pthreads support,     */
-/* which doesn't include pthread_cond bits                           */
-#define _WINDOWS_
-#define _WINSOCKAPI_
-#define _WINDOWS_H
-#define _WINSOCK_H
-#endif // !defined(OPTION_FTHREADS)
-#define HANDLE int
-#define DWORD int       /* will be undefined later */
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Macro for issuing panel commands                                  */
 /*-------------------------------------------------------------------*/
@@ -156,6 +141,18 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 #define ASYNCHRONOUS_PANEL_CMD(cmdline) \
     create_thread(&cmdtid,&sysblk.detattr,panel_command,(cmdline))
+
+/*-------------------------------------------------------------------*/
+/* Debugging macros                                                  */
+/*-------------------------------------------------------------------*/
+#include "debug.h"
+
+/*-------------------------------------------------------------------*/
+/* Convenience macro                                                 */
+/*-------------------------------------------------------------------*/
+#ifndef AUTO_RETRY_IF_EINTR
+#define AUTO_RETRY_IF_EINTR(expr)   do{(expr);}while(EINTR==errno)
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Macro definitions for tracing                                     */
@@ -169,26 +166,6 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
             logmsg("%4.4X:" format, dev->devnum, a); \
     } while(0)
 
-/* Debugging */
-
-#if defined(DEBUG) || defined(_DEBUG)
-    #define TRACE(a...) logmsg(a)
-    #define ASSERT(a) \
-        do \
-        { \
-            if (!(a)) \
-            { \
-                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
-            } \
-        } \
-        while(0)
-    #define VERIFY(a) ASSERT((a))
-#else
-    #define TRACE(a...)
-    #define ASSERT(a)
-    #define VERIFY(a) ((void)(a))
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Macro definitions for version number                              */
 /*-------------------------------------------------------------------*/
@@ -198,127 +175,7 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 /*-------------------------------------------------------------------*/
 /* Macro definitions for thread functions                            */
 /*-------------------------------------------------------------------*/
-#ifdef WIN32
-#define HAVE_STRUCT_TIMESPEC
-#endif
-#if defined(OPTION_FTHREADS)
-#include "fthreads.h"
-#else // !defined(OPTION_FTHREADS)
-#include <pthread.h>
-#endif // defined(OPTION_FTHREADS)
-#ifdef WIN32
-#undef DWORD
-#endif
-#if defined(OPTION_FTHREADS)
-#define NORMAL_THREAD_PRIORITY  0  /* THREAD_PRIORITY_NORMAL */
-#define DEVICE_THREAD_PRIORITY  1  /* THREAD_PRIORITY_ABOVE_NORMAL */
-typedef fthread_t         TID;
-typedef fthread_mutex_t   LOCK;
-typedef fthread_cond_t    COND;
-typedef fthread_attr_t    ATTR;
-
-#if defined(FISH_HANG)
-
-    #define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
-    #define create_device_thread(ptid,pat,fn,arg)  fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
-
-    #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk))
-    #define destroy_lock(plk)                      fthread_mutex_destroy(__FILE__,__LINE__,(plk))
-    #define obtain_lock(plk)                       fthread_mutex_lock(__FILE__,__LINE__,(plk))
-    #define try_obtain_lock(plk)                   fthread_mutex_trylock(__FILE__,__LINE__,(plk))
-    #define test_lock(plk) \
-            (fthread_mutex_trylock(__FILE__,__LINE__,(plk)) ? 1 : fthread_mutex_unlock(__FILE__,__LINE__,(plk)) )
-    #define release_lock(plk)                      fthread_mutex_unlock(__FILE__,__LINE__,(plk))
-
-    #define initialize_condition(pcond)            fthread_cond_init(__FILE__,__LINE__,(pcond))
-    #define destroy_condition(pcond)               fthread_cond_destroy(__FILE__,__LINE__,(pcond))
-    #define signal_condition(pcond)                fthread_cond_signal(__FILE__,__LINE__,(pcond))
-    #define broadcast_condition(pcond)             fthread_cond_broadcast(__FILE__,__LINE__,(pcond))
-    #define wait_condition(pcond,plk)              fthread_cond_wait(__FILE__,__LINE__,(pcond),(plk))
-    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait(__FILE__,__LINE__,(pcond),(plk),(tm))
-
-#else // !defined(FISH_HANG)
-
-    #define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
-    #define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
-
-    #define initialize_lock(plk)                   fthread_mutex_init((plk))
-    #define destroy_lock(plk)                      fthread_mutex_destroy((plk))
-    #define obtain_lock(plk)                       fthread_mutex_lock((plk))
-    #define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
-    #define test_lock(plk) \
-            (fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
-    #define release_lock(plk)                      fthread_mutex_unlock((plk))
-
-    #define initialize_condition(pcond)            fthread_cond_init((pcond))
-    #define destroy_condition(pcond)               fthread_cond_destroy((pcond))
-    #define signal_condition(pcond)                fthread_cond_signal((pcond))
-    #define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
-    #define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
-    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
-
-#endif // defined(FISH_HANG)
-
-#define initialize_detach_attr(pat)            /* unsupported */
-#define signal_thread(tid,signo)               fthread_kill((tid),(signo))
-#define thread_id()                            fthread_self()
-#define exit_thread(exitvar_ptr)               fthread_exit((exitvar_ptr))
-#else // !defined(OPTION_FTHREADS)
-typedef pthread_t                       TID;
-typedef pthread_mutex_t                 LOCK;
-typedef pthread_cond_t                  COND;
-typedef pthread_attr_t                  ATTR;
-#define initialize_lock(plk) \
-        pthread_mutex_init((plk),NULL)
-#define destroy_lock(plk) \
-        pthread_mutex_destroy((plk))
-#define obtain_lock(plk) \
-        pthread_mutex_lock((plk))
-#define try_obtain_lock(plk) \
-        pthread_mutex_trylock((plk))
-#define release_lock(plk) \
-        pthread_mutex_unlock((plk))
-#define test_lock(plk) \
-        (pthread_mutex_trylock((plk)) ? 1 : pthread_mutex_unlock((plk)) )
-#define initialize_condition(pcond) \
-        pthread_cond_init((pcond),NULL)
-#define destroy_condition(pcond) \
-        pthread_cond_destroy((pcond))
-#define signal_condition(pcond) \
-        pthread_cond_signal((pcond))
-#define broadcast_condition(pcond) \
-        pthread_cond_broadcast((pcond))
-#define wait_condition(pcond,plk) \
-        pthread_cond_wait((pcond),(plk))
-#define timed_wait_condition(pcond,plk,timeout) \
-        pthread_cond_timedwait((pcond),(plk),(timeout))
-#define initialize_detach_attr(pat) \
-        pthread_attr_init((pat)); \
-        pthread_attr_setstacksize((pat),1048576); \
-        pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED)
-typedef void*THREAD_FUNC(void*);
-#define create_thread(ptid,pat,fn,arg) \
-        pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
-#define create_device_thread(ptid,pat,fn,arg) \
-        pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
-#define exit_thread(_code) \
-        pthread_exit((_code))
-#if !defined(WIN32)
-#define signal_thread(tid,signo) \
-        pthread_kill(tid,signo)
-#else // defined(WIN32)
-#define signal_thread(tid,signo)
-#endif // !defined(WIN32)
-#define thread_id() \
-        pthread_self()
-#endif // defined(OPTION_FTHREADS)
-
-/* Pattern for displaying the thread_id */
-#define TIDPAT "%8.8lX"
-#if defined(WIN32) && !defined(OPTION_FTHREADS)
-#undef  TIDPAT
-#define TIDPAT "%p"
-#endif // defined(WIN32) && !defined(OPTION_FTHREADS)
+#include "xthreads.h"
 
 /*-------------------------------------------------------------------*/
 /* Prototype definitions for device handler functions                */
@@ -370,9 +227,9 @@ typedef struct _REGS {                  /* Processor registers       */
         U32     siosrate;               /* IOs per second            */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
-        U64     waittime;               /* Wait time (us) in interval*/ 
+        U64     waittime;               /* Wait time (us) in interval*/
 #ifdef WIN32
-        struct  timeval lasttod;        /* Last gettimeofday         */ 
+        struct  timeval lasttod;        /* Last gettimeofday         */
 #endif
         TLBE    tlb[256];               /* Translation lookaside buf */
         TID     cputid;                 /* CPU thread identifier     */
@@ -572,7 +429,7 @@ typedef struct _REGS {                  /* Processor registers       */
      if (prev->next == (_io)) { \
        prev->next = (_io)->next; \
        break; \
-     } \
+   } \
    if (sysblk.iointq == NULL) \
      OFF_IC_IOPENDING; \
  } while (0)
@@ -687,7 +544,8 @@ typedef struct _SYSBLK {
                 inststop:1,             /* 1 = stop on program check */ /*VMA*/
                 vmactive:1,             /* 1 = vma active            */ /*VMA*/
                 mschdelay:1,            /* 1 = delay MSCH instruction*/ /*LNX*/
-                shutdown:1;             /* 1 = shutdown requested    */
+                shutdown:1,             /* 1 = shutdown requested    */
+                quickexit:1;            /* 1 = immediate shutdown    */
         U32     ints_state;             /* Common Interrupts Status  */
         U32     waitmask;               /* Mask for waiting CPUs     */
         U32     started_mask;           /* Mask for started CPUs     */
@@ -708,14 +566,9 @@ typedef struct _SYSBLK {
                 U16 level;
         } ecpsvm;                       /* ECPS:VM structure         */
 #endif
-
-        FILE   *syslog[2];              /* Syslog read/write pipe    */
-        int     syslogfd[2];            /*   pairs                   */
-        FILE   *hrdcpy;                 /* Hardcopy log or zero      */
-        int     hrdcpyfd;               /* Hardcopt fd or -1         */
-//
         U64     pgminttr;               /* Program int trace mask    */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
+        TID     pantid;                 /* Control Panel thread id   */
 
         int     cpuprio;                /* CPU thread priority       */
         int     pgmprdos;               /* Program product OS flag   */
@@ -881,7 +734,7 @@ typedef struct _IOINT {
                 pcipending:1;           /* 1=PCI interrupt           */
     } IOINT;
 
-struct _DEVDATA;                                /* Forward reference */
+struct _DEVDATA;                        /* Forward reference         */
 /*-------------------------------------------------------------------*/
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
@@ -894,7 +747,7 @@ typedef struct _DEVBLK {
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
         U16     devtype;                /* Device type               */
-        U16     chanset;                /* Channel Set to which this   
+        U16     chanset;                /* Channel Set to which this
                                            device is connected S/370 */
         char    *typname;               /* Device type name          */
 
@@ -974,7 +827,7 @@ typedef struct _DEVBLK {
         /* to rely on the handler to perform the halt           @ISW */
 
         void ( *halt_device)(struct _DEVBLK *);         /*      @ISW */
-                
+
 
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
@@ -1145,16 +998,16 @@ typedef struct _DEVBLK {
             U16 compress:1;             /* 1=Compression enabled     */
             U16 method:3;               /* Compression method        */
             U16 level:4;                /* Compression level         */
-	    U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
-	    U16 displayfeat:1;          /* Device has a display      */
+            U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
+            U16 displayfeat:1;          /* Device has a display      */
                                         /* feature installed         */
             U16 deonirq:1;              /* DE on IRQ on tape motion  */
                                         /* MVS 3.8j workaround       */
-	    U16 logical_readonly;       /* Tape is forced READ ONLY  */
+            U16 logical_readonly;       /* Tape is forced READ ONLY  */
             U16 chksize;                /* Chunk size                */
-            off_t maxsize;              /* Maximum allowed TAPE file
+            size_t maxsize;             /* Maximum allowed TAPE file
                                            size                      */
-            size_t eotmargin;           /* Amount of space left   
+            size_t eotmargin;           /* Amount of space left
                                            before reporting EOT      */
         }       tdparms;                /* HET device parms          */
         U32                             /* Flags                     */
@@ -1168,15 +1021,15 @@ typedef struct _DEVBLK {
                                         /*        sense command only */
                                         /*        or a device init   */
         BYTE    tapedevt;               /* Tape device type          */
-	struct _TAPEMEDIA_HANDLER *tmh; /* Tape Media Handling       */
+        struct _TAPEMEDIA_HANDLER *tmh; /* Tape Media Handling       */
                                         /* dispatcher                */
-	/* Autoloader feature */
-	struct _TAPEAUTOLOADENTRY *als;  /* Autoloader stack         */
-	int     alss;                    /* Autoloader stack size    */
-	int     alsix;                   /* Current Autoloader index */
-	char    **al_argv;               /* ARGV in autoloader       */
-	int     al_argc;                 /* ARGC in autoloader       */
-	/* end autoloader feature */
+        /* Autoloader feature */
+        struct _TAPEAUTOLOADENTRY *als;  /* Autoloader stack         */
+        int     alss;                    /* Autoloader stack size    */
+        int     alsix;                   /* Current Autoloader index */
+        char    **al_argv;               /* ARGV in autoloader       */
+        int     al_argc;                 /* ARGC in autoloader       */
+        /* end autoloader feature */
         /* 3480/3490/3590 Message display */
         BYTE    tapemsg1[9];            /* 1st 3480 Message          */
         BYTE    tapemsg2[9];            /* 2nd 3480 Message          */
@@ -1261,7 +1114,7 @@ typedef struct _DEVBLK {
         BYTE    ckdreserved1;           /* Alignment                 */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
-        U32                            /* Flags                     */
+        U32                             /* Flags                     */
                 ckd3990:1,              /* 1=Control unit is 3990    */
                 ckdxtdef:1,             /* 1=Define Extent processed */
                 ckdsetfm:1,             /* 1=Set File Mask processed */
@@ -1598,9 +1451,6 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 /*-------------------------------------------------------------------*/
 extern SYSBLK   sysblk;                 /* System control block      */
 extern CCKDBLK  cckdblk;                /* CCKD global block         */
-#ifdef EXTERNALGUI
-extern int extgui;              /* external gui present */
-#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Global data areas and functions in module cpu.c                   */
@@ -1624,11 +1474,11 @@ int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
 int  configure_cpu (REGS *regs);
 int  deconfigure_cpu (REGS *regs);
-int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
+int  parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 
 /* Global data areas and functions in module panel.c */
 extern int volatile initdone;    /* Initialization complete flag */
-extern void panel_display (void);
+extern void panel_thread (void);
 extern LIST_ENTRY  bind_head;
 extern LOCK        bind_lock;
 extern int bind_device   (DEVBLK* dev, char* spec);

@@ -42,7 +42,7 @@ int             typ;                    /* Type of space             */
 
 int cdsk_spctab_comp(const void *, const void *);
 int cdsk_rcvtab_comp(const void *, const void *);
-int cdsk_valid_trk (int, BYTE *, int, int, int, BYTE *);
+int cdsk_valid_trk (int, BYTE *, int, int, int, BYTE *, size_t);
 int cdsk_recover_trk (int, BYTE *, int, int, int, int, int, int *);
 int cdsk_build_gap (SPCTAB *, int *, SPCTAB *);
 int cdsk_build_gap_long (SPCTAB *, int *, SPCTAB *);
@@ -380,9 +380,6 @@ int             imbedded=0;             /* Imbedded space freed      */
 int             moved=0;                /* Total space moved         */
 int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
 BYTE            buf[65536];             /* Buffer                    */
-#ifdef EXTERNALGUI
-int extgui2 = (m!= NULL && fileno(m) == fileno(stderr) && extgui);
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Read the headers and level 1 table                                */
@@ -482,17 +479,13 @@ restart:
     if (cdevhdr.free_imbed) pos = (off_t)(CCKD_L1TAB_POS + l1tabsz);
     else pos = (off_t)cdevhdr.free;
 
-#ifdef EXTERNALGUI
-    if (extgui2) fprintf (stderr,"SIZE=%d\n",cdevhdr.size);
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("SIZE=%d\n",cdevhdr.size);
 
     /* process each space in file sequence; the only spaces we expect
        are free blocks, level 2 tables, and track images             */
     for ( ; pos + freed < (off_t)cdevhdr.size; pos += len)
     {
-#ifdef EXTERNALGUI
-        if (extgui2) fprintf (stderr,"POS=%lu\n",pos);
-#endif /*EXTERNALGUI*/
+        if (!is_hercules) statmsg("POS=%lu\n",pos);
 
         /* check for free space */
         if ((U32)(pos + freed) == cdevhdr.free)
@@ -597,9 +590,7 @@ restart:
     cdevhdr.free_largest = 0;
     for (pos = cdevhdr.free; pos; pos = fb.pos)
     {
-#ifdef EXTERNALGUI
-        if (extgui2) fprintf (stderr,"POS=%lu\n",pos);
-#endif /*EXTERNALGUI*/
+        if (!is_hercules) statmsg("POS=%lu\n",pos);
         rc = lseek (fd, pos, SEEK_SET);
         rc = read (fd, &fb, CCKD_FREEBLK_SIZE);
         if (fb.len > cdevhdr.free_largest)
@@ -690,15 +681,11 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
     comps |= CCKD_COMPRESS_BZIP2;
 #endif
 
-#ifdef EXTERNALGUI
     /* The number of "steps" (checks) we'll be doing... */
-    if (extgui) fprintf (stderr,"STEPS=10\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEPS=10\n");
 
-#ifdef EXTERNALGUI
     /* Beginning first step... */
-    if (extgui) fprintf (stderr,"STEP=1\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=1\n");
 
 /*-------------------------------------------------------------------*/
 /* Read the device header.                                           */
@@ -1024,24 +1011,22 @@ free_space_check:
     /* if the file wasn't closed then rebuild the free space */
     if (cdevhdr.options & CCKD_OPENED)
     {   fsperr = 1;
-        sprintf (msg, "file not closed");
+        snprintf (msg, sizeof(msg), "file not closed");
     }
     else if (hdrerr)
     {   fsperr = 1;
-        sprintf (msg, "header errors");
+        snprintf (msg, sizeof(msg), "header errors");
     }
     else fsperr = 0;
 
-    #ifdef EXTERNALGUI
     /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=2\n");
-    #endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=2\n");
 
     for (fsp = (off_t)cdevhdr.free; fsp && !fsperr; fsp = (off_t)fb.pos)
     {
         fsperr = 1;               /* turn on error indicator */
         memset (&fb, 0, CCKD_FREEBLK_SIZE);
-        sprintf (msg, "pos=0x%llx nxt=0x%llx len=%d\n",
+        snprintf (msg, sizeof(msg), "pos=0x%llx nxt=0x%llx len=%d\n",
                  (long long)fsp, (long long)fb.pos, fb.len);
         if (fsp < lopos || fsp > hipos - CCKD_FREEBLK_SIZE) break;
         rc = lseek (fd, fsp, SEEK_SET);
@@ -1052,7 +1037,7 @@ free_space_check:
         if ((U32)fb.len < (U32)CCKD_FREEBLK_SIZE || (U32)(fsp + fb.len) > (U32)hipos) break;
         if (fb.pos && (fb.pos <= fsp + fb.len ||
                        (U32)fb.pos > (U32)(hipos - CCKD_FREEBLK_SIZE))) break;
-        sprintf (msg, "free space at end of the file");
+        snprintf (msg, sizeof(msg), "free space at end of the file");
         if ((U32)(fsp + fb.len) == (U32)hipos && (fdflags & O_RDWR)) break;
         fsperr = 0;                       /* reset error indicator   */
         cdevhdr2.free_number++;
@@ -1100,10 +1085,8 @@ space_check:
     spc[s].pos = hipos;
     spc[s++].typ = SPCTAB_END;
 
-#ifdef EXTERNALGUI
     /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=3\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=3\n");
 
     /* free spaces */
     if (level >= 0)
@@ -1122,10 +1105,8 @@ space_check:
 
     l1errs = l2errs = trkerrs = 0;
 
-#ifdef EXTERNALGUI
     /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=4\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=4\n");
 
     /* level 2 lookup table and track image spaces */
     for (i = 0; i < (int)cdevhdr.numl1tab; i++)
@@ -1206,7 +1187,7 @@ space_check:
                 l2[j].len <= CKDDASD_TRKHDR_SIZE ||
                 l2[j].len > trksz)
             {
-                sprintf(msg, "l2tab inconsistency track %d", trk);
+                snprintf(msg, sizeof(msg), "l2tab inconsistency track %d", trk);
             bad_trk:
                 if (level == 0)
                 {
@@ -1255,14 +1236,14 @@ space_check:
                 rc = lseek (fd, (off_t)l2[j].pos, SEEK_SET);
                 if (rc == -1)
                 {
-                    sprintf (msg, "lseek error track %d: %s", trk,
+                    snprintf (msg, sizeof(msg), "lseek error track %d: %s", trk,
                              strerror(errno));
                     goto bad_trk;
                 }
                 rc = read (fd, buf, readlen);
                 if (rc != readlen)
                 {
-                    sprintf (msg, "read error track %d: %s", trk,
+                    snprintf (msg, sizeof(msg), "read error track %d: %s", trk,
                              strerror(errno));
                     goto bad_trk;
                 }
@@ -1275,7 +1256,7 @@ space_check:
                    || fetch_hw (buf + 3) >= heads
                    || fetch_hw (buf + 1) * heads + fetch_hw (buf + 3) != trk)
                   {
-                      sprintf (msg, "track %d invalid header "
+                      snprintf (msg, sizeof(msg), "track %d invalid header "
                                "0x%2.2x%2.2x%2.2x%2.2x%2.2x", trk,
                                buf[0], buf[1], buf[2], buf[3], buf[4]);
                       goto bad_trk;
@@ -1286,7 +1267,7 @@ space_check:
                   if ((buf[0] & ~CCKD_COMPRESS_MASK)
                      || (int)fetch_fw (buf + 1) != trk)
                   {
-                      sprintf (msg, "block %d invalid header "
+                      snprintf (msg, sizeof(msg), "block %d invalid header "
                                "0x%2.2x%2.2x%2.2x%2.2x%2.2x", trk,
                                buf[0], buf[1], buf[2], buf[3], buf[4]);
                       goto bad_trk;
@@ -1296,7 +1277,7 @@ space_check:
                 /* Check for unsupported compression */
                 if (buf[0] & ~comps)
                 {
-                      sprintf (msg, "%s %d compressed using %s"
+                      snprintf (msg, sizeof(msg), "%s %d compressed using %s"
                                " which is not configured",
                                ckddasd ? "track" : "block", trk,
                                compression[buf[0]]);
@@ -1311,7 +1292,7 @@ space_check:
                then validate the entire track */
             if (!valid_l2 || level >= 3)
             {
-                rc = cdsk_valid_trk (trk, buf, heads, l2[j].len, trksz, msg);
+                rc = cdsk_valid_trk (trk, buf, heads, l2[j].len, trksz, msg, sizeof(msg));
                 if (rc != l2[j].len)
                     goto bad_trk;
             }
@@ -1400,10 +1381,8 @@ space_check:
 overlap:
     qsort ((void *)spc, s, sizeof(SPCTAB), cdsk_spctab_comp);
     for ( ; spc[s-1].typ == SPCTAB_NONE; s--);
-#ifdef EXTERNALGUI
     /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=5\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=5\n");
     for (i = 0; i < s - 1; i++)
     {
 //      CDSKMSG (m, "%s[%d] pos 0x%x length %d\n",
@@ -1514,10 +1493,8 @@ overlap:
     for (i = rcvtrks = 0; i < r; i++)
         if (rcv[i].typ == SPCTAB_TRKIMG) rcvtrks++;
 
-#ifdef EXTERNALGUI
     /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=6\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=6\n");
 
     for (gapsize = i = 0; r > 0 && i < gaps && rcvtrks > 0; i++)
     {
@@ -1681,10 +1658,8 @@ overlap:
     {   qsort ((void *)rcv, r, sizeof(SPCTAB), cdsk_rcvtab_comp);
         for ( ; rcv[r-1].typ == SPCTAB_NONE; r--);
     }
-#ifdef EXTERNALGUI
     /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=7\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=7\n");
     for (i = 0; i < r; i++)
     {
         if (rcv[i].typ != SPCTAB_TRKIMG) continue;
@@ -1753,10 +1728,8 @@ overlap:
         for ( ; rcv[r-1].typ == SPCTAB_NONE; r--);
     }
 
-#ifdef EXTERNALGUI
     /* Beginning next step... */
-    if (extgui) fprintf (stderr,"STEP=8\n");
-#endif /*EXTERNALGUI*/
+    if (!is_hercules) statmsg("STEP=8\n");
 
     for (i = 0; i < r; i++)
     {
@@ -1816,10 +1789,8 @@ overlap:
 
     short_gap:
         gaps = cdsk_build_gap (spc, &s, gap);
-#ifdef EXTERNALGUI
         /* Beginning next step... */
-        if (extgui) fprintf (stderr,"STEP=9\n");
-#endif /*EXTERNALGUI*/
+        if (!is_hercules) statmsg("STEP=9\n");
         for (i = j = 0; i < gaps; i++)
         {
             if (gap[i].siz == 0 || gap[i].siz >= CCKD_FREEBLK_SIZE)
@@ -1887,10 +1858,8 @@ overlap:
         cdevhdr.size = hipos;
         if (gaps) cdevhdr.free = gap[0].pos;
         cdevhdr.free_number = gaps;
-#ifdef EXTERNALGUI
         /* Beginning next step... */
-        if (extgui) fprintf (stderr,"STEP=10\n");
-#endif /*EXTERNALGUI*/
+        if (!is_hercules) statmsg("STEP=10\n");
         for (i = 0; i < gaps; i++)
         {
             if (i < gaps - 1) fb.pos = gap[i+1].pos;
@@ -2009,7 +1978,7 @@ unsigned int    v1, v2;                 /* Value for entry           */
 /* Validate a track image                                            */
 /*-------------------------------------------------------------------*/
 int cdsk_valid_trk (int trk, BYTE *buf, int heads, int len, int trksz,
-                    BYTE *msg)
+                    BYTE *msg, size_t msgsz)
 {
 int             rc;                     /* Return code               */
 int             cyl;                    /* Cylinder                  */
@@ -2035,7 +2004,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
     if (buf[0] & ~CCKD_COMPRESS_MASK)
     {
         if (msg)
-            sprintf(msg,"%s %d invalid byte[0]: "
+            snprintf(msg,msgsz,"%s %d invalid byte[0]: "
                    "%2.2x%2.2x%2.2x%2.2x%2.2x",
                    heads >= 0 ? "trk" : "blk", trk,
                    buf[0], buf[1], buf[2], buf[3], buf[4]);
@@ -2046,7 +2015,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
     if (buf[0] & ~comps)
     {
         if (msg)
-            sprintf(msg,"%s %d compression %s not configured",
+            snprintf(msg,msgsz,"%s %d compression %s not configured",
                    heads >= 0 ? "trk" : "blk", trk,
                    compression[buf[0]]);
         return -1;
@@ -2070,7 +2039,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
         if (rc != Z_OK)
         {
             if (msg)
-                sprintf (msg, "%s %d uncompress error, rc=%d;"
+                snprintf (msg,msgsz, "%s %d uncompress error, rc=%d;"
                          "%2.2x%2.2x%2.2x%2.2x%2.2x",
                          heads >= 0 ? "trk" : "blk", trk, rc,
                          buf[0], buf[1], buf[2], buf[3], buf[4]);
@@ -2090,7 +2059,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
         if (rc != BZ_OK)
         {
             if (msg)
-                sprintf (msg, "%s %d decompress error, rc=%d;"
+                snprintf (msg, msgsz,"%s %d decompress error, rc=%d;"
                          "%2.2x%2.2x%2.2x%2.2x%2.2x",
                          heads >= 0 ? "trk" : "blk", trk, rc,
                          buf[0], buf[1], buf[2], buf[3], buf[4]);
@@ -2110,7 +2079,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
     {
         if (bufl == trksz) return len;
         if (msg)
-            sprintf (msg, "block %d length %d expected %d validation error: "
+            snprintf (msg, msgsz,"block %d length %d expected %d validation error: "
                      "%2.2x%2.2x%2.2x%2.2x%2.2x",
                      trk, len, trksz, 
                      bufp[0], bufp[1], bufp[2], bufp[3], bufp[4]);
@@ -2129,7 +2098,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
     if (memcmp (&bufp[1], cchh, 4) != 0)
     {
         if (msg)
-            sprintf (msg, "track %d HA validation error: "
+            snprintf (msg, msgsz,"track %d HA validation error: "
                  "%2.2x%2.2x%2.2x%2.2x%2.2x",
                  trk, bufp[0], bufp[1], bufp[2], bufp[3], bufp[4]);
         return -1;
@@ -2141,7 +2110,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
         bufp[10] != 0 || bufp[11] != 0 || bufp[12] != 8)
     {
         if (msg)
-            sprintf (msg, "track %d R0 validation error: "
+            snprintf (msg, msgsz,"track %d R0 validation error: "
                  "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
                  trk, bufp[5], bufp[6], bufp[7], bufp[8], bufp[9],
                  bufp[10], bufp[11], bufp[12]);
@@ -2166,7 +2135,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
             sz + 8 + kl + dl >= bufl)
         {
              if (msg)
-                 sprintf (msg, "track %d R%d validation error: "
+                 snprintf (msg, msgsz,"track %d R%d validation error: "
                      "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
                      trk, r, bufp[sz], bufp[sz+1], bufp[sz+2], bufp[sz+3],
                      bufp[sz+4], bufp[sz+5], bufp[sz+6], bufp[sz+7]);
@@ -2178,7 +2147,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
     if (sz > trksz)
     {
         if (msg)
-            sprintf (msg, "track %d R%d validation error, no EOT: "
+            snprintf (msg, msgsz,"track %d R%d validation error, no EOT: "
                 "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
                 trk, r, bufp[sz], bufp[sz+1], bufp[sz+2], bufp[sz+3],
                 bufp[sz+4], bufp[sz+5], bufp[sz+6], bufp[sz+7]);
@@ -2191,7 +2160,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
         if (sz > len)
         {
             if (msg)
-                sprintf (msg, "track %d size %d exceeds %d: "
+                snprintf (msg, msgsz,"track %d size %d exceeds %d: "
                     "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x",
                     trk, sz, len, bufp[sz], bufp[sz+1], bufp[sz+2], bufp[sz+3],
                     bufp[sz+4], bufp[sz+5], bufp[sz+6], bufp[sz+7]);
@@ -2203,7 +2172,7 @@ BYTE           *compression[] = {"none", "zlib", "bzip2", "????"};
     if (sz != bufl)
     {
         if (msg)
-            sprintf (msg, "track %d size mismatch, expected %d found %d",
+            snprintf (msg, msgsz,"track %d size mismatch, expected %d found %d",
                      trk, bufl, sz);
         return -1;
     }
@@ -2231,7 +2200,7 @@ BYTE            b0;                     /* First buffer byte         */
 
     /* Special case if not compressed */
     buf[0] = 0;
-    rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL);
+    rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL, 0);
     if (rc > 0)
     {
         if (trys) (*trys)++;
@@ -2244,13 +2213,13 @@ BYTE            b0;                     /* First buffer byte         */
 #ifdef CCKD_COMPRESS_ZLIB
         buf[0] = CCKD_COMPRESS_ZLIB;
         if (trys) (*trys)++;
-        rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL);
+        rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL, 0);
         if (rc > 0) return rc;
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
         buf[0] = CCKD_COMPRESS_BZIP2;
         if (trys) (*trys)++;
-        rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL);
+        rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL, 0);
         if (rc > 0) return rc;
 #endif
     }
@@ -2261,13 +2230,13 @@ BYTE            b0;                     /* First buffer byte         */
 #ifdef CCKD_COMPRESS_ZLIB
         buf[0] = CCKD_COMPRESS_ZLIB;
         if (trys) (*trys)++;
-        rc = cdsk_valid_trk (trk, buf, heads, origlen, trksz, NULL);
+        rc = cdsk_valid_trk (trk, buf, heads, origlen, trksz, NULL, 0);
         if (rc > 0) return rc;
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
         buf[0] = CCKD_COMPRESS_BZIP2;
         if (trys) (*trys)++;
-        rc = cdsk_valid_trk (trk, buf, heads, origlen, trksz, NULL);
+        rc = cdsk_valid_trk (trk, buf, heads, origlen, trksz, NULL, 0);
         if (rc > 0) return rc;
 #endif
     }
@@ -2284,13 +2253,13 @@ BYTE            b0;                     /* First buffer byte         */
 #ifdef CCKD_COMPRESS_ZLIB
     buf[0] = CCKD_COMPRESS_ZLIB;
     if (trys) (*trys)++;
-    rc = cdsk_valid_trk (trk, buf, heads, startlen, trksz, NULL);
+    rc = cdsk_valid_trk (trk, buf, heads, startlen, trksz, NULL, 0);
     if (rc > 0) return rc;
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
     buf[0] = CCKD_COMPRESS_BZIP2;
     if (trys) (*trys)++;
-    rc = cdsk_valid_trk (trk, buf, heads, startlen, trksz, NULL);
+    rc = cdsk_valid_trk (trk, buf, heads, startlen, trksz, NULL, 0);
     if (rc > 0) return rc;
 #endif
 
@@ -2304,13 +2273,13 @@ BYTE            b0;                     /* First buffer byte         */
 #ifdef CCKD_COMPRESS_ZLIB
             buf[0] = CCKD_COMPRESS_ZLIB;
             if (trys) (*trys)++;
-            rc = cdsk_valid_trk (trk, buf, heads, startlen - adjust, trksz, NULL);
+            rc = cdsk_valid_trk (trk, buf, heads, startlen - adjust, trksz, NULL, 0);
             if (rc > 0) return rc;
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
             buf[0] = CCKD_COMPRESS_BZIP2;
             if (trys) (*trys)++;
-            rc = cdsk_valid_trk (trk, buf, heads, startlen - adjust, trksz, NULL);
+            rc = cdsk_valid_trk (trk, buf, heads, startlen - adjust, trksz, NULL, 0);
             if (rc > 0) return rc;
 #endif
         }
@@ -2319,13 +2288,13 @@ BYTE            b0;                     /* First buffer byte         */
 #ifdef CCKD_COMPRESS_ZLIB
             buf[0] = CCKD_COMPRESS_ZLIB;
             if (trys) (*trys)++;
-            rc = cdsk_valid_trk (trk, buf, heads, startlen + adjust, trksz, NULL);
+            rc = cdsk_valid_trk (trk, buf, heads, startlen + adjust, trksz, NULL, 0);
             if (rc > 0) return rc;
 #endif
 #ifdef CCKD_COMPRESS_BZIP2
             buf[0] = CCKD_COMPRESS_BZIP2;
             if (trys) (*trys)++;
-            rc = cdsk_valid_trk (trk, buf, heads, startlen + adjust, trksz, NULL);
+            rc = cdsk_valid_trk (trk, buf, heads, startlen + adjust, trksz, NULL, 0);
             if (rc > 0) return rc;
 #endif
         }

@@ -178,7 +178,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
                                      IFF_TUN | IFF_NO_PI,
                                      &pDevCTCBLK->fd,
-                                     pDevCTCBLK->szTUNDevName );
+                                     pDevCTCBLK->szTUNDevName,
+                                     sizeof(pDevCTCBLK->szTUNDevName) );
 
         if( rc < 0 )
         {
@@ -800,10 +801,12 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
     pCTCBLK->pid = getpid();
 
-    while( 1 )
+    while( !sysblk.shutdown )
     {
         // Read frame from the TUN/TAP interface
         iLength = TUNTAP_Read( pCTCBLK->fd, szBuff, 2048 );
+
+        if (sysblk.shutdown) break;
 
         // Check for error condition
         if( iLength < 0 )
@@ -923,12 +926,12 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     memset( &mac,  0, sizeof( MAC ) );
 
     // Set some initial defaults
-    strcpy( pCTCBLK->szMTU,     "1500" );
-    strcpy( pCTCBLK->szNetMask, "255.255.255.255" );
+    safe_strcpy( pCTCBLK->szMTU, sizeof(pCTCBLK->szMTU),     "1500" );
+    safe_strcpy( pCTCBLK->szNetMask, sizeof(pCTCBLK->szNetMask), "255.255.255.255" );
 #if defined( WIN32 )
-    strcpy( pCTCBLK->szTUNCharName,  tt32_get_default_iface() );
+    safe_strcpy( pCTCBLK->szTUNCharName, sizeof(pCTCBLK->szTUNCharName),  tt32_get_default_iface() );
 #else
-    strcpy( pCTCBLK->szTUNCharName,  "/dev/net/tun" );
+    safe_strcpy( pCTCBLK->szTUNCharName, sizeof(pCTCBLK->szTUNCharName),  "/dev/net/tun" );
 #endif
 
     pCTCBLK->iKernBuff     = DEF_TT32DRV_BUFFSIZE_K * 1024;
@@ -948,7 +951,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         pCTCBLK->fOldFormat = 1;
         argc--; argv++;
     }
-	
+    
     // Parse any optional arguments if not old format
     while( !pCTCBLK->fOldFormat )
     {
@@ -999,7 +1002,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 #endif // defined( WIN32 )
-            strcpy( pCTCBLK->szTUNCharName, optarg );
+            safe_strcpy( pCTCBLK->szTUNCharName, sizeof(pCTCBLK->szTUNCharName), optarg );
             break;
 
         case 'k':     // Kernel Buffer Size (ignored if not Windows)
@@ -1040,7 +1043,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strcpy( pCTCBLK->szMTU, optarg );
+            safe_strcpy( pCTCBLK->szMTU, sizeof(pCTCBLK->szMTU), optarg );
             break;
 
         case 's':     // Netmask of point-to-point link (ignored if Windows)
@@ -1051,7 +1054,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strcpy( pCTCBLK->szNetMask, optarg );
+            safe_strcpy( pCTCBLK->szNetMask, sizeof(pCTCBLK->szNetMask), optarg );
             break;
 
         case 'm':
@@ -1062,7 +1065,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 return -1;
             }
 
-            strcpy( pCTCBLK->szMACAddress, optarg );
+            safe_strcpy( pCTCBLK->szMACAddress, sizeof(pCTCBLK->szMACAddress), optarg );
 
             break;
 
@@ -1107,7 +1110,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szGuestIPAddr, *argv );
+        safe_strcpy( pCTCBLK->szGuestIPAddr, sizeof(pCTCBLK->szGuestIPAddr), *argv );
 
         argc--; argv++;
 
@@ -1119,7 +1122,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szDriveIPAddr, *argv );
+        safe_strcpy( pCTCBLK->szDriveIPAddr, sizeof(pCTCBLK->szDriveIPAddr), *argv );
 
         argc--; argv++;
     }
@@ -1144,7 +1147,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szTUNCharName, *argv );
+        safe_strcpy( pCTCBLK->szTUNCharName, sizeof(pCTCBLK->szTUNCharName), *argv );
 
         argc--; argv++;
 
@@ -1158,7 +1161,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szMTU, *argv );
+        safe_strcpy( pCTCBLK->szMTU, sizeof(pCTCBLK->szMTU), *argv );
         argc--; argv++;
 
         // Guest IP Address
@@ -1169,7 +1172,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szGuestIPAddr, *argv );
+        safe_strcpy( pCTCBLK->szGuestIPAddr, sizeof(pCTCBLK->szGuestIPAddr), *argv );
 
         argc--; argv++;
 
@@ -1181,7 +1184,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szDriveIPAddr, *argv );
+        safe_strcpy( pCTCBLK->szDriveIPAddr, sizeof(pCTCBLK->szDriveIPAddr), *argv );
 
         argc--; argv++;
 
@@ -1193,7 +1196,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             return -1;
         }
 
-        strcpy( pCTCBLK->szNetMask, *argv );
+        safe_strcpy( pCTCBLK->szNetMask, sizeof(pCTCBLK->szNetMask), *argv );
 
         argc--; argv++;
 
@@ -1222,7 +1225,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     return -1;
                 }
 
-                strcpy( pCTCBLK->szGuestIPAddr, *argv );
+                safe_strcpy( pCTCBLK->szGuestIPAddr, sizeof(pCTCBLK->szGuestIPAddr), *argv );
 
                 argc--; argv++;
 
@@ -1238,7 +1241,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     }
                 }
 
-                strcpy( pCTCBLK->szTUNCharName, *argv );
+                safe_strcpy( pCTCBLK->szTUNCharName, sizeof(pCTCBLK->szTUNCharName), *argv );
 
                 // Kludge: This may look strange at first, but with 
                 // TunTap32, only the last byte of the "driver IP 
@@ -1251,8 +1254,9 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // This also fixes the confusing error messages from
                 // TunTap.c when a MAC is given for this argument.
                 
-                strcpy( pCTCBLK->szDriveIPAddr,
-                        pCTCBLK->szGuestIPAddr );
+                safe_strcpy( pCTCBLK->szDriveIPAddr,
+                             sizeof(pCTCBLK->szDriveIPAddr),
+                             pCTCBLK->szGuestIPAddr );
 
                 argc--; argv++; i++;
                 continue;

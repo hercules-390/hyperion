@@ -334,7 +334,7 @@ FISH_EVENT*  FindFISH_EVENT
 /////////////////////////////////////////////////////////////////////////////
 // NOTE! Global lock must be held before calling this function!
 
-char PrintFISH_THREADBuffer[4096];
+char PrintFISH_THREADBuffer[1024];
 
 char*  PrintFISH_THREAD
 (
@@ -366,7 +366,7 @@ char*  PrintFISH_THREAD
         ThreadLockListLink = NULL;
     }
 
-    sprintf(PrintFISH_THREADBuffer,
+    snprintf(PrintFISH_THREADBuffer, sizeof(PrintFISH_THREADBuffer),
         "THREAD @ %8.8X\n"
         "         bWaitingForLock    = %s\n"
         "         bTryingForLock     = %s\n"
@@ -411,7 +411,7 @@ char*  PrintFISH_THREAD
 /////////////////////////////////////////////////////////////////////////////
 // NOTE! Global lock must be held before calling this function!
 
-char PrintFISH_LOCKBuffer[4096];
+char PrintFISH_LOCKBuffer[1024];
 
 char*  PrintFISH_LOCK
 (
@@ -459,7 +459,7 @@ char*  PrintFISH_LOCK
         }
     }
 
-    sprintf(PrintFISH_LOCKBuffer,
+    snprintf(PrintFISH_LOCKBuffer, sizeof(PrintFISH_LOCKBuffer),
         "LOCK @ %8.8X\n"
         "       pOwningThread      = %8.8X\n"
         "       nLockedDepth       = %d\n"
@@ -491,7 +491,7 @@ char*  PrintFISH_LOCK
 /////////////////////////////////////////////////////////////////////////////
 // NOTE! Global lock must be held before calling this function!
 
-char PrintFISH_EVENTBuffer[4096];
+char PrintFISH_EVENTBuffer[1024];
 
 char*  PrintFISH_EVENT
 (
@@ -510,7 +510,7 @@ char*  PrintFISH_EVENT
     }
     else EventsListLink = (FISH_EVENT*) &EventsListHead;
 
-    sprintf(PrintFISH_EVENTBuffer,
+    snprintf(PrintFISH_EVENTBuffer, sizeof(PrintFISH_EVENTBuffer),
         "EVENT @ %8.8X\n"
         "        timeSet            = %2.2d:%2.2d:%2.2d.%3.3d\n"
         "        pszFileSet         = %s\n"

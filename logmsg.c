@@ -147,8 +147,8 @@ void log_write(int panel,BYTE *msg,...)
 /*   the function parm               */
 struct log_capture_data
 {
-    char *obfr;
-    size_t sz;
+    char *obfr; /* pointer to msg buffer */
+    size_t sz;  /* malloc'ed size of above buffer */
 };
 
 void log_capture_writer(void *vcd,BYTE *msg)
@@ -166,7 +166,7 @@ void log_capture_writer(void *vcd,BYTE *msg)
         cd->sz+=strlen(msg);
         cd->obfr=realloc(cd->obfr,cd->sz);
     }
-    strcat(cd->obfr,msg);
+    safe_strcat(cd->obfr,cd->sz,msg);
     return;
 }
 void log_capture_closer(void *vcd)

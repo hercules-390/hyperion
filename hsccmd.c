@@ -8,8 +8,6 @@
 /*-------------------------------------------------------------------*/
 /* This module implements the various Hercules System Console        */
 /* (i.e. hardware console) commands that the emulator supports.      */
-/* It is not currently designed to be compiled directly, but rather  */
-/* is #included inline by the panel.c source module.                 */
 /* To define a new commmand, add an entry to the "Commands" CMDTAB   */
 /* table pointing to the command processing function, and optionally */
 /* add additional help text to the HelpTab HELPTAB. Both tables are  */
@@ -17,11 +15,8 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
-
 #include "devtype.h"
-
 #include "opcode.h"
-
 #if defined(OPTION_FISHIO)
 #include "w32chan.h"
 #endif /* defined(OPTION_FISHIO) */
@@ -41,30 +36,17 @@ extern void ecpsvm_command(int argc,char **argv);
 int process_script_file(char *,int);
 
 ///////////////////////////////////////////////////////////////////////
-/* quit or exit command - terminate the emulator */
+/* quit or exit command - terminate (shutdown) the Hercules emulator */
 
 int quit_cmd(char* cmdline, int argc, char *argv[])
 {
     UNREFERENCED(cmdline);
-
-    /* redirect the logger input to stderr such that termination 
-       messages are written to the screen */
-    dup2(STDERR_FILENO,STDOUT_FILENO);
-
+    obtain_lock (&sysblk.intlock);
     sysblk.shutdown = 1;
-
-    if (!(argc > 1 && !strcasecmp("now",argv[1])))
-        usleep(100000);
-
-#if defined(FISH_HANG)
-    FishHangAtExit();
-#endif
-
-    if (argc < 2 || strcasecmp("now",argv[1]))
-        release_config();
-
-    exit(0);
-
+    if (argc > 1 && strcasecmp("now",argv[1]) == 0)
+        sysblk.quickexit = 1;
+    release_lock (&sysblk.intlock);
+    exit(0);    /* (automatically initiates controlled shutdown) */
     return 0;   /* (make compiler happy) */
 }
 
@@ -288,13 +270,13 @@ int quiet_cmd(char* cmdline, int argc, char *argv[])
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-#ifdef EXTERNALGUI
-    if (extgui)
+
+    if (daemon_mode)    /* (there is no screen in daemon mode) */
     {
-        logmsg( _("HHCPN026W Ignored. (external GUI active)\n") );
+        logmsg( _("HHCPN026W Ignored. (daemon mode active)\n") );
         return 0;
     }
-#endif /*EXTERNALGUI*/
+
     sysblk.npquiet = !sysblk.npquiet;
     logmsg( _("HHCPN027I Automatic refresh %s.\n"),
               sysblk.npquiet ? _("disabled") : _("enabled") );
@@ -1453,7 +1435,7 @@ BYTE c;                                 /* Character work area       */
 
     /* Reject if device is busy or interrupt pending */
     if (dev->busy || dev->pending || dev->pcipending
-     || (dev->scsw.flag3 & SCSW3_SC_PEND))
+        || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         release_lock (&dev->lock);
         logmsg( _("HHCPN096E Device %4.4X busy or interrupt pending\n"),
@@ -1881,11 +1863,11 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         if (dev->ioactive == DEV_SYS_NONE)
-            strcpy (sysid, "(none)");
+            safe_strcpy (sysid, sizeof(sysid), "(none)");
         else if (dev->ioactive == DEV_SYS_LOCAL)
-            strcpy (sysid, "local");
+            safe_strcpy (sysid, sizeof(sysid), "local");
         else
-            sprintf (sysid, "id=%d", dev->ioactive);
+            snprintf (sysid, sizeof(sysid), "id=%d", dev->ioactive);
         if (dev->busy && !(dev->suspended && dev->ioactive == DEV_SYS_NONE))
             logmsg( _("          DEV%4.4X: busy %s\n"), dev->devnum, sysid );
         if (dev->reserved)
@@ -2041,10 +2023,10 @@ int icount_cmd(char* cmdline, int argc, char *argv[])
 
 /* PATCH ISW20030220 - Script command support */
 
-static int scr_recursion=0;		/* Recursion count (set to 0) */
+static int scr_recursion=0;     /* Recursion count (set to 0) */
 static int scr_aborted=0;          /* Script abort flag */
 static int scr_uaborted=0;          /* Script user abort flag */
-TID	scr_tid=0;
+TID scr_tid=0;
 
 int cscript_cmd(char* cmdline, int argc, char *argv[])
 {
@@ -2137,8 +2119,8 @@ BYTE   *p;                              /* (work)                    */
 
     if(isrcfile)
     {
-	    logmsg(_("HHCPN008I Script file processing started using file %s\n"),
-		   script_name);
+        logmsg(_("HHCPN008I Script file processing started using file %s\n"),
+           script_name);
     }
 
     /* Obtain storage for the SCRIPT file buffer */
@@ -2231,11 +2213,11 @@ BYTE   *p;                              /* (work)                    */
     }
 
     fclose(scrfp);
-    scr_recursion--;	/* Decrement recursion count */
+    scr_recursion--;    /* Decrement recursion count */
     if(scr_recursion==0)
     {
-      scr_aborted=0;	/* reset abort flag */
-      scr_tid=0;	/* reset script thread id */
+      scr_aborted=0;    /* reset abort flag */
+      scr_tid=0;    /* reset script thread id */
     }
 
     return 0;
@@ -2565,7 +2547,7 @@ COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/eve
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
 COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread" )
 #if defined(FEATURE_ECPSVM)
-COMMAND ( "evm",   evm_cmd,   "ECPS:VM Commands" )
+COMMAND ( "evm",       evm_cmd,       "ECPS:VM Commands" )
 #endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
@@ -2715,127 +2697,131 @@ HELPTAB HelpTab[] =
 /*        command         additional hep text...
         (max 9 chars)
 */
-CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need help\n"
-                       "with. If the command has additional help text defined for it,\n"
-                       "it will be displayed. Help text is usually limited to explaining\n"
-                       "the format of the command and its various required or optional\n"
-                       "parameters and is not meant to replace reading the documentation.\n"
-                       )
+CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need help "
+                       "with. If the command has additional help text defined for it, "
+                       "it will be displayed. Help text is usually limited to explaining "
+                       "the format of the command and its various required or optional "
+                       "parameters and is not meant to replace reading the documentation."
+                       "\n")
 
-CMDHELP ( "quit",      "Format: \"quit [NOW]\". The optional 'NOW' argument\n"
-                       "causes the emulator to immediately terminate without\n"
-                       "attempting to close any of the device files or perform\n"
-                       "any cleanup. Only use it in extreme circumstances.\n"
-                       )
+CMDHELP ( "quit",      "Format: \"quit [NOW]\". The optional 'NOW' argument "
+                       "causes the emulator to immediately terminate without "
+                       "attempting to close any of the device files or perform "
+                       "any cleanup. Only use it in extreme circumstances."
+                       "\n")
 
-CMDHELP ( "cpu",       "Format: \"cpu nnnn\" where 'nnnn' is the cpu address of\n"
-                       "the cpu in your multiprocessor configuration which you wish\n"
-                       "all panel commands to apply to. For example, entering 'cpu 1'\n"
-                       "followed by \"gpr\" will display the general purpose registers\n"
-                       "for cpu#1 in your configuration as opposed to cpu#0\n"
-                       )
+CMDHELP ( "cpu",       "Format: \"cpu nnnn\" where 'nnnn' is the cpu address of "
+                       "the cpu in your multiprocessor configuration which you wish "
+                       "all panel commands to apply to. For example, entering 'cpu 1' "
+                       "followed by \"gpr\" will display the general purpose registers "
+                       "for cpu#1 in your configuration as opposed to cpu#0."
+                       "\n")
 
-CMDHELP ( "start",     "Entering the 'start' command by itself simply starts a stopped\n"
-                       "CPU, whereas 'start <devn>' presses the virtual start button on\n"
-                       "printer device <devn>.\n"
-                       )
+CMDHELP ( "start",     "Entering the 'start' command by itself simply starts a stopped "
+                       "CPU, whereas 'start <devn>' presses the virtual start button on "
+                       "printer device <devn>."
+                       "\n")
 
-CMDHELP ( "stop",      "Entering the 'stop' command by itself simply stops a running\n"
-                       "CPU, whereas 'stop <devn>' presses the virtual stop button on\n"
-                       "printer device <devn>, usually causing an INTREQ.\n"
-                       )
+CMDHELP ( "stop",      "Entering the 'stop' command by itself simply stops a running "
+                       "CPU, whereas 'stop <devn>' presses the virtual stop button on "
+                       "printer device <devn>, usually causing an INTREQ."
+                       "\n")
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
-CMDHELP ( ".reply",    "To reply to a system control program (i.e. guest operating system)\n"
-                       "message that gets issued to the hercules console, prefix the reply\n"
-                       "with a period.\n"
-                       )
+CMDHELP ( ".reply",    "To reply to a system control program (i.e. guest operating system) "
+                       "message that gets issued to the hercules console, prefix the reply "
+                       "with a period."
+                       "\n")
 
-CMDHELP ( "!message",  "To enter a system control program (i.e. guest operating system)\n"
-                       "priority command on the hercules console, simply prefix the command\n"
-                       "with an exclamation point '!'.\n"
-                       )
+CMDHELP ( "!message",  "To enter a system control program (i.e. guest operating system) "
+                       "priority command on the hercules console, simply prefix the command "
+                       "with an exclamation point '!'."
+                       "\n")
 #endif
 
-CMDHELP ( "r",         "Format: \"r addr[.len]\" or \"r addr-addr\" to display real\n"
-                       "storage, or \"r addr=value\" to alter real storage, where 'value'\n"
-                       "is a hex string of up to 32 pairs of digits.\n"
-                       )
-CMDHELP ( "v",         "Format: \"v addr[.len]\" or \"v addr-addr\" to display virtual\n"
-                       "storage, or \"v addr=value\" to alter virtual storage, where 'value'\n"
-                       "is a hex string of up to 32 pairs of digits.\n"
-                       )
+CMDHELP ( "r",         "Format: \"r addr[.len]\" or \"r addr-addr\" to display real "
+                       "storage, or \"r addr=value\" to alter real storage, where 'value' "
+                       "is a hex string of up to 32 pairs of digits."
+                       "\n")
 
-CMDHELP ( "attach",    "Format: \"attach devn type [arg...]\n"
-                       )
+CMDHELP ( "v",         "Format: \"v addr[.len]\" or \"v addr-addr\" to display virtual "
+                       "storage, or \"v addr=value\" to alter virtual storage, where 'value' "
+                       "is a hex string of up to 32 pairs of digits."
+                       "\n")
 
-CMDHELP ( "define",    "Format: \"define olddevn newdevn\"\n"
-                       )
+CMDHELP ( "attach",    "Format: \"attach devn type [arg...]"
+                       "\n")
 
-CMDHELP ( "devinit",   "Format: \"devinit devn arg [arg...]\"\n"
-                       )
+CMDHELP ( "define",    "Format: \"define olddevn newdevn\""
+                       "\n")
 
-CMDHELP ( "sh",        "Format: \"sh command [args...]\" where 'command' is any valid shell\n"
-                       "command. The entered command and any arguments are passed as-is to the\n"
-                       "shell for processing and the results are displayed on the console.\n"
-                       )
+CMDHELP ( "devinit",   "Format: \"devinit devn arg [arg...]\""
+                       "\n")
 
-CMDHELP ( "b",         "Format: \"b addr\" where 'addr' is the instruction address where you\n"
-                       "wish to halt execution. Once the breakpoint is reached, instruction\n"
-                       "execution is temporarily halted and the next instruction to be executed\n"
-                       "is displayed. You may then examine registers and/or storage, etc. To\n"
-                       "continue execution after reaching a breakpoint, enter the 'g' command.\n"
-                       )
+CMDHELP ( "sh",        "Format: \"sh command [args...]\" where 'command' is any valid shell "
+                       "command. The entered command and any arguments are passed as-is to the "
+                       "shell for processing and the results are displayed on the console."
+                       "\n")
 
-CMDHELP ( "b-",        "Format: \"b-\"  (removes any previously set breakpoint)\n"
-                       )
+CMDHELP ( "b",         "Format: \"b addr\" where 'addr' is the instruction address where you "
+                       "wish to halt execution. Once the breakpoint is reached, instruction "
+                       "execution is temporarily halted and the next instruction to be executed "
+                       "is displayed. You may then examine registers and/or storage, etc. To "
+                       "continue execution after reaching a breakpoint, enter the 'g' command."
+                       "\n")
 
-CMDHELP ( "pgmtrace",  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any valid program\n"
-                       "interruption code in the range 0x01 to 0x40. Precede the interrupt code\n"
-                       "with a '-' to stop tracing of that particular program interruption.\n"
-                       )
+CMDHELP ( "b-",        "Format: \"b-\"  (removes any previously set breakpoint)"
+                       "\n")
 
-CMDHELP ( "savecore",  "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and 'end'\n"
-                       "define the starting and ending addresss of the range of real storage to be\n"
-                       "saved to file 'filename'. '*' means address 0 if specified for start, and end\n"
-                       "of available storage if specified for end. The default is '* *' (beginning\n"
-                       "of storage through the end of storage; i.e. all of storage).\n"
-                       )
-CMDHELP ( "loadcore",  "Format: \"loadcore filename [address]\" where 'address' is the storage address\n"
-                       "of where to begin loading memory. The file 'filename' is presumed to be a pure\n"
-                       "binary image file previously created via the 'savecore' command. The default for\n"
-                       "'address' is 0 (begining of storage).\n"
-                       )
-CMDHELP ( "loadtext",  "Format: \"loadtext filename [address]\". This command is essentially identical\n"
-                       "to the 'loadcore' command except that it loads a text deck file with \"TXT\"\n"
-                       "and \"END\" 80 byte records (i.e. an object deck).\n"
-                       )
-CMDHELP ( "script",    "Format: \"script filename [...filename...]\". Sequentially executes the commands contained\n"
-                       "within the file -filename-. The script file may also contain \"script\" commands,\n"
-                       "but the system ensures that no more than 10 levels of script are invoked at any\n"
-                       "one time (to avoid a recursion loop)\n"
-                       )
+CMDHELP ( "pgmtrace",  "Format: \"pgmtrace [-]intcode\" where 'intcode' is any valid program "
+                       "interruption code in the range 0x01 to 0x40. Precede the interrupt code "
+                       "with a '-' to stop tracing of that particular program interruption."
+                       "\n")
 
-CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the currently running script.\n"
-                       "if no script is running, no action is taken\n"
-                       )
+CMDHELP ( "savecore",  "Format: \"savecore filename [{start|*}] [{end|*}]\" where 'start' and 'end' "
+                       "define the starting and ending addresss of the range of real storage to be "
+                       "saved to file 'filename'. '*' means address 0 if specified for start, and end "
+                       "of available storage if specified for end. The default is '* *' (beginning "
+                       "of storage through the end of storage; i.e. all of storage)."
+                       "\n")
+
+CMDHELP ( "loadcore",  "Format: \"loadcore filename [address]\" where 'address' is the storage address "
+                       "of where to begin loading memory. The file 'filename' is presumed to be a pure "
+                       "binary image file previously created via the 'savecore' command. The default for "
+                       "'address' is 0 (begining of storage)."
+                       "\n")
+
+CMDHELP ( "loadtext",  "Format: \"loadtext filename [address]\". This command is essentially identical "
+                       "to the 'loadcore' command except that it loads a text deck file with \"TXT\" "
+                       "and \"END\" 80 byte records (i.e. an object deck)."
+                       "\n")
+
+CMDHELP ( "script",    "Format: \"script filename [...filename...]\". Sequentially executes the commands "
+                       "contained within the file -filename-. The script file may also contain \"script\" "
+                       "commands, but the system ensures that no more than 10 levels of script are invoked "
+                       "at any one time (to avoid a recursion loop)"
+                       "\n")
+
+CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the currently running script. "
+                       "If no script is running, no action is taken."
+                       "\n")
 
 #if defined(FEATURE_ECPSVM)
-CMDHELP ( "evm",   "Format: \"evm\". This command invokes ECPS:VM Subcommands.\n"
-                       "Type \"evm help\" to see a list of available commands\n"
-                       )
+CMDHELP ( "evm",       "Format: \"evm\". This command invokes ECPS:VM Subcommands. "
+                       "Type \"evm help\" to see a list of available commands."
+                       "\n")
 #endif
 
-#if defined(FISH_HANG)
-CMDHELP ( "FishHangReport", "When built with --enable-fthreads --enable-fishhang, a detailed record of\n"
-                       "every thread, lock and event that is created is maintained for debugging purposes.\n"
-                       "If a lock is accessed before it has been initialized or if a thread exits while\n"
-                       "still holding a lock, etc (including deadlock situations), the FishHang logic will\n"
-                       "detect and report it. If you suspect one of hercules's threads is hung waiting for\n"
-                       "a condition to be signalled for example, entering \"FishHangReport\" will display\n"
-                       "the internal list of thread, locks and events to possibly help you determine where\n"
-                       "it's hanging and what event (condition) it's hung on.\n"
-                       )
+#if defined(DEBUG) && defined(OPTION_FTHREADS)
+CMDHELP ( "FishHangReport", "When built with --enable-fthreads --enable-fishhang, a detailed record of "
+                       "every thread, lock and event that is created is maintained for debugging purposes. "
+                       "If a lock is accessed before it has been initialized or if a thread exits while "
+                       "still holding a lock, etc (including deadlock situations), the FishHang logic will "
+                       "detect and report it. If you suspect one of Hercules's threads is hung waiting for "
+                       "a condition to be signalled for example, entering \"FishHangReport\" will display "
+                       "the internal list of thread, locks and events to possibly help you determine where "
+                       "it's hanging and what event (condition) it's hung on."
+                       "\n")
 #endif
 
 CMDHELP ( NULL, NULL )         /* (end of table) */
@@ -2920,37 +2906,6 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     ProcessPanelCommand(cmd);
     return NULL;
+}
 
-#ifdef OPTION_CKD_KEY_TRACING
- #define TSPLUS_CMD \
-  "t+=trace, s+=step, t+ckd=CKD_KEY trace, t+devn=CCW trace, s+devn=CCW step\n"
-#else
- #define TSPLUS_CMD \
-  "t+=trace, s+=step, t+devn=CCW trace, s+devn=CCW step\n"
-#endif /*OPTION_CKD_KEY_TRACING*/
-
-#ifdef _FEATURE_SYSTEM_CONSOLE
- #define SYSCONS_CMD ".xxx=scp command, !xxx=scp priority messsage\n"
-#else
- #define SYSCONS_CMD
-#endif /*_FEATURE_SYSTEM_CONSOLE*/
-
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
- #define TODDRAG_CMD "toddrag nnn = display or set TOD clock drag factor\n"
-#else
- #define TODDRAG_CMD
-#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
-
-#ifdef PANEL_REFRESH_RATE
- #define PANRATE_CMD "panrate [fast|slow|nnnn] = display or set panel refresh rate\n"
-#else
- #define PANRATE_CMD
-#endif /*PANEL_REFRESH_RATE*/
-
-#if defined(OPTION_INSTRUCTION_COUNTING)
- #define ICOUNT_CMD "icount [clear] = display instruction counters\n"
-#else
- #define ICOUNT_CMD
-#endif
-
-        }
+///////////////////////////////////////////////////////////////////////

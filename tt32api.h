@@ -55,45 +55,45 @@ extern "C"
 
 struct tt32ctl
 {
-	union
+    union
     {
-		char ctln_name[IFNAMSIZ];	// Interface name, e.g. "en0". 
+        char ctln_name[IFNAMSIZ];   // Interface name, e.g. "en0".
     } tt32_ctln;
 
     union
     {
-		int  	ctlu_devbuffsize;	// Kernel buffer size
-		int  	ctlu_iobuffsize;	// Read buffer size
-		int     ctlu_readtimeout;	// Read timeout value
+        int     ctlu_devbuffsize;   // Kernel buffer size
+        int     ctlu_iobuffsize;    // Read buffer size
+        int     ctlu_readtimeout;   // Read timeout value
     } tt32_ctlu;
 };
 
-#define tt32ctl_name		tt32_ctln.ctln_name	
-#define tt32ctl_devbuffsize	tt32_ctlu.ctlu_devbuffsize
-#define tt32ctl_iobuffsize	tt32_ctlu.ctlu_iobuffsize
-#define tt32ctl_readtimeout	tt32_ctlu.ctlu_readtimeout
+#define tt32ctl_name        tt32_ctln.ctln_name
+#define tt32ctl_devbuffsize tt32_ctlu.ctlu_devbuffsize
+#define tt32ctl_iobuffsize  tt32_ctlu.ctlu_iobuffsize
+#define tt32ctl_readtimeout tt32_ctlu.ctlu_readtimeout
 
 typedef struct _tagTT32STATS
 {
-	DWORD    dwStructSize;			// size of this structure
-	DWORD    dwKernelBuffSize;		// size of kernel capture buffer
-	DWORD    dwReadBuffSize;		// size of dll I/O buffer
-	DWORD    dwMaxBytesReceived;	// max dll I/O bytes received
+    DWORD    dwStructSize;          // size of this structure
+    DWORD    dwKernelBuffSize;      // size of kernel capture buffer
+    DWORD    dwReadBuffSize;        // size of dll I/O buffer
+    DWORD    dwMaxBytesReceived;    // max dll I/O bytes received
 
-	__int64  n64WriteCalls;			// total #of write requests
-	__int64  n64WriteIOs;			// total #of write I/Os
+    __int64  n64WriteCalls;         // total #of write requests
+    __int64  n64WriteIOs;           // total #of write I/Os
 
-	__int64  n64ReadCalls;			// total #of read requests
-	__int64  n64ReadIOs;			// total #of read I/Os
+    __int64  n64ReadCalls;          // total #of read requests
+    __int64  n64ReadIOs;            // total #of read I/Os
 
-	__int64  n64PacketsRead;		// total #of packets read
-	__int64  n64PacketsWritten;		// total #of packets written
+    __int64  n64PacketsRead;        // total #of packets read
+    __int64  n64PacketsWritten;     // total #of packets written
 
-	__int64  n64BytesRead;			// total #of bytes read
-	__int64  n64BytesWritten;		// total #of bytes written
+    __int64  n64BytesRead;          // total #of bytes read
+    __int64  n64BytesWritten;       // total #of bytes written
 
-	__int64  n64InternalPackets;	// total #of packets handled internally
-	__int64  n64IgnoredPackets;		// total #of packets ignored
+    __int64  n64InternalPackets;    // total #of packets handled internally
+    __int64  n64IgnoredPackets;     // total #of packets ignored
 }
 TT32STATS, *PTT32STATS;
 
@@ -121,8 +121,8 @@ extern int         WINAPI EXPORT tuntap32_get_stats         (int fd, TT32STATS* 
 extern const char* WINAPI EXPORT tuntap32_get_default_iface ();
 
 // For compatability with previous releases
-extern int         WINAPI EXPORT tuntap32_open_ip_tuntap    (char* virtualipaddr, char* gatewayipaddr, 
-							     u_long capturebuffersize, u_long iobuffersize);
+extern int         WINAPI EXPORT tuntap32_open_ip_tuntap    (char* virtualipaddr, char* gatewayipaddr,
+                                                             u_long capturebuffersize, u_long iobuffersize);
 extern int         WINAPI EXPORT tuntap32_write_ip_tun      (int fd, u_char* buffer, u_long len);
 extern int         WINAPI EXPORT tuntap32_read_ip_tap       (int fd, u_char* buffer, u_long len, u_long timeout);
 extern int         WINAPI EXPORT tuntap32_close_ip_tuntap   (int fd);

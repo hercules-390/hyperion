@@ -61,10 +61,6 @@ typedef struct _DADSM {
 //----------------------------------------------------------------------------------
 //  Globals
 //----------------------------------------------------------------------------------
-// ISW - Added extgui for EXTERNALGUI to allow for Windows build
-#ifdef EXTERNALGUI
-        int     extgui;                 // extgui flag for GUI support
-#endif
         int     local_verbose = 0;      // verbose setting
         int     copy_verbose = 0;       // verbose setting for copyfile
         char    *din;                   // dasd image filename
@@ -98,20 +94,20 @@ void sayext(int max, DSXTENT *extent) {
 //  Display selected F1 DSCB information
 //----------------------------------------------------------------------------------
 
-void showf1(    FILE            *fmsg, 
-                FORMAT1_DSCB    *f1dscb, 
-                DSXTENT         extent[], 
-                int             verbose) {
-
-        int     i, dsorg, lrecl, blksize, volseq, x, y, num_extents;
-        BYTE    volser[sizeof(f1dscb->ds1dssn) + 1];
-        BYTE    dsn[sizeof(f1dscb->ds1dsnam) + 1];
-        BYTE    txtcredt[9];                            // creation date
-        BYTE    txtexpdt[9] = "(n/a)";                  // expiration date
-        BYTE    txtscr[20];
-        BYTE    txtsyscd[14];
-        BYTE    txtdsorg[5] = "";                       // dsorg text
-        BYTE    txtrecfm[5] = "";                       // recfm text
+void showf1 (FILE           *fmsg, 
+             FORMAT1_DSCB   *f1dscb, 
+             DSXTENT         extent[], 
+             int             verbose)
+{
+int    i, dsorg, lrecl, blksize, volseq, x, y, num_extents;
+BYTE   volser[sizeof(f1dscb->ds1dssn) + 1];
+BYTE   dsn[sizeof(f1dscb->ds1dsnam) + 1];
+BYTE   txtcredt[9];                            // creation date
+BYTE   txtexpdt[9] = "(n/a)";                  // expiration date
+BYTE   txtscr[20];
+BYTE   txtsyscd[14];
+BYTE   txtdsorg[5] = "";                       // dsorg text
+BYTE   txtrecfm[5] = "";                       // recfm text
 
     if (verbose > 2) {
         fprintf(fmsg, "showf1 F1 DSCB\n");
@@ -124,17 +120,17 @@ void showf1(    FILE            *fmsg,
     volseq = (f1dscb->ds1volsq[0] << 8) | (f1dscb->ds1volsq[1]);
     x = f1dscb->ds1credt[0] + 1900;
     y = (f1dscb->ds1credt[1] << 8) | f1dscb->ds1credt[2];
-    sprintf(txtcredt, "%4.4d", x);
-    strcat(txtcredt, ".");
-    sprintf(txtscr, "%3.3d", y);        
-    strcat(txtcredt, txtscr);
+    snprintf(txtcredt, sizeof(txtcredt), "%4.4d", x);
+    safe_strcat(txtcredt, sizeof(txtcredt), ".");
+    snprintf(txtscr, sizeof(txtscr), "%3.3d", y);        
+    safe_strcat(txtcredt, sizeof(txtcredt), txtscr);
     if (f1dscb->ds1expdt[0] || f1dscb->ds1expdt[1] || f1dscb->ds1expdt[2]) {
         x = f1dscb->ds1expdt[0] + 1900;
         y = (f1dscb->ds1expdt[1] << 8) | f1dscb->ds1expdt[2];
-        sprintf(txtexpdt, "%4.4d", x);
-        strcat(txtexpdt, ".");
-        sprintf(txtscr, ".%3.3d", y);
-        strcat(txtexpdt, txtscr);
+        snprintf(txtexpdt, sizeof(txtexpdt), "%4.4d", x);
+        safe_strcat(txtexpdt, sizeof(txtexpdt), ".");
+        snprintf(txtscr, sizeof(txtscr), ".%3.3d", y);
+        safe_strcat(txtexpdt, sizeof(txtexpdt), txtscr);
     }
     num_extents = f1dscb->ds1noepv;
 //  Field ignored: ds1nobdb (# bytes used in last PDS dir blk)
@@ -142,23 +138,23 @@ void showf1(    FILE            *fmsg,
                 f1dscb->ds1syscd, sizeof(f1dscb->ds1syscd));
 
     dsorg = (f1dscb->ds1dsorg[0] << 8) | (f1dscb->ds1dsorg[1]);
-    if (dsorg & (DSORG_IS * 256))               strcpy(txtdsorg, "ISAM");
-    if (dsorg & (DSORG_PS * 256))               strcpy(txtdsorg, "PS"); 
-    if (dsorg & (DSORG_DA * 256))               strcpy(txtdsorg, "DA"); 
-    if (dsorg & (DSORG_PO * 256))               strcpy(txtdsorg, "PO"); 
-    if (dsorg &  DSORG_AM)                      strcpy(txtdsorg, "VSAM");
-    if (txtdsorg[0] == '\0')                    strcpy(txtdsorg, "?"); 
-    if (dsorg & (DSORG_U * 256))                strcat(txtdsorg, "-Unmovable");
+    if (dsorg & (DSORG_IS * 256))               safe_strcpy(txtdsorg, sizeof(txtdsorg), "ISAM");
+    if (dsorg & (DSORG_PS * 256))               safe_strcpy(txtdsorg, sizeof(txtdsorg), "PS"); 
+    if (dsorg & (DSORG_DA * 256))               safe_strcpy(txtdsorg, sizeof(txtdsorg), "DA"); 
+    if (dsorg & (DSORG_PO * 256))               safe_strcpy(txtdsorg, sizeof(txtdsorg), "PO"); 
+    if (dsorg &  DSORG_AM)                      safe_strcpy(txtdsorg, sizeof(txtdsorg), "VSAM");
+    if (txtdsorg[0] == '\0')                    safe_strcpy(txtdsorg, sizeof(txtdsorg), "?"); 
+    if (dsorg & (DSORG_U * 256))                safe_strcat(txtdsorg, sizeof(txtdsorg), "-Unmovable");
  
-    if (f1dscb->ds1recfm & RECFM_FORMAT_F)      strcpy(txtrecfm, "F"); 
-    if (f1dscb->ds1recfm & RECFM_FORMAT_V)      strcpy(txtrecfm, "V"); 
+    if (f1dscb->ds1recfm & RECFM_FORMAT_F)      safe_strcpy(txtrecfm, sizeof(txtrecfm), "F"); 
+    if (f1dscb->ds1recfm & RECFM_FORMAT_V)      safe_strcpy(txtrecfm, sizeof(txtrecfm), "V"); 
     if ((f1dscb->ds1recfm & RECFM_FORMAT_U) == RECFM_FORMAT_U)  
-                                                strcpy(txtrecfm, "U"); 
-    if (f1dscb->ds1recfm & RECFM_BLOCKED)       strcat(txtrecfm, "B"); 
-    if (f1dscb->ds1recfm & RECFM_SPANNED)       strcat(txtrecfm, "S"); 
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     strcat(txtrecfm, "A"); 
-    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     strcat(txtrecfm, "M"); 
-    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      strcat(txtrecfm, "-Track overflow");
+                                                safe_strcpy(txtrecfm, sizeof(txtrecfm), "U"); 
+    if (f1dscb->ds1recfm & RECFM_BLOCKED)       safe_strcat(txtrecfm, sizeof(txtrecfm), "B"); 
+    if (f1dscb->ds1recfm & RECFM_SPANNED)       safe_strcat(txtrecfm, sizeof(txtrecfm), "S"); 
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_A)     safe_strcat(txtrecfm, sizeof(txtrecfm), "A"); 
+    if (f1dscb->ds1recfm & RECFM_CTLCHAR_M)     safe_strcat(txtrecfm, sizeof(txtrecfm), "M"); 
+    if (f1dscb->ds1recfm & RECFM_TRKOFLOW)      safe_strcat(txtrecfm, sizeof(txtrecfm), "-Track overflow");
 //  Field ignored: ds1optcd (option codes, same as in DCB)
     blksize = (f1dscb->ds1blkl[0] << 8) | f1dscb->ds1blkl[1];
     lrecl = (f1dscb->ds1lrecl[0] << 8) | f1dscb->ds1lrecl[1];
@@ -224,29 +220,29 @@ void showf1(    FILE            *fmsg,
 //      hope for valid EOF.
 //----------------------------------------------------------------------------------
 
-int fbcopy(     FILE            *fout, 
-                CIFBLK          *cif,
-                DADSM           *dadsm,
-                int             tran, 
-                int             verbose) {
-
-        FORMAT1_DSCB    *f1dscb = &dadsm->f1buf;
-        DSXTENT         extent[MAX_EXTENTS];
-        int     rc, trk = 0, trkconv = 999, rec = 1;
-        int     cyl = 0, head = 0, rc_rb, len, offset;
-        int     rc_copy = 0;
-        int     recs_written = 0, lrecl, num_extents;
-        int     lstartrack = 0, lstarrec = 0, lstarvalid = 0;
-        BYTE    *buffer, *pascii = NULL;
-        BYTE    zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
+int fbcopy ( FILE     *fout, 
+             CIFBLK   *cif,
+             DADSM    *dadsm,
+             int       tran, 
+             int       verbose)
+{
+FORMAT1_DSCB   *f1dscb = &dadsm->f1buf;
+DSXTENT         extent[MAX_EXTENTS];
+int             rc, trk = 0, trkconv = 999, rec = 1;
+int             cyl = 0, head = 0, rc_rb, len, offset;
+int             rc_copy = 0;
+int             recs_written = 0, lrecl, num_extents;
+int             lstartrack = 0, lstarrec = 0, lstarvalid = 0;
+BYTE           *buffer, *pascii = NULL;
+BYTE            zdsn[sizeof(f1dscb->ds1dsnam) + 1];     // ascii dsn
 
     // Kludge to avoid rewriting this code (for now):
-    memcpy(&extent, (void *)&(dadsm->f1ext), sizeof(extent));
+    memcpy( extent, (void*)dadsm->f1ext, sizeof(extent) );
 
     num_extents = f1dscb->ds1noepv;
     lrecl = (f1dscb->ds1lrecl[0] << 8) | (f1dscb->ds1lrecl[1]);
     if (absvalid) {
-        strcpy(zdsn, argdsn);
+        safe_strcpy(zdsn, sizeof(zdsn), argdsn);
         if (debug) fprintf(stderr, "fbcopy absvalid\n");
     } else {
         make_asciiz(zdsn, sizeof(zdsn), 
@@ -1090,6 +1086,9 @@ int dadsm_setup(
 //----------------------------------------------------------------------------------
 //  Main
 //----------------------------------------------------------------------------------
+
+FILE*  fstate = NULL;           // state stream for daemon_mode
+int    is_hercules = 0;         // 1==Hercules calling, not utility
 
 int main(int argc, char **argv) {
 

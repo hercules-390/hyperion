@@ -170,7 +170,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         pDev->pDEVBLK[0]->ctcxmode = 1;
         pDev->pDEVBLK[0]->dev_data = pDev;
         pDev->pLCSBLK              = pLCSBLK;
-        strcpy( pDev->pDEVBLK[0]->filename, pLCSBLK->pszTUNDevice );
+        safe_strcpy( pDev->pDEVBLK[0]->filename, sizeof(pDev->pDEVBLK[0]->filename), pLCSBLK->pszTUNDevice );
 
         // If this is an IP Passthru address, we need a write address
         if( pDev->bMode == LCSDEV_MODE_IP )
@@ -210,7 +210,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
             pDev->pDEVBLK[1]->dev_data = pDev;
             pDev->pLCSBLK              = pLCSBLK;
 
-            strcpy( pDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
+            safe_strcpy( pDev->pDEVBLK[1]->filename, sizeof(pDev->pDEVBLK[1]->filename), pLCSBLK->pszTUNDevice );
         }
 
         // Indicate that the DEVBLK(s) have been create sucessfully
@@ -230,7 +230,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
                                          IFF_TAP | IFF_NO_PI,
                                          &pLCSBLK->Port[pDev->bPort].fd,
-                                         pLCSBLK->Port[pDev->bPort].szNetDevName );
+                                         pLCSBLK->Port[pDev->bPort].szNetDevName,
+                                         sizeof(pLCSBLK->Port[pDev->bPort].szNetDevName) );
 
             // Indicate that the port is used.
             pLCSBLK->Port[pDev->bPort].fUsed    = 1;
@@ -1121,7 +1122,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     memset( &ifr, 0, sizeof( ifr ) );
 
-    strcpy( ifr.ifr_name, pPort->szNetDevName );
+    safe_strcpy( ifr.ifr_name, sizeof(ifr.ifr_name), pPort->szNetDevName );
 
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
@@ -1565,7 +1566,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
                 return -1;
             }
 
-            strcpy( pLCSBLK->Port[0].szMACAddress, optarg );
+            safe_strcpy( pLCSBLK->Port[0].szMACAddress, sizeof(pLCSBLK->Port[0].szMACAddress), optarg );
             pLCSBLK->Port[0].fLocalMAC = TRUE;
 
             break;
@@ -1707,7 +1708,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 return -1;
             }
 
-            strcpy( pPort->szMACAddress, argv[0] );
+            safe_strcpy( pPort->szMACAddress, sizeof(pPort->szMACAddress), argv[0] );
             pPort->fLocalMAC = TRUE;
         }
         else if( strcasecmp( pszKeyword, "ROUTE" ) == 0 )

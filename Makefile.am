@@ -3,179 +3,166 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-AUTOMAKE_OPTIONS=foreign 1.5
+AUTOMAKE_OPTIONS = foreign 1.5
+
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  intl m4  intl m4  intl m4  intl m4  intl m4  intl m4  intl m4 po util html man
+SUBDIRS = intl m4 po util html man
 
 if BUILD_HERCIFC
-HERCIFC=hercifc
+HERCIFC = hercifc
 else
-HERCIFC=
+HERCIFC =
 endif
+
 LDADD = @LIBINTL@
 
 bin_PROGRAMS = hercules $(HERCIFC) \
-	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
-	   tapecopy tapemap tapesplt \
-	   cckdcdsk cckdcomp cckddiag cckdswap \
-	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
-	   hetget hetinit hetmap hetupd \
-	   dmap2hrc
-EXTRA_PROGRAMS=hercifc
+               dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
+               tapecopy tapemap tapesplt \
+               cckdcdsk cckdcomp cckddiag cckdswap \
+               cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
+               hetget hetinit hetmap hetupd \
+               dmap2hrc
 
-fthreads_sources=fthreads.c
-fishhang_sources=fishhang.c
-fishio_sources=w32chan.c
-memrchr_sources=memrchr.c
+EXTRA_PROGRAMS = hercifc
 
-EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources)
+fthreads_sources = fthreads.c
+fishhang_sources = fishhang.c
+fishio_sources   = w32chan.c
+memrchr_sources  = memrchr.c
+
+EXTRA_hercules_SOURCES = $(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(memrchr_sources)
 
 if BUILD_FTHREADS
-FTHREADS=$(fthreads_sources)
+FTHREADS = $(fthreads_sources)
 if BUILD_FISHHANG
-FISHHANG=$(fishhang_sources)
+FISHHANG = $(fishhang_sources)
 else
-FISHHANG=
+FISHHANG =
 endif
-FISHIO=$(fishio_sources)
+FISHIO = $(fishio_sources)
 else
-FTHREADS=
-FISHHANG=
-FISHIO=
+FTHREADS =
+FISHHANG =
+FISHIO =
 endif
 
 if USE_BUILTIN_MEMRCHR
-MEMRCHR=memrchr.c
+MEMRCHR = memrchr.c
 else
-MEMRCHR=
+MEMRCHR =
 endif
 
-hercules_SOURCES = hostinfo.c w32ctca.c \
-	   impl.c config.c panel.c version.c \
-	   ipl.c assist.c dat.c \
-	   stack.c cpu.c vstore.c \
-	   general1.c general2.c plo.c \
-	   control.c io.c \
-	   decimal.c service.c opcode.c \
-	   diagnose.c diagmssf.c vm.c \
-	   channel.c ckddasd.c fbadasd.c \
-	   tapedev.c cardrdr.c cardpch.c \
-	   printer.c console.c external.c \
-	   float.c ctcadpt.c trace.c \
-	   machchk.c vector.c xstore.c \
-	   cmpsc.c sie.c qdio.c timer.c \
-	   esame.c cckddasd.c cckdutil.c dasdtab.c \
-	   parser.c hetlib.c ieee.c sockdev.c \
-	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
-	   httpserv.c cgibin.c devtype.c codepage.c \
-	   ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
-	   logger.c commadpt.c cache.c ecpsvm.c shared.c \
-	   $(MEMRCHR) hscutl.c logmsg.c
+hercules_SOURCES = ecpsvm.c hostinfo.c w32ctca.c \
+                   impl.c config.c panel.c version.c \
+                   ipl.c assist.c dat.c \
+                   stack.c cpu.c vstore.c \
+                   general1.c general2.c plo.c \
+                   control.c io.c \
+                   decimal.c service.c opcode.c \
+                   diagnose.c diagmssf.c vm.c \
+                   channel.c ckddasd.c fbadasd.c \
+                   tapedev.c cardrdr.c cardpch.c \
+                   printer.c console.c external.c \
+                   float.c ctcadpt.c trace.c \
+                   machchk.c vector.c xstore.c \
+                   cmpsc.c sie.c qdio.c timer.c \
+                   esame.c cckddasd.c cckdutil.c dasdtab.c \
+                   parser.c hetlib.c ieee.c sockdev.c \
+                   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
+                   httpserv.c cgibin.c devtype.c codepage.c \
+                   ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
+                   logger.c commadpt.c cache.c shared.c \
+                   $(MEMRCHR) hscutl.c logmsg.c
 
-hercifc_SOURCES = hercifc.c hostinfo.c version.c
+hercifc_SOURCES  = hercifc.c hostinfo.c version.c hscutl.c
 
 dasdinit_SOURCES = dasdinit.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
 dasdisup_SOURCES = dasdisup.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	  $(FTHREADS) $(FISHHANG)
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
 dasdload_SOURCES = dasdload.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-dasdls_SOURCES = dasdls.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+dasdls_SOURCES   = dasdls.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-dasdcat_SOURCES = dasdcat.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+dasdcat_SOURCES  = dasdcat.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-dasdseq_SOURCES = dasdseq.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+dasdseq_SOURCES  = dasdseq.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-tapecopy_SOURCES = tapecopy.c codepage.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+tapecopy_SOURCES = tapecopy.c codepage.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-tapemap_SOURCES = tapemap.c codepage.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+tapemap_SOURCES  = tapemap.c codepage.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-tapesplt_SOURCES = tapesplt.c codepage.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+tapesplt_SOURCES = tapesplt.c codepage.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-cckdcomp_SOURCES = cckdcomp.c cckdutil.c dasdtab.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+cckdcomp_SOURCES = cckdcomp.c cckdutil.c dasdtab.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-cckddiag_SOURCES = cckddiag.c cckddasd.c cckdutil.c ckddasd.c codepage.c \
-	   cache.c \
-	   dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+cckddiag_SOURCES = cckddiag.c cckddasd.c cckdutil.c ckddasd.c codepage.c cache.c \
+                   dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-ckd2cckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+ckd2cckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-fba2cfba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+fba2cfba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-cfba2fba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+cfba2fba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-cckd2ckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+cckd2ckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
 dasdcopy_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+                   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
+                   $(FTHREADS) $(FISHHANG) hscutl.c logmsg.c
 
-cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c \ 
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+hetget_SOURCES   = hetget.c hetlib.c sllib.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetinit_SOURCES = hetinit.c hetlib.c sllib.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+hetinit_SOURCES  = hetinit.c hetlib.c sllib.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetmap_SOURCES = hetmap.c hetlib.c sllib.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+hetmap_SOURCES   = hetmap.c hetlib.c sllib.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+hetupd_SOURCES   = hetupd.c hetlib.c sllib.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c hscutl.c $(FTHREADS) $(FISHHANG) logmsg.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
-    README.OSX README.TAPE README.COMMADPT
+EXTRA_DIST       = autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
+                   README.OSX README.TAPE README.COMMADPT
 
-noinst_HEADERS  = fishhang.h \
-    hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
-    feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
-    hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
-    sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
-    if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
-    ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
-    ecpsvm.h memrchr.h shared.h hscutl.h
+noinst_HEADERS  = debug.h xthreads.h fishhang.h \
+                  hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
+                  feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
+                  hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
+                  sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
+                  if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
+                  ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
+                  ecpsvm.h memrchr.h shared.h hscutl.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \

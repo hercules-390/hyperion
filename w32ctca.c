@@ -32,6 +32,7 @@ int w32ctca_dummy = 0;
 #endif
 
 #include "tt32api.h"    // (exported TunTap32.dll functions)
+#include "debug.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Debugging
@@ -39,24 +40,6 @@ int w32ctca_dummy = 0;
 LPCTSTR FormatLastErrorMessage(DWORD dwLastError, LPTSTR pszErrMsgBuff, DWORD dwBuffSize);
 
 #define IsEventSet(hEventHandle) (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
-
-#if defined(DEBUG) || defined(_DEBUG)
-    #define TRACE(a...) logmsg(a)
-    #define ASSERT(a) \
-        do \
-        { \
-            if (!(a)) \
-            { \
-                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
-            } \
-        } \
-        while(0)
-    #define VERIFY(a) ASSERT((a))
-#else
-    #define TRACE(a...)
-    #define ASSERT(a)
-    #define VERIFY(a) ((void)(a))
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Global variables...

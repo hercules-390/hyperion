@@ -60,21 +60,10 @@ extern DEVENT device_handler_table[];
 SYSBLK  sysblk;
 
 /*-------------------------------------------------------------------*/
-/* External GUI control                                              */
-/*-------------------------------------------------------------------*/
-#ifdef EXTERNALGUI
-int extgui = 0;             /* 1=external gui active                */
-#endif /*EXTERNALGUI*/
-
-/*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static int  stmt = 0;                   /* Config statement number   */
-#ifdef EXTERNALGUI
 static BYTE buf[1024];                  /* Config statement buffer   */
-#else /*!EXTERNALGUI*/
-static BYTE buf[256];                   /* Config statement buffer   */
-#endif /*EXTERNALGUI*/
 static BYTE *keyword;                   /* -> Statement keyword      */
 static BYTE *operand;                   /* -> First argument         */
 #define MAX_ARGS 12                     /* Max #of additional args   */
@@ -129,14 +118,6 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc)
     return *pargc;
 }
 
-static void delayed_exit (int exit_code)
-{
-    /* Delay exiting is to give the system
-     * time to display the error message. */
-    usleep(100000);
-    exit(exit_code);
-}
-
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
 /* The statement is then parsed into keyword, operand, and           */
@@ -171,7 +152,7 @@ int     lstarted;                       /* Indicate if non-whitespace*/
             {
                 fprintf(stderr, _("HHCCF001S Error reading file %s line %d: %s\n"),
                     fname, stmt, strerror(errno));
-                delayed_exit(1);
+                exit(1);
             }
 
             /* Check for end of file */
@@ -185,16 +166,16 @@ int     lstarted;                       /* Indicate if non-whitespace*/
             /* Ignore nulls and carriage returns */
             if (c == '\0' || c == '\r') continue;
 
-	    /* Check if it is a white space and no other character yet */
-	    if(!lstarted && isspace(c)) continue;
-	    lstarted=1;
+        /* Check if it is a white space and no other character yet */
+        if(!lstarted && isspace(c)) continue;
+        lstarted=1;
 
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
             {
                 fprintf(stderr, _("HHCCF002S File %s line %d is too long\n"),
                     fname, stmt);
-                delayed_exit(1);
+                exit(1);
             }
 
             /* Append character to buffer */
@@ -359,7 +340,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     {
         fprintf(stderr, _("HHCCF003S Cannot open file %s: %s\n"),
                 fname, strerror(errno));
-        delayed_exit(1);
+        exit(1);
     }
     
     /* Set the default system parameter values */
@@ -404,7 +385,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         {
             fprintf(stderr, _("HHCCF004S No device records in file %s\n"),
                     fname);
-            delayed_exit(1);
+            exit(1);
         }
 
         /* Exit loop if first device statement found */
@@ -571,7 +552,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                         fprintf(stderr, _("HHCCF005S Error in %s line %d: "
                         "Unrecognized argument %s\n"),
                         fname, stmt, addargv[0]);
-                        delayed_exit(1);
+                        exit(1);
                     }
                     addargc--;
                 }
@@ -585,7 +566,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                         fprintf(stderr, _("HHCCF006S Error in %s line %d: "
                         "Userid, but no password given %s\n"),
                         fname, stmt, addargv[1]);
-                        delayed_exit(1);
+                        exit(1);
                     }
                     addargc--;
                 }
@@ -600,7 +581,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                     fprintf(stderr, _("HHCCF007S Error in %s line %d: "
                     "Missing argument.\n"),
                         fname, stmt);
-                    delayed_exit(1);
+                    exit(1);
                 }
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -619,7 +600,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF008S Error in %s line %d: "
                         "Unrecognized keyword %s\n"),
                         fname, stmt, keyword);
-                delayed_exit(1);
+                exit(1);
             }
 
             /* Check for one and only one operand */
@@ -628,7 +609,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF009S Error in %s line %d: "
                         "Incorrect number of operands\n"),
                         fname, stmt);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -662,7 +643,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF010S Error in %s line %d: "
                         "Unknown or unsupported ARCHMODE specification %s\n"),
                         fname, stmt, sarchmode);
-                delayed_exit(1);
+                exit(1);
             }
         }
         sysblk.arch_mode = archmode;
@@ -680,7 +661,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU version code\n"),
                         fname, stmt, sversion);
-                delayed_exit(1);
+                exit(1);
             }
             dfltver = 0;
         }
@@ -694,7 +675,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF051S Error in %s line %d: "
                         "%s is not a valid serial number\n"),
                         fname, stmt, sserial);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -707,7 +688,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF012S Error in %s line %d: "
                         "%s is not a valid CPU model\n"),
                         fname, stmt, smodel);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -720,7 +701,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF013S Error in %s line %d: "
                         "Invalid main storage size %s\n"),
                         fname, stmt, smainsize);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -733,7 +714,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
                         fname, stmt, sxpndsize);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -746,7 +727,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF015S Error in %s line %d: "
                         "Invalid console port number %s\n"),
                         fname, stmt, scnslport);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -758,7 +739,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF016S Error in %s line %d: "
                         "Invalid CPU thread priority %s\n"),
                         fname, stmt, scpuprio);
-                delayed_exit(1);
+                exit(1);
             }
 
 #if !defined(NO_SETUID)
@@ -780,7 +761,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF018S Error in %s line %d: "
                         "Invalid number of CPUs %s\n"),
                         fname, stmt, snumcpu);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -794,7 +775,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF019S Error in %s line %d: "
                         "Invalid number of VFs %s\n"),
                         fname, stmt, snumvec);
-                delayed_exit(1);
+                exit(1);
             }
 #else /*!_FEATURE_VECTOR_FACILITY*/
             logmsg(_("HHCCF020W Vector Facility support not configured\n"));
@@ -809,7 +790,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF021S Error in %s line %d: "
                         "Load parameter %s exceeds 8 characters\n"),
                         fname, stmt, sloadparm);
-                delayed_exit(1);
+                exit(1);
             }
 
             /* Convert the load parameter to EBCDIC */
@@ -832,7 +813,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                         "%s is not a valid system epoch.\n"
                         "Patch config.c to expand the table\n"),
                         fname, stmt, ssysepoch);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -846,7 +827,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF023S Error in %s line %d: "
                         "%s is not a valid timezone offset\n"),
                         fname, stmt, stzoffset);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -863,7 +844,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF052S Error in %s line %d: "
                         "%s: invalid argument\n"),
                         fname, stmt, sdiag8cmd);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -877,7 +858,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF024S Error in %s line %d: "
                         "Invalid TOD clock drag factor %s\n"),
                         fname, stmt, stoddrag);
-                delayed_exit(1);
+                exit(1);
             }
         }
 #endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
@@ -901,7 +882,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                         fprintf(stderr, _("HHCCF025S Error in %s line %d: "
                                 "Invalid panel refresh rate %s\n"),
                                 fname, stmt, spanrate);
-                        delayed_exit(1);
+                        exit(1);
                     }
             }
         }
@@ -940,7 +921,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF026S Error in %s line %d: "
                         "Unknown OS tailor specification %s\n"),
                         fname, stmt, sostailor);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -953,7 +934,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF027S Error in %s line %d: "
                         "Invalid maximum device threads %s\n"),
                         fname, stmt, sdevtmax);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -978,7 +959,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF028S Error in %s line %d: "
                         "Invalid program product OS permission %s\n"),
                         fname, stmt, spgmprdos);
-                delayed_exit(1);
+                exit(1);
             }
         }
 
@@ -1028,7 +1009,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF029S Error in %s line %d: "
                         "Invalid HTTP port number %s\n"),
                         fname, stmt, shttpport);
-                delayed_exit(1);
+                exit(1);
             }
         }
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -1043,7 +1024,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF029S Error in %s line %d: "
                         "Invalid SHRDPORT port number %s\n"),
                         fname, stmt, sshrdport);
-                delayed_exit(1);
+                exit(1);
             }
         }
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -1057,7 +1038,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                 fprintf(stderr, _("HHCCF030S Error in %s line %d: "
                         "Invalid I/O delay value: %s\n"),
                         fname, stmt, siodelay);
-                delayed_exit(1);
+                exit(1);
             }
         }
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -1076,7 +1057,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     {
         fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
                 mainsize, strerror(errno));
-        delayed_exit(1);
+        exit(1);
     }
 
     /* Obtain main storage key array */
@@ -1085,7 +1066,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     {
         fprintf(stderr, _("HHCCF032S Cannot obtain storage key array: %s\n"),
                 strerror(errno));
-        delayed_exit(1);
+        exit(1);
     }
 
 #if 0   /*DEBUG-JJ-20/03/2000*/
@@ -1109,7 +1090,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             fprintf(stderr, _("HHCCF033S Cannot obtain %dMB expanded storage: "
                     "%s\n"),
                     xpndsize, strerror(errno));
-            delayed_exit(1);
+            exit(1);
         }
 #else /*!_FEATURE_EXPANDED_STORAGE*/
         logmsg(_("HHCCF034W Expanded storage support not installed\n"));
@@ -1303,7 +1284,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             fprintf(stderr, _("HHCCF035S Error in %s line %d: "
                     "Missing device number or device type\n"),
                     fname, stmt);
-            delayed_exit(1);
+            exit(1);
         }
 
         if (strlen(sdevnum) > 4
@@ -1312,7 +1293,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             fprintf(stderr, _("HHCCF036S Error in %s line %d: "
                     "%s is not a valid device number\n"),
                     fname, stmt, sdevnum);
-            delayed_exit(1);
+            exit(1);
         }
 
         /* Build the device configuration block */
@@ -1364,6 +1345,13 @@ void release_config()
 {
 DEVBLK *dev;
 int     cpu;
+
+    /* PROGRAMMING NOTE: this function should ONLY be called by the
+       system_cleanup (atexit) function in order to always ensure an
+       orderly shutdown of Hercules. Do NOT call it yourself! If you
+       want to shutdown Herc, just exit. */
+
+    ASSERT(!sysblk.quickexit); if (sysblk.quickexit) return;
 
     /* Stop all CPU's */
     obtain_lock (&sysblk.intlock);
@@ -1594,7 +1582,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
             release_lock(&dev->lock);
 
             /* Release the device block if we just acquired it */
-            if (newdevblk)
+            if(newdevblk)
             {
                 free(dev);
             /* Correction to high subchannel # (needed because of LCS

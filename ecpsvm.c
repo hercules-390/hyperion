@@ -46,10 +46,10 @@
 
 #include "hercules.h"
 
+#define _ECPSVM_C
+
 #include "opcode.h"
-
 #include "inline.h"
-
 #include "ecpsvm.h"
 
 static ECPSVM_CMDENT ecpsvm_cmdtab[];
@@ -297,7 +297,7 @@ VADR    effective_addr1, \
 { \
     obtain_lock(&sysblk.todlock); \
     regs->ptimer=EVM_LD(_x); \
-    if((regs->ptimer & 0x8000000000000000)) \
+    if((regs->ptimer & 0x8000000000000000ULL)) \
     { \
         ON_IC_PTIMER(regs); \
     } \
@@ -693,15 +693,15 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             {
                 regs->GR_L(i)=CPEXBKUP[i];
             }
-	    /* Save GPRS 12-1 (wraping) in DSPSAVE (datalist +40) */
-	    /* So that LM 12,1,DSPSAVE in DMKDSP works after call to DMKFRET */
-	    EVM_ST(dl+40,CPEXBKUP[12]);
-	    EVM_ST(dl+44,CPEXBKUP[13]);
-	    EVM_ST(dl+48,CPEXBKUP[14]);
-	    EVM_ST(dl+52,CPEXBKUP[15]);
-	    EVM_ST(dl+56,CPEXBKUP[0]);
-	    EVM_ST(dl+60,CPEXBKUP[1]);	/* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
-	    /* Upon taking this exit, GPRS 12-15 are same as entry */
+        /* Save GPRS 12-1 (wraping) in DSPSAVE (datalist +40) */
+        /* So that LM 12,1,DSPSAVE in DMKDSP works after call to DMKFRET */
+        EVM_ST(dl+40,CPEXBKUP[12]);
+        EVM_ST(dl+44,CPEXBKUP[13]);
+        EVM_ST(dl+48,CPEXBKUP[14]);
+        EVM_ST(dl+52,CPEXBKUP[15]);
+        EVM_ST(dl+56,CPEXBKUP[0]);
+        EVM_ST(dl+60,CPEXBKUP[1]);  /* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
+        /* Upon taking this exit, GPRS 12-15 are same as entry */
             regs->psw.IA=EVM_L(el+12);
             return(0);
         }
@@ -1300,7 +1300,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
     DW_VMTTIME=EVM_LD(vmb+VMTTIME);
     DW_VMTMINQ=EVM_LD(vmb+VMTMINQ);
     /* Check 1st 5 bytes */
-    if((DW_VMTTIME & 0xffffffffff000000) < (DW_VMTMINQ & 0xffffffffff000000))
+    if((DW_VMTTIME & 0xffffffffff000000ULL) < (DW_VMTMINQ & 0xffffffffff000000ULL))
     {
         B_VMDSTAT=EVM_IC(vmb+VMDSTAT);
         B_VMDSTAT&=~VMDSP;
@@ -2586,15 +2586,15 @@ static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
             snprintf(nname,32,"%s%s",ar[i].name,ar[i].support ? "" : "*");
             if(!ar[i].enabled)
             {
-                strcat(nname,"-");
+                safe_strcat(nname,sizeof(nname),"-");
             }
             if(ar[i].debug)
             {
-                strcat(nname,"%");
+                safe_strcat(nname,sizeof(nname),"%");
             }
             if(ar[i].total)
             {
-                strcat(nname,"+");
+                safe_strcat(nname,sizeof(nname),"+");
             }
             logmsg("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n",
                     nname,

@@ -483,7 +483,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
         if( ( hp = gethostbyname( remaddr ) ) != NULL )
         {
             memcpy( &ipaddr, hp->h_addr, hp->h_length );
-            strcpy( address, inet_ntoa( ipaddr ) );
+            safe_strcpy( address, sizeof(address), inet_ntoa( ipaddr ) );
             remaddr = address;
         }
         else
@@ -631,7 +631,7 @@ static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
 
     // for cosmetics, since we are successfully connected or serving,
     // fill in some details for the panel.
-    sprintf( dev->filename, "%s:%s", remaddr, remotep );
+    snprintf( dev->filename, sizeof(dev->filename), "%s:%s", remaddr, remotep );
 
     return 0;
 }
@@ -832,6 +832,8 @@ static void  CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
     iRetVal = select( pDEVBLK->fd + 1, &rfds, NULL, NULL, &tv );
 
+    if (sysblk.shutdown) return;
+
     switch( iRetVal )
     {
     case 0:
@@ -946,7 +948,7 @@ static void*  CTCT_ListenThread( void* argp )
                          (struct sockaddr *)&parm.addr,
                          &servlen );
 
-        sprintf( str, "%s:%d",
+        snprintf( str, sizeof(str), "%s:%d",
                  inet_ntoa( parm.addr.sin_addr ),
                  ntohs( parm.addr.sin_port ) );
 
@@ -1074,7 +1076,7 @@ DEVBLK          *xdev;                  /* Pair device               */
         if (start_vmnet(dev, xdev, argc - 1, &argv[1]))
             return -1;
     }
-    strcpy(dev->filename, "vmnet");
+    safe_strcpy(dev->filename, sizeof(dev->filename), "vmnet");
 
     /* Set the control unit type */
     /* Linux/390 currently only supports 3088 model 2 CTCA and ESCON */

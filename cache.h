@@ -178,7 +178,7 @@ typedef struct _CACHE {                 /* Cache entry               */
       U64       key;                    /* Key                       */
       U32       flag;                   /* Flags                     */
       int       len;                    /* Buffer length             */
-      void     *buf;                    /* Buffer address            */	
+      void     *buf;                    /* Buffer address            */ 
       int       value;                  /* Arbitrary value           */
       U64       age;                    /* Age                       */
     } CACHE;
@@ -277,7 +277,7 @@ static int  cache_check(int ix, int i);
 static int  cache_isbusy(int ix, int i);
 static int  cache_isempty(int ix, int i);
 static int  cache_adjust(int ix, int n);
-static int  cache_resize (int ix, int n);
+//static int  cache_resize (int ix, int n);
 static void cache_allocbuf(int ix, int i, int len);
 #endif
 
