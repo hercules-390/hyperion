@@ -5,7 +5,6 @@
 /* Default features                                                  */
 /*   All existing features MUST be #undef-ed here.                   */
 /*-------------------------------------------------------------------*/
-#define MAX_CPU_ENGINES               2 /* Maximum number of engines */
 #define OPTION_370_MODE                 /* Generate S/370 support    */
 #define OPTION_390_MODE                 /* Generate ESA/390 support  */
 #define OPTION_900_MODE                 /* Generate ESAME support    */

@@ -153,19 +153,24 @@ The following system parameters may be specified:
     <em>Note:</em>
     Multiprocessor emulation is only available when the definition of
     the compile-time variable <code>MAX_CPU_ENGINES</code>
-    in the file <em><b>featall.h</b></em> has a value of more than 1.
-    <i>[Note: current versions of Hercules already have this value
-    set to 2 by default, so all you need to do is specify </i><tt>NUMCPU 2</tt><i>
-    in your configuration file and you're all set!]</i><p>
+    in the file <tt>config.h</tt> has a value of more than 1.
+    <i>Note:</i> current versions of Hercules already have this value
+    set to 2 by default, so all you need to do is specify
+    <tt>NUMCPU 2</tt>
+    in your configuration file. If you wish to set a different value
+    for <tt>MAX_CPU_ENGINES</tt>, use the
+    <tt>--enable-multi-cpu=NUMBER</tt>
+    option when you do your <tt>./configure</tt> before doing your
+    <tt>make</tt>.
     Multiprocessor emulation works best
     if your host system actually has more than one physical CPU, but you can
     still emulate multiple CPUs nervertheless  even on a uniprocessor system
     (and you might even achieve a small performance benefit when you do).
-    There is little point, however, in specifying NUMCPU greater than 1 unless
-    your guest operating system (running under Hercules) is actually able to
-    support multiple CPUs (and if you do not actually need multiprocessor
-    emulation, then setting MAX_CPU_ENGINES to 1 at compile time might even
-    produce a slight performance advantage too).
+    There is little point, however, in specifying <tt>NUMCPU</tt> greater
+    than 1 unless your guest operating system (running under Hercules) is
+    actually able to support multiple CPUs (and if you do not actually need
+    multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
+    compile time might even produce a slight performance advantage too).
 <dt><code>NUMVEC <em>nn</em></code>
 <dd>specifies the number of emulated vector facilities. Default is one per
     CPU. Only available by default in ESA/390 mode.

@@ -1,7 +1,7 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.17.b12)
+AM_INIT_AUTOMAKE(hercules,2.17.b13)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
@@ -160,6 +160,28 @@ if test x$build_external_gui = xtrue; then
       AC_DEFINE([EXTERNALGUI])
     fi
   fi
+fi
+
+max_num_cpus=8
+default_num_cpus=2
+num_cpus_error=no
+
+AC_ARG_ENABLE(multi-cpu,
+              AC_HELP_STRING([--enable-multi-cpu=NUMBER|no],
+                             [enable/disable multi-cpu support (valid range is 1-8, default is 2)]),
+              [case "${enableval}" in
+                no)              num_cpu_engines=1 ;;
+                yes)             num_cpu_engines=${default_num_cpus} ;;
+                0|9)             num_cpus_error=yes ;;
+                1|2|3|4|5|6|7|8) num_cpu_engines=${enableval} ;;
+                *)               num_cpus_error=yes ;;
+               esac],
+              [num_cpu_engines=${default_num_cpus}])
+
+if test $num_cpus_error = no; then
+  AC_DEFINE_UNQUOTED(MAX_CPU_ENGINES,${num_cpu_engines})
+else
+  AC_MSG_ERROR(bad value "${enableval}" for --enable-multi-cpu)
 fi
 
 AC_ARG_ENABLE(fthreads,
@@ -461,7 +483,6 @@ if test x$opt_configsymbols = xtrue; then
     AC_DEFINE([OPTION_CONFIG_SYMBOLS])
 fi
 
-
 if test x$auto_optimize = xtrue; then
   case "$host_cpu" in
           powerpc)
@@ -562,6 +583,8 @@ AH_TEMPLATE([OPTION_DYNAMIC_LOAD],
             [Define to enable Hercules Dynamic Loader feature])
 AH_TEMPLATE([HDL_USE_LIBTOOL],
             [Define to cause dynamic loader use use libtool instead of dlopen])
+AH_TEMPLATE([MAX_CPU_ENGINES],
+            [Defines the maximum number of emulated CPU engines])
 
 AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
 
