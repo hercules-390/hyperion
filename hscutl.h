@@ -23,9 +23,13 @@ void kill_all_symbols(void);
 // Cygwin w32api/winbase.h updates
 //      REALTIME_PRIORITY_CLASS       256      //   -20
 //      HIGH_PRIORITY_CLASS           128      //   -15
+#ifndef ABOVE_NORMAL_PRIORITY_CLASS
 #define ABOVE_NORMAL_PRIORITY_CLASS 32768      //    -8
+#endif
 //      NORMAL_PRIORITY_CLASS          32      //     0
+#ifndef BELOW_NORMAL_PRIORITY_CLASS
 #define BELOW_NORMAL_PRIORITY_CLASS 16384      //     8
+#endif
 //      IDLE_PRIORITY_CLASS            64      //    15
 
 // Cygwin sys/resource.h updates
