@@ -14,6 +14,8 @@ static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
 
 static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
+static char *hdl_modpath = HDL_DEFAULT_PATH;
+
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 
@@ -74,6 +76,49 @@ HDLSHD *shdent;
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
+
+/* hdl_setpath - set path for module load 
+ */
+void hdl_setpath(char *path)
+{
+    hdl_modpath = path;
+}
+
+
+static void * hdl_dlopen(char *filename, int flag __attribute__ ((unused)))
+{
+char *fullname;
+void *ret;
+int fulllen = 0;
+
+    if(filename)
+    {
+        if(hdl_modpath && *hdl_modpath)
+        {
+            fulllen = strlen(filename) + strlen(hdl_modpath) + 2;
+            fullname = malloc(fulllen);
+            strlcpy(fullname,hdl_modpath,fulllen);
+            strlcat(fullname,"/",fulllen);
+            strlcat(fullname,filename,fulllen);
+        }
+        else
+            fullname = filename;
+
+        if((ret = dlopen(fullname,flag)))
+        {
+            if(fulllen)
+                free(fullname);
+
+            return ret;
+        }
+
+        if(fulllen)
+            free(fullname);
+    }
+
+    return dlopen(filename,flag);
+}
+    
 
 /* hdl_dvad - register device type
  */
@@ -433,7 +478,7 @@ HDLPRE *preload;
 
     hdl_cdll->name = strdup("*Hercules");
 
-    if(!(hdl_cdll->dll = dlopen(NULL, RTLD_NOW )))
+    if(!(hdl_cdll->dll = hdl_dlopen(NULL, RTLD_NOW )))
     {
         fprintf(stderr, _("HHCHD003E unable to open hercules as DLL: %s\n"),
           dlerror());
@@ -516,7 +561,7 @@ char *modname;
 
     dllent->name = strdup(modname);
 
-    if(!(dllent->dll = dlopen(name, RTLD_NOW)))
+    if(!(dllent->dll = hdl_dlopen(name, RTLD_NOW)))
     {
         if(!(flags & HDL_LOAD_NOMSG))
             logmsg(_("HHCHD007E unable to open DLL %s: %s\n"),

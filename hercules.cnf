@@ -13,10 +13,9 @@
   MAINSIZE  64                  # Main storage size in megabytes
   XPNDSIZE  0                   # Expanded storage size in megabytes
   NUMCPU    1                   # Number of CPUs
-  NUMVEC    1                   # Number of Vector Processors
+# NUMVEC    1                   # Number of Vector Processors
   ARCHMODE  ESA/390             # Architecture mode S/370, ESA/390 or ESAME
   ECPSVM    NO                  # VM Assist : NO or Level (20 recommended)
-
 
 #------------------------------------------------------------------------------
 #       OS Tailoring
@@ -32,10 +31,18 @@
 #       Hercules Service Processor and Hercules Application Window
 #------------------------------------------------------------------------------
 
+
+# MODPATH   /usr/local/lib/hercules     # Where to search for modules
+# LDMOD     dyninst tcpip               # Modules to be loaded
+
+#------------------------------------------------------------------------------
+#       Hercules Service Processor and Hercules Application Window
+#------------------------------------------------------------------------------
+
   CODEPAGE  default                     # CodePage conversion table
   DIAG8CMD  disable                     # OS may not issue commands via DIAG 8
   HTTPPORT  8081 noauth userid password # HTTP server port
-  HTTPROOT  /usr/local/share/hercules/  # built-in web server base directory
+  
   PANRATE   FAST                        # Panel refresh rate
 
 
@@ -70,7 +77,7 @@
 #   |     |       |
 #   V     V       V
 # ----    ----    --------------------
-  000C    3505    ../share/hercules/zzsacard.bin
+  000C    3505    ./util/zzsacard.bin
   000D    3525    punch00d.txt ascii
   000E    1403    print00e.txt crlf
   001F    3270

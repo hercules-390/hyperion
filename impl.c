@@ -227,7 +227,7 @@ TID     rctid;                          /* RC file thread identifier */
         cfgfile = "hercules.cnf";
 
     /* Process the command line options */
-    while ((c = getopt(argc, argv, "f:l:d")) != EOF)
+    while ((c = getopt(argc, argv, "f:p:l:d")) != EOF)
     {
 
         switch (c) {
@@ -235,6 +235,9 @@ TID     rctid;                          /* RC file thread identifier */
             cfgfile = optarg;
             break;
 #if defined(OPTION_DYNAMIC_LOAD)
+        case 'p':
+            hdl_setpath(optarg);
+            break;
         case 'l':
             {
             char *dllname, *strtok_str;

@@ -91,6 +91,9 @@ typedef struct _DLLENT {                /* DLL entry                 */
 } DLLENT;
 
 
+#define HDL_DEFAULT_PATH     "hercules" /* default mod. search path  */
+
+
 int hdl_load(char *, int);              /* load dll                  */
 #define HDL_LOAD_DEFAULT     0x00000000
 #define HDL_LOAD_MAIN        0x00000001 /* Hercules MAIN module flag */
@@ -106,6 +109,8 @@ void hdl_list(int);                     /* list all loaded modules   */
 void hdl_dlst();                        /* list all dependencies     */
 
 void hdl_main();                        /* Main initialization rtn   */
+
+void hdl_setpath(char *);               /* Set module path           */
 
 void * hdl_fent(char *);                /* Find entry name           */
 void * hdl_nent(void *);                /* Find next in chain        */
