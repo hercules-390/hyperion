@@ -672,6 +672,7 @@ BYTE   buf[80];
                           "<table>\n"
                           "<tr><th>Number</th>"
                           "<th>Subchannel</th>"
+                          "<th>Class</th>"
                           "<th>Type</th>"
                           "<th>Status</th></tr>\n");
 
@@ -683,11 +684,13 @@ BYTE   buf[80];
              fprintf(webblk->hsock,"<tr>"
                                    "<td>%4.4X</td>"    /* devnum */
                                    "<td>%4.4X</td>"    /* schnum */
+                                   "<td>%s</td>"       /* class  */
                                    "<td>%4.4X</td>"    /* devtyp */
                                    "<td>%s%s%s</td>\n" /* status */
                                    "</tr>",
                                    dev->devnum,
                                    dev->subchan,
+                                   class,
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
                                    (dev->busy ? "busy " : ""),
