@@ -44,7 +44,7 @@ void hdl_dlst();                        /* list all dependencies     */
 void hdl_main();                        /* Main initialization rtn   */
 
 void * hdl_fent(char *);                /* Find entry name           */
-void * hdl_nent(char *, void*);         /* Find next in chain        */
+void * hdl_nent(void *);                /* Find next in chain        */
 
 /* The following statement should be void *(*unresolved)(void) = NULL*/
 static void **unresolved __attribute__ ((unused)) = NULL;
@@ -121,8 +121,8 @@ return 0; }
 #define HDL_FINDSYM(_name)                              \
     hdl_fent( (_name) )
 
-#define HDL_FINDNXT(_name, _ep)                         \
-    hdl_nent( STRINGMAC(_name), &(_ep) )
+#define HDL_FINDNXT(_ep)                                \
+    hdl_nent( &(_ep) )
 
 /*-------------------------------------------------------------------*/
 

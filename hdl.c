@@ -230,40 +230,35 @@ void *fep;
 
 
 /* hdl_fnxt - find next entry point in chain */
-void * hdl_nent(char *name, void *fep)
+void * hdl_nent(void *fep)
 {
 DLLENT *dllent;
 MODENT *modent = NULL;
+char   *name;
 
-    if(fep)
+    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+        for(modent = dllent->modent; modent; modent = modent->modnext)
         {
-            for(modent = dllent->modent; modent; modent = modent->modnext)
-            {
-                if((modent->fep == fep) && !strcmp(modent->name,name))
-                    break;
-            }
-    
-            if(modent && modent->fep == fep)
+            if(modent->fep == fep)
                 break;
         }
 
-        if(!modent)
-            return NULL;
-
-        if(!(modent = modent->modnext))
-        {
-            if((dllent = dllent->dllnext))
-                modent = dllent->modent;
-            else
-                return NULL;
-        }
+        if(modent && modent->fep == fep)
+            break;
     }
-    else
+
+    if(!modent)
+        return NULL;
+
+    name = modent->name;
+
+    if(!(modent = modent->modnext))
     {
-        if( (dllent = hdl_dll) )
+        if((dllent = dllent->dllnext))
             modent = dllent->modent;
+        else
+            return NULL;
     }
 
     /* Find entry point */

@@ -373,7 +373,7 @@ void*  gui_panel_command (char* pszCommand)
     // Hercules's "panel_command" function, but which MAY have been over-
     // ridden by yet some OTHER dynamically loaded command handler...
 
-    next_panel_command_handler = HDL_FINDNXT( panel_command, gui_panel_command );
+    next_panel_command_handler = HDL_FINDNXT( gui_panel_command );
 
     if (!next_panel_command_handler)    // (extremely unlikely!)
         return NULL;                    // (extremely unlikely!)

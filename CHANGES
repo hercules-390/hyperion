@@ -1,3 +1,4 @@
+12 Jul 2003 Optimize HDL_FINDNXT call - Jan Jaeger
 12 Jul 2003 Correct archmode check in cmpsc and featchk - Jan Jaeger
 12 Jul 2003 Restructure service and facility features - Jan Jaeger
 11 Jul 2003 Fix bogus HHCCT048E error message - Fish

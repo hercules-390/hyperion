@@ -55,9 +55,9 @@
         This function will return the entry point of symbolname or
         zero when the symbol cannot be resolved.
 
-    void * HDL_FINDNXT(char *symbolname, current_entry point);
+    void * HDL_FINDNXT(current_entry point);
 
-        This function will return the previous entry point of symbolname.
+        This function will return the previous entry point.
         That is, the entry point which was current before the entry point
         as identified by current_entry point was registered.
 
@@ -141,7 +141,7 @@ static void *gui_cpu_state(REGS *regs)
     /* CPU status update processing */
 
     /* Call higher level routine if one exists */
-    if((prev_cpu_state = HDL_FINDNXT(debug_cpu_state,gui_cpu_state)))
+    if((prev_cpu_state = HDL_FINDNXT(gui_cpu_state)))
         return prev_cpu_state(regs);
 
     return NULL;
@@ -158,7 +158,7 @@ void * (*prev_panel_command)(char *);
     }
     else
         /* Call higher level command handler */
-        if((prev_panel_command = HDL_FINDNXT(panel_command,ProcessCommand)))
+        if((prev_panel_command = HDL_FINDNXT(ProcessCommand)))
             return prev_panel_command(command);
 
     return NULL;
