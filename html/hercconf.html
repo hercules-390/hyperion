@@ -109,7 +109,7 @@ The following system parameters may be specified:
     which means a low priority such that I/O can be scheduled and completed
     in favour of CPU cycles being burned.  
 <dd>On Multi CPU systems, a real CPU can be 'dedicated' to Hercules, by
-    giving the CPU thread a very high dispatching priority (-20).  
+    giving the CPU thread a very high dispatching priority (-20).
     Hercules needs to be a setuid root program to allow it to
     reset is dispatching priority to a high (negative) value.
     (ie. chown root.root hercules; chmod +s hercules)
@@ -285,14 +285,14 @@ the device record is:
     <dt><code>sockdev</code>
     <dd>indicates the card reader is a socket device wherein the
         filename is actually a socket specification instead of a
-        device filename. When used, there must only be one filename
-        specified in the form: <code>host:port</code>, where
-        <code>host</code> is either an IP address or hostname
-        and <code>port</code> is the port number. The device then
-        accepts remote connections on the given <code>host:port</code>
-        combination and reads data from the socket instead of a
-        device file. This allows automatic remote submission of card
-        reader data.
+        device filename.  When used, there must only be one filename
+        specified in the form: <code>port</code> or <code>host:port</code>
+        or <code>sockpath/sockname</code>.  The device then accepts
+        remote connections on the given TCP/IP port or Unix Domain
+        Socket, and reads data from the socket instead of from a device
+        file. This allows automatic remote submission of card reader
+        data. See the <a href="hercrdr.html">Hercules Socket Reader</a>
+        page for more details.
     <dt><code>eof</code>
     <dd>specifies that unit exception status is presented after
         reading the last card in the file.  If eof is not specified,
@@ -316,6 +316,8 @@ the device record is:
     If neither EBCDIC nor ASCII is specified, then the device handler
     attempts to detect the format of the card image file when the device
     is first accessed.
+    Auto-detection is not supported for socket devices, and the default
+    is ASCII if sockdev is specified.
     <dt><code>trunc</code>
     <dd>specifies, for ASCII files, that lines longer than 80
         characters are truncated instead of producing a unit check
@@ -560,6 +562,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 5 July 2001
+<p>Last updated 27 January 2002
 </BODY>
 </HTML>
