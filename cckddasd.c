@@ -4589,7 +4589,7 @@ int cckd_compress_none (DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm)
 }
 int cckd_compress_zlib (DEVBLK *dev, BYTE **to, BYTE *from, int len, int parm)
 {
-#if defined(HAVE_ZLIB)
+#if defined(HAVE_LIBZ)
 int newlen;
 int rc;
 BYTE *buf;

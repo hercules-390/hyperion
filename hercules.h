@@ -1292,7 +1292,7 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #else
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_BZIP2
 #endif  // CCKD_BZIP2 defined
-#endif  // HAVE_ZLIB  defined
+#endif  // HAVE_LIBZ  defined
 #define CCKD_COMPRESS_MAX_POSSIBLE 2
 
 #define CCKD_COMPRESS_MASK     0x03
