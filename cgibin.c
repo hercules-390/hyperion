@@ -708,7 +708,7 @@ int doipl;
         }
         else
         {
-            fprintf(webblk->hsock,"<h3>IPL successfull</h3>\n");
+            fprintf(webblk->hsock,"<h3>IPL completed</h3>\n");
         }
     }
 
