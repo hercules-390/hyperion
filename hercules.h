@@ -490,6 +490,7 @@ typedef struct _REGS {                  /* Processor registers       */
         U32     mipsrate;               /* Instructions/millisecond  */
         U32     siocount;               /* SIO/SSCH counter          */
         U32     siosrate;               /* IOs per second            */
+        U64     siototal;               /* Total SIO/SSCH count      */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
         U64     waittime;               /* Wait time (us) in interval*/

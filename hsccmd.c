@@ -308,13 +308,12 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argv);
 
     obtain_lock (&sysblk.intlock);
-
     mask = (~sysblk.started_mask) & sysblk.config_mask;
     for (i = 0; mask; i++)
     {
         n = ffs(mask);
         i += n;
-        sysblk.regs[i]->cpustate = CPUSTATE_STARTING;
+        sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
         signal_condition(&sysblk.regs[i]->intcond);
         mask >>= (n+1);
     }
@@ -2184,6 +2183,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     IOINT  *io;                         /* -> I/O interrupt entry    */
     unsigned i;
     char    sysid[12];
+    BYTE    curpsw[16];
     char *states[] = {"?", "STOPPED", "STOPPING", "?", "STARTED",
                       "?", "?", "?", "STARTING"};
 
@@ -2262,6 +2262,21 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                     sysblk.regs[i]->cpuad,sysblk.regs[i]->chanset
                     );
         }
+        logmsg( _("          CPU%4.4X: state %s\n"),
+               sysblk.regs[i]->cpuad,states[sysblk.regs[i]->cpustate]);
+        logmsg( _("          CPU%4.4X: instcount %lld\n"),
+               sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->instcount);
+        logmsg( _("          CPU%4.4X: siocount %lld\n"),
+               sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->siototal);
+        store_psw(sysblk.regs[i], curpsw);
+        logmsg( _("          CPU%4.4X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
+               sysblk.regs[i]->cpuad,curpsw[0],curpsw[1],curpsw[2],curpsw[3],
+               curpsw[4],curpsw[5],curpsw[6],curpsw[7]);
+        if (ARCH_900 == sysblk.arch_mode)
+        logmsg( _(" %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x"),
+               curpsw[8],curpsw[9],curpsw[10],curpsw[11],
+               curpsw[12],curpsw[13],curpsw[14],curpsw[15]);
+        logmsg("\n");
     }
 
     logmsg( _("          Config mask %8.8X started mask %8.8X waiting mask %8.8X\n"),

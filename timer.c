@@ -399,6 +399,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
                 /* Save the instruction counter */
                 regs->prevcount = regs->instcount;
+                regs->siototal += regs->siocount;
                 regs->siocount = 0;
 
                 /* Calculate CPU busy percentage */
