@@ -652,7 +652,7 @@ do { \
  /*
   * Reset aea_ar vector to indicate the appropriate
   * control register:
-  *   0 - unresolvable (armode and alet is not 0, 1 or 2)
+  *   0 - unresolvable (armode and alet is not 0 or 1)
   *   1 - primary space
   *   7 - secondary space
   *  13 - home space
@@ -675,7 +675,6 @@ do { \
       memset((_regs)->aea_ar,  1, 17); \
       for (i = 1; i < 16; i++) { \
         if ((_regs)->AR(i) == ALET_SECONDARY) (_regs)->aea_ar[i] = 7; \
-        else if ((_regs)->AR(i) == ALET_HOME) (_regs)->aea_ar[i] = 13; \
         else if ((_regs)->AR(i) != ALET_PRIMARY) (_regs)->aea_ar[i] = 0; \
       } \
       break; \
