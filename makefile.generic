@@ -22,6 +22,8 @@ LFLAGS	 = -lpthread -lm -lz
 
 CFLAGS  += -DHAVE_SQRTL
 
+CFLAGS  += -DHAVE_SETRESUID
+
 # Uncomment the lines below to enable Compressed CKD bzip2 compression
 CFLAGS	+= -DHAVE_LIBZ -DCCKD_BZIP2
 LFLAGS	+= -lbz2
