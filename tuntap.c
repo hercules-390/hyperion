@@ -624,10 +624,8 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
             exit( 127 );
         }
 
-#if defined(OPTION_DYNAMIC_LOAD)
         /* Terminate TunTap on shutdown */
         hdl_adsc(tuntap_term, NULL);
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
     }
 
     // Populate some common fields

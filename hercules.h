@@ -77,9 +77,7 @@
 #include <bzlib.h>
 #endif
 
-#if defined(OPTION_DYNAMIC_LOAD)
 #include "hdl.h"
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #if defined(BUILTIN_MEMRCHR)
 #include "memrchr.h"

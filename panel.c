@@ -849,9 +849,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     pipefd = compat_msgpiper;
     keybfd = STDIN_FILENO;
 
-#if defined(OPTION_DYNAMIC_LOAD)
     hdl_adsc(panel_cleanup, NULL);
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
 
     /* Set screen output stream to fully buffered */
     setvbuf (confp, NULL, _IOFBF, 0);

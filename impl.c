@@ -415,9 +415,8 @@ void system_shutdown (void)
     sysblk.shutdown = 1;
 
     release_config();
-#if defined(OPTION_DYNAMIC_LOAD)
+
     /* Call all termination routines in LIFO order */
     hdl_shut();
-#endif /* defined(OPTION_DYNAMIC_LOAD) */
 
 }

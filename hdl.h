@@ -4,6 +4,15 @@
 #ifndef _HDL_H
 #define _HDL_H
 
+
+void hdl_adsc (void *, void *);         /* Add shutdown routine      */
+int hdl_rmsc(void *, void *);           /* Remove shutdown routine   */
+void hdl_shut(void);                    /* Call all shutdown routines*/
+
+
+#if defined(OPTION_DYNAMIC_LOAD)
+
+
 /*-------------------------------------------------------------------*/
 
 #if defined(HDL_USE_LIBTOOL)
@@ -33,10 +42,6 @@ void hdl_list();                        /* list all loaded modules   */
 void hdl_dlst();                        /* list all dependencies     */
 
 void hdl_main();                        /* Main initialization rtn   */
-
-void hdl_adsc (void *, void *);         /* Add shutdown routine      */
-int hdl_rmsc(void *, void *);           /* Remove shutdown routine   */
-void hdl_shut(void);                    /* Call all shutdown routines*/
 
 void * hdl_fent(char *);                /* Find entry name           */
 void * hdl_nent(char *, void*);         /* Find next in chain        */
@@ -158,6 +163,11 @@ typedef struct _DLLENT {                /* DLL entry                 */
     struct _DLLENT *dllnext;            /* Next entry in chain       */
 } DLLENT;
 
+/*-------------------------------------------------------------------*/
+
+
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
 
 typedef struct _HDLSHD {
     struct _HDLSHD *next;
@@ -165,7 +175,5 @@ typedef struct _HDLSHD {
     void *shdarg;                       /* Optional argument         */
 } HDLSHD;
 
-
-/*-------------------------------------------------------------------*/
 
 #endif

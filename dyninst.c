@@ -12,6 +12,9 @@
 #include "hercules.h"
 
 
+#if defined(OPTION_DYNAMIC_LOAD)
+
+
 #if defined(WIN32)
 /* We need to do some special tricks for cygwin here, since cygwin   */
 /* does not support backlink and we need to resolve symbols during   */
@@ -416,3 +419,4 @@ HDL_FINAL_SECTION;
 
 #endif /*!defined(_GEN_ARCH)*/
 
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
