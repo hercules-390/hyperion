@@ -577,6 +577,17 @@ if USE_DLLTOOL
 	rm -f                                          $(DESTDIR)$(bindir)/$(HDT3525_DLL)
 	mv -f $(DESTDIR)$(bindir)/$(HDT3525)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT3525_DLL)
 	rm -f $(DESTDIR)$(bindir)/$(HDT3525_DLL)$(EXEEXT)
+else
+	mv -f $(DESTDIR)$(bindir)/$(DYNGUI)$(EXEEXT)   $(DESTDIR)$(libdir)/$(DYNGUI)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(DYNINST)$(EXEEXT)  $(DESTDIR)$(libdir)/$(DYNINST)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDTEQ)$(EXEEXT)    $(DESTDIR)$(libdir)/$(HDTEQ)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDT1403)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT1403)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDT2703)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT2703)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDT3088)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3088)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDT3270)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3270)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDT3420)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3420)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDT3505)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3505)$(EXEEXT)
+	mv -f $(DESTDIR)$(bindir)/$(HDT3525)$(EXEEXT)  $(DESTDIR)$(libdir)/$(HDT3525)$(EXEEXT)
 endif
 endif
 
@@ -607,6 +618,17 @@ if USE_DLLTOOL
 	rm -f                     $(HDT3505_DLL)
 	rm -f $(DESTDIR)$(bindir)/$(HDT3525_DLL)
 	rm -f                     $(HDT3525_DLL)
+else
+	rm -f $(DESTDIR)$(libdir)/$(DYNGUI)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(DYNINST)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDTEQ)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDT1403)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDT2703)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDT3088)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDT3270)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDT3420)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDT3505)$(EXEEXT)
+	rm -f $(DESTDIR)$(libdir)/$(HDT3525)$(EXEEXT)
 endif
 endif
 
