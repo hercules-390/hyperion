@@ -82,7 +82,7 @@ CKDDEV         *ckd;                    /* -> DASD table entry       */
 int             l2empty;                /* 1=level 2 table is empty  */
 
     /* Display the program identification message */
-    display_version (stdout, "Hercules ckd to cckd copy program ");
+    display_version (stderr, "Hercules ckd to cckd copy program ");
 
     /* parse the arguments */
 #ifdef EXTERNALGUI

@@ -612,7 +612,7 @@ MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
 
     /* Display the program identification message */
-    display_version (stdout,
+    display_version (stderr,
                      "Hercules IEHIOSUP program ");
 
     /* Check the number of arguments */

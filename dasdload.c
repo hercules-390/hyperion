@@ -4301,7 +4301,7 @@ BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 
     /* Display the program identification message */
-    display_version (stdout,
+    display_version (stderr,
                      "Hercules DASD loader program ");
 
 #ifdef EXTERNALGUI

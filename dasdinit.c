@@ -105,7 +105,7 @@ FBADEV *fba;                            /* -> FBA device table entry */
 
     /* Display the program identification message */
 
-    display_version (stdout,
+    display_version (stderr,
                      "Hercules DASD image file creation program\n");
 
 #ifdef EXTERNALGUI

@@ -1,3 +1,14 @@
+08 Apr 2002 (RESCINDED): display_version via stdout instead of stderr;
+            set stdout/stderr to unbuffered (if externalgui) instead - Fish
+08 Apr 2002 RC file handling: 1) new 'pause nnn' .rc-file-only command
+            to sleep for 1-999 seconds, 2) accept and display comments
+            from either the keyboard or the .rc file, 3) control .rc file
+            comments logging via new "&comments on|off" .rc-file-command,
+            4) use buffered "fgets" call to read .rc file for efficiency,
+            5) silently ignore CR's in .rc file for Windows compatibility,
+            6) prefix logged commands from .rc file with "> ". -- Fish
+08 Apr 2002 parse_args (config.c): 1) not EXTERNALGUI dependent,
+            2) support embedded quoted strings (sf="path") - Fish
 08 Apr 2002 Update message buffer in exgui mode - Jan Jaeger
 05 Apr 2002 Support cookies to save settings - Jan Jaeger
 02 Apr 2002 hercload.html updated for cckd utility support - Greg Smith

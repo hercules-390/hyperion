@@ -263,10 +263,9 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         if (strlen (argv[i]) > 3 &&
             memcmp ("sf=", argv[i], 3) == 0)
         {
-            kw = strtok (argv[i], "=");
-            op = strtok (NULL, " \t");
-            if (op && strlen(op) < 256)
-                strcpy (dev->ckdsfn, op);
+            if ('\"' == argv[i][3]) argv[i]++;
+            if (strlen(argv[i]+3) < 256)
+                strcpy (dev->ckdsfn, argv[i]+3);
             continue;
         }
         if (strlen (argv[i]) > 3

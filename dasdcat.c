@@ -292,7 +292,7 @@ int main(int argc, char **argv)
 #endif /*EXTERNALGUI*/
 
  /* Display program info message */
- display_version (stdout, "Hercules DASD cat program ");
+ display_version (stderr, "Hercules DASD cat program ");
 
  if (argc < 2) {
  fprintf(stderr, "Usage: dasdcat [-i dasd_image [sf=shadow-file-name] dsname...]...\n");

@@ -116,6 +116,18 @@ void display_version (FILE *f, char *prog)
 {
     unsigned int i;
 
+#if defined(EXTERNALGUI)
+    /* If external gui being used, set stdout & stderr streams
+       to unbuffered so we don't have to flush them all the time
+       in order to ensure consistent sequence of log messages.
+    */
+    if (extgui)
+    {
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
+    }
+#endif
+
         /* Log version */
 
     fprintf (f, "%sVersion %s\n", prog, VERSION);

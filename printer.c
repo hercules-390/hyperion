@@ -83,12 +83,13 @@ pid_t           pid;                    /* Child process identifier  */
             {
                 logmsg ("HHC418I %4.4X dup2 error: %s\n",
                         dev->devnum, strerror(errno));
+                close (pipefd[0]);
                 _exit(127);
             }
-            /* Close the original descriptor now duplicated to STDIN */
-            close (pipefd[0]);
-
         } /* end if(pipefd[0] != STDIN_FILENO) */
+
+        /* Close the original descriptor now duplicated to STDIN */
+        close (pipefd[0]);
 
         /* Redirect STDOUT to the control panel message pipe */
         rc = dup2 (fileno(sysblk.msgpipew), STDOUT_FILENO);
@@ -96,7 +97,6 @@ pid_t           pid;                    /* Child process identifier  */
         {
             logmsg ("HHC419I %4.4X dup2 error: %s\n",
                     dev->devnum, strerror(errno));
-            close (STDIN_FILENO);
             _exit(127);
         }
 
@@ -106,8 +106,6 @@ pid_t           pid;                    /* Child process identifier  */
         {
             logmsg ("HHC420I %4.4X dup2 error: %s\n",
                     dev->devnum, strerror(errno));
-            close (STDIN_FILENO);
-            close (STDOUT_FILENO);
             _exit(127);
         }
 
@@ -118,58 +116,44 @@ pid_t           pid;                    /* Child process identifier  */
 
 #if defined(WIN32)
         {
-            /* Build cmdline to start print spooler:
+            /* The dev=, pid= and extgui= arguments are for informational
+               purposes only so the spooler knows who/what it's spooling. */
 
-              "<splrpgm> pid=nnnn dev=dddd [extgui=1|0]"
+            BYTE  cmdline[256];
 
-            The "pid=", "dev=", etc, parms are informational
-            only and allows the spooler program to identify
-            which printer for which Herc it is controlling.
-            The "extgui=" parm tells the spooler whether the
-            Hercules it is controlling a device for is under
-            the control of an external gui or not (so it can
-            behave differently if it needs to).
-            */
-            BYTE* pCmdLine;
-            int nMaxLen = 1 + strlen(dev->filename+1) + 64;
-            pCmdLine = malloc(nMaxLen);
-            snprintf(pCmdLine,nMaxLen-1,"%s pid=%d dev=%4.4X"
+            snprintf(cmdline,256,"\"%s\" pid=%d dev=%4.4X extgui=%d",
+                dev->filename+1,getpid(),dev->devnum,
 #ifdef EXTERNALGUI
-                " extgui=%d"
-#endif /*EXTERNALGUI*/
-                ,dev->filename+1,getpid(),dev->devnum
-#ifdef EXTERNALGUI
-                ,extgui
+                extgui
+#else /*!EXTERNALGUI*/
+                0
 #endif /*EXTERNALGUI*/
                 );
-            pCmdLine[nMaxLen-1] = 0;
-            rc = system (pCmdLine);
-            free(pCmdLine);
+
+            fclose(stderr);
+            fclose(sysblk.msgpipew);
+
+            rc = system (cmdline);
         }
 #else
         rc = system (dev->filename+1);
 #endif
-
-        if (rc != 0)
+        if (rc == 0)
         {
+            /* Log end of child process */
+            logmsg ("HHC423I pipe receiver (pid=%d) terminating for %4.4X\n",
+                    getpid(), dev->devnum);
+        }
+        else
+        {
+            /* Log error */
             logmsg ("HHC422I %4.4X Unable to execute %s: %s\n",
                     dev->devnum, dev->filename+1, strerror(errno));
-            close (STDIN_FILENO);
-            close (STDOUT_FILENO);
-            close (STDERR_FILENO);
-            _exit(rc);
         }
-
-        /* Log end of child process */
-        logmsg ("HHC423I pipe receiver (pid=%d) terminating for %4.4X\n",
-                getpid(), dev->devnum);
 
         /* The child process terminates using _exit instead of exit
            to avoid invoking the panel atexit cleanup routine */
-        close (STDIN_FILENO);
-        close (STDOUT_FILENO);
-        close (STDERR_FILENO);
-        _exit(0);
+        _exit(rc);
 
     } /* end if(pid==0) */
 
@@ -281,7 +265,7 @@ void printer_query_device (DEVBLK *dev, BYTE **class,
     snprintf (buffer, buflen, "%s%s%s",
                 dev->filename,
                 (dev->crlf ? " crlf" : ""),
-                (dev->stopprt ? " stopped" : ""));
+                (dev->stopprt ? " (stopped)" : ""));
 
 } /* end function printer_query_device */
 

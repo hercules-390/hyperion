@@ -226,10 +226,10 @@ fthread_self
 void
 fthread_exit
 (
-	FT_W32_DWORD  dwExitCode
+	FT_W32_DWORD*  pdwExitCode
 )
 {
-	MyExitThread(dwExitCode);
+	MyExitThread(pdwExitCode ? *pdwExitCode : 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

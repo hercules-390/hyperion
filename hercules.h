@@ -209,7 +209,7 @@ typedef fthread_attr_t    ATTR;
 #define initialize_detach_attr(pat)            /* unsupported */
 #define signal_thread(tid,signo)               fthread_kill((tid),(signo))
 #define thread_id()                            fthread_self()
-#define exit_thread(exitcode)                  fthread_exit((exitcode))
+#define exit_thread(exitvar_ptr)               fthread_exit((exitvar_ptr))
 #else // !defined(OPTION_FTHREADS)
 typedef pthread_t                       TID;
 typedef pthread_mutex_t                 LOCK;
@@ -254,6 +254,8 @@ typedef void*THREAD_FUNC(void*);
 #endif // !defined(WIN32)
 #define thread_id() \
         pthread_self()
+#define exit_thread(exitvar_ptr) \
+        pthread_exit((exitvar_ptr))
 #endif // defined(OPTION_FTHREADS)
 #else
 typedef int                             TID;
@@ -274,6 +276,7 @@ typedef int                             ATTR;
 #define create_thread(ptid,pat,fn,arg)  (*(ptid)=0,fn(arg),0)
 #define signal_thread(tid,signo)        raise(signo)
 #define thread_id()                     0
+#define exit_thread(exitvar_ptr)        (exit(0)) /* (should not ever be used with NOTHREAD!) */
 #endif
 
 /* Pattern for displaying the thread_id */
@@ -1446,9 +1449,9 @@ int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
 int  configure_cpu (REGS *regs);
 int  deconfigure_cpu (REGS *regs);
-#ifdef EXTERNALGUI
+//#ifdef EXTERNALGUI
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
-#endif /*EXTERNALGUI*/
+//#endif /*EXTERNALGUI*/
 
 /* Global data areas and functions in module panel.c */
 extern int volatile initdone;    /* Initialization complete flag */

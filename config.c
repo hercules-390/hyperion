@@ -82,7 +82,7 @@ static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 /*-------------------------------------------------------------------*/
 #include "codeconv.h"
 
-#ifdef EXTERNALGUI
+//#ifdef EXTERNALGUI
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
 /* is modified in-place by inserting null characters at the end of   */
@@ -105,37 +105,32 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc)
 {
     for (*pargc = 0; *pargc < MAX_ARGS; ++*pargc) addargv[*pargc] = NULL;
 
-    *pargc = 0; p--;
+    *pargc = 0;
+    *pargv = NULL;
 
-    while (*pargc < maxargc)
+    while (*p && *pargc < maxargc)
     {
-        if (!*(p+1)) break;             // exit at end-of-string
-        while (isspace(*++p));          // advance to next arg
-        if (!*p) break;                 // exit at end-of-string
-        if (*p == '\"')                 // begin of quoted string?
+        while (*p && isspace(*p)) p++; if (!*p) break; // find start of arg
+
+        if (*p == '#') break; // stop on comments
+
+        *pargv = p; ++*pargc; // count new arg
+
+        while (*p && !isspace(*p) && *p != '\"') p++; if (!*p) break; // find end of arg
+
+        if (*p == '\"')
         {
-            *pargv++ = ++p;             // save ptr to next arg
-            while (*p && *++p != '\"'); // advance to ending quote
-            if (!*p)                    // end quote not found?
-            {
-                --pargv;                // backup to quote arg
-                while (*--(*pargv) != '\"'); // backup to quote
-                ++*pargc;               // count last arg
-                break;                  // end quote not found
-            }
-            *p = 0;                     // mark end of arg
+            if (p == *pargv) *pargv = p+1;
+            while (*++p && *p != '\"'); if (!*p) break; // find end of quoted string
         }
-        else *pargv++ = p;              // save ptr to next arg
-        if ('#' == *p) break;           // exit at beg-of-comments
-        ++*pargc;                       // count args
-        while (!isspace(*++p) && *p);   // skip to end of arg
-        if (!*p) break;                 // exit at end-of-string
-        *p = 0;                         // mark end of arg
+
+        *p++ = 0; // mark end of arg
+        pargv++; // next arg ptr
     }
 
-    return *pargc;                      // return #of arguments
+    return *pargc;
 }
-#endif /*EXTERNALGUI*/
+//#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
@@ -205,7 +200,7 @@ int     stmtlen;                        /* Statement length          */
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
-#ifdef EXTERNALGUI
+#if 1 // def EXTERNALGUI
 
         /* Parse the statement just read */
 
@@ -522,7 +517,7 @@ BYTE    c;                              /* Work area for sscanf      */
                     else
                     {
                         logmsg("HHS008E Error in %s line %d: "
-                        "Userid, but nu password given %s\n",
+                        "Userid, but no password given %s\n",
                         fname, stmt, addargv[1]);
                         exit(1);
                     }

@@ -71,7 +71,7 @@ int             maxerrs=5;              /* Max errors allowed        */
 int             limited=0;              /* 1=Limit cyls copied       */
 
     /* Display the program identification message */
-    display_version (stdout, "Hercules cckd to ckd copy program ");
+    display_version (stderr, "Hercules cckd to ckd copy program ");
 
     /* parse the arguments */
 #ifdef EXTERNALGUI

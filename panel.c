@@ -941,6 +941,9 @@ int pid, status;
 /*-------------------------------------------------------------------*/
 /* Execute a panel command                                           */
 /*-------------------------------------------------------------------*/
+
+BYTE    rc_cmd = 0;                     /* 1=command is from RC file */
+
 void *panel_command (void *cmdline)
 {
 BYTE    cmd[32767];                     /* Copy of panel command     */
@@ -984,7 +987,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
     /* Echo the command to the control panel */
     if (cmd[0] != '\0')
-        logmsg ("%s\n", cmd);
+        logmsg ("%s%s\n", rc_cmd? "> " : "", cmd);
 
     /* Set target CPU for commands and displays */
     regs = sysblk.regs + sysblk.pcpu;
@@ -2239,7 +2242,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         }
 
         /* Set up remaining arguments for initialization handler */
-#ifndef EXTERNALGUI
+#if 0 // ndef EXTERNALGUI
         for (devargc = 0; devargc < MAX_ARGS &&
             (devargv[devargc] = strtok(NULL," \t")) != NULL;
             devargc++);
@@ -2310,7 +2313,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         }
 
         /* Set up remaining arguments for initialization handler */
-#ifndef EXTERNALGUI
+#if 0 // ndef EXTERNALGUI
         for (devargc = 0; devargc < MAX_ARGS &&
             (devargv[devargc] = strtok(NULL," \t")) != NULL;
             devargc++);
@@ -2836,22 +2839,32 @@ FILE   *logfp;                          /* Log file pointer          */
 FILE   *rcfp;                           /* RC file pointer           */
 BYTE   *rcname;                         /* hercules.rc name pointer  */
 struct termios kbattr;                  /* Terminal I/O structure    */
-#ifdef EXTERNALGUI
-BYTE    kbbuf[CMD_SIZE];                /* Keyboard input buffer     */
-#else /*!EXTERNALGUI*/
-BYTE    kbbuf[6];                       /* Keyboard input buffer     */
-#endif /*EXTERNALGUI*/
+size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer   */
+BYTE   *kbbuf = NULL;                   /* Keyboard input buffer     */
 int     kblen;                          /* Number of chars in kbbuf  */
 int     pipefd;                         /* Pipe file descriptor      */
 int     keybfd;                         /* Keyboard file descriptor  */
 int     maxfd;                          /* Highest file descriptor   */
 fd_set  readset;                        /* Select file descriptors   */
 struct  timeval tv;                     /* Select timeout structure  */
+int     rc_pause_amt = 0;               /* seconds to pause RC file  */
+time_t  rc_time_paused = 0;             /* time RC file was paused   */
+BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
+BYTE    rc_comments = 0;                /* 1 = show RC file comments */
 
     /* Display thread started message on control panel */
     logmsg ("HHC650I Control panel thread started: "
             "tid="TIDPAT", pid=%d\n",
             thread_id(), getpid());
+
+    /* Obtain storage for the keyboard buffer */
+    if (!(kbbuf = malloc (kbbufsize)))
+    {
+        fprintf (stderr,
+                "panel: Cannot obtain keyboard buffer: %s\n",
+                strerror(errno));
+        return;
+    }
 
     /* Obtain storage for the circular message buffer */
     msgbuf = malloc (BUF_SIZE);
@@ -2977,30 +2990,35 @@ struct  timeval tv;                     /* Select timeout structure  */
         }
 
         /* If keyboard input has arrived then process it */
-        if (rcfp || FD_ISSET(keybfd, &readset))
+
+        rc_cmd = 0;
+
+        if (rc_paused && (time(NULL) - rc_time_paused) >= rc_pause_amt)
+        {
+            rc_paused = 0;
+            logmsg ("HHC427I resuming .rc file processing...\n");
+        }
+
+        if ((!rc_paused && rcfp) || FD_ISSET(keybfd, &readset))
         {
             kblen = 0;
-            if (rcfp)
+            if (!rc_paused && rcfp)
             {
-                /* Read a character from the RC file */
-                if ((rc = fgetc (rcfp)) == EOF)
+                /* Read a complete line from the RC file */
+                if (fgets (kbbuf, kbbufsize, rcfp))
                 {
+                    kblen = strlen(kbbuf);
+                    rc_cmd = 1;
+                }
+                else
+                {
+                    if (feof(rcfp))
+                        logmsg ("HHC429I EOF reached on .rc file.\n");
+                    else
+                        logmsg ("HHC429E I/O reading .rc file: %s\n",strerror(errno));
+
                     fclose(rcfp);
                     rcfp = 0;
-                } else {
-                    /* check for comment char '#' */
-                    rc = rc & 0xff;
-                    if (rc == '#')
-                    {
-                        while (rc != '\n')
-                            {
-                            rc = fgetc (rcfp);
-                            rc = rc & 0xff;
-                            }
-                    }
-                    kbbuf[0] = rc & 0xff;
-                    kblen = 1;
-                    kbbuf[kblen] = '\0';
                 }
             }
             if (kblen == 0 && FD_ISSET(keybfd, &readset))
@@ -3344,8 +3362,53 @@ struct  timeval tv;                     /* Select timeout structure  */
                         }
                         else
 #endif /*EXTERNALGUI*/
-                        create_thread (&cmdtid, &sysblk.detattr,
-                                panel_command, cmdline);
+                        if (rc_cmd && strncasecmp(cmdline,"pause",5) == 0)
+                        {
+                            logmsg ("> %s\n",cmdline);
+
+                            sscanf(cmdline+5, "%d", &rc_pause_amt);
+
+                            if (rc_pause_amt > 0 && rc_pause_amt <= 999)
+                            {
+                                rc_paused = 1;
+                                rc_time_paused = time(NULL);
+                                logmsg ("HHC426I pausing .rc file processing for %d seconds...\n", rc_pause_amt);
+                            }
+                            else
+                                logmsg ("HHC428E ignoring invalid .rc file pause statement\n");
+                        }
+                        else if (rc_cmd && strncasecmp(cmdline,"&comments",9) == 0)
+                        {
+                            BYTE err = 0, *onoroff = strtok(cmdline+9," \t");
+
+                            if (!onoroff)
+                                err = 1;
+                            else
+                            {
+                                if (strcasecmp(onoroff,"on") == 0)
+                                    rc_comments = 1;
+                                else if (strcasecmp(onoroff,"off") == 0)
+                                    rc_comments = 0;
+                                else
+                                    err = 1;
+                            }
+                            if (err)
+                                logmsg ("HHC423E ignoring invalid .rc file &comments statement\n");
+                        }
+                        else
+                        {
+                            if ('#' == cmdline[0] || '*' == cmdline[0])
+                            {
+                                /* Show comment statements (if requested) */
+                                if (!rc_cmd || rc_comments)
+                                    logmsg ("%s%s\n", (rcfp && rc_cmd) ? "> " : "", cmdline);
+                            }
+                            else
+                            {
+                                create_thread (&cmdtid, &sysblk.detattr,
+                                    panel_command, cmdline);
+                            }
+                        }
                     } else {
                         NPdataentry = 0;
                         NPcurpos[0] = 24;
@@ -3389,6 +3452,13 @@ struct  timeval tv;                     /* Select timeout structure  */
 #endif /*EXTERNALGUI*/
                     redraw_cmd = 1;
                     break;
+                }
+
+                /* Silently ignore CR for Windows compatibility */
+                if ('\r' == kbbuf[i])
+                {
+                    i++;
+                    continue;
                 }
 
                 /* Ignore non-printable characters */
