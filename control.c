@@ -3033,6 +3033,22 @@ int     rc;                             /* return code from load_psw */
             if (xcode != 0)
                 ARCH_DEP(program_interrupt) (&newregs, xcode);
 
+            /* When ASN-and-LX-reuse is installed and enabled by CR0,
+               the PASTEIN previously loaded from the state entry (by
+               the program_return_unstack procedure) into the high word
+               of CR4 must equal the ASTEIN in word 11 of the ASTE */
+            if (ASN_AND_LX_REUSE_ENABLED(regs))
+            {
+                if (regs->CR_H(4) != aste[11])
+                {
+                    /* Set bit 2 of the exception access identification
+                       to indicate that the program check occurred
+                       during PASN translation in a PR instruction */
+                    regs->excarid = 0x20;
+                    ARCH_DEP(program_interrupt) (&newregs, PGM_ASTE_INSTANCE_EXCEPTION);
+                }
+            } /* end if(ASN_AND_LX_REUSE_ENABLED) */
+
             /* Space switch if either current PSTD or new PSTD
                space-switch-event control bit is set to 1 */
             if ((regs->CR(1) & SSEVENT_BIT)
@@ -3073,6 +3089,8 @@ int     rc;                             /* return code from load_psw */
         }
         else /* sasn != pasn */
         {
+            /* Perform SASN translation */
+
             /* Special operation exception if ASN translation
                control (control register 14 bit 12) is zero */
             if ((regs->CR(14) & CR14_ASN_TRAN) == 0)
@@ -3084,6 +3102,22 @@ int     rc;                             /* return code from load_psw */
             /* Program check if ASN translation exception */
             if (xcode != 0)
                 ARCH_DEP(program_interrupt) (&newregs, xcode);
+
+            /* When ASN-and-LX-reuse is installed and enabled by CR0,
+               the SASTEIN previously loaded from the state entry (by
+               the program_return_unstack procedure) into the high word
+               of CR3 must equal the ASTEIN in word 11 of the ASTE */
+            if (ASN_AND_LX_REUSE_ENABLED(regs))
+            {
+                if (regs->CR_H(3) != aste[11])
+                {
+                    /* Set bit 3 of the exception access identification
+                       to indicate that the program check occurred
+                       during SASN translation in a PR instruction */
+                    regs->excarid = 0x10;
+                    ARCH_DEP(program_interrupt) (&newregs, PGM_ASTE_INSTANCE_EXCEPTION);
+                }
+            } /* end if(ASN_AND_LX_REUSE_ENABLED) */
 
             /* Obtain new SSTD or SASCE from secondary ASTE */
             newregs.CR(7) = ASTE_AS_DESIGNATOR(aste);
@@ -3169,7 +3203,7 @@ int     rc;                             /* return code from load_psw */
 
     RETURN_INTCHECK(regs);
 
-}
+} /* end DEF_INST(program_return) */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
 
 
