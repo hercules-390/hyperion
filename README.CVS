@@ -16,5 +16,5 @@ Then, you may follow the instructions in the file INSTALL.  Briefly:
 - To uninstall the software, run "make uninstall"
 
 --
-Matt Zimmerman
+Matt Zimmerman <mdz@debian.org>
 08 Oct, 2001
