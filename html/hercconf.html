@@ -290,11 +290,22 @@ parameter statement.
 <h3>Device records</h3>
 <p>
 The remaining statements in the configuration file are device records.
-There must be one device record for each I/O device.  The format of
-the device record is:
-<p><code><em>devnum devtype</em> [<em>arguments</em>]</code>
+There must be one device record for each I/O device or group of identical I/O devices.
+The format of the device record is:
+<p><code><em>devnums devtype</em> [<em>arguments</em>]</code>
 <p>where:
 <dl>
+<dt><code><em>devnums</em></code>
+<dd>is either a single <em>devnum</em>, a range of <em>devnum</em> (separated by a '-'),
+    a count of <em>devnum</em> (separated by a '.') or a comma separated list
+    of <em>devnums</em>.
+    Examples would be 200-210 or 0300.10 or 0400,0403 or 0100,0110-011F.
+    All devices defined when <em>devnums</em> specifies more than one device
+    have identical caracteristics (except for the device number itself).
+    All devices defined as a group must be defined on a single channel.
+    A channel is defined as a contiguous group of 256 (or hexadecimal 100) devices.
+    0010 and 0020 are on the same channels. 0100 and 0210 are not.
+    See <em>devnum</em> below for an explanation of how each device number is specified.
 <dt><code><em>devnum</em></code>
 <dd>is a 1 to 4 digit hexadecimal number, in the range 0000 to FFFF
     (for ESA/390) or 0000 to 0FFF (for S/370).  The device number uniquely
