@@ -80,8 +80,8 @@ extern void     LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
 
 extern void     AddDevice( DEVBLK**    ppDEVBLK, 
                            U16         sDevNum,  
-			   const char* szDevType,
-			   DEVHND*     pDevHnd );
+                           const char* szDevType,
+                           DEVHND*     pDevHnd );
 
 extern int      ParseMAC( char* pszMACAddr, BYTE* pbMACAddr );
 extern void     packet_trace( BYTE *addr, int len );
@@ -210,6 +210,7 @@ struct  _CTCBLK
     char        szMTU[32];
     char        szTUNCharName[256];       // TUN/TAP char filename
     char        szTUNDevName[IFNAMSIZ];   // Network Device Name
+    char        szMACAddress[32];         // MAC Address
 };
 
 // --------------------------------------------------------------------

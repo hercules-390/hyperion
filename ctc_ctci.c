@@ -53,45 +53,29 @@ DEVHND ctci_device_hndinfo =
 // CTCI_Init
 //
 
-
-/* FIXME: work around Cygwin gcc 3.x __alloca large stack vars bug:
- * http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view&database=gcc&pr=8750
- */
-#define GCC3_BUG_8750
-
-
 int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
-#ifndef GCC3_BUG_8750
-    CTCBLK          ctcblk;             // Work CTCBLK
-#endif
-    PCTCBLK         pWrkCTCBLK = NULL;  // Ptr to work CTCBLK
-    PCTCBLK         pDevCTCBLK = NULL;  // Ptr to CTCBLK for device
-    DEVBLK*         pDevPair = NULL;    // Paired DEVBLK
+    PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
+    PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
+    DEVBLK*         pDevPair = NULL;    // Paired  DEVBLK
     int             rc = 0;             // Return code
 
     // Housekeeping
-#ifndef GCC3_BUG_8750
-    pWrkCTCBLK = &ctcblk;
-#else
     pWrkCTCBLK = malloc( sizeof( CTCBLK ) );
 
     if( !pWrkCTCBLK )
     {
         logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
-            pDEVBLK->devnum );
+                pDEVBLK->devnum );
         return -1;
     }
-#endif
 
     memset( pWrkCTCBLK, 0, sizeof( CTCBLK ) );
 
     // Parse configuration file statement
     if( ParseArgs( pDEVBLK, pWrkCTCBLK, argc, (char**)argv ) != 0 )
     {
-#ifdef GCC3_BUG_8750
-        free(pWrkCTCBLK);
-#endif
+        free( pWrkCTCBLK );
         return -1;
     }
 
@@ -104,10 +88,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         if( !pDevCTCBLK )
         {
             logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
-                pDEVBLK->devnum );
-#ifdef GCC3_BUG_8750
-            free(pWrkCTCBLK);
-#endif
+                    pDEVBLK->devnum );
+            free( pWrkCTCBLK );
             return -1;
         }
 
@@ -120,10 +102,10 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         pDevCTCBLK->pDEVBLK[1] = pDEVBLK;
 
         AddDevice( &pDevCTCBLK->pDEVBLK[0], pDEVBLK->devnum,
-               "CTCI", &ctci_device_hndinfo );
+                   "CTCI", &ctci_device_hndinfo );
 
         AddDevice( &pDevCTCBLK->pDEVBLK[1], pDEVBLK->devnum + 1,
-               "CTCI", &ctci_device_hndinfo );
+                   "CTCI", &ctci_device_hndinfo );
 
         pDevCTCBLK->pDEVBLK[0]->dev_data = pDevCTCBLK;
         pDevCTCBLK->pDEVBLK[1]->dev_data = pDevCTCBLK;
@@ -145,25 +127,17 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         // First pass through?
         if( !pDevPair )
         {
-#if 0
-            // Emit a warning about depreciated usage
-            logmsg( _("CTC013W: WARNING: You are using a depreciated device\n"
-                  "configuration statement that will no longer be supported\n"
-                  "in future releases.\n"
-                  "Please see README.NETWORKING for more information.\n" ));
-#endif
-
             // Allocate the CTCBLK
             pDevCTCBLK = malloc( sizeof( CTCBLK ) );
+
             if( !pDevCTCBLK )
             {
                 logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
-                    pDEVBLK->devnum );
-#ifdef GCC3_BUG_8750
-                free(pWrkCTCBLK);
-#endif
+                        pDEVBLK->devnum );
+                free( pWrkCTCBLK );
                 return -1;
             }
+
             memcpy( pDevCTCBLK, pWrkCTCBLK, sizeof( CTCBLK ) );
 
             pDEVBLK->dev_data = pDevCTCBLK;
@@ -207,9 +181,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
         if( rc < 0 )
         {
-#ifdef GCC3_BUG_8750
-            free(pWrkCTCBLK);
-#endif
+            free( pWrkCTCBLK );
             return -1;
         }
 
@@ -225,8 +197,14 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         TUNTAP_SetMTU     ( pDevCTCBLK->szTUNDevName,
                             pDevCTCBLK->szMTU );
 
+#if defined( WIN32 )
+        if( pDevCTCBLK->szMACAddress[0] != '\0' )
+            TUNTAP_SetMACAddr( pDevCTCBLK->szTUNDevName,
+                               pDevCTCBLK->szMACAddress );
+#endif
+
         TUNTAP_SetFlags   ( pDevCTCBLK->szTUNDevName,
-                         IFF_UP | IFF_RUNNING | IFF_BROADCAST );
+                            IFF_UP | IFF_RUNNING | IFF_BROADCAST );
 
         // Copy the fd to make panel.c happy
         pDevCTCBLK->pDEVBLK[0]->fd =
@@ -235,9 +213,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK );
     }
 
-#ifdef GCC3_BUG_8750
-    free(pWrkCTCBLK);
-#endif
+    free( pWrkCTCBLK );
+
     return 0;
 }
 
@@ -919,9 +896,9 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
 
     release_lock( &pCTCBLK->Lock );
 
-//  obtain_lock( &pCTCBLK->EventLock );
+    obtain_lock( &pCTCBLK->EventLock );
     signal_condition( &pCTCBLK->Event );
-//  release_lock( &pCTCBLK->EventLock );
+    release_lock( &pCTCBLK->EventLock );
 
     return 1;
 }
@@ -961,37 +938,16 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     optind      = 0;
 
     // Compatability with old format configuration files needs to be
-    // maintained for at least for a release or 2.  Old format
-    // statements have the CTC mode as the first argument, either
-    // CTCI or CTCI-W32.
-    if( strncasecmp( *argv, "CTCI", 4 ) == 0 )
+    // maintained. Old format statements have the tun character device
+    // name as the second argument on Linux, or CTCI-W32 as the first
+    // argument on Windows.
+    if( ( strncasecmp( argv[1], "/", 1 ) == 0 ) ||
+        ( strncasecmp( argv[0], "ctci-w32", 8 ) == 0 ) )
     {
         pCTCBLK->fOldFormat = 1;
-
-        // Shift past the CTC mode
         argc--; argv++;
     }
-    else
-    {
-        // Build new argv list.
-        // getopt_long used to work on old format configuration statements
-        // because CTCI or CTCI-32 was the first argument passed to the
-        // device initialization routine (and was interpreted by getopt*
-        // as the program name and ignored). Now that argv[0] is a valid
-        // argument, we need to shift the arguments and insert a dummy
-        // argv[0];
-
-        // Don't allow us to exceed the allocated storage (sanity check)
-        if( argc > 11 )
-            argc = 11;
-
-        for( i = argc; i > 0; i-- )
-            argv[i] = argv[ i - 1];
-
-        argc++;
-        argv[0] = "CTCI";
-    }
-
+	
     // Parse any optional arguments if not old format
     while( !pCTCBLK->fOldFormat )
     {
@@ -1004,13 +960,14 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             { "kbuff",   1, NULL, 'k' },
             { "ibuff",   1, NULL, 'i' },
             { "mtu",     1, NULL, 't' },
-            { "netmask", 1, NULL, 'm' },
+            { "netmask", 1, NULL, 's' },
+            { "mac",     1, NULL, 'm' },
             { "debug",   0, NULL, 'd' },
             { NULL,      0, NULL,  0  }
         };
 
         c = getopt_long( argc, argv,
-                 "n:k:i:t:m:d",
+                 "n:k:i:t:s:m:d",
                  options, &iOpt );
 
         if( c == -1 ) // No more options found
@@ -1085,7 +1042,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strcpy( pCTCBLK->szMTU, optarg );
             break;
 
-        case 'm':     // Netmask of point-to-point link (ignored if Windows)
+        case 's':     // Netmask of point-to-point link (ignored if Windows)
             if( inet_aton( optarg, &addr ) == 0 )
             {
                 logmsg( _("CTC007E %4.4X: Invalid netmask %s\n"),
@@ -1094,6 +1051,18 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             }
 
             strcpy( pCTCBLK->szNetMask, optarg );
+            break;
+
+        case 'm':
+            if( ParseMAC( optarg, mac ) != 0 )
+            {
+                logmsg( _("CTC012E %4.4X: Invalid MAC address %s\n"),
+                        pDEVBLK->devnum, optarg );
+                return -1;
+            }
+
+            strcpy( pCTCBLK->szMACAddress, optarg );
+
             break;
 
         case 'd':     // Diagnostics
@@ -1269,7 +1238,20 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 }
 
                 strcpy( pCTCBLK->szTUNCharName, *argv );
-                strcpy( pCTCBLK->szDriveIPAddr, *argv );
+
+                // Kludge: This may look strange at first, but with 
+                // TunTap32, only the last byte of the "driver IP 
+                // address" is actually used. It's purpose is to 
+                // generate a unique MAC for the virtual interface. 
+                // Thus, having the same address for the adapter and 
+                // destination is not an issue. This used to be 
+                // generated from the guest IP address, I screwed up 
+                // TunTap32 V2. (JAP)
+                // This also fixes the confusing error messages from
+                // TunTap.c when a MAC is given for this argument.
+                
+                strcpy( pCTCBLK->szDriveIPAddr,
+                        pCTCBLK->szGuestIPAddr );
 
                 argc--; argv++; i++;
                 continue;

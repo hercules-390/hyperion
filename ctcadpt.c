@@ -3,7 +3,7 @@
 // ====================================================================
 //
 // Copyright (C) James A. Pierson, 2002-2003
-//       Roger Bowler, 2000-2003
+//               Roger Bowler, 2000-2003
 //
 // vmnet     (C) Copyright Willem Konynenberg, 2000-2003
 // CTCT      (C) Copyright Vic Cross, 2001-2003
@@ -29,11 +29,11 @@
 // Declarations
 // ====================================================================
 
-static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] );
+static int      CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] );
 
-static void CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
-                       BYTE*   pIOBuf,    BYTE* pUnitStat,
-                       U16*    pResidual, BYTE* pMore );
+static void     CTCT_Read( DEVBLK* pDEVBLK,   U16   sCount,
+                           BYTE*   pIOBuf,    BYTE* pUnitStat,
+                           U16*    pResidual, BYTE* pMore );
 
 static void     CTCT_Write( DEVBLK* pDEVBLK,   U16   sCount,
                             BYTE*   pIOBuf,    BYTE* pUnitStat,
@@ -1395,6 +1395,11 @@ void  AddDevice( DEVBLK**    ppDEVBLK,
     pDev->typname  = pDevEntry->name;
 
     pDev->fd = -1;
+
+    // Initialize storage view
+    pDev->mainstor = sysblk.mainstor;
+    pDev->storkeys = sysblk.storkeys;
+    pDev->mainlim  = sysblk.mainsize - 1;
 
     // Initialize the path management control word
     pDev->pmcw.devnum[0] = pDev->devnum >> 8;

@@ -570,10 +570,14 @@ int  LCS_Close( DEVBLK* pDEVBLK )
 
     if( !pLCSBLK->pDevices )
     {
-        if( pLCSBLK->pszTUNDevice   ) free( pLCSBLK->pszTUNDevice   );
-        if( pLCSBLK->pszOATFilename ) free( pLCSBLK->pszOATFilename );
-        if( pLCSBLK->pszIPAddress   ) free( pLCSBLK->pszIPAddress   );
-        if( pLCSBLK->pszMACAddress  ) free( pLCSBLK->pszMACAddress  );
+        if( pLCSBLK->pszTUNDevice   ) 
+            free( pLCSBLK->pszTUNDevice   );
+        if( pLCSBLK->pszOATFilename ) 
+            free( pLCSBLK->pszOATFilename );
+        if( pLCSBLK->pszIPAddress   ) 
+            free( pLCSBLK->pszIPAddress   );
+        if( pLCSBLK->pszMACAddress  ) 
+            free( pLCSBLK->pszMACAddress  );
 
         free( pLCSBLK );
     }
@@ -817,16 +821,13 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
     if( pLCSDEV->fReplyPending )
     {
-//      obtain_lock( &pLCSDEV->Lock );
-//      release_lock( &pLCSDEV->Lock );
-
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             logmsg( _("LCS903I %4.4X Triggering Event.\n"),
                     pDEVBLK->devnum );
 
-//      obtain_lock( &pLCSDEV->EventLock );
+        obtain_lock( &pLCSDEV->EventLock );
         signal_condition( &pLCSDEV->Event );
-//      release_lock( &pLCSDEV->EventLock );
+        release_lock( &pLCSDEV->EventLock );
     }
 }
 

@@ -201,12 +201,9 @@ int             TUNTAP_SetIPAddr( char*   pszNetDevName,
     if( !pszIPAddr  || 
         !inet_aton( pszIPAddr, &sin->sin_addr ) )
     {
-        if (TUNTAP_SetMACAddr( pszNetDevName, pszIPAddr ) != 0)
-        {
-            logmsg( _("TUN006E %s: Invalid IP address: %s.\n"),
-                    pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
-            return -1;
-        }
+        logmsg( _("TUN006E %s: Invalid IP address: %s.\n"),
+                pszNetDevName, !pszIPAddr ? "NULL" : pszIPAddr );
+        return -1;
     }
 
     return TUNTAP_IOCtl( 0, SIOCSIFADDR, (char*)&ifreq );
