@@ -391,7 +391,8 @@ typedef struct _REGS {                  /* Processor registers       */
         BYTE    aekey[256];             /* Storage Key               */
         int     aeacc[256];             /* Access type               */
         int     aearn[256];             /* Address room              */
-        int     aenoarn;                /* no access mode           */
+        int     aenoarn;                /* no access mode            */
+        U32     aeID;                   /* Validation identifier     */
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
 #define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
