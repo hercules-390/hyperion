@@ -941,7 +941,7 @@ int pid, status;
 /*-------------------------------------------------------------------*/
 /* Execute a panel command                                           */
 /*-------------------------------------------------------------------*/
-static void *panel_command (void *cmdline)
+void *panel_command (void *cmdline)
 {
 BYTE    cmd[32767];                     /* Copy of panel command     */
 int     cpu;                            /* CPU engine number         */
@@ -2784,27 +2784,38 @@ struct termios kbattr;                  /* Terminal I/O structure    */
 
 int volatile initdone = 0;           /* Initialization complete flag */
 
-void panel_display (void)
-{
-int     rc;                             /* Return code               */
-int     i, n;                           /* Array subscripts          */
-BYTE   *msgbuf;                         /* Circular message buffer   */
-int     msgslot = 0;                    /* Next available buffer slot*/
-int     nummsgs = 0;                    /* Number of msgs in buffer  */
-int     firstmsgn = 0;                  /* Number of first message to
-                                           be displayed relative to
-                                           oldest message in buffer  */
 #define MAX_MSGS                800     /* Number of slots in buffer */
 #define MSG_SIZE                80      /* Size of one message       */
 #define BUF_SIZE    (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
 #define NUM_LINES               22      /* Number of scrolling lines */
 #define CMD_SIZE             32767      /* Length of command line    */
+BYTE   *msgbuf;                         /* Circular message buffer   */
+int     msgslot = 0;                    /* Next available buffer slot*/
+int     nummsgs = 0;                    /* Number of msgs in buffer  */
+int     msg_size = MSG_SIZE;
+int     max_msgs = MAX_MSGS;
+
+void get_msgbuf(BYTE **_msgbuf, int *_msgslot, int *_nummsgs, int *_msg_size, int *_max_msgs)
+{
+    *_msgbuf = msgbuf;
+    *_msgslot = msgslot;
+    *_nummsgs = nummsgs;
+    *_msg_size = msg_size;
+    *_max_msgs = max_msgs;
+}
+void panel_display (void)
+{
+int     rc;                             /* Return code               */
+int     i, n;                           /* Array subscripts          */
 REGS   *regs;                           /* -> CPU register context   */
 QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
 BYTE    prvstate = 0xFF;                /* Previous stopped state    */
 U64     prvicount = 0;                  /* Previous instruction count*/
 BYTE    pswwait;                        /* PSW wait state bit        */
+int     firstmsgn = 0;                  /* Number of first message to
+                                           be displayed relative to
+                                           oldest message in buffer  */
 #ifdef EXTERNALGUI
 BYTE    redraw_msgs = 0;                /* 1=Redraw message area     */
 BYTE    redraw_cmd = 0;                 /* 1=Redraw command line     */

@@ -276,6 +276,9 @@ BYTE   *spanrate;                       /* -> Panel refresh rate     */
 BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
+#if defined(OPTION_HTTP_SERVER)
+BYTE   *shttpport;                      /* -> HTTP port number       */
+#endif /*defined(OPTION_HTTP_SERVER)*/
 #ifdef OPTION_IODELAY_KLUDGE
 BYTE   *siodelay;                       /* -> I/O delay value        */
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -288,6 +291,9 @@ U16     xpndsize;                       /* Expanded storage size (MB)*/
 U16     cnslport;                       /* Console port number       */
 U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
+#if defined(OPTION_HTTP_SERVER)
+U16     httpport;                       /* HTTP port number          */
+#endif /*defined(OPTION_HTTP_SERVER)*/
 int     archmode;                       /* Architectural mode        */
 S32     sysepoch;                       /* System epoch year         */
 S32     tzoffset;                       /* System timezone offset    */
@@ -354,6 +360,9 @@ BYTE    c;                              /* Work area for sscanf      */
     cpuprio = 15;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax = MAX_DEVICE_THREADS;
+#if defined(OPTION_HTTP_SERVER)
+    httpport = 0;
+#endif /*defined(OPTION_HTTP_SERVER)*/
 
     /* Read records from the configuration file */
     for (scount = 0; ; scount++)
@@ -389,6 +398,9 @@ BYTE    c;                              /* Work area for sscanf      */
         scpuprio = NULL;
         sdevtmax = NULL;
         spgmprdos = NULL;
+#if defined(OPTION_HTTP_SERVER)
+        shttpport = NULL;
+#endif /*defined(OPTION_HTTP_SERVER)*/
 #ifdef OPTION_IODELAY_KLUDGE
         siodelay = NULL;
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -485,6 +497,40 @@ BYTE    c;                              /* Work area for sscanf      */
                 siodelay = operand;
             }
 #endif /*OPTION_IODELAY_KLUDGE*/
+#if defined(OPTION_HTTP_SERVER)
+            else if (strcasecmp (keyword, "httpport") == 0)
+            {
+                shttpport = operand;
+                if(addargc > 0)
+                {
+                    if(!strcasecmp(addargv[0],"auth"))
+                        sysblk.httpauth = 1;
+                    else if(strcasecmp(addargv[0],"noauth"))
+                    {
+                        logmsg("HHS009E Error in %s line %d: "
+                        "Unrecognized argument %s\n",
+                        fname, stmt, addargv[0]);
+                        exit(1);
+                    }
+                    addargc--;
+                }
+                if(addargc > 0)
+                {
+                    sysblk.httpuser = strdup(addargv[1]);
+                    if(--addargc)
+                        sysblk.httppass = strdup(addargv[2]);
+                    else
+                    {
+                        logmsg("HHS008E Error in %s line %d: "
+                        "Userid, but nu password given %s\n",
+                        fname, stmt, addargv[1]);
+                        exit(1);
+                    }
+                    addargc--;
+                }
+                    
+            }
+#endif /*defined(OPTION_HTTP_SERVER)*/
             else
             {
                 logmsg( "HHC006I Error in %s line %d: "
@@ -817,6 +863,21 @@ BYTE    c;                              /* Work area for sscanf      */
             }
         }
 
+#if defined(OPTION_HTTP_SERVER)
+        /* Parse console port number operand */
+        if (shttpport != NULL)
+        {
+            if (sscanf(shttpport, "%hu%c", &httpport, &c) != 1
+                || httpport == 0)
+            {
+                logmsg( "HHS002E Error in %s line %d: "
+                        "Invalid HTTP port number %s\n",
+                        fname, stmt, shttpport);
+                exit(1);
+            }
+        }
+#endif /*defined(OPTION_HTTP_SERVER)*/
+
 #ifdef OPTION_IODELAY_KLUDGE
         /* Parse I/O delay value */
         if (siodelay != NULL)
@@ -882,6 +943,10 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Save the console port number */
     sysblk.cnslport = cnslport;
+
+#if defined(OPTION_HTTP_SERVER)
+    sysblk.httpport = httpport;
+#endif /*defined(OPTION_HTTP_SERVER)*/
 
     /* Build CPU identifier */
     sysblk.cpuid = ((U64)version << 56)

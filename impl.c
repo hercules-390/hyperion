@@ -11,6 +11,7 @@
 #include "hercules.h"
 #include "opcode.h"
 #include <unistd.h>
+#include "httpmisc.h"
 
 /*-------------------------------------------------------------------*/
 /* Signal handler for SIGINT signal                                  */
@@ -202,6 +203,20 @@ TID paneltid;
         exit(1);
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
+
+#if defined(OPTION_HTTP_SERVER)
+    if(sysblk.httpport) {
+        /* Start the http server connection thread */
+        if ( create_thread (&sysblk.httptid, &sysblk.detattr,
+                            http_server, NULL) )
+        {
+            fprintf (stderr,
+                    "HHS001E Cannot create http_server thread: %s\n",
+                    strerror(errno));
+            exit(1);
+        }
+    }
+#endif /*defined(OPTION_HTTP_SERVER)*/
 
     /* Start the console connection thread */
     if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,

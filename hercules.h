@@ -705,6 +705,13 @@ typedef struct _SYSBLK {
 
         int     cpuprio;                /* CPU thread priority       */
         int     pgmprdos;               /* Program product OS flag   */
+// #if defined(OPTION_HTTP_SERVER)
+        TID     httptid;
+        U16     httpport;
+        int     httpauth;
+        char   *httpuser;
+        char   *httppass;
+// #endif /*defined(OPTION_HTTP_SERVER)*/
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -1486,6 +1493,9 @@ extern int unbind_device (DEVBLK* dev);
 #define SIE_INTERCEPT_PER      (-14)    /* SIE guest per event       */
 
 
+/* Functions in module panel.c */
+void *panel_command (void *cmdline);
+
 /* Functions in module timer.c */
 void update_TOD_clock (void);
 void *timer_update_thread (void *argp);
@@ -1580,5 +1590,6 @@ int     cckd_chkdsk(int, FILE *, int);
 /* Functions in module w32ctca.c */
 #include "w32ctca.h"
 #endif // defined(OPTION_W32_CTCI)
+
 
 #endif /*!defined(_HERCULES_H)*/

@@ -114,7 +114,8 @@ hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 	   cmpsc.c sie.c timer.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
 	   parser.c hetlib.c ieee.c \
-	   machdep.h $(FTHREADS) $(FISHIO)
+	   machdep.h $(FTHREADS) $(FISHIO) \
+           httpserv.c cgibin.c
 
 
 hercifc_SOURCES = hercifc.c version.c
@@ -347,7 +348,8 @@ hercifc_LDFLAGS =
 @BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdutil.$(OBJEXT) \
 @BUILD_FTHREADS_TRUE@	dasdtab.$(OBJEXT) parser.$(OBJEXT) \
 @BUILD_FTHREADS_TRUE@	hetlib.$(OBJEXT) ieee.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT) w32chan.$(OBJEXT)
+@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT) w32chan.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	httpserv.$(OBJEXT) cgibin.$(OBJEXT)
 @BUILD_FTHREADS_FALSE@am_hercules_OBJECTS = w32ctca.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	impl.$(OBJEXT) config.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	panel.$(OBJEXT) version.$(OBJEXT) \
@@ -371,7 +373,8 @@ hercifc_LDFLAGS =
 @BUILD_FTHREADS_FALSE@	timer.$(OBJEXT) esame.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdutil.$(OBJEXT) \
 @BUILD_FTHREADS_FALSE@	dasdtab.$(OBJEXT) parser.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	hetlib.$(OBJEXT) ieee.$(OBJEXT)
+@BUILD_FTHREADS_FALSE@	hetlib.$(OBJEXT) ieee.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	httpserv.$(OBJEXT) cgibin.$(OBJEXT)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 hercules_LDADD = $(LDADD)
 hercules_DEPENDENCIES =
@@ -426,24 +429,25 @@ depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/cardrdr.Po $(DEPDIR)/cckd2ckd.Po \
 @AMDEP_TRUE@	$(DEPDIR)/cckdcdsk.Po $(DEPDIR)/cckdcomp.Po \
 @AMDEP_TRUE@	$(DEPDIR)/cckddasd.Po $(DEPDIR)/cckdswap.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cckdutil.Po $(DEPDIR)/channel.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ckd2cckd.Po $(DEPDIR)/ckddasd.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cmpsc.Po $(DEPDIR)/config.Po \
-@AMDEP_TRUE@	$(DEPDIR)/console.Po $(DEPDIR)/control.Po \
-@AMDEP_TRUE@	$(DEPDIR)/cpu.Po $(DEPDIR)/ctcadpt.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdcat.Po $(DEPDIR)/dasdinit.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdisup.Po $(DEPDIR)/dasdload.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdls.Po $(DEPDIR)/dasdpdsu.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdtab.Po $(DEPDIR)/dasdutil.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dat.Po $(DEPDIR)/decimal.Po \
-@AMDEP_TRUE@	$(DEPDIR)/diagmssf.Po $(DEPDIR)/diagnose.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dmap2hrc.Po $(DEPDIR)/esame.Po \
-@AMDEP_TRUE@	$(DEPDIR)/external.Po $(DEPDIR)/fbadasd.Po \
-@AMDEP_TRUE@	$(DEPDIR)/float.Po $(DEPDIR)/fthreads.Po \
-@AMDEP_TRUE@	$(DEPDIR)/general1.Po $(DEPDIR)/general2.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hercifc.Po $(DEPDIR)/hetget.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetinit.Po $(DEPDIR)/hetlib.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetmap.Po $(DEPDIR)/hetupd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cckdutil.Po $(DEPDIR)/cgibin.Po \
+@AMDEP_TRUE@	$(DEPDIR)/channel.Po $(DEPDIR)/ckd2cckd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ckddasd.Po $(DEPDIR)/cmpsc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/config.Po $(DEPDIR)/console.Po \
+@AMDEP_TRUE@	$(DEPDIR)/control.Po $(DEPDIR)/cpu.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ctcadpt.Po $(DEPDIR)/dasdcat.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdinit.Po $(DEPDIR)/dasdisup.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdload.Po $(DEPDIR)/dasdls.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdpdsu.Po $(DEPDIR)/dasdtab.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdutil.Po $(DEPDIR)/dat.Po \
+@AMDEP_TRUE@	$(DEPDIR)/decimal.Po $(DEPDIR)/diagmssf.Po \
+@AMDEP_TRUE@	$(DEPDIR)/diagnose.Po $(DEPDIR)/dmap2hrc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/esame.Po $(DEPDIR)/external.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fbadasd.Po $(DEPDIR)/float.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fthreads.Po $(DEPDIR)/general1.Po \
+@AMDEP_TRUE@	$(DEPDIR)/general2.Po $(DEPDIR)/hercifc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetget.Po $(DEPDIR)/hetinit.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetlib.Po $(DEPDIR)/hetmap.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetupd.Po $(DEPDIR)/httpserv.Po \
 @AMDEP_TRUE@	$(DEPDIR)/ieee.Po $(DEPDIR)/impl.Po $(DEPDIR)/io.Po \
 @AMDEP_TRUE@	$(DEPDIR)/ipl.Po $(DEPDIR)/machchk.Po \
 @AMDEP_TRUE@	$(DEPDIR)/opcode.Po $(DEPDIR)/panel.Po \
@@ -632,6 +636,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckddasd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckdswap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cckdutil.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cgibin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/channel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ckd2cckd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ckddasd.Po@am__quote@
@@ -667,6 +672,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetlib.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/hetupd.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/httpserv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ieee.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/impl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/io.Po@am__quote@

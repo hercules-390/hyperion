@@ -46,7 +46,8 @@ hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 	   cmpsc.c sie.c timer.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
 	   parser.c hetlib.c ieee.c \
-	   machdep.h $(FTHREADS) $(FISHIO)
+	   machdep.h $(FTHREADS) $(FISHIO) \
+           httpserv.c cgibin.c
 
 hercifc_SOURCES = hercifc.c version.c
 
