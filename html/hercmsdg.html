@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Messages: DG - DYNGUI.DLL</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages: DG - DYNGUI.DLL</h1>
+<p>
+This page describes the DYNGUI.DLL messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator.
+<h3>Messages</h3>
+<dl>
+
+<!-- ----------------------------------------------------------- -->
+<!-- ------    INDEX    ---------------------------------------- -->
+<!-- ----------------------------------------------------------- -->
+
+<blockquote><table>
+
+<tr><td><a href="#HHCDG001I"><tt>
+HHCDG001I dyngui.dll initiated
+</tt></a></td></tr>
+
+<tr><td><a href="#HHCDG002I"><tt>
+HHCDG002I dyngui.dll terminated
+</tt></a></td></tr>
+
+<tr><td><a href="#HHCDG003S"><tt>
+HHCDG003S select failed on input stream: <i>errmsg</i>
+</tt></a></td></tr>
+
+<tr><td><a href="#HHCDG004S"><tt>
+HHCDG004S read failed on input stream: <i>errmsg</i>
+</tt></a></td></tr>
+
+<tr><td><a href="#HHCDG005E"><tt>
+HHCDG005E Device query buffer overflow! (device=<i>xxxx</i>)
+</tt></a></td></tr>
+
+<tr><td><a href="#HHCDG006S"><tt>
+HHCDG006S malloc pszInputBuff failed: <i>errmsg</i>
+</tt></a></td></tr>
+
+<tr><td><a href="#HHCDG007S"><tt>
+HHCDG007S malloc pszCommandBuff failed: <i>errmsg</i>
+</tt></a></td></tr>
+
+</table></blockquote>
+
+<p><hr><p>
+<!-- ----------------------------------------------------------- -->
+<!-- ------    Message detail   -------------------------------- -->
+<!-- ----------------------------------------------------------- -->
+
+<dt><tt><a name="HHCDG001I"><b>
+HHCDG001I dyngui.dll initiated
+</b></a></tt><dd><dl>
+
+  <p><dt>Meaning<dd>
+  
+  The dyngui loadable module was successfully loaded and initiated.
+
+  <p><dt>Action<dd>
+  
+  None. This message is informational only.
+  
+  <p></dl><br>
+
+<!-- ----------------------------------------------------------- -->
+
+<dt><tt><a name="HHCDG002I"><b>
+HHCDG002I dyngui.dll terminated
+</b></a></tt><dd><dl>
+
+  <p><dt>Meaning<dd>
+  
+  The dyngui loadable module was successfully terminated.
+
+  <p><dt>Action<dd>
+  
+  None. This message is informational only.
+  
+  <p></dl><br>
+
+<!-- ----------------------------------------------------------- -->
+
+<dt><tt><a name="HHCDG003S"><b>
+HHCDG003S select failed on input stream: </b><i>errmsg</i><b>
+</b></a></tt><dd><dl>
+
+  <p><dt>Meaning<dd>
+  
+  The socket select function call failed on the input stream.
+  <tt><i>errmsg</i></tt>&nbsp; describes the exact error.
+
+  <p><dt>Action<dd>
+  
+  None; this is a fatal error; the system is immediately terminated.
+  
+  <p></dl><br>
+
+<!-- ----------------------------------------------------------- -->
+
+<dt><tt><a name="HHCDG004S"><b>
+HHCDG004S read failed on input stream: </b><i>errmsg</i><b>
+</b></a></tt><dd><dl>
+
+  <p><dt>Meaning<dd>
+  
+  An unrecoverable i/o error occurred while reading from the input stream.
+  <tt><i>errmsg</i></tt>&nbsp; describes the exact error.
+
+  <p><dt>Action<dd>
+  
+  None; this is a fatal error; the system is immediately terminated.
+  
+  <p></dl><br>
+
+<!-- ----------------------------------------------------------- -->
+
+<dt><tt><a name="HHCDG005E"><b>
+HHCDG005E Device query buffer overflow! (device=</b><i>xxxx</i><b>)
+</b></a></tt><dd><dl>
+
+  <p><dt>Meaning<dd>
+  
+  The device query buffer is not large enough to hold all of the information
+  returned by the device handler. <tt><i>xxxx</i></tt>&nbsp; is the device
+  whose information was being queried at the time the error occurred.
+
+  <p><dt>Action<dd>
+  
+  The system attempts to continue functioning, but unpredictable results may
+  occur (i.e. the system could crash). You should report this error to the
+  Hercules developers immediately so that they can build you a new dyngui.dll
+  with a larger device query buffer. Since the dyngui.dll is an unloadable
+  module however, you will need to restart Hercules in order to begin using
+  the newly fixed version of dyngui.dll.
+  
+  <p></dl><br>
+
+<!-- ----------------------------------------------------------- -->
+
+<dt><tt><a name="HHCDG006S"><b>
+HHCDG006S malloc pszInputBuff failed: </b><i>errmsg</i><b>
+</b></a></tt><dd><dl>
+
+  <p><dt>Meaning<dd>
+  
+  There was not enough virtual memory on the host system to satisfy the
+  malloc request for the input stream buffer. <tt><i>errmsg</i></tt>&nbsp;
+  describes the exact error.
+
+  <p><dt>Action<dd>
+  
+  None; this is a fatal error; the system is immediately terminated. You
+  should increase the size of your host system's virtual memory allocation
+  so that there is enough for Hercules to run, or else decrease the amount of
+  memory that Hercules needs in order to run (e.g. decrease your <tt>MAINSIZE</tt>
+  value).
+
+  <p></dl><br>
+
+<!-- ----------------------------------------------------------- -->
+
+<dt><tt><a name="HHCDG007S"><b>
+HHCDG007S malloc pszCommandBuff failed: </b><i>errmsg</i><b>
+</b></a></tt><dd><dl>
+
+  <p><dt>Meaning<dd>
+  
+  There was not enough virtual memory on the host system to satisfy the
+  malloc request for the command processing buffer. <tt><i>errmsg</i></tt>&nbsp;
+  describes the exact error.
+
+  <p><dt>Action<dd>
+  
+  None; this is a fatal error; the system is immediately terminated. You
+  should increase the size of your host system's virtual memory allocation
+  so that there is enough for Hercules to run, or else decrease the amount of
+  memory that Hercules needs in order to run (e.g. decrease your <tt>MAINSIZE</tt>
+  value).
+
+  <p></dl><br>
+
+<!-- ----------------------------------------------------------- -->
+
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 6 July 2003    
+</BODY>
+</HTML>

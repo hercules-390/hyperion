@@ -189,7 +189,7 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
 
         logmsg
         (
-            _("HHCHGnnnE select failed: %s\n")
+            _("HHCDG003S select failed on input stream: %s\n")
 
             ,strerror(errno)
         );
@@ -223,7 +223,7 @@ void ReadInputData ( size_t  nTimeoutMillsecs )
 
         logmsg
         (
-            _("HHCHGnnnE read failed: %s\n")
+            _("HHCDG004S read failed on input stream: %s\n")
 
             ,strerror(errno)
         );
@@ -744,7 +744,7 @@ void  UpdateDeviceStatus ()
         {
             logmsg
             (
-                _("HHCHGnnnE Device query buffer overflow! (device=%4.4X)\n")
+                _("HHCDG005E Device query buffer overflow! (device=%4.4X)\n")
 
                 ,pDEVBLK->devnum
 
@@ -807,7 +807,7 @@ void  Initialize ()
     if (!(pszInputBuff = (BYTE*) malloc( nInputBuffSize )))
     {
         fprintf(stderr,
-            _("HHCHGnnnS malloc pszInputBuff failed: %s\n")
+            _("HHCDG006S malloc pszInputBuff failed: %s\n")
             ,strerror(errno));
         exit(0);
     }
@@ -820,7 +820,7 @@ void  Initialize ()
     if (!(pszCommandBuff = (BYTE*) malloc( nCommandBuffSize )))
     {
         fprintf(stderr,
-            _("HHCHGnnnS malloc pszCommandBuff failed: %s\n")
+            _("HHCDG007S malloc pszCommandBuff failed: %s\n")
             ,strerror(errno));
         exit(0);
     }
@@ -883,10 +883,10 @@ void*  gui_debug_cpu_state ( REGS* pREGS )
 
 void gui_panel_display ()
 {
-    logmsg(_("HHCHGnnnI dyngui.dll initiated\n"));
+    logmsg(_("HHCDG001I dyngui.dll initiated\n"));
     Initialize();               // (allocate buffers, etc)
     ProcessingLoop();           // (primary processing loop)
-    logmsg(_("HHCHGnnnI dyngui.dll terminated\n"));
+    logmsg(_("HHCDG002I dyngui.dll terminated\n"));
     Cleanup();                  // (de-allocate resources)
 }
 
