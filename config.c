@@ -838,19 +838,19 @@ BYTE **newargv;
             }
             else
             {
-                fprintf(stderr, _("HHCCF008S Error in %s line %d: "
+                logmsg( _("HHCCF008E Error in %s line %d: "
                         "Unrecognized keyword %s\n"),
                         fname, stmt, keyword);
-                delayed_exit(1);
+                operand = "";
+                addargc = 0;
             }
 
             /* Check for one and only one operand */
             if (operand == NULL || addargc != 0)
             {
-                fprintf(stderr, _("HHCCF009S Error in %s line %d: "
+                logmsg( _("HHCCF009E Error in %s line %d: "
                         "Incorrect number of operands\n"),
                         fname, stmt);
-                delayed_exit(1);
             }
         }
 
