@@ -17,7 +17,7 @@
 //
 //   Please read README.NETWORKING for more info.
 //
-//#if !defined(__APPLE__)
+#if !defined(__APPLE__)
 
 #include "hercules.h"
 #include "devtype.h"
@@ -1564,4 +1564,4 @@ void  packet_trace( BYTE* pAddr, int iLen )
         logmsg( " %s\n", print_chars );
     }
 }
-//#endif /* !defined(__APPLE__) */
+#endif /* !defined(__APPLE__) */
