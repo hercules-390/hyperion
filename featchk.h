@@ -55,6 +55,12 @@
  #define _FEATURE_EXPANDED_STORAGE
 #endif
 
+/* When ESAME is installed then all instructions
+   marked N3 in the reference are also available
+   in ESA/390 mode */
+#if defined(FEATURE_ESAME_INSTALLED)
+ #define FEATURE_ESAME_N3_ESA390
+#endif /*defined(FEATURE_ESAME_INSTALLED)*/
 
 #if defined(_FEATURE_SIE) && defined(FEATURE_STORAGE_KEY_ASSIST)
  #define _FEATURE_STORAGE_KEY_ASSIST
@@ -124,13 +130,6 @@
  && defined(OPTION_NO_IEEE_SUPPORT)
  #undef FEATURE_BINARY_FLOATING_POINT
 #endif
-
-/* When ESAME is installed then all instructions
-   marked N3 in the reference are also available
-   in ESA/390 mode */
-#if defined(FEATURE_ESAME_INSTALLED)
- #define FEATURE_ESAME_N3_ESA390
-#endif /*defined(FEATURE_ESAME_INSTALLED)*/
 
 #if defined(FEATURE_BASIC_FP_EXTENSIONS) \
  && !defined(FEATURE_HEXADECIMAL_FLOATING_POINT)

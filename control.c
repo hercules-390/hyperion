@@ -224,8 +224,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         }
 
         /* Restore the PSW key mask from the DUCT */
-        regs->CR(3) &= ~CR3_KEYMASK;
-        regs->CR(3) |= duct_pkrp & DUCT_PKM;
+        regs->CR_LHH(3) = duct_pkrp & DUCT_PKM;
 
         /* Restore the PSW key from the DUCT */
         regs->psw.pkey = duct_pkrp & DUCT_KEY;
@@ -1698,7 +1697,7 @@ U16     xcode;                          /* Exception code            */
             /* Unlock reguest */
             if(pte & PAGETAB_PGLOCK)
             {
-                pte &= ~PAGETAB_PGLOCK;
+                pte &= ~((U64)PAGETAB_PGLOCK);
 #if defined(FEATURE_ESAME)
                 ARCH_DEP(store_doubleword_absolute) (pte, raddr, regs);
 #else /*!defined(FEATURE_ESAME)*/
@@ -2373,7 +2372,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* Replace the PSW key mask by the EKM if the M bit is set,
            otherwise OR the EKM into the current PSW key mask */
         if (ete[4] & ETE4_M)
-            regs->CR(3) &= ~CR3_KEYMASK;
+            regs->CR_LHH(3) = 0;
         regs->CR(3) |= (ete[3] & ETE3_EKM);
 
         /* Replace the EAX key by the EEAX if the E bit is set */
@@ -2561,7 +2560,7 @@ U16     xcode;                          /* Exception code            */
 
             /* Obtain new PSTD (or PASCE) and AX from the ASTE */
             newregs.CR(1) = ASTE_AS_DESIGNATOR(aste);
-            newregs.CR(4) &= ~CR4_AX;
+            newregs.CR_LHH(4) = 0;
             newregs.CR(4) |= aste[1] & ASTE1_AX;
 
             /* Load CR5 with the primary ASTE origin address */

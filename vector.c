@@ -630,7 +630,7 @@ BYTE    workvmr[VECTOR_SECTION_SIZE/8];
 DEF_INST(v_save_vsr)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -649,7 +649,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(v_save_vmr)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -667,7 +667,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(v_restore_vsr)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U32     n1, n2;
 U64     d;
 
@@ -720,7 +720,7 @@ U64     d;
 DEF_INST(v_restore_vmr)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -738,7 +738,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(v_load_vct_from_address)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U32     n;
 
     S_NW(inst, execflag, regs, b2, effective_addr2);
@@ -765,7 +765,7 @@ U32     n;
 DEF_INST(v_clear_vr)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U32     n, n1, n2;
 
     S(inst, execflag, regs, b2, effective_addr2);
@@ -799,7 +799,7 @@ U32     n, n1, n2;
 DEF_INST(v_set_vector_mask_mode)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -819,7 +819,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(v_load_vix_from_address)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U32     n;
 
     S_NW(inst, execflag, regs, b2, effective_addr2);
@@ -846,7 +846,7 @@ U32     n;
 DEF_INST(v_store_vector_parameters)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -867,7 +867,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(v_save_vac)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -893,7 +893,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(v_restore_vac)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 

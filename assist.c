@@ -55,7 +55,7 @@
 DEF_INST(svc_assist)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
@@ -79,16 +79,16 @@ U32     effective_addr1,
 DEF_INST(obtain_local_lock)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-U32     ascb_addr;                      /* Virtual address of ASCB   */
-U32     lock_addr;                      /* Virtual addr of ASCBLOCK  */
+VADR    ascb_addr;                      /* Virtual address of ASCB   */
+VADR    lock_addr;                      /* Virtual addr of ASCBLOCK  */
 U32     hlhi_word;                      /* Highest lock held word    */
-U32     lit_addr;                       /* Virtual address of lock
+VADR    lit_addr;                       /* Virtual address of lock
                                            interface table           */
 U32     lock;                           /* Lock value                */
 U32     lcpa;                           /* Logical CPU address       */
-U32     newia;                          /* Unsuccessful branch addr  */
+VADR    newia;                          /* Unsuccessful branch addr  */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -168,18 +168,18 @@ U32     newia;                          /* Unsuccessful branch addr  */
 DEF_INST(release_local_lock)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-U32     ascb_addr;                      /* Virtual address of ASCB   */
-U32     lock_addr;                      /* Virtual addr of ASCBLOCK  */
-U32     susp_addr;                      /* Virtual addr of ASCBLSWQ  */
+VADR    ascb_addr;                      /* Virtual address of ASCB   */
+VADR    lock_addr;                      /* Virtual addr of ASCBLOCK  */
+VADR    susp_addr;                      /* Virtual addr of ASCBLSWQ  */
 U32     hlhi_word;                      /* Highest lock held word    */
-U32     lit_addr;                       /* Virtual address of lock
+VADR    lit_addr;                       /* Virtual address of lock
                                            interface table           */
 U32     lock;                           /* Lock value                */
 U32     susp;                           /* Lock suspend queue        */
 U32     lcpa;                           /* Logical CPU address       */
-U32     newia;                          /* Unsuccessful branch addr  */
+VADR    newia;                          /* Unsuccessful branch addr  */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -258,16 +258,16 @@ U32     newia;                          /* Unsuccessful branch addr  */
 DEF_INST(obtain_cms_lock)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-U32     ascb_addr;                      /* Virtual address of ASCB   */
+VADR    ascb_addr;                      /* Virtual address of ASCB   */
 U32     hlhi_word;                      /* Highest lock held word    */
-U32     lit_addr;                       /* Virtual address of lock
+VADR    lit_addr;                       /* Virtual address of lock
                                            interface table           */
-U32     lock_addr;                      /* Lock address              */
+VADR    lock_addr;                      /* Lock address              */
 int     lock_arn;                       /* Lock access register      */
 U32     lock;                           /* Lock value                */
-U32     newia;                          /* Unsuccessful branch addr  */
+VADR    newia;                          /* Unsuccessful branch addr  */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -347,17 +347,17 @@ U32     newia;                          /* Unsuccessful branch addr  */
 DEF_INST(release_cms_lock)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-U32     ascb_addr;                      /* Virtual address of ASCB   */
+VADR    ascb_addr;                      /* Virtual address of ASCB   */
 U32     hlhi_word;                      /* Highest lock held word    */
-U32     lit_addr;                       /* Virtual address of lock
+VADR    lit_addr;                       /* Virtual address of lock
                                            interface table           */
-U32     lock_addr;                      /* Lock address              */
+VADR    lock_addr;                      /* Lock address              */
 int     lock_arn;                       /* Lock access register      */
 U32     lock;                           /* Lock value                */
 U32     susp;                           /* Lock suspend queue        */
-U32     newia;                          /* Unsuccessful branch addr  */
+VADR    newia;                          /* Unsuccessful branch addr  */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -436,7 +436,7 @@ U32     newia;                          /* Unsuccessful branch addr  */
 DEF_INST(trace_svc_interruption)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
@@ -458,7 +458,7 @@ U32     effective_addr1,
 DEF_INST(trace_program_interruption)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
@@ -480,7 +480,7 @@ U32     effective_addr1,
 DEF_INST(trace_initial_srb_dispatch)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
@@ -502,7 +502,7 @@ U32     effective_addr1,
 DEF_INST(trace_io_interruption)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
@@ -524,7 +524,7 @@ U32     effective_addr1,
 DEF_INST(trace_task_dispatch)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
@@ -546,7 +546,7 @@ U32     effective_addr1,
 DEF_INST(trace_svc_return)
 {
 int     b1, b2;                         /* Values of base field      */
-U32     effective_addr1,
+VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
     SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);

@@ -741,7 +741,7 @@ DEF_INST(add_bfp_long_reg)
 DEF_INST(add_bfp_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op1, op2;
 	int pgm_check;
 
@@ -865,7 +865,7 @@ DEF_INST(add_bfp_short_reg)
 DEF_INST(add_bfp_short)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct sbfp op1, op2;
 	int pgm_check;
 
@@ -1048,7 +1048,7 @@ DEF_INST(compare_bfp_long_reg)
 DEF_INST(compare_bfp_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op1, op2;
 	int pgm_check;
 
@@ -1150,7 +1150,7 @@ DEF_INST(compare_bfp_short_reg)
 DEF_INST(compare_bfp_short)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct sbfp op1, op2;
 	int pgm_check;
 
@@ -1221,7 +1221,7 @@ DEF_INST(compare_and_signal_bfp_long_reg)
 DEF_INST(compare_and_signal_bfp_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op1, op2;
 	int pgm_check;
 
@@ -1268,7 +1268,7 @@ DEF_INST(compare_and_signal_bfp_short_reg)
 DEF_INST(compare_and_signal_bfp_short)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct sbfp op1, op2;
 	int pgm_check;
 
@@ -1683,7 +1683,7 @@ DEF_INST(divide_bfp_long_reg)
 DEF_INST(divide_bfp_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op1, op2;
 	int pgm_check;
 
@@ -1810,7 +1810,7 @@ DEF_INST(divide_bfp_short_reg)
 DEF_INST(divide_bfp_short)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct sbfp op1, op2;
 	int pgm_check;
 
@@ -2024,7 +2024,7 @@ DEF_INST(loadlength_bfp_short_to_long_reg)
 DEF_INST(loadlength_bfp_short_to_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op1;
 	struct sbfp op2;
 
@@ -2504,7 +2504,7 @@ DEF_INST(multiply_bfp_long_reg)
 DEF_INST(multiply_bfp_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op1, op2;
 	int pgm_check;
 
@@ -2635,7 +2635,7 @@ DEF_INST(multiply_bfp_short_reg)
 DEF_INST(multiply_bfp_short)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct sbfp op1, op2;
 	int pgm_check;
 
@@ -2783,7 +2783,7 @@ DEF_INST(squareroot_bfp_long_reg)
 DEF_INST(squareroot_bfp_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op;
 	int pgm_check;
 
@@ -2861,7 +2861,7 @@ DEF_INST(squareroot_bfp_short_reg)
 DEF_INST(squareroot_bfp_short)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct sbfp op;
 	int pgm_check;
 
@@ -2943,7 +2943,7 @@ DEF_INST(subtract_bfp_long_reg)
 DEF_INST(subtract_bfp_long)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct lbfp op1, op2;
 	int pgm_check;
 
@@ -2996,7 +2996,7 @@ DEF_INST(subtract_bfp_short_reg)
 DEF_INST(subtract_bfp_short)
 {
 	int r1, b2;
-	U32 effective_addr2;
+	VADR effective_addr2;
 	struct sbfp op1, op2;
 	int pgm_check;
 

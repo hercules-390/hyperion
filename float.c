@@ -479,7 +479,7 @@ static inline void store_ef( EXTENDED_FLOAT *fl, U32 *fpr )
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-static inline void vfetch_sf( SHORT_FLOAT *fl, U32 addr, int arn,
+static inline void vfetch_sf( SHORT_FLOAT *fl, VADR addr, int arn,
     REGS *regs )
 {
 U32     value;                          /* Operand value             */
@@ -510,7 +510,7 @@ U32     value;                          /* Operand value             */
 /*      causes an addressing, translation, or fetch protection       */
 /*      exception, and in this case the function does not return.    */
 /*-------------------------------------------------------------------*/
-static inline void vfetch_lf( LONG_FLOAT *fl, U32 addr, int arn,
+static inline void vfetch_lf( LONG_FLOAT *fl, VADR addr, int arn,
     REGS *regs )
 {
 U64     value;                          /* Operand value             */
@@ -3854,7 +3854,7 @@ DEF_INST(store_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Double word workarea      */
 
     RX(inst, execflag, regs, r1, b2, effective_addr2);
@@ -3876,7 +3876,7 @@ DEF_INST(multiply_float_long_to_ext)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT mul_fl;
 EXTENDED_FLOAT result_fl;
@@ -3911,7 +3911,7 @@ DEF_INST(load_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U64     dreg;                           /* Double word workarea      */
 
     RX(inst, execflag, regs, r1, b2, effective_addr2);
@@ -3934,7 +3934,7 @@ DEF_INST(compare_float_long)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT cmp_fl;
 
@@ -3958,7 +3958,7 @@ DEF_INST(add_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT add_fl;
 int     pgm_check;
@@ -3999,7 +3999,7 @@ DEF_INST(subtract_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT sub_fl;
 int     pgm_check;
@@ -4043,7 +4043,7 @@ DEF_INST(multiply_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT mul_fl;
 int     pgm_check;
@@ -4077,7 +4077,7 @@ DEF_INST(divide_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT div_fl;
 int     pgm_check;
@@ -4111,7 +4111,7 @@ DEF_INST(add_unnormal_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT add_fl;
 int     pgm_check;
@@ -4152,7 +4152,7 @@ DEF_INST(subtract_unnormal_float_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT fl;
 LONG_FLOAT sub_fl;
 int     pgm_check;
@@ -4195,7 +4195,7 @@ DEF_INST(store_float_short)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     RX(inst, execflag, regs, r1, b2, effective_addr2);
     HFPREG_CHECK(r1, regs);
@@ -4212,7 +4212,7 @@ DEF_INST(load_float_short)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     RX(inst, execflag, regs, r1, b2, effective_addr2);
     HFPREG_CHECK(r1, regs);
@@ -4229,7 +4229,7 @@ DEF_INST(compare_float_short)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT cmp_fl;
 
@@ -4253,7 +4253,7 @@ DEF_INST(add_float_short)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT add_fl;
 int     pgm_check;
@@ -4294,7 +4294,7 @@ DEF_INST(subtract_float_short)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT sub_fl;
 int     pgm_check;
@@ -4339,7 +4339,7 @@ DEF_INST(multiply_float_short_to_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT mul_fl;
 LONG_FLOAT result_fl;
@@ -4374,7 +4374,7 @@ DEF_INST(divide_float_short)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT div_fl;
 int     pgm_check;
@@ -4408,7 +4408,7 @@ DEF_INST(add_unnormal_float_short)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT add_fl;
 int     pgm_check;
@@ -4449,7 +4449,7 @@ DEF_INST(subtract_unnormal_float_short)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT sub_fl;
 int     pgm_check;
@@ -5834,7 +5834,7 @@ DEF_INST(loadlength_float_short_to_long)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
     HFPREG_CHECK(r1, regs);
@@ -5856,7 +5856,7 @@ DEF_INST(loadlength_float_long_to_ext)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U32     wk;
 U64     wkd;
 
@@ -5894,7 +5894,7 @@ DEF_INST(loadlength_float_short_to_ext)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 U32     wk;
 
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
@@ -5932,7 +5932,7 @@ DEF_INST(squareroot_float_short)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT sq_fl;
 SHORT_FLOAT fl;
 
@@ -5957,7 +5957,7 @@ DEF_INST(squareroot_float_long)
 {
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 LONG_FLOAT sq_fl;
 LONG_FLOAT fl;
 
@@ -5983,7 +5983,7 @@ DEF_INST(multiply_float_short)
 int     r1;                             /* Value of R field          */
 int     i1;
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 SHORT_FLOAT fl;
 SHORT_FLOAT mul_fl;
 int     pgm_check;

@@ -1023,7 +1023,7 @@ BYTE    func;                           /* Function code...          */
 DEF_INST(inter_user_communication_vehicle)
 {
 int     b2;                             /* Effective addr base       */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 

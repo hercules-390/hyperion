@@ -1,4 +1,4 @@
-11 Mar 2001 Correction to RP - identified by Peter Stammbach
+13 Mar 2001 Fix address types in assist/float/ieee instructions - Jan Jaeger
 10 Mar 2001 Stop all CPU's in release_config - Jan Jaeger
 10 Mar 2001 Fix CPU entering manual state on disabled wait - Jan Jaeger
 10 Mar 2001 Various fixes to configurable features logic - Jan Jaeger

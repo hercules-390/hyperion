@@ -832,7 +832,7 @@ S32     i,j;                            /* Integer workareas         */
 DEF_INST(branch_relative_on_index_low_or_equal)
 {
 int     r1, r3;                         /* Register numbers          */
-U32     i2;                             /* 16-bit operand            */
+U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
 
     RI(inst, execflag, regs, r1, r3, i2);

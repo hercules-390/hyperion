@@ -1236,6 +1236,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
     regs->GR_G(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
 } /* end DEF_INST(load_logical_character) */
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -3183,7 +3184,7 @@ U64     n;                              /* Integer work areas        */
     n = effective_addr2 & 0x3F;
 
     /* Copy and shift the signed value of the R3 register */
-    (S64)regs->GR_G(r1) = n > 62 ?
+    (S64)regs->GR_G(r1) = (n > 62) ?
                     ((S64)regs->GR_G(r3) < 0 ? -1LL : 0) :
                     (S64)regs->GR_G(r3) >> n;
 
@@ -4508,7 +4509,7 @@ int     i, j;                           /* Array subscripts          */
     }
 
     /* Store 16-byte packed decimal result at operand address */
-    ARCH_DEP(vstorec) ( result, 15, addr1, b1, regs );
+    ARCH_DEP(vstorec) ( result, 16-1, addr1, b1, regs );
 
 } /* end DEF_INST(pack_ascii) */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
@@ -4548,7 +4549,7 @@ int     i, j;                           /* Array subscripts          */
     }
 
     /* Store 16-byte packed decimal result at operand address */
-    ARCH_DEP(vstorec) ( result, 15, addr1, b1, regs );
+    ARCH_DEP(vstorec) ( result, 16-1, addr1, b1, regs );
 
 } /* end DEF_INST(pack_unicode) */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/

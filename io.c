@@ -590,7 +590,7 @@ U32     ioparm;                         /* I/O interruption parameter*/
 DEF_INST(test_subchannel)
 {
 int     b2;                             /* Effective addr base       */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 IRB     irb;                            /* Interruption response blk */
 
@@ -643,7 +643,7 @@ IRB     irb;                            /* Interruption response blk */
 DEF_INST(cancel_subchannel)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -663,11 +663,11 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(start_io)
 {
 int     b2;                             /* Effective addr base       */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 PSA    *psa;                            /* -> prefixed storage area  */
 DEVBLK *dev;                            /* -> device block for SIO   */
 ORB     orb;                            /* Operation request blk @IZW*/
-U32     ccwaddr;                        /* CCW address for start I/O */
+VADR    ccwaddr;                        /* CCW address for start I/O */
 BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
 
     S(inst, execflag, regs, b2, effective_addr2);
@@ -712,7 +712,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
 DEF_INST(test_io)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
 
     S(inst, execflag, regs, b2, effective_addr2);
@@ -744,7 +744,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 DEF_INST(halt_io)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block for SIO   */
 
     S(inst, execflag, regs, b2, effective_addr2);
@@ -775,7 +775,7 @@ DEVBLK *dev;                            /* -> device block for SIO   */
 DEF_INST(test_channel)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 #if defined(_FEATURE_SIE)
 BYTE    channelid;
 U16     tch_ctl;
@@ -814,7 +814,7 @@ U16     tch_ctl;
 DEF_INST(store_channel_id)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -836,7 +836,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(connect_channel_set)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -855,7 +855,7 @@ U32     effective_addr2;                /* Effective address         */
 DEF_INST(disconnect_channel_set)
 {
 int     b2;                             /* Base of effective addr    */
-U32     effective_addr2;                /* Effective address         */
+VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
