@@ -183,6 +183,25 @@ char           *kw, *op;                /* Argument keyword/option   */
     if (cckd->max_dfw < 1) cckd->max_dfw = 1;
     if (cckd->max_wt < 1) cckd->max_wt = CCKD_MAX_WRITE_TIME;
 
+    /* Initialize locks, conditions and attributes */
+    initialize_lock (&cckd->filelock);
+    initialize_lock (&cckd->dfwlock);
+    initialize_lock (&cckd->gclock);
+    initialize_lock (&cckd->termlock);
+    initialize_lock (&cckd->cachelock);
+    initialize_condition (&cckd->dfwcond);
+    initialize_condition (&cckd->gccond);
+    initialize_condition (&cckd->rtcond);
+    initialize_condition (&cckd->termcond);
+    initialize_detach_attr (&cckd->gcattr);
+    initialize_detach_attr (&cckd->dfwattr);
+    for (i = 0; i < cckd->max_ra; i++)
+    {   /* read-ahead locks, conditions and attributes */
+        initialize_lock (&cckd->ralock[i]);
+        initialize_condition (&cckd->racond[i]);
+        initialize_detach_attr (&cckd->raattr[i]);
+    }
+
     cckd->l1x = cckd->sfx = -1;
 
     /* Read the compressed device header */
@@ -227,24 +246,6 @@ char           *kw, *op;                /* Argument keyword/option   */
 
     /* Set current ckddasd position */
     cckd->curpos = 512;
-
-    /* Initialize locks, conditions and attributes */
-    initialize_lock (&cckd->filelock);
-    initialize_lock (&cckd->dfwlock);
-    initialize_lock (&cckd->gclock);
-    initialize_lock (&cckd->termlock);
-    initialize_condition (&cckd->dfwcond);
-    initialize_condition (&cckd->gccond);
-    initialize_condition (&cckd->rtcond);
-    initialize_condition (&cckd->termcond);
-    initialize_detach_attr (&cckd->gcattr);
-    initialize_detach_attr (&cckd->dfwattr);
-    for (i = 0; i < cckd->max_ra; i++)
-    {   /* read-ahead locks, conditions and attributes */
-        initialize_lock (&cckd->ralock[i]);
-        initialize_condition (&cckd->racond[i]);
-        initialize_detach_attr (&cckd->raattr[i]);
-    }
 
     /* set default cache limit for cckd_read_trk */
     if (dev->ckdcachenbr < 1)

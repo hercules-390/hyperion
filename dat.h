@@ -651,7 +651,7 @@ U16     xcode;                          /* ALET tran.exception code  */
         *pstid = TEA_ST_HOME;
         *pasd = regs->CR(13);
     }
-  #endif defined(FEATURE_LINKAGE_STACK)
+  #endif /*defined(FEATURE_LINKAGE_STACK)*/
     else /* SECONDARY_SPACE_MODE */
     {
         *pstid = TEA_ST_SECNDRY;

@@ -1,3 +1,5 @@
+11 Jun 2001 Initialize conditions & locks earlier in init routine,
+            including initializing cachelock (thanks Fish) - Greg Smith
 11 Jun 2001 Correct excarid in ESAME mode - Jan Jaeger
 10 Jun 2001 Correct tea on MVPG protection exception - Paul Leisy
 10 Jun 2001 Correct halt subchannel function - Jan Jaeger
