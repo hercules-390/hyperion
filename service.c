@@ -17,7 +17,6 @@
 /*      Dynamic CPU reconfiguration - Jan Jaeger                     */
 /*      Suppress superflous HHC701I/HHC702I messages - Jan Jaeger    */
 /*      Break syscons output if too long - Jan Jaeger                */
-/*      Added CHSC - CHannel Subsystem Call - Jan Jaeger 2001-05-30  */
 /*      Added CPI - Control Program Information ev. - JJ 2001-11-19  */
 /*-------------------------------------------------------------------*/
 
@@ -1341,66 +1340,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
 } /* end function service_call */
 
-
-#if defined(FEATURE_CHSC)
-/*-------------------------------------------------------------------*/
-/* B25F CHSC  - Channel Subsystem Call                         [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(channel_subsystem_call)
-{
-int     r1, r2;                                 /* register values   */
-VADR    n;                                      /* Unsigned work     */
-BYTE   *mn;                                     /* Unsigned work     */
-U16     length;                                 /* Length of request */
-U16     req;                                    /* Request code      */
-CHSC_REQ *chsc_req;                             /* Request structure */
-CHSC_RSP *chsc_rsp;                             /* Response structure*/
-
-    RRE(inst, regs, r1, r2);
-
-    PRIV_CHECK(regs);
-
-    SIE_INTERCEPT(regs);
-
-    n = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    
-    if(n & 0xFFF)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
-
-    mn = MADDR(n, r1, regs, ACCTYPE_READ, regs->psw.pkey);
-    chsc_req = (CHSC_REQ*)(mn);
-
-    /* Fetch length of request field */
-    FETCH_HW(length, chsc_req->length);
-
-    chsc_rsp = (CHSC_RSP*)((BYTE*)chsc_req + length);
-
-    if((length < sizeof(CHSC_REQ))
-      || (length > (0x1000 - sizeof(CHSC_RSP))))
-        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
-
-    FETCH_HW(req,chsc_req->req);
-    switch(req) {
-        /* process various requests here */
-
-        default:
-
-            if( HDC(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
-                break;
-
-            ARCH_DEP(validate_operand) (n, r1, 0, ACCTYPE_WRITE, regs);
-            /* Set response field length */
-            STORE_HW(chsc_rsp->length,sizeof(CHSC_RSP));
-            /* Store unsupported command code */
-            STORE_HW(chsc_rsp->rsp,CHSC_REQ_INVALID);
-            /* No reaon code */
-            STORE_FW(chsc_rsp->info,0);
-
-            regs->psw.cc = 0;
-    }
-
-}
-#endif /*defined(FEATURE_CHSC)*/
 
 #endif /*defined(FEATURE_SERVICE_PROCESSOR)*/
 

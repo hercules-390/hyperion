@@ -445,19 +445,4 @@ typedef struct _SCCB_XST_MAP {
 // #endif /*FEATURE_EXPANDED_STORAGE*/
 
 
-// #if defined(FEATURE_CHSC)
-typedef struct _CHSC_REQ {
-        HWORD   length;                 /* Offset to response field  */
-        HWORD   req;                    /* Request code              */
-        FWORD   resv[3];
-    } CHSC_REQ;
-
-typedef struct _CHSC_RSP {
-        HWORD   length;                 /* Length of response field  */
-        HWORD   rsp;                    /* Reponse code              */
-#define CHSC_REQ_INVALID        0x0002  /* Invalid request           */
-        FWORD   info;
-    } CHSC_RSP;
-// #endif /*defined(FEATURE_CHSC)*/
-
 #endif /*!defined(_SERVICE_H)*/

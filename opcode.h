@@ -1995,6 +1995,9 @@ DEF_INST(disconnect_channel_set);
 
 /* Instructions in service.c */
 DEF_INST(service_call);
+
+
+/* Instructions in chsc.c */
 DEF_INST(channel_subsystem_call);
 
 

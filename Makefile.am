@@ -346,6 +346,7 @@ endif
                        io.c        \
                        decimal.c   \
                        service.c   \
+                       chsc.c      \
                        opcode.c    \
                        diagnose.c  \
                        diagmssf.c  \
@@ -611,6 +612,7 @@ noinst_HEADERS = fishhang.h \
                  ltdl.h     \
                  herc_getopt.h \
                  service.h  \
+                 chsc.h     \
                  pttrace.h  \
                  history.h  \
                  sr.h       \
