@@ -2704,6 +2704,7 @@ U16     pasn;                           /* New primary ASN           */
 U16     sasn;                           /* New secondary ASN         */
 U16     ax;                             /* Authorization index       */
 U16     xcode;                          /* Exception code            */
+int     rc;                             /* return code from load_psw */
 
     E(inst, execflag, regs);
 
@@ -2725,7 +2726,7 @@ U16     xcode;                          /* Exception code            */
     oldpasn = regs->CR_LHL(4);
 
     /* Perform the unstacking process */
-    etype = ARCH_DEP(program_return_unstack) (&newregs, &alsed);
+    etype = ARCH_DEP(program_return_unstack) (&newregs, &alsed, &rc);
 
     /* Perform PR-cp or PR-ss if unstacked entry was a program call */
     if (etype == LSED_UET_PC)
@@ -2852,6 +2853,9 @@ U16     xcode;                          /* Exception code            */
     /* Generate space switch event if required */
     if (ssevent)
         ARCH_DEP(program_interrupt) (&newregs, PGM_SPACE_SWITCH_EVENT);
+
+    if (rc) /* if new psw has bad format */
+        ARCH_DEP(program_interrupt) (&newregs, rc);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);

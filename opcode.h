@@ -1274,7 +1274,7 @@ void ARCH_DEP(stack_modify) (VADR lsea, U32 m1, U32 m2, REGS *regs);
 void ARCH_DEP(stack_extract) (VADR lsea, int r1, int code, REGS *regs);
 void ARCH_DEP(unstack_registers) (int gtype, VADR lsea, int r1,
 	int r2, REGS *regs);
-int  ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap);
+int  ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap, int *rc);
 
 
 /* Functions in module trace.c */
