@@ -3336,9 +3336,19 @@ BYTE    storkey;                        /* Storage key               */
               && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
             {
 	        SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
-        	storkey = STORAGE_KEY(n);
-        	/* Reset the reference bit in the storage key */
-        	STORAGE_KEY(n) &= ~(STORKEY_REF);
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                storkey = STORAGE_KEY(n);
+#else
+                storkey = STORAGE_KEY1(n) | STORAGE_KEY2(n);
+#endif
+
+            /* Reset the reference bit in the storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+                STORAGE_KEY(n) &= ~(STORKEY_REF);
+#else
+                STORAGE_KEY1(n) &= ~(STORKEY_REF);
+                STORAGE_KEY2(n) &= ~(STORKEY_REF);
+#endif
             }
             else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
@@ -3392,11 +3402,10 @@ BYTE    storkey;                        /* Storage key               */
                     &protect, &stid))
                 {
                     ra = APPLY_PREFIXING(ra, regs->hostregs->PX);
-                    realkey =
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
-                              STORAGE_KEY(n)
+                     realkey = STORAGE_KEY(ra)
 #else
-                              (STORAGE_KEY1(n) | STORAGE_KEY2(n))
+                     realkey = (STORAGE_KEY1(ra) | STORAGE_KEY2(ra))
 #endif
                               & (STORKEY_REF | STORKEY_CHANGE);
 
@@ -3424,19 +3433,37 @@ BYTE    storkey;                        /* Storage key               */
                 STORAGE_KEY(rcpa) |= (STORKEY_REF|STORKEY_CHANGE);
             }
         }
-        else
+        else /* regs->sie_perf */
         {
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
             storkey = STORAGE_KEY(n);
+#else
+            storkey = STORAGE_KEY1(n) | STORAGE_KEY2(n);
+#endif
             /* Reset the reference bit in the storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
             STORAGE_KEY(n) &= ~(STORKEY_REF);
+#else
+            STORAGE_KEY1(n) &= ~(STORKEY_REF);
+            STORAGE_KEY2(n) &= ~(STORKEY_REF);
+#endif
         }
     }
     else
 #endif /*defined(_FEATURE_SIE)*/
     {
-        storkey = STORAGE_KEY(n);
-        /* Reset the reference bit in the storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
+        storkey =  STORAGE_KEY(n);
+#else
+        storkey =  STORAGE_KEY1(n) | STORAGE_KEY2(n);
+#endif
+            /* Reset the reference bit in the storage key */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n) &= ~(STORKEY_REF);
+#else
+        STORAGE_KEY1(n) &= ~(STORKEY_REF);
+        STORAGE_KEY2(n) &= ~(STORKEY_REF);
+#endif
     }
 
     /* Set the condition code according to the original state
@@ -4215,6 +4242,7 @@ RADR    n;                              /* Absolute storage addr     */
                 /* or with host set */
                 rcpkey |= realkey << 4;
                 /* or new settings with guest set */
+                rcpkey &= ~(STORKEY_REF | STORKEY_CHANGE);
                 rcpkey |= regs->GR_L(r1) & (STORKEY_REF | STORKEY_CHANGE);
                 sysblk.mainstor[rcpa] = rcpkey;
                 STORAGE_KEY(rcpa) |= (STORKEY_REF|STORKEY_CHANGE);
