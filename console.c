@@ -2602,7 +2602,7 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(1052, constty_device_hndinfo );
     HDL_DEVICE(3215, constty_device_hndinfo );
     HDL_DEVICE(3270, loc3270_device_hndinfo );
-    HDL_DEVICE(3278, loc3270_device_hndinfo );
+    HDL_DEVICE(3287, loc3270_device_hndinfo );
 }
 END_DEVICE_SECTION;
 #endif
