@@ -14,6 +14,9 @@
 # ! Last Change: '$Id$'
 # !
 # ! Change log: '$Log$
+# ! Change log: 'Revision 1.11  2002/02/05 17:47:51  jj
+# ! Change log: 'Fix CR/LF issues in various files
+# ! Change log: '
 # ! Change log: 'Revision 1.10  2001/12/15 21:13:07  vbandke
 # ! Change log: 'del version.o before build to keep timestamp display current
 # ! Change log: '
@@ -86,7 +89,7 @@ else
 fi
 mkdir -p ${HOST_ARCH}_${FDIR}
 cd ${HOST_ARCH}_${FDIR}
-../configure --prefix=`pwd` ${HOST_OPT} ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${HOST_ARCH}"
+../configure --prefix=`pwd` ${HOST_OPT} ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${HOST_ARCH}" --disable-nls
 if [ $? = 0 ]
 then
    if test -f version.o
