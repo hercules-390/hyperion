@@ -152,6 +152,7 @@ int     icode;                          /* Interception code         */
         /* Validity intercept for invalid mode */
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_MODE, GUESTREGS);
+        STATEBK->c = SIE_C_VALIDITY;
         return;
     }
 
@@ -170,10 +171,11 @@ int     icode;                          /* Interception code         */
 #if !defined(FEATURE_ESAME)
     /* Reference and Change Preservation Origin */
     FETCH_FW(GUESTREGS->sie_rcpo, STATEBK->rcpo);
-    if(!GUESTREGS->sie_rcpo)
+    if(!GUESTREGS->sie_rcpo && !GUESTREGS->sie_pref)
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_RCZER, GUESTREGS);
+        STATEBK->c = SIE_C_VALIDITY;
         return;
     }
 #endif /*!defined(FEATURE_ESAME)*/
@@ -184,6 +186,7 @@ int     icode;                          /* Interception code         */
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_SCADR, GUESTREGS);
+        STATEBK->c = SIE_C_VALIDITY;
         return;
     }
 
@@ -210,6 +213,7 @@ int     icode;                          /* Interception code         */
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_MSDEF, GUESTREGS);
+        STATEBK->c = SIE_C_VALIDITY;
         return;
     }
 
@@ -231,6 +235,7 @@ int     icode;                          /* Interception code         */
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_PFOUT, GUESTREGS);
+        STATEBK->c = SIE_C_VALIDITY;
         return;
     }
 
@@ -241,6 +246,7 @@ int     icode;                          /* Interception code         */
         {
             SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
               SIE_VI_WHY_MSONZ, GUESTREGS);
+            STATEBK->c = SIE_C_VALIDITY; 
             return;
         }
 
@@ -249,6 +255,7 @@ int     icode;                          /* Interception code         */
         {
             SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
               SIE_VI_WHY_MSODS, GUESTREGS);
+            STATEBK->c = SIE_C_VALIDITY;
             return;
         }
 
