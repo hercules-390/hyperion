@@ -152,6 +152,8 @@ static int read_config (BYTE *fname, FILE *fp)
 int     i;                              /* Array subscript           */
 int     c;                              /* Character work area       */
 int     stmtlen;                        /* Statement length          */
+int     lstarted;                       /* Indicate if non-whitespace*/
+                                        /* has been seen yet in line */
 
     while (1)
     {
@@ -159,7 +161,7 @@ int     stmtlen;                        /* Statement length          */
         stmt++;
 
         /* Read next statement from configuration file */
-        for (stmtlen = 0; ;)
+        for (stmtlen = 0, lstarted = 0; ;)
         {
             /* Read character from configuration file */
             c = fgetc(fp);
@@ -182,6 +184,10 @@ int     stmtlen;                        /* Statement length          */
 
             /* Ignore nulls and carriage returns */
             if (c == '\0' || c == '\r') continue;
+
+	    /* Check if it is a white space and no other character yet */
+	    if(!lstarted && isspace(c)) continue;
+	    lstarted=1;
 
             /* Check that statement does not overflow buffer */
             if (stmtlen >= (int)(sizeof(buf) - 1))
