@@ -6151,70 +6151,10 @@ DEF_INST(load_real_address_y)
 int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U16     xcode;                          /* Exception code            */
-int     private;                        /* 1=Private address space   */
-int     protect;                        /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
-int     cc;                             /* Condition code            */
-RADR    n;                              /* 32-bit operand values     */
 
     RXY(inst, execflag, regs, r1, b2, effective_addr2);
 
-    SIE_MODE_XC_OPEX(regs);
-
-    PRIV_CHECK(regs);
-
-    /* Translate the effective address to a real address */
-    cc = ARCH_DEP(translate_addr) (effective_addr2, b2, regs,
-            ACCTYPE_LRA, &n, &xcode, &private, &protect, &stid);
-
-    /* If ALET exception or ASCE-type or region translation
-       exception, set exception code in R1 bits 48-63, set
-       bit 32 of R1, and set condition code 3 */
-    if (cc > 3) {
-        regs->GR_L(r1) = 0x80000000 | xcode;
-        cc = 3;
-    }
-    else
-    {
-        /* Set r1 and condition code as returned by translate_addr */
-#if defined(FEATURE_ESAME)
-        if (regs->psw.amode64 && cc != 3)
-        {
-            regs->GR_G(r1) = n;
-        }
-        else
-        {
-            if (n <= 0x7FFFFFFF)
-            {
-                regs->GR_L(r1) = n;
-            }
-            else
-            {
-                /* Special handling if in 24-bit or 31-bit mode
-                   and the returned address exceeds 2GB, or if
-                   cc=3 and the returned address exceeds 2GB */
-                if (cc == 0)
-                {
-                    /* Real address exceeds 2GB */
-                    ARCH_DEP(program_interrupt) (regs,
-                                PGM_SPECIAL_OPERATION_EXCEPTION);
-                }
-
-                /* Condition code is 1, 2, or 3, and the returned
-                   table entry address exceeds 2GB.  Convert to
-                   condition code 3 and return the exception code
-                   which will be X'0010' or X'0011' */
-                regs->GR_L(r1) = 0x80000000 | xcode;
-                cc = 3;
-            } /* end else(n) */
-        } /* end else(amode) */
-#else /*!defined(FEATURE_ESAME)*/
-        regs->GR_L(r1) = n;
-#endif /*!defined(FEATURE_ESAME)*/
-    } /* end else(cc) */
-
-    regs->psw.cc = cc;
+    ARCH_DEP(load_real_address_proc) (regs, r1, b2, effective_addr2);
 
 } /* end DEF_INST(load_real_address_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
