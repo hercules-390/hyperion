@@ -38,12 +38,15 @@ extern CGITAB cgidir[];
 
 
 static CONTYP mime_types[] = {
-    { NULL,    "text/html" },         /* No suffix entry */
+    { NULL,    NULL },                            /* No suffix entry */
     { "txt",   "text/plain" },
-    { "gif",   "image/gif" },
+    { "jcl",   "text/plain" },
+    { "gif",   "image/gif"  },
     { "jpg",   "image/jpeg" },
-    { "css",   "text/css" },
-    { NULL,    "text/html" } };       /* Default suffix entry */
+    { "css",   "text/css"   },
+    { "html",  "text/html"  },
+    { "htm",   "text/html"  },
+    { NULL,    NULL } };                     /* Default suffix entry */
 
 
 int html_include(WEBBLK *webblk, char *filename)
@@ -397,7 +400,8 @@ static void http_download(WEBBLK *webblk, char *filename)
         for(mime_type++;mime_type->suffix
           && strcasecmp(mime_type->suffix,filetype + 1);
           mime_type++);
-    fprintf(webblk->hsock,"Content-Type: %s\n",mime_type->type);
+    if(mime_type->type)
+        fprintf(webblk->hsock,"Content-Type: %s\n", mime_type->type);
 
     fprintf(webblk->hsock,"Expires: %s\n", http_timestring(time(NULL)+HTML_STATIC_EXPIRY_TIME));
 
