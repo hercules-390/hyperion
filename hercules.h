@@ -31,8 +31,6 @@
 
 #if !defined(_HERCULES_H)
 
-#include "logger.h"
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +38,7 @@
 #include <stdarg.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <limits.h>
 #include <time.h>
 #include <fcntl.h>
 #include <ctype.h>
@@ -83,6 +82,7 @@
 #include "version.h"
 #include "hetlib.h"
 #include "codepage.h"
+#include "logger.h"
 
 /* definition of CLK_TCK is not part of the SUSE 7.2 definition.  Added (VB) */
 #  ifndef CLK_TCK
