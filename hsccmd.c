@@ -33,6 +33,9 @@ extern  void  FishHangReport();
 extern  void  FishHangAtExit();
 #endif // defined(FISH_HANG)
 
+/* Added forward declaration to process_script_file ISW20030220-3 */
+int process_script_file(char *,int);
+
 ///////////////////////////////////////////////////////////////////////
 /* quit or exit command - terminate the emulator */
 
@@ -2068,6 +2071,209 @@ int icount_cmd(char* cmdline, int argc, char *argv[])
 
 #endif /*defined(OPTION_INSTRUCTION_COUNTING)*/
 
+/* PATCH ISW20030220 - Script command support */
+
+static int scr_recursion=0;		/* Recursion count (set to 0) */
+static int scr_aborted=0;          /* Script abort flag */
+static int scr_uaborted=0;          /* Script user abort flag */
+TID	scr_tid=0;
+
+int cscript_cmd(char* cmdline, int argc, char *argv[])
+{
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    if(scr_tid!=0)
+    {
+        scr_uaborted=1;
+    }
+    return 0;
+}
+
+int script_cmd(char* cmdline, int argc, char *argv[])
+{
+
+    int i;
+
+    UNREFERENCED(cmdline);
+    if(argc<2)
+    {
+        logmsg(_("HHCPN996E The script command requires a filename\n"));
+        return 1;
+    }
+    if(scr_tid==0)
+    {
+        scr_tid=thread_id();
+        scr_aborted=0;
+        scr_uaborted=0;
+    }
+    else
+    {
+        if(scr_tid!=thread_id())
+        {
+            logmsg(_("HHCPN997E Only 1 script may be invoked from the panel at any time\n"));
+            return 1;
+        }
+    }
+    
+    for(i=1;i<argc;i++)
+    {
+        process_script_file(argv[i],0);
+    }
+    return(0);
+}
+void script_test_userabort()
+{
+        if(scr_uaborted)
+        {
+           logmsg(_("HHCPN998E Script aborted : user cancel request\n"));
+           scr_aborted=1;
+        }
+}
+
+int process_script_file(char *script_name,int isrcfile)
+{
+FILE   *scrfp;                           /* RC file pointer           */
+size_t  scrbufsize = 1024;               /* Size of RC file  buffer   */
+BYTE   *scrbuf = NULL;                   /* RC file input buffer      */
+int     scrlen;                          /* length of RC file record  */
+int     scr_pause_amt = 0;               /* seconds to pause RC file  */
+BYTE   *p;                              /* (work)                    */
+
+
+    /* Check the recursion level - if it exceeds a certain amount 
+       abort the script stack
+    */
+    if(scr_recursion>=10)
+    {
+        logmsg(_("HHCPN998E Script aborted : Script recursion level exceeded\n"));
+        scr_aborted=1;
+        return 0;
+    }
+    /* Open RC file. If it doesn't exist, then issue error message
+       only if this is NOT the RuntimeConfiguration (rc) file */
+
+    if (!(scrfp = fopen(script_name, "r")))
+    {
+        if (ENOENT != errno && !isrcfile)
+            logmsg(_("HHCPN007E Script file %s open failed: %s\n"),
+                script_name, strerror(errno));
+        return 0;
+        if(errno==ENOENT)
+        {
+            logmsg(_("HHCPN995E Script file %s not found\n"),
+                script_name);
+        }
+    }
+    scr_recursion++;
+
+    if(isrcfile)
+    {
+	    logmsg(_("HHCPN008I Script file processing started using file %s\n"),
+		   script_name);
+    }
+
+    /* Obtain storage for the SCRIPT file buffer */
+
+    if (!(scrbuf = malloc (scrbufsize)))
+    {
+        logmsg(_("HHCPN009E Script file buffer malloc failed: %s\n"),
+            strerror(errno));
+        fclose(scrfp);
+        return 0;
+    }
+
+    for (;;)
+    {
+        script_test_userabort();
+        if(scr_aborted)
+        {
+           break;
+        }
+        /* Read a complete line from the SCRIPT file */
+
+        if (!fgets(scrbuf, scrbufsize, scrfp)) break;
+
+        /* Remove trailing whitespace */
+
+        for (scrlen = strlen(scrbuf); scrlen && isspace(scrbuf[scrlen-1]); scrlen--);
+        scrbuf[scrlen] = 0;
+
+        /* '#' == silent comment, '*' == loud comment */
+
+        if ('#' == scrbuf[0] || '*' == scrbuf[0])
+        {
+            if ('*' == scrbuf[0])
+                logmsg ("> %s",scrbuf);
+            continue;
+        }
+
+        /* Remove any # comments on the line before processing */
+
+        if ((p = strchr(scrbuf,'#')) && p > scrbuf)
+            do *p = 0; while (isspace(*--p) && p >= scrbuf);
+
+        if (strncasecmp(scrbuf,"pause",5) == 0)
+        {
+            sscanf(scrbuf+5, "%d", &scr_pause_amt);
+
+            if (scr_pause_amt < 0 || scr_pause_amt > 999)
+            {
+                logmsg(_("HHCPN010W Ignoring invalid SCRIPT file pause "
+                         "statement: %s\n"),
+                         scrbuf+5);
+                continue;
+            }
+
+            logmsg (_("HHCPN011I Pausing SCRIPT file processing for %d "
+                      "seconds...\n"),
+                      scr_pause_amt);
+            sleep(scr_pause_amt);
+            logmsg (_("HHCPN012I Resuming SCRIPT file processing...\n"));
+
+            continue;
+        }
+
+        /* Process the command */
+
+        for (p = scrbuf; isspace(*p); p++);
+
+        SYNCHRONOUS_PANEL_CMD(p);
+        script_test_userabort();
+        if(scr_aborted)
+        {
+           break;
+        }
+    }
+
+    if (feof(scrfp))
+        logmsg (_("HHCPN013I EOF reached on SCRIPT file. Processing complete.\n"));
+    else
+    {
+        if(!scr_aborted)
+        {
+           logmsg (_("HHCPN014E I/O error reading SCRIPT file: %s\n"),
+                 strerror(errno));
+        }
+        else
+        {
+           logmsg (_("HHCPN999I Script %s aborted due to previous conditions\n"),script_name);
+           scr_uaborted=1;
+        }
+    }
+
+    fclose(scrfp);
+    scr_recursion--;	/* Decrement recursion count */
+    if(scr_recursion==0)
+    {
+      scr_aborted=0;	/* reset abort flag */
+      scr_tid=0;	/* reset script thread id */
+    }
+
+    return 0;
+}
+/* END PATCH ISW20030220 */
+
 ///////////////////////////////////////////////////////////////////////
 /* archmode command - set architecture mode */
 
@@ -2351,6 +2557,8 @@ COMMAND ( "icount",    icount_cmd,    "display instruction counts" )
 #if defined(FISH_HANG)
 COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects" )
 #endif
+COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
+COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread" )
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };
@@ -2591,6 +2799,15 @@ CMDHELP ( "loadcore",  "Format: \"loadcore filename [address]\" where 'address' 
 CMDHELP ( "loadtext",  "Format: \"loadtext filename [address]\". This command is essentially identical\n"
                        "to the 'loadcore' command except that it loads a text deck file with \"TXT\"\n"
                        "and \"END\" 80 byte records (i.e. an object deck).\n"
+                       )
+CMDHELP ( "script",    "Format: \"script filename [...filename...]\". Sequentially executes the commands contained\n"
+                       "within the file -filename-. The script file may also contain \"script\" commands,\n"
+                       "but the system ensures that no more than 10 levels of script are invoked at any\n"
+                       "one time (to avoid a recursion loop)\n"
+                       )
+
+CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the currently running script.\n"
+                       "if no script is running, no action is taken\n"
                        )
 
 #if defined(FISH_HANG)

@@ -22,6 +22,17 @@
 #include "hercules.h"
 #include "hercifc.h"
 
+/* ISW 02/20/2003 - Proposed patch ISW20032002-2
+   define dummy 'extgui' so that hercules can be defined on
+   a build with --enable-external-gui
+   extgui is set to 0 regardless of the environment
+   (i.e. there is no EXTERNALGUI argument to hercifc
+*/
+#ifdef EXTERNALGUI
+int   extgui=0;
+#endif
+/* End of ISW20032002-2 */
+
 // --------------------------------------------------------------------
 // HERCIFC program entry point
 // --------------------------------------------------------------------

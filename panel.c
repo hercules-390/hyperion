@@ -61,6 +61,9 @@ void check_socket_devices_for_connections (fd_set* mask);
 void socket_device_connection_handler (bind_struct* bs);
 char* safe_strdup (char* str);
 
+/* forward define process_script_file (ISW20030220-3) */
+int process_script_file(char *,int);
+
 
 /*=NP================================================================*/
 /* Global data for new panel display                                 */
@@ -729,12 +732,6 @@ int rc_thread_done = 0;                 /* 1 = RC file processed     */
 void* process_rc_file (void* dummy)
 {
 BYTE   *rcname;                         /* hercules.rc name pointer  */
-FILE   *rcfp;                           /* RC file pointer           */
-size_t  rcbufsize = 1024;               /* Size of RC file  buffer   */
-BYTE   *rcbuf = NULL;                   /* RC file input buffer      */
-int     rclen;                          /* length of RC file record  */
-int     rc_pause_amt = 0;               /* seconds to pause RC file  */
-BYTE   *p;                              /* (work)                    */
 
     UNREFERENCED(dummy);
 
@@ -743,92 +740,9 @@ BYTE   *p;                              /* (work)                    */
     if(!(rcname = getenv("HERCULES_RC")))
         rcname = "hercules.rc";
 
-    /* Open RC file. If it doesn't exist,
-       then there's nothing for us to do */
+    /* Run the script processor for this file */
 
-    if (!(rcfp = fopen(rcname, "r")))
-    {
-        if (ENOENT != errno)
-            logmsg(_("HHCPN007E RC file %s open failed: %s\n"),
-                rcname, strerror(errno));
-        rc_thread_done = 1;
-        return NULL;
-    }
-
-    logmsg(_("HHCPN008I RC file processing thread started using file %s\n"),
-           rcname);
-
-    /* Obtain storage for the RC file buffer */
-
-    if (!(rcbuf = malloc (rcbufsize)))
-    {
-        logmsg(_("HHCPN009E RC file buffer malloc failed: %s\n"),
-            strerror(errno));
-        fclose(rcfp);
-        rc_thread_done = 1;
-        return NULL;
-    }
-
-    for (;;)
-    {
-        /* Read a complete line from the RC file */
-
-        if (!fgets(rcbuf, rcbufsize, rcfp)) break;
-
-        /* Remove trailing whitespace */
-
-        for (rclen = strlen(rcbuf); rclen && isspace(rcbuf[rclen-1]); rclen--);
-        rcbuf[rclen] = 0;
-
-        /* '#' == silent comment, '*' == loud comment */
-
-        if ('#' == rcbuf[0] || '*' == rcbuf[0])
-        {
-            if ('*' == rcbuf[0])
-                logmsg ("> %s",rcbuf);
-            continue;
-        }
-
-        /* Remove any # comments on the line before processing */
-
-        if ((p = strchr(rcbuf,'#')) && p > rcbuf)
-            do *p = 0; while (isspace(*--p) && p >= rcbuf);
-
-        if (strncasecmp(rcbuf,"pause",5) == 0)
-        {
-            sscanf(rcbuf+5, "%d", &rc_pause_amt);
-
-            if (rc_pause_amt < 0 || rc_pause_amt > 999)
-            {
-                logmsg(_("HHCPN010W Ignoring invalid RC file pause "
-                         "statement: %s\n"),
-                         rcbuf+5);
-                continue;
-            }
-
-            logmsg (_("HHCPN011I Pausing RC file processing for %d "
-                      "seconds...\n"),
-                      rc_pause_amt);
-            sleep(rc_pause_amt);
-            logmsg (_("HHCPN012I Resuming RC file processing...\n"));
-
-            continue;
-        }
-
-        /* Process the command */
-
-        for (p = rcbuf; isspace(*p); p++);
-
-        SYNCHRONOUS_PANEL_CMD(p);
-    }
-
-    if (feof(rcfp))
-        logmsg (_("HHCPN013I EOF reached on RC file. Processing complete.\n"));
-    else
-        logmsg (_("HHCPN014E I/O error reading RC file: %s\n"),
-                 strerror(errno));
-
-    fclose(rcfp);
+    process_script_file(rcname,1);
 
     rc_thread_done = 1;
 
