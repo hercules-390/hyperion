@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+12 Sep 2004 Fix crash in CTCI_Query when device group incomplete - Fish
 06 Sep 2004 emulated positioning error fix for read blockid - Fish
 05 Sep 2004 tapedev.c/scsiptape.h: blockid s/b maintained by media handlers,
             minor tweak to when scsi automount thread started, fthreads.h:

@@ -618,7 +618,7 @@ void  LCS_Query( DEVBLK* pDEVBLK, BYTE** ppszClass,
 
     if(!pLCSDEV)
     {
-        strcpy(pBuffer,"*Uninitialised");
+        strlcpy(pBuffer,"*Uninitialised",iBufLen);
         return;
     }
 

@@ -590,6 +590,13 @@ void  CTCI_Query( DEVBLK* pDEVBLK, BYTE** ppszClass,
     PCTCBLK     pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
 
     *ppszClass = "CTCA";
+
+    if(!pCTCBLK)
+    {
+        strlcpy(pBuffer,"*Uninitialised",iBufLen);
+        return;
+    }
+
     snprintf( pBuffer, iBufLen, "CTCI %s/%s (%s)",
               pCTCBLK->szGuestIPAddr,
               pCTCBLK->szDriveIPAddr,
