@@ -66,6 +66,7 @@ a real System/390.  The configuration file is an ASCII text file.
 
     001F    3270
     0200.4  3270
+    0220.16 3270    GROUP1
 
     0140    3370    dosres.140
     0141    3370    syswk1.141
@@ -571,6 +572,16 @@ The format of the device record is:
     suffix to connect the client to a specific device number.
     If no suffix is specified, then the client will be connected
     to the first available 3270 device.
+    A group name can be specified as an option. If a group name is
+    given on the device definition statement, a device type suffix
+    with this group name can be used to indicate that a device in
+    this group is to be used. If a group name is specified as a
+    terminal type suffix and there are no, or no more, devices in
+    this group, the connection is rejected. If no group name is
+    specified as a terminal type suffix, this connection will only
+    be eligible for devices that do not have a group name.
+    The device number suffix has precedence over a group name. The
+    group name should not be an hexadecimal value.
 <p>
 <a name="conprkb">
 <dt><em>Console printer-keyboard devices</em>
@@ -584,6 +595,16 @@ The format of the device record is:
     to the first available 1052 or 3215 device. One optional argument
     may be specified: <code>noprompt</code>, if specified, will remove
     the message at the console prompting for input.
+    A group name can be specified as an option. If a group name is
+    given on the device definition statement, a device type suffix
+    with this group name can be used to indicate that a device in
+    this group is to be used. If a group name is specified as a
+    terminal type suffix and there are no, or no more, devices in
+    this group, the connection is rejected. If no group name is
+    specified as a terminal type suffix, this connection will only
+    be eligible for devices that do not have a group name.
+    The device number suffix has precedence over a group name. The
+    group name should not be an hexadecimal value.
 <p>
 <a name="cardrdr">
 <dt><em>Card reader devices</em>

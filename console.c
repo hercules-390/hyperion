@@ -589,7 +589,7 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
 /*      0=negotiation successful, -1=negotiation error               */
 /*-------------------------------------------------------------------*/
 static int
-negotiate(int csock, BYTE *class, BYTE *model, BYTE *extatr, U16 *devn)
+negotiate(int csock, BYTE *class, BYTE *model, BYTE *extatr, U16 *devn,BYTE *group)
 {
 int    rc;                              /* Return code               */
 BYTE  *termtype;                        /* Pointer to terminal type  */
@@ -652,10 +652,27 @@ static BYTE will_naws[] = { IAC, WILL, NAWS };
 
     /* Check terminal type string for device name suffix */
     s = strchr (termtype, '@');
-    if (s != NULL && sscanf (s, "@%hx", &devnum) == 1)
-        *devn = devnum;
+    if(s!=NULL)
+    {
+        if(strlen(s)<16)
+        {
+            strncpy(group,&s[1],16);
+        }
+    }
     else
+    {
+        group[0]=0;
+    }
+
+    if (s != NULL && sscanf (s, "@%hx", &devnum) == 1)
+    {
+        *devn = devnum;
+        group[0]=0;
+    }
+    else
+    {
         *devn = 0xFFFF;
+    }
 
     /* Test for non-display terminal type */
     if (memcmp(termtype, "IBM-", 4) != 0)
@@ -1142,6 +1159,7 @@ BYTE                    buf[256];       /* Message buffer            */
 BYTE                    conmsg[256];     /* Connection message        */
 BYTE                    hostmsg[256];    /* Host ID message           */
 BYTE                    rejmsg[256];     /* Rejection message         */
+BYTE                    group[16];      /* Console group             */
 
     /* Load the socket address from the thread parameter */
     csock = *csockp;
@@ -1167,7 +1185,7 @@ BYTE                    rejmsg[256];     /* Rejection message         */
             clientip, clientname);
 
     /* Negotiate telnet parameters */
-    rc = negotiate (csock, &class, &model, &extended, &devnum);
+    rc = negotiate (csock, &class, &model, &extended, &devnum, group);
     if (rc != 0)
     {
         close (csock);
@@ -1198,6 +1216,19 @@ BYTE                    rejmsg[256];     /* Rejection message         */
         if (devnum != 0xFFFF && dev->devnum != devnum)
             continue;
 
+        /* Loop if no specific devnum was requested
+         *    AND
+         *    a group was requested OR the device is in a group
+         *       AND
+         *          The groups match
+         * this device is not in that device group */
+        if(devnum==0xFFFF && (group[0] || dev->filename[0]))
+        {
+           if(strncmp(group,dev->filename,16)!=0)
+           {
+               continue;
+           }
+        }
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
 
@@ -1253,13 +1284,26 @@ BYTE                    rejmsg[256];     /* Rejection message         */
     {
         /* Build the rejection message */
         if (devnum == 0xFFFF)
-            len = sprintf (rejmsg,
-                    "Connection rejected, no available %s device",
-       (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
+        {
+            if(!group[0])
+            {
+                len = sprintf (rejmsg,
+                        "Connection rejected, no available %s device",
+                (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
+            }
+            else
+            {
+                len = sprintf (rejmsg,
+                        "Connection rejected, no available %s devices in the %s group",
+                (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")),group);
+            }
+        }
         else
+        {
             len = sprintf (rejmsg,
                     "Connection rejected, device %4.4X unavailable",
                     devnum);
+        }
 
         TNSDEBUG1( "DBG019: %s\n", rejmsg);
 
@@ -1636,8 +1680,11 @@ console_remove(DEVBLK *dev)
 static int
 loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
+    int ac=0;
+    /*
     UNREFERENCED(argc);
     UNREFERENCED(argv);
+    */
 
     /* Indicate that this is a console device */
     dev->console = 1;
@@ -1671,6 +1718,16 @@ loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
      dev->devid[6] = 0x01;
      }
     dev->numdevid = 7;
+    if(argc>0)
+    {
+        strncpy(dev->filename,argv[ac],sizeof(dev->filename));
+        argc--;
+        ac++;
+    }
+    else
+    {
+        dev->filename[0]=0;
+    }
 
     return console_initialise();
 } /* end function loc3270_init_handler */
@@ -1687,10 +1744,21 @@ loc3270_query_device (DEVBLK *dev, BYTE **class,
     *class = "DSP";
 
     if (dev->connected)
+    {
         snprintf (buffer, buflen, "%s",
                 (BYTE*)inet_ntoa(dev->ipaddr));
+    }
     else
-        buffer[0] = '\0';
+    {
+        if(dev->filename[0])
+        {
+            snprintf(buffer,buflen,"GROUP=%s",dev->filename);
+        }
+        else
+        {
+            buffer[0] = '\0';
+        }
+    }
 
 } /* end function loc3270_query_device */
 
@@ -1713,6 +1781,7 @@ loc3270_close_device ( DEVBLK *dev )
 static int
 constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
+    int ac=0;
 
     /* Indicate that this is a console device */
     dev->console = 1;
@@ -1730,11 +1799,15 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->prompt1052 = 1;
     
     /* Is there an argument? */
-    if (argc == 1)
+    if (argc > 0)
     {
         /* Look at the argument and set noprompt flag if specified. */
-        if (strcmp(argv[0], "noprompt") == 0)
+        if (strcmp(argv[ac], "noprompt") == 0)
+        {
             dev->prompt1052 = 0;
+            ac++;
+            argc--;
+        }
     }
     
     if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
@@ -1749,6 +1822,14 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->devid[5] = dev->devtype & 0xFF;
     dev->devid[6] = 0x00;
     dev->numdevid = 7;
+    if(argc>1)
+    {
+        strncpy(dev->filename,argv[1],sizeof(dev->filename));
+    }
+    else
+    {
+        dev->filename[0]=0;
+    }
 
     return console_initialise();
 
