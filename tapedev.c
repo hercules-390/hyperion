@@ -2677,11 +2677,19 @@ static void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
 
         if ( dev->tapedispflags & TAPEDISPFLG_ALTERNATE )
         {
-            strlcat ( msgbfr, dev->tapemsg1,    lenbfr );
-            strlcat ( msgbfr, "/",              lenbfr );
-            strlcat ( msgbfr, dev->tapemsg2,    lenbfr );
-            strlcat ( msgbfr, "\"",             lenbfr );
-            strlcat ( msgbfr, " (alternating)", lenbfr );
+            char  msg1[9];
+            char  msg2[9];
+
+            strlcpy ( msg1,   dev->tapemsg1, sizeof(msg1) );
+            strlcat ( msg1,   "        ",    sizeof(msg1) );
+            strlcpy ( msg2,   dev->tapemsg2, sizeof(msg2) );
+            strlcat ( msg2,   "        ",    sizeof(msg2) );
+
+            strlcat ( msgbfr, msg1,              lenbfr );
+            strlcat ( msgbfr, "\" / \"",         lenbfr );
+            strlcat ( msgbfr, msg2,              lenbfr );
+            strlcat ( msgbfr, "\"",              lenbfr );
+            strlcat ( msgbfr, " (alternating)",  lenbfr );
         }
         else
         {
@@ -2939,11 +2947,13 @@ static void ReqAutoMount( DEVBLK *dev )
                  )
            )
     )
+#if 0 // (I'll remove these eventually (Fish))
     &&
     (0
         || scratch
         || 'M' == tapemsg[0]
     )
+#endif
     ? TRUE : FALSE;
     TRACE( "** ReqAutoMount: mountreq = %s\n", mountreq ? "TRUE" : "FALSE" );
     unmountreq =
@@ -2954,12 +2964,14 @@ static void ReqAutoMount( DEVBLK *dev )
             &&  !( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
            )
     )
+#if 0 // (I'll remove these eventually (Fish))
     &&
     (0
         || scratch
         || 'R' == tapemsg[0]
         || 'K' == tapemsg[0]
     )
+#endif
     ? TRUE : FALSE;
     TRACE( "** ReqAutoMount: unmountreq = %s\n", unmountreq ? "TRUE" : "FALSE" );
 
@@ -3116,6 +3128,7 @@ static void ReqAutoMount( DEVBLK *dev )
     }
 #endif /* defined(OPTION_SCSI_TAPE) */
 }
+
 /*-------------------------------------------------------------------*/
 /* Load Display channel command processing...                        */
 /*-------------------------------------------------------------------*/
@@ -4671,7 +4684,7 @@ static void tapedev_query_device ( DEVBLK *dev, char **class,
                 dev->curfilen, dev->nxtblkpos );
         }
 
-        if ( TAPEDEVT_SCSITAPE != dev->tapedevt 
+        if ( TAPEDEVT_SCSITAPE != dev->tapedevt
 #if defined(OPTION_SCSI_TAPE)
         || !STS_NOT_MOUNTED(dev)
 #endif /* defined(OPTION_SCSI_TAPE) */

@@ -566,6 +566,8 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
 int scsimount_cmd(int argc, char *argv[], char *cmdline)
 {
+    char*  eyecatcher =
+"*******************************************************************************";
     DEVBLK*  dev;
     char*    tapemsg;
     char     volname[7];
@@ -602,46 +604,73 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
     else
         logmsg( _("SCSI auto-mount queries are disabled.\n") );
 
-    // Scan the device list looking for SCSI tape devices
-    // with outstanding mount requests...
+    // Scan the device list looking for all SCSI tape devices
+    // with either an active scsi mount thread and/or an out-
+    // standing tape mount request...
 
     for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
     {
+        if ( !dev->allocated || TAPEDEVT_SCSITAPE != dev->tapedevt )
+            continue;  // (not an active SCSI tape device; skip)
+
+        logmsg( _("SCSI auto-mount thread %s active for drive %4.4X = %s.\n"),
+            dev->stape_mountmon_tid ? "is" : "not", dev->devnum, dev->filename );
+
         if (0
-            || !dev->allocated
-            ||  TAPEDEVT_SCSITAPE != dev->tapedevt
             || !dev->tdparms.displayfeat
-            || !dev->stape_mountmon_tid
             || (1
                 && TAPEDISPTYP_MOUNT       != dev->tapedisptype
                 && TAPEDISPTYP_UNMOUNT     != dev->tapedisptype
                 && TAPEDISPTYP_UMOUNTMOUNT != dev->tapedisptype
                )
         )
+        {
+            logmsg( _("No mount/dismount requests pending for drive %4.4X = %s.\n\n"),
+                dev->devnum, dev->filename );
             continue;
+        }
 
-        mountreq =
-            ( TAPEDISPTYP_MOUNT == dev->tapedisptype )
-            ||
-            (
-                TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
-                &&
-                ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
-            )
-            ? TRUE : FALSE;
+        if ( TAPEDISPTYP_MOUNT == dev->tapedisptype )
+        {
+            mountreq = TRUE;
+            tapemsg = dev->tapemsg1;
+        }
+        else if ( TAPEDISPTYP_UNMOUNT == dev->tapedisptype )
+        {
+            mountreq = FALSE;
+            tapemsg = dev->tapemsg1;
+        }
+        else // ( TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
+        {
+            if (dev->tapedispflags & TAPEDISPFLG_MESSAGE2)
+            {
+                mountreq = TRUE;
+                tapemsg = dev->tapemsg2;
+            }
+            else
+            {
+                mountreq = FALSE;
+                tapemsg = dev->tapemsg1;
+            }
+        }
 
-        if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
-            tapemsg = (char *)dev->tapemsg2;
-        else
-            tapemsg = (char *)dev->tapemsg1;
+        volname[0]=0;
 
-        volname[0]=0; if (*tapemsg && *(tapemsg+1))
+        if (*tapemsg && *(tapemsg+1))
+        {
             strncpy( volname, tapemsg+1, sizeof(volname)-1 );
-        volname[sizeof(volname)-1]=0;
+            volname[sizeof(volname)-1]=0;
+        }
 
-        logmsg( _("HHCCF069I %s of volume \"%6.6s\" pending on drive %4.4X = %s\n"),
-            mountreq ? "Mount" : "Dismount",
-            volname, dev->devnum, dev->filename );
+        logmsg
+        (
+            _("\n%s\nHHCCF069I %s of volume \"%6.6s\" pending for drive %4.4X = %s\n%s\n\n"),
+
+            eyecatcher,
+            mountreq ? "Mount" : "Dismount", volname,
+            dev->devnum, dev->filename,
+            eyecatcher
+        );
     }
 
     return 0;
@@ -3123,7 +3152,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         if(regs->aea_ar[i] > 15)
             logmsg ("    alb[%d] %16.16llx\n",
                     regs->alb[i]);
-    
+
     if (regs->sie_active)
     {
         regs = regs->guestregs;
