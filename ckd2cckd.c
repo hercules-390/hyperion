@@ -352,8 +352,10 @@ int             z=-1;                   /* Compression value         */
     cdevhdr.vrm[1] = CCKD_RELEASE;
     cdevhdr.vrm[2] = CCKD_MODLVL;
     if (chk_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
-    if (nofudge)       cdevhdr.options |= CCKD_NOFUDGE;
-    cdevhdr.numl1tab = (ckdtrks + 255) / 256;
+    if (nofudge || 1)  cdevhdr.options |= CCKD_NOFUDGE;
+    if (trks < ckdtrks)
+        cdevhdr.numl1tab = (ckdtrks + 255) / 256;
+    else cdevhdr.numl1tab = (trks + 255) / 256;
     cdevhdr.numl2tab = 256;
     cdevhdr.cyls[3] = (cyls >> 24) & 0xFF;
     cdevhdr.cyls[2] = (cyls >> 16) & 0xFF;
