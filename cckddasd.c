@@ -3155,7 +3155,7 @@ int             kl,dl;                  /* Key/Data lengths          */
     if (cckd->fbadasd)
     {
         if (len == CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE || len == 0)
-            return 0;
+            return len;
         cckdtrc ("cckddasd: validation failed: bad length%s\n","");
         return -1;
     }
