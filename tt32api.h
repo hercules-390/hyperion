@@ -9,7 +9,7 @@
  *
  **********************************************************************************
 
-  Copyright (c) 2002-2003,
+  Copyright (c) 2002-2004,
   Software Development Laboratories (aka "Fish" (David B. Trout)).
 
   All rights reserved.

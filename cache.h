@@ -1,4 +1,4 @@
-/* CACHE.H    (c)Copyright Greg Smith, 2002-2003                     */
+/* CACHE.H    (c)Copyright Greg Smith, 2002-2004                     */
 /*            Buffer Cache Manager                                   */
 
 /*-------------------------------------------------------------------

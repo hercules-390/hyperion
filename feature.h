@@ -1,4 +1,4 @@
-/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2003          */
+/* FEATURES.H   (c) Copyright Jan Jaeger, 2000-2004          */
 /*      Architecture-dependent macro definitions         */
 
 #ifdef HAVE_CONFIG_H

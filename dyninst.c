@@ -1,4 +1,4 @@
-/* DYNINST.C    (c) Copyright Jan Jaeger, 2003                       */
+/* DYNINST.C    (c) Copyright Jan Jaeger, 2003-2004                  */
 /*              Hercules Dynamic Loader                              */
 
 

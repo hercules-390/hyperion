@@ -1,4 +1,4 @@
-/*  VERSION.H   (c) Copyright Roger Bowler, 1999-2003            */
+/*  VERSION.H   (c) Copyright Roger Bowler, 1999-2004            */
 /*      ESA/390 Emulator Version definition                      */
 
 /*-------------------------------------------------------------------*/
@@ -23,4 +23,4 @@
 void display_version(FILE *f, char *prog, const char verbose);
 
 #define HERCULES_COPYRIGHT \
-       "(c)Copyright 1999-2003 by Roger Bowler, Jan Jaeger, and others"
+       "(c)Copyright 1999-2004 by Roger Bowler, Jan Jaeger, and others"

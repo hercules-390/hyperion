@@ -1,8 +1,8 @@
-/* PLO.C        (c) Copyright Jan Jaeger, 2000-2003                  */
+/* PLO.C        (c) Copyright Jan Jaeger, 2000-2004                  */
 /*              Perform Locked Operation functions codes             */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2003      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2003      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2004      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
 
 #include "hercules.h"
 

@@ -2,11 +2,11 @@
 // Hercules IP Channel-to-Channel Support (CTCI)
 // ====================================================================
 //
-// Copyright    (C) Copyright James A. Pierson, 2002-2003
-//              (C) Copyright "Fish" (David B. Trout), 2002-2003
-//              (C) Copyright Roger Bowler, 2000-2003
+// Copyright    (C) Copyright James A. Pierson, 2002-2004
+//              (C) Copyright "Fish" (David B. Trout), 2002-2004
+//              (C) Copyright Roger Bowler, 2000-2004
 //
-// linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2003
+// linux 2.4 modifications (c) Copyright Fritz Elfert, 2001-2004
 //
 
 #if !defined(__APPLE__)

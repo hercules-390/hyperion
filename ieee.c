@@ -2,7 +2,7 @@
  * Hercules System/370, ESA/390, z/Architecture emulator
  * ieee.c
  * Binary (IEEE) Floating Point Instructions
- * Copyright (c) 2001 Willem Konynenberg <wfk@xos.nl>
+ * Copyright (c) 2001-2004 Willem Konynenberg <wfk@xos.nl>
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * THDER,THDR by Roger Bowler, 19 July 2003.
  * Licensed under the Q Public License
@@ -18,7 +18,7 @@
  */
 
 /*
- * Based very loosely on float.c by Peter Kuschnerus, (c) 2000-2003.
+ * Based very loosely on float.c by Peter Kuschnerus, (c) 2000-2004.
  */
 
 /*

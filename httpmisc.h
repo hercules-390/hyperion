@@ -1,4 +1,4 @@
-/* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2003                   */
+/* HTTPMISC.C   (c)Copyright Jan Jaeger, 2002-2004                   */
 /*              HTTP Server                                          */
 
 #if !defined(_HTTPMISC_H)

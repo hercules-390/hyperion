@@ -1,4 +1,4 @@
-/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2003                  */
+/* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2004                  */
 /*              Code Page conversion                                 */
 
 #ifndef _HERCULES_CODEPAGE_H

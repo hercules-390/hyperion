@@ -1,4 +1,4 @@
-/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2003                */
+/* TAPECOPY.C   (c) Copyright Roger Bowler, 1999-2004                */
 /*              Convert SCSI tape into AWSTAPE format                */
 
 /*-------------------------------------------------------------------*/

@@ -1,8 +1,8 @@
-/* ESA390.H     (c) Copyright Roger Bowler, 1994-2003                */
+/* ESA390.H     (c) Copyright Roger Bowler, 1994-2004                */
 /*              ESA/390 Data Areas                                   */
 
-/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2003      */
-/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2003      */
+/* Interpretive Execution - (c) Copyright Jan Jaeger, 1999-2004      */
+/* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2004      */
 
 #if !defined(_ESA390_H)
 

@@ -1,5 +1,5 @@
-/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2003                */
-/*              (c) Copyright Jan Jaeger, 1999-2003                  */
+/* HSCMISC.C    (c) Copyright Roger Bowler, 1999-2004                */
+/*              (c) Copyright Jan Jaeger, 1999-2004                  */
 /*              Misc. system command routines                        */
 
 

@@ -1,4 +1,4 @@
-/* SOCKDEV.H    (c) Copyright Hercules development, 2003             */
+/* SOCKDEV.H    (c) Copyright Hercules development, 2003-2004        */
 /*              Socketdevice support                                 */
 
 extern int bind_device   (DEVBLK* dev, char* spec);

@@ -1,4 +1,4 @@
-/* SOCKDEV.C    (c) Copyright Hercules development, 2003             */
+/* SOCKDEV.C    (c) Copyright Hercules development, 2003-2004        */
 /*              Socketdevice support                                 */
 
 #include "hercules.h"

@@ -1,4 +1,4 @@
-/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2003                */
+/* DASDTAB.C    (c) Copyright Roger Bowler, 1999-2004                */
 /*              Hercules Supported DASD definitions                  */
 
 /*-------------------------------------------------------------------*/

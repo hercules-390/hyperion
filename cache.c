@@ -1,4 +1,4 @@
-/* CACHE.C    (c)Copyright Greg Smith, 2002-2003                     */
+/* CACHE.C    (c)Copyright Greg Smith, 2002-2004                     */
 /*            Dynamic cache manager for multi-threaded applications  */
 
 //FIXME ?? Dynamic resizing is disabled

@@ -1,4 +1,4 @@
-/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003                       */
+/* HDTEQ.C      (c) Copyright Jan Jaeger, 2003-2004                  */
 /*              Hercules Dynamic Loader                              */
 
 
