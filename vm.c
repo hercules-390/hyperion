@@ -825,7 +825,7 @@ int     j,k;
     {
         if(!freeresp)
         {
-                strcpy (resp, dresp);
+                strncpy (resp, dresp,256);
                 dresp=resp;
         }
         resplen = strlen(dresp);
