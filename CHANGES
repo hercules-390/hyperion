@@ -16,7 +16,7 @@
 16 Dec 2004 Fix BRXHG and BRXLG to branch backwards too - Greg Smith
 14 Dec 2004 Ensure dyncrypt is built *AFTER* core - Ivan Warren
 14 Dec 2004 cckd garbage collector fix - Greg Smith
-14 Dec 2004 Bug in utf xlations, cc2 was never reached - Bernard van der Helm
+14 Dec 2004 Bug in utf xlations, cc3 was never reached - Bernard van der Helm
 10 Dec 2004 ppc assembler assists for cmpxchg1, cmpxchg4 - Greg Smith
 08 Dec 2004 dasdinit -linux option support - Greg Smith
 06 Dec 2004 Keep crx in sync with INST_SPACE - Jan Jaeger
