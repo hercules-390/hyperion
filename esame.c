@@ -29,7 +29,7 @@ static inline int add_logical_long(U64 *result, U64 op1, U64 op2)
 
     return (*result == 0 ? 0 : 1) | (op1 > *result ? 2 : 0);
 } /* end add_logical_long() */
-        
+
 
 static inline int sub_logical_long(U64 *result, U64 op1, U64 op2)
 {
@@ -37,7 +37,7 @@ static inline int sub_logical_long(U64 *result, U64 op1, U64 op2)
 
     return (*result == 0 ? 0 : 1) | (op1 < *result ? 0 : 2);
 } /* end sub_logical_long() */
-        
+
 
 static inline int add_signed_long(U64 *result, U64 op1, U64 op2)
 {
@@ -48,7 +48,7 @@ static inline int add_signed_long(U64 *result, U64 op1, U64 op2)
                                               (S64)*result < 0 ? 1 :
                                               (S64)*result > 0 ? 2 : 0;
 } /* end add_signed_long() */
-        
+
 
 static inline int sub_signed_long(U64 *result, U64 op1, U64 op2)
 {
@@ -290,7 +290,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Determine the address of the parameter list */
     pl_addr = !execflag ? regs->psw.IA : (regs->ET + 4);
-    
+
     /* Fetch flags from the instruction address space */
     abs = LOGICAL_TO_ABS (pl_addr, 0, regs,
             ACCTYPE_INSTFETCH, regs->psw.pkey);
@@ -396,7 +396,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
 
-    /* Privileged Operation exception when setting home 
+    /* Privileged Operation exception when setting home
        space mode in problem state */
     if(!REAL_MODE(&regs->psw)
       && regs->psw.prob
@@ -404,7 +404,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
 #if defined(FEATURE_ESAME)
-    if(flags & 0x0004) 
+    if(flags & 0x0004)
     {
         /* Do not check esame bit (force to zero) */
         psw[1] &= ~0x08;
@@ -472,7 +472,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #endif /*FEATURE_TRACING*/
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -637,7 +637,7 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
 
         /* Increment operand address */
         effective_addr2++;
-        effective_addr2 &= ADDRESS_MAXWRAP(regs);              
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
 
     } /* end for(i) */
 
@@ -836,14 +836,14 @@ DEF_INST(divide_logical)
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective Address         */
-U32     d; 
+U32     d;
 U64     n;
 
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
-    n = ((U64)regs->GR_L(r1) << 32) | (U32)regs->GR_L(r1 + 1); 
+    n = ((U64)regs->GR_L(r1) << 32) | (U32)regs->GR_L(r1 + 1);
 
     /* Load second operand from operand address */
     d = ARCH_DEP(vfetch4) (effective_addr2, b2, regs);
@@ -891,7 +891,7 @@ U64     d, r, q;
     {
       if (div_logical_long(&r, &q, regs->GR_G(r1), regs->GR_G(r1 + 1), d) )
           ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
-      else 
+      else
       {
         regs->GR_G(r1) = r;
         regs->GR_G(r1 + 1) = q;
@@ -960,7 +960,7 @@ U64     r, q, d;
     {
       if (div_logical_long(&r, &q, regs->GR_G(r1), regs->GR_G(r1 + 1), d) )
           ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
-      else 
+      else
       {
         regs->GR_G(r1) = r;
         regs->GR_G(r1 + 1) = q;
@@ -1384,7 +1384,7 @@ QWORD   qwork;                          /* Quadword work area        */
     STORE_DW(qwork+8, regs->GR_G(r1+1));
 
     /* Store R1 and R1+1 registers to second operand
-       Provide storage consistancy by means of obtaining 
+       Provide storage consistancy by means of obtaining
        the main storage access lock */
     OBTAIN_MAINLOCK(regs);
     ARCH_DEP(vstorec) ( qwork, 16-1, effective_addr2, b2, regs );
@@ -1412,7 +1412,7 @@ QWORD   qwork;                          /* Quadword work area        */
     QW_CHECK(effective_addr2, regs);
 
     /* Load R1 and R1+1 registers contents from second operand
-       Provide storage consistancy by means of obtaining 
+       Provide storage consistancy by means of obtaining
        the main storage access lock */
     OBTAIN_MAINLOCK(regs);
     ARCH_DEP(vfetchc) ( qwork, 16-1, effective_addr2, b2, regs );
@@ -1867,7 +1867,7 @@ U32     i2;                             /* 32-bit operand values     */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -1907,7 +1907,7 @@ U32     i2;                             /* 32-bit operand values     */
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -1942,7 +1942,7 @@ int     i;                              /* Integer work areas        */
     /* if mask is zero, access rupts recognized for 1 byte */
     if (r3 == 0)
             sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-                                                                                
+
     /* Compare characters in register with operand characters */
     for ( i = 0; i < 4; i++ )
     {
@@ -2125,7 +2125,7 @@ S64     i,j;                            /* Integer workareas         */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -2166,7 +2166,7 @@ S64     i,j;                            /* Integer workareas         */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -2207,7 +2207,7 @@ S64     i, j;                           /* Integer work areas        */
     {
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -2248,7 +2248,7 @@ S64     i, j;                           /* Integer work areas        */
     {
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -2400,7 +2400,7 @@ VADR    effective_addr2;                /* Effective address         */
     {
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -2434,7 +2434,7 @@ VADR    newia;                          /* New instruction address   */
     {
         regs->psw.IA = newia;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
@@ -3113,7 +3113,7 @@ U16     i2;                             /* 16-bit operand values     */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -3254,7 +3254,7 @@ U64     n;                              /* Integer work areas        */
 /*-------------------------------------------------------------------*/
 /* EB1D RLL   - Rotate Left Single Logical                     [RSE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(rotate_left_single_logical)     
+DEF_INST(rotate_left_single_logical)
 {
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
@@ -4950,7 +4950,7 @@ DEF_INST(translate_one_to_one)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
-GREG    len; 
+GREG    len;
 BYTE    svalue, dvalue, tvalue;
 
     RRE(inst, execflag, regs, r1, r2);
@@ -5021,7 +5021,7 @@ DEF_INST(translate_one_to_two)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
-GREG    len; 
+GREG    len;
 BYTE    svalue;
 BYTE    dvalue, tvalue;
 
@@ -5093,7 +5093,7 @@ DEF_INST(translate_two_to_one)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
-GREG    len; 
+GREG    len;
 U16     svalue;
 BYTE    dvalue, tvalue;
 
@@ -5167,8 +5167,8 @@ DEF_INST(translate_two_to_two)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    addr1, addr2, trtab;            /* Effective addresses       */
-GREG    len; 
-U16     svalue, dvalue, tvalue; 
+GREG    len;
+U16     svalue, dvalue, tvalue;
 
     RRE(inst, execflag, regs, r1, r2);
 
