@@ -692,9 +692,11 @@ void FishHang_InitializeCriticalSection
 	LPCRITICAL_SECTION lpCriticalSection   // address of critical section object
 )
 {
-	FISH_LOCK*  pFISH_LOCK = FindFISH_LOCK(lpCriticalSection);
+	FISH_LOCK*  pFISH_LOCK;
 
 	LockFishHang();
+
+	pFISH_LOCK = FindFISH_LOCK(lpCriticalSection);
 
 	if (pFISH_LOCK)
 	{

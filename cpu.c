@@ -1623,6 +1623,9 @@ void ARCH_DEP(run_cpu) (REGS *pregs)
 
     /* Initialize copied locks and conditions */
     initialize_condition (&regs.intcond);
+#if defined(OPTION_CPU_UTILIZATION)
+    initialize_lock (&regs.accum_wait_time_lock);
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 
     /* Set started bit on and wait bit off for this CPU */
     sysblk.started_mask |= regs.cpumask;
