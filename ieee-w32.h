@@ -1,6 +1,21 @@
 #if !defined(_IEEE_W32_H)
 #define _IEEE_W32_H 1
 
+/* FIXME - Cygwin is messing this code up */
+#ifdef FP_NAN
+#undef FP_NAN
+#undef FP_INFINITE
+#undef FP_ZERO
+#undef FP_SUBNORMAL
+#undef FP_NORMAL
+#endif
+#ifdef fpclassify
+#undef fpclassify
+#endif
+#ifdef signbit
+#undef signbit
+#endif
+
 /* All floating-point numbers can be put in one of these categories.  */
 enum
   {

@@ -57,7 +57,7 @@ void    cckd_flush_cache(DEVBLK *);
 void    cckd_purge_cache(DEVBLK *);
 void    cckd_writer();
 off_t   cckd_get_space (DEVBLK *, unsigned int);
-void    cckd_rel_space (DEVBLK *, unsigned int, int);
+void    cckd_rel_space (DEVBLK *, off_t, int);
 void    cckd_rel_free_atend (DEVBLK *, unsigned int, int, int);
 void    cckd_flush_space(DEVBLK *);
 int     cckd_read_chdr (DEVBLK *);
@@ -1582,7 +1582,7 @@ struct stat     st;                     /* File status area          */
             return -1;
         }
 
-        if (fpos + len > st.st_size)
+        if ((off_t)(fpos + len) > st.st_size)
         {
             rc = ftruncate (cckd->fd[sfx], fpos + len);
             if (rc < 0)
@@ -1668,7 +1668,7 @@ struct stat     st;                     /* File status area          */
 /*-------------------------------------------------------------------*/
 /* Release file space                                                */
 /*-------------------------------------------------------------------*/
-void cckd_rel_space(DEVBLK *dev, unsigned int pos, int len)
+void cckd_rel_space(DEVBLK *dev, off_t pos, int len)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 off_t           ppos,npos;              /* Prev/next offsets         */
@@ -1680,8 +1680,9 @@ int             sfx;                    /* Shadow file index         */
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
 
-    cckdtrc ("cckddasd: rel_space pos 0x%x len %d %s\n",
-            pos, len, pos + len == cckd->cdevhdr[sfx].size ? "at end" : "");
+    cckdtrc ("cckddasd: rel_space pos %llx len %d %s\n",
+            (long long)pos, len,
+            pos + len == (off_t)cckd->cdevhdr[sfx].size ? "at end" : "");
 
     if (!cckd->free) cckd_read_fsp (dev);
 
@@ -1740,7 +1741,8 @@ int             sfx;                    /* Shadow file index         */
 
     /* if the new free space is adjacent to the previous free
        space then combine the two if the previous space is pending */
-    if (p >= 0 && ppos + cckd->free[p].len == pos && cckd->free[p].pending)
+    if (p >= 0 && (off_t)(ppos + cckd->free[p].len) == pos
+     && cckd->free[p].pending)
     {
         cckd->cdevhdr[sfx].free_number--;
         cckd->free[p].pos = cckd->free[i].pos;
@@ -1756,7 +1758,8 @@ int             sfx;                    /* Shadow file index         */
 
     /* if the new free space is adjacent to the following free
        space then combine the two if the previous space is pending */
-    if (n >= 0 && pos + cckd->free[i].len == npos && cckd->free[n].pending)
+    if (n >= 0 && (off_t)(pos + cckd->free[i].len) == npos
+     && cckd->free[n].pending)
     {
         cckd->cdevhdr[sfx].free_number--;
         cckd->free[i].pos = cckd->free[n].pos;
@@ -2786,7 +2789,7 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
     if (rc < 0) return -1;
 
     /* release the previous space */
-    cckd_rel_space (dev, oldl2.pos, oldl2.len);
+    cckd_rel_space (dev, (off_t)oldl2.pos, oldl2.len);
 
     cckdtrc ("cckddasd: file[%d] trk %d write complete offset 0x%llx len %d\n",
               sfx, trk, (long long)l2.pos, l2.len);
@@ -2827,7 +2830,8 @@ int             rc;                     /* Return code               */
     rc = cckd_write_chdr (dev);
     if (rc < 0) return -1;
 
-    rc = fdatasync (cckd->fd[cckd->sfn]);
+    if (!cckdblk.nofsync)
+        rc = fdatasync (cckd->fd[cckd->sfn]);
 
     return 0;
 }
@@ -2883,9 +2887,9 @@ int             rc;                     /* Return code               */
 int             sfx;                    /* File index                */
 struct stat     st;                     /* File status area          */
 #ifdef OPTION_TRUNCATE_KLUDGE
-int             sz = 1024 * 1024;       /* Change for ftruncate      */
+off_t           sz = 1024 * 1024;       /* Change for ftruncate      */
 #else
-int             sz = 0;
+off_t           sz = 0;
 #endif
 
     cckd = dev->cckd_ext;
@@ -2900,9 +2904,9 @@ int             sz = 0;
     }
 
     cckdtrc("cckddasd: truncate st_size=%lld, chdr_size=%d\n",
-            st.st_size, cckd->cdevhdr[sfx].size);
+            (long long)st.st_size, cckd->cdevhdr[sfx].size);
 
-    if (now || st.st_size - cckd->cdevhdr[sfx].size > sz)
+    if (now || (off_t)(st.st_size - cckd->cdevhdr[sfx].size) > sz)
     {
 #ifdef OPTION_TRUNCATE_KLUDGE
         BYTE sfn[1024];
@@ -3493,7 +3497,7 @@ BYTE            buf[65536];             /* Buffer                    */
 cckd_sf_remove_trkerr:
 
                     cckdtrc ("cckddasd: erasing trk %d\n", i * 256 + j);
-                    cckd_rel_space (dev, cckd->l2[j].pos, cckd->l2[j].len);
+                    cckd_rel_space (dev, (off_t) cckd->l2[j].pos, cckd->l2[j].len);
                     cckd->l2[j].pos = 0;
                     cckd->l2[j].len = cckd->l2[j].size = l2[j].len;
                     rc = cckd_write_l2ent (dev, NULL, i * 256 + j);
@@ -3830,7 +3834,8 @@ int             gctab[5]= {             /* default gcol parameters   */
             if (cckdblk.gcolwait >= 5 || cckd->lastsync + 5 <= now.tv_sec)
             {
                 obtain_lock (&cckd->filelock);
-                rc = fsync (cckd->fd[cckd->sfn]);
+                if (!cckdblk.nofsync)
+                    rc = fdatasync (cckd->fd[cckd->sfn]);
                 cckd_flush_space (dev);
                 cckd_truncate (dev, 0);
                 release_lock (&cckd->filelock);
@@ -3986,7 +3991,7 @@ cckd_gc_perc_retry:
                 }
 
                 /* Release the space occupied by the l2tab */
-                cckd_rel_space (dev, (unsigned int)(fpos + flen + b), len);
+                cckd_rel_space (dev, (off_t)(fpos + flen + b), len);
 
             }
             else
@@ -4059,6 +4064,7 @@ void cckd_command_help()
              "gcparm=<n>\tSet garbage collector parameter\t\t(-8 .. 8)\n"
              "\t\t    (least agressive ... most aggressive)\n"
              "nostress=<n>\t1=Disable stress writes\n"
+             "nofsync=<n>\t1=Disable fsync()\n"
              "trace=<n>\tSet trace table size\t\t\t(0 .. 200000)\n"
             );
 } /* end function cckd_command_help */
@@ -4070,12 +4076,14 @@ void cckd_command_help()
 void cckd_command_opts()
 {
     cckdmsg ("cache=%d,l2cache=%d,ra=%d,raq=%d,rat=%d,"
-             "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n\ttrace=%d\n",
+             "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n"
+             "\tnofsync=%d,trace=%d\n",
              (cckdblk.cachenbr + 8) >> 4,
              cckdblk.l2cachenbr << 1, cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
              cckdblk.writermax, cckdblk.gcolwait,
-             cckdblk.gcolparm, cckdblk.nostress,cckdblk.itracen);
+             cckdblk.gcolparm, cckdblk.nostress, cckdblk.nofsync,
+             cckdblk.itracen);
 } /* end function cckd_command_opts */
 
 
@@ -4334,6 +4342,19 @@ int   val, i, opts = 0;
             else
             {
                 cckdblk.nostress = val;
+                opts = 1;
+            }
+        }
+        else if (strcasecmp (kw, "nofsync") == 0)
+        {
+            if (val < 0 || val > 1 || c != '\0')
+            {
+                cckdmsg ("Invalid value for nofsync=\n");
+                return -1;
+            }
+            else
+            {
+                cckdblk.nofsync = val;
                 opts = 1;
             }
         }

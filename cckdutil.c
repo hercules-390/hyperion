@@ -484,7 +484,7 @@ restart:
 
     /* process each space in file sequence; the only spaces we expect
        are free blocks, level 2 tables, and track images             */
-    for ( ; pos + freed < cdevhdr.size; pos += len)
+    for ( ; pos + freed < (off_t)cdevhdr.size; pos += len)
     {
 #ifdef EXTERNALGUI
         if (extgui) fprintf (stderr,"POS=%lu\n",pos);
@@ -544,7 +544,7 @@ restart:
             rc = lseek (fd, (off_t)(l1[l1x] + l2x * CCKD_L2ENT_SIZE), SEEK_SET);
             rc = read (fd, &l2, CCKD_L2ENT_SIZE);
         }
-        if (l2.pos == pos + freed)
+        if ((off_t)l2.pos == pos + freed)
         { /* space is a track image */
             len = l2.len;
             imbedded = l2.size - l2.len;
