@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+15 Jul 2004 Fixed tape "at loadpoint" sense issue - Ivan Warren
 08 Jul 2004 cfba fixes - Greg Smith
 08 Jul 2004 ASN-and-LX-reuse facility: SSAR, SSAIR - Roger Bowler
 07 Jul 2004 ASN-and-LX-reuse facility: PT, PTI - Roger Bowler

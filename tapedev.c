@@ -3567,6 +3567,7 @@ int sns4mat;
         else
         {
             dev->sense[0]&=~SENSE_IR;
+            dev->sense[1]&=~(SENSE1_TAPE_LOADPT|SENSE1_TAPE_FP);
             dev->sense[1]|=IsAtLoadPoint(dev)?SENSE1_TAPE_LOADPT:0;
             dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
         }
