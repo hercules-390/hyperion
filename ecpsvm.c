@@ -244,21 +244,21 @@ struct _ECPSVM_SASTATS
     /* Load the micblok copy */ \
     if((_cput)) \
     { \
-	    micblok.MICRSEG=EVM_L(amicblok); \
-	    micblok.MICCREG=EVM_L(amicblok+4); \
-	    micblok.MICVPSW=EVM_L(amicblok+8); \
-	    micblok.MICWORK=EVM_L(amicblok+12); \
-	    micblok.MICVTMR=EVM_L(amicblok+16); \
-	    micblok.MICACF=EVM_L(amicblok+20); \
+        micblok.MICRSEG=EVM_L(amicblok); \
+        micblok.MICCREG=EVM_L(amicblok+4); \
+        micblok.MICVPSW=EVM_L(amicblok+8); \
+        micblok.MICWORK=EVM_L(amicblok+12); \
+        micblok.MICVTMR=EVM_L(amicblok+16); \
+        micblok.MICACF=EVM_L(amicblok+20); \
     } \
     else \
     { \
-	    FETCH_FW(micblok.MICRSEG,regs->mainstor+amicblok); \
-	    FETCH_FW(micblok.MICCREG,regs->mainstor+amicblok+4); \
-	    FETCH_FW(micblok.MICVPSW,regs->mainstor+amicblok+8); \
-	    FETCH_FW(micblok.MICWORK,regs->mainstor+amicblok+12); \
-	    FETCH_FW(micblok.MICVTMR,regs->mainstor+amicblok+16); \
-	    FETCH_FW(micblok.MICACF,regs->mainstor+amicblok+20); \
+        FETCH_FW(micblok.MICRSEG,regs->mainstor+amicblok); \
+        FETCH_FW(micblok.MICCREG,regs->mainstor+amicblok+4); \
+        FETCH_FW(micblok.MICVPSW,regs->mainstor+amicblok+8); \
+        FETCH_FW(micblok.MICWORK,regs->mainstor+amicblok+12); \
+        FETCH_FW(micblok.MICVTMR,regs->mainstor+amicblok+16); \
+        FETCH_FW(micblok.MICACF,regs->mainstor+amicblok+20); \
     } \
     micpend=(micblok.MICVPSW >> 24); \
     vpswa=micblok.MICVPSW & ADDRESS_MAXWRAP(regs); \
@@ -269,7 +269,7 @@ struct _ECPSVM_SASTATS
     /* Set ref bit on page where Virtual PSW is stored */ \
     if((_cput)) \
     { \
-    	vpswa_p=MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
+        vpswa_p=MADDR(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     } \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" VPSWA= %8.8X Virtual "),vpswa)); \
     DEBUG_SASSISTX(_instname,logmsg(_("HHCEV300D : SASSIST "#_instname" CR6= %8.8X\n"),CR6)); \
@@ -278,18 +278,18 @@ struct _ECPSVM_SASTATS
     DEBUG_SASSISTX(_instname,display_psw(regs)); \
     if((_cput)) \
     { \
-    	/* Load the Virtual PSW in a temporary REGS structure */ \
-	    INITSIESTATE(vpregs); \
-	    ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
-	    DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
+        /* Load the Virtual PSW in a temporary REGS structure */ \
+        INITSIESTATE(vpregs); \
+        ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
+        DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
     } \
 
 
 #define SASSIST_PROLOG( _instname ) \
-	SASSIST_PROLOGX(_instname,1)
+    SASSIST_PROLOGX(_instname,1)
 
 #define SASSIST_PROLOG_VT( _instname ) \
-	SASSIST_PROLOGX(_instname,0)
+    SASSIST_PROLOGX(_instname,0)
 
 #define ECPSVM_PROLOG(_inst) \
 int     b1, b2; \
@@ -846,7 +846,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
 
         memset(&wregs,0,sizeof(wregs));
         INITSIESTATE(wregs);
-	work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
+    work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
         ARCH_DEP(load_psw) (&wregs,work_p);    /* Load user's Virtual PSW in work structure */
         /* Clear ILC from Virtual PSW */
         wregs.psw.ilc=0;
@@ -2418,18 +2418,18 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     if(B_VMPSTAT & VMV370R)
     {
         F_ECBLOK=fetch_fw(regs->mainstor+vmb+VMECEXT);
-	for(i=0;i<16;i++)
-	{
-		ecb_p=MADDR(F_ECBLOK+(i*4),USE_REAL_ADDR,regs,ACCTYPE_READ,0);
-		ocrs[i]=fetch_fw(ecb_p);
-	}
+    for(i=0;i<16;i++)
+    {
+        ecb_p=MADDR(F_ECBLOK+(i*4),USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+        ocrs[i]=fetch_fw(ecb_p);
+    }
     }
     else
     {
         F_ECBLOK=vmb+VMECEXT;  /* Update ECBLOK ADDRESS for VCR0 Update */
-	ecb_p=MADDR(F_ECBLOK,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+    ecb_p=MADDR(F_ECBLOK,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
         /* Load OLD CR0 From VMBLOK */
-	ocrs[0]=fetch_fw(ecb_p);
+    ocrs[0]=fetch_fw(ecb_p);
     }
     for(i=0;i<16;i++)
     {
@@ -2535,8 +2535,8 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
         {
             j-=16;
         }
-	ecb_p=MADDR(F_ECBLOK+(j*4),USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
-	store_fw(ecb_p,ocrs[j]);
+    ecb_p=MADDR(F_ECBLOK+(j*4),USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
+    store_fw(ecb_p,ocrs[j]);
     }
     DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL %d,%d Done\n",r1,r3));
     SASSIST_HIT(LCTL);

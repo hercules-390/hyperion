@@ -745,8 +745,8 @@ int     i;                              /* Loop counter              */
 
     if ( (addr1 & 0x7FF) <= 0x7FF - len )
     {
-	source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
-	dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
+    source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
+    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
         if ( (addr2 & 0x7FF) <= 0x7FF - len )
         {
              /* (1) - No boundaries are crossed */
@@ -754,47 +754,47 @@ int     i;                              /* Loop counter              */
                || (source1 < dest1 && source1 + len < dest1) )
              {
                  /* (1a) - No overlap */
-		 /* Single out memcpys that can be translated */
-		 /* into 1 or 2 GCC insns                     */
-		 switch(len+1)
-		 {
-			case 2:	/* MOVHI (2) */
-				 memcpy(dest1,source1,2);
-				 break;
-			case 3:	/* MOVHI + MOVQI (2+1) */
-				 memcpy(dest1,source1,3);
-				 break;
-			case 4: /* MOVSI (4) */
-				 memcpy(dest1,source1,4);
-				 break;
-			case 5: /* MOVSI +MOVQI (4+1) */
-				 memcpy(dest1,source1,5);
-				 break;
-			case 6: /* MOVSI + MOVHI (4+2) */
-				 memcpy(dest1,source1,6);
-				 break;
-		        /* 7 : Would be MOVSI+MOVHI+MOVQI (4+2+1) */
-			case 8:	/* MOVDI 8) */
-				 memcpy(dest1,source1,8);
-				 break;
-			case 9:	/* MOVDI+MOVQI (8+1) */
-				 memcpy(dest1,source1,9);
-				 break;
-			case 10: /* MOVDI+MOVHI (8+2) */
-				 memcpy(dest1,source1,10);
-				 break;
-		        /* 11 : Would be MOVDI+MOVHI+MOVQI (8+2+1) */
-			case 12: /* MOVDI+MOVSI (8+4) */
-				 memcpy(dest1,source1,12);
-				 break;
-		        /* 13, 14, 15 are 3 insns */
-			case 16: /* MOVDI+MOVDI (8+8) */
-				 memcpy(dest1,source1,16);
-				 break;
-			default:
-                 		MEMCPY (dest1, source1, len + 1);
-				break;
-		 }
+         /* Single out memcpys that can be translated */
+         /* into 1 or 2 GCC insns                     */
+         switch(len+1)
+         {
+            case 2: /* MOVHI (2) */
+                 memcpy(dest1,source1,2);
+                 break;
+            case 3: /* MOVHI + MOVQI (2+1) */
+                 memcpy(dest1,source1,3);
+                 break;
+            case 4: /* MOVSI (4) */
+                 memcpy(dest1,source1,4);
+                 break;
+            case 5: /* MOVSI +MOVQI (4+1) */
+                 memcpy(dest1,source1,5);
+                 break;
+            case 6: /* MOVSI + MOVHI (4+2) */
+                 memcpy(dest1,source1,6);
+                 break;
+                /* 7 : Would be MOVSI+MOVHI+MOVQI (4+2+1) */
+            case 8: /* MOVDI 8) */
+                 memcpy(dest1,source1,8);
+                 break;
+            case 9: /* MOVDI+MOVQI (8+1) */
+                 memcpy(dest1,source1,9);
+                 break;
+            case 10: /* MOVDI+MOVHI (8+2) */
+                 memcpy(dest1,source1,10);
+                 break;
+                /* 11 : Would be MOVDI+MOVHI+MOVQI (8+2+1) */
+            case 12: /* MOVDI+MOVSI (8+4) */
+                 memcpy(dest1,source1,12);
+                 break;
+                /* 13, 14, 15 are 3 insns */
+            case 16: /* MOVDI+MOVDI (8+8) */
+                 memcpy(dest1,source1,16);
+                 break;
+            default:
+                        MEMCPY (dest1, source1, len + 1);
+                break;
+         }
              }
              else
              {

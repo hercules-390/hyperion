@@ -2094,12 +2094,12 @@ DEF_INST(convert_utf32_to_utf8)
       if(utf32[2] == 0x00)
       {
         if(utf32[3] <= 0x7f)
-	{
-	  /* xlate range 00000000-0000007f */
-	  /* 00000000 00000000 00000000 0jklmnop -> 0jklmnop */
-	  utf8[0] = utf32[3];
-	  write = 1;
-	}
+    {
+      /* xlate range 00000000-0000007f */
+      /* 00000000 00000000 00000000 0jklmnop -> 0jklmnop */
+      utf8[0] = utf32[3];
+      write = 1;
+    }
       }
       else if(utf32[2] <= 0x07)
       {
@@ -2110,11 +2110,11 @@ DEF_INST(convert_utf32_to_utf8)
           return;
         }
       
-	/* xlate range 00000080-000007ff */
+    /* xlate range 00000080-000007ff */
         /* 00000000 00000000 00000fgh ijklmnop -> 110fghij 10klmnop */
-	utf8[0] = 0xc0 | (utf32[2] << 2) | (utf32[2] >> 6);
-	utf8[1] = 0x80 | (utf32[2] & 0x3f);
-	write = 2;
+    utf8[0] = 0xc0 | (utf32[2] << 2) | (utf32[2] >> 6);
+    utf8[1] = 0x80 | (utf32[2] & 0x3f);
+    write = 2;
       }
       else if(utf32[2] <= 0xd7 || utf32[2] > 0xdc)
       {
@@ -2124,18 +2124,18 @@ DEF_INST(convert_utf32_to_utf8)
           regs->psw.cc = 1;
           return;
         }
-	
-	/* xlate range 00000800-0000d7ff and 0000dc00-0000ffff */
-	/* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */      
+    
+    /* xlate range 00000800-0000d7ff and 0000dc00-0000ffff */
+    /* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */      
         utf8[0] = 0xe0 | (utf32[2] >> 4);
-	utf8[1] = 0x80 | ((utf32[2] & 0x0f) << 2) | (utf32[3] >> 6);
-	utf8[2] = 0x80 | (utf32[3] & 0x3f);
-	write = 3;
+    utf8[1] = 0x80 | ((utf32[2] & 0x0f) << 2) | (utf32[3] >> 6);
+    utf8[2] = 0x80 | (utf32[3] & 0x3f);
+    write = 3;
       }
       else
       {
         regs->psw.cc = 2;
-        return;	
+        return; 
       }
     }
     else if(utf32[1] >= 0x01 && utf32[1] <= 0x10)

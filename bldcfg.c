@@ -791,7 +791,7 @@ BYTE **orig_newargv;
 #endif /*OPTION_PTTRACE*/
         scckd = NULL;
 #if defined(OPTION_LPARNAME)
-	lparname = NULL;
+    lparname = NULL;
 #endif /*defined(OPTION_LPARNAME)*/
 
         /* Check for old-style CPU statement */
@@ -1610,8 +1610,8 @@ BYTE **orig_newargv;
             cckd_command (scckd, 0);
 
 #if defined(OPTION_LPARNAME)
-	if(lparname)
-	    set_lparname(lparname);
+    if(lparname)
+        set_lparname(lparname);
 #endif /*defined(OPTION_LPARNAME)*/
 
     } /* end for(scount) */
