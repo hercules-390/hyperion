@@ -1,7 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
-28 Nov 2004 TBEDR instruction - Roger Bowler
+28 Nov 2004 TBEDR,TBDR instructions - Roger Bowler
 26 Nov 2004 Improve stack access - Jan Jaeger
 25 Nov 2004 Fix MCK in ECPS:VM - Ivan Warren
 23 Nov 2004 Improve access register translation - Jan Jaeger

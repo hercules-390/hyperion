@@ -5,12 +5,10 @@
  * Copyright (c) 2001-2004 Willem Konynenberg <wfk@xos.nl>
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * THDER,THDR by Roger Bowler, 19 July 2003.
- * LXDBR,LXDB,LXEBR,LXEB by Roger Bowler, 13 Nov 2004.
- * LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR by Roger Bowler, 15 Nov 2004.
- * MXDBR,MXDB,MDEBR,MDEB by Roger Bowler, 16 Nov 2004.
- * MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB by Roger Bowler, 17 Nov 2004.
- * DIEBR,DIDBR by Roger Bowler, 18 Nov 2004.
- * TBEDR by Roger Bowler, 28 Nov 2004.
+ * Additional instructions by Roger Bowler, November 2004:
+ *  LXDBR,LXDB,LXEBR,LXEB,LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR,
+ *  MXDBR,MXDB,MDEBR,MDEB,MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,
+ *  MSEBR,MSEB,DIEBR,DIDBR,TBEDR,TBDR.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -943,11 +941,13 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
 } /* end function cnvt_bfp_to_hfp */
 
 /*
- * Convert hexadecimal long floating point register to binary short
- * floating point operand and return condition code
+ * Convert hexadecimal long floating point register to 
+ * binary floating point and return condition code
  * Roger Bowler, 28 Nov 2004
  */
-static int cnvt_lhfp_to_sbfp (struct sbfp *op, U32 *fpr, int rounding)
+static int cnvt_hfp_to_bfp (U32 *fpr, int rounding,
+        int bfp_fractbits, int bfp_emax, int bfp_ebias,
+        BYTE *result_sign, int *result_exp, U64 *result_fract)
 {
     BYTE sign;
     short expo;
@@ -962,9 +962,9 @@ static int cnvt_lhfp_to_sbfp (struct sbfp *op, U32 *fpr, int rounding)
 
     /* Determine whether to round up or down */
     switch (rounding) {
-    case RM_DEFAULT_ROUNDING:
     case RM_BIASED_ROUND_TO_NEAREST:
-    case RM_ROUND_TO_NEAREST:
+    case RM_ROUND_TO_NEAREST: roundup = 0; break;
+    case RM_DEFAULT_ROUNDING:
     case RM_ROUND_TOWARD_ZERO: roundup = 0; break;
     case RM_ROUND_TOWARD_POS_INF: roundup = (sign ? 0 : 1); break;
     case RM_ROUND_TOWARD_NEG_INF: roundup = sign; break;
@@ -973,9 +973,9 @@ static int cnvt_lhfp_to_sbfp (struct sbfp *op, U32 *fpr, int rounding)
     /* Convert HFP zero to BFP zero and return cond code 0 */
     if (fract == 0) /* a = -0 or +0 */
     {
-        op->sign = sign;
-        op->exp = 0;
-        op->fract = 0;
+        *result_sign = sign;
+        *result_exp = 0;
+        *result_fract = 0;
         return 0;
     }
 
@@ -986,7 +986,7 @@ static int cnvt_lhfp_to_sbfp (struct sbfp *op, U32 *fpr, int rounding)
     expo = (expo - 64) * 4;
 
     /* Convert true binary exponent to a biased exponent */
-    expo += 127;
+    expo += bfp_ebias;
 
     /* Shift the fraction left until leftmost 1 is in bit 8 */
     while ((fract & 0x0080000000000000ULL) == 0)
@@ -999,8 +999,14 @@ static int cnvt_lhfp_to_sbfp (struct sbfp *op, U32 *fpr, int rounding)
     expo--;
     fract &= 0x007FFFFFFFFFFFFFULL;
 
-    if (expo < -22) /* |a| < Dmin */
+    if (expo < -(bfp_fractbits-1)) /* |a| < Dmin */
     {
+        if (expo == -(bfp_fractbits-1) - 1)
+        {
+            if (rounding == RM_BIASED_ROUND_TO_NEAREST
+                || rounding == RM_ROUND_TO_NEAREST)
+                roundup = 1;
+        }
         if (roundup) { expo = 0; fract = 1; } /* Dmin */
         else { expo = 0; fract = 0; } /* Zero */
     }
@@ -1010,25 +1016,36 @@ static int cnvt_lhfp_to_sbfp (struct sbfp *op, U32 *fpr, int rounding)
         fract |= 0x0080000000000000ULL;
 
         /* Denormalize to get exponent back in range */
-        fract >>= (expo + 22);
+        fract >>= (expo + (bfp_fractbits-1));
         expo = 0;
     }
-    else if (expo > 254) /* |a| > Nmax */
+    else if (expo > (bfp_emax+bfp_ebias)) /* |a| > Nmax */
     {
         cc = 3;
-        if (roundup) { expo = 255; fract = 0; } /* Inf */
-        else { expo = 254; fract = 0x007FFFFF00000000ULL; } /* Nmax */
+        if (roundup) { /* Inf */
+            expo = (bfp_emax+bfp_ebias) + 1;
+            fract = 0;
+        } else { /* Nmax */
+            expo = (bfp_emax+bfp_ebias);
+            fract = 0x007FFFFFFFFFFFFFULL - ((1<<(1+(55-bfp_fractbits)))-1);
+        } /* Nmax */
     } /* end Nmax < |a| */
      
     /* Set the result sign and exponent */
-    op->sign = sign;
-    op->exp = expo;
+    *result_sign = sign;
+    *result_exp = expo;
 
-    /* Convert 55-bit fraction to a 23-bit fraction */
-    op->fract = fract >> 32;
+    /* Apply rounding before truncating to final fraction length */
+    if (roundup && (fract & (1<<(55-bfp_fractbits))))
+    {
+        fract += (1<<(55-bfp_fractbits));
+    }
+
+    /* Convert 55-bit fraction to result fraction length */
+    *result_fract = fract >> (55-bfp_fractbits);
      
     return cc;
-} /* end function cnvt_lhfp_to_sbfp */
+} /* end function cnvt_hfp_to_bfp */
 
 #define _CBH_FUNC
 #endif /*!defined(_CBH_FUNC)*/
@@ -1055,7 +1072,7 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
                          lbfpclassify(&op2),
                          regs->fpr + FPR2I(r1));
 
-}
+} /* end DEF_INST(convert_bfp_long_to_float_long_reg) */
 
 /*
  * B358 THDER - CONVERT BFP TO HFP (short to long)             [RRE]
@@ -1085,14 +1102,28 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
                          sbfpclassify(&op2),
                          regs->fpr + FPR2I(r1));
 
-}
+} /* end DEF_INST(convert_bfp_short_to_float_long_reg) */
 
 /*
  * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
  */
 DEF_INST(convert_float_long_to_bfp_long_reg)
 {
-    ARCH_DEP(operation_exception) (inst,regs); 
+    int r1, r2, m3;
+    struct lbfp op1;
+
+    RRF_M(inst, regs, r1, r2, m3);
+    //logmsg("TBDR r1=%d r2=%d\n", r1, r2);
+    HFPREG2_CHECK(r1, r2, regs);
+    BFPRM_CHECK(m3,regs);
+
+    regs->psw.cc = 
+        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3, 
+            /*fractbits*/52, /*emax*/1023, /*ebias*/1023,
+            &(op1.sign), &(op1.exp), &(op1.fract));
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+
 } /* end DEF_INST(convert_float_long_to_bfp_long_reg) */
 
 /*
@@ -1102,6 +1133,7 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
 {
     int r1, r2, m3;
     struct sbfp op1;
+    U64 fract;
 
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
@@ -1109,7 +1141,10 @@ DEF_INST(convert_float_long_to_bfp_short_reg)
     BFPRM_CHECK(m3,regs);
 
     regs->psw.cc = 
-        cnvt_lhfp_to_sbfp (&op1, regs->fpr + FPR2I(r1), m3);
+        cnvt_hfp_to_bfp (regs->fpr + FPR2I(r1), m3, 
+            /*fractbits*/23, /*emax*/127, /*ebias*/127,
+            &(op1.sign), &(op1.exp), &fract);
+    op1.fract = (U32)fract;
 
     put_sbfp(&op1, regs->fpr + FPR2I(r1));
 
