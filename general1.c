@@ -1770,6 +1770,20 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
             len2--;
         }
 
+
+        /* update GPRs if we just crossed half page - could get rupt */
+        if ((addr1 & 0x7FF) == 0 || (addr2 & 0x7FF) == 0)
+            {
+                /* Update R1 and R2 to point to next bytes to compare */
+                GR_A(r1, regs) = addr1;
+                GR_A(r2, regs) = addr2;
+
+                /* Set R1+1 and R2+1 to remaining operand lengths */
+                GR_A(r1+1, regs) = len1;
+                GR_A(r2+1, regs) = len2;
+            }
+
+
     } /* end for(i) */
 
     /* Update the registers */
@@ -3299,6 +3313,7 @@ int     i;                              /* Loop counter              */
 VADR    addr1, addr2;                   /* Operand addresses         */
 BYTE    sbyte;                          /* String character          */
 BYTE    termchar;                       /* Terminating character     */
+int     cpu_length;                     /* length to next page       */
 
     RRE(inst, execflag, regs, r1, r2);
 
@@ -3313,8 +3328,14 @@ BYTE    termchar;                       /* Terminating character     */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
+    /* set cpu_length as shortest distance to new page */
+    if ((addr1 & 0xFFF) > (addr2 & 0xFFF))
+        cpu_length = 0x1000 - (addr1 & 0xFFF);
+    else
+        cpu_length = 0x1000 - (addr2 & 0xFFF);
+
     /* Move up to 4096 bytes until terminating character */
-    for (i = 0; i < 4096; i++)
+    for (i = 0; i < cpu_length; i++)
     {
         /* Fetch a byte from the source operand */
         sbyte = ARCH_DEP(vfetchb) ( addr2, r2, regs );
