@@ -79,6 +79,7 @@ int             nofudge=1;              /* Disable fudge factor      */
 unsigned int    c=CCKD_COMPRESS_ZLIB;   /* Compression algorithm     */
 int             z=-1;                   /* Compression value         */
 CKDDEV         *ckd;                    /* -> DASD table entry       */
+int             l2empty;                /* 1=level 2 table is empty  */
 
     /* Display the program identification message */
     display_version (stdout, "Hercules ckd to cckd copy program ");
@@ -389,6 +390,7 @@ CKDDEV         *ckd;                    /* -> DASD table entry       */
     pos = CCKD_L1TAB_POS + cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
     l1x = 0;
     l2pos = 0;
+    l2empty = 1;
 
 #ifdef EXTERNALGUI
     /* Tell the GUI how many tracks we'll be processing. */
@@ -409,7 +411,7 @@ CKDDEV         *ckd;                    /* -> DASD table entry       */
         {
             if (l2pos > 0)
             { /* write the old secondary table if it's not empty */
-                if (l2pos + CCKD_L2TAB_SIZE == pos)
+                if (l2empty)
                     pos = l2pos;
                 else
                 {
@@ -433,6 +435,7 @@ CKDDEV         *ckd;                    /* -> DASD table entry       */
             }
             l2pos = pos;
             memset (&l2, 0, CCKD_L2TAB_SIZE);
+            l2empty = 1;
 
             rc = lseek (ofd, l2pos, SEEK_SET);
             if (rc == -1)
@@ -533,8 +536,8 @@ CKDDEV         *ckd;                    /* -> DASD table entry       */
             /* update the secondary table and write track image */
             l2x = i % 256;
             l2[l2x].pos = pos;
-            l2[l2x].len = obuflen;
-            l2[l2x].size = obuflen;
+            l2[l2x].len = l2[l2x].size = obuflen;
+            l2empty = 0;
             rc = write (ofd, obuf, obuflen);
             if (rc != obuflen)
             {
@@ -545,7 +548,10 @@ CKDDEV         *ckd;                    /* -> DASD table entry       */
             pos += obuflen;
         }
         else if (buflen == CCKD_NULLTRK_SIZE0)
+        {
             l2[i % 256].len = l2[i % 256].size = 0xffff;
+            l2empty = 0;
+        }
 
         /* update status information */
         if (!quiet) status (i+1, ckdtrks);
