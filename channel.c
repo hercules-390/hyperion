@@ -2560,8 +2560,10 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             break;
         }
 
+	dev->is_immed=IS_CCW_IMMEDIATE(dev);
         /* For WRITE and CONTROL operations, copy data
            from main storage into channel buffer */
+	/*
         if (IS_CCW_WRITE(dev->code)
             ||
             (
@@ -2569,6 +2571,10 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 &&
                 !(IS_CCW_NOP(dev->code) || IS_CCW_SET_EXTENDED(dev->code))
             ))
+	    */
+        if ( IS_CCW_WRITE(dev->code) 
+		|| IS_CCW_CONTROL(dev->code)
+		&& (!dev->is_immed))
         {
             /* Channel program check if data exceeds buffer size */
             if (bufpos + count > 65536)
@@ -2670,7 +2676,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                for non-NOP CCWs */
             if (((flags & CCW_FLAGS_CD)
                 || (flags & CCW_FLAGS_SLI) == 0)
-                && (dev->code != 0x03)
+                && (!dev->is_immed)
 #if defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
                 /* Suppress incorrect length indication if
                    CCW format is one and SLI mode is indicated

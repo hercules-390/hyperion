@@ -879,7 +879,7 @@ DEVHND cardrdr_device_hndinfo = {
         &cardrdr_execute_ccw,
         &cardrdr_close_device,
         &cardrdr_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 /* Libtool static name colision resolution */

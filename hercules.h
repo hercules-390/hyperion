@@ -438,6 +438,11 @@ typedef int DEVUF (struct _DEVBLK *dev);
 typedef void DEVRR (struct _DEVBLK *dev);
 
 /*-------------------------------------------------------------------*/
+/* Device handler description structures                             */
+/*-------------------------------------------------------------------*/
+typedef BYTE *DEVIM; /* Immediate CCW Codes Table */
+
+/*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
 /*-------------------------------------------------------------------*/
 #if defined(_FEATURE_VECTOR_FACILITY)
@@ -1160,6 +1165,9 @@ typedef struct _DEVBLK {
 
         void ( *halt_device)(struct _DEVBLK *);         /*      @ISW */
 
+	DEVIM   *immed;                 /* Model Specific IM codes   */
+	                                /* (overrides devhnd immed)  */
+	int	is_immed;               /* Last command is Immediate */
 
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
@@ -2010,5 +2018,15 @@ struct mt_tape_info {
 };
 #define MT_TAPE_INFO   { { 0, NULL } }
 #endif /* defined(__APPLE__) */
+
+/* Utility channel macro */
+#define IS_CCW_IMMEDIATE(_dev) \
+	( ( (_dev)->hnd->immed \
+			&& (_dev)->hnd->immed[(_dev)->code]) \
+		|| ( ( _dev)->immed \
+			&& (_dev)->immed[(_dev)->code]) \
+		|| IS_CCW_NOP((_dev)->code) \
+		|| IS_CCW_SET_EXTENDED((_dev)->code) \
+	) \
 
 #endif /*!defined(_HERCULES_H)*/

@@ -27,6 +27,37 @@
 /* getopt dynamic linking kludge */
 #include "herc_getopt.h"
 
+/*-------------------------------------------------------------------*/
+/* Ivan Warren 20040227                                              */
+/* This table is used by channel.c to determine if a CCW code is an  */
+/* immediate command or not                                          */
+/* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/* 0 : Command is NOT an immediate command                           */
+/* 1 : Command is an immediate command                               */
+/* Note : An immediate command is defined as a command which returns */
+/* CE (channel end) during initialisation (that is, no data is       */
+/* actually transfered. In this case, IL is not indicated for a CCW  */
+/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
+/* effect                                                            */
+/*-------------------------------------------------------------------*/
+
+static BYTE CTCI_Immed_Commands[256]=
+{ 0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 // ====================================================================
 // Declarations
@@ -50,7 +81,8 @@ DEVHND ctci_device_hndinfo =
     &CTCI_ExecuteCCW,
     &CTCI_Close,
     &CTCI_Query,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    CTCI_Immed_Commands
 };
 
 // ====================================================================

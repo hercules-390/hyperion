@@ -67,7 +67,56 @@ extern
 #endif
        char *config_cnslport;
 
+/*-------------------------------------------------------------------*/
+/* Ivan Warren 20040227                                              */
+/* This table is used by channel.c to determine if a CCW code is an  */
+/* immediate command or not                                          */
+/* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/* 0 : Command is NOT an immediate command                           */
+/* 1 : Command is an immediate command                               */
+/* Note : An immediate command is defined as a command which returns */
+/* CE (channel end) during initialisation (that is, no data is       */
+/* actually transfered. In this case, IL is not indicated for a CCW  */
+/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
+/* effect                                                            */
+/*-------------------------------------------------------------------*/
+static BYTE constty_immed[256]=
+ /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+  { 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,  /* 00 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 10 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 20 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 30 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 40 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 50 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 60 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 70 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 80 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 90 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* A0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* B0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* C0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* D0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* E0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; /* F0 */
 
+static BYTE loc3270_immed[256]=
+ /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+  { 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,  /* 00 */
+    0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,  /* 10 */
+    0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,  /* 20 */
+    0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,  /* 30 */
+    0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,  /* 40 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 50 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 60 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 70 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 80 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 90 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* A0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* B0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* C0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* D0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* E0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; /* F0 */
 /*-------------------------------------------------------------------*/
 /* Telnet command definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -2103,7 +2152,9 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         /* Reset the buffer address */
         dev->pos3270 = 0;
 
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -2495,7 +2546,7 @@ BYTE    stat;                           /* Unit status               */
     if (dev->connected == 0 && !IS_CCW_SENSE(code))
     {
         dev->sense[0] = SENSE_IR;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        *unitstat = CSW_UC;
         return;
     }
 
@@ -2629,7 +2680,9 @@ BYTE    stat;                           /* Unit status               */
     /* AUDIBLE ALARM                                                 */
     /*---------------------------------------------------------------*/
         rc = send_packet (dev->fd, "\a", 1, NULL);
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -2688,7 +2741,8 @@ DEVHND constty_device_hndinfo = {
         &constty_execute_ccw,
         &constty_close_device,
         &constty_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	constty_immed
 };
 
 /* Libtool static name colision resolution */
@@ -2710,7 +2764,8 @@ DEVHND loc3270_device_hndinfo = {
         &loc3270_execute_ccw,
         &loc3270_close_device,
         &loc3270_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	loc3270_immed
 };
 
 

@@ -13,6 +13,49 @@
 #include "opcode.h"
 
 /*-------------------------------------------------------------------*/
+/* Ivan Warren 20040227                                              */
+/* This table is used by channel.c to determine if a CCW code is an  */
+/* immediate command or not                                          */
+/* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/* 0 : Command is NOT an immediate command                           */
+/* 1 : Command is an immediate command                               */
+/* Note : An immediate command is defined as a command which returns */
+/* CE (channel end) during initialisation (that is, no data is       */
+/* actually transfered. In this case, IL is not indicated for a CCW  */
+/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
+/* effect                                                            */
+/*-------------------------------------------------------------------*/
+
+/* Printer Specific : 1403 */
+/* The following are considered IMMEDIATE commands : */
+/* CTL-NOOP, Skip Channel 'n' Immediate, Block Data check , Allow Data Check
+ * Space 1,2,3 Lines Immediate, UCS Gate Load, Load UCS Buffer & Fold,
+ * Load UCS Buffer (No Fold)
+ */
+
+static BYTE printer_immed_commands[256]=
+/*
+ *0 1 2 3 4 5 6 7 8 9 A B C D E F
+*/
+
+{ 0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,
+  0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0};
+
+/*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define LINE_LENGTH     150
@@ -486,7 +529,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -498,7 +543,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -510,7 +557,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -534,7 +583,9 @@ BYTE            c;                      /* Print character           */
     /*---------------------------------------------------------------*/
     /* BLOCK DATA CHECK                                              */
     /*---------------------------------------------------------------*/
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -542,7 +593,9 @@ BYTE            c;                      /* Print character           */
     /*---------------------------------------------------------------*/
     /* ALLOW DATA CHECK                                              */
     /*---------------------------------------------------------------*/
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -554,7 +607,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -566,7 +621,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -578,7 +635,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -621,7 +680,9 @@ BYTE            c;                      /* Print character           */
 
         /* Set fold indicator and return normal status */
         dev->fold = 1;
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -639,7 +700,9 @@ BYTE            c;                      /* Print character           */
 
         /* Reset fold indicator and return normal status */
         dev->fold = 0;
+	/*
         *residual = 0;
+	*/
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -699,7 +762,8 @@ DEVHND printer_device_hndinfo = {
         &printer_execute_ccw,
         &printer_close_device,
         &printer_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	printer_immed_commands
 };
 
 /* Libtool static name colision resolution */

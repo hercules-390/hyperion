@@ -178,6 +178,38 @@ void build_sense_3430(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode);
 static TapeDeviceDepSenseFunction build_senseX;
 
 /*-------------------------------------------------------------------*/
+/* Ivan Warren 20040227                                              */
+/* This table is used by channel.c to determine if a CCW code is an  */
+/* immediate command or not                                          */
+/* The tape is addressed in the DEVHND structure as 'DEVIMM immed'   */
+/* 0 : Command is NOT an immediate command                           */
+/* 1 : Command is an immediate command                               */
+/* Note : An immediate command is defined as a command which returns */
+/* CE (channel end) during initialisation (that is, no data is       */
+/* actually transfered. In this case, IL is not indicated for a CCW  */
+/* Format 0 or for a CCW Format 1 when IL Suppression Mode is in     */
+/* effect                                                            */
+/*-------------------------------------------------------------------*/
+static BYTE TapeImmedCommands[256]=
+ /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+  { 0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,  /* 00 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 10 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 20 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 30 */
+    0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,  /* 40 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 50 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 60 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 70 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,  /* 80 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,  /* 90 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,  /* A0 */
+    0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,  /* B0 */
+    0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,  /* C0 */
+    0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,  /* D0 */
+    0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,  /* E0 */
+    0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1}; /* F0 */
+
+/*-------------------------------------------------------------------*/
 /* Ivan Warren 20030224                                              */
 /* This table is used by TapeCommandIsValid to determine if a CCW    */
 /* code is valid for the device                                      */
@@ -4655,8 +4687,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
 
-    *residual = 0;     /* (pre-initialize residual in case of error) */
-
     /* If this is a data-chained READ, then return any data remaining
        in the buffer which was not used by the previous CCW */
     if (chained & CCW_FLAGS_CD)
@@ -4802,8 +4832,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     /* CONTROL NO-OPERATION                                          */
     /*---------------------------------------------------------------*/
-        *residual = 0;
-        /* NOTE : UC+IR is already set for NO-OP on 3480 if tape not ready */
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -4817,7 +4845,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
         /* Reset position counters to start of file */
 
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -4896,7 +4923,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
 
         dev->blockid = 0;
 
-        *residual = 0;
         /* Status may require tweaking according to D/T */
         /* this is what TAPEUNLOADED2 does */
         rc=1;
@@ -4921,7 +4947,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Set normal status */
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -4944,7 +4969,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         dev->curfilen++;
         dev->blockid++;
         /* Set normal status */
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -4998,13 +5022,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Exit with unit exception status if tapemark was sensed */
         if (rc == 0)
         {
-            *residual = 0;
             build_senseX(TAPE_BSENSE_READTM,dev,unitstat,code);
             break;
         }
 
         /* Set normal status */
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5022,7 +5044,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Set normal status */
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5041,13 +5062,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Exit with unit exception status if tapemark was sensed */
         if (rc == 0)
         {
-            *residual = 0;
             build_senseX(TAPE_BSENSE_READTM,dev,unitstat,code);
             break;
         }
 
         /* Set normal status */
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5065,7 +5084,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Set normal status */
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5169,7 +5187,6 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     /* MODE SET                                                      */
     /*---------------------------------------------------------------*/
-        *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5566,11 +5583,20 @@ static
 #endif
 
 DEVHND tapedev_device_hndinfo = {
-        &tapedev_init_handler,
-        &tapedev_execute_ccw,
-        &tapedev_close_device,
-        &tapedev_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        &tapedev_init_handler,	/* INIT */
+        &tapedev_execute_ccw,	/* EXEC */
+        &tapedev_close_device,	/* CLOSE */
+        &tapedev_query_device,  /* QUERY */
+        NULL,                   /* Start */
+	NULL,                   /* End */
+	NULL,                   /* Resume */
+	NULL,                   /* Suspend */
+	NULL,                   /* Read */
+	NULL,                   /* Write */
+	NULL,                   /* Qry Used */
+	NULL,                   /* Reserve */
+	NULL,                   /* Release */
+	TapeImmedCommands       /* Immed CCWs */
 };
 
 /* Libtool static name colision resolution */

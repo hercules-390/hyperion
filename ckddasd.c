@@ -4698,5 +4698,6 @@ DEVHND ckddasd_device_hndinfo = {
         &ckddasd_update_track,
         &ckddasd_used,
         NULL,
-        NULL
+        NULL,
+	NULL
 };

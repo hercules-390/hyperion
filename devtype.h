@@ -19,6 +19,7 @@ typedef struct _DEVHND {
         DEVUF *used;                   /* Device Query used          */
         DEVRR *reserve;                /* Device Reserve             */
         DEVRR *release;                /* Device Release             */
+	DEVIM immed;                   /* Immediate CCW Codes        */
 } DEVHND;
 
 

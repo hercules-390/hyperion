@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+27 Feb 2004 Special I/O processing for Immediate Commands - Ivan Warren
 26 Feb 2004 Set iodelay correctly for 0 value; dasdtab comments - Greg Smith
 25 Feb 2004 Don't set incorrect length on printer immediate CCWs - Jay Maynard
 21 Feb 2004 Added system parameter lparname - Bernard van der Helm

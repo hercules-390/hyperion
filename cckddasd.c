@@ -5151,7 +5151,8 @@ DEVHND cckddasd_device_hndinfo = {
         &cckd_update_track,
         &cckd_used,
         NULL,
-        NULL
+        NULL,
+	NULL
 };
 
 DEVHND cfbadasd_device_hndinfo = {
@@ -5167,5 +5168,6 @@ DEVHND cfbadasd_device_hndinfo = {
         &cfba_write_block,
         &cfba_used,
         NULL,
-        NULL
+        NULL,
+	NULL
 };

@@ -308,7 +308,7 @@ DEVHND cardpch_device_hndinfo = {
         &cardpch_execute_ccw,
         &cardpch_close_device,
         &cardpch_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 /* Libtool static name colision resolution */

@@ -1351,5 +1351,6 @@ DEVHND fbadasd_device_hndinfo = {
         &fbadasd_update_blkgrp,        /* Device Write               */
         &fbadasd_used,                 /* Device Query used          */
         NULL,                          /* Device Reserve             */
-        NULL                           /* Device Release             */
+        NULL,                          /* Device Release             */
+	NULL                           /* Immediate Commands         */
 };
