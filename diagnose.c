@@ -423,6 +423,7 @@ U32   code;
     /* SHUTDATA DC X'0000FFFF'             MUST BE X'0000FFFF'       */
 
     if (0 == r1 && 2 == r2
+         && (sysblk.cpuid >> 56 & 0xFF) != 0xFF
          && ((sysblk.cpuid >> 16 & 0xFFFF) == 0x4361
           || (sysblk.cpuid >> 16 & 0xFFF9) == 0x9371    /* (937X) */
           || (sysblk.cpuid >> 16 & 0xFFFF) == 0x9221)
