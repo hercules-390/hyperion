@@ -1826,7 +1826,7 @@ U16     xcode;                          /* Exception code            */
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
 
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
+        if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
 #if defined(FEATURE_PER2)
           && ((REAL_MODE(&regs->psw) ||
             ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
@@ -1845,7 +1845,7 @@ U16     xcode;                          /* Exception code            */
             goto vabs_prot_excp;
 
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
+        if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
 #if defined(FEATURE_PER2)
           && ((REAL_MODE(&regs->psw) ||
             ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
@@ -2042,7 +2042,7 @@ int     aeind;
         /* Set the reference and change bits in the storage key */
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
+        if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
 #if defined(FEATURE_PER2)
           && ((REAL_MODE(&regs->psw) ||
             ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
@@ -2059,7 +2059,7 @@ int     aeind;
                                 private, protect, regs))
             goto vabs_prot_excp;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SA(regs)
+        if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
 #if defined(FEATURE_PER2)
           && ((REAL_MODE(&regs->psw) ||
             ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
