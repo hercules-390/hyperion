@@ -747,6 +747,72 @@ HHCCF052S Error in <em>filename</em> line <em>lineno</em>:
   <dt>Issued by
   <dd>config.c, function build_config
   </dl>
+<dt><code><a name="HHCCF053E">
+        HHCCF053E Incorrect second device number in device range near character <em>c</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The 2nd argument of a device range contains an incorrect device number
+  <dt>Action
+  <dd>Correct the statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function parse_devnums
+  </dl>
+<dt><code><a name="HHCCF054E">
+HHCCF054E Incorrect Device count near character <em>c</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The count field in a device count specification is invalid
+  <dt>Action
+  <dd>Correct the statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function parse_devnums
+  </dl>
+<dt><code><a name="HHCCF055E">
+HHCCF055E Incorrect device address specification near character <em>c</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The first or only CUU in a device specification statement is invalid
+  <dt>Action
+  <dd>Correct the statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function parse_devnums
+  </dl>
+<dt><code><a name="HHCCF056E">
+HHCCF056E Incorrect device address range. <em>CUU1</em>&gt<em>CUU2</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The first device number of a range is greater than the last device number
+  <dt>Action
+  <dd>Correct the statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function parse_devnums
+  </dl>
+<dt><code><a name="HHCCF057E">
+HHCCF057E <em>CUU</em> is on wrong channel (1st device defined on channel <em>CC</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>At least one of the devices in a device number specification is on a different channel than a previously defined device number within the same specification. All device numbers on a single configuration line must be on a single channel (Group of 256 devices)
+  <dt>Action
+  <dd>Correct the statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function parse_devnums
+  </dl>
+<dt><code><a name="HHCCF058E">
+HHCCF058E Some or all devices in <em>CUU</em>-<em>CUU</em> duplicate devices already defined
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>At least one of the device numbers on a device specification statement defines a device number that is already specified on that same statement.
+  <dt>Action
+  <dd>Correct the statement and restart Hercules.
+  <dt>Issued by
+  <dd>config.c, function parse_devnums
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
