@@ -27,8 +27,11 @@ DEVENT device_handler_table[] = {
     { "3211", 0x3211, &printer_device_hndinfo },
 
     /* Tapes */
+    { "3410", 0x3411, &tapedev_device_hndinfo }, /* a 3410 is a 3411 */
+    { "3411", 0x3411, &tapedev_device_hndinfo },
     { "3420", 0x3420, &tapedev_device_hndinfo },
     { "3480", 0x3480, &tapedev_device_hndinfo },
+    { "3490", 0x3490, &tapedev_device_hndinfo },
 
     /* Count Key Data Direct Access Storage Devices */
     { "2311", 0x2311, &ckddasd_device_hndinfo },

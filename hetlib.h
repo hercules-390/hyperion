@@ -109,6 +109,7 @@ typedef struct _hetb
 || Flags for het_open()
 */
 #define HETOPEN_CREATE          0x01    /* Create NL tape, if file missing  */
+#define HETOPEN_READONLY        0x02    /* Force the open read-only         */
 
 /*
 || Modes for het_cntl()
@@ -170,5 +171,6 @@ int het_bsf( HETB *hetb );
 int het_fsf( HETB *hetb );
 int het_rewind( HETB *hetb );
 const char *het_error( int rc );
+long het_tell ( HETB *hetb );
 
 #endif /* defined( _HETLIB_H_ ) */

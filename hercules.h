@@ -1048,17 +1048,40 @@ typedef struct _DEVBLK {
         U16     curbufoff;              /* Offset into buffer of data
                                            for next data chained CCW */
         HETB   *hetb;                   /* HET control block         */
+
         struct                          /* HET device parms          */
         {
             U16 compress:1;             /* 1=Compression enabled     */
             U16 method:3;               /* Compression method        */
             U16 level:4;                /* Compression level         */
+	    U16 strictsize:1;           /* Strictly enforce MAXSIZE  */
+	    U16 logical_readonly;       /* Tape is forced READ ONLY  */
             U16 chksize;                /* Chunk size                */
+            off_t maxsize;              /* Maximum allowed TAPE file
+                                           size                      */
+            size_t eotmargin;           /* Amount of space left   
+                                           before reporting EOT      */
         }       tdparms;                /* HET device parms          */
         U32                             /* Flags                     */
                 readonly:1,             /* 1=Tape is write-protected */
-                longfmt:1;              /* 1=Long record format (DDR)*/ /*DDR*/
+                longfmt:1,              /* 1=Long record format (DDR)*/ /*DDR*/
+                sns_pending:1;          /* Contingency Allegiance    */
+                                        /* - means : don't build a   */
+                                        /* sense on X'04' : it's     */
+                                        /* aleady there              */
+                                        /* NOTE : flag cleared by    */
+                                        /*        sense command only */
+                                        /*        or a device init   */
         BYTE    tapedevt;               /* Tape device type          */
+	struct _TAPEMEDIA_HANDLER *tmh; /* Tape Media Handling       */
+                                        /* dispatcher                */
+	/* Autoloader feature */
+	struct _TAPEAUTOLOADENTRY *als;  /* Autoloader stack         */
+	int     alss;                    /* Autoloader stack size    */
+	int     alsix;                   /* Current Autoloader index */
+	char    **al_argv;               /* ARGV in autoloader       */
+	int     al_argc;                 /* ARGC in autoloader       */
+	/* end autoloader feature */
 
         /*  Device dependent fields for dasd (fba and ckd)           */
 

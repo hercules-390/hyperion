@@ -78,6 +78,13 @@ static const char *het_errstr[] =
             
             Currently, "HETOPEN_CREATE" is the only flag available and has
             the same function as the O_CREAT flag of the open(3) function.
+
+	    @ISW@ Added flag HETOPEN_READONLY
+
+	    HETOPEN_CREATE and HETOPEN_READONLY are mutually exclusive.
+
+	    When HETOPEN_READONLY is set, the het file must exist.
+	    It is opened read only. Any attempt to write will fail.
             
     RETURN VALUE
             If no errors are detected then the return value will be >= 0
@@ -138,6 +145,7 @@ het_open( HETB **hetb, char *filename, int flags )
     char *omode;
     int rc;
     int fd;
+    int oflags;
 
     /*
     || Initialize
@@ -163,16 +171,26 @@ het_open( HETB **hetb, char *filename, int flags )
     thetb->chksize    = HETDFLT_CHKSIZE;
 
     /*
+    || clear HETOPEN_CREATE if HETOPEN_READONLY is specified
+    */
+    if(flags & HETOPEN_READONLY)
+    {
+        flags&=~HETOPEN_CREATE;
+    }
+    /*
     || Translate HET create flag to filesystem flag
     */
-    flags = ( ( flags & HETOPEN_CREATE ) ? O_CREAT : 0 );
+    oflags = ( ( flags & HETOPEN_CREATE ) ? O_CREAT : 0 );
 
     /*
     || Open the tape file
     */
     omode = "r+b";
-    fd = open( filename, O_RDWR | flags, S_IRUSR | S_IWUSR | S_IRGRP );
-    if( fd == -1 && (errno == EROFS || errno == EACCES) )
+    if(!(flags & HETOPEN_READONLY))
+    {
+        fd = open( filename, O_RDWR | oflags, S_IRUSR | S_IWUSR | S_IRGRP );
+    }
+    if( (flags & HETOPEN_READONLY) || (fd == -1 && (errno == EROFS || errno == EACCES) ) )
     {
         /*
         || Retry open if file resides on readonly file system
@@ -2111,4 +2129,72 @@ het_error( int rc )
     || Return string
     */
     return( het_errstr[ rc ] );
+}
+/*==DOC==
+
+    NAME
+            het_tell - Returns the current read/write pointer offset
+        
+    SYNOPSIS
+            #include "hetlib.h"
+
+            long het_error( HETB *hetb )
+        
+    DESCRIPTION
+            Returns a long describing the actual read/write cursor
+            within the HET file
+            
+    RETURN VALUE
+            >=0 The actual cursor offset
+            <0 An error occured.
+                Possible errors are :
+                HETE_ERROR - File system error occured
+
+    EXAMPLE
+            //
+            // Get the current HET pointer
+            //
+
+            #include "hetlib.h"
+
+            int main( int argc, char *argv[] )
+            {
+                HETB *hetb;
+                int rc;
+                long rwptr;
+
+                rc = het_open( &hetb, argv[ 1 ], 0 );
+                if( rc >= 0 )
+                {
+                    rwptr = het_tell( hetb );
+                    if( rc >= 0 )
+                    {
+                        printf( "Current offset is %ld\n" , rwptr);
+                    }
+                }
+
+                if( rc < 0 )
+                {
+                    printf( "HETLIB error: %d\n", rc );
+                }
+
+                het_close( &hetb );
+
+                return( 0 );
+            }
+
+    SEE ALSO
+
+==DOC==*/
+
+long
+het_tell( HETB *hetb )
+{
+    long rwptr;
+    rwptr=ftell(hetb->fd);
+    if(rwptr<0)
+    {
+        return HETE_ERROR;
+    }
+    return rwptr;
 }
