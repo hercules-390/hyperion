@@ -2715,7 +2715,7 @@ U32             stat;                   /* SCSI tape status bits     */
 
     /* Indicate intervention required if no file */
     if (!strcmp (dev->filename, TAPE_UNLOADED))
-	dev->sense[0] |= SENSE_IR;
+    dev->sense[0] |= SENSE_IR;
 
     if (!(dev->fd < 0))
     {
@@ -3432,10 +3432,10 @@ long            locblock;               /* Block Id for Locate Block */
             } /* end if(rc) */
         } /* end if(SCSITAPE) */
 
-	if ((dev->tapedevt == TAPEDEVT_AWSTAPE) ||
-	    (dev->tapedevt == TAPEDEVT_HET))
+    if ((dev->tapedevt == TAPEDEVT_AWSTAPE) ||
+        (dev->tapedevt == TAPEDEVT_HET))
         {
-	    strcpy(dev->filename, TAPE_UNLOADED);
+        strcpy(dev->filename, TAPE_UNLOADED);
             logmsg (_("HHC287I Tape %4.4X unloaded\n"),
                     dev->devnum);
         }

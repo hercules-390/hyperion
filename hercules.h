@@ -227,39 +227,39 @@ typedef fthread_attr_t    ATTR;
 
 #if defined(FISH_HANG)
 
-	#define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
-	#define create_device_thread(ptid,pat,fn,arg)  fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
+    #define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
+    #define create_device_thread(ptid,pat,fn,arg)  fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
 
-	#define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk))
-	#define obtain_lock(plk)                       fthread_mutex_lock(__FILE__,__LINE__,(plk))
-	#define try_obtain_lock(plk)                   fthread_mutex_trylock(__FILE__,__LINE__,(plk))
-	#define test_lock(plk) \
-			(fthread_mutex_trylock(__FILE__,__LINE__,(plk)) ? 1 : fthread_mutex_unlock(__FILE__,__LINE__,(plk)) )
-	#define release_lock(plk)                      fthread_mutex_unlock(__FILE__,__LINE__,(plk))
+    #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk))
+    #define obtain_lock(plk)                       fthread_mutex_lock(__FILE__,__LINE__,(plk))
+    #define try_obtain_lock(plk)                   fthread_mutex_trylock(__FILE__,__LINE__,(plk))
+    #define test_lock(plk) \
+            (fthread_mutex_trylock(__FILE__,__LINE__,(plk)) ? 1 : fthread_mutex_unlock(__FILE__,__LINE__,(plk)) )
+    #define release_lock(plk)                      fthread_mutex_unlock(__FILE__,__LINE__,(plk))
 
-	#define initialize_condition(pcond)            fthread_cond_init(__FILE__,__LINE__,(pcond))
-	#define signal_condition(pcond)                fthread_cond_signal(__FILE__,__LINE__,(pcond))
-	#define broadcast_condition(pcond)             fthread_cond_broadcast(__FILE__,__LINE__,(pcond))
-	#define wait_condition(pcond,plk)              fthread_cond_wait(__FILE__,__LINE__,(pcond),(plk))
-	#define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait(__FILE__,__LINE__,(pcond),(plk),(tm))
+    #define initialize_condition(pcond)            fthread_cond_init(__FILE__,__LINE__,(pcond))
+    #define signal_condition(pcond)                fthread_cond_signal(__FILE__,__LINE__,(pcond))
+    #define broadcast_condition(pcond)             fthread_cond_broadcast(__FILE__,__LINE__,(pcond))
+    #define wait_condition(pcond,plk)              fthread_cond_wait(__FILE__,__LINE__,(pcond),(plk))
+    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait(__FILE__,__LINE__,(pcond),(plk),(tm))
 
 #else // !defined(FISH_HANG)
 
-	#define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
-	#define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
+    #define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
+    #define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
 
-	#define initialize_lock(plk)                   fthread_mutex_init((plk))
-	#define obtain_lock(plk)                       fthread_mutex_lock((plk))
-	#define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
-	#define test_lock(plk) \
-			(fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
-	#define release_lock(plk)                      fthread_mutex_unlock((plk))
+    #define initialize_lock(plk)                   fthread_mutex_init((plk))
+    #define obtain_lock(plk)                       fthread_mutex_lock((plk))
+    #define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
+    #define test_lock(plk) \
+            (fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
+    #define release_lock(plk)                      fthread_mutex_unlock((plk))
 
-	#define initialize_condition(pcond)            fthread_cond_init((pcond))
-	#define signal_condition(pcond)                fthread_cond_signal((pcond))
-	#define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
-	#define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
-	#define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
+    #define initialize_condition(pcond)            fthread_cond_init((pcond))
+    #define signal_condition(pcond)                fthread_cond_signal((pcond))
+    #define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
+    #define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
+    #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
 
 #endif // defined(FISH_HANG)
 
@@ -294,7 +294,7 @@ typedef pthread_attr_t                  ATTR;
         pthread_cond_timedwait((pcond),(plk),(timeout))
 #define initialize_detach_attr(pat) \
         pthread_attr_init((pat)); \
-		pthread_attr_setstacksize((pat),1048576); \
+        pthread_attr_setstacksize((pat),1048576); \
         pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED)
 typedef void*THREAD_FUNC(void*);
 #define create_thread(ptid,pat,fn,arg) \
@@ -695,9 +695,9 @@ typedef struct _SYSBLK {
                 insttrace:1,            /* 1=Instruction trace       */
                 inststep:1,             /* 1=Instruction step        */
                 instbreak:1,            /* 1=Have breakpoint         */
-				inststop:1,        		/* 1 = stop on program check */ /*VMA*/
-				vmactive:1,       		/* 1 = vma active            */ /*VMA*/
-				mschdelay:1;			/* 1 = delay MSCH instruction*/ /*LNX*/
+                inststop:1,             /* 1 = stop on program check */ /*VMA*/
+                vmactive:1,             /* 1 = vma active            */ /*VMA*/
+                mschdelay:1;            /* 1 = delay MSCH instruction*/ /*LNX*/
         U32     ints_state;             /* Common Interrupts Status  */
         U32     waitmask;               /* Mask for waiting CPUs     */
         U32     started_mask;           /* Mask for started CPUs     */
@@ -1009,16 +1009,16 @@ typedef struct _DEVBLK {
         int     ctclastrem;             /* last packet read          */
         U32                             /* Flags                     */
                 ctcxmode:1,             /* 0=Basic mode, 1=Extended  */
-				lcscmd:1, 		        /* lcs cmd response pending  */ /*LCS*/
-				readpnd:1,         		/* read pending on thread    */ /*LCS*/
-				readstrt:1,     	    /* read thread started       */ /*LCS*/
-				readerr:1;        		/* read error                */ /*LCS*/
+                lcscmd:1,               /* lcs cmd response pending  */ /*LCS*/
+                readpnd:1,              /* read pending on thread    */ /*LCS*/
+                readstrt:1,             /* read thread started       */ /*LCS*/
+                readerr:1;              /* read error                */ /*LCS*/
         BYTE    ctctype;                /* CTC_xxx device type       */
         BYTE    netdevname[IFNAMSIZ];   /* network device name       */
-		FWORD	ctcipsrc;    			/* LCS source IP address     */ /*LCS*/
-		int lcslen;           			/* LCS read length           */ /*LCS*/
-		int lcscmdlen;        			/* LCS command length        */ /*LCS*/
-		BYTE   *lcsbuf;   				/* -> to lcs command buffer  */ /*LCS*/
+        FWORD   ctcipsrc;               /* LCS source IP address     */ /*LCS*/
+        int lcslen;                     /* LCS read length           */ /*LCS*/
+        int lcscmdlen;                  /* LCS command length        */ /*LCS*/
+        BYTE   *lcsbuf;                 /* -> to lcs command buffer  */ /*LCS*/
 
         /*  Device dependent fields for printer                      */
 

@@ -593,7 +593,7 @@ U32 addr = 0;
                                   "<td></td>\n",
                                   i + addr);
 
-	for(j = 0; j < 4; i += 4, j++)
+    for(j = 0; j < 4; i += 4, j++)
         {
         U32 m;
             FETCH_FW(m,sysblk.mainstor + i + addr);

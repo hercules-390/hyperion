@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
         extgui = 1;
-		argv[--argc] = 0;
+        argv[--argc] = 0;
     }
 #endif /*EXTERNALGUI*/
 

@@ -197,7 +197,7 @@ DEF_INST(move_page)
 {
 int     r1, r2;                         /* Register values           */
 int     rc = 0;                         /* Return code               */
-int     cc = 0;				/* Condition code            */
+int     cc = 0;             /* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
 RADR    raddr1, raddr2, xpkeya;         /* Real addresses            */
 RADR    aaddr1 = 0, aaddr2 = 0;         /* Absolute addresses        */
@@ -268,7 +268,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         else
             raddr2 = vaddr2;
 
-	raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
+    raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
 
         if (raddr2 >= regs->mainsize)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
@@ -303,7 +303,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
         {
-	    FETCH_W(pte2,sysblk.mainstor + raddr2);
+        FETCH_W(pte2,sysblk.mainstor + raddr2);
             /* If page is invalid in real storage but valid in expanded
                storage then xpblk2 now contains expanded storage block# */
             if(pte2 & PAGETAB_ESVALID)
@@ -333,7 +333,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 /* For ESA/390 mode, the XPTE lies directly beyond 
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
-	                             1024 + ((vaddr2 & 0x000FF000) >> 9);
+                                 1024 + ((vaddr2 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
                 if (xpkeya > regs->mainsize)
                     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
@@ -355,9 +355,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
            in either main storage or expanded storage */
         if (rc)
         {
-	    cc = 2;
+        cc = 2;
             goto mvpg_progck;
-	}
+    }
 
         /* Reset protection indication before calling translate_addr() */
         prot = 0;
@@ -368,7 +368,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         else
             raddr1 = vaddr1;
 
-	raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
+    raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
 
         if (raddr1 >= regs->mainsize)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
@@ -403,7 +403,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
         {
-	    FETCH_W(pte1,sysblk.mainstor + raddr1);
+        FETCH_W(pte1,sysblk.mainstor + raddr1);
             /* If page is invalid in real storage but valid in expanded
                storage then xpblk1 now contains expanded storage block# */
             if(pte1 & PAGETAB_ESVALID)
@@ -433,7 +433,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 /* For ESA/390 mode, the XPTE lies directly beyond 
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
-	                          1024 + ((vaddr1 & 0x000FF000) >> 9);
+                              1024 + ((vaddr1 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
                 if (xpkeya > regs->mainsize)
                     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
@@ -453,9 +453,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Program check if operand not valid in main or expanded */
         if (rc)
         {
-	    cc = 1;
+        cc = 1;
             goto mvpg_progck;
-	}
+    }
 
         /* Program check if page protection or access-list controlled
            protection applies to the first operand */
@@ -547,7 +547,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Set the main storage reference and change bits */
         STORAGE_KEY(aaddr1) |= (STORKEY_REF | STORKEY_CHANGE);
 
-	/* Set Expanded Storage reference bit in the PTE */
+    /* Set Expanded Storage reference bit in the PTE */
         STORE_W(sysblk.mainstor + raddr2, pte2 | PAGETAB_ESREF);
         
 
@@ -561,7 +561,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Set the main storage reference bit */
         STORAGE_KEY(aaddr2) |= STORKEY_REF;
 
-	/* Set Expanded Storage reference and change bits in the PTE */
+    /* Set Expanded Storage reference and change bits in the PTE */
         STORE_W(sysblk.mainstor + raddr1, pte1 | PAGETAB_ESREF | PAGETAB_ESCHA);
 
         /* Move 4K bytes from main storage to expanded storage */

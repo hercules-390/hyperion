@@ -622,10 +622,10 @@ TID                     httptid;        /* Negotiation thread id     */
 
         /* Wait for a file descriptor to become ready */
 #if defined(WIN32)
-	{
-	    struct timeval tv={0,500000};	/* half a second */
-	    rc = select ( lsock+1, &selset, NULL, NULL, &tv );
-	}
+    {
+        struct timeval tv={0,500000};   /* half a second */
+        rc = select ( lsock+1, &selset, NULL, NULL, &tv );
+    }
 #else /*!defined(WIN32)*/
         rc = select ( lsock+1, &selset, NULL, NULL, NULL );
 #endif /*!defined(WIN32)*/

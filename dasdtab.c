@@ -298,7 +298,7 @@ int altcyls;                            /* Number alternate cyls     */
         devchar[26] = 0;
         devchar[27] = 0;
     }
-    if (altcyls > 0)			// alternate cylinders and tracks
+    if (altcyls > 0)            // alternate cylinders and tracks
     {
         devchar[28] = (ckd->cyls >> 8) & 0xff;
         devchar[29] = ckd->cyls & 0xff;
@@ -312,11 +312,11 @@ int altcyls;                            /* Number alternate cyls     */
         devchar[30] = 0;
         devchar[31] = 0;
     }
-    devchar[32] = 0;			// diagnostic cylinders and tracks
+    devchar[32] = 0;            // diagnostic cylinders and tracks
     devchar[33] = 0;
     devchar[34] = 0;
     devchar[35] = 0;
-    devchar[36] = 0;			// device support cylinders and tracks
+    devchar[36] = 0;            // device support cylinders and tracks
     devchar[37] = 0;
     devchar[38] = 0;
     devchar[39] = 0;
@@ -331,8 +331,8 @@ int altcyls;                            /* Number alternate cyls     */
     devchar[48] = ckd->f6;
     devchar[49] = (ckd->rpscalc >> 8) & 0xff;
     devchar[50] = ckd->rpscalc & 0xff;
-    devchar[56] = 0xff;			// real CU type code
-    devchar[57] = 0xff;			// real device type code
+    devchar[56] = 0xff;         // real CU type code
+    devchar[57] = 0xff;         // real device type code
 
     return 64;
 }
@@ -364,38 +364,38 @@ int dasd_build_fba_devchar (FBADEV *fba, BYTE *devchar, int blks)
 
     memset (devchar, 0, 64);
 
-    devchar[0]  = 0x30;						// operation modes
-    devchar[1]  = 0x08;						// features
-    devchar[2]  = fba->class;				// device class
-    devchar[3]  = fba->type;				// unit type
-    devchar[4]  = (fba->size >> 8) & 0xff;	// block size
+    devchar[0]  = 0x30;                     // operation modes
+    devchar[1]  = 0x08;                     // features
+    devchar[2]  = fba->class;               // device class
+    devchar[3]  = fba->type;                // unit type
+    devchar[4]  = (fba->size >> 8) & 0xff;  // block size
     devchar[5]  = fba->size & 0xff;
-    devchar[6]  = (fba->bpg >> 24) & 0xff;	// blks per cyclical group
+    devchar[6]  = (fba->bpg >> 24) & 0xff;  // blks per cyclical group
     devchar[7]  = (fba->bpg >> 16) & 0xff;
     devchar[8]  = (fba->bpg >> 8) & 0xff;
     devchar[9]  = fba->bpg & 0xff;
-    devchar[10] = (fba->bpp >> 24) & 0xff;	// blks per access position
+    devchar[10] = (fba->bpp >> 24) & 0xff;  // blks per access position
     devchar[11] = (fba->bpp >> 16) & 0xff;
     devchar[12] = (fba->bpp >> 8) & 0xff;
     devchar[13] = fba->bpp & 0xff;
-    devchar[14] = (blks >> 24) & 0xff;		// blks under movable heads
+    devchar[14] = (blks >> 24) & 0xff;      // blks under movable heads
     devchar[15] = (blks >> 16) & 0xff;
     devchar[16] = (blks >> 8) & 0xff;
     devchar[17] = blks & 0xff;
-    devchar[18] = 0;						// blks under fixed heads
+    devchar[18] = 0;                        // blks under fixed heads
     devchar[19] = 0;
     devchar[20] = 0;
     devchar[21] = 0;
-    devchar[22] = 0;						// blks in alternate area
+    devchar[22] = 0;                        // blks in alternate area
     devchar[23] = 0;
-    devchar[24] = 0;						// blks in CE+SA areas
+    devchar[24] = 0;                        // blks in CE+SA areas
     devchar[25] = 0;
-    devchar[26] = 0;						// cyclic period in ms
+    devchar[26] = 0;                        // cyclic period in ms
     devchar[27] = 0;
-    devchar[28] = 0;						// min time to change access
-    devchar[29] = 0;						//   position in ms
-    devchar[30] = 0;						// max to change access
-    devchar[31] = 0;						//   position in ms
+    devchar[28] = 0;                        // min time to change access
+    devchar[29] = 0;                        //   position in ms
+    devchar[30] = 0;                        // max to change access
+    devchar[31] = 0;                        //   position in ms
 
     return 32;
 }

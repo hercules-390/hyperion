@@ -1036,7 +1036,7 @@ free_space_check:
 
     for (fsp = (off_t)cdevhdr.free; fsp && !fsperr; fsp = (off_t)fb.pos)
     {
-        fsperr = 1;		          /* turn on error indicator */
+        fsperr = 1;               /* turn on error indicator */
         memset (&fb, 0, CCKD_FREEBLK_SIZE);
         sprintf (msg, "pos=0x%llx nxt=0x%llx len=%d\n",
                  (long long)fsp, (long long)fb.pos, fb.len);

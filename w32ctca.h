@@ -18,7 +18,7 @@ extern FILE*  g_tt32_msgpipew;
 
 extern void tt32_init
 (
-	FILE*  msgpipew		// (needed for issuing msgs to Herc console)
+    FILE*  msgpipew     // (needed for issuing msgs to Herc console)
 );
 
 #define MIN_TT32DRV_BUFFSIZE_K   ( 128)

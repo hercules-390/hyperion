@@ -14,7 +14,7 @@
 #include "hostinfo.h"
 
 #if defined(FISH_HANG)
-extern  int   bFishHangAtExit;	// (set to true when shutting down)
+extern  int   bFishHangAtExit;  // (set to true when shutting down)
 extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
 extern  void  FishHangReport();
 extern  void  FishHangAtExit();
@@ -201,7 +201,7 @@ TID paneltid;
 #ifdef SA_NODEFER
         sa.sa_flags = SA_NODEFER;
 #else
-	sa.sa_flags = 0;
+    sa.sa_flags = 0;
 #endif
 
         if( sigaction(SIGILL, &sa, NULL)

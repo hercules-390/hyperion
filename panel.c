@@ -42,7 +42,7 @@
 #endif /* defined(OPTION_FISHIO) */
 
 #if defined(FISH_HANG)
-extern  int   bFishHangAtExit;	// (set to true when shutting down)
+extern  int   bFishHangAtExit;  // (set to true when shutting down)
 extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
 extern  void  FishHangReport();
 extern  void  FishHangAtExit();

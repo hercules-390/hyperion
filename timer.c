@@ -28,8 +28,8 @@ void check_timer_event(void);
 /*-------------------------------------------------------------------*/
 void update_TOD_clock(void)
 {
-struct timeval	tv;			/* Current time              */
-U64		dreg;			/* Double register work area */
+struct timeval  tv;         /* Current time              */
+U64     dreg;           /* Double register work area */
 
     /* Get current time */
     gettimeofday (&tv, NULL);
@@ -44,7 +44,7 @@ U64		dreg;			/* Double register work area */
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
     if (sysblk.toddrag > 1)
         dreg = sysblk.todclock_init +
-		(dreg - sysblk.todclock_init) / sysblk.toddrag;
+        (dreg - sysblk.todclock_init) / sysblk.toddrag;
 #endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
 
     /* Shift left 4 bits so that bits 0-7=TOD Clock Epoch,
@@ -125,7 +125,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         /* If running under SIE also check the SIE copy */
         if(regs->sie_active)
         {
-	    /* Signal clock comparator interrupt if needed */
+        /* Signal clock comparator interrupt if needed */
             if((sysblk.todclk + regs->guestregs->todoffset) > regs->guestregs->clkc)
             {
                 ON_IC_CLKC(regs->guestregs);

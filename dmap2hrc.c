@@ -16,11 +16,11 @@ typedef struct _DEVMAP_CTLR {
         BYTE    channel;                /* High order dev addr byte  */
         BYTE    name[8];                /* Name of controller program*/
         BYTE    lowdev;                 /* Low addr byte first dev   */
-        BYTE    highdev;		/* Low addr byte last dev    */
-        BYTE    filler1;		/* Fill byte                 */
-        BYTE    type[4];		/* Type of controller        */
+        BYTE    highdev;        /* Low addr byte last dev    */
+        BYTE    filler1;        /* Fill byte                 */
+        BYTE    type[4];        /* Type of controller        */
         BYTE    flags;                  /* Flag byte                 */
-        BYTE    filler2[47];		/* More filler bytes         */
+        BYTE    filler2[47];        /* More filler bytes         */
     } DEVMAP_CTLR;
 
 /*-------------------------------------------------------------------*/
@@ -29,21 +29,21 @@ typedef struct _DEVMAP_CTLR {
 typedef struct _DEVMAP_DEV {
         BYTE    highaddr;               /* High order dev addr byte  */
         BYTE    lowaddr;                /* Low order dev addr byte   */
-        BYTE    type[4];		/* Type of device            */
-	union {
-	    struct {                    /* Disk devices:             */
-	        BYTE filler1[4];        /* filler                    */
-	        BYTE volser[6];         /* Volume serial             */
-	        BYTE filler2[2];        /* more filler               */
-	        BYTE filename[45];      /* name of file on disk      */
-	        BYTE flags;             /* flag byte                 */
-	    } disk;
-	    struct {                    /* Other devices:            */
-	        BYTE filler1[7];        /* fill bytes                */
-	        BYTE filename[50];      /* device filename           */
-	        BYTE flags;             /* flag byte                 */
-	    } other;
-	} parms;
+        BYTE    type[4];        /* Type of device            */
+    union {
+        struct {                    /* Disk devices:             */
+            BYTE filler1[4];        /* filler                    */
+            BYTE volser[6];         /* Volume serial             */
+            BYTE filler2[2];        /* more filler               */
+            BYTE filename[45];      /* name of file on disk      */
+            BYTE flags;             /* flag byte                 */
+        } disk;
+        struct {                    /* Other devices:            */
+            BYTE filler1[7];        /* fill bytes                */
+            BYTE filename[50];      /* device filename           */
+            BYTE flags;             /* flag byte                 */
+        } other;
+    } parms;
     } DEVMAP_DEV;
 
 #if defined(EXTERNALGUI)
@@ -62,10 +62,10 @@ int             len;                    /* Length of actual read     */
 BYTE           *filename;               /* -> Input file name        */
 int             infd = -1;              /* Input file descriptor     */
 DEVMAP_CTLR     controller;             /* Controller record         */
-DEVMAP_DEV      device;			/* Device record             */
-BYTE		output_type[5];		/* Device type to print      */
-BYTE	       *output_filename;	/* -> filename to print      */
-int		more_devices;		/* More devices this ctlr?   */
+DEVMAP_DEV      device;         /* Device record             */
+BYTE        output_type[5];     /* Device type to print      */
+BYTE           *output_filename;    /* -> filename to print      */
+int     more_devices;       /* More devices this ctlr?   */
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -174,37 +174,37 @@ int		more_devices;		/* More devices this ctlr?   */
                 exit(8);
             }
 
-	    /* Is this the dummy device record at the end of the controller's
-	       set of devices? */
-	    if (strncmp(device.type,"    ",4) == 0)
-	    {
-	        more_devices = 0;
-	        break;
-	    }
-	    
-	    /* It's a real device. Fix the type so Hercules can use it and
-	       locate the output filename. */
-	    strncpy(output_type, device.type, 4);
-	    output_type[4] = '\0';
-	    if (isprint(device.parms.disk.volser[0]))
-	        output_filename = device.parms.disk.filename;
-	    else output_filename = device.parms.other.filename;
-	    
-	    if (strncmp(device.type, "3278", 4) == 0)
-	    {
-	        strcpy(output_type, "3270");
-	        output_filename = "";
-	    }
-	    if (strncmp(device.type, "2540", 4) == 0)
-	        strcpy(output_type, "3505");
-	    
-	    /* Emit the Hercules config file entry. */
-	    printf("%02X%02X    %s",
-	           device.highaddr, device.lowaddr,
-	           output_type);
-	    if (strlen(output_filename) > 0)
-	        printf("    %s", output_filename);
-	    puts("");	/* newline */
+        /* Is this the dummy device record at the end of the controller's
+           set of devices? */
+        if (strncmp(device.type,"    ",4) == 0)
+        {
+            more_devices = 0;
+            break;
+        }
+        
+        /* It's a real device. Fix the type so Hercules can use it and
+           locate the output filename. */
+        strncpy(output_type, device.type, 4);
+        output_type[4] = '\0';
+        if (isprint(device.parms.disk.volser[0]))
+            output_filename = device.parms.disk.filename;
+        else output_filename = device.parms.other.filename;
+        
+        if (strncmp(device.type, "3278", 4) == 0)
+        {
+            strcpy(output_type, "3270");
+            output_filename = "";
+        }
+        if (strncmp(device.type, "2540", 4) == 0)
+            strcpy(output_type, "3505");
+        
+        /* Emit the Hercules config file entry. */
+        printf("%02X%02X    %s",
+               device.highaddr, device.lowaddr,
+               output_type);
+        if (strlen(output_filename) > 0)
+            printf("    %s", output_filename);
+        puts("");   /* newline */
 
         } /* end while more_devices) */
 

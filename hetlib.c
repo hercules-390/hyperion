@@ -133,7 +133,7 @@ int
 het_open( HETB **hetb, char *filename, int flags )
 {
     HETB *thetb;
-	char *omode;
+    char *omode;
     int rc;
     int fd;
 

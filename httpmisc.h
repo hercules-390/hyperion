@@ -70,7 +70,7 @@ typedef void (*zz_cgibin) (WEBBLK *webblk);
 
 
 typedef struct _CGITAB {
-	char   *path;
+    char   *path;
         zz_cgibin cgibin;
 } CGITAB;
 

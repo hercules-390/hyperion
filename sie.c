@@ -117,7 +117,7 @@ int     icode;                          /* Interception code         */
 #endif /*defined(SIE_DEBUG)*/
 
     if(effective_addr2 > regs->mainsize - (sizeof(SIEBK)-1))
-	ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Direct pointer to state descriptor block */
     STATEBK = (void*)(sysblk.mainstor + effective_addr2);

@@ -660,7 +660,7 @@ int     i;                              /* Loop counter              */
 BYTE    obyte;                          /* Operand byte              */
 #ifdef OPTION_FAST_MOVECHAR
 BYTE    slow = 0;
-BYTE	*a1, *a2;
+BYTE    *a1, *a2;
 #endif
 
     /* Translate addresses of leftmost operand bytes */
@@ -714,12 +714,12 @@ BYTE	*a1, *a2;
 #ifdef OPTION_FAST_MOVECHAR
     if (!slow)
     {
-	/* Gabor Hoffer (performance option) */
+    /* Gabor Hoffer (performance option) */
         a1 = sysblk.mainstor+abs1;
-	a2 = sysblk.mainstor+abs2;
-	for (i = 0; i < len + 1; i++) a1 [i] = a2 [i];
-/*	
-	for (i = 0; i < len + 1; i++)
+    a2 = sysblk.mainstor+abs2;
+    for (i = 0; i < len + 1; i++) a1 [i] = a2 [i];
+/*  
+    for (i = 0; i < len + 1; i++)
             sysblk.mainstor[abs1++] = sysblk.mainstor[abs2++];
 */
         return;

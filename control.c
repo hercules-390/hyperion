@@ -1018,7 +1018,7 @@ BYTE    storkey;
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-	{
+    {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
               && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
@@ -1056,7 +1056,7 @@ BYTE    storkey;
                     /* The reference and change byte is located directly 
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
-		       mode, so no provision is made for ESAME mode tables */
+               mode, so no provision is made for ESAME mode tables */
                     rcpa += 1025;
                 }
                 else
@@ -1069,7 +1069,7 @@ BYTE    storkey;
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -1172,7 +1172,7 @@ BYTE    storkey;
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-	{
+    {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if(((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #if defined(_FEATURE_ZSIE)
@@ -1180,7 +1180,7 @@ BYTE    storkey;
 #endif /*defined(_FEATURE_ZSIE)*/
               ) && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
             {
-        	SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
+            SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 
                 /* Insert the storage key into R1 register bits 24-31 */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -1188,8 +1188,8 @@ BYTE    storkey;
 #else
                 regs->GR_LHLCL(r1) = (STORAGE_KEY1(n) | STORAGE_KEY2(n)) & 0xFE;
 #endif
-	    }
-	    else
+        }
+        else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
             U16  xcode;
@@ -1217,7 +1217,7 @@ BYTE    storkey;
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a 
                        four byte entry directly beyond the page table,
-		       for ESAME mode, this entry is eight bytes long */
+               for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
                 }
                 else
@@ -1235,7 +1235,7 @@ BYTE    storkey;
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -1276,7 +1276,7 @@ BYTE    storkey;
 #endif
                 }
             }
-	}
+    }
         else /* sie_pref */
             /* Insert the storage key into R1 register bits 24-31 */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -1948,7 +1948,7 @@ U16     xcode = 0;                      /* Exception code            */
                 if(ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_LRA,
                             &raddr, &xcode, &private, &protect, &stid))
                 {
-	            regs->psw.cc = 3;
+                regs->psw.cc = 3;
                     RELEASE_MAINLOCK(regs);
                     return;
                 }
@@ -3355,12 +3355,12 @@ BYTE    storkey;                        /* Storage key               */
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-	{
+    {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
               && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
             {
-	        SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
+            SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                 storkey = STORAGE_KEY(n);
 #else
@@ -3401,7 +3401,7 @@ BYTE    storkey;                        /* Storage key               */
                     /* The reference and change byte is located directly 
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
-		       mode, so no provision is made for ESAME mode tables */
+               mode, so no provision is made for ESAME mode tables */
                     rcpa += 1025;
                 }
                 else
@@ -3414,7 +3414,7 @@ BYTE    storkey;                        /* Storage key               */
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -3450,8 +3450,8 @@ BYTE    storkey;                        /* Storage key               */
                 storkey = realkey | (rcpkey & (STORKEY_REF | STORKEY_CHANGE));
                 /* or with host set */
                 rcpkey |= realkey << 4;
-		/* Put storage key in guest set */
-		rcpkey |= storkey;
+        /* Put storage key in guest set */
+        rcpkey |= storkey;
                 /* reset the reference bit */
                 rcpkey &= ~(STORKEY_REF);
                 sysblk.mainstor[rcpa] = rcpkey;
@@ -3532,7 +3532,7 @@ BYTE    storkey;                        /* Storage key               */
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-	{
+    {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if(((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #if defined(_FEATURE_ZSIE)
@@ -3544,19 +3544,19 @@ BYTE    storkey;                        /* Storage key               */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                 storkey = STORAGE_KEY(n);
 #else
-        	storkey = STORAGE_KEY1(n)
+            storkey = STORAGE_KEY1(n)
                    | (STORAGE_KEY2(n) & (STORKEY_REF|STORKEY_CHANGE))
 #endif
-                                	    ;
-        	/* Reset the reference bit in the storage key */
+                                        ;
+            /* Reset the reference bit in the storage key */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
-        	STORAGE_KEY(n) &= ~(STORKEY_REF);
+            STORAGE_KEY(n) &= ~(STORKEY_REF);
 #else
-        	STORAGE_KEY1(n) &= ~(STORKEY_REF);
-        	STORAGE_KEY2(n) &= ~(STORKEY_REF);
+            STORAGE_KEY1(n) &= ~(STORKEY_REF);
+            STORAGE_KEY2(n) &= ~(STORKEY_REF);
 #endif
-    	    }
-	    else
+            }
+        else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
             BYTE rcpkey, realkey;
@@ -3585,7 +3585,7 @@ BYTE    storkey;                        /* Storage key               */
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a 
                        four byte entry directly beyond the page table,
-		       for ESAME mode, this entry is eight bytes long */
+               for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
                 }
                 else
@@ -3603,7 +3603,7 @@ BYTE    storkey;                        /* Storage key               */
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -3639,8 +3639,8 @@ BYTE    storkey;                        /* Storage key               */
                 storkey = realkey | (rcpkey & (STORKEY_REF | STORKEY_CHANGE));
                 /* or with host set */
                 rcpkey |= realkey << 4;
-		/* Put storage key in guest set */
-		rcpkey |= storkey;
+        /* Put storage key in guest set */
+        rcpkey |= storkey;
                 /* reset the reference bit */
                 rcpkey &= ~(STORKEY_REF);
                 sysblk.mainstor[rcpa] = rcpkey;
@@ -4184,7 +4184,7 @@ RADR    n;                              /* Absolute storage addr     */
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-	{
+    {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
               && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
@@ -4196,7 +4196,7 @@ RADR    n;                              /* Absolute storage addr     */
             int  private,
                  protect,
                  stid,
-		 sr;
+         sr;
             BYTE realkey,
                  rcpkey;
             RADR rcpa;
@@ -4216,7 +4216,7 @@ RADR    n;                              /* Absolute storage addr     */
                     /* The reference and change byte is located directly 
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
-		       mode, so no provision is made for ESAME mode tables */
+               mode, so no provision is made for ESAME mode tables */
                     rcpa += 1025;
                 }
                 else
@@ -4229,7 +4229,7 @@ RADR    n;                              /* Absolute storage addr     */
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -4242,13 +4242,13 @@ RADR    n;                              /* Absolute storage addr     */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                   && !(regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-		      )
+              )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-		if(sr)
+        if(sr)
                     realkey = 0;
-		else
+        else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
@@ -4261,7 +4261,7 @@ RADR    n;                              /* Absolute storage addr     */
                               (STORAGE_KEY1(n) | STORAGE_KEY2(n))
 #endif
                               & (STORKEY_REF | STORKEY_CHANGE);
-		}
+        }
 
                 /* fetch the RCP key */
                 rcpkey = sysblk.mainstor[rcpa];
@@ -4370,7 +4370,7 @@ RADR    n;                              /* Abs frame addr stor key   */
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-	{
+    {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if(((regs->siebk->rcpo[0] & SIE_RCPO0_SKA)
 #if defined(_FEATURE_ZSIE)
@@ -4378,7 +4378,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 #endif /*defined(_FEATURE_ZSIE)*/
               ) && (regs->siebk->rcpo[2] & SIE_RCPO2_RCPBY))
                 { SIE_TRANSLATE(&n, ACCTYPE_SIE, regs); }
-	    else
+        else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
             U16  xcode;
@@ -4408,7 +4408,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a 
                        four byte entry directly beyond the page table,
-		       for ESAME mode, this entry is eight bytes long */
+               for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
                 }
                 else
@@ -4426,7 +4426,7 @@ RADR    n;                              /* Abs frame addr stor key   */
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-		    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
                                        regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
@@ -4443,13 +4443,13 @@ RADR    n;                              /* Abs frame addr stor key   */
 #endif /*defined(_FEATURE_ZSIE)*/
                                                               )
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
-		      )
+              )
                     longjmp(regs->progjmp, SIE_INTERCEPT_INST);
     
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
-		if(sr)
+        if(sr)
                     realkey = 0;
-		else
+        else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */

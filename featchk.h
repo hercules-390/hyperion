@@ -1,11 +1,11 @@
-/* FEATCHK.H	(c) Copyright Jan Jaeger, 2000-2002		     */
-/*		Feature definition consistency checks		     */
+/* FEATCHK.H    (c) Copyright Jan Jaeger, 2000-2002          */
+/*      Feature definition consistency checks            */
 
 /*-------------------------------------------------------------------*/
-/* Perform various checks on feature combinations, and set	     */
-/* additional flags to percolate certain features such as	     */
-/* SIE down to lower architecture levels such that these	     */
-/* can include emulation support				     */
+/* Perform various checks on feature combinations, and set       */
+/* additional flags to percolate certain features such as        */
+/* SIE down to lower architecture levels such that these         */
+/* can include emulation support                     */
 /*-------------------------------------------------------------------*/
 
 #if defined(FEATCHK_CHECK_ALL)
@@ -142,11 +142,11 @@
 #endif
 
 #if defined(_ARCHMODE3)
- #define GEN_MAXARCH	3+2
+ #define GEN_MAXARCH    3+2
 #elif defined(_ARCHMODE2)
- #define GEN_MAXARCH	2+2
+ #define GEN_MAXARCH    2+2
 #else 
- #define GEN_MAXARCH	1+2
+ #define GEN_MAXARCH    1+2
 #endif
 
 #if defined(_900) && !defined(_390)

@@ -1,5 +1,5 @@
-/* FEAT900.H	(c) Copyright Jan Jaeger, 2000-2002		     */
-/*		ESAME feature definitions			     */
+/* FEAT900.H    (c) Copyright Jan Jaeger, 2000-2002          */
+/*      ESAME feature definitions                */
 #if defined(OPTION_900_MODE)
 #define _ARCH_900_NAME "ESAME"
 

@@ -28,25 +28,25 @@ extern "C"
 
 typedef struct _tagTT32STATS
 {
-	DWORD    dwStructSize;			// size of this structure
-	DWORD    dwKernelBuffSize;		// size of kernel capture buffer
-	DWORD    dwReadBuffSize;		// size of dll I/O buffer
-	DWORD    dwMaxBytesReceived;	// max dll I/O bytes received
+    DWORD    dwStructSize;          // size of this structure
+    DWORD    dwKernelBuffSize;      // size of kernel capture buffer
+    DWORD    dwReadBuffSize;        // size of dll I/O buffer
+    DWORD    dwMaxBytesReceived;    // max dll I/O bytes received
 
-	__int64  n64WriteCalls;			// total #of write requests
-	__int64  n64WriteIOs;			// total #of write I/Os
+    __int64  n64WriteCalls;         // total #of write requests
+    __int64  n64WriteIOs;           // total #of write I/Os
 
-	__int64  n64ReadCalls;			// total #of read requests
-	__int64  n64ReadIOs;			// total #of read I/Os
+    __int64  n64ReadCalls;          // total #of read requests
+    __int64  n64ReadIOs;            // total #of read I/Os
 
-	__int64  n64PacketsRead;		// total #of packets read
-	__int64  n64PacketsWritten;		// total #of packets written
+    __int64  n64PacketsRead;        // total #of packets read
+    __int64  n64PacketsWritten;     // total #of packets written
 
-	__int64  n64BytesRead;			// total #of bytes read
-	__int64  n64BytesWritten;		// total #of bytes written
+    __int64  n64BytesRead;          // total #of bytes read
+    __int64  n64BytesWritten;       // total #of bytes written
 
-	__int64  n64InternalPackets;	// total #of packets handled internally
-	__int64  n64IgnoredPackets;		// total #of packets ignored
+    __int64  n64InternalPackets;    // total #of packets handled internally
+    __int64  n64IgnoredPackets;     // total #of packets ignored
 }
 TT32STATS, *PTT32STATS;
 

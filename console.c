@@ -1269,10 +1269,10 @@ BYTE                    unitstat;       /* Status after receive data */
 
         /* Wait for a file descriptor to become ready */
 #ifdef WIN32
-	{
-	    struct timeval tv={0,500000};	/* half a second */
-	    rc = select ( maxfd+1, &readset, NULL, NULL, &tv );
-	}
+    {
+        struct timeval tv={0,500000};   /* half a second */
+        rc = select ( maxfd+1, &readset, NULL, NULL, &tv );
+    }
 #else /* WIN32 */
         rc = select ( maxfd+1, &readset, NULL, NULL, NULL );
 #endif /* WIN32 */

@@ -41,20 +41,20 @@ fenv_t;
 enum
   {
     FE_INVALID = 0x01,
-#define FE_INVALID	FE_INVALID
+#define FE_INVALID  FE_INVALID
     __FE_DENORM = 0x02,
     FE_DIVBYZERO = 0x04,
-#define FE_DIVBYZERO	FE_DIVBYZERO
+#define FE_DIVBYZERO    FE_DIVBYZERO
     FE_OVERFLOW = 0x08,
-#define FE_OVERFLOW	FE_OVERFLOW
+#define FE_OVERFLOW FE_OVERFLOW
     FE_UNDERFLOW = 0x10,
-#define FE_UNDERFLOW	FE_UNDERFLOW
+#define FE_UNDERFLOW    FE_UNDERFLOW
     FE_INEXACT = 0x20
-#define FE_INEXACT	FE_INEXACT
+#define FE_INEXACT  FE_INEXACT
   };
 
 #define FE_ALL_EXCEPT \
-	(FE_INEXACT | FE_DIVBYZERO | FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID)
+    (FE_INEXACT | FE_DIVBYZERO | FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID)
 
 #define fpclassify(x) \
      (sizeof (x) == sizeof (float)  ? __fpclassifyf (x) \
@@ -243,7 +243,7 @@ long double frexpl(long double x, int *eptr)
  GET_LDOUBLE_WORDS(se,hx,lx,x);
  ix = 0x7fff&se;
  *eptr = 0;
- if(ix==0x7fff||((ix|hx|lx)==0)) return x;	/* 0,inf,nan */
+ if(ix==0x7fff||((ix|hx|lx)==0)) return x;  /* 0,inf,nan */
  if (ix==0x0000) { /* subnormal */
    x *= two64;
    GET_LDOUBLE_EXP(se,x);

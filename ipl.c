@@ -480,7 +480,7 @@ U32  pagesize;
             br += rl;
         }
         pageaddr += PAGEFRAME_PAGESIZE;
-	pageaddr &= PAGEFRAME_PAGEMASK;
+    pageaddr &= PAGEFRAME_PAGEMASK;
         pagesize = PAGEFRAME_PAGESIZE;
     } while (rl == (int)pagesize);
 

@@ -87,28 +87,28 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     cckd_chkdsk_rc = cckd_chkdsk (fd, stderr, level);
 
     /* print some statistics */
-	if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
-	{
-		fprintf (stderr, _("lseek error: %s\n"),strerror(errno));
-		if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
-	}
-	else
-	{
-		if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < 0)
-		{
-			fprintf (stderr, _("read error: %s\n"),strerror(errno));
-			if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
-		}
-		else
-		{
-			if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
-				cckd_swapend_chdr (&cdevhdr);
+    if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+    {
+        fprintf (stderr, _("lseek error: %s\n"),strerror(errno));
+        if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
+    }
+    else
+    {
+        if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < 0)
+        {
+            fprintf (stderr, _("read error: %s\n"),strerror(errno));
+            if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
+        }
+        else
+        {
+            if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
+                cckd_swapend_chdr (&cdevhdr);
 
-			fprintf (stdout, _("size %d used %d free %d first 0x%x number %d\n"),
-					 cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
-					 cdevhdr.free, cdevhdr.free_number);
-		}
-	}
+            fprintf (stdout, _("size %d used %d free %d first 0x%x number %d\n"),
+                     cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
+                     cdevhdr.free, cdevhdr.free_number);
+        }
+    }
 
     close (fd);
 
