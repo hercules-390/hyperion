@@ -65,4 +65,3 @@ int html_include(WEBBLK *webblk, char *filename);
 
 
 void *http_server (void *arg);
-void *http_request (FILE *hsock);

@@ -37,11 +37,12 @@
 extern CGITAB cgidir[];
 
 
-static CONTYP content_type[] = {
+static CONTYP mime_types[] = {
     { NULL,    "text/html" },         /* No suffix entry */
     { "txt",   "text/plain" },
     { "gif",   "image/gif" },
     { "jpg",   "image/jpeg" },
+    { "css",   "text/css" },
     { NULL,    "text/html" } };       /* Default suffix entry */
 
 
@@ -94,7 +95,7 @@ void html_footer(WEBBLK *webblk)
 }
 
 
-void http_exit(WEBBLK *webblk)
+static void http_exit(WEBBLK *webblk)
 {
 CGIVAR *cgivar;
     if(webblk)
@@ -219,41 +220,40 @@ static char *http_unescape(char *buffer)
 
 static void http_interpret_variable_string(WEBBLK *webblk, char *qstring, int type)
 {
-char *pointer;
-char *separator;
+char *name;
+char *value;
 char *strtok_str;
 CGIVAR **cgivar;
 
     for(cgivar = &(webblk->cgivar); *cgivar != NULL;
         cgivar = &((*cgivar)->next));
 
-    for (separator = strtok_r(qstring,"&;",&strtok_str);
-         separator; 
-         separator = strtok_r(NULL,"&;",&strtok_str))
+    for (name = strtok_r(qstring,"&;",&strtok_str);
+         name; 
+         name = strtok_r(NULL,"&;",&strtok_str))
     {
-        if(!(pointer = strchr(separator,'=')))
+        if(!(value = strchr(name,'=')))
             break;
                         
-        *pointer++ = '\0';
+        *value++ = '\0';
 
         (*cgivar) = malloc(sizeof(CGIVAR));
         (*cgivar)->next = NULL;
-        (*cgivar)->name = strdup(http_unescape(separator));
-        (*cgivar)->value = strdup(http_unescape(pointer));
+        (*cgivar)->name = strdup(http_unescape(name));
+        (*cgivar)->value = strdup(http_unescape(value));
         (*cgivar)->type = type;
         cgivar = &((*cgivar)->next);
     }
 }
 
 
-void http_load_cgi_variables(WEBBLK *webblk)
+static void http_load_cgi_variables(WEBBLK *webblk)
 {
     if(webblk->post_arg)
         http_interpret_variable_string(webblk, webblk->post_arg, REQTYPE_POST);
     if(webblk->get_arg)
         http_interpret_variable_string(webblk, webblk->get_arg, REQTYPE_GET);
 }
-
 
 
 #if 0
@@ -369,14 +369,14 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 }
 
 
-void http_download(WEBBLK *webblk, char *filename)
+static void http_download(WEBBLK *webblk, char *filename)
 {
     char buffer[1024];
     int fd, length;
     char *filetype;
     char fullname[1024] = HTTP_ROOT;
     struct stat st;
-    CONTYP *page_content = content_type;
+    CONTYP *mime_type = mime_types;
 
     strcat(fullname,filename);
 
@@ -394,10 +394,10 @@ void http_download(WEBBLK *webblk, char *filename)
 
     fprintf(webblk->hsock,"HTTP/1.0 200 OK\n");
     if ((filetype = strrchr(filename,'.')))
-        for(page_content++;page_content->suffix
-          && strcasecmp(page_content->suffix,filetype + 1);
-          page_content++);
-    fprintf(webblk->hsock,"Content-Type: %s\n",page_content->type);
+        for(mime_type++;mime_type->suffix
+          && strcasecmp(mime_type->suffix,filetype + 1);
+          mime_type++);
+    fprintf(webblk->hsock,"Content-Type: %s\n",mime_type->type);
 
     fprintf(webblk->hsock,"Expires: %s\n", http_timestring(time(NULL)+HTML_STATIC_EXPIRY_TIME));
 
@@ -409,7 +409,7 @@ void http_download(WEBBLK *webblk, char *filename)
 }
 
 
-void *http_request(FILE *hsock)
+static void *http_request(FILE *hsock)
 {
     WEBBLK *webblk;
     int authok = FALSE;
