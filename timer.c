@@ -88,7 +88,7 @@ PSA_3XX        *psa;                    /* -> Prefixed storage area  */
 S32             itimer;                 /* Interval timer value      */
 S32             olditimer;              /* Previous interval timer   */
 #if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(_FEATURE_ECPSVM) )
-int             itimer_diff;            /* TOD difference in TU      */
+S32             itimer_diff;            /* TOD difference in TU      */
 #endif
 U32             intmask = 0;            /* Interrupt CPU mask        */
 
@@ -179,8 +179,10 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
          *-------------------------------------------*/
 
 #if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(_FEATURE_ECPSVM) )
-        /* Calculate diff in interval timer units */
-        itimer_diff = (int)((3*sysblk.todclock_diff)/625);
+        /* Calculate diff in interval timer units plus rounding to improve accuracy */
+        itimer_diff = (S32) ((((6*sysblk.todclock_diff)/625)+1) >> 1);
+        if (itimer_diff <= 0)           /* Handle gettimeofday low */
+            itimer_diff = 1;            /* resolution problems     */
 #endif
 
         if(regs->arch_mode == ARCH_370)
@@ -191,7 +193,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                     /* Decrement the location 80 timer */
             FETCH_FW(itimer,psa->inttimer);
                     olditimer = itimer;
-            
+
                     /* The interval timer is decremented as though bit 23 is
                        decremented by one every 1/300 of a second. This comes
                        out to subtracting 768 (X'300') every 1/100 of a second.
@@ -206,7 +208,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             itimer -= 76800 / CLK_TCK;
 #endif
             STORE_FW(psa->inttimer,itimer);
-        
+
             /* Set interrupt flag and interval timer interrupt pending
                if the interval timer went from positive to negative */
             if (itimer < 0 && olditimer >= 0)
@@ -241,7 +243,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                 /* Decrement the location 80 timer */
                 FETCH_FW(itimer,regs->guestregs->sie_psa->inttimer);
                 olditimer = itimer;
-            
+
 #if defined(OPTION_MIPS_COUNTING)
                 itimer -= itimer_diff;
 #else
