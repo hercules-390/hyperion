@@ -1,3 +1,6 @@
+26 Feb 2002 Set ILC=4 when an EX with PER is to an SVC - Paul Leisy
+26 Feb 2002 Fix RP so it doesn't Space Switch in REAL mode - Paul Leisy
+26 Feb 2002 Fix TRAP in GUEST so Change Bit not set on PIC 04 - Paul Leisy
 25 Feb 2002 Don't signal CLKC/CPT interrupts if already pending - Greg Smith
 24 Feb 2002 XSCH now removes i/o requests from the i/o queue - Jan Jaeger
 24 Feb 2002 Fixes for CLMH, LCTLG and CVBG - Jan Jaeger
