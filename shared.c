@@ -2659,8 +2659,6 @@ TID                     tid;            /* Negotiation thread id     */
     if (usock < 0)
     {
         logmsg(_("HHCSH051E unix socket: %s\n"), strerror(errno));
-        close(lsock);
-        return NULL;
     }
 
     /* Allow previous instance of socket to be reused */
@@ -2693,18 +2691,21 @@ TID                     tid;            /* Negotiation thread id     */
     }
 
     /* Bind the unix socket */
-    userver.sun_family = AF_UNIX;
-    sprintf(userver.sun_path, "/tmp/hercules_shared.%d", sysblk.shrdport);
-    unlink(userver.sun_path);
-    fchmod (usock, 0700);
-
-    rc = bind (usock, (struct sockaddr *)&userver, sizeof(userver));
-
-    if (rc < 0)
+    if (usock >= 0)
     {
-        logmsg(_("HHCSH054E unix bind: %s\n"), strerror(errno));
-        close(lsock); close(usock);
-        return NULL;
+        userver.sun_family = AF_UNIX;
+        sprintf(userver.sun_path, "/tmp/hercules_shared.%d", sysblk.shrdport);
+        unlink(userver.sun_path);
+        fchmod (usock, 0700);
+
+        rc = bind (usock, (struct sockaddr *)&userver, sizeof(userver));
+
+        if (rc < 0)
+        {
+            logmsg(_("HHCSH054E unix bind: %s\n"), strerror(errno));
+            close(usock);
+            usock = -1;
+        }
     }
 
     /* Put the sockets into listening state */
@@ -2717,13 +2718,16 @@ TID                     tid;            /* Negotiation thread id     */
         return NULL;
     }
 
-    rc = listen (usock, SHARED_MAX_SYS);
-
-    if (rc < 0)
+    if (usock >= 0)
     {
-        logmsg(_("HHCSH056E unix listen: %s\n"), strerror(errno));
-        close(lsock); close(usock);
-        return NULL;
+        rc = listen (usock, SHARED_MAX_SYS);
+
+        if (rc < 0)
+        {
+            logmsg(_("HHCSH056E unix listen: %s\n"), strerror(errno));
+            close(usock);
+            usock = -1;
+        }
     }
 
     sysblk.shrdtid = thread_id();
@@ -2742,7 +2746,8 @@ TID                     tid;            /* Negotiation thread id     */
         /* Initialize the select parameters */
         FD_ZERO (&selset);
         FD_SET (lsock, &selset);
-        FD_SET (usock, &selset);
+        if (usock >= 0)
+            FD_SET (usock, &selset);
 
         /* Wait for a file descriptor to become ready */
         rc = select ( hi, &selset, NULL, NULL, NULL );
@@ -2759,7 +2764,7 @@ TID                     tid;            /* Negotiation thread id     */
         /* If a client connection request has arrived then accept it */
         if (FD_ISSET(lsock, &selset))
             rsock = lsock;
-        else if (FD_ISSET(usock, &selset))
+        else if (usock >= 0 && FD_ISSET(usock, &selset))
             rsock = usock;
         else
             rsock = -1;
@@ -2799,8 +2804,12 @@ TID                     tid;            /* Negotiation thread id     */
     } /* end while */
 
     /* Close the listening sockets */
-    close (lsock); close (usock);
-    unlink(userver.sun_path);
+    close (lsock);
+    if (usock >= 0)
+    {
+        close (usock);
+        unlink(userver.sun_path);
+    }
 
     sysblk.shrdtid = 0;
 
