@@ -214,16 +214,16 @@ dasdcopy_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.
 cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c \
+hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 hetinit_SOURCES = hetinit.c hetlib.c codepage.c sllib.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetmap_SOURCES = hetmap.c hetlib.c sllib.c hostinfo.c version.c \
+hetmap_SOURCES = hetmap.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
-hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c \
+hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
