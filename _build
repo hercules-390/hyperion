@@ -1,1 +1,21 @@
-make -f makefile.w32 HOST_ARCH=`uname -m` DEST=/bin install
+#!/bin/bash
+if ! test -f configure
+then
+  echo "running autogen.sh"
+  sh autogen.sh
+  echo "autogen complete"
+fi
+THIS_DIR=`pwd`
+if [ $# = 0 ]
+then
+   HOST_ARCH=`uname -m`
+   HOST_OPT=
+   BUILD_OPT=
+else
+   HOST_ARCH=$1
+   HOST_OPT=--host=${HOST_ARCH}-pc-cygwin
+   BUILD_OPT=--build=${HOST_ARCH}-pc-cygwin
+fi
+mkdir -p ${HOST_ARCH}
+cd ${HOST_ARCH}
+../configure --prefix=${THIS_DIR}/${HOST_ARCH} ${HOST_OPT} ${BUILD_OPT} && make && make install

@@ -1,2 +1,2 @@
-bash _build
+bash _build %1
 pause
