@@ -272,6 +272,10 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
     npv2 &= PAGEFRAME_PAGEMASK;
 
+    /* If FPO crosser, check last byte for protection */
+    if (effective_addr2 < 0x800 && effective_addr2 + l >= 0x800)
+        npa2 = LOGICAL_TO_ABS (effective_addr2 + l, b2, regs, ACCTYPE_READ, akey);
+
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & PAGEFRAME_PAGEMASK))
         npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
@@ -2454,6 +2458,10 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
     npv2 &= PAGEFRAME_PAGEMASK;
 
+    /* If FPO crosser, check last byte for protection */
+    if (effective_addr2 < 0x800 && effective_addr2 + l >= 0x800)
+        npa2 = LOGICAL_TO_ABS (effective_addr2 + l, b2, regs, ACCTYPE_READ, akey);
+
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & PAGEFRAME_PAGEMASK))
         npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
@@ -3335,6 +3343,10 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
     npv2 &= PAGEFRAME_PAGEMASK;
 
+    /* If FPO crosser, check last byte for protection */
+    if (effective_addr2 < 0x800 && effective_addr2 + l >= 0x800)
+        npa2 = LOGICAL_TO_ABS (effective_addr2 + l, b2, regs, ACCTYPE_READ, akey);
+
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & PAGEFRAME_PAGEMASK))
         npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
@@ -3547,6 +3559,10 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     npv1 &= PAGEFRAME_PAGEMASK;
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
     npv2 &= PAGEFRAME_PAGEMASK;
+
+    /* If FPO crosser, check last byte for protection */
+    if (effective_addr2 < 0x800 && effective_addr2 + l >= 0x800)
+        npa2 = LOGICAL_TO_ABS (effective_addr2 + l, b2, regs, ACCTYPE_READ, akey);
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & PAGEFRAME_PAGEMASK))
