@@ -232,8 +232,12 @@ do { \
 #if defined(_FEATURE_SIE)
   #define SIE_STATE(_register_context) \
           ((_register_context)->sie_state)
+  #define SIE_FEATB(_regs, _feat_byte, _feat_name) \
+          (((_regs)->siebk->SIE_ ## _feat_byte) & (SIE_ ## _feat_byte ## _ ## _feat_name))
   #define SIE_STATB(_regs, _feat_byte, _feat_name) \
-          (SIE_STATE((_regs)) && (((_regs)->siebk->SIE_ ## _feat_byte) & (SIE_ ## _feat_byte ## _ ## _feat_name)) )
+          (SIE_STATE((_regs)) && SIE_FEATB((_regs), _feat_byte, _feat_name) )
+  #define SIE_STATNB(_regs, _feat_byte, _feat_name) \
+          (SIE_STATE((_regs)) && !SIE_FEATB((_regs), _feat_byte, _feat_name) )
 #else
   #define SIE_STATE(_register_context) (0)
   #define SIE_STATB(_register_context, _feat_byte, _feat_name) (0)

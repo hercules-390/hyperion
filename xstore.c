@@ -158,7 +158,7 @@ int     r1, r2;                         /* Values of R fields        */
     PRIV_CHECK(regs);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs, EC0, MVPG))
+    if(SIE_STATNB(regs, EC0, MVPG))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -221,7 +221,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     RRE(inst, execflag, regs, r1, r2);
 
 #if defined(_FEATURE_SIE)
-    if(SIE_STATB(regs, EC0, MVPG))
+    if(SIE_STATNB(regs, EC0, MVPG))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
