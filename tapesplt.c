@@ -33,10 +33,7 @@ static BYTE eoflbl[] = "\xC5\xD6\xC6";  /* EBCDIC characters "EOF"   */
 static BYTE eovlbl[] = "\xC5\xD6\xE5";  /* EBCDIC characters "EOV"   */
 static BYTE buf[65500];
 
-/*-------------------------------------------------------------------*/
-/* ASCII to EBCDIC translate tables                                  */
-/*-------------------------------------------------------------------*/
-#include "codeconv.h"
+SYSBLK sysblk; /* Currently only used for codepage mapping */
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
@@ -72,6 +69,9 @@ int             outfilecount;           /* Current # files copied    */
 int             files2copy;             /* Current # files to copy   */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
+
+    if(!sysblk.codepage)
+        set_codepage("default");                                                
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -272,7 +272,7 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
                         || memcmp(buf, eovlbl, 3) == 0))
                 {
                     for (i=0; i < 80; i++)
-                        labelrec[i] = ebcdic_to_ascii[buf[i]];
+                        labelrec[i] = guest_to_host(buf[i]);
                     labelrec[i] = '\0';
                     printf ("%s\n", labelrec);
                 }

@@ -223,7 +223,7 @@ unsigned char print_chars[17];
                 logmsg("%2.2X", c);
                 print_chars[i] = '.';
                 if (isprint(c)) print_chars[i] = c;
-                c = ebcdic_to_ascii[c];
+                c = guest_to_host(c);
                 if (isprint(c)) print_chars[i] = c;
             }
             else {
@@ -339,7 +339,7 @@ BYTE    c;                              /* Character work area       */
     for (i = 0; str[i] != '\0'; i++)
     {
         c = str[i];
-        str[i] = (isprint(c) ? ascii_to_ebcdic[c] : SPACE);
+        str[i] = (isprint(c) ? host_to_guest(c) : SPACE);
     }
 
     return str;
@@ -957,7 +957,7 @@ BYTE    c;                              /* Character work area       */
     for (i = 0; i < dev->keybdrem; i++)
     {
         c = dev->buf[i];
-        dev->buf[i] = (isprint(c) ? ascii_to_ebcdic[c] : SPACE);
+        dev->buf[i] = (isprint(c) ? host_to_guest(c) : SPACE);
     } /* end for(i) */
 
     /* Trace the EBCDIC input data */
@@ -2167,7 +2167,7 @@ BYTE    stat;                           /* Unit status               */
         /* Translate data in channel buffer to ASCII */
         for (len = 0; len < num; len++)
         {
-            c = ebcdic_to_ascii[iobuf[len]];
+            c = guest_to_host(iobuf[len]);
             if (!isprint(c) && c != 0x0a && c != 0x0d) c = SPACE;
             iobuf[len] = c;
         } /* end for(len) */

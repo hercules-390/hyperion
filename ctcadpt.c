@@ -493,7 +493,7 @@ unsigned char print_chars[17];
             if (offset < len) {
                 logmsg("%2.2X", c);
                 print_chars[i] = '.';
-                e = ebcdic_to_ascii[c];
+                e = guest_to_host(c);
                 if (isprint(e)) print_chars[i] = e;
                 if (isprint(c)) print_chars[i] = c;
             }
@@ -1613,7 +1613,7 @@ U32             stackcmd;               /* VSE IP stack command      */
     {
         /* Extract the 32-byte stack identity string */
         for (i = 0; i < sizeof(stackid)-1 && i < count - 4; i++)
-            stackid[i] = ebcdic_to_ascii[iobuf[i+4]];
+            stackid[i] = guest_to_host(iobuf[i+4]);
         stackid[i] = '\0';
 
         /* Extract the stack command word */

@@ -2223,7 +2223,7 @@ BYTE            c;                      /* Character work area       */
 
         /* Translate character to EBCDIC and copy to I/O buffer */
         if (buf != NULL)
-            buf[pos] = ascii_to_ebcdic[c];
+            buf[pos] = host_to_guest(c);
 
         /* Count characters copied or skipped */
         pos++;
@@ -2669,10 +2669,10 @@ BYTE            fcb;                    /* Format Control Byte       */
     {
         /* Copy and translate messages */
         for (i = 0; i < 8; i++)
-            msg1[i] = ebcdic_to_ascii[*buf++];
+            msg1[i] = guest_to_host(*buf++);
         msg1[8] = '\0';
         for (i = 0; i < 8; i++)
-            msg2[i] = ebcdic_to_ascii[*buf++];
+            msg2[i] = guest_to_host(*buf++);
         msg2[8] = '\0';
 
         /* If not both messages are to be shown

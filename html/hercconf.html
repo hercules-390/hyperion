@@ -26,6 +26,7 @@ a real System/390.  The configuration file is an ASCII text file.
     CPUMODEL  3090
     MAINSIZE  64
     XPNDSIZE  0
+    CODEPAGE  default
     CNSLPORT  3270
     HTTPPORT  8081
     NUMCPU    1
@@ -228,6 +229,10 @@ The following system parameters may be specified:
     real machine.  This problem is being pursued with IBM linux. Meanwhile,
     if <code>OSTAILOR LINUX</code> is specified, then this value defaults to
     <em>800</em> otherwise the value defaults to <em>0</em>.
+<dt><code>CODEPAGE<em>codepage</em></code>
+<dd>specifies the codepage conversion table used for ascii/ebcdic translation
+    "default" specifies traditional hercules codepage, "437/037" and
+    "437/500" are also supported.
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any system

@@ -81,11 +81,6 @@ static BYTE *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 
-/*-------------------------------------------------------------------*/
-/* ASCII/EBCDIC TRANSLATE TABLES                                     */
-/*-------------------------------------------------------------------*/
-#include "codeconv.h"
-
 //#ifdef EXTERNALGUI
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
@@ -275,6 +270,7 @@ BYTE   *spanrate;                       /* -> Panel refresh rate     */
 BYTE   *sdevtmax;                       /* -> Max device threads     */
 BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
+BYTE   *scodepage;                      /* -> Code page              */
 #if defined(OPTION_HTTP_SERVER)
 BYTE   *shttpport;                      /* -> HTTP port number       */
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -326,6 +322,8 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Direct logmsg output to stderr during initialization */
     sysblk.msgpipew = stderr;
+
+    set_codepage("default");
 
     /* Open the configuration file */
     fp = fopen (fname, "r");
@@ -396,6 +394,7 @@ BYTE    c;                              /* Work area for sscanf      */
         scpuprio = NULL;
         sdevtmax = NULL;
         spgmprdos = NULL;
+        scodepage = NULL;
 #if defined(OPTION_HTTP_SERVER)
         shttpport = NULL;
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -489,6 +488,10 @@ BYTE    c;                              /* Work area for sscanf      */
             {
                 spgmprdos = operand;
             }
+            else if (strcasecmp (keyword, "codepage") == 0)
+            {
+                scodepage = operand;
+            }
 #ifdef OPTION_IODELAY_KLUDGE
             else if (strcasecmp (keyword, "iodelay") == 0)
             {
@@ -546,6 +549,9 @@ BYTE    c;                              /* Work area for sscanf      */
                 exit(1);
             }
         }
+
+        if(scodepage)
+            set_codepage(scodepage);
 
         if (sarchmode != NULL)
         {
@@ -712,7 +718,7 @@ BYTE    c;                              /* Work area for sscanf      */
             /* Convert the load parameter to EBCDIC */
             memset (loadparm, 0x4B, 8);
             for (i = 0; i < strlen(sloadparm); i++)
-                loadparm[i] = ascii_to_ebcdic[sloadparm[i]];
+                loadparm[i] = host_to_guest(sloadparm[i]);
         }
 
         /* Parse system epoch operand */

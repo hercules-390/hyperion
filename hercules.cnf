@@ -5,6 +5,7 @@
 CPUSERIAL 002623        # CPU serial number
 CPUMODEL  3090          # CPU model number
 MAINSIZE  64            # Main storage size in megabytes
+CODEPAGE  default       # CodePage conversion table 
 XPNDSIZE  0             # Expanded storage size in megabytes
 CNSLPORT  3270          # TCP port number to which consoles connect
 HTTPPORT  8081 noauth userid password   # HTTP server port 

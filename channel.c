@@ -77,7 +77,7 @@ BYTE    c;                              /* Character work area       */
 
         for (i = 0; i < 16; i++)
         {
-            c = ebcdic_to_ascii[*a++];
+            c = guest_to_host(*a++);
             if (!isprint(c)) c = '.';
             area[j++] = c;
         }

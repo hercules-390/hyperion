@@ -200,7 +200,7 @@ BYTE            c;                      /* Output character          */
 
             if (dev->ascii)
             {
-                c = ebcdic_to_ascii[c];
+                c = guest_to_host(c);
                 if (!isprint(c)) c = SPACE;
             }
 

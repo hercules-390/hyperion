@@ -43,10 +43,7 @@ long  curpos = 0;
 long  prevpos = 0;
 #endif /*EXTERNALGUI*/
 
-/*-------------------------------------------------------------------*/
-/* ASCII to EBCDIC translate tables                                  */
-/*-------------------------------------------------------------------*/
-#include "codeconv.h"
+SYSBLK sysblk; /* Currently only used for codepage mapping */
 
 /*-------------------------------------------------------------------*/
 /* TAPEMAP main entry point                                          */
@@ -65,6 +62,9 @@ int             minblksz;               /* Minimum block size        */
 int             maxblksz;               /* Maximum block size        */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
+
+    if(!sysblk.codepage)
+        set_codepage("default");                                                
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -209,7 +209,7 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
                     || memcmp(buf, eovlbl, 3) == 0))
             {
                 for (i=0; i < 80; i++)
-                    labelrec[i] = ebcdic_to_ascii[buf[i]];
+                    labelrec[i] = guest_to_host(buf[i]);
                 labelrec[i] = '\0';
                 printf ("%s\n", labelrec);
             }

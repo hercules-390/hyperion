@@ -56,6 +56,9 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
  int rc, trk, len, cyl, head, rec;
  BYTE *buf;
 
+ if(!sysblk.codepage)
+  set_codepage("default");
+
  trk = (ttr[0] << 8) | ttr[1];
  rec = ttr[2];
 
@@ -82,7 +85,7 @@ int process_member(CIFBLK *cif, int noext, DSXTENT extent[],
  else if (optflags & OPT_ASCIIFY) {
  BYTE *p;
  for (p = buf; len--; p++)
- putchar(ebcdic_to_ascii[*p]);
+ putchar(guest_to_host(*p));
  } else {
  fwrite(buf, len, 1, stdout);
  }

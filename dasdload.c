@@ -1507,6 +1507,9 @@ U16     len;                            /* Field length              */
 BYTE   *name;                           /* Text unit name            */
 BYTE    c, hex[17], chars[9];           /* Character work areas      */
 
+    if(!sysblk.codepage)
+        set_codepage("default");
+
     /* Error if remaining length is insufficient for header */
     if (bufrem < 4)
     {
@@ -1576,7 +1579,7 @@ BYTE    c, hex[17], chars[9];           /* Character work areas      */
                 j = 0;
             }
             sprintf(hex+2*j, "%2.2X", xbuf[bufpos+offset+i]);
-            c = ebcdic_to_ascii[xbuf[bufpos+offset+i]];
+            c = guest_to_host(xbuf[bufpos+offset+i]);
             if (!isprint(c)) c = '.';
             chars[j] = c;
         } /* end for(i) */
@@ -2124,6 +2127,9 @@ PDSDIR         *dirent;                 /* -> Directory entry        */
 BYTE            memname[9];             /* Member name (ASCIIZ)      */
 BYTE            c, hex[49], chars[25];  /* Character work areas      */
 
+    if(!sysblk.codepage)
+        set_codepage("default");
+
     /* Check for end of directory */
     if (blklen == 12 && memcmp(xbuf, twelvehex00, 12) == 0)
     {
@@ -2226,7 +2232,7 @@ BYTE            c, hex[49], chars[25];  /* Character work areas      */
                 j = 0;
             }
             sprintf(hex+2*j, "%2.2X", dirent->pds2usrd[i]);
-            c = ebcdic_to_ascii[dirent->pds2usrd[i]];
+            c = guest_to_host(dirent->pds2usrd[i]);
             if (!isprint(c)) c = '.';
             chars[j] = c;
         } /* end for(i) */

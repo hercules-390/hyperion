@@ -673,7 +673,7 @@ BYTE            c;                      /* Character work area       */
     for (i = 0; i < 8; i++)
     {
         c = (*puser == '\0' ? SPACE : *(puser++));
-        buf[16+i] = ascii_to_ebcdic[toupper(c)];
+        buf[16+i] = host_to_guest(toupper(c));
     }
 
     /* Bytes 24-31 contain the program product bitmap */
@@ -771,7 +771,7 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
 
     /* Display the command on the console */
     for (i = 0; i < cmdlen; i++)
-        buf[i] = ebcdic_to_ascii[buf[i]];
+        buf[i] = guest_to_host(buf[i]);
     buf[i] = '\0';
     logmsg ("HHC660I %s\n", buf);
 
@@ -781,7 +781,7 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
         strcpy (resp, "HHC661I Command complete");
         resplen = strlen(resp);
         for (i = 0; i < resplen; i++)
-            resp[i] = ascii_to_ebcdic[resp[i]];
+            resp[i] = host_to_guest(resp[i]);
 
         respadr = regs->GR_L(r1+1);
         maxrlen = regs->GR_L(r2+1);
@@ -863,7 +863,7 @@ static  BYTE timefmt[]="%m/%d/%y%H:%M:%S%m/%d/%Y%Y-%m-%d";
     tmptr = localtime(&timeval);
     strftime(dattim, sizeof(dattim), timefmt, tmptr);
     for (i = 0; dattim[i] != '\0'; i++)
-        dattim[i] = ascii_to_ebcdic[dattim[i]];
+        dattim[i] = host_to_guest(dattim[i]);
 
     /* Obtain buffer address and length from R1 and R2 registers */
     bufadr = regs->GR_L(r1);

@@ -122,40 +122,40 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
 	   parser.c hetlib.c ieee.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
-           httpserv.c cgibin.c devtype.c
+           httpserv.c cgibin.c devtype.c codepage.c
 
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
-dasdinit_SOURCES = dasdinit.c dasdutil.c hostinfo.c version.c \
+dasdinit_SOURCES = dasdinit.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
 
 
-dasdisup_SOURCES = dasdisup.c dasdutil.c hostinfo.c version.c \
+dasdisup_SOURCES = dasdisup.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
 
 
-dasdload_SOURCES = dasdload.c dasdutil.c hostinfo.c version.c \
+dasdload_SOURCES = dasdload.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
 
 
-dasdls_SOURCES = dasdls.c dasdutil.c hostinfo.c version.c \
+dasdls_SOURCES = dasdls.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
 
 
-dasdcat_SOURCES = dasdcat.c dasdutil.c hostinfo.c version.c \
+dasdcat_SOURCES = dasdcat.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
 
 
-dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c hostinfo.c version.c \
+dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
 
 
-tapecopy_SOURCES = tapecopy.c hostinfo.c version.c
+tapecopy_SOURCES = tapecopy.c codepage.c hostinfo.c version.c
 
-tapemap_SOURCES = tapemap.c hostinfo.c version.c
+tapemap_SOURCES = tapemap.c codepage.c hostinfo.c version.c
 
-tapesplt_SOURCES = tapesplt.c hostinfo.c version.c
+tapesplt_SOURCES = tapesplt.c codepage.c hostinfo.c version.c
 
 cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c
 
@@ -182,9 +182,9 @@ EXTRA_DIST = hercules.cnf CHANGES
 noinst_HEADERS = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
-    codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
+    hbyteswp.h dasdblks.h hetlib.h  version.h parser.h dasdtab.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
-    if_tun.h ieee-w32.h httpmisc.h devtype.h
+    if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -248,6 +248,7 @@ ckd2cckd_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@am_dasdcat_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdcat.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -258,6 +259,7 @@ ckd2cckd_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@am_dasdcat_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdcat.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -267,6 +269,7 @@ ckd2cckd_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@am_dasdcat_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdcat.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -278,6 +281,7 @@ ckd2cckd_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@am_dasdcat_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdcat.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -291,6 +295,7 @@ dasdcat_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@am_dasdinit_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdinit.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -301,6 +306,7 @@ dasdcat_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@am_dasdinit_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdinit.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -310,6 +316,7 @@ dasdcat_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@am_dasdinit_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdinit.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -321,6 +328,7 @@ dasdcat_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@am_dasdinit_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdinit.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -334,6 +342,7 @@ dasdinit_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@am_dasdisup_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdisup.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -344,6 +353,7 @@ dasdinit_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@am_dasdisup_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdisup.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -353,6 +363,7 @@ dasdinit_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@am_dasdisup_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdisup.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -364,6 +375,7 @@ dasdinit_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@am_dasdisup_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdisup.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -377,6 +389,7 @@ dasdisup_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@am_dasdload_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdload.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -387,6 +400,7 @@ dasdisup_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@am_dasdload_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdload.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -396,6 +410,7 @@ dasdisup_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@am_dasdload_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdload.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -407,6 +422,7 @@ dasdisup_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@am_dasdload_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdload.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -420,6 +436,7 @@ dasdload_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@am_dasdls_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdls.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -430,6 +447,7 @@ dasdload_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@am_dasdls_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdls.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -439,6 +457,7 @@ dasdload_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@am_dasdls_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdls.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -450,6 +469,7 @@ dasdload_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@am_dasdls_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdls.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -463,6 +483,7 @@ dasdls_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@am_dasdpdsu_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdpdsu.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -473,6 +494,7 @@ dasdls_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@am_dasdpdsu_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdpdsu.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -482,6 +504,7 @@ dasdls_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@am_dasdpdsu_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdpdsu.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) \
@@ -493,6 +516,7 @@ dasdls_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@am_dasdpdsu_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdpdsu.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) \
@@ -568,7 +592,8 @@ hercifc_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	w32chan.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	httpserv.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	cgibin.$(OBJEXT) \
-@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	devtype.$(OBJEXT)
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	devtype.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT)
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@am_hercules_OBJECTS = \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	w32ctca.$(OBJEXT) \
@@ -620,7 +645,8 @@ hercifc_LDFLAGS =
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	ieee.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	httpserv.$(OBJEXT) \
 @BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	cgibin.$(OBJEXT) \
-@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	devtype.$(OBJEXT)
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	devtype.$(OBJEXT) \
+@BUILD_FISHHANG_FALSE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT)
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@am_hercules_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	w32ctca.$(OBJEXT) \
@@ -675,7 +701,8 @@ hercifc_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	w32chan.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	httpserv.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	cgibin.$(OBJEXT) \
-@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	devtype.$(OBJEXT)
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	devtype.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_TRUE@	codepage.$(OBJEXT)
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@am_hercules_OBJECTS = \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	hostinfo.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	w32ctca.$(OBJEXT) \
@@ -727,7 +754,8 @@ hercifc_LDFLAGS =
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	ieee.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	httpserv.$(OBJEXT) \
 @BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	cgibin.$(OBJEXT) \
-@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	devtype.$(OBJEXT)
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	devtype.$(OBJEXT) \
+@BUILD_FISHHANG_TRUE@@BUILD_FTHREADS_FALSE@	codepage.$(OBJEXT)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 hercules_LDADD = $(LDADD)
 hercules_DEPENDENCIES =
@@ -756,20 +784,20 @@ hetupd_OBJECTS = $(am_hetupd_OBJECTS)
 hetupd_LDADD = $(LDADD)
 hetupd_DEPENDENCIES =
 hetupd_LDFLAGS =
-am_tapecopy_OBJECTS = tapecopy.$(OBJEXT) hostinfo.$(OBJEXT) \
-	version.$(OBJEXT)
+am_tapecopy_OBJECTS = tapecopy.$(OBJEXT) codepage.$(OBJEXT) \
+	hostinfo.$(OBJEXT) version.$(OBJEXT)
 tapecopy_OBJECTS = $(am_tapecopy_OBJECTS)
 tapecopy_LDADD = $(LDADD)
 tapecopy_DEPENDENCIES =
 tapecopy_LDFLAGS =
-am_tapemap_OBJECTS = tapemap.$(OBJEXT) hostinfo.$(OBJEXT) \
-	version.$(OBJEXT)
+am_tapemap_OBJECTS = tapemap.$(OBJEXT) codepage.$(OBJEXT) \
+	hostinfo.$(OBJEXT) version.$(OBJEXT)
 tapemap_OBJECTS = $(am_tapemap_OBJECTS)
 tapemap_LDADD = $(LDADD)
 tapemap_DEPENDENCIES =
 tapemap_LDFLAGS =
-am_tapesplt_OBJECTS = tapesplt.$(OBJEXT) hostinfo.$(OBJEXT) \
-	version.$(OBJEXT)
+am_tapesplt_OBJECTS = tapesplt.$(OBJEXT) codepage.$(OBJEXT) \
+	hostinfo.$(OBJEXT) version.$(OBJEXT)
 tapesplt_OBJECTS = $(am_tapesplt_OBJECTS)
 tapesplt_LDADD = $(LDADD)
 tapesplt_DEPENDENCIES =
@@ -788,37 +816,37 @@ depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/cckdutil.Po $(DEPDIR)/cgibin.Po \
 @AMDEP_TRUE@	$(DEPDIR)/channel.Po $(DEPDIR)/ckd2cckd.Po \
 @AMDEP_TRUE@	$(DEPDIR)/ckddasd.Po $(DEPDIR)/cmpsc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/config.Po $(DEPDIR)/console.Po \
-@AMDEP_TRUE@	$(DEPDIR)/control.Po $(DEPDIR)/cpu.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ctcadpt.Po $(DEPDIR)/dasdcat.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdinit.Po $(DEPDIR)/dasdisup.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdload.Po $(DEPDIR)/dasdls.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdpdsu.Po $(DEPDIR)/dasdtab.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdutil.Po $(DEPDIR)/dat.Po \
-@AMDEP_TRUE@	$(DEPDIR)/decimal.Po $(DEPDIR)/devtype.Po \
-@AMDEP_TRUE@	$(DEPDIR)/diagmssf.Po $(DEPDIR)/diagnose.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dmap2hrc.Po $(DEPDIR)/esame.Po \
-@AMDEP_TRUE@	$(DEPDIR)/external.Po $(DEPDIR)/fbadasd.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fishhang.Po $(DEPDIR)/float.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fthreads.Po $(DEPDIR)/general1.Po \
-@AMDEP_TRUE@	$(DEPDIR)/general2.Po $(DEPDIR)/hercifc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetget.Po $(DEPDIR)/hetinit.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetlib.Po $(DEPDIR)/hetmap.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetupd.Po $(DEPDIR)/hostinfo.Po \
-@AMDEP_TRUE@	$(DEPDIR)/httpserv.Po $(DEPDIR)/ieee.Po \
-@AMDEP_TRUE@	$(DEPDIR)/impl.Po $(DEPDIR)/io.Po $(DEPDIR)/ipl.Po \
-@AMDEP_TRUE@	$(DEPDIR)/machchk.Po $(DEPDIR)/opcode.Po \
-@AMDEP_TRUE@	$(DEPDIR)/panel.Po $(DEPDIR)/parser.Po \
-@AMDEP_TRUE@	$(DEPDIR)/plo.Po $(DEPDIR)/printer.Po \
-@AMDEP_TRUE@	$(DEPDIR)/service.Po $(DEPDIR)/sie.Po \
-@AMDEP_TRUE@	$(DEPDIR)/sllib.Po $(DEPDIR)/stack.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tapecopy.Po $(DEPDIR)/tapedev.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tapemap.Po $(DEPDIR)/tapesplt.Po \
-@AMDEP_TRUE@	$(DEPDIR)/timer.Po $(DEPDIR)/trace.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vector.Po $(DEPDIR)/version.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vm.Po $(DEPDIR)/vstore.Po \
-@AMDEP_TRUE@	$(DEPDIR)/w32chan.Po $(DEPDIR)/w32ctca.Po \
-@AMDEP_TRUE@	$(DEPDIR)/xstore.Po
+@AMDEP_TRUE@	$(DEPDIR)/codepage.Po $(DEPDIR)/config.Po \
+@AMDEP_TRUE@	$(DEPDIR)/console.Po $(DEPDIR)/control.Po \
+@AMDEP_TRUE@	$(DEPDIR)/cpu.Po $(DEPDIR)/ctcadpt.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdcat.Po $(DEPDIR)/dasdinit.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdisup.Po $(DEPDIR)/dasdload.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdls.Po $(DEPDIR)/dasdpdsu.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdtab.Po $(DEPDIR)/dasdutil.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dat.Po $(DEPDIR)/decimal.Po \
+@AMDEP_TRUE@	$(DEPDIR)/devtype.Po $(DEPDIR)/diagmssf.Po \
+@AMDEP_TRUE@	$(DEPDIR)/diagnose.Po $(DEPDIR)/dmap2hrc.Po \
+@AMDEP_TRUE@	$(DEPDIR)/esame.Po $(DEPDIR)/external.Po \
+@AMDEP_TRUE@	$(DEPDIR)/fbadasd.Po $(DEPDIR)/fishhang.Po \
+@AMDEP_TRUE@	$(DEPDIR)/float.Po $(DEPDIR)/fthreads.Po \
+@AMDEP_TRUE@	$(DEPDIR)/general1.Po $(DEPDIR)/general2.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hercifc.Po $(DEPDIR)/hetget.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetinit.Po $(DEPDIR)/hetlib.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetmap.Po $(DEPDIR)/hetupd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hostinfo.Po $(DEPDIR)/httpserv.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ieee.Po $(DEPDIR)/impl.Po $(DEPDIR)/io.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ipl.Po $(DEPDIR)/machchk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/opcode.Po $(DEPDIR)/panel.Po \
+@AMDEP_TRUE@	$(DEPDIR)/parser.Po $(DEPDIR)/plo.Po \
+@AMDEP_TRUE@	$(DEPDIR)/printer.Po $(DEPDIR)/service.Po \
+@AMDEP_TRUE@	$(DEPDIR)/sie.Po $(DEPDIR)/sllib.Po \
+@AMDEP_TRUE@	$(DEPDIR)/stack.Po $(DEPDIR)/tapecopy.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapedev.Po $(DEPDIR)/tapemap.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapesplt.Po $(DEPDIR)/timer.Po \
+@AMDEP_TRUE@	$(DEPDIR)/trace.Po $(DEPDIR)/vector.Po \
+@AMDEP_TRUE@	$(DEPDIR)/version.Po $(DEPDIR)/vm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vstore.Po $(DEPDIR)/w32chan.Po \
+@AMDEP_TRUE@	$(DEPDIR)/w32ctca.Po $(DEPDIR)/xstore.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -840,10 +868,10 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 	install-exec-recursive installdirs-recursive install-recursive \
 	uninstall-recursive check-recursive installcheck-recursive
 DIST_COMMON = $(noinst_HEADERS) ./stamp-h.in INSTALL Makefile.am \
-	Makefile.in aclocal.m4 autoconf/README autoconf/config.guess \
-	autoconf/config.sub autoconf/depcomp autoconf/install-sh \
-	autoconf/missing autoconf/mkinstalldirs config.h.in configure \
-	configure.ac
+	Makefile.in TODO aclocal.m4 autoconf/README \
+	autoconf/config.guess autoconf/config.sub autoconf/depcomp \
+	autoconf/install-sh autoconf/missing autoconf/mkinstalldirs \
+	config.h.in configure configure.ac
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckdswap_SOURCES) $(ckd2cckd_SOURCES) $(dasdcat_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dmap2hrc_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(EXTRA_hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
 
@@ -999,6 +1027,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ckd2cckd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ckddasd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cmpsc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/codepage.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/config.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/console.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/control.Po@am__quote@

@@ -2109,19 +2109,19 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 c = loadparm[i];
                 c = toupper(c);
                 if (!isprint(c)) c = '.';
-                sysblk.loadparm[i] = ascii_to_ebcdic[c];
+                sysblk.loadparm[i] = host_to_guest(c);
             }
         }
         /* Display IPL parameter */
         logmsg ("LOADPARM=%c%c%c%c%c%c%c%c\n",
-                ebcdic_to_ascii[sysblk.loadparm[0]],
-                ebcdic_to_ascii[sysblk.loadparm[1]],
-                ebcdic_to_ascii[sysblk.loadparm[2]],
-                ebcdic_to_ascii[sysblk.loadparm[3]],
-                ebcdic_to_ascii[sysblk.loadparm[4]],
-                ebcdic_to_ascii[sysblk.loadparm[5]],
-                ebcdic_to_ascii[sysblk.loadparm[6]],
-                ebcdic_to_ascii[sysblk.loadparm[7]]);
+                guest_to_host(sysblk.loadparm[0]),
+                guest_to_host(sysblk.loadparm[1]),
+                guest_to_host(sysblk.loadparm[2]),
+                guest_to_host(sysblk.loadparm[3]),
+                guest_to_host(sysblk.loadparm[4]),
+                guest_to_host(sysblk.loadparm[5]),
+                guest_to_host(sysblk.loadparm[6]),
+                guest_to_host(sysblk.loadparm[7]));
         return NULL;
     }
 
@@ -4063,7 +4063,7 @@ BYTE    c;                              /* Character work area       */
         c = sysblk.mainstor[aaddr++];
         j += sprintf (hbuf+j, "%2.2X", c);
         if ((aaddr & 0x3) == 0x0) hbuf[j++] = SPACE;
-        c = ebcdic_to_ascii[c];
+        c = guest_to_host(c);
         if (!isprint(c)) c = '.';
         cbuf[i] = c;
         if ((aaddr & PAGEFRAME_BYTEMASK) == 0x000) break;

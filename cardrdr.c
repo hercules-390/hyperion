@@ -663,7 +663,7 @@ BYTE    c;                              /* Input character           */
         }
 
         /* Convert character to EBCDIC and store in device buffer */
-        dev->buf[i++] = ascii_to_ebcdic[c];
+        dev->buf[i++] = host_to_guest(c);
 
     } /* end for(i) */
 

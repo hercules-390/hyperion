@@ -422,7 +422,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         partinfo->partnum = 1;
         partinfo->virtcpu = sysblk.numcpu;
         for(i = 0; i < sizeof(partinfo->partname); i++)
-            partinfo->partname[i] = ascii_to_ebcdic[(int)lparname[i]];
+            partinfo->partname[i] = host_to_guest((int)lparname[i]);
 
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
@@ -455,7 +455,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         partinfo->partnum = 0;
         partinfo->virtcpu = 1;
         for(i = 0; i < sizeof(partinfo->partname); i++)
-            partinfo->partname[i] = ascii_to_ebcdic[(int)physical[i]];
+            partinfo->partname[i] = host_to_guest((int)physical[i]);
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
         memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
 //      STORE_HW(cpuinfo->cpaddr,0);

@@ -1170,8 +1170,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         for (i = 0, j = 0; i < event_msglen; i++)
 #endif
                         {
-                            message[j++] = isprint(ebcdic_to_ascii[event_msg[i]]) ?
-                                ebcdic_to_ascii[event_msg[i]] : 0x20;
+                            message[j++] = isprint(guest_to_host(event_msg[i])) ?
+                                guest_to_host(event_msg[i]) : 0x20;
                                 /* Break the line if too long */
                                 if(j > 79)
                                 {
@@ -1217,9 +1217,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             
                 for(i = 0; i < 8; i++)
                 {
-                    systype[i] = ebcdic_to_ascii[cpi_bk->system_type[i]];
-                    sysname[i] = ebcdic_to_ascii[cpi_bk->system_name[i]];
-                    sysplex[i] = ebcdic_to_ascii[cpi_bk->sysplex_name[i]];
+                    systype[i] = guest_to_host(cpi_bk->system_type[i]);
+                    sysname[i] = guest_to_host(cpi_bk->system_name[i]);
+                    sysplex[i] = guest_to_host(cpi_bk->sysplex_name[i]);
                 }
                 systype[8] = sysname[8] = sysplex[8] = 0;
                 FETCH_DW(syslevel,cpi_bk->system_level);
@@ -1354,7 +1354,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         /* Copy and translate command */
         for (i = 0; i < event_msglen; i++)
-                event_msg[i] = ascii_to_ebcdic[sysblk.scpcmdstr[i]];
+                event_msg[i] = host_to_guest(sysblk.scpcmdstr[i]);
 
         /* Clear the command string (It has been read) */
         sysblk.scpcmdstr[0] = '\0';

@@ -28,10 +28,7 @@ static BYTE iplpsw[8]    = {0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x0F};
 static BYTE iplccw1[8]   = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x01};
 static BYTE iplccw2[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
-/*-------------------------------------------------------------------*/
-/* ASCII to EBCDIC translate tables                                  */
-/*-------------------------------------------------------------------*/
-#include "codeconv.h"
+SYSBLK sysblk; /* Currently only used for codepage mapping */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to convert a null-terminated string to upper case      */
@@ -64,8 +61,11 @@ void convert_to_ebcdic (BYTE *dest, int len, BYTE *source)
 {
 int     i;                              /* Array subscript           */
 
+    if(!sysblk.codepage)
+        set_codepage("default");
+
     for (i = 0; i < len && source[i] != '\0'; i++)
-        dest[i] = ascii_to_ebcdic[source[i]];
+        dest[i] = host_to_guest(source[i]);
 
     while (i < len)
         dest[i++] = 0x40;
@@ -81,8 +81,11 @@ int make_asciiz (BYTE *dest, int destlen, BYTE *src, int srclen)
 {
 int             len;                    /* Result length             */
 
+    if(!sysblk.codepage)
+        set_codepage("default");
+
     for (len=0; len < srclen && len < destlen-1; len++)
-        dest[len] = ebcdic_to_ascii[src[len]];
+        dest[len] = guest_to_host(src[len]);
     while (len > 0 && dest[len-1] == SPACE) len--;
     dest[len] = '\0';
 
@@ -104,6 +107,9 @@ BYTE            hex_chars[64];
 BYTE            prev_hex[64] = "";
 int             firstsame = 0;
 int             lastsame = 0;
+
+    if(!sysblk.codepage)
+        set_codepage("default");
 
     pchar = (unsigned char*)addr;
 
@@ -153,7 +159,7 @@ int             lastsame = 0;
                 sprintf(hex_chars+xi, "%2.2X", c);
                 print_chars[i] = '.';
                 if (isprint(c)) print_chars[i] = c;
-                c = ebcdic_to_ascii[c];
+                c = guest_to_host(c);
                 if (isprint(c)) print_chars[i] = c;
             }
             offset++;

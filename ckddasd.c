@@ -3209,11 +3209,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            the key, which will usually be a dataset name or member
            name and can provide useful debugging information */
         if ((*unitstat & CSW_SM) && dev->ckdkeytrace
-            && isprint(ebcdic_to_ascii[iobuf[0]]))
+            && isprint(guest_to_host(iobuf[0])))
         {
             BYTE module[45]; int i;
             for (i=0; i < sizeof(module)-1 && i < num; i++)
-                module[i] = ebcdic_to_ascii[iobuf[i]];
+                module[i] = guest_to_host(iobuf[i]);
             module[i] = '\0';
             devmsg ("ckddasd: search key %s\n", module);
         }
@@ -4757,7 +4757,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         iobuf[2] = 0x01;
         memcpy (&iobuf[4],"  0000000HRC01000000000001", 26);
         for (i = 4; i < 30; i++)
-            iobuf[i] = ascii_to_ebcdic[iobuf[i]];
+            iobuf[i] = host_to_guest(iobuf[i]);
         iobuf[31] = 0x30;
 
         /* Bytes 32-63 contain node element descriptor 2 (unit) data */
@@ -4784,7 +4784,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         iobuf[104] += ((dev->ckdcu->devt >>  4) & 0x0f);
         iobuf[105] += ((dev->ckdcu->devt >>  0) & 0x0f);
         for (i = 102; i < 109; i++)
-            iobuf[i] = ascii_to_ebcdic[iobuf[i]];
+            iobuf[i] = host_to_guest(iobuf[i]);
 
         /* Bytes 128-223 contain zeroes */
 

@@ -391,7 +391,7 @@ BYTE            c;                      /* Print character           */
         /* Copy data from channel buffer to print buffer */
         for (i = 0; i < num; i++)
         {
-            c = ebcdic_to_ascii[iobuf[i]];
+            c = guest_to_host(iobuf[i]);
 
             if (dev->fold) c = toupper(c);
             if (c == 0) c = SPACE;

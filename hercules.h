@@ -68,6 +68,7 @@
 #endif
 #include "version.h"
 #include "hetlib.h"
+#include "codepage.h"
 
 /* definition of CLK_TCK is not part of the SUSE 7.2 definition.  Added (VB) */
 #  ifndef CLK_TCK
@@ -754,6 +755,7 @@ typedef struct _SYSBLK {
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
 // #endif /*defined(OPTION_HTTP_SERVER)*/
+        CPCONV *codepage;
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -1451,8 +1453,8 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 /* Global data areas in module config.c                              */
 /*-------------------------------------------------------------------*/
 extern SYSBLK   sysblk;                 /* System control block      */
-extern BYTE     ascii_to_ebcdic[];      /* Translate table           */
-extern BYTE     ebcdic_to_ascii[];      /* Translate table           */
+// ZZ extern BYTE     ascii_to_ebcdic[];      /* Translate table           */
+// ZZ extern BYTE     ebcdic_to_ascii[];      /* Translate table           */
 #ifdef EXTERNALGUI
 extern int extgui;              /* external gui present */
 #endif /*EXTERNALGUI*/

@@ -643,14 +643,14 @@ DEVBLK *dev;
     fprintf(webblk->hsock,"</select>\n");
 
     fprintf(webblk->hsock,"Loadparm:<input type=text size=8 value=\"%c%c%c%c%c%c%c%c\">\n",
-      ebcdic_to_ascii[sysblk.loadparm[0]],
-      ebcdic_to_ascii[sysblk.loadparm[1]],
-      ebcdic_to_ascii[sysblk.loadparm[2]],
-      ebcdic_to_ascii[sysblk.loadparm[3]],
-      ebcdic_to_ascii[sysblk.loadparm[4]],
-      ebcdic_to_ascii[sysblk.loadparm[5]],
-      ebcdic_to_ascii[sysblk.loadparm[6]],
-      ebcdic_to_ascii[sysblk.loadparm[7]]);
+      guest_to_host(sysblk.loadparm[0]),
+      guest_to_host(sysblk.loadparm[1]),
+      guest_to_host(sysblk.loadparm[2]),
+      guest_to_host(sysblk.loadparm[3]),
+      guest_to_host(sysblk.loadparm[4]),
+      guest_to_host(sysblk.loadparm[5]),
+      guest_to_host(sysblk.loadparm[6]),
+      guest_to_host(sysblk.loadparm[7]));
 
     fprintf(webblk->hsock,"<input type=submit name=doipl value=\"IPL\">\n"
                           "</form>\n");
