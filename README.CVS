@@ -1,7 +1,7 @@
 In order to build Hercules from the CVS sources, you must have installed:
 
 - Autoconf, version 2.50 or greater
-- Automake, version 1.4 or greater
+- Automake, version 1.5 or greater
 
 Both of these tools can be found at www.gnu.org in source code form, and are
 widely available in packaged form (RPM, DEB, Solaris packages, etc.).
