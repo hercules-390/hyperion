@@ -31,6 +31,7 @@ a real System/390.  The configuration file is an ASCII text file.
     CNSLPORT  3270
     HTTPPORT  8081
     HTTPROOT  /usr/local/share/hercules/
+    SHRDPORT  3990
     DIAG8CMD  disable
     NUMCPU    1
     NUMVEC    1
@@ -54,11 +55,10 @@ a real System/390.  The configuration file is an ASCII text file.
     0120    3380    mvsv5r.120
     0121    3380    mvsv5d.121
     0122    3380    mvswk1.122
+    0123    3380    192.168.1.100
     0140    3370    dosres.140
     0141    3370    syswk1.141
-    0200    3270
-    0201    3270
-    0202    3270
+    0200.4  3270
     0300    3370    sysres.300
     0400    3088    CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0    
     0401    3088    CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0    
@@ -124,6 +124,16 @@ The following system parameters may be specified:
     "<tt>K:\Hercules\html\</tt>", then you should specify
     "<tt>/cygdrive/k/Hercules/html/</tt>"
     on your <tt>HTTPROOT</tt> statement.
+<dt><code>SHRDPORT <em>nnnn</em></code>
+<dd>specifies the port number (in decimal) on which the Shared Device server
+    will listen.  Specifying SHRDPORT will allow other Hercules instances
+    to access devices on this instance.  (Currently only DASD devices may
+    be shared).  By default, the other Hercules instances (clients) will
+    use port 3990.  If you specify a different port number, then you will
+    have to specify this port number on the device statement for the other
+    Hercules clients.
+    If no SHRDPORT statement is present then the Shared Device server thread
+    will not be activated.<br>
 <dt><code>DIAG8CMD <em>disable/enable</em></code>
 <dd>When set to enable, commands issued through diagnose 8 will be 
     executed by hercules as hercules commands.  When set to disable,
@@ -658,7 +668,9 @@ The format of the device record is:
 <a name="fbadasd">
 <dt><em>FBA DASD devices</em>
 <dd>The argument specifies the name of a file which contains the FBA
-    DASD image.  The file consists of fixed length 512-byte records,
+    DASD image or the INET address of a Hercules shared device server.
+    <p>
+    The file consists of fixed length 512-byte records,
     each of which represents one physical block of the emulated disk.
     <p>
     To allow access to a minidisk within a full-pack FBA DASD image
@@ -678,17 +690,33 @@ The format of the device record is:
         If omitted, or if specified as an asterisk, then the minidisk
         continues to the end of the DASD image file.
     </dl>
+    <p>
+    If you specify an INET address the format is:
+    <p>
+    <dl>
+    <dt><code><em>ip-name-or-addr:port:devnum</em></code>
+    <dd><i>ip-name-or-addr</i> specifies the internet name or address
+        where the Hercules shared device server is running.
+    <p>
+    <dd><i>port</i> specifies the port number the shared device server
+        is listening on.  If omitted, the default is 3990.
+    <p>
+    <dd><i>devnum</i> specifies the device number on the shared
+        device server.  If omitted, the default is the current device number.
+    </dl>
 <p>
 <a name="ckddasd">
 <dt><em>CKD DASD devices</em>
 <dd>The argument specifies the name of a file containing the disk CKD
-    DASD image.  The file consists of a 512-byte device header record
+    DASD image or the INET address of a Hercules shared device server.
+    <p>
+    The file consists of a 512-byte device header record
     followed by fixed length track images.  The length of each track
     image depends on the emulated device type, and is always rounded
     up to the next multiple of 512 bytes.
     <p>
     Volumes larger than 2GB (for example, the 3390 model 3)
-    are supported by spreading the data across more than one file.
+    can be supported by spreading the data across more than one file.
     Each file contains a whole number of cylinders.  The first file
     (which contains cylinders 0-2518 in the case of a 3390) usually
     has _1 as the last two characters of its name.  The ckddasd driver
@@ -699,11 +727,30 @@ The format of the device record is:
     specify only the first file name (the file with suffix _1) in the
     configuration statement!</em>
     <p>
+    If your operating system supports <i>large file sizes</i> or
+    <i>64 bit offsets</i> then volumes larger than 2G can be kept
+    in a single file.
+    <p>
     Alternatively, the argument may specify the name of a file containing
     a compressed CKD DASD image.  The CKD driver will automatically detect
     whether the file contains a regular CKD image or a compressed CKD
     image.  Refer to the <a href="cckddasd.html">CCKD</a> page for details
-    of how to create and use compressed CKD DASD images.
+    on how to create and use compressed CKD DASD images.
+    <p>
+    If you specify an INET address the format is:
+    <p>
+    <dl>
+    <dt><code><em>ip-name-or-addr:port:devnum</em></code>
+    <dd><i>ip-name-or-addr</i> specifies the internet name or address
+        where the Hercules shared device server is running.
+    <p>
+    <dd><i>port</i> specifies the port number the shared device server
+        is listening on.  If omitted, the default is 3990.
+    <p>
+    <dd><i>devnum</i> specifies the device number on the shared
+        device server.  If omitted, the default is the current device number.
+    </dl>
+<p>
 <a name="comline">
     <dt><em>Communication Adapter</em>
     <dd>
