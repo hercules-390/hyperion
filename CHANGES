@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+28 Nov 2003 Flush Buffer On lost data condition in 2703 handler - Ivan Warren
 27 Nov 2003 CTCI/LCS: fix enqueue full frame buffer loop; enable thread
             joining at LCS close - Fish
 26 Nov 2003 Performance enhancements for CLM/ICM/STCM and XC - Greg Smith

@@ -75,7 +75,8 @@ typedef struct _COMMADPT
         badpoll:1,              /* Bad poll data (>7 Bytes before ENQ)      */
         callissued:1,           /* The connect out for the DIAL/ENABLE      */
                                 /* has already been issued                  */
-        readcomp:1;             /* Data in the read buffer completes a read */
+        readcomp:1,             /* Data in the read buffer completes a read */
+        datalostcond:1;         /* Data Lost Condition Raised               */
 } COMMADPT;
 
 enum {

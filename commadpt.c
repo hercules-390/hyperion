@@ -1934,6 +1934,14 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                         break;
                     }
                 }
+                if(dev->commadpt->datalostcond)
+                {
+                        dev->commadpt->datalostcond=0;
+                        commadpt_read_flush(&dev->commadpt->inbfr);
+                        *residual=count;
+                        *unitstat=CSW_CE|CSW_DE;
+                        break;
+                }
                 dev->commadpt->readcomp=0;
                 *unitstat=0;
                 num=0;
@@ -2234,6 +2242,7 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 /* Set UX on write if line has pending inbound data */
                 if(dev->commadpt->inbfr.havedata)
                 {
+                    dev->commadpt->datalostcond=1;
                     *unitstat=CSW_CE|CSW_DE|CSW_UX;
                     break;
                 }
