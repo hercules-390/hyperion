@@ -20,6 +20,29 @@
 
 #include "devtype.h"
 
+#ifdef CKDTRACE
+#undef DEVTRACE
+#define DEVTRACE(format, a...) \
+do { \
+ if (dev->ccwtrace||dev->ccwstep) \
+ { \
+  int n; \
+  if (!dev->ckdtrace) dev->ckdtrace = calloc (128, CKDTRACE); \
+  if (dev->ckdtracex >= 128 * CKDTRACE) \
+  { \
+   n = 0; \
+   dev->ckdtracex = 128; \
+  } \
+  else \
+  { \
+    n = dev->ckdtracex; \
+    dev->ckdtracex += 128; \
+  } \
+  sprintf(&dev->ckdtrace[n], "%4.4X:" format, dev->devnum, a); \
+ } \
+} while (0)
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
 /*-------------------------------------------------------------------*/

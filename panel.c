@@ -2544,6 +2544,29 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     /* k command - print out cckd internal trace */
     if (strcmp(cmd, "k") == 0)
     {
+#ifdef CKDTRACE
+        if (sscanf(cmd+1, "%hx%c", &devnum, &c) == 1)
+        {
+            int           start, i;
+
+            dev = find_device_by_devnum (devnum);
+            if (dev == NULL || !dev->cckd_ext)
+            {
+                logmsg ("Doh !!\n");
+                return NULL;
+            }
+            i = start = dev->ckdtracex;
+            do
+            {
+                if (i >= 128*CKDTRACE) i = 0;
+                if (dev->ckdtrace[i] != '\0')
+                    fprintf(dev->msgpipew, "%s", &dev->ckdtrace[i]);
+                i+=128;
+            } while (i != start);
+            fflush (dev->msgpipew);
+            sleep (2);
+        } else
+#endif
         cckd_print_itrace ();
         return NULL;
     }

@@ -734,7 +734,7 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
         goto cdsk_return;
     }
     if (memcmp(devhdr.devid, "CKD_S370", 8) == 0
-     || memcmp(devhdr.devid, "CKD_S370", 8) == 0)
+     || memcmp(devhdr.devid, "FBA_S370", 8) == 0)
         shadow = 1;
 
 /*-------------------------------------------------------------------*/

@@ -1138,6 +1138,10 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for ckddasd                      */
 
+#ifdef CKDTRACE
+        BYTE   *ckdtrace;               /* Trace table               */
+        int     ckdtracex;              /* Trace table index         */
+#endif
         CKDRT  *ckdrdtrk;               /* -> Read track routine     */
         CKDUT  *ckdupdtrk;              /* -> Update track routine   */
         int     ckdnumfd;               /* Number of CKD image files */
