@@ -9,7 +9,7 @@ LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@
 
 LDADD += $(LIBGCRYPT_LIBS)
 
-CFLAGS += $(LIBGCRYPT_CFLAGS)
+AM_CFLAGS = $(LIBGCRYPT_CFLAGS)
 
 dyncrypt_SRC     = dyncrypt.c \
                    sha1.c
