@@ -915,7 +915,7 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
     fpr[0] = r0;
     fpr[1] = r1;
     return cc;
-}
+} /* end function cnvt_bfp_to_hfp */
 #define _CBH_FUNC
 #endif /*!defined(_CBH_FUNC)*/
 
@@ -2795,7 +2795,7 @@ DEF_INST(load_and_test_bfp_short_reg)
 }
 
 /*
- * B357 FIEBR - LOAD FP INTEGER (extended BFP)                 [RRF]
+ * B357 FIEBR - LOAD FP INTEGER (short BFP)                    [RRF]
  */
 DEF_INST(load_fp_int_short_reg)
 {
@@ -2823,10 +2823,9 @@ DEF_INST(load_fp_int_short_reg)
     case FP_INFINITE:
         break;
     default:
-
         FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(&op);
-            op.v = rint(op.v);
+        op.v = rint(op.v);
 
         if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
@@ -2834,7 +2833,7 @@ DEF_INST(load_fp_int_short_reg)
             ieee_exception(FE_INVALID, regs);
         }
 
-            sbfpston(&op);
+        sbfpston(&op);
 
         raised = fetestexcept(FE_ALL_EXCEPT);
 
@@ -2879,10 +2878,9 @@ DEF_INST(load_fp_int_long_reg)
     case FP_INFINITE:
         break;
     default:
-
         FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(&op);
-            op.v = rint(op.v);
+        op.v = rint(op.v);
 
         if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
@@ -2890,7 +2888,7 @@ DEF_INST(load_fp_int_long_reg)
             ieee_exception(FE_INVALID, regs);
         }
 
-            lbfpston(&op);
+        lbfpston(&op);
 
         raised = fetestexcept(FE_ALL_EXCEPT);
 
@@ -2936,10 +2934,9 @@ DEF_INST(load_fp_int_ext_reg)
     case FP_INFINITE:
         break;
     default:
-
         FECLEAREXCEPT(FE_ALL_EXCEPT);
         ebfpston(&op);
-            op.v = rint(op.v);
+        op.v = rint(op.v);
 
         if (regs->fpc & FPC_MASK_IMX) {
             ieee_exception(FE_INEXACT, regs);
@@ -2947,7 +2944,7 @@ DEF_INST(load_fp_int_ext_reg)
             ieee_exception(FE_INVALID, regs);
         }
 
-            ebfpston(&op);
+        ebfpston(&op);
 
         raised = fetestexcept(FE_ALL_EXCEPT);
 
