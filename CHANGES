@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+06 Dec 2004 Keep crx in sync with INST_SPACE - Jan Jaeger
 04 Dec 2004 Make chkdsk faster if disk is readonly - Greg Smith
 03 Dec 2004 Optimize clearing memory - Greg Smith
 02 Dec 2004 Fix ref & change recording in relation to SSKE/RRBE - Jan Jaeger
