@@ -3845,6 +3845,8 @@ BYTE            buf[65536];             /* Buffer                    */
     } /* if merge */
 
     /* Remove the old file */
+//FIXME: unlink doesn't free space ??
+    if (!cckdblk.ftruncwa) ftruncate(cckd->fd[sfx[0]], 0);
     close (cckd->fd[sfx[0]]);
     free (cckd->l1[sfx[0]]);
     cckd->l1[sfx[0]] = NULL;
