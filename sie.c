@@ -620,18 +620,15 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->inst);
 #endif /*defined(SIE_DEBUG)*/
 
-#if defined(OPTION_CPU_UNROLL)
-                regs->instcount += 8;
-#else
                 regs->instcount++;
-#endif
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
 #if defined(OPTION_CPU_UNROLL)
 #ifdef FEATURE_PER
-                if (!IS_IC_PER(regs))
+                if (!PER_MODE(GUESTREGS))
 #endif
                 {
+                    regs->instcount += 7;
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
