@@ -5211,6 +5211,174 @@ U16     svalue, dvalue, tvalue;
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 
 
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+/*-------------------------------------------------------------------*/
+/* EB8E MVCLU - Move Long Unicode                              [RSE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(move_long_unicode)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     i;                              /* Loop counter              */
+int     cc;                             /* Condition code            */
+VADR    addr1, addr2;                   /* Operand addresses         */
+GREG    len1, len2;                     /* Operand lengths           */
+U16     odbyte;                         /* Operand double byte       */
+U16     pad;                            /* Padding double byte       */
+int     cpu_length;                     /* cpu determined length     */
+
+    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    ODD2_CHECK(r1, r3, regs);
+
+    /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
+    len1 = GR_A(r1+1, regs);
+    len2 = GR_A(r3+1, regs);
+
+    ODD2_CHECK(len1, len2, regs);
+
+    /* Load padding doublebyte from bits 48-63 of effective address */
+    pad = effective_addr2 & 0xFFFF;
+
+    /* Determine the destination and source addresses */
+    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r3) & ADDRESS_MAXWRAP(regs);
+
+    /* set cpu_length as shortest distance to new page */
+    if ((addr1 & 0xFFF) > (addr2 & 0xFFF))
+        cpu_length = 0x1000 - (addr1 & 0xFFF);
+    else
+        cpu_length = 0x1000 - (addr2 & 0xFFF);
+
+    /* Set the condition code according to the lengths */
+    cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
+
+    /* Process operands from left to right */
+    for (i = 0; len1 > 0; i++)
+    {
+        /* If cpu determined length has been moved, exit with cc=3 */
+        if (i >= cpu_length)
+        {
+            cc = 3;
+            break;
+        }
+
+        /* Fetch byte from source operand, or use padding double byte */
+        if (len2 > 0)
+        {
+            odbyte = ARCH_DEP(vfetch2) ( addr2, r3, regs );
+            addr2 += 2;
+            addr2 &= ADDRESS_MAXWRAP(regs);
+            len2 -= 2;
+        }
+        else
+            odbyte = pad;
+
+        /* Store the double byte in the destination operand */
+        ARCH_DEP(vstore2) ( odbyte, addr1, r1, regs );
+        addr1 +=2;
+        addr1 &= ADDRESS_MAXWRAP(regs);
+        len1 -= 2;
+
+        /* Update the registers */
+        GR_A(r1, regs) = addr1;
+        GR_A(r1+1, regs) = len1;
+        GR_A(r3, regs) = addr2;
+        GR_A(r3+1, regs) = len2;
+
+    } /* end for(i) */
+
+    regs->psw.cc = cc;
+
+}
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
+
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+/*-------------------------------------------------------------------*/
+/* EB8F CLCLU - Compare Logical Long Unicode                   [RSE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_long_unicode)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     i;                              /* Loop counter              */
+int     cc = 0;                         /* Condition code            */
+VADR    addr1, addr2;                   /* Operand addresses         */
+GREG    len1, len2;                     /* Operand lengths           */
+U16     dbyte1, dbyte2;                 /* Operand double bytes      */
+U16     pad;                            /* Padding double byte       */
+
+    RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    ODD2_CHECK(r1, r3, regs);
+
+    /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
+    len1 = GR_A(r1+1, regs);
+    len2 = GR_A(r3+1, regs);
+
+    ODD2_CHECK(len1, len2, regs);
+
+    /* Load padding doublebyte from bits 24-31 of effective address */
+    pad = effective_addr2 & 0xFFFF;
+
+    /* Determine the destination and source addresses */
+    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r3) & ADDRESS_MAXWRAP(regs);
+
+    /* Process operands from left to right */
+    for (i = 0; len1 > 0 || len2 > 0 ; i++)
+    {
+        /* If 4096 bytes have been compared, exit with cc=3 */
+        if (i >= 4096)
+        {
+            cc = 3;
+            break;
+        }
+
+        /* Fetch a byte from each operand, or use padding double byte */
+        dbyte1 = (len1 > 0) ? ARCH_DEP(vfetch2) (addr1, r1, regs) : pad;
+        dbyte2 = (len2 > 0) ? ARCH_DEP(vfetch2) (addr2, r3, regs) : pad;
+
+        /* Compare operand bytes, set condition code if unequal */
+        if (dbyte1 != dbyte2)
+        {
+            cc = (dbyte1 < dbyte2) ? 1 : 2;
+            break;
+        } /* end if */
+
+        /* Update the first operand address and length */
+        if (len1 > 0)
+        {
+            addr1 += 2;
+            addr1 &= ADDRESS_MAXWRAP(regs);
+            len1 -= 2;
+        }
+
+        /* Update the second operand address and length */
+        if (len2 > 0)
+        {
+            addr2 +=2;
+            addr2 &= ADDRESS_MAXWRAP(regs);
+            len2 -= 2;
+        }
+
+    } /* end for(i) */
+
+    /* Update the registers */
+    GR_A(r1, regs) = addr1;
+    GR_A(r1+1, regs) = len1;
+    GR_A(r3, regs) = addr2;
+    GR_A(r3+1, regs) = len2;
+
+    regs->psw.cc = cc;
+
+}
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE2)

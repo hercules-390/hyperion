@@ -2055,6 +2055,8 @@ DEF_INST(translate_two_to_two);
 DEF_INST(translate_two_to_one);
 DEF_INST(translate_one_to_two);
 DEF_INST(translate_one_to_one);
+DEF_INST(move_long_unicode);
+DEF_INST(compare_logical_long_unicode);
 
 
 /* Instructions in ieee.c */
