@@ -671,13 +671,18 @@ int             i,o;                    /* Indexes                   */
 int             active;                 /* 1=Synchronous I/O active  */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
+    /* Calculate the track number */
+    trk = cyl * dev->ckdheads + head;
+
+    DEVTRACE ("ckddasd: read trk %d cur trk %d\n", trk, dev->dasdcur);
+
+    /* Return if reading the same track image */
+    if (trk >= 0 && trk == dev->dasdcur && dev->buf) return 0;
+
     /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
     active = dev->syncio_active;
     if (dev->ckdtrkof || (cyl <= 0 && head <= 0))
         dev->syncio_active = 0;
-
-    DEVTRACE ("ckddasd: read trk %d cur trk %d\n",
-              cyl * dev->ckdheads + head, dev->dasdcur);
 
     /* Write the previous track image if modified */
     if (dev->bufupd)
@@ -728,15 +733,9 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     /* Return on special case when called by the close handler */
     if (cyl < 0 && head < 0) return 0;
 
-    /* Calculate the track number */
-    trk = cyl * dev->ckdheads + head;
-
     /* Reset buffer offsets */
     dev->bufoff = 0;
     dev->bufoffhi = dev->ckdtrksz;
-
-    /* Return if reading the same track image */
-    if (trk == dev->dasdcur && dev->buf) return 0;
 
     /* Command reject if seek position is outside volume */
     if (cyl >= dev->ckdcyls || head >= dev->ckdheads)
@@ -1191,7 +1190,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         else if (dev->ckdorient == CKDORIENT_KEY)
             dev->bufoff += dev->ckdcurdl;
 
-        /* Make sure we do copy past the end of the buffer */
+        /* Make sure we don't copy past the end of the buffer */
         if (dev->bufoff + CKDDASD_RECHDR_SIZE >= dev->bufoffhi)
         {
             /* Handle error condition */

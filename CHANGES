@@ -1,3 +1,5 @@
+18 Jun 2002 FBA dasdtab updates - Tomas Masek by Greg Smith
+18 Jun 2002 Fix NRF condition for CKD dasd - Greg Smith
 17 Jun 2002 Fix segmentation fault during cckd compress - Greg Smith
 15 Jun 2002 configure.ac: Cygwin stack bug workaround - Matt and Fish
 15 Jun 2002 cfba chkdsk fix - Greg Smith
