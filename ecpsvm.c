@@ -55,6 +55,8 @@
 
 #include "ecpsvm.h"
 
+#ifdef FEATURE_ECPSVM
+
 static ECPSVM_CMDENT ecpsvm_cmdtab[];
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
@@ -329,7 +331,6 @@ VADR    effective_addr1, \
     (_x)=(_y); \
 }
 
-#ifdef FEATURE_ECPSVM
 
 int ecpsvm_do_fretx(REGS *regs,VADR block,U16 numdw,VADR maxsztbl,VADR fretl);
 
@@ -2927,43 +2928,25 @@ void ecpsvm_command(int ac,char **av)
     ce->fun(ac-1,av+1);
     logmsg(_("HHCEV011I ECPS:VM Command processor complete\n"));
 }
-/* NOTE : THE FOLLOWING 2 ROUTINES ARE ONLY DEFINED TO ELEVIATE A COMPILER WARNING */
-/*        DO NOT INVOKE THEM. IF IT IS NECESSARY TO PERFORM S/390 OR z/Arch DAT    */
-/*        THEN IT WILL BE NECESSARY TO PERFORM ARCH_DEP AUTO INCLUSION             */
-/*        AND THE NECESSARY ROUTINES WILL BE AUTOMATICALLY DEFINED                 */
-
-static int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
-               int acctype, RADR *raddr, U16 *xcode, int *priv,
-               int *prot, int *pstid)
-{
-    abort();
-    UNREFERENCED(vaddr);
-    UNREFERENCED(arn);
-    UNREFERENCED(regs);
-    UNREFERENCED(acctype);
-    UNREFERENCED(raddr);
-    UNREFERENCED(xcode);
-    UNREFERENCED(priv);
-    UNREFERENCED(prot);
-    UNREFERENCED(pstid);
-    return(0);
-}
-static int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
-               int acctype, RADR *raddr, U16 *xcode, int *priv,
-               int *prot, int *pstid)
-{
-    abort();
-    UNREFERENCED(vaddr);
-    UNREFERENCED(arn);
-    UNREFERENCED(regs);
-    UNREFERENCED(acctype);
-    UNREFERENCED(raddr);
-    UNREFERENCED(xcode);
-    UNREFERENCED(priv);
-    UNREFERENCED(prot);
-    UNREFERENCED(pstid);
-    return(0);
-}
-
 
 #endif /* ifdef FEATURE_ECPSVM */
+
+/* Note : The following forces inclusion for S/390 & z/ARCH */
+/*        This is necessary just in order to properly define */
+/*        S/390 auxialiary routines invoked by S/370 routines */
+/*        because of SIE                                     */
+
+#if !defined(_GEN_ARCH)
+
+#if defined(_ARCHMODE2)
+ #define  _GEN_ARCH _ARCHMODE2
+ #include "ecpsvm.c"
+#endif
+
+#if defined(_ARCHMODE3)
+ #undef   _GEN_ARCH
+ #define  _GEN_ARCH _ARCHMODE3
+ #include "ecpsvm.c"
+#endif
+
+#endif /*!defined(_GEN_ARCH)*/
