@@ -70,14 +70,6 @@ static const char *build_info[] = {
     "Windows CTCI-W32 support",
 #endif
 
-#if defined(GNU_MTIO_SUPPORT)
-	"Using GNU tape handling",
-#elif defined(HAVE_MTIO_H)
-	"Using generic Unix tape handling",
-#else 
-	"No SCSI tape support",
-#endif
-
 #if defined(NOTHREAD)
     "No threading support",
 #else
@@ -121,19 +113,19 @@ void display_version (FILE *f, char *prog)
 {
     unsigned int i;
 
-	/* Log version */
+        /* Log version */
 
     fprintf (f, "%sVersion %s\n", prog, VERSION);
 
-	/* Log Copyright */
+        /* Log Copyright */
 
     fprintf(f, "%s\n", HERCULES_COPYRIGHT);
 
-	/* Log build date/time */
+        /* Log build date/time */
 
     fprintf (f, "Built on %s at %s\n", __DATE__, __TIME__);
 
-	/* Log "unusual" build options */
+        /* Log "unusual" build options */
 
     fprintf (f, "Build information:\n");
 
