@@ -4046,20 +4046,21 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 if (memcmp (&rechdr, cchhr, 5) == 0)
                     break;
 
+// NOTE: Code like this breaks VM mini-disks !!!
+#if 0
                 if (memcmp (&rechdr, cchhr, 4) != 0)
                 {
     	            logmsg ("HHCDA999E wrong recordheader: cc hh r=%d %d %d,"
 		                    "should be:cc hh r=%d %d %d\n",
-                    (rechdr.cyl[0] << 8) | rechdr.cyl[1],
-                    (rechdr.head[0] << 8) | rechdr.head[1],
-                    (rechdr.head[0] << 8) | rechdr.head[1],
-                    rechdr.rec,
-                    (cchhr[0] << 8) | cchhr[1],
-                    (cchhr[2] << 8) | cchhr[3],
-                    cchhr[4]);
+                            (rechdr.cyl[0] << 8) | rechdr.cyl[1],
+                            (rechdr.head[0] << 8) | rechdr.head[1],
+                            rechdr.rec,
+                            (cchhr[0] << 8) | cchhr[1],
+                            (cchhr[2] << 8) | cchhr[3],
+                            cchhr[4]);
                     break;
                 }
-
+#endif
             } /* end while */
 
         } /* end switch(CKDOPER_ORIENTATION) */
