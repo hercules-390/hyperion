@@ -204,10 +204,14 @@ if USE_DLLTOOL
 else
   HERCULES_A       =
   HERCULES_EXP     =
+  hercules_LDADD   = $(LDADD)
   hercules_LDFLAGS = -rdynamic
+endif
+else
+# This needs to be present whether or not dynamic loading is enabled.
   hercules_LDADD   = $(LDADD)
 endif
-endif
+
 
 hercules_SOURCES = version.c   \
                    hostinfo.c  \
