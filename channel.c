@@ -1219,9 +1219,6 @@ void adjust_thread_priority(int *newprio)
 
     /* Back to user mode */
     SETMODE(USER);
-
-    /* Save new priority for next time */
-    *oldprio = *newprio;
 }
 
 /*-------------------------------------------------------------------*/
