@@ -5,6 +5,7 @@
  * Copyright (c) 2001-2004 Willem Konynenberg <wfk@xos.nl>
  * TCEB, TCDB and TCXB contributed by Per Jessen, 20 September 2001.
  * THDER,THDR by Roger Bowler, 19 July 2003.
+ * LXDBR,LXDB,LXEBR,LXEB by Roger Bowler, 13 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -741,6 +742,78 @@ static void put_sbfp(struct sbfp *op, U32 *fpr)
 {
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<23) | op->fract;
     //logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
+}
+ 
+/*
+ * Convert binary float to longer format
+ */
+static void lengthen_short_to_long(struct sbfp *op2, struct lbfp *op1, REGS *regs)
+{
+    switch (sbfpclassify(op2)) {
+    case FP_ZERO:
+        lbfpzero(op1, op2->sign);
+        break;
+    case FP_NAN:
+        if (sbfpissnan(op2)) {
+            ieee_exception(FE_INVALID, regs);
+            lbfpstoqnan(op1);
+        }
+        break;
+    case FP_INFINITE:
+        lbfpinfinity(op1, op2->sign);
+        break;
+    default:
+        sbfpston(op2);
+        op1->v = (double)op2->v;
+        lbfpntos(op1);
+        break;
+    }
+}
+
+static void lengthen_long_to_ext(struct lbfp *op2, struct ebfp *op1, REGS *regs)
+{
+    switch (lbfpclassify(op2)) {
+    case FP_ZERO:
+        ebfpzero(op1, op2->sign);
+        break;
+    case FP_NAN:
+        if (lbfpissnan(op2)) {
+            ieee_exception(FE_INVALID, regs);
+            ebfpstoqnan(op1);
+        }
+        break;
+    case FP_INFINITE:
+        ebfpinfinity(op1, op2->sign);
+        break;
+    default:
+        lbfpston(op2);
+        op1->v = (long double)op2->v;
+        ebfpntos(op1);
+        break;
+    }
+}
+
+static void lengthen_short_to_ext(struct sbfp *op2, struct ebfp *op1, REGS *regs)
+{
+    switch (sbfpclassify(op2)) {
+    case FP_ZERO:
+        ebfpzero(op1, op2->sign);
+        break;
+    case FP_NAN:
+        if (sbfpissnan(op2)) {
+            ieee_exception(FE_INVALID, regs);
+            ebfpstoqnan(op1);
+        }
+        break;
+    case FP_INFINITE:
+        ebfpinfinity(op1, op2->sign);
+        break;
+    default:
+        sbfpston(op2);
+        op1->v = (long double)op2->v;
+        ebfpntos(op1);
+        break;
+    }
 }
 #define _IEEE_C
 #endif  /* !defined(_IEEE_C) */
@@ -2725,10 +2798,7 @@ DEF_INST(load_fp_int_ext_reg)
 
 /*
  * B29D LFPC  - LOAD FPC                                         [S]
- * B305 LXDBR - LOAD LENGTHENED (long to extended BFP)         [RRE]
- * ED05 LXDB  - LOAD LENGTHENED (long to extended BFP)         [RXE]
- * B306 LXEBR - LOAD LENGTHENED (short to extended BFP)        [RRE]
- * ED06 LXEB  - LOAD LENGTHENED (short to extended BFP)        [RXE]
+ * This instruction is in module esame.c
  */
 
 /*
@@ -2746,25 +2816,7 @@ DEF_INST(loadlength_bfp_short_to_long_reg)
 
     get_sbfp(&op2, regs->fpr + FPR2I(r2));
 
-    switch (sbfpclassify(&op2)) {
-    case FP_ZERO:
-        lbfpzero(&op1, op2.sign);
-        break;
-    case FP_NAN:
-        if (sbfpissnan(&op2)) {
-            ieee_exception(FE_INVALID, regs);
-            lbfpstoqnan(&op1);
-        }
-        break;
-    case FP_INFINITE:
-        lbfpinfinity(&op1, op2.sign);
-        break;
-    default:
-        sbfpston(&op2);
-        op1.v = (double)op2.v;
-        lbfpntos(&op1);
-        break;
-    }
+    lengthen_short_to_long(&op2, &op1, regs);
 
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
 }
@@ -2785,27 +2837,95 @@ DEF_INST(loadlength_bfp_short_to_long)
 
     vfetch_sbfp(&op2, effective_addr2, b2, regs);
 
-    switch (sbfpclassify(&op2)) {
-    case FP_ZERO:
-        lbfpzero(&op1, op2.sign);
-        break;
-    case FP_NAN:
-        if (sbfpissnan(&op2)) {
-            ieee_exception(FE_INVALID, regs);
-            lbfpstoqnan(&op1);
-        }
-        break;
-    case FP_INFINITE:
-        lbfpinfinity(&op1, op2.sign);
-        break;
-    default:
-        sbfpston(&op2);
-        op1.v = (double)op2.v;
-        lbfpntos(&op1);
-        break;
-    }
+    lengthen_short_to_long(&op2, &op1, regs);
 
     put_lbfp(&op1, regs->fpr + FPR2I(r1));
+}
+
+/*
+ * B305 LXDBR - LOAD LENGTHENED (long to extended BFP)         [RRE]
+ */
+DEF_INST(loadlength_bfp_long_to_ext_reg)
+{
+    int r1, r2;
+    struct ebfp op1;
+    struct lbfp op2;
+
+    RRE(inst, regs, r1, r2);
+    //logmsg("LXDBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+
+    lengthen_long_to_ext(&op2, &op1, regs);
+
+    put_ebfp(&op1, regs->fpr + FPR2I(r1));
+}
+
+/*
+ * ED05 LXDB  - LOAD LENGTHENED (long to extended BFP)         [RXE]
+ */
+DEF_INST(loadlength_bfp_long_to_ext)
+{
+    int r1, b2;
+    VADR effective_addr2;
+    struct ebfp op1;
+    struct lbfp op2;
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    //logmsg("LXEB r1=%d b2=%d\n", r1, b2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
+
+    vfetch_lbfp(&op2, effective_addr2, b2, regs);
+
+    lengthen_long_to_ext(&op2, &op1, regs);
+
+    put_ebfp(&op1, regs->fpr + FPR2I(r1));
+}
+
+/*
+ * B306 LXEBR - LOAD LENGTHENED (short to extended BFP)        [RRE]
+ */
+DEF_INST(loadlength_bfp_short_to_ext_reg)
+{
+    int r1, r2;
+    struct ebfp op1;
+    struct sbfp op2;
+
+    RRE(inst, regs, r1, r2);
+    //logmsg("LXEBR r1=%d r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
+    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+
+    lengthen_short_to_ext(&op2, &op1, regs);
+
+    put_ebfp(&op1, regs->fpr + FPR2I(r1));
+}
+
+/*
+ * ED06 LXEB  - LOAD LENGTHENED (short to extended BFP)        [RXE]
+ */
+DEF_INST(loadlength_bfp_short_to_ext)
+{
+    int r1, b2;
+    VADR effective_addr2;
+    struct ebfp op1;
+    struct sbfp op2;
+
+    RXE(inst, regs, r1, b2, effective_addr2);
+    //logmsg("LXEB r1=%d b2=%d\n", r1, b2);
+    BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
+
+    vfetch_sbfp(&op2, effective_addr2, b2, regs);
+
+    lengthen_short_to_ext(&op2, &op1, regs);
+
+    put_ebfp(&op1, regs->fpr + FPR2I(r1));
 }
 
 /*
@@ -3511,8 +3631,16 @@ DEF_INST(multiply_bfp_short)
  * ED1F MSDB  - MULTIPLY AND SUBTRACT (long BFP)               [RXF]
  * B30F MSEBR - MULTIPLY AND SUBTRACT (short BFP)              [RRF]
  * ED0F MSEB  - MULTIPLY AND SUBTRACT (short BFP)              [RXF]
+ */
+
+/*
  * B384 SFPC  - SET FPC                                        [RRE]
+ * This instruction is in module esame.c
+ */
+  
+/*
  * B299 SRNM  - SET ROUNDING MODE                                [S]
+ * This instruction is in module esame.c
  */
 
 /*
@@ -3727,6 +3855,7 @@ DEF_INST(squareroot_bfp_short)
 
 /*
  * B29C STFPC - STORE FPC                                        [S]
+ * This instruction is in module esame.c
  */
 
 /*

@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+13 Nov 2004 LXEB,LXEBR,LXDB,LXDBR instructions - Roger Bowler
 01 Nov 2004 Simplify ALRF integration in LASP (Suggested by RB) - Ivan Warren
 15 Oct 2004 Apply CKD Shadow file update to FBA devices - Ivan Warren
 14 Oct 2004 Resolved pointers to signed/unsigned types issues

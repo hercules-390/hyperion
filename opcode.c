@@ -427,6 +427,10 @@
  UNDEF_INST(load_positive_bfp_short_reg)
  UNDEF_INST(loadlength_bfp_short_to_long)
  UNDEF_INST(loadlength_bfp_short_to_long_reg)
+ UNDEF_INST(loadlength_bfp_long_to_ext)
+ UNDEF_INST(loadlength_bfp_long_to_ext_reg)
+ UNDEF_INST(loadlength_bfp_short_to_ext)
+ UNDEF_INST(loadlength_bfp_short_to_ext_reg)
  UNDEF_INST(multiply_bfp_ext_reg)
  UNDEF_INST(multiply_bfp_long)
  UNDEF_INST(multiply_bfp_long_reg)
@@ -2416,8 +2420,8 @@ zz_func opcode_b3xx[256][GEN_MAXARCH] = {
  /*B302*/ GENx___x390x900 (load_and_test_bfp_short_reg,RRE,"LTEBR"),
  /*B303*/ GENx___x390x900 (load_complement_bfp_short_reg,RRE,"LCEBR"),
  /*B304*/ GENx___x390x900 (loadlength_bfp_short_to_long_reg,RRE,"LDEBR"),
- /*B305*/ GENx___x390x900 (dummy_instruction,RRE,"LXDBR"),
- /*B306*/ GENx___x390x900 (dummy_instruction,RRE,"LXEBR"),
+ /*B305*/ GENx___x390x900 (loadlength_bfp_long_to_ext_reg,RRE,"LXDBR"),
+ /*B306*/ GENx___x390x900 (loadlength_bfp_short_to_ext_reg,RRE,"LXEBR"),
  /*B307*/ GENx___x390x900 (dummy_instruction,RRE,"MXDBR"),
  /*B308*/ GENx___x390x900 (compare_and_signal_bfp_short_reg,RRE,"KEBR"),
  /*B309*/ GENx___x390x900 (compare_bfp_short_reg,RRE,"CEBR"),
@@ -4267,8 +4271,8 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED02*/ GENx___x___x___ ,
  /*ED03*/ GENx___x___x___ ,
  /*ED04*/ GENx___x390x900 (loadlength_bfp_short_to_long,RXE,"LDEB"),
- /*ED05*/ GENx___x390x900 (dummy_instruction,RXE,"LXDB"),
- /*ED06*/ GENx___x390x900 (dummy_instruction,RXE,"LXEB"),
+ /*ED05*/ GENx___x390x900 (loadlength_bfp_long_to_ext,RXE,"LXDB"),
+ /*ED06*/ GENx___x390x900 (loadlength_bfp_short_to_ext,RXE,"LXEB"),
  /*ED07*/ GENx___x390x900 (dummy_instruction,RXE,"MXDB"),
  /*ED08*/ GENx___x390x900 (compare_and_signal_bfp_short,RXE,"KEB"),
  /*ED09*/ GENx___x390x900 (compare_bfp_short,RXE,"CEB"),
