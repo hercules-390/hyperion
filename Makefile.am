@@ -96,7 +96,7 @@ dyndev_SRC         = commadpt.c \
                      hchan.c  \
                      tuntap.c   \
                      qeth.c \
-		     con1052c.c
+                     con1052c.c
 
 
 # -module         : create a dlopen'able module
@@ -172,7 +172,7 @@ endif
              hdt2880.la \
              hdt3525.la \
              hdtqeth.la \
-	     hdt1052c.la
+             hdt1052c.la
 
 if OPTION_DYNAMIC_LOAD
   modexec_LTLIBRARIES = $(HERCMODS)
@@ -430,16 +430,17 @@ else
              dyninst.la  \
              hdteq.la    \
              hdt1403.la  \
+             hdt3420.la  \
              hdt2703.la  \
              hdt3088.la  \
              hdt3270.la  \
              hdt3505.la  \
+             hdt3525.la  \
+             hdtqeth.la  \
+             hdt1052c.la \
              libherc.la  \
              libherct.la \
-             libhercd.la \
-             hdt3525.la  \
-             hdtqeth.la \
-	     hdt1052c.la
+             libhercd.la
 endif
 
 else
