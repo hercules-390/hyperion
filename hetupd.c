@@ -16,7 +16,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <getopt.h>
 
 #include "hetlib.h"
 #include "sllib.h"

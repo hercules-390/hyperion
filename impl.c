@@ -10,7 +10,7 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include <getopt.h>
+#include <unistd.h>
 
 /*-------------------------------------------------------------------*/
 /* Signal handler for SIGHUP signal                                  */

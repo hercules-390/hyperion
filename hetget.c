@@ -13,7 +13,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include "hetlib.h"
 #include "sllib.h"
 #include "hercules.h"

@@ -14,7 +14,6 @@
 #include "hercules.h"
 #include <fcntl.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <time.h>
 /*
 || Local constant data
