@@ -76,7 +76,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
     pLCSBLK = malloc( sizeof( LCSBLK ) );
     if( !pLCSBLK )
     {
-        logmsg( _("LCS001E %4.4X unable to allocate LCSBLK\n"),
+        logmsg( _("HHCLC001E %4.4X unable to allocate LCSBLK\n"),
                 pDEVBLK->devnum );
         return -1;
     }
@@ -647,7 +647,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        logmsg( _("LCS900I %4.4X: Halt or Clear Recognized\n"),
+                        logmsg( _("HHCLC002I %4.4X: Halt or Clear Recognized\n"),
                                 pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
@@ -690,7 +690,7 @@ void  LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
         // Trace the IP packet before sending to TAP device
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
         {
-            logmsg( _("LCS901I %4.4X: LCS Read Buffer:\n"),
+            logmsg( _("HHCLC003I %4.4X: LCS Read Buffer:\n"),
                     pDEVBLK->devnum );
             packet_trace( pLCSDEV->bFrameBuffer, iLength );
         }
@@ -794,7 +794,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             // Trace the IP packet before sending to TAP device
             if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
             {
-                logmsg( _("LCS902I %4.4X: Sending packet to %s:\n"),
+                logmsg( _("HHCLC004I %4.4X: Sending packet to %s:\n"),
                         pDEVBLK->devnum, pDEVBLK->filename );
                 packet_trace( pEthFrame->bData, iLength );
             }
@@ -803,7 +803,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
             if( TUNTAP_Write( pDEVBLK->fd,
                               pEthFrame->bData, iLength ) != iLength )
             {
-                logmsg( _("LCS100W %4.4X: Error writing to %s: %s\n"),
+                logmsg( _("HHCLC005E %4.4X: Error writing to %s: %s\n"),
                         pDEVBLK->devnum, pDEVBLK->filename,
                         strerror( errno ) );
 
@@ -822,7 +822,7 @@ void  LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
     if( pLCSDEV->fReplyPending )
     {
         if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-            logmsg( _("LCS903I %4.4X Triggering Event.\n"),
+            logmsg( _("HHCLC006I %4.4X Triggering Event.\n"),
                     pDEVBLK->devnum );
 
         obtain_lock( &pLCSDEV->EventLock );
@@ -1112,7 +1112,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     if( fd == -1 )
     {
-        logmsg( _("LCS020E Error in call to socket: %s.\n"),
+        logmsg( _("HHCLC007E Error in call to socket: %s.\n"),
                 strerror( errno ) );
         return;
     }
@@ -1123,7 +1123,7 @@ static void  LCS_LanStats( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
     if( TUNTAP_IOCtl( fd, SIOCGIFHWADDR, (char*)&ifr ) != 0  )
     {
-        logmsg( _("LCS101W ioctl error on device %s: %s.\n"),
+        logmsg( _("HHCLC008E ioctl error on device %s: %s.\n"),
                 pPort->szNetDevName, strerror( errno ) );
 
         return;
@@ -1195,7 +1195,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
         if( pPort->pLCSBLK->fDebug )
         {
             // Trace the frame
-            logmsg( _("LCS904I Port %2.2X: Read Buffer:\n"),
+            logmsg( _("HHCLC009I Port %2.2X: Read Buffer:\n"),
                     pPort->bPort );
             packet_trace( szBuff, iLength );
 
@@ -1224,7 +1224,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
 
                     if( pPort->pLCSBLK->fDebug && !bReported )
                     {
-                        logmsg( _("LCS905I Port %2.2X: "
+                        logmsg( _("HHCLC010I Port %2.2X: "
                                   "IPV4 frame for %8.8X\n"),
                                 pPort->bPort, lIPAddress );
 
@@ -1251,7 +1251,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
 
                     if( pPort->pLCSBLK->fDebug && !bReported )
                     {
-                        logmsg( _("LCS905I Port %2.2X: "
+                        logmsg( _("HHCLC011I Port %2.2X: "
                                   "ARP frame for %8.8X\n"),
                                 pPort->bPort, lIPAddress );
 
@@ -1275,7 +1275,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                 {
                     if( pPort->pLCSBLK->fDebug && !bReported )
                     {
-                        logmsg( _("LCS905I Port %2.2X: SNA frame\n"),
+                        logmsg( _("HHCLC012I Port %2.2X: SNA frame\n"),
                                 pPort->bPort );
 
                         bReported = 1;
@@ -1305,7 +1305,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                 pDevMatch = pDevPri;
 
                 if( pPort->pLCSBLK->fDebug )
-                    logmsg( _("LCS907I Port %2.2X: "
+                    logmsg( _("HHCLC013I Port %2.2X: "
                               "No match found - "
                               "selecting primary %4.4X\n"),
                             pPort->bPort, pDevMatch->sAddr );
@@ -1315,7 +1315,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                 pDevMatch = pDevSec;
 
                 if( pPort->pLCSBLK->fDebug )
-                    logmsg( _("LCS908I Port %2.2X: "
+                    logmsg( _("HHCLC014I Port %2.2X: "
                               "No match found - "
                               "selecting secondary %4.4X\n"),
                             pPort->bPort, pDevMatch->sAddr );
@@ -1326,7 +1326,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
         if( !pDevMatch )
         {
             if( pPort->pLCSBLK->fDebug )
-                logmsg( _("LCS909I Port %2.2X: "
+                logmsg( _("HHCLC015I Port %2.2X: "
                           "No match found - Discarding frame\n"),
                         pPort->bPort );
 
@@ -1334,7 +1334,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
         }
 
         if( pPort->pLCSBLK->fDebug )
-            logmsg( _("LCS910I Port %2.2X: "
+            logmsg( _("HHCLC016I Port %2.2X: "
                       "Enqueing frame to device %4.4X (%8.8X)\n"),
                     pPort->bPort, pDevMatch->sAddr,
                     pDevMatch->lIPAddress );
@@ -1542,7 +1542,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'n':
             if( strlen( optarg ) > sizeof( pDEVBLK->filename ) - 1 )
             {
-                logmsg( _("LCS002E %4.4X invalid device name %s\n"),
+                logmsg( _("HHCLC017E %4.4X invalid device name %s\n"),
                         pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1558,7 +1558,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
         case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                logmsg( _("LCS003E %4.4X invalid MAC address %s\n"),
+                logmsg( _("HHCLC018E %4.4X invalid MAC address %s\n"),
                         pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1582,7 +1582,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 
     if( argc > 1 )
     {
-        logmsg( _("LCS004E %4.4X too many arguments in statement.\n"),
+        logmsg( _("HHCLC019E %4.4X too many arguments in statement.\n"),
                 pDEVBLK->devnum );
         return -1;
     }
@@ -1592,7 +1592,7 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     {
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            logmsg( _("LCS005E %4.4X invalid IP address %s\n"),
+            logmsg( _("HHCLC020E %4.4X invalid IP address %s\n"),
                     pDEVBLK->devnum, argv[optind] );
             return -1;
         }
@@ -1639,7 +1639,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     fp = fopen( pszOATName, "r" );
     if( !fp )
     {
-        logmsg( _("HHC003I Cannot open file %s: %s\n"),
+        logmsg( _("HHCLC039E Cannot open file %s: %s\n"),
                 pszOATName, strerror( errno ) );
         return -1;
     }
@@ -1688,7 +1688,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 1    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                logmsg( _("LCS006E Invalid HWADD statement in %s: %s\n"),
+                logmsg( _("HHCLC021E Invalid HWADD statement in %s: %s\n"),
                         pszOATName, pszStatement );
                 return -1;
             }
@@ -1697,7 +1697,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
             if( ParseMAC( argv[0], pPort->MAC_Address ) != 0 )
             {
-                logmsg( _("LCS007E Invalid MAC in HWADD statement "
+                logmsg( _("HHCLC022E Invalid MAC in HWADD statement "
                           "in %s: %s (%s)\n "),
                         pszOATName, pszStatement, argv[0] );
 
@@ -1714,14 +1714,14 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 argc       != 2    ||
                 sscanf( pszOperand, "%hi%c", &sPort, &c ) != 1 )
             {
-                logmsg( _("LCS008E Invalid ROUTE statement in %s: %s\n"),
+                logmsg( _("HHCLC023E Invalid ROUTE statement in %s: %s\n"),
                         pszOATName, pszStatement );
                 return -1;
             }
 
             if( inet_aton( argv[0], &addr ) == 0 )
             {
-                logmsg( _("LCS009E Invalid net address in ROUTE %s: %s (%s)\n"),
+                logmsg( _("HHCLC024E Invalid net address in ROUTE %s: %s (%s)\n"),
                         pszOATName, pszStatement, argv[0] );
                 return -1;
             }
@@ -1730,7 +1730,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
             if( inet_aton( argv[1], &addr ) == 0 )
             {
-                logmsg( _("LCS010E Invalid net mask in ROUTE %s: %s (%s)\n"),
+                logmsg( _("HHCLC025E Invalid net mask in ROUTE %s: %s (%s)\n"),
                         pszOATName, pszStatement, argv[1] );
                 return -1;
             }
@@ -1762,7 +1762,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
         {
             if( !pszKeyword || !pszOperand )
             {
-                logmsg( _("LCS011E Error in %s: "
+                logmsg( _("HHCLC026E Error in %s: "
                           "Missing device number or mode\n"),
                         pszOATName );
                 return -1;
@@ -1771,7 +1771,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             if( strlen( pszKeyword ) > 4 ||
                 sscanf( pszKeyword, "%hx%c", &sDevNum, &c ) != 1 )
             {
-                logmsg( _("LCS012E Error in %s: %s: "
+                logmsg( _("HHCLC027E Error in %s: %s: "
                           "Invalid device number\n"),
                         pszOATName, pszKeyword );
                 return -1;
@@ -1783,7 +1783,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    logmsg( _("LCS013E Error in %s: %s:"
+                    logmsg( _("HHCLC028E Error in %s: %s:"
                               "Missing PORT number\n"),
                             pszOATName, pszStatement );
                     return -1;
@@ -1791,7 +1791,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    logmsg( _("LCS014E Error in %s: %s: "
+                    logmsg( _("HHCLC029E Error in %s: %s: "
                               "Invalid PORT number\n"),
                             pszOATName, argv[0] );
                     return -1;
@@ -1801,7 +1801,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                 {
                     if( argc != 3 )
                     {
-                        logmsg( _("LCS015E Error in %s: %s: "
+                        logmsg( _("HHCLC030E Error in %s: %s: "
                                   "Invalid number of arguments\n"),
                                 pszOATName, pszStatement );
                         return -1;
@@ -1815,7 +1815,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
                         bType = 0;
                     else
                     {
-                        logmsg( _("LCS016E Error in %s: %s: "
+                        logmsg( _("HHCLC031E Error in %s: %s: "
                                   "Invalid entry starting at %s\n"),
                                 pszOATName, pszStatement, argv[1] );
                         return -1;
@@ -1825,7 +1825,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                     if( inet_aton( pszIPAddress, &addr ) == 0 )
                     {
-                        logmsg( _("LCS017E Error is %s: %s: "
+                        logmsg( _("HHCLC032E Error is %s: %s: "
                                   "Invalid IP address (%s)\n"),
                                 pszOATName, pszStatement, pszIPAddress );
                         return -1;
@@ -1840,7 +1840,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc < 1 )
                 {
-                    logmsg( _("LCS013E Error in %s: %s: "
+                    logmsg( _("HHCLC033E Error in %s: %s: "
                               "Missing PORT number\n"),
                             pszOATName, pszStatement );
                     return -1;
@@ -1848,7 +1848,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( sscanf( argv[0], "%hi%c", &sPort, &c ) != 1 )
                 {
-                    logmsg( _("LCS014E Error in %s: %s:"
+                    logmsg( _("HHCLC034E Error in %s: %s:"
                               "Invalid PORT number\n"),
                             pszOATName, argv[0] );
                     return -1;
@@ -1856,7 +1856,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
                 if( argc > 1 )
                 {
-                    logmsg( _("LCS018E Error in %s: %s: "
+                    logmsg( _("HHCLC035E Error in %s: %s: "
                             "SNA does not accept any arguments\n"),
                             pszOATName, pszStatement );
                     return -1;
@@ -1864,7 +1864,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
             }
             else
             {
-                logmsg( _("LCS019E Error in %s: %s: "
+                logmsg( _("HHCLC036E Error in %s: %s: "
                           "Invalid MODE\n"),
                         pszOATName, pszOperand );
                 return -1;
@@ -1924,7 +1924,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check for I/O error
             if( ferror( fp ) )
             {
-                logmsg( _("HHC001E Error reading file %s line %d: %s\n"),
+                logmsg( _("HHCLC037E Error reading file %s line %d: %s\n"),
                         pszOATName, iLine, strerror( errno ) );
                 return NULL;
             }
@@ -1948,7 +1948,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
             // Check that statement does not overflow bufffer
             if( iLen >= 255 )
             {
-                logmsg( _("HHC002E File %s line %d is too long\n"),
+                logmsg( _("HHCLC038E File %s line %d is too long\n"),
                         pszOATName, iLine );
                 exit(1);
             }

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2003-01-30 20:40-0600\n"
+"POT-Creation-Date: 2003-01-30 20:54-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -242,21 +242,6 @@ msgstr ""
 #: httpserv.c:66
 #, c-format
 msgid "ERROR: Cannot open %s: %s\n"
-msgstr ""
-
-#: ctc_lcs.c:1927
-#, fuzzy, c-format
-msgid "HHC001E Error reading file %s line %d: %s\n"
-msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: ctc_lcs.c:1951
-#, c-format
-msgid "HHC002E File %s line %d is too long\n"
-msgstr ""
-
-#: ctc_lcs.c:1642
-#, c-format
-msgid "HHC003I Cannot open file %s: %s\n"
 msgstr ""
 
 #: config.c:170
@@ -1631,6 +1616,203 @@ msgstr ""
 msgid "HHCIF005E %s: ioctl error doing %s on %s: %s\n"
 msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
+#: ctc_lcs.c:79
+#, fuzzy, c-format
+msgid "HHCLC001E %4.4X unable to allocate LCSBLK\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: ctc_lcs.c:650
+#, fuzzy, c-format
+msgid "HHCLC002I %4.4X: Halt or Clear Recognized\n"
+msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
+
+#: ctc_lcs.c:693
+#, fuzzy, c-format
+msgid "HHCLC003I %4.4X: LCS Read Buffer:\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:797
+#, fuzzy, c-format
+msgid "HHCLC004I %4.4X: Sending packet to %s:\n"
+msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
+
+#: ctc_lcs.c:806
+#, fuzzy, c-format
+msgid "HHCLC005E %4.4X: Error writing to %s: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctc_lcs.c:825
+#, fuzzy, c-format
+msgid "HHCLC006I %4.4X Triggering Event.\n"
+msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
+
+#: ctc_lcs.c:1115
+#, fuzzy, c-format
+msgid "HHCLC007E Error in call to socket: %s.\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctc_lcs.c:1126
+#, fuzzy, c-format
+msgid "HHCLC008E ioctl error on device %s: %s.\n"
+msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
+
+#: ctc_lcs.c:1198
+#, c-format
+msgid "HHCLC009I Port %2.2X: Read Buffer:\n"
+msgstr ""
+
+#: ctc_lcs.c:1227
+#, c-format
+msgid "HHCLC010I Port %2.2X: IPV4 frame for %8.8X\n"
+msgstr ""
+
+#: ctc_lcs.c:1254
+#, c-format
+msgid "HHCLC011I Port %2.2X: ARP frame for %8.8X\n"
+msgstr ""
+
+#: ctc_lcs.c:1278
+#, c-format
+msgid "HHCLC012I Port %2.2X: SNA frame\n"
+msgstr ""
+
+#: ctc_lcs.c:1308
+#, c-format
+msgid "HHCLC013I Port %2.2X: No match found - selecting primary %4.4X\n"
+msgstr ""
+
+#: ctc_lcs.c:1318
+#, c-format
+msgid "HHCLC014I Port %2.2X: No match found - selecting secondary %4.4X\n"
+msgstr ""
+
+#: ctc_lcs.c:1329
+#, c-format
+msgid "HHCLC015I Port %2.2X: No match found - Discarding frame\n"
+msgstr ""
+
+#: ctc_lcs.c:1337
+#, fuzzy, c-format
+msgid "HHCLC016I Port %2.2X: Enqueing frame to device %4.4X (%8.8X)\n"
+msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
+
+#: ctc_lcs.c:1545
+#, fuzzy, c-format
+msgid "HHCLC017E %4.4X invalid device name %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1561
+#, fuzzy, c-format
+msgid "HHCLC018E %4.4X invalid MAC address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_lcs.c:1585
+#, c-format
+msgid "HHCLC019E %4.4X too many arguments in statement.\n"
+msgstr ""
+
+#: ctc_lcs.c:1595
+#, fuzzy, c-format
+msgid "HHCLC020E %4.4X invalid IP address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_lcs.c:1691
+#, fuzzy, c-format
+msgid "HHCLC021E Invalid HWADD statement in %s: %s\n"
+msgstr "HHC422I Optie %s niet geldig\n"
+
+#: ctc_lcs.c:1700
+#, c-format
+msgid ""
+"HHCLC022E Invalid MAC in HWADD statement in %s: %s (%s)\n"
+" "
+msgstr ""
+
+#: ctc_lcs.c:1717
+#, fuzzy, c-format
+msgid "HHCLC023E Invalid ROUTE statement in %s: %s\n"
+msgstr "HHC422I Optie %s niet geldig\n"
+
+#: ctc_lcs.c:1724
+#, fuzzy, c-format
+msgid "HHCLC024E Invalid net address in ROUTE %s: %s (%s)\n"
+msgstr "Ongeldig bereik: %s\n"
+
+#: ctc_lcs.c:1733
+#, fuzzy, c-format
+msgid "HHCLC025E Invalid net mask in ROUTE %s: %s (%s)\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1765
+#, fuzzy, c-format
+msgid "HHCLC026E Error in %s: Missing device number or mode\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctc_lcs.c:1774
+#, fuzzy, c-format
+msgid "HHCLC027E Error in %s: %s: Invalid device number\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1786
+#, fuzzy, c-format
+msgid "HHCLC028E Error in %s: %s:Missing PORT number\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctc_lcs.c:1794
+#, fuzzy, c-format
+msgid "HHCLC029E Error in %s: %s: Invalid PORT number\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1804
+#, fuzzy, c-format
+msgid "HHCLC030E Error in %s: %s: Invalid number of arguments\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1818
+#, fuzzy, c-format
+msgid "HHCLC031E Error in %s: %s: Invalid entry starting at %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1828
+#, fuzzy, c-format
+msgid "HHCLC032E Error is %s: %s: Invalid IP address (%s)\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_lcs.c:1843
+#, fuzzy, c-format
+msgid "HHCLC033E Error in %s: %s: Missing PORT number\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctc_lcs.c:1851
+#, fuzzy, c-format
+msgid "HHCLC034E Error in %s: %s:Invalid PORT number\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1859
+#, fuzzy, c-format
+msgid "HHCLC035E Error in %s: %s: SNA does not accept any arguments\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: ctc_lcs.c:1867
+#, fuzzy, c-format
+msgid "HHCLC036E Error in %s: %s: Invalid MODE\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_lcs.c:1927
+#, fuzzy, c-format
+msgid "HHCLC037E Error reading file %s line %d: %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: ctc_lcs.c:1951
+#, c-format
+msgid "HHCLC038E File %s line %d is too long\n"
+msgstr ""
+
+#: ctc_lcs.c:1642
+#, fuzzy, c-format
+msgid "HHCLC039E Cannot open file %s: %s\n"
+msgstr "Kann %s nicht öffnen: %s\n"
+
 #: panel.c:922
 #, fuzzy, c-format
 msgid "HHCPN001I Control panel thread started: tid=%8.8lX, pid=%d\n"
@@ -2964,188 +3146,6 @@ msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 msgid "Hercules %s copy program "
 msgstr ""
 
-#: ctc_lcs.c:79
-#, c-format
-msgid "LCS001E %4.4X unable to allocate LCSBLK\n"
-msgstr ""
-
-#: ctc_lcs.c:1545
-#, fuzzy, c-format
-msgid "LCS002E %4.4X invalid device name %s\n"
-msgstr "Ongeldig apparaat nummer\n"
-
-#: ctc_lcs.c:1561
-#, c-format
-msgid "LCS003E %4.4X invalid MAC address %s\n"
-msgstr ""
-
-#: ctc_lcs.c:1585
-#, c-format
-msgid "LCS004E %4.4X too many arguments in statement.\n"
-msgstr ""
-
-#: ctc_lcs.c:1595
-#, c-format
-msgid "LCS005E %4.4X invalid IP address %s\n"
-msgstr ""
-
-#: ctc_lcs.c:1691
-#, c-format
-msgid "LCS006E Invalid HWADD statement in %s: %s\n"
-msgstr ""
-
-#: ctc_lcs.c:1700
-#, c-format
-msgid ""
-"LCS007E Invalid MAC in HWADD statement in %s: %s (%s)\n"
-" "
-msgstr ""
-
-#: ctc_lcs.c:1717
-#, c-format
-msgid "LCS008E Invalid ROUTE statement in %s: %s\n"
-msgstr ""
-
-#: ctc_lcs.c:1724
-#, c-format
-msgid "LCS009E Invalid net address in ROUTE %s: %s (%s)\n"
-msgstr ""
-
-#: ctc_lcs.c:1733
-#, c-format
-msgid "LCS010E Invalid net mask in ROUTE %s: %s (%s)\n"
-msgstr ""
-
-#: ctc_lcs.c:1765
-#, fuzzy, c-format
-msgid "LCS011E Error in %s: Missing device number or mode\n"
-msgstr "Geen apparaat nummer\n"
-
-#: ctc_lcs.c:1774
-#, fuzzy, c-format
-msgid "LCS012E Error in %s: %s: Invalid device number\n"
-msgstr "Ongeldig apparaat nummer\n"
-
-#: ctc_lcs.c:1843
-#, c-format
-msgid "LCS013E Error in %s: %s: Missing PORT number\n"
-msgstr ""
-
-#: ctc_lcs.c:1786
-#, c-format
-msgid "LCS013E Error in %s: %s:Missing PORT number\n"
-msgstr ""
-
-#: ctc_lcs.c:1794
-#, c-format
-msgid "LCS014E Error in %s: %s: Invalid PORT number\n"
-msgstr ""
-
-#: ctc_lcs.c:1851
-#, c-format
-msgid "LCS014E Error in %s: %s:Invalid PORT number\n"
-msgstr ""
-
-#: ctc_lcs.c:1804
-#, c-format
-msgid "LCS015E Error in %s: %s: Invalid number of arguments\n"
-msgstr ""
-
-#: ctc_lcs.c:1818
-#, c-format
-msgid "LCS016E Error in %s: %s: Invalid entry starting at %s\n"
-msgstr ""
-
-#: ctc_lcs.c:1828
-#, c-format
-msgid "LCS017E Error is %s: %s: Invalid IP address (%s)\n"
-msgstr ""
-
-#: ctc_lcs.c:1859
-#, c-format
-msgid "LCS018E Error in %s: %s: SNA does not accept any arguments\n"
-msgstr ""
-
-#: ctc_lcs.c:1867
-#, c-format
-msgid "LCS019E Error in %s: %s: Invalid MODE\n"
-msgstr ""
-
-#: ctc_lcs.c:1115
-#, fuzzy, c-format
-msgid "LCS020E Error in call to socket: %s.\n"
-msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: ctc_lcs.c:806
-#, fuzzy, c-format
-msgid "LCS100W %4.4X: Error writing to %s: %s\n"
-msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: ctc_lcs.c:1126
-#, fuzzy, c-format
-msgid "LCS101W ioctl error on device %s: %s.\n"
-msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
-
-#: ctc_lcs.c:650
-#, c-format
-msgid "LCS900I %4.4X: Halt or Clear Recognized\n"
-msgstr ""
-
-#: ctc_lcs.c:693
-#, c-format
-msgid "LCS901I %4.4X: LCS Read Buffer:\n"
-msgstr ""
-
-#: ctc_lcs.c:797
-#, c-format
-msgid "LCS902I %4.4X: Sending packet to %s:\n"
-msgstr ""
-
-#: ctc_lcs.c:825
-#, c-format
-msgid "LCS903I %4.4X Triggering Event.\n"
-msgstr ""
-
-#: ctc_lcs.c:1198
-#, c-format
-msgid "LCS904I Port %2.2X: Read Buffer:\n"
-msgstr ""
-
-#: ctc_lcs.c:1254
-#, c-format
-msgid "LCS905I Port %2.2X: ARP frame for %8.8X\n"
-msgstr ""
-
-#: ctc_lcs.c:1227
-#, c-format
-msgid "LCS905I Port %2.2X: IPV4 frame for %8.8X\n"
-msgstr ""
-
-#: ctc_lcs.c:1278
-#, c-format
-msgid "LCS905I Port %2.2X: SNA frame\n"
-msgstr ""
-
-#: ctc_lcs.c:1308
-#, c-format
-msgid "LCS907I Port %2.2X: No match found - selecting primary %4.4X\n"
-msgstr ""
-
-#: ctc_lcs.c:1318
-#, c-format
-msgid "LCS908I Port %2.2X: No match found - selecting secondary %4.4X\n"
-msgstr ""
-
-#: ctc_lcs.c:1329
-#, c-format
-msgid "LCS909I Port %2.2X: No match found - Discarding frame\n"
-msgstr ""
-
-#: ctc_lcs.c:1337
-#, c-format
-msgid "LCS910I Port %2.2X: Enqueing frame to device %4.4X (%8.8X)\n"
-msgstr ""
-
 #: hsccmd.c:1830
 msgid "OFF\n"
 msgstr ""
@@ -3549,6 +3549,14 @@ msgid ""
 "%s%s     -0                don't compress track images\n"
 "     -blks  n          size of output file\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "LCS002E %4.4X invalid device name %s\n"
+#~ msgstr "Ongeldig apparaat nummer\n"
+
+#, fuzzy
+#~ msgid "LCS100W %4.4X: Error writing to %s: %s\n"
+#~ msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
 #~ msgid "TIO modification executed CC=1\n"
 #~ msgstr "TIO modificatie uitgevoerd CC=1\n"
