@@ -13,6 +13,7 @@
 26 Jul 2004 Clear PSW Bit 12 when switching to ESAME via SIGP - Ivan Warren
 26 Jul 2004 Added ASN_AND_LX_REUSE config statement - Ivan Warren
 25 Jul 2004 cfba fixes (I hope) - Greg Smith
+23 Jul 2004 DAT-enhancement facility: CSPG instruction - Roger Bowler
 22 Jul 2004 Fix 370 address lookup for USE_REAL_ADDR - Greg Smith
 22 Jul 2004 Activate ASN-and-LX-reuse facility - Roger Bowler
 22 Jul 2004 ASN-and-LX-reuse facility: changes for LASP - Roger Bowler
