@@ -3665,6 +3665,7 @@ int ProcessPanelCommand (char* pszCmdLine)
     int      rc = -1;
     CMDTAB*  pCmdTab;
     char*    pszSaveCmdLine;
+    char*    cl;
 
     if (!pszCmdLine || !*pszCmdLine)
     {
@@ -3674,13 +3675,21 @@ int ProcessPanelCommand (char* pszCmdLine)
         return rc;
     }
 
+
+#if defined(OPTION_CONFIG_SYMBOLS)
+    cl=resolve_symbol_string(pszCmdLine);
+#else
+    cl=pszCmdLine;
+#endif
+    
+
     /* Save unmodified copy of the command line in case
        its format is unusual and needs customized parsing. */
-    pszSaveCmdLine = strdup(pszCmdLine);
+    pszSaveCmdLine = strdup(cl);
 
     /* Parse the command line into its individual arguments...
        Note: original command line now sprinkled with nulls */
-    parse_args (pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
+    parse_args (cl, MAX_ARGS, cmd_argv, &cmd_argc);
 
 #if defined(OPTION_DYNAMIC_LOAD)
     if( system_command )
@@ -3730,6 +3739,10 @@ int ProcessPanelCommand (char* pszCmdLine)
 
     /* Free our saved copy */
     free(pszSaveCmdLine);
+
+#if defined(OPTION_CONFIG_SYMBOLS)
+    free(cl);
+#endif
 
     return -1;
 }
