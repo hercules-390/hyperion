@@ -34,6 +34,9 @@ static BYTE sense_id_bytes[] = { 0xff,
 /*-------------------------------------------------------------------*/
 static int qeth_init_handler ( DEVBLK *dev, int argc, char *argv[] )
 {
+UNREFERENCED(argc);
+UNREFERENCED(argv);
+
 logmsg(D_("dev(%4.4x) experimental driver\n"),dev->devnum);
 
     dev->numdevid = sizeof(sense_id_bytes);
@@ -67,6 +70,8 @@ logmsg(D_("senseidnum=%d\n"),dev->numdevid);
 static void qeth_query_device (DEVBLK *dev, char **class,
                 int buflen, char *buffer)
 {
+    UNREFERENCED(dev);
+
     *class = "QETH";
 
     snprintf (buffer, buflen, "\n");
@@ -79,6 +84,8 @@ static void qeth_query_device (DEVBLK *dev, char **class,
 /*-------------------------------------------------------------------*/
 static int qeth_close_device ( DEVBLK *dev )
 {
+    UNREFERENCED(dev);
+
     /* Close the device file */
 
     return 0;
@@ -100,6 +107,9 @@ int     blocksize = 1024;
     UNREFERENCED(flags);
     UNREFERENCED(prevcode);
     UNREFERENCED(ccwseq);
+    UNREFERENCED(chained);
+    UNREFERENCED(rc);
+    UNREFERENCED(blocksize);
 
     /* Process depending on CCW opcode */
     switch (code) {
@@ -260,6 +270,8 @@ logmsg(D_("Unkown CCW dev(%4.4x) code(%2.2x)\n"),dev->devnum,code);
 /*-------------------------------------------------------------------*/
 static int qeth_initiate_input(DEVBLK *dev, U32 qmask)
 {
+    UNREFERENCED(qmask);
+
 logmsg(D_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
     return 0;
 }
@@ -270,6 +282,8 @@ logmsg(D_("SIGA-r dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
 /*-------------------------------------------------------------------*/
 static int qeth_initiate_output(DEVBLK *dev, U32 qmask)
 {
+    UNREFERENCED(qmask);
+
 logmsg(D_("SIGA-w dev(%4.4x) qmask(%8.8x)\n"),dev->devnum);
     return 0;
 }
@@ -285,7 +299,8 @@ DEVHND qeth_device_hndinfo = {
         &qeth_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
         &qeth_initiate_input,
-        &qeth_initiate_output
+        &qeth_initiate_output,
+        NULL, NULL
 };
 
 /* Libtool static name colision resolution */
