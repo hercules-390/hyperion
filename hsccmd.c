@@ -8,8 +8,6 @@
 /*-------------------------------------------------------------------*/
 /* This module implements the various Hercules System Console        */
 /* (i.e. hardware console) commands that the emulator supports.      */
-/* It is not currently designed to be compiled directly, but rather  */
-/* is #included inline by the panel.c source module.                 */
 /* To define a new commmand, add an entry to the "Commands" CMDTAB   */
 /* table pointing to the command processing function, and optionally */
 /* add additional help text to the HelpTab HELPTAB. Both tables are  */
