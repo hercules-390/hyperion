@@ -82,16 +82,19 @@ SUBDIRS = . util html
 @BUILD_HERCIFC_TRUE@HERCIFC = hercifc
 @BUILD_HERCIFC_FALSE@HERCIFC = 
 
-@BUILD_FTHREADS_TRUE@FTHREADS = fthreads.c w32chan.c
-@BUILD_FTHREADS_FALSE@FTHREADS = 
-
 bin_PROGRAMS = hercules $(HERCIFC) \
-	   dasdinit dasdisup dasdload dasdls dasdpdsu \
+	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu \
 	   tapecopy tapemap tapesplt \
 	   cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap \
 	   hetget hetinit hetmap hetupd \
 	   dmap2hrc
 
+EXTRA_PROGRAMS = hercifc
+
+fthreads_sources = fthreads.c w32chan.c
+EXTRA_hercules_SOURCES = $(fthreads_sources)
+@BUILD_FTHREADS_TRUE@FTHREADS = $(fthreads_sources)
+@BUILD_FTHREADS_FALSE@FTHREADS = 
 
 hercules_SOURCES = impl.c config.c panel.c version.c \
 	   ipl.c assist.c dat.c \
@@ -121,6 +124,8 @@ dasdload_SOURCES = dasdload.c dasdutil.c version.c
 
 dasdls_SOURCES = dasdls.c dasdutil.c version.c
 
+dasdcat_SOURCES = dasdcat.c dasdutil.c version.c
+
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c
 
 tapecopy_SOURCES = tapecopy.c version.c
@@ -149,7 +154,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c version.c
 
-EXTRA_DIST = hercules.cnf
+EXTRA_DIST = hercules.cnf CHANGES
 
 noinst_HEADERS = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
@@ -161,26 +166,28 @@ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/autoconf/mkinstalldirs
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
+EXTRA_PROGRAMS = hercifc$(EXEEXT)
 @BUILD_HERCIFC_TRUE@bin_PROGRAMS = hercules$(EXEEXT) hercifc$(EXEEXT) \
 @BUILD_HERCIFC_TRUE@	dasdinit$(EXEEXT) dasdisup$(EXEEXT) \
 @BUILD_HERCIFC_TRUE@	dasdload$(EXEEXT) dasdls$(EXEEXT) \
-@BUILD_HERCIFC_TRUE@	dasdpdsu$(EXEEXT) tapecopy$(EXEEXT) \
-@BUILD_HERCIFC_TRUE@	tapemap$(EXEEXT) tapesplt$(EXEEXT) \
-@BUILD_HERCIFC_TRUE@	cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
-@BUILD_HERCIFC_TRUE@	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
-@BUILD_HERCIFC_TRUE@	cckdswap$(EXEEXT) hetget$(EXEEXT) \
-@BUILD_HERCIFC_TRUE@	hetinit$(EXEEXT) hetmap$(EXEEXT) \
-@BUILD_HERCIFC_TRUE@	hetupd$(EXEEXT) dmap2hrc$(EXEEXT)
+@BUILD_HERCIFC_TRUE@	dasdcat$(EXEEXT) dasdpdsu$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	tapecopy$(EXEEXT) tapemap$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	tapesplt$(EXEEXT) cckd2ckd$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	cckdcdsk$(EXEEXT) ckd2cckd$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	cckdcomp$(EXEEXT) cckdswap$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	hetget$(EXEEXT) hetinit$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	hetmap$(EXEEXT) hetupd$(EXEEXT) \
+@BUILD_HERCIFC_TRUE@	dmap2hrc$(EXEEXT)
 @BUILD_HERCIFC_FALSE@bin_PROGRAMS = hercules$(EXEEXT) dasdinit$(EXEEXT) \
 @BUILD_HERCIFC_FALSE@	dasdisup$(EXEEXT) dasdload$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	dasdls$(EXEEXT) dasdpdsu$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	tapecopy$(EXEEXT) tapemap$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	tapesplt$(EXEEXT) cckd2ckd$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	cckdcdsk$(EXEEXT) ckd2cckd$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	cckdcomp$(EXEEXT) cckdswap$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	hetget$(EXEEXT) hetinit$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	hetmap$(EXEEXT) hetupd$(EXEEXT) \
-@BUILD_HERCIFC_FALSE@	dmap2hrc$(EXEEXT)
+@BUILD_HERCIFC_FALSE@	dasdls$(EXEEXT) dasdcat$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	dasdpdsu$(EXEEXT) tapecopy$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	tapemap$(EXEEXT) tapesplt$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	cckdswap$(EXEEXT) hetget$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	hetinit$(EXEEXT) hetmap$(EXEEXT) \
+@BUILD_HERCIFC_FALSE@	hetupd$(EXEEXT) dmap2hrc$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
 am_cckd2ckd_OBJECTS = cckd2ckd.$(OBJEXT) cckdend.$(OBJEXT) \
@@ -212,6 +219,12 @@ ckd2cckd_OBJECTS = $(am_ckd2cckd_OBJECTS)
 ckd2cckd_LDADD = $(LDADD)
 ckd2cckd_DEPENDENCIES =
 ckd2cckd_LDFLAGS =
+am_dasdcat_OBJECTS = dasdcat.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT)
+dasdcat_OBJECTS = $(am_dasdcat_OBJECTS)
+dasdcat_LDADD = $(LDADD)
+dasdcat_DEPENDENCIES =
+dasdcat_LDFLAGS =
 am_dasdinit_OBJECTS = dasdinit.$(OBJEXT) dasdutil.$(OBJEXT) \
 	version.$(OBJEXT)
 dasdinit_OBJECTS = $(am_dasdinit_OBJECTS)
@@ -360,31 +373,32 @@ depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/ckddasd.Po $(DEPDIR)/cmpsc.Po \
 @AMDEP_TRUE@	$(DEPDIR)/config.Po $(DEPDIR)/console.Po \
 @AMDEP_TRUE@	$(DEPDIR)/control.Po $(DEPDIR)/cpu.Po \
-@AMDEP_TRUE@	$(DEPDIR)/ctcadpt.Po $(DEPDIR)/dasdinit.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdisup.Po $(DEPDIR)/dasdload.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdls.Po $(DEPDIR)/dasdpdsu.Po \
-@AMDEP_TRUE@	$(DEPDIR)/dasdutil.Po $(DEPDIR)/dat.Po \
-@AMDEP_TRUE@	$(DEPDIR)/decimal.Po $(DEPDIR)/diagmssf.Po \
-@AMDEP_TRUE@	$(DEPDIR)/diagnose.Po $(DEPDIR)/dmap2hrc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/esame.Po $(DEPDIR)/external.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fbadasd.Po $(DEPDIR)/float.Po \
-@AMDEP_TRUE@	$(DEPDIR)/fthreads.Po $(DEPDIR)/general1.Po \
-@AMDEP_TRUE@	$(DEPDIR)/general2.Po $(DEPDIR)/hercifc.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetget.Po $(DEPDIR)/hetinit.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetlib.Po $(DEPDIR)/hetmap.Po \
-@AMDEP_TRUE@	$(DEPDIR)/hetupd.Po $(DEPDIR)/ieee.Po \
-@AMDEP_TRUE@	$(DEPDIR)/impl.Po $(DEPDIR)/io.Po $(DEPDIR)/ipl.Po \
-@AMDEP_TRUE@	$(DEPDIR)/machchk.Po $(DEPDIR)/opcode.Po \
-@AMDEP_TRUE@	$(DEPDIR)/panel.Po $(DEPDIR)/parser.Po \
-@AMDEP_TRUE@	$(DEPDIR)/plo.Po $(DEPDIR)/printer.Po \
-@AMDEP_TRUE@	$(DEPDIR)/service.Po $(DEPDIR)/sie.Po \
-@AMDEP_TRUE@	$(DEPDIR)/sllib.Po $(DEPDIR)/stack.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tapecopy.Po $(DEPDIR)/tapedev.Po \
-@AMDEP_TRUE@	$(DEPDIR)/tapemap.Po $(DEPDIR)/tapesplt.Po \
-@AMDEP_TRUE@	$(DEPDIR)/timer.Po $(DEPDIR)/trace.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vector.Po $(DEPDIR)/version.Po \
-@AMDEP_TRUE@	$(DEPDIR)/vm.Po $(DEPDIR)/vstore.Po \
-@AMDEP_TRUE@	$(DEPDIR)/w32chan.Po $(DEPDIR)/xstore.Po
+@AMDEP_TRUE@	$(DEPDIR)/ctcadpt.Po $(DEPDIR)/dasdcat.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdinit.Po $(DEPDIR)/dasdisup.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdload.Po $(DEPDIR)/dasdls.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dasdpdsu.Po $(DEPDIR)/dasdutil.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dat.Po $(DEPDIR)/decimal.Po \
+@AMDEP_TRUE@	$(DEPDIR)/diagmssf.Po $(DEPDIR)/diagnose.Po \
+@AMDEP_TRUE@	$(DEPDIR)/dmap2hrc.Po $(DEPDIR)/esame.Po \
+@AMDEP_TRUE@	$(DEPDIR)/external.Po $(DEPDIR)/fbadasd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/float.Po $(DEPDIR)/fthreads.Po \
+@AMDEP_TRUE@	$(DEPDIR)/general1.Po $(DEPDIR)/general2.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hercifc.Po $(DEPDIR)/hetget.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetinit.Po $(DEPDIR)/hetlib.Po \
+@AMDEP_TRUE@	$(DEPDIR)/hetmap.Po $(DEPDIR)/hetupd.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ieee.Po $(DEPDIR)/impl.Po $(DEPDIR)/io.Po \
+@AMDEP_TRUE@	$(DEPDIR)/ipl.Po $(DEPDIR)/machchk.Po \
+@AMDEP_TRUE@	$(DEPDIR)/opcode.Po $(DEPDIR)/panel.Po \
+@AMDEP_TRUE@	$(DEPDIR)/parser.Po $(DEPDIR)/plo.Po \
+@AMDEP_TRUE@	$(DEPDIR)/printer.Po $(DEPDIR)/service.Po \
+@AMDEP_TRUE@	$(DEPDIR)/sie.Po $(DEPDIR)/sllib.Po \
+@AMDEP_TRUE@	$(DEPDIR)/stack.Po $(DEPDIR)/tapecopy.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapedev.Po $(DEPDIR)/tapemap.Po \
+@AMDEP_TRUE@	$(DEPDIR)/tapesplt.Po $(DEPDIR)/timer.Po \
+@AMDEP_TRUE@	$(DEPDIR)/trace.Po $(DEPDIR)/vector.Po \
+@AMDEP_TRUE@	$(DEPDIR)/version.Po $(DEPDIR)/vm.Po \
+@AMDEP_TRUE@	$(DEPDIR)/vstore.Po $(DEPDIR)/w32chan.Po \
+@AMDEP_TRUE@	$(DEPDIR)/xstore.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -392,11 +406,12 @@ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) \
 	$(cckdcomp_SOURCES) $(cckdswap_SOURCES) $(ckd2cckd_SOURCES) \
-	$(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) \
-	$(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dmap2hrc_SOURCES) \
-	$(hercifc_SOURCES) $(hercules_SOURCES) $(hetget_SOURCES) \
-	$(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) \
-	$(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
+	$(dasdcat_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) \
+	$(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) \
+	$(dmap2hrc_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) \
+	$(EXTRA_hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) \
+	$(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) \
+	$(tapemap_SOURCES) $(tapesplt_SOURCES)
 HEADERS = $(noinst_HEADERS)
 
 
@@ -410,7 +425,7 @@ DIST_COMMON = $(noinst_HEADERS) ./stamp-h.in INSTALL Makefile.am \
 	autoconf/missing autoconf/mkinstalldirs config.h.in configure \
 	configure.ac
 DIST_SUBDIRS = $(SUBDIRS)
-SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckdswap_SOURCES) $(ckd2cckd_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dmap2hrc_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
+SOURCES = $(cckd2ckd_SOURCES) $(cckdcdsk_SOURCES) $(cckdcomp_SOURCES) $(cckdswap_SOURCES) $(ckd2cckd_SOURCES) $(dasdcat_SOURCES) $(dasdinit_SOURCES) $(dasdisup_SOURCES) $(dasdload_SOURCES) $(dasdls_SOURCES) $(dasdpdsu_SOURCES) $(dmap2hrc_SOURCES) $(hercifc_SOURCES) $(hercules_SOURCES) $(EXTRA_hercules_SOURCES) $(hetget_SOURCES) $(hetinit_SOURCES) $(hetmap_SOURCES) $(hetupd_SOURCES) $(tapecopy_SOURCES) $(tapemap_SOURCES) $(tapesplt_SOURCES)
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -495,6 +510,9 @@ cckdswap$(EXEEXT): $(cckdswap_OBJECTS) $(cckdswap_DEPENDENCIES)
 ckd2cckd$(EXEEXT): $(ckd2cckd_OBJECTS) $(ckd2cckd_DEPENDENCIES) 
 	@rm -f ckd2cckd$(EXEEXT)
 	$(LINK) $(ckd2cckd_LDFLAGS) $(ckd2cckd_OBJECTS) $(ckd2cckd_LDADD) $(LIBS)
+dasdcat$(EXEEXT): $(dasdcat_OBJECTS) $(dasdcat_DEPENDENCIES) 
+	@rm -f dasdcat$(EXEEXT)
+	$(LINK) $(dasdcat_LDFLAGS) $(dasdcat_OBJECTS) $(dasdcat_LDADD) $(LIBS)
 dasdinit$(EXEEXT): $(dasdinit_OBJECTS) $(dasdinit_DEPENDENCIES) 
 	@rm -f dasdinit$(EXEEXT)
 	$(LINK) $(dasdinit_LDFLAGS) $(dasdinit_OBJECTS) $(dasdinit_LDADD) $(LIBS)
@@ -566,6 +584,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/cpu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/ctcadpt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdcat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdinit.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdisup.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/dasdload.Po@am__quote@

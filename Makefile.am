@@ -13,7 +13,7 @@ HERCIFC=
 endif
 
 bin_PROGRAMS = hercules $(HERCIFC) \
-	   dasdinit dasdisup dasdload dasdls dasdpdsu \
+	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu \
 	   tapecopy tapemap tapesplt \
 	   cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap \
 	   hetget hetinit hetmap hetupd \
@@ -54,6 +54,8 @@ dasdisup_SOURCES = dasdisup.c dasdutil.c version.c
 dasdload_SOURCES = dasdload.c dasdutil.c version.c
 
 dasdls_SOURCES = dasdls.c dasdutil.c version.c
+
+dasdcat_SOURCES = dasdcat.c dasdutil.c version.c
 
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c
 

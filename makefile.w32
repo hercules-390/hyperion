@@ -5,12 +5,13 @@
 # modified to be useful (hopefully) for Linux AND windows (VB)
 # Added LINKMAP option (Fish)
 # Support for version >= 1.3.3 of Cygwin = built-in pthreads (Fish)
+# Added Malcolm Beattie's dasdcat program (rbowler)
 #
 
 #### VERSION #####
 
 ifndef VER
-VER=2.14a
+VER=2.15a
 endif
 
 # Change the following to yes/no depending on whether
@@ -176,6 +177,7 @@ EXEFILES = hercules \
 	   dasdisup \
 	   dasdload \
 	   dasdls   \
+	   dasdcat  \
 	   dasdpdsu \
 	   tapecopy \
 	   tapemap  \
@@ -264,6 +266,8 @@ DLD_OBJS = dasdload.o dasdutil.o version.o
 
 DLS_OBJS = dasdls.o dasdutil.o version.o
 
+DCA_OBJS = dasdcat.o dasdutil.o version.o
+
 DPU_OBJS = dasdpdsu.o dasdutil.o version.o
 
 TCY_OBJS = tapecopy.o version.o
@@ -335,6 +339,9 @@ dasdload:  $(DLD_OBJS)
 dasdls:  $(DLS_OBJS)
 	$(CC) -o dasdls $(DLS_OBJS)
 
+dasdcat:  $(DCA_OBJS)
+	$(CC) -o dasdcat $(DCA_OBJS)
+
 dasdpdsu:  $(DPU_OBJS)
 	$(CC) -o dasdpdsu $(DPU_OBJS)
 
@@ -369,6 +376,8 @@ dasdisup.o: dasdisup.c $(HEADERS) dasdblks.h
 dasdload.o: dasdload.c $(HEADERS) dasdblks.h
 
 dasdls.o: dasdls.c $(HEADERS) dasdblks.h
+
+dasdcat.o: dasdcat.c $(HEADERS) dasdblks.h
 
 dasdpdsu.o: dasdpdsu.c $(HEADERS) dasdblks.h
 
