@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+22 Jul 2004 ASN-and-LX-reuse facility: changes for LASP - Roger Bowler
 22 Jul 2004 defsym fix and env var fallback - Ivan Warren
 21 Jul 2004 Invalidate AIA for s370 on dat-mode change - Greg Smith
 21 Jul 2004 ASN-and-LX-reuse facility: changes for BSG - Roger Bowler

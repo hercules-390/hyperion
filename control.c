@@ -1527,10 +1527,10 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 U64     dreg;
-#if defined(FEATURE_ASN_AND_LX_REUSE)
 U32     sastein_d;                      /* Designated SASTEIN        */
 U32     pastein_d;                      /* Designated PASTEIN        */
-#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+U32     sastein_new;                    /* New SASTEIN               */
+U32     pastein_new;                    /* New PASTEIN               */
 U16     pkm_d;                          /* Designated PKM            */
 U16     sasn_d;                         /* Designated SASN           */
 U16     ax_d;                           /* Designated AX             */
@@ -1567,12 +1567,41 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     inst_cr = regs->CR(regs->aea_ar[USE_INST_SPACE]);
 
-    /* Fetch PKM, SASN, AX, and PASN from first operand */
-    dreg = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
-    pkm_d = (dreg >> 48) & 0xFFFF;
-    sasn_d = (dreg >> 32) & 0xFFFF;
-    ax_d = (dreg >> 16) & 0xFFFF;
-    pasn_d = dreg & 0xFFFF;
+    /* Fetch LASP parameters from first operand location
+       (note that the storage-operand references for LASP
+       may be multiple-access references) */
+    if (ASN_AND_LX_REUSE_ENABLED(regs))
+    {
+        /* When ASN-and-LX-reuse is installed and enabled by CR0,
+           the first operand consists of two doublewords */
+
+        /* The first doubleword contains the SASTEIN-d (32 bits),
+           PKM-d (16 bits), and SASN-d (16 bits) */
+        dreg = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+        sastein_d = (dreg >> 32);
+        pkm_d = (dreg >> 16) & 0xFFFF;
+        sasn_d = dreg & 0xFFFF;
+
+        /* The second doubleword contains the PASTEIN-d (32 bits),
+           AX-d (16 bits), and PASN-d (16 bits) */
+        effective_addr1 += 8;
+        effective_addr1 &= ADDRESS_MAXWRAP(regs);
+        dreg = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+        pastein_d = (dreg >> 32);
+        ax_d = (dreg >> 16) & 0xFFFF;
+        pasn_d = dreg & 0xFFFF;
+    }
+    else /* !ASN_AND_LX_REUSE_ENABLED */
+    {  
+        /* When ASN-and-LX-reuse is not installed or not enabled,
+           the first operand is one doubleword containing the
+           PKM-d, SASN-d, AX-d, and PASN-d (16 bits each) */
+        dreg = ARCH_DEP(vfetch8) ( effective_addr1, b1, regs );
+        pkm_d = (dreg >> 48) & 0xFFFF;
+        sasn_d = (dreg >> 32) & 0xFFFF;
+        ax_d = (dreg >> 16) & 0xFFFF;
+        pasn_d = dreg & 0xFFFF;
+    } /* end else !ASN_AND_LX_REUSE_ENABLED */
 
     /* PASN translation */
 
@@ -1589,10 +1618,25 @@ CREG    inst_cr;                        /* Instruction CR            */
             return;
         }
 
+        /* When ASN-and-LX-reuse is installed and enabled by CR0,
+           condition code 1 is also set if the PASTEIN-d does not
+           equal the ASTEIN in word 11 of the ASTE */
+        if (ASN_AND_LX_REUSE_ENABLED(regs)
+            && pastein_d != aste[11])
+        {
+            regs->psw.cc = 1;
+            return;
+        } /* end if(ASN_AND_LX_REUSE_ENABLED && pastein_d!=aste[11]) */
+
         /* Obtain new PSTD and LTD from ASTE */
         pstd = ASTE_AS_DESIGNATOR(aste);
         ltd = ASTE_LT_DESIGNATOR(aste);
         ax = (aste[1] & ASTE1_AX) >> 16;
+
+        /* When ASN-and-LX-reuse is installed and enabled by CR0, 
+           set the new PASTEIN equal to the PASTEIN-d */
+        if (ASN_AND_LX_REUSE_ENABLED(regs))
+            pastein_new = pastein_d;
 
 #ifdef FEATURE_SUBSPACE_GROUP
         /* Perform subspace replacement on new PSTD */
@@ -1623,6 +1667,11 @@ CREG    inst_cr;                        /* Instruction CR            */
         ltd = regs->CR_L(5);
         pasteo = regs->CR_L(5);
         ax = (regs->CR(4) & CR4_AX) >> 16;
+
+        /* When ASN-and-LX-reuse is installed and enabled by CR0, 
+           load the current PASTEIN */
+        if (ASN_AND_LX_REUSE_ENABLED(regs))
+            pastein_new = regs->CR_H(4);
     }
 
     /* If bit 30 of the LASP function bits is zero,
@@ -1633,22 +1682,29 @@ CREG    inst_cr;                        /* Instruction CR            */
 
     /* SASN translation */
 
-    /* If new SASN = new PASN then set new SSTD = new PSTD */
+    /* If new SASN = new PASN then set new SSTD = new PSTD,
+       also set the new SASTEIN equal to new PASTEIN when
+       ASN-and-LX-reuse is installed and enabled by CR0 */
     if (sasn_d == pasn_d)
     {
         sstd = pstd;
-
+        if (ASN_AND_LX_REUSE_ENABLED(regs))
+            sastein_new = pastein_new;
     }
     else
     {
         /* If new SASN = current SASN, and bit 29 of the LASP
        function bits is 0, and bit 31 of the LASP function bits
-       is 1, use current SSTD in control register 7 */
+       is 1, use current SSTD/SASCE in control register 7, also
+       use current SASTEIN if ASN-and-LX-reuse is installed and
+       enabled by CR0 */
         if (!(effective_addr2 & 0x00000004)
             && (effective_addr2 & 0x00000001)
             && (sasn_d == regs->CR_LHL(3)))
         {
             sstd = regs->CR(7);
+            if (ASN_AND_LX_REUSE_ENABLED(regs))
+                sastein_new = regs->CR_H(3);
         }
         else
         {
@@ -1660,8 +1716,23 @@ CREG    inst_cr;                        /* Instruction CR            */
                 return;
             }
 
+            /* When ASN-and-LX-reuse is installed and enabled by CR0,
+               condition code 2 is also set if the SASTEIN-d does not
+               equal the ASTEIN in word 11 of the ASTE */
+            if (ASN_AND_LX_REUSE_ENABLED(regs)
+                && sastein_d != aste[11])
+            {
+                regs->psw.cc = 2;
+                return;
+            } /* end if(ASN_AND_LX_REUSE_ENABLED && sastein_d!=aste[11]) */
+
             /* Obtain new SSTD or SASCE from secondary ASTE */
             sstd = ASTE_AS_DESIGNATOR(aste);
+
+            /* When ASN-and-LX-reuse is installed and enabled by CR0,
+               set the new SASTEIN equal to the SASTEIN-d */
+            if (ASN_AND_LX_REUSE_ENABLED(regs))
+                sastein_new = sastein_d;
 
 #ifdef FEATURE_SUBSPACE_GROUP
             /* Perform subspace replacement on new SSTD */
@@ -1702,6 +1773,11 @@ CREG    inst_cr;                        /* Instruction CR            */
     regs->CR_LHL(4) = pasn_d;
     regs->CR_L(5) = ASF_ENABLED(regs) ? pasteo : ltd;
     regs->CR(7) = sstd;
+    if (ASN_AND_LX_REUSE_ENABLED(regs))
+    {
+        regs->CR_H(3) = sastein_new;
+        regs->CR_H(4) = pastein_new;
+    } /* end if(ASN_AND_LX_REUSE_ENABLED) */
 
     SET_AEA_COMMON(regs);
     if (inst_cr != regs->CR(regs->aea_ar[USE_INST_SPACE]))
