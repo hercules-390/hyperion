@@ -21,7 +21,7 @@ bin_PROGRAMS = hercules $(HERCIFC) \
 	   cckdcdsk cckdcomp cckddiag cckdswap \
 	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
 	   hetget hetinit hetmap hetupd \
-	   dmap2hrc
+	   dmap2hrc dyninst
 EXTRA_PROGRAMS=hercifc
 
 fthreads_sources=fthreads.c
@@ -51,6 +51,19 @@ else
 MEMRCHR=
 endif
 
+if USE_DLLTOOL
+HERCULES_EXP=hercules.exp
+HERCULES_A=hercules.a
+hercules_LDADD = $(LDADD) $(HERCULES_EXP)
+dyninst_LDADD = $(LDADD) $(HERCULES_A)
+hercules_LDFLAGS = --export-dynamic
+else
+HERCULES_EXP=
+HERCULES_A=
+hercules_LDFLAGS = -rdynamic
+dyninst_LDFLAGS = -shared
+endif
+
 hercules_SOURCES = hostinfo.c w32ctca.c \
 	   impl.c config.c panel.c version.c \
 	   ipl.c assist.c dat.c \
@@ -71,7 +84,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   httpserv.c cgibin.c devtype.c codepage.c \
 	   ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
 	   logger.c commadpt.c cache.c ecpsvm.c shared.c \
-	   $(MEMRCHR) hscutl.c logmsg.c hdl.c hdlmain.c
+	   $(MEMRCHR) hscutl.c logmsg.c hdl.c hdlmain.c $(HERCULES_EXP)
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
@@ -165,6 +178,19 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c \
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
 	   $(FTHREADS) $(FISHHANG) logmsg.c
 
+dyninst_SOURCES = dyninst.c
+
+if USE_DLLTOOL
+hercules.def: $(am_hercules_OBJECTS)
+	dlltool --export-all-symbols --output-def hercules.def $(am_hercules_OBJECTS)
+
+hercules.exp: hercules.def
+	dlltool --input-def hercules.def --dllname hercules.exe --output-exp hercules.exp
+
+hercules.a:	hercules.def
+	dlltool --input-def hercules.def --dllname hercules.exe --output-lib hercules.a
+endif
+
 EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
     README.OSX README.TAPE README.COMMADPT
 
@@ -194,4 +220,3 @@ endif
 
 %.s: %.c
 	$(COMPILE) -S $<
-

@@ -11,7 +11,7 @@ AC_CANONICAL_HOST
 CFLAGS="-W -Wall $CFLAGS"
 
 #loadable modules
-LIBS="-rdynamic -ldl"
+LIBS="-ldl"
 
 # Programs
 AC_PROG_CC
@@ -33,6 +33,7 @@ case "$host_os" in
                 build_hercifc=false
                 AC_DEFINE([WIN32])
                 AC_DEFINE([NO_SIGABEND_HANDLER])
+                use_dlltool=true
                 ;;
         *)
                 build_hercifc=false
@@ -48,6 +49,8 @@ case "$host_cpu-$GCC" in
 esac
 
 AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
+
+AM_CONDITIONAL(USE_DLLTOOL, [test "x$use_dlltool" = "xtrue"])
 
 # System Services
 AC_SYS_LARGEFILE
@@ -473,6 +476,8 @@ AH_TEMPLATE([BUILTIN_STRERROR_R],
             [Define to use built-in strerror_r implementation])
 AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
             [Define to enable symbolic substitutions in configuration file])
+AH_TEMPLATE([HDL_USE_LIBTOOL],
+            [Define to enable use libtool instead of dlopen/dlsym/dlclose])
 
 AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile ])
 
