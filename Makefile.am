@@ -21,7 +21,7 @@ DYNINST_DLL=dyninst.dll
 DYNGUI=dyngui
 DYNGUI_DLL=dyngui.dll
 else
-DYNINST=
+DYNINST=dyninst
 DYNINST_DLL=
 DYNGUI=
 DYNGUI_DLL=
