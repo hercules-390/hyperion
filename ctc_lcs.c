@@ -1051,7 +1051,7 @@ static void  LCS_StartLan( PLCSDEV pLCSDEV, PLCSHDR pHeader )
 
         pPort->fStarted = 1;
 
-        sleep( 1 );
+        SLEEP( 1 );
     }
 
     release_lock( &pPort->Lock );
@@ -1243,7 +1243,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                 break;
             logmsg( _("HHCLC042E Port %2.2X: Read error: %s\n"),
                 pPort->bPort, strerror( errno ) );
-            sleep(1);           // (purposeful long delay)
+            SLEEP(1);           // (purposeful long delay)
             continue;
         }
 

@@ -113,7 +113,7 @@ int i;
 //          release_lock (&sysblk.cpulock[i]);
         }
         /* Sleep for 20 seconds */
-        sleep(20);
+        SLEEP(20);
     }
 
     return NULL;

@@ -407,6 +407,18 @@ typedef void*THREAD_FUNC(void*);
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
 
+/*-------------------------------------------------------------------*/
+/* sleep for as long as we like                                      */
+/*-------------------------------------------------------------------*/
+#define SLEEP(_n) \
+ do { \
+   unsigned int rc = (_n); \
+   while (rc) rc = sleep (rc); \
+ } while (0)
+
+/*-------------------------------------------------------------------*/
+/* likely and unlikely                                               */
+/*-------------------------------------------------------------------*/
 #undef likely
 #undef unlikely
 #if __GNUC__ >= 3

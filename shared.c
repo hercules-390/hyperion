@@ -227,7 +227,7 @@ init_retry:
         {
             logmsg (_("HHCSH002W %4.4X connect pending to %s\n"),
                     dev->devnum, dev->filename);
-            if (retry) sleep(5);
+            if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
 
@@ -475,7 +475,7 @@ init_retry:
         {
             logmsg (_("HHCSH011I %4.4X connect pending to %s\n"),
                     dev->devnum, dev->filename);
-            if (retry) sleep(5);
+            if (retry) SLEEP(5);
         }
     } while (retry && rc < 0);
 
@@ -1374,7 +1374,7 @@ retry :
     {
         if (cmd != SHRD_CONNECT && retries--)
         {
-            sleep (1);
+            SLEEP (1);
             clientConnect (dev, 1);
             goto retry;
         }
@@ -2687,7 +2687,7 @@ TID                     tid;            /* Negotiation thread id     */
         if (rc == 0 || errno != EADDRINUSE) break;
         logmsg (_("HHCSH052W Waiting for port %u to become free\n"),
                 sysblk.shrdport);
-        sleep(10);
+        SLEEP(10);
     } /* end while */
 
     if (rc != 0)
@@ -2870,7 +2870,7 @@ int shared_cmd(int argc, char *argv[], char *cmdline)
             if (s != NULL)
             {
                 sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
-                sleep (1);
+                SLEEP (1);
                 free (s);
             }
             sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
@@ -2893,7 +2893,7 @@ int shared_cmd(int argc, char *argv[], char *cmdline)
         /* Print the trace table */
         sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
         i = p;
-        sleep(1);
+        SLEEP(1);
         do {
             if (i[0] != '\0') logmsg ("%s",(char *)i);
             if (++i >= x) i = s;

@@ -1420,7 +1420,7 @@ char                    group[16];      /* Console group             */
         }
 
         /* Close the connection and terminate the thread */
-        sleep (5);
+        SLEEP (5);
         close (csock);
         if (clientip) free(clientip);
         return NULL;
@@ -1554,7 +1554,7 @@ BYTE                    unitstat;       /* Status after receive data */
 
         logmsg (_("HHCTE002W Waiting for port %u to become free\n"),
                 ntohs(server->sin_port));
-        sleep(10);
+        SLEEP(10);
     } /* end while */
 
     if (rc != 0)

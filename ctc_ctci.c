@@ -936,7 +936,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
             logmsg( _("HHCCT048E %4.4X: Error reading from %s: %s\n"),
                 pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                 strerror( errno ) );
-            sleep(1);           // (purposeful long delay)
+            SLEEP(1);           // (purposeful long delay)
             continue;
         }
 

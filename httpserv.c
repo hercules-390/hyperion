@@ -664,7 +664,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
         logmsg (_("HHCHT003W Waiting for port %u to become free\n"),
                 sysblk.httpport);
-        sleep(10);
+        SLEEP(10);
     } /* end while */
 
     if (rc != 0)

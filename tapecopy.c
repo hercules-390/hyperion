@@ -337,7 +337,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         EXIT( RC_ERROR_OPENING_SCSI_INPUT );
     }
 
-    sleep(1);
+    SLEEP(1);
 
     /* Set the tape device to process variable length blocks */
     opblk.mt_op = MTSETBLK;
@@ -350,7 +350,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         EXIT( RC_ERROR_SETTING_SCSI_VARBLK_PROCESSING );
     }
 
-    sleep(1);
+    SLEEP(1);
 
     /* Rewind the tape to the beginning */
     opblk.mt_op = MTREW;
@@ -363,7 +363,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         EXIT( RC_ERROR_REWINDING_SCSI );
     }
 
-    sleep(1);
+    SLEEP(1);
 
     /* Obtain the tape status */
     rc = obtain_status (devname, devfd);

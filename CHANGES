@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+30 Nov 2004 Use SLEEP() to ensure sleep for `n' seconds - Greg Smith
 30 Nov 2004 Get mainstor after device initialization - Greg Smith
 29 Nov 2004 Fix reference and change recording in dat-off mode - Jan Jaeger
 28 Nov 2004 Binary Floating Point feature completed - Roger Bowler

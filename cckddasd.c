@@ -4936,7 +4936,7 @@ int   val, opts = 0;
                 cckdblk.itrace = NULL;
                 if (p)
                 {
-                    sleep (1);
+                    SLEEP (1);
                     cckdblk.itrace = cckdblk.itracep = cckdblk.itracex = NULL;
                     cckdblk.itracen = 0;
                     cckd_free (NULL, "trace", p);
@@ -4981,7 +4981,7 @@ CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
     logmsg (_("HHCCD900I print_itrace\n"));
     i = cckdblk.itrace;
     cckdblk.itrace = NULL;
-    sleep (1);
+    SLEEP (1);
     p = cckdblk.itracep;
     if (p >= cckdblk.itracex) p = i;
     do

@@ -88,7 +88,7 @@ BYTE     psw[16];
 
     /* Wait for I/O queue to clear out */
 #ifdef OPTION_FISHIO
-    sleep (2);
+    SLEEP (2);
 #else
     obtain_lock (&sysblk.ioqlock);
     while (sysblk.ioq)

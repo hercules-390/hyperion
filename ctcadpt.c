@@ -1186,7 +1186,7 @@ int n;
                     return -3;
                 logmsg (_("HHCCT033E %4.4X: Error: read: %s\n"),
                         dev->devnum, strerror(errno));
-                sleep(2);
+                SLEEP(2);
             }
         } while (n <= 0);
         dev->ctcrem = n;

@@ -42,7 +42,7 @@ int pending, i;
         release_lock(&sysblk.intlock);
 
         if(pending)
-            sleep(1);
+            SLEEP(1);
     }
     while(is_wait_sigq_pending());
 }

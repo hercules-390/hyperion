@@ -4393,7 +4393,7 @@ DEVBLK *dev = (DEVBLK*) db;
         )
         {
             release_lock( &dev->lock );
-            sleep(AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS);
+            SLEEP(AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS);
             obtain_lock( &dev->lock );
         }
     }

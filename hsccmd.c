@@ -2797,7 +2797,7 @@ char   *p;                              /* (work)                    */
             logmsg (_("HHCPN011I Pausing SCRIPT file processing for %d "
                       "seconds...\n"),
                       scr_pause_amt);
-            sleep(scr_pause_amt);
+            SLEEP(scr_pause_amt);
             logmsg (_("HHCPN012I Resuming SCRIPT file processing...\n"));
 
             continue;

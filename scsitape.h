@@ -1050,7 +1050,7 @@ static void *scsi_tapemountmon_thread( void *db )
         release_lock( &dev->lock );
         TRACE( "** scsi_tapemountmon_thread: sleeping for %d seconds...\n",
             sysblk.auto_scsi_mount_secs );
-        sleep( sysblk.auto_scsi_mount_secs );
+        SLEEP( sysblk.auto_scsi_mount_secs );
         TRACE( "** scsi_tapemountmon_thread: waking up...\n" );
         obtain_lock( &dev->lock );
 
