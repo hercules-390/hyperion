@@ -67,7 +67,10 @@
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
-#define MAX_BLKLEN              65530   /* Maximum I/O buffer size   */
+/* ISW 20030308 : Set max block size to 65535 (64k-1)                */
+/*               3490E Manual doesn't specify a maximum record size  */
+/*-------------------------------------------------------------------*/
+#define MAX_BLKLEN              65535   /* Maximum I/O buffer size   */
 #define TAPE_UNLOADED           "*"     /* Name for unloaded drive   */
 
 /*-------------------------------------------------------------------*/
