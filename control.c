@@ -1125,7 +1125,11 @@ BYTE    storkey;
     else /* !sie_state */
 #endif /*defined(_FEATURE_SIE)*/
         /* Insert the storage key into R1 register bits 24-31 */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
         regs->GR_LHLCL(r1) = STORAGE_KEY(n) & 0xFE;
+#else
+        regs->GR_LHLCL(r1) = (STORAGE_KEY1(n) | STORAGE_KEY2(n)) & 0xFE;
+#endif
 
     /* In BC mode, clear bits 29-31 of R1 register */
     if ( regs->psw.ecmode == 0 )
@@ -4287,8 +4291,15 @@ RADR    n;                              /* Absolute storage addr     */
 #endif /*defined(_FEATURE_SIE)*/
     {
         /* Update the storage key from R1 register bits 24-30 */
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n) &= STORKEY_BADFRM;
         STORAGE_KEY(n) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+#else
+        STORAGE_KEY1(n) &= STORKEY_BADFRM;
+        STORAGE_KEY1(n) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+        STORAGE_KEY2(n) &= STORKEY_BADFRM;
+        STORAGE_KEY2(n) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
+#endif
     }
 
 //  /*debug*/logmsg("SSK storage block %8.8X key %2.2X\n",
