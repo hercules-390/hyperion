@@ -674,6 +674,7 @@ DEF_INST(compare_and_swap_and_purge)
 {
 int     r1, r2;                         /* Values of R fields        */
 U32     n1, n2;                         /* 32 Bit work               */
+RADR    abs2;                           /* absolute address of op2   */
 
     RRE(inst, execflag, regs, r1, r2);
 
@@ -703,20 +704,16 @@ U32     n1, n2;                         /* 32 Bit work               */
 
     /* Obtain 2nd operand address from r2 */
     n2 = regs->GR(r2) & 0xFFFFFFFFFFFFFFFCULL & ADDRESS_MAXWRAP(regs);
-
-#if defined(MODEL_DEPENDENT_CS)
-    /* some models always store, so validate as a store operand, if desired */
-    ARCH_DEP(validate_operand) (n2, r2, 3, ACCTYPE_WRITE, regs);
-#endif /*defined(MODEL_DEPENDENT_CS)*/
+    abs2 = LOGICAL_TO_ABS (n2, r2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Load second operand from operand address  */
-    n1 = ARCH_DEP(vfetch4) ( n2, r2, regs );
+    n1 = fetch_fw(sysblk.mainstor + abs2);
 
     /* Compare operand with R1 register contents */
     if ( regs->GR_L(r1) == n1 )
     {
         /* If equal, store R1+1 at operand location and set cc=0 */
-        ARCH_DEP(vstore4) ( regs->GR_L(r1+1), n2, r2, regs );
+        STORE_FW(sysblk.mainstor + abs2, regs->GR_L(r1+1));
         regs->psw.cc = 0;
 
         /* Release main-storage access lock */
