@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+20 Sep 2003 Add disassemble command (u [r|v|p|h] addr range) - Jan Jaeger
 16 Sep 2003 Repair DEVPRIO handling - Mark L. Gaubatz
 28 Aug 2003 Check mmap return value when allocating main storg - Ivan Warren
 24 Aug 2003 fix for Asynch I/O Status stacking race condition - Ivan Warren

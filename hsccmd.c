@@ -654,6 +654,19 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 }
 
 ///////////////////////////////////////////////////////////////////////
+/* ur command - disassemble real */
+
+int u_cmd(int argc, char *argv[], char *cmdline)
+{
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    disasm_stor (regs, cmdline+2);
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
 /* v command - display or alter virtual storage */
 
 int v_cmd(int argc, char *argv[], char *cmdline)
@@ -2676,6 +2689,7 @@ COMMAND ( "ipending",  ipending_cmd,  "display pending interrupts" )
 COMMAND ( "ds",        ds_cmd,        "display subchannel" )
 COMMAND ( "r",         r_cmd,         "display or alter real storage" )
 COMMAND ( "v",         v_cmd,         "display or alter virtual storage" )
+COMMAND ( "u",         u_cmd,         "disassemble storage" )
 COMMAND ( "devtmax",   devtmax_cmd,   "display or set max device threads" )
 COMMAND ( "k",         k_cmd,         "display cckd internal trace\n" )
 

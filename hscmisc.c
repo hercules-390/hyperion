@@ -183,7 +183,7 @@ BYTE    c;                              /* Character work area       */
     rc = sscanf(operand, "%Lx%c%Lx%c", &opnd1, &delim, &opnd2, &c);
 
     /* Process storage alteration operand */
-    if (rc > 2 && delim == '=')
+    if (rc > 2 && delim == '=' && newval)
     {
         s = strchr (operand, '=');
         for (n = 0; n < 32;)
@@ -441,6 +441,111 @@ U16     xcode;                          /* Exception code            */
     return n;
 
 } /* end function display_virt */
+
+
+/*-------------------------------------------------------------------*/
+/* Disassemble real                                                  */
+/*-------------------------------------------------------------------*/
+static void ARCH_DEP(disasm_stor) (REGS *regs, char *opnd)
+{
+U64     saddr, eaddr;                   /* Range start/end addresses */
+U64     maxadr;                         /* Highest real storage addr */
+RADR    raddr;                          /* Real storage address      */
+RADR    aaddr;                          /* Absolute storage address  */
+int     stid;
+int     len;                            /* Number of bytes to alter  */
+int     i;                              /* Loop counter              */
+int     ilc;
+BYTE    inst[6];                        /* Storage alteration value  */
+BYTE    opcode;
+U16     xcode;
+char    type;
+
+    /* Set limit for address range */
+  #if defined(FEATURE_ESAME)
+    maxadr = 0xFFFFFFFFFFFFFFFFULL;
+  #else /*!defined(FEATURE_ESAME)*/
+    maxadr = 0x7FFFFFFF;
+  #endif /*!defined(FEATURE_ESAME)*/
+
+    while((opnd && *opnd != '\0') &&
+      (*opnd == ' ' || *opnd == '\t'))
+        opnd++;
+
+    if(REAL_MODE(&regs->psw))
+        type = 'R';
+    else
+        type = 'V';
+
+    switch(toupper(*opnd)) {
+        case 'R': /* real */
+        case 'V': /* virtual */
+        case 'P': /* primary */
+        case 'H': /* home */
+          type = toupper(*opnd);
+          opnd++;
+    }
+
+    if(type == 'V')
+    {
+        if(HOME_SPACE_MODE(&(regs->psw)))
+            type = 'H';
+        else
+            type = 'P';
+    }
+
+    /* Parse the range or alteration operand */
+    len = parse_range (opnd, maxadr, &saddr, &eaddr, NULL);
+    if (len < 0) return;
+
+    /* Display real storage */
+    for (i = 0; i < 999 && saddr <= eaddr; i++)
+    {
+
+        if(type == 'R')
+            raddr = saddr;
+        else
+        {
+            if((xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid, saddr, 0, regs, ACCTYPE_INSTFETCH) ))
+            {
+                logmsg(_("Storage not accessible code = %4.4X\n"), xcode);
+                return;
+            }
+        }
+
+        aaddr = APPLY_PREFIXING (raddr, regs->PX);
+        if (aaddr > regs->mainlim)
+        {
+            logmsg(_("Adressing exception\n"));
+            return;
+        }
+
+        opcode = regs->mainstor[aaddr];
+        ilc = (opcode < 0x40) ? 2 : (opcode < 0xC0) ? 4 : 6;
+
+        if (aaddr + ilc > regs->mainlim)
+        {
+            logmsg(_("Adressing exception\n"));
+            return;
+        }
+
+        memcpy(inst, regs->mainstor + aaddr, ilc);
+        logmsg("%c" F_VADR ": %2.2X%2.2X", type, raddr, inst[0], inst[1]);
+        if(ilc > 2)
+        {
+            logmsg("%2.2X%2.2X", inst[2], inst[3]);
+            if(ilc > 4)
+                logmsg("%2.2X%2.2X ", inst[4], inst[5]);
+            else
+                logmsg("     ");
+        }
+        else
+            logmsg("         ");
+        DISASM_INSTRUCTION(inst);
+        saddr += ilc;
+    } /* end for(i) */
+
+} /* end function disasm_stor */
 
 
 /*-------------------------------------------------------------------*/
@@ -833,6 +938,29 @@ void display_inst(REGS *regs, BYTE *inst)
 #if defined(_900)
         case ARCH_900:
             z900_display_inst(regs,inst);
+            break;
+#endif
+    }
+
+}
+
+
+void disasm_stor(REGS *regs, char *opnd)
+{
+    switch(regs->arch_mode) {
+#if defined(_370)
+        case ARCH_370:
+            s370_disasm_stor(regs,opnd);
+            break;
+#endif
+#if defined(_390)
+        case ARCH_390:
+            s390_disasm_stor(regs,opnd);
+            break;
+#endif
+#if defined(_900)
+        case ARCH_900:
+            z900_disasm_stor(regs,opnd);
             break;
 #endif
     }
