@@ -471,7 +471,7 @@ BYTE    c;                              /* Work area for sscanf      */
             }
             else if (strcasecmp (keyword, "pgmprdos") == 0)
             {
-                sdevtmax = operand;
+                spgmprdos = operand;
             }
             else
             {
@@ -786,10 +786,11 @@ BYTE    c;                              /* Work area for sscanf      */
             if (strcasecmp (spgmprdos, "LICENSED") == 0)
             {
                 pgmprdos = PGM_PRD_OS_LICENSED;
-                logmsg( "HHC046W PGMPRDOS LICENSED specified. Licensed program "
-                        "product OSes will run properly.\n       You are "
-                        "responsible for meeting all conditions\n        "
-                        "of your license for the software you will run.");
+            }
+            /* Handle silly British spelling. */
+            else if (strcasecmp (spgmprdos, "LICENCED") == 0)
+            {
+                pgmprdos = PGM_PRD_OS_LICENSED;
             }
             else if (strcasecmp (spgmprdos, "RESTRICTED") == 0)
             {
@@ -1059,6 +1060,14 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Display the version identifier on the control panel */
     display_version (sysblk.msgpipew, "Hercules ");
+    if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
+    {
+        logmsg( "HHC046W PGMPRDOS LICENSED specified.\n"
+                "        Licensed program product operating systems will run "
+                "properly.\n        You are "
+                "responsible for meeting all conditions of your software "
+                "license.\n");
+    }
 
 #ifdef _FEATURE_VECTOR_FACILITY
     for(i = 0; i < numvec && i < numcpu; i++)
