@@ -59,10 +59,18 @@ int     i;                              /* Array subscript           */
 /*-------------------------------------------------------------------*/
 void convert_to_ebcdic (BYTE *dest, int len, BYTE *source)
 {
+char   *scodepage;
 int     i;                              /* Array subscript           */
 
+    /* set_codepage() uses the logmsg macro which requires msgpipew */
+    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
-        set_codepage("default");
+    {
+        if((scodepage = getenv("HERCULES_CP")))
+            set_codepage(scodepage);
+        else
+            set_codepage("default");
+    }
 
     for (i = 0; i < len && source[i] != '\0'; i++)
         dest[i] = host_to_guest(source[i]);
@@ -80,9 +88,18 @@ int     i;                              /* Array subscript           */
 int make_asciiz (BYTE *dest, int destlen, BYTE *src, int srclen)
 {
 int             len;                    /* Result length             */
+char   *scodepage;
 
+    /* set_codepage() uses the logmsg macro which requires msgpipew */
+    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
-        set_codepage("default");
+    {
+        if((scodepage = getenv("HERCULES_CP")))
+            set_codepage(scodepage);
+        else
+            set_codepage("default");
+    }
+
 
     for (len=0; len < srclen && len < destlen-1; len++)
         dest[len] = guest_to_host(src[len]);
@@ -107,9 +124,18 @@ BYTE            hex_chars[64];
 BYTE            prev_hex[64] = "";
 int             firstsame = 0;
 int             lastsame = 0;
+char   *scodepage;
 
+    /* set_codepage() uses the logmsg macro which requires msgpipew */
+    sysblk.msgpipew = stdout;
     if(!sysblk.codepage)
-        set_codepage("default");
+    {
+        if((scodepage = getenv("HERCULES_CP")))
+            set_codepage(scodepage);
+        else
+            set_codepage("default");
+    }
+
 
     pchar = (unsigned char*)addr;
 

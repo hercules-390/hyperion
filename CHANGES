@@ -1,3 +1,5 @@
+08 May 2002 CodePage converion table 850/273 - Gerd Petermann
+05 May 2002 Add some NLS definitions - Jan Jaeger
 05 May 2002 Merge Debian patch to ckd2cckd.c to permit compilation with
             gcc 3.0, where printf may be a macro - Matt Zimmerman
 04 May 2002 Fix panel.c attach command bug identified by Kris Van Hees

@@ -323,7 +323,10 @@ BYTE    c;                              /* Work area for sscanf      */
     /* Direct logmsg output to stderr during initialization */
     sysblk.msgpipew = stderr;
 
-    set_codepage("default");
+    if((scodepage = getenv("HERCULES_CP")))
+        set_codepage(scodepage);
+    else
+        set_codepage("default");
 
     /* Open the configuration file */
     fp = fopen (fname, "r");

@@ -233,6 +233,8 @@ The following system parameters may be specified:
 <dd>specifies the codepage conversion table used for ascii/ebcdic translation
     "default" specifies traditional hercules codepage, "437/037" and
     "437/500" are also supported.
+    If no codepage is specified then the environment variable HERCULES_CP
+    will be inspected.  The default codepage used is "default"
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any system
