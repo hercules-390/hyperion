@@ -118,6 +118,8 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
     if((pDEVBLK->hnd = hdl_ghnd(argv[0])))
     {
+        if(pDEVBLK->hnd->init == &CTCX_Init)
+            return -1;
         free(pDEVBLK->typname);
         pDEVBLK->typname = strdup(argv[0]);
         return (pDEVBLK->hnd->init)( pDEVBLK, argc, argv );
@@ -1309,10 +1311,10 @@ void  AddDevice( DEVBLK**    ppDEVBLK,
 
     if( *ppDEVBLK == NULL )
     {
-        *ppDEVBLK = get_devblk(sDevNum);
+        (*ppDEVBLK) = get_devblk(sDevNum);
         (*ppDEVBLK)->hnd = pDevBlk->hnd;
         (*ppDEVBLK)->devtype = pDevBlk->devtype;
-        (*ppDEVBLK)->typname = pDevBlk->typname;
+        (*ppDEVBLK)->typname = strdup(pDevBlk->typname);
         // Release the just aquired devblk
         release_lock( &(*ppDEVBLK)->lock );
     }

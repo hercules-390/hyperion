@@ -23,6 +23,7 @@ DYNINST=dyninst
 HDTEQ=hdteq
 HDT1403=hdt1403
 HDT2703=hdt2703
+HDT3088=hdt3088
 HDT3270=hdt3270
 HDT3420=hdt3420
 HDT3505=hdt3505
@@ -33,6 +34,7 @@ DYNINST_DLL=dyninst.dll
 HDTEQ_DLL=hdteq.dll
 HDT1403_DLL=hdt1403.dll
 HDT2703_DLL=hdt2703.dll
+HDT3088_DLL=hdt3088.dll
 HDT3270_DLL=hdt3270.dll
 HDT3420_DLL=hdt3420.dll
 HDT3505_DLL=hdt3505.dll
@@ -47,6 +49,8 @@ HDT1403=
 HDT1403_DLL=
 HDT2703=
 HDT2703_DLL=
+HDT3088=
+HDT3088_DLL=
 HDT3270=
 HDT3270_DLL=
 HDT3420=
@@ -71,6 +75,7 @@ bin_PROGRAMS = hercules \
            $(HDTEQ) $(HDTEQ_DLL) \
            $(HDT1403) $(HDT1403_DLL) \
            $(HDT2703) $(HDT2703_DLL) \
+           $(HDT3088) $(HDT3088_DLL) \
            $(HDT3270) $(HDT3270_DLL) \
            $(HDT3420) $(HDT3420_DLL) \
            $(HDT3505) $(HDT3505_DLL) \
@@ -117,10 +122,8 @@ devtype_sources=commadpt.c \
                 cardpch.c \
                 cardrdr.c sockdev.c \
                 printer.c \
-                tapedev.c hetlib.c
-#               ctc_lcs.c  <--- hdtlcs
-#               ctc_ctci.c <--- hdtctci
-#               ctcadpt.c  <--- hdtvmnet + hdtctct (should split ctcadpt.c)
+                tapedev.c hetlib.c \
+                ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
 
 extra_dynamic_sources=dynguib.h dynguip.h dynguiv.h dyngui.rc
 
@@ -137,6 +140,8 @@ hdt1403_SOURCES = printer.c
 hdt1403_LDFLAGS = -shared
 hdt2703_SOURCES = commadpt.c
 hdt2703_LDFLAGS = -shared
+hdt3088_SOURCES = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
+hdt3088_LDFLAGS = -shared
 hdt3270_SOURCES = console.c
 hdt3270_LDFLAGS = -shared
 hdt3420_SOURCES = tapedev.c hetlib.c
@@ -173,6 +178,7 @@ dyninst_LDADD = $(LDADD) $(HERCULES_A)
 hdteq_LDADD = $(LDADD) $(HERCULES_A)
 hdt1403_LDADD = $(LDADD) $(HERCULES_A)
 hdt2703_LDADD = $(LDADD) $(HERCULES_A)
+hdt3088_LDADD = $(LDADD) $(HERCULES_A)
 hdt3270_LDADD = $(LDADD) $(HERCULES_A)
 hdt3420_LDADD = $(LDADD) $(HERCULES_A)
 hdt3505_LDADD = $(LDADD) $(HERCULES_A)
@@ -187,7 +193,7 @@ else
 STADEV=$(DYNDEV)
 endif
 
-hercules_SOURCES = hostinfo.c w32ctca.c \
+hercules_SOURCES = hostinfo.c \
 	   impl.c config.c panel.c version.c \
 	   ipl.c assist.c dat.c \
 	   stack.c cpu.c vstore.c \
@@ -197,14 +203,14 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   diagnose.c diagmssf.c vm.c \
 	   channel.c ckddasd.c fbadasd.c \
 	   external.c \
-	   float.c ctcadpt.c trace.c \
+	   float.c trace.c \
 	   machchk.c vector.c xstore.c \
 	   cmpsc.c sie.c qdio.c timer.c \
 	   esame.c cckddasd.c cckdutil.c dasdtab.c \
 	   parser.c ieee.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
 	   httpserv.c cgibin.c codepage.c \
-	   ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c \
+	   hsccmd.c hscmisc.c \
 	   logger.c cache.c ecpsvm.c shared.c \
 	   $(MEMRCHR) hscutl.c logmsg.c hdl.c hdlmain.c \
            $(STADEV) $(HERCULES_EXP)
@@ -332,6 +338,10 @@ hdt2703.dll$(EXEEXT): hdt2703$(EXEEXT)
 	rm  -f                         hdt2703.dll
 	cp           hdt2703$(EXEEXT)  hdt2703.dll
 
+hdt3088.dll$(EXEEXT): hdt3088$(EXEEXT)
+	rm  -f                         hdt3088.dll
+	cp           hdt3088$(EXEEXT)  hdt3088.dll
+
 hdt3270.dll$(EXEEXT): hdt3270$(EXEEXT)
 	rm  -f                         hdt3270.dll
 	cp           hdt3270$(EXEEXT)  hdt3270.dll
@@ -353,7 +363,7 @@ dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 endif
 endif
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath RELEASE.NOTES CHANGES README.COMMADPT \
+EXTRA_DIST = autoconf/config.rpath RELEASE.NOTES CHANGES README.COMMADPT \
              README.CVS README.ECPSVM README.HDL README.NETWORKING \
              README.OSX README.TAPE hercules.cnf cckdfix.c
 

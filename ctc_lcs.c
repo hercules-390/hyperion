@@ -1979,7 +1979,7 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 // --------------------------------------------------------------------
 
 
-#if defined(OPTION_DYNAMIC_LOAD) && 0
+#if defined(OPTION_DYNAMIC_LOAD)
 static
 #endif
 DEVHND lcs_device_hndinfo =
@@ -1992,7 +1992,7 @@ DEVHND lcs_device_hndinfo =
 };
 
 
-#if defined(OPTION_DYNAMIC_LOAD) && 0
+#if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -2004,6 +2004,14 @@ END_DEPENDENCY_SECTION;
 HDL_DEVICE_SECTION;
 {
     HDL_DEVICE(LCS, lcs_device_hndinfo );
+
+// ZZ the following device types should be moved to
+// ZZ their own loadable modules
+    HDL_DEVICE(3088, ctcadpt_device_hndinfo );
+    HDL_DEVICE(CTCI, ctci_device_hndinfo    );
+    HDL_DEVICE(CTCI-W32, ctci_device_hndinfo);
+    HDL_DEVICE(CTCT, ctct_device_hndinfo    );
+    HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
 }
 END_DEVICE_SECTION;
 #endif

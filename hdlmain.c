@@ -166,6 +166,19 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(9347, tapedev_device_hndinfo );
     HDL_DEVICE(9348, tapedev_device_hndinfo );
     HDL_DEVICE(8809, tapedev_device_hndinfo );
+
+#if !defined(__APPLE__)
+    /* Communications devices */
+    HDL_DEVICE(3088, ctcadpt_device_hndinfo );
+    HDL_DEVICE(CTCI, ctci_device_hndinfo    );
+#if defined(WIN32)
+    HDL_DEVICE(CTCI-W32, ctci_device_hndinfo);
+#endif /*defined(WIN32)*/
+    HDL_DEVICE(CTCT, ctct_device_hndinfo    );
+    HDL_DEVICE(LCS,  lcs_device_hndinfo     );
+    HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
+#endif /* !defined(__APPLE__) */
+
 #endif /*!defined(OPTION_DYNAMIC_LOAD)*/
 
     /* Count Key Data Direct Access Storage Devices */
@@ -187,16 +200,6 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(9332, fbadasd_device_hndinfo );
     HDL_DEVICE(9335, fbadasd_device_hndinfo );
     HDL_DEVICE(9336, fbadasd_device_hndinfo );
-
-#if !defined(__APPLE__)
-    /* Communications devices */
-    HDL_DEVICE(3088, ctcadpt_device_hndinfo );
-    HDL_DEVICE(CTCI, ctci_device_hndinfo    );
-    HDL_DEVICE(CTCI-W32, ctci_device_hndinfo);
-    HDL_DEVICE(CTCT, ctct_device_hndinfo    );
-    HDL_DEVICE(LCS,  lcs_device_hndinfo     );
-    HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
-#endif /* !defined(__APPLE__) */
 }
 END_DEVICE_SECTION;
 

@@ -372,7 +372,7 @@ int cckd_cmd(char* cmdline, int argc, char *argv[])
     return cckd_command(p,1);
 }
 
-#if defined(OPTION_W32_CTCI)
+#if defined(OPTION_W32_CTCI) && !defined(OPTION_DYNAMIC_LOAD)
 
 ///////////////////////////////////////////////////////////////////////
 /* tt32stats command - display CTCI-W32 statistics */
@@ -2638,7 +2638,7 @@ COMMAND ( "lsdep",     lsdep_cmd,     "list module dependencies\n" )
 #ifdef OPTION_IODELAY_KLUDGE
 COMMAND ( "iodelay",   iodelay_cmd,   "display or set I/O delay value" )
 #endif
-#if defined(OPTION_W32_CTCI)
+#if defined(OPTION_W32_CTCI) && !defined(OPTION_DYNAMIC_LOAD)
 COMMAND ( "tt32stats", tt32stats_cmd, "display CTCI-W32 statistics" )
 #endif
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
