@@ -64,11 +64,11 @@ int      nInputStreamFileNum  =  -1;    // (file descriptor for stdin stream)
 
 void  Initialize         ();
 void  ProcessingLoop     ();
+void  Cleanup            ();
 void  UpdateTargetCPU    ();
 void  ReadInputData      (size_t nTimeoutMillsecs);
 void  ProcessInputData   ();
 void* gui_panel_command  (char* pszCommand);
-void  gui_panel_cleanup  ();
 void  UpdateStatus       ();
 void  UpdateCPUStatus    ();
 void  UpdateRegisters    ();
@@ -827,11 +827,12 @@ void  Initialize ()
 
     memset(pszCommandBuff,0,nCommandBuffSize);
     nCommandLen = 0;
-
-    atexit( gui_panel_cleanup );
 }
 
-void gui_panel_cleanup()
+///////////////////////////////////////////////////////////////////////////////
+// (called by 'gui_panel_display' when main loop terminates...)
+
+void Cleanup()
 {
     if  (pszInputBuff)
     free(pszInputBuff);
@@ -885,6 +886,8 @@ void gui_panel_display ()
     logmsg(_("HHCHGnnnI dyngui.dll initiated\n"));
     Initialize();               // (allocate buffers, etc)
     ProcessingLoop();           // (primary processing loop)
+    logmsg(_("HHCHGnnnI dyngui.dll terminated\n"));
+    Cleanup();                  // (de-allocate resources)
 }
 
 /*****************************************************************************\

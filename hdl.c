@@ -328,12 +328,6 @@ HDLPRE *preload;
 
     hdl_cdll->name = strdup("*Hercules");
 
-    // ZZ FIXME: Win32-specific file name handling: If no file name
-    // extension is specified in the file name parameter, the default
-    // library extension ".dll" is appended. However, the file name
-    // string can include a trailing point character (.) to indicate
-    // that the module name has no extension.
-
     if(!(hdl_cdll->dll = dlopen(NULL, RTLD_NOW )))
     {
         fprintf(stderr, "HHCHD003E unable to open hercules as DLL: %s\n",
