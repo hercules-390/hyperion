@@ -114,6 +114,15 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #define DWORD int       /* will be undefined later */
 #endif
 
+/*-------------------------------------------------------------------*/
+/* Macro for issuing panel commands                                  */
+/*-------------------------------------------------------------------*/
+
+#define SYNCHRONOUS_PANEL_CMD(cmdline) \
+    panel_command((cmdline))
+
+#define ASYNCHRONOUS_PANEL_CMD(cmdline) \
+    create_thread(&cmdtid,&sysblk.detattr,panel_command,(cmdline))
 
 /*-------------------------------------------------------------------*/
 /* Macro definitions for tracing                                     */

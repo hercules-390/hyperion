@@ -23,11 +23,14 @@ int w32ctca_dummy = 0;
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include "w32ctca.h"
 #include "tt32api.h"    // (exported TunTap32.dll functions)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Debugging
+
+LPCTSTR FormatLastErrorMessage(DWORD dwLastError, LPTSTR pszErrMsgBuff, DWORD dwBuffSize);
 
 #define logmsg(fmt...) \
 do \
@@ -202,8 +205,12 @@ void __cdecl tt32_output_debug_string(const char* debug_string)
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Load the TUNTAP32.DLL...
 
+#define MAX_ERR_MSG_LEN  (256)
+
 BOOL tt32_loaddll()
 {
+    TCHAR szErrMsgBuff[MAX_ERR_MSG_LEN];
+
     EnterCriticalSection(&g_tt32_lock);
 
     if (g_tt32_hmoddll)
@@ -220,8 +227,8 @@ BOOL tt32_loaddll()
     {
         DWORD dwLastError = GetLastError();
         LeaveCriticalSection(&g_tt32_lock);
-        logmsg("** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld\n",
-            g_tt32_dllname,dwLastError);
+        logmsg("** tt32_loaddll: LoadLibraryEx(\"%s\") failed; rc=%ld: %s\n",
+            g_tt32_dllname,dwLastError,FormatLastErrorMessage(dwLastError,szErrMsgBuff,MAX_ERR_MSG_LEN));
         return FALSE;
     }
 
@@ -297,6 +304,37 @@ error:
     LeaveCriticalSection(&g_tt32_lock);
     logmsg("** tt32_loaddll: One of the GetProcAddress calls failed\n");
     return FALSE;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+LPCTSTR FormatLastErrorMessage(DWORD dwLastError, LPTSTR pszErrMsgBuff, DWORD dwBuffSize)
+{
+    LPTSTR p = pszErrMsgBuff;
+    DWORD dwBytesReturned = 0;
+
+    ASSERT(pszErrMsgBuff && dwBuffSize);
+
+    dwBytesReturned = FormatMessage
+    (
+        0
+            | FORMAT_MESSAGE_FROM_SYSTEM
+            | FORMAT_MESSAGE_IGNORE_INSERTS
+        ,
+        NULL,
+        dwLastError,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        pszErrMsgBuff,
+        dwBuffSize,
+        NULL
+    );
+
+    ASSERT(dwBytesReturned);
+
+    for (p += dwBytesReturned - 1; p >= pszErrMsgBuff && isspace(*p); p--);
+    *++p = 0;
+
+    return (LPCTSTR) pszErrMsgBuff;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -71,21 +71,21 @@ int dummy = 0;
 // Debugging
 
 #if defined(DEBUG) || defined(_DEBUG)
-    #define TRACE(a...) logmsg(a)
-    #define ASSERT(a) \
-        do \
-        { \
-            if (!(a)) \
-            { \
-                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
-            } \
-        } \
-        while(0)
-    #define VERIFY(a) ASSERT(a)
+	#define TRACE(a...) logmsg(a)
+	#define ASSERT(a) \
+		do \
+		{ \
+			if (!(a)) \
+			{ \
+				logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+			} \
+		} \
+		while(0)
+	#define VERIFY(a) ASSERT(a)
 #else
-    #define TRACE(a...)
-    #define ASSERT(a)
-    #define VERIFY(a) ((void)(a))
+	#define TRACE(a...)
+	#define ASSERT(a)
+	#define VERIFY(a) ((void)(a))
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -574,9 +574,13 @@ void  TrimDeviceThreads()
 
 		// Thread is currently idle and awaiting work. Tell it to exit.
 
-		MySetEvent(pThreadParms->hShutdownEvent);
+		// (Note: we need to signal the hRequestQueuedEvent event too so that
+		//  it can wake up and notice that the hShutdownEvent event is signaled)
 
-		Sleep(100);	// (give it time to die)
+		MySetEvent(pThreadParms->hShutdownEvent);
+		MySetEvent(pThreadParms->hRequestQueuedEvent);	// (wakeup thread)
+
+		Sleep(10);	// (give it time to die)
 		RemoveDeadThreadsFromList();
 	}
 
@@ -622,7 +626,7 @@ void  KillAllDeviceThreads()
 
 		UnlockScheduler();				// (unlock scheduler vars)
 		TRACE("** KillAllDeviceThreads: waiting for thread(s) to shutdown\n");
-		Sleep(100);						// (give them time to die)
+		Sleep(10);						// (give them time to die)
 		LockScheduler();				// (re-lock scheduler vars)
 		RemoveDeadThreadsFromList();	// (discard dead threads)
 	}

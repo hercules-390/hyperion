@@ -202,7 +202,7 @@ int refresh_interval = 5;
 int msgcount = 22;
 
     if ((command = cgi_variable(webblk,"command")))
-        panel_command(command);
+        SYNCHRONOUS_PANEL_CMD(command);
 
     if((value = cgi_variable(webblk,"msgcount")))
         msgcount = atoi(value);

@@ -768,18 +768,18 @@ BYTE   *s;                              /* Alteration value pointer  */
 BYTE    delim;                          /* Operand delimiter         */
 BYTE    c;                              /* Character work area       */
 
-    rc = sscanf(operand, "%llx%c%llx%c", &opnd1, &delim, &opnd2, &c);
+    rc = sscanf(operand, "%Lx%c%Lx%c", &opnd1, &delim, &opnd2, &c);
 
     /* Process storage alteration operand */
     if (rc > 2 && delim == '=')
     {
         s = strchr (operand, '=');
-        for (n = 0;;)
+        for (n = 0; n < 32;)
         {
             h1 = *(++s);
-            h1 = toupper(h1);
-            if (h1 == '\0') break;
+            if (h1 == '\0'  || h1 == '#' ) break;
             if (h1 == SPACE || h1 == '\t') continue;
+            h1 = toupper(h1);
             h2 = *(++s);
             h2 = toupper(h2);
             h1 = (h1 >= '0' && h1 <= '9') ? h1 - '0' :
@@ -788,7 +788,7 @@ BYTE    c;                              /* Character work area       */
                  (h2 >= 'A' && h2 <= 'F') ? h2 - 'A' + 10 : -1;
             if (h1 < 0 || h2 < 0 || n >= 32)
             {
-                logmsg ("Invalid value: %s\n", operand);
+                logmsg ("Invalid value: %s\n", s);
                 return -1;
             }
             newval[n++] = (h1 << 4) | h2;
@@ -2773,6 +2773,114 @@ struct termios kbattr;                  /* Terminal I/O structure    */
 } /* end function system_cleanup */
 
 /*-------------------------------------------------------------------*/
+/* Process .RC file thread                                           */
+/*-------------------------------------------------------------------*/
+
+int rc_thread_done = 0;                 /* 1 = RC file processed     */
+
+void* process_rc_file (void* dummy)
+{
+BYTE   *rcname;                         /* hercules.rc name pointer  */
+FILE   *rcfp;                           /* RC file pointer           */
+size_t  rcbufsize = 1024;               /* Size of RC file  buffer   */
+BYTE   *rcbuf = NULL;                   /* RC file input buffer      */
+int     rclen;                          /* length of RC file record  */
+int     rc_pause_amt = 0;               /* seconds to pause RC file  */
+BYTE   *p;                              /* (work)                    */
+
+    /* Obtain the name of the hercules.rc file or default */
+
+    if(!(rcname = getenv("HERCULES_RC")))
+        rcname = "hercules.rc";
+
+    /* Open RC file. If it doesn't exist,
+       then there's nothing for us to do */
+
+    if (!(rcfp = fopen(rcname, "r")))
+    {
+        if (ENOENT != errno)
+            logmsg("HHC432E: RC file open failed: %s\n",
+                strerror(errno));
+        rc_thread_done = 1;
+        return NULL;
+    }
+
+    logmsg("HHC430I: RC file processing thread started...\n");
+
+    /* Obtain storage for the RC file buffer */
+
+    if (!(rcbuf = malloc (rcbufsize)))
+    {
+        logmsg("HHC431E: RC file buffer malloc failed: %s\n",
+            strerror(errno));
+        fclose(rcfp);
+        rc_thread_done = 1;
+        return NULL;
+    }
+
+    for (;;)
+    {
+        /* Read a complete line from the RC file */
+
+        if (!fgets(rcbuf, rcbufsize, rcfp)) break;
+
+        /* Remove trailing whitespace */
+
+        for (rclen = strlen(rcbuf); rclen && isspace(rcbuf[rclen-1]); rclen--);
+        rcbuf[rclen] = 0;
+
+        /* '#' == silent comment, '*' == loud comment */
+
+        if ('#' == rcbuf[0] || '*' == rcbuf[0])
+        {
+            if ('*' == rcbuf[0])
+                logmsg ("> %s",rcbuf);
+            continue;
+        }
+
+        /* Remove any # comments on the line before processing */
+
+        if ((p = strchr(rcbuf,'#')) && p > rcbuf)
+            do *p = 0; while (isspace(*--p) && p >= rcbuf);
+
+        if (strncasecmp(rcbuf,"pause",5) == 0)
+        {
+            sscanf(rcbuf+5, "%d", &rc_pause_amt);
+
+            if (rc_pause_amt < 0 || rc_pause_amt > 999)
+            {
+                logmsg("HHC428W Ignoring invalid .RC file pause statement\n");
+                continue;
+            }
+
+            logmsg ("HHC426I Pausing .RC file processing for %d seconds...\n", rc_pause_amt);
+            sleep(rc_pause_amt);
+            logmsg ("HHC427I Resuming .RC file processing...\n");
+
+            continue;
+        }
+
+        /* Process the command */
+
+        for (p = rcbuf; isspace(*p); p++);
+
+        rc_cmd = 1;
+        SYNCHRONOUS_PANEL_CMD(p);
+    }
+
+    if (feof(rcfp))
+        logmsg ("HHC429I EOF reached on .RC file.\n");
+    else
+        logmsg ("HHC429E I/O reading .RC file: %s\n",strerror(errno));
+
+    fclose(rcfp);
+
+    rc_thread_done = 1;
+
+    return NULL;
+}
+
+/*-------------------------------------------------------------------*/
 /* Panel display thread                                              */
 /*                                                                   */
 /* This function runs on the main thread.  It receives messages      */
@@ -2808,6 +2916,7 @@ void get_msgbuf(BYTE **_msgbuf, int *_msgslot, int *_nummsgs, int *_msg_size, in
     *_msg_size = msg_size;
     *_max_msgs = max_msgs;
 }
+
 void panel_display (void)
 {
 int     rc;                             /* Return code               */
@@ -2835,11 +2944,10 @@ int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
 int     cmdoff = 0;                     /* Number of bytes in cmdline*/
 TID     cmdtid;                         /* Command thread identifier */
+TID     rctid;                          /* RC file thread identifier */
 BYTE    c;                              /* Character work area       */
 FILE   *confp;                          /* Console file pointer      */
 FILE   *logfp;                          /* Log file pointer          */
-FILE   *rcfp;                           /* RC file pointer           */
-BYTE   *rcname;                         /* hercules.rc name pointer  */
 struct termios kbattr;                  /* Terminal I/O structure    */
 size_t  kbbufsize = CMD_SIZE;           /* Size of keyboard buffer   */
 BYTE   *kbbuf = NULL;                   /* Keyboard input buffer     */
@@ -2849,9 +2957,6 @@ int     keybfd;                         /* Keyboard file descriptor  */
 int     maxfd;                          /* Highest file descriptor   */
 fd_set  readset;                        /* Select file descriptors   */
 struct  timeval tv;                     /* Select timeout structure  */
-int     rc_pause_amt = 0;               /* seconds to pause RC file  */
-time_t  rc_time_paused = 0;             /* time RC file was paused   */
-BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
 
     /* Display thread started message on control panel */
     logmsg ("HHC650I Control panel thread started: "
@@ -2901,12 +3006,6 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
     pipefd = sysblk.msgpiper;
     keybfd = STDIN_FILENO;
 
-    /* Obtain the name of the hercules.rc file or default */
-    if(!(rcname = getenv("HERCULES_RC")))
-        rcname = "hercules.rc";
-
-    rcfp = fopen(rcname, "r");
-
     /* Register the system cleanup exit routine */
     atexit (system_cleanup);
 
@@ -2938,6 +3037,9 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
 
     /* Wait for system to finish coming up */
     while (!initdone) sleep(1);
+
+    /* Start up the RC file processing thread */
+    create_thread(&rctid,&sysblk.detattr,process_rc_file,NULL);
 
     /* Process messages and commands */
     while (1)
@@ -2992,49 +3094,19 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
 
         /* If keyboard input has arrived then process it */
 
-        rc_cmd = 0;
-
-        if (rc_paused && (time(NULL) - rc_time_paused) >= rc_pause_amt)
+        if (FD_ISSET(keybfd, &readset))
         {
-            rc_paused = 0;
-            logmsg ("HHC427I resuming .rc file processing...\n");
-        }
+            /* Read character(s) from the keyboard */
 
-        if ((!rc_paused && rcfp) || FD_ISSET(keybfd, &readset))
-        {
-            kblen = 0;
-            if (!rc_paused && rcfp)
+            kblen = read (keybfd, kbbuf, sizeof(kbbuf)-1);
+            if (kblen < 0)
             {
-                /* Read a complete line from the RC file */
-                if (fgets (kbbuf, kbbufsize, rcfp))
-                {
-                    kblen = strlen(kbbuf);
-                    rc_cmd = 1;
-                }
-                else
-                {
-                    if (feof(rcfp))
-                        logmsg ("HHC429I EOF reached on .rc file.\n");
-                    else
-                        logmsg ("HHC429E I/O reading .rc file: %s\n",strerror(errno));
-
-                    fclose(rcfp);
-                    rcfp = 0;
-                }
+                fprintf (stderr,
+                        "panel: keyboard read: %s\n",
+                        strerror(errno));
+                break;
             }
-            if (kblen == 0 && FD_ISSET(keybfd, &readset))
-            {
-                /* Read character(s) from the keyboard */
-                kblen = read (keybfd, kbbuf, sizeof(kbbuf)-1);
-                if (kblen < 0)
-                {
-                    fprintf (stderr,
-                            "panel: keyboard read: %s\n",
-                            strerror(errno));
-                    break;
-                }
-                kbbuf[kblen] = '\0';
-            }
+            kbbuf[kblen] = '\0';
 
             /* =NP= : Intercept NP commands & process */
 
@@ -3061,23 +3133,19 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
                             break;
                         case 'S':                   /* START */
                         case 's':
-                            create_thread (&cmdtid, &sysblk.detattr,
-                                        panel_command, "start");
+                            ASYNCHRONOUS_PANEL_CMD("start");
                             break;
                         case 'P':                   /* STOP */
                         case 'p':
-                            create_thread (&cmdtid, &sysblk.detattr,
-                                        panel_command, "stop");
+                            ASYNCHRONOUS_PANEL_CMD("stop");
                             break;
                         case 'T':                   /* RESTART */
                         case 't':
-                            create_thread (&cmdtid, &sysblk.detattr,
-                                        panel_command, "restart");
+                            ASYNCHRONOUS_PANEL_CMD("restart");
                             break;
                         case 'E':                   /* Ext int */
                         case 'e':
-                            create_thread (&cmdtid, &sysblk.detattr,
-                                        panel_command, "ext");
+                            ASYNCHRONOUS_PANEL_CMD("ext");
                             redraw_status = 1;
                             break;
                         case 'O':                   /* Store */
@@ -3161,8 +3229,7 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
                             sprintf(NPdevstr, "%x", NPdevaddr[i]);
                             strcpy(cmdline, "ipl ");
                             strcat(cmdline, NPdevstr);
-                            create_thread (&cmdtid, &sysblk.detattr,
-                                        panel_command, cmdline);
+                            ASYNCHRONOUS_PANEL_CMD(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
                             break;
@@ -3183,8 +3250,7 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
                             sprintf(NPdevstr, "%x", NPdevaddr[i]);
                             strcpy(cmdline, "i ");
                             strcat(cmdline, NPdevstr);
-                            create_thread (&cmdtid, &sysblk.detattr,
-                                        panel_command, cmdline);
+                            ASYNCHRONOUS_PANEL_CMD(cmdline);
                             strcpy(NPprompt2, "");
                             redraw_status = 1;
                             break;
@@ -3221,8 +3287,7 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
                             break;
                         case 4:                     /* IPL - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
-                                create_thread (&cmdtid, &sysblk.detattr,
-                                        panel_command, "quit");
+                                ASYNCHRONOUS_PANEL_CMD("quit");
                             strcpy(NPprompt1, "");
                             redraw_status = 1;
                             break;
@@ -3363,32 +3428,19 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
                         }
                         else
 #endif /*EXTERNALGUI*/
-                        if (rc_cmd && strncasecmp(cmdline,"pause",5) == 0)
-                        {
-                            logmsg ("> %s\n",cmdline);
-
-                            sscanf(cmdline+5, "%d", &rc_pause_amt);
-
-                            if (rc_pause_amt > 0 && rc_pause_amt <= 999)
-                            {
-                                rc_paused = 1;
-                                rc_time_paused = time(NULL);
-                                logmsg ("HHC426I pausing .rc file processing for %d seconds...\n", rc_pause_amt);
-                            }
-                            else
-                                logmsg ("HHC428E ignoring invalid .rc file pause statement\n");
-                        }
-                        else
                         {
                             if ('#' == cmdline[0] || '*' == cmdline[0])
                             {
-                                if (!rc_cmd || '*' == cmdline[0])
-                                    logmsg ("%s%s\n", (rc_cmd) ? "> " : "", cmdline);
+                                if ('*' == cmdline[0])
+                                    logmsg("%s\n", cmdline);
                             }
                             else
                             {
-                                create_thread (&cmdtid, &sysblk.detattr,
-                                    panel_command, cmdline);
+                                if (rc_thread_done)
+                                {
+                                    rc_cmd = 0;
+                                    ASYNCHRONOUS_PANEL_CMD(cmdline);
+                                }
                             }
                         }
                     } else {
@@ -3417,8 +3469,7 @@ BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
                                 strcat(NPentered, NPdevstr);
                                 strcat(NPentered, " ");
                                 strcat(NPentered, cmdline);
-                                create_thread (&cmdtid, &sysblk.detattr,
-                                       panel_command, NPentered);
+                                ASYNCHRONOUS_PANEL_CMD(NPentered);
                                 strcpy(NPprompt2, "");
                                 break;
                             default:

@@ -224,6 +224,8 @@
 #define write_ctci_w32  write_ctci
 #endif /* defined(OPTION_W32_CTCI) */
 
+int ctcadpt_close_device(DEVBLK *dev);  /*   (forward reference)     */
+
 /*-------------------------------------------------------------------*/
 /* Definitions for 3088 model numbers                                */
 /*-------------------------------------------------------------------*/

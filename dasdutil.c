@@ -9,6 +9,12 @@
 #include "dasdblks.h"
 
 /*-------------------------------------------------------------------*/
+/* External references         (defined in ckddasd.c)                */
+/*-------------------------------------------------------------------*/
+extern int ckddasd_init_handler(DEVBLK *dev, int argc, BYTE *argv[]);
+extern int ckddasd_close_device(DEVBLK *dev);
+
+/*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define SPACE           ((BYTE)' ')
