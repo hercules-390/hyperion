@@ -210,14 +210,15 @@
 
 #define SET_IC_TRACE \
  do { \
-   int i = 0; \
+   int i, n; \
    int tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace); \
    U32 mask = sysblk.started_mask; \
-   while (mask) { \
-     i += ffs(mask); \
+   for (i = 0; mask; i++) { \
+     n = ffs(mask); \
+     i += n; \
      sysblk.regs[i]->tracing = tracing; \
      set_bit (4, IC_INTERRUPT, &sysblk.regs[i]->ints_state); \
-     mask >>= ++i; \
+     mask >>= (n+1); \
    } \
  } while (0)
 
@@ -248,72 +249,72 @@
 
 #define ON_IC_IOPENDING \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( !test_bit (4, IC_IO, &sysblk.ints_state) ) { \
      set_bit (4, IC_IO, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        if (test_bit (4, IC_IO, &sysblk.regs[i]->ints_mask)) \
          or_bits (4, BIT(IC_IO)|BIT(IC_INTERRUPT), &sysblk.regs[i]->ints_state); \
        else \
          set_bit (4, IC_IO, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
 
 #define ON_IC_CHANRPT \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( !test_bit (4, IC_CHANRPT, &sysblk.ints_state) ) { \
      set_bit (4, IC_CHANRPT, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        if (test_bit (4, IC_CHANRPT, &sysblk.regs[i]->ints_mask)) \
          or_bits (4, BIT(IC_CHANRPT)|BIT(IC_INTERRUPT), &sysblk.regs[i]->ints_state); \
        else \
          set_bit (4, IC_CHANRPT, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
 
 #define ON_IC_INTKEY \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( !test_bit (4, IC_INTKEY, &sysblk.ints_state) ) { \
      set_bit (4, IC_INTKEY, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        if (test_bit (4, IC_INTKEY, &sysblk.regs[i]->ints_mask)) \
          or_bits (4, BIT(IC_INTKEY)|BIT(IC_INTERRUPT), &sysblk.regs[i]->ints_state); \
        else \
          set_bit (4, IC_INTKEY, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
 
 #define ON_IC_SERVSIG \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( !test_bit (4, IC_SERVSIG, &sysblk.ints_state) ) { \
      set_bit (4, IC_SERVSIG, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        if (test_bit (4, IC_SERVSIG, &sysblk.regs[i]->ints_mask)) \
          or_bits (4, BIT(IC_SERVSIG)|BIT(IC_INTERRUPT), &sysblk.regs[i]->ints_state); \
        else \
          set_bit (4, IC_SERVSIG, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
@@ -428,60 +429,60 @@
 
 #define OFF_IC_IOPENDING \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( test_bit (4, IC_IO, &sysblk.ints_state) ) { \
      clear_bit (4, IC_IO, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        clear_bit (4, IC_IO, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
 
 #define OFF_IC_CHANRPT \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( test_bit (4, IC_CHANRPT, &sysblk.ints_state) ) { \
      clear_bit (4, IC_CHANRPT, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        clear_bit (4, IC_CHANRPT, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
 
 #define OFF_IC_INTKEY \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( test_bit (4, IC_INTKEY, &sysblk.ints_state) ) { \
      clear_bit (4, IC_INTKEY, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        clear_bit (4, IC_INTKEY, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
 
 #define OFF_IC_SERVSIG \
  do { \
-   int i; U32 mask; \
+   int i, n; U32 mask; \
    if ( test_bit (4, IC_SERVSIG, &sysblk.ints_state) ) { \
      clear_bit (4, IC_SERVSIG, &sysblk.ints_state); \
-     i = 0; \
      mask = sysblk.started_mask; \
-     while (mask) { \
-       i += ffs(mask); \
+     for (i = 0; mask; i++) { \
+       n = ffs(mask); \
+       i += n; \
        clear_bit (4, IC_SERVSIG, &sysblk.regs[i]->ints_state); \
-       mask >>= ++i; \
+       mask >>= (n+1); \
      } \
    } \
  } while (0)
