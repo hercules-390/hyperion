@@ -790,7 +790,7 @@ int     j,k;
 #ifdef FEATURE_HERCULES_DIAGCALLS
         if(sysblk.diag8cmd)
         {
-            logmsg ("HHC660I *%s* panel command issued by guest\n", buf);
+            logmsg (_("HHCVM001I *%s* panel command issued by guest\n"), buf);
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
                 dresp=log_capture(panel_command,buf);
@@ -806,13 +806,13 @@ int     j,k;
             else
             {
                 panel_command(buf);
-                logmsg ("HHC661I *%s* command complete\n", buf);
+                logmsg (_("HHCVM002I *%s* command complete\n"), buf);
             }
         }
         else
-            dresp="HHC662E Host command processing disabled by configuration statement";
+            dresp=_("HHCVM003I Host command processing disabled by configuration statement");
 #else
-            dresp="HHC663E Host command processing not included in engine build";
+            dresp=_("HHCVM004E Host command processing not included in engine build");
 #endif
     }
 
