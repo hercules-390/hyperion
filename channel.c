@@ -670,11 +670,6 @@ int     cc;                             /* Condition code            */
         /* Clear the status bits in the SCSW */
         dev->scsw.flag3 &= ~(SCSW3_SC);
 
-        /* Signal console thread to redrive select */
-        if (dev->console)
-        {
-            signal_thread (sysblk.cnsltid, SIGUSR2);
-        }
     }
     else
     {
@@ -714,10 +709,6 @@ int     cc;                             /* Condition code            */
             dev->attnpending = 0;
 
             /* Signal console thread to redrive select */
-            if (dev->console)
-            {
-                signal_thread (sysblk.cnsltid, SIGUSR2);
-            }
             /* Return condition code 0 to indicate status was pending */
             release_lock (&dev->lock);
             /* ISW20030812 - Added 3 lines */
@@ -725,6 +716,10 @@ int     cc;                             /* Condition code            */
             DEQUEUE_IO_INTERRUPT(&dev->attnioint);
             release_lock(&sysblk.intlock);
             /* ISW20030812 - END */
+            if (dev->console)
+            {
+                signal_thread (sysblk.cnsltid, SIGUSR2);
+            }
             return 0;
         }
         /* Set condition code 1 if status not pending */
@@ -743,6 +738,11 @@ int     cc;                             /* Condition code            */
     DEQUEUE_IO_INTERRUPT(&dev->ioint);
     release_lock(&sysblk.intlock);
     /* ISW20030812 - END */
+    /* Signal console thread to redrive select */
+    if (dev->console)
+    {
+        signal_thread (sysblk.cnsltid, SIGUSR2);
+    }
 
     /* Return the condition code */
     return cc;
