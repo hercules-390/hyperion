@@ -2628,55 +2628,21 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Determine the size of the entry table entry */
     numwords = ASF_ENABLED(regs) ? 8 : 4;
 
-    /* Fetch the 4- or 8-word entry table entry from real
-       storage.  Each fullword of the ETE must be fetched
-       concurrently as observed by other CPUs.  The entry
-       table cannot cross a page boundary. */
-
-//QUESTION:  If the table cannot cross a page boundary why do
-//           we apply prefixing and address wrapping for each
-//           loop iteration ??  Also, would 0x7fffffff be correct
-//           for esame ??  Can we do the code below instead ??
-//RESPONSE:  I think you must be right. Each ETE is 16 or 32 bytes
-//           long and starts on a 16 or 32 byte boundary. So it
-//           cannot cross a page boundary, so the absolute address
-//           only needs to be calculated once. 0x7FFFFFFF WOULD be
-//           correct, because the ET has a 31 bit address EVEN IN
-//           ESAME, but we cannot cross a page, so it is needed only
-//           when calculating the start address as above. S390 POP
-//           and z/POP figure 3-2 Address Wraparound both say that
-//           ET address wraps after 2**31-1 but it is unpredictable
-//           whether it wraps to 0 or causes an addressing exception.
-//           Either would be correct; we choose to wrap.
-//           Incidentally, the original comment above should be
-//           changed to "the entry table ENTRY cannot cross a page
-//           boundary" (the entry table as a whole could cross,
-//           but an individual entry table entry cannot).
-//Response by rbowler 14juin2004
-#if 1
+    /* Program check if entry table entry is outside main storage */
     abs = APPLY_PREFIXING (eto, regs->PX);
     if (abs > regs->mainlim - (numwords * 4))
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
+    /* Fetch the 4- or 8-word entry table entry from real
+       storage.  Each fullword of the ETE must be fetched
+       concurrently as observed by other CPUs.  The entry
+       table entry cannot cross a page boundary. */
     main = FETCH_MAIN_ABSOLUTE (abs, regs, numwords * 4);
     for (i = 0; i < numwords; i++)
     {
         ete[i] = fetch_fw (main);
         main += 4;
     }
-#else
-    for (i = 0; i < numwords; i++)
-    {
-        /* Program check if address is outside main storage */
-        abs = APPLY_PREFIXING (eto, regs->PX);
-        if (abs > regs->mainlim)
-            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-
-        /* Fetch one word of the entry table entry */
-        ete[i] = ARCH_DEP(fetch_fullword_absolute) (abs, regs);
-        eto += 4;
-        eto &= 0x7FFFFFFF;
-    }
-#endif
 
     /* Clear remaining words if fewer than 8 words were loaded */
     while (i < 8) ete[i++] = 0;
