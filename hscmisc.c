@@ -759,7 +759,7 @@ int     n;                              /* Number of bytes in buffer */
 
     /* Display the PSW */
     memset (qword, 0x00, sizeof(qword));
-    ARCH_DEP(store_psw) (regs, qword);
+    copy_psw (regs, qword);
     n = sprintf (buf,
                 "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
                 qword[0], qword[1], qword[2], qword[3],

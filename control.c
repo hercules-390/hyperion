@@ -267,7 +267,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             || (regs->psw.amode == 0 && regs->psw.IA > 0x00FFFFFF))
       #endif /*!defined(FEATURE_ESAME)*/
         {
-            regs->instvalid = 0;
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
 
@@ -1950,7 +1949,10 @@ int     amode64;
         regs->psw.AMASK = AMASK64;
         /* amode31 bit must be set when amode64 is set */
         if(!regs->psw.amode)
+        {
+            regs->zeroilc = 1;
             rc = PGM_SPECIFICATION_EXCEPTION;
+        }
     }
 #else /*!defined(FEATURE_ESAME)*/
     rc = ARCH_DEP(load_psw) ( regs, dword );
@@ -3363,7 +3365,6 @@ int     rc;                             /* return code from load_psw */
 
     if (rc) /* if new psw has bad format */
     {
-        regs->instvalid = 0;
         ARCH_DEP(program_interrupt) (&newregs, rc);
     }
 

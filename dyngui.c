@@ -545,7 +545,7 @@ void  UpdateStatus ()
 {
     BOOL  bStatusChanged = FALSE;   // (whether or not anything has changed)
 
-    store_psw(pTargetCPU_REGS, psw);
+    copy_psw(pTargetCPU_REGS, psw);
     wait_bit = (psw[1] & 0x02);
 
     // The SYS light and %CPU-Utilization

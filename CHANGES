@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+18 Nov 2004 Fix zero ilc & pgm oldpsw problem - Jan Jaeger
 18 Nov 2004 DIEBR,DIDBR instructions - Roger Bowler
 18 Nov 2004 VPATH Build enablement - Ivan Warren
 17 Nov 2004 Fix instruction operand trace display - Jan Jaeger

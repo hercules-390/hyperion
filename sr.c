@@ -169,7 +169,7 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU, i, sizeof(i));
         SR_WRITE_VALUE(file, SR_CPU_ARCHMODE, regs->arch_mode,sizeof(regs->arch_mode));
         SR_WRITE_VALUE(file, SR_CPU_PX, regs->PX_G,sizeof(regs->PX_G));
-        store_psw (regs, psw);
+        copy_psw (regs, psw);
         SR_WRITE_BUF(file, SR_CPU_PSW, psw, 16);
         for (j = 0; j < 16; j++)
             SR_WRITE_VALUE(file, SR_CPU_GR+j, regs->GR_G(j),sizeof(regs->GR_G(0)));

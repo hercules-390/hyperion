@@ -2429,7 +2429,7 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
                sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->instcount);
         logmsg( _("          CPU%4.4X: siocount %lld\n"),
                sysblk.regs[i]->cpuad,(long long)sysblk.regs[i]->siototal);
-        store_psw(sysblk.regs[i], curpsw);
+        copy_psw(sysblk.regs[i], curpsw);
         logmsg( _("          CPU%4.4X: psw %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x"),
                sysblk.regs[i]->cpuad,curpsw[0],curpsw[1],curpsw[2],curpsw[3],
                curpsw[4],curpsw[5],curpsw[6],curpsw[7]);

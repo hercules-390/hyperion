@@ -39,6 +39,10 @@
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 {
 
+    /* Ensure real instruction address is properly wrapped */   
+    if(likely(!regs->zeroilc))
+        regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+
 #if defined(FEATURE_BCMODE)
     if ( ECMODE(&regs->psw) ) {
 #endif /*defined(FEATURE_BCMODE)*/
@@ -54,7 +58,10 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | regs->psw.zerobyte
                    )
                  );
-        STORE_FW ( addr + 4,
+        if(unlikely(regs->zeroilc))
+            STORE_FW ( addr + 4, regs->psw.IA | (regs->psw.amode ? 0x80000000 : 0) );
+        else
+            STORE_FW ( addr + 4,
                    ( (regs->psw.IA & ADDRESS_MAXWRAP(regs)) | (regs->psw.amode ? 0x80000000 : 0) )
                  );
 #endif /*!defined(FEATURE_ESAME)*/
@@ -66,7 +73,16 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | (regs->psw.intcode)
                    )
                  );
-        STORE_FW ( addr + 4,
+        if(unlikely(regs->zeroilc))
+            STORE_FW ( addr + 4,
+                   ( ( (REAL_ILC(regs) << 5)
+                     | (regs->psw.cc << 4)
+                     | regs->psw.progmask
+                     ) << 24
+                   ) | regs->psw.IA
+                 );
+        else
+            STORE_FW ( addr + 4,
                    ( ( (REAL_ILC(regs) << 5)
                      | (regs->psw.cc << 4)
                      | regs->psw.progmask
@@ -92,7 +108,10 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | regs->psw.zeroword
                    )
                  );
-        STORE_DW ( addr + 8, (regs->psw.IA & ADDRESS_MAXWRAP(regs)) );
+        if(unlikely(regs->zeroilc))
+            STORE_DW ( addr + 8, regs->psw.IA );
+        else
+            STORE_DW ( addr + 8, (regs->psw.IA & ADDRESS_MAXWRAP(regs)) );
 #endif /*defined(FEATURE_ESAME)*/
 } /* end function ARCH_DEP(store_psw) */
 
@@ -102,6 +121,8 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 {
+    regs->zeroilc = 1;
+
     regs->psw.sysmask = addr[0];
     regs->psw.pkey    = (addr[1] & 0xF0);
     regs->psw.states  = (addr[1] & 0x0F);
@@ -224,6 +245,8 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         return PGM_SPECIFICATION_EXCEPTION;
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
+    regs->zeroilc = 0;
+
     /* Check for wait state PSW */
     if (WAITSTATE(&regs->psw) && (sysblk.insttrace || sysblk.inststep))
     {
@@ -340,11 +363,8 @@ static char *pgmintname[] = {
     realregs = sysblk.regs[regs->cpuad];
 #endif /*!defined(_FEATURE_SIE)*/
 
-    /* Ensure real instruction address is properly wrapped */   
-    realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
-
     /* Set instruction length (ilc) */
-    ilc = REAL_ILC(realregs);
+    ilc = REAL_ILC(regs);
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active)
         sie_ilc = REAL_ILC(realregs->guestregs);
@@ -475,6 +495,7 @@ static char *pgmintname[] = {
       || code == PGM_TRANSLATION_SPECIFICATION_EXCEPTION ))
     {
         realregs->psw.IA += ilc;
+        realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
     }
         
     /* Store the interrupt code in the PSW */
@@ -646,7 +667,7 @@ static char *pgmintname[] = {
     {
         /* Store the program interrupt code at PSA+X'8C' */
         psa->pgmint[0] = 0;
-        psa->pgmint[1] = realregs->instvalid ? ilc : 0;
+        psa->pgmint[1] = regs->zeroilc ? 0 : ilc;
         STORE_HW(psa->pgmint + 2, pcode);
 
         /* Store the exception access identification at PSA+160 */
@@ -1570,28 +1591,30 @@ slowloop:
 #endif
 
 /*-------------------------------------------------------------------*/
-/* Store program status word                                         */
+/* Copy program status word                                          */
 /*-------------------------------------------------------------------*/
-void store_psw (REGS *regs, BYTE *addr)
+void copy_psw (REGS *regs, BYTE *addr)
 {
-    switch(regs->arch_mode) {
+REGS cregs = *regs;
+
+    switch(cregs.arch_mode) {
 #if defined(_370)
         case ARCH_370:
-            s370_store_psw(regs, addr);
+            s370_store_psw(&cregs, addr);
             break;
 #endif
 #if defined(_390)
         case ARCH_390:
-            s390_store_psw(regs, addr);
+            s390_store_psw(&cregs, addr);
             break;
 #endif
 #if defined(_900)
         case ARCH_900:
-            z900_store_psw(regs, addr);
+            z900_store_psw(&cregs, addr);
             break;
 #endif
     }
-} /* end function store_psw */
+} /* end function copy_psw */
 
 /*-------------------------------------------------------------------*/
 /* Display program status word                                       */
@@ -1604,14 +1627,14 @@ QWORD   qword;                            /* quadword work area      */
 
     if( regs->arch_mode != ARCH_900 )
     {
-        store_psw (regs, qword);
+        copy_psw (regs, qword);
         logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
     }
     else
     {
-        store_psw (regs, qword);
+        copy_psw (regs, qword);
         logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n"),
                 qword[0], qword[1], qword[2], qword[3],

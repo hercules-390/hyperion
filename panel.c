@@ -486,7 +486,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #endif /*defined(_FEATURE_SIE)*/
 
     memset (curpsw, 0x00, sizeof(curpsw));
-    store_psw (regs, curpsw);
+    copy_psw (regs, curpsw);
     if( regs->arch_mode == ARCH_900 )
     {
         curpsw[1] |= 0x08;
@@ -1478,7 +1478,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
         /* Obtain the PSW for target CPU */
         memset (curpsw, 0x00, sizeof(curpsw));
-        store_psw (regs, curpsw);
+        copy_psw (regs, curpsw);
 
         /* Isolate the PSW interruption wait bit */
         pswwait = curpsw[1] & 0x02;

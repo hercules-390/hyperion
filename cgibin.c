@@ -109,7 +109,7 @@ int i;
 }
 
 
-void store_psw (REGS *regs, BYTE *addr);
+// void copy_psw (REGS *regs, BYTE *addr);
 
 void cgibin_psw(WEBBLK *webblk)
 {
@@ -160,14 +160,14 @@ void cgibin_psw(WEBBLK *webblk)
 
     if( regs->arch_mode != ARCH_900 )
     {
-        store_psw (regs, qword);
+        copy_psw (regs, qword);
         fprintf(webblk->hsock, "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n",
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
     }
     else
     {
-        store_psw (regs, qword);
+        copy_psw (regs, qword);
         fprintf(webblk->hsock, "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
                 "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n",
                 qword[0], qword[1], qword[2], qword[3],

@@ -113,7 +113,7 @@ typedef void (ATTR_REGPARM(2) (*zz_func)) (BYTE inst[], REGS *regs);
 
 #define ILC(_b) ((_b) < 0x40 ? 2 : (_b) < 0xc0 ? 4 : 6)
 #define REAL_ILC(_regs) \
- ( !(_regs)->instvalid ? 0 : (_regs)->execflag ? 4 : ILC((_regs)->ip[0]) )
+ ( (_regs)->zeroilc ? 0 : (_regs)->execflag ? 4 : ILC((_regs)->ip[0]) )
 
 /* Gabor Hoffer (performance option) */
 extern zz_func s370_opcode_table[];
@@ -275,7 +275,7 @@ do { \
 
 #define INSTRUCTION_FETCH(_dest, _addr, _regs, _valid) \
   likely((_addr) <= (_regs)->AIE && (_regs)->AIV == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
-  ? MAINADDR((_regs)->aim, (_addr)) \
+  ? (_regs)->instvalid = 1, MAINADDR((_regs)->aim, (_addr)) \
   : ((_regs)->instvalid = (_valid), \
      ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)) \
     )
@@ -1430,7 +1430,7 @@ void s390_program_interrupt (REGS *regs, int code);
 #endif /*!defined(_FEATURE_ZSIE)*/
 void ARCH_DEP(program_interrupt) (REGS *regs, int code);
 void *cpu_thread (int *cpu);
-void store_psw (REGS *regs, BYTE *addr);
+void copy_psw (REGS *regs, BYTE *addr);
 void display_psw (REGS *regs);
 
 
