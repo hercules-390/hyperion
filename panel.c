@@ -738,6 +738,10 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #define KBD_DOWN_ARROW          "\x1B[B"
 #define KBD_RIGHT_ARROW         "\x1B[C"
 #define KBD_LEFT_ARROW          "\x1B[D"
+#define xKBD_UP_ARROW           "\x1BOA"
+#define xKBD_DOWN_ARROW         "\x1BOB"
+#define xKBD_RIGHT_ARROW        "\x1BOC"
+#define xKBD_LEFT_ARROW         "\x1BOD"
 
 /*-------------------------------------------------------------------*/
 /* Cleanup routine                                                   */
@@ -1176,7 +1180,8 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Test for line up command */
-                if (strcmp(kbbuf+i, KBD_UP_ARROW) == 0)
+                if (strcmp(kbbuf+i, KBD_UP_ARROW) == 0
+                    || strcmp(kbbuf+i, xKBD_UP_ARROW) == 0)
                 {
                     if (firstmsgn == 0) break;
                     firstmsgn--;
@@ -1185,7 +1190,8 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Test for line down command */
-                if (strcmp(kbbuf+i, KBD_DOWN_ARROW) == 0)
+                if (strcmp(kbbuf+i, KBD_DOWN_ARROW) == 0
+                    || strcmp(kbbuf+i, xKBD_DOWN_ARROW) == 0)
                 {
                     if (firstmsgn + NUM_LINES >= nummsgs) break;
                     firstmsgn++;
@@ -1214,6 +1220,30 @@ struct  timeval tv;                     /* Select timeout structure  */
                     break;
                 }
 
+                /* Process backspace character               */
+                /* DEL (\x7F), KBD_LEFT_ARROW and KBD_DELETE */
+                /* are all equivalent to backspace           */
+                if (kbbuf[i] == '\b' || kbbuf[i] == '\x7F'
+                    || strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0
+                    || strcmp(kbbuf+i, xKBD_LEFT_ARROW) == 0
+                    || strcmp(kbbuf+i, KBD_DELETE) == 0)
+                {
+                    if (cmdoff > 0) cmdoff--;
+                    i++;
+                    redraw_cmd = 1;
+                    break;
+                }
+
+                /* Test for other KBD_* strings           */
+                /* Just ignore them, no function assigned */
+                if (strcmp(kbbuf+i, KBD_RIGHT_ARROW) == 0
+                    || strcmp(kbbuf+i, xKBD_RIGHT_ARROW) == 0
+                    || strcmp(kbbuf+i, KBD_INSERT) == 0)
+                {
+                    redraw_msgs = 1;
+                    break;
+                }
+
                 /* Process escape key */
                 if (kbbuf[i] == '\x1B')
                 {
@@ -1221,16 +1251,6 @@ struct  timeval tv;                     /* Select timeout structure  */
                     NP_init();
                     NPDup = 1;
                     /* =END= */
-                    break;
-                }
-
-                /* Process backspace character */
-                if (kbbuf[i] == '\b' || kbbuf[i] == '\x7F'
-                    || strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0)
-                {
-                    if (cmdoff > 0) cmdoff--;
-                    i++;
-                    redraw_cmd = 1;
                     break;
                 }
 
