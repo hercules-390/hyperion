@@ -260,7 +260,7 @@ The following system parameters may be specified:
     real machine.  This problem is being pursued with IBM linux. Meanwhile,
     if <code>OSTAILOR LINUX</code> is specified, then this value defaults to
     <em>800</em> otherwise the value defaults to <em>0</em>.
-<dt><code>CODEPAGE<em>codepage</em></code>
+<dt><code>CODEPAGE <em>codepage</em></code>
 <dd>specifies the codepage conversion table used for ascii/ebcdic translation
     "default" specifies traditional hercules codepage, "437/037",
     "437/500" and "850/273" are also supported.
@@ -283,6 +283,10 @@ The following system parameters may be specified:
     to the operating system when it issues a Store ECPS:VM level, but it
     doesn't otherwise alter the ECPS:VM facility operations. This is a partial
     implementation.
+<dt><code>LDMOD <em>module list</em></code>
+<dd>specifies additional modules that are to be loaded by the hercules dynamic loader.
+The search order is the default DLL search path. Most systems also support absolute filenames (ie names starting with '/' or '.') in which case the default search path is not taken.
+<br>Multiple LDMOD statements may be used.
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any system
