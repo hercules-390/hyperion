@@ -1,3 +1,4 @@
+11 Feb 2002 ISK, SSK missing 2k/4k check in 370 native - Paul Leisy
 11 Feb 2002 Fix SIGP Initial Program Reset (S/370) - Jan Jaeger
 08 Feb 2002 Fix RRB in 370 guest - Paul Leisy
 06 Feb 2002 Fix cckdcdsk space/recovery/gap table malloc() - Greg Smith
