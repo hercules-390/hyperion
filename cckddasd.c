@@ -4401,7 +4401,7 @@ int             asw;                    /* New spc after current spc */
             {
                 logmsg ("%4.4X:",dev->devnum);
                 logmsg (_("HHCCD181E gcperc read error file[%d] "
-                          "offset 0x%llx (expected %d bytes)\n"
+                          "offset 0x%llx (expected %d bytes)\n"
                            "         error: %s\n"),
                         sfx, (long long)bpos, blen, strerror(errno));
                 goto cckd_gc_perc_error;
@@ -4410,7 +4410,7 @@ int             asw;                    /* New spc after current spc */
             {
                 logmsg ("%4.4X:",dev->devnum);
                 logmsg (_("HHCCD184E gcperc read too few bytes in file[%d] "
-                          "offset 0x%llx: read %d, expected %d\n"),
+                          "offset 0x%llx: read %d, expected %d\n"),
                         sfx, (long long)bpos, rc, blen, strerror(errno));
                 goto cckd_gc_perc_error;
             }
