@@ -190,9 +190,9 @@
 /* When ESAME is installed then all instructions
    marked N3 in the reference are also available
    in ESA/390 mode */
-#if defined(_900)
+#if defined(_900) && (__GEN_ARCH == 390)
  #define FEATURE_ESAME_N3_ESA390
-#endif /*defined(_900)*/
+#endif
 
 #if !defined(FEATURE_2K_STORAGE_KEYS) \
  && !defined(FEATURE_4K_STORAGE_KEYS)

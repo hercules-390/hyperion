@@ -4481,7 +4481,7 @@ RADR    n;                              /* 64-bit operand values     */
 #endif /*defined(FEATURE_ESAME)*/
 
 
-#if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
+#if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
 BYTE ARCH_DEP(stfl_data)[4] = {
                  0
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
@@ -4490,8 +4490,8 @@ BYTE ARCH_DEP(stfl_data)[4] = {
 #if defined(FEATURE_ESAME)
                  | STFL_0_ESAME_ACTIVE
 #endif /*defined(FEATURE_ESAME)*/
-#if defined(_900) || defined(FEATURE_ESAME)
-//               | STFL_0_ESAME_INSTALLED
+#if defined(FEATURE_ESAME)
+                 | STFL_0_ESAME_INSTALLED
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
 #if defined(FEATURE_DAT_ENHANCEMENT)
                  | STFL_0_IDTE_INSTALLED
