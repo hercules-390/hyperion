@@ -1,3 +1,5 @@
+28 Aug 2001 Change FPR display so if BASIC FP EXTENSIONS all displayed - Paul Leisy
+28 Aug 2001 Change MVCLE cpu-determined length - Paul Leisy
 26 Aug 2001 Added test for file-existance in cardrdr.c (code suggested by Richard Snow) - Volker Bandke
 24 Aug 2001 Add optional address parm to loadcore panel command - Michael Ackerson
 23 Aug 2001 Fix general1.c so commented statements don't wrap to 2 lines - Paul Leisy
