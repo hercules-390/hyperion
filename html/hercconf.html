@@ -29,6 +29,7 @@ a real System/390.  The configuration file is an ASCII text file.
     CODEPAGE  default
     CNSLPORT  3270
     HTTPPORT  8081
+    HTTPROOT  /usr/local/share/hercules/
     NUMCPU    1
     NUMVEC    1
     CPUPRIO   15
@@ -100,6 +101,19 @@ The following system parameters may be specified:
     <tt>AUTH</tt> indictates that a userid and password are required to access
     the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
     are not required. The userid and password may be any valid string.
+<dt><code>HTTPROOT<em>pathname</em></code>
+<dd>specifies the root directory where the HTTP server's files reside.
+    The default value varies depending on how the hercules executable was
+    built, but is usually <tt>/usr/local/share/hercules/</tt>.<br>
+    Note: Windows users
+    of Hercules who do not have Cygwin installed (and are instead just using
+    the Cygwin DLLs) should specify "<tt>/cygdrive/x/pathname/</tt>" where
+    '<tt>x</tt>' is the Windows drive letter. For example, if the Windows
+    directory where the http server's files reside is
+    "<tt>H:\Hercules\httpserv\</tt>"
+    then you should specify
+    "<tt>/cygdrive/h/Hercules/httpserv/</tt>"
+    on your HTTPROOT statement.
 <dt><code>CNSLPORT <em>nnnn</em></code>
 <dd>specifies the port number (in decimal) to which tn3270 and
     telnet clients will connect

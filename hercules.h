@@ -719,6 +719,7 @@ typedef struct _SYSBLK {
         int     httpauth;               /* HTTP auth required flag   */
         char   *httpuser;               /* HTTP userid               */
         char   *httppass;               /* HTTP password             */
+        char   *httproot;               /* HTTP root                 */
 // #endif /*defined(OPTION_HTTP_SERVER)*/
         CPCONV *codepage;
 #ifdef OPTION_IODELAY_KLUDGE

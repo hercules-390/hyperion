@@ -230,6 +230,7 @@ TID paneltid;
 #if defined(OPTION_HTTP_SERVER)
     if(sysblk.httpport) {
         /* Start the http server connection thread */
+        if (!sysblk.httproot) sysblk.httproot = HTTP_ROOT;
         if ( create_thread (&sysblk.httptid, &sysblk.detattr,
                             http_server, NULL) )
         {

@@ -81,7 +81,6 @@ static BYTE *operand;                   /* -> First argument         */
 static int  addargc;                    /* Number of additional args */
 static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 
-//#ifdef EXTERNALGUI
 /*-------------------------------------------------------------------*/
 /* Subroutine to parse an argument string. The string that is passed */
 /* is modified in-place by inserting null characters at the end of   */
@@ -129,7 +128,6 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc)
 
     return *pargc;
 }
-//#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
@@ -199,8 +197,6 @@ int     stmtlen;                        /* Statement length          */
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
-#if 1 // def EXTERNALGUI
-
         /* Parse the statement just read */
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
@@ -217,23 +213,6 @@ int     stmtlen;                        /* Statement length          */
             if (i < (MAX_ARGS-2)) addargv[i] = addargv[i+2];
             else addargv[i] = NULL;
         }
-
-#else /*EXTERNALGUI*/
-
-        /* Split the statement into keyword and first operand */
-        keyword = strtok (buf, " \t");
-        operand = strtok (NULL, " \t");
-
-        /* Extract any additional operands */
-        for (addargc = 0; addargc < MAX_ARGS &&
-            (addargv[addargc] = strtok (NULL, " \t")) != NULL
-                && addargv[addargc][0] != '#';
-            addargc++);
-
-        /* Clear any unused additional operand pointers */
-        for (i = addargc; i < MAX_ARGS; i++) addargv[i] = NULL;
-
-#endif /*!EXTERNALGUI*/
 
         break;
     } /* end while */
@@ -569,6 +548,17 @@ BYTE    c;                              /* Work area for sscanf      */
                     addargc--;
                 }
                     
+            }
+            else if (strcasecmp (keyword, "httproot") == 0)
+            {
+                if (operand)
+                    sysblk.httproot = strdup(operand);
+                else
+                {
+                    logmsg(_("HHS003E Error in %s line %d: Missing argument.\n"),
+                        fname, stmt);
+                    exit(1);
+                }
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
             else if (strcasecmp (keyword, "cckd") == 0)

@@ -17,12 +17,12 @@
 /*                                                                   */
 /* If the request is for a /cgi-bin/ path, then the cgibin           */
 /* directory in cgibin.c will be searched, for any other request     */
-/* the HTTP_ROOT (/usr/local/hercules) will be used as the root      */
-/* to find the specified file.                                       */
+/* the sysblk.httproot (/usr/local/hercules) will be used as the     */
+/* root to find the specified file.                                  */
 /*                                                                   */
 /* As realpath() is used to verify that the files are from within    */
-/* the HTTP_ROOT tree symbolic links that refer to files outside     */
-/* the HTTP_ROOT tree are not supported.                             */
+/* the sysblk.httproot tree symbolic links that refer to files       */
+/* outside the sysblk.httproot tree are not supported.               */
 /*                                                                   */
 /*                                                                   */
 /*                                           Jan Jaeger - 28/03/2002 */
@@ -52,11 +52,12 @@ static CONTYP mime_types[] = {
 int html_include(WEBBLK *webblk, char *filename)
 {
     FILE *inclfile;
-    char fullname[1024] = HTTP_ROOT;
+    char fullname[1024];
     char buffer[1024];
     int ret;
 
-    inclfile = fopen(strcat(fullname,filename),"r");
+    strncpy(fullname,sysblk.httproot,1024);
+    inclfile = fopen(strncat(fullname,filename,1024),"r");
 
     if (!inclfile)
     {
@@ -280,7 +281,7 @@ static void http_verify_path(WEBBLK *webblk, char *path)
     char resolved_path[1024];
     int i;
 
-    realpath(HTTP_ROOT,resolved_base); strcat(resolved_base,"/");
+    realpath(sysblk.httproot,resolved_base); strncat(resolved_base,"/",1024);
     realpath(path,resolved_path);
 
     for (i = 0; path[i]; i++)
@@ -358,11 +359,12 @@ static void http_download(WEBBLK *webblk, char *filename)
     char tbuf[80];
     int fd, length;
     char *filetype;
-    char fullname[1024] = HTTP_ROOT;
+    char fullname[1024];
     struct stat st;
     CONTYP *mime_type = mime_types;
 
-    strcat(fullname,filename);
+    strncpy(fullname,sysblk.httproot,1024);
+    strncat(fullname,filename,1024);
 
     http_verify_path(webblk,fullname);
 
