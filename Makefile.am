@@ -10,9 +10,6 @@ ACLOCAL_AMFLAGS  = -I m4
 
 lns=@LN_S@
 
-#SUBDIRS = intl m4 \
-#          po util html man
-
 if HAVE_GCRYPT
 SUBDIRS = intl m4 po util html man crypto
 else
