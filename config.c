@@ -47,6 +47,12 @@
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
 
+typedef struct _DEVARRAY
+{
+    U16 cuu1;
+    U16 cuu2;
+} DEVARRAY;
+
 extern DEVENT device_handler_table[];
 
 /*-------------------------------------------------------------------*/
@@ -233,6 +239,152 @@ int     lstarted;                       /* Indicate if non-whitespace*/
 
     return 0;
 } /* end function read_config */
+/*-------------------------------------------------------------------*/
+/* Function to Parse compound device numbers                         */
+/* Syntax : CCUU[-CUU][,CUU..][.nn][...]                             */
+/* Examples : 200-23F                                                */
+/*            200,201                                                */
+/*            200.16                                                 */
+/*            200-23F,280.8                                          */
+/*            etc...                                                 */
+/* - is the range specification (from CUU to CUU)                    */
+/* , is the separator                                                */
+/* . is the count indicator (nn is decimal)                          */
+/* 1st parm is the specification string as specified above           */
+/* 2nd parm is the address of an array of DEVARRAY                   */
+/* Return value : 0 - Parsing error, etc..                           */
+/*                >0 - Size of da                                    */
+/*                                                                   */
+/* NOTE : A basic validity check is made for the following :         */
+/*        All CUUs must belong on the same channel                   */
+/*        (this check is to eventually pave the way to a formal      */
+/*         channel/cu/device architecture)                           */
+/*        no 2 identical CCUUs                                       */
+/*   ex : 200,300 : WRONG                                            */
+/*        200.12,200.32 : WRONG                                      */
+/*        2FF.2 : WRONG                                              */
+/* NOTE : caller should free the array returned in da if the return  */
+/*        value is not 0                                             */
+/*-------------------------------------------------------------------*/
+static size_t parse_devnums(const char *spec,DEVARRAY **da)
+{
+    size_t gcount;      /* Group count                     */
+    size_t i;           /* Index runner                    */
+    char *grps;         /* Pointer to current devnum group */
+    char *sc;           /* Specification string copy       */
+    DEVARRAY *dgrs;     /* Device groups                   */
+    U16  cuu1,cuu2;     /* CUUs                            */
+    char *strptr;       /* strtoul ptr-ptr                 */
+    BYTE basechan=0;    /* Channel for all CUUs            */
+    int  duplicate;     /* duplicated CUU indicator        */
+
+    sc=malloc(strlen(spec)+1);
+    strcpy(sc,spec);
+
+    /* Split by ',' groups */
+    gcount=0;
+    grps=strtok(sc,",");
+    dgrs=NULL;
+    while(grps!=NULL)
+    {
+        if(dgrs==NULL)
+        {
+            dgrs=malloc(sizeof(DEVARRAY));
+        }
+        else
+        {
+            dgrs=realloc(dgrs,(sizeof(DEVARRAY))*(gcount+1));
+        }
+        cuu1=strtoul(grps,&strptr,16);
+        switch(*strptr)
+        {
+            case 0:     /* Single CUU */
+                cuu2=cuu1;
+                break;
+            case '-':   /* CUU Range */
+                cuu2=strtoul(&strptr[1],&strptr,16);
+                if(*strptr!=0)
+                {
+                    free(dgrs);
+                    return(0);
+                }
+                break;
+            case '.':   /* CUU Count */
+                cuu2=cuu1+strtoul(&strptr[1],&strptr,10);
+                cuu2--;
+                if(*strptr!=0)
+                {
+                    fprintf(stderr,_("HHCCFXXXE Incorrect Device count near character %c\n"),*strptr);
+                    free(dgrs);
+                    return(0);
+                }
+                break;
+            default:
+                fprintf(stderr,_("HHCCFXXXE Incorrect single device address specification near character %c\n"),*strptr);
+                free(dgrs);
+                return(0);
+        }
+        /* Check cuu1 <= cuu2 */
+        if(cuu1>cuu2)
+        {
+            fprintf(stderr,_("HHCCFXXXE Incorrect device address range. %4.4X < %4.4X\n"),cuu2,cuu1);
+            free(dgrs);
+            return(0);
+        }
+        if(gcount==0)
+        {
+            basechan=(cuu1 >> 8) & 0xff;
+        }
+        if(((cuu1 >> 8) & 0xff) != basechan)
+        {
+            fprintf(stderr,_("HHCCFXXXE %4.4X is on wrong channel (should be on channel %2.2X)\n"),cuu1,basechan);
+            free(dgrs);
+            return(0);
+        }
+        if(((cuu2 >> 8) & 0xff) != basechan)
+        {
+            fprintf(stderr,_("HHCCFXXXE %4.4X is on wrong channel (1st device defined on channel %2.2X)\n"),cuu2,basechan);
+            free(dgrs);
+            return(0);
+        }
+        /* Check for duplicates */
+        duplicate=0;
+        for(i=0;i<gcount;i++)
+        {
+            /* check 1st cuu not within existing range */
+            if(cuu1>=dgrs[i].cuu1 && cuu1<=dgrs[i].cuu2)
+            {
+                duplicate=1;
+                break;
+            }
+            /* check 2nd cuu not within existing range */
+            if(cuu2>=dgrs[i].cuu1 && cuu1<=dgrs[i].cuu2)
+            {
+                duplicate=1;
+                break;
+            }
+            /* check current range doesn't completelly overlap existing range */
+            if(cuu1<dgrs[i].cuu1 && cuu2>dgrs[i].cuu2)
+            {
+                duplicate=1;
+                break;
+            }
+        }
+        if(duplicate)
+        {
+            fprintf(stderr,_("HHCCFXXXE Device range %4.4X-%4.4X duplicates devices already defined\n"),cuu1,cuu2);
+            free(dgrs);
+            return(0);
+        }
+        dgrs[gcount].cuu1=cuu1;
+        dgrs[gcount].cuu2=cuu2;
+        gcount++;
+        grps=strtok(NULL,",");
+    }
+    free(sc);
+    *da=dgrs;
+    return(gcount);
+}
 
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
@@ -305,6 +457,9 @@ BYTE    pgmprdos;                       /* Program product OS OK     */
 BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
+DEVARRAY *devnarray;                    /* Compound device numbers   */
+size_t  devncount;                      /* size of comp devnum array */
+int     baddev;                         /* devblk attach failed ind  */
 int     devtmax;                        /* Max number device threads */
 #if defined(_FEATURE_ECPSVM)
 int     ecpsvmavail;                    /* ECPS:VM Available flag    */
@@ -1305,18 +1460,33 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                     fname, stmt);
             delayed_exit(1);
         }
+        /* Parse devnum */
+        devncount=parse_devnums(sdevnum,&devnarray);
 
-        if (strlen(sdevnum) > 4
-            || sscanf(sdevnum, "%hx%c", &devnum, &c) != 1)
+        if(devncount==0)
         {
             fprintf(stderr, _("HHCCF036S Error in %s line %d: "
-                    "%s is not a valid device number\n"),
+                    "%s is not a valid device number(s) specification\n"),
                     fname, stmt, sdevnum);
             delayed_exit(1);
         }
-
-        /* Build the device configuration block */
-        attach_device (devnum, sdevtype, addargc, addargv);
+        for(baddev=0,i=0;i<(int)devncount;i++)
+        {
+            for(devnum=devnarray[i].cuu1;devnum<=devnarray[i].cuu2;devnum++)
+            {
+                /* Build the device configuration block */
+               if(attach_device(devnum, sdevtype, addargc, addargv)!=0)
+               {
+                   baddev=1;
+                   break;
+               }
+            }
+            if(baddev)
+            {
+                break;
+            }
+        }
+        free(devnarray);
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))

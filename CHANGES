@@ -1,3 +1,6 @@
+04 Jun 2003 Device number specification extension. Device numbers are now
+            CUU or CUU-CUU or CUU.count or CUU,CUU or a combination
+            of the above - Ivan Warren
 01 Jun 2003 Updated hercconf.html page to include ECPS:VM,
             2703, 3410, 3490, 9347 D/T and explanation for
             2703 parameters - Ivan Warren
