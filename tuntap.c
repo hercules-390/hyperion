@@ -583,6 +583,22 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
         // The child process executes the configuration command
         if( ifc_pid == 0 )
         {
+            /* @ISW@ Close all file descriptors 
+             * (except sysblk.ifcfd[1] and STDOUT FILENO)
+             * (otherwise some devices are never closed)
+             * (ex: SCSI tape devices can never be re-opened)
+            */
+            struct rlimit rlim;
+            int i;
+            getrlimit(RLIMIT_NOFILE,&rlim);
+            for(i=0;(unsigned int)i<rlim.rlim_max;i++)
+            {
+                if(i!=sysblk.ifcfd[1] && i!=STDOUT_FILENO)
+                {
+                    close(i);
+                }
+            }
+            /* @ISW@ Close spurious FDs END */
             dup2( sysblk.ifcfd[1], STDIN_FILENO  );
             dup2( STDOUT_FILENO, STDERR_FILENO );
             
