@@ -1,4 +1,13 @@
 #!/bin/bash
+# +-------------------------------------------------------------------------------+
+# !                                                                               !
+# ! Name: _build                                                                  !
+# !                                                                               !
+# ! Desc: build Hercules with various options                                     !
+# !                                                                               !
+# ! Use:  build [i586 | i686] [fthreads | nofthreads]                             !
+# !                                                                               !
+# +-------------------------------------------------------------------------------+
 if ! test -f configure
 then
   echo "running autogen.sh"
@@ -9,13 +18,56 @@ THIS_DIR=`pwd`
 if [ $# = 0 ]
 then
    HOST_ARCH=`uname -m`
-   HOST_OPT=
+   FTHREAD=yes
    BUILD_OPT=
-else
+   HOST_OPT=
+elif [ $# = 1 ]
+then
+   HOST_ARCH=`uname -m`
+   BUILD_OPT=
+   HOST_OPT=
+   FTHREAD=no
+   if [ $1 = i586 -o $1 = i686 ]
+   then
+      HOST_ARCH=$1
+      HOST_OPT=--host=${HOST_ARCH}-pc-cygwin
+      BUILD_OPT=--build=${HOST_ARCH}-pc-cygwin
+      FTHREAD=yes
+   elif [ $1 = nofthread ]
+   then
+      FTHREAD=no
+   elif [ $1 = fthread ]
+   then
+      FTHREAD=yes
+   else
+      echo "Invalid option " $1
+      exit
+   fi
+elif [ $# = 2 ]
+then
    HOST_ARCH=$1
    HOST_OPT=--host=${HOST_ARCH}-pc-cygwin
    BUILD_OPT=--build=${HOST_ARCH}-pc-cygwin
+   if [ $2 = fthread ]
+   then
+      FTHREAD=yes
+   else
+      FTHREAD=no
+   fi
 fi
-mkdir -p ${HOST_ARCH}
-cd ${HOST_ARCH}
-../configure --prefix=${THIS_DIR}/${HOST_ARCH} ${HOST_OPT} ${BUILD_OPT} && make && make install
+if [ $FTHREAD = yes ]
+then
+   FDIR=fthread
+else
+   FDIR=pthread
+fi
+mkdir -p ${HOST_ARCH}_${FDIR}
+cd ${HOST_ARCH}_${FDIR}
+../configure --prefix=${THIS_DIR}/${HOST_ARCH}_${FDIR} ${HOST_OPT} ${BUILD_OPT} --enable-fthreads=${FTHREAD}
+if [ $? = 0 ]
+then
+   make && make install
+else
+   echo "./configure script failed with RC=" $?
+fi
+cd ..
