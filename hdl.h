@@ -46,7 +46,7 @@ void hdl_main();                        /* Main initialization rtn   */
 void * hdl_fent(char *);                /* Find entry name           */
 void * hdl_nent(char *, void*);         /* Find next in chain        */
 
-static void **unresolved = NULL;
+static void **unresolved __attribute__ ((unused)) = NULL;
 #define UNRESOLVED *unresolved
 
 /*-------------------------------------------------------------------*/
