@@ -1,14 +1,14 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.15a)
+AM_INIT_AUTOMAKE(hercules,2.16-candidate)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
 AC_CANONICAL_HOST
 
 # Initialization
-CFLAGS="-Wall $CFLAGS -DPKGDATADIR=\"\\\"\$(pkgdatadir)/\\\"\""
+CFLAGS="-Wall $CFLAGS"
 
 # Programs
 AC_PROG_CC
@@ -299,6 +299,18 @@ AC_ARG_ENABLE(custom,
                              [provide a custom description for this build]),
               [AC_DEFINE_UNQUOTED([CUSTOM_BUILD_STRING], "${enableval}") ])
 
+dnl This is ugly. The object is to get the value of PKGDATADIR into
+dnl config.h, but this is the only way I've found to do so. The incantation
+dnl "${prefix}/share" is needed because ${datadir} doesn't expand to the
+dnl desired data directory. If there's a better way to get there, PLEASE
+dnl replace this. --JRM
+if test "x$prefix" = "xNONE"; then
+  PKGDATADIR="/usr/local/share/${PACKAGE}"
+else
+  PKGDATADIR="${prefix}/share/${PACKAGE}"
+fi
+AC_DEFINE_UNQUOTED([PKGDATADIR], "${PKGDATADIR}")
+
 AH_TEMPLATE([NO_ATTR_REGPARM],
 	    [Define if your gcc does not support __attribute__((regparm(n)))])
 AH_TEMPLATE([NO_ASM_BYTESWAP],
@@ -327,5 +339,7 @@ AH_TEMPLATE([CUSTOM_BUILD_STRING],
             [Define to provide additional information about this build])
 AH_TEMPLATE([DEBUG],
             [Define to enable extra debugging code])
+AH_TEMPLATE([PKGDATADIR],
+            [Directory where the HTTP server will find documents])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
