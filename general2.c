@@ -901,10 +901,10 @@ BYTE    cwork[4];                       /* Character work areas      */
        access exception may be recognized on the first byte */
     if (j == 0)
     {
-#if defined(MODEL_DEPENDENT)
+#if defined(MODEL_DEPENDENT_STCM)
 // /*debug*/logmsg ("Model dependent STCM use\n");
         ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
-#endif /*defined(MODEL_DEPENDENT)*/
+#endif /*defined(MODEL_DEPENDENT_STCM)*/
         return;
     }
 
