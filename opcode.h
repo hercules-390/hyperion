@@ -378,8 +378,10 @@ do { \
 
 
 #define PER_RANGE_CHECK(_addr, _low, _high) \
-        (((_high) >= (_low)) ? ((_addr) >= (_low) && (_addr) <= (_high)) : \
-                               ((_addr) >= (_low) || (_addr) <= (_high)) )
+    ((((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ?
+    (((_addr) >= ((_low) & MAXADDRESS) && (_addr) <= ((_high) & MAXADDRESS)) : \
+    (((_addr) >= ((_low) & MAXADDRESS) || (_addr) <= ((_high) & MAXADDRESS))
+
 
 #ifdef WORDS_BIGENDIAN
  #define CSWAP16(_x) (_x)
