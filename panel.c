@@ -471,12 +471,16 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 
     memset (curpsw, 0x00, sizeof(curpsw));
     store_psw (regs, curpsw);
-    curpsw[4] |= curpsw[12];
-    curpsw[5] |= curpsw[13];
-    curpsw[6] |= curpsw[14];
-    curpsw[7] |= curpsw[15];
-    if(regs->psw.IA_G > 0x7FFFFFFFULL)
-        curpsw[7] |= 0x01;
+    if( regs->arch_mode == ARCH_900 )
+    {
+        curpsw[1] |= 0x08;
+        curpsw[4] |= curpsw[12];
+        curpsw[5] |= curpsw[13];
+        curpsw[6] |= curpsw[14];
+        curpsw[7] |= curpsw[15];
+        if(regs->psw.IA_G > 0x7FFFFFFFULL)
+            curpsw[7] |= 0x01;
+    }
     pswwait = curpsw[1] & 0x02;
     fprintf (confp, ANSI_YLW_BLK);
     fprintf (confp, ANSI_CURSOR, 3, 2);
