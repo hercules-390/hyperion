@@ -26,7 +26,7 @@ MODENT *modent;
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
         {
-            logmsg(" name = %s",modent->name);
+            logmsg(" entry = %s",modent->name);
 //          logmsg(", ep = %p",modent->fep);
             logmsg(", loadcount = %d",modent->count);
             logmsg(", owner = %s\n",modent->dllent->name);
