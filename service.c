@@ -39,6 +39,10 @@ static  U32     servc_cp_send_mask;     /* Syscons CP send mask      */
 static  BYTE    servc_scpcmdstr[123+1]; /* Operator command string   */
 static  int     servc_scpcmdtype;       /* Operator command type     */
 
+static  int     servc_signal_quiesce_pending = 0;  /* Signal Quiesce */
+static  U16     servc_signal_quiesce_count;
+static  BYTE    servc_signal_quiesce_unit;
+
 // #ifdef FEATURE_SYSTEM_CONSOLE
 /*-------------------------------------------------------------------*/
 /* Issue SCP command                                                 */
@@ -111,6 +115,50 @@ void scp_command (BYTE *command, int priomsg)
 
 } /* end function scp_command */
 
+
+void signal_quiesce (U16 count, BYTE unit)
+{
+    /* Error if disabled for commands */
+    if (!(servc_cp_recv_mask & (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1))))
+    {
+        logmsg (_("HHCCPxxxE SCP not receiving quiesce signals\n"));
+        return;
+    }
+
+    /* Obtain the interrupt lock */
+    obtain_lock (&sysblk.intlock);
+
+    /* If an event buffer available signal is pending then reject the
+       command with message indicating that service processor is busy */
+    if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND))
+    {
+        logmsg (_("HHCCPxxxE Service Processor busy\n"));
+
+        /* Release the interrupt lock */
+        release_lock (&sysblk.intlock);
+        return;
+    }
+
+    /* Save delay values for signal shutdown event read */
+    servc_signal_quiesce_count = count;
+    servc_signal_quiesce_unit = unit;
+
+    servc_signal_quiesce_pending = 1;
+
+    /* Set event pending flag in service parameter */
+    sysblk.servparm |= SERVSIG_PEND;
+    
+    /* Set service signal interrupt pending for read event data */
+    if (!IS_IC_SERVSIG)
+    {
+        ON_IC_SERVSIG;
+        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
+    }
+
+    /* Release the interrupt lock */
+    release_lock (&sysblk.intlock);
+
+} /* end function signal_quiesce */
 
 #endif /*!defined(_SERVICE_C)*/
 
@@ -333,6 +381,7 @@ SCCB_EVD_HDR   *evd_hdr;                /* Event header              */
 U32             evd_len;                /* Length of event data      */
 SCCB_EVD_BK    *evd_bk;                 /* Event data                */
 SCCB_MCD_BK    *mcd_bk;                 /* Message Control Data      */
+SCCB_SGQ_BK    *sgq_bk;                 /* Signal Quiesce            */
 U32             mcd_len;                /* Length of MCD             */
 SCCB_OBJ_HDR   *obj_hdr;                /* Object Header             */
 U32             obj_len;                /* Length of Object          */
@@ -858,8 +907,53 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         event_msglen = strlen(servc_scpcmdstr);
         if (event_msglen == 0)
         {
-            sccb->reas = SCCB_REAS_NO_EVENTS;
-            sccb->resp = SCCB_RESP_NO_EVENTS;
+	    if(servc_signal_quiesce_pending)
+		{
+		    sgq_bk = (SCCB_SGQ_BK*)(evd_hdr+1);
+		    evd_len = sizeof(SCCB_EVD_HDR) + sizeof(SCCB_SGQ_BK);
+
+                    /* Set response code X'75F0' if SCCB length exceeded */
+                    if ((evd_len + sizeof(SCCB_HEADER)) > sccblen)
+                    {
+                        sccb->reas = SCCB_REAS_EXCEEDS_SCCB;
+                        sccb->resp = SCCB_RESP_EXCEEDS_SCCB;
+                        break;
+                    }
+
+                    /* Zero all fields */
+                    memset (evd_hdr, 0, evd_len);
+
+                    /* Update SCCB length field if variable request */
+                    if (sccb->type & SCCB_TYPE_VARIABLE)
+                    {
+                        /* Set new SCCB length */
+                        sccblen = evd_len + sizeof(SCCB_HEADER);
+                        STORE_HW(sccb->length, sccblen);
+                        sccb->type &= ~SCCB_TYPE_VARIABLE;
+                    }
+
+                    /* Set length in event header */
+                    STORE_HW(evd_hdr->totlen, evd_len);
+
+                    /* Set type in event header */
+                    evd_hdr->type = SCCB_EVD_TYPE_SIGQ;
+
+		    STORE_HW(sgq_bk->count, servc_signal_quiesce_count);
+		    sgq_bk->unit = servc_signal_quiesce_unit;
+
+		    servc_signal_quiesce_pending = 0;
+
+                    /* Set response code X'0020' in SCCB header */
+                    sccb->reas = SCCB_REAS_NONE;
+                    sccb->resp = SCCB_RESP_COMPLETE;
+
+                    break;
+	        }
+	    else
+            {
+                sccb->reas = SCCB_REAS_NO_EVENTS;
+                sccb->resp = SCCB_RESP_NO_EVENTS;
+	    }
             break;
         }
 

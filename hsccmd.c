@@ -2643,6 +2643,22 @@ int spm_cmd(int argc, char *argv[], char *cmdline)
 }
 #endif
 
+#if defined(_FEATURE_SYSTEM_CONSOLE)
+///////////////////////////////////////////////////////////////////////
+/* ssd - signal shutdown command */
+
+int ssd_cmd(int argc, char *argv[], char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    signal_quiesce(0, 0);
+
+    return 0;
+}
+#endif
+
 #if defined(OPTION_COUNTING)
 ///////////////////////////////////////////////////////////////////////
 /* count - display counts */
@@ -2810,7 +2826,8 @@ COMMAND ( "stopall",   stopall_cmd,   "stop all CPU's\n" )
 
 #ifdef _FEATURE_SYSTEM_CONSOLE
 COMMAND ( ".reply",    g_cmd,         "scp command" )
-COMMAND ( "!message",    g_cmd,       "scp priority messsage\n" )
+COMMAND ( "!message",    g_cmd,       "scp priority messsage" )
+COMMAND ( "ssd",       ssd_cmd,       "Signal Shutdown\n" )
 #endif
 
 #ifdef OPTION_PTTRACE

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+01 Dec 2003 Signal Quiesce (shutdown) & ssd command - Jan Jaeger
 29 Nov 2003 Fix race condition in console.c recv_3270_data causing 100%
             CPU utilization, zero MIPS" Hercules hang symptom (version
             in configure.ac version bumped to 3.00a.5) - Fish
