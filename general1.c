@@ -2852,14 +2852,20 @@ BYTE   *ip;                             /* -> executed instruction   */
     if ( r1 != 0 )
         regs->exinst[1] |= regs->GR_LHLCL(r1);
 
-    /* Execute the target instruction.
+    /*
+     * Execute the target instruction.
+     *
      * This is the *only* place where `execflag' is set to 1.
-     * If the target instruction is a 4 byte instruction then
-     * backup psw.IA by 4 bytes.  This way 4 byte instruction
-     * decoders do not have to check `execflag' to update the psw
+     *
+     * regs->psw.IA is backed up the length of the executed
+     * instruction.  The instruction decoder will immediately
+     * add back the length, even if the instruction is invalid.
+     * Thus, the decoder does not have to check execflag.  This
+     * is made possible because the instruction decoder no longer
+     * sets the ilc.  Greg
      */
     regs->execflag = 1;
-    if (ILC(regs->exinst[0]) == 4) regs->psw.IA -= 4;
+    regs->psw.IA -= ILC(regs->exinst[0]);
     EXECUTE_INSTRUCTION (regs->exinst, regs, ARCH_DEP(opcode_table));
     regs->execflag = 0;
 }

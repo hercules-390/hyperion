@@ -583,10 +583,7 @@ do { \
 
 #define INST_UPDATE_PSW(_regs, _len) \
      do { \
-            if( likely((_len) == 4 || !(_regs)->execflag) ) \
-            { \
-                (_regs)->psw.IA += (_len); \
-            } \
+            (_regs)->psw.IA += (_len); \
         } while(0)
 
 /* E implied operands and extended op code */

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+29 Jun 2004 exilc.pat - Remove execflag check from INST_UPDATE_PSW - Greg
 29 Jun 2004 noilc.pat - Calculate ILC on demand - Greg Smith
 27 Jun 2004 pr.pat - Performance tweak for PR - Greg Smith
 27 Jun 2004 cckdwrs.pat - Prevent extra writer threads from starting - Greg

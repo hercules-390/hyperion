@@ -592,12 +592,6 @@ static char *pgmintname[] = {
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* If EX and target instruction is 4 bytes and operation exception
-       then add 4 to psw.IA because EX has subtracted 4 */
-    if (realregs->execflag && ILC(realregs->exinst[0]) == 4
-     && (pcode & 0x7F) == 0x01)
-        realregs->psw.IA += 4;
-
 #if defined(_FEATURE_PER)
     /* Handle PER or concurrent PER event */
 
