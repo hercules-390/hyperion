@@ -707,14 +707,7 @@ int     i;
 static void display_fregs (REGS *regs)
 {
 
-#if !defined(FEATURE_BASIC_FP_EXTENSIONS)
-
-    logmsg ("FPR0=%8.8X %8.8X\t\tFPR2=%8.8X %8.8X\n"
-            "FPR4=%8.8X %8.8X\t\tFPR6=%8.8X %8.8X\n",
-            regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3],
-            regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]);
-
-#else /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
+    if(regs->CR(0) & CR0_AFP)
 
     logmsg ("FPR0=%8.8X %8.8X\t\tFPR1=%8.8X %8.8X\n"
             "FPR2=%8.8X %8.8X\t\tFPR3=%8.8X %8.8X\n"
@@ -732,8 +725,12 @@ static void display_fregs (REGS *regs)
             regs->fpr[20], regs->fpr[21], regs->fpr[22], regs->fpr[23],
             regs->fpr[24], regs->fpr[25], regs->fpr[26], regs->fpr[27],
             regs->fpr[28], regs->fpr[29], regs->fpr[30], regs->fpr[31]);
+    else
 
-#endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
+    logmsg ("FPR0=%8.8X %8.8X\t\tFPR2=%8.8X %8.8X\n"
+            "FPR4=%8.8X %8.8X\t\tFPR6=%8.8X %8.8X\n",
+            regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3],
+            regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]);
 
 } /* end function display_fregs */
 
@@ -2788,6 +2785,16 @@ struct  timeval tv;                     /* Select timeout structure  */
                     fclose(rcfp);
                     rcfp = 0;
                 } else {
+                    /* check for comment char '#' */
+                    rc = rc & 0xff;
+                    if (rc == '#')
+                    {
+                        while (rc != '\n')
+                            {
+                            rc = fgetc (rcfp);
+                            rc = rc & 0xff;
+                            }
+                    }
                     kbbuf[0] = rc & 0xff;
                     kblen = 1;
                     kbbuf[kblen] = '\0';
