@@ -37,10 +37,18 @@
 extern CGITAB cgidir[];
 
 
+static CONTYP content_type[] = {
+    { NULL,    "text/html" },         /* No suffix entry */
+    { "txt",   "text/plain" },
+    { "gif",   "image/gif" },
+    { "jpg",   "image/jpeg" },
+    { NULL,    "text/html" } };       /* Default suffix entry */
+
+
 int html_include(WEBBLK *webblk, char *filename)
 {
     FILE *inclfile;
-    char fullname[256] = HTTP_ROOT;
+    char fullname[1024] = HTTP_ROOT;
     char buffer[1024];
     int ret;
 
@@ -368,6 +376,7 @@ void http_download(WEBBLK *webblk, char *filename)
     char *filetype;
     char fullname[1024] = HTTP_ROOT;
     struct stat st;
+    CONTYP *page_content = content_type;
 
     strcat(fullname,filename);
 
@@ -384,17 +393,12 @@ void http_download(WEBBLK *webblk, char *filename)
     }
 
     fprintf(webblk->hsock,"HTTP/1.0 200 OK\n");
-    if ((filetype = strrchr(filename,'.'))) {
-        if (!strcmp(filetype,".gif")) {
-            fprintf(webblk->hsock,"Content-Type: image/gif\n");
-        } else if (!strcmp(filetype,".jpg")) {
-            fprintf(webblk->hsock,"Content-Type: image/jpeg\n");
-        } else if (!strcmp(filetype,".txt")) {
-            fprintf(webblk->hsock,"Content-Type: text/plain\n");
-        } else {
-            fprintf(webblk->hsock,"Content-Type: text/html\n");
-        }
-    }
+    if ((filetype = strrchr(filename,'.')))
+        for(page_content++;page_content->suffix
+          && strcasecmp(page_content->suffix,filetype + 1);
+          page_content++);
+    fprintf(webblk->hsock,"Content-Type: %s\n",page_content->type);
+
     fprintf(webblk->hsock,"Expires: %s\n", http_timestring(time(NULL)+HTML_STATIC_EXPIRY_TIME));
 
     fprintf(webblk->hsock,"Content-Length: %d\n\n", (int)st.st_size);

@@ -21,6 +21,12 @@ typedef struct _CGIVAR {
 } CGIVAR;
 
 
+typedef struct _CONTYP {
+    char *suffix;
+    char *type;
+} CONTYP;
+
+
 typedef struct _WEBBLK {
     FILE *hsock;
     int content_length;
