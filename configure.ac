@@ -44,13 +44,15 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 AC_ARG_ENABLE(fthreads,
               AC_HELP_STRING([--enable-fthreads],
                              [Use included fthreads instead of libpthread]),
-              [case "$host_os" in
-                 *cygwin*)
+              [case "${host_os},${enableval}" in
+                 *cygwin*,yes)
                    build_fthreads=true
                    AC_DEFINE([OPTION_FTHREADS])
                    ;;
-                 *)
+                 *,yes)
                    AC_MSG_ERROR([fthreads are only for win32])
+                   ;;
+                 *)
                    ;;
                esac],
               [AC_CHECK_LIB(pthread, pthread_create,
