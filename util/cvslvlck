@@ -15,7 +15,7 @@ my @req = qw(
      gawk        3.0	0  http://www.gnu.org/directory/gawk.html
      gcc         2.95	0  http://www.gnu.org/directory/gcc.html
      gettext     0.11	0  http://www.gnu.org/directory/gettext.html
-     grep        2.5	0  http://www.gnu.org/directory/grep.html
+     grep        0	0  http://www.gnu.org/directory/grep.html
      libiconv    1.8	1  http://www.gnu.org/directory/libiconv.html
      libintl     0.10	1  http://www.gnu.org/directory/gettext.html
      m4          0.0	1  http://www.gnu.org/directory/GNU/gnum4.html
@@ -221,4 +221,5 @@ sub present {
 	}
 	return scalar @present;
 }
+
 
