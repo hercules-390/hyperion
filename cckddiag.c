@@ -37,6 +37,7 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 #else
         int     debug = 0;              // disable debug code
 #endif
+        int     pausesnap = 0;          // 1 = pause after snap (getc)
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
@@ -68,6 +69,22 @@ int syntax()
         "Further information: man 1 cckddiag\n"
         );
     return -1;
+}
+
+/*-------------------------------------------------------------------*/
+/* snap - display msg, dump data                                     */
+/*-------------------------------------------------------------------*/
+/* Newline appended to message                                       */
+void snap(BYTE *msg, void *data, int len) {
+int    x;
+
+    if (msg != NULL) 
+        fprintf(stderr, "%s\n", msg);
+    data_dump(data, len);
+    if (pausesnap) {
+        fprintf(stderr, "Press enter to continue\n");
+        x = getc(stdin);
+    }
 }
 
 /*-------------------------------------------------------------------*/
@@ -153,12 +170,14 @@ int             rc;                     /* Return code               */
 BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
 
+    memset(obuf, 0x00, obuflen);  /* clear output buffer             */
+
     /* Uncompress the track/block image */
     switch (ibuf[0] & CCKD_COMPRESS_MASK) {
 
     case CCKD_COMPRESS_NONE:
-        bufp = ibuf;
-        bufl = ibuflen;
+        bufl = (ibuflen < obuflen) ? ibuflen : obuflen;
+        memcpy (obuf, ibuf, bufl);
         break;
 
 #ifdef CCKD_COMPRESS_ZLIB
@@ -217,6 +236,7 @@ int             bufl;                   /* Buffer length             */
 /* RECHDR is stored in big-endian byte order.                        */
 BYTE *show_ckd_count(CKDDASD_RECHDR *rh, int trk) {
 int     cc, hh, r, kl, dl;
+BYTE    *past;
 
     cc = (rh->cyl[0] << 8) | (rh->cyl[1]);
     hh = (rh->head[0] << 8) | (rh->head[1]);
@@ -224,10 +244,11 @@ int     cc, hh, r, kl, dl;
     kl = rh->klen;
     dl = (rh->dlen[0] << 8) | (rh->dlen[1]);
     fprintf(stderr, "\n"
-            "Track %d COUNT\n"
+            "Track %d COUNT "
             "CC=%d HH=%d R=%d KL=%d DL=%d\n",
             trk, cc, hh, r, kl, dl);
-    return (BYTE *)rh + sizeof(CKDDASD_RECHDR); /* skip COUNT field */
+    past = (BYTE *)rh + sizeof(CKDDASD_RECHDR);
+    return past;
 }
 
 /*-------------------------------------------------------------------*/
@@ -270,17 +291,14 @@ void showtrk(
              int trk,             /* relative track number           */
              int xop              /* 1=dump key & data blks; 0=don't */
              ) {
-BYTE            buf2[65536];           /* max uncompressed buffer    */
+BYTE            buf2[64*1024];         /* max uncompressed buffer    */
 BYTE            msg[81];               /* error message buffer       */
 CKDDASD_RECHDR  *rh;                   /* CCKD COUNT field           */
 BYTE            *bufp;
 int             len;
 
-    if (0) {
-        fprintf(stderr, 
-                "\nSHOWTRK Compressed track header and data\n");
-        data_dump(buf, imglen);
-    }
+    if (debug) 
+       snap("\nSHOWTRK Compressed track header and data", buf, imglen);
     len = decomptrk(
               (BYTE *)buf,        /* input buffer address            */
               imglen,             /* input buffer length             */
@@ -290,11 +308,8 @@ int             len;
               trk,                /* relative track or block number  */
               msg                 /* addr of message buffer          */
               );
-    if (0) {
-        fprintf(stderr, 
-                "\nSHOWTRK Decompressed track header and data\n");
-        data_dump(buf2, len);
-    }
+    if (debug) 
+       snap("\nSHOWTRK Decompressed track header and data", buf2, len);
     bufp = &buf2[sizeof(CKDDASD_TRKHDR)];
     while (bufp < &buf2[sizeof(buf2)]) {
         (BYTE *)rh = bufp;
@@ -654,5 +669,4 @@ int             imglen=0;               /* track length              */
     clean();
     return cckd_diag_rc;
 }
-
 
