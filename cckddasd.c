@@ -1019,7 +1019,7 @@ cckd_read_trk_retry:
     else
     {
         cache_setflag(CACHE_DEVBUF, lru, ~CACHE_TYPE, DEVBUF_TYPE_CFBA);
-        buf = cache_getbuf(CACHE_DEVBUF, lru, CFBA_BLOCK_SIZE);
+        buf = cache_getbuf(CACHE_DEVBUF, lru, CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE);
     }
     cckdtrc ("cckddasd: %d rdtrk[%d] %d buf %p len %d\n",
              ra, lru, trk, buf, cache_getlen(CACHE_DEVBUF, lru));
