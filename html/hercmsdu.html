@@ -1,0 +1,894 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules Version 2: System Messages: DU - DASD Utilities Common
+Functions</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules Version 2: System Messages: DU - DASD Utilities
+Common Functions</h1>
+<p>
+This page describes the messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator DASD utility programs that are common
+to more than one utility.
+<h3>Messages</h3>
+<dl>
+<dt><code><a name="HHCDU001I">
+HHCDU001I Updating cyl <em>cylinder</em> head <em>head</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The track at cylinder number <code><em>cylinder</em></code> and head number
+<code><em>head</em></code> is being rewritten after being modified.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function read_track
+  </dl>
+<dt><code><a name="HHCDU002E">
+HHCDU002E <em>filename</em> write track error: stat=<em>status</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to rewrite a track from the DASD image named
+<code><em>filename</em></code> failed. The status returned was <code><em>status</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function read_track
+  </dl>
+<dt><code><a name="HHCDU003I">
+HHCDU003I Reading cyl <em>cylinder</em> head <em>head</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The track at cylinder number <code><em>cylinder</em></code> and head number
+<code><em>head</em></code> is being read.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function read_track
+  </dl>
+<dt><code><a name="HHCDU004E">
+HHCDU004E <em>filename</em> read track error: stat=<em>status</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to read a track from the DASD image named
+<code><em>filename</em></code> failed. The status returned was <code><em>status</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function read_track
+  </dl>
+<dt><code><a name="HHCDU005I">
+HHCDU005I Searching extent 0 begin
+(<em>begcyl</em>,<em>beghead</em>) end (<em>endcyl</em>,<em>endhead</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The first extent of the dataset is being searched for a key.
+The extent starts at the track at cylinder <code><em>begcyl</em></code>, head
+<code><em>beghead</em></code>, and ends at the track at cylinder <code><em>endcyl</em></code>,
+head <code><em>endhead</em></code>.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function search_key_equal
+  </dl>
+<dt><code><a name="HHCDU006I">
+HHCDU006I Searching extent <em>extent</em> begin
+(<em>begcyl</em>,<em>beghead</em>) end (<em>endcyl</em>,<em>endhead</em>)
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An extent, <code><em>extent</em></code>, of the dataset is being searched for a key.
+The extent starts at the track at cylinder <code><em>begcyl</em></code>, head
+<code><em>beghead</em></code>, and ends at the track at cylinder <code><em>endcyl</em></code>,
+head <code><em>endhead</em></code>.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function search_key_equal
+  </dl>
+<dt><code><a name="HHCDU007E">
+HHCDU007E Track <em>track</em> not found in extent table
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt was made to convert a track number to an absolute
+address, but the track specified, <code><em>track</em></code>, is beyond the end
+of the dataset.
+  <dt>Action
+  <dd>Correct the error and retry the operation. The dataset, the VTOC, or
+the DASD image may be corrupt.
+  <dt>Issued by
+  <dd>dasdutil.c, function convert_tt
+  </dl>
+<dt><code><a name="HHCDU008E">
+HHCDU008E Cannot obtain storage for device descriptor buffer: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain storage for the buffer used to hold a CKD
+DASD image's description failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_ckd_image
+  </dl>
+<dt><code><a name="HHCDU009E">
+HHCDU009E Cannot open <em>filename</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CKD image file named <code><em>filename</em></code> could not be opened. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_ckd_image
+  </dl>
+<dt><code><a name="HHCDU010E">
+HHCDU010E <em>filename</em> read error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered while reading the CKD header record
+from the file named <code><em>filename</em></code>. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_ckd_image
+  </dl>
+<dt><code><a name="HHCDU011E">
+HHCDU011E <em>filename</em> CKD header invalid
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The file <code><em>filename</em></code> is not a valid CKD DASD image file.
+Either the first record is not the length of a CKD header record, or the
+marker in the header record is not correct.
+  <dt>Action
+  <dd>Supply the name of a valid CKD DASD image file and retry the
+operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_ckd_image
+  </dl>
+<dt><code><a name="HHCDU012E">
+HHCDU012E DASD table entry not found for devtype <em>type</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device type in the CKD header record does not correspond
+to any known DASD device. The CKD DASD image file may be corrupt, or
+else the device is not supported by Hercules.
+  <dt>Action
+  <dd>Supply the name of a supported CKD DASD image file and retry the
+operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_ckd_image
+  </dl>
+<dt><code><a name="HHCDU013E">
+HHCDU013E CKD initialization failed for <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device-specific initialization routine for the
+file named <code><em>filename</em></code> failed. Another message describes the specific
+failure.
+  <dt>Action
+  <dd>See the specific message for the action needed.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_ckd_image
+  </dl>
+<dt><code><a name="HHCDU014I">
+HHCDU014I <em>filename</em> heads=<em>heads</em> trklen=<em>trklen</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device represented by the CKD DASD image file named
+<code><em>filename</em></code> has <code><em>heads</em></code> heads and tracks of
+<code><em>trklen</em></code> bytes length.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_ckd_image
+  </dl>
+<dt><code><a name="HHCDU015I">
+HHCDU015I Updating cyl <em>cylinder</em> head <em>head</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>During processing of a request to close the CKD image file, the track
+at cylinder number <code><em>cylinder</em></code> and head number
+<code><em>head</em></code> is being rewritten, since it has been modified.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function close_ckd_image
+  </dl>
+<dt><code><a name="HHCDU016E">
+HHCDU016E <em>filename</em> write track error: stat=<em>status</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>During processing of a request to close the CKD image file, an
+attempt to rewrite a track from the DASD image named
+<code><em>filename</em></code> failed. The status returned was <code><em>status</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function close_ckd_image
+  </dl>
+<dt><code><a name="HHCDU017E">
+HHCDU017E Cannot obtain storage for device descriptor buffer: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain storage for the buffer used to hold a FBA
+DASD image's description failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_fba_image
+  </dl>
+<dt><code><a name="HHCDU018E">
+HHCDU018E DASD table entry not found for devtype <em>type</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The default FBA device type does not correspond
+to any known DASD device. This is likely an internal programming error.
+  <dt>Action
+  <dd>Report the bug to the Hercules development team.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_fba_image
+  </dl>
+<dt><code><a name="HHCDU019E">
+HHCDU019E FBA initialization failed for <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device-specific initialization routine for the
+file named <code><em>filename</em></code> failed. Another message describes the specific
+failure.
+  <dt>Action
+  <dd>See the specific message for the action needed.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_fba_image
+  </dl>
+<dt><code><a name="HHCDU020I">
+HHCDU020I <em>filename</em> sectors=<em>sectors</em> size=<em>size</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The device represented by the FBA DASD image file named
+<code><em>filename</em></code> has <code><em>sectors</em></code> sectors of
+<code><em>size</em></code> bytes length.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function open_fba_image
+  </dl>
+<dt><code><a name="HHCDU021E">
+HHCDU021E VOL1 record not found
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The volume being processed does not have a volume label. It is probably
+blank and unformatted.
+  <dt>Action
+  <dd>Format the volume, or specify a formatted volume and retry the
+operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function build_extent_array
+  </dl>
+<dt><code><a name="HHCDU022I">
+HHCDU022I VOLSER=<em>serial</em> VTOC=<em>cchhr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The volume being processed has the volume
+serial <code><em>serial</em></code>, and its VTOC format 4 DSCB is at absolute
+location <code><em>cchhr</em></code>.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function build_extent_array
+  </dl>
+<dt><code><a name="HHCDU023I">
+HHCDU023I VTOC start <em>begcchh</em> end <em>endcchh</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The VTOC of the volume being processed begins at cylinder and head
+<code><em>begcchh</em></code> and ends at cylinder and head <code><em>endcchh</em></code>.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function build_extent_array
+  </dl>
+<dt><code><a name="HHCDU024E">
+HHCDU024E Dataset <em>dsn</em> not found in VTOC
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested dataset, <code><em>dsn</em></code>, was not found in the VTOC and
+does not exist on this volume.
+  <dt>Action
+  <dd>Specify the correct dataset name, or select the volume on which it
+appears.
+  <dt>Issued by
+  <dd>dasdutil.c, function build_extent_array
+  </dl>
+<dt><code><a name="HHCDU025I">
+HHCDU025I DSNAME=<em>dsn</em> F1DSCB CCHHR=<em>cchhr</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The format 1 DSCB for the requested dataset, <code><em>dsn</em></code>, is at
+absolute location <code><em>cchhr</em></code>.
+This message is only issued if verbose message reporting has been selected.
+  <dt>Issued by
+  <dd>dasdutil.c, function build_extent_array
+  </dl>
+<dt><code><a name="HHCDU026E">
+HHCDU026E F1DSCB record not found
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested dataset is listed in the VTOC, but its format 1 DSCB
+record was not found when an attempt was made to read it. The VTOC may
+be corrupt.
+  <dt>Action
+  <dd>Recreate the dataset and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function build_extent_array
+  </dl>
+<dt><code><a name="HHCDU027E">
+HHCDU027E F3DSCB record not found
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested dataset is reported to contain more than three extents
+in the format 1 DSCB, but its format 3 DSCB record was not found when an
+attempt was made to read it. The VTOC may be corrupt.
+  <dt>Action
+  <dd>Recreate the dataset and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function build_extent_array
+  </dl>
+<dt><code><a name="HHCDU028E">
+HHCDU028E <em>filename</em> open error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU029E">
+HHCDU029E <em>filename</em> device header write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the device header to
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU030E">
+HHCDU030E <em>filename</em> compressed device header write error:
+<em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the compressed device header to
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU031E">
+HHCDU031E Cannot obtain l1tab buffer: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain storage for the primary lookup table buffer
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU032E">
+HHCDU032E <em>filename</em> primary lookup table write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the primary lookup table to
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU033E">
+HHCDU033E <em>filename</em> secondary lookup table write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the secondary lookup table to
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU034E">
+HHCDU034E <em>filename</em> dasdcopy ftruncate error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to truncate
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU035E">
+HHCDU035E <em>filename</em> cylinder <em>cyl</em> head <em>head</em> write
+error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the track at cylinder <code><em>cyl</em></code>,
+head <code><em>head</em></code> to
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU036E">
+HHCDU036E <em>filename</em> compressed device header lseek error:
+<em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to reposition to the beginning of
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU037E">
+HHCDU037E <em>filename</em> compressed device header write error:
+<em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to rewrite the compressed device header record of
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU038E">
+HHCDU038E <em>filename</em> secondary lookup table lseek error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to reposition to the secondary lookup table of
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU039E">
+HHCDU039E <em>filename</em> secondary lookup table write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to rewrite the secondary lookup table of
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU040E">
+HHCDU040E <em>filename</em> close error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to close
+the CKD DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU041I">
+HHCDU041I <em>count</em> cylinders successfully written to
+file <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The CKD DASD image file named <code><em>filename</em></code> has been successfully
+created. It contains <code><em>count</em></code> cylinders.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd_file
+  </dl>
+<dt><code><a name="HHCDU042E">
+HHCDU042E Cylinder count <em>count</em> is outside range
+<em>min</em>-<em>max</em> 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested number of cylinders, <code><em>count</em></code>, is outside the valid
+range from <code><em>min</em></code> to <code><em>max</em></code>.
+  <dt>Action
+  <dd>Specify a valid number of cylinders and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd
+  </dl>
+<dt><code><a name="HHCDU043E">
+HHCDU043E Cannot obtain track buffer: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain storage for the track buffer
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd
+  </dl>
+<dt><code><a name="HHCDU044I">
+HHCDU044I Creating <em>type</em> volume <em>serial</em>:
+<em>cylinders</em> cyls, <em>tracks</em> trks/cyl, <em>length</em>
+bytes/track
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A new volume is being created of device type <code><em>type</em></code> and volume
+serial number <code><em>serial</em></code>. It has <code><em>cylinders</em></code> cylinders, <code><em>tracks</em></code>
+tracks per cylinder, and <code><em>length</em></code> bytes per track.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_ckd
+  </dl>
+<dt><code><a name="HHCDU045E">
+HHCDU045E Sector count <em>count</em> is outside range
+<em>min</em>-<em>max</em> 
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested number of sectors, <code><em>count</em></code>, is outside the valid
+range from <code><em>min</em></code> to <code><em>max</em></code>.
+  <dt>Action
+  <dd>Specify a valid number of cylinders and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU046E">
+HHCDU046E Cannot obtain sector buffer: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain storage for the sector buffer
+failed. The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU047I">
+HHCDU047I Creating <em>type</em> volume <em>serial</em>:
+<em>sectors</em> sectors, <em>length</em> bytes/sector
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A new volume is being created of device type <code><em>type</em></code> and volume
+serial number <code><em>serial</em></code>. It has <code><em>sectors</em></code> sectors
+and <code><em>length</em></code> bytes per sector.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU048E">
+HHCDU048E <em>filename</em> open error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create
+the FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU049E">
+HHCDU049E <em>filename</em> dasdcopy ftruncate error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to truncate
+the FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU050E">
+HHCDU050E <em>filename</em> sector <em>sector</em> write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write sector number <code><em>sector</em></code> to
+the FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU051E">
+HHCDU051E <em>filename</em> close error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to close
+the FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU052I">
+HHCDU052I <em>count</em> sectors successfully written to
+file <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The FBA DASD image file named <code><em>filename</em></code> has been successfully
+created. It contains <code><em>count</em></code> sectors.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_fba
+  </dl>
+<dt><code><a name="HHCDU053E">
+HHCDU053E File size too large: <em>size</em> [<em>l1tab</em>]
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The requested file size, <code><em>size</em></code>, would result in a primary
+lookup table that is too large. The DASD image cannot be created
+as a compressed image.
+  <dt>Action
+  <dd>Either specify fewer sectors, or create the DASD image uncompressed.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU054E">
+HHCDU054E <em>filename</em> open error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to create
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU055I">
+HHCDU055I Creating <em>type</em> compressed volume <em>serial</em>:
+<em>sectors</em> sectors, <em>length</em> bytes/sector
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>A new compressed FBA volume is being created of device type
+<code><em>type</em></code> and volume serial number <code><em>serial</em></code>. It has <code><em>sectors</em></code>
+sectors and <code><em>length</em></code> bytes per sector.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU056E">
+HHCDU056E <em>filename</em> devhdr write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the device header to
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU057E">
+HHCDU057E <em>filename</em> cdevhdr write error:
+<em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the compressed device header to
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU058E">
+HHCDU058E <em>filename</em> l1tab write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the primary lookup table to
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU059E">
+HHCDU059E <em>filename</em> l2tab write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write the secondary lookup table to
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU060E">
+HHCDU060E <em>filename</em> block header write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write a compressed block header to
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU061E">
+HHCDU061E <em>filename</em> block write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write a compressed block to
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU062E">
+HHCDU062E <em>filename</em> block write error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to write an uncompressed block to
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU063E">
+HHCDU063E <em>filename</em> cdevhdr lseek error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to reposition to the beginning of
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU064E">
+HHCDU064E <em>filename</em> cdevhdr rewrite error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to rewrite the compressed device header record of
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU065E">
+HHCDU065E <em>filename</em> l2tab lseek error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to reposition to the secondary lookup table of
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU066E">
+HHCDU066E <em>filename</em> l2tab rewrite error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to rewrite the secondary lookup table of
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU067E">
+HHCDU067E <em>filename</em> close error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to close
+the compressed FBA DASD image file named <code><em>filename</em></code> failed. The error
+is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+<dt><code><a name="HHCDU068I">
+HHCDU068I <em>count</em> sectors successfully written to
+file <em>filename</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The compressed FBA DASD image file named <code><em>filename</em></code> has
+been successfully created. It contains <code><em>count</em></code> sectors.
+  <dt>Issued by
+  <dd>dasdutil.c, function create_compressed_fba
+  </dl>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+<p><center><hr width=15% noshade>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+<small>
+<p>Last updated 18 December 2002
+</BODY>
+</HTML>
