@@ -6134,6 +6134,22 @@ int     i1;                             /* Index of R1 in fpr array  */
 #endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 
+#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+/* The following instructions are not yet implemented */
+#define UNDEF_INST(_x) \
+        DEF_INST(_x) { ARCH_DEP(operation_exception) \
+        (inst,execflag,regs); }
+ UNDEF_INST(multiply_add_float_short_reg)
+ UNDEF_INST(multiply_add_float_long_reg)
+ UNDEF_INST(multiply_add_float_short)
+ UNDEF_INST(multiply_add_float_long)
+ UNDEF_INST(multiply_subtract_float_short_reg)
+ UNDEF_INST(multiply_subtract_float_long_reg)
+ UNDEF_INST(multiply_subtract_float_short)
+ UNDEF_INST(multiply_subtract_float_long)
+#endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+
+
 #if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
 /* ED64 LEY   - Load Floating Point Short (Long Displacement)  [RXY] */
