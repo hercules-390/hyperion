@@ -431,11 +431,18 @@ U32             offset;                 /* Current input file offset */
     /* Create the device header */
     memset(&devhdr, 0, CKDDASD_DEVHDR_SIZE);
     memcpy(devhdr.devid, "CKD_P370", 8);
-    STORE_FW (devhdr.heads, heads);
-    STORE_FW (devhdr.trksize, trksize);
+    devhdr.heads[3] = (heads >> 24) & 0xFF;
+    devhdr.heads[2] = (heads >> 16) & 0xFF;
+    devhdr.heads[1] = (heads >> 8) & 0xFF;
+    devhdr.heads[0] = heads & 0xFF;
+    devhdr.trksize[3] = (trksize >> 24) & 0xFF;
+    devhdr.trksize[2] = (trksize >> 16) & 0xFF;
+    devhdr.trksize[1] = (trksize >> 8) & 0xFF;
+    devhdr.trksize[0] = trksize & 0xFF;
     devhdr.devtype = devtype & 0xFF;
     devhdr.fileseq = fileseq;
-    STORE_HW (devhdr.highcyl, highcyl);
+    devhdr.highcyl[1] = (highcyl >> 8) & 0xFF;
+    devhdr.highcyl[0] = highcyl & 0xFF;
 
     /* Write the device header */
     rc = write (ofd, &devhdr, CKDDASD_DEVHDR_SIZE);
