@@ -1,25 +1,153 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</TITLE>
+Hercules Version 2: System Messages: DC - dasdcopy</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</h1>
+<h1>Hercules Version 2: System Messages: DC - dasdcopy</h1>
 <p>
-This page describes the terminal emulation messages for the Hercules S/370,
-ESA/390, and z/Architecture emulator.
+This page describes the messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator disk image copy utility.
+<p>
+Note that this utility can be called by several names:
+<code>dasdcopy</code>, <code>ckd2cckd</code>, <code>cckd2ckd</code>,
+<code>fba2cfba</code>, and <code>cfba2fba</code>. The same program is used
+for all of these functions. The name used to invoke the program is
+reported in each of these messages as <code><em>progname</em></code>.
 <h3>Messages</h3>
 <dl>
-<dt><code><a name="HHCTE001I">
-HHCTE001I text
+<dt><code><a name="HHCDC001E">
+HHCDC001E <em>progname</em>: <em>filename</em> open
+error: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>An error was encountered when trying to open the input file
+named <code><em>filename</em></code> to determine its type.
+The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
   <dt>Issued by
-  <dd>console.c
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC002E">
+HHCDC001E <em>progname</em>: <em>filename</em> read
+error: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when trying to read the input
+file named <code><em>filename</em></code> to determine its type.
+The error is described by <code><em>error</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC003E">
+HHCDC003E <em>progname</em>: <em>filename</em> open failed
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when trying to open the input
+file named <code><em>filename</em></code> for copying. A
+previous message described the error.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC004E">
+HHCDC004E <em>progname</em>: ckd lookup failed for <em>size</em> cyls
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>There was no disk drive table entry that matched the number of
+cylinders in the CKD source file, <code><em>size</em></code>. The program cannot
+determine how much data to copy.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC005E">
+HHCDC005E <em>progname</em>: fba lookup failed, blks <em>size</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>There was no disk drive table entry that matched the number of
+blocks in the FBA source file, <code><em>size</em></code>. The program cannot
+determine how much data to copy.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC006E">
+HHCDC006E <em>progname</em>: <em>filename</em> create failed
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when trying to create the output file named
+<code><em>filename</em></code>. A previous message described the error.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC007E">
+HHCDC007E <em>progname</em>: <em>filename</em> open failed
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when trying to open the newly created
+output file named <code><em>filename</em></code>. A previous message described
+the error.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC008E">
+HHCDC008E <em>progname</em>: <em>filename</em> read error 
+(<em>track</em>|<em>block</em>) <em>number</em> stat=<em>status</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when trying to read a block or track from
+the input file named <code><em>filename</em></code>. The block or track is
+number <code><em>number</em></code>.
+The status returned is shown as <code><em>status</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC009E">
+HHCDC008E <em>progname</em>: <em>filename</em> write error 
+(<em>track</em>|<em>block</em>) <em>number</em> stat=<em>status</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An error was encountered when trying to read a block or track from
+the input file named <code><em>filename</em></code>. The block or track is number
+<code><em>number</em></code>.
+The status returned is shown as <code><em>status</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
+  </dl>
+<dt><code><a name="HHCDC010I">
+HHCDC010I Copy successful !!!
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The copy operation has completed successfully.
+  <dt>Issued by
+  <dd>dasdcopy.c, function main
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
@@ -27,9 +155,9 @@ HHCTE001I text
 If you have a question about Hercules, see the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
 <p><center><hr width=15% noshade>
-<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+<a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 15 December 2002
+<p>Last updated 18 December 2002
 </BODY>
 </HTML>

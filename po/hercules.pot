@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-18 13:35-0600\n"
+"POT-Creation-Date: 2002-12-18 15:30-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,10 +15,10 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: dasdcopy.c:373
+#: dasdcopy.c:376
 msgid ""
 "\n"
-"Copy successful !!!       \n"
+"HHCDC010I Copy successful !!!       \n"
 msgstr ""
 
 #: fbadasd.c:760
@@ -35,19 +35,19 @@ msgstr ""
 msgid "     (no one currently connected)\n"
 msgstr ""
 
-#: dasdcopy.c:555
+#: dasdcopy.c:558
 msgid "     -bz2              compress output using bzip2\n"
 msgstr ""
 
-#: dasdcopy.c:441 dasdcopy.c:495
+#: dasdcopy.c:444 dasdcopy.c:498
 msgid "     -bz2              compress using bzip2\n"
 msgstr ""
 
-#: dasdcopy.c:434 dasdcopy.c:488 dasdcopy.c:548
+#: dasdcopy.c:437 dasdcopy.c:491 dasdcopy.c:551
 msgid "     -z                compress using zlib [default]\n"
 msgstr ""
 
-#: dasdcopy.c:323
+#: dasdcopy.c:324
 #, c-format
 msgid "  %3d%% %7d of %d"
 msgstr ""
@@ -168,46 +168,6 @@ msgstr ""
 #: hsccmd.c:1418
 #, c-format
 msgid "%d devices processed\n"
-msgstr ""
-
-#: dasdcopy.c:304
-#, c-format
-msgid "%s: %s create failed\n"
-msgstr ""
-
-#: dasdcopy.c:184
-#, c-format
-msgid "%s: %s open error: %s\n"
-msgstr ""
-
-#: dasdcopy.c:254 dasdcopy.c:316
-#, c-format
-msgid "%s: %s open failed\n"
-msgstr ""
-
-#: dasdcopy.c:344
-#, c-format
-msgid "%s: %s read error %s %d stat=%2.2X\n"
-msgstr ""
-
-#: dasdcopy.c:191
-#, c-format
-msgid "%s: %s read error: %s\n"
-msgstr ""
-
-#: dasdcopy.c:363
-#, c-format
-msgid "%s: %s write error %s %d stat=%2.2X\n"
-msgstr ""
-
-#: dasdcopy.c:267
-#, c-format
-msgid "%s: ckd lookup failed for %4.4X cyls %d\n"
-msgstr ""
-
-#: dasdcopy.c:285
-#, c-format
-msgid "%s: fba lookup failed, blks %d\n"
 msgstr ""
 
 #: hscmisc.c:626
@@ -1648,6 +1608,51 @@ msgstr ""
 msgid "HHCCPU006E Cannot create timer thread: %s\n"
 msgstr ""
 
+#: dasdcopy.c:184
+#, c-format
+msgid "HHCDC001E %s: %s open error: %s\n"
+msgstr ""
+
+#: dasdcopy.c:191
+#, c-format
+msgid "HHCDC002E %s: %s read error: %s\n"
+msgstr ""
+
+#: dasdcopy.c:254
+#, c-format
+msgid "HHCDC003E %s: %s open failed\n"
+msgstr ""
+
+#: dasdcopy.c:267
+#, c-format
+msgid "HHCDC004E %s: ckd lookup failed for %4.4X cyls %d\n"
+msgstr ""
+
+#: dasdcopy.c:286
+#, c-format
+msgid "HHCDC005E %s: fba lookup failed, blks %d\n"
+msgstr ""
+
+#: dasdcopy.c:305
+#, c-format
+msgid "HHCDC006E %s: %s create failed\n"
+msgstr ""
+
+#: dasdcopy.c:317
+#, c-format
+msgid "HHCDC007E %s: %s open failed\n"
+msgstr ""
+
+#: dasdcopy.c:345
+#, c-format
+msgid "HHCDC008E %s: %s read error %s %d stat=%2.2X\n"
+msgstr ""
+
+#: dasdcopy.c:365
+#, c-format
+msgid "HHCDC009E %s: %s write error %s %d stat=%2.2X\n"
+msgstr ""
+
 #: httpserv.c:561
 #, c-format
 msgid "HHCHT001I HTTP listener thread started: tid=%8.8lX, pid=%d\n"
@@ -2947,7 +2952,7 @@ msgstr ""
 msgid "usable"
 msgstr ""
 
-#: dasdcopy.c:522
+#: dasdcopy.c:525
 #, c-format
 msgid ""
 "usage:  %s [-options] ifile [sf=sfile] ofile\n"
@@ -2972,7 +2977,7 @@ msgid ""
 "     -o     type       output file type (CKD, CCKD, FBA, CFBA)\n"
 msgstr ""
 
-#: dasdcopy.c:449
+#: dasdcopy.c:452
 msgid ""
 "usage:  cckd2ckd [-options] ifile [sf=sfile] ofile\n"
 "\n"
@@ -3002,7 +3007,7 @@ msgid ""
 "                       byte order swapped\n"
 msgstr ""
 
-#: dasdcopy.c:503
+#: dasdcopy.c:506
 msgid ""
 "usage:  cfba2fba [-options] ifile [sf=sfile] ofile\n"
 "\n"
@@ -3022,7 +3027,7 @@ msgid ""
 "     -blks  n          size of output file\n"
 msgstr ""
 
-#: dasdcopy.c:414
+#: dasdcopy.c:417
 #, c-format
 msgid ""
 "usage:  ckd2cckd [-options] ifile ofile\n"
@@ -3042,7 +3047,7 @@ msgid ""
 "     -a                output file will have alt cyls\n"
 msgstr ""
 
-#: dasdcopy.c:469
+#: dasdcopy.c:472
 #, c-format
 msgid ""
 "usage:  fba2cfba [-options] ifile ofile\n"
