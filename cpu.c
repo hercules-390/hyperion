@@ -89,8 +89,8 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
         STORE_FW ( addr + 4,
                    ( (regs->psw.amode ? 0x80000000 : 0 )
                    | regs->psw.zeroword
-		   )
-		 );
+                   )
+                 );
         STORE_DW ( addr + 8, regs->psw.IA );
 #endif /*defined(FEATURE_ESAME)*/
 } /* end function ARCH_DEP(store_psw) */
@@ -536,6 +536,9 @@ static char *pgmintname[] = {
 #else /*!defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
          code != PGM_PROTECTION_EXCEPTION
 #endif /*!defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)*/
+#if defined (_FEATURE_PER2)
+      && !((pcode & PGM_PER_EVENT) && SIE_FEATB(regs, M, GPE))
+#endif /* defined (_FEATURE_PER2) */
       && code != PGM_ADDRESSING_EXCEPTION
       && code != PGM_SPECIFICATION_EXCEPTION
       && code != PGM_SPECIAL_OPERATION_EXCEPTION
@@ -629,7 +632,8 @@ static char *pgmintname[] = {
             psa->perarid = realregs->peraid;
 
         /* Reset PER pending indication */
-        OFF_IC_PER(realregs);
+        if(nointercept)
+            OFF_IC_PER(realregs);
 
     }
     else

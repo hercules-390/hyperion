@@ -672,7 +672,7 @@ int     n;
     /* zeroize interception status */
     STATEBK->f = 0;
 
-    switch(code)
+    switch(code > 0 ? code & ~PGM_PER_EVENT : code)
     {
         case SIE_HOST_INTERRUPT:
            /* If a host interrupt is pending
@@ -793,6 +793,7 @@ int     n;
 #if defined(_FEATURE_PER)
         /* Handle PER or concurrent PER event */
         if( OPEN_IC_PERINT(GUESTREGS)
+          && ECMODE(&GUESTREGS->psw)
           && (GUESTREGS->psw.sysmask & PSW_PERMODE) )
         {
         PSA *psa;   
@@ -814,6 +815,8 @@ int     n;
         if (IS_IC_PER_IF(GUESTREGS))
             STATEBK->f |= SIE_F_IF;
 
+        /* Reset any pending PER indication */
+        OFF_IC_PER(GUESTREGS);
 #endif /*defined(_FEATURE_PER)*/
 
         /* Update interception parameters in the state descriptor */
