@@ -1,3 +1,4 @@
+13 Jul 2001 Further CMPSC fixes - Bernard van der Helm
 12 Jul 2001 Fix CEFR when converting 0x80000000 - Paul leisy
 12 Jul 2001 Fix BSG trace entry for 24bit mode - Paul Leisy
 12 Jul 2001 Fix BSA so it traces when R2=0 - Paul Leisy

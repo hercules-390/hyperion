@@ -231,7 +231,7 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
     {
 
       /* Can we write an index or interchange symbol */
-      if (((GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8) > GR_A (r1 + 1, iregs))
+      if (((GR1_cbn (iregs) + GR0_symbol_size (iregs) - 1) / 8) >= GR_A (r1 + 1, iregs))
 	{
 	  regs->psw.cc = 1;
 	  return;
@@ -259,6 +259,9 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
 
 	      /* Reached end of source, store last match */
 	      ARCH_DEP (store_is) (r1, r2, regs, iregs, index_symbol);
+	
+              /* Commit registers */
+              COMMITREGS (regs, iregs, r1, r2);
 	      return;
 	    }
 
@@ -364,7 +367,6 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
 			}
 		    }
 
-
 		  /* Next sibling follows last possible child */
 		  sd_ptr += SD_sct (iregs, sd) + 1;
 
@@ -395,6 +397,7 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs, REGS * iregs)
   BYTE byte;			/* a byte                                     */
   U16 index_symbol;		/* Index symbol                               */
   BYTE ece[8];			/* Expansion Character Entry                  */
+  int entries;                  /* Entries processed                          */
   U16 pptr;			/* predecessor pointer                        */
   int translated;		/* number of bytes generated                  */
   int written;			/* Childs written                             */
@@ -420,6 +423,9 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs, REGS * iregs)
 
 	  /* Adjust destination registers */
 	  ADJUSTREGS (r1, iregs, 1);
+	
+	  /* Commit registers */
+	  COMMITREGS (regs, iregs, r1, r2);
 	}
       else
 	{
@@ -429,6 +435,9 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs, REGS * iregs)
 
           /* Reset child counter */
           written = 0;
+
+          /* Reset entries counter */
+          entries = 1;
 
 	  /* Process the whole tree to the top */
 	  while (!ECE_unprec (ece))
@@ -445,6 +454,19 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs, REGS * iregs)
 	      /* Get the preceeding entry */
 	      pptr = ECE_pptr (ece);
 	      ARCH_DEP (fetch_ece) (r2, regs, iregs, ece, pptr);
+	
+	      /* Check for processing entry 128 */
+	      if(++entries > 127)
+	      {
+	
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
+                 logmsg ("expand: trying to process entry 128\n");
+#endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
+
+                 ARCH_DEP (program_interrupt) (regs, PGM_DATA_EXCEPTION);
+                 return;
+	      }
+	
 	    }
 	
           /* Check for writing child 261 */
@@ -589,7 +611,7 @@ static int ARCH_DEP (fetch_is) (int r2, REGS * regs, REGS * iregs, U16 * index_s
   BYTE work[3];
 
   /* Check if we can read an index symbol */
-  if (((GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8) > GR_A (r2 + 1, iregs) || GR_A (r2 + 1, iregs) == 1)
+  if (((GR1_cbn (iregs) + GR0_symbol_size (iregs) - 1) / 8) >= GR_A (r2 + 1, iregs))
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -684,6 +706,7 @@ static void ARCH_DEP (fetch_sd) (int r2, REGS * regs, REGS * iregs, BYTE * sd, i
       }
   }
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
+
 }
 
 /*----------------------------------------------------------------------------*/
@@ -740,7 +763,7 @@ static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 
       ARCH_DEP (vfetchc) (work, 1, (GR1_dictor (iregs) + GR1_sttoff (iregs) + index_symbol * 2) & ADDRESS_MAXWRAP (regs), r2, regs);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-      logmsg ("store_is : %04X -> %02X%02X", index_symbol, work[0], work[1]);
+      logmsg ("store_is : %04X -> %02X%02X\n", index_symbol, work[0], work[1]);
 #endif
 
       /* set index_symbol to interchange symbol */
@@ -785,6 +808,7 @@ static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
   logmsg ("store_is : %04X, cbn=%d, GR%02d=" ADRFMT ", GR%02d=" ADRFMT "\n", index_symbol, GR1_cbn (iregs), r1, iregs->GR (r1), r1 + 1, iregs->GR (r1 + 1));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
+
 }
 
 /*----------------------------------------------------------------------------*/
@@ -798,7 +822,7 @@ static int ARCH_DEP (test_ch261) (REGS * regs, REGS * iregs, int * processed, in
   if (*processed > 260)
     {
 
-#if defined(OPTION_CMPSC_DEBUGLVL)
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL > 0
       logmsg ("test_ch261: trying to process child 261\n");
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
@@ -819,12 +843,8 @@ static int ARCH_DEP (test_ec) (int r2, REGS * regs, REGS * iregs, BYTE * cce)
   for (i = 0; i < CCE_act (cce); i++)
     {
 
-      /* Get a character return nomatch on end of source */
-      if (ARCH_DEP (fetch_ch) (r2, regs, iregs, &ch, i + 1))
-	return (0);
-
-      /* Match? */	
-      if (ch != CCE_ec (cce)[i])
+      /* Get a character return on nomatch or end of source */
+      if (ARCH_DEP (fetch_ch) (r2, regs, iregs, &ch, i + 1) || ch != CCE_ec (cce)[i])
 	return (0);
     }
 
@@ -881,9 +901,6 @@ DEF_INST (compression_call)
     ARCH_DEP (expand) (r1, r2, regs, &iregs);
   else
     ARCH_DEP (compress) (r1, r2, regs, &iregs);
-
-  /* Commit registers */
-  COMMITREGS (regs, &iregs, r1, r2);
 }
 
 #endif /* FEATURE_COMPRESSION */
