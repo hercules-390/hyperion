@@ -1430,6 +1430,8 @@ BYTE **orig_newargv;
     sysblk.mainsize = mainsize * 1024 * 1024;
 #if !defined(MAP_ANONYMOUS) /* the following fix isn't needed */
     sysblk.mainstor = malloc(sysblk.mainsize);
+/* ISW20030828-1 : Check for MALLOC result */
+    if (sysblk.mainstor == NULL)
 #else /* !defined(MAP_ANONYMOUS) */
     /*
              Windows "double memory consumption" bug fix
@@ -1479,9 +1481,9 @@ BYTE **orig_newargv;
     */
     sysblk.mainstor = mmap(0, sysblk.mainsize,
         PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+/* ISW20030828-1 : Check for MMAP result */
+    if (sysblk.mainstor == ((void *)-1))
 #endif /* !defined(MAP_ANONYMOUS) */
-
-    if (sysblk.mainstor == NULL)
     {
         fprintf(stderr, _("HHCCF031S Cannot obtain %dMB main storage: %s\n"),
                 mainsize, strerror(errno));
