@@ -552,7 +552,7 @@ DEVBLK *dev;                            /* -> Device block           */
 /*                                                                   */
 /* device_init(dev)                                                  */
 /* {                                                                 */
-/*    if(!device_group(dev, 2))                                      */
+/*    if( !device_group(dev, 2) )                                    */
 /*       return 0;                                                   */
 /*                                                                   */
 /*    ... all devices in the group have been attached,               */
@@ -565,19 +565,20 @@ DEVBLK *dev;                            /* -> Device block           */
 /*                                                                   */
 /* device_init(dev)                                                  */
 /* {                                                                 */
-/*    if(device_group(dev, 0))                                       */
+/*    if( !group_device(dev, 0) && dev->group )                      */
+/*        return 0;                                                  */
+/*                                                                   */
+/*    if( !device->group )                                           */
 /*    {                                                              */
+/*        ... process parameters to determine number of devices      */
+/*                                                                   */
+/*        // Create group                                            */
+/*        if( !group_device(dev, variable_count) )                   */
+/*            return 0;                                              */
+/*    }                                                              */
+/*                                                                   */
 /*    ... all devices in the group have been attached,               */
 /*    ... group initialisation may proceed.                          */
-/*    }                                                              */
-/*    else                                                           */
-/*        if(device->group)                                          */
-/*           return 0;                                               */
-/*        else                                                       */
-/*        {                                                          */
-/*            ... process parameters to determine number of devices  */
-/*            device_group(dev, variable_count);                     */
-/*        }                                                          */
 /* }                                                                 */
 /*                                                                   */
 /*                                                                   */
