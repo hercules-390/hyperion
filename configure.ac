@@ -223,14 +223,14 @@ AC_ARG_ENABLE(optimization,
                 no) auto_optimize=false ;;
                 *) auto_optimize=false; OFLAGS="${enableval}" ;;
                esac],
-              [auto_optimize=true])
+              [test x$debug != xtrue && auto_optimize=true])
 
-if test x$auto_optimize = xtrue && test x$debug != xtrue; then
+if test x$auto_optimize = xtrue; then
   case "$host_cpu" in
 	  i586|i686)
 	    if test "$GCC" = "yes"; then
 		OFLAGS="-O3 -march=$host_cpu $OFLAGS"
-                if test x$enable_profiling != xtrue; then
+                if test x$enable_profiling != xtrue && test x$debug != xtrue; then
                   OFLAGS="-fomit-frame-pointer $OFLAGS"
                 fi
 	    else
@@ -268,7 +268,7 @@ if test x$build_external_gui = xtrue; then
 fi
 
 AC_ARG_ENABLE(custom,
-              AC_HELP_STRING([--enable-custom],
+              AC_HELP_STRING([--enable-custom=STRING],
                              [Provide a custom description for this build]),
               [AC_DEFINE_UNQUOTED([CUSTOM_BUILD_STRING], "${enableval}") ])
 
