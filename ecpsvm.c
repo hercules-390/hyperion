@@ -176,7 +176,10 @@ struct _ECPSVM_SASTATS
 #define EVM_STC( x , y ) ARCH_DEP(vstoreb) ( ( x ) , ( ( y ) & ADDRESS_MAXWRAP(regs) ) , USE_REAL_ADDR , regs )
 #define EVM_MVC( x , y , z ) ARCH_DEP(vfetchc) ( ( x ) , ( z ) , ( y ) , USE_REAL_ADDR , regs )
 
-#define BR14 regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWRAP(regs)
+#define BR14 do { \
+    regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWRAP(regs); \
+    VALIDATE_AIA(regs); \
+} while(0)
 
 #if defined(_FEATURE_SIE)
 #define INITSIESTATE(_regs)       \
@@ -205,10 +208,14 @@ struct _ECPSVM_SASTATS
 #define SASSIST_HIT(_stat) ecpsvm_sastats._stat.hit++
 
 #define SASSIST_LPSW(_regs) \
+    do { \
         regs->psw.IA=(_regs.psw.IA & ADDRESS_MAXWRAP(_regs)); \
         regs->psw.cc=_regs.psw.cc; \
         regs->psw.pkey=_regs.psw.pkey; \
-        regs->psw.progmask=_regs.psw.progmask;
+        regs->psw.progmask=_regs.psw.progmask; \
+        VALIDATE_AIA(regs); \
+    } \
+    while(0)
 
 
 #define SASSIST_PROLOGX( _instname, _cput ) \
@@ -600,6 +607,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     {
         DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Call SCHEDULE because VMKILL not set\n"));
         regs->psw.IA=SCHDL;
+        VALIDATE_AIA(regs);
         return(0);
     }
     B_VMQSTAT=EVM_IC(vmb+VMQSTAT);
@@ -609,6 +617,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
         {
             DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Call SCHEDULE because VMKILL & VMCF & !VMCFREAD set\n"));
             regs->psw.IA=SCHDL;
+            VALIDATE_AIA(regs);
             return(0);
         }
     }
@@ -626,6 +635,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     B_VMRSTAT |= VMLOGOFF;
     EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
     regs->psw.IA=EVM_L(el+0);
+    VALIDATE_AIA(regs);
     DEBUG_CPASSISTX(DISP1,logmsg("DISP1 : Call USOFF\n"));
     return(0);
 }
@@ -667,6 +677,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Exit 8 : System extending\n"));
         /* System in Extend process */
         regs->psw.IA=EVM_L(el+8);
+        VALIDATE_AIA(regs);
         return(0);
     }
     if(EVM_IC(APSTAT2) & CPMCHLK)
@@ -674,6 +685,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Exit 8 : MCH Recovery\n"));
         /* Machine Check recovery in progress */
         regs->psw.IA=EVM_L(el+8);
+        VALIDATE_AIA(regs);
         return(0);
     }
     svmb=EVM_L(ASYSVM);
@@ -702,6 +714,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         regs->GR_L(11)=vmb;
         regs->GR_L(12)=EVM_L(F_TRQB+0x1C);
         regs->psw.IA=regs->GR_L(12) & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 TRQ/IOB @ %6.6X IA = %6.6X\n",F_TRQB,regs->GR_L(12)));
         return(0);
     }
@@ -747,6 +760,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         EVM_ST(dl+60,CPEXBKUP[1]);  /* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
         /* Upon taking this exit, GPRS 12-15 are same as entry */
             regs->psw.IA=EVM_L(el+12);
+            VALIDATE_AIA(regs);
             return(0);
         }
         for(i=0;i<15;i++)
@@ -755,6 +769,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         }
         regs->GR_L(15)=F_CPEXADD;
         regs->psw.IA=F_CPEXADD & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(regs);
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 CPEXBLOK CPEX=%6.6X IA=%6.6X\n",F_CPEXB,F_CPEXADD));
         return(0);  /* CPEXBLOCK Branch taken */
     }
@@ -764,6 +779,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     {
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 Exit 24 : CPSHRLK Set in CPSTAT2\n"));
         regs->psw.IA=EVM_L(el+24);      /* IDLEECPS */
+        VALIDATE_AIA(regs);
         return(0);
     }
     /* Scan Scheduler IN-Q */
@@ -787,6 +803,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             regs->GR_L(1)=vmb;
             regs->GR_L(11)=EVM_L(ASYSVM);
             regs->psw.IA=EVM_L(el+20);  /* FREELOCK */
+            VALIDATE_AIA(regs);
             return(0);
         }
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Will now be dispatched\n",vmb));
@@ -811,6 +828,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                     regs->GR_L(10)=vmb;
                     regs->GR_L(11)=lastu;
                     regs->psw.IA=EVM_L(el+16);
+                    VALIDATE_AIA(regs);
                     return(0);
                     /* A CHARGE_STOP(runu) is due when LCSHRPG is implemented */
                 }
@@ -866,6 +884,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         INITPSEUDOREGS(rregs);
         /* Copy IAR */
         rregs.psw.IA=wregs.psw.IA & ADDRESS_MAXWRAP(regs);
+        VALIDATE_AIA(&rregs);
         /* Copy CC, PSW KEYs and PGM Mask */
         rregs.psw.cc=wregs.psw.cc;
         rregs.psw.pkey=wregs.psw.pkey;
@@ -901,6 +920,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
                     /* Take exit 28 */
                     logmsg(_("HHCEV004W : Abend condition detected in DISP2 instr\n"));
                     regs->psw.IA=EVM_L(el+28);
+                    VALIDATE_AIA(regs);
                     return(0);
                 }
                 /* Check 3rd level translation */
@@ -1088,6 +1108,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         SET_IC_MASK(regs);
         SET_AEA_MODE(regs);
         SET_AEA_COMMON(regs);
+        VALIDATE_AIA(regs);
         /* Dispatch..... */
         DEBUG_CPASSISTX(DISP2,logmsg(_("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
         DEBUG_CPASSISTX(DISP2,display_regs(regs));
@@ -1097,6 +1118,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
     /* Nothing else to do - wait state */
     DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Nothing to dispatch - IDLEECPS\n"));
     regs->psw.IA=EVM_L(el+24);      /* IDLEECPS */
+    VALIDATE_AIA(regs);
     return(0);
 }
 
@@ -1208,6 +1230,7 @@ DEF_INST(ecpsvm_tpage)
     regs->psw.cc=0;
     regs->GR_L(2)=raddr;
     regs->psw.IA = effective_addr2 & ADDRESS_MAXWRAP(regs);
+    VALIDATE_AIA(regs);
     CPASSIST_HIT(TRBRG);
     return;
 }
@@ -1234,6 +1257,7 @@ DEF_INST(ecpsvm_tpage_lock)
     regs->psw.cc=0;
     regs->GR_L(2)=raddr;
     regs->psw.IA = effective_addr2 & ADDRESS_MAXWRAP(regs);
+    VALIDATE_AIA(regs);
     CPASSIST_HIT(TRLOK);
     return;
 }
@@ -1367,6 +1391,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
         /* Abend condition detected during virtual time update - exit at +32 */
         DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : Bad ITIMER - Taking Exist #32\n"));
         regs->psw.IA=EVM_L(exitlist+32);
+        VALIDATE_AIA(regs);
         return(0);
     }
     /* Load CR1 with the vmblock's VMSEG */
@@ -1394,6 +1419,7 @@ static int ecpsvm_disp_runtime(REGS *regs,VADR *vmb_p,VADR dlist,VADR exitlist)
         regs->GR_L(9)=EVM_L(dlist+4);
         regs->GR_L(11)=vmb;
         regs->psw.IA = EVM_L(exitlist+8);
+        VALIDATE_AIA(regs);
         DEBUG_CPASSISTX(DISP0,logmsg("RUNTIME : Complete - Taking exit #8\n"));
         return(0);
     }
@@ -1466,6 +1492,7 @@ DEF_INST(ecpsvm_dispatch_main)
                 /* Clean status - Do exit 36 */
                 regs->GR_L(11)=vmb;
                 regs->psw.IA=EVM_L(elist+36);
+                VALIDATE_AIA(regs);
                 EVM_ST(DISPCNT,dlist);
                 CPASSIST_HIT(DISP0);
                 return;
@@ -1484,6 +1511,7 @@ DEF_INST(ecpsvm_dispatch_main)
             /* No need to update R11 */
             CPASSIST_HIT(DISP0);
             regs->psw.IA=EVM_L(elist+4);
+            VALIDATE_AIA(regs);
             EVM_ST(DISPCNT,dlist);
             return;
         }
@@ -1498,6 +1526,7 @@ DEF_INST(ecpsvm_dispatch_main)
         /* Take Exit 12 */
         regs->GR_L(11)=vmb;
         regs->psw.IA=EVM_L(elist+12);
+        VALIDATE_AIA(regs);
         CPASSIST_HIT(DISP0);
         EVM_ST(DISPCNT,dlist);
         return;
@@ -1510,6 +1539,7 @@ DEF_INST(ecpsvm_dispatch_main)
         /* Take Exit 16 */
         regs->GR_L(11)=vmb;
         regs->psw.IA=EVM_L(elist+16);
+        VALIDATE_AIA(regs);
         CPASSIST_HIT(DISP0);
         EVM_ST(DISPCNT,dlist);
         return;
@@ -1554,6 +1584,7 @@ DEF_INST(ecpsvm_dispatch_main)
                     regs->GR_L(6)=F_VMPXINT;        /* Current XINTBLOK */
                     regs->GR_L(11)=vmb;             /* RUNUSER */
                     regs->psw.IA=EVM_L(elist+20);   /* Exit +20 */
+                    VALIDATE_AIA(regs);
                     EVM_ST(DISPCNT,dlist);
                     CPASSIST_HIT(DISP0);
                     return;
@@ -1614,6 +1645,7 @@ DEF_INST(ecpsvm_dispatch_main)
                 regs->GR_L(7)=F_VMIOINT;
                 regs->GR_L(11)=vmb;
                 regs->psw.IA=EVM_L(elist+24);   /* Exit +24 */
+                VALIDATE_AIA(regs);
                 EVM_ST(DISPCNT,dlist);
                 CPASSIST_HIT(DISP0);
                 return;
@@ -1631,6 +1663,7 @@ DEF_INST(ecpsvm_dispatch_main)
         /* Take exit 28  */
         regs->GR_L(11)=vmb;
         regs->psw.IA=EVM_L(elist+28);   /* Exit +28 */
+        VALIDATE_AIA(regs);
         CPASSIST_HIT(DISP0);
         EVM_ST(DISPCNT,dlist);
         return;
@@ -1639,6 +1672,7 @@ DEF_INST(ecpsvm_dispatch_main)
     DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : DISPATCH - Taking exit #0\n"));
     regs->GR_L(11)=vmb;
     regs->psw.IA=EVM_L(elist+0);   /* Exit +0 */
+    VALIDATE_AIA(regs);
     CPASSIST_HIT(DISP0);
     EVM_ST(DISPCNT,dlist);
     return;
@@ -1756,6 +1790,7 @@ DEF_INST(ecpsvm_locate_rblock)
         regs->GR_L(7)=~0;
         regs->GR_L(8)=~0;
         regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWREP(regs);
+        VALIDATE_AIA(regs);
         regs->psw.cc=1;
         */
         /* Right now, let CP handle the case */
@@ -1783,6 +1818,7 @@ DEF_INST(ecpsvm_locate_rblock)
             regs->GR_L(8)=~0;
             regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWREP(regs);
             regs->psw.cc=2;
+            VALIDATE_AIA(regs);
             */
             return;
         }
@@ -1791,8 +1827,6 @@ DEF_INST(ecpsvm_locate_rblock)
     rcutbl=EVM_L(arioct+8);
     rcublk=rcutbl+cuix;
     dvix=EVM_LH(rcublk+0x28+((rdev & 0x00f)<<1));
-    dvix<<=3;
-    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n"),dvix);
     if(EVM_IC(rcublk+5)&0x40)
     {
         rcublk=EVM_L(rcublk+0x10);
@@ -1805,10 +1839,13 @@ DEF_INST(ecpsvm_locate_rblock)
         regs->GR_L(7)=rcublk;
         regs->GR_L(8)=~0;
         regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWREP(regs);
+        VALIDATE_AIA(regs);
         regs->psw.cc=3;
         */
         return;
     }
+    dvix<<=3;
+    // logmsg(_("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n"),dvix);
     rdvtbl=EVM_L(arioct+12);
     rdvblk=rdvtbl+dvix;
     DEBUG_CPASSISTX(SCNRU,logmsg(_("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n"),rchblk,rcublk,rdvblk));
