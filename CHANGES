@@ -1,5 +1,9 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+05 Sep 2004 1. Fix deadlock introduced by me in scsitape.h, 2. rescind
+            30 Jul 2004 bldcfg.c fix that I'm told is actually contrary
+            to a change/decision made by Jan back on 2003/03/20 that I
+            was unaware of - Fish
 02 Sep 2004 Re-enable build without dynamic loading suppt - Ivan Warren
 28 Aug 2004 SCSI tape mods part 1 (cont'd): don't retreive tape status
             until it's actually needed for error determination - Fish

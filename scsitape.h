@@ -56,7 +56,7 @@ int             i;                      /* Array subscript           */
 struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 int save_errno;
 
-    obtain_lock( &dev->lock );
+//  obtain_lock( &dev->lock );
 
     ASSERT( dev->fd < 0 );  // (sanity check)
     dev->sstat = GMT_DR_OPEN( -1 );
@@ -86,7 +86,7 @@ int save_errno;
     {
         logmsg (_("HHCTA024E Error opening %s; errno=%d: %s\n"),
                 dev->filename, errno, strerror(errno));
-        release_lock( &dev->lock );
+//      release_lock( &dev->lock );
         build_senseX(TAPE_BSENSE_ITFERROR,dev,unitstat,code);
         return -1; // (FATAL error; device cannot be opened)
     }
@@ -130,7 +130,7 @@ int save_errno;
 
     TRACE( "** open_scsitape: exit\n" );
 
-    release_lock( &dev->lock );
+//  release_lock( &dev->lock );
     return rc;
 } /* end function open_scsitape */
 
@@ -785,7 +785,7 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
 /*-------------------------------------------------------------------*/
 static void update_status_scsitape( DEVBLK* dev, int no_trace )
 {
-    obtain_lock( &dev->lock );
+//  obtain_lock( &dev->lock );
 
     if ( dev->fd < 0 )
     {
@@ -908,7 +908,7 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
 
     TRACE( "** update_status_scsitape: exit\n" );
 
-    release_lock( &dev->lock );
+//  release_lock( &dev->lock );
 } /* end function update_status_scsitape */
 
 /*-------------------------------------------------------------------*/
@@ -972,22 +972,22 @@ static void *scsi_tapemountmon_thread( void *db )
             // trying to open it until it's ready.
             // (Note that 'open_scsitape' calls
             //  'update_status_scsitape' for us)
-            release_lock( &dev->lock );
+//          release_lock( &dev->lock );
             TRACE( "** scsi_tapemountmon_thread: calling 'open_scsitape'...\n" );
             open_scsitape( dev, NULL, 0 );
             TRACE( "** scsi_tapemountmon_thread: back from 'open_scsitape'...\n" );
-            obtain_lock( &dev->lock );
+//          obtain_lock( &dev->lock );
         }
         else
         {
             // The DRIVE is ready, but there's still
             // not any tape mounted; keep retrieving
             // the status until we know it's mounted.
-            release_lock( &dev->lock );
+//          release_lock( &dev->lock );
             TRACE( "** scsi_tapemountmon_thread: calling 'update_status_scsitape'...\n" );
             update_status_scsitape( dev, 1 );
             TRACE( "** scsi_tapemountmon_thread: back from 'update_status_scsitape'...\n" );
-            obtain_lock( &dev->lock );
+//          obtain_lock( &dev->lock );
         }
     }
 
@@ -1017,7 +1017,9 @@ static void *scsi_tapemountmon_thread( void *db )
             // succcessfully loaded by presenting them with
             // an unsolicited device attention interrupt.
             TRACE( "** scsi_tapemountmon_thread: calling 'device_attention'...\n" );
+            release_lock( &dev->lock );
             device_attention( dev, CSW_DE );
+            obtain_lock( &dev->lock );
         }
     }
 

@@ -1972,11 +1972,13 @@ BYTE **orig_newargv;
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         free(devnarray);
 
+		/*
         if (baddev)
         {
             // (error message already issued)
             delayed_exit(1); // (abort startup)
         }
+		*/
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))
