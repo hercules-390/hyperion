@@ -288,7 +288,7 @@ static void NP_screen(FILE *confp)
     fprintf(confp, ANSI_CLEAR);
     fprintf(confp, ANSI_WHT_BLU);
     fprintf(confp, ANSI_CURSOR, 1, 1);
-    fprintf(confp, " Hercules        CPU         %7.7s ",
+    fprintf(confp, " Hercules   CPU              %7.7s ",
                                         get_arch_mode_string(NULL));
     fprintf(confp, ANSI_CURSOR, 1, 38);
     fprintf(confp, "|             Peripherals                  ");
