@@ -1370,7 +1370,7 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
 
                     convert_to_ebcdic (pos, 4, "VOL1");             //VOL1
                     convert_to_ebcdic (pos+4, 6, volser);           //volser
-                    pos[10] = 0xF0;                                 //security
+                    pos[10] = 0x40;                                 //security
                     store_hw(pos+11,0);                             //vtoc CC
                     store_hw(pos+13,1);                             //vtoc HH
                     pos[15] = 0x01;                                 //vtoc R
