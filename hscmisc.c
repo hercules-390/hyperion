@@ -889,7 +889,7 @@ int     n;                              /* Number of bytes in buffer */
             || (opcode == 0xB2 && inst[1] == 0x46) /*STURA*/
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
             || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
-            n = ARCH_DEP(display_virt) (regs, addr1, buf, USE_REAL_ADDR,
+            n = ARCH_DEP(display_virt) (regs, addr2, buf, USE_REAL_ADDR,
                                                 ACCTYPE_READ);
         else
             n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,

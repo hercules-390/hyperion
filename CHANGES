@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+17 Nov 2004 Fix instruction operand trace display - Jan Jaeger
 17 Nov 2004 MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB instructions - Roger Bowler
 16 Nov 2004 MXDBR,MXDB,MDEBR,MDEB instructions - Roger Bowler
 15 Nov 2004 LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR instructions - Roger Bowler
