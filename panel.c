@@ -2005,24 +2005,47 @@ int unbind_device (DEVBLK* dev)
         return 0;   /* (failure) */
     }
 
+    /* IMPORTANT! it's bad form to close a listening socket (and it
+     * happens to crash the Cygwin build) while another thread is still
+     * listening for connections on that socket (i.e. is in its FD_SET
+     * 'select' list). Thus we always issue a message (any message)
+     * immediately AFTER removing the entry from the sockdev (bind_struct)
+     * list and BEFORE closing our listening socket, thereby forcing
+     * the panel thread to rebuild its FD_SET 'select' list. (It wakes up
+     * from its 'select' as a result of our sending it our message and
+     * then before issuing another 'select' before going back to sleep,
+     * it then rebuilds its FD_SET 'select' list based on the current
+     * state of the sockdev (bind_struct) list, and since we just removed
+     * our entry from that list, the panel thread will thus not add our
+     * listening socket to its FD_SET 'select' list and thus we can then
+     * SAFELY close the listening socket).
+     */
+
     /* Remove the entry from our list */
 
     obtain_lock(&bind_lock);
     RemoveListEntry(&bs->bind_link);
     release_lock(&bind_lock);
 
-    /* Unchain device and socket from each another */
+    /* Issue message to wake up panel thread from its 'select' */
 
-    dev->bs = NULL;
-    bs->dev = NULL;
+    logmsg (_("HHC422I Device %4.4X unbound from socket %s\n"),
+        dev->devnum, bs->spec);
 
-    /* Close the listening socket */
+    /* Give panel thread time to process our message
+     * and rebuild its select list. */
+
+    usleep(100000);
+
+    /* Now safe to close the listening socket */
 
     if (bs->sd != -1)
         close (bs->sd);
 
-    logmsg (_("HHC422I Device %4.4X unbound from socket %s\n"),
-        dev->devnum, bs->spec);
+    /* Unchain device and socket from each another */
+
+    dev->bs = NULL;
+    bs->dev = NULL;
 
     /* Discard the entry */
 
