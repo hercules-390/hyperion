@@ -21,6 +21,8 @@
 #if !defined(_HERCULES_H)
 #include "cpuint.h"
 
+#include "machdep.h"
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -236,10 +238,27 @@ typedef struct _REGS {			/* Processor registers	     */
 	DW	vi;			/* Virtual instruction addr  */
 #endif /*defined(OPTION_AIA_BUFFER)*/
 #if defined(OPTION_AEA_BUFFER)
+#if !defined(OPTION_FAST_LOGICAL)
 	DW	ae[16]; 		/* Absolute effective addr   */
 	DW	ve[16]; 		/* Virtual effective addr    */
 	BYTE	aekey[16];		/* Storage Key		     */
 	int	aeacc[16];		/* Access type		     */
+#else
+#if defined(OPTION_REDUCED_INVAL)
+	DW	ae[256]; 		/* Absolute effective addr   */
+	DW	ve[256]; 		/* Virtual effective addr    */
+	BYTE	aekey[256];		/* Storage Key		     */
+	int	aeacc[256];		/* Access type		     */
+	int	aearn[256];		/* Address room		     */
+#else
+	DW	ae[16]; 		/* Absolute effective addr   */
+	DW	ve[16]; 		/* Virtual effective addr    */
+	BYTE	aekey[16];		/* Storage Key		     */
+	int	aeacc[16];		/* Access type		     */
+	int	aearn[16];		/* Address room		     */
+#endif
+        int     aenoarn;                /* no access mode           */
+#endif
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F 	 /* Fullword bits 0-31	     */

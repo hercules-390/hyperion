@@ -10,24 +10,28 @@
 
 // #define INLINE_STORE_FETCH_ADDR_CHECK
 
+#if defined(FEATURE_DUAL_ADDRESS_SPACE)
 _DAT_C_STATIC U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
 					       U32 *asteo, U32 aste[]);
 _DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
 					      int atemask, REGS *regs);
+#endif
+#if defined(FEATURE_ACCESS_REGISTERS)
 _DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
 	   int acctype, REGS *regs, U32 *asteo, U32 aste[], int *prot);
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs);
+#endif
 _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
 	   REGS *regs, int acctype, RADR *raddr, U16 *xcode, int *priv,
 		                                int *prot, int *pstid);
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
 						   int r2, REGS *regs);
-_DAT_C_STATIC RADR ARCH_DEP(logical_to_abs) (VADR addr, int arn,
+_LOGICAL_C_STATIC RADR ARCH_DEP(logical_to_abs) (VADR addr, int arn,
 				   REGS *regs, int acctype, BYTE akey);
 
 #if defined(_FEATURE_SIE)
-_DAT_C_STATIC RADR s390_logical_to_abs (U32 addr, int arn, REGS *regs,
+_LOGICAL_C_STATIC RADR s390_logical_to_abs (U32 addr, int arn, REGS *regs,
 					       int acctype, BYTE akey);
 _DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
 		       int acctype, RADR *raddr, U16 *xcode, int *priv,
@@ -35,7 +39,7 @@ _DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(_FEATURE_ZSIE)
-_DAT_C_STATIC RADR z900_logical_to_abs (U64 addr, int arn, REGS *regs,
+_LOGICAL_C_STATIC RADR z900_logical_to_abs (U64 addr, int arn, REGS *regs,
 					       int acctype, BYTE akey);
 _DAT_C_STATIC int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
 		       int acctype, RADR *raddr, U16 *xcode, int *priv,

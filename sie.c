@@ -125,6 +125,12 @@ int     icode;                          /* Interception code         */
         gpv = s390_load_psw(GUESTREGS, STATEBK->psw);
     }
 
+#if defined(OPTION_REDUCE_INVAL)
+    INVALIDATE_AIA(GUESTREGS);
+
+    INVALIDATE_AEA_ALL(GUESTREGS);
+#endif
+
     /* Set host program interrupt routine */
     GUESTREGS->sie_hostpi = (SIEFN)&ARCH_DEP(program_interrupt);
 

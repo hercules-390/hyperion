@@ -59,11 +59,8 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     } else {
         len1 = addr2 - addr;
         len2 = len - len1 + 1;
-        addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE_SKP, akey);
-        addr2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE_SKP, akey);
-        /* both pages are accessable, so set ref & change bits */
-        STORAGE_KEY(addr) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(addr2) |= (STORKEY_REF | STORKEY_CHANGE);
+        addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
+        addr2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE, akey);
         memcpy (sysblk.mainstor+addr, src, len1);
         memcpy (sysblk.mainstor+addr2, src+len1, len2);
     }
@@ -108,24 +105,25 @@ _VSTORE_C_STATIC void ARCH_DEP(vstore2) (U16 value, VADR addr, int arn,
 {
 VADR    addr2;                          /* Address of second byte    */
 RADR    abs1, abs2;                     /* Absolute addresses        */
+BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
+    /* Obtain current access key from PSW */
+    akey = regs->psw.pkey;
 
-    /* Check if store crosses page or not */
-    if ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2))
+    /* Get absolute address of first byte of operand */
+    abs1 = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
+
+    if(!(addr & 1) || (abs1 & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2))
     {
-        abs1 = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_HW(sysblk.mainstor + abs1, value);
         return;
     }
 
-    /* Page Crosser - get absolute address of both pages skipping change bit */
+    /* Calculate address of second byte of operand */
     addr2 = (addr + 1) & ADDRESS_MAXWRAP(regs);
-    abs1 = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
 
-    /* Both pages are accessable, now safe to set Reference and Change bits */
-    STORAGE_KEY(abs1) |= (STORKEY_REF | STORKEY_CHANGE);
-    STORAGE_KEY(abs2) |= (STORKEY_REF | STORKEY_CHANGE);
+    /* Repeat address translation for next page */
+    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE, akey);
 
     /* Store integer value at operand location */
     sysblk.mainstor[abs1] = value >> 8;
@@ -153,23 +151,24 @@ int     i;                              /* Loop counter              */
 int     k;                              /* Shift counter             */
 VADR    addr2;                          /* Page address of last byte */
 RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    /* Check if store crosses page or not */
-    if ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 4))
+    /* Obtain current access key from PSW */
+    akey = regs->psw.pkey;
+
+    /* Get absolute address of first byte of operand */
+    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
+
+    if(!(addr & 3) || (abs & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 4))
     {
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_FW(sysblk.mainstor + abs, value);
         return;
     }
 
-    /* Page Crosser - get absolute address of both pages skipping change bit */
-    addr2 = ((addr + 3) & ADDRESS_MAXWRAP(regs)) & PAGEFRAME_PAGEMASK;
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-
-    /* Both pages are accessable, now safe to set Reference and Change bits */
-    STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE);
-    STORAGE_KEY(abs2) |= (STORKEY_REF | STORKEY_CHANGE);
+    /* Calculate page address of last byte of operand */
+    addr2 = (addr + 3) & ADDRESS_MAXWRAP(regs);
+    addr2 &= PAGEFRAME_PAGEMASK;
+    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE, akey);
 
     /* Store integer value byte by byte at operand location */
     for (i=0, k=24; i < 4; i++, k -= 8) {
@@ -210,23 +209,24 @@ int     i;                              /* Loop counter              */
 int     k;                              /* Shift counter             */
 VADR    addr2;                          /* Page address of last byte */
 RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    /* Check if store crosses page or not */
-    if ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 8))
+    /* Obtain current access key from PSW */
+    akey = regs->psw.pkey;
+
+    /* Get absolute address of first byte of operand */
+    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, akey);
+
+    if(!(addr & 7) || (abs & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 8))
     {
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE, regs->psw.pkey);
         STORE_DW(sysblk.mainstor + abs, value);
         return;
     }
 
-    /* Page Crosser - get absolute address of both pages skipping change bit */
-    addr2 = ((addr + 7) & ADDRESS_MAXWRAP(regs)) & PAGEFRAME_PAGEMASK;
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE_SKP, regs->psw.pkey);
-
-    /* Both pages are accessable, now safe to set Reference and Change bits */
-    STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE);
-    STORAGE_KEY(abs2) |= (STORKEY_REF | STORKEY_CHANGE);
+    /* Calculate page address of last byte of operand */
+    addr2 = (addr + 7) & ADDRESS_MAXWRAP(regs);
+    addr2 &= PAGEFRAME_PAGEMASK;
+    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_WRITE, akey);
 
     /* Store integer value byte by byte at operand location */
     for (i=0, k=56; i < 8; i++, k -= 8) {
@@ -266,7 +266,6 @@ _VSTORE_C_STATIC void ARCH_DEP(vfetchc) (void *dest, BYTE len,
                                         VADR addr, int arn, REGS *regs)
 {
 VADR    addr2;                          /* Page address of last byte */
-RADR    abs, abs2;                      /* Absolute addresses        */
 BYTE    len1;                           /* Length to end of page     */
 BYTE    len2;                           /* Length after next page    */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
@@ -276,26 +275,20 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page address of last byte of operand */
     addr2 = (addr + len) & ADDRESS_MAXWRAP(regs);
-    addr2 &= PAGEFRAME_PAGEMASK;
+    addr2 &= 0x7FFFF800;
 
-    /* If no page crosser, fetch once from same absolute page */
-    if (addr2 == (addr & PAGEFRAME_PAGEMASK))
-    {
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
-        memcpy (dest, sysblk.mainstor+abs, len+1);
-
-        /* Check protection on last byte if FPO crosser */
-        if (addr > 0x7FF || addr + len < 0x800) return;
-        abs = LOGICAL_TO_ABS (addr + len, arn, regs, ACCTYPE_READ, akey);
-    }
-    else
-    {
+    /* Copy data from real storage in either one or two parts
+       depending on whether operand crosses a page boundary */
+    if (addr2 == (addr & 0x7FFFF800)) {
+        addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
+        memcpy (dest, sysblk.mainstor+addr, len+1);
+    } else {
         len1 = addr2 - addr;
         len2 = len - len1 + 1;
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
-        abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
-        memcpy (dest, sysblk.mainstor+abs, len1);
-        memcpy (dest+len1, sysblk.mainstor+abs2, len2);
+        addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
+        addr2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
+        memcpy (dest, sysblk.mainstor+addr, len1);
+        memcpy (dest+len1, sysblk.mainstor+addr2, len2);
     }
 } /* end function ARCH_DEP(vfetchc) */
 
@@ -338,23 +331,26 @@ _VSTORE_C_STATIC BYTE ARCH_DEP(vfetchb) (VADR addr, int arn,
 _VSTORE_C_STATIC U16 ARCH_DEP(vfetch2) (VADR addr, int arn, REGS *regs)
 {
 VADR    addr2;                          /* Address of second byte    */
-RADR    abs, abs2;                      /* Absolute addresses        */
+RADR    abs1, abs2;                     /* Absolute addresses        */
+BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    /* Check to see if operand crosses page or FPO boundary */
-    if (!(addr & 1) || ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2) &&
-                                                       (addr != 0x7FF)))
-    {
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-        return CSWAP16(*((U16*)(sysblk.mainstor + abs)));
-    }
+    /* Obtain current access key from PSW */
+    akey = regs->psw.pkey;
 
-    /* Page or FPO crosser, get absolute address of first and last byte */
+    /* Get absolute address of first byte of operand */
+    abs1 = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
+
+    if(!(addr & 1) || (abs1 & 0x000007FF) <= (2048 - 2))
+        return CSWAP16(*((U16*)(sysblk.mainstor + abs1)));
+
+    /* Calculate address of second byte of operand */
     addr2 = (addr + 1) & ADDRESS_MAXWRAP(regs);
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* Repeat address translation for 2nd page */
+    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
 
     /* Return integer value of operand */
-    return (sysblk.mainstor[abs] << 8) | sysblk.mainstor[abs2];
+    return (sysblk.mainstor[abs1] << 8) | sysblk.mainstor[abs2];
 } /* end function ARCH_DEP(vfetch2) */
 
 /*-------------------------------------------------------------------*/
@@ -377,20 +373,24 @@ int     i;                              /* Loop counter              */
 U32     value;                          /* Accumulated value         */
 VADR    addr2;                          /* Page address of last byte */
 RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    /* Check to see if operand crosses page or FPO boundary */
-    if (!(addr & 3) || ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 4) &&
-                                     (addr > 0x7FF || addr < 0x7FD)))
-    {
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    /* Obtain current access key from PSW */
+    akey = regs->psw.pkey;
+
+    /* Get absolute address of first byte of operand */
+    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
+
+    /* Fetch 4 bytes when operand does not cross page boundary */
+    if(!(addr & 3) || (abs & 0x000007FF) <= (2048 - 4))
         return CSWAP32(*((U32*)(sysblk.mainstor + abs)));
-    }
 
-    /* Page or FPO crosser, get absolute address of first and last byte */
+    /* Operand is not fullword aligned and may cross a page boundary */
+
+    /* Calculate page address of last byte of operand */
     addr2 = (addr + 3) & ADDRESS_MAXWRAP(regs);
-    addr2 &= 0x7FFFF800;  /* round to nearest page or FPO boundary */
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    addr2 &= 0x7FFFF800;
+    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
 
     /* Fetch integer value byte by byte from operand location */
     for (i=0, value=0; i < 4; i++) {
@@ -433,20 +433,22 @@ int     i;                              /* Loop counter              */
 U64     value;                          /* Accumulated value         */
 VADR    addr2;                          /* Page address of last byte */
 RADR    abs, abs2;                      /* Absolute addresses        */
+BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    /* Check to see if operand crosses page or FPO boundary */
-    if (!(addr & 7) || ((addr & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 8) &&
-                                                 (addr > 0x7FF || addr < 0x7F9)))
-    {
-        abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    /* Obtain current access key from PSW */
+    akey = regs->psw.pkey;
+
+    /* Get absolute address of first byte of operand */
+    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
+
+    /* Fetch 8 bytes when operand does not cross page boundary */
+    if(!(addr & 7) || (abs & 0x000007FF) <= (2048 - 8))
         return CSWAP64(*((U64*)(sysblk.mainstor + abs)));
-    }
 
-    /* Page or FPO crosser, get absolute address of first and last byte */
+    /* Calculate page address of last byte of operand */
     addr2 = (addr + 7) & ADDRESS_MAXWRAP(regs);
-    addr2 &= 0x7FFFF800;  /* round to nearest page or FPO boundary */
-    abs = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, regs->psw.pkey);
-    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, regs->psw.pkey);
+    addr2 &= 0x7FFFF800;
+    abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
 
     /* Fetch integer value byte by byte from operand location */
     for (i=0, value=0; i < 8; i++) {
@@ -599,7 +601,7 @@ BYTE    slow = 0;
 #endif
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
+    abs1 = LOGICAL_TO_ABS (addr1, arn1, regs, ACCTYPE_WRITE, key1);
     abs2 = LOGICAL_TO_ABS (addr2, arn2, regs, ACCTYPE_READ, key2);
 
     /* Calculate page addresses of rightmost operand bytes */
@@ -608,14 +610,10 @@ BYTE    slow = 0;
     npv2 = (addr2 + len) & ADDRESS_MAXWRAP(regs);
     npv2 &= PAGEFRAME_PAGEMASK;
 
-    /* If FPO crosser, check last byte for protection */
-    if (addr2 < 0x800 && addr2 + len >= 0x800)
-        npa2 = LOGICAL_TO_ABS (addr2 + len, arn2, regs, ACCTYPE_READ, key2);
-
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (addr1 & PAGEFRAME_PAGEMASK))
     {
-        npa1 = LOGICAL_TO_ABS (npv1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
+        npa1 = LOGICAL_TO_ABS (npv1, arn1, regs, ACCTYPE_WRITE, key1);
 #ifdef OPTION_FAST_MOVECHAR
         slow = 1;
 #endif
@@ -627,11 +625,6 @@ BYTE    slow = 0;
         slow = 1;
 #endif
     }
-
-    /* all operands and page crossers valid, now alter ref & chg bits */
-    STORAGE_KEY(abs1) |= (STORKEY_REF | STORKEY_CHANGE);
-    if (npa1)
-        STORAGE_KEY(npa1) |= (STORKEY_REF | STORKEY_CHANGE);
 
 #ifdef FEATURE_INTERVAL_TIMER
     /* Special case for mvc to/from interval timer */

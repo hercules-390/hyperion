@@ -80,6 +80,13 @@
  #define _DAT_C_STATIC
 #endif
 
+#undef _LOGICAL_C_STATIC
+#if !defined(OPTION_NO_INLINE_LOGICAL)
+ #define _LOGICAL_C_STATIC static inline
+#else
+ #define _LOGICAL_C_STATIC
+#endif
+
 #else /*!defined(FEATCHK_CHECK_ALL)*/
 
 /* When ESAME is installed then all instructions

@@ -4,7 +4,7 @@
 
 #include "hercules.h"
 
-#if defined(OPTION_NO_INLINE_DAT)
+#if defined(OPTION_NO_INLINE_DAT) || defined(OPTION_NO_INLINE_LOGICAL)
 
 #define _DAT_C
 
@@ -23,4 +23,4 @@
 
 #endif /*!defined(_GEN_ARCH)*/
 
-#endif /*!defined(OPTION_NO_INLINE_DAT)*/
+#endif /*!defined(OPTION_NO_INLINE_DAT) || defined(OPTION_NO_INLINE_LOGICAL)*/

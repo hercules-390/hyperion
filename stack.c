@@ -1424,6 +1424,12 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     /* The rc will be checked by calling routine for PIC 06        */
     *rc = ARCH_DEP(load_psw) (regs, newpsw);
 
+#if defined(OPTION_REDUCE_INVAL)
+    INVALIDATE_AIA(regs);
+
+    INVALIDATE_AEA_ALL(regs);
+#endif
+
     /* Restore the PER mode bit from the current PSW */
     if (permode)
         regs->psw.sysmask |= PSW_PERMODE;

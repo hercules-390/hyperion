@@ -32,7 +32,6 @@
 
 #include "inline.h"
 
-
 #if defined(FEATURE_BRANCH_AND_SET_AUTHORITY)
 /*-------------------------------------------------------------------*/
 /* B25A BSA   - Branch and Set Authority                       [RRE] */
@@ -4388,10 +4387,21 @@ DEF_INST(set_system_mask)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
+#if defined(OPTION_REDUCED_INVAL)
+int     realmode;
+int     space;
+int     armode;
+#endif
 
     S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
+
+#if defined(OPTION_REDUCED_INVAL)
+    realmode = REAL_MODE(&regs->psw);
+    armode = (regs->psw.armode == 1);
+    space = (regs->psw.space == 1);
+#endif
 
     /* Special operation exception if SSM-suppression is active */
     if ( (regs->CR(0) & CR0_SSM_SUPP)
@@ -4414,9 +4424,21 @@ VADR    effective_addr2;                /* Effective address         */
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
 
+#if defined(OPTION_REDUCED_INVAL)
+    if ((realmode  != REAL_MODE(&regs->psw)) ||
+        (armode    != (regs->psw.armode == 1)) ||
+        (space     != (regs->psw.space == 1)))
+    {
+        INVALIDATE_AIA(regs);
+
+        INVALIDATE_AEA_ALL(regs);
+    }
+#else
     INVALIDATE_AIA(regs);
 
     INVALIDATE_AEA_ALL(regs);
+
+#endif
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* DAT must be off in XC mode */
@@ -5329,10 +5351,21 @@ DEF_INST(store_then_and_system_mask)
 BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
+#if defined(OPTION_REDUCED_INVAL)
+int     realmode;
+int     space;
+int     armode;
+#endif
 
     SI(inst, execflag, regs, i2, b1, effective_addr1);
 
     PRIV_CHECK(regs);
+
+#if defined(OPTION_REDUCED_INVAL)
+    realmode = REAL_MODE(&regs->psw);
+    armode = (regs->psw.armode == 1);
+    space = (regs->psw.space == 1);
+#endif
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[1] & SIE_IC1_STNSM))
@@ -5342,13 +5375,30 @@ VADR    effective_addr1;                /* Effective address         */
     /* Store current system mask value into storage operand */
     ARCH_DEP(vstoreb) ( regs->psw.sysmask, effective_addr1, b1, regs );
 
+#if !defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AIA(regs);
 
     INVALIDATE_AEA_ALL(regs);
+#endif
 
     /* AND system mask with immediate operand */
     regs->psw.sysmask &= i2;
 
+#if defined(OPTION_REDUCED_INVAL)
+    if ((realmode  != REAL_MODE(&regs->psw)) ||
+        (armode    != (regs->psw.armode == 1)) ||
+        (space     != (regs->psw.space == 1)))
+    {
+        INVALIDATE_AIA(regs);
+
+        INVALIDATE_AEA_ALL(regs);
+    }
+#else
+    INVALIDATE_AIA(regs);
+
+    INVALIDATE_AEA_ALL(regs);
+
+#endif
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);

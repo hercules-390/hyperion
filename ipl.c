@@ -164,6 +164,12 @@ BYTE    chanstat;                       /* IPL device channel status */
         return -1;
     }
 
+#if defined(OPTION_REDUCE_INVAL)
+    INVALIDATE_AIA(regs);
+
+    INVALIDATE_AEA_ALL(regs);
+#endif
+
     /* Set the CPU into the started state */
     regs->cpustate = CPUSTATE_STARTED;
     OFF_IC_CPU_NOT_STARTED(regs);
