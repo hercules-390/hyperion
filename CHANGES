@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+20 Jan 2004 Fix references to regs->inst to regs->ip - Greg Smith
 19 Jan 2004 Return 'Already at BOT' sense on BSF when at BOT 
             (Detected by Mark Drummond) - Ivan Warren
 16 Jan 2004 Performance Enhancement: REGS on run_cpu stack - Greg Smith

@@ -585,7 +585,7 @@ static char *pgmintname[] = {
 
     /* Throw out Stor Alter PER if merged with nullified/suppressed rupt */
     if ( IS_IC_PER_SA(realregs) && !IS_IC_PER_STURA(realregs) &&
-                                   (realregs->inst[0] != 0x0E) &&
+                                   (realregs->ip[0] != 0x0E) &&
          !(code == 0x00 || code == 0x06 || code == 0x08 || code == 0x0A ||
            code == 0x0C || code == 0x0D || code == 0x0E || code == 0x1C ||
            code == 0x40) )

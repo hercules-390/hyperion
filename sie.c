@@ -662,7 +662,7 @@ int     n;
 #if defined(SIE_DEBUG)
     logmsg(_("SIE: interception code %d\n"),code);
     ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->instvalid ?
-                                        GUESTREGS->inst : NULL);
+                                        GUESTREGS->ip : NULL);
 #endif /*defined(SIE_DEBUG)*/
 
     SIE_PERFMON(SIE_PERF_EXIT);
@@ -819,10 +819,10 @@ int     n;
 #endif /*defined(_FEATURE_PER)*/
 
         /* Update interception parameters in the state descriptor */
-        if(GUESTREGS->inst[0] != 0x44)
+        if(GUESTREGS->ip[0] != 0x44)
         {
             if(GUESTREGS->instvalid)
-                memcpy(STATEBK->ipa, GUESTREGS->inst, GUESTREGS->psw.ilc);
+                memcpy(STATEBK->ipa, GUESTREGS->ip, GUESTREGS->psw.ilc);
         }
         else
         {
