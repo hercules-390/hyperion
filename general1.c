@@ -778,7 +778,9 @@ int     r1, r2;                         /* Values of R fields        */
     if ( --(regs->GR_L(r1)) && r2 != 0 )
     {
         /* Compute the branch address from the R2 operand */
-        regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+        regs->psw.IA = regs->GR(r2);
+        if (unlikely(r1 == r2)) regs->psw.IA++;
+        regs->psw.IA &= ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
