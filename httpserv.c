@@ -613,7 +613,7 @@ TID                     httptid;        /* Negotiation thread id     */
     logmsg(_("HHCHT006I Waiting for HTTP requests on port %u\n"),
             sysblk.httpport);
 
-    /* Handle connection requests and attention interrupts */
+    /* Handle http requests */
     while (TRUE) {
 
         /* Initialize the select parameters */
@@ -639,10 +639,10 @@ TID                     httptid;        /* Negotiation thread id     */
             break;
         }
 
-        /* If a client connection request has arrived then accept it */
+        /* If a http request has arrived then accept it */
         if (FD_ISSET(lsock, &selset))
         {
-            /* Accept a connection and create conversation socket */
+            /* Accept the connection and create conversation socket */
             csock = accept (lsock, NULL, NULL);
 
             if (csock < 0)
@@ -658,7 +658,7 @@ TID                     httptid;        /* Negotiation thread id     */
                 continue;
             }
 
-            /* Create a thread to complete the client connection */
+            /* Create a thread to execute the http request */
             if ( create_thread (&httptid, &sysblk.detattr,
                                 http_request, hsock) )
             {
