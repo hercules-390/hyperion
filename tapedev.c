@@ -3093,11 +3093,10 @@ static void close_omatape(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 static int rewind_omatape(DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
-        UNREFERENCED(unitstat);
-        UNREFERENCED(code);
-        close (dev->fd);
-        dev->fd = -1;
-        return 0;
+    UNREFERENCED(unitstat);
+    UNREFERENCED(code);
+    close_omatape(dev);
+    return 0;
 }
 /*-------------------------------------------------------------------*/
 /* Get 3480/3490/3590 Display text in 'human' form                   */
