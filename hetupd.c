@@ -36,6 +36,15 @@ static char *o_dname    = NULL;
 static int dorename     = FALSE;
 static HETB *s_hetb     = NULL;
 static HETB *d_hetb     = NULL;
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+static int extgui = 0;
+/* Previous reported file position */
+static long prevpos = 0;
+/* Report progress every this many bytes */
+#define PROGRESS_MASK (~0x3FFFF /* 256K */)
+#endif /*EXTERNALGUI*/
 
 /*
 || Local constant data
@@ -116,6 +125,19 @@ copytape( void )
 
     while( TRUE )
     {
+#ifdef EXTERNALGUI
+        if( extgui )
+        {
+            /* Report progress every nnnK */
+            long curpos = ftell( s_hetb->fd );
+            if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
+            {
+                prevpos = curpos;
+                fprintf( stderr, "IPOS=%ld\n", curpos );
+            }
+        }
+#endif /*EXTERNALGUI*/
+
         rc = het_read( s_hetb, buf );
         if( rc == HETE_EOT )
         {
@@ -245,6 +267,14 @@ main( int argc, char *argv[] )
     /* Display the program identification message */
     display_version (stderr, "Hercules HET copy/update program ",
                      MSTRING(VERSION), __DATE__, __TIME__);
+
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
 
     while( TRUE )
     {

@@ -34,6 +34,12 @@ void swapend2 (unsigned char *);
 BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 int          errs = 0;
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Build a ckd file from a compressed ckd file                       */
 /*-------------------------------------------------------------------*/
@@ -78,6 +84,13 @@ int             maxerrs=5;              /* Max errors allowed        */
                      MSTRING(VERSION), __DATE__, __TIME__);
 
     /* parse the arguments */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if(**argv != '-') break;
@@ -220,7 +233,15 @@ int             maxerrs=5;              /* Max errors allowed        */
     files = (trks + trks_per_file - 1) / trks_per_file;
     highcyl = cyls_per_file - 1;
 
+#ifdef EXTERNALGUI
+    /* Tell the GUI how many tracks we'll be processing. */
+    if (extgui) fprintf (stderr, "TRKS=%ld\n", trks);
+#endif /*EXTERNALGUI*/
+
     /* don't print status if stdout is not a tty */
+#ifdef EXTERNALGUI
+    if (!extgui)
+#endif /*EXTERNALGUI*/
     if (!isatty (fileno(stdout))) quiet = 1;
 
     /* Locate the last character of the file name */
@@ -255,8 +276,11 @@ int             maxerrs=5;              /* Max errors allowed        */
 
         /* process each entry in the secondary lookup table */
         for (j = 0;
+
              j < 256 && (i * 256 + j < trks || (l1[i] != 0 && l2[j].pos != 0));
+
              j++)
+
         {
             trk = i * 256 + j;
 
@@ -494,6 +518,10 @@ void status (int i, int n)
 {
 static char indic[] = "|/-\\";
 
+#ifdef EXTERNALGUI
+    if (extgui) fprintf (stderr, "TRK=%d\n", i);
+    else
+#endif /*EXTERNALGUI*/
     printf ("\r%c %3d%% track %6d of %6d\r",
             indic[i%4], (i*100)/n, i, n);
 } /* end function status */
@@ -567,6 +595,7 @@ int             kl,dl;                  /* Key/Data lengths          */
         buf[10] != 0   || buf[11] != 0 || buf[12] != 8)
     {
         fprintf (stderr, "\r*** track %d R0 validation error !! "
+
                  "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
                  trk, buf[5], buf[6], buf[7], buf[8], buf[9],
                  buf[10], buf[11], buf[12]);
@@ -585,11 +614,15 @@ int             kl,dl;                  /* Key/Data lengths          */
         /* fix for track overflow bit */
         memcpy (cchh2, &buf[sz], 4); cchh2[0] &= 0x7f;
         /* fix for funny formatted vm disks */
+
         if (r == 1) memcpy (cchh, cchh2, 4);
+
         if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] == 0 ||
+
             sz + 8 + kl + dl >= len)
         {
             fprintf (stderr, "\r*** track %d R%d validation error !! "
+
                      "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
                      trk, r, buf[sz], buf[sz+1], buf[sz+2], buf[sz+3],
                      buf[sz+4], buf[sz+5], buf[sz+6], buf[sz+7]);
@@ -597,12 +630,14 @@ int             kl,dl;                  /* Key/Data lengths          */
             if (r > 1)
             {
                 printf ("    track truncated              \n");
+
                 memcpy (&buf[sz], eighthexFF, 8);
                 return sz + 8;
             }
             else
             {
                 printf ("    null track substituted       \n");
+
                 return null_trk (trk, buf, heads);
             }
         }
@@ -612,6 +647,7 @@ int             kl,dl;                  /* Key/Data lengths          */
     if (sz != len)
     {
         fprintf (stderr, "\r*** track %d size mismatch !! "
+
                  "size found %d, expected %d\n",
                  trk, sz, len);
         errs++;

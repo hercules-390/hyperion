@@ -9,6 +9,12 @@
 
 static int needsep = 0;         /* Write newline separator next time */
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 int end_of_track(char *ptr)
 {
     unsigned char *p = (unsigned char *)ptr;
@@ -27,12 +33,20 @@ int list_contents(CIFBLK *cif, char *volser, DSXTENT *extent)
     int ecyl = (extent[cext].xtecyl[0] << 8) | extent[cext].xtecyl[1];
     int ehead = (extent[cext].xtetrk[0] << 8) | extent[cext].xtetrk[1];
 
+#ifdef EXTERNALGUI
+    if (extgui) fprintf(stderr,"ETRK=%d\n",((ecyl*(cif->heads))+ehead));
+#endif /*EXTERNALGUI*/
+
     printf("%s%s: VOLSER=%s\n", needsep ? "\n" : "", cif->fname, volser);
     needsep = 1;
 
     do {
         char *ptr;
         int rc = read_track(cif, ccyl, chead);
+
+#ifdef EXTERNALGUI
+        if (extgui) fprintf(stderr,"CTRK=%d\n",((ccyl*(cif->heads))+chead));
+#endif /*EXTERNALGUI*/
 
         if (rc < 0)
             return -1;
@@ -109,6 +123,14 @@ int main(int argc, char **argv)
     /* Display program info message */
     display_version (stderr, "Hercules DASD list program ",
                      MSTRING(VERSION), __DATE__, __TIME__);
+
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+		argv[--argc] = 0;
+    }
+#endif /*EXTERNALGUI*/
 
     if (argc < 2) {
         fprintf(stderr, "Usage: dasdls dasd_image...\n");

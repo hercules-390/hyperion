@@ -22,6 +22,12 @@ int cckd_comp (int, FILE *);
 int syntax ();
 BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Main function for stand-alone compress                            */
 /*-------------------------------------------------------------------*/
@@ -38,6 +44,13 @@ int             level=-1;               /* Level for chkdsk          */
                      MSTRING(VERSION), __DATE__, __TIME__);
 
     /* parse the arguments */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if(**argv != '-') break;
@@ -166,10 +179,18 @@ int             moved=0;                /* Total space moved         */
     if (cdevhdr.free_imbed) pos = CCKD_L1TAB_POS + l1tabsz;
     else pos = cdevhdr.free;
 
+#ifdef EXTERNALGUI
+    if (extgui) fprintf (stderr,"SIZE=%d\n",cdevhdr.size);
+#endif /*EXTERNALGUI*/
+
     /* process each space in file sequence; the only spaces we expect
        are free blocks, level 2 tables, and track images             */
     for ( ; pos + freed < cdevhdr.size; pos += len)
     {
+#ifdef EXTERNALGUI
+        if (extgui) fprintf (stderr,"POS=%lu\n",pos);
+#endif /*EXTERNALGUI*/
+
         /* check for free space */
         if (pos + freed == cdevhdr.free)
         { /* space is free space */
@@ -263,6 +284,9 @@ int             moved=0;                /* Total space moved         */
     cdevhdr.free_largest = 0;
     for (pos = cdevhdr.free; pos; pos = fb.pos)
     {
+#ifdef EXTERNALGUI
+        if (extgui) fprintf (stderr,"POS=%lu\n",pos);
+#endif /*EXTERNALGUI*/
         rc = lseek (fd, pos, SEEK_SET);
         rc = read (fd, &fb, CCKD_FREEBLK_SIZE);
         if (fb.len > cdevhdr.free_largest)

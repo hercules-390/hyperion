@@ -38,6 +38,17 @@ static BYTE buf[65500];
 /*-------------------------------------------------------------------*/
 #include "codeconv.h"
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+/* Report progress every this many bytes */
+#define PROGRESS_MASK (~0x3FFFF /* 256K */)
+/* How many bytes we've read so far. */
+long  curpos = 0;
+long  prevpos = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* tapesplt main entry point                                        */
 /*-------------------------------------------------------------------*/
@@ -65,6 +76,14 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     /* Display the program identification message */
     display_version (stderr, "Hercules tape split program ",
                      MSTRING(VERSION), __DATE__, __TIME__);
+
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
 
     /* The only argument is the tape image file name */
     if (argc > 3 && argv[1] != NULL)
@@ -141,6 +160,19 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
                 exit(5);
             }
 
+#ifdef EXTERNALGUI
+            if (extgui)
+            {
+                curpos += len;
+                /* Report progress every nnnK */
+                if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
+                {
+                    prevpos = curpos;
+                    fprintf( stderr, "IPOS=%ld\n", curpos );
+                }
+            }
+#endif /*EXTERNALGUI*/
+
             /* Check for end of tape. */
             if (len == 0)
             {
@@ -210,6 +242,19 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
                             infilename);
                     exit(9);
                 }
+
+#ifdef EXTERNALGUI
+                if (extgui)
+                {
+                    curpos += len;
+                    /* Report progress every nnnK */
+                    if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
+                    {
+                        prevpos = curpos;
+                        fprintf( stderr, "IPOS=%ld\n", curpos );
+                    }
+                }
+#endif /*EXTERNALGUI*/
 
                 /* Copy the header to the output file. */
                 rc = write(outfd, buf, len);

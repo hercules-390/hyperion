@@ -31,6 +31,10 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
 
+#ifdef EXTERNALGUI
+    if (extgui) logmsg("LOAD=1\n");
+#endif /*EXTERNALGUI*/
+
     /* Reset external interrupts */
     OFF_IC_SERVSIG;
     OFF_IC_INTKEY;
@@ -54,6 +58,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     {
         logmsg ("HHC103I Device %4.4X not in configuration\n",
                 devnum);
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("LOAD=0\n");
+#endif /*EXTERNALGUI*/
         return -1;
     }
 
@@ -113,6 +120,9 @@ BYTE    chanstat;                       /* IPL device channel status */
             if ((i & 3) == 3) logmsg(" ");
         }
         logmsg ("\n");
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("LOAD=0\n");
+#endif /*EXTERNALGUI*/
         return -1;
     }
 
@@ -154,6 +164,9 @@ BYTE    chanstat;                       /* IPL device channel status */
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("LOAD=0\n");
+#endif /*EXTERNALGUI*/
         return -1;
     }
 
@@ -169,6 +182,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     signal_condition (&sysblk.intcond);
     release_lock (&sysblk.intlock);
 
+#ifdef EXTERNALGUI
+    if (extgui) logmsg("LOAD=0\n");
+#endif /*EXTERNALGUI*/
     return 0;
 } /* end function load_ipl */
 

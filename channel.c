@@ -749,57 +749,73 @@ DEVBLK *dev;                            /* -> Device control block   */
 
 /*-------------------------------------------------------------------*/
 /* Run as a separate thread for each device to run execute_ccw_chain */
-/* LOOPER_DIE isn't actually used yet but is there if anyone wants it*/
 /*                                                                   */
 /* code courtesy of Malcome Beattie                                  */
 /*                                                                   */
 /* Dynamic thread create/drop added         25 Mar 2001 - Jan Jaeger */
+/* Dynamic thread create/drop fixed         01 Apr 2001 - Fish       */
 /*-------------------------------------------------------------------*/
 void device_thread (DEVBLK *dev)
 {
-struct timespec waittime;
-struct timeval  now;
-int    timeout1 = 0, timeout2;
+    struct timespec waittime;
+    struct timeval  now;
+    int             timedout;
 
-    while (1) {
+    obtain_lock(&dev->lock);
 
-        if(!timeout1)
-            switch(sysblk.arch_mode) {
-                case ARCH_370:
-	            s370_execute_ccw_chain (dev);
-                    break;
-                case ARCH_900:
-	            z900_execute_ccw_chain (dev);
-                    break;
-                case ARCH_390:
-                default:
-	            s390_execute_ccw_chain (dev);
-                    break;
-            }
-        else
+    while (1)
+    {
+        if (LOOPER_DIE == dev->loopercmd) break;
+
+        if (LOOPER_EXEC == dev->loopercmd)
         {
-            gettimeofday(&now, NULL);
-            /* If we have not done I/O for more then five minutes,
-               we might just as well terminate the thread. */
-            waittime.tv_sec = now.tv_sec + 300;
-            waittime.tv_nsec = now.tv_usec * 1000;
+            /* We have work to do... */
+
+            /* Release the device lock. The 'execute_ccw_chain'
+               function will obtain the lock if it needs to. */
+
+            release_lock(&dev->lock);
+
+            switch (sysblk.arch_mode)
+            {
+                case ARCH_370: s370_execute_ccw_chain (dev); break;
+                case ARCH_900: z900_execute_ccw_chain (dev); break;
+                default:
+                case ARCH_390: s390_execute_ccw_chain (dev); break;
+            }
+
+            obtain_lock(&dev->lock);
         }
 
-        timeout2 = timeout1;
-        timeout1 = 0;
+        /* The 'execute_ccw_chain' function sets loopercmd to LOOPER_WAIT when it's
+           done executing a channel program after setting the 'pending' flag. Thus,
+           if loopercmd is not LOOPER_WAIT at this point, then it means the interrupt
+           has already been cleared and we've been given more work and thus do not
+           need to wait.
+        */
 
-        obtain_lock(&dev->lock);
+        if (LOOPER_WAIT == dev->loopercmd)
+        {
+            gettimeofday(&now, NULL);
 
-        dev->loopercmd = LOOPER_WAIT;
+            waittime.tv_sec = now.tv_sec + 300; /* set alarm for 5 minutes from now */
+            waittime.tv_nsec = now.tv_usec * 1000;
 
-	while (dev->loopercmd == LOOPER_WAIT && !timeout1)
-	    timeout1 = timed_wait_condition(&dev->loopercond,
-                                                &dev->lock, &waittime);
+            /* Wait for work to arrive or timer to expire... */
 
-	if ((timeout1 && timeout2) || dev->loopercmd == LOOPER_DIE)
-            break;
+            timedout = timed_wait_condition (&dev->loopercond, &dev->lock, &waittime);
 
-	release_lock(&dev->lock);
+            /*  If we timed out AND loopercmd is LOOPER_WAIT
+                (set by execute_ccw_chain), then we should exit. */
+
+            /*  Note regarding the below test: even if we timed out, we could have been
+                given more work just before our timer expired. Thus we only exit when a
+                timeout occurs AND loopercmd is still LOOPER_WAIT. If loopercmd is *NOT*
+                LOOPER_WAIT when we wake up, then someone must have given us work to do.
+            */
+
+            if (timedout && LOOPER_WAIT == dev->loopercmd) break;
+        }
     }
 
     dev->tid = 0;
@@ -1212,7 +1228,6 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
 {
-
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
 
@@ -1903,6 +1918,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     /* Set the interrupt pending flag for this device */
     dev->busy = 0;
     dev->pending = 1;
+    dev->loopercmd = LOOPER_WAIT;
 
     /* Signal console thread to redrive select */
     if (dev->console)

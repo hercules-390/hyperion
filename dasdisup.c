@@ -74,6 +74,12 @@ static BYTE *secondload[] = {
         "IGG094",                       /* TSO (SVC94)               */
         NULL };                         /* End of list               */
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 #if 0
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
@@ -610,6 +616,13 @@ int             nmem = 0;               /* Number of array entries   */
                      MSTRING(VERSION), __DATE__, __TIME__);
 
     /* Check the number of arguments */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     if (argc != 2)
     {
         fprintf (stdout,
@@ -681,9 +694,16 @@ int             nmem = 0;               /* Number of array entries   */
             "End of directory: %d members selected\n",
             nmem);
 
+#ifdef EXTERNALGUI
+    if (extgui) fprintf (stderr,"NMEM=%d\n",nmem);
+#endif /*EXTERNALGUI*/
+
     /* Read each member and resolve the embedded TTRs */
     for (i = 0; i < nmem; i++)
     {
+#ifdef EXTERNALGUI
+        if (extgui) fprintf (stderr,"MEM=%d\n",i);
+#endif /*EXTERNALGUI*/
         rc = resolve_xctltab (cif, noext, extent, memtab+i,
                                 memtab, nmem);
 

@@ -48,13 +48,24 @@
 SYSBLK  sysblk;
 
 /*-------------------------------------------------------------------*/
+/* External GUI control                                              */
+/*-------------------------------------------------------------------*/
+#ifdef EXTERNALGUI
+int extgui = 0;             /* 1=external gui active                */
+#endif /*EXTERNALGUI*/
+
+/*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static int  stmt = 0;                   /* Config statement number   */
+#ifdef EXTERNALGUI
+static BYTE buf[1024];                  /* Config statement buffer   */
+#else /*!EXTERNALGUI*/
 static BYTE buf[256];                   /* Config statement buffer   */
+#endif /*EXTERNALGUI*/
 static BYTE *keyword;                   /* -> Statement keyword      */
 static BYTE *operand;                   /* -> First argument         */
-#define MAX_ARGS 10                     /* Max #of additional args   */
+#define MAX_ARGS 12                     /* Max #of additional args   */
 static int  addargc;                    /* Number of additional args */
 static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 
@@ -62,6 +73,61 @@ static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 /* ASCII/EBCDIC TRANSLATE TABLES                                     */
 /*-------------------------------------------------------------------*/
 #include "codeconv.h"
+
+#ifdef EXTERNALGUI
+/*-------------------------------------------------------------------*/
+/* Subroutine to parse an argument string. The string that is passed */
+/* is modified in-place by inserting null characters at the end of   */
+/* each argument found. The returned array of argument pointers      */
+/* then points to each argument found in the original string. Any    */
+/* argument that begins with '#' comment indicator causes early      */
+/* termination of the parsing and is not included in the count. Any  */
+/* argument found that starts with a double-quote character causes   */
+/* all characters following the double-quote up to the next double-  */
+/* quote to be included as part of that argument. The quotes them-   */
+/* selves are not considered part of any argument and are ignored.   */
+/* p            Points to string to be parsed.                       */
+/* maxargc      Maximum allowable number of arguments. (Prevents     */
+/*              overflowing the pargv array)                         */
+/* pargv        Pointer to buffer for argument pointer array.        */
+/* pargc        Pointer to number of arguments integer result.       */
+/* Returns number of arguments found. (same value as at *pargc)      */
+/*-------------------------------------------------------------------*/
+int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc)
+{
+    for (*pargc = 0; *pargc < MAX_ARGS; ++*pargc) addargv[*pargc] = NULL;
+
+    *pargc = 0; p--;
+
+    while (*pargc < maxargc)
+    {
+        if (!*(p+1)) break;             // exit at end-of-string
+        while (isspace(*++p));          // advance to next arg
+        if (!*p) break;                 // exit at end-of-string
+        if (*p == '\"')                 // begin of quoted string?
+        {
+            *pargv++ = ++p;             // save ptr to next arg
+            while (*p && *++p != '\"'); // advance to ending quote
+            if (!*p)                    // end quote not found?
+            {
+                --pargv;                // backup to quote arg
+                while (*--(*pargv) != '\"'); // backup to quote
+                ++*pargc;               // count last arg
+                break;                  // end quote not found
+            }
+            *p = 0;                     // mark end of arg
+        }
+        else *pargv++ = p;              // save ptr to next arg
+        if ('#' == *p) break;           // exit at beg-of-comments
+        ++*pargc;                       // count args
+        while (!isspace(*++p) && *p);   // skip to end of arg
+        if (!*p) break;                 // exit at end-of-string
+        *p = 0;                         // mark end of arg
+    }
+
+    return *pargc;                      // return #of arguments
+}
+#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to read a statement from the configuration file        */
@@ -93,10 +159,10 @@ int     stmtlen;                        /* Statement length          */
             /* Check for I/O error */
             if (ferror(fp))
             {
-            logmsg( "HHC001I Error reading file %s line %d: %s\n",
+                logmsg( "HHC001I Error reading file %s line %d: %s\n",
                     fname, stmt, strerror(errno));
-            exit(1);
-        }
+                exit(1);
+            }
 
             /* Check for end of file */
             if (stmtlen == 0 && (c == EOF || c == '\x1A'))
@@ -111,11 +177,11 @@ int     stmtlen;                        /* Statement length          */
 
             /* Check that statement does not overflow buffer */
             if (stmtlen >= sizeof(buf) - 1)
-        {
-            logmsg( "HHC002I File %s line %d is too long\n",
+            {
+                logmsg( "HHC002I File %s line %d is too long\n",
                     fname, stmt);
-            exit(1);
-        }
+                exit(1);
+            }
 
             /* Append character to buffer */
             buf[stmtlen++] = c;
@@ -131,6 +197,27 @@ int     stmtlen;                        /* Statement length          */
         if (stmtlen == 0 || buf[0] == '*' || buf[0] == '#')
            continue;
 
+#ifdef EXTERNALGUI
+
+        /* Parse the statement just read */
+
+        parse_args (buf, MAX_ARGS, addargv, &addargc);
+
+        /* Move the first two arguments to separate variables */
+
+        keyword = addargv[0];
+        operand = addargv[1];
+
+        addargc = (addargc > 2) ? (addargc-2) : (0);
+
+        for (i = 0; i < MAX_ARGS; i++)
+        {
+            if (i < (MAX_ARGS-2)) addargv[i] = addargv[i+2];
+            else addargv[i] = NULL;
+        }
+
+#else /*EXTERNALGUI*/
+
         /* Split the statement into keyword and first operand */
         keyword = strtok (buf, " \t");
         operand = strtok (NULL, " \t");
@@ -144,12 +231,13 @@ int     stmtlen;                        /* Statement length          */
         /* Clear any unused additional operand pointers */
         for (i = addargc; i < MAX_ARGS; i++) addargv[i] = NULL;
 
+#endif /*!EXTERNALGUI*/
+
         break;
     } /* end while */
 
     return 0;
 } /* end function read_config */
-
 
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */

@@ -57,6 +57,12 @@ int syntax ();
 
 BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Main function for stand-alone chkdsk                              */
 /*-------------------------------------------------------------------*/
@@ -75,6 +81,13 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
                      MSTRING(VERSION), __DATE__, __TIME__);
 
     /* parse the arguments */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if(**argv != '-') break;
@@ -202,6 +215,16 @@ int  cyls3390[]   = {1113, 2226, 3339, 10017, 0};
 char *space[]     = {"none", "devhdr", "cdevhdr", "l1tab", "l2tab",
                      "trkimg", "free_blk", "file_end"};
 char *compression[] = {"none", "zlib", "bzip2"};
+
+#ifdef EXTERNALGUI
+    /* The number of "steps" (checks) we'll be doing... */
+    if (extgui) fprintf (stderr,"STEPS=10\n");
+#endif /*EXTERNALGUI*/
+
+#ifdef EXTERNALGUI
+    /* Beginning first step... */
+    if (extgui) fprintf (stderr,"STEP=1\n");
+#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Read the device header.                                           */
@@ -395,7 +418,9 @@ char *compression[] = {"none", "zlib", "bzip2"};
 #endif
 
     if (cdevhdr.numl1tab < (hdrcyls * heads + 255) / 256
+
      || cdevhdr.numl1tab > (hdrcyls * heads + 255) / 256 + 1)
+
     {
         cdskmsg (m, "Invalid number of l1 table entries in header: "
                  "expected %d and found %d\n",
@@ -405,11 +430,17 @@ char *compression[] = {"none", "zlib", "bzip2"};
     cyls = hdrcyls;
     trks = cyls * heads;
     /* allow for alternate tracks */
+
     if ((cdevhdr.numl1tab << 8) > trks)
+
     {
+
         trks = (cdevhdr.numl1tab << 8);
+
         cyls = trks / heads;
+
     }
+
     l1tabsz = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
 
 /*-------------------------------------------------------------------*/
@@ -484,6 +515,11 @@ char *compression[] = {"none", "zlib", "bzip2"};
         sprintf (msg, "file not closed");
     }
     else fsperr = 0;
+
+#ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=2\n");
+#endif /*EXTERNALGUI*/
 
     for (fsp = cdevhdr.free; fsp && !fsperr; fsp = fb.pos)
     {
@@ -572,6 +608,11 @@ space_check:
     spc[s].pos = hipos;
     spc[s++].typ = SPCTAB_END;
 
+#ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=3\n");
+#endif /*EXTERNALGUI*/
+
     /* free spaces */
     for (fsp = cdevhdr.free, i=0; i < cdevhdr2.free_number;
          fsp = fb.pos, i++)
@@ -584,6 +625,11 @@ space_check:
     }
 
     l1errs = l2errs = trkerrs = 0;
+
+#ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=4\n");
+#endif /*EXTERNALGUI*/
 
     /* level 2 lookup table and track image spaces */
     for (i = 0; i < cdevhdr.numl1tab; i++)
@@ -859,6 +905,10 @@ space_check:
 overlap:
     qsort ((void *)spc, s, sizeof(SPCTAB), cdsk_spctab_comp);
     for ( ; spc[s-1].typ == SPCTAB_NONE; s--);
+#ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=5\n");
+#endif /*EXTERNALGUI*/
     for (i = 0; i < s - 1; i++)
     {
 //      cdskmsg (m, "%s[%d] pos 0x%x length %d\n",
@@ -961,6 +1011,11 @@ overlap:
     /* count the number of tracks to be recovered */
     for (i = rcvtrks = 0; i < r; i++)
         if (rcv[i].typ == SPCTAB_TRKIMG) rcvtrks++;
+
+#ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=6\n");
+#endif /*EXTERNALGUI*/
 
     for (gapsize = i = 0; r > 0 && i < gaps && rcvtrks > 0; i++)
     {
@@ -1243,6 +1298,10 @@ overlap:
     {   qsort ((void *)rcv, r, sizeof(SPCTAB), cdsk_rcvtab_comp);
         for ( ; rcv[r-1].typ == SPCTAB_NONE; r--);
     }
+#ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=7\n");
+#endif /*EXTERNALGUI*/
     for (i = 0, j = -1; i < r; i++)
             {
         switch (rcv[i].typ) {
@@ -1287,6 +1346,10 @@ overlap:
 /* recover any level 2 tables                                        */
 /*-------------------------------------------------------------------*/
 
+#ifdef EXTERNALGUI
+    /* Beginning next step... */
+    if (extgui) fprintf (stderr,"STEP=8\n");
+#endif /*EXTERNALGUI*/
     for (i = 0; i < r; i++)
     {
         if (rcv[i].typ != SPCTAB_L2TAB) continue;
@@ -1343,6 +1406,10 @@ overlap:
 
     short_gap:
         gaps = cdsk_build_gap (spc, &s, gap);
+#ifdef EXTERNALGUI
+        /* Beginning next step... */
+        if (extgui) fprintf (stderr,"STEP=9\n");
+#endif /*EXTERNALGUI*/
         for (i = j = 0; i < gaps; i++)
         {
             if (gap[i].siz == 0 || gap[i].siz >= CCKD_FREEBLK_SIZE)
@@ -1409,6 +1476,10 @@ overlap:
         cdevhdr.size = hipos;
         if (gaps) cdevhdr.free = gap[0].pos;
         cdevhdr.free_number = gaps;
+#ifdef EXTERNALGUI
+        /* Beginning next step... */
+        if (extgui) fprintf (stderr,"STEP=10\n");
+#endif /*EXTERNALGUI*/
         for (i = 0; i < gaps; i++)
         {
             if (i < gaps - 1) fb.pos = gap[i+1].pos;
@@ -1591,8 +1662,11 @@ int             kl,dl;                  /* Key/Data lengths          */
         /* fix for track overflow bit */
         memcpy (cchh2, &buf[sz], 4); cchh2[0] &= 0x7f;
         /* fix for funny formatted vm disks */
+
         if (r == 1) memcpy (cchh, cchh2, 4);
+
         if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] == 0 ||
+
             sz + 8 + kl + dl >= len)
         {
              if (msg)

@@ -33,6 +33,16 @@ static const char help[] =
     "  -h  display usage summary\n"
     "  -l  print only label information (default: off)\n";
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+static int extgui = 0;
+/* Previous reported file position */
+static long prevpos = 0;
+/* Report progress every this many bytes */
+#define PROGRESS_MASK (~0x3FFFF /* 256K */)
+#endif /*EXTERNALGUI*/
+
 /*
 || Print terse dataset information (from VOL1/EOF1/EOF2)
 */
@@ -155,6 +165,14 @@ main( int argc, char *argv[] )
     display_version (stderr, "Hercules HET map program ",
                      MSTRING(VERSION), __DATE__, __TIME__);
 
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
+
     while( TRUE )
     {
         rc = getopt( argc, argv, "adfhlt" );
@@ -230,6 +248,19 @@ main( int argc, char *argv[] )
 
     while( TRUE )
     {
+#ifdef EXTERNALGUI
+        if( extgui )
+        {
+            /* Report progress every nnnK */
+            long curpos = ftell( hetb->fd );
+            if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
+            {
+                prevpos = curpos;
+                fprintf( stderr, "IPOS=%ld\n", curpos );
+            }
+        }
+#endif /*EXTERNALGUI*/
+
         rc = het_read( hetb, buf );
         if( rc == HETE_EOT )
         {

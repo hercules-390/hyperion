@@ -26,6 +26,12 @@ static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
 static BYTE eighthexFF[] =              /* End of directory marker   */
         {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+static int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Subroutine to process a member                                    */
 /* Input:                                                            */
@@ -233,6 +239,13 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
                      MSTRING(VERSION), __DATE__, __TIME__);
 
     /* Check the number of arguments */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     if (argc < 3 || argc > 4)
     {
         fprintf (stderr,
@@ -271,6 +284,31 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     rc = build_extent_array (cif, dsnama, extent, &noext);
     if (rc < 0) return -1;
 
+#ifdef EXTERNALGUI
+    /* Calculate ending relative track */
+    if (extgui)
+    {
+        int bcyl;  /* Extent begin cylinder     */
+        int btrk;  /* Extent begin head         */
+        int ecyl;  /* Extent end cylinder       */
+        int etrk;  /* Extent end head           */
+        int trks;  /* total tracks in dataset   */
+        int i;     /* loop control              */
+
+        for (i = 0, trks = 0; i < noext; i++)
+        {
+            bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
+            btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
+            ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
+            etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
+
+            trks += (((ecyl * cif->heads) + etrk) - ((bcyl * cif->heads) + btrk)) + 1;
+        }
+
+        fprintf(stderr,"ETRK=%d\n",trks-1);
+    }
+#endif /*EXTERNALGUI*/
+
     /* Point to the start of the directory */
     trk = 0;
     rec = 1;
@@ -278,6 +316,10 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     /* Read the directory */
     while (1)
     {
+#ifdef EXTERNALGUI
+        if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
+#endif /*EXTERNALGUI*/
+
         /* Convert relative track to cylinder and head */
         rc = convert_tt (trk, noext, extent, cif->heads, &cyl, &head);
         if (rc < 0) return -1;

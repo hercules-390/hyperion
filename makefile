@@ -1,38 +1,79 @@
 #
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
+# modified to build hercules under windows (VB)
+# modified to build external GUI compatible version under Windows (Fish)
 #
 
-VERSION  = 2.12m
+VERSION  = 2.12n
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
 #   overridden in the make command line, as in "PREFIX=/foo make install"
 #   (the directory is only used when installing).
-DESTDIR  = $(PREFIX)/usr/bin
+
+DESTDIR  = $(PREFIX)/hercules2
+
+
+# Directory where the pthreads-win32 library was installed.
+
+PTHREADS_W32DIR = /usr
+CC = gcc -I$(PTHREADS_W32DIR)/Pthreads
+
 
 # For Linux use:
+
 #CFLAGS  = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
 	   -DVERSION=$(VERSION)
-# For older Linux versions use:
-# For Linux/390 use:
-CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP\
-	  -DNO_ATTR_REGPARM
 
-LFLAGS	 = -lpthread -lm -lz
+
+# For older Linux versions use:
+
+CFLAGS	 = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
+           -DVERSION=$(VERSION) -DWIN32 -DNO_BYTESWAP_H \
+           -D__BYTE_ORDER=1234
+
+
+# For Linux/390 use:
+
+#CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP
+
+LFLAGS   = -L$(PTHREADS_W32DIR)/DLL -lpthreadw32 -lz
+
+
+# Comment out the line below to build a console-mode only
+# (i.e. NON-external GUI compatible) version of Hercules
+#
+# Note: the external GUI compatible version of Hercules
+# (which is the default) can be run in both console mode
+# or external GUI mode, whereas a NON-external GUI compatible
+# version can ONLY be run in console (non-GUI) mode.
+
+CFLAGS += -DEXTERNALGUI
+
 
 # Uncomment the lines below to enable Compressed CKD bzip2 compression
+
 #CFLAGS	+= -DCCKD_BZIP2
 #LFLAGS	+= -lbz2
 
+
 # Uncomment the lines below to enable HET bzip2 compression
+
 #CFLAGS	+= -DHET_BZIP2
 #LFLAGS	+= -lbz2
 
-EXEFILES = hercules hercifc \
+
+EXEFILES = hercules \
 	   dasdinit dasdisup dasdload dasdls dasdpdsu \
 	   tapecopy tapemap tapesplt \
 	   cckd2ckd cckdcdsk ckd2cckd cckdcomp \
 	   hetget hetinit hetmap hetupd
+
+EXFILES = hercules.exe \
+           dasdinit.exe dasdisup.exe dasdload.exe dasdls.exe dasdpdsu.exe \
+           tapecopy.exe tapemap.exe tapesplt.exe \
+           cckd2ckd.exe cckdcdsk.exe ckd2cckd.exe cckdcomp.exe \
+           hetget.exe hetinit.exe hetmap.exe hetupd.exe
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
 	   html zzsa.cnf zzsacard.bin
@@ -53,7 +94,7 @@ HRC_OBJS = impl.o config.o panel.o version.o \
 	   esame.o cckddasd.o cckdcdsx.o \
 	   parser.o hetlib.o ieee.o
 
-HIFC_OBJ = hercifc.o version.o
+#HIFC_OBJ = hercifc.o version.o
 
 DIN_OBJS = dasdinit.o dasdutil.o version.o
 
@@ -89,7 +130,6 @@ HUP_OBJS = hetupd.o hetlib.o sllib.o version.o
 
 HEADERS  = feat370.h feat390.h feat900.h featall.h featchk.h features.h \
 	   esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
-	   codeconv.h \
 	   byteswap.h \
 	   dasdblks.h \
 	   hetlib.h \
@@ -105,8 +145,8 @@ hercules:  $(HRC_OBJS)
 $(HRC_OBJS): %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-hercifc:  $(HIFC_OBJ)
-	$(CC) -o hercifc $(HIFC_OBJ)
+#hercifc:  $(HIFC_OBJ)
+#        $(CC) -o hercifc $(HIFC_OBJ)
 
 dasdinit:  $(DIN_OBJS)
 	$(CC) -o dasdinit $(DIN_OBJS)
@@ -129,20 +169,8 @@ tapecopy:  $(TCY_OBJS)
 tapemap:  $(TMA_OBJS)
 	$(CC) -o tapemap $(TMA_OBJS)
 
-tapesplt: $(TSP_OBJS)
+tapesplt:  $(TSP_OBJS)
 	$(CC) -o tapesplt $(TSP_OBJS)
-
-cckdcdsk: $(CCHK_OBJ)
-	$(CC) -o cckdcdsk $(CCHK_OBJ) $(LFLAGS)
-
-cckdcomp: $(COMP_OBJ)
-	$(CC) -o cckdcomp $(COMP_OBJ) $(LFLAGS)
-
-cckd2ckd: $(CC2C_OBJ)
-	$(CC) -o cckd2ckd $(CC2C_OBJ) $(LFLAGS)
-
-ckd2cckd: $(C2CC_OBJ)
-	$(CC) -o ckd2cckd $(C2CC_OBJ) $(LFLAGS)
 
 hetget:  $(HGT_OBJS)
 	$(CC) -o hetget $(HGT_OBJS) $(LFLAGS)
@@ -174,6 +202,18 @@ tapemap.o: tapemap.c $(HEADERS)
 
 tapesplt.o: tapesplt.c $(HEADERS)
 
+cckdcdsk: $(CCHK_OBJ)
+	$(CC) -o cckdcdsk $(CCHK_OBJ) $(LFLAGS)
+
+cckdcomp: $(COMP_OBJ)
+	$(CC) -o cckdcomp $(COMP_OBJ) $(LFLAGS)
+
+cckd2ckd: $(CC2C_OBJ)
+	$(CC) -o cckd2ckd $(CC2C_OBJ) $(LFLAGS)
+
+ckd2cckd: $(C2CC_OBJ)
+	$(CC) -o ckd2cckd $(C2CC_OBJ) $(LFLAGS)
+
 hetget.o: hetget.c hetlib.h sllib.h
 
 hetinit.o: hetinit.c hetlib.h sllib.h
@@ -182,7 +222,9 @@ hetmap.o: hetmap.c hetlib.h sllib.h
 
 hetupd.o: hetupd.c hetlib.h sllib.h
 
+
 cckd:	   cckd2ckd cckdcdsk ckd2cckd cckdcomp
+
 
 clean:
 	rm -rf $(EXEFILES) *.o
@@ -191,8 +233,4 @@ tar:	clean
 	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
 
 install:  $(EXEFILES)
-	cp $(EXEFILES) $(DESTDIR)
-	chown root $(DESTDIR)/hercifc
-	chmod 0751 $(DESTDIR)/hercifc
-	chmod +s $(DESTDIR)/hercifc
-	rm hercifc
+	cp *.exe $(DESTDIR)

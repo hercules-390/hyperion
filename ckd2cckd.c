@@ -32,6 +32,12 @@ int chk_endian ();
 BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 int          errs = 0;
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Build a compressed ckd file from a regular ckd file               */
 /*-------------------------------------------------------------------*/
@@ -82,6 +88,13 @@ int             z=-1;                   /* Compression value         */
                      MSTRING(VERSION), __DATE__, __TIME__);
 
     /* parse the arguments */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if(**argv != '-') break;
@@ -379,6 +392,12 @@ int             z=-1;                   /* Compression value         */
     pos = CCKD_L1TAB_POS + cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
     l1x = 0;
     l2pos = 0;
+
+#ifdef EXTERNALGUI
+    /* Tell the GUI how many tracks we'll be processing. */
+    if (extgui) fprintf (stderr, "CKDTRKS=%d\n", ckdtrks);
+#endif /*EXTERNALGUI*/
+
     for (i = 0; i < ckdtrks; i++)
     {
         /* see if we need to changed input file descriptor */
@@ -608,12 +627,18 @@ void status (int i, int n, int f, int fn)
 {
 static char indic[] = "|/-\\";
 
-    if (!i % 100) return;
-    printf ("\r%c %3d%% track %6d of %6d",
-            indic[i%4], (i*100)/n, i, n);
-    if (fn > 1)
-        printf ("  [%d of %d]", f, fn);
-    printf ("\r");
+    if (i % 100) return; /* issue status message only after every 100 tracks */
+#ifdef EXTERNALGUI
+    if (extgui) fprintf (stderr, "TRK=%d\n", i);
+    else
+#endif /*EXTERNALGUI*/
+    {
+        printf ("\r%c %3d%% track %6d of %6d",
+                indic[i%4], (i*100)/n, i, n);
+        if (fn > 1)
+            printf ("  [%d of %d]", f, fn);
+        printf ("\r");
+    }
 } /* end function status */
 
 

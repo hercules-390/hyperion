@@ -1,40 +1,67 @@
 #
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 # modified to build hercules under windows (VB)
+# modified to build external GUI compatible version under Windows (Fish)
 #
 
-VERSION  = 2.12m
+VERSION  = 2.12n
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
 #   overridden in the make command line, as in "PREFIX=/foo make install"
 #   (the directory is only used when installing).
+
 DESTDIR  = $(PREFIX)/hercules2
 
+
 # Directory where the pthreads-win32 library was installed.
+
 PTHREADS_W32DIR = /usr
 CC = gcc -I$(PTHREADS_W32DIR)/Pthreads
 
+
 # For Linux use:
+
 #CFLAGS  = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
 	   -DVERSION=$(VERSION)
+
+
 # For older Linux versions use:
+
 CFLAGS	 = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
            -DVERSION=$(VERSION) -DWIN32 -DNO_BYTESWAP_H \
            -D__BYTE_ORDER=1234
 
+
 # For Linux/390 use:
+
 #CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP
 
 LFLAGS   = -L$(PTHREADS_W32DIR)/DLL -lpthreadw32 -lz
 
+
+# Comment out the line below to build a console-mode only
+# (i.e. NON-external GUI compatible) version of Hercules
+#
+# Note: the external GUI compatible version of Hercules
+# (which is the default) can be run in both console mode
+# or external GUI mode, whereas a NON-external GUI compatible
+# version can ONLY be run in console (non-GUI) mode.
+
+CFLAGS += -DEXTERNALGUI
+
+
 # Uncomment the lines below to enable Compressed CKD bzip2 compression
+
 #CFLAGS	+= -DCCKD_BZIP2
 #LFLAGS	+= -lbz2
 
+
 # Uncomment the lines below to enable HET bzip2 compression
+
 #CFLAGS	+= -DHET_BZIP2
 #LFLAGS	+= -lbz2
+
 
 EXEFILES = hercules \
 	   dasdinit dasdisup dasdload dasdls dasdpdsu \
@@ -206,4 +233,4 @@ tar:	clean
 	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
 
 install:  $(EXEFILES)
-	cp $(EXEFILES) $(DESTDIR)
+	cp *.exe $(DESTDIR)

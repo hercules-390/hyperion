@@ -32,6 +32,18 @@ static BYTE eoflbl[] = "\xC5\xD6\xC6";  /* EBCDIC characters "EOF"   */
 static BYTE eovlbl[] = "\xC5\xD6\xE5";  /* EBCDIC characters "EOV"   */
 static BYTE buf[65500];
 
+#ifdef EXTERNALGUI
+static BYTE padding[36]; /* (above buffer size scares me!) */
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+/* Report progress every this many bytes */
+#define PROGRESS_MASK (~0x3FFFF /* 256K */)
+/* How many bytes we've read so far. */
+long  curpos = 0;
+long  prevpos = 0;
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* ASCII to EBCDIC translate tables                                  */
 /*-------------------------------------------------------------------*/
@@ -58,6 +70,14 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     /* Display the program identification message */
     display_version (stderr, "Hercules tape map program ",
                      MSTRING(VERSION), __DATE__, __TIME__);
+
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
 
     /* The only argument is the tape image file name */
     if (argc == 2 && argv[1] != NULL)
@@ -88,11 +108,25 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 
     while (1)
     {
+#ifdef EXTERNALGUI
+        if (extgui)
+        {
+            /* Report progress every nnnK */
+            if( ( curpos & PROGRESS_MASK ) != ( prevpos & PROGRESS_MASK ) )
+            {
+                prevpos = curpos;
+                fprintf( stderr, "IPOS=%ld\n", curpos );
+            }
+        }
+#endif /*EXTERNALGUI*/
         /* Save previous block length */
         prevlen = len;
 
         /* Read a block from the tape */
         len = read (infd, buf, sizeof(AWSTAPE_BLKHDR));
+#ifdef EXTERNALGUI
+        if (extgui) curpos += len;
+#endif /*EXTERNALGUI*/
         if (len < 0)
         {
             printf ("tapemap: error reading header block from %s: %s\n",
@@ -142,6 +176,9 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 
             /* Read the data block. */
             len = read (infd, buf, curblkl);
+#ifdef EXTERNALGUI
+            if (extgui) curpos += len;
+#endif /*EXTERNALGUI*/
             if (len < 0)
             {
                 printf ("tapemap: error reading data block from %s: %s\n",

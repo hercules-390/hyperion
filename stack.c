@@ -382,7 +382,7 @@ LSED    lsed2;                          /* New entry descriptor      */
 U16     rfs;                            /* Remaining free space      */
 VADR    fsha;                           /* Forward section hdr addr  */
 VADR    bsea = 0;                       /* Backward stack entry addr */
-RADR    absea;                          /* Absolute address of bsea  */
+RADR    absea = 0;                      /* Absolute address of bsea  */
 int     i;                              /* Array subscript           */
 
     /* [5.12.3] Special operation exception if ASF is not enabled,

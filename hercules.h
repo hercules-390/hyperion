@@ -974,6 +974,9 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 extern SYSBLK	sysblk; 		/* System control block      */
 extern BYTE	ascii_to_ebcdic[];	/* Translate table	     */
 extern BYTE	ebcdic_to_ascii[];	/* Translate table	     */
+#ifdef EXTERNALGUI
+extern int extgui;              /* external gui present */
+#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Function prototypes						     */
@@ -991,6 +994,9 @@ int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
 int  configure_cpu (REGS *regs);
 int  deconfigure_cpu (REGS *regs);
+#ifdef EXTERNALGUI
+int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
+#endif /*EXTERNALGUI*/
 
 /* Functions in module panel.c */
 void panel_display (void);

@@ -45,7 +45,6 @@ static void alter_display_virt (BYTE *opnd, REGS *regs);
 /*-------------------------------------------------------------------*/
 #define SPACE           ((BYTE)' ')
 
-
 /*=NP================================================================*/
 /* Global data for new panel display                                 */
 /*   (Note: all NPD mods are identified by the string =NP=           */
@@ -137,6 +136,27 @@ int NPdatalen;          /* Length of data */
 char NPcurprompt1[40];
 char NPcurprompt2[40];
 U32 NPaaddr;
+
+#ifdef EXTERNALGUI
+/*-------------------------------------------------------------------*/
+/* External GUI control                                              */
+/*-------------------------------------------------------------------*/
+#ifdef OPTION_MIPS_COUNTING
+U32     mipsrate = 0;
+U32     siosrate = 0;
+U32     prevmipsrate = 0;
+U32     prevsiosrate = 0;
+#endif /*OPTION_MIPS_COUNTING*/
+int     gui_gregs = 1;                  /* 1=gregs status active     */
+int     gui_cregs = 1;                  /* 1=cregs status active     */
+int     gui_aregs = 1;                  /* 1=aregs status active     */
+int     gui_fregs = 1;                  /* 1=fregs status active     */
+int     gui_devlist = 1;                /* 1=devlist status active   */
+DEVBLK* dev;
+BYTE*   devclass;
+char    devnam[256];
+int     stat_online, stat_busy, stat_pend, stat_open;
+#endif /*EXTERNALGUI*/
 
 /*=NP================================================================*/
 /*  Initialize the NP data                                           */
@@ -1006,6 +1026,9 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
 
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("MAN=0\n");
+#endif /*EXTERNALGUI*/
         return NULL;
     }
 
@@ -1014,6 +1037,9 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     {
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_CPU_NOT_STARTED(regs);
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("MAN=1\n");
+#endif /*EXTERNALGUI*/
         return NULL;
     }
 
@@ -1251,6 +1277,9 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
                 sysblk.regs[i].cpustate = CPUSTATE_STARTED;
         signal_condition (&sysblk.intcond);
         release_lock (&sysblk.intlock);
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("MAN=0\n");
+#endif /*EXTERNALGUI*/
         return NULL;
     }
 
@@ -1265,6 +1294,9 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
         }
         release_lock (&sysblk.intlock);
+#ifdef EXTERNALGUI
+        if (extgui) logmsg("MAN=1\n");
+#endif /*EXTERNALGUI*/
         return NULL;
     }
 #endif /*MAX_CPU_ENGINES > 1*/
@@ -1710,9 +1742,13 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         }
 
         /* Set up remaining arguments for initialization handler */
+#ifndef EXTERNALGUI
         for (devargc = 0; devargc < MAX_ARGS &&
             (devargv[devargc] = strtok(NULL," \t")) != NULL;
             devargc++);
+#else /*EXTERNALGUI*/
+        parse_args (devascii+strlen(devascii)+1, MAX_ARGS, devargv, &devargc);
+#endif /*!EXTERNALGUI*/
 
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
@@ -1776,9 +1812,13 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         }
 
         /* Set up remaining arguments for initialization handler */
+#ifndef EXTERNALGUI
         for (devargc = 0; devargc < MAX_ARGS &&
             (devargv[devargc] = strtok(NULL," \t")) != NULL;
             devargc++);
+#else /*EXTERNALGUI*/
+        parse_args (devascii+strlen(devascii)+1, MAX_ARGS, devargv, &devargc);
+#endif /*!EXTERNALGUI*/
 
         /* Attach the device */
         attach_device(devnum, devtype, devargc, devargv);
@@ -2006,6 +2046,9 @@ struct termios kbattr;                  /* Terminal I/O structure    */
     kbattr.c_lflag |= (ECHO | ICANON);
     tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
 
+#ifdef EXTERNALGUI
+    if (!extgui)
+#endif /*EXTERNALGUI*/
     /* Reset the cursor position */
     fprintf (stderr,
             ANSI_ROW24_COL79
@@ -2044,16 +2087,26 @@ int     firstmsgn = 0;                  /* Number of first message to
 #define MSG_SIZE                80      /* Size of one message       */
 #define BUF_SIZE    (MAX_MSGS*MSG_SIZE) /* Total size of buffer      */
 #define NUM_LINES               22      /* Number of scrolling lines */
+#ifdef EXTERNALGUI
+#define CMD_SIZE              1024      /* Length of command line    */
+#else /*!EXTERNALGUI*/
 #define CMD_SIZE                60      /* Length of command line    */
+#endif /*EXTERNALGUI*/
 REGS   *regs;                           /* -> CPU register context   */
 QWORD   curpsw;                         /* Current PSW               */
 QWORD   prvpsw;                         /* Previous PSW              */
 BYTE    prvstate = 0xFF;                /* Previous stopped state    */
 U64     prvicount = 0;                  /* Previous instruction count*/
 BYTE    pswwait;                        /* PSW wait state bit        */
+#ifdef EXTERNALGUI
+BYTE    redraw_msgs = 0;                /* 1=Redraw message area     */
+BYTE    redraw_cmd = 0;                 /* 1=Redraw command line     */
+BYTE    redraw_status = 0;              /* 1=Redraw status line      */
+#else /*!EXTERNALGUI*/
 BYTE    redraw_msgs;                    /* 1=Redraw message area     */
 BYTE    redraw_cmd;                     /* 1=Redraw command line     */
 BYTE    redraw_status;                  /* 1=Redraw status line      */
+#endif /*EXTERNALGUI*/
 BYTE    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
@@ -2065,7 +2118,11 @@ FILE   *logfp;                          /* Log file pointer          */
 FILE   *rcfp;                           /* RC file pointer           */
 BYTE   *rcname;                         /* hercules.rc name pointer  */
 struct termios kbattr;                  /* Terminal I/O structure    */
+#ifdef EXTERNALGUI
+BYTE    kbbuf[CMD_SIZE];                /* Keyboard input buffer     */
+#else /*!EXTERNALGUI*/
 BYTE    kbbuf[6];                       /* Keyboard input buffer     */
+#endif /*EXTERNALGUI*/
 int     kblen;                          /* Number of chars in kbbuf  */
 int     pipefd;                         /* Pipe file descriptor      */
 int     keybfd;                         /* Keyboard file descriptor  */
@@ -2126,12 +2183,23 @@ struct  timeval tv;                     /* Select timeout structure  */
     kbattr.c_cc[VTIME] = 0;
     tcsetattr (keybfd, TCSANOW, &kbattr);
 
+#ifdef EXTERNALGUI
+    if (!extgui)
+#endif /*EXTERNALGUI*/
     /* Clear the screen */
     fprintf (confp,
             ANSI_WHT_BLK
             ANSI_ERASE_SCREEN);
+
+#ifdef EXTERNALGUI
+    if (!extgui)
+    {
+#endif /*EXTERNALGUI*/
     redraw_msgs = 1;
     redraw_cmd = 1;
+#ifdef EXTERNALGUI
+    }
+#endif /*EXTERNALGUI*/
     redraw_status = 1;
 
     /* Process messages and commands */
@@ -2491,6 +2559,44 @@ struct  timeval tv;                     /* Select timeout structure  */
                     cmdline[cmdoff] = '\0';
                     /* =NP= create_thread replaced with: */
                     if (NPDup == 0) {
+#ifdef EXTERNALGUI
+                        if (extgui && (cmdline[0] == ']'))
+                        {
+                            redraw_status = 1;
+
+                            if (strncmp(cmdline,"]GREGS=",7) == 0)
+                            {
+                                gui_gregs = atoi(cmdline+7);
+                            }
+                            else
+                            if (strncmp(cmdline,"]CREGS=",7) == 0)
+                            {
+                                gui_cregs = atoi(cmdline+7);
+                            }
+                            else
+                            if (strncmp(cmdline,"]AREGS=",7) == 0)
+                            {
+                                gui_aregs = atoi(cmdline+7);
+                            }
+                            else
+                            if (strncmp(cmdline,"]FREGS=",7) == 0)
+                            {
+                                gui_fregs = atoi(cmdline+7);
+                            }
+                            else
+                            if (strncmp(cmdline,"]DEVLIST=",9) == 0)
+                            {
+                                gui_devlist = atoi(cmdline+9);
+                            }
+                            else
+                            if (strncmp(cmdline,"]MAINSTOR=",10) == 0)
+                            {
+                                fprintf(stderr,"MAINSTOR=%d\n",(U32)sysblk.mainstor);
+                                fprintf(stderr,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
+                            }
+                        }
+                        else
+#endif /*EXTERNALGUI*/
                         create_thread (&cmdtid, &sysblk.detattr,
                                 panel_command, cmdline);
                     } else {
@@ -2530,6 +2636,10 @@ struct  timeval tv;                     /* Select timeout structure  */
                     }
                     /* =END= */
                     cmdoff = 0;
+#ifdef EXTERNALGUI
+                    /* Process *ALL* of the 'keyboard' (stdin) buffer data! */
+                    if (extgui) {i++; continue;}
+#endif /*EXTERNALGUI*/
                     redraw_cmd = 1;
                     break;
                 }
@@ -2604,9 +2714,16 @@ struct  timeval tv;                     /* Select timeout structure  */
             }
 
             /* Copy message to circular buffer and empty read buffer */
+#ifdef EXTERNALGUI
+            if (!extgui)
+#endif /*EXTERNALGUI*/
             memcpy (msgbuf + (msgslot * MSG_SIZE), readbuf, MSG_SIZE);
             readoff = 0;
 
+#ifdef EXTERNALGUI
+            if (!extgui)
+            {
+#endif /*EXTERNALGUI*/
             /* Update message count and next available slot number */
             if (nummsgs < MAX_MSGS)
                 msgslot = ++nummsgs;
@@ -2620,11 +2737,15 @@ struct  timeval tv;                     /* Select timeout structure  */
 
             /* Set the display update indicator */
             redraw_msgs = 1;
-
+#ifdef EXTERNALGUI
+            }
+#endif /*EXTERNALGUI*/
         }
 
+#ifdef EXTERNALGUI
+        if (!extgui)
+#endif /*EXTERNALGUI*/
         /* =NP= : Reinit traditional panel if NP is down */
-
         if (NPDup == 0 && NPDinit == 1) {
             NPDinit = 0;
             redraw_msgs = 1;
@@ -2633,12 +2754,14 @@ struct  timeval tv;                     /* Select timeout structure  */
             fprintf(confp, ANSI_WHT_BLK);
             fprintf(confp, ANSI_ERASE_SCREEN);
         }
-
         /* =END= */
 
         /* Obtain the PSW for target CPU */
         memset (curpsw, 0x00, sizeof(curpsw));
         store_psw (regs, curpsw);
+
+        /* Isolate the PSW interruption wait bit */
+        pswwait = curpsw[1] & 0x02;
 
         /* Set the display update indicator if the PSW has changed
            or if the instruction counter has changed, or if
@@ -2667,6 +2790,9 @@ struct  timeval tv;                     /* Select timeout structure  */
         /*        the NP display as an else after those ifs */
 
         if (NPDup == 0) {
+#ifdef EXTERNALGUI
+            if (!extgui)
+#endif /*EXTERNALGUI*/
             /* Rewrite the screen if display update indicators are set */
             if (redraw_msgs)
             {
@@ -2692,20 +2818,20 @@ struct  timeval tv;                     /* Select timeout structure  */
 
             if (redraw_status)
             {
-                /* Isolate the PSW interruption wait bit */
-                pswwait = curpsw[1] & 0x02;
-
                 /* Display the PSW and instruction counter for CPU 0 */
                 fprintf (confp,
-                    ANSI_ROW24_COL1
-                    ANSI_YELLOW_RED
+                    "%s"
 #if MAX_CPU_ENGINES > 1
                     "CPU%4.4X "
 #endif
                     "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
                        " %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X"
                     " %c%c%c%c%c%c%c instcount=%llu"
-                    ANSI_ERASE_EOL,
+                    "%s",
+#ifdef EXTERNALGUI
+                    extgui ? ("STATUS=") :
+#endif /*EXTERNALGUI*/
+                    (ANSI_ROW24_COL1 ANSI_YELLOW_RED),
 #if MAX_CPU_ENGINES > 1
                     regs->cpuad,
 #endif
@@ -2727,9 +2853,182 @@ struct  timeval tv;                     /* Select timeout structure  */
 #if defined(_FEATURE_SIE)
                     regs->sie_state ?  regs->hostregs->instcount :
 #endif /*defined(_FEATURE_SIE)*/
-                        regs->instcount);
-            } /* end if(redraw_status) */
+                    regs->instcount,
+#ifdef EXTERNALGUI
+                    extgui ? "\n" :
+#endif /*EXTERNALGUI*/
+                    ANSI_ERASE_EOL);
 
+#ifdef EXTERNALGUI
+                if (extgui)
+                {
+                    /* (for system activity meter) */
+                    if (!(regs->cpustate == CPUSTATE_STOPPING ||
+                        regs->cpustate == CPUSTATE_STOPPED))
+                    {
+                        fprintf(confp,"SYS=%c\n",pswwait?'0':'1');
+                    }
+#ifdef OPTION_MIPS_COUNTING
+                    /* Calculate MIPS rate */
+#ifdef FEATURE_CPU_RECONFIG
+                    for (mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
+                        if(sysblk.regs[i].cpuonline)
+#else /*!FEATURE_CPU_RECONFIG*/
+                        for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
+#endif /*!FEATURE_CPU_RECONFIG*/
+                        {
+                            mipsrate += sysblk.regs[i].mipsrate;
+                            siosrate += sysblk.regs[i].siosrate;
+                        }
+
+                    if (mipsrate > 100000) mipsrate = 0;	/* ignore wildly high rate */
+
+                    /* MIPS rate */
+                    if (prevmipsrate != mipsrate)
+                    {
+                        prevmipsrate = mipsrate;
+                        fprintf(confp, "MIPS=%2.1d.%2.2d\n",
+                            prevmipsrate / 1000, (prevmipsrate % 1000) / 10);
+                    }
+
+                    /* SIO rate */
+                    if (prevsiosrate != siosrate)
+                    {
+                        prevsiosrate = siosrate;
+                        fprintf(confp, "SIOS=%5d\n",prevsiosrate);
+                    }
+
+#endif /*OPTION_MIPS_COUNTING*/
+                    if (gui_gregs)  /* GP regs */
+                    {
+                        fprintf(confp,"GR0-3=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->GR_L(0),regs->GR_L(1),regs->GR_L(2),regs->GR_L(3));
+                        fprintf(confp,"GR4-7=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->GR_L(4),regs->GR_L(5),regs->GR_L(6),regs->GR_L(7));
+                        fprintf(confp,"GR8-B=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->GR_L(8),regs->GR_L(9),regs->GR_L(10),regs->GR_L(11));
+                        fprintf(confp,"GRC-F=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->GR_L(12),regs->GR_L(13),regs->GR_L(14),regs->GR_L(15));
+                    }
+
+                    if (gui_cregs)  /* CR regs */
+                    {
+                        fprintf(confp,"CR0-3=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->CR_L(0),regs->CR_L(1),regs->CR_L(2),regs->CR_L(3));
+                        fprintf(confp,"CR4-7=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->CR_L(4),regs->CR_L(5),regs->CR_L(6),regs->CR_L(7));
+                        fprintf(confp,"CR8-B=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->CR_L(8),regs->CR_L(9),regs->CR_L(10),regs->CR_L(11));
+                        fprintf(confp,"CRC-F=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->CR_L(12),regs->CR_L(13),regs->CR_L(14),regs->CR_L(15));
+                    }
+
+                    if (gui_aregs)  /* AR regs */
+                    {
+                        fprintf(confp,"AR0-3=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->AR(0),regs->AR(1),regs->AR(2),regs->AR(3));
+                        fprintf(confp,"AR4-7=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->AR(4),regs->AR(5),regs->AR(6),regs->AR(7));
+                        fprintf(confp,"AR8-B=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->AR(8),regs->AR(9),regs->AR(10),regs->AR(11));
+                        fprintf(confp,"ARC-F=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->AR(12),regs->AR(13),regs->AR(14),regs->AR(15));
+                    }
+
+                    if (gui_fregs)  /* FP regs */
+                    {
+                        fprintf(confp,"FR0-2=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->fpr[0],regs->fpr[1],regs->fpr[2],regs->fpr[3]);
+                        fprintf(confp,"FR4-6=%8.8X %8.8X %8.8X %8.8X\n",
+                            regs->fpr[4],regs->fpr[5],regs->fpr[6],regs->fpr[7]);
+                    }
+
+                    if (gui_devlist)  /* device status */
+                    {
+                        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+                        {
+                            if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
+
+                            stat_online = stat_busy = stat_pend = stat_open = 0;
+
+                            (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+
+                            devnam[255] = 0;   // (ensure string is null terminated)
+
+                            if ((dev->console && dev->connected) ||
+                                (strlen(dev->filename) > 0))
+                                stat_online = 1;
+                            if (dev->busy) stat_busy = 1;
+                            if (dev->pending) stat_pend = 1;
+                            if (dev->fd > 2) stat_open = 1;
+
+                            fprintf(confp, "DEV=%4.4X %4.4X %-4.4s %d%d%d%d %s\n",
+                                dev->devnum,
+                                dev->devtype,
+                                devclass,
+                                stat_online,
+                                stat_busy,
+                                stat_pend,
+                                stat_open,
+                                devnam);
+                        }
+
+                        fprintf(confp, "DEV=X\n");    /* (indicate end of list) */
+                    }
+                }
+#endif /*EXTERNALGUI*/
+            } /* end if(redraw_status) */
+#ifdef EXTERNALGUI
+			else /* !redraw_status */
+			{
+	            /* If we're under the control of an external GUI,
+	               some status info we need to send ALL the time. */
+	            if (extgui)
+				{
+                    /* (for system activity meter) */
+                    if (!(regs->cpustate == CPUSTATE_STOPPING ||
+                        regs->cpustate == CPUSTATE_STOPPED))
+                    {
+                        fprintf(confp,"SYS=%c\n",pswwait?'0':'1');
+                    }
+
+                    if (gui_devlist)  /* device status */
+                    {
+                        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+                        {
+                            if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
+
+                            stat_online = stat_busy = stat_pend = stat_open = 0;
+
+                            (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+
+                            devnam[255] = 0;   // (ensure string is null terminated)
+
+                            if ((dev->console && dev->connected) ||
+                                (strlen(dev->filename) > 0))
+                                stat_online = 1;
+                            if (dev->busy) stat_busy = 1;
+                            if (dev->pending) stat_pend = 1;
+                            if (dev->fd > 2) stat_open = 1;
+
+                            fprintf(confp, "DEV=%4.4X %4.4X %-4.4s %d%d%d%d %s\n",
+                                dev->devnum,
+                                dev->devtype,
+                                devclass,
+                                stat_online,
+                                stat_busy,
+                                stat_pend,
+                                stat_open,
+                                devnam);
+                        }
+
+                        fprintf(confp, "DEV=X\n");    /* (indicate end of list) */
+                    }
+				}
+			}
+
+            if (!extgui)
+#endif /*EXTERNALGUI*/
             if (redraw_cmd)
             {
                 /* Display the command line */
@@ -2751,6 +3050,9 @@ struct  timeval tv;                     /* Select timeout structure  */
             /* Flush screen buffer and reset display update indicators */
             if (redraw_msgs || redraw_cmd || redraw_status)
             {
+#ifdef EXTERNALGUI
+                if (!extgui)
+#endif /*EXTERNALGUI*/
                 fprintf (confp,
                     ANSI_POSITION_CURSOR,
                     23, 13+cmdoff);
@@ -2766,8 +3068,14 @@ struct  timeval tv;                     /* Select timeout structure  */
                    || (redraw_cmd && NPdataentry == 1)) {
                 if (NPDinit == 0) {
                     NPDinit = 1;
+#ifdef EXTERNALGUI
+                    if (!extgui)
+#endif /*EXTERNALGUI*/
                     NP_screen(confp);
                 }
+#ifdef EXTERNALGUI
+                if (!extgui)
+#endif /*EXTERNALGUI*/
                 NP_update(confp, cmdline, cmdoff);
                 fflush (confp);
                 redraw_msgs = 0;

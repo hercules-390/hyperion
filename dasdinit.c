@@ -30,6 +30,11 @@ BYTE iplpsw[8]    = {0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F};
 BYTE iplccw1[8]   = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
 BYTE iplccw2[8]   = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to display command syntax and exit                     */
@@ -136,7 +141,14 @@ int             highcyl;                /* CKD header high cyl number*/
     {
         /* Display progress message every 10 cylinders */
         if ((cyl % 10) == 0)
+#ifdef EXTERNALGUI
+        {
+            if (extgui) fprintf (stderr, "CYL=%u\n", cyl);
+            else fprintf (stderr, "Writing cylinder %u\r", cyl);
+        }
+#else /*!EXTERNALGUI*/
             fprintf (stderr, "Writing cylinder %u\r", cyl);
+#endif /*EXTERNALGUI*/
 
         for (head = 0; head < heads; head++)
         {
@@ -452,7 +464,14 @@ U32             maxsect;                /* Maximum sector count      */
 
         /* Display progress message every 100 sectors */
         if ((sectnum % 100) == 0)
+#ifdef EXTERNALGUI
+        {
+            if (extgui) fprintf (stderr, "BLK=%u\n", sectnum);
+            else fprintf (stderr, "Writing sector %u\r", sectnum);
+        }
+#else /*!EXTERNALGUI*/
             fprintf (stderr, "Writing sector %u\r", sectnum);
+#endif /*EXTERNALGUI*/
 
         /* Write the sector to the file */
         rc = write (fd, buf, sectsz);
@@ -505,6 +524,13 @@ BYTE    c;                              /* Character work area       */
                      MSTRING(VERSION), __DATE__, __TIME__);
 
     /* Check the number of arguments */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     if (argc != 5)
         argexit(5);
 

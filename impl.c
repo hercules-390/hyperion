@@ -63,6 +63,13 @@ int     c;                              /* Work area for getopt      */
                              __DATE__, __TIME__);
 
     /* Process the command line options */
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
     while ((c = getopt(argc, argv, "f:")) != EOF)
     {
         switch (c) {
