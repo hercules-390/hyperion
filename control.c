@@ -1643,7 +1643,7 @@ VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work areas       */
 int     inval = 0;                      /* Invalidation flag         */
-int	intlockheld;			/* int lock held by CR6 load */
+int intlockheld;            /* int lock held by CR6 load */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
@@ -1714,21 +1714,21 @@ int	intlockheld;			/* int lock held by CR6 load */
             }
         }
 #if defined(FEATURE_ECPSVM)
-	if(i==6)
-	{
-		obtain_lock(&sysblk.intlock);
-		intlockheld=1;
-	}
+    if(i==6)
+    {
+        obtain_lock(&sysblk.intlock);
+        intlockheld=1;
+    }
 #endif
 
         /* Load control register bits 32-63 from work area */
         FETCH_FW(regs->CR_L(i), rwork + d); d += 4;
 #if defined(FEATURE_ECPSVM)
-	if(intlockheld)
-	{
-	    release_lock(&sysblk.intlock);
+    if(intlockheld)
+    {
+        release_lock(&sysblk.intlock);
             intlockheld=0;
-	}
+    }
 #endif
 
         /* Instruction is complete when r3 register is done */
@@ -4775,8 +4775,10 @@ static char *ordername[] = {    "Unassigned",
         return;
     }
 
-    /* Trace SIGP unless Sense, External Call, Emergency Signal,
-       or the target CPU is configured offline */
+    /* Trace all "unusual" SIGPs... (anything OTHER THAN Sense,
+       External Call and Emergency Signal (which are considered
+       normal) to ANY cpu, -or- ANY SIGP at all sent to a CPU
+       that is configured offline (which is indeed unusual!)) */
     if (order > LOG_SIGPORDER || !IS_CPU_ONLINE(cpad))
 #if !defined(FEATURE_ESAME)
         logmsg ("CPU%4.4X: SIGP CPU%4.4X %s PARM %8.8X\n",
