@@ -65,7 +65,7 @@ HRC_OBJS = impl.o config.o panel.o version.o \
 	   machchk.o vector.o xstore.o \
 	   cmpsc.o sie.o ses.o timer.o \
 	   esame.o cckddasd.o cckdcdsx.o \
-	   parser.o hetlib.o
+	   parser.o hetlib.o ieee.o
 
 #HIFC_OBJ = hercifc.o version.o
 
@@ -87,7 +87,7 @@ TSP_OBJS = tapesplt.o version.o
 
 CCHK_OBJ = cckdcdsk.o version.o
 
-COMP_OBJ = cckdcomp.o cckdcdsx,o version.o
+COMP_OBJ = cckdcomp.o cckdcdsx.o version.o
 
 C2CC_OBJ = ckd2cckd.o version.o
 
