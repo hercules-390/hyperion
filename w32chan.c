@@ -24,6 +24,7 @@ int dummy = 0;
 #include "fthreads.h"   // (need "fthread_create")
 #include "w32chan.h"    // (function prototypes for this module)
 #include "linklist.h"   // (linked list macros)
+#include "hercnls.h"    // (need NLS support)
 
 /////////////////////////////////////////////////////////////////////////////
 // (helper macros...)
