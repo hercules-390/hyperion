@@ -414,6 +414,8 @@ int rc;
         obtain_lock(&bind_lock);
     } /* end while */
 
+    sysblk.socktid = 0;
+
     release_lock(&bind_lock);
 
     logmsg (_("HHCSD022I Socketdevice listener thread terminated\n"));
@@ -558,17 +560,8 @@ int unbind_device (DEVBLK* dev)
     RemoveListEntry(&bs->bind_link);
     release_lock(&bind_lock);
 
-    /* Issue message to wake up panel thread from its 'select' */
-
     logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
         dev->devnum, bs->spec);
-
-    /* Give panel thread time to process our message
-     * and rebuild its select list. */
-
-    usleep(100000);
-
-    /* Now safe to close the listening socket */
 
     if (bs->sd != -1)
         close (bs->sd);
@@ -591,5 +584,9 @@ int unbind_device (DEVBLK* dev)
     free (bs->spec);
     free (bs);
 
+    /* ZZ INCOMPLETE
+       The last socketdevice to be detached should set
+       sysblk.socktid to zero such that the listener
+       thread will terminate */
     return 1;   /* (success) */
 }
