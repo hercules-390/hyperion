@@ -1829,6 +1829,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         /* Calculate number of bytes to move and residual byte count */
         num = sizeof(buf) / 2;
         num = (count < num) ? count : num;
+        if(cmd == R3270_EAU) 
+           num = 0;
         *residual = count - num;
 
         /* Move the 3270 command code to the first byte of the buffer
