@@ -1733,9 +1733,9 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb)      /*@IWZ*/
 {
+int     rc;                             /* Return code               */
 #if !defined(OPTION_FISHIO)
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
-int     rc;                             /* Return code               */
 #endif // !defined(OPTION_FISHIO)
 
     /* Obtain the device lock */
@@ -1809,7 +1809,7 @@ int     rc;                             /* Return code               */
      * [4] Original.  Create a thread to execute this I/O
      */
 
-    if (dev->syncio
+    if (dev->syncio && !dev->ioactive
 #ifdef OPTION_IODELAY_KLUDGE
      && sysblk.iodelay < 1
 #endif /*OPTION_IODELAY_KLUDGE*/
@@ -1817,6 +1817,8 @@ int     rc;                             /* Return code               */
     {
         /* Attempt synchronous I/O */
         dev->syncio_active = 1;
+        dev->syncio_retry = 0;
+        dev->ioactive = 1;
         release_lock (&dev->lock);
         switch (sysblk.arch_mode)
         {
@@ -1830,7 +1832,8 @@ int     rc;                             /* Return code               */
             case ARCH_900: z900_execute_ccw_chain (dev); break;
 #endif
         }
-        /* Return code 0 if the retry bit is not on */
+        /* Return if retry not required */
+        dev->syncio_active = 0;
         if (!dev->syncio_retry)
             return 0;
         obtain_lock (&dev->lock);
@@ -1927,9 +1930,28 @@ BYTE    tracethis = 0;                  /* 1=Trace this CCW only     */
 BYTE    area[64];                       /* Message area              */
 int     bufpos = 0;                     /* Position in I/O buffer    */
 BYTE    iobuf[65536];                   /* Channel I/O buffer        */
-int     retry = 0;                      /* 1=I/O asynchronous retry  */
 
-    if (dev->hnd->start) (dev->hnd->start) (dev);
+    obtain_lock(&dev->lock);
+
+    /* Wait while some other channel program completes.  This can
+       happen when the device is shared and a remote system is
+       accessing it.  If synchronous i/o is active then the ioactive
+       bit has already been turned on.  Also, if synchronous i/o is
+       being retried then the bit is still on */
+    if (!dev->syncio_active && !dev->syncio_retry)
+        while (dev->ioactive)
+        {
+            dev->iowaiters++;
+            wait_condition(&dev->iocond, &dev->lock);
+            dev->iowaiters--;
+        }
+    dev->ioactive = 1;
+
+    /* Call the i/o start exit */
+    if (!dev->syncio_retry)
+        if (dev->hnd->start) (dev->hnd->start) (dev);
+
+    release_lock(&dev->lock);
 
     /* Extract the I/O parameters from the ORB */              /*@IWZ*/
     FETCH_FW(ccwaddr, dev->orb.ccwaddr);                       /*@IWZ*/
@@ -1957,7 +1979,6 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
     /* Check for retried synchronous I/O */
     if (dev->syncio_retry)
     {
-        dev->syncio_active = 0;
         dev->syncios--; dev->asyncios++;
         ccwaddr = dev->syncio_addr;
         dev->code = dev->prevcode;
@@ -1981,8 +2002,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Update the measurement block if applicable */
-    if (sysblk.zpb[dev->pmcw.zone].mbm && (dev->pmcw.flag5 & PMCW5_MM_MBU)
-                                                      )
+    if (sysblk.zpb[dev->pmcw.zone].mbm && (dev->pmcw.flag5 & PMCW5_MM_MBU))
     {
         mbaddr = sysblk.zpb[dev->pmcw.zone].mbo;
         mbaddr += (dev->pmcw.mbi[0] << 8 | dev->pmcw.mbi[1]) << 5;
@@ -2056,6 +2076,16 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Reset device busy indicator */
             dev->busy = 0;
 
+            /* Call the i/o end exit */
+            if (dev->hnd->end) (dev->hnd->end) (dev);
+
+            /* Turn off the active bit and notify any waiters */
+            if (!dev->reserved)
+            {
+                dev->ioactive = 0;
+                if (dev->iowaiters) signal_condition (&dev->iocond);
+            }
+
             /* Release the device lock */
             release_lock (&dev->lock);
 
@@ -2071,7 +2101,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP070I Device %4.4X attention completed\n"),
                         dev->devnum);
-            if (dev->hnd->end) (dev->hnd->end) (dev);
+
             return NULL;
         } /* end attention processing */
 
@@ -2120,6 +2150,16 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Reset device busy indicator */
             dev->busy = 0;
 
+            /* Call the i/o end exit */
+            if (dev->hnd->end) (dev->hnd->end) (dev);
+
+            /* Turn off the active bit and notify any waiters */
+            if (!dev->reserved)
+            {
+                dev->ioactive = 0;
+                if (dev->iowaiters) signal_condition (&dev->iocond);
+            }
+
             /* Release the device lock */
             release_lock (&dev->lock);
 
@@ -2135,7 +2175,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP071I Device %4.4X clear completed\n"),
                         dev->devnum);
-            if (dev->hnd->end) (dev->hnd->end) (dev);
+
             return NULL;
         } /* end perform clear subchannel */
 
@@ -2168,6 +2208,16 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Reset device busy indicator */
             dev->busy = 0;
 
+            /* Call the i/o end exit */
+            if (dev->hnd->end) (dev->hnd->end) (dev);
+
+            /* Turn off the active bit and notify any waiters */
+            if (!dev->reserved)
+            {
+                dev->ioactive = 0;
+                if (dev->iowaiters) signal_condition (&dev->iocond);
+            }
+
             /* Release the device lock */
             release_lock (&dev->lock);
 
@@ -2183,7 +2233,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("HHCCP072I Device %4.4X halt completed\n"),
                         dev->devnum);
-            if (dev->hnd->end) (dev->hnd->end) (dev);
+
             return NULL;
         } /* end perform halt subchannel */
 
@@ -2301,7 +2351,6 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                 {
                     dev->syncio_retry = 1;
                     release_lock (&dev->lock);
-                    if (dev->hnd->end) (dev->hnd->end) (dev);
                     return NULL;
                 }
 
@@ -2342,11 +2391,22 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                     signal_thread (sysblk.cnsltid, SIGUSR2);
                 }
 
+                /* Call the i/o suspend exit */
+                if (dev->hnd->suspend) (dev->hnd->suspend) (dev);
+
+                /* Turn off the active bit and notify any waiters */
+                if (!dev->reserved)
+                {
+                    dev->ioactive = 0;
+                    if (dev->iowaiters) signal_condition (&dev->iocond);
+                }
+
                 /* Suspend the device until resume instruction */
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
                     logmsg (_("HHCCP073I Device %4.4X suspended\n"),
                             dev->devnum);
 
+                /* Call the i/o suspend exit */
                 if (dev->hnd->suspend) (dev->hnd->suspend) (dev);
 
                 while (dev->busy && (dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
@@ -2355,11 +2415,21 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                 /* If the device has been reset then simply return */
                 if(!dev->busy)
                 {
-                    release_lock (&dev->lock);
                     if (dev->hnd->end) (dev->hnd->end) (dev);
+                    release_lock (&dev->lock);
                     return NULL;
                 }
 
+                /* Wait for any remote channel programs */
+                while (dev->ioactive)
+                {
+                    dev->iowaiters++;
+                    wait_condition(&dev->iocond, &dev->lock);
+                    dev->iowaiters--;
+                }
+                dev->ioactive = 1;
+
+                /* Call the i/o resume exit */
                 if (dev->hnd->resume) (dev->hnd->resume) (dev);
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
@@ -2539,20 +2609,12 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         }
 
         /* Pass the CCW to the device handler for execution */
-        retry = dev->syncio_retry;
-
         (dev->hnd->exec) (dev, dev->code, flags, dev->chained, count, dev->prevcode,
                     dev->ccwseq, iobuf, &more, &unitstat, &residual);
 
-        if (retry) dev->syncio_retry = 0;
-
         /* Check if synchronous I/O needs to be retried */
-        if (dev->syncio_retry)
-        {
-            if (dev->hnd->end) (dev->hnd->end) (dev);
+        if (dev->syncio_active && dev->syncio_retry)
             return NULL;
-        }
-        retry = 0;
 
         /* Check for Command Retry (suggested by Jim Pierson) */
         if ( unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
@@ -2680,7 +2742,6 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             dev->ccwseq++;
 
     } /* end while(chain) */
-    if (dev->hnd->end) (dev->hnd->end) (dev);
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
@@ -2732,6 +2793,16 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
     /* Set the interrupt pending flag for this device */
     dev->busy = 0;
     dev->pending = 1;
+
+    /* Call the i/o end exit */
+    if (dev->hnd->end) (dev->hnd->end) (dev);
+
+    /* Turn off the active bit and notify any waiters */
+    if (!dev->reserved)
+    {
+        dev->ioactive = 0;
+        if (dev->iowaiters) signal_condition (&dev->iocond);
+    }
 
     /* Signal console thread to redrive select */
     if (dev->console)

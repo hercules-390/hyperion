@@ -1,6 +1,8 @@
 /* CODEPAGE.H   (c) Copyright Jan Jaeger, 1999-2003                  */
 /*              Code Page conversion                                 */
 
+#ifndef _HERCULES_CODEPAGE_H
+#define _HERCULES_CODEPAGE_H
 
 typedef struct _CPCONV {
     char *name;
@@ -16,3 +18,5 @@ void set_codepage(char *name);
 
 #define guest_to_host(_gbyte) \
     (sysblk.codepage->g2h[(_gbyte)])
+
+#endif /* _HERCULES_CODEPAGE_H */

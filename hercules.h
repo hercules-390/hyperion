@@ -78,6 +78,7 @@
 #define fdatasync(fd) fsync(fd)
 #endif
 
+#include "cache.h"
 #include "hercnls.h"
 #include "version.h"
 #include "hetlib.h"
@@ -928,6 +929,8 @@ typedef struct _DEVBLK {
         BYTE    pgid[11];               /* Path Group ID             */
         BYTE    reserved2[5];           /* (pad/align/unused/avail)  */
         COND    resumecond;             /* Resume condition          */
+        COND    iocond;                 /* I/O active condition      */
+        int     iowaiters;              /* Number of I/O waiters     */
 #ifdef WIN32
         struct timeval   lasttod;       /* Last gettimeofday         */
 #endif
@@ -948,12 +951,14 @@ typedef struct _DEVBLK {
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1;             /* 1=Channel will merge data
                                              chained write CCWs      */
-        U32     pending;                /* 1=Interrupt pending       */
-        U32     busy;                   /* 1=Device busy             */
-        U32     pcipending;             /* 1=PCI interrupt pending   */
-        U32     crwpending;             /* 1=CRW pending             */
-        U32     syncio_active;          /* 1=Synchronous I/O active  */
-        U32     syncio_retry;           /* 1=Retry I/O asynchronously*/
+        int     pending;                /* 1=Interrupt pending       */
+        int     busy;                   /* 1=Device busy             */
+        int     pcipending;             /* 1=PCI interrupt pending   */
+        int     crwpending;             /* 1=CRW pending             */
+        int     syncio_active;          /* 1=Synchronous I/O active  */
+        int     syncio_retry;           /* 1=Retry I/O asynchronously*/
+        int     ioactive;               /* 1=I/O is active on device */
+        int     reserved;               /* 1=Device is reserved      */
 
         /*  Synchronous I/O                                          */
 
@@ -1106,10 +1111,6 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for ckddasd                      */
 
-#ifdef CKDTRACE
-        BYTE   *ckdtrace;               /* Trace table               */
-        int     ckdtracex;              /* Trace table index         */
-#endif
         CKDRT  *ckdrdtrk;               /* -> Read track routine     */
         CKDUT  *ckdupdtrk;              /* -> Update track routine   */
         CKDUC  *ckdused;                /* -> Used cyls routine      */
@@ -1147,11 +1148,11 @@ typedef struct _DEVBLK {
         BYTE    ckdloper;               /* Locate record operation   */
         BYTE    ckdlaux;                /* Locate record aux byte    */
         BYTE    ckdlcount;              /* Locate record count       */
-        struct _CKDDASD_CACHE *ckdcache;/* Cache table               */
-        int     ckdcachenbr;            /* Cache table size          */
+        BYTE    ckdreserved1;           /* Alignment                 */
+        int     ckdcache;               /* Current cache index       */
         int     ckdcachehits;           /* Cache hits                */
         int     ckdcachemisses;         /* Cache misses              */
-        U64     ckdcacheage;            /* Cache aging counter       */
+        int     ckdcachewaits;          /* Cache waits               */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
         U32                            /* Flags                     */
@@ -1225,18 +1226,9 @@ typedef struct _CKDDASD_RECHDR {        /* Record header             */
         HWORD   dlen;                   /* Data length               */
     } CKDDASD_RECHDR;
 
-typedef struct _CKDDASD_CACHE {         /* Cache entry               */
-        int     trk;                    /* Track number              */
-        BYTE   *buf;                    /* Buffer address            */
-        int     fd;                     /* Track fd                  */
-        U64     age;                    /* Entry age                 */
-        U64     off;                    /* Entry offset              */
-    } CKDDASD_CACHE;
-
 #define CKDDASD_DEVHDR_SIZE     ((ssize_t)sizeof(CKDDASD_DEVHDR))
 #define CKDDASD_TRKHDR_SIZE     ((ssize_t)sizeof(CKDDASD_TRKHDR))
 #define CKDDASD_RECHDR_SIZE     ((ssize_t)sizeof(CKDDASD_RECHDR))
-#define CKDDASD_CACHE_SIZE      ((ssize_t)sizeof(CKDDASD_CACHE))
 
 /*-------------------------------------------------------------------*/
 /* Structure definitions for Compressed CKD devices                  */
@@ -1282,18 +1274,18 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #define CCKD_FREEHDR_POS       CKDDASD_DEVHDR_SIZE+12
 
 #define CCKD_COMPRESS_NONE     0
+#define CCKD_COMPRESS_ZLIB     1
+#define CCKD_COMPRESS_BZIP2    2
 #ifndef HAVE_LIBZ
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_NONE
 #else
-#define CCKD_COMPRESS_ZLIB     1
 #ifndef CCKD_BZIP2
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_ZLIB
 #else
-#define CCKD_COMPRESS_BZIP2    2
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_BZIP2
 #endif  // CCKD_BZIP2 defined
 #endif  // HAVE_ZLIB  defined
-#define CCKD_COMPRESS_MAX_POSSIBLE 3
+#define CCKD_COMPRESS_MAX_POSSIBLE 2
 
 #define CCKD_COMPRESS_MASK     0x03
 
@@ -1331,25 +1323,7 @@ typedef struct _CCKD_RA {               /* Readahead queue entry     */
         int              next;          /* Index to next entry       */
     } CCKD_RA;
 
-typedef struct _CCKD_CACHE {            /* Cache structure           */
-        DEVBLK          *dev;           /* Cached device block ptr   */
-        int              trk;           /* Cached track number       */
-        int              sfx;           /* Cached l2tab file index   */
-        int              l1x;           /* Cached l2tab index        */
-        BYTE            *buf;           /* Cached buffer address     */
-        U64              age;           /* Cache entry age           */
-        U32              flags;         /* Cache flags               */
-    } CCKD_CACHE;
-#define CCKD_CACHE_ACTIVE    0x80000000 /* Cache entry is active     */
-#define CCKD_CACHE_UPDATED   0x40000000 /* Cache buf has been updated*/
-#define CCKD_CACHE_READING   0x20000000 /* Cache buf being read      */
-#define CCKD_CACHE_WRITING   0x10000000 /* Cache buf being written   */
-#define CCKD_CACHE_WRITE     0x08000000 /* Cache buf pending write   */
-#define CCKD_CACHE_READWAIT  0x04000000 /* Thread waiting for read   */
-#define CCKD_CACHE_WRITEWAIT 0x02000000 /* Thread waiting for write  */
-#define CCKD_CACHE_INVALID   0x01000000 /* Cache entry invalid       */
-#define CCKD_CACHE_USED      0x00800000 /* Cache entry was used      */
-#define CCKD_CACHE_BUSY      0xff000000 /* Cache entry is busy       */
+typedef char CCKD_TRACE[128];           /* Trace entry               */
 
 #define CCKDDASD_DEVHDR_SIZE   ((ssize_t)sizeof(CCKDDASD_DEVHDR))
 #define CCKD_L1ENT_SIZE        ((ssize_t)sizeof(CCKD_L1ENT))
@@ -1374,8 +1348,6 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_MAX_RA            9        /* Max readahead threads     */
 #define CCKD_MAX_WRITER        9        /* Max writer threads        */
 #define CCKD_MAX_GCOL          1        /* Max garbage collectors    */
-#define CCKD_MAX_CACHE         1024     /* Max number cache entries  */
-#define CCKD_MAX_L2CACHE       1024     /* Max nbr l2 cache entries  */
 #define CCKD_MAX_TRACE         200000   /* Max nbr trace entries     */
 #define CCKD_MAX_FREEPEND      4        /* Max free pending cycles   */
 
@@ -1383,8 +1355,6 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_MIN_RA            0        /* Min readahead threads     */
 #define CCKD_MIN_WRITER        1        /* Min writer threads        */
 #define CCKD_MIN_GCOL          0        /* Min garbage collectors    */
-#define CCKD_MIN_CACHE         16       /* Min number cache entries  */
-#define CCKD_MIN_L2CACHE       128      /* Min nbr l2 cache entries  */
 
 #define CCKD_DEFAULT_RA_SIZE   4        /* Readahead queue size      */
 #define CCKD_DEFAULT_RA        2        /* Default number readaheads */
@@ -1393,8 +1363,6 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
                                               collectors             */
 #define CCKD_DEFAULT_GCOLWAIT  5        /* Default wait (seconds)    */
 #define CCKD_DEFAULT_GCOLPARM  0        /* Default adjustment parm   */
-#define CCKD_DEFAULT_CACHE     128      /* Default cache size        */
-#define CCKD_DEFAULT_L2CACHE   256      /* Default level 2 cache size*/
 #define CCKD_DEFAULT_READAHEADS 2       /* Default nbr to read ahead */
 #define CCKD_DEFAULT_FREEPEND  -1       /* Default freepend cycles   */
 
@@ -1409,17 +1377,22 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         BYTE             id[8];         /* "CCKDBLK "                */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
         int              batch:1;       /* 1=called in batch mode    */
-        LOCK             l2cachelock;   /* L2 cache lock             */
-        LOCK             cachelock;     /* Cache lock                */
-        COND             cachecond;     /* Wait for cache condition  */
-        U64              cacheage;      /* Cache aging value         */
-        int              cachewaiting;  /* Threads waiting for cache */
+
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
-        int              gcols;         /* Number garbage collectors */
-        int              gcolmax;       /* Max garbage collectors    */
-        int              gcolwait;      /* Wait time in seconds      */
-        int              gcolparm;      /* Adjustment parm           */
+        int              gcs;           /* Number garbage collectors */
+        int              gcmax;         /* Max garbage collectors    */
+        int              gcwait;        /* Wait time in seconds      */
+        int              gcparm;        /* Adjustment parm           */
+
+        LOCK             wrlock;        /* I/O lock                  */
+        COND             wrcond;        /* I/O condition             */
+        int              wrpending;     /* Number writes pending     */
+        int              wrwaiting;     /* Number writers waiting    */
+        int              wrs;           /* Number writer threads     */
+        int              wrmax;         /* Max writer threads        */
+        int              wrprio;        /* Writer thread priority    */
+
         LOCK             ralock;        /* Readahead lock            */
         COND             racond;        /* Readahead condition       */
         int              ras;           /* Number readahead threads  */
@@ -1427,25 +1400,22 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         int              rawaiting;     /* Number threads waiting    */
         int              ranbr;         /* Readahead queue size      */
         int              readaheads;    /* Nbr tracks to read ahead  */
-        CCKD_RA          ra[CCKD_MAX_RA_SIZE]; /* Readahead queue    */
+        CCKD_RA          ra[CCKD_MAX_RA_SIZE];    /* Readahead queue */
         int              ra1st;         /* First readahead entry     */
         int              ralast;        /* Last readahead entry      */
         int              rafree;        /* Free readahead entry      */
+
+        LOCK             devlock;       /* Device chain lock         */
+        COND             devcond;       /* Device chain condition    */
+        int              devusers;      /* Number shared users       */
+        int              devwaiters;    /* Number of waiters         */
+
         int              freepend;      /* Number freepend cycles    */
         int              nostress;      /* 1=No stress writes        */
         int              fsync;         /* 1=Perform fsync()         */
         int              ftruncwa;      /* 1=ftruncate() workaround  */
-        COND             writercond;    /* Writer condition          */
-        int              writepending;  /* Number writes pending     */
-        int              writerswaiting;/* Number writers waiting    */
-        int              writers;       /* Number writer threads     */
-        int              writermax;     /* Max writer threads        */
-        int              writerprio;    /* Writer thread priority    */
-        int              writewaiting;  /* Threads waiting for writes*/
-        COND             writecond;     /* Write wait condition      */
         COND             termcond;      /* Termination condition     */
-        int              l2cachenbr;    /* Size of level 2 cache     */
-        int              cachenbr;      /* Size of cache             */
+
         U64              stats_switches;       /* Switches           */
         U64              stats_cachehits;      /* Cache hits         */
         U64              stats_cachemisses;    /* Cache misses       */
@@ -1453,8 +1423,7 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         U64              stats_readaheadmisses;/* Readahead misses   */
         U64              stats_syncios;        /* Synchronous i/os   */
         U64              stats_synciomisses;   /* Missed syncios     */
-        U64              stats_readwaits;      /* Waits for read     */
-        U64              stats_writewaits;     /* Waits for write    */
+        U64              stats_iowaits;        /* Waits for i/o      */
         U64              stats_cachewaits;     /* Waits for cache    */
         U64              stats_stresswrites;   /* Writes under stress*/
         U64              stats_l2cachehits;    /* L2 cache hits      */
@@ -1466,52 +1435,57 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         U64              stats_writebytes;     /* Bytes written      */
         U64              stats_gcolmoves;      /* Spaces moved       */
         U64              stats_gcolbytes;      /* Bytes moved        */
-        char            *itrace;        /* Internal trace table      */
-        int              itracex;       /* Internal trace index      */
-        int              itracen;       /* Internal trace size       */
+
+        CCKD_TRACE      *itrace;        /* Internal trace table      */
+        CCKD_TRACE      *itracep;       /* Current pointer           */
+        CCKD_TRACE      *itracex;       /* End of trace table        */
+        int              itracen;       /* Number of entries         */
+
         int              bytemsgs;      /* Limit for `byte 0' msgs   */
-        CCKD_CACHE       cache[CCKD_MAX_CACHE];     /* CCKD cache    */
-        CCKD_CACHE       l2cache[CCKD_MAX_L2CACHE]; /* CCKD l2 cache */
       } CCKDBLK;
 
 typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         DEVBLK          *devnext;       /* cckd device queue         */
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
                          fbadasd:1,     /* 1=FBA dasd                */
-                         updated:1,     /* 1=Data has been updated   */
                          ioactive:1,    /* 1=Channel program active  */
+                         updated:1,     /* 1=Update occurred         */
                          merging:1,     /* 1=File merge in progress  */
                          stopping:1;    /* 1=Device is closing       */
         LOCK             filelock;      /* File lock                 */
-        CCKDDASD_DEVHDR  cdevhdr[CCKD_MAX_SF+1];/* cckd device hdr   */
-        CCKD_L1ENT      *l1[CCKD_MAX_SF+1]; /* Level 1 tables        */
-        int              fd[CCKD_MAX_SF+1]; /* File descriptors      */
-        BYTE             swapend[CCKD_MAX_SF+1]; /* Swap endian flag */
-        BYTE             open[CCKD_MAX_SF+1];    /* Open flag        */
+        LOCK             iolock;        /* I/O lock                  */
+        COND             iocond;        /* I/O condition             */
+        int              iowaiters;     /* Number I/O waiters        */
+        int              wrpending;     /* Number writes pending     */
         int              sfn;           /* Number active shadow files*/
         int              sfx;           /* Active level 2 file index */
         int              l1x;           /* Active level 2 table index*/
         CCKD_L2ENT      *l2;            /* Active level 2 table      */
-        CCKD_CACHE      *l2active;      /* Active level 2 cache entry*/
-        CCKD_CACHE      *active;        /* Active cache entry        */
-        COND             readcond;      /* Wait for read condition   */
-        COND             writecond;     /* Wait for write condition  */
+        int              l2active;      /* Active level 2 cache entry*/
+        int              active;        /* Active cache entry        */
         CCKD_FREEBLK    *free;          /* Internal free space chain */
         int              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */
         int              freelast;      /* Index of last entry       */
         int              freeavail;     /* Index of available entry  */
         int              lastsync;      /* Time of last sync         */
+        int              ralkup[CCKD_MAX_RA_SIZE];/* Lookup table    */
+        int              ratrk;         /* Track to readahead        */
+        unsigned int     totreads;      /* Total nbr trk reads       */
+        unsigned int     totwrites;     /* Total nbr trk writes      */
+        unsigned int     totl2reads;    /* Total nbr l2 reads        */
+        unsigned int     cachehits;     /* Cache hits                */
+        unsigned int     readaheads;    /* Number trks read ahead    */
+        unsigned int     switches;      /* Number trk switches       */
+        unsigned int     misses;        /* Number readahead misses   */
+        int              fd[CCKD_MAX_SF+1];      /* File descriptors */
+        BYTE             swapend[CCKD_MAX_SF+1]; /* Swap endian flag */
+        BYTE             open[CCKD_MAX_SF+1];    /* Open flag        */
         int              reads[CCKD_MAX_SF+1];   /* Nbr track reads  */
         int              l2reads[CCKD_MAX_SF+1]; /* Nbr l2 reads     */
         int              writes[CCKD_MAX_SF+1];  /* Nbr track writes */
-        U32              totreads;      /* Total nbr trk reads       */
-        U32              totwrites;     /* Total nbr trk writes      */
-        U32              totl2reads;    /* Total nbr l2 reads        */
-        U32              cachehits;     /* Cache hits                */
-        U32              readaheads;    /* Number trks read ahead    */
-        U32              switches;      /* Number trk switches       */
-        U32              misses;        /* Number readahead misses   */
+        CCKD_L1ENT      *l1[CCKD_MAX_SF+1];      /* Level 1 tables   */
+        CCKDDASD_DEVHDR  cdevhdr[CCKD_MAX_SF+1]; /* cckd device hdr  */
     } CCKDDASD_EXT;
 
 #define CCKD_OPEN_NONE         0

@@ -1353,6 +1353,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         /* Initialize the device lock and conditions */
         initialize_lock (&dev->lock);
         initialize_condition (&dev->resumecond);
+        initialize_condition (&dev->iocond);
 
         /* Assign new subchannel number */
         dev->subchan = sysblk.highsubchan++;

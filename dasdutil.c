@@ -27,6 +27,7 @@ static BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 static BYTE iplpsw[8]    = {0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x0F};
 static BYTE iplccw1[8]   = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x01};
 static BYTE iplccw2[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+static int  nextnum = 0;
 
 SYSBLK sysblk; /* Currently only used for codepage mapping */
 
@@ -519,9 +520,6 @@ CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 DEVBLK         *dev;                    /* CKD device block          */
 CKDDEV         *ckd;                    /* CKD DASD table entry      */
-BYTE           *sfxptr;                 /* -> Last char of file name */
-U16             devnum;                 /* Device number             */
-BYTE            c;                      /* Work area for sscanf      */
 BYTE           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*                           */
 BYTE            sfxname[1024];          /* Suffixed file name        */
@@ -627,14 +625,8 @@ BYTE            sfxname[1024];          /* Suffixed file name        */
     /* Set the device handlers */
     dev->hnd = &ckddasd_device_hndinfo;
 
-    /* If the end of the filename is a valid device address then
-       use that as the device number, otherwise default to 0x0000 */
-    sfxptr = strrchr (fname, '/');
-    if (sfxptr == NULL) sfxptr = fname + 1;
-    sfxptr = strchr (sfxptr, '.');
-    if (sfxptr != NULL)
-        if (sscanf(sfxptr+1, "%hx%c", &devnum, &c) == 1)
-            dev->devnum = devnum;
+    /* Set the device number */
+    dev->devnum = ++nextnum;
 
     /* Build arguments for ckddasd_init_handler */
     argv[0] = sfxname;

@@ -1095,41 +1095,9 @@ BYTE    c;                              /* Character work area       */
 int k_cmd(char* cmdline, int argc, char *argv[])
 {
     UNREFERENCED(cmdline);
-
-#ifndef CKDTRACE
     UNREFERENCED(argc);
     UNREFERENCED(argv);
-#else
-    if (argc > 1)
-    {
-        DEVBLK*  dev;
-        U16      devnum;
-        int      start, i;
 
-        if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1
-            || !(dev = find_device_by_devnum (devnum)) || !dev->cckd_ext)
-        {
-            logmsg( _("HHCPN068E Device number %s is invalid\n"), argv[1]);
-            return -1;
-        }
-
-        i = start = dev->ckdtracex;
-
-        do
-        {
-            if (i >= (128 * CKDTRACE)) i = 0;
-
-            if (dev->ckdtrace[i] != '\0')
-                logmsg("%s", &dev->ckdtrace[i]);
-
-            i += 128;
-        }
-        while (i != start);
-
-        sleep (2);
-    }
-    else
-#endif
     cckd_print_itrace ();
 
     return 0;
@@ -2529,6 +2497,7 @@ COMMAND ( "devinit",   devinit_cmd,   "reinitialize device" )
 COMMAND ( "devlist",   devlist_cmd,   "list all devices\n" )
 
 COMMAND ( "sh",        sh_cmd,        "shell command" )
+COMMAND ( "cache",     cache_cmd,     "cache command" )
 COMMAND ( "cckd",      cckd_cmd,      "cckd command" )
 COMMAND ( "quiet",     quiet_cmd,     "toggle automatic refresh of panel display data\n" )
 

@@ -1,0 +1,537 @@
+/* CACHE.C    (c)Copyright Greg Smith, 2002-2003                     */
+/*            Dynamic cache manager for multi-threaded applications  */
+
+//FIXME ?? Dynamic resizing is disabled
+
+#define _HERCULES_CACHE_C
+#include "hercules.h"
+
+static CACHEBLK cacheblk[CACHE_MAX_INDEX];
+
+/*-------------------------------------------------------------------*/
+/* Public functions                                                  */
+/*-------------------------------------------------------------------*/
+int cache_nbr (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return cacheblk[ix].nbr;
+}
+
+int cache_busy (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return cacheblk[ix].busy;
+}
+
+int cache_empty (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return cacheblk[ix].empty;
+}
+
+int cache_waiters (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return cacheblk[ix].waiters;
+}
+
+long long cache_size (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return cacheblk[ix].size;
+}
+
+long long cache_hits (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return cacheblk[ix].hits;
+}
+
+long long cache_misses (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return cacheblk[ix].misses;
+}
+
+int cache_busy_percent (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return (cacheblk[ix].busy * 100) / cacheblk[ix].nbr;
+}
+
+int cache_empty_percent (int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    return (cacheblk[ix].empty * 100) / cacheblk[ix].nbr;
+}
+
+int cache_hit_percent (int ix)
+{
+    long long total;
+    if (cache_check_ix(ix)) return -1;
+    total = cacheblk[ix].hits + cacheblk[ix].misses;
+    if (total == 0) return -1;
+    return (cacheblk[ix].hits * 100) / total;
+}
+
+int cache_lookup (int ix, U64 key, int *o)
+{
+    int i,p;
+    if (o) *o = -1;
+    if (cache_check_ix(ix)) return -1;
+    /* `p' is the preferred index */
+    p = key % cacheblk[ix].nbr;
+    if (cacheblk[ix].cache[p].key == key) {
+        i = p;
+        cacheblk[ix].fasthits++;
+    }
+    else {
+        if (cache_isbusy(ix, p) || cacheblk[ix].age - cacheblk[ix].cache[p].age < 20)
+            p = -2; 
+        for (i = 0; i < cacheblk[ix].nbr; i++) {
+            if (cacheblk[ix].cache[i].key == key) break;
+            if (o && !cache_isbusy(ix, i)
+             && (*o < 0 || i == p || cacheblk[ix].cache[i].age < cacheblk[ix].cache[*o].age))
+                if (*o != p) *o = i;
+        }
+    }
+    if (i >= cacheblk[ix].nbr) {
+        i = -1;
+        cacheblk[ix].misses++;
+    }
+    else
+        cacheblk[ix].hits++;
+
+    if (i < 0 && o && *o < 0) cache_adjust(ix,1);
+    else cache_adjust(ix, 0);
+    return i;
+}
+
+int cache_scan (int ix, CACHE_SCAN_RTN rtn, void *data)
+{
+int      i;                             /* Cache index               */
+int      rc;                            /* Return code               */
+int      answer = -1;                   /* Answer from routine       */
+
+    if (cache_check_ix(ix)) return -1;
+    for (i = 0; i < cacheblk[ix].nbr; i++) {
+        rc = (rtn)(&answer, ix, i, data);
+        if (rc != 0) break;
+    }
+    return answer;
+}
+
+int cache_lock(int ix)
+{
+    if (cache_check_cache(ix)) return -1;
+    obtain_lock(&cacheblk[ix].lock);
+    return 0;
+}
+
+int cache_unlock(int ix)
+{
+    if (cache_check_ix(ix)) return -1;
+    release_lock(&cacheblk[ix].lock);
+    if (cacheblk[ix].empty == cacheblk[ix].nbr)
+        cache_destroy(ix);
+    return 0;
+}
+
+int cache_wait(int ix)
+{
+    struct timeval  now;
+    struct timespec tm;
+
+    if (cache_check_ix(ix)) return -1;
+    if (cacheblk[ix].busy < cacheblk[ix].nbr)
+        return 0;
+    if (cache_adjust(ix, 1))
+        return 0;
+    gettimeofday (&now, NULL);
+    tm.tv_sec = now.tv_sec;
+    tm.tv_nsec = (now.tv_usec + CACHE_WAITTIME) * 1000;
+    tm.tv_sec += tm.tv_nsec / 1000000000;
+    tm.tv_nsec = tm.tv_nsec % 1000000000;
+    cacheblk[ix].waiters++; cacheblk[ix].waits++;
+#if 0
+    timed_wait_condition(&cacheblk[ix].waitcond, &cacheblk[ix].lock, &tm);
+#else
+    wait_condition(&cacheblk[ix].waitcond, &cacheblk[ix].lock);
+#endif
+    cacheblk[ix].waiters--;
+    return 0;
+}
+
+U64 cache_getkey(int ix, int i)
+{
+    if (cache_check(ix,i)) return (U64)-1;
+    return cacheblk[ix].cache[i].key;
+}
+
+U64 cache_setkey(int ix, int i, U64 key)
+{
+    U64 oldkey;
+    int empty;
+
+    if (cache_check(ix,i)) return (U64)-1;
+    empty = cache_isempty(ix, i);
+    oldkey = cacheblk[ix].cache[i].key;
+    cacheblk[ix].cache[i].key = key;
+    if (empty && !cache_isempty(ix, i))
+        cacheblk[ix].empty--;
+    else if (!empty && cache_isempty(ix, i))
+        cacheblk[ix].empty++;
+    return oldkey;
+}
+
+U32 cache_getflag(int ix, int i)
+{
+    if (cache_check(ix,i)) return (U32)-1;
+    return cacheblk[ix].cache[i].flag;
+}
+
+U32 cache_setflag(int ix, int i, U32 andbits, U32 orbits)
+{
+    U32 oldflags;
+    int empty;
+    int busy;
+
+    if (cache_check(ix,i)) return (U32)-1;
+
+    empty = cache_isempty(ix, i);
+    busy = cache_isbusy(ix, i);
+    oldflags = cacheblk[ix].cache[i].flag;
+
+    cacheblk[ix].cache[i].flag &= andbits;
+    cacheblk[ix].cache[i].flag |= orbits;
+
+    if (!cache_isbusy(ix, i) && cacheblk[ix].waiters > 0)
+        signal_condition(&cacheblk[ix].waitcond);
+    if (busy && !cache_isbusy(ix, i))
+        cacheblk[ix].busy--;
+    else if (!busy && cache_isbusy(ix, i))
+        cacheblk[ix].busy++;
+    if (empty && !cache_isempty(ix, i))
+        cacheblk[ix].empty--;
+    else if (!empty && cache_isempty(ix, i))
+        cacheblk[ix].empty++;
+    return oldflags;
+}
+
+U64 cache_getage(int ix, int i)
+{
+    if (cache_check(ix,i)) return (U64)-1;
+    return cacheblk[ix].cache[i].age;
+}
+
+U64 cache_setage(int ix, int i)
+{
+    U64 oldage;
+    int empty;
+
+    if (cache_check(ix,i)) return (U64)-1;
+    empty = cache_isempty(ix, i);
+    oldage = cacheblk[ix].cache[i].age;
+    cacheblk[ix].cache[i].age = ++cacheblk[ix].age;
+    if (empty) cacheblk[ix].empty--;
+    return oldage;
+}
+
+void *cache_getbuf(int ix, int i, int len)
+{
+    if (cache_check(ix,i)) return NULL;
+    if (len > 0
+     && cacheblk[ix].cache[i].buf != NULL
+     && cacheblk[ix].cache[i].len < len) {
+        cacheblk[ix].size -= cacheblk[ix].cache[i].len;
+        free (cacheblk[ix].cache[i].buf);
+        cacheblk[ix].cache[i].buf = NULL;
+        cacheblk[ix].cache[i].len = 0;
+    }
+    if (cacheblk[ix].cache[i].buf == NULL && len > 0)
+        cache_allocbuf (ix, i, len);
+    return cacheblk[ix].cache[i].buf;
+}
+
+void *cache_setbuf(int ix, int i, void *buf, int len)
+{
+    void *oldbuf;
+    if (cache_check(ix,i)) return NULL;
+    oldbuf = cacheblk[ix].cache[i].buf;
+    cacheblk[ix].size -= cacheblk[ix].cache[i].len;
+    cacheblk[ix].cache[i].buf = buf;
+    cacheblk[ix].cache[i].len = len;
+    cacheblk[ix].size += len;
+    return oldbuf;
+}
+
+int cache_getlen(int ix, int i)
+{
+    if (cache_check(ix,i)) return -1;
+    return cacheblk[ix].cache[i].len;
+}
+
+int cache_release(int ix, int i, int flag)
+{
+    void *buf;
+    int   len;
+    int   empty;
+    int   busy;
+
+    if (cache_check(ix,i)) return -1;
+
+    empty = cache_isempty(ix, i);
+    busy = cache_isbusy(ix, i);
+
+    buf = cacheblk[ix].cache[i].buf;
+    len = cacheblk[ix].cache[i].len;
+
+    memset (&cacheblk[ix].cache[i], 0, sizeof(CACHE));
+
+    if ((flag & CACHE_FREEBUF) && buf != NULL) {
+        free (buf);
+        cacheblk[ix].size -= len; 
+        buf = NULL;
+        len = 0;
+    }
+
+    cacheblk[ix].cache[i].buf = buf;
+    cacheblk[ix].cache[i].len = len;
+
+    if (cacheblk[ix].waiters > 0)
+        signal_condition(&cacheblk[ix].waitcond);
+
+    if (!empty) cacheblk[ix].empty++;
+    if (busy) cacheblk[ix].busy--;
+
+    return 0;
+}
+
+int cache_cmd(char* cmdline, int argc, char *argv[])
+{
+    int ix, i;
+
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
+    for (ix = 0; ix < CACHE_MAX_INDEX; ix++) {
+        if (cacheblk[ix].magic != CACHE_MAGIC) {
+            logmsg ("cache[%d] ....... not created\n", ix);
+            continue;
+        }
+        logmsg ("\n"
+                "cache............ %10d\n"
+                "nbr ............. %10d\n"
+                "busy ............ %10d\n"
+                "busy%% ........... %10d\n"
+                "empty ........... %10d\n"
+                "waiters ......... %10d\n"
+                "waits ........... %10d\n"
+                "buf size ........ %10lld\n"
+                "hits ............ %10lld\n"
+                "fast hits ....... %10lld\n"
+                "misses .......... %10lld\n"
+                "hit%% ............ %10d\n"
+                "age ............. %10lld\n"
+                "last adjusted ... %s"
+                "last wait ....... %s"
+                "adjustments ..... %10d\n",
+          ix, cacheblk[ix].nbr, cacheblk[ix].busy, cache_busy_percent(ix),
+          cacheblk[ix].empty, cacheblk[ix].waiters, cacheblk[ix].waits,
+          cacheblk[ix].size, cacheblk[ix].hits, cacheblk[ix].fasthits,
+          cacheblk[ix].misses, cache_hit_percent(ix), cacheblk[ix].age,
+          ctime(&cacheblk[ix].atime), ctime(&cacheblk[ix].wtime),
+          cacheblk[ix].adjusts);
+        if (argc > 1)
+          for (i = 0; i < cacheblk[ix].nbr; i++)
+            logmsg ("[%4d] %16.16llx %8.8x %10p %6d %10lld\n",
+              i, cacheblk[ix].cache[i].key, cacheblk[ix].cache[i].flag,
+              cacheblk[ix].cache[i].buf, cacheblk[ix].cache[i].len,
+              cacheblk[ix].cache[i].age);
+    }
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Private functions                                                 */
+/*-------------------------------------------------------------------*/
+static int cache_create (int ix)
+{
+    cache_destroy (ix);
+    cacheblk[ix].magic = CACHE_MAGIC;
+    cacheblk[ix].nbr = CACHE_DEFAULT_NBR;
+    cacheblk[ix].empty = cacheblk[ix].nbr;
+    initialize_lock (&cacheblk[ix].lock);
+    initialize_condition (&cacheblk[ix].waitcond);
+    cacheblk[ix].cache = calloc (cacheblk[ix].nbr, sizeof(CACHE));
+    if (cacheblk[ix].cache == NULL) {
+        logmsg (_("HHCCHxxxE calloc failed cache[%d] size %d: %s\n"),
+                ix, cacheblk[ix].nbr * sizeof(CACHE), strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+static int cache_destroy (int ix)
+{
+    int i;
+    if (cacheblk[ix].magic == CACHE_MAGIC)
+        if (cacheblk[ix].cache) {
+            for (i = 0; i < cacheblk[ix].nbr; i++)
+                cache_release(ix, i, CACHE_FREEBUF);
+            free (cacheblk[ix].cache);
+        }
+    memset(&cacheblk[ix], 0, sizeof(CACHEBLK));
+    return 0;
+}
+
+static int cache_check_ix(int ix)
+{
+    if (ix < 0 || ix >= CACHE_MAX_INDEX) return -1;
+    return 0;
+}
+
+static int cache_check_cache(int ix)
+{
+    if (cache_check_ix(ix)
+     || (cacheblk[ix].magic != CACHE_MAGIC && cache_create(ix)))
+        return -1;
+    return 0;
+}
+
+static int cache_check(int ix, int i)
+{
+    if (cache_check_ix(ix) || i < 0 || i >= cacheblk[ix].nbr)
+        return -1;
+    return 0;
+}
+
+static int cache_isbusy(int ix, int i)
+{
+    return ((cacheblk[ix].cache[i].flag & CACHE_BUSY) != 0);
+}
+
+static int cache_isempty(int ix, int i)
+{
+    return (cacheblk[ix].cache[i].key  == 0
+         && cacheblk[ix].cache[i].flag == 0
+         && cacheblk[ix].cache[i].age  == 0);
+}
+
+static int cache_adjust(int ix, int n)
+{
+#if 0
+    time_t now;
+    int    busypct, hitpct, nbr, empty, sz;
+
+    now = time(NULL);
+    busypct = cache_busy_percent(ix);
+    hitpct = cache_hit_percent(ix);
+    nbr = cacheblk[ix].nbr;
+    empty = cache_empty(ix);
+    sz = cacheblk[ix].size;
+
+    if (n == 0) {
+        /* Normal adjustments */
+        if (now - cacheblk[ix].atime < CACHE_ADJUST_INTERVAL) return 0;
+        cacheblk[ix].atime = now;
+
+        /* Increase cache if a lot of busy entries */
+        if (((nbr <= CACHE_ADJUST_NUMBER || sz < CACHE_ADJUST_SIZE) && busypct >= CACHE_ADJUST_BUSY1)
+         || busypct > CACHE_ADJUST_BUSY2)
+            return cache_resize(ix, CACHE_ADJUST_RESIZE);
+
+        /* Decrease cache if too many empty entries */
+        if (nbr > CACHE_ADJUST_NUMBER && empty >= CACHE_ADJUST_EMPTY)
+            return cache_resize(ix, -CACHE_ADJUST_RESIZE);
+
+        /* Increase cache if hit percentage is too low */
+        if (hitpct > 0) {
+            if ((nbr <= CACHE_ADJUST_NUMBER && hitpct < CACHE_ADJUST_HIT1)
+             || hitpct < CACHE_ADJUST_HIT2)
+                return cache_resize(ix, CACHE_ADJUST_RESIZE);
+        }
+
+        /* Decrease cache if hit percentage is ok and not many busy */
+        if (hitpct >= CACHE_ADJUST_HIT3 && busypct <= CACHE_ADJUST_BUSY3
+         && cacheblk[ix].size >= CACHE_ADJUST_SIZE)
+            return cache_resize(ix, -CACHE_ADJUST_RESIZE);
+    } else {
+        /* All cache entries are busy */
+        if (nbr <= CACHE_ADJUST_NUMBER)
+            return cache_resize(ix, CACHE_ADJUST_RESIZE);
+
+        /* Increase cache if previous wait within this interval */
+        if (now - cacheblk[ix].wtime <= CACHE_ADJUST_WAITTIME) {
+            return cache_resize(ix, CACHE_ADJUST_RESIZE);
+        }
+        cacheblk[ix].wtime = now;
+    }
+#else
+    UNREFERENCED(ix);
+    UNREFERENCED(n);
+#endif
+    return 0;
+}
+
+static int cache_resize (int ix, int n)
+{
+    CACHE *cache;
+    int    i;
+
+    if (n == 0) return 0;
+    else if (n > 0) {
+        /* Increase cache size */
+        cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr + n) * sizeof(CACHE));
+        if (cache == NULL) {
+            logmsg (_("HHCCHxxxW realloc increase failed cache[%d] size %d: %s\n"),
+               ix, (cacheblk[ix].nbr + n) * sizeof(CACHE), strerror(errno));
+            return 0;
+        }
+        cacheblk[ix].cache = cache;
+        for (i = cacheblk[ix].nbr; i < cacheblk[ix].nbr +n; i++)
+            memset(&cacheblk[ix].cache[i], 0, sizeof(CACHE));
+        cacheblk[ix].nbr += n;
+        cacheblk[ix].empty += n;
+        cacheblk[ix].adjusts++;
+    } else if (n < 0) {
+        /* Decrease cache size */
+        for (i = cacheblk[ix].nbr - 1; i >= cacheblk[ix].nbr + n; i--)
+            if (cache_isbusy(ix, i)) break;
+            else cache_release(ix, i, CACHE_FREEBUF);
+        n = cacheblk[ix].nbr - i + 1;
+        if (n == 0) return 0; 
+        cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr - n) * sizeof(CACHE));
+        if (cache == NULL) {
+            logmsg (_("HHCCHxxxW realloc decrease failed cache[%d] size %d: %s\n"),
+               ix, (cacheblk[ix].nbr - n) * sizeof(CACHE), strerror(errno));
+            return 0;
+        }
+        cacheblk[ix].cache = cache;
+        cacheblk[ix].nbr -= n;
+        cacheblk[ix].empty -= n;
+        cacheblk[ix].adjusts++;
+    }
+    return 1;
+}
+
+static void cache_allocbuf(int ix, int i, int len)
+{
+    cacheblk[ix].cache[i].buf = calloc (len, 1);
+    if (cacheblk[ix].cache[i].buf == NULL) {
+        logmsg (_("HHCCHxxxW buf calloc failed cache[%d] size %d: %s\n"),
+                ix, len, strerror(errno));
+        logmsg (_("HHCCHxxxW releasing inactive buffer space\n"));
+        for (i = 0; i < cacheblk[ix].nbr; i++)
+            if (!cache_isbusy(ix, i)) cache_release(ix, i, CACHE_FREEBUF);
+        cacheblk[ix].cache[i].buf = calloc (len, 1);
+        if (cacheblk[ix].cache[i].buf == NULL) {
+            logmsg (_("HHCCHxxxE Unable to calloc buf cache[%d] size %d: %s\n"),
+                    ix, len, strerror(errno));
+            return;
+        }
+    }
+    cacheblk[ix].cache[i].len = len;
+    cacheblk[ix].size += len;
+}

@@ -17,31 +17,7 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
-
 #include "devtype.h"
-
-#ifdef CKDTRACE
-#undef DEVTRACE
-#define DEVTRACE(format, a...) \
-do { \
- if (dev->ccwtrace||dev->ccwstep) \
- { \
-  int n; \
-  if (!dev->ckdtrace) dev->ckdtrace = calloc (128, CKDTRACE); \
-  if (dev->ckdtracex >= 128 * CKDTRACE) \
-  { \
-   n = 0; \
-   dev->ckdtracex = 128; \
-  } \
-  else \
-  { \
-    n = dev->ckdtracex; \
-    dev->ckdtracex += 128; \
-  } \
-  sprintf(&dev->ckdtrace[n], "%4.4X:" format, dev->devnum, a); \
- } \
-} while (0)
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
@@ -222,7 +198,7 @@ int             trks;                   /* #of tracks in CKD file    */
 int             cyls;                   /* #of cylinders in CKD file */
 int             highcyl;                /* Highest cyl# in CKD file  */
 BYTE           *cu = NULL;              /* Specified control unit    */
-char           *kw, *op;                /* Argument keyword/option   */
+char           *kw;                     /* Argument keyword          */
 int             cckd=0;                 /* 1 if compressed CKD       */
 
     /* The first argument is the file name */
@@ -237,6 +213,9 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
     /* Default to synchronous I/O */
     dev->syncio = 1;
+
+    /* No active track or cache entry */
+    dev->dasdcur = dev->ckdcache = -1;
 
     /* Locate and save the last character of the file name */
     sfxptr = strrchr (dev->filename, '/');
@@ -287,14 +266,6 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             dev->ckdfakewr = 1;
             continue;
         }
-        if (strlen (argv[i]) > 6 &&
-            memcmp ("cache=", argv[i], 6) == 0)
-        {
-            kw = strtok (argv[i], "=");
-            op = strtok (NULL, " \t");
-            if (op) dev->ckdcachenbr = atoi (op);
-            continue;
-        }
         if (strlen (argv[i]) > 3 &&
             memcmp ("sf=", argv[i], 3) == 0)
         {
@@ -322,19 +293,6 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             dev->syncio = 1;
             continue;
         }
-
-        /* the following parameters are processed by cckd code */
-        if (strlen (argv[i]) > 8 &&  !memcmp ("l2cache=", argv[i], 8))
-            continue;
-        if (strlen (argv[i]) > 5 && !memcmp ("dfwq=", argv[i], 5))
-            continue;
-        if (strlen (argv[i]) > 3 && !memcmp ("wt=", argv[i], 3))
-            continue;
-        if (strlen (argv[i]) == 4 && !memcmp ("ra=", argv[i], 3)
-         && argv[i][3] >= '0' && argv[i][3] <= '0' + CCKD_MAX_RA)
-            continue;
-        if (strlen (argv[i]) == 5 && !memcmp ("dfw=", argv[i], 4))
-            continue;
 
         devmsg (_("HHCDA002E parameter %d is invalid: %s\n"),
                 i + 1, argv[i]);
@@ -453,7 +411,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         }
 
         /* Extract fields from device header */
-        heads = ((U32)(devhdr.heads[3]) << 24)
+        heads   = ((U32)(devhdr.heads[3]) << 24)
                 | ((U32)(devhdr.heads[2]) << 16)
                 | ((U32)(devhdr.heads[1]) << 8)
                 | (U32)(devhdr.heads[0]);
@@ -624,28 +582,41 @@ void ckddasd_query_device (DEVBLK *dev, BYTE **class,
 } /* end function ckddasd_query_device */
 
 /*-------------------------------------------------------------------*/
+/* Release cache entries                                             */
+/*-------------------------------------------------------------------*/
+int ckddasd_purge_cache (int *answer, int ix, int i, void *data)
+{
+U16             devnum;                 /* Cached device number      */
+U32             trk;                    /* Cached track              */
+DEVBLK         *dev = data;             /* -> device block           */
+
+    UNREFERENCED(answer);
+    CKD_CACHE_GETKEY(i, devnum, trk);
+    if (dev->devnum == devnum)
+        cache_release (ix, i, CACHE_FREEBUF);
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
 int ckddasd_close_device ( DEVBLK *dev )
 {
-int i;                              /* Index                     */
+int     i;                              /* Index                     */
 BYTE    unitstat;                       /* Unit Status               */
 
     /* Write the last track image if it's modified */
     if (dev->bufupd) ckd_read_track (dev, -1, -1, &unitstat);
 
     /* Free the cache */
-    if (dev->ckdcache)
-    {
-        for (i = 0; i < dev->ckdcachenbr; i++)
-            if (dev->ckdcache[i].buf)
-                free (dev->ckdcache[i].buf);
-        free (dev->ckdcache);
-    }
+    cache_lock(CACHE_DEVBUF);
+    cache_scan(CACHE_DEVBUF, ckddasd_purge_cache, dev);
+    cache_unlock(CACHE_DEVBUF);
 
     if (!dev->batch)
-        devmsg (_("HHCDA022I %4.4X cache hits %d, misses %d\n"),
-                dev->devnum, dev->ckdcachehits, dev->ckdcachemisses);
+        devmsg (_("HHCDA022I %4.4X cache hits %d, misses %d, waits %d\n"),
+                dev->devnum, dev->ckdcachehits, dev->ckdcachemisses,
+                dev->ckdcachewaits);
 
     /* Close all of the CKD image files */
     for (i = 0; i < dev->ckdnumfd; i++)
@@ -667,7 +638,7 @@ int ckd_read_track (DEVBLK *dev, int cyl, int head, BYTE *unitstat)
 int             rc;                     /* Return code               */
 off_t           offset;                 /* File offsets              */
 int             trk;                    /* New track number          */
-int             i,o;                    /* Indexes                   */
+int             i,o,f;                  /* Indexes                   */
 int             active;                 /* 1=Synchronous I/O active  */
 CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
@@ -746,116 +717,107 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         return -1;
     }
 
-    /* Get the cache if it doesn't exist */
-    if (dev->ckdcache == NULL)
-    {
-        /* default cache size is number of heads (trks/cyl) */
-        if (dev->ckdcachenbr < 1)
-            dev->ckdcachenbr = dev->ckdheads;
+    cache_lock (CACHE_DEVBUF);
 
-        dev->ckdcache = calloc (dev->ckdcachenbr, CKDDASD_CACHE_SIZE);
-        if (dev->ckdcache == NULL)
-        {
-            /* Handle calloc error condition */
-            devmsg (_("HHCDA027E calloc error for cache table "
-                    "size %d: %s\n"),
-                    dev->ckdcachenbr * CKDDASD_CACHE_SIZE,
-                    strerror(errno));
-            return (SENSE_EC << 8);
-        }
-    }
+    /* Make the previous cache entry inactive */
+    if (dev->ckdcache >= 0)
+        cache_setflag(CACHE_DEVBUF, dev->ckdcache, ~CKD_CACHE_ACTIVE, 0);
+
+ckd_read_track_retry:
 
     /* Search the cache */
-    for (i = 0, o = -1; i < dev->ckdcachenbr; i++)
+    i = cache_lookup (CACHE_DEVBUF, CKD_CACHE_SETKEY(dev->devnum, trk), &o);
+
+    /* Cache hit */
+    if (i >= 0)
     {
-        if (dev->ckdcache[i].trk == trk && dev->ckdcache[i].buf)
-        {
-            DEVTRACE ("HHCDA028I read trk %d found in cache[%d]\n",
-                      trk, i);
-            dev->fd = dev->ckdcache[i].fd;
-            dev->buf = dev->ckdcache[i].buf;
-            dev->ckdtrkoff = dev->ckdcache[i].off;
-            dev->ckdcache[i].age = ++dev->ckdcacheage;
-            dev->dasdcur = trk;
-            dev->ckdcachehits++;
-            return 0;
-        }
-        if (o < 0 || dev->ckdcache[i].age < dev->ckdcache[o].age)
-            o = i;
-    }
-
-    /* Retry if synchronous I/O */
-    if (dev->syncio_active)
-    {
-        dev->syncio_retry = 1;
-        return -1;
-    }
-    dev->syncio_active = active;
-
-    DEVTRACE ("HHCDA029I read trk %d cache miss, using cache[%d]\n",
-              trk, o);
-
+        DEVTRACE ("HHCDA028I read trk %d cache hit, using cache[%d]\n",
+                  trk, i);
+        dev->ckdcachehits++;
+        dev->ckdcache = i;
+     }
     /* Cache miss */
-    dev->ckdcachemisses++;
-
-    /* Get a track image buffer if one doesn't exist */
-    if (dev->ckdcache[o].buf == NULL)
+    else if (o >= 0)
     {
-        dev->ckdcache[o].buf = malloc(dev->ckdtrksz);
-        if (dev->ckdcache[o].buf == NULL)
+        /* Retry if synchronous I/O */
+        if (dev->syncio_active)
         {
-            /* Handle calloc error condition */
-            devmsg (_("HHCDA030E malloc error for cache entry buffer "
-                    "size %d: %s\n"),
-                    dev->ckdtrksz, strerror(errno));
-            dev->syncio_active = active;
-            return (SENSE_EC << 8);
+            cache_unlock(CACHE_DEVBUF);
+            dev->syncio_retry = 1;
+            return -1;
         }
+
+        DEVTRACE ("HHCDA029I read trk %d cache miss, using cache[%d]\n",
+                  trk, o);
+        dev->ckdcachemisses++;
+        dev->ckdcache = o;
+    }
+    /* No available cache entry */
+    else if (o < 0)
+    {
+        /* Retry if synchronous I/O */
+        if (dev->syncio_active)
+        {
+            cache_unlock(CACHE_DEVBUF);
+            dev->syncio_retry = 1;
+            return -1;
+        }
+
+        DEVTRACE ("HHCDA030I read trk %d no available cache entry, waiting\n",
+                  trk); 
+        dev->ckdcachewaits++;
+        cache_wait(CACHE_DEVBUF);
+        goto ckd_read_track_retry;
     }
 
-    dev->ckdcache[o].trk = trk;
-    dev->ckdcache[o].age = ++dev->ckdcacheage;
-    dev->buf = dev->ckdcache[o].buf;
-    
-    /* Calculate the file number */
-    for (i = 0; i < dev->ckdnumfd; i++)
-        if (trk < dev->ckdhitrk[i]) break;
-    dev->fd = dev->ckdfd[i];
-    dev->ckdcache[o].fd = dev->fd;
+    cache_setkey(CACHE_DEVBUF, dev->ckdcache, CKD_CACHE_SETKEY(dev->devnum, trk));
+    cache_setflag(CACHE_DEVBUF, dev->ckdcache, 0, CKD_CACHE_ACTIVE|DEVBUF_TYPE_CKD);
+    cache_setage(CACHE_DEVBUF, dev->ckdcache);
+    dev->buf = cache_getbuf(CACHE_DEVBUF, dev->ckdcache, dev->ckdtrksz);
+
+    cache_unlock(CACHE_DEVBUF);
+
+    /* Set the file descriptor */
+    for (f = 0; f < dev->ckdnumfd; f++)
+        if (trk < dev->ckdhitrk[f]) break;
+    dev->fd = dev->ckdfd[f];
 
     /* Calculate the track offset */
     dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-             (off_t)(trk - (i ? dev->ckdhitrk[i-1] : 0)) * dev->ckdtrksz;
-    dev->ckdcache[o].off = dev->ckdtrkoff;
+         (off_t)(trk - (f ? dev->ckdhitrk[f-1] : 0)) * dev->ckdtrksz;
 
-    DEVTRACE ("HHCDA031I read trk %d reading file %d offset %lld len %d\n",
-              trk, i+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);  
+    dev->syncio_active = active;
 
-    /* Seek to the track image offset */
-    offset = (off_t)dev->ckdtrkoff;
-    offset = lseek (dev->fd, offset, SEEK_SET);
-    if (offset < 0)
+    /* Read the track image if a cache miss */
+    if (i < 0)
     {
-        /* Handle seek error condition */
-        devmsg (_("HHCDA032E error reading trk %d: lseek error: %s\n"),
-                trk, strerror(errno));
-        ckd_build_sense (dev, SENSE_EC, 0, 0,
-                        FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
+        DEVTRACE ("HHCDA031I read trk %d reading file %d offset %lld len %d\n",
+                  trk, i+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);  
 
-    /* Read the track image */
-    rc = read (dev->fd, dev->buf, dev->ckdtrksz);
-    if (rc < dev->ckdtrksz)
-    {
-        /* Handle read error condition */
-        devmsg (_("HHCDA033E error reading trk %d: read error: %s\n"),
-           trk, (rc < 0 ? strerror(errno) : "unexpected end of file"));
-        ckd_build_sense (dev, SENSE_EC, 0, 0,
-                        FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
+        /* Seek to the track image offset */
+        offset = (off_t)dev->ckdtrkoff;
+        offset = lseek (dev->fd, offset, SEEK_SET);
+        if (offset < 0)
+        {
+            /* Handle seek error condition */
+            devmsg (_("HHCDA032E error reading trk %d: lseek error: %s\n"),
+                    trk, strerror(errno));
+            ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return -1;
+        }
+
+        /* Read the track image */
+        rc = read (dev->fd, dev->buf, dev->ckdtrksz);
+        if (rc < dev->ckdtrksz)
+        {
+            /* Handle read error condition */
+            devmsg (_("HHCDA033E error reading trk %d: read error: %s\n"),
+               trk, (rc < 0 ? strerror(errno) : "unexpected end of file"));
+            ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return -1;
+        }
     }
 
     /* Validate the track header */
@@ -1683,7 +1645,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdlcount = 0;
         dev->ckdtrkof = 0;
     }
-    else dev->syncio_retry = 0;
+    dev->syncio_retry = 0;
 
     /* Reset index marker flag if sense or control command,
        or any write command (other search ID or search key),

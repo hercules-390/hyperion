@@ -1,3 +1,6 @@
+26 Mar 2003 Fix cckd locking problems, esp. during sf- and sfc - Greg Smith
+26 Mar 2003 CKD now uses the same shared cache as cckd - Greg Smith
+26 Mar 2003 Divorced cache management code from cckd code - Greg Smith
 21 Mar 2003 BSC/2703 Line emulation - Ivan Warren
 20 Mar 2003 Rework system logger functions - Jan Jaeger
 19 Mar 2003 Tape : Present DE on IntReq for non-data motion CCWs
