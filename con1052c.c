@@ -358,9 +358,15 @@ int  i;
             dev->keybdrem = dev->buflen = i;
             obtain_lock(&dev->lock);
             if(dev->iowaiters)
+            {
                 signal_condition(&dev->iocond);
-            release_lock(&dev->lock);
-            device_attention (dev, CSW_ATTN);
+                release_lock(&dev->lock);
+            }
+            else
+            {
+                release_lock(&dev->lock);
+                device_attention (dev, CSW_ATTN);
+            }
             return NULL;
         }
     }
