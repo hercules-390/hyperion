@@ -915,7 +915,7 @@ BYTE    c;                              /* Work area for sscanf      */
         if (shttpport != NULL)
         {
             if (sscanf(shttpport, "%hu%c", &httpport, &c) != 1
-                || httpport == 0)
+                || httpport == 0 || (httpport < 1024 && httpport != 80) )
             {
                 logmsg(_("HHS002E Error in %s line %d: "
                         "Invalid HTTP port number %s\n"),
