@@ -1096,8 +1096,8 @@ sys_dl_open (loader_data, filename)
      lt_user_data loader_data;
      const char *filename;
 {
-  loader_data=loader_data;
   lt_module   module   = dlopen (filename, LT_GLOBAL | LT_LAZY_OR_NOW);
+  loader_data=loader_data;
 
   if (!module)
     {
@@ -1130,8 +1130,8 @@ sys_dl_sym (loader_data, module, symbol)
      lt_module module;
      const char *symbol;
 {
-  loader_data=loader_data;
   lt_ptr address = dlsym (module, symbol);
+  loader_data=loader_data;
 
   if (!address)
     {

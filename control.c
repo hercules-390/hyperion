@@ -3153,7 +3153,7 @@ int     rc;                             /* return code from load_psw */
 #if defined(PTRININTOK)
      if((unsigned long)regs + sizeof(REGS) == (unsigned long)(&regs->tlb) + sizeof(TLB)) {
         memcpy(&newregs, regs, sizeof(REGS)-sizeof(TLB));
-        MEMSET(&newregs.tlb.vaddr, 0, TLBN * sizeof(DW));
+        memset(&newregs.tlb.vaddr, 0, TLBN * sizeof(DW));
     }
     else
         newregs = *regs;
