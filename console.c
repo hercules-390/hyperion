@@ -188,7 +188,7 @@ static BYTE sba_code[] = { "\x40\xC1\xC2\xC3\xC4\xC5\xC6\xC7"
 #define TNSERROR(_format,_args...) \
         logmsg("console: " _format, ## _args)
 
-#define BUFLEN_3270     32768           /* 3270 Send/Receive buffer  */
+#define BUFLEN_3270     65536           /* 3270 Send/Receive buffer  */
 #define BUFLEN_1052     150             /* 1052 Send/Receive buffer  */
 #define SPACE           ((BYTE)' ')
 
@@ -289,7 +289,7 @@ int     m, n, c;
     } /* end for */
 
     if (n < m) {
-        TNSDEBUG3(_("%d IAC bytes removed, newlen=%d\n"), m-n, n);
+        TNSDEBUG3("%d IAC bytes removed, newlen=%d\n", m-n, n);
         packet_trace (buf, n);
     }
 
@@ -316,7 +316,7 @@ int     m, n, x, newlen;
 
     /* Insert extra IAC bytes backwards from the end of the buffer */
     newlen = len + x;
-    TNSDEBUG3(_("%d IAC bytes added, newlen=%d\n"), x, newlen);
+    TNSDEBUG3("%d IAC bytes added, newlen=%d\n", x, newlen);
     for (n=newlen, m=len; n > m; ) {
         buf[--n] = buf[--m];
         if (buf[n] == IAC) buf[--n] = IAC;
@@ -355,7 +355,7 @@ send_packet (int csock, BYTE *buf, int len, char *caption)
 int     rc;                             /* Return code               */
 
     if (caption != NULL) {
-        TNSDEBUG2(_("Sending %s\n"), caption);
+        TNSDEBUG2("Sending %s\n", caption);
         packet_trace (buf, len);
     }
 
@@ -404,7 +404,7 @@ int     rcvlen=0;                       /* Length of data received   */
         }
 
         if (rc == 0) {
-            TNSDEBUG1(_("Connection closed by client\n"));
+            TNSDEBUG1("Connection closed by client\n");
             return -1;
         }
 
@@ -415,7 +415,7 @@ int     rcvlen=0;                       /* Length of data received   */
             break;
     }
 
-    TNSDEBUG2(_("Packet received length=%d\n"), rcvlen);
+    TNSDEBUG2("Packet received length=%d\n", rcvlen);
     packet_trace (buf, rcvlen);
 
     return rcvlen;
@@ -451,10 +451,10 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
     if (memcmp(buf, expected, len) != 0)
 #endif
     {
-        TNSDEBUG2(_("Expected %s\n"), caption);
+        TNSDEBUG2("Expected %s\n", caption);
         return -1;
     }
-    TNSDEBUG2(_("Received %s\n"), caption);
+    TNSDEBUG2("Received %s\n", caption);
 
     return 0;
 
@@ -535,12 +535,12 @@ static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
     if (rc < sizeof(type_is) + 2
         || memcmp(buf, type_is, sizeof(type_is)) != 0
         || buf[rc-2] != IAC || buf[rc-1] != SE) {
-        TNSDEBUG2(_("Expected IAC SB TERMINAL_TYPE IS\n"));
+        TNSDEBUG2("Expected IAC SB TERMINAL_TYPE IS\n");
         return -1;
     }
     buf[rc-2] = '\0';
     termtype = buf + sizeof(type_is);
-    TNSDEBUG2(_("Received IAC SB TERMINAL_TYPE IS %s IAC SE\n"),
+    TNSDEBUG2("Received IAC SB TERMINAL_TYPE IS %s IAC SE\n",
             termtype);
 
     /* Check terminal type string for device name suffix */
@@ -712,7 +712,7 @@ int     eor = 0;                        /* 1=End of record received  */
     /* If record is incomplete, test for buffer full */
     if (eor == 0 && dev->rlen3270 >= BUFLEN_3270)
     {
-        TNSDEBUG1(_("3270 buffer overflow\n"));
+        TNSDEBUG1("3270 buffer overflow\n");
         dev->sense[0] = SENSE_DC;
         return (CSW_ATTN | CSW_UC);
     }
@@ -721,7 +721,7 @@ int     eor = 0;                        /* 1=End of record received  */
     if (eor == 0) return 0;
 
     /* Trace the complete 3270 data packet */
-    TNSDEBUG2(_("Packet received length=%d\n"), dev->rlen3270);
+    TNSDEBUG2("Packet received length=%d\n", dev->rlen3270);
     packet_trace (dev->buf, dev->rlen3270);
 
     /* Strip off the telnet EOR marker */
@@ -786,7 +786,7 @@ BYTE            buf[32];                /* tn3270 write buffer       */
     do {
         len = dev->rlen3270;
         rc = recv_3270_data (dev);
-        TNSDEBUG2(_("read buffer: %d bytes received\n"),
+        TNSDEBUG2("read buffer: %d bytes received\n",
                 dev->rlen3270 - len);
     } while(rc == 0);
 
@@ -852,7 +852,7 @@ BYTE    c;                              /* Character work area       */
     }
 
     /* Trace the bytes received */
-    TNSDEBUG2(_("Bytes received length=%d\n"), num);
+    TNSDEBUG2("Bytes received length=%d\n", num);
     packet_trace (buf, num);
 
     /* Copy received bytes to keyboard buffer */
@@ -875,7 +875,7 @@ BYTE    c;                              /* Character work area       */
         /* Return unit check if buffer is full */
         if (dev->keybdrem >= BUFLEN_1052)
         {
-            TNSDEBUG1(_("Console keyboard buffer overflow\n"));
+            TNSDEBUG1("Console keyboard buffer overflow\n");
             dev->keybdrem = 0;
             dev->sense[0] = SENSE_EC;
             return (CSW_ATTN | CSW_UC);
@@ -932,7 +932,7 @@ BYTE    c;                              /* Character work area       */
             && dev->buf[dev->keybdrem - 1] == '\n'
             && i < num - 1)
         {
-            TNSDEBUG1(_("Console keyboard buffer overrun\n"));
+            TNSDEBUG1("Console keyboard buffer overrun\n");
             dev->keybdrem = 0;
             dev->sense[0] = SENSE_OR;
             return (CSW_ATTN | CSW_UC);
@@ -947,7 +947,7 @@ BYTE    c;                              /* Character work area       */
         return 0;
 
     /* Trace the complete keyboard data packet */
-    TNSDEBUG2(_("Packet received length=%d\n"), dev->keybdrem);
+    TNSDEBUG2("Packet received length=%d\n", dev->keybdrem);
     packet_trace (dev->buf, dev->keybdrem);
 
     /* Strip off the CRLF sequence */
@@ -961,7 +961,7 @@ BYTE    c;                              /* Character work area       */
     } /* end for(i) */
 
     /* Trace the EBCDIC input data */
-    TNSDEBUG2(_("Input data line length=%d\n"), dev->keybdrem);
+    TNSDEBUG2("Input data line length=%d\n", dev->keybdrem);
     packet_trace (dev->buf, dev->keybdrem);
 
     /* Return attention status */
@@ -1014,7 +1014,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
         clientname = "host name unknown";
     }
 
-    TNSDEBUG1(_("Received connection from %s (%s)\n"),
+    TNSDEBUG1("Received connection from %s (%s)\n",
             clientip, clientname);
 
     /* Negotiate telnet parameters */
@@ -1350,7 +1350,7 @@ BYTE                    unitstat;       /* Status after receive data */
                 rc = device_attention (dev, unitstat);
 
                 /* Trace the attention request */
-                TNSDEBUG2(_("%4.4X attention request %s\n"),
+                TNSDEBUG2("%4.4X attention request %s\n",
                         dev->devnum,
                         (rc == 0 ? "raised" : "rejected"));
 
