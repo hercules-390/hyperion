@@ -4182,6 +4182,13 @@ int             gctab[5]= {             /* default gcol parameters   */
                 continue;
             }
 
+            /* Bypass if not opened read-write */
+            if (cckd->open[cckd->sfn] != CCKD_OPEN_RW)
+            {
+                release_lock (&cckd->iolock);
+                continue;
+            }
+
             /* If OPENED bit not on then flush if updated */
             if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
             {
