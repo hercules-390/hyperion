@@ -5515,7 +5515,7 @@ static char *ordername[] = {    "Unassigned",
                         if(sysblk.arch_mode == ARCH_900)
                             status = SIGP_STATUS_INVALID_ORDER;
                         sysblk.arch_mode = ARCH_900;
-                        regs->psw.states &= BIT(PSW_NOTESAME_BIT);
+                        regs->psw.states &= ~BIT(PSW_NOTESAME_BIT);
                         regs->psw.IA_H = 0;
                         regs->PX_G &= 0x7FFFE000;
                         set_arch = 1;
