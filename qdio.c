@@ -2,7 +2,7 @@
 /*              Queued Direct Input Output                           */
 
 /*      This module contains the Signal Adapter instruction          */
-/*      and the queued direct CCW                                    */
+/*      and the Establish Queues CCW                                 */
 
 #include "hercules.h"
 
@@ -22,8 +22,6 @@ RADR    effective_addr2;
 DEVBLK *dev;                            /* -> device block           */
 
     S(inst, execflag, regs, b2, effective_addr2);
-
-    SIE_MODE_XC_OPEX(regs);
 
     PRIV_CHECK(regs);
 
