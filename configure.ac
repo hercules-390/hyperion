@@ -29,6 +29,9 @@ AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
 # Libraries
 AC_CHECK_LIB(pthread, pthread_create)
 AC_CHECK_LIB(m, sqrt)
+AC_CHECK_LIB(socket, connect)
+AC_CHECK_LIB(nsl, gethostbyname)
+AC_CHECK_LIB(resolv, inet_aton)
 dnl This will only work for zlib >= 1.0.2
 dnl AC_CHECK_LIB(z, zlibVersion)
 AC_CHECK_LIB(z, main)
@@ -104,7 +107,7 @@ fi
 
 # Library functions
 
-AC_CHECK_FUNCS(sqrtl)
+AC_CHECK_FUNCS(sqrtl getresuid)
 
 # User-definable settings
 
