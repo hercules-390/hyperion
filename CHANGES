@@ -1,3 +1,4 @@
+21 May 2003 Fix spec exception in LPSW on incorrect amode settings - Jan Jaeger
 19 May 2003 Close all FDs before forking hercifc - Ivan Warren
 18 May 2003 Fix incorrect amask in LPSW in 64 bit mode - Jan Jaeger
 15 May 2003 Fixed cygwin regparm bug check bug in configure.ac:

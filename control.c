@@ -1801,7 +1801,12 @@ int     amode64;
     regs->psw.amode64 = amode64;
     /* s390_load_psw will not have set the AMASK correctly for amode64 */
     if(amode64)
+    {
         regs->psw.AMASK = AMASK64;
+        /* amode31 bit must be set when amode64 is set */
+        if(!regs->psw.amode)
+            rc = PGM_SPECIFICATION_EXCEPTION;
+    }
 #else /*!defined(FEATURE_ESAME)*/
     rc = ARCH_DEP(load_psw) ( regs, dword );
 #endif /*!defined(FEATURE_ESAME)*/
