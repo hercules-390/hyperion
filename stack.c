@@ -282,6 +282,11 @@ int  i;
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
     regs->psw.IA = trap_ia & 0x7FFFFFFF;
+    /* set PSW to primary space */
+    regs->psw.space = 0;
+    regs->psw.armode = 0;
+    INVALIDATE_AIA(regs);
+    INVALIDATE_AEA_ALL(regs);
 }
 
 
@@ -390,6 +395,7 @@ void ARCH_DEP(form_stack_entry) (BYTE etype, VADR retna, VADR calla,
 {
 QWORD   currpsw;                        /* Current PSW               */
 VADR    lsea;                           /* Linkage stack entry addr  */
+VADR    lseaold;                        /* Linkage stack old addr    */
 RADR    abs, abs2 = 0;                  /* Absolute addr new entry   */
 RADR    absold;                         /* Absolute addr old entry   */
 LSED    lsed;                           /* Linkage stack entry desc. */
@@ -408,6 +414,7 @@ int     i;                              /* Array subscript           */
     /* Fetch the entry descriptor of the current entry */
     absold = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
     memcpy (&lsed, sysblk.mainstor+absold, sizeof(LSED));
+    lseaold = lsea;
 
 #ifdef STACK_DEBUG
     logmsg ("stack: Current stack entry at " F_VADR "\n", lsea);
@@ -447,6 +454,7 @@ int     i;                              /* Array subscript           */
         /* Fetch the entry descriptor of the next section's header */
         absold = ARCH_DEP(abs_stack_addr) (fsha, regs, ACCTYPE_READ);
         memcpy (&lsed, sysblk.mainstor+absold, sizeof(LSED));
+        lseaold = fsha;
 
 #ifdef STACK_DEBUG
         logmsg ("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
@@ -768,6 +776,7 @@ int     i;                              /* Array subscript           */
 
     /* [5.12.3.3] Update the current entry */
     STORE_HW(lsed.nes, LSSE_SIZE);
+    absold = ARCH_DEP(abs_stack_addr) (lseaold, regs, ACCTYPE_WRITE);
     memcpy (sysblk.mainstor+absold, &lsed, sizeof(LSED));
 
 #ifdef STACK_DEBUG
