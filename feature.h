@@ -308,7 +308,7 @@ s390_ ## _name
 #define ARCH_MODE   ARCH_900
 
 #define APPLY_PREFIXING(addr,pfx) \
-    ( ((addr) & 0xFFFFFFFFFFFFE000) == 0 || ((addr) & 0xFFFFFFFFFFFFE000) == (pfx) \
+    ( (U64)((addr) & 0xFFFFFFFFFFFFE000ULL) == (U64)0 || (U64)((addr) & 0xFFFFFFFFFFFFE000ULL) == (pfx) \
       ? (addr) ^ (pfx) \
       : (addr) \
     )
