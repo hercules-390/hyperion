@@ -4491,7 +4491,7 @@ int             lfs = 0;                /* 1 = Large file            */
         }
     }
     if (reqcyls == 0)
-        reqcyls = ckd->cyls;
+        reqcyls = devcyls;
 
     /* Calculate the track size of the virtual device */
     outtrklv = sizeof(CKDDASD_TRKHDR)
