@@ -1306,6 +1306,8 @@ typedef struct _DEVBLK {
                 ckdssi:1,               /* 1=Set Special Intercept   */
                 ckdnolazywr:1,          /* 1=Perform updates now     */
                 ckdrdonly:1,            /* 1=Open read only          */
+                ckdwrha:1,              /* 1=Write Home Address      */
+                                        /* Line above ISW20030819-1  */
                 ckdfakewr:1;            /* 1=Fake successful write
                                              for read only file      */
     } DEVBLK;

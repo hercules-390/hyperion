@@ -1745,6 +1745,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdwckd = 0;
         dev->ckdlcount = 0;
         dev->ckdtrkof = 0;
+        /* ISW20030819-1 : Clear Write HA flag */
+        dev->ckdwrha = 0;
     }
     dev->syncio_retry = 0;
 
@@ -2325,6 +2327,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         num = (count < size) ? count : size;
     /* FIXME: what devices want 5 bytes, what ones want 7, and what
         ones want 11? Do this right when we figure that out */
+        /* ISW20030819-1 Indicate WRHA performed */
+        dev->ckdwrha=1;
         *residual = 0;
 
         /* Return normal status */
@@ -3610,6 +3614,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            logmsg("DEBUG : WR0 OUTSIDE PACK\n");
             break;
         }
 
@@ -3617,11 +3622,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
            and not preceded by either a Search Home Address that
            compared equal on all 4 bytes, or a Write Home Address not
            within the domain of a Locate Record */
-        if (dev->ckdlcount == 0 && dev->ckdhaeq == 0)
+        /* ISW20030819-1 : Added check for previously issued WRHA */
+        if (dev->ckdlcount == 0 && dev->ckdhaeq == 0 && dev->ckdwrha==0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            logmsg("DEBUG : WR0 CASE 2\n");
             break;
         }
 
@@ -3631,6 +3638,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            logmsg("DEBUG : WR0 BAD FM\n");
             break;
         }
 
@@ -3647,6 +3655,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 ckd_build_sense (dev, SENSE_CR, 0, 0,
                                 FORMAT_0, MESSAGE_2);
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                logmsg("DEBUG : LOC REC 2\n");
                 break;
             }
         }
