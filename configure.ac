@@ -142,7 +142,10 @@ have_dlopen=false
 
 # AC_CHECK_LIB(gcrypt,gcry_cipher_open, have_gcrypt=true, have_gcrypt=false )
 
-AM_PATH_LIBGCRYPT("0.4.4",[have_gcrypt=true],[have_gcrypt=false])
+# ISW20041011 :
+# Was :
+# AM_PATH_LIBGCRYPT("0.4.4",[have_gcrypt=true],[have_gcrypt=false])
+AM_PATH_LIBGCRYPT("1.1.90",[have_gcrypt=true],[have_gcrypt=false])
 
 AM_CONDITIONAL(HAVE_GCRYPT, [test "x$have_gcrypt" = "xtrue"])
 

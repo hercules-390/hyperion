@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+11 Oct 2004 Changed libgcrypt requirement to 1.1.90 or better - Ivan Warren
 10 Oct 2004 Repaired some deprecated warnings dyncrypt.c - Bernard van der Helm
 07 Oct 2004 OPTION_WAKEUP_SELECT_VIA_PIPE - Ivan Warren by Fish
 05 Oct 2004 cr_mask.pat - Fix SIE intercept logic for LCTL - Greg Smith
