@@ -1052,17 +1052,18 @@ void panel_display (void);
 
 /* Access type parameter passed to translate functions in dat.c */
 #define ACCTYPE_READ		1	/* Read operand data	     */
-#define ACCTYPE_WRITE		2	/* Write operand data	     */
-#define ACCTYPE_INSTFETCH	3	/* Instruction fetch	     */
-#define ACCTYPE_TAR		4	/* Test Access		     */
-#define ACCTYPE_LRA		5	/* Load Real Address	     */
-#define ACCTYPE_TPROT		6	/* Test Protection	     */
-#define ACCTYPE_IVSK		7	/* Insert Virtual Storage Key*/
-#define ACCTYPE_STACK		8	/* Linkage stack operations  */
-#define ACCTYPE_BSG		9	/* Branch in Subspace Group  */
-#define ACCTYPE_PTE            10	/* Return PTE raddr          */
-#define ACCTYPE_SIE	       11	/* SIE host translation      */
-#define ACCTYPE_STRAG	       12	/* Store real address	     */
+#define ACCTYPE_WRITE_SKP	2	/* Write but skip change bit */
+#define ACCTYPE_WRITE 		3	/* Write operand data        */
+#define ACCTYPE_INSTFETCH	4	/* Instruction fetch	     */
+#define ACCTYPE_TAR		5	/* Test Access		     */
+#define ACCTYPE_LRA		6	/* Load Real Address	     */
+#define ACCTYPE_TPROT		7	/* Test Protection	     */
+#define ACCTYPE_IVSK		8	/* Insert Virtual Storage Key*/
+#define ACCTYPE_STACK		9	/* Linkage stack operations  */
+#define ACCTYPE_BSG		10	/* Branch in Subspace Group  */
+#define ACCTYPE_PTE             11	/* Return PTE raddr          */
+#define ACCTYPE_SIE	        12	/* SIE host translation      */
+#define ACCTYPE_STRAG	        13	/* Store real address	     */
 
 /* Special value for arn parameter for translate functions in dat.c */
 #define USE_REAL_ADDR		(-1)	/* Real address 	     */
