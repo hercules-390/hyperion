@@ -101,14 +101,6 @@ int main( int argc, char **argv )
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
 
-#if !defined(__APPLE__)
-        case SIOCSIFNETMASK:
-            pOp  = "SIOCSIFNETMASK";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
-            break;
-#endif /* !defined(__APPLE__) */
-
         case SIOCSIFFLAGS:
             pOp  = "SIOCSIFFLAGS";
             pArg = &ctlreq.iru.ifreq;
@@ -120,14 +112,6 @@ int main( int argc, char **argv )
             pArg = &ctlreq.iru.ifreq;
             pIF  = ctlreq.iru.ifreq.ifr_name;
             break;
-
-#if !defined(__APPLE__)
-        case SIOCSIFHWADDR:
-            pOp  = "SIOCSIFHWADDR";
-            pArg = &ctlreq.iru.ifreq;
-            pIF  = ctlreq.iru.ifreq.ifr_name;
-            break;
-#endif /* !defined(__APPLE__) */
 
         case SIOCADDMULTI:
             pOp  = "SIOCADDMULTI";
@@ -142,6 +126,18 @@ int main( int argc, char **argv )
             break;
 
 #if !defined(__APPLE__)
+        case SIOCSIFNETMASK:
+            pOp  = "SIOCSIFNETMASK";
+            pArg = &ctlreq.iru.ifreq;
+            pIF  = ctlreq.iru.ifreq.ifr_name;
+            break;
+
+        case SIOCSIFHWADDR:
+            pOp  = "SIOCSIFHWADDR";
+            pArg = &ctlreq.iru.ifreq;
+            pIF  = ctlreq.iru.ifreq.ifr_name;
+            break;
+
         case SIOCADDRT:
             pOp  = "SIOCADDRT";
             pArg = &ctlreq.iru.rtentry;
@@ -174,6 +170,12 @@ int main( int argc, char **argv )
         }
             
         rc = ioctl( sockfd, ctlreq.iCtlOp, pArg );
+
+        sprintf( szMsgBuffer,
+                 _("HHCIF006I %s: Doing %s on %s: %s\n"),
+                 pszProgName, pOp, pIF, strerror( errno ) );
+
+        write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
     
         if( rc < 0 )
         {

@@ -185,6 +185,12 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         free( pWrkCTCBLK );
         return -1;
     }
+    else
+    {
+        logmsg(_("HHCCT073I %4.4X: TUN device %s opened\n"),
+                  pDevCTCBLK->pDEVBLK[0]->devnum,
+                  pDevCTCBLK->szTUNDevName);
+    }
 
     TUNTAP_SetIPAddr  ( pDevCTCBLK->szTUNDevName,
                         pDevCTCBLK->szDriveIPAddr );

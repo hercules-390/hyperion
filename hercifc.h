@@ -43,14 +43,14 @@
 
 typedef struct _CTLREQ
 {
-    long   iType;
-    int    iProcID;
-    int    iCtlOp;
-    char   szIFName[IFNAMSIZ];
+    long                 iType;
+    int                  iProcID;
+    unsigned long int    iCtlOp;
+    char                 szIFName[IFNAMSIZ];
     union 
     {
-        struct ifreq   ifreq;
-        struct rtentry rtentry;
+        struct ifreq     ifreq;
+        struct rtentry   rtentry;
     } iru;
 }   CTLREQ, *PCTLREQ;
 

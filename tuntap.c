@@ -30,7 +30,7 @@
 // ====================================================================
 
 #if !defined( WIN32 )
-static int      IFC_IOCtl( int fd, int iRequest, char* argp );
+static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp );
 #endif // !defined( WIN32 )
 
 static int ifc_fd[2] = { -1, -1 };
@@ -552,9 +552,11 @@ int             TUNTAP_DelRoute( char*   pszNetDevName,
 // IFC_IOCtl
 // 
 
-static int      IFC_IOCtl( int fd, int iRequest, char* argp )
+static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 {
     char*       pszCfgCmd;     // Interface config command
+    char*       request_name;  // debugging: name of ioctl request
+    char        unknown_request[]="Unknown (0x00000000)";
     int         rc;
     CTLREQ      ctlreq;
 
@@ -564,6 +566,32 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
 
     ctlreq.iCtlOp = iRequest;
 
+    // Select string to represent ioctl request for debugging.
+    switch (iRequest) {
+    case SIOCSIFADDR:
+        request_name="SIOCSIFADDR";
+    case SIOCSIFDSTADDR:
+        request_name="SIOCSIFDSTADDR";
+    case SIOCSIFMTU:
+        request_name="SIOCSIFMTU";
+    case SIOCSIFFLAGS:
+        request_name="SIOCSIFFLAGS";
+    case SIOCSIFNETMASK:
+        request_name="SIOCSIFNETMASK";
+#if !defined(__APPLE__)
+    case SIOCSIFHWADDR:
+        request_name="SIOCSIFHWADDR";
+#endif /* !defined(__APPLE__) */
+    case SIOCADDRT:
+        request_name="SIOCADDRT";
+    case SIOCDELRT:
+        request_name="SIOCDELRT";
+    default:
+        sprintf(unknown_request,"Unknown (0x%x)",iRequest);
+        request_name=unknown_request;
+    }
+    logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
+              request_name,ifc_fd[0],ifc_fd[1]);
     if( iRequest == SIOCADDRT ||
         iRequest == SIOCDELRT )
     {
@@ -573,7 +601,8 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
       ((struct rtentry*)argp)->rt_dev = NULL;
 #else /* !defined(__APPLE__) */
       logmsg(_("HHCTU028E Unsupported call to %s a network route on OS X\n"),
-                ((iRequest=SIOCADDRT) ? "add" : "delete"));
+                ((iRequest==SIOCADDRT) ? "add" : "delete"));
+      return -1;
 #endif /* !defined(__APPLE__) */
     }
     else
@@ -626,6 +655,8 @@ static int      IFC_IOCtl( int fd, int iRequest, char* argp )
             dup2( ifc_fd[1], STDIN_FILENO  );
             dup2( STDOUT_FILENO, STDERR_FILENO );
             
+            logmsg(_("HHCTU029I Executing '%s' to configure interface: %s\n"),
+                      pszCfgCmd, request_name);
             // Execute the interface configuration command
             rc = execlp( pszCfgCmd, pszCfgCmd, NULL );
             
