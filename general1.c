@@ -782,6 +782,16 @@ VADR    effective_addr2;                /* Effective address         */
     if ( --(regs->GR_L(r1)) )
         regs->psw.IA = effective_addr2;
 
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs)
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+
 }
 
 
