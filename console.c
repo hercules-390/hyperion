@@ -1172,7 +1172,8 @@ BYTE                    rejmsg[80];     /* Rejection message         */
 
     /* Raise attention interrupt for the device */
     if (class != 'P')  /* do not raise attention for  3287 */
-    rc = device_attention (dev, CSW_ATTN);
+    /* rc = device_attention (dev, CSW_ATTN); *ISW3274DR* - Removed */
+    rc = device_attention (dev, CSW_DE);        /* *ISW3274DR - Added */
 
     /* Signal connection thread to redrive its select loop */
     signal_thread (sysblk.cnsltid, SIGUSR2);
@@ -1383,7 +1384,10 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* console: CCUU attention requests raised */
                 if (dev->devtype != 0x3287)
                 {
-                rc = device_attention (dev, unitstat);
+                    if(dev->connected)  /* *ISW3274DR* - Added */
+                    { /* *ISW3274DR - Added */
+                                rc = device_attention (dev, unitstat);
+                    } /* *ISW3274DR - Added */
 
                 /* Trace the attention request */
                 TNSDEBUG2("%4.4X attention request %s\n",
