@@ -76,7 +76,7 @@ REGS   *tregs;                          /* Target regs               */
                 if (IS_CPU_ONLINE(i))
                 {
                     tregs = sysblk.regs[i];
-                    if (tregs->cpumask & sysblk.started_mask)
+                    if ( test_bit(4, tregs->cpuad, &sysblk.started_mask) )
                     {
                         ON_IC_BROADCAST(tregs);
                         sysblk.broadcast_count++;
@@ -84,7 +84,7 @@ REGS   *tregs;                          /* Target regs               */
                 }
             sysblk.broadcast_code = code;
             sysblk.BROADCAST_PFRA = pfra;
-            WAKEUP_WAITING_CPUS(ALL_CPUS, CPUSTATE_STARTED);
+            WAKEUP_CPUS_MASK(sysblk.waiting_mask);
         }
 
         /* Perform the requested functions */
@@ -135,9 +135,6 @@ static void ARCH_DEP(external_interrupt) (int code, REGS *regs)
 RADR    pfx;
 PSA     *psa;
 int     rc;
-
-    /* reset the cpuint indicator */
-    RESET_IC_CPUINT(regs);
 
 #if defined(_FEATURE_SIE)
     /* Set the main storage reference and change bits */
@@ -452,9 +449,6 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Generate service signal interrupt */
         ARCH_DEP(external_interrupt) (EXT_SERVICE_SIGNAL_INTERRUPT, regs);
     }
-
-    /* reset the cpuint indicator */
-    RESET_IC_CPUINT(regs);
 
 } /* end function perform_external_interrupt */
 

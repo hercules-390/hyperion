@@ -160,7 +160,7 @@ int start_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.regs[sysblk.pcpu]->cpustate = CPUSTATE_STARTED;
             sysblk.regs[sysblk.pcpu]->checkstop = 0;
-            WAKEUP_CPU(sysblk.pcpu);
+            WAKEUP_CPU(sysblk.regs[sysblk.pcpu]);
         }
         release_lock (&sysblk.intlock);
     }
@@ -253,7 +253,7 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
         {
             sysblk.regs[sysblk.pcpu]->cpustate = CPUSTATE_STOPPING;
             ON_IC_INTERRUPT(sysblk.regs[sysblk.pcpu]);
-            WAKEUP_CPU (sysblk.pcpu);
+            WAKEUP_CPU (sysblk.regs[sysblk.pcpu]);
         }
         release_lock (&sysblk.intlock);
     }
@@ -301,7 +301,8 @@ int stop_cmd(int argc, char *argv[], char *cmdline)
 
 int startall_cmd(int argc, char *argv[], char *cmdline)
 {
-    int i;
+    int i = 0;
+    U32 mask;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -309,12 +310,14 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 
     obtain_lock (&sysblk.intlock);
 
-    for (i = 0; i < MAX_CPU; i++)
-        if(IS_CPU_ONLINE(i) && !sysblk.regs[i]->checkstop)
-        {
-            sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
-            WAKEUP_CPU (i);
-        }
+    mask = sysblk.config_mask ^ sysblk.started_mask;
+    while (mask)
+    {
+        i += ffs (mask);
+        sysblk.regs[i]->cpustate = CPUSTATE_STARTING;
+        WAKEUP_CPU (sysblk.regs[i]);
+        mask >>= ++i;
+    }
 
     release_lock (&sysblk.intlock);
 
@@ -326,7 +329,8 @@ int startall_cmd(int argc, char *argv[], char *cmdline)
 
 int stopall_cmd(int argc, char *argv[], char *cmdline)
 {
-    unsigned i;
+    int i = 0;
+    U32 mask;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
@@ -334,13 +338,15 @@ int stopall_cmd(int argc, char *argv[], char *cmdline)
 
     obtain_lock (&sysblk.intlock);
 
-    for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if(IS_CPU_ONLINE(i))
-        {
-            sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(sysblk.regs[i]);
-            WAKEUP_CPU(i);
-        }
+    mask = sysblk.started_mask;
+    while (mask)
+    {
+        i += ffs (mask);
+        sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
+        ON_IC_INTERRUPT(sysblk.regs[i]);
+        WAKEUP_CPU(sysblk.regs[i]);
+        mask >>= ++i;
+    }
 
     release_lock (&sysblk.intlock);
 
@@ -908,7 +914,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     sysblk.regs[sysblk.pcpu]->checkstop = 0;
 
     /* Signal CPU that an interrupt is pending */
-    WAKEUP_CPU (sysblk.pcpu);
+    WAKEUP_CPU (sysblk.regs[sysblk.pcpu]);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
@@ -1023,7 +1029,7 @@ BYTE c[2];                              /* Character work area       */
             (long long)sysblk.breakaddr[0],(long long)sysblk.breakaddr[1]
             );
         sysblk.instbreak = 1;
-        ON_IC_TRACE;
+        SET_IC_TRACE;
     }
     else
     {
@@ -1121,7 +1127,7 @@ int ext_cmd(int argc, char *argv[], char *cmdline)
     logmsg( _("HHCPN050I Interrupt key depressed\n") );
 
     /* Signal waiting CPUs that an interrupt is pending */
-    WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
+    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
 
     release_lock(&sysblk.intlock);
 
@@ -2194,7 +2200,6 @@ REGS *regs;
 
 int ipending_cmd(int argc, char *argv[], char *cmdline)
 {
-    BYTE   *cmdarg;                     /* -> Command argument       */
     DEVBLK *dev;                        /* -> Device block           */
     IOINT  *io;                         /* -> I/O interrupt entry    */
     unsigned i;
@@ -2202,24 +2207,9 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
     char *states[] = {"?", "STOPPED", "STOPPING", "?", "STARTED",
                       "?", "?", "?", "STARTING"};
 
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
     UNREFERENCED(cmdline);
-
-    if (argc > 1)
-        cmdarg = argv[1];
-    else
-        cmdarg = NULL;
-
-    if (cmdarg)
-    {
-        if (strcasecmp(cmdarg,"+debug") != 0 &&
-            strcasecmp(cmdarg,"-debug") != 0)
-        {
-            logmsg( _("HHCPN121E ipending expects {+|-}debug as operand."
-                " %s is invalid\n"), cmdarg
-                );
-            cmdarg = NULL;
-        }
-    }
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
     {
@@ -2229,28 +2219,20 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             continue;
         }
 
-        if (cmdarg)
-        {
-            logmsg( _("HHCPN122I Interrupt checking debug mode set to ") );
-
-            if ('+' == *cmdarg)
-            {
-                ON_IC_DEBUG(sysblk.regs[i]);
-                logmsg( _("ON\n") );
-            }
-            else
-            {
-                OFF_IC_DEBUG(sysblk.regs[i]);
-                logmsg( _("OFF\n") );
-            }
-        }
 // /*DEBUG*/logmsg( _("CPU%4.4X: Any cpu interrupt %spending\n"),
 // /*DEBUG*/    sysblk.regs[i]->cpuad, sysblk.regs[i]->cpuint ? "" : _("not ") );
         logmsg( _("HHCPN123I CPU%4.4X: CPUint=%8.8X "
-                  "(r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n"),
+                  "(State:%8.8X)&(Mask:%8.8X)\n"),
             sysblk.regs[i]->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]),
-            sysblk.regs[i]->ints_state,
-            sysblk.ints_state, sysblk.regs[i]->ints_mask
+            sysblk.regs[i]->ints_state, sysblk.regs[i]->ints_mask
+            );
+        logmsg( _("          CPU%4.4X: Interrupt %spending\n"),
+            sysblk.regs[i]->cpuad,
+            IS_IC_INTERRUPT(sysblk.regs[i]) ? "" : _("not ")
+            );
+        logmsg( _("          CPU%4.4X: I/O interrupt %spending\n"),
+            sysblk.regs[i]->cpuad,
+            IS_IC_IOPENDING                 ? "" : _("not ")
             );
         logmsg( _("          CPU%4.4X: Clock comparator %spending\n"),
             sysblk.regs[i]->cpuad,
@@ -2272,13 +2254,17 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
             sysblk.regs[i]->cpuad,
             IS_IC_EMERSIG(sysblk.regs[i]) ? "" : _("not ")
             );
+        logmsg( _("          CPU%4.4X: Machine check interrupt %spending\n"),
+            sysblk.regs[i]->cpuad,
+            IS_IC_MCKPENDING(sysblk.regs[i]) ? "" : _("not ")
+            );
+        logmsg( _("          CPU%4.4X: Service signal %spending\n"),
+            sysblk.regs[i]->cpuad,
+            IS_IC_SERVSIG                    ? "" : _("not ")
+            );
         logmsg( _("          CPU%4.4X: CPU interlock %sheld\n"),
             sysblk.regs[i]->cpuad,
             sysblk.regs[i]->mainlock ? "" : _("not ")
-            );
-        logmsg( _("          CPU%4.4X: CPU state is %s\n"),
-            sysblk.regs[i]->cpuad,
-            states[sysblk.regs[i]->cpustate]
             );
         logmsg( _("          CPU%4.4X: lock %sheld\n"),
             sysblk.regs[i]->cpuad,
@@ -2298,17 +2284,11 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         }
     }
 
-    logmsg( _("          Started mask %8.8X waiting mask %8.8X\n"),
-        sysblk.started_mask, sysblk.waitmask
+    logmsg( _("          Config mask %8.8X started mask %8.8X waiting mask %8.8X\n"),
+        sysblk.config_mask, sysblk.started_mask, sysblk.waiting_mask
         );
     logmsg( _("          Broadcast count %d code %d\n"),
         sysblk.broadcast_count, sysblk.broadcast_code
-        );
-    logmsg( _("          Machine check interrupt %spending\n"),
-        IS_IC_MCKPENDING ? "" : _("not ")
-        );
-    logmsg( _("          Service signal %spending\n"),
-        IS_IC_SERVSIG ? "" : _("not ")
         );
     logmsg( _("          Signaling facility %sbusy\n"),
         test_lock(&sysblk.sigplock) ? "" : _("not ")
@@ -2327,9 +2307,6 @@ int ipending_cmd(int argc, char *argv[], char *cmdline)
         test_lock(&sysblk.ioqlock) ? "" : _("not ")
         );
 #endif
-    logmsg( _("          I/O interrupt %spending\n"),
-        IS_IC_IOPENDING ? "" : _("not ")
-        );
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {

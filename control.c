@@ -1742,10 +1742,7 @@ int     inval = 0;                      /* Invalidation flag        */
         INVALIDATE_AEA_ALL(regs);
     }
 
-    SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
-    SET_IC_PER_MASK(regs);
-    SET_IC_IO_MASK(regs);
+    SET_IC_MASK(regs);
 
     RETURN_INTCHECK(regs);
 
@@ -3004,9 +3001,7 @@ int     rc;                             /* return code from load_psw */
     regs->armode = newregs.armode;
     INVALIDATE_AIA(regs);
     INVALIDATE_AEA_ALL(regs);
-    SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
-    SET_IC_IO_MASK(regs);
+    SET_IC_MASK(regs);
 
     regs->psw.ilc = 2;
 
@@ -4686,10 +4681,7 @@ int     realmode;
        )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    SET_IC_EXTERNAL_MASK(regs);
-//  SET_IC_MCK_MASK(regs);   machine check is bit 13
-    SET_IC_IO_MASK(regs);
-    SET_IC_PER_MASK(regs);
+    SET_IC_MASK(regs);
 
     if (realmode != REAL_MODE(&regs->psw)
 #if defined(FEATURE_PER)
@@ -5173,7 +5165,7 @@ static char *ordername[] = {    "Unassigned",
 
     /* Wake up the target CPU */
     if (IS_CPU_ONLINE(cpad))
-        WAKEUP_CPU (cpad);
+        WAKEUP_CPU (sysblk.regs[cpad]);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
@@ -5655,10 +5647,7 @@ int     permode;
         INVALIDATE_AEA_ALL(regs);
     }
 
-    SET_IC_EXTERNAL_MASK(regs);
-//  SET_IC_MCK_MASK(regs);  machine check is bit 13
-    SET_IC_IO_MASK(regs);
-    SET_IC_PER_MASK(regs);
+    SET_IC_MASK(regs);
     regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 
     RETURN_INTCHECK(regs);
@@ -5725,10 +5714,7 @@ int     permode;
         INVALIDATE_AEA_ALL(regs);
     }
 
-    SET_IC_EXTERNAL_MASK(regs);
-//  SET_IC_MCK_MASK(regs);  machine check is bit 13
-    SET_IC_IO_MASK(regs);
-    SET_IC_PER_MASK(regs);
+    SET_IC_MASK(regs);
     regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 
     RETURN_INTCHECK(regs);

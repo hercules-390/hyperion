@@ -579,10 +579,12 @@ typedef struct _REGS {                  /* Processor registers       */
                 hostint:1,              /* 1=Host generated interrupt*/
                 instvalid:1;            /* 1=Inst field is valid     */
         unsigned int                    /* Flags (intlock serialized)*/
+                dummy:1,                /* 1=Dummy regs structure    */
                 configured:1,           /* 1=CPU is online           */
                 loadstate:1,            /* 1=CPU is in load state    */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 reset_opctab:1,         /* 1=Copy new opcode table   */
+                tracing:1,              /* 1=Trace is active         */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1,           /* 1=SIGP initial cpu reset  */
                 vtimerint:1,            /* 1=Virtual Timer interrupt */
@@ -613,7 +615,6 @@ typedef struct _REGS {                  /* Processor registers       */
         jmp_buf archjmp;                /* longjmp destination to
                                            switch architecture mode  */
         COND    intcond;                /* CPU interrupt condition   */
-        U32     cpumask;                /* CPU mask                  */
 
      /* AIA - Instruction fetch accelerator                          */
 
@@ -640,9 +641,6 @@ typedef struct _REGS {                  /* Processor registers       */
 #define CPUSTATE_STOPPING       2       /* CPU is stopping           */
 #define CPUSTATE_STARTED        4       /* CPU is started            */
 #define CPUSTATE_STARTING       8       /* CPU is starting           */
-#define CPUSTATE_ALL          255       /* All CPU states            */
-
-#define ALL_CPUS                0xffffffff
 
 #define IS_CPU_ONLINE(_cpu) \
   (sysblk.regs[(_cpu)] != NULL)
@@ -656,29 +654,26 @@ typedef struct _REGS {                  /* Processor registers       */
 #define HI_CPU sysblk.hicpu
 
 /* Macros to signal interrupt condition to a CPU[s] */
-#define WAKEUP_CPU(cpu) signal_condition(&sysblk.regs[(cpu)]->intcond)
-#define WAKEUP_WAITING_CPU(mask,statemask) \
+#define WAKEUP_CPU(_regs) \
  do { \
-   int i; \
-   for (i = 0; i < HI_CPU; i++) \
-     if (IS_CPU_ONLINE(i) \
-      && (sysblk.regs[i]->cpustate & (statemask)) \
-      && (sysblk.regs[i]->cpumask  & (mask)) \
-      && (sysblk.regs[i]->cpumask  & sysblk.waitmask)) \
-      { \
-        signal_condition(&sysblk.regs[i]->intcond); \
-        break; \
-      } \
- } while(0)
-#define WAKEUP_WAITING_CPUS(mask,statemask) \
+   signal_condition(&(_regs)->intcond); \
+ } while (0)
+
+#define WAKEUP_CPU_MASK(_mask) \
  do { \
-   int i; \
-   for (i = 0; i < HI_CPU; i++) \
-     if (IS_CPU_ONLINE(i) \
-      && (sysblk.regs[i]->cpustate & (statemask)) \
-      && (sysblk.regs[i]->cpumask  & (mask)) \
-      && (sysblk.regs[i]->cpumask  & sysblk.waitmask)) \
-        signal_condition(&sysblk.regs[i]->intcond); \
+   if ((_mask)) \
+     signal_condition(&sysblk.regs[ffs((_mask))]->intcond); \
+ } while (0)
+
+#define WAKEUP_CPUS_MASK(_mask) \
+ do { \
+   int i = 0; \
+   U32 mask = (_mask); \
+   while (mask) { \
+     i += ffs(mask); \
+     signal_condition(&sysblk.regs[i]->intcond); \
+     mask >>= ++i; \
+   } \
  } while (0)
 
 /* Macros to queue/dequeue a device on the I/O interrupt queue */
@@ -694,7 +689,7 @@ typedef struct _REGS {                  /* Processor registers       */
      (_io)->priority = (_io)->dev->priority; \
    } \
    ON_IC_IOPENDING; \
-   WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED); \
+   WAKEUP_CPU_MASK (sysblk.waiting_mask); \
  } while (0)
 
 #define DEQUEUE_IO_INTERRUPT(_io) \
@@ -826,8 +821,9 @@ typedef struct _SYSBLK {
                 mschdelay:1,            /* 1 = delay MSCH instruction*/ /*LNX*/
                 shutdown:1;             /* 1 = shutdown requested    */
         U32     ints_state;             /* Common Interrupts Status  */
-        U32     waitmask;               /* Mask for waiting CPUs     */
-        U32     started_mask;           /* Mask for started CPUs     */
+        U32     config_mask;            /* Configured CPUs           */
+        U32     started_mask;           /* Started CPUs              */
+        U32     waiting_mask;           /* Waiting CPUs              */
         int     broadcast_code;         /* Broadcast code            */
 #define BROADCAST_PTLB  1               /* Broadcast purge tlb       */
 #define BROADCAST_PALB  2               /* Broadcast purge alb       */

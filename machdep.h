@@ -15,6 +15,103 @@
 /*-------------------------------------------------------------------*/
 #if defined(__i686__) | defined(__pentiumpro__) 
 
+#ifdef OPTION_SMP
+#define LOCK_PREFIX "lock ; "
+#else
+#define LOCK_PREFIX ""
+#endif
+
+#define ADDR (*(volatile long *) addr)
+
+#define set_bit(x,y,z) set_bit_i686((y),(z))
+static __inline__ void set_bit_i686(int nr, volatile void * addr)
+{
+	__asm__ __volatile__( LOCK_PREFIX
+		"btsl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (nr));
+}
+
+#define __set_bit(x,y,z) __set_bit_i686((y),(z))
+static __inline__ void __set_bit_i686(int nr, volatile void * addr)
+{
+	__asm__ (
+		"btsl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (nr));
+}
+
+#define clear_bit(x,y,z) clear_bit_i686((y),(z))
+static __inline__ void clear_bit_i686(int nr, volatile void * addr)
+{
+	__asm__ __volatile__( LOCK_PREFIX
+		"btrl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (nr));
+}
+
+#define __clear_bit(x,y,z) __clear_bit_i686((y),(z))
+static __inline__ void __clear_bit_i686(int nr, volatile void * addr)
+{
+	__asm__ __volatile__(
+		"btrl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (nr));
+}
+
+#define test_bit(x,y,z) test_bit_i686((y),(z))
+static __inline__ int test_bit_i686(int nr, volatile void *addr)
+{
+    if (__builtin_constant_p(nr))
+        return ((*(const volatile unsigned int *)addr) & (1 << nr));
+    else
+    {
+        int oldbit;
+        __asm__ __volatile__(
+            "btl  %2,%1\n\t"
+            "sbbl %0,%0"
+            :"=r" (oldbit)
+            :"m" (ADDR),"Ir" (nr));
+        return oldbit;
+    }
+}
+
+/* find first 1 bit in a 32 bit word.  `x' must be non-zero. */
+#define ffs(x) ffs_i686((x))
+static __inline__ unsigned long ffs_i686(unsigned long word)
+{
+	__asm__("bsfl %1,%0"
+		:"=r" (word)
+		:"rm" (word));
+	return word;
+}
+
+#define or_bits(x,y,z) or_bits_i686((x),(y),(z))
+static __inline__ void or_bits_i686(int len, int bits, volatile void * addr)
+{
+    switch (len) {
+    case 4:
+	__asm__ __volatile__( LOCK_PREFIX
+		"orl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (bits));
+        break;
+    }
+}
+
+#define and_bits(x,y,z) and_bits_i686((x),(y),(z))
+static __inline__ void and_bits_i686(int len, int bits, volatile void * addr)
+{
+    switch (len) {
+    case 4:
+	__asm__ __volatile__( LOCK_PREFIX
+		"andl %1,%0"
+		:"=m" (ADDR)
+		:"Ir" (bits));
+        break;
+    }
+}
+
 #define cmpxchg1(x,y,z) cmpxchg1_i686(x,y,z)
 static __inline__ BYTE cmpxchg1_i686(BYTE *old, BYTE new, void *ptr) {
 /* returns zero on success otherwise returns 1 */
@@ -290,6 +387,96 @@ static __inline__ U64 fetch_dw(volatile void *ptr) {
 static __inline__ void store_dw(volatile void *ptr, U64 value) {
  U64 tmp = CSWAP64(value);
  memcpy((BYTE *)ptr, &tmp, 8);
+}
+#endif
+
+#ifndef BIT
+#define BIT(nr) (1<<(nr))
+#endif
+
+#ifndef set_bit
+static __inline__ void set_bit(int len, int nr, volatile void * addr)
+{
+    switch (len) {
+    case 1:
+        *(BYTE *)addr |= (BYTE)(BIT(nr));
+        break;
+    case 4:
+        *(U32 *)addr |= (U32)(BIT(nr));
+        break;
+    }
+}
+#endif
+
+#ifndef __set_bit
+#define __set_bit(x,y,z) set_bit((x),(y),(z))
+#endif
+
+#ifndef clear_bit
+static __inline__ void clear_bit(int len, int nr, volatile void * addr)
+{
+    switch (len) {
+    case 1:
+        *(BYTE *)addr &= ~((BYTE)(BIT(nr)));
+        break;
+    case 4:
+        *(U32 *)addr &= ~((U32)(BIT(nr)));
+        break;
+    }
+}
+#endif
+
+#ifndef __clear_bit
+#define __clear_bit(x,y,z) clear_bit((x),(y),(z))
+#endif
+
+#ifndef test_bit
+static __inline__ int test_bit(int len, int nr, volatile void * addr)
+{
+    switch (len) {
+    case 1:
+        return ((*(BYTE *)addr & (BYTE)(BIT(nr))) != 0);
+        break;
+    case 4:
+        return ((*(U32 *)addr & (U32)(BIT(nr))) != 0);
+        break;
+    }
+    return 0;
+}
+#endif
+
+#ifndef ffs
+static __inline__ unsigned long ffs(U32 word)
+{
+    unsigned long i = 0;
+    while ((word & 1) == 0)
+    {
+        i++;
+        word >>= 1;
+    }
+    return i;
+}
+#endif
+
+#ifndef or_bits
+static __inline__ void or_bits(int len, int bits, volatile void * addr)
+{
+    switch (len) {
+    case 4:
+        *(U32 *)addr |= (U32)bits;
+        break;
+    }
+}
+#endif
+
+#ifndef and_bits
+static __inline__ void and_bits(int len, int bits, volatile void * addr)
+{
+    switch (len) {
+    case 4:
+        *(U32 *)addr &= (U32)bits;
+        break;
+    }
 }
 #endif
 

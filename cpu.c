@@ -99,19 +99,13 @@ BYTE    pkey;
     regs->psw.mach = (addr[1] & 0x04) >> 2;
     regs->psw.wait = (addr[1] & 0x02) >> 1;
     regs->psw.prob = addr[1] & 0x01;
-
-    SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
-    SET_IC_PSW_WAIT_MASK(regs);
-    SET_IC_PER_MASK(regs);
-
     regs->psw.zerobyte = addr[3];
 
 #if defined(FEATURE_BCMODE)
     if ( regs->psw.ecmode ) {
 #endif /*defined(FEATURE_BCMODE)*/
 
-        SET_IC_ECIO_MASK(regs);
+        SET_IC_ECMODE_MASK(regs);
 
         /* Processing for EC mode PSW */
         regs->psw.space = (addr[2] & 0x80) >> 7;
@@ -213,7 +207,8 @@ BYTE    pkey;
 
 #if defined(FEATURE_BCMODE)
     } else {
-        SET_IC_BCIO_MASK(regs);
+
+        SET_IC_BCMODE_MASK(regs);
 
         /* Processing for S/370 BC mode PSW */
         regs->psw.space = 0;
@@ -228,8 +223,7 @@ BYTE    pkey;
         regs->psw.amode = 0;
         regs->psw.AMASK = AMASK24;
 
-        if ((realmode  != REAL_MODE(&regs->psw)) ||
-            (space     != (regs->psw.space == 1)))
+        if (realmode != REAL_MODE(&regs->psw) || space)
             INVALIDATE_AEA_ALL(regs);
         regs->armode = 0;
 
@@ -593,7 +587,7 @@ static char *pgmintname[] = {
 
     if( OPEN_IC_PERINT(realregs) )
     {
-        if( IS_IC_TRACE )
+        if( realregs->tracing )
             logmsg(_("HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X "
                      "addr=" F_VADR "\n"),
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
@@ -1094,17 +1088,11 @@ int cpu_init (int cpu, REGS *regs)
         obtain_lock (&sysblk.cpulock[cpu]);
 
     regs->cpuad = cpu;
-    regs->cpumask = 0x80000000 >> cpu;
-
-    regs->configured = 1;
     regs->arch_mode = sysblk.arch_mode;
-
     regs->chanset = cpu;
-
     regs->mainstor = sysblk.mainstor;
     regs->storkeys = sysblk.storkeys;
     regs->mainlim = sysblk.mainsize - 1;
-
     regs->todoffset = sysblk.todoffset;
 
     initialize_condition (&regs->intcond);
@@ -1124,6 +1112,8 @@ int cpu_init (int cpu, REGS *regs)
 
     initial_cpu_reset(regs);
 
+    regs->configured = 1;
+
     if (!regs->hostregs)
     {
 #if defined(_FEATURE_SIE)
@@ -1141,6 +1131,8 @@ int cpu_init (int cpu, REGS *regs)
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_INTERRUPT(regs);
         sysblk.regs[cpu] = regs;
+        set_bit(4, cpu, &sysblk.config_mask);
+        set_bit(4, cpu, &sysblk.started_mask);
         release_lock (&sysblk.cpulock[cpu]);
     }
 
@@ -1169,6 +1161,11 @@ void *cpu_uninit (int cpu, REGS *regs)
 
     if (!regs->hostregs)
     {
+        /* Remove CPU from all CPU bit masks */
+        clear_bit (4, cpu, &sysblk.config_mask);
+        clear_bit (4, cpu, &sysblk.started_mask);
+        clear_bit (4, cpu, &sysblk.waiting_mask);
+
         sysblk.regs[cpu] = NULL;
         release_lock (&sysblk.cpulock[cpu]);
     }
@@ -1185,34 +1182,15 @@ void *cpu_uninit (int cpu, REGS *regs)
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(process_interrupt)(REGS *regs)
 {
-    if( OPEN_IC_DEBUG(regs) )
-    {
-        U32 prevmask = regs->ints_mask;
-        SET_IC_EXTERNAL_MASK(regs);
-        SET_IC_IO_MASK(regs);
-        SET_IC_MCK_MASK(regs);
-        SET_IC_PER_MASK(regs);
-        if(prevmask != regs->ints_mask)
-        {
-            logmsg(_("HHCCP009E CPU MASK MISMATCH: %8.8X - %8.8X. "
-                   "Last instruction:\n"), prevmask, regs->ints_mask);
-            ARCH_DEP(display_inst) (regs, regs->ip);
-        }
-    }
-
     /* Process PER program interrupts */
     if( OPEN_IC_PERINT(regs) )
         ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
 
     /* Obtain the interrupt lock */
     obtain_lock (&sysblk.intlock);
-
     OFF_IC_INTERRUPT(regs);
 
-    /* Perform broadcasted purge of ALB and TLB if requested
-       synchronize_broadcast() must be called until there are
-       no more broadcast pending because synchronize_broadcast()
-       releases and reacquires the mainlock. */
+    /* Perform broadcasted purge of ALB and TLB */
     while (IS_IC_BROADCAST(regs))
         ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
 
@@ -1220,14 +1198,13 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if (regs->reset_opctab)
     {
         regs->reset_opctab = 0;
-        MEMCPY(regs->opctab, ARCH_DEP(opcode_table), 256*sizeof(zz_func));
+        memcpy(regs->opctab, ARCH_DEP(opcode_table), 256*sizeof(zz_func));
     }
 
     /* Take interrupts if CPU is not stopped */
     if (regs->cpustate == CPUSTATE_STARTED)
     {
-        /* If a machine check is pending and we are enabled for
-           machine checks then take the interrupt */
+        /* Process machine check interrupt */
         if ( OPEN_IC_MCKPENDING(regs) )
         {
             PERFORM_SERIALIZATION (regs);
@@ -1235,8 +1212,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             ARCH_DEP (perform_mck_interrupt) (regs);
         }
 
-        /* If enabled for external interrupts, invite the
-           service processor to present a pending interrupt */
+        /* Process external interrupt */
         if ( OPEN_IC_EXTPENDING(regs) )
         {
             PERFORM_SERIALIZATION (regs);
@@ -1244,26 +1220,25 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             ARCH_DEP (perform_external_interrupt) (regs);
         }
 
-        /* If an I/O interrupt is pending, and this CPU is
-           enabled for I/O interrupts, invite the channel
-           subsystem to present a pending interrupt */
-        if ( OPEN_IC_IOPENDING(regs) )
+        /* Process I/O interrupt */
+        if (IS_IC_IOPENDING)
         {
-            PERFORM_SERIALIZATION (regs);
-            PERFORM_CHKPT_SYNC (regs);
-            ARCH_DEP (perform_io_interrupt) (regs);
+            if ( OPEN_IC_IOPENDING(regs) )
+            {
+                PERFORM_SERIALIZATION (regs);
+                PERFORM_CHKPT_SYNC (regs);
+                ARCH_DEP (perform_io_interrupt) (regs);
+            }
+            else
+                WAKEUP_CPU_MASK(sysblk.waiting_mask);
         }
-        else if (IS_IC_IOPENDING)
-            WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
-
-    } /*if(cpustate == CPU_STARTED)*/
+    } /*CPU_STARTED*/
 
     /* If CPU is stopping, change status to stopped */
     if (regs->cpustate == CPUSTATE_STOPPING)
     {
         /* Change CPU status to stopped */
         regs->cpustate = CPUSTATE_STOPPED;
-        sysblk.started_mask &= ~regs->cpumask;
 
         if (!regs->configured)
         {
@@ -1306,7 +1281,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             release_lock(&sysblk.intlock);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
-    } /* end if(cpustate == STOPPING) */
+    } /*CPUSTATE_STOPPING*/
 
     /* Perform restart interrupt if pending */
     if ( IS_IC_RESTART(regs) )
@@ -1314,7 +1289,6 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         PERFORM_SERIALIZATION (regs);
         PERFORM_CHKPT_SYNC (regs);
         OFF_IC_RESTART(regs);
-        sysblk.started_mask |= regs->cpumask;
         ARCH_DEP(restart_interrupt) (regs);
     } /* end if(restart) */
 
@@ -1330,22 +1304,22 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 #endif
 
         /* Wait until there is work to do */
-        sysblk.waitmask |= regs->cpumask;
-        sysblk.started_mask &= ~regs->cpumask;
-
         HDC(debug_cpu_state, regs);
 
+        regs->ints_state = IC_INITIAL_STATE;
+        clear_bit (4, regs->cpuad, &sysblk.started_mask);
         while (regs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&regs->intcond, &sysblk.intlock);
         }
+        set_bit (4, regs->cpuad, &sysblk.started_mask);
+        regs->ints_state |= sysblk.ints_state;
 
         HDC(debug_cpu_state, regs);
 
-        sysblk.started_mask |= regs->cpumask;
-        sysblk.waitmask &= ~regs->cpumask;
-
         /* Purge the lookaside buffers */
+        INVALIDATE_AIA(regs);
+        INVALIDATE_AEA_ALL(regs);
         ARCH_DEP(purge_tlb) (regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
         ARCH_DEP(purge_alb) (regs);
@@ -1357,7 +1331,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         if(sysblk.arch_mode != regs->arch_mode)
             longjmp(regs->archjmp,SIE_NO_INTERCEPT);
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-    } /* end if(cpustate == STOPPED) */
+    } /*CPUSTATE_STOPPED*/
 
     /* Test for wait state */
     if (regs->psw.wait)
@@ -1373,21 +1347,27 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                     regs->cpuad);
             display_psw (regs);
             regs->cpustate = CPUSTATE_STOPPING;
-            ON_IC_INTERRUPT(regs);
             release_lock (&sysblk.intlock);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
         }
 
         /* Wait for I/O, external or restart interrupt */
-        sysblk.waitmask |= regs->cpumask;
+        set_bit (4, regs->cpuad, &sysblk.waiting_mask);
         wait_condition (&regs->intcond, &sysblk.intlock);
-        sysblk.waitmask &= ~regs->cpumask;
+        clear_bit (4, regs->cpuad, &sysblk.waiting_mask);
+
         release_lock (&sysblk.intlock);
+
         longjmp(regs->progjmp, SIE_NO_INTERCEPT);
     } /* end if(wait) */
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
+
+    /* Do progjmp if tracing so we get into the right loop */
+    if (regs->tracing)
+        longjmp(regs->progjmp, SIE_NO_INTERCEPT);
+
 } /* process_interrupt */
 
 /*-------------------------------------------------------------------*/
@@ -1418,22 +1398,21 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         {
             /* Put CPU into stopped state */
             regs->cpustate = CPUSTATE_STOPPED;
-            ON_IC_INTERRUPT(regs);
-    
+
             /* Wait for start command from panel */
             obtain_lock (&sysblk.intlock);
-            sysblk.waitmask |= regs->cpumask;
 
             HDC(debug_cpu_state, regs);
 
+            set_bit (4, regs->cpuad, &sysblk.waiting_mask);
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
             }
+            clear_bit (4, regs->cpuad, &sysblk.waiting_mask);
 
             HDC(debug_cpu_state, regs);
 
-            sysblk.waitmask &= ~regs->cpumask;
             release_lock (&sysblk.intlock);
         }
     }
@@ -1450,7 +1429,7 @@ zz_func opcode_table[256];
 
     if (oldregs)
     {
-        MEMCPY (&regs, oldregs, sizeof(REGS));
+        memcpy (&regs, oldregs, sizeof(REGS));
         free (oldregs);
         sysblk.regs[cpu] = &regs;
         release_lock(&sysblk.cpulock[cpu]);
@@ -1459,7 +1438,7 @@ zz_func opcode_table[256];
     }
     else
     {
-        MEMSET (&regs, 0, sizeof(REGS));
+        memset (&regs, 0, sizeof(REGS));
 
         if (cpu_init (cpu, &regs))
             return NULL;
@@ -1474,12 +1453,11 @@ zz_func opcode_table[256];
 #endif /*FEATURE_VECTOR_FACILITY*/
     }
 
-    /* Set started bit on and wait bit off for this CPU */
-    sysblk.started_mask |= regs.cpumask;
-    sysblk.waitmask &= ~regs.cpumask;
+    regs.tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
+    regs.ints_state |= sysblk.ints_state;
 
     /* Copy the opcode table */
-    MEMCPY(opcode_table, ARCH_DEP(opcode_table), sizeof(opcode_table));
+    memcpy(opcode_table, ARCH_DEP(opcode_table), sizeof(opcode_table));
     regs.opctab = opcode_table;
 
     release_lock (&sysblk.intlock);
@@ -1495,7 +1473,7 @@ zz_func opcode_table[256];
         oldregs = malloc (sizeof(REGS));
         if (oldregs)
         {
-            MEMCPY(oldregs, &regs, sizeof(REGS));
+            memcpy(oldregs, &regs, sizeof(REGS));
             obtain_lock(&sysblk.cpulock[cpu]);
         }
         else
@@ -1514,44 +1492,37 @@ zz_func opcode_table[256];
     /* Establish longjmp destination for program check */
     setjmp(regs.progjmp);
 
-    if (IS_IC_TRACE
-#ifdef FEATURE_PER
-     || PER_MODE(&regs)
-#endif
-       )
+    if (regs.tracing || PER_MODE(&regs))
         goto slowloop;
 
     while (1)
     {
         /* Test for interrupts if it appears that one may be pending */
-        if( unlikely(IC_INTERRUPT_CPU_NO_PER(&regs)) )
+        if ( unlikely(IC_INTERRUPT_CPU_NO_PER(&regs)) )
         {
             ARCH_DEP(process_interrupt)(&regs);
             if (!regs.configured)
                 return cpu_uninit(cpu, &regs);
-            if (IS_IC_TRACE) goto slowloop;
         }
 
-        do {
-            UNROLLED_EXECUTE(&regs, opcode_table);
-            UNROLLED_EXECUTE(&regs, opcode_table);
-            UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs, opcode_table);
 
-            regs.instcount += 8;
+        regs.instcount += 8;
 
-            UNROLLED_EXECUTE(&regs, opcode_table);
-            UNROLLED_EXECUTE(&regs, opcode_table);
-            UNROLLED_EXECUTE(&regs, opcode_table);
-            UNROLLED_EXECUTE(&regs, opcode_table);
-            UNROLLED_EXECUTE(&regs, opcode_table);
-        } while (!IS_IC_INTERRUPT(&regs));
+        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs, opcode_table);
     }
 
 slowloop:
     while (1)
     {
         /* Test for interrupts if it appears that one may be pending */
-        if( IC_INTERRUPT_CPU(&regs) )
+        if ( IC_INTERRUPT_CPU(&regs) )
         {
             ARCH_DEP(process_interrupt)(&regs);
             if (!regs.configured)
@@ -1561,7 +1532,7 @@ slowloop:
         /* Fetch the next sequential instruction */
         regs.ip = INSTRUCTION_FETCH(regs.inst, regs.psw.IA, &regs, 0);
 
-        if( IS_IC_TRACE )
+        if( regs.tracing )
             ARCH_DEP(process_trace)(&regs);
 
         /* Execute the instruction */

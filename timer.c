@@ -116,7 +116,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if (!IS_IC_CLKC(regs))
             {
                 ON_IC_CLKC(regs);
-                intmask |= regs->cpumask;
+                intmask |= BIT(regs->cpuad);
             }
         }
         else if (IS_IC_CLKC(regs))
@@ -130,7 +130,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if((sysblk.todclk + regs->guestregs->todoffset) > regs->guestregs->clkc)
             {
                 ON_IC_CLKC(regs->guestregs);
-                intmask |= regs->cpumask;
+                intmask |= BIT(regs->cpuad);
             }
             else
                 OFF_IC_CLKC(regs->guestregs);
@@ -149,7 +149,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if (!IS_IC_PTIMER(regs))
             {
                 ON_IC_PTIMER(regs);
-                intmask |= regs->cpumask;
+                intmask |= BIT(regs->cpuad);
             }
         }
         else if(IS_IC_PTIMER(regs))
@@ -166,7 +166,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             if ((S64)regs->guestregs->ptimer < 0)
             {
                 ON_IC_PTIMER(regs->guestregs);
-                intmask |= regs->cpumask;
+                intmask |= BIT(regs->cpuad);
             }
             else
                 OFF_IC_PTIMER(regs->guestregs);
@@ -216,7 +216,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                 regs->rtimerint=1;      /* To resolve concurrent V/R Int Timer Ints */
 #endif
                 ON_IC_ITIMER(regs);
-                intmask |= regs->cpumask;
+                intmask |= BIT(regs->cpuad);
             }
 #if defined(_FEATURE_ECPSVM)
 #if defined(OPTION_MIPS_COUNTING)
@@ -226,7 +226,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 #endif /* OPTION_MIPS_COUNTING */
             {
                 ON_IC_ITIMER(regs);
-                intmask |= regs->cpumask;
+                intmask |= BIT(regs->cpuad);
             }
 #endif /* _FEATURE_ECPSVM */
 
@@ -255,7 +255,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                 if (itimer < 0 && olditimer >= 0)
                 {
                     ON_IC_ITIMER(regs->guestregs);
-                    intmask |= regs->cpumask;
+                    intmask |= BIT(regs->cpuad);
                 }
             }
         }
@@ -266,7 +266,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 
     /* If a timer interrupt condition was detected for any CPU
        then wake up those CPUs if they are waiting */
-    WAKEUP_WAITING_CPUS (intmask, CPUSTATE_STARTED);
+    WAKEUP_CPUS_MASK (intmask);
 
     release_lock(&sysblk.intlock);
 
@@ -396,7 +396,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
                 /* Calculate CPU busy percentage */
                 waittime = regs->waittime;
-                if ((sysblk.waitmask & regs->cpumask) != 0)
+                if ( test_bit (4, regs->cpuad, &sysblk.waiting_mask) )
                     waittime += now - regs->waittod;
                 regs->cpupct = ((interval - waittime)*1.0) / (interval*1.0);
 

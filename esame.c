@@ -451,10 +451,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     }
 
-    SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
-    SET_IC_ECIO_MASK(regs);
-    SET_IC_PSW_WAIT_MASK(regs);
+    SET_IC_ECMODE_MASK(regs);
 
     /* Update access register b2 */
     regs->AR(b2) = ar;
@@ -511,7 +508,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             if (regs->CR(13) & SSEVENT_BIT)
                 regs->TEA |= TEA_SSEVENT;
         }
-    regs->psw.ilc = 4;
+        regs->psw.ilc = 4;
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
 
@@ -3954,10 +3951,7 @@ int     inval = 0;                      /* Invalidation flag        */
         INVALIDATE_AEA_ALL(regs);
     }
 
-    SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
-    SET_IC_PER_MASK(regs);
-    SET_IC_IO_MASK(regs);
+    SET_IC_MASK(regs);
 
     RETURN_INTCHECK(regs);
 

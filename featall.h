@@ -9,6 +9,7 @@
 #define OPTION_390_MODE                 /* Generate ESA/390 support  */
 #define OPTION_900_MODE                 /* Generate ESAME support    */
 #define OPTION_LPP_RESTRICT             /* Disable Licensed Software */
+#define OPTION_SMP                      /* Enable SMP support        */
 #define VECTOR_SECTION_SIZE         128 /* Vector section size       */
 #define VECTOR_PARTIAL_SUM_NUMBER     1 /* Vector partial sum number */
 #define CKD_MAXFILES                  4 /* Max files per CKD volume  */

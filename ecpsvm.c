@@ -1054,10 +1054,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         /* HERCULES STUFF - Invalidate AEA & AIA */
         INVALIDATE_AIA(regs);
         INVALIDATE_AEA_ALL(regs);
-        SET_IC_EXTERNAL_MASK(regs);
-        SET_IC_MCK_MASK(regs);
-        SET_IC_PER_MASK(regs);
-        SET_IC_IO_MASK(regs);
+        SET_IC_MASK(regs);
         /* Dispatch..... */
         DEBUG_CPASSISTX(DISP2,logmsg(_("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
         DEBUG_CPASSISTX(DISP2,display_regs(regs));

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+07 Feb 2004 Update cpuints.h bit processing - Greg Smith
 05 Feb 2004 Reverse armode patch - problems with XC mode - Greg Smith
 02 Feb 2004 Fix instr display for SIE'd prog interrupt - Ivan Warren
 01 Feb 2004 Breakpoint range, suggested by Binyamin Dissen - Greg Smith

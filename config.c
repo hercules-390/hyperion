@@ -643,8 +643,6 @@ BYTE **newargv;
 BYTE **orig_newargv;
 #endif
 
-    SET_IC_INITIAL_STATE;
-
 #if !defined(OPTION_CONFIG_SYMBOLS)
     UNREFERENCED(j);
 #endif
@@ -1770,6 +1768,7 @@ BYTE **orig_newargv;
     sysblk.dummyregs.storkeys = sysblk.storkeys;
     sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
     sysblk.dummyregs.todoffset = sysblk.todoffset;
+    sysblk.dummyregs.dummy = 1;
     initial_cpu_reset (&sysblk.dummyregs);
     sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
@@ -1959,7 +1958,7 @@ int deconfigure_cpu(int cpu)
     ON_IC_INTERRUPT(sysblk.regs[cpu]);
 
     /* Wake up CPU as it may be waiting */
-    WAKEUP_CPU (cpu);
+    WAKEUP_CPU (sysblk.regs[cpu]);
 
     /* Wait for CPU thread to terminate */
     wait_condition (&sysblk.cpucond, &sysblk.intlock);

@@ -205,7 +205,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     sysblk.iplcpu = regs->cpuad;
 
     /* Signal the CPU to retest stopped indicator */
-    WAKEUP_CPU (regs->cpuad);
+    WAKEUP_CPU (regs);
 
     HDC(debug_cpu_state, regs);
     return 0;
@@ -349,7 +349,7 @@ U32     fileaddr;
     regs->loadstate = 0;
 
     /* Signal the CPU to retest stopped indicator */
-    WAKEUP_CPU (regs->cpuad);
+    WAKEUP_CPU (regs);
 
     HDC(debug_cpu_state, regs);
     return 0;
@@ -363,23 +363,19 @@ int             i;                      /* Array subscript           */
 
     regs->ip = regs->inst;
 
-    /* Clear pending interrupts and indicators */
+    /* Clear indicators */
     regs->loadstate = 0;
     regs->checkstop = 0;
     regs->sigpreset = 0;
-    OFF_IC_ITIMER(regs);
-    OFF_IC_RESTART(regs);
-    OFF_IC_EXTCALL(regs);
     regs->extccpu = 0;
-    OFF_IC_EMERSIG(regs);
     for (i = 0; i < MAX_CPU; i++)
         regs->emercpu[i] = 0;
-    OFF_IC_STORSTAT(regs);
-    OFF_IC_CPUINT(regs);
     regs->instvalid = 0;
     regs->instcount = 0;
 
+    /* Clear interrupts */
     SET_IC_INITIAL_MASK(regs);
+    SET_IC_INITIAL_STATE(regs);
 
     /* Clear the translation exception identification */
     regs->EA_G = 0;
@@ -496,7 +492,7 @@ U32  pagesize;
             br += rl;
         }
         pageaddr += PAGEFRAME_PAGESIZE;
-    pageaddr &= PAGEFRAME_PAGEMASK;
+        pageaddr &= PAGEFRAME_PAGEMASK;
         pagesize = PAGEFRAME_PAGESIZE;
     } while (rl == (int)pagesize);
 

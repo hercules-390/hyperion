@@ -308,7 +308,7 @@ U32   code;
     /* Diagnose F04: Hercules single step mode                       */
     /*---------------------------------------------------------------*/
         sysblk.inststep = 1;
-        ON_IC_TRACE;
+        SET_IC_TRACE;
         break;
 
     case 0xF08:

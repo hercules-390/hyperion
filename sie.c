@@ -847,10 +847,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
     INVALIDATE_AIA(GUESTREGS);
 
-    SET_IC_EXTERNAL_MASK(GUESTREGS);
-    SET_IC_MCK_MASK(GUESTREGS);
-    SET_IC_IO_MASK(GUESTREGS);
-    SET_IC_PER_MASK(GUESTREGS);
+    SET_IC_MASK(GUESTREGS);
 #if defined(_FEATURE_PER)
     /* Reset any PER pending indication */
     OFF_IC_PER(GUESTREGS);
@@ -933,12 +930,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
                             waittime.tv_sec = now.tv_sec;
                             waittime.tv_nsec = ((now.tv_usec + 3333) * 1000);
 
-                            sysblk.waitmask |= regs->cpumask;
-
+                            set_bit (4, regs->cpuad, &sysblk.waiting_mask);
                             timed_wait_condition
                                  (&regs->intcond, &sysblk.intlock, &waittime);
-
-                            sysblk.waitmask &= ~regs->cpumask;
+                            clear_bit (4, regs->cpuad, &sysblk.waiting_mask);
                         }
 
                         release_lock (&sysblk.intlock);

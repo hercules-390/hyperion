@@ -3008,7 +3008,7 @@ retry:
             break;
 
         /* See if another CPU can take this interrupt */
-        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
+        WAKEUP_CPU_MASK (sysblk.waiting_mask);
 
     } /* end for(io) */
 

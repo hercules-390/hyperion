@@ -195,14 +195,14 @@
 /*----------------------------------------------------------------------------*/
 /* Bit operation macro's                                                      */
 /*----------------------------------------------------------------------------*/
-/* BIT    : return bit in byte                                                */
+/* TBIT   : return bit in byte                                                */
 /* BITS   : return bits in byte                                               */
 /* SBIT   : return bit in bytes                                               */
 /* SBITS  : return bits in bytes (bits must be in one byte!)                  */
 /*----------------------------------------------------------------------------*/
-#define BIT(byte, bit)      ((byte) & (0x80 >> (bit)) ? TRUE : FALSE)
+#define TBIT(byte, bit)      ((byte) & (0x80 >> (bit)) ? TRUE : FALSE)
 #define BITS(byte, start, end)  (((BYTE)((byte) << (start))) >> (7 - (end) + (start)))
-#define SBIT(bytes, bit)    (BIT((bytes)[(bit) / 8], (bit) % 8))
+#define SBIT(bytes, bit)    (TBIT((bytes)[(bit) / 8], (bit) % 8))
 #define SBITS(bytes, strt, end) (BITS((bytes)[(strt) / 8], (strt) % 8, (end) % 8))
 
 /******************************************************************************/

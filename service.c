@@ -117,11 +117,8 @@ void scp_command (BYTE *command, int priomsg)
     sysblk.servparm |= SERVSIG_PEND;
     
     /* Set service signal interrupt pending for read event data */
-    if (!IS_IC_SERVSIG)
-    {
-        ON_IC_SERVSIG;
-        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
-    }
+    ON_IC_SERVSIG;
+    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
@@ -168,11 +165,8 @@ int signal_quiesce (U16 count, BYTE unit)
     sysblk.servparm |= SERVSIG_PEND;
     
     /* Set service signal interrupt pending for read event data */
-    if (!IS_IC_SERVSIG)
-    {
-        ON_IC_SERVSIG;
-        WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
-    }
+    ON_IC_SERVSIG;
+    WAKEUP_CPUS_MASK (sysblk.waiting_mask);
 
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
