@@ -1,3 +1,5 @@
+02 Apr 2001 Fixed device_thread race condition in channel.c
+02 Apr 2001 Added support for [Windows] External GUI
 28 Mar 2001 Fix nullification problem in form_stack_entry - Jan Jaeger
 27 Mar 2001 Fix exception access id in BSG - Jan Jaeger
 27 Mar 2001 Fix exception access id during subspace replacement - Jan Jaeger
