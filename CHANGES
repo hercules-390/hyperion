@@ -1,3 +1,5 @@
+30 Aug 2001 Fix Change Bit in Key so on page crossers with rupt it's not set.
+            Done by using new acctype ACCTYPE_WRITE_SKP - Paul Leisy
 28 Aug 2001 Change FPR display so if BASIC FP EXTENSIONS all displayed - Paul Leisy
 28 Aug 2001 Change MVCLE cpu-determined length - Paul Leisy
 26 Aug 2001 Added test for file-existance in cardrdr.c (code suggested by Richard Snow) - Volker Bandke
