@@ -611,7 +611,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 
     /* Double check that record will not exceed virtual track size */
     if (*usedv + CKDDASD_RECHDR_SIZE + keylen + datalen + 8
-        > (U32)trklen)
+        > trklen)
     {
         XMERRF ("Input record CCHHR=%2.2X%2.2X%2.2X%2.2X%2.2X "
                 "exceeds virtual device track size\n",
@@ -4471,7 +4471,7 @@ int             lfs = 0;                /* 1 = Large file            */
 
     /* Create the output file */
     rc = create_ckd (ofname, devtype, outheads, outmaxdl, reqcyls,
-                     volser, comp, lfs);
+                     volser, comp, lfs, 0);
     if (rc < 0)
     {
         XMERRF ("Cannot create %s\n", ofname);
@@ -4479,7 +4479,7 @@ int             lfs = 0;                /* 1 = Large file            */
     }
 
     /* Open the output file */
-    cif = open_ckd_image (ofname, NULL, O_RDWR | O_BINARY);
+    cif = open_ckd_image (ofname, NULL, O_RDWR | O_BINARY, 0);
     if (!cif)
     {
         XMERRF ("Cannot open %s\n", ofname);

@@ -109,7 +109,7 @@ int do_ls_cif(CIFBLK *cif)
 
 int do_ls(char *file, char *sfile)
 {
-    CIFBLK *cif = open_ckd_image(file, sfile, O_RDONLY|O_BINARY);
+    CIFBLK *cif = open_ckd_image(file, sfile, O_RDONLY|O_BINARY, 0);
 
     if (!cif || do_ls_cif(cif) || close_ckd_image(cif))
         return -1;

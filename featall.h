@@ -39,7 +39,8 @@
 #define FEATURE_ALD_FORMAT            0
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 #define OPTION_CPU_UTILIZATION          /* Track CPU Utilization     */
-
+#undef  OPTION_TRUNCATE_KLUDGE          /* fdatasync()/ftruncate()
+                                           problem workaround (linux)*/
 /*********************************************************************/
 /* Gabor Hoffer performance option. NOTE! which individual           */
 /*   instructions are inlined is defined further below at the end    */

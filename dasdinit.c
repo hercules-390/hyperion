@@ -216,9 +216,11 @@ int     lfs = 0;                        /* 1 = Build large file      */
     /* Create the device */
 
     if (type == 'C')
-        create_ckd (fname, devtype, heads, maxdlen, size, volser, comp, lfs);
+        create_ckd (fname, devtype, heads, maxdlen, size, volser,
+                    comp, lfs, 0);
     else
-        create_fba (fname, devtype, sectsize, size, volser, comp, lfs);
+        create_fba (fname, devtype, sectsize, size, volser, comp,
+                    lfs, 0);
 
     /* Display completion message */
 

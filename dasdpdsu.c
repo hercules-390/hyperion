@@ -285,7 +285,7 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     }
 
     /* Open the CKD image file */
-    cif = open_ckd_image (fname, sfname, O_RDONLY|O_BINARY);
+    cif = open_ckd_image (fname, sfname, O_RDONLY|O_BINARY, 0);
     if (cif == NULL) return -1;
 
     /* Build the extent array for the requested dataset */

@@ -21,7 +21,7 @@ typedef struct _SPCTAB {                /* Space table               */
 off_t           pos;                    /* Space offset              */
 long long       len;                    /* Space length              */
 long long       siz;                    /* Space size                */
-unsigned int    val;                    /* Value for space           */
+int             val;                    /* Value for space           */
 void           *ptr;                    /* Pointer to recovered space*/
 int             typ;                    /* Type of space             */
                } SPCTAB;
@@ -361,23 +361,23 @@ int cckd_comp (int fd, FILE *m)
 {
 int             rc;                     /* Return code               */
 off_t           pos;                    /* Current file offset       */
-U32             i;                      /* Loop index                */
+int             i;                      /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 CCKD_L1ENT     *l1=NULL;                /* -> Primary lookup table   */
-U32             l1tabsz;                /* Primary lookup table size */
+int             l1tabsz;                /* Primary lookup table size */
 CCKD_L2ENT      l2;                     /* Secondary lookup table    */
 CCKD_FREEBLK    fb;                     /* Free space block          */
-U32             len;                    /* Space  length             */
-U32             trksz;                  /* Maximum track size        */
-U32             heads;                  /* Heads per cylinder        */
-U32             blks;                   /* Number fba blocks         */
-U32             trk;                    /* Track number              */
-U32             l1x,l2x;                /* Lookup indices            */
-U32             freed=0;                /* Total space freed         */
-U32             imbedded=0;             /* Imbedded space freed      */
-U32             moved=0;                /* Total space moved         */
-U32             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
+int             len;                    /* Space  length             */
+int             trksz;                  /* Maximum track size        */
+int             heads;                  /* Heads per cylinder        */
+int             blks;                   /* Number fba blocks         */
+int             trk;                    /* Track number              */
+int             l1x,l2x;                /* Lookup indices            */
+int             freed=0;                /* Total space freed         */
+int             imbedded=0;             /* Imbedded space freed      */
+int             moved=0;                /* Total space moved         */
+int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
 BYTE            buf[65536];             /* Buffer                    */
 
 /*-------------------------------------------------------------------*/
@@ -852,7 +852,7 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
             goto cdsk_return;
         }
 
-        if (cdevhdr.numl1tab != (U32)(((hdrcyls * heads) + 255) / 256))
+        if (cdevhdr.numl1tab != ((hdrcyls * heads) + 255) / 256)
         {
             CDSKMSG (m, "Invalid number of l1 table entries in header: "
                      "%d, expecting %d\n",
@@ -873,7 +873,7 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
         numl1 = (trks + 255) / 256;
         trksz = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
         cyls = heads = -1;
-        if (cdevhdr.numl1tab != (U32)numl1)
+        if (cdevhdr.numl1tab != numl1)
         {
             CDSKMSG (m, "Invalid number of l1 table entries in header: "
                      "%d, expecting %d\n", cdevhdr.numl1tab, numl1);

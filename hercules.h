@@ -357,8 +357,10 @@ typedef int DEVCF (struct _DEVBLK *dev);
 typedef void DEVSF (struct _DEVBLK *dev);
 typedef int CKDRT (struct _DEVBLK *, int, int, BYTE *);
 typedef int CKDUT (struct _DEVBLK *, BYTE *, int, BYTE *);
+typedef int CKDUC (struct _DEVBLK *);
 typedef int FBARB (struct _DEVBLK *, BYTE *, int, BYTE *);
 typedef int FBAWB (struct _DEVBLK *, BYTE *, int, BYTE *);
+typedef int FBAUB (struct _DEVBLK *);
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
@@ -952,6 +954,7 @@ typedef struct _DEVBLK {
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
                 batch:1,                /* 1=Called by dasdutil      */
+                dasdcopy:1,             /* 1=Called by dasdcopy      */
                 ccwtrace:1,             /* 1=CCW trace               */
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1;             /* 1=Channel will merge data
@@ -1068,21 +1071,22 @@ typedef struct _DEVBLK {
 
         FBARB  *fbardblk;               /* -> Read block routine     */
         FBAWB  *fbawrblk;               /* -> Write block  routine   */
+        FBAUB  *fbaused;                /* -> Used blocks routine    */  
         FBADEV *fbatab;                 /* Device table entry        */
-        U32     fbaorigin;              /* Device origin block number*/
-        U32     fbanumblk;              /* Number of blocks in device*/
+        int     fbaorigin;              /* Device origin block number*/
+        int     fbanumblk;              /* Number of blocks in device*/
         off_t   fbarba;                 /* Relative byte offset      */
-        U32     fbaxblkn;               /* Offset from start of device
+        int     fbaxblkn;               /* Offset from start of device
                                            to first block of extent  */
-        U32     fbaxfirst;              /* Block number within dataset
+        int     fbaxfirst;              /* Block number within dataset
                                            of first block of extent  */
-        U32     fbaxlast;               /* Block number within dataset
+        int     fbaxlast;               /* Block number within dataset
                                            of last block of extent   */
-        U32     fbalcblk;               /* Block number within dataset
+        int     fbalcblk;               /* Block number within dataset
                                            of first block for locate */
-        U16     fbalcnum;               /* Block count for locate    */
-        U16     fbablksiz;              /* Physical block size       */
-        U32                             /* Flags                     */
+        int     fbalcnum;               /* Block count for locate    */
+        int     fbablksiz;              /* Physical block size       */
+        int                             /* Flags                     */
                 fbaxtdef:1;             /* 1=Extent defined          */
         BYTE    fbaoper;                /* Locate operation byte     */
         BYTE    fbamask;                /* Define extent file mask   */
@@ -1095,17 +1099,18 @@ typedef struct _DEVBLK {
 #endif
         CKDRT  *ckdrdtrk;               /* -> Read track routine     */
         CKDUT  *ckdupdtrk;              /* -> Update track routine   */
-        U32     ckdnumfd;               /* Number of CKD image files */
+        CKDUC  *ckdused;                /* -> Used cyls routine      */
+        int     ckdnumfd;               /* Number of CKD image files */
         int     ckdfd[CKD_MAXFILES];    /* CKD image file descriptors*/
         int     ckdhitrk[CKD_MAXFILES]; /* Highest track number
                                            in each CKD image file    */
         CKDDEV *ckdtab;                 /* Device table entry        */
         CKDCU  *ckdcu;                  /* Control unit entry        */
         U64     ckdtrkoff;              /* Track image file offset   */
-        U32     ckdcyls;                /* Number of cylinders       */
-        U32     ckdtrks;                /* Number of tracks          */
-        U32     ckdheads;               /* #of heads per cylinder    */
-        U32     ckdtrksz;               /* Track size                */
+        int     ckdcyls;                /* Number of cylinders       */
+        int     ckdtrks;                /* Number of tracks          */
+        int     ckdheads;               /* #of heads per cylinder    */
+        int     ckdtrksz;               /* Track size                */
         int     ckdcurcyl;              /* Current cylinder          */
         int     ckdcurhead;             /* Current head              */
         int     ckdcurrec;              /* Current record id         */
@@ -1130,9 +1135,9 @@ typedef struct _DEVBLK {
         BYTE    ckdlaux;                /* Locate record aux byte    */
         BYTE    ckdlcount;              /* Locate record count       */
         struct _CKDDASD_CACHE *ckdcache;/* Cache table               */
-        U32     ckdcachenbr;            /* Cache table size          */
-        U32     ckdcachehits;           /* Cache hits                */
-        U32     ckdcachemisses;         /* Cache misses              */
+        int     ckdcachenbr;            /* Cache table size          */
+        int     ckdcachehits;           /* Cache hits                */
+        int     ckdcachemisses;         /* Cache misses              */
         U64     ckdcacheage;            /* Cache aging counter       */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
@@ -1214,10 +1219,10 @@ typedef struct _CKDDASD_CACHE {         /* Cache entry               */
         U64     off;                    /* Entry offset              */
     } CKDDASD_CACHE;
 
-#define CKDDASD_DEVHDR_SIZE     sizeof(CKDDASD_DEVHDR)
-#define CKDDASD_TRKHDR_SIZE     sizeof(CKDDASD_TRKHDR)
-#define CKDDASD_RECHDR_SIZE     sizeof(CKDDASD_RECHDR)
-#define CKDDASD_CACHE_SIZE      sizeof(CKDDASD_CACHE)
+#define CKDDASD_DEVHDR_SIZE     ((ssize_t)sizeof(CKDDASD_DEVHDR))
+#define CKDDASD_TRKHDR_SIZE     ((ssize_t)sizeof(CKDDASD_TRKHDR))
+#define CKDDASD_RECHDR_SIZE     ((ssize_t)sizeof(CKDDASD_RECHDR))
+#define CKDDASD_CACHE_SIZE      ((ssize_t)sizeof(CKDDASD_CACHE))
 
 /*-------------------------------------------------------------------*/
 /* Structure definitions for Compressed CKD devices                  */
@@ -1225,15 +1230,15 @@ typedef struct _CKDDASD_CACHE {         /* Cache entry               */
 typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 /*  0 */BYTE             vrm[3];        /* Version Release Modifier  */
 /*  3 */BYTE             options;       /* Options byte              */
-/*  4 */U32              numl1tab;      /* Size of lvl 1 table       */
-/*  8 */U32              numl2tab;      /* Size of lvl 2 tables      */
+/*  4 */S32              numl1tab;      /* Size of lvl 1 table       */
+/*  8 */S32              numl2tab;      /* Size of lvl 2 tables      */
 /* 12 */U32              size;          /* File size                 */
 /* 16 */U32              used;          /* File used                 */
 /* 20 */U32              free;          /* Position to free space    */
 /* 24 */U32              free_total;    /* Total free space          */
 /* 28 */U32              free_largest;  /* Largest free space        */
-/* 32 */U32              free_number;   /* Number free spaces        */
-/* 36 */U32              free_imbed;    /* [deprecated]              */
+/* 32 */S32              free_number;   /* Number free spaces        */
+/* 36 */S32              free_imbed;    /* [deprecated]              */
 /* 40 */FWORD            cyls;          /* Cylinders on device       */
 /* 44 */BYTE             resv1;         /* Reserved                  */
 /* 45 */BYTE             compress;      /* Compression algorithm     */
@@ -1334,15 +1339,14 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_CACHE_USED      0x00800000 /* Cache entry was used      */
 #define CCKD_CACHE_BUSY      0xff000000 /* Cache entry is busy       */
 
-#define CCKDDASD_DEVHDR_SIZE   sizeof(CCKDDASD_DEVHDR)
-#define CCKD_L1ENT_SIZE        sizeof(CCKD_L1ENT)
+#define CCKDDASD_DEVHDR_SIZE   ((ssize_t)sizeof(CCKDDASD_DEVHDR))
+#define CCKD_L1ENT_SIZE        ((ssize_t)sizeof(CCKD_L1ENT))
 #define CCKD_L1TAB_POS         CKDDASD_DEVHDR_SIZE+CCKDDASD_DEVHDR_SIZE
-#define CCKD_L2ENT_SIZE        sizeof(CCKD_L2ENT)
-#define CCKD_L2TAB_SIZE        sizeof(CCKD_L2TAB)
-#define CCKD_DFWQE_SIZE        sizeof(CCKD_DFWQE)
+#define CCKD_L2ENT_SIZE        ((ssize_t)sizeof(CCKD_L2ENT))
+#define CCKD_L2TAB_SIZE        ((ssize_t)sizeof(CCKD_L2TAB))
 #define CCKD_FREEBLK_SIZE      8
-#define CCKD_FREEBLK_ISIZE     sizeof(CCKD_FREEBLK)
-#define CCKD_CACHE_SIZE        sizeof(CCKD_CACHE)
+#define CCKD_FREEBLK_ISIZE     ((ssize_t)sizeof(CCKD_FREEBLK))
+#define CCKD_CACHE_SIZE        ((ssize_t)sizeof(CCKD_CACHE))
 #define CCKD_NULLTRK_SIZE1     37       /* ha r0 r1 ffff */
 #define CCKD_NULLTRK_SIZE0     29       /* ha r0 ffff */
 
@@ -1391,40 +1395,41 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         BYTE             id[8];         /* "CCKDBLK "                */
         FILE            *msgpipew;      /* Message pipe write handle */
         DEVBLK          *dev1st;        /* 1st device in cckd queue  */
+        int              batch:1;       /* 1=called in batch mode    */
         LOCK             l2cachelock;   /* L2 cache lock             */
         LOCK             cachelock;     /* Cache lock                */
         COND             cachecond;     /* Wait for cache condition  */
         U64              cacheage;      /* Cache aging value         */
-        U32              cachewaiting;  /* Threads waiting for cache */
+        int              cachewaiting;  /* Threads waiting for cache */
         LOCK             gclock;        /* Garbage collector lock    */
         COND             gccond;        /* Garbage collector cond    */
-        U32              gcols;         /* Number garbage collectors */
-        U32              gcolmax;       /* Max garbage collectors    */
-        U32              gcolwait;      /* Wait time in seconds      */
+        int              gcols;         /* Number garbage collectors */
+        int              gcolmax;       /* Max garbage collectors    */
+        int              gcolwait;      /* Wait time in seconds      */
         int              gcolparm;      /* Adjustment parm           */
         LOCK             ralock;        /* Readahead lock            */
         COND             racond;        /* Readahead condition       */
-        U32              ras;           /* Number readahead threads  */
-        U32              ramax;         /* Max readahead threads     */
-        U32              rawaiting;     /* Number threads waiting    */
+        int              ras;           /* Number readahead threads  */
+        int              ramax;         /* Max readahead threads     */
+        int              rawaiting;     /* Number threads waiting    */
         int              ranbr;         /* Readahead queue size      */
         int              readaheads;    /* Nbr tracks to read ahead  */
         CCKD_RA          ra[CCKD_MAX_RA_SIZE]; /* Readahead queue    */
         int              ra1st;         /* First readahead entry     */
         int              ralast;        /* Last readahead entry      */
         int              rafree;        /* Free readahead entry      */
-        U32              nostress;      /* 1=No stress writes        */
+        int              nostress;      /* 1=No stress writes        */
         COND             writercond;    /* Writer condition          */
-        U32              writepending;  /* Number writes pending     */
-        U32              writerswaiting;/* Number writers waiting    */
-        U32              writers;       /* Number writer threads     */
-        U32              writermax;     /* Max writer threads        */
+        int              writepending;  /* Number writes pending     */
+        int              writerswaiting;/* Number writers waiting    */
+        int              writers;       /* Number writer threads     */
+        int              writermax;     /* Max writer threads        */
         int              writerprio;    /* Writer thread priority    */
         int              writewaiting;  /* Threads waiting for writes*/
         COND             writecond;     /* Write wait condition      */
         COND             termcond;      /* Termination condition     */
         int              l2cachenbr;    /* Size of level 2 cache     */
-        U32              cachenbr;      /* Size of cache             */
+        int              cachenbr;      /* Size of cache             */
         U64              stats_switches;       /* Switches           */
         U64              stats_cachehits;      /* Cache hits         */
         U64              stats_cachemisses;    /* Cache misses       */
@@ -1472,7 +1477,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         COND             readcond;      /* Wait for read condition   */
         COND             writecond;     /* Wait for write condition  */
         CCKD_FREEBLK    *free;          /* Internal free space chain */
-        U32              freenbr;       /* Number free space entries */
+        int              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */
         int              freeavail;     /* Index of available entry  */
         int              lastsync;      /* Time of last sync         */
@@ -1600,8 +1605,8 @@ void ckddasd_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer);
 
 /* Functions in module fbadasd.c */
-void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, U32 blknum,
-        U32 blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
+void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, int blknum,
+        int blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
 int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[]);
 void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,

@@ -332,19 +332,25 @@ int  search_key_equal (CIFBLK *cif, BYTE *key, int keylen, int noext,
         DSXTENT extent[], int *cyl, int *head, int *rec);
 int  convert_tt (int tt, int noext, DSXTENT extent[], int heads,
         int *cyl, int *head);
-CIFBLK* open_ckd_image (BYTE *fname, BYTE *sfname, int omode);
+CIFBLK* open_ckd_image (BYTE *fname, BYTE *sfname, int omode,
+        int dasdcopy);
+CIFBLK* open_fba_image (BYTE *fname, BYTE *sfname, int omode,
+        int dasdcopy);
 int  close_ckd_image (CIFBLK *cif);
+#define close_image_file(cif) close_ckd_image((cif))
 int  build_extent_array (CIFBLK *cif, BYTE *dsnama, DSXTENT extent[],
         int *noext);
 int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
         int *newused, int *trkbaln, int *physlen, int *kbconst,
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
-int create_ckd (BYTE *fname, U16 devtype, U32 heads,
-        U32 maxdlen, U32 volcyls, BYTE *volser, BYTE comp, int lfs);
-int create_fba (BYTE *fname, U16 devtype,
-        U32 sectsz, U32 sectors, BYTE *volser, BYTE comp, int lfs);
-int create_compressed_fba (BYTE *fname, U16 devtype,
-        U32 sectsz, U32 sectors, BYTE *volser, BYTE comp, int lfs);
+int create_ckd (BYTE *fname, U16 devtype, U32 heads, U32 maxdlen,
+        U32 volcyls, BYTE *volser, BYTE comp, int lfs, int dasdcopy);
+int create_fba (BYTE *fname, U16 devtype, U32 sectsz, U32 sectors,
+        BYTE *volser, BYTE comp, int lfs, int dasdcopy);
+int create_compressed_fba (BYTE *fname, U16 devtype, U32 sectsz,
+        U32 sectors, BYTE *volser, BYTE comp, int lfs, int dasdcopy);
 int get_verbose_util(void);
 void set_verbose_util(int v);
+
+#define DEFAULT_FBA_TYPE 0x3370

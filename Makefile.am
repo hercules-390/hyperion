@@ -5,7 +5,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 #ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = util html
+SUBDIRS = m4  util html
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -16,7 +16,8 @@ endif
 bin_PROGRAMS = hercules $(HERCIFC) \
 	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu \
 	   tapecopy tapemap tapesplt \
-	   cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap \
+	   cckdcdsk cckdcomp cckdswap \
+	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
 	   hetget hetinit hetmap hetupd \
 	   dmap2hrc
 EXTRA_PROGRAMS=hercifc
@@ -92,9 +93,20 @@ cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c
 
 cckdcomp_SOURCES = cckdcomp.c cckdutil.c dasdtab.c hostinfo.c version.c
 
-ckd2cckd_SOURCES = ckd2cckd.c cckdutil.c dasdtab.c hostinfo.c version.c
+ckd2cckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
-cckd2ckd_SOURCES = cckd2ckd.c cckdutil.c dasdtab.c hostinfo.c version.c
+fba2cfba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+
+cfba2fba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+
+cckd2ckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
+
+dasdcopy_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c
 
@@ -108,7 +120,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
 
 noinst_HEADERS  = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
@@ -119,7 +131,8 @@ noinst_HEADERS  = fishhang.h \
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
-	cckdswap$(EXEEXT)
+	cckdswap$(EXEEXT) fba2cfba$(EXEEXT) \
+	cfba2fba$(EXEEXT) dasdcopy$(EXEEXT)
 
 tar: dist
 
@@ -133,3 +146,5 @@ endif
 
 %.s: %.c
 	$(COMPILE) -S $<
+
+ACLOCAL_AMFLAGS = -I m4

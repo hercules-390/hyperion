@@ -201,6 +201,7 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 /*-------------------------------------------------------------------*/
 static int ckd_read_track (DEVBLK *, int, int, BYTE *);
 static int ckd_update_track (DEVBLK *, BYTE *, int, BYTE *);
+static int ckd_used (DEVBLK *);
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -215,11 +216,11 @@ int             i;                      /* Loop index                */
 int             fileseq;                /* File sequence number      */
 BYTE           *sfxptr;                 /* -> Last char of file name */
 BYTE            sfxchar;                /* Last char of file name    */
-U32             heads;                  /* #of heads in CKD file     */
-U32             trksize;                /* Track size of CKD file    */
-U32             trks;                   /* #of tracks in CKD file    */
-U32             cyls;                   /* #of cylinders in CKD file */
-U32             highcyl;                /* Highest cyl# in CKD file  */
+int             heads;                  /* #of heads in CKD file     */
+int             trksize;                /* Track size of CKD file    */
+int             trks;                   /* #of tracks in CKD file    */
+int             cyls;                   /* #of cylinders in CKD file */
+int             highcyl;                /* Highest cyl# in CKD file  */
 BYTE           *cu = NULL;              /* Specified control unit    */
 char           *kw, *op;                /* Argument keyword/option   */
 int             cckd=0;                 /* 1 if compressed CKD       */
@@ -368,7 +369,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         /* If `readonly' and shadow files (`sf=') were specified,
            then turn off the readonly bit.  Might as well make
            sure the `fakewrite' bit is off, too.               */
-        if (dev->dasdsfn[0] != '\0')
+        if (dev->dasdsfn[0] != '\0' && !dev->batch)
             dev->ckdrdonly = dev->ckdfakewr = 0;
 
         /* If shadow file, only one base file is allowed */
@@ -600,8 +601,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     /* Set the routine addresses for read_track and write_track */
     dev->ckdrdtrk = &ckd_read_track;
     dev->ckdupdtrk = &ckd_update_track;
-
-    
+    dev->ckdused = &ckd_used;
 
     if (!cckd) return 0;
     else return cckddasd_init_handler(dev, argc, argv);
@@ -862,11 +862,12 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     DEVTRACE ("ckddasd: read trk %d trkhdr %2.2x %2.2x%2.2x %2.2x%2.2x\n",
        trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]);
     trkhdr = (CKDDASD_TRKHDR *)dev->buf;
-    if (trkhdr->bin != 0
-        || trkhdr->cyl[0] != (cyl >> 8)
-        || trkhdr->cyl[1] != (cyl & 0xFF)
-        || trkhdr->head[0] != (head >> 8)
-        || trkhdr->head[1] != (head & 0xFF))
+    if ((trkhdr->bin != 0
+      || trkhdr->cyl[0] != (cyl >> 8)
+      || trkhdr->cyl[1] != (cyl & 0xFF)
+      || trkhdr->head[0] != (head >> 8)
+      || trkhdr->head[1] != (head & 0xFF))
+     && !dev->dasdcopy)
     {
         devmsg (_("%4.4X ckddasd: invalid track header for cyl %d head %d "
                 " %2.2x%2.2x%2.2x%2.2x%2.2x\n"), dev->devnum, cyl, head,
@@ -964,6 +965,15 @@ off_t           offset;                 /* File offsets              */
 
     return len;
 } /* end function ckd_update_track */
+
+/*-------------------------------------------------------------------*/
+/* Return used cylinders                                             */
+/*-------------------------------------------------------------------*/
+static
+int ckd_used (DEVBLK *dev)
+{
+    return dev->ckdcyls;
+}
 
 /*-------------------------------------------------------------------*/
 /* Build sense data                                                  */
@@ -2854,7 +2864,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             && isprint(guest_to_host(iobuf[0])))
         {
             BYTE module[45]; int i;
-            for (i=0; i < sizeof(module)-1 && i < num; i++)
+            for (i=0; i < (ssize_t)sizeof(module)-1 && i < num; i++)
                 module[i] = guest_to_host(iobuf[i]);
             module[i] = '\0';
             devmsg (_("ckddasd: search key %s\n"), module);

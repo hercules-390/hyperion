@@ -40,6 +40,7 @@
 
 static int fbadasd_read_block (DEVBLK *, BYTE *, int, BYTE *);
 static int fbadasd_write_block (DEVBLK *, BYTE *, int, BYTE *);
+static int fbadasd_used (DEVBLK *);
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
@@ -48,8 +49,8 @@ int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 int     rc;                             /* Return code               */
 struct  stat statbuf;                   /* File information          */
-U32     startblk;                       /* Device origin block number*/
-U32     numblks;                        /* Device block count        */
+int     startblk;                       /* Device origin block number*/
+int     numblks;                        /* Device block count        */
 BYTE    c;                              /* Character work area       */
 int     cfba = 0;                       /* 1 = Compressed fba        */
 int     i;                              /* Loop index                */
@@ -67,8 +68,9 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     strcpy (dev->filename, argv[0]);
 
     /* Open the device file */
-    dev->fd = open (dev->filename, O_RDWR|O_BINARY);
-    if (dev->fd < 0)
+    if (!dev->ckdrdonly)
+        dev->fd = open (dev->filename, O_RDWR|O_BINARY);
+    if (dev->ckdrdonly || dev->fd < 0)
     {
         dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
@@ -156,7 +158,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         }
     }
 
-    /* Processing for regullar fba dasd */
+    /* Processing for regular fba dasd */
     else
     {
         /* Determine the device size */
@@ -234,6 +236,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     /* Set the routine addresses for read_block and write_block */
     dev->fbardblk = &fbadasd_read_block;
     dev->fbawrblk = &fbadasd_write_block;
+    dev->fbaused = &fbadasd_used;
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
@@ -354,6 +357,15 @@ off_t   rcoff;                          /* Return value from lseek() */
 
     return len;
 } /* end function fbadasd_write_block */
+
+/*-------------------------------------------------------------------*/
+/* Return used blocks                                                */
+/*-------------------------------------------------------------------*/
+static
+int fbadasd_used (DEVBLK *dev)
+{
+    return dev->fbanumblk;
+}
 
 /*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
@@ -884,8 +896,8 @@ int     repcnt;                         /* Replication count         */
 /*-------------------------------------------------------------------*/
 /* Synchronous Fixed Block I/O (used by Diagnose instruction)        */
 /*-------------------------------------------------------------------*/
-void fbadasd_syncblk_io ( DEVBLK *dev, BYTE type, U32 blknum,
-        U32 blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual )
+void fbadasd_syncblk_io ( DEVBLK *dev, BYTE type, int blknum,
+        int blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual )
 {
 int     rc;                             /* Return code               */
 int     blkfactor;                      /* Number of device blocks

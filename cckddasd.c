@@ -46,15 +46,17 @@ void    cckddasd_start (DEVBLK *);
 void    cckddasd_end (DEVBLK *);
 int     cckd_read_track (DEVBLK *, int, int, BYTE *);
 int     cckd_update_track (DEVBLK *, BYTE *, int, BYTE *);
+int     cckd_used (DEVBLK *);
 int     cfba_read_block (DEVBLK *, BYTE *, int, BYTE *);
 int     cfba_write_block (DEVBLK *, BYTE *, int, BYTE *);
+int     cfba_used (DEVBLK *);
 CCKD_CACHE *cckd_read_trk (DEVBLK *, int, int, BYTE *);
 void    cckd_readahead (DEVBLK *, int);
 void    cckd_ra ();
 void    cckd_flush_cache(DEVBLK *);
 void    cckd_purge_cache(DEVBLK *);
 void    cckd_writer();
-off_t   cckd_get_space (DEVBLK *, int);
+off_t   cckd_get_space (DEVBLK *, unsigned int);
 void    cckd_rel_space (DEVBLK *, unsigned int, int);
 void    cckd_rel_free_atend (DEVBLK *, unsigned int, int, int);
 void    cckd_flush_space(DEVBLK *);
@@ -293,12 +295,14 @@ int             fdflags;                /* File flags                */
         dev->hnd = &cckddasd_device_hndinfo;
         dev->ckdrdtrk = &cckd_read_track;
         dev->ckdupdtrk = &cckd_update_track;
+        dev->ckdused = &cckd_used;
     }
     else
     {
         dev->hnd = &cfbadasd_device_hndinfo;
         dev->fbardblk = &cfba_read_block;
         dev->fbawrblk = &cfba_write_block;
+        dev->fbaused = &cfba_used;
     }
 
     /* Insert the device into the cckd device queue */
@@ -306,6 +310,9 @@ int             fdflags;                /* File flags                */
         cckd = dev2->cckd_ext;
     if (cckd) cckd->devnext = dev;
     else cckdblk.dev1st = dev;
+
+    cckdblk.batch = dev->batch;
+    if (cckdblk.batch) cckdblk.nostress = 1;
 
     return 0;
 } /* end function cckddasd_init_handler */
@@ -545,6 +552,40 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
 
 /*-------------------------------------------------------------------*/
+/* Return used cylinders                                             */
+/*-------------------------------------------------------------------*/
+int cckd_used (DEVBLK *dev)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             rc;                     /* Return code               */
+int             l1x, l2x;               /* Lookup table indexes      */
+int             sfx;                    /* Shadow file suffix        */
+CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
+
+    cckd = dev->cckd_ext;
+    obtain_lock (&cckd->filelock);
+
+    /* Find the last used level 1 table entry */
+    for (l1x = cckd->cdevhdr[0].numl1tab - 1; l1x > 0; l1x--)
+    {
+        sfx = cckd->sfn;
+        while (cckd->l1[sfx][l1x] == 0xffffffff && sfx > 0) sfx--;
+        if (cckd->l1[sfx][l1x]) break;
+    }
+
+    /* Find the last used level 2 table entry */
+    for (l2x = 255; l2x >= 0; l2x--)
+    {
+        rc = cckd_read_l2ent (dev, &l2, l1x * 256 + l2x);
+        if (rc < 0 || l2.pos != 0) break;
+    }
+
+    release_lock (&cckd->filelock);
+    return (l1x * 256 + l2x + dev->ckdheads) / dev->ckdheads;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* Compressed fba read block(s)                                      */
 /*-------------------------------------------------------------------*/
 int cfba_read_block (DEVBLK *dev, BYTE *buf, int rdlen, BYTE *unitstat)
@@ -733,6 +774,41 @@ int             len;                    /* Length left to copy       */
 
     return wrlen;
 } /* end function cfba_write_block */
+
+
+/*-------------------------------------------------------------------*/
+/* Return used blocks                                                */
+/*-------------------------------------------------------------------*/
+int cfba_used (DEVBLK *dev)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             rc;                     /* Return code               */
+int             l1x, l2x;               /* Lookup table indexes      */
+int             sfx;                    /* Shadow file suffix        */
+CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
+
+    cckd = dev->cckd_ext;
+    obtain_lock (&cckd->filelock);
+
+    /* Find the last used level 1 table entry */
+    for (l1x = cckd->cdevhdr[0].numl1tab - 1; l1x > 0; l1x--)
+    {
+        sfx = cckd->sfn;
+        while (cckd->l1[sfx][l1x] == 0xffffffff && sfx > 0) sfx--;
+        if (cckd->l1[sfx][l1x]) break;
+    }
+
+    /* Find the last used level 2 table entry */
+    for (l2x = 255; l2x >= 0; l2x--)
+    {
+        rc = cckd_read_l2ent (dev, &l2, l1x * 256 + l2x);
+        if (rc < 0 || l2.pos != 0) break;
+    }
+
+    release_lock (&cckd->filelock);
+    return (l1x * 256 + l2x + CFBA_BLOCK_NUM) / CFBA_BLOCK_NUM;
+}
+
 
 
 /*-------------------------------------------------------------------*/
@@ -1062,7 +1138,7 @@ TID             tid;                    /* Readahead thread id       */
     cckd = dev->cckd_ext;
 
     if (cckdblk.ramax < 1 || cckdblk.readaheads < 1
-     || cckdblk.cachewaiting || dev->batch)
+     || cckdblk.cachewaiting)
         return;
 
     /* Initialize */
@@ -1131,6 +1207,7 @@ TID             tid;                    /* Readahead thread id       */
         return;
     }
 
+    if (!cckdblk.batch)
     cckdmsg ("cckddasd: readahead thread %d started: tid="TIDPAT", pid=%d\n",
             ra, thread_id(), getpid());
 
@@ -1173,6 +1250,7 @@ TID             tid;                    /* Readahead thread id       */
         obtain_lock (&cckdblk.ralock);
     }
 
+    if (!cckdblk.batch)
     cckdmsg ("cckddasd: readahead thread %d stopping: tid="TIDPAT", pid=%d\n",
             ra, thread_id(), getpid());
     --cckdblk.ras;
@@ -1279,6 +1357,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
         return;
     }
 
+    if (!cckdblk.batch)
     cckdmsg ("cckddasd: writer thread %d started: tid="TIDPAT", pid=%d\n",
             writer, thread_id(), getpid());
 
@@ -1454,6 +1533,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
 
     }
 
+    if (!cckdblk.batch)
     cckdmsg ("cckddasd: writer thread %d stopping: tid="TIDPAT", pid=%d\n",
             writer, thread_id(), getpid());
     cckdblk.writers--;
@@ -1465,13 +1545,13 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
 /*-------------------------------------------------------------------*/
 /* Get file space                                                    */
 /*-------------------------------------------------------------------*/
-off_t cckd_get_space(DEVBLK *dev, int len)
+off_t cckd_get_space(DEVBLK *dev, unsigned int len)
 {
 int             rc;                     /* Return code               */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             i,p,n;                  /* Free space indices        */
 off_t           fpos;                   /* Free space offset         */
-int             flen;                   /* Free space size           */
+unsigned int    flen;                   /* Free space size           */
 int             sfx;                    /* Shadow file index         */
 struct stat     st;                     /* File status area          */
 
@@ -2725,6 +2805,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
 
     cckd = dev->cckd_ext;
+    if (dev->ckdrdonly) return 0;
 
     /* Purge the level 2 entries */
     cckd_purge_l2 (dev);
@@ -3060,8 +3141,9 @@ char            sfn[256];               /* Shadow file name          */
         if (rc < 0) return -1;
 
         /* try to open the shadow file read-write then read-only */
-        cckd->fd[cckd->sfn] = open (sfn, O_RDWR|O_BINARY);
-        if (cckd->fd[cckd->sfn] < 0)
+        if (!dev->ckdrdonly)
+            cckd->fd[cckd->sfn] = open (sfn, O_RDWR|O_BINARY);
+        if (dev->ckdrdonly || cckd->fd[cckd->sfn] < 0)
         {
             cckd->fd[cckd->sfn] = open (sfn, O_RDONLY|O_BINARY);
             if (cckd->fd[cckd->sfn] < 0) break;
@@ -3081,7 +3163,7 @@ char            sfn[256];               /* Shadow file name          */
     cckd->sfn--;
 
     /* If the last file was opened read-only then create a new one   */
-    if (cckd->open[cckd->sfn] == CCKD_OPEN_RO)
+    if (cckd->open[cckd->sfn] == CCKD_OPEN_RO && !dev->ckdrdonly)
     {
         rc = cckd_sf_new (dev);
         if (rc < 0) return -1;
@@ -3684,6 +3766,7 @@ int             gctab[5]= {             /* default gcol parameters   */
         return;
     }
 
+    if (!cckdblk.batch)
     cckdmsg ("cckddasd: garbage collector thread started: tid="TIDPAT" pid=%d \n",
               thread_id(), getpid());
 
@@ -3765,6 +3848,7 @@ int             gctab[5]= {             /* default gcol parameters   */
         timed_wait_condition (&cckdblk.gccond, &cckdblk.gclock, &tm);
     }
 
+    if (!cckdblk.batch)
     cckdmsg ("cckddasd: garbage collector thread stopping: tid="TIDPAT", pid=%d\n",
             thread_id(), getpid());
 

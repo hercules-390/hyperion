@@ -1,3 +1,5 @@
+17 Jul 2002 New utility dasdcopy.c; replaces ckd2cckd and cckd2ckd and
+            adds fba2cfba and cfba2fba function - Greg Smith
 16 Jul 2002 New 'hmccmds.c' source module #included by 'panel.c'. - Fish
 14 Jul 2002 UNTABBED all .c/.h source files (NO EMBEDDED TABS, please!) - Fish
 14 Jul 2002 ** MAJOR CLEANUP ** Added -W compile option to see ALL warnings and
