@@ -4482,7 +4482,40 @@ RADR    n;                              /* 64-bit operand values     */
 
 
 #if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
-BYTE ARCH_DEP(stfl_data)[4] = { 0, 0, 0, 0 };
+BYTE ARCH_DEP(stfl_data)[4] = {
+                 0
+#if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
+                 | STFL_0_N3
+#endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
+#if defined(FEATURE_ESAME)
+                 | STFL_0_ESAME_ACTIVE
+#endif /*defined(FEATURE_ESAME)*/
+#if defined(_900) || defined(FEATURE_ESAME)
+//               | STFL_0_ESAME_INSTALLED
+#endif /*defined(_900) || defined(FEATURE_ESAME)*/
+#if defined(FEATURE_DAT_ENHANCEMENT)
+                 | STFL_0_IDTE_INSTALLED
+#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+                 ,
+                 0
+                 ,
+                 0
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+                 | STFL_2_TRAN_FAC2
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+#if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
+//               | STFL_2_MSG_SECURITY
+#endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
+#if defined(FEATURE_LONG_DISPLACEMENT)
+                 | STFL_2_LONG_DISPL_INST
+                 | STFL_2_LONG_DISPL_HPERF
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+                 | STFL_2_HFP_MULT_ADD_SUB
+#endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
+                 ,
+                 0 };
+
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facilities List                            [S] */
 /*-------------------------------------------------------------------*/
@@ -4504,37 +4537,17 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     /* Point to PSA in main storage */
     psa = (void*)(regs->mainstor + regs->PX);
 
-    psa->stfl[0] = ARCH_DEP(stfl_data)[0] 
-#if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
-                 | STFL_0_N3
-#endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
+    memcpy(psa->stfl, ARCH_DEP(stfl_data), sizeof(psa->stfl));
+
 #if defined(_900) || defined(FEATURE_ESAME)
-                 | (sysblk.arch_z900 ? STFL_0_ESAME_INSTALLED : 0)
+    if(sysblk.arch_z900)
+        psa->stfl[0] |= STFL_0_ESAME_INSTALLED;
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
-#if defined(FEATURE_ESAME)
-                 | STFL_0_ESAME_ACTIVE
-#endif /*defined(FEATURE_ESAME)*/
-#if defined(FEATURE_DAT_ENHANCEMENT)
-                 | STFL_0_IDTE_INSTALLED
-#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
-                 ;
-    psa->stfl[1] = ARCH_DEP(stfl_data)[1];
-    psa->stfl[2] = ARCH_DEP(stfl_data)[2] 
-#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
-                 | STFL_2_TRAN_FAC2
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+
 #if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
-                 | (ARCH_DEP(cipher_message) ? STFL_2_MSG_SECURITY : 0)
+    if(ARCH_DEP(cipher_message))
+        psa->stfl[2] |= STFL_2_MSG_SECURITY;
 #endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
-#if defined(FEATURE_LONG_DISPLACEMENT)
-                 | STFL_2_LONG_DISPL_INST
-                 | STFL_2_LONG_DISPL_HPERF
-#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
-#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
-                 | STFL_2_HFP_MULT_ADD_SUB
-#endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
-                 ;
-    psa->stfl[3] = ARCH_DEP(stfl_data)[3];
 
 } /* end DEF_INST(store_facilities_list) */
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/

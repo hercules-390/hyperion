@@ -117,9 +117,187 @@ void scp_command (BYTE *command, int priomsg)
 // #endif /*FEATURE_SYSTEM_CONSOLE*/
 
 #if defined(FEATURE_SERVICE_PROCESSOR)
-BYTE ARCH_DEP(scpinfo_ifm)[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-BYTE ARCH_DEP(scpinfo_cfg)[6] = { 0, 0, 0, 0, 0, 0 };
-BYTE ARCH_DEP(scpinfo_cpf)[14] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+BYTE ARCH_DEP(scpinfo_ifm)[8] = {
+                        0
+                        | SCCB_IFM0_CHANNEL_PATH_INFORMATION
+                        | SCCB_IFM0_CHANNEL_PATH_SUBSYSTEM_COMMAND
+//                      | SCCB_IFM0_CHANNEL_PATH_RECONFIG
+//                      | SCCB_IFM0_CPU_INFORMATION
+                        ,
+                        0
+//                      | SCCB_IFM1_SIGNAL_ALARM
+//                      | SCCB_IFM1_WRITE_OPERATOR_MESSAGE
+//                      | SCCB_IFM1_STORE_STATUS_ON_LOAD
+//                      | SCCB_IFM1_RESTART_REASONS
+//                      | SCCB_IFM1_INSTRUCTION_ADDRESS_TRACE_BUFFER
+                        | SCCB_IFM1_LOAD_PARAMETER
+#ifdef FEATURE_CPU_RECONFIG
+                        | SCCB_IFM0_CPU_RECONFIG
+#endif /*FEATURE_CPU_RECONFIG*/
+                        ,
+                        0
+//                      | SCCB_IFM2_REAL_STORAGE_INCREMENT_RECONFIG
+//                      | SCCB_IFM2_REAL_STORAGE_ELEMENT_INFO
+//                      | SCCB_IFM2_REAL_STORAGE_ELEMENT_RECONFIG
+//                      | SCCB_IFM2_COPY_AND_REASSIGN_STORAGE
+#ifdef FEATURE_EXPANDED_STORAGE
+                        | SCCB_IFM2_EXTENDED_STORAGE_USABILITY_MAP
+#endif /*FEATURE_EXPANDED_STORAGE*/
+//                      | SCCB_IFM2_EXTENDED_STORAGE_ELEMENT_INFO
+//                      | SCCB_IFM2_EXTENDED_STORAGE_ELEMENT_RECONFIG
+                        ,
+                        0
+#if defined(FEATURE_VECTOR_FACILITY) && defined(FEATURE_CPU_RECONFIG)
+                        | SCCB_IFM3_VECTOR_FEATURE_RECONFIG
+#endif /*FEATURE_VECTOR_FACILITY*/
+#ifdef FEATURE_SYSTEM_CONSOLE
+                        | SCCB_IFM3_READ_WRITE_EVENT_FEATURE
+#endif /*FEATURE_SYSTEM_CONSOLE*/
+//                      | SCCB_IFM3_READ_RESOURCE_GROUP_INFO
+                        ,
+                        0, 0, 0, 0 };
+
+BYTE ARCH_DEP(scpinfo_cfg)[6] = {
+                        0
+#if defined(FEATURE_HYPERVISOR)
+                        | SCCB_CFG0_LOGICALLY_PARTITIONED
+#endif /*defined(FEATURE_HYPERVISOR)*/
+#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+                        | SCCB_CFG0_SUPPRESSION_ON_PROTECTION
+#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+//                      | SCCB_CFG0_INITIATE_RESET
+#if defined(FEATURE_CHSC)
+                        | SCCB_CFG0_STORE_CHANNEL_SUBSYS_CHARACTERISTICS
+#endif /*defined(FEATURE_CHSC)*/
+#if defined(FEATURE_MOVE_PAGE_FACILITY_2)
+                        | SCCB_CFG0_MVPG_FOR_ALL_GUESTS
+#endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
+//                      | SCCB_CFG0_FAST_SYNCHRONOUS_DATA_MOVER
+                        ,
+                        0
+//                      | SCCB_CFG1_CSLO
+                        ,
+                        0
+//                      | SCCB_CFG2_DEVICE_ACTIVE_ONLY_MEASUREMENT
+#ifdef FEATURE_CALLED_SPACE_IDENTIFICATION
+                        | SCCB_CFG2_CALLED_SPACE_IDENTIFICATION
+#endif /*FEATURE_CALLED_SPACE_IDENTIFICATION*/
+#ifdef FEATURE_CHECKSUM_INSTRUCTION
+                        | SCCB_CFG2_CHECKSUM_INSTRUCTION
+#endif /*FEATURE_CHECKSUM_INSTRUCTION*/
+                        ,
+                        0
+#if defined(FEATURE_RESUME_PROGRAM)
+                        | SCCB_CFG3_RESUME_PROGRAM
+#endif /*defined(FEATURE_RESUME_PROGRAM)*/
+#if defined(FEATURE_PERFORM_LOCKED_OPERATION)
+                        | SCCB_CFG3_PERFORM_LOCKED_OPERATION
+#endif /*defined(FEATURE_PERFORM_LOCKED_OPERATION)*/
+#ifdef FEATURE_IMMEDIATE_AND_RELATIVE
+                        | SCCB_CFG3_IMMEDIATE_AND_RELATIVE
+#endif /*FEATURE_IMMEDIATE_AND_RELATIVE*/
+#ifdef FEATURE_COMPARE_AND_MOVE_EXTENDED
+                        | SCCB_CFG3_COMPARE_AND_MOVE_EXTENDED
+#endif /*FEATURE_COMPARE_AND_MOVE_EXTENDED*/
+#ifdef FEATURE_BRANCH_AND_SET_AUTHORITY
+                        | SCCB_CFG3_BRANCH_AND_SET_AUTHORITY
+#endif /*FEATURE_BRANCH_AND_SET_AUTHORITY*/
+#if defined(FEATURE_BASIC_FP_EXTENSIONS)
+                        | SCCB_CFG3_EXTENDED_FLOATING_POINT
+#endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
+/*ZZ*/                  | SCCB_CFG3_EXTENDED_LOGICAL_COMPUTATION_FACILITY
+                        ,
+                        0
+#ifdef FEATURE_EXTENDED_TOD_CLOCK
+                        | SCCB_CFG4_EXTENDED_TOD_CLOCK
+#endif /*FEATURE_EXTENDED_TOD_CLOCK*/
+#if defined(FEATURE_EXTENDED_TRANSLATION)
+                        | SCCB_CFG4_EXTENDED_TRANSLATION
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION)*/
+#if defined(FEATURE_LOAD_REVERSED)
+                        | SCCB_CFG4_LOAD_REVERSED_FACILITY            
+#endif /*defined(FEATURE_LOAD_REVERSED)*/
+#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
+                        | SCCB_CFG4_EXTENDED_TRANSLATION_FACILITY2   
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+#if defined(FEATURE_STORE_SYSTEM_INFORMATION)
+                        | SCCB_CFG4_STORE_SYSTEM_INFORMATION
+#endif /*FEATURE_STORE_SYSTEM_INFORMATION*/
+                        ,
+                        0 };
+BYTE ARCH_DEP(scpinfo_cpf)[14] = {
+                            0
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+#if defined(_370) && !defined(FEATURE_ESAME)
+                            | SCCB_CPF0_SIE_370_MODE
+#endif /*defined(_370) && !defined(FEATURE_ESAME)*/
+                            | SCCB_CPF0_SIE_XA_MODE
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+//                          | SCCB_CPF0_SIE_SET_II_370_MODE
+#if defined(FEATURE_IO_ASSIST)
+                            | SCCB_CPF0_SIE_SET_II_XA_MODE
+#endif /*defined(FEATURE_IO_ASSIST)*/
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+                            | SCCB_CPF0_SIE_NEW_INTERCEPT_FORMAT
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+#if defined(FEATURE_STORAGE_KEY_ASSIST)
+                            | SCCB_CPF0_STORAGE_KEY_ASSIST
+#endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
+#if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+                            | SCCB_CPF0_MULTIPLE_CONTROLLED_DATA_SPACE
+#endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+                            ,
+                            0
+#if defined(FEATURE_IO_ASSIST)
+                            | SCCB_CPF1_IO_INTERPRETATION_LEVEL_2
+#endif /*defined(FEATURE_IO_ASSIST)*/
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+                            | SCCB_CPF1_GUEST_PER_ENHANCED
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+//                          | SCCB_CPF1_SIGP_INTERPRETATION_ASSIST
+#if defined(FEATURE_STORAGE_KEY_ASSIST)
+                            | SCCB_CPF1_RCP_BYPASS_FACILITY
+#endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
+#if defined(FEATURE_REGION_RELOCATE)
+                            | SCCB_CPF1_REGION_RELOCATE_FACILITY
+#endif /*defined(FEATURE_REGION_RELOCATE)*/
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+                            | SCCB_CPF1_EXPEDITE_TIMER_PROCESSING
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+                            ,
+                            0
+#if defined(FEATURE_CRYPTO)
+                            | SCCB_CPF2_CRYPTO_FEATURE_ACCESSED
+#endif /*defined(FEATURE_CRYPTO)*/
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+                            | SCCB_CPF2_EXPEDITE_RUN_PROCESSING
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+                            ,
+                            0
+#ifdef FEATURE_PRIVATE_SPACE
+                            | SCCB_CPF3_PRIVATE_SPACE_FEATURE
+                            | SCCB_CPF3_FETCH_ONLY_BIT
+#endif /*FEATURE_PRIVATE_SPACE*/
+#if defined(FEATURE_PER2)
+                            | SCCB_CPF3_PER2_INSTALLED
+#endif /*defined(FEATURE_PER2)*/
+                            ,
+                            0
+#if defined(FEATURE_PER2)
+                            | SCCB_CPF4_OMISION_GR_ALTERATION_370
+#endif /*defined(FEATURE_PER2)*/
+                            ,
+                            0
+#if defined(FEATURE_WAITSTATE_ASSIST)
+                            | SCCB_CPF5_GUEST_WAIT_STATE_ASSIST
+#endif /*defined(FEATURE_WAITSTATE_ASSIST)*/
+                            ,
+                            0, 0, 0, 0, 0, 0, 0,
+                            0
+#if defined(FEATURE_CRYPTO)
+//                          | SCCB_CPF13_CRYPTO_UNIT_ID
+#endif /*defined(FEATURE_CRYPTO)*/
+                            } ;
 U32  ARCH_DEP(sclp_recv_mask) = SCCB_EVENT_SUPP_RECV_MASK;
 U32  ARCH_DEP(sclp_send_mask) = SCCB_EVENT_SUPP_SEND_MASK;
 /*-------------------------------------------------------------------*/
@@ -368,113 +546,12 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         memcpy (sccbscp->loadparm, sysblk.loadparm, 8);
 
         /* Set installed features bit mask in SCCB */
-        sccbscp->ifm[0] = ARCH_DEP(scpinfo_ifm)[0]
-                        | SCCB_IFM0_CHANNEL_PATH_INFORMATION
-                        | SCCB_IFM0_CHANNEL_PATH_SUBSYSTEM_COMMAND
-//                      | SCCB_IFM0_CHANNEL_PATH_RECONFIG
-//                      | SCCB_IFM0_CPU_INFORMATION
-#ifdef FEATURE_CPU_RECONFIG
-                        | SCCB_IFM0_CPU_RECONFIG
-#endif /*FEATURE_CPU_RECONFIG*/
-                        ;
-        sccbscp->ifm[1] = ARCH_DEP(scpinfo_ifm)[1]
-//                      | SCCB_IFM1_SIGNAL_ALARM
-//                      | SCCB_IFM1_WRITE_OPERATOR_MESSAGE
-//                      | SCCB_IFM1_STORE_STATUS_ON_LOAD
-//                      | SCCB_IFM1_RESTART_REASONS
-//                      | SCCB_IFM1_INSTRUCTION_ADDRESS_TRACE_BUFFER
-                        | SCCB_IFM1_LOAD_PARAMETER
-                        ;
-        sccbscp->ifm[2] = ARCH_DEP(scpinfo_ifm)[2]
-//                      | SCCB_IFM2_REAL_STORAGE_INCREMENT_RECONFIG
-//                      | SCCB_IFM2_REAL_STORAGE_ELEMENT_INFO
-//                      | SCCB_IFM2_REAL_STORAGE_ELEMENT_RECONFIG
-//                      | SCCB_IFM2_COPY_AND_REASSIGN_STORAGE
-#ifdef FEATURE_EXPANDED_STORAGE
-                        | SCCB_IFM2_EXTENDED_STORAGE_USABILITY_MAP
-#endif /*FEATURE_EXPANDED_STORAGE*/
-//                      | SCCB_IFM2_EXTENDED_STORAGE_ELEMENT_INFO
-//                      | SCCB_IFM2_EXTENDED_STORAGE_ELEMENT_RECONFIG
-                        ;
-        sccbscp->ifm[3] = ARCH_DEP(scpinfo_ifm)[3]
-#if defined(FEATURE_VECTOR_FACILITY) && defined(FEATURE_CPU_RECONFIG)
-                        | SCCB_IFM3_VECTOR_FEATURE_RECONFIG
-#endif /*FEATURE_VECTOR_FACILITY*/
-#ifdef FEATURE_SYSTEM_CONSOLE
-                        | SCCB_IFM3_READ_WRITE_EVENT_FEATURE
-#endif /*FEATURE_SYSTEM_CONSOLE*/
-//                      | SCCB_IFM3_READ_RESOURCE_GROUP_INFO
-                        ;
-        sccbscp->cfg[0] = ARCH_DEP(scpinfo_cfg)[0]
-#if defined(FEATURE_HYPERVISOR)
-                        | SCCB_CFG0_LOGICALLY_PARTITIONED
-#endif /*defined(FEATURE_HYPERVISOR)*/
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
-                        | SCCB_CFG0_SUPPRESSION_ON_PROTECTION
-#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
-//                      | SCCB_CFG0_INITIATE_RESET
-#if defined(FEATURE_CHSC)
-                        | SCCB_CFG0_STORE_CHANNEL_SUBSYS_CHARACTERISTICS
-#endif /*defined(FEATURE_CHSC)*/
-#if defined(FEATURE_MOVE_PAGE_FACILITY_2)
-                        | SCCB_CFG0_MVPG_FOR_ALL_GUESTS
-#endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
-//                      | SCCB_CFG0_FAST_SYNCHRONOUS_DATA_MOVER
-                        ;
-        sccbscp->cfg[1] = ARCH_DEP(scpinfo_cfg)[1]
-//                      | SCCB_CFG1_CSLO
-                        ;
-        sccbscp->cfg[2] = ARCH_DEP(scpinfo_cfg)[2]
-//                      | SCCB_CFG2_DEVICE_ACTIVE_ONLY_MEASUREMENT
-#ifdef FEATURE_CALLED_SPACE_IDENTIFICATION
-                        | SCCB_CFG2_CALLED_SPACE_IDENTIFICATION
-#endif /*FEATURE_CALLED_SPACE_IDENTIFICATION*/
-#ifdef FEATURE_CHECKSUM_INSTRUCTION
-                        | SCCB_CFG2_CHECKSUM_INSTRUCTION
-#endif /*FEATURE_CHECKSUM_INSTRUCTION*/
-                        ;
-        sccbscp->cfg[3] = ARCH_DEP(scpinfo_cfg)[3]
-#if defined(FEATURE_RESUME_PROGRAM)
-                        | SCCB_CFG3_RESUME_PROGRAM
-#endif /*defined(FEATURE_RESUME_PROGRAM)*/
-#if defined(FEATURE_PERFORM_LOCKED_OPERATION)
-                        | SCCB_CFG3_PERFORM_LOCKED_OPERATION
-#endif /*defined(FEATURE_PERFORM_LOCKED_OPERATION)*/
-#ifdef FEATURE_IMMEDIATE_AND_RELATIVE
-                        | SCCB_CFG3_IMMEDIATE_AND_RELATIVE
-#endif /*FEATURE_IMMEDIATE_AND_RELATIVE*/
-#ifdef FEATURE_COMPARE_AND_MOVE_EXTENDED
-                        | SCCB_CFG3_COMPARE_AND_MOVE_EXTENDED
-#endif /*FEATURE_COMPARE_AND_MOVE_EXTENDED*/
-#ifdef FEATURE_BRANCH_AND_SET_AUTHORITY
-                        | SCCB_CFG3_BRANCH_AND_SET_AUTHORITY
-#endif /*FEATURE_BRANCH_AND_SET_AUTHORITY*/
-#if defined(FEATURE_BASIC_FP_EXTENSIONS)
-                        | SCCB_CFG3_EXTENDED_FLOATING_POINT
-#endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
-/*ZZ*/                  | SCCB_CFG3_EXTENDED_LOGICAL_COMPUTATION_FACILITY
-                        ;
-        sccbscp->cfg[4] = ARCH_DEP(scpinfo_cfg)[4]
-#ifdef FEATURE_EXTENDED_TOD_CLOCK
-                        | SCCB_CFG4_EXTENDED_TOD_CLOCK
-#endif /*FEATURE_EXTENDED_TOD_CLOCK*/
-#if defined(FEATURE_EXTENDED_TRANSLATION)
-                        | SCCB_CFG4_EXTENDED_TRANSLATION
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION)*/
-#if defined(FEATURE_LOAD_REVERSED)
-                        | SCCB_CFG4_LOAD_REVERSED_FACILITY            
-#endif /*defined(FEATURE_LOAD_REVERSED)*/
-#if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
-                        | SCCB_CFG4_EXTENDED_TRANSLATION_FACILITY2   
-#endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
-#if defined(FEATURE_STORE_SYSTEM_INFORMATION)
-                        | SCCB_CFG4_STORE_SYSTEM_INFORMATION
-#endif /*FEATURE_STORE_SYSTEM_INFORMATION*/
-                        ;
+        memcpy(sccbscp->ifm, ARCH_DEP(scpinfo_ifm), sizeof(sccbscp->ifm));
 
-        sccbscp->cfg[5] = ARCH_DEP(scpinfo_cfg)[5]
+        memcpy(sccbscp->cfg, ARCH_DEP(scpinfo_cfg), sizeof(sccbscp->cfg));
 #if defined(_900) || defined(FEATURE_ESAME)
-                        | (sysblk.arch_z900 ? SCCB_CFG5_ESAME : 0)
+        if(sysblk.arch_z900)
+            sccbscp->cfg[5] |= SCCB_CFG5_ESAME;
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
                         ;
 
@@ -489,53 +566,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             memset (sccbcpu, 0, sizeof(SCCB_CPU_INFO));
             sccbcpu->cpa = sysblk.regs[i].cpuad;
             sccbcpu->tod = 0;
-            sccbcpu->cpf[0] = ARCH_DEP(scpinfo_cpf)[0]
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
-#if defined(_370) && !defined(FEATURE_ESAME)
-                            | SCCB_CPF0_SIE_370_MODE
-#endif /*defined(_370) && !defined(FEATURE_ESAME)*/
-                            | SCCB_CPF0_SIE_XA_MODE
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
-//                          | SCCB_CPF0_SIE_SET_II_370_MODE
-#if defined(FEATURE_IO_ASSIST)
-                            | SCCB_CPF0_SIE_SET_II_XA_MODE
-#endif /*defined(FEATURE_IO_ASSIST)*/
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
-                            | SCCB_CPF0_SIE_NEW_INTERCEPT_FORMAT
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
-#if defined(FEATURE_STORAGE_KEY_ASSIST)
-                            | SCCB_CPF0_STORAGE_KEY_ASSIST
-#endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
-#if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-                            | SCCB_CPF0_MULTIPLE_CONTROLLED_DATA_SPACE
-#endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                            ;
-            sccbcpu->cpf[1] = ARCH_DEP(scpinfo_cpf)[1]
-#if defined(FEATURE_IO_ASSIST)
-                            | SCCB_CPF1_IO_INTERPRETATION_LEVEL_2
-#endif /*defined(FEATURE_IO_ASSIST)*/
-#if defined(FEATURE_INTERPRETIVE_EXECUTION)
-                            | SCCB_CPF1_GUEST_PER_ENHANCED
-#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
-//                          | SCCB_CPF1_SIGP_INTERPRETATION_ASSIST
-#if defined(FEATURE_STORAGE_KEY_ASSIST)
-                            | SCCB_CPF1_RCP_BYPASS_FACILITY
-#endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
-#if defined(FEATURE_REGION_RELOCATE)
-                            | SCCB_CPF1_REGION_RELOCATE_FACILITY
-#endif /*defined(FEATURE_REGION_RELOCATE)*/
-#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
-                            | SCCB_CPF1_EXPEDITE_TIMER_PROCESSING
-#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
-                            ;
-            sccbcpu->cpf[2] = ARCH_DEP(scpinfo_cpf)[2]
-#if defined(FEATURE_CRYPTO)
-                            | SCCB_CPF2_CRYPTO_FEATURE_ACCESSED
-#endif /*defined(FEATURE_CRYPTO)*/
-#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
-                            | SCCB_CPF2_EXPEDITE_RUN_PROCESSING
-#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
-                            ;
+            memcpy(sccbcpu->cpf, ARCH_DEP(scpinfo_cpf), sizeof(sccbcpu->cpf));
 
 #ifdef FEATURE_VECTOR_FACILITY
 #ifndef FEATURE_CPU_RECONFIG
@@ -550,32 +581,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*FEATURE_CPU_RECONFIG*/
 #endif /*FEATURE_VECTOR_FACILITY*/
 
-            sccbcpu->cpf[3] = ARCH_DEP(scpinfo_cpf)[3]
-#ifdef FEATURE_PRIVATE_SPACE
-                            | SCCB_CPF3_PRIVATE_SPACE_FEATURE
-                            | SCCB_CPF3_FETCH_ONLY_BIT
-#endif /*FEATURE_PRIVATE_SPACE*/
-#if defined(FEATURE_PER2)
-                            | SCCB_CPF3_PER2_INSTALLED
-#endif /*defined(FEATURE_PER2)*/
-                            ;
-            sccbcpu->cpf[4] = ARCH_DEP(scpinfo_cpf)[4]
-#if defined(FEATURE_PER2)
-                            | SCCB_CPF4_OMISION_GR_ALTERATION_370
-#endif /*defined(FEATURE_PER2)*/
-                            ;
-            sccbcpu->cpf[5] = ARCH_DEP(scpinfo_cpf)[5]
-#if defined(FEATURE_WAITSTATE_ASSIST)
-                            | SCCB_CPF5_GUEST_WAIT_STATE_ASSIST
-#endif /*defined(FEATURE_WAITSTATE_ASSIST)*/
-                            ;
-            for(i = 6; i < 13; i++)
-                sccbcpu->cpf[i] = ARCH_DEP(scpinfo_cpf)[i];
-            sccbcpu->cpf[13] = ARCH_DEP(scpinfo_cpf)[13]
-#if defined(FEATURE_CRYPTO)
-//                          | SCCB_CPF13_CRYPTO_UNIT_ID
-#endif /*defined(FEATURE_CRYPTO)*/
-                            ;
         }
 
         /* Set response code X'0010' in SCCB header */
