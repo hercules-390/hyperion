@@ -1477,7 +1477,15 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         logmsg("Service signal %spending\n",
                                 IS_IC_SERVSIG ? "" : "not ");
         logmsg("Signaling facility %sbusy\n",
-                                sysblk.sigpbusy ? "" : "not ");
+                                test_lock(&sysblk.sigplock) ? "" : "not ");
+        logmsg("TOD lock %sheld\n",
+                                test_lock(&sysblk.todlock) ? "" : "not ");
+        logmsg("Main lock %sheld\n",
+                                test_lock(&sysblk.mainlock) ? "" : "not ");
+        logmsg("Int lock %sheld\n",
+                                test_lock(&sysblk.intlock) ? "" : "not ");
+        logmsg("Ioq lock %sheld\n",
+                                test_lock(&sysblk.ioqlock) ? "" : "not ");
         logmsg("I/O interrupt %spending\n",
                                 IS_IC_IOPENDING ? "" : "not ");
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -1488,6 +1496,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 logmsg("DEV%4.4X: PCI pending\n",dev->devnum);
             if ((dev->crwpending) && (dev->pmcw.flag5 & PMCW5_V))
                 logmsg("DEV%4.4X: CRW pending\n",dev->devnum);
+            if (test_lock(&dev->lock) && (dev->pmcw.flag5 & PMCW5_V))
+                logmsg("DEV%4.4X: lock held\n",dev->devnum);
         }
 
         logmsg ("I/O interrupt queue: ");

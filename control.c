@@ -4697,21 +4697,16 @@ static char *ordername[] = {    "Unassigned",
 
     /* [4.9.2.1] Claim the use of the CPU signaling and response
        facility, and return condition code 2 if the facility is
-       busy.  The sigpbusy bit is set while the facility is in
-       use by any CPU.  The sigplock must be held while testing
-       and setting the value of the sigpbusy bit to one. */
-    obtain_lock (&sysblk.sigplock);
-    if (sysblk.sigpbusy)
+       busy.  The sigplock is held while the facility is in
+       use by any CPU. */
+    if(try_obtain_lock (&sysblk.sigplock))
     {
-        release_lock (&sysblk.sigplock);
         regs->psw.cc = 2;
         return;
     }
-    sysblk.sigpbusy = 1;
-    release_lock (&sysblk.sigplock);
 
     /* Obtain the interrupt lock */
-    obtain_lock (&sysblk.intlock);
+    obtain_lock(&sysblk.intlock);
 
     /* If the cpu is not part of the configuration then return cc3
        Initial CPU reset may IML a processor that is currently not
@@ -4723,7 +4718,7 @@ static char *ordername[] = {    "Unassigned",
 #endif /*defined(FEATURE_S370_CHANNEL)*/
        && !tregs->cpuonline)
     {
-        sysblk.sigpbusy = 0;
+        release_lock(&sysblk.sigplock);
         release_lock(&sysblk.intlock);
         regs->psw.cc = 3;
         return;
@@ -4741,7 +4736,7 @@ static char *ordername[] = {    "Unassigned",
         && (tregs->cpustate == CPUSTATE_STOPPING
             || IS_IC_RESTART(tregs)))
     {
-        sysblk.sigpbusy = 0;
+        release_lock(&sysblk.sigplock);
         release_lock(&sysblk.intlock);
         regs->psw.cc = 2;
         return;
@@ -5077,7 +5072,7 @@ static char *ordername[] = {    "Unassigned",
         } /* end switch(order) */
 
     /* Release the use of the signalling and response facility */
-    sysblk.sigpbusy = 0;
+    release_lock(&sysblk.sigplock);
 
     /* Wake up the target CPU */
     WAKEUP_CPU (tregs->cpuad);

@@ -192,6 +192,8 @@ typedef fthread_attr_t    ATTR;
 #define initialize_lock(plk)                   fthread_mutex_init((plk))
 #define obtain_lock(plk)                       fthread_mutex_lock((plk))
 #define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
+#define test_lock(plk) \
+        (fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
 #define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
 #define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
 #define initialize_condition(pcond)            fthread_cond_init((pcond))
@@ -215,6 +217,8 @@ typedef pthread_attr_t                  ATTR;
         pthread_mutex_trylock((plk))
 #define release_lock(plk) \
         pthread_mutex_unlock((plk))
+#define test_lock(plk) \
+        (pthread_mutex_trylock((plk)) ? 1 : pthread_mutex_unlock((plk)) )
 #define initialize_condition(pcond) \
         pthread_cond_init((pcond),NULL)
 #define signal_condition(pcond) \
@@ -252,6 +256,7 @@ typedef int                             ATTR;
 #define obtain_lock(plk)                *(plk)=1
 #define try_obtain_lock(plk)            *(plk)=1
 #define release_lock(plk)               *(plk)=0
+#define test_lock(plk)                  (*(plk)!=0)
 #define initialize_condition(pcond)     *(pcond)=0
 #define signal_condition(pcond)         *(pcond)=1
 #define broadcast_condition(pcond)      *(pcond)=1
@@ -665,7 +670,6 @@ typedef struct _SYSBLK {
                 servsig:1,              /* 1=Service signal pending  */
                 crwpending:1,           /* 1=Channel report pending  */
 #endif /*INTERRUPTS_FAST_CHECK*/
-                sigpbusy:1,             /* 1=Signal facility in use  */
                 sigintreq:1,            /* 1=SIGINT request pending  */
                 insttrace:1,            /* 1=Instruction trace       */
                 inststep:1,             /* 1=Instruction step        */

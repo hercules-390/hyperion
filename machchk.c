@@ -367,9 +367,9 @@ int i;
         ON_IC_CPU_NOT_STARTED(regs);
 
         /* Notify other CPU's by means of a malfuction alert if possible */
-        if (!try_obtain_lock(&sysblk.intlock))
+        if (!try_obtain_lock(&sysblk.sigplock))
         {
-            if(!sysblk.sigpbusy)
+            if(!try_obtain_lock(&sysblk.intlock))
             {
 #ifdef FEATURE_CPU_RECONFIG
                 for (i = 0; i < MAX_CPU_ENGINES; i++)
@@ -381,8 +381,9 @@ int i;
                         ON_IC_MALFALT(&sysblk.regs[i]);
                         sysblk.regs[i].malfcpu[regs->cpuad] = 1;
                     }
+                release_lock(&sysblk.intlock);
             }
-            release_lock(&sysblk.intlock);
+            release_lock(&sysblk.sigplock);
         }
 
     }
