@@ -23,8 +23,6 @@
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
-static BYTE eighthexFF[] =              /* End of directory marker   */
-        {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
@@ -221,12 +219,14 @@ BYTE            memname[9];             /* Member name (ASCIIZ)      */
 int main (int argc, char *argv[])
 {
 int             rc;                     /* Return code               */
+int             i=0;                    /* Arument index             */
 int             len;                    /* Record length             */
 int             cyl;                    /* Cylinder number           */
 int             head;                   /* Head number               */
 int             rec;                    /* Record number             */
 int             trk;                    /* Relative track number     */
 BYTE           *fname;                  /* -> CKD image file name    */
+BYTE           *sfname=NULL;            /* -> CKD shadow file name   */
 BYTE            dsnama[45];             /* Dataset name (ASCIIZ)     */
 int             noext;                  /* Number of extents         */
 DSXTENT         extent[16];             /* Extent descriptor array   */
@@ -245,10 +245,10 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         argc--;
     }
 #endif /*EXTERNALGUI*/
-    if (argc < 3 || argc > 4)
+    if (argc < 3 || argc > 5)
     {
         fprintf (stderr,
-                "Usage: %s ckdfile pdsname [ascii]\n",
+                "Usage: %s ckdfile [sf=shadow-file-name] pdsname [ascii]\n",
                 argv[0]);
         return -1;
     }
@@ -256,27 +256,34 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
     /* The first argument is the name of the CKD image file */
     fname = argv[1];
 
+    /* The next argument may be the shadow file name */
+    if (!memcmp (argv[2], "sf=", 3))
+    {
+        sfname = argv[2];
+        i = 1;
+    }
+
     /* The second argument is the dataset name */
     memset (dsnama, 0, sizeof(dsnama));
-    strncpy (dsnama, argv[2], sizeof(dsnama)-1);
+    strncpy (dsnama, argv[2|+i], sizeof(dsnama)-1);
     string_to_upper (dsnama);
 
     /* The third argument is an optional keyword */
-    if (argc > 3 && argv[3] != NULL)
+    if (argc > 3+i && argv[3+i] != NULL)
     {
-        if (strcasecmp(argv[3], "ascii") == 0)
+        if (strcasecmp(argv[3+i], "ascii") == 0)
             asciiflag = 1;
         else
         {
             fprintf (stderr,
                     "Keyword %s is not recognized\n",
-                    argv[3]);
+                    argv[3+i]);
             return -1;
         }
     }
 
     /* Open the CKD image file */
-    cif = open_ckd_image (fname, O_RDONLY|O_BINARY);
+    cif = open_ckd_image (fname, sfname, O_RDONLY|O_BINARY);
     if (cif == NULL) return -1;
 
     /* Build the extent array for the requested dataset */
