@@ -49,9 +49,6 @@ REGS   *regs;                           /* -> Regs                   */
         if (IS_CPU_ONLINE(cpu))
             ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
 
-    /* put cpu in load state */
-    regs->loadstate = 1;
-
     /* Perform I/O reset */
     io_reset ();
 
@@ -77,9 +74,12 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 BYTE    unitstat;                       /* IPL device unit status    */
 BYTE    chanstat;                       /* IPL device channel status */
 
-    regs = sysblk.regs[cpu];
 
     ARCH_DEP(system_reset(cpu,clear));
+
+    regs = sysblk.regs[cpu];
+
+    regs->loadstate = 1;
 
 
     /* Point to the device block for the IPL device */
