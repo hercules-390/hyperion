@@ -4,7 +4,7 @@
 /*-------------------------------------------------------------------*/
 /* This module initializes the Hercules S/370 or ESA/390 emulator.   */
 /* It builds the system configuration blocks, creates threads for    */
-/* the console server, the timer handler, and central processors,    */
+/* central processors, HTTP server                                   */
 /* and activates the control panel which runs under the main thread. */
 /*-------------------------------------------------------------------*/
 
@@ -230,16 +230,6 @@ TID paneltid;
         }
     }
 #endif /*defined(OPTION_HTTP_SERVER)*/
-
-    /* Start the TOD clock and CPU timer thread */
-    if ( create_thread (&sysblk.todtid, &sysblk.detattr,
-                        timer_update_thread, NULL) )
-    {
-        fprintf (stderr,
-                "HHC136I Cannot create timer thread: %s\n",
-                strerror(errno));
-        exit(1);
-    }
 
 #ifndef PROFILE_CPU
     /* Activate the control panel */

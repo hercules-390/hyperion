@@ -290,7 +290,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
     sysblk.todclock_init = sysblk.todclock_init * 1000000 + tv.tv_usec;
 #endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
 
-    while (1)
+    while (sysblk.numcpu)
     {
         /* Obtain the TOD lock */
         obtain_lock (&sysblk.todlock);
@@ -355,6 +355,8 @@ struct  timeval tv;                     /* Structure for gettimeofday
         select (0, NULL, NULL, NULL, &tv);
 
     } /* end while */
+
+    logmsg ("HHC612I Timer thread ended\n");
 
     return NULL;
 

@@ -3082,6 +3082,7 @@ struct  timeval tv;                     /* Select timeout structure  */
               ++sysblk.pcpu;
             }
 
+/* ZZTEMP */ if(!regs) regs = sysblk.regs;
         if (!regs)
             /* No CPUs are online! The 'quit' or 'exit'
                command must have been issued; exit loop. */

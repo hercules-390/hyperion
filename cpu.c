@@ -986,7 +986,23 @@ void *cpu_thread (REGS *regs)
         release_lock(&sysblk.intlock);
         return NULL;
     }
-    sysblk.numcpu++;
+
+    if(!sysblk.numcpu)
+    {
+        sysblk.numcpu++;
+        /* Start the TOD clock and CPU timer thread */
+        if ( create_thread (&sysblk.todtid, &sysblk.detattr,
+                            timer_update_thread, NULL) )
+        {
+            logmsg ("HHC136I Cannot create timer thread: %s\n",
+                    strerror(errno));
+            release_lock(&sysblk.intlock);
+            return NULL;
+        }
+    }
+    else
+        sysblk.numcpu++;
+
     initdone = 1;  /* now safe for panel_display function to proceed */
 
     /* Perform initial cpu reset */
