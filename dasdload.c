@@ -99,6 +99,7 @@ typedef struct _TTRCONV {
 #define METHOD_CVOL     3
 #define METHOD_VTOC     4
 #define METHOD_VS       5
+#define METHOD_SEQ      6
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -3342,6 +3343,166 @@ DATABLK         datablk;                /* Data block                */
 } /* end function dip_initialize */
 
 /*-------------------------------------------------------------------*/
+/* Subroutine to initialize a sequential dataset                     */
+/* Input:                                                            */
+/*      sfname  SEQ input file name                                  */
+/*      ofname  DASD image file name                                 */
+/*      cif     -> CKD image file descriptor                         */
+/*      devtype Output device type                                   */
+/*      heads   Output device number of tracks per cylinder          */
+/*      trklen  Output device virtual track length                   */
+/*      outcyl  Output starting cylinder number                      */
+/*      outhead Output starting head number                          */
+/*      extsize Extent size in tracks                                */
+/*      dsorg   Dataset organization  (DA or PS)                     */
+/*      recfm   Record Format (F or FB)                              */
+/*      lrecl   Record length                                        */
+/*      blksz   Block size                                           */
+/*      keyln   Key length                                           */
+/* Output:                                                           */
+/*      lastrec Record number of last block written                  */
+/*      trkbal  Number of bytes remaining on last track              */
+/*      numtrks Number of tracks written                             */
+/*      nxtcyl  Starting cylinder number for next dataset            */
+/*      nxthead Starting head number for next dataset                */
+/*-------------------------------------------------------------------*/
+static int
+seq_initialize (BYTE *sfname, BYTE *ofname, CIFBLK *cif, U16 devtype,
+                int heads, int trklen, int outcyl, int outhead,
+                int extsize, BYTE dsorg, BYTE recfm,
+                int lrecl, int blksz, int keyln,
+                int *lastrec, int *trkbal,
+                int *numtrks, int *nxtcyl, int *nxthead)
+{
+int             rc;                     /* Return code               */
+int             sfd;                    /* Input seq file descriptor */
+int             size;                   /* Size left in input file   */
+int             outusedv = 0;           /* Output bytes used on track
+                                           of virtual device         */
+int             outusedr = 0;           /* Output bytes used on track
+                                           of real device            */
+int             outtrkbr = 0;           /* Output bytes remaining on
+                                           track of real device      */
+int             outtrk = 0;             /* Output relative track     */
+int             outrec = 0;             /* Output record number      */
+struct stat     st;                     /* Data area for fstat()     */
+DATABLK         datablk;                /* Data block                */
+
+    /* Perform some checks */
+    if (!(dsorg & DSORG_PS) && !(dsorg & DSORG_DA))
+    {
+        XMERRF ("SEQ dsorg must be PS or DA: dsorg=0x%2.2x\n",dsorg);
+        return -1;
+    }
+    if (recfm != RECFM_FORMAT_F && recfm != (RECFM_FORMAT_F|RECFM_BLOCKED))
+    {
+        XMERRF ("SEQ recfm must be F or FB: recfm=0x%2.2x\n",recfm);
+        return -1;
+    }
+    if (blksz == 0) blksz = lrecl;
+    if (lrecl == 0) lrecl = blksz;
+    if (lrecl == 0 || blksz % lrecl != 0
+     || (blksz != lrecl && recfm == RECFM_FORMAT_F))
+    {
+        XMERRF ("SEQ invalid lrecl or blksz: lrecl=%d blksz=%d\n",lrecl,blksz);
+        return -1;
+    }
+    if (keyln > 0 && blksz > lrecl)
+    {
+        XMERR ("SEQ keyln must be 0 for blocked files\n");
+        return -1;
+    }
+
+    /* Open the input file */
+    sfd = open (sfname, O_RDONLY|O_BINARY);
+    if (sfd < 0)
+    {
+        XMERRF ("Cannot open %s: %s\n",
+                sfname, strerror(errno));
+        return -1;
+    }
+
+    /* Get input file status */
+    rc = fstat(sfd, &st);
+    if (rc < 0)
+    {
+        XMERRF ("Cannot stat %s: %s\n",
+                sfname, strerror(errno));
+        close (sfd);
+        return -1;
+    }
+    size = st.st_size;
+
+    /* Read the first track */
+    rc = read_track (cif, *nxtcyl, *nxthead);
+    if (rc < 0)
+    {
+        XMERRF ("%s cyl %d head %d read error\n",
+                ofname, *nxtcyl, *nxthead);
+        close (sfd);
+        return -1;
+    }
+
+    while (size > 0)
+    {
+        /* Read a block of data from the input file */
+        rc = read (sfd, &datablk.kdarea, blksz < size ? blksz : size);
+        if (rc < (blksz < size ? blksz : size))
+        {
+            XMERRF ("%s read error: %s\n",
+                    sfname, strerror(errno));
+            close (sfd);
+            return -1;
+        }
+        size -= rc;
+
+        /* Pad the block if necessary */
+        if (rc < blksz)
+        {
+            blksz = ((rc / lrecl) + 1) * lrecl;
+            memset (&datablk.kdarea[rc], 0, blksz - rc);
+        }
+
+        rc = write_block (cif, ofname, &datablk, keyln, blksz - keyln,
+                        devtype, heads, trklen, extsize,
+                        &outusedv, &outusedr, &outtrkbr,
+                        &outtrk, &outcyl, &outhead, &outrec);
+        if (rc < 0)
+        {
+            close (sfd);
+            return -1;
+        }
+    }
+ 
+    /* Close the input file */
+    close (sfd);
+
+    /* Create the end of file record */
+    rc = write_block (cif, ofname, &datablk, 0, 0,
+                devtype, heads, trklen, extsize,
+                &outusedv, &outusedr, &outtrkbr,
+                &outtrk, &outcyl, &outhead, &outrec);
+    if (rc < 0) return -1;
+
+    /* Return the last record number and track balance */
+    *lastrec = outrec;
+    *trkbal = outtrkbr;
+
+    /* Write data remaining in track buffer */
+    rc = write_track (cif, ofname, heads, trklen,
+                    &outusedv, &outtrk, &outcyl, &outhead);
+    if (rc < 0) return -1;
+
+    /* Return number of tracks and starting address of next dataset */
+    *numtrks = outtrk;
+    *nxtcyl = outcyl;
+    *nxthead = outhead;
+    return 0;
+
+} /* end function seq_initialize */
+
+
+/*-------------------------------------------------------------------*/
 /* Subroutine to initialize an empty dataset                         */
 /* Input:                                                            */
 /*      ofname  DASD image file name                                 */
@@ -3632,6 +3793,8 @@ BYTE            c;                      /* Character work area       */
         *method = METHOD_CVOL;
     else if (strcasecmp(pimeth, "VTOC") == 0)
         *method = METHOD_VTOC;
+    else if (strcasecmp(pimeth, "SEQ") == 0)
+        *method = METHOD_SEQ;
     else
     {
         XMERRF ("Invalid initialization method: %s\n", pimeth);
@@ -3639,7 +3802,7 @@ BYTE            c;                      /* Character work area       */
     }
 
     /* Locate the initialization file name */
-    if (*method == METHOD_XMIT || *method == METHOD_VS)
+    if (*method == METHOD_XMIT || *method == METHOD_VS || *method == METHOD_SEQ)
     {
         pifile = strtok (NULL, " \t");
         if (pifile == NULL)
@@ -3956,6 +4119,17 @@ int             fsflag = 0;             /* 1=Free space message sent */
             trkbal = 0;
             break;
 
+        case METHOD_SEQ:
+            /* Create sequential dataset */
+            rc = seq_initialize (ifname, ofname, cif,
+                                    devtype, heads, trklen,
+                                    outcyl, outhead, mintrks,
+                                    dsorg, recfm, lrecl, blksz,
+                                    keyln, &lastrec, &trkbal,
+                                    &tracks, &outcyl, &outhead);
+            if (rc < 0) return -1;
+            break;
+
         default:
         case METHOD_EMPTY:
             /* Create empty dataset */
@@ -4229,9 +4403,10 @@ int             altcylflag = 0;         /* Alternate cylinders flag  */
     if (altcylflag) devcyls += ckd->altcyls;
     outmaxdl = ckd->r1;
 
-    /* Use default device size if requested size is omitted or "*" */
+    /* Use default device size if requested size is omitted or
+       is zero or is "*" or compression is specified */
     reqcyls = 0;
-    if (sdevsz != NULL && strcmp(sdevsz, "*") != 0)
+    if (sdevsz != NULL && strcmp(sdevsz, "*") != 0 && comp == 0xff)
     {
         /* Validate the requested device size in cylinders */
         if (sscanf(sdevsz, "%u%c", &reqcyls, &c) != 1)
