@@ -435,6 +435,12 @@ int     n;
         PSA *psa;   
 #if defined(FEATURE_PER2)
             GUESTREGS->perc |= OPEN_IC_PERINT(GUESTREGS) >> ((32 - IC_CR9_SHIFT) - 16);
+            /* Positions 14 and 15 contain zeros if a storage alteration
+               event was not indicated */
+            if( !(OPEN_IC_PERINT(GUESTREGS) & IC_PER_SA)
+              || (OPEN_IC_PERINT(GUESTREGS) & IC_PER_STURA) )
+                GUESTREGS->perc &= 0xFFFC;
+
 #endif /*defined(FEATURE_PER2)*/
             /* Point to PSA fields in state descriptor */
             psa = (void*)(sysblk.mainstor + GUESTREGS->sie_state + SIE_IP_PSA_OFFSET);

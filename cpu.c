@@ -568,6 +568,12 @@ static char *pgmintname[] = {
                   (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
 
             regs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
+            /* Positions 14 and 15 contain zeros if a storage alteration
+               event was not indicated */
+            if( !(OPEN_IC_PERINT(realregs) & IC_PER_SA)
+              || (OPEN_IC_PERINT(realregs) & IC_PER_STURA) )
+                realregs->perc &= 0xFFFC;
+
             STORE_HW(psa->perint, realregs->perc);
 
             STORE_W(psa->peradr, realregs->peradr);
