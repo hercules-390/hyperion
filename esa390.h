@@ -567,7 +567,7 @@ typedef struct _PSA_3XX {		/* Prefixed storage area     */
 /*09C*/ FWORD moncode;			/* Monitor code 	     */
 /*0A0*/ BYTE  excarid;			/* Exception access id	     */
 /*0A1*/ BYTE  perarid;			/* PER access id	     */
-/*0A2*/ BYTE  resv0A2;			/* Reserved		     */
+/*0A2*/ BYTE  opndrid;			/* Operand access id	     */
 /*0A3*/ BYTE  arch;			/* Architecture mode ID      */
 /*0A4*/ FWORD resv0A4;			/* Reserved		     */
 /*0A8*/ FWORD chanid;			/* Channel id (S370)	     */
