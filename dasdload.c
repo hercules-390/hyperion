@@ -31,11 +31,11 @@
 #define CASERET(s)      case s: return (#s)
 #define XMINF(lvl,format) \
         do { \
-        if(infolvl<lvl) fprintf(stdout, _(format)); \
+        if(infolvl>=lvl) fprintf(stdout, _(format)); \
         } while(0)
 #define XMINFF(lvl,format,a...) \
         do { \
-        if(infolvl<lvl) fprintf(stdout, _(format), ## a); \
+        if(infolvl>=lvl) fprintf(stdout, _(format), ## a); \
         } while(0)
 #define XMERR(format) \
         fprintf(stdout, _(format))
