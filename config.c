@@ -1724,6 +1724,7 @@ BYTE **orig_newargv;
     }
 
     /* Initialize the CPU registers */
+    obtain_lock (&sysblk.intlock);
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
     {
         /* Initialize the processor address register for STAP */
@@ -1756,6 +1757,7 @@ BYTE **orig_newargv;
 #endif /*defined(_FEATURE_SIE)*/
 
     } /* end for(cpu) */
+    release_lock (&sysblk.intlock);
 
     /* Parse the device configuration statements */
     while(1)
@@ -1906,9 +1908,11 @@ int     cpu;
 #endif
 
     /* Deconfigure all CPU's */
+    obtain_lock (&sysblk.intlock);
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
         if(sysblk.regs[cpu].cpuonline)
             deconfigure_cpu(sysblk.regs + cpu);
+    release_lock (&sysblk.intlock);
 
 } /* end function release_config */
 

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+16 Oct 2003 Always updagte `ints_state' (except PER) with `intlock' held - Greg
 13 Oct 2003 fix 'ipending' cmd to display ALL pending interrupts - Fish
 13 Oct 2003 dequeue ALL i/o ints in device_reset - Fish
 13 Oct 2003 impl.c: terminate w/HHCIN008S if dyngui.dll load fails - Fish

@@ -790,15 +790,16 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     /* Load new PSW from PSA+X'0' or PSA+X'1A0' for ESAME */
     rc = ARCH_DEP(load_psw) (regs, psa->RSTNEW);
 
-    release_lock(&sysblk.intlock);
-
-    if ( rc )
-        ARCH_DEP(program_interrupt)(regs, rc);
-    else
+    if ( rc == 0)
     {
         regs->cpustate = CPUSTATE_STARTED;
         OFF_IC_CPU_NOT_STARTED(regs);
     }
+
+    release_lock(&sysblk.intlock);
+
+    if ( rc )
+        ARCH_DEP(program_interrupt)(regs, rc);
 
     longjmp (regs->progjmp, SIE_INTERCEPT_RESTART);
 } /* end function restart_interrupt */
@@ -1079,7 +1080,9 @@ void *cpu_thread (REGS *regs)
     run_cpu[regs->arch_mode] (regs);
 
     /* Clear all regs */
+    obtain_lock (&sysblk.intlock);
     initial_cpu_reset (regs);
+    release_lock (&sysblk.intlock);
 
     /* Display thread ended message on control panel */
     logmsg (_("HHCCP008I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n"),

@@ -1186,6 +1186,8 @@ int console = 0;
 /* Resets status of all devices ready for IPL.  Note that device     */
 /* positioning is not affected by I/O reset; thus the system can     */
 /* be IPLed from current position in a tape or card reader file.     */
+/*                                                                   */
+/* Caller holds `intlock'                                            */
 /*-------------------------------------------------------------------*/
 void
 io_reset (void)
@@ -1200,8 +1202,6 @@ int i;
         sysblk.regs[i].chanset = i;
 // #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
 
-    obtain_lock (&sysblk.intlock);
-
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
@@ -1211,8 +1211,6 @@ int i;
 
     /* No crws pending anymore */
     OFF_IC_CHANRPT;
-
-    release_lock (&sysblk.intlock);
 
     /* Signal console thread to redrive select */
     if (console)
