@@ -525,13 +525,18 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     vmb=regs->GR_L(11);
     DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Data list = %6.6X VM=%6.6X\n",dl,vmb));
     F_VMFLGS=EVM_L(vmb+VMRSTAT);
-    F_SCHMASK=EVM_L(dl+60);
-    F_SCHMON=EVM_L(dl+64);
+    F_SCHMASK=EVM_L(dl+64);
+    F_SCHMON=EVM_L(dl+68);
     if((F_VMFLGS & F_SCHMASK) == F_SCHMON)
     {
         DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Quick Check complete\n"));
         return(2);
     }
+    else
+    {
+        DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Quick Check failed : %8.8X != %8.8X\n",(F_VMFLGS & F_SCHMASK),F_SCHMON));
+    }
+
     F_ASYSVM=EVM_L(ASYSVM);
     if(vmb==F_ASYSVM)
     {
@@ -551,7 +556,7 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     {
         if(B_VMOSTAT & VMCF)
         {
-            DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Call SCHEDULE because VMKILL & VMCF set\n"));
+            DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Call SCHEDULE because VMKILL & VMCF & !VMCFREAD set\n"));
             regs->psw.IA=SCHDL;
             return(0);
         }
@@ -561,14 +566,14 @@ int ecpsvm_do_disp1(REGS *regs,VADR dl,VADR el)
     B_VMOSTAT &= ~VMKILL;
     EVM_STC(B_VMQSTAT,vmb+VMQSTAT);
     EVM_STC(B_VMOSTAT,vmb+VMOSTAT);
-    B_VMRSTAT=EVM_IC(VMRSTAT);
+    B_VMRSTAT=EVM_IC(vmb+VMRSTAT);
     if(B_VMRSTAT & VMLOGOFF)
     {
         DEBUG_CPASSISTX(DISP1,logmsg("DISP1 Continue because already logging off\n"));
         return(2);
     }
     B_VMRSTAT |= VMLOGOFF;
-    EVM_STC(B_VMRSTAT,VMRSTAT);
+    EVM_STC(B_VMRSTAT,vmb+VMRSTAT);
     regs->psw.IA=EVM_L(el+0);
     DEBUG_CPASSISTX(DISP1,logmsg("DISP1 : Call USOFF\n"));
     return(0);
@@ -718,11 +723,10 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         if(EVM_IC(vmb+VMNOECPS))
         {
             DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Exit 20 : VMB @ %6.6X Has VMNOECPS Set to %2.2X\n",vmb,EVM_IC(vmb+VMNOECPS)));
-            return(1);  /* TRY NO-OP */
             regs->GR_L(1)=vmb;
             regs->GR_L(11)=EVM_L(ASYSVM);
             regs->psw.IA=EVM_L(el+20);  /* FREELOCK */
-            return(0);  /* TRY NO-OP */
+            return(0);
         }
         DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : VMB @ %6.6X Will now be dispatched\n",vmb));
         runu=EVM_L(RUNUSER);
@@ -1034,7 +1038,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         DEBUG_CPASSISTX(DISP2,logmsg("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
         DEBUG_CPASSISTX(DISP2,display_regs(regs));
         DEBUG_CPASSISTX(DISP2,display_cregs(regs));
-        RETURN_INTCHECK(regs);
+        return(0);
     }
     /* Nothing else to do - wait state */
     DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Nothing to dispatch - IDLEECPS\n"));
