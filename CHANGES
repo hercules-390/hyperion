@@ -1,4 +1,4 @@
-13 Dec 2001 Kludge for OS/390 2.10 with ARCHLVL 2 - Greg Smith
+14 Dec 2001 Fix BSM instruction for z/OS - Greg Smith
 12 Dec 2001 Correct SIE intercept with concurrent PER indication - Jan Jaeger
 09 Dec 2001 SIE PER enhancements - Jan Jaeger
 06 Dec 2001 Basic PER implemention - Jan Jaeger

@@ -365,7 +365,7 @@ VADR    newia;                          /* New instruction address   */
     {
         regs->psw.IA = newia;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
@@ -407,7 +407,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->psw.IA = effective_addr2;
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -454,7 +454,7 @@ VADR    newia;                          /* New instruction address   */
     {
         regs->psw.IA = newia;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
@@ -491,7 +491,7 @@ VADR    effective_addr2;                /* Effective address         */
     regs->psw.IA = effective_addr2;
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -573,7 +573,7 @@ VADR    newia;                          /* New instruction address   */
         }
 
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -612,11 +612,8 @@ VADR    newia;                          /* New instruction address   */
     if ( r1 != 0 )
     {
 #if defined(FEATURE_ESAME)
-#if defined(OPTION_OS390_BSM_KLUDGE)
-        if (!(r2 == 0 && (regs->GR_LHLCL(r1) & 0x1)
-           && regs->GR_L(1) < 0x1000 && regs->GR_L(1) >= 0xc00))
-#endif
-        regs->GR_LHLCL(r1) &= 0xFE;
+        /* Z/Pops seems to be in error about this */
+//      regs->GR_LHLCL(r1) &= 0xFE;
         if ( regs->psw.amode64 )
             regs->GR_LHLCL(r1) |= 0x01;
         else
@@ -660,7 +657,7 @@ VADR    newia;                          /* New instruction address   */
         }
 
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -688,7 +685,7 @@ int     r1, r2;                         /* Values of R fields        */
     {
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -725,7 +722,7 @@ VADR    effective_addr2;                /* Effective address         */
     {
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -757,7 +754,7 @@ VADR    newia;                          /* New instruction address   */
     {
         regs->psw.IA = newia;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
@@ -814,7 +811,7 @@ S32     i, j;                           /* Integer work areas        */
     {
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -853,7 +850,7 @@ S32     i, j;                           /* Integer work areas        */
     {
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
@@ -885,7 +882,7 @@ U16     i2;                             /* 16-bit operand values     */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -925,7 +922,7 @@ U16     i2;                             /* 16-bit operand values     */
     regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -955,7 +952,7 @@ U16     i2;                             /* 16-bit operand values     */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -995,7 +992,7 @@ S32     i,j;                            /* Integer workareas         */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -1036,7 +1033,7 @@ S32     i,j;                            /* Integer workareas         */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
-        if( EN_IC_PER_SB(regs) 
+        if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
            || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
@@ -1731,7 +1728,7 @@ BYTE    pad;                            /* Padding byte              */
     /* Load operand lengths from bits 0-31 of R1+1 and R3+1 */
     len1 = GR_A(r1+1, regs);
     len2 = GR_A(r3+1, regs);
-    
+
     /* Process operands from left to right */
     for (i = 0; len1 > 0 || len2 > 0 ; i++)
     {
@@ -1934,13 +1931,13 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
         regs->psw.cc = 2;
         return;
     }
- 
-    /* If r1=r2, exit with condition code 0 or 1*/ 
-    if (r1 == r2) 
-    { 
-        regs->psw.cc = (len1 < sublen) ? 1 : 0; 
-        return; 
-    } 
+
+    /* If r1=r2, exit with condition code 0 or 1*/
+    if (r1 == r2)
+    {
+        regs->psw.cc = (len1 < sublen) ? 1 : 0;
+        return;
+    }
 
     /* Process operands from left to right */
     for (i = 0; len1 > 0 || len2 > 0 ; i++)
@@ -2170,7 +2167,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         addr1 += n + 1;
         addr1 &= ADDRESS_MAXWRAP(regs);
         len1 -= n + 1;
-        
+
         /* Update operand 2 address and length */
         addr2 = naddr2;
         len2 = nlen2;
@@ -2737,7 +2734,7 @@ VADR    effective_addr2;                /* Effective address         */
     if ( regs->exinst[0] == 0x44 )
         ARCH_DEP(program_interrupt) (regs, PGM_EXECUTE_EXCEPTION);
 
-    /* Save the execute target address for use with relative 
+    /* Save the execute target address for use with relative
                                                         instructions */
     regs->ET = effective_addr2;
 
@@ -3311,7 +3308,7 @@ GREG    len3;
             GR_A(r2, regs) = addr2;
             regs->psw.cc =  3;
             logmsg ("MVCL destructive overlap: ");
-	    ARCH_DEP(display_inst) (regs, inst);
+            ARCH_DEP(display_inst) (regs, inst);
             return;
         }
     }
@@ -3331,7 +3328,7 @@ GREG    len3;
             else
                 len3 = len1;
 
-            abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, 
+            abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE,
                                    regs->psw.pkey);
             memset(sysblk.mainstor+abs1, pad, len3);
 
@@ -3356,10 +3353,10 @@ GREG    len3;
         regs->psw.cc = cc;
         return;
     }
-    
-    if ((len2) && (len1 == len2) && 
+
+    if ((len2) && (len1 == len2) &&
                   ((addr1 & PAGEFRAME_PAGEMASK) ==
-                   ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)) && 
+                   ((addr1 + len1 - 1) & PAGEFRAME_PAGEMASK)) &&
                   ((addr2 & PAGEFRAME_PAGEMASK) ==
                    ((addr2 + len2 - 1) & PAGEFRAME_PAGEMASK)))
     {
@@ -3377,9 +3374,9 @@ GREG    len3;
         return;
     }
 
-    if ((len1 >= 256) && (len2 >= 256) && 
+    if ((len1 >= 256) && (len2 >= 256) &&
                   ((addr1 & PAGEFRAME_PAGEMASK) ==
-                   ((addr1 + 255) & PAGEFRAME_PAGEMASK)) && 
+                   ((addr1 + 255) & PAGEFRAME_PAGEMASK)) &&
                   ((addr2 & PAGEFRAME_PAGEMASK) ==
                    ((addr2 + 255) & PAGEFRAME_PAGEMASK)))
     {
