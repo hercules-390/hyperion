@@ -244,9 +244,6 @@ do { \
 #endif
 
 
-#define SIE_STATB(_regs, _feat_byte, _feat_name) \
-        (SIE_STATE((_regs)) && (((_regs)->siebk->SIE_ ## _feat_byte) & (SIE_ ## _feat_byte ## _ ## _feat_name)) )
-
 /* The footprint_buffer option saves a copy of the register context
    every time an instruction is executed.  This is for problem
    determination only, as it severely impacts performance.       *JJ */
