@@ -406,7 +406,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         if (prot)
         {
             regs->TEA = vaddr1 | stid | 0x00000004;
-            regs->excarid = (stid == TEA_ST_ARMODE) ? r1 : 0;
+            regs->excarid = (ACCESS_REGISTER_MODE(&regs->psw)) ? r1 : 0;
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
         }
 
