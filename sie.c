@@ -982,6 +982,8 @@ int ARCH_DEP(run_sie) (REGS *regs)
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
 #endif
+/* 1 LINE ADDED ISW20040727 */
+                do
                 {
                     SIE_PERFMON(SIE_PERF_EXEC_U);
                     regs->instcount += 7;
@@ -992,7 +994,8 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
                     UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
                     UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
-                }
+/* 1 LINE CHANGED ISW20040727 - was '}' only */
+                } while( !SIE_I_HOST(regs) );
             } while( !SIE_I_HOST(regs) );
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)
