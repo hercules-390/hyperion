@@ -74,7 +74,7 @@ int unix_socket (char* path)
 
     if (0
         || bind (sd, (struct sockaddr*) &addr, sizeof(addr)) == -1
-        || listen (sd, 5) == -1
+        || listen (sd, 0) == -1
         )
     {
         logmsg (_("HHCSD010E Failed to bind or listen on socket %s: %s\n"),
@@ -167,7 +167,7 @@ int inet_socket (char* spec)
 
     if (0
         || bind (sd, (struct sockaddr*) &sin, sizeof(sin)) == -1
-        || listen (sd, 5) == -1
+        || listen (sd, 0) == -1
         )
     {
         logmsg (_("HHCSD014E Failed to bind or listen on socket %s: %s\n"),
@@ -201,7 +201,7 @@ int add_socket_devices_to_fd_set (fd_set* readset, int maxfd)
         {
             dev = bs->dev;
 
-            if (dev->fd == -1)      /* and not already connected, */
+// ZZ       if (dev->fd == -1)      /* and not already connected, */
             {
                 FD_SET(bs->sd, readset);    /* then add file to set */
 
@@ -260,6 +260,7 @@ void socket_device_connection_handler (bind_struct* bs)
         logmsg (_("HHCSD016E Connect to device %4.4X (%s) rejected; "
             "client %s (%s) still connected\n"),
             dev->devnum, bs->spec, bs->clientip, bs->clientname);
+        close(accept(bs->sd, 0, 0));  /* Should reject */
         return;
     }
 
@@ -376,8 +377,13 @@ int rc;
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
-    while(1)
+
+    obtain_lock(&bind_lock);
+
+    while(sysblk.socktid)
     {
+        release_lock(&bind_lock);
+
         /* Set the file descriptors for select */
         FD_ZERO (&sockset);
         maxfd = add_socket_devices_to_fd_set (&sockset, maxfd);
@@ -393,7 +399,11 @@ int rc;
 
         if (rc < 0 )
         {
-            if (errno == EINTR) continue;
+            if (errno == EINTR)
+            {
+                obtain_lock(&bind_lock);
+                continue;
+            }
             logmsg ( _("HHCSD021E select: %s\n"), strerror(errno));
             break;
         }
@@ -401,7 +411,10 @@ int rc;
         /* Check if any sockets have received new connections */
         check_socket_devices_for_connections (&sockset);
 
+        obtain_lock(&bind_lock);
     } /* end while */
+
+    release_lock(&bind_lock);
 
     logmsg (_("HHCSD022I Socketdevice listener thread terminated\n"));
 
@@ -420,6 +433,7 @@ int bind_device (DEVBLK* dev, char* spec)
 
     logdebug("bind_device (%4.4X, %s)\n", dev->devnum, spec);
 
+    obtain_lock(&bind_lock);
     if(!sysblk.socktid)
     {
         if ( create_thread (&sysblk.socktid, &sysblk.detattr,
@@ -430,6 +444,7 @@ int bind_device (DEVBLK* dev, char* spec)
                 return 0;
             }
     }
+    release_lock(&bind_lock);
 
     /* Error if device already bound */
 
