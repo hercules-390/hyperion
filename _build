@@ -28,6 +28,9 @@
 # +-------------------------------------------------------------------+
 # !
 # ! Change Log: '$Log$
+# ! Change Log: 'Revision 1.16  2002/12/16 16:19:17  vbandke
+# ! Change Log: 'remove --prefix=`pwd` from ./configure invocation
+# ! Change Log: '
 # ! Change Log: 'Revision 1.15  2002/12/15 21:56:03  vbandke
 # ! Change Log: 'Complete rework.  Include support for P4 processor
 # ! Change Log: '
@@ -137,7 +140,7 @@ case ${THREAD_TYPE} in
 esac
 echo -e "${TURQ}Hercules will be using the ${THREAD_TYPE} model"
 if ! test -f ./configure -a -f ABOUT-NLS ; then
-  sh autogen.sh
+  bash autogen.sh
   RC=$?
   if [ ${RC} = 0 ] ; then
      echo -e "${TURQ}autogen completed successfully"
