@@ -311,8 +311,6 @@ typedef void*THREAD_FUNC(void*);
 #endif // !defined(WIN32)
 #define thread_id() \
         pthread_self()
-#define exit_thread(exitvar_ptr) \
-        pthread_exit((exitvar_ptr))
 #endif // defined(OPTION_FTHREADS)
 #else
 typedef int                             TID;
@@ -1107,7 +1105,7 @@ typedef struct _DEVBLK {
                                            in each CKD image file    */
         CKDDEV *ckdtab;                 /* Device table entry        */
         CKDCU  *ckdcu;                  /* Control unit entry        */
-        U64     ckdtrkoff;              /* Track image file offset   */
+        off_t   ckdtrkoff;              /* Track image file offset   */
         int     ckdcyls;                /* Number of cylinders       */
         int     ckdtrks;                /* Number of tracks          */
         int     ckdheads;               /* #of heads per cylinder    */

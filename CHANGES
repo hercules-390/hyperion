@@ -1,3 +1,4 @@
+12 Oct 2002 CKD fix when offset >= 2G - Greg Smith
 03 Okt 2002 PER fixes
 01 Okt 2002 Fix for SSK/ISK/RRB - Juergen Dobrinski
 19 Sep 2002 Fix cckd thrash for large fragmentations - Greg Smith

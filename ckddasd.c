@@ -502,7 +502,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
         /* Consistency check device header */
         if (cckd == 0 && (cyls * heads != trks
-            || (trks * trksize) + CKDDASD_DEVHDR_SIZE
+            || ((off_t)trks * trksize) + CKDDASD_DEVHDR_SIZE
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
@@ -746,7 +746,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         return -1;
     }
 
-    /* Get a cache if one doesn't exist */
+    /* Get the cache if it doesn't exist */
     if (dev->ckdcache == NULL)
     {
         /* default cache size is number of heads (trks/cyl) */
@@ -825,7 +825,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
 
     /* Calculate the track offset */
     dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
-                (trk - (i ? dev->ckdhitrk[i-1] : 0)) * dev->ckdtrksz;
+             (off_t)(trk - (i ? dev->ckdhitrk[i-1] : 0)) * dev->ckdtrksz;
     dev->ckdcache[o].off = dev->ckdtrkoff;
 
     DEVTRACE ("ckddasd: read trk %d reading file %d offset %lld len %d\n",
