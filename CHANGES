@@ -1,3 +1,5 @@
+15 Mar 2001 Invalidate AEA and AIA cache on SIE entry/exit - Jan Jaeger
+15 Mar 2001 Present device end on terminating console session - Jan Jaeger
 13 Mar 2001 Fix address types in assist/float/ieee instructions - Jan Jaeger
 10 Mar 2001 Stop all CPU's in release_config - Jan Jaeger
 10 Mar 2001 Fix CPU entering manual state on disabled wait - Jan Jaeger

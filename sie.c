@@ -271,6 +271,9 @@ int     icode;                          /* Interception code         */
     }
 #endif /*!defined(FEATURE_ESAME)*/
 
+    INVALIDATE_AIA (regs);
+    INVALIDATE_AEA_ALL (regs);
+
     if(GUESTREGS->arch_mode == ARCH_390)
         icode = s390_sie_run (regs);
     else
@@ -413,6 +416,10 @@ int     n;
             memcpy(STATEBK->ipa, GUESTREGS->exinst, exilc);
         }
     }
+
+    INVALIDATE_AIA (regs);
+    INVALIDATE_AEA_ALL (regs);
+
 }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 

@@ -683,7 +683,7 @@ int     eor = 0;                        /* 1=End of record received  */
         logmsg ("HHC603I Device %4.4X connection closed by client %s\n",
                 dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
-        return (CSW_ATTN | CSW_UC);
+        return (CSW_ATTN | CSW_UC | CSW_DE);
     }
 
     /* Update number of bytes in receive buffer */
