@@ -654,7 +654,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* u command - disassemble real */
+/* u command - disassemble */
 
 int u_cmd(int argc, char *argv[], char *cmdline)
 {
