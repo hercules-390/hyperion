@@ -5321,7 +5321,7 @@ U16     pad;                            /* Padding double byte       */
 
     ODD2_CHECK(len1, len2, regs);
 
-    /* Load padding doublebyte from bits 24-31 of effective address */
+    /* Load padding doublebyte from bits 48-64 of effective address */
     pad = effective_addr2 & 0xFFFF;
 
     /* Determine the destination and source addresses */
