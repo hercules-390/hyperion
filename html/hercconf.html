@@ -411,12 +411,13 @@ a real System/390.  The configuration file is an ASCII text file.
     <p>
 
 <a name="OSTAILOR">
-<dt><code>OSTAILOR OS/390 &#124; VM &#124; VSE &#124; LINUX</code>
+<dt><code>OSTAILOR OS/390 &#124; VM &#124; VSE &#124; LINUX &#124; QUIET</code>
 <dd><p>
     specifies the intended operating system.  The effect of this
     parameter is to reduce control panel message traffic by
     selectively suppressing trace messages for program checks
-    which are considered normal in the specified environment.
+    which are considered normal in the specified environment. <code>
+    QUIET</code> discards all exception messages.
     <p>
 
 <a name="PANRATE">
