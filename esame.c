@@ -351,7 +351,7 @@ RADR    abs;                            /* Absolute address of parm  */
 
     /* Use bits 16-23, 32-63 of psw in operand, other bits from old psw */
     psw[0] = save_psw.sysmask;
-    psw[1] = save_psw.pkey | 0x08 | save_psw.mach | save_psw.wait | save_psw.prob;
+    psw[1] = save_psw.pkey | 0x08 | save_psw.mach<<2 | save_psw.wait<<1 | save_psw.prob;
     psw[3] = 0;
 
 
