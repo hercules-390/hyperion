@@ -1,3 +1,6 @@
+08 Mar 2003 Set Byte 1 Bit 3 on IntReq for D/T 3505 to prevent
+            Reader tasks from dying and filling ERDS + set
+            sense size to 4 - Ivan Warren
 06 Mar 2003 Relax numl1tab check - Greg Smith
 03 Mar 2003 Relax CCKD track validation algorithm - Ivan Warren
 02 Mar 2003 Set ref and change bits on store status - Jan Jaeger

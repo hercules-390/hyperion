@@ -11,6 +11,14 @@
 #include "devtype.h"
 
 /*-------------------------------------------------------------------*/
+/* ISW 2003/03/07                                                    */
+/* 3505 Byte 1 Sense Codes                                           */
+/*-------------------------------------------------------------------*/
+#define SENSE1_RDR_PERM         0x80 /* Permanent Err key depressed  */
+#define SENSE1_RDR_AUTORETRY    0x40 /* Don't know                   */
+#define SENSE1_RDR_MOTIONMF     0x20 /* Motion Malfunction           */
+#define SENSE1_RDR_RAIC         0x10 /* Retry After Intreq Cleared   */
+/*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
 #define CARD_SIZE        80
@@ -263,7 +271,9 @@ int     fc;                             /* File counter              */
 
     /* Set number of sense bytes */
 
-    dev->numsense = 1;
+    /* ISW 20030307 : Empirical knowledge : DOS/VS R34 Erep */
+    /*                indicates 4 bytes in 3505 sense       */
+    dev->numsense = 4;
 
     /* Initialize the device identifier bytes */
 
@@ -391,6 +401,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         if (dev->fd == -1)
         {
             dev->sense[0] = SENSE_IR;
+            dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             return -1;
         }
@@ -446,6 +457,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
     if (dev->filename[0] == '\0')
     {
         dev->sense[0] = SENSE_IR;
+        dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return -1;
     }
@@ -559,6 +571,7 @@ int     rc;                             /* Return code               */
       else
         {
           dev->sense[0] = SENSE_IR;
+          dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
           *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
 
@@ -628,6 +641,7 @@ BYTE    c;                              /* Input character           */
             else
             {
                 dev->sense[0] = SENSE_IR;
+                dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
             }
 
