@@ -1104,9 +1104,9 @@ do { \
 #define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype) \
     ARCH_DEP(translate_addr)((_addr), (_arn), (_regs), (_acctype))
 
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...) \
+#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
-    ARCH_DEP(logical_to_main)(_addr, _arn, _regs, _parms), \
+    ARCH_DEP(logical_to_main)((_addr), (_arn), (_regs), (_acctype), (_akey)), \
     (_regs)->dat.aaddr \
   )
 
@@ -1115,9 +1115,9 @@ do { \
 #define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
     s390_translate_addr((_addr), (_arn), (_regs), (_acctype))
 
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)   \
+#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
-    s390_logical_to_main((_addr), (_arn), (_regs), _parms), \
+    s390_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey)), \
     (_regs)->dat.aaddr \
   )
 
@@ -1128,11 +1128,11 @@ do { \
     s390_translate_addr((_addr), (_arn), (_regs), (_acctype)) : \
     z900_translate_addr((_addr), (_arn), (_regs), (_acctype)) )
 
-#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)   \
+#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
   ( \
     (((_regs)->arch_mode == ARCH_390) \
-    ? s390_logical_to_main((_addr), (_arn), (_regs), _parms) \
-    : z900_logical_to_main((_addr), (_arn), (_regs), _parms)), \
+    ? s390_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey)) \
+    : z900_logical_to_main((_addr), (_arn), (_regs), (_acctype), (_akey))), \
     (_regs)->dat.aaddr \
   )
 
@@ -1153,10 +1153,10 @@ do { \
 
 #else /*!defined(_FEATURE_SIE)*/
 
-#define SIE_TRANSLATE_ADDR(_parms...)
-#define SIE_LOGICAL_TO_ABS(_parms...)
-#define SIE_INTERCEPT(_parms...)
-#define SIE_TRANSLATE(_parms...)
+#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)
+#define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)
+#define SIE_INTERCEPT(_regs)
+#define SIE_TRANSLATE(_addr, _acctype, _regs)
 
 #endif /*!defined(_FEATURE_SIE)*/
 
