@@ -1,3 +1,6 @@
+13 Jul 2001 Correct excarid on MVPG PIC 04 - Paul Leisy
+13 Jul 2001 Fix PR trace table entry - Paul Leisy
+13 Jul 2001 CUTFU, CUUTF not setting cc=1 when len1=0 - Paul Leisy
 13 Jul 2001 Further CMPSC fixes - Bernard van der Helm
 12 Jul 2001 Fix CEFR when converting 0x80000000 - Paul leisy
 12 Jul 2001 Fix BSG trace entry for 24bit mode - Paul Leisy
