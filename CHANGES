@@ -1,3 +1,4 @@
+08 Aug 2002 Increased cckd shutdown serialization - Greg Smith
 08 Aug 2002 Add 'Send" button in syslog cgi - Adam Thornton by Jan Jaeger
 08 Aug 2002 AEA invalidation performance enhancement - Gabor Hofi by Greg Smith
 03 Aug 2002 Fix dasdload to ignore comments in CBT XMIT files - Roger Bowler

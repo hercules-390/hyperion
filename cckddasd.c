@@ -269,6 +269,7 @@ int             fdflags;                /* File flags                */
     initialize_condition (&cckd->writecond);
 
     /* Initialize some variables */
+    obtain_lock (&cckd->filelock);
     cckd->l1x = cckd->sfx = -1;
     cckd->fd[0] = dev->fd;
     fdflags = fcntl (dev->fd, F_GETFL);
@@ -305,12 +306,15 @@ int             fdflags;                /* File flags                */
         dev->fbawrblk = &cfba_write_block;
         dev->fbaused = &cfba_used;
     }
+    release_lock (&cckd->filelock);
 
     /* Insert the device into the cckd device queue */
+    obtain_lock (&cckdblk.gclock);
     for (cckd = NULL, dev2 = cckdblk.dev1st; dev2; dev2 = cckd->devnext)
         cckd = dev2->cckd_ext;
     if (cckd) cckd->devnext = dev;
     else cckdblk.dev1st = dev;
+    release_lock (&cckdblk.gclock);
 
     cckdblk.batch = dev->batch;
     if (cckdblk.batch)
@@ -335,6 +339,7 @@ int             i;                      /* Index                     */
     cckd->stopping = 1;
 
     /* Remove the device from the cckd queue */
+    obtain_lock (&cckdblk.gclock);
     if (dev == cckdblk.dev1st) cckdblk.dev1st = cckd->devnext;
     else
     {
@@ -346,11 +351,6 @@ int             i;                      /* Index                     */
         }
         cckd2->devnext = cckd->devnext;
     }
-
-
-    /* By obtaining the garbage collector lock we are sure the
-       collector will ignore this device on the next round */
-    obtain_lock (&cckdblk.gclock);
     release_lock (&cckdblk.gclock);
 
     /* Flush the cache and wait for the writes to complete */
@@ -362,14 +362,13 @@ int             i;                      /* Index                     */
         wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
         cckdblk.writewaiting--;
     }
-    release_lock (&cckdblk.cachelock);
 
     /* Purge the device entries from the cache */
-    obtain_lock (&cckdblk.cachelock);
     cckd_purge_cache (dev);
     release_lock (&cckdblk.cachelock);
 
     /* harden the file */
+    obtain_lock (&cckd->filelock);
     cckd_harden (dev);
 
     /* close the shadow files */
@@ -386,11 +385,12 @@ int             i;                      /* Index                     */
     /* write some statistics */
     if (!dev->batch)
         cckd_sf_stats (dev);
+    release_lock (&cckd->filelock);
 
     /* free the cckd extension */
     dev->cckd_ext= NULL;
-    memset (&dev->dasdsfn, 0, sizeof(dev->dasdsfn));
     free (cckd);
+    memset (&dev->dasdsfn, 0, sizeof(dev->dasdsfn));
 
     close (dev->fd);
 
@@ -409,6 +409,7 @@ void cckddasd_start (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
+    if (!cckd || cckd->stopping) return;
 
     obtain_lock (&cckdblk.cachelock);
 
@@ -447,6 +448,7 @@ void cckddasd_end (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
+    if (!cckd || cckd->stopping) return;
     if (cckd->active)
     {
         obtain_lock (&cckdblk.cachelock);
@@ -473,6 +475,14 @@ CCKD_CACHE     *active;                 /* New active cache entry    */
 int             act;                    /* Syncio indicator          */
 
     cckd = dev->cckd_ext;
+
+    /* Error if device is stopping */
+    if (!cckd || cckd->stopping)
+    {
+        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
 
     /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
     act = dev->syncio_active;
@@ -525,12 +535,20 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
 
+    /* Error if device is stopping */
+    if (!cckd || cckd->stopping)
+    {
+        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
     /* Immediately return if fake writing */
     if (dev->ckdfakewr)
         return len;
 
     /* Error if opened read-only */
-    if (dev->ckdrdonly || cckd->stopping)
+    if (dev->ckdrdonly)
     {
         ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -606,6 +624,15 @@ int             copylen;                /* Length to copy            */
 int             len;                    /* Length left to copy       */
 
     cckd = dev->cckd_ext;
+
+    /* Error if device is stopping */
+    if (!cckd || cckd->stopping)
+    {
+        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
     len = rdlen;
 
     /* Command reject if seek position is outside volume */
@@ -696,6 +723,15 @@ int             copylen;                /* Length to copy            */
 int             len;                    /* Length left to copy       */
 
     cckd = dev->cckd_ext;
+
+    /* Error if device is stopping */
+    if (!cckd || cckd->stopping)
+    {
+        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
     len = wrlen;
 
     /* Command reject if seek position is outside volume */
@@ -703,14 +739,6 @@ int             len;                    /* Length left to copy       */
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         if (unitstat) *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
-
-    /* Error if device is stopping */
-    if (cckd->stopping)
-    {
-        ckd_build_sense (dev, SENSE_EC, SENSE1_WRI, 0,FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return -1;
     }
 
@@ -3820,6 +3848,8 @@ int             gctab[5]= {             /* default gcol parameters   */
         for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
         {
             cckd = dev->cckd_ext;
+            if (!cckd || cckd->stopping) continue;
+
             if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
             {
                 if (cckd->updated)
