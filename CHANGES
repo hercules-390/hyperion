@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+20 Oct 2003 Prevent dyngui unload when gui active - Jan Jaeger
 17 Oct 2003 Make sure 'init_hostinfo' called BEFORE 'display_version' - Fish
 16 Oct 2003 Always updagte `ints_state' (except PER) with `intlock' held - Greg
 13 Oct 2003 fix 'ipending' cmd to display ALL pending interrupts - Fish

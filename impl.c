@@ -216,7 +216,7 @@ TID     rctid;                          /* RC file thread identifier */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
 #if defined(OPTION_DYNAMIC_LOAD)
-        if (hdl_load("dyngui",HDL_LOAD_NOUNLOAD) != 0)
+        if (hdl_load("dyngui",HDL_LOAD_DEFAULT) != 0)
         {
             usleep(10000); /* (give logger thread time to issue
                                preceding HHCHD007E message) */
