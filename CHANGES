@@ -1,3 +1,4 @@
+20 Jan 2002 dasdinit can now create a cckd file - Greg Smith
 17 Jan 2002 Add PER storage checks for TRAP accesses - Paul Leisy
 17 Jan 2002 Fix PER rupt TEA for PC, PR and PT - Paul Leisy
 16 Jan 2002 Synchronous I/O fixes - Greg Smith
