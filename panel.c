@@ -2081,6 +2081,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                     {
                         logmsg ("     (no one currently connected)\n");
                     }
+
+                    if (clientip)   free(clientip);
+                    if (clientname) free(clientname);
                 }
             }
             /* end if(PMCW5_V) */

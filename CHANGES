@@ -1,4 +1,4 @@
-04 Feb 2002 Fix minor memory leak in unbind_device - Fish
+04 Feb 2002 Fix very minor memory leaks in sockdev logic - Fish
 03 Feb 2002 Close hercules configuration file after processing - Volker Bandke
 03 Feb 2002 Added PGMPRDOS config parameter - Jay Maynard
 03 Feb 2002 Performance tweaks - Greg Smith
