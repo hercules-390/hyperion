@@ -3098,7 +3098,7 @@ struct  timeval tv;                     /* Select timeout structure  */
         {
             /* Read character(s) from the keyboard */
 
-            kblen = read (keybfd, kbbuf, sizeof(kbbuf)-1);
+            kblen = read (keybfd, kbbuf, kbbufsize-1);
             if (kblen < 0)
             {
                 fprintf (stderr,
@@ -3485,13 +3485,6 @@ struct  timeval tv;                     /* Select timeout structure  */
 #endif /*EXTERNALGUI*/
                     redraw_cmd = 1;
                     break;
-                }
-
-                /* Silently ignore CR for Windows compatibility */
-                if ('\r' == kbbuf[i])
-                {
-                    i++;
-                    continue;
                 }
 
                 /* Ignore non-printable characters */
