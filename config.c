@@ -486,10 +486,14 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            select(). sigh            */
 #endif
 #if defined(OPTION_CONFIG_SYMBOLS)
-BYTE **newargv;                         /* Additional Device argument array copy */
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+BYTE **newargv;
+#endif
 
     SET_IC_INITIAL_STATE;
+
+#if !defined(OPTION_CONFIG_SYMBOLS)
+    UNREFERENCED(j);
+#endif
 
     /* Gabor Hoffer (performance option) */
     for (i = 0; i < 256; i++)
@@ -753,14 +757,21 @@ BYTE **newargv;                         /* Additional Device argument array copy
                 }
                 if(addargc!=1)
                 {
-                    fprintf(stderr, _("HHCCF059S Error in %s line %d: "
+                    fprintf(stderr, _("HHCCF060S Error in %s line %d: "
                         "DEFSYM requires a single symbol value (include quotation marks if necessary)\n"),
                         fname, stmt);
                     delayed_exit(1);
                 }
                 subval=resolve_symbol_string(addargv[0]);
-                set_symbol(operand,subval);
-                free(subval);
+                if(subval!=NULL)
+                {
+                    set_symbol(operand,subval);
+                    free(subval);
+                }
+                else
+                {
+                    set_symbol(operand,addargv[0]);
+                }
                 addargc--;
             }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) */
@@ -1522,7 +1533,7 @@ BYTE **newargv;                         /* Additional Device argument array copy
             delayed_exit(1);
         }
 #if defined(OPTION_CONFIG_SYMBOLS)
-        newargv=malloc(sizeof(char *)*addargc);
+        newargv=malloc(addargc*sizeof(char *));
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         for(baddev=0,i=0;i<(int)devncount;i++)
         {
@@ -1542,16 +1553,15 @@ BYTE **newargv;                         /* Additional Device argument array copy
                {
                    newargv[j]=resolve_symbol_string(addargv[j]);
                }
-               rc=attach_device(devnum, sdevtype, addargc , newargv);
-#else /* #if defined(OPTION_CONFIG_SYMBOLS) */
-               rc=attach_device(devnum, sdevtype, addargc, addargv);
-#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
                 /* Build the device configuration block */
-#if defined(OPTION_CONFIG_SYMBOLS)
+               rc=attach_device(devnum, sdevtype, addargc, newargv);
                for(j=0;j<addargc;j++)
                {
                    free(newargv[j]);
                }
+#else /* #if defined(OPTION_CONFIG_SYMBOLS) */
+                /* Build the device configuration block (no syms) */
+               rc=attach_device(devnum, sdevtype, addargc, addargv);
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
                if(rc!=0)
                {
@@ -1564,10 +1574,10 @@ BYTE **newargv;                         /* Additional Device argument array copy
                 break;
             }
         }
-        free(devnarray);
 #if defined(OPTION_CONFIG_SYMBOLS)
         free(newargv);
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+        free(devnarray);
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))
