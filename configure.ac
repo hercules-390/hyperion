@@ -1,5 +1,8 @@
 AC_INIT(hercules.h)
+AC_CONFIG_AUX_DIR(autoconf)
+
 AM_INIT_AUTOMAKE(hercules,2.14a)
+dnl AM_CONFIG_HEADER(autoconf/config.h)
 
 AC_CANONICAL_HOST
 
@@ -119,5 +122,11 @@ AC_ARG_ENABLE(setuid-hercifc,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-setuid-hercifc) ;;
 esac],[setuid_hercifc=no])
 AM_CONDITIONAL(SETUID_HERCIFC, test x$setuid_hercifc = xyes)
+
+AH_TEMPLATE([NO_ATTR_REGPARM],[Define if your gcc does not support __attribute__((regparm(n)))])
+AH_TEMPLATE([NO_ASM_BYTESWAP],[Define to disable assembler routines for byte swapping])
+AH_TEMPLATE([NO_IEEE_SUPPORT],[Define to disable IEEE floating point support])
+AH_TEMPLATE([CCKD_BZIP2],[Define to enable bzip2 compression in emulated DASDs])
+AH_TEMPLATE([HET_BZIP2],[Define to enable bzip2 compression in emulated tapes])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
