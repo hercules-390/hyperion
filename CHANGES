@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+28 Dec 2004 Set reserved VOL1 fields to blanks - Greg Smith
 26 Dec 2004 Initialize guestsregs->ints_state in SIE - Greg Smith
 25 Dev 2004 Allow use of 'symbols' for panel commands - Ivan Warren
 24 Dec 2004 sie perf update attempt (again).. Merry Xmas - Ivan Warren

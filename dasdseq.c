@@ -30,16 +30,11 @@ typedef struct _DASD_VOL_LABEL {
         BYTE    vollabi[3];             // c'VOL'
         BYTE    volno;                  // volume label sequence #
         BYTE    volserno[6];            // volume serial 
-        BYTE    resv1;                  // reserved; must be recorded
-                                        // as EBCDIC c'0' 0xF0
+        BYTE    security;               // security field, set to 0xc0
         BYTE    volvtoc[5];             // CCHHR of VTOC's F4DSCB
-        BYTE    resv2[5];               // reserved; must be recorded
-                                        // as EBCDIC blanks 0x40
-        BYTE    resv3[20];              // reserved; must be recorded
-                                        // as EBCDIC blanks 0x40
-        BYTE    volowner[10];           // volume owner
-        BYTE    resv4[29];              // reserved; must be recorded
-                                        // as EBCDIC blanks 0x40
+        BYTE    resv1[21];              // reserved; should be left blank
+        BYTE    volowner[14];           // volume owner
+        BYTE    resv2[29];              // reserved; should be left blank
 } DASD_VOL_LABEL;
 
 #include "dasdblks.h"
