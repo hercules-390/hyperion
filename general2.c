@@ -1790,284 +1790,791 @@ int     ar1 = 4;                        /* Access register number    */
     regs->psw.cc = cc;
 }
 
+#if 0 /*defined(FEATURE_EXTENDED_TRANSLATION)*/
+/* ?? Better readable than functions in general1.c ?? */
+/*-------------------------------------------------------------------*/
+/* B2A7 CU12/CUTFU - Convert UTF-8 to UTF-16/Unicode           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_utf8_to_utf16)
+{
+  VADR dest;                       /* Destination address            */
+  GREG destlen;                    /* Destination length             */
+  int r1;
+  int r2;
+  int read;                        /* Bytes read                     */
+  VADR srce;                       /* Source address                 */
+  GREG srcelen;                    /* Source length                  */
+  BYTE u16[4];                     /* utf16 character(s)             */
+  BYTE u8[4];                      /* utf8 character(s)              */
+  int write;                       /* Bytes written                  */
+  int xlated;                      /* characters translated          */
+  BYTE zabcd;                      /* Work value                     */
+
+  RRE(inst, regs, r1, r2);
+  ODD2_CHECK(r1, r2, regs);
+
+  /* Get paramaters */
+  dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  destlen = GR_A(r1 + 1, regs);
+  srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+  srcelen = GR_A(r2 + 1, regs);
+  
+  /* Initialize number of translated charachters */
+  xlated = 0;
+  while(xlated < 4096)
+  {
+    /* Check end of source or destination */  
+    if(srcelen < 1)
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+    if(destlen < 2)
+    {
+      regs->psw.cc = 1;
+      return;
+    }
+     
+    /* Fetch a byte */
+    u8[0] = ARCH_DEP(vfetchb)(srce, r2, regs);
+    if(u8[0] < 0x80) 
+    {
+      /* 0jklmnop -> 00000000 0jklmnop */
+      u16[0] = 0x00;
+      u16[1] = u8[0];
+      read = 1;
+      write = 2;
+    }
+    else if(u8[0] >= 0xc0 && u8[0] <= 0xdf)
+    {
+      /* Check end of source */
+      if(srcelen < 2)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+ 
+      /* Get the next byte */
+      u8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
+  
+      /* 110fghij 10klmnop -> 00000fgh ijklmnop */	
+      u16[0] = (u8[0] & 0x1c) >> 2;
+      u16[1] = (u8[0] << 6) & (u8[1] & 0x3f);
+      read = 2;
+      write = 2;
+    }
+    else if(u8[0] >= 0xe0 && u8[0] <= 0xef)
+    {
+      /* Check end of source */
+      if(srcelen < 3)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+      
+      /* Get the next 2 bytes */      
+      ARCH_DEP(vfetchc)(&u8[1], 1, srce + 1, r2, regs);
+    
+      /* 1110abcd 10efghij 10klmnop -> abcdefgh ijklmnop */
+      u16[0] = (u8[0] << 4) & ((u8[1] & 0x3c) >> 2);
+      u16[1] = (u8[1] << 6) & (u8[2] & 0x3f);
+      read = 3;
+      write = 2;      
+    }
+    else if(u8[0] >= 0xf0 && u8[0] <= 0xf7)
+    {
+      /* Check end of source or destination */
+      if(srcelen < 4)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+      if(destlen < 4)
+      {
+        regs->psw.cc = 1;
+	return;
+      }
+
+      /* Get the next 3 bytes */      
+      ARCH_DEP(vfetchc)(&u8[1], 2, srce + 1, r2, regs);
+
+      /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 110110ab cdefghij 110111kl mnopqrst */
+      /* 000zabcd = 000uvwxy - 1 */
+      zabcd = ((((u8[0] & 0x07) << 2) & ((u8[1] & 0x30) >> 4)) - 1) & 0x0f;
+      u16[0] = 0xd8 & (zabcd >> 2);
+      u16[1] = (zabcd << 6) & ((u8[1] & 0x0f) << 2) & ((u8[2] & 0x30) >> 4);
+      u16[2] = 0xd9 & ((u8[2] & 0x0c) >> 2);
+      u16[3] = (u8[2] << 6) & (u8[3] & 0x3f);
+      read = 4;
+      write = 4;
+    }
+    else
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+    
+    /* Write and commit registers */
+    ARCH_DEP(vstorec)(u16, write - 1, dest, r1, regs);
+    GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
+    GR_A(r1 + 1, regs) = destlen - write;
+    GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
+    GR_A(r2 + 1, regs) = srcelen - read;
+    
+    xlated += read;
+  }
+  
+  /* CPU determined number of characters reached */
+  regs->psw.cc = 3;
+}    
+
+/*-------------------------------------------------------------------*/
+/* B2A6 CU21/CUUTF - Convert UTF-16/Unicode to UTF-8           [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_utf16_to_utf8)
+{
+  VADR dest;                       /* Destination address            */
+  GREG destlen;                    /* Destination length             */
+  int r1;
+  int r2;
+  int read;                        /* Bytes read                     */
+  VADR srce;                       /* Source address                 */
+  GREG srcelen;                    /* Source length                  */
+  BYTE u16[4];                     /* utf16 character(s)             */
+  BYTE u8[4];                      /* utf8 character(s)              */
+  BYTE uvwxy;                      /* Work value                     */
+  int write;                       /* Bytes written                  */
+  int xlated;                      /* characters translated          */
+  
+  RRE(inst, regs, r1, r2);
+  ODD2_CHECK(r1, r2, regs);
+
+  /* Get paramaters */
+  dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  destlen = GR_A(r1 + 1, regs);
+  srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+  srcelen = GR_A(r2 + 1, regs);
+  
+  /* Initialize number of translated charachters */
+  xlated = 0;
+  while(xlated < 4096)
+  {
+    /* Check end of source or destination */  
+    if(srcelen < 2)
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+    if(destlen < 1)
+    {
+      regs->psw.cc = 1;
+      return;
+    }
+
+    /* Fetch 2 bytes */
+    ARCH_DEP(vfetchc)(u16, 1, srce, r2, regs);
+    if(u16[0] == 0x00 && u16[1] <= 0x7f)
+    {
+      /* 00000000 0jklnmop -> 0jklnmop */
+      u8[0] = u16[1];
+      read = 2;
+      write = 1;
+    }
+    else if(u16[0] <= 0x07 && u16[1] >= 0x80)
+    { 
+      /* Check end of destination */
+      if(destlen < 2)
+      {
+        regs->psw.cc = 1;
+	return;
+      }
+    
+      /* 00000fgh ijklmnop -> 110fghij 10klmnop */ 
+      u8[0] = 0xc0 | (u16[0] << 2) | (u16[1] >> 6);
+      u8[1] = 0x80 | (u16[1] & 0x3f);
+      read = 2;
+      write = 2;
+    }
+    else if(u16[0] >= 0x08 && u16[0] <= 0xd7)
+    {
+      /* Check end of destination */
+      if(destlen < 3)
+      {
+        regs->psw.cc = 1;
+	return;
+      }
+    
+      /* abcdefgh ijklmnop -> 1110abcd 10efghij 10klmnop */
+      u8[0] = 0xe0 | (u16[0] >> 4);
+      u8[1] = 0x80 | ((u16[0] & 0x0f) << 2) | (u16[1] >> 6);
+      u8[2] = 0x80 | (u16[1] & 0x3f);
+      read = 2;
+      write = 3;
+    }
+    else if(u16[0] >= 0xd8 && u16[0] <= 0xdb)
+    {
+      /* Check end of source or destination */
+      if(srcelen < 4)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+      if(destlen < 4)
+      {
+        regs->psw.cc = 1;
+	return;
+      }
+      
+      /* Fetch another 2 bytes */
+      ARCH_DEP(vfetchc)(&u16[2], 1, srce, r2, regs);
+      
+      /* 110110ab cdefghij 110111kl mnopqrst -> 11110uvw 10xyefgh 10ijklmn 10opqrst */
+      /* 000uvwxy = 0000abcd + 1 */
+      uvwxy = (((u16[0] & 0x03) << 2) & (u16[1] >> 6)) + 1;	
+      u8[0] = 0xf0 | (uvwxy >> 2);
+      u8[1] = 0x80 | ((uvwxy & 0x03) << 4) | ((u16[1] & 0x3c) >> 2);
+      u8[2] = 0x80 | ((u16[1] & 0x03) << 4) | ((u16[2] & 0x03) << 2) | (u16[3] >> 6); 
+      u8[3] = 0x80 | (u16[3] & 0x3f);
+      read = 4;
+      write = 4;
+    }
+    else
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+    
+    /* Write and commit registers */
+    ARCH_DEP(vstorec)(u8, write - 1, dest, r1, regs);
+    GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
+    GR_A(r1 + 1, regs) = destlen - write;
+    GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
+    GR_A(r2 + 1, regs) = srcelen - read;
+    
+    xlated += read;
+  }
+  
+  /* CPU determined number of characters reached */
+  regs->psw.cc = 3;
+}
+#endif /*defined(FEATURE_EXTENDED_TRANSLATION)*/
+
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)
+/*-------------------------------------------------------------------*/
+/* B9B0 CU14 - Convert UTF-8 to UTF-32                         [RRE] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_utf8_to_utf32)
+{
+  VADR dest;                       /* Destination address            */
+  GREG destlen;                    /* Destination length             */
+  int r1;
+  int r2;
+  int read;                        /* Bytes read                     */
+  VADR srce;                       /* Source address                 */
+  GREG srcelen;                    /* Source length                  */
+  BYTE u32[4];                     /* utf32 character(s)             */
+  BYTE u8[4];                      /* utf8 character(s)              */
+  int xlated;                      /* characters translated          */
+  
+  RRE(inst, regs, r1, r2);
+  ODD2_CHECK(r1, r2, regs);
+
+  /* Get paramaters */
+  dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  destlen = GR_A(r1 + 1, regs);
+  srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+  srcelen = GR_A(r2 + 1, regs);
+  
+  /* Initialize number of translated charachters */
+  xlated = 0;
+  while(xlated < 4096)
+  {
+    /* Check end of source or destination */  
+    if(srcelen < 1)
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+    if(destlen < 4)
+    {
+      regs->psw.cc = 1;
+      return;
+    }
+    
+    /* Fetch a byte */
+    u8[0] = ARCH_DEP(vfetchb)(srce, r2, regs);
+    if(u8[0] < 0x80) 
+    {
+      /* xlate range 00-7f */
+      /* 0jklmnop -> 00000000 00000000 00000000 0jklmnop */
+      u32[0] = 0x00;
+      u32[1] = 0x00;
+      u32[2] = 0x00;
+      u32[3] = u8[0];
+      read = 1;
+    }
+    else if(u8[0] >= 0xc0 && u8[0] <= 0xdf)
+    {
+      /* Check end of source */
+      if(srcelen < 2)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+    
+      /* Get the next byte */      
+      u8[1] = ARCH_DEP(vfetchb)(srce + 1, r2, regs);
+            
+      /* xlate range c000-dfff */
+      /* 110fghij 10klmnop -> 00000000 00000000 00000fgh ijklmnop */
+      u32[0] = 0x00;
+      u32[1] = 0x00;
+      u32[2] = (u8[0] & 0x1c) >> 2;
+      u32[3] = (u8[0] << 6) & (u8[1] & 0x3f);
+      read = 2;
+    }
+    else if(u8[0] >= 0xe0 && u8[0] <= 0xef)
+    {
+      /* Check end of source */
+      if(srcelen < 3)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+
+      /* Get the next 2 bytes */      
+      ARCH_DEP(vfetchc)(&u8[1], 1, srce + 1, r2, regs);
+    
+      /* xlate range e00000-efffff */
+      /* 1110abcd 10efghij 10klmnop -> 00000000 00000000 abcdefgh ijklmnop */
+      u32[0] = 0x00;
+      u32[1] = 0x00;
+      u32[2] = (u8[0] << 4) & ((u8[1] & 0x3c) >> 2);
+      u32[3] = (u8[1] << 6) & (u8[2] & 0x3f);
+      read = 3;
+    }
+    else if(u8[0] >= 0xf0 && u8[0] <= 0xf7)
+    {
+      /* Check end of source */
+      if(srcelen < 4)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+
+      /* Get the next 3 bytes */      
+      ARCH_DEP(vfetchc)(&u8[1], 2, srce + 1, r2, regs);
+    
+      /* xlate range f0000000-f7000000 */
+      /* 1110uvw 10xyefgh 10ijklmn 10opqrst -> 00000000 000uvwxy efghijkl mnopqrst */
+      u32[0] = 0x00;
+      u32[1] = ((u8[0] & 0x07) << 2) & ((u8[1] & 0x30) >> 4);
+      u32[2] = (u8[1] << 4) & ((u8[2] & 0x3f) >> 2);
+      u32[3] = (u8[2] << 6) & (u8[3] & 0x3f);
+      read = 4;
+    }
+    else
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+    
+    /* Write and commit registers */
+    ARCH_DEP(vstorec)(u32, 4 - 1, dest, r1, regs);
+    GR_A(r1, regs) = (dest + 4) & ADDRESS_MAXWRAP(regs);
+    GR_A(r1 + 1, regs) = destlen - 4;
+    GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
+    GR_A(r2 + 1, regs) = srcelen - read;
+    
+    xlated += read;
+  }
+  
+  /* CPU determined number of characters reached */
+  regs->psw.cc = 3;
+}
+
 /*-------------------------------------------------------------------*/
 /* B9B1 CU24 - Convert UTF-16 to UTF-32                        [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf16_to_utf32)
 {
-int     r1, r2;                         /* Register numbers          */
-int     i;                              /* Loop counter              */
-int     cc = 0;                         /* Condition code            */
-VADR    addr1, addr2;                   /* Operand addresses         */
-GREG    len1, len2;                     /* Operand lengths           */
-VADR    naddr2;                         /* Next operand 2 addr       */
-GREG    nlen2;                          /* Next operand 2 length     */
-U16     unicode[2];                     /* UTF-32                    */
-U16     unicode1;                       /* Unicode character         */
-U16     unicode2;                       /* Unicode low surrogate     */
-
-    RRE(inst, regs, r1, r2);
-
-    ODD2_CHECK(r1, r2, regs);
-
-    /* Determine the destination and source addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-
-    /* Load operand lengths from bits 0-31 of R1+1 and R2+1 */
-    len1 = GR_A(r1+1, regs);
-    len2 = GR_A(r2+1, regs);
-
-    if (len1 == 0 && len2 > 1)
-        cc = 1;
-
-    /* Process operands from left to right */
-    for (i = 0; len1 > 0 && len2 > 0; i++)
-    {
-        /* If 4096 characters have been converted, exit with cc=3 */
-        if (i >= 4096)
-        {
-            cc = 3;
-            break;
-        }
-
-        /* Exit if fewer than 2 bytes remain in source operand */
-        if (len2 < 2) break;
-
-        /* Fetch two bytes from source operand */
-        unicode1 = ARCH_DEP(vfetch2) ( addr2, r2, regs );
-        naddr2 = addr2 + 2;
-        naddr2 &= ADDRESS_MAXWRAP(regs);
-        nlen2 = len2 - 2;
-
-        if (unicode1 < 0xD800 || unicode1 >= 0xDC00)
-        {
-            /* Convert Unicode 0800-D7FF or DC00-FFFF to UTF-32 */
-	    unicode[0] = 0;
-	    unicode[1] = unicode1;
-        }
-        else
-        {
-            /* Exit if fewer than 2 bytes remain in source operand */
-            if (nlen2 < 2) break;
-
-            /* Fetch the Unicode low surrogate */
-            unicode2 = ARCH_DEP(vfetch2) ( naddr2, r2, regs );
-            naddr2 += 2;
-            naddr2 &= ADDRESS_MAXWRAP(regs);
-            nlen2 -= 2;
-
-            /* Convert Unicode surrogate pair to UTF-32 */
-	    unicode[0] = (unicode1 >> 6) + 1;
-	    unicode[1] = (unicode2 & 0x03ff) | unicode1 << 10;
-        }
-
-        /* Exit cc=1 if too few bytes remain in destination operand */
-        if (len1 <= 4)
-        {
-            cc = 1;
-            break;
-        }
-
-        /* Store the result bytes in the destination operand */
-        ARCH_DEP(vstore4) ( unicode, addr1, r1, regs );
-        addr1 += 4;
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        len1 -= 4;
-
-        /* Update operand 2 address and length */
-        addr2 = naddr2;
-        len2 = nlen2;
-
-        /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1+1, regs) = len1;
-        GR_A(r2, regs) = addr2;
-        GR_A(r2+1, regs) = len2;
-
-        if (len1 == 0)
-            cc = 1;
-
-    } /* end for(i) */
-
-    regs->psw.cc = cc;
-
-} /* end convert_utf16_to_utf32 */
-
-/*-------------------------------------------------------------------*/
-/* B9B1 CU42 - Convert UTF-32 to UTF-16                        [RRE] */
-/*-------------------------------------------------------------------*/
-DEF_INST(convert_utf32_to_utf16)
-{
-  int r1, r2;                           /* Values of R fields        */
+  VADR dest;                       /* Destination address            */
+  GREG destlen;                    /* Destination length             */
+  int r1;
+  int r2;
+  int read;                        /* Bytes read                     */
+  VADR srce;                       /* Source address                 */
+  GREG srcelen;                    /* Source length                  */
+  BYTE u16[4];                     /* utf16 character(s)             */
+  BYTE u32[4];                     /* utf328 character(s)            */
+  BYTE uvwxy;                      /* Work value                     */
+  int xlated;                      /* characters translated          */
   
   RRE(inst, regs, r1, r2);
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+  ODD2_CHECK(r1, r2, regs);
+
+  /* Get paramaters */
+  dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  destlen = GR_A(r1 + 1, regs);
+  srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+  srcelen = GR_A(r2 + 1, regs);
+  
+  /* Initialize number of translated charachters */
+  xlated = 0;
+  while(xlated < 4096)
+  {
+    /* Check end of source or destination */  
+    if(srcelen < 2)
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+    if(destlen < 4)
+    {
+      regs->psw.cc = 1;
+        return;
+    }
+
+    /* Fetch 2 bytes */
+    ARCH_DEP(vfetchc)(u16, 1, srce, r2, regs);
+    if(u16[0] <= 0xd7 || u16[0] >= 0xdc) 
+    {
+      /* xlate range 0000-d7fff and dc00-ffff */
+      /* abcdefgh ijklmnop -> 00000000 00000000 abcdefgh ijklmnop */
+      u32[0] = 0x00;
+      u32[1] = 0x00;
+      u32[2] = u16[0];
+      u32[3] = u16[1];
+      read = 2;
+    }
+    else
+    {
+      /* Check end of source */
+      if(srcelen < 4)
+      {
+        regs->psw.cc = 0;   /* Strange but stated in POP */
+        return;
+      }
+
+      /* Fetch another 2 bytes */
+      ARCH_DEP(vfetchc)(&u16[2], 1, srce, r2, regs);
+      
+      /* xlate range d800-dbff */
+      /* 110110ab cdefghij 110111kl mnopqrst -> 00000000 000uvwxy efghijkl mnopqrst */
+      /* 000uvwxy = 0000abcde + 1 */
+      uvwxy = (((u16[0] & 0x03) << 2) | (u16[1] >> 6)) + 1;
+      u32[0] = 0x00;
+      u32[1] = uvwxy;
+      u32[2] = (u16[1] << 2) | (u16[2] & 0x03);
+      u32[3] = u16[3];
+      read = 4;
+    }
+    
+    /* Write and commit registers */
+    ARCH_DEP(vstorec)(u32, 4 - 1, dest, r1, regs);
+    GR_A(r1, regs) = (dest + 4) & ADDRESS_MAXWRAP(regs);
+    GR_A(r1 + 1, regs) = destlen - 4;
+    GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
+    GR_A(r2 + 1, regs) = srcelen - read;
+    
+    xlated += read;
+  }
+  
+  /* CPU determined number of characters reached */
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
-/* B9B1 CU41 - Convert UTF-32 to UTF-8                         [RRE] */
+/* B9B2 CU41 - Convert UTF-32 to UTF-8                         [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(convert_utf32_to_utf8)
 {
-  int r1, r2;                           /* Values of R fields        */
+  VADR dest;                       /* Destination address            */
+  GREG destlen;                    /* Destination length             */
+  int r1;
+  int r2;
+  VADR srce;                       /* Source address                 */
+  GREG srcelen;                    /* Source length                  */
+  BYTE u32[4];                     /* utf32 character(s)             */
+  BYTE u8[4];                      /* utf8 character(s)              */
+  BYTE uvwxy;                      /* Work value                     */
+  int write;                       /* Bytes written                  */
+  int xlated;                      /* characters translated          */
   
   RRE(inst, regs, r1, r2);
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+  ODD2_CHECK(r1, r2, regs);
+
+  /* Get paramaters */
+  dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  destlen = GR_A(r1 + 1, regs);
+  srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+  srcelen = GR_A(r2 + 1, regs);
+  
+  /* Initialize number of translated charachters */
+  xlated = 0;
+  while(xlated < 4096)
+  {
+    /* Check end of source or destination */  
+    if(srcelen < 4)
+    {
+      regs->psw.cc = 0;
+      return;
+    }
+    if(destlen < 1)
+    {
+      regs->psw.cc = 1;
+      return;
+    }
+
+    /* Get 4 bytes */
+    ARCH_DEP(vfetchc)(u32, 3, srce, r2, regs);
+
+    if(u32[0])
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+    else if(u32[1] = 0x00)
+    {
+      if(u32[2] == 0x00)
+      {
+        if(u32[3] <= 0x7f)
+	{
+	  /* xlate range 00000000-0000007f */
+	  /* 00000000 00000000 00000000 0jklmnop -> 0jklmnop */
+	  u8[0] = u32[3];
+	  write = 1;
+	}
+      }
+      else if(u32[2] <= 0x07)
+      {
+        /* Check destination length */
+        if(destlen < 2)
+        {
+          regs->psw.cc = 1;
+          return;
+        }
+      
+	/* xlate range 00000080-000007ff */
+        /* 00000000 00000000 00000fgh ijklmnop -> 110fghij 10klmnop */
+	u8[0] = 0xc0 | (u32[2] << 2) | (u32[2] >> 6);
+	u8[1] = 0x80 | (u32[2] & 0x3f);
+	write = 2;
+      }
+      else if(u32[2] <= 0xd7 || u32[2] > 0xdc)
+      {
+        /* Check destination length */
+        if(destlen < 3)
+        {
+          regs->psw.cc = 1;
+          return;
+        }
+	
+	/* xlate range 00000800-0000d7ff and 0000dc00-0000ffff */
+	/* 00000000 00000000 abcdefgh ijklnmop -> 1110abcd 10efghij 10klmnop */      
+        u8[0] = 0xe0 | (u32[2] >> 4);
+	u8[1] = 0x80 | ((u32[2] & 0x0f) << 2) | (u32[3] >> 6);
+	u8[2] = 0x80 | (u32[3] & 0x3f);
+	write = 3;
+      }
+      else
+      {
+        regs->psw.cc = 2;
+        return;	
+      }
+    }
+    else if(u32[1] >= 0x01 && u32[1] <= 0x10)
+    {
+      /* Check destination length */
+      if(destlen < 4)
+      {
+        regs->psw.cc = 1;
+        return;
+      }
+    
+      /* xlate range 00010000-0010ffff */
+      /* 00000000 000uvwxy efghijkl mnopqrst -> 11110uvw 10xyefgh 10ijklmn 10opqrst */
+      u8[0] = 0xf0 | (u32[1] >> 2);
+      u8[1] = 0x80 | ((u32[1] & 0x03) << 4) | (u32[2] >> 4);
+      u8[2] = 0x80 | ((u32[2] & 0x0f) < 2) | (u32[3] >> 6);
+      u8[3] = 0x80 | (u32[3] & 0x3f);
+      write = 4;
+    }
+    else
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+    
+    /* Write and commit registers */
+    ARCH_DEP(vstorec)(u8, write - 1, dest, r1, regs);
+    GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
+    GR_A(r1 + 1, regs) = destlen - write;
+    GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
+    GR_A(r2 + 1, regs) = srcelen - 4;
+    
+    xlated += read;
+  }
+  
+  /* CPU determined number of characters reached */
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
-/* B9B1 CU14 - Convert UTF-8 to UTF-32                         [RRE] */
+/* B9B3 CU42 - Convert UTF-32 to UTF-16                        [RRE] */
 /*-------------------------------------------------------------------*/
-DEF_INST(convert_utf8_to_utf32)
+DEF_INST(convert_utf32_to_utf16)
 {
-int     r1, r2;                         /* Register numbers          */
-int     i;                              /* Loop counter              */
-int     cc = 0;                         /* Condition code            */
-VADR    addr1, addr2;                   /* Operand addresses         */
-GREG    len1, len2;                     /* Operand lengths           */
-U16     uvwxy;                          /* Unicode work area         */
-U16     unicode[2];                     /* UTF-32                    */
-GREG    n;                              /* Number of UTF-8 bytes - 1 */
-BYTE    utf[4];                         /* UTF-8 bytes               */
+  VADR dest;                       /* Destination address            */
+  GREG destlen;                    /* Destination length             */
+  int r1;
+  int r2;
+  VADR srce;                       /* Source address                 */
+  GREG srcelen;                    /* Source length                  */
+  BYTE u16[4];                     /* utf16 character(s)             */
+  BYTE u32[4];                     /* utf32 character(s)             */
+  BYTE uvwxy;                      /* work value                     */
+  int write;                       /* Bytes written                  */
+  int xlated;                      /* characters translated          */
+  BYTE zabcd;                      /* Work value                     */
+  
+  RRE(inst, regs, r1, r2);
+  ODD2_CHECK(r1, r2, regs);
 
-    RRE(inst, regs, r1, r2);
-
-    ODD2_CHECK(r1, r2, regs);
-
-    /* Determine the destination and source addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-
-    /* Load operand lengths from bits 0-31 of R1+1 and R2+1 */
-    len1 = GR_A(r1+1, regs);
-    len2 = GR_A(r2+1, regs);
-
-    if (len1 == 0 && len2 > 0)
-        cc = 1;
-
-    /* Process operands from left to right */
-    for (i = 0; len1 > 0 && len2 > 0; i++)
+  /* Get paramaters */
+  dest = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  destlen = GR_A(r1 + 1, regs);
+  srce = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+  srcelen = GR_A(r2 + 1, regs);
+  
+  /* Initialize number of translated charachters */
+  xlated = 0;
+  while(xlated < 4096)
+  {
+    /* Check end of source or destination */  
+    if(srcelen < 4)
     {
-        /* If 4096 characters have been converted, exit with cc=3 */
-        if (i >= 4096)
-        {
-            cc = 3;
-            break;
-        }
+      regs->psw.cc = 0;
+      return;
+    }
+    if(destlen < 2)
+    {
+      regs->psw.cc = 1;
+      return;
+    }
 
-        /* Fetch first UTF-8 byte from source operand */
-        utf[0] = ARCH_DEP(vfetchb) ( addr2, r2, regs );
-
-        /* Convert UTF-8 to UTF-32 */
-        if (utf[0] < (BYTE)0x80)
-        {
-            /* Convert 00-7F to Unicode 00000000-0000007F */
-            n = 0;
-	    unicode[0] = 0;
-            unicode[1] = utf[0];
-        }
-        else if ((utf[0] & 0xE0) == 0xC0)
-        {
-            /* Exit if fewer than 2 bytes remain in source operand */
-            n = 1;
-            if (len2 <= n) break;
-
-            /* Fetch two UTF-8 bytes from source operand */
-            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
-
-            /* Convert C0xx-DFxx to UTF-32 */
-	    unicode[0] = 0;
-            unicode[1] = ((U16)(utf[0] & 0x1F) << 6)
-                        | ((U16)(utf[1] & 0x3F));
-        }
-        else if ((utf[0] & 0xF0) == 0xE0)
-        {
-            /* Exit if fewer than 3 bytes remain in source operand */
-            n = 2;
-            if (len2 <= n) break;
-
-            /* Fetch three UTF-8 bytes from source operand */
-            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
-
-            /* Convert E0xxxx-EFxxxx to UTF-32 */
-	    unicode[0] = 0;
-            unicode[1] = ((U16)(utf[0]) << 12)
-                        | ((U16)(utf[1] & 0x3F) << 6)
-                        | ((U16)(utf[2] & 0x3F));
-        }
-        else if ((utf[0] & 0xF8) == 0xF0)
-        {
-            /* Exit if fewer than 4 bytes remain in source operand */
-            n = 3;
-            if (len2 <= n) break;
-
-            /* Fetch four UTF-8 bytes from source operand */
-            ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
-
-            /* Convert F0xxxxxx-F7xxxxxx to UTF-32 */
-            uvwxy = ((((U16)(utf[0] & 0x07) << 2)
-                        | ((U16)(utf[1] & 0x30) >> 4)) - 1) & 0x0F;
-            unicode[0] = 0xD800 | (uvwxy << 6) | ((U16)(utf[1] & 0x0F) << 2)
-                        | ((U16)(utf[2] & 0x30) >> 4);
-            unicode[1] = 0xDC00 | ((U16)(utf[2] & 0x0F) << 6)
-                        | ((U16)(utf[3] & 0x3F));
-        }
-        else
-        {
-            /* Invalid UTF-8 byte 80-BF or F8-FF, exit with cc=2 */
-            cc = 2;
-            break;
-        }
-
-        /* Store the result bytes in the destination operand */
-        /* Exit if fewer than 4 bytes remain in destination */
-        if (len1 < 4)
-        {
-            cc = 1;
-            break;
-        }
-
-        /* Store UTF-32 in destination */
-        ARCH_DEP(vstore4) ( unicode, addr1, r1, regs );
-        addr1 += 4;
-        addr1 &= ADDRESS_MAXWRAP(regs);
-        len1 -= 4;
-
-
-        /* Update operand 2 address and length */
-        addr2 += n + 1;
-        addr2 &= ADDRESS_MAXWRAP(regs);
-        len2 -= n + 1;
-
-        /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1+1, regs) = len1;
-        GR_A(r2, regs) = addr2;
-        GR_A(r2+1, regs) = len2;
-
-        if (len1 == 0)
-            cc = 1;
-
-    } /* end for(i) */
-
-    regs->psw.cc = cc;
-
-} /* end convert_utf8_to_utf32 */
+    /* Get 4 bytes */
+    ARCH_DEP(vfetchc)(u32, 3, srce, r2, regs);
+    if(u32[0] != 0x00)
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+    else if(u32[1] == 0x00 && (u32[2] <= 0xd7 || u32[2] >= 0xdc))
+    {
+      /* xlate range 00000000-0000d7ff and 0000dc00-0000ffff */
+      /* 00000000 00000000 abcdefgh ijklmnop -> abcdefgh ijklmnop */
+      u16[0] = u32[2];
+      u16[1] = u32[3];
+      write = 2;
+    }
+    else if(u32[1] >= 0x01 && u32[1] <= 0x10)
+    {
+      /* Check end of destination */
+      if(destlen < 4)
+      {
+        regs->psw.cc = 1;
+        return;
+      }
+      
+      /* xlate range 00010000-0010ffff */
+      /* 00000000 000uvwxy efghijkl mnopqrst -> 110110ab cdefghij 110111kl mnopqrst */
+      /* 000zabcd = 000uvwxy - 1 */
+      zabcd = (u32[1] - 1) & 0x0f;
+      u16[0] = 0xd8 | (zabcd >> 2);
+      u16[1] = (zabcd << 6) | (u32[2] >> 2);
+      u16[2] = 0xd9 | (u32[2] & 0x03);
+      u16[3] = u32[3];
+      write = 4;
+    }    
+    else
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+    
+    /* Write and commit registers */
+    ARCH_DEP(vstorec)(u16, write - 1, dest, r1, regs);
+    GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
+    GR_A(r1 + 1, regs) = destlen - write;
+    GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
+    GR_A(r2 + 1, regs) = srcelen - 4;
+    
+    xlated += read;
+  }
+  
+  /* CPU determined number of characters reached */
+  regs->psw.cc = 3;
+}
 
 /*-------------------------------------------------------------------*/
 /* B9B1 STSTU - Search String Unicode                          [RRE] */
 /*-------------------------------------------------------------------*/
 DEF_INST(search_string_unicode)
 {
-  int len;                              /* Lengths to copy           */
-  int b1, b2;                           /* Base register numbers     */
-  VADR addr1, addr2;                    /* Virtual addresses         */
+  VADR addr1, addr2;                    /* End/start addresses       */
+  int i;                                /* Loop counter              */  
+  int r1, r2;                           /* Values of R fields        */  
+  U16 sbyte;                            /* String character          */
+  U16 termchar;                         /* Terminating character     */
 
-  SS_L(inst, regs, len, b1, addr1, b2, addr2);
+  RRE(inst, regs, r1, r2);
 
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
+  /* Program check if bits 0-15 of register 0 not zero */
+  if(regs->GR_L(0) & 0xFFFF0000)
+    ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+  /* Load string terminating character from register 0 bits 16-31 */
+  termchar = (U16) regs->GR(0);
+
+  /* Determine the operand end and start addresses */
+  addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+  addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+
+  /* Search up to 256 bytes or until end of operand */
+  for(i = 0; i < 0x100; i++)
+  {
+    /* If operand end address has been reached, return condition
+       code 2 and leave the R1 and R2 registers unchanged */
+    if(addr2 == addr1)
+    {
+      regs->psw.cc = 2;
+      return;
+    }
+
+    /* Fetch 2 bytes from the operand */
+    sbyte = ARCH_DEP(vfetch2)(addr2, r2, regs );
+
+    /* If the terminating character was found, return condition
+       code 1 and load the address of the character into R1 */
+    if(sbyte == termchar)
+    {
+      GR_A(r1, regs) = addr2;
+      regs->psw.cc = 1;
+      return;
+    }
+
+    /* Increment operand address */
+    addr2 += 2;
+    addr2 &= ADDRESS_MAXWRAP(regs);
+
+  } /* end for(i) */
+
+  /* Set R2 to point to next character of operand */
+  GR_A(r2, regs) = addr2;
+
+  /* Return condition code 3 */
+  regs->psw.cc = 3;
 }
 
 /*-------------------------------------------------------------------*/
@@ -2075,62 +2582,60 @@ DEF_INST(search_string_unicode)
 /*-------------------------------------------------------------------*/
 DEF_INST(translate_and_test_reversed)
 {
-int     l;                              /* Lenght byte               */
-int     b1, b2;                         /* Values of base field      */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
-int     cc = 0;                         /* Condition code            */
-BYTE    sbyte;                          /* Byte work areas           */
-BYTE    dbyte;                          /* Byte work areas           */
-int     i;                              /* Integer work areas        */
+  int b1, b2;                           /* Values of base field      */  
+  int cc = 0;                           /* Condition code            */  
+  BYTE dbyte;                           /* Byte work areas           */  
+  VADR effective_addr1;
+  VADR effective_addr2;                 /* Effective addresses       */
+  int i;                                /* Integer work areas        */  
+  int l;                                /* Lenght byte               */  
+  BYTE sbyte;                           /* Byte work areas           */
 
-    SS_L(inst, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+  SS_L(inst, regs, l, b1, effective_addr1, b2, effective_addr2);
 
-    /* Process first operand from right to left*/
-    for ( i = 0; i <= l; i++ )
+  /* Process first operand from right to left*/
+  for(i = 0; i <= l; i++)
+  {
+    /* Fetch argument byte from first operand */
+    dbyte = ARCH_DEP(vfetchb)(effective_addr1, b1, regs);
+
+    /* Fetch function byte from second operand */
+    sbyte = ARCH_DEP(vfetchb)((effective_addr2 + dbyte) & ADDRESS_MAXWRAP(regs), b2, regs);
+
+    /* Test for non-zero function byte */
+    if(sbyte != 0)
     {
-        /* Fetch argument byte from first operand */
-        dbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
-
-        /* Fetch function byte from second operand */
-        sbyte = ARCH_DEP(vfetchb) ( (effective_addr2 + dbyte)
-                                   & ADDRESS_MAXWRAP(regs), b2, regs );
-
-        /* Test for non-zero function byte */
-        if (sbyte != 0) {
-
-            /* Store address of argument byte in register 1 */
+      /* Store address of argument byte in register 1 */
 #if defined(FEATURE_ESAME)
-            if(regs->psw.amode64)
-                regs->GR_G(1) = effective_addr1;
-            else
+      if(regs->psw.amode64)
+        regs->GR_G(1) = effective_addr1;
+      else
 #endif
-            if ( regs->psw.amode )
-                regs->GR_L(1) = effective_addr1;
-            else
-                regs->GR_LA24(1) = effective_addr1;
+      if(regs->psw.amode)
+        regs->GR_L(1) = effective_addr1;
+      else
+        regs->GR_LA24(1) = effective_addr1;
 
-            /* Store function byte in low-order byte of reg.2 */
-            regs->GR_LHLCL(2) = sbyte;
+      /* Store function byte in low-order byte of reg.2 */
+      regs->GR_LHLCL(2) = sbyte;
 
-            /* Set condition code 2 if argument byte was last byte
-               of first operand, otherwise set condition code 1 */
-            cc = (i == l) ? 2 : 1;
+      /* Set condition code 2 if argument byte was last byte
+         of first operand, otherwise set condition code 1 */
+      cc = (i == l) ? 2 : 1;
 
-            /* Terminate the operation at this point */
-            break;
+      /* Terminate the operation at this point */
+      break;
 
-        } /* end if(sbyte) */
+    } /* end if(sbyte) */
 
-        /* Decrement first operand address */
-        effective_addr1--;  /* The only difference with TRT ;-) */
-        effective_addr1 &= ADDRESS_MAXWRAP(regs);
+    /* Decrement first operand address */
+    effective_addr1--;  /* The only difference with TRT ;-) */
+    effective_addr1 &= ADDRESS_MAXWRAP(regs);
 
-    } /* end for(i) */
+  } /* end for(i) */
 
-    /* Update the condition code */
-    regs->psw.cc = cc;
+  /* Update the condition code */
+  regs->psw.cc = cc;
 }
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_3)*/
 
