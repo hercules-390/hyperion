@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+10 Oct 2004 Repaired some deprecated warnings dyncrypt.c - Bernard van der Helm
 07 Oct 2004 OPTION_WAKEUP_SELECT_VIA_PIPE - Ivan Warren by Fish
 05 Oct 2004 cr_mask.pat - Fix SIE intercept logic for LCTL - Greg Smith
 05 Oct 2004 no_ffs.pat - Remove ffs ia32 assembler assist - Greg Smith
