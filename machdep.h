@@ -15,6 +15,11 @@
 #define _ext_ia32
 #endif
 
+#undef _ext_ppc
+#if defined(__powerpc__) || defined(__PPC__)
+#define _ext_ppc
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Intel pentiumpro/i686                                             */
 /*-------------------------------------------------------------------*/
@@ -37,28 +42,10 @@ static __inline__ void set_bit_i686(int nr, volatile void * addr)
 		:"Ir" (nr));
 }
 
-#define __set_bit(x,y,z) __set_bit_i686((y),(z))
-static __inline__ void __set_bit_i686(int nr, volatile void * addr)
-{
-	__asm__ (
-		"btsl %1,%0"
-		:"=m" (ADDR)
-		:"Ir" (nr));
-}
-
 #define clear_bit(x,y,z) clear_bit_i686((y),(z))
 static __inline__ void clear_bit_i686(int nr, volatile void * addr)
 {
 	__asm__ __volatile__( LOCK_PREFIX
-		"btrl %1,%0"
-		:"=m" (ADDR)
-		:"Ir" (nr));
-}
-
-#define __clear_bit(x,y,z) __clear_bit_i686((y),(z))
-static __inline__ void __clear_bit_i686(int nr, volatile void * addr)
-{
-	__asm__ __volatile__(
 		"btrl %1,%0"
 		:"=m" (ADDR)
 		:"Ir" (nr));
@@ -140,7 +127,6 @@ static __inline__ BYTE cmpxchg4_i686(U32 *old, U32 new, void *ptr) {
          : "ax", "memory");
  return code;
 }
-#define HAVE_CMPXCHG
 
 #if !defined(PIC)
 
@@ -334,7 +320,62 @@ do {                                          \
          : "edx", "memory");                  \
 } while (0)
 
-#endif /* defined(__i686__) | defined(__pentiumpro__) */
+#endif /* defined(_ext_ia32) */
+
+/*-------------------------------------------------------------------*/
+/* PowerPC                                                           */
+/*-------------------------------------------------------------------*/
+#if defined(_ext_ppc)
+
+/* From /usr/src/linux/include/asm-ppc/system.h */
+static __inline__ unsigned long
+__cmpxchg_u32(volatile int *p, int old, int new)
+{
+	int prev;
+
+	__asm__ __volatile__ ("\n\
+1:	lwarx	%0,0,%2 \n\
+	cmpw	0,%0,%3 \n\
+	bne	2f \n\
+ 	stwcx.	%4,0,%2 \n\
+	bne-	1b\n"
+#ifdef OPTION_SMP
+"	sync\n"
+#endif /* OPTION_SMP */
+"2:"
+	: "=&r" (prev), "=m" (*p)
+	: "r" (p), "r" (old), "r" (new), "m" (*p)
+	: "cc", "memory");
+
+	return prev;
+}
+
+#define cmpxchg4(x,y,z) cmpxchg4_ppc(x,y,z)
+static __inline__ BYTE cmpxchg4_ppc(U32 *old, U32 new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+U32 prev = *old;
+return (prev != (*old = __cmpxchg_u32((int *)ptr, (int)prev, (int)new)));
+}
+
+#define cmpxchg1(x,y,z) cmpxchg1_ppc(x,y,z)
+static __inline__ BYTE cmpxchg1_ppc(BYTE *old, BYTE new, void *ptr) {
+/* returns zero on success otherwise returns 1 */
+long  off, shift;
+BYTE  cc;
+U32  *ptr4, val4, old4, new4;
+
+    off = (long)ptr & 3;
+    shift = (3 - off) * 8;
+    ptr4 = ptr - off;
+    val4 = *ptr4;
+    old4 = (val4 & ~(0xff << shift)) | (*old << shift);
+    new4 = (val4 & ~(0xff << shift)) | (new << shift);
+    cc = cmpxchg4_ppc(&old4, new4, ptr4);
+    *old = (old4 >> shift) & 0xff;
+    return cc;
+}
+
+#endif /* defined(_ext_ppc) */
 
 /*-------------------------------------------------------------------*/
 /* Defaults                                                          */
@@ -406,10 +447,6 @@ static __inline__ void set_bit(int len, int nr, volatile void * addr)
 }
 #endif
 
-#ifndef __set_bit
-#define __set_bit(x,y,z) set_bit((x),(y),(z))
-#endif
-
 #ifndef clear_bit
 static __inline__ void clear_bit(int len, int nr, volatile void * addr)
 {
@@ -422,10 +459,6 @@ static __inline__ void clear_bit(int len, int nr, volatile void * addr)
         break;
     }
 }
-#endif
-
-#ifndef __clear_bit
-#define __clear_bit(x,y,z) clear_bit((x),(y),(z))
 #endif
 
 #ifndef test_bit
