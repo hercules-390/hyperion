@@ -110,10 +110,13 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         /*-------------------------------------------*
          * [1] Check for clock comparator interrupt  *
          *-------------------------------------------*/
-        if((sysblk.todclk + regs->todoffset) > regs->clkc)
+        if ((sysblk.todclk + regs->todoffset) > regs->clkc)
         {
-            ON_IC_CLKC(regs);
-            intmask |= regs->cpumask;
+            if (!IS_IC_CLKC(regs))
+            {
+                ON_IC_CLKC(regs);
+                intmask |= regs->cpumask;
+            }
         }
         else
             OFF_IC_CLKC(regs);
@@ -142,8 +145,11 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         /* Set interrupt flag if the CPU timer is negative */
         if ((S64)regs->ptimer < 0)
         {
-            ON_IC_PTIMER(regs);
-            intmask |= regs->cpumask;
+            if (!IS_IC_PTIMER(regs))
+            {
+                ON_IC_PTIMER(regs);
+                intmask |= regs->cpumask;
+            }
         }
         else
             OFF_IC_PTIMER(regs);
