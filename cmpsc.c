@@ -255,6 +255,7 @@
 #define CMPSTATUS_DEFINED
 typedef struct
 {
+  BOOL end_of_source;		/* indicator end of source of course          */
   BYTE next_ch;			/* next character read                        */
   BOOL child_tested;		/* Indication if a possible child is tested   */
   U16 last_match;		/* last matched Index symbol                  */
@@ -321,6 +322,7 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
 	{
 
 	  /* Initialize status */
+	  status.end_of_source = FALSE;
 	  status.parent_found = FALSE;
 	  status.child_tested = FALSE;
 	  status.indexsymbol_found = FALSE;
@@ -335,11 +337,15 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
 	  /* Check if we already found an index symbol */
 	  if (status.indexsymbol_found)
 	    break;
+	
+	  /* Check if we reached end of source */
+	  if (status.end_of_source)
+	    break;
 
 	  /* Stop searching when childs are tested in cce */
 	  if (status.child_tested)
 	    break;
-
+	
 	  /* Try to find a child in the sibling descriptors */
 	  ARCH_DEP (search_sd) (r1, r2, regs, iregs, cce, &status);
 	}
@@ -349,6 +355,10 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
 
       /* Commit registers */
       COMMITREGS (regs, iregs, r1, r2);
+
+      /* When reached end of source, return to caller */
+      if (status.end_of_source)
+        return;
     }
 
   /* Reached model dependent CPU processing amount */
@@ -693,8 +703,8 @@ static void ARCH_DEP (search_cce) (int r1, int r2, REGS * regs, REGS * iregs, BY
   if (CCE_ccs (cce) && ARCH_DEP (fetch_ch) (r2, regs, iregs, &status->next_ch, 0))
     {
 
-      /* Reached end of source, store last match */
-      status->indexsymbol_found = TRUE;
+      /* Reached end of source */
+      status->end_of_source = TRUE;
       return;
     }
 
