@@ -1516,6 +1516,37 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     /* Copy ESAME PSW bits 64-127 from bytes 168-175 */
     memcpy (newpsw + 8, regs->mainstor + abs, 8);
 
+    /* Update virtual and absolute addresses to point to byte 176 */
+    lsea += 8;
+    LSEA_WRAP(lsea);
+    abs += 8;
+
+    /* Recalculate absolute address if page boundary crossed */
+    if ((lsea & PAGEFRAME_BYTEMASK) == 0x000)
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+
+    /* For a call state entry only, if ASN-and-LX-reuse is installed and
+       active, load the SASTEIN (high word of CR3) from bytes 176-179,  
+       and load the PASTEIN (high word of CR4) from bytes 180-183 */
+    if ((lsed.uet & LSED_UET_ET) == LSED_UET_PC
+        && ASN_AND_LX_REUSE_ENABLED(regs))
+    {
+        FETCH_FW(regs->CR_H(3), regs->mainstor + abs);
+        FETCH_FW(regs->CR_H(4), regs->mainstor + abs + 4);
+
+      #ifdef STACK_DEBUG
+        logmsg (_("stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
+                "PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
+                "loaded from V:" F_VADR " A:" F_RADR "\n"),
+                regs->mainstor[abs], regs->mainstor[abs+1],
+                regs->mainstor[abs+2], regs->mainstor[abs+3],
+                regs->mainstor[abs+4], regs->mainstor[abs+5],
+                regs->mainstor[abs+6], regs->mainstor[abs+7],
+                lsea, abs);
+      #endif /*STACK_DEBUG*/
+
+    } /* end if(LSED_UET_PC && ASN_AND_LX_REUSE_ENABLED) */
+
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Load new PSW using the bytes extracted from the stack entry */
