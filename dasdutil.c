@@ -16,7 +16,7 @@
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static int verbose = 1;                /* Be chatty about reads etc. */
+static int verbose = 0;                /* Be chatty about reads etc. */
 static BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 static BYTE iplpsw[8]    = {0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x0F};
 static BYTE iplccw1[8]   = {0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x01};
