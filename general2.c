@@ -1288,7 +1288,7 @@ VADR    effective_addr2;                /* Effective address         */
     if (regs->psw.cc == 1)
     {
 #if defined(_FEATURE_SIE)
-        if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_TS1)))
         {
             if( !OPEN_IC_PERINT(regs) )
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
