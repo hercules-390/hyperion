@@ -145,8 +145,6 @@ typedef void*THREAD_FUNC(void*);
 	pthread_kill(tid,signo)
 #define thread_id() \
 	pthread_self()
-#define wait_timed_condition(pcond,plk,tm) \
-	pthread_cond_timedwait((pcond),(plk),(tm))
 #else
 typedef int				TID;
 typedef int				LOCK;
@@ -163,7 +161,6 @@ typedef int				ATTR;
 #define create_thread(ptid,pat,fn,arg)	(*(ptid)=0,fn(arg),0)
 #define signal_thread(tid,signo)	raise(signo)
 #define thread_id()			0
-#define wait_timed_condition(pcond,plk,tm) *(pcond)=1
 #endif
 
 /*-------------------------------------------------------------------*/

@@ -2972,7 +2972,7 @@ char           *gc_state[]=             /* Garbage states            */
         tm.tv_sec = cckd->gctime + wait;
         tm.tv_nsec = 0;
         obtain_lock (&cckd->gclock);
-        wait_timed_condition ( &cckd->gccond, &cckd->gclock, &tm);
+        timed_wait_condition ( &cckd->gccond, &cckd->gclock, &tm);
         release_lock (&cckd->gclock);
         time (&cckd->gctime);
         DEVTRACE ( "cckddasd: gcol waking up at %s", ctime(&cckd->gctime));
