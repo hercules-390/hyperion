@@ -199,7 +199,7 @@ int     r1, r2;                         /* Register values           */
 int     rc = 0;                         /* Return code               */
 int     cc = 0;				/* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
-RADR    raddr1, raddr2;                 /* Real addresses            */
+RADR    raddr1, raddr2, xpkeya;         /* Real addresses            */
 RADR    aaddr1 = 0, aaddr2 = 0;         /* Absolute addresses        */
 int     priv;                           /* 1=Private address space   */
 int     prot = 0;                       /* 1=Protected page          */
@@ -215,12 +215,6 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
     RRE(inst, execflag, regs, r1, r2);
-
-    /* Specification exception if register 0 bits 16-19 are
-       not all zero, or if bits 20 and 21 are both ones */
-    if ((regs->GR_L(0) & 0x0000F000) != 0
-        || (regs->GR_L(0) & 0x00000C00) == 0x00000C00)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Use PSW key as access key for both operands */
     akey1 = akey2 = regs->psw.pkey;
@@ -245,6 +239,12 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         if (regs->GR_L(0) & 0x00000400)
             akey2 = akey;
     }
+
+    /* Specification exception if register 0 bits 16-19 are
+       not all zero, or if bits 20 and 21 are both ones */
+    if ((regs->GR_L(0) & 0x0000F000) != 0
+        || (regs->GR_L(0) & 0x00000C00) == 0x00000C00)
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Determine the logical addresses of each operand */
     vaddr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -274,7 +274,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                storage then xpblk2 now contains expanded storage block# */
             if(pte2 & PAGETAB_ESVALID)
             {
-                xpblk2 = pte2 & ZPGETAB_PFRA >> 12;
+                xpblk2 = (pte2 & ZPGETAB_PFRA) >> 12;
 #if defined(_FEATURE_SIE)
                 if(regs->sie_state)
                 {
@@ -290,27 +290,24 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 }
 #endif /*defined(_FEATURE_SIE)*/
 
-                /* If the expanded storage block does not exist
-                   then terminate the instruction */
-                if (xpblk2 >= sysblk.xpndsize)
-                {
-                    cc = 2;
-                    goto mvpg_progck;
-                }
-
                 rc = 0;
                 xpvalid2 = 1;
-                xpkey2 = sysblk.mainstor[raddr2 +
+                xpkeya = raddr2 +
 #if defined(FEATURE_ESAME)
-                                                  2048
+                                   2048;
 #else /*!defined(FEATURE_ESAME)*/
                 /* For ESA/390 mode, the XPTE lies directly beyond 
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
-	                             1024 + ((vaddr1 & 0x000FF000) >> 9)
+	                             1024 + ((vaddr2 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
-                                                      ];
-/*DEBUG*/ logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X\n",pte2,xpkey2);
+                if (xpkeya > regs->mainsize)
+                    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+                xpkey2 = sysblk.mainstor[xpkeya]; 
+
+/*DEBUG logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
+                  pte2,xpkey2,xpblk2,akey2);  */
+
             }
             else
             {
@@ -347,7 +344,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                storage then xpblk1 now contains expanded storage block# */
             if(pte1 & PAGETAB_ESVALID)
             {
-                xpblk1 = pte1 & ZPGETAB_PFRA >> 12;
+                xpblk1 = (pte1 & ZPGETAB_PFRA) >> 12;
 #if defined(_FEATURE_SIE)
                 if(regs->sie_state)
                 {
@@ -363,27 +360,23 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                 }
 #endif /*defined(_FEATURE_SIE)*/
 
-                /* If the expanded storage block does not exist
-                   then terminate the instruction */
-                if (xpblk1 >= sysblk.xpndsize)
-                {
-                    cc = 1;
-                    goto mvpg_progck;
-                }
-
                 rc = 0;
                 xpvalid1 = 1;
-                xpkey1 = sysblk.mainstor[raddr2 +
+                xpkeya = raddr1 +
 #if defined(FEATURE_ESAME)
-                                                  2048
+                                  2048;
 #else /*!defined(FEATURE_ESAME)*/
                 /* For ESA/390 mode, the XPTE lies directly beyond 
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
-	                             1024 + ((vaddr1 & 0x000FF000) >> 9)
+	                          1024 + ((vaddr1 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
-                                                      ];
-/*DEBUG*/ logmsg("MVPG pte1 = " F_CREG ", xkey1 = %2.2X\n",pte1,xpkey1);
+                if (xpkeya > regs->mainsize)
+                    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+                xpkey1 = sysblk.mainstor[xpkeya]; 
+
+/*DEBUG  logmsg("MVPG pte1 = " F_CREG ", xkey1 = %2.2X, xpblk1 = %5.5X, akey1 = %2.2X\n",
+                  pte1,xpkey1,xpblk1,akey1);  */
             }
             else
             {
@@ -402,9 +395,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
         /* Program check if page protection or access-list controlled
            protection applies to the first operand */
-        if (prot)
+        if (prot || (xpvalid1 && (pte1 & PAGETAB_PROT)))
         {
-            regs->TEA = vaddr1 | stid | TEA_PROT_AP;
+            regs->TEA = vaddr1 | TEA_PROT_AP | stid;
             regs->excarid = (ACCESS_REGISTER_MODE(&regs->psw)) ? r1 : 0;
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
         }
@@ -414,20 +407,43 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
     /* Program check if both operands are in expanded storage, or
        if first operand is in expanded storage and the destination
-       reference intention (register 0 bit 22) is set to one */
+       reference intention (register 0 bit 22) is set to one, or
+       if first operand is in expanded storage and pte lock bit on, or
+       if first operand is in expanded storage and frame invalid */
     if ((xpvalid1 && xpvalid2)
-        || (xpvalid1 && (regs->GR_L(0) & 0x00000200)))
+        || (xpvalid1 && (regs->GR_L(0) & 0x00000200))
+        || (xpvalid1 && (pte1 & PAGETAB_PGLOCK))
+        || (xpvalid1 && (xpblk1 >= sysblk.xpndsize)))
     {
         xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
+        rc = 2;
+        cc = 1;
+        goto mvpg_progck;
+    }
+    /* More Program check checking, but at lower priority:
+       if second operand is in expanded storage and pte lock bit on, or
+       if second operand is in expanded storage and frame invalid */
+    if ((xpvalid2 && (pte2 & PAGETAB_PGLOCK))
+        || (xpvalid2 && (xpblk2 >= sysblk.xpndsize)))
+    {
+        /* re-do translation to set up TEA */
+        rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ, &raddr2,
+                        &xcode, &priv, &prot, &stid);
+        xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
+        cc = 1;
         goto mvpg_progck;
     }
 
-    /* Perform addressing and protection checks */
+    /* Perform protection checks */
     if (xpvalid1)
     {
-        /* Perform protection check on expanded storage block */
-        if (akey1 != 0 && akey1 != (xpkey1 & STORKEY_KEY))
+        /* Key check on expanded storage block if NoKey bit off in PTE */
+        if (akey1 != 0 && akey1 != (xpkey1 & STORKEY_KEY)
+            && (pte1 & PAGETAB_ESNK) == 0
+            && !((regs->CR(0) & CR0_STORE_OVRD) && ((xpkey1 & STORKEY_KEY) == 0x90)))
+        {
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+        }
     }
     else
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
@@ -441,10 +457,13 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
     if (xpvalid2)
     {
-        /* Perform protection check on expanded storage block */
+        /* Key check on expanded storage block if NoKey bit off in PTE */
         if (akey2 != 0 && (xpkey2 & STORKEY_FETCH)
-            && akey2 != (xpkey2 & STORKEY_KEY))
+            && akey2 != (xpkey2 & STORKEY_KEY)
+            && (pte2 & PAGETAB_ESNK) == 0)
+        {
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+        }
     }
     else
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
@@ -504,6 +523,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     return;
 
 mvpg_progck:
+
     /* If page translation exception (PTE invalid) and condition code
         option in register 0 bit 23 is set, return condition code */
     if ((regs->GR_L(0) & 0x00000100)
