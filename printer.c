@@ -37,7 +37,7 @@ pid_t           pid;                    /* Child process identifier  */
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (fd < 0)
         {
-            logmsg (_("HHC413I Error opening file %s: %s\n"),
+            logmsg (_("HHCPR004E Error opening file %s: %s\n"),
                     dev->filename, strerror(errno));
             return -1;
         }
@@ -53,7 +53,7 @@ pid_t           pid;                    /* Child process identifier  */
     rc = pipe (pipefd);
     if (rc < 0)
     {
-        logmsg (_("HHC415I %4.4X device initialization error: pipe: %s\n"),
+        logmsg (_("HHCPR005E %4.4X device initialization error: pipe: %s\n"),
                 dev->devnum, strerror(errno));
         return -1;
     }
@@ -62,7 +62,7 @@ pid_t           pid;                    /* Child process identifier  */
     pid = fork();
     if (pid < 0)
     {
-        logmsg (_("HHC416I %4.4X device initialization error: fork: %s\n"),
+        logmsg (_("HHCPR006E %4.4X device initialization error: fork: %s\n"),
                 dev->devnum, strerror(errno));
         return -1;
     }
@@ -71,7 +71,7 @@ pid_t           pid;                    /* Child process identifier  */
     if (pid == 0)
     {
         /* Log start of child process */
-        logmsg (_("HHC417I pipe receiver (pid=%d) starting for %4.4X\n"),
+        logmsg (_("HHCPR007I pipe receiver (pid=%d) starting for %4.4X\n"),
                 getpid(), dev->devnum);
 
         /* Close the write end of the pipe */
@@ -83,7 +83,7 @@ pid_t           pid;                    /* Child process identifier  */
             rc = dup2 (pipefd[0], STDIN_FILENO);
             if (rc != STDIN_FILENO)
             {
-                logmsg (_("HHC418I %4.4X dup2 error: %s\n"),
+                logmsg (_("HHCPR008E %4.4X dup2 error: %s\n"),
                         dev->devnum, strerror(errno));
                 close (pipefd[0]);
                 _exit(127);
@@ -97,7 +97,7 @@ pid_t           pid;                    /* Child process identifier  */
         rc = dup2 (fileno(sysblk.msgpipew), STDOUT_FILENO);
         if (rc != STDOUT_FILENO)
         {
-            logmsg (_("HHC419I %4.4X dup2 error: %s\n"),
+            logmsg (_("HHCPR009E %4.4X dup2 error: %s\n"),
                     dev->devnum, strerror(errno));
             _exit(127);
         }
@@ -106,7 +106,7 @@ pid_t           pid;                    /* Child process identifier  */
         rc = dup2 (fileno(sysblk.msgpipew), STDERR_FILENO);
         if (rc != STDERR_FILENO)
         {
-            logmsg (_("HHC420I %4.4X dup2 error: %s\n"),
+            logmsg (_("HHCPR010E %4.4X dup2 error: %s\n"),
                     dev->devnum, strerror(errno));
             _exit(127);
         }
@@ -143,13 +143,13 @@ pid_t           pid;                    /* Child process identifier  */
         if (rc == 0)
         {
             /* Log end of child process */
-            logmsg (_("HHC423I pipe receiver (pid=%d) terminating for %4.4X\n"),
+            logmsg (_("HHCPR011I pipe receiver (pid=%d) terminating for %4.4X\n"),
                     getpid(), dev->devnum);
         }
         else
         {
             /* Log error */
-            logmsg (_("HHC422I %4.4X Unable to execute %s: %s\n"),
+            logmsg (_("HHCPR012E %4.4X Unable to execute %s: %s\n"),
                     dev->devnum, dev->filename+1, strerror(errno));
         }
 
@@ -184,7 +184,7 @@ int             rc;                     /* Return code               */
     /* Equipment check if error writing to printer file */
     if (rc < len)
     {
-        logmsg (_("HHC414I %4.4X Error writing to %s: %s\n"),
+        logmsg (_("HHCPR003E %4.4X Error writing to %s: %s\n"),
                 dev->devnum, dev->filename,
                 (errno == 0 ? _("incomplete"): strerror(errno)));
         dev->sense[0] = SENSE_EC;
@@ -205,7 +205,8 @@ int     i;                              /* Array subscript           */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
         fprintf (stderr,
-                "HHC411I File name missing or invalid\n");
+                "HHCPR001E File name missing or invalid for printer %4.4X\n",
+                 dev->devnum);
         return -1;
     }
 
@@ -230,8 +231,8 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        fprintf (stderr, "HHC412I Invalid argument: %s\n",
-                argv[i]);
+        fprintf (stderr, "HHCPR002E Invalid argument for printer %4.4X: %s\n",
+                dev->devnum, argv[i]);
         return -1;
     }
 
