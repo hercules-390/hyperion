@@ -196,7 +196,11 @@ TID paneltid;
     {
     struct sigaction sa;
         sa.sa_sigaction = (void*)&sigabend_handler;
+#ifdef SA_NODEFER
         sa.sa_flags = SA_NODEFER;
+#else
+	sa.sa_flags = 0
+#endif
 
         if( sigaction(SIGILL, &sa, NULL)
          || sigaction(SIGFPE, &sa, NULL)
