@@ -1120,6 +1120,7 @@ create_ckd_file (char *fname, int fseqn, U16 devtype, U32 heads,
 int             rc;                     /* Return code               */
 int             fd;                     /* File descriptor           */
 int             i;                      /* Loop counter              */
+int             n;                      /* Loop delimiter            */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 CCKD_L1ENT     *l1=NULL;                /* -> Primary lookup table   */
@@ -1129,6 +1130,7 @@ CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
 U32             cyl;                    /* Cylinder number           */
 U32             head;                   /* Head number               */
 int             trk = 0;                /* Track number              */
+int             trks;                   /* Total number tracks       */
 BYTE            r;                      /* Record number             */
 BYTE           *pos;                    /* -> Next position in buffer*/
 U32             cpos = 0;               /* Offset into cckd file     */
@@ -1141,6 +1143,16 @@ int             rec0len = 8;            /* Length of R0 data         */
 int             fileseq;                /* CKD header sequence number*/
 int             highcyl;                /* CKD header high cyl number*/
 int             x=O_EXCL;               /* Open option               */
+CKDDEV         *ckdtab;                 /* -> CKD table entry        */
+
+    /* Locate the CKD dasd table entry */
+    ckdtab = dasd_lookup (DASD_CKDDEV, NULL, devtype, volcyls);
+    if (ckdtab == NULL)
+    {
+        logmsg (_("HHCDU028E device type %4.4X not found in dasd table\n"),
+               devtype);
+        return -1;
+    }
 
     /* Set file sequence number to zero if this is the only file */
     if (fseqn == 1 && end + 1 == volcyls)
@@ -1154,6 +1166,8 @@ int             x=O_EXCL;               /* Open option               */
     else
         highcyl = end;
     cyl = end - start + 1;
+
+    trks = volcyls * heads;
 
     /* if `dasdcopy' > 1 then we can replace the existing file */
     if (dasdcopy > 1) x = 0;
@@ -1357,6 +1371,9 @@ int             x=O_EXCL;               /* Open option               */
                     convert_to_ebcdic (pos, 4, "VOL1");
                     convert_to_ebcdic (pos+4, 6, volser);
                     convert_to_ebcdic (pos+37, 14, "HERCULES");
+                    /* vtoc cchhr will be 0000 0001 01 rather than all zeroes */
+                    pos[14] = 1;
+                    pos[15] = 1;
                     /* For linux disk, vtoc is at CCHHR 0000 0001 01 */
                     if (nullfmt == CKDDASD_NULLTRK_FMT2)
                     {
@@ -1388,7 +1405,98 @@ int             x=O_EXCL;               /* Open option               */
                 /* Track 1 for linux contains an empty VTOC */
                 else if (trk == 1 && nullfmt == CKDDASD_NULLTRK_FMT2)
                 {
-                    for (i = 0; i < 12; i++)
+                    /* build format 4 dscb */
+                    rechdr = (CKDDASD_RECHDR*)pos;
+                    pos += CKDDASD_RECHDR_SIZE;
+
+                    /* track 1 record 1 count */
+                    store_hw(&rechdr->cyl, cyl);
+                    store_hw(&rechdr->head, head);
+                    rechdr->rec = r;
+                    rechdr->klen = 44;
+                    store_hw(&rechdr->dlen, 96);
+                    r++;
+
+                    /* track 1 record 1 key */
+                    memset (pos, 0x04, 44);
+                    pos += 44;
+
+                    /* track 1 record 1 data */
+                    memset (pos, 0, 96);
+                    pos[0] = 0xf4;                            // DS4IDFMT
+                    store_hw(pos + 6, 10);                    // DS4DSREC
+                    pos[14] = trks > 65535 ? 0xa0 : 0;        // DS4VTOCI
+                    pos[15] = 1;                              // DS4NOEXT
+                    store_hw(pos+18, volcyls);                // DS4DSCYL
+                    store_hw(pos+20, heads);                  // DS4DSTRK
+                    store_hw(pos+22, ckdtab->len);            // DS4DEVTK
+                    pos[27] = 0x30;                           // DS4DEVFG
+                    pos[30] = 0x0c;                           // DS4DEVDT
+                    pos[61] = 0x01;                           // DS4VTOCE + 00
+                    pos[66] = 0x01;                           // DS4VTOCE + 05
+                    pos[70] = 0x01;                           // DS4VTOCE + 09
+                    pos[81] = trks > 65535 ? 7 : 0;           // DS4EFLVL
+                    pos[85] = trks > 65535 ? 1 : 0;           // DS4EFPTR + 03
+                    pos[86] = trks > 65535 ? 3 : 0;           // DS4EFPTR + 04
+                    pos += 96;
+
+                    /* build format 5 dscb */
+                    rechdr = (CKDDASD_RECHDR*)pos;
+                    pos += CKDDASD_RECHDR_SIZE;
+
+                    /* track 1 record 1 count */
+                    store_hw(&rechdr->cyl, cyl);
+                    store_hw(&rechdr->head, head);
+                    rechdr->rec = r;
+                    rechdr->klen = 44;
+                    store_hw(&rechdr->dlen, 96);
+                    r++;
+
+                    /* track 1 record 2 key */
+                    memset (pos, 0x05, 4);                    // DS5KEYID
+                    memset (pos+4, 0, 40);
+                    if (trks <= 65535)
+                    {
+                        store_hw(pos+4, 2);                   // DS5AVEXT + 00
+                        store_hw(pos+6, volcyls - 1);         // DS5AVEXT + 02
+                        pos[8] = heads - 2;                   // DS5AVEXT + 04
+                    }
+                    pos += 44;
+
+                    /* track 1 record 2 data */
+                    memset (pos, 0, 96);
+                    pos[0] = 0xf5;                            // DS5FMTID
+                    pos += 96;
+
+                    /* build format 7 dscb */
+                    if (trks > 65535)
+                    {
+                        rechdr = (CKDDASD_RECHDR*)pos;
+                        pos += CKDDASD_RECHDR_SIZE;
+
+                        /* track 1 record 3 count */
+                        store_hw(&rechdr->cyl, cyl);
+                        store_hw(&rechdr->head, head);
+                        rechdr->rec = r;
+                        rechdr->klen = 44;
+                        store_hw(&rechdr->dlen, 96);
+                        r++;
+
+                        /* track 1 record 2 key */
+                        memset (pos, 0x07, 4);                // DS7KEYID
+                        memset (pos+4, 0, 40);
+                        store_fw(pos+4, 2);                   // DS7EXTNT + 00
+                        store_fw(pos+8, trks - 1);            // DS7EXTNT + 04
+                        pos += 44;
+
+                        /* track 1 record 2 data */
+                        memset (pos, 0, 96);
+                        pos[0] = 0xf7;                        // DS7FMTID
+                        pos += 96;
+                    }
+
+                    n = 12 - r + 1;
+                    for (i = 0; i < n; i++)
                     {
                         rechdr = (CKDDASD_RECHDR*)pos;
                         pos += CKDDASD_RECHDR_SIZE;
