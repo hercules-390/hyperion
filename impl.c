@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
 BYTE   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
 #ifdef PROFILE_CPU
-TID panelid;
+TID paneltid;
 #endif
 
     /* Get name of configuration file or default to hercules.cnf */
