@@ -2700,13 +2700,14 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(load_positive_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
+S64     gpr2l;
 
     RRE(inst, execflag, regs, r1, r2);
 
+    gpr2l = (S32)regs->GR_L(r2);
+
     /* Load positive value of second operand and set cc */
-    (S64)regs->GR_G(r1) = (S32)regs->GR_L(r2) < 0 ?
-                            -((S32)regs->GR_L(r2)) :
-                            (S32)regs->GR_L(r2);
+    (S64)regs->GR_G(r1) = gpr2l < 0 ? -gpr2l : gpr2l;
 
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 2;
 
@@ -2742,13 +2743,14 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(load_negative_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
+S64     gpr2l;
 
     RRE(inst, execflag, regs, r1, r2);
 
+    gpr2l = (S32)regs->GR_L(r2);
+
     /* Load negative value of second operand and set cc */
-    (S64)regs->GR_G(r1) = (S32)regs->GR_L(r2) > 0 ?
-                            -((S32)regs->GR_L(r2)) :
-                            (S32)regs->GR_L(r2);
+    (S64)regs->GR_G(r1) = gpr2l > 0 ? -gpr2l : gpr2l;
 
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 1;
 
@@ -2833,11 +2835,14 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(load_complement_long_fullword_register)
 {
 int     r1, r2;                         /* Values of R fields        */
+S64     gpr2l;
 
     RRE(inst, execflag, regs, r1, r2);
 
+    gpr2l = (S32)regs->GR_L(r2);
+
     /* Load complement of second operand and set condition code */
-    (S64)regs->GR_G(r1) = -((S32)regs->GR_L(r2));
+    (S64)regs->GR_G(r1) = -gpr2l;
 
     regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;

@@ -81,6 +81,9 @@
 #undef VE
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #undef SIEBK
+#undef TLB_STD
+#undef TLB_VADDR
+#undef TLB_PTE
 /* The default mode is 900, basic ESAME */
 
 #if !defined(NO_ATTR_REGPARM) & !defined(PROFILE_CPU)
@@ -167,6 +170,9 @@ s370_ ## _name
 #define VE(_r)	VE_L(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE1BK
+#define TLB_STD   TLB_STD_L
+#define TLB_VADDR TLB_VADDR_L
+#define TLB_PTE   TLB_PTE_L
 
 #elif _GEN_ARCH == 390
 
@@ -251,6 +257,9 @@ s390_ ## _name
 #define VE(_r)	VE_L(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE1BK
+#define TLB_STD   TLB_STD_L
+#define TLB_VADDR TLB_VADDR_L
+#define TLB_PTE   TLB_PTE_L
 
 #elif _GEN_ARCH == 900
 
@@ -330,6 +339,9 @@ z900_ ## _name
 #define VE(_r)	VE_G(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE2BK
+#define TLB_STD   TLB_STD_G
+#define TLB_VADDR TLB_VADDR_G
+#define TLB_PTE   TLB_PTE_G
 
 #else
 

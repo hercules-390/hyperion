@@ -1162,10 +1162,6 @@ int     i;                              /* Array subscript           */
             logmsg ("stack: AR%d=" F_AREG " loaded from V:" F_VADR
                     " A:" F_RADR "\n", i, regs->AR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
-#if 1
-if((abs & PAGEFRAME_PAGEMASK) == 0) /*ZZ*/
-  logmsg("error: abs = 0\n"); /*ZZ*/
-#endif
         }
 
         /* Update the virtual and absolute addresses */

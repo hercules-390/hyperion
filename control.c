@@ -4729,8 +4729,8 @@ static char *ordername[] = {    "Unassigned",
             if(!sysblk.arch_z900)
                 status = SIGP_STATUS_INVALID_ORDER;
 
-            PERFORM_SERIALIZATION (tregs);
-            PERFORM_CHKPT_SYNC (tregs);
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
 
 #ifdef _FEATURE_CPU_RECONFIG
             for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
@@ -4773,9 +4773,14 @@ static char *ordername[] = {    "Unassigned",
                         status |= SIGP_STATUS_INVALID_PARAMETER;
                 }
 
+            /* Invalidate the ALB and TLB */
+            ARCH_DEP(purge_tlb) (regs);
+#if defined(FEATURE_ACCESS_REGISTERS)
+            ARCH_DEP(purge_alb) (tregs);
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
-            PERFORM_SERIALIZATION (tregs);
-            PERFORM_CHKPT_SYNC (tregs);
+            PERFORM_SERIALIZATION (regs);
+            PERFORM_CHKPT_SYNC (regs);
 
             break;
 #endif /*defined(FEATURE_ESAME_INSTALLED) || defined(FEATURE_ESAME)*/

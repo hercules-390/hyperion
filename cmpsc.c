@@ -157,7 +157,7 @@
 #define GR1_cbn(regs)           (((regs)->GR_L (1) & 0x00000007))
 #define GR1_dictor(regs)        (GR_A (1, regs) & ((GREG) 0xFFFFFFFFFFFFF000ULL))
 #define GR1_setcbn(regs, cbn) 	((regs)->GR_L (1) = ((regs)->GR_L (1) & 0xFFFFFFF8) | ((cbn) & 0x00000007))
-#define GR1_sttoff(regs)        (((regs)->GR_L (1) & 0x00000FF8) >> 3)
+#define GR1_sttoff(regs)        (((regs)->GR_L (1) & 0x00000FF8) << 4)
 
 /*----------------------------------------------------------------------------*/
 /* Adjust registers conform length                                            */
@@ -230,28 +230,12 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
   while (translated++ < PROCESS_MAX)
     {
 
-      /* First check if we can write */
-      if (GR0_st (iregs))
+      /* Can we write an index or interchange symbol */
+      if (((GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8) > GR_A (r1 + 1, iregs))
 	{
-
-	  /* Can we write an interchange symbol */
-	  if (GR_A (r1 + 1, iregs) < 2)
-	    {
-	      regs->psw.cc = 1;
-	      return;
-	    }
+	  regs->psw.cc = 1;
+	  return;
 	}
-      else
-	{
-
-	  /* Can we write an index symbol */
-	  if (((GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8) > GR_A (r1 + 1, iregs))
-	    {
-	      regs->psw.cc = 1;
-	      return;
-	    }
-	}
-
 
       /* Get the alphabet entry, return on end of source */
       if (ARCH_DEP (fetch_ch) (r2, regs, iregs, &ch, 0))
@@ -709,7 +693,7 @@ static int ARCH_DEP (store_ch) (int r1, int r2, REGS * regs, REGS * iregs, BYTE 
 {
 
   /* Check destination size */
-  if (GR_A (r1 + 1, iregs) + offset < length)
+  if (GR_A (r1 + 1, iregs) < length + offset)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
@@ -752,15 +736,15 @@ static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 
   if (GR0_st (iregs))
     {
 
-      /* Get the interchange symbol at sttoff+indexsymbol after the compression dictionary */
-      ARCH_DEP (vfetchc) (work, 1, (GR1_dictor (iregs) + GR0_dictor_size (iregs) + GR1_sttoff (iregs) + index_symbol * 2) & ADDRESS_MAXWRAP (regs), 1, regs);
+      /* Get the interchange symbol */
+      ARCH_DEP (vfetchc) (work, 1, (GR1_dictor (iregs) + GR1_sttoff (iregs) + index_symbol * 2) & ADDRESS_MAXWRAP (regs), 1, regs);
 
-      /* Store the 2 bytes interchange symbol */
-      ARCH_DEP (vstorec) (work, 1, (GR_A (r1, iregs)) & ADDRESS_MAXWRAP (regs), r1, regs);
+#if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
+      logmsg ("store_is : %04X -> %02X%02X\n", index_symbol, work[0], work[1]);
+#endif
 
-      /* Adjust destination registers */
-      ADJUSTREGS (r1, iregs, 2);
-      return;
+      /* set index_symbol to interchange symbol */
+      index_symbol = (work[0] << 8) + work[1];
     }
 
   /* Calculate clear mask */
@@ -777,7 +761,6 @@ static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 
     ARCH_DEP (vfetchc) (work, 2, GR_A (r1, iregs) & ADDRESS_MAXWRAP (regs), r1, regs);
   else
     ARCH_DEP (vfetchc) (work, 1, GR_A (r1, iregs) & ADDRESS_MAXWRAP (regs), r1, regs);
-
 
   /* Do the job */
   work[0] &= clear_mask >> 16;
@@ -879,7 +862,7 @@ DEF_INST (compression_call)
 
   logmsg ("GR01        : " ADRFMT "\n", (regs)->GR (1));
   logmsg ("dictor      : " ADRFMT "\n", GR1_dictor ((regs)));
-  logmsg ("sttoff      : %d\n", GR1_sttoff ((regs)));
+  logmsg ("sttoff      : %08X\n", GR1_sttoff ((regs)));
   logmsg ("cbn         : %d\n\n", GR1_cbn ((regs)));
 #endif /* OPTION_CMPSC_DEBUGLVL */
 

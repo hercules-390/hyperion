@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = 2.13e
+VERSION  = 2.13f
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be

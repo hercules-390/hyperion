@@ -36,11 +36,13 @@ domain. </P>
 <H4>Is it functional enough to run production work?</H4>
 <P>No. At the moment it's a system programmer's toy, though it's rapidly
 becoming good enough to run a wide range of software without problems. </P>
-<H4>Can it run OS/390, VM/ESA, VSE/ESA?</H4>
-<P>Yes. Hercules is a software implementation of ESA/390, and so it is
-capable of running OS/390, VSE/ESA, and VM/ESA, as well as older versions of
-these OS's.</P>
+<H4>Can it run z/OS, z/VM, VSE/ESA, Linux/390 and Linux for zSeries?</H4>
+<P>Yes. Hercules is a software implementation of the architecture, and so
+it is capable of running Linux, z/OS, VSE/ESA, and z/VM, as well as older
+versions of these OS's.</P>
 <H4>What IBM operating systems can I run legally?</H4>
+<P>Linux/390 and Linux for zSeries can be run as there are no
+licensing issues involved.</P>
 <P>OS/360 (PCP, MFT and MVT), as far as I know. OS/360 is in the public
 domain. The status of OSes for which IBM did not charge a license fee is
 somewhat murky; these include MVS 3.8, VM/370 release 6, and DOS/VS release
@@ -48,7 +50,7 @@ somewhat murky; these include MVS 3.8, VM/370 release 6, and DOS/VS release
 particular machine. Therefore, in practice you cannot run any ESA operating
 system on your PC unless you can obtain a license from IBM allowing you to
 do so. It is believed that there are, however, three legal ways you could
-run OS/390, VM/ESA, or VSE/ESA under Hercules: </P>
+run z/OS, z/VM, or VSE/ESA under Hercules: </P>
 <OL>
 <LI>Running under Linux on the Pentium processor of a P/390 which is
 licensed to run the OS. </LI>
@@ -321,7 +323,7 @@ September 1999 issue of NaSPA Technical Support magazine. </P>
 <LI>BAKR/PC/PR/PT instructions </LI>
 <LI>Linkage Stack </LI>
 <LI>Compare and Form Codeword and Update Tree instructions </LI>
-<LI>Operational Extensions: Console Integration </LI></UL>
+</UL>
 
 <P>The following optional features have been implemented: </P>
 
@@ -331,16 +333,21 @@ September 1999 issue of NaSPA Technical Support magazine. </P>
 <LI>Broadcasted Purging </LI>
 <LI>Checksum instruction </LI>
 <LI>Compare and Move Extended instructions </LI>
+<LI>Dynamic Reconfiguration </LI>
 <LI>Expanded Storage </LI>
 <LI>Halfword-Immediate instructions </LI>
 <LI>Branch-Relative instructions </LI>
+<LI>Incorrect-Length-Indication Suppression </LI>
 <li>Interpretive Execution (SIE) </li>
 <LI>Move Inverse </LI>
 <LI>Move Page (Facility 2) </LI>
+<LI>Operational Extensions: Console Integration </LI>
 <LI>Private Space </LI>
 <LI>Set Address Space Control Fast </LI>
+<li>Service-call-logical-processor (SCLP) facility </li>
 <li>Square Root</li>
 <LI>Storage-Protection Override </LI>
+<li>Storage Key assist</li>
 <LI>String instructions </LI>
 <LI>Subspace Group </LI>
 <LI>Compare Until Substring Equal </LI>
@@ -350,6 +357,7 @@ September 1999 issue of NaSPA Technical Support magazine. </P>
 <li>Compression</li>
 <LI>Perform Locked Operation </LI>
 <li>Vector Facility</li>
+<li>Multiple Controlled Data Space (VM dataspaces) </li>
 <LI>Extended Translation </LI>
 <LI>Store System Information </LI>
 <li>64-bit operations</li>
@@ -358,24 +366,26 @@ September 1999 issue of NaSPA Technical Support magazine. </P>
 <UL>
 <LI>Clear I/O (full functionality for S/370) </LI>
 <LI>Binary Floating-Point instructions </LI></UL>
-<P>The following optional features are not yet implemented but probably will
-be in due course: </P>
+<P>The following optional features are partially implemented: </P>
 <UL>
 <LI>Address-Limit Checking </LI>
-<LI>Incorrect-Length-Indication Suppression </LI>
+<LI>Channel-Subsystem Call </LI>
+<LI>Coupling Support (Parallel Sysplex) [SIE only]</LI>
+<li>Extended Translation Facility 2
 <LI>MVS assists </LI>
 </UL>
+<p>The following optional features will be implemented:
+<ul>
+<LI>Cancel I/O Facility</LI>
+<li>Program Event Recording</li>
+</ul>
 <P>The following features are not implemented, and are unlikely to be,
 either due to lack of documentation, limited host system capability, or lack
 of supporting hardware: </P>
 <UL>
 <LI>Asynchronous Data Mover Facility </LI>
 <LI>Asynchronous Pageout Facility </LI>
-<LI>Cancel I/O </LI>
-<LI>Channel-Subsystem Call </LI>
-<LI>Coupling (Parallel Sysplex, Coupling Links, Integrated Coupling
-Migration Facility) </LI>
-<LI>Dynamic Reconfiguration Management </LI>
+<LI>Coupling Links </LI>
 <LI>ESCON </LI>
 <LI>EMIF (ESCON Multiple Image Facility) </LI>
 <LI>Extended Sorting </LI>
@@ -383,24 +393,18 @@ Migration Facility) </LI>
 <LI>ICRF (Cryptography) </LI>
 <LI>Operational Extensions: Automatic Reconfiguration, Storage
 Reconfiguration, SCP-initiated Reset, Processor Availability </LI>
-<LI>Program-Event Recording </LI>
 <LI>PER extensions </LI>
 <LI>PR/SM </LI>
-<LI>Sysplex </LI>
 <LI>Sysplex Timer (ETR) </LI>
-<LI>VM assists </LI></UL>
+<LI>VM/370 assists </LI></UL>
 <p>Hercules is compliant with both IBM's ALS-1 and ALS-2 architectural level
 sets to the degree necessary to run all OS/390 versions through 2.10 and
-z/OS version 1.1 in ARCHLVL 1 mode.</p>
+z/OS version 1.1 in ARCHLVL 1 mode, Linux and z/VM in both ESA/390 and z/Architecture mode.</p>
 <H4>What z/Architecture features are implemented?</H4>
 <P>z/Architecture includes as standard all of the features of ESA/390,
 except vector operations, which is not part of the z/Architecture.
 It also includes new standard features such as 5-level DAT, 64-bit
 addressing, IDAW format-2, and many new instructions.
-<p>The following optional features of z/Architecture will be implemented:
-<ul>
-<li>Extended Translation Facility 2
-</ul>
 <H4>Who are the Herculeans?</H4>
 
 <P>The following people are among those who have contributed to this
@@ -443,6 +447,7 @@ maintainer)
 <li>Willem Konynenberg
 <li>Vic Cross
 <li>Nobumichi Kozawa
+<li>Paul Leisy
 </sl></p>
 <P>And thanks for support and encouragement from:
 <sl>

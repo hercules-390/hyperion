@@ -1,3 +1,6 @@
+16 Jun 2001 Correctons to LPGFR/LNGFR/LCGFR - Jan Jaeger
+16 Jun 2001 Fix index-symbol translation - Bernard van der Helm
+16 Jun 2001 TLB implementation for z/Architecture - Jan Jaeger
 15 Jun 2001 Fix interrupt key processing - Jan Jaeger
 13 Jun 2001 Zero highbyte in 24 bit branch trace entry - Paul Leisy
 13 Jun 2001 Correct attention processing on suspended devices - Jan Jaeger

@@ -121,9 +121,15 @@ typedef struct _PSW {
 
 /* Structure definition for translation-lookaside buffer entry */
 typedef struct _TLBE {
-	U32	std;			/* Segment table designation */
-	U32	vaddr;			/* Virtual page address      */
-	U32	pte;			/* Copy of page table entry  */
+	DW 	std;			/* Segment table designation */
+#define TLB_STD_G 	std.D
+#define TLB_STD_L	std.F.L.F
+	DW 	vaddr;			/* Virtual page address      */
+#define TLB_VADDR_G 	vaddr.D
+#define TLB_VADDR_L	vaddr.F.L.F
+	DW 	pte;			/* Copy of page table entry  */
+#define TLB_PTE_G 	pte.D
+#define TLB_PTE_L	pte.F.L.F
 	BYTE	valid;			/* 1=TLB entry is valid      */
 	BYTE	common; 		/* 1=Page in common segment  */
 	BYTE	protect;		/* 1=Page in protected segmnt*/
