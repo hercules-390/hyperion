@@ -403,7 +403,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* ASTE validity exception if ASTE invalid bit is one */
         if (daste[0] & ASTE0_INVALID)
+        {
+            regs->excarid = r2;
             ARCH_DEP(program_interrupt) (regs, PGM_ASTE_VALIDITY_EXCEPTION);
+        }
 
         /* ASTE sequence exception if the subspace ASTE sequence
            number does not match the sequence number in the DUCT */
