@@ -1914,12 +1914,12 @@ BYTE    cwork[4];                       /* Character work areas      */
 
     if (j == 0)
     {
-#if defined(MODEL_DEPENDENT)
+#if defined(MODEL_DEPENDENT_STCM)
         /* If the mask is all zero, we nevertheless access one byte
            from the storage operand, because POP states that an
            access exception may be recognized on the first byte */
         ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
-#endif /*defined(MODEL_DEPENDENT)*/
+#endif /*defined(MODEL_DEPENDENT_STCM)*/
         return;
     }
 
