@@ -150,7 +150,7 @@ hetinit_OBJ  = hetinit.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
 hetmap_OBJ   = hetmap.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
                codepage.o pttrace.o hsys.o
 
-hetupd_OBJ   = hetupd.o hetlib.o sllib.o codepage.o hostinfo.o version.o  logmsg.o pttrace.o
+hetupd_OBJ   = hetupd.o hetlib.o sllib.o codepage.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
 dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o pttrace.o hsys.o
 
