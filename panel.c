@@ -161,6 +161,14 @@ int     stat_online, stat_busy, stat_pend, stat_open;
 
 #if 1
 //
+//
+//  THE FOLLOWING CODE IS HERE TO PROVIDE COMPATIBILIY WITH THE CURRENT 
+//  PANEL IMPLEMENTATION
+//
+//  THE PANEL DISPLAY SHOULD AT SOME POINT BE REWRITTEN TO USE LOG_LINE
+//  AND LOG_READ RATHER THEN THE MESSAGE PIPE PROVIDED HERE
+//
+//
 FILE   *compat_msgpipew;                /* Message pipe write handle */
 int     compat_msgpiper;                /* Message pipe read handle  */
 
