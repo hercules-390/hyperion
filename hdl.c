@@ -174,6 +174,8 @@ void hdl_main()
 {
     initialize_lock(&hdl_lock);
 
+    dlinit();
+
     if(!(hdl_cdll = hdl_dll = malloc(sizeof(DLLENT))))
     {
         fprintf(stderr, "HHCHD002E cannot allocate memory for DLL descriptor: %s\n",

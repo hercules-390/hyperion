@@ -7,12 +7,14 @@
 
 #if defined(HDL_USE_LIBTOOL)
  #include <ltdl.h>
+ #define dlinit()                lt_dlinit()
  #define dlopen(_name, _flags)   lt_dlopen(_name)
  #define dlsym(_handle, _symbol) lt_dlsym(_handle, _symbol)
  #define dlclose(_handle)        lt_dlclose(_handle)
- #define dlerror                 lt_dlerror
+ #define dlerror()               lt_dlerror()
 #else
  #include <dlfcn.h>
+ #define dlinit()
 #endif
 
 int hdl_load(char *);                 		/* load dll          */
