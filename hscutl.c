@@ -314,7 +314,7 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
         free(tok);
         return(NULL);
     }
-    strncpy(tok->var,sym,MIN(MAX_SYMBOL_SIZE,strlen(sym)));
+    strncpy(tok->var,sym,MIN(MAX_SYMBOL_SIZE+1,strlen(sym)+1));
     tok->val=NULL;
     symbols[symbol_count]=tok;
     symbol_count++;
@@ -344,11 +344,13 @@ void set_symbol(const char *sym,const char *value)
 
 const char *get_symbol(const char *sym)
 {
+    char *val;
     SYMBOL_TOKEN        *tok;
     tok=get_symbol_token(sym,0);
     if(tok==NULL)
     {
-        return(NULL);
+        val=getenv(sym);
+        return(val);
     }
     return(tok->val);
 }
