@@ -474,7 +474,7 @@ typedef struct _SYSBLK {
 // #endif /*defined(FEATURE_HARDWARE_LOADER)*/
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
-#define IMAP_START sysblk.imap01
+#define IMAP_FIRST sysblk.imap01
 	U64 imap01[256];
 	U64 imapa4[256];
 	U64 imapa5[16];
