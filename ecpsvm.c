@@ -12,6 +12,8 @@
 // #define DEBUG_ASSIST(x) ( x )
 #define DEBUG_ASSIST(x)
 
+#define BR14 regs->psw.IA=regs->GR_L(14) & ADDRESS_MAXWRAP(regs)
+
 #define ECPSVM_PROLOG \
 int     b1, b2; \
 VADR    effective_addr1, \
@@ -116,7 +118,7 @@ DEF_INST(ecpsvm_locate_rblock)
     ECPSVM_PROLOG
     arioct=APPLY_PREFIXING(effective_addr2,regs->PX);
     rdev=(effective_addr1 & 0xfff);
-    DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%8.8X\n",effective_addr1,arioct));
+    DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU called; RDEV=%4.4X ARIOCT=%6.6X\n",effective_addr1,arioct));
     FETCH_FW(rchixtbl,sysblk.mainstor+arioct);
     FETCH_HW(chix,sysblk.mainstor+rchixtbl+((rdev & 0xf00) >> 7 ));
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RCH IX = %x\n",chix);
@@ -135,7 +137,6 @@ DEF_INST(ecpsvm_locate_rblock)
     FETCH_FW(rchtbl,sysblk.mainstor+arioct+4);
     rchblk=rchtbl+chix;
     /* RCHBLK now contains RCHBLOK address */
-    // logmsg("HHCEV300D : ECPS:VM SCNRU RCHBLOK @ %8.8X\n",rchblk);
     FETCH_HW(cuix,sysblk.mainstor+rchblk+0x20+((rdev & 0xf8 )>> 2));
     if(cuix & 0x8000)
     {
@@ -157,14 +158,12 @@ DEF_INST(ecpsvm_locate_rblock)
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RCU IX = %x\n",cuix);
     FETCH_FW(rcutbl,sysblk.mainstor+arioct+8);
     rcublk=rcutbl+cuix;
-    // logmsg("HHCEV300D : ECPS:VM SCNRU RCUBLOK @ %8.8X\n",rcublk);
     FETCH_HW(dvix,sysblk.mainstor+rcublk+0x28+((rdev & 0xf)<<1));
     dvix<<=3;
     // logmsg("HHCEV300D : ECPS:VM SCNRU : RDV IX = %x\n",dvix);
     if(sysblk.mainstor[rcublk+5]&0x40)
     {
         FETCH_FW(rcublk,sysblk.mainstor+rcublk+0x10);
-        // logmsg("HHCEV300D : ECPS:VM SCNRU RCUBLOK ACTUALLY @ %8.8X\n",rcublk);
     }
     if(dvix & 0x8000)
     {
@@ -180,7 +179,7 @@ DEF_INST(ecpsvm_locate_rblock)
     }
     FETCH_FW(rdvtbl,sysblk.mainstor+arioct+12);
     rdvblk=rdvtbl+dvix;
-    // logmsg("HHCEV300D : ECPS:VM SCNRU RDVBLOK @ %8.8X\n",rdvblk);
+    DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM SCNRU : RCH = %6.6X, RCU = %6.6X, RDV = %6.6X\n",rchblk,rcublk,rdvblk));
     regs->GR_L(6)=rchblk;
     regs->GR_L(7)=rcublk;
     regs->GR_L(8)=rdvblk;
@@ -216,13 +215,103 @@ DEF_INST(ecpsvm_loc_chgshrpg)
 }
 DEF_INST(ecpsvm_extended_freex)
 {
+    U32 maxdw;
+    U32 numdw;
+    U32 maxsztbl;
+    U32 spixtbl;
+    BYTE spix;
+    U32 freeblock;
+    U32 nextblk;
     ECPSVM_PROLOG
-    DEBUG_ASSIST(logmsg("HHCEV300D : X freex called CR6 = %8.8X\n",regs->CR_L(6)));
+    numdw=regs->GR_L(0);
+    spixtbl=effective_addr2;
+    maxsztbl=effective_addr1;
+    DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM FREEX DW = %4.4X\n",numdw));
+    if(numdw==0)
+    {
+        return;
+    }
+    DEBUG_ASSIST(logmsg("HHCEV300D : MAXSIZE ADDR = %6.6X, SUBPOOL INDEX TABLE = %6.6X\n",maxsztbl,spixtbl));
+    /* E1 = @ of MAXSIZE (maximum # of DW allocatable by FREEX from subpools) */
+    /*      followed by subpool pointers                                      */
+    /* E2 = @ of subpool indices                                              */
+    FETCH_FW(maxdw,sysblk.mainstor+effective_addr1);
+    if(regs->GR_L(0)>maxdw)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : FREEX request beyond subpool capacity\n"));
+        return;
+    }
+    /* Fetch subpool index */
+    spix=sysblk.mainstor[spixtbl+numdw];
+    DEBUG_ASSIST(logmsg("HHCEV300D : Subpool index = %X\n",spix));
+    /* Fetch value */
+    FETCH_FW(freeblock,sysblk.mainstor+maxsztbl+4+spix);
+    DEBUG_ASSIST(logmsg("HHCEV300D : Value in subpool table = %6.6X\n",freeblock));
+    if(freeblock==0)
+    {
+        /* Can't fullfill request here */
+        return;
+    }
+    FETCH_FW(nextblk,sysblk.mainstor+freeblock);
+    STORE_FW(sysblk.mainstor+maxsztbl+4+spix,nextblk);
+    DEBUG_ASSIST(logmsg("HHCEV300D : New Value in subpool table = %6.6X\n",nextblk));
+    regs->GR_L(1)=freeblock;
+    regs->psw.cc=0;
+    BR14;
+    return;
 }
 DEF_INST(ecpsvm_extended_fretx)
 {
+    U32 fretl;
+    U32 cortbl;
+    U32 maxsztbl;
+    U32 maxdw;
+    U32 numdw;
+    U32 block;
+    U32 cortbe; /* Core table Page entry for fretted block */
+    U32 prevblk;
+    BYTE spix;
     ECPSVM_PROLOG
-    DEBUG_ASSIST(logmsg("HHCEV300D : X fretx called\n"));
+    numdw=regs->GR_L(0);
+    block=regs->GR_L(1);
+    maxsztbl=effective_addr1;
+    fretl=effective_addr2;
+    DEBUG_ASSIST(logmsg("HHCEV300D : X fretx called AREA=%6.6X, DW=%4.4X\n",regs->GR_L(1),regs->GR_L(0)));
+    if(numdw==0)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = 0\n"));
+        return;
+    }
+    FETCH_FW(maxdw,sysblk.mainstor+maxsztbl);
+    if(numdw>maxdw)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : DWORDS = %d > MAXDW %d\n",numdw,maxdw));
+        return;
+    }
+    FETCH_FW(cortbl,sysblk.mainstor+fretl);
+    cortbe=cortbl+((block & 0xfff000)>>8);
+    if(memcmp(sysblk.mainstor+cortbe,sysblk.mainstor+fretl+4,4)!=0)
+
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area not in Core Free area\n"));
+        return;
+    }
+    if(sysblk.mainstor[cortbe+8]!=0x02)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : Area flag != 0x02\n"));
+        return;
+    }
+    spix=sysblk.mainstor[fretl+11+numdw];
+    FETCH_FW(prevblk,sysblk.mainstor+maxsztbl+4+spix);
+    if(prevblk==block)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM Cannot FRETX : fretted block already on subpool chain\n"));
+        return;
+    }
+    STORE_FW(sysblk.mainstor+maxsztbl+4+spix,block);
+    STORE_FW(sysblk.mainstor+block,prevblk);
+    BR14;
+    return;
 }
 DEF_INST(ecpsvm_prefmach_assist)
 {
