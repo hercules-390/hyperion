@@ -8,6 +8,9 @@
 
 #define _OPCODE_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #define GEN_MAXARCH	3+2
 
@@ -1543,20 +1546,19 @@ do { \
     setgid(sysblk.rgid); \
 } while (0)
 
-#else
+#else /* defined(HAVE_SETRESUID) || defined(HAVE_SETEREUID) */
 
-#error Do not know how to swap effective UID/GID without setreuid or setresuid
+#error Cannot figure out how to swap effective UID/GID, maybe you should define NO_SETUID?
 
-#endif
-
+#endif /* defined(HAVE_SETREUID) || defined(HAVE_SETRESUID) */
 
 #define SETMODE(_func) _SETMODE_ ## _func
 
-#else 
+#else /* !defined(NO_SETUID) */
 
 #define SETMODE(_func)
 
-#endif
+#endif /* !defined(NO_SETUID) */
 
 
 /* Functions in module channel.c */
