@@ -1490,6 +1490,9 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 DWORD   dword;
 int     rc;
+#if defined(FEATURE_ESAME)
+int     amode64;
+#endif /*defined(FEATURE_ESAME)*/
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -1511,6 +1514,10 @@ int     rc;
 
     /* Load updated PSW (ESA/390 Format in ESAME mode) */
 #if defined(FEATURE_ESAME)
+    /* save amode64 flag */
+    amode64 = dword[3] & 0x01;
+    /* make psw valid for esa390 mode */
+    dword[3] &= ~0x01;
     if ( ( rc = s390_load_psw ( regs, dword ) ) )
 #else /*!defined(FEATURE_ESAME)*/
     if ( ( rc = ARCH_DEP(load_psw) ( regs, dword ) ) )
@@ -1522,7 +1529,7 @@ int     rc;
        and clear the high word of the instruction address,
        as it has not been touched by s390_load_psw */
     regs->psw.notesame = 0;
-    regs->psw.amode64 = 0;
+    regs->psw.amode64 = amode64;
     regs->psw.IA_H = 0;
 #endif /*defined(FEATURE_ESAME)*/
 
