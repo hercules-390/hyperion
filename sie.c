@@ -136,7 +136,13 @@ int     icode;                          /* Interception code         */
 
     /* Load prefix from state descriptor */
     FETCH_FW(GUESTREGS->PX, STATEBK->prefix);
-    GUESTREGS->PX &= PX_MASK;
+    GUESTREGS->PX &=
+#if !defined(FEATURE_ESAME)
+                     PX_MASK;
+#else /*defined(FEATURE_ESAME)*/
+                     (GUESTREGS->arch_mode == ARCH_900) ? PX_MASK : 0x7FFFF000;
+#endif /*defined(FEATURE_ESAME)*/
+
 
 #if defined(FEATURE_ESAME)
     /* Load main storage origin */
