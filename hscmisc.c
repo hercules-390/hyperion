@@ -874,7 +874,7 @@ int     n;                              /* Number of bytes in buffer */
         display_cregs (regs);
 
     /* Display access registers if appropriate */
-    if (regs->armode)
+    if (!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         display_aregs (regs);
 
 } /* end function display_inst */

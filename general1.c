@@ -3228,7 +3228,7 @@ GREG    len3;
 
     /* Test for destructive overlap */
     if ( len2 > 1 && len1 > 1
-        && (!regs->armode
+        && (!ACCESS_REGISTER_MODE(&(regs->psw))
             || (r1 == 0 ? 0 : regs->AR(r1))
                == (r2 == 0 ? 0 : regs->AR(r2))))
     {

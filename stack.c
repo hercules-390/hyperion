@@ -127,7 +127,7 @@ int  i;
 
     if (   REAL_MODE(&regs->psw)
       || !(PRIMARY_SPACE_MODE(&regs->psw)
-      ||   regs->armode) )
+      ||   ACCESS_REGISTER_MODE(&regs->psw)) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Obtain the DUCT origin from control register 2 */
@@ -302,7 +302,7 @@ int  i;
     regs->psw.armode = 0;
     INVALIDATE_AIA(regs);
     INVALIDATE_AEA_ALL(regs);
-    regs->armode = ARMODE(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 }
 
 /*-------------------------------------------------------------------*/

@@ -2385,7 +2385,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (!ASF_ENABLED(regs))
     {
         /* Special operation exception if in AR mode */
-        if (regs->armode)
+        if (ACCESS_REGISTER_MODE(&(regs->psw)))
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
         /* Obtain the LTD from control register 5 */
         ltd = regs->CR_L(5);
@@ -2830,7 +2830,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
 
-    regs->armode = ARMODE(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -3056,7 +3056,7 @@ int     rc;                             /* return code from load_psw */
         ARCH_DEP(program_interrupt) (&newregs, rc);
     }
 
-    regs->armode = ARMODE(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -3873,7 +3873,7 @@ int     ssevent = 0;                    /* 1=space switch event      */
     if (ssevent)
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
 
-    regs->armode = ARMODE(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 
     if(inst[1] == 0x19)
     {
@@ -4700,7 +4700,7 @@ int     realmode;
         INVALIDATE_AIA(regs);
         INVALIDATE_AEA_ALL(regs);
     }
-    regs->armode = ARMODE(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
     RETURN_INTCHECK(regs);
 
 }
@@ -5659,7 +5659,7 @@ int     permode;
 //  SET_IC_MCK_MASK(regs);  machine check is bit 13
     SET_IC_IO_MASK(regs);
     SET_IC_PER_MASK(regs);
-    regs->armode = ARMODE(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 
     RETURN_INTCHECK(regs);
 
@@ -5729,7 +5729,7 @@ int     permode;
 //  SET_IC_MCK_MASK(regs);  machine check is bit 13
     SET_IC_IO_MASK(regs);
     SET_IC_PER_MASK(regs);
-    regs->armode = ARMODE(regs);
+    regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
 
     RETURN_INTCHECK(regs);
 

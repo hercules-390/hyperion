@@ -118,7 +118,7 @@ int     acc_mode = 0;                   /* access mode to use        */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    if (regs->armode)
+    if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
 
     /* Load ASCB address from first operand location */
@@ -211,7 +211,7 @@ int     acc_mode = 0;                   /* access mode to use        */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    if (regs->armode)
+    if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
 
     /* Load ASCB address from first operand location */
@@ -309,7 +309,7 @@ int     acc_mode = 0;                   /* access mode to use        */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    if (regs->armode)
+    if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
 
     /* Load ASCB address from first operand location */
@@ -401,7 +401,7 @@ int     acc_mode = 0;                   /* access mode to use        */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    if (regs->armode)
+    if (ACCESS_REGISTER_MODE(&regs->psw))
         acc_mode = USE_PRIMARY_SPACE;
 
     /* Load ASCB address from first operand location */
