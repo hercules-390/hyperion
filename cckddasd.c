@@ -919,11 +919,12 @@ cckd_read_trk_retry:
         cckd->active = NULL;
 
         /* Mark the new entry active */
+        cckdtrc ("cckddasd: %d rdtrk[%d] %d cache hit %lld -> %lld\n",
+                 ra, fnd, trk, cckdblk.cache[fnd].age, cckdblk.cacheage+1);
         cckdblk.cache[fnd].flags |= CCKD_CACHE_ACTIVE | CCKD_CACHE_USED;
         cckdblk.cache[fnd].age = ++cckdblk.cacheage;
         cckdblk.stats_switches++; cckd->switches++;
         cckdblk.stats_cachehits++; cckd->cachehits++;
-        cckdtrc ("cckddasd: %d rdtrk[%d] %d cache hit\n",ra, fnd, trk);
 
         /* if read is in progress then wait for it to finish */
         if (cckdblk.cache[fnd].flags & CCKD_CACHE_READING)
@@ -967,7 +968,9 @@ cckd_read_trk_retry:
         return &cckdblk.cache[fnd];
     } /* cache hit */
 
-    cckdtrc ("cckddasd: %d rdtrk[%d] %d cache miss\n",ra, lru, trk);
+    cckdtrc ("cckddasd: %d rdtrk[%d] %d cache miss %lld -> %lld\n",
+             ra, lru, trk, lru >= 0 ? (long long)cckdblk.cache[lru].age : -1,
+             lru >=0 ? (long long)cckdblk.cacheage+1 : -1);
 
     /* If not readahead and synchronous I/O then return with
        the `syio_retry' bit set */
@@ -1041,7 +1044,8 @@ cckd_read_trk_retry:
     cckdblk.cache[lru].age = ++cckdblk.cacheage;
 
     /* asynchrously schedule readaheads */
-    if (!ra && trk == dev->dasdcur + 1 && dev->dasdcur > 0)
+    if (!ra && dev->dasdcur > 0
+     && trk >= dev->dasdcur + 1 && trk <= dev->dasdcur + 2)
         cckd_readahead (dev, trk);
 
     release_lock (&cckdblk.cachelock);
@@ -1496,7 +1500,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
         /* Stress adjustments */
         if (((cckdblk.cache[o].flags & CCKD_CACHE_WRITEWAIT)
           || cckdblk.cachewaiting
-          || cckdblk.writepending > (cckdblk.cachenbr >> 1))
+          || cckdblk.writepending > (cckdblk.cachenbr - (cckdblk.cachenbr >> 2)))
          && !cckdblk.nostress)
         {
             stressed = 1;
@@ -1505,7 +1509,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
                 compress = CCKD_COMPRESS_NONE;
             else
                 compress = CCKD_STRESS_COMP;
-            if (cckdblk.writepending < cckdblk.cachenbr - (cckdblk.cachenbr >> 2))
+            if (cckdblk.writepending < cckdblk.cachenbr - (cckdblk.cachenbr >> 2) + 8)
                 parm = CCKD_STRESS_PARM1;
             else
                 parm = CCKD_STRESS_PARM2;
@@ -3833,7 +3837,7 @@ BYTE            buf[65536];             /* Buffer                    */
                 /* Write the `to' track/blkgrp image */
                 if (l2[0][j].len > 1)
                 {
-                    cckdtrc ("cckddasd: merging trk[%d] to %llx\n",
+                    cckdtrc ("cckddasd: merging trk[%d] to 0x%llx\n",
                          i * 256 + j, (long long)pos);
 
                     rcoff = lseek (cckd->fd[sfx[1]], pos, SEEK_SET);
