@@ -18,7 +18,7 @@ rm -f ./autogen.log
 if test ! -e ./ABOUT-NLS; then
 
   echo " Due to a bug(?) in the automake process, if this script"
-  echo " appears to 'hang', simply press the enter key. If fact,"
+  echo " appears to 'hang', simply press the enter key. In fact,"
   echo " you may do that right now if you wish; it's not going to"
   echo " hurt anything if you do."
   echo ""

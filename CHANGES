@@ -1,3 +1,5 @@
+07 Jul 2003 #undef OPTION_DYNAMIC_LOAD in featall.h if neither dlopen
+            nor libtool is available - Fish
 06 Jul 2003 LXR,LZER,LZDR,LZXR instructions - Roger Bowler
 04 Jul 2003 Allow NUMCPU=0 - Jan Jaeger
 03 Jul 2003 Long Displacement Facility - Roger Bowler

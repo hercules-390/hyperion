@@ -53,7 +53,8 @@ AM_CONDITIONAL(USE_DLLTOOL, [test "x$use_dlltool" = "xtrue"])
 AC_SYS_LARGEFILE
 
 # Libraries
-AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(  dl,    dlopen)
+AC_CHECK_LIB(ltdl, lt_dlopen)
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
@@ -474,8 +475,6 @@ AH_TEMPLATE([BUILTIN_STRERROR_R],
             [Define to use built-in strerror_r implementation])
 AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
             [Define to enable symbolic substitutions in configuration file])
-AH_TEMPLATE([HDL_USE_LIBTOOL],
-            [Define to enable use libtool instead of dlopen/dlsym/dlclose])
 
 AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
 
