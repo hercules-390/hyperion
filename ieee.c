@@ -1931,7 +1931,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         break;
     case FP_ZERO:
         regs->psw.cc = 0;
-        regs->GR_L(r1) = 0;
+        regs->GR_G(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
@@ -1996,7 +1996,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
         break;
     case FP_ZERO:
         regs->psw.cc = 0;
-        regs->GR_L(r1) = 0;
+        regs->GR_G(r1) = 0;
         break;
     case FP_INFINITE:
         pgm_check = ieee_exception(FE_INVALID, regs);
