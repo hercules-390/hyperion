@@ -5852,7 +5852,7 @@ RADR    n;                              /* Real address              */
     PRIV_CHECK(regs);
 
 #if defined(FEATURE_REGION_RELOCATE)
-    if(SIE_STATB(regs, MX, RRF) && !regs->sie_pref)
+    if(SIE_STATNB(regs, MX, RRF) && !regs->sie_pref)
 #endif
         SIE_INTERCEPT(regs);
 
