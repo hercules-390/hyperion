@@ -155,9 +155,9 @@ BYTE            c;                      /* Output character          */
     {
         rc = open (dev->filename,
 #ifdef WIN32
-                    O_WRONLY | O_CREAT | O_TRUNC | O_SYNC | O_BINARY,
+                    O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */ |  O_BINARY,
 #else /* WIN32 */
-                    O_WRONLY | O_CREAT | O_TRUNC | O_SYNC,
+                    O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */,
 #endif /* WIN32 */
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (rc < 0)

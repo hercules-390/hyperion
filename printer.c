@@ -149,7 +149,7 @@ BYTE            c;                      /* Print character           */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
     {
         rc = open (dev->filename,
-                    O_WRONLY | O_CREAT | O_TRUNC | O_SYNC,
+                    O_WRONLY | O_CREAT | O_TRUNC /* | O_SYNC */,
                     S_IRUSR | S_IWUSR | S_IRGRP);
         if (rc < 0)
         {
