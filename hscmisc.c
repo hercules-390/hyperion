@@ -530,7 +530,7 @@ char    type;
         }
 
         memcpy(inst, regs->mainstor + aaddr, ilc);
-        logmsg("%c" F_VADR ": %2.2X%2.2X", type, raddr, inst[0], inst[1]);
+        logmsg("%c" F_RADR ": %2.2X%2.2X", type, raddr, inst[0], inst[1]);
         if(ilc > 2)
         {
             logmsg("%2.2X%2.2X", inst[2], inst[3]);
