@@ -38,6 +38,9 @@
 # +-------------------------------------------------------------------+
 # !
 # ! Change Log: '$Log$
+# ! Change Log: 'Revision 1.20  2003/10/12 06:48:13  vbandke
+# ! Change Log: 'remove extraneous CR from _build scripts
+# ! Change Log: '
 # ! Change Log: 'Revision 1.19  2003/10/06 19:51:24  vbandke
 # ! Change Log: 'Add support for Linux build.  Add support for -p flag (number of processors)
 # ! Change Log: '
@@ -309,11 +312,15 @@ while ! test -f Makefile ; do
                    --enable-fthreads=${FTHREAD} \
                    --enable-custom="compiled for ${TARG_CPU}" \
                    --enable-optimization="${OPTOPT}" \
+                   --enable-cckd-bzip2 \
+                   --enable-het-bzip2 \
                    --enable-multi-cpu=${NUMCPU} >>${LOGFILE} 2>&1
    else
        ./configure ${HOST_OPT} \
                    --enable-fthreads=${FTHREAD} \
                    --enable-custom="compiled for ${TARG_CPU}" \
+                   --enable-cckd-bzip2 \
+                   --enable-het-bzip2 \
                    --enable-multi-cpu=${NUMCPU} >>${LOGFILE} 2>&1
    fi
 done

@@ -965,9 +965,15 @@ struct  timeval tv;                     /* Select timeout structure  */
                         kbbuf[0] = '\0';
                         redraw_status = 1;
                     }
+		    cmdline[0] = '\0';
+		    cmdlen = 0;
+		    cmdoff = 0;
                     switch(kbbuf[0]) {
                         case 0x1b:                  /* ESC */
                             NPDup = 0;
+			    cmdline[0] = '\0';
+			    cmdoff = 0;
+			    cmdlen = 0;
                             break;
                         case '?':
                             NPhelpup = 1;
@@ -1276,6 +1282,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                     /* =NP= : Switch to new panel display */
                     NP_init();
                     NPDup = 1;
+		    cmdline[0] = '\0';
+		    cmdoff = 0;
+		    cmdlen = 0;
                     /* =END= */
                     break;
                 }
@@ -1294,7 +1303,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                 /* Process the command if newline was read */
                 if (kbbuf[i] == '\n')
                 {
-                    if (cmdlen == 0) {
+                    if (cmdlen == 0 && NPDup == 0) {
                         history_show();
                     } else {
                         cmdline[cmdlen] = '\0';
@@ -1352,6 +1361,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                                     break;
                             }
                             redraw_status = 1;
+			    cmdline[0] = '\0';
+			    cmdlen = 0;
+			    cmdoff = 0;
                         }
                         /* =END= */
                         redraw_cmd = 1;
