@@ -1,3 +1,4 @@
+25 Jun 2003 micro performance update in branch on condition - Bernard van der Helm
 25 Jun 2003 Fix unlikely but serious fthreads bug in wait_condition - Fish
 25 Jun 2003 Move external gui logic from panel_display to dyngui.c, and
             modify build process (makefile.am) to automatically build
