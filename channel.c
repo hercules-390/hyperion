@@ -798,7 +798,7 @@ void device_thread (DEVBLK *dev)
         {
             gettimeofday(&now, NULL);
 
-            waittime.tv_sec = now.tv_sec + 300; /* set alarm for 5 minutes from now */
+            waittime.tv_sec = now.tv_sec + MAX_DEVICE_THREAD_IDLE_SECS;
             waittime.tv_nsec = now.tv_usec * 1000;
 
             /* Wait for work to arrive or timer to expire... */

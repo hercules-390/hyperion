@@ -1,3 +1,4 @@
+04 Apr 2001 #define MAX_DEVICE_THREAD_IDLE_SECS 300
 02 Apr 2001 Fixed device_thread race condition in channel.c
 02 Apr 2001 Added support for [Windows] External GUI
 28 Mar 2001 Fix nullification problem in form_stack_entry - Jan Jaeger
