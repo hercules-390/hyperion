@@ -622,16 +622,16 @@ static __inline__ BYTE cmpxchg8(U64 *old, U64 new, volatile void *ptr) {
 #ifndef cmpxchg16
 static __inline__ int cmpxchg16(U64 *old1, U64 *old2, U64 new1, U64 new2, volatile void *ptr) {
  int code;
- if (*old1 == *(U64 *)ptr && *old2 == *(U64 *)(ptr + 8))
+ if (*old1 == *(U64 *)ptr && *old2 == *((U64 *)ptr + 1))
  {
      *(U64 *)ptr = new1;
-     *(U64 *)(ptr + 8) = new2;
+     *((U64 *)ptr + 1) = new2;
      code = 0;
  }
  else
  {
      *old1 = *((U64 *)ptr);
-     *old2 = *((U64 *)(ptr + 8));
+     *old2 = *((U64 *)ptr + 1);
      code = 1;
  }
  return code;
