@@ -197,8 +197,8 @@ typedef struct _REGS
 }
 REGS;
 
-__attribute__ ((regparm(3))) int func1 (int a, int b, int c, REGS *regs);
-__attribute__ ((regparm(3))) int func2 (int a, int b, int c, REGS *regs);
+int func1 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)));
+int func2 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)));
 
 int main ( int argc, char *argv[] )
 {
@@ -206,13 +206,13 @@ int main ( int argc, char *argv[] )
         exit(func1 (1, 2, 3, regs));
 }
 
-__attribute__ ((regparm(3))) int func1 (int a, int b, int c, REGS *regs)
+int func1 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)))
 {
         REGS iregs;
         return func2 (a, b, c, &iregs);
 }
 
-__attribute__ ((regparm(3))) int func2 (int a, int b, int c, REGS *regs)
+int func2 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)))
 {
         return ((a == 1 && b == 2 && c == 3) ? 0 : 1);
 }
@@ -456,6 +456,5 @@ AH_TEMPLATE([BUILTIN_MEMRCHR],
 AH_TEMPLATE([BUILTIN_STRERROR_R],
             [Define to use built-in strerror_r implementation])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile m4/Makefile ])
-
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
 

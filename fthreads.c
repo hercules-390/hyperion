@@ -23,6 +23,28 @@ int dummy = 0;
 
 #include "fthreads.h"
 #include "hostinfo.h"
+#include "logger.h"
+
+////////////////////////////////////////////////////////////////////////////////////
+// Debugging
+
+#if defined(DEBUG) || defined(_DEBUG)
+    #define TRACE(a...) logmsg(a)
+    #define ASSERT(a) \
+        do \
+        { \
+            if (!(a)) \
+            { \
+                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+            } \
+        } \
+        while(0)
+    #define VERIFY(a) ASSERT((a))
+#else
+    #define TRACE(a...)
+    #define ASSERT(a)
+    #define VERIFY(a) ((void)(a))
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -70,36 +92,7 @@ int dummy = 0;
 
 #define IsEventSet(hEventHandle)                          (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
 
-#define _fthreadmsg(fmt...)   \
-    do                        \
-    {                         \
-        fprintf(stderr, fmt); \
-        fflush(stderr);       \
-    }                         \
-    while (0)
-
 /////////////////////////////////////////////////////////////////////////////
-// Debugging
-
-#if defined(DEBUG) || defined(_DEBUG)
-    #define TRACE(a...) _fthreadmsg(a)
-    #define ASSERT(a) \
-        do \
-        { \
-            if (!(a)) \
-            { \
-                _fthreadmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
-            } \
-        } \
-        while(0)
-    #define VERIFY(a) ASSERT((a))
-#else
-    #define TRACE(a...)
-    #define ASSERT(a)
-    #define VERIFY(a) ((void)(a))
-#endif
-
-////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 // private internal fthreads CRITICAL_SECTION functions...
@@ -116,6 +109,7 @@ InitializeFT_MUTEX
 {
     MyInitializeCriticalSection(&pFT_MUTEX->MutexLock);
     pFT_MUTEX->hUnlockedEvent = MyCreateEvent(NULL,TRUE,TRUE,NULL); // (initially signalled)
+    pFT_MUTEX->dwMutexMagic = FT_MUTEX_MAGIC;
     pFT_MUTEX->nLockedCount = 0;
     pFT_MUTEX->dwLockOwner = 0;
 }
@@ -132,11 +126,11 @@ DeleteFT_MUTEX
     fthread_mutex_t* pFT_MUTEX
 )
 {
-    ASSERT(IsEventSet(pFT_MUTEX->hUnlockedEvent) && !pFT_MUTEX->nLockedCount);
-    pFT_MUTEX->dwLockOwner = 0;
-    pFT_MUTEX->nLockedCount = 0;
-    MyDeleteEvent(pFT_MUTEX->hUnlockedEvent);
     MyDeleteCriticalSection(&pFT_MUTEX->MutexLock);
+    MyDeleteEvent(pFT_MUTEX->hUnlockedEvent);
+    pFT_MUTEX->dwMutexMagic = 0;
+    pFT_MUTEX->nLockedCount = 0;
+    pFT_MUTEX->dwLockOwner = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -151,14 +145,16 @@ EnterFT_MUTEX
     fthread_mutex_t* pFT_MUTEX
 )
 {
+    FT_W32_DWORD  dwThreadId = GetCurrentThreadId();
+
     if (hostinfo.trycritsec_avail)
     {
         MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
+        pFT_MUTEX->dwLockOwner = dwThreadId;
+        VERIFY(++pFT_MUTEX->nLockedCount > 0);
     }
     else
     {
-        FT_W32_DWORD dwThreadId = GetCurrentThreadId();
-
         for (;;)
         {
             MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
@@ -189,14 +185,20 @@ LeaveFT_MUTEX
 {
     if (hostinfo.trycritsec_avail)
     {
+        ASSERT(pFT_MUTEX->nLockedCount > 0);
+        if (--pFT_MUTEX->nLockedCount <= 0)
+            pFT_MUTEX->dwLockOwner = 0;
         MyLeaveCriticalSection(&pFT_MUTEX->MutexLock);
     }
     else
     {
         MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
-        ASSERT(pFT_MUTEX->nLockedCount >= 0);
+        ASSERT(pFT_MUTEX->nLockedCount > 0);
         if (--pFT_MUTEX->nLockedCount <= 0)
+        {
+            pFT_MUTEX->dwLockOwner = 0;
             MySetEvent(pFT_MUTEX->hUnlockedEvent);
+        }
         MyLeaveCriticalSection(&pFT_MUTEX->MutexLock);
     }
 }
@@ -213,16 +215,21 @@ TryEnterFT_MUTEX
     fthread_mutex_t* pFT_MUTEX
 )
 {
-    FT_W32_BOOL  bSuccess;
+    FT_W32_BOOL   bSuccess;
+    FT_W32_DWORD  dwThreadId = GetCurrentThreadId();
 
     if (hostinfo.trycritsec_avail)
     {
         bSuccess = MyTryEnterCriticalSection(&pFT_MUTEX->MutexLock);
+
+        if (bSuccess)
+        {
+            VERIFY(++pFT_MUTEX->nLockedCount > 0);
+            pFT_MUTEX->dwLockOwner = dwThreadId;
+        }
     }
     else
     {
-        FT_W32_DWORD dwThreadId = GetCurrentThreadId();
-
         MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
 
         ASSERT(pFT_MUTEX->nLockedCount >= 0);
@@ -322,9 +329,9 @@ fthread_create
     if (!pCallTheirThreadParms)
     {
 #ifdef FISH_HANG
-        _fthreadmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
+        TRACE("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
 #else
-        _fthreadmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
+        TRACE("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
 #endif
         return (errno = EAGAIN);
     }
@@ -338,9 +345,9 @@ fthread_create
     if (!hWin32ThreadFunc)
     {
 #ifdef FISH_HANG
-        _fthreadmsg("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
+        TRACE("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
 #else
-        _fthreadmsg("fthread_create: MyCreateThread failed\n");
+        TRACE("fthread_create: MyCreateThread failed\n");
 #endif
         free (pCallTheirThreadParms);
         return (errno = EAGAIN);
@@ -351,9 +358,9 @@ fthread_create
         if (!SetThreadPriority(hWin32ThreadFunc,nThreadPriority))
         {
 #ifdef FISH_HANG
-            _fthreadmsg("fthread_create: SetThreadPriority failed; %s(%d)\n",pszFile,nLine);
+            TRACE("fthread_create: SetThreadPriority failed; %s(%d)\n",pszFile,nLine);
 #else
-            _fthreadmsg("fthread_create: SetThreadPriority failed\n");
+            TRACE("fthread_create: SetThreadPriority failed\n");
 #endif
         }
     }
@@ -399,6 +406,12 @@ fthread_mutex_init
     fthread_mutex_t*  pFT_MUTEX
 )
 {
+    if (!pFT_MUTEX)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_MUTEX->dwMutexMagic == FT_MUTEX_MAGIC)
+        return (errno = EBUSY);     // (already initialized)
+
     InitializeFT_MUTEX
     (
 #ifdef FISH_HANG
@@ -407,7 +420,42 @@ fthread_mutex_init
 #endif
         pFT_MUTEX
     );
-    return 0;
+
+    return (errno = 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// destroy a lock...
+
+int
+fthread_mutex_destroy
+(
+#ifdef FISH_HANG
+    char*  pszFile,
+    int    nLine,
+#endif
+    fthread_mutex_t*  pFT_MUTEX
+)
+{
+    if (!pFT_MUTEX)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
+
+    if (pFT_MUTEX->nLockedCount > 0)
+        return (errno = EBUSY);     // (still in use)
+
+    DeleteFT_MUTEX
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_MUTEX
+    );
+
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -423,6 +471,12 @@ fthread_mutex_lock
     fthread_mutex_t*  pFT_MUTEX
 )
 {
+    if (!pFT_MUTEX)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
+
     EnterFT_MUTEX
     (
 #ifdef FISH_HANG
@@ -431,7 +485,8 @@ fthread_mutex_lock
 #endif
         pFT_MUTEX
     );
-    return 0;
+
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -447,16 +502,27 @@ fthread_mutex_trylock
     fthread_mutex_t*  pFT_MUTEX
 )
 {
-    return ((TryEnterFT_MUTEX
+    if (!pFT_MUTEX)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
+
+    return
     (
+        TryEnterFT_MUTEX
+        (
 #ifdef FISH_HANG
-        pszFile,
-        nLine,
+            pszFile,
+            nLine,
 #endif
-        pFT_MUTEX
-    ))
-    ?
-    (0) : (errno = EBUSY));
+            pFT_MUTEX
+        )
+        ?
+            (errno = 0)
+        :
+            (errno = EBUSY)
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -472,6 +538,18 @@ fthread_mutex_unlock
     fthread_mutex_t*  pFT_MUTEX
 )
 {
+    if (!pFT_MUTEX)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
+
+    if (pFT_MUTEX->dwLockOwner != GetCurrentThreadId())
+        return (errno = EPERM);     // (not owned)
+
+    if (pFT_MUTEX->nLockedCount <= 0)
+        return (errno = EPERM);     // (not locked)
+
     LeaveFT_MUTEX
     (
 #ifdef FISH_HANG
@@ -480,7 +558,8 @@ fthread_mutex_unlock
 #endif
         pFT_MUTEX
     );
-    return 0;
+
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -496,25 +575,64 @@ fthread_cond_init
     fthread_cond_t*  pFT_COND_VAR
 )
 {
+    if (!pFT_COND_VAR)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_COND_VAR->dwCondMagic == FT_COND_MAGIC)
+        return (errno = EBUSY);     // (already initialized)
+
     if ((pFT_COND_VAR->hSigXmitEvent = MyCreateEvent(NULL,TRUE,FALSE,NULL)))
     {
         if ((pFT_COND_VAR->hSigRecvdEvent = MyCreateEvent(NULL,TRUE,TRUE,NULL)))
         {
             MyInitializeCriticalSection(&pFT_COND_VAR->CondVarLock);
+            pFT_COND_VAR->dwCondMagic = FT_COND_MAGIC;
             pFT_COND_VAR->bBroadcastSig = FALSE;
             pFT_COND_VAR->nNumWaiting = 0;
-            return 0;
+            return (errno = 0);
         }
 
         MyDeleteEvent(pFT_COND_VAR->hSigXmitEvent);
     }
 
 #ifdef FISH_HANG
-    _fthreadmsg("fthread_cond_init failure; %s(%d)\n",pszFile,nLine);
+    TRACE("fthread_cond_init failure; %s(%d)\n",pszFile,nLine);
 #else
-    _fthreadmsg("fthread_cond_init failure\n");
+    TRACE("fthread_cond_init failure\n");
 #endif
     return (errno = EAGAIN);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// destroy a "condition"...
+
+int
+fthread_cond_destroy
+(
+#ifdef FISH_HANG
+    char*  pszFile,
+    int    nLine,
+#endif
+    fthread_cond_t*  pFT_COND_VAR
+)
+{
+    if (!pFT_COND_VAR)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
+
+    if (pFT_COND_VAR->nNumWaiting > 0)
+        return (errno = EBUSY);     // (still in use)
+
+    MyDeleteCriticalSection(&pFT_COND_VAR->CondVarLock);
+    MyDeleteEvent(pFT_COND_VAR->hSigXmitEvent);
+    MyDeleteEvent(pFT_COND_VAR->hSigRecvdEvent);
+    pFT_COND_VAR->dwCondMagic = 0;
+    pFT_COND_VAR->bBroadcastSig = FALSE;
+    pFT_COND_VAR->nNumWaiting = 0;
+
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -530,7 +648,11 @@ fthread_cond_signal
     fthread_cond_t*  pFT_COND_VAR
 )
 {
-    if (!pFT_COND_VAR) return (errno = EINVAL);
+    if (!pFT_COND_VAR)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
 
     // Wait for everyone to finish receiving prior signal..
 
@@ -556,7 +678,7 @@ fthread_cond_signal
 
     MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
 
-    return 0;
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -572,7 +694,11 @@ fthread_cond_broadcast
     fthread_cond_t*  pFT_COND_VAR
 )
 {
-    if (!pFT_COND_VAR) return (errno = EINVAL);
+    if (!pFT_COND_VAR)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
 
     // Wait for everyone to finish receiving prior signal..
 
@@ -598,7 +724,7 @@ fthread_cond_broadcast
 
     MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
 
-    return 0;
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -615,13 +741,18 @@ fthread_cond_wait
     fthread_mutex_t*  pFT_MUTEX
 )
 {
+    int           rc;
     FT_W32_DWORD  dwWaitRetCode;
 
-    if (!pFT_COND_VAR || !pFT_MUTEX) return (errno = EINVAL);
+    if (!pFT_COND_VAR)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
 
     // Release lock (and thus any potential signalers)...
 
-    LeaveFT_MUTEX
+    rc = fthread_mutex_unlock
     (
 #ifdef FISH_HANG
         pszFile,
@@ -629,6 +760,16 @@ fthread_cond_wait
 #endif
         pFT_MUTEX
     );
+
+    if (rc)
+    {
+#ifdef FISH_HANG
+        TRACE("fthread_cond_wait: fthread_mutex_unlock failed; %s(%d)\n",pszFile,nLine);
+#else
+        TRACE("fthread_cond_wait: fthread_mutex_unlock failed\n");
+#endif
+        return (errno = rc);
+    }
 
     // Wait for everyone to finish receiving prior signal (if any)..
 
@@ -664,9 +805,9 @@ fthread_cond_wait
         if (WAIT_OBJECT_0 != dwWaitRetCode)
         {
 #ifdef FISH_HANG
-            _fthreadmsg("fthread_cond_wait: Invalid handle; %s(%d)\n",pszFile,nLine);
+            TRACE("fthread_cond_wait: Invalid handle; %s(%d)\n",pszFile,nLine);
 #else
-            _fthreadmsg("fthread_cond_wait: Invalid handle\n");
+            TRACE("fthread_cond_wait: Invalid handle\n");
 #endif
             return (errno = EINVAL);
         }
@@ -688,7 +829,7 @@ fthread_cond_wait
     // receive it, or if no one remains to receive it,
     // then stop transmitting the signal.
 
-    if (!pFT_COND_VAR->bBroadcastSig || pFT_COND_VAR->nNumWaiting == 0)
+    if (!pFT_COND_VAR->bBroadcastSig || pFT_COND_VAR->nNumWaiting <= 0)
     {
         MyResetEvent(pFT_COND_VAR->hSigXmitEvent);
         MySetEvent(pFT_COND_VAR->hSigRecvdEvent);
@@ -700,7 +841,7 @@ fthread_cond_wait
 
     // Re-acquire the original lock before returning...
 
-    EnterFT_MUTEX
+    rc = fthread_mutex_lock
     (
 #ifdef FISH_HANG
         pszFile,
@@ -709,7 +850,17 @@ fthread_cond_wait
         pFT_MUTEX
     );
 
-    return 0;
+    if (rc)
+    {
+#ifdef FISH_HANG
+        TRACE("fthread_cond_wait: fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
+#else
+        TRACE("fthread_cond_wait: fthread_mutex_lock failed\n");
+#endif
+        return (errno = rc);
+    }
+
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -728,13 +879,18 @@ fthread_cond_timedwait
 )
 {
     struct timeval  TimeNow;
-    FT_W32_DWORD  dwWaitRetCode, dwWaitMilliSecs;
+    int             rc;
+    FT_W32_DWORD    dwWaitRetCode, dwWaitMilliSecs;
 
-    if (!pFT_COND_VAR || !pFT_MUTEX) return (errno = EINVAL);
+    if (!pFT_COND_VAR)
+        return (errno = EINVAL);    // (invalid ptr)
+
+    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
+        return (errno = EINVAL);    // (not initialized)
 
     // Release lock (and thus any potential signalers)...
 
-    LeaveFT_MUTEX
+    rc = fthread_mutex_unlock
     (
 #ifdef FISH_HANG
         pszFile,
@@ -742,6 +898,16 @@ fthread_cond_timedwait
 #endif
         pFT_MUTEX
     );
+
+    if (rc)
+    {
+#ifdef FISH_HANG
+        TRACE("fthread_cond_timedwait: fthread_mutex_unlock failed; %s(%d)\n",pszFile,nLine);
+#else
+        TRACE("fthread_cond_timedwait: fthread_mutex_unlock failed\n");
+#endif
+        return (errno = rc);
+    }
 
     // Wait for everyone to finish receiving prior signal..
 
@@ -804,7 +970,7 @@ fthread_cond_timedwait
             // timed out) to allow late signal to eventually
             // be sent [to a different future waiter].
 
-            if (pFT_COND_VAR->nNumWaiting == 0)
+            if (pFT_COND_VAR->nNumWaiting <= 0)
             {
                 MySetEvent(pFT_COND_VAR->hSigRecvdEvent);
             }
@@ -815,7 +981,7 @@ fthread_cond_timedwait
 
             // Re-acquire the original lock before returning...
 
-            EnterFT_MUTEX
+            rc = fthread_mutex_lock
             (
 #ifdef FISH_HANG
                 pszFile,
@@ -824,13 +990,23 @@ fthread_cond_timedwait
                 pFT_MUTEX
             );
 
+            if (rc)
+            {
+#ifdef FISH_HANG
+                TRACE("fthread_cond_timedwait: timeout fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
+#else
+                TRACE("fthread_cond_timedwait: timeout fthread_mutex_lock failed\n");
+#endif
+                return (errno = rc);
+            }
+
             if (WAIT_TIMEOUT == dwWaitRetCode)
                 return (errno = ETIMEDOUT);     // (timeout)
 
 #ifdef FISH_HANG
-            _fthreadmsg("fthread_cond_timedwait: Invalid handle; %s(%d)\n",pszFile,nLine);
+            TRACE("fthread_cond_timedwait: Invalid handle; %s(%d)\n",pszFile,nLine);
 #else
-            _fthreadmsg("fthread_cond_timedwait: Invalid handle\n");
+            TRACE("fthread_cond_timedwait: Invalid handle\n");
 #endif
             return (errno = EINVAL);
         }
@@ -852,7 +1028,7 @@ fthread_cond_timedwait
     // receive it, or if no one remains to receive it,
     // then stop transmitting the signal.
 
-    if (!pFT_COND_VAR->bBroadcastSig || pFT_COND_VAR->nNumWaiting == 0)
+    if (!pFT_COND_VAR->bBroadcastSig || pFT_COND_VAR->nNumWaiting <= 0)
     {
         MyResetEvent(pFT_COND_VAR->hSigXmitEvent);
         MySetEvent(pFT_COND_VAR->hSigRecvdEvent);
@@ -864,7 +1040,7 @@ fthread_cond_timedwait
 
     // Re-acquire the original lock before returning...
 
-    EnterFT_MUTEX
+    rc = fthread_mutex_lock
     (
 #ifdef FISH_HANG
         pszFile,
@@ -873,7 +1049,17 @@ fthread_cond_timedwait
         pFT_MUTEX
     );
 
-    return 0;
+    if (rc)
+    {
+#ifdef FISH_HANG
+        TRACE("fthread_cond_timedwait: fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
+#else
+        TRACE("fthread_cond_timedwait: fthread_mutex_lock failed\n");
+#endif
+        return (errno = rc);
+    }
+
+    return (errno = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

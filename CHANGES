@@ -1,3 +1,8 @@
+15 May 2003 Fixed cygwin regparm bug check bug in configure.ac:
+            __attribute__ ((regparm(3))) in wrong place - Fish
+15 May 2003 Created "destroy_lock" and "destroy_condition" macros;
+            added support destroying locks/conds to fthreads - Fish
+15 May 2003 Fixed impl.c so FishHang doesn't crash - Fish
 14 May 2003 Update in cmpsc.c store_ch - Scott Blackledge/Bernard van der Helm
 09 May 2003 Update dasdtab.c 3380 entries - Jesper by Greg Smith
 05 May 2003 Write zeroes at end of file to increase its size if ftruncate

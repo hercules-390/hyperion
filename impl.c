@@ -151,6 +151,13 @@ int     msgnum;                         /*                           */
 int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 
+#if defined(FISH_HANG)
+	/* "FishHang" debugs lock/cond/threading logic. Thus it must
+	 * be initialized BEFORE any lock/cond/threads are created.
+	 */
+    FishHangInit(__FILE__,__LINE__);
+#endif // defined(FISH_HANG)
+
     if(isatty(STDERR_FILENO))
         display_version (stderr, "Hercules ");
     else
@@ -179,10 +186,6 @@ TID     rctid;                          /* RC file thread identifier */
         argc--;
     }
 #endif /*EXTERNALGUI*/
-
-#if defined(FISH_HANG)
-    FishHangInit(__FILE__,__LINE__);
-#endif // defined(FISH_HANG)
 
 #if defined(BUILTIN_STRERROR_R)
     strerror_r_init();

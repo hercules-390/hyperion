@@ -12,19 +12,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////////
 
+#define  FT_MUTEX_MAGIC  (0x4D767478)
+#define  FT_COND_MAGIC   (0x436F6E64)
+
+////////////////////////////////////////////////////////////////////////////////////
+
 struct FT_CS    // fthread "CRITICAL_SECTION" structure
 {
-    // Note: none of the below defined fields are actually used
-    // for anything. Their whole purpose is to simply reserve room
-    // for the actual WIN32 CRITICAL_SECTION.
+    // The below defined field is not actually used for anything.
+    // Its whole purpose is to simply reserve room for the actual
+    // WIN32 CRITICAL_SECTION. Thus we purposely over-allocate.
 
-    union
-    {
-        void*     dummy1[16];   // (room for actual CRITICAL_SECTION + growth)
-        double    dummy2;       // (will hopefully ensure alignment)
-        long long dummy3;       // (will hopefully ensure alignment)
-    }
-    dummy;
+    long long dummy[16];    // (room for actual CRITICAL_SECTION + growth)
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +39,7 @@ typedef int            FT_W32_BOOL;             // BOOL
 struct FT_COND_VAR      // fthread "condition variable" structure
 {
     FT_W32_CRITICAL_SECTION  CondVarLock;       // (lock for accessing this data)
+    FT_W32_DWORD             dwCondMagic;       // (magic number)
     FT_W32_HANDLE            hSigXmitEvent;     // set during signal transmission
     FT_W32_HANDLE            hSigRecvdEvent;    // set once signal received by every-
                                                 // one that's supposed to receive it.
@@ -52,6 +52,7 @@ struct FT_COND_VAR      // fthread "condition variable" structure
 struct FT_MUTEX         // fthread "mutex" structure
 {
     FT_W32_CRITICAL_SECTION  MutexLock;         // (lock for accessing this data)
+    FT_W32_DWORD             dwMutexMagic;      // (magic number)
     FT_W32_HANDLE            hUnlockedEvent;    // (signalled while NOT locked)
     FT_W32_DWORD             dwLockOwner;       // (thread-id of who owns it)
     int                      nLockedCount;      // (#of times lock acquired)
@@ -124,6 +125,19 @@ fthread_mutex_init
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
+// destroy a "mutex"...
+
+int
+fthread_mutex_destroy
+(
+#ifdef FISH_HANG
+    char*  pszFile,
+    int    nLine,
+#endif
+    fthread_mutex_t*  pFT_MUTEX
+);
+
+////////////////////////////////////////////////////////////////////////////////////
 // lock a "mutex"...
 
 int
@@ -167,6 +181,19 @@ fthread_mutex_unlock
 
 int
 fthread_cond_init
+(
+#ifdef FISH_HANG
+    char*  pszFile,
+    int    nLine,
+#endif
+    fthread_cond_t*  pFT_COND_VAR
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// destroy a "condition"...
+
+int
+fthread_cond_destroy
 (
 #ifdef FISH_HANG
     char*  pszFile,

@@ -223,6 +223,7 @@ typedef fthread_attr_t    ATTR;
     #define create_device_thread(ptid,pat,fn,arg)  fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
 
     #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk))
+    #define destroy_lock(plk)                      fthread_mutex_destroy(__FILE__,__LINE__,(plk))
     #define obtain_lock(plk)                       fthread_mutex_lock(__FILE__,__LINE__,(plk))
     #define try_obtain_lock(plk)                   fthread_mutex_trylock(__FILE__,__LINE__,(plk))
     #define test_lock(plk) \
@@ -230,6 +231,7 @@ typedef fthread_attr_t    ATTR;
     #define release_lock(plk)                      fthread_mutex_unlock(__FILE__,__LINE__,(plk))
 
     #define initialize_condition(pcond)            fthread_cond_init(__FILE__,__LINE__,(pcond))
+    #define destroy_condition(pcond)               fthread_cond_destroy(__FILE__,__LINE__,(pcond))
     #define signal_condition(pcond)                fthread_cond_signal(__FILE__,__LINE__,(pcond))
     #define broadcast_condition(pcond)             fthread_cond_broadcast(__FILE__,__LINE__,(pcond))
     #define wait_condition(pcond,plk)              fthread_cond_wait(__FILE__,__LINE__,(pcond),(plk))
@@ -241,6 +243,7 @@ typedef fthread_attr_t    ATTR;
     #define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
 
     #define initialize_lock(plk)                   fthread_mutex_init((plk))
+    #define destroy_lock(plk)                      fthread_mutex_destroy((plk))
     #define obtain_lock(plk)                       fthread_mutex_lock((plk))
     #define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
     #define test_lock(plk) \
@@ -248,6 +251,7 @@ typedef fthread_attr_t    ATTR;
     #define release_lock(plk)                      fthread_mutex_unlock((plk))
 
     #define initialize_condition(pcond)            fthread_cond_init((pcond))
+    #define destroy_condition(pcond)               fthread_cond_destroy((pcond))
     #define signal_condition(pcond)                fthread_cond_signal((pcond))
     #define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
     #define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
@@ -266,6 +270,8 @@ typedef pthread_cond_t                  COND;
 typedef pthread_attr_t                  ATTR;
 #define initialize_lock(plk) \
         pthread_mutex_init((plk),NULL)
+#define destroy_lock(plk) \
+        pthread_mutex_destroy((plk))
 #define obtain_lock(plk) \
         pthread_mutex_lock((plk))
 #define try_obtain_lock(plk) \
@@ -276,6 +282,8 @@ typedef pthread_attr_t                  ATTR;
         (pthread_mutex_trylock((plk)) ? 1 : pthread_mutex_unlock((plk)) )
 #define initialize_condition(pcond) \
         pthread_cond_init((pcond),NULL)
+#define destroy_condition(pcond) \
+        pthread_cond_destroy((pcond))
 #define signal_condition(pcond) \
         pthread_cond_signal((pcond))
 #define broadcast_condition(pcond) \
@@ -1655,9 +1663,9 @@ int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
 int  configure_cpu (REGS *regs);
 int  deconfigure_cpu (REGS *regs);
-//#ifdef EXTERNALGUI
+#ifdef EXTERNALGUI
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
-//#endif /*EXTERNALGUI*/
+#endif /*EXTERNALGUI*/
 
 /* Global data areas and functions in module panel.c */
 extern int volatile initdone;    /* Initialization complete flag */
