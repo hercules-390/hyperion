@@ -301,7 +301,7 @@ U16     devnum;                         /* Device number             */
 U16     devtype;                        /* Device type               */
 int     devtmax;                        /* Max number device threads */
 #ifdef OPTION_IODELAY_KLUDGE
-int     iodelay=0;                      /* I/O delay value           */
+int     iodelay=-1;                     /* I/O delay value           */
 #endif /*OPTION_IODELAY_KLUDGE*/
 BYTE    c;                              /* Work area for sscanf      */
 
@@ -981,7 +981,10 @@ BYTE    c;                              /* Work area for sscanf      */
 
 #ifdef OPTION_IODELAY_KLUDGE
     /* Set I/O delay value */
-    sysblk.iodelay = iodelay;
+    if (iodelay > 0)
+        sysblk.iodelay = iodelay;
+    else if (ostailor == OS_LINUX)
+        sysblk.iodelay = OPTION_IODELAY_LINUX_DEFAULT;
 #endif /*OPTION_IODELAY_KLUDGE*/
 
     /* Set the panel refresh rate */

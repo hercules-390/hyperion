@@ -203,7 +203,17 @@ The following system parameters may be specified:
     <p><code>RESTRICTED</code> is the default. Specifying
     <code>LICENSED</code> will produce a message at Hercules startup to
     remind you of your responsibility to comply with software license terms.
-</dl>
+<dt><code>IODELAY <em>usec</em></code>
+<dd>specifies the amount of time (in microseconds) to wait after
+    an I/O interrupt is ready to be set pending.  This value can also be
+    set using the Hercules console.  The purpose of this parameter is to
+    bypass a bug in the <b>Linux/390</b> and <b>zLinux</b> <code>dasd.c</code>
+    device driver. The problem is more apt to happen under Hercules than
+    on a real machine because we may present an I/O interrupt sooner than a
+    real machine.  This problem is being pursued with IBM linux. Meanwhile,
+    if <code>OSTAILOR LINUX</code> is specified, then this value defaults to
+    <em>800</em> otherwise the value defaults to <em>0</em>.
+<dl>
 <p>
 A comment preceded by a pound sign may be appended to any system
 parameter statement.

@@ -38,6 +38,7 @@
 #define OPTION_FAST_INTCOND             /* Ea CPU has intcond COND   */
 #define OPTION_SYNCIO                   /* Synchronous I/O option    */
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
+#define OPTION_IODELAY_LINUX_DEFAULT 800/* Default if OSTAILOR LINUX */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
