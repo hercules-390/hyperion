@@ -631,8 +631,8 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      ve[256];                /* Virtual effective addr    */
         DW      me[256];                /* Mangled effective addr    */
         BYTE    aekey[256];             /* Storage Key               */
-        int     aeacc[256];             /* Access type               */
-        int     aearn[256];             /* Access register used      */
+        BYTE    aeacc[256];             /* Access type               */
+        char    aearn[256];             /* Access register used      */
 
     } REGS;
 
