@@ -419,15 +419,6 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             }
         }
 
-        /* Check for correct file sequence number */
-        if (devhdr.fileseq != fileseq
-            && !(devhdr.fileseq == 0 && fileseq == 1))
-        {
-            logmsg (_("HHCDA014E %s CKD file out of sequence\n"),
-                    dev->filename);
-            return -1;
-        }
-
         /* Extract fields from device header */
         heads   = ((U32)(devhdr.heads[3]) << 24)
                 | ((U32)(devhdr.heads[2]) << 16)
@@ -439,10 +430,32 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                 | (U32)(devhdr.trksize[0]);
         highcyl = ((U32)(devhdr.highcyl[1]) << 8)
                 | (U32)(devhdr.highcyl[0]);
+
         if (cckd == 0)
         {
-            trks = (statbuf.st_size - CKDDASD_DEVHDR_SIZE) / trksize;
-            cyls = trks / heads;
+            if (dev->dasdcopy == 0)
+            {
+                trks = (statbuf.st_size - CKDDASD_DEVHDR_SIZE) / trksize;
+                cyls = trks / heads;
+            }
+            else
+            {
+                /*
+                 * For dasdcopy we get the number of cylinders and tracks from
+                 * the highcyl in the device header.  The last file will have
+                 * a sequence number of 0xFF.
+                 */
+                cyls = highcyl - dev->ckdcyls + 1;
+                trks = cyls * heads;
+                if (devhdr.fileseq == 0xFF)
+                {
+                    devhdr.fileseq = fileseq == 1 ? 0 : fileseq;
+                    highcyl = 0;
+                    devhdr.highcyl[0] = devhdr.highcyl[1] = 0;
+                    rc = lseek (dev->fd, 0, SEEK_SET);
+                    rc = write (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+                }
+            }
         }
         else
         {
@@ -451,6 +464,15 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                  | ((U32)(cdevhdr.cyls[1]) << 8)
                  |  (U32)(cdevhdr.cyls[0]);
             trks = cyls * heads;
+        }
+
+        /* Check for correct file sequence number */
+        if (devhdr.fileseq != fileseq
+            && !(devhdr.fileseq == 0 && fileseq == 1))
+        {
+            logmsg (_("HHCDA014E %s CKD file out of sequence\n"),
+                    dev->filename);
+            return -1;
         }
 
         if (devhdr.fileseq > 0)
@@ -477,7 +499,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         }
 
         /* Consistency check device header */
-        if (cckd == 0 && (cyls * heads != trks
+        if (cckd == 0 && dev->dasdcopy == 0 && (cyls * heads != trks
             || ((off_t)trks * trksize) + CKDDASD_DEVHDR_SIZE
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
@@ -912,31 +934,43 @@ ckd_read_track_retry:
     }
 
     /* Read the track image */
-    rc = read (dev->fd, dev->buf, dev->ckdtrksz);
-    if (rc < dev->ckdtrksz)
+    if (dev->dasdcopy == 0)
     {
-        /* Handle read error condition */
-        logmsg (_("HHCDA033E error reading trk %d: read error: %s\n"),
-           trk, (rc < 0 ? strerror(errno) : "unexpected end of file"));
-        ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        dev->bufcur = dev->cache = -1;
-        cache_lock(CACHE_DEVBUF);
-        cache_release(CACHE_DEVBUF, o, 0);
-        cache_unlock(CACHE_DEVBUF);
-        return -1;
+        rc = read (dev->fd, dev->buf, dev->ckdtrksz);
+        if (rc < dev->ckdtrksz)
+        {
+            /* Handle read error condition */
+            logmsg (_("HHCDA033E error reading trk %d: read error: %s\n"),
+               trk, (rc < 0 ? strerror(errno) : "unexpected end of file"));
+            ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            dev->bufcur = dev->cache = -1;
+            cache_lock(CACHE_DEVBUF);
+            cache_release(CACHE_DEVBUF, o, 0);
+            cache_unlock(CACHE_DEVBUF);
+            return -1;
+        }
+    }
+    else
+    {
+        trkhdr = (CKDDASD_TRKHDR *)dev->buf;
+        trkhdr->bin = 0;
+        trkhdr->cyl[0] = (cyl >> 8);
+        trkhdr->cyl[1] = (cyl & 0xFF);
+        trkhdr->head[0] = (head >> 8);
+        trkhdr->head[1] = (head & 0xFF);
+        memset (dev->buf + CKDDASD_TRKHDR_SIZE, 0xFF, 8);
     }
 
     /* Validate the track header */
     DEVTRACE (_("HHCDA034I read trk %d trkhdr %2.2x %2.2x%2.2x %2.2x%2.2x\n"),
        trk, dev->buf[0], dev->buf[1], dev->buf[2], dev->buf[3], dev->buf[4]);
     trkhdr = (CKDDASD_TRKHDR *)dev->buf;
-    if ((trkhdr->bin != 0
-      || trkhdr->cyl[0] != (cyl >> 8)
-      || trkhdr->cyl[1] != (cyl & 0xFF)
-      || trkhdr->head[0] != (head >> 8)
-      || trkhdr->head[1] != (head & 0xFF))
-     && !dev->dasdcopy)
+    if (trkhdr->bin != 0
+     || trkhdr->cyl[0] != (cyl >> 8)
+     || trkhdr->cyl[1] != (cyl & 0xFF)
+     || trkhdr->head[0] != (head >> 8)
+     || trkhdr->head[1] != (head & 0xFF))
     {
         logmsg (_("HHCDA035E %4.4X invalid track header for cyl %d head %d "
                 " %2.2x%2.2x%2.2x%2.2x%2.2x\n"), dev->devnum, cyl, head,

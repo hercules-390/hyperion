@@ -1167,6 +1167,14 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
         highcyl = end;
     cyl = end - start + 1;
 
+    /* Special processing for ckd and dasdcopy */
+    if (comp == 0xFF && dasdcopy)
+    {
+        highcyl = end;
+        if (end + 1 == volcyls)
+            fileseq = 0xff;
+    }
+
     trks = volcyls * heads;
 
     /* if `dasdcopy' > 1 then we can replace the existing file */
@@ -1577,6 +1585,8 @@ CKDDEV         *ckdtab;                 /* -> CKD table entry        */
         } /* end for(cyl) */
 
     } /* `dasdcopy' bit is off */
+    else
+        cyl = end + 1;
 
     /* Complete building the compressed file */
     if (comp != 0xff)
