@@ -805,7 +805,7 @@ BYTE    c;                              /* Work area for sscanf      */
     initialize_lock (&sysblk.mainlock);
     initialize_lock (&sysblk.intlock);
     initialize_lock (&sysblk.sigplock);
-#if MAX_CPU_ENGINES == 0 || !defined(OPTION_FAST_INTCOND)
+#if MAX_CPU_ENGINES == 1 || !defined(OPTION_FAST_INTCOND)
     initialize_condition (&sysblk.intcond);
 #endif
 #if MAX_CPU_ENGINES > 1
