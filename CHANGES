@@ -1,13 +1,14 @@
+16 Apr 2003 memrchr.[ch] added for Cygwin - Volker Bandke
 15 Apr 2003 LCTL VM Assist - Ivan Warren
 10 Apr 2003 DISP0/DISP1/DISP2 CP Assists - Ivan Warren
 05 Apr 2003 Virtual Timer Assist - Ivan Warren
 04 Apr 2003 Return IntReq on Card Read unsolicited Sense when
             the card reader is empty - Ivan Warren
-03 Apr 2003 ECPS:VM SSM Correction, panel command rework (evm) 
+03 Apr 2003 ECPS:VM SSM Correction, panel command rework (evm)
             and conditional debug messages - Ivan Warren
 02 Apr 2003 Reordered int/dev locks in channel handler
             to avoid race conditions in certain situations - Ivan Warren
-29 Mar 2003 Addl VM Assist support : SVC + SSM VM Assists  
+29 Mar 2003 Addl VM Assist support : SVC + SSM VM Assists
             new evmstat panel command
             No Timer Assist (do #CP SET ASSIST ON NOTMR) - Ivan Warren
 27 Mar 2003 Initial minimal CPASSIST ECPS:VM/370 support - Ivan Warren
@@ -17,7 +18,7 @@
 21 Mar 2003 BSC/2703 Line emulation - Ivan Warren
 20 Mar 2003 Rework system logger functions - Jan Jaeger
 19 Mar 2003 Tape : Present DE on IntReq for non-data motion CCWs
-            Added deonirq=0|1 for 3410/3420 tapes in relation with MVS 3.8j 
+            Added deonirq=0|1 for 3410/3420 tapes in relation with MVS 3.8j
             issues - Ivan Warren
 14 Mar 2003 Increased tbuf in het_write due specs compress2 - Bernard van der Helm
 13 Mar 2003 Tape support update - see README.TAPE - Ivan Warren
@@ -91,7 +92,7 @@
 27 Dec 2002 Added comprehensive details to README.CVS document - Fish
 27 Dec 2002 Fix bug ctc logic to accept MAC addr in lieu of IP addr - Fish
 27 Dec 2002 Fix warning about IFC_IOCtl in tuntap.c - Fish
-27 Dec 2002 obtain_lock not needed to signal_condition in ctc logic - Fish 
+27 Dec 2002 obtain_lock not needed to signal_condition in ctc logic - Fish
 27 Dec 2002 Use sched_yield (not usleep) if can't enqueue ctc frame - Fish
 27 Dec 2002 Rewrote ParseMAC function to fix subtle bug - Fish
 27 Dec 2002 Fixed tt32stats command to work with new LCS CTC logic - Fish
