@@ -8,15 +8,7 @@
 #if defined(OPTION_DYNAMIC_LOAD)
 
 
-HDL_VRS hdl_version[] = {
-    { "HERCULES", HDL_VERS_HERCULES, HDL_SIZE_HERCULES },
-    { "SYSBLK",   HDL_VERS_SYSBLK,   HDL_SIZE_SYSBLK   },
-    { "DEVBLK",   HDL_VERS_DEVBLK,   HDL_SIZE_DEVBLK   },
-    { "REGS",     HDL_VERS_REGS,     HDL_SIZE_REGS     },
-    { NULL,       NULL,              0                 } };
-
-
-HDL_PRE hdl_preload[] = {
+HDLPRE hdl_preload[] = {
     { "dyn_test1",      HDL_LOAD_DEFAULT },
     { "dyn_test2",      HDL_LOAD_NOMSG },
     { "dyn_test3",      HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },

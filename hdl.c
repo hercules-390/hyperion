@@ -7,13 +7,13 @@
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
-extern HDL_VRS hdl_version[];            /* Version codes in hdlmain */
-extern HDL_PRE hdl_preload[];            /* Preload list in hdlmain */
+extern HDLPRE hdl_preload[];            /* Preload list in hdlmain */
 
 static DLLENT *hdl_dll;                 /* dll chain           */
 static LOCK   hdl_lock;
 static DLLENT *hdl_cdll;             /* current dll (hdl_lock) */
 
+static HDLVRS *hdl_version;            /* Version codes in hdlmain */
 
 /* hdl_list - list all entry points */
 void hdl_list()
@@ -40,16 +40,47 @@ MODENT *modent;
 }
 
 
+/* hdl_dadd - add depency */
+int hdl_dadd(char *name, char *version, int size)
+{
+HDLVRS **newvrs;
+
+    for (newvrs = &(hdl_version);
+        *newvrs;
+         newvrs = &((*newvrs)->next));
+
+    (*newvrs) = malloc(sizeof(HDLVRS));
+    (*newvrs)->next = NULL;
+    (*newvrs)->name = strdup(name);
+    (*newvrs)->version = strdup(version);
+    (*newvrs)->size = size;
+
+    return 0;
+}
+
+
+void hdl_dlst()
+{
+HDLVRS *version_entry;
+
+    for(version_entry = hdl_version;
+      version_entry;
+      version_entry = version_entry->next)
+        logmsg("dependency(%s) version(%s) size(%d)\n",
+          version_entry->name,version_entry->version,version_entry->size);
+}
+
+
 /* hdl_dchk - depency check */
 int hdl_dchk(char *name, char *version, int size)
 {
-HDL_VRS *version_entry;
+HDLVRS *version_entry;
 
     for(version_entry = hdl_version;
-      version_entry->name && strcmp(name,version_entry->name);
-      version_entry++);
+      version_entry && strcmp(name,version_entry->name);
+      version_entry = version_entry->next);
 
-    if(version_entry->name)
+    if(version_entry)
     {
         if(strcmp(version,version_entry->version))
         {
@@ -67,7 +98,7 @@ HDL_VRS *version_entry;
     }
     else
     {
-        logmsg("HHCHDxxxI No dependency entry for %s\n",name);
+        hdl_dadd(name,version,size);
     }
 
     return 0;
@@ -208,7 +239,7 @@ MODENT *modent;
  */
 void hdl_main()
 {
-HDL_PRE *preload;
+HDLPRE *preload;
 
     initialize_lock(&hdl_lock);
 
@@ -261,7 +292,7 @@ HDL_PRE *preload;
     obtain_lock(&hdl_lock);
 
     if(hdl_cdll->hdldepc)
-        (hdl_cdll->hdldepc)(&hdl_dchk);
+        (hdl_cdll->hdldepc)(&hdl_dadd);
 
     if(hdl_cdll->hdlinit)
         (hdl_cdll->hdlinit)(&hdl_regi);
@@ -334,6 +365,15 @@ char *modname;
         }
     }
 
+    dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);
+
+    dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
+
+    /* No modules registered yet */
+    dllent->modent = NULL;
+
+    obtain_lock(&hdl_lock);
+
     if(dllent->hdldepc)
     {
         if((dllent->hdldepc)(&hdl_dchk))
@@ -343,19 +383,11 @@ char *modname;
             if(!(flags & HDL_LOAD_FORCE))
             {
                 free(dllent);
+                release_lock(&hdl_lock);
                 return -1;
             }
         }
     }
-
-    dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);
-
-    dllent->hdlfini = dlsym(dllent->dll,HDL_FINI_Q);
-
-    /* No modules registered yet */
-    dllent->modent = NULL;
-
-    obtain_lock(&hdl_lock);
 
     hdl_cdll = dllent;
 

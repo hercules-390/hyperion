@@ -23,8 +23,10 @@ int hdl_load(char *, int);           		/* load dll          */
 #define HDL_LOAD_NOUNLOAD    0x00000002
 #define HDL_LOAD_FORCE       0x00000004         /* Override depchk   */
 #define HDL_LOAD_NOMSG       0x00000008
+
 int hdl_dele(char *);                           /* unload dll        */
 void hdl_list();                          /* list all loaded modules */
+void hdl_dlst();                          /* list all dependencies   */
 
 void hdl_main();  
 
@@ -112,21 +114,23 @@ void HDL_FINI()                                         \
     hdl_nent( STRINGMAC(_name), &(_ep) )
 
 
+struct _HDLVRS;
 struct _MODENT; 
 struct _DLLENT;
 
 
-typedef struct _HDL_VRS {
+typedef struct _HDLVRS {
+    struct _HDLVRS *next;
     char *name;
     char *version;
     int  size;
-} HDL_VRS;
+} HDLVRS;
 
 
-typedef struct _HDL_PRE {
+typedef struct _HDLPRE {
     char *name;
     int  flag;
-} HDL_PRE;
+} HDLPRE;
 
 
 typedef struct _MODENT {

@@ -2494,6 +2494,20 @@ int lsmod_cmd(char* cmdline, int argc, char *argv[])
 
     return 0;
 }
+
+///////////////////////////////////////////////////////////////////////
+/* lsdep - list module dependencies */
+
+int lsdep_cmd(char* cmdline, int argc, char *argv[])
+{
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
+    hdl_dlst();
+
+    return 0;
+}
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef FEATURE_ECPSVM
@@ -2601,6 +2615,7 @@ COMMAND ( "loadtext",  loadtext_cmd,  "load a text deck file\n" )
 COMMAND ( "ldmod",     ldmod_cmd,     "load a module" )
 COMMAND ( "rmmod",     rmmod_cmd,     "delete a module" )
 COMMAND ( "lsmod",     lsmod_cmd,     "list dynamic modules\n" )
+COMMAND ( "lsdep",     lsdep_cmd,     "list module dependencies\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
 #ifdef OPTION_IODELAY_KLUDGE
