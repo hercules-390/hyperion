@@ -4,12 +4,8 @@
 /*              Modified for New Panel Display =NP=                  */
 /*-------------------------------------------------------------------*/
 /* This module is the control panel for the ESA/390 emulator.        */
-/* It provides functions for displaying the PSW and registers        */
-/* and a command line for requesting control operations such         */
-/* as IPL, stop, start, single stepping, instruction tracing,        */
-/* and storage displays. It displays messages issued by other        */
-/* threads via the logmsg macro, and optionally also writes          */
-/* all messages to a log file if stdout is redirected.               */
+/* It provides a command interface into hercules, and it displays    */
+/* messages that are issued by various hercules components.          */
 /*-------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------*/
@@ -764,15 +760,9 @@ struct termios kbattr;                  /* Terminal I/O structure    */
 /* Panel display thread                                              */
 /*                                                                   */
 /* This function runs on the main thread.  It receives messages      */
-/* from other threads and displays them on the screen.  It accepts   */
+/* from the log task and displays them on the screen.  It accepts    */
 /* panel commands from the keyboard and executes them.  It samples   */
 /* the PSW periodically and displays it on the screen status line.   */
-/*                                                                   */
-/* Note that this routine must not attempt to write messages into    */
-/* the message pipe by calling the logmsg function, because this     */
-/* will cause a deadlock when the pipe becomes full during periods   */
-/* of high message activity.  For this reason a separate thread is   */
-/* created to process all commands entered.                          */
 /*-------------------------------------------------------------------*/
 
 int volatile initdone = 0;           /* Initialization complete flag */
