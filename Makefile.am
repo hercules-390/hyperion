@@ -13,28 +13,29 @@ HERCIFC=
 endif
 
 bin_PROGRAMS = hercules $(HERCIFC) \
-	   dasdinit dasdisup dasdload dasdls dasdpdsu \
-	   tapecopy tapemap tapesplt \
-	   cckd2ckd cckdcdsk ckd2cckd cckdcomp \
-	   hetget hetinit hetmap hetupd \
-	   dmap2hrc
+        dasdinit dasdisup dasdload dasdls dasdpdsu \
+        tapecopy tapemap tapesplt \
+        cckd2ckd cckdcdsk ckd2cckd cckdcomp \
+        hetget hetinit hetmap hetupd \
+        dmap2hrc
 
-hercules_SOURCES = impl.c config.c panel.c version.c \
-	   ipl.c assist.c dat.c \
-	   stack.c cpu.c vstore.c \
-	   general1.c general2.c plo.c \
-           control.c io.c \
-	   decimal.c service.c opcode.c \
-	   diagnose.c diagmssf.c vm.c \
-	   channel.c ckddasd.c fbadasd.c \
-	   tapedev.c cardrdr.c cardpch.c \
-	   printer.c console.c external.c \
-	   float.c ctcadpt.c trace.c \
-	   machchk.c vector.c xstore.c \
-	   cmpsc.c sie.c timer.c \
-	   esame.c cckddasd.c cckdcdsx.c \
-	   parser.c hetlib.c ieee.c \
-	   machdep.h
+hercules_SOURCES = fthreads.c w32chan.c \
+        impl.c config.c panel.c version.c \
+        ipl.c assist.c dat.c \
+        stack.c cpu.c vstore.c \
+        general1.c general2.c plo.c \
+        control.c io.c \
+        decimal.c service.c opcode.c \
+        diagnose.c diagmssf.c vm.c \
+        channel.c ckddasd.c fbadasd.c \
+        tapedev.c cardrdr.c cardpch.c \
+        printer.c console.c external.c \
+        float.c ctcadpt.c trace.c \
+        machchk.c vector.c xstore.c \
+        cmpsc.c sie.c timer.c \
+        esame.c cckddasd.c cckdcdsx.c \
+        parser.c hetlib.c ieee.c \
+        machdep.h
 
 hercifc_SOURCES = hercifc.c version.c
 
@@ -75,9 +76,9 @@ dmap2hrc_SOURCES = dmap2hrc.c version.c
 EXTRA_DIST = hercules.cnf
 
 noinst_HEADERS  = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
-	   feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
-	   codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
-           sllib.h htypes.h
+    feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
+    codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
+    sllib.h htypes.h fthreads.h w32chan.h linklist.h
 
 cckd: cckd2ckd cckdcdsk ckd2cckd cckdcomp
 

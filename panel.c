@@ -32,6 +32,10 @@
 
 #include "inline.h"
 
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#include "w32chan.h"
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
 /*-------------------------------------------------------------------*/
@@ -869,7 +873,9 @@ void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
 void    cckd_print_itrace (DEVBLK *);
 
+#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
 void    device_thread();
+#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
 
 #ifdef WIN32
 int herc_system (char* command)
@@ -1128,6 +1134,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 logmsg("Invalid architecture mode %s\n",archmode);
                 return NULL;
             }
+
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+            ios_arch_mode = sysblk.arch_mode;
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
 
             logmsg("Architecture successfully set to %s mode.\n",get_arch_mode_string(NULL));
 
@@ -1806,6 +1816,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"exit") == 0)
     {
         sysblk.msgpipew = stderr;
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+        ios_msgpipew = sysblk.msgpipew;
+        KillAllDeviceThreads();
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
         devascii = strtok(cmd+5," \t");
         if (devascii == NULL || strcmp("now",devascii))
             release_config();
@@ -2106,8 +2120,35 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
     if (memcmp(cmd,"devtmax",7)==0)
     {
-        TID tid;
         int devtmax = -2;
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+
+        // Note: no need to lock scheduler vars since WE are the only one
+        // that updates "ios_devtmax" (the scheduler just references it)
+        // and we only display (but not update) all the other variables.
+
+        if (cmd[7] == '=')
+            sscanf(cmd+8, "%d", &devtmax);
+        else
+            devtmax = ios_devtmax;
+
+        if (devtmax >= -1)
+            ios_devtmax = devtmax;
+        else
+        {
+            logmsg("Invalid max device threads value (must be -1 to n)\n");
+            return NULL;
+        }
+
+        TrimDeviceThreads();	// (enforce newly defined threshold)
+
+        logmsg ("Max device threads: %d, current: %d, most: %d, "
+                "waiting: %d, max exceeded: %d\n",
+                ios_devtmax, ios_devtnbr, ios_devthwm,
+                (int)ios_devtwait, ios_devtunavail);
+
+#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+        TID tid;
 
         if (cmd[7] == '=')
             sscanf(cmd+8, "%d", &devtmax);
@@ -2144,6 +2185,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
                 sysblk.devtwait, sysblk.devtunavail);
 
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
         return NULL;
     }
 

@@ -84,7 +84,7 @@ int i;
                 if(sysblk.regs[i].instcount == savecount[i])
                 {
                     /* Send signal to looping CPU */
-                    pthread_kill(sysblk.regs[i].cputid, SIGUSR1);
+                    signal_thread(sysblk.regs[i].cputid, SIGUSR1);
                     savecount[i] = -1;
                 }
                 else

@@ -262,7 +262,7 @@ REGS *regs = NULL;
 TID tid;
 int i;
 
-    tid = pthread_self();
+    tid = thread_id();
 
 #ifdef FEATURE_CPU_RECONFIG
     for (i = 0; i < MAX_CPU_ENGINES; i++)
@@ -318,7 +318,7 @@ int i;
         ON_IC_CPU_NOT_STARTED(regs);
 
         /* Notify other CPU's by means of a malfuction alert if possible */
-        if(!pthread_mutex_trylock(&sysblk.intlock) )
+        if (!try_obtain_lock(&sysblk.intlock))
         {
             if(!sysblk.sigpbusy)
             {
@@ -333,7 +333,7 @@ int i;
                         sysblk.regs[i].malfcpu[regs->cpuad] = 1;
                     }
             }
-            pthread_mutex_unlock(&sysblk.intlock);
+            release_lock(&sysblk.intlock);
         }
 
     }

@@ -21,6 +21,10 @@
 
 #include "opcode.h"
 
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#include "w32chan.h"
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+
 #undef CHADDRCHK
 #if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
 #define CHADDRCHK(_addr,_dev)                   \
@@ -824,6 +828,8 @@ DEVBLK *dev;                            /* -> Device control block   */
 } /* end function io_reset */
 
 
+#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+
 /*-------------------------------------------------------------------*/
 /* Execute a queued I/O                                              */
 /*-------------------------------------------------------------------*/
@@ -883,6 +889,8 @@ void device_thread ()
     release_lock (&sysblk.ioqlock);
 
 } /* end function device_thread */
+
+#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
 
 
 #endif /*!defined(_CHANNEL_C)*/
@@ -1365,6 +1373,10 @@ int     rc;                             /* Return code               */
     memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
                         sizeof(dev->pmcw.intparm));            /*@IWZ*/
 
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+    release_lock (&dev->lock);
+    return ScheduleIORequest(dev,dev->devnum);
+#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
     if (sysblk.devtmax >= 0)
     {
         /* Queue the I/O request */
@@ -1388,7 +1400,7 @@ int     rc;                             /* Return code               */
             signal_condition(&sysblk.ioqcond);
         else if (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)
         {
-            rc = create_thread(&tid,&sysblk.detattr,device_thread,NULL);
+            rc = create_device_thread(&tid,&sysblk.detattr,device_thread,NULL);
             if (rc != 0 && sysblk.devtnbr == 0)
             {
                 logmsg ("HHC760I %4.4X create_thread error: %s",
@@ -1406,7 +1418,7 @@ int     rc;                             /* Return code               */
     else
     {
         /* Execute the CCW chain on a separate thread */
-        if ( create_thread (&dev->tid, &sysblk.detattr,
+        if ( create_device_thread (&dev->tid, &sysblk.detattr,
                             ARCH_DEP(execute_ccw_chain), dev) )
         {
             logmsg ("HHC760I %4.4X create_thread error: %s",
@@ -1421,6 +1433,7 @@ int     rc;                             /* Return code               */
     /* Return with condition code zero */
     return 0;
 
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
 } /* end function startio */
 
 /*-------------------------------------------------------------------*/
@@ -2391,5 +2404,17 @@ int device_attention (DEVBLK *dev, BYTE unitstat)
     return 3;
 }
 
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+void  call_execute_ccw_chain(int arch_mode, void* pDevBlk)
+{
+    switch (arch_mode)
+    {
+        case ARCH_370: s370_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+        case ARCH_900: z900_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+        default:
+        case ARCH_390: s390_execute_ccw_chain((DEVBLK*)pDevBlk); break;
+    }
+}
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -32,6 +32,10 @@
 
 #include "inline.h"
 
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#include "w32chan.h"
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+
 #if defined(FEATURE_BRANCH_AND_SET_AUTHORITY)
 /*-------------------------------------------------------------------*/
 /* B25A BSA   - Branch and Set Authority                       [RRE] */
@@ -1397,7 +1401,6 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Mainlock now released by `invalidate_pte' */
 //  RELEASE_MAINLOCK(regs);
-
 }
 
 
@@ -4856,6 +4859,10 @@ static char *ordername[] = {    "Unassigned",
                     default:
                         status |= SIGP_STATUS_INVALID_PARAMETER;
                 }
+
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+            ios_arch_mode = sysblk.arch_mode;
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
 
             /* Invalidate the ALB and TLB */
             ARCH_DEP(purge_tlb) (regs);

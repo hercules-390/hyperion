@@ -209,14 +209,14 @@ do { \
 #else
 #define OBTAIN_MAINLOCK(_register_context) \
 do { \
-    pthread_mutex_lock(&sysblk.mainlock); \
+    obtain_lock(&sysblk.mainlock); \
     (_register_context)->mainlock = 1; \
 } while(0)
 
 #define RELEASE_MAINLOCK(_register_context) \
 do { \
     (_register_context)->mainlock = 0; \
-    pthread_mutex_unlock(&sysblk.mainlock); \
+    release_lock(&sysblk.mainlock); \
 } while(0)
 #endif
 

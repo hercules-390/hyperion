@@ -37,6 +37,10 @@
 #include "config.c"
 #undef   _GEN_ARCH
 
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#include "w32chan.h"
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -812,8 +816,23 @@ BYTE    c;                              /* Work area for sscanf      */
 #endif /*SMP_SERIALIZATION*/
 #endif /*MAX_CPU_ENGINES > 1*/
     initialize_detach_attr (&sysblk.detattr);
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+    InitIOScheduler                         // initialize i/o scheduler...
+        (
+            sysblk.msgpipew,                // (for issuing msgs to Herc console)
+            sysblk.arch_mode,               // (for calling execute_ccw_chain)
+            DEVICE_THREAD_PRIORITY,         // (for calling fthread_create)
+            MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
+            devtmax                         // (maximum #of device threads allowed)
+        );
+#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
+    /* Set max number device threads */
+    sysblk.devtmax = devtmax;
+    sysblk.devtwait = sysblk.devtnbr =
+    sysblk.devthwm  = sysblk.devtunavail = 0;
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
 
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock
@@ -860,11 +879,6 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
-
-    /* Set max number device threads */
-    sysblk.devtmax = devtmax;
-    sysblk.devtwait = sysblk.devtnbr =
-    sysblk.devthwm  = sysblk.devtunavail = 0;
 
     /* Initialize the CPU registers */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
@@ -965,6 +979,10 @@ BYTE    c;                              /* Work area for sscanf      */
         exit(1);
     }
     setvbuf (sysblk.msgpipew, NULL, _IOLBF, 0);
+
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+    ios_msgpipew = sysblk.msgpipew;
+#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
 
     /* Display the version identifier on the control panel */
     display_version (sysblk.msgpipew, "Hercules ",

@@ -44,6 +44,12 @@
 
 #define FEATURE_ALD_FORMAT            0
 
+// The following option is set as appropriate by configure and
+// makefile.w32; don't define/undefine it.
+//
+//#define OPTION_FTHREADS           /* Fish pthreads replacement */
+
+
 #undef FEATURE_4K_STORAGE_KEYS
 #undef FEATURE_ACCESS_REGISTERS
 #undef FEATURE_ADDRESS_LIMIT_CHECKING

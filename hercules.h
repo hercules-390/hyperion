@@ -93,13 +93,15 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 #ifdef WIN32
 #define socklen_t int
-/* fake loading of windows.h and winsock.h so we can use             */
-/* pthreads-win32 instead of the native gygwin pthreads support,     */
+#if !defined(OPTION_FTHREADS)
+/* fake loading of <windows.h> and <winsock.h> so we can use         */
+/* pthreads-win32 instead of the native cygwin pthreads support,     */
 /* which doesn't include pthread_cond bits                           */
 #define _WINDOWS_
 #define _WINSOCKAPI_
 #define _WINDOWS_H
 #define _WINSOCK_H
+#endif // !defined(OPTION_FTHREADS)
 #define HANDLE int
 #define DWORD int       /* will be undefined later */
 #endif
@@ -137,10 +139,37 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #ifdef WIN32
 #define HAVE_STRUCT_TIMESPEC
 #endif
+#if defined(OPTION_FTHREADS)
+#include "fthreads.h"
+#else // !defined(OPTION_FTHREADS)
 #include <pthread.h>
+#endif // defined(OPTION_FTHREADS)
 #ifdef WIN32
 #undef DWORD
 #endif
+#if defined(OPTION_FTHREADS)
+#define NORMAL_THREAD_PRIORITY  0  /* THREAD_PRIORITY_NORMAL */
+#define DEVICE_THREAD_PRIORITY  1  /* THREAD_PRIORITY_ABOVE_NORMAL */
+typedef fthread_t         TID;
+typedef fthread_mutex_t   LOCK;
+typedef fthread_cond_t    COND;
+typedef fthread_attr_t    ATTR;
+#define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
+#define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
+#define initialize_lock(plk)                   fthread_mutex_init((plk))
+#define obtain_lock(plk)                       fthread_mutex_lock((plk))
+#define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
+#define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
+#define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
+#define initialize_condition(pcond)            fthread_cond_init((pcond))
+#define signal_condition(pcond)                fthread_cond_signal((pcond))
+#define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
+#define release_lock(plk)                      fthread_mutex_unlock((plk))
+#define initialize_detach_attr(pat)            /* unsupported */
+#define signal_thread(tid,signo)               fthread_kill((tid),(signo))
+#define thread_id()                            fthread_self()
+#define exit_thread(exitcode)                  fthread_exit((exitcode))
+#else // !defined(OPTION_FTHREADS)
 typedef pthread_t                       TID;
 typedef pthread_mutex_t                 LOCK;
 typedef pthread_cond_t                  COND;
@@ -149,6 +178,8 @@ typedef pthread_attr_t                  ATTR;
         pthread_mutex_init((plk),NULL)
 #define obtain_lock(plk) \
         pthread_mutex_lock((plk))
+#define try_obtain_lock(plk) \
+        pthread_mutex_trylock((plk))
 #define release_lock(plk) \
         pthread_mutex_unlock((plk))
 #define initialize_condition(pcond) \
@@ -167,6 +198,8 @@ typedef pthread_attr_t                  ATTR;
 typedef void*THREAD_FUNC(void*);
 #define create_thread(ptid,pat,fn,arg) \
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
+#define create_device_thread(ptid,pat,fn,arg) \
+        pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
 #if !defined(WIN32)
 #define signal_thread(tid,signo) \
         pthread_kill(tid,signo)
@@ -175,6 +208,7 @@ typedef void*THREAD_FUNC(void*);
 #endif // !defined(WIN32)
 #define thread_id() \
         pthread_self()
+#endif // defined(OPTION_FTHREADS)
 #else
 typedef int                             TID;
 typedef int                             LOCK;
@@ -182,6 +216,7 @@ typedef int                             COND;
 typedef int                             ATTR;
 #define initialize_lock(plk)            *(plk)=0
 #define obtain_lock(plk)                *(plk)=1
+#define try_obtain_lock(plk)            *(plk)=1
 #define release_lock(plk)               *(plk)=0
 #define initialize_condition(pcond)     *(pcond)=0
 #define signal_condition(pcond)         *(pcond)=1
@@ -196,10 +231,10 @@ typedef int                             ATTR;
 
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
-#ifdef  WIN32
+#if defined(WIN32) && !defined(OPTION_FTHREADS)
 #undef  TIDPAT
 #define TIDPAT "%p"
-#endif
+#endif // defined(WIN32) && !defined(OPTION_FTHREADS)
 
 /*-------------------------------------------------------------------*/
 /* Prototype definitions for device handler functions                */
@@ -549,17 +584,19 @@ typedef struct _SYSBLK {
         struct _DEVBLK *firstdev;       /* -> First device block     */
         U16     highsubchan;            /* Highest subchannel + 1    */
         U32     chp_reset[8];           /* Channel path reset masks  */
-        struct _DEVBLK *ioq;            /* I/O queue                 */
-        LOCK    ioqlock;                /* I/O queue lock            */
-        COND    ioqcond;                /* I/O queue condition       */
 #ifdef OPTION_IOINTQ
         struct _DEVBLK *iointq;         /* I/O interrupt queue       */
 #endif
+#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+        struct _DEVBLK *ioq;            /* I/O queue                 */
+        LOCK    ioqlock;                /* I/O queue lock            */
+        COND    ioqcond;                /* I/O queue condition       */
         int     devtwait;               /* Device threads waiting    */
         int     devtnbr;                /* Number of device threads  */
         int     devtmax;                /* Max device threads        */
         int     devthwm;                /* High water mark           */
         int     devtunavail;            /* Count thread unavailable  */
+#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
         RADR    addrlimval;             /* Address limit value (SAL) */
         U32     servparm;               /* Service signal parameter  */
         U32     cp_recv_mask;           /* Syscons CP receive mask   */
