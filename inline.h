@@ -81,7 +81,6 @@ _VSTORE_C_STATIC void s390_instfetch (BYTE *dest, U32 addr, REGS *regs);
 
 #define _INLINE_H
 
-#if 1
 
 static inline int add_logical(U32 *result, U32 op1, U32 op2)
 {
@@ -119,80 +118,7 @@ static inline int sub_signed(U32 *result, U32 op1, U32 op2)
                                              (S32)*result < 0 ? 1 :
                                              (S32)*result > 0 ? 2 : 0;
 }
-#else
-/*-------------------------------------------------------------------*/
-/* Add two signed fullwords giving a signed fullword result	     */
-/* and return condition code					     */
-/*-------------------------------------------------------------------*/
-static inline int add_signed ( U32 *result, U32 op1, U32 op2 )
-{
-U64	r;
-U32	x;
-int	carry_in, carry_out;
-int	cc;
 
-    r = (U64)op1 + op2;
-    x = (U32)r;
-    carry_in = ((op1 & 0x7FFFFFFF) + (op2 & 0x7FFFFFFF)) >> 31;
-    carry_out = r >> 32;
-    *result = x;
-    cc = (carry_out != carry_in)? 3 :
-	(x == 0)? 0 : ((S32)x < 0)? 1 : 2;
-    return cc;
-} /* end function add_signed */
-
-/*-------------------------------------------------------------------*/
-/* Subtract two signed fullwords giving a signed fullword result     */
-/* and return condition code					     */
-/*-------------------------------------------------------------------*/
-static inline int sub_signed ( U32 *result, U32 op1, U32 op2 )
-{
-U64	r;
-U32	x;
-int	carry_in, carry_out;
-int	cc;
-
-    r = (U64)op1 + ~op2 + 1;
-    x = (U32)r;
-    carry_in = ((op1 & 0x7FFFFFFF) + (~op2 & 0x7FFFFFFF) + 1) >> 31;
-    carry_out = r >> 32;
-    *result = x;
-    cc = (carry_out != carry_in)? 3 :
-	(x == 0)? 0 : ((S32)x < 0)? 1 : 2;
-    return cc;
-} /* end function sub_signed */
-
-/*-------------------------------------------------------------------*/
-/* Add two unsigned fullwords giving an unsigned fullword result     */
-/* and return condition code					     */
-/*-------------------------------------------------------------------*/
-static inline int add_logical ( U32 *result, U32 op1, U32 op2 )
-{
-U64	r;
-int	cc;
-
-    r = (U64)op1 + (U64)op2;
-    *result = (U32)r;
-    if ((r >> 32) == 0) cc = ((U32)r == 0)? 0 : 1;
-    else cc = ((U32)r == 0)? 2 : 3;
-    return cc;
-} /* end function add_logical */
-
-/*-------------------------------------------------------------------*/
-/* Subtract two unsigned fullwords giving an unsigned fullword	     */
-/* and return condition code					     */
-/*-------------------------------------------------------------------*/
-static inline int sub_logical ( U32 *result, U32 op1, U32 op2 )
-{
-U64	r;
-int	cc;
-
-    r = (U64)op1 + ~((U32)op2) + 1;
-    *result = (U32)r;
-    cc = ((U32)r == 0) ? 2 : ((r >> 32) == 0) ? 1 : 3;
-    return cc;
-} /* end function sub_logical */
-#endif
 
 /*-------------------------------------------------------------------*/
 /* Multiply two signed fullwords giving a signed doubleword result   */

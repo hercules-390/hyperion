@@ -889,46 +889,6 @@ int deconfigure_cpu(REGS *regs)
 } /* end function deconfigure_cpu */
 
 
-#if !defined(OPTION_NO_DEVICE_THREAD)
-/*-------------------------------------------------------------------*/
-/* Run as a separate thread for each device to run execute_ccw_chain */
-/* LOOPER_DIE isn't actually used yet but is there if anyone wants it*/
-/*                                                                   */
-/* code courtesy of Malcome Beattie                                  */
-/*-------------------------------------------------------------------*/
-void device_loop (DEVBLK *dev)
-{
-    while (1) {
-	obtain_lock(&dev->lock);
-	while (dev->loopercmd == LOOPER_WAIT)
-	    wait_condition(&dev->loopercond, &dev->lock);
-	if (dev->loopercmd == LOOPER_DIE)
-	    break;
-	/* It's LOOPER_EXEC */
-	dev->loopercmd = LOOPER_WAIT;
-	release_lock(&dev->lock);
-        switch(sysblk.arch_mode) {
-            case ARCH_370:
-	        s370_execute_ccw_chain (dev);
-                break;
-            case ARCH_900:
-	        z900_execute_ccw_chain (dev);
-                break;
-            case ARCH_390:
-            default:
-	        s390_execute_ccw_chain (dev);
-                break;
-        }
-    }
-    release_lock(&dev->lock);
-
-    /* It's our responsibility to free the device structure */
-    /* otherwise it's a headache to synchronise with the config thread */
-    free(dev);
-} /* end function device_loop */
-#endif /*!defined(OPTION_NO_DEVICE_THREAD)*/
-
-
 /*-------------------------------------------------------------------*/
 /* Function to build a device configuration block                    */
 /*-------------------------------------------------------------------*/
@@ -1061,26 +1021,11 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         /* Initialize the device lock and conditions */
         initialize_lock (&dev->lock);
         initialize_condition (&dev->resumecond);
-#if !defined(OPTION_NO_DEVICE_THREAD)
         initialize_condition (&dev->loopercond);
-#endif /*!defined(OPTION_NO_DEVICE_THREAD)*/
 
         /* Assign new subchannel number */
         dev->subchan = sysblk.highsubchan++;
 
-#if !defined(OPTION_NO_DEVICE_THREAD)
-	/* Ensure command for new thread is LOOPER_WAIT */
-	/* (Yeah, it's zero anyway but let's be pedantic) */
-	dev->loopercmd = LOOPER_WAIT;
-
-	/* Start a thread for this device */
-	if ( create_thread (&dev->tid, &sysblk.detattr, device_loop, dev) )
-	{
-            logmsg ("HHC045I Cannot create thread for device %4.4X: %s\n",
-                    devnum, strerror(errno));
-            return 1;
-	}
-#endif /*!defined(OPTION_NO_DEVICE_THREAD)*/
     }
 
     /* Obtain the device lock */
@@ -1210,6 +1155,11 @@ DEVBLK *dev;                            /* -> Device block           */
             signal_thread (sysblk.cnsltid, SIGHUP);
         }
     }
+
+    /* Signal the device thread to exit */
+    dev->loopercmd = LOOPER_DIE;
+    if(dev->tid)
+        signal_condition(&dev->loopercond);
 
     /* Release device lock */
     release_lock(&dev->lock);

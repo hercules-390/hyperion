@@ -747,6 +747,67 @@ DEVBLK *dev;                            /* -> Device control block   */
 } /* end function io_reset */
 
 
+/*-------------------------------------------------------------------*/
+/* Run as a separate thread for each device to run execute_ccw_chain */
+/* LOOPER_DIE isn't actually used yet but is there if anyone wants it*/
+/*                                                                   */
+/* code courtesy of Malcome Beattie                                  */
+/*                                                                   */
+/* Dynamic thread create/drop added         25 Mar 2001 - Jan Jaeger */
+/*-------------------------------------------------------------------*/
+void device_thread (DEVBLK *dev)
+{
+struct timespec waittime;
+struct timeval  now;
+int    timeout1 = 0, timeout2;
+
+    while (1) {
+
+        if(!timeout1)
+            switch(sysblk.arch_mode) {
+                case ARCH_370:
+	            s370_execute_ccw_chain (dev);
+                    break;
+                case ARCH_900:
+	            z900_execute_ccw_chain (dev);
+                    break;
+                case ARCH_390:
+                default:
+	            s390_execute_ccw_chain (dev);
+                    break;
+            }
+        else
+        {
+            gettimeofday(&now, NULL);
+            /* If we have not done I/O for more then five minutes,
+               we might just as well terminate the thread. */
+            waittime.tv_sec = now.tv_sec + 300;
+            waittime.tv_nsec = now.tv_usec * 1000;
+        }
+
+        timeout2 = timeout1;
+        timeout1 = 0;
+
+        obtain_lock(&dev->lock);
+
+        dev->loopercmd = LOOPER_WAIT;
+
+	while (dev->loopercmd == LOOPER_WAIT && !timeout1)
+	    timeout1 = timed_wait_condition(&dev->loopercond,
+                                                &dev->lock, &waittime);
+
+	if ((timeout1 && timeout2) || dev->loopercmd == LOOPER_DIE)
+            break;
+
+	release_lock(&dev->lock);
+    }
+
+    dev->tid = 0;
+    release_lock(&dev->lock);
+
+} /* end function device_thread */
+
+
 #endif /*!defined(_CHANNEL_C)*/
 
 /*-------------------------------------------------------------------*/
@@ -1202,24 +1263,22 @@ int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
     memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
                         sizeof(dev->pmcw.intparm));            /*@IWZ*/
 
-    /* Release the device lock */
-    release_lock (&dev->lock);
-
-#if !defined(OPTION_NO_DEVICE_THREAD)
-     /* Execute the CCW chain in the device's own thread by
-        prodding it (code courtesy of Malcolm Beattie) */
-     dev->loopercmd = LOOPER_EXEC;
-     signal_condition(&dev->loopercond);
-#else
-    /* Execute the CCW chain on a separate thread */
-    if ( create_thread (&dev->tid, &sysblk.detattr,
-                        ARCH_DEP(execute_ccw_chain), dev) )
+    dev->loopercmd = LOOPER_EXEC;
+    if(dev->tid)
+        signal_condition(&dev->loopercond);
+    else
     {
-        logmsg ("HHC760I %4.4X create_thread error: %s",
-                dev->devnum, strerror(errno));
-        return 2;
+        /* Execute the CCW chain on a separate thread */
+        if ( create_thread (&dev->tid, &sysblk.detattr,
+                                                  device_thread, dev) )
+        {
+            release_lock (&dev->lock);
+            logmsg ("HHC760I %4.4X create_thread error: %s",
+                    dev->devnum, strerror(errno));
+            return 2;
+        }
     }
-#endif
+    release_lock (&dev->lock);
 
     /* Return with condition code zero */
     return 0;

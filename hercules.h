@@ -145,6 +145,8 @@ typedef pthread_attr_t			ATTR;
 	pthread_cond_broadcast((pcond))
 #define wait_condition(pcond,plk) \
 	pthread_cond_wait((pcond),(plk))
+#define timed_wait_condition(pcond,plk,timeout) \
+	pthread_cond_timedwait((pcond),(plk),(timeout))
 #define initialize_detach_attr(pat) \
 	pthread_attr_init((pat)); \
 	pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED)
@@ -168,6 +170,7 @@ typedef int				ATTR;
 #define initialize_condition(pcond)	*(pcond)=0
 #define signal_condition(pcond) 	*(pcond)=1
 #define wait_condition(pcond,plk)	*(pcond)=1
+#define timed_wait_condition(pcond,plk,timeout)	*(pcond)=1
 #define initialize_detach_attr(pat)	*(pat)=1
 #define create_thread(ptid,pat,fn,arg)	(*(ptid)=0,fn(arg),0)
 #define signal_thread(tid,signo)	raise(signo)
@@ -529,10 +532,8 @@ typedef struct _DEVBLK {
 	DEVCF  *devclos;		/* -> Close device function  */
 	LOCK	lock;			/* Device block lock	     */
 	COND	resumecond;		/* Resume condition	     */
-#if !defined(OPTION_NO_DEVICE_THREAD)
 	COND	loopercond;		/* Loop or die condition     */
 	int	loopercmd;		/* Loop or die command	     */
-#endif /*!defined(OPTION_NO_DEVICE_THREAD)*/
 	struct _DEVBLK *nextdev;	/* -> next device block      */
 	unsigned int			/* Flags		     */
 		pending:1,		/* 1=Interrupt pending	     */

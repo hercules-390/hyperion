@@ -22,7 +22,6 @@
 #undef  OPTION_FOOTPRINT_BUFFER  /* 256 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING	/* First use trace and count */
 #define OPTION_CKD_KEY_TRACING		/* Trace CKD search keys     */
-#undef  OPTION_NO_DEVICE_THREAD 	/* Separate threads for I/O  */
 #undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
 #undef  OPTION_NO_IEEE_SUPPORT          /* No/downlevel IEEE support */
 

@@ -1068,7 +1068,9 @@ int used; \
 
 /* Functions in module channel.c */
 int  ARCH_DEP(startio) (DEVBLK *dev, ORB *orb); 	       /*@IZW*/
-void *ARCH_DEP(execute_ccw_chain) (DEVBLK *dev);
+void *s370_execute_ccw_chain (DEVBLK *dev);
+void *s390_execute_ccw_chain (DEVBLK *dev);
+void *z900_execute_ccw_chain (DEVBLK *dev);
 int  stchan_id (REGS *regs, U16 chan);
 int  testch (REGS *regs, U16 chan);
 int  testio (REGS *regs, DEVBLK *dev, BYTE ibyte);
