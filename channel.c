@@ -236,7 +236,8 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     obtain_lock (&dev->lock);
 
     /* Test device status and set condition code */
-    if (dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+    if ((dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+     || dev->startpending)
     {
         /* Set condition code 2 if device is busy */
         cc = 2;
@@ -690,7 +691,8 @@ int pending = 0;
 #endif
 
     /* If the device is busy then signal the device to clear */
-    if (dev->busy)
+    if ((dev->busy  && dev->ioactive == DEV_SYS_LOCAL)
+     || dev->startpending)
     {
         /* Set clear pending condition */
         dev->scsw.flag2 |= SCSW2_FC_CLEAR | SCSW2_AC_CLEAR;
@@ -813,7 +815,8 @@ int pending = 0;
     }
 
     /* If the device is busy then signal subchannel to halt */
-    if (dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+    if ((dev->busy && dev->ioactive == DEV_SYS_LOCAL)
+     || dev->startpending)
     {
         /* Set halt pending condition and reset pending condition */
         dev->scsw.flag2 |= (SCSW2_FC_HALT | SCSW2_AC_HALT);
@@ -973,7 +976,8 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
 void device_reset (DEVBLK *dev)
 {
     obtain_lock (&dev->lock);
-    dev->busy = dev->reserved = dev->pending = dev->pcipending = 0;
+    dev->busy = dev->reserved = dev->pending = dev->pcipending =
+    dev->startpending = 0;
     dev->ioactive = DEV_SYS_NONE;
     if (dev->suspended)
     {
@@ -1661,7 +1665,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     }
 
     /* Set the device busy indicator */
-    dev->busy = 1;
+    dev->busy = dev->startpending = 1;
 
     /* Initialize the subchannel status word */
     memset (&dev->scsw,    0, sizeof(SCSW));
@@ -1813,9 +1817,9 @@ int     bufpos = 0;                     /* Position in I/O buffer    */
 BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     /* Wait for the device to become available */
+    obtain_lock (&dev->lock);
     if (!dev->syncio_active && dev->shared)
     {
-        obtain_lock (&dev->lock);
         while (dev->ioactive != DEV_SYS_NONE
             && dev->ioactive != sysid)
         {
@@ -1825,12 +1829,15 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         }
         dev->ioactive = sysid;
         dev->busy = 1;
-        release_lock (&dev->lock);
+        if (sysid == DEV_SYS_LOCAL)
+            dev->startpending = 0;
     }
     else
     {
         dev->ioactive = DEV_SYS_LOCAL;
+        dev->startpending = 0;
     }
+    release_lock (&dev->lock);
 
     /* Call the i/o start exit */
     if (!dev->syncio_retry)

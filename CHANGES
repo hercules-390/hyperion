@@ -1,3 +1,5 @@
+15 Jul 2003 Fix s/370 testio race condition - Greg Smith as reported
+            by Victor Shkamerda
 14 Jul 2003 Fixes for compiler weirdness - Greg Smith
 12 Jul 2003 Optimize HDL_FINDNXT call - Jan Jaeger
 12 Jul 2003 Correct archmode check in cmpsc and featchk - Jan Jaeger

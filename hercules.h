@@ -1054,7 +1054,8 @@ typedef struct _DEVBLK {
                 reserved:1,             /* 1=Device is reserved      */
                 suspended:1,            /* 1=Channel pgm suspended   */
                 pending:1,              /* 1=I/O interrupt pending   */
-                pcipending:1;           /* 1=PCI interrupt pending   */
+                pcipending:1,           /* 1=PCI interrupt pending   */
+                startpending:1;         /* 1=startio pending         */
 
         int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */
