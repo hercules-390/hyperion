@@ -181,11 +181,11 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
         case CHSC_REQ_SCHDESC:
             regs->psw.cc = ARCH_DEP(chsc_get_sch_desc) (chsc_req, chsc_rsp);
             break;
-
+#if 0
         case CHSC_REQ_CSSINFO:
             regs->psw.cc = ARCH_DEP(chsc_get_css_info) (chsc_req, chsc_rsp);
             break;
-
+#endif
         default:
 
             if( HDC(debug_chsc_unknown_request, chsc_rsp, chsc_req, regs) )
