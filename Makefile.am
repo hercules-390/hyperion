@@ -2,6 +2,8 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
+AUTOMAKE_OPTIONS=foreign nostdinc
+
 SUBDIRS = . util html
 
 bin_PROGRAMS = hercules hercifc \
