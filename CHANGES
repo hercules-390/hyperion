@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+25 Feb 2005 Remove C99 Struct init from ecpsvm for MSVC support - Ivan Warren
 23 Feb 2005 Hopefully fixed last cmpsc bugs ;-) - Bernard van der Helm
 22 Feb 2005 suspend fix for resume loop - Greg Smith
 22 Feb 2005 Fix for "invalid command in 3270 data stream" - John Decker
