@@ -864,10 +864,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                     }
                 }
                 mcd_len -= obj_len;
-                /*
                 obj_hdr=(SCCB_OBJ_HDR *)((BYTE*)obj_hdr + obj_len);
-                */
-                (BYTE *)obj_hdr += obj_len;
             }
     
             /* Indicate Event Processed */
