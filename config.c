@@ -29,6 +29,10 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 
+#if defined(OPTION_LPARNAME)
+#include <ctype.h>
+#endif /*defined(OPTION_LPARNAME)*/
+
 #if !defined(_GEN_ARCH)
 
 #if defined(_ARCHMODE3)
@@ -630,6 +634,9 @@ int     iodelay=-1;                     /* I/O delay value           */
 int     ptt = 0;                        /* Pthread trace table size  */
 #endif /*OPTION_PTTRACE*/
 BYTE    c;                              /* Work area for sscanf      */
+#if defined(OPTION_LPARNAME)
+BYTE   *lparname;                       /* DIAG 204 lparname         */
+#endif /*defined(OPTION_LPARNAME)*/
 #ifdef OPTION_SELECT_KLUDGE
 int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            this allows the console to
@@ -785,6 +792,9 @@ BYTE **orig_newargv;
         sptt = NULL;
 #endif /*OPTION_PTTRACE*/
         scckd = NULL;
+#if defined(OPTION_LPARNAME)
+	lparname = NULL;
+#endif /*defined(OPTION_LPARNAME)*/
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -1050,6 +1060,14 @@ BYTE **orig_newargv;
             {
                 scckd = operand;
             }
+
+#if defined(OPTION_LPARNAME)
+            else if (strcasecmp (keyword, "lparname") == 0)
+            {
+               lparname = operand;
+            }
+#endif /*defined(OPTION_LPARNAME)*/
+
             else
             {
                 logmsg( _("HHCCF008E Error in %s line %d: "
@@ -1594,6 +1612,30 @@ BYTE **orig_newargv;
         /* Parse cckd value value */
         if (scckd)
             cckd_command (scckd, 0);
+
+#if defined(OPTION_LPARNAME)
+        /* Parse lparname value */
+        if (lparname != NULL)
+        {
+            for (i = 0; i < 8 && lparname[i]; i++)
+            {
+                if (!(lparname[i] == '@' || lparname[i] == '#' || lparname[i] == '$'))
+                {
+                    if (i == 0 && !isalpha(lparname[i]) || !isalnum(lparname[i]))
+                    {
+                        logmsg("HHCCF???W Warning in %s line %d: Invalid lparname, default 'HERCULES' used.\n", fname, stmt);
+                        memcpy(sysblk.lparname, "HERCULES", 8);
+                        i = 8;
+                    }
+                }
+                sysblk.lparname[i] = toupper(lparname[i]);
+            }
+            while (i < 8)
+                sysblk.lparname[i++] = ' ';
+        }
+        else
+            memcpy(sysblk.lparname, "HERCULES", 8);
+#endif /*defined(OPTION_LPARNAME)*/
 
     } /* end for(scount) */
 
