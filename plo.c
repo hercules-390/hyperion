@@ -839,8 +839,7 @@ VADR op4addr,
         FW_CHECK(op6addr, regs);
 
         /* Verify access to 6th operand */
-        ARCH_DEP(validate_operand) (op6addr, r3, 4-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op6addr, r3, 4-1,ACCTYPE_WRITE, regs);
 
         /* Store 3th op at 4th op */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1014,8 +1013,7 @@ VADR op4addr,
         DW_CHECK(op6addr, regs);
 
         /* Verify access to 6th operand */
-        ARCH_DEP(validate_operand) (op6addr, r3, 8-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op6addr, r3, 8-1,ACCTYPE_WRITE, regs);
 
         /* Store 3th op at 4th op */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1101,8 +1099,7 @@ VADR op4addr,
         DW_CHECK(op6addr, regs);
 
         /* Verify access to 6th operand */
-        ARCH_DEP(validate_operand) (op6addr, r3, 16-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op6addr, r3, 16-1,ACCTYPE_WRITE, regs);
 
         /* Store 3th op at 4th op */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1158,7 +1155,6 @@ VADR op4addr,
     op5 = ARCH_DEP(vfetch4)(effective_addr4 + 92, b4, regs);
     op7 = ARCH_DEP(vfetch4)(effective_addr4 + 124, b4, regs);
 
-
     if(regs->GR_L(r1) == op2) 
     { 
         /* Verify access to 2nd operand */
@@ -1206,8 +1202,7 @@ VADR op4addr,
         FW_CHECK(op8addr, regs);
 
         /* Verify access to 8th operand */
-        ARCH_DEP(validate_operand) (op8addr, r3, 4-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op8addr, r3, 4-1,ACCTYPE_WRITE, regs);
 
         /* Verify access to 6th operand */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1215,8 +1210,7 @@ ACCTYPE_WRITE, regs);
             regs->AR(r3) = op6alet;
             INVALIDATE_AEA(r3, regs);
         }
-        ARCH_DEP(validate_operand) (op6addr, r3, 4-1,
- ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op6addr, r3, 4-1, ACCTYPE_WRITE, regs);
 
         /* Store 3rd op at 4th op */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1330,8 +1324,7 @@ VADR op4addr,
         DW_CHECK(op8addr, regs);
 
         /* Verify access to 8th operand */
-        ARCH_DEP(validate_operand) (op8addr, r3, 8-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op8addr, r3, 8-1,ACCTYPE_WRITE, regs);
 
         /* Verify access to 6th operand */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1339,8 +1332,7 @@ ACCTYPE_WRITE, regs);
             regs->AR(r3) = op6alet;
             INVALIDATE_AEA(r3, regs);
         }
-        ARCH_DEP(validate_operand) (op6addr, r3, 8-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op6addr, r3, 8-1,ACCTYPE_WRITE, regs);
 
         /* Store 3th op at 4th op */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1440,8 +1432,7 @@ VADR op4addr,
         DW_CHECK(op8addr, regs);
 
         /* Verify access to 8th operand */
-        ARCH_DEP(validate_operand) (op8addr, r3, 8-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op8addr, r3, 8-1,ACCTYPE_WRITE, regs);
 
         /* Verify access to 6th operand */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1449,8 +1440,7 @@ ACCTYPE_WRITE, regs);
             regs->AR(r3) = op6alet;
             INVALIDATE_AEA(r3, regs);
         }
-        ARCH_DEP(validate_operand) (op6addr, r3, 8-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op6addr, r3, 8-1,ACCTYPE_WRITE, regs);
 
         /* Store 3rd op at 4th op */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
@@ -1554,8 +1544,7 @@ VADR op4addr,
         DW_CHECK(op8addr, regs);
 
         /* Verify access to 8th operand */
-        ARCH_DEP(validate_operand) (op8addr, r3, 16-1,
-ACCTYPE_WRITE, regs);
+        ARCH_DEP(validate_operand) (op8addr, r3, 16-1,ACCTYPE_WRITE, regs);
 
         /* Verify access to 6th operand */
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
