@@ -690,7 +690,7 @@ int     eor = 0;                        /* 1=End of record received  */
 
     /* If zero bytes were received then client has closed connection */
     if (rc == 0) {
-        logmsg (_("HHC603I Device %4.4X connection closed by client %s\n"),
+        logmsg (_("HHCTE007I Device %4.4X connection closed by client %s\n"),
                 dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC | CSW_DE);
@@ -853,7 +853,7 @@ BYTE    c;                              /* Character work area       */
 
     /* If zero bytes were received then client has closed connection */
     if (num == 0) {
-        logmsg (_("HHC606I Device %4.4X connection closed by client %s\n"),
+        logmsg (_("HHCTE008I Device %4.4X connection closed by client %s\n"),
                 dev->devnum, inet_ntoa(dev->ipaddr));
         dev->sense[0] = SENSE_IR;
         return (CSW_ATTN | CSW_UC);
@@ -1143,7 +1143,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
         return NULL;
     }
 
-    logmsg (_("HHC604I Client %s connected to %4.4X device %4.4X\n"),
+    logmsg (_("HHCTE009I Client %s connected to %4.4X device %4.4X\n"),
             clientip, dev->devtype, dev->devnum);
 
     /* Send connection message to client */
@@ -1197,7 +1197,7 @@ BYTE                    unitstat;       /* Status after receive data */
     UNREFERENCED(arg);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHC600I Console connection thread started: "
+    logmsg (_("HHCTE001I Console connection thread started: "
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
@@ -1235,7 +1235,7 @@ BYTE                    unitstat;       /* Status after receive data */
 
         if (rc == 0 || errno != EADDRINUSE) break;
 
-        logmsg (_("HHC601I Waiting for port %u to become free\n"),
+        logmsg (_("HHCTE002W Waiting for port %u to become free\n"),
                 sysblk.cnslport);
         sleep(10);
     } /* end while */
@@ -1255,7 +1255,7 @@ BYTE                    unitstat;       /* Status after receive data */
         return NULL;
     }
 
-    logmsg (_("HHC602I Waiting for console connection on port %u\n"),
+    logmsg (_("HHCTE003I Waiting for console connection on port %u\n"),
             sysblk.cnslport);
 
     /* Handle connection requests and attention interrupts */
@@ -1400,7 +1400,7 @@ BYTE                    unitstat;       /* Status after receive data */
     /* Close the listening socket */
     close (lsock);
 
-    logmsg (_("HHC609I Console connection thread terminated\n"));
+    logmsg (_("HHCTE004I Console connection thread terminated\n"));
 
     return NULL;
 
@@ -1415,7 +1415,7 @@ console_initialise()
         if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
                             console_connection_handler, NULL) )
         {
-            logmsg (_("HHC135I Cannot create console thread: %s\n"),
+            logmsg (_("HHCTE005E Cannot create console thread: %s\n"),
                     strerror(errno));
             return 1;
         }
@@ -2284,7 +2284,7 @@ BYTE    stat;                           /* Unit status               */
             if (dev->prompt1052 == 1)
             {
                 len = sprintf (dev->buf,
-                        "HHC901I Enter input for console device %4.4X\r\n",
+                        "HHCTE006I Enter input for console device %4.4X\r\n",
                         dev->devnum);
                 rc = send_packet (dev->fd, dev->buf, len, NULL);
                 if (rc < 0)

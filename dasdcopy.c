@@ -370,7 +370,7 @@ char            buf[512];               /* FBA i/o buffer            */
         if (!quiet) status (i+1, n);
     }
 
-    if (!quiet) printf (_("\rCopy successful !!!       \n"));
+    if (!quiet) printf (_("\nCopy successful !!!       \n"));
     close_image_file(icif); close_image_file(ocif);
 
     return 0;
