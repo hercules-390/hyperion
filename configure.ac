@@ -107,7 +107,7 @@ fi
 
 # Library functions
 
-AC_CHECK_FUNCS(sqrtl getresuid)
+AC_CHECK_FUNCS(sqrtl setresuid setreuid)
 
 # User-definable settings
 
