@@ -1113,7 +1113,7 @@ static int write_het (DEVBLK *dev, BYTE *buf, U16 blklen,
                       BYTE *unitstat,BYTE code)
 {
 int             rc;                     /* Return code               */
-long          cursize;                /* Current size for size chk */
+size_t          cursize;                /* Current size for size chk */
 
     /* Check if we have already violated the size limit */
     if(dev->tdparms.maxsize>0)

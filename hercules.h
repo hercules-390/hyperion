@@ -1181,7 +1181,7 @@ typedef struct _DEVBLK {
                                         /* MVS 3.8j workaround       */
         U16 logical_readonly;       /* Tape is forced READ ONLY  */
             U16 chksize;                /* Chunk size                */
-            off_t maxsize;              /* Maximum allowed TAPE file
+            size_t maxsize;              /* Maximum allowed TAPE file
                                            size                      */
             size_t eotmargin;           /* Amount of space left
                                            before reporting EOT      */
