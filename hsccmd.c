@@ -2696,6 +2696,10 @@ int ProcessPanelCommand (const char* pszCmdLine)
        Note: original command line now sprinkled with nulls */
     parse_args((BYTE*)pszCmdLine, MAX_CMD_ARGS, cmd_argv, &cmd_argc);
 
+    if( system_command )
+        if( (rc = system_command(cmd_argc, (char**)cmd_argv,pszSaveCmdLine) ) )
+            return rc;
+
     /* Route standard formatted commands from our routing table... */
     if (cmd_argc)
         for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
@@ -2731,10 +2735,6 @@ int ProcessPanelCommand (const char* pszCmdLine)
         free(pszSaveCmdLine);
         return rc;
     }
-
-    if( system_command )
-        if( (rc = system_command(cmd_argc, (char**)cmd_argv,pszSaveCmdLine) ) )
-            return rc;
 
     /* Error: unknown/unsupported command... */
     logmsg( _("HHCPN139E Command \"%s\" not found; enter '?' for list.\n"),
