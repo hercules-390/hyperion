@@ -1001,6 +1001,127 @@ U64     old;                            /* Old value                 */
 #endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
 
 
+#if defined(FEATURE_DAT_ENHANCEMENT)
+/*-------------------------------------------------------------------*/
+/* B98E IDTE  - Invalidate DAT Table Entry                     [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(invalidate_dat_table_entry)
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+U64     asceto;                         /* ASCE table origin         */
+int     ascedt;                         /* ASCE designation type     */
+int     count;                          /* Invalidation counter      */
+int     eiindx;                         /* Eff. invalidation index   */
+U64     asce;                           /* Contents of ASCE          */
+BYTE   *main;                           /* Mainstor address of ASCE  */
+
+    RRF_M(inst, regs, r1, r2, r3);
+
+    PRIV_CHECK(regs);
+
+    /* Program check if bits 44-51 of r2 register are non-zero */
+    if (regs->GR_L(r2) & 0x000FF000)
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+#if defined(_FEATURE_SIE)
+    if(SIE_STATB(regs,IC0, IPTECSP))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
+
+#if defined(_FEATURE_SIE)
+    if(SIE_MODE(regs) && regs->sie_scao)
+    {
+        STORAGE_KEY(regs->sie_scao, regs) |= STORKEY_REF;
+        if(regs->mainstor[regs->sie_scao] & 0x80)
+            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+    }
+#endif /*defined(_FEATURE_SIE)*/
+
+    /* Perform serialization before starting operation */
+    PERFORM_SERIALIZATION (regs);
+
+    /* Bit 52 of the r2 register determines the operation performed */
+    if ((regs->GR_L(r2) & 0x00000800) == 0)
+    {
+        /* Perform invalidation-and-clearing operation */
+
+        /* Extract the invalidation table origin and type from r1 */
+        asceto = regs->GR_G(r1) & ASCE_TO;
+        ascedt = regs->GR_L(r1) & ASCE_DT;
+
+        /* Extract the effective invalidation index from r2 */
+        switch(ascedt) {
+        case TT_R1TABL: /* Region first table */
+            eiindx = (regs->GR_H(r2) & 0xFF700000) >> 18;
+            break;
+        case TT_R2TABL: /* Region second table */
+            eiindx = (regs->GR_H(r2) & 0x001FFC00) >> 7;
+            break;
+        case TT_R3TABL: /* Region third table */
+            eiindx = (regs->GR_G(r2) & 0x000003FF80000000ULL) >> 28;
+            break;
+        case TT_SEGTAB: /* Segment table */
+        default:
+            eiindx = (regs->GR_L(r2) & 0x7FF00000) >> 17;
+            break;
+        } /* end switch(ascedt) */
+
+        /* Calculate the address of table for invalidation, noting
+           that it is always a 64-bit address regardless of the
+           current addressing mode, and that overflow is ignored */
+        asceto += eiindx;
+
+        /* Extract the additional entry count from r2 */
+        count = (regs->GR_L(r2) & 0x7FF) + 1;
+
+        /* Perform invalidation of one or more table entries */
+        while (count-- > 0)
+        {
+            /* Fetch the table entry, set the invalid bit, then
+               store only the byte containing the invalid bit */
+            main = MADDR (asceto, USE_REAL_ADDR, regs, ACCTYPE_WRITE, regs->psw.pkey);
+            FETCH_DW(asce, main);
+            asce |= ZSEGTAB_I;
+            main[7] = asce & 0xFF;
+
+            /* Calculate the address of the next table entry, noting
+               that it is always a 64-bit address regardless of the
+               current addressing mode, and that overflow is ignored */
+            asceto += 8;
+        } /* end while */
+
+        /* Clear the TLB and signal all other CPUs to clear their TLB */
+        /* Note: Currently we clear all entries regardless of whether
+           a clearing ASCE is passed in the r3 register. This conforms
+           to the POP which only specifies the minimum set of entries
+           which must be cleared from the TLB. */
+        obtain_lock (&sysblk.intlock);
+        ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_PTLB, 0);
+        release_lock (&sysblk.intlock);
+
+    } /* end if(invalidation-and-clearing) */
+    else
+    {
+        /* Perform clearing-by-ASCE operation */
+
+        /* Clear the TLB and signal all other CPUs to clear their TLB */
+        /* Note: Currently we clear all entries regardless of the
+           clearing ASCE passed in the r3 register. This conforms
+           to the POP which only specifies the minimum set of entries
+           which must be cleared from the TLB. */
+        obtain_lock (&sysblk.intlock);
+        ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_PTLB, 0);
+        release_lock (&sysblk.intlock);
+
+    } /* end else(clearing-by-ASCE) */
+
+    /* Perform serialization after completing operation */
+    PERFORM_SERIALIZATION (regs);
+
+} /* end DEF_INST(invalidate_dat_table_entry) */
+#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
+
+
 #if defined(FEATURE_ESAME)
 /*-------------------------------------------------------------------*/
 /* E388 ALCG  - Add Logical with Carry Long                    [RXY] */
@@ -4527,7 +4648,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #if defined(FEATURE_ASN_AND_LX_REUSE)
     if(!sysblk.asnandlxreuse)
     {
-	    psa->stfl[0] &= ~STFL_0_ASN_LX_REUSE;
+            psa->stfl[0] &= ~STFL_0_ASN_LX_REUSE;
     }
 #endif
 
