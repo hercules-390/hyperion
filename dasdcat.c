@@ -281,6 +281,7 @@ int main(int argc, char **argv)
 {
  int rc = 0;
  CIFBLK *cif = 0;
+ char *fn, *sfn;
 
 #ifdef EXTERNALGUI
  if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0) {
@@ -294,7 +295,7 @@ int main(int argc, char **argv)
  display_version (stdout, "Hercules DASD cat program ");
 
  if (argc < 2) {
- fprintf(stderr, "Usage: dasdcat [-i dasd_image dsname...]...\n");
+ fprintf(stderr, "Usage: dasdcat [-i dasd_image [sf=shadow-file-name] dsname...]...\n");
  fprintf(stderr, " dsname can (currently must) be pdsname/spec\n");
  fprintf(stderr, " spec is memname[:flags], * (all) or ? (list)\n");
  fprintf(stderr, " flags can include (c)ard images, (a)scii\n");
@@ -309,20 +310,28 @@ int main(int argc, char **argv)
  */
  set_verbose_util(0);
 
- while (*++argv) {
- if (!strcmp(*argv, "-i")) {
- argv++;
- if (cif) {
- close_ckd_image(cif);
- cif = 0;
- }
- cif = open_ckd_image(*argv, O_RDONLY);
- if (!cif)
- fprintf(stderr, "failed to open image %s\n", *argv);
- } else {
- if (do_cat(cif, *argv))
- rc = 1;
- }
+ while (*++argv)
+ {
+     if (!strcmp(*argv, "-i"))
+     {
+         fn = *++argv;
+         if (*(argv+1) && strlen (*(argv+1)) > 3 && !memcmp(*(argv+1), "sf=", 3))
+             sfn = *++argv;
+         else sfn = NULL;
+         if (cif)
+         {
+             close_ckd_image(cif);
+             cif = 0;
+         }
+         cif = open_ckd_image(fn, sfn, O_RDONLY);
+         if (!cif)
+             fprintf(stderr, "failed to open image %s\n", *argv);
+     }
+     else
+     {
+         if (do_cat(cif, *argv))
+             rc = 1;
+     }
  }
 
  if (cif)
