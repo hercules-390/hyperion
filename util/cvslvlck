@@ -22,6 +22,7 @@ my @req = qw(
      make        3.79	0  http://www.gnu.org/directory/make.html
      perl        5.6	1  http://www.gnu.org/directory/perl/html
      sed         3.02	0  http://www.gnu.org/directory/sed.html
+     libtool     1.5    1  http://www.gnu.org/directory/libtool.html
 );
 my $cvsroot = ":pserver:anonymous\@cvs.conmicro.cx:/usr/cvs/hercules";
 my $msg;
@@ -100,6 +101,18 @@ sub weird {
 			my @resp = `perl --version`;
 			chomp $resp[1];
 			my $instversion = getvers($resp[1]);
+			my $msg = ckvers($level, $instversion);
+			print "$msg\t$facility requires $level, found $instversion\n";
+			print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		}
+		return;
+	}
+	if ($facility eq 'libtool') {
+		if (present($facility, $url)) {
+			my @resp = `libtoolize --version`;
+			print "\t$resp[0]\n";
+			chomp $resp[0];
+			my $instversion = getvers($resp[0]);
 			my $msg = ckvers($level, $instversion);
 			print "$msg\t$facility requires $level, found $instversion\n";
 			print "\tURL: $url\n" if $msg eq 'UPGRADE';
