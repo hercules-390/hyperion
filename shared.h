@@ -377,10 +377,9 @@ typedef char SHRD_TRACE[128];           /* Trace entry               */
 #define SHARED_DEFAULT_PORT      3990   /* Default shared port       */
 #define SHARED_PURGE_MAX           16   /* Max size of purge list    */
 #define SHARED_MAX_MSGLEN         255   /* Max message length        */
-#define SHARED_TIMEOUT             60   /* Disconnect timeout (sec)  */
+#define SHARED_TIMEOUT            120   /* Disconnect timeout (sec)  */
 #define SHARED_FORCE_TIMEOUT      300   /* Force disconnect (sec)    */
-#define SHARED_SELECT_WAIT         10   /* Select timeout (sec)      */
-#define SHARED_COMPRESS_PARM        2   /* Compression parameter     */
+#define SHARED_SELECT_WAIT          2   /* Select timeout (sec)      */
 #define SHARED_COMPRESS_MINLEN    512   /* Min length for compression*/
 
 typedef struct _SHRD {

@@ -1594,7 +1594,7 @@ struct stat     st;                     /* File status area          */
             return -1;
         }
 
-        if (fpos + len > st.st_size)
+        if ((off_t)(fpos + len) > (off_t)st.st_size)
         {
             int sz = fpos + len;
             /* FIXME - workaround for ftruncate() linux problem */
@@ -3799,7 +3799,7 @@ BYTE            buf[65536];             /* Buffer                    */
                 else
                 {
                     pos = (off_t)cckd->l1[sfx[1]][i];
-                    if (pos == 0 || pos == 0xffffffff)
+                    if (pos == 0 || pos == (off_t)0xffffffff)
                         pos = cckd_get_space (dev, CCKD_L2TAB_SIZE);
 
                     cckdtrc ("cckddasd: merging l2[%d] to %llx\n",

@@ -1321,7 +1321,7 @@ BYTE     cbuf[65536];                   /* Compress buffer           */
         newlen = 65536 - hdrlen;
         memcpy (cbuf, hdr, hdrlen);
         rc = compress2 (cbuf + hdrlen, &newlen,
-                        buf, buflen, SHARED_COMPRESS_PARM);
+                        buf, buflen, dev->rmtcomp);
         if (rc == Z_OK && (int)newlen < buflen) {
             flag = (SHRD_LIBZ << 4) | off;
             SHRD_SET_HDR (cbuf, cmd, flag, devnum, id, newlen + off);
