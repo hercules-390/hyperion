@@ -7,13 +7,13 @@
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
-extern HDLPRE hdl_preload[];            /* Preload list in hdlmain */
+extern HDLPRE hdl_preload[];             /* Preload list in hdlmain  */
 
-static DLLENT *hdl_dll;                 /* dll chain           */
-static LOCK   hdl_lock;
-static DLLENT *hdl_cdll;             /* current dll (hdl_lock) */
+static DLLENT *hdl_dll;                  /* dll chain                */
+static LOCK   hdl_lock;                  /* loader lock              */
+static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
 
-static HDLDEP *hdl_depend;            /* Version codes in hdlmain */
+static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
 /* hdl_list - list all entry points */
 void hdl_list()
@@ -40,6 +40,7 @@ MODENT *modent;
 }
 
 
+/* hdl_list - list all dependencies */
 void hdl_dlst()
 {
 HDLDEP *depent;
@@ -418,6 +419,8 @@ char *modname;
 }
 
 
+/* hdl_load - unload a dll
+ */
 int hdl_dele(char *name)
 {
 DLLENT **dllent, *tmpdll;
