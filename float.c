@@ -24,6 +24,7 @@
 /*                                         Peter Kuschnerus 13/12/00 */
 /* Long Displacement Facility: LDY,LEY,STDY,STEY   R.Bowler 29/06/03 */
 /* FPS Extensions Facility: LXR,LZER,LZDR,LZXR     R.Bowler 06juil03 */
+/* HFP Mult-Add/Sub: MAER,MAE,MSER,MSE,MADR,MAD,MSDR,MSD RB 09juil03 */
 /*-------------------------------------------------------------------*/
 
 
@@ -6135,18 +6136,313 @@ int     i1;                             /* Index of R1 in fpr array  */
 
 
 #if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
-/* The following instructions are not yet implemented */
-#define UNDEF_INST(_x) \
-        DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,execflag,regs); }
- UNDEF_INST(multiply_add_float_short_reg)
- UNDEF_INST(multiply_add_float_long_reg)
- UNDEF_INST(multiply_add_float_short)
- UNDEF_INST(multiply_add_float_long)
- UNDEF_INST(multiply_subtract_float_short_reg)
- UNDEF_INST(multiply_subtract_float_long_reg)
- UNDEF_INST(multiply_subtract_float_short)
- UNDEF_INST(multiply_subtract_float_long)
+/*-------------------------------------------------------------------*/
+/* B32E MAER  - Multiply and Add Floating Point Short Register [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_float_short_reg)
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+SHORT_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RRF_R(inst, execflag, regs, r1, r2, r3);
+    HFPREG2_CHECK(r1, r2, regs);
+    HFPREG_CHECK(r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_sf(&fl1, regs->fpr + i1);
+    get_sf(&fl2, regs->fpr + FPR2I(r2));
+    get_sf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply third and second operands */
+    mul_sf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Add the first operand with normalization */
+    pgm_check = add_sf(&fl1, &fl2, NORMAL, regs);
+
+    /* Store result back to first operand register */
+    store_sf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_add_float_short_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B32F MSER  - Multiply and Subtract Floating Point Short Reg [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_subtract_float_short_reg)
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+SHORT_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RRF_R(inst, execflag, regs, r1, r2, r3);
+    HFPREG2_CHECK(r1, r2, regs);
+    HFPREG_CHECK(r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_sf(&fl1, regs->fpr + i1);
+    get_sf(&fl2, regs->fpr + FPR2I(r2));
+    get_sf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply third and second operands */
+    mul_sf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Invert the sign of the first operand */
+    fl1.sign = ! (fl1.sign);
+
+    /* Subtract the first operand with normalization */
+    pgm_check = add_sf(&fl1, &fl2, NORMAL, regs);
+
+    /* Store result back to first operand register */
+    store_sf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_subtract_float_short_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B33E MADR  - Multiply and Add Floating Point Long Register  [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_float_long_reg)
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+LONG_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RRF_R(inst, execflag, regs, r1, r2, r3);
+    HFPREG2_CHECK(r1, r2, regs);
+    HFPREG_CHECK(r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply long third and second operands */
+    mul_lf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Store result back to first operand register */
+    store_lf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_add_float_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* B33F MSDR  - Multiply and Subtract Floating Point Long Reg  [RRF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_subtract_float_long_reg)
+{
+int     r1, r2, r3;                     /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+LONG_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RRF_R(inst, execflag, regs, r1, r2, r3);
+    HFPREG2_CHECK(r1, r2, regs);
+    HFPREG_CHECK(r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    get_lf(&fl2, regs->fpr + FPR2I(r2));
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply long third and second operands */
+    mul_lf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Invert the sign of the first operand */
+    fl1.sign = ! (fl1.sign);
+
+    /* Subtract the first operand with normalization */
+    pgm_check = add_sf(&fl1, &fl2, NORMAL, regs);
+
+    /* Store result back to first operand register */
+    store_lf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_subtract_float_long_reg) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED2E MAE   - Multiply and Add Floating Point Short          [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_float_short)
+{
+int     r1, r3;                         /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+SHORT_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RXF(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_sf(&fl1, regs->fpr + i1);
+    vfetch_sf(&fl2, effective_addr2, b2, regs );
+    get_sf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply third and second operands */
+    mul_sf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Add the first operand with normalization */
+    pgm_check = add_sf(&fl1, &fl2, NORMAL, regs);
+
+    /* Back to register */
+    store_sf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_add_float_short) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED2F MSE   - Multiply and Subtract Floating Point Short     [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_subtract_float_short)
+{
+int     r1, r3;                         /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+SHORT_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RXF(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_sf(&fl1, regs->fpr + i1);
+    vfetch_sf(&fl2, effective_addr2, b2, regs );
+    get_sf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply third and second operands */
+    mul_sf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Invert the sign of the first operand */
+    fl1.sign = ! (fl1.sign);
+
+    /* Subtract the first operand with normalization */
+    pgm_check = add_sf(&fl1, &fl2, NORMAL, regs);
+
+    /* Back to register */
+    store_sf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_subtract_float_short) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED3E MAD   - Multiply and Add Floating Point Long           [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_add_float_long)
+{
+int     r1, r3;                         /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+LONG_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RXF(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply long third and second operands */
+    mul_lf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Add long first operand with normalization */
+    pgm_check = add_lf(&fl1, &fl2, NORMAL, regs);
+
+    /* Back to register */
+    store_lf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_add_float_long) */
+
+
+/*-------------------------------------------------------------------*/
+/* ED3F MSD   - Multiply and Subtract Floating Point Long      [RXF] */
+/*-------------------------------------------------------------------*/
+DEF_INST(multiply_subtract_float_long)
+{
+int     r1, r3;                         /* Values of R fields        */
+int     i1;                             /* Index of R1 in fpr array  */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+LONG_FLOAT fl1, fl2, fl3;
+int     pgm_check;
+
+    RXF(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    HFPREG2_CHECK(r1, r3, regs);
+    i1 = FPR2I(r1);
+
+    /* Get the operands */
+    get_lf(&fl1, regs->fpr + i1);
+    vfetch_lf(&fl2, effective_addr2, b2, regs );
+    get_lf(&fl3, regs->fpr + FPR2I(r3));
+
+    /* Multiply long third and second operands */
+    mul_lf(&fl2, &fl3, NOCHKOVF, regs);
+
+    /* Invert the sign of the first operand */
+    fl1.sign = ! (fl1.sign);
+
+    /* Subtract long with normalization */
+    pgm_check = add_lf(&fl1, &fl2, NORMAL, regs);
+
+    /* Back to register */
+    store_lf(&fl1, regs->fpr + i1);
+
+    /* Program check ? */
+    if (pgm_check) {
+        ARCH_DEP(program_interrupt) (regs, pgm_check);
+    }
+
+} /* end DEF_INST(multiply_subtract_float_long) */
 #endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
 
 
