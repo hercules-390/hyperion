@@ -1152,6 +1152,7 @@ BYTE    c;                              /* Work area for sscanf      */
 
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
         dev->msgpipew = sysblk.msgpipew;
+    cckdblk.msgpipew = sysblk.msgpipew;
 
 #if defined(OPTION_FISHIO)
     ios_msgpipew = sysblk.msgpipew;
