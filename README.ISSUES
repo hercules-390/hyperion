@@ -9,3 +9,76 @@ Initial IPL of MVT fails with waitstate 0007.  Immediately repeating the
 IPL will then miraculously work!
 
 
+==============================================================================
+Fish; May 1, 2004: Cygwin / WinCVS (cvsnt) / tcl issue:
+
+After refreshing my Cygwin to the latest release, WinCVS stopped working. It
+would 'hang' almost immediately after starting. The opening dialog would be
+displayed and immediately upon dismissing it, it would hang.
+
+A bit of research revealed that a lack of coordination between the Cygwin and
+WinCVS development teams resulted in a DLL incompatibility issue that occurs
+whenever the Cygwin /bin directory is a part of the Windows executable search
+path.
+
+The latest version of Cygwin includes a "cygwin-ized" 'tcl' DLL (for Cygwin's
+Python support??), but the WinCVS product -- which has its own 'tcl' (Python)
+optional requirements as well -- requires a native Windows version (i.e. NON-
+"cygwin-ized" version) of the same 'tcl' DLL.
+
+'tcl' support in WinCVS is optional. Whenever it starts up, it tries loading
+the DLLs it needs to provide tcl (Python) support. If it doesn't find them,
+then it simply notifies the user that tcl support is missing and continues.
+
+If it finds them though (i.e. if WINDOWS returns "success" upon its request
+to load that particular DLL), then it thinks the user has Python installed
+and that it can thus provide tcl support to the user.
+
+The problem is of course that because the Cygwin /bin directory is in the
+user's search path, Windows "finds" the "cygwin-ized" version of the tcl DLL
+(which was obviously written to use various Cygwin functions and features
+which WinCVS obviously doesn't expect nor understand) instead of the normal
+"native Windows version" of the same DLL (which is the version that WinCVS
+normally expects to be loaded).
+
+On my system, the DLLs in question were called 'tcl83.dll' and 'tcl84.dll'.
+
+The resolution is to either: a) remove the Cygwin /bin directory from the
+Windows search path, or b) rename the 'tcl84.dll' (or whatever it's called)
+so that Windows doesn't find it whenever WinCVS asks that it be loaded, OR
+c) simply uninstall Cygwin's 'tcl' support (which is what I ended up doing).
+
+Voila! Cygwin still works (as far as I can tell) and WinCVS works just fine
+now.
+
+
+==============================================================================
+Fish; May 1, 2004: Herc build issue:
+
+Trying to build Herc failed, with the below message:
+
+  configure:5423: error: C++ preprocessor "/lib/cpp" fails sanity check
+
+Looking through the 'config.log' file, I find the following messages appearing
+in several different places:
+
+
+...
+
+
+CC: installation problem, cannot exec `cc1plus': No such file or directory
+
+
+...
+
+
+./configure: line 1: /lib/cpp: No such file or directory
+
+
+
+A bit of research revealed that autoconf(?) apparently now requires you to
+not only have the GNU gcc C compiler (just like normal), but ALSO the GNU C++
+compiler (i.e. 'g++') as well! After rerunning Cygwin setup and selecting g++
+for installation, ./configure then completed successfully.
+
+==============================================================================
