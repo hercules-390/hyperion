@@ -63,7 +63,6 @@
 SYSBLK            *psysblk;                    // (ptr to Herc's SYSBLK structure)
 #define  sysblk  (*psysblk)
 void* (*panel_command) (void*);
-int   (*parse_args)    (BYTE*, int, BYTE**, int*);
 #endif
 static FILE*    fInputStream         = NULL;   // (stdin stream)
 static FILE*    fOutputStream        = NULL;   // (stdout stream)
@@ -1128,7 +1127,6 @@ HDL_RESOLVER_SECTION;       // ("Resolve" needed entry-points)
 //            entry-points
 //            that we call
 HDL_RESOLVE ( panel_command );
-HDL_RESOLVE ( parse_args    );
 
 //                    Our pointer-     Registered entry-
 //                    variable name    point value name
