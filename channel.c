@@ -387,6 +387,8 @@ int      pending = 0;                   /* New interrupt pending     */
         signal_thread (sysblk.cnsltid, SIGUSR2);
     }
 
+    pending = (dev->pending || dev->pcipending);
+
     release_lock (&dev->lock);
 
     if (pending)
