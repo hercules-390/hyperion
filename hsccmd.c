@@ -62,7 +62,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     {
         if (!sysblk.shutdown)
         {
-            logmsg(_("HHCPNxxxE specify `quit' first\n"));
+            logmsg(_("HHCPN151E specify `quit' first\n"));
             return -1;
         }
 #if defined(FISH_HANG)
@@ -377,14 +377,14 @@ int cf_cmd(int argc, char *argv[], char *cmdline)
     if (IS_CPU_ONLINE(sysblk.pcpu))
     {
         if (on < 0)
-            logmsg(_("HHCPNxxxI CPU%4.4X online\n"), sysblk.pcpu);
+            logmsg(_("HHCPN152I CPU%4.4X online\n"), sysblk.pcpu);
         else if (on == 0)
             deconfigure_cpu(sysblk.pcpu);
     }
     else
     {
         if (on < 0)
-            logmsg(_("HHCPNxxxI CPU%4.4X offline\n"), sysblk.pcpu);
+            logmsg(_("HHCPN153I CPU%4.4X offline\n"), sysblk.pcpu);
         else if (on > 0)
             configure_cpu(sysblk.pcpu);
     }
@@ -420,14 +420,14 @@ int cfall_cmd(int argc, char *argv[], char *cmdline)
         if (IS_CPU_ONLINE(i))
         {
             if (on < 0)
-                logmsg(_("HHCPNxxxI CPU%4.4X online\n"), i);
+                logmsg(_("HHCPN154I CPU%4.4X online\n"), i);
             else if (on == 0)
                 deconfigure_cpu(i);
         }
         else
         {
             if (on < 0)
-                logmsg(_("HHCPNxxxI CPU%4.4X offline\n"), i);
+                logmsg(_("HHCPN155I CPU%4.4X offline\n"), i);
             else if (on > 0 && i < MAX_CPU)
                 configure_cpu(i);
         }
@@ -478,7 +478,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -622,7 +622,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -728,7 +728,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -756,7 +756,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -784,7 +784,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -812,7 +812,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -840,7 +840,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -871,7 +871,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -900,7 +900,7 @@ int restart_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock (&sysblk.intlock);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu );
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu );
         return 0;
     }
 
@@ -937,7 +937,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -964,7 +964,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -991,7 +991,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -1926,7 +1926,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2062,7 +2062,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2128,7 +2128,7 @@ REGS *regs;
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2811,7 +2811,7 @@ BYTE c;                                 /* Character work area       */
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.intlock);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
 
@@ -2931,7 +2931,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -2971,7 +2971,7 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     if (!IS_CPU_ONLINE(sysblk.pcpu))
     {
         release_lock(&sysblk.cpulock[sysblk.pcpu]);
-        logmsg( _("HHCPNxxxW CPU%4.4X not configured\n"), sysblk.pcpu);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
@@ -3164,13 +3164,13 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg(_("HHCPNxxxI (void *) ..........%7d\n"),sizeof(void *));
-    logmsg(_("HHCPNxxxI (unsigned int) ....%7d\n"),sizeof(unsigned int));
-    logmsg(_("HHCPNxxxI SYSBLK ............%7d\n"),sizeof(SYSBLK));
-    logmsg(_("HHCPNxxxI REGS ..............%7d\n"),sizeof(REGS));
-    logmsg(_("HHCPNxxxI DEVBLK ............%7d\n"),sizeof(DEVBLK));
-    logmsg(_("HHCPNxxxI TLB entry .........%7d\n"),sizeof(TLBE));
-    logmsg(_("HHCPNxxxI TLB table .........%7d\n"),sizeof(TLBE)*TLBN);
+    logmsg(_("HHCPN161I (void *) ..........%7d\n"),sizeof(void *));
+    logmsg(_("HHCPN162I (unsigned int) ....%7d\n"),sizeof(unsigned int));
+    logmsg(_("HHCPN163I SYSBLK ............%7d\n"),sizeof(SYSBLK));
+    logmsg(_("HHCPN164I REGS ..............%7d\n"),sizeof(REGS));
+    logmsg(_("HHCPN165I DEVBLK ............%7d\n"),sizeof(DEVBLK));
+    logmsg(_("HHCPN166I TLB entry .........%7d\n"),sizeof(TLBE));
+    logmsg(_("HHCPN167I TLB table .........%7d\n"),sizeof(TLBE)*TLBN);
     return 0;
 }
 

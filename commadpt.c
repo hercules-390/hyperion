@@ -1601,7 +1601,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         dev->commadpt->curpending=COMMADPT_PEND_TINIT;
         if(create_thread(&dev->commadpt->cthread,&sysblk.detattr,commadpt_thread,dev->commadpt))
         {
-            logmsg(D_("HHCCAxxxE create_thread: %s\n"),strerror(errno));
+            logmsg(D_("HHCCA022E create_thread: %s\n"),strerror(errno));
             release_lock(&dev->commadpt->lock);
             return -1;
         }

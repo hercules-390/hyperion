@@ -1120,7 +1120,7 @@ int cpu_init (int cpu, REGS *regs)
     regs->tlb = calloc (sizeof(TLBE), TLBN);
     if (!regs->tlb)
     {
-        logmsg (_("HHCCPxxxE CPU%4.4X: calloc failed for%s tlb: %s\n"),
+        logmsg (_("HHCCP078E CPU%4.4X: calloc failed for%s tlb: %s\n"),
                     cpu, regs->hostregs ? " sie" : "", strerror(errno));
             return -1;
     }
@@ -1135,7 +1135,7 @@ int cpu_init (int cpu, REGS *regs)
         regs->guestregs = calloc(sizeof(REGS), 1);
         if (!regs->guestregs)
         {
-            logmsg (_("HHCCPxxxE CPU%4.4X: calloc failed for sie regs: %s\n"),
+            logmsg (_("HHCCP079E CPU%4.4X: calloc failed for sie regs: %s\n"),
                     cpu, strerror(errno));
             return -1;
         }
@@ -1513,7 +1513,7 @@ zz_func opcode_table[256];
         }
         else
         {
-            logmsg (_("HHCCPxxxE CPU%4.4X malloc failed for archjmp regs: %s\n"),
+            logmsg (_("HHCCP080E CPU%4.4X malloc failed for archjmp regs: %s\n"),
                     cpu, strerror(errno));
             cpu_uninit (cpu, &regs);
         }

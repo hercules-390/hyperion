@@ -137,7 +137,7 @@ int signal_quiesce (U16 count, BYTE unit)
     /* Error if disabled for commands */
     if (!(servc_cp_recv_mask & (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1))))
     {
-        logmsg (_("HHCCPxxxE SCP not receiving quiesce signals\n"));
+        logmsg (_("HHCCP081E SCP not receiving quiesce signals\n"));
         return -1;
     }
 
@@ -148,7 +148,7 @@ int signal_quiesce (U16 count, BYTE unit)
        command with message indicating that service processor is busy */
     if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND))
     {
-        logmsg (_("HHCCPxxxE Service Processor busy\n"));
+        logmsg (_("HHCCP082E Service Processor busy\n"));
 
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);

@@ -381,7 +381,7 @@ static int cache_create (int ix)
     initialize_condition (&cacheblk[ix].waitcond);
     cacheblk[ix].cache = calloc (cacheblk[ix].nbr, sizeof(CACHE));
     if (cacheblk[ix].cache == NULL) {
-        logmsg (_("HHCCHxxxE calloc failed cache[%d] size %d: %s\n"),
+        logmsg (_("HHCCH001E calloc failed cache[%d] size %d: %s\n"),
                 ix, cacheblk[ix].nbr * sizeof(CACHE), strerror(errno));
         return -1;
     }
@@ -503,7 +503,7 @@ static int cache_resize (int ix, int n)
         /* Increase cache size */
         cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr + n) * sizeof(CACHE));
         if (cache == NULL) {
-            logmsg (_("HHCCHxxxW realloc increase failed cache[%d] size %d: %s\n"),
+            logmsg (_("HHCCH002W realloc increase failed cache[%d] size %d: %s\n"),
                ix, (cacheblk[ix].nbr + n) * sizeof(CACHE), strerror(errno));
             return 0;
         }
@@ -522,7 +522,7 @@ static int cache_resize (int ix, int n)
         if (n == 0) return 0; 
         cache = realloc (cacheblk[ix].cache, (cacheblk[ix].nbr - n) * sizeof(CACHE));
         if (cache == NULL) {
-            logmsg (_("HHCCHxxxW realloc decrease failed cache[%d] size %d: %s\n"),
+            logmsg (_("HHCCH003W realloc decrease failed cache[%d] size %d: %s\n"),
                ix, (cacheblk[ix].nbr - n) * sizeof(CACHE), strerror(errno));
             return 0;
         }
@@ -538,14 +538,14 @@ static void cache_allocbuf(int ix, int i, int len)
 {
     cacheblk[ix].cache[i].buf = calloc (len, 1);
     if (cacheblk[ix].cache[i].buf == NULL) {
-        logmsg (_("HHCCHxxxW buf calloc failed cache[%d] size %d: %s\n"),
+        logmsg (_("HHCCH004W buf calloc failed cache[%d] size %d: %s\n"),
                 ix, len, strerror(errno));
-        logmsg (_("HHCCHxxxW releasing inactive buffer space\n"));
+        logmsg (_("HHCCH005W releasing inactive buffer space\n"));
         for (i = 0; i < cacheblk[ix].nbr; i++)
             if (!cache_isbusy(ix, i)) cache_release(ix, i, CACHE_FREEBUF);
         cacheblk[ix].cache[i].buf = calloc (len, 1);
         if (cacheblk[ix].cache[i].buf == NULL) {
-            logmsg (_("HHCCHxxxE Unable to calloc buf cache[%d] size %d: %s\n"),
+            logmsg (_("HHCCH006E Unable to calloc buf cache[%d] size %d: %s\n"),
                     ix, len, strerror(errno));
             return;
         }
