@@ -241,12 +241,16 @@
 /*----------------------------------------------------------------------------*/
 #define PROCESS_MAX             4096	/* CPU-determined amount of data      */
 #define TRUEFALSE(boolean)	((boolean) ? "True" : "False")
-#if !defined(_GEN_ARCH)
-#define ADRFMT			"%016llX"
-#else
+#undef ADRFMT
+#define ADRFMT			"CMPSC not designed for this architecture"
+#if (_GEN_ARCH == _ARCHMODE2)
 #undef ADRFMT
 #define ADRFMT			"%08X"
-#endif /* !defined(_GEN_ARCH) */
+#endif /* (_GEN_ARCH == _ARCHMODE2) */
+#if (_GEN_ARCH == _ARCHMODE3)
+#undef ADRFMT
+#define ADRFMT			"%016llX"
+#endif /* (_GEN_ARCH == _ARCHMODE3) */
 
 /*----------------------------------------------------------------------------*/
 /* Compression status structure                                               */
