@@ -2608,8 +2608,8 @@ COMMAND ( "loadcore",  loadcore_cmd,  "load a core image file" )
 COMMAND ( "loadtext",  loadtext_cmd,  "load a text deck file\n" )
 
 #if defined(OPTION_DYNAMIC_LOAD)
-COMMAND ( "ldmod",     ldmod_cmd,     "load a module\n" )
-COMMAND ( "rmmod",     rmmod_cmd,     "delete a module\n" )
+COMMAND ( "ldmod",     ldmod_cmd,     "load a module" )
+COMMAND ( "rmmod",     rmmod_cmd,     "delete a module" )
 COMMAND ( "lsmod",     lsmod_cmd,     "list dynamic modules\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
