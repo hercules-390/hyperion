@@ -86,13 +86,16 @@ SVC Simulation
 Non-Implemented assists :
 
 CP ASSISTS :
+FREE/FRET : (Original (up to level 19)
+            CP Storage Management - replaced by FREEX/FRETX)
 CCWGN, DFCCW, DNCCW, UXCCW : CCW/CSW Translation assists
 LCSPG : Locate Changed Shared Page
 VIPT, VIST : Virtual Translation Page/Segment Invalidation
 LINK/RETURN (SVC 8/SVC 12)
 Prefered Machine Assists
+.. Maybe others ...
 
-Non-implemented VM Assists :
+VM ASSISTS :
 SIO
 DIAG
 IUCV
@@ -100,6 +103,7 @@ STxSM
 ISK/SSK
 LRA
 VM Assists for MVS
+.. Maybe others ...
 
 *****************
 
