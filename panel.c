@@ -1450,6 +1450,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 
             if (redraw_status && !sysblk.npquiet)
             {
+                if(regs->cpuonline)
                 /* Display the PSW and instruction counter for CPU 0 */
                 fprintf (confp,
                     "%s"
@@ -1485,7 +1486,11 @@ struct  timeval tv;                     /* Select timeout structure  */
 #endif /*defined(_FEATURE_SIE)*/
                     (long long)regs->instcount,
                     ANSI_ERASE_EOL);
-
+                else
+                fprintf (confp,
+                    ANSI_ROW24_COL1 ANSI_YELLOW_RED
+                    "CPU Offline"
+                    ANSI_ERASE_EOL);
             } /* end if(redraw_status) */
 
             if (redraw_cmd)
