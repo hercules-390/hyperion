@@ -553,7 +553,7 @@ do { \
 #endif
 
 #define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)       \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((AEIND(_addr)))) &&      \
+    (((_addr) & PAGEFRAME_PAGEMASK) + (_regs)->aeID == (_regs)->VE((AEIND(_addr)))) &&      \
     ((_arn) >= 0) &&                              \
     (((_regs)->aekey[(AEIND(_addr))] == (_akey)) || (_akey) == 0) &&          \
     (((_regs)->aenoarn) || ((_regs)->aearn[AEIND(_addr)] == (_arn))) && \
@@ -566,7 +566,7 @@ do { \
     ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
 
 #define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey)       \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((AEIND(_addr)))) &&      \
+    (((_addr) & PAGEFRAME_PAGEMASK) + (_regs)->aeID == (_regs)->VE((AEIND(_addr)))) &&      \
     ((_arn) >= 0) &&                              \
     (((_regs)->aekey[(AEIND(_addr))] == (_akey)) || (_akey) == 0) &&          \
     (((_regs)->aenoarn) || ((_regs)->aearn[AEIND(_addr)] == (_arn))) && \
@@ -578,10 +578,11 @@ do { \
 do { \
     int i; \
     for(i = 0; i < MAXAEA; i++) \
-    if ((_regs)->aearn[i] == (_arn)) \
+        if ((_regs)->aearn[i] == (_arn)) \
             (_regs)->VE(i) = 1; \
 } while(0)
 
+#if 0
 #define INVALIDATE_AEA_ALL(_regs) \
 do { \
     int i; \
@@ -589,6 +590,18 @@ do { \
     for(i = 0; i < MAXAEA; i++) \
         (_regs)->VE(i) = 1; \
 } while(0)
+#else
+#define INVALIDATE_AEA_ALL(_regs) \
+do { \
+    (_regs)->aenoarn = 0; \
+    (_regs)->aeID++; \
+    if ((_regs)->aeID == PAGEFRAME_PAGESIZE) \
+    { \
+        regs->aeID = 1; \
+        memset((_regs)->ve, 0, 256*sizeof(DW)); \
+    } \
+} while (0)
+#endif
 
 #else /*!defined(OPTION_AEA_BUFFER)*/
 

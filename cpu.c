@@ -1449,7 +1449,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 #if defined(FEATURE_ACCESS_REGISTERS)
 #undef HLOGICAL_TO_ABS_READ
 #define HLOGICAL_TO_ABS_READ(_addr, _arn, _regs, _akey)           \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) && \
+    (((_addr) & PAGEFRAME_PAGEMASK) + (_regs).aeID == (_regs).VE((AEIND((_addr))))) && \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&   \
     (((_regs).aenoarn) || ((_regs).aearn[AEIND((_addr))] == (_arn))) && \
     ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_READ) ?                          \
@@ -1459,7 +1459,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
 #undef HLOGICAL_TO_ABS_WRITE
 #define HLOGICAL_TO_ABS_WRITE(_addr, _arn, _regs, _akey)           \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) &&      \
+    (((_addr) & PAGEFRAME_PAGEMASK) + (_regs).aeID == (_regs).VE((AEIND((_addr))))) &&      \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&          \
     (((_regs).aenoarn) || ((_regs).aearn[AEIND((_addr))] == (_arn))) && \
     ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_WRITE) ?                          \
@@ -1469,7 +1469,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 #else
 #undef HLOGICAL_TO_ABS_READ
 #define HLOGICAL_TO_ABS_READ(_addr, _arn, _regs, _akey)           \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) && \
+    (((_addr) & PAGEFRAME_PAGEMASK) + (_regs).aeID == (_regs).VE((AEIND((_addr))))) && \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&   \
     ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_READ) ?                          \
             (STORAGE_KEY((_regs).AE((AEIND((_addr))))) |= STORKEY_REF,                 \
@@ -1478,7 +1478,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
 #undef HLOGICAL_TO_ABS_WRITE
 #define HLOGICAL_TO_ABS_WRITE(_addr, _arn, _regs, _akey)           \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) &&      \
+    (((_addr) & PAGEFRAME_PAGEMASK) + (_regs).aeID == (_regs).VE((AEIND((_addr))))) &&      \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&          \
     ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_WRITE) ?                          \
             (STORAGE_KEY((_regs).AE((AEIND((_addr))))) |= (STORKEY_REF | STORKEY_CHANGE), \

@@ -425,7 +425,8 @@ typedef struct _REGS {                  /* Processor registers       */
         int     aeacc[16];              /* Access type               */
         int     aearn[16];              /* Address room              */
 #endif
-        int     aenoarn;                /* no access mode           */
+        int     aenoarn;                /* no access mode            */
+        int     aeID;                   /* Current AE ID             */
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */

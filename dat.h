@@ -1877,7 +1877,7 @@ int     aeind;
 #endif
         aeind = AEIND(addr);
         regs->AE(aeind) = aaddr & STORAGE_KEY_PAGEMASK;
-        regs->VE(aeind) = addr & STORAGE_KEY_PAGEMASK;
+        regs->VE(aeind) = (addr & STORAGE_KEY_PAGEMASK) + regs->aeID;
         regs->aekey[aeind] = akey;
         regs->aeacc[aeind] = acctype;
         if (!regs->aenoarn)
