@@ -114,7 +114,8 @@ fi
 
 # Library functions
 
-AC_CHECK_FUNCS(sqrtl setresuid setreuid)
+AC_CHECK_FUNCS(sqrtl)
+AC_CHECK_FUNCS([setresuid setreuid], [break])
 
 # User-definable settings
 
@@ -181,6 +182,22 @@ else
   CFLAGS="$OFLAGS $CFLAGS"
 fi
 
+AC_ARG_ENABLE(external-gui,
+              [  --enable-external-gui         Build interface to external Windows  GUI],
+              [case "${enableval}" in
+                 yes) build_external_gui=true ;;
+                 no) build_external_gui=false ;;
+                 *) AC_MSG_ERROR(bad value ${enableval} for --enable-external-gui) ;;
+               esac],
+              [case "$host_os" in
+                 *cygwin*) build_external_gui=true ;;
+                 *) build_external_gui=false ;;
+               esac])
+
+if test x$build_external_gui = xtrue; then
+  AC_DEFINE([EXTERNALGUI])
+fi
+
 AH_TEMPLATE([NO_ATTR_REGPARM],
 	    [Define if your gcc does not support __attribute__((regparm(n)))])
 AH_TEMPLATE([NO_ASM_BYTESWAP],
@@ -191,5 +208,7 @@ AH_TEMPLATE([CCKD_BZIP2],
 	    [Define to enable bzip2 compression in emulated DASDs])
 AH_TEMPLATE([HET_BZIP2],
 	    [Define to enable bzip2 compression in emulated tapes])
+AH_TEMPLATE([EXTERNALGUI],
+            [Define to build interface to external Windows GUI])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
