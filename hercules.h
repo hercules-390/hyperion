@@ -486,8 +486,8 @@ typedef struct _REGS {                  /* Processor registers       */
 #define INTCOND       regs->intcond
 #else /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 #define WAKEUP_CPU(cpu)               broadcast_condition(&sysblk.intcond)
-#define WAKEUP_WAITING_CPU    WAKEUP_CPU(0)
-#define WAKEUP_WAITING_CPUS   WAKEUP_CPU(0)
+#define WAKEUP_WAITING_CPU(m,s)       WAKEUP_CPU(0)
+#define WAKEUP_WAITING_CPUS(m,s)      WAKEUP_CPU(0)
 #define INTCOND       sysblk.intcond
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 
