@@ -424,7 +424,7 @@ REGS *regs;
 
     if(!select_gr)
     {
-        fprintf(webblk->hsock,"<form>\n"
+        fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_gr "
                               "value=\"Select General Registers\">\n"
                               "<input type=hidden name=cpu value=%d>\n" 
@@ -434,7 +434,7 @@ REGS *regs;
     }
     else
     {
-        fprintf(webblk->hsock,"<form>\n"
+        fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_gr "
                               "value=\"Hide General Registers\">\n"
                               "<input type=hidden name=cpu value=%d>\n" 
@@ -468,7 +468,7 @@ REGS *regs;
 
     if(!select_cr)
     {
-        fprintf(webblk->hsock,"<form>\n"
+        fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_cr "
                               "value=\"Select Control Registers\">\n"
                               "<input type=hidden name=cpu value=%d>\n" 
@@ -478,7 +478,7 @@ REGS *regs;
     }
     else
     {
-        fprintf(webblk->hsock,"<form>\n"
+        fprintf(webblk->hsock,"<form method=post>\n"
                               "<input type=submit name=select_cr "
                               "value=\"Hide Control Registers\">\n"
                               "<input type=hidden name=cpu value=%d>\n" 
@@ -514,7 +514,7 @@ REGS *regs;
     {
         if(!select_ar)
         {
-            fprintf(webblk->hsock,"<form>\n"
+            fprintf(webblk->hsock,"<form method=post>\n"
                                   "<input type=submit name=select_ar "
                                   "value=\"Select Access Registers\">\n"
                                   "<input type=hidden name=cpu value=%d>\n" 
@@ -524,7 +524,7 @@ REGS *regs;
         }
         else
         {
-            fprintf(webblk->hsock,"<form>\n"
+            fprintf(webblk->hsock,"<form method=post>\n"
                                   "<input type=submit name=select_ar "
                                   "value=\"Hide Access Registers\">\n"
                                   "<input type=hidden name=cpu value=%d>\n" 
@@ -547,7 +547,7 @@ REGS *regs;
                                   "<input type=hidden name=select_gr value=%c>\n" 
                                   "<input type=hidden name=select_cr value=%c>\n" 
                                   "<input type=hidden name=select_ar value=S>\n" 
-                                  "</form>\n",select_gr?'S':'H',select_cr?'S':'H',cpu);
+                                  "</form>\n",cpu,select_gr?'S':'H',select_cr?'S':'H');
         }
     }
 
