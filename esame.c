@@ -297,7 +297,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     pl_addr = !regs->execflag ? (regs->psw.IA & ADDRESS_MAXWRAP(regs)) : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
-    mn = MADDR (pl_addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    mn = MADDR (pl_addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
     FETCH_HW(flags, mn);
 
 #if defined(FEATURE_ESAME)
@@ -310,22 +310,22 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch the offset to the new psw */
-    mn = MADDR (pl_addr + 2, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    mn = MADDR (pl_addr + 2, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
     FETCH_HW(psw_offset, mn);
 
     /* Fetch the offset to the new ar */
-    mn = MADDR (pl_addr + 4, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    mn = MADDR (pl_addr + 4, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
     FETCH_HW(ar_offset, mn);
 
     /* Fetch the offset to the new gr */
-    mn = MADDR (pl_addr + 6, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    mn = MADDR (pl_addr + 6, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
     FETCH_HW(gr_offset, mn);
 
 #if defined(FEATURE_ESAME)
     /* Fetch the offset to the new disjoint gr_h */
     if((flags & 0x0003) == 0x0003)
     {
-        mn = MADDR (pl_addr + 8, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+        mn = MADDR (pl_addr + 8, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
         FETCH_HW(grd_offset, mn);
     }
 #endif /*defined(FEATURE_ESAME)*/
