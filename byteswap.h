@@ -10,13 +10,13 @@
 
 #if !defined(NO_ASM_BYTESWAP)
 
-extern __inline__ __attribute__ ((regparm(1))) u_int16_t bswap_16(u_int16_t x)
+extern __inline__ ATTR_REGPARM(1) u_int16_t bswap_16(u_int16_t x)
 {
         __asm__("xchgb %b0,%h0" : "=q" (x) :  "0" (x));
         return x;
 }
 
-extern __inline__ __attribute__ ((regparm(1))) u_int32_t bswap_32(u_int32_t x)
+extern __inline__ ATTR_REGPARM(1) u_int32_t bswap_32(u_int32_t x)
 {
         __asm__("bswap %0" : "=r" (x) : "0" (x));
         return x;

@@ -75,6 +75,12 @@
 #undef SIEBK
 /* The default mode is 900, basic ESAME */
 
+#if !defined(NO_ATTR_REGPARM)
+#define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
+#else
+#define ATTR_REGPARM(n) /* nothing */
+#endif
+
 #if !defined(_GEN_ARCH)
 #define _GEN_ARCH 900
 #endif
@@ -84,7 +90,7 @@
 #define ARCH_MODE	ARCH_370
 
 #define DEF_INST(_name) \
-__attribute__ ((regparm(3))) void s370_ ## _name (BYTE inst[], int execflag, REGS *regs)
+ATTR_REGPARM(3) void s370_ ## _name (BYTE inst[], int execflag, REGS *regs)
 
 #define ARCH_DEP(_name) \
 s370_ ## _name
@@ -158,7 +164,7 @@ s370_ ## _name
 #define ARCH_MODE	ARCH_390
 
 #define DEF_INST(_name) \
-__attribute__ ((regparm(3))) void s390_ ## _name (BYTE inst[], int execflag, REGS *regs)
+ATTR_REGPARM(3) void s390_ ## _name (BYTE inst[], int execflag, REGS *regs)
 
 #define ARCH_DEP(_name) \
 s390_ ## _name
@@ -256,7 +262,7 @@ s390_ ## _name
 #define SSGROUP_BIT	ASCE_G
 
 #define DEF_INST(_name) \
-__attribute__ ((regparm(3))) void z900_ ## _name (BYTE inst[], int execflag, REGS *regs)
+ATTR_REGPARM(3) void z900_ ## _name (BYTE inst[], int execflag, REGS *regs)
 
 #define ARCH_DEP(_name) \
 z900_ ## _name
