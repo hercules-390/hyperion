@@ -137,14 +137,13 @@ usage( char *name )
     printf( help, name, name );
 }
 
-static char main_buf[ HETMAX_BLOCKSIZE ];
-
 /*
 || Standard main
 */
 int
 main( int argc, char *argv[] )
 {
+    char buf[ HETMAX_BLOCKSIZE ];
     HETB *hetb;
     int rc;
     int fileno;
@@ -266,7 +265,7 @@ main( int argc, char *argv[] )
         }
 #endif /*EXTERNALGUI*/
 
-        rc = het_read( hetb, main_buf );
+        rc = het_read( hetb, buf );
         if( rc == HETE_EOT )
         {
             break;
@@ -322,12 +321,12 @@ main( int argc, char *argv[] )
 
         if( opts & O_LABELS )
         {
-            printlabel( main_buf, rc );
+            printlabel( buf, rc );
         }
 
         if( opts & O_DATASETS )
         {
-            printdataset( main_buf, rc, fileno );
+            printdataset( buf, rc, fileno );
         }
     }
 

@@ -120,8 +120,6 @@ closetapes( int rc )
     return;
 }
 
-static char copytape_buf[ HETMAX_BLOCKSIZE ];
-
 /*
 || Copy source to dest
 */
@@ -129,6 +127,7 @@ static int
 copytape( void )
 {
     int rc;
+    char buf[ HETMAX_BLOCKSIZE ];
 
     while( TRUE )
     {
@@ -145,7 +144,7 @@ copytape( void )
         }
 #endif /*EXTERNALGUI*/
 
-        rc = het_read( s_hetb, copytape_buf );
+        rc = het_read( s_hetb, buf );
         if( rc == HETE_EOT )
         {
             rc = 0;
@@ -169,7 +168,7 @@ copytape( void )
             break;
         }
 
-        rc = het_write( d_hetb, copytape_buf, rc );
+        rc = het_write( d_hetb, buf, rc );
         if( rc < 0 )
         {
             printf( "het_write() returned %d\n", rc );

@@ -751,8 +751,6 @@ het_read_header( HETB *hetb )
 
 ==DOC==*/
 
-static char het_read_tbuf[ HETMAX_BLOCKSIZE ];
-
 int
 het_read( HETB *hetb, void *sbuf )
 {
@@ -761,6 +759,7 @@ het_read( HETB *hetb, void *sbuf )
     unsigned long slen;
     int flags;
     unsigned long tlen;
+    char tbuf[ HETMAX_BLOCKSIZE ];
 
     /*
     || Initialize
@@ -804,7 +803,7 @@ het_read( HETB *hetb, void *sbuf )
             {
                 if( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS )
                 {
-                    tptr = het_read_tbuf;
+                    tptr = tbuf;
                 }
             }
 
@@ -888,7 +887,7 @@ het_read( HETB *hetb, void *sbuf )
             case HETHDR_FLAGS1_ZLIB:
                 slen = HETMAX_BLOCKSIZE;
 
-                rc = uncompress( sbuf, &slen, het_read_tbuf, tlen );
+                rc = uncompress( sbuf, &slen, tbuf, tlen );
                 if( rc != Z_OK )
                 {
                     errno = rc;
@@ -905,7 +904,7 @@ het_read( HETB *hetb, void *sbuf )
 
                 rc = BZ2_bzBuffToBuffDecompress( sbuf,
                                                  (unsigned int *) &slen,
-                                                 het_read_tbuf,
+                                                 tbuf,
                                                  tlen,
                                                  0,
                                                  0 );
@@ -1177,14 +1176,13 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
 
 ==DOC==*/
 
-static char het_write_tbuf[ ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12) ];
-
 int
 het_write( HETB *hetb, void *sbuf, int slen )
 {
     int rc;
     int flags;
     unsigned long tlen;
+    char tbuf[ ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12) ];
 
     /*
     || Validate
@@ -1213,9 +1211,9 @@ het_write( HETB *hetb, void *sbuf, int slen )
         {
 #if defined(HAVE_LIBZ)
             case HETHDR_FLAGS1_ZLIB:
-                tlen = sizeof( het_write_tbuf );
+                tlen = sizeof( tbuf );
 
-                rc = compress2( het_write_tbuf, &tlen, sbuf, slen, hetb->level );
+                rc = compress2( tbuf, &tlen, sbuf, slen, hetb->level );
                 if( rc != Z_OK )
                 {
                     errno = rc;
@@ -1224,7 +1222,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
                 if( (int)tlen < slen )
                 {
-                    sbuf = het_write_tbuf;
+                    sbuf = tbuf;
                     slen = tlen;
                     flags |= HETHDR_FLAGS1_ZLIB;
                 }
@@ -1233,9 +1231,9 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
-                tlen = sizeof( het_write_tbuf );
+                tlen = sizeof( tbuf );
 
-                rc = BZ2_bzBuffToBuffCompress( het_write_tbuf,
+                rc = BZ2_bzBuffToBuffCompress( tbuf,
                                                (unsigned int *) &tlen,
                                                sbuf,
                                                slen,
@@ -1250,7 +1248,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
                 if( (int)tlen < slen )
                 {
-                    sbuf = het_write_tbuf;
+                    sbuf = tbuf;
                     slen = tlen;
                     flags |= HETHDR_FLAGS1_BZLIB;
                 }

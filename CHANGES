@@ -1,5 +1,8 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+29 Sep 2003 Backout STUPID (dangerous) 16 Aug 2003 het changes now that
+            configure.ac detects the bug that was causing it - Fish
+            (I can't believe I did that; I must have been tired)
 27 Sep 2003 Correct Makefile.am Transient variable names to not end
             with automake primaries - Ivan Warren
 25 Sep 2003 PowerOff diagnose for 4361 & 937X processors - Tomas Masek by Fish
