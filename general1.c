@@ -3014,7 +3014,7 @@ GREG    len3;
     if ( len2 > 1 && len1 > 1
         && (!ACCESS_REGISTER_MODE(&(regs->psw))
             || (r1 == 0 ? 0 : regs->AR(r1))
-               != (r2 == 0 ? 0 : regs->AR(r2))))
+               == (r2 == 0 ? 0 : regs->AR(r2))))
     {
         n = addr2 + ((len2 < len1) ? len2 : len1) - 1;
         n &= ADDRESS_MAXWRAP(regs);

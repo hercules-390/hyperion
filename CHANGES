@@ -1,3 +1,4 @@
+19 Jun 2001 Correct check for MVCL in different spaces - Jan Jaeger
 19 Jun 2001 Prevent msg HHC611I during machine check - Jan Jaeger
 19 Jun 2001 Enhance MVCL cc3 diagostics - Jan Jaeger
 18 Jun 2001 Add missing obtain_lock(devlock) to halt function - Fish
