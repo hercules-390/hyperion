@@ -1,3 +1,5 @@
+10 Oct 2001 SMP performance - phase 1 - remove usleep(1) by default from
+            CS instructions - Greg Smith
 10 Oct 2001 Define "signal_thread" macro as a 'nop' for WIN32 builds
 10 Oct 2001 Add IS_CCW_SET_EXTENDED test to channel.c's write-ccw handling logic
             to fix a problem that was preventing TCP/IP in VM from working on
