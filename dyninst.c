@@ -20,6 +20,7 @@
 /* does not support backlink and we need to resolve symbols during   */
 /* dll initialisation (REGISTER/RESOLVER). Opcode tables are renamed */
 /* such that no naming conflicts occur.                              */
+ #define copy_opcode_tables copy_opcode_tables_r
  #define opcode_table opcode_table_r
  #define opcode_01xx  opcode_01xx_r
  #define opcode_a5xx  opcode_a5xx_r
@@ -35,14 +36,12 @@
  #define opcode_ebxx  opcode_ebxx_r
  #define opcode_ecxx  opcode_ecxx_r
  #define opcode_edxx  opcode_edxx_r
- #define s370_opcode_table s370_opcode_table_r
- #define s390_opcode_table s390_opcode_table_r
- #define z900_opcode_table z900_opcode_table_r
 #endif
 
 #include "opcode.h"
 
 #if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
+ #undef copy_opcode_tables
  #undef opcode_table
  #undef opcode_01xx
  #undef opcode_a5xx
@@ -58,9 +57,6 @@
  #undef opcode_ebxx
  #undef opcode_ecxx
  #undef opcode_edxx
- #undef s370_opcode_table
- #undef s390_opcode_table
- #undef z900_opcode_table
 #endif
 
 #include "inline.h"
@@ -100,6 +96,7 @@ static zz_func save_edxx[256][GEN_MAXARCH];
 
 #if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 static int opcodes_saved;
+static void copy_opcode_tables ();
 static void * opcode_table;
 static void * opcode_01xx;
 #if defined (FEATURE_VECTOR_FACILITY)
@@ -117,9 +114,6 @@ static void * opcode_e6xx;
 static void * opcode_ebxx;
 static void * opcode_ecxx;
 static void * opcode_edxx;
-static void * s370_opcode_table;
-static void * s390_opcode_table;
-static void * z900_opcode_table;
 #endif
 
 static char *prefix[] = {
@@ -294,6 +288,7 @@ int opcode, extop;
 #if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
     if(!opcodes_saved)
     {
+        HDL_RESOLVE(copy_opcode_tables);
         HDL_RESOLVE(opcode_table);
         HDL_RESOLVE(opcode_01xx);
 #if defined(FEATURE_VECTOR_FACILITY)
@@ -311,9 +306,6 @@ int opcode, extop;
         HDL_RESOLVE(opcode_ebxx);
         HDL_RESOLVE(opcode_ecxx);
         HDL_RESOLVE(opcode_edxx);
-        HDL_RESOLVE(s370_opcode_table);
-        HDL_RESOLVE(s390_opcode_table);
-        HDL_RESOLVE(z900_opcode_table);
 
         opcode_save();
 
@@ -404,19 +396,8 @@ int opcode, extop;
 
     }
 
-    /* Copy opcodes to performance shadow table */
-    for (opcode = 0; opcode < 256; opcode++)
-    {
-#if defined(_370)
-        copy_opcode(s370_opcode_table,opcode_table,opcode,ARCH_370);
-#endif
-#if defined(_390)
-        copy_opcode(s390_opcode_table,opcode_table,opcode,ARCH_390);
-#endif
-#if defined(_900)
-        copy_opcode(z900_opcode_table,opcode_table,opcode,ARCH_900);
-#endif
-    }
+    /* Copy opcodes to performance shadow tables */
+    copy_opcode_tables();
 
 } END_RESOLVER_SECTION;
 

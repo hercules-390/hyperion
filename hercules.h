@@ -455,6 +455,7 @@ typedef struct _VFREGS {                /* Vector Facility Registers*/
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 
 typedef void    (*SIEFN) ();
+typedef void    (ATTR_REGPARM(2)(*FUNC))();
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for CPU register context                     */
@@ -628,6 +629,26 @@ typedef struct _REGS {                  /* Processor registers       */
         jmp_buf archjmp;                /* longjmp destination to
                                            switch architecture mode  */
         COND    intcond;                /* CPU interrupt condition   */
+
+     /* Opcode table pointers                                        */
+
+        FUNC   *s370_opcode_table;
+        FUNC   *s370_opcode_a4xx, *s370_opcode_a5xx, *s370_opcode_a6xx,
+               *s370_opcode_b2xx, *s370_opcode_e4xx, *s370_opcode_e5xx,
+               *s370_opcode_e6xx, *s370_opcode_edxx;
+
+        FUNC   *s390_opcode_table;
+        FUNC   *s390_opcode_01xx, *s390_opcode_a4xx, *s390_opcode_a5xx, 
+               *s390_opcode_a6xx, *s390_opcode_a7xx, *s390_opcode_b2xx,
+               *s390_opcode_b3xx, *s390_opcode_b9xx, *s390_opcode_c0xx,
+               *s390_opcode_e3xx, *s390_opcode_e4xx, *s390_opcode_e5xx,
+               *s390_opcode_ebxx, *s390_opcode_ecxx, *s390_opcode_edxx;
+
+        FUNC   *z900_opcode_table;
+        FUNC   *z900_opcode_01xx, *z900_opcode_a5xx, *z900_opcode_a7xx,
+               *z900_opcode_b2xx, *z900_opcode_b3xx, *z900_opcode_b9xx,
+               *z900_opcode_c0xx, *z900_opcode_e3xx, *z900_opcode_e5xx,
+               *z900_opcode_ebxx, *z900_opcode_ecxx, *z900_opcode_edxx;
 
      /* AIA - Instruction fetch accelerator                          */
 

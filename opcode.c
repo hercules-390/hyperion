@@ -694,81 +694,85 @@
    as the called routine has the same arguments, and the routine
    exits immediately after the call.                             *JJ */
 
+#if ARCH_MODE != ARCH_370
 DEF_INST(execute_01xx)
 {
-    opcode_01xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_01xx)[inst[1]](inst, regs);
 }
 
 
 DEF_INST(execute_a7xx)
 {
-    opcode_a7xx[inst[1] & 0x0F][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_a7xx)[inst[1]](inst, regs);
 }
+#endif
 
 
 DEF_INST(execute_b2xx)
 {
-    opcode_b2xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_b2xx)[inst[1]](inst, regs);
 }
 
 
 #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 DEF_INST(execute_b3xx)
 {
-    opcode_b3xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_b3xx)[inst[1]](inst, regs);
 }
 
 DEF_INST(execute_edxx)
 {
-    opcode_edxx[inst[5]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_edxx)[inst[5]](inst, regs);
 }
 #endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
 
 DEF_INST(execute_e5xx)
 {
-    opcode_e5xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_e5xx)[inst[1]](inst, regs);
 }
 
+#if ARCH_MODE == ARCH_370
 DEF_INST(execute_e6xx)
 {
-    opcode_e6xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_e6xx)[inst[1]](inst, regs);
 }
+#endif
 
 #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
 DEF_INST(execute_a5xx)
 {
-    opcode_a5xx[inst[1] & 0x0F][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
 }
 
 
 DEF_INST(execute_b9xx)
 {
-    opcode_b9xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_b9xx)[inst[1]](inst, regs);
 }
 
 
 DEF_INST(execute_e3xx)
 {
-    opcode_e3xx[inst[5]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_e3xx)[inst[5]](inst, regs);
 }
 
 
 DEF_INST(execute_ebxx)
 {
-    opcode_ebxx[inst[5]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_ebxx)[inst[5]](inst, regs);
 }
 
 
 DEF_INST(execute_ecxx)
 {
-    opcode_ecxx[inst[5]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_ecxx[inst[5]])(inst, regs);
 }
 
 
 DEF_INST(execute_c0xx)
 {
-    opcode_c0xx[inst[1] & 0x0F][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_c0xx)[inst[1]](inst, regs);
 }
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -777,25 +781,25 @@ DEF_INST(execute_c0xx)
 
 DEF_INST(execute_a4xx)
 {
-    v_opcode_a4xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_a4xx)[inst[1]](inst, regs);
 }
 
 
 DEF_INST(execute_a5xx)
 {
-    v_opcode_a5xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_a5xx)[inst[1]](inst, regs);
 }
 
 
 DEF_INST(execute_a6xx)
 {
-    v_opcode_a6xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_a6xx)[inst[1]](inst, regs);
 }
 
 
 DEF_INST(execute_e4xx)
 {
-    v_opcode_e4xx[inst[1]][ARCH_MODE](inst, regs);
+    regs->ARCH_DEP(opcode_e4xx)[inst[1]](inst, regs);
 }
 
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
@@ -1184,8 +1188,145 @@ int d2,b2;
 
 /* Gabor Hoffer (performance option) */
 zz_func s370_opcode_table[256];
+static zz_func s370_opcode_a4xx[256];
+static zz_func s370_opcode_a5xx[256]; 
+static zz_func s370_opcode_a6xx[256];
+static zz_func s370_opcode_b2xx[256];
+static zz_func s370_opcode_e4xx[256];
+static zz_func s370_opcode_e5xx[256];
+static zz_func s370_opcode_e6xx[256];
+
 zz_func s390_opcode_table[256];
+static zz_func s390_opcode_01xx[256];
+static zz_func s390_opcode_a4xx[256];
+static zz_func s390_opcode_a5xx[256]; 
+static zz_func s390_opcode_a6xx[256];
+static zz_func s390_opcode_a7xx[256];
+static zz_func s390_opcode_b2xx[256];
+static zz_func s390_opcode_b3xx[256];
+static zz_func s390_opcode_b9xx[256];
+static zz_func s390_opcode_c0xx[256];
+static zz_func s390_opcode_e3xx[256];
+static zz_func s390_opcode_e4xx[256];
+static zz_func s390_opcode_e5xx[256];
+static zz_func s390_opcode_ebxx[256];
+static zz_func s390_opcode_ecxx[256];
+static zz_func s390_opcode_edxx[256];
+
 zz_func z900_opcode_table[256];
+static zz_func z900_opcode_01xx[256];
+static zz_func z900_opcode_a5xx[256]; 
+static zz_func z900_opcode_a7xx[256];
+static zz_func z900_opcode_b2xx[256];
+static zz_func z900_opcode_b3xx[256];
+static zz_func z900_opcode_b9xx[256];
+static zz_func z900_opcode_c0xx[256];
+static zz_func z900_opcode_e3xx[256];
+static zz_func z900_opcode_e5xx[256];
+static zz_func z900_opcode_ebxx[256];
+static zz_func z900_opcode_ecxx[256];
+static zz_func z900_opcode_edxx[256];
+
+void copy_opcode_tables()
+{
+int i;
+
+    for (i = 0; i < 256; i++)
+    {
+#if defined(_370)
+        s370_opcode_table[i] = opcode_table[i][ARCH_370];
+        s370_opcode_a4xx [i] = v_opcode_a4xx [i][ARCH_370];
+        s370_opcode_a5xx [i] = v_opcode_a5xx [i][ARCH_370];
+        s370_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_370];
+        s370_opcode_b2xx [i] = opcode_b2xx [i][ARCH_370];
+        s370_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_370];
+        s370_opcode_e5xx [i] = opcode_e5xx [i][ARCH_370];
+        s370_opcode_e6xx [i] = opcode_e6xx [i][ARCH_370];
+#endif
+
+#if defined(_390)
+        s390_opcode_table[i] = opcode_table[i][ARCH_390];
+        s390_opcode_01xx [i] = opcode_01xx [i][ARCH_390];
+        s390_opcode_a4xx [i] = v_opcode_a4xx [i][ARCH_390];
+        s390_opcode_a5xx [i] = v_opcode_a5xx [i][ARCH_390];
+        s390_opcode_a6xx [i] = v_opcode_a6xx [i][ARCH_390];
+        s390_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_390];
+        s390_opcode_b2xx [i] = opcode_b2xx [i][ARCH_390];
+        s390_opcode_b3xx [i] = opcode_b3xx [i][ARCH_390];
+        s390_opcode_b9xx [i] = opcode_b9xx [i][ARCH_390];
+        s390_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_390];
+        s390_opcode_e3xx [i] = opcode_e3xx [i][ARCH_390];
+        s390_opcode_e4xx [i] = v_opcode_e4xx [i][ARCH_390];
+        s390_opcode_e5xx [i] = opcode_e5xx [i][ARCH_390];
+        s390_opcode_ebxx [i] = opcode_ebxx [i][ARCH_390];
+        s390_opcode_ecxx [i] = opcode_ecxx [i][ARCH_390];
+        s390_opcode_edxx [i] = opcode_edxx [i][ARCH_390];
+#endif
+
+#if defined(_900)
+        z900_opcode_table[i] = opcode_table[i][ARCH_900];
+        z900_opcode_01xx [i] = opcode_01xx [i][ARCH_900];
+        z900_opcode_a5xx [i] = opcode_a5xx [i&0x0F][ARCH_900];
+        z900_opcode_a7xx [i] = opcode_a7xx [i&0x0F][ARCH_900];
+        z900_opcode_b2xx [i] = opcode_b2xx [i][ARCH_900];
+        z900_opcode_b3xx [i] = opcode_b3xx [i][ARCH_900];
+        z900_opcode_b9xx [i] = opcode_b9xx [i][ARCH_900];
+        z900_opcode_c0xx [i] = opcode_c0xx [i&0x0F][ARCH_900];
+        z900_opcode_e3xx [i] = opcode_e3xx [i][ARCH_900];
+        z900_opcode_e5xx [i] = opcode_e5xx [i][ARCH_900];
+        z900_opcode_ebxx [i] = opcode_ebxx [i][ARCH_900];
+        z900_opcode_ecxx [i] = opcode_ecxx [i][ARCH_900];
+        z900_opcode_edxx [i] = opcode_edxx [i][ARCH_900];
+#endif
+    }
+}
+
+void set_opcode_pointers(REGS *regs)
+{
+#if defined(_370)
+    regs->s370_opcode_table= s370_opcode_table;
+    regs->s370_opcode_a4xx = s370_opcode_a4xx;
+    regs->s370_opcode_a5xx = s370_opcode_a5xx;
+    regs->s370_opcode_a6xx = s370_opcode_a6xx;
+    regs->s370_opcode_b2xx = s370_opcode_b2xx;
+    regs->s370_opcode_e4xx = s370_opcode_e4xx;
+    regs->s370_opcode_e5xx = s370_opcode_e5xx;
+    regs->s370_opcode_e6xx = s370_opcode_e6xx;
+#endif
+#if defined(_390)
+    regs->s390_opcode_table= s390_opcode_table;
+    regs->s390_opcode_01xx = s390_opcode_01xx;
+    regs->s390_opcode_a4xx = s390_opcode_a4xx;
+    regs->s390_opcode_a5xx = s390_opcode_a5xx;
+    regs->s390_opcode_a6xx = s390_opcode_a6xx;
+    regs->s390_opcode_a7xx = s390_opcode_a7xx;
+    regs->s390_opcode_b2xx = s390_opcode_b2xx;
+    regs->s390_opcode_b3xx = s390_opcode_b3xx;
+    regs->s390_opcode_b9xx = s390_opcode_b9xx;
+    regs->s390_opcode_c0xx = s390_opcode_c0xx;
+    regs->s390_opcode_e3xx = s390_opcode_e3xx;
+    regs->s390_opcode_e4xx = s390_opcode_e4xx;
+    regs->s390_opcode_e5xx = s390_opcode_e5xx;
+    regs->s390_opcode_ebxx = s390_opcode_ebxx;
+    regs->s390_opcode_ecxx = s390_opcode_ecxx;
+    regs->s390_opcode_edxx = s390_opcode_edxx;
+#endif
+#if defined(_900)
+    regs->z900_opcode_table= z900_opcode_table;
+    regs->z900_opcode_01xx = z900_opcode_01xx;
+    regs->z900_opcode_a5xx = z900_opcode_a5xx;
+    regs->z900_opcode_a7xx = z900_opcode_a7xx;
+    regs->z900_opcode_b2xx = z900_opcode_b2xx;
+    regs->z900_opcode_b3xx = z900_opcode_b3xx;
+    regs->z900_opcode_b9xx = z900_opcode_b9xx;
+    regs->z900_opcode_c0xx = z900_opcode_c0xx;
+    regs->z900_opcode_e3xx = z900_opcode_e3xx;
+    regs->z900_opcode_e5xx = z900_opcode_e5xx;
+    regs->z900_opcode_ebxx = z900_opcode_ebxx;
+    regs->z900_opcode_ecxx = z900_opcode_ecxx;
+    regs->z900_opcode_edxx = z900_opcode_edxx;
+#endif
+}
 
 zz_func opcode_table[256][GEN_MAXARCH] = {
  /*00*/   GENx___x___x___ ,

@@ -1874,18 +1874,7 @@ BYTE **orig_newargv;
 #endif
 
     /* Gabor Hoffer (performance option) */
-    for (i = 0; i < 256; i++)
-    {
-#if defined(_370)
-        s370_opcode_table [i] = opcode_table [i][ARCH_370];
-#endif
-#if defined(_390)
-        s390_opcode_table [i] = opcode_table [i][ARCH_390];
-#endif
-#if defined(_900)
-        z900_opcode_table [i] = opcode_table [i][ARCH_900];
-#endif
-    }
+    copy_opcode_tables();
 
     /* Initialize dummy regs.
      * Dummy regs are used by the panel or gui when the target cpu

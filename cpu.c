@@ -1154,6 +1154,9 @@ int cpu_init (int cpu, REGS *regs, REGS *hostregs)
     regs->aea_ar[USE_SECONDARY_SPACE] =  7;
     regs->aea_ar[USE_HOME_SPACE]      = 13;
 
+    /* Initialize opcode table pointers */
+    set_opcode_pointers (regs);
+
     regs->configured = 1;
 
     release_lock (&sysblk.cpulock[cpu]);

@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+21 Sep 2004 Performance enhancement for multi-byte opcodes - Greg Smith
 21 Sep 2004 Performance enhancement for load/store multiple type
             instructions (LCTL STCTL LMD LMH LMG STCTG LCTLG STMG
             STMH LAMY LMY STAMY STMY LAM LM STAM STM) - Greg Smith

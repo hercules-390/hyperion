@@ -1477,6 +1477,11 @@ void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
 void sigabend_handler (int signo);
 
 
+/* Functions in module opcode.c */
+void copy_opcode_tables ();
+void set_opcode_pointers (REGS *regs);
+
+
 /* Functions in module panel.c */
 void ARCH_DEP(display_inst) (REGS *regs, BYTE *inst);
 void display_inst (REGS *regs, BYTE *inst);
