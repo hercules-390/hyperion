@@ -1,4 +1,3 @@
-
 // Hercules Channel-to-Channel Emulation Support
 // ====================================================================
 //
@@ -1318,6 +1317,9 @@ void  AddDevice( DEVBLK**    ppDEVBLK,
         // Release the just aquired devblk
         release_lock( &(*ppDEVBLK)->lock );
     }
+    else
+        if((*ppDEVBLK)->devnum != sDevNum)
+            define_device((*ppDEVBLK)->devnum, sDevNum);
 
     return;
 }
