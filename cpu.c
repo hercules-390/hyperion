@@ -458,6 +458,9 @@ static char *pgmintname[] = {
     /* Store the interrupt code in the PSW */
     realregs->psw.intcode = pcode;
 
+    /* Call debugger if active */
+    HDC(debug_program_interrupt, regs, pcode);
+
     /* Trace program checks other then PER event */
     if(code && (sysblk.insttrace || sysblk.inststep
         || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
@@ -483,7 +486,6 @@ static char *pgmintname[] = {
                 pgmintname[ (code - 1) & 0x3F], pcode, realregs->psw.ilc);
         ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
                                                 realregs->ip : NULL);
-        HDC(debug_program_interrupt, regs);
     }
 
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
