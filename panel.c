@@ -1426,6 +1426,23 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 
 /*********************************************************************/
+    /* clocks command - display tod clkc and cpu timer */
+    if(memcmp(cmd,"clocks",6)==0)
+    {
+        logmsg("tod = %16.16llX\n",(sysblk.todclk + regs->todoffset) << 8);
+        logmsg("ckc = %16.16llX\n",regs->clkc << 8);
+        logmsg("cpt = %16.16llX\n",regs->ptimer);
+        if(regs->arch_mode == ARCH_370)
+        {
+        U32 itimer;
+        PSA_3XX *psa = (void*) (sysblk.mainstor + regs->PX);
+            FETCH_FW(itimer, psa->inttimer);
+            logmsg("itm = %8.8X\n",itimer);
+        }
+        return NULL;
+    }
+
+/*********************************************************************/
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
     /* toddrag command - display or set TOD clock drag factor */
     if (memcmp(cmd,"toddrag",7)==0)

@@ -13,17 +13,6 @@
 #include <unistd.h>
 
 /*-------------------------------------------------------------------*/
-/* Signal handler for SIGHUP signal                                  */
-/*-------------------------------------------------------------------*/
-static void sighup_handler (int signo)
-{
-//  logmsg ("config: sighup handler entered for thread %lu\n",/*debug*/
-//          thread_id());                                     /*debug*/
-    signal(SIGHUP, sighup_handler);
-    return;
-} /* end function sighup_handler */
-
-/*-------------------------------------------------------------------*/
 /* Signal handler for SIGINT signal                                  */
 /*-------------------------------------------------------------------*/
 static void sigint_handler (int signo)
@@ -145,15 +134,6 @@ TID paneltid;
 
     /* Build system configuration */
     build_config (cfgfile);
-
-    /* Register the SIGHUP handler */
-    if ( signal (SIGHUP, sighup_handler) == SIG_ERR )
-    {
-        fprintf (stderr,
-                "HHC030I Cannot register SIGHUP handler: %s\n",
-                strerror(errno));
-        exit(1);
-    }
 
     /* Register the SIGINT handler */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )

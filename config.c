@@ -1348,7 +1348,7 @@ DEVBLK *dev;                            /* -> Device block           */
         if (dev->console)
         {
             dev->console = 0;
-            signal_thread (sysblk.cnsltid, SIGHUP);
+            signal_thread (sysblk.cnsltid, SIGUSR2);
         }
     }
 

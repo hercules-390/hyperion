@@ -1150,7 +1150,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     rc = device_attention (dev, CSW_ATTN);
 
     /* Signal connection thread to redrive its select loop */
-    signal_thread (sysblk.cnsltid, SIGHUP);
+    signal_thread (sysblk.cnsltid, SIGUSR2);
 
     return NULL;
 
@@ -2029,7 +2029,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
         release_lock (&dev->lock);
 
         /* Signal connection thread to redrive its select loop */
-        signal_thread (sysblk.cnsltid, SIGHUP);
+        signal_thread (sysblk.cnsltid, SIGUSR2);
 
         break;
 

@@ -267,6 +267,9 @@ int i;
     if( signo == SIGUSR2 )
     {
     DEVBLK *dev;
+
+        if(tid == sysblk.cnsltid)
+            return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->tid == tid) break;
         if( dev == NULL)

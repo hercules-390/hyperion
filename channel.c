@@ -265,7 +265,7 @@ if (dev->ccwtrace || dev->ccwstep)
         /* Signal console thread to redrive select */
         if (dev->console)
         {
-            signal_thread (sysblk.cnsltid, SIGHUP);
+            signal_thread (sysblk.cnsltid, SIGUSR2);
         }
     }
     else
@@ -340,7 +340,7 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGHUP);
+        signal_thread (sysblk.cnsltid, SIGUSR2);
     }
 
     /* Release the device lock */
@@ -512,7 +512,7 @@ int     cc;                             /* Condition code            */
         /* Signal console thread to redrive select */
         if (dev->console)
         {
-            signal_thread (sysblk.cnsltid, SIGHUP);
+            signal_thread (sysblk.cnsltid, SIGUSR2);
         }
     }
     else
@@ -605,7 +605,7 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
         /* Signal console thread to redrive select */
         if (dev->console)
         {
-            signal_thread (sysblk.cnsltid, SIGHUP);
+            signal_thread (sysblk.cnsltid, SIGUSR2);
         }
 
         /* Release the device lock */
@@ -711,7 +711,7 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
         /* Signal console thread to redrive select */
         if (dev->console)
         {
-            signal_thread (sysblk.cnsltid, SIGHUP);
+            signal_thread (sysblk.cnsltid, SIGUSR2);
         }
 
         /* Release the device lock */
@@ -779,7 +779,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGHUP);
+        signal_thread (sysblk.cnsltid, SIGUSR2);
     }
 
     /* Set the resume pending flag and signal the subchannel */
@@ -852,7 +852,7 @@ int operational = 3;
     }
 
     /* Signal console thread to redrive select */
-    signal_thread (sysblk.cnsltid, SIGHUP);
+    signal_thread (sysblk.cnsltid, SIGUSR2);
 
     return operational;
 
@@ -878,7 +878,7 @@ DEVBLK *dev;                            /* -> Device control block   */
     OFF_IC_CHANRPT;
 
     /* Signal console thread to redrive select */
-    signal_thread (sysblk.cnsltid, SIGHUP);
+    signal_thread (sysblk.cnsltid, SIGUSR2);
 
 } /* end function io_reset */
 
@@ -1406,7 +1406,7 @@ int     rc;                             /* Return code               */
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGHUP);
+        signal_thread (sysblk.cnsltid, SIGUSR2);
     }
 
     /* Store the start I/O parameters in the device block */
@@ -1748,7 +1748,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Signal console thread to redrive select */
             if (dev->console)
             {
-                signal_thread (sysblk.cnsltid, SIGHUP);
+                signal_thread (sysblk.cnsltid, SIGUSR2);
             }
 
             /* Reset device busy indicator */
@@ -1796,7 +1796,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Signal console thread to redrive select */
             if (dev->console)
             {
-                signal_thread (sysblk.cnsltid, SIGHUP);
+                signal_thread (sysblk.cnsltid, SIGUSR2);
             }
     
             /* Reset device busy indicator */
@@ -1974,7 +1974,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                 /* Signal console thread to redrive select */
                 if (dev->console)
                 {
-                    signal_thread (sysblk.cnsltid, SIGHUP);
+                    signal_thread (sysblk.cnsltid, SIGUSR2);
                 }
 
                 /* Suspend the device until resume instruction */
@@ -2413,7 +2413,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGHUP);
+        signal_thread (sysblk.cnsltid, SIGUSR2);
     }
 
     /* Release the device lock */
@@ -2578,7 +2578,7 @@ int     iopending = 0;                  /* 1 = I/O still pending     */
     /* Signal console thread to redrive select */
     if (dev->console)
     {
-        signal_thread (sysblk.cnsltid, SIGHUP);
+        signal_thread (sysblk.cnsltid, SIGUSR2);
     }
 
     /* Release the device lock */

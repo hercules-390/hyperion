@@ -549,7 +549,8 @@ typedef struct _PSA_3XX {		/* Prefixed storage area     */
 /*040*/ DWORD csw;			/* Channel status word (S370)*/
 /*048*/ FWORD caw;			/* Channel address word(S370)*/
 /*04C*/ FWORD resv04C;			/* Reserved		     */
-/*050*/ DWORD inttimer; 		/* Interval timer	     */
+/*050*/ FWORD inttimer; 		/* Interval timer	     */
+/*054*/ FWORD resv054;  		/* Reserved                  */
 /*058*/ DWORD extnew;			/* External new PSW	     */
 /*060*/ DWORD svcnew;			/* SVC new PSW		     */
 /*068*/ DWORD pgmnew;			/* Program check new PSW     */
