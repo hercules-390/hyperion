@@ -1,8 +1,13 @@
 #### Don't forget to change the version number in configure.ac! ####
 
 04 Apr 2004 Undo change 14 May - Bernard van der Helm
+30 Mar 2004 Add debug entry point for watchdog signal - Jan Jaeger
+26 Mar 2004 Program old PSW fix (ESAME) - Jan Jaeger
+25 Mar 2004 Program old PSW fix (S/390) - Jan Jaeger
 24 Mar 2004 More of Greg's CLC improvements + no direct SK manipulation
             when dealing with non-crossing MVCs - Ivan Warren
+22 Mar 2004 Fix DXC codes in ieee.c - Jan Jaeger
+21 Mar 2004 Fix false PIC 04's under SIE - Jan Jaeger
 18 Mar 2004 re-enable ECPS:VM + VTIMER fix - Ivan Warren
 17 Mar 2004 clc.pat - Optimize CLC - Ivan & Greg - Greg Smith
 17 Mar 2004 l2m.pat - Tweaks to logical_to_main - Greg Smith
@@ -17,6 +22,10 @@
 08 Mar 2004 Optimised non crossing/non overlap MVCs with length
             2,4,8,12 and 16 - Ivan Warren
 06 Mar 2004 RR, RRE, RRF_* macro optimalization - Bernard van der Helm
+05 Mar 2004 Restructure loadparm handling - Jan Jaeger
+05 Mar 2004 Fix locking during ipl from web interface - Jan Jaeger
+05 Mar 2004 LPAR name restructure - Jan Jaeger
+05 Mar 2004 Initialize loadparm to blanks instead of dots - Jan Jaeger
 28 Feb 2004 Simplify translate_addr() parameter list - Greg Smith
 28 Feb 2004 vstore/vfetch updates for boundary crosses - Greg Smith
 28 Feb 2004 Fix TB (B22C) under SIE - Greg Smith
@@ -34,7 +43,14 @@
 16 Feb 2004 psw.pat - Revise internal psw format - Greg Smith
 07 Feb 2004 Device groups descriminators for console devices - Ivan Warren
 07 Feb 2004 Update cpuints.h bit processing - Greg Smith
+06 Feb 2004 Add SIE_STATNB macro - Jan Jaeger
+06 Feb 2004 Correct SIE feature byte tests - Jan Jaeger
 05 Feb 2004 Reverse armode patch - problems with XC mode - Greg Smith
+05 Feb 2004 PR (Program Return) fix - Jan Jaeger
+04 Feb 2004 Add SIE_STATE macro - Jan Jaeger
+04 Feb 2004 Aff SIE_STATB macro - Jan Jaeger
+04 Feb 2004 Change SIE host page protect logic - Jan Jaeger
+03 Feb 2004 Fix segfault in ipl from CDROM - Jan Jaeger
 02 Feb 2004 Fix instr display for SIE'd prog interrupt - Ivan Warren
 01 Feb 2004 Breakpoint range, suggested by Binyamin Dissen - Greg Smith
 31 Jan 2004 Fix possible CKD/FBA corruption - Karl-Heinz Lohner by Greg Smith
@@ -48,14 +64,19 @@
             (Detected by Mark Drummond) - Ivan Warren
 16 Jan 2004 Performance Enhancement: REGS on run_cpu stack - Greg Smith
 16 Jan 2004 Performance Enhancement: instfetch - Greg Smith
+14 Jan 2004 CPU reconfig fixes - Jan Jaeger
+07 Jan 2004 DIAG 204 fix - Jan Jaeger
+07 Jan 2004 Add log command to dynamically redirect system log - Jan Jaeger
 19 Dec 2003 Correct Keyboard Shortcuts for pseudo-graphical Console - Volker
             Bandke, code by Marian Gasparovic
 17 Dec 2003 Correct structure size boundaries for ARM compiles - Ivan Warren
 12 Dec 2003 Clear tlb every 2^16 invalidations instead of 2^8 - Greg Smith
+09 Dec 2003 Fix false PIC 05 on MVPG - Jan Jaeger
 05 Dec 2003 Move IS_IC_TRACE check to slowloop in run_cpu - Greg Smith
 05 Dec 2003 Clear regs->ve every 2^20 invalidations instead of 2^12 - Greg Smith
 05 Dec 2003 Add "filename completion" shortcut via TAB character to panel.c -
             Volker Bandke, original code by Marian Gasparovic
+04 Dec 2003 Add sclp reset to io reset - Jan Jaeger
 01 Dec 2003 Signal Quiesce (shutdown) & ssd command - Jan Jaeger
 29 Nov 2003 Fix race condition in console.c recv_3270_data causing 100%
             CPU utilization, zero MIPS" Hercules hang symptom (version
