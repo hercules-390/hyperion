@@ -327,7 +327,7 @@ the device record is:
         <td><a href="#printer">Line printers</a></td>
         <td>Disk file (ASCII)</td>
     </tr>
-    <tr><td>3420, 3480</td>
+    <tr><td>3410, 3420, 3480<br>3490, 9347</td>
         <td><a href="#tapedev">Tape drives</a></td>
         <td>Disk file, CDROM, or SCSI tape</td>
     </tr>
@@ -342,6 +342,10 @@ the device record is:
     <tr><td>2311, 2314, 3330<br>3340, 3350, 3375<br>3380, 3390, 9345</td>
         <td><a href="#ckddasd">CKD direct access storage devices</a></td>
         <td>Disk file</td>
+    </tr>
+    <tr><td>2703</td>
+        <td><a href="#comline">Communication Line</a></td>
+        <td>TCP Socket</td>
     </tr>
     </table>
 <dt><code><em>arguments</em></code>
@@ -662,6 +666,65 @@ the device record is:
     whether the file contains a regular CKD image or a compressed CKD
     image.  Refer to the <a href="cckddasd.html">CCKD</a> page for details
     of how to create and use compressed CKD DASD images.
+<a name="comline">
+    <dt><em>Communication Adapter</em>
+    <dd>
+    Describes a BSC emulation line entry to either link 2 hercules engines
+    or a custom made program emulating a 2780, 3780 or 3x74, or a custom made
+    program interfacing to a real BSC line.
+    <p />
+    The communication is emulated over a TCP connection. All bytes are 
+    transfered as-is (except for doubling DLE in transparent mode) just
+    like it would over a real BSC link. Emulated EIA (DCD, DTR, CTS,
+    etc..) or X.21/V.11 leads (C, T, etc..) are treated differently depending
+    on the DIAL option selected.
+    <p />
+    The line emulates a point-to-point BSC link. There is no point-to-multipoint handling.
+    <p />
+    The following options define the line emulation behaviour :
+    <dl>
+        <dt><code>DIAL=IN|OUT|INOUT|NO</code><dd>
+        Specifies call direction (if any). If <em>DIAL=NO</em> is specified, the
+        TCP outgoing connection is attempted as soon as an 'ENABLE' CCW is executed.
+        Also, in this mode, an incoming connection will always be accepted. If <em>DIAL=IN|INOUT</em>
+        is specified, a TCP incoming call is accepted ONLY if an 'ENABLE' CCW is currently
+        executing on the device. If <em>DIAL=OUT</em>, the 'ENABLE' CCW is rejected.
+        When <em>DIAL=IN|INOUT</em> is specified, a DIAL CCW allows the application
+        to establish a TCP connection to a specific host. For other DIAL values,
+        the DIAL CCW is rejected.
+        <dt><code>lhost=hostname|ip address|<em>*</em></code>
+        <dd>Specifies which IP address to listen on. This also conditions the network
+        interface from which incoming calls will be accepted. Specifying '*' means
+        all incoming TCP calls are accepted, regardless of the destination IP
+        address or call origin. This is the default value. Specifying a specific
+        IP address when <em>DIAL=OUT</em> is specified has no effect.
+        <dt><code>lport=service name|port number</code>
+        <dd>Specifies the TCP port for which to listen to incoming TCP calls. This
+        value is mandatory for <em>DIAL=IN|INOUT|NO</em>. It is ignored for <em>DIAL=OUT</em>.
+        <dt><code>rhost=hostname|ip address</code>
+        <dt><code>rport=service name|port number</code>
+        <dd>Specifies the remote host and port to which to direct a TCP connection on a 
+        DIAL=NO line when an 'ENABLE' CCW is executed. This option is mandatory when <em>DIAL=NO</em>
+        is specified. It is ignored for other <em>DIAL</em> values.
+        <dt>The following options are tuning options. In most cases, using the default values
+        give the best results
+        <dt><code>rto=0|-1|nnn|<em>3000</em></code>
+        <dd>Specifies the number of miliseconds before terminating a read on a timeout, when
+        no read termination control character is received. Specifying 0 means the READ ends
+        immediatly. -1 specifies there is no timeout.
+        <dt><code>pto=0|-1|nnn|<em>3000</em></code>
+        <dd>Specifies the number of miliseconds before terminating a POLL on a timeout, when
+        no ACK or NACK sequence is received. Specifying 0 means the POLL ends
+        immediatly. -1 specifies there is no timeout.
+        <dt><code>eto=0|<em>-1</em>|nnn|<em>10000</em></code>
+        <dd>Specifies the number of miliseconds before terminating an ENABLE operation on a timeout.
+        the timeout applies when <em>DIAL=NO|IN|INOUT</em> is specified, the outgoing TCP call fails (<em>DIAL=NO</em>)
+        and there is no previously or currently established TCP connection for this line. When <em>DIAL=NO</em> is
+        specified, the timeout defaults to 10 seconds. for <em>DIAL=IN|INOUT</em>, the timeout
+        defaults to -1.
+    </dl>
+<dd>
+        
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any device
@@ -674,6 +737,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 1 February 2003
+<p>Last updated 1 June 2003
 </BODY>
 </HTML>
