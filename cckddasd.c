@@ -1344,7 +1344,7 @@ int             sfx;                    /* Shadow file index         */
     }
     cckd->free[i].next = cckd->freeavail;
     cckd->freeavail = i;
-    rc = ftruncate (dev->fd, cckd->cdevhdr[sfx].size);
+    rc = ftruncate (cckd->fd[sfx], cckd->cdevhdr[sfx].size);
     if (cckd->free[i].len >= cckd->cdevhdr[sfx].free_largest)
     {   /* find the next largest free space */
         cckd->cdevhdr[sfx].free_largest = 0;
@@ -1534,9 +1534,30 @@ int             i;                      /* Index                     */
     DEVTRACE ("cckddasd: reading free space, number %d\n",
               cckd->cdevhdr[sfx].free_number);
 
+    /* get storage for the internal free space chain;
+       get a multiple of 1024 entries. */
+    cckd->freenbr = ((cckd->cdevhdr[sfx].free_number << 10) + 1) >> 10;
+    cckd->free = calloc (cckd->freenbr, CCKD_FREEBLK_ISIZE);
+
+    /* if the only free space is at the end of the file,
+       then remove it.  this should only happen for a file
+       built by the cckddump os/390 utility */
+    if (cckd->cdevhdr[sfx].free_number == 1)
+    {
+        fpos = cckd->cdevhdr[sfx].free;
+        rc = lseek (cckd->fd[sfx], fpos, SEEK_SET);
+        rc = read (cckd->fd[sfx], &cckd->free[0], CCKD_FREEBLK_SIZE);
+        if (fpos + cckd->free[0].len == cckd->cdevhdr[sfx].size)
+        {
+            cckd->cdevhdr[sfx].free_number = 
+            cckd->cdevhdr[sfx].free_total = 
+            cckd->cdevhdr[sfx].free_largest = 0;
+            cckd->cdevhdr[sfx].size -= cckd->free[0].len;
+            rc = ftruncate (cckd->fd[sfx], cckd->cdevhdr[sfx].size);
+        }
+    }
+
     /* build the doubly linked internal free space chain */
-    cckd->freenbr = ((cckd->cdevhdr[sfx].free_number >> 10) + 1) << 10;
-    cckd->free = malloc (cckd->freenbr * CCKD_FREEBLK_ISIZE);
     if (cckd->cdevhdr[sfx].free_number)
     {
         cckd->free1st = 0;
