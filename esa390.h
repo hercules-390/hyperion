@@ -20,6 +20,7 @@ typedef uint8_t         HWORD[2];
 typedef uint8_t         FWORD[4];
 typedef uint8_t         DWORD[8];
 typedef uint8_t         QWORD[16];
+typedef int8_t          S8;
 typedef uint16_t        U16;
 typedef int16_t         S16;
 typedef uint32_t        U32;
