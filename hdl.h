@@ -17,7 +17,8 @@
  #define dlinit()
 #endif
 
-int hdl_load(char *);                 		/* load dll          */
+int hdl_load(char *, int);           		/* load dll          */
+#define HDL_LOAD_FORCE 0x00000001               /* Override depchk   */
 int hdl_dele(char *);                           /* unload dll        */
 void hdl_list();                          /* list all loaded modules */
 
@@ -31,15 +32,31 @@ void * hdl_fent(char *);
 static void * (*hdl_fent_l)(char *) __attribute__ ((unused)) ;
 #endif
 
+#define HDL_DEPC hdl_depc
 #define HDL_RESO hdl_reso
 #define HDL_INIT hdl_init
 #define HDL_FINI hdl_fini
 
 #define QSTRING(_string) STRINGMAC(_string)
 
+#define HDL_DEPC_Q QSTRING(HDL_DEPC)
 #define HDL_RESO_Q QSTRING(HDL_RESO)
 #define HDL_INIT_Q QSTRING(HDL_INIT)
 #define HDL_FINI_Q QSTRING(HDL_FINI)
+
+
+#define HDL_DEPENDENCY_SECTION \
+int HDL_DEPC(int (*hdl_depc_vers)(char *, char *, int) __attribute__ ((unused)) ) \
+{ \
+int hdl_depc_rc = 0
+    
+#define HDL_DEPENDENCY(_comp) \
+    if (hdl_depc_vers( STRINGMAC(_comp), HDL_VERS_ ## _comp, HDL_SIZE_ ## _comp)) \
+        hdl_depc_rc = 1
+
+#define END_DEPENDENCY_SECTION                            \
+return hdl_depc_rc; }
+
 
 /* Cygwin back-link support */
 #if !defined(WIN32)
@@ -50,7 +67,7 @@ void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
 #define HDL_RESOLVER_SECTION                            \
 void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
 {                                                       \
-hdl_fent_l = hdl_reso_fent;
+hdl_fent_l = hdl_reso_fent
 #endif /*defined(WIN32)*/
 
 #define HDL_RESOLVE(_name)                              \
@@ -70,6 +87,15 @@ void HDL_INIT(int (*hdl_init_regi)(char *, void *) __attribute__ ((unused)) ) \
 #define END_REGISTER_SECTION                            \
 }
 
+
+#define HDL_FINAL_SECTION                               \
+void HDL_FINI()                                         \
+{
+
+#define END_FINAL_SECTION                               \
+}
+
+
 #if !defined(WIN32)
 #define HDL_FINDSYM(_name)                              \
     hdl_fent( (_name) )
@@ -81,16 +107,16 @@ void HDL_INIT(int (*hdl_init_regi)(char *, void *) __attribute__ ((unused)) ) \
 #define HDL_FINDNXT(_name, _ep)                         \
     hdl_nent( STRINGMAC(_name), &(_ep) )
 
-#define HDL_FINAL_SECTION                               \
-void HDL_FINI()                                         \
-{
-
-#define END_FINAL_SECTION                               \
-}
-
 
 struct _MODENT; 
 struct _DLLENT;
+
+
+typedef struct _HDL_VRS {
+    char *name;
+    char *version;
+    int  size;
+} HDL_VRS;
 
 
 typedef struct _MODENT {
@@ -108,6 +134,7 @@ typedef struct _DLLENT {
     int type;
 #define DLL_TYPE_MAIN 0
 #define DLL_TYPE_LOAD 1
+    int (*hdldepc)(void *);                  /* hdl_depc             */
     int (*hdlreso)(void *);                  /* hdl_reso             */
     int (*hdlinit)(void *);                  /* hdl_init             */
     int (*hdlfini)();                        /* hdl_fini             */
@@ -116,3 +143,4 @@ typedef struct _DLLENT {
 } DLLENT;
 
 #endif
+

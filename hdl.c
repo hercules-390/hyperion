@@ -7,6 +7,7 @@
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
+extern HDL_VRS *hdl_version;            /* Version codes in hdlmain */
 
 static DLLENT *hdl_dll;                 /* dll chain           */
 static LOCK   hdl_lock;
@@ -35,6 +36,40 @@ MODENT *modent;
             logmsg(", owner = %s\n",modent->dllent->name);
         }
     }
+}
+
+
+/* hdl_dchk - depency check */
+int hdl_dchk(char *name, char *version, int size)
+{
+HDL_VRS *version_entry;
+
+    for(version_entry = &hdl_version;
+      version_entry->name && strcmp(name,version_entry->name);
+      version_entry++);
+
+    if(version_entry->name)
+    {
+        if(strcmp(version,version_entry->version))
+        {
+            logmsg("HHCHDxxxI Dependency check failed for %s, version(%s) expected(%s)\n",
+               name,version,version_entry->version);
+            return -1;
+        }
+
+        if(size != version_entry->size)
+        {
+            logmsg("HHCHDxxxI Dependency check failed for %s, size(%d) expected(%d)\n",
+               name,size,version_entry->size);
+            return -1;
+        }
+    }
+    else
+    {
+        logmsg("HHCHDxxxI No dependency entry for %s\n",name);
+    }
+
+    return 0;
 }
 
 
@@ -194,9 +229,17 @@ void hdl_main()
 
     hdl_cdll->type = DLL_TYPE_MAIN;
 
+    if(!(hdl_cdll->hdldepc = dlsym(hdl_cdll->dll,HDL_DEPC_Q)))
+    {
+        fprintf(stderr, "HHCHDxxxE No depency section in %s: %s\n",
+          hdl_cdll->name, dlerror());
+        close(sysblk.syslogfd[LOG_WRITE]); /* ZZ FIXME: shutdown */
+        exit(1);
+    }
+
     if(!(hdl_cdll->hdlinit = dlsym(hdl_cdll->dll,HDL_INIT_Q)))
     {
-        fprintf(stderr, "HHCHD004I No initialiser in %s: %s\n",
+        fprintf(stderr, "HHCHD004I No registration section in %s: %s\n",
           hdl_cdll->name, dlerror());
         close(sysblk.syslogfd[LOG_WRITE]); /* ZZ FIXME: shutdown */
         exit(1);
@@ -214,6 +257,9 @@ void hdl_main()
 
     obtain_lock(&hdl_lock);
 
+    if(hdl_cdll->hdldepc)
+        (hdl_cdll->hdldepc)(&hdl_dchk);
+
     if(hdl_cdll->hdlinit)
         (hdl_cdll->hdlinit)(&hdl_regi);
 
@@ -226,7 +272,7 @@ void hdl_main()
 
 /* hdl_load - load a dll
  */
-int hdl_load(char *name)
+int hdl_load(char *name,int flags)
 {
 DLLENT *dllent;
 MODENT *modent;
@@ -262,12 +308,37 @@ char *modname;
 
     dllent->type = DLL_TYPE_LOAD;
 
-    if(!(dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q)))
+    if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        logmsg("HHCHD008I No initialiser in %s: %s\n",
+        logmsg("HHCHDxxxE No depency section in %s: %s\n",
           dllent->name, dlerror());
         free(dllent);
         return -1;
+    }
+
+    if(!(dllent->hdlinit = dlsym(dllent->dll,HDL_INIT_Q)))
+    {
+        logmsg("HHCHD008I No registration section in %s: %s\n",
+          dllent->name, dlerror());
+        if(!(flags & HDL_LOAD_FORCE))
+        {
+            free(dllent);
+            return -1;
+        }
+    }
+
+    if(dllent->hdldepc)
+    {
+        if((dllent->hdldepc)(&hdl_dchk))
+        {
+            logmsg("HHCHDxxxE Dependency check failed for %s\n",
+              dllent->name);
+            if(!(flags & HDL_LOAD_FORCE))
+            {
+                free(dllent);
+                return -1;
+            }
+        }
     }
 
     dllent->hdlreso = dlsym(dllent->dll,HDL_RESO_Q);

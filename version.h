@@ -14,6 +14,9 @@
 #define VERSION Unknown                 /* Unkown version number     */
 #endif
 
+#define HDL_VERS_HERCULES VERSION
+#define HDL_SIZE_HERCULES sizeof(VERSION)
+
 void display_version(FILE *f, char *prog);
 
 #define HERCULES_COPYRIGHT \

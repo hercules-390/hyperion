@@ -2451,7 +2451,7 @@ int ldmod_cmd(char* cmdline, int argc, char *argv[])
     for(i = 1; i < argc; i++)
     {
         logmsg("HHCHD100I Loading %s\n",argv[i]);
-        hdl_load(argv[i]);
+        hdl_load(argv[i], 0);
     }
 
     return 0;

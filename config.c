@@ -649,10 +649,10 @@ BYTE **newargv;
 #if defined(OPTION_DYNAMIC_LOAD)
             if (!strcasecmp (keyword, "ldmod"))
             {
-                hdl_load(operand);
+                hdl_load(operand, 0);
 
                 for(i = 0; i < addargc; i++)
-                    hdl_load(addargv[i]);
+                    hdl_load(addargv[i], 0);
 
                 addargc = 0;
             }

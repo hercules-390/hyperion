@@ -1,3 +1,4 @@
+15 Jun 2003 Add version and dependency checks to dynamic loader - Jan Jaeger
 11 Jun 2003 More message numbers - Greg Smith
 05 Jun 2003 Dynamic loader support - Jan Jaeger
 05 Jun 2003 Preliminary substitution capabilities in config file.
