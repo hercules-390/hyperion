@@ -1309,10 +1309,13 @@ int  ARCH_DEP(present_mck_interrupt) (REGS *regs, U64 *mcic, U32 *xdmg,
 	RADR *fsta);
 U32  channel_report (void);
 void machine_check_crwpend (void);
+void ARCH_DEP(sync_mck_interrupt) (REGS *regs);
+void sigabend_handler (int signo);
 
 
 /* Functions in module panel.c */
 void ARCH_DEP(display_inst) (REGS *regs, BYTE *inst);
+void display_inst (REGS *regs, BYTE *inst);
 
 
 /* Functions in module sie.c */

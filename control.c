@@ -4584,9 +4584,20 @@ static char *ordername[] = {    "Unassigned",
             if (tregs->cpustate != CPUSTATE_STARTED)
                 status |= SIGP_STATUS_STOPPED;
 
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+                status |= SIGP_STATUS_CHECK_STOP;
+
             break;
 
         case SIGP_EXTCALL:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Exit with status bit 24 set if a previous external
                call interrupt is still pending in the target CPU */
             if (IS_IC_EXTCALL(tregs))
@@ -4602,6 +4613,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_EMERGENCY:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Raise an emergency signal interrupt pending condition */
             ON_IC_EMERSIG(tregs);
             tregs->emercpu[regs->cpuad] = 1;
@@ -4609,6 +4627,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_START:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Restart the target CPU if it is in the stopped state */
             tregs->cpustate = CPUSTATE_STARTED;
             OFF_IC_CPU_NOT_STARTED(tregs);
@@ -4616,6 +4641,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_STOP:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Put the the target CPU into the stopping state */
             tregs->cpustate = CPUSTATE_STOPPING;
             ON_IC_CPU_NOT_STARTED(tregs);
@@ -4623,6 +4655,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_RESTART:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Make restart interrupt pending in the target CPU */
             ON_IC_RESTART(tregs);
             /* Set cpustate to stopping. If the restart is successful,
@@ -4633,6 +4672,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_STOPSTORE:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Indicate store status is required when stopped */
             ON_IC_STORSTAT(tregs);
 
@@ -4664,6 +4710,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_SETPREFIX:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Exit with operator intervening if the status is
                stopping, such that a retry can be attempted */
             if(tregs->cpustate == CPUSTATE_STOPPING)
@@ -4706,6 +4759,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_STORE:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /* Exit with operator intervening if the status is
                stopping, such that a retry can be attempted */
             if(tregs->cpustate == CPUSTATE_STOPPING)
@@ -4742,6 +4802,13 @@ static char *ordername[] = {    "Unassigned",
             break;
 
         case SIGP_STOREX:
+            /* Test for checkstop state */
+            if(tregs->checkstop)
+            {
+                status |= SIGP_STATUS_CHECK_STOP;
+                break;
+            }
+
             /*INCOMPLETE*/
 
             break;

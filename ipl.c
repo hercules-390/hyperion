@@ -191,6 +191,7 @@ int             i;                      /* Array subscript           */
 
     /* Clear pending interrupts and indicators */
     regs->loadstate = 0;
+    regs->checkstop = 0;
     regs->sigpreset = 0;
     OFF_IC_ITIMER(regs);
     OFF_IC_RESTART(regs);

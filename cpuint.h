@@ -173,6 +173,7 @@
 #define ON_IC_PTIMER(_regs)     ((_regs)->ints_state|=CR0_XM_PTIMER)
 #define ON_IC_CLKC(_regs)       ((_regs)->ints_state|=CR0_XM_CLKC)
 #define ON_IC_EXTCALL(_regs)    ((_regs)->ints_state|=CR0_XM_EXTCALL)
+#define ON_IC_MALFALT(_regs)    ((_regs)->ints_state|=CR0_XM_MALFALT)
 #define ON_IC_EMERSIG(_regs)    ((_regs)->ints_state|=CR0_XM_EMERSIG)
 #define ON_IC_TRACE             (sysblk.ints_state|=IC_DEBUG_BIT)
 #define ON_IC_DEBUG(_regs) \
@@ -192,6 +193,7 @@
 #define OFF_IC_PTIMER(_regs)   ((_regs)->ints_state&=~CR0_XM_PTIMER)
 #define OFF_IC_CLKC(_regs)     ((_regs)->ints_state&=~CR0_XM_CLKC)
 #define OFF_IC_EXTCALL(_regs)  ((_regs)->ints_state&=~CR0_XM_EXTCALL)
+#define OFF_IC_MALFALT(_regs)  ((_regs)->ints_state&=~CR0_XM_MALFALT)
 #define OFF_IC_EMERSIG(_regs)  ((_regs)->ints_state&=~CR0_XM_EMERSIG)
 //#define OFF_IC_TRACE           (sysblk.ints_state&=~IC_DEBUG_BIT)
 #define OFF_IC_DEBUG(_regs) \
@@ -215,6 +217,7 @@
 #define IS_IC_PTIMER(_regs)   ((_regs)->ints_state&CR0_XM_PTIMER)
 #define IS_IC_CLKC(_regs)     ((_regs)->ints_state&CR0_XM_CLKC)
 #define IS_IC_EXTCALL(_regs)  ((_regs)->ints_state&CR0_XM_EXTCALL)
+#define IS_IC_MALFALT(_regs)  ((_regs)->ints_state&CR0_XM_MALFALT)
 #define IS_IC_EMERSIG(_regs)  ((_regs)->ints_state&CR0_XM_EMERSIG)
 #define IS_IC_TRACE           (sysblk.ints_state&IC_DEBUG_BIT)
 
@@ -248,6 +251,9 @@
                                             & (_regs)->ints_mask)
 
 #define OPEN_IC_EXTCALL(_regs)  (((_regs)->ints_state&CR0_XM_EXTCALL) \
+                                            & (_regs)->ints_mask)
+
+#define OPEN_IC_MALFALT(_regs)  (((_regs)->ints_state&CR0_XM_MALFALT) \
                                             & (_regs)->ints_mask)
 
 #define OPEN_IC_EMERSIG(_regs)  (((_regs)->ints_state&CR0_XM_EMERSIG) \

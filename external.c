@@ -215,6 +215,46 @@ U16     cpuad;                          /* Originating CPU address   */
         ARCH_DEP(external_interrupt) (EXT_INTERRUPT_KEY_INTERRUPT, regs);
     }
 
+    /* External interrupt if malfunction alert is pending */
+    if (OPEN_IC_MALFALT(regs))
+    {
+        /* Find first CPU which generated a malfunction alert */
+        for (cpuad = 0; regs->malfcpu[cpuad] == 0; cpuad++)
+        {
+            if (cpuad >= MAX_CPU_ENGINES)
+            {
+                OFF_IC_MALFALT(regs);
+                return;
+            }
+        } /* end for(cpuad) */
+
+// /*debug*/ logmsg ("External interrupt: Malfuction Alert from CPU %d\n",
+// /*debug*/    cpuad);
+
+        /* Reset the indicator for the CPU which was found */
+        regs->malfcpu[cpuad] = 0;
+
+        /* Store originating CPU address at PSA+X'84' */
+        psa = (void*)(sysblk.mainstor + regs->PX);
+        STORE_HW(psa->extcpad,cpuad);
+
+        /* Reset emergency signal pending flag if there are
+           no other CPUs which generated emergency signal */
+        OFF_IC_MALFALT(regs);
+        while (++cpuad < MAX_CPU_ENGINES)
+        {
+            if (regs->malfcpu[cpuad])
+            {
+                ON_IC_MALFALT(regs);
+                break;
+            }
+        } /* end while */
+
+        /* Generate emergency signal interrupt */
+        ARCH_DEP(external_interrupt) (EXT_MALFUNCTION_ALERT_INTERRUPT, regs);
+    }
+
+
     /* External interrupt if emergency signal is pending */
     if (OPEN_IC_EMERSIG(regs))
     {

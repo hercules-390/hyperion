@@ -9,6 +9,7 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
+#include "opcode.h"
 #include <getopt.h>
 
 /*-------------------------------------------------------------------*/
@@ -51,6 +52,50 @@ static void sigint_handler (int signo)
     ON_IC_TRACE;
     return;
 } /* end function sigint_handler */
+
+
+#if !defined(NO_SIGABEND_HANDLER)
+static void watchdog_thread()
+{
+U64 savecount[MAX_CPU_ENGINES];
+int i;
+
+#ifndef WIN32
+    /* Set watchdog priority just below cpu priority
+       such that it will not invalidly detect an 
+       inoperable cpu */
+    if(sysblk.cpuprio > 0)
+        setpriority(PRIO_PROCESS, 0, sysblk.cpuprio+1);
+#endif
+
+    while(1)
+    {
+        for(i = 0; i < MAX_CPU_ENGINES; i++)
+        {
+            if(sysblk.regs[i].cpustate == CPUSTATE_STARTED)
+            {
+                /* If the cpu is running but not executing 
+                   instructions then it must be malfunctioning */
+                if(sysblk.regs[i].instcount == savecount[i])
+                {
+                    /* Send signal to looping CPU */
+                    pthread_kill(sysblk.regs[i].cputid, SIGUSR1);
+                    savecount[i] = -1;
+                }
+                else
+                    /* Save current instcount */
+                    savecount[i] = sysblk.regs[i].instcount;
+            }
+            else
+                /* mark savecount invalid as CPU not in running state */
+                savecount[i] = -1;
+        }
+        /* Sleep for 20 seconds */
+        sleep(20);
+    }
+}
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
+
 
 /*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
@@ -113,6 +158,36 @@ TID paneltid;
                 strerror(errno));
         exit(1);
     }
+
+#if !defined(NO_SIGABEND_HANDLER)
+    {
+    struct sigaction sa;
+        sa.sa_sigaction = (void*)&sigabend_handler;
+        sa.sa_flags = SA_NODEFER;
+
+        if( sigaction(SIGILL, &sa, NULL)
+         || sigaction(SIGFPE, &sa, NULL)
+         || sigaction(SIGSEGV, &sa, NULL)
+         || sigaction(SIGBUS, &sa, NULL)
+         || sigaction(SIGUSR1, &sa, NULL) )
+        {
+            fprintf (stderr,
+                    "HHC031I Cannot register SIG ILL/FPE/SEGV/BUS handler: %s\n",
+                    strerror(errno));
+            exit(1);
+        }
+    }
+
+    /* Start the watchdog */
+    if ( create_thread (&sysblk.wdtid, &sysblk.detattr,
+                        watchdog_thread, NULL) )
+    {
+        fprintf (stderr,
+                "HHC033I Cannot watchdog thread: %s\n",
+                strerror(errno));
+        exit(1);
+    }
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
 
     /* Start the console connection thread */
     if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,

@@ -116,6 +116,8 @@ endif
 #CFLAGS += -DNO_ASM_BYTESWAP
 #
 
+# The sigabend handler has not yet been tested with windows *JJ
+CFLAGS += -DNO_SIGABEND_HANDLER
 
 ifeq ($(WIN),yes)
 LFLAGS = -L$(PTHREADS_W32DIR)/DLL -lpthreadw32

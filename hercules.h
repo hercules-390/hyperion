@@ -12,6 +12,10 @@
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
 
+#if !defined(_GNU_SOURCE)
+ #define _GNU_SOURCE                   /* required by strsignal() *JJ */
+#endif
+
 #include "features.h"
 
 #if !defined(_HERCULES_H)
@@ -314,6 +318,7 @@ typedef struct _REGS {			/* Processor registers	     */
 	unsigned int			/* Flags		     */
 		cpuonline:1,		/* 1=CPU is online	     */
 		loadstate:1,		/* 1=CPU is in load state    */
+		checkstop:1,		/* 1=CPU is checkstop-ed     */
 #ifndef INTERRUPTS_FAST_CHECK
 		cpuint:1,		/* 1=There is an interrupt
 					     pending for this CPU    */
@@ -334,6 +339,8 @@ typedef struct _REGS {			/* Processor registers	     */
 	U32	ints_state;		/* CPU Interrupts Status     */
 	U32	ints_mask;		/* Respective Interrupts Mask*/
 #endif /*INTERRUPTS_FAST_CHECK*/
+	BYTE	malfcpu 		/* Malfuction alert flags    */
+		    [MAX_CPU_ENGINES];	/* for each CPU (1=pending)  */
 	BYTE	emercpu 		/* Emergency signal flags    */
 		    [MAX_CPU_ENGINES];	/* for each CPU (1=pending)  */
 	U16	extccpu;		/* CPU causing external call */
@@ -394,6 +401,7 @@ typedef struct _SYSBLK {
 // #endif /* OPTION_TODCLOCK_DRAG_FACTOR */
 	LOCK	todlock;		/* TOD clock update lock     */
 	TID	todtid; 		/* Thread-id for TOD update  */
+	TID	wdtid; 		        /* Thread-id for watchdog    */
 	BYTE	loadparm[8];		/* IPL load parameter	     */
 	U16	numcpu; 		/* Number of CPUs installed  */
 	REGS	regs[MAX_CPU_ENGINES];	/* Registers for each CPU    */

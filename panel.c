@@ -383,11 +383,12 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
     fprintf (confp, "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X",
                     curpsw[0], curpsw[1], curpsw[2], curpsw[3],
                     curpsw[4], curpsw[5], curpsw[6], curpsw[7]);
-    sprintf (state, "%c%c%c%c%c%c%c",
+    sprintf (state, "%c%c%c%c%c%c%c%c",
                     regs->cpustate == CPUSTATE_STOPPED ? 'M' : '.',
                     sysblk.inststep ? 'T' : '.',
                     pswwait ? 'W' : '.',
                     regs->loadstate ? 'L' : '.',
+                    regs->checkstop ? 'C' : '.',
                     regs->psw.prob ? 'P' : '.',
 #if defined(_FEATURE_SIE)
                     regs->sie_state ? 'S' : '.',
@@ -1038,6 +1039,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         /* Restart the CPU if it is in the stopped state */
         regs->cpustate = CPUSTATE_STARTED;
+        
+        /* Reset checkstop indicator */
+        regs->checkstop = 0;
+
         OFF_IC_CPU_NOT_STARTED(regs);
 
         /* Signal stopped CPUs to retest stopped indicator */
@@ -1312,7 +1317,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     {
         obtain_lock (&sysblk.intlock);
         for (i = 0; i < MAX_CPU_ENGINES; i++)
-            if(sysblk.regs[i].cpuonline)
+            if(sysblk.regs[i].cpuonline && !regs->checkstop)
                 sysblk.regs[i].cpustate = CPUSTATE_STARTED;
         signal_condition (&sysblk.intcond);
         release_lock (&sysblk.intlock);
@@ -1550,6 +1555,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         /* Ensure that a stopped CPU will recognize the restart */
         if (regs->cpustate == CPUSTATE_STOPPED)
             regs->cpustate = CPUSTATE_STOPPING;
+
+        regs->checkstop = 0;
 
         /* Signal waiting CPUs that an interrupt is pending */
         signal_condition (&sysblk.intcond);
@@ -2935,7 +2942,7 @@ struct  timeval tv;                     /* Select timeout structure  */
 #endif
                     "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
                        " %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X"
-                    " %c%c%c%c%c%c%c instcount=%llu"
+                    " %c%c%c%c%c%c%c%c instcount=%llu"
                     "%s",
 #ifdef EXTERNALGUI
                     extgui ? ("STATUS=") :
@@ -2952,6 +2959,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     sysblk.inststep ? 'T' : '.',
                     pswwait ? 'W' : '.',
                     regs->loadstate ? 'L' : '.',
+                    regs->checkstop ? 'C' : '.',
                     regs->psw.prob ? 'P' : '.',
 #if defined(_FEATURE_SIE)
                     regs->sie_state ? 'S' : '.',
@@ -3695,5 +3703,21 @@ static void alter_display_virt (BYTE *opnd, REGS *regs)
     }
     return;
 } /* end function alter_display_virt */
+
+void display_inst(REGS *regs, BYTE *inst)
+{
+    switch(regs->arch_mode) {
+        case ARCH_370:
+            s370_display_inst(regs,inst);
+            break;
+        case ARCH_900:
+            z900_display_inst(regs,inst);
+            break;
+        case ARCH_390:
+        default:
+            s390_display_inst(regs,inst);
+            break;
+    }
+}
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -285,6 +285,53 @@ U32             n;                      /* 32-bit operand value      */
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_CPU_NOT_STARTED(regs);
         break;
+
+#if !defined(NO_SIGABEND_HANDLER)
+    /* The following diagnose calls cause a exigent (non-repressible)
+       machine check, and are used for test purposes only *JJ */
+    case 0xFE8:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FE8: Simulate Illegal Instruction                    */
+    /*---------------------------------------------------------------*/
+        raise(SIGILL);
+        break;
+
+    case 0xFEC:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FEC: Simulate Floating Point Exception               */
+    /*---------------------------------------------------------------*/
+        raise(SIGFPE);
+        break;
+
+    case 0xFF0:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FF0: Simulate Segment Violation                      */
+    /*---------------------------------------------------------------*/
+        raise(SIGSEGV);
+        break;
+
+    case 0xFF4:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FF4: Simulate BUS Error                              */
+    /*---------------------------------------------------------------*/
+        raise(SIGBUS);
+        break;
+
+    case 0xFF8:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FF8: Simulate Loop                                   */
+    /*---------------------------------------------------------------*/
+        while(1);
+        break;
+
+    case 0xFFC:
+    /*---------------------------------------------------------------*/
+    /* Diagnose FFC: Simulate Wait                                   */
+    /*---------------------------------------------------------------*/
+        sleep(300);
+        break;
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
+
 #endif /*FEATURE_HERCULES_DIAGCALLS*/
 
     default:

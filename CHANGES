@@ -1,3 +1,5 @@
+06 Aug 2001 Machine check/checkstop/malfunction alert support
+            for host exception/loop/wait errors - Jan Jaeger
 03 Aug 2001 Fix CLST condition code when 2nd op = end char - Paul Leisy
 03 Aug 2001 LCXR was not making true zero - Paul Leisy
 03 Aug 2001 Fix BSG so excarid is correct on PIC 2B - Paul Leisy
@@ -9,7 +11,6 @@
 01 Aug 2001 Add stor-prot-override to TRAP accesses - Paul Leisy
 01 Aug 2001 Fix CE and CDR cc when fraction is zero - Paul Leisy
 01 Aug 2001 Change cpu-determined number for SRST - Paul Leisy
-31 Jul 2001 Square root division by zero fix - Jan Jaeger
 27 Jul 2001 BSA missing INVALIDATA_AEA, not ANDing CR3 - Paul Leisy
 27 Jul 2001 TRAP missing key-ctl protection - Paul Leisy
 24 Jul 2001 Add CPUPRIO config statement - Jan Jaeger

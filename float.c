@@ -2318,7 +2318,7 @@ static U32 square_root_fraction( U64 a )
 U32     xi;
 U32     xj;
 static const unsigned short sqtab[] = {
-/* 0 */         1,   /* Was zero *JJ */
+/* 0 */         0,
 /* 1 */         304,
 /* 2 */         401,
 /* 3 */         476,
