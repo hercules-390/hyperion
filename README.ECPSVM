@@ -1,0 +1,59 @@
+ECPS:VM : Extended Control Program Support : VM/370
+
+
+How to enable VM Assists :
+
+In the HERCULES.CNF file, in the configuration secion :
+
+ECPS:VM NO|n (where n is the requested level.)
+
+n Doesn't affect the operations of the assist but how it is reported to VM. 
+
+At this time, value 20 should be set (works perfect with VM/370 R6 PLC 29)
+
+**********
+
+To see the VM Assists statistics, a new panel command has been added :
+
+evmstats
+
+It reports, the number of calls made to CP/VM Assists, and indicates the
+supported/unsupported features as well as the count of assist calls that did
+actually work.
+
+**********
+
+Seeing if the assist is used by VM :
+
+Use the 2 following CLASS A commands :
+
+CP QUERY CPASSIST
+CP QUERY SASSIST
+
+Both queries should return 'ON'.
+
+Also use the following CLASS G Command :
+
+CP QUERY SET
+
+2nd line should indicate :
+
+ASSIST ON SVC TMR
+
+***********
+
+Caveats :
+
+Timer Assist is not implemented, and is the only feature for which CP doesn't ask for the availability and does really react well to it's absence. Therefore, for any Guest application that make heavy use of the Interval Timer, the Virtual Timer Assist should be disabled with :
+
+CP SET ASSIST ON SVC NOTMR
+
+(Otherwise, for example, if attempting to run VM/370 under VM/370, it will complain in a loop that the Interval Timer is not turned on. This is is because CP is expecting the VM Assist to update the virtual interval timer when the Virtual Machine is being dispatched).
+
+Eventually, this issue will be solved.
+
+***********
+
+Have Fun,
+
+--Ivan
