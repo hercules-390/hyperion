@@ -956,7 +956,6 @@ U32     ptl;                            /* Page table length         */
         tlbix = TLBIX(vaddr);
 
     if (tlbix >= 0
-        && regs->tlb.acc[tlbix]
         && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
         && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
         && !(regs->tlb.common[tlbix] && regs->dat.private) )
