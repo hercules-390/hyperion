@@ -856,15 +856,15 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op4addr, op4alet ? r3 : 0, 4-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 5th op at 6th op */
-        if(op6alet)
-            regs->AR(r3) = op6alet;
-        ARCH_DEP(vstore4)(op5, op6addr, op6alet ? r3 : 0, regs);
-
         /* Store 3th op at 4th op */
         if(op4alet)
             regs->AR(r3) = op4alet;
         ARCH_DEP(vstore4)(op3, op4addr, op4alet ? r3 : 0, regs);
+
+        /* Store 5th op at 6th op */
+        if(op6alet)
+            regs->AR(r3) = op6alet;
+        ARCH_DEP(vstore4)(op5, op6addr, op6alet ? r3 : 0, regs);
 
         /* Store 1st op at 2nd op */
         ARCH_DEP(vstore4)(regs->GR_L(r1+1), effective_addr2, b2, regs);
@@ -945,15 +945,15 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op4addr, op4alet ? r3 : 0, 8-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 5th op at 6th op */
-        if(op6alet)
-            regs->AR(r3) = op6alet;
-        ARCH_DEP(vstore8)(op5, op6addr, op6alet ? r3 : 0, regs);
-
         /* Store 3th op at 4th op */
         if(op4alet)
             regs->AR(r3) = op4alet;
         ARCH_DEP(vstore8)(op3, op4addr, op4alet ? r3 : 0, regs);
+
+        /* Store 5th op at 6th op */
+        if(op6alet)
+            regs->AR(r3) = op6alet;
+        ARCH_DEP(vstore8)(op5, op6addr, op6alet ? r3 : 0, regs);
 
         /* Store 1st op replacement at 2nd op */
         ARCH_DEP(vstore8)(op1r, effective_addr2, b2, regs);
@@ -1024,15 +1024,15 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op4addr, op4alet ? r3 : 0, 8-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 5th op at 6th op */
-        if(op6alet)
-            regs->AR(r3) = op6alet;
-        ARCH_DEP(vstore8)(op5, op6addr, op6alet ? r3 : 0, regs);
-
         /* Store 3th op at 4th op */
         if(op4alet)
             regs->AR(r3) = op4alet;
         ARCH_DEP(vstore8)(op3, op4addr, op4alet ? r3 : 0, regs);
+
+        /* Store 5th op at 6th op */
+        if(op6alet)
+            regs->AR(r3) = op6alet;
+        ARCH_DEP(vstore8)(op5, op6addr, op6alet ? r3 : 0, regs);
 
         /* Store 1st op at 2nd op */
         ARCH_DEP(vstore8)(regs->GR_G(r1+1), effective_addr2, b2, regs);
@@ -1107,15 +1107,15 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op4addr, op4alet ? r3 : 0, 16-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 5th op at 6th op */
-        if(op6alet)
-            regs->AR(r3) = op6alet;
-        ARCH_DEP(vstorec)(op5, 16-1, op6addr, op6alet ? r3 : 0, regs);
-
         /* Store 3th op at 4th op */
         if(op4alet)
             regs->AR(r3) = op4alet;
         ARCH_DEP(vstorec)(op3, 16-1, op4addr, op4alet ? r3 : 0, regs);
+
+        /* Store 5th op at 6th op */
+        if(op6alet)
+            regs->AR(r3) = op6alet;
+        ARCH_DEP(vstorec)(op5, 16-1, op6addr, op6alet ? r3 : 0, regs);
 
         /* Store 1st op replacement at 2nd op */
         ARCH_DEP(vstorec)(op1r, 16-1, effective_addr2, b2, regs);
@@ -1214,20 +1214,20 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op6addr, op6alet ? r3 : 0, 4-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 7th op at 8th op */
-        if(op8alet)
-            regs->AR(r3) = op8alet;
-        ARCH_DEP(vstore4)(op7, op8addr, op8alet ? r3 : 0, regs);
+        /* Store 3rd op at 4th op */
+        if(op4alet)
+            regs->AR(r3) = op4alet;
+        ARCH_DEP(vstore4)(op3, op4addr, op4alet ? r3 : 0, regs);
 
         /* Store 5th op at 6th op */
         if(op6alet)
             regs->AR(r3) = op6alet;
         ARCH_DEP(vstore4)(op5, op6addr, op6alet ? r3 : 0, regs);
 
-        /* Store 3rd op at 4th op */
-        if(op4alet)
-            regs->AR(r3) = op4alet;
-        ARCH_DEP(vstore4)(op3, op4addr, op4alet ? r3 : 0, regs);
+        /* Store 7th op at 8th op */
+        if(op8alet)
+            regs->AR(r3) = op8alet;
+        ARCH_DEP(vstore4)(op7, op8addr, op8alet ? r3 : 0, regs);
 
         /* Store 1st op replacement at 2nd op */
         ARCH_DEP(vstore4)(regs->GR_L(r1+1), effective_addr2, b2, regs);
@@ -1328,20 +1328,20 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op6addr, op6alet ? r3 : 0, 8-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 7th op at 8th op */
-        if(op8alet)
-            regs->AR(r3) = op8alet;
-        ARCH_DEP(vstore8)(op7, op8addr, op8alet ? r3 : 0, regs);
+        /* Store 3th op at 4th op */
+        if(op4alet)
+            regs->AR(r3) = op4alet;
+        ARCH_DEP(vstore8)(op3, op4addr, op4alet ? r3 : 0, regs);
 
         /* Store 5th op at 6th op */
         if(op6alet)
             regs->AR(r3) = op6alet;
         ARCH_DEP(vstore8)(op5, op6addr, op6alet ? r3 : 0, regs);
 
-        /* Store 3th op at 4th op */
-        if(op4alet)
-            regs->AR(r3) = op4alet;
-        ARCH_DEP(vstore8)(op3, op4addr, op4alet ? r3 : 0, regs);
+        /* Store 7th op at 8th op */
+        if(op8alet)
+            regs->AR(r3) = op8alet;
+        ARCH_DEP(vstore8)(op7, op8addr, op8alet ? r3 : 0, regs);
 
         /* Store 1st op replacement value at 2nd op */
         ARCH_DEP(vstore8)(op1r, effective_addr2, b2, regs);
@@ -1428,20 +1428,20 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op6addr, op6alet ? r3 : 0, 8-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 7th op at 8th op */
-        if(op8alet)
-            regs->AR(r3) = op8alet;
-        ARCH_DEP(vstore8)(op7, op8addr, op8alet ? r3 : 0, regs);
+        /* Store 3rd op at 4th op */
+        if(op4alet)
+            regs->AR(r3) = op4alet;
+        ARCH_DEP(vstore8)(op3, op4addr, op4alet ? r3 : 0, regs);
 
         /* Store 5th op at 6th op */
         if(op6alet)
             regs->AR(r3) = op6alet;
         ARCH_DEP(vstore8)(op5, op6addr, op6alet ? r3 : 0, regs);
 
-        /* Store 3rd op at 4th op */
-        if(op4alet)
-            regs->AR(r3) = op4alet;
-        ARCH_DEP(vstore8)(op3, op4addr, op4alet ? r3 : 0, regs);
+        /* Store 7th op at 8th op */
+        if(op8alet)
+            regs->AR(r3) = op8alet;
+        ARCH_DEP(vstore8)(op7, op8addr, op8alet ? r3 : 0, regs);
 
         /* Store 1st op replacement at 2nd op */
         ARCH_DEP(vstore8)(regs->GR_G(r1+1), effective_addr2, b2, regs);
@@ -1532,20 +1532,20 @@ VADR op4addr,
         ARCH_DEP(validate_operand) (op6addr, op6alet ? r3 : 0, 16-1,
             ACCTYPE_WRITE, regs);
 
-        /* Store 7th op at 8th op */
-        if(op8alet)
-            regs->AR(r3) = op8alet;
-        ARCH_DEP(vstorec)(op7, 16-1, op8addr, op8alet ? r3 : 0, regs);
+        /* Store 3th op at 4th op */
+        if(op4alet)
+            regs->AR(r3) = op4alet;
+        ARCH_DEP(vstorec)(op3, 16-1, op4addr, op4alet ? r3 : 0, regs);
 
         /* Store 5th op at 6th op */
         if(op6alet)
             regs->AR(r3) = op6alet;
         ARCH_DEP(vstorec)(op5, 16-1, op6addr, op6alet ? r3 : 0, regs);
 
-        /* Store 3th op at 4th op */
-        if(op4alet)
-            regs->AR(r3) = op4alet;
-        ARCH_DEP(vstorec)(op3, 16-1, op4addr, op4alet ? r3 : 0, regs);
+        /* Store 7th op at 8th op */
+        if(op8alet)
+            regs->AR(r3) = op8alet;
+        ARCH_DEP(vstorec)(op7, 16-1, op8addr, op8alet ? r3 : 0, regs);
 
         /* Store 1st op replacement value at 2nd op */
         ARCH_DEP(vstorec)(op1r, 16-1, effective_addr2, b2, regs);
