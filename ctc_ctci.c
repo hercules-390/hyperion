@@ -104,8 +104,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         // New format has only one device statement for both addresses
         // We need to dynamically allocate the read device block
 
-        pDevCTCBLK->pDEVBLK[0] = pDEVBLK;
-        pDevCTCBLK->pDEVBLK[1] = NULL;
+        pDevCTCBLK->pDEVBLK[0] = NULL;
+        pDevCTCBLK->pDEVBLK[1] = pDEVBLK;
 
         AddDevice( &pDevCTCBLK->pDEVBLK[0], pDEVBLK->devnum,
                    pDEVBLK );
