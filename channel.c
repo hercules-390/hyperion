@@ -1291,6 +1291,28 @@ BYTE    storkey;                        /* Storage key               */
 
     /* Channel program check if IDAW data location is not
        on a page boundary, except for the first IDAW */        /*@IWZ*/
+
+    if (IS_CCW_RDBACK (code))
+    {
+        if (idaseq > 0 && ((idaw+1) & idapmask) != 0)
+        {
+            *chanstat = CSW_PROGC;
+            return;
+        }
+
+        /* Pre-decrement first idaw */
+        idaw -= (idaseq == 0 ? 1 : 0);
+
+        /* Calculate address of next page boundary */
+        idapage = (idaw & ~idapmask);
+        idalen = (idaw - idapage) + 1;
+
+        /* Return the address and length for this IDAW */
+        *addr = idaw;
+        *len = idalen;
+    }
+    else
+    {
     if (idaseq > 0 && (idaw & idapmask) != 0)                  /*@IWZ*/
     {
         *chanstat = CSW_PROGC;
@@ -1304,6 +1326,7 @@ BYTE    storkey;                        /* Storage key               */
     /* Return the address and length for this IDAW */
     *addr = idaw;
     *len = idalen;
+    }
 
 } /* end function fetch_idaw */
 
@@ -1376,10 +1399,22 @@ BYTE    area[64];                       /* Data display area         */
                 (readcmd ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
 
             /* Copy data between main storage and channel buffer */
+            if (IS_CCW_RDBACK(code))
+            {
+                idadata =  (idadata - idalen) + 1;
+                memcpy (sysblk.mainstor + idadata,
+                        &iobuf[ idacount - idalen ], idalen);
+            }
+            else
+            {
             if (readcmd)
                 memcpy (sysblk.mainstor + idadata, iobuf, idalen);
             else
                 memcpy (iobuf, sysblk.mainstor + idadata, idalen);
+
+                /* Increment buffer pointer */
+                iobuf += idalen;
+            }
 
             /* Display the IDAW if CCW tracing is on */
             if (dev->ccwtrace || dev->ccwstep)
@@ -1402,7 +1437,6 @@ BYTE    area[64];                       /* Data display area         */
 
             /* Decrement remaining count, increment buffer pointer */
             idacount -= idalen;
-            iobuf += idalen;
 
             /* Increment to next IDAW address */
             idawaddr += (idawfmt == 1) ? 4 : 8;
@@ -1410,6 +1444,12 @@ BYTE    area[64];                       /* Data display area         */
         } /* end for(idaseq) */
 
     } else {                            /* Non-IDA data addressing */
+
+        /* Point to start of data for read backward command */
+        if (IS_CCW_RDBACK (code))
+        {
+            addr -= (count + 1);
+        }
 
         /* Channel program check if data is outside main storage */
         if ( CHADDRCHK(addr, dev) || CHADDRCHK(addr + (count - 1), dev) )
@@ -2460,7 +2500,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         if (dev->ccwtrace || dev->ccwstep || tracethis)
         {
             /* Format data for READ or SENSE commands only */
-            if (IS_CCW_READ(dev->code) || IS_CCW_SENSE(dev->code))
+            if (IS_CCW_READ(dev->code) || IS_CCW_SENSE(dev->code) || IS_CCW_RDBACK(dev->code))
                 format_iobuf_data (addr, area);
             else
                 area[0] = '\0';

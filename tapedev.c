@@ -3040,7 +3040,7 @@ long            locblock;               /* Block Id for Locate Block */
     }
 
     /* Command reject if data chaining and command is not READ */
-    if ((flags & CCW_FLAGS_CD) && code != 0x02)
+    if ((flags & CCW_FLAGS_CD) && code != 0x02 && code != 0x0C)
     {
         logmsg(_("HHC283I Data chaining not supported for CCW %2.2X\n"),
                 code);
@@ -3272,6 +3272,127 @@ long            locblock;               /* Block Id for Locate Block */
 
         /* Set unit status */
         *residual = 0;
+        *unitstat = CSW_CE | CSW_DE;
+        break;
+
+    case 0x0C:
+    /*---------------------------------------------------------------*/
+    /* READ BACKWARD                                                 */
+    /*---------------------------------------------------------------*/
+        /* Backspace to previous block according to device type */
+        switch (dev->tapedevt)
+        {
+        default:
+        case TAPEDEVT_AWSTAPE:
+            rc = bsb_awstape (dev, unitstat);
+            break;
+
+        case TAPEDEVT_HET:
+            rc = bsb_het (dev, unitstat);
+            break;
+
+        case TAPEDEVT_SCSITAPE:
+            rc = bsb_scsitape (dev, unitstat);
+            break;
+
+        case TAPEDEVT_OMATAPE:
+            rc = bsb_omatape (dev, unitstat);
+            break;
+
+        } /* end switch(dev->tapedevt) */
+
+        /* Exit with unit check status if error condition */
+        if (rc < 0)
+            break;
+
+        /* Exit with unit exception status if tapemark was sensed */
+        if (rc == 0)
+        {
+            *residual = 0;
+            *unitstat = CSW_CE | CSW_DE | CSW_UX;
+            break;
+        }
+
+        /* Read a block from the tape according to device type */
+        switch (dev->tapedevt)
+        {
+        default:
+        case TAPEDEVT_AWSTAPE:
+            len = read_awstape (dev, iobuf, unitstat);
+            break;
+
+        case TAPEDEVT_HET:
+            len = read_het (dev, iobuf, unitstat);
+            break;
+
+        case TAPEDEVT_SCSITAPE:
+            len = read_scsitape (dev, iobuf, unitstat);
+            break;
+
+        case TAPEDEVT_OMATAPE:
+            omadesc = (OMATAPE_DESC*)(dev->omadesc);
+            omadesc += dev->curfilen;
+
+            switch (omadesc->format)
+            {
+            default:
+            case 'H':
+                len = read_omaheaders (dev, omadesc, iobuf, unitstat);
+                break;
+            case 'F':
+                len = read_omafixed (dev, omadesc, iobuf, unitstat);
+                break;
+            case 'T':
+                len = read_omatext (dev, omadesc, iobuf, unitstat);
+                break;
+            } /* end switch(omadesc->format) */
+
+            break;
+
+        } /* end switch(dev->tapedevt) */
+
+        /* Exit with unit check status if read error condition */
+        if (len < 0)
+            break;
+
+        /* Calculate number of bytes to read and residual byte count */
+        num = (count < len) ? count : len;
+        *residual = count - num;
+        if (count < dev->curblkrem) *more = 1;
+
+        /* Save size and offset of data not used by this CCW */
+        dev->curblkrem = len - num;
+        dev->curbufoff = num;
+
+        dev->blockid++;
+
+        /* Backspace to previous block according to device type */
+        switch (dev->tapedevt)
+        {
+        default:
+        case TAPEDEVT_AWSTAPE:
+            rc = bsb_awstape (dev, unitstat);
+            break;
+
+        case TAPEDEVT_HET:
+            rc = bsb_het (dev, unitstat);
+            break;
+
+        case TAPEDEVT_SCSITAPE:
+            rc = bsb_scsitape (dev, unitstat);
+            break;
+
+        case TAPEDEVT_OMATAPE:
+            rc = bsb_omatape (dev, unitstat);
+            break;
+
+        } /* end switch(dev->tapedevt) */
+
+        /* Exit with unit check status if error condition */
+        if (rc < 0)
+            break;
+
+        /* Set normal status */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
