@@ -15,9 +15,9 @@ ifndef HOST_ARCH
 HOST_ARCH=pentium
 endif
 
-VERSION  = 2.12n_$(HOST_ARCH)
+VERSION  = 2.12_$(HOST_ARCH)
 
-# Change this if you want to install the Hercules executables somewhere
+#   Set the default directory where you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
 #   overridden in the make command line, as in "PREFIX=/foo make install"
 #   (the directory is only used when installing).
@@ -25,6 +25,12 @@ ifeq ($(WIN),yes)
 DESTDIR  = $(PREFIX)/hercules2
 else
 DESTDIR  = $(prefix)/usr/bin
+endif
+
+#    The default installation directory can be overridden by the DEST= keyword
+#    when executing the make utility
+ifndef DEST
+DEST = $(DESTDIR)
 endif
 
 # Standard compiler flags used for all architectures
@@ -37,40 +43,43 @@ CC = gcc -I$(PTHREADS_W32DIR)/Pthreads
 endif
 
 ifeq ($(WIN),yes)
-CFLAGS +=  -DWIN32
-CFLAGS +=  -D__LITTLE_ENDIAN=1234
-CFLAGS +=  -D__BYTE_ORDER="__LITTLE_ENDIAN"
-CFLAGS +=  -DNO_BYTESWAP_H  -DNO_ASM_BYTESWAP
+CFLAGS += -DWIN32
+CFLAGS += -D__LITTLE_ENDIAN=1234
+CFLAGS += -D__BYTE_ORDER=1234
+CFLAGS += -DNO_BYTESWAP_H
 endif
 
 
 #set compiler flags depending on HOST_ARCH
 ifeq ($(HOST_ARCH),i386)
-CFLAGS	+= -O3 -malign-double
+CFLAGS += -O3 -malign-double
+CFLAGS += -DNO_ASM_BYTESWAP
 endif
 
 ifeq ($(HOST_ARCH),i586)
-CFLAGS	+= -O3 -malign-double -march=pentium
+CFLAGS += -O3 -malign-double -march=pentium
 endif
 
 ifeq ($(HOST_ARCH),pentium)
-CFLAGS	+= -O3 -malign-double -march=pentium
+CFLAGS += -O3 -malign-double -march=pentium
 endif
 
 ifeq ($(HOST_ARCH),i686)
-CFLAGS	+= -O3 -malign-double -march=pentiumpro
+CFLAGS += -O3 -malign-double -march=pentiumpro
 endif
 
 ifeq ($(HOST_ARCH),pentiumpro)
-CFLAGS	+= -O3 -malign-double -march=pentiumpro
+CFLAGS += -O3 -malign-double -march=pentiumpro
 endif
 
 ifeq ($(HOST_ARCH),alpha)
-CFLAGS	+= -O2
+CFLAGS += -O2
+CFLAGS += -DNO_ASM_BYTESWAP
 endif
 
 ifeq ($(HOST_ARCH),other)
-CFLAGS	+= -O3
+CFLAGS += -O3
+CFLAGS += -DNO_ASM_BYTESWAP
 endif
 
 # For Linux/390 use:
@@ -79,9 +88,9 @@ endif
 
 
 ifeq ($(WIN),yes)
-LFLAGS	 = -L$(PTHREADS_W32DIR)/DLL -lpthreadw32
+LFLAGS = -L$(PTHREADS_W32DIR)/DLL -lpthreadw32
 else
-LFLAGS	 = -lpthread
+LFLAGS = -lpthread
 endif
 
 # Comment out the line below to build a console-mode only
@@ -94,20 +103,23 @@ endif
 
 CFLAGS += -DEXTERNALGUI
 
-# Reverse the comments below to disable Compressed CKD Dasd support
-#CFLAGS  += -DNO_CCKD
-LFLAGS	+= -lz
+# Change the value below to YES to enable compresion
+#			 to NO	to disable compression
+CCKD=YES
 
-BZIP2=NO
-# Remove (comment) these lines to disable Compressed CKD bzip2 compression
-CFLAGS	+= -DCCKD_BZIP2
+# Change the value below to YES to use bzip2 compression
+#			 to NO	to use standard compression
 BZIP2=YES
 
-# Remove (comment) these lines to enable HET bzip2 compression
-CFLAGS += -DHET_BZIP2
-BZIP2=YES
+ifeq ($(CCKD),YES)
+LFLAGS += -lz
+else
+CFLAGS += -DNO_CCKD
+endif
 
 ifeq ($(BZIP2),YES)
+CFLAGS += -DCCKD_BZIP2
+CFLAGS += -DHET_BZIP2
 LFLAGS += -lbz2
 endif
 
@@ -127,21 +139,22 @@ EXEFILES = hercules \
 	   hetget   \
 	   hetinit  \
 	   hetmap   \
-	   hetupd
+	   hetupd   \
+	   dmap2hrc
 
 ifeq ($(WIN),yes)
 else
 EXEFILES += hercifc
 endif
 
-TARFILES = makefile		\
-	   *.c			\
-	   *.h			\
-	   hercules.cnf 	\
-	   tapeconv.jcl 	\
-	   util/dasdlist	\
-	   html 		\
-	   zzsa.cnf		\
+TARFILES = makefile \
+	   *.c \
+	   *.h \
+	   hercules.cnf \
+	   tapeconv.jcl \
+	   util/dasdlist \
+	   html \
+	   zzsa.cnf \
 	   zzsacard.bin
 
 HRC_OBJS = impl.o \
@@ -228,6 +241,8 @@ HMA_OBJS = hetmap.o hetlib.o sllib.o version.o
 
 HUP_OBJS = hetupd.o hetlib.o sllib.o version.o
 
+D2H_OBJS = dmap2hrc.o version.o
+
 HEADERS  = feat370.h \
 	   feat390.h \
 	   feat900.h \
@@ -247,7 +262,7 @@ HEADERS  = feat370.h \
 
 #HEADERS  = esa390.h version.h inline.h
 
-all:		$(EXEFILES)
+all:  $(EXEFILES)
 
 hercules:  $(HRC_OBJS)
 	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS)
@@ -297,6 +312,9 @@ hetmap:  $(HMA_OBJS)
 hetupd:  $(HUP_OBJS)
 	$(CC) -o hetupd $(HUP_OBJS) $(LFLAGS)
 
+dmap2hrc:  $(D2H_OBJS)
+	$(CC) -o dmap2hrc $(D2H_OBJS) $(LFLAGS)
+
 dasdinit.o: dasdinit.c $(HEADERS) dasdblks.h
 
 dasdisup.o: dasdisup.c $(HEADERS) dasdblks.h
@@ -335,9 +353,9 @@ hetmap.o: hetmap.c hetlib.h sllib.h
 
 hetupd.o: hetupd.c hetlib.h sllib.h
 
+dmap2hrc.o: dmap2hrc.c $(HEADERS)
 
-cckd:		 cckd2ckd cckdcdsk ckd2cckd cckdcomp
-
+cckd: cckd2ckd cckdcdsk ckd2cckd cckdcomp
 
 clean:
 	rm -rf $(EXEFILES) *.o
@@ -346,13 +364,15 @@ tar:	clean
 	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
 
 install:  $(EXEFILES)
+	mkdir -p $(DEST)
 ifeq ($(WIN),yes)
-	cp *.exe $(DESTDIR)
+	cp *.exe $(DEST)
+	cp util/dasdlist* $(DEST)
 else
-	cp $(EXEFILES) $(DESTDIR)
-	cp util/dasdlist $(DESTDIR)
-	chown root $(DESTDIR)/hercifc
-	chmod 0751 $(DESTDIR)/hercifc
-	chmod +s $(DESTDIR)/hercifc
+	cp $(EXEFILES) $(DEST)
+	cp util/dasdlist $(DEST)
+	chown root $(DEST)/hercifc
+	chmod 0751 $(DEST)/hercifc
+	chmod +s $(DEST)/hercifc
 	rm hercifc
 endif
