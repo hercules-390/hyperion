@@ -1729,7 +1729,7 @@ BYTE                    unitstat;       /* Status after receive data */
     free(server);
 
     logmsg (_("HHCTE004I Console connection thread terminated\n"));
-
+    sysblk.cnsltid = 0;
     return NULL;
 
 } /* end function console_connection_handler */
@@ -1738,7 +1738,7 @@ BYTE                    unitstat;       /* Status after receive data */
 static int
 console_initialise()
 {
-    if(!(console_cnslcnt++))
+    if(!(console_cnslcnt++) && !sysblk.cnsltid)
     {
         if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
                             console_connection_handler, NULL) )
@@ -1812,6 +1812,10 @@ loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     }
     dev->numdevid = 7;
 
+    dev->filename[0] = 0;
+    dev->acc_ipaddr = 0;
+    dev->acc_ipmask = 0;
+
     if (argc > 0)   // group name?
     {
         if ('*' == argv[ac][0] && '\0' == argv[ac][1])
@@ -1855,15 +1859,6 @@ loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
                     dev->acc_ipmask = (in_addr_t)(-1);
             }
         }
-        else
-        {
-            dev->acc_ipaddr = 0;
-            dev->acc_ipmask = 0;
-        }
-    }
-    else
-    {
-        dev->filename[0]=0;
     }
 
     return console_initialise();
@@ -1991,6 +1986,10 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->devid[6] = 0x00;
     dev->numdevid = 7;
 
+    dev->filename[0] = 0;
+    dev->acc_ipaddr = 0;
+    dev->acc_ipmask = 0;
+
     if (argc > 0)   // group name?
     {
         if ('*' == argv[ac][0] && '\0' == argv[ac][1])
@@ -2034,15 +2033,6 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
                     dev->acc_ipmask = (in_addr_t)(-1);
             }
         }
-        else
-        {
-            dev->acc_ipaddr = 0;
-            dev->acc_ipmask = 0;
-        }
-    }
-    else
-    {
-        dev->filename[0]=0;
     }
 
     return console_initialise();
