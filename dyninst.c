@@ -11,6 +11,7 @@
 
 #include "hercules.h"
 
+
 #if defined(WIN32)
 /* We need to do some special tricks for cygwin here, since cygwin   */
 /* does not support backlink and we need to resolve symbols during   */
@@ -113,9 +114,9 @@ static void * opcode_e6xx;
 static void * opcode_ebxx;
 static void * opcode_ecxx;
 static void * opcode_edxx;
-static zz_func s370_opcode_table[];
-static zz_func s390_opcode_table[];
-static zz_func z900_opcode_table[];
+static void * s370_opcode_table;
+static void * s390_opcode_table;
+static void * z900_opcode_table;
 #endif
 
 static char *prefix[] = {
@@ -244,6 +245,12 @@ void *tmp;
 }
 
 
+static inline void copy_opcode(zz_func to_table[256], zz_func from_table[256][GEN_MAXARCH], int opcode, int arch_mode)
+{
+    to_table[opcode] = from_table[opcode][arch_mode];
+}
+
+
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY (HERCULES);
@@ -290,6 +297,9 @@ int opcode, extop;
         HDL_RESOLVE(opcode_ebxx);
         HDL_RESOLVE(opcode_ecxx);
         HDL_RESOLVE(opcode_edxx);
+        HDL_RESOLVE(s370_opcode_table);
+        HDL_RESOLVE(s390_opcode_table);
+        HDL_RESOLVE(z900_opcode_table);
 
         opcode_save();
 
@@ -379,21 +389,19 @@ int opcode, extop;
 
     }
 
-#if !defined(WIN32)  /* ZZ FIXME */
     /* Copy opcodes to performance shadow table */
     for (opcode = 0; opcode < 256; opcode++)
     {
 #if defined(_370)
-        s370_opcode_table[opcode] = opcode_table[opcode][ARCH_370];
+        copy_opcode(s370_opcode_table,opcode_table,opcode,ARCH_370);
 #endif
 #if defined(_390)
-        s390_opcode_table[opcode] = opcode_table[opcode][ARCH_390];
+        copy_opcode(s390_opcode_table,opcode_table,opcode,ARCH_390);
 #endif
 #if defined(_900)
-        z900_opcode_table[opcode] = opcode_table[opcode][ARCH_900];
+        copy_opcode(z900_opcode_table,opcode_table,opcode,ARCH_900);
 #endif
     }
-#endif
 
 } END_RESOLVER_SECTION;
 
