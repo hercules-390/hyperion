@@ -164,7 +164,18 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
              && memcmp ("sf=", argv[i], 3) == 0)
             {
                 if (strlen(argv[i]+3) < 256)
-                    strcpy (dev->dasdsfn, argv[i]+3);
+                    dev->dasdsfn=strdup (argv[i]+3);
+                    if (dev->dasdsfn)
+                    {
+                    /* Set the pointer to the suffix character */
+                        dev->dasdsfx = strrchr (dev->dasdsfn, '/');
+                        if (dev->dasdsfx == NULL)
+                            dev->dasdsfx = dev->dasdsfn + 1;
+                        dev->dasdsfx = strchr (dev->dasdsfx, '.');
+                        if (dev->dasdsfx == NULL)
+                            dev->dasdsfx = dev->dasdsfn + strlen(dev->dasdsfn);
+                        dev->dasdsfx--;
+                    }
                 continue;
             }
             if (strcasecmp ("nosyncio", argv[i]) == 0

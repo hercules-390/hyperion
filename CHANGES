@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+15 Oct 2004 Apply CKD Shadow file update to FBA devices - Ivan Warren
 14 Oct 2004 Resolved pointers to signed/unsigned types issues
             revealed by gcc 4.0 pre-release experiments - Ivan Warren
 12 Oct 2004 Tweak cckd free space processing - Greg Smith
