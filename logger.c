@@ -29,7 +29,7 @@ int  logger_wrapped;
    one being the most recent line                                    */
 int log_line(int linenumber)
 {
-char *msgbuf[2],*tmpbuf;
+char *msgbuf[2],*tmpbuf = NULL;
 int  msgidx[2] = { -1, -1 };
 int  msgcnt[2];
 int  i;
@@ -56,6 +56,13 @@ int  i;
             if(!linenumber)
                 break;
         }
+
+    while(i < 2 && tmpbuf && (*tmpbuf == '\r' || *tmpbuf == '\n'))
+    {
+        tmpbuf++;
+        msgcnt[i]++;
+    }
+
     return i ? msgcnt[i] + msgidx[0] : msgcnt[i];
 }
 
