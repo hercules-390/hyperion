@@ -11,7 +11,7 @@
 /* Any thread can determine background mode by inspecting stderr     */
 /* for isatty()                                                      */
 
-#include "hercules.h" 
+#include "hercules.h"
 #include "opcode.h"             /* Required for SETMODE macro        */
 
 static ATTR  logger_attr;
@@ -156,11 +156,13 @@ static void logger_term(void *arg __attribute__ ((unused)) )
     {
         obtain_lock(&logger_lock);
 
-fflush(stdout);
+        /* Flush all pending logger o/p before redirecting?? */
+        fflush(stdout);
+
         /* Redirect all output to stderr */
         dup2(STDERR_FILENO, STDOUT_FILENO);
 
-        /* Mark logger inactive */
+        /* Tell logger thread we want it to exit */
         logger_active = 0;
 
         /* Send the logger a message to wake it up */
@@ -172,7 +174,10 @@ fflush(stdout);
         release_lock(&logger_lock);
 
         /* Wait for the logger to terminate */
-//      pthread_join(logger_tid, NULL);
+        VERIFY(join_thread(logger_tid,NULL));
+
+        /* Release its system resources */
+        VERIFY(detach_thread(logger_tid));
     }
 }
 
@@ -200,7 +205,7 @@ int bytes_read;
         exit(1);
     }
     setvbuf (stdout, NULL, _IOLBF, 0);
-    
+
     /* call logger_term on system shutdown */
     hdl_adsc(logger_term, NULL);
 
@@ -214,6 +219,9 @@ int bytes_read;
     release_lock(&logger_lock);
 
     /* ZZ FIXME:  We must empty the read pipe before we terminate */
+    /* (Couldn't we just loop waiting for a 'select(,&readset,,,timeout)'
+        to return zero?? Or use the 'poll' function similarly?? - Fish) */
+
     while(logger_active)
     {
         bytes_read = read(logger_syslogfd[LOG_READ],logger_buffer + logger_currmsg,
@@ -261,7 +269,8 @@ int bytes_read;
 
 void logger_init(void)
 {
-    initialize_detach_attr (&logger_attr);
+//  initialize_detach_attr (&logger_attr);
+    initialize_join_attr(&logger_attr);     // (JOINable)
     initialize_condition (&logger_cond);
     initialize_lock (&logger_lock);
 
@@ -273,8 +282,8 @@ void logger_init(void)
        as the log file. */
     if(!isatty(STDOUT_FILENO) && !isatty(STDERR_FILENO))
     {
-        /* Ignore standard output to the extent that it is 
-           treated as standard error */ 
+        /* Ignore standard output to the extent that it is
+           treated as standard error */
         logger_hrdcpyfd = dup(STDOUT_FILENO);
         if(dup2(STDERR_FILENO,STDOUT_FILENO) == -1)
         {

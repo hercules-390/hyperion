@@ -45,6 +45,11 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 
+/*-------------------------------------------------------------------*/
+/* Ignore "Negotiate About Window Size" client option (for now) so   */
+/* WinNT version of telnet works. -- Greg Price (implemted by Fish)  */
+/*-------------------------------------------------------------------*/
+
 #include "hercules.h"
 
 #include "devtype.h"
@@ -73,6 +78,7 @@ extern
 #define SUPPRESS_GA     3       /* Suppress go-ahead option */
 #define TIMING_MARK     6       /* Timing mark option */
 #define TERMINAL_TYPE   24      /* Terminal type option */
+#define NAWS            31      /* Negotiate About Window Size */
 #define EOR             25      /* End of record option */
 #define EOR_MARK        239     /* End of record marker */
 #define SE              240     /* End of subnegotiation parameters */
@@ -606,6 +612,7 @@ static BYTE dont_sga[] = { IAC, DONT, SUPPRESS_GA };
 #endif
 static BYTE wont_echo[] = { IAC, WONT, ECHO_OPTION };
 static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
+static BYTE will_naws[] = { IAC, WILL, NAWS };
 
     /* Perform terminal-type negotiation */
     rc = send_packet (csock, do_term, sizeof(do_term),
@@ -623,6 +630,14 @@ static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
 
     rc = recv_packet (csock, buf, sizeof(buf)-2, SE);
     if (rc < 0) return -1;
+
+    /* Ignore Negotiate About Window Size */
+    if (rc >= sizeof(will_naws) &&
+        memcmp (buf, will_naws, sizeof(will_naws)) == 0)
+    {
+        memmove(buf, &buf[sizeof(will_naws)], (rc - sizeof(will_naws)));
+        rc -= sizeof(will_naws);
+    }
 
     if (rc < (int)(sizeof(type_is) + 2)
         || memcmp(buf, type_is, sizeof(type_is)) != 0

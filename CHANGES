@@ -1,5 +1,9 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+26 Nov 2003 console.c: ignore "Negotiate About Window Size" from telnet
+            client so e.g. WinNT telnet client works - Greg Price by Fish
+26 Nov 2003 Add missing 'filename' initialization for CTCI devices - Fish
+26 Nov 2003 Enable thread joining logic in logger_term - Fish
 24 Nov 2003 Fixed fthreads: basically almost a complete rewrite, involving
             thread joining support and & mutex attribute support; version
             number in configure.ac bumped to 3.00a.3 - Fish

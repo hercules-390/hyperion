@@ -65,7 +65,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
     PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
     PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
-    DEVBLK*         pDevPair = NULL;    // Paired  DEVBLK
+    DEVBLK*         pDEVBLK2 = NULL;    // Paired  DEVBLK
     int             rc = 0;             // Return code
 
     pDEVBLK->devtype = 0x3088;
@@ -129,16 +129,16 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         pDevCTCBLK->pDEVBLK[1]->ctctype  = CTC_CTCI;
         pDevCTCBLK->pDEVBLK[1]->ctcxmode = 1;
 
-        pDevPair = pDEVBLK;
+        pDEVBLK2 = pDEVBLK;
     }
     else
     {
         // Old format has paired device statements
         // Find device block for paired CTC adapter device number
-        pDevPair = find_device_by_devnum( pDEVBLK->devnum ^ 0x01 );
+        pDEVBLK2 = find_device_by_devnum( pDEVBLK->devnum ^ 0x01 );
 
         // First pass through?
-        if( !pDevPair )
+        if( !pDEVBLK2 )
         {
             // Allocate the CTCBLK
             pDevCTCBLK = malloc( sizeof( CTCBLK ) );
@@ -160,7 +160,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         else
         {
             // Use CTCBLK from the paired DEVBLK
-            pDevCTCBLK = (PCTCBLK)pDevPair->dev_data;
+            pDevCTCBLK = (PCTCBLK)pDEVBLK2->dev_data;
 
             pDEVBLK->dev_data  = pDevCTCBLK;
 
@@ -174,9 +174,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         pDEVBLK->ctcxmode            = 1;
     }
 
-    if( pDevPair )
+    if( pDEVBLK2 )
     {
-        // pDevPair is non-null if:
+        // pDEVBLK2 is non-null if:
         //   Old format and this is the 2nd pass or
         //   New format unconditionally
 
@@ -186,6 +186,16 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         initialize_lock( &pDevCTCBLK->Lock );
         initialize_lock( &pDevCTCBLK->EventLock );
         initialize_condition( &pDevCTCBLK->Event );
+
+        // Give both Herc devices a reasonable name...
+
+        strlcpy( pDevCTCBLK->pDEVBLK[0]->filename,
+                 pDevCTCBLK->szTUNCharName,
+         sizeof( pDevCTCBLK->pDEVBLK[0]->filename ) );
+
+        strlcpy( pDevCTCBLK->pDEVBLK[1]->filename,
+                 pDevCTCBLK->szTUNCharName,
+         sizeof( pDevCTCBLK->pDEVBLK[1]->filename ) );
 
         rc = TUNTAP_CreateInterface( pDevCTCBLK->szTUNCharName,
                                      IFF_TUN | IFF_NO_PI,
@@ -455,10 +465,10 @@ void  CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
 
 int  CTCI_Close( DEVBLK* pDEVBLK )
 {
-    DEVBLK* pDevPair;
+    DEVBLK* pDEVBLK2;
     PCTCBLK pCTCBLK  = (PCTCBLK)pDEVBLK->dev_data;
 
-    pDevPair = find_device_by_devnum( pDEVBLK->devnum ^ 0x01 );
+    pDEVBLK2 = find_device_by_devnum( pDEVBLK->devnum ^ 0x01 );
 
     // Close the device file (if not already closed)
     if( pCTCBLK->fd >= 0 )
@@ -470,8 +480,8 @@ int  CTCI_Close( DEVBLK* pDEVBLK )
         pCTCBLK->fd = -1;
         pDEVBLK->fd = -1;           // indicate we're now closed
 
-        if( pDevPair )              // if paired device exists,
-            pDevPair->fd = -1;      // then it's now closed too.
+        if( pDEVBLK2 )              // if paired device exists,
+            pDEVBLK2->fd = -1;      // then it's now closed too.
 
         pCTCBLK->fCloseInProgress = 0;
     }
