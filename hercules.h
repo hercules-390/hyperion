@@ -356,6 +356,8 @@ typedef int DEVCF (struct _DEVBLK *dev);
 typedef void DEVSF (struct _DEVBLK *dev);
 typedef int CKDRT (struct _DEVBLK *, int, int, BYTE *);
 typedef int CKDUT (struct _DEVBLK *, BYTE *, int, BYTE *);
+typedef int FBARB (struct _DEVBLK *, BYTE *, int, BYTE *);
+typedef int FBAWB (struct _DEVBLK *, BYTE *, int, BYTE *);
 
 /*-------------------------------------------------------------------*/
 /* Structure definition for the Vector Facility                      */
@@ -1110,11 +1112,19 @@ typedef struct _DEVBLK {
                 longfmt:1;              /* 1=Long record format (DDR)*/ /*DDR*/
         BYTE    tapedevt;               /* Tape device type          */
 
+        /*  Device dependent fields for dasd (fba and ckd)           */
+
+        int     dasdcur;                /* Current ckd trk or fba blk*/
+        BYTE    dasdsfn[256];           /* Shadow file name          */
+
         /*  Device dependent fields for fbadasd                      */
 
+        FBARB  *fbardblk;               /* -> Read block routine     */
+        FBAWB  *fbawrblk;               /* -> Write block  routine   */
         FBADEV *fbatab;                 /* Device table entry        */
         U32     fbaorigin;              /* Device origin block number*/
         U32     fbanumblk;              /* Number of blocks in device*/
+        off_t   fbarba;                 /* Relative byte offset      */
         U32     fbaxblkn;               /* Offset from start of device
                                            to first block of extent  */
         U32     fbaxfirst;              /* Block number within dataset
@@ -1147,7 +1157,6 @@ typedef struct _DEVBLK {
         int     ckdtrksz;               /* Track size                */
         int     ckdcurcyl;              /* Current cylinder          */
         int     ckdcurhead;             /* Current head              */
-        int     ckdcurtrk;              /* Current track             */
         int     ckdcurrec;              /* Current record id         */
         int     ckdcurkl;               /* Current record key length */
         int     ckdorient;              /* Current orientation       */
@@ -1174,7 +1183,6 @@ typedef struct _DEVBLK {
         int     ckdcachehits;           /* Cache hits                */
         int     ckdcachemisses;         /* Cache misses              */
         U64     ckdcacheage;            /* Cache aging counter       */
-        BYTE    ckdsfn[256];            /* Shadow file name          */
         void   *cckd_ext;               /* -> Compressed ckddasd
                                            extension otherwise NULL  */
         unsigned int                    /* Flags                     */
@@ -1370,9 +1378,6 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 
 /* adjustable values */
 
-#define CCKD_L2CACHE_NBR       64       /* Number of secondary lookup
-                                           tables that will be cached
-                                           in storage                */
 #define CCKD_COMPRESS_MIN      512      /* Track images smaller than
                                            this won't be compressed  */
 #define CCKD_MAX_SF            8        /* Maximum number of shadow
@@ -1404,6 +1409,13 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_DEFAULT_CACHE     128      /* Default cache size        */
 #define CCKD_DEFAULT_L2CACHE   256      /* Default level 2 cache size*/
 #define CCKD_DEFAULT_READAHEADS 2       /* Default nbr to read ahead */
+
+#define CFBA_BLOCK_NUM         120      /* Number fba blocks / group */
+#define CFBA_BLOCK_SIZE        61440    /* Size of a block group 60k */
+                                        /* Number of bytes in an fba
+                                           block group.  Probably
+                                           should be a multiple of 512
+                                           but has to be < 64K       */
 
 typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         BYTE             id[8];         /* "CCKDBLK "                */
@@ -1471,9 +1483,9 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
 
 typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         DEVBLK          *devnext;       /* cckd device queue         */
-        unsigned int     stopping:1,    /* 1=Device is closing       */
-                         l1updated:1,   /* 1=Level 1 table updated   */
-                         l2updated:1;   /* 1=Level 2 table updated   */
+        unsigned int     ckddasd:1,     /* 1=CKD dasd                */
+                         fbadasd:1,     /* 1=FBA dasd                */
+                         stopping:1;    /* 1=Device is closing       */
         LOCK             filelock;      /* File lock                 */
         CCKDDASD_DEVHDR  cdevhdr[CCKD_MAX_SF+1];/* cckd device hdr   */
         CCKD_L1ENT      *l1[CCKD_MAX_SF+1]; /* Level 1 tables        */
@@ -1525,12 +1537,6 @@ extern int extgui;              /* external gui present */
 /*-------------------------------------------------------------------*/
 extern const char* arch_name[];
 extern const char* get_arch_mode_string(REGS* regs);
-
-
-/*-------------------------------------------------------------------*/
-/* Global data areas and functions in module eightxff.c              */
-/*-------------------------------------------------------------------*/
-extern BYTE eighthexFF[8];
 
 /*-------------------------------------------------------------------*/
 /* Function prototypes                                               */
@@ -1620,12 +1626,22 @@ void ckddasd_query_device (DEVBLK *dev, BYTE **class,
 /* Functions in module fbadasd.c */
 void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, U32 blknum,
         U32 blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual);
+int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[]);
+void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+        BYTE chained, U16 count, BYTE prevcode, int ccwseq,
+        BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual );
+int fbadasd_close_device ( DEVBLK *dev );
+void fbadasd_query_device (DEVBLK *dev, BYTE **class,
+                int buflen, BYTE *buffer);
+
 
 /* Functions in module cckddasd.c */
 DEVIF   cckddasd_init_handler;
 int     cckddasd_close_device (DEVBLK *);
 int     cckd_read_track (DEVBLK *, int, int, BYTE *);
 int     cckd_update_track (DEVBLK *, BYTE *, int, BYTE *);
+int     cfba_read_block (DEVBLK *, BYTE *, int, BYTE *);
+int     cfba_write_block (DEVBLK *, BYTE *, int, BYTE *);
 void    cckd_sf_add (DEVBLK *);
 void    cckd_sf_remove (DEVBLK *, int);
 void    cckd_sf_newname (DEVBLK *, BYTE *);

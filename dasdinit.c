@@ -184,10 +184,6 @@ int     lfs = 0;                        /* 1 = Build large file      */
         /* Specified model not found */
         argexit(2);
 
-    /* FBA compression not yet supported */
-    if (type == 'F' && 0xff != comp)
-        argexit(0);
-
     /* The third argument is the volume serial number */
     if (!argv[3] || strlen(argv[3]) == 0
         || strlen(argv[3]) > sizeof(volser)-1)
@@ -209,7 +205,7 @@ int     lfs = 0;                        /* 1 = Build large file      */
             argexit(4);
 
         /* Use requested size only if compression not specified */
-        if (0xff == comp)
+        if (0xff == comp || (type == 'F' && requested_size > size))
             size = requested_size;
         altcylflag = 0;
     }

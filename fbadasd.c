@@ -38,17 +38,23 @@
 #define FBAOPER_WRTVRFY         0x05    /* ...write data and verify  */
 #define FBAOPER_READ            0x06    /* ...read data              */
 
+static int fbadasd_read_block (DEVBLK *, BYTE *, int, BYTE *);
+static int fbadasd_write_block (DEVBLK *, BYTE *, int, BYTE *);
 
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */
 /*-------------------------------------------------------------------*/
-static int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 int     rc;                             /* Return code               */
 struct  stat statbuf;                   /* File information          */
 U32     startblk;                       /* Device origin block number*/
 U32     numblks;                        /* Device block count        */
 BYTE    c;                              /* Character work area       */
+int     cfba = 0;                       /* 1 = Compressed fba        */
+int     i;                              /* Loop index                */
+CKDDASD_DEVHDR  devhdr;                 /* Device header             */
+CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
@@ -73,51 +79,132 @@ BYTE    c;                              /* Character work area       */
         }
     }
 
-    /* Determine the device size */
-    rc = fstat (dev->fd, &statbuf);
-    if (rc < 0)
+    /* Read the first block to see if it's compressed */
+    rc = read (dev->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+    if (rc < CKDDASD_DEVHDR_SIZE)
     {
-        devmsg ("HHC303I File %s fstat error: %s\n",
-                dev->filename, strerror(errno));
+        /* Handle read error condition */
+        if (rc < 0)
+            devmsg (_("HHC303I Read error in file %s: %s\n"),
+                    dev->filename, strerror(errno));
+        else
+            devmsg (_("HHC304I Unexpected end of file in %s\n"),
+                    dev->filename);
         close (dev->fd);
         dev->fd = -1;
         return -1;
     }
 
-    /* Set block size, device origin, and device size in blocks */
-    dev->fbablksiz = 512;
-    dev->fbaorigin = 0;
-    dev->fbanumblk = statbuf.st_size / dev->fbablksiz;
-
-    /* The second argument is the device origin block number */
-    if (argc >= 2)
+    /* Processing for compressed fba dasd */
+    if (memcmp (&devhdr.devid, "FBA_C370", 8) == 0)
     {
-        if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
-            || startblk >= dev->fbanumblk)
+        cfba = 1;
+
+        /* Read the compressed device header */
+        rc = read (dev->fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+        if (rc < CKDDASD_DEVHDR_SIZE)
         {
-            devmsg ("HHC304I Invalid device origin block number %s\n",
-                    argv[1]);
+            /* Handle read error condition */
+            if (rc < 0)
+                devmsg (_("HHC303I Read error in file %s: %s\n"),
+                        dev->filename, strerror(errno));
+            else
+                devmsg (_("HHC304I Unexpected end of file in %s\n"),
+                        dev->filename);
             close (dev->fd);
             dev->fd = -1;
             return -1;
         }
-        dev->fbaorigin = startblk;
-        dev->fbanumblk -= startblk;
+
+        /* Set block size, device origin, and device size in blocks */
+        dev->fbablksiz = 512;
+        dev->fbaorigin = 0;
+        dev->fbanumblk = ((U32)(cdevhdr.cyls[3]) << 24)
+                       | ((U32)(cdevhdr.cyls[2]) << 16)
+                       | ((U32)(cdevhdr.cyls[1]) << 8)
+                       |  (U32)(cdevhdr.cyls[0]);
+
+        /* Default to synchronous I/O */
+        dev->syncio = 1;
+
+        /* process the remaining arguments */
+        for (i = 1; i < argc; i++)
+        {
+            if (strlen (argv[i]) > 3
+             && memcmp ("sf=", argv[i], 3) == 0)
+            {
+                if (strlen(argv[i]+3) < 256)
+                    strcpy (dev->dasdsfn, argv[i]+3);
+                continue;
+            }
+            if (strcasecmp ("nosyncio", argv[i]) == 0
+             || strcasecmp ("nosyio",   argv[i]) == 0)
+            {
+                dev->syncio = 0;
+                continue;
+            }
+            if (strcasecmp ("syncio", argv[i]) == 0
+             || strcasecmp ("syio",   argv[i]) == 0)
+            {
+                dev->syncio = 1;
+                continue;
+            }
+
+            devmsg (_("HHC351I parameter %d is invalid: %s\n"),
+                    i + 1, argv[i]);
+            return -1;
+        }
     }
 
-    /* The third argument is the device block count */
-    if (argc >= 3 && strcmp(argv[2],"*") != 0)
+    /* Processing for regullar fba dasd */
+    else
     {
-        if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
-            || numblks > dev->fbanumblk)
+        /* Determine the device size */
+        rc = fstat (dev->fd, &statbuf);
+        if (rc < 0)
         {
-            devmsg ("HHC305I Invalid device block count %s\n",
-                    argv[2]);
+            devmsg ("HHC305I File %s fstat error: %s\n",
+                    dev->filename, strerror(errno));
             close (dev->fd);
             dev->fd = -1;
             return -1;
         }
-        dev->fbanumblk = numblks;
+
+        /* Set block size, device origin, and device size in blocks */
+        dev->fbablksiz = 512;
+        dev->fbaorigin = 0;
+        dev->fbanumblk = statbuf.st_size / dev->fbablksiz;
+
+        /* The second argument is the device origin block number */
+        if (argc >= 2)
+        {
+            if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
+             || startblk >= dev->fbanumblk)
+            {
+                devmsg ("HHC306I Invalid device origin block number %s\n",
+                        argv[1]);
+                close (dev->fd);
+                dev->fd = -1;
+                return -1;
+            }
+            dev->fbaorigin = startblk;
+            dev->fbanumblk -= startblk;
+        }
+
+        /* The third argument is the device block count */
+        if (argc >= 3 && strcmp(argv[2],"*") != 0)
+        {
+            if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
+             || numblks > dev->fbanumblk)
+            {
+                devmsg ("HHC307I Invalid device block count %s\n",
+                        argv[2]);
+                close (dev->fd);
+                dev->fd = -1;
+                return -1;
+            }
+            dev->fbanumblk = numblks;
+        }
     }
 
     devmsg ("fbadasd: %s origin=%d blks=%d\n",
@@ -130,8 +217,10 @@ BYTE    c;                              /* Character work area       */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        devmsg ("HHC306I %4.4X device type %4.4X not found in dasd table\n",
+        devmsg ("HHC308I %4.4X device type %4.4X not found in dasd table\n",
                 dev->devnum, dev->devtype);
+        close (dev->fd);
+        dev->fd = -1;
         return -1;
     }
 
@@ -142,8 +231,16 @@ BYTE    c;                              /* Character work area       */
     dev->numdevchar = dasd_build_fba_devchar (dev->fbatab,
                                  (BYTE *)&dev->devchar,dev->fbanumblk);
 
+    /* Set the routine addresses for read_block and write_block */
+    dev->fbardblk = &fbadasd_read_block;
+    dev->fbawrblk = &fbadasd_write_block;
+
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;
+
+    /* Call the compressed init handler if compressed fba */
+    if (cfba)
+        return cckddasd_init_handler (dev, argc, argv);
 
     return 0;
 } /* end function fbadasd_init_handler */
@@ -151,7 +248,7 @@ BYTE    c;                              /* Character work area       */
 /*-------------------------------------------------------------------*/
 /* Query the device definition                                       */
 /*-------------------------------------------------------------------*/
-static void fbadasd_query_device (DEVBLK *dev, BYTE **class,
+void fbadasd_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -165,7 +262,7 @@ static void fbadasd_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* Close the device                                                  */
 /*-------------------------------------------------------------------*/
-static int fbadasd_close_device ( DEVBLK *dev )
+int fbadasd_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
     close (dev->fd);
@@ -175,15 +272,98 @@ static int fbadasd_close_device ( DEVBLK *dev )
 } /* end function fbadasd_close_device */
 
 /*-------------------------------------------------------------------*/
+/* Read an fba block                                                 */
+/*-------------------------------------------------------------------*/
+static int fbadasd_read_block (DEVBLK *dev, BYTE *buf, int len,
+                               BYTE *unitstat)
+{
+int     rc;                             /* Return code               */
+off_t   rcoff;                          /* Return value from lseek() */
+
+    rcoff = lseek (dev->fd, dev->fbarba, SEEK_SET);
+    if (rcoff < 0)
+    {
+        /* Handle seek error condition */
+        devmsg (_("HHC311I Seek error in file %s: %s\n"),
+                dev->filename, strerror(errno));
+
+        /* Set unit check with equipment check */
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
+    rc = read (dev->fd, buf, len);
+    if (rc < len)
+    {
+        /* Handle read error condition */
+        if (rc < 0)
+            devmsg (_("HHC312I Read error in file %s: %s\n"),
+                    dev->filename, strerror(errno));
+        else
+            devmsg (_("HHC313I Unexpected end of file in %s\n"),
+                    dev->filename);
+
+        /* Set unit check with equipment check */
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
+    dev->fbarba += len;
+
+    return len;
+} /* end function fbadasd_read_block */
+
+/*-------------------------------------------------------------------*/
+/* Write an fba block                                                */
+/*-------------------------------------------------------------------*/
+static int fbadasd_write_block (DEVBLK *dev, BYTE *buf, int len,
+                                BYTE *unitstat)
+{
+int     rc;                             /* Return code               */
+off_t   rcoff;                          /* Return value from lseek() */
+
+    rcoff = lseek (dev->fd, dev->fbarba, SEEK_SET);
+    if (rcoff < 0)
+    {
+        /* Handle seek error condition */
+        devmsg (_("HHC314I Seek error in file %s: %s\n"),
+                dev->filename, strerror(errno));
+
+        /* Set unit check with equipment check */
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
+    rc = write (dev->fd, buf, len);
+    if (rc < len)
+    {
+        /* Handle write error condition */
+        devmsg (_("HHC315I Write error in file %s: %s\n"),
+                dev->filename, strerror(errno));
+
+        /* Set unit check with equipment check */
+        dev->sense[0] = SENSE_EC;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return -1;
+    }
+
+    dev->fbarba += len;
+
+    return len;
+} /* end function fbadasd_write_block */
+
+/*-------------------------------------------------------------------*/
 /* Execute a Channel Command Word                                    */
 /*-------------------------------------------------------------------*/
-static void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
 int     rc;                             /* Return code               */
 int     num;                            /* Number of bytes to move   */
-long    rba;                            /* Offset for seek           */
 BYTE    hexzeroes[512];                 /* Bytes for zero fill       */
 int     rem;                            /* Byte count for zero fill  */
 int     repcnt;                         /* Replication count         */
@@ -214,19 +394,7 @@ int     repcnt;                         /* Replication count         */
         dev->fbaxlast = dev->fbanumblk - 1;
 
         /* Seek to start of block zero */
-        rba = dev->fbaorigin * dev->fbablksiz;
-        rc = lseek (dev->fd, rba, SEEK_SET);
-        if (rc < 0)
-        {
-            /* Handle seek error condition */
-            logmsg (_("HHC311I Seek error in file %s: %s\n"),
-                    dev->filename, strerror(errno));
-
-            /* Set unit check with equipment check */
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
+        dev->fbarba = dev->fbaorigin * dev->fbablksiz;
 
         /* Overrun if data chaining */
         if ((flags & CCW_FLAGS_CD))
@@ -242,22 +410,8 @@ int     repcnt;                         /* Replication count         */
         if (count < dev->fbablksiz) *more = 1;
 
         /* Read physical block into channel buffer */
-        rc = read (dev->fd, iobuf, num);
-        if (rc < num)
-        {
-            /* Handle read error condition */
-            if (rc < 0)
-                logmsg (_("HHC312I Read error in file %s: %s\n"),
-                        dev->filename, strerror(errno));
-            else
-                logmsg (_("HHC313I Unexpected end of file in %s\n"),
-                        dev->filename);
-
-            /* Set unit check with equipment check */
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
+        rc = (dev->fbardblk) (dev, iobuf, num, unitstat);
+        if (rc < num) break;
 
         /* Set extent defined flag */
         dev->fbaxtdef = 1;
@@ -318,36 +472,16 @@ int     repcnt;                         /* Replication count         */
             /* Write physical block from channel buffer */
             if (num > 0)
             {
-                rc = write (dev->fd, iobuf, num);
-                if (rc < num)
-                {
-                    /* Handle write error condition */
-                    logmsg (_("HHC314I Write error in file %s: %s\n"),
-                            dev->filename, strerror(errno));
-
-                    /* Set unit check with equipment check */
-                    dev->sense[0] = SENSE_EC;
-                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                    break;
-                }
+                rc = (dev->fbawrblk) (dev, iobuf, num, unitstat);
+                if (rc < num) break;
             }
 
             /* Fill remainder of block with zeroes */
             if (num < dev->fbablksiz)
             {
                 rem = dev->fbablksiz - num;
-                rc = write (dev->fd, hexzeroes, rem);
-                if (rc < rem)
-                {
-                    /* Handle write error condition */
-                    logmsg (_("HHC315I Write error in file %s: %s\n"),
-                            dev->filename, strerror(errno));
-
-                    /* Set unit check with equipment check */
-                    dev->sense[0] = SENSE_EC;
-                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                    break;
-                }
+                rc = (dev->fbawrblk) (dev, hexzeroes, rem, unitstat);
+                if (rc < rem) break;
             }
 
             /* Prepare to write next block */
@@ -402,22 +536,8 @@ int     repcnt;                         /* Replication count         */
             if (num < dev->fbablksiz) *more = 1;
 
             /* Read physical block into channel buffer */
-            rc = read (dev->fd, iobuf, num);
-            if (rc < num)
-            {
-                /* Handle read error condition */
-                if (rc < 0)
-                    logmsg (_("HHC316I Read error in file %s: %s\n"),
-                            dev->filename, strerror(errno));
-                else
-                    logmsg (_("HHC317I Unexpected end of filein %s\n"),
-                            dev->filename);
-
-                /* Set unit check with equipment check */
-                dev->sense[0] = SENSE_EC;
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
-            }
+            rc = (dev->fbardblk) (dev, iobuf, num, unitstat);
+            if (rc < num) break;
 
             /* Prepare to read next block */
             count -= num;
@@ -537,24 +657,12 @@ int     repcnt;                         /* Replication count         */
         }
 
         /* Position device to start of block */
-        rba = (dev->fbalcblk - dev->fbaxfirst
-                + dev->fbaorigin
-                + dev->fbaxblkn) * dev->fbablksiz;
+        dev->fbarba = (dev->fbalcblk - dev->fbaxfirst
+                     + dev->fbaorigin
+                     + dev->fbaxblkn) * dev->fbablksiz;
 
-        DEVTRACE("fbadasd: Positioning to %8.8lX (%lu)\n", rba, rba);
-
-        rc = lseek (dev->fd, rba, SEEK_SET);
-        if (rc < 0)
-        {
-            /* Handle seek error condition */
-            logmsg (_("HHC318I Seek error in file %s: %s\n"),
-                    dev->filename, strerror(errno));
-
-            /* Set unit check with equipment check */
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            break;
-        }
+        DEVTRACE("fbadasd: Positioning to %8.8llX (%llu)\n",
+                 dev->fbarba, dev->fbarba);
 
         /* Return normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -571,7 +679,7 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            logmsg(_("fbadasd: define extent data too short: %d bytes\n"),
+            devmsg(_("fbadasd: define extent data too short: %d bytes\n"),
                     count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -581,7 +689,7 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            logmsg(_("fbadasd: second define extent in chain\n"));
+            devmsg(_("fbadasd: second define extent in chain\n"));
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -592,7 +700,7 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            logmsg(_("fbadasd: invalid file mask %2.2X\n"),
+            devmsg(_("fbadasd: invalid file mask %2.2X\n"),
                     dev->fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -603,7 +711,7 @@ int     repcnt;                         /* Replication count         */
 //      /* Verify that bytes 1-3 are zeroes */
 //      if (iobuf[1] != 0 || iobuf[2] != 0 || iobuf[3] != 0)
 //      {
-//          logmsg(_("fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n"),
+//          devmsg(_("fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n"),
 //                  iobuf[1], iobuf[2], iobuf[3]);
 //          dev->sense[0] = SENSE_CR;
 //          *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -633,9 +741,9 @@ int     repcnt;                         /* Replication count         */
             || dev->fbaxlast - dev->fbaxfirst
                 >= dev->fbanumblk - dev->fbaxblkn)
         {
-            logmsg(_("fbadasd: invalid extent: first block %d, last block %d,\n"),
+            devmsg(_("fbadasd: invalid extent: first block %d, last block %d,\n"),
                     dev->fbaxfirst, dev->fbaxlast);
-            logmsg(_("         numblks %d, device size %d\n"),
+            devmsg(_("         numblks %d, device size %d\n"),
                     dev->fbaxblkn, dev->fbanumblk);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -778,7 +886,6 @@ void fbadasd_syncblk_io ( DEVBLK *dev, BYTE type, U32 blknum,
         U32 blksize, BYTE *iobuf, BYTE *unitstat, U16 *residual )
 {
 int     rc;                             /* Return code               */
-long    rba;                            /* Offset for seek           */
 int     blkfactor;                      /* Number of device blocks
                                            per logical block         */
 
@@ -794,58 +901,22 @@ int     blkfactor;                      /* Number of device blocks
     }
 
     /* Seek to start of desired block */
-    rba = dev->fbaorigin * dev->fbablksiz;
-    rba += blknum * blksize;
-    rc = lseek (dev->fd, rba, SEEK_SET);
-    if (rc < 0)
-    {
-        /* Handle seek error condition */
-        logmsg (_("HHC321I Seek error in file %s: %s\n"),
-                dev->filename, strerror(errno));
-
-        /* Set unit check with equipment check */
-        dev->sense[0] = SENSE_EC;
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return;
-    }
+    dev->fbarba = dev->fbaorigin * dev->fbablksiz;
+    dev->fbarba += blknum * blksize;
 
     /* Process depending on operation type */
     switch (type) {
 
     case 0x01:
         /* Write block from I/O buffer */
-        rc = write (dev->fd, iobuf, blksize);
-        if (rc < blksize)
-        {
-            /* Handle write error condition */
-            logmsg (_("HHC322I Write error in file %s: %s\n"),
-                    dev->filename, strerror(errno));
-
-            /* Set unit check with equipment check */
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return;
-        }
+        rc = (dev->fbawrblk) (dev, iobuf, blksize, unitstat);
+        if (rc < blksize) return;
         break;
 
     case 0x02:
         /* Read block into I/O buffer */
-        rc = read (dev->fd, iobuf, blksize);
-        if (rc < blksize)
-        {
-            /* Handle read error condition */
-            if (rc < 0)
-                logmsg (_("HHC323I Read error in file %s: %s\n"),
-                        dev->filename, strerror(errno));
-            else
-                logmsg (_("HHC324I Unexpected end of file in %s\n"),
-                        dev->filename);
-
-            /* Set unit check with equipment check */
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return;
-        }
+        rc = (dev->fbardblk) (dev, iobuf, blksize, unitstat);
+        if (rc < blksize) return;
         break;
 
     } /* end switch(type) */

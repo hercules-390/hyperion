@@ -276,7 +276,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         {
             if ('\"' == argv[i][3]) argv[i]++;
             if (strlen(argv[i]+3) < 256)
-                strcpy (dev->ckdsfn, argv[i]+3);
+                strcpy (dev->dasdsfn, argv[i]+3);
             continue;
         }
         if (strlen (argv[i]) > 3
@@ -332,7 +332,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                         O_RDONLY|O_BINARY : O_RDWR|O_BINARY);
         if (dev->fd < 0)
         {   /* Try read-only if shadow file present */
-            if (!dev->ckdrdonly && dev->ckdsfn[0] != '\0')
+            if (!dev->ckdrdonly && dev->dasdsfn[0] != '\0')
                 dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
@@ -345,11 +345,11 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         /* If `readonly' and shadow files (`sf=') were specified,
            then turn off the readonly bit.  Might as well make
            sure the `fakewrite' bit is off, too.               */
-        if (dev->ckdsfn[0] != '\0')
+        if (dev->dasdsfn[0] != '\0')
             dev->ckdrdonly = dev->ckdfakewr = 0;
 
         /* If shadow file, only one base file is allowed */
-        if (fileseq > 1 && dev->ckdsfn[0] != '\0')
+        if (fileseq > 1 && dev->dasdsfn[0] != '\0')
         {
             devmsg (_("HHC362I %s not in a single file for shadowing\n"),
                     dev->filename);
@@ -654,7 +654,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         dev->syncio_active = 0;
 
     DEVTRACE ("ckddasd: read trk %d cur trk %d\n",
-              cyl * dev->ckdheads + head, dev->ckdcurtrk);
+              cyl * dev->ckdheads + head, dev->dasdcur);
 
     /* Write the previous track image if modified */
     if (dev->bufupd)
@@ -667,7 +667,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         }
 
         DEVTRACE ("ckddasd: read track: updating track %d\n",
-                  dev->ckdcurtrk);
+                  dev->dasdcur);
 
         dev->bufupd = 0;
 
@@ -678,7 +678,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         {
             /* Handle seek error condition */
             devmsg (_("ckddasd: error writing trk %d: lseek error: %s\n"),
-                    dev->ckdcurtrk, strerror(errno));
+                    dev->dasdcur, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -692,7 +692,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         {
             /* Handle seek error condition */
             devmsg (_("ckddasd: error writing trk %d: write error: %s\n"),
-                    dev->ckdcurtrk, strerror(errno));
+                    dev->dasdcur, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -713,7 +713,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     dev->bufoffhi = dev->ckdtrksz;
 
     /* Return if reading the same track image */
-    if (trk == dev->ckdcurtrk && dev->buf) return 0;
+    if (trk == dev->dasdcur && dev->buf) return 0;
 
     /* Command reject if seek position is outside volume */
     if (cyl >= dev->ckdcyls || head >= dev->ckdheads)
@@ -754,8 +754,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
             dev->buf = dev->ckdcache[i].buf;
             dev->ckdtrkoff = dev->ckdcache[i].off;
             dev->ckdcache[i].age = ++dev->ckdcacheage;
-            dev->bufoff = 0;
-            dev->bufoffhi = dev->ckdtrksz;
+            dev->dasdcur = trk;
             dev->ckdcachehits++;
             return 0;
         }
@@ -792,6 +791,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         }
     }
 
+    dev->ckdcache[o].trk = trk;
     dev->ckdcache[o].age = ++dev->ckdcacheage;
     dev->buf = dev->ckdcache[o].buf;
     
@@ -805,8 +805,6 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     dev->ckdtrkoff = CKDDASD_DEVHDR_SIZE +
                 (trk - (i ? dev->ckdhitrk[i-1] : 0)) * dev->ckdtrksz;
     dev->ckdcache[o].off = dev->ckdtrkoff;
-    dev->bufoff = 0;
-    dev->bufoffhi = dev->ckdtrksz;
 
     DEVTRACE ("ckddasd: read trk %d reading file %d offset %lld len %d\n",
               trk, i+1, (long long)dev->ckdtrkoff, dev->ckdtrksz);  
@@ -856,7 +854,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         return -1;
     }
 
-    dev->ckdcurtrk = trk;
+    dev->dasdcur = trk;
 
     return 0;
 } /* end function ckd_read_track */
@@ -910,7 +908,7 @@ off_t           offset;                 /* File offsets              */
         {
             /* Handle seek error condition */
             devmsg (_("ckddasd: error writing trk %d: lseek error: %s\n"),
-                    dev->ckdcurtrk, strerror(errno));
+                    dev->dasdcur, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -923,7 +921,7 @@ off_t           offset;                 /* File offsets              */
         {
             /* Handle seek error condition */
             devmsg (_("ckddasd: error writing trk %d: write error: %s\n"),
-                    dev->ckdcurtrk, strerror(errno));
+                    dev->dasdcur, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;

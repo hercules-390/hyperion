@@ -344,5 +344,7 @@ int create_ckd (BYTE *fname, U16 devtype, U32 heads,
         U32 maxdlen, U32 volcyls, BYTE *volser, BYTE comp, int lfs);
 int create_fba (BYTE *fname, U16 devtype,
         U32 sectsz, U32 sectors, BYTE *volser, BYTE comp, int lfs);
+int create_compressed_fba (BYTE *fname, U16 devtype,
+        U32 sectsz, U32 sectors, BYTE *volser, BYTE comp, int lfs);
 int get_verbose_util(void);
 void set_verbose_util(int v);

@@ -63,22 +63,22 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
 dasdinit_SOURCES = dasdinit.c dasdutil.c codepage.c hostinfo.c version.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 dasdisup_SOURCES = dasdisup.c dasdutil.c codepage.c hostinfo.c version.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 dasdload_SOURCES = dasdload.c dasdutil.c codepage.c hostinfo.c version.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 dasdls_SOURCES = dasdls.c dasdutil.c codepage.c hostinfo.c version.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 dasdcat_SOURCES = dasdcat.c dasdutil.c codepage.c hostinfo.c version.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c codepage.c hostinfo.c version.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c $(FTHREADS) $(FISHHANG)
+	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
 
 tapecopy_SOURCES = tapecopy.c codepage.c hostinfo.c version.c
 

@@ -90,8 +90,7 @@ post</a> to the <a href="http://www.egroups.com/community/hercules-390">newsgrou
 8 December 2000.  The function is actually implemented as a kind of
 <i>snapshot</i>, where a new shadow file can be created on demand.
 A CKD emulated dasd is represented by a <i>base</i> file and 0 or more
-shadow files.  The base file can be either a regular CKD file
-(with some restrictions) or a cckd file.  All files are opened <i>read-only</i>
+shadow files.  All files are opened <i>read-only</i>
 except for the <i>current</i> file, which is opened <i>read-write</i>.
 <p>
 Shadow files are implemented using the same file structure as base <b>cckd</b> files.
@@ -99,7 +98,7 @@ By default, there can be up to 8 shadow files in use at any time for an
 emulated CKD device.  The base file is designated file <b>[0]</b> and
 the shadow files are files <b>[1]</b> up to file <b>[8]</b>.
 The <i>highest</i> numbered file in use at a given time is the <i>current</i>
-file, where all writes will occur.  Track reads start at the <i>current</i>
+file, where all writes will occur.  Track reads start with the <i>current</i>
 file and proceed down until a file is found that actually contains the track
 image.
 <p>
@@ -115,8 +114,8 @@ such as cdrom, or change the base CKD file attributes to read-only,
 ensuring that this file can never be corrupted.
 <p>
 Hercules console commands are provided to add a new shadow file, remove
-the current shadow file (with or without backward merge), and display
-the shadow file status and statistics.
+the current shadow file (with or without backward merge), compress the
+curent shadow file, and display the shadow file status and statistics.
 
 <p>
 <hr noshade>
@@ -194,6 +193,8 @@ Since the first byte of the <code>HA</code> is always 0x00 (at least in emulated
 CKD files), this byte as stored in the file actually indicates the compression
 algorithm used for the remainder of the track image
 (<b>0</b> = no compression, <b>1</b> = zlib compression, <b>2</b> = bzip2 compression).
+The hi-order bit (<b>0x80</b>) may also be on, indicating the track image was written
+under <i>stress</i>.
 <p>
 <b>Free space</b> contains a 4-byte <i>offset</i> to the next free space,
 a 4-byte <i>length</i> of the free space, and zero or more bytes of residual data.
@@ -217,70 +218,189 @@ maintained in storage.
 <p>
 <hr noshade>
 <p><h3><a NAME="methodology">Methodology</a></h3>
-
 This section is tedious; you probably want to skip to the
 <a href="#quickstart">next section</a> unless you are genuinely
  curious as to how cckd actually works.  This section is for my edification
 as much as anything...
-
 <p>
-<b>Initialization</b>
+<b>The interface</b>
 <p>
-When a CKD dasd emulation file is initialized, function <code>ckddasd_init_handler</code>
-in <code>ckddasd.c</code> is called.  After <code>ckddasd_init_handler</code>
-has completed its initialization, if the file is a <b>cckd</b> file, function
-<code>cckddasd_init_handler</code> in <code>cckddasd.c</code> is called.
+All Hercules emulated devices have standard interface routines described
+by the <code>DEVHND</code> structure.  These routines are
+<table>
+<tr><td><b>init</b></td><td>Device initialization (attach)</td>
+<tr><td><b>exec</b></td><td>Device execute channel command</td>
+<tr><td><b>close</b></td><td>Device close (detach)</td>
+<tr><td><b>query</b></td><td>Device query</td>
+<tr><td><b>start</b></td><td>Device channel program start</td>
+<tr><td><b>end</b></td><td>Device channel program end</td>
+<tr><td><b>resume</b></td><td>Device channel program resume</td>
+<tr><td><b>suspend</b></td><td>Device channel program suspend</td>
+</table>
 <p>
-<code>cckddasd_init_handler</code> obtains a <i>cckd extension</i> and stores
-its address in field <code>cckd_ext</code> in the <code>DEVBLK</code> (the
-control block that represents the device).
+Emulated CKD DASD devices have two additional routines:
+<table>
+<tr><td><b>ckdrdtrk</b></td><td>Read CKD track image</td>
+<tr><td><b>ckdupdtrk</b></td><td>Update CKD track image</td>
+</table>
+<code>ckdrdtrk</code> is called whenever a <code>SEEK</code>
+type channel command is executed and <code>ckdupdtrk</code> is
+called whenever any of the various <code>WRITE</code> channel
+commands modifies the current track image.
 <p>
-The compressed device header (<code>CCKDDASD_DEVHDR</code>) and <code>L1TAB</code>
-for the file is read.
+The <b>cckd</b> code implements the following routines:
+<table>
+<tr><td><code>cckddasd_init_handler</code></td>
+    <td>cckd device initialization (attach)</td>
+<tr><td><code>cckddasd_close_device</code></td><td>cckd device close (detach)</td>
+<tr><td><code>cckd_start</code></td><td>cckd channel program start/resume</td>
+<tr><td><code>cckd_end</code></td><td>cckd channel program end/suspend</td>
+</table>
 <p>
-If shadow files exist, they are opened and their <code>CCKD_DEVHDR</code>s and
-<code>L1TAB</code>s are read.  If the last file opened could only be opened read-only,
-then a new shadow file is created.
+<b>The cache</b>
 <p>
-The basic point is that the <code>CCKD_DEVHDR</code> and the <code>L1TAB</code>
-for the base file and each shadow file is read and stored in an array in the
-<i>cckd extension</i>, and each file is opened read-only, except the
-current file, which is opened read-write.
+The implementation is <i>cache</i> table driven.  The cache table contains
+16 to 1024 entries, each representing a track image, and is shared by <em>all</em>
+cckd devices.  Each entry contains a pointer to a track image buffer which
+is 64K bytes.  That is, every 16 entries represents 1M of buffer space.
+The size of the cache can be changed by a configuration file statement
+or by a hercules console command.
 <p>
-<b>File I/O</b>
+Each entry can be in one (or certain combinations) of the following states:
+<table>
+<tr><td><b>active</b></td><td>A channel program is active for the device
+                               and the track image is the last <code>SEEK</code>ed
+                               track image.</td>
+<tr><td><b>updated</b></td><td>The track image has been updated by a
+                               <code>WRITE</code> command.</td>
+<tr><td><b>write</b></td><td>The track image is not <b>active</b> and has
+                             been <b>updated</b> and is eligible to be written.</td>
+<tr><td><b>reading</b></td><td>The track image is currently being read.</td>
+<tr><td><b>writing</b></td><td>The track image is currently being written.</td>
+<tr><td><b>inactive</b></td><td>The track image is not <i>busy</i> and is eligible
+                               to be <i>stolen</i></td>
+</table>
+When the <code>ckdrdtrk</code> routine is called, and the track to be
+read is not the <em>active</em> track, then a <em>track switch</em> event
+occurs.  The cache is scanned to see if it contains the track image.  If
+it does, then a <em>cache hit</em> occurs else a <em>cache miss</em>
+occurs.
 <p>
-In the course of executing a channel program, routines in <code>ckddasd.c</code>
-will call the <i>generic</i> routines <code>read_track</code> and
-<code>update_track</code>.  These generic routines have their addresses
-stored in the <code>DEVBLK</code> fields <code>ckdrdtrk</code> and <code>
-ckdupdtrk</code>.  For regular ckd dasd images these are <code>ckd_read_track
-</code> and <code>ckd_write_track</code> and for cckd dasd images these are
-<code>cckd_read_track</code> and <code>cckd_write_track</code>.
+In the case of a <em>cache hit</em>, if the entry status is <em>reading</em>
+or <em>writing</em> then the code waits for the read or write to complete.
+If the entry is <em>write</em>-pending, then the entry is changed back
+to <em>updated</em>.
 <p>
-The read_track routine is called when a <i>track switch</i> occurs.  A track
-switch can switch back to the same track.  The routine is responsible for
-scheduling the previous active track to be written, if it has been modified and
-the write has not already been committed.  The new track is read (or retrieved
-from cache), and the buffer address containing the track image is placed in
-the <code>DEVBLK</code> field <code>buf</code>.  <code>DEVBLK</code> field
-<code>bufoff</code> is set to the offset in the buffer of the track image and
-<code>DEVBLK</code> field <code>bufoffhi</code> is set to the end offset of
-the image in the buffer.  In this way, <code>buf</buf> can contain multiple
-track images.  Both <code>ckd_read_track</code> and <code>cckd_read_track</code>
-place a single track image in the device buffer.
+Otherwise, for a <em>cache miss</em>, the oldest <em>inactive</em> cache
+entry will then be <em>stolen</em>.
+If no inactive cache entry was found then the cache is <em>flushed</em>
+and the code will have to wait for an inactive cache entry to become
+available.  This is called a <em>cache wait</em> event.  When the cache
+is flushed, all cache entries that have been <em>updated</em> and are
+not <em>active</em> are set to <em>write</em>-pending and the <b>writer</b>
+thread is signalled.  After an entry has been stolen the track image will
+then be read and uncompressed.
+If sequential access is detected then track <em>readaheads</em> will be
+scheduled.
 <p>
-The update_track routine is called when the contents of the track image buffer
-is updated, and passes the offset into the buffer where the update began and its
-length.  The update_track routine may either immediately write the updated
-contents of the buffer or remember the portion of the buffer that has been updated
-and write later.  The ckd_update_routine will write the updated data immediately
-if the options <i>nofulltrk</i> or <i>nolazywrite</i> was specified for the device,
-otherwise, the updated data will be written at the next track switch.  The
-cckd_update_track routine will schedule the track image to be written sometime
-after a track switch, or 5 seconds.
+<b>L1 tables</b>
 <p>
-These routines alone are responsible for reading and writing to the ckd
-disk image, either compressed or uncompressed.
+The L1 tables, or <i>primary lookup</i> tables, contain the file offsets
+to each <b>L2 table</b>, or <i>secondary lookup</i> table.  Each L1 table
+4-byte entry represents 256 track images and there is an L1 table for the base
+file and each opened shadow file (if any).  These tables are memory resident.
+<p>
+<b>The L2 cache</b>
+<p>
+The L2 tables, or <i>secondary lookup</i> tables contain the file offsets
+and lengths of 256 track images.  Each table is 2K in length.  These tables
+are cached in the <em>l2cache</em>, which is shared for all cckd devices.
+The cache can contain 128 (512K) entries to 1024 entries (2M).  Each cckd
+device has one active l2cache entry implying that, architecturally speaking,
+there can be no more than 1024 cckd devices.  If this is a problem for
+you then I'll buy you a beer ;-)
+<p>
+The size of the l2cache can be specified by a configuration statement or
+changed by a hercules console command.  If a cache miss occurs and no
+inactive entries are found, then the cache is automatically extended
+(unless the 1024 entry barrier would be crossed).
+<p>
+L2 tables are read but never written.  Instead, as track images are
+written, the individual 8-byte L2 entries are updated in the file.
+<p>
+<b>Writing</b>
+<p>
+Whenever the <code>ckdupdtrk</code> is called, indicating the active
+track image has been updated, the <em>updated</em> flag bit is turned
+on for the cache entry.  However, the updated cache entries are never
+scheduled to be written until a <em>cache flush</em> occurs (routine
+<code>cckd_flush_cache</code>).  A cache flush occurs whenever a cache
+entry couldn't be <em>stolen</em> during read or at the beginning of
+the <em>garbage collection</em> cycle.
+<p>
+When a <em>cache flush</em> occurs, all cache entries that are <em>updated</em>
+(but not <em>active</em>) get the <em>write</em>-pending bit turned on
+and one of the <b>writer</b> threads is signalled (or created).
+<p>
+The <em>writer</em> thread selects the oldest cache entry with the
+<em>write</em>-pending bit on and changes the status to <em>writing</em>.
+If there are other writes pending and other writer threads are waiting then
+they are signalled.  Otherwise if there are writes pending and the maximum
+number of writer threads hasn't been created yet, then a new writer thread
+is created.
+<p>
+The writer thread, because it performs track image compression, is cpu
+intensive.  Therefore, the writer thread resets its priority to 1 below
+the cpu thread(s) (except under Cygwin (Windows)).  In periods of
+<em>write stress</em> then the level of compression is downgraded.
+Write stress occurs when more than a quarter of the cache entries are
+pending write, or when there are threads waiting for a cache entry, or
+when a thread is waiting for this track image to be written.  When a
+track image is written under stress, a bit is turned on in the track
+image so that the <em>garbage collector</em> can later rewrite the
+track image properly compressed during a period of no stress.
+<p>
+A track image is always written to a new location in the file.
+After a successful write, its L2 entry is updated and then the
+space it previously occupied is freed.
+<p>
+The <em>writer</em> threads 
+<p>
+<b>The Garbage Collector</b>
+<p>
+For some reason, this seems to be everyone's favorite routine.
+For me, it has to do with the fact that the garbage man only has
+to apparently work on Fridays  ;-).
+<p>
+Simply, the garbage collector moves occupied spaces (track images
+and level 2 tables) towards the beginning of the file while moving
+free spaces towards the end of the file.  When a free space reaches
+the end of the file, then the file is <em>truncated</em>, that is,
+reduced in size.  Another important job the garbage collector performs
+is to combine free spaces to make a larger free space that will be
+more likely to satisfy a <i>get space</i> request.  Finally, the
+garbage collector will cause track images that were written under
+stress to be rewritten (with optimal compression).
+<p>
+The garbage collector runs in a separate thread.  There is a single
+garbage collector for all cckd devices.  The collector waits for
+some number of seconds and then performs collection for each cckd
+device in turn.  The wait interval and the aggressiveness parameter
+can be specified by a configuration file statement or by a hercules
+console command.
+<p>
+The garbage collector algorithm simply selects an occupied space after
+some free space, obtains a new space for that space, writes it to the
+new space, updates the meta-data for that space to point to the new
+space, frees the previously occupied space, and repeats the process
+until some number of bytes have been moved.  In other words, the collector
+shifts the spaces around <i>coherently</i> such that in the event of
+a crash then the space occupies at least one space in the file
+(the original and possibly the new).
+<p>
+The garbage collector on each interval (or round ;-) flushes the cache
+and waits for all pending writes to complete.  Therefore, the collector
+doesn't run while <em>write stress</em> is occurring.
 
 <hr noshade>
 <p><h3><a NAME="quickstart">Quick Start</a></h3>
@@ -289,9 +409,12 @@ The <i>ckd2cckd</i> utility can be used to create a new compressed CKD file from
 regular CKD file.  Your disk images can be a combination of regular CKD files and
 compressed CKD files. Simply specify the names of your new compressed ckd files in
 <code>hercules.cnf</code> in place of the regular CKD file names.
+<p>
 You can also use the <i>cckddump</i> program on an os/390 system to build a
 compressed CKD file from a real disk that can be transferred to your Hercules machine
 and used right away.
+<p>
+
 
 <hr noshade>
 <p><h3><a NAME="usingsfiles">Using Shadow Files</a></h3>

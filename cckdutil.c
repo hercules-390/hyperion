@@ -42,6 +42,7 @@ int             typ;                    /* Type of space             */
 int cdsk_spctab_comp(const void *, const void *);
 int cdsk_rcvtab_comp(const void *, const void *);
 int cdsk_valid_trk (int, BYTE *, int, int, int, BYTE *);
+int cdsk_valid_blk (int, BYTE *, int, int, int, BYTE *);
 int cdsk_recover_trk (int, BYTE *, int, int, int);
 int cdsk_build_gap (SPCTAB *, int *, SPCTAB *);
 int cdsk_build_gap_long (SPCTAB *, int *, SPCTAB *);
@@ -368,15 +369,17 @@ CCKD_L1ENT     *l1=NULL;                /* -> Primary lookup table   */
 int             l1tabsz;                /* Primary lookup table size */
 CCKD_L2ENT      l2;                     /* Secondary lookup table    */
 CCKD_FREEBLK    fb;                     /* Free space block          */
-BYTE           *buf=NULL;               /* Buffers for track image   */
 int             len;                    /* Space  length             */
 int             trksz;                  /* Maximum track size        */
 int             heads;                  /* Heads per cylinder        */
+int             blks;                   /* Number fba blocks         */
 int             trk;                    /* Track number              */
 int             l1x,l2x;                /* Lookup indices            */
 int             freed=0;                /* Total space freed         */
 int             imbedded=0;             /* Imbedded space freed      */
 int             moved=0;                /* Total space moved         */
+int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
+BYTE            buf[65536];             /* Buffer                    */
 
 /*-------------------------------------------------------------------*/
 /* Read the headers and level 1 table                                */
@@ -396,8 +399,13 @@ restart:
         COMPMSG (m, "devhdr read error: %s\n",strerror(errno));
         return -1;
     }
-    if (memcmp (devhdr.devid, "CKD_C370", 8) != 0
-     && memcmp (devhdr.devid, "CKD_S370", 8) != 0)
+    if (memcmp (devhdr.devid, "CKD_C370", 8) == 0
+     || memcmp (devhdr.devid, "CKD_S370", 8) == 0)
+        ckddasd = 1;
+    else if (memcmp (devhdr.devid, "FBA_C370", 8) == 0
+          || memcmp (devhdr.devid, "FBA_S370", 8) == 0)
+             ckddasd = 0;
+    else
     {
         COMPMSG (m, "incorrect header id\n");
         return -1;
@@ -426,6 +434,11 @@ restart:
     }
     l1tabsz = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
     l1 = malloc (l1tabsz);
+    if (l1 == NULL)
+    {
+        COMPMSG (m, "l1 table malloc error: %s\n",strerror(errno));
+        return -1;
+    }
     rc = read (fd, l1, l1tabsz);
     if (rc < l1tabsz)
     {
@@ -433,17 +446,28 @@ restart:
         return -1;
     }
 
-    trksz = ((U32)(devhdr.trksize[3]) << 24)
-          | ((U32)(devhdr.trksize[2]) << 16)
-          | ((U32)(devhdr.trksize[1]) << 8)
-          | (U32)(devhdr.trksize[0]);
+    if (ckddasd)
+    {
+        trksz = ((U32)(devhdr.trksize[3]) << 24)
+              | ((U32)(devhdr.trksize[2]) << 16)
+              | ((U32)(devhdr.trksize[1]) << 8)
+              | (U32)(devhdr.trksize[0]);
 
-    heads = ((U32)(devhdr.heads[3]) << 24)
-          | ((U32)(devhdr.heads[2]) << 16)
-          | ((U32)(devhdr.heads[1]) << 8)
-          | (U32)(devhdr.heads[0]);
-
-    buf = malloc(trksz);
+        heads = ((U32)(devhdr.heads[3]) << 24)
+              | ((U32)(devhdr.heads[2]) << 16)
+              | ((U32)(devhdr.heads[1]) << 8)
+              | (U32)(devhdr.heads[0]);
+        blks = -1;
+    }
+    else
+    {
+        trksz = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
+        heads = -1;
+        blks  = ((U32)(cdevhdr.cyls[0]) << 24)
+              | ((U32)(cdevhdr.cyls[2]) << 16)
+              | ((U32)(cdevhdr.cyls[1]) << 8)
+              | (U32)(cdevhdr.cyls[0]);
+    }
 
 /*-------------------------------------------------------------------*/
 /* Relocate spaces                                                   */
@@ -501,8 +525,18 @@ restart:
         /* check for track image */
         rc = lseek (fd, pos + freed, SEEK_SET);
         rc = read  (fd, buf, 8);
-        trk = ((buf[1] << 8) + buf[2]) * heads
-            + ((buf[3] << 8) + buf[4]);
+        if (ckddasd)
+        {
+            trk = ((buf[1] << 8) + buf[2]) * heads
+                + ((buf[3] << 8) + buf[4]);
+        }
+        else
+        {
+            trk = (buf[1] << 24)
+                | (buf[2] << 16)
+                | (buf[3] <<  8)
+                | buf[4];
+        }
         l1x = trk >> 8;
         l2x = trk & 0xff;
         l2.pos = l2.len = l2.size = 0;
@@ -602,7 +636,7 @@ CCKDDASD_DEVHDR cdevhdr2;               /* CCKD header 2             */
 CCKD_L1ENT     *l1=NULL;                /* -> Primary lookup table   */
 int             l1tabsz;                /* Primary lookup table size */
 CCKD_L2ENT      l2[256], *l2p=NULL;     /* Secondary lookup table    */
-CKDDEV         *ckd;                    /* -> CKD DASD table entry   */
+CKDDEV         *ckd=NULL;               /* -> CKD DASD table entry   */
 BYTE           *buf=NULL, *buf2=NULL;   /* Buffers for track image   */
 long            buf2len;                /* Buffer length             */
 BYTE           *trkbuf=NULL;            /* Pointer to track image    */
@@ -611,12 +645,12 @@ int             rc;                     /* Return code               */
 int             crc=-1;                 /* Chdsk return code         */
 int             i,j,k;                  /* Indexes                   */
 struct stat     fst;                    /* File status information   */
-int             cyls, hdrcyls;          /* Total cylinders           */
+int             cyls=-1, hdrcyls=-1;    /* Total cylinders           */
 int             trks;                   /* Total tracks              */
-int             heads, hdrheads;        /* Heads per cylinder        */
+int             heads=-1, hdrheads=-1;  /* Heads per cylinder        */
 int             rec0len=8;              /* R0 length                 */
-int             maxdlen;                /* Max data length for device*/
-int             trksz, hdrtrksz;        /* Track size                */
+int             maxdlen=-1;             /* Max data length for device*/
+int             trksz=-1, hdrtrksz=-1;  /* Track size                */
 off_t           hipos, lopos;           /* Valid high/low offsets    */
 off_t           pos;                    /* File offset               */
 int             hdrerr=0, fsperr=0, l1errs=0, l2errs=0, trkerrs=0,
@@ -634,9 +668,10 @@ BYTE           *gapbuf=NULL;            /* Buffer containing gap data*/
 int             x,y;                    /* Lookup table indices      */
 int             rcvtrks;                /* Nbr trks to be recovered  */
 int             fdflags;                /* File flags                */
-int             shadow=0;               /* 1 = Shadow file           */
-int             swapend=0;              /* 1 = Wrong endianess       */
+int             shadow=0;               /* 1=Shadow file             */
+int             swapend=0;              /* 1=Wrong endianess         */
 int             fend,mend;              /* Byte order indicators     */
+int             ckddasd;                /* 1=CKD dasd   0=FBA dasd   */
 char            msg[256];               /* Message                   */
 BYTE *space[]     = {"none", "devhdr", "cdevhdr", "l1tab", "l2tab",
                      "trkimg", "free_blk", "file_end"};
@@ -687,17 +722,20 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
 /*-------------------------------------------------------------------*/
 
     /* Check the identifier */
-    if (memcmp(devhdr.devid, "CKD_P370", 8) == 0)
-    {   CDSKMSG (m, "file is a regular ckd file\n");
-        return 0;
+    if (memcmp(devhdr.devid, "CKD_C370", 8) == 0
+     || memcmp(devhdr.devid, "CKD_S370", 8) == 0)
+        ckddasd = 1;
+    else if (memcmp(devhdr.devid, "FBA_C370", 8) == 0
+          || memcmp(devhdr.devid, "FBA_S370", 8) == 0)
+        ckddasd = 0;
+    else
+    {
+        CDSKMSG (m, "file is not a compressed dasd file\n");
+        goto cdsk_return;
     }
-    if (memcmp(devhdr.devid, "CKD_C370", 8) != 0)
-    {   if (memcmp(devhdr.devid, "CKD_S370", 8) != 0)
-        {   CDSKMSG (m, "file is not a compressed ckd file\n");
-            goto cdsk_return;
-        }
-        else shadow = 1;
-    }
+    if (memcmp(devhdr.devid, "CKD_S370", 8) == 0
+     || memcmp(devhdr.devid, "CKD_S370", 8) == 0)
+        shadow = 1;
 
 /*-------------------------------------------------------------------*/
 /* read the compressed CKD device header                             */
@@ -737,20 +775,23 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
 /*-------------------------------------------------------------------*/
 /* Lookup the DASD table entry for the device                        */
 /*-------------------------------------------------------------------*/
-    hdrcyls = ((U32)(cdevhdr.cyls[3]) << 24)
-              | ((U32)(cdevhdr.cyls[2]) << 16)
-              | ((U32)(cdevhdr.cyls[1]) << 8)
-              | (U32)(cdevhdr.cyls[0]);
-
-    ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, hdrcyls);
-    if (ckd == NULL)
+    if (ckddasd)
     {
-        CDSKMSG (m, "DASD table entry not found for 0x%2.2X cyls %d\n",
-                 devhdr.devtype, hdrcyls);
-        goto cdsk_return;
+        hdrcyls = ((U32)(cdevhdr.cyls[3]) << 24)
+                | ((U32)(cdevhdr.cyls[2]) << 16)
+                | ((U32)(cdevhdr.cyls[1]) << 8)
+                | (U32)(cdevhdr.cyls[0]);
+
+        ckd = dasd_lookup (DASD_CKDDEV, NULL, devhdr.devtype, hdrcyls);
+        if (ckd == NULL)
+        {
+            CDSKMSG (m, "DASD table entry not found for 0x%2.2X cyls %d\n",
+                     devhdr.devtype, hdrcyls);
+            goto cdsk_return;
+        }
+        maxdlen = ckd->r1;
+        heads = ckd->heads;
     }
-    maxdlen = ckd->r1;
-    heads = ckd->heads;
 
 /*-------------------------------------------------------------------*/
 /* Perform checks on the headers.  The following fields must be      */
@@ -765,59 +806,80 @@ BYTE *compression[] = {"none", "zlib", "bzip2"};
 /* repaired -- see cckdfix.c for a sample                            */
 /*-------------------------------------------------------------------*/
 
-    /* Check track size */
-    trksz = sizeof(CKDDASD_TRKHDR)
+    if (ckddasd)
+    {
+        /* Check track size */
+        trksz = sizeof(CKDDASD_TRKHDR)
               + sizeof(CKDDASD_RECHDR) + rec0len
               + sizeof(CKDDASD_RECHDR) + maxdlen
               + sizeof(eighthexFF);
-    trksz = ((trksz+511)/512)*512;
+        trksz = ((trksz+511)/512)*512;
 
-    hdrtrksz = ((U32)(devhdr.trksize[3]) << 24)
-             | ((U32)(devhdr.trksize[2]) << 16)
-             | ((U32)(devhdr.trksize[1]) << 8)
-             | (U32)(devhdr.trksize[0]);
+        hdrtrksz = ((U32)(devhdr.trksize[3]) << 24)
+                 | ((U32)(devhdr.trksize[2]) << 16)
+                 | ((U32)(devhdr.trksize[1]) << 8)
+                 | (U32)(devhdr.trksize[0]);
 
-    if (trksz != hdrtrksz)
-    {
-        CDSKMSG (m, "Invalid track size in header: "
-                 "0x%x, expecting 0x%x\n",
-                 hdrtrksz, trksz);
-        goto cdsk_return;
+        if (trksz != hdrtrksz)
+        {
+            CDSKMSG (m, "Invalid track size in header: "
+                     "0x%x, expecting 0x%x\n",
+                     hdrtrksz, trksz);
+            goto cdsk_return;
+        }
+
+        /* Check number of heads */
+        hdrheads = ((U32)(devhdr.heads[3]) << 24)
+                 | ((U32)(devhdr.heads[2]) << 16)
+                 | ((U32)(devhdr.heads[1]) << 8)
+                 | (U32)(devhdr.heads[0]);
+
+        if (heads != hdrheads)
+        {
+            CDSKMSG (m, "Invalid number of heads in header: "
+                     "%d, expecting %d\n",
+                     hdrheads, heads);
+            goto cdsk_return;
+        }
+
+        /* Check number of cylinders */
+        if (hdrcyls < ckd->cyls || hdrcyls > ckd->cyls + ckd->altcyls)
+        {
+            CDSKMSG (m, "Invalid number of cylinders in header: %d, "
+                     "expecting %d - %d\n",
+                     hdrcyls, ckd->cyls, ckd->cyls + ckd->altcyls);
+            goto cdsk_return;
+        }
+
+        if (cdevhdr.numl1tab < (hdrcyls * heads + 255) / 256
+         || cdevhdr.numl1tab > (hdrcyls * heads + 255) / 256 + 1)
+        {
+            CDSKMSG (m, "Invalid number of l1 table entries in header: "
+                     "%d, expecting %d\n",
+                     cdevhdr.numl1tab, (hdrcyls * heads + 255) / 256);
+            goto cdsk_return;
+        }
+        cyls = hdrcyls;
+        trks = cyls * heads;
     }
-
-    /* Check number of heads */
-    hdrheads = ((U32)(devhdr.heads[3]) << 24)
-               | ((U32)(devhdr.heads[2]) << 16)
-               | ((U32)(devhdr.heads[1]) << 8)
-               | (U32)(devhdr.heads[0]);
-
-    if (heads != hdrheads)
+    else
     {
-        CDSKMSG (m, "Invalid number of heads in header: "
-                 "%d, expecting %d\n",
-                 hdrheads, heads);
-        goto cdsk_return;
+        int numl1;
+        trks = ((U32)(cdevhdr.cyls[3]) << 24)
+             | ((U32)(cdevhdr.cyls[2]) << 16)
+             | ((U32)(cdevhdr.cyls[1]) << 8)
+             | (U32)(cdevhdr.cyls[0]);
+        trks = (trks / CFBA_BLOCK_NUM) + 1;
+        numl1 = (trks + 255) / 256;
+        trksz = CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE;
+        cyls = heads = -1;
+        if (cdevhdr.numl1tab != numl1)
+        {
+            CDSKMSG (m, "Invalid number of l1 table entries in header: "
+                     "%d, expecting %d\n", cdevhdr.numl1tab, numl1);
+            goto cdsk_return;
+        }
     }
-
-    /* Check number of cylinders */
-    if (hdrcyls < ckd->cyls || hdrcyls > ckd->cyls + ckd->altcyls)
-    {
-        CDSKMSG (m, "Invalid number of cylinders in header: %d, "
-                 "expecting %d - %d\n",
-                 hdrcyls, ckd->cyls, ckd->cyls + ckd->altcyls);
-        goto cdsk_return;
-    }
-
-    if (cdevhdr.numl1tab < (hdrcyls * heads + 255) / 256
-     || cdevhdr.numl1tab > (hdrcyls * heads + 255) / 256 + 1)
-    {
-        CDSKMSG (m, "Invalid number of l1 table entries in header: "
-                 "%d, expecting %d\n",
-                 cdevhdr.numl1tab, (hdrcyls * heads + 255) / 256);
-      goto cdsk_return;
-    }
-    cyls = hdrcyls;
-    trks = cyls * heads;
 
     l1tabsz = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
 
@@ -1201,16 +1263,30 @@ space_check:
                 }
 
                 /* consistency check on track header */
-                if ((buf[0] & ~CCKD_COMPRESS_STRESSED) > CCKD_COMPRESS_MAX
-                 || (buf[1] * 256 + buf[2]) >= cyls
-                 || (buf[3] * 256 + buf[4]) >= heads
-                 || (buf[1] * 256 + buf[2]) * heads +
-                    (buf[3] * 256 + buf[4]) != trk)
+                if (ckddasd)
                 {
-                    sprintf (msg, "track %d invalid header "
-                             "0x%2.2x%2.2x%2.2x%2.2x%2.2x", trk,
-                             buf[0], buf[1], buf[2], buf[3], buf[4]);
-                    goto bad_trk;
+                  if ((buf[0] & ~CCKD_COMPRESS_STRESSED) > CCKD_COMPRESS_MAX
+                   || (buf[1] * 256 + buf[2]) >= cyls
+                   || (buf[3] * 256 + buf[4]) >= heads
+                   || (buf[1] * 256 + buf[2]) * heads +
+                      (buf[3] * 256 + buf[4]) != trk)
+                  {
+                      sprintf (msg, "track %d invalid header "
+                               "0x%2.2x%2.2x%2.2x%2.2x%2.2x", trk,
+                               buf[0], buf[1], buf[2], buf[3], buf[4]);
+                      goto bad_trk;
+                  }
+                }
+                else
+                {
+                  if ((buf[0] & ~CCKD_COMPRESS_STRESSED) > CCKD_COMPRESS_MAX
+                   || (buf[1] << 24) + (buf[2] << 16) + (buf[3] << 8) + buf[4] != trk)
+                  {
+                      sprintf (msg, "block %d invalid header "
+                               "0x%2.2x%2.2x%2.2x%2.2x%2.2x", trk,
+                               buf[0], buf[1], buf[2], buf[3], buf[4]);
+                      goto bad_trk;
+                  }
                 }
             }
 
@@ -1276,7 +1352,8 @@ space_check:
                         goto bad_trk;
                 }
                 trkbuf[0] = 0;
-                if (cdsk_valid_trk (trk, trkbuf, heads, trklen, trksz, msg) != trklen)
+                rc = cdsk_valid_trk (trk, trkbuf, heads, trklen, trksz, msg);
+                if (rc != trklen)
                     goto bad_trk;
             }
 
@@ -1509,16 +1586,30 @@ overlap:
         for (j = 0; j < gap[i].siz; )
         {
             /* test for possible track header */
-            if (!(gap[i].siz - j > CKDDASD_TRKHDR_SIZE &&
-                  (gapbuf[j] & ~CCKD_COMPRESS_STRESSED) <= CCKD_COMPRESS_MAX
-               && (gapbuf[j+1] << 8) + gapbuf[j+2] < cyls
-               && (gapbuf[j+3] << 8) + gapbuf[j+4] < heads))
-            {   j++; continue;
+            if (ckddasd)
+            {
+              if (!(gap[i].siz - j > CKDDASD_TRKHDR_SIZE
+                && (gapbuf[j] & ~CCKD_COMPRESS_STRESSED) <= CCKD_COMPRESS_MAX
+                && (gapbuf[j+1] << 8) + gapbuf[j+2] < cyls
+                && (gapbuf[j+3] << 8) + gapbuf[j+4] < heads))
+              { j++; continue;
+              }
+              /* get track number */
+              trk = ((gapbuf[j+1] << 8) + gapbuf[j+2]) * heads +
+                     (gapbuf[j+3] << 8) + gapbuf[j+4];
             }
-
-            /* get track number */
-            trk = ((gapbuf[j+1] << 8) + gapbuf[j+2]) * heads +
-                   (gapbuf[j+3] << 8) + gapbuf[j+4];
+            /* test for possible block header */
+            else
+            {
+              /* get block number */
+              trk = (gapbuf[j+1] << 24) + (gapbuf[j+2] << 16) +
+                    (gapbuf[j+3] <<  8) +  gapbuf[j+4];
+              if (!(gap[i].siz - j > CKDDASD_TRKHDR_SIZE
+                && (gapbuf[j] & ~CCKD_COMPRESS_STRESSED) <= CCKD_COMPRESS_MAX
+                && trk < trks))
+              { j++; continue;
+              }
+            }
 
             /* see if track is to be recovered */
             for (k = 0; k < r; k++)
@@ -1535,8 +1626,9 @@ overlap:
             if (gap[i].siz - j < trksz) maxlen = gap[i].siz - j;
             else maxlen = trksz;
 
-            CDSKMSG (m, "trying to recover track %d at offset 0x%llx\n   "
+            CDSKMSG (m, "trying to recover %s %d at offset 0x%llx\n   "
                         "max length %d compression %s\n",
+                     ckddasd ? "track" : "block",
                      trk, (long long)(gap[i].pos + j), maxlen,
                      compression[gapbuf[j]]);
 
@@ -1545,13 +1637,15 @@ overlap:
 
             /* continue if track couldn't be uncompressed or isn't valid */
             if (trklen < 0)
-            {   CDSKMSG (m, "unable to recover track %d at offset 0x%llx\n",
-                            trk, (long long)(gap[i].pos + j));
+            {   CDSKMSG (m, "unable to recover %s %d at offset 0x%llx\n",
+                         ckddasd ? "track" : "block", trk,
+                         (long long)(gap[i].pos + j));
                 j++; continue;
             }
 
-            CDSKMSG (m, "track %d recovered, offset 0x%llx length %ld\n",
-                    trk, (long long)(gap[i].pos + j), trklen);
+            CDSKMSG (m, "%s %d recovered, offset 0x%llx length %ld\n",
+                     ckddasd ? "track" : "block", trk,
+                     (long long)(gap[i].pos + j), trklen);
 
             /* enter the recovered track into the space table */
             spc[s].pos = gap[i].pos + j;
@@ -1927,6 +2021,10 @@ int             r;                      /* Record number             */
 int             sz;                     /* Track size                */
 int             kl,dl;                  /* Key/Data lengths          */
 
+    /* Check for fba dasd */
+    if (heads == -1)
+        return cdsk_valid_blk (trk, buf, heads, len, trksz, msg);
+
     /* cylinder and head calculations */
     cyl = trk / heads;
     head = trk % heads;
@@ -1998,6 +2096,23 @@ int             kl,dl;                  /* Key/Data lengths          */
 } /* end function cdsk_valid_trk */
 
 /*-------------------------------------------------------------------*/
+/* Validate a block group image                                      */
+/*-------------------------------------------------------------------*/
+int cdsk_valid_blk (int trk, BYTE *buf, int heads, int len, int trksz, BYTE *msg)
+{
+    if (len == trksz)
+        return len;
+
+    if (msg)
+        sprintf (msg, "block %d length %d validation error: "
+                 "%2.2x%2.2x%2.2x%2.2x%2.2x",
+                 trk, len, buf[0], buf[1], buf[2], buf[3], buf[4]);
+    return -1;
+
+} /* end function cdsk_valid_blk */
+
+
+/*-------------------------------------------------------------------*/
 /* Recover a track image                                             */
 /*-------------------------------------------------------------------*/
 int cdsk_recover_trk (int trk, BYTE *buf, int heads, int maxlen, int trksz)
@@ -2023,7 +2138,6 @@ BYTE            buf2[65536];            /* Uncompress/Decompress buf */
                              &buf[CKDDASD_TRKHDR_SIZE], i);
             if (rc == Z_OK)
             {
-printf ("trk %d buf %p len %d uncompress ok\n",trk,buf,i);
                 rc = cdsk_valid_trk (trk, (BYTE *)&buf2, heads,
                           len + CKDDASD_TRKHDR_SIZE, trksz, NULL);
                 if (rc == len + CKDDASD_TRKHDR_SIZE)

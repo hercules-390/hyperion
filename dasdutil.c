@@ -1486,7 +1486,6 @@ U32             trksize;                /* DASD image track length   */
 /*      volser  Volume serial number                                 */
 /*      comp    Compression algorithm for a compressed device.       */
 /*              Will be 0xff if device is not to be compressed.      */
-/*              FBA compression is NOT currently supported.          */
 /*-------------------------------------------------------------------*/
 int
 create_fba (BYTE *fname, U16 devtype,
@@ -1498,6 +1497,14 @@ U32             sectnum;                /* Sector number             */
 BYTE           *buf;                    /* -> Sector data buffer     */
 U32             minsect;                /* Minimum sector count      */
 U32             maxsect;                /* Maximum sector count      */
+
+    /* Special processing for compressed fba */
+    if (comp != 0xff)
+    {
+        rc = create_compressed_fba (fname, devtype, sectsz, sectors,
+                                    volser, comp, lfs);
+        return rc;
+    }
 
     /* Compute minimum and maximum number of sectors */
     minsect = 64;
@@ -1591,6 +1598,212 @@ U32             maxsect;                /* Maximum sector count      */
 
     return 0;
 } /* end function create_fba */
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to create a compressed FBA DASD image file             */
+/* Input:                                                            */
+/*      fname   DASD image file name                                 */
+/*      devtype Device type                                          */
+/*      sectsz  Sector size                                          */
+/*      sectors Number of sectors                                    */
+/*      volser  Volume serial number                                 */
+/*      comp    Compression algorithm for a compressed device.       */
+/*-------------------------------------------------------------------*/
+int
+create_compressed_fba (BYTE *fname, U16 devtype,
+            U32 sectsz, U32 sectors, BYTE *volser, BYTE comp, int lfs)
+{
+int             rc;                     /* Return code               */
+off_t           rcoff;                  /* Return value from lseek() */
+int             fd;                     /* File descriptor           */
+CKDDASD_DEVHDR  devhdr;                 /* Device header             */
+CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
+int             blkgrps;                /* Number block groups       */
+int             numl1tab, l1tabsz;      /* Level 1 entries, size     */
+CCKD_L1ENT     *l1;                     /* Level 1 table pointer     */
+CCKD_L2ENT      l2[256];                /* Level 2 table             */
+unsigned long   len2;                   /* Compressed buffer length  */
+BYTE            buf2[256];              /* Compressed buffer         */
+BYTE            buf[65536];             /* Buffer                    */
+
+    /* Calculate the size of the level 1 table */
+    blkgrps = (sectors / CFBA_BLOCK_NUM) + 1;
+    numl1tab = (blkgrps + 255) / 256;
+    l1tabsz = numl1tab * CCKD_L1ENT_SIZE;
+    if (l1tabsz > 65536)
+    {
+        fprintf (stderr, "File size too large: %lld [%d]\n",
+                 (long long)(sectors * sectsz), numl1tab);
+        return -1;
+    }
+
+    /* Create the DASD image file */
+    fd = open (fname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
+                S_IRUSR | S_IWUSR | S_IRGRP);
+    if (fd < 0)
+    {
+        fprintf (stderr, "%s open error: %s\n",
+                fname, strerror(errno));
+        return -1;
+    }
+
+    /* Display progress message */
+    fprintf (stderr,
+            "Creating %4.4X compressed volume %s: "
+            "%u sectors, %u bytes/sector\n",
+            devtype, volser, sectors, sectsz);
+
+    /* Write the device header */
+    memset (&devhdr, 0, CKDDASD_DEVHDR_SIZE);
+    memcpy (&devhdr.devid, "FBA_C370", 8);
+    rc = write (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+    if (rc < CKDDASD_DEVHDR_SIZE)
+    {
+        fprintf (stderr, "%s devhdr write error: %s\n",
+                 fname, errno ? strerror(errno) : "incomplete");
+            return -1;
+    }
+
+    /* Write the compressed device header */
+    memset (&cdevhdr, 0, CCKDDASD_DEVHDR_SIZE);
+    cdevhdr.vrm[0] = CCKD_VERSION;
+    cdevhdr.vrm[1] = CCKD_RELEASE;
+    cdevhdr.vrm[2] = CCKD_MODLVL;
+    if (cckd_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
+    cdevhdr.options |= (CCKD_ORDWR | CCKD_NOFUDGE);
+    cdevhdr.numl1tab = numl1tab;
+    cdevhdr.numl2tab = 256;
+    cdevhdr.cyls[3] = (sectors >> 24) & 0xFF;
+    cdevhdr.cyls[2] = (sectors >> 16) & 0xFF;
+    cdevhdr.cyls[1] = (sectors >>    8) & 0xFF;
+    cdevhdr.cyls[0] = sectors & 0xFF;
+    cdevhdr.compress = comp;
+    cdevhdr.compress_parm = -1;
+    rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+    if (rc < CCKDDASD_DEVHDR_SIZE)
+    {
+        fprintf (stderr, "%s cdevhdr write error: %s\n",
+                 fname, errno ? strerror(errno) : "incomplete");
+        return -1;
+    }
+
+    /* Write the level 1 table */
+    l1 = (CCKD_L1ENT *)&buf;
+    memset (l1, 0, l1tabsz);
+    l1[0] = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz;
+    rc = write (fd, l1, l1tabsz);
+    if (rc < l1tabsz)
+    {
+        fprintf (stderr, "%s l1tab write error: %s\n",
+                 fname, errno ? strerror(errno) : "incomplete");
+        return -1;
+    }
+
+    /* Write the 1st level 2 table */
+    memset (&l2, 0, CCKD_L2TAB_SIZE);
+    l2[0].pos = CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz +
+                CCKD_L2TAB_SIZE;
+    rc = write (fd, &l2, CCKD_L2TAB_SIZE);
+    if (rc < CCKD_L2TAB_SIZE)
+    {
+        fprintf (stderr, "%s l2tab write error: %s\n",
+                 fname, errno ? strerror(errno) : "incomplete");
+        return -1;
+    }
+
+    /* Write the 1st block group */
+    memset (&buf, 0, CKDDASD_DEVHDR_SIZE + CFBA_BLOCK_SIZE);
+    convert_to_ebcdic (&buf[CKDDASD_DEVHDR_SIZE], 4, "VOL1");
+    convert_to_ebcdic (&buf[CKDDASD_DEVHDR_SIZE+4], 6, volser);
+    len2 = sizeof(buf2);
+    rc = compress2 (&buf2[0], &len2, &buf[CKDDASD_TRKHDR_SIZE],
+                    CFBA_BLOCK_SIZE, -1);
+    if (rc == Z_OK)
+    {
+        buf[0] = CCKD_COMPRESS_ZLIB;
+        rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE);
+        if (rc < CKDDASD_TRKHDR_SIZE)
+        {
+            fprintf (stderr, "%s block header write error: %s\n",
+                     fname, errno ? strerror(errno) : "incomplete");
+            return -1;
+        }
+        rc = write (fd, &buf2, len2);
+        if (rc < len2)
+        {
+            fprintf (stderr, "%s block write error: %s\n",
+                     fname, errno ? strerror(errno) : "incomplete");
+            return -1;
+        }
+        l2[0].len = l2[0].size = CKDDASD_TRKHDR_SIZE + len2;
+        cdevhdr.size = cdevhdr.used = CKDDASD_DEVHDR_SIZE +
+                       CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
+                       CKDDASD_TRKHDR_SIZE + len2;
+    }
+    else
+    {
+        rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE);
+        if (rc < CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE)
+        {
+            fprintf (stderr, "%s block write error: %s\n",
+                     fname, errno ? strerror(errno) : "incomplete");
+            return -1;
+        }
+        l2[0].len = l2[0].size = CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE;
+        cdevhdr.size = cdevhdr.used = CKDDASD_DEVHDR_SIZE +
+                       CCKDDASD_DEVHDR_SIZE + l1tabsz + CCKD_L2TAB_SIZE +
+                       CKDDASD_TRKHDR_SIZE + CFBA_BLOCK_SIZE;
+    }
+
+    /* Re-write the compressed device header */
+    rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
+    if (rcoff < 0)
+    {
+        fprintf (stderr, "%s cdevhdr lseek error: %s\n",
+                 fname, strerror(errno));
+        return -1;
+    }
+    rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+    if (rc < CCKDDASD_DEVHDR_SIZE)
+    {
+        fprintf (stderr, "%s cdevhdr rewrite error: %s\n",
+                 fname, errno ? strerror(errno) : "incomplete");
+        return -1;
+    }
+
+    /* Re-write the 1st level 2 table */
+    rcoff = lseek (fd, CKDDASD_DEVHDR_SIZE + CCKDDASD_DEVHDR_SIZE + l1tabsz, SEEK_SET);
+    if (rcoff < 0)
+    {
+        fprintf (stderr, "%s l2tab lseek error: %s\n",
+                 fname, strerror(errno));
+        return -1;
+    }
+    rc = write (fd, &l2, CCKD_L2TAB_SIZE);
+    if (rc < CCKD_L2TAB_SIZE)
+    {
+        fprintf (stderr, "%s l2tab rewrite error: %s\n",
+                 fname, errno ? strerror(errno) : "incomplete");
+        return -1;
+    }
+
+    /* Close the DASD image file */
+    rc = close (fd);
+    if (rc < 0)
+    {
+        fprintf (stderr, "%s close error: %s\n",
+                fname, strerror(errno));
+        return -1;
+    }
+
+    /* Display completion message */
+    fprintf (stderr,
+            "%u sectors successfully written to file %s\n",
+            sectors, fname);
+
+    return 0;
+} /* end function create_compressed_fba */
+
 
 int get_verbose_util(void)
 {
