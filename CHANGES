@@ -1,3 +1,4 @@
+30 Jan 2002 Fix SIE validity checks and intercepts - Paul Leisy
 29 Jan 2002 Fix pending I/O interrupt when enabling I/O subclass - Jan Jaeger
 28 Jan 2002 PER fix for BCTR and move #endif for FEATURE_PER2 - Paul Leisy
 27 Jan 2002 Documentation updates for TCP/IP and Socket Readers - Roger Bowler
