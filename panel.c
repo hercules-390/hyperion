@@ -1994,6 +1994,11 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         else
             sysblk.pgminttr |= ((U64)1 << (n - 1));
 
+        if (sysblk.pgminttr)
+        {
+            SET_IC_TRACE;
+        }
+
         return NULL;
     }
 

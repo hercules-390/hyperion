@@ -1138,9 +1138,16 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             release_lock (&sysblk.intlock);
 }
 
-void ARCH_DEP(process_trace)(REGS *regs, int tracethis, int stepthis)
+void ARCH_DEP(process_trace)(REGS *regs, BYTE *inst, int tracethis, int stepthis)
 {
 int     shouldbreak;                    /* 1=Stop at breakpoint      */
+
+#ifdef OPTION_FAST_INSTFETCH
+            /* fill regs->inst in case of fast ifetch; 
+               it is also needed for program_interrupt when pgminttr is set */
+            if (regs->inst != inst)
+                memcpy(regs->inst, inst, 6);
+#endif
 
             /* Test for breakpoint */
             shouldbreak = sysblk.instbreak
@@ -1182,11 +1189,24 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
                 goto _if; \
         } 
 
+#if !defined(OPTION_FOOTPRINT_BUFFER)
 #define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
         { \
+        COUNT_INST ((_inst), (_regs)); \
         (opcode_table[_inst[0]][ARCH_MODE]) \
                                ((_inst), 0, (_regs)); \
         }
+#else
+#define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
+do { \
+    sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]] = *(_regs); \
+    memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_inst),6); \
+    sysblk.footprptr[(_regs)->cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
+    COUNT_INST((_inst), (_regs)); \
+    opcode_table[((_inst)[0])][ARCH_MODE]((_inst), 0, (_regs)); \
+} while(0)
+
+#endif
 
 #define FAST_IFETCH(_regs, _pe, _ip, _if, _ex) \
     { \
@@ -1246,14 +1266,14 @@ exec0:
 
         if( IS_IC_TRACE )
         {
-            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
+            ARCH_DEP(process_trace)(regs, ip, tracethis, stepthis);
 
     
             /* Reset instruction trace indicators */
             tracethis = 0;
             stepthis = 0;
-            regs->instcount++;
 #ifdef OPTION_CPU_UNROLL
+            regs->instcount++;
             FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
@@ -1293,7 +1313,7 @@ FAST_IFETCH(regs, pageend, ip, ifetch6, exec6);
 FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
 
 specexception:
-    regs->instvalid = 0; \
+    regs->instvalid = 0;
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION); 
 
 } /* end function cpu_thread */
@@ -1338,7 +1358,7 @@ int     stepthis;                       /* Stop on this instruction  */
 
         if( IS_IC_TRACE )
         {
-            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
+            ARCH_DEP(process_trace)(regs, regs->inst, tracethis, stepthis);
 
     
             /* Reset instruction trace indicators */
