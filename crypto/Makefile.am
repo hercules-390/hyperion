@@ -7,7 +7,9 @@ lns=@LN_S@
 
 LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@
 
-LDADD += -lgcrypt
+LDADD += $(LIBGCRYPT_LIBS)
+
+CFLAGS += $(LIBGCRYPT_CFLAGS)
 
 dyncrypt_SRC     = dyncrypt.c \
                    sha1.c

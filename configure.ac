@@ -135,8 +135,50 @@ have_dlopen=false
 # AC_CHECK_LIB(ltdl,lt_dlopen)
 # AC_CHECK_LIB(ltdl,lt_dlopen, have_lt_dlopen=true, have_lt_dlopen=false )
 
-AC_CHECK_LIB(gcrypt,gcry_cipher_open, have_gcrypt=true, have_gcrypt=false )
+# AC_CHECK_LIB(gcrypt,gcry_cipher_open, have_gcrypt=true, have_gcrypt=false )
+
+AM_PATH_LIBGCRYPT("0.4.4",[have_gcrypt=true],[have_gcrypt=false])
+
 AM_CONDITIONAL(HAVE_GCRYPT, [test "x$have_gcrypt" = "xtrue"])
+
+if test "x$have_gcrypt" = "xtrue" ; then
+	OCFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $GCRYPT_CFLAGS"
+	AC_MSG_CHECKING([whether gcry_cipher_open takes 3 or 4 args])
+	AC_COMPILE_IFELSE([
+#include <gcrypt.h>
+int main()
+{
+  GCRY_CIPHER_HD hd;
+  hd = gcry_cipher_open(0,0,0);
+  return 0;
+}
+],[gcrypt_form=3],
+	AC_COMPILE_IFELSE(
+[
+#include <gcrypt.h>
+int main()
+{
+  gcry_cipher_hd_t hd;
+  gcry_cipher_open(&hd,0,0,0);
+  return 0;
+}
+],[gcrypt_form=4],[gcrypt_form=0]))
+	case $gcrypt_form in
+		3)
+		AC_MSG_RESULT([3])
+		;;
+		4)
+		AC_MSG_RESULT([4])
+		;;
+		*)
+		AC_MSG_RESULT([unknown])
+		;;
+	esac
+	CFLAGS="$OCFLAGS"
+	AC_DEFINE_UNQUOTED(GCRYPT_OPENFORMAT,${gcrypt_form})
+
+fi
 
 opt_dynamic_load=true
 
@@ -770,5 +812,7 @@ AH_TEMPLATE([NEED_GETOPT_OPTRESET],
             [Define to indicate optreset exists])
 AH_TEMPLATE([MODULESDIR],
             [Directory where HERCULES modules are installed])
+AH_TEMPLATE([GCRYPT_OPENFORMAT],
+            [Semantic to use for gcry_cipher_open function])
 
 AC_OUTPUT([Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])

@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+14 May 2004 libgcrypt API variations automagic integration - Greg & Ivan
 13 May 2004 bc.pat - Yet another BC optimization - Greg Smith
 13 May 2004 fetch_main_absolute.pat - Resolve absolute addresses only
             once for multiple addresses in the same page - Greg Smith
