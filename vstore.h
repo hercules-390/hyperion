@@ -523,7 +523,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Fetch six bytes if instruction cannot cross a page boundary */
-    if ((addr & PAGEFRAME_BYTEMASK) <= PAGEFRAME_PAGESIZE - 6)
+    if ((addr & 0x7FF) <= (0x800 - 6))
     {
         abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
 #if defined(OPTION_AIA_BUFFER)
@@ -549,7 +549,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs += 2;
     addr += 2;
     addr &= ADDRESS_MAXWRAP(regs);
-    if ((addr & PAGEFRAME_BYTEMASK) == 0x000) {
+    if ((addr & 0x7FF) == 0x000) {
         abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
     }
     memcpy (dest+2, sysblk.mainstor+abs, 2);
@@ -561,7 +561,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs += 2;
     addr += 2;
     addr &= ADDRESS_MAXWRAP(regs);
-    if ((addr & PAGEFRAME_BYTEMASK) == 0x000) {
+    if ((addr & 0x7FF) == 0x000) {
         abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
     }
     memcpy (dest+4, sysblk.mainstor+abs, 2);

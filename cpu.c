@@ -1246,7 +1246,7 @@ _if: \
     (_regs)->ip = (_ip); \
     ARCH_DEP(instfetch) (regs->inst, regs->psw.IA, regs);  \
     (regs)->instvalid = 1; \
-    (_pe) = (regs->psw.IA & PAGEFRAME_PAGEMASK) + PAGEFRAME_PAGESIZE - 6; \
+    (_pe) = (regs->psw.IA & ~0x7FF) + (0x800 - 6); \
     goto _ex; \
     }
 

@@ -34,7 +34,7 @@
 #define OPTION_FAST_INTCOND             /* Ea CPU has intcond COND   */
 #define OPTION_IOINTQ                   /* I/O interrupt queue       */
 #define OPTION_SYNCIO                   /* Synchronous I/O option    */
-#undef  OPTION_IODELAY          /* 1000 ** IO delay in uSec          */
+#undef  OPTION_IODELAY         /*  1000 ** IO delay in uSec          */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */

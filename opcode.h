@@ -417,7 +417,7 @@ do { \
 #define INSTRUCTION_FETCH(_dest, _addr, _regs) \
 do { \
     if( (_regs)->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
-      && ((_addr) & PAGEFRAME_BYTEMASK) <= PAGEFRAME_PAGESIZE - 6) \
+      && ((_addr) & 0x7FF) <= (0x800 - 6)) \
     { \
         if((_addr) & 0x01) \
             ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
