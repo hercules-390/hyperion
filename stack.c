@@ -126,8 +126,9 @@ U32  trap_flags;
 QWORD trap_psw;
 int  i;
 
-    if(!PRIMARY_SPACE_MODE(&(regs->psw)) 
-      && !ACCESS_REGISTER_MODE(&(regs->psw)))
+    if (   REAL_MODE(&regs->psw)
+      || !(PRIMARY_SPACE_MODE(&regs->psw) 
+      ||   ACCESS_REGISTER_MODE(&regs->psw)) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Obtain the DUCT origin from control register 2 */
