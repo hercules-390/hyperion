@@ -257,7 +257,7 @@ static void http_load_cgi_variables(WEBBLK *webblk)
 
 
 #if 0
-void http_dump_cgi_variables(WEBBLK *webblk)
+static void http_dump_cgi_variables(WEBBLK *webblk)
 {
     CGIVAR *cv;
     for(cv = webblk->cgivar; cv != NULL; cv = cv->next)
@@ -425,7 +425,8 @@ static void *http_request(FILE *hsock)
     memset(webblk,0,sizeof(WEBBLK));
     webblk->hsock = hsock;
 
-    while (fgets(line, sizeof(line), webblk->hsock)) {
+    while (fgets(line, sizeof(line), webblk->hsock))
+    {
         if (*line == '\r' || *line == '\n')
             break;
 
@@ -520,7 +521,9 @@ static void *http_request(FILE *hsock)
 
     http_load_cgi_variables(webblk);
 
-//  http_dump_cgi_variables(webblk);
+#if 0
+    http_dump_cgi_variables(webblk);
+#endif
 
     for(cgient = cgidir; cgient->path != NULL; cgient++)
     {

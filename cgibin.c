@@ -127,15 +127,18 @@ zz_cgibin cgibin_psw(WEBBLK *webblk)
 
     fprintf(webblk->hsock, "<FORM method=post>\n");
 
-    if (!autorefresh) {
+    if (!autorefresh)
+    {
         fprintf(webblk->hsock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
-        fprintf(webblk->hsock, "<BR>Refresh Interval: ");
+        fprintf(webblk->hsock, "Refresh Interval: ");
         fprintf(webblk->hsock, "<INPUT type=text size=2 name=\"refresh_interval\" value=%d>\n", 
            refresh_interval);
-    } else {
+    }
+    else
+    {
         fprintf(webblk->hsock, "<INPUT type=submit value=\"Stop Refreshing\" name=norefresh>\n");
-        fprintf(webblk->hsock, "<BR>Refresh Interval: %d\n", refresh_interval);
-        fprintf(webblk->hsock, "<INPUT type=hidden name=refresh value=1>\n");
+        fprintf(webblk->hsock, "Refresh Interval: %d\n", refresh_interval);
+        fprintf(webblk->hsock, "<INPUT type=hidden name=\"refresh_interval\" value=%d>\n",refresh_interval);
     }
 
     fprintf(webblk->hsock, "</FORM>\n");
@@ -160,7 +163,8 @@ zz_cgibin cgibin_psw(WEBBLK *webblk)
                 qword[12], qword[13], qword[14], qword[15]);
     }
  
-    if (autorefresh) {
+    if (autorefresh)
+    {
         /* JavaScript to cause automatic page refresh */
         fprintf(webblk->hsock, "<script language=\"JavaScript\">\n");
         fprintf(webblk->hsock, "<!--\nsetTimeout('window.location.replace(\"%s?refresh_interval=%d&refresh=1\")', %d)\n", 
@@ -189,8 +193,26 @@ BYTE   *pointer;
 int     currmsgn;
 char   *command;
 
+char *value;
+int autorefresh = 0;
+int refresh_interval = 5;
+int msgcount = 0;
+
     if ((command = cgi_variable(webblk,"command")))
         panel_command(command);
+
+    if((value = cgi_variable(webblk,"msgcount")))
+        msgcount = atoi(value);
+
+    if ((value = cgi_variable(webblk,"refresh_interval")))
+        refresh_interval = atoi(value);
+
+    if (cgi_variable(webblk,"autorefresh"))
+        autorefresh = 1;
+    else if (cgi_variable(webblk,"norefresh"))
+        autorefresh = 0;
+    else if (cgi_variable(webblk,"refresh"))
+        autorefresh = 1;
 
     html_header(webblk);
 
@@ -200,22 +222,71 @@ char   *command;
     get_msgbuf(&msgbuf, &msgslot, &nummsgs, &msg_size, &max_msgs);
 
     for(currmsgn = 0; currmsgn < nummsgs; currmsgn++) {
-        if(nummsgs < max_msgs)
-            pointer = msgbuf + (currmsgn * msg_size);
-        else
-            if(currmsgn + msgslot < max_msgs) 
-                pointer = msgbuf + ((currmsgn + msgslot) * msg_size);
+        if(!msgcount || currmsgn >= (nummsgs - msgcount))
+        {
+            if(nummsgs < max_msgs)
+                pointer = msgbuf + (currmsgn * msg_size);
             else
-                pointer = msgbuf + ((currmsgn + msgslot - max_msgs) * msg_size);
+                if(currmsgn + msgslot < max_msgs) 
+                    pointer = msgbuf + ((currmsgn + msgslot) * msg_size);
+                else
+                    pointer = msgbuf + ((currmsgn + msgslot - max_msgs) * msg_size);
     
-        fprintf(webblk->hsock,"%80.80s\n",pointer);
+            fprintf(webblk->hsock,"%80.80s\n",pointer);
+        }
     }
 
     fprintf(webblk->hsock, "</PRE>\n");
 
-    fprintf(webblk->hsock, "<FORM method=post>Command:");
-    fprintf(webblk->hsock, "<INPUT type=text size=80 name=\"command\">");
-    fprintf(webblk->hsock, "</FORM>\n<A name=bottom>\n");
+    fprintf(webblk->hsock, "<FORM method=post>Command:\n");
+    fprintf(webblk->hsock, "<INPUT type=text name=command size=80>\n");
+    fprintf(webblk->hsock, "<INPUT type=hidden name=%srefresh value=1>\n",autorefresh ? "auto" : "no");
+    fprintf(webblk->hsock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
+    fprintf(webblk->hsock, "<INPUT type=hidden name=msgcount value=%d>\n",msgcount);
+    fprintf(webblk->hsock, "</FORM>\n<BR>\n");
+
+    fprintf(webblk->hsock, "<A name=bottom>\n");
+
+    fprintf(webblk->hsock, "<FORM method=post>\n");
+    if(!autorefresh)
+    {
+        fprintf(webblk->hsock, "<INPUT type=submit value=\"Auto Refresh\" name=autorefresh>\n");
+        fprintf(webblk->hsock, "Refresh Interval: ");
+        fprintf(webblk->hsock, "<INPUT type=text name=\"refresh_interval\" size=2 value=%d>\n", 
+           refresh_interval);
+    }
+    else
+    {
+        fprintf(webblk->hsock, "<INPUT type=submit name=norefresh value=\"Stop Refreshing\">\n");
+        fprintf(webblk->hsock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
+        fprintf(webblk->hsock, " Refresh Interval: %2d \n", refresh_interval);
+    }
+    fprintf(webblk->hsock, "<INPUT type=hidden name=msgcount value=%d>\n",msgcount);
+    fprintf(webblk->hsock, "</FORM>\n");
+
+    fprintf(webblk->hsock, "<FORM method=post>\n");
+    fprintf(webblk->hsock, "Only show last ");
+    fprintf(webblk->hsock, "<INPUT type=text name=msgcount size=3 value=%d>",msgcount);
+    fprintf(webblk->hsock, " lines (zero for all loglines)\n");
+    fprintf(webblk->hsock, "<INPUT type=hidden name=%srefresh value=1>\n",autorefresh ? "auto" : "no");
+    fprintf(webblk->hsock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
+    fprintf(webblk->hsock, "</FORM>\n");
+    
+    if (autorefresh)
+    {
+        /* JavaScript to cause automatic page refresh */
+        fprintf(webblk->hsock, "<script language=\"JavaScript\">\n");
+        fprintf(webblk->hsock, "<!--\nsetTimeout('window.location.replace(\"%s"
+               "?refresh_interval=%d"
+               "&refresh=1"
+               "&msgcount=%d"
+               "\")', %d)\n", 
+               cgi_baseurl(webblk),
+               refresh_interval,
+               msgcount,
+               refresh_interval*1000);
+        fprintf(webblk->hsock, "//-->\n</script>\n");
+    }
 
     html_footer(webblk);
 
