@@ -12,30 +12,35 @@ else
 HERCIFC=
 endif
 
-bin_PROGRAMS = hercules $(HERCIFC) \
-        dasdinit dasdisup dasdload dasdls dasdpdsu \
-        tapecopy tapemap tapesplt \
-        cckd2ckd cckdcdsk ckd2cckd cckdcomp \
-        hetget hetinit hetmap hetupd \
-        dmap2hrc
+if BUILD_FTHREADS
+FTHREADS=fthreads.c w32chan.c
+else
+FTHREADS=
+endif
 
-hercules_SOURCES = fthreads.c w32chan.c \
-        impl.c config.c panel.c version.c \
-        ipl.c assist.c dat.c \
-        stack.c cpu.c vstore.c \
-        general1.c general2.c plo.c \
-        control.c io.c \
-        decimal.c service.c opcode.c \
-        diagnose.c diagmssf.c vm.c \
-        channel.c ckddasd.c fbadasd.c \
-        tapedev.c cardrdr.c cardpch.c \
-        printer.c console.c external.c \
-        float.c ctcadpt.c trace.c \
-        machchk.c vector.c xstore.c \
-        cmpsc.c sie.c timer.c \
-        esame.c cckddasd.c cckdcdsx.c \
-        parser.c hetlib.c ieee.c \
-        machdep.h
+bin_PROGRAMS = hercules $(HERCIFC) \
+	   dasdinit dasdisup dasdload dasdls dasdpdsu \
+	   tapecopy tapemap tapesplt \
+	   cckd2ckd cckdcdsk ckd2cckd cckdcomp \
+	   hetget hetinit hetmap hetupd \
+	   dmap2hrc
+
+hercules_SOURCES = impl.c config.c panel.c version.c \
+	   ipl.c assist.c dat.c \
+	   stack.c cpu.c vstore.c \
+	   general1.c general2.c plo.c \
+           control.c io.c \
+	   decimal.c service.c opcode.c \
+	   diagnose.c diagmssf.c vm.c \
+	   channel.c ckddasd.c fbadasd.c \
+	   tapedev.c cardrdr.c cardpch.c \
+	   printer.c console.c external.c \
+	   float.c ctcadpt.c trace.c \
+	   machchk.c vector.c xstore.c \
+	   cmpsc.c sie.c timer.c \
+	   esame.c cckddasd.c cckdcdsx.c \
+	   parser.c hetlib.c ieee.c \
+	   machdep.h $(FTHREADS)
 
 hercifc_SOURCES = hercifc.c version.c
 

@@ -40,42 +40,55 @@ dnl AC_CHECK_LIB(z, zlibVersion)
 AC_CHECK_LIB(z, main)
 AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 [have_libbz2=yes],[have_libbz2=no])
-AC_CHECK_LIB(pthread, pthread_create,
-             [],
-             [case "$host_os" in
-                *cygwin*)
-                  # Alternate pthreads location for older cygwin
-                  AC_MSG_NOTICE([Looking for pthreadw32 in /usr/DLL])
-                  LDFLAGS_SAVE="$LDFLAGS"
-                  LDFLAGS="$LDFLAGS -L/usr/DLL"
-                  AC_CHECK_LIB(pthreadw32, pthread_create,
-                               [],
-                               [LDFLAGS="$LDFLAGS_SAVE"])
-                  ;;
-              esac])
+
+AC_ARG_ENABLE(fthreads,
+              AC_HELP_STRING([--enable-fthreads],
+                             [Use included fthreads instead of libpthread]),
+              [case "$host_os" in
+                 *cygwin*) build_fthreads=true ;;
+                 *) AC_MSG_ERROR([fthreads are only for win32]) ;;
+               esac],
+              [AC_CHECK_LIB(pthread, pthread_create,
+               [],
+               [case "$host_os" in
+                  *cygwin*)
+                    # Alternate pthreads location for older cygwin
+                    AC_MSG_NOTICE([Looking for pthreadw32 in /usr/DLL])
+                    LDFLAGS_SAVE="$LDFLAGS"
+                    LDFLAGS="$LDFLAGS -L/usr/DLL"
+                    AC_CHECK_LIB(pthreadw32, pthread_create,
+                                 [],
+                                 [LDFLAGS="$LDFLAGS_SAVE"])
+                    ;;
+                esac]) ])
+
+AM_CONDITIONAL(BUILD_FTHREADS, [test x$build_fthreads = xtrue])
 
 # Headers
 AC_CHECK_HEADERS(byteswap.h linux/if_tun.h)
 AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
-AC_CHECK_HEADER(pthread.h,
-                [],
-                [case "$host_os" in
-                   *cygwin*)
-                     # Alternate pthreads location for older cygwin
-                     AC_MSG_NOTICE([Looking for pthread.h in /usr/Pthreads])
-                     CFLAGS_SAVE="$CFLAGS"
-                     CFLAGS="$CFLAGS -I/usr/Pthreads"
-                     AC_CHECK_HEADER(pthread.h,
-                                     [],
-                                     [CFLAGS="$CFLAGS_SAVE"
-                                      AC_DEFINE([NOTHREAD])
-                                      AC_MSG_WARN([Unable to find pthread.h, disabling threads]) ])
-                     ;;
-                   *)
-                     AC_MSG_WARN([Unable to find pthread.h, disabling threads])
-                     AC_DEFINE([NOTHREAD])
-                     ;;
-                 esac])
+
+if test x$build_fthreads != xtrue; then
+  AC_CHECK_HEADER(pthread.h,
+                  [],
+                  [case "$host_os" in
+                     *cygwin*)
+                       # Alternate pthreads location for older cygwin
+                       AC_MSG_NOTICE([Looking for pthread.h in /usr/Pthreads])
+                       CFLAGS_SAVE="$CFLAGS"
+                       CFLAGS="$CFLAGS -I/usr/Pthreads"
+                       AC_CHECK_HEADER(pthread.h,
+                                       [],
+                                       [CFLAGS="$CFLAGS_SAVE"
+                                        AC_DEFINE([NOTHREAD])
+                                        AC_MSG_WARN([Unable to find pthread.h, disabling threads]) ])
+                       ;;
+                     *)
+                       AC_MSG_WARN([Unable to find pthread.h, disabling threads])
+                       AC_DEFINE([NOTHREAD])
+                       ;;
+                   esac])
+fi
 
 dnl AC_MSG_NOTICE([Checking how to get fixed-size data types])
 AC_CHECK_HEADER(inttypes.h,
