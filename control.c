@@ -1513,7 +1513,8 @@ int     r1, r2;                         /* Values of R fields        */
 #endif /*defined(_FEATURE_SIE)*/
 
     RELEASE_MAINLOCK(regs);
-}
+ 
+} /* DEF_INST(invalidate_page_table_entry) */
 
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
@@ -1526,10 +1527,14 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 U64     dreg;
-U16     pkm_d;
-U16     sasn_d;
-U16     ax_d;
-U16     pasn_d;
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+U32     sastein_d;                      /* Designated SASTEIN        */
+U32     pastein_d;                      /* Designated PASTEIN        */
+#endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+U16     pkm_d;                          /* Designated PKM            */
+U16     sasn_d;                         /* Designated SASN           */
+U16     ax_d;                           /* Designated AX             */
+U16     pasn_d;                         /* Designated PASN           */
 U32     aste[16];                       /* ASN second table entry    */
 RADR    pstd;                           /* Primary STD               */
 RADR    sstd;                           /* Secondary STD             */
@@ -1705,7 +1710,7 @@ CREG    inst_cr;                        /* Instruction CR            */
     /* Return condition code zero */
     regs->psw.cc = 0;
 
-}
+} /* end DEF_INST(load_address_space_parameters) */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
