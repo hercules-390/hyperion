@@ -73,7 +73,7 @@ install_sh = @install_sh@
 
 bin_SCRIPTS = dasdlist
 
-dist_pkgdata_DATA = cckddump.hla tapeconv.jcl zzsacard.bin
+dist_pkgdata_DATA = cckddump.hla rawstape.jcl tapeconv.jcl zzsacard.bin
 
 EXTRA_DIST = dasdlist  dasdlist.bat
 subdir = util
