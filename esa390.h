@@ -548,6 +548,10 @@ typedef struct _LSED {
 #define Z_LSED_UET_PC   0x0D            /* ...call state entry       */
 
 /* Program call number bit definitions */
+#define PC_LFX1         0xFFF00000      /* Linkage first index (high)*/
+#define PC_BIT44        0x00080000      /* 1=LFX1 is significant     */
+#define PC_LFX2         0x0007E000      /* Linkage first index (low) */
+#define PC_LSX          0x00001F00      /* Linkage second index      */
 #define PC_LX           0x000FFF00      /* Linkage index             */
 #define PC_EX           0x000000FF      /* Entry index               */
 
@@ -556,11 +560,11 @@ typedef struct _LSED {
 #define LTE_ETO         0x7FFFFFC0      /* Entry table origin        */
 #define LTE_ETL         0x0000003F      /* Entry table length        */
 
-/* Linkage first table entry bit definitions (ASN-and-LX reuse) */
+/* Linkage first table entry bit definitions (ASN-and-LX-reuse) */
 #define LFTE_INVALID    0x80000000      /* LFX invalid               */
 #define LFTE_LSTO       0x7FFFFF00      /* Linkage second table orig */
 
-/* Linkage second table entry bit definitions (ASN-and-LX reuse) */
+/* Linkage second table entry bit definitions (ASN-and-LX-reuse) */
 #define LSTE0_INVALID   0x80000000      /* LSX invalid               */
 #define LSTE0_ETO       0x7FFFFFC0      /* Entry table origin        */
 #define LSTE0_ETL       0x0000003F      /* Entry table length        */
@@ -1261,7 +1265,7 @@ typedef struct _MBK {
                                            when segtab invalidated   */
 #define STFL_0_IDTE_SC_REGTAB   0x04    /* IDTE selective clearing
                                            when regtab invalidated   */
-#define STFL_0_ASN_LX_REUSE     0x02    /* ASN-and-LX reuse facility
+#define STFL_0_ASN_LX_REUSE     0x02    /* ASN-and-LX-reuse facility
                                            is installed              */
 #define STFL_2_TRAN_FAC2        0x80    /* Extended translation
                                            facility 2 is installed   */

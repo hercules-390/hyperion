@@ -2429,7 +2429,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-    /* The PC number is the low 20 or 32 bits of the operand address */
+    /* Load the PC number from the operand address */
     if (!ASN_AND_LX_REUSE_ENABLED(regs))
     {
         /* When ASN-and-LX-reuse is not installed or not enabled, the
@@ -2439,13 +2439,16 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     else
     {
         /* When ASN-and-LX-reuse is installed and enabled by CR0,
-           the PC number is loaded from the low-order 32 bits of the
-           operand address (bits 32-63) if bit 44 is 1, otherwise it
-           is loaded from the low-order 20 bits (bits 44-63) */
-        if (effective_addr2 & 0x00080000)
-            pcnum = effective_addr2 & 0xFFFFFFFF;
+           the PC number is loaded from the low-order 20 bits of the
+           operand address (bits 44-63) if bit 44 is zero, otherwise
+           a 31-bit PC number is constructed using bits 32-43 (LFX1)
+           of the operand address concatenated with bits 45-63 (LFX2,
+           LSX,EX) of the operand address */
+        if ((effective_addr2 & PC_BIT44) == 0)
+            pcnum = effective_addr2 & (PC_LFX2 | PC_LSX | PC_EX);
         else
-            pcnum = effective_addr2 & 0x000FFFFF;
+            pcnum = ((effective_addr2 & PC_LFX1) >> 1)
+                    | (effective_addr2 & (PC_LFX2 | PC_LSX | PC_EX));
     } 
 
     /* Special operation exception if DAT is off, or if
