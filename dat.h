@@ -1832,8 +1832,8 @@ U16     xcode;                          /* Exception code            */
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+          && ((REAL_MODE(&regs->psw) || !(regs->CR(9) & CR9_SAC)
+            || ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
               && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
@@ -1851,8 +1851,8 @@ U16     xcode;                          /* Exception code            */
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+          && ((REAL_MODE(&regs->psw) || !(regs->CR(9) & CR9_SAC)
+            || ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
               && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
@@ -2048,8 +2048,8 @@ int     aeind;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+          && ((REAL_MODE(&regs->psw) || !(regs->CR(9) & CR9_SAC)
+            || ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
               && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
@@ -2065,8 +2065,8 @@ int     aeind;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
-          && ((REAL_MODE(&regs->psw) ||
-            ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
+          && ((REAL_MODE(&regs->psw) || !(regs->CR(9) & CR9_SAC)
+            || ARCH_DEP(check_sa_per2) (addr, arn, acctype, regs) )
               && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
