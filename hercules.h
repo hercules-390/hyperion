@@ -1898,6 +1898,7 @@ extern void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
 extern void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
 extern void *(*debug_sclp_event_data) (void *, void *, REGS *);
 extern void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
+extern void *(*debug_watchdog_signal) (REGS *);
 
 #else
 void *panel_command (void *cmdline);

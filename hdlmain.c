@@ -43,6 +43,7 @@ HDLPRE hdl_preload[] = {
     { NULL,             0  } };
 */
 
+
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY(HERCULES);
@@ -69,6 +70,7 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_sclp_unknown_event,   UNRESOLVED      );
     HDL_REGISTER( debug_sclp_event_data,      UNRESOLVED      );
     HDL_REGISTER( debug_chsc_unknown_request, UNRESOLVED      );
+    HDL_REGISTER( debug_watchdog_signal,      UNRESOLVED      );
 #if defined(OPTION_W32_CTCI)
     HDL_REGISTER( debug_tt32_stats,           UNRESOLVED      );
 #endif

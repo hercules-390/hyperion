@@ -209,6 +209,7 @@ void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
 void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
 void *(*debug_sclp_event_data) (void *, void *, REGS *);
 void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
+void *(*debug_watchdog_signal) (REGS *);
 #endif
 
 static char *lmsbuf;

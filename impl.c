@@ -96,6 +96,9 @@ int i;
                    instructions then it must be malfunctioning */
                 if(sysblk.regs[i]->instcount == (U64)savecount[i])
                 {
+                    /* call debug entry point */
+                    HDC(debug_watchdog_signal, sysblk.regs[i]);
+
                     /* Send signal to looping CPU */
                     signal_thread(sysblk.cputid[i], SIGUSR1);
                     savecount[i] = -1;
