@@ -1064,10 +1064,10 @@ BYTE    c;                              /* Work area for sscanf      */
     if (sysblk.pgmprdos == PGM_PRD_OS_LICENSED)
     {
         logmsg( "HHC046W PGMPRDOS LICENSED specified.\n"
-                "        Licensed program product operating systems will run "
-                "properly.\n        You are "
+                "        Licensed program product operating systems are "
+                "enabled.\n        You are "
                 "responsible for meeting all conditions of your software "
-                "license.\n");
+                "license.\n\n");
     }
 
 #ifdef _FEATURE_VECTOR_FACILITY
