@@ -1540,17 +1540,17 @@ VADR    ea1, ea2;                       /* Effective addresses       */
 				U16 v1,v2;
 				v1=CSWAP16(*(U16 *)main1);
 				v2=CSWAP16(*(U16 *)main2);
-				rc=v1-v2;
+				regs->psw.cc = ( v1==v2 ? 0 : ( v1<v2 ? 1 : 2 ) );
 			}
-			break;
+			return;
 		case 3:
 			{
 				U32 v1,v2;
 				v1=CSWAP32(*(U32 *)main1);
 				v2=CSWAP32(*(U32 *)main2);
-				rc=v1-v2;
+				regs->psw.cc = ( v1==v2 ? 0 : ( v1<v2 ? 1 : 2 ) );
 			}
-			break;
+			return;
 		case 7:
 			/*
 			{
