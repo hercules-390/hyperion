@@ -255,6 +255,11 @@
  #error I/O Assist Feature only supported with SIE
 #endif
 
+#if defined(FEATURE_IO_ASSIST) \
+ && !defined(_FEATURE_REGION_RELOCATE)
+ #error Region Relocate Facility required for IO Assist
+#endif
+
 #if defined(FEATURE_EXTERNAL_INTERRUPT_ASSIST) \
  && !defined(_FEATURE_SIE)
  #error External Interruption assist only supported with SIE

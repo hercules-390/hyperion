@@ -2002,15 +2002,25 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         DEVTRACE ("synchronous  I/O ccw addr %8.8x\n", ccwaddr);
     }
 
+#if defined(_FEATURE_IO_ASSIST)
+ #define _IOA_MBO sysblk.zpb[dev->pmcw.zone].mbo
+ #define _IOA_MBM sysblk.zpb[dev->pmcw.zone].mbm
+ #define _IOA_MBK sysblk.zpb[dev->pmcw.zone].mbk
+#else /*defined(_FEATURE_IO_ASSIST)*/
+ #define _IOA_MBO sysblk.mbo
+ #define _IOA_MBM sysblk.mbm
+ #define _IOA_MBK sysblk.mbk
+#endif /*defined(_FEATURE_IO_ASSIST)*/
+
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Update the measurement block if applicable */
-    if (sysblk.zpb[dev->pmcw.zone].mbm && (dev->pmcw.flag5 & PMCW5_MM_MBU))
+    if (_IOA_MBM && (dev->pmcw.flag5 & PMCW5_MM_MBU))
     {
-        mbaddr = sysblk.zpb[dev->pmcw.zone].mbo;
+        mbaddr = _IOA_MBO;
         mbaddr += (dev->pmcw.mbi[0] << 8 | dev->pmcw.mbi[1]) << 5;
         if ( !CHADDRCHK(mbaddr, dev)
-            && (((STORAGE_KEY(mbaddr, dev) & STORKEY_KEY) == sysblk.zpb[dev->pmcw.zone].mbk)
-                || (sysblk.zpb[dev->pmcw.zone].mbk == 0)))
+            && (((STORAGE_KEY(mbaddr, dev) & STORKEY_KEY) == _IOA_MBK)
+                || (_IOA_MBK == 0)))
         {
             STORAGE_KEY(mbaddr, dev) |= (STORKEY_REF | STORKEY_CHANGE);
             mbk = (MBK*)&dev->mainstor[mbaddr];

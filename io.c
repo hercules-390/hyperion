@@ -234,6 +234,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
     dev->pmcw.flag26 = pmcw.flag26;
     dev->pmcw.flag27 = pmcw.flag27;
 
+#if defined(_FEATURE_IO_ASSIST)
     /* Relate the device storage view to the requested zone */
     { RADR mso, msl;
         mso = sysblk.zpb[dev->pmcw.zone].mso << 20;
@@ -247,6 +248,7 @@ PMCW    pmcw;                           /* Path management ctl word  */
         dev->mainlim = msl - mso;
         dev->storkeys = &(STORAGE_KEY(mso, &sysblk));
     }
+#endif /*defined(_FEATURE_IO_ASSIST)*/
 
     /* Set device priority from the interruption subclass bits */
     dev->priority = (dev->pmcw.flag4 & PMCW4_ISC) >> 3;

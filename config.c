@@ -1133,7 +1133,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
 
-#if defined(FEATURE_REGION_RELOCATE)
+#if defined(_FEATURE_REGION_RELOCATE)
     /* Initialize base zone storage view (SIE compat) */
     for(i = 0; i < FEATURE_SIE_MAXZONES; i++)
     {

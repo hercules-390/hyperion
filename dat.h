@@ -1059,6 +1059,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
     else
         tlbp = &(regs->tlb[(vaddr >> 12) & 0xFF]);
 
+#if 0
     if (tlbp != NULL
         && (vaddr & 0xFFFFFFFFFFFFF000ULL) == tlbp->TLB_VADDR
         && tlbp->valid
@@ -1068,6 +1069,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
         pte = tlbp->TLB_PTE;
     }
     else
+#endif
     {
 
         /* If ASCE indicates a real-space then real addr = virtual addr */
