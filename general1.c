@@ -475,6 +475,12 @@ VADR    newia;                          /* New instruction address   */
     newia = regs->GR(r2);
 
 #if defined(FEATURE_TRACING)
+#if defined(FEATURE_ESAME)
+    /* Add a mode trace entry when switching in/out of 64 bit mode */
+    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && regs->psw.amode64 != (newia & 1))
+        ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE, newia | regs->psw.amode64 ? newia & 0x80000000 : 0, regs);
+    else
+#endif /*defined(FEATURE_ESAME)*/
     /* Add a branch trace entry to the trace table */
     if ((regs->CR(12) & CR12_BRTRACE) && (r2 != 0))
         regs->CR(12) = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
@@ -540,6 +546,12 @@ VADR    newia;                          /* New instruction address   */
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
+
+#if defined(FEATURE_ESAME)
+    /* Add a mode trace entry when switching in/out of 64 bit mode */
+    if((regs->CR(12) & CR12_MTRACE) && (r2 != 0) && regs->psw.amode64 != (newia & 1))
+        ARCH_DEP(trace_ms) (0, newia, regs);
+#endif /*defined(FEATURE_ESAME)*/
 
     /* Insert addressing mode into bit 0 of R1 operand */
     if ( r1 != 0 )

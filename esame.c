@@ -365,6 +365,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     amode = psw[4] & 0x80;
 #endif /*!defined(FEATURE_ESAME)*/
 
+#if defined(FEATURE_ESAME)
+    /* Add a mode trace entry when switching in/out of 64 bit mode */
+    if((regs->CR(12) & CR12_MTRACE)  && regs->psw.amode64 != amode)
+        ARCH_DEP(trace_ms) (regs->CR(12) & CR12_BRTRACE, ia | regs->psw.amode64 ? amode << 31 : 0, regs);
+    else
+#endif /*defined(FEATURE_ESAME)*/
     if (regs->CR(12) & CR12_BRTRACE)
         newcr12 = ARCH_DEP(trace_br) (amode, ia, regs);
 #endif /*defined(FEATURE_TRACING)*/
@@ -480,6 +486,9 @@ DEF_INST(trace_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
+#if defined(FEATURE_TRACING)
+U32     op;                             /* Operand                   */
+#endif /*defined(FEATURE_TRACING)*/
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -487,7 +496,26 @@ VADR    effective_addr2;                /* effective address         */
 
     FW_CHECK(effective_addr2, regs);
 
-    /*INCOMPLETE*/
+    /* Exit if explicit tracing (control reg 12 bit 31) is off */
+    if ( (regs->CR(12) & CR12_EXTRACE) == 0 )
+        return;
+
+    /* Fetch the trace operand */
+    op = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+
+    /* Exit if bit zero of the trace operand is one */
+    if ( (op & 0x80000000) )
+        return;
+
+    /* Perform serialization and checkpoint-synchronization */
+    PERFORM_SERIALIZATION (regs);
+    PERFORM_CHKPT_SYNC (regs);
+
+    regs->CR(12) = ARCH_DEP(trace_tg) (r1, r3, op, regs);
+
+    /* Perform serialization and checkpoint-synchronization */
+    PERFORM_SERIALIZATION (regs);
+    PERFORM_CHKPT_SYNC (regs);
 
 } /* end DEF_INST(trace_long) */
 #endif /*defined(FEATURE_ESAME) && defined(FEATURE_TRACING)*/
@@ -3873,6 +3901,7 @@ BYTE    rwork[128];                     /* Register work areas       */
 
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
+    SET_IC_PER_MASK(regs);
 
     RETURN_INTCHECK(regs);
 
@@ -3987,6 +4016,15 @@ RADR    n;                              /* Unsigned work             */
 
     PRIV_CHECK(regs);
 
+#if defined(FEATURE_PER2)
+    /* Storage alteration must be enabled for STURA to be recognised */
+    if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
+    {
+        ON_IC_PER_SA(regs) ;
+        ON_IC_PER_STURA(regs) ;
+    }
+#endif /*defined(FEATURE_PER2)*/
+
     /* R2 register contains operand real storage address */
     n = regs->GR_G(r2) & ADDRESS_MAXWRAP(regs);
 
@@ -4036,6 +4074,12 @@ VADR    ia;                             /* Unupdated instruction addr*/
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
 #if defined(FEATURE_ESAME)
+    /* Add a mode trace entry when switching in/out of 64 bit mode */
+    if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
+        ARCH_DEP(trace_ms) (0, regs->psw.IA, regs);
+#endif /*defined(FEATURE_ESAME)*/
+
+#if defined(FEATURE_ESAME)
     regs->psw.amode64 =
 #endif /*defined(FEATURE_ESAME)*/
                         regs->psw.amode = 0;
@@ -4063,6 +4107,12 @@ VADR    ia;                             /* Unupdated instruction addr*/
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
 #if defined(FEATURE_ESAME)
+    /* Add a mode trace entry when switching in/out of 64 bit mode */
+    if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
+        ARCH_DEP(trace_ms) (0, regs->psw.IA, regs);
+#endif /*defined(FEATURE_ESAME)*/
+
+#if defined(FEATURE_ESAME)
     regs->psw.amode64 = 0;
 #endif /*defined(FEATURE_ESAME)*/
     regs->psw.amode = 1;
@@ -4079,6 +4129,12 @@ VADR    ia;                             /* Unupdated instruction addr*/
 DEF_INST(set_addressing_mode_64)
 {
     E(inst, execflag, regs);
+
+#if defined(FEATURE_ESAME)
+    /* Add a mode trace entry when switching in/out of 64 bit mode */
+    if((regs->CR(12) & CR12_MTRACE) && !regs->psw.amode64)
+        ARCH_DEP(trace_ms) (0, regs->psw.IA, regs);
+#endif /*defined(FEATURE_ESAME)*/
 
     regs->psw.amode = regs->psw.amode64 = 1;
     regs->psw.AMASK = AMASK64;

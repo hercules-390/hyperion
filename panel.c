@@ -1931,6 +1931,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 n   = buf[5]*65536 + buf[6]*256 + buf[7];
                 len = buf[11];
                 memcpy(sysblk.mainstor + aaddr + n, &buf[16], len);
+                STORAGE_KEY(aaddr + n) |= (STORKEY_REF | STORKEY_CHANGE);
+                STORAGE_KEY(aaddr + n + len - 1) |= (STORKEY_REF | STORKEY_CHANGE);
             }
         }
 
@@ -2437,7 +2439,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         if (i == 0) { logmsg ("No synchronous I/O devices found\n"); }
         else
             logmsg ("TOTAL synchronous: %12lld asynchronous: %12lld  %3lld%%\n",
-                syncios, asyncios, (syncios * 100) / (syncios + asyncios + 1));
+                   syncios, asyncios, (syncios * 100) / (syncios + asyncios));
         return NULL;
     }
 #endif

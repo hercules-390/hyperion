@@ -247,7 +247,7 @@ U32     fileaddr;
 
     /* remove filename from pathname */
     strcpy(dirname,fname);
-    dirbase = strchr(dirname,'/');
+    dirbase = rindex(dirname,'/');
     if(dirbase) *(++dirbase) = '\0';
     
     fp = fopen(fname, "r");

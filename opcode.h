@@ -1720,6 +1720,9 @@ CREG  ARCH_DEP(trace_ssar) (U16 sasn, REGS *regs);
 CREG  ARCH_DEP(trace_pc) (U32 pcnum, REGS *regs);
 CREG  ARCH_DEP(trace_pr) (REGS *newregs, REGS *regs);
 CREG  ARCH_DEP(trace_pt) (U16 pasn, GREG gpr2, REGS *regs);
+CREG  ARCH_DEP(trace_tr) (int r1, int r3, U32 op, REGS *regs);
+CREG  ARCH_DEP(trace_tg) (int r1, int r3, U32 op, REGS *regs);
+CREG  ARCH_DEP(trace_ms) (int br_ind, VADR ia, REGS *regs);
 
 
 /* Functions in module plo.c */

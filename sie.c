@@ -454,6 +454,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
     SET_IC_EXTERNAL_MASK(GUESTREGS);
     SET_IC_MCK_MASK(GUESTREGS);
     SET_IC_IO_MASK(GUESTREGS);
+    SET_IC_PER_MASK(GUESTREGS);
 
     do {
         if(!(icode = setjmp(GUESTREGS->progjmp)))
@@ -467,7 +468,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 if( SIE_IC_INTERRUPT_CPU(GUESTREGS) )
                 {
-                    obtain_lock (&sysblk.intlock);
+                    /* Process PER program interrupts */
+                    if( OPEN_IC_PERINT(regs) )
+                        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+
 #if MAX_CPU_ENGINES > 1
                     /* Perform broadcasted purge of ALB and TLB if requested
                        synchronize_broadcast() must be called until there are

@@ -106,6 +106,7 @@ int     armode;
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_PSW_WAIT(regs);
+    SET_IC_PER_MASK(regs);
 
     regs->psw.zerobyte = addr[3];
 
@@ -257,11 +258,12 @@ int     armode;
 /*-------------------------------------------------------------------*/
 /* Load program interrupt new PSW                                    */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(program_interrupt) (REGS *regs, int code)
+void ARCH_DEP(program_interrupt) (REGS *regs, int pcode)
 {
 PSA    *psa;                            /* -> Prefixed storage area  */
 REGS   *realregs;                       /* True regs structure       */
 RADR    px;                             /* host real address of pfx  */
+int     code;                           /* pcode without PER ind.    */
 #if defined(_FEATURE_SIE)
 int     nointercept;                    /* True for virtual pgmint   */
 #endif /*defined(_FEATURE_SIE)*/
@@ -356,6 +358,12 @@ static char *pgmintname[] = {
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 #endif /*MAX_CPU_ENGINES > 1*/
 
+    /* Remove PER indication from program interrupt code
+       such that interrupt code specific tests may be done.
+       The PER indication will be stored in the PER handling
+       code */
+    code = pcode & ~PGM_PER_EVENT;
+
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (realregs);
     PERFORM_CHKPT_SYNC (realregs);
@@ -373,12 +381,12 @@ static char *pgmintname[] = {
         ) )
     {
 #if defined(SIE_DEBUG)
-        logmsg("program_int() passing to guest code=%4.4X\n",code);
+        logmsg("program_int() passing to guest code=%4.4X\n",pcode);
 #endif /*defined(SIE_DEBUG)*/
         realregs->guestregs->TEA = realregs->TEA;
         realregs->guestregs->excarid = realregs->excarid;
         realregs->guestregs->opndrid = realregs->opndrid;
-        (realregs->guestregs->sie_guestpi) (realregs->guestregs, code);
+        (realregs->guestregs->sie_guestpi) (realregs->guestregs, pcode);
     }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
@@ -442,9 +450,9 @@ static char *pgmintname[] = {
     /* Store the interrupt code in the PSW */
     realregs->psw.intcode = code;
 
-    /* Trace the program check */
-    if(sysblk.insttrace || sysblk.inststep
-        || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F)))
+    /* Trace the program check other then PER event*/
+    if(code && (sysblk.insttrace || sysblk.inststep
+        || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
     {
 #if defined(OPTION_FOOTPRINT_BUFFER)
         if(!(sysblk.insttrace || sysblk.inststep))
@@ -463,7 +471,7 @@ static char *pgmintname[] = {
         logmsg (MSTRING(_GEN_ARCH) " ");
 #endif /*defined(SIE_DEBUG)*/
         logmsg ("CPU%4.4X: %s CODE=%4.4X ILC=%d\n", realregs->cpuad,
-                pgmintname[ (code - 1) & 0x3F], code, realregs->psw.ilc);
+                pgmintname[ (code - 1) & 0x3F], pcode, realregs->psw.ilc);
         ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
                                                 realregs->ip : NULL);
     }
@@ -545,7 +553,23 @@ static char *pgmintname[] = {
         /* Store the program interrupt code at PSA+X'8C' */
         psa->pgmint[0] = 0;
         psa->pgmint[1] = realregs->psw.ilc;
-        STORE_HW(psa->pgmint + 2, code);
+        STORE_HW(psa->pgmint + 2, pcode);
+
+        /* Handle PER or concurrent PER event */
+        if( IS_IC_PER(regs) )
+        {
+            if( IS_IC_TRACE )
+                logmsg("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n",
+                  regs->cpuad, pcode, IS_IC_PER(regs) >> 16,
+                  (regs->psw.IA - regs->psw.ilc) & ADDRESS_MAXWRAP(regs) );
+            psa->perint[0] = IS_IC_PER(regs) >> 16;
+
+            /* Reset PER pending indication */
+            OFF_IC_PER(regs);
+
+            STORE_W(psa->peradr, (regs->psw.IA - regs->psw.ilc)
+                                          & ADDRESS_MAXWRAP(regs));
+        }
 
         /* Store the access register number at PSA+160 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
@@ -668,7 +692,7 @@ static char *pgmintname[] = {
 #if defined(_FEATURE_SIE)
     }
 
-    longjmp (realregs->progjmp, code);
+    longjmp (realregs->progjmp, pcode);
 #endif /*defined(_FEATURE_SIE)*/
 
 } /* end function ARCH_DEP(program_interrupt) */
@@ -962,6 +986,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 	        SET_IC_EXTERNAL_MASK(regs);
 	        SET_IC_IO_MASK(regs);
 	        SET_IC_MCK_MASK(regs);
+	        SET_IC_PER_MASK(regs);
 	        if(prevmask != regs->ints_mask)
 		{
 	            logmsg("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n",
@@ -982,6 +1007,15 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             /* Take interrupts if CPU is not stopped */
             if (regs->cpustate == CPUSTATE_STARTED)
             {
+
+                /* Process PER program interrupts */
+                if( OPEN_IC_PERINT(regs) )
+                {
+                    /* release the interrupt lock */
+                    release_lock (&sysblk.intlock);
+                    ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+                }
+
                 /* If a machine check is pending and we are enabled for
                    machine checks then take the interrupt */
                 if (OPEN_IC_MCKPENDING(regs))

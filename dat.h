@@ -1800,6 +1800,14 @@ U16     xcode;                          /* Exception code            */
 
         /* Set the reference and change bits in the storage key */
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
+
+#if defined(FEATURE_PER2)
+        if( EN_IC_PER_SA(regs)
+          && regs->CR(10) >= addr
+          && regs->CR(11) <= addr )
+            ON_IC_PER_SA(regs);
+#endif /*defined(FEATURE_PER2)*/
+
         break;
 
     case ACCTYPE_WRITE_SKP:
@@ -1807,6 +1815,13 @@ U16     xcode;                          /* Exception code            */
         if (ARCH_DEP(is_store_protected) (addr, STORAGE_KEY(aaddr), akey,
                                 private, protect, regs))
             goto vabs_prot_excp;
+
+#if defined(FEATURE_PER2)
+        if( EN_IC_PER_SA(regs)
+          && regs->CR(10) >= addr
+          && regs->CR(11) <= addr )
+            ON_IC_PER_SA(regs);
+#endif /*defined(FEATURE_PER2)*/
 
         break;
 
@@ -1994,6 +2009,12 @@ int     aeind;
 
         /* Set the reference and change bits in the storage key */
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
+#if defined(FEATURE_PER2)
+        if( EN_IC_PER_SA(regs)
+          && regs->CR(10) >= addr
+          && regs->CR(11) <= addr )
+            ON_IC_PER_SA(regs);
+#endif /*defined(FEATURE_PER2)*/
         break;
 
     case ACCTYPE_WRITE_SKP:
@@ -2001,6 +2022,12 @@ int     aeind;
         if (ARCH_DEP(is_store_protected) (addr, STORAGE_KEY(aaddr), akey,
                                 private, protect, regs))
             goto vabs_prot_excp;
+#if defined(FEATURE_PER2)
+        if( EN_IC_PER_SA(regs)
+          && regs->CR(10) >= addr
+          && regs->CR(11) <= addr )
+            ON_IC_PER_SA(regs);
+#endif /*defined(FEATURE_PER2)*/
 
         break;
 

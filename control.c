@@ -1657,6 +1657,7 @@ BYTE    rwork[64];                      /* Register work areas       */
 
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
+    SET_IC_PER_MASK(regs);
 
     RETURN_INTCHECK(regs);
 
@@ -2528,6 +2529,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (!ASF_ENABLED(regs))
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
+      #if defined(FEATURE_ESAME)
+        /* Add a mode trace entry when switching in/out of 64 bit mode */
+        if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64 != (ete[4] & ETE4_G) ? 1 : 0)
+            ARCH_DEP(trace_ms) (0,((U64)(ete[0]) << 32) | (U64)(ete[1] & 0xFFFFFFFE), regs);
+      #endif /*defined(FEATURE_ESAME)*/
+
         /* Set the called-space identification */
         csi = (pasn == 0) ? 0 : pasn << 16 | (aste[5] & 0x0000FFFF);
 
@@ -2739,6 +2746,14 @@ int     rc;                             /* return code from load_psw */
         /* Perform tracing if ASN tracing is on */
         if (regs->CR(12) & CR12_ASNTRACE)
             newregs.CR(12) = ARCH_DEP(trace_pr) (&newregs, regs);
+
+      #if defined(FEATURE_ESAME)
+        else
+        /* Add a mode trace entry when switching in/out of 64 bit mode */
+        if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64 != newregs.psw.amode64)
+            ARCH_DEP(trace_ms) (0, newregs.psw.IA, regs);
+      #endif /*defined(FEATURE_ESAME)*/
+
 #endif /*FEATURE_TRACING*/
 
         /* Perform PASN translation if new PASN not equal old PASN */
@@ -2924,7 +2939,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #ifdef FEATURE_TRACING
     /* Build trace entry if ASN tracing is on */
     if (regs->CR(12) & CR12_ASNTRACE)
-        newcr12 = ARCH_DEP(trace_pt) (pasn, regs->GR_L(r2), regs);
+        newcr12 = ARCH_DEP(trace_pt) (pasn, regs->GR(r2), regs);
 #endif /*FEATURE_TRACING*/
 
     /* Determine instruction address, amode, and problem state */
@@ -4385,6 +4400,7 @@ int     armode;
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
+    SET_IC_PER_MASK(regs);
 
     INVALIDATE_AIA(regs);
 
@@ -5351,6 +5367,7 @@ int     armode;
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
+    SET_IC_PER_MASK(regs);
 
     RETURN_INTCHECK(regs);
 
@@ -5384,6 +5401,7 @@ VADR    effective_addr1;                /* Effective address         */
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
+    SET_IC_PER_MASK(regs);
 
     INVALIDATE_AIA(regs);
 
@@ -5420,6 +5438,15 @@ RADR    n;                              /* Unsigned work             */
     RRE(inst, execflag, regs, r1, r2);
 
     PRIV_CHECK(regs);
+
+#if defined(FEATURE_PER2)
+    /* Storage alteration must be enabled for STURA to be recognised */
+    if( EN_IC_PER_SA(regs) && EN_IC_PER_STURA(regs) )
+    {
+        ON_IC_PER_SA(regs) ;
+        ON_IC_PER_STURA(regs) ;
+    }
+#endif /*defined(FEATURE_PER2)*/
 
     /* R2 register contains operand real storage address */
     n = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
@@ -5654,14 +5681,7 @@ int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 #if defined(FEATURE_TRACING)
-RADR    n1,                             /* Addr of trace table entry */
-        n2;                             /* Operand                   */
-#if defined(_FEATURE_SIE)
-RADR    ag,                             /* Abs Guest addr of TTE     */
-        ah;                             /* Abs Host addr of TTE      */
-#endif /*defined(_FEATURE_SIE)*/
-int     i;                              /* Loop counter              */
-U64     dreg;                           /* 64-bit work area          */
+U32     op;                             /* Operand                   */
 #endif /*defined(FEATURE_TRACING)*/
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
@@ -5676,98 +5696,17 @@ U64     dreg;                           /* 64-bit work area          */
         return;
 
     /* Fetch the trace operand */
-    n2 = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    op = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Exit if bit zero of the trace operand is one */
-    if ( (n2 & 0x80000000) )
+    if ( (op & 0x80000000) )
         return;
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
-    /* Obtain the trace entry address from control register 12 */
-    n1 = regs->CR(12) & CR12_TRACEEA;
-
-    /* Apply low-address protection to trace entry address */
-    if (ARCH_DEP(is_low_address_protected) (n1, 0, regs))
-    {
-#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
-        regs->TEA = (n1 & STORAGE_KEY_PAGEMASK);
-        regs->excarid = 0;
-#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
-        ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
-    }
-
-    /* Program check if trace entry is outside main storage */
-    if ( n1 >= regs->mainsize )
-        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-
-    /* Program check if storing the maximum length trace
-       entry (76 bytes) would overflow a 4K page boundary */
-    if ( ((n1 + 76) & PAGEFRAME_PAGEMASK) != (n1 & PAGEFRAME_PAGEMASK) )
-        ARCH_DEP(program_interrupt) (regs, PGM_TRACE_TABLE_EXCEPTION);
-
-    /* Convert trace entry real address to absolute address */
-    n1 = APPLY_PREFIXING (n1, regs->PX);
-
-#if defined(_FEATURE_SIE)
-    ag = n1;
-
-    SIE_TRANSLATE(&n1, ACCTYPE_WRITE, regs);
-
-    ah = n1;
-#endif /*defined(_FEATURE_SIE)*/
-
-    /* Calculate the number of registers to be traced, minus 1 */
-    i = ( r3 < r1 ) ? r3 + 16 - r1 : r3 - r1;
-
-    /* Obtain the TOD clock update lock */
-    obtain_lock (&sysblk.todlock);
-
-    /* Update the TOD clock */
-    update_TOD_clock();
-
-    /* Retrieve the TOD clock value and shift out the epoch */
-    dreg = sysblk.todclk << 8;
-
-    /* Release the TOD clock update lock */
-    release_lock (&sysblk.todlock);
-
-    /* Set the main storage change and reference bits */
-    STORAGE_KEY(n1) |= (STORKEY_REF | STORKEY_CHANGE);
-
-    /* Build the explicit trace entry */
-    STORE_DW(sysblk.mainstor + n1, dreg);
-    sysblk.mainstor[n1] = (0x70 | i);
-    sysblk.mainstor[n1+1] = 0x00;
-    n1 += 8;
-    STORE_FW(sysblk.mainstor + n1, n2);
-    n1 += 4;
-
-    /* Store general registers r1 through r3 in the trace entry */
-    for ( i = r1; ; )
-    {
-        STORE_FW(sysblk.mainstor + n1, regs->GR_L(i)); n1 += 4;
-
-        /* Instruction is complete when r3 register is done */
-        if ( i == r3 ) break;
-
-        /* Update register number, wrapping from 15 to 0 */
-        i++; i &= 15;
-    }
-
-    /* Update trace entry address in control register 12 */
-#if defined(_FEATURE_SIE)
-    /* Recalculate the Guest absolute address */
-    n1 = ag + (n1 - ah);
-#endif /*defined(_FEATURE_SIE)*/
-
-    /* Convert trace entry absolue address back to real address */
-    n1 = APPLY_PREFIXING (n1, regs->PX);
-
-    regs->CR(12) &= ~CR12_TRACEEA;
-    regs->CR(12) |= n1;
+    regs->CR(12) = ARCH_DEP(trace_tr) (r1, r3, op, regs);
 
 #endif /*defined(FEATURE_TRACING)*/
 

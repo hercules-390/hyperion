@@ -1,3 +1,6 @@
+06 Dec 2001 Basic PER implemention - Jan Jaeger
+05 Dec 2001 Corrected ref and change bits on loadtext - Jan Jaeger
+04 Dec 2001 Rewrite of trace including full 64 bit support - Jan Jaeger
 28 Nov 2001 Reset device status in device_reset() for ckd dev - Jan Jaeger
 28 Nov 2001 Alignment fixes for SPARC64 - Matt Zimmerman
 28 Nov 2001 Bypass syncio if track overflow or data chaining - Valery
