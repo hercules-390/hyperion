@@ -818,13 +818,14 @@ typedef struct _PSA_900 {		/* Prefixed storage area     */
 #define EXT_SERVICE_SIGNAL_INTERRUPT			0x2401
 
 /* Macros for classifying CCW operation codes */
-#define IS_CCW_WRITE(c) 	(((c)&0x03)==0x01)
-#define IS_CCW_READ(c)		(((c)&0x03)==0x02)
-#define IS_CCW_CONTROL(c)	(((c)&0x03)==0x03)
-#define IS_CCW_NOP(c)		((c)==0x03)
-#define IS_CCW_SENSE(c) 	(((c)&0x0F)==0x04)
-#define IS_CCW_TIC(c)		(((c)&0x0F)==0x08)
-#define IS_CCW_RDBACK(c)	(((c)&0x0F)==0x0C)
+#define IS_CCW_WRITE(c) 	    (((c)&0x03)==0x01)
+#define IS_CCW_READ(c)		    (((c)&0x03)==0x02)
+#define IS_CCW_CONTROL(c)	    (((c)&0x03)==0x03)
+#define IS_CCW_NOP(c)		    ((c)==0x03)
+#define IS_CCW_SET_EXTENDED(c)	((c)==0xC3)
+#define IS_CCW_SENSE(c) 	    (((c)&0x0F)==0x04)
+#define IS_CCW_TIC(c)		    (((c)&0x0F)==0x08)
+#define IS_CCW_RDBACK(c)	    (((c)&0x0F)==0x0C)
 
 /* Operation request block structure definition */
 typedef struct _ORB {

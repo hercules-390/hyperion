@@ -1,3 +1,6 @@
+10 Oct 2001 Add IS_CCW_SET_EXTENDED test to channel.c's write-ccw handling logic
+            to fix a problem that was preventing TCP/IP in VM from working on
+            CTC adapter devices (fix contributed by Kris Van Hees)
 03 Oct 2001 Move INVALIDATE_AIA out of optimization - Juergen Dobrinski
 02 Oct 2001 Fix MVPG to work in pageable guest - Paul Leisy
 02 Oct 2001 Fix TRAP to work in pageable guest - Paul Leisy

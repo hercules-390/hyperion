@@ -1929,11 +1929,15 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             break;
         }
 
-
         /* For WRITE and CONTROL operations, copy data
            from main storage into channel buffer */
         if (IS_CCW_WRITE(code)
-            || (IS_CCW_CONTROL(code) && !IS_CCW_NOP(code)))
+            ||
+            (
+                IS_CCW_CONTROL(code)
+                &&
+                !(IS_CCW_NOP(code) || IS_CCW_SET_EXTENDED(code))
+            ))
         {
             /* Channel program check if data exceeds buffer size */
             if (bufpos + count > 65536)
