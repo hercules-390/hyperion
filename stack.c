@@ -345,7 +345,9 @@ U16     xcode;                          /* Exception code            */
 
     SIE_TRANSLATE(&aaddr, acctype, regs);
 
-    if (regs->psw.pkey)
+    if (!((regs->psw.pkey == 0) 
+        || ((regs->CR(0) & CR0_STORE_OVRD)
+        && ((STORAGE_KEY(aaddr) & STORKEY_KEY) == 0x90))))
     {
         /* Check Key protection for store */
         if (acctype == ACCTYPE_WRITE
