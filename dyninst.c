@@ -375,26 +375,25 @@ int opcode, extop;
 
             default:
                 assign_opcode(opcode, opcode_table, save_table);
-
-#if !defined(WIN32)  /* ZZ FIXME */
-                /* Copy opcodes to performance shadow table */
-                for (opcode = 0; opcode < 256; opcode++)
-                {
-#if defined(_370)
-                    s370_opcode_table[opcode] = opcode_table[opcode][ARCH_370];
-#endif
-#if defined(_390)
-                    s390_opcode_table[opcode] = opcode_table[opcode][ARCH_390];
-#endif
-#if defined(_900)
-                    z900_opcode_table[opcode] = opcode_table[opcode][ARCH_900];
-#endif
-                }
-#endif
-
         }
 
     }
+
+#if !defined(WIN32)  /* ZZ FIXME */
+    /* Copy opcodes to performance shadow table */
+    for (opcode = 0; opcode < 256; opcode++)
+    {
+#if defined(_370)
+        s370_opcode_table[opcode] = opcode_table[opcode][ARCH_370];
+#endif
+#if defined(_390)
+        s390_opcode_table[opcode] = opcode_table[opcode][ARCH_390];
+#endif
+#if defined(_900)
+        z900_opcode_table[opcode] = opcode_table[opcode][ARCH_900];
+#endif
+    }
+#endif
 
 } END_RESOLVER_SECTION;
 
