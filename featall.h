@@ -40,6 +40,7 @@
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0
 #define FEATURE_SIE_MAXZONES          8
+#define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 
 // #define SIE_DEBUG_PERFMON
 

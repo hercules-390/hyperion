@@ -795,6 +795,9 @@ typedef struct _SYSBLK {
         REGS    footprregs[MAX_CPU_ENGINES][OPTION_FOOTPRINT_BUFFER];
         U32     footprptr[MAX_CPU_ENGINES];
 #endif
+#if defined(OPTION_LPARNAME)
+	char	lparname[8];		/* DIAG 204 lparname         */
+#endif /*defined(OPTION_LPARNAME)*/
         LOCK    mainlock;               /* Main storage lock         */
         LOCK    intlock;                /* Interrupt lock            */
         LOCK    sigplock;               /* Signal processor lock     */
