@@ -798,6 +798,18 @@ int     num;                            /* Number of bytes to move   */
         *residual = count - num;
         if (count < dev->numsense) *more = 1;
 
+        /* If sense is clear AND filename = "" OR sockdev and fd=-1 */
+        /* Put an IR sense - so that an unsolicited sense can see the intreq */
+        if(dev->sense[0]==0)
+        {
+            if(dev->filename[0]==0x00 ||
+                    (dev->bs && dev->fd==-1))
+            {
+                dev->sense[0] = SENSE_IR;
+                dev->sense[1] = SENSE1_RDR_RAIC; /* Retry when IntReq Cleared */
+            }
+        }
+
         /* Copy device sense bytes to channel I/O buffer */
         memcpy (iobuf, dev->sense, num);
 
