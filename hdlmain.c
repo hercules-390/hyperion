@@ -9,9 +9,11 @@
 
 
 HDLPRE hdl_preload[] = {
+#if 0
     { "dyn_test1",      HDL_LOAD_DEFAULT },
     { "dyn_test2",      HDL_LOAD_NOMSG },
     { "dyn_test3",      HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
+#endif
     { NULL,             0  } };
 
 
