@@ -187,6 +187,10 @@ void * (*prev_panel_command)(char *);
 
     where SOMETHING can be a structure or other component.
 
+    the associated dependency statement:
+
+      HDL_DEPENDENCY(SOMETHING);
+
     When a dependency is given that has not yet been registered,
     it will be registered, such that it can be checked in subsequent
     module loads.
