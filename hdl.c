@@ -8,9 +8,9 @@
 #if defined(OPTION_DYNAMIC_LOAD)
 
 
-DLLENT *hdl_dll;                        /* dll chain           */
-LOCK   hdl_lock;
-DLLENT *hdl_cdll;                       /* current dll (hdl_lock) */
+static DLLENT *hdl_dll;                 /* dll chain           */
+static LOCK   hdl_lock;
+static DLLENT *hdl_cdll;             /* current dll (hdl_lock) */
 
 
 /* hdl_list - list all entry points */
@@ -26,7 +26,7 @@ MODENT *modent;
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
         {
-            logmsg(" entry = %s",modent->name);
+            logmsg(" symbol = %s",modent->name);
 //          logmsg(", ep = %p",modent->fep);
             if(modent->fep)
                 logmsg(", loadcount = %d",modent->count);

@@ -101,7 +101,7 @@ static char *prefix[] = {
     strcpy(entry,prefix[regs->arch_mode]);
     strcat(entry,name);
 
-    if( (dllcall = HDL_FINDENT(entry)) )
+    if( (dllcall = HDL_FINDSYM(entry)) )
         dllcall(r1, r3, regs);
     else
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);

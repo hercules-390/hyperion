@@ -74,7 +74,6 @@
 #endif
 
 #if defined(OPTION_DYNAMIC_LOAD)
-#include <dlfcn.h>
 #include "hdl.h"
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 

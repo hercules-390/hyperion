@@ -5,6 +5,16 @@
 #if !defined(_HDL_H)
 #define _HDL_H
 
+#if defined(HDL_USE_LIBTOOL)
+ #include <ltdl.h>
+ #define dlopen(_name, _flags)   lt_dlopen(_name)
+ #define dlsym(_handle, _symbol) lt_dlsym(_handle, _symbol)
+ #define dlclose(_handle)        lt_dlclose(_handle)
+ #define dlerror                 lt_dlerror
+#else
+ #include <dlfcn.h>
+#endif
+
 int hdl_load(char *);                 		/* load dll          */
 int hdl_dele(char *);                           /* unload dll        */
 void hdl_list();                          /* list all loaded modules */
@@ -14,6 +24,10 @@ void hdl_main();
 void * hdl_nent(char *, void*);
 void * hdl_fent(char *);
 
+/* Cygwin back-link support */
+#if defined(WIN32)
+static void * (*hdl_fent_l)(char *) __attribute__ ((unused)) ;
+#endif
 
 #define HDL_RESO hdl_reso
 #define HDL_INIT hdl_init
@@ -25,10 +39,17 @@ void * hdl_fent(char *);
 #define HDL_INIT_Q QSTRING(HDL_INIT)
 #define HDL_FINI_Q QSTRING(HDL_FINI)
 
-
+/* Cygwin back-link support */
+#if !defined(WIN32)
 #define HDL_RESOLVER_SECTION                            \
 void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
 {
+#else /*defined(WIN32)*/
+#define HDL_RESOLVER_SECTION                            \
+void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
+{                                                       \
+hdl_fent_l = hdl_reso_fent;
+#endif /*defined(WIN32)*/
 
 #define HDL_RESOLVE(_name)                              \
     (_name) = (hdl_reso_fent)(STRINGMAC(_name))
@@ -47,10 +68,15 @@ void HDL_INIT(int (*hdl_init_regi)(char *, void *) __attribute__ ((unused)) ) \
 #define END_REGISTER_SECTION                            \
 }
 
-#define HDL_FINDENT(_name)                              \
+#if !defined(WIN32)
+#define HDL_FINDSYM(_name)                              \
     hdl_fent( (_name) )
+#else /*defined(WIN32)*/
+#define HDL_FINDSYM(_name)                              \
+    hdl_fent_l( (_name) )
+#endif /*defined(WIN32)*/
 
-#define HDL_FINDNEXT(_name, _ep)                        \
+#define HDL_FINDNXT(_name, _ep)                         \
     hdl_nent( STRINGMAC(_name), &(_ep) )
 
 #define HDL_FINAL_SECTION                               \
