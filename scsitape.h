@@ -12,6 +12,8 @@ static void  close_scsitape           ( DEVBLK *dev);
 static int   read_scsitape            ( DEVBLK *dev, BYTE *buf,          BYTE *unitstat, BYTE code );
 static int   write_scsitape           ( DEVBLK *dev, BYTE *buf, U16 len, BYTE *unitstat, BYTE code );
 static int   write_scsimark           ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+static int   erg_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
+static int   dse_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 static int   fsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 static int   bsb_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
 static int   fsf_scsitape             ( DEVBLK *dev,                     BYTE *unitstat, BYTE code );
@@ -718,6 +720,62 @@ struct mtop opblk;
 } /* end function rewind_unload_scsitape */
 
 /*-------------------------------------------------------------------*/
+/* Erase Gap                                                         */
+/*-------------------------------------------------------------------*/
+static int erg_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
+{
+#if defined( OPTION_SCSI_ERASE_GAP )
+
+    struct mtop opblk;
+
+    opblk.mt_op    = MTERASE;
+    opblk.mt_count = 0;         // (zero means "short" erase-gap)
+
+    if ( ioctl( dev->fd, MTIOCTOP, (char*)&opblk ) < 0 )
+    {
+        logmsg (_("HHCTA999E Erase Gap error on %4.4X = %s; errno=%d: %s\n"),
+                dev->devnum, dev->filename, errno, strerror(errno));
+        build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+        return -1;
+    }
+
+#else // !defined( OPTION_SCSI_ERASE_GAP )
+
+    build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+    return 0;       // (treat as nop)
+
+#endif // defined( OPTION_SCSI_ERASE_GAP )
+}
+
+/*-------------------------------------------------------------------*/
+/* Data Security Erase                                               */
+/*-------------------------------------------------------------------*/
+static int dse_scsitape( DEVBLK *dev, BYTE *unitstat, BYTE code )
+{
+#if defined( OPTION_SCSI_ERASE_TAPE )
+
+    struct mtop opblk;
+
+    opblk.mt_op    = MTERASE;
+    opblk.mt_count = 1;         // (one means "long" erase-tape)
+
+    if ( ioctl( dev->fd, MTIOCTOP, (char*)&opblk ) < 0 )
+    {
+        logmsg (_("HHCTA999E Data Security Erase error on %4.4X = %s; errno=%d: %s\n"),
+                dev->devnum, dev->filename, errno, strerror(errno));
+        build_senseX(TAPE_BSENSE_WRITEFAIL,dev,unitstat,code);
+        return -1;
+    }
+
+#else // !defined( OPTION_SCSI_ERASE_TAPE )
+
+    build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+    return 0;       // (treat as nop)
+
+#endif // defined( OPTION_SCSI_ERASE_TAPE )
+}
+
+/*-------------------------------------------------------------------*/
 /* Determine if the tape is Ready   (tape drive door status)         */
 /*-------------------------------------------------------------------*/
 /* Returns:  true/false:  1 = ready,   0 = NOT ready                 */
@@ -794,6 +852,7 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
     {
         struct mtget stblk;                 /* Area for MTIOCGET ioctl   */
         int rc, save_errno;                 /* Return code from ioctl    */
+        long saved_stat = dev->sstat;       /* (save existing status)    */
 
         TRACE( "** update_status_scsitape: calling 'ioctl'...\n" );
         rc = ioctl (dev->fd, MTIOCGET, (char*)&stblk);
@@ -820,15 +879,35 @@ static void update_status_scsitape( DEVBLK* dev, int no_trace )
                 || EBUSY     == errno
                 || EACCES    == errno
             ))
-                logmsg (_("HHCTA022E Error reading status of %s; errno=%d: %s\n"),
-                    dev->filename, errno, strerror(errno));
+            {
+                save_errno = errno;
+                {
+                    logmsg (_("HHCTA022E Error reading status of %s; errno=%d: %s\n"),
+                        dev->filename, errno, strerror(errno));
+                }
+                errno = save_errno;
+            }
 
-            // Set "door open" status to force closing of tape file
-            stblk.mt_gstat = GMT_DR_OPEN( -1 );
+            // For 'busy' and 'access-denied', don't change the
+            // existing status...
+
+            if (0
+                || EBUSY  == errno
+                || EACCES == errno
+            )
+            {
+                stblk.mt_gstat = saved_stat;
+            }
+            else
+            {
+                // Set "door open" status to force closing of tape file
+                stblk.mt_gstat = GMT_DR_OPEN( -1 );
+            }
         }
         else
             TRACE( "** update_status_scsitape: ioctl(MTIOCGET) success\n" );
-        dev->sstat = stblk.mt_gstat;
+
+        dev->sstat = stblk.mt_gstat;    // (save new status)
     }
 
     TRACE( "** update_status_scsitape: dev->sstat=0x%8.8X (%s)\n",
@@ -945,11 +1024,11 @@ static void *scsi_tapemountmon_thread( void *db )
     logmsg
     (
         _( "HHCTA200I SCSI-Tape mount-monitoring thread started;\n"
-           "          dev=%4.4X, pri=%d, tid="TIDPAT", pid=%d\n" )
+           "          dev=%4.4X, tid="TIDPAT", pri=%d, pid=%d\n" )
 
         ,dev->devnum
-        ,getpriority(PRIO_PROCESS,0)
         ,thread_id()
+        ,getpriority(PRIO_PROCESS,0)
         ,getpid()
     );
 
@@ -1023,11 +1102,11 @@ static void *scsi_tapemountmon_thread( void *db )
     logmsg
     (
         _( "HHCTA299I SCSI-Tape mount-monitoring thread ended;\n"
-           "          tid="TIDPAT", pid=%d, dev=%4.4X\n" )
+           "          dev=%4.4X, tid="TIDPAT", pid=%d\n" )
 
+        ,dev->devnum
         ,thread_id()
         ,getpid()
-        ,dev->devnum
     );
 
     // Notify the 'update_status_scsitape' function that we are done

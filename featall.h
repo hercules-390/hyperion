@@ -41,11 +41,60 @@
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
-#define OPTION_SCSI_TAPE                /* SCSI tape support         */
 
+// ZZ FIXME: We should really move the setting of OPTION_SCSI_TAPE
+//           to configure.ac rather than have it hard-coded here,
+
+#define OPTION_SCSI_TAPE                /* SCSI tape support         */
 #if defined(__APPLE__)                  /* (Apple-only options)      */
-#undef OPTION_SCSI_TAPE                  /* No SCSI tape support     */
+#undef OPTION_SCSI_TAPE                 /* No SCSI tape support      */
 #endif
+
+#if defined(OPTION_SCSI_TAPE)           /* SCSI Tape options         */
+
+    // ZZ FIXME:
+
+    // NOTE: The following SHOULD in reality be some sort of test
+    // within configure.ac, but until we can devise some sort of
+    // simple configure test, we must hard-code them for now.
+
+    /* According to the only docs I could find:
+
+        MTERASE   Erase the media from current position. If the
+                  field mt_count is nonzero, a full erase is done
+                  (from current position to end of media). If
+                  mt_count is zero, only an erase gap is written.
+                  It is hard to say which drives support only one
+                  but not the other option
+    */
+
+    // HOWEVER, since it's hard to say which drivers support short
+    // erase-gaps and which support erase-tape (and HOW they support
+    // them if they do! For example, Cygwin is currently coded to
+    // perform whichever type of erase the drive happens to support;
+    // e.g. if you try to do an erase-gap but the drive doesn't support
+    // short erases, it will end up doing a LONG erase [of the entire
+    // tape]!! (and vice-versa: doing a long erase-tape on a drive
+    // that doesn't support it will cause [Cygwin] to do an erase-
+    // gap instead)).
+
+    // THUS, the SAFEST thing to do is to simply treat all "erases",
+    // whether short or long, as 'nop's for now (in order to prevent
+    // the accidental erasure of an entire tape!) Once we happen to
+    // know for DAMN SURE that a particular host o/s ALWAYS does what
+    // we want it to should we then change the below #defines. (and
+    // like I said, they really SHOULD be in some type of configure
+    // test/setting and not here).
+
+  #if defined(WIN32)
+    #undef  OPTION_SCSI_ERASE_TAPE      // (NOT supported)
+    #undef  OPTION_SCSI_ERASE_GAP       // (NOT supported)
+  #else
+    #undef  OPTION_SCSI_ERASE_TAPE      // (NOT supported)
+    #undef  OPTION_SCSI_ERASE_GAP       // (NOT supported)
+  #endif
+
+#endif // defined(OPTION_SCSI_TAPE)
 
 /* (dynamic load option & max cpu engines handled in configure.ac)   */
 // #define OPTION_DYNAMIC_LOAD          /* Hercules Dynamic Loader   */

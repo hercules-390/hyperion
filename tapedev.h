@@ -65,9 +65,12 @@
 /*-------------------------------------------------------------------*/
 /* Format control byte for Load Display command */
 #define FCB_FS                  0xE0    /* Function Select bits...   */
-#define FCB_FS_READYGO          0x00    /* Display msg until motion  */
+#define FCB_FS_READYGO          0x00    /* Display msg until motion, */
+                                        /* or until msg is updated   */
 #define FCB_FS_UNMOUNT          0x20    /* Display msg until unloaded*/
 #define FCB_FS_MOUNT            0x40    /* Display msg until loaded  */
+#define FCB_FS_RESET_DISPLAY    0x80    /* Reset display (clear Host */
+                                        /* msg; replace w/Unit msg)  */
 #define FCB_FS_NOP              0x60    /* No-op                     */
 #define FCB_FS_UMOUNTMOUNT      0xE0    /* Display msg 1 until tape  */
                                         /* is unloaded, then msg 2   */

@@ -1393,23 +1393,34 @@ typedef struct _DEVBLK {
 
         /* 3480/3490/3590 Message display */
 
-        BYTE    tapemsg1[9];            /* 1st 3480 Message          */
-        BYTE    tapemsg2[9];            /* 2nd 3480 Message          */
+        BYTE    tapemsg1[9];            /* 1st Host Message          */
+        BYTE    tapemsg2[9];            /* 2nd Host Message          */
+        BYTE    tapesysmsg[32];         /*     Unit Message     (SYS)*/
         BYTE   *prev_tapemsg;           /* Previously displayed msg  */
 
         BYTE    tapedisptype;           /* Type of message display   */
         BYTE    tapedispflags;          /* How the msg is displayed  */
 
-#define TAPEDISPTYP_IDLE           0    /* "READY" or "NT RDY" (SYS) */
-#define TAPEDISPTYP_LOCATING       1    /* Locate in progress  (SYS) */
-#define TAPEDISPTYP_ERASING        2    /* DSE in progress     (SYS) */
-#define TAPEDISPTYP_REWINDING      3    /* Rewind in progress  (SYS) */
-#define TAPEDISPTYP_UNLOADING      4    /* Unload in progress  (SYS) */
-#define TAPEDISPTYP_MOUNT          5    /* Mount Message active      */
-#define TAPEDISPTYP_UNMOUNT        6    /* Unmount message active    */
-#define TAPEDISPTYP_UMOUNTMOUNT    7    /* Unmount/Mount msg active  */
-#define TAPEDISPTYP_WAITACT        8    /* Display until motion      */
-#define TAPEDISPTYP_CLEAN          9    /* Cleaning recommended      */
+#define TAPEDISPTYP_IDLE           0    /* "READY" "NT RDY" etc (SYS)*/
+#define TAPEDISPTYP_LOCATING       1    /* Locate in progress   (SYS)*/
+#define TAPEDISPTYP_ERASING        2    /* DSE in progress      (SYS)*/
+#define TAPEDISPTYP_REWINDING      3    /* Rewind in progress   (SYS)*/
+#define TAPEDISPTYP_UNLOADING      4    /* Unload in progress   (SYS)*/
+#define TAPEDISPTYP_CLEAN          5    /* Clean recommended    (SYS)*/
+#define TAPEDISPTYP_MOUNT          6    /* Mount Message active      */
+#define TAPEDISPTYP_UNMOUNT        7    /* Unmount message active    */
+#define TAPEDISPTYP_UMOUNTMOUNT    8    /* Unmount/Mount msg active  */
+#define TAPEDISPTYP_WAITACT        9    /* Display until motion      */
+
+#define IS_TAPEDISPTYP_SYSMSG( dev ) \
+    (0 \
+     || TAPEDISPTYP_IDLE      == (dev)->tapedisptype \
+     || TAPEDISPTYP_LOCATING  == (dev)->tapedisptype \
+     || TAPEDISPTYP_ERASING   == (dev)->tapedisptype \
+     || TAPEDISPTYP_REWINDING == (dev)->tapedisptype \
+     || TAPEDISPTYP_UNLOADING == (dev)->tapedisptype \
+     || TAPEDISPTYP_CLEAN     == (dev)->tapedisptype \
+    )
 
 #define TAPEDISPFLG_ALTERNATE   0x80    /* Alternate msgs 1 & 2      */
 #define TAPEDISPFLG_BLINKING    0x40    /* Selected msg blinks       */

@@ -2647,50 +2647,128 @@ static void GetDisplayMsg( DEVBLK *dev, char *msgbfr, size_t  lenbfr )
     if ( !dev->tdparms.displayfeat )
         return; // (drive doesn't have a display)
 
-    if ( TAPEDISPTYP_IDLE == dev->tapedisptype )
+    if ( !IS_TAPEDISPTYP_SYSMSG( dev ) )
     {
-        if ( strcmp( dev->filename, TAPE_UNLOADED ) == 0 )
+        // -------------------------
+        //   Display Host message
+        // -------------------------
+
+        // "When bit 3 (alternate) is set to 1, then
+        //  bits 4 (blink) and 5 (low/high) are ignored."
+
+        strlcpy( msgbfr, "\"", lenbfr );
+
+        if ( dev->tapedispflags & TAPEDISPFLG_ALTERNATE )
         {
-            strlcpy(msgbfr,"         ",lenbfr);
-            return;
+            strlcat ( msgbfr, dev->tapemsg1,    lenbfr );
+            strlcat ( msgbfr, "/",              lenbfr );
+            strlcat ( msgbfr, dev->tapemsg2,    lenbfr );
+            strlcat ( msgbfr, "\"",             lenbfr );
+            strlcat ( msgbfr, " (alternating)", lenbfr );
+        }
+        else
+        {
+            if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
+                strlcat( msgbfr, dev->tapemsg2, lenbfr );
+            else
+                strlcat( msgbfr, dev->tapemsg1, lenbfr );
+
+            strlcat ( msgbfr, "\"",          lenbfr );
+
+            if ( dev->tapedispflags & TAPEDISPFLG_BLINKING )
+                strlcat ( msgbfr, " (blinking)", lenbfr );
         }
 
-        if ( dev->fd >= 0 && !dev->tmh->tapeloaded( dev, NULL, 0 ) )
-        {
-            strlcpy( msgbfr, " NT RDY ", lenbfr );
-            return;
-        }
-
-        ASSERT( dev->tmh->tapeloaded( dev, NULL, 0 ) );
-
-        strlcpy ( msgbfr, " READY  ",                  lenbfr );
-        strlcat ( msgbfr, dev->readonly ? "*FP*" : "", lenbfr );
+        if ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER )
+            strlcat( msgbfr, " (AUTOLOADER)", lenbfr );
 
         return;
     }
 
-    // "When bit 3 (alternate) is set to 1, then
-    //  bits 4 (blink) and 5 (low/high) are ignored."
+    // ----------------------------------------------
+    //   Display SYS message (Unit/Device message)
+    // ----------------------------------------------
 
-    if ( dev->tapedispflags & TAPEDISPFLG_ALTERNATE )
+    // First, build the system message, then move it into
+    // the caller's buffer...
+
+    strlcpy( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+
+    switch ( dev->tapedisptype )
     {
-        strlcpy ( msgbfr, dev->tapemsg1, lenbfr );
-        strlcat ( msgbfr, "/",           lenbfr );
-        strlcat ( msgbfr, dev->tapemsg2, lenbfr );
-    }
-    else
-    {
-        if ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
-            strlcpy( msgbfr, dev->tapemsg2, lenbfr );
-        else
-            strlcpy( msgbfr, dev->tapemsg1, lenbfr );
+    case TAPEDISPTYP_IDLE:
+    case TAPEDISPTYP_WAITACT:
+    default:
+        // Blank display if no tape loaded...
+        if ( !dev->tmh->tapeloaded( dev, NULL, 0 ) )
+        {
+            strlcat( dev->tapesysmsg, "        ", sizeof(dev->tapesysmsg) );
+            break;
+        }
 
-        if ( dev->tapedispflags & TAPEDISPFLG_BLINKING )
-            strlcat ( msgbfr, " (blinking)", lenbfr );
+        // " NT RDY " if tape IS loaded, but not ready...
+        // (IBM docs say " NT RDY " means "Loaded but not ready")
+
+        ASSERT( dev->tmh->tapeloaded( dev, NULL, 0 ) );
+
+        if (0
+            || dev->fd < 0
+#if defined(OPTION_SCSI_TAPE)
+            || (1
+                && TAPEDEVT_SCSITAPE == dev->tapedevt
+                && !STS_ONLINE( dev )
+               )
+#endif
+        )
+        {
+            strlcat( dev->tapesysmsg, " NT RDY ", sizeof(dev->tapesysmsg) );
+            break;
+        }
+
+        // Otherwise tape is loaded and ready  -->  "READY"
+
+        ASSERT( dev->tmh->tapeloaded( dev, NULL, 0 ) );
+
+        strlcat ( dev->tapesysmsg, " READY  ", sizeof(dev->tapesysmsg) );
+        strlcat( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+
+        if (0
+            || dev->readonly
+#if defined(OPTION_SCSI_TAPE)
+            || (1
+                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
+                &&  STS_WR_PROT( dev )
+               )
+#endif
+        )
+            // (append "file protect" indicator)
+            strlcat ( dev->tapesysmsg, " *FP*", sizeof(dev->tapesysmsg) );
+
+        // Copy system message to caller's buffer
+        strlcpy( msgbfr, dev->tapesysmsg, lenbfr );
+        return;
+
+    case TAPEDISPTYP_ERASING:
+        strlcat ( dev->tapesysmsg, " ERASING", sizeof(dev->tapesysmsg) );
+        break;
+
+    case TAPEDISPTYP_REWINDING:
+        strlcat ( dev->tapesysmsg, "REWINDNG", sizeof(dev->tapesysmsg) );
+        break;
+
+    case TAPEDISPTYP_UNLOADING:
+        strlcat ( dev->tapesysmsg, "UNLOADNG", sizeof(dev->tapesysmsg) );
+        break;
+
+    case TAPEDISPTYP_CLEAN:
+        strlcat ( dev->tapesysmsg, "*CLEAN  ", sizeof(dev->tapesysmsg) );
+        break;
     }
 
-    if ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER )
-        strlcat( msgbfr, " (autoloader)", lenbfr );
+    strlcat( dev->tapesysmsg, "\"", sizeof(dev->tapesysmsg) );
+
+    // Copy system message to caller's buffer
+    strlcpy( msgbfr, dev->tapesysmsg, lenbfr );
 }
 /*-------------------------------------------------------------------*/
 /* Issue a message on the console indicating the display status      */
@@ -2723,10 +2801,13 @@ static void UpdateDisplay( DEVBLK *dev )
 static void ReqAutoMount( DEVBLK *dev )
 {
     char   volser[7];
+    BYTE   autoload, mountreq, unmountreq, stdlbled, ascii, scratch;
     BYTE*  tapemsg;
-    BYTE   autoload, mountreq, stdlbled, ascii;
+    BYTE*  lbltype;
     BYTE*  eyecatcher =
 "*******************************************************************************";
+
+    TRACE( "** ReqAutoMount...\n" );
 
     ///////////////////////////////////////////////////////////////////
 
@@ -2814,19 +2895,56 @@ static void ReqAutoMount( DEVBLK *dev )
     tapemsg = ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 ) ?
         dev->tapemsg2 : dev->tapemsg1;
 
+    TRACE( "** ReqAutoMount: tapemsg = \"%s\"\n", tapemsg );
+
     /* Extract volser from message */
     strncpy( volser, tapemsg+1, sizeof(volser)-1 ); volser[sizeof(volser)-1]=0;
 
+    TRACE( "** ReqAutoMount: volser = \"%s\"\n", volser );
+
     /* Set some boolean flags */
     autoload = ( dev->tapedispflags & TAPEDISPFLG_AUTOLOADER ) ? TRUE : FALSE;
+    TRACE( "** ReqAutoMount: autoload = %s\n", autoload ? "TRUE" : "FALSE" );
     stdlbled = ( 'S' == tapemsg[7] )                           ? TRUE : FALSE;
+    TRACE( "** ReqAutoMount: stdlbled = %s\n", stdlbled ? "TRUE" : "FALSE" );
     ascii    = ( 'A' == tapemsg[7] )                           ? TRUE : FALSE;
+    TRACE( "** ReqAutoMount: ascii = %s\n", ascii ? "TRUE" : "FALSE" );
+    scratch  = ( 'S' == tapemsg[0] )                           ? TRUE : FALSE;
+    TRACE( "** ReqAutoMount: scratch = %s\n", scratch ? "TRUE" : "FALSE" );
     mountreq =
     (0
-        || (             TAPEDISPTYP_MOUNT       == dev->tapedisptype )
-        || ( autoload && TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype )
+        || (       TAPEDISPTYP_MOUNT       == dev->tapedisptype )
+        || (1
+            &&     TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+            &&   (0
+                  || ( dev->tapedispflags & TAPEDISPFLG_MESSAGE2  )
+                  || ( dev->tapedispflags & TAPEDISPFLG_ALTERNATE )
+                 )
+           )
+    )
+    &&
+    (0
+        || scratch
+        || 'M' == tapemsg[0]
     )
     ? TRUE : FALSE;
+    TRACE( "** ReqAutoMount: mountreq = %s\n", mountreq ? "TRUE" : "FALSE" );
+    unmountreq =
+    (0
+        || (       TAPEDISPTYP_UNMOUNT     == dev->tapedisptype )
+        || (1
+            &&     TAPEDISPTYP_UMOUNTMOUNT == dev->tapedisptype
+            &&  !( dev->tapedispflags & TAPEDISPFLG_MESSAGE2 )
+           )
+    )
+    &&
+    (0
+        || scratch
+        || 'R' == tapemsg[0]
+        || 'K' == tapemsg[0]
+    )
+    ? TRUE : FALSE;
+    TRACE( "** ReqAutoMount: unmountreq = %s\n", unmountreq ? "TRUE" : "FALSE" );
 
 #if 1
     // ****************************************************************
@@ -2850,6 +2968,8 @@ static void ReqAutoMount( DEVBLK *dev )
     // ****************************************************************
 #endif
 
+    lbltype = stdlbled ? "SL" : "UL";
+
     if ( autoload )
     {
         // ZZ TODO: Here is where we'd issue i/o (ASPI?) to the actual
@@ -2859,62 +2979,82 @@ static void ReqAutoMount( DEVBLK *dev )
 
         // For now though, we'll just issue an informative message...
 
+        // (Note: issue unmount msg first (if any), before any mount msg)
+
+        if ( unmountreq )
+        {
+            if ( scratch )
+                logmsg(_("AutoMount: %s%s scratch tape being auto-unloaded on %4.4X = %s\n"),
+                    ascii ? "ASCII " : "",lbltype,
+                    dev->devnum, dev->filename);
+            else
+                logmsg(_("AutoMount: %s%s tape volume \"%s\" being auto-unloaded on %4.4X = %s\n"),
+                    ascii ? "ASCII " : "",lbltype,
+                    volser, dev->devnum, dev->filename);
+        }
         if ( mountreq )
         {
-            if ( 'M' == tapemsg[0] )
-                logmsg(_("AutoMount: %s%s tape volume \"%s\" being autoloaded onto drive %4.4X = %s\n"),
-                    ascii ? "ASCII " : "",
-                    stdlbled ? "standard labeled" : "unlabeled",
-                    volser, dev->devnum, dev->filename);
-            else
-                logmsg(_("AutoMount: %s%s scratch tape being autoloaded onto drive %4.4X = %s\n"),
-                    ascii ? "ASCII " : "",
-                    stdlbled ? "standard labeled" : "unlabeled",
+            if ( scratch )
+                logmsg(_("AutoMount: %s%s scratch tape being auto-loaded on %4.4X = %s\n"),
+                    ascii ? "ASCII " : "",lbltype,
                     dev->devnum, dev->filename);
-        }
-        else
-        {
-            // (tape being auto-UNloaded...)
-
-            // (todo...)
+            else
+                logmsg(_("AutoMount: %s%s tape volume \"%s\" being auto-loaded on %4.4X = %s\n"),
+                    ascii ? "ASCII " : "",lbltype,
+                    volser, dev->devnum, dev->filename);
         }
     }
     else
     {
-        // If this is a mount request, inform the [Hercules] operator
-        // of the action they're expected to take...
+        // If this is a mount or unmount request, inform the
+        // [Hercules] operator of the action they're expected to take...
 
-        if ( mountreq )
-        {
-            if ( 'M' == tapemsg[0] )
-                logmsg(_("%s\nAUTOMOUNT: Mount for %s%s tape volume \"%s\" requested on drive %4.4X = %s\n%s\n"),
-                    eyecatcher,
-                    ascii ? "ASCII " : "",
-                    stdlbled ? "standard labeled" : "unlabeled",
-                    volser, dev->devnum, dev->filename,
-                    eyecatcher );
-            else
-                logmsg(_("%s\nAUTOMOUNT: %s%s scratch tape requested on drive %4.4X = %s\n%s\n"),
-                    eyecatcher,
-                    ascii ? "ASCII " : "",
-                    stdlbled ? "standard labeled" : "unlabeled",
-                    dev->devnum, dev->filename,
-                    eyecatcher );
-        }
-        else // (dismount)
+        // (Note: issue unmount msg first (if any), before any mount msg)
+
+        if ( unmountreq )
         {
             BYTE* keep_or_retain = "";
 
             if ( 'K' == tapemsg[0] ) keep_or_retain = "and keep ";
             if ( 'R' == tapemsg[0] ) keep_or_retain = "and retain ";
 
-            logmsg(_("%s\nAUTOMOUNT: Unmount %srequested for %s%s tape volume \"%s\" on drive %4.4X = %s\n%s\n"),
-                eyecatcher,
-                keep_or_retain,
-                ascii ? "ASCII " : "",
-                stdlbled ? "standard labeled" : "unlabeled",
-                volser, dev->devnum, dev->filename,
-                eyecatcher );
+            if ( scratch )
+            {
+                logmsg(_("\n%s\nAUTOMOUNT: Unmount %sof %s%s scratch tape requested on %4.4X = %s\n%s\n\n"),
+                    eyecatcher,
+                    keep_or_retain,
+                    ascii ? "ASCII " : "",lbltype,
+                    volser,
+                    dev->devnum, dev->filename,
+                    eyecatcher );
+            }
+            else
+            {
+                logmsg(_("\n%s\nAUTOMOUNT: Unmount %sof %s%s tape volume \"%s\" requested on %4.4X = %s\n%s\n\n"),
+                    eyecatcher,
+                    keep_or_retain,
+                    ascii ? "ASCII " : "",lbltype,
+                    volser,
+                    dev->devnum, dev->filename,
+                    eyecatcher );
+            }
+        }
+
+        if ( mountreq )
+        {
+            if ( scratch )
+                logmsg(_("\n%s\nAUTOMOUNT: Mount for %s%s scratch tape requested on %4.4X = %s\n%s\n\n"),
+                    eyecatcher,
+                    ascii ? "ASCII " : "",lbltype,
+                    dev->devnum, dev->filename,
+                    eyecatcher );
+            else
+                logmsg(_("\n%s\nAUTOMOUNT: Mount for %s%s tape volume \"%s\" requested on %4.4X = %s\n%s\n\n"),
+                    eyecatcher,
+                    ascii ? "ASCII " : "",lbltype,
+                    volser,
+                    dev->devnum, dev->filename,
+                    eyecatcher );
         }
     }
 
@@ -2967,39 +3107,48 @@ U16             i;                      /* Array subscript           */
 BYTE            msg1[9], msg2[9];       /* Message areas (ASCIIZ)    */
 BYTE            fcb;                    /* Format Control Byte       */
 BYTE            tapeloaded;             /* (boolean true/false)      */
+BYTE*           msg;                    /* (work buf ptr)            */
 
     if ( !count )
         return;
 
     /* Pick up format control byte */
-    fcb = *buf++;
+    fcb = *buf;
 
-    /* Copy and translate messages */
+    /* Copy and translate messages... */
 
     memset( msg1, 0, sizeof(msg1) );
     memset( msg2, 0, sizeof(msg2) );
 
-    for (i=0; *buf && i < 8 && ((i+1)+0) < count; i++)
-        msg1[i] = guest_to_host(*buf++);
+    msg = buf+1;
 
-    for (i=0; *buf && i < 8 && ((i+1)+8) < count; i++)
-        msg2[i] = guest_to_host(*buf++);
+    for (i=0; *msg && i < 8 && ((i+1)+0) < count; i++)
+        msg1[i] = guest_to_host(*msg++);
+
+    msg = buf+1+8;
+
+    for (i=0; *msg && i < 8 && ((i+1)+8) < count; i++)
+        msg2[i] = guest_to_host(*msg++);
 
     msg1[ sizeof(msg1) - 1 ] = 0;
     msg2[ sizeof(msg2) - 1 ] = 0;
 
-    tapeloaded =
-        ( dev->tmh->tapeloaded( dev, NULL, 0 ) &&
-          strcmp( dev->filename, TAPE_UNLOADED ) != 0 );
+    TRACE( "** load_display: msg1 = \"%s\", msg2 = \"%s\"\n", msg1, msg2 );
+
+    tapeloaded = dev->tmh->tapeloaded( dev, NULL, 0 );
+
+    TRACE( "** load_display: tapeloaded = %s\n", tapeloaded ? "TRUE" : "FALSE" );
 
     switch ( fcb & FCB_FS )  // (high-order 3 bits)
     {
     case FCB_FS_READYGO:     // 0x00
 
+        TRACE( "** load_display: FCB_FS_READYGO\n" );
+
         /*
-        || 000b: The message specified in bytes 1-8 and 9-16 is
+        || 000b: "The message specified in bytes 1-8 and 9-16 is
         ||       maintained until the tape drive next starts tape
-        ||       motion, or until the message is updated.
+        ||       motion, or until the message is updated."
         */
 
         dev->tapedispflags = 0;
@@ -3013,20 +3162,26 @@ BYTE            tapeloaded;             /* (boolean true/false)      */
 
     case FCB_FS_UNMOUNT:     // 0x20
 
+        TRACE( "** load_display: FCB_FS_UNMOUNT\n" );
+
         /*
-        || 001b: The message specified in bytes 1-8 is maintained
+        || 001b: "The message specified in bytes 1-8 is maintained
         ||       until the tape cartridge is physically removed from
         ||       the tape drive, or until the next unload/load cycle.
+        ||       If the drive does not contain a cartridge when the
+        ||       Load Display command is received, the display will
+        ||       contain the message that existed prior to the receipt
+        ||       of the command."
         */
 
         dev->tapedispflags = 0;
-
-        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
         if ( tapeloaded )
         {
             dev->tapedisptype  = TAPEDISPTYP_UNMOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+
+            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
                 logmsg(_("HHCTA099I %4.4X: Tape Unmount Request: \"%s\"\n"),
@@ -3037,19 +3192,24 @@ BYTE            tapeloaded;             /* (boolean true/false)      */
 
     case FCB_FS_MOUNT:       // 0x40
 
+        TRACE( "** load_display: FCB_FS_MOUNT\n" );
+
         /*
-        || 010b: The message specified in bytes 1-8 is maintained
-        ||       until the drive is next loaded.
+        || 010b: "The message specified in bytes 1-8 is maintained
+        ||       until the drive is next loaded. If the drive is
+        ||       loaded when the Load Display command is received,
+        ||       the display will contain the message that existed
+        ||       prior to the receipt of the command."
         */
 
         dev->tapedispflags = 0;
-
-        strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
         if ( !tapeloaded )
         {
             dev->tapedisptype  = TAPEDISPTYP_MOUNT;
             dev->tapedispflags = TAPEDISPFLG_REQAUTOMNT;
+
+            strlcpy( dev->tapemsg1, msg1, sizeof(dev->tapemsg1) );
 
             if ( dev->ccwtrace || dev->ccwstep )
                 logmsg(_("HHCTA099I %4.4X: Tape Mount Request: \"%s\"\n"),
@@ -3061,25 +3221,43 @@ BYTE            tapeloaded;             /* (boolean true/false)      */
     case FCB_FS_NOP:         // 0x60
     default:
 
+        TRACE( "** load_display: FCB_FS_NOP/default\n" );
+
         /*
-        || 011b: This value is used to physically access a drive
+        || 011b: "This value is used to physically access a drive
         ||       without changing the message display. This option
         ||       can be used to test whether a control unit can
-        ||       physically communicate with a drive.
+        ||       physically communicate with a drive."
         */
 
         return;
 
-    case FCB_FS_UMOUNTMOUNT: // 0xE0
+    case FCB_FS_RESET_DISPLAY: // 0x80
+
+        TRACE( "** load_display: FCB_FS_RESET_DISPLAY\n" );
 
         /*
-        || 111b: The message in bytes 1-8 is displayed until a tape
+        || 100b: "The host message being displayed is cancelled and
+        ||       a unit message is displayed instead."
+        */
+
+        dev->tapedispflags = 0;
+        dev->tapedisptype  = TAPEDISPTYP_IDLE;
+
+        break;
+
+    case FCB_FS_UMOUNTMOUNT: // 0xE0
+
+        TRACE( "** load_display: FCB_FS_UMOUNTMOUNT\n" );
+
+        /*
+        || 111b: "The message in bytes 1-8 is displayed until a tape
         ||       cartridge is physically removed from the tape drive,
         ||       or until the drive is next loaded. The message in
         ||       bytes 9-16 is displayed until the drive is next loaded.
         ||       If no cartridge is present in the drive, the first
         ||       message is ignored and only the second message is
-        ||       displayed until the drive is next loaded.
+        ||       displayed until the drive is next loaded."
         */
 
         dev->tapedispflags = 0;
@@ -3108,6 +3286,9 @@ BYTE            tapeloaded;             /* (boolean true/false)      */
 
         break;
     }
+
+    TRACE( "** load_display: (after switch): dev->tapemsg1 = \"%s\", dev->tapemsg2 = \"%s\"\n",
+        dev->tapemsg1, dev->tapemsg2 );
 
     /* Set the flags... */
 
@@ -3215,10 +3396,6 @@ int ldpt=0;
         {
             /* If the tape has a filename but the tape is not yet */
             /* opened, then we are at loadpoint                   */
-            /* WNG : SCSI tapes should follow a different         */
-            /*       procedure. The tape MAY not be at load point */
-            /*       but we have no way to tell unless we open    */
-            /*       /dev/nstX device                             */
             ldpt=1;
         }
     }
@@ -4685,6 +4862,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         }
 
         /* Write a block from the tape according to device type */
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
         rc=dev->tmh->write(dev,iobuf,count,unitstat,code);
         if (rc < 0)
         {
@@ -4700,8 +4882,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* READ FORWARD                                                  */
     /*---------------------------------------------------------------*/
         /* Read a block from the tape according to device type */
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
         len=dev->tmh->read(dev,iobuf,unitstat,code);
-
         /* Exit with unit check status if read error condition */
         if (len < 0)
         {
@@ -4740,7 +4926,22 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     /* REWIND                                                        */
     /*---------------------------------------------------------------*/
-        if(dev->tmh->rewind(dev,unitstat,code)<0)
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_REWINDING;
+            UpdateDisplay( dev );
+        }
+
+        rc = dev->tmh->rewind(dev,unitstat,code);
+
+        if ( TAPEDISPTYP_REWINDING == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
+
+        if ( rc < 0 )
         {
             break;
         }
@@ -4754,6 +4955,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* READ BACKWARD                                                 */
     /*---------------------------------------------------------------*/
         /* Backspace to previous block according to device type */
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
         rc=dev->tmh->bsb(dev,unitstat,code);
         if (rc < 0)
         {
@@ -4815,10 +5021,25 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
             }
         }
 
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_UNLOADING;
+            UpdateDisplay( dev );
+        }
+
+#if defined(OPTION_SCSI_TAPE)
         if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
             rewind_unload_scsitape( dev, unitstat, code );
         else
-        dev->tmh->close(dev);
+#endif
+            dev->tmh->close(dev);
+
+        if ( TAPEDISPTYP_UNLOADING == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
 
         dev->curfilen = 1;
         dev->nxtblkpos = 0;
@@ -4846,14 +5067,74 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* ERASE GAP                                                     */
     /*---------------------------------------------------------------*/
         /* Unit check if tape is write-protected */
-        if (dev->readonly)
+        if (0
+            || dev->readonly
+#if defined(OPTION_SCSI_TAPE)
+            || (1
+                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
+                &&  STS_WR_PROT( dev )
+               )
+#endif
+        )
         {
             build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
             break;
         }
 
-        /* Set normal status */
-        build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
+
+        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
+            dev->tmh->erg(dev,unitstat,code);
+
+        if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+            /* Set normal status */
+            build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+
+        break;
+
+    case 0x97:
+    /*---------------------------------------------------------------*/
+    /* DATA SECURITY ERASE                                           */
+    /*---------------------------------------------------------------*/
+        /* Unit check if tape is write-protected */
+        if (0
+            || dev->readonly
+#if defined(OPTION_SCSI_TAPE)
+            || (1
+                &&  TAPEDEVT_SCSITAPE == dev->tapedevt
+                &&  STS_WR_PROT( dev )
+               )
+#endif
+        )
+        {
+            build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
+            break;
+        }
+
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_ERASING;
+            UpdateDisplay( dev );
+        }
+
+        if ( TAPEDEVT_SCSITAPE == dev->tapedevt )
+            dev->tmh->dse(dev,unitstat,code);
+
+        if ( TAPEDISPTYP_ERASING == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
+
+        if ( TAPEDEVT_SCSITAPE != dev->tapedevt )
+            /* Not yet implemented */
+            build_senseX(TAPE_BSENSE_BADCOMMAND,dev,unitstat,code);
+
         break;
 
     case 0x1F:
@@ -4865,6 +5146,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         {
             build_senseX(TAPE_BSENSE_WRITEPROTECT,dev,unitstat,code);
             break;
+        }
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
         }
         rc=dev->tmh->wtm(dev,unitstat,code);
         if(rc<0)
@@ -5003,6 +5289,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* BACKSPACE BLOCK                                               */
     /*---------------------------------------------------------------*/
         /* Backspace to previous block according to device type */
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
         rc=dev->tmh->bsb(dev,unitstat,code);
         /* Exit with unit check status if error condition */
         if (rc < 0)
@@ -5026,6 +5317,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* BACKSPACE FILE                                                */
     /*---------------------------------------------------------------*/
         /* Backspace to previous file according to device type */
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
+
         rc=dev->tmh->bsf(dev,unitstat,code);
 
         /* Exit with unit check status if error condition */
@@ -5043,6 +5340,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* FORWARD SPACE BLOCK                                           */
     /*---------------------------------------------------------------*/
         /* Forward to next block according to device type */
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
         rc=dev->tmh->fsb(dev,unitstat,code);
         /* Exit with unit check status if error condition */
         if (rc < 0)
@@ -5066,6 +5368,12 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /* FORWARD SPACE FILE                                            */
     /*---------------------------------------------------------------*/
         /* Forward to next file according to device type */
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
+
         rc=dev->tmh->fsf(dev,unitstat,code);
 
         /* Exit with unit check status if error condition */
@@ -5082,6 +5390,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
     /* SYNCHRONIZE                                                   */
     /*---------------------------------------------------------------*/
+        if ( TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
         break;
 
@@ -5115,12 +5428,20 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         *residual = count - num;
 
         /* Start of block locate code */
-        logmsg(_("HHCTA081I Locate block 0x%8.8lX on %s%s%4.4X\n")
-            ,locblock
-            ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
-            ,TAPEDEVT_SCSITAPE == dev->tapedevt ?             " = "    : ""
-            ,dev->devnum
-        );
+        if ( dev->ccwtrace || dev->ccwstep )
+            logmsg(_("HHCTA081I Locate block 0x%8.8lX on %s%s%4.4X\n")
+                ,locblock
+                ,TAPEDEVT_SCSITAPE == dev->tapedevt ? (char*)dev->filename : ""
+                ,TAPEDEVT_SCSITAPE == dev->tapedevt ?             " = "    : ""
+                ,dev->devnum
+                );
+
+        if ( TAPEDISPTYP_IDLE    == dev->tapedisptype ||
+             TAPEDISPTYP_WAITACT == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_LOCATING;
+            UpdateDisplay( dev );
+        }
 
         {
 #if defined(OPTION_SCSI_TAPE)
@@ -5157,6 +5478,13 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
                 }
             }
         }
+
+        if ( TAPEDISPTYP_LOCATING == dev->tapedisptype )
+        {
+            dev->tapedisptype = TAPEDISPTYP_IDLE;
+            UpdateDisplay( dev );
+        }
+
         if (rc < 0)
         {
             // ZZ FIXME: shouldn't we be returning
@@ -5498,12 +5826,21 @@ typedef struct _TAPEMEDIA_HANDLER {
         int *wtm(DEVBLK *,BYTE *unitstat,BYTE code);
 } TAPEMEDIA_HANDLER;
 */
+/*
 static int return_true3(DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
     UNREFERENCED(dev);
     UNREFERENCED(unitstat);
     UNREFERENCED(code);
     return 1;
+}
+*/
+static int is_tapeloaded_filename(DEVBLK *dev,BYTE *unitstat,BYTE code)
+{
+    UNREFERENCED(unitstat);
+    UNREFERENCED(code);
+    // true 1 == tape loaded, false 0 == tape not loaded
+    return strcmp( dev->filename, TAPE_UNLOADED ) != 0 ? 1 : 0;
 }
 static int return_false1(DEVBLK *dev)
 {
@@ -5538,8 +5875,9 @@ static TAPEMEDIA_HANDLER tmh_aws = {
     &write_awsmark,
     NULL, /* DSE */
     NULL, /* ERG */
-    &return_true3,
-    passedeot_awstape}; /* Get Open Status */
+//  &return_true3,
+    &is_tapeloaded_filename,
+    passedeot_awstape};
 
 static TAPEMEDIA_HANDLER tmh_het = {
     &open_het,
@@ -5554,8 +5892,9 @@ static TAPEMEDIA_HANDLER tmh_het = {
     &write_hetmark,
     NULL, /* DSE */
     NULL, /* ERG */
-    &return_true3,
-    passedeot_het}; /* Get Open Status */
+//  &return_true3,
+    &is_tapeloaded_filename,
+    passedeot_het};
 
 #if defined(OPTION_SCSI_TAPE)
 static TAPEMEDIA_HANDLER tmh_scsi = {
@@ -5569,10 +5908,10 @@ static TAPEMEDIA_HANDLER tmh_scsi = {
     &bsf_scsitape,
     &fsf_scsitape,
     &write_scsimark,
-    NULL, /* DSE */
-    NULL, /* ERG */
-    &driveready_scsitape, /* Tape door opened */
-    &return_false1}; /* Passed EOT marker */
+    &dse_scsitape,
+    &erg_scsitape,
+    &driveready_scsitape,
+    &return_false1};
 #endif /* defined(OPTION_SCSI_TAPE) */
 
 static TAPEMEDIA_HANDLER tmh_oma = {
@@ -5588,7 +5927,8 @@ static TAPEMEDIA_HANDLER tmh_oma = {
     &write_READONLY, /* WTM */
     &write_READONLY, /* DSE */
     &write_READONLY, /* ERG */
-    &return_true3,
+//  &return_true3,
+    &is_tapeloaded_filename,
     &return_false1};
 
 /*-------------------------------------------------------------------*/
