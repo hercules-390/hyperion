@@ -2568,16 +2568,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     int     i;                          /* Index                     */
     int     matches = 0;                /* Number aeID matches       */
     REGS   *regs;
-    int     cpu = 0;
+    int     cpu = sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
     if (argc == 2) cpu = atoi (argv[1]);
     if (cpu < 0 || cpu >= MAX_CPU_ENGINES)
-        cpu = 0;
+        cpu = sysblk.pcpu;
 
     regs = sysblk.regs + cpu;
-    logmsg ("cpu %d aenoarn %d aeID 0x%3.3x\n",cpu,regs->aenoarn,regs->aeID);
+    logmsg ("cpu %d aenoarn %d aeID 0x%5.5x\n",cpu,regs->aenoarn,regs->aeID);
     logmsg (" ix               ve key ar a               ae\n");
     for (i = 0; i < MAXAEA; i++)
     {
@@ -2600,13 +2600,13 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
     int     i;                          /* Index                     */
     int     matches = 0;                /* Number aeID matches       */
     REGS   *regs;
-    int     cpu = 0;
+    int     cpu = sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
     if (argc == 2) cpu = atoi (argv[1]);
     if (cpu < 0 || cpu >= MAX_CPU_ENGINES)
-        cpu = 0;
+        cpu = sysblk.pcpu;
 
     regs = sysblk.regs + cpu;
     logmsg ("cpu %d tlbID 0x%3.3x\n",cpu,regs->tlbID);
@@ -2664,10 +2664,15 @@ int ssd_cmd(int argc, char *argv[], char *cmdline)
 int count_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
+    U64     instcount = 0;              /* Instruction count         */
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     UNREFERENCED(cmdline);
+
+    for (i = 0; i < MAX_CPU_ENGINES; i++)
+        instcount += sysblk.regs[i].instcount;
+    logmsg ("  i: %12lld\n", instcount);
 
     for (i = 0; i < OPTION_COUNTING; i++)
         logmsg ("%3d: %12lld\n", i, sysblk.count[i]);

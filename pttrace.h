@@ -6,8 +6,14 @@
 /*--------------------------------------------------------------------*/
 
 #if defined(OPTION_FTHREADS)
-#define OBTAIN_PTTLOCK   fthread_mutex_lock(&pttlock);
-#define RELEASE_PTTLOCK  fthread_mutex_unlock(&pttlock);
+#define OBTAIN_PTTLOCK \
+ do { \
+   if (!pttnolock) fthread_mutex_lock(&pttlock); \
+ }
+#define RELEASE_PTTLOCK \
+ do { \
+   if (!pttnolock) fthread_mutex_unlock(&pttlock); \
+ } while (0)
 int ptt_pthread_mutex_init(LOCK *, void *, char *, int);
 int ptt_pthread_mutex_lock(LOCK *, char *, int);
 int ptt_pthread_mutex_unlock(LOCK *, char *, int);
@@ -21,8 +27,14 @@ int ptt_pthread_join(TID, void **, char *, int);
 int ptt_pthread_detach(TID, char *, int);
 int ptt_pthread_kill(TID, int, char *, int);
 #else
-#define OBTAIN_PTTLOCK   pthread_mutex_lock(&pttlock);
-#define RELEASE_PTTLOCK  pthread_mutex_unlock(&pttlock);
+#define OBTAIN_PTTLOCK \
+ do { \
+   if (!pttnolock) pthread_mutex_lock(&pttlock); \
+ } while (0)
+#define RELEASE_PTTLOCK \
+ do { \
+   if (!pttnolock) pthread_mutex_unlock(&pttlock); \
+ } while (0)
 int ptt_pthread_mutex_init(LOCK *, pthread_mutexattr_t *, char *, int);
 int ptt_pthread_mutex_lock(LOCK *, char *, int);
 int ptt_pthread_mutex_unlock(LOCK *, char *, int);
@@ -53,4 +65,10 @@ typedef struct _PTT_TRACE {
         int          result;            /* Result                     */
       } PTT_TRACE;
 #define PTT_TRACE_SIZE sizeof(PTT_TRACE)
+#define PTT_MAGIC -99
+#define PTT(_a,_b,_c) \
+        ptt_pthread_trace(_a,(void *)(_b),(void *)(_c),__FILE__,__LINE__,(int *)PTT_MAGIC);
+#define PTTRACE(_a,_b,_c,_d,_e,_f) \
+  if (!pttnothreads) \
+    ptt_pthread_trace(_a,_b,_c,_d,_e,_f)
 #endif /* defined( _PTTHREAD_H_ ) */
