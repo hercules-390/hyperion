@@ -1552,12 +1552,15 @@ VADR    ea1, ea2;                       /* Effective addresses       */
 			}
 			break;
 		case 7:
+			/*
 			{
 				U64 v1,v2;
 				v1=CSWAP64(*(U64 *)main1);
 				v2=CSWAP64(*(U64 *)main2);
 				rc=v1-v2;
 			}
+			*/
+			rc=memcmp(main1,main2,8);
 			break;
 		default:
 			rc=memcmp(main1,main2,l+1);
