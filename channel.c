@@ -914,7 +914,6 @@ void device_thread ()
 
 #endif // !defined(OPTION_FISHIO)
 
-
 #endif /*!defined(_CHANNEL_C)*/
 
 /*-------------------------------------------------------------------*/
@@ -1396,6 +1395,37 @@ int     rc;                             /* Return code               */
     memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
                         sizeof(dev->pmcw.intparm));            /*@IWZ*/
 
+    /* Schedule the I/O.  The various methods are a direct
+     * correlation to the interest in the subject:
+     * [1] Synchronous I/O.  Attempts to complete the channel program
+     *     in the cpu thread to avoid any threads overhead.
+     * [2] FishIO.  Use native win32 APIs to coordinate I/O
+     *     thread scheduling.
+     * [3] Device threads.  Queue the I/O and signal a device thread.
+     *     Eliminates the overhead of thead creation/termination.
+     * [4] Original.  Create a thread to execute this I/O
+     */
+
+#ifdef OPTION_SYNCIO
+    if (dev->syncio)
+    {
+        /* Attempt synchronous I/O */
+        dev->syncio_active = 1;
+        release_lock (&dev->lock);
+        switch (sysblk.arch_mode)
+        {
+            case ARCH_370: s370_execute_ccw_chain (dev); break;
+            case ARCH_900: z900_execute_ccw_chain (dev); break;
+            default:
+            case ARCH_390: s390_execute_ccw_chain (dev); break;
+        }
+        /* Return code 0 if the retry bit is not on */
+        if (!dev->syncio_retry)
+            return 0;
+        obtain_lock (&dev->lock);
+    }
+#endif /*OPTION_SYNCIO*/
+
 #if defined(OPTION_FISHIO)
     release_lock (&dev->lock);
     return ScheduleIORequest(dev,dev->devnum);
@@ -1497,6 +1527,9 @@ DEVXF  *devexec;                        /* -> Execute CCW function   */
 int     ccwseq = 0;                     /* CCW sequence number       */
 int     bufpos = 0;                     /* Position in I/O buffer    */
 BYTE    iobuf[65536];                   /* Channel I/O buffer        */
+#ifdef OPTION_SYNCIO
+int     retry = 0;                      /* 1=I/O asynchronous retry  */
+#endif
 
     /* Extract the I/O parameters from the ORB */              /*@IWZ*/
     FETCH_FW(ccwaddr, dev->orb.ccwaddr);                       /*@IWZ*/
@@ -1523,6 +1556,24 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     /* Set the subchannel active and device active bits in the SCSW */
     dev->scsw.flag3 |= (SCSW3_AC_SCHAC | SCSW3_AC_DEVAC);
+
+#ifdef OPTION_SYNCIO
+    /* Check for retried synchronous I/O */
+    if (dev->syncio_retry)
+    {
+        dev->syncio_active = 0;
+        dev->syncios--; dev->asyncios++;
+        ccwaddr = dev->syncio_addr;
+        DEVTRACE ("asynchronous I/O ccw addr %8.8x\n", ccwaddr);
+    }
+
+    /* Check for synchronous I/O */
+    if (dev->syncio_active)
+    {
+        dev->syncios++;
+        DEVTRACE ("synchronous  I/O ccw addr %8.8x\n", ccwaddr);
+    }
+#endif
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* Update the measurement block if applicable */
@@ -1551,7 +1602,11 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     }
 
     /* Generate an initial status I/O interruption if requested */
+#ifdef OPTION_SYNCIO
+    if (dev->scsw.flag1 & SCSW1_I && !dev->syncio_retry)
+#else
     if (dev->scsw.flag1 & SCSW1_I)
+#endif
     {
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
@@ -1743,6 +1798,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         ccw = sysblk.mainstor + ccwaddr;
 
         /* Increment to next CCW address */
+#ifdef OPTION_SYNCIO
+        dev->syncio_addr = ccwaddr;
+#endif
         ccwaddr += 8;
 
         /* Update the CCW address in the SCSW */
@@ -1838,6 +1896,15 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Suspend the device if not already resume pending */
             if ((dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
             {
+#ifdef OPTION_SYNCIO
+                /* Retry if synchronous I/O */
+                if (dev->syncio_active)
+                {
+                    dev->syncio_retry = 1;
+                    release_lock (&dev->lock);
+                    return NULL;
+                }
+#endif
                 /* Set the subchannel status word to suspended */
                 dev->scsw.flag3 = SCSW3_AC_SUSP
                                     | SCSW3_SC_INTER
@@ -1865,7 +1932,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                     WAKEUP_WAITING_CPU (ALL_CPUS, CPUSTATE_STARTED);
                     release_lock (&sysblk.intlock);
 
-                    /* Obtain the device lock */
+                    /* Re-obtain the device lock */
                     obtain_lock (&dev->lock);
                 }
 
@@ -1886,7 +1953,6 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 /* If the device has been reset then simply return */
                 if(!dev->busy)
                 {
-                    
                     release_lock (&dev->lock);
                     return NULL;
                 }
@@ -1915,6 +1981,9 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             prevcode = 0;
             ccwseq = 0;
             bufpos = 0;
+#ifdef OPTION_SYNCIO
+            dev->syncio_retry = 0;
+#endif
 
             /* Go back and refetch the suspended CCW */
             ccwaddr -= 8;
@@ -1924,7 +1993,11 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
         /* Signal I/O interrupt if PCI flag is set */
+#ifdef OPTION_SYNCIO
+        if (flags & CCW_FLAGS_PCI && !dev->syncio_retry)
+#else
         if (flags & CCW_FLAGS_PCI)
+#endif
         {
             /* Obtain the device lock */
             obtain_lock (&dev->lock);
@@ -2067,8 +2140,21 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         }
 
         /* Pass the CCW to the device handler for execution */
+#ifdef OPTION_SYNCIO
+        retry = dev->syncio_retry;
+#endif
         (*devexec) (dev, code, flags, chained, count, prevcode,
                     ccwseq, iobuf, &more, &unitstat, &residual);
+#ifdef OPTION_SYNCIO
+        if (retry) dev->syncio_retry = 0;
+
+        /* Check if synchronous I/O needs to be retried */
+        if (dev->syncio_retry)
+        {
+            return NULL;
+        }
+        retry = 0;
+#endif
 
         /* Check for Command Retry (suggested by Jim Pierson) */
         if ( unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
@@ -2424,7 +2510,6 @@ int     iopending = 0;                  /* 1 = I/O still pending     */
 
     /* Exit with condition code indicating interrupt cleared */
     return 1;
-
 
 } /* end function present_io_interrupt */
 

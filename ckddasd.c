@@ -88,6 +88,7 @@
 #define CKDORIENT_COUNT         2       /* Oriented after count field*/
 #define CKDORIENT_KEY           3       /* Oriented after key field  */
 #define CKDORIENT_DATA          4       /* Oriented after data field */
+#define CKDORIENT_EOT           5       /* Oriented after end of trk */
 
 /* Path state byte for Sense Path Group ID command */
 #define SPG_PATHSTAT            0xC0    /* Pathing status bits...    */
@@ -280,6 +281,20 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                 strcpy (dev->ckdsfn, op);
             continue;
         }
+#ifdef OPTION_SYNCIO
+        if (strcasecmp ("nosyncio", argv[i]) == 0 ||
+            strcasecmp ("nosyio",   argv[i]) == 0)
+        {
+            dev->nosyncio = 1;
+            continue;
+        }
+        if (strcasecmp ("syncio", argv[i]) == 0 ||
+            strcasecmp ("syio",   argv[i]) == 0)
+        {
+            dev->syncio = 1;
+            continue;
+        }
+#endif
 
         /* the following parameters are processed by cckd code */
         if (strlen (argv[i]) > 8 &&  !memcmp ("l2cache=", argv[i], 8))
@@ -306,6 +321,9 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
     /* Initialize fields for full track read/write */
     dev->ckdtrkfd = dev->ckdlopos = dev->ckdhipos = -1;
+#ifdef OPTION_SYNCIO
+    if (dev->nosyncio) dev->syncio = 0;
+#endif
 
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)
@@ -816,7 +834,7 @@ int	i;				/* Index                     */
 off_t ckd_lseek (DEVBLK *dev, int fd, off_t offset, int pos)
 {
 int             rc;                     /* Return code               */
-off_t           oldpos, newpos;         /* Old, new file offsets     */
+off_t           oldpos, newpos, trkpos; /* File offsets              */
 size_t          N;			/* Number of bytes to write  */
 int             trk;                    /* Current track number      */
 int             i;                      /* Cache index               */
@@ -863,6 +881,15 @@ int             lru;                    /* LRU cache entry index     */
             /* check if we need to write the old track */
             if ((N = dev->ckdhipos - dev->ckdlopos) > 0 && dev->ckdlazywrt)
             {
+#ifdef OPTION_SYNCIO
+                /* Retry if synchronous I/O */
+                if (dev->syncio_active)
+                {
+                    dev->syncio_retry = 1;
+                    return -1;
+                }
+#endif
+
                 DEVTRACE("ckddasd: writing %s track image CCHH "
                          "%2.2X%2.2X%2.2X%2.2X\n",
                          N == dev->ckdtrksz ? "full" : "partial",
@@ -897,7 +924,7 @@ int             lru;                    /* LRU cache entry index     */
             if (pos == -1) return 0;
 
             /* calculate offset of the beginning of the track */
-            dev->ckdtrkpos = newpos -
+            trkpos = newpos -
                       ((newpos - CKDDASD_DEVHDR_SIZE) % dev->ckdtrksz);
 
             /* get a cache table if we don't have one */
@@ -922,7 +949,7 @@ int             lru;                    /* LRU cache entry index     */
 
             /* calculate current track number */
             trk = (dev->ckdlocyl[dev->ckdtrkfn] * dev->ckdheads) +
-                  (dev->ckdtrkpos-CKDDASD_DEVHDR_SIZE) / dev->ckdtrksz;
+                  (trkpos-CKDDASD_DEVHDR_SIZE) / dev->ckdtrksz;
 
             /* search the cache for the track; otherwise find the
                least-recently-used cache entry */
@@ -949,6 +976,15 @@ int             lru;                    /* LRU cache entry index     */
             /* otherwise read in the track image */
             else
             {
+#ifdef OPTION_SYNCIO
+                /* Retry if synchronous I/O */
+                if (dev->syncio_active)
+                {
+                    dev->syncio_retry = 1;
+                    return -1;
+                }
+#endif
+
                 dev->ckdcachemisses++;
 
                 /* get a track image buffer if we don't have one */
@@ -967,7 +1003,7 @@ int             lru;                    /* LRU cache entry index     */
                 dev->ckdtrkbuf = dev->ckdcache[lru].buf;
 
                 /* read the track image */
-                rc = lseek (fd, dev->ckdtrkpos, SEEK_SET);
+                rc = lseek (fd, trkpos, SEEK_SET);
                 if (rc == -1)
                 {
                     /* Handle seek error condition */
@@ -998,7 +1034,7 @@ int             lru;                    /* LRU cache entry index     */
                      dev->ckdtrkbuf[1], dev->ckdtrkbuf[2],
                      dev->ckdtrkbuf[3], dev->ckdtrkbuf[4]);
             DEVTRACE("ckddasd:    file %d fd %d offset %d length %d\n",
-                     dev->ckdtrkfn + 1, fd, (int)dev->ckdtrkpos,
+                     dev->ckdtrkfn + 1, fd, (int)trkpos,
                      dev->ckdtrksz);
 
             /* calculate old file offset - another dependency here:
@@ -1013,6 +1049,7 @@ int             lru;                    /* LRU cache entry index     */
 
             dev->ckdtrkfd = fd;
             dev->ckdcurpos = newpos;
+            dev->ckdtrkpos = trkpos;
         } /* end track switch */
         else
         {
@@ -1206,6 +1243,9 @@ int             rc;                     /* Return code               */
     rc = ckd_lseek (dev, dev->fd, skiplen, SEEK_CUR);
     if (rc == -1)
     {
+#ifdef OPTION_SYNCIO
+        if (dev->syncio_retry) return -1;
+#endif
         /* Handle seek error condition */
         logmsg ("ckddasd: lseek error: %s\n",
                 strerror(errno));
@@ -1263,6 +1303,9 @@ off_t           seekpos;                /* Seek position for lseek   */
     rc = ckd_lseek (dev, dev->fd, seekpos, SEEK_SET);
     if (rc == -1)
     {
+#ifdef OPTION_SYNCIO
+        if (dev->syncio_retry) return -1;
+#endif
         /* Handle seek error condition */
         logmsg ("ckddasd: lseek error: %s\n",
                 strerror(errno));
@@ -1366,6 +1409,7 @@ CKDDASD_TRKHDR  trkhdr;                 /* CKD track header          */
         head = 0;
         cyl++;
     }
+    DEVTRACE("ckddasd: MT advance to cyl %d head %d\n", cyl, head);
 
     /* File protect error if next track is outside the
        limits of the device or outside the defined extent */
@@ -1405,6 +1449,7 @@ int             skipr0 = 0;             /* 1=Skip record zero        */
 U16             cyl;                    /* Cylinder number for seek  */
 U16             head;                   /* Head number for seek      */
 CKDDASD_TRKHDR  trkhdr;                 /* CKD track header          */
+char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
 
     /* Skip record 0 for all operations except READ TRACK, READ R0,
        SEARCH ID EQUAL, SEARCH ID HIGH, SEARCH ID EQUAL OR HIGH,
@@ -1417,6 +1462,17 @@ CKDDASD_TRKHDR  trkhdr;                 /* CKD track header          */
         && code != 0x47
         && code != 0x9D)
         skipr0 = 1;
+
+    DEVTRACE ("ckddasd: ckd_read_count orientation is %s\n",
+              orient[dev->ckdorient]);
+
+    /* If orientation is at End-Of_Track then a multi-track advance
+       failed previously during synchronous I/O */
+    if (dev->ckdorient == CKDORIENT_EOT)
+    {
+        rc = mt_advance (dev, unitstat);
+        if (rc < 0) return -1;
+    }
 
     /* Search for next count field */
     for ( ; ; )
@@ -1470,6 +1526,7 @@ CKDDASD_TRKHDR  trkhdr;                 /* CKD track header          */
         /* Test for logical end of track and exit if not */
         if (memcmp(rechdr, eighthexFF, 8) != 0)
             break;
+        dev->ckdorient = CKDORIENT_EOT;
 
         /* For READ TRACK or READ MULTIPLE CKD, return with the
            end of track marker in the record header field */
@@ -1680,6 +1737,9 @@ int             skiplen;                /* Number of bytes to skip   */
     curpos = ckd_lseek (dev, dev->fd, 0, SEEK_CUR);
     if (curpos == -1)
     {
+#ifdef OPTION_SYNCIO
+        if (dev->syncio_retry) return -1;
+#endif
         /* Handle seek error condition */
         logmsg ("ckddasd: lseek error: %s\n",
                 strerror(errno));
@@ -1725,6 +1785,9 @@ int             skiplen;                /* Number of bytes to skip   */
     rc = ckd_lseek (dev, dev->fd, -(CKDDASD_RECHDR_SIZE), SEEK_CUR);
     if (rc == -1)
     {
+#ifdef OPTION_SYNCIO
+        if (dev->syncio_retry) return -1;
+#endif
         /* Handle seek error condition */
         logmsg ("ckddasd: lseek error: %s\n",
                 strerror(errno));
@@ -1794,6 +1857,9 @@ int             skiplen;                /* Number of bytes to skip   */
     curpos = ckd_lseek (dev, dev->fd, 0, SEEK_CUR);
     if (curpos == -1)
     {
+#ifdef OPTION_SYNCIO
+        if (dev->syncio_retry) return -1;
+#endif
         /* Handle write error condition */
         logmsg ("ckddasd: write error: %s\n", dev->ckdrdonly ?
                          "read only file" : strerror(errno));
@@ -1875,6 +1941,9 @@ int             skiplen;                /* Number of bytes to skip   */
     rc = ckd_lseek (dev, dev->fd, -(CKDDASD_RECHDR_SIZE), SEEK_CUR);
     if (rc == -1)
     {
+#ifdef OPTION_SYNCIO
+        if (dev->syncio_retry) return -1;
+#endif
         /* Handle seek error condition */
         logmsg ("ckddasd: lseek error: %s\n",
                 strerror(errno));
@@ -2063,7 +2132,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     }
 
     /* Reset flags at start of CCW chain */
+#ifdef OPTION_SYNCIO
+    if (chained == 0 && !dev->syncio_retry)
+#else
     if (chained == 0)
+#endif
     {
         dev->ckdxtdef = 0;
         dev->ckdsetfm = 0;
@@ -2082,6 +2155,9 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         dev->ckdlcount = 0;
         dev->ckdtrkof = 0;
     }
+#ifdef OPTION_SYNCIO
+    else dev->syncio_retry = 0;
+#endif
 
     /* Reset index marker flag if sense or control command,
        or any write command (other search ID or search key),
@@ -4269,7 +4345,13 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
         /* Seek to the required track */
         rc = ckd_seek (dev, cyl, head, &trkhdr, unitstat);
-        if (rc < 0) break;
+        if (rc < 0)
+        {
+#ifdef OPTION_SYNCIO
+            if (dev->syncio_retry) dev->ckdlcount = 0;
+#endif
+            break;
+        }
 
         /* Set normal status */
         *unitstat = CSW_CE | CSW_DE;
@@ -4580,6 +4662,15 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* DEVICE RESERVE                                                */
     /*---------------------------------------------------------------*/
+#ifdef OPTION_SYNCIO
+        /* If synchronous I/O then retry asynchronously */
+        if (dev->syncio_active)
+        {
+            dev->syncio_retry = 1;
+            break;
+        }
+#endif
+
         /* Command reject if within the domain of a Locate Record,
            or indeed if preceded by any command at all apart from
            Suspend Multipath Reconnection */
@@ -4828,6 +4919,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
 
     } /* end switch(code) */
+
+#ifdef OPTION_SYNCIO
+    /* Return if synchronous I/O needs to be retried asynchronously */
+    if (dev->syncio_retry) return;
+#endif
 
     /* Reset the flags which ensure correct positioning for write
        commands */

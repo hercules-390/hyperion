@@ -862,17 +862,33 @@ typedef struct _DEVBLK {
         /*  control flags...                                         */
 
         unsigned int                    /* Flags                     */
-                pending:1,              /* 1=Interrupt pending       */
-                busy:1,                 /* 1=Device busy             */
+#ifdef OPTION_SYNCIO
+                nosyncio:1,             /* 1=No synchronous I/Os     */
+                syncio:1,               /* 1=Synchronous I/Os allowed*/
+#endif /*OPTION_SYNCIO*/
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
-                pcipending:1,           /* 1=PCI interrupt pending   */
                 ccwtrace:1,             /* 1=CCW trace               */
                 ccwstep:1,              /* 1=CCW single step         */
-                cdwmerge:1,             /* 1=Channel will merge data
+                cdwmerge:1;             /* 1=Channel will merge data
                                              chained write CCWs      */
-                crwpending:1;           /* 1=CRW pending             */
+        int     pending;                /* 1=Interrupt pending       */
+        int     busy;                   /* 1=Device busy             */
+        int     pcipending;             /* 1=PCI interrupt pending   */
+        int     crwpending;             /* 1=CRW pending             */
+#ifdef OPTION_SYNCIO
+        int     syncio_active;          /* 1=Synchronous I/O active  */
+        int     syncio_retry;           /* 1=Retry I/O asynchronously*/
+#endif /*OPTION_SYNCIO*/
+
+        /*  Synchronous I/O                                          */
+
+#ifdef OPTION_SYNCIO
+        U32     syncio_addr;            /* Synchronous i/o ccw addr  */
+        U64     syncios;                /* Number synchronous I/Os   */
+        U64     asyncios;               /* Number asynchronous I/Os  */
+#endif /*OPTION_SYNCIO*/
 
         /*  Device dependent fields for console                      */
 

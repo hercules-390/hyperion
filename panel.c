@@ -2402,6 +2402,29 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+#ifdef OPTION_SYNCIO
+/*********************************************************************/
+    /* syncio command - list syncio devices statistics */
+    if (strcmp(cmd,"syncio")==0)
+    {
+        U64 syncios=0, asyncios=0;
+
+        for (i = 0, dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+        {
+            if(!dev->syncio) continue;
+            i++;
+            logmsg ("%4.4X  synchronous: %12lld asynchronous: %12lld\n",
+                    dev->devnum, dev->syncios, dev->asyncios);
+            syncios += dev->syncios; asyncios += dev->asyncios;
+        } /* end for(dev) */
+        if (i == 0) { logmsg ("No synchronous I/O devices found\n"); }
+        else
+            logmsg ("TOTAL synchronous: %12lld asynchronous: %12lld  %3lld%%\n",
+                   syncios, asyncios, (syncios * 100) / (syncios + asyncios));
+        return NULL;
+    }
+#endif
+
 /*********************************************************************/
     /* Ignore just enter */
     if (cmd[0] == '\0')

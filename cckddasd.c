@@ -174,6 +174,9 @@ char           *kw, *op;                /* Argument keyword/option   */
 #endif
     if (cckd->max_dfw < 1) cckd->max_dfw = 1;
     if (cckd->max_wt < 1) cckd->max_wt = CCKD_MAX_WRITE_TIME;
+#ifdef OPTION_SYNCIO
+    if (!dev->nosyncio) dev->syncio = 1;
+#endif
 
     /* Initialize locks, conditions and attributes */
     initialize_lock (&cckd->filelock);
@@ -365,6 +368,7 @@ unsigned int    newpos=0;               /* New position              */
 off_t           oldpos;                 /* Old position              */
 int             newtrk;                 /* New track                 */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+CCKD_CACHE     *active;                 /* New active cache entry    */
 
     cckd = dev->cckd_ext;
 
@@ -392,9 +396,18 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     if (newtrk != cckd->curtrk || cckd->active == NULL)
     {
         /* read the new track */
+#ifdef OPTION_SYNCIO
+        DEVTRACE ("cckddasd: lseek trk   %d (%s)\n", newtrk,
+                  dev->syncio_active ? "synchronous" : "asynchronous");
+#else
         DEVTRACE ("cckddasd: lseek trk   %d\n", newtrk);
+#endif
         cckd->switches++;
-        cckd->active = cckd_read_trk (dev, newtrk, 0);
+        active = cckd_read_trk (dev, newtrk, 0);
+#ifdef OPTION_SYNCIO
+        if (dev->syncio_retry) return -1;
+#endif
+        cckd->active = active;
         cckd->curtrk = newtrk;
         cckd->trkpos = newtrk * dev->ckdtrksz + CKDDASD_DEVHDR_SIZE;
     }
@@ -502,7 +515,19 @@ BYTE           *buf,*buf2;              /* Buffers                   */
 
         /* if read is in progress then wait for it to finish */
         if (cckd->cache[fnd].reading)
-        {   DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d waiting for read\n",
+        {
+#ifdef OPTION_SYNCIO
+            /* Return with the `syio_retry' bit on if synchronous I/O */
+            if (dev->syncio_active)
+            {
+                DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d syncio reading\n",
+                           ra, lru, trk);
+                dev->syncio_retry = 1;
+                release_lock (&cckd->cachelock);
+                return NULL;
+            }
+#endif
+            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d waiting for read\n",
                   ra, fnd, trk);
             cckd->cache[fnd].waiting = 1;
             wait_condition (&cckd->rtcond, &cckd->cachelock);
@@ -522,6 +547,19 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         release_lock (&cckd->cachelock);
         return &cckd->cache[fnd];
     }
+
+#ifdef OPTION_SYNCIO
+    /* If not readahead and synchronous I/O then return with
+       the `syio_retry' bit set */
+    if (!ra && dev->syncio_active)
+    {
+        DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d syncio not found\n",
+                   ra, fnd, trk);
+        dev->syncio_retry = 1;
+        release_lock (&cckd->cachelock);
+        return NULL;
+    }
+#endif
 
     /* Mark the entry active if not readahead */
     if (ra == 0)
