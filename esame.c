@@ -293,7 +293,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     S(inst, regs, b2, effective_addr2);
 
     /* Determine the address of the parameter list */
-    pl_addr = !regs->execflag ? regs->psw.IA : (regs->ET + 4);
+    pl_addr = !regs->execflag ? (regs->psw.IA & ADDRESS_MAXWRAP(regs)) : (regs->ET + 4);
 
     /* Fetch flags from the instruction address space */
     main = MADDR (pl_addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
@@ -446,11 +446,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
     }
 
-    SET_IC_ECMODE_MASK(regs);
-
     /* Update access register b2 */
     regs->AR(b2) = ar;
-    INVALIDATE_AEA_AR(b2, regs);
 
     /* Update general register b2 */
 #if defined(FEATURE_ESAME)
@@ -466,11 +463,14 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
+    SET_IC_ECMODE_MASK(regs);
+    SET_AEA_MODE(regs);
+
 #if defined(FEATURE_PER)
     if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -1351,12 +1351,6 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     /* Load registers from the stack entry */
     ARCH_DEP(unstack_registers) (1, lsea, r1, r2, regs);
 
-    if (r1 == r2)
-        INVALIDATE_AEA_AR(r1, regs);
-    else
-        INVALIDATE_AEA_ARALL(regs);
-
-
 } /* end DEF_INST(extract_stacked_registers_long) */
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -1413,9 +1407,6 @@ int     r1, unused;                     /* Value of R field          */
 
     regs->GR_LHH(r1) = regs->CR_LHH(8);
     regs->CR_LHH(8) = regs->GR_LHL(r1);
-
-    INVALIDATE_AIA(regs);
-    INVALIDATE_AEA_ALL(regs);
 
 } /* end DEF_INST(extract_and_set_extended_authority) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -1799,11 +1790,11 @@ U32     i2;                             /* 32-bit operand values     */
 
 #if defined(FEATURE_ESAME)
     if(regs->psw.amode64)
-        regs->GR_G(r1) = regs->psw.IA;
+        regs->GR_G(r1) = regs->psw.IA & ADDRESS_MAXWRAP(regs);
     else
 #endif /*defined(FEATURE_ESAME)*/
     if ( regs->psw.amode )
-        regs->GR_L(r1) = 0x80000000 | regs->psw.IA;
+        regs->GR_L(r1) = 0x80000000 | (regs->psw.IA & ADDRESS_MAXWRAP(regs));
     else
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
@@ -3859,9 +3850,8 @@ DEF_INST(load_control_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, d;                           /* Integer work areas        */
-BYTE    rwork[128];                     /* Register work areas       */
-int     inval = 0;                      /* Invalidation flag         */
+int     len;                            /* Length to load            */
+U32     updated = 0;                    /* Updated control regs      */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -3872,11 +3862,11 @@ int     inval = 0;                      /* Invalidation flag         */
 #if defined(_FEATURE_ZSIE)
     if ( SIE_MODE(regs) )
     {
+    int i;
     U32 n;
         for(i = r1; ; )
         {
             n = 0x8000 >> i;
-//FIXME: can we use the test_bit function here ?? (see machdep.h)
             if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & ((i < 8) ? n >> 8 : n))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
@@ -3886,64 +3876,31 @@ int     inval = 0;                      /* Invalidation flag         */
     }
 #endif /*defined(_FEATURE_ZSIE)*/
 
-    /* Calculate the number of bytes to be loaded */
-    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 8;
+    /* Validate operand address */
+    len = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 8;
+    ARCH_DEP(validate_operand)(effective_addr2, b2, len-1, ACCTYPE_READ, regs);
 
-    /* Fetch new control register contents from operand address */
-    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+    do {
 
-    /* Load control registers from work area */
-    for ( i = r1, d = 0; ; )
-    {
-        /* Check for invalidation */
-        if (!inval) {
-            switch (i) {
-            case  0:
-                if ((fetch_dw(rwork + d) & CR0_TRAN_FMT) != (regs->CR(0) & CR0_TRAN_FMT))
-                    inval = 1;
-                break;
-            case  1:
-            case  2:
-            case  3:
-            case  4:
-            case  5:
-            case  7:
-            case 13:
-                if (fetch_dw(rwork + d) != regs->CR(i))
-                    inval = 1;
-                break;
-            case  8:
-                if ((fetch_dw(rwork + d) & CR8_EAX) != (regs->CR(8) & CR8_EAX))
-                    inval = 1;
-                break;
-            case 14:
-                if ((fetch_dw(rwork + d) & (CR14_ASN_TRAN|CR14_AFTO))
-                  != (regs->CR(14) & (CR14_ASN_TRAN|CR14_AFTO)))
-                    inval = 1;
-                break;
-            default:
-                break;
-            }
-        }
+        regs->CR_G(r1) = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+        set_bit (4, r1, &updated);
 
-        /* Load one control register from work area */
-        FETCH_DW(regs->CR_G(i), rwork + d); d += 8;
+        if ( r1 == r3 ) break;
 
-        /* Instruction is complete when r3 register is done */
-        if ( i == r3 ) break;
+        r1++; r1 &= 15;
 
-        /* Update register number, wrapping from 15 to 0 */
-        i++; i &= 15;
-    }
+        effective_addr2 += 8;
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
 
-    /* Conditionally invalidate the AIA and AEA buffers */
-    if (inval)
-    {
-        INVALIDATE_AIA(regs);
-        INVALIDATE_AEA_ALL(regs);
-    }
+    } while (1);
 
     SET_IC_MASK(regs);
+    if (updated & (BIT(1) | BIT(7) | BIT(13)))
+        SET_AEA_COMMON(regs);
+    if (test_bit(4, regs->aea_ar[16], &updated))
+        INVALIDATE_AIA(regs);
+    if (test_bit(4, 9, &updated) && EN_IC_PER_SA(regs))
+        ARCH_DEP(invalidate_tlb)(regs,~ACC_WRITE);
 
     RETURN_INTCHECK(regs);
 
@@ -4106,7 +4063,8 @@ DEF_INST(test_addressing_mode)
 /*-------------------------------------------------------------------*/
 DEF_INST(set_addressing_mode_24)
 {
-VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
+VADR    ia = regs->psw.IA & ADDRESS_MAXWRAP(regs);
+                                        /* Unupdated instruction addr*/
 
     E(inst, regs);
 
@@ -4119,7 +4077,7 @@ VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
-        ARCH_DEP(trace_ms) (0, regs->psw.IA, regs);
+        ARCH_DEP(trace_ms) (0, regs->psw.IA & ADDRESS_MAXWRAP(regs), regs);
 #endif /*defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_ESAME)
@@ -4138,7 +4096,8 @@ VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 /*-------------------------------------------------------------------*/
 DEF_INST(set_addressing_mode_31)
 {
-VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
+VADR    ia = regs->psw.IA & ADDRESS_MAXWRAP(regs);
+                                        /* Unupdated instruction addr*/
 
     E(inst, regs);
 
@@ -4151,7 +4110,7 @@ VADR    ia = regs->psw.IA;              /* Unupdated instruction addr*/
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && regs->psw.amode64)
-        ARCH_DEP(trace_ms) (0, regs->psw.IA, regs);
+        ARCH_DEP(trace_ms) (0, regs->psw.IA & ADDRESS_MAXWRAP(regs), regs);
 #endif /*defined(FEATURE_ESAME)*/
 
 #if defined(FEATURE_ESAME)
@@ -4177,7 +4136,7 @@ DEF_INST(set_addressing_mode_64)
 #if defined(FEATURE_ESAME)
     /* Add a mode trace entry when switching in/out of 64 bit mode */
     if((regs->CR(12) & CR12_MTRACE) && !regs->psw.amode64)
-        ARCH_DEP(trace_ms) (0, regs->psw.IA, regs);
+        ARCH_DEP(trace_ms) (0, regs->psw.IA & ADDRESS_MAXWRAP(regs), regs);
 #endif /*defined(FEATURE_ESAME)*/
 
     regs->psw.amode = regs->psw.amode64 = 1;
@@ -5986,6 +5945,7 @@ BYTE    rwork[64];                      /* Register work area        */
     {
         /* Load one access register from work area */
         FETCH_FW(regs->AR(n), rwork + d); d += 4;
+        SET_AEA_AR(regs, n);
 
         /* Instruction is complete when r3 register is done */
         if ( n == r3 ) break;
@@ -5993,11 +5953,6 @@ BYTE    rwork[64];                      /* Register work area        */
         /* Update register number, wrapping from 15 to 0 */
         n++; n &= 15;
     }
-
-    if (r1 == r3)
-        INVALIDATE_AEA_AR(r1, regs);
-    else
-        INVALIDATE_AEA_ARALL(regs);
 
 } /* end DEF_INST(load_access_multiple_y) */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/

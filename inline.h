@@ -25,6 +25,11 @@ _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
                                             REGS *regs, int acctype);
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
 _DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
+_DAT_C_STATIC void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask);
+#if ARCH_MODE == ARCH_390 && defined(_900)
+_DAT_C_STATIC void z900_invalidate_tlb (REGS *regs, BYTE mask);
+#endif
+_DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main);
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
                            int r2, REGS *regs);
 _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,

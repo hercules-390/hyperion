@@ -55,7 +55,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    )
                  );
         STORE_FW ( addr + 4,
-                   ( regs->psw.IA | (regs->psw.amode ? 0x80000000 : 0) )
+                   ( (regs->psw.IA & ADDRESS_MAXWRAP(regs)) | (regs->psw.amode ? 0x80000000 : 0) )
                  );
 #endif /*!defined(FEATURE_ESAME)*/
 #if defined(FEATURE_BCMODE)
@@ -71,7 +71,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                      | (regs->psw.cc << 4)
                      | regs->psw.progmask
                      ) << 24
-                   ) | regs->psw.IA
+                   ) | (regs->psw.IA & ADDRESS_MAXWRAP(regs))
                  );
     }
 #elif defined(FEATURE_ESAME)
@@ -92,7 +92,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | regs->psw.zeroword
                    )
                  );
-        STORE_DW ( addr + 8, regs->psw.IA );
+        STORE_DW ( addr + 8, (regs->psw.IA & ADDRESS_MAXWRAP(regs)) );
 #endif /*defined(FEATURE_ESAME)*/
 } /* end function ARCH_DEP(store_psw) */
 
@@ -102,12 +102,6 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 {
-int     permode = PER_MODE(regs);
-int     realmode = REAL_MODE(&regs->psw);
-int     space = SPACE_BIT(&regs->psw);
-int     homemode = HOME_SPACE_MODE(&regs->psw);
-BYTE    pkey = regs->psw.pkey;
-
     regs->psw.sysmask = addr[0];
     regs->psw.pkey    = (addr[1] & 0xF0);
     regs->psw.states  = (addr[1] & 0x0F);
@@ -238,20 +232,7 @@ BYTE    pkey = regs->psw.pkey;
         display_psw (regs);
     }
 
-    /* Perform AIA/AEA invalidations */
-    if (realmode != REAL_MODE(&regs->psw)
-     || permode  != PER_MODE(regs)
-     || homemode != HOME_SPACE_MODE(&regs->psw)
-     ||(pkey     != regs->psw.pkey && regs->psw.pkey != 0))
-        INVALIDATE_AIA(regs);
-
-    if ( (realmode  != REAL_MODE(&regs->psw)) ||
-         (space     != SPACE_BIT(&regs->psw))
-#if defined (FEATURE_PER)
-      || PER_MODE(regs)
-#endif /* defined (FEATURE_PER) */
-       )
-        INVALIDATE_AEA_ALL(regs);
+    TEST_SET_AEA_MODE(regs);
 
     return 0;
 } /* end function ARCH_DEP(load_psw) */
@@ -343,7 +324,7 @@ static char *pgmintname[] = {
        to the caller */
     if(regs->ghostregs)
         longjmp(regs->progjmp, pcode);
-   
+
     /* program_interrupt() may be called with a shadow copy of the
        regs structure, realregs is the pointer to the real structure
        which must be used when loading/storing the psw, or backing up
@@ -355,6 +336,10 @@ static char *pgmintname[] = {
 #else /*!defined(_FEATURE_SIE)*/
     realregs = sysblk.regs[regs->cpuad];
 #endif /*!defined(_FEATURE_SIE)*/
+
+
+    /* Ensure real instruction address is properly wrapped */   
+    realregs->psw.IA &= ADDRESS_MAXWRAP(regs);
 
     /* Set `execflag' to 0 in case EXecuted instruction program-checked */
     realregs->execflag = 0;
@@ -602,6 +587,11 @@ static char *pgmintname[] = {
     }
 #endif /*defined(_FEATURE_SIE)*/
 
+    /* If EX and target instruction is 4 bytes and operation exception
+       then add 4 to psw.IA because EX has subtracted 4 */
+    if (realregs->execflag && ILC(realregs->exinst[0]) == 4
+     && (pcode & 0x7F) == 0x01)
+        realregs->psw.IA += 4;
 
 #if defined(_FEATURE_PER)
     /* Handle PER or concurrent PER event */
@@ -1135,14 +1125,6 @@ int cpu_init (int cpu, REGS *regs, REGS *hostregs)
     regs->vf->online = (cpu < sysblk.numvec);
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 
-    regs->tlb = calloc (sizeof(TLBE), TLBN);
-    if (!regs->tlb)
-    {
-        logmsg (_("HHCCP078E CPU%4.4X: calloc failed for%s tlb: %s\n"),
-                    cpu, regs->hostregs ? " sie" : "", strerror(errno));
-            return -1;
-    }
-
     initial_cpu_reset(regs);
 
 #if defined(_FEATURE_SIE)
@@ -1162,6 +1144,15 @@ int cpu_init (int cpu, REGS *regs, REGS *hostregs)
         set_bit(4, cpu, &sysblk.config_mask);
         set_bit(4, cpu, &sysblk.started_mask);
     }
+
+    /* Initialize accelerated lookup fields */
+    regs->CR_G(16) = 0xFFFFFFFFFFFFFFFFULL;
+    memset(regs->aea_ar,16,16);
+    regs->aea_ar[USE_INST_SPACE]      = 16;
+    regs->aea_ar[USE_REAL_ADDR]       = 16;
+    regs->aea_ar[USE_PRIMARY_SPACE]   =  1;
+    regs->aea_ar[USE_SECONDARY_SPACE] =  7;
+    regs->aea_ar[USE_HOME_SPACE]      = 13;
 
     regs->configured = 1;
 
@@ -1184,9 +1175,6 @@ void *cpu_uninit (int cpu, REGS *regs)
         cpu_uninit (cpu, regs->guestregs);
         free (regs->guestregs);
     }
-
-    if (regs->tlb)
-        free (regs->tlb);
 
     destroy_condition(&regs->intcond);
 
@@ -1235,21 +1223,9 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     /* Set tracing bit */
     regs->tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
 
-    /* Perform invalidations */
+    /* Perform invalidation */
     if (regs->invalidate)
-    {
-        if (regs->INVABS == 1)
-        {
-            INVALIDATE_AIA(regs);
-            INVALIDATE_AEA_ALL(regs);
-        }
-        else
-        {
-            INVALIDATE_AIA_ABS(regs->INVABS, regs);
-            INVALIDATE_AEA_ABS(regs->INVABS, regs);
-        }
-        regs->invalidate = 0;
-    }
+        ARCH_DEP(invalidate_tlbe)(regs, regs->invalidate_main);
 
     /* Take interrupts if CPU is not stopped */
     if (regs->cpustate == CPUSTATE_STARTED)
@@ -1368,8 +1344,6 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         HDC(debug_cpu_state, regs);
 
         /* Purge the lookaside buffers */
-        INVALIDATE_AIA(regs);
-        INVALIDATE_AEA_ALL(regs);
         ARCH_DEP(purge_tlb) (regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
         ARCH_DEP(purge_alb) (regs);
@@ -1386,9 +1360,6 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     /* Test for wait state */
     if (WAITSTATE(&regs->psw))
     {
-        INVALIDATE_AIA(regs);
-        INVALIDATE_AEA_ALL(regs);
-
         /* Test for disabled wait PSW and issue message */
         if( IS_IC_DISABLED_WAIT_PSW(regs) )
         {
@@ -1430,12 +1401,12 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
      /* Test for breakpoint */
     shouldbreak = sysblk.instbreak
                 ? sysblk.breakaddr[0] <= sysblk.breakaddr[1]
-                  ?      sysblk.breakaddr[0] <= regs->psw.IA
-                      && regs->psw.IA <= sysblk.breakaddr[1]
+                  ?      sysblk.breakaddr[0] <= (regs->psw.IA & ADDRESS_MAXWRAP(regs))
+                      && (regs->psw.IA & ADDRESS_MAXWRAP(regs)) <= sysblk.breakaddr[1]
                     ? 1
                     : 0
-                  :      sysblk.breakaddr[1] <= regs->psw.IA
-                      && regs->psw.IA <= sysblk.breakaddr[0]
+                  :      sysblk.breakaddr[1] <= (regs->psw.IA & ADDRESS_MAXWRAP(regs))
+                      && (regs->psw.IA & ADDRESS_MAXWRAP(regs)) <= sysblk.breakaddr[0]
                     ? 1
                     : 0
                 : 0;
@@ -1534,10 +1505,6 @@ zz_func opcode_table[256];
         }
         return oldregs;
     }
-
-    /* Invalidate AIA and AEA */
-    INVALIDATE_AIA(&regs);
-    INVALIDATE_AEA_ALL(&regs);
 
     /* Establish longjmp destination for program check */
     setjmp(regs.progjmp);

@@ -191,9 +191,6 @@ BYTE    chanstat;                       /* IPL device channel status */
         return -1;
     }
 
-    INVALIDATE_AIA(regs);
-    INVALIDATE_AEA_ALL(regs);
-
     /* Set the CPU into the started state */
     regs->cpustate = CPUSTATE_STARTED;
 
@@ -339,9 +336,6 @@ U32     fileaddr;
         return -1;
     }
 
-    INVALIDATE_AIA(regs);
-    INVALIDATE_AEA_ALL(regs);
-
     /* Set the CPU into the started state */
     regs->cpustate = CPUSTATE_STARTED;
 
@@ -385,11 +379,8 @@ int             i;                      /* Array subscript           */
     regs->MC_G = 0;
 
     /* Purge the lookaside buffers */
-    if (regs->tlb)
-    {
-        regs->tlbID = 255;
-        ARCH_DEP(purge_tlb) (regs);
-    }
+    ARCH_DEP(purge_tlb) (regs);
+
 #if defined(FEATURE_ACCESS_REGISTERS)
     ARCH_DEP(purge_alb) (regs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/

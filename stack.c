@@ -308,8 +308,7 @@ int  i;
     regs->psw.IA = trap_ia;
     /* set PSW to primary space */
     regs->psw.asc = 0;
-    INVALIDATE_AIA(regs);
-    INVALIDATE_AEA_ALL(regs);
+    SET_AEA_MODE(regs);
 }
 
 /*-------------------------------------------------------------------*/
@@ -1358,6 +1357,7 @@ int     i;                              /* Array subscript           */
             || (r1 > r2 && (i >= r1 || i <= r2)))
         {
             FETCH_FW(regs->AR(i),regs->mainstor + abs);
+            SET_AEA_AR(regs, i);
 
           #ifdef STACK_DEBUG
             logmsg (_("stack: AR%d=" F_AREG " loaded from V:" F_VADR

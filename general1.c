@@ -393,7 +393,7 @@ VADR    newia;                          /* New instruction address   */
         ( regs->psw.amode )
         ? 0x80000000 | regs->psw.IA_L
         : (regs->psw.ilc << 29)      | (regs->psw.cc << 28)
-        | (regs->psw.progmask << 24) | regs->psw.IA_L;
+        | (regs->psw.progmask << 24) | (regs->psw.IA_L & ADDRESS_MAXWRAP(regs));
 
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
@@ -403,7 +403,7 @@ VADR    newia;                          /* New instruction address   */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -433,7 +433,7 @@ VADR    effective_addr2;                /* Effective address         */
         ( regs->psw.amode )
           ? 0x80000000 | regs->psw.IA_L
           : (regs->psw.ilc << 29)      | (regs->psw.cc << 28)
-          | (regs->psw.progmask << 24) | regs->psw.IA_L;
+          | (regs->psw.progmask << 24) | (regs->psw.IA_L & ADDRESS_MAXWRAP(regs));
 
     regs->psw.IA = effective_addr2;
 
@@ -441,7 +441,7 @@ VADR    effective_addr2;                /* Effective address         */
     if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -488,7 +488,7 @@ VADR    newia;                          /* New instruction address   */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -714,12 +714,12 @@ int     r1, r2;                         /* Values of R fields        */
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if (((0x08 >> regs->psw.cc) & r1) && r2 != 0)
     {
-        regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+        regs->psw.IA = regs->GR(r2);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -754,7 +754,7 @@ VADR    effective_addr2;                /* Effective address         */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -780,12 +780,12 @@ VADR    newia;                          /* New instruction address   */
     if ( --(regs->GR_L(r1)) && r2 != 0 )
     {
         /* Compute the branch address from the R2 operand */
-        regs->psw.IA = newia & ADDRESS_MAXWRAP(regs);
+        regs->psw.IA = newia;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -815,7 +815,7 @@ VADR    effective_addr2;                /* Effective address         */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -854,7 +854,7 @@ S32     i, j;                           /* Integer work areas        */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -893,7 +893,7 @@ S32     i, j;                           /* Integer work areas        */
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -920,12 +920,12 @@ U16     i2;                             /* 16-bit operand values     */
     {
         /* Calculate the relative branch address */
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
-                                  + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
+                                  + 2*(S16)i2);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -960,12 +960,12 @@ U16     i2;                             /* 16-bit operand values     */
 
     /* Calculate the relative branch address */
     regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
-                                  + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
+                                  + 2*(S16)i2);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -990,12 +990,12 @@ U16     i2;                             /* 16-bit operand values     */
     if ( --(regs->GR_L(r1)) )
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
-                                  + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
+                                  + 2*(S16)i2);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -1030,12 +1030,12 @@ S32     i,j;                            /* Integer workareas         */
     if ( (S32)regs->GR_L(r1) > j )
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
-                                  + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
+                                  + 2*(S16)i2);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -1071,12 +1071,12 @@ S32     i,j;                            /* Integer workareas         */
     if ( (S32)regs->GR_L(r1) <= j )
     {
         regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
-                                  + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
+                                  + 2*(S16)i2);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA&ADDRESS_MAXWRAP(regs),regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -2559,8 +2559,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Copy R2 access register to R1 access register */
     regs->AR(r1) = regs->AR(r2);
-
-    INVALIDATE_AEA_AR(r1, regs);
+    SET_AEA_AR(regs, r1);
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
@@ -2857,8 +2856,12 @@ BYTE   *ip;                             /* -> executed instruction   */
 
     /* Execute the target instruction.
      * This is the *only* place where `execflag' is set to 1.
+     * If the target instruction is a 4 byte instruction then
+     * backup psw.IA by 4 bytes.  This way 4 byte instruction
+     * decoders do not have to check `execflag' to update the psw
      */
     regs->execflag = 1;
+    if (ILC(regs->exinst[0]) == 4) regs->psw.IA -= 4;
     EXECUTE_INSTRUCTION (regs->exinst, regs, ARCH_DEP(opcode_table));
     regs->execflag = 0;
 }
@@ -3037,6 +3040,7 @@ BYTE    rwork[64];                      /* Register work area        */
     {
         /* Load one access register from work area */
         FETCH_FW(regs->AR(n), rwork + d); d += 4;
+        SET_AEA_AR(regs, n);
 
         /* Instruction is complete when r3 register is done */
         if ( n == r3 ) break;
@@ -3044,11 +3048,6 @@ BYTE    rwork[64];                      /* Register work area        */
         /* Update register number, wrapping from 15 to 0 */
         n++; n &= 15;
     }
-
-    if (r1 == r3)
-        INVALIDATE_AEA_AR(r1, regs);
-    else
-        INVALIDATE_AEA_ARALL(regs);
 
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -3094,8 +3093,7 @@ VADR    effective_addr2;                /* Effective address         */
         regs->AR(r1) = ALET_HOME;
     else /* ACCESS_REGISTER_MODE(&(regs->psw)) */
         regs->AR(r1) = (b2 == 0) ? 0 : regs->AR(b2);
-
-    INVALIDATE_AEA_AR(r1, regs);
+    SET_AEA_AR(regs, r1);
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
@@ -3484,7 +3482,6 @@ BYTE    pad;                            /* Padding byte              */
          && (OPEN_IC_EXTPENDING(regs) || OPEN_IC_IOPENDING(regs)) )
         {
             regs->psw.IA -= regs->psw.ilc;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
             break;
         }
 

@@ -543,8 +543,7 @@ int     r1, r2;                         /* Values of R fields        */
 
     /* Copy R2 general register to R1 access register */
     regs->AR(r1) = regs->GR_L(r2);
-
-    INVALIDATE_AEA_AR(r1, regs);
+    SET_AEA_AR(regs, r1);
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 

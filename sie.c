@@ -320,9 +320,6 @@ int     icode = 0;                      /* Interception code         */
 
     release_lock(&sysblk.intlock);
 
-    INVALIDATE_AIA(GUESTREGS);
-    INVALIDATE_AEA_ALL(GUESTREGS);
-
     /* Set host program interrupt routine */
     GUESTREGS->sie_hostpi = (SIEFN)&ARCH_DEP(program_interrupt);
 
@@ -861,9 +858,11 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
     SIE_PERFMON(SIE_PERF_RUNSIE);
 
+    SET_IC_MASK(GUESTREGS);
+    SET_AEA_MODE(GUESTREGS);
+    SET_AEA_COMMON(GUESTREGS);
     INVALIDATE_AIA(GUESTREGS);
 
-    SET_IC_MASK(GUESTREGS);
 #if defined(_FEATURE_PER)
     /* Reset any PER pending indication */
     OFF_IC_PER(GUESTREGS);
@@ -938,8 +937,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                         }
 
                         INVALIDATE_AIA(GUESTREGS);
-
-                        INVALIDATE_AEA_ALL(GUESTREGS);
+                        SET_AEA_MODE(GUESTREGS);
 
                         {
                         struct timespec waittime;

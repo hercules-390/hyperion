@@ -485,12 +485,7 @@ ext_auth_excp:
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
 {
-    INVALIDATE_AEA_ARALL(regs);
-  #if defined(_FEATURE_SIE)
-    if(regs->guestregs) {
-        INVALIDATE_AEA_ARALL(regs->guestregs);
-    }
-  #endif /*defined(_FEATURE_SIE)*/
+
 } /* end function purge_alb */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
@@ -719,6 +714,7 @@ _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
 RADR    sto = 0;                        /* Segment table origin      */
 RADR    pto = 0;                        /* Page table origin         */
 int     cc;                             /* Condition code            */
+int     tlbix = -1;                     /* TLB entry index           */
 
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
 /*-----------------------------------*/
@@ -728,7 +724,6 @@ U32     stl;                            /* Segment table length      */
 RADR    ste;                            /* Segment table entry       */
 U16     pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
-TLBE   *tlbp;                           /* -> TLB entry              */
 
     regs->dat.private = regs->dat.protect = 0;
 
@@ -748,25 +743,19 @@ TLBE   *tlbp;                           /* -> TLB entry              */
 
     /* Only a single entry in the TLB will be looked up, namely the
        entry indexed by bits 12-19 of the virtual address */
-    if (acctype == ACCTYPE_LRA)
-        tlbp = NULL;
-    else
-        tlbp = &(regs->tlb[(vaddr >> 12) & 0x3FF]);
+    if (acctype != ACCTYPE_LRA)
+        tlbix = TLBIX(vaddr);
 
-    if (tlbp != NULL
-        && ((((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) &&
-        (vaddr & 0x00FFF000) == tlbp->TLB_VADDR) ||
-        (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_2K) &&
-        (vaddr & 0x00FFF800) == tlbp->TLB_VADDR))
-        && (tlbp->valid == regs->tlbID)
-        && (tlbp->common || regs->dat.asd == tlbp->TLB_STD)
-        && !(tlbp->common && regs->dat.private))
+    if (tlbix >= 0
+        && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
+        && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
+        && !(regs->tlb.common[tlbix] && regs->dat.private))
     {
-        pte = tlbp->TLB_PTE;
+        pte = regs->tlb.TLB_PTE(tlbix);
 
         #ifdef FEATURE_SEGMENT_PROTECTION
         /* Set the protection indicator if segment is protected */
-        if (tlbp->protect)
+        if (regs->tlb.protect[tlbix])
             regs->dat.protect = 1;
         #endif /*FEATURE_SEGMENT_PROTECTION*/
     }
@@ -853,16 +842,27 @@ TLBE   *tlbp;                           /* -> TLB entry              */
         #endif /*FEATURE_SEGMENT_PROTECTION*/
 
         /* Place the translated address in the TLB */
-        if (tlbp != NULL)
+        if (tlbix >= 0)
         {
-            tlbp->TLB_STD = regs->dat.asd;
-            tlbp->TLB_VADDR =
-                ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
-                vaddr & 0x00FFF000 : vaddr & 0x00FFF800;
-            tlbp->TLB_PTE = pte;
-            tlbp->common = (ste & SEGTAB_370_CMN) ? 1 : 0;
-            tlbp->protect = (regs->dat.protect != 0);
-            tlbp->valid = regs->tlbID;
+            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+            regs->tlb.TLB_PTE(tlbix)   = pte;
+            regs->tlb.common[tlbix]    = (ste & SEGTAB_370_CMN) ? 1 : 0;
+            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
+            regs->tlb.acc[tlbix]       = 0;
+            regs->tlb.main[tlbix]       = NULL;
+
+            /* Set adjacent TLB entry if 4K page sizes */
+            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+            {
+                regs->tlb.TLB_ASD(tlbix^1)   = regs->tlb.TLB_ASD(tlbix);
+                regs->tlb.TLB_VADDR(tlbix^1) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+                regs->tlb.TLB_PTE(tlbix^1)   = regs->tlb.TLB_PTE(tlbix);
+                regs->tlb.common[tlbix^1]    = regs->tlb.common[tlbix];
+                regs->tlb.protect[tlbix^1]   = regs->tlb.protect[tlbix];
+                regs->tlb.acc[tlbix^1]       = 0;
+                regs->tlb.main[tlbix^1]      = NULL;
+            }
         }
     } /* end if(!TLB) */
 
@@ -885,7 +885,6 @@ U32     stl;                            /* Segment table length      */
 RADR    ste;                            /* Segment table entry       */
 RADR    pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
-TLBE   *tlbp;                           /* -> TLB entry              */
 
     regs->dat.private = regs->dat.protect = 0;
 
@@ -905,19 +904,17 @@ TLBE   *tlbp;                           /* -> TLB entry              */
 
     /* Only a single entry in the TLB will be looked up, namely the
        entry indexed by bits 12-19 of the virtual address */
-    if (acctype == ACCTYPE_LRA
-       || acctype == ACCTYPE_PTE)
-        tlbp = NULL;
-    else
-        tlbp = &(regs->tlb[(vaddr >> 12) & 0x3FF]);
+    if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE)
+        tlbix = TLBIX(vaddr);
 
-    if (tlbp != NULL
-        && (vaddr & 0x7FFFF000) == tlbp->TLB_VADDR
-        && (tlbp->valid == regs->tlbID)
-        && (tlbp->common || regs->dat.asd == tlbp->TLB_STD)
-        && !(tlbp->common && regs->dat.private))
+    if (tlbix >= 0
+        && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
+        && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
+        && !(regs->tlb.common[tlbix] && regs->dat.private))
     {
-        pte = tlbp->TLB_PTE;
+        pte = regs->tlb.TLB_PTE(tlbix);
+        if (regs->tlb.protect[tlbix])
+            regs->dat.protect = 1;
     }
     else
     {
@@ -984,21 +981,23 @@ TLBE   *tlbp;                           /* -> TLB entry              */
         if (pte & PAGETAB_RESV)
             goto tran_spec_excp;
 
+        /* Set the protection indicator if page protection is active */
+        if (pte & PAGETAB_PROT)
+            regs->dat.protect = 1;
+
         /* [3.11.4.2] Place the translated address in the TLB */
-        if (tlbp != NULL)
+        if (tlbix >= 0)
         {
-            tlbp->TLB_STD = regs->dat.asd;
-            tlbp->TLB_VADDR = vaddr & 0x7FFFF000;
-            tlbp->TLB_PTE = pte;
-            tlbp->common = (ste & SEGTAB_COMMON) ? 1 : 0;
-            tlbp->valid = regs->tlbID;
+            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+            regs->tlb.TLB_PTE(tlbix)   = pte;
+            regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
+            regs->tlb.acc[tlbix]       = 0;
+            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
+            regs->tlb.main[tlbix]       = NULL;
         }
 
     } /* end if(!TLB) */
-
-    /* Set the protection indicator if page protection is active */
-    if (pte & PAGETAB_PROT)
-        regs->dat.protect = 1;
 
     if(acctype != ACCTYPE_PTE)
     /* [3.11.3.5] Combine the page frame real address with the byte
@@ -1026,7 +1025,6 @@ U16     rfx, rsx, rtx;                  /* Region first/second/third
                                            index + 3 low-order zeros */
 U16     sx, px;                         /* Segment and page index,
                                            + 3 low-order zero bits   */
-TLBE   *tlbp;                           /* -> TLB entry              */
 
     regs->dat.private = regs->dat.protect = 0;
 
@@ -1044,23 +1042,19 @@ TLBE   *tlbp;                           /* -> TLB entry              */
 
     /* Only a single entry in the TLB will be looked up, namely the
        entry indexed by bits 12-19 of the virtual address */
-    if (acctype == ACCTYPE_LRA
-       || acctype == ACCTYPE_PTE)
-        tlbp = NULL;
-    else
-        tlbp = &(regs->tlb[(vaddr >> 12) & 0x3FF]);
+    if (acctype != ACCTYPE_LRA && acctype != ACCTYPE_PTE)
+        tlbix = TLBIX(vaddr);
 
-#if 1
-    if (tlbp != NULL
-        && (vaddr & 0xFFFFFFFFFFFFF000ULL) == tlbp->TLB_VADDR
-        && (tlbp->valid == regs->tlbID)
-        && (tlbp->common || regs->dat.asd == tlbp->TLB_STD)
-        && !(tlbp->common && regs->dat.private))
+    if (tlbix >= 0
+        && ((vaddr & TLBID_PAGEMASK) | regs->tlbID) == regs->tlb.TLB_VADDR(tlbix)
+        && (regs->tlb.common[tlbix] || regs->dat.asd == regs->tlb.TLB_ASD(tlbix))
+        && !(regs->tlb.common[tlbix] && regs->dat.private))
     {
-        pte = tlbp->TLB_PTE;
+        pte = regs->tlb.TLB_PTE(tlbix);
+        if (regs->tlb.protect[tlbix])
+            regs->dat.protect = 1;
     }
     else
-#endif
     {
         /* If ASCE indicates a real-space then real addr = virtual addr */
         if (regs->dat.asd & ASCE_R)
@@ -1315,22 +1309,24 @@ TLBE   *tlbp;                           /* -> TLB entry              */
 
         } /* end else(ASCE_R) */
 
+        /* Set protection indicator if page protection is indicated
+           in either the segment table or the page table */
+        if ((ste & ZSEGTAB_P) || (pte & ZPGETAB_P))
+            regs->dat.protect = 1;
+
         /* [3.11.4.2] Place the translated address in the TLB */
-        if (tlbp != NULL)
+        if (tlbix >= 0)
         {
-            tlbp->TLB_STD = regs->dat.asd;
-            tlbp->TLB_VADDR = vaddr & 0xFFFFFFFFFFFFF000ULL;
-            tlbp->TLB_PTE = pte;
-            tlbp->common = (ste & SEGTAB_COMMON) ? 1 : 0;
-            tlbp->valid = regs->tlbID;
+            regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
+            regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
+            regs->tlb.TLB_PTE(tlbix)   = pte;
+            regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
+            regs->tlb.protect[tlbix]   = (regs->dat.protect != 0);
+            regs->tlb.acc[tlbix]       = 0;
+            regs->tlb.main[tlbix]      = NULL;
         }
 
-    } /* end if(!tlbp) */
-
-    /* Set protection indicator if page protection is indicated
-       in either the segment table or the page table */
-    if ((ste & ZSEGTAB_P) || (pte & ZPGETAB_P))
-        regs->dat.protect = 1;
+    }
 
     if(acctype != ACCTYPE_PTE)
         /* Combine the page frame real address with the byte index
@@ -1489,26 +1485,23 @@ tran_excp_addr:
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
 {
-    regs->tlbID = ++regs->tlbID & 0xFFFF;
-    if (!regs->tlbID)
+    INVALIDATE_AIA(regs);
+    if (((++regs->tlbID) & TLBID_BYTEMASK) == 0)
     {
-        memset (regs->tlb, 0, sizeof(regs->tlb));
+        memset (&regs->tlb.vaddr, 0, TLBN * sizeof(DW));
         regs->tlbID = 1;
     }
-    INVALIDATE_AIA(regs);
-    INVALIDATE_AEA_ALL(regs);
 #if defined(_FEATURE_SIE)
     /* Also clear the guest registers in the SIE copy */
     if(regs->guestregs)
     {
-        regs->guestregs->tlbID = ++regs->guestregs->tlbID & 0xFFFF;
-        if (!regs->guestregs->tlbID)
+        INVALIDATE_AIA(regs->guestregs);
+        regs->guestregs->tlbID = ++regs->guestregs->tlbID;
+        if (((++regs->guestregs->tlbID) & TLBID_BYTEMASK) == 0)
         {
-            memset (regs->guestregs->tlb, 0, sizeof(regs->guestregs->tlb));
+            memset (&regs->guestregs->tlb.vaddr, 0, TLBN * sizeof(DW));
             regs->guestregs->tlbID = 1;
         }
-        INVALIDATE_AIA(regs->guestregs);
-        INVALIDATE_AEA_ALL(regs->guestregs);
     }
 #endif /*defined(_FEATURE_SIE)*/
 } /* end function purge_tlb */
@@ -1539,27 +1532,95 @@ RADR ptemask;
     pte = pfra & ptemask;
 #endif /* defined(FEATURE_ESAME) */
 
+    INVALIDATE_AIA(regs);
     for (i = 0; i < TLBN; i++)
-        if (regs->tlb[i].valid == regs->tlbID
-         && (regs->tlb[i].TLB_PTE & ptemask) == pte)
-        {
-            regs->tlb[i].valid = 0;
-        }
-    INVALIDATE_AIA_ABS(pfra, regs);
-    INVALIDATE_AEA_ABS(pfra, regs);
+        if ((regs->tlb.TLB_PTE(i) & ptemask) == pte)
+            regs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
 
 #if defined(_FEATURE_SIE)
     /* Also clear the guest registers in the SIE copy */
     if (regs->guestregs)
     {
+        INVALIDATE_AIA(regs->guestregs);
         for (i = 0; i < TLBN; i++)
-            if (regs->guestregs->tlb[i].valid == regs->guestregs->tlbID
-             && (regs->guestregs->tlb[i].TLB_PTE & ptemask) == pte)
+            if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte)
+                regs->guestregs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
+    }
+#endif /*defined(_FEATURE_SIE)*/
+
+} /* end function purge_tlbe */
+
+
+/*-------------------------------------------------------------------*/
+/* Invalidate all translation lookaside buffer entries               */
+/*-------------------------------------------------------------------*/
+_DAT_C_STATIC void ARCH_DEP(invalidate_tlb) (REGS *regs, BYTE mask)
+{
+int  i;
+
+    INVALIDATE_AIA(regs);
+    if (mask == 0)
+        memset(&regs->tlb.acc, 0, TLBN);
+    else
+        for (i = 0; i < TLBN; i++)
+            if ((regs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->tlbID)
+                regs->tlb.acc[i] &= mask;
+
+#if defined(_FEATURE_SIE)
+    /* Also invalidate the guest registers in the SIE copy */
+    if(regs->guestregs)
+    {
+        INVALIDATE_AIA(regs->guestregs);
+        if (mask == 0)
+            memset(&regs->guestregs->tlb.acc, 0, TLBN);
+        else
+            for (i = 0; i < TLBN; i++)
+                if ((regs->guestregs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->guestregs->tlbID)
+                    regs->guestregs->tlb.acc[i] &= mask;
+    }
+#endif /*defined(_FEATURE_SIE)*/
+} /* end function invalidate_tlb */
+
+
+/*-------------------------------------------------------------------*/
+/* Invalidate matching translation lookaside buffer entries          */
+/*-------------------------------------------------------------------*/
+_DAT_C_STATIC void ARCH_DEP(invalidate_tlbe) (REGS *regs, BYTE *main)
+{
+int i;
+
+    if (main == NULL)
+    {
+        ARCH_DEP(invalidate_tlb)(regs, 0);
+        return;
+    }
+
+    INVALIDATE_AIA_MAIN(regs, main);
+    for (i = 0; i < TLBN; i++)
+        if (MAINADDR(regs->tlb.main[i], regs->tlb.TLB_VADDR(i)) == main)
+        {
+            regs->tlb.acc[i] = 0;
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+                regs->tlb.acc[i^1] = 0;
+#endif
+        }
+
+#if defined(_FEATURE_SIE)
+    /* Also clear the guest registers in the SIE copy */
+    if (regs->guestregs)
+    {
+        INVALIDATE_AIA_MAIN(regs->guestregs, main);
+        for (i = 0; i < TLBN; i++)
+            if (MAINADDR(regs->guestregs->tlb.main[i],
+                         regs->guestregs->tlb.TLB_VADDR(i)) == main)
             {
-                regs->guestregs->tlb[i].valid = 0;
+                regs->guestregs->tlb.acc[i] = 0;
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+                if ((regs->guestregs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+                    regs->guestregs->tlb.acc[i^1] = 0;
+#endif
             }
-        INVALIDATE_AIA_ABS(pfra, regs->guestregs);
-        INVALIDATE_AEA_ABS(pfra, regs->guestregs);
     }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -1755,6 +1816,7 @@ _LOGICAL_C_STATIC BYTE *ARCH_DEP(logical_to_main) (VADR addr, int arn,
                                     REGS *regs, int acctype, BYTE akey)
 {
 RADR    aaddr;                          /* Absolute address          */
+int     ix = TLBIX(addr);               /* TLB index                 */
 
     /* Convert logical address to real address */
     if ( (REAL_MODE(&regs->psw) || arn == USE_REAL_ADDR)
@@ -1771,6 +1833,13 @@ RADR    aaddr;                          /* Absolute address          */
     {
         regs->dat.private = regs->dat.protect = 0;
         regs->dat.raddr = addr;
+
+        /* Setup `real' TLB entry (for MADDR) */
+        regs->tlb.TLB_ASD(ix)   = TLB_REAL_ASD;
+        regs->tlb.TLB_VADDR(ix) = addr & TLBID_PAGEMASK;
+        regs->tlb.acc[ix]       =
+        regs->tlb.common[ix]    =
+        regs->tlb.protect[ix]   = 0;
     }
     else {
         if (ARCH_DEP(translate_addr) (addr, arn, regs, acctype))
@@ -1816,7 +1885,7 @@ RADR    aaddr;                          /* Absolute address          */
 
     /* Check protection and set reference and change bits */
     regs->dat.storkey = &(STORAGE_KEY(aaddr, regs));
-    if (acctype == ACCTYPE_INSTFETCH || acctype == ACCTYPE_READ)
+    if (acctype & ACC_READ)
     {
         /* Program check if fetch protected location */
         if (unlikely(ARCH_DEP(is_fetch_protected) (addr, *regs->dat.storkey, akey, regs)))
@@ -1827,9 +1896,17 @@ RADR    aaddr;                          /* Absolute address          */
 
         /* Set the reference bit in the storage key */
         *regs->dat.storkey |= STORKEY_REF;
-    } /* acctype == ACCTYPE_INSTFETCH || acctype == ACCTYPE_READ */
+
+        /* Update accelerated lookup TLB fields
+           (the id field is either 0 (real mode) or already set correctly) */
+        regs->tlb.TLB_VADDR(ix) |= regs->tlbID;
+        regs->tlb.storkey[ix]    = regs->dat.storkey;
+        regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
+        regs->tlb.acc[ix]       |= ACC_READ;
+        regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);
+    }
     else
-    if (acctype == ACCTYPE_WRITE_SKP || acctype == ACCTYPE_WRITE)
+    if (acctype & ACC_WRITE)
     {
         /* Program check if store protected location */
         if (unlikely(ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs)))
@@ -1844,6 +1921,16 @@ RADR    aaddr;                          /* Absolute address          */
         if (acctype == ACCTYPE_WRITE)
             *regs->dat.storkey |= (STORKEY_REF | STORKEY_CHANGE);
 
+        /* Update accelerated lookup TLB fields */
+        regs->tlb.TLB_VADDR(ix) |= regs->tlbID;
+        regs->tlb.storkey[ix]    = regs->dat.storkey;
+        regs->tlb.skey[ix]       = *regs->dat.storkey & STORKEY_KEY;
+        if ((addr >= PSA_SIZE || regs->dat.private) && !EN_IC_PER_SA(regs))
+            regs->tlb.acc[ix]   |= (ACC_WRITE|ACC_READ);
+        else
+            regs->tlb.acc[ix]   |= ACC_READ;
+        regs->tlb.main[ix]       = NEW_MAINADDR (regs, addr, aaddr);
+
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs) && (arn != USE_REAL_ADDR)
 #if defined(FEATURE_PER2)
@@ -1854,31 +1941,6 @@ RADR    aaddr;                          /* Absolute address          */
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
     } /* acctype == ACCTYPE_WRITE_SKP || acctype == ACCTYPE_WRITE */
-
-    /* Update the aea tables */
-    if ( arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs) )
-    {
-        int i;
-
-        if (addr < PSA_SIZE && !regs->dat.private)
-            acctype = ACCTYPE_READ;
-
-#if defined(FEATURE_ACCESS_REGISTERS)
-        if ( ACCESS_REGISTER_MODE(&regs->psw) && arn > 0 && regs->AR(arn) != 0 )
-            regs->aearvalid = 1;
-        else
-#endif
-            arn = 0;
-
-        i = AEAIX(addr);
-        regs->aearn[i] = arn;
-        regs->aeacc[i] = (acctype > ACCTYPE_READ);
-        regs->aekey[i] = akey;
-        regs->aem[i]   = NEW_AEADDR (regs, addr, aaddr);
-        regs->AEV(i)   = (addr & PAGEFRAME_PAGEMASK);
-        regs->aeid[i]  = regs->aeID;
-        regs->aesk[i]  = regs->dat.storkey;
-    }
 
     /* Return mainstor address */
     return regs->mainstor + aaddr;

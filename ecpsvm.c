@@ -193,7 +193,7 @@ struct _ECPSVM_SASTATS
 #define SASSIST_HIT(_stat) ecpsvm_sastats._stat.hit++
 
 #define SASSIST_LPSW(_regs) \
-        regs->psw.IA=_regs.psw.IA; \
+        regs->psw.IA=(_regs.psw.IA & ADDRESS_MAXWRAP(_regs)); \
         regs->psw.cc=_regs.psw.cc; \
         regs->psw.pkey=_regs.psw.pkey; \
         regs->psw.progmask=_regs.psw.progmask;
@@ -1076,10 +1076,9 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         DEBUG_CPASSISTX(DISP2,display_psw(&wregs));
         /* TEST */
         ARCH_DEP(purge_tlb)(regs);
-        /* HERCULES STUFF - Invalidate AEA & AIA */
-        INVALIDATE_AIA(regs);
-        INVALIDATE_AEA_ALL(regs);
         SET_IC_MASK(regs);
+        SET_AEA_MODE(regs);
+        SET_AEA_COMMON(regs);
         /* Dispatch..... */
         DEBUG_CPASSISTX(DISP2,logmsg(_("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n"),ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
         DEBUG_CPASSISTX(DISP2,display_regs(regs));
@@ -2185,7 +2184,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC NEW VIRT "));
     DEBUG_SASSISTX(SVC,display_psw(&newr));
     /* Get some stuff from the REAL Running PSW to put in OLD SVC PSW */
-    vpregs.psw.IA=regs->psw.IA;                   /* Instruction Address */
+    vpregs.psw.IA=(regs->psw.IA & ADDRESS_MAXWRAP(regs)); /* Instruction Address */
     vpregs.psw.cc=regs->psw.cc;                   /* Condition Code      */
     vpregs.psw.pkey=regs->psw.pkey;               /* Protection Key      */
     vpregs.psw.progmask=regs->psw.progmask;       /* Program Mask        */

@@ -163,7 +163,7 @@ int     acc_mode = 0;                   /* access mode to use        */
         newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
-        regs->GR_L(12) = regs->psw.IA;
+        regs->GR_L(12) = regs->psw.IA & ADDRESS_MAXWRAP(regs);
 
         /* Copy LITOLOC into register 13 to signify obtain failure */
         regs->GR_L(13) = newia;
@@ -259,7 +259,7 @@ int     acc_mode = 0;                   /* access mode to use        */
         newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
-        regs->GR_L(12) = regs->psw.IA;
+        regs->GR_L(12) = regs->psw.IA & ADDRESS_MAXWRAP(regs);
 
         /* Copy LITRLOC into register 13 to signify release failure */
         regs->GR_L(13) = newia;
@@ -350,7 +350,7 @@ int     acc_mode = 0;                   /* access mode to use        */
         newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
-        regs->GR_L(12) = regs->psw.IA;
+        regs->GR_L(12) = regs->psw.IA & ADDRESS_MAXWRAP(regs);
 
         /* Copy LITOCMS into register 13 to signify obtain failure */
         regs->GR_L(13) = newia;
@@ -444,7 +444,7 @@ int     acc_mode = 0;                   /* access mode to use        */
         newia = ARCH_DEP(vfetch4) ( lit_addr, acc_mode, regs );
 
         /* Save the link information in register 12 */
-        regs->GR_L(12) = regs->psw.IA;
+        regs->GR_L(12) = regs->psw.IA & ADDRESS_MAXWRAP(regs);
 
         /* Copy LITRCMS into register 13 to signify release failure */
         regs->GR_L(13) = newia;

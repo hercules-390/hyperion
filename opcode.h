@@ -267,22 +267,9 @@ do { \
 
 /* Instruction fetching */
 
-#define AIADDR(_regs, _addr) \
- ( (sizeof(BYTE *) == sizeof(unsigned int)) \
-   ?  (BYTE *)((unsigned int)(_regs)->aim ^ (unsigned int)(_addr)) \
-   :  ((_regs)->aim + ((_addr) & PAGEFRAME_BYTEMASK)) \
- )
-
-#define NEW_AIADDR(_regs, _addr, _ia) \
- ( (sizeof(BYTE *) == sizeof(unsigned int)) \
-   ?  (BYTE *)(((unsigned int)(_ia) - (unsigned int)((_addr) & PAGEFRAME_BYTEMASK)) \
-              ^ (unsigned int)((_addr) & PAGEFRAME_PAGEMASK)) \
-   :  (_ia) - (unsigned int)((_addr) & PAGEFRAME_BYTEMASK) \
- )
-
 #define INSTRUCTION_FETCH(_dest, _addr, _regs, _valid) \
   likely((_addr) <= (_regs)->AIE && (_regs)->AIV == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01))) \
-  ? AIADDR((_regs), (_addr)) \
+  ? MAINADDR((_regs)->aim, (_addr)) \
   : ((_regs)->instvalid = (_valid), \
      ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)) \
     )
@@ -525,119 +512,179 @@ do { \
 #define INVALIDATE_AIA(_regs) \
     (_regs)->AIV = 1
 
-#define INVALIDATE_AIA_ABS(_aaddr, _regs) \
+#define INVALIDATE_AIA_MAIN(_regs, _main) \
 do { \
-  if ((_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK) == AIADDR((_regs), (_regs)->AIV)) \
-    (_regs)->AIV = 1; \
+  if ((_main) == MAINADDR((_regs)->aim, (_regs)->AIV)) \
+    INVALIDATE_AIA(_regs); \
 } while (0)
 
-#define AEAIX(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
-#define MAXAEA 256
+#define TLBIX(_addr) (((_addr) >> TLB_PAGESHIFT) & TLB_MASK)
 
-#define AEADDR(_regs, _addr) \
+ /*
+  * Accelerated lookup address mode
+  *    0 - real mode
+  *    1 - primary space mode
+  *    2 - access register mode
+  *    3 - secondary space mode
+  *    4 - home space mode
+  *   4x - per mode
+  */
+#define AEA_MODE(_regs) \
+  ( ( REAL_MODE(&(_regs)->psw) ? 0 : (((_regs)->psw.asc >> 6) + 1) ) \
+  | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
+  )
+
+#define SET_AEA_COMMON(_regs) \
+do { \
+  (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+  (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
+  (_regs)->aea_common[13] = ((_regs)->CR(13) & ASD_PRIVATE) == 0; \
+} while (0)
+
+ /*
+  * Reset aea_ar vector to indicate the appropriate
+  * control register:
+  *   0 - unresolvable (armode and alet is not 0, 1 or 2)
+  *   1 - primary space
+  *   7 - secondary space
+  *  13 - home space
+  *  16 - real
+  */
+#define SET_AEA_MODE(_regs) \
+do { \
+  int i; \
+  BYTE inst_cr = (_regs)->aea_ar[16]; \
+  BYTE oldmode = (_regs)->aea_mode; \
+  (_regs)->aea_mode = AEA_MODE((_regs)); \
+  switch ((_regs)->aea_mode & 0x0F) { \
+    case 0: \
+      memset((_regs)->aea_ar, 16, 17); \
+      break; \
+    case 1: \
+      memset((_regs)->aea_ar,  1, 17); \
+      break; \
+    case 2: \
+      memset((_regs)->aea_ar,  1, 17); \
+      for (i = 1; i < 16; i++) { \
+        if ((_regs)->AR(i) == ALET_SECONDARY) (_regs)->aea_ar[i] = 7; \
+        else if ((_regs)->AR(i) == ALET_HOME) (_regs)->aea_ar[i] = 13; \
+        else if ((_regs)->AR(i) != ALET_PRIMARY) (_regs)->aea_ar[i] = 0; \
+      } \
+      break; \
+    case 3: \
+      memset((_regs)->aea_ar,  7, 16); \
+      (_regs)->aea_ar[16] = 1; \
+      break; \
+    case 4: \
+      memset((_regs)->aea_ar, 13, 17); \
+      break; \
+  } \
+  if (inst_cr != (_regs)->aea_ar[USE_INST_SPACE]) \
+    INVALIDATE_AIA((_regs)); \
+  if ((oldmode & PSW_PERMODE) == 0 && ((_regs)->aea_mode & PSW_PERMODE) != 0) { \
+    INVALIDATE_AIA((_regs)); \
+    if (EN_IC_PER_SA((_regs))) \
+      ARCH_DEP(invalidate_tlb)((_regs),~ACC_WRITE); \
+  } \
+} while (0)
+
+ /*
+  * Conditionally reset the aea_ar vector
+  */
+#define TEST_SET_AEA_MODE(_regs) \
+do { \
+  if ((_regs)->aea_mode != AEA_MODE((_regs))) { \
+    SET_AEA_MODE((_regs)); \
+  } \
+} while (0)
+
+ /*
+  * Update the aea_ar vector whenever an access register
+  * is changed and in armode
+  */
+#define SET_AEA_AR(_regs, _arn) \
+do { \
+  if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0) { \
+    if ((_regs)->AR((_arn)) == ALET_PRIMARY) (_regs)->aea_ar[(_arn)] = 1; \
+    else if ((_regs)->AR((_arn)) == ALET_SECONDARY) (_regs)->aea_ar[(_arn)] = 7; \
+    else if ((_regs)->AR((_arn)) == ALET_HOME) (_regs)->aea_ar[(_arn)] = 13; \
+    else (_regs)->aea_ar[(_arn)] = 0; \
+  } \
+} while (0)
+
+#define MAINADDR(_main, _addr) \
  ( (sizeof(unsigned int) == sizeof(BYTE*)) \
-   ? (BYTE *)((unsigned int)(_regs)->aem[AEAIX(_addr)] ^ (unsigned int)(_addr)) \
-   : ((_regs)->aem[AEAIX(_addr)] + ((_addr) & PAGEFRAME_BYTEMASK)) \
+   ? (BYTE *)((unsigned int)(_main) ^ (unsigned int)(_addr)) \
+   : (_main) + ((_addr) & TLB_BYTEMASK) \
  )
 
-#define NEW_AEADDR(_regs, _addr, _aaddr) \
+#define NEW_INSTADDR(_regs, _addr, _ia) \
+ ( (sizeof(unsigned int) == sizeof(BYTE*)) \
+   ? (BYTE *)((unsigned int)(_ia) ^ (unsigned int)(_addr)) \
+   : (_ia) \
+ )
+
+#define NEW_MAINADDR(_regs, _addr, _aaddr) \
  ( (sizeof(unsigned int) == sizeof(BYTE*)) \
    ? (BYTE *)((unsigned int)((_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK)) \
-            ^ (unsigned int)((_addr) & PAGEFRAME_PAGEMASK)) \
+            ^ (unsigned int)((_addr) & TLB_PAGEMASK)) \
    : (_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK) \
  )
 
+ /*
+  * Accelerated lookup
+  */
 #define MADDR(_addr, _arn, _regs, _acctype, _akey) \
- (     ((_acctype) <= ACCTYPE_READ || ((_acctype) <= ACCTYPE_WRITE && (_regs)->aeacc[AEAIX(_addr)])) \
-   &&  ((_arn) >= 0) \
-   &&  ((_regs)->aeid[AEAIX(_addr)] == (_regs)->aeID) \
-   &&  (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->AEV(AEAIX(_addr))) \
-   &&  ((_akey) == 0 || (_regs)->aekey[AEAIX(_addr)] == (_akey)) \
-   &&  ( (_regs)->aearn[AEAIX(_addr)] == 0 \
-       && ( !ACCESS_REGISTER_MODE(&(_regs)->psw) || (_arn) == 0 || (_regs)->AR(_arn) == 0 ) \
-     ||  ( ACCESS_REGISTER_MODE(&(_regs)->psw) && (_regs)->aearn[AEAIX(_addr)] == (_arn) ) \
-       ) \
+ ( \
+       likely((_regs)->aea_ar[(_arn)]) \
+   &&  likely( \
+              ((_regs)->CR((_regs)->aea_ar[(_arn)]) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
+           || ((_regs)->aea_common[(_regs)->aea_ar[(_arn)]] & (_regs)->tlb.common[TLBIX(_addr)]) \
+             ) \
+   &&  likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]) \
+   &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
+   &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
        ((_acctype) == ACCTYPE_WRITE_SKP) \
-        ? (_regs)->dat.storkey = (_regs)->aesk[AEAIX(_addr)] \
+        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)] \
         : (0), \
-       AEADDR((_regs), (_addr)) \
+       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
      ) \
  )
 
-#define INVALIDATE_AEA_AR(_arn, _regs) \
-do { \
-    int i; \
-    if ((_regs)->aearvalid) \
-      for (i = 0; i < MAXAEA; i++) \
-        if ((_regs)->aearn[i] == (_arn)) \
-          (_regs)->aeid[i] = 0; \
-} while(0)
-
-#define INVALIDATE_AEA_ARALL(_regs) \
-do { \
-    int i; \
-    if ((_regs)->aearvalid) \
-    { \
-      (_regs)->aearvalid = 0; \
-      for (i = 0; i < MAXAEA; i++) \
-        if ((_regs)->aearn[i] != 0) \
-          (_regs)->aeid[i] = 0; \
-    } \
-} while(0)
-
-#define INVALIDATE_AEA_ABS(_aaddr, _regs) \
-do { \
-    int i; \
-    BYTE *main = (_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK); \
-    for (i = 0; i < MAXAEA; i++) \
-      if (main == AEADDR( (_regs), (_regs)->AEV(i) ) ) \
-        (_regs)->aeid[i] = 0; \
-} while(0)
-
-#define INVALIDATE_AEA_ALL(_regs) \
-do { \
-    (_regs)->aearvalid = 0; \
-    if (++(_regs)->aeID == 0) \
-    { \
-        (_regs)->aeID = 1; \
-        memset((_regs)->aeid, 0, MAXAEA*sizeof(unsigned int)); \
-    } \
-} while (0)
-
 /* Perform invalidation after storage key update.
  * If the REF or CHANGE bit is turned off for an absolute
- * address then we need to invalidate any AIA/AEA entries
- * for that address on *all* CPUs.  This is because
- * LOGICAL_TO_ABS no longer updates the storage keys on a
- * successful lookup.
+ * address then we need to invalidate any cached entries
+ * for that address on *all* CPUs.
  * FIXME: Synchronization, esp for the CHANGE bit, should
  * be tighter than what is provided here.
  */
 
-#define STORKEY_INVALIDATE(_n, _regs) \
+#define STORKEY_INVALIDATE(_regs, _n) \
  do { \
-   INVALIDATE_AIA_ABS((_n), (_regs)); \
-   INVALIDATE_AEA_ABS((_n), (_regs)); \
+   BYTE *main = (_regs)->mainstor + (_n); \
+   ARCH_DEP(invalidate_tlbe)((_regs), main); \
    if (sysblk.cpus > 1) { \
      int i; \
      obtain_lock (&sysblk.intlock); \
      for (i = 0; i < HI_CPU; i++) { \
-       if ( !IS_CPU_ONLINE(i) || sysblk.regs[i]->cpuad == (_regs)->cpuad \
-        ||  test_bit(4, i, &sysblk.waiting_mask) ) \
-         continue; \
-       ON_IC_INTERRUPT( sysblk.regs[i] ); \
-       if (!sysblk.regs[i]->invalidate) { \
-         sysblk.regs[i]->invalidate = 1; \
-         sysblk.regs[i]->INVABS = n; \
-       } else { \
-         sysblk.regs[i]->INVABS = 1; \
+       if (IS_CPU_ONLINE(i) && i != (_regs)->cpuad) { \
+         if (test_bit(4, i, &sysblk.waiting_mask)) \
+           ARCH_DEP(invalidate_tlbe)(sysblk.regs[i], main); \
+         else { \
+           ON_IC_INTERRUPT(sysblk.regs[i]); \
+           if (!sysblk.regs[i]->invalidate) { \
+             sysblk.regs[i]->invalidate = 1; \
+             sysblk.regs[i]->invalidate_main = main; \
+           } else \
+             sysblk.regs[i]->invalidate_main = NULL; \
+         } \
        } \
      } \
-     release_lock (&sysblk.intlock); \
+     release_lock(&sysblk.intlock); \
    } \
  } while (0)
 
@@ -651,11 +698,10 @@ do { \
 
 #define INST_UPDATE_PSW(_regs, _len) \
      do { \
-            if( likely(!(_regs)->execflag) ) \
+            if( likely((_len) == 4 || !(_regs)->execflag) ) \
             { \
                 (_regs)->psw.ilc = (_len); \
                 (_regs)->psw.IA += (_len); \
-                (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
             } \
         } while(0)
 
@@ -769,20 +815,13 @@ do { \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_effective_addr2) = temp & 0xfff; \
-            (_b2) = (temp >> 12) & 0xf; \
-            if(likely(_b2)) \
-            { \
-                (_effective_addr2) += (_regs)->GR((_b2)); \
-                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-            } \
             (_b2) = (temp >> 16) & 0xf; \
-            if(unlikely(_b2)) \
-            { \
+            if((_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
-                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-            } \
-            if (likely(!(_regs)->execflag)) \
-                (_regs)->psw.ilc = 4; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_regs)->psw.ilc = 4; \
     }
 
 /* RXE register and indexed storage with extended op code */

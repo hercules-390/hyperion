@@ -588,6 +588,13 @@ VADR    mask;                           /* Mask for page crossing    */
     if ( unlikely(addr & 0x01) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
+    /* Perform address wrapping if not EXecuted */
+    if (likely(!regs->instvalid))
+    {
+        addr &= ADDRESS_MAXWRAP(regs);
+        regs->psw.IA = addr;
+    }
+
 #if defined(FEATURE_PER)
     /* Save the address address used to fetch the instruction */
     if( EN_IC_PER(regs) )
@@ -614,7 +621,7 @@ VADR    mask;                           /* Mask for page crossing    */
 #endif /*defined(FEATURE_PER)*/
 
     /* Get instruction address */
-    ia = MADDR (addr, 0, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
+    ia = MADDR (addr, USE_INST_SPACE, regs, ACCTYPE_INSTFETCH, regs->psw.pkey);
 
     /* If boundary is crossed then copy instruction to destination */
     if ( unlikely((addr & 0x7FF) > 0x7FA) )
@@ -639,10 +646,12 @@ VADR    mask;                           /* Mask for page crossing    */
 #endif /*defined(FEATURE_PER)*/
        )
     {
-        regs->AIV = addr & PAGEFRAME_PAGEMASK;
-        regs->AIE = (addr & PAGEFRAME_PAGEMASK)
-                  | (addr < PSA_SIZE ? 0x7FA : (PAGEFRAME_BYTEMASK -  5));
-        regs->aim = NEW_AIADDR(regs, addr, ia);
+        int off;
+        regs->AIV = addr & TLB_PAGEMASK;
+        regs->AIE = (addr & TLB_PAGEMASK)
+                  | (addr < PSA_SIZE ? 0x7FA : (TLB_BYTEMASK -  5));
+        off = addr & TLB_BYTEMASK;
+        regs->aim = NEW_INSTADDR(regs, addr-off, ia-off);
     }
 
     regs->instvalid = 1;

@@ -2909,12 +2909,11 @@ BYTE c;                                 /* Character work area       */
 }
 
 ///////////////////////////////////////////////////////////////////////
-/* aea - display aea tables */
+/* aea - display aea values */
 
 int aea_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
-    int     matches = 0;                /* Number aeID matches       */
     REGS   *regs;
 
     UNREFERENCED(argc);
@@ -2931,20 +2930,32 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("cpu %d aearvalid %d aeID %d mainstor %p\n",
-            sysblk.pcpu,regs->aearvalid,regs->aeID,regs->mainstor);
-    logmsg (" ix               ve key ar a         me       id\n");
-    for (i = 0; i < MAXAEA; i++)
-    {
-        logmsg("%s%2.2x %16.16llx  %2.2x %2d %d %p %8d\n",
-         regs->aeid[i] == regs->aeID ? "*" : " ", i,
-         regs->AEV_G(i),regs->aekey[i], regs->aearn[i], regs->aeacc[i],
-         regs->aem[i],regs->aeid[i]);
-        if (regs->aeid[i] == regs->aeID) matches++;
-    }
-    logmsg("%d aeID matches\n", matches);
+    logmsg ("aea mode   %2.2x\n",regs->aea_mode);
 
-    release_lock(&sysblk.cpulock[sysblk.pcpu]);
+    logmsg ("aea ar    ");
+    for (i = 0; i < 21; i++) logmsg(" %2.2x",regs->aea_ar[i]);
+    logmsg ("\n");
+
+    logmsg ("aea common");
+    for (i = 0; i < 17; i++) logmsg(" %2.2x",regs->aea_common[i]);
+    logmsg ("\n");
+
+    if (regs->sie_active)
+    {
+        regs = regs->guestregs;
+
+        logmsg ("aea mode   %2.2x\n",regs->aea_mode);
+
+        logmsg ("aea ar    ");
+        for (i = 0; i < 21; i++) logmsg(" %2.2x",regs->aea_ar[i]);
+        logmsg ("\n");
+
+        logmsg ("aea common");
+        for (i = 0; i < 17; i++) logmsg(" %2.2x",regs->aea_common[i]);
+        logmsg ("\n");
+    }
+
+    release_lock (&sysblk.cpulock[sysblk.pcpu]);
 
     return 0;
 }
@@ -2955,6 +2966,9 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 int tlb_cmd(int argc, char *argv[], char *cmdline)
 {
     int     i;                          /* Index                     */
+    int     shift;                      /* Number of bits to shift   */
+    int     bytemask;                   /* Byte mask                 */
+    U64     pagemask;                   /* Page mask                 */
     int     matches = 0;                /* Number aeID matches       */
     REGS   *regs;
 
@@ -2971,19 +2985,53 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
         return 0;
     }
     regs = sysblk.regs[sysblk.pcpu];
+    shift = regs->arch_mode == ARCH_370 ? 11 : 12;
+    bytemask = regs->arch_mode == ARCH_370 ? 0x1FFFFF : 0x3FFFFF;
+    pagemask = regs->arch_mode == ARCH_370 ? 0x00E00000 :
+               regs->arch_mode == ARCH_390 ? 0x7FC00000 :
+                                     0xFFFFFFFFFFC00000ULL;
 
-    logmsg ("cpu %d tlbID 0x%3.3x\n",sysblk.pcpu,regs->tlbID);
-    logmsg (" ix              std            vaddr              pte   id c p\n");
+    logmsg ("tlbID 0x%6.6x mainstor %p\n",regs->tlbID,regs->mainstor);
+    logmsg ("  ix              asd            vaddr              pte   id c p r w ky       main\n");
     for (i = 0; i < TLBN; i++)
     {
-        logmsg("%s%2.2x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d\n",
-         regs->tlb[i].valid == regs->tlbID ? "*" : " ",
-         i,regs->tlb[i].TLB_STD_G,regs->tlb[i].TLB_VADDR_G,
-         regs->tlb[i].TLB_PTE_G,regs->tlb[i].valid, regs->tlb[i].common,
-         regs->tlb[i].protect);
-        matches += (regs->tlb[i].valid == regs->tlbID);
+        logmsg("%s%3.3x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d %1d %1d %2.2x %p\n",
+         ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
+         i,regs->tlb.TLB_ASD_G(i),
+         ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
+         regs->tlb.TLB_PTE_G(i),(int)(regs->tlb.TLB_VADDR_G(i) & bytemask),
+         regs->tlb.common[i],regs->tlb.protect[i],
+         (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
+         regs->tlb.skey[i],regs->tlb.main[i]);
+        matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
     }
     logmsg("%d tlbID matches\n", matches);
+
+    if (regs->sie_active)
+    {
+        regs = regs->guestregs;
+        shift = regs->guestregs->arch_mode == ARCH_370 ? 11 : 12;
+        bytemask = regs->arch_mode == ARCH_370 ? 0x1FFFFF : 0x3FFFFF;
+        pagemask = regs->arch_mode == ARCH_370 ? 0x00E00000 :
+                   regs->arch_mode == ARCH_390 ? 0x7FC00000 :
+                                         0xFFFFFFFFFFC00000ULL;
+
+        logmsg ("\nSIE: tlbID 0x%4.4x mainstor %p\n",regs->tlbID,regs->mainstor);
+        logmsg ("  ix              asd            vaddr              pte   id c p r w ky       main\n");
+        for (i = matches = 0; i < TLBN; i++)
+        {
+            logmsg("%s%3.3x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d %1d %1d %2.2x %p\n",
+             ((regs->tlb.TLB_VADDR_G(i) & bytemask) == regs->tlbID ? "*" : " "),
+             i,regs->tlb.TLB_ASD_G(i),
+             ((regs->tlb.TLB_VADDR_G(i) & pagemask) | (i << shift)),
+             regs->tlb.TLB_PTE_G(i),(int)(regs->tlb.TLB_VADDR_G(i) & bytemask),
+             regs->tlb.common[i],regs->tlb.protect[i],
+             (regs->tlb.acc[i] & ACC_READ) != 0,(regs->tlb.acc[i] & ACC_WRITE) != 0,
+             regs->tlb.skey[i],regs->tlb.main[i]);
+            matches += ((regs->tlb.TLB_VADDR(i) & bytemask) == regs->tlbID);
+        }
+        logmsg("SIE: %d tlbID matches\n", matches);
+    }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);
 
@@ -3165,8 +3213,8 @@ int sizeof_cmd(int argc, char *argv[], char *cmdline)
     logmsg(_("HHCPN163I SYSBLK ............%7d\n"),sizeof(SYSBLK));
     logmsg(_("HHCPN164I REGS ..............%7d\n"),sizeof(REGS));
     logmsg(_("HHCPN165I DEVBLK ............%7d\n"),sizeof(DEVBLK));
-    logmsg(_("HHCPN166I TLB entry .........%7d\n"),sizeof(TLBE));
-    logmsg(_("HHCPN167I TLB table .........%7d\n"),sizeof(TLBE)*TLBN);
+    logmsg(_("HHCPN166I TLB entry .........%7d\n"),sizeof(TLB)/TLBN);
+    logmsg(_("HHCPN167I TLB table .........%7d\n"),sizeof(TLB));
     return 0;
 }
 
@@ -3308,6 +3356,7 @@ COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands" )
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
 COMMAND ( "tlb",       tlb_cmd,       "Display TLB tables" )
+
 #if defined(SIE_DEBUG_PERFMON)
 COMMAND ( "spm",       spm_cmd,       "SIE performance monitor" )
 #endif

@@ -98,14 +98,19 @@
 #undef AIV
 #undef AIE
 #undef VIE
-#undef AEV
 #undef SIEBK
 #undef ZPB
-#undef TLB_STD
+#undef TLB_REAL_ASD
+#undef TLB_ASD
 #undef TLB_VADDR
 #undef TLB_PTE
+#undef TLB_PAGEMASK
+#undef TLB_BYTEMASK
+#undef TLB_PAGESHIFT
+#undef TLBID_PAGEMASK
+#undef TLBID_BYTEMASK
+#undef ASD_PRIVATE
 #undef BROADCAST_PFRA
-#undef INVABS
 
 #if !defined(NO_ATTR_REGPARM)
 #define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
@@ -197,14 +202,19 @@ s370_ ## _name
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
 #define AIE     AIE_L
-#define AEV(_r) AEV_L(_r)
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
-#define TLB_STD   TLB_STD_L
-#define TLB_VADDR TLB_VADDR_L
-#define TLB_PTE   TLB_PTE_L
+#define TLB_REAL_ASD  TLB_REAL_ASD_L
+#define TLB_ASD(_n)   TLB_ASD_L(_n)
+#define TLB_VADDR(_n) TLB_VADDR_L(_n)
+#define TLB_PTE(_n)   TLB_PTE_L(_n)
+#define TLB_PAGEMASK  0x00FFF800
+#define TLB_BYTEMASK  0x000007FF
+#define TLB_PAGESHIFT 11
+#define TLBID_PAGEMASK  0x00E00000
+#define TLBID_BYTEMASK  0x001FFFFF
+#define ASD_PRIVATE   0
 #define BROADCAST_PFRA BROADCAST_PFRA_L
-#define INVABS  INVABS_L
 
 #elif __GEN_ARCH == 390
 
@@ -299,14 +309,19 @@ s390_ ## _name
 #define FETCH_W FETCH_FW
 #define AIV     AIV_L
 #define AIE     AIE_L
-#define AEV(_r) AEV_L(_r)
 #define SIEBK                   SIE1BK
 #define ZPB                     ZPB1
-#define TLB_STD   TLB_STD_L
-#define TLB_VADDR TLB_VADDR_L
-#define TLB_PTE   TLB_PTE_L
+#define TLB_REAL_ASD  TLB_REAL_ASD_L
+#define TLB_ASD(_n)   TLB_ASD_L(_n)
+#define TLB_VADDR(_n) TLB_VADDR_L(_n)
+#define TLB_PTE(_n)   TLB_PTE_L(_n)
+#define TLB_PAGEMASK  0x7FFFF000
+#define TLB_BYTEMASK  0x00000FFF
+#define TLB_PAGESHIFT 12
+#define TLBID_PAGEMASK  0x7FC00000
+#define TLBID_BYTEMASK  0x003FFFFF
+#define ASD_PRIVATE   STD_PRIVATE
 #define BROADCAST_PFRA BROADCAST_PFRA_L
-#define INVABS  INVABS_L
 
 #elif __GEN_ARCH == 900
 
@@ -407,14 +422,19 @@ z900_ ## _name
 #define FETCH_W FETCH_DW
 #define AIV     AIV_G
 #define AIE     AIE_G
-#define AEV(_r) AEV_G(_r)
 #define SIEBK                   SIE2BK
 #define ZPB                     ZPB2
-#define TLB_STD   TLB_STD_G
-#define TLB_VADDR TLB_VADDR_G
-#define TLB_PTE   TLB_PTE_G
+#define TLB_REAL_ASD  TLB_REAL_ASD_G
+#define TLB_ASD(_n)   TLB_ASD_G(_n)
+#define TLB_VADDR(_n) TLB_VADDR_G(_n)
+#define TLB_PTE(_n)   TLB_PTE_G(_n)
+#define TLB_PAGEMASK  0xFFFFFFFFFFFFF000ULL
+#define TLB_BYTEMASK  0x0000000000000FFFULL
+#define TLB_PAGESHIFT 12
+#define TLBID_PAGEMASK  0xFFFFFFFFFFC00000ULL
+#define TLBID_BYTEMASK  0x00000000003FFFFFULL
+#define ASD_PRIVATE   (ASCE_P|ASCE_R)
 #define BROADCAST_PFRA BROADCAST_PFRA_G
-#define INVABS  INVABS_G
 
 #else
 
@@ -483,20 +503,6 @@ z900_ ## _name
  #define STORAGE_KEY_BYTEMASK   0x000007FF
 #endif
 
-#undef AEA_PAGEMASK
-#undef AEA_BYTEMASK
-#ifdef FEATURE_4K_STORAGE_KEYS
- #if defined(FEATURE_ESAME)
-  #define AEA_PAGEMASK  0xFFFFFFFFFFF00000ULL
- #else
-  #define AEA_PAGEMASK  0x7FF00000
- #endif
- #define AEA_BYTEMASK   0x000FFFFF
-#else
- #define AEA_PAGEMASK   0x7FF80000
- #define AEA_BYTEMASK   0x0007FFFF
-#endif
-
 #define STORAGE_KEY(_addr, _pointer) \
    (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 
@@ -507,6 +513,34 @@ z900_ ## _name
     (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)|1]
 #endif
 
+/* Macros for testing address space control mode */
+#undef SPACE_BIT
+#undef AR_BIT
+#undef PRIMARY_SPACE_MODE
+#undef SECONDARY_SPACE_MODE
+#undef ACCESS_REGISTER_MODE
+#undef HOME_SPACE_MODE
+#if __GEN_ARCH == 370
+#define SPACE_BIT(p) (0)
+#define AR_BIT(p) (0)
+#define PRIMARY_SPACE_MODE(p) (1)
+#define SECONDARY_SPACE_MODE(p) (0)
+#define ACCESS_REGISTER_MODE(p) (0)
+#define HOME_SPACE_MODE(p) (0)
+#else
+#define SPACE_BIT(p) \
+        (((p)->asc & BIT(PSW_SPACE_BIT)) != 0)
+#define AR_BIT(p) \
+        (((p)->asc & BIT(PSW_AR_BIT)) != 0)
+#define PRIMARY_SPACE_MODE(p) \
+        ((p)->asc == PSW_PRIMARY_SPACE_MODE)
+#define SECONDARY_SPACE_MODE(p) \
+        ((p)->asc == PSW_SECONDARY_SPACE_MODE)
+#define ACCESS_REGISTER_MODE(p) \
+        ((p)->asc == PSW_ACCESS_REGISTER_MODE)
+#define HOME_SPACE_MODE(p) \
+        ((p)->asc == PSW_HOME_SPACE_MODE)
+#endif
 
 #define XSTORE_INCREMENT_SIZE   0x00100000
 #define XSTORE_PAGESHIFT    12

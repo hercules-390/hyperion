@@ -506,6 +506,8 @@ RADR raddr;
 RADR ag;
 int  size;
 
+    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
+
 #if defined(FEATURE_ESAME)
     if(regs->psw.amode64)
     {
@@ -553,6 +555,8 @@ CREG ARCH_DEP(trace_pr) (REGS *newregs, REGS *regs)
 RADR raddr;
 RADR ag;
 int  size;
+
+    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
 
 #if defined(FEATURE_ESAME)
     if(!regs->psw.amode64 && !newregs->psw.amode64)
@@ -766,6 +770,8 @@ CREG ARCH_DEP(trace_ms) (int br, VADR ia, REGS *regs)
 RADR raddr;
 RADR ag;
 int  size;
+
+    regs->psw.IA &= ADDRESS_MAXWRAP(regs);
 
     if(!br)
     {

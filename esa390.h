@@ -144,20 +144,6 @@ typedef struct  _PSW {
 #define PSW_AMODE64_BIT    0            /* Extended addressing  (31) */
 #define PSW_AMODE31_BIT    7            /* Basic addressing     (32) */
 
-/* Macros for testing address space control mode */
-#define SPACE_BIT(p) \
-        (((p)->asc & BIT(PSW_SPACE_BIT)) != 0)
-#define AR_BIT(p) \
-        (((p)->asc & BIT(PSW_AR_BIT)) != 0)
-#define PRIMARY_SPACE_MODE(p) \
-        ((p)->asc == PSW_PRIMARY_SPACE_MODE)
-#define SECONDARY_SPACE_MODE(p) \
-        ((p)->asc == PSW_SECONDARY_SPACE_MODE)
-#define ACCESS_REGISTER_MODE(p) \
-        ((p)->asc == PSW_ACCESS_REGISTER_MODE)
-#define HOME_SPACE_MODE(p) \
-        ((p)->asc == PSW_HOME_SPACE_MODE)
-
 /* Macros for testing states (EC, M, W, P bits) */
 #define ECMODE(p)    (((p)->states & BIT(PSW_EC_BIT))       != 0)
 #define NOTESAME(p)  (((p)->states & BIT(PSW_NOTESAME_BIT)) != 0)
@@ -171,6 +157,36 @@ typedef struct  _PSW {
 #define EUMASK(p)             (test_bit (1, PSW_EUBIT, &(p)->progmask))
 #define SGMASK(p)             (test_bit (1, PSW_SGBIT, &(p)->progmask))
 
+/* Structure definition for translation-lookaside buffer entry */
+#define TLBN            1024            /* Number TLB entries        */
+#define TLB_MASK        0x3FF           /* Mask for 1024 entries     */
+#define TLB_REAL_ASD_L  0xFFFFFFFF      /* ASD values for real mode  */
+#define TLB_REAL_ASD_G  0xFFFFFFFFFFFFFFFFULL
+typedef struct _TLB  {
+        DW              asd[TLBN];      /* Address space designator  */
+#define TLB_ASD_G(_n)   asd[(_n)].D
+#define TLB_ASD_L(_n)   asd[(_n)].F.L.F
+        DW              vaddr[TLBN];    /* Virtual page address      */
+#define TLB_VADDR_G(_n) vaddr[(_n)].D
+#define TLB_VADDR_L(_n) vaddr[(_n)].F.L.F
+        DW              pte[TLBN];      /* Copy of page table entry  */
+#define TLB_PTE_G(_n)   pte[(_n)].D
+#define TLB_PTE_L(_n)   pte[(_n)].F.L.F
+        BYTE           *main[TLBN];     /* Mainstor address          */
+        BYTE           *storkey[TLBN];  /* -> Storage key            */
+        BYTE            skey[TLBN];     /* Storage key key-value     */
+        BYTE            common[TLBN];   /* 1=Page in common segment  */
+        BYTE            protect[TLBN];  /* 1=Page in protected segmnt*/
+        BYTE            acc[TLBN];      /* Access type flags         */
+    } TLB;
+
+/* TLB Notes -
+ * Fields set by translate_addr() are asd, vaddr, pte, id, common and
+ * protect.
+ * Fields set by logical_to_main() are main, storkey, skey, read and
+ * write and are used for accelerated address lookup (formerly AEA).
+ */
+
 /* Structure for Dynamic Address Translation */
 typedef struct _DAT {
         RADR    raddr;                  /* Real address              */
@@ -182,25 +198,8 @@ typedef struct _DAT {
         U16     xcode;                  /* Translation exception code*/ 
         BYTE    private:1,              /* 1=Private address space   */
                 protect:2;              /* 1=Page prot, 2=ALE prot   */ 
-        BYTE    reserved[0];            /* [alignment]               */
+        BYTE    reserved[1];            /* [alignment]               */
       } DAT;
-
-/* Structure definition for translation-lookaside buffer entry */
-typedef struct _TLBE {
-        DW      std;                    /* Segment table designation */
-#define TLB_STD_G       std.D
-#define TLB_STD_L       std.F.L.F
-        DW      vaddr;                  /* Virtual page address      */
-#define TLB_VADDR_G     vaddr.D
-#define TLB_VADDR_L     vaddr.F.L.F
-        DW      pte;                    /* Copy of page table entry  */
-#define TLB_PTE_G       pte.D
-#define TLB_PTE_L       pte.F.L.F
-        U16     valid;                  /* TLB entry identifier      */
-        U16     common:1,               /* 1=Page in common segment  */
-                protect:1;              /* 1=Page in protected segmnt*/
-    } TLBE;
-#define TLBN    1024                    /* Number TLB entries        */
 
 /* Bit definitions for control register 0 */
 #define CR0_BMPX        0x80000000      /* Block multiplex ctl  S/370*/

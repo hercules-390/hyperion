@@ -471,7 +471,7 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      px;                     /* Prefix register           */
         PSW     psw;                    /* Program status word       */
         DW      gr[16];                 /* General registers         */
-        DW      cr[16];                 /* Control registers         */
+        DW      cr[16+1];               /* Control registers         */
         U32     ar[16];                 /* Access registers          */
         U32     fpr[32];                /* Floating point registers  */
         U32     fpc;                    /* IEEE Floating Point
@@ -496,8 +496,6 @@ typedef struct _REGS {                  /* Processor registers       */
         U64     waittime;               /* Wait time (us) in interval*/
         struct  timeval lasttod;        /* Last gettimeofday         */
         DAT     dat;                    /* Fields for DAT use        */
-        int     tlbID;                  /* Validation identifier     */
-        TLBE   *tlb;                    /* Translation lookaside buf */
         void   *opctab;                 /* -> opcode table           */
 
 #define GR_G(_r) gr[(_r)].D
@@ -532,11 +530,7 @@ typedef struct _REGS {                  /* Processor registers       */
 #define AIV_L     aiv.F.L.F
 #define AIE_G     aie.D
 #define AIE_L     aie.F.L.F
-#define AEV_G(_r) aev[(_r)].D
-#define AEV_L(_r) aev[(_r)].F.L.F
 #define AR(_r)    ar[(_r)]
-#define INVABS_G  invabs.D
-#define INVABS_L  invabs.F.L.F
 
         U16     chanset;                /* Connected channel set     */
         U32     todpr;                  /* TOD programmable register */
@@ -627,7 +621,7 @@ typedef struct _REGS {                  /* Processor registers       */
         BYTE    *ip;                    /* Pointer to last-fetched
                                            instruction (either inst
                                            above or in mainstor      */
-        DW      invabs;                 /* Abs address to invalidate */
+        BYTE    *invalidate_main;       /* Mainstor addr to invalidat*/
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS *vf;                     /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
@@ -645,17 +639,16 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      aiv;                    /* Virtual address           */
         DW      aie;                    /* Virtual page end address  */
 
-     /* AEA - Virtual storage translation accelerator                */
+     /* Mainstor address lookup accelerator                          */
 
-        int     aearvalid;              /* 1=Address(es) in AR mode  */
-        U32     aeID;                   /* Validation identifier     */
-        int     aeid[256];              /* Identifier                */
-        BYTE   *aem[256];               /* Mainstor address          */
-        BYTE   *aesk[256];              /* ->Storage key             */
-        DW      aev[256];               /* Virtual address           */
-        BYTE    aekey[256];             /* Access Key                */
-        BYTE    aeacc[256];             /* Access type               */
-        char    aearn[256];             /* Access register used      */
+        BYTE    aea_mode;               /* aea addressing mode       */
+        BYTE    aea_ar[21];             /* arn to cr number          */
+        BYTE    aea_common[16+1];       /* 1=asd is not private      */
+
+     /* TLB - Translation lookaside buffer                           */
+
+        unsigned int tlbID;             /* Validation identifier     */
+        TLB     tlb;                    /* Translation lookaside buf */
 
     } REGS;
 
@@ -1847,26 +1840,36 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 #define MAX_ARGS  12                    /* Max argv[] array size     */
 
 /* Access type parameter passed to translate functions in dat.c */
-#define ACCTYPE_HW              0       /* Hardware access           */
-#define ACCTYPE_INSTFETCH       1       /* Instruction fetch         */
-#define ACCTYPE_READ            2       /* Read operand data         */
-#define ACCTYPE_WRITE_SKP       3       /* Write but skip change bit */
-#define ACCTYPE_WRITE           4       /* Write operand data        */
-#define ACCTYPE_TAR             5       /* Test Access               */
-#define ACCTYPE_LRA             6       /* Load Real Address         */
-#define ACCTYPE_TPROT           7       /* Test Protection           */
-#define ACCTYPE_IVSK            8       /* Insert Virtual Storage Key*/
-#define ACCTYPE_STACK           9       /* Linkage stack operations  */
-#define ACCTYPE_BSG             10      /* Branch in Subspace Group  */
-#define ACCTYPE_PTE             11      /* Return PTE raddr          */
-#define ACCTYPE_SIE             12      /* SIE host translation      */
-#define ACCTYPE_SIE_WRITE       13      /* SIE host translation write*/
-#define ACCTYPE_STRAG           14      /* Store real address        */
+
+#define ACC_READ           0x01
+#define ACC_WRITE          0x02
+#define ACC_SIE            0x04
+#define ACC_PTE            0x08
+#define ACC_LKUP          (ACC_READ|ACC_WRITE)
+//TODO: Use ACC_SIE and ACC_PTE for lookup
+
+#define ACCTYPE_HW         0x00            /* Hardware access        */
+#define ACCTYPE_INSTFETCH (0x10|ACC_READ)  /* Instruction fetch      */
+#define ACCTYPE_READ      (0x20|ACC_READ)  /* Read storage           */
+#define ACCTYPE_WRITE_SKP (0x30|ACC_WRITE) /* Write, skip change bit */
+#define ACCTYPE_WRITE     (0x40|ACC_WRITE) /* Write storage          */
+#define ACCTYPE_TAR        0x50            /* TAR instruction        */
+#define ACCTYPE_LRA        0x60            /* LRA instruction        */
+#define ACCTYPE_TPROT      0x70            /* TPROT instruction      */
+#define ACCTYPE_IVSK       0x80            /* IVSK instruction       */
+#define ACCTYPE_STACK      0x90            /* Linkage stack          */
+#define ACCTYPE_BSG        0xA0            /* BSG instruction        */
+#define ACCTYPE_PTE       (0xB0|ACC_PTE)   /* PTE raddr              */
+#define ACCTYPE_SIE       (0xC0|ACC_SIE)   /* SIE host translation   */
+#define ACCTYPE_SIE_WRITE (0xD0|ACC_SIE)   /* SIE host write         */
+#define ACCTYPE_STRAG      0xE0            /* STRAG instruction      */
 
 /* Special value for arn parameter for translate functions in dat.c */
-#define USE_REAL_ADDR           (-1)    /* Real address              */
-#define USE_PRIMARY_SPACE       (-2)    /* Primary space virtual     */
-#define USE_SECONDARY_SPACE     (-3)    /* Secondary space virtual   */
+#define USE_INST_SPACE          (16)    /* Instruction space virtual */
+#define USE_REAL_ADDR           (17)    /* Real address              */
+#define USE_PRIMARY_SPACE       (18)    /* Primary space virtual     */
+#define USE_SECONDARY_SPACE     (19)    /* Secondary space virtual   */
+#define USE_HOME_SPACE          (20)    /* Home space virtual        */
 
 /* Interception codes used by longjmp/SIE */
 #define SIE_NO_INTERCEPT        (-1)    /* Continue (after pgmint)   */
