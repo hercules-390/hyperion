@@ -14,9 +14,12 @@ DESTDIR  = $(PREFIX)/usr/bin
 #CFLAGS  = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
 	   -DVERSION=$(VERSION)
 # For older Linux versions use:
-# For Linux/390 use:
-CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP\
+CFLAGS  = -O3 -malign-double -march=pentiumpro -fomit-frame-pointer \
+	  -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP \
 	  -DNO_ATTR_REGPARM
+# For Linux/390 use:
+#CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP\
+#	  -DNO_ATTR_REGPARM
 
 LFLAGS	 = -lpthread -lm -lz
 
