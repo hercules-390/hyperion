@@ -109,12 +109,15 @@ typedef ATTR_REGPARM(3) void (*zz_func) (BYTE inst[], int execflag, REGS *regs);
 /* Gabor Hoffer (performance option) */
 #if defined(_370)
 extern zz_func s370_opcode_table[];
+extern zz_func s370_opcode_a7xx[];
 #endif
 #if defined(_390)
 extern zz_func s390_opcode_table[];
+extern zz_func s390_opcode_a7xx[];
 #endif
 #if defined(_900)
 extern zz_func z900_opcode_table[];
+extern zz_func z900_opcode_a7xx[];
 #endif
 
 extern zz_func opcode_table[][GEN_MAXARCH];
@@ -124,9 +127,6 @@ extern zz_func opcode_a5xx[][GEN_MAXARCH];
 extern zz_func v_opcode_a5xx[][GEN_MAXARCH];
 extern zz_func v_opcode_a6xx[][GEN_MAXARCH];
 extern zz_func opcode_a7xx[][GEN_MAXARCH];
-extern zz_func s370_opcode_a7xx[];
-extern zz_func s390_opcode_a7xx[];
-extern zz_func z900_opcode_a7xx[];
 extern zz_func opcode_b2xx[][GEN_MAXARCH];
 extern zz_func opcode_b3xx[][GEN_MAXARCH];
 extern zz_func opcode_b9xx[][GEN_MAXARCH];
