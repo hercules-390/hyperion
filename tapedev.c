@@ -2946,6 +2946,7 @@ static void ReqAutoMount( DEVBLK *dev )
     ? TRUE : FALSE;
     TRACE( "** ReqAutoMount: unmountreq = %s\n", unmountreq ? "TRUE" : "FALSE" );
 
+#if defined(OPTION_SCSI_TAPE)
 #if 1
     // ****************************************************************
     // ZZ FIXME: ZZ TODO:   ***  Programming Note  ***
@@ -2967,6 +2968,7 @@ static void ReqAutoMount( DEVBLK *dev )
 
     // ****************************************************************
 #endif
+#endif /* defined(OPTION_SCSI_TAPE) */
 
     lbltype = stdlbled ? "SL" : "UL";
 
