@@ -341,7 +341,9 @@ the device record is:
     type suffix (for example, ansi@0009) then you can use the
     suffix to connect the client to a specific device number.
     If no suffix is specified, then the client will be connected
-    to the first available 1052 or 3215 device.
+    to the first available 1052 or 3215 device. One optional argument
+    may be specified: <code>noprompt</code>, if specified, will remove
+    the message at the console prompting for input.
 <p>
 <a name="cardrdr">
 <dt><em>Card reader devices</em>
@@ -362,16 +364,15 @@ the device record is:
         page for more details.
     <dt><code>eof</code>
     <dd>specifies that unit exception status is presented after
-        reading the last card in the file.  If eof is not specified,
-        then end of file results in unit check status with intervention
-        required in the sense bytes.
+        reading the last card in the file. This option is persistent, and
+        will remain in effect until the reader is reinitialized with the
+        <code>intrq</code> option.
     <dt><code>intrq</code>
-    <dd>this option results in the exact opposite behavior as the eof
-        option described just above (i.e. if specified, it results in
-        a unit check status with intervention required sense bytes
-        being presented after reading the last card in the file, and
-        if not specified, results in a unit exception status after
-        the last card is read).
+    <dd>specifies that unit check status with intervention required
+        sense bytes is presented after reading the last card
+        in the file. This option is persistent, and will remain in
+        effect until the reader is reinitialized with the <code>eof</code>
+        option.
     <dt><code>multifile</code>
     <dd>specifies, when multiple input files are entered, to
         automatically open the next input file and continue reading
@@ -642,6 +643,6 @@ If you have a question about Hercules, see the
 <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 3 February 2002
+<p>Last updated 1 February 2003
 </BODY>
 </HTML>

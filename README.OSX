@@ -1,0 +1,177 @@
+Jay,
+
+You don't need to install gettext on Mac OS X. You can
+make the changes below (see notes on autogen.sh for 
+building files on your system first) and just invoke
+configure on Mac OSX with the --with-included-gettext
+option.
+
+$ ./configure --with-included-gettext
+
+However, if you want to install gettext on Mac OSX, you
+should do the following:
+
+$ ./configure CPPFLAGS=-traditional-cpp CFLAGS=-D_INTL_REDIRECT_MACROS
+$ make
+$ sudo make install
+
+Then, in hercules directory you can just run:
+
+$ ./configure
+
+Here are the changes included in PatchOSX-2_17-current:
+
+autogen.sh
+	1. Added --copy option on gettextize. 
+
+           This is necessary because it allows a user to
+           build hercules without having installed the 
+           gettext package. All they would have to do is
+           invoke configure with --with-internal-gettext
+           option.
+ 
+           You should run autogen.sh on your system. Then,
+           after it completes, you should put the m4 and
+           intl directories into CVS so that they are
+           saved as part of the package. Someone can then
+           just co hercules and run configure. voila.
+
+	2. Added -I m4 on the second autolocal call.
+
+           I'm not really sure why the second autolocal
+           is necessary, but I left it in. In any case
+           you need the -I m4 so that it can find the
+           AM_GNU_GETTEXT macro.
+
+config.h.in
+
+	1. Added symbol for HAVE_FREXPL.
+
+	   Mac OS X does not support long double data types. 
+	   I took the same approack as for fmodl().
+
+           From /Developer/Documentation/DeveloperTools/\
+	      MachORuntime/2rt_powerpc_abi/index.html:
+
+	   "The long double extended-precision type is 16 
+	   bytes on classic Mac OS, but GCC for PowerPC
+	   currently treats it as 8 bytes, equivalent to a
+	   double. A future revision of the compiler may
+	   extend long double to 128 bytes. For this reason,
+	   it is not currently recommended that you use long
+	   double on Mac OS X."
+
+	2. Added symbol for HAVE_STRSIGNAL.
+
+	   Apple messed up here. So I put a check in for 
+	   strsignal().
+
+	3. Added symbol for _BSD_SOCKLEN_T_.
+
+	   Hercules actually uses data type socklen_t,
+	   which is found in the Apple headers, but it
+	   is only defined when _BSD_SOCKLEN_T_ is
+	   also defined with a type.
+
+	   This symbol will only be defined for OSX.
+
+	4. Added symbol for _INTL_REDIRECT_MACROS.
+
+	   This time gettext is messed up. To be honest,
+	   I don't know how gettext could install on *any*
+	   system without this macro unless you manually
+	   remove the #define _INTL_REDIRECT_MACROS from
+	   intl/intl-compat.c, or build everything with
+	   _INTL_REDIRECT_MACROS defined. Of course, the
+	   version of gettext I used was downloaded from
+	   gnu.org as gettext-0.11.5.tar.gz, and it's
+	   possible that another version doesn't have this
+	   problem. In any case, on Mac OSX it is required
+	   if you get the latest gettext, or if you use the
+	   included gettext.
+
+	   This symbol will only be defined for OSX.
+
+configure.ac
+
+	1. Moved AM_GNU_GETTEXT macro further down.
+
+	   Necessary because the darwin checks need to 
+	   set CPPFLAGS=-traditional-cpp so that the
+	   AM_GNU_GETTEXT works correctly.
+
+	2. Added AC_CANONICAL_HOST at top.
+
+	   Necessary because AM_GNU_GETTEXT used to 
+	   ensure $host_os and $host_vendor were
+	   defined. But with AM_GNU_GETTEXT moved,
+	   we need AC_CANONICAL_HOST to do this.
+
+	3. Added case statement for "darwin*".
+
+	   If vendor is 'apple' then we set the 
+	   CPPFLAGS to -traditional-cpp and define
+	   the other macros necessary for OS X.
+
+	4. Added 'frexpl' to AC_CHECK_FUNCS.
+
+	5. Added 'strsignal' to AC_CHECK_FUNCS.
+
+	6. Added templages for macros added earlier.
+
+ctc_ctci.c
+
+	1. Bypassed this module, as it's not supported
+	   yet on OS X. Since this is a temporary 
+	   condition, I used _APPLE_ conditional.
+
+ctc_lcs.c
+
+	1. Bypassed this module, as it's not supported
+	   yet on OS X.
+
+ctcadpt.c
+
+	1. Bypassed this module, as it's not supported
+	   yet on OS X.
+
+devtype.c
+
+	1. Bypassed all communication devices. 
+
+hercules.h
+
+	1. Relocated <sys/time.h> because of header
+	   prequisite conditions. Hopefully, this 
+	   doesn't cause a problem on other systems.
+
+	2. Added dummy scsi tape data. The scsi tape
+	   is not yet supported on OS X. Used _APPLE_
+	   conditional.
+
+ieee.c
+
+	1. Defined frexpl() based on HAVE_FREXPL.
+
+machchk.c
+
+	1. Defined strsignal() based on HAVE_STRSIGNAL.
+	   
+	   There may be a better place to put this,
+	   but rather than creating a prototype for it
+	   it seemed easier to put inline. However,
+	   the multi-pass compile required it be buried
+	   inside one of the pass conditionals.
+
+tapecopy.c
+
+	1. Bypassed all code based on _APPLE_ since
+	   scsi tape is not yet suupported on OS X.
+
+tapedev.c
+
+	1. Bypassed all scsi tape code.
+
+tuntap.c
+
+	1. Bypassed entire module. Not yet supported.

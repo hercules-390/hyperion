@@ -1,7 +1,15 @@
-dist_pkgdata_DATA=cckddasd.html  hercinst.html  hercnew.html \
-	hercconf.html  herclic.html  hercrdr.html  herctcp.html \
-	hercfaq.html   hercload.html  index.html hercules.css \
-        hercules.html tasks.html fishgui.html
+dist_pkgdata_DATA =   cckddasd.html hercinst.html hercnew.html \
+	hercconf.html herclic.html  hercrdr.html  herctcp.html \
+	hercfaq.html  hercload.html index.html    hercules.css \
+        hercules.html tasks.html    fishgui.html  hercmsg.html \
+        hercmscf.html hercmscp.html hercmsct.html hercmsda.html \
+        hercmsdc.html hercmsdi.html hercmsdl.html hercmsds.html \
+        hercmsdt.html hercmsdu.html hercmshe.html hercmshg.html \
+        hercmshm.html hercmsht.html hercmshu.html hercmsif.html \
+        hercmsin.html hercmslc.html hercmspn.html hercmspr.html \
+        hercmspu.html hercmsrd.html hercmssd.html hercmsta.html \
+        hercmstc.html hercmste.html hercmstm.html hercmsts.html \
+        hercmstu.html
 
 include_sources = include/header.htmlpart include/footer.htmlpart
 
@@ -17,7 +25,8 @@ images_sources = images/hercules.jpg \
         images/interruptd.gif  images/poweronond.gif  images/stored.gif  \
         images/interruptu.gif  images/powerononu.gif  images/storeu.gif  \
         images/loadd.gif       images/restartd.gif    images/sysonu.gif  \
-        images/loadonu.gif     images/restartu.gif    images/waitonu.gif
+        images/loadonu.gif     images/restartu.gif    images/waitonu.gif \
+        images/osi-certified-60x50.jpg
 
 images_pkgdatadir = $(pkgdatadir)/images
 

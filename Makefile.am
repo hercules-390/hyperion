@@ -120,7 +120,8 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  hercules.cnf CHANGES README.NETWORKING
+EXTRA_DIST = autoconf/config.rpath  hercules.cnf CHANGES README.NETWORKING \
+    README.OSX
 
 noinst_HEADERS  = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \

@@ -8,6 +8,79 @@ Hercules: What's new</TITLE>
       VLINK="#008040" ALINK="#000000">
 <h1>What's new in Hercules</h1>
 <hr noshade>
+<h2>What's new in release 2.17</h2>
+<p>Release date: 1 February 2003
+<ul>
+<li>Restructured DASD subsystem: better use of memory,
+compressed FBA support, framework for shared DASD (Greg Smith)
+<li>New dasdcopy utility replaces ckd2cckd and cckd2ckd, and adds
+compressed FBA support (Greg Smith)
+<li>Native support for Mac OS X 10.2 and above (Paul Scott)
+<li>Reworked CTC and LCS emulation (Jim Pierson)
+<li>SMP host integrity fixes (Greg Smith and Jan Jaeger)
+<li>Fixes for compile errors with gcc 3.x (Greg Smith and David "Fish" Trout)
+<li>S/370 dual address space and MVS assist fixes (Jan Jaeger)
+<li>Renumbered all messages to consistent format, removed duplicate
+numbers, and began message documentation (Jay Maynard)
+<li>Added options for 1052/3215 consoles and card readers (Jay Maynard)
+<li>Numerous instruction and I/O emulation fixes (Greg
+Smith, Jan Jaeger, Juergen Dobrinski, Bernard van der Helm,
+Andy Norrie, and David "Fish" Trout)
+</ul>
+<p>Download
+<a href="hercules-2.17.tar.gz">hercules-2.17.tar.gz</a>
+<h2>What's new in release 2.16.5</h2>
+<p>Release date: 8 July 2002
+<ul>
+<li>Correct serious CCKD image file corruption error (Greg Smith)
+<li>Allow tape files to be opened for input if on CD-ROM (Volker Bandke)
+</ul>
+<p>Download
+<a href="hercules-2.16.5.tar.gz">hercules-2.16.5.tar.gz</a>
+<h2>What's new in release 2.16.4</h2>
+<p>Release date: 3 July 2002
+<ul>
+<li>Read backward support for emulated tape (Volker Bandke)
+<li>Added 9313, 9332, and 9335 to list of supported devices (Tomas Masek)
+</ul>
+<p>Download
+<a href="hercules-2.16.4.tar.gz">hercules-2.16.4.tar.gz</a>
+<h2>What's new in release 2.16.3</h2>
+<p>Release date: 2 July 2002
+<ul>
+<li>CTC fix for TurboLinux bug (Jim Pierson)
+<li>3287 printer support via TN3270 (Tomas Masek)
+<li>S/370 extended memory fixes (Tomas Masek)
+<li>ctcadpt.c compilation fix for FreeBSD (Mark Szlaga)
+<li>Fixed 3270 ERASE ALL UNPROTECTED command to not count data read
+(Tomas Fott)
+<li>Fixes to ckdtab in dasdtab.c (Greg Smith)
+<li>Retrofitted cckd chkdsk fixes/enhancements (Greg Smith)
+<li>FBA fixes contributed by Tomas Masek (Greg Smith)
+<li>Compatibility fixes for cckd and 2.17 (Greg Smith)
+</ul>
+<p>Download
+<a href="hercules-2.16.3.tar.gz">hercules-2.16.3.tar.gz</a>
+<h2>What's new in release 2.16.2</h2>
+<p>Release date: 20 May 2002
+<ul>
+<li>Fixed 3350 dasdtab entry (Greg Smith)
+<li>Fixed 370 interval timer error (Valery Pogonchenko)
+<li>Control panel attach command bug fix (David "Fish" Trout)
+</ul>
+<p>Download
+<a href="hercules-2.16.2.tar.gz">hercules-2.16.2.tar.gz</a>
+<h2>What's new in release 2.16.1</h2>
+<p>Release date: 4 May 2002
+<ul>
+<li>fthreads locking fixes (David "Fish" Trout)
+<li>dasdload bug fix (Greg Smith)
+<li>FBA dasd devices allow any size disk (Jay Maynard)
+<li>Control panel attach command bug fix (Kris Van Hees)
+<li>Windows versions (finally) accessible from main page (Jay Maynard)
+</ul>
+<p>Download
+<a href="hercules-2.16.1.tar.gz">hercules-2.16.1.tar.gz</a>
 <h2>What's new in release 2.16</h2>
 <p>Release date: 20 April 2002
 <ul>
@@ -708,6 +781,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 19 April 2002
+<p>Last updated 1 February 2003
 </BODY>
 </HTML>
