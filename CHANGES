@@ -1,3 +1,4 @@
+19 Feb 2002 Fix pending interrupts on other cpus channelset - Jan Jaeger
 15 Feb 2002 Fix interval timer state retention - Jan Jaeger
 13 Feb 2002 Fix TS intercept test - Paul Leisy
 13 Feb 2002 Fix TXA for HOST PIC 04 fault on GUEST stack access - Paul Leisy

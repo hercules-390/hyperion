@@ -2529,6 +2529,13 @@ static int ARCH_DEP(interrupt_enabled) (REGS *regs, DEVBLK *dev)
 int     i;                              /* Interruption subclass     */
 
 #ifdef FEATURE_S370_CHANNEL
+
+#if defined(FEATURE_CHANNEL_SWITCHING)
+    /* Is this device on a channel connected to this CPU? */
+    if(regs->chanset != dev->chanset)
+        return 0;
+#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
+
     /* Isolate the channel number */
     i = dev->devnum >> 8;
     if (regs->psw.ecmode == 0 && i < 6)
@@ -2588,10 +2595,6 @@ int     iopending = 0;                  /* 1 = I/O still pending     */
     /* Find a device with pending interrupt */
     for (dev = sysblk.iointq; dev != NULL; dev = dev->iointq)
     {
-#if defined(FEATURE_CHANNEL_SWITCHING)
-        if(regs->chanset != dev->chanset)
-            continue;
-#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
         obtain_lock (&dev->lock);
         if ((dev->pending || dev->pcipending)
             && (dev->pmcw.flag5 & PMCW5_V))
