@@ -914,6 +914,13 @@ int     i;
 
     effective_addr2 &= 0xFFFF;
 
+    /* Hercules has as many channelsets as CPU's */
+    if(effective_addr2 >= MAX_CPU_ENGINES)
+    {
+        regs->psw.cc = 3;
+        return;
+    }
+
     /* If the addressed channel set is currently connected
        then return with cc0 */
     if(regs->chanset == effective_addr2)
@@ -924,13 +931,6 @@ int     i;
 
     /* Disconnect channel set */
     regs->chanset = 0xFFFF;
-
-    /* Hercules has as many channelsets as CPU's */
-    if(effective_addr2 >= MAX_CPU_ENGINES)
-    {
-        regs->psw.cc = 3;
-        return;
-    }
 
     obtain_lock(&sysblk.intlock);
 
