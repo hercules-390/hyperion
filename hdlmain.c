@@ -188,12 +188,14 @@ HDL_DEVICE_SECTION;
     HDL_DEVICE(9335, fbadasd_device_hndinfo );
     HDL_DEVICE(9336, fbadasd_device_hndinfo );
 
+#if !defined(__APPLE__)
     /* Communications devices */
     HDL_DEVICE(3088, ctcadpt_device_hndinfo );
     HDL_DEVICE(CTCI, ctcadpt_device_hndinfo );
     HDL_DEVICE(CTCT, ctcadpt_device_hndinfo );
     HDL_DEVICE(LCS,  ctcadpt_device_hndinfo );
     HDL_DEVICE(VMNET,ctcadpt_device_hndinfo );
+#endif /* !defined(__APPLE__) */
 }
 END_DEVICE_SECTION;
 
