@@ -2684,6 +2684,9 @@ int     n;                              /* Number of bytes in buffer */
         b1 = inst[3] >> 4;
         addr1 = regs->GR(b1) & ADDRESS_MAXWRAP(regs);
         b2 = inst[3] & 0x0F;
+        if (inst[1] >= 0x29 && inst[1] <= 0x2C)
+            addr2 = regs->GR(b2) & ADDRESS_MAXWRAP_E(regs);
+        else
         addr2 = regs->GR(b2) & ADDRESS_MAXWRAP(regs);
     }
 

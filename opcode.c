@@ -174,6 +174,10 @@
  UNDEF_INST(set_storage_key_extended)
 #endif /*!defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
+#if !defined(FEATURE_TEST_BLOCK)
+ UNDEF_INST(test_block)
+#endif /*!defined(FEATURE_TEST_BLOCK)*/
+
 
 #if !defined(FEATURE_EXTENDED_TOD_CLOCK)
  UNDEF_INST(set_clock_programmable_field)

@@ -1122,7 +1122,7 @@ BYTE    storkey;
     else /* !sie_state */
 #endif /*defined(_FEATURE_SIE)*/
         /* Insert the storage key into R1 register bits 24-31 */
-#if defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
         regs->GR_LHLCL(r1) = STORAGE_KEY(n) & 0xFE;
 #else
         regs->GR_LHLCL(r1) = (STORAGE_KEY1(n) | STORAGE_KEY2(n)) & 0xFE;
@@ -1156,7 +1156,7 @@ BYTE    storkey;
     PRIV_CHECK(regs);
 
     /* Load 4K block address from R2 register */
-    n = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
 
     /* Convert real address to absolute address */
     n = APPLY_PREFIXING (n, regs->PX);
@@ -3483,7 +3483,7 @@ BYTE    storkey;                        /* Storage key               */
         storkey =  STORAGE_KEY1(n) | STORAGE_KEY2(n);
 #endif
             /* Reset the reference bit in the storage key */
-#if defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n) &= ~(STORKEY_REF);
 #else
         STORAGE_KEY1(n) &= ~(STORKEY_REF);
@@ -3516,7 +3516,7 @@ BYTE    storkey;                        /* Storage key               */
     PRIV_CHECK(regs);
 
     /* Load 4K block address from R2 register */
-    n = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
 
     /* Convert real address to absolute address */
     n = APPLY_PREFIXING (n, regs->PX);
@@ -4314,7 +4314,7 @@ RADR    n;                              /* Absolute storage addr     */
 #endif /*defined(_FEATURE_SIE)*/
     {
         /* Update the storage key from R1 register bits 24-30 */
-#if defined(_FEATURE_2K_STORAGE_KEYS)
+#if !defined(_FEATURE_2K_STORAGE_KEYS)
         STORAGE_KEY(n) &= STORKEY_BADFRM;
         STORAGE_KEY(n) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #else
@@ -4350,7 +4350,7 @@ RADR    n;                              /* Abs frame addr stor key   */
     INVALIDATE_AEA_ALL(regs);
 
     /* Load 4K block address from R2 register */
-    n = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
@@ -5713,6 +5713,7 @@ int     protect;                        /* 1=ALE or page protection  */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
 
+#if defined(FEATURE_TEST_BLOCK)
 /*-------------------------------------------------------------------*/
 /* B22C TB    - Test Block                                     [RRE] */
 /*-------------------------------------------------------------------*/
@@ -5728,8 +5729,8 @@ RADR    n;                              /* Real address              */
     SIE_INTERCEPT(regs);
 
     /* Load 4K block address from R2 register */
-    n = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
-    n &= PAGEFRAME_PAGEMASK;
+    n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
+    n &= XSTORE_PAGEMASK;  /* 4K boundary */
 
     /* Perform serialization */
     PERFORM_SERIALIZATION (regs);
@@ -5767,6 +5768,7 @@ RADR    n;                              /* Real address              */
     GR_A(0, regs) = 0;
 
 }
+#endif /*defined(FEATURE_TEST_BLOCK)*/
 
 
 /*-------------------------------------------------------------------*/

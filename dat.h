@@ -896,6 +896,9 @@ TLBE   *tlbp;                           /* -> TLB entry              */
     /* Combine the page frame real address with the byte
        index of the virtual address to form the real address */
     *raddr = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
+#if defined(FEATURE_S370E_EXTENDED_ADDRESSING)
+        (((U32)pte & PAGETAB_EA_4K) << 23) |
+#endif
         (((U32)pte & PAGETAB_PFRA_4K) << 8) | (vaddr & 0xFFF) :
         (((U32)pte & PAGETAB_PFRA_2K) << 8) | (vaddr & 0x7FF);
 

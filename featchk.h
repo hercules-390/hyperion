@@ -167,6 +167,12 @@
  #error Storage keys must be 2K or 4K
 #endif
 
+#if defined(FEATURE_EXTENDED_STORAGE_KEYS)
+ #if !defined(FEATURE_S370E_EXTENDED_ADDRESSING)
+  #define FEATURE_S370E_EXTENDED_ADDRESSING
+ #endif
+#endif
+
 #if defined(FEATURE_EXPANDED_STORAGE) \
  && !defined(FEATURE_4K_STORAGE_KEYS)
  #error Expanded storage cannot be defined with 2K storage keys
