@@ -1,3 +1,4 @@
+31 Jan 2002 Fix PER in guest for OPTION_CPU_UNROLL - Paul Leisy
 30 Jan 2002 Fix SIE validity checks and intercepts - Paul Leisy
 29 Jan 2002 Fix pending I/O interrupt when enabling I/O subclass - Jan Jaeger
 28 Jan 2002 PER fix for BCTR and move #endif for FEATURE_PER2 - Paul Leisy
