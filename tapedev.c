@@ -3940,7 +3940,10 @@ union
         regfree(&regwrk);
         return -1;
     }
-    logmsg (_("HHCTA998I Device %4.4X : %s is a %s\n"),dev->devnum,dev->filename,fmttab[i].descr);
+    if (strcmp (dev->filename, TAPE_UNLOADED)!=0)
+    {
+        logmsg (_("HHCTA998I Device %4.4X : %s is a %s\n"),dev->devnum,dev->filename,fmttab[i].descr);
+    }
     /* Initialize device dependent fields */
     dev->fd = -1;
     dev->omadesc = NULL;
@@ -4715,6 +4718,11 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     if (dev->fd < 0 && (drc==1 || drc==5))
     {
             *residual=count;
+            if (!strcmp (dev->filename, TAPE_UNLOADED))
+            {
+                build_senseX(TAPE_BSENSE_TAPEUNLOADED,dev,unitstat,code);
+                return;
+            }
             rc=dev->tmh->open(dev,unitstat,code);
             /* Exit with unit status if open was unsuccessful */
             if (rc < 0) {
