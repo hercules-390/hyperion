@@ -924,9 +924,11 @@ FTHREAD, *PFTHREAD;
 FTHREAD*  FindFTHREAD ( DWORD dwThreadID )
 {
     FTHREAD*     pFTHREAD;
-    LIST_ENTRY*  pListEntry = ThreadListHead.Flink;
+    LIST_ENTRY*  pListEntry;
 
     LockThreadsList();      // (acquire thread list lock)
+
+    pListEntry = ThreadListHead.Flink;
 
     while ( pListEntry != &ThreadListHead )
     {
