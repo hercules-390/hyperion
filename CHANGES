@@ -1,3 +1,4 @@
+07 Jan 2003 Add Region Relocate, I/O- External- and Wait-assists - Jan Jaeger
 06 Jan 2003 delay exit in config.c to give time to display message - Fish
 06 Jan 2003 minor changes to tapedev.c read_omadesc function - JCS
 06 Jan 2003 Pre-init residual to zero in tapedev execute_ccw -

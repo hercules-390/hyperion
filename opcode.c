@@ -174,10 +174,6 @@
  UNDEF_INST(set_storage_key_extended)
 #endif /*!defined(FEATURE_EXTENDED_STORAGE_KEYS)*/
 
-#if !defined(FEATURE_TEST_BLOCK)
- UNDEF_INST(test_block)
-#endif /*!defined(FEATURE_TEST_BLOCK)*/
-
 
 #if !defined(FEATURE_EXTENDED_TOD_CLOCK)
  UNDEF_INST(set_clock_programmable_field)
@@ -455,6 +451,17 @@
 #if !defined(FEATURE_INTERPRETIVE_EXECUTION)
  UNDEF_INST(start_interpretive_execution)
 #endif /*!defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+
+
+#if !defined(FEATURE_REGION_RELOCATE)
+ UNDEF_INST(store_zone_parameter);
+ UNDEF_INST(set_zone_parameter);
+#endif /*!defined(FEATURE_REGION_RELOCATE)*/
+
+
+#if !defined(FEATURE_IO_ASSIST)
+ UNDEF_INST(test_pending_zone_interrupt);
+#endif /*!defined(FEATURE_IO_ASSIST)*/
 
 
 #if !defined(FEATURE_CHANNEL_SWITCHING)
@@ -1899,9 +1906,9 @@ zz_func opcode_b2xx[256][GEN_MAXARCH] = {
  /*B23A*/ GENx___x390x900 (store_channel_path_status,S,"STCPS"),
  /*B23B*/ GENx___x390x900 (reset_channel_path,S,"RCHP"),
  /*B23C*/ GENx___x390x900 (set_channel_monitor,S,"SCHM"),
- /*B23D*/ GENx___x___x___ ,                                     /*.STZP      */
- /*B23E*/ GENx___x___x___ ,                                     /*.SZP       */
- /*B23F*/ GENx___x___x___ ,                                     /*.TPZI      */
+ /*B23D*/ GENx___x390x900 (store_zone_parameter,S,"STZP"),
+ /*B23E*/ GENx___x390x900 (set_zone_parameter,S,"SZP"),
+ /*B23F*/ GENx___x390x900 (test_pending_zone_interrupt,S,"TPZI"),
  /*B240*/ GENx___x390x900 (branch_and_stack,RRE,"BAKR"),
  /*B241*/ GENx___x390x900 (checksum,RRE,"CKSM"),
  /*B242*/ GENx___x___x___ ,                                     /**Add FRR   */

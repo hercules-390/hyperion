@@ -73,6 +73,26 @@
  #define _FEATURE_PER2
 #endif
 
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+#define _FEATURE_EXPEDITED_SIE_SUBSET
+#endif
+
+#if defined(FEATURE_REGION_RELOCATE)
+ #define _FEATURE_REGION_RELOCATE
+#endif
+
+#if defined(FEATURE_IO_ASSIST)
+ #define _FEATURE_IO_ASSIST
+#endif
+
+#if defined(FEATURE_WAITSTATE_ASSIST)
+ #define _FEATURE_WAITSTATE_ASSIST
+#endif
+
+#if defined(FEATURE_EXTERNAL_INTERRUPT_ASSIST)
+ #define _FEATURE_EXTERNAL_INTERRUPT_ASSIST
+#endif
+
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
  #define _VSTORE_C_STATIC static inline
@@ -219,6 +239,26 @@
 #if defined(FEATURE_STORAGE_KEY_ASSIST) \
  && !defined(FEATURE_INTERPRETIVE_EXECUTION)
  #error Storage Key assist only supported with SIE
+#endif
+
+#if defined(FEATURE_REGION_RELOCATE) \
+ && !defined(FEATURE_INTERPRETIVE_EXECUTION)
+ #error Region Relocate Facility only supported with SIE
+#endif
+
+#if defined(FEATURE_IO_ASSIST) \
+ && !defined(_FEATURE_SIE)
+ #error I/O Assist Feature only supported with SIE
+#endif
+
+#if defined(FEATURE_EXTERNAL_INTERRUPT_ASSIST) \
+ && !defined(_FEATURE_SIE)
+ #error External Interruption assist only supported with SIE
+#endif
+
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET) \
+ && !defined(_FEATURE_SIE)
+ #error Expedited SIE Subset only supported with SIE
 #endif
 
 #if defined(FEATURE_ESAME) \

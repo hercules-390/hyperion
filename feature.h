@@ -98,6 +98,7 @@
 #undef VE
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #undef SIEBK
+#undef ZPB
 #undef TLB_STD
 #undef TLB_VADDR
 #undef TLB_PTE
@@ -194,6 +195,7 @@ s370_ ## _name
 #define VE(_r)	VE_L(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE1BK
+#define ZPB                     ZPB1
 #define TLB_STD   TLB_STD_L
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
@@ -293,6 +295,7 @@ s390_ ## _name
 #define VE(_r)	VE_L(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE1BK
+#define ZPB                     ZPB1
 #define TLB_STD   TLB_STD_L
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
@@ -387,6 +390,7 @@ z900_ ## _name
 #define VE(_r)	VE_G(_r)
 #endif /*defined(OPTION_AEA_BUFFER)*/
 #define SIEBK                   SIE2BK
+#define ZPB                     ZPB2
 #define TLB_STD   TLB_STD_G
 #define TLB_VADDR TLB_VADDR_G
 #define TLB_PTE   TLB_PTE_G

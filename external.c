@@ -147,11 +147,14 @@ int     rc;
 #if defined(FEATURE_EXPEDITED_SIE_SUBSET)
                        && !(regs->siebk->s & SIE_S_EXP_TIMER)
 #endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+#if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
+                       && !(regs->siebk->ec[0] & SIE_EC0_EXTA)
+#endif
                                                             )
     {
         /* Point to SIE copy of PSA in state descriptor */
         psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
-        STORAGE_KEY(regs->sie_state, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
 #endif /*defined(_FEATURE_SIE)*/
@@ -184,6 +187,9 @@ int     rc;
 #if defined(FEATURE_EXPEDITED_SIE_SUBSET)
                        || (regs->siebk->s & SIE_S_EXP_TIMER)
 #endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+#if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
+                       || (regs->siebk->ec[0] & SIE_EC0_EXTA)
+#endif
                                                             )
 #endif /*defined(_FEATURE_SIE)*/
     {
@@ -202,6 +208,9 @@ int     rc;
 #if defined(FEATURE_EXPEDITED_SIE_SUBSET)
                        && !(regs->siebk->s & SIE_S_EXP_TIMER)
 #endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+#if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
+                       && !(regs->siebk->ec[0] & SIE_EC0_EXTA)
+#endif
                                                             )
         longjmp (regs->progjmp, SIE_INTERCEPT_EXT);
     else

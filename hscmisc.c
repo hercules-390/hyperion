@@ -133,7 +133,7 @@ void display_subchannel (DEVBLK *dev)
                 dev->pmcw.chpid[2], dev->pmcw.chpid[3],
                 dev->pmcw.chpid[4], dev->pmcw.chpid[5],
                 dev->pmcw.chpid[6], dev->pmcw.chpid[7],
-                dev->pmcw.flag24, dev->pmcw.flag25,
+                dev->pmcw.zone, dev->pmcw.flag25,
                 dev->pmcw.flag26, dev->pmcw.flag27);
 
         logmsg ("     SCSW=Flags:%2.2X%2.2X SCHC:%2.2X%2.2X "
@@ -642,12 +642,6 @@ int     n;                              /* Number of bytes in buffer */
 
 #ifdef DISPLAY_INSTRUCTION_OPERANDS
 
-// ZZ  #if defined(_FEATURE_SIE)
-// ZZ    /* Do not try to access host virtual in SIE state */
-// ZZ    if(!regs->sie_state || regs->sie_pref)
-// ZZ    {
-// ZZ  #endif /*defined(_FEATURE_SIE)*/
-
     /* Process the first storage operand */
     if (ilc > 2
         && opcode != 0x84 && opcode != 0x85
@@ -749,10 +743,6 @@ int     n;                              /* Number of bytes in buffer */
 
         logmsg ("%s\n", buf);
     }
-
-// ZZ  #if defined(_FEATURE_SIE)
-// ZZ    }
-// ZZ  #endif /*defined(_FEATURE_SIE)*/
 
 #endif /*DISPLAY_INSTRUCTION_OPERANDS*/
 

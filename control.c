@@ -1645,11 +1645,6 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work areas       */
-#if defined(FEATURE_CHANNEL_SUBSYSTEM)
-BYTE    dism;                           /* Disabled int subcl mask   */
-#elif defined(FEATURE_S370_CHANNEL)
-U32     dchn;                           /* Disabled channel mask     */
-#endif
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -1683,14 +1678,6 @@ U32     dchn;                           /* Disabled channel mask     */
 
     INVALIDATE_AEA_ALL(regs);
 
-#if defined(FEATURE_CHANNEL_SUBSYSTEM)
-    /* Save disabled I/O subclasses */
-    dism = ~regs->CR_LHHCH(6);
-#elif defined(FEATURE_S370_CHANNEL)
-    /* Save disabled channel mask */
-    dchn = ~regs->CR_L(2);
-#endif
-
     /* Load control registers from work area */
     for ( i = r1, d = 0; ; )
     {
@@ -1704,21 +1691,10 @@ U32     dchn;                           /* Disabled channel mask     */
         i++; i &= 15;
     }
 
-#if defined(FEATURE_CHANNEL_SUBSYSTEM)
-    /* Force I/O interrupt check when enabling an I/O subclass */
-    if(dism & regs->CR_LHHCH(6))
-#elif defined(FEATURE_S370_CHANNEL)
-    if(dchn & regs->CR_L(2))
-#endif
-    {
-        obtain_lock(&sysblk.intlock);
-        ON_IC_IOPENDING;
-        release_lock(&sysblk.intlock);
-    }
-
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_PER_MASK(regs);
+    SET_IC_IO_MASK(regs);
 
     RETURN_INTCHECK(regs);
 
@@ -5726,7 +5702,10 @@ RADR    n;                              /* Real address              */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(FEATURE_REGION_RELOCATE)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->mx & SIE_MX_RRF))
+#endif
+        SIE_INTERCEPT(regs);
 
     /* Load 4K block address from R2 register */
     n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);

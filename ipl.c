@@ -396,9 +396,14 @@ int             i;                      /* Array subscript           */
     ARCH_DEP(purge_alb) (regs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
-    /* Put the CPU into the stopped state */
-    regs->cpustate = CPUSTATE_STOPPED;
-    ON_IC_CPU_NOT_STARTED(regs);
+#if defined(_FEATURE_SIE)
+    if(!regs->hostregs)
+#endif /*defined(_FEATURE_SIE)*/
+    {
+        /* Put the CPU into the stopped state */
+        regs->cpustate = CPUSTATE_STOPPED;
+        ON_IC_CPU_NOT_STARTED(regs);
+    }
 
 #if defined(_FEATURE_SIE)
    if(regs->guestregs)

@@ -928,7 +928,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                             | SCCB_CPF0_SIE_XA_MODE
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 //                          | SCCB_CPF0_SIE_SET_II_370_MODE
-//                          | SCCB_CPF0_SIE_SET_II_XA_MODE
+#if defined(FEATURE_IO_ASSIST)
+                            | SCCB_CPF0_SIE_SET_II_XA_MODE
+#endif /*defined(FEATURE_IO_ASSIST)*/
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
                             | SCCB_CPF0_SIE_NEW_INTERCEPT_FORMAT
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
@@ -940,7 +942,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
                             ;
             sccbcpu->cpf[1] = 0
-//                          | SCCB_CPF1_IO_INTERPRETATION_LEVEL_2
+#if defined(FEATURE_IO_ASSIST)
+                            | SCCB_CPF1_IO_INTERPRETATION_LEVEL_2
+#endif /*defined(FEATURE_IO_ASSIST)*/
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
                             | SCCB_CPF1_GUEST_PER_ENHANCED
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
@@ -948,7 +952,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #if defined(FEATURE_STORAGE_KEY_ASSIST)
                             | SCCB_CPF1_RCP_BYPASS_FACILITY
 #endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
-//                          | SCCB_CPF1_REGION_RELOCATE_FACILITY
+#if defined(FEATURE_REGION_RELOCATE)
+                            | SCCB_CPF1_REGION_RELOCATE_FACILITY
+#endif /*defined(FEATURE_REGION_RELOCATE)*/
 #if defined(FEATURE_EXPEDITED_SIE_SUBSET)
                             | SCCB_CPF1_EXPEDITE_TIMER_PROCESSING
 #endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
@@ -990,7 +996,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*defined(FEATURE_PER2)*/
                             ;
             sccbcpu->cpf[5] = 0
-//                          | SCCB_CPF5_GUEST_WAIT_STATE_ASSIST
+#if defined(FEATURE_WAITSTATE_ASSIST)
+                            | SCCB_CPF5_GUEST_WAIT_STATE_ASSIST
+#endif /*defined(FEATURE_WAITSTATE_ASSIST)*/
                             ;
             sccbcpu->cpf[13] = 0
 #if defined(FEATURE_CRYPTO)

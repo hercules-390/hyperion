@@ -39,6 +39,17 @@ U32             n;                      /* 32-bit operand value      */
     switch(code) {
 
 
+#if defined(FEATURE_IO_ASSIST)
+    case 0x002:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 002: Update Interrupt Interlock Control Bit in PMCW  */
+    /*---------------------------------------------------------------*/
+
+        ARCH_DEP(diagnose_002) (regs, r1, r2);
+
+        break;
+#endif
+
     case 0x01F:
     /*---------------------------------------------------------------*/
     /* Diagnose 01F: Power Off                                       */

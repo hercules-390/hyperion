@@ -76,7 +76,11 @@ int i;
 #endif /*!FEATURE_CPU_RECONFIG*/
         {
             if(sysblk.regs[i].cpustate == CPUSTATE_STARTED
-              && !sysblk.regs[i].psw.wait)
+              && (!sysblk.regs[i].psw.wait
+#if defined(_FEATURE_WAITSTATE_ASSIST)
+              && !(sysblk.regs[i].sie_state && sysblk.regs[i].guestregs->psw.wait)
+#endif
+                                           ))
             {
                 /* If the cpu is running but not executing
                    instructions then it must be malfunctioning */

@@ -1079,11 +1079,33 @@ BYTE    c;                              /* Work area for sscanf      */
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
 
+#if defined(FEATURE_REGION_RELOCATE)
+    /* Initialize base zone storage view (SIE compat) */
+    for(i = 0; i < FEATURE_SIE_MAXZONES; i++)
+    {
+        sysblk.zpb[i].mso = 0;
+        sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> 20;
+        if(sysblk.xpndsize)
+        {
+            sysblk.zpb[i].eso = 0;
+            sysblk.zpb[i].esl = (sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
+        }
+        else
+        {
+            sysblk.zpb[i].eso = -1;
+            sysblk.zpb[i].esl = -1;
+        }
+    }
+#endif
+
     /* Initialize the CPU registers */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
     {
         /* Initialize the processor address register for STAP */
         sysblk.regs[cpu].cpuad = cpu;
+
+        /* And set the CPU mask bit for this cpu */
+        sysblk.regs[cpu].cpumask = 0x80000000 >> cpu;
 
         /* Initialize storage views (SIE compat) */
         sysblk.regs[cpu].mainstor = sysblk.mainstor;
@@ -1100,17 +1122,15 @@ BYTE    c;                              /* Work area for sscanf      */
         sysblk.regs[cpu].vf = &sysblk.vf[cpu];
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+        initialize_condition (&sysblk.regs[cpu].intcond);
+#endif
+
 #if defined(_FEATURE_SIE)
         sysblk.sie_regs[cpu] = sysblk.regs[cpu];
         sysblk.sie_regs[cpu].hostregs = &sysblk.regs[cpu];
         sysblk.regs[cpu].guestregs = &sysblk.sie_regs[cpu];
 #endif /*defined(_FEATURE_SIE)*/
-
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
-        initialize_condition (&sysblk.regs[cpu].intcond);
-#endif
-        sysblk.regs[cpu].cpustate = CPUSTATE_STOPPED;
-        sysblk.regs[cpu].cpumask = 0x80000000 >> cpu;
 
     } /* end for(cpu) */
 

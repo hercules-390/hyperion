@@ -515,7 +515,7 @@ typedef struct _REGS {                  /* Processor registers       */
         RADR    sie_scao;               /* System Contol Area        */
         S64     sie_epoch;              /* TOD offset in state desc. */
         unsigned int
-                sie_active:1,           /* Sie active (host only)    */
+                sie_active:1,           /* SIE active (host only)    */
                 sie_pref:1;             /* Preferred-storage mode    */
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -668,6 +668,22 @@ typedef struct _REGS {                  /* Processor registers       */
    } \
  }
 
+// #if defined(FEATURE_REGION_RELOCATE)
+/*-------------------------------------------------------------------*/
+/* Zone Parameter Block                                              */
+/*-------------------------------------------------------------------*/
+typedef struct _ZPBLK {
+    RADR mso;                          /* Main Storage Origin        */
+    RADR msl;                          /* Main Storage Length        */
+    RADR eso;                          /* Expanded Storage Origin    */
+    RADR esl;                          /* Expanded Storage Length    */
+    RADR mbo;                          /* Measurement block origin   */
+    BYTE mbk;                          /* Measurement block key      */
+    int  mbm;                          /* Measurement block mode     */
+    int  mbd;                          /* Device connect time mode   */
+    } ZPBLK;
+// #endif /*defined(FEATURE_REGION_RELOCATE)*/
+
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
@@ -708,6 +724,9 @@ typedef struct _SYSBLK {
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 #if defined(_FEATURE_SIE)
         REGS    sie_regs[MAX_CPU_ENGINES];  /* SIE copy of regs      */
+// #if defined(FEATURE_REGION_RELOCATE)
+        ZPBLK   zpb[FEATURE_SIE_MAXZONES];  /* SIE Zone Parameter Blk*/
+// #endif /*defined(FEATURE_REGION_RELOCATE)*/
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(OPTION_FOOTPRINT_BUFFER)
         REGS    footprregs[MAX_CPU_ENGINES][OPTION_FOOTPRINT_BUFFER];
@@ -1232,6 +1251,7 @@ typedef struct _DEVBLK {
                 ckdkyeq:1,              /* 1=Search Key Equal        */
                 ckdwckd:1,              /* 1=Write R0 or Write CKD   */
                 ckdtrkof:1,             /* 1=Track ovfl on this blk  */
+                ckdssi:1,               /* 1=Set Special Intercept   */
                 ckdnolazywr:1,          /* 1=Perform updates now     */
                 ckdrdonly:1,            /* 1=Open read only          */
                 ckdfakewr:1;            /* 1=Fake successful write
@@ -1599,8 +1619,6 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 /*-------------------------------------------------------------------*/
 extern SYSBLK   sysblk;                 /* System control block      */
 extern CCKDBLK  cckdblk;                /* CCKD global block         */
-// ZZ extern BYTE     ascii_to_ebcdic[];      /* Translate table           */
-// ZZ extern BYTE     ebcdic_to_ascii[];      /* Translate table           */
 #ifdef EXTERNALGUI
 extern int extgui;              /* external gui present */
 #endif /*EXTERNALGUI*/
@@ -1676,6 +1694,9 @@ extern int unbind_device (DEVBLK* dev);
 #define SIE_INTERCEPT_EXT      (-12)    /* External interrupt pending*/
 #define SIE_INTERCEPT_VALIDITY (-13)    /* SIE validity check        */
 #define SIE_INTERCEPT_PER      (-14)    /* SIE guest per event       */
+#define SIE_INTERCEPT_IOINT    (-15)    /* I/O Interruption          */
+#define SIE_INTERCEPT_IOINTP   (-16)    /* I/O Interruption pending  */
+#define SIE_INTERCEPT_IOINST   (-17)    /* I/O Instruction           */
 
 
 /* Functions in module panel.c */

@@ -582,7 +582,8 @@ typedef struct _PSA_3XX {       /* Prefixed storage area     */
 /*0B4*/ FWORD resv0B0;          /* Reserved          */
 /*0B8*/ FWORD ioid;         /* I/O interrupt device id   */
 /*0BC*/ FWORD ioparm;           /* I/O interrupt parameter   */
-/*0C0*/ DWORD resv0C0;          /* Reserved          */
+/*0C0*/ FWORD iointid;          /* I/O interrupt ID      */
+/*0C4*/ FWORD resv0C4;          /* Reserved          */
 /*0C8*/ FWORD stfl;         /* Facilities list (STFL)    */
 /*0CC*/ FWORD resv0CC;          /* Reserved          */
 /*0D0*/ DWORD resv0D0;          /* Reserved          */
@@ -879,15 +880,16 @@ typedef struct _PMCW {
     BYTE    pom;            /* Path operational mask     */
     BYTE    pam;            /* Path available mask       */
     BYTE    chpid[8];       /* Channel path identifiers  */
-    BYTE    flag24;         /* Reserved byte - must be 0 */
-    BYTE    flag25;         /* Reserved byte - must be 0 */
+    BYTE    zone;           /* SIE zone                  */
+    BYTE    flag25;         /* Flag byte 25              */
     BYTE    flag26;         /* Reserved byte - must be 0 */
     BYTE    flag27;         /* Flag byte 27          */
     } PMCW;
 
 /* Bit definitions for PMCW flag byte 4 */
 #define PMCW4_ISC   0x38        /* Interruption subclass     */
-#define PMCW4_RESV  0xC7        /* Reserved bits - must be 0 */
+#define PMCW4_A     0x01        /* Alternate Block Control   */
+#define PMCW4_RESV  0xC6        /* Reserved bits - must be 0 */
 
 /* Bit definitions for PMCW flag byte 5 */
 #define PMCW5_E     0x80        /* Subchannel enabled        */
@@ -903,9 +905,14 @@ typedef struct _PMCW {
 #define PMCW5_T     0x02        /* Timing facility available */
 #define PMCW5_V     0x01        /* Subchannel valid      */
 
+/* Bit definitions for PMCW flag byte 25 */
+#define PMCW25_VISC 0x1F        /* Guest ISC                 */
+#define PMCW25_RESV 0xE0        /* Reserved bits - must be 0 */
+
 /* Bit definitions for PMCW flag byte 27 */
+#define PMCW27_I    0x80        /* Interrupt Interlock Cntl  */
 #define PMCW27_S    0x01        /* Concurrent sense mode     */
-#define PMCW27_RESV 0xFE        /* Reserved bits - must be 0 */
+#define PMCW27_RESV 0x7E        /* Reserved bits - must be 0 */
 
 /* Extended status word structure definition */
 typedef struct _ESW {
@@ -1103,7 +1110,9 @@ typedef struct _MBK {
 #define CHM_GPR1_MBK    0xF0000000  /* Measurement Block Key     */
 #define CHM_GPR1_M  0x00000002  /* Measurement mode control  */
 #define CHM_GPR1_D  0x00000001  /* Block update Mode         */
-#define CHM_GPR1_RESV   0x0FFFFFFC  /* Reserved, must be zero    */
+#define CHM_GPR1_A  0x01000000  /* Alternate mode            */
+#define CHM_GPR1_ZONE  0x00FF0000  /* Zone                      */
+#define CHM_GPR1_RESV   0x0E00FFFC  /* Reserved, must be zero    */
 
 /* Measurement Block Origin  */
 #define S_CHM_GPR2_RESV 0x8000001F  /* Reserved, must be zero    */
@@ -1175,6 +1184,7 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
 /*002*/ BYTE  mx;                       /* Machine mode control      */
+#define SIE_MX_RRF      0x80            /* Region Relocate Installed */
 #define SIE_MX_XC       0x01            /* XC mode guest             */
 /*003*/ BYTE  m;                        /* Mode controls             */
 #define SIE_M_VCC       0x40            /* Vector change control     */
@@ -1249,8 +1259,17 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
 /*04C*/ FWORD ec;                       /* Execution Controls        */
+#define SIE_EC0_EXTA    0x80            /* External Interrupt Assist */
+#define SIE_EC0_INTA    0x40            /* Intervention Bypass Assist*/
+#define SIE_EC0_WAIA    0x20            /* Wait State Assist         */
+#define SIE_EC0_SIGPA   0x10            /* SIGP Assist               */
+#define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
+#define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+#define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
+#define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
+#define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
 /*050*/ BYTE  c;                        /* Interception Code         */
 #define SIE_C_INST         4            /* Instruction interception  */
 #define SIE_C_PGMINT       8            /* Program interruption      */
@@ -1262,6 +1281,8 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_C_VALIDITY    32            /* Validity                  */
 #define SIE_C_STOPREQ     40            /* Stop request              */
 #define SIE_C_OPEREXC     44            /* Operation Exception       */
+#define SIE_C_IOINT       60            /* I/O Interruption          */
+#define SIE_C_IOINST      64            /* I/O Instruction           */
 #define SIE_C_EXP_RUN     68            /* Expedited Run Intercept   */
 #define SIE_C_EXP_TIMER   72            /* Expedited Timer Intercept */
 /*051*/ BYTE  f;                        /* Interception Status       */
@@ -1282,7 +1303,10 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 /*06C*/ FWORD resv6Cf;
 /*070*/ HWORD tch_ctl;                  /* Test Channel control      */
 /*072*/ HWORD resv72h;
-/*074*/ FWORD iopassthru;               /* I/O passthru control      */
+/*074*/ BYTE  zone;                     /* Zone Number               */
+/*075*/ BYTE  resv075;
+/*076*/ BYTE  tschds;                   /* TSCH device status        */
+/*077*/ BYTE  tschsc;                   /* TSCH subchannel status    */
 /*078*/ BYTE  xslim[3];                 /* Extended stor upper lim   */
 /*07B*/ BYTE  resv7Bb;
 /*07C*/ FWORD resv7Cf;
@@ -1291,6 +1315,9 @@ typedef struct _SIE1BK {                /* SIE State Descriptor      */
 #define SIE_IP_PSA_OFFSET   0x40        /* Offset of the IP field
                                            relative to the ipfields
                                                in the PSA            */
+#define SIE_II_PSA_OFFSET   0x30        /* Offset of the IP field 
+                                           relative to the I/O fields
+                                           in the PSA for ESAME guest*/
 /*0E2*/ BYTE  xso[3];                   /* Expanded storage origin   */
 /*0E5*/ BYTE  xsl[3];                   /* Expanded storage limit    */
 /*0E8*/ BYTE  resvE8b[24];
@@ -1311,6 +1338,7 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_S_EXP_TIMER 0x02            /* Expedite timer enabled    */
 #define SIE_S_EXP_RUN   0x01            /* Expedite run enabled      */
 /*002*/ BYTE  mx;                       /* Machine mode control      */
+#define SIE_MX_RRF      0x80            /* Region Relocate Installed */
 #define SIE_MX_XC       0x01            /* XC mode guest             */
 #define SIE_MX_ESAME    0x08            /* ESAME mode guest          */
 /*003*/ BYTE  m;                        /* Mode controls             */
@@ -1383,8 +1411,17 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_IC3_BAKR    0x04            /* Intercept BAKR            */
 #define SIE_IC3_PGX     0x02            /* Intercept PGIN/PGOUT      */
 /*04C*/ FWORD ec;                       /* Execution Controls        */
+#define SIE_EC0_EXTA    0x80            /* External Interrupt Assist */
+#define SIE_EC0_INTA    0x40            /* Intervention Bypass Assist*/
+#define SIE_EC0_WAIA    0x20            /* Wait State Assist         */
+#define SIE_EC0_SIGPA   0x10            /* SIGP Assist               */
+#define SIE_EC0_ALERT   0x08            /* Alert Monitoring          */
+#define SIE_EC0_IOA     0x04            /* I/O Assist                */
 #define SIE_EC0_MVPG    0x01            /* Interpret MVPG and IESBE  */
+#define SIE_EC1_EC370   0x20            /* 370 I/O Assist            */
+#define SIE_EC1_VFONL   0x04            /* Virtual VF online         */
 #define SIE_EC2_PROTEX  0x20            /* Intercept prot exception  */
+#define SIE_EC3_SIGAA   0x04            /* SIGA Assist               */
 /*050*/ BYTE  c;                        /* Interception Code         */
 #define SIE_C_INST         4            /* Instruction interception  */
 #define SIE_C_PGMINT       8            /* Program interruption      */
@@ -1420,7 +1457,10 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*06C*/ HWORD todpfh;                   /* TOD pf high half          */
 /*06E*/ HWORD todpf;                    /* TOD programmable field    */
 /*070*/ FWORD resv070f;
-/*074*/ FWORD iopct;                    /* I/O interpretation cntl 2 */
+/*074*/ BYTE  zone;                     /* Zone Number               */
+/*075*/ BYTE  resv075;
+/*076*/ BYTE  tschds;                   /* TSCH device status        */
+/*077*/ BYTE  tschsc;                   /* TSCH subchannel status    */
 /*078*/ FWORD resv078f;
 /*07C*/ FWORD resv07cf;
 /*080*/ DWORD mso;                      /* Main Storage Origin       */
@@ -1438,6 +1478,9 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 /*0C0*/ BYTE  ip[52];                   /* Interruption parameters   */
 #define SIE_IP_PSA_OFFSET       0x40    /* Offset of the IP field 
                                            relative to the ipfields
+                                           in the PSA for ESAME guest*/
+#define SIE_II_PSA_OFFSET       0x30    /* Offset of the IP field 
+                                           relative to the I/O fields
                                            in the PSA for ESAME guest*/
 /*0F4*/ BYTE  resv0f4b[6];
 /*0FA*/ HWORD ief;                      /* Migration Emulation cnlt  */
@@ -1553,6 +1596,31 @@ typedef struct _SIE2BK {                /* SIE State Descriptor      */
 #define SIE_VI_WHY_OBMSB 0xF003    /* MSO/MSE not multiple of 1Meg...
                                       ..not supported in ESAME gen   */
 
+/* Zone Parameter Block */
+typedef struct _ZPB1 {
+    FWORD   mso;         /* Main Storage Origin
+                            bits 0-15 must be 0       */
+    FWORD   msl;         /* Main Storage Limit
+                            bits 0-15 must be 0       */
+    FWORD   eso;         /* Expanded Storage Origin
+                            bits 0-7 must be 0        */
+    FWORD   esl;         /* Expanded Storage Limit
+                            bits 0-7 must be 0        */
+    FWORD   res[4];      /* Reserved bits - must be 0 */
+} ZPB1;
+
+typedef struct _ZPB2 {
+    DWORD   mso;         /* Main Storage Origin
+                            bits 0-19 must be 0       */
+    DWORD   msl;         /* Main Storage Limit
+                            bits 0-19 must be 0       */
+#define ZPB2_MS_VALID 0x00000FFFFFFFFFFF
+    DWORD   eso;         /* Expanded Storage Origin
+                            bits 0-7 must be 0        */
+    DWORD   esl;         /* Expanded Storage Limit
+                            bits 0-7 must be 0        */
+#define ZPB2_ES_VALID 0x00FFFFFFFFFFFFFF
+} ZPB2;
 
 #define LKPG_GPR0_LOCKBIT   0x00000200
 #define LKPG_GPR0_RESV      0x0000FD00

@@ -51,7 +51,10 @@ DEVBLK *dev;                            /* -> device block           */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+       SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
     if ( regs->GR_LHH(1) != 0x0001 )
@@ -66,6 +69,9 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+#if defined(_FEATURE_IO_ASSIST)
+        SIE_INTERCEPT(regs);
+#endif
         regs->psw.cc = 3;
         return;
     }
@@ -91,7 +97,10 @@ DEVBLK *dev;                            /* -> device block           */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+       SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
     if ( regs->GR_LHH(1) != 0x0001 )
@@ -106,6 +115,9 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+#if defined(_FEATURE_IO_ASSIST)
+        SIE_INTERCEPT(regs);
+#endif
         regs->psw.cc = 3;
         return;
     }
@@ -138,10 +150,17 @@ PMCW    pmcw;                           /* Path management ctl word  */
     ARCH_DEP(vfetchc) ( &pmcw, sizeof(PMCW)-1, effective_addr2, b2, regs );
 
     /* Program check if reserved bits are not zero */
-    if (pmcw.flag4 & PMCW4_RESV
+    if ((pmcw.flag4 & PMCW4_RESV)
         || (pmcw.flag5 & PMCW5_LM) == PMCW5_LM_RESV
-        || pmcw.flag24 != 0 || pmcw.flag25 != 0
-        || pmcw.flag26 != 0 || (pmcw.flag27 & PMCW27_RESV))
+#if !defined(_FEATURE_IO_ASSIST)
+        || (pmcw.flag4 & PMCW4_A)
+        || (pmcw.zone != 0)
+        || (pmcw.flag25 & PMCW25_VISC)
+        || (pmcw.flag27 & PMCW27_I)
+#endif
+        || (pmcw.flag25 & PMCW25_RESV)
+        || (pmcw.flag26 != 0)
+        || (pmcw.flag27 & PMCW27_RESV))
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
@@ -202,17 +221,32 @@ PMCW    pmcw;                           /* Path management ctl word  */
     /* Update the interruption parameter */
     memcpy (dev->pmcw.intparm, pmcw.intparm, sizeof(FWORD));
 
-    /* Update the interruption subclass (ISC) field */
-    dev->pmcw.flag4 &= ~PMCW4_ISC;
-    dev->pmcw.flag4 |= (pmcw.flag4 & PMCW4_ISC);
+    /* Update the ISC and A fields */
+    dev->pmcw.flag4 = pmcw.flag4;
 
     /* Update the path management (LPM and POM) fields */
     dev->pmcw.lpm = pmcw.lpm;
     dev->pmcw.pom = pmcw.pom;
 
-    /* Update the concurrent sense (S) field */
-    dev->pmcw.flag27 &= ~PMCW27_S;
-    dev->pmcw.flag27 |= (pmcw.flag27 & PMCW27_S);
+    /* Update zone, VISC, I and S bit */
+    dev->pmcw.zone = pmcw.zone;
+    dev->pmcw.flag25 = pmcw.flag25;
+    dev->pmcw.flag26 = pmcw.flag26;
+    dev->pmcw.flag27 = pmcw.flag27;
+
+    /* Relate the device storage view to the requested zone */
+    { RADR mso, msl;
+        mso = sysblk.zpb[dev->pmcw.zone].mso << 20;
+        msl = (sysblk.zpb[dev->pmcw.zone].msl << 20) | 0xFFFFF;
+
+        /* Ensure channel program checks on incorrect zone defs */
+        if(mso > (sysblk.mainsize-1) || msl > (sysblk.mainsize-1) || mso > msl)
+            mso = msl = 0;
+
+        dev->mainstor = &(sysblk.mainstor[mso]);
+        dev->mainlim = msl - mso;
+        dev->storkeys = &(STORAGE_KEY(mso, &sysblk));
+    }
 
     /* Set device priority from the interruption subclass bits */
     dev->priority = (dev->pmcw.flag4 & PMCW4_ISC) >> 3;
@@ -273,7 +307,10 @@ DEVBLK *dev;                            /* -> device block           */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+       SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
     if ( regs->GR_LHH(1) != 0x0001 )
@@ -288,6 +325,9 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+#if defined(_FEATURE_IO_ASSIST)
+        SIE_INTERCEPT(regs);
+#endif
         regs->psw.cc = 3;
         return;
     }
@@ -332,7 +372,10 @@ VADR    effective_addr2;                /* Effective address         */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+        SIE_INTERCEPT(regs);
 
     /* Reserved bits in gpr1 must be zero */
     if (regs->GR_L(1) & CHM_GPR1_RESV)
@@ -344,17 +387,53 @@ VADR    effective_addr2;                /* Effective address         */
      && (regs->GR_L(2) & CHM_GPR2_RESV))
         ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
 
-    /* Set the measurement block origin address */
-    if (regs->GR_L(1) & CHM_GPR1_M)
-    {
-        sysblk.mbo = regs->GR(2);
-        sysblk.mbk = (regs->GR_L(1) & CHM_GPR1_MBK) >> 24;
-        sysblk.mbm = 1;
-    }
-    else
-        sysblk.mbm = 0;
+#if defined(_FEATURE_IO_ASSIST)
+    /* Virtual use of I/O Assist features must be intercepted */
+    if(regs->sie_state
+      && ( (regs->GR_L(1) & CHM_GPR1_ZONE)
+        || (regs->GR_L(1) & CHM_GPR1_A) ))
+        SIE_INTERCEPT(regs);
 
-    sysblk.mbd = regs->GR_L(1) & CHM_GPR1_D;
+    /* Zone must be a valid zone number */
+    if (((regs->GR_L(1) & CHM_GPR1_ZONE) >> 16) >= FEATURE_SIE_MAXZONES)
+        ARCH_DEP(program_interrupt) (regs, PGM_OPERAND_EXCEPTION);
+
+    if(regs->GR_L(1) & CHM_GPR1_A)
+#endif /*defined(_FEATURE_IO_ASSIST)*/
+    {
+        /* Set the measurement block origin address */
+        if (regs->GR_L(1) & CHM_GPR1_M)
+        {
+            sysblk.mbo = regs->GR(2);
+            sysblk.mbk = (regs->GR_L(1) & CHM_GPR1_MBK) >> 24;
+            sysblk.mbm = 1;
+        }
+        else
+            sysblk.mbm = 0;
+
+        sysblk.mbd = regs->GR_L(1) & CHM_GPR1_D;
+
+    }
+#if defined(_FEATURE_IO_ASSIST)
+    else
+    {
+    int zone = regs->sie_state ? regs->siebk->zone :
+                               ((regs->GR_L(1) & CHM_GPR1_ZONE) >> 16);
+
+        /* Set the measurement block origin address */
+        if (regs->GR_L(1) & CHM_GPR1_M)
+        {
+            sysblk.zpb[zone].mbo = regs->GR(2);
+            sysblk.zpb[zone].mbk = (regs->GR_L(1) & CHM_GPR1_MBK) >> 24;
+            sysblk.zpb[zone].mbm = 1;
+        }
+        else
+            sysblk.zpb[zone].mbm = 0;
+
+        sysblk.zpb[zone].mbd = regs->GR_L(1) & CHM_GPR1_D;
+
+    }
+#endif /*defined(_FEATURE_IO_ASSIST)*/
 
 }
 
@@ -373,7 +452,10 @@ ORB     orb;                            /* Operation request block   */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+        SIE_INTERCEPT(regs);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -406,6 +488,9 @@ ORB     orb;                            /* Operation request block   */
         || (dev->pmcw.flag5 & PMCW5_E) == 0
         || (orb.lpm & dev->pmcw.pam) == 0)
     {
+#if defined(_FEATURE_IO_ASSIST)
+        SIE_INTERCEPT(regs);
+#endif
         regs->psw.cc = 3;
         return;
     }
@@ -421,12 +506,13 @@ ORB     orb;                            /* Operation request block   */
     dev->pmcw.lpm = orb.lpm;
 
     /* Start the channel program and set the condition code */
-    regs->psw.cc = ARCH_DEP(startio) (dev, &orb);              /*@IWZ*/
+    regs->psw.cc = ARCH_DEP(startio) (regs, dev, &orb);        /*@IWZ*/
 
     regs->siocount++;
 
     /* Set the last path used mask */
     if (0 == regs->psw.cc) dev->pmcw.lpum = 0x80;
+
 }
 
 
@@ -529,8 +615,15 @@ SCHIB   schib;                          /* Subchannel information blk*/
 
     /* Build the subchannel information block */
     schib.pmcw = dev->pmcw;
-    schib.scsw = dev->scsw;
-    memset (schib.moddep, 0, sizeof(schib.moddep));
+
+    obtain_lock (&dev->lock);
+    if (dev->pciscsw.flag3 & SCSW3_SC_PEND)
+        schib.scsw = dev->pciscsw;
+    else
+        schib.scsw = dev->scsw;
+    release_lock (&dev->lock);
+
+    memset (schib.moddep, 0x00, sizeof(schib.moddep));
 
     /* Store the subchannel information block */
     ARCH_DEP(vstorec) ( &schib, sizeof(SCHIB)-1, effective_addr2,
@@ -554,12 +647,17 @@ U64     dreg;                           /* Double register work area */
 U32     ioid;                           /* I/O interruption address  */
 U32     ioparm;                         /* I/O interruption parameter*/
 U32     iointid;                        /* I/O interruption ident    */
+int     icode;                          /* Intercept code            */
+RADR    pfx;                            /* Prefix                    */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+       SIE_INTERCEPT(regs);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -578,26 +676,49 @@ U32     iointid;                        /* I/O interruption ident    */
         obtain_lock (&sysblk.intlock);
 
         /* Test and clear pending interrupt, set condition code */
-        regs->psw.cc =
-            ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm,
+        icode = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm,
                                                        &iointid, NULL);
 
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
 
         /* Store the SSID word and I/O parameter if an interrupt was pending */
-        if (regs->psw.cc)
+        if (icode)
         {
-            if ( effective_addr2 == 0 )
+            if ( effective_addr2 == 0
+#if defined(_FEATURE_IO_ASSIST)
+                                      || icode != SIE_NO_INTERCEPT
+#endif
+                                                                  )
             {
+#if defined(_FEATURE_IO_ASSIST)
+                if(icode != SIE_NO_INTERCEPT)
+                {
+                    /* Point to SIE copy of PSA in state descriptor */
+                    psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_II_PSA_OFFSET);
+                    STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+                }
+                else
+#endif
+                {
+                    /* Point to PSA in main storage */
+                    pfx = regs->PX;
+                    SIE_TRANSLATE(&pfx, ACCTYPE_SIE, regs);
+                    psa = (void*)(regs->mainstor + pfx);
+                    STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+                }
+
                 /* If operand address is zero, store in PSA */
-                psa = (void*)(regs->mainstor + regs->PX);
                 STORE_FW(psa->ioid,ioid);
                 STORE_FW(psa->ioparm,ioparm);
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
                 STORE_FW(psa->iointid,iointid);
 #endif /*defined(FEATURE_ESAME)*/
-                STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF|STORKEY_CHANGE);
+
+#if defined(_FEATURE_IO_ASSIST)
+                if(icode != SIE_NO_INTERCEPT)
+                    longjmp(regs->progjmp,SIE_INTERCEPT_IOINST);
+#endif
             }
             else
             {
@@ -608,8 +729,16 @@ U32     iointid;                        /* I/O interruption ident    */
         }
     }
     else
-        regs->psw.cc = 0;
+    {
+#if defined(_FEATURE_IO_ASSIST)
+        /* If no I/O assisted devices have pending interrupts 
+           then we must intercept */
+        SIE_INTERCEPT(regs);
+#endif
+        icode = 0;
+    }
     
+    regs->psw.cc = (icode == 0) ? 0 : 1;
 }
 
 
@@ -622,12 +751,16 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 DEVBLK *dev;                            /* -> device block           */
 IRB     irb;                            /* Interruption response blk */
+int     cc;                             /* Condition Code            */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+        SIE_INTERCEPT(regs);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -644,23 +777,28 @@ IRB     irb;                            /* Interruption response blk */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+#if defined(_FEATURE_IO_ASSIST)
+        SIE_INTERCEPT(regs);
+#endif
         regs->psw.cc = 3;
         return;
     }
 
     /* validate operand before taking any action */
     ARCH_DEP(validate_operand) (effective_addr2, b2, sizeof(IRB)-1,
-                                        ACCTYPE_WRITE, regs);
+                                        ACCTYPE_WRITE_SKP, regs);
 
     /* Perform serialization and checkpoint-synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
 
     /* Test and clear pending status, set condition code */
-    regs->psw.cc = test_subchan (regs, dev, &irb);
+    cc = test_subchan (regs, dev, &irb);
 
     /* Store the interruption response block */
     ARCH_DEP(vstorec) ( &irb, sizeof(IRB)-1, effective_addr2, b2, regs );
+
+    regs->psw.cc = cc;
 
 }
 
@@ -679,7 +817,10 @@ DEVBLK *dev;                            /* -> device block           */
 
     PRIV_CHECK(regs);
 
-    SIE_INTERCEPT(regs);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && !regs->sie_pref && !(regs->siebk->ec[0] & SIE_EC0_IOA))
+#endif
+       SIE_INTERCEPT(regs);
 
     /* Program check if reg 1 bits 0-15 not X'0001' */
     if ( regs->GR_LHH(1) != 0x0001 )
@@ -694,6 +835,9 @@ DEVBLK *dev;                            /* -> device block           */
         || (dev->pmcw.flag5 & PMCW5_V) == 0
         || (dev->pmcw.flag5 & PMCW5_E) == 0)
     {
+#if defined(_FEATURE_IO_ASSIST)
+        SIE_INTERCEPT(regs);
+#endif
         regs->psw.cc = 3;
         return;
     }
@@ -755,7 +899,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
     STORE_FW(orb.ccwaddr,ccwaddr);                             /*@IZW*/
 
     /* Start the channel program and set the condition code */
-    regs->psw.cc = ARCH_DEP(startio) (dev, &orb);              /*@IZW*/
+    regs->psw.cc = ARCH_DEP(startio) (regs, dev, &orb);        /*@IZW*/
 
     regs->siocount++;
 
@@ -906,8 +1050,6 @@ int     i;
 
     S(inst, execflag, regs, b2, effective_addr2);
 
-// ZZTEMP ARCH_DEP(display_inst) (regs, inst);
-
     PRIV_CHECK(regs);
 
     SIE_INTERCEPT(regs);
@@ -969,8 +1111,6 @@ VADR    effective_addr2;                /* Effective address         */
 int     i;
 
     S(inst, execflag, regs, b2, effective_addr2);
-
-// ZZTEMP ARCH_DEP(display_inst) (regs, inst);
 
     PRIV_CHECK(regs);
 

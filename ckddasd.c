@@ -1248,7 +1248,6 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
            command; or if this is the second end of track in this
            channel program without an intervening read of the home
            address or data area and without an intervening write,
-
            sense, or control command --
            -- except when multitrack READ or SEARCH [KEY?] command
            operates outside the domain of a locate record */
@@ -2523,12 +2522,88 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         break;
 
     case 0x27: /* SEEK AND SET SECTOR (Itel 7330 controller only) */
+/*  case 0x27:    Perform Subsystem Function (3990)               */
     case 0x07: /* SEEK */
     case 0x0B: /* SEEK CYLINDER */
     case 0x1B: /* SEEK HEAD */
     /*---------------------------------------------------------------*/
     /* SEEK                                                          */
+    /* PERFORM SUBSYSTEM FUNCTION                                    */
     /*---------------------------------------------------------------*/
+
+        /* Process Perform Subsystem Function - Set Special Intercept */
+        if(code == 0x27 && dev->ckd3990)
+        {
+#if 0
+            /* Command reject if SSI active */
+            if(dev->ckdssi)
+            {
+                /* Reset SSI condition */
+                dev->ckdssi = 0;
+                ckd_build_sense (dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_F);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+#endif
+
+            /* Command reject if within the domain of a Locate Record,
+               or indeed if preceded by any command at all apart from
+               Suspend Multipath Reconnection */
+            if (dev->ckdlcount > 0
+                || ccwseq > 1
+                || (chained && prevcode != 0x5B))
+            {
+                ckd_build_sense (dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_2);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+
+            /* Command reject if not Set Special Intercept order, 
+               with zero flag byte */
+            if (iobuf[0] != 0x1B || iobuf[1] != 0x00)
+            {
+                ckd_build_sense (dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_4);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+
+            /* Command reject if any command is chained from this command */
+            if (flags & CCW_FLAGS_CC)
+            {
+                ckd_build_sense (dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_2);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+
+            /* Command reject if count is less than 2 */
+            if (count < 2)
+            {
+                ckd_build_sense (dev, SENSE_CR, 0, 0,
+                                FORMAT_0, MESSAGE_3);
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                break;
+            }
+
+            /* Mark Set Special Intercept inactive */
+            dev->ckdssi = 1;
+
+            /* Set residual count */
+            num = (count < 2) ? count : 2;
+            *residual = count - num;
+
+            /* No further processing required */
+
+            /* Return normal status */
+            *unitstat = CSW_CE | CSW_DE;
+
+            break;
+        }
+     
+
         /* Command reject if within the domain of a Locate Record */
         if (dev->ckdlcount > 0)
         {
@@ -4088,6 +4163,17 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* DIAGNOSTIC CONTROL                                            */
     /*---------------------------------------------------------------*/
+        /* Command reject if SSI active */
+        if(dev->ckdssi)
+        {
+            /* Mark Set Special Intercept inactive */
+            dev->ckdssi = 0;
+            ckd_build_sense (dev, SENSE_CR, 0, 0,
+                            FORMAT_0, MESSAGE_F);
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            break;
+        }
+
         /* Calculate residual byte count */
         num = (count < 4) ? count : 4;
         *residual = count - num;

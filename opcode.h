@@ -405,7 +405,7 @@ static inline void store_dw(void* storage, U64 value) {
 
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) \
-            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
             ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
         }
@@ -414,7 +414,7 @@ static inline void store_dw(void* storage, U64 value) {
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -424,7 +424,7 @@ static inline void store_dw(void* storage, U64 value) {
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
 #define HFPREG2_CHECK(_r1, _r2, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+            || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -436,7 +436,7 @@ static inline void store_dw(void* storage, U64 value) {
     if( (_r) & 2 ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-               || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+               || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -448,7 +448,7 @@ static inline void store_dw(void* storage, U64 value) {
     if( ((_r1) & 2) || ((_r2) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-                || (regs->sie_state && !(regs->hostregs->CR(0) & CR0_AFP)) ) { \
+                || ((_regs)->sie_state && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -556,7 +556,7 @@ do { \
     { \
         if((_addr) & 0x01) \
             ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
-        memcpy ((_dest), regs->mainstor + (_regs)->AI + \
+        memcpy ((_dest), (_regs)->mainstor + (_regs)->AI + \
                     ((_addr) & PAGEFRAME_BYTEMASK) , 6); \
     } \
     else \
@@ -1397,7 +1397,7 @@ do { \
 
 
 /* Functions in module channel.c */
-int  ARCH_DEP(startio) (DEVBLK *dev, ORB *orb);            /*@IZW*/
+int  ARCH_DEP(startio) (REGS *regs, DEVBLK *dev, ORB *orb);
 void *s370_execute_ccw_chain (DEVBLK *dev);
 void *s390_execute_ccw_chain (DEVBLK *dev);
 void *z900_execute_ccw_chain (DEVBLK *dev);
@@ -1412,6 +1412,8 @@ int  haltio (REGS *regs, DEVBLK *dev, BYTE ibyte);
 int  resume_subchan (REGS *regs, DEVBLK *dev);
 int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
         U32 *ioparm, U32 *iointid, BYTE *csw);
+int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm, 
+                                              U32 *iointid, BYTE zone);
 void io_reset (void);
 int  chp_reset(BYTE chpid);
 void channelset_reset(REGS *regs);
@@ -1430,6 +1432,7 @@ void s390_store_psw (REGS *regs, BYTE *addr);
 #endif /*defined(_FEATURE_ZSIE)*/
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr);
 int  ARCH_DEP(load_psw) (REGS *regs, BYTE *addr);
+void ARCH_DEP(perform_io_interrupt) (REGS *regs);
 #if defined(_FEATURE_SIE)
 void s370_program_interrupt (REGS *regs, int code);
 #endif /*!defined(_FEATURE_SIE)*/
@@ -1499,6 +1502,7 @@ void display_inst (REGS *regs, BYTE *inst);
 
 /* Functions in module sie.c */
 void ARCH_DEP(sie_exit) (REGS *regs, int code);
+void ARCH_DEP(diagnose_002) (REGS *regs, int r1, int r3);
 
 
 /* Functions in module stack.c */
@@ -1698,6 +1702,9 @@ DEF_INST(inter_user_communication_vehicle);
 
 /* Instructions in sie.c */
 DEF_INST(start_interpretive_execution);
+DEF_INST(store_zone_parameter);
+DEF_INST(set_zone_parameter);
+DEF_INST(test_pending_zone_interrupt);
 
 
 /* Instructions in float.c */

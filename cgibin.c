@@ -812,7 +812,8 @@ int subchan;
 
         fprintf(webblk->hsock,"<tr><th colspan=2>00</th>"
                               "<th colspan=3>ISC</th>"
-                              "<th colspan=3>000</th>"
+                              "<th colspan=2>00</th>"
+                              "<th>A</th>"
                               "<th>E</th>"
                               "<th colspan=2>LM</th>"
                               "<th colspan=2>MM</th>"
@@ -822,8 +823,9 @@ int subchan;
                               "<th colspan=16>DEVNUM</th></tr>\n");
 
         fprintf(webblk->hsock,"<tr><td colspan=2></td>"
-                              "<td colspan=3>%d%d%d</td>"
-                              "<td colspan=3></td>"
+                              "<td colspan=3>%d</td>"
+                              "<td colspan=2></td>"
+                              "<td>%d</td>"
                               "<td>%d</td>"
                               "<td colspan=2>%d%d</td>"
                               "<td colspan=2>%d%d</td>"
@@ -831,9 +833,8 @@ int subchan;
                               "<td>%d</td>"
                               "<td>%d</td>"
                               "<td colspan=16>%2.2X%2.2X</td></tr>\n",
-                              ((dev->pmcw.flag4 >> 5) & 1),
-                              ((dev->pmcw.flag4 >> 4) & 1),
-                              ((dev->pmcw.flag4 >> 3) & 1),
+                              ((dev->pmcw.flag4 & PMCW4_ISC) >> 3),
+                              (dev->pmcw.flag4 & 1),
                               ((dev->pmcw.flag5 >> 7) & 1),
                               ((dev->pmcw.flag5 >> 6) & 1),
                               ((dev->pmcw.flag5 >> 5) & 1),
@@ -899,12 +900,25 @@ int subchan;
                               dev->pmcw.chpid[6],
                               dev->pmcw.chpid[7]);
 
-        fprintf(webblk->hsock,"<tr><th colspan=31>0000000000000000000000000000000</th>"
+        fprintf(webblk->hsock,"<tr><th colspan=8>ZONE</th>"
+                              "<th colspan=5>00000</th>"
+                              "<th colspan=3>VISC</th>"
+                              "<th colspan=8>00000000</th>"
+                              "<th>I</th>"
+                              "<th colspan=6>000000</th>"
                               "<th>S</th></tr>\n");
 
-        fprintf(webblk->hsock,"<tr><td colspan=31></td>"
+        fprintf(webblk->hsock,"<tr><td colspan=8>%2.2X</td>"
+                              "<td colspan=5></td>"
+                              "<td colspan=3>%d</td>"
+                              "<td colspan=8></td>"
+                              "<td>%d</td>"
+                              "<td colspan=6></td>"
                               "<td>%d</td></tr>\n",
-                              (dev->pmcw.flag27 & 1));
+                              dev->pmcw.zone,
+                              (dev->pmcw.flag25 & PMCW25_VISC),
+                              (dev->pmcw.flag27 & PMCW27_I) >> 7,
+                              (dev->pmcw.flag27 & PMCW27_S));
 
         fprintf(webblk->hsock,"</table>\n");
 
@@ -913,6 +927,82 @@ int subchan;
     html_footer(webblk);
 
 }
+
+
+void cgibin_debug_misc(WEBBLK *webblk)
+{
+int zone;
+
+    html_header(webblk);
+
+    fprintf(webblk->hsock,"<h2>Miscellaneous Registers<h2>\n");
+
+
+    fprintf(webblk->hsock,"<table border>\n"
+                          "<caption align=left>"
+                          "<h3>Zone related Registers</h3>"
+                          "</caption>\n");
+
+    fprintf(webblk->hsock,"<tr><th>Zone</th>"
+                          "<th>CS Origin</th>"
+                          "<th>CS Limit</th>"
+                          "<th>ES Origin</th>"
+                          "<th>ES Limit</th>"
+                          "<th>Measurement Block</th>"
+                          "<th>Key</th></tr>\n");
+
+    for(zone = 0; zone < FEATURE_SIE_MAXZONES; zone++)
+    {
+        fprintf(webblk->hsock,"<tr><td>%2.2X</td>"
+                              "<td>%8.8X</td>"
+                              "<td>%8.8X</td>"
+                              "<td>%8.8X</td>"
+                              "<td>%8.8X</td>"
+                              "<td>%8.8X</td>"
+                              "<td>%2.2X</td></tr>\n",
+                              zone,
+                              (U32)sysblk.zpb[zone].mso << 20,
+                              ((U32)sysblk.zpb[zone].msl << 20) | 0xFFFFF,
+                              (U32)sysblk.zpb[zone].eso << 20,
+                              ((U32)sysblk.zpb[zone].esl << 20) | 0xFFFFF,
+                              (U32)sysblk.zpb[zone].mbo,
+                              sysblk.zpb[zone].mbk);
+
+    }
+
+    fprintf(webblk->hsock,"</table>\n");
+
+
+    fprintf(webblk->hsock,"<table border>\n"
+                          "<caption align=left>"
+                          "<h3>Alternate Measurement</h3>"
+                          "</caption>\n");
+
+    fprintf(webblk->hsock,"<tr><th>Measurement Block</th>"
+                          "<th>Key</th></tr>\n");
+
+    fprintf(webblk->hsock,"<tr><td>%8.8X</td>"
+                          "<td>%2.2X</td></tr>\n",
+                          (U32)sysblk.mbo,
+                          sysblk.mbk);
+
+    fprintf(webblk->hsock,"</table>\n");
+
+
+    fprintf(webblk->hsock,"<table border>\n"
+                          "<caption align=left>"
+                          "<h3>Address Limit Register</h3>"
+                          "</caption>\n");
+
+    fprintf(webblk->hsock,"<tr><td>%8.8X</td></tr>\n",
+                              (U32)sysblk.addrlimval);
+
+    fprintf(webblk->hsock,"</table>\n");
+
+    html_footer(webblk);
+
+}
+
 
 
 void cgibin_debug_version_info(WEBBLK *webblk)
@@ -937,6 +1027,7 @@ CGITAB cgidir[] = {
     { "tasks/ipl", &cgibin_ipl },
     { "debug/registers", &cgibin_debug_registers },
     { "debug/storage", &cgibin_debug_storage },
+    { "debug/misc", &cgibin_debug_misc },
     { "debug/version_info", &cgibin_debug_version_info },
     { "debug/device/list", &cgibin_debug_device_list },
     { "debug/device/detail", &cgibin_debug_device_detail },

@@ -561,7 +561,7 @@ static char *pgmintname[] = {
         {
             psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
             /* Set the main storage reference and change bits */
-            STORAGE_KEY(regs->sie_state, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+            STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
         }
         else
         {
@@ -808,26 +808,39 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 /* Perform I/O interrupt if pending                                  */
 /* Note: The caller MUST hold the interrupt lock (sysblk.intlock)    */
 /*-------------------------------------------------------------------*/
-static void ARCH_DEP(perform_io_interrupt) (REGS *regs)
+void ARCH_DEP(perform_io_interrupt) (REGS *regs)
 {
 int     rc;                             /* Return code               */
+int     icode;                          /* Intercept code            */
 PSA    *psa;                            /* -> Prefixed storage area  */
 U32     ioparm;                         /* I/O interruption parameter*/
 U32     ioid;                           /* I/O interruption address  */
 U32     iointid;                        /* I/O interruption ident    */
+RADR    pfx;                            /* Prefix                    */
 DWORD   csw;                            /* CSW for S/370 channels    */
 
     /* Test and clear pending I/O interrupt */
-    rc = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, &iointid, csw);
+    icode = ARCH_DEP(present_io_interrupt) (regs, &ioid, &ioparm, &iointid, csw);
 
     /* Exit if no interrupt was presented */
-    if (rc == 0) return;
+    if (icode == 0) return;
 
-    /* Set the main storage reference and change bits */
-    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
-
-    /* Point to the PSA in main storage */
-    psa = (void*)(regs->mainstor + regs->PX);
+#if defined(_FEATURE_IO_ASSIST)
+    if(regs->sie_state && icode != SIE_NO_INTERCEPT)
+    {
+        /* Point to SIE copy of PSA in state descriptor */
+        psa = (void*)(regs->hostregs->mainstor + regs->sie_state + SIE_II_PSA_OFFSET);
+        STORAGE_KEY(regs->sie_state, regs->hostregs) |= (STORKEY_REF | STORKEY_CHANGE);
+    }
+    else
+#endif
+    {
+        /* Point to PSA in main storage */
+        pfx = regs->PX;
+        SIE_TRANSLATE(&pfx, ACCTYPE_SIE, regs);
+        psa = (void*)(regs->mainstor + pfx);
+        STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+    }
 
 #ifdef FEATURE_S370_CHANNEL
     /* Store the channel status word at PSA+X'40' */
@@ -856,14 +869,14 @@ DWORD   csw;                            /* CSW for S/370 channels    */
     /* Store the I/O interruption parameter at PSA+X'BC' */
     STORE_FW(psa->ioparm, ioparm);
 
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
     /* Store the I/O interruption identification word at PSA+X'C0' */
     STORE_FW(psa->iointid, iointid);
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Trace the I/O interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-#if !defined(FEATURE_ESAME)
+#if !defined(FEATURE_ESAME) && !defined(_FEATURE_IO_ASSIST)
         logmsg (_("HHCCP045I I/O interrupt code=%8.8X parm=%8.8X\n"),
                   ioid, ioparm);
 #else /*defined(FEATURE_ESAME)*/
@@ -872,18 +885,24 @@ DWORD   csw;                            /* CSW for S/370 channels    */
 #endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
-    /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
-    ARCH_DEP(store_psw) ( regs, psa->iopold );
-
-    /* Load new PSW from PSA+X'78' or PSA+X'1F0' for ESAME */
-    rc = ARCH_DEP(load_psw) ( regs, psa->iopnew );
-
     release_lock(&sysblk.intlock);
 
-    if ( rc )
-        ARCH_DEP(program_interrupt) (regs, rc);
+#if defined(_FEATURE_IO_ASSIST)
+    if(icode == SIE_NO_INTERCEPT)
+#endif
+    {
+        /* Store current PSW at PSA+X'38' or PSA+X'170' for ESAME */
+        ARCH_DEP(store_psw) ( regs, psa->iopold );
 
-    longjmp (regs->progjmp, SIE_INTERCEPT_IOREQ);
+        /* Load new PSW from PSA+X'78' or PSA+X'1F0' for ESAME */
+        rc = ARCH_DEP(load_psw) ( regs, psa->iopnew );
+
+        if ( rc )
+            ARCH_DEP(program_interrupt) (regs, rc);
+    }
+
+    longjmp(regs->progjmp, icode);
+
 } /* end function perform_io_interrupt */
 
 /*-------------------------------------------------------------------*/
@@ -1344,7 +1363,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 #ifdef OPTION_FAST_INSTFETCH
 #define FAST_INSTRUCTION_FETCH(_dest, _addr, _regs, _pe, _if) \
         { \
-            if ( regs->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)) \
+            if ( (_regs)->VI == ((_addr) & (PAGEFRAME_PAGEMASK | 0x01)) \
                && ((_addr) <= (_pe))) \
                 (_dest) =  pagestart + ((_addr) & PAGEFRAME_BYTEMASK); \
             else goto _if; \
@@ -1373,13 +1392,13 @@ do { \
 #define FAST_IFETCH(_regs, _pe, _ip, _if, _ex) \
     { \
 _if: \
-    regs->instvalid = 0; \
-    (_ip) = regs->inst; \
+    (_regs)->instvalid = 0; \
+    (_ip) = (_regs)->inst; \
     (_regs)->ip = (_ip); \
-    ARCH_DEP(instfetch) (regs->inst, regs->psw.IA, regs);  \
+    ARCH_DEP(instfetch) ((_regs)->inst, (_regs)->psw.IA, (_regs));  \
     (regs)->instvalid = 1; \
-    (_pe) = (regs->psw.IA & ~0x7FF) + (0x800 - 6); \
-    pagestart = regs->mainstor + regs->AI; \
+    (_pe) = ((_regs)->psw.IA & ~0x7FF) + (0x800 - 6); \
+    pagestart = (_regs)->mainstor + (_regs)->AI; \
     goto _ex; \
 }                                                                                          
 
