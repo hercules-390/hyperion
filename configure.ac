@@ -92,7 +92,7 @@ AC_CHECK_FUNCS(sqrtl)
 AC_ARG_ENABLE(profiling,
 [  --enable-profiling      enable profiling],
 [case "${enableval}" in
-  yes) CFLAGS="$CFLAGS -pg" ;;
+  yes) CFLAGS="$CFLAGS -pg -DPROFILE_CPU" ;;
   no) ;;
   *) CFLAGS="$CFLAGS ${enableval}" ;;
 esac])
@@ -105,7 +105,5 @@ AC_ARG_ENABLE(setuid-hercifc,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-setuid-hercifc) ;;
 esac],[setuid_hercifc=no])
 AM_CONDITIONAL(SETUID_HERCIFC, test x$setuid_hercifc = xyes)
-
-# Maybe something for PROFILE_CPU here?
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
