@@ -109,9 +109,15 @@
 
 #if defined(FEATURE_LINKAGE_STACK)
 
-static inline RADR ARCH_DEP(abs_trap_addr) (VADR vaddr, REGS *regs, int acctype)
+static inline RADR ARCH_DEP(abs_stack_addr) (VADR vaddr, REGS *regs, int acctype)
 {
     return MADDR(vaddr, USE_HOME_SPACE, regs, acctype, 0) - regs->mainstor;
+}
+
+
+static inline RADR ARCH_DEP(abs_trap_addr) (VADR vaddr, REGS *regs, int acctype)
+{
+    return MADDR(vaddr, USE_HOME_SPACE, regs, acctype, regs->psw.pkey) - regs->mainstor;
 }
 
 /*-------------------------------------------------------------------*/
@@ -325,6 +331,7 @@ int  i;
     SET_AEA_MODE(regs);
 }
 
+
 /*-------------------------------------------------------------------*/
 /* Form a new entry on the linkage stack                             */
 /*                                                                   */
@@ -355,14 +362,14 @@ void ARCH_DEP(form_stack_entry) (BYTE etype, VADR retna, VADR calla,
 QWORD   currpsw;                        /* Current PSW               */
 VADR    lsea;                           /* Linkage stack entry addr  */
 VADR    lseaold;                        /* Linkage stack old addr    */
-BYTE    *abs, *abs2 = 0;                /* Absolute addr new entry   */
-BYTE    *absold;                        /* Absolute addr old entry   */
+RADR    abs, abs2 = 0;                  /* Absolute addr new entry   */
+RADR    absold;                         /* Absolute addr old entry   */
 LSED    lsed;                           /* Linkage stack entry desc. */
 LSED    lsed2;                          /* New entry descriptor      */
 U16     rfs;                            /* Remaining free space      */
 VADR    fsha;                           /* Forward section hdr addr  */
 VADR    bsea = 0;                       /* Backward stack entry addr */
-BYTE    *absea = 0;                     /* Absolute address of bsea  */
+RADR    absea = 0;                      /* Absolute address of bsea  */
 int     i;                              /* Array subscript           */
 
     /* [5.12.3.1] Locate space for a new linkage stack entry */
@@ -371,8 +378,8 @@ int     i;                              /* Array subscript           */
     lsea = regs->CR(15) & CR15_LSEA;
 
     /* Fetch the entry descriptor of the current entry */
-    absold = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-    memcpy (&lsed, absold, sizeof(LSED));
+    absold = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+    memcpy (&lsed, regs->mainstor+absold, sizeof(LSED));
     lseaold = lsea;
 
 #ifdef STACK_DEBUG
@@ -395,8 +402,8 @@ int     i;                              /* Array subscript           */
            from the trailer entry of current linkage stack section */
         lsea += sizeof(LSED) + rfs;
         LSEA_WRAP(lsea);
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-        FETCH_FSHA(fsha, abs);
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+        FETCH_FSHA(fsha, regs->mainstor + abs);
 
 #ifdef STACK_DEBUG
         logmsg (_("stack: Forward section header addr " F_VADR "\n"), fsha);
@@ -411,8 +418,8 @@ int     i;                              /* Array subscript           */
         fsha &= LSTE_FSHA;
 
         /* Fetch the entry descriptor of the next section's header */
-        absold = MADDR(fsha, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-        memcpy (&lsed, absold, sizeof(LSED));
+        absold = ARCH_DEP(abs_stack_addr) (fsha, regs, ACCTYPE_READ);
+        memcpy (&lsed, regs->mainstor+absold, sizeof(LSED));
         lseaold = fsha;
 
 #ifdef STACK_DEBUG
@@ -435,7 +442,7 @@ int     i;                              /* Array subscript           */
 
         /* Form the backward stack entry address */
         bsea = LSHE_BVALID | (regs->CR(15) & CR15_LSEA);
-        absea = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_WRITE, 0);
+        absea = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_WRITE);
 
         /* Use the virtual address of the entry descriptor of the
            new section's header entry as the current entry address */
@@ -450,14 +457,15 @@ int     i;                              /* Array subscript           */
     LSEA_WRAP(lsea);
 
     /* Obtain absolute address of the new stack entry */
-    abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_WRITE, 0);
+    abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_WRITE);
 
     /* If new stack entry will cross a page boundary, obtain the
        absolute address of the second page of the stack entry */
     if(((lsea + (LSSE_SIZE - 1)) & PAGEFRAME_PAGEMASK)
                                 != (lsea & PAGEFRAME_PAGEMASK))
-        abs2 = MADDR((lsea + (LSSE_SIZE - 1)) & PAGEFRAME_PAGEMASK,
-                      USE_HOME_SPACE, regs, ACCTYPE_WRITE, 0);
+        abs2 = ARCH_DEP(abs_stack_addr)
+                        ((lsea + (LSSE_SIZE - 1)) & PAGEFRAME_PAGEMASK,
+                        regs, ACCTYPE_WRITE);
 
 #ifdef STACK_DEBUG
     logmsg (_("stack: New stack entry at " F_VADR "\n"), lsea);
@@ -466,7 +474,7 @@ int     i;                              /* Array subscript           */
     /* If a new section then place updated backward stack
        entry address in the new section's header entry */
     if(bsea)
-        STORE_BSEA(absea, bsea);
+        STORE_BSEA(regs->mainstor + absea, bsea);
 
     /* Store general registers 0-15 in bytes 0-63 (ESA/390)
        or bytes 0-127 (ESAME) of the new state entry */
@@ -474,19 +482,19 @@ int     i;                              /* Array subscript           */
     {
 #if defined(FEATURE_ESAME)
         /* Store the 64-bit general register in the stack entry */
-        STORE_DW(abs, regs->GR_G(i));
+        STORE_DW(regs->mainstor + abs, regs->GR_G(i));
 
       #ifdef STACK_DEBUG
         logmsg (_("stack: GPR%d=" F_GREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->GR_G(i), lsea - regs->mainstor, abs - regs->mainstor);
+                " A:" F_RADR "\n"), i, regs->GR_G(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 #else /*!defined(FEATURE_ESAME)*/
         /* Store the 32-bit general register in the stack entry */
-        STORE_FW(abs, regs->GR_L(i));
+        STORE_FW(regs->mainstor + abs, regs->GR_L(i));
 
       #ifdef STACK_DEBUG
         logmsg (_("stack: GPR%d=" F_GREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->GR_L(i), lsea, abs - regs->mainstor);
+                " A:" F_RADR "\n"), i, regs->GR_L(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 #endif /*!defined(FEATURE_ESAME)*/
 
@@ -506,11 +514,11 @@ int     i;                              /* Array subscript           */
     for (i = 0; i < 16; i++)
     {
         /* Store the access register in the stack entry */
-        STORE_FW(abs, regs->AR(i));
+        STORE_FW(regs->mainstor + abs, regs->AR(i));
 
       #ifdef STACK_DEBUG
         logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs - regs->mainstor);
+                " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 
         /* Update the virtual and absolute addresses */
@@ -526,17 +534,19 @@ int     i;                              /* Array subscript           */
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Store the PKM, SASN, EAX, and PASN in bytes 128-135 */
-    STORE_FW(abs, regs->CR_L(3));
-    STORE_HW(abs + 4, regs->CR_LHH(8));
-    STORE_HW(abs + 6, regs->CR_LHL(4));
+    STORE_FW(regs->mainstor + abs, regs->CR_L(3));
+    STORE_HW(regs->mainstor + abs + 4, regs->CR_LHH(8));
+    STORE_HW(regs->mainstor + abs + 6, regs->CR_LHL(4));
 
   #ifdef STACK_DEBUG
     logmsg (_("stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
             "EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
             "stored at V:" F_VADR " A:" F_RADR "\n"),
-            *abs, *(abs+1), *(abs+2), *(abs+3),
-            *(abs+4), *(abs+5), *(abs+6), *(abs+7),
-            lsea, abs - regs->mainstor);
+            regs->mainstor[abs], regs->mainstor[abs+1],
+            regs->mainstor[abs+2], regs->mainstor[abs+3],
+            regs->mainstor[abs+4], regs->mainstor[abs+5],
+            regs->mainstor[abs+6], regs->mainstor[abs+7],
+            lsea, abs);
   #endif /*STACK_DEBUG*/
 
     /* Update virtual and absolute addresses to point to byte 136 */
@@ -550,7 +560,7 @@ int     i;                              /* Array subscript           */
 
     /* Store bits 0-63 of the current PSW in bytes 136-143 */
     ARCH_DEP(store_psw) (regs, currpsw);
-    memcpy (abs, currpsw, 8);
+    memcpy (regs->mainstor + abs, currpsw, 8);
 
 #if defined(FEATURE_ESAME)
     /* For ESAME, use the addressing mode bits from the return
@@ -558,36 +568,38 @@ int     i;                              /* Array subscript           */
     if (retna & 0x01)
     {
         /* For a 64-bit return address, set bits 31 and 32 */
-        *(abs+3) |= 0x01;
-        *(abs+4) |= 0x80;
+        regs->mainstor[abs+3] |= 0x01;
+        regs->mainstor[abs+4] |= 0x80;
         retna &= 0xFFFFFFFFFFFFFFFEULL;
     }
     else if (retna & 0x80000000)
     {
         /* For a 31-bit return address, clear bit 31 and set bit 32 */
-        *(abs+3) &= 0xFE;
-        *(abs+4) |= 0x80;
+        regs->mainstor[abs+3] &= 0xFE;
+        regs->mainstor[abs+4] |= 0x80;
         retna &= 0x7FFFFFFF;
     }
     else
     {
         /* For a 24-bit return address, clear bits 31 and 32 */
-        *(abs+3) &= 0xFE;
-        *(abs+4) &= 0x7F;
+        regs->mainstor[abs+3] &= 0xFE;
+        regs->mainstor[abs+4] &= 0x7F;
         retna &= 0x00FFFFFF;
     }
 #else /*!defined(FEATURE_ESAME)*/
     /* For ESA/390, replace bytes 140-143 by the return address,
        with the high-order bit indicating the addressing mode */
-    STORE_FW(abs + 4, retna);
+    STORE_FW(regs->mainstor + abs + 4, retna);
 #endif /*!defined(FEATURE_ESAME)*/
 
   #ifdef STACK_DEBUG
     logmsg (_("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
             "stored at V:" F_VADR " A:" F_RADR "\n"),
-            *abs, *(abs+1), *(abs+2), *(abs+3),
-            *(abs+4), *(abs+5), *(abs+6), *(abs+7),
-            lsea, abs - regs->mainstor);
+            regs->mainstor[abs], regs->mainstor[abs+1],
+            regs->mainstor[abs+2], regs->mainstor[abs+3],
+            regs->mainstor[abs+4], regs->mainstor[abs+5],
+            regs->mainstor[abs+6], regs->mainstor[abs+7],
+            lsea, abs);
   #endif /*STACK_DEBUG*/
 
     /* Update virtual and absolute addresses to point to byte 144 */
@@ -604,20 +616,20 @@ int     i;                              /* Array subscript           */
     {
       #if defined(FEATURE_CALLED_SPACE_IDENTIFICATION)
         /* Store the called-space identification in bytes 144-147 */
-        STORE_FW(abs, csi);
+        STORE_FW(regs->mainstor + abs, csi);
       #endif /*defined(FEATURE_CALLED_SPACE_IDENTIFICATION)*/
 
         /* Store the PC number in bytes 148-151 */
-        STORE_FW(abs + 4, pcnum);
+        STORE_FW(regs->mainstor + abs + 4, pcnum);
     }
     else
     {
       #if defined(FEATURE_ESAME)
         /* Store the called address and amode in bytes 144-151 */
-        STORE_DW(abs, calla);
+        STORE_DW(regs->mainstor + abs, calla);
       #else /*!defined(FEATURE_ESAME)*/
         /* Store the called address and amode in bytes 148-151 */
-        STORE_FW(abs + 4, calla);
+        STORE_FW(regs->mainstor + abs + 4, calla);
       #endif /*!defined(FEATURE_ESAME)*/
     }
 
@@ -631,7 +643,7 @@ int     i;                              /* Array subscript           */
         abs = abs2;
 
     /* Store zeroes in bytes 152-159 */
-    memset (abs, 0, 8);
+    memset (regs->mainstor+abs, 0, 8);
 
     /* Update virtual and absolute addresses to point to byte 160 */
     lsea += 8;
@@ -644,7 +656,7 @@ int     i;                              /* Array subscript           */
 
 #if defined(FEATURE_ESAME)
     /* For ESAME, store zeroes in bytes 160-167 */
-    memset (abs, 0, 8);
+    memset (regs->mainstor+abs, 0, 8);
 
     /* Update virtual and absolute addresses to point to byte 168 */
     lsea += 8;
@@ -656,14 +668,16 @@ int     i;                              /* Array subscript           */
         abs = abs2;
 
     /* For ESAME, store the return address in bytes 168-175 */
-    STORE_DW ( abs, retna);
+    STORE_DW (regs->mainstor + abs, retna);
 
   #ifdef STACK_DEBUG
     logmsg (_("stack: PSW2=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
             "stored at V:" F_VADR " A:" F_RADR "\n"),
-            *(abs), *(abs+1), *(abs+2), *(abs+3),
-            *(abs+4), *(abs+5), *(abs+6), *(abs+7),
-            lsea, abs - regs->mainstor);
+            regs->mainstor[abs], regs->mainstor[abs+1],
+            regs->mainstor[abs+2], regs->mainstor[abs+3],
+            regs->mainstor[abs+4], regs->mainstor[abs+5],
+            regs->mainstor[abs+6], regs->mainstor[abs+7],
+            lsea, abs);
   #endif /*STACK_DEBUG*/
 
     /* Update virtual and absolute addresses to point to byte 176 */
@@ -680,16 +694,18 @@ int     i;                              /* Array subscript           */
        store the PASTEIN (CR4 bits 0-31) in bytes 180-183 */
     if (ASN_AND_LX_REUSE_ENABLED(regs))
     {
-        STORE_FW(abs, regs->CR_H(3));
-        STORE_FW(abs + 4, regs->CR_H(4));
+        STORE_FW(regs->mainstor + abs, regs->CR_H(3));
+        STORE_FW(regs->mainstor + abs + 4, regs->CR_H(4));
 
       #ifdef STACK_DEBUG
         logmsg (_("stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
                 "PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
                 "stored at V:" F_VADR " A:" F_RADR "\n"),
-                *(abs), *(abs+1), *(abs+2), *(abs+3),
-                *(abs+4), *(abs+5), *(abs+6), *(abs+7),
-                lsea, abs - regs->mainstor);
+                regs->mainstor[abs], regs->mainstor[abs+1],
+                regs->mainstor[abs+2], regs->mainstor[abs+3],
+                regs->mainstor[abs+4], regs->mainstor[abs+5],
+                regs->mainstor[abs+6], regs->mainstor[abs+7],
+                lsea, abs);
       #endif /*STACK_DEBUG*/
 
     } /* end if(ASN_AND_LX_REUSE_ENABLED) */
@@ -701,17 +717,17 @@ int     i;                              /* Array subscript           */
 
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) < 48)
-        abs = (int)abs2 | (lsea & PAGEFRAME_BYTEMASK);
+        abs = abs2 | (lsea & PAGEFRAME_BYTEMASK);
 
     /* For ESAME, store access registers 0-15 in bytes 224-287 */
     for (i = 0; i < 16; i++)
     {
         /* Store the access register in the stack entry */
-        STORE_FW(abs, regs->AR(i));
+        STORE_FW(regs->mainstor + abs, regs->AR(i));
 
       #ifdef STACK_DEBUG
         logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR
-                " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs - regs->mainstor);
+                " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 
         /* Update the virtual and absolute addresses */
@@ -736,7 +752,7 @@ int     i;                              /* Array subscript           */
     /* Store the linkage stack entry descriptor in the last eight
        bytes of the new state entry (bytes 160-167 for ESA/390,
        or bytes 288-295 for ESAME) */
-    memcpy (abs, &lsed2, sizeof(LSED));
+    memcpy (regs->mainstor+abs, &lsed2, sizeof(LSED));
 
 #ifdef STACK_DEBUG
     logmsg (_("stack: New stack entry at " F_VADR "\n"), lsea);
@@ -747,12 +763,12 @@ int     i;                              /* Array subscript           */
 
     /* [5.12.3.3] Update the current entry */
     STORE_HW(lsed.nes, LSSE_SIZE);
-    absold = MADDR(lseaold, USE_HOME_SPACE, regs, ACCTYPE_WRITE, 0);
-    memcpy (absold, &lsed, sizeof(LSED));
+    absold = ARCH_DEP(abs_stack_addr) (lseaold, regs, ACCTYPE_WRITE);
+    memcpy (regs->mainstor+absold, &lsed, sizeof(LSED));
 
 #ifdef STACK_DEBUG
     logmsg (_("stack: Previous stack entry updated at A:" F_RADR "\n"),
-            absold - regs->mainstor);
+            absold);
     logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X nes=%2.2X%2.2X\n"),
             lsed.uet, lsed.si, lsed.rfs[0],
             lsed.rfs[1], lsed.nes[0], lsed.nes[1]);
@@ -792,7 +808,7 @@ VADR ARCH_DEP(locate_stack_entry) (int prinst, LSED *lsedptr,
                                     REGS *regs)
 {
 VADR    lsea;                           /* Linkage stack entry addr  */
-BYTE   *abs;                            /* Absolute address          */
+RADR    abs;                            /* Absolute address          */
 VADR    bsea;                           /* Backward stack entry addr */
 
     /* [5.12.4] Special operation exception if ASF is not enabled,
@@ -812,8 +828,8 @@ VADR    bsea;                           /* Backward stack entry addr */
     lsea = regs->CR(15) & CR15_LSEA;
 
     /* Fetch the entry descriptor of the current entry */
-    abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-    memcpy (lsedptr, abs, sizeof(LSED));
+    abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+    memcpy (lsedptr, regs->mainstor+abs, sizeof(LSED));
 
 #ifdef STACK_DEBUG
     logmsg (_("stack: Stack entry located at " F_VADR "\n"), lsea);
@@ -836,8 +852,8 @@ VADR    bsea;                           /* Backward stack entry addr */
         LSEA_WRAP(lsea);
 
         /* Fetch the backward stack entry address from the header */
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-        FETCH_BSEA(bsea,abs);
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+        FETCH_BSEA(bsea,regs->mainstor + abs);
 
 #ifdef STACK_DEBUG
         logmsg (_("stack: Stack entry located at " F_VADR "\n"), bsea);
@@ -852,8 +868,8 @@ VADR    bsea;                           /* Backward stack entry addr */
         lsea = bsea & LSHE_BSEA;
 
         /* Fetch the entry descriptor of the designated entry */
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-        memcpy (lsedptr, abs, sizeof(LSED));
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+        memcpy (lsedptr, regs->mainstor+abs, sizeof(LSED));
 
 #ifdef STACK_DEBUG
         logmsg (_("stack: et=%2.2X si=%2.2X rfs=%2.2X%2.2X "
@@ -905,7 +921,7 @@ VADR    bsea;                           /* Backward stack entry addr */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(stack_modify) (VADR lsea, U32 m1, U32 m2, REGS *regs)
 {
-BYTE   *abs;                            /* Absolute address          */
+RADR    abs;                            /* Absolute address          */
 
     /* Point back to byte 152 of the state entry */
     lsea -= LSSE_SIZE - sizeof(LSED);
@@ -913,9 +929,9 @@ BYTE   *abs;                            /* Absolute address          */
     LSEA_WRAP(lsea);
 
     /* Store the modify values into the state entry */
-    abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_WRITE, 0);
-    STORE_FW(abs, m1);
-    STORE_FW(abs + 4, m2);
+    abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_WRITE);
+    STORE_FW(regs->mainstor + abs, m1);
+    STORE_FW(regs->mainstor + abs + 4, m2);
 
 } /* end function ARCH_DEP(stack_modify) */
 
@@ -955,7 +971,7 @@ BYTE   *abs;                            /* Absolute address          */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(stack_extract) (VADR lsea, int r1, int code, REGS *regs)
 {
-BYTE   *abs;                            /* Absolute address          */
+RADR    abs;                            /* Absolute address          */
 
     /* Point back to byte 128 of the state entry */
     lsea -= LSSE_SIZE - sizeof(LSED);
@@ -972,8 +988,8 @@ BYTE   *abs;                            /* Absolute address          */
         LSEA_WRAP(lsea);
 
         /* Load bits 0-63 of ESAME PSW from bytes 136-143 */
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-        FETCH_DW(psw1, abs);
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+        FETCH_DW(psw1, regs->mainstor + abs);
 
         /* Point to byte 168 of the state entry */
         lsea += 32;
@@ -981,10 +997,10 @@ BYTE   *abs;                            /* Absolute address          */
 
         /* Recalculate absolute address if page boundary crossed */
         if ((lsea & PAGEFRAME_BYTEMASK) < 32)
-            abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
+            abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
         /* Load bits 64-127 of ESAME PSW from bytes 168-175 */
-        FETCH_DW(psw2, abs);
+        FETCH_DW(psw2, regs->mainstor + abs);
 
         /* For code 4, return ESAME PSW in general register pair */
         if (code == 4)
@@ -1017,9 +1033,9 @@ BYTE   *abs;                            /* Absolute address          */
         LSEA_WRAP(lsea);
 
         /* Load the SASTEIN, PASTEIN from bytes 176-179, 180-183*/
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-        FETCH_FW(regs->GR_H(r1), abs);
-        FETCH_FW(regs->GR_H(r1+1), abs + 4);
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+        FETCH_FW(regs->GR_H(r1), regs->mainstor + abs);
+        FETCH_FW(regs->GR_H(r1+1), regs->mainstor + abs + 4);
 
         return;
 
@@ -1032,9 +1048,9 @@ BYTE   *abs;                            /* Absolute address          */
     LSEA_WRAP(lsea);
 
     /* Load the general register pair from the state entry */
-    abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
-    FETCH_FW(regs->GR_L(r1), abs);
-    FETCH_FW(regs->GR_L(r1+1), abs + 4);
+    abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
+    FETCH_FW(regs->GR_L(r1), regs->mainstor + abs);
+    FETCH_FW(regs->GR_L(r1+1), regs->mainstor + abs + 4);
 
 } /* end function ARCH_DEP(stack_extract) */
 
@@ -1067,7 +1083,7 @@ BYTE   *abs;                            /* Absolute address          */
 void ARCH_DEP(unstack_registers) (int gtype, VADR lsea,
                                 int r1, int r2, REGS *regs)
 {
-BYTE    *abs, *abs2 = 0;                /* Absolute address          */
+RADR    abs, abs2 = 0;                  /* Absolute address          */
 VADR    firstbyte,                      /* First byte to be fetched  */
         lastbyte;                       /* Last byte to be fetched   */
 int     i;                              /* Array subscript           */
@@ -1085,14 +1101,14 @@ int     i;                              /* Array subscript           */
     lsea = firstbyte;
 
     /* Obtain absolute address of the state entry */
-    abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
+    abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
     /* If the state entry crosses a page boundary, obtain the
        absolute address of the second page of the stack entry */
     if( (firstbyte & PAGEFRAME_PAGEMASK)
                                 != (lastbyte & PAGEFRAME_PAGEMASK))
-        abs2 = MADDR(lastbyte & PAGEFRAME_PAGEMASK,
-                     USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
+        abs2 = ARCH_DEP(abs_stack_addr)
+                 (lastbyte & PAGEFRAME_PAGEMASK, regs, ACCTYPE_READ);
 
   #ifdef STACK_DEBUG
     logmsg (_("stack: Unstacking registers %d-%d from " F_VADR "\n"),
@@ -1112,24 +1128,24 @@ int     i;                              /* Array subscript           */
             {
                 /* For ESAME PR and EREGG instructions,
                    load all 64 bits of the register */
-                FETCH_DW(regs->GR_G(i), abs);
+                FETCH_DW(regs->GR_G(i), regs->mainstor + abs);
             } else {
                 /* For ESAME EREG instruction, load bits 32-63 of
                    the register, and leave bits 0-31 unchanged */
-                FETCH_FW(regs->GR_L(i), abs + 4);
+                FETCH_FW(regs->GR_L(i), regs->mainstor + abs + 4);
             }
 
           #ifdef STACK_DEBUG
             logmsg (_("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
-                    " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs - regs->mainstor);
+                    " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
     #else /*!defined(FEATURE_ESAME)*/
             /* For ESA/390, load a 32-bit general register */
-            FETCH_FW(regs->GR_L(i), abs);
+            FETCH_FW(regs->GR_L(i), regs->mainstor + abs);
 
           #ifdef STACK_DEBUG
             logmsg (_("stack: GPR%d=" F_GREG " loaded from V:" F_VADR
-                    " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs - regs->mainstor);
+                    " A:" F_RADR "\n"), i, regs->GR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
     #endif /*!defined(FEATURE_ESAME)*/
         }
@@ -1151,7 +1167,7 @@ int     i;                              /* Array subscript           */
 
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) < 96)
-        abs = (int)(abs2) | (lsea & PAGEFRAME_BYTEMASK);
+        abs = abs2 | (lsea & PAGEFRAME_BYTEMASK);
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Load access registers from bytes 64-127 (for ESA/390), or
@@ -1162,12 +1178,12 @@ int     i;                              /* Array subscript           */
         if ((r1 <= r2 && i >= r1 && i <= r2)
             || (r1 > r2 && (i >= r1 || i <= r2)))
         {
-            FETCH_FW(regs->AR(i), abs);
+            FETCH_FW(regs->AR(i),regs->mainstor + abs);
             SET_AEA_AR(regs, i);
 
           #ifdef STACK_DEBUG
             logmsg (_("stack: AR%d=" F_AREG " loaded from V:" F_VADR
-                    " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs - regs->mainstor);
+                    " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
           #endif /*STACK_DEBUG*/
         }
 
@@ -1214,7 +1230,7 @@ int ARCH_DEP(program_return_unstack) (REGS *regs, RADR *lsedap, int *rc)
 QWORD   newpsw;                         /* New PSW                   */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
-BYTE   *abs;                            /* Absolute address          */
+RADR    abs;                            /* Absolute address          */
 int     permode;                        /* 1=PER mode is set in PSW  */
 U16     pkm;                            /* PSW key mask              */
 U16     sasn;                           /* Secondary ASN             */
@@ -1242,32 +1258,32 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     LSEA_WRAP(lsea);
 
     /* Translate virtual address to absolute address */
-    abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
+    abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
     /* For a call state entry, replace the PKM, SASN, EAX, and PASN */
     if ((lsed.uet & LSED_UET_ET) == LSED_UET_PC)
     {
         /* Fetch the PKM from bytes 128-129 of the stack entry */
-        FETCH_HW(pkm, abs);
+        FETCH_HW(pkm,regs->mainstor + abs);
 
         /* Fetch the SASN from bytes 130-131 of the stack entry */
-        FETCH_HW(sasn, abs + 2);
+        FETCH_HW(sasn,regs->mainstor + abs + 2);
 
         /* Fetch the EAX from bytes 132-133 of the stack entry */
-        FETCH_HW(eax, abs + 4);
+        FETCH_HW(eax,regs->mainstor + abs + 4);
 
         /* Fetch the PASN from bytes 134-135 of the stack entry */
-        FETCH_HW(pasn, abs + 6);
+        FETCH_HW(pasn,regs->mainstor + abs + 6);
 
       #ifdef STACK_DEBUG
         logmsg (_("stack: PKM=%2.2X%2.2X SASN=%2.2X%2.2X "
                 "EAX=%2.2X%2.2X PASN=%2.2X%2.2X \n"
                 "loaded from V:" F_VADR " A:" F_RADR "\n"),
-                *(abs), *(abs+1),
-                *(abs+2), *(abs+3),
-                *(abs+4), *(abs+5),
-                *(abs+6), *(abs+7),
-                lsea, abs - regs->mainstor);
+                regs->mainstor[abs], regs->mainstor[abs+1],
+                regs->mainstor[abs+2], regs->mainstor[abs+3],
+                regs->mainstor[abs+4], regs->mainstor[abs+5],
+                regs->mainstor[abs+6], regs->mainstor[abs+7],
+                lsea, abs);
       #endif /*STACK_DEBUG*/
 
         /* Load PKM into CR3 bits 0-15 (32-47) */
@@ -1291,7 +1307,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) == 0x000)
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
     /* Save the PER mode bit from the current PSW */
     permode = (regs->psw.sysmask & PSW_PERMODE) ? 1 : 0;
@@ -1299,15 +1315,15 @@ VADR    lsep;                           /* Virtual addr of entry desc.
   #ifdef STACK_DEBUG
     logmsg (_("stack: PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
             "loaded from V:" F_VADR " A:" F_RADR "\n"),
-            *(abs), *(abs+1),
-            *(abs+2), *(abs+3),
-            *(abs+4), *(abs+5),
-            *(abs+6), *(abs+7),
-            lsea, abs - regs->mainstor);
+            regs->mainstor[abs], regs->mainstor[abs+1],
+            regs->mainstor[abs+2], regs->mainstor[abs+3],
+            regs->mainstor[abs+4], regs->mainstor[abs+5],
+            regs->mainstor[abs+6], regs->mainstor[abs+7],
+            lsea, abs);
   #endif /*STACK_DEBUG*/
 
     /* Copy PSW bits 0-63 from bytes 136-143 of the stack entry */
-    memcpy (newpsw, abs, 8);
+    memcpy (newpsw, regs->mainstor + abs, 8);
 
 #if defined(FEATURE_ESAME)
     /* For ESAME, advance to byte 168 of the stack entry */
@@ -1317,10 +1333,10 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) < 32)
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
     /* Copy ESAME PSW bits 64-127 from bytes 168-175 */
-    memcpy (newpsw + 8, abs, 8);
+    memcpy (newpsw + 8, regs->mainstor + abs, 8);
 
     /* Update virtual and absolute addresses to point to byte 176 */
     lsea += 8;
@@ -1329,7 +1345,7 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     /* Recalculate absolute address if page boundary crossed */
     if ((lsea & PAGEFRAME_BYTEMASK) == 0x000)
-        abs = MADDR(lsea, USE_HOME_SPACE, regs, ACCTYPE_READ, 0);
+        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_READ);
 
     /* For a call state entry only, if ASN-and-LX-reuse is installed and
        active, load the SASTEIN (high word of CR3) from bytes 176-179,  
@@ -1337,27 +1353,23 @@ VADR    lsep;                           /* Virtual addr of entry desc.
     if ((lsed.uet & LSED_UET_ET) == LSED_UET_PC
         && ASN_AND_LX_REUSE_ENABLED(regs))
     {
-        FETCH_FW(regs->CR_H(3), abs);
-        FETCH_FW(regs->CR_H(4), abs + 4);
+        FETCH_FW(regs->CR_H(3), regs->mainstor + abs);
+        FETCH_FW(regs->CR_H(4), regs->mainstor + abs + 4);
 
       #ifdef STACK_DEBUG
         logmsg (_("stack: SASTEIN=%2.2X%2.2X%2.2X%2.2X "
                 "PASTEIN=%2.2X%2.2X%2.2X%2.2X \n"
                 "loaded from V:" F_VADR " A:" F_RADR "\n"),
-                *(abs), *(abs+1), *(abs+2), *(abs+3),
-                *(abs+4), *(abs+5), *(abs+6), *(abs+7),
-                lsea, abs - regs->mainstor);
+                regs->mainstor[abs], regs->mainstor[abs+1],
+                regs->mainstor[abs+2], regs->mainstor[abs+3],
+                regs->mainstor[abs+4], regs->mainstor[abs+5],
+                regs->mainstor[abs+6], regs->mainstor[abs+7],
+                lsea, abs);
       #endif /*STACK_DEBUG*/
 
     } /* end if(LSED_UET_PC && ASN_AND_LX_REUSE_ENABLED) */
 
 #endif /*defined(FEATURE_ESAME)*/
-
-    /* [5.12.4.4] Pass back the absolute address of the entry
-       descriptor of the preceding linkage stack entry.  The
-       next entry size field of this entry will be cleared on
-       successful completion of the PR instruction */
-    *lsedap = MADDR(lsep, USE_HOME_SPACE, regs, ACCTYPE_WRITE, 0) - regs->mainstor;
 
     /* Load new PSW using the bytes extracted from the stack entry */
     /* The rc will be checked by calling routine for PIC 06        */
@@ -1371,6 +1383,12 @@ VADR    lsep;                           /* Virtual addr of entry desc.
 
     /* restore PER masks which could have been wiped out by load_psw */
     SET_IC_MASK(regs);
+
+    /* [5.12.4.4] Pass back the absolute address of the entry
+       descriptor of the preceding linkage stack entry.  The
+       next entry size field of this entry will be cleared on
+       successful completion of the PR instruction */
+    *lsedap = ARCH_DEP(abs_stack_addr) (lsep, regs, ACCTYPE_WRITE);
 
     /* [5.12.4.5] Update CR15 to point to the previous entry */
     regs->CR(15) = lsep & CR15_LSEA;
