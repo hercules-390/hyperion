@@ -166,7 +166,9 @@
 
 #include "hercules.h"
 
+#ifdef linux
 #include "if_tun.h"
+#endif
 
 #define HERCIFC_CMD "hercifc"           /* Interface config command  */
 
@@ -657,6 +659,7 @@ BYTE            c;                      /* Character work area       */
         }
         dev->fd = fd;
 
+#ifdef linux
         if ((strncasecmp(utsbuf.sysname, "linux", 5) == 0) &&
             (strncmp(utsbuf.machine, "s390", 4) != 0) &&
             (strncmp(utsbuf.release, "2.4", 3) == 0))
@@ -684,6 +687,7 @@ BYTE            c;                      /* Character work area       */
                 }
 	    strcpy(dev->netdevname, ifr.ifr_name);
         } else
+#endif
 	  {
             /* Other OS: Simply use basename of the device */
             char *p = strrchr(dev->filename, '/');
