@@ -658,11 +658,11 @@ int     i;
     if(regs->arch_mode < ARCH_900)
         for (i = 0; i < 16; i++)
             logmsg ("GR%2.2d=%8.8X%s", i, regs->GR_L(i),
-                ((i & 0x03) == 0x03) ? "\n" : "\t")
+                ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
             logmsg ("R%1.1X=%16.16llX%s", i, regs->GR_G(i),
-                ((i & 0x03) == 0x03) ? "\n" : " ")
+                ((i & 0x03) == 0x03) ? "\n" : " ");
 
 } /* end function display_regs */
 
@@ -676,11 +676,11 @@ int     i;
     if(regs->arch_mode < ARCH_900)
         for (i = 0; i < 16; i++)
             logmsg ("CR%2.2d=%8.8X%s", i, regs->CR_L(i),
-                ((i & 0x03) == 0x03) ? "\n" : "\t")
+                ((i & 0x03) == 0x03) ? "\n" : "\t");
     else
         for (i = 0; i < 16; i++)
             logmsg ("C%1.1X=%16.16llX%s", i, regs->CR_G(i),
-                ((i & 0x03) == 0x03) ? "\n" : " ")
+                ((i & 0x03) == 0x03) ? "\n" : " ");
 
 } /* end function display_cregs */
 
@@ -693,7 +693,7 @@ int     i;
 
     for (i = 0; i < 16; i++)
         logmsg ("AR%2.2d=%8.8X%s", i, regs->AR(i),
-            ((i & 0x03) == 0x03) ? "\n" : "\t")
+            ((i & 0x03) == 0x03) ? "\n" : "\t");
 
 } /* end function display_aregs */
 
@@ -1582,9 +1582,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     if (strcmp(cmd,"pr") == 0)
     {
         if(regs->arch_mode > ARCH_390)
-            logmsg ("Prefix=%16.16llX\n", regs->PX_G)
+            logmsg ("Prefix=%16.16llX\n", regs->PX_G);
         else
-            logmsg ("Prefix=%8.8X\n", regs->PX_L)
+            logmsg ("Prefix=%8.8X\n", regs->PX_L);
         return NULL;
     }
 
@@ -1875,7 +1875,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 #else /*!_FEATURE_CPU_RECONFIG*/
         if(cpu < 0 || cpu > sysblk.numcpu)
 #endif /*!_FEATURE_CPU_RECONFIG*/
-            logmsg ("CPU%4.4X not configured\n",cpu)
+            logmsg ("CPU%4.4X not configured\n",cpu);
         else
             sysblk.pcpu = cpu;
         return NULL;

@@ -338,7 +338,7 @@ int     repcnt;                         /* Replication count         */
             /* Handle read error condition */
             if (rc < 0)
                 logmsg ("HHC312I Read error in file %s: %s\n",
-                        dev->filename, strerror(errno))
+                        dev->filename, strerror(errno));
             else
                 logmsg ("HHC313I Unexpected end of file in %s\n",
                         dev->filename);
@@ -498,7 +498,7 @@ int     repcnt;                         /* Replication count         */
                 /* Handle read error condition */
                 if (rc < 0)
                     logmsg ("HHC316I Read error in file %s: %s\n",
-                            dev->filename, strerror(errno))
+                            dev->filename, strerror(errno));
                 else
                     logmsg ("HHC317I Unexpected end of filein %s\n",
                             dev->filename);
@@ -926,7 +926,7 @@ int     blkfactor;                      /* Number of device blocks
             /* Handle read error condition */
             if (rc < 0)
                 logmsg ("HHC323I Read error in file %s: %s\n",
-                        dev->filename, strerror(errno))
+                        dev->filename, strerror(errno));
             else
                 logmsg ("HHC324I Unexpected end of file in %s\n",
                         dev->filename);

@@ -111,19 +111,21 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 /*-------------------------------------------------------------------*/
 #ifndef FLUSHLOG
 #define logmsg(a...) \
-        { \
+    do { \
         fprintf(sysblk.msgpipew, a); \
-        }
+    } while(0)
 #else
 #define logmsg(a...) \
-        { \
+    do { \
         fprintf(sysblk.msgpipew, a); \
         fflush(sysblk.msgpipew); \
-        }
+    } while(0)
 #endif
 #define DEVTRACE(format, a...) \
+    do { \
         if(dev->ccwtrace||dev->ccwstep) \
-        fprintf(sysblk.msgpipew, "%4.4X:" format, dev->devnum, a)
+            fprintf(sysblk.msgpipew, "%4.4X:" format, dev->devnum, a); \
+    } while(0)
 
 /* Debugging */
 

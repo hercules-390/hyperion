@@ -561,7 +561,7 @@ int     rc;                             /* Return code               */
     {
         if (rc < 0)
             logmsg ("HHC407I Error reading file %s: %s\n",
-                    dev->filename, strerror(errno))
+                    dev->filename, strerror(errno));
         else
             logmsg ("HHC408I Unexpected end of file on %s\n",
                     dev->filename);

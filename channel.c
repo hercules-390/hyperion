@@ -518,6 +518,13 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             signal_condition (&dev->resumecond);
         }
+#if !defined(NO_SIGABEND_HANDLER)
+        else
+        {
+            if( dev->ctctype )
+                signal_thread(dev->tid, SIGUSR2);
+        }
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
 
         /* Release the device lock */
         release_lock (&dev->lock);
@@ -633,6 +640,13 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
             dev->scsw.flag2 |= SCSW2_AC_RESUM;
             signal_condition (&dev->resumecond);
         }
+#if !defined(NO_SIGABEND_HANDLER)
+        else
+        {
+            if( dev->ctctype )
+                signal_thread(dev->tid, SIGUSR2);
+        }
+#endif /*!defined(NO_SIGABEND_HANDLER)*/
 
         /* Release the device lock */
         release_lock (&dev->lock);
@@ -853,6 +867,7 @@ void device_thread ()
             sysblk.ioq = dev->nextioq;
             if (sysblk.ioq && sysblk.devtwait)
                 signal_condition(&sysblk.ioqcond);
+            dev->tid = thread_id();
             release_lock (&sysblk.ioqlock);
 
             switch (sysblk.arch_mode)
@@ -864,6 +879,7 @@ void device_thread ()
             }
 
             obtain_lock(&sysblk.ioqlock);
+            dev->tid = 0;
         }
 
         if (sysblk.devtmax < 0
@@ -1320,7 +1336,6 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
 {
 #if !defined(OPTION_FISHIO)
-TID     tid;                            /* Device thread thread id   */
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 int     rc;                             /* Return code               */
 #endif // !defined(OPTION_FISHIO)
@@ -1402,7 +1417,7 @@ int     rc;                             /* Return code               */
             signal_condition(&sysblk.ioqcond);
         else if (sysblk.devtmax == 0 || sysblk.devtnbr < sysblk.devtmax)
         {
-            rc = create_device_thread(&tid,&sysblk.detattr,device_thread,NULL);
+            rc = create_device_thread(&dev->tid,&sysblk.detattr,device_thread,NULL);
             if (rc != 0 && sysblk.devtnbr == 0)
             {
                 logmsg ("HHC760I %4.4X create_thread error: %s",

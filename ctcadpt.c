@@ -1042,6 +1042,11 @@ static struct timeval tv;               /* Timeout time for 'select' */
 
         case -1:
         {
+            if(errno == EINTR)
+            {
+//              logmsg("read interrupted for ctc %4.4X\n",dev->devnum);
+                return;
+            }
             logmsg ("HHC869I %4.4X Error reading from %s: %s\n",
                 dev->devnum, dev->filename, strerror(errno));
             dev->sense[0] = SENSE_EC;
@@ -1318,6 +1323,8 @@ int n;
                     /* -2 will cause an error status to be set */
                     return -2;
                 }
+                if( n == EINTR )
+                    return -3;
                 logmsg ("%4.4X: Error: read: %s\n",
                         dev->devnum, strerror(errno));
                 sleep(2);
@@ -1371,6 +1378,8 @@ int             lastlen = 2;            /* block length at last pckt */
     while (1) {
         c = bufgetc(dev, lastlen == 2);
         if (c < 0) {
+            if(c == -3)
+                return 0;
             /* End of input buffer.  Return what we have. */
 
             setblkheader (iobuf, lastlen);
@@ -1399,6 +1408,8 @@ int             lastlen = 2;            /* block length at last pckt */
         case SLIP_ESC:
             c = bufgetc(dev, lastlen == 2);
             if (c < 0) {
+                if(c == -3)
+                    return 0;
                 /* End of input buffer.  Return what we have. */
 
                 setblkheader (iobuf, lastlen);

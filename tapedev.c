@@ -1263,7 +1263,7 @@ long            density;                /* Tape density code         */
 
     if (tapeinfo[i].t_name != NULL)
         logmsg ("HHC218I %s device type: %s\n",
-                dev->filename, tapeinfo[i].t_name)
+                dev->filename, tapeinfo[i].t_name);
     else
         logmsg ("HHC219I %s device type: 0x%lX\n",
                 dev->filename, stblk.mt_type);
@@ -1276,7 +1276,7 @@ long            density;                /* Tape density code         */
 
     if (densinfo[i].t_name != NULL)
         logmsg ("HHC220I %s tape density: %s\n",
-                dev->filename, densinfo[i].t_name)
+                dev->filename, densinfo[i].t_name);
     else
         logmsg ("HHC221I %s tape density code: 0x%lX\n",
                 dev->filename, density);

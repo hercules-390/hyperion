@@ -174,7 +174,8 @@ TID paneltid;
          || sigaction(SIGFPE, &sa, NULL)
          || sigaction(SIGSEGV, &sa, NULL)
          || sigaction(SIGBUS, &sa, NULL)
-         || sigaction(SIGUSR1, &sa, NULL) )
+         || sigaction(SIGUSR1, &sa, NULL)
+         || sigaction(SIGUSR2, &sa, NULL) )
         {
             fprintf (stderr,
                     "HHC031I Cannot register SIG ILL/FPE/SEGV/BUS handler: %s\n",

@@ -357,7 +357,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         {
             if (rc < 0)
                 logmsg ("HHC354I %s read error: %s\n",
-                        dev->filename, strerror(errno))
+                        dev->filename, strerror(errno));
             else
                 logmsg ("HHC355I %s CKD header incomplete\n",
                         dev->filename);

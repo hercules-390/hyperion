@@ -1332,9 +1332,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
          || sysblk.cp_send_mask != old_cp_send_mask)
         {
             if (sysblk.cp_recv_mask != 0 || sysblk.cp_send_mask != 0)
-                logmsg ("HHC701I SYSCONS interface active\n")
+                logmsg ("HHC701I SYSCONS interface active\n");
             else
-                logmsg ("HHC702I SYSCONS interface inactive\n")
+                logmsg ("HHC702I SYSCONS interface inactive\n");
         }
 
         /* Set response code X'0020' in SCCB header */

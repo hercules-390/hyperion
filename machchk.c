@@ -264,6 +264,20 @@ int i;
 
     tid = thread_id();
 
+    if( signo == SIGUSR2 )
+    {
+    DEVBLK *dev;
+        for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+            if (dev->tid == tid) break;
+        if( dev == NULL)
+            logmsg("signal USR2 received for undetermined device\n");
+#if 0
+        else
+            logmsg("signal USR2 received for device %4.4X\n",dev->devnum);
+#endif
+        return;
+    }
+
 #ifdef FEATURE_CPU_RECONFIG
     for (i = 0; i < MAX_CPU_ENGINES; i++)
 #else /*!FEATURE_CPU_RECONFIG*/
