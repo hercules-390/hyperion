@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+15 Aug 2003 Compress ESAME psw in semi graphic panel - Jan Jaeger
 14 Aug 2003 Updated dasdutil.c for HDL compatibility - Ivan Warren
 14 Aug 2003 Added D/T 3422,3430 to hdteq & tapedev(hdt3420) - Ivan Warren
 14 Aug 2003 Cosmetics : Correct HHCTE006A Prompt - Ivan Warren
