@@ -880,10 +880,8 @@ struct  timeval tv;                     /* Select timeout structure  */
         /* Set screen output stream to fully buffered */
         setvbuf (confp, NULL, _IOFBF, 0);
 
-#if !defined(OPTION_DYNAMIC_LOAD)
     /* Register the panel cleanup exit routine */
     atexit (panel_cleanup);
-#endif
 
     /* Put the terminal into cbreak mode */
     tcgetattr (keybfd, &kbattr);

@@ -391,11 +391,6 @@ TID     rctid;                          /* RC file thread identifier */
 /*-------------------------------------------------------------------*/
 void system_cleanup (void)
 {
-    /* ZZ FIXME: The panel display should handle it's own 
-       termination  the following should be dropped in future */
-    if(!daemon_mode)
-        panel_cleanup();
-
     /* ZZ FIXME: Closing the syslog makes the logger terminate 
        but a more elegant shutdown procedure is required */
     close(sysblk.syslogfd[LOG_WRITE]) ;
