@@ -24,6 +24,7 @@
 /*      ESAME low-address protection - Roger Bowler                  */
 /*      ESAME linkage stack operations - Roger Bowler                */
 /*      ESAME BSA instruction - Roger Bowler                    v209c*/
+/*      ASN-and-LX-reuse facility - Roger Bowler            June 2004*/
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -810,7 +811,7 @@ int     r1, r2;                         /* Values of R fields        */
          && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    /* Load R1 bits 48-63 with PASN from control register 4 bits 48-63 
+    /* Load R1 bits 48-63 with PASN from control register 4 bits 48-63
        and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(4);
 
@@ -825,7 +826,7 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(extract_primary_asn_and_instance)
 {
   int r1, r2;                           /* Values of R fields        */
-  
+
   RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
@@ -840,7 +841,7 @@ DEF_INST(extract_primary_asn_and_instance)
          && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    /* Load R1 bits 48-63 with PASN from control register 4 bits 48-63 
+    /* Load R1 bits 48-63 with PASN from control register 4 bits 48-63
        and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(4);
 
@@ -873,7 +874,7 @@ int     r1, r2;                         /* Values of R fields        */
          && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    /* Load R1 bits 48-63 with SASN from control register 3 bits 48-63 
+    /* Load R1 bits 48-63 with SASN from control register 3 bits 48-63
        and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(3);
 
@@ -888,7 +889,7 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(extract_secondary_asn_and_instance)
 {
   int r1, r2;                           /* Values of R fields        */
-  
+
   RRE(inst, regs, r1, r2);
 
     SIE_MODE_XC_OPEX(regs);
@@ -903,7 +904,7 @@ DEF_INST(extract_secondary_asn_and_instance)
          && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    /* Load R1 bits 48-63 with SASN from control register 3 bits 48-63 
+    /* Load R1 bits 48-63 with SASN from control register 3 bits 48-63
        and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(3);
 
@@ -956,7 +957,9 @@ LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
 
 #undef  MAX_ESTA_CODE
-#if defined(FEATURE_ESAME)
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+#define MAX_ESTA_CODE   5
+#elif defined(FEATURE_ESAME)
 #define MAX_ESTA_CODE   4
 #else /*!defined(FEATURE_ESAME)*/
 #define MAX_ESTA_CODE   3
@@ -3409,10 +3412,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 DEF_INST(program_transfer_with_instance)
 {
   int r1, r2;                           /* Values of R fields        */
-  
+
   RRE(inst, regs, r1, r2);
   ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-} 
+}
 #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
@@ -4325,10 +4328,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 DEF_INST(set_secondary_asn_with_instance)
 {
   int r1, r2;                           /* Values of R fields        */
-  
+
   RRE(inst, regs, r1, r2);
   ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-} 
+}
 #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
