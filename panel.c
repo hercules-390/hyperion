@@ -2437,7 +2437,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         if (i == 0) { logmsg ("No synchronous I/O devices found\n"); }
         else
             logmsg ("TOTAL synchronous: %12lld asynchronous: %12lld  %3lld%%\n",
-                   syncios, asyncios, (syncios * 100) / (syncios + asyncios));
+                syncios, asyncios, (syncios * 100) / (syncios + asyncios + 1));
         return NULL;
     }
 #endif
