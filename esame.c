@@ -411,6 +411,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         {
             /* restore the psw */
             regs->psw = save_psw;
+            regs->zeroilc = 0;
             /* And generate a program interrupt */
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
@@ -426,6 +427,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         {
             /* restore the psw */
             regs->psw = save_psw;
+            regs->zeroilc = 0;
             /* And generate a program interrupt */
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
