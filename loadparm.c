@@ -23,7 +23,7 @@ void set_loadparm(char *name)
 
 void get_loadparm(BYTE *dest)
 {
-    memcpy(dest,loadparm, sizeof(loadparm));
+    memcpy(dest, loadparm, sizeof(loadparm));
 }
 
 
@@ -64,7 +64,7 @@ void set_lparname(char *name)
 
 void get_lparname(BYTE *dest)
 {
-    memcpy(dest,lparname, sizeof(lparname));
+    memcpy(dest, lparname, sizeof(lparname));
 }
 
 
