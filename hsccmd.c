@@ -43,14 +43,16 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
 {
     UNREFERENCED(cmdline);
 
+    /* redirect the logger input to stderr such that termination 
+       messages are written to the screen */
+    dup2(STDERR_FILENO,STDOUT_FILENO);
+
     if (!(argc > 1 && !strcasecmp("now",argv[1])))
         usleep(100000);
 
 #if defined(FISH_HANG)
     FishHangAtExit();
 #endif
-
-    dup2(STDERR_FILENO,STDOUT_FILENO);
 
     if (argc < 2 || strcasecmp("now",argv[1]))
         release_config();
