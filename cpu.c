@@ -455,7 +455,7 @@ static char *pgmintname[] = {
     /* Store the interrupt code in the PSW */
     realregs->psw.intcode = code;
 
-    /* Trace the program check other then PER event*/
+    /* Trace program checks other then PER event */
     if(code && (sysblk.insttrace || sysblk.inststep
         || sysblk.pgminttr & ((U64)1 << ((code - 1) & 0x3F))))
     {

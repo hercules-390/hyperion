@@ -395,7 +395,7 @@ int  size;
         size = sizeof(TRACE_F1_BR);
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)sysblk.mainstor + raddr;
-        STORE_FW(tte->newia24,ia);
+        STORE_FW(tte->newia24,ia & 0x00FFFFFF);
     }
     
     return ARCH_DEP(set_trace_entry) (ag, raddr, size, regs);

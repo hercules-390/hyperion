@@ -519,12 +519,16 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Save the address address used to fetch the instruction */
     if( EN_IC_PER(regs) )
     {
+#if defined(FEATURE_PER2)
         regs->perc = 0x40    /* ATMID-validity */
                    | (regs->psw.amode64 << 7)
                    | (regs->psw.amode << 5)
                    | (!REAL_MODE(&regs->psw) ? 0x10 : 0)
                    | (regs->psw.space << 3)
                    | (regs->psw.armode << 2);
+#else /*!defined(FEATURE_PER2)*/
+        regs->perc = 0;
+#endif /*!defined(FEATURE_PER2)*/
 
         if(*regs->ip != 0x44)
             regs->peradr = addr;
