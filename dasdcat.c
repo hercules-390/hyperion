@@ -254,6 +254,9 @@ int main(int argc, char **argv)
  int rc = 0;
  CIFBLK *cif = 0;
 
+ /* Display program info message */
+ display_version (stderr, "Hercules DASD cat program ");
+
  if (argc < 2) {
  fprintf(stderr, "Usage: dasdcat [-i dasd_image dsname...]...\n");
  fprintf(stderr, " dsname can (currently must) be pdsname/spec\n");
