@@ -2882,7 +2882,7 @@ static ECPSVM_CMDENT ecpsvm_cmdtab[]={
                                                         "        ECPSVM subcommand\n"},
     {"STats",2,ecpsvm_showstats,"Show statistical counters","format : evm stats : Shows various ECPS:VM Counters\n"},
     {"DIsable",2,ecpsvm_disable,"Disable ECPS:VM Features","format : evm disable [ALL|feat1[ feat2|...]\n"},
-    {"ENable",2,ecpsvm_enable,"Enable ECPS:VM Features","format : evm disable [ALL|feat1[ feat2|...]\n"},
+    {"ENable",2,ecpsvm_enable,"Enable ECPS:VM Features","format : evm enable [ALL|feat1[ feat2|...]\n"},
 #if defined(DEBUG_SASSIST) || defined(DEBUG_CPASSIST)
     {"DEBUG",5,ecpsvm_debug,"Debug ECPS:VM Features","format : evm debug [ALL|feat1[ feat2|...]\n"},
     {"NODebug",3,ecpsvm_nodebug,"Turn Debug off for ECPS:VM Features","format : evm NODebug [ALL|feat1[ feat2|...]\n"},
