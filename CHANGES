@@ -1,3 +1,7 @@
+07 Jul 2003 configure.ac now correctly sets USE_DLLTOOL to false if
+            OPTION_DYNAMIC_LOAD not possible (so dyninst/dyngui don't
+            get built), and OPTION_DYNAMIC_LOAD and HDL_USE_LIBTOOL
+            are now both handled automatically in configure.ac - Fish
 07 Jul 2003 ECPS:VM config Statement and EVM panel command retired.
             both replaced with ECPSVM - Ivan Warren
 07 Jul 2003 #undef OPTION_DYNAMIC_LOAD in featall.h if neither dlopen

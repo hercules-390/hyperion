@@ -43,20 +43,8 @@
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 
 
-/* Hercules Dynamic Loader requires dlopen OR libtool support.
-   If dlopen is not available, then use libtool. If neither is
-   available, then OPTION_DYNAMIC_LOAD not possible.
-*/
-#if defined(HAVE_LIBDL) || defined(HAVE_LIBLTDL)
-  #define OPTION_DYNAMIC_LOAD           /* Loadable module support   */
-  #if !defined(HAVE_LIBDL)
-    #define HDL_USE_LIBTOOL
-  #else
-    #undef  HDL_USE_LIBTOOL
-  #endif
-#else
-  #undef  OPTION_DYNAMIC_LOAD           /* Loadable module support   */
-#endif
+// (handled automatically in configure.ac)
+// #define OPTION_DYNAMIC_LOAD 
 
 
 /* Allow for compiler command line overrides */

@@ -16,10 +16,12 @@ endif
 
 if USE_DLLTOOL
 #  USE_DLLTOOL implies Cygwin which implies external gui
+DYNINST=dyninst
 DYNINST_DLL=dyninst.dll
 DYNGUI=dyngui
 DYNGUI_DLL=dyngui.dll
 else
+DYNINST=
 DYNINST_DLL=
 DYNGUI=
 DYNGUI_DLL=
@@ -33,7 +35,7 @@ bin_PROGRAMS = hercules \
 	   cckdcdsk cckdcomp cckddiag cckdswap \
 	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
 	   hetget hetinit hetmap hetupd \
-	   dmap2hrc $(HERCIFC) dyninst $(DYNINST_DLL) $(DYNGUI) $(DYNGUI_DLL)
+	   dmap2hrc $(HERCIFC) $(DYNINST) $(DYNINST_DLL) $(DYNGUI) $(DYNGUI_DLL)
 
 EXTRA_PROGRAMS=hercifc
 

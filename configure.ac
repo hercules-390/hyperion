@@ -15,6 +15,9 @@ AC_PROG_CC
 
 # OS-specific settings that we can't figure out any other way (yet)
 
+build_hercifc=false
+use_dlltool=false
+
 case "$host_os" in
         darwin*)    
                if test $host_vendor = apple ; then
@@ -37,6 +40,8 @@ case "$host_os" in
                 ;;
 esac
 
+AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
+
 # Arch-specific settings that we can't figure out any other way (yet)
 
 case "$host_cpu-$GCC" in
@@ -45,16 +50,11 @@ case "$host_cpu-$GCC" in
         ;;
 esac
 
-AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
-
-AM_CONDITIONAL(USE_DLLTOOL, [test "x$use_dlltool" = "xtrue"])
 
 # System Services
 AC_SYS_LARGEFILE
 
 # Libraries
-AC_CHECK_LIB(  dl,    dlopen)
-AC_CHECK_LIB(ltdl, lt_dlopen)
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
@@ -64,6 +64,25 @@ dnl AC_CHECK_LIB(z, zlibVersion)
 AC_CHECK_LIB(z, main)
 AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 [have_libbz2=yes],[have_libbz2=no])
+
+# OPTION_DYNAMIC_LOAD requires availability of either dlopen
+# or libtool. If neither available OPTION_DYNAMIC_LOAD is not
+# possible and USE_DLLTOOL shouldn't be set either. (Each test
+# done twice; first time to cause default autoconf behavior,
+# the second time to set our flag)
+AC_CHECK_LIB(dl,dlopen)
+AC_CHECK_LIB(dl,dlopen, have_dlopen=true, have_dlopen=false )
+AC_CHECK_LIB(ltdl,lt_dlopen)
+AC_CHECK_LIB(ltdl,lt_dlopen, have_lt_dlopen=true, have_lt_dlopen=false )
+if test $have_dlopen = true || test $have_lt_dlopen = true; then
+  AC_DEFINE([OPTION_DYNAMIC_LOAD])
+  if test $have_dlopen != true; then
+    AC_DEFINE([HDL_USE_LIBTOOL])
+  fi
+else
+  use_dlltool=false
+fi
+AM_CONDITIONAL(USE_DLLTOOL, [test "x$use_dlltool" = "xtrue"])
 
 AM_GNU_GETTEXT()
 
@@ -475,6 +494,10 @@ AH_TEMPLATE([BUILTIN_STRERROR_R],
             [Define to use built-in strerror_r implementation])
 AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
             [Define to enable symbolic substitutions in configuration file])
+AH_TEMPLATE([OPTION_DYNAMIC_LOAD],
+            [Define to enable Hercules Dynamic Loader feature])
+AH_TEMPLATE([HDL_USE_LIBTOOL],
+            [Define to cause dynamic loader use use libtool instead of dlopen])
 
 AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
 
