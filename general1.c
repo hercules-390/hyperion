@@ -1333,8 +1333,14 @@ U32     n;                              /* 32-bit operand value      */
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
+      && regs->psw.cc == 1)
+    {
+        if( !OPEN_IC_PERINT(regs) )
+            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        else
+            longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    }
 #endif /*defined(_FEATURE_SIE)*/
 
 }
@@ -1405,8 +1411,14 @@ U32     n1, n2;                         /* 32-bit operand values     */
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_SIE)
-    if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
+      && regs->psw.cc == 1)
+    {
+        if( !OPEN_IC_PERINT(regs) )
+            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        else
+            longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    }
 #endif /*defined(_FEATURE_SIE)*/
 
 }

@@ -504,9 +504,8 @@ static char *pgmintname[] = {
       && code != PGM_VECTOR_OPERATION_EXCEPTION
 #endif /*FEATURE_VECTOR_FACILITY*/
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-      && !( regs->sie_state
-        && (regs->siebk->mx & SIE_MX_XC)
-        && code == PGM_ALEN_TRANSLATION_EXCEPTION )
+      && !(code == PGM_ALEN_TRANSLATION_EXCEPTION
+        && (regs->siebk->mx & SIE_MX_XC))
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
       /* And conditional for the following exceptions */
       && !(code == PGM_OPERATION_EXCEPTION
@@ -683,7 +682,7 @@ static char *pgmintname[] = {
         {
 #if defined(_FEATURE_SIE)
             if(realregs->sie_state)
-                longjmp(realregs->progjmp, code);
+                longjmp(realregs->progjmp, pcode);
             else
 #endif /*defined(_FEATURE_SIE)*/
             {

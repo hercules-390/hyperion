@@ -2283,8 +2283,14 @@ U64     n;                              /* 64-bit operand value      */
 #endif /* MAX_CPU_ENGINES > 1 && defined)OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_ZSIE)
-    if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
+      && regs->psw.cc == 1)
+    {
+        if( !OPEN_IC_PERINT(regs) )
+            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        else
+            longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    }
 #endif /*defined(_FEATURE_ZSIE)*/
 
 } /* end DEF_INST(compare_and_swap_long) */
@@ -2354,8 +2360,14 @@ U64     n1, n2;                         /* 64-bit operand values     */
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_ZSIE)
-    if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
+      && regs->psw.cc == 1)
+    {
+        if( !OPEN_IC_PERINT(regs) )
+            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        else
+            longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+    }
 #endif /*defined(_FEATURE_ZSIE)*/
 
 } /* end DEF_INST(compare_double_and_swap_long) */
