@@ -113,9 +113,6 @@
 #undef ASD_PRIVATE
 #undef BROADCAST_PFRA
 #undef ASD_RESV
-#undef ASD_CR  
-
-#define ASD_RESV ( ASCE_RESV & STD_RESV )
 
 #if !defined(NO_ATTR_REGPARM)
 #define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
@@ -220,7 +217,6 @@ s370_ ## _name
 #define TLBID_PAGEMASK  0x00E00000
 #define TLBID_BYTEMASK  0x001FFFFF
 #define ASD_PRIVATE   SEGTAB_370_CMN
-#define ASD_CR(_cr) (_cr)
 #define BROADCAST_PFRA BROADCAST_PFRA_L
 
 #elif __GEN_ARCH == 390
@@ -329,7 +325,6 @@ s390_ ## _name
 #define TLBID_PAGEMASK  0x7FC00000
 #define TLBID_BYTEMASK  0x003FFFFF
 #define ASD_PRIVATE   STD_PRIVATE
-#define ASD_CR(_cr) ((_cr) & ~ASD_RESV)
 #define BROADCAST_PFRA BROADCAST_PFRA_L
 
 #elif __GEN_ARCH == 900
@@ -452,7 +447,6 @@ z900_ ## _name
 #define TLBID_PAGEMASK  0xFFFFFFFFFFC00000ULL
 #define TLBID_BYTEMASK  0x00000000003FFFFFULL
 #define ASD_PRIVATE   (ASCE_P|ASCE_R)
-#define ASD_CR(_cr) ((_cr) & ~ASD_RESV)
 #define BROADCAST_PFRA BROADCAST_PFRA_G
 
 #else
@@ -737,7 +731,7 @@ do { \
  ( \
        likely((_regs)->aea_ar[(_arn)]) \
    &&  likely( \
-              (ASD_CR((_regs)->CR((_regs)->aea_ar[(_arn)])) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
+              ((_regs)->CR((_regs)->aea_ar[(_arn)]) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
            || ((_regs)->aea_common[(_regs)->aea_ar[(_arn)]] & (_regs)->tlb.common[TLBIX(_addr)]) \
              ) \
    &&  likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]) \

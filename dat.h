@@ -551,31 +551,31 @@ U16     eax;                            /* Authorization index       */
         if (HOME_SPACE_MODE(&regs->psw))
         {
             regs->dat.stid = TEA_ST_HOME;
-            regs->dat.asd = ASD_CR(regs->CR(13));
+            regs->dat.asd = regs->CR(13);
         }
         else
   #endif /*defined(FEATURE_LINKAGE_STACK)*/
         {
             regs->dat.stid = TEA_ST_PRIMARY;
-            regs->dat.asd = ASD_CR(regs->CR(1));
+            regs->dat.asd = regs->CR(1);
         }
   #if defined(FEATURE_LINKAGE_STACK)
     }
     else if (acctype == ACCTYPE_STACK)
     {
         regs->dat.stid = TEA_ST_HOME;
-        regs->dat.asd = ASD_CR(regs->CR(13));
+        regs->dat.asd = regs->CR(13);
     }
   #endif /*defined(FEATURE_LINKAGE_STACK)*/
     else if (arn == USE_PRIMARY_SPACE)
     {
         regs->dat.stid = TEA_ST_PRIMARY;
-        regs->dat.asd = ASD_CR(regs->CR(1));
+        regs->dat.asd = regs->CR(1);
     }
     else if (arn == USE_SECONDARY_SPACE)
     {
         regs->dat.stid = TEA_ST_SECNDRY;
-        regs->dat.asd = ASD_CR(regs->CR(7));
+        regs->dat.asd = regs->CR(7);
     }
   #if defined(FEATURE_ACCESS_REGISTERS)
     else if(ACCESS_REGISTER_MODE(&regs->psw)
@@ -605,13 +605,13 @@ U16     eax;                            /* Authorization index       */
         case ALET_PRIMARY:
             /* [5.8.4.2] Obtain primary segment table designation */
             regs->dat.stid = TEA_ST_PRIMARY;
-            regs->dat.asd = ASD_CR(regs->CR(1));
+            regs->dat.asd = regs->CR(1);
             break;
 
         case ALET_SECONDARY:
             /* [5.8.4.2] Obtain secondary segment table designation */
             regs->dat.stid = TEA_ST_SECNDRY;
-            regs->dat.asd = ASD_CR(regs->CR(7));
+            regs->dat.asd = regs->CR(7);
             break;
 
         default:
@@ -620,7 +620,7 @@ U16     eax;                            /* Authorization index       */
             if(regs->aea_ar[arn] >= CR_ALB_OFFSET)
             {
                 regs->dat.asd = regs->CR(regs->aea_ar[arn]);
-                regs->dat.protect = (regs->dat.asd & TLB_PROT_ASD) ? 2 : 0;
+                regs->dat.protect = regs->aea_aleprot[arn];
                 regs->dat.stid = TEA_ST_ARMODE;
             }
             else
@@ -636,10 +636,10 @@ U16     eax;                            /* Authorization index       */
                     return regs->dat.xcode;
 
                 /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
-                regs->dat.asd = ASD_CR(ASTE_AS_DESIGNATOR(aste));
+                regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
                 regs->dat.stid = TEA_ST_ARMODE;
                 if(regs->dat.protect & 2)
-                   regs->dat.asd |= TLB_PROT_ASD;
+                   regs->dat.asd ^= TLB_PROT_ASD;
             }
 
 #if 1
@@ -647,6 +647,7 @@ U16     eax;                            /* Authorization index       */
             regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
             regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
             regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
+            regs->aea_aleprot[arn] = regs->dat.protect & 2;
 #endif
 
         } /* end switch(alet) */
@@ -657,20 +658,20 @@ U16     eax;                            /* Authorization index       */
     {
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
         regs->dat.stid = TEA_ST_PRIMARY;
-        regs->dat.asd = ASD_CR(regs->CR(1));
+        regs->dat.asd = regs->CR(1);
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
     }
   #if defined(FEATURE_LINKAGE_STACK)
     else if (HOME_SPACE_MODE(&regs->psw))
     {
         regs->dat.stid = TEA_ST_HOME;
-        regs->dat.asd = ASD_CR(regs->CR(13));
+        regs->dat.asd = regs->CR(13);
     }
   #endif /*defined(FEATURE_LINKAGE_STACK)*/
     else /* SECONDARY_SPACE_MODE */
     {
         regs->dat.stid = TEA_ST_SECNDRY;
-        regs->dat.asd = ASD_CR(regs->CR(7));
+        regs->dat.asd = regs->CR(7);
     }
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
@@ -1023,7 +1024,7 @@ U32     ptl;                            /* Page table length         */
         {
             regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
             if(regs->dat.protect & 2)
-                regs->tlb.TLB_ASD(tlbix) |= TLB_PROT_ASD;
+                regs->tlb.TLB_ASD(tlbix) ^= TLB_PROT_ASD;
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
@@ -1354,7 +1355,7 @@ U16     sx, px;                         /* Segment and page index,
         {
             regs->tlb.TLB_ASD(tlbix)   = regs->dat.asd;
             if(regs->dat.protect & 2)
-                regs->tlb.TLB_ASD(tlbix) |= TLB_PROT_ASD;
+                regs->tlb.TLB_ASD(tlbix) ^= TLB_PROT_ASD;
             regs->tlb.TLB_VADDR(tlbix) = (vaddr & TLBID_PAGEMASK) | regs->tlbID;
             regs->tlb.TLB_PTE(tlbix)   = pte;
             regs->tlb.common[tlbix]    = (ste & SEGTAB_COMMON) ? 1 : 0;
