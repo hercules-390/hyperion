@@ -642,10 +642,9 @@ do { \
 #undef RR
 #define RR(_inst, _regs, _r1, _r2) \
         { \
-            register U32 ib; \
-	    ib=(_inst)[1]; \
-            (_r1) = ib >> 4; \
-            (_r2) = ib & 0x0F; \
+            int i = (_inst)[1]; \
+            (_r1) = i >> 4; \
+            (_r2) = i & 0x0F; \
             INST_UPDATE_PSW((_regs), 2); \
         }
 
@@ -668,50 +667,49 @@ do { \
 /* RRE register to register with extended op code */
 #undef RRE
 #define RRE(_inst, _regs, _r1, _r2) \
-        {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
-            (_r1) = (temp >> 4) & 0xf; \
-            (_r2) = temp & 0xf; \
+        { \
+            int i = (_inst)[3]; \
+            (_r1) = i >> 4; \
+            (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
         }
 
 /* RRF register to register with additional R3 field */
 #undef RRF_R
 #define RRF_R(_inst, _regs, _r1, _r2, _r3) \
-        {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
-            (_r1) = (temp >> 12) & 0xf; \
-            (_r3) = (temp >> 4) & 0xf; \
-            (_r2) = temp & 0xf; \
+        { \
+            int i = (_inst)[2]; \
+            (_r1) = i >> 4; \
+            i = (_inst)[3]; \
+            (_r3) = i >> 4; \
+            (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
         }
 
 /* RRF register to register with additional M3 field */
 #undef RRF_M
 #define RRF_M(_inst, _regs, _r1, _r2, _m3) \
-        {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
-            (_m3) = (temp >> 12) & 0xf; \
-            (_r1) = (temp >> 4) & 0xf; \
-            (_r2) = temp & 0xf; \
+        { \
+            int i = (_inst)[2]; \
+            (_m3) = i >> 4; \
+            i = (_inst)[3]; \
+            (_r1) = i >> 4; \
+            (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
         }
 
 /* RRF register to register with additional R3 and M4 fields */
 #undef RRF_RM
 #define RRF_RM(_inst, _regs, _r1, _r2, _r3, _m4) \
-        {   U32 temp; \
-            memcpy (&temp, (_inst), 4); \
-            temp = CSWAP32(temp); \
-            (_r3) = (temp >> 12) & 0xf; \
-            (_m4) = (temp >> 8) & 0xf; \
-            (_r1) = (temp >> 4) & 0xf; \
-            (_r2) = temp & 0xf; \
+        { \
+            int i = (_inst)[2]; \
+            (_r3) = i >> 4; \
+            (_m4) = i & 0xf; \
+            i = (_inst)[3]; \
+            (_r1) = i >> 4; \
+            (_r2) = i & 0xf; \
             INST_UPDATE_PSW((_regs), 4); \
-    }
+        }
 
 /* RX register and indexed storage */
 #undef RX
