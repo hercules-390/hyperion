@@ -267,7 +267,7 @@ int             fdflags;                /* File flags                */
     dev->cckd_ext = cckd = malloc(sizeof(CCKDDASD_EXT));
     if (cckd == NULL)
     {
-        devmsg ("%4.4X:cckddasd: malloc failed for cckd extension: %s\n",
+        logmsg ("%4.4X:HHCCD100E malloc failed for cckd extension: %s\n",
                 dev->devnum, strerror(errno));
         return -1;
     }
@@ -302,7 +302,7 @@ int             fdflags;                /* File flags                */
     /* open the shadow files */
     rc = cckd_sf_init (dev);
     if (rc < 0)
-    {   devmsg ("%4.4X:cckddasd: error initializing shadow files\n",
+    {   logmsg ("%4.4X:HHCCD101E error initializing shadow files\n",
                 dev->devnum);
         return -1;
     }
@@ -1249,7 +1249,7 @@ TID             tid;                    /* Readahead thread id       */
     }
 
     if (!cckdblk.batch)
-    cckdmsg ("cckddasd: readahead thread %d started: tid="TIDPAT", pid=%d\n",
+    logmsg ("HHCCD001I Readahead thread %d started: tid="TIDPAT", pid=%d\n",
             ra, thread_id(), getpid());
 
     while (ra <= cckdblk.ramax)
@@ -1299,7 +1299,7 @@ TID             tid;                    /* Readahead thread id       */
     }
 
     if (!cckdblk.batch)
-    cckdmsg ("cckddasd: readahead thread %d stopping: tid="TIDPAT", pid=%d\n",
+    logmsg ("HHCCD011I Readahead thread %d stopping: tid="TIDPAT", pid=%d\n",
             ra, thread_id(), getpid());
     --cckdblk.ras;
     if (!cckdblk.ras) signal_condition(&cckdblk.termcond);
@@ -1445,7 +1445,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
     }
 
     if (!cckdblk.batch)
-    cckdmsg ("cckddasd: writer thread %d started: tid="TIDPAT", pid=%d\n",
+    logmsg ("HHCCD002I Writer thread %d started: tid="TIDPAT", pid=%d\n",
             writer, thread_id(), getpid());
 
     while (writer <= cckdblk.wrmax || cckdblk.wrpending)
@@ -1552,7 +1552,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
     }
 
     if (!cckdblk.batch)
-    cckdmsg ("cckddasd: writer thread %d stopping: tid="TIDPAT", pid=%d\n",
+    logmsg ("HHCCD012I Writer thread %d stopping: tid="TIDPAT", pid=%d\n",
             writer, thread_id(), getpid());
     cckdblk.wrs--;
     if (cckdblk.wrs == 0) signal_condition(&cckdblk.termcond);
@@ -1596,7 +1596,7 @@ struct stat     st;                     /* File status area          */
         fpos = cckd->cdevhdr[sfx].size;
         if ((U64)(fpos + len) > 4294967295ULL)
         {
-            devmsg("%4.4X:cckddasd file[%d] get space error, size exceeds 4G\n",
+            logmsg("%4.4X:HHCCD102E file[%d] get space error, size exceeds 4G\n",
                    dev->devnum, sfx);
             return -1;
         }
@@ -1604,7 +1604,7 @@ struct stat     st;                     /* File status area          */
         rc = fstat (cckd->fd[sfx], &st);
         if (rc < 0)
         {
-            devmsg("%4.4X:cckddasd file[%d] get space fstat error, size %llx: %s\n",
+            logmsg("%4.4X:HHCCD103E file[%d] get space fstat error, size %llx: %s\n",
                    dev->devnum, sfx, (long long)cckd->cdevhdr[sfx].size, strerror(errno));
             return -1;
         }
@@ -1624,7 +1624,7 @@ struct stat     st;                     /* File status area          */
                 cckd->fd[sfx] = open (sfn, O_RDWR|O_BINARY);
                 if (cckd->fd[sfx] < 0)
                 {
-                    devmsg ("%4.4X:cckddasd truncate re-open error: %s\n",
+                    logmsg ("%4.4X:HHCCD104E truncate re-open error: %s\n",
                             dev->devnum, strerror(errno));
                     return -1;
                 }
@@ -1652,7 +1652,7 @@ struct stat     st;                     /* File status area          */
 
             if (rc < 0)
             {
-                devmsg("%4.4X:cckddasd file[%d] get space ftruncate error, size %llx: %s\n",
+                logmsg("%4.4X:HHCCD105E file[%d] get space ftruncate error, size %llx: %s\n",
                    dev->devnum, sfx, (long long)cckd->cdevhdr[sfx].size, strerror(errno));
                 return -1;
             }
@@ -1983,7 +1983,7 @@ int             fend,mend;              /* Byte order indicators     */
     rcoff = lseek(cckd->fd[sfx], CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd file[%d] hdr lseek error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD106E file[%d] hdr lseek error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
@@ -1992,7 +1992,7 @@ int             fend,mend;              /* Byte order indicators     */
     rc = read (cckd->fd[sfx], &cckd->cdevhdr[sfx], CCKDDASD_DEVHDR_SIZE);
     if (rc != CCKDDASD_DEVHDR_SIZE)
     {
-        devmsg ("%4.4X:cckddasd file[%d] chdr read error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD107E file[%d] chdr read error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
@@ -2036,14 +2036,14 @@ int             sfx;                    /* File index                */
     rcoff = lseek(cckd->fd[sfx], CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd file[%d] chdr lseek error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD108E file[%d] chdr lseek error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
     rc = write (cckd->fd[sfx], &cckd->cdevhdr[sfx], CCKDDASD_DEVHDR_SIZE);
     if (rc < CCKDDASD_DEVHDR_SIZE)
     {
-        devmsg ("%4.4X:cckddasd file[%d] chdr write error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD109E file[%d] chdr write error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CKDDASD_DEVHDR_SIZE, strerror(errno));
         return -1;
     }
@@ -2074,7 +2074,7 @@ int             len;                    /* Length of level 1 table   */
     cckd->l1[sfx] = malloc (len);
     if (cckd->l1[sfx] == NULL)
     {
-        devmsg ("%4.4X:cckddasd l1 table malloc error: %s\n",
+        logmsg ("%4.4X:HHCCD110E l1 table malloc error: %s\n",
                 dev->devnum, strerror(errno));
         return -1;
     }
@@ -2083,14 +2083,14 @@ int             len;                    /* Length of level 1 table   */
     rcoff = lseek (cckd->fd[sfx], CCKD_L1TAB_POS, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd file[%d] l1 lseek error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD111E file[%d] l1 lseek error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CCKD_L1TAB_POS, strerror(errno));
         return -1;
     }
     rc = read(cckd->fd[sfx], cckd->l1[sfx], len);
     if (rc != len)
     {
-        devmsg ("%4.4X:cckddasd file[%d] l1 read error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD112E file[%d] l1 read error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CCKD_L1TAB_POS, strerror(errno));
         return -1;
     }
@@ -2122,14 +2122,14 @@ int             len;                    /* Length of level 1 table   */
     rcoff = lseek (cckd->fd[sfx], CCKD_L1TAB_POS, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd file[%d] l1 lseek error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD113E file[%d] l1 lseek error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CCKD_L1TAB_POS, strerror(errno));
         return -1;
     }
     rc = write (cckd->fd[sfx], cckd->l1[sfx], len);
     if (rc != len)
     {
-        devmsg ("%4.4X:cckddasd file[%d] l1 write error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD114E file[%d] l1 write error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)CCKD_L1TAB_POS, strerror(errno));
         return -1;
     }
@@ -2159,14 +2159,14 @@ off_t           l1pos;                  /* Offset to l1 entry        */
     rcoff = lseek (cckd->fd[sfx], l1pos, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd file[%d] l1[%d] lseek error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD115E file[%d] l1[%d] lseek error, offset %llx: %s\n",
                 dev->devnum, sfx, l1x, (long long)l1pos, strerror(errno));
         return -1;
     }
     rc = write (cckd->fd[sfx], &cckd->l1[sfx][l1x], CCKD_L1ENT_SIZE);
     if (rc != CCKD_L1ENT_SIZE)
     {
-        devmsg ("%4.4X:cckddasd file[%d] l1[%d] write error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD116E file[%d] l1[%d] write error, offset %llx: %s\n",
                 dev->devnum, sfx, l1x, (long long)l1pos, strerror(errno));
         return -1;
     }
@@ -2196,14 +2196,14 @@ int             sfx;                    /* File index                */
     rcoff = lseek (cckd->fd[sfx], 0, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd file[%d] devhdr lseek error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD117E file[%d] devhdr lseek error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)0, strerror(errno));
         return -1;
     }
     rc = read (cckd->fd[sfx], &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc != CKDDASD_DEVHDR_SIZE)
     {
-        devmsg ("%4.4X:cckddasd file[%d] devhdr read error, offset %llx: %s\n",
+        logmsg ("%4.4X:HHCCD118E file[%d] devhdr read error, offset %llx: %s\n",
                 dev->devnum, sfx, (long long)0, strerror(errno));
         return -1;
     }
@@ -2216,7 +2216,7 @@ int             sfx;                    /* File index                */
     else if (!(sfx && memcmp (&devhdr.devid, "CKD_S370", 8) == 0 && cckd->ckddasd)
           && !(sfx && memcmp (&devhdr.devid, "FBA_S370", 8) == 0 && cckd->fbadasd))
     {
-        devmsg ("%4.4X:cckddasd file[%d] devhdr id error\n",
+        logmsg ("%4.4X:HHCCD119E file[%d] devhdr id error\n",
                 dev->devnum, sfx);
         return -1;
     }
@@ -2258,7 +2258,7 @@ int             i;                      /* Index                     */
     cckd->free = calloc (cckd->freenbr, CCKD_FREEBLK_ISIZE);
     if (!cckd->free)
     {
-        devmsg ("%4.4X:cckddasd: calloc failed for free space, size %d: %s\n",
+        logmsg ("%4.4X:HHCCD120E calloc failed for free space, size %d: %s\n",
                 dev->devnum, cckd->freenbr * CCKD_FREEBLK_ISIZE,
                 strerror(errno));
         return -1;
@@ -2273,14 +2273,14 @@ int             i;                      /* Index                     */
         rcoff = lseek (cckd->fd[sfx], fpos, SEEK_SET);
         if (rcoff < 0)
         {
-            devmsg("%4.4X:cckddasd file[%d] free space lseek error, offset %llx: %s\n",
+            logmsg("%4.4X:HHCCD121E file[%d] free space lseek error, offset %llx: %s\n",
                    dev->devnum, sfx, (long long)fpos, strerror(errno));
             return -1;
         }
         rc = read (cckd->fd[sfx], &cckd->free[0], CCKD_FREEBLK_SIZE);
         if (rc < CCKD_FREEBLK_SIZE)
         {
-            devmsg("%4.4X:cckddasd file[%d] free space read error, offset %llx: %d,%d %s\n",
+            logmsg("%4.4X:HHCCD122E file[%d] free space read error, offset %llx: %d,%d %s\n",
                    dev->devnum, sfx, (long long)fpos, rc, CCKD_FREEBLK_SIZE, strerror(errno));
             return -1;
         }
@@ -2293,7 +2293,7 @@ int             i;                      /* Index                     */
             rc = ftruncate (cckd->fd[sfx], (off_t)cckd->cdevhdr[sfx].size);
             if (rc < 0)
             {
-                devmsg("%4.4X:cckddasd file[%d] free space ftruncate error, size %llx: %s\n",
+                logmsg("%4.4X:HHCCD123E file[%d] free space ftruncate error, size %llx: %s\n",
                        dev->devnum, sfx, (long long)cckd->cdevhdr[sfx].size, strerror(errno));
                 return -1;
             }
@@ -2310,14 +2310,14 @@ int             i;                      /* Index                     */
             rcoff = lseek (cckd->fd[sfx], fpos, SEEK_SET);
             if (rcoff < 0)
             {
-                devmsg("%4.4X:cckddasd file[%d] free space lseek error, offset %llx: %s\n",
+                logmsg("%4.4X:HHCCD124E file[%d] free space lseek error, offset %llx: %s\n",
                        dev->devnum, sfx, (long long)fpos, strerror(errno));
                 return -1;
             }
             rc = read (cckd->fd[sfx], &cckd->free[i], CCKD_FREEBLK_SIZE);
             if (rc < CCKD_FREEBLK_SIZE)
             {
-                devmsg("%4.4X:cckddasd file[%d] free space read error, offset %llx: %d,%d,%d %s\n",
+                logmsg("%4.4X:HHCCD125E file[%d] free space read error, offset %llx: %d,%d,%d %s\n",
                        dev->devnum, sfx, (long long)fpos, rc, CCKD_FREEBLK_SIZE, errno, strerror(errno));
 cckd_print_itrace();
 sleep(600);
@@ -2374,14 +2374,14 @@ int             i;                      /* Index                     */
         rcoff = lseek (cckd->fd[sfx], fpos, SEEK_SET);
         if (rcoff < 0)
         {
-            devmsg("%4.4X:cckddasd file[%d] free space lseek error, offset %llx: %s\n",
+            logmsg("%4.4X:HHCCD126E file[%d] free space lseek error, offset %llx: %s\n",
                    dev->devnum, sfx, (long long)fpos, strerror(errno));
             return -1;
         }
         rc = write (cckd->fd[sfx], &cckd->free[i], CCKD_FREEBLK_SIZE);
         if (rc < CCKD_FREEBLK_SIZE)
         {
-            devmsg("%4.4X:cckddasd file[%d] free space write error, offset %llx: %s\n",
+            logmsg("%4.4X:HHCCD127E file[%d] free space write error, offset %llx: %s\n",
                    dev->devnum, sfx, (long long)fpos, strerror(errno));
             return -1;
         }
@@ -2468,7 +2468,7 @@ CCKD_L2ENT     *buf;                    /* -> Cache buffer           */
         rcoff = lseek (cckd->fd[sfx], (off_t)cckd->l1[sfx][l1x], SEEK_SET);
         if (rcoff < 0)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] l2[%d] lseek error offset %lld: %s\n",
+            logmsg ("%4.4X:HHCCD128E file[%d] l2[%d] lseek error offset %lld: %s\n",
                     dev->devnum, sfx, l1x, (long long)cckd->l1[sfx][l1x],
                     strerror(errno));
             cache_lock(CACHE_L2);
@@ -2479,7 +2479,7 @@ CCKD_L2ENT     *buf;                    /* -> Cache buffer           */
         rc = read (cckd->fd[sfx], buf, CCKD_L2TAB_SIZE);
         if (rc < CCKD_L2TAB_SIZE)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] l2[%d] read error offset %lld: %s\n",
+            logmsg ("%4.4X:HHCCD129E file[%d] l2[%d] read error offset %lld: %s\n",
                     dev->devnum, sfx, l1x, (long long)cckd->l1[sfx][l1x],
                     strerror(errno));
             cache_lock(CACHE_L2);
@@ -2598,14 +2598,14 @@ off_t           rcoff;                  /* lseek() return value      */
     rcoff = lseek (cckd->fd[sfx], l2pos, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] l2[%d] lseek error offset %lld: %s\n",
+        logmsg ("%4.4X:HHCCD130E file[%d] l2[%d] lseek error offset %lld: %s\n",
                 dev->devnum, sfx, l1x, (long long)l2pos, strerror(errno));
         return -1;
     }
     rc = write (cckd->fd[sfx], cckd->l2, CCKD_L2TAB_SIZE);
     if (rc < CCKD_L2TAB_SIZE)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] l2[%d] write error offset %lld: %s\n",
+        logmsg ("%4.4X:HHCCD131E file[%d] l2[%d] write error offset %lld: %s\n",
                 dev->devnum, sfx, l1x, (long long)l2pos, strerror(errno));
         return -1;
     }
@@ -2691,14 +2691,14 @@ off_t           rcoff;                  /* lseek() return value      */
     rcoff = lseek (cckd->fd[sfx], l2pos, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] l2[%d,%d] lseek error offset %lld: %s\n",
+        logmsg ("%4.4X:HHCCD132E file[%d] l2[%d,%d] lseek error offset %lld: %s\n",
                 dev->devnum, sfx, l1x, l2x, (long long)l2pos, strerror(errno));
         return -1;
     }
     rc = write (cckd->fd[sfx], &cckd->l2[l2x], CCKD_L2ENT_SIZE);
     if (rc < CCKD_L2ENT_SIZE)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] l2[%d,%d] write error offset %lld: %s\n",
+        logmsg ("%4.4X:HHCCD133E file[%d] l2[%d,%d] write error offset %lld: %s\n",
                 dev->devnum, sfx, l1x, l2x, (long long)l2pos, strerror(errno));
         return -1;
     }
@@ -2731,14 +2731,14 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
         rcoff = lseek (cckd->fd[sfx], (off_t)l2.pos, SEEK_SET);
         if (rcoff < 0)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] trk %d lseek error offset %llx: %s\n",
+            logmsg ("%4.4X:HHCCD134E file[%d] trk %d lseek error offset %llx: %s\n",
                     dev->devnum, sfx, trk, (long long)l2.pos, strerror(errno));
             goto cckd_read_trkimg_error;
         }
         rc = read (cckd->fd[sfx], buf, l2.len);
         if (rc < l2.len)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] trk %d read error offset %llx: %s\n",
+            logmsg ("%4.4X:HHCCD135E file[%d] trk %d read error offset %llx: %s\n",
                     dev->devnum, sfx, trk, (long long)l2.pos, strerror(errno));
             goto cckd_read_trkimg_error;
         }
@@ -2795,7 +2795,7 @@ int             after = 0;              /* 1=New track after old     */
     rc = cckd_cchh (dev, buf, trk);
     if (rc < 0)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] trk %d not written, invalid format\n",
+        logmsg ("%4.4X:HHCCD136E file[%d] trk %d not written, invalid format\n",
                 dev->devnum, sfx, trk);
         return -1;
     }
@@ -2825,14 +2825,14 @@ int             after = 0;              /* 1=New track after old     */
         rcoff = lseek (cckd->fd[sfx], (off_t)l2.pos, SEEK_SET);
         if (rcoff < 0)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] trk %d lseek error offset %llx: %s\n",
+            logmsg ("%4.4X:HHCCD137E file[%d] trk %d lseek error offset %llx: %s\n",
                     dev->devnum, sfx, trk, (long long)l2.pos, strerror(errno));
             return -1;
         }
         rc = write (cckd->fd[sfx], buf, len);
         if (rc < len)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] trk %d write error offset %llx len %d rc %d: %s\n",
+            logmsg ("%4.4X:HHCCD138E file[%d] trk %d write error offset %llx len %d rc %d: %s\n",
                     dev->devnum, sfx, trk, (long long)l2.pos, len, rc, strerror(errno));
             return -1;
         }
@@ -2925,7 +2925,7 @@ int             size;                   /* Track size                */
     if (size > dev->ckdtrksz ||
         memcmp (&buf[size-CKDDASD_RECHDR_SIZE], &eighthexFF, 8) != 0)
     {
-        devmsg ("%4.4X:cckddasd trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+        logmsg ("%4.4X:HHCCD139E trklen err for %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                 dev->devnum, buf[0], buf[1], buf[2], buf[3], buf[4]);
         size = -1;
     }
@@ -2954,7 +2954,7 @@ off_t           sz;                     /* Change for ftruncate      */
     rc = fstat (cckd->fd[sfx], &st);
     if (rc < 0)
     {
-        cckdmsg ("%4.4X:cckddasd truncate fstat error: %s\n",
+        logmsg ("%4.4X:HHCCD140E truncate fstat error: %s\n",
                 dev->devnum, strerror(errno));
         return;
     }
@@ -2975,7 +2975,7 @@ off_t           sz;                     /* Change for ftruncate      */
             cckd->fd[sfx] = open (sfn, O_RDWR|O_BINARY);
             if (cckd->fd[sfx] < 0)
             {
-                devmsg ("%4.4X:cckddasd truncate re-open error: %s\n",
+                logmsg ("%4.4X:HHCCD141E truncate re-open error: %s\n",
                         dev->devnum, strerror(errno));
                 return;
             }
@@ -2984,7 +2984,7 @@ off_t           sz;                     /* Change for ftruncate      */
         rc = ftruncate (cckd->fd[sfx], (off_t)cckd->cdevhdr[sfx].size);
         if (rc < 0)
         {
-            devmsg ("%4.4X:cckddasd truncate ftruncate error: %s\n",
+            logmsg ("%4.4X:HHCCD142E truncate ftruncate error: %s\n",
                     dev->devnum, strerror(errno));
             return;
         }
@@ -3079,7 +3079,7 @@ char           *comp[] = {"none", "zlib", "bzip2"};
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
                     if (cckdblk.bytemsgs++ < 10)
-                        devmsg ("%4.4X:cckddasd: invalid byte 0 trk %d: "
+                        logmsg ("%4.4X:HHCCD143E invalid byte 0 trk %d: "
                             "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n", dev->devnum,
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
@@ -3101,7 +3101,7 @@ char           *comp[] = {"none", "zlib", "bzip2"};
             {
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
-                    devmsg ("%4.4X:cckddasd: invalid byte 0 blkgrp %d: "
+                    logmsg ("%4.4X:HHCCD144E invalid byte 0 blkgrp %d: "
                             "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n", dev->devnum,
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
@@ -3116,14 +3116,14 @@ char           *comp[] = {"none", "zlib", "bzip2"};
 
     if (badcomp)
     {
-        devmsg ("%4.4X:cckddasd: invalid %s hdr %s %d: "
+        logmsg ("%4.4X:HHCCD145E invalid %s hdr %s %d: "
                 "%s compression unsupported\n",
                 dev->devnum, cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", t, comp[buf[0]]);
     }
     else
     {
-        devmsg ("%4.4X:cckddasd: invalid %s hdr %s %d "
+        logmsg ("%4.4X:HHCCD146E invalid %s hdr %s %d "
                 "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                 dev->devnum, cckd->ckddasd ? "trk" : "blk",
                 cckd->ckddasd ? "trk" : "blk", trk,
@@ -3238,7 +3238,7 @@ BYTE           *sfxptr;                 /* -> Last char of file name */
     /* Error if no shadow file name specified */
     if (dev->dasdsfn[0] == '\0')
     {
-        devmsg ("%4.4X:cckddasd: no shadow file name specified\n",
+        logmsg ("%4.4X:HHCCD147E no shadow file name specified\n",
                 dev->devnum);
         return -1;
     }
@@ -3246,8 +3246,8 @@ BYTE           *sfxptr;                 /* -> Last char of file name */
     /* Error if number shadow files exceeded */
     if (sfx > CCKD_MAX_SF)
     {
-        devmsg ("cckddasd: [%d] number of shadow files exceeded: %d\n",
-                sfx, CCKD_MAX_SF);
+        logmsg ("%4.4X:HHCCD148E [%d] number of shadow files exceeded: %d\n",
+                dev->devnum, sfx, CCKD_MAX_SF);
         return -1;
     }
 
@@ -3306,7 +3306,7 @@ char            sfn[256];               /* Shadow file name          */
                 if (rc < 0) continue;
                 if (strcmp ((char *)&sfn, (char *)&sfn2) == 0)
                 {
-                    devmsg ("%4.4X:cckddasd shadow file[%d] name %s\n"
+                    logmsg ("%4.4X:HHCCD149E shadow file[%d] name %s\n"
                             "      collides with %4.4X file[%d] name %s\n",
                             dev->devnum, i, sfn, dev2->devnum, j, sfn2);
                     return -1;
@@ -3368,8 +3368,8 @@ char            sfn[256];               /* Shadow file name          */
         cckd->fd[i] = open (sfn, O_RDONLY|O_BINARY);
         if (cckd->fd[i] < 0)
         {
-            devmsg ("cckddasd: error re-opening %s readonly\n   %s\n",
-                    sfn, strerror(errno));
+            logmsg ("%4.4X:HHCCD150E error re-opening %s readonly\n  %s\n",
+                    dev->devnum, sfn, strerror(errno));
             return -1;
         }
         if (!i) dev->fd = cckd->fd[i];
@@ -3407,7 +3407,7 @@ int             l1size;                 /* Size of level 1 table     */
     sfd = open (sfn, O_RDWR|O_CREAT|O_EXCL|O_BINARY,
                      S_IRUSR | S_IWUSR | S_IRGRP);
     if (sfd < 0)
-    {    devmsg ("%4.4X:cckddasd: shadow file[%d] open error: %s\n",
+    {    logmsg ("%4.4X:HHCCD151E shadow file[%d] open error: %s\n",
                  dev->devnum, sfx, strerror (errno));
          return -1;
     }
@@ -3416,7 +3416,7 @@ int             l1size;                 /* Size of level 1 table     */
     rcoff = lseek (cckd->fd[sfx-1], 0, SEEK_SET);
     if (rcoff < 0)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] lseek error offset %d: %s\n",
+        logmsg ("%4.4X:HHCCD152E file[%d] lseek error offset %d: %s\n",
                 dev->devnum, sfx-1, 0, strerror(errno));
         close (sfd);
         return -1;
@@ -3424,7 +3424,7 @@ int             l1size;                 /* Size of level 1 table     */
     rc = read (cckd->fd[sfx-1], &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc < CKDDASD_DEVHDR_SIZE)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] read error offset %d: %s\n",
+        logmsg ("%4.4X:HHCCD153E file[%d] read error offset %d: %s\n",
                 dev->devnum, sfx-1, 0, strerror(errno));
         close (sfd);
         return -1;
@@ -3434,7 +3434,7 @@ int             l1size;                 /* Size of level 1 table     */
     rc = write (sfd, &devhdr, CKDDASD_DEVHDR_SIZE);
     if (rc < CKDDASD_DEVHDR_SIZE)
     {
-        devmsg ("%4.4X:cckddasd: shadow file[%d] write error offset %d: %s\n",
+        logmsg ("%4.4X:HHCCD154E shadow file[%d] write error offset %d: %s\n",
                 dev->devnum, sfx, 0, strerror(errno));
         close (sfd);
         return -1;
@@ -3451,7 +3451,7 @@ int             l1size;                 /* Size of level 1 table     */
     cckd->l1[sfx] = malloc (l1size);
     if (!cckd->l1[sfx])
     {
-        devmsg ("%4.4X:cckddasd file[%d] l1 malloc failed: %s\n",
+        logmsg ("%4.4X:HHCCD155E file[%d] l1 malloc failed: %s\n",
                 dev->devnum, sfx, strerror(errno));
         close (sfd);
         return -1;
@@ -3491,7 +3491,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        devmsg ("%4.4X:cckddasd: not a cckd device\n", dev->devnum);
+        logmsg ("%4.4X:HHCCD156E not a cckd device\n", dev->devnum);
         return;
     }
     
@@ -3523,7 +3523,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     rc = cckd_sf_new (dev);
     if (rc < 0)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] error adding shadow file: %s\n",
+        logmsg ("%4.4X:HHCCD157E file[%d] error adding shadow file: %s\n",
                 dev->devnum, cckd->sfn  + 1, strerror(errno));
         release_lock (&cckd->filelock);
         obtain_lock (&cckd->iolock);
@@ -3546,7 +3546,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     }
 
     rc = cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
-    devmsg ("%4.4X:cckddasd: file[%d] %s added\n",dev->devnum, cckd->sfn, sfn);
+    logmsg ("%4.4X:HHCCD158E file[%d] %s added\n",dev->devnum, cckd->sfn, sfn);
     release_lock (&cckd->filelock);
 
     obtain_lock (&cckd->iolock);
@@ -3582,13 +3582,13 @@ BYTE            buf[65536];             /* Buffer                    */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        devmsg ("%4.4X:cckddasd: not a cckd device\n",dev->devnum);
+        logmsg ("%4.4X:HHCCD159E not a cckd device\n",dev->devnum);
         return;
     }
 
     if (!cckd->sfn)
     {
-        devmsg ("%4.4X:cckddasd: cannot remove base file\n",dev->devnum);
+        logmsg ("%4.4X:HHCCD160E cannot remove base file\n",dev->devnum);
         return;
     }
 
@@ -3625,7 +3625,7 @@ BYTE            buf[65536];             /* Buffer                    */
         cckd->fd[sfx[1]] = open (sfn, O_RDONLY|O_BINARY);
         if (merge)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] not merged, "
+            logmsg ("%4.4X:HHCCD161E file[%d] not merged, "
                     "file[%d] cannot be opened read-write\n",
                     dev->devnum, sfx[0], sfx[1]);
             goto sf_remove_exit;
@@ -3637,7 +3637,7 @@ BYTE            buf[65536];             /* Buffer                    */
         rc = cckd_chkdsk (cckd->fd[sfx[1]], stdout, 0);
         if (rc < 0)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] not merged, "
+            logmsg ("%4.4X:HHCCD162E file[%d] not merged, "
                     "file[%d] check failed\n",
                     dev->devnum, sfx[0], sfx[1]);
             goto sf_remove_exit;
@@ -3651,7 +3651,7 @@ BYTE            buf[65536];             /* Buffer                    */
         rc = cckd_harden (dev);
         if (rc < 0)
         {
-            devmsg ("%4.4X:cckddasd: file[%d] not merged, "
+            logmsg ("%4.4X:HHCCD163E file[%d] not merged, "
                     "file[%d] not hardened\n",
                     dev->devnum, sfx[0], sfx[0]);
             goto sf_remove_exit;
@@ -3688,7 +3688,7 @@ BYTE            buf[65536];             /* Buffer                    */
                 rcoff = lseek (cckd->fd[sfx[0]], (off_t)cckd->l1[sfx[0]][i], SEEK_SET);
                 if (rcoff < 0)
                 {
-                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] lseek error offset %lld: %s\n",
+                    logmsg ("%4.4X:HHCCD164E file[%d] l2[%d] lseek error offset %lld: %s\n",
                             dev->devnum, sfx[0], i, (long long)cckd->l1[sfx[0]][i],
                             strerror(errno));
                     err = 1;
@@ -3697,7 +3697,7 @@ BYTE            buf[65536];             /* Buffer                    */
                 rc = read (cckd->fd[sfx[0]], &l2[0], CCKD_L2TAB_SIZE);
                 if (rc < CCKD_L2TAB_SIZE)
                 {
-                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] read error offset %lld: %s\n",
+                    logmsg ("%4.4X:HHCCD165E file[%d] l2[%d] read error offset %lld: %s\n",
                             dev->devnum, sfx[0], i, (long long)cckd->l1[sfx[0]][i],
                             strerror(errno));
                     err = 1;
@@ -3715,7 +3715,7 @@ BYTE            buf[65536];             /* Buffer                    */
                 rcoff = lseek (cckd->fd[sfx[1]], (off_t)cckd->l1[sfx[1]][i], SEEK_SET);
                 if (rcoff < 0)
                 {
-                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] lseek error offset %lld: %s\n",
+                    logmsg ("%4.4X:HHCCD166E file[%d] l2[%d] lseek error offset %lld: %s\n",
                             dev->devnum, sfx[1], i, (long long)cckd->l1[sfx[1]][i],
                             strerror(errno));
                     err = 1;
@@ -3724,7 +3724,7 @@ BYTE            buf[65536];             /* Buffer                    */
                 rc = read (cckd->fd[sfx[1]], &l2[1], CCKD_L2TAB_SIZE);
                 if (rc < CCKD_L2TAB_SIZE)
                 {
-                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] read error offset %lld: %s\n",
+                    logmsg ("%4.4X:HHCCD167E file[%d] l2[%d] read error offset %lld: %s\n",
                             dev->devnum, sfx[1], i, (long long)cckd->l1[sfx[1]][i],
                             strerror(errno));
                     err = 1;
@@ -3750,12 +3750,12 @@ BYTE            buf[65536];             /* Buffer                    */
                     rcoff = lseek (cckd->fd[sfx[0]], (off_t)l2[0][j].pos, SEEK_SET);
                     if (rcoff < 0)
                     {
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] lseek error "
+                        logmsg ("%4.4X:HHCCD168E file[%d] %s[%d] lseek error "
                                 " offset %lld: %s\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256 + j, (long long)l2[0][j].pos,
                                 strerror(errno));
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                        logmsg ("%4.4X:HHCCD169E file[%d] %s[%d] not merged\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256 + j);
                         err = 1;
@@ -3764,12 +3764,12 @@ BYTE            buf[65536];             /* Buffer                    */
                     rc = read (cckd->fd[sfx[0]], &buf, (size_t)l2[0][j].len);
                     if (rc != (int)l2[0][j].len)
                     {
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] read error "
+                        logmsg ("%4.4X:HHCCD170E file[%d] %s[%d] read error "
                                 " offset %lld: %s\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256 + j, (long long)l2[0][j].pos,
                                 strerror(errno));
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                        logmsg ("%4.4X:HHCCD171E file[%d] %s[%d] not merged\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256 + j);
                         err = 1;
@@ -3789,11 +3789,11 @@ BYTE            buf[65536];             /* Buffer                    */
                     rcoff = lseek (cckd->fd[sfx[1]], pos, SEEK_SET);
                     if (rcoff < 0)
                     {
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] lseek error "
+                        logmsg ("%4.4X:HHCCD172E file[%d] %s[%d] lseek error "
                                 " offset %lld: %s\n",
                                 dev->devnum, sfx[1], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256 + j, (long long)pos, strerror(errno));
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                        logmsg ("%4.4X:HHCCD173E file[%d] %s[%d] not merged\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256 + j);
                         err = 1;
@@ -3802,11 +3802,11 @@ BYTE            buf[65536];             /* Buffer                    */
                     rc = write (cckd->fd[sfx[1]], &buf, (size_t)l2[0][j].len);
                     if (rc != (int)l2[0][j].len)
                     {
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] write error "
+                        logmsg ("%4.4X:HHCCD174E file[%d] %s[%d] write error "
                                 " offset %lld: %s\n",
                                 dev->devnum, sfx[1], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256, (long long)pos, strerror(errno));
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                        logmsg ("%4.4X:HHCCD175E file[%d] %s[%d] not merged\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
                                 i * 256 + j);
                         err = 1;
@@ -3843,11 +3843,11 @@ BYTE            buf[65536];             /* Buffer                    */
                     rcoff = lseek (cckd->fd[sfx[1]], pos, SEEK_SET);
                     if (rcoff < 0)
                     {
-                        devmsg ("%4.4X:cckddasd: file[%d] l1[%d] lseek error "
+                        logmsg ("%4.4X:HHCCD176E file[%d] l1[%d] lseek error "
                                 " offset %lld: %s\n",
                                 dev->devnum, sfx[1], i, (long long)pos,
                                 strerror(errno));
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d-%d] not merged\n",
+                        logmsg ("%4.4X:HHCCD177E file[%d] %s[%d-%d] not merged\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trks" : "blkgrps",
                                 i * 256, i * 256 +255);
                         err = 1;
@@ -3856,11 +3856,11 @@ BYTE            buf[65536];             /* Buffer                    */
                     rc = write (cckd->fd[sfx[1]], &l2[1], CCKD_L2TAB_SIZE);
                     if (rc != CCKD_L2TAB_SIZE)
                     {
-                        devmsg ("%4.4X:cckddasd: file[%d] l1[%d] write error "
+                        logmsg ("%4.4X:HHCCD178E file[%d] l1[%d] write error "
                                 " offset %lld: %s\n",
                                 dev->devnum, sfx[1], i, (long long)pos,
                                 strerror(errno));
-                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d-%d] not merged\n",
+                        logmsg ("%4.4X:HHCCD179E file[%d] %s[%d-%d] not merged\n",
                                 dev->devnum, sfx[0], cckd->ckddasd ? "trks" : "blkgrps",
                                 i * 256, i * 256 + 255);
                         err = 1;
@@ -3892,8 +3892,8 @@ BYTE            buf[65536];             /* Buffer                    */
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
-    devmsg ("cckddasd: shadow file [%d] successfully %s%s\n",
-            sfx[0], merge ? "merged" : add ? "re-added" : "removed",
+    logmsg ("%4.4X:HHCCD200I shadow file [%d] successfully %s%s\n",
+            dev->devnum, sfx[0], merge ? "merged" : add ? "re-added" : "removed",
             err ? " with errors" : "");
 
 sf_remove_exit:
@@ -3920,13 +3920,13 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        logmsg ("%4.4X:HHCCD201W device is not a shadow file\n",
                 dev->devnum);
         return;
     }
     if (CCKD_MAX_SF == 0)
     {
-        devmsg ("%4.4X: cckddasd: file shadowing not activated\n",
+        logmsg ("%4.4X:HHCCD202W file shadowing not activated\n",
                 dev->devnum);
         return;
     }
@@ -3935,14 +3935,14 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     if (cckd->sfn)
     {
-        devmsg ("%4.4X: cckddasd: shadowing is already active\n",
+        logmsg ("%4.4X:HHCCD203W shadowing is already active\n",
                 dev->devnum);
         release_lock (&cckd->filelock);
         return;
     }
 
     strcpy ((char *)&dev->dasdsfn, (const char *)sfn);
-    devmsg ("cckddasd: shadow file name set to %s\n", sfn);
+    logmsg ("HHCCD204I shadow file name set to %s\n", sfn);
     release_lock (&cckd->filelock);
 
 } /* end function cckd_sf_newname */
@@ -3959,7 +3959,7 @@ int             rc;                     /* Return code               */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        logmsg ("%4.4X:HHCCD205W device is not a shadow file\n",
                 dev->devnum);
         return;
     }
@@ -4027,7 +4027,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     cckd = dev->cckd_ext;
     if (!cckd)
     {
-        devmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+        logmsg ("%4.4X:HHCCD206W device is not a shadow file\n",
                 dev->devnum);
         return;
     }
@@ -4045,23 +4045,23 @@ BYTE            sfn[256];               /* Shadow file name          */
     }
 
     /* header */
-    devmsg ("cckddasd:           size free  nbr st   reads  writes l2reads    hits switches\n");
+    logmsg ("HHCCD210I           size free  nbr st  reads  writes l2reads    hits switches\n");
     if (cckd->readaheads || cckd->misses)
-    devmsg ("cckddasd:                                                  readaheads   misses\n");
-    devmsg ("cckddasd: --------------------------------------------------------------------\n");
+    logmsg ("HHCCD211I                                                 readaheads   misses\n");
+    logmsg ("HHCCD212I -------------------------------------------------------------------\n");
 
     /* total statistics */
-    devmsg ("cckddasd: [*] %10lld %3lld%% %4d    %7d %7d %7d %7d  %7d\n",
+    logmsg ("HHCCD213I [*] %10lld %3lld%% %4d   %7d %7d %7d %7d  %7d\n",
             size, (free * 100) / size, freenbr,
             cckd->totreads, cckd->totwrites, cckd->totl2reads,
             cckd->cachehits, cckd->switches);
     if (cckd->readaheads || cckd->misses)
-    devmsg ("cckddasd:                                                     %7d  %7d\n",
+    logmsg ("HHCCD214I                                                    %7d  %7d\n",
             cckd->readaheads, cckd->misses);
 
     /* base file statistics */
-    devmsg ("cckddasd: %s\n", dev->filename);
-    devmsg ("cckddasd: [0] %10lld %3lld%% %4d %s %7d %7d %7d\n",
+    logmsg ("HHCCD215I %s\n", dev->filename);
+    logmsg ("HHCCD216I [0] %10lld %3lld%% %4d %s %7d %7d %7d\n",
             (long long)st.st_size,
             (long long)((long long)((long long)cckd->cdevhdr[0].free_total * 100) / st.st_size),
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
@@ -4070,13 +4070,13 @@ BYTE            sfn[256];               /* Shadow file name          */
     if (dev->dasdsfn[0] && CCKD_MAX_SF > 0)
     {
         cckd_sf_name ( dev, -1, (char *)&sfn);
-        devmsg ("cckddasd: %s\n", sfn);
+        logmsg ("HHCCD217I %s\n", sfn);
     }
 
     /* shadow file statistics */
     for (i = 1; i <= cckd->sfn; i++)
     {
-        devmsg ("cckddasd: [%d] %10lld %3lld%% %4d %s %7d %7d %7d\n",
+        logmsg ("HHCCD218I [%d] %10lld %3lld%% %4d %s %7d %7d %7d\n",
                 i, (long long)cckd->cdevhdr[i].size,
                 (long long)((long long)((long long)cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
@@ -4173,7 +4173,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch)
-    cckdmsg ("cckddasd: garbage collector thread started: tid="TIDPAT" pid=%d \n",
+    logmsg ("HHCCD003I Garbage collector thread started: tid="TIDPAT", pid=%d \n",
               thread_id(), getpid());
 
     while (gcol <= cckdblk.gcmax)
@@ -4263,7 +4263,7 @@ int             gctab[5]= {             /* default gcol parameters   */
     }
 
     if (!cckdblk.batch)
-    cckdmsg ("cckddasd: garbage collector thread stopping: tid="TIDPAT", pid=%d\n",
+    logmsg ("HHCCD013I Garbage collector thread stopping: tid="TIDPAT", pid=%d\n",
             thread_id(), getpid());
 
     cckdblk.gcs--;
@@ -4400,14 +4400,14 @@ int             asw;                    /* New spc after current spc */
             rcoff = lseek (fd, (off_t)bpos, SEEK_SET);
             if (rcoff < 0)
             {
-                devmsg ("%4.4X cckddasd: gcperc lseek error file[%d] offset 0x%llx: %s\n",
+                logmsg ("%4.4X:HHCCD180E gcperc lseek error file[%d] offset 0x%llx: %s\n",
                         dev->devnum, sfx, (long long)bpos, strerror(errno));
                 goto cckd_gc_perc_error;
             }
             rc = read (fd, &buf, blen);
             if (rc < (int)blen)
             {
-                devmsg ("%4.4X cckddasd: gcperc read error file[%d] offset 0x%llx: %d,%d %s\n",
+                logmsg ("%4.4X:HHCCD181E gcperc read error file[%d] offset 0x%llx: %d,%d %s\n",
                         dev->devnum, sfx, (long long)bpos, rc, blen, strerror(errno));
                 goto cckd_gc_perc_error;
             }
@@ -4460,9 +4460,9 @@ int             asw;                    /* New spc after current spc */
                     if (rc < 0) goto cckd_gc_perc_error;
                     if (l2.pos != (U32)(bpos + b))
                     {
-                        devmsg ("%4.4X:cckddasd: unknown space at offset 0x%llx\n",
+                        logmsg ("%4.4X:HHCCD182E unknown space at offset 0x%llx\n",
                                 dev->devnum, (long long)(bpos + b));
-                        devmsg ("%4.4X:cckddasd: %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                        logmsg ("%4.4X:HHCCD183E %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                                 dev->devnum, buf[b+0], buf[b+1],buf[b+2], buf[b+3], buf[b+4]);
                         cckd_print_itrace ();
                         goto cckd_gc_perc_error;
@@ -4544,7 +4544,7 @@ char           *compress[] = {"none", "zlib", "bzip2"};
     case CCKD_COMPRESS_ZLIB:
         to = calloc (maxlen, 1);
         if (to == NULL) {
-            devmsg("%4.4X cckddasd: uncompress %d calloc() error: %s\n",
+            logmsg("%4.4X:HHCCD190E uncompress %d calloc() error: %s\n",
                    dev->devnum, trk, strerror(errno));
             return NULL;
         }
@@ -4553,7 +4553,7 @@ char           *compress[] = {"none", "zlib", "bzip2"};
     case CCKD_COMPRESS_BZIP2:
         to = calloc (maxlen, 1);
         if (to == NULL) {
-            devmsg("%4.4X cckddasd: uncompress %d calloc() error: %s\n",
+            logmsg("%4.4X:HHCCD191E uncompress %d calloc() error: %s\n",
                    dev->devnum, trk, strerror(errno));
             return NULL;
         }
@@ -4569,7 +4569,7 @@ char           *compress[] = {"none", "zlib", "bzip2"};
     if (newlen < 0 && (to == NULL || to == from)) {
         to = calloc (maxlen, 1);
         if (to == NULL) {
-            devmsg("%4.4X cckddasd: uncompress %d calloc() error: %s\n",
+            logmsg("%4.4X:HHCCD192E uncompress %d calloc() error: %s\n",
                    dev->devnum, trk, strerror(errno));
             return NULL;
         }
@@ -4599,10 +4599,10 @@ char           *compress[] = {"none", "zlib", "bzip2"};
     /* Handle error condition */
     if (newlen < 0)
     {
-        devmsg("%4.4X cckddasd: uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+        logmsg("%4.4X:HHCCD193E uncompress error trk %d: %2.2x%2.2x%2.2x%2.2x%2.2x\n",
                 dev->devnum, trk, from[0], from[1], from[2], from[3], from[4]);
         if (comp & ~cckdblk.comps)
-            devmsg("%4.4X cckddasd: %s compression not supported\n",
+            logmsg("%4.4X:HHCCD194E %s compression not supported\n",
                 dev->devnum, compress[comp]);
         free (to);
         to = NULL;
@@ -4775,7 +4775,7 @@ BYTE *buf;
 /*-------------------------------------------------------------------*/
 void cckd_command_help()
 {
-    cckdmsg ("cckd command parameters:\n"
+    logmsg ("cckd command parameters:\n"
              "help\t\tDisplay help message\n"
              "stats\t\tDisplay cckd statistics\n"
              "opts\t\tDisplay cckd options\n"
@@ -4801,7 +4801,7 @@ void cckd_command_help()
 /*-------------------------------------------------------------------*/
 void cckd_command_opts()
 {
-    cckdmsg ("comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,"
+    logmsg ("comp=%d,compparm=%d,ra=%d,raq=%d,rat=%d,"
              "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n"
              "\tfreepend=%d,fsync=%d,ftruncwa=%d,trace=%d\n",
              cckdblk.comp, cckdblk.compparm,
@@ -4817,7 +4817,7 @@ void cckd_command_opts()
 /*-------------------------------------------------------------------*/
 void cckd_command_stats()
 {
-    cckdmsg("reads....%10lld Kbytes...%10lld writes...%10lld Kbytes...%10lld\n"
+    logmsg("reads....%10lld Kbytes...%10lld writes...%10lld Kbytes...%10lld\n"
             "readaheads%9lld misses...%10lld syncios..%10lld misses...%10lld\n"
             "switches.%10lld l2 reads.%10lld              stress writes...%10lld\n"
             "cachehits%10lld misses...%10lld l2 hits..%10lld misses...%10lld\n"
@@ -4900,7 +4900,7 @@ int   val, opts = 0;
         {
             if (val < -1 || (val & ~cckdblk.comps) || c != '\0')
             {
-                cckdmsg ("Invalid value for comp=\n");
+                logmsg ("Invalid value for comp=\n");
                 return -1;
             }
             else
@@ -4913,7 +4913,7 @@ int   val, opts = 0;
         {
             if (val < -1 || val > 9 || c != '\0')
             {
-                cckdmsg ("Invalid value for compparm=\n");
+                logmsg ("Invalid value for compparm=\n");
                 return -1;
             }
             else
@@ -4926,7 +4926,7 @@ int   val, opts = 0;
         {
             if (val < CCKD_MIN_RA || val > CCKD_MAX_RA || c != '\0')
             {
-                cckdmsg ("Invalid value for ra=\n");
+                logmsg ("Invalid value for ra=\n");
                 return -1;
             }
             else
@@ -4939,7 +4939,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
-                cckdmsg ("Invalid value for raq=\n");
+                logmsg ("Invalid value for raq=\n");
                 return -1;
             }
             else
@@ -4952,7 +4952,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
             {
-                cckdmsg ("Invalid value for rat=\n");
+                logmsg ("Invalid value for rat=\n");
                 return -1;
             }
             else
@@ -4965,7 +4965,7 @@ int   val, opts = 0;
         {
             if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER || c != '\0')
             {
-                cckdmsg ("Invalid value for wr=\n");
+                logmsg ("Invalid value for wr=\n");
                 return -1;
             }
             else
@@ -4978,7 +4978,7 @@ int   val, opts = 0;
         {
             if (val < 1 || val > 60 || c != '\0')
             {
-                cckdmsg ("Invalid value for gcint=\n");
+                logmsg ("Invalid value for gcint=\n");
                 return -1;
             }
             else
@@ -4991,7 +4991,7 @@ int   val, opts = 0;
         {
             if (val < -8 || val > 8 || c != '\0')
             {
-                cckdmsg ("Invalid value for gcparm=\n");
+                logmsg ("Invalid value for gcparm=\n");
                 return -1;
             }
             else
@@ -5004,7 +5004,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                cckdmsg ("Invalid value for nostress=\n");
+                logmsg ("Invalid value for nostress=\n");
                 return -1;
             }
             else
@@ -5017,7 +5017,7 @@ int   val, opts = 0;
         {
             if (val < -1 || val > CCKD_MAX_FREEPEND || c != '\0')
             {
-                cckdmsg ("Invalid value for freepend=\n");
+                logmsg ("Invalid value for freepend=\n");
                 return -1;
             }
             else
@@ -5030,7 +5030,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > 1 || c != '\0')
             {
-                cckdmsg ("Invalid value for fsync=\n");
+                logmsg ("Invalid value for fsync=\n");
                 return -1;
             }
             else
@@ -5043,7 +5043,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > 1000 || c != '\0')
             {
-                cckdmsg ("Invalid value for ftruncwa=\n");
+                logmsg ("Invalid value for ftruncwa=\n");
                 return -1;
             }
             else
@@ -5056,7 +5056,7 @@ int   val, opts = 0;
         {
             if (val < 0 || val > CCKD_MAX_TRACE || c != '\0')
             {
-                cckdmsg ("Invalid value for trace=\n");
+                logmsg ("Invalid value for trace=\n");
                 return -1;
             }
             else
@@ -5084,7 +5084,7 @@ int   val, opts = 0;
                         cckdblk.itrace  = p;
                     }
                     else
-                        cckdmsg ("calloc() failed for trace table: %s\n",
+                        logmsg ("calloc() failed for trace table: %s\n",
                                  strerror(errno));
                 }
                 opts = 1;
@@ -5092,7 +5092,7 @@ int   val, opts = 0;
         }
         else
         {
-            cckdmsg ("cckd invalid keyword: %s\n",kw);
+            logmsg ("cckd invalid keyword: %s\n",kw);
             if (!cmd) return -1;
             cckd_command_help ();
             op = NULL;
@@ -5111,7 +5111,7 @@ void cckd_print_itrace()
 CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
 
     if (!cckdblk.itrace) return;
-    cckdmsg ("cckddasd: print_itrace\n");
+    logmsg ("HHCCD900I print_itrace\n");
     i = cckdblk.itrace;
     cckdblk.itrace = NULL;
     sleep (1);
@@ -5120,7 +5120,7 @@ CCKD_TRACE     *i, *p;                  /* Trace table pointers      */
     {
         if (p >= cckdblk.itracex) p = i;
         if (p[0] != '\0')
-            cckdmsg ("%s", (char *)p);
+            logmsg ("%s", (char *)p);
         ++p;
     } while (p != cckdblk.itracep);
     memset (i, 0, cckdblk.itracen * sizeof(CCKD_TRACE));

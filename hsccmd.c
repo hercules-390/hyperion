@@ -1254,18 +1254,8 @@ int devtmax_cmd(char* cmdline, int argc, char *argv[])
     if (sysblk.ioq && (!sysblk.devtmax || sysblk.devtnbr < sysblk.devtmax))
         create_thread(&tid, &sysblk.detattr, device_thread, NULL);
 
-    /* Terminate threads while the number of threads exceeds
-       the maximum and threads are waiting */
-
-    while (1
-        && sysblk.devtmax
-        && sysblk.devtnbr > sysblk.devtmax
-        && sysblk.devtwait
-    )
-    {
-        signal_condition (&sysblk.ioqcond);
-        sched_yield();
-    }
+    /* Wakeup threads in case they need to terminate */
+    broadcast_condition (&sysblk.ioqcond);
 
     logmsg( _("HHCPN078E Max device threads %d current %d most %d "
             "waiting %d total I/Os queued %d\n"),

@@ -155,8 +155,6 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 /*-------------------------------------------------------------------*/
 /* Macro definitions for tracing                                     */
 /*-------------------------------------------------------------------*/
-#define devmsg(a...) logmsg(a)
-#define cckdmsg(a...) logmsg(a)
 
 #define DEVTRACE(format, a...) \
     do { \

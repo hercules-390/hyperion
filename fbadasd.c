@@ -58,7 +58,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        devmsg ("HHCDA056E File name missing or invalid\n");
+        logmsg ("HHCDA056E File name missing or invalid\n");
         return -1;
     }
 
@@ -74,7 +74,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         rc = shared_fba_init ( dev, argc, argv);
         if (rc < 0)
         {
-            devmsg (_("HHCDA057E %4.4X:File not found or invalid\n"),
+            logmsg (_("HHCDA057E %4.4X:File not found or invalid\n"),
                     dev->devnum);
             return -1;
         }
@@ -89,7 +89,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            devmsg ("HHCDA058E File %s open error: %s\n",
+            logmsg ("HHCDA058E File %s open error: %s\n",
                     dev->filename, strerror(errno));
             return -1;
         }
@@ -101,10 +101,10 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     {
         /* Handle read error condition */
         if (rc < 0)
-            devmsg (_("HHCDA059E Read error in file %s: %s\n"),
+            logmsg (_("HHCDA059E Read error in file %s: %s\n"),
                     dev->filename, strerror(errno));
         else
-            devmsg (_("HHCDA060E Unexpected end of file in %s\n"),
+            logmsg (_("HHCDA060E Unexpected end of file in %s\n"),
                     dev->filename);
         close (dev->fd);
         dev->fd = -1;
@@ -122,10 +122,10 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         {
             /* Handle read error condition */
             if (rc < 0)
-                devmsg (_("HHCDA061E Read error in file %s: %s\n"),
+                logmsg (_("HHCDA061E Read error in file %s: %s\n"),
                         dev->filename, strerror(errno));
             else
-                devmsg (_("HHCDA062E Unexpected end of file in %s\n"),
+                logmsg (_("HHCDA062E Unexpected end of file in %s\n"),
                         dev->filename);
             close (dev->fd);
             dev->fd = -1;
@@ -167,7 +167,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
                 continue;
             }
 
-            devmsg (_("HHCDA063E parameter %d is invalid: %s\n"),
+            logmsg (_("HHCDA063E parameter %d is invalid: %s\n"),
                     i + 1, argv[i]);
             return -1;
         }
@@ -180,7 +180,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            devmsg ("HHCDA064E File %s fstat error: %s\n",
+            logmsg ("HHCDA064E File %s fstat error: %s\n",
                     dev->filename, strerror(errno));
             close (dev->fd);
             dev->fd = -1;
@@ -198,7 +198,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
              || startblk >= dev->fbanumblk)
             {
-                devmsg ("HHCDA065E Invalid device origin block number %s\n",
+                logmsg ("HHCDA065E Invalid device origin block number %s\n",
                         argv[1]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -214,7 +214,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
              || numblks > dev->fbanumblk)
             {
-                devmsg ("HHCDA066E Invalid device block count %s\n",
+                logmsg ("HHCDA066E Invalid device block count %s\n",
                         argv[2]);
                 close (dev->fd);
                 dev->fd = -1;
@@ -225,7 +225,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     }
     dev->fbaend = (dev->fbaorigin + dev->fbanumblk) * dev->fbablksiz;
 
-    devmsg ("HHCDA067I %s origin=%d blks=%d\n",
+    logmsg ("HHCDA067I %s origin=%d blks=%d\n",
             dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
@@ -235,7 +235,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        devmsg ("HHCDA068E %4.4X device type %4.4X not found in dasd table\n",
+        logmsg ("HHCDA068E %4.4X device type %4.4X not found in dasd table\n",
                 dev->devnum, dev->devtype);
         close (dev->fd);
         dev->fd = -1;
@@ -460,7 +460,7 @@ off_t           offset;                 /* File offsets              */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            devmsg (_("HHCDA069E error writing blkgrp %d: lseek error: %s\n"),
+            logmsg (_("HHCDA069E error writing blkgrp %d: lseek error: %s\n"),
                     dev->bufcur, strerror(errno));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -478,7 +478,7 @@ off_t           offset;                 /* File offsets              */
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
             /* Handle write error condition */
-            devmsg (_("HHCDA070E error writing blkgrp %d: write error: %s\n"),
+            logmsg (_("HHCDA070E error writing blkgrp %d: write error: %s\n"),
                     dev->bufcur, strerror(errno));
             dev->sense[0] = SENSE_EC;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -576,7 +576,7 @@ fba_read_blkgrp_retry:
     if (offset < 0)
     {
         /* Handle seek error condition */
-        devmsg (_("HHCDA075E error reading blkgrp %d: lseek error: %s\n"),
+        logmsg (_("HHCDA075E error reading blkgrp %d: lseek error: %s\n"),
                 blkgrp, strerror(errno));
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -591,7 +591,7 @@ fba_read_blkgrp_retry:
     if (rc < len)
     {
         /* Handle read error condition */
-        devmsg (_("HHCDA076E error reading blkgrp %d: read error: %s\n"),
+        logmsg (_("HHCDA076E error reading blkgrp %d: read error: %s\n"),
            blkgrp, rc < 0 ? strerror(errno) : "end of file");
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1037,7 +1037,7 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            devmsg(_("HHCDA078E define extent data too short: %d bytes\n"),
+            logmsg(_("HHCDA078E define extent data too short: %d bytes\n"),
                     count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1047,7 +1047,7 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            devmsg(_("HHCDA079E second define extent in chain\n"));
+            logmsg(_("HHCDA079E second define extent in chain\n"));
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -1058,7 +1058,7 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            devmsg(_("HHCDA080E invalid file mask %2.2X\n"),
+            logmsg(_("HHCDA080E invalid file mask %2.2X\n"),
                     dev->fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1069,7 +1069,7 @@ int     repcnt;                         /* Replication count         */
 //      /* Verify that bytes 1-3 are zeroes */
 //      if (iobuf[1] != 0 || iobuf[2] != 0 || iobuf[3] != 0)
 //      {
-//          devmsg(_("fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n"),
+//          logmsg(_("fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n"),
 //                  iobuf[1], iobuf[2], iobuf[3]);
 //          dev->sense[0] = SENSE_CR;
 //          *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1099,9 +1099,9 @@ int     repcnt;                         /* Replication count         */
             || dev->fbaxlast - dev->fbaxfirst
                 >= dev->fbanumblk - dev->fbaxblkn)
         {
-            devmsg(_("HHCDA081E invalid extent: first block %d, last block %d,\n"),
+            logmsg(_("HHCDA081E invalid extent: first block %d, last block %d,\n"),
                     dev->fbaxfirst, dev->fbaxlast);
-            devmsg(_("         numblks %d, device size %d\n"),
+            logmsg(_("         numblks %d, device size %d\n"),
                     dev->fbaxblkn, dev->fbanumblk);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;

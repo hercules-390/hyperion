@@ -58,7 +58,8 @@ int      i, j;                          /* Indexes                   */
     if (dev->shrdconn == 0)
         return 0;
 
-    for (i = 0; i < SHARED_MAX_SYS; i++) {
+    for (i = 0; i < SHARED_MAX_SYS; i++)
+    {
 
         /* Ignore the entry if it doesn't exist or if it's ours
            our if it's already maxed out */
@@ -71,7 +72,8 @@ int      i, j;                          /* Indexes                   */
             if (fetch_fw(dev->shrd[i]->purge[j]) == (U32)block) break;
 
         /* Add the block if it's not already there */
-        if (j >= dev->shrd[i]->purgen) {
+        if (j >= dev->shrd[i]->purgen)
+        {
             if (dev->shrd[i]->purgen >= SHARED_PURGE_MAX)
                 dev->shrd[i]->purgen = -1;
             else
@@ -111,8 +113,8 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
     dev->connecting = 1;
 
     /* Process the arguments */
-    if (!retry) {
-
+    if (!retry)
+    {
         if (argc < 1 || strlen(argv[0]) >= sizeof(buf))
             return -1;
         strcpy (buf, argv[0]);
@@ -120,53 +122,64 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
         /* First argument is `ipname:port:devnum' */
         ipname = buf;
         p = strchr (buf, ':');
-        if (p) {
+        if (p)
+        {
             *p = '\0';
             port = p + 1;
             p = strchr (port, ':');
         }
-        if (p) {
+        if (p)
+        {
             *p = '\0';
             rmtnum = p + 1;
         }
 
         if ( strcmp (ipname, "localhost") == 0)
             dev->localhost = 1;
-        else {
+        else
+        {
             if ( (he = gethostbyname (ipname)) == NULL )
                 return -1;
             memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
         }
 
-        if (port && strlen(port)) {
+        if (port && strlen(port))
+        {
             if (sscanf(port, "%hu%c", &dev->rmtport, &c) != 1)
                 return -1;
-        } else
+        }
+        else
             dev->rmtport = SHARED_DEFAULT_PORT;
 
-        if (rmtnum && strlen(rmtnum)) {
+        if (rmtnum && strlen(rmtnum))
+        {
             if (strlen (rmtnum) > 4
              || sscanf (rmtnum, "%hx%c", &dev->rmtnum, &c) != 1)
                 return -1;
-        } else
+        }
+        else
             dev->rmtnum = dev->devnum;
 
         /* Process the remaining arguments */
-        for (i = 1; i < argc; i++) {
+        for (i = 1; i < argc; i++)
+        {
             if (strcasecmp ("readonly", argv[i]) == 0 ||
                 strcasecmp ("rdonly",   argv[i]) == 0 ||
-                strcasecmp ("ro",       argv[i]) == 0) {
+                strcasecmp ("ro",       argv[i]) == 0)
+            {
                 dev->ckdrdonly = 1;
                 continue;
             }
             if (strcasecmp ("fakewrite", argv[i]) == 0 ||
                 strcasecmp ("fakewrt",   argv[i]) == 0 ||
-                strcasecmp ("fw",        argv[i]) == 0) {
+                strcasecmp ("fw",        argv[i]) == 0)
+            {
                 dev->ckdfakewr = 1;
                 continue;
             }
             if (strlen (argv[i]) > 3
-             && memcmp("cu=", argv[i], 3) == 0) {
+             && memcmp("cu=", argv[i], 3) == 0)
+            {
                 kw = strtok (argv[i], "=");
                 op = strtok (NULL, " \t");
                 cu = op;
@@ -174,7 +187,8 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
             }
 #ifdef HAVE_LIBZ
             if (strlen (argv[i]) > 5
-             && memcmp("comp=", argv[i], 5) == 0) {
+             && memcmp("comp=", argv[i], 5) == 0)
+            {
                 kw = strtok (argv[i], "=");
                 op = strtok (NULL, " \t");
                 dev->rmtcomp = atoi (op);
@@ -205,7 +219,8 @@ init_retry:
 
     do {
         rc = clientConnect (dev, retry);
-        if (rc < 0) {
+        if (rc < 0)
+        {
             logmsg (_("HHCSH002W %4.4X connect pending to %s\n"),
                     dev->devnum, dev->filename);
             if (retry) sleep(5);
@@ -222,7 +237,8 @@ init_retry:
     rc = clientRequest (dev, cyls, 4, SHRD_QUERY, SHRD_CKDCYLS, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc != 4) {
+    else if (rc != 4)
+    {
         logmsg (_("HHCSH003S %4.4X Error retrieving cylinders\n"),
                 dev->devnum);
         return -1;
@@ -234,7 +250,8 @@ init_retry:
                         SHRD_QUERY, SHRD_DEVCHAR, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc == 0 || rc > (int)sizeof(dev->devchar)) {
+    else if (rc == 0 || rc > (int)sizeof(dev->devchar))
+    {
         logmsg (_("HHCSH004S %4.4X Error retrieving device"
                   " characteristics\n"), dev->devnum);
         return -1;
@@ -251,7 +268,8 @@ init_retry:
     /* Check the device type */
     if (dev->devtype == 0)
         dev->devtype = fetch_hw (dev->devchar + 3);
-    else if (dev->devtype != fetch_hw (dev->devchar + 3)) {
+    else if (dev->devtype != fetch_hw (dev->devchar + 3))
+    {
         logmsg (_("HHCSH005S %4.4X Remote device %4.4X is a %4.4X\n"),
                 dev->devnum, dev->rmtnum, fetch_hw (dev->devchar + 3));
         return -1;
@@ -262,7 +280,8 @@ init_retry:
                         SHRD_QUERY, SHRD_DEVID, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc == 0 || rc > (int)sizeof(dev->devid)) {
+    else if (rc == 0 || rc > (int)sizeof(dev->devid))
+    {
         logmsg (_("HHCSH006S %4.4X Error retrieving device id\n"),
                 dev->devnum);
         return -1;
@@ -280,7 +299,7 @@ init_retry:
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        devmsg (_("HHCSH007S %4.4X device type %4.4X not found in dasd table\n"),
+        logmsg (_("HHCSH007S %4.4X device type %4.4X not found in dasd table\n"),
                 dev->devnum, dev->devtype);
         return -1;
     }
@@ -292,7 +311,7 @@ init_retry:
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        devmsg (_("HHCSH008S %4.4X control unit %s not found in dasd table\n"),
+        logmsg (_("HHCSH008S %4.4X control unit %s not found in dasd table\n"),
                 dev->devnum, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
@@ -313,7 +332,7 @@ init_retry:
 
     /* Log the device geometry */
     if (!dev->batch)
-    devmsg (_("HHCSH009I %s cyls=%d heads=%d tracks=%d trklen=%d\n"),
+    logmsg (_("HHCSH009I %s cyls=%d heads=%d tracks=%d trklen=%d\n"),
             dev->filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
@@ -331,7 +350,8 @@ static int shared_ckd_close ( DEVBLK *dev )
     clientPurge (dev, 0, NULL);
 
     /* Disconnect and close */
-    if (dev->fd >= 0) {
+    if (dev->fd >= 0)
+    {
         clientRequest (dev, NULL, 0, SHRD_DISCONNECT, 0, NULL, NULL);
         close (dev->fd);
         dev->fd = -1;
@@ -364,7 +384,8 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
     dev->connecting = 1;
 
     /* Process the arguments */
-    if (!retry) {
+    if (!retry)
+    {
 
         kw = op = NULL;
 
@@ -375,12 +396,14 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
         /* First argument is `ipname:port:devnum' */
         ipname = buf;
         p = strchr (buf, ':');
-        if (p) {
+        if (p)
+        {
             *p = '\0';
             port = p + 1;
             p = strchr (port, ':');
         }
-        if (p) {
+        if (p)
+        {
             *p = '\0';
             rmtnum = p + 1;
         }
@@ -389,24 +412,30 @@ BYTE    *p, buf[1024];                  /* Work buffer               */
             return -1;
         memcpy(&dev->rmtaddr, he->h_addr_list[0], sizeof(dev->rmtaddr));
 
-        if (port) {
+        if (port)
+        {
             if (sscanf(port, "%hu%c", &dev->rmtport, &c) != 1)
                 return -1;
-        } else
+        }
+        else
             dev->rmtport = SHARED_DEFAULT_PORT;
 
-        if (rmtnum) {
+        if (rmtnum)
+        {
             if (strlen (rmtnum) > 4
              || sscanf (rmtnum, "%hx%c", &dev->rmtnum, &c) != 0)
                 return -1;
-        } else
+        }
+        else
             dev->rmtnum = dev->devnum;
 
         /* Process the remaining arguments */
-        for (i = 1; i < argc; i++) {
+        for (i = 1; i < argc; i++)
+        {
 #ifdef HAVE_LIBZ
             if (strlen (argv[i]) > 5
-             && memcmp("comp=", argv[i], 5) == 0) {
+             && memcmp("comp=", argv[i], 5) == 0)
+            {
                 kw = strtok (argv[i], "=");
                 op = strtok (NULL, " \t");
                 dev->rmtcomp = atoi (op);
@@ -437,8 +466,9 @@ init_retry:
 
     do {
         rc = clientConnect (dev, retry);
-        if (rc < 0) {
-            logmsg (_("HHCSH011S %4.4X connect pending to %s\n"),
+        if (rc < 0)
+        {
+            logmsg (_("HHCSH011I %4.4X connect pending to %s\n"),
                     dev->devnum, dev->filename);
             if (retry) sleep(5);
         }
@@ -451,7 +481,8 @@ init_retry:
     rc = clientRequest (dev, origin, 4, SHRD_QUERY, SHRD_FBAORIGIN, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc != 4) {
+    else if (rc != 4)
+    {
         logmsg (_("HHCSH012S %4.4X Error retrieving fba origin\n"),
                 dev->devnum);
         return -1;
@@ -462,7 +493,8 @@ init_retry:
     rc = clientRequest (dev, numblks, 4, SHRD_QUERY, SHRD_FBANUMBLK, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc != 4) {
+    else if (rc != 4)
+    {
         logmsg (_("HHCSH013S %4.4X Error retrieving fba number blocks\n"),
                 dev->devnum);
         return -1;
@@ -473,7 +505,8 @@ init_retry:
     rc = clientRequest (dev, blksiz, 4, SHRD_QUERY, SHRD_FBABLKSIZ, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc != 4) {
+    else if (rc != 4)
+    {
         logmsg (_("HHCSH014S %4.4X Error retrieving fba block size\n"),
                 dev->devnum);
         return -1;
@@ -486,7 +519,8 @@ init_retry:
                         SHRD_QUERY, SHRD_DEVID, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc == 0 || rc > (int)sizeof(dev->devid)) {
+    else if (rc == 0 || rc > (int)sizeof(dev->devid))
+    {
         logmsg (_("HHCSH015S %4.4X Error retrieving device id\n"),
                 dev->devnum);
         return -1;
@@ -494,7 +528,8 @@ init_retry:
     dev->numdevid = rc;
 
     /* Check the device type */
-    if (dev->devtype != fetch_hw (dev->devid + 4)) {
+    if (dev->devtype != fetch_hw (dev->devid + 4))
+    {
         logmsg (_("HHCSH016S %4.4X Remote device %4.4X is a %4.4X\n"),
                 dev->devnum, dev->rmtnum, fetch_hw (dev->devid + 4));
         return -1;
@@ -505,7 +540,8 @@ init_retry:
                         SHRD_QUERY, SHRD_DEVCHAR, NULL, NULL);
     if (rc < 0)
         goto init_retry;
-    else if (rc == 0 || rc > (int)sizeof(dev->devchar)) {
+    else if (rc == 0 || rc > (int)sizeof(dev->devchar))
+    {
         logmsg (_("HHCSH017S %4.4X Error retrieving device"
                   " characteristics\n"), dev->devnum);
         return -1;
@@ -523,7 +559,7 @@ init_retry:
     dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
     if (dev->fbatab == NULL)
     {
-        devmsg (_("HHCSH018S %4.4X device type %4.4X not found in dasd table\n"),
+        logmsg (_("HHCSH018S %4.4X device type %4.4X not found in dasd table\n"),
                 dev->devnum, dev->devtype);
         return -1;
     }
@@ -532,7 +568,7 @@ init_retry:
     clientPurge (dev, 0, NULL);
 
     /* Log the device geometry */
-    devmsg ("HHCSH019I %s origin=%d blks=%d\n",
+    logmsg ("HHCSH019I %s origin=%d blks=%d\n",
             dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     dev->connecting = 0;
@@ -549,7 +585,8 @@ static int shared_fba_close (DEVBLK *dev)
     clientPurge (dev, 0, NULL);
 
     /* Disconnect and close */
-    if (dev->fd >= 0) {
+    if (dev->fd >= 0)
+    {
         clientRequest (dev, NULL, 0, SHRD_DISCONNECT, 0, NULL, NULL);
         close (dev->fd);
         dev->fd = -1;
@@ -574,7 +611,8 @@ BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
     /* Send the START request */
     rc = clientRequest (dev, buf, sizeof(buf),
                         SHRD_START, 0, &code, NULL);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         logmsg(_("HHCSH020E %4.4X error during channel program start\n"),
                dev->devnum);
         clientPurge (dev, 0, NULL);
@@ -584,18 +622,21 @@ BYTE     buf[SHARED_PURGE_MAX * 4];     /* Purge list                */
     }
 
     /* Check for purge */
-    if (code & SHRD_PURGE) {
+    if (code & SHRD_PURGE)
+    {
         if (rc / 4 > SHARED_PURGE_MAX) rc = 0;
         clientPurge (dev, rc / 4, buf);
     }
 
     /* Make previous active entry active again */
-    if (dev->cache >= 0) {
+    if (dev->cache >= 0)
+    {
         cache_lock (CACHE_DEVBUF);
         SHRD_CACHE_GETKEY (dev->cache, devnum, trk);
         if (dev->devnum == devnum && dev->bufcur == trk)
             cache_setflag(CACHE_DEVBUF, dev->cache, ~0, SHRD_CACHE_ACTIVE);
-        else {
+        else
+        {
             dev->cache = dev->bufcur = -1;
             dev->buf = NULL;
         }
@@ -612,16 +653,14 @@ int      rc;                            /* Return code               */
 
     shrdtrc("end cur %d cache %d\n",dev->bufcur,dev->cache);
 
-    /* This should only happen when a resumed channel program ends   */
-//    if (!dev->busy) return;
-
     /* Write the previous active entry if it was updated */
     if (dev->bufupd)
         clientWrite (dev, dev->bufcur);
     dev->bufupd = 0;
 
     /* Mark the active entry inactive */
-    if (dev->cache >= 0) {
+    if (dev->cache >= 0)
+    {
         cache_lock (CACHE_DEVBUF);
         cache_setflag (CACHE_DEVBUF, dev->cache, ~SHRD_CACHE_ACTIVE, 0);
         cache_unlock (CACHE_DEVBUF);
@@ -629,7 +668,8 @@ int      rc;                            /* Return code               */
 
     /* Send the END request */
     rc = clientRequest (dev, NULL, 0, SHRD_END, 0, NULL, NULL);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         logmsg(_("HHCSH021E %4.4X error during channel program end\n"),
                dev->devnum);
         clientPurge (dev, 0, NULL);
@@ -659,7 +699,8 @@ BYTE     hdr[SHRD_HDR_SIZE + 4];        /* Read request header       */
     *unitstat = 0;
 
     /* Return if reading the same track image */
-    if (trk == dev->bufcur && dev->cache >= 0) {
+    if (trk == dev->bufcur && dev->cache >= 0)
+    {
         dev->bufoff = 0;
         dev->bufoffhi = dev->ckdtrksz;
         return 0;
@@ -689,7 +730,8 @@ cache_retry:
     cache = cache_lookup (CACHE_DEVBUF, SHRD_CACHE_SETKEY(dev->devnum, trk), &lru);
 
     /* Process cache hit */
-    if (cache >= 0) {
+    if (cache >= 0)
+    {
         cache_setflag (CACHE_DEVBUF, cache, ~0, SHRD_CACHE_ACTIVE);
         cache_unlock (CACHE_DEVBUF);
         dev->cachehits++;
@@ -705,7 +747,8 @@ cache_retry:
     }
 
     /* Special processing if no available cache entry */
-    if (lru < 0) {
+    if (lru < 0)
+    {
         shrdtrc("ckd_read trk %d cache wait\n",trk);
         dev->cachewaits++;
         cache_wait (CACHE_DEVBUF);
@@ -728,7 +771,8 @@ read_retry:
     SHRD_SET_HDR (hdr, SHRD_READ, 0, dev->rmtnum, dev->rmtid, 4);
     store_fw (hdr + SHRD_HDR_SIZE, trk);
     rc = clientSend (dev, hdr, NULL, 0);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         logmsg(_("HHCSH022E %4.4X error reading track %d\n"), dev->devnum, trk);
@@ -738,7 +782,8 @@ read_retry:
     /* Read the track from the remote host */
     rc = clientRecv (dev, hdr, buf, dev->ckdtrksz);
     SHRD_GET_HDR (hdr, code, *unitstat, devnum, id, len);
-    if (rc < 0 || code & SHRD_ERROR) {
+    if (rc < 0 || code & SHRD_ERROR)
+    {
         if (rc < 0 && retries--) goto read_retry;
         ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -817,7 +862,8 @@ int      rc;                            /* Return code               */
         dev->bufupdhi = off + len;
 
     /* Indicate track image has been modified */
-    if (!dev->bufupd) {
+    if (!dev->bufupd)
+    {
         dev->bufupd = 1;
         shared_update_notify (dev, trk);
     }
@@ -894,7 +940,8 @@ cache_retry:
     i = cache_lookup (CACHE_DEVBUF, FBA_CACHE_SETKEY(dev->devnum, blkgrp), &o);
 
     /* Cache hit */
-    if (i >= 0) {
+    if (i >= 0)
+    {
         cache_setflag(CACHE_DEVBUF, dev->cache, ~0, FBA_CACHE_ACTIVE);
         cache_setage(CACHE_DEVBUF, dev->cache);
         cache_unlock(CACHE_DEVBUF);
@@ -911,7 +958,8 @@ cache_retry:
     }
 
     /* Wait if no available cache entry */
-    if (o < 0) {
+    if (o < 0)
+    {
         shrdtrc("fba_read blkgrp %d cache wait\n",blkgrp);
         dev->cachewaits++;
         cache_wait(CACHE_DEVBUF);
@@ -934,7 +982,8 @@ read_retry:
     SHRD_SET_HDR (hdr, SHRD_READ, 0, dev->rmtnum, dev->rmtid, 4);
     store_fw (hdr + SHRD_HDR_SIZE, blkgrp);
     rc = clientSend (dev, hdr, NULL, 0);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         logmsg(_("HHCSH024E %4.4X error reading block group %d\n"),
@@ -945,7 +994,8 @@ read_retry:
     /* Read the blkgrp from the remote host */
     rc = clientRecv (dev, hdr, dev->buf, FBA_BLKGRP_SIZE);
     SHRD_GET_HDR (hdr, code, *unitstat, devnum, id, len);
-    if (rc < 0 || code & SHRD_ERROR) {
+    if (rc < 0 || code & SHRD_ERROR)
+    {
         if (rc < 0 && retries--) goto read_retry;
         dev->sense[0] = SENSE_EC;
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -980,7 +1030,8 @@ static int shared_fba_write (DEVBLK *dev, int blkgrp, int off,
 int             rc;                     /* Return code               */
 
     /* Read the block group */
-    if (blkgrp != dev->bufcur) {
+    if (blkgrp != dev->bufcur)
+    {
         rc = (dev->hnd->read) (dev, blkgrp, unitstat);
         if (rc < 0) {
             dev->bufcur = dev->cache = -1;
@@ -998,7 +1049,8 @@ int             rc;                     /* Return code               */
         dev->bufupdhi = off + len;
 
     /* Indicate block group has been modified */
-    if (!dev->bufupd) {
+    if (!dev->bufupd)
+    {
         dev->bufupd = 1;
         shared_update_notify (dev, blkgrp);
     }
@@ -1030,7 +1082,8 @@ FWORD    usage;                         /* Usage buffer              */
 
     /* Get usage information */
     rc = clientRequest (dev, usage, 4, SHRD_USED, 0, NULL, NULL);
-    if (rc != 4) {
+    if (rc != 4)
+    {
         logmsg (_("HHCSH026E %4.4X Error retrieving usage information\n"),
                 dev->devnum);
         return -1;
@@ -1083,7 +1136,8 @@ BYTE        errmsg[SHARED_MAX_MSGLEN+1];/* Error message             */
 
     /* Calculate length to write */
     len = dev->bufupdhi - dev->bufupdlo;
-    if (len <= 0 || dev->bufcur < 0) {
+    if (len <= 0 || dev->bufcur < 0)
+    {
         dev->bufupdlo = dev->bufupdhi = 0;
         return 0;
     }
@@ -1099,7 +1153,8 @@ write_retry:
     store_fw (hdr + SHRD_HDR_SIZE + 2, block);
 
     rc = clientSend (dev, hdr, dev->buf + dev->bufupdlo, len);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         logmsg(_("HHCSH027E %4.4X error writing track %d\n"),
              dev->devnum, dev->bufcur);
         dev->bufupdlo = dev->bufupdhi = 0;
@@ -1110,7 +1165,8 @@ write_retry:
     /* Get the response */
     rc = clientRecv (dev, hdr, errmsg, sizeof(errmsg));
     SHRD_GET_HDR (hdr, code, status, devnum, id, len);
-    if (rc < 0 || (code & SHRD_ERROR) || (code & SHRD_IOERR)) {
+    if (rc < 0 || (code & SHRD_ERROR) || (code & SHRD_IOERR))
+    {
         if (rc < 0 && retries--) goto write_retry;
         logmsg(_("HHCSH028E %4.4X remote error writing track %d: "
          "%2.2X-%2.2X\n"), dev->devnum, dev->bufcur, code, status);
@@ -1143,17 +1199,24 @@ DEVBLK         *dev = data;             /* -> device block           */
 
     UNREFERENCED(answer);
     SHRD_CACHE_GETKEY(i, devnum, trk);
-    if (devnum == dev->devnum) {
+    if (devnum == dev->devnum)
+    {
         if (dev->rmtpurgen == 0) {
             cache_release (ix, i, 0);
             shrdtrc("purge %d\n",trk);
-        } else
+        }
+        else
+        {
             for (p = 0; p < dev->rmtpurgen; p++)
-                if (trk == (int)fetch_fw (dev->rmtpurge[p])) {
+            {
+                if (trk == (int)fetch_fw (dev->rmtpurge[p]))
+                {
                     shrdtrc("purge %d\n",trk);
                     cache_release (ix, i, 0);
                     break;
                 }
+            }
+        }
     }
     return 0;
 } /* clientPurge */
@@ -1178,9 +1241,11 @@ HWORD              comp;                /* Returned compression parm */
         if (dev->fd >= 0) close (dev->fd);
 
         /* Get a socket */
-        if (dev->localhost) {
+        if (dev->localhost)
+        {
             dev->fd = dev->ckdfd[0] = socket (AF_UNIX, SOCK_STREAM, 0);
-            if (dev->fd < 0) {
+            if (dev->fd < 0)
+            {
                 logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
                         dev->devnum, strerror(errno));
                 return -1;
@@ -1190,10 +1255,12 @@ HWORD              comp;                /* Returned compression parm */
             server = (struct sockaddr *)&userver;
             len = sizeof(userver);
         }
-        else {
+        else
+        {
             dev->fd = dev->ckdfd[0] = socket (AF_INET, SOCK_STREAM, 0);
-            if (dev->fd < 0) {
-                logmsg (_("HHCSH029E %4.4X socket failed: %s\n"),
+            if (dev->fd < 0)
+            {
+                logmsg (_("HHCSH030E %4.4X socket failed: %s\n"),
                         dev->devnum, strerror(errno));
                 return -1;
             }
@@ -1208,9 +1275,10 @@ HWORD              comp;                /* Returned compression parm */
         store_hw (id, dev->rmtid);
         rc = connect (dev->fd, server, len);
         shrdtrc("connect rc=%d errno=%d\n",rc, errno);
-        if (rc >= 0) {
+        if (rc >= 0)
+        {
             if (!dev->batch)
-              logmsg(_("HHCSH030I %4.4X Connected to %s\n"),
+              logmsg(_("HHCSH031I %4.4X Connected to %s\n"),
                  dev->devnum, dev->filename);
             /* Request device connection */
             rc = clientRequest (dev, id, 2, SHRD_CONNECT, 0, NULL, NULL);
@@ -1227,7 +1295,8 @@ HWORD              comp;                /* Returned compression parm */
                cckd or cfba then the server doesn't have to uncompress
                the data for us if we support the compression algorithm */
 
-            if (rc >= 0 && (dev->rmtcomp || dev->rmtcomps)) {
+            if (rc >= 0 && (dev->rmtcomp || dev->rmtcomps))
+            {
                 rc = clientRequest (dev, comp, 2, SHRD_COMPRESS,
                            (dev->rmtcomps << 4) | dev->rmtcomp, NULL, NULL);
                 if (rc >= 0)
@@ -1236,7 +1305,7 @@ HWORD              comp;                /* Returned compression parm */
 
         }
         else if (!retry)
-            logmsg(_("HHCSH031E %4.4X Connect %s %d: %s\n"),
+            logmsg(_("HHCSH032E %4.4X Connect %s %d: %s\n"),
                dev->devnum, dev->filename, errno, strerror(errno));
 
         if (rc < 0 && retry) usleep (20000);
@@ -1284,8 +1353,10 @@ retry :
     rc = clientRecv (dev, hdr, temp, sizeof(temp));
 
     /* Retry recv errors */
-    if (rc < 0) {
-        if (cmd != SHRD_CONNECT && retries--) {
+    if (rc < 0)
+    {
+        if (cmd != SHRD_CONNECT && retries--)
+        {
             sleep (1);
             clientConnect (dev, 1);
             goto retry;
@@ -1343,7 +1414,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     hdrlen = SHRD_HDR_SIZE + (len - buflen);
     off = len - buflen;
 
-    if (dev->fd < 0) {
+    if (dev->fd < 0)
+    {
         rc = clientConnect (dev, 1);
         if (rc < 0) return -1;
     }
@@ -1352,13 +1424,15 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     /* Compress the buf */
     if (dev->rmtcomp != 0
      && flag == 0 && off <= SHRD_COMP_MAX_OFF
-     && buflen >= SHARED_COMPRESS_MINLEN) {
+     && buflen >= SHARED_COMPRESS_MINLEN)
+    {
         unsigned long newlen;
         newlen = 65536 - hdrlen;
         memcpy (cbuf, hdr, hdrlen);
         rc = compress2 (cbuf + hdrlen, &newlen,
                         buf, buflen, dev->rmtcomp);
-        if (rc == Z_OK && (int)newlen < buflen) {
+        if (rc == Z_OK && (int)newlen < buflen)
+        {
             cmd |= SHRD_COMP;
             flag = (SHRD_LIBZ << 4) | off;
             hdr = cbuf;
@@ -1370,11 +1444,13 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 #endif
 
     /* Combine header and data unless there's no buffer */
-    if (buflen == 0) {
+    if (buflen == 0)
+    {
         sendbuf = hdr;
         sendlen = hdrlen;
     }
-    else {
+    else
+    {
         memcpy (cbuf, hdr, hdrlen);
         memcpy (cbuf + hdrlen, buf, buflen);
         sendbuf = cbuf;
@@ -1391,14 +1467,16 @@ retry:
 
     /* Send the header and data */
     rc = send (dev->fd, sendbuf, sendlen, 0);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         rc = clientConnect (dev, 0);
         if (rc >= 0) goto retry;
     }
 
     /* Process return code */
-    if (rc < 0) {
-        logmsg(_("HHCSH032E %4.4X send error %d for %2.2X-%2.2X: %s\n"),
+    if (rc < 0)
+    {
+        logmsg(_("HHCSH033E %4.4X send error %d for %2.2X-%2.2X: %s\n"),
                dev->devnum, errno, cmd, flag, strerror(errno)); 
         return -1;
     }
@@ -1423,17 +1501,19 @@ int      len;                           /* Response length           */
     memset (hdr, 0, SHRD_HDR_SIZE);
 
     /* Return error if not connected */
-    if (dev->fd < 0) {
-        logmsg(_("HHCSH033E %4.4X Not connected to %s\n"),
+    if (dev->fd < 0)
+    {
+        logmsg(_("HHCSH034E %4.4X Not connected to %s\n"),
                dev->devnum, dev->filename); 
         return -1;
     }
 
     /* Receive the header */
     rc = recvData (dev->fd, hdr, buf, buflen, 0);
-    if (rc < 0) {
+    if (rc < 0)
+    {
         if (rc != -ENOTCONN)
-            logmsg(_("HHCSH034E %4.4X recv error %d: %s\n"),
+            logmsg(_("HHCSH035E %4.4X recv error %d: %s\n"),
                    dev->devnum, -rc, strerror(-rc));
         return rc;
     }
@@ -1443,14 +1523,16 @@ int      len;                           /* Response length           */
              code,status,devnum,id,len);
 
     /* Handle remote logical error */
-    if (code & SHRD_ERROR) {
-        logmsg(_("HHCSH035E %4.4X Remote error %2.2X-%2.2X: %s\n"),
+    if (code & SHRD_ERROR)
+    {
+        logmsg(_("HHCSH036E %4.4X Remote error %2.2X-%2.2X: %s\n"),
                dev->devnum, code, status, buf);
         len = 0;
     }
 
     /* Reset code/status if response was compressed */
-    if (len > 0 && code == SHRD_COMP) {
+    if (len > 0 && code == SHRD_COMP)
+    {
         code = SHRD_OK;
         status = 0;
     }
@@ -1500,7 +1582,8 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
 
     /* Check for compressed data */
     if ((server && (cmd & SHRD_COMP))
-     || (!server && cmd == SHRD_COMP)) {
+     || (!server && cmd == SHRD_COMP))
+    {
         comp = (flag & SHRD_COMP_MASK) >> 4;
         off = flag & SHRD_COMP_OFF;
         cmd &= ~SHRD_COMP;
@@ -1508,7 +1591,8 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         recvbuf = cbuf;
         rlen = len;
     }
-    else {
+    else
+    {
         recvbuf = buf;
         rlen = buflen < len ? buflen : len;
     }
@@ -1545,7 +1629,8 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         rc = uncompress(buf + off, &newlen, cbuf + off, len - off);
         if (rc == Z_OK)
             recvlen = (int)newlen + off;
-        else {
+        else
+        {
             logmsg(_("HHCSH037E uncompress error %d, off %d len %d\n"),
                    rc, off, len - off);
             recvlen = -1;
@@ -1554,7 +1639,9 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         logmsg(_("HHCSH038E data compressed using libz, unsupported\n"));
         recvlen = -1;
 #endif
-    } else if (comp == SHRD_BZIP2) {
+    }
+    else if (comp == SHRD_BZIP2)
+    {
 #ifdef CCKD_BZIP2
         unsigned int newlen;
 
@@ -1565,7 +1652,8 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
         rc = BZ2_bzBuffToBuffDecompress(buf + off, &newlen, cbuf + off, len - off, 0, 0);
         if (rc == BZ_OK)
             recvlen = (int)newlen + off;
-        else {
+        else
+        {
             logmsg(_("HHCSH039E decompress error %d, off %d len %d\n"),
                    rc, off, len - off);
             recvlen = -1;
@@ -1576,7 +1664,8 @@ BYTE                    cbuf[65536];    /* Compressed buffer         */
 #endif
     }
 
-    if (recvlen > 0) {
+    if (recvlen > 0)
+    {
         SHRD_SET_HDR (hdr, cmd, flag, devnum, id, recvlen);
         if (comp)
             shrdtrc("recvData    %2.2x %2.2x %2.2x %d %d (uncompressed)\n",
@@ -1614,7 +1703,8 @@ int      off;                           /* Offset into record        */
     switch (cmd) {
 
     case SHRD_CONNECT:
-        if (dev->connecting) {
+        if (dev->connecting)
+        {
             serverError (dev, ix, SHRD_ERROR_NOTINIT, cmd,
                          "device not initialized");
             break;
@@ -1632,8 +1722,10 @@ int      off;                           /* Offset into record        */
         obtain_lock (&dev->lock);
 
         /* Make the device available if this system active on it */
-        if (dev->ioactive == id) {
-            if (!dev->suspended) {
+        if (dev->ioactive == id)
+        {
+            if (!dev->suspended)
+            {
                 dev->busy = 0;
                 dev->ioactive = DEV_SYS_NONE;
             }
@@ -1656,11 +1748,13 @@ int      off;                           /* Offset into record        */
             dev->ioactive = id;
 
         /* Check if the device is busy */
-        if (dev->ioactive != id && dev->ioactive != DEV_SYS_NONE) {
+        if (dev->ioactive != id && dev->ioactive != DEV_SYS_NONE)
+        {
             shrdtrc("server_request busy id=%d ioactive=%d reserved=%d\n",
                     id,dev->ioactive,dev->reserved);
             /* If the `nowait' bit is on then respond `busy' */
-            if (flag & SHRD_NOWAIT) {
+            if (flag & SHRD_NOWAIT)
+            {
                 release_lock (&dev->lock);
                 SHRD_SET_HDR (hdr, SHRD_BUSY, 0, dev->devnum, id, 0);
                 serverSend (dev, ix, hdr, NULL, 0);
@@ -1670,14 +1764,16 @@ int      off;                           /* Offset into record        */
             dev->shrd[ix]->waiting = 1;
 
             /* Wait while the device is busy by the local system */
-            while (dev->ioactive == DEV_SYS_LOCAL && !dev->suspended) {
+            while (dev->ioactive == DEV_SYS_LOCAL && !dev->suspended)
+            {
                 dev->iowaiters++;
                 wait_condition (&dev->iocond, &dev->lock);
                 dev->iowaiters--;
             }
 
             /* Return with the `waiting' bit on if busy by a remote system */
-            if (dev->ioactive != DEV_SYS_NONE && dev->ioactive != DEV_SYS_LOCAL) {
+            if (dev->ioactive != DEV_SYS_NONE && dev->ioactive != DEV_SYS_LOCAL)
+            {
                 release_lock (&dev->lock);
                 break;
             }
@@ -1703,7 +1799,8 @@ int      off;                           /* Offset into record        */
         /* Get the purge list */
         if (dev->shrd[ix]->purgen == 0)
             code = len = 0;
-        else {
+        else
+        {
             code = SHRD_PURGE;
             if (dev->shrd[ix]->purgen < 0)
                 len = 0;
@@ -1721,7 +1818,8 @@ int      off;                           /* Offset into record        */
     case SHRD_END:
     case SHRD_SUSPEND:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id) {
+        if (dev->ioactive != id)
+        {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
@@ -1736,13 +1834,16 @@ int      off;                           /* Offset into record        */
         obtain_lock (&dev->lock);
 
         /* Make the device available if it's not reserved */
-        if (!dev->reserved) {
+        if (!dev->reserved)
+        {
             /* If locally suspended then return the device to local */
-            if (dev->suspended) {
+            if (dev->suspended)
+            {
                 dev->ioactive = DEV_SYS_LOCAL;
                 dev->busy = 1;
             }
-            else {
+            else
+            {
                 dev->ioactive = DEV_SYS_NONE;
                 dev->busy = 0;
             }
@@ -1767,7 +1868,8 @@ int      off;                           /* Offset into record        */
 
     case SHRD_RESERVE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id) {
+        if (dev->ioactive != id)
+        {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
@@ -1790,7 +1892,8 @@ int      off;                           /* Offset into record        */
 
     case SHRD_RELEASE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id) {
+        if (dev->ioactive != id)
+        {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
@@ -1813,7 +1916,8 @@ int      off;                           /* Offset into record        */
 
     case SHRD_READ:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id) {
+        if (dev->ioactive != id)
+        {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
@@ -1831,7 +1935,8 @@ int      off;                           /* Offset into record        */
 
         if (rc < 0)
             code = SHRD_IOERR;
-        else {
+        else
+        {
             code = dev->comp ? SHRD_COMP : 0;
             flag = (dev->comp << 4) | dev->compoff;
         }
@@ -1846,7 +1951,8 @@ int      off;                           /* Offset into record        */
 
     case SHRD_WRITE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id) {
+        if (dev->ioactive != id)
+        {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
@@ -1873,7 +1979,8 @@ int      off;                           /* Offset into record        */
 
     case SHRD_SENSE:
         /* Must be active on the device for this command */
-        if (dev->ioactive != id) {
+        if (dev->ioactive != id)
+        {
             serverError (dev, ix, SHRD_ERROR_NOTACTIVE, cmd,
                          "not active on this device");
             break;
@@ -1966,8 +2073,10 @@ static int serverLocate (DEVBLK *dev, int id, int *avail)
 int      i;                             /* Loop index                */
 
     if (avail) *avail = -1;
-    for (i = 0; i < SHARED_MAX_SYS; i++) {
-        if (dev->shrd[i]) {
+    for (i = 0; i < SHARED_MAX_SYS; i++)
+    {
+        if (dev->shrd[i])
+        {
             if (dev->shrd[i]->id == id)
                 return i;
         }
@@ -2054,7 +2163,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     sendlen = hdrlen + buflen;
 
     /* Check if buf is adjacent to the header */
-    if (buf && hdr + hdrlen == buf) {
+    if (buf && hdr + hdrlen == buf)
+    {
         hdrlen += buflen;
         buf = NULL;
         buflen = 0;
@@ -2066,7 +2176,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     /* Get socket number; if `ix' < 0 we don't have a device yet */
     if (ix >= 0)
         sock = dev->shrd[ix]->fd;
-    else {
+    else
+    {
         sock = -ix;
         dev = NULL;
     }
@@ -2079,7 +2190,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     if (ix >= 0 && dev->shrd[ix]->comp != 0
      && code == SHRD_OK && status == 0
      && hdrlen - SHRD_HDR_SIZE <= SHRD_COMP_MAX_OFF
-     && buflen >= SHARED_COMPRESS_MINLEN) {
+     && buflen >= SHARED_COMPRESS_MINLEN)
+    {
         unsigned long newlen;
         int off = hdrlen - SHRD_HDR_SIZE;
         sendbuf = cbuf;
@@ -2087,7 +2199,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
         memcpy (cbuf, hdr, hdrlen);
         rc = compress2 (cbuf + hdrlen, &newlen,
                         buf, buflen, dev->shrd[ix]->comp);
-        if (rc == Z_OK && (int)newlen < buflen) {
+        if (rc == Z_OK && (int)newlen < buflen)
+        {
             /* Setup to use the compressed buffer */
             sendlen = hdrlen + newlen;
             buflen = 0;
@@ -2101,7 +2214,8 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
 #endif
 
     /* Build combined (hdr + data) buffer */
-    if (buflen > 0) {
+    if (buflen > 0)
+    {
         sendbuf = cbuf;
         memcpy (cbuf, hdr, hdrlen);
         memcpy (cbuf + hdrlen, buf, buflen);
@@ -2111,8 +2225,9 @@ BYTE     cbuf[SHRD_HDR_SIZE + 65536];   /* Combined buffer           */
     rc = send (sock, sendbuf, sendlen, 0);
 
     /* Process return code */
-    if (rc < 0) {
-        logmsg(_("HHCSH044E %4.4X send error %d id=%d: %s\n"),
+    if (rc < 0)
+    {
+        logmsg(_("HHCSH041E %4.4X send error %d id=%d: %s\n"),
                dev->devnum, errno, id, strerror(errno));
         dev->shrd[ix]->disconnect = 1;
     }
@@ -2149,9 +2264,9 @@ int i;                                  /* Loop index                */
 
     /* If the device is active by the client then extricate it.
        This is *not* a good situation */
-    if (dev->ioactive == id) {
-
-        logmsg(_("HHCSH045W %4.4X busy client being removed id=%d %s\n"),
+    if (dev->ioactive == id)
+    {
+        logmsg(_("HHCSH042W %4.4X busy client being removed id=%d %s\n"),
                dev->devnum, id, dev->reserved ? "reserved" : "");
 
         /* Call the I/O release exit if reserved by this client */
@@ -2172,7 +2287,8 @@ int i;                                  /* Loop index                */
             dev->ioactive = DEV_SYS_LOCAL;
             dev->busy = 1;
         }
-        else {
+        else
+        {
             dev->ioactive = DEV_SYS_NONE;
             dev->busy = 0;
         }
@@ -2182,7 +2298,7 @@ int i;                                  /* Loop index                */
             signal_condition (&dev->iocond);
     }
 
-    logmsg(_("HHCSH046I %s disconnected from %4.4X id=%d\n"),
+    logmsg(_("HHCSH043I %s disconnected from %4.4X id=%d\n"),
            clientip(dev->shrd[ix]->fd), dev->devnum, id);
 
     /* Release the SHRD block */
@@ -2249,15 +2365,17 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     shrdtrc("server_connect %s sock %d\n",clientip(csock),csock);
 
     rc = recvData(csock, hdr, buf, 65536, 1);
-    if (rc < 0) {
-        logmsg(_("HHCSH047E %s connect failed\n"), clientip (csock));
+    if (rc < 0)
+    {
+        logmsg(_("HHCSH0474 %s connect failed\n"), clientip (csock));
         close (csock);
         return NULL;
     }
     SHRD_GET_HDR (hdr, cmd, flag, devnum, id, len);
 
     /* Error if not a connect request */
-    if (id == 0 && cmd != SHRD_CONNECT) {
+    if (id == 0 && cmd != SHRD_CONNECT)
+    {
         serverError (NULL, -csock, SHRD_ERROR_NOTCONN, cmd,
                      "not a connect request");
         close (csock);
@@ -2268,7 +2386,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     dev = findDevice (devnum);
 
     /* Error if device not found */
-    if (dev == NULL) {
+    if (dev == NULL)
+    {
         serverError (NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
                      "device not found");
         close (csock);
@@ -2282,7 +2401,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     rc = serverLocate (dev, id, &ix);
 
     /* Error if already connected */
-    if (rc >= 0) {
+    if (rc >= 0)
+    {
         release_lock (&dev->lock);
         serverError (NULL, -csock, SHRD_ERROR_NODEVICE, cmd,
                      "already connected");
@@ -2291,7 +2411,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     }
 
     /* Error if no available slot */
-    if (ix < 0) {
+    if (ix < 0)
+    {
         release_lock (&dev->lock);
         serverError (NULL, -csock, SHRD_ERROR_NOTAVAIL, cmd,
                      "too many connections");
@@ -2303,7 +2424,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     dev->shrd[ix] = calloc (sizeof(SHRD), 1);
 
     /* Error if not obtained */
-    if (dev->shrd[ix] == NULL) {
+    if (dev->shrd[ix] == NULL)
+    {
         release_lock (&dev->lock);
         serverError (NULL, -csock, SHRD_ERROR_NOMEM, cmd,
                      "calloc() failure");
@@ -2326,7 +2448,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
             clientip(csock), devnum, id);
 
     /* Return if device thread already active */
-    if (dev->shrdtid) {
+    if (dev->shrdtid)
+    {
         if (dev->shrdwait)
         {
             signal_thread (dev->shrdtid, SIGUSR2);
@@ -2337,22 +2460,22 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     dev->shrdtid = thread_id();
 
     /* This thread will be the shared device thread */
-    logmsg (_("HHCSH056I Shared device %4.4X thread started: "
+    logmsg (_("HHCSH045I Shared device %4.4X thread started: "
             "tid="TIDPAT", pid=%d\n"),
             dev->devnum, thread_id(), getpid());
 
-    while (dev->shrdconn) {
-
+    while (dev->shrdconn)
+    {
         FD_ZERO (&selset);
         maxfd = -1;
 
         /* Get the current time */
         now = time (NULL);
 
-        for (ix = 0; ix < SHARED_MAX_SYS; ix++) {
-
-            if (dev->shrd[ix]) {
-
+        for (ix = 0; ix < SHARED_MAX_SYS; ix++)
+        {
+            if (dev->shrd[ix])
+            {
                 /* Exit loop if pending and not waiting */
                 if (dev->shrd[ix]->pending && !dev->shrd[ix]->waiting)
                     break;
@@ -2372,7 +2495,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
                     serverDisconnect (dev, ix);
 
                 /* Otherwise set the fd if not waiting */
-                else if (!dev->shrd[ix]->waiting) {
+                else if (!dev->shrd[ix]->waiting)
+                {
                     FD_SET (dev->shrd[ix]->fd, &selset);
                     if (dev->shrd[ix]->fd >= maxfd)
                         maxfd = dev->shrd[ix]->fd + 1;
@@ -2383,8 +2507,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
         }
 
         /* Wait for a request if no pending requests */
-        if (ix >= SHARED_MAX_SYS) {
-
+        if (ix >= SHARED_MAX_SYS)
+        {
             /* Exit thread if nothing to select */
             if (maxfd < 0) continue;
 
@@ -2403,19 +2527,23 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 
             if (rc == 0) continue;
 
-            if (rc < 0 ) {
+            if (rc < 0 )
+            {
                 if (errno == EINTR || errno == EBADF) continue;
-                logmsg(_("HHCSH057E select: %s\n"), strerror(errno));
+                logmsg(_("HHCSH046E select: %s\n"), strerror(errno));
                 break;
             }
 
             /* Find any pending requests */
             for (ix = 0; ix < SHARED_MAX_SYS; ix++)
+            {
                 if (dev->shrd[ix]
-                 && FD_ISSET(dev->shrd[ix]->fd, &selset)) {
+                 && FD_ISSET(dev->shrd[ix]->fd, &selset))
+                {
                     dev->shrd[ix]->pending = 1;
                     shrdtrc("select isset %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
                 }
+            }
             continue;
         }
 
@@ -2424,16 +2552,19 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
 
         shrdtrc("select ready %d id=%d\n",dev->shrd[ix]->fd,dev->shrd[ix]->id);
 
-        if (dev->shrd[ix]->havehdr) {
+        if (dev->shrd[ix]->havehdr)
+        {
             /* Copy the saved start/resume packet */
             memcpy (hdr, dev->shrd[ix]->hdr, SHRD_HDR_SIZE);
             dev->shrd[ix]->havehdr = dev->shrd[ix]->waiting = 0;
         }
-        else {
+        else
+        {
             /* Read the request packet */
             rc = recvData (dev->shrd[ix]->fd, hdr, buf, 65536, 1);
-            if (rc < 0) {
-                logmsg(_("HHCSH058E %4.4X %s recv error id=%d\n"),
+            if (rc < 0)
+            {
+                logmsg(_("HHCSH047E %4.4X %s recv error id=%d\n"),
                      dev->devnum, clientip(dev->shrd[ix]->fd), dev->shrd[ix]->id);
                 dev->shrd[ix]->disconnect = 1;
                 dev->shrd[ix]->pending = 0;
@@ -2452,7 +2583,8 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
            system.  We only need to save the header because the data
            is ignored for start/resume.
         */
-        if (dev->shrd[ix]->waiting) {
+        if (dev->shrd[ix]->waiting)
+        {
             memcpy (dev->shrd[ix]->hdr, hdr, SHRD_HDR_SIZE);
             dev->shrd[ix]->havehdr = 1;
         }
@@ -2463,7 +2595,7 @@ BYTE           *buf = hdr + SHRD_HDR_SIZE;   /* Buffer               */
     dev->shrdtid = 0;
     release_lock (&dev->lock);
 
-    logmsg (_("HHCSH059I Shared device %4.4X thread stopping\n"),
+    logmsg (_("HHCSH048I Shared device %4.4X thread stopping\n"),
             dev->devnum);
 
     return NULL;
@@ -2491,7 +2623,7 @@ TID                     tid;            /* Negotiation thread id     */
     UNREFERENCED(arg);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHCSH060I Shared device listener thread started: "
+    logmsg (_("HHCSH049I Shared device listener thread started: "
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
@@ -2500,7 +2632,7 @@ TID                     tid;            /* Negotiation thread id     */
 
     if (lsock < 0)
     {
-        logmsg(_("HHCSH061E inet socket: %s\n"), strerror(errno));
+        logmsg(_("HHCSH050E inet socket: %s\n"), strerror(errno));
         return NULL;
     }
 
@@ -2509,7 +2641,7 @@ TID                     tid;            /* Negotiation thread id     */
 
     if (usock < 0)
     {
-        logmsg(_("HHCSH061E unix socket: %s\n"), strerror(errno));
+        logmsg(_("HHCSH051E unix socket: %s\n"), strerror(errno));
         close(lsock);
         return NULL;
     }
@@ -2527,16 +2659,18 @@ TID                     tid;            /* Negotiation thread id     */
     server.sin_port = htons(server.sin_port);
 
     /* Attempt to bind the internet socket to the port */
-    while (1) {
+    while (1)
+    {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
         if (rc == 0 || errno != EADDRINUSE) break;
-        logmsg (_("HHCSH062W Waiting for port %u to become free\n"),
+        logmsg (_("HHCSH052W Waiting for port %u to become free\n"),
                 sysblk.shrdport);
         sleep(10);
     } /* end while */
 
-    if (rc != 0) {
-        logmsg(_("HHCSH063E inet bind: %s\n"), strerror(errno));
+    if (rc != 0)
+    {
+        logmsg(_("HHCSH053E inet bind: %s\n"), strerror(errno));
         close(lsock); close(usock);
         return NULL;
     }
@@ -2549,8 +2683,9 @@ TID                     tid;            /* Negotiation thread id     */
 
     rc = bind (usock, (struct sockaddr *)&userver, sizeof(userver));
 
-    if (rc < 0) {
-        logmsg(_("HHCSH063E unix bind: %s\n"), strerror(errno));
+    if (rc < 0)
+    {
+        logmsg(_("HHCSH054E unix bind: %s\n"), strerror(errno));
         close(lsock); close(usock);
         return NULL;
     }
@@ -2558,16 +2693,18 @@ TID                     tid;            /* Negotiation thread id     */
     /* Put the sockets into listening state */
     rc = listen (lsock, SHARED_MAX_SYS);
 
-    if (rc < 0) {
-        logmsg(_("HHCSH064E inet listen: %s\n"), strerror(errno));
+    if (rc < 0)
+    {
+        logmsg(_("HHCSH055E inet listen: %s\n"), strerror(errno));
         close(lsock); close(usock);
         return NULL;
     }
 
     rc = listen (usock, SHARED_MAX_SYS);
 
-    if (rc < 0) {
-        logmsg(_("HHCSH064E unix listen: %s\n"), strerror(errno));
+    if (rc < 0)
+    {
+        logmsg(_("HHCSH056E unix listen: %s\n"), strerror(errno));
         close(lsock); close(usock);
         return NULL;
     }
@@ -2579,12 +2716,12 @@ TID                     tid;            /* Negotiation thread id     */
     else
         hi = lsock + 1;
 
-    logmsg(_("HHCSH065I Waiting for shared device requests on port %u\n"),
+    logmsg(_("HHCSH057I Waiting for shared device requests on port %u\n"),
             sysblk.shrdport);
 
     /* Handle connection requests and attention interrupts */
-    while (!sysblk.shutdown) {
-
+    while (!sysblk.shutdown)
+    {
         /* Initialize the select parameters */
         FD_ZERO (&selset);
         FD_SET (lsock, &selset);
@@ -2595,9 +2732,10 @@ TID                     tid;            /* Negotiation thread id     */
 
         if (rc == 0) continue;
 
-        if (rc < 0 ) {
+        if (rc < 0 )
+        {
             if (errno == EINTR) continue;
-            logmsg(_("HHCSH066E select: %s\n"), strerror(errno));
+            logmsg(_("HHCSH058E select: %s\n"), strerror(errno));
             break;
         }
 
@@ -2609,18 +2747,20 @@ TID                     tid;            /* Negotiation thread id     */
         else
             rsock = -1;
 
-        if (rsock > 0) {
-
+        if (rsock > 0)
+        {
             /* Accept a connection and create conversation socket */
             csock = accept (rsock, NULL, NULL);
-            if (csock < 0) {
-                logmsg(_("HHCSH067E accept: %s\n"), strerror(errno));
+            if (csock < 0)
+            {
+                logmsg(_("HHCSH059E accept: %s\n"), strerror(errno));
                 continue;
             }
 
             psock = malloc (sizeof (csock));
-            if (psock == NULL) {
-                logmsg(_("HHCSH068E malloc size %d: %s\n"),
+            if (psock == NULL)
+            {
+                logmsg(_("HHCSH060E malloc size %d: %s\n"),
                        sizeof(csock), strerror(errno));
                 close (csock);
                 continue;
@@ -2629,8 +2769,9 @@ TID                     tid;            /* Negotiation thread id     */
 
             /* Create a thread to complete the client connection */
             if ( create_thread (&tid, &sysblk.detattr,
-                                serverConnect, psock) ) {
-                logmsg(_("HHCSH069E serverConnect create_thread: %s\n"),
+                                serverConnect, psock) )
+            {
+                logmsg(_("HHCSH061E serverConnect create_thread: %s\n"),
                         strerror(errno));
                 close (csock);
             }
@@ -2661,20 +2802,23 @@ int shared_cmd(char* cmdline, int argc, char *argv[])
     UNREFERENCED(cmdline);    
 
     /* Get keyword and operand */
-    if (argc != 2 || strlen(argv[1]) > 255) {
-        logmsg (_("HHCSH070E Invalid or missing argument 1\n"));
+    if (argc != 2 || strlen(argv[1]) > 255)
+    {
+        logmsg (_("HHCSH062E Invalid or missing argument 1\n"));
         return 0;
     }
     strcpy (buf, argv[1]);
     kw = strtok (buf, "=");
     op = strtok (NULL, " \t");
 
-    if (kw == NULL) {
-        logmsg (_("HHCSH071E Invalid or missing keyword 2\n"));
+    if (kw == NULL)
+    {
+        logmsg (_("HHCSH063E Invalid or missing keyword 2\n"));
         return 0;
     }
 
-    if (strcasecmp(kw, "trace") == 0) {
+    if (strcasecmp(kw, "trace") == 0)
+    {
         int n;
         SHRD_TRACE *s, *p, *x, *i;
         s = sysblk.shrdtrace;
@@ -2683,22 +2827,27 @@ int shared_cmd(char* cmdline, int argc, char *argv[])
         n = sysblk.shrdtracen;
 
         /* Get a new trace table if an operand was specified */
-        if (op) {
-            if (sscanf (op, "%d%c", &n, &c) != 1) {
-                logmsg (_("HHCSH072E Invalid or missing value %s\n"),op);
+        if (op)
+        {
+            if (sscanf (op, "%d%c", &n, &c) != 1)
+            {
+                logmsg (_("HHCSH064E Invalid or missing value %s\n"),op);
                 return 0;
             }
-            if (s != NULL) {
+            if (s != NULL)
+            {
                 sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
                 sleep (1);
                 free (s);
             }
             sysblk.shrdtrace = sysblk.shrdtracex = sysblk.shrdtracep = NULL;
             sysblk.shrdtracen = 0;
-            if (n > 0) {
+            if (n > 0)
+            {
                 s = calloc (sizeof(SHRD_TRACE), n);
-                if (s == NULL) {
-                    logmsg (_("HHCSH073E calloc() size=%d: %s\n"),
+                if (s == NULL)
+                {
+                    logmsg (_("HHCSH065E calloc() size=%d: %s\n"),
                             sizeof(SHRD_TRACE) * n, strerror(errno));
                     return 0;
                 }
@@ -2721,8 +2870,10 @@ int shared_cmd(char* cmdline, int argc, char *argv[])
         sysblk.shrdtracep = s;
         sysblk.shrdtracex = x;
         sysblk.shrdtracen = n;
-    } else {
-        logmsg (_("HHCSH074E Invalid or missing keyword %s\n"), kw);
+    }
+    else
+    {
+        logmsg (_("HHCSH066E Invalid or missing keyword %s\n"), kw);
         return 0;
     }
     return 0;
