@@ -811,6 +811,8 @@ void  UpdateDeviceStatus ()
 
 void*  gui_debug_cpu_state ( REGS* pREGS )
 {
+void *(*next_debug_call)(REGS *);
+
     static BOOL bLoading = FALSE;
     static BOOL bStopped = FALSE;
 
@@ -828,6 +830,9 @@ void*  gui_debug_cpu_state ( REGS* pREGS )
         bStopped  = ((CPUSTATE_STOPPED == pREGS->cpustate) ? TRUE : FALSE);
         fprintf(stdout,"MAN=%c\n", bStopped ? '1' : '0');
     }
+
+    if((next_debug_call = HDL_FINDNXT( gui_debug_cpu_state )))
+        return next_debug_call( pREGS );
 
     return NULL;    // (I have no idea why this is a void* func)
 }
