@@ -82,7 +82,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   ipl.c assist.c dat.c \
 	   stack.c cpu.c vstore.c \
 	   general1.c general2.c plo.c \
-	   control.c io.c \
+	   control.c crypto.c io.c \
 	   decimal.c service.c opcode.c \
 	   diagnose.c diagmssf.c vm.c \
 	   channel.c ckddasd.c fbadasd.c \

@@ -1602,6 +1602,14 @@ DEF_INST(trace_svc_return);
 DEF_INST(compression_call);
 
 
+/* Instructions in crypto.c */
+DEF_INST(cipher_message);
+DEF_INST(cipher_message_with_chaining);
+DEF_INST(compute_intermediate_message_digest);
+DEF_INST(compute_last_message_digest);
+DEF_INST(compute_message_authentication_code);
+
+
 /* Instructions in control.c */
 DEF_INST(branch_and_set_authority);
 DEF_INST(branch_in_subspace_group);
