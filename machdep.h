@@ -406,6 +406,9 @@ static __inline__ void set_bit(int len, int nr, volatile void * addr)
     case 1:
         *(BYTE *)addr |= (BYTE)(BIT(nr));
         break;
+    case 2:
+        *(U16 *)addr |= (U16)(BIT(nr));
+        break;
     case 4:
         *(U32 *)addr |= (U32)(BIT(nr));
         break;
@@ -441,6 +444,9 @@ static __inline__ int test_bit(int len, int nr, volatile void * addr)
     switch (len) {
     case 1:
         return ((*(BYTE *)addr & (BYTE)(BIT(nr))) != 0);
+        break;
+    case 2:
+        return ((*(U16 *)addr & (U16)(BIT(nr))) != 0);
         break;
     case 4:
         return ((*(U32 *)addr & (U32)(BIT(nr))) != 0);
