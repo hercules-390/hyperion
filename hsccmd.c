@@ -129,7 +129,7 @@ int log_cmd(int argc, char *argv[],char *cmdline)
             log_sethrdcpy(NULL);
     }
     else
-        logmsg(_("HHCPNxxxE no argument\n"));
+        logmsg(_("HHCPN160E no argument\n"));
 
     return 0;
 }
