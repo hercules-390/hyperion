@@ -96,11 +96,11 @@
 #
 #         The following statement defines 3480 devices 
 #             at addresses 0280 to 028F
-# 0280-028F 3480
+# 280-28F 3480
 #
 #         The following statement defines 3420 devices
 #             at addresses 02C0 & 02C2
-# 02C0,02C2 3420
+# 2C0,2C2 3420
 # 0300    3370    sysres.300
 #
 #         The following statements define 3380 Devices
