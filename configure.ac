@@ -445,21 +445,17 @@ case "$host_os" in
                          [ac_cv_darwin_gcc_cpp_bug],
                          [SAVE_CFLAGS="$CFLAGS"
                           CFLAGS="-Wall -Werror"
-                          AC_TRY_COMPILE([#include <stdio.h>
-                                          #include <string.h>],
-                                         [
-#define ENDMSG(m, format, a...) \
-   if(m!=NULL) fprintf (m, "cckdend: " format, ## a)
-
-int func1(FILE *m, int fd) {
-    ENDMSG (m, "cdevhdr write error fd %d: %s\n",
-            fd, strerror(1));
-    return 0;
-}
-],
-                        ac_cv_darwin_gcc_cpp_bug=no,
-                        ac_cv_darwin_gcc_cpp_bug=yes)
-                        CFLAGS="$SAVE_CFLAGS"])
+                          if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null \
+                             2>&1
+#if __GNUC__ == 3 && __GNUC_MINOR__ == 1
+yes
+#endif
+__EOF
+                          then
+                              ac_cv_darwin_gcc_cpp_bug=yes
+                          else
+                              ac_cv_darwin_gcc_cpp_bug=no
+                          fi])
           ;;
       *)
           ac_cv_darwin_gcc_cpp_bug=no
