@@ -1484,8 +1484,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                                 test_lock(&sysblk.mainlock) ? "" : "not ");
         logmsg("Int lock %sheld\n",
                                 test_lock(&sysblk.intlock) ? "" : "not ");
+#ifndef OPTION_FISHIO
         logmsg("Ioq lock %sheld\n",
                                 test_lock(&sysblk.ioqlock) ? "" : "not ");
+#endif
         logmsg("I/O interrupt %spending\n",
                                 IS_IC_IOPENDING ? "" : "not ");
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
