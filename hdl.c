@@ -196,6 +196,7 @@ void hdl_main()
     {
         fprintf(stderr, "HHCHD004I No initialiser in %s: %s\n",
           hdl_cdll->name, dlerror());
+        close(sysblk.syslogfd[LOG_WRITE]); /* ZZ FIXME: shutdown */
         exit(1);
     }
 

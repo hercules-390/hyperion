@@ -769,6 +769,9 @@ struct termios kbattr;                  /* Terminal I/O structure    */
     fprintf (stderr,
             "HHCIN007I Hercules terminated\n");
 
+    /* ZZ FIXME: Closing the syslog makes the logger terminate 
+       but a more elegant shutdown procedure is required */
+    close(sysblk.syslogfd[LOG_WRITE]) ;
 } /* end function system_cleanup */
 
 /*-------------------------------------------------------------------*/
