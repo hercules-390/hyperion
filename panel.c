@@ -747,34 +747,6 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #define xKBD_LEFT_ARROW         "\x1BOD"
 
 /*-------------------------------------------------------------------*/
-/* Cleanup routine                                                   */
-/*-------------------------------------------------------------------*/
-static void system_cleanup (void)
-{
-struct termios kbattr;                  /* Terminal I/O structure    */
-
-    /* Restore the terminal mode */
-    tcgetattr (STDIN_FILENO, &kbattr);
-    kbattr.c_lflag |= (ECHO | ICANON);
-    tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
-
-#ifdef EXTERNALGUI
-    if (!extgui)
-#endif /*EXTERNALGUI*/
-    /* Reset the cursor position */
-    fprintf (stderr,
-            ANSI_ROW24_COL79
-            ANSI_WHITE_BLACK
-            "\n");
-    fprintf (stderr,
-            "HHCIN007I Hercules terminated\n");
-
-    /* ZZ FIXME: Closing the syslog makes the logger terminate 
-       but a more elegant shutdown procedure is required */
-    close(sysblk.syslogfd[LOG_WRITE]) ;
-} /* end function system_cleanup */
-
-/*-------------------------------------------------------------------*/
 /* Panel display thread                                              */
 /*                                                                   */
 /* This function runs on the main thread.  It receives messages      */
@@ -795,6 +767,29 @@ int volatile initdone = 0;           /* Initialization complete flag */
 #ifdef EXTERNALGUI
 void gui_devlist_status (FILE *confp);
 #endif
+
+void panel_cleanup (void)
+{
+struct termios kbattr;                  /* Terminal I/O structure    */
+
+    /* Restore the terminal mode */
+    tcgetattr (STDIN_FILENO, &kbattr);
+    kbattr.c_lflag |= (ECHO | ICANON);
+    tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
+
+#ifdef EXTERNALGUI
+    if (!extgui)
+#endif /*EXTERNALGUI*/
+    /* Reset the cursor position */
+    fprintf (stderr,
+            ANSI_ROW24_COL79
+            ANSI_WHITE_BLACK
+            "\n");
+    fprintf (stderr,
+            "HHCIN007I Hercules terminated\n");
+
+}
+
 
 #if defined(OPTION_DYNAMIC_LOAD)
 void panel_display_r (void)
@@ -885,8 +880,10 @@ struct  timeval tv;                     /* Select timeout structure  */
         /* Set screen output stream to fully buffered */
         setvbuf (confp, NULL, _IOFBF, 0);
 
+#if !defined(OPTION_DYNAMIC_LOAD)
     /* Register the system cleanup exit routine */
-    atexit (system_cleanup);
+    atexit (panel_cleanup);
+#endif
 
     /* Put the terminal into cbreak mode */
     tcgetattr (keybfd, &kbattr);

@@ -140,12 +140,12 @@ BYTE   *rcname;                         /* hercules.rc name pointer  */
 /*-------------------------------------------------------------------*/
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
+static int daemon_mode = 0;
 int main (int argc, char *argv[])
 {
 BYTE   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
 int     arg_error = 0;                  /* 1=Invalid arguments       */
-int     daemon_mode = 0;                /*                           */
 char   *msgbuf;                         /*                           */
 int     msgnum;                         /*                           */
 int     msgcnt;                         /*                           */
@@ -383,3 +383,18 @@ TID     rctid;                          /* RC file thread identifier */
 
     return 0;
 } /* end function main */
+
+
+/*-------------------------------------------------------------------*/
+/* Cleanup routine                                                   */
+/*-------------------------------------------------------------------*/
+void system_cleanup (void)
+{
+
+    if(!daemon_mode)
+        panel_cleanup();
+
+    /* ZZ FIXME: Closing the syslog makes the logger terminate 
+       but a more elegant shutdown procedure is required */
+    close(sysblk.syslogfd[LOG_WRITE]) ;
+} /* end function system_cleanup */

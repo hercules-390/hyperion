@@ -58,6 +58,7 @@ HDL_RESOLVER_SECTION;
 
 HDL_FINAL_SECTION;
 {
+    system_cleanup();
 
 } END_FINAL_SECTION;
 

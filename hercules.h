@@ -1702,6 +1702,15 @@ void *panel_command (void *cmdline);
 void panel_display (void);
 #endif
 
+/* Functions in module impl.c */
+void system_cleanup(void);
+
+/* Functions in module timer.c */
+void panel_cleanup(void);
+
+
+
+
 /* Functions in module timer.c */
 void update_TOD_clock (void);
 void *timer_update_thread (void *argp);

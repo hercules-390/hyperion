@@ -236,6 +236,21 @@ MODENT *modent;
 }
 
 
+/* hdl_term - hercules termination
+ */
+static void hdl_term(void)
+{
+DLLENT *dllent;
+
+    /* Call all final */
+    for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
+    {
+        if(dllent->hdlfini)
+            (dllent->hdlfini)();
+    }
+}
+
+
 /* hdl_main - initialize hercules dynamic loader
  */
 void hdl_main()
@@ -305,6 +320,9 @@ HDLPRE *preload;
 
     for(preload = hdl_preload; preload->name; preload++)
         hdl_load(preload->name, preload->flag);
+
+    /* Register termination exit */
+    atexit(hdl_term);
 }
 
 
