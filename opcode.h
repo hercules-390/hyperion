@@ -840,6 +840,49 @@ do { \
             INST_UPDATE_PSW((_regs), 6, (_execflag)); \
     }
 
+/* RXY register and indexed storage with extended op code
+   and long displacement */
+#undef RXY
+#if defined(FEATURE_LONG_DISPLACEMENT)
+#define RXY(_inst, _execflag, _regs, _r1, _b2, _effective_addr2) \
+    {   U32 temp; S32 temp2; int tempx; \
+            memcpy (&temp, (_inst), 4); \
+            temp = CSWAP32(temp); \
+            (_r1) = (temp >> 20) & 0xf; \
+            tempx = (temp >> 16) & 0xf; \
+            (_b2) = (temp >> 12) & 0xf; \
+            temp2 = (_inst[4] << 12) Ý (temp & 0xfff); \
+            if (temp2 & 0x80000) temp2 Ý= 0xfff00000; \
+            (_effective_addr2) =
+                        (tempx ? (_regs)->GR(tempx) : (GREG)0) + \
+                        ((_b2) ? (_regs)->GR((_b2)) : (GREG)0) + \
+                        temp2; \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+    }
+#else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
+#define RXY(_inst, _execflag, _regs, _r1, _b2, _effective_addr2) \
+    {   U32 temp; \
+            memcpy (&temp, (_inst), 4); \
+            temp = CSWAP32(temp); \
+            (_r1) = (temp >> 20) & 0xf; \
+            (_b2) = (temp >> 16) & 0xf; \
+            (_effective_addr2) = temp & 0xfff; \
+        if((_b2)) \
+        { \
+        (_effective_addr2) += (_regs)->GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+        } \
+            (_b2) = (temp >> 12) & 0xf; \
+        if((_b2)) \
+        { \
+        (_effective_addr2) += (_regs)->GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+        } \
+            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+    }
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
+
 /* RS register and storage with additional R3 or M3 field */
 #undef RS
 #define RS(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
@@ -860,6 +903,7 @@ do { \
 
 /* RSE register and storage with extended op code and additional
    R3 or M3 field (note, this is NOT the ESA/390 vector RSE format) */
+/* Note: Effective June 2003, RSE is retired and replaced by RSY */
 #undef RSE
 #define RSE(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; \
@@ -876,6 +920,43 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 6, (_execflag)); \
     }
+
+/* RSY register and storage with extended op code, long displacement,
+   and additional R3 or M3 field */
+#undef RSY
+#if defined(FEATURE_LONG_DISPLACEMENT)
+#define RSY(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
+    {   U32 temp; S32 temp2; \
+            memcpy (&temp, (_inst), 4); \
+            temp = CSWAP32(temp); \
+            (_r1) = (temp >> 20) & 0xf; \
+            (_r3) = (temp >> 16) & 0xf; \
+            (_b2) = (temp >> 12) & 0xf; \
+            temp2 = (_inst[4] << 12) Ý (temp & 0xfff); \
+            if (temp2 & 0x80000) temp2 Ý= 0xfff00000; \
+            (_effective_addr2) =
+                        ((_b2) ? (_regs)->GR((_b2)) : (GREG)0) + \
+                        temp2; \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+    }
+#else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
+#define RSY(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
+    {   U32 temp; \
+            memcpy (&temp, (_inst), 4); \
+            temp = CSWAP32(temp); \
+            (_r1) = (temp >> 20) & 0xf; \
+            (_r3) = (temp >> 16) & 0xf; \
+            (_b2) = (temp >> 12) & 0xf; \
+            (_effective_addr2) = temp & 0xfff; \
+        if((_b2) != 0) \
+        { \
+        (_effective_addr2) += (_regs)->GR((_b2)); \
+        (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+        } \
+            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+    }
+#endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* RSL storage operand with extended op code and 4-bit L field */
 #undef RSL
@@ -960,6 +1041,25 @@ do { \
         } \
             INST_UPDATE_PSW((_regs), 4, (_execflag)); \
     }
+
+/* SIY storage and immediate with long displacement */
+#undef SIY
+#if defined(FEATURE_LONG_DISPLACEMENT)
+#define SIY(_inst, _execflag, _regs, _i2, _b1, _effective_addr1) \
+    {   U32 temp; S32 temp1; \
+            memcpy (&temp, (_inst), 4); \
+            temp = CSWAP32(temp); \
+            (_i2) = (temp >> 16) & 0xff; \
+            (_b1) = (temp >> 12) & 0xf; \
+            temp1 = (_inst[4] << 12) Ý (temp & 0xfff); \
+            if (temp1 & 0x80000) temp1 Ý= 0xfff00000; \
+            (_effective_addr1) =
+                        ((_b1) ? (_regs)->GR((_b1)) : (GREG)0) + \
+                        temp1; \
+            (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
+            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+    }
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* S storage operand only */
 #undef S
@@ -1781,6 +1881,10 @@ DEF_INST(loadlength_float_short_to_ext);
 DEF_INST(squareroot_float_short);
 DEF_INST(squareroot_float_long);
 DEF_INST(multiply_float_short);
+DEF_INST(load_float_long_y);
+DEF_INST(load_float_short_y);
+DEF_INST(store_float_long_y);
+DEF_INST(store_float_short_y);
 
 
 /* Instructions in general.c */
@@ -2148,6 +2252,47 @@ DEF_INST(translate_one_to_two);
 DEF_INST(translate_one_to_one);
 DEF_INST(move_long_unicode);
 DEF_INST(compare_logical_long_unicode);
+DEF_INST(add_y);
+DEF_INST(add_halfword_y);
+DEF_INST(add_logical_y);
+DEF_INST(and_immediate_y);
+DEF_INST(and_y);
+DEF_INST(compare_y);
+DEF_INST(compare_and_swap_y);
+DEF_INST(compare_double_and_swap_y);
+DEF_INST(compare_halfword_y);
+DEF_INST(compare_logical_y);
+DEF_INST(compare_logical_immediate_y);
+DEF_INST(compare_logical_characters_under_mask_y);
+DEF_INST(convert_to_binary_y);
+DEF_INST(convert_to_decimal_y);
+DEF_INST(exclusive_or_immediate_y);
+DEF_INST(exclusive_or_y);
+DEF_INST(insert_character_y);
+DEF_INST(insert_characters_under_mask_y);
+DEF_INST(load_y);
+DEF_INST(load_access_multiple_y);
+DEF_INST(load_address_y);
+DEF_INST(load_byte);
+DEF_INST(load_byte_long);
+DEF_INST(load_halfword_y);
+DEF_INST(load_multiple_y);
+DEF_INST(load_real_address_y);
+DEF_INST(move_immediate_y);
+DEF_INST(multiply_single_y);
+DEF_INST(or_immediate_y);
+DEF_INST(or_y);
+DEF_INST(store_y);
+DEF_INST(store_access_multiple_y);
+DEF_INST(store_character_y);
+DEF_INST(store_characters_under_mask_y);
+DEF_INST(store_halfword_y);
+DEF_INST(store_multiple_y);
+DEF_INST(subtract_y);
+DEF_INST(subtract_halfword_y);
+DEF_INST(subtract_logical_y);
+DEF_INST(test_under_mask_y);
+
 
 /* Instructions in ecpsvm.c */
 DEF_INST(ecpsvm_basic_freex);
