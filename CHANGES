@@ -1,3 +1,8 @@
+23 Jul 2001 RP not making trace entry - Paul Leisy
+23 Jul 2001 TRAP not making trace entry - Paul Leisy
+23 Jul 2001 Fix ILC when PR gets PIC 1C - Paul Leisy
+23 Jul 2001 Change order of stores for PLO - Paul Leisy
+23 Jul 2001 LCXR low order sign incorrect - Paul leisy
 17 Jul 2001 Fix BSA so PIC 16 does nullification - Paul Leisy
 17 Jul 2001 Another fix to TRAP and page cross - Paul Leisy
 17 Jul 2001 More fixes to CUTFU, CUUTF - Paul Leisy
