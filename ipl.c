@@ -111,6 +111,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     ARCH_DEP(execute_ccw_chain) (dev);
 
     /* Clear the interrupt pending and device busy conditions */
+    obtain_lock (&sysblk.intlock);
+    DEQUEUE_IO_INTERRUPT(&dev->ioint);
+    release_lock (&sysblk.intlock);
     dev->busy = dev->pending = dev->pcipending = 0;
     dev->scsw.flag2 = 0;
     dev->scsw.flag3 = 0;

@@ -1102,11 +1102,11 @@ void device_reset (DEVBLK *dev)
     dev->mainlim = sysblk.mainsize - 1;
 #endif
     dev->ioint.dev = dev;
-    dev->ioint.pending = 0;
+    dev->ioint.pending = 1;
     dev->pciioint.dev = dev;
-    dev->pciioint.pcipending = 0;
+    dev->pciioint.pcipending = 1;
     dev->attnioint.dev = dev;
-    dev->attnioint.attnpending = 0;
+    dev->attnioint.attnpending = 1;
     release_lock (&dev->lock);
 } /* end device_reset() */
 
