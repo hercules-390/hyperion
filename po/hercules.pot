@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-16 17:53-0600\n"
+"POT-Creation-Date: 2002-12-16 20:05-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -281,11 +281,6 @@ msgstr ""
 msgid "CKD KEY trace is now %s\n"
 msgstr ""
 
-#: cpu.c:1082
-#, c-format
-msgid "CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"
-msgstr ""
-
 #: cpu.c:593
 #, c-format
 msgid "CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%16.16llX\n"
@@ -344,11 +339,6 @@ msgstr ""
 #: hsccmd.c:1838
 #, c-format
 msgid "CPU%4.4X: Connected to channelset %4.4X\n"
-msgstr ""
-
-#: cpu.c:1268
-#, c-format
-msgid "CPU%4.4X: Disabled wait state\n"
 msgstr ""
 
 #: hsccmd.c:1814
@@ -732,11 +722,6 @@ msgstr ""
 msgid ""
 "HHC109I IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
 "2.2X\n"
-msgstr ""
-
-#: cpu.c:1021
-#, c-format
-msgid "HHC136I Cannot create timer thread: %s\n"
 msgstr ""
 
 #: tapedev.c:280
@@ -1382,43 +1367,8 @@ msgstr ""
 msgid "HHC610I Timer thread started: tid=%8.8lX, pid=%d\n"
 msgstr ""
 
-#: cpu.c:1201
-#, c-format
-msgid "HHC611I CPU%4.4X store status completed.\n"
-msgstr ""
-
 #: timer.c:385
 msgid "HHC612I Timer thread ended\n"
-msgstr ""
-
-#: cpu.c:986
-#, c-format
-msgid "HHC620I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
-msgstr ""
-
-#: cpu.c:979
-#, c-format
-msgid "HHC621I CPU thread set priority %d failed: %s\n"
-msgstr ""
-
-#: cpu.c:1008
-#, c-format
-msgid "HHC623I CPU%4.4X thread already started\n"
-msgstr ""
-
-#: cpu.c:1056
-#, c-format
-msgid "HHC624I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
-msgstr ""
-
-#: cpu.c:992
-#, c-format
-msgid "HHC630I CPU%4.4X Architecture Mode %s\n"
-msgstr ""
-
-#: cpu.c:1043
-#, c-format
-msgid "HHC631I CPU%4.4X Architecture Mode set to %s\n"
 msgstr ""
 
 #: panel.c:916
@@ -1706,6 +1656,56 @@ msgstr ""
 #: config.c:1542
 #, c-format
 msgid "HHCCF050I Device %4.4X defined as %4.4X\n"
+msgstr ""
+
+#: cpu.c:979
+#, c-format
+msgid "HHCCP001W CPU thread set priority %d failed: %s\n"
+msgstr ""
+
+#: cpu.c:986
+#, c-format
+msgid "HHCCP002I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
+msgstr ""
+
+#: cpu.c:992
+#, c-format
+msgid "HHCCP003I CPU%4.4X architecture mode %s\n"
+msgstr ""
+
+#: cpu.c:1008
+#, c-format
+msgid "HHCCP005E CPU%4.4X thread already started\n"
+msgstr ""
+
+#: cpu.c:1043
+#, c-format
+msgid "HHCCP007I CPU%4.4X architecture mode set to %s\n"
+msgstr ""
+
+#: cpu.c:1056
+#, c-format
+msgid "HHCCP008I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
+msgstr ""
+
+#: cpu.c:1082
+#, c-format
+msgid "HHCCP009E CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"
+msgstr ""
+
+#: cpu.c:1202
+#, c-format
+msgid "HHCCP010I CPU%4.4X store status completed.\n"
+msgstr ""
+
+#: cpu.c:1269
+#, c-format
+msgid "HHCCP011I CPU%4.4X: Disabled wait state\n"
+msgstr ""
+
+#: cpu.c:1021
+#, c-format
+msgid "HHCCPU006E Cannot create timer thread: %s\n"
 msgstr ""
 
 #: printer.c:187
@@ -2346,12 +2346,12 @@ msgstr ""
 msgid "Operand must be `merge' or `nomerge'\n"
 msgstr ""
 
-#: cpu.c:1694
+#: cpu.c:1696
 #, c-format
 msgid "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: cpu.c:1701
+#: cpu.c:1703
 #, c-format
 msgid ""
 "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%"

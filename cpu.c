@@ -976,25 +976,25 @@ void *cpu_thread (REGS *regs)
     
     /* Set CPU thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        logmsg (_("HHC621I CPU thread set priority %d failed: %s\n"),
+        logmsg (_("HHCCP001W CPU thread set priority %d failed: %s\n"),
                 sysblk.cpuprio, strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
     
     /* Display thread started message on control panel */
-    logmsg (_("HHC620I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
+    logmsg (_("HHCCP002I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
             "priority=%d\n"),
             regs->cpuad, thread_id(), getpid(),
             getpriority(PRIO_PROCESS,0));
 #endif
 
-    logmsg (_("HHC630I CPU%4.4X Architecture Mode %s\n"),
+    logmsg (_("HHCCP003I CPU%4.4X architecture mode %s\n"),
         regs->cpuad,get_arch_mode_string(regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
     if (regs->vf->online)
-        logmsg (_("HHC625I CPU%4.4X Vector Facility online\n"),
+        logmsg (_("HHCCP004I CPU%4.4X Vector Facility online\n"),
                 regs->cpuad);
 #endif /*FEATURE_VECTOR_FACILITY*/
 
@@ -1005,7 +1005,7 @@ void *cpu_thread (REGS *regs)
     obtain_lock(&sysblk.intlock);
     if(regs->cpustate != CPUSTATE_STARTING)
     {
-        logmsg(_("HHC623I CPU%4.4X thread already started\n"),
+        logmsg(_("HHCCP005E CPU%4.4X thread already started\n"),
             regs->cpuad);
         release_lock(&sysblk.intlock);
         return NULL;
@@ -1018,7 +1018,7 @@ void *cpu_thread (REGS *regs)
         if ( create_thread (&sysblk.todtid, &sysblk.detattr,
                             timer_update_thread, NULL) )
         {
-            logmsg (_("HHC136I Cannot create timer thread: %s\n"),
+            logmsg (_("HHCCPU006E Cannot create timer thread: %s\n"),
                     strerror(errno));
             release_lock(&sysblk.intlock);
             return NULL;
@@ -1040,7 +1040,7 @@ void *cpu_thread (REGS *regs)
     if(sysblk.arch_mode != regs->arch_mode)
     {
         regs->arch_mode = sysblk.arch_mode;
-        logmsg (_("HHC631I CPU%4.4X Architecture Mode set to %s\n"),
+        logmsg (_("HHCCP007I CPU%4.4X architecture mode set to %s\n"),
             regs->cpuad,get_arch_mode_string(regs));
     }
 
@@ -1053,7 +1053,7 @@ void *cpu_thread (REGS *regs)
     initial_cpu_reset (regs);
 
     /* Display thread ended message on control panel */
-    logmsg (_("HHC624I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n"),
+    logmsg (_("HHCCP008I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n"),
             regs->cpuad, thread_id(), getpid());
 
     /* Thread exit */
@@ -1079,7 +1079,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 	        SET_IC_PER_MASK(regs);
 	        if(prevmask != regs->ints_mask)
 		{
-	            logmsg(_("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"),
+	            logmsg(_("HHCCP009E CPU MASK MISMATCH: %8.8X - %8.8X. "
+                            "Last instruction:\n"),
 		       prevmask, regs->ints_mask);
 		       ARCH_DEP(display_inst) (regs, regs->ip);
 		}
@@ -1198,7 +1199,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 {
                     OFF_IC_STORSTAT(regs);
                     ARCH_DEP(store_status) (regs, 0);
-                    logmsg (_("HHC611I CPU%4.4X store status completed.\n"),
+                    logmsg (_("HHCCP010I CPU%4.4X store status completed.\n"),
                         regs->cpuad);
 
 #ifdef OPTION_CPU_UNROLL
@@ -1265,7 +1266,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 /* Test for disabled wait PSW and issue message */
                 if( IS_IC_DISABLED_WAIT_PSW(regs) )
                 {
-                    logmsg (_("CPU%4.4X: Disabled wait state\n"),regs->cpuad);
+                    logmsg (_("HHCCP011I CPU%4.4X: Disabled wait state\n"),
+                           regs->cpuad);
                     display_psw (regs);
                     regs->cpustate = CPUSTATE_STOPPING;
                     ON_IC_CPU_NOT_STARTED(regs);

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2002-12-16 10:36-0600\n"
+"POT-Creation-Date: 2002-12-16 20:05-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -279,11 +279,6 @@ msgstr "HHC403I standaard waarde 'ascii' aan socket apparaat %4.4X toegekend\n"
 msgid "CKD KEY trace is now %s\n"
 msgstr ""
 
-#: cpu.c:1082
-#, c-format
-msgid "CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"
-msgstr ""
-
 #: cpu.c:593
 #, c-format
 msgid "CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%16.16llX\n"
@@ -342,11 +337,6 @@ msgstr ""
 #: hsccmd.c:1838
 #, c-format
 msgid "CPU%4.4X: Connected to channelset %4.4X\n"
-msgstr ""
-
-#: cpu.c:1268
-#, c-format
-msgid "CPU%4.4X: Disabled wait state\n"
 msgstr ""
 
 #: hsccmd.c:1814
@@ -661,49 +651,14 @@ msgstr ""
 msgid "HHC001E Error reading file %s line %d: %s\n"
 msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: config.c:162
-#, c-format
-msgid "HHC001I Error reading file %s line %d: %s\n"
-msgstr ""
-
 #: ctc_lcs.c:1960
 #, c-format
 msgid "HHC002E File %s line %d is too long\n"
 msgstr ""
 
-#: config.c:181
-#, c-format
-msgid "HHC002I File %s line %d is too long\n"
-msgstr ""
-
-#: config.c:315 ctc_lcs.c:1651
+#: ctc_lcs.c:1651
 #, c-format
 msgid "HHC003I Cannot open file %s: %s\n"
-msgstr ""
-
-#: config.c:352
-#, c-format
-msgid "HHC004I No device records in file %s\n"
-msgstr ""
-
-#: config.c:545
-#, c-format
-msgid "HHC005I Error in %s line %d: Incorrect number of operands\n"
-msgstr ""
-
-#: config.c:536
-#, c-format
-msgid "HHC006I Error in %s line %d: Unrecognized keyword %s\n"
-msgstr ""
-
-#: config.c:597
-#, c-format
-msgid "HHC007I Error in %s line %d: %s is not a valid serial number\n"
-msgstr ""
-
-#: config.c:610
-#, c-format
-msgid "HHC008I Error in %s line %d: %s is not a valid CPU model\n"
 msgstr ""
 
 #: ipl.c:275
@@ -711,199 +666,27 @@ msgstr ""
 msgid "HHC008I Load from %s failed: %s\n"
 msgstr ""
 
-#: config.c:623
-#, c-format
-msgid "HHC009I Error in %s line %d: Invalid main storage size %s\n"
-msgstr ""
-
-#: config.c:636
-#, c-format
-msgid "HHC010I Error in %s line %d: Invalid expanded storage size %s\n"
-msgstr ""
-
 #: ipl.c:467
 #, c-format
 msgid "HHC010I load_main: %s: %s\n"
-msgstr ""
-
-#: config.c:649
-#, c-format
-msgid "HHC011I Error in %s line %d: Invalid console port number %s\n"
 msgstr ""
 
 #: ipl.c:476
 msgid "HHC011I load_main: terminated at end of mainstor\n"
 msgstr ""
 
-#: config.c:661
-#, c-format
-msgid "HHC012I Error in %s line %d: Invalid CPU thread priority %s\n"
-msgstr ""
-
-#: config.c:890
-#, c-format
-msgid "HHC012I Error in %s line %d: Invalid I/O delay value: %s\n"
-msgstr ""
-
-#: config.c:682
-#, c-format
-msgid "HHC012I Error in %s line %d: Invalid number of CPUs %s\n"
-msgstr ""
-
-#: config.c:711
-#, c-format
-msgid "HHC013I Error in %s line %d: Load parameter %s exceeds 8 characters\n"
-msgstr ""
-
-#: config.c:733
-#, c-format
-msgid ""
-"HHC014I Error in %s line %d: %s is not a valid system epoch\n"
-"patch config.c to expand the table\n"
-msgstr ""
-
-#: config.c:747
-#, c-format
-msgid "HHC015I Error in %s line %d: %s is not a valid timezone offset\n"
-msgstr ""
-
-#: config.c:837
-#, c-format
-msgid "HHC016I Error in %s line %d: Invalid Max device threads %s\n"
-msgstr ""
-
-#: config.c:761
-#, c-format
-msgid "HHC016I Error in %s line %d: Invalid TOD clock drag factor %s\n"
-msgstr ""
-
-#: config.c:824
-#, c-format
-msgid "HHC017I Error in %s line %d: Unknown OS tailor specification %s\n"
-msgstr ""
-
-#: config.c:579
-#, c-format
-msgid ""
-"HHC017I Error in %s line %d: Unknown or unsupported ARCHMODE specification %"
-"s\n"
-msgstr ""
-
-#: config.c:702
-msgid "HHC019I Vector Facility Support not configured\n"
-msgstr ""
-
-#: config.c:911
-#, c-format
-msgid "HHC020I Cannot obtain %dMB main storage: %s\n"
-msgstr ""
-
-#: config.c:920
-#, c-format
-msgid "HHC021I Cannot obtain storage key array: %s\n"
-msgstr ""
-
-#: config.c:943
-#, c-format
-msgid "HHC022I Cannot obtain %dMB expanded storage: %s\n"
-msgstr ""
-
 #: ipl.c:74
 msgid "HHC023I Device not connected to channelset\n"
 msgstr ""
 
-#: config.c:1115
-#, c-format
-msgid "HHC030I Error in %s line %d: Missing device number or device type\n"
-msgstr ""
-
-#: config.c:1124
-#, c-format
-msgid "HHC031I Error in %s line %d: %s is not a valid device number\n"
-msgstr ""
-
-#: config.c:1144
-#, c-format
-msgid "HHC033I Message pipe creation failed: %s\n"
-msgstr ""
-
-#: config.c:1259
-#, c-format
-msgid "HHC034I Cannot create CPU%4.4X thread: %s\n"
-msgstr ""
-
-#: config.c:1158
-#, c-format
-msgid "HHC034I Message pipe open failed: %s\n"
-msgstr ""
-
-#: config.c:1304 ctcadpt.c:1329
+#: ctcadpt.c:1329
 #, c-format
 msgid "HHC035I device %4.4X already exists\n"
 msgstr ""
 
-#: config.c:1314
-#, c-format
-msgid "HHC036I Device type %s not recognized\n"
-msgstr ""
-
-#: config.c:1329 ctcadpt.c:1357
+#: ctcadpt.c:1357
 #, c-format
 msgid "HHC037I Cannot obtain device block for device %4.4X: %s\n"
-msgstr ""
-
-#: config.c:1381
-#, c-format
-msgid "HHC038I Initialization failed for device %4.4X\n"
-msgstr ""
-
-#: config.c:1398
-#, c-format
-msgid "HHC039I Cannot obtain buffer for device %4.4X: %s\n"
-msgstr ""
-
-#: config.c:1455
-#, c-format
-msgid "HHC040I device %4.4X does not exist\n"
-msgstr ""
-
-#: config.c:1483
-#, c-format
-msgid "HHC041I device %4.4X detached\n"
-msgstr ""
-
-#: config.c:1501
-#, c-format
-msgid "HHC042I device %4.4X does not exist\n"
-msgstr ""
-
-#: config.c:1508
-#, c-format
-msgid "HHC043I device %4.4X already exists\n"
-msgstr ""
-
-#: config.c:1538
-#, c-format
-msgid "HHC044I device %4.4X defined as %4.4X\n"
-msgstr ""
-
-#: config.c:785
-#, c-format
-msgid "HHC045I Error in %s line %d: Invalid panel refresh rate %s\n"
-msgstr ""
-
-#: config.c:1179
-msgid ""
-"HHC046W PGMPRDOS LICENSED specified.\n"
-"        Licensed program product operating systems are enabled.\n"
-"        You are responsible for meeting all conditions of your software "
-"license.\n"
-"\n"
-msgstr ""
-
-#: config.c:862
-#, c-format
-msgid "HHC047I Error in %s line %d: Invalid program product OS permission %s\n"
 msgstr ""
 
 #: codepage.c:187
@@ -937,11 +720,6 @@ msgstr ""
 msgid ""
 "HHC109I IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
 "2.2X\n"
-msgstr ""
-
-#: cpu.c:1021
-#, c-format
-msgid "HHC136I Cannot create timer thread: %s\n"
 msgstr ""
 
 #: tapedev.c:280
@@ -1587,43 +1365,8 @@ msgstr ""
 msgid "HHC610I Timer thread started: tid=%8.8lX, pid=%d\n"
 msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
 
-#: cpu.c:1201
-#, c-format
-msgid "HHC611I CPU%4.4X store status completed.\n"
-msgstr ""
-
 #: timer.c:385
 msgid "HHC612I Timer thread ended\n"
-msgstr ""
-
-#: cpu.c:986
-#, fuzzy, c-format
-msgid "HHC620I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
-msgstr "HHC620I CPU%4.4X thread gestart: tid=%8.8lX, pid=%d, prioriteit=%d\n"
-
-#: cpu.c:979
-#, c-format
-msgid "HHC621I CPU thread set priority %d failed: %s\n"
-msgstr ""
-
-#: cpu.c:1008
-#, c-format
-msgid "HHC623I CPU%4.4X thread already started\n"
-msgstr "HHC623I CPU%4.4X thread al gestart\n"
-
-#: cpu.c:1056
-#, fuzzy, c-format
-msgid "HHC624I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
-msgstr "HHC624I CPU%4.4X thread geeindigd: tid=%8.8lX, pid=%d\n"
-
-#: cpu.c:992
-#, c-format
-msgid "HHC630I CPU%4.4X Architecture Mode %s\n"
-msgstr "HHC630I CPU%4.4X Architectuur Modus %s\n"
-
-#: cpu.c:1043
-#, c-format
-msgid "HHC631I CPU%4.4X Architecture Mode set to %s\n"
 msgstr ""
 
 #: panel.c:916
@@ -1664,6 +1407,304 @@ msgstr ""
 #, c-format
 msgid "HHC760I %4.4X create_thread error: %s"
 msgstr "HHC760I %4.4X create_thread fout: %s"
+
+#: config.c:162
+#, fuzzy, c-format
+msgid "HHCCF001S Error reading file %s line %d: %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: config.c:181
+#, c-format
+msgid "HHCCF002S File %s line %d is too long\n"
+msgstr ""
+
+#: config.c:315
+#, fuzzy, c-format
+msgid "HHCCF003S Cannot open file %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: config.c:352
+#, fuzzy, c-format
+msgid "HHCCF004S No device records in file %s\n"
+msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+
+#: config.c:495
+#, fuzzy, c-format
+msgid "HHCCF005S Error in %s line %d: Unrecognized argument %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: config.c:509
+#, c-format
+msgid "HHCCF006S Error in %s line %d: Userid, but no password given %s\n"
+msgstr ""
+
+#: config.c:524
+#, fuzzy, c-format
+msgid "HHCCF007S Error in %s line %d: Missing argument.\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: config.c:537
+#, fuzzy, c-format
+msgid "HHCCF008S Error in %s line %d: Unrecognized keyword %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: config.c:546
+#, fuzzy, c-format
+msgid "HHCCF009S Error in %s line %d: Incorrect number of operands\n"
+msgstr "Geen apparaat nummer\n"
+
+#: config.c:580
+#, c-format
+msgid ""
+"HHCCF010S Error in %s line %d: Unknown or unsupported ARCHMODE specification "
+"%s\n"
+msgstr ""
+
+#: config.c:598
+#, fuzzy, c-format
+msgid "HHCCF011S Error in %s line %d: %s is not a valid serial number\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: config.c:611
+#, fuzzy, c-format
+msgid "HHCCF012S Error in %s line %d: %s is not a valid CPU model\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: config.c:624
+#, c-format
+msgid "HHCCF013S Error in %s line %d: Invalid main storage size %s\n"
+msgstr ""
+
+#: config.c:637
+#, c-format
+msgid "HHCCF014S Error in %s line %d: Invalid expanded storage size %s\n"
+msgstr ""
+
+#: config.c:650
+#, fuzzy, c-format
+msgid "HHCCF015S Error in %s line %d: Invalid console port number %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: config.c:662
+#, c-format
+msgid "HHCCF016S Error in %s line %d: Invalid CPU thread priority %s\n"
+msgstr ""
+
+#: config.c:670
+msgid ""
+"HHCCF017W Hercules is not running as setuid root, cannot raise CPU priority\n"
+msgstr ""
+
+#: config.c:684
+#, fuzzy, c-format
+msgid "HHCCF018S Error in %s line %d: Invalid number of CPUs %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: config.c:704
+msgid "HHCCF020W Vector Facility support not configured\n"
+msgstr ""
+
+#: config.c:713
+#, c-format
+msgid "HHCCF021S Error in %s line %d: Load parameter %s exceeds 8 characters\n"
+msgstr ""
+
+#: config.c:735
+#, c-format
+msgid ""
+"HHCCF022S Error in %s line %d: %s is not a valid system epoch.\n"
+"Patch config.c to expand the table\n"
+msgstr ""
+
+#: config.c:750
+#, c-format
+msgid "HHCCF023S Error in %s line %d: %s is not a valid timezone offset\n"
+msgstr ""
+
+#: config.c:764
+#, c-format
+msgid "HHCCF024S Error in %s line %d: Invalid TOD clock drag factor %s\n"
+msgstr ""
+
+#: config.c:788
+#, c-format
+msgid "HHCCF025S Error in %s line %d: Invalid panel refresh rate %s\n"
+msgstr ""
+
+#: config.c:827
+#, c-format
+msgid "HHCCF026S Error in %s line %d: Unknown OS tailor specification %s\n"
+msgstr ""
+
+#: config.c:840
+#, fuzzy, c-format
+msgid "HHCCF027S Error in %s line %d: Invalid maximum device threads %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: config.c:865
+#, c-format
+msgid ""
+"HHCCF028S Error in %s line %d: Invalid program product OS permission %s\n"
+msgstr ""
+
+#: config.c:879
+#, fuzzy, c-format
+msgid "HHCCF029S Error in %s line %d: Invalid HTTP port number %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: config.c:893
+#, fuzzy, c-format
+msgid "HHCCF030S Error in %s line %d: Invalid I/O delay value: %s\n"
+msgstr "Ongeldige waarde: %s\n"
+
+#: config.c:914
+#, c-format
+msgid "HHCCF031S Cannot obtain %dMB main storage: %s\n"
+msgstr ""
+
+#: config.c:923
+#, c-format
+msgid "HHCCF032S Cannot obtain storage key array: %s\n"
+msgstr ""
+
+#: config.c:946
+#, c-format
+msgid "HHCCF033S Cannot obtain %dMB expanded storage: %s\n"
+msgstr ""
+
+#: config.c:1118
+#, fuzzy, c-format
+msgid "HHCCF035S Error in %s line %d: Missing device number or device type\n"
+msgstr "Geen apparaat nummer\n"
+
+#: config.c:1127
+#, fuzzy, c-format
+msgid "HHCCF036S Error in %s line %d: %s is not a valid device number\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: config.c:1147
+#, c-format
+msgid "HHCCF037S Message pipe creation failed: %s\n"
+msgstr ""
+
+#: config.c:1161
+#, fuzzy, c-format
+msgid "HHCCF038S Message pipe open failed: %s\n"
+msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+
+#: config.c:1182
+msgid ""
+"HHCCF039W PGMPRDOS LICENSED specified.\n"
+"           Licensed program product operating systems are enabled.\n"
+"           You are responsible for meeting all conditions of your\n"
+"           software license.\n"
+"\n"
+msgstr ""
+
+#: config.c:1263
+#, c-format
+msgid "HHCCF040E Cannot create CPU%4.4X thread: %s\n"
+msgstr ""
+
+#: config.c:1308
+#, c-format
+msgid "HHCCF041E Device %4.4X already exists\n"
+msgstr ""
+
+#: config.c:1318
+#, c-format
+msgid "HHCCF042E Device type %s not recognized\n"
+msgstr ""
+
+#: config.c:1333
+#, c-format
+msgid "HHCCF043E Cannot obtain device block for device %4.4X: %s\n"
+msgstr ""
+
+#: config.c:1385
+#, fuzzy, c-format
+msgid "HHCCF044E Initialization failed for device %4.4X\n"
+msgstr "HHC403I standaard waarde 'ascii' aan socket apparaat %4.4X toegekend\n"
+
+#: config.c:1402
+#, c-format
+msgid "HHCCF045E Cannot obtain buffer for device %4.4X: %s\n"
+msgstr ""
+
+#: config.c:1459
+#, c-format
+msgid "HHCCF046E Device %4.4X does not exist\n"
+msgstr ""
+
+#: config.c:1487
+#, c-format
+msgid "HHCCF047I Device %4.4X detached\n"
+msgstr ""
+
+#: config.c:1505
+#, c-format
+msgid "HHCCF048E Device %4.4X does not exist\n"
+msgstr ""
+
+#: config.c:1512
+#, c-format
+msgid "HHCCF049E Device %4.4X already exists\n"
+msgstr ""
+
+#: config.c:1542
+#, fuzzy, c-format
+msgid "HHCCF050I Device %4.4X defined as %4.4X\n"
+msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
+
+#: cpu.c:979
+#, c-format
+msgid "HHCCP001W CPU thread set priority %d failed: %s\n"
+msgstr ""
+
+#: cpu.c:986
+#, fuzzy, c-format
+msgid "HHCCP002I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
+msgstr "HHC620I CPU%4.4X thread gestart: tid=%8.8lX, pid=%d, prioriteit=%d\n"
+
+#: cpu.c:992
+#, fuzzy, c-format
+msgid "HHCCP003I CPU%4.4X architecture mode %s\n"
+msgstr "HHC630I CPU%4.4X Architectuur Modus %s\n"
+
+#: cpu.c:1008
+#, fuzzy, c-format
+msgid "HHCCP005E CPU%4.4X thread already started\n"
+msgstr "HHC623I CPU%4.4X thread al gestart\n"
+
+#: cpu.c:1043
+#, fuzzy, c-format
+msgid "HHCCP007I CPU%4.4X architecture mode set to %s\n"
+msgstr "HHC630I CPU%4.4X Architectuur Modus %s\n"
+
+#: cpu.c:1056
+#, fuzzy, c-format
+msgid "HHCCP008I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
+msgstr "HHC624I CPU%4.4X thread geeindigd: tid=%8.8lX, pid=%d\n"
+
+#: cpu.c:1082
+#, c-format
+msgid "HHCCP009E CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"
+msgstr ""
+
+#: cpu.c:1202
+#, fuzzy, c-format
+msgid "HHCCP010I CPU%4.4X store status completed.\n"
+msgstr "HHC623I CPU%4.4X thread al gestart\n"
+
+#: cpu.c:1269
+#, fuzzy, c-format
+msgid "HHCCP011I CPU%4.4X: Disabled wait state\n"
+msgstr "HHC623I CPU%4.4X thread al gestart\n"
+
+#: cpu.c:1021
+#, fuzzy, c-format
+msgid "HHCCPU006E Cannot create timer thread: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
 
 #: printer.c:187
 #, fuzzy, c-format
@@ -1868,26 +1909,6 @@ msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
 #: hsccmd.c:1576
 #, c-format
 msgid "HHCxxxI savecore: unable to save %d bytes\n"
-msgstr ""
-
-#: config.c:876
-#, c-format
-msgid "HHS002E Error in %s line %d: Invalid HTTP port number %s\n"
-msgstr ""
-
-#: config.c:524
-#, c-format
-msgid "HHS003E Error in %s line %d: Missing argument.\n"
-msgstr ""
-
-#: config.c:509
-#, c-format
-msgid "HHS008E Error in %s line %d: Userid, but no password given %s\n"
-msgstr ""
-
-#: config.c:495
-#, c-format
-msgid "HHS009E Error in %s line %d: Unrecognized argument %s\n"
 msgstr ""
 
 #: httpserv.c:665
@@ -2331,12 +2352,12 @@ msgstr ""
 msgid "Operand must be `merge' or `nomerge'\n"
 msgstr ""
 
-#: cpu.c:1694
+#: cpu.c:1696
 #, c-format
 msgid "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: cpu.c:1701
+#: cpu.c:1703
 #, c-format
 msgid ""
 "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%"
@@ -2371,10 +2392,6 @@ msgstr "Restart key ingedrukt\n"
 #, c-format
 msgid "Running on %s %s%s %s %s\n"
 msgstr "Draaiend op %s %s%s %s %s\n"
-
-#: config.c:669
-msgid "SETPRIO: Hercules not running as setuid root\n"
-msgstr ""
 
 #: cpu.c:486 hscmisc.c:596
 msgid "SIE: "
@@ -3038,10 +3055,6 @@ msgstr ""
 
 #~ msgid "HHC407I Error reading file %s: %s\n"
 #~ msgstr "HHC407I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#, fuzzy
-#~ msgid "HHC620I CPU%4.4X thread started: tid="
-#~ msgstr "HHC623I CPU%4.4X thread al gestart\n"
 
 #, fuzzy
 #~ msgid "HHC625I CPU%4.4X Vector Facility online\n"
