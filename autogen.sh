@@ -23,7 +23,7 @@ if test ! -e autoconf/ltmain.sh; then
   #  and has a different program named libtool. We want the GNU version
   #  here.
 
-  if test -e "`which glibtool 2>&1`"; then
+  if test -e "`which glibtool 2>/dev/null`"; then
     glibtoolize --copy --force --ltdl    >> ./autogen.log 2>&1
   else
     libtoolize --copy --force --ltdl     >> ./autogen.log 2>&1
