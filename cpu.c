@@ -1430,7 +1430,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
         regs.po = (regs.psw.IA & PAGEFRAME_BYTEMASK); \
         regs.ip = regs.pagestart + (regs.psw.IA & PAGEFRAME_BYTEMASK); \
         COUNT_INST(regs.ip, &regs); \
-    regs.instcount ++; \
+    regs.instcount32 ++; \
         goto *instructions[regs.ip[0]]; \
     } else goto instruction_fetch; \
 }
@@ -1441,14 +1441,14 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     { \
         regs.ip = regs.pagestart + (regs.psw.IA & PAGEFRAME_BYTEMASK); \
         COUNT_INST(regs.ip, &regs); \
-    regs.instcount ++; \
+    regs.instcount32 ++; \
         goto *instructions[regs.ip[0]]; \
     } else goto instruction_fetch; \
 }
 
+#if defined(FEATURE_ACCESS_REGISTERS)
 #define HLOGICAL_TO_ABS_READ(_addr, _arn, _regs, _akey)           \
     (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) && \
-    ((_arn) >= 0) &&                                                    \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&   \
     (((_regs).aenoarn) || ((_regs).aearn[AEIND((_addr))] == (_arn))) && \
     ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_READ) ?                          \
@@ -1458,13 +1458,29 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
 #define HLOGICAL_TO_ABS_WRITE(_addr, _arn, _regs, _akey)           \
     (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) &&      \
-    ((_arn) >= 0) &&                                                  \
     (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&          \
     (((_regs).aenoarn) || ((_regs).aearn[AEIND((_addr))] == (_arn))) && \
     ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_WRITE) ?                          \
             (STORAGE_KEY((_regs).AE((AEIND((_addr))))) |= (STORKEY_REF | STORKEY_CHANGE), \
         ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
         ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_WRITE, (_akey))
+#else
+#define HLOGICAL_TO_ABS_READ(_addr, _arn, _regs, _akey)           \
+    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) && \
+    (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&   \
+    ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_READ) ?                          \
+            (STORAGE_KEY((_regs).AE((AEIND((_addr))))) |= STORKEY_REF,                 \
+        ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
+        ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_READ, (_akey))
+
+#define HLOGICAL_TO_ABS_WRITE(_addr, _arn, _regs, _akey)           \
+    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs).VE((AEIND((_addr))))) &&      \
+    (((_regs).aekey[(AEIND((_addr)))] == (_akey)) || (_akey) == 0) &&          \
+    ((_regs).aeacc[(AEIND((_addr)))] >= ACCTYPE_WRITE) ?                          \
+            (STORAGE_KEY((_regs).AE((AEIND((_addr))))) |= (STORKEY_REF | STORKEY_CHANGE), \
+        ((_regs).AE((AEIND((_addr)))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
+        ARCH_DEP(logical_to_abs) ((_addr), (_arn), &(_regs), ACCTYPE_WRITE, (_akey))
+#endif
 
 #define HFETCHB(_value, _addr, _arn, _regs) \
 { \
@@ -1486,7 +1502,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     \
     abs1 = HLOGICAL_TO_ABS_READ((_addr), (_arn), (_regs), (_regs).psw.pkey); \
     \
-    if(!((_addr) & 1) || (abs1 & 0x000007FF) <= (2048 - 2)) \
+    if ((abs1 & 0x000007FF) <= (2048 - 2)) \
     { (_value) = fetch_hw(sysblk.mainstor + abs1); } \
     else \
     { \
@@ -1503,7 +1519,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
     \
     abs1 = HLOGICAL_TO_ABS_WRITE((_addr), (_arn), (_regs), (_regs).psw.pkey); \
     \
-    if (!((_addr) & 1) || ((_addr) & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2)) \
+    if (((_addr) & PAGEFRAME_BYTEMASK) <= (PAGEFRAME_PAGESIZE - 2)) \
     { \
         STORE_HW(sysblk.mainstor + abs1, (_value)); \
     } else \
@@ -1518,7 +1534,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
 #define HFETCH4(_value, _addr, _arn, _regs) \
 { \
-    if (!((_addr) & 3) || ((_addr) & 0x000007FF) <= 2048 - 4) \
+    if (((_addr) & 0x000007FF) <= 2048 - 4) \
     { \
     RADR abs; \
     abs = HLOGICAL_TO_ABS_READ((_addr), (_arn), (_regs), (_regs).psw.pkey); \
@@ -1529,7 +1545,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
 #define HSTORE4(_value, _addr, _arn, _regs) \
 { \
-    if (!((_addr) & 3) || ((_addr) & 0x000007FF) <= 2048 - 4) \
+    if (((_addr) & 0x000007FF) <= 2048 - 4) \
     { \
     RADR    abs; \
     abs = HLOGICAL_TO_ABS_WRITE((_addr), (_arn), (_regs), (_regs).psw.pkey); \
@@ -1642,7 +1658,7 @@ instruction_fetch:
     }
 
     COUNT_INST(regs.ip, &regs);
-    regs.instcount ++;
+    regs.instcount32 ++;
     goto *instructions[regs.ip[0]];
 }
 

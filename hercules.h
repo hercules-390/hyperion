@@ -396,7 +396,9 @@ typedef struct _REGS {                  /* Processor registers       */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
         U64     waittime;               /* Wait time (us) in interval*/ 
+#ifdef WIN32
         struct  timeval lasttod;        /* Last gettimeofday         */ 
+#endif
         TLBE    tlb[256];               /* Translation lookaside buf */
         TID     cputid;                 /* CPU thread identifier     */
         DW      gr[16];                 /* General registers         */
@@ -1417,6 +1419,7 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         int              rafree;        /* Free readahead entry      */
         int              nostress;      /* 1=No stress writes        */
         int              nofsync;       /* 1=No fsync()              */
+        int              fsyncwa;       /* 1=fsync() prob workaround */
         COND             writercond;    /* Writer condition          */
         int              writepending;  /* Number writes pending     */
         int              writerswaiting;/* Number writers waiting    */

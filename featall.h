@@ -38,8 +38,7 @@
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-#undef  OPTION_TRUNCATE_KLUDGE          /* fdatasync()/ftruncate()
-                                           problem workaround (linux)*/
+
 /*********************************************************************/
 /* Gabor Hoffer performance option. NOTE! which individual           */
 /*   instructions are inlined is defined further below at the end    */

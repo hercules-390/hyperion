@@ -2886,14 +2886,14 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
 int             sfx;                    /* File index                */
 struct stat     st;                     /* File status area          */
-#ifdef OPTION_TRUNCATE_KLUDGE
-off_t           sz = 1024 * 1024;       /* Change for ftruncate      */
-#else
-off_t           sz = 0;
-#endif
+off_t           sz;                     /* Change for ftruncate      */
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
+
+    /* FIXME - workaround for fsync(), ftruncate() linux problem */
+    if (cckdblk.fsyncwa) sz = 1024 * 1024;
+    else sz = 0;
 
     rc = fstat (cckd->fd[sfx], &st);
     if (rc < 0)
@@ -2908,18 +2908,21 @@ off_t           sz = 0;
 
     if (now || (off_t)(st.st_size - cckd->cdevhdr[sfx].size) > sz)
     {
-#ifdef OPTION_TRUNCATE_KLUDGE
-        BYTE sfn[1024];
-        close (cckd->fd[sfx]);
-        cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
-        cckd->fd[cckd->sfn] = open (sfn, O_RDWR|O_BINARY);
-        if (rc < 0)
+        /* FIXME - workaround for fsync(), ftruncate() linux problem */
+        if (cckdblk.fsyncwa)
         {
-            devmsg ("%4.4X:cckddasd truncate re-open error: %s\n",
-                    dev->devnum, strerror(errno));
-            return;
+            BYTE sfn[1024];
+            close (cckd->fd[sfx]);
+            cckd_sf_name (dev, cckd->sfn, (char *)&sfn);
+            cckd->fd[cckd->sfn] = open (sfn, O_RDWR|O_BINARY);
+            if (rc < 0)
+            {
+                devmsg ("%4.4X:cckddasd truncate re-open error: %s\n",
+                        dev->devnum, strerror(errno));
+                return;
+            }
         }
-#endif
+
         rc = ftruncate (cckd->fd[sfx], (off_t)cckd->cdevhdr[sfx].size);
         if (rc < 0)
         {
@@ -4065,6 +4068,7 @@ void cckd_command_help()
              "\t\t    (least agressive ... most aggressive)\n"
              "nostress=<n>\t1=Disable stress writes\n"
              "nofsync=<n>\t1=Disable fsync()\n"
+             "fsyncwa=<n>\t1=Enable fsync()/ftruncate() workaround fix\n"
              "trace=<n>\tSet trace table size\t\t\t(0 .. 200000)\n"
             );
 } /* end function cckd_command_help */
@@ -4077,13 +4081,13 @@ void cckd_command_opts()
 {
     cckdmsg ("cache=%d,l2cache=%d,ra=%d,raq=%d,rat=%d,"
              "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n"
-             "\tnofsync=%d,trace=%d\n",
+             "\tnofsync=%d,fsyncwa=%d,trace=%d\n",
              (cckdblk.cachenbr + 8) >> 4,
              cckdblk.l2cachenbr << 1, cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
              cckdblk.writermax, cckdblk.gcolwait,
              cckdblk.gcolparm, cckdblk.nostress, cckdblk.nofsync,
-             cckdblk.itracen);
+             cckdblk.fsyncwa,cckdblk.itracen);
 } /* end function cckd_command_opts */
 
 
@@ -4355,6 +4359,19 @@ int   val, i, opts = 0;
             else
             {
                 cckdblk.nofsync = val;
+                opts = 1;
+            }
+        }
+        else if (strcasecmp (kw, "fsyncwa") == 0)
+        {
+            if (val < 0 || val > 1 || c != '\0')
+            {
+                cckdmsg ("Invalid value for fsyncwa=\n");
+                return -1;
+            }
+            else
+            {
+                cckdblk.fsyncwa = val;
                 opts = 1;
             }
         }

@@ -341,6 +341,10 @@ struct  timeval tv;                     /* Structure for gettimeofday
                     continue;
                 }
 
+                /* Get instruction count for this last interval */
+                regs->instcount += regs->instcount32;
+                regs->instcount32 = 0;
+
                 /* Calculate instructions/millisecond for this CPU */
                 regs->mipsrate =
                     ((regs->instcount - regs->prevcount)*1000) / interval;
