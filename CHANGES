@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+19 Jan 2004 Return 'Already at BOT' sense on BSF when at BOT - Ivan Warren
 16 Jan 2004 Performance Enhancement: REGS on run_cpu stack - Greg Smith
 16 Jan 2004 Performance Enhancement: instfetch - Greg Smith
 19 Dec 2003 Correct Keyboard Shortcuts for pseudo-graphical Console - Volker Bandke, code by Marian Gasparovic

@@ -938,7 +938,10 @@ int             rc;                     /* Return code               */
     {
         /* Exit if now at start of tape */
         if (dev->nxtblkpos == 0)
-            break;
+        {
+            build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
+            return -1;
+        }
 
         /* Backspace to previous block position */
         rc = bsb_awstape (dev, unitstat,code);
@@ -1377,7 +1380,8 @@ int             rc;                     /* Return code               */
     /* Exit if already at BOT */
     if (dev->blockid == 0)
     {
-        return 0;
+        build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
+        return -1;
     }
 
     rc = het_bsf (dev->hetb);
@@ -2963,7 +2967,10 @@ S32             nxthdro;                /* Offset of next header     */
 
     /* Exit with tape at load point if currently on first file */
     if (dev->curfilen <= 1)
-        return 0;
+    {
+        build_senseX(TAPE_BSENSE_LOADPTERR,dev,unitstat,code);
+        return -1;
+    }
 
     /* Decrement current file number */
     dev->curfilen--;
