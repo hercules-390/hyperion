@@ -22,6 +22,9 @@ AM_MAINTAINER_MODE
 
 # Initialization
 CFLAGS="-W -Wall $CFLAGS"
+# ISW20030826-2 : add -I./intl as specified by gettext/info - Maintainers - Adjusting files - src/Makefile.in - Paragraph before last
+# added line below
+CPPFLAGS="-I ./intl"
 
 # Programs  (Note use "HC_PROG_CC" and not "AC_PROG_CC". We now
 #            have our own "hercules.m4" macro defined in the
