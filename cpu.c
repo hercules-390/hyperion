@@ -1563,7 +1563,7 @@ REGS    regs;
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
             UNROLLED_EXECUTE(&regs);
-        } while (IC_INTERRUPT_CPU_NO_PER(&regs));
+        } while (!IC_INTERRUPT_CPU_NO_PER(&regs));
         regs.instvalid = 0;
     }
 
