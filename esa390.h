@@ -81,6 +81,7 @@ typedef struct  _PSW {
         BYTE     progmask;              /* Program mask    (20 - 23) */
         BYTE     zerobyte;              /* Zeroes          (24 - 31) */
                                         /* or (esame)      (24 - 30) */
+	U32      zeroword;              /* esame only      (32 - 63) */
         BYTE                            /* Addressing mode (31 - 32) */
                  amode64:1,             /* 64-bit addressing         */
                  amode:1;               /* 31-bit addressing         */

@@ -86,7 +86,11 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | regs->psw.zerobyte
                    )
                  );
-        STORE_FW ( addr + 4, regs->psw.amode ? 0x80000000 : 0 );
+        STORE_FW ( addr + 4,
+                   ( (regs->psw.amode ? 0x80000000 : 0 )
+                   | regs->psw.zeroword
+		   )
+		 );
         STORE_DW ( addr + 8, regs->psw.IA );
 #endif /*defined(FEATURE_ESAME)*/
 } /* end function ARCH_DEP(store_psw) */
@@ -123,6 +127,7 @@ BYTE    pkey = regs->psw.pkey;
 #if defined(FEATURE_ESAME)
         regs->psw.zerobyte = addr[3] & 0xFE;
         regs->psw.amode64  = addr[3] & 0x01;
+        regs->psw.zeroword = fetch_fw(addr+4) & 0x7FFFFFFF;
         regs->psw.IA       = fetch_dw (addr + 8);
         regs->psw.AMASK    = regs->psw.amode64 ? AMASK64
                            : regs->psw.amode   ? AMASK31 : AMASK24;
@@ -147,7 +152,7 @@ BYTE    pkey = regs->psw.pkey;
             return PGM_SPECIFICATION_EXCEPTION;
 
         /* Bits 33-63 must be zero */
-        if ( fetch_fw(addr+4) & 0x7FFFFFFF )
+        if ( regs->psw.zeroword )
             return PGM_SPECIFICATION_EXCEPTION;
 #else /*!defined(FEATURE_ESAME)*/
         /* Bits 24-31 must be zero */
