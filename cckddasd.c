@@ -16,12 +16,13 @@ do { \
   logmsg("%4.4X:" format, dev->devnum, a); \
  if (cckdblk.itrace) { \
     struct timeval tv; \
-    gettimeofday(&tv, NULL); \
-    CCKD_TRACE *p = cckdblk.itracep++; \
+    CCKD_TRACE *p; \
+    p = cckdblk.itracep++; \
     if (p >= cckdblk.itracex) { \
         p = cckdblk.itrace; \
         cckdblk.itracep = p + 1; \
     } \
+    gettimeofday(&tv, NULL); \
     if (p) sprintf ((char *)p, "%6.6ld" "." "%6.6ld %4.4X:" format, \
                     tv.tv_sec, tv.tv_usec, dev ? dev->devnum : 0, a); \
  } \
