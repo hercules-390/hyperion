@@ -149,6 +149,8 @@ RADR    ag,                             /* Abs Guest addr of TTE     */
     STORE_FW(sysblk.mainstor + n, ( 0x41000000 |
                      ((alet & 0x01000000) >> 1) | (alet & 0x007FFFFF)));
     n += 4;
+    if (!(ia & 0x80000000))
+        ia &= 0x00FFFFFF;
     STORE_FW(sysblk.mainstor + n, ia);
     n += 4;
 
