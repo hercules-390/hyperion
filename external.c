@@ -453,6 +453,14 @@ PSA     *sspsa;                         /* -> Store status area      */
     /* Point to the PSA into which status is to be stored */
     sspsa = (void*)(ssreg->mainstor + aaddr);
 
+    /* Set reference and change bits */
+#if !defined(FEATURE_ESAME)
+    STORAGE_KEY(aaddr, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
+#else /*defined(FEATURE_ESAME)*/
+    /* For ESAME only the 2nd 4K page is updated */
+    STORAGE_KEY(aaddr + 4096, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
+#endif /*defined(FEATURE_ESAME)*/
+
     /* Store CPU timer in bytes 216-223 */
     dreg = ssreg->ptimer;
     STORE_DW(sspsa->storeptmr, ssreg->ptimer);
