@@ -13,6 +13,10 @@
 #define MAX_TT32_DLLNAMELEN  (512)
 #define DEF_TT32_DLLNAME     "TunTap32.dll"
 
+#ifndef   MODULESDIR
+  #define MODULESDIR         ""
+#endif
+
 extern char   g_tt32_dllname   [MAX_TT32_DLLNAMELEN];
 
 extern void tt32_init

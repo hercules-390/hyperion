@@ -26,7 +26,9 @@ int w32ctca_dummy = 0;
 #include <ctype.h>
 #include "logger.h"
 #include "w32ctca.h"
-#include <sys/cygwin.h> // need cygwin32_conv_to_full_win32_path
+#ifdef __CYGWIN32__
+  #include <sys/cygwin.h>  // need cygwin32_conv_to_full_win32_path
+#endif
 
 #if !defined( IFNAMSIZ )
 #define IFNAMSIZ 16
@@ -264,7 +266,14 @@ BOOL tt32_loaddll()
 
     // Now convert it to a full Win32 path...
 
+#ifdef __CYGWIN32__
     cygwin32_conv_to_full_win32_path( tt32_dllname_in_buff, tt32_dllname_out_buff );
+#else
+    if ( !_fullpath( tt32_dllname_out_buff, tt32_dllname_in_buff, sizeof(tt32_dllname_out_buff) ) )
+        strlcpy(     tt32_dllname_out_buff, tt32_dllname_in_buff, sizeof(tt32_dllname_out_buff) );
+
+    tt32_dllname_out_buff[ sizeof(tt32_dllname_out_buff) - 1 ] = 0;
+#endif
 
     // Finally, copy it to our global home for it...
 
