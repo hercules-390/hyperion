@@ -1,5 +1,8 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+24 Nov 2003 Fixed fthreads: basically almost a complete rewrite, involving
+            thread joining support and & mutex attribute support; version
+            number in configure.ac bumped to 3.00a.3 - Fish
 23 Nov 2003 TLB fixes - Greg Smith
 18 Nov 2003 ptt trace updates - Fish & Greg Smith
 17 Nov 2003 Bypass garbage collection if not opened read/write - Greg Smith

@@ -32,7 +32,7 @@ void ptt_trace_init (int n, int init)
     if (init)
     {
 #if defined(OPTION_FTHREADS)
-        fthread_mutex_init (&pttlock);
+        fthread_mutex_init (&pttlock, NULL);
 #else
         pthread_mutex_init (&pttlock, NULL);
 #endif
@@ -87,7 +87,7 @@ int ptt_cmd(int argc, char *argv[], char* cmdline)
 #ifndef OPTION_FTHREADS
 int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, char *file, int line)
 {
-    ptt_pthread_trace ("lock init", mutex, NULL, file, line, NULL);
+    ptt_pthread_trace ("lock init", mutex, attr, file, line, NULL);
     return pthread_mutex_init(mutex, attr);
 }
 
@@ -165,6 +165,26 @@ int result;
     return result;
 }
 
+int ptt_pthread_join(pthread_t tid, void **value, char *file, int line)
+{
+int result;
+
+    ptt_pthread_trace ("join before", (void *)tid, value ? *value : NULL, file, line, NULL);
+    result = pthread_join(tid,value);
+    ptt_pthread_trace ("join after", (void *)tid, value ? *value : NULL, file, line, &result);
+    return result;
+}
+
+int ptt_pthread_detach(pthread_t tid, char *file, int line)
+{
+int result;
+
+    ptt_pthread_trace ("dtch before", (void *)tid, NULL, file, line, NULL);
+    result = pthread_detach(tid);
+    ptt_pthread_trace ("dtch after", (void *)tid, NULL, file, line, &result);
+    return result;
+}
+
 int ptt_pthread_kill(pthread_t tid, int sig, char *file, int line)
 {
     ptt_pthread_trace ("kill", (void *)tid, (void *)sig, file, line, NULL);
@@ -173,8 +193,8 @@ int ptt_pthread_kill(pthread_t tid, int sig, char *file, int line)
 #else /* OPTION_FTHREADS */
 int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *file, int line)
 {
-    ptt_pthread_trace ("lock init", mutex, NULL, file, line, NULL);
-    return fthread_mutex_init(mutex);
+    ptt_pthread_trace ("lock init", mutex, attr, file, line, NULL);
+    return fthread_mutex_init(mutex,attr);
 }
 
 int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
@@ -251,11 +271,30 @@ int result;
     return result;
 }
 
+int ptt_pthread_join(fthread_t tid, void **value, char *file, int line)
+{
+int result;
+
+    ptt_pthread_trace ("join before", (void *)tid, value ? *value : NULL, file, line, NULL);
+    result = fthread_join(tid,value);
+    ptt_pthread_trace ("join after", (void *)tid, value ? *value : NULL, file, line, &result);
+    return result;
+}
+
+int ptt_pthread_detach(fthread_t tid, char *file, int line)
+{
+int result;
+
+    ptt_pthread_trace ("dtch before", (void *)tid, NULL, file, line, NULL);
+    result = fthread_detach(tid);
+    ptt_pthread_trace ("dtch after", (void *)tid, NULL, file, line, &result);
+    return result;
+}
+
 int ptt_pthread_kill(fthread_t tid, int sig, char *file, int line)
 {
     ptt_pthread_trace ("kill", (void *)tid, (void *)sig, file, line, NULL);
-    fthread_kill(tid, sig);
-    return 0;
+    return fthread_kill(tid, sig);
 }
 #endif
 

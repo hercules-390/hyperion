@@ -17,6 +17,8 @@ int ptt_pthread_cond_broadcast(COND *, char *, int);
 int ptt_pthread_cond_wait(COND *, LOCK *, char *, int);
 int ptt_pthread_cond_timedwait(COND *, LOCK *, struct timespec *, char *, int);
 int ptt_pthread_create(TID *, ATTR *, PFT_THREAD_FUNC, void *, char *, int);
+int ptt_pthread_join(TID, void **, char *, int);
+int ptt_pthread_detach(TID, char *, int);
 int ptt_pthread_kill(TID, int, char *, int);
 #else
 #define OBTAIN_PTTLOCK   pthread_mutex_lock(&pttlock);
@@ -30,6 +32,8 @@ int ptt_pthread_cond_broadcast(COND *, char *, int);
 int ptt_pthread_cond_wait(COND *, LOCK *, char *, int);
 int ptt_pthread_cond_timedwait(COND *, LOCK *, const struct timespec *, char *, int);
 int ptt_pthread_create(TID *, ATTR *, void *(*)(), void *, char *, int);
+int ptt_pthread_join(TID, void **, char *, int);
+int ptt_pthread_detach(TID, char *, int);
 int ptt_pthread_kill(TID, int, char *, int);
 #endif
 

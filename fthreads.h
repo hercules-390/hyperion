@@ -8,252 +8,366 @@
 #ifndef _FTHREADS_H_
 #define _FTHREADS_H_
 
-#include <sys/types.h>      // (need struct timespec)
-
-////////////////////////////////////////////////////////////////////////////////////
-
-#define  FT_MUTEX_MAGIC  (0x4D767478)
-#define  FT_COND_MAGIC   (0x436F6E64)
-
-////////////////////////////////////////////////////////////////////////////////////
-
-struct FT_CS    // fthread "CRITICAL_SECTION" structure
-{
-    // The below defined field is not actually used for anything.
-    // Its whole purpose is to simply reserve room for the actual
-    // WIN32 CRITICAL_SECTION. Thus we purposely over-allocate.
-
-    long long dummy[16];    // (room for actual CRITICAL_SECTION + growth)
-};
-
-////////////////////////////////////////////////////////////////////////////////////
-// "WIN32 types" that we need to use...
-
-typedef struct FT_CS   FT_W32_CRITICAL_SECTION; // CRITICAL_SECTION
-typedef unsigned long  FT_W32_DWORD;            // DWORD
-typedef void*          FT_W32_HANDLE;           // HANDLE
-typedef int            FT_W32_BOOL;             // BOOL
-
-////////////////////////////////////////////////////////////////////////////////////
-
-struct FT_COND_VAR      // fthread "condition variable" structure
-{
-    FT_W32_CRITICAL_SECTION  CondVarLock;       // (lock for accessing this data)
-    FT_W32_DWORD             dwCondMagic;       // (magic number)
-    FT_W32_HANDLE            hSigXmitEvent;     // set during signal transmission
-    FT_W32_HANDLE            hSigRecvdEvent;    // set once signal received by every-
-                                                // one that's supposed to receive it.
-    FT_W32_BOOL              bBroadcastSig;     // TRUE = "broadcast", FALSE = "signal"
-    int                      nNumWaiting;       // #of threads waiting to receive signal
-};
-
-////////////////////////////////////////////////////////////////////////////////////
-
-struct FT_MUTEX         // fthread "mutex" structure
-{
-    FT_W32_CRITICAL_SECTION  MutexLock;         // (lock for accessing this data)
-    FT_W32_DWORD             dwMutexMagic;      // (magic number)
-    FT_W32_HANDLE            hUnlockedEvent;    // (signalled while NOT locked)
-    FT_W32_DWORD             dwLockOwner;       // (thread-id of who owns it)
-    int                      nLockedCount;      // (#of times lock acquired)
-};
+#include <sys/types.h>      // (need struct timespec for fthread_cond_timedwait)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // fthread typedefs...
 
-typedef struct FT_COND_VAR       fthread_cond_t;    // "condition variable"
-typedef struct FT_MUTEX          fthread_mutex_t;   // "mutex"
-typedef FT_W32_DWORD             fthread_t;         // "thread id"
-typedef FT_W32_HANDLE            fthread_attr_t;    // "thread attribute" (not used)
-typedef void* (*PFT_THREAD_FUNC)(void*);            // "thread function" ptr
+typedef void*                    FT_W32_HANDLE;       // HANDLE
+typedef unsigned long            FT_W32_DWORD;        // DWORD
+
+typedef FT_W32_DWORD             fthread_t;           // thread id
+typedef FT_W32_DWORD             fthread_mutexattr_t; // mutex attribute
+
+typedef void* (FT_THREAD_FUNC)(void*);                // thread function
+typedef FT_THREAD_FUNC* PFT_THREAD_FUNC;              // thread function ptr
+
+typedef struct _tagFTU_MUTEX        // fthread "mutex" structure
+{
+    FT_W32_DWORD   dwMutexMagic;    // (magic number)
+    FT_W32_HANDLE  hMutex;          // (ptr to actual mutex structure)
+}
+fthread_mutex_t;
+
+typedef struct _tagFTU_COND         // fthread "condition variable" structure
+{
+    FT_W32_DWORD   dwCondMagic;     // (magic number)
+    FT_W32_HANDLE  hCondVar;        // (ptr to actual condition variable structure)
+}
+fthread_cond_t;
+
+typedef struct _tagFTU_ATTR         // fthread "thread attribute" structure
+{
+    FT_W32_DWORD  dwAttrMagic;      // (magic number)
+    size_t        nStackSize;       // (initial stack size in bytes)
+    int           nDetachState;     // (requested detach state: detached/joinable)
+}
+fthread_attr_t;
 
 ////////////////////////////////////////////////////////////////////////////////////
-// (thread signalling not supported...)
+// fthread thread attribute types...
 
-void
-fthread_kill    // (nop)
+#define  FTHREAD_CREATE_JOINABLE    0x4A6F696E                  // "Join" in ASCII
+#define  FTHREAD_CREATE_DETACHED    0x44697363                  // "Disc" in ASCII
+#define  FTHREAD_CREATE_DEFAULT     FTHREAD_CREATE_JOINABLE
+
+////////////////////////////////////////////////////////////////////////////////////
+// Initialize a "thread attribute"...
+
+int  fthread_attr_init
+(
+    fthread_attr_t*  pThreadAttr
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Destroy a "thread attribute"...
+
+int  fthread_attr_destroy
+(
+    fthread_attr_t*  pThreadAttr
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Set a thread's "detachstate" attribute...
+
+int  fthread_attr_setdetachstate
+(
+    fthread_attr_t*  pThreadAttr,
+    int              nDetachState
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Retrieve a thread's "detachstate" attribute...
+
+int  fthread_attr_getdetachstate
+(
+    const fthread_attr_t*  pThreadAttr,
+    int*                   pnDetachState
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Set a thread's initial stack size...
+
+int  fthread_attr_setstacksize
+(
+    fthread_attr_t*  pThreadAttr,
+    size_t           nStackSize
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Retrieve a thread's initial stack size...
+
+int  fthread_attr_getstacksize
+(
+    const fthread_attr_t*  pThreadAttr,
+    size_t*                pnStackSize
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Join a thread (i.e. wait for a thread's termination)...
+
+int  fthread_join
+(
+    fthread_t  dwThreadID,
+    void**     pExitVal
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Detach a thread (i.e. ignore a thread's termination)...
+
+int  fthread_detach
+(
+    fthread_t  dwThreadID
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Create a new thread...
+
+int  fthread_create
+(
+#ifdef FISH_HANG
+    const char*  pszFile,
+    const int    nLine,
+#endif
+    fthread_t*       pdwThreadID,
+    fthread_attr_t*  pThreadAttr,
+    PFT_THREAD_FUNC  pfnThreadFunc,
+    void*            pvThreadArgs
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Exit from a thread...
+
+void  fthread_exit
+(
+    void*  ExitVal
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Return thread-id...
+
+fthread_t  fthread_self
+(
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
+
+int  fthread_kill   // FIXME: TODO:
 (
     int  dummy1,
     int  dummy2
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// create a new thread...
+// Initialize a "mutex"...
 
-int
-fthread_create
+int  fthread_mutex_init
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*                 pszFile,
+    const int                   nLine,
 #endif
-    fthread_t*       pdwThreadID,
-    fthread_attr_t*  dummy1,
-    PFT_THREAD_FUNC  pfnThreadFunc,
-    void*            pvThreadArgs
+          fthread_mutex_t*      pFT_MUTEX,
+    const fthread_mutexattr_t*  pFT_MUTEX_ATTR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// return thread-id...
+// Destroy a "mutex"...
 
-FT_W32_DWORD
-fthread_self
-(
-);
-
-////////////////////////////////////////////////////////////////////////////////////
-// exit from a thread...
-
-void
-fthread_exit
-(
-    FT_W32_DWORD*  pdwExitCode
-);
-
-////////////////////////////////////////////////////////////////////////////////////
-// initialize a "mutex"...
-
-int
-fthread_mutex_init
+int  fthread_mutex_destroy
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// destroy a "mutex"...
+// Lock a "mutex"...
 
-int
-fthread_mutex_destroy
+int  fthread_mutex_lock
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// lock a "mutex"...
+// Try to lock a "mutex"...
 
-int
-fthread_mutex_lock
+int  fthread_mutex_trylock
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// try to lock a "mutex"...
+// Unlock a "mutex"...
 
-int
-fthread_mutex_trylock
+int  fthread_mutex_unlock
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// unlock a "mutex"...
+// Initialize a "condition"...
 
-int
-fthread_mutex_unlock
+int  fthread_cond_init
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_mutex_t*  pFT_MUTEX
-);
-
-////////////////////////////////////////////////////////////////////////////////////
-// initialize a "condition"...
-
-int
-fthread_cond_init
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// destroy a "condition"...
+// Destroy a "condition"...
 
-int
-fthread_cond_destroy
+int  fthread_cond_destroy
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// 'signal' a "condition"...   (releases ONE waiting thread)
+// 'Signal' a "condition"...   (causes ONE waiting thread to be released)
 
-int
-fthread_cond_signal
+int  fthread_cond_signal
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// 'broadcast' a "condition"...  (releases ALL waiting threads)
+// 'Broadcast' a "condition"...  (causes ALL waiting threads to be released)
 
-int
-fthread_cond_broadcast
+int  fthread_cond_broadcast
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_cond_t*  pFT_COND_VAR
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// wait for a "condition" to occur...
+// Wait for a "condition" to occur...
 
-int
-fthread_cond_wait
+int  fthread_cond_wait
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_cond_t*   pFT_COND_VAR,
     fthread_mutex_t*  pFT_MUTEX
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
-// wait (but not forever) for a "condition" to occur...
+// Wait (but not forever) for a "condition" to occur...
 
-int
-fthread_cond_timedwait
+int  fthread_cond_timedwait
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
     fthread_cond_t*   pFT_COND_VAR,
     fthread_mutex_t*  pFT_MUTEX,
     struct timespec*  pTimeTimeout
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// fthread mutex attribute types...
+//
+//  FTHREAD_MUTEX_NORMAL      This type of mutex does not detect deadlock. A thread
+//                            attempting to relock this mutex without first unlocking
+//                            it shall deadlock. Attempting to unlock a mutex locked
+//                            by a different thread results in undefined behavior.
+//                            Attempting to unlock an unlocked mutex results in
+//                            undefined behavior. The FTHREAD_MUTEX_NORMAL mutex type
+//                            is not currently supported by fthreads.
+//
+//  FTHREAD_MUTEX_ERRORCHECK  This type of mutex provides error checking. A thread
+//                            attempting to relock this mutex without first unlocking
+//                            it shall return with an error. A thread attempting to
+//                            unlock a mutex which another thread has locked shall
+//                            return with an error. A thread attempting to unlock an
+//                            unlocked mutex shall return with an error.
+//
+//  FTHREAD_MUTEX_RECURSIVE   A thread attempting to relock this mutex without first
+//                            unlocking it shall succeed in locking the mutex. The
+//                            relocking deadlock which can occur with mutexes of type
+//                            FTHREAD_MUTEX_NORMAL cannot occur with this type of mutex.
+//                            Multiple locks of this mutex shall require the same number
+//                            of unlocks to release the mutex before another thread
+//                            can acquire the mutex. A thread attempting to unlock a
+//                            mutex which another thread has locked shall return with
+//                            an error. A thread attempting to unlock an unlocked mutex
+//                            shall return with an error.
+//
+//  FTHREAD_MUTEX_DEFAULT     Attempting to recursively lock a mutex of this type results
+//                            in undefined behavior. Attempting to unlock a mutex of this
+//                            type which was not locked by the calling thread results
+//                            in undefined behavior. Attempting to unlock a mutex of this
+//                            type which is not locked results in undefined behavior.
+//                            An implementation may map this mutex to one of the other
+//                            mutex types.
+
+#define  FTHREAD_MUTEX_ERRORCHECK   0x4F6E6365                  // "Once" in ASCII
+#define  FTHREAD_MUTEX_RECURSIVE    0x4D616E79                  // "Many" in ASCII
+#define  FTHREAD_MUTEX_DEFAULT      FTHREAD_MUTEX_RECURSIVE
+
+////////////////////////////////////////////////////////////////////////////////////
+// Initialize a "mutex" attribute...
+
+int  fthread_mutexattr_init
+(
+    fthread_mutexattr_t*  pFT_MUTEX_ATTR
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Destroy a "mutex" attribute...
+
+int  fthread_mutexattr_destroy
+(
+    fthread_mutexattr_t*  pFT_MUTEX_ATTR
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Retrieve "mutex" attribute type...
+
+int fthread_mutexattr_gettype
+(
+    const fthread_mutexattr_t*  pFT_MUTEX_ATTR,
+    int*                        pnMutexType
+);
+
+////////////////////////////////////////////////////////////////////////////////////
+// Set "mutex" attribute type...
+
+int fthread_mutexattr_settype
+(
+    fthread_mutexattr_t*  pFT_MUTEX_ATTR,
+    int                   nMutexType
 );
 
 ////////////////////////////////////////////////////////////////////////////////////

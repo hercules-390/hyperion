@@ -6,11 +6,11 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 #if defined(HAVE_CONFIG_H)
-#include <config.h>     // (needed to set OPTION_FTHREADS flag appropriately)
+#include <config.h>             // (needed to set OPTION_FTHREADS flag appropriately)
 #endif
 
 #if !defined(OPTION_FTHREADS)
-int dummy = 0;
+int dummy = 0;                  // (just to have something to compile)
 #else // defined(OPTION_FTHREADS)
 
 #define _WIN32_WINNT  0x0403    // (so "InitializeCriticalSectionAndSpinCount" gets defined)
@@ -20,249 +20,929 @@ int dummy = 0;
 #include <errno.h>
 #include <malloc.h>
 #include <sys/time.h>
+#include <setjmp.h>
 
 #include "fthreads.h"
 #include "hostinfo.h"
 #include "logger.h"
+#include "linklist.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Debugging
+// Debugging via ptt (pttrace)...
+
+#if (defined(DEBUG) || defined(_DEBUG)) && !defined(FISH_HANG)
+    #define FT_ENABLE_DEBUG_VIA_PTTRACE
+#endif
+
+#ifdef FT_ENABLE_DEBUG_VIA_PTTRACE
+    #ifdef FISH_HANG
+    #error Option FT_ENABLE_DEBUG_VIA_PTTRACE incompatible with (mutually exclusive to) FISH_HANG option
+    #endif
+    #define  PTTRACE(a...)  ptt_pthread_trace(a)
+    //#include "pttrace.h"
+    extern void ptt_pthread_trace (const char* pszType, void *data1, void *data2,
+                                   const char* pszFile, int line, int *result);
+#else
+    #define  PTTRACE(a...)
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////
+// Normal fthreads message issuance...
+
+#define  ft_logmsg(a...)  logmsg(a)
+
+////////////////////////////////////////////////////////////////////////////////////
+// Debug logging...
 
 #if defined(DEBUG) || defined(_DEBUG)
-    #define TRACE(a...) printf(a)
-    #define ASSERT(a) \
+    #define  TRACE(a...)  ft_logmsg(a)
+    #define  ASSERT(a) \
         do \
         { \
             if (!(a)) \
             { \
-                printf("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+                ft_logmsg ( "** Assertion Failed: %s(%d)\n", __FILE__, __LINE__ ); \
             } \
         } \
         while(0)
-    #define VERIFY(a) ASSERT((a))
+    #define  VERIFY(a)  ASSERT((a))
 #else
-    #define TRACE(a...)
-    #define ASSERT(a)
-    #define VERIFY(a) ((void)(a))
+    #define  TRACE(a...)
+    #define  ASSERT(a)
+    #define  VERIFY(a)  ((void)(a))
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-#define UNREFERENCED(x) ((x)=(x))
+#define UNREFERENCED( x )  ((x)=(x))
 
 #if defined(FISH_HANG)
 
+    #ifdef FT_ENABLE_DEBUG_VIA_PTTRACE
+    #error Option FISH_HANG incompatible with (mutually exclusive to) FT_ENABLE_DEBUG_VIA_PTTRACE option
+    #endif
+
     #include "fishhang.h"   // (function definitions)
 
-    #define MyInitializeCriticalSection(lock)                 (FishHang_InitializeCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(lock)))
-    #define MyEnterCriticalSection(lock)                      (FishHang_EnterCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(lock)))
-    #define MyTryEnterCriticalSection(lock)                   (FishHang_TryEnterCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(lock)))
-    #define MyLeaveCriticalSection(lock)                      (FishHang_LeaveCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(lock)))
-    #define MyDeleteCriticalSection(lock)                     (FishHang_DeleteCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(lock)))
+    #define MyInitializeCriticalSection(pCS)                (FishHang_InitializeCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
+    #define MyEnterCriticalSection(pCS)                     (FishHang_EnterCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
+    #define MyTryEnterCriticalSection(pCS)                  (FishHang_TryEnterCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
+    #define MyLeaveCriticalSection(pCS)                     (FishHang_LeaveCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
+    #define MyDeleteCriticalSection(pCS)                    (FishHang_DeleteCriticalSection(pszFile,nLine,(CRITICAL_SECTION*)(pCS)))
 
-    #define MyCreateThread(secat,stack,start,parm,flags,tid)  (FishHang_CreateThread(pszFile,nLine,(secat),(stack),(start),(parm),(flags),(tid)))
-    #define MyExitThread(code)                                (FishHang_ExitThread((code)))
+    #define MyCreateThread(sec,stack,start,parm,flags,tid)  (FishHang_CreateThread(pszFile,nLine,(sec),(stack),(start),(parm),(flags),(tid)))
+    #define MyExitThread(code)                              (FishHang_ExitThread((code)))
 
-    #define MyCreateEvent(sec,man,set,name)                   (FishHang_CreateEvent(pszFile,nLine,(sec),(man),(set),(name)))
-    #define MySetEvent(handle)                                (FishHang_SetEvent(pszFile,nLine,(handle)))
-    #define MyResetEvent(handle)                              (FishHang_ResetEvent(pszFile,nLine,(handle)))
-    #define MyDeleteEvent(handle)                             (FishHang_CloseHandle(pszFile,nLine,(handle)))
+    #define MyCreateEvent(sec,man,set,name)                 (FishHang_CreateEvent(pszFile,nLine,(sec),(man),(set),(name)))
+    #define MySetEvent(h)                                   (FishHang_SetEvent(pszFile,nLine,(h)))
+    #define MyResetEvent(h)                                 (FishHang_ResetEvent(pszFile,nLine,(h)))
+    #define MyDeleteEvent(h)                                (FishHang_CloseHandle(pszFile,nLine,(h)))
 
-    #define MyWaitForSingleObject(handle,millsecs)            (FishHang_WaitForSingleObject(pszFile,nLine,(handle),(millsecs)))
+    #define MyWaitForSingleObject(h,millsecs)               (FishHang_WaitForSingleObject(pszFile,nLine,(h),(millsecs)))
 
 #else // !defined(FISH_HANG)
 
-    #define MyInitializeCriticalSection(pCS)                  (InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(pCS),3000))
-    #define MyEnterCriticalSection(pCS)                       (EnterCriticalSection((CRITICAL_SECTION*)(pCS)))
-    #define MyTryEnterCriticalSection(pCS)                    (TryEnterCriticalSection((CRITICAL_SECTION*)(pCS)))
-    #define MyLeaveCriticalSection(pCS)                       (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
-    #define MyDeleteCriticalSection(pCS)                      (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
+    #define MyInitializeCriticalSection(pCS)                (InitializeCriticalSectionAndSpinCount((CRITICAL_SECTION*)(pCS),3000))
+    #define MyEnterCriticalSection(pCS)                     (EnterCriticalSection((CRITICAL_SECTION*)(pCS)))
+    #define MyTryEnterCriticalSection(pCS)                  (TryEnterCriticalSection((CRITICAL_SECTION*)(pCS)))
+    #define MyLeaveCriticalSection(pCS)                     (LeaveCriticalSection((CRITICAL_SECTION*)(pCS)))
+    #define MyDeleteCriticalSection(pCS)                    (DeleteCriticalSection((CRITICAL_SECTION*)(pCS)))
 
-    #define MyCreateThread(secat,stack,start,parm,flags,tid)  (CreateThread((secat),(stack),(start),(parm),(flags),(tid)))
-    #define MyExitThread(code)                                (ExitThread((code)))
+    #define MyCreateThread(sec,stack,start,parm,flags,tid)  (CreateThread((sec),(stack),(start),(parm),(flags),(tid)))
+    #define MyExitThread(code)                              (ExitThread((code)))
 
-    #define MyCreateEvent(sec,man,set,name)                   (CreateEvent((sec),(man),(set),(name)))
-    #define MySetEvent(handle)                                (SetEvent((handle)))
-    #define MyResetEvent(handle)                              (ResetEvent((handle)))
-    #define MyDeleteEvent(handle)                             (CloseHandle((handle)))
+    #define MyCreateEvent(sec,man,set,name)                 (CreateEvent((sec),(man),(set),(name)))
+    #define MySetEvent(h)                                   (SetEvent((h)))
+    #define MyResetEvent(h)                                 (ResetEvent((h)))
+    #define MyDeleteEvent(h)                                (CloseHandle((h)))
 
-    #define MyWaitForSingleObject(handle,millisecs)           (WaitForSingleObject((handle),(millisecs)))
+    #define MyWaitForSingleObject(h,millisecs)              (WaitForSingleObject((h),(millisecs)))
 
 #endif // defined(FISH_HANG)
 
-#define IsEventSet(hEventHandle)                          (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
-
-/////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////
-// private internal fthreads CRITICAL_SECTION functions...
+// Just some handy macros to have around...
 
-void
-InitializeFT_MUTEX
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_mutex_t* pFT_MUTEX
-)
+#define  IsEventSet(h)  (WaitForSingleObject(h,0) == WAIT_OBJECT_0)
+#define  RC(rc)         (errno = rc)
+
+////////////////////////////////////////////////////////////////////////////////////
+// Private internal fthreads structures...
+
+typedef struct _tagFT_MUTEX             // fthread "mutex" structure
 {
-    MyInitializeCriticalSection(&pFT_MUTEX->MutexLock);
-    pFT_MUTEX->hUnlockedEvent = MyCreateEvent(NULL,TRUE,TRUE,NULL); // (initially signalled)
-    pFT_MUTEX->dwMutexMagic = FT_MUTEX_MAGIC;
-    pFT_MUTEX->nLockedCount = 0;
-    pFT_MUTEX->dwLockOwner = 0;
+    CRITICAL_SECTION  MutexLock;        // (lock for accessing this data)
+    DWORD             dwMutexMagic;     // (magic number)
+    HANDLE            hUnlockedEvent;   // (signalled while NOT locked)
+    DWORD             dwMutexType;      // (type of mutex (normal, etc))
+    DWORD             dwLockOwner;      // (thread-id of who owns it)
+    int               nLockedCount;     // (#of times lock acquired)
+}
+FT_MUTEX, *PFT_MUTEX;
+
+typedef struct _tagFT_COND_VAR          // fthread "condition variable" structure
+{
+    CRITICAL_SECTION  CondVarLock;      // (lock for accessing this data)
+    DWORD             dwCondMagic;      // (magic number)
+    HANDLE            hSigXmitEvent;    // set during signal transmission
+    HANDLE            hSigRecvdEvent;   // set once signal received by every-
+                                        // one that's supposed to receive it.
+    BOOL              bBroadcastSig;    // TRUE = "broadcast", FALSE = "signal"
+    int               nNumWaiting;      // #of threads waiting to receive signal
+}
+FT_COND_VAR, *PFT_COND_VAR;
+
+////////////////////////////////////////////////////////////////////////////////////
+// So we can tell whether our structures have been properly initialized or not...
+
+#define  FT_MUTEX_MAGIC   0x4D767478    // "Mutx" in ASCII
+#define  FT_COND_MAGIC    0x436F6E64    // "Cond" in ASCII
+#define  FT_ATTR_MAGIC    0x41747472    // "Attr" in ASCII
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+// Private internal fthreads functions...
+
+BOOL  IsValidMutexType ( DWORD dwMutexType )
+{
+    return (0
+//      || FTHREAD_MUTEX_DEFAULT    == dwMutexType  // (FTHREAD_MUTEX_RECURSIVE)
+        || FTHREAD_MUTEX_RECURSIVE  == dwMutexType
+        || FTHREAD_MUTEX_ERRORCHECK == dwMutexType
+//      || FTHREAD_MUTEX_NORMAL     == dwMutexType  // (not currently supported)
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-void
-DeleteFT_MUTEX
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_mutex_t* pFT_MUTEX
-)
+FT_MUTEX*  MallocFT_MUTEX ( )
 {
-    MyDeleteCriticalSection(&pFT_MUTEX->MutexLock);
-    MyDeleteEvent(pFT_MUTEX->hUnlockedEvent);
-    pFT_MUTEX->dwMutexMagic = 0;
-    pFT_MUTEX->nLockedCount = 0;
-    pFT_MUTEX->dwLockOwner = 0;
+    FT_MUTEX*  pFT_MUTEX = (FT_MUTEX*) malloc ( sizeof ( FT_MUTEX ) );
+    if ( !pFT_MUTEX ) return NULL;
+    memset ( pFT_MUTEX, 0xCD, sizeof ( FT_MUTEX ) );
+    return pFT_MUTEX;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-void
-EnterFT_MUTEX
+BOOL  InitializeFT_MUTEX
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*   pszFile,
+    const int     nLine,
 #endif
-    fthread_mutex_t* pFT_MUTEX
+    FT_MUTEX*     pFT_MUTEX,
+    DWORD         dwMutexType
 )
 {
-    FT_W32_DWORD  dwThreadId = GetCurrentThreadId();
+    // Note: UnlockedEvent created initially signalled
 
-    if (hostinfo.trycritsec_avail)
+    if ( !(pFT_MUTEX->hUnlockedEvent = MyCreateEvent ( NULL, TRUE, TRUE, NULL )) )
     {
-        MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
-        pFT_MUTEX->dwLockOwner = dwThreadId;
-        VERIFY(++pFT_MUTEX->nLockedCount > 0);
+        memset ( pFT_MUTEX, 0xCD, sizeof ( FT_MUTEX ) );
+        return FALSE;
     }
-    else
+
+    MyInitializeCriticalSection ( &pFT_MUTEX->MutexLock );
+
+    pFT_MUTEX->dwMutexMagic   = FT_MUTEX_MAGIC;
+    pFT_MUTEX->dwMutexType    = dwMutexType;
+    pFT_MUTEX->dwLockOwner    = 0;
+    pFT_MUTEX->nLockedCount   = 0;
+
+    return TRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+BOOL  UninitializeFT_MUTEX
+(
+#ifdef FISH_HANG
+    const char*  pszFile,
+    const int    nLine,
+#endif
+    FT_MUTEX*    pFT_MUTEX
+)
+{
+    if ( pFT_MUTEX->nLockedCount > 0 )
+        return FALSE;   // (still in use)
+
+    ASSERT( IsEventSet ( pFT_MUTEX->hUnlockedEvent ) );
+
+    MyDeleteEvent ( pFT_MUTEX->hUnlockedEvent );
+    MyDeleteCriticalSection ( &pFT_MUTEX->MutexLock );
+
+    memset ( pFT_MUTEX, 0xCD, sizeof ( FT_MUTEX ) );
+
+    return TRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+FT_COND_VAR*  MallocFT_COND_VAR ( )
+{
+    FT_COND_VAR*  pFT_COND_VAR = (FT_COND_VAR*) malloc ( sizeof ( FT_COND_VAR ) );
+    if ( !pFT_COND_VAR ) return NULL;
+    memset ( pFT_COND_VAR, 0xCD, sizeof ( FT_COND_VAR ) );
+    return pFT_COND_VAR;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+BOOL  InitializeFT_COND_VAR
+(
+#ifdef FISH_HANG
+    const char*   pszFile,
+    const int     nLine,
+#endif
+    FT_COND_VAR*  pFT_COND_VAR
+)
+{
+    if ( ( pFT_COND_VAR->hSigXmitEvent = MyCreateEvent ( NULL, TRUE, FALSE, NULL ) ) )
     {
-        for (;;)
+        // Note: hSigRecvdEvent created initially signaled
+
+        if ( ( pFT_COND_VAR->hSigRecvdEvent = MyCreateEvent ( NULL, TRUE, TRUE, NULL ) ) )
         {
-            MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
-            ASSERT(pFT_MUTEX->nLockedCount >= 0);
-            if (pFT_MUTEX->nLockedCount <= 0 || pFT_MUTEX->dwLockOwner == dwThreadId) break;
-            MyLeaveCriticalSection(&pFT_MUTEX->MutexLock);
-            MyWaitForSingleObject(pFT_MUTEX->hUnlockedEvent,INFINITE);
+            MyInitializeCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+            pFT_COND_VAR->dwCondMagic   = FT_COND_MAGIC;
+            pFT_COND_VAR->bBroadcastSig = FALSE;
+            pFT_COND_VAR->nNumWaiting   = 0;
+
+            return TRUE;
         }
 
-        MyResetEvent(pFT_MUTEX->hUnlockedEvent);
-        pFT_MUTEX->dwLockOwner = dwThreadId;
-        VERIFY(++pFT_MUTEX->nLockedCount > 0);
-        MyLeaveCriticalSection(&pFT_MUTEX->MutexLock);
+        MyDeleteEvent ( pFT_COND_VAR->hSigXmitEvent );
     }
+
+    memset ( pFT_COND_VAR, 0xCD, sizeof ( FT_COND_VAR ) );
+
+    return FALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-void
-LeaveFT_MUTEX
+BOOL  UninitializeFT_COND_VAR
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*   pszFile,
+    const int     nLine,
 #endif
-    fthread_mutex_t* pFT_MUTEX
+    FT_COND_VAR*  pFT_COND_VAR
 )
 {
-    if (hostinfo.trycritsec_avail)
-    {
-        ASSERT(pFT_MUTEX->nLockedCount > 0);
-        if (--pFT_MUTEX->nLockedCount <= 0)
-            pFT_MUTEX->dwLockOwner = 0;
-        MyLeaveCriticalSection(&pFT_MUTEX->MutexLock);
-    }
-    else
-    {
-        MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
-        ASSERT(pFT_MUTEX->nLockedCount > 0);
-        if (--pFT_MUTEX->nLockedCount <= 0)
-        {
-            pFT_MUTEX->dwLockOwner = 0;
-            MySetEvent(pFT_MUTEX->hUnlockedEvent);
-        }
-        MyLeaveCriticalSection(&pFT_MUTEX->MutexLock);
-    }
+    if (0
+        ||  pFT_COND_VAR->nNumWaiting
+        ||  IsEventSet ( pFT_COND_VAR->hSigXmitEvent  )
+        || !IsEventSet ( pFT_COND_VAR->hSigRecvdEvent )
+    )
+        return FALSE;
+
+    MyDeleteEvent ( pFT_COND_VAR->hSigXmitEvent  );
+    MyDeleteEvent ( pFT_COND_VAR->hSigRecvdEvent );
+
+    MyDeleteCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+    memset ( pFT_COND_VAR, 0xCD, sizeof ( FT_COND_VAR ) );
+
+    return TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-FT_W32_BOOL
-TryEnterFT_MUTEX
+BOOL  TryEnterFT_MUTEX
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*  pszFile,
+    const int    nLine,
 #endif
-    fthread_mutex_t* pFT_MUTEX
+    FT_MUTEX*    pFT_MUTEX
 )
 {
-    FT_W32_BOOL   bSuccess;
-    FT_W32_DWORD  dwThreadId = GetCurrentThreadId();
+    BOOL   bSuccess;
+    DWORD  dwThreadId = GetCurrentThreadId();
 
-    if (hostinfo.trycritsec_avail)
+    if ( hostinfo.trycritsec_avail )
     {
-        bSuccess = MyTryEnterCriticalSection(&pFT_MUTEX->MutexLock);
+        bSuccess = MyTryEnterCriticalSection ( &pFT_MUTEX->MutexLock );
 
-        if (bSuccess)
+        if ( bSuccess )
         {
-            VERIFY(++pFT_MUTEX->nLockedCount > 0);
+            pFT_MUTEX->nLockedCount++;
+            ASSERT( pFT_MUTEX->nLockedCount > 0 );
             pFT_MUTEX->dwLockOwner = dwThreadId;
         }
     }
     else
     {
-        MyEnterCriticalSection(&pFT_MUTEX->MutexLock);
+        MyEnterCriticalSection ( &pFT_MUTEX->MutexLock );
 
-        ASSERT(pFT_MUTEX->nLockedCount >= 0);
+        ASSERT ( pFT_MUTEX->nLockedCount >= 0 );
 
-        bSuccess = (pFT_MUTEX->nLockedCount <= 0 || pFT_MUTEX->dwLockOwner == dwThreadId);
+        bSuccess = ( pFT_MUTEX->nLockedCount <= 0 || pFT_MUTEX->dwLockOwner == dwThreadId );
 
-        if (bSuccess)
+        if ( bSuccess )
         {
-            VERIFY(++pFT_MUTEX->nLockedCount > 0);
+            pFT_MUTEX->nLockedCount++;
+            ASSERT ( pFT_MUTEX->nLockedCount > 0 );
             pFT_MUTEX->dwLockOwner = dwThreadId;
-            MyResetEvent(pFT_MUTEX->hUnlockedEvent);
+            MyResetEvent ( pFT_MUTEX->hUnlockedEvent );
         }
 
-        MyLeaveCriticalSection(&pFT_MUTEX->MutexLock);
+        MyLeaveCriticalSection ( &pFT_MUTEX->MutexLock );
     }
 
     return bSuccess;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////
-// (thread signalling not supported...)
 
-void fthread_kill       // (nop)
+void  EnterFT_MUTEX
 (
-    int  dummy1,
-    int  dummy2
+#ifdef FISH_HANG
+    const char*  pszFile,
+    const int    nLine,
+#endif
+    FT_MUTEX*    pFT_MUTEX
 )
 {
-    // (nop)
-    UNREFERENCED(dummy1);
-    UNREFERENCED(dummy2);
+    DWORD  dwThreadId = GetCurrentThreadId();
+
+    if ( hostinfo.trycritsec_avail )
+    {
+        MyEnterCriticalSection ( &pFT_MUTEX->MutexLock );
+        pFT_MUTEX->dwLockOwner = dwThreadId;
+        pFT_MUTEX->nLockedCount++;
+        ASSERT ( pFT_MUTEX->nLockedCount > 0 );
+    }
+    else
+    {
+        for (;;)
+        {
+            MyEnterCriticalSection ( &pFT_MUTEX->MutexLock );
+            ASSERT ( pFT_MUTEX->nLockedCount >= 0 );
+            if ( pFT_MUTEX->nLockedCount <= 0 || pFT_MUTEX->dwLockOwner == dwThreadId ) break;
+            MyLeaveCriticalSection ( &pFT_MUTEX->MutexLock );
+            MyWaitForSingleObject ( pFT_MUTEX->hUnlockedEvent, INFINITE );
+        }
+
+        MyResetEvent ( pFT_MUTEX->hUnlockedEvent );
+        pFT_MUTEX->dwLockOwner = dwThreadId;
+        pFT_MUTEX->nLockedCount++;
+        ASSERT ( pFT_MUTEX->nLockedCount > 0 );
+        MyLeaveCriticalSection ( &pFT_MUTEX->MutexLock );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+void  LeaveFT_MUTEX
+(
+#ifdef FISH_HANG
+    const char*  pszFile,
+    const int    nLine,
+#endif
+    FT_MUTEX*    pFT_MUTEX
+)
+{
+    if ( hostinfo.trycritsec_avail )
+    {
+        ASSERT ( pFT_MUTEX->nLockedCount > 0 );
+        pFT_MUTEX->nLockedCount--;
+        if ( pFT_MUTEX->nLockedCount <= 0 )
+            pFT_MUTEX->dwLockOwner = 0;
+        MyLeaveCriticalSection ( &pFT_MUTEX->MutexLock );
+    }
+    else
+    {
+        MyEnterCriticalSection ( &pFT_MUTEX->MutexLock );
+        ASSERT ( pFT_MUTEX->nLockedCount > 0 );
+        pFT_MUTEX->nLockedCount--;
+        if ( pFT_MUTEX->nLockedCount <= 0 )
+        {
+            pFT_MUTEX->dwLockOwner = 0;
+            MySetEvent ( pFT_MUTEX->hUnlockedEvent );
+        }
+        MyLeaveCriticalSection ( &pFT_MUTEX->MutexLock );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+// Now we get to the "meat" of fthreads...
+//
+// The below function atomically releases the caller's mutex and registers the fact
+// that the caller wishes to wait on their condition variable (or rather the other
+// way around: it first registers the fact that the caller wishes to wait on the
+// condition by first acquiring the condition variable lock and then registering
+// the wait and THEN afterwards (once the wait has been registered and condition
+// variable lock acquired) releases the original mutex). This ensures that no one
+// can "sneak a signal past us" from the time this function is called until we can
+// manage to register the wait request since no signals can ever be sent while the
+// condition variable is locked.
+
+int  BeginWait
+(
+#ifdef FISH_HANG
+    const char*       pszFile,
+    const int         nLine,
+#endif
+    FT_COND_VAR*      pFT_COND_VAR,
+    fthread_mutex_t*  pFTUSER_MUTEX
+)
+{
+    int        rc;
+    FT_MUTEX*  pFT_MUTEX;
+
+    if (0
+        || !pFT_COND_VAR                                          // (invalid ptr)
+        ||  pFT_COND_VAR -> dwCondMagic  != FT_COND_MAGIC         // (not initialized)
+        || !pFTUSER_MUTEX                                         // (invalid ptr)
+        ||  pFTUSER_MUTEX-> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
+        || !(pFT_MUTEX = pFTUSER_MUTEX->hMutex)                   // (invalid ptr)
+//      || !pFT_MUTEX                                             // (invalid ptr)
+        ||  pFT_MUTEX    -> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
+    )
+        return RC(EINVAL);
+
+    if (0
+        ||  pFT_MUTEX    -> dwLockOwner  != GetCurrentThreadId()  // (mutex not owned)
+        ||  pFT_MUTEX    -> nLockedCount <= 0                     // (mutex not locked)
+    )
+        return RC(EPERM);
+
+    // First, acquire the fthreads condition variable lock...
+
+    for (;;)
+    {
+        MyEnterCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+        // It is always safe to proceed if the prior signal was completely
+        // processed (received by everyone who was supposed to receive it)
+
+        if ( IsEventSet ( pFT_COND_VAR->hSigRecvdEvent ) )
+            break;
+
+        // Prior signal not completely received yet... Verify that it is
+        // still being transmitted...
+
+        ASSERT ( IsEventSet ( pFT_COND_VAR->hSigXmitEvent ) );
+
+        // If no one is currently waiting to receive [this signal not yet
+        // completely received and still being transmitted], then we can
+        // go ahead and receive it right now *regardless* of what type of
+        // signal it is ("signal" or "broadcast") since we're *obviously*
+        // the one who is supposed to receive it (since we ARE trying to
+        // wait on it after all and it IS being transmitted. The 'xmit'
+        // event is *always* turned off once everyone [who is *supposed*
+        // to receive the signal] *has* received the signal. Thus, since
+        // it's still being transmitted, that means *not* everyone who
+        // *should* receive it *has* received it yet, and thus we can be
+        // absolutely certain that we indeed *should* therefore receive it
+        // since we *are* after all waiting for it).
+
+        // Otherwise (prior signal not completely processed AND there are
+        // still others waiting to receive it too (as well as us)), then if
+        // it's a "broadcast" type signal, we can go ahead and receive that
+        // type of signal too as well (along with the others); we just came
+        // to the party a little bit late (but nevertheless in the nick of
+        // time!), that's all...
+
+        if ( !pFT_COND_VAR->nNumWaiting || pFT_COND_VAR->bBroadcastSig )
+            break;
+
+        // Otherwise it's a "signal" type signal (and not a broadcast type)
+        // that hasn't been completely received yet, meaning only ONE thread
+        // should be released. Thus, since there's already a thread (or more
+        // than one thread) already waiting/trying to receive it, we need to
+        // let [one of] THEM receive it and NOT US. Thus we go back to sleep
+        // and wait for the signal processing currently in progress to finish
+        // releasing the proper number of threads first. Only once that has
+        // happened can we then be allowed to try and catch whatever signal
+        // happens to come along next...
+
+        MyLeaveCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+        // (Programming Note: technically we should really be checking our
+        // return code from the below wait call too)
+
+        MyWaitForSingleObject ( pFT_COND_VAR->hSigRecvdEvent, INFINITE );
+    }
+
+    // Register the caller's wait request while we still have control
+    // over this condition variable...
+
+    pFT_COND_VAR->nNumWaiting++;        // (register wait request)
+
+    // Now release the original mutex and thus any potential signalers...
+    // (but note that no signal can actually ever be sent per se until
+    // the condition variable which we currently have locked is first
+    // released, which gets done in the WaitForTransmission function).
+
+    if
+    (
+        (
+            rc = fthread_mutex_unlock
+            (
+#ifdef FISH_HANG
+                pszFile,
+                nLine,
+#endif
+                pFTUSER_MUTEX
+            )
+        )
+        != 0
+    )
+    {
+        // Oops! Something went wrong. We couldn't release the original
+        // caller's original mutex. Since we've already registered their
+        // wait and already have the condition variable locked, we need
+        // to first de-register their wait and release the condition var-
+        // iable lock before returning our error (i.e. we essentially
+        // need to back out what we previously did just above).
+
+#ifdef FISH_HANG
+        ft_logmsg("fthreads: BeginWait: fthread_mutex_unlock failed at %s(%d)! rc=%d\n"
+            ,pszFile ,nLine ,rc );
+#else
+        ft_logmsg("fthreads: BeginWait: fthread_mutex_unlock failed! rc=%d\n"
+            ,rc );
+#endif
+        pFT_COND_VAR->nNumWaiting--;    // (de-register wait request)
+
+        MyLeaveCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+        return RC(rc);
+    }
+
+    // Our "begin-to-wait-on-condition-variable" task has been successfully
+    // completed. We have essentially atomically released the originally mutex
+    // and "begun our wait" on it (by registering the fact that there's someone
+    // wanting to wait on it). Return to OUR caller with the condition variable
+    // still locked (so no signals can be sent nor any threads released until
+    // our caller calls the below WaitForTransmission function)...
+
+    return RC(0);   // (success)
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Wait for the condition variable in question to receive a transmission...
+
+int  WaitForTransmission
+(
+#ifdef FISH_HANG
+    const char*       pszFile,
+    const int         nLine,
+#endif
+    FT_COND_VAR*      pFT_COND_VAR,
+    struct timespec*  pTimeTimeout     // (NULL == INFINITE wait)
+)
+{
+    DWORD  dwWaitRetCode, dwWaitMilliSecs;
+
+    // If the signal has already arrived (i.e. is still being transmitted)
+    // then there's no need to wait for it. Simply return success with the
+    // condition variable still locked...
+
+    if ( IsEventSet ( pFT_COND_VAR->hSigXmitEvent ) )
+    {
+        // There's no need to wait for the signal (transmission)
+        // to arrive because it's already been sent! Just return.
+
+        return 0;           // (transmission received!)
+    }
+
+    // Our loop to wait for our transmission to arrive...
+
+    do
+    {
+        // Release condition var lock (so signal (transmission) can
+        // be sent) and then wait for the signal (transmission)...
+
+        MyLeaveCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+        // Need to calculate a timeout value if this is a
+        // timed condition wait as opposed to a normal wait...
+
+        // Note that we unfortunately need to do this on each iteration
+        // because Window's wait API requires a relative timeout value
+        // rather than an absolute TOD timeout value like pthreads...
+
+        if ( !pTimeTimeout )
+        {
+            dwWaitMilliSecs = INFINITE;
+        }
+        else
+        {
+            struct timeval  TimeNow;
+
+            gettimeofday ( &TimeNow, NULL );
+
+            if (TimeNow.tv_sec >  pTimeTimeout->tv_sec
+                ||
+                (
+                    TimeNow.tv_sec == pTimeTimeout->tv_sec
+                    &&
+                    (TimeNow.tv_usec * 1000) > pTimeTimeout->tv_nsec
+                )
+            )
+            {
+                dwWaitMilliSecs = 0;
+            }
+            else
+            {
+                dwWaitMilliSecs =
+                    ((pTimeTimeout->tv_sec - TimeNow.tv_sec) * 1000) +
+                    ((pTimeTimeout->tv_nsec - (TimeNow.tv_usec * 1000)) / 1000000);
+            }
+        }
+
+        // Finally we get to do the actual wait...
+
+        dwWaitRetCode =
+            MyWaitForSingleObject ( pFT_COND_VAR->hSigXmitEvent, dwWaitMilliSecs );
+
+        // A signal (transmission) has been sent; reacquire our condition var lock
+        // and receive the transmission (if it's still being transmitted that is)...
+
+        MyEnterCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+        // The "WAIT_OBJECT_0 == dwWaitRetCode && ..." clause in the below 'while'
+        // statement ensures that we will always break out of our wait loop whenever
+        // either a timeout occurs or our actual MyWaitForSingleObject call fails
+        // for any reason. As long as dwWaitRetCode is WAIT_OBJECT_0 though *AND*
+        // our event has still not been signaled yet, then we'll continue looping
+        // to wait for a signal (transmission) that we're supposed to receive...
+
+        // Also note that one might at first think/ask: "Gee, Fish, why do we need
+        // to check to see if the condition variable's "hSigXmitEvent" event has
+        // been set each time (via the 'IsEventSet' macro)? Shouldn't it *always*
+        // be set if the above MyWaitForSingleObject call returns??" The answer is
+        // of course no, it might NOT [still] be signaled. This is because whenever
+        // someone *does* happen to signal it, we will of course be released from
+        // our wait (the above MyWaitForSingleObject call) BUT... someone else who
+        // was also waiting for it may have managed to grab our condition variable
+        // lock before we could and they could have reset it. Thus we need to check
+        // it again each time.
+    }
+    while ( WAIT_OBJECT_0 == dwWaitRetCode && !IsEventSet( pFT_COND_VAR->hSigXmitEvent ) );
+
+    // Our signal (transmission) has either [finally] arrived or else we got
+    // tired of waiting for it (i.e. we timed out) or else there was an error...
+
+    if ( WAIT_OBJECT_0 == dwWaitRetCode ) return RC(0);
+    if ( WAIT_TIMEOUT  == dwWaitRetCode ) return RC(ETIMEDOUT);
+
+    // Our wait failed! Something is VERY wrong! Maybe the condition variable
+    // was prematurely destroyed by someone? <shrug> In any case there's not
+    // much we can do about it other than log the fact that it occurred and
+    // return the error back to the caller. Their wait request has, believe
+    // it or not, actually been completed (although not as they expected it
+    // would in all likelihood!)...
+
+#ifdef FISH_HANG
+    ft_logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed at %s(%d)! dwWaitRetCode=%d (0x%8.8X)\n"
+        ,pszFile ,nLine ,dwWaitRetCode ,dwWaitRetCode );
+#else
+    ft_logmsg ( "fthreads: WaitForTransmission: MyWaitForSingleObject failed! dwWaitRetCode=%d (0x%8.8X)\n"
+        ,dwWaitRetCode ,dwWaitRetCode );
+#endif
+
+    return RC(EFAULT);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Send a "signal" or "broadcast" to a condition variable...
+
+int  QueueTransmission
+(
+#ifdef FISH_HANG
+    const char*   pszFile,
+    const int     nLine,
+#endif
+    FT_COND_VAR*  pFT_COND_VAR,
+    BOOL          bXmitType
+)
+{
+    if (0
+        || !pFT_COND_VAR                                // (invalid ptr)
+        ||  pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC  // (not initialized)
+    )
+    {
+        return RC(EINVAL);    // (invalid parameters were passed)
+    }
+
+    // Wait for the condition variable to become free so we can begin transmitting
+    // our signal... If the condition variable is still "busy" (in use), then that
+    // means threads are still in the process of being released as a result of some
+    // prior signal (transmission). Thus we must wait until that work is completed
+    // first before we can send our new signal (transmission)...
+
+    for (;;)
+    {
+        MyEnterCriticalSection ( &pFT_COND_VAR->CondVarLock );
+        if ( IsEventSet ( pFT_COND_VAR->hSigRecvdEvent ) ) break;
+        MyLeaveCriticalSection ( &pFT_COND_VAR->CondVarLock );
+        MyWaitForSingleObject ( pFT_COND_VAR->hSigRecvdEvent, INFINITE );
+    }
+
+    // Turn on our transmitter...  (i.e. start transmitting our "signal" to
+    // all threads who might be waiting to receive it (if there are any)...
+
+    // If no one has registered their interest in receiving any transmissions
+    // associated with this particular condition variable, then they are unfor-
+    // tunately a little too late in doing so because we're ready to start our
+    // transmission right now! If there's no one to receive our transmission,
+    // then it simply gets lost (i.e. a "missed signal" situation has essenti-
+    // ally occurred), but then that's not our concern here; our only concern
+    // here is to transmit the signal (transmission) and nothing more. Tough
+    // beans is there's no one listening to receive it... <shrug>
+
+    if ( pFT_COND_VAR->nNumWaiting )                    // (anyone interested?)
+    {
+        pFT_COND_VAR->bBroadcastSig = bXmitType;        // (yep! set xmit type)
+        MySetEvent   ( pFT_COND_VAR->hSigXmitEvent  );  // (turn on transmitter)
+        MyResetEvent ( pFT_COND_VAR->hSigRecvdEvent );  // (serialize reception)
+    }
+
+    MyLeaveCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// A thread has been released as a result of someone's signal or broadcast...
+
+void  ReceiveXmission ( FT_COND_VAR*  pFT_COND_VAR )
+{
+    // If we were the only ones supposed to receive the transmission, (or
+    // if no one remains to receive any transmissions), then turn off the
+    // transmitter (i.e. stop sending the signal) and indicate that it has
+    // been completely received all interested parties (i.e. by everyone
+    // who was supposed to receive it)...
+
+    pFT_COND_VAR->nNumWaiting--;    // (de-register wait since transmission
+                                    //  has been successfully received now)
+
+    // Determine whether any more waiters (threads) should also receive
+    // this transmission (i.e. also be released) or whether we should
+    // reset (turn off) our transmitter so as to not release any other
+    // thread(s) besides ourselves...
+
+    if (0
+        || !pFT_COND_VAR->bBroadcastSig         // ("signal" == only us)
+        ||  pFT_COND_VAR->nNumWaiting <= 0      // (no one else == only us)
+    )
+    {
+        MyResetEvent ( pFT_COND_VAR->hSigXmitEvent  );   // (turn off transmitter)
+        MySetEvent   ( pFT_COND_VAR->hSigRecvdEvent );   // (transmission complete)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// The following function is called just before returning back to the caller. It
+// first releases the condition variable lock (since we're now done with it) and
+// then reacquires the caller's original mutex before returning [back to the caller].
+
+// We MUST do things in that order! 1) release our condition variable lock, and THEN
+// 2) try to reacquire the caller's original mutex. Otherwise a deadlock could occur!
+
+// If we still had the condition variable locked before trying to acquire the caller's
+// original mutex, we could easily become blocked if some other thread still already
+// owned (had locked) the caller's mutex. We would then be unable to ever release our
+// condition variable lock until whoever had the mutex locked first released it, but
+// they would never be able to release it because we still had the condition variable
+// still locked! Recall that upon entry to a wait call (see previous BeginWait function)
+// we acquire the condition variable lock *first* (in order to register the caller's
+// wait) before releasing their mutex. Thus, we MUST therefore release our condition
+// variable lock FIRST and THEN try reacquiring their original mutex before returning.
+
+int  ReturnFromWait
+(
+#ifdef FISH_HANG
+    const char*       pszFile,
+    const int         nLine,
+#endif
+    FT_COND_VAR*      pFT_COND_VAR,
+    fthread_mutex_t*  pFTUSER_MUTEX,
+    int               nRetCode
+)
+{
+    int        rc;
+    FT_MUTEX*  pFT_MUTEX;
+
+    if (0
+        || !pFT_COND_VAR                                          // (invalid ptr)
+        ||  pFT_COND_VAR -> dwCondMagic  != FT_COND_MAGIC         // (not initialized)
+        || !pFTUSER_MUTEX                                         // (invalid ptr)
+        ||  pFTUSER_MUTEX-> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
+        || !(pFT_MUTEX = pFTUSER_MUTEX->hMutex)                   // (invalid ptr)
+//      || !pFT_MUTEX                                             // (invalid ptr)
+        ||  pFT_MUTEX    -> dwMutexMagic != FT_MUTEX_MAGIC        // (not initialized)
+    )
+        return RC(EINVAL);
+
+    // (let other threads access this condition variable now...)
+
+    MyLeaveCriticalSection ( &pFT_COND_VAR->CondVarLock );
+
+    // (reacquire original mutex before returning back to the original caller...)
+
+    if
+    (
+        (
+            rc = fthread_mutex_lock
+            (
+#ifdef FISH_HANG
+                pszFile,
+                nLine,
+#endif
+                pFTUSER_MUTEX
+            )
+        )
+        != 0
+    )
+    {
+        // Oops! We were unable to reacquire the caller's original mutex! This
+        // is actually a catastrophic type of error! The caller expects their
+        // mutex to still be owned (locked) by themselves upon return, but we
+        // were unable to reacquire it for them! Unfortunately there's nothing
+        // we can do about this; the system is essentially hosed at this point.
+        // Just log the fact that something went wrong and return. <shrug>
+
+#ifdef FISH_HANG
+        ft_logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed at %s(%d)! rc=%d\n"
+            ,pszFile ,nLine ,rc );
+#else
+        ft_logmsg("fthreads: ReturnFromWait: fthread_mutex_lock failed! rc=%d\n"
+            ,rc );
+#endif
+
+        return RC(rc);        // (what went wrong)
+    }
+
+    // Return to caller with the requested return code. (The caller passes to us
+    // the return code they wish to pass back to the original caller, so we just
+    // return that same return code back to OUR caller (so they can then pass it
+    // back to the original fthreads caller)).
+
+    return RC(nRetCode);      // (as requested)
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+// Threading functions...
+
+LIST_ENTRY        ThreadListHead;   // head list entry of list of joinable threads
+CRITICAL_SECTION  ThreadListLock;   // lock for accessing list of joinable threads
+
+#define LockThreadsList()    EnterCriticalSection ( &ThreadListLock )
+#define UnlockThreadsList()  LeaveCriticalSection ( &ThreadListLock )
+
+////////////////////////////////////////////////////////////////////////////////////
+// internal joinable thread information
+
+typedef struct _tagFTHREAD
+{
+    LIST_ENTRY  ThreadListLink;     // (links entries together in a chain)
+    DWORD       dwThreadID;         // (thread-id)
+    HANDLE      hThreadHandle;      // (Win32 thread handle)
+    BOOL        bJoinable;          // (whether thread is joinable or detached)
+    int         nJoinedCount;       // (#of threads that did join on this one)
+    void*       ExitVal;            // (saved thread exit value)
+    jmp_buf     JumpBuf;            // (jump buffer for fthread_exit)
+}
+FTHREAD, *PFTHREAD;
+
+////////////////////////////////////////////////////////////////////////////////////
+// (Note: returns with thread list lock still held if found; not held if not found)
+
+FTHREAD*  FindFTHREAD ( DWORD dwThreadID )
+{
+    FTHREAD*     pFTHREAD;
+    LIST_ENTRY*  pListEntry = ThreadListHead.Flink;
+
+    LockThreadsList();      // (acquire thread list lock)
+
+    while ( pListEntry != &ThreadListHead )
+    {
+        pFTHREAD = CONTAINING_RECORD ( pListEntry, FTHREAD, ThreadListLink );
+
+        pListEntry = pListEntry->Flink;
+
+        if ( pFTHREAD->dwThreadID != dwThreadID )
+            continue;
+
+        return pFTHREAD;    // (return with thread list lock still held)
+    }
+
+    UnlockThreadsList();    // (release thread list lock)
+
+    return NULL;            // (not found)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -271,14 +951,13 @@ typedef struct _ftCallThreadParms
 {
     PFT_THREAD_FUNC  pfnTheirThreadFunc;
     void*            pvTheirThreadArgs;
+    FTHREAD*         pFTHREAD;
 }
 FT_CALL_THREAD_PARMS;
 
-////////////////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------------------
 
-FT_W32_DWORD
-__stdcall
-FTWin32ThreadFunc
+DWORD  __stdcall  FTWin32ThreadFunc
 (
     void*  pMyArgs
 )
@@ -286,256 +965,609 @@ FTWin32ThreadFunc
     FT_CALL_THREAD_PARMS*  pCallTheirThreadParms;
     PFT_THREAD_FUNC        pfnTheirThreadFunc;
     void*                  pvTheirThreadArgs;
+    FTHREAD*               pFTHREAD;
+    void*                  ExitVal;
 
     pCallTheirThreadParms = (FT_CALL_THREAD_PARMS*) pMyArgs;
 
     pfnTheirThreadFunc = pCallTheirThreadParms->pfnTheirThreadFunc;
     pvTheirThreadArgs  = pCallTheirThreadParms->pvTheirThreadArgs;
+    pFTHREAD           = pCallTheirThreadParms->pFTHREAD;
 
-    free(pCallTheirThreadParms);
+    free ( pCallTheirThreadParms );
 
-    (pfnTheirThreadFunc)(pvTheirThreadArgs);
+    if ( setjmp ( pFTHREAD->JumpBuf ) == 0 )
+        pFTHREAD->ExitVal = pfnTheirThreadFunc ( pvTheirThreadArgs );
 
-    MyExitThread(0);
+    LockThreadsList();
+
+    if ( !pFTHREAD->bJoinable )
+    {
+        // If we are not a joinable thread, we must free our
+        // own resources ourselves, but ONLY IF the 'joined'
+        // count is zero. If the 'joined' count is NOT zero,
+        // then, however it occurred, there is still someone
+        // waiting in the join function for us to exit, and
+        // thus, we cannot free our resources at this time
+        // (since the thread that did the join and which is
+        // waiting for us to exit still needs access to our
+        // resources). In such a situation the actual freeing
+        // of resources is deferred and will be done by the
+        // join function itself whenever it's done with them.
+
+        if ( pFTHREAD->nJoinedCount <= 0 )
+        {
+            CloseHandle ( pFTHREAD->hThreadHandle );
+            RemoveListEntry ( &pFTHREAD->ThreadListLink );
+            free ( pFTHREAD );
+        }
+    }
+
+    UnlockThreadsList();
+
+    MyExitThread ( 0 );
 
     return 0;   // (make compiler happy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// create a new thread...
+// Create a new thread...
 
-int
-fthread_create
+int  fthread_create
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*      pszFile,
+    const int        nLine,
 #endif
     fthread_t*       pdwThreadID,
-    fthread_attr_t*  dummy1,
+    fthread_attr_t*  pThreadAttr,
     PFT_THREAD_FUNC  pfnThreadFunc,
     void*            pvThreadArgs
 )
 {
+    static BOOL            bDidInit = FALSE;
     FT_CALL_THREAD_PARMS*  pCallTheirThreadParms;
-    FT_W32_HANDLE          hWin32ThreadFunc;
+    size_t                 nStackSize;
+    int                    nDetachState;
+    FTHREAD*               pFTHREAD;
+    HANDLE                 hThread;
+    DWORD                  dwThreadID;
 
-    UNREFERENCED(dummy1);
+    if ( !bDidInit )
+    {
+        bDidInit = TRUE;
+        InitializeListHead ( &ThreadListHead );
+        InitializeCriticalSection ( &ThreadListLock );
+    }
 
-    pCallTheirThreadParms =
-        (FT_CALL_THREAD_PARMS*) malloc(sizeof(FT_CALL_THREAD_PARMS));
+    if (0
+        || !pdwThreadID
+        || !pfnThreadFunc
+    )
+        return RC(EINVAL);
 
-    if (!pCallTheirThreadParms)
+    if ( pThreadAttr )
+    {
+        if (  pThreadAttr->dwAttrMagic  != FT_ATTR_MAGIC ||
+            ( pThreadAttr->nDetachState != FTHREAD_CREATE_DETACHED &&
+              pThreadAttr->nDetachState != FTHREAD_CREATE_JOINABLE ) )
+            return RC(EINVAL);
+
+        nStackSize   = pThreadAttr->nStackSize;
+        nDetachState = pThreadAttr->nDetachState;
+    }
+    else
+    {
+        nStackSize   = 0;
+        nDetachState = FTHREAD_CREATE_DEFAULT;
+    }
+
+    pCallTheirThreadParms = (FT_CALL_THREAD_PARMS*)
+        malloc ( sizeof ( FT_CALL_THREAD_PARMS ) );
+
+    if ( !pCallTheirThreadParms )
     {
 #ifdef FISH_HANG
-        TRACE("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
+        ft_logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed; %s(%d)\n",pszFile,nLine);
 #else
-        TRACE("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
+        ft_logmsg("fthread_create: malloc(FT_CALL_THREAD_PARMS) failed\n");
 #endif
-        return (errno = EAGAIN);
+        return RC(ENOMEM);      // (out of memory)
+    }
+
+    pFTHREAD = (FTHREAD*)
+        malloc ( sizeof( FTHREAD ) );
+
+    if ( !pFTHREAD )
+    {
+#ifdef FISH_HANG
+        ft_logmsg("fthread_create: malloc(FTHREAD) failed; %s(%d)\n",pszFile,nLine);
+#else
+        ft_logmsg("fthread_create: malloc(FTHREAD) failed\n");
+#endif
+        free ( pCallTheirThreadParms );
+        return RC(ENOMEM);      // (out of memory)
     }
 
     pCallTheirThreadParms->pfnTheirThreadFunc = pfnThreadFunc;
     pCallTheirThreadParms->pvTheirThreadArgs  = pvThreadArgs;
+    pCallTheirThreadParms->pFTHREAD           = pFTHREAD;
 
-    hWin32ThreadFunc =
-        MyCreateThread(NULL,0,FTWin32ThreadFunc,pCallTheirThreadParms,0,(FT_W32_DWORD*)pdwThreadID);
+    InitializeListLink(&pFTHREAD->ThreadListLink);
 
-    if (!hWin32ThreadFunc)
+    pFTHREAD->dwThreadID    = 0;
+    pFTHREAD->hThreadHandle = NULL;
+    pFTHREAD->bJoinable     = ((FTHREAD_CREATE_JOINABLE == nDetachState) ? (TRUE) : (FALSE));
+    pFTHREAD->nJoinedCount  = 0;
+    pFTHREAD->ExitVal       = NULL;
+
+    LockThreadsList();
+
+    hThread =
+        MyCreateThread ( NULL, nStackSize, FTWin32ThreadFunc, pCallTheirThreadParms, 0, &dwThreadID );
+
+    if ( !hThread )
     {
+        UnlockThreadsList();
 #ifdef FISH_HANG
-        TRACE("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
+        ft_logmsg("fthread_create: MyCreateThread failed; %s(%d)\n",pszFile,nLine);
 #else
-        TRACE("fthread_create: MyCreateThread failed\n");
+        ft_logmsg("fthread_create: MyCreateThread failed\n");
 #endif
-        free (pCallTheirThreadParms);
-        return (errno = EAGAIN);
+        free ( pCallTheirThreadParms );
+        free ( pFTHREAD );
+        return RC(EAGAIN);      // (unable to obtain required resources)
     }
 
-    CloseHandle(hWin32ThreadFunc);
+    pFTHREAD->hThreadHandle = hThread;
+    pFTHREAD->dwThreadID    = dwThreadID;
+    *pdwThreadID            = dwThreadID;
 
-    return 0;
+    InsertListHead ( &ThreadListHead, &pFTHREAD->ThreadListLink );
+
+    UnlockThreadsList();
+
+    return RC(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// return thread-id...
+// Exit from a thread...
 
-FT_W32_DWORD
-fthread_self
+void  fthread_exit
 (
+    void*  ExitVal
 )
+{
+    FTHREAD* pFTHREAD;
+    VERIFY ( pFTHREAD = FindFTHREAD ( GetCurrentThreadId() ) );
+    UnlockThreadsList();
+    pFTHREAD->ExitVal = ExitVal;
+    longjmp ( pFTHREAD->JumpBuf, 1 );
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Join a thread (i.e. wait for a thread's termination)...
+
+int  fthread_join
+(
+    fthread_t  dwThreadID,
+    void**     pExitVal
+)
+{
+    HANDLE    hThread;
+    FTHREAD*  pFTHREAD;
+
+    if ( GetCurrentThreadId() == dwThreadID )
+        return RC(EDEADLK);             // (can't join self!)
+
+    if ( !(pFTHREAD = FindFTHREAD ( dwThreadID ) ) )
+        return RC(ESRCH);               // (thread not found)
+
+    // (Note: threads list lock still held at this point
+    //  since thread was found...)
+
+    if ( !pFTHREAD->bJoinable )
+    {
+        UnlockThreadsList();
+        return RC(EINVAL);              // (not a joinable thread)
+    }
+
+    ASSERT ( pFTHREAD->nJoinedCount >= 0 );
+    pFTHREAD->nJoinedCount++;
+    hThread = pFTHREAD->hThreadHandle;
+
+    UnlockThreadsList();
+
+    MyWaitForSingleObject ( hThread, INFINITE ); // (wait for thread exit)
+
+    LockThreadsList();
+
+    if ( pExitVal )
+        *pExitVal = pFTHREAD->ExitVal;  // (pass back thread's exit value)
+
+    ASSERT ( pFTHREAD->nJoinedCount > 0 );
+    pFTHREAD->nJoinedCount--;
+
+    // If this is the last thread to be resumed after having been suspended
+    // (as a result of doing the join), then we need to do the detach (i.e.
+    // to free resources), BUT ONLY IF the detach for the thread in question
+    // has already been done by someone (which can be determined by virtue of
+    // the "joinable" flag having already been changed back to non-joinable).
+
+    // The idea here is that the 'detach' function purposely does not free
+    // the resources unless the 'joined' count is zero. If the joined count
+    // is NOT zero whenever the detach function is called, then the resources
+    // cannot be freed since there's still a thread waiting to be resumed
+    // from its join (perhaps us!), and it obviously still needs access to
+    // the resources in question. Thus, in such a situation (i.e. there still
+    // being a thread remaining to be woken up from its join when the detach
+    // is done), the freeing of resources normally done by the detach function
+    // is deferred so that WE can do the resource freeing ourselves once we
+    // are done with them.
+
+    if ( !pFTHREAD->bJoinable && pFTHREAD->nJoinedCount <= 0 )
+    {
+        CloseHandle ( pFTHREAD->hThreadHandle );
+        RemoveListEntry ( &pFTHREAD->ThreadListLink );
+        free ( pFTHREAD );
+    }
+
+    UnlockThreadsList();
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Detach a thread (i.e. ignore a thread's termination)...
+
+int  fthread_detach
+(
+    fthread_t  dwThreadID
+)
+{
+    FTHREAD*  pFTHREAD;
+
+    if ( !( pFTHREAD = FindFTHREAD ( dwThreadID ) ) )
+        return RC(ESRCH);           // (thread not found)
+
+    // (Note: threads list lock still held at this point
+    //  since thread was found...)
+
+    if ( !pFTHREAD->bJoinable )
+    {
+        UnlockThreadsList();
+        return RC(EINVAL);          // (not a joinable thread)
+    }
+
+    // If the thread has not yet exited, then IT will free its
+    // own resources itself whenever it eventually does exit by
+    // virtue of our changing it to a non-joinable thread type.
+
+    pFTHREAD->bJoinable = FALSE;    // (indicate detach was done)
+
+    // Otherwise we need to free its resources ourselves since
+    // it obviously can't (since it has already exited).
+
+    // Note that we cannot free the resources ourselves even if the
+    // thread has already exited if there are still other threads
+    // waiting to be woken up from their own join (since they will
+    // still need to have access to the resources). In other words,
+    // even if the thread has already exited (and thus it would seem
+    // that our freeing the resources would be the proper thing to
+    // do), we CANNOT do so if the 'join' count is non-zero.
+
+    // In such a situation (the join count being non-zero indicating
+    // there is still another thread waiting to be resumed from its
+    // own join), we simply defer the actual freeing of resources to
+    // the thread still waiting to be woken up from its join. Whenever
+    // it does eventually wake up from its join, it will free the
+    // resources for us, as long as we remember to reset the 'joinable'
+    // flag back to non-joinable (which we've already done just above).
+
+    if ( IsEventSet ( pFTHREAD->hThreadHandle ) && pFTHREAD->nJoinedCount <= 0 )
+    {
+        CloseHandle ( pFTHREAD->hThreadHandle );
+        RemoveListEntry ( &pFTHREAD->ThreadListLink );
+        free ( pFTHREAD );
+    }
+
+    UnlockThreadsList();
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Initialize a "thread attribute"...
+
+int  fthread_attr_init
+(
+    fthread_attr_t*  pThreadAttr
+)
+{
+    if ( !pThreadAttr )
+        return RC(EINVAL);          // (invalid ptr)
+
+    if ( FT_ATTR_MAGIC == pThreadAttr->dwAttrMagic )
+        return RC(EBUSY);           // (already initialized)
+
+    pThreadAttr->dwAttrMagic  = FT_ATTR_MAGIC;
+    pThreadAttr->nDetachState = FTHREAD_CREATE_DEFAULT;
+    pThreadAttr->nStackSize   = 0;
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Destroy a "thread attribute"...
+
+int  fthread_attr_destroy
+(
+    fthread_attr_t*  pThreadAttr
+)
+{
+    if ( !pThreadAttr )
+        return RC(EINVAL);      // (invalid ptr)
+
+    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
+        return RC(EINVAL);      // (not initialized)
+
+    pThreadAttr->dwAttrMagic  = 0;
+    pThreadAttr->nDetachState = 0;
+    pThreadAttr->nStackSize   = 0;
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Set a thread's "detachstate" attribute...
+
+int  fthread_attr_setdetachstate
+(
+    fthread_attr_t*  pThreadAttr,
+    int              nDetachState
+)
+{
+    if ( !pThreadAttr )
+        return RC(EINVAL);          // (invalid ptr)
+
+    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
+        return RC(EINVAL);          // (not initialized)
+
+    if ( FTHREAD_CREATE_DETACHED != nDetachState &&
+         FTHREAD_CREATE_JOINABLE != nDetachState )
+        return RC(EINVAL);          // (invalid detach state)
+
+    pThreadAttr->nDetachState = nDetachState;
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Retrieve a thread's "detachstate" attribute...
+
+int  fthread_attr_getdetachstate
+(
+    const fthread_attr_t*  pThreadAttr,
+    int*                   pnDetachState
+)
+{
+    if ( !pThreadAttr || !pnDetachState )
+        return RC(EINVAL);          // (invalid ptr)
+
+    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
+        return RC(EINVAL);          // (not initialized)
+
+    if ( FTHREAD_CREATE_DETACHED != pThreadAttr->nDetachState &&
+         FTHREAD_CREATE_JOINABLE != pThreadAttr->nDetachState )
+        return RC(EINVAL);          // (invalid detach state)
+
+    *pnDetachState = pThreadAttr->nDetachState;
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Set a thread's initial stack size...
+
+int  fthread_attr_setstacksize
+(
+    fthread_attr_t*  pThreadAttr,
+    size_t           nStackSize
+)
+{
+    if ( !pThreadAttr )
+        return RC(EINVAL);          // (invalid ptr)
+
+    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
+        return RC(EINVAL);          // (not initialized)
+
+    pThreadAttr->nStackSize = nStackSize;
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Retrieve a thread's initial stack size...
+
+int  fthread_attr_getstacksize
+(
+    const fthread_attr_t*  pThreadAttr,
+    size_t*                pnStackSize
+)
+{
+    if ( !pThreadAttr || !pnStackSize )
+        return RC(EINVAL);          // (invalid ptr)
+
+    if ( FT_ATTR_MAGIC != pThreadAttr->dwAttrMagic )
+        return RC(EINVAL);          // (not initialized)
+
+    *pnStackSize = pThreadAttr->nStackSize;
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
+
+int  fthread_kill       // FIXME: TODO:
+(
+    int  dummy1,
+    int  dummy2
+)
+{
+    UNREFERENCED ( dummy1 );
+    UNREFERENCED ( dummy2 );
+    return RC(ENOTSUP);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Return thread-id...
+
+fthread_t  fthread_self ()
 {
     return GetCurrentThreadId();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// exit from a thread...
-
-void
-fthread_exit
-(
-    FT_W32_DWORD*  pdwExitCode
-)
-{
-    MyExitThread(pdwExitCode ? *pdwExitCode : 0);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////
-// initialize a lock...
+////////////////////////////////////////////////////////////////////////////////////
+// Initialize a lock...
 
-int
-fthread_mutex_init
+int  fthread_mutex_init
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*                 pszFile,
+    const int                   nLine,
 #endif
-    fthread_mutex_t*  pFT_MUTEX
+          fthread_mutex_t*      pFTUSER_MUTEX,
+    const fthread_mutexattr_t*  pFT_MUTEX_ATTR
 )
 {
-    if (!pFT_MUTEX)
-        return (errno = EINVAL);    // (invalid ptr)
+    DWORD  dwMutexType;
 
-    if (pFT_MUTEX->dwMutexMagic == FT_MUTEX_MAGIC)
-        return (errno = EBUSY);     // (already initialized)
+    if ( !pFTUSER_MUTEX )
+        return RC(EINVAL);      // (invalid mutex ptr)
 
-    InitializeFT_MUTEX
+    if ( FT_MUTEX_MAGIC == pFTUSER_MUTEX->dwMutexMagic )
+        return RC(EBUSY);       // (mutex already initialized)
+
+    if ( pFT_MUTEX_ATTR && !IsValidMutexType ( dwMutexType = *pFT_MUTEX_ATTR ) )
+        return RC(EINVAL);      // (invalid mutex attr ptr or mutex attr type)
+
+    if ( !(pFTUSER_MUTEX->hMutex = MallocFT_MUTEX()) )
+        return RC(ENOMEM);      // (out of memory)
+
+    if ( !InitializeFT_MUTEX
     (
 #ifdef FISH_HANG
         pszFile,
         nLine,
 #endif
-        pFT_MUTEX
-    );
+        pFTUSER_MUTEX->hMutex,
+        pFT_MUTEX_ATTR ? dwMutexType : FTHREAD_MUTEX_DEFAULT
+    ))
+    {
+        free ( pFTUSER_MUTEX->hMutex );
 
-    return (errno = 0);
+        pFTUSER_MUTEX->dwMutexMagic = 0;
+        pFTUSER_MUTEX->hMutex       = NULL;
+
+        return RC(EAGAIN);      // (unable to obtain required resources)
+    }
+
+    pFTUSER_MUTEX->dwMutexMagic = FT_MUTEX_MAGIC;
+
+    return RC(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// destroy a lock...
+// Destroy a lock...
 
-int
-fthread_mutex_destroy
+int  fthread_mutex_destroy
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*       pszFile,
+    const int         nLine,
 #endif
-    fthread_mutex_t*  pFT_MUTEX
+    fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
-    if (!pFT_MUTEX)
-        return (errno = EINVAL);    // (invalid ptr)
+    if ( !pFTUSER_MUTEX )
+        return RC(EINVAL);      // (invalid ptr)
 
-    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
+    if ( FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic )
+        return RC(EINVAL);      // (not initialized)
 
-    if (pFT_MUTEX->nLockedCount > 0)
-        return (errno = EBUSY);     // (still in use)
-
-    DeleteFT_MUTEX
+    if ( !UninitializeFT_MUTEX
     (
 #ifdef FISH_HANG
         pszFile,
         nLine,
 #endif
-        pFT_MUTEX
-    );
+        pFTUSER_MUTEX->hMutex
+    ))
+        return RC(EBUSY);       // (still in use)
 
-    return (errno = 0);
+    free ( pFTUSER_MUTEX->hMutex );
+
+    pFTUSER_MUTEX->dwMutexMagic = 0;
+    pFTUSER_MUTEX->hMutex       = NULL;
+
+    return RC(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// lock a "mutex"...
+// Try to lock a "mutex"...
 
-int
-fthread_mutex_lock
+int  fthread_mutex_trylock
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*       pszFile,
+    const int         nLine,
 #endif
-    fthread_mutex_t*  pFT_MUTEX
+    fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
-    if (!pFT_MUTEX)
-        return (errno = EINVAL);    // (invalid ptr)
+    if ( !pFTUSER_MUTEX )
+        return RC(EINVAL);      // (invalid ptr)
 
-    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
+    if ( FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic )
+        return RC(EINVAL);      // (not initialized)
 
-    EnterFT_MUTEX
+    // Try to acquire the requested mutex...
+
+    if
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
-        pFT_MUTEX
-    );
-
-    return (errno = 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// try to lock a "mutex"...
-
-int
-fthread_mutex_trylock
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_mutex_t*  pFT_MUTEX
-)
-{
-    if (!pFT_MUTEX)
-        return (errno = EINVAL);    // (invalid ptr)
-
-    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
-
-    return
-    (
-        TryEnterFT_MUTEX
+        !TryEnterFT_MUTEX
         (
 #ifdef FISH_HANG
             pszFile,
             nLine,
 #endif
-            pFT_MUTEX
+            pFTUSER_MUTEX->hMutex
         )
-        ?
-            (errno = 0)
-        :
-            (errno = EBUSY)
-    );
-}
+    )
+        // We could not acquire the mutex; return 'busy'...
 
-////////////////////////////////////////////////////////////////////////////////////
-// unlock a "mutex"...
+        return RC(EBUSY);
 
-int
-fthread_mutex_unlock
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_mutex_t*  pFT_MUTEX
-)
-{
-    if (!pFT_MUTEX)
-        return (errno = EINVAL);    // (invalid ptr)
+    // We successfully acquired the mutex... If the mutex type is recursive,
+    // or, if not recursive (i.e. error-check), if this was the first/initial
+    // lock on the mutex, then return success...
 
-    if (pFT_MUTEX->dwMutexMagic != FT_MUTEX_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
+    if (0
+        || FTHREAD_MUTEX_RECURSIVE == ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->dwMutexType
+        || ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->nLockedCount <= 1
+    )
+        return RC(0);
 
-    if (pFT_MUTEX->dwLockOwner != GetCurrentThreadId())
-        return (errno = EPERM);     // (not owned)
+    ASSERT ( FTHREAD_MUTEX_ERRORCHECK == ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->dwMutexType
+        && ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->nLockedCount > 1 );
 
-    if (pFT_MUTEX->nLockedCount <= 0)
-        return (errno = EPERM);     // (not locked)
+    // The mutex type is error-check and we already previously had the mutex locked
+    // before (i.e. this was the *second* time we acquired this same mutex). Return
+    // 'busy' after first releasing the mutex once (to decrement the locked count
+    // back down to what it was (i.e. 1 (one))).
 
     LeaveFT_MUTEX
     (
@@ -543,535 +1575,500 @@ fthread_mutex_unlock
         pszFile,
         nLine,
 #endif
-        pFT_MUTEX
+        pFTUSER_MUTEX->hMutex
     );
 
-    return (errno = 0);
+    return RC(EBUSY);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// initialize a "condition"...
+// Lock a "mutex"...
 
-int
-fthread_cond_init
+int  fthread_mutex_lock
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*       pszFile,
+    const int         nLine,
 #endif
-    fthread_cond_t*  pFT_COND_VAR
+    fthread_mutex_t*  pFTUSER_MUTEX
 )
 {
-    if (!pFT_COND_VAR)
-        return (errno = EINVAL);    // (invalid ptr)
+    if ( !pFTUSER_MUTEX )
+        return RC(EINVAL);      // (invalid ptr)
 
-    if (pFT_COND_VAR->dwCondMagic == FT_COND_MAGIC)
-        return (errno = EBUSY);     // (already initialized)
+    if ( FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic )
+        return RC(EINVAL);      // (not initialized)
 
-    if ((pFT_COND_VAR->hSigXmitEvent = MyCreateEvent(NULL,TRUE,FALSE,NULL)))
+    // Try to acquire the requested mutex...
+
+    if
+    (
+        !TryEnterFT_MUTEX
+        (
+#ifdef FISH_HANG
+            pszFile,
+            nLine,
+#endif
+            pFTUSER_MUTEX->hMutex
+        )
+    )
     {
-        if ((pFT_COND_VAR->hSigRecvdEvent = MyCreateEvent(NULL,TRUE,TRUE,NULL)))
-        {
-            MyInitializeCriticalSection(&pFT_COND_VAR->CondVarLock);
-            pFT_COND_VAR->dwCondMagic = FT_COND_MAGIC;
-            pFT_COND_VAR->bBroadcastSig = FALSE;
-            pFT_COND_VAR->nNumWaiting = 0;
-            return (errno = 0);
-        }
+        // We could not acquire the mutex. This means someone already owns the mutex,
+        // so just do a normal acquire on the mutex. Both recursive and error-check
+        // types will block until such time as the mutex is successfully acquired...
 
-        MyDeleteEvent(pFT_COND_VAR->hSigXmitEvent);
+        EnterFT_MUTEX
+        (
+#ifdef FISH_HANG
+            pszFile,
+            nLine,
+#endif
+            pFTUSER_MUTEX->hMutex
+        );
+
+        return RC(0);
     }
 
-#ifdef FISH_HANG
-    TRACE("fthread_cond_init failure; %s(%d)\n",pszFile,nLine);
-#else
-    TRACE("fthread_cond_init failure\n");
-#endif
-    return (errno = EAGAIN);
-}
+    // We successfully acquired the mutex... If the mutex type is recursive,
+    // or, if not recursive (i.e. error-check), if this was the first/initial
+    // lock on the mutex, then return success...
 
-////////////////////////////////////////////////////////////////////////////////////
-// destroy a "condition"...
+    if (0
+        || FTHREAD_MUTEX_RECURSIVE == ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->dwMutexType
+        || ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->nLockedCount <= 1
+    )
+        return RC(0);
 
-int
-fthread_cond_destroy
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_cond_t*  pFT_COND_VAR
-)
-{
-    if (!pFT_COND_VAR)
-        return (errno = EINVAL);    // (invalid ptr)
+    ASSERT ( FTHREAD_MUTEX_ERRORCHECK == ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->dwMutexType
+        && ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->nLockedCount > 1 );
 
-    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
+    // The mutex type is error-check and we already previously had the mutex locked
+    // before (i.e. this was the *second* time we acquired this same mutex). Return
+    // 'deadlock' after first releasing the mutex once (to decrement the locked count
+    // back down to what it was (i.e. 1 (one))).
 
-    if (pFT_COND_VAR->nNumWaiting > 0)
-        return (errno = EBUSY);     // (still in use)
-
-    MyDeleteCriticalSection(&pFT_COND_VAR->CondVarLock);
-    MyDeleteEvent(pFT_COND_VAR->hSigXmitEvent);
-    MyDeleteEvent(pFT_COND_VAR->hSigRecvdEvent);
-    pFT_COND_VAR->dwCondMagic = 0;
-    pFT_COND_VAR->bBroadcastSig = FALSE;
-    pFT_COND_VAR->nNumWaiting = 0;
-
-    return (errno = 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// 'signal' a "condition"...   (releases ONE waiting thread)
-
-int
-fthread_cond_signal
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_cond_t*  pFT_COND_VAR
-)
-{
-    if (!pFT_COND_VAR)
-        return (errno = EINVAL);    // (invalid ptr)
-
-    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
-
-    // Wait for everyone to finish receiving prior signal..
-
-    for (;;)
-    {
-        MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
-        if (IsEventSet(pFT_COND_VAR->hSigRecvdEvent)) break;
-        MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-        MyWaitForSingleObject(pFT_COND_VAR->hSigRecvdEvent,INFINITE);
-    }
-
-    // Begin transmitting our new signal...
-
-    pFT_COND_VAR->bBroadcastSig = FALSE;
-    MySetEvent(pFT_COND_VAR->hSigXmitEvent);
-
-    if (pFT_COND_VAR->nNumWaiting)
-    {
-        // Serialize signal reception...
-
-        MyResetEvent(pFT_COND_VAR->hSigRecvdEvent);
-    }
-
-    MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-    return (errno = 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// 'broadcast' a "condition"...  (releases ALL waiting threads)
-
-int
-fthread_cond_broadcast
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_cond_t*  pFT_COND_VAR
-)
-{
-    if (!pFT_COND_VAR)
-        return (errno = EINVAL);    // (invalid ptr)
-
-    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
-
-    // Wait for everyone to finish receiving prior signal..
-
-    for (;;)
-    {
-        MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
-        if (IsEventSet(pFT_COND_VAR->hSigRecvdEvent)) break;
-        MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-        MyWaitForSingleObject(pFT_COND_VAR->hSigRecvdEvent,INFINITE);
-    }
-
-    // Begin transmitting our new signal...
-
-    pFT_COND_VAR->bBroadcastSig = TRUE;
-    MySetEvent(pFT_COND_VAR->hSigXmitEvent);
-
-    if (pFT_COND_VAR->nNumWaiting)
-    {
-        // Serialize signal reception...
-
-        MyResetEvent(pFT_COND_VAR->hSigRecvdEvent);
-    }
-
-    MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-    return (errno = 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// wait for a "condition" to occur...
-
-int
-fthread_cond_wait
-(
-#ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
-#endif
-    fthread_cond_t*   pFT_COND_VAR,
-    fthread_mutex_t*  pFT_MUTEX
-)
-{
-    int           rc;
-    FT_W32_DWORD  dwWaitRetCode;
-
-    if (!pFT_COND_VAR)
-        return (errno = EINVAL);    // (invalid ptr)
-
-    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
-
-    // Release lock (and thus any potential signalers)...
-
-    rc = fthread_mutex_unlock
+    LeaveFT_MUTEX
     (
 #ifdef FISH_HANG
         pszFile,
         nLine,
 #endif
-        pFT_MUTEX
+        pFTUSER_MUTEX->hMutex
     );
 
-    if (rc)
-    {
+    return RC(EDEADLK);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Unlock a "mutex"...
+
+int  fthread_mutex_unlock
+(
 #ifdef FISH_HANG
-        TRACE("fthread_cond_wait: fthread_mutex_unlock failed; %s(%d)\n",pszFile,nLine);
-#else
-        TRACE("fthread_cond_wait: fthread_mutex_unlock failed\n");
+    const char*       pszFile,
+    const int         nLine,
 #endif
-        return (errno = rc);
+    fthread_mutex_t*  pFTUSER_MUTEX
+)
+{
+    if (0
+        || !pFTUSER_MUTEX                                   // (invalid ptr)
+        ||   FT_MUTEX_MAGIC != pFTUSER_MUTEX->dwMutexMagic  // (not initialized)
+    )
+        return RC(EINVAL);
+
+    if (0
+        || GetCurrentThreadId() != ((PFT_MUTEX)pFTUSER_MUTEX->hMutex)->dwLockOwner  // (not owned)
+        || ((PFT_MUTEX)pFTUSER_MUTEX->hMutex)->nLockedCount <= 0                    // (not locked)
+    )
+        return RC(EPERM);
+
+    ASSERT ( ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->nLockedCount <= 1
+        || FTHREAD_MUTEX_RECURSIVE == ((FT_MUTEX*)pFTUSER_MUTEX->hMutex)->dwMutexType );
+
+    LeaveFT_MUTEX
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFTUSER_MUTEX->hMutex
+    );
+
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Initialize a "condition"...
+
+int  fthread_cond_init
+(
+#ifdef FISH_HANG
+    const char*      pszFile,
+    const int        nLine,
+#endif
+    fthread_cond_t*  pFT_COND_VAR
+)
+{
+    if ( !pFT_COND_VAR )
+        return RC(EINVAL);      // (invalid ptr)
+
+    if ( FT_COND_MAGIC == pFT_COND_VAR->dwCondMagic )
+        return RC(EBUSY);       // (already initialized)
+
+    if ( !(pFT_COND_VAR->hCondVar = MallocFT_COND_VAR()) )
+        return RC(ENOMEM);      // (out of memory)
+
+    if ( !InitializeFT_COND_VAR
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR->hCondVar
+    ))
+    {
+        free ( pFT_COND_VAR->hCondVar );
+
+        pFT_COND_VAR->dwCondMagic = 0;
+        pFT_COND_VAR->hCondVar    = NULL;
+
+        return RC(EAGAIN);      // (unable to obtain required resources)
     }
 
-    // Wait for everyone to finish receiving prior signal (if any)..
+    pFT_COND_VAR->dwCondMagic = FT_COND_MAGIC;
 
-    for (;;)
-    {
-        MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
-        if (IsEventSet(pFT_COND_VAR->hSigRecvdEvent)) break;
-        MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-        MyWaitForSingleObject(pFT_COND_VAR->hSigRecvdEvent,INFINITE);
-    }
+    return RC(0);
+}
 
-    // Indicate new signal reception desired...
+////////////////////////////////////////////////////////////////////////////////////
+// Destroy a "condition"...
 
-    pFT_COND_VAR->nNumWaiting++;
+int  fthread_cond_destroy
+(
+#ifdef FISH_HANG
+    const char*      pszFile,
+    const int        nLine,
+#endif
+    fthread_cond_t*  pFT_COND_VAR
+)
+{
+    if ( !pFT_COND_VAR )
+        return RC(EINVAL);      // (invalid ptr)
 
-    // Wait for condition variable to be signalled...
+    if ( FT_COND_MAGIC != pFT_COND_VAR->dwCondMagic )
+        return RC(EINVAL);      // (not initialized)
 
-    for (;;)
-    {
-        // Allow signal to be transmitted...
+    if ( !UninitializeFT_COND_VAR
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR->hCondVar
+    ))
+        return RC(EBUSY);       // (still in use)
 
-        MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
+    free ( pFT_COND_VAR->hCondVar );
 
-        // Wait for signal transmission...
+    pFT_COND_VAR->dwCondMagic = 0;
+    pFT_COND_VAR->hCondVar    = NULL;
 
-        dwWaitRetCode = MyWaitForSingleObject(pFT_COND_VAR->hSigXmitEvent,INFINITE);
+    return RC(0);
+}
 
-        // Our condition was signalled...
-        // Or there was an error...
+////////////////////////////////////////////////////////////////////////////////////
+// 'Signal' a "condition"...     (causes ONE waiting thread to be released)
 
-        MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
+int  fthread_cond_signal
+(
+#ifdef FISH_HANG
+    const char*      pszFile,
+    const int        nLine,
+#endif
+    fthread_cond_t*  pFT_COND_VAR
+)
+{
+    if ( !pFT_COND_VAR )
+        return RC(EINVAL);      // (invalid ptr)
 
-        if (WAIT_OBJECT_0 != dwWaitRetCode)
-        {
-            MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
+    if ( FT_COND_MAGIC != pFT_COND_VAR->dwCondMagic )
+        return RC(EINVAL);      // (not initialized)
 
-            // Re-acquire the original lock before returning...
+    return QueueTransmission
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR->hCondVar,
+        FALSE               // (FALSE == not "broadcast")
+    );
+}
 
-            rc = fthread_mutex_lock
+////////////////////////////////////////////////////////////////////////////////////
+// 'Broadcast' a "condition"...  (causes ALL waiting threads to be released)
+
+int  fthread_cond_broadcast
+(
+#ifdef FISH_HANG
+    const char*      pszFile,
+    const int        nLine,
+#endif
+    fthread_cond_t*  pFT_COND_VAR
+)
+{
+    if ( !pFT_COND_VAR )
+        return RC(EINVAL);      // (invalid ptr)
+
+    if ( FT_COND_MAGIC != pFT_COND_VAR->dwCondMagic )
+        return RC(EINVAL);      // (not initialized)
+
+    return QueueTransmission
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR->hCondVar,
+        TRUE                // (TRUE == "broadcast" type)
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Wait for a "condition" to occur...
+
+int  fthread_cond_wait
+(
+#ifdef FISH_HANG
+    const char*       pszFile,
+    const int         nLine,
+#endif
+    fthread_cond_t*   pFT_COND_VAR,
+    fthread_mutex_t*  pFTUSER_MUTEX
+)
+{
+    int rc;
+
+    if (0
+        || !pFT_COND_VAR                                        // (invalid ptr)
+        ||   FT_COND_MAGIC  != pFT_COND_VAR  -> dwCondMagic     // (not initialized)
+        || !pFTUSER_MUTEX                                       // (invalid ptr)
+        ||   FT_MUTEX_MAGIC != pFTUSER_MUTEX -> dwMutexMagic    // (not initialized)
+    )
+        return RC(EINVAL);
+
+    // The following call essentially atomically releases the caller's mutex
+    // and does a wait. Of course, it doesn't really do the wait though; that's
+    // actually done further below. BUT, it does atomically register the fact
+    // that this thread *wishes* to do a wait by acquiring the condition variable
+    // lock and then incrementing the #of waiters counter before it releases the
+    // original mutex. Thus, whenever the below function call returns back to us,
+    // we can be assured that: 1) our request to wait on this condition variable
+    // has been registered AND 2) we have control of the condition variable in
+    // question (i.e. we still hold the condition variable lock thus preventing
+    // anyone from trying to send a signal just yet)...
+
+    if
+    (
+        (
+            rc = BeginWait
             (
 #ifdef FISH_HANG
                 pszFile,
                 nLine,
 #endif
-                pFT_MUTEX
-            );
-
-            if (rc)
-            {
-#ifdef FISH_HANG
-                TRACE("fthread_cond_wait: fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
-#else
-                TRACE("fthread_cond_wait: fthread_mutex_lock failed\n");
-#endif
-                return (errno = rc);
-            }
-
-#ifdef FISH_HANG
-            TRACE("fthread_cond_wait: Invalid handle; %s(%d)\n",pszFile,nLine);
-#else
-            TRACE("fthread_cond_wait: Invalid handle\n");
-#endif
-            return (errno = EINVAL);
-        }
-
-        // Make sure signal still being transmitted...
-
-        if (IsEventSet(pFT_COND_VAR->hSigXmitEvent)) break;
-
-        // If signal no longer being transmitted, then
-        // some other waiter received it; keep waiting
-        // for another signal...
-    }
-
-    // Indicate we received the signal...
-
-    pFT_COND_VAR->nNumWaiting--;
-
-    // If we were the only one that was supposed to
-    // receive it, or if no one remains to receive it,
-    // then stop transmitting the signal.
-
-    if (!pFT_COND_VAR->bBroadcastSig || pFT_COND_VAR->nNumWaiting <= 0)
+                pFT_COND_VAR -> hCondVar,
+                pFTUSER_MUTEX
+            )
+        )
+        != 0
+    )
     {
-        MyResetEvent(pFT_COND_VAR->hSigXmitEvent);
-        MySetEvent(pFT_COND_VAR->hSigRecvdEvent);
+        // OOPS! Something went wrong. The original mutex has NOT been released
+        // and we did NOT acquire our condition variable lock (and thus our wait
+        // was not registered). Thus we can safely return back to the caller with
+        // the original mutex still owned (held) by the caller.
+
+        return RC(rc); // (return error code to caller; their wait failed)
     }
 
-    // Unlock condition variable...
+    // We only reach here if the condition var was successfully acquired AND our
+    // wait was registered AND the original mutex was released so the signal can
+    // be sent (but the signal (transmission) of course cannot ever be sent until
+    // we first release our lock on our condition variable, which is of course is
+    // what the below WaitForTransmission function call does within its wait loop)...
 
-    MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-    // Re-acquire the original lock before returning...
-
-    rc = fthread_mutex_lock
+    rc = WaitForTransmission    // (wait for "signal" or "broadcast"...)
     (
 #ifdef FISH_HANG
         pszFile,
         nLine,
 #endif
-        pFT_MUTEX
+        pFT_COND_VAR->hCondVar,
+        NULL
     );
 
-    if (rc)
-    {
-#ifdef FISH_HANG
-        TRACE("fthread_cond_wait: fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
-#else
-        TRACE("fthread_cond_wait: fthread_mutex_lock failed\n");
-#endif
-        return (errno = rc);
-    }
+    // A signal (transmission) was sent and we're one of the ones (or the
+    // only one) that's supposed to receive it...
 
-    return (errno = 0);
+    // If we're the only one that's supposed to receive this transmission,
+    // then we need to turn off the transmitter (stop "sending" the signal)
+    // so that no other threads get "woken up" (released) as a result of
+    // this particular "signal" (transmission)...
+
+    // (Note that the below call also de-registers our wait too)
+
+    ReceiveXmission ( pFT_COND_VAR->hCondVar ); // (reset transmitter)
+
+    // Release the condition var lock (since we're done with it) and then
+    // reacquire the caller's original mutex (if possible) and then return
+    // back to the original caller with their original mutex held with what-
+    // ever return code got set by the above wait call...
+
+    return ReturnFromWait
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR -> hCondVar,
+        pFTUSER_MUTEX,
+        rc
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-// wait (but not forever) for a "condition" to occur...
+// Wait (but not forever) for a "condition" to occur...
 
-int
-fthread_cond_timedwait
+// Refer to the comments in the above 'fthread_cond_wait' function (as well as all
+// of our other internal functions too of course (BeginWait, WaitForTransmission,
+// ReceiveXmission and ReturnFromWait)) for details regarding what's going on here
+// (i.e. what we're doing below and why). The below function is essentially identical
+// to the above 'fthread_cond_wait' function except that we don't wait forever; we
+// only wait for a limited amount of time. Other than that they're exactly identical
+// so there's no sense in repeating myself here...
+
+int  fthread_cond_timedwait
 (
 #ifdef FISH_HANG
-    char*  pszFile,
-    int    nLine,
+    const char*       pszFile,
+    const int         nLine,
 #endif
     fthread_cond_t*   pFT_COND_VAR,
-    fthread_mutex_t*  pFT_MUTEX,
+    fthread_mutex_t*  pFTUSER_MUTEX,
     struct timespec*  pTimeTimeout
 )
 {
-    struct timeval  TimeNow;
-    int             rc;
-    FT_W32_DWORD    dwWaitRetCode, dwWaitMilliSecs;
+    int rc;
 
-    if (!pFT_COND_VAR)
-        return (errno = EINVAL);    // (invalid ptr)
+    if (0
+        || !pFT_COND_VAR
+        ||   FT_COND_MAGIC  != pFT_COND_VAR -> dwCondMagic
+        || !pFTUSER_MUTEX
+        ||   FT_MUTEX_MAGIC != pFTUSER_MUTEX    -> dwMutexMagic
+        || !pTimeTimeout
+    )
+        return RC(EINVAL);
 
-    if (pFT_COND_VAR->dwCondMagic != FT_COND_MAGIC)
-        return (errno = EINVAL);    // (not initialized)
-
-    // Release lock (and thus any potential signalers)...
-
-    rc = fthread_mutex_unlock
+    if
     (
-#ifdef FISH_HANG
-        pszFile,
-        nLine,
-#endif
-        pFT_MUTEX
-    );
-
-    if (rc)
-    {
-#ifdef FISH_HANG
-        TRACE("fthread_cond_timedwait: fthread_mutex_unlock failed; %s(%d)\n",pszFile,nLine);
-#else
-        TRACE("fthread_cond_timedwait: fthread_mutex_unlock failed\n");
-#endif
-        return (errno = rc);
-    }
-
-    // Wait for everyone to finish receiving prior signal..
-
-    for (;;)
-    {
-        MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
-        if (IsEventSet(pFT_COND_VAR->hSigRecvdEvent)) break;
-        MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-        MyWaitForSingleObject(pFT_COND_VAR->hSigRecvdEvent,INFINITE);
-    }
-
-    // Indicate new signal reception desired...
-
-    pFT_COND_VAR->nNumWaiting++;
-
-    // Wait for condition variable to be signalled...
-
-    for (;;)
-    {
-        // Allow signal to be transmitted...
-
-        MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-        // Wait for signal transmission...
-
-        gettimeofday(&TimeNow, NULL);
-
-        if (TimeNow.tv_sec > pTimeTimeout->tv_sec ||
-            (TimeNow.tv_sec == pTimeTimeout->tv_sec &&
-            (TimeNow.tv_usec * 1000) > pTimeTimeout->tv_nsec))
-        {
-            dwWaitMilliSecs = 0;
-        }
-        else
-        {
-            dwWaitMilliSecs =
-                ((pTimeTimeout->tv_sec - TimeNow.tv_sec) * 1000) +
-                ((pTimeTimeout->tv_nsec - (TimeNow.tv_usec * 1000)) / 1000000);
-        }
-
-        dwWaitRetCode =
-            MyWaitForSingleObject(pFT_COND_VAR->hSigXmitEvent,dwWaitMilliSecs);
-
-        // Our condition was signalled...
-        // Or we got tired of waiting for it...
-        // Or there was an error...
-
-        MyEnterCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-        if (WAIT_OBJECT_0 != dwWaitRetCode)
-        {
-            // We either got tired of waiting for it,
-            // or there was an error...
-
-            pFT_COND_VAR->nNumWaiting--;
-
-            // If we were the only one that was waiting to
-            // receive it, then indicate signal received
-            // (even though it really wasn't since we
-            // timed out) to allow late signal to eventually
-            // be sent [to a different future waiter].
-
-            if (pFT_COND_VAR->nNumWaiting <= 0)
-            {
-                MySetEvent(pFT_COND_VAR->hSigRecvdEvent);
-            }
-
-            // Unlock condition variable...
-
-            MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-            // Re-acquire the original lock before returning...
-
-            rc = fthread_mutex_lock
+        (
+            rc = BeginWait
             (
 #ifdef FISH_HANG
                 pszFile,
                 nLine,
 #endif
-                pFT_MUTEX
-            );
+                pFT_COND_VAR -> hCondVar,
+                pFTUSER_MUTEX
+            )
+        )
+        != 0
+    )
+        return rc;
 
-            if (rc)
-            {
-#ifdef FISH_HANG
-                TRACE("fthread_cond_timedwait: timeout fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
-#else
-                TRACE("fthread_cond_timedwait: timeout fthread_mutex_lock failed\n");
-#endif
-                return (errno = rc);
-            }
-
-            if (WAIT_TIMEOUT == dwWaitRetCode)
-                return (errno = ETIMEDOUT);     // (timeout)
-
-#ifdef FISH_HANG
-            TRACE("fthread_cond_timedwait: Invalid handle; %s(%d)\n",pszFile,nLine);
-#else
-            TRACE("fthread_cond_timedwait: Invalid handle\n");
-#endif
-            return (errno = EINVAL);
-        }
-
-        // Make sure signal still being transmitted...
-
-        if (IsEventSet(pFT_COND_VAR->hSigXmitEvent)) break;
-
-        // If signal no longer being transmitted, then
-        // some other waiter received it; keep waiting
-        // for another signal...
-    }
-
-    // Indicate we received the signal...
-
-    pFT_COND_VAR->nNumWaiting--;
-
-    // If we were the only one that was supposed to
-    // receive it, or if no one remains to receive it,
-    // then stop transmitting the signal.
-
-    if (!pFT_COND_VAR->bBroadcastSig || pFT_COND_VAR->nNumWaiting <= 0)
-    {
-        MyResetEvent(pFT_COND_VAR->hSigXmitEvent);
-        MySetEvent(pFT_COND_VAR->hSigRecvdEvent);
-    }
-
-    // Unlock condition variable...
-
-    MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
-
-    // Re-acquire the original lock before returning...
-
-    rc = fthread_mutex_lock
+    rc = WaitForTransmission
     (
 #ifdef FISH_HANG
         pszFile,
         nLine,
 #endif
-        pFT_MUTEX
+        pFT_COND_VAR->hCondVar,
+        pTimeTimeout
     );
 
-    if (rc)
-    {
-#ifdef FISH_HANG
-        TRACE("fthread_cond_timedwait: fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
-#else
-        TRACE("fthread_cond_timedwait: fthread_mutex_lock failed\n");
-#endif
-        return (errno = rc);
-    }
+    ReceiveXmission ( pFT_COND_VAR->hCondVar );
 
-    return (errno = 0);
+    return ReturnFromWait
+    (
+#ifdef FISH_HANG
+        pszFile,
+        nLine,
+#endif
+        pFT_COND_VAR -> hCondVar,
+        pFTUSER_MUTEX,
+        rc
+    );
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+// Initialize a "mutex" attribute...
+
+int  fthread_mutexattr_init ( fthread_mutexattr_t*  pFT_MUTEX_ATTR )
+{
+    if ( !pFT_MUTEX_ATTR )
+        return RC(EINVAL);
+    *pFT_MUTEX_ATTR = FTHREAD_MUTEX_DEFAULT;
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Destroy a "mutex" attribute...
+
+int  fthread_mutexattr_destroy ( fthread_mutexattr_t*  pFT_MUTEX_ATTR )
+{
+    if ( !pFT_MUTEX_ATTR )
+        return RC(EINVAL);
+    *pFT_MUTEX_ATTR = 0xCDCDCDCD;
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Retrieve "mutex" attribute type...
+
+int fthread_mutexattr_gettype
+(
+    const fthread_mutexattr_t*  pFT_MUTEX_ATTR,
+    int*                        pnMutexType
+)
+{
+    DWORD  dwMutexType;
+    if ( !pFT_MUTEX_ATTR || !pnMutexType || !IsValidMutexType ( dwMutexType = *pFT_MUTEX_ATTR ) )
+        return RC(EINVAL);
+    *pnMutexType = (int) dwMutexType;
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// Set "mutex" attribute type...
+
+int fthread_mutexattr_settype
+(
+    fthread_mutexattr_t*  pFT_MUTEX_ATTR,
+    int                   nMutexType
+)
+{
+    if ( !pFT_MUTEX_ATTR || !IsValidMutexType ( (DWORD) nMutexType ) )
+        return RC(EINVAL);
+    *pFT_MUTEX_ATTR = (DWORD) nMutexType;
+    return RC(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
 #undef IsEventSet

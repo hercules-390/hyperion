@@ -258,7 +258,7 @@ typedef fthread_attr_t    ATTR;
 
     #define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg))
 
-    #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk))
+    #define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk),NULL)
     #define destroy_lock(plk)                      fthread_mutex_destroy(__FILE__,__LINE__,(plk))
     #define obtain_lock(plk)                       fthread_mutex_lock(__FILE__,__LINE__,(plk))
     #define try_obtain_lock(plk)                   fthread_mutex_trylock(__FILE__,__LINE__,(plk))
@@ -277,7 +277,7 @@ typedef fthread_attr_t    ATTR;
 
     #define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg))
 
-    #define initialize_lock(plk)                   fthread_mutex_init((plk))
+    #define initialize_lock(plk)                   fthread_mutex_init((plk),NULL)
     #define destroy_lock(plk)                      fthread_mutex_destroy((plk))
     #define obtain_lock(plk)                       fthread_mutex_lock((plk))
     #define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
@@ -294,7 +294,14 @@ typedef fthread_attr_t    ATTR;
 
 #endif // defined(FISH_HANG)
 
-#define initialize_detach_attr(pat)            /* unsupported */
+#define initialize_detach_attr(pat)            fthread_attr_init((pat)); \
+                                               fthread_attr_setstacksize((pat),1048576); \
+                                               fthread_attr_setdetachstate((pat),FTHREAD_CREATE_DETACHED)
+#define initialize_join_attr(pat)              fthread_attr_init((pat)); \
+                                               fthread_attr_setstacksize((pat),1048576); \
+                                               fthread_attr_setdetachstate((pat),FTHREAD_CREATE_JOINABLE)
+#define join_thread(tid,pcode)                 fthread_join((tid),(pcode))
+#define detach_thread(tid)                     fthread_detach((tid))
 #define signal_thread(tid,signo)               fthread_kill((tid),(signo))
 #define thread_id()                            fthread_self()
 #define exit_thread(exitvar_ptr)               fthread_exit((exitvar_ptr))
@@ -331,17 +338,25 @@ typedef pthread_attr_t                  ATTR;
         pthread_attr_init((pat)); \
         pthread_attr_setstacksize((pat),1048576); \
         pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED)
+#define initialize_join_attr(pat) \
+        pthread_attr_init((pat)); \
+        pthread_attr_setstacksize((pat),1048576); \
+        pthread_attr_setdetachstate((pat),PTHREAD_CREATE_JOINABLE)
+#define join_thread(tid,pcode) \
+        pthread_join((tid),(pcode))
+#define detach_thread(tid) \
+        pthread_detach((tid))
 typedef void*THREAD_FUNC(void*);
 #define create_thread(ptid,pat,fn,arg) \
         pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg)
 #define exit_thread(_code) \
         pthread_exit((_code))
-#if !defined(WIN32)
+//#if !defined(WIN32) // (there's no reason for this that I can see! pthreads supports thread signaling! Fish)
 #define signal_thread(tid,signo) \
         pthread_kill(tid,signo)
-#else // defined(WIN32)
-#define signal_thread(tid,signo)
-#endif // !defined(WIN32)
+//#else // defined(WIN32)
+//#define signal_thread(tid,signo)
+//#endif // !defined(WIN32)
 #define thread_id() \
         pthread_self()
 #endif // defined(OPTION_FTHREADS)
@@ -380,14 +395,19 @@ typedef void*THREAD_FUNC(void*);
 #define create_thread(ptid,pat,fn,arg) \
         ptt_pthread_create(ptid,pat,(THREAD_FUNC*)&(fn),arg,__FILE__,__LINE__)
 #endif
+#undef  join_thread
+#define join_thread(tid,pcode) \
+        ptt_pthread_join((tid),(pcode),__FILE__,__LINE__)
+#undef  detach_thread
+#define detach_thread(tid) \
+        ptt_pthread_detach((tid),__FILE__,__LINE__)
+#undef  signal_thread
+#define signal_thread(tid,signo) \
+        ptt_pthread_kill(tid,signo,__FILE__,__LINE__)
 #endif /* OPTION_PTTRACE */
 
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
-#if defined(WIN32) && !defined(OPTION_FTHREADS)
-#undef  TIDPAT
-#define TIDPAT "%p"
-#endif // defined(WIN32) && !defined(OPTION_FTHREADS)
 
 /*-------------------------------------------------------------------*/
 /* Prototype definitions for device handler functions                */

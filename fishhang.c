@@ -5,6 +5,15 @@
 // (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
 ////////////////////////////////////////////////////////////////////////////////////
 
+
+// Programming Note for myself for future maintenance: this logic could probably be
+// made MUCH more  efficient by simply 'malloc'ing one large block of memory at the
+// start and carving it up into several "free" chains and then just grabbing entries
+// from there (i.e. RemoveListHead from the "free" list and InsertListHead to needed
+// list) rather than constantly 'malloc'ing and 'free'ing brand new structures each
+// time like I am now. I've just never "gotten a round tuit" yet, that's all.
+
+
 #if defined(HAVE_CONFIG_H)
 #include <config.h>     // (needed to set FISH_HANG flag!)
 #endif
@@ -14,10 +23,37 @@ int dummy = 0;
 #else // defined(FISH_HANG)
 
 #include <windows.h>    // (standard WIN32)
+#include <unistd.h>     // (need STDOUT_FILENO)
 #include <stdio.h>      // (need "fprintf")
 #include <malloc.h>     // (need "malloc")
 #include "linklist.h"   // (linked list macros)
 #include "fishhang.h"   // (prototypes for this module)
+
+////////////////////////////////////////////////////////////////////////////////////
+
+#define logmsg(a...) fprintf(fh_stdout_stream,a)
+
+////////////////////////////////////////////////////////////////////////////////////
+
+//#define DEBUG_FISHHANG
+
+#ifdef DEBUG_FISHHANG
+    #define TRACE(a...) logmsg(a)
+    #define ASSERT(a) \
+        do \
+        { \
+            if (!(a)) \
+            { \
+                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+            } \
+        } \
+        while(0)
+    #define VERIFY(a) ASSERT((a))
+#else
+    #define TRACE(a...)
+    #define ASSERT(a)
+    #define VERIFY(a) ((void)(a))
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Global variables...
@@ -122,9 +158,14 @@ FISH_THREAD* CreateFISH_THREAD(char* pszFileCreated,int nLineCreated);
 /////////////////////////////////////////////////////////////////////////////
 // Initialize global variables...
 
+FILE*  fh_stdout_stream = NULL;  // (because logger thread screws me up)
+
 void FishHangInit(char* pszFileCreated, int nLineCreated)
 {
     FISH_THREAD*  pFISH_THREAD;
+
+    // (Need private stdout stream because of new logger facility)
+    setvbuf((fh_stdout_stream = fdopen(dup(STDOUT_FILENO),"w")), NULL, _IONBF, 0);
 
     InitializeListHead(&ThreadsListHead);
     InitializeListHead(&LocksListHead);
@@ -133,7 +174,7 @@ void FishHangInit(char* pszFileCreated, int nLineCreated)
 
     if (!(pFISH_THREAD = CreateFISH_THREAD(pszFileCreated,nLineCreated)))
     {
-        fprintf(stdout,"** FishHangInit: CreateFISH_THREAD failed\n");
+        fprintf(fh_stdout_stream,"** FishHangInit: CreateFISH_THREAD failed\n");
         exit(-1);
     }
 
@@ -152,13 +193,13 @@ void FishHangAtExit()
 /////////////////////////////////////////////////////////////////////////////
 // Internal abort function...
 
-#define FishHangAbort(file,line)                                            \
-{                                                                           \
-    FishHangAtExit();   /* (disable further error checking) */              \
-    UnlockFishHang();   /* (prevent deadlocking ourselves!) */              \
-    fprintf(stdout,"** FishHangAbort called from %s(%d)\n",(file),(line));  \
-    Sleep(100);         /* (give system time to display messages) */        \
-    exit(-1);           /* (immediately terminate entire process) */        \
+#define FishHangAbort(file,line)                                        \
+{                                                                       \
+    FishHangAtExit();   /* (disable further error checking) */          \
+    UnlockFishHang();   /* (prevent deadlocking ourselves!) */          \
+    logmsg("** FishHangAbort called from %s(%d)\n",(file),(line));      \
+    Sleep(100);         /* (give system time to display messages) */    \
+    exit(-1);           /* (immediately terminate entire process) */    \
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -451,7 +492,7 @@ char*  PrintFISH_LOCK
     {
         if (ThreadLockListLink)
         {
-            fprintf(stdout,"** PrintFISH_LOCK:  **OOPS!**  "
+            logmsg("** PrintFISH_LOCK:  **OOPS!**  "
                 "Lock %8.8X not owned, "
                 "but ThreadLockListLink not NULL!\n",
                 (int)pFISH_LOCK
@@ -571,14 +612,14 @@ void  PrintAllFISH_THREADs()
     }
     else pFISH_THREAD = (FISH_THREAD*) &ThreadsListHead;
 
-    fprintf(stdout,"\nTHREAD LIST ANCHOR @ %8.8X --> %8.8X\n\n",
+    logmsg("\nTHREAD LIST ANCHOR @ %8.8X --> %8.8X\n\n",
         (int)&ThreadsListHead,(int)pFISH_THREAD);
 
     while (pListEntry != &ThreadsListHead)
     {
         pFISH_THREAD = CONTAINING_RECORD(pListEntry,FISH_THREAD,ThreadListLink);
         pListEntry = pListEntry->Flink;
-        fprintf(stdout,"%s\n",PrintFISH_THREAD(pFISH_THREAD));
+        logmsg("%s\n",PrintFISH_THREAD(pFISH_THREAD));
     }
 }
 
@@ -598,14 +639,14 @@ void  PrintAllFISH_LOCKs()
     }
     else pFISH_LOCK = (FISH_LOCK*) &LocksListHead;
 
-    fprintf(stdout,"\nLOCK LIST ANCHOR @ %8.8X --> %8.8X\n\n",
+    logmsg("\nLOCK LIST ANCHOR @ %8.8X --> %8.8X\n\n",
         (int)&LocksListHead,(int)pFISH_LOCK);
 
     while (pListEntry != &LocksListHead)
     {
         pFISH_LOCK = CONTAINING_RECORD(pListEntry,FISH_LOCK,LockListLink);
         pListEntry = pListEntry->Flink;
-        fprintf(stdout,"%s\n",PrintFISH_LOCK(pFISH_LOCK));
+        logmsg("%s\n",PrintFISH_LOCK(pFISH_LOCK));
     }
 }
 
@@ -625,14 +666,14 @@ void  PrintAllFISH_EVENTs()
     }
     else pFISH_EVENT = (FISH_EVENT*) &EventsListHead;
 
-    fprintf(stdout,"\nEVENT LIST ANCHOR @ %8.8X --> %8.8X\n\n",
+    logmsg("\nEVENT LIST ANCHOR @ %8.8X --> %8.8X\n\n",
         (int)&EventsListHead,(int)pFISH_EVENT);
 
     while (pListEntry != &EventsListHead)
     {
         pFISH_EVENT = CONTAINING_RECORD(pListEntry,FISH_EVENT,EventsListLink);
         pListEntry = pListEntry->Flink;
-        fprintf(stdout,"%s\n",PrintFISH_EVENT(pFISH_EVENT));
+        logmsg("%s\n",PrintFISH_EVENT(pFISH_EVENT));
     }
 }
 
@@ -700,17 +741,17 @@ void FishHang_InitializeCriticalSection
 
     if (pFISH_LOCK)
     {
-        fprintf(stdout,
+        logmsg(
             "** ERROR ** FISH_LOCK %8.8X already initialized!\n",
             (int)pFISH_LOCK);
-        fprintf(stdout,"%s(%d)\n",pszFileCreated,nLineCreated);
-        fprintf(stdout,"%s\n",PrintFISH_LOCK(pFISH_LOCK));
+        logmsg("%s(%d)\n",pszFileCreated,nLineCreated);
+        logmsg("%s\n",PrintFISH_LOCK(pFISH_LOCK));
         FishHangAbort(pszFileCreated,nLineCreated);
     }
 
     if (!(pFISH_LOCK = CreateFISH_LOCK(pszFileCreated,nLineCreated)))
     {
-        fprintf(stdout,"** FishHang_InitializeCriticalSection: CreateFISH_LOCK failed!\n");
+        logmsg("** FishHang_InitializeCriticalSection: CreateFISH_LOCK failed!\n");
         FishHangAbort(pszFileCreated,nLineCreated);
     }
 
@@ -738,7 +779,7 @@ BOOL GetThreadAndLockPtrs
 
     if (!*ppFISH_THREAD)
     {
-        fprintf(stdout,
+        logmsg(
             "** GetThreadAndLockPtrs: FindFISH_THREAD(%8.8X) failed!\n",
             (int)GetCurrentThreadId());
         PrintAllFISH_THREADs();     // (caller will abort)
@@ -746,7 +787,7 @@ BOOL GetThreadAndLockPtrs
 
     if (!*ppFISH_LOCK)
     {
-        fprintf(stdout,
+        logmsg(
             "** GetThreadAndLockPtrs: FindFISH_LOCK(%8.8X) failed!\n",
             (int)lpCriticalSection);
         PrintAllFISH_LOCKs();       // (caller will abort)
@@ -772,7 +813,7 @@ BOOL GetThreadAndEventPtrs
 
     if (!*ppFISH_THREAD)
     {
-        fprintf(stdout,
+        logmsg(
             "** GetThreadAndEventPtrs: FindFISH_THREAD(%8.8X) failed!\n",
             (int)GetCurrentThreadId());
         PrintAllFISH_THREADs();     // (caller will abort)
@@ -780,7 +821,7 @@ BOOL GetThreadAndEventPtrs
 
     if (!*ppFISH_EVENT)
     {
-        fprintf(stdout,
+        logmsg(
             "** GetThreadAndEventPtrs: FindFISH_EVENT(%8.8X) failed!\n",
             (int)hEvent);
         PrintAllFISH_EVENTs();      // (caller will abort)
@@ -804,9 +845,8 @@ BOOL  PrintDeadlock
     FISH_LOCK*    pWhatWaiting;
     FISH_THREAD*  pOwningThread;
 
-    // For each thread that is waiting for a lock (pFISH_THREAD),
-    // see if the thread that owns the lock (pOwningThread) is waiting
-    // for any of the locks that the first thread (pFISH_THREAD) already owns...
+    // Technique: for each thread that is waiting for a lock, chase the lock owner
+    // chain to see if it leads back to the thread we started with...
 
     pListEntry = ThreadsListHead.Flink;
 
@@ -823,68 +863,87 @@ BOOL  PrintDeadlock
         if (pForThisFISH_THREAD &&
             pFISH_THREAD != pForThisFISH_THREAD) continue;
 
-        // If thread isn't waiting for a lock, no deadlock possible; skip it.
+        // If the thread isn't waiting for a lock, then no deadlock possible; skip it.
 
-        if (!pFISH_THREAD->bWaitingForLock) continue;
+        if (!pFISH_THREAD->bWaitingForLock)
+        {
+            // If the caller was only interested in checking this one thread
+            // then since it's not waiting for any locks, we're done...
 
-        // This thread (pFISH_THREAD) is waiting for a lock. Chase all the locks
-        // for the thread that currently owns the lock (pOwningThread) and see if
-        // maybe it is waiting for any locks that THIS thread (pFISH_THREAD) owns...
+            if (pForThisFISH_THREAD)
+                return FALSE;               // (that was easy!)
 
-        pOwningThread = pFISH_THREAD;   // (so we can chase our chains...)
+            continue;
+        }
+
+        // This thread (pFISH_THREAD) is waiting for a lock. Chase the lock owner
+        // chain to see if it eventually leads back to the current thread. If so,
+        // then we've found a deadlock...
+
+        // (I.e. If this thread A is waiting for lock X and lock X is owned by thread
+        // B and thread B is itself waiting for lock Y and lock Y is owned by thread C
+        // and thread C is itself waiting for lock Z and lock Z is owned by thread A
+        // (the thread we started with), then we have found a deadlock situation. If
+        // any of the threads in the chain are not waiting for a lock. then of course
+        // no deadlock is possible so we simply move on to the next thread).
+
+        // Get a pointer to the lock that this thread is waiting for...
+
+        pWhatWaiting = (FISH_LOCK*) pFISH_THREAD->pWhatWaiting;
 
         for (;;)
         {
-            // Get a pointer to the lock that is being waited on...
+            // (Note: if the pOwningThread variable is NULL (i.e. lock not currently
+            // owned by anyone), then the thread isn't actually waiting for a lock at
+            // all. All a NULL pOwningThread variable means is the thread was simply
+            // interrupted in the middle of its FishHang_EnterCriticalSection call,
+            // and if had NOT been interrupted, it WOULD have grabbed that lock.)
+
+            // Grab the owner of the lock the current thread is trying to acquire...
+
+            pOwningThread = pWhatWaiting->pOwningThread;    // (next owner in chain)
+
+            if (!pOwningThread ||                   // (if there is no lock owner, or)
+                !pOwningThread->bWaitingForLock)    // (owner not waiting for any locks)
+                break;                              // (then go on to next thread)
+
+            // Grab which lock the current lock-owner is trying to acquire...
 
             pWhatWaiting = (FISH_LOCK*) pOwningThread->pWhatWaiting;
 
-            // Get a pointer to the thread that OWNS the lock being waited on...
+            // If we've circled around such that the current lock-owner is the very
+            // same thread we began with, then we've detected a deadlock situation...
 
-            pOwningThread = pWhatWaiting->pOwningThread;
+            if (pOwningThread != pFISH_THREAD)      // (back to where we started?)
+                continue;                           // (nope, go on to next owner)
 
-            // If the lock is not owned by anyone or if the thread that owns it
-            // is not waiting for another lock, then no deadlock is possible...
+            logmsg(">>>>>>> Deadlock detected! <<<<<<<\n");
+            if (pszFile) logmsg("%s(%d)\n",pszFile,nLine);
+            logmsg("\n");
 
-            if (!pOwningThread || !pOwningThread->bWaitingForLock) break;
+            // Now do the same thing we already just did, but THIS time print
+            // each thread that's participating in the deadlock and the lock
+            // they're each waiting on...
 
-            // If the thread that owns the lock that the lock owner is waiting on
-            // is not the thread currently being processed (pFISH_THREAD), then it's
-            // not a deadlock for the thread currently being processed. (Note: if it
-            // is a part of some other deadlocak situation, we'll detect it when we
-            // eventually process the other participating thread.)
+            pWhatWaiting = (FISH_LOCK*) pFISH_THREAD->pWhatWaiting;
 
-            if (pOwningThread != pFISH_THREAD) continue;
+            logmsg("%s",PrintFISH_THREAD(pFISH_THREAD));
+            logmsg("%s",PrintFISH_LOCK(pWhatWaiting));
 
-            // Ah-HA! This thread is waiting for a lock that WE own! Oops!
-
-            fprintf(stdout,">>>>>>> Deadlock detected! <<<<<<<\n");
-            if (pszFile) fprintf(stdout,"%s(%d)\n",pszFile,nLine);
-            fprintf(stdout,"\n");
-
-            for (;;)
+            do
             {
-                // Display the thread that owns the lock causing the deadlock...
-
-                fprintf(stdout,"%s",PrintFISH_THREAD(pOwningThread));
-
-                // Display the lock that's causing the deadlock (the one WE own)...
-
-                pWhatWaiting = (FISH_LOCK*) pOwningThread->pWhatWaiting;
-                fprintf(stdout,"%s",PrintFISH_LOCK(pWhatWaiting));
-
-                // Now switch over to the other participant in the deadlock
-                // and display the same information from that perspective...
+                logmsg("\n");
 
                 pOwningThread = pWhatWaiting->pOwningThread;
-                if (pOwningThread != pFISH_THREAD) continue;
+                pWhatWaiting = (FISH_LOCK*) pOwningThread->pWhatWaiting;
 
-                // The deadlock information for both participating threads
-                // has been displayed. Return to caller so it can abort.
-
-                fprintf(stdout,"\n");
-                return TRUE;            // (deadlock detected!)
+                logmsg("%s",PrintFISH_THREAD(pOwningThread));
+                logmsg("%s",PrintFISH_LOCK(pWhatWaiting));
             }
+            while (pWhatWaiting->pOwningThread != pFISH_THREAD);
+
+            logmsg("\n");
+            return TRUE;            // (deadlock detected!)
         }
     }
 
@@ -1022,7 +1081,7 @@ void FishHang_LeaveCriticalSection
 
     if (!bFishHangAtExit && pFISH_LOCK->pOwningThread != pFISH_THREAD)
     {
-        fprintf(stdout,
+        logmsg(
             "\n** ERROR ** FISH_THREAD %8.8X "
             "releasing FISH_LOCK %8.8X "
             "owned by FISH_THREAD %8.8X!\n"
@@ -1054,7 +1113,7 @@ void FishHang_LeaveCriticalSection
     {
         if (pFISH_LOCK->nLockedDepth < 0)
         {
-            fprintf(stdout,
+            logmsg(
                 "\n** ERROR ** FISH_THREAD %8.8X "
                 "attempted to release FISH_LOCK %8.8X "
                 "one too many times!?!\n"
@@ -1104,7 +1163,7 @@ HANDLE FishHang_CreateEvent
 
     if (!(pFISH_EVENT = CreateFISH_EVENT(pszFileCreated,nLineCreated)))
     {
-        fprintf(stdout,"** FishHang_CreateEvent: CreateFISH_EVENT failed\n");
+        logmsg("** FishHang_CreateEvent: CreateFISH_EVENT failed\n");
         exit(-1);
     }
 
@@ -1245,7 +1304,7 @@ BOOL FishHang_CloseHandle   // ** NOTE: only events for right now **
         if (!pWaitingFISH_THREAD->bWaitingForEvent ||
             pWaitingFISH_THREAD->pWhatWaiting != pFISH_EVENT) continue;
 
-        fprintf(stdout,
+        logmsg(
             "\n** ERROR ** %s(%d); FISH_THREAD %8.8X "
             "is closing FISH_EVENT %8.8X "
             "that FISH_THREAD %8.8X is still waiting on!\n",
@@ -1254,7 +1313,7 @@ BOOL FishHang_CloseHandle   // ** NOTE: only events for right now **
             (int)pWaitingFISH_THREAD
             );
 
-        fprintf(stdout,"\n%s\n%s\n%s\n",
+        logmsg("\n%s\n%s\n%s\n",
             PrintFISH_THREAD(pThisFISH_THREAD),
             PrintFISH_EVENT(pFISH_EVENT),
             PrintFISH_THREAD(pWaitingFISH_THREAD)
@@ -1314,12 +1373,17 @@ DWORD FishHang_WaitForSingleObject  // ** NOTE: only events for right now **
 void  FishHangReport()
 {
     LockFishHang();
-    fprintf(stdout,"\n--------------- BEGIN FishHangReport ---------------\n\n");
+
+    logmsg("\n--------------- BEGIN FishHangReport ---------------\n\n");
+
     PrintDeadlock(NULL,NULL,0);
+
     PrintAllFISH_THREADs();
     PrintAllFISH_LOCKs();
     PrintAllFISH_EVENTs();
-    fprintf(stdout,"\n---------------- END FishHangReport ----------------\n\n");
+
+    logmsg("\n---------------- END FishHangReport ----------------\n\n");
+
     UnlockFishHang();
 }
 
@@ -1343,7 +1407,7 @@ void FishHang_DeleteCriticalSection
 
     if (!bFishHangAtExit && pFISH_LOCK->nLockedDepth)
     {
-        fprintf(stdout,
+        logmsg(
             "\n** ERROR ** FISH_THREAD %8.8X "
             "deleting still-locked FISH_LOCK %8.8X!\n",
             (int)pFISH_THREAD,
@@ -1352,7 +1416,7 @@ void FishHang_DeleteCriticalSection
 
         if (pFISH_LOCK->pOwningThread != pFISH_THREAD)
         {
-            fprintf(stdout,
+            logmsg(
                 "** ERROR ** FISH_LOCK %8.8X "
                 "owned by FISH_THREAD %8.8X!\n",
                 (int)pFISH_LOCK,
@@ -1360,9 +1424,9 @@ void FishHang_DeleteCriticalSection
                 );
         }
 
-        fprintf(stdout,"%s(%d)\n\n",pszFileDeleting,nLineDeleting);
-        fprintf(stdout,"%s\n",PrintFISH_THREAD(pFISH_THREAD));
-        fprintf(stdout,"%s\n",PrintFISH_LOCK(pFISH_LOCK));
+        logmsg("%s(%d)\n\n",pszFileDeleting,nLineDeleting);
+        logmsg("%s\n",PrintFISH_THREAD(pFISH_THREAD));
+        logmsg("%s\n",PrintFISH_LOCK(pFISH_LOCK));
     }
 
     RemoveListEntry(&pFISH_LOCK->LockListLink);
@@ -1393,7 +1457,7 @@ void FishHang_ExitThread
     if (!(pFISH_THREAD = FindFISH_THREAD(GetCurrentThreadId())))
     {
         UnlockFishHang();
-        fprintf(stdout,"** FishHang_ExitThread: FindFISH_THREAD failed!\n");
+        logmsg("** FishHang_ExitThread: FindFISH_THREAD failed!\n");
         if (bFishHangAtExit) ExitThread(dwExitCode);
         exit(-1);
     }
@@ -1403,14 +1467,14 @@ void FishHang_ExitThread
 
     if (!bFishHangAtExit && !IsListEmpty(&pFISH_THREAD->ThreadLockListHead))
     {
-        fprintf(stdout,
+        logmsg(
             "\n** ERROR ** FISH_THREAD %8.8X "
             "exiting with locks still owned!\n\n",
             (int)pFISH_THREAD);
 
         RemoveListEntry(&pFISH_THREAD->ThreadListLink);
         InsertListHead(&ThreadsListHead,&pFISH_THREAD->ThreadListLink);
-        fprintf(stdout,"%s\n",PrintFISH_THREAD(pFISH_THREAD));
+        logmsg("%s\n",PrintFISH_THREAD(pFISH_THREAD));
 
         pListEntry = pFISH_THREAD->ThreadLockListHead.Flink;
 
@@ -1418,7 +1482,7 @@ void FishHang_ExitThread
         {
             pFISH_LOCK = CONTAINING_RECORD(pListEntry,FISH_LOCK,ThreadLockListLink);
             pListEntry = pListEntry->Flink;
-            fprintf(stdout,"%s\n",PrintFISH_LOCK(pFISH_LOCK));
+            logmsg("%s\n",PrintFISH_LOCK(pFISH_LOCK));
         }
     }
 
@@ -1430,3 +1494,4 @@ void FishHang_ExitThread
 /////////////////////////////////////////////////////////////////////////////
 
 #endif // !defined(FISH_HANG)
+
