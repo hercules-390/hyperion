@@ -1101,6 +1101,8 @@ U32     n;                              /* 32-bit operand value      */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
+    /* Some models always store, so validate as a store operand, if desired */
+//  ARCH_DEP(validate_operand) (effective_addr2, b2, 3, ACCTYPE_WRITE, regs);
     /* Load second operand from operand address  */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
@@ -1676,6 +1678,10 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
+    /* update regs so unused bits zeroed */
+    GR_A(r1, regs) = addr1;
+    GR_A(r2, regs) = addr2;
+
     /* Load signed operand lengths from R1+1 and R2+1 */
     len1 =
 #if defined(FEATURE_ESAME)
@@ -1701,7 +1707,7 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     }
 
     /* If both operand lengths are zero, exit with condition code 2 */
-    if (len1 == 0 && len2 == 0)
+    if (len1 <= 0 && len2 <= 0)
     {
         regs->psw.cc = 2;
         return;
