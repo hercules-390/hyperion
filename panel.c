@@ -2652,11 +2652,18 @@ struct  timeval tv;                     /* Select timeout structure  */
         regs = sysblk.regs + sysblk.pcpu;
         /* If the requested CPU is offline, then take the first available CPU*/
         if(!regs->cpuonline)
-            for(sysblk.pcpu = 0, regs = sysblk.regs + sysblk.pcpu;
-                !regs->cpuonline && sysblk.pcpu < sysblk.numcpu;
-                regs = sysblk.regs + ++sysblk.pcpu);
+	  /* regs = first online CPU
+	   * sysblk.pcpu = number of online CPUs
+	   */
+	  for(regs = 0, sysblk.pcpu = 0, i = 0 ;
+	      i < MAX_CPU_ENGINES ; ++i )
+	    if (sysblk.regs[i].cpuonline) {
+	      if (!regs)
+		regs = &sysblk.regs[i];
+	      ++sysblk.pcpu;
+	    }
 
-        if (sysblk.pcpu >= sysblk.numcpu)
+        if (!regs)
             /* No CPUs are online! The 'quit' or 'exit'
                command must have been issued; exit loop. */
             break;
