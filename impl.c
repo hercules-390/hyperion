@@ -107,8 +107,7 @@ TID paneltid;
         cfgfile = "hercules.cnf";
 
     /* Display the version identifier */
-    display_version (stderr, "Hercules ", MSTRING(VERSION),
-                             __DATE__, __TIME__);
+    display_version (stderr, "Hercules ");
 
     /* Process the command line options */
 #ifdef EXTERNALGUI

@@ -136,8 +136,7 @@ BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules tape copy program ",
-                     MSTRING(VERSION), __DATE__, __TIME__);
+    display_version (stderr, "Hercules tape copy program ");
 
     /* The first argument is the tape device name */
     if (argc > 1 && argv[1] != NULL && strlen(argv[1]) > 5

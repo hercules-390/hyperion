@@ -162,11 +162,11 @@ shrink dramatically, usually to about 20 to 30 percent of the original
 size.</P>
 <H4><A NAME="software">What PC software do I need to run Hercules? </A></H4>
 <P>1. You need a Linux system with POSIX threads (pthread) support. I will
-only provide support for Linux 2.2.x kernels with glibc2 (libc6) as supplied
-in popular distributions such as Red Hat 6.0 or later and SuSE Linux 6.1 or
-later. My development system runs Red Hat 6.1. You can also run under
-Windows NT or Windows 2000, though Hercules isn't quite as polished on that
-platform.</P>
+only provide support for Linux 2.2.x or later kernels with glibc2 (libc6) as
+supplied in popular distributions such as Red Hat 6.0 or later and SuSE
+Linux 6.1 or later. My development system runs Red Hat 6.1. You can also run
+under Windows NT or Windows 2000, though Hercules isn't quite as polished on
+that platform.</P>
 <P>2. A recent version of the GNU C compiler (GCC), normally
 distributed with Linux. See the notes below on this compiler. If you
 wish to rebuild the Windows version, you will need the <a
@@ -195,15 +195,15 @@ Attachmate Extra, or Dynacomm Elite should also work in most cases, but
 be aware that some tn3270 clients have bugs which make them unusable
 as OS/360 or MVS consoles.</P>
 <H4>What sort of MIPS rate can I expect?</H4>
-<P>Thanks to the performance enhancements which began around release
-1.60, as a result of work by Mike Noel, Juergen Dobrinski,
-Valery Pogonchenko, and Jan Jaeger,
-you should now see an execution speed of around 0.8 to 1 MIPS, even on a
-Pentium 200.  That's enough to run OS/360 (MFT or MVT) with a response
-time similar to that of a 3033 from the 1970's. It's also fast enough to
-run VSE/ESA with an acceptable response time. If you want to run OS/390
-instead of OS/360, you'd better get a gigahertz or so Pentium III.  On a
-fast dual Pentium III it's now not unusual to see 5 MIPS or better.</P>
+<P>Thanks to the performance enhancements which began around release 1.60,
+as a result of work by Mike Noel, Juergen Dobrinski, Valery Pogonchenko, and
+Jan Jaeger, you should now see an execution speed of around 0.8 to 1 MIPS,
+even on a Pentium 200.  That's enough to run OS/360 (MFT or MVT) with a
+response time similar to that of a 3033 from the 1970's. It's also fast
+enough to run VSE/ESA with an acceptable response time. If you want to run
+OS/390 instead of OS/360 (assuming you can do so legally), you'd better get
+a gigahertz or so Pentium III.  On a fast dual Pentium III it's now not
+unusual to see 10 MIPS or better.</P>
 <P>Typical I/O rates of around 50 EXCP/second are reported on average
 hardware, with rates over 500/second achievable with hardware RAID. </P>
 <H4>Which C compiler should I use to build Hercules?</H4>
@@ -226,7 +226,7 @@ included 2.91 as well as <code>kgcc</code>. If you encounter problems when
 building Hercules with the 2.96 compiler, try <code>make CC=kgcc</code>
 instead. I would appreciate reports as to how well the 2.96 compiler works,
 as it is a development snapshot, and lots of folks, including the GCC
-development team ad Linus Torvalds, were very unhappy that Red Hat included
+development team and Linus Torvalds, were very unhappy that Red Hat included
 it in their distribution.</p>
 <H4>Why do I get an unexpected fixed-point divide exception (program check
 0009 or abend 0C9) on a CVB instruction?</H4>
@@ -236,12 +236,13 @@ compiler instead. See previous question for the required compiler level.
 <H4>Do you plan to port Hercules to other platforms?</H4>
 <P>No. I do not have the resources to support more than one operating
 system. </P>
-<P>If you want to make Hercules run on FreeBSD, Solaris, Linux 2.0.x, or
-whatever, then by all means go ahead. I welcome reports of any bugs or
-problems you find, but I probably won't fix problems if it means introducing
+<P>If you want to make Hercules run on Solaris, Linux 2.0.x, or whatever,
+then by all means go ahead. I welcome reports of any bugs or problems you
+find, but I probably won't fix problems if it means introducing
 platform-specific code, and I will not be able to test new releases against
 other platforms. Folks who have gotten it compiled on the BSDs report that
-the hardest part is removing the Linux-specific tape support. </P>
+the hardest part is removing the Linux-specific tape support. Hercules is
+part of the FreeBSD packages collection.</P>
 <p>There is ongoing work to make Hercules run under Windows 98, NT, and
 2000. The source code has support for these platforms included, and there is
 a Win32 makefile as makefile.w32.</p>
@@ -270,8 +271,10 @@ when attempting to restore from tape originally created using the default
 DF/DSS block size. The solution is to recreate the dump tape with
 DCB=BLKSIZE=32760. </P>
 <H4>Can I attach a PC tape drive to Hercules?</H4>
-<P>Yes. Hercules can read and write tapes on SCSI drives. I have tested this
-with 4mm DAT, QIC-1000, and 9-track drives. </P>
+<P>Yes. Hercules can read and write tapes on SCSI drives on Linux systems. I
+have tested this with 4mm DAT, QIC-1000, and 9-track drives. The Cygwin
+libraries that support Hercules on Windows do not provide support for SCSI
+tapes.</P>
 <H4>Can I process mainframe tapes with Hercules?</H4>
 <P>Yes.  It is possible to obtain 9-track open reel drives and 3480-type
 cartridge drives which attach to the SCSI bus.  Hercules makes these
@@ -298,7 +301,7 @@ assembler. </DD>
 </DL>
 <P>Sam Golob wrote a fascinating review of these two products in the
 September 1999 issue of NaSPA Technical Support magazine. </P>
-<H4>What ESA/390 features are implemented?</H4>
+<H4>What architectural features are implemented?</H4>
 <P>The following standard features have been implemented: </P>
 <UL>
 <LI>Address-Limit Checking </LI>
@@ -365,11 +368,13 @@ September 1999 issue of NaSPA Technical Support magazine. </P>
 <LI>Store System Information </LI>
 <li>64-bit operations</li>
 </ul>
-<P>The following standard features have not yet been implemented: </P>
+<P>The following standard feature has not yet been implemented: </P>
 <UL>
-<LI>Clear I/O (full functionality for S/370) </LI>
+<LI>Clear I/O (full functionality for S/370) </LI></ul>
+<p>The following standard feature has been partially implemented: </p>
+<ul>
 <LI>Binary Floating-Point instructions </LI></UL>
-<P>The following optional features are partially implemented: </P>
+<P>The following optional features have been partially implemented: </P>
 <UL>
 <LI>Channel-Subsystem Call </LI>
 <li>Extended Translation Facility 2
@@ -400,7 +405,8 @@ Reconfiguration, SCP-initiated Reset, Processor Availability </LI>
 <LI>VM/370 assists </LI></UL>
 <p>Hercules is compliant with both IBM's ALS-1 and ALS-2 architectural level
 sets to the degree necessary to run all OS/390 versions through 2.10 and
-z/OS version 1.1 in ARCHLVL 1 mode, Linux and z/VM in both ESA/390 and z/Architecture mode.</p>
+z/OS version 1.1 in ARCHLVL 1 mode, and Linux and z/VM in both ESA/390 and
+z/Architecture mode.</p>
 <H4>What z/Architecture features are implemented?</H4>
 <P>z/Architecture includes as standard all of the features of ESA/390,
 except vector operations, which is not part of the z/Architecture.
@@ -417,68 +423,70 @@ HREF="http://www.snipix.freeserve.co.uk/people.htm">Roger Bowler</A>
 <li><A HREF="http://www.conmicro.cx/">Jay Maynard</A> (current
 maintainer)
 <li><A HREF="http://home.worldonline.nl/~jjaeger">Jan Jaeger</A>
-<li><A HREF="http://www.sysun.com/museum">Dutch Owen</A>
-<li>Peter Kuschnerus
+<li>Volker Bandke
+<li>David Barth
 <li>Malcolm Beattie
 <li>Mario Bezzi
-<li>Adam Thornton
-<li>Daniel Seagraves
-<li>Mike Noel
-<li>Rick McKelvy
-<li>Dan Horak
-<li>Roland Goetschi
-<li>Axel Schwarzer
-<li>Valery Pogonchenko
-<li>Juergen Dobrinski
-<li>Steve Gay
-<li>Reed H. Petty
-<li>Glen Herrmannsfeldt
-<li>Peter Macdonald
-<li>Bernard van der Helm
-<li>David Barth
-<li>Soren Jorvang
-<li>Volker Bandke
-<li>Greg Smith
-<li>Dave Morton
-<li>Albert Louw
-<li>David Pritchard
-<li>John Kozak
-<li>Brandon Hill
-<li>Ronen Tzur
-<li>Willem Konynenberg
 <li>Vic Cross
-<li>Nobumichi Kozawa
-<li>Paul Leisy
-<li>Kris Van Hees
+<li>Juergen Dobrinski
 <li>Fritz Elfert
+<li>Steve Gay
+<li>Roland Goetschi
+<li>Glen Herrmannsfeldt
+<li>Brandon Hill
+<li>Dan Horak
+<li>Soren Jorvang
+<li>Willem Konynenberg
+<li>John Kozak
+<li>Nobumichi Kozawa
+<li>Peter Kuschnerus
+<li>Paul Leisy
+<li>Albert Louw
+<li>Peter Macdonald
+<li>Rick McKelvy
+<li>Dave Morton
+<li>Mike Noel
+<li><A HREF="http://www.sysun.com/museum">Dutch Owen</A>
+<li>Reed H. Petty
+<li>Valery Pogonchenko
+<li>David Pritchard
+<li>Axel Schwarzer
+<li>Daniel Seagraves
+<li>Greg Smith
+<li>Adam Thornton
+<li>David "Fish" Trout
+<li>Ronen Tzur
+<li>Bernard van der Helm
+<li>Kris Van Hees
+<li>Matt Zimmerman
 </sl></p>
 <P>And thanks for support and encouragement from:
 <sl>
-<li>Sam Golob
-<li>Sam Knutson
 <li>Tim Alpaerts
-<li>Rich Smrcina
-<li>Rick Fochtman
-<li>Daniel Rudin
-<li>Cory Hamasaki
 <li>Bertus Bekker
-<li>Mark S. Waterbury
 <li>Giorgio de Nunzio
+<li>Rick Fochtman
 <li>Alex Friis
+<li>Sam Golob
+<li>Cory Hamasaki
 <li>Tony Harminc
-<li>Henk Stegeman
-<li>Mike Ross
 <li>Richard Higson
+<li>Sam Knutson
+<li>Mike Ross
+<li>Daniel Rudin
+<li>Rich Smrcina
+<li>Henk Stegeman
+<li>Mark S. Waterbury
 </sl></P>
 <P>If anyone feels they have been unfairly omitted from either of these
 lists, please let me (Jay Maynard) know. </P>
 <P align="center"><HR WIDTH="15%" noshade></p>
 <p><IMG SRC="gifs/note.gif" alt="Note:">If you have any
 comments and questions, join the Hercules discussion group at <A
-HREF="http://www.onelist.com/community/hercules-390">http://www.onelist.com/community/hercules-390</A>
+HREF="http://groups.yahoo.com/group/hercules-390">http://groups.yahoo.com/group/hercules-390</A>
 </P>
 <P ALIGN="CENTER"><hr width="15%" noshade><A
-HREF="hercules.html"><IMG SRC="gifs/back.gif" BORDER=0 ALT="back"></A></P>
+HREF="index.html"><IMG SRC="gifs/back.gif" BORDER=0 ALT="back"></A></P>
 <P><small>
-Last updated 19 June 2001</P></BODY>
+Last updated 29 November 2001</P></BODY>
 </HTML>

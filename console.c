@@ -1080,8 +1080,8 @@ BYTE                    rejmsg[80];     /* Rejection message         */
                 hostinfo.nodename, hostinfo.sysname,
                 hostinfo.release);
     len = snprintf (conmsg, sizeof(conmsg),
-                "Hercules version %s build at %s %s",
-                MSTRING(VERSION), __DATE__, __TIME__);
+                "Hercules version %s built at %s %s",
+                VERSION, __DATE__, __TIME__);
 
     if (dev != NULL)
         len += sprintf (conmsg + len, " device %4.4X", dev->devnum);

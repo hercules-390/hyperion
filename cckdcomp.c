@@ -40,8 +40,7 @@ int             fd;                     /* File descriptor           */
 int             level=-1;               /* Level for chkdsk          */
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules cckd compress program ",
-                     MSTRING(VERSION), __DATE__, __TIME__);
+    display_version (stderr, "Hercules cckd compress program ");
 
     /* parse the arguments */
 #ifdef EXTERNALGUI

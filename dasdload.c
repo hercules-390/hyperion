@@ -4221,8 +4221,7 @@ int             stmtno;                 /* Statement number          */
 
     /* Display the program identification message */
     display_version (stderr,
-                     "Hercules DASD loader program ",
-                     MSTRING(VERSION), __DATE__, __TIME__);
+                     "Hercules DASD loader program ");
 
     /* Check the number of arguments */
 #ifdef EXTERNALGUI

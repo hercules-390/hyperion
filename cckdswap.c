@@ -25,8 +25,7 @@ int             fd;                     /* File descriptor           */
 int             bigend;                 /* 1 = big-endian file       */
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules cckd swap-endian program ",
-                     MSTRING(VERSION), __DATE__, __TIME__);
+    display_version (stderr, "Hercules cckd swap-endian program ");
 
     if (argc != 2) syntax ();
     fn = argv[1];

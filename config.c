@@ -991,8 +991,7 @@ BYTE    c;                              /* Work area for sscanf      */
 #endif // defined(OPTION_FISHIO)
 
     /* Display the version identifier on the control panel */
-    display_version (sysblk.msgpipew, "Hercules ",
-                     MSTRING(VERSION), __DATE__, __TIME__);
+    display_version (sysblk.msgpipew, "Hercules ");
 
 #ifdef _FEATURE_VECTOR_FACILITY
     for(i = 0; i < numvec && i < numcpu; i++)

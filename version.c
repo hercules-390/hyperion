@@ -88,13 +88,12 @@ static const char *build_info[] = {
 /*-------------------------------------------------------------------*/
 /* Display version and copyright                                     */
 /*-------------------------------------------------------------------*/
-void display_version (FILE *f, char *prog, char *version,
-                               char *date, char *time)
+void display_version (FILE *f, char *prog)
 {
     unsigned int i;
 
-    fprintf (f, "%sVersion %s build at %s %s\nBuild information:\n",
-             prog, version, date, time);
+    fprintf (f, "%sVersion %s built at %s %s\nBuild information:\n",
+             prog, VERSION, __DATE__, __TIME__);
 
     if (sizeof(build_info) == 0)
       fprintf(f, "  (none)\n");

@@ -520,8 +520,7 @@ BYTE    c;                              /* Character work area       */
 
     /* Display the program identification message */
     display_version (stderr,
-                     "Hercules DASD image file creation program\n",
-                     MSTRING(VERSION), __DATE__, __TIME__);
+                     "Hercules DASD image file creation program\n");
 
     /* Check the number of arguments */
 #ifdef EXTERNALGUI
