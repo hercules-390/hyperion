@@ -25,7 +25,7 @@
  #endif
 #endif
 
-/* _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE is used for host 
+/* _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE is used for host
    related processing issues, FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE
    is defined only in ESA/390 mode. MCDS is an ESA/390
    feature that is supported under z/Architecture SIE */
@@ -176,7 +176,7 @@
  #define GEN_MAXARCH    3+2
 #elif defined(_ARCHMODE2)
  #define GEN_MAXARCH    2+2
-#else 
+#else
  #define GEN_MAXARCH    1+2
 #endif
 
@@ -213,7 +213,7 @@
 #if defined(_900) && defined(FEATURE_VECTOR_FACILITY)
  #error Vector Facility not supported on ESAME capable processors
 #endif
- 
+
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2) \
  && !defined(FEATURE_4K_STORAGE_KEYS)
  #error Move page facility cannot be defined with 2K storage keys
