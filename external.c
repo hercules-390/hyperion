@@ -435,12 +435,12 @@ PSA     *sspsa;                         /* -> Store status area      */
     STORE_FW(sspsa->storetpr,ssreg->todpr);
 #endif /*defined(FEATURE_ESAME)*/
 
+#if defined(_900)
 #if defined(FEATURE_ESAME)
     sspsa->arch = 1;
-#endif /*defined(FEATURE_ESAME)*/
-
-#if defined(_900)
+#else /*defined(FEATURE_ESAME)*/
     sspsa->arch = 0;
+#endif /*defined(FEATURE_ESAME)*/
 #endif /*defined(_900)*/
 
     /* Store access registers in bytes 288-351 */

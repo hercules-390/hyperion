@@ -719,11 +719,12 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
         }
     }
 
-        /* Release the device lock */
-        release_lock (&dev->lock);
+    /* Release the device lock */
+    release_lock (&dev->lock);
 
     /* Handle change in status for pending interrupts */
-        obtain_lock (&sysblk.intlock);
+    obtain_lock (&sysblk.intlock);
+
     if (dev->pcipending || dev->pending)
     {
         QUEUE_IO_INTERRUPT (dev);
@@ -739,6 +740,7 @@ void clear_subchan (REGS *regs, DEVBLK *dev)
     }
     else
         OFF_IC_IOPENDING;
+
     release_lock (&sysblk.intlock);
 
 } /* end function clear_subchan */
