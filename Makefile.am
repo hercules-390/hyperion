@@ -6,7 +6,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = po util html man intl m4
+SUBDIRS = intl m4  po util html man intl m4
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -220,7 +220,7 @@ dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 	windres -DHAVE_CONFIG_H --include-dir=. -i dyngui.rc -o dyngui.res -O coff
 endif
 
-EXTRA_DIST = autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
              README.HDL README.NETWORKING README.OSX README.TAPE hercules.cnf
 
 noinst_HEADERS  = fishhang.h \

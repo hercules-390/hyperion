@@ -427,7 +427,7 @@ AC_DEFINE_UNQUOTED([PKGDATADIR], "${PKGDATADIR}")
 if test "x$prefix" = "xNONE"; then
   LOCALEDIR="/usr/local/share/locale"
 else
-  PKGDATADIR="${prefix}/share/locale}"
+  LOCALEDIR="${prefix}/share/locale}"
 fi
 AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
 
@@ -476,5 +476,5 @@ AH_TEMPLATE([BUILTIN_STRERROR_R],
 AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
             [Define to enable symbolic substitutions in configuration file])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile  intl/Makefile m4/Makefile ])
 
