@@ -1879,6 +1879,7 @@ U32     i2;                             /* 32-bit operand values     */
             ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
     }
+
 } /* end DEF_INST(branch_relative_on_condition_long) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
 
@@ -1918,6 +1919,7 @@ U32     i2;                             /* 32-bit operand values     */
         )
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
+
 } /* end DEF_INST(branch_relative_and_save_long) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
 
@@ -5328,7 +5330,7 @@ int     cpu_length;                     /* cpu determined length     */
 
     regs->psw.cc = cc;
 
-}
+} /* end DEF_INST(move_long_unicode) */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 
 
@@ -5419,7 +5421,7 @@ int     cpu_length;                     /* cpu determined length     */
 
     regs->psw.cc = cc;
 
-}
+} /* end DEF_INST(compare_logical_long_unicode) */
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
 
 
@@ -5437,7 +5439,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Load sign-extended byte from operand address */
     (S32)regs->GR_L(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(load_byte) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5455,7 +5458,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Load sign-extended byte from operand address */
     (S64)regs->GR_G(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(load_byte_long) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5485,7 +5489,7 @@ U32     n;                              /* 32-bit operand values     */
     if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
-}
+} /* end DEF_INST(add_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5515,7 +5519,7 @@ U32     n;                              /* 32-bit operand values     */
     if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
-}
+} /* end DEF_INST(add_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5540,7 +5544,8 @@ U32     n;                              /* 32-bit operand values     */
             add_logical (&(regs->GR_L(r1)),
                     regs->GR_L(r1),
                     n);
-}
+
+} /* end DEF_INST(add_logical_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5568,7 +5573,8 @@ BYTE    rbyte;                          /* Result byte               */
 
     /* Set condition code */
     regs->psw.cc = rbyte ? 1 : 0;
-}
+
+} /* end DEF_INST(and_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5590,7 +5596,8 @@ U32     n;                              /* 32-bit operand values     */
 
     /* AND second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) &= n ) ? 1 : 0;
-}
+
+} /* end DEF_INST(and_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5614,7 +5621,8 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc =
             (S32)regs->GR_L(r1) < (S32)n ? 1 :
             (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
-}
+
+} /* end DEF_INST(compare_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5638,7 +5646,8 @@ U32     n;                              /* 32-bit operand values     */
     regs->psw.cc =
             (S32)regs->GR_L(r1) < (S32)n ? 1 :
             (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
-}
+
+} /* end DEF_INST(compare_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5646,7 +5655,7 @@ U32     n;                              /* 32-bit operand values     */
 /*-------------------------------------------------------------------*/
 /* E355 CLY   - Compare Logical (Long Displacement)            [RXY] */
 /*-------------------------------------------------------------------*/
-DEF_INST(compare_logical)
+DEF_INST(compare_logical_y)
 {
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
@@ -5661,7 +5670,8 @@ U32     n;                              /* 32-bit operand values     */
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_L(r1) < n ? 1 :
                    regs->GR_L(r1) > n ? 2 : 0;
-}
+
+} /* end DEF_INST(compare_logical_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5684,7 +5694,8 @@ BYTE    cbyte;                          /* Compare byte              */
     /* Compare with immediate operand and set condition code */
     regs->psw.cc = (cbyte < i2) ? 1 :
                    (cbyte > i2) ? 2 : 0;
-}
+
+} /* end DEF_INST(compare_logical_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5738,7 +5749,8 @@ int     i;                              /* Integer work areas        */
 
     /* Update the condition code */
     regs->psw.cc = cc;
-}
+
+} /* end DEF_INST(compare_logical_characters_under_mask_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5766,7 +5778,8 @@ BYTE    rbyte;                          /* Result byte               */
 
     /* Set condition code */
     regs->psw.cc = rbyte ? 1 : 0;
-}
+
+} /* end DEF_INST(exclusive_or_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5788,7 +5801,8 @@ U32     n;                              /* 32-bit operand values     */
 
     /* XOR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) ^= n ) ? 1 : 0;
-}
+
+} /* end DEF_INST(exclusive_or_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5807,7 +5821,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Insert character in r1 register */
     regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
-}
+} /* end DEF_INST(insert_character_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5878,7 +5892,8 @@ U64     dreg;                           /* Double register work area */
 
     /* Set condition code */
     regs->psw.cc = cc;
-}
+
+} /* end DEF_INST(insert_characters_under_mask_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5896,7 +5911,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(load_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5940,7 +5956,8 @@ BYTE    rwork[64];                      /* Register work area        */
         INVALIDATE_AEA_AR(r1, regs);
     else
         INVALIDATE_AEA_ARALL(regs);
-}
+
+} /* end DEF_INST(load_access_multiple_y) */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
@@ -5959,7 +5976,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Load operand address into register */
     GR_A(r1, regs) = effective_addr2;
-}
+
+} /* end DEF_INST(load_address_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -5977,7 +5995,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Load rightmost 2 bytes of register from operand address */
     (S32)regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(load_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6013,7 +6032,8 @@ BYTE    rwork[64];                      /* Character work areas      */
         /* Update register number, wrapping from 15 to 0 */
         i++; i &= 15;
     }
-}
+
+} /* end DEF_INST(load_multiple_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6031,7 +6051,8 @@ VADR    effective_addr1;                /* Effective address         */
 
     /* Store immediate operand at operand address */
     ARCH_DEP(vstoreb) ( i2, effective_addr1, b1, regs );
-}
+
+} /* end DEF_INST(move_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6082,7 +6103,8 @@ BYTE    rbyte;                          /* Result byte               */
 
     /* Set condition code */
     regs->psw.cc = rbyte ? 1 : 0;
-}
+
+} /* end DEF_INST(or_immediate_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6104,7 +6126,8 @@ U32     n;                              /* 32-bit operand values     */
 
     /* OR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) |= n ) ? 1 : 0;
-}
+
+} /* end DEF_INST(or_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6122,7 +6145,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Store register contents at operand address */
     ARCH_DEP(vstore4) ( regs->GR_L(r1), effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(store_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6158,7 +6182,8 @@ BYTE    rwork[64];                      /* Register work area        */
 
     /* Store access register contents at operand address */
     ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(store_access_multiple_y) */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
@@ -6177,7 +6202,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Store rightmost byte of R1 register at operand address */
     ARCH_DEP(vstoreb) ( regs->GR_LHLCL(r1), effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(store_character_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6229,7 +6255,8 @@ BYTE    cwork[4];                       /* Character work areas      */
 
     /* Store result at operand location */
     ARCH_DEP(vstorec) ( cwork, j-1, effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(store_characters_under_mask_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6247,7 +6274,8 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Store rightmost 2 bytes of R1 register at operand address */
     ARCH_DEP(vstore2) ( regs->GR_LHL(r1), effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(store_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6280,7 +6308,8 @@ BYTE    rwork[64];                      /* Register work area        */
 
     /* Store register contents at operand address */
     ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
-}
+
+} /* end DEF_INST(store_multiple_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6309,7 +6338,8 @@ U32     n;                              /* 32-bit operand values     */
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-}
+
+} /* end DEF_INST(subtract_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6338,7 +6368,8 @@ U32     n;                              /* 32-bit operand values     */
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && regs->psw.fomask )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
-}
+
+} /* end DEF_INST(subtract_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6363,7 +6394,8 @@ U32     n;                              /* 32-bit operand values     */
             sub_logical (&(regs->GR_L(r1)),
                     regs->GR_L(r1),
                     n);
-}
+
+} /* end DEF_INST(subtract_logical_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
@@ -6391,7 +6423,8 @@ BYTE    tbyte;                          /* Work byte                 */
             ( tbyte == 0 ) ? 0 :            /* result all zeroes */
             ((tbyte^i2) == 0) ? 3 :         /* result all ones   */
             1 ;                             /* result mixed      */
-}
+
+} /* end DEF_INST(test_under_mask_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 
