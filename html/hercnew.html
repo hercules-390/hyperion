@@ -8,6 +8,26 @@ Hercules: What's new</TITLE>
       VLINK="#008040" ALINK="#000000">
 <h1>What's new in Hercules</h1>
 <hr noshade>
+<h2>What's new in release 3.01</h2>
+<p>Release date: 30 November 2003
+<ul>
+<li>Bypass gcc 2.96 optimizer bug that caused incorrect instruction
+execution (Ivan Warren)
+<li>Added command-line control panel command history (Martin Gasparovic,
+Volker Bandke)
+<li>Added ALS4 (z/990) cryptographic instructions (Bernard van der Helm, Jan
+Jaeger)
+<li>Fixed device interrupt pending on IPL that caused OS/360 to have to be
+IPLed twice (David "Fish" Trout, Greg Smith)
+<li>Added pthreads trace function for debugging (Greg Smith)
+<li>Fish threads code rewritten, closer to POSIX thread functionality while
+still performing better (David "Fish" Trout)
+<li>Fixed incompatibility with Windows NT telnet client (Greg Price, David
+"Fish" Trout)
+<li>Performance and integrity enhancements for RS instructions (Greg Smith)
+</ul>
+<p>Download
+<a href="hercules-3.01.tar.gz">hercules-3.01.tar.gz</a>
 <h2>What's new in release 3.00</h2>
 <p>Release date: 2 October 2003
 <ul>
@@ -820,6 +840,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 3 October 2003
+<p>Last updated 30 November 2003
 </BODY>
 </HTML>
