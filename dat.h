@@ -1804,7 +1804,7 @@ U16     xcode;                          /* Exception code            */
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
@@ -1821,7 +1821,7 @@ U16     xcode;                          /* Exception code            */
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
@@ -1865,7 +1865,7 @@ U16     xcode;                          /* Exception code            */
 #endif /*FEATURE_INTERVAL_TIMER*/
 
 #if defined(OPTION_AEA_BUFFER)
-    if(arn >= 0 && acctype <= ACCTYPE_WRITE)
+    if(arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs) )
     {
         regs->AE(arn) = aaddr & STORAGE_KEY_PAGEMASK;
         regs->VE(arn) = addr & STORAGE_KEY_PAGEMASK;
@@ -2016,7 +2016,7 @@ int     aeind;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
@@ -2031,7 +2031,7 @@ int     aeind;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
@@ -2042,7 +2042,7 @@ int     aeind;
     } /* end switch */
 
 #if defined(OPTION_AEA_BUFFER)
-    if(arn >= 0 && acctype <= ACCTYPE_WRITE)
+    if(arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs) )
     {
 #if defined(FEATURE_ACCESS_REGISTERS)
         if(ACCESS_REGISTER_MODE(&regs->psw))

@@ -566,13 +566,15 @@ static char *pgmintname[] = {
                 logmsg("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n",
                   regs->cpuad, pcode, IS_IC_PER(regs) >> 16,
                   (regs->psw.IA - regs->psw.ilc) & ADDRESS_MAXWRAP(regs) );
-            psa->perint[0] = IS_IC_PER(regs) >> 16;
+
+            regs->perc = IS_IC_PER(regs) >> 8;
+            STORE_HW(psa->perint, regs->perc);
+
+            STORE_W(psa->peradr, regs->peradr);
 
             /* Reset PER pending indication */
             OFF_IC_PER(regs);
 
-            STORE_W(psa->peradr, (regs->psw.IA - regs->psw.ilc)
-                                          & ADDRESS_MAXWRAP(regs));
         }
 
         /* Store the access register number at PSA+160 */

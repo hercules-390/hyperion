@@ -414,6 +414,12 @@ typedef struct _REGS {                  /* Processor registers       */
                 sie_pref:1;             /* Preferred-storage mode    */
 #endif /*defined(_FEATURE_SIE)*/
 
+// #if defined(FEATURE_PER)
+        U16     perc;                   /* PER code                  */
+        RADR    peradr;                 /* PER address               */
+        BYTE    peraid;                 /* PER access id             */
+// #endif /*defined(FEATURE_PER)*/
+
         BYTE    cpustate;               /* CPU stopped/started state */
         unsigned int                    /* Flags                     */
                 cpuonline:1,            /* 1=CPU is online           */

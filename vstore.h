@@ -516,6 +516,10 @@ RADR    abs;                            /* Absolute storage address  */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
 #if defined(FEATURE_PER)
+    /* Save the address address used to fetch the instruction */
+    if( EN_IC_PER(regs)  && *regs->ip != 0x44)
+        regs->peradr = addr;
+
     if( EN_IC_PER_IF(regs)
       && addr >= regs->CR(10)
       && addr <= regs->CR(11) )
@@ -535,7 +539,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
 #if defined(OPTION_AIA_BUFFER)
 #if defined(FEATURE_PER)
-        if( !EN_IC_PER_IF(regs) )
+        if( !EN_IC_PER(regs) )
 #endif /*defined(FEATURE_PER)*/
         {
             regs->AI = abs & PAGEFRAME_PAGEMASK;
@@ -554,7 +558,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     abs = LOGICAL_TO_ABS (addr, 0, regs, ACCTYPE_INSTFETCH, akey);
 #if defined(OPTION_AIA_BUFFER)
 #if defined(FEATURE_PER)
-    if( !EN_IC_PER_IF(regs) )
+    if( !EN_IC_PER(regs) )
 #endif /*defined(FEATURE_PER)*/
     {
         regs->AI = abs & PAGEFRAME_PAGEMASK;
