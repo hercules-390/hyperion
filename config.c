@@ -495,20 +495,6 @@ BYTE **newargv;
     UNREFERENCED(j);
 #endif
 
-    /* Gabor Hoffer (performance option) */
-    for (i = 0; i < 256; i++)
-    {
-#if defined(_370)
-        s370_opcode_table [i] = opcode_table [i][ARCH_370];
-#endif
-#if defined(_390)
-        s390_opcode_table [i] = opcode_table [i][ARCH_390];
-#endif
-#if defined(_900)
-        z900_opcode_table [i] = opcode_table [i][ARCH_900];
-#endif
-    }
-
     /* Initialize SETMODE and set user authority */
     SETMODE(INIT);
 
@@ -1485,6 +1471,20 @@ BYTE **newargv;
         }
     }
 #endif
+
+    /* Gabor Hoffer (performance option) */
+    for (i = 0; i < 256; i++)
+    {
+#if defined(_370)
+        s370_opcode_table [i] = opcode_table [i][ARCH_370];
+#endif
+#if defined(_390)
+        s390_opcode_table [i] = opcode_table [i][ARCH_390];
+#endif
+#if defined(_900)
+        z900_opcode_table [i] = opcode_table [i][ARCH_900];
+#endif
+    }
 
     /* Initialize the CPU registers */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
