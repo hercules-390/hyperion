@@ -1737,6 +1737,10 @@ int     amode64;
 #endif /*!defined(FEATURE_ESAME)*/
         ARCH_DEP(program_interrupt) (regs, rc);
 
+    /* load_psw() has set the ILC to zero.  This needs to
+       be reset to 4 for an eventual PER event */
+    regs->psw.ilc = 4;
+
 #if defined(FEATURE_ESAME)
     /* Set the notesame bit to zero as it has been set, 
        and clear the high word of the instruction address,
@@ -2918,10 +2922,8 @@ int     rc;                             /* return code from load_psw */
 
     /* Generate space switch event if required */
     if (ssevent)
-    {     
-        regs->psw.ilc = 2;
         ARCH_DEP(program_interrupt) (&newregs, PGM_SPACE_SWITCH_EVENT);
-    }
+
     if (rc) /* if new psw has bad format */
         ARCH_DEP(program_interrupt) (&newregs, rc);
 

@@ -1248,6 +1248,10 @@ int     rc;                             /* Return code               */
     if ( rc )
         ARCH_DEP(program_interrupt) (regs, rc);
 
+    /* load_psw() has set the ILC to zero.  This needs to
+       be reset to 2 for an eventual PER event */
+    regs->psw.ilc = 2;
+
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
     PERFORM_CHKPT_SYNC (regs);
