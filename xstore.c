@@ -197,10 +197,6 @@ int     cc = 0;             /* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
 RADR    raddr1, raddr2, xpkeya;         /* Real addresses            */
 RADR    aaddr1 = 0, aaddr2 = 0;         /* Absolute addresses        */
-int     priv;                           /* 1=Private address space   */
-int     prot = 0;                       /* 1=Protected page          */
-int     stid;                           /* Segment table indication  */
-U16     xcode;                          /* Exception code            */
 BYTE    akey;                           /* Access key in register 0  */
 BYTE    akey1, akey2;                   /* Access keys for operands  */
 #if defined(FEATURE_EXPANDED_STORAGE)
@@ -260,8 +256,10 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     {
         /* Translate the second operand address to a real address */
         if(!REAL_MODE(&regs->psw))
-            rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ,
-                        &raddr2, &xcode, &priv, &prot, &stid);
+        {
+            rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ);
+            raddr2 = regs->dat.raddr;
+        }
         else
             raddr2 = vaddr2;
 
@@ -276,27 +274,19 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(_FEATURE_SIE)
         if(SIE_MODE(regs)  && !regs->sie_pref)
         {
-        int sie_stid;
-        U16 sie_xcode;
-        int sie_private;
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
-                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r2 > 0) ?
-                    r2 :
-                    USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &raddr2, &sie_xcode,
-                    &sie_private, &prot, &sie_stid))
+                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r2 > 0)
+                ? r2 : USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr2,
-                    USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &raddr2, &sie_xcode,
-                    &sie_private, &prot, &sie_stid))
+                    USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+                (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr2 = APPLY_PREFIXING (raddr2, regs->hostregs->PX);
+            raddr2 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -360,11 +350,13 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     }
 
         /* Reset protection indication before calling translate_addr() */
-        prot = 0;
+        regs->dat.protect = 0;
         /* Translate the first operand address to a real address */
         if(!REAL_MODE(&regs->psw))
-            rc = ARCH_DEP(translate_addr) (vaddr1, r1, regs, ACCTYPE_WRITE,
-                        &raddr1, &xcode, &priv, &prot, &stid);
+        {
+            rc = ARCH_DEP(translate_addr) (vaddr1, r1, regs, ACCTYPE_WRITE);
+            raddr1 = regs->dat.raddr;
+        }
         else
             raddr1 = vaddr1;
 
@@ -379,27 +371,18 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(_FEATURE_SIE)
         if(SIE_MODE(regs)  && !regs->sie_pref)
         {
-        int sie_stid;
-        U16 sie_xcode;
-        int sie_private;
-
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
-                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r1 > 0) ?
-                    r1 :
-                    USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &raddr1, &sie_xcode,
-                    &sie_private, &prot, &sie_stid))
+                (SIE_STATB(regs, MX, XC) && AR_BIT(&regs->psw) && r1 > 0)
+                ? r1 : USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             if (SIE_TRANSLATE_ADDR (regs->sie_mso + raddr1,
-                    USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &raddr1, &sie_xcode,
-                    &sie_private, &prot, &sie_stid))
+                    USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-                (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+                (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
 
             /* Convert host real address to host absolute address */
-            raddr1 = APPLY_PREFIXING (raddr1, regs->hostregs->PX);
+            raddr1 = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
         }
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -462,9 +445,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
         /* Program check if page protection or access-list controlled
            protection applies to the first operand */
-        if (prot || (xpvalid1 && (pte1 & PAGETAB_PROT)))
+        if (regs->dat.protect || (xpvalid1 && (pte1 & PAGETAB_PROT)))
         {
-            regs->TEA = vaddr1 | TEA_PROT_AP | stid;
+            regs->TEA = vaddr1 | TEA_PROT_AP | regs->dat.stid;
             regs->excarid = (ACCESS_REGISTER_MODE(&regs->psw)) ? r1 : 0;
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
         }
@@ -482,7 +465,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         || (xpvalid1 && (pte1 & PAGETAB_PGLOCK))
         || (xpvalid1 && (xpblk1 >= sysblk.xpndsize)))
     {
-        xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
+        regs->dat.xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
         rc = 2;
         cc = 1;
         goto mvpg_progck;
@@ -494,9 +477,8 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         || (xpvalid2 && (xpblk2 >= sysblk.xpndsize)))
     {
         /* re-do translation to set up TEA */
-        rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ, &raddr2,
-                        &xcode, &priv, &prot, &stid);
-        xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
+        rc = ARCH_DEP(translate_addr) (vaddr2, r2, regs, ACCTYPE_READ);
+        regs->dat.xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
         cc = 1;
         goto mvpg_progck;
     }
@@ -594,7 +576,7 @@ mvpg_progck:
     /* If page translation exception (PTE invalid) and condition code
         option in register 0 bit 23 is set, return condition code */
     if ((regs->GR_L(0) & 0x00000100)
-        && xcode == PGM_PAGE_TRANSLATION_EXCEPTION
+        && regs->dat.xcode == PGM_PAGE_TRANSLATION_EXCEPTION
         && rc == 2)
     {
         regs->psw.cc = cc;
@@ -603,12 +585,12 @@ mvpg_progck:
 
     /* Otherwise generate program check */
     /* (Bit 29 of TEA is on for PIC 11 & operand ID also stored) */
-    if (xcode == PGM_PAGE_TRANSLATION_EXCEPTION)
+    if (regs->dat.xcode == PGM_PAGE_TRANSLATION_EXCEPTION)
     {
         regs->TEA |= TEA_MVPG;
         regs->opndrid = (r1 << 4) | r2;
     }
-    ARCH_DEP(program_interrupt) (regs, xcode);
+    ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
 } /* end function move_page */
 
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/

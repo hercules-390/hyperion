@@ -493,6 +493,7 @@ typedef struct _REGS {                  /* Processor registers       */
         U64     waittod;                /* Time of day last wait (us)*/
         U64     waittime;               /* Wait time (us) in interval*/
         struct  timeval lasttod;        /* Last gettimeofday         */
+        DAT     dat;                    /* Fields for DAT use        */
         int     tlbID;                  /* Validation identifier     */
         TLBE   *tlb;                    /* Translation lookaside buf */
         void   *opctab;                 /* -> opcode table           */

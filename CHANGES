@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+28 Feb 2004 Simplify translate_addr() parameter list - Greg Smith
+28 Feb 2004 vstore/vfetch updates for boundary crosses - Greg Smith
 28 Feb 2004 Fix TB (B22C) under SIE - Greg Smith
 27 Feb 2004 Special I/O processing for Immediate Commands - Ivan Warren
 26 Feb 2004 Set iodelay correctly for 0 value; dasdtab comments - Greg Smith

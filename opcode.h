@@ -1114,26 +1114,26 @@ do { \
 
 #if __GEN_ARCH == 900 || (__GEN_ARCH == 390 && !defined(_FEATURE_ZSIE))
 
-#define SIE_TRANSLATE_ADDR(_parms...) \
-    ARCH_DEP(translate_addr)(_parms)
+#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype) \
+    ARCH_DEP(translate_addr)((_addr), (_arn), (_regs), (_acctype))
 
 #define SIE_LOGICAL_TO_ABS(_parms...) \
     ARCH_DEP(logical_to_abs)(_parms)
 
 #elif __GEN_ARCH == 370 && defined(_FEATURE_SIE)
 
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _parms...)   \
-    s390_translate_addr((_addr), (_arn), (_regs), _parms)
+#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
+    s390_translate_addr((_addr), (_arn), (_regs), (_acctype))
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)   \
     s390_logical_to_abs((_addr), (_arn), (_regs), _parms)
 
 #else /*__GEN_ARCH == 390 && defined(_FEATURE_ZSIE)*/
 
-#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _parms...)   \
+#define SIE_TRANSLATE_ADDR(_addr, _arn, _regs, _acctype)   \
     ( ((_regs)->arch_mode == ARCH_390) ?            \
-    s390_translate_addr((_addr), (_arn), (_regs), _parms) : \
-    z900_translate_addr((_addr), (_arn), (_regs), _parms) )
+    s390_translate_addr((_addr), (_arn), (_regs), (_acctype)) : \
+    z900_translate_addr((_addr), (_arn), (_regs), (_acctype)) )
 
 #define SIE_LOGICAL_TO_ABS(_addr, _arn, _regs, _parms...)   \
     ( ((_regs)->arch_mode == ARCH_390) ?            \

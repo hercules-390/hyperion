@@ -4222,11 +4222,6 @@ DEF_INST(store_real_address)
 int     b1, b2;                         /* Values of base registers  */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-U16     xcode;                          /* Exception code            */
-int     private;                        /* 1=Private address space   */
-int     protect;                        /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
-RADR    n;                              /* 64-bit operand values     */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -4235,12 +4230,11 @@ RADR    n;                              /* 64-bit operand values     */
     DW_CHECK(effective_addr1, regs);
 
     /* Translate virtual address to real address */
-    if (ARCH_DEP(translate_addr) (effective_addr2, b2, regs, ACCTYPE_STRAG,
-        &n, &xcode, &private, &protect, &stid))
-        ARCH_DEP(program_interrupt) (regs, xcode);
+    if (ARCH_DEP(translate_addr) (effective_addr2, b2, regs, ACCTYPE_STRAG))
+        ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
 
     /* Store register contents at operand address */
-    ARCH_DEP(vstore8) ( n, effective_addr1, b1, regs );
+    ARCH_DEP(vstore8) (regs->dat.raddr, effective_addr1, b1, regs );
 
 } /* end DEF_INST(store_real_address) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4398,12 +4392,7 @@ DEF_INST(load_real_address_long)
 int     r1;                             /* Register number           */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U16     xcode;                          /* Exception code            */
-int     private;                        /* 1=Private address space   */
-int     protect;                        /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
 int     cc;                             /* Condition code            */
-RADR    n;                              /* 64-bit operand values     */
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
@@ -4412,30 +4401,29 @@ RADR    n;                              /* 64-bit operand values     */
     PRIV_CHECK(regs);
 
     /* Translate the effective address to a real address */
-    cc = ARCH_DEP(translate_addr) (effective_addr2, b2, regs,
-            ACCTYPE_LRA, &n, &xcode, &private, &protect, &stid);
+    cc = ARCH_DEP(translate_addr) (effective_addr2, b2, regs, ACCTYPE_LRA);
 
     /* If ALET exception or ASCE-type or region translation
        exception, or if the segment table entry is outside the
        table and the entry address exceeds 2GB, set exception
        code in R1 bits 48-63, set bit 32 of R1, and set cc 3 */
     if (cc > 3
-        || (cc == 3 && n > 0x7FFFFFFF))
+        || (cc == 3 && regs->dat.raddr > 0x7FFFFFFF))
     {
-        regs->GR_L(r1) = 0x80000000 | xcode;
+        regs->GR_L(r1) = 0x80000000 | regs->dat.xcode;
         cc = 3;
     }
-    else if (cc == 3) /* && n <= 0x7FFFFFFF */
+    else if (cc == 3) /* && regs->dat.raddr <= 0x7FFFFFFF */
     {
         /* If segment table entry is outside table and entry
            address does not exceed 2GB, return bits 32-63 of
            the entry address and leave bits 0-31 unchanged */
-        regs->GR_L(r1) = n;
+        regs->GR_L(r1) = regs->dat.raddr;
     }
     else
     {
         /* Set R1 and condition code as returned by translate_addr */
-        regs->GR_G(r1) = n;
+        regs->GR_G(r1) = regs->dat.raddr;
     }
 
     /* Set condition code */

@@ -3283,15 +3283,13 @@ GREG    len3;
 
             abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE,
                                    regs->psw.pkey);
-            // FIXME: ia32 assembler assists works only with 0 pad
-            if (pad) memset(regs->mainstor+abs1, pad, len3);
-            else memset(regs->mainstor+abs1, pad, len3);
+            memset(regs->mainstor+abs1, pad, len3);
 
 #if defined(FEATURE_PER)
             if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
               && ( REAL_MODE(&regs->psw) ||
-                   ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
+                   ARCH_DEP(check_sa_per2) (r1, ACCTYPE_WRITE, regs) )
 #endif /*defined(FEATURE_PER2)*/
               && PER_RANGE_CHECK2(addr1, addr1+len3, regs->CR(10), regs->CR(11)) )
                 ON_IC_PER_SA(regs);
@@ -3338,7 +3336,7 @@ GREG    len3;
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
           && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
+               ARCH_DEP(check_sa_per2) (r1, ACCTYPE_WRITE, regs) )
 #endif /*defined(FEATURE_PER2)*/
           && PER_RANGE_CHECK2(addr1, addr1+len1, regs->CR(10), regs->CR(11)) )
             ON_IC_PER_SA(regs);
@@ -3368,7 +3366,7 @@ GREG    len3;
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
           && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (addr1, r1, ACCTYPE_WRITE, regs) )
+               ARCH_DEP(check_sa_per2) (r1, ACCTYPE_WRITE, regs) )
 #endif /*defined(FEATURE_PER2)*/
           && PER_RANGE_CHECK2(addr1, addr1+255, regs->CR(10), regs->CR(11)) )
             ON_IC_PER_SA(regs);

@@ -325,30 +325,26 @@ int  i;
 RADR ARCH_DEP(abs_trap_addr) (VADR vaddr, REGS *regs, int acctype)
 {
 int     rc;                             /* Return code               */
-RADR    raddr;                          /* Real address              */
 RADR    aaddr;                          /* Absolute address          */
-int     private = 0;                    /* 1=Private address space   */
-int     protect = 0;                    /* 1=page 2=ALE protection   */
-int     stid;                           /* Segment table indication  */
-U16     xcode;                          /* Exception code            */
+int     protect = 0;                    /* Protection bits           */
 
     /* Convert to real address using home segment table */
-    rc = ARCH_DEP(translate_addr) (vaddr, 0, regs, ACCTYPE_STACK,
-                &raddr, &xcode, &private, &protect, &stid);
+    rc = ARCH_DEP(translate_addr) (vaddr, 0, regs, ACCTYPE_STACK);
     if (rc != 0)
-        ARCH_DEP(program_interrupt) (regs, xcode);
+        ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
 
     /* Low-address protection prohibits stores into PSA locations */
     if (acctype == ACCTYPE_WRITE
-        && ARCH_DEP(is_low_address_protected) (vaddr, private, regs))
+        && ARCH_DEP(is_low_address_protected) (vaddr, regs->dat.private, regs))
         goto trap_prot;
 
     /* Page protection prohibits all stores into the page */
+    protect = regs->dat.protect;
     if (acctype == ACCTYPE_WRITE && protect)
         goto trap_prot;
 
     /* Convert real address to absolute address */
-    aaddr = APPLY_PREFIXING (raddr, regs->PX);
+    aaddr = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
     /* Program check if absolute address is outside main storage */
     if (aaddr > regs->mainlim)
@@ -357,30 +353,26 @@ U16     xcode;                          /* Exception code            */
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
-    int sie_stid;
-    U16 sie_xcode;
-    int sie_private;
-
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-                USE_PRIMARY_SPACE,
-                regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
-                &sie_private, &protect, &sie_stid))
-            (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+                USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+            (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
 
         /* Convert host real address to host absolute address */
-        aaddr = APPLY_PREFIXING (aaddr, regs->hostregs->PX);
+        aaddr = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+
+        protect = regs->hostregs->dat.protect;
     }
+#endif /*defined(_FEATURE_SIE)*/
 
     /* Check for HOST Page protection */
     if (acctype == ACCTYPE_WRITE && protect)
         goto trap_prot;
-#endif /*defined(_FEATURE_SIE)*/
 
     if (!((regs->psw.pkey == 0)
         || ((regs->CR(0) & CR0_STORE_OVRD)
         && ((STORAGE_KEY(aaddr, regs) & STORKEY_KEY) == 0x90))))
     {
-        protect = 0; /* clear ALE, PTE protect flag */
+        regs->dat.protect = 0; /* clear ALE, PTE protect flag */
         /* Check Key protection for store */
         if (acctype == ACCTYPE_WRITE
             && ((STORAGE_KEY(aaddr, regs) & STORKEY_KEY) != regs->psw.pkey))
@@ -401,7 +393,7 @@ U16     xcode;                          /* Exception code            */
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
           && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (vaddr, 0, ACCTYPE_STACK, regs) )
+               ARCH_DEP(check_sa_per2) (0, ACCTYPE_STACK, regs) )
 #endif /*defined(FEATURE_PER2)*/
           && PER_RANGE_CHECK(vaddr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
@@ -445,22 +437,17 @@ trap_prot:
 RADR ARCH_DEP(abs_stack_addr) (VADR vaddr, REGS *regs, int acctype)
 {
 int     rc;                             /* Return code               */
-RADR    raddr;                          /* Real address              */
 RADR    aaddr;                          /* Absolute address          */
-int     private = 0;                    /* 1=Private address space   */
-int     protect = 0;                    /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
-U16     xcode;                          /* Exception code            */
+int     protect = 0;                    /* Protection bits           */
 
     /* Convert to real address using home segment table */
-    rc = ARCH_DEP(translate_addr) (vaddr, 0, regs, ACCTYPE_STACK,
-                &raddr, &xcode, &private, &protect, &stid);
+    rc = ARCH_DEP(translate_addr) (vaddr, 0, regs, ACCTYPE_STACK);
     if (rc != 0)
-        ARCH_DEP(program_interrupt) (regs, xcode);
+        ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
 
     /* Low-address protection prohibits stores into PSA locations */
     if (acctype == ACCTYPE_WRITE
-        && ARCH_DEP(is_low_address_protected) (vaddr, private, regs))
+        && ARCH_DEP(is_low_address_protected) (vaddr, regs->dat.private, regs))
     {
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
         regs->TEA = (vaddr & STORAGE_KEY_PAGEMASK) | TEA_ST_HOME;
@@ -470,6 +457,7 @@ U16     xcode;                          /* Exception code            */
     }
 
     /* Page protection prohibits all stores into the page */
+    protect = regs->dat.protect;
     if (acctype == ACCTYPE_WRITE && protect)
     {
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
@@ -481,7 +469,7 @@ U16     xcode;                          /* Exception code            */
     }
 
     /* Convert real address to absolute address */
-    aaddr = APPLY_PREFIXING (raddr, regs->PX);
+    aaddr = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
     /* Program check if absolute address is outside main storage */
     if (aaddr > regs->mainlim)
@@ -490,18 +478,14 @@ U16     xcode;                          /* Exception code            */
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
-    int sie_stid;
-    U16 sie_xcode;
-    int sie_private;
-
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-                USE_PRIMARY_SPACE,
-                regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
-                &sie_private, &protect, &sie_stid))
-            (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+                USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
+            (regs->sie_hostpi) (regs->hostregs, regs->hostregs->dat.xcode);
 
         /* Convert host real address to host absolute address */
-        aaddr = APPLY_PREFIXING (aaddr, regs->hostregs->PX);
+        aaddr = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
+
+        protect = regs->hostregs->dat.protect;
     }
 
     /* Check for HOST Page protection */
@@ -526,7 +510,7 @@ U16     xcode;                          /* Exception code            */
         if( EN_IC_PER_SA(regs)
 #if defined(FEATURE_PER2)
           && ( REAL_MODE(&regs->psw) ||
-               ARCH_DEP(check_sa_per2) (vaddr, 0, ACCTYPE_STACK, regs) )
+               ARCH_DEP(check_sa_per2) (0, ACCTYPE_STACK, regs) )
 #endif /*defined(FEATURE_PER2)*/
           && PER_RANGE_CHECK(vaddr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);

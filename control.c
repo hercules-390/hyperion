@@ -309,8 +309,6 @@ U32     duct1;                          /* DUCT word 1               */
 U32     duct3;                          /* DUCT word 3               */
 RADR    abs;                            /* Absolute address          */
 VADR    newia;                          /* New instruction address   */
-int     protect = 0;                    /* 1=ALE protection detected
-                                           by ART (ignored by BSG)   */
 U16     xcode;                          /* Exception code            */
 #ifdef FEATURE_TRACING
 CREG    newcr12 = 0;                    /* CR12 upon completion      */
@@ -437,7 +435,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Perform special ART to obtain destination ASTE */
         xcode = ARCH_DEP(translate_alet) (alet, 0, ACCTYPE_BSG, regs,
-                                &dasteo, daste, &protect);
+                                &dasteo, daste);
 
         /* Program check if ALET translation error */
         if (xcode != 0)
@@ -1047,10 +1045,6 @@ BYTE    storkey;
             else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
-            U16  xcode;
-            int  private,
-                 protect,
-                 stid;
             RADR rcpa;
             BYTE rcpkey;
 
@@ -1059,17 +1053,16 @@ BYTE    storkey;
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                        regs->hostregs, ACCTYPE_PTE, &rcpa, &xcode, &private,
-                        &protect, &stid))
+                                            regs->hostregs, ACCTYPE_PTE))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
+                    rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
-               mode, so no provision is made for ESAME mode tables */
+                       mode, so no provision is made for ESAME mode tables */
                     rcpa += 1025;
                 }
                 else
@@ -1082,8 +1075,8 @@ BYTE    storkey;
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
-                                       regs->hostregs, ACCTYPE_SIE, 0);
+                    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                               regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* fetch the RCP key */
@@ -1095,8 +1088,7 @@ BYTE    storkey;
 
                 /* guest absolute to host real */
                 if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &n, &xcode, &private,
-                    &protect, &stid))
+                                        regs->hostregs, ACCTYPE_SIE))
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 {
                     /* In case of storage key assist obtain the
@@ -1113,7 +1105,7 @@ BYTE    storkey;
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
-                    n = APPLY_PREFIXING(n, regs->hostregs->PX);
+                    n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                     regs->GR_LHLCL(r1) = storkey
@@ -1205,10 +1197,6 @@ BYTE    storkey;
         else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
-            U16  xcode;
-            int  private,
-                 protect,
-                 stid;
             RADR rcpa;
             BYTE rcpkey;
 
@@ -1221,16 +1209,15 @@ BYTE    storkey;
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                        regs->hostregs, ACCTYPE_PTE, &rcpa, &xcode, &private,
-                        &protect, &stid))
+                                            regs->hostregs, ACCTYPE_PTE))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
+                    rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
-               for ESAME mode, this entry is eight bytes long */
+                       for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
                 }
                 else
@@ -1261,8 +1248,7 @@ BYTE    storkey;
 
                 /* guest absolute to host real */
                 if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &n, &xcode, &private,
-                    &protect, &stid))
+                                        regs->hostregs, ACCTYPE_SIE))
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 {
                     /* In case of storage key assist obtain the
@@ -1279,7 +1265,7 @@ BYTE    storkey;
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
-                    n = APPLY_PREFIXING(n, regs->hostregs->PX);
+                    n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* Insert the storage key into R1 register bits 24-31 */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -1319,10 +1305,6 @@ DEF_INST(insert_virtual_storage_key)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    effective_addr;                 /* Virtual storage addr      */
-U16     xcode;                          /* Exception code            */
-int     private;                        /* 1=Private address space   */
-int     protect;                        /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
 RADR    n;                              /* 32-bit operand values     */
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
 int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
@@ -1344,12 +1326,11 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
     effective_addr = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
     /* Translate virtual address to real address */
-    if (ARCH_DEP(translate_addr) (effective_addr, r2, regs, ACCTYPE_IVSK,
-        &n, &xcode, &private, &protect, &stid))
-        ARCH_DEP(program_interrupt) (regs, xcode);
+    if (ARCH_DEP(translate_addr) (effective_addr, r2, regs, ACCTYPE_IVSK))
+        ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
 
     /* Convert real address to absolute address */
-    n = APPLY_PREFIXING (n, regs->PX);
+    n = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
     /* Addressing exception if block is outside main storage */
     if ( n > regs->mainlim )
@@ -1369,13 +1350,12 @@ int     sr;                             /* SIE_TRANSLATE_ADDR rc     */
     {
         /* guest absolute to host absolute addr or PTE addr in case of rc2 */
         sr = SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-            regs->hostregs, ACCTYPE_SIE, &n, &xcode, &private,
-            &protect, &stid);
+                                 regs->hostregs, ACCTYPE_SIE);
 
-        n = APPLY_PREFIXING (n, regs->hostregs->PX);
+        n = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
         if(sr != 0 && sr != 2)
-            ARCH_DEP(program_interrupt) (regs->hostregs, xcode);
+            ARCH_DEP(program_interrupt) (regs->hostregs, regs->hostregs->dat.xcode);
 
         if(sr == 2)
         {
@@ -1860,26 +1840,20 @@ VADR    effective_addr2;                /* Effective address         */
 void ARCH_DEP(load_real_address_proc) (REGS *regs,
                 int r1, int b2, VADR effective_addr2)
 {
-U16     xcode;                          /* Exception code            */
-int     private;                        /* 1=Private address space   */
-int     protect;                        /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
 int     cc;                             /* Condition code            */
-RADR    n;                              /* 32-bit operand values     */
 
     SIE_MODE_XC_OPEX(regs);
 
     PRIV_CHECK(regs);
 
     /* Translate the effective address to a real address */
-    cc = ARCH_DEP(translate_addr) (effective_addr2, b2, regs,
-            ACCTYPE_LRA, &n, &xcode, &private, &protect, &stid);
+    cc = ARCH_DEP(translate_addr) (effective_addr2, b2, regs, ACCTYPE_LRA);
 
     /* If ALET exception or ASCE-type or region translation
        exception, set exception code in R1 bits 48-63, set
        bit 32 of R1, and set condition code 3 */
     if (cc > 3) {
-        regs->GR_L(r1) = 0x80000000 | xcode;
+        regs->GR_L(r1) = 0x80000000 | regs->dat.xcode;
         cc = 3;
     }
     else
@@ -1888,13 +1862,13 @@ RADR    n;                              /* 32-bit operand values     */
 #if defined(FEATURE_ESAME)
         if (regs->psw.amode64 && cc != 3)
         {
-            regs->GR_G(r1) = n;
+            regs->GR_G(r1) = regs->dat.raddr;
         }
         else
         {
-            if (n <= 0x7FFFFFFF)
+            if (regs->dat.raddr <= 0x7FFFFFFF)
             {
-                regs->GR_L(r1) = n;
+                regs->GR_L(r1) = regs->dat.raddr;
             }
             else
             {
@@ -1912,12 +1886,12 @@ RADR    n;                              /* 32-bit operand values     */
                    table entry address exceeds 2GB.  Convert to
                    condition code 3 and return the exception code
                    which will be X'0010' or X'0011' */
-                regs->GR_L(r1) = 0x80000000 | xcode;
+                regs->GR_L(r1) = 0x80000000 | regs->dat.xcode;
                 cc = 3;
-            } /* end else(n) */
+            } /* end else(regs->dat.raddr) */
         } /* end else(amode) */
 #else /*!defined(FEATURE_ESAME)*/
-        regs->GR_L(r1) = n;
+        regs->GR_L(r1) = regs->dat.raddr;
 #endif /*!defined(FEATURE_ESAME)*/
     } /* end else(cc) */
 
@@ -1958,13 +1932,8 @@ DEF_INST(lock_page)
 {
 int     r1, r2;                         /* Values of R fields        */
 VADR    n2;                             /* effective addr of r2      */
-RADR    raddr,                          /* Real address              */
-        rpte;                           /* PTE real address          */
+RADR    rpte;                           /* PTE real address          */
 CREG    pte;                            /* Page Table Entry          */
-int     private;                        /* 1=Private address space   */
-int     protect;                        /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
-U16     xcode = 0;                      /* Exception code            */
 
     RRE(inst, regs, r1, r2);
 
@@ -1982,11 +1951,9 @@ U16     xcode = 0;                      /* Exception code            */
     OBTAIN_MAINLOCK(regs);
 
     /* Return condition code 3 if translation exception */
-    ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_PTE,
-                &rpte, &xcode, &private, &protect, &stid);
-    if (xcode == 0)
+    if (ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_PTE) == 0)
     {
-        rpte = APPLY_PREFIXING (rpte, regs->PX);
+        rpte = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
         pte =
 #if defined(FEATURE_ESAME)
@@ -2001,10 +1968,9 @@ U16     xcode = 0;                      /* Exception code            */
             if(!(pte & PAGETAB_PGLOCK))
             {
                 /* Return condition code 3 if translation exception */
-                if(ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_LRA,
-                            &raddr, &xcode, &private, &protect, &stid))
+                if(ARCH_DEP(translate_addr) (n2, r2, regs, ACCTYPE_LRA))
                 {
-                regs->psw.cc = 3;
+                    regs->psw.cc = 3;
                     RELEASE_MAINLOCK(regs);
                     return;
                 }
@@ -2015,7 +1981,7 @@ U16     xcode = 0;                      /* Exception code            */
 #else /*!defined(FEATURE_ESAME)*/
                 ARCH_DEP(store_fullword_absolute) (pte, rpte, regs);
 #endif /*!defined(FEATURE_ESAME)*/
-                regs->GR(r1) = raddr;
+                regs->GR(r1) = regs->dat.raddr;
                 regs->psw.cc = 0;
             }
             else
@@ -3428,19 +3394,19 @@ BYTE    storkey;                        /* Storage key               */
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         if(!regs->sie_pref)
-    {
+        {
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
             if(SIE_STATB(regs, RCPO0, SKA)
               && SIE_STATB(regs, RCPO2, RCPBY))
             {
-            SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
+                SIE_TRANSLATE(&n, ACCTYPE_SIE, regs);
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                 storkey = STORAGE_KEY(n, regs);
 #else
                 storkey = STORAGE_KEY1(n, regs) | STORAGE_KEY2(n, regs);
 #endif
 
-            /* Reset the reference bit in the storage key */
+                /* Reset the reference bit in the storage key */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                 STORAGE_KEY(n, regs) &= ~(STORKEY_REF);
 #else
@@ -3454,27 +3420,22 @@ BYTE    storkey;                        /* Storage key               */
             BYTE rcpkey, realkey;
             RADR ra;
             RADR rcpa;
-            U16  xcode;
-            int  private,
-                 protect,
-                 stid;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if(SIE_STATB(regs, RCPO0, SKA))
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                        regs->hostregs, ACCTYPE_PTE, &rcpa, &xcode, &private,
-                        &protect, &stid))
+                                            regs->hostregs, ACCTYPE_PTE))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
+                    rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
                        the entry. S/370 mode cannot be emulated in ESAME
-               mode, so no provision is made for ESAME mode tables */
+                       mode, so no provision is made for ESAME mode tables */
                     rcpa += 1025;
                 }
                 else
@@ -3487,8 +3448,8 @@ BYTE    storkey;                        /* Storage key               */
                     rcpa += n >> 12;
 
                     /* host primary to host absolute */
-            rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
-                                       regs->hostregs, ACCTYPE_SIE, 0);
+                    rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
+                                               regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* fetch the RCP key */
@@ -3496,16 +3457,15 @@ BYTE    storkey;                        /* Storage key               */
                 STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
 
                 if (!SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &ra, &xcode, &private,
-                    &protect, &stid))
+                                         regs->hostregs, ACCTYPE_SIE))
                 {
-                    ra = APPLY_PREFIXING(ra, regs->hostregs->PX);
+                    ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
-                     realkey = STORAGE_KEY(ra, regs)
+                    realkey = STORAGE_KEY(ra, regs)
 #else
-                     realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
+                    realkey = (STORAGE_KEY1(ra, regs) | STORAGE_KEY2(ra, regs))
 #endif
-                              & (STORKEY_REF | STORKEY_CHANGE);
+                            & (STORKEY_REF | STORKEY_CHANGE);
 
                     /* Reset reference and change bits in storage key */
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -3523,8 +3483,8 @@ BYTE    storkey;                        /* Storage key               */
                 storkey = realkey | (rcpkey & (STORKEY_REF | STORKEY_CHANGE));
                 /* or with host set */
                 rcpkey |= realkey << 4;
-        /* Put storage key in guest set */
-        rcpkey |= storkey;
+                /* Put storage key in guest set */
+                rcpkey |= storkey;
                 /* reset the reference bit */
                 rcpkey &= ~(STORKEY_REF);
                 regs->mainstor[rcpa] = rcpkey;
@@ -3641,10 +3601,6 @@ BYTE    storkey;                        /* Storage key               */
             BYTE rcpkey, realkey;
             RADR ra;
             RADR rcpa;
-            U16  xcode;
-            int  private,
-                 protect,
-                 stid;
 
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
                 if(SIE_STATB(regs, RCPO0, SKA)
@@ -3655,16 +3611,15 @@ BYTE    storkey;                        /* Storage key               */
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                        regs->hostregs, ACCTYPE_PTE, &rcpa, &xcode, &private,
-                        &protect, &stid))
+                                            regs->hostregs, ACCTYPE_PTE))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
+                    rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
-               for ESAME mode, this entry is eight bytes long */
+                       for ESAME mode, this entry is eight bytes long */
                     rcpa += regs->hostregs->arch_mode == ARCH_900 ? 2049 : 1025;
                 }
                 else
@@ -3691,10 +3646,9 @@ BYTE    storkey;                        /* Storage key               */
                 STORAGE_KEY(rcpa, regs) |= STORKEY_REF;
 
                 if (!SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                    regs->hostregs, ACCTYPE_SIE, &ra, &xcode, &private,
-                    &protect, &stid))
+                                         regs->hostregs, ACCTYPE_SIE))
                 {
-                    ra = APPLY_PREFIXING(ra, regs->hostregs->PX);
+                    ra = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
                     realkey = STORAGE_KEY(ra, regs) & (STORKEY_REF | STORKEY_CHANGE);
 #else
@@ -3718,8 +3672,8 @@ BYTE    storkey;                        /* Storage key               */
                 storkey = realkey | (rcpkey & (STORKEY_REF | STORKEY_CHANGE));
                 /* or with host set */
                 rcpkey |= realkey << 4;
-        /* Put storage key in guest set */
-        rcpkey |= storkey;
+                /* Put storage key in guest set */
+                rcpkey |= storkey;
                 /* reset the reference bit */
                 rcpkey &= ~(STORKEY_REF);
                 regs->mainstor[rcpa] = rcpkey;
@@ -4297,11 +4251,7 @@ RADR    n;                              /* Absolute storage addr     */
             else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
-            U16  xcode;
-            int  private,
-                 protect,
-                 stid,
-                 sr;
+            int  sr;
             BYTE realkey,
                  rcpkey;
             RADR rcpa;
@@ -4311,12 +4261,11 @@ RADR    n;                              /* Absolute storage addr     */
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                        regs->hostregs, ACCTYPE_PTE, &rcpa, &xcode, &private,
-                        &protect, &stid))
+                                            regs->hostregs, ACCTYPE_PTE))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
+                    rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* The reference and change byte is located directly
                        beyond the page table and is located at offset 1 in
@@ -4335,13 +4284,12 @@ RADR    n;                              /* Absolute storage addr     */
 
                     /* host primary to host absolute */
                     rcpa = SIE_LOGICAL_TO_ABS (rcpa, USE_PRIMARY_SPACE,
-                                       regs->hostregs, ACCTYPE_SIE, 0);
+                                               regs->hostregs, ACCTYPE_SIE, 0);
                 }
 
                 /* guest absolute to host real */
                 sr = SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                     regs->hostregs, ACCTYPE_SIE, &n, &xcode, &private,
-                     &protect, &stid);
+                                         regs->hostregs, ACCTYPE_SIE);
 
                 if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
@@ -4357,7 +4305,7 @@ RADR    n;                              /* Absolute storage addr     */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
-                    n = APPLY_PREFIXING(n, regs->hostregs->PX);
+                    n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     realkey =
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -4490,11 +4438,7 @@ RADR    n;                              /* Abs frame addr stor key   */
             else
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
             {
-            U16  xcode;
-            int  private,
-                 protect,
-                 stid,
-                 sr;
+            int  sr;
             BYTE realkey,
                  rcpkey;
             RADR rcpa;
@@ -4508,12 +4452,11 @@ RADR    n;                              /* Abs frame addr stor key   */
                 {
                     /* guest absolute to host PTE addr */
                     if (SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                        regs->hostregs, ACCTYPE_PTE, &rcpa, &xcode, &private,
-                        &protect, &stid))
+                                            regs->hostregs, ACCTYPE_PTE))
                         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
                     /* Convert real address to absolute address */
-                    rcpa = APPLY_PREFIXING (rcpa, regs->hostregs->PX);
+                    rcpa = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     /* For ESA/390 the RCP byte entry is at offset 1 in a
                        four byte entry directly beyond the page table,
@@ -4541,8 +4484,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 
                 /* guest absolute to host real */
                 sr = SIE_TRANSLATE_ADDR (regs->sie_mso + n, USE_PRIMARY_SPACE,
-                     regs->hostregs, ACCTYPE_SIE, &n, &xcode, &private,
-                     &protect, &stid);
+                                         regs->hostregs, ACCTYPE_SIE);
 
                 if (sr
 #if defined(_FEATURE_STORAGE_KEY_ASSIST)
@@ -4562,7 +4504,7 @@ RADR    n;                              /* Abs frame addr stor key   */
 #endif /*defined(_FEATURE_STORAGE_KEY_ASSIST)*/
                 {
                     /* host real to host absolute */
-                    n = APPLY_PREFIXING(n, regs->hostregs->PX);
+                    n = APPLY_PREFIXING(regs->hostregs->dat.raddr, regs->hostregs->PX);
 
                     realkey =
 #if !defined(_FEATURE_2K_STORAGE_KEYS)
@@ -5794,7 +5736,6 @@ DEF_INST(test_access)
 int     r1, r2;                         /* Values of R fields        */
 U32     asteo;                          /* Real address of ASTE      */
 U32     aste[16];                       /* ASN second table entry    */
-int     protect;                        /* 1=ALE or page protection  */
 
     RRE(inst, regs, r1, r2);
 
@@ -5824,7 +5765,7 @@ int     protect;                        /* 1=ALE or page protection  */
                         SIE_STATB(regs, MX, XC) ? regs->hostregs :
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
                           regs,
-                        &asteo, aste, &protect))
+                        &asteo, aste))
     {
         regs->psw.cc = 3;
         return;
@@ -5907,14 +5848,9 @@ DEF_INST(test_protection)
 int     b1, b2;                         /* Values of base registers  */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
-RADR    raddr;                          /* Real address              */
 RADR    aaddr;                          /* Absolute address          */
 BYTE    skey;                           /* Storage key               */
 BYTE    akey;                           /* Access key                */
-int     private = 0;                    /* 1=Private address space   */
-int     protect = 0;                    /* 1=ALE or page protection  */
-int     stid;                           /* Segment table indication  */
-U16     xcode;                          /* Exception code            */
 
     SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
@@ -5927,13 +5863,14 @@ U16     xcode;                          /* Exception code            */
 
     /* Convert logical address to real address */
     if (REAL_MODE(&regs->psw))
-        raddr = effective_addr1;
-    else {
+    {
+        regs->dat.protect = 0;
+        regs->dat.raddr = effective_addr1;
+    }
+    else
+    {
         /* Return condition code 3 if translation exception */
-        if (ARCH_DEP(translate_addr) (effective_addr1, b1, regs,
-                                        ACCTYPE_TPROT, &raddr,
-                                        &xcode, &private, &protect,
-                                        &stid))
+        if (ARCH_DEP(translate_addr) (effective_addr1, b1, regs, ACCTYPE_TPROT))
         {
             regs->psw.cc = 3;
             return;
@@ -5941,7 +5878,7 @@ U16     xcode;                          /* Exception code            */
     }
 
     /* Convert real address to absolute address */
-    aaddr = APPLY_PREFIXING (raddr, regs->PX);
+    aaddr = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
 
     /* Program check if absolute address is outside main storage */
     if (aaddr > regs->mainlim)
@@ -5950,27 +5887,19 @@ U16     xcode;                          /* Exception code            */
 #if defined(_FEATURE_SIE)
     if(SIE_MODE(regs)  && !regs->sie_pref)
     {
-    U16 sie_xcode;
-    int sie_private,
-        sie_stid;
-
         /* Under SIE TPROT also indicates if the host is using
            page protection */
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-                b1,
-                regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
-                &sie_private, &protect, &sie_stid))
+                                b1, regs->hostregs, ACCTYPE_SIE))
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
         if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
-                USE_PRIMARY_SPACE,
-                regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
-                &sie_private, &protect, &sie_stid))
+                                USE_PRIMARY_SPACE, regs->hostregs, ACCTYPE_SIE))
 #endif /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
         /* Convert host real address to host absolute address */
-        aaddr = APPLY_PREFIXING (aaddr, regs->hostregs->PX);
+        aaddr = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
         if (aaddr > regs->hostregs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
@@ -5985,13 +5914,11 @@ U16     xcode;                          /* Exception code            */
     skey = STORAGE_KEY(aaddr, regs);
 
     /* Return condition code 2 if location is fetch protected */
-    if (ARCH_DEP(is_fetch_protected) (effective_addr1, skey, akey,
-                                        private, regs))
+    if (ARCH_DEP(is_fetch_protected) (effective_addr1, skey, akey, regs))
         regs->psw.cc = 2;
     else
         /* Return condition code 1 if location is store protected */
-        if (ARCH_DEP(is_store_protected) (effective_addr1, skey, akey,
-                                            private, protect, regs))
+        if (ARCH_DEP(is_store_protected) (effective_addr1, skey, akey, regs))
             regs->psw.cc = 1;
         else
             /* Return condition code 0 if location is not protected */

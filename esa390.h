@@ -170,6 +170,18 @@ typedef struct  _PSW {
 #define EUMASK(p)             (test_bit (1, PSW_EUBIT, &(p)->progmask))
 #define SGMASK(p)             (test_bit (1, PSW_SGBIT, &(p)->progmask))
 
+/* Structure for Dynamic Address Translation */
+typedef struct _DAT {
+        RADR    raddr;                  /* Real address              */
+        RADR    asd;                    /* Address space designator: */
+                                        /*   STD or ASCE             */
+        int     stid;                   /* Address space indicator   */
+        U16     xcode;                  /* Translation exception code*/ 
+        BYTE    private:1,              /* 1=Private address space   */
+                protect:2;              /* 1=Page prot, 2=ALE prot   */ 
+        BYTE    reserved[0];            /* [alignment]               */
+      } DAT;
+
 /* Structure definition for translation-lookaside buffer entry */
 typedef struct _TLBE {
         DW      std;                    /* Segment table designation */

@@ -564,15 +564,10 @@ int     icode = 0;                      /* Interception code         */
             GUESTREGS->sie_psa = (PSA_3XX*)(GUESTREGS->mainstor + GUESTREGS->PX);
         else
         {
-        U16 sie_xcode;
-        int sie_private,
-            sie_protect = 0,
-            sie_stid;
         RADR sie_px;
     
             if (ARCH_DEP(translate_addr) (GUESTREGS->sie_mso + GUESTREGS->PX,
-                    USE_PRIMARY_SPACE, regs, ACCTYPE_SIE, &sie_px,
-                    &sie_xcode, &sie_private, &sie_protect, &sie_stid))
+                                          USE_PRIMARY_SPACE, regs, ACCTYPE_SIE))
             {
                 SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
                   SIE_VI_WHY_PFACC, GUESTREGS);
@@ -582,9 +577,9 @@ int     icode = 0;                      /* Interception code         */
             }
     
             /* Convert host real address to host absolute address */
-            sie_px = APPLY_PREFIXING (sie_px, regs->PX);
+            sie_px = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
             
-            if (sie_protect || sie_px > regs->mainlim)
+            if (regs->dat.protect || sie_px > regs->mainlim)
             {
                 SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
                   SIE_VI_WHY_PFACC, GUESTREGS);

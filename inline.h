@@ -18,12 +18,11 @@ _DAT_C_STATIC int ARCH_DEP(authorize_asn) (U16 ax, U32 aste[],
 #endif
 #if defined(FEATURE_ACCESS_REGISTERS)
 _DAT_C_STATIC U16 ARCH_DEP(translate_alet) (U32 alet, U16 eax,
-       int acctype, REGS *regs, U32 *asteo, U32 aste[], int *prot);
+       int acctype, REGS *regs, U32 *asteo, U32 aste[]);
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs);
 #endif
 _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
-       REGS *regs, int acctype, RADR *raddr, U16 *xcode, int *priv,
-                                        int *prot, int *pstid);
+                                            REGS *regs, int acctype);
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
 _DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
@@ -35,16 +34,14 @@ _LOGICAL_C_STATIC RADR ARCH_DEP(logical_to_abs) (VADR addr, int arn,
 _LOGICAL_C_STATIC RADR s390_logical_to_abs (U32 addr, int arn, REGS *regs,
                            int acctype, BYTE akey);
 _DAT_C_STATIC int s390_translate_addr (U32 vaddr, int arn, REGS *regs,
-               int acctype, RADR *raddr, U16 *xcode, int *priv,
-                                        int *prot, int *pstid);
+                           int acctype);
 #endif /*defined(_FEATURE_SIE)*/
 
 #if defined(_FEATURE_ZSIE)
 _LOGICAL_C_STATIC RADR z900_logical_to_abs (U64 addr, int arn, REGS *regs,
                            int acctype, BYTE akey);
 _DAT_C_STATIC int z900_translate_addr (U64 vaddr, int arn, REGS *regs,
-               int acctype, RADR *raddr, U16 *xcode, int *priv,
-                                        int *prot, int *pstid);
+                           int acctype);
 #endif /*defined(_FEATURE_ZSIE)*/
 
 _VSTORE_C_STATIC void ARCH_DEP(vstorec) (void *src, BYTE len,
@@ -177,23 +174,22 @@ S64 quot, rem;
 
 
 /*-------------------------------------------------------------------*/
-/* Test for fetch protected storage location.                */
-/*                                   */
-/* Input:                                */
-/*  addr    Logical address of storage location          */
-/*  skey    Storage key with fetch, reference, and change bits   */
-/*      and one low-order zero appended              */
-/*  akey    Access key with 4 low-order zeroes appended      */
-/*  private 1=Location is in a private address space         */
-/*  regs    Pointer to the CPU register context          */
-/* Return value:                             */
-/*  1=Fetch protected, 0=Not fetch protected             */
+/* Test for fetch protected storage location.                        */
+/*                                                                   */
+/* Input:                                                            */
+/*  addr    Logical address of storage location                      */
+/*  skey    Storage key with fetch, reference, and change bits       */
+/*      and one low-order zero appended                              */
+/*  akey    Access key with 4 low-order zeroes appended              */
+/*  private 1=Location is in a private address space                 */
+/*  regs    Pointer to the CPU register context                      */
+/* Return value:                                                     */
+/*  1=Fetch protected, 0=Not fetch protected                         */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
-                    BYTE akey, int private, REGS *regs)
+                    BYTE akey, REGS *regs)
 {
     UNREFERENCED_370(addr);
-    UNREFERENCED_370(private);
     UNREFERENCED_370(regs);
 
     /* [3.4.1] Fetch is allowed if access key is zero, regardless
@@ -206,7 +202,7 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
        2K of non-private address spaces if CR0 bit 6 is set */
     if (addr < 2048
     && (regs->CR(0) & CR0_FETCH_OVRD)
-    && private == 0)
+    && regs->dat.private == 0)
     return 0;
 #endif /*FEATURE_FETCH_PROTECTION_OVERRIDE*/
 
@@ -231,17 +227,17 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 } /* end function is_fetch_protected */
 
 /*-------------------------------------------------------------------*/
-/* Test for low-address protection.                  */
-/*                                   */
-/* Input:                                */
-/*  addr    Logical address of storage location          */
-/*  private 1=Location is in a private address space         */
-/*  regs    Pointer to the CPU register context          */
-/* Return value:                             */
-/*  1=Low-address protected, 0=Not low-address protected         */
+/* Test for low-address protection.                                  */
+/*                                                                   */
+/* Input:                                                            */
+/*  addr    Logical address of storage location                      */
+/*  private 1=Location is in a private address space                 */
+/*  regs    Pointer to the CPU register context                      */
+/* Return value:                                                     */
+/*  1=Low-address protected, 0=Not low-address protected             */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
-            int private, REGS *regs)
+                                              int private, REGS *regs)
 {
 #if defined (FEATURE_ESAME)
     /* For ESAME, low-address protection applies to locations
@@ -268,7 +264,7 @@ static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 
     /* Low-address protection does not apply to private address
        spaces */
-    if (private)
+    if (regs->dat.private)
     return 0;
 
     /* Return one if location is low-address protected */
@@ -277,33 +273,33 @@ static inline int ARCH_DEP(is_low_address_protected) (VADR addr,
 } /* end function is_low_address_protected */
 
 /*-------------------------------------------------------------------*/
-/* Test for store protected storage location.                */
-/*                                   */
-/* Input:                                */
-/*  addr    Logical address of storage location          */
-/*  skey    Storage key with fetch, reference, and change bits   */
-/*      and one low-order zero appended              */
-/*  akey    Access key with 4 low-order zeroes appended      */
-/*  private 1=Location is in a private address space         */
-/*  protect 1=Access list protection or page protection applies  */
-/*  regs    Pointer to the CPU register context          */
-/* Return value:                             */
-/*  1=Store protected, 0=Not store protected             */
+/* Test for store protected storage location.                        */
+/*                                                                   */
+/* Input:                                                            */
+/*  addr    Logical address of storage location                      */
+/*  skey    Storage key with fetch, reference, and change bits       */
+/*      and one low-order zero appended                              */
+/*  akey    Access key with 4 low-order zeroes appended              */
+/*  private 1=Location is in a private address space                 */
+/*  protect 1=Access list protection or page protection applies      */
+/*  regs    Pointer to the CPU register context                      */
+/* Return value:                                                     */
+/*  1=Store protected, 0=Not store protected                         */
 /*-------------------------------------------------------------------*/
 static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
-               BYTE akey, int private, int protect, REGS *regs)
+               BYTE akey, REGS *regs)
 {
     /* [3.4.4] Low-address protection prohibits stores into certain
        locations in the prefixed storage area of non-private address
        address spaces, if the low-address control bit in CR0 is set,
        regardless of the access key and storage key */
-    if (ARCH_DEP(is_low_address_protected) (addr, private, regs))
+    if (ARCH_DEP(is_low_address_protected) (addr, regs->dat.protect, regs))
     return 1;
 
     /* Access-list controlled protection prohibits all stores into
        the address space, and page protection prohibits all stores
        into the page, regardless of the access key and storage key */
-    if (protect)
+    if (regs->dat.protect)
     return 1;
 
     /* [3.4.1] Store is allowed if access key is zero, regardless
@@ -332,9 +328,9 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
 
 
 /*-------------------------------------------------------------------*/
-/* Fetch a doubleword from absolute storage.                 */
+/* Fetch a doubleword from absolute storage.                         */
 /* The caller is assumed to have already checked that the absolute   */
-/* address is within the limit of main storage.              */
+/* address is within the limit of main storage.                      */
 /* All bytes of the word are fetched concurrently as observed by     */
 /* other CPUs.  The doubleword is first fetched as an integer, then  */
 /* the bytes are reversed into host byte order if necessary.         */
@@ -359,9 +355,9 @@ static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
 
 
 /*-------------------------------------------------------------------*/
-/* Fetch a fullword from absolute storage.               */
+/* Fetch a fullword from absolute storage.                           */
 /* The caller is assumed to have already checked that the absolute   */
-/* address is within the limit of main storage.              */
+/* address is within the limit of main storage.                      */
 /* All bytes of the word are fetched concurrently as observed by     */
 /* other CPUs.  The fullword is first fetched as an integer, then    */
 /* the bytes are reversed into host byte order if necessary.         */

@@ -310,16 +310,13 @@ void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname)
 static U16 ARCH_DEP(virt_to_abs) (RADR *aaptr, int *siptr,
                         VADR vaddr, int arn, REGS *regs, int acctype)
 {
-RADR    raddr;                          /* Real address              */
 RADR    aaddr;
 int     icode;
-int  private = 0;
-int  protect = 0;
-U16  xcode;
 REGS    gregs, hgregs;
 
 // FIXME: cygwin emits bad code here so we have the next stmt:
     if (!regs) return 0;
+
     gregs = *regs;
     gregs.ghostregs = 1;
 
@@ -339,18 +336,16 @@ REGS    gregs, hgregs;
 
         /* Convert logical address to real address */
         if (REAL_MODE(&gregs.psw) || arn == USE_REAL_ADDR)
-            raddr = vaddr;
+            gregs.dat.raddr = vaddr;
         else {
             /* Return condition code 3 if translation exception */
-            if (ARCH_DEP(translate_addr) (vaddr, arn, &gregs,
-                                            acctype, &raddr,
-                                            &xcode, &private, &protect,
-                                            siptr))
-                return xcode;
+            if (ARCH_DEP(translate_addr) (vaddr, arn, &gregs, acctype))
+                *siptr = gregs.dat.stid;
+                return gregs.dat.xcode;
         }
 
         /* Convert real address to absolute address */
-        aaddr = APPLY_PREFIXING (raddr, gregs.PX);
+        aaddr = APPLY_PREFIXING (gregs.dat.raddr, gregs.PX);
 
         /* Program check if absolute address is outside main storage */
         if (aaddr > gregs.mainlim)

@@ -1097,12 +1097,10 @@ DEF_INST(ecpsvm_disp1)
 }
 static int ecpsvm_int_lra(REGS *regs,VADR pgadd,RADR *raddr)
 {
-    U16 xcode;
-    int private;
-    int protect;
-    int stid;
-    return(ARCH_DEP(translate_addr) (pgadd , USE_PRIMARY_SPACE,  regs,
-                  ACCTYPE_LRA, raddr , &xcode, &private, &protect, &stid));
+    int cc;
+    cc = ARCH_DEP(translate_addr) (pgadd , USE_PRIMARY_SPACE, regs, ACCTYPE_LRA);
+    *raddr = regs->dat.raddr;
+    return cc;
 }
 /* TRANBRNG/TRANLOCK Common code */
 static int ecpsvm_tranbrng(REGS *regs,VADR cortabad,VADR pgadd,RADR *raddr)
