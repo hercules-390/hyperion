@@ -9,15 +9,6 @@
 #include "hercules.h"
 #include "opcode.h"
 
-#define ENDMSG(m, format, a...) \
-   if(m!=NULL) fprintf (m, "cckdend: " format, ## a)
-
-#define COMPMSG(m, format, a...) \
- if(m!=NULL) fprintf (m, "cckdcomp: " format, ## a)
-
-#define CDSKMSG(m, format, a...) \
- if(m!=NULL) fprintf (m, "cckdcdsk: " format, ## a)
-
 typedef struct _SPCTAB {                /* Space table               */
 off_t           pos;                    /* Space offset              */
 long long       len;                    /* Space length              */
@@ -46,6 +37,10 @@ int cdsk_valid_trk (int, BYTE *, int, int, int, char *);
 int cdsk_recover_trk (int, BYTE *, int, int, int, int, int, int *);
 int cdsk_build_gap (SPCTAB *, int *, SPCTAB *);
 int cdsk_build_gap_long (SPCTAB *, int *, SPCTAB *);
+
+static __inline__ void ENDMSG(FILE *,char *,...);
+static __inline__ void COMPMSG(FILE *,char *,...);
+static __inline__ void CDSKMSG(FILE *,char *,...);
 
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
@@ -2414,3 +2409,38 @@ int i, gaps, s, siz;
     *n = s;
     return gaps;
 }
+
+/*-------------------------------------------------------------------*/
+/* Message functions                                                 */
+/*-------------------------------------------------------------------*/
+
+static __inline__ void ENDMSG (FILE *m, char *format, ...)
+{
+va_list vl;
+
+    if (m == NULL) return;
+    va_start(vl,format);
+    fprintf (m, "cckdend: ");
+    vfprintf (m, format, vl);
+} /* end function ENDMSG */
+
+static __inline__ void COMPMSG (FILE *m, char *format, ...)
+{
+va_list vl;
+
+    if (m == NULL) return;
+    va_start(vl,format);
+    fprintf (m, "cckdcomp: ");
+    vfprintf (m, format, vl);
+} /* end function COMPMSG */
+
+static __inline__ void CDSKMSG (FILE *m, char *format, ...)
+{
+va_list vl;
+
+    if (m == NULL) return;
+    va_start(vl,format);
+    fprintf (m, "cckdcdsk: ");
+    vfprintf (m, format, vl);
+} /* end function CDSKMSG */
+
