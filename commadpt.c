@@ -1210,7 +1210,7 @@ static void commadpt_wait(DEVBLK *dev)
 /*-------------------------------------------------------------------*/
 static void    commadpt_halt(DEVBLK *dev)
 {
-    if(dev->busy)
+    if(!dev->busy)
     {
         return;
     }
