@@ -682,7 +682,6 @@ typedef struct _REGS {                  /* Processor registers       */
      /* Mainstor address lookup accelerator                          */
 
         BYTE    aea_mode;               /* aea addressing mode       */
-        int     aea_crx;                /* cr index (s370 mode)      */
 
         int     aea_ar_special[5];      /* Negative index into ar    */
         int     aea_ar[16];             /* arn to cr number          */

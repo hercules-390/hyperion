@@ -525,35 +525,6 @@ z900_ ## _name
     (_pointer)->storkeys[((_addr)>>STORAGE_KEY_PAGESHIFT)|1]
 #endif
 
-/* Macros for testing address space control mode */
-#undef SPACE_BIT
-#undef AR_BIT
-#undef PRIMARY_SPACE_MODE
-#undef SECONDARY_SPACE_MODE
-#undef ACCESS_REGISTER_MODE
-#undef HOME_SPACE_MODE
-#if __GEN_ARCH == 370
-#define SPACE_BIT(p) (0)
-#define AR_BIT(p) (0)
-#define PRIMARY_SPACE_MODE(p) (1)
-#define SECONDARY_SPACE_MODE(p) (0)
-#define ACCESS_REGISTER_MODE(p) (0)
-#define HOME_SPACE_MODE(p) (0)
-#else
-#define SPACE_BIT(p) \
-        (((p)->asc & BIT(PSW_SPACE_BIT)) != 0)
-#define AR_BIT(p) \
-        (((p)->asc & BIT(PSW_AR_BIT)) != 0)
-#define PRIMARY_SPACE_MODE(p) \
-        ((p)->asc == PSW_PRIMARY_SPACE_MODE)
-#define SECONDARY_SPACE_MODE(p) \
-        ((p)->asc == PSW_SECONDARY_SPACE_MODE)
-#define ACCESS_REGISTER_MODE(p) \
-        ((p)->asc == PSW_ACCESS_REGISTER_MODE)
-#define HOME_SPACE_MODE(p) \
-        ((p)->asc == PSW_HOME_SPACE_MODE)
-#endif
-
 #define XSTORE_INCREMENT_SIZE   0x00100000
 #define XSTORE_PAGESHIFT    12
 #define XSTORE_PAGESIZE     4096
@@ -565,91 +536,105 @@ z900_ ## _name
 #endif
 
 /* Macros for accelerated lookup */
+#undef SPACE_BIT
+#undef AR_BIT
+#undef PRIMARY_SPACE_MODE
+#undef SECONDARY_SPACE_MODE
+#undef ACCESS_REGISTER_MODE
+#undef HOME_SPACE_MODE
 #undef AEA_MODE
 #undef SET_AEA_COMMON
 #undef SET_AEA_MODE
+#undef _CASE_AR_SET_AEA_MODE
+#undef _CASE_DAS_SET_AEA_MODE
+#undef _CASE_HOME_SET_AEA_MODE
 #undef TEST_SET_AEA_MODE
 #undef SET_AEA_AR
 #undef MADDR
 
-#if __GEN_ARCH == 370
 
-#define AEA_MODE(_regs) \
-  ( ( REAL_MODE(&(_regs)->psw) ? 0 : (((_regs)->psw.asc >> 6) + 1) ) \
-  | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
-  )
+#if defined(FEATURE_DUAL_ADDRESS_SPACE) && defined(FEATURE_LINKAGE_STACK)
+  #define SET_AEA_COMMON(_regs) \
+  do { \
+    (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+    (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
+    (_regs)->aea_common[13] = ((_regs)->CR(13) & ASD_PRIVATE) == 0; \
+  } while (0)
+#elif defined(FEATURE_DUAL_ADDRESS_SPACE)
+  #define SET_AEA_COMMON(_regs) \
+  do { \
+    (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+    (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
+  } while (0)
+#else
+  #define SET_AEA_COMMON(_regs) \
+  do { \
+    (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+  } while (0)
+#endif
 
-#define SET_AEA_COMMON(_regs) \
-do { \
-  (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
-  (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
-} while (0)
 
-#define SET_AEA_MODE(_regs) \
-do { \
-  BYTE oldmode = (_regs)->aea_mode; \
-  (_regs)->aea_mode = AEA_MODE((_regs)); \
-  if (oldmode != (_regs)->aea_mode) { \
-    INVALIDATE_AIA((_regs)); \
-    if (((_regs)->aea_mode & PSW_PERMODE) != 0 && EN_IC_PER_SA((_regs))) \
-      ARCH_DEP(invalidate_tlb)((_regs),~(ACC_WRITE|ACC_CHECK)); \
-  } \
-  (_regs)->aea_ar[USE_INST_SPACE] = \
-  (_regs)->aea_crx = (_regs)->aea_mode & 0x0F ? 1 : CR_ASD_REAL; \
-} while (0)
+#if defined(FEATURE_DUAL_ADDRESS_SPACE) || defined(FEATURE_LINKAGE_STACK)
+  #define SPACE_BIT(p) \
+    (((p)->asc & BIT(PSW_SPACE_BIT)) != 0)
+  #define AR_BIT(p) \
+    (((p)->asc & BIT(PSW_AR_BIT)) != 0)
+  #define PRIMARY_SPACE_MODE(p) \
+    ((p)->asc == PSW_PRIMARY_SPACE_MODE)
+  #define SECONDARY_SPACE_MODE(p) \
+    ((p)->asc == PSW_SECONDARY_SPACE_MODE)
+  #define ACCESS_REGISTER_MODE(p) \
+    ((p)->asc == PSW_ACCESS_REGISTER_MODE)
+  #define HOME_SPACE_MODE(p) \
+    ((p)->asc == PSW_HOME_SPACE_MODE)
+  #define AEA_MODE(_regs) \
+    ( ( REAL_MODE(&(_regs)->psw) ? 0 : (((_regs)->psw.asc >> 6) + 1) ) \
+    | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
+    )
+#else
+  #define SPACE_BIT(p) (0)
+  #define AR_BIT(p) (0)
+  #define PRIMARY_SPACE_MODE(p) (1)
+  #define SECONDARY_SPACE_MODE(p) (0)
+  #define ACCESS_REGISTER_MODE(p) (0)
+  #define HOME_SPACE_MODE(p) (0)
+  #define AEA_MODE(_regs) \
+    ( (REAL_MODE(&(_regs)->psw) ? 0 : 1 ) | (PER_MODE((_regs)) ? 0x40 : 0 ) )
+#endif
 
+#if defined(FEATURE_ACCESS_REGISTERS)
+  /*
+   * Update the aea_ar vector whenever an access register
+   * is changed and in armode
+   */
+  #define SET_AEA_AR(_regs, _arn) \
+  do \
+  { \
+    if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0) { \
+      if ((_regs)->AR((_arn)) == ALET_PRIMARY) \
+        (_regs)->aea_ar[(_arn)] = 1; \
+      else if ((_regs)->AR((_arn)) == ALET_SECONDARY) \
+        (_regs)->aea_ar[(_arn)] = 7; \
+      else \
+        (_regs)->aea_ar[(_arn)] = 0; \
+     } \
+  } while (0)
+#else
+  #define SET_AEA_AR(_regs, _arn)
+#endif
+
+
+/*
+ * Conditionally reset the aea_ar vector
+ */
 #define TEST_SET_AEA_MODE(_regs) \
-do { \
+do \
+{ \
   if ((_regs)->aea_mode != AEA_MODE((_regs))) { \
     SET_AEA_MODE((_regs)); \
   } \
 } while (0)
 
-#define SET_AEA_AR(_regs, _arn)
-
-#define MADDR(_addr, _arn, _regs, _acctype, _akey) \
- ( \
-       likely((_arn) != USE_REAL_ADDR) \
-   &&  likely( \
-              ((_regs)->CR((_regs)->aea_crx) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
-           || ((_regs)->aea_common[(_regs)->aea_crx] & (_regs)->tlb.common[TLBIX(_addr)]) \
-             ) \
-   &&  likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]) \
-   &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
-   &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
-   ? ( \
-       ((_acctype) & ACC_CHECK) ? \
-         (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-         MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) : \
-         MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
-     ) \
-   : ( \
-       ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
-     ) \
- )
-
-#else
-
- /*
-  * Accelerated lookup address mode
-  *    0 - real mode
-  *    1 - primary space mode
-  *    2 - access register mode
-  *    3 - secondary space mode
-  *    4 - home space mode
-  *   4x - per mode
-  */
-#define AEA_MODE(_regs) \
-  ( ( REAL_MODE(&(_regs)->psw) ? 0 : (((_regs)->psw.asc >> 6) + 1) ) \
-  | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
-  )
-
-#define SET_AEA_COMMON(_regs) \
-do { \
-  (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
-  (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
-  (_regs)->aea_common[13] = ((_regs)->CR(13) & ASD_PRIVATE) == 0; \
-} while (0)
 
  /*
   * Reset aea_ar vector to indicate the appropriate
@@ -660,21 +645,8 @@ do { \
   *  13 - home space
   *  16 - real
   */
-#define SET_AEA_MODE(_regs) \
-do { \
-  int i; \
-  int inst_cr = (_regs)->aea_ar[USE_INST_SPACE]; \
-  BYTE oldmode = (_regs)->aea_mode; \
-  (_regs)->aea_mode = AEA_MODE((_regs)); \
-  switch ((_regs)->aea_mode & 0x0F) { \
-    case 0: /* REAL */ \
-      for(i = USE_INST_SPACE; i < 16; i++) \
-          (_regs)->aea_ar[i] = CR_ASD_REAL; \
-      break; \
-    case 1: /* PRIM */ \
-      for(i = USE_INST_SPACE; i < 16; i++) \
-          (_regs)->aea_ar[i] = 1; \
-      break; \
+#if defined(FEATURE_ACCESS_REGISTERS)
+  #define _CASE_AR_SET_AEA_MODE(_regs) \
     case 2: /* AR */ \
       for(i = USE_INST_SPACE; i < 16; i++) \
           (_regs)->aea_ar[i] = 1; \
@@ -682,16 +654,49 @@ do { \
         if ((_regs)->AR(i) == ALET_SECONDARY) (_regs)->aea_ar[i] = 7; \
         else if ((_regs)->AR(i) != ALET_PRIMARY) (_regs)->aea_ar[i] = 0; \
       } \
-      break; \
+      break;
+#else
+  #define _CASE_AR_SET_AEA_MODE(_regs)
+#endif
+
+#if defined(FEATURE_DUAL_ADDRESS_SPACE)
+  #define _CASE_DAS_SET_AEA_MODE(_regs) \
     case 3: /* SEC */ \
       (_regs)->aea_ar[USE_INST_SPACE] = 1; \
       for(i = 0; i < 16; i++) \
           (_regs)->aea_ar[i] = 7; \
-      break; \
+      break;
+#else
+  #define _CASE_DAS_SET_AEA_MODE(_regs)
+#endif
+
+#if defined(FEATURE_LINKAGE_STACK)
+  #define _CASE_HOME_SET_AEA_MODE(_regs) \
     case 4: /* HOME */ \
       for(i = USE_INST_SPACE; i < 16; i++) \
           (_regs)->aea_ar[i] = 13; \
+      break;
+#else
+  #define _CASE_HOME_SET_AEA_MODE(_regs)
+#endif
+
+#define SET_AEA_MODE(_regs) \
+do { \
+  int i; \
+  int inst_cr = (_regs)->aea_ar[USE_INST_SPACE]; \
+  BYTE oldmode = (_regs)->aea_mode; \
+  (_regs)->aea_mode = AEA_MODE((_regs)); \
+  switch ((_regs)->aea_mode & 0x0F) { \
+    case 1: /* PRIM */ \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->aea_ar[i] = 1; \
       break; \
+    _CASE_AR_SET_AEA_MODE((_regs)) \
+    _CASE_DAS_SET_AEA_MODE((_regs)) \
+    _CASE_HOME_SET_AEA_MODE((_regs)) \
+    default: /* case 0: REAL */ \
+      for(i = USE_INST_SPACE; i < 16; i++) \
+          (_regs)->aea_ar[i] = CR_ASD_REAL; \
   } \
   if (inst_cr != (_regs)->aea_ar[USE_INST_SPACE]) \
     INVALIDATE_AIA((_regs)); \
@@ -702,28 +707,6 @@ do { \
   } \
 } while (0)
 
- /*
-  * Conditionally reset the aea_ar vector
-  */
-#define TEST_SET_AEA_MODE(_regs) \
-do { \
-  if ((_regs)->aea_mode != AEA_MODE((_regs))) { \
-    SET_AEA_MODE((_regs)); \
-  } \
-} while (0)
-
- /*
-  * Update the aea_ar vector whenever an access register
-  * is changed and in armode
-  */
-#define SET_AEA_AR(_regs, _arn) \
-do { \
-  if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0) { \
-    if ((_regs)->AR((_arn)) == ALET_PRIMARY) (_regs)->aea_ar[(_arn)] = 1; \
-    else if ((_regs)->AR((_arn)) == ALET_SECONDARY) (_regs)->aea_ar[(_arn)] = 7; \
-    else (_regs)->aea_ar[(_arn)] = 0; \
-  } \
-} while (0)
 
  /*
   * Accelerated lookup
@@ -748,7 +731,5 @@ do { \
        ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
      ) \
  )
-
-#endif
 
 /* end of FEATURES.H */

@@ -3070,6 +3070,14 @@ BYTE c;                                 /* Character work area       */
     return -1;
 }
 
+static inline char *aea_mode_str(BYTE mode)
+{
+static char *name[] = { "DAT-Off", "Primary", "AR", "Secondary", "Home",
+0, 0, 0, "PER/DAT-Off", "PER/Primary", "PER/AR", "PER/Secondary", "PER/Home" };
+
+    return name[(mode & 0x0f) | ((mode & 0xf0) ? 8 : 0)];
+}
+
 ///////////////////////////////////////////////////////////////////////
 /* aea - display aea values */
 
@@ -3092,11 +3100,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("aea mode   %2.2x",regs->aea_mode);
-    if(regs->aea_crx > 0)
-        logmsg(" crx   %2.2x\n",regs->aea_crx);
-    else
-        logmsg(" crx   %2d\n",regs->aea_crx);
+    logmsg ("aea mode   %s\n",aea_mode_str(regs->aea_mode));
 
     logmsg ("aea ar    ");
     for (i = -5; i < 16; i++)
@@ -3131,7 +3135,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         regs = regs->guestregs;
 
         logmsg ("aea SIE\n");
-        logmsg ("aea mode   %2.2x crx   %2.2x\n",regs->aea_mode,regs->aea_crx);
+        logmsg ("aea mode   %s\n",aea_mode_str(regs->aea_mode));
 
         logmsg ("aea ar    ");
         for (i = -5; i < 16; i++)
