@@ -13,17 +13,18 @@
 
 void *memrchr(const void *buf, int c, size_t num)
 {
-   unsigned char *pMem = (unsigned char *) buf;
-   for (;;)
+   unsigned char *pMem;
+   if (num == 0)
    {
-      if (num-- == 0)
-      {
-         return NULL;
-      }
-      if (*pMem-- == (unsigned char) c)
-      {
-        break;
-      }
+      return NULL;
    }
-   return (void *) (pMem + 1);
+   for (pMem = (unsigned char *) buf + num - 1; pMem >= (unsigned char *) buf; pMem--)
+   {
+      if (*pMem == (unsigned char *) c) break;
+   }
+   if (pMem >= (unsigned char *) buf)
+   {
+      return ((void *) pMem);
+   }
+   return NULL;
 }
