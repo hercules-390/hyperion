@@ -1299,6 +1299,7 @@ typedef struct _CCKD_FREEBLK {          /* Free block                */
         U32              len;           /* Length this free blk      */
         int              prev;          /* Index to prev free blk    */
         int              next;          /* Index to next free blk    */
+        int              pending;       /* 1=Free pending (don't use)*/
     } CCKD_FREEBLK;
 
 typedef struct _CCKD_RA {               /* Readahead queue entry     */
@@ -1469,6 +1470,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         int              freenbr;       /* Number free space entries */
         int              free1st;       /* Index of 1st entry        */
         int              freeavail;     /* Index of available entry  */
+        int              lastsync;      /* Time of last sync         */
         int              reads[CCKD_MAX_SF+1];   /* Nbr track reads  */
         int              l2reads[CCKD_MAX_SF+1]; /* Nbr l2 reads     */
         int              writes[CCKD_MAX_SF+1];  /* Nbr track writes */
