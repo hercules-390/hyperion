@@ -113,17 +113,15 @@ zz_cgibin cgibin_psw(WEBBLK *webblk)
     html_header(webblk);
 
 
-    if (cgi_variable(webblk,"autorefresh")) {
+    if (cgi_variable(webblk,"autorefresh"))
         autorefresh = 1;
-    } else if (cgi_variable(webblk,"norefresh")) {
+    else if (cgi_variable(webblk,"norefresh"))
         autorefresh = 0;
-    } else if (cgi_variable(webblk,"refresh")) {
+    else if (cgi_variable(webblk,"refresh"))
         autorefresh = 1;
-    }
 
-    if ((value = cgi_variable(webblk,"refresh_interval"))) {
+    if ((value = cgi_variable(webblk,"refresh_interval")))
         refresh_interval = atoi(value);
-    }
 
     fprintf(webblk->hsock, "<H2>Program Status Word</H2>\n");
 
