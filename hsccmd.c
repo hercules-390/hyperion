@@ -2914,7 +2914,7 @@ CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the curren
                        )
 
 #if defined(FEATURE_ECPSVM)
-CMDHELP ( "ecpsvm",   "Format: \"evm\". This command invokes ECPS:VM Subcommands.\n"
+CMDHELP ( "ecpsvm",   "Format: \"ecpsvm\". This command invokes ECPS:VM Subcommands.\n"
                        "Type \"ecpsvm help\" to see a list of available commands\n"
                        )
 CMDHELP ( "evm",      "Format: \"evm\". This command is deprecated.\n"
