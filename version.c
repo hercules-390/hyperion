@@ -108,7 +108,7 @@ static const char *build_info[] = {
 #endif
 
 #if defined(ENABLE_NLS)
-    "Native Language Support",
+    "National Language Support",
 #endif
 
   " "
