@@ -1,11 +1,13 @@
+29 Oct 2002 Ignore 7-track mode set commands for tape drives - Andy Norrie
 27 Oct 2002 Fix dasdisup to accept one argument - Jay Maynard
-13 Oct 2002 64bit cmpsc fixes Bernard van der Helm
+13 Oct 2002 64bit cmpsc fixes - Bernard van der Helm
 12 Oct 2002 CKD fix when offset >= 2G - Greg Smith
 03 Okt 2002 PER fixes - Jan Jaeger
 01 Okt 2002 Fix for SSK/ISK/RRB - Juergen Dobrinski
 19 Sep 2002 Fix cckd thrash for large fragmentations - Greg Smith
 19 Sep 2002 Fix console.c to wait for initdone to listen - Greg Smith
-30 Aug 2002 Fix MVCL to update regs prior to possible program check - Greg Smith
+30 Aug 2002 Fix MVCL to update regs prior to possible program check - Greg
+            Smith
 26 Aug 2002 Added "noprompt" option to turn off input prompting for 1052/3215
             consoles - Jay Maynard
 25 Aug 2002 Fix cckd free space chain corruption when freeing space

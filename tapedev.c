@@ -3870,6 +3870,24 @@ long            locblock;               /* Block Id for Locate Block */
     case 0xC3: /* 9-track 1600 bpi */
     case 0xD3: /* 9-track 6250 bpi */
     case 0xDB: /* 3480 mode set */
+    /* Patch to no-op modeset 1 (7-track) commands -                 */
+    /*   causes VM problems                                          */
+    /*                                                               */
+    /* Andy Norrie 2002/10/06                                        */
+    case 0x13:
+    case 0x33:
+    case 0x3B:
+    case 0x23:
+    case 0x53:
+    case 0x73:
+    case 0x7B:
+    case 0x63:
+    case 0x6B:
+    case 0x93:
+    case 0xB3:
+    case 0xBB:
+    case 0xA3:
+    case 0xAB:
     /*---------------------------------------------------------------*/
     /* MODE SET                                                      */
     /*---------------------------------------------------------------*/
