@@ -749,19 +749,20 @@ BYTE   *p;                              /* (work)                    */
     if (!(rcfp = fopen(rcname, "r")))
     {
         if (ENOENT != errno)
-            logmsg(_("HHC432E: RC file open failed: %s\n"),
-                strerror(errno));
+            logmsg(_("HHCPN007E RC file %s open failed: %s\n"),
+                rcname, strerror(errno));
         rc_thread_done = 1;
         return NULL;
     }
 
-    logmsg(_("HHC430I: RC file processing thread started...\n"));
+    logmsg(_("HHCPN008I RC file processing thread started using file %s\n"),
+           rcname);
 
     /* Obtain storage for the RC file buffer */
 
     if (!(rcbuf = malloc (rcbufsize)))
     {
-        logmsg(_("HHC431E: RC file buffer malloc failed: %s\n"),
+        logmsg(_("HHCPN009E RC file buffer malloc failed: %s\n"),
             strerror(errno));
         fclose(rcfp);
         rc_thread_done = 1;
@@ -799,13 +800,17 @@ BYTE   *p;                              /* (work)                    */
 
             if (rc_pause_amt < 0 || rc_pause_amt > 999)
             {
-                logmsg(_("HHC428W Ignoring invalid .RC file pause statement\n"));
+                logmsg(_("HHCPN010W Ignoring invalid RC file pause "
+                         "statement: %s\n"),
+                         rcbuf+5);
                 continue;
             }
 
-            logmsg (_("HHC426I Pausing .RC file processing for %d seconds...\n"), rc_pause_amt);
+            logmsg (_("HHCPN011I Pausing RC file processing for %d "
+                      "seconds...\n"),
+                      rc_pause_amt);
             sleep(rc_pause_amt);
-            logmsg (_("HHC427I Resuming .RC file processing...\n"));
+            logmsg (_("HHCPN012I Resuming RC file processing...\n"));
 
             continue;
         }
@@ -818,9 +823,10 @@ BYTE   *p;                              /* (work)                    */
     }
 
     if (feof(rcfp))
-        logmsg (_("HHC429I EOF reached on .RC file.\n"));
+        logmsg (_("HHCPN013I EOF reached on RC file. Processing complete.\n"));
     else
-        logmsg (_("HHC429E I/O reading .RC file: %s\n"),strerror(errno));
+        logmsg (_("HHCPN014E I/O error reading RC file: %s\n"),
+                 strerror(errno));
 
     fclose(rcfp);
 
@@ -913,14 +919,14 @@ fd_set  readset;                        /* Select file descriptors   */
 struct  timeval tv;                     /* Select timeout structure  */
 
     /* Display thread started message on control panel */
-    logmsg (_("HHC650I Control panel thread started: "
+    logmsg (_("HHCPN001I Control panel thread started: "
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
     /* Obtain storage for the keyboard buffer */
     if (!(kbbuf = malloc (kbbufsize)))
     {
-        logmsg(_("panel: Cannot obtain keyboard buffer: %s\n"),
+        logmsg(_("HHCPN002S Cannot obtain keyboard buffer: %s\n"),
                 strerror(errno));
         return;
     }
@@ -930,7 +936,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     if (msgbuf == NULL)
     {
         fprintf (stderr,
-                "panel: Cannot obtain message buffer: %s\n",
+                _("HHCPN003S Cannot obtain message buffer: %s\n"),
                 strerror(errno));
         return;
     }
@@ -1037,7 +1043,7 @@ struct  timeval tv;                     /* Select timeout structure  */
         {
             if (errno == EINTR) continue;
             fprintf (stderr,
-                    "panel: select: %s\n",
+                    _("HHCPN004E select: %s\n"),
                     strerror(errno));
             break;
         }
@@ -1052,7 +1058,7 @@ struct  timeval tv;                     /* Select timeout structure  */
             if (kblen < 0)
             {
                 fprintf (stderr,
-                        "panel: keyboard read: %s\n",
+                        _("HHCPN005E keyboard read: %s\n"),
                         strerror(errno));
                 break;
             }
@@ -1473,7 +1479,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                 if (rc < 1)
                 {
                     fprintf (stderr,
-                            "panel: message pipe read: %s\n",
+                            "HHCPN006E message pipe read: %s\n",
                             strerror(errno));
                     break;
                 }
