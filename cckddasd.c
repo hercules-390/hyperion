@@ -5152,7 +5152,7 @@ DEVHND cckddasd_device_hndinfo = {
         &cckd_used,
         NULL,
         NULL,
-	NULL
+        NULL
 };
 
 DEVHND cfbadasd_device_hndinfo = {
@@ -5169,5 +5169,5 @@ DEVHND cfbadasd_device_hndinfo = {
         &cfba_used,
         NULL,
         NULL,
-	NULL
+        NULL
 };

@@ -2742,7 +2742,7 @@ DEVHND constty_device_hndinfo = {
         &constty_close_device,
         &constty_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	constty_immed
+    	constty_immed
 };
 
 /* Libtool static name colision resolution */
@@ -2765,7 +2765,7 @@ DEVHND loc3270_device_hndinfo = {
         &loc3270_close_device,
         &loc3270_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	loc3270_immed
+	   loc3270_immed
 };
 
 

@@ -4699,5 +4699,5 @@ DEVHND ckddasd_device_hndinfo = {
         &ckddasd_used,
         NULL,
         NULL,
-	NULL
+        NULL
 };

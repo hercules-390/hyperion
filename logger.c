@@ -225,7 +225,7 @@ int bytes_read;
     while(logger_active)
     {
         bytes_read = read(logger_syslogfd[LOG_READ],logger_buffer + logger_currmsg,
-          ((logger_bufsize - logger_currmsg) > SSIZE_MAX ? SSIZE_MAX : logger_bufsize - logger_currmsg));
+          ((logger_bufsize - logger_currmsg) > LOG_DEFSIZE ? LOG_DEFSIZE : logger_bufsize - logger_currmsg));
 
         if(bytes_read == -1)
         {
