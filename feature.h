@@ -76,6 +76,7 @@
 #undef CR
 #undef GR
 #undef GR_A
+#undef SET_GR_A
 #undef MONCODE
 #undef TEA
 #undef DXC
@@ -175,6 +176,7 @@ s370_ ## _name
 #define CR(_r)  CR_L(_r)
 #define GR(_r)  GR_L(_r)
 #define GR_A(_r, _regs) ((_regs)->GR_L((_r)))
+#define SET_GR_A(_r, _regs,_v) ((_regs)->GR_L((_r))=(_v))
 #define MONCODE MC_L
 #define TEA EA_L
 #define DXC     tea
@@ -282,6 +284,7 @@ s390_ ## _name
 #define CR(_r)  CR_L(_r)
 #define GR(_r)  GR_L(_r)
 #define GR_A(_r, _regs) ((_regs)->GR_L((_r)))
+#define SET_GR_A(_r, _regs,_v) ((_regs)->GR_L((_r))=(_v))
 #define MONCODE MC_L
 #define TEA EA_L
 #define DXC     tea
@@ -396,6 +399,15 @@ z900_ ## _name
 #define CR(_r)  CR_G(_r)
 #define GR(_r)  GR_G(_r)
 #define GR_A(_r, _regs) ((_regs)->psw.amode64 ? (_regs)->GR_G((_r)) : (_regs)->GR_L((_r)))
+#define SET_GR_A(_r, _regs,_v)  \
+    do  { \
+        if((_regs)->psw.amode64) { \
+            ((_regs)->GR_G((_r))=(_v)); \
+        } else { \
+            ((_regs)->GR_L((_r))=(_v)); \
+        } \
+    } while(0)
+
 #define MONCODE MC_G
 #define TEA EA_G
 #define DXC     dataexc

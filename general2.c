@@ -511,7 +511,7 @@ BYTE    termchar;                       /* Terminating character     */
            code 1 and load the address of the character into R1 */
         if (sbyte == termchar)
         {
-            GR_A(r1, regs) = addr2;
+            SET_GR_A(r1, regs, addr2);
             regs->psw.cc = 1;
             return;
         }
@@ -523,7 +523,7 @@ BYTE    termchar;                       /* Terminating character     */
     } /* end for(i) */
 
     /* Set R2 to point to next character of operand */
-    GR_A(r2, regs) = addr2;
+    SET_GR_A(r2, regs, addr2);
 
     /* Return condition code 3 */
     regs->psw.cc = 3;
@@ -799,7 +799,7 @@ U32     n;                              /* Integer work areas        */
     n = effective_addr2 & 0x3F;
 
     /* Shift the signed value of the R1 register */
-    (S32)regs->GR_L(r1) = n > 30 ?
+    regs->GR_L(r1) = n > 30 ?
                     ((S32)regs->GR_L(r1) < 0 ? -1 : 0) :
                     (S32)regs->GR_L(r1) >> n;
 
@@ -1176,7 +1176,7 @@ U32     n;                              /* 32-bit operand values     */
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
-    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
     /* Subtract signed operands and set condition code */
     regs->psw.cc =
@@ -1643,8 +1643,8 @@ BYTE    trtab[256];                     /* Translate table           */
         len1--;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1+1, regs) = len1;
+        SET_GR_A(r1, regs, addr1);
+        SET_GR_A(r1+1, regs, len1);
 
     } /* end for(i) */
 
@@ -1919,10 +1919,10 @@ DEF_INST(convert_utf8_to_utf32)
     
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
-    GR_A(r1, regs) = (dest + 4) & ADDRESS_MAXWRAP(regs);
-    GR_A(r1 + 1, regs) = destlen - 4;
-    GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
-    GR_A(r2 + 1, regs) = srcelen - read;
+    SET_GR_A(r1, regs, (dest + 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen - 4);
+    SET_GR_A(r2, regs, (srce + read) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen - read);
     
     xlated += read;
   }
@@ -2011,10 +2011,10 @@ DEF_INST(convert_utf16_to_utf32)
     
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf32, 3, dest, r1, regs);
-    GR_A(r1, regs) = (dest + 4) & ADDRESS_MAXWRAP(regs);
-    GR_A(r1 + 1, regs) = destlen - 4;
-    GR_A(r2, regs) = (srce + read) & ADDRESS_MAXWRAP(regs);
-    GR_A(r2 + 1, regs) = srcelen - read;
+    SET_GR_A(r1, regs, (dest + 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen - 4);
+    SET_GR_A(r2, regs, (srce + read) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen - read);
     
     xlated += read;
   }
@@ -2147,10 +2147,10 @@ DEF_INST(convert_utf32_to_utf8)
     
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf8, write - 1, dest, r1, regs);
-    GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
-    GR_A(r1 + 1, regs) = destlen - write;
-    GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
-    GR_A(r2 + 1, regs) = srcelen - 4;
+    SET_GR_A(r1, regs, (dest + write) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen - write);
+    SET_GR_A(r2, regs, (srce + 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen - 4);
     
     xlated += 4;
   }
@@ -2245,10 +2245,10 @@ DEF_INST(convert_utf32_to_utf16)
     
     /* Write and commit registers */
     ARCH_DEP(vstorec)(utf16, write - 1, dest, r1, regs);
-    GR_A(r1, regs) = (dest + write) & ADDRESS_MAXWRAP(regs);
-    GR_A(r1 + 1, regs) = destlen - write;
-    GR_A(r2, regs) = (srce + 4) & ADDRESS_MAXWRAP(regs);
-    GR_A(r2 + 1, regs) = srcelen - 4;
+    SET_GR_A(r1, regs, (dest + write) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r1 + 1, regs, destlen - write);
+    SET_GR_A(r2, regs, (srce + 4) & ADDRESS_MAXWRAP(regs));
+    SET_GR_A(r2 + 1, regs, srcelen - 4);
     
     xlated += 4;
   }
@@ -2299,7 +2299,7 @@ DEF_INST(search_string_unicode)
        code 1 and load the address of the character into R1 */
     if(sbyte == termchar)
     {
-      GR_A(r1, regs) = addr2;
+      SET_GR_A(r1, regs, addr2);
       regs->psw.cc = 1;
       return;
     }
@@ -2311,7 +2311,7 @@ DEF_INST(search_string_unicode)
   } /* end for(i) */
 
   /* Set R2 to point to next character of operand */
-  GR_A(r2, regs) = addr2;
+  SET_GR_A(r2, regs, addr2);
 
   /* Return condition code 3 */
   regs->psw.cc = 3;

@@ -136,7 +136,7 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
     {
         if( (S64)dreg == -1LL )
             *ovf = 1;
-        (S64)dreg = -((S64)dreg);
+        dreg = -((S64)dreg);
     }
 
     /* Set result field and return */

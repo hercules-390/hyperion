@@ -258,8 +258,8 @@ static void ARCH_DEP(kimd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r2, regs) += 64;
-    GR_A(r2 + 1, regs) -= 64;
+    SET_GR_A(r2, regs,GR_A(r2,regs) + 64);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 64);
 
 #ifdef OPTION_KIMD_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -359,8 +359,8 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r2, regs) += 64;
-    GR_A(r2 + 1, regs) -= 64;
+    SET_GR_A(r2, regs,GR_A(r2,regs) + 64);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 64);
 
 #ifdef OPTION_KLMD_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -421,8 +421,8 @@ static void ARCH_DEP(klmd_sha_1)(int r1, int r2, REGS *regs)
 #endif
 
   /* Update registers */
-  GR_A(r2, regs) += GR_A(r2 + 1, regs);
-  GR_A(r2 + 1, regs) = 0;
+  SET_GR_A(r2, regs, GR_A(r2,regs) + GR_A(r2 + 1, regs));
+  SET_GR_A(r2 + 1, regs, 0);
 
 #ifdef OPTION_KLMD_DEBUG
   logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -522,10 +522,10 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r1, regs) += 8;
+    SET_GR_A(r1, regs, GR_A(r1,regs) + 8);
     if(r1 != r2)
-      GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+      SET_GR_A(r2, regs, GR_A(r2,regs) + 8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
 #ifdef OPTION_KM_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
@@ -619,10 +619,10 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r1, regs) += 8;
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
     if(r1 != r2)
-      GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+      SET_GR_A(r2, regs,GR_A(r2,regs) + 8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
 #ifdef OPTION_KM_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
@@ -714,10 +714,10 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r1, regs) += 8;
+    SET_GR_A(r1, regs,GR_A(r1,regs) + 8);
     if(r1 != r2)
-      GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+      SET_GR_A(r2, regs,GR_A(r2,regs)+8);
+    SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
 #ifdef OPTION_KM_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
@@ -832,8 +832,8 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+    SET_GR_A(r2, regs, GR_A(r2,regs) + 8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs) - 8);
 
 #ifdef OPTION_KMAC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -929,8 +929,8 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+    SET_GR_A(r2, regs,GR_A(r2,regs)+8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
 
 #ifdef OPTION_KMAC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -1024,8 +1024,8 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+    SET_GR_A(r2, regs,GR_A(r2,regs)+8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
 
 #ifdef OPTION_KMAC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r2, (regs)->GR(r2));
@@ -1158,10 +1158,10 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r1, regs) += 8;
+    SET_GR_A(r1, regs,GR_A(r1,regs)+ 8);
     if(r1 != r2)
-      GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+      SET_GR_A(r2, regs, GR_A(r2,regs)+8);
+    SET_GR_A(r2 + 1, regs,GR_A(r2+1,regs)-8);
 
 #ifdef OPTION_KMC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
@@ -1279,10 +1279,10 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r1, regs) += 8;
+    SET_GR_A(r1, regs,GR_A(r1,regs)+8);
     if(r1 != r2)
-      GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+      SET_GR_A(r2, regs, GR_A(r2, regs)+8);
+    SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
 #ifdef OPTION_KMC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));
@@ -1398,10 +1398,10 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
 #endif
 
     /* Update the registers */
-    GR_A(r1, regs) += 8;
+    SET_GR_A(r1, regs,GR_A(r1,regs)+8);
     if(r1 != r2)
-      GR_A(r2, regs) += 8;
-    GR_A(r2 + 1, regs) -= 8;
+      SET_GR_A(r2, regs, GR_A(r2, regs)+8);
+    SET_GR_A(r2 + 1, regs, GR_A(r2+1, regs) - 8);
 
 #ifdef OPTION_KMC_DEBUG
     logmsg("  GR%02d  : " F_GREG "\n", r1, (regs)->GR(r1));

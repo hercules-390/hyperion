@@ -224,8 +224,8 @@
 #if !defined(ADJUSTREGS)
 #define ADJUSTREGS(r, regs, iregs, len) \
 {\
-  GR_A((r), (iregs)) = (GR_A((r), (iregs)) + (len)) & ADDRESS_MAXWRAP((regs));\
-  GR_A((r) + 1, (iregs)) -= (len);\
+  SET_GR_A((r), (iregs), (GR_A((r), (iregs)) + (len)) & ADDRESS_MAXWRAP((regs)));\
+  SET_GR_A((r) + 1, (iregs), GR_A((r)+1, (iregs)) - (len));\
 }
 #endif /* !defined(ADJUSTREGS) */
 
@@ -238,11 +238,11 @@
 #if !defined(COMMITREGS)
 #define COMMITREGS(regs, iregs, r1, r2) \
 {\
-  GR_A(1, (regs)) = GR_A(1, (iregs));\
-  GR_A((r1), (regs)) = GR_A((r1), (iregs));\
-  GR_A((r1) + 1, (regs)) = GR_A((r1) + 1, (iregs));\
-  GR_A((r2), (regs)) = GR_A((r2), (iregs));\
-  GR_A((r2) + 1, (regs)) = GR_A((r2) + 1, (iregs));\
+  SET_GR_A(1, (regs), GR_A(1, (iregs)));\
+  SET_GR_A((r1), (regs), GR_A((r1), (iregs)));\
+  SET_GR_A((r1) + 1, (regs), GR_A((r1) + 1, (iregs)));\
+  SET_GR_A((r2), (regs), GR_A((r2), (iregs)));\
+  SET_GR_A((r2) + 1, (regs), GR_A((r2) + 1, (iregs)));\
 }
 #endif /* !defined(COMMITREGS) */
 

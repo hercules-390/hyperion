@@ -1615,8 +1615,8 @@ U32     i2;                             /* 32-bit operand values     */
 
     RIL(inst, regs, r1, opcd, i2);
 
-    GR_A(r1, regs) = ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
-                               + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
+    SET_GR_A(r1, regs, ((!regs->execflag ? (regs->psw.IA - 6) : regs->ET)
+                               + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs));
 
 } /* end DEF_INST(load_address_relative_long) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
@@ -2174,7 +2174,7 @@ S64     i,j;                            /* Integer workareas         */
     j = (r3 & 1) ? (S64)regs->GR_G(r3) : (S64)regs->GR_G(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S64)regs->GR_G(r1) += i;
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) + i;
 
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
@@ -2215,7 +2215,7 @@ S64     i,j;                            /* Integer workareas         */
     j = (r3 & 1) ? (S64)regs->GR_G(r3) : (S64)regs->GR_G(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S64)regs->GR_G(r1) += i;
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) + i;
 
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
@@ -2257,7 +2257,7 @@ S64     i, j;                           /* Integer work areas        */
     j = (r3 & 1) ? (S64)regs->GR_G(r3) : (S64)regs->GR_G(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S64)regs->GR_G(r1) += i;
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) + i;
 
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
@@ -2298,7 +2298,7 @@ S64     i, j;                           /* Integer work areas        */
     j = (r3 & 1) ? (S64)regs->GR_G(r3) : (S64)regs->GR_G(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S64)regs->GR_G(r1) += i;
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) + i;
 
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
@@ -2923,7 +2923,7 @@ int     r1, r2;                         /* Values of R fields        */
     }
 
     /* Load positive value of second operand and set cc */
-    (S64)regs->GR_G(r1) = (S64)regs->GR_G(r2) < 0 ?
+    regs->GR_G(r1) = (S64)regs->GR_G(r2) < 0 ?
                             -((S64)regs->GR_G(r2)) :
                             (S64)regs->GR_G(r2);
 
@@ -2947,7 +2947,7 @@ S64     gpr2l;
     gpr2l = (S32)regs->GR_L(r2);
 
     /* Load positive value of second operand and set cc */
-    (S64)regs->GR_G(r1) = gpr2l < 0 ? -gpr2l : gpr2l;
+    regs->GR_G(r1) = gpr2l < 0 ? -gpr2l : gpr2l;
 
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 2;
 
@@ -2966,7 +2966,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE(inst, regs, r1, r2);
 
     /* Load negative value of second operand and set cc */
-    (S64)regs->GR_G(r1) = (S64)regs->GR_G(r2) > 0 ?
+    regs->GR_G(r1) = (S64)regs->GR_G(r2) > 0 ?
                             -((S64)regs->GR_G(r2)) :
                             (S64)regs->GR_G(r2);
 
@@ -2990,7 +2990,7 @@ S64     gpr2l;
     gpr2l = (S32)regs->GR_L(r2);
 
     /* Load negative value of second operand and set cc */
-    (S64)regs->GR_G(r1) = gpr2l > 0 ? -gpr2l : gpr2l;
+    regs->GR_G(r1) = gpr2l > 0 ? -gpr2l : gpr2l;
 
     regs->psw.cc = (S64)regs->GR_G(r1) == 0 ? 0 : 1;
 
@@ -3029,7 +3029,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE(inst, regs, r1, r2);
 
     /* Copy second operand and set condition code */
-    (S64)regs->GR_G(r1) = (S32)regs->GR_L(r2);
+    regs->GR_G(r1) = (S32)regs->GR_L(r2);
 
     regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
@@ -3059,7 +3059,7 @@ int     r1, r2;                         /* Values of R fields        */
     }
 
     /* Load complement of second operand and set condition code */
-    (S64)regs->GR_G(r1) = -((S64)regs->GR_G(r2));
+    regs->GR_G(r1) = -((S64)regs->GR_G(r2));
 
     regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
@@ -3082,7 +3082,7 @@ S64     gpr2l;
     gpr2l = (S32)regs->GR_L(r2);
 
     /* Load complement of second operand and set condition code */
-    (S64)regs->GR_G(r1) = -gpr2l;
+    regs->GR_G(r1) = -gpr2l;
 
     regs->psw.cc = (S64)regs->GR_G(r1) < 0 ? 1 :
                    (S64)regs->GR_G(r1) > 0 ? 2 : 0;
@@ -3447,7 +3447,7 @@ U64     n;                              /* Integer work areas        */
     n = effective_addr2 & 0x3F;
 
     /* Copy and shift the signed value of the R3 register */
-    (S64)regs->GR_G(r1) = (n > 62) ?
+    regs->GR_G(r1) = (n > 62) ?
                     ((S64)regs->GR_G(r3) < 0 ? -1LL : 0) :
                     (S64)regs->GR_G(r3) >> n;
 
@@ -3476,7 +3476,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Multiply signed operands ignoring overflow */
-    (S64)regs->GR_G(r1) *= (S32)n;
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S32)n;
 
 } /* end DEF_INST(multiply_single_long_fullword) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3499,7 +3499,7 @@ U64     n;                              /* 64-bit operand values     */
     n = ARCH_DEP(vfetch8) ( effective_addr2, b2, regs );
 
     /* Multiply signed operands ignoring overflow */
-    (S64)regs->GR_G(r1) *= (S64)n;
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S64)n;
 
 } /* end DEF_INST(multiply_single_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3516,7 +3516,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE(inst, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
-    (S64)regs->GR_G(r1) *= (S32)regs->GR_L(r2);
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S32)regs->GR_L(r2);
 
 } /* end DEF_INST(multiply_single_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3533,7 +3533,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE(inst, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
-    (S64)regs->GR_G(r1) *= (S64)regs->GR_G(r2);
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S64)regs->GR_G(r2);
 
 } /* end DEF_INST(multiply_single_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3552,7 +3552,7 @@ U16     i2;                             /* 16-bit operand values     */
     RI(inst, regs, r1, opcd, i2);
 
     /* Load operand into register */
-    (S64)regs->GR_G(r1) = (S16)i2;
+    regs->GR_G(r1) = (S16)i2;
 
 } /* end DEF_INST(load_long_halfword_immediate) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3596,7 +3596,7 @@ U16     i2;                             /* 16-bit operand            */
     RI(inst, regs, r1, opcd, i2);
 
     /* Multiply register by operand ignoring overflow  */
-    (S64)regs->GR_G(r1) *= (S16)i2;
+    regs->GR_G(r1) = (S64)regs->GR_G(r1) * (S16)i2;
 
 } /* end DEF_INST(multiply_long_halfword_immediate) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3788,7 +3788,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
-    (S64)regs->GR_G(r1) = (S32)regs->GR_L(r2);
+    regs->GR_G(r1) = (S32)regs->GR_L(r2);
 
 } /* end DEF_INST(load_long_fullword_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4415,7 +4415,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
-    (S64)regs->GR_G(r1) = (S32)ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    regs->GR_G(r1) = (S32)ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_long_fullword) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4434,7 +4434,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
-    (S64)regs->GR_G(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    regs->GR_G(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_long_halfword) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -5043,9 +5043,9 @@ BYTE    svalue, dvalue, tvalue;
         len--;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1 + 1, regs) = len;
-        GR_A(r2, regs) = addr2;
+        SET_GR_A(r1, regs, addr1);
+        SET_GR_A(r1 + 1, regs, len);
+        SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
         regs->psw.cc = len ? 3 : 0;
@@ -5115,9 +5115,9 @@ BYTE    dvalue, tvalue;
         len--;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1 + 1, regs) = len;
-        GR_A(r2, regs) = addr2;
+        SET_GR_A(r1, regs, addr1);
+        SET_GR_A(r1 + 1, regs, len);
+        SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
         regs->psw.cc = len ? 3 : 0;
@@ -5189,9 +5189,9 @@ BYTE    dvalue, tvalue;
         len -= 2;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1 + 1, regs) = len;
-        GR_A(r2, regs) = addr2;
+        SET_GR_A(r1, regs, addr1);
+        SET_GR_A(r1 + 1, regs, len);
+        SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
         regs->psw.cc = len ? 3 : 0;
@@ -5262,9 +5262,9 @@ U16     svalue, dvalue, tvalue;
         len -= 2;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1 + 1, regs) = len;
-        GR_A(r2, regs) = addr2;
+        SET_GR_A(r1, regs, addr1);
+        SET_GR_A(r1 + 1, regs, len);
+        SET_GR_A(r2, regs, addr2);
 
         /* Set cc0 when all values have been processed */
         regs->psw.cc = len ? 3 : 0;
@@ -5350,10 +5350,10 @@ int     cpu_length;                     /* cpu determined length     */
         len1 -= 2;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1 + 1, regs) = len1;
-        GR_A(r3, regs) = addr3;
-        GR_A(r3 + 1, regs) = len3;
+        SET_GR_A(r1, regs, addr1);
+        SET_GR_A(r1 + 1, regs, len1);
+        SET_GR_A(r3, regs, addr3);
+        SET_GR_A(r3 + 1, regs, len3);
 
     } /* end for(i) */
 
@@ -5443,10 +5443,10 @@ int     cpu_length;                     /* cpu determined length     */
     } /* end for(i) */
 
     /* Update the registers */
-    GR_A(r1, regs) = addr1;
-    GR_A(r1 + 1, regs) = len1;
-    GR_A(r3, regs) = addr3;
-    GR_A(r3 + 1, regs) = len3;
+    SET_GR_A(r1, regs, addr1);
+    SET_GR_A(r1 + 1, regs, len1);
+    SET_GR_A(r3, regs, addr3);
+    SET_GR_A(r3 + 1, regs, len3);
 
     regs->psw.cc = cc;
 
@@ -5467,7 +5467,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load sign-extended byte from operand address */
-    (S32)regs->GR_L(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+    regs->GR_L(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_byte) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -5486,7 +5486,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load sign-extended byte from operand address */
-    (S64)regs->GR_G(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+    regs->GR_G(r1) = (S8)ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_byte_long) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -5531,18 +5531,18 @@ DEF_INST(add_halfword_y)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
+S32     n;                              /* 32-bit operand values     */
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
-    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
     /* Add signed operands and set condition code */
     regs->psw.cc =
             add_signed (&(regs->GR_L(r1)),
                     regs->GR_L(r1),
-                    n);
+                    (U32)n);
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -5664,17 +5664,17 @@ DEF_INST(compare_halfword_y)
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
+S32     n;                              /* 32-bit operand values     */
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of comparand from operand address */
-    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S32)regs->GR_L(r1) < (S32)n ? 1 :
-            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+            (S32)regs->GR_L(r1) < n ? 1 :
+            (S32)regs->GR_L(r1) > n ? 2 : 0;
 
 } /* end DEF_INST(compare_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6165,7 +6165,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
-    GR_A(r1, regs) = effective_addr2;
+    SET_GR_A(r1, regs, effective_addr2);
 
 } /* end DEF_INST(load_address_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6184,7 +6184,7 @@ VADR    effective_addr2;                /* Effective address         */
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of register from operand address */
-    (S32)regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
 } /* end DEF_INST(load_halfword_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6273,15 +6273,15 @@ DEF_INST(multiply_single_y)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
+S32     n;                              /* 32-bit operand values     */
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
-    n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
+    n = (S32)ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Multiply signed operands ignoring overflow */
-    (S32)regs->GR_L(r1) *= (S32)n;
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) * n;
 
 } /* end DEF_INST(multiply_single) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6554,18 +6554,18 @@ DEF_INST(subtract_halfword_y)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
+S32     n;                              /* 32-bit operand values     */
 
     RXY(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
-    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
     /* Subtract signed operands and set condition code */
     regs->psw.cc =
             sub_signed (&(regs->GR_L(r1)),
                     regs->GR_L(r1),
-                    n);
+                    (U32)n);
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )

@@ -314,7 +314,7 @@ int             len;
        snap("\nSHOWTRK Decompressed track header and data", buf2, len);
     bufp = &buf2[sizeof(CKDDASD_TRKHDR)];
     while (bufp < &buf2[sizeof(buf2)]) {
-        (BYTE *)rh = bufp;
+        rh = (CKDDASD_RECHDR *)bufp;
         if (memcmp((BYTE *)rh, &eighthexFF, 8) == 0) {
             fprintf(stderr, "\nEnd of Track\n");
             break;

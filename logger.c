@@ -14,6 +14,7 @@
 #include "hercules.h"
 #include "opcode.h"             /* Required for SETMODE macro        */
 
+
 static ATTR  logger_attr;
 static COND  logger_cond;
 static LOCK  logger_lock;
@@ -67,7 +68,7 @@ int  i;
         {
             for(; linenumber > 0; linenumber--)
             {
-                if(!(tmpbuf = memrchr(msgbuf[i],'\n',msgcnt[i])))
+                if(!(tmpbuf = (void *)memrchr(msgbuf[i],'\n',msgcnt[i])))
                     break;
                 msgcnt[i] = tmpbuf - msgbuf[i];
             }

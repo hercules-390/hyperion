@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+27 Aug 2004 Removed all conditional and cast lvalues to accomodate for
+            gcc 3.4 and beyond - Ivan Warren
 19 Aug 2004 Suspend/resume loadparm value - Christopher by Greg Smith
 19 Aug 2004 cckd fix: Honor readonly option on sf- to base file - Greg Smith
 18 Aug 2004 cckd fixes: possible sf- corruption, messages - Greg Smith

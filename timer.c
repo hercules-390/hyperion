@@ -141,7 +141,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
          * [2] Decrement the CPU timer for each CPU  *
          *-------------------------------------------*/
 
-        (S64)regs->ptimer -= (S64)sysblk.todclock_diff << 8;
+        regs->ptimer = (S64)regs->ptimer - (S64)(sysblk.todclock_diff << 8);
 
         /* Set interrupt flag if the CPU timer is negative */
         if ((S64)regs->ptimer < 0)
@@ -160,7 +160,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         if(regs->sie_active)
         {
             /* Decrement the guest CPU timer */
-            (S64)regs->guestregs->ptimer -= (S64)sysblk.todclock_diff << 8;
+            regs->guestregs->ptimer = (S64)regs->guestregs->ptimer - (S64)(sysblk.todclock_diff << 8);
 
             /* Set interrupt flag if the CPU timer is negative */
             if ((S64)regs->guestregs->ptimer < 0)

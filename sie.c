@@ -43,7 +43,7 @@ static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
     };
 
 #define GUESTREGS (regs->guestregs)
-#define STATEBK   ((SIEBK*)(GUESTREGS->siebk))
+#define STATEBK   ((SIEBK *)GUESTREGS->siebk)
 
 #define SIE_I_STOP(_guestregs) \
         ((_guestregs)->siebk->v & SIE_V_STOP)
@@ -271,7 +271,7 @@ int     icode = 0;                      /* Interception code         */
     }
 
     /* Direct pointer to state descriptor block */
-    STATEBK = (void*)(regs->mainstor + effective_addr2);
+    GUESTREGS->siebk = (void*)(regs->mainstor + effective_addr2);
 
 #if defined(FEATURE_ESAME)
     if(STATEBK->mx & SIE_MX_ESAME)

@@ -93,18 +93,18 @@ DEF_INST(add_halfword)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
+S32     n;                              /* 32-bit operand values     */
 
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
-    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
     /* Add signed operands and set condition code */
     regs->psw.cc =
             add_signed (&(regs->GR_L(r1)),
                     regs->GR_L(r1),
-                    n);
+                    (U32)n);
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
@@ -844,7 +844,7 @@ S32     i, j;                           /* Integer work areas        */
     j = (r3 & 1) ? (S32)regs->GR_L(r3) : (S32)regs->GR_L(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S32)regs->GR_L(r1) += i;
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) + i;
 
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
@@ -883,7 +883,7 @@ S32     i, j;                           /* Integer work areas        */
     j = (r3 & 1) ? (S32)regs->GR_L(r3) : (S32)regs->GR_L(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S32)regs->GR_L(r1) += i;
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) + i;
 
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
@@ -1024,7 +1024,7 @@ S32     i,j;                            /* Integer workareas         */
     j = (r3 & 1) ? (S32)regs->GR_L(r3) : (S32)regs->GR_L(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S32)regs->GR_L(r1) += i;
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) + i;
 
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
@@ -1065,7 +1065,7 @@ S32     i,j;                            /* Integer workareas         */
     j = (r3 & 1) ? (S32)regs->GR_L(r3) : (S32)regs->GR_L(r3+1);
 
     /* Add the increment value to the R1 register */
-    (S32)regs->GR_L(r1) += i;
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) + i;
 
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
@@ -1161,8 +1161,8 @@ U64     dreg;                           /* Checksum accumulator      */
     regs->GR_L(r1) = dreg;
 
     /* Update the operand address and length registers */
-    GR_A(r2, regs) = addr2;
-    GR_A(r2+1, regs) = len;
+    SET_GR_A(r2, regs,addr2);
+    SET_GR_A(r2+1, regs,len);
 
     /* Set condition code 0 or 3 */
     regs->psw.cc = cc;
@@ -1434,17 +1434,17 @@ DEF_INST(compare_halfword)
 int     r1;                             /* Values of R fields        */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
+S32     n;                              /* 32-bit operand values     */
 
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of comparand from operand address */
-    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
-            (S32)regs->GR_L(r1) < (S32)n ? 1 :
-            (S32)regs->GR_L(r1) > (S32)n ? 2 : 0;
+            (S32)regs->GR_L(r1) < n ? 1 :
+            (S32)regs->GR_L(r1) > n ? 2 : 0;
 }
 
 
@@ -1795,8 +1795,8 @@ BYTE    pad;                            /* Padding byte              */
         /* Update Regs if cross half page - may get access rupt */
         if ((addr1 & 0x7ff) == 0 || (addr2 & 0x7ff) == 0)
         {
-            GR_A(r1, regs) = addr1;
-            GR_A(r2, regs) = addr2;
+            SET_GR_A(r1, regs, addr1);
+            SET_GR_A(r2, regs, addr2);
 
             regs->GR_LA24(r1+1) = len1;
             regs->GR_LA24(r2+1) = len2;
@@ -1817,8 +1817,8 @@ BYTE    pad;                            /* Padding byte              */
     } /* end while(len1||len2) */
 
     /* Update the registers */
-    GR_A(r1, regs) = addr1;
-    GR_A(r2, regs) = addr2;
+    SET_GR_A(r1, regs,addr1);
+    SET_GR_A(r2, regs,addr2);
 
     regs->GR_LA24(r1+1) = len1;
     regs->GR_LA24(r2+1) = len2;
@@ -1899,10 +1899,10 @@ BYTE    pad;                            /* Padding byte              */
     } /* end for(i) */
 
     /* Update the registers */
-    GR_A(r1, regs) = addr1;
-    GR_A(r1+1, regs) = len1;
-    GR_A(r3, regs) = addr2;
-    GR_A(r3+1, regs) = len2;
+    SET_GR_A(r1, regs,addr1);
+    SET_GR_A(r1+1, regs,len1);
+    SET_GR_A(r3, regs,addr2);
+    SET_GR_A(r3+1, regs,len2);
 
     regs->psw.cc = cc;
 
@@ -1981,8 +1981,8 @@ BYTE    termchar;                       /* Terminating character     */
     } /* end for(i) */
 
     /* Set R1 and R2 to point to current character of each operand */
-    GR_A(r1, regs) = addr1;
-    GR_A(r2, regs) = addr2;
+    SET_GR_A(r1, regs,addr1);
+    SET_GR_A(r2, regs,addr2);
 
     /* Set condition code */
     regs->psw.cc =  cc;
@@ -2027,8 +2027,8 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
     /* update regs so unused bits zeroed */
-    GR_A(r1, regs) = addr1;
-    GR_A(r2, regs) = addr2;
+    SET_GR_A(r1, regs,addr1);
+    SET_GR_A(r2, regs,addr2);
 
     /* Load signed operand lengths from R1+1 and R2+1 */
     len1 =
@@ -2140,12 +2140,12 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
         if ((addr1 & 0x7FF) == 0 || (addr2 & 0x7FF) == 0)
             {
                 /* Update R1 and R2 to point to next bytes to compare */
-                GR_A(r1, regs) = addr1;
-                GR_A(r2, regs) = addr2;
+                SET_GR_A(r1, regs,addr1);
+                SET_GR_A(r2, regs,addr2);
 
                 /* Set R1+1 and R2+1 to remaining operand lengths */
-                GR_A(r1+1, regs) = len1;
-                GR_A(r2+1, regs) = len2;
+                SET_GR_A(r1+1, regs,len1);
+                SET_GR_A(r2+1, regs,len2);
             }
 
         /* If equal byte count has reached substring length
@@ -2162,23 +2162,23 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     if (cc < 2)
     {
         /* Update R1 and R2 to point to the equal substring */
-        GR_A(r1, regs) = eqaddr1;
-        GR_A(r2, regs) = eqaddr2;
+        SET_GR_A(r1, regs,eqaddr1);
+        SET_GR_A(r2, regs,eqaddr2);
 
         /* Set R1+1 and R2+1 to length remaining in each
            operand after the start of the substring */
-        GR_A(r1+1, regs) = remlen1;
-        GR_A(r2+1, regs) = remlen2;
+        SET_GR_A(r1+1, regs,remlen1);
+        SET_GR_A(r2+1, regs,remlen2);
     }
     else
     {
         /* Update R1 and R2 to point to next bytes to compare */
-        GR_A(r1, regs) = addr1;
-        GR_A(r2, regs) = addr2;
+        SET_GR_A(r1, regs,addr1);
+        SET_GR_A(r2, regs,addr2);
 
         /* Set R1+1 and R2+1 to remaining operand lengths */
-        GR_A(r1+1, regs) = len1;
-        GR_A(r2+1, regs) = len2;
+        SET_GR_A(r1+1, regs,len1);
+        SET_GR_A(r2+1, regs,len2);
     }
 
     /* Set condition code */
@@ -2303,10 +2303,10 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         len2 = nlen2;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1+1, regs) = len1;
-        GR_A(r2, regs) = addr2;
-        GR_A(r2+1, regs) = len2;
+        SET_GR_A(r1, regs,addr1);
+        SET_GR_A(r1+1, regs,len1);
+        SET_GR_A(r2, regs,addr2);
+        SET_GR_A(r2+1, regs,len2);
 
         if (len1 == 0)
             cc = 1;
@@ -2464,10 +2464,10 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         len2 -= n + 1;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1+1, regs) = len1;
-        GR_A(r2, regs) = addr2;
-        GR_A(r2+1, regs) = len2;
+        SET_GR_A(r1, regs,addr1);
+        SET_GR_A(r1+1, regs,len1);
+        SET_GR_A(r2, regs,addr2);
+        SET_GR_A(r2+1, regs,len2);
 
         if (len1 == 0)
             cc = 1;
@@ -3079,7 +3079,7 @@ VADR    effective_addr2;                /* Effective address         */
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
-    GR_A(r1, regs) = effective_addr2;
+    SET_GR_A(r1, regs, effective_addr2);
 }
 
 
@@ -3096,7 +3096,7 @@ VADR    effective_addr2;                /* Effective address         */
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
-    GR_A(r1, regs) = effective_addr2;
+    SET_GR_A(r1, regs,effective_addr2);
 
     /* Load corresponding value into access register */
     if ( PRIMARY_SPACE_MODE(&(regs->psw)) )
@@ -3149,7 +3149,7 @@ int     r1, r2;                         /* Values of R fields        */
     }
 
     /* Load complement of second operand and set condition code */
-    (S32)regs->GR_L(r1) = -((S32)regs->GR_L(r2));
+    regs->GR_L(r1) = -((S32)regs->GR_L(r2));
 
     regs->psw.cc = (S32)regs->GR_L(r1) < 0 ? 1 :
                    (S32)regs->GR_L(r1) > 0 ? 2 : 0;
@@ -3168,7 +3168,7 @@ VADR    effective_addr2;                /* Effective address         */
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of register from operand address */
-    (S32)regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 }
 
 
@@ -3185,7 +3185,7 @@ U16     i2;                             /* 16-bit operand values     */
     RI(inst, regs, r1, opcd, i2);
 
     /* Load operand into register */
-    (S32)regs->GR_L(r1) = (S16)i2;
+    regs->GR_L(r1) = (S16)i2;
 
 }
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/
@@ -3235,7 +3235,7 @@ int     r1, r2;                         /* Values of R fields        */
     RR(inst, regs, r1, r2);
 
     /* Load negative value of second operand and set cc */
-    (S32)regs->GR_L(r1) = (S32)regs->GR_L(r2) > 0 ?
+    regs->GR_L(r1) = (S32)regs->GR_L(r2) > 0 ?
                             -((S32)regs->GR_L(r2)) :
                             (S32)regs->GR_L(r2);
 
@@ -3263,7 +3263,7 @@ int     r1, r2;                         /* Values of R fields        */
     }
 
     /* Load positive value of second operand and set cc */
-    (S32)regs->GR_L(r1) = (S32)regs->GR_L(r2) < 0 ?
+    regs->GR_L(r1) = (S32)regs->GR_L(r2) < 0 ?
                             -((S32)regs->GR_L(r2)) :
                             (S32)regs->GR_L(r2);
 
@@ -3426,8 +3426,8 @@ BYTE    pad;                            /* Padding byte              */
           || (n <= addr2
                 && (addr1 > addr2 || addr1 <= n)))
         {
-            GR_A(r1, regs) = addr1;
-            GR_A(r2, regs) = addr2;
+            SET_GR_A(r1, regs,addr1);
+            SET_GR_A(r2, regs,addr2);
             regs->psw.cc =  3;
 #if 0
             logmsg (_("MVCL destructive overlap: "));
@@ -3486,8 +3486,8 @@ BYTE    pad;                            /* Padding byte              */
         }
 
         /* Update regs (since interrupt may occur) */
-        GR_A(r1, regs) = addr1;
-        GR_A(r2, regs) = addr2;
+        SET_GR_A(r1, regs,addr1);
+        SET_GR_A(r2, regs,addr2);
         regs->GR_LA24(r1+1) = len1;
         regs->GR_LA24(r2+1) = len2;
 
@@ -3593,10 +3593,10 @@ int     cpu_length;                     /* cpu determined length     */
         len1--;
 
         /* Update the registers */
-        GR_A(r1, regs) = addr1;
-        GR_A(r1+1, regs) = len1;
-        GR_A(r3, regs) = addr2;
-        GR_A(r3+1, regs) = len2;
+        SET_GR_A(r1, regs,addr1);
+        SET_GR_A(r1+1, regs,len1);
+        SET_GR_A(r3, regs,addr2);
+        SET_GR_A(r3+1, regs,len2);
 
     } /* end for(i) */
 
@@ -3765,7 +3765,7 @@ int     cpu_length;                     /* length to next page       */
         if (sbyte == termchar)
         {
             /* Set r1 to point to terminating character */
-            GR_A(r1, regs) = addr1;
+            SET_GR_A(r1, regs,addr1);
 
             /* Set condition code 1 */
             regs->psw.cc = 1;
@@ -3781,8 +3781,8 @@ int     cpu_length;                     /* length to next page       */
     } /* end for(i) */
 
     /* Set R1 and R2 to point to next character of each operand */
-    GR_A(r1, regs) = addr1;
-    GR_A(r2, regs) = addr2;
+    SET_GR_A(r1, regs,addr1);
+    SET_GR_A(r2, regs,addr2);
 
     /* Set condition code 3 */
     regs->psw.cc = 3;
@@ -4021,12 +4021,12 @@ DEF_INST(multiply_halfword)
 int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-U32     n;                              /* 32-bit operand values     */
+S32     n;                              /* 32-bit operand values     */
 
     RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
-    (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
+    n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
 
     /* Multiply R1 register by n, ignore leftmost 32 bits of
        result, and place rightmost 32 bits in R1 register */
@@ -4048,7 +4048,7 @@ U16     i2;                             /* 16-bit operand            */
     RI(inst, regs, r1, opcd, i2);
 
     /* Multiply register by operand ignoring overflow  */
-    (S32)regs->GR_L(r1) *= (S16)i2;
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) * (S16)i2;
 
 } /* end DEF_INST(multiply_halfword_immediate) */
 
@@ -4063,7 +4063,7 @@ int     r1, r2;                         /* Values of R fields        */
     RRE(inst, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
-    (S32)regs->GR_L(r1) *= (S32)regs->GR_L(r2);
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) * (S32)regs->GR_L(r2);
 
 } /* end DEF_INST(multiply_single_register) */
 
@@ -4084,7 +4084,7 @@ U32     n;                              /* 32-bit operand values     */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
 
     /* Multiply signed operands ignoring overflow */
-    (S32)regs->GR_L(r1) *= (S32)n;
+    regs->GR_L(r1) = (S32)regs->GR_L(r1) * (S32)n;
 
 } /* end DEF_INST(multiply_single) */
 #endif /*defined(FEATURE_IMMEDIATE_AND_RELATIVE)*/

@@ -6245,7 +6245,7 @@ RADR    n;                              /* Real address              */
     PERFORM_SERIALIZATION (regs);
 
     /* Clear general register 0 */
-    GR_A(0, regs) = 0;
+    SET_GR_A(0, regs, 0);
 
 }
 #endif /*defined(FEATURE_TEST_BLOCK)*/
