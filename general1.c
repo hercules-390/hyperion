@@ -129,7 +129,7 @@ U16     i2;                             /* 16-bit immediate op       */
     regs->psw.cc =
             add_signed (&(regs->GR_L(r1)),
                           regs->GR_L(r1),
-                (U32)(S16)i2);
+                     (S16)i2);
 
     /* Program check if fixed-point overflow */
     if ( regs->psw.cc == 3 && regs->psw.fomask )
