@@ -4478,31 +4478,28 @@ static char *ordername[] = {    "Unassigned",
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
-    /* Load the target CPU address from R3 bits 16-31 */
-    cpad = regs->GR_LHL(r3);
-
     /* Load the order code from operand address bits 24-31 */
     order = effective_addr2 & 0xFF;
+
+    /* Load the target CPU address from R3 bits 16-31 */
+    cpad = (order != SIGP_SETARCH) ? regs->GR_LHL(r3) : regs->cpuad;
 
     /* Load the parameter from R1 (if R1 odd), or R1+1 (if even) */
     parm = (r1 & 1) ? regs->GR_L(r1) : regs->GR_L(r1+1);
 
     /* Return condition code 3 if target CPU does not exist */
 #ifdef _FEATURE_CPU_RECONFIG
-    if (cpad >= MAX_CPU_ENGINES && order != SIGP_SETARCH)
+    if (cpad >= MAX_CPU_ENGINES)
 #else /*!_FEATURE_CPU_RECONFIG*/
-    if (cpad >= sysblk.numcpu && order != SIGP_SETARCH)
+    if (cpad >= sysblk.numcpu)
 #endif /*!_FEATURE_CPU_RECONFIG*/
     {
         regs->psw.cc = 3;
         return;
     }
 
-    /* Point to CPU register context for the target CPU */
-    if(order != SIGP_SETARCH)
-        tregs = sysblk.regs + cpad;
-    else
-        tregs = regs;
+    /* Point to the target CPU */
+    tregs = sysblk.regs + cpad;
 
     /* Trace SIGP unless Sense, External Call, Emergency Signal,
        or the target CPU is configured offline */

@@ -250,6 +250,9 @@ int     icode;                          /* Interception code         */
         ARCH_DEP(purge_alb) (GUESTREGS);
     }
 
+    /* Initialise the last fetched instruction pointer */
+    GUESTREGS->ip = GUESTREGS->inst;
+
     /* Set SIE active */
     GUESTREGS->instvalid = 0;
     regs->sie_active = 1;

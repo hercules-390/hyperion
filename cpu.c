@@ -433,8 +433,8 @@ static char *pgmintname[] = {
       || code == PGM_SPECIFICATION_EXCEPTION
       || code == PGM_TRANSLATION_SPECIFICATION_EXCEPTION ))
     {
-            realregs->psw.ilc = (realregs->inst[0] < 0x40) ? 2 :
-                                (realregs->inst[0] < 0xC0) ? 4 : 6;
+            realregs->psw.ilc = (realregs->ip[0] < 0x40) ? 2 :
+                                (realregs->ip[0] < 0xC0) ? 4 : 6;
             realregs->psw.IA += realregs->psw.ilc;
             realregs->psw.IA &= ADDRESS_MAXWRAP(realregs);
     }
@@ -465,7 +465,7 @@ static char *pgmintname[] = {
         logmsg ("CPU%4.4X: %s CODE=%4.4X ILC=%d\n", realregs->cpuad,
                 pgmintname[ (code - 1) & 0x3F], code, realregs->psw.ilc);
         ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
-                                                realregs->inst : NULL);
+                                                realregs->ip : NULL);
     }
 
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
@@ -968,7 +968,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 		{
 	            logmsg("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n",
 		       prevmask, regs->ints_mask);
-		       ARCH_DEP(display_inst) (regs, regs->inst);
+		       ARCH_DEP(display_inst) (regs, regs->ip);
 		}
 	    }
 
@@ -1171,7 +1171,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             if (sysblk.insttrace || sysblk.inststep || shouldbreak
                 || tracethis || stepthis)
             {
-                ARCH_DEP(display_inst) (regs, regs->inst);
+                ARCH_DEP(display_inst) (regs, regs->ip);
                 if (sysblk.inststep || stepthis || shouldbreak)
                 {
                     /* Put CPU into stopped state */
@@ -1248,7 +1248,6 @@ void ARCH_DEP(run_cpu) (REGS *regs)
 int     tracethis;                      /* Trace this instruction    */
 int     stepthis;                       /* Stop on this instruction  */
 VADR    pageend;
-BYTE    *ip;
 
     /* Establish longjmp destination for program check */
     setjmp(regs->progjmp);
@@ -1257,7 +1256,7 @@ BYTE    *ip;
     tracethis = 0;
     stepthis = 0;
     pageend = 0;
-    ip = regs->inst;
+    regs->ip = regs->inst;
 
     while (1)
     {
@@ -1270,7 +1269,7 @@ BYTE    *ip;
         }
 
         /* Fetch the next sequential instruction */
-        FAST_INSTRUCTION_FETCH(ip, regs->psw.IA, regs, pageend,
+        FAST_INSTRUCTION_FETCH(regs->ip, regs->psw.IA, regs, pageend,
                             ifetch0, specexception);
 exec0:
 
@@ -1282,7 +1281,7 @@ exec0:
 
         if( IS_IC_TRACE )
         {
-            ARCH_DEP(process_trace)(regs, ip, tracethis, stepthis);
+            ARCH_DEP(process_trace)(regs, regs->ip, tracethis, stepthis);
 
     
             /* Reset instruction trace indicators */
@@ -1290,28 +1289,28 @@ exec0:
             stepthis = 0;
 #ifdef OPTION_CPU_UNROLL
             regs->instcount++;
-            FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
+            FAST_EXECUTE_INSTRUCTION (regs->ip, 0, regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
         }
 
         /* Execute the instruction */
-        FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
+        FAST_EXECUTE_INSTRUCTION (regs->ip, 0, regs);
 
 #ifdef OPTION_CPU_UNROLL
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
                            ifetch1, exec1, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
                            ifetch2, exec2, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
                            ifetch3, exec3, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
                            ifetch4, exec4, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
                            ifetch5, exec5, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
                            ifetch6, exec6, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
                            ifetch7, exec7, specexception);
 
         regs->instcount += 8;
@@ -1319,14 +1318,14 @@ exec0:
 
     }
 
-FAST_IFETCH(regs, pageend, ip, ifetch0, exec0);
-FAST_IFETCH(regs, pageend, ip, ifetch1, exec1);
-FAST_IFETCH(regs, pageend, ip, ifetch2, exec2);
-FAST_IFETCH(regs, pageend, ip, ifetch3, exec3);
-FAST_IFETCH(regs, pageend, ip, ifetch4, exec4);
-FAST_IFETCH(regs, pageend, ip, ifetch5, exec5);
-FAST_IFETCH(regs, pageend, ip, ifetch6, exec6);
-FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch0, exec0);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch1, exec1);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch2, exec2);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch3, exec3);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch4, exec4);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch5, exec5);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch6, exec6);
+FAST_IFETCH(regs, pageend, regs->ip, ifetch7, exec7);
 
 specexception:
     regs->instvalid = 0;
@@ -1374,7 +1373,7 @@ int     stepthis;                       /* Stop on this instruction  */
 
         if( IS_IC_TRACE )
         {
-            ARCH_DEP(process_trace)(regs, regs->inst, tracethis, stepthis);
+            ARCH_DEP(process_trace)(regs, regs->ip, tracethis, stepthis);
 
     
             /* Reset instruction trace indicators */
@@ -1382,13 +1381,13 @@ int     stepthis;                       /* Stop on this instruction  */
             stepthis = 0;
 #ifdef OPTION_CPU_UNROLL
             regs->instcount++;
-            EXECUTE_INSTRUCTION (regs->inst, 0, regs);
+            EXECUTE_INSTRUCTION (regs->ip, 0, regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
         }
 
         /* Execute the instruction */
-        EXECUTE_INSTRUCTION (regs->inst, 0, regs);
+        EXECUTE_INSTRUCTION (regs->ip, 0, regs);
 
 #ifdef OPTION_CPU_UNROLL
         UNROLLED_EXECUTE(regs);

@@ -462,7 +462,6 @@ do { \
 #define INVALIDATE_AEA_ALL(_regs) \
 do { \
     int i; \
-    (_regs)->aenoarn = 0; \
     for(i = 0; i < 16; i++) \
         (_regs)->VE(i) = 1; \
 } while(0)
@@ -471,8 +470,10 @@ do { \
 
 #if defined(OPTION_REDUCED_INVAL)
 #define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
+#define MAXAEA 256
 #else
 #define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xf)
+#define MAXAEA 16
 #endif
 
 #define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)	      \
@@ -492,7 +493,7 @@ do { \
 do { \
     int i; \
     (_regs)->aenoarn = 0; \
-    for(i = 0; i < 256; i++) \
+    for(i = 0; i < MAXAEA; i++) \
         (_regs)->VE(i) = 1; \
 } while(0)
 
@@ -500,7 +501,7 @@ do { \
 do { \
     int i; \
     (_regs)->aenoarn = 0; \
-    for(i = 0; i < 256; i++) \
+    for(i = 0; i < MAXAEA; i++) \
         (_regs)->VE(i) = 1; \
 } while(0)
 #endif

@@ -275,12 +275,12 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page address of last byte of operand */
     addr2 = (addr + len) & ADDRESS_MAXWRAP(regs);
-    addr2 &= 0x7FFFF800;
+    addr2 &= ~0x7FF;
 
     /* Copy data from real storage in either one or two parts
        depending on whether operand crosses a page boundary
        (Page boundary set at 800 to catch FPO crosser too) */
-    if (addr2 == (addr & 0x7FFFF800)) {
+    if (addr2 == (addr & ~0x7FF)) {
         addr = LOGICAL_TO_ABS (addr, arn, regs, ACCTYPE_READ, akey);
         memcpy (dest, sysblk.mainstor+addr, len+1);
     } else {
@@ -393,7 +393,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page address of last byte of operand */
     addr2 = (addr + 3) & ADDRESS_MAXWRAP(regs);
-    addr2 &= 0x7FFFF800;
+    addr2 &= ~0x7FF;
     abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
 
     /* Fetch integer value byte by byte from operand location */
@@ -452,7 +452,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page address of last byte of operand */
     addr2 = (addr + 7) & ADDRESS_MAXWRAP(regs);
-    addr2 &= 0x7FFFF800;
+    addr2 &= ~0x7FF;
     abs2 = LOGICAL_TO_ABS (addr2, arn, regs, ACCTYPE_READ, akey);
 
     /* Fetch integer value byte by byte from operand location */

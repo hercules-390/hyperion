@@ -268,14 +268,14 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page addresses of rightmost operand bytes */
     npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= 0x7FFFF800;
+    npv1 &= ~0x7FF;
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= 0x7FFFF800;
+    npv2 &= ~0x7FF;
 
     /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & 0x7FFFF800))
+    if (npv1 != (effective_addr1 & ~0x7FF))
         npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & 0x7FFFF800))
+    if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
     /* all operands and page crossers valid, now alter ref & chg bits */
@@ -2450,14 +2450,14 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page addresses of rightmost operand bytes */
     npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= 0x7FFFF800;
+    npv1 &= ~0x7FF;
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= 0x7FFFF800;
+    npv2 &= ~0x7FF;
 
     /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & 0x7FFFF800))
+    if (npv1 != (effective_addr1 & ~0x7FF))
         npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & 0x7FFFF800))
+    if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
     /* all operands and page crossers valid, now alter ref & chg bits */
@@ -3361,14 +3361,14 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page addresses of rightmost operand bytes */
     npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= 0x7FFFF800;
+    npv1 &= ~0x7FF;
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= 0x7FFFF800;
+    npv2 &= ~0x7FF;
 
     /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & 0x7FFFF800))
+    if (npv1 != (effective_addr1 & ~0x7FF))
         npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & 0x7FFFF800))
+    if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
     /* all operands and page crossers valid, now alter ref & chg bits */
@@ -3574,14 +3574,14 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Calculate page addresses of rightmost operand bytes */
     npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
-    npv1 &= 0x7FFFF800;
+    npv1 &= ~0x7FF;
     npv2 = (effective_addr2 + l) & ADDRESS_MAXWRAP(regs);
-    npv2 &= 0x7FFFF800;
+    npv2 &= ~0x7FF;
 
     /* Translate next page addresses if page boundary crossed */
-    if (npv1 != (effective_addr1 & 0x7FFFF800))
+    if (npv1 != (effective_addr1 & ~0x7FF))
         npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
-    if (npv2 != (effective_addr2 & 0x7FFFF800))
+    if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
     /* all operands and page crossers valid, now alter ref & chg bits */

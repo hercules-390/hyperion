@@ -424,6 +424,9 @@ typedef struct _REGS {                  /* Processor registers       */
                     [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
         U16     extccpu;                /* CPU causing external call */
         BYTE    inst[6];                /* Last-fetched instruction  */
+        BYTE    *ip;                    /* Pointer to Last-fetched
+                                           instruction (inst might
+                                           not be uptodate           */
 // #if MAX_CPU_ENGINES > 1
         unsigned int                    /* Flags                     */
                 mainlock:1,             /* MAINLOCK held indicator   */
