@@ -25,6 +25,12 @@
 #include "w32chan.h"
 #endif // defined(OPTION_FISHIO)
 
+#if defined(OPTION_IODELAY) && OPTION_IODELAY > 0
+#define IODELAY() usleep(OPTION_IODELAY)
+#else
+#define IODELAY()
+#endif
+
 #undef CHADDRCHK
 #if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
 #define CHADDRCHK(_addr,_dev)                   \
@@ -1569,6 +1575,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             logmsg ("channel: Device %4.4X initial status interrupt\n",
                 dev->devnum);
 
+        IODELAY();
+
         /* Signal waiting CPUs that interrupt is pending */
         obtain_lock (&sysblk.intlock);
         QUEUE_IO_INTERRUPT (dev);
@@ -1594,6 +1602,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Release the device lock */
             release_lock (&dev->lock);
+
+            IODELAY();
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
@@ -1657,6 +1667,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
             /* Release the device lock */
             release_lock (&dev->lock);
 
+            IODELAY();
+
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
             QUEUE_IO_INTERRUPT (dev);
@@ -1702,6 +1714,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Release the device lock */
             release_lock (&dev->lock);
+
+            IODELAY();
 
             /* Signal waiting CPUs that an interrupt may be pending */
             obtain_lock (&sysblk.intlock);
@@ -1842,6 +1856,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                     /* Release the device lock */
                     release_lock (&dev->lock);
 
+                    IODELAY();
+
                     /* Signal waiting CPUs that interrupt is pending */
                     obtain_lock (&sysblk.intlock);
                     QUEUE_IO_INTERRUPT (dev);
@@ -1951,6 +1967,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             /* Release the device lock */
             release_lock (&dev->lock);
+
+            IODELAY();
 
             /* Signal waiting CPUs that an interrupt is pending */
             obtain_lock (&sysblk.intlock);
@@ -2238,6 +2256,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
     /* Release the device lock */
     release_lock (&dev->lock);
+
+    IODELAY();
 
     /* Signal waiting CPUs that an interrupt is pending */
     obtain_lock (&sysblk.intlock);
