@@ -9,6 +9,7 @@ VERSION  = \"2.17\"
 #   overridden in the make command line, as in "PREFIX=/foo make install"
 #   (the directory is only used when installing).
 DESTDIR  = $(PREFIX)/usr/bin
+DESTLIB  = $(PREFIX)/usr/lib
 
 # For Linux use:
 CFLAGS  = -O3 -march=pentium -fomit-frame-pointer
@@ -44,8 +45,9 @@ EXEFILES = hercules hercifc \
            cckdcdsk cckdcomp cckddiag cckdswap \
            cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
            hetget hetinit hetmap hetupd \
-           dmap2hrc dyninst \
-           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525 hdteq
+           dmap2hrc
+DYNFILES = dyninst hdteq \
+           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525
 
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
@@ -164,7 +166,7 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h crypto.h \
            sockdev.h
 
-all:	   $(EXEFILES)
+all:	   $(EXEFILES) $(DYNFILES)
 
 
 hercules: $(hercules_OBJ)
@@ -276,13 +278,14 @@ hdteq:    $(hdteq_OBJ)
 	  $(CC) -o hdteq $(hdteq_OBJ) $(LFLAGS) -shared
 
 clean:
-	rm -rf $(EXEFILES) *.o
+	rm -rf $(EXEFILES) $(DYNFILES) *.o
 
 tar:	clean
 	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
 
 install:  $(EXEFILES)
 	cp $(EXEFILES) $(DESTDIR)
+	cp $(DYNFILES) $(DESTLIB)
 	chown root $(DESTDIR)/hercifc
 	chmod 0751 $(DESTDIR)/hercifc
 	chmod +s $(DESTDIR)/hercifc
