@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+27 Jul 2004 SR Fix affecting suspended CCWs - Ivan Warren P/O Greg Smith
 26 Jul 2004 Hercules suspend/resume command support - Greg Smith
 26 Jul 2004 Clear PSW Bit 12 when switching to ESAME via SIGP - Ivan Warren
 26 Jul 2004 Added ASN_AND_LX_REUSE config statement - Ivan Warren

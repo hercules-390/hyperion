@@ -1239,7 +1239,8 @@ typedef struct _DEVBLK {
                 pending:1,              /* 1=I/O interrupt pending   */
                 pcipending:1,           /* 1=PCI interrupt pending   */
                 attnpending:1,          /* 1=ATTN interrupt pending  */
-                startpending:1;         /* 1=startio pending         */
+                startpending:1,         /* 1=startio pending         */
+		resumesuspended:1;      /* 1=Hresuming suspended dev */
 #define IOPENDING(_dev) ((_dev)->pending || (_dev)->pcipending || (_dev)->attnpending)
         int     crwpending;             /* 1=CRW pending             */
         int     syncio_active;          /* 1=Synchronous I/O active  */

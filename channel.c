@@ -2001,7 +2001,11 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
 #ifdef FEATURE_CHANNEL_SUBSYSTEM
     /* For hercules `resume' resume suspended state */
-    if (dev->suspended) goto resume_suspend;
+    if (dev->resumesuspended) 
+    {
+	    dev->resumesuspended=0;
+	    goto resume_suspend;
+    }
 #endif
 
     release_lock (&dev->lock);

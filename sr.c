@@ -1188,6 +1188,7 @@ BYTE     buf[SR_MAX_STRING_LENGTH+1];
     {
         if (dev->suspended && (dev->pmcw.flag5 & PMCW5_V))
         {
+	    dev->resumesuspended=1;
             switch (sysblk.arch_mode) {
 #if defined(_370)
             case ARCH_370:
