@@ -32,7 +32,9 @@
   loaded modules.
 
   Ensure that your library path LD_LIBRARY_PATH set correctly such that it
-  includes the directory of your hercules executables
+  includes the directory of your hercules executables. Especially, message
+  HHCCF042E will indicate that system is unable to locate necessary loadable
+  modules.
 
 - ECPS:VM: Do not use ECPS:VM (See README.ECPSVM) in an AP or MP environment
   in VM/370. If AP=YES or MP=YES is coded in DMKSYS and the AP/MP control
