@@ -50,7 +50,7 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
     FishHangAtExit();
 #endif
 
-    sysblk.syslog[LOG_WRITE] = stderr;
+    dup2(STDERR_FILENO,STDOUT_FILENO);
 
     if (argc < 2 || strcasecmp("now",argv[1]))
         release_config();
