@@ -1,0 +1,368 @@
+/*
+    The dynamic loader is intended to supply a loading and linking
+    mechanism, whereby routines, commands, instructions and functions
+    can be dynamically added to hercules, without the need to rebuild
+    or even restart hercules.
+
+    The loader can be controlled by the following hercules commands:
+
+        ldmod <module list>    - Load modules named in module list
+        rmmod <module list>    - Unload modules named in list
+        lsmod                  - List all modules and entry points
+        lsdep                  - List all dependencies
+
+        The ldmod statement may also appear in the hercules 
+        configuration file.
+
+
+    The loader has 2 basic functions module load and module unload.
+    
+    Module load:
+
+    int hdl_load(char *name, int flags);
+
+        Where name is the module name, this name may include the 
+        path.  If no path is given then the module is loaded from
+        the default library search order.  Note that this is 
+        different from the standard search order.
+
+        flags may be one of the following:
+        HDL_LOAD_DEFAULT or 0  -  Default load
+        HDL_LOAD_MAIN          -  Reserved for hercules use
+        HDL_LOAD_NOUNLOAD      -  Module cannot be unloaded
+        HDL_LOAD_FORCE         -  Override dependency check
+        HDL_LOAD_NOMSG         -  Do not issue any error messages
+
+        This function returns a zero value when the load was successfull.
+
+
+    Module unload:
+
+    int hdl_dele(char *name);
+
+        Where name is the name of the module that is to be unloaded.
+
+        This function returns a zero value when the unload was successfull.
+
+
+    Resolving Symbols:
+
+    void * HDL_FINDSYM(char *symbolname);
+
+        This function will return the entrypoint of symbolname or
+        zero when the symbol cannot be resolved.
+        
+    void * HDL_FINDNXT(char *symbolname, current_entrypoint);
+
+        This function will return the privious entrypoint of symbolname,
+        that is the entrypoint which was current before the entrypoint
+        as identified by current_entrypoint was registered.
+
+        This function is intended to allow a module to call the original 
+        routine.  An example of this is given in the panel_command entry
+        as listed below.
+
+
+    There are some special considerations for systems that do not support
+    the concept of back-linking.  Back-linking is the operating system 
+    support of dynamically resolving unresolved external references in 
+    a dynamic module, with the main module, or other loaded modules.
+    Cygwin does not support back-linking and cygwin specials are listed
+    in this example with #if defined(WIN32).
+
+ */
+
+
+
+#include "hercules.h"
+#include "devtype.h"
+#include "opcode.h"
+
+
+/*
+ Local definitions 
+ */
+
+
+static void *gui_cpu_state(REGS *regs)
+{
+    void *(*prev_cpu_state)(REGS *);
+
+/* 
+    CPU status update processing
+ */
+
+    /* Call higher level routine if one exists */
+    if((prev_cpu_state = HDL_FINDNXT(debug_cpu_state,gui_cpu_state)))
+        prev_cpu_state(regs);
+
+    return NULL;
+}
+
+
+void  *ProcessCommand (char *command)
+{
+void * (*prev_panel_command)(char *);
+
+    if (strncasecmp(command,"ourcmd",6) == 0)
+    {
+        logmsg ("This is our command\n");
+    }
+    else
+        /* Call higher level command handler */
+        if((prev_panel_command = HDL_FINDNXT(panel_command,ProcessCommand)))
+            prev_panel_command(command);
+
+    return NULL;
+}
+
+/* 
+    The dependency section is - for all intends and purposes - called 
+    before the module is loaded.  Its function is to check that there
+    are no incompatibilities between this module and the version of 
+    hercules that we are running.  Dependencies are identified by
+    name, this name is given on the HDL_DEPENDENCY statement.
+    Each dependency then has a version code, and a size code, where
+    the version code is a character string, and the size code an
+    integer value.  If the version or size codes do not match with 
+    those in the hercules main module, the module cannot be loaded.
+    The version is usually a character string that identifies the 
+    version of the component, and the size is to be the size of
+    the component in the case of structures or unions.
+    Version and size should be coded as following:
+    #define HDL_VERS_SOMETHING  "1.0"
+    #define HDL_SIZE_SOMETHING  sizeof(SOMETHING)
+    where SOMETHING can be a structure or other component.
+    When a dependency is given that has not yet been registered,
+    it will be registered, such that it can be checked in subsequent
+    module loads.
+
+    The dependency section is mandatory.
+
+ */
+    
+
+HDL_DEPENDENCY_SECTION;
+{
+     /* Define version dependencies that this module requires */
+     HDL_DEPENDENCY ( HERCULES );
+     HDL_DEPENDENCY ( SYSBLK   );
+     HDL_DEPENDENCY ( REGS     );
+     HDL_DEPENDENCY ( DEVBLK   );
+
+}
+END_DEPENDENCY_SECTION;
+
+
+/*
+    The registration exports labels and their associated entrypoints 
+    to hercules, such that the symbols and associated entrypoints may
+    be known to hercules and any other module that may have been loaded.
+    The registration section is called once during module load.
+    If we have registered a function that is also called from this DLL,
+    then it must also be listed in the resolver section.  This to ensure
+    that the symbol is properly resolved when other modules are loaded.
+
+    The registration section is mandatory.
+
+ */
+
+    
+HDL_REGISTER_SECTION;
+{
+    /* These are the entry-points we export to Hercules
+       All funtions and labels used this dll must be static
+       and non exportable, this to ensure that no foreign
+       names are included by the system loader on systems
+       that provide backlink support (mostly *nix systems) */
+       
+    HDL_REGISTER ( daemon_task, external_gui_interface );
+    HDL_REGISTER ( debug_cpu_state, gui_cpu_state );
+    HDL_REGISTER ( panel_command, ProcessCommand );
+}
+END_REGISTER_SECTION;
+
+
+/*
+    The resolver section imports the entrypoints of symbols that
+    have been previously registered. 
+    When a symbol is requested that has not been previously registered
+    then the resolve function will search the loaded modules for 
+    that sumbol, and register it implicitly.  This latter function
+    is mainly provided to support systems that do not have back-link
+    support (notably cygwin)
+    Entrypoints that are resolved should be indirect pointers, for
+    example the panel_command routine is defined as:
+    void *(*panel_command)(char *)
+    The resolver may be called multiple times, the first time it is 
+    called is during module load, immediately after the registration 
+    section is called.  It is subsequently called when other modules
+    are loaded or unloaded.  
+    When a symbol cannot be resolved it will be set to NULL.
+    
+    The resolver section is optional.
+
+ */
+
+
+HDL_RESOLVER_SECTION;
+{
+    /* These are Hercules's entry-points that we need access to
+       these may be updated by other loadable modules, so we need
+       to resolve them here */
+    HDL_RESOLVE ( panel_command );
+    HDL_RESOLVE ( debug_cpu_state );
+
+    HDL_RESOLVE_PTRVAR ( sysbl_ptr, sysblk        );
+#endif
+}
+END_RESOLVER_SECTION;
+
+
+/*
+    The final section is called once, when the module is unloaded
+    or when hercules terminates.
+    The final section is indented to be used to perform cleanup or
+    indicate cleanup action to be taking.  It may set a shutdown 
+    flag that is used within this dll that all local funtions 
+    must now terminate
+   
+    The final section is optional
+
+ */
+
+
+HDL_FINAL_SECTION;
+{
+
+}
+END_FINAL_SECTION;
+
+
+/*
+    The device section is to register device drivers with hercules.
+    This part is still under development, but may have the following
+    structure:
+
+HDL_DEVICE_SECTION;
+{
+    HDL_DEVICE(1052,constty_device_hndinfo);
+    HDL_DEVICE(3215,constty_device_hndinfo);
+}
+END_DEVICE_SECTION;
+
+ */
+
+
+
+
+
+Below is Fish' sample code
+
+
+/*   Define version dependencies that this module requires...
+**
+** The following are the various Hercules structures whose layout your
+** module depends on. The layout of the following structures (size and
+** version) MUST match the layout that was used to build Hercules with.
+** If the size/version of any of the following structures changes (and
+** a new version of Hercules is built using the new layout), then YOUR
+** module must also be built with the new layout as well. The layout of
+** the structures as they were when your module is built MUST MATCH the
+** layout as it was when the version of Hercules you're using was built.
+** Further note that the below HDL_DEPENDENCY_SECTION is actually just
+** a function that the hdl logic calls, and thus allows you to insert
+** directly into the below section any specialized 'C' code you need.
+*/
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+     HDL_DEPENDENCY(REGS);
+     HDL_DEPENDENCY(DEVBLK);
+     HDL_DEPENDENCY(SYSBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+/*  Register re-bindable entry point with resident version, or NULL
+**
+** The following section defines the entry points within Hercules that
+** your module is overriding (replacing). Your module's functions will
+** be called by Hercules instead of the normal Hercules function (if any).
+** The functions defined below thus provide additional/new functionality
+** above/beyond the functionality normally provided by Hercules. Be aware
+** however that it is entirely possible for other dlls to subsequently
+** override the same functions that you've overridden such that they end
+** up being called before your override does and your override may thus
+** not get called at all (depending on how their override is written).
+** Note that the "entry-point name" does not need to correspond to any
+** existing variable or function (i.e. the entry-point name is just that:
+** a name, and nothing more. There does not need to be a variable defined
+** anywhere in your module with that name). Further note that the below
+** HDL_REGISTER_SECTION is actually just a function that the hdl logic
+** calls, thus allowing you to insert directly into the below section
+** any specialized 'C' code that you need.
+*/
+HDL_REGISTER_SECTION;
+{
+/*                register this            as the address of
+                  entry-point name,        this var or func
+*/
+    HDL_REGISTER( panel_command,           my_panel_command );
+    HDL_REGISTER( panel_display,           my_panel_display );
+    HDL_REGISTER( some_exitpoint,          *NULL            );
+}
+END_REGISTER_SECTION;
+
+
+/*   Resolve re-bindable entry point on module load or unload...
+**
+** The following entries "resolve" entry-points that your module
+** needs. These entries define the names of registered entry-points
+** that you need "imported" into your dll so that you may call them
+** directly yourself. The HDL_RESOLVE_PTRVAR macro is used to auto-
+** matically set one of your own pointer variables to the registered
+** entry-point's currently registered value (usually an address of
+** a function or variable). Note that the HDL_RESOLVER_SECTION is
+** actually just a function that the hdl logic calls, thus allowing
+** you to insert directly into the below section any specialized 'C'
+** code that you may need.
+*/
+HDL_RESOLVER_SECTION;
+{
+    /*           Herc's registered
+                 entry-points that
+                 you need to call
+                 directly yourself
+    */
+    HDL_RESOLVE( config_command          );
+    HDL_RESOLVE( some_exitpoint          );
+    HDL_RESOLVE( debug_cpu_state         );
+    HDL_RESOLVE( debug_program_interrupt );
+    HDL_RESOLVE( debug_diagnose          );
+
+    /* The following illustrates how to use HDL_RESOLVE_PTRVAR
+       macro to retrieve the address of one of Herc's registered
+       entry-points.
+
+                         Your pointer-   Herc's registered
+                         variable name   entry-point name
+    */
+    HDL_RESOLVE_PTRVAR(  my_sysblk_ptr,  sysblk         );
+}
+END_RESOLVER_SECTION;
+
+
+/* The following section defines what should be done just before
+** your module is unloaded. It is nothing more than a function that
+** is called by hdl logic just before your module is unloaded, and
+** nothing more. Thus you can place any 'C' code here that you want.
+*/
+HDL_FINAL_SECTION;
+{
+    my_cleanup();
+}
+END_FINAL_SECTION;
+
+
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
