@@ -615,6 +615,56 @@ U32 addr = 0;
 }
 
 
+zz_cgibin cgibin_ipl(WEBBLK *webblk)
+{
+int i;
+DEVBLK *dev;
+
+    html_header(webblk);
+
+    fprintf(webblk->hsock,"<h1>Function not yet implemented</h1>\n");
+
+    fprintf(webblk->hsock,"<form method=post>\n"
+                          "<select type=submit name=cpu>\n");
+
+    for(i = 0;
+#if defined(_FEATURE_CPU_RECONFIG)
+        i < MAX_CPU_ENGINES;
+#else
+        i < sysblk.numcpu;
+#endif
+        i++)
+        if(sysblk.regs[i].cpuonline)
+            fprintf(webblk->hsock,"<option value=%d>CPU%4.4X</option>\n",i,i);
+
+    fprintf(webblk->hsock,"</select>\n"
+                          "<select type=submit name=cpu>\n");
+
+    for(dev = sysblk.firstdev; dev; dev = dev->nextdev)
+        if(dev->pmcw.flag5 & PMCW5_V)
+            fprintf(webblk->hsock,"<option value=%d>DEV%4.4X</option>\n",
+              dev->devnum, dev->devnum);
+
+    fprintf(webblk->hsock,"</select>\n");
+
+    fprintf(webblk->hsock,"Loadparm:<input type=text size=8 value=\"%c%c%c%c%c%c%c%c\">\n",
+      ebcdic_to_ascii[sysblk.loadparm[0]],
+      ebcdic_to_ascii[sysblk.loadparm[1]],
+      ebcdic_to_ascii[sysblk.loadparm[2]],
+      ebcdic_to_ascii[sysblk.loadparm[3]],
+      ebcdic_to_ascii[sysblk.loadparm[4]],
+      ebcdic_to_ascii[sysblk.loadparm[5]],
+      ebcdic_to_ascii[sysblk.loadparm[6]],
+      ebcdic_to_ascii[sysblk.loadparm[7]]);
+
+    fprintf(webblk->hsock,"<input type=submit name=doipl value=\"IPL\">");
+
+    html_footer(webblk);
+
+    return NULL;
+}
+
+
 zz_cgibin cgibin_debug_version_info(WEBBLK *webblk)
 {
     html_header(webblk);
@@ -635,6 +685,7 @@ zz_cgibin cgibin_debug_version_info(WEBBLK *webblk)
 
 CGITAB cgidir[] = {
     { "syslog", (void*)&cgibin_syslog },
+    { "ipl", (void*)&cgibin_ipl },
     { "debug/registers", (void*)&cgibin_debug_registers },
     { "debug/memory", (void*)&cgibin_debug_memory },
     { "debug/version_info", (void*)&cgibin_debug_version_info },
