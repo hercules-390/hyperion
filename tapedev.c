@@ -3768,7 +3768,7 @@ struct tape_format_entry {
 };
 static struct tape_format_entry fmttab[]={
     /* This entry matches a filename ending with .tdf    */
-    {"\\.tdf$",    TAPEDEVT_OMATAPE,  &tmh_oma,  "Optimcal Media Attachment"},
+    {"\\.tdf$",    TAPEDEVT_OMATAPE,  &tmh_oma,  "Optical Media Attachment (OMA) tape"},
 #        if !defined(__APPLE__)
     /* This entry matches a filename starting with /dev/ */
     {"^/dev/",    TAPEDEVT_SCSITAPE,  &tmh_scsi, "SCSI Tape"},
@@ -3833,7 +3833,7 @@ union
         {
             break;
         }
-        rc=regcomp(&regwrk,fmttab[i].fmtreg,0);
+        rc=regcomp(&regwrk,fmttab[i].fmtreg,REG_ICASE);
         if(rc<0)
         {
             regerror(rc,&regwrk,errbfr,1024);
