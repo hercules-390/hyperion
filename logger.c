@@ -174,10 +174,10 @@ static void logger_term(void *arg __attribute__ ((unused)) )
         release_lock(&logger_lock);
 
         /* Wait for the logger to terminate */
-        VERIFY(join_thread(logger_tid,NULL));
+        VERIFY(join_thread(logger_tid,NULL) == 0);
 
         /* Release its system resources */
-        VERIFY(detach_thread(logger_tid));
+        VERIFY(detach_thread(logger_tid) == 0);
     }
 }
 

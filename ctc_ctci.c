@@ -25,7 +25,7 @@
 #endif /* defined(HAVE_GETOPT_LONG) */
 
 /* getopt dynamic linking kludge */
-#include "herc_getopt.h"    
+#include "herc_getopt.h"
 
 
 // ====================================================================
@@ -826,34 +826,24 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
     pCTCBLK->pid = getpid();
 
-    while( 1 )
+    do
     {
         // Read frame from the TUN/TAP interface
-        iLength = TUNTAP_Read( pCTCBLK->fd, szBuff, 2048 );
+        iLength = TUNTAP_Read( pCTCBLK->fd, szBuff, sizeof(szBuff) );
 
         // Check for error condition
         if( iLength < 0 )
         {
-            if( pCTCBLK->fd != -1 && !pCTCBLK->fCloseInProgress )
-            {
-                logmsg( _("HHCCT048E %4.4X: Error reading from %s: %s\n"),
-                    pDEVBLK->devnum, pCTCBLK->szTUNDevName,
-                    strerror( errno ) );
-                sleep(1);
-                continue;
-            }
-
-            // Wait for close to complete
-            while( pCTCBLK->fCloseInProgress )
-            {
-                usleep(10000);  // (give it time to complete)
-            }
-
-            ASSERT( pCTCBLK->fd == -1 );    // (sanity check)
-            break;
+            if( pCTCBLK->fd == -1 || pCTCBLK->fCloseInProgress )
+                break;
+            logmsg( _("HHCCT048E %4.4X: Error reading from %s: %s\n"),
+                pDEVBLK->devnum, pCTCBLK->szTUNDevName,
+                strerror( errno ) );
+            sleep(1);           // (purposeful long delay)
+            continue;
         }
 
-        if( iLength == 0 )
+        if( iLength == 0 )      // (probably EINTR; ignore)
             continue;
 
         if( pCTCBLK->fDebug )
@@ -864,12 +854,35 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         }
 
         // Enqueue frame on buffer, if buffer is full, keep trying
-        while( !CTCI_EnqueueIPFrame( pDEVBLK, szBuff, iLength ) )
-            sched_yield();
-    }
+        while( CTCI_EnqueueIPFrame( pDEVBLK, szBuff, iLength ) < 0
+            && pCTCBLK->fd != -1 && !pCTCBLK->fCloseInProgress )
+        {
+            if( EMSGSIZE == errno )     // (if too large for buffer)
+            {
+                if( pCTCBLK->fDebug )
+                    logmsg( _("HHCCT072W %4.4X: Packet too big; dropped.\n"),
+                            pDEVBLK->devnum );
+                break;                  // (discard it...)
+            }
 
-    if( pCTCBLK->fd >= 0 )
-        CTCI_Close( pDEVBLK );
+            ASSERT( ENOBUFS == errno );
+
+            // Don't use sched_yield() here; use an actual non-dispatchable
+            // delay instead so as to allow another [possibly lower priority]
+            // thread to 'read' (remove) some packet(s) from our frame buffer.
+            usleep( CTC_DELAY_USECS );  // (wait a bit before retrying...)
+        }
+    }
+    while( pCTCBLK->fd != -1 && !pCTCBLK->fCloseInProgress );
+
+    // Wait for close to complete...
+    while( pCTCBLK->fd != -1 )
+    {
+        // Don't use sched_yield() here; use an actual non-dispatchable
+        // delay instead so as to allow the other [possibly lower priority]
+        // thread to finish its closing of our device...
+        usleep( CTC_DELAY_USECS );  // (give it time to complete...)
+    }
 
     return NULL;
 }
@@ -881,13 +894,25 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 // Places the provided IP frame in the next available frame
 // slot in the adapter buffer.
 //
-
+// Returns:
+//
+//  0 == Success
+// -1 == Failure; errno = ENOBUFS:  No buffer space available
+//                        EMSGSIZE: Message too long
+//
 static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
                                  BYTE*   pData, size_t iSize )
 {
     PCTCIHDR pFrame;
     PCTCISEG pSegment;
     PCTCBLK  pCTCBLK = (PCTCBLK)pDEVBLK->dev_data;
+
+    // Will frame NEVER fit into buffer??
+    if( iSize > MAX_CTCI_FRAME_SIZE )
+    {
+        errno = EMSGSIZE;   // Message too long
+        return -1;          // (-1==failure)
+    }
 
     obtain_lock( &pCTCBLK->Lock );
 
@@ -896,10 +921,11 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
           sizeof( CTCIHDR )     +       // Block Header
           sizeof( CTCISEG )     +       // Segment Header
           iSize +                       // Current packet
-          2 ) > 0x5000 )                // Block terminator
+          2 ) > CTC_FRAME_BUFFER_SIZE ) // Block terminator
     {
         release_lock( &pCTCBLK->Lock );
-        return 0;
+        errno = ENOBUFS;    // No buffer space available
+        return -1;          // (-1==failure)
     }
 
     // Fix-up Frame pointer
@@ -938,7 +964,7 @@ static int  CTCI_EnqueueIPFrame( DEVBLK* pDEVBLK,
     signal_condition( &pCTCBLK->Event );
     release_lock( &pCTCBLK->EventLock );
 
-    return 1;
+    return 0;       // (0==success)
 }
 
 //

@@ -31,55 +31,55 @@ extern int      CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] );
 extern int      CTCX_Close( DEVBLK* pDEVBLK );
 extern void     CTCX_Query( DEVBLK* pDEVBLK, BYTE** ppszClass,
                             int     iBufLen, BYTE*  pBuffer );
-extern void     CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode, 
-                                 BYTE    bFlags,  BYTE  bChained, 
-                                 U16     sCount,  BYTE  bPrevCode, 
-                                 int     iCCWSeq, BYTE* pIOBuf, 
-                                 BYTE*   pMore,   BYTE* pUnitStat, 
+extern void     CTCX_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
+                                 BYTE    bFlags,  BYTE  bChained,
+                                 U16     sCount,  BYTE  bPrevCode,
+                                 int     iCCWSeq, BYTE* pIOBuf,
+                                 BYTE*   pMore,   BYTE* pUnitStat,
                                  U16*    pResidual );
 
 extern int      CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] );
 extern int      CTCI_Close( DEVBLK* pDEVBLK );
 extern void     CTCI_Query( DEVBLK* pDEVBLK, BYTE** ppszClass,
                             int     iBufLen, BYTE*  pBuffer );
-extern void     CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode, 
-                                 BYTE    bFlags,  BYTE  bChained, 
-                                 U16     sCount,  BYTE  bPrevCode, 
-                                 int     iCCWSeq, BYTE* pIOBuf, 
-                                 BYTE*   pMore,   BYTE* pUnitStat, 
+extern void     CTCI_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
+                                 BYTE    bFlags,  BYTE  bChained,
+                                 U16     sCount,  BYTE  bPrevCode,
+                                 int     iCCWSeq, BYTE* pIOBuf,
+                                 BYTE*   pMore,   BYTE* pUnitStat,
                                  U16*    pResidual );
 
-extern void     CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount, 
-                           BYTE*   pIOBuf,    BYTE* UnitStat, 
+extern void     CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
+                           BYTE*   pIOBuf,    BYTE* UnitStat,
                            U16*    pResidual, BYTE* pMore );
-extern void     CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount, 
-                            BYTE*   pIOBuf,    BYTE* UnitStat, 
+extern void     CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
+                            BYTE*   pIOBuf,    BYTE* UnitStat,
                             U16*    pResidual );
 
 extern int      LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] );
 extern int      LCS_Close( DEVBLK* pDEVBLK );
 extern void     LCS_Query( DEVBLK* pDEVBLK, BYTE** ppszClass,
                            int     iBufLen, BYTE*  pBuffer );
-extern void     LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode, 
-                                BYTE    bFlags,  BYTE  bChained, 
-                                U16     sCount,  BYTE  bPrevCode, 
-                                int     iCCWSeq, BYTE* pIOBuf, 
-                                BYTE*   pMore,   BYTE* pUnitStat, 
+extern void     LCS_ExecuteCCW( DEVBLK* pDEVBLK, BYTE  bCode,
+                                BYTE    bFlags,  BYTE  bChained,
+                                U16     sCount,  BYTE  bPrevCode,
+                                int     iCCWSeq, BYTE* pIOBuf,
+                                BYTE*   pMore,   BYTE* pUnitStat,
                                 U16*    pResidual );
 
-extern void     LCS_Read( DEVBLK* pDEVBLK,   U16   sCount, 
-                          BYTE*   pIOBuf,    BYTE* UnitStat, 
+extern void     LCS_Read( DEVBLK* pDEVBLK,   U16   sCount,
+                          BYTE*   pIOBuf,    BYTE* UnitStat,
                           U16*    pResidual, BYTE* pMore );
-extern void     LCS_Write( DEVBLK* pDEVBLK,   U16   sCount, 
-                           BYTE*   pIOBuf,    BYTE* UnitStat, 
+extern void     LCS_Write( DEVBLK* pDEVBLK,   U16   sCount,
+                           BYTE*   pIOBuf,    BYTE* UnitStat,
                            U16*    pResidual );
 extern void     LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
-                         U16     sCount,    BYTE*  pIOBuf,    
-                         BYTE*   UnitStat,  U16*   pResidual, 
+                         U16     sCount,    BYTE*  pIOBuf,
+                         BYTE*   UnitStat,  U16*   pResidual,
                          BYTE*   pMore );
 
-extern void     AddDevice( DEVBLK**    ppDEVBLK, 
-                           U16         sDevNum,  
+extern void     AddDevice( DEVBLK**    ppDEVBLK,
+                           U16         sDevNum,
                            DEVBLK*     pDevBlk );
 
 extern int      ParseMAC( char* pszMACAddr, BYTE* pbMACAddr );
@@ -103,7 +103,7 @@ typedef uint8_t MAC[IFHWADDRLEN];       // Data Type for MAC Addresses
 // Ethernet Frame Header
 // ---------------------------------------------------------------------
 
-struct _ETHFRM 
+struct _ETHFRM
 {
     MAC         bDestMAC;                // 0x00
     MAC         bSrcMAC;                 // 0x06
@@ -117,16 +117,16 @@ typedef struct _ETHFRM ETHFRM, *PETHFRM;
 // IP Version 4 Frame Header ( Frame Type 0x0800 )
 // ---------------------------------------------------------------------
 
-struct  _IP4FRM 
+struct  _IP4FRM
 {
     BYTE        bVersion:4;              // 0x00
     BYTE        bHeaderLength:4;         // 0x00
     BYTE        bTOS;                    // 0x01
     HWORD       hwTotalLength;           // 0x02
     HWORD       hwIdentification;        // 0x04
-    U16         
+    U16
         bFlags:3,                        // 0x06
-        sFragmentOffset:13;        
+        sFragmentOffset:13;
     BYTE        bTTL;                    // 0x08
     BYTE        bProtocol;               // 0x09
     HWORD       hwChecksum;              // 0x0A
@@ -141,7 +141,7 @@ typedef struct _IP4FRM IP4FRM, *PIP4FRM;
 // Address Resolution Protocol Frame ( Frame Type 0x0806 )
 // ---------------------------------------------------------------------
 
-struct  _ARPFRM 
+struct  _ARPFRM
 {
     HWORD       hwHardwareType;          // 0x00
     HWORD       hwProtocolType;          // 0x02
@@ -165,7 +165,28 @@ typedef struct _ARPFRM ARPFRM, *PARPFRM;
 // CTCI Definitions
 // ====================================================================
 
-#define CTC_READ_TIMEOUT_SECS  (5)      // five seconds
+#define CTC_READ_TIMEOUT_SECS  (5)       // five seconds
+
+#define CTC_DELAY_USECS        (100000)  // 100 millisecond delay; used
+                                         // mostly by enqueue frame buffer
+                                         // full delay loop...
+
+#define CTC_FRAME_BUFFER_SIZE  (0x5000)  // 20K CTCI/LCS frame buffer
+
+#define MAX_CTCI_FRAME_SIZE     \
+    (                           \
+        CTC_FRAME_BUFFER_SIZE   \
+        - sizeof( CTCIHDR )     \
+        - sizeof( CTCISEG )     \
+        - 2                     \
+    )
+
+#define MAX_LCS_FRAME_SIZE      \
+    (                           \
+        CTC_FRAME_BUFFER_SIZE   \
+        - sizeof( PLCSETHFRM )  \
+        - 2                     \
+    )
 
 struct  _CTCBLK;
 struct  _CTCIHDR;
@@ -176,7 +197,7 @@ typedef struct _CTCIHDR CTCIHDR,*PCTCIHDR;
 typedef struct _CTCISEG CTCISEG,*PCTCISEG;
 
 // --------------------------------------------------------------------
-// CTCBLK - 
+// CTCBLK -
 // --------------------------------------------------------------------
 
 struct  _CTCBLK
@@ -189,7 +210,7 @@ struct  _CTCBLK
                                           // 1 - Write cubchannel
 
     U16         iMaxFrameBufferSize;
-    BYTE        bFrameBuffer[0x5000];
+    BYTE        bFrameBuffer[CTC_FRAME_BUFFER_SIZE];
     U16         iFrameOffset;
     U16         sMTU;                     // Max MTU
 
@@ -263,7 +284,7 @@ typedef struct  _LCSRTE     LCSRTE,     *PLCSRTE;
 typedef struct  _LCSHDR     LCSHDR,     *PLCSHDR;
 typedef struct  _LCSSTDFRM  LCSSTDFRM,  *PLCSSTDFRM;
 typedef struct  _LCSSTRTFRM LCSSTRTFRM, *PLCSSTRTFRM;
-typedef struct  _LCSQIPFRM  LCSQIPFRM,  *PLCSQIPFRM;  
+typedef struct  _LCSQIPFRM  LCSQIPFRM,  *PLCSQIPFRM;
 typedef struct  _LCSLSTFRM  LCSLSTFRM,  *PLCSLSTFRM;
 typedef struct  _LCSIPMPAIR LCSIPMPAIR, *PLCSIPMPAIR;
 typedef struct  _LCSIPMFRM  LCSIPMFRM,  *PLCSIPMFRM;
@@ -287,7 +308,7 @@ struct  _LCSDEV
                                           // 1 - Write cubchannel
 
     U16         iMaxFrameBufferSize;      // Device Buffer Size
-    BYTE        bFrameBuffer[0x5000];     // Device Buffer
+    BYTE        bFrameBuffer[CTC_FRAME_BUFFER_SIZE];
     U16         iFrameOffset;             // Curr Offset into Buffer
 
     LOCK        Lock;                     // Data LOCK
@@ -334,7 +355,8 @@ struct  _LCSPORT
       fLocalMAC:1,                        // MAC is specified in OAT
       fCreated:1,                         // Interface Created
       fStarted:1,                         // Startup Received
-      fRouteAdded:1;                      // Routing Added
+      fRouteAdded:1,                      // Routing Added
+      fCloseInProgress:1;                 // Close in progress
 
     int         fd;                       // TUN/TAP fd
     TID         tid;                      // Read Thread ID
@@ -572,7 +594,7 @@ struct  _LCSIPMFRM
 // LCS Ethernet Passthru Frame
 // ---------------------------------------------------------------------
 
-struct  _LCSETHFRM 
+struct  _LCSETHFRM
 {
     HWORD       hwOffset;
     BYTE        bType;
@@ -627,7 +649,7 @@ static inline void SetCIWInfo( DEVBLK* pDEVBLK,
 
     pSIDInfo += 8;
     pSIDInfo += ( bOffset * 4 );
-    
+
     *pSIDInfo++ = bCIWType | 0x40;
     *pSIDInfo++ = bCIWOp;
     *pSIDInfo++ = (BYTE)(( wCIWCount >> 8 ) & 0x00FF );

@@ -213,6 +213,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         // previous pass. More than one interface can exist on a port.
         if( !pLCSBLK->Port[pLCSDev->bPort].fCreated )
         {
+            ATTR  thread_attr;
             int   rc;
 
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
@@ -224,8 +225,9 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
             pLCSBLK->Port[pLCSDev->bPort].fUsed    = 1;
             pLCSBLK->Port[pLCSDev->bPort].fCreated = 1;
 
+            initialize_join_attr( &thread_attr );
             create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
-                           NULL, LCS_PortThread,
+                           &thread_attr, LCS_PortThread,
                            &pLCSBLK->Port[pLCSDev->bPort] );
         }
 
@@ -502,30 +504,28 @@ int  LCS_Close( DEVBLK* pDEVBLK )
     pPort->icDevices--;
 
     // Is this the last device on the port?
-    if( pPort->icDevices == 0 )
+    if( !pPort->icDevices )
     {
-    // Close the port
-        if( pPort->fd >= 0 )
+        pPort->fCloseInProgress = 1;
         {
-#if 0
-            TID tid = pPort->tid;
-#endif
+            // Close the port
+            if( pPort->fd >= 0 )
+            {
+                TID tid = pPort->tid;
+                TUNTAP_Close( pDEVBLK->fd );
+                signal_thread( tid, SIGINT );
 
-            TUNTAP_Close( pDEVBLK->fd );
+                // Wait for thread to end
+                join_thread( tid, NULL );
+                detach_thread( tid );
+            }
 
-            kill( pPort->pid, SIGINT );
-
-#if 0       // Unfortunately, if compiling under Windows using
-            // fthreads, there is no comparable call. FIXME!
-            // Wait for thread to end
-            pthread_join( tid, NULL );
-#endif
+            if( pLCSDEV->pDEVBLK[0] && pLCSDEV->pDEVBLK[0]->fd >= 0 )
+                pLCSDEV->pDEVBLK[0]->fd = -1;
+            if( pLCSDEV->pDEVBLK[1] && pLCSDEV->pDEVBLK[1]->fd >= 0 )
+                pLCSDEV->pDEVBLK[1]->fd = -1;
         }
-
-        if( pLCSDEV->pDEVBLK[0] && pLCSDEV->pDEVBLK[0]->fd >= 0 )
-            pLCSDEV->pDEVBLK[0]->fd = -1;
-        if( pLCSDEV->pDEVBLK[1] && pLCSDEV->pDEVBLK[1]->fd >= 0 )
-            pLCSDEV->pDEVBLK[1]->fd = -1;
+        pPort->fCloseInProgress = 0;
     }
 
     // Housekeeping
@@ -1174,7 +1174,7 @@ static void*  LCS_PortThread( PLCSPORT pPort )
 
     pPort->pid = getpid();
 
-    while( 1 )
+    do
     {
         // Read an IP packet from the TAP device
         iLength = TUNTAP_Read( pPort->fd, szBuff, sizeof( szBuff ) );
@@ -1182,7 +1182,12 @@ static void*  LCS_PortThread( PLCSPORT pPort )
         // Check for other error condition
         if( iLength < 0 )
         {
-            break;
+            if( pPort->fd == -1 || pPort->fCloseInProgress )
+                break;
+            logmsg( _("HHCLC042E Port %2.2X: Read error: %s\n"),
+                pPort->bPort, strerror( errno ) );
+            sleep(1);           // (purposeful long delay)
+            continue;
         }
 
         if( pPort->pLCSBLK->fDebug )
@@ -1332,12 +1337,25 @@ static void*  LCS_PortThread( PLCSPORT pPort )
                     pPort->bPort, pDevMatch->sAddr,
                     pDevMatch->lIPAddress );
 
-        // Match was found, enqueue it on the device,
-        // if buffer is full, keep trying
-        while( !LCS_EnqueueEthFrame( pDevMatch, pPort->bPort,
-                                     szBuff, iLength ) )
-            sched_yield();
+        // Match was found.
+        // Enqueue frame on buffer, if buffer is full, keep trying
+
+        while( LCS_EnqueueEthFrame( pDevMatch, pPort->bPort, szBuff, iLength ) < 0
+            && pPort->fd != -1 && !pPort->fCloseInProgress )
+        {
+            if (EMSGSIZE == errno)
+            {
+                if( pPort->pLCSBLK->fDebug )
+                    logmsg( _("HHCLC041W Port %2.2X: "
+                        "Frame too big; discarded.\n"),
+                        pPort->bPort );
+                break;
+            }
+            ASSERT( ENOBUFS == errno );
+            usleep(CTC_DELAY_USECS);
+        }
     }
+    while( pPort->fd != -1 && !pPort->fCloseInProgress );
 
     // Housekeeping - Cleanup Port Block
 
@@ -1371,11 +1389,24 @@ static void*  LCS_PortThread( PLCSPORT pPort )
 // Places the provided ethernet frame in the next available frame
 // slot in the adapter buffer.
 //
-
+//
+// Returns:
+//
+//  0 == Success
+// -1 == Failure; errno = ENOBUFS:  No buffer space available
+//                        EMSGSIZE: Message too long
+//
 static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
                                  BYTE*   pData,   size_t iSize )
 {
     PLCSETHFRM  pFrame;
+
+    // Will frame NEVER fit into buffer??
+    if( iSize > MAX_LCS_FRAME_SIZE )
+    {
+        errno = EMSGSIZE;   // Message too long
+        return -1;          // (-1==failure)
+    }
 
     obtain_lock( &pLCSDEV->Lock );
 
@@ -1383,10 +1414,11 @@ static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
     if( ( pLCSDEV->iFrameOffset +       // Current Offset
           sizeof( PLCSETHFRM )  +       // Frame Header
           iSize +                       // Current packet
-          2 ) > 0x5000 )                // Frame terminator
+          2 ) > CTC_FRAME_BUFFER_SIZE ) // Frame terminator
     {
         release_lock( &pLCSDEV->Lock );
-        return 0;
+        errno = ENOBUFS;    // No buffer space available
+        return -1;          // (-1==failure)
     }
 
     // Fix-up frame pointer
@@ -1410,11 +1442,11 @@ static int  LCS_EnqueueEthFrame( PLCSDEV pLCSDEV, BYTE   bPort,
 
     release_lock( &pLCSDEV->Lock );
 
-//  obtain_lock( &pLCSDEV->EventLock );
+    obtain_lock( &pLCSDEV->EventLock );
     signal_condition( &pLCSDEV->Event );
-//  release_lock( &pLCSDEV->EventLock );
+    release_lock( &pLCSDEV->EventLock );
 
-    return 1;
+    return 0;       // (0==success)
 }
 
 
