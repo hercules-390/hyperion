@@ -73,8 +73,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
         exit(0);
     }
 
-    if (create_thread(&tid, NULL, do_shutdown, NULL))
-        do_shutdown(NULL);
+    do_shutdown();
 
     return 0;   /* (make compiler happy) */
 }
