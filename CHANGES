@@ -1,3 +1,6 @@
+29 Mar 2003 Addl VM Assist support : SVC + SSM VM Assists  
+            new evmstat panel command
+            No Timer Assist (do #CP SET ASSIST ON NOTMR) - Ivan Warren
 27 Mar 2003 Initial minimal CPASSIST ECPS:VM/370 support - Ivan Warren
 26 Mar 2003 Fix cckd locking problems, esp. during sf- and sfc - Greg Smith
 26 Mar 2003 CKD now uses the same shared cache as cckd - Greg Smith
