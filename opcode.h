@@ -1328,6 +1328,7 @@ void ARCH_DEP(sie_exit) (REGS *regs, int code);
 
 /* Functions in module stack.c */
 void ARCH_DEP(trap_x) (int trap_is_trap4, int execflag, REGS *regs, U32 trap_operand);
+RADR ARCH_DEP(abs_trap_addr) (VADR vaddr, REGS *regs, int acctype);
 RADR ARCH_DEP(abs_stack_addr) (VADR vaddr, REGS *regs, int acctype);
 void ARCH_DEP(form_stack_entry) (BYTE etype, VADR retna, VADR calla,
 	U32 csi, U32 pcnum, REGS *regs);
