@@ -1,3 +1,6 @@
+17 Jul 2001 Fix BSA so PIC 16 does nullification - Paul Leisy
+17 Jul 2001 Another fix to TRAP and page cross - Paul Leisy
+17 Jul 2001 More fixes to CUTFU, CUUTF - Paul Leisy
 13 Jul 2001 Correct excarid on MVPG PIC 04 - Paul Leisy
 13 Jul 2001 Fix PR trace table entry - Paul Leisy
 13 Jul 2001 CUTFU, CUUTF not setting cc=1 when len1=0 - Paul Leisy
