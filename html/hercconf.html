@@ -216,32 +216,32 @@ The following system parameters may be specified:
 <dt><code>DEVTMAX -1 &#124 0 &#124 1-n</code>
 <dd>specifies the maximum number of device threads allowed.
     <p>Specify <code>-1</code> to cause 'one time only' temporary threads to be
-	created to service each I/O request to a device. Once the I/O request is
-	complete, the thread exits. Subsequent I/O to the same device will cause
-	another worker thread to be created again.
+    created to service each I/O request to a device. Once the I/O request is
+    complete, the thread exits. Subsequent I/O to the same device will cause
+    another worker thread to be created again.
     <p>Specify <code>0</code> to cause an unlimited number of 'semi-permanent'
-	threads to be created on an 'as-needed' basis. With this option, a thread
-	is created to service an I/O request for a device if one doesn't already
-	exist, but once the I/O is complete, the thread enters an idle state waiting
-	for new work. If a new I/O request for the device arrives before the timeout
-	period expires, the existing thread will be reused. The timeout value is
-	currently hard coded at 5 minutes. Note that this option can cause one thread
-	(or possibly more) to be created for each device defined in your
-	configuration. Specifying <code>0</code> means there is no limit to the
-	number of threads that can be created.
-	<p>Specify a value from <code>1</code> to <code>n</code> to set an upper limit
-	to the number of threads that can be created to service any I/O request to
-	any device. Like the <code>0</code> option, each thread, once done servicing
-	an I/O request, enters an idle state. If a new request arrives before the
-	timeout period expires, the thread is reused. If all threads are busy when
-	a new I/O request arrives however, a new thread is created <i>only</i> if the
-	specified maximum has not yet been reached. If the specified maximum number
-	of threads has already been reached, then the I/O request is placed in a queue
-	and will be serviced by the first available thread (i.e. by whichever thread
-	becomes idle first). This option was created to address a threading issue
-	(possibly related to the cygwin Pthreads implementation) on Windows systems.
-	<p>The default for Windows is <code>8</code>. The default for all other systems
-	is <code>0</code>.
+    threads to be created on an 'as-needed' basis. With this option, a thread
+    is created to service an I/O request for a device if one doesn't already
+    exist, but once the I/O is complete, the thread enters an idle state waiting
+    for new work. If a new I/O request for the device arrives before the timeout
+    period expires, the existing thread will be reused. The timeout value is
+    currently hard coded at 5 minutes. Note that this option can cause one thread
+    (or possibly more) to be created for each device defined in your
+    configuration. Specifying <code>0</code> means there is no limit to the
+    number of threads that can be created.
+    <p>Specify a value from <code>1</code> to <code>n</code> to set an upper limit
+    to the number of threads that can be created to service any I/O request to
+    any device. Like the <code>0</code> option, each thread, once done servicing
+    an I/O request, enters an idle state. If a new request arrives before the
+    timeout period expires, the thread is reused. If all threads are busy when
+    a new I/O request arrives however, a new thread is created <i>only</i> if the
+    specified maximum has not yet been reached. If the specified maximum number
+    of threads has already been reached, then the I/O request is placed in a queue
+    and will be serviced by the first available thread (i.e. by whichever thread
+    becomes idle first). This option was created to address a threading issue
+    (possibly related to the cygwin Pthreads implementation) on Windows systems.
+    <p>The default for Windows is <code>8</code>. The default for all other systems
+    is <code>0</code>.
 <dt><code>PGMPRDOS RESTRICTED &#124 LICENSED</code>
 <dd>specifies whether or not Hercules will run licensed program product ESA
     or z/Architecture operating systems.  Specify <code>RESTRICTED</code> to
@@ -622,8 +622,12 @@ The format of the device record is:
 <a name="ctca">
 <dt><em>Channel-to-channel adapters</em>
 <dd>The first argument defines the emulation type, and the remaining
-    arguments depend on the emulation type.  The following emulation
-    types are defined:
+    arguments depend on the chosen emulation type. If the first argument
+    is not a recognized emulation type, then the driver will operate as
+    in Hercules Version 1, using Willem Konynenberg's vmnet package, as
+    described in Axel Schwarzer's
+    <a href="http://www.kiyoinc.com/herc3088.html">CTCA 3088</a> document.
+    <p>The following are the emulation types currently supported:
     <dl>
     <p><dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)<p>
     <dd>A point-to-point IP connection with the TCP/IP stack of the
@@ -793,10 +797,6 @@ when the primary is not available, and NO
         </dl>
 
     </dl>
-    <p>If the first parameter is not one of the recognized CTC emulation
-    types, then the driver will operate as in Hercules Version 1, using
-    Willem Konynenberg's vmnet package, as described in Axel Schwarzer's
-    <a href="http://www.kiyoinc.com/herc3088.html">CTCA 3088</a> document.
 <p>
 <a name="fbadasd">
 <dt><em>FBA DASD devices</em>

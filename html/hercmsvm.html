@@ -19,16 +19,16 @@ ESA/390, and z/Architecture emulator.
 HHCVM001I *<em>panel_command</em>* panel command issued by guest
 </a></code>
 <dd><dl>
-	<dt>Explanation
+    <dt>Explanation
         <dd>The guest operating system has issued a DIAGNOSE 8 instruction to perform the <em>panel_command</em> panel command to be carried out by the hercules panel command processor
-	<dt>System Action
-		<dd>The hercules panel command processor carries out the command, if possible.
-	<dt>Operator Action
-		<dd>None
-	<dt>Programmer Action
+    <dt>System Action
+        <dd>The hercules panel command processor carries out the command, if possible.
+    <dt>Operator Action
+        <dd>None
+    <dt>Programmer Action
         <dd>No action is requested if this behaviour is expected. If this behaviour poses a security concern, the <em>DIAG8CMD</em> configuration statement should either be ommited or specified with the <em>disabled</em> argument.
-	<dt>Module
-		<dd>vm.c
+    <dt>Module
+        <dd>vm.c
 </dl>
 <p></p>
 <dt>
@@ -36,16 +36,16 @@ HHCVM001I *<em>panel_command</em>* panel command issued by guest
 HHCVM002I *<em>panel_command</em> command complete
 </a></code>
 <dd><dl>
-	<dt>Explanation
+    <dt>Explanation
         <dd>The <em>panel_command</em>panel command has been carried out by the panel command processor. Note that this message only appears if the guest issued diagnose 8 instruction specified that it didn't request the command response to be placed in a supplied buffer.
-	<dt>System Action
-		<dd>The system continues
-	<dt>Operator Action
-		<dd>None. This is an informational message
-	<dt>Programmer Action
-		<dd>None. This is an informational message
-	<dt>Module
-		<dd>vm.c
+    <dt>System Action
+        <dd>The system continues
+    <dt>Operator Action
+        <dd>None. This is an informational message
+    <dt>Programmer Action
+        <dd>None. This is an informational message
+    <dt>Module
+        <dd>vm.c
 </dl>
 <p></p>
 <dt>
@@ -53,16 +53,16 @@ HHCVM002I *<em>panel_command</em> command complete
 HHCVM003I Host command processing disabled by configuration statement
 </a></code>
 <dd><dl>
-	<dt>Explanation
+    <dt>Explanation
         <dd>The guest operating system attempted using the DIAGNOSE 8 Instruction to carry out a panel command, but the system configuration disabled this feature (with the <em>DIAG8CMD</em> configuration statement)
-	<dt>System Action
-		<dd>The panel command is ignored.
-	<dt>Operator Action
-		<dd>None.
-	<dt>Programmer Action
+    <dt>System Action
+        <dd>The panel command is ignored.
+    <dt>Operator Action
+        <dd>None.
+    <dt>Programmer Action
         <dd>If it is deemed necessary for the guest operating system to issue DIAGNOSE 8 commands to issue panel commands, the <em>DIAG8CMD</em> with the <em>enable</em> argument should be specified in the configuration file.
-	<dt>Module
-		<dd>vm.c
+    <dt>Module
+        <dd>vm.c
 </dl>
 <p></p>
 <dt>

@@ -19,20 +19,20 @@ ESA/390, and z/Architecture emulator.
 HHCCA001I <em>CCUU</em>:Connect out to <em>ipaddr:port</em> failed during initial status : <em>System Cause Text</em>
 </a></code>
 <dd><dl>
-	<dt>Explanation
-		<dd>HERCULES attempted to make an outgoing TCP connection to <em>ipaddr:port</em>, but the system indicated that there was an error 	while processing the request.
-	<dt>System Action
-		<dd>The DIAL or ENABLE CCW that caused the connection attempt ends with Unit Check and Intervention Required.
-		The reason for the failure is indicated in the <em>System Cause Text</em> field
-	<dt>Operator Action
-		<dd>None
-	<dt>Programmer Action
-		<dd>Correct the RHOST/RPORT configuration statements in the configuration file.
-		If this message occured during a program initiated DIAL, correct the dial data.
-	<dt>Module
-		<dd>commadpt.c
-	<dt>Function
-		<dd>commadpt_connout
+    <dt>Explanation
+        <dd>HERCULES attempted to make an outgoing TCP connection to <em>ipaddr:port</em>, but the system indicated that there was an error     while processing the request.
+    <dt>System Action
+        <dd>The DIAL or ENABLE CCW that caused the connection attempt ends with Unit Check and Intervention Required.
+        The reason for the failure is indicated in the <em>System Cause Text</em> field
+    <dt>Operator Action
+        <dd>None
+    <dt>Programmer Action
+        <dd>Correct the RHOST/RPORT configuration statements in the configuration file.
+        If this message occured during a program initiated DIAL, correct the dial data.
+    <dt>Module
+        <dd>commadpt.c
+    <dt>Function
+        <dd>commadpt_connout
 </dl>
 <p></p>
 <dt>
@@ -40,18 +40,18 @@ HHCCA001I <em>CCUU</em>:Connect out to <em>ipaddr:port</em> failed during initia
 HHCCA002I <em>CCUU</em>:Line Communication thread <em>thread id</em> started
 </a></code>
 <dd><dl>
-	<dt>Explanation
-		<dd>The thread responsible for asynchronous operations for the BSC emulated line <em>CCUU</em> has been started.
-	<dt>System Action
-		<dd>The system continues
-	<dt>Operator Action
-		<dd>None. This is an informational message
-	<dt>Programmer Action
-		<dd>None. This is an informational message
-	<dt>Module
-		<dd>commadpt.c
-	<dt>Function
-		<dd>commadpt_thread
+    <dt>Explanation
+        <dd>The thread responsible for asynchronous operations for the BSC emulated line <em>CCUU</em> has been started.
+    <dt>System Action
+        <dd>The system continues
+    <dt>Operator Action
+        <dd>None. This is an informational message
+    <dt>Programmer Action
+        <dd>None. This is an informational message
+    <dt>Module
+        <dd>commadpt.c
+    <dt>Function
+        <dd>commadpt_thread
 </dl>
 <p></p>
 <dt>
@@ -59,18 +59,18 @@ HHCCA002I <em>CCUU</em>:Line Communication thread <em>thread id</em> started
 HHCCA003E <em>CCUU</em>:Cannot obtain socket for incoming calls : <em>System Cause Text</em>
 </a></code>
 <dd><dl>
-	<dt>Explanation
-		<dd>A system error occured while attempting to create a socket to listen for incoming calls.
-	<dt>System Action
-		<dd>The device creation is aborted.
-	<dt>Operator Action
-		<dd>None.
-	<dt>Programmer Action
-		<dd>Check the System Cause Text for any information relating to the host system. Notify support.
-	<dt>Module
-		<dd>commadpt.c
-	<dt>Function
-		<dd>commadpt_thread
+    <dt>Explanation
+        <dd>A system error occured while attempting to create a socket to listen for incoming calls.
+    <dt>System Action
+        <dd>The device creation is aborted.
+    <dt>Operator Action
+        <dd>None.
+    <dt>Programmer Action
+        <dd>Check the System Cause Text for any information relating to the host system. Notify support.
+    <dt>Module
+        <dd>commadpt.c
+    <dt>Function
+        <dd>commadpt_thread
 </dl>
 <p></p>
 <dt>
@@ -79,15 +79,15 @@ HHCCA004W <em>CCUU</em>:Waiting 5 seconds for port <em>port</em> to become avail
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>While attempting to reserve port <em>port</em> to listen to
-		it, the system indicated the port was already being used.
+    <dt>Explanation<dd>While attempting to reserve port <em>port</em> to listen to
+        it, the system indicated the port was already being used.
 
-	<dt>System Action<dd>The system waits 5 seconds and then retries the operation
+    <dt>System Action<dd>The system waits 5 seconds and then retries the operation
 
-	<dt>Operator Action<dd>Terminate the device if the port is in error
+    <dt>Operator Action<dd>Terminate the device if the port is in error
 
-	<dt>Programmer Action<dd>Determine the program holding the specified port. If
-		the port cannot be made available, use a different port.
+    <dt>Programmer Action<dd>Determine the program holding the specified port. If
+        the port cannot be made available, use a different port.
 </dl>
 <p></p>
 <dt>
@@ -96,14 +96,14 @@ HHCCA005I <em>CCUU</em>:Listening on port <em>port</em> for incoming TCP connect
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The system is now listening on port <em>port</em> for incoming
-		a tcp connection.
+    <dt>Explanation<dd>The system is now listening on port <em>port</em> for incoming
+        a tcp connection.
 
-	<dt>System Action<dd>The system continues
+    <dt>System Action<dd>The system continues
 
-	<dt>Operator Action<dd>None. This is an informational message
+    <dt>Operator Action<dd>None. This is an informational message
 
-	<dt>Programmer Action<dd> None. This is an informational message
+    <dt>Programmer Action<dd> None. This is an informational message
 </dl>
 <p></p>
 <dt>
@@ -112,14 +112,14 @@ HHCCA006T <em>CCUU</em>:Select failed : <em>System Cause Text</em>
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>An error occured during a 'select' system call.
+    <dt>Explanation<dd>An error occured during a 'select' system call.
 
-	<dt>System Action<dd>The BSC thread is terminated
+    <dt>System Action<dd>The BSC thread is terminated
 
-	<dt>Operator Action<dd>None.
+    <dt>Operator Action<dd>None.
 
-	<dt>Programmer Action<dd>Check the <em>System Cause Text</em> for any indication
-		of where the error might come from. Notify Support.
+    <dt>Programmer Action<dd>Check the <em>System Cause Text</em> for any indication
+        of where the error might come from. Notify Support.
 </dl>
 <p></p>
 <dt>
@@ -128,18 +128,18 @@ HHCCA007W <em>CCUU</em>:Outgoing call failed during <em>ENABLE|DIAL</em> command
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The system reported that a previously initiated TCP connection
-		could not be completed
+    <dt>Explanation<dd>The system reported that a previously initiated TCP connection
+        could not be completed
 
-	<dt>System Action<dd>The I/O operation responsible for the TCP outgoing connection
-		is ended with Unit Check and Intervention Required.
+    <dt>System Action<dd>The I/O operation responsible for the TCP outgoing connection
+        is ended with Unit Check and Intervention Required.
 
-	<dt>Operator Action<dd>If the error indicates that the error is temporary, retry
-		the operation.
+    <dt>Operator Action<dd>If the error indicates that the error is temporary, retry
+        the operation.
 
-	<dt>Programmer Action<dd>Check that the destination for this line is correctly 
-		configured. If the operation was a DIAL attempt, check in the
-		application configuration or operation data.
+    <dt>Programmer Action<dd>Check that the destination for this line is correctly 
+        configured. If the operation was a DIAL attempt, check in the
+        application configuration or operation data.
 </dl>
 <p></p>
 <dt>
@@ -148,15 +148,15 @@ HHCCA008I <em>CCUU</em>:cthread - Incoming Call
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The BSC thread has received an incoming call.
+    <dt>Explanation<dd>The BSC thread has received an incoming call.
 
-	<dt>System Action<dd>Depending on configuration and operational status,
-		the call is either accepted or rejected. Eventually, an
-		ongoign I/O operation may complete.
+    <dt>System Action<dd>Depending on configuration and operational status,
+        the call is either accepted or rejected. Eventually, an
+        ongoign I/O operation may complete.
 
-	<dt>Operator Action<dd>None. This is an informational message
+    <dt>Operator Action<dd>None. This is an informational message
 
-	<dt>Programmer Action<dd> None. This is an informational message
+    <dt>Programmer Action<dd> None. This is an informational message
 </dl>
 <p></p>
 <dt>
@@ -165,15 +165,15 @@ HHCCA009I <em>CCUU</em>:BSC utility thread terminated
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The BSC thread has ended
+    <dt>Explanation<dd>The BSC thread has ended
 
-	<dt>System Action<dd>the system continue.
+    <dt>System Action<dd>the system continue.
 
-	<dt>Operator Action<dd>Refer to any previous error message
-		if this message was not unexpected 
+    <dt>Operator Action<dd>Refer to any previous error message
+        if this message was not unexpected 
 
-	<dt>Programmer Action<dd> Refer to any previous error message
-		if this message was not unexpected 
+    <dt>Programmer Action<dd> Refer to any previous error message
+        if this message was not unexpected 
 </dl>
 <p></p>
 <dt>
@@ -182,15 +182,15 @@ HHCCA010I <em>CCUU</em>:initialisation not performed
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The Device initialisation process has failed.
+    <dt>Explanation<dd>The Device initialisation process has failed.
 
-	<dt>System Action<dd>the system terminates or continues, depending
-		on the reason for which the device was initialisation was
-		initiated.
+    <dt>System Action<dd>the system terminates or continues, depending
+        on the reason for which the device was initialisation was
+        initiated.
 
-	<dt>Operator Action<dd>Refer to any previous error message
+    <dt>Operator Action<dd>Refer to any previous error message
 
-	<dt>Programmer Action<dd> Refer to any previous error message
+    <dt>Programmer Action<dd> Refer to any previous error message
 </dl>
 <p></p>
 <dt>
@@ -199,19 +199,19 @@ HHCCA011E <em>CCUU</em>:Error parsing <em>Keyword</em>
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The device keyword parser found an error while
-		parsing a known keyword.
+    <dt>Explanation<dd>The device keyword parser found an error while
+        parsing a known keyword.
 
-	<dt>System Action<dd>The system continues. The device initialisation
-		routine turns on a NOGO flag.
+    <dt>System Action<dd>The system continues. The device initialisation
+        routine turns on a NOGO flag.
 
-	<dt>Operator Action<dd>for a runtime initialisation,
-		correct the device initialisation parameters, otherwise
-		notify the programmer.
+    <dt>Operator Action<dd>for a runtime initialisation,
+        correct the device initialisation parameters, otherwise
+        notify the programmer.
 
-	<dt>Programmer Action<dd>For an engine initialisation, correct the device
-		configuration parameters in the configuration file.
-</dl>		
+    <dt>Programmer Action<dd>For an engine initialisation, correct the device
+        configuration parameters in the configuration file.
+</dl>       
 <p></p>
 <dt>
 <code><a name="HHCCA012E">
@@ -219,18 +219,18 @@ HHCCA012E <em>CCUU</em>:Unrecognized parameter <em>Keyword</em>
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The device keyword parser found an unknown
-		keyword in the device parameter list.
+    <dt>Explanation<dd>The device keyword parser found an unknown
+        keyword in the device parameter list.
 
-	<dt>System Action<dd>The system continues. The device initialisation
-		routine turns on a NOGO flag.
+    <dt>System Action<dd>The system continues. The device initialisation
+        routine turns on a NOGO flag.
 
-	<dt>Operator Action<dd>for a runtime initialisation,
-		correct the device initialisation parameters, otherwise
-		notify the programmer.
+    <dt>Operator Action<dd>for a runtime initialisation,
+        correct the device initialisation parameters, otherwise
+        notify the programmer.
 
-	<dt>Programmer Action<dd>For an engine initialisation, correct the device
-		configuration parameters in the configuration file.
+    <dt>Programmer Action<dd>For an engine initialisation, correct the device
+        configuration parameters in the configuration file.
 </dl>
 <p></p>
 <dt>
@@ -239,18 +239,18 @@ HHCCA013E <em>CCUU</em>:Incorrect <em>local port|remote port|local host|remote h
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The device initialisation routine could not correctly parse a 
-		parameter value.
+    <dt>Explanation<dd>The device initialisation routine could not correctly parse a 
+        parameter value.
 
-	<dt>System Action<dd>The system continues. The device initialisation
-		routine turns on a NOGO flag.
+    <dt>System Action<dd>The system continues. The device initialisation
+        routine turns on a NOGO flag.
 
-	<dt>Operator Action<dd>for a runtime initialisation,
-		correct the device initialisation parameters, otherwise
-		notify the programmer.
+    <dt>Operator Action<dd>for a runtime initialisation,
+        correct the device initialisation parameters, otherwise
+        notify the programmer.
 
-	<dt>Programmer Action<dd>For an engine initialisation, correct the device
-		configuration parameters in the configuration file.
+    <dt>Programmer Action<dd>For an engine initialisation, correct the device
+        configuration parameters in the configuration file.
 </dl>
 <p></p>
 <dt>
@@ -259,18 +259,18 @@ HHCCA014E <em>CCUU</em>:Incorrect switched/dial specification <em>value</em>; de
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The device initialisation routine found an incorrect
-		DIAL value.
+    <dt>Explanation<dd>The device initialisation routine found an incorrect
+        DIAL value.
 
-	<dt>System Action<dd>The system continues. The device initialisation
-		routine turns on a NOGO flag.
+    <dt>System Action<dd>The system continues. The device initialisation
+        routine turns on a NOGO flag.
 
-	<dt>Operator Action<dd>for a runtime initialisation,
-		correct the device initialisation parameters, otherwise
-		notify the programmer.
+    <dt>Operator Action<dd>for a runtime initialisation,
+        correct the device initialisation parameters, otherwise
+        notify the programmer.
 
-	<dt>Programmer Action<dd>For an engine initialisation, correct the device
-		configuration parameters in the configuration file.
+    <dt>Programmer Action<dd>For an engine initialisation, correct the device
+        configuration parameters in the configuration file.
 </dl>
 <p></p>
 <dt>
@@ -279,25 +279,25 @@ HHCCA015E <em>CCUU</em>:Missing parameter : DIAL=<em>NO|IN|OUT|INOUT</em> and <e
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The device initialisation routine found that a 
-		mandatory parameter was not provided for a specific
-		DIAL Value.
+    <dt>Explanation<dd>The device initialisation routine found that a 
+        mandatory parameter was not provided for a specific
+        DIAL Value.
 
-	<dt>System Action<dd>The system continues. The device initialisation
-		routine turns on a NOGO flag.
+    <dt>System Action<dd>The system continues. The device initialisation
+        routine turns on a NOGO flag.
 
-	<dt>Operator Action<dd>for a runtime initialisation,
-		correct the device initialisation parameters, otherwise
-		notify the programmer.
+    <dt>Operator Action<dd>for a runtime initialisation,
+        correct the device initialisation parameters, otherwise
+        notify the programmer.
 
-	<dt>Programmer Action<dd>For an engine initialisation, correct the device
-		configuration parameters in the configuration file.
+    <dt>Programmer Action<dd>For an engine initialisation, correct the device
+        configuration parameters in the configuration file.
 
-	<dt>Note<dd>
-		For DIAL=NO   , LPORT, RPORT and RHOST are needed
-		<dd>For DIAL=IN   , LPORT is required
-		<dd>For DIAL=OUT  None of LPORT,LHOST,RPORT,RHOST are required
-		<dd>For DIAL=INOUT, LPORT is required
+    <dt>Note<dd>
+        For DIAL=NO   , LPORT, RPORT and RHOST are needed
+        <dd>For DIAL=IN   , LPORT is required
+        <dd>For DIAL=OUT  None of LPORT,LHOST,RPORT,RHOST are required
+        <dd>For DIAL=INOUT, LPORT is required
 </dl>
 <p></p>
 <dt>
@@ -306,18 +306,18 @@ HHCCA016W <em>CCUU</em>:Conflicting parameter : DIAL=<em>NO|IN|OUT|INOUT</em> an
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The device initialisation routine found that a 
-		parameter was provided for a parameter that is not
-		relevant for a specific	DIAL Value.
+    <dt>Explanation<dd>The device initialisation routine found that a 
+        parameter was provided for a parameter that is not
+        relevant for a specific DIAL Value.
 
-	<dt>System Action<dd>The parameter is ignored. The system continues
+    <dt>System Action<dd>The parameter is ignored. The system continues
 
-	<dt>Operator Action<dd>for a runtime initialisation,
-		correct the device initialisation parameters, otherwise
-		notify the programmer.
+    <dt>Operator Action<dd>for a runtime initialisation,
+        correct the device initialisation parameters, otherwise
+        notify the programmer.
 
-	<dt>Programmer Action<dd>For an engine initialisation, correct the device
-		configuration parameters in the configuration file.
+    <dt>Programmer Action<dd>For an engine initialisation, correct the device
+        configuration parameters in the configuration file.
 
                 <dt>Note
                 <dd>For DIAL=IN   , RPORT and RHOST are ignored
@@ -331,14 +331,14 @@ HHCCA017I <em>CCUU</em>:<em>LPORT|RPORT|LHOST|RHOST</em> parameter ignored
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The system indicates that the parameter specified
-		is ignored. This message is preceeded by message HHCCA016W
+    <dt>Explanation<dd>The system indicates that the parameter specified
+        is ignored. This message is preceeded by message HHCCA016W
 
-	<dt>System Action<dd>The system continues
+    <dt>System Action<dd>The system continues
 
-	<dt>Operator Action<dd>None
+    <dt>Operator Action<dd>None
 
-	<dt>Programmer Action<dd>None
+    <dt>Programmer Action<dd>None
 </dl>
 <p></p>
 <dt>
@@ -347,16 +347,16 @@ HHCCA018E <em>CCUU</em>:Bind failed : <em>System Cause Text</em>
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>While attempting to bind a socket to a specific
-		host/port, the host system returned an uncorrectable
-		error.
+    <dt>Explanation<dd>While attempting to bind a socket to a specific
+        host/port, the host system returned an uncorrectable
+        error.
 
-	<dt>System Action<dd>BSC Thread terminates
+    <dt>System Action<dd>BSC Thread terminates
 
-	<dt>Operator Action<dd>None
+    <dt>Operator Action<dd>None
 
-	<dt>Programmer Action<dd>Check that the LHOST parameter for this device
-		is indeed a local IP address. Otherwise, notify support.
+    <dt>Programmer Action<dd>Check that the LHOST parameter for this device
+        is indeed a local IP address. Otherwise, notify support.
 </dl>
 <p></p>
 <dt>
@@ -365,14 +365,14 @@ HHCCA019E <em>CCUU</em>:BSC comm thread did not initialise
 </a></code>
 <dd><dl>
 
-	<dt>Explanation<dd>The BSC communication thread reported that it terminated
-		while the device was initialising.
+    <dt>Explanation<dd>The BSC communication thread reported that it terminated
+        while the device was initialising.
 
-	<dt>System Action<dd>The device is not initialised.
+    <dt>System Action<dd>The device is not initialised.
 
-	<dt>Operator Action<dd>Check for any previously issued error message.
+    <dt>Operator Action<dd>Check for any previously issued error message.
 
-	<dt>Programmer Action<dd>Check for any previously issued error message.
+    <dt>Programmer Action<dd>Check for any previously issued error message.
 </dl>
 <p></p>
 
