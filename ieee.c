@@ -2795,12 +2795,6 @@ DEF_INST(load_and_test_bfp_short_reg)
 }
 
 /*
- * B343 LCXBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
- * B313 LCDBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
- * B303 LCEBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
- */
-
-/*
  * B357 FIEBR - LOAD FP INTEGER (extended BFP)                 [RRF]
  */
 DEF_INST(load_fp_int_short_reg)
