@@ -450,7 +450,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -1839,7 +1839,7 @@ U32     i2;                             /* 32-bit operand values     */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -1879,7 +1879,7 @@ U32     i2;                             /* 32-bit operand values     */
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -2093,7 +2093,7 @@ S64     i,j;                            /* Integer workareas         */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -2134,7 +2134,7 @@ S64     i,j;                            /* Integer workareas         */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -2175,7 +2175,7 @@ S64     i, j;                           /* Integer work areas        */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (effective_addr2 >= regs->CR(10) && effective_addr2 <= regs->CR(11)) )
+           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -2216,7 +2216,7 @@ S64     i, j;                           /* Integer work areas        */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (effective_addr2 >= regs->CR(10) && effective_addr2 <= regs->CR(11)) )
+           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -2382,7 +2382,7 @@ VADR    effective_addr2;                /* Effective address         */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (effective_addr2 >= regs->CR(10) && effective_addr2 <= regs->CR(11)) )
+           || PER_RANGE_CHECK(effective_addr2,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -2416,7 +2416,7 @@ VADR    newia;                          /* New instruction address   */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (newia >= regs->CR(10) && newia <= regs->CR(11)) )
+           || PER_RANGE_CHECK(newia,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -3095,7 +3095,7 @@ U16     i2;                             /* 16-bit operand values     */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);

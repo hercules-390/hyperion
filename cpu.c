@@ -568,7 +568,7 @@ static char *pgmintname[] = {
                   regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
                   (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
 
-            regs->perc = OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
+            regs->perc |= OPEN_IC_PERINT(realregs) >> ((32 - IC_CR9_SHIFT) - 16);
             STORE_HW(psa->perint, realregs->perc);
 
             STORE_W(psa->peradr, realregs->peradr);

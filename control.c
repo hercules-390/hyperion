@@ -281,7 +281,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -555,7 +555,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -655,7 +655,7 @@ VADR    n = 0;                          /* Work area                 */
         if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
           && ( !(regs->CR(9) & CR9_BAC)
-           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+           || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
             )
             ON_IC_PER_SB(regs);
@@ -2718,7 +2718,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -2914,7 +2914,7 @@ int     rc;                             /* return code from load_psw */
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+       || PER_RANGE_CHECK(regs->psw.IA,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);
@@ -3139,7 +3139,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (ia >= regs->CR(10) && ia <= regs->CR(11)) )
+       || PER_RANGE_CHECK(ia,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);

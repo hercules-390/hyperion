@@ -377,6 +377,10 @@ do { \
 #endif /* defined(FEATURE_BINARY_FLOATING_POINT) */
 
 
+#define PER_RANGE_CHECK(_addr, _low, _high) \
+        (((_high) >= (_low)) ? ((_addr) >= (_low) && (_addr) <= (_high)) : \
+                               ((_addr) >= (_low) || (_addr) <= (_high)) )
+
 #ifdef WORDS_BIGENDIAN
  #define CSWAP16(_x) (_x)
  #define CSWAP32(_x) (_x)

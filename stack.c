@@ -204,7 +204,7 @@ int  i;
     if( EN_IC_PER_SB(regs) 
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
-       || (trap_ia >= regs->CR(10) && trap_ia <= regs->CR(11)) )
+       || PER_RANGE_CHECK(trap_ia,regs->CR(10),regs->CR(11)) )
 #endif /*defined(FEATURE_PER2)*/
         )
         ON_IC_PER_SB(regs);

@@ -1804,9 +1804,8 @@ U16     xcode;                          /* Exception code            */
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
-          && addr >= regs->CR(10)
-          && addr <= regs->CR(11) )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
+          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
@@ -1821,9 +1820,8 @@ U16     xcode;                          /* Exception code            */
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
-          && addr >= regs->CR(10)
-          && addr <= regs->CR(11) )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
+          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
@@ -2016,9 +2014,8 @@ int     aeind;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
-          && addr >= regs->CR(10)
-          && addr <= regs->CR(11) )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
+          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
         break;
@@ -2031,9 +2028,8 @@ int     aeind;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
-/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 1)
-          && addr >= regs->CR(10)
-          && addr <= regs->CR(11) )
+/* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ || 0)
+          && PER_RANGE_CHECK(addr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
 #endif /*defined(FEATURE_PER)*/
 
