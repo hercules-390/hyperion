@@ -98,16 +98,20 @@ int bytes_returned;
 
     obtain_lock(&logger_lock);
 
-    if(!logger_active)
-    {
-        *msgindex = 0;
-        *buffer = logger_buffer;
-        release_lock(&logger_lock);
-        return 0;
-    }
-
     if(*msgindex == logger_currmsg && block)
-        wait_condition(&logger_cond, &logger_lock);
+    {
+        if(logger_active)
+        {
+            wait_condition(&logger_cond, &logger_lock);
+        }
+        else
+        {
+            *msgindex = logger_currmsg;
+            *buffer = logger_buffer + logger_currmsg;
+            release_lock(&logger_lock);
+            return 0;
+        }
+    }
 
     if(*msgindex != logger_currmsg)
     {
