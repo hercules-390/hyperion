@@ -408,7 +408,7 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 
 void AdjustThreadPriority(int* pCurPrio, int* pNewPrio)
 {
-    if ((*pCurPrio = getpriority(PRIO_PROCESS, 0)) != *pNewPrio)
+    if ((*pCurPrio != *pNewPrio))
     {
         setpriority(PRIO_PROCESS, 0, *pNewPrio);
         *pCurPrio = *pNewPrio;
@@ -433,6 +433,7 @@ void*  DeviceThread (void* pArg)
 
     pThreadParms->dwThreadID = GetCurrentThreadId();
 
+    nCurPrio = getpriority(PRIO_PROCESS, 0);
     AdjustThreadPriority(&nCurPrio,ios_devthread_prio);
 
     for (;;)
@@ -443,7 +444,6 @@ void*  DeviceThread (void* pArg)
         MyWaitForSingleObject(pThreadParms->hRequestQueuedEvent,ios_devthread_timeout * 1000);
         InterlockedDecrement(&ios_devtwait);
 
-        AdjustThreadPriority(&nCurPrio,ios_devthread_prio);
 
         if (IsEventSet(pThreadParms->hShutdownEvent)) break;
 
@@ -479,7 +479,17 @@ void*  DeviceThread (void* pArg)
         // Process the i/o request by calling the proper 'execute_ccw_chain'
         // function (based on architectural mode) in source module channel.c
 
+        // Set thread priority to requested device level
+        /* Commented out as DEVBLK is not defined as hercules.h is not included
+        AdjustThreadPriority(&nCurPrio,*pDevBlk->devprio);
+        -- */
+
         call_execute_ccw_chain(ios_arch_mode, pDevBlk); // (process i/o request)
+
+        // Reset thread priority, if necessary
+        if (nCurPrio > *ios_devthread_prio)
+            AdjustThreadPriority(&nCurPrio,ios_devthread_prio);
+
 
         ////////////////////////////////////////////////////////////////////////////
         //

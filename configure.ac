@@ -1,7 +1,7 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.17.b13)
+AM_INIT_AUTOMAKE(hercules,2.17.b14)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
@@ -9,16 +9,16 @@ AM_MAINTAINER_MODE
 ## Begin JAP unwanted "-g -O2" optimization flags fix...
 ##
 ## AM_GNU_GETTEXT()
-## 
+##
 ## AC_CANONICAL_HOST
-## 
+##
 ## # Initialization
 ## CFLAGS="-W -Wall $CFLAGS"
-## 
+##
 ## # Programs
 ## AC_PROG_CC
 ## AC_PROG_LIBTOOL
-## 
+##
 
 # Initialization
 CFLAGS="-W -Wall $CFLAGS"

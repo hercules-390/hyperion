@@ -197,7 +197,7 @@ int     cc = 0;                         /* Returned condition code   */
          || (dev->pmcw.flag5 & PMCW5_V) == 0
 #if defined(FEATURE_CHANNEL_SWITCHING)
          || regs->chanset != dev->chanset
-#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
+#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
                                           )
             continue;
 
@@ -556,7 +556,7 @@ int     cc;                             /* Condition code            */
 #if defined(_FEATURE_IO_ASSIST)
         /* For I/O assisted devices we must intercept if type B
            status is present on the subchannel */
-        if(regs->sie_state 
+        if(regs->sie_state
           && ( (regs->siebk->tschds & dev->pciscsw.unitstat)
             || (regs->siebk->tschsc & dev->pciscsw.chanstat) ) )
         {
@@ -609,7 +609,7 @@ int     cc;                             /* Condition code            */
 #if defined(_FEATURE_IO_ASSIST)
         /* For I/O assisted devices we must intercept if type B
            status is present on the subchannel */
-        if(regs->sie_state 
+        if(regs->sie_state
           && ( (regs->siebk->tschds & dev->scsw.unitstat)
             || (regs->siebk->tschsc & dev->scsw.chanstat) ) )
         {
@@ -684,7 +684,7 @@ int     cc;                             /* Condition code            */
 #if defined(_FEATURE_IO_ASSIST)
             /* For I/O assisted devices we must intercept if type B
                status is present on the subchannel */
-            if(regs->sie_state 
+            if(regs->sie_state
               && ( (regs->siebk->tschds & dev->attnscsw.unitstat)
                 || (regs->siebk->tschsc & dev->attnscsw.chanstat) ) )
             {
@@ -1150,7 +1150,7 @@ int operational = 3;
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
     {
         for(i = 0; i < 8; i++)
-        { 
+        {
             if((chpid == dev->pmcw.chpid[i])
               && (dev->pmcw.pim & dev->pmcw.pam & dev->pmcw.pom & (0x80 >> i)) )
             {
@@ -1186,7 +1186,7 @@ int i;
     /* Connect each channel set to its home cpu */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
         sysblk.regs[i].chanset = i;
-// #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
+// #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
 
     obtain_lock (&sysblk.intlock);
 
@@ -1209,22 +1209,19 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Set a thread's priority to its proper value                       */
 /*-------------------------------------------------------------------*/
-void adjust_thread_priority(int *oldprio, int *newprio)
+void adjust_thread_priority(int *newprio)
 {
-    if ((*oldprio = getpriority(PRIO_PROCESS, 0)) != *newprio)
-    {
-        /* Set root mode in order to set priority */
-        SETMODE(ROOT);
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
 
-        /* Set device thread priority; ignore any errors */
-        setpriority(PRIO_PROCESS, 0, *newprio);
+    /* Set device thread priority; ignore any errors */
+    setpriority(PRIO_PROCESS, 0, *newprio);
 
-        /* Back to user mode */
-        SETMODE(USER);
+    /* Back to user mode */
+    SETMODE(USER);
 
-        /* Save new priority for next time */
-        *oldprio = *newprio;
-    }
+    /* Save new priority for next time */
+    *oldprio = *newprio;
 }
 
 /*-------------------------------------------------------------------*/
@@ -1233,9 +1230,11 @@ void adjust_thread_priority(int *oldprio, int *newprio)
 void *device_thread (void *arg)
 {
 DEVBLK  *dev;
-int     curprio;                         /* Current thread priority  */
+int     current_priority;               /* Current thread priority   */
 
     UNREFERENCED(arg);
+
+    adjust_thread_priority(&sysblk.devprio);
 
     obtain_lock(&sysblk.ioqlock);
 
@@ -1245,19 +1244,24 @@ int     curprio;                         /* Current thread priority  */
 
     while (1)
     {
-        adjust_thread_priority(&curprio,&sysblk.devprio);
-
         while ((dev=sysblk.ioq) != NULL)
         {
-            adjust_thread_priority(&curprio,&sysblk.devprio);
-
             sysblk.ioq = dev->nextioq;
             if (sysblk.ioq && sysblk.devtwait)
                 signal_condition(&sysblk.ioqcond);
             dev->tid = thread_id();
+
+            /* Set priority to requested device priority */
+            if (dev->devprio != current_priority)
+                adjust_thread_priority(&dev->devprio);
+
             release_lock (&sysblk.ioqlock);
 
             call_execute_ccw_chain(sysblk.arch_mode, dev);
+
+            /* Reset priority to default priority */
+            if (current_priority > sysblk.devprio)
+                adjust_thread_priority(&sysblk.devprio);
 
             obtain_lock(&sysblk.ioqlock);
             dev->tid = 0;
@@ -1668,7 +1672,7 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
      || (dev->scsw.flag3 & SCSW3_SC_PEND))
     {
         /* Resume the suspended device with attention set */
-        if(dev->scsw.flag3 & SCSW3_AC_SUSP) 
+        if(dev->scsw.flag3 & SCSW3_AC_SUSP)
         {
             dev->scsw.flag3 |= SCSW3_SC_ALERT | SCSW3_SC_PEND;
             dev->scsw.unitstat |= unitstat;
@@ -1683,7 +1687,7 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 
             return 0;
         }
-            
+
         release_lock (&dev->lock);
 
         return 1;
@@ -2504,7 +2508,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 
             release_lock (&dev->lock);
 
-            /* Queue the pci pending interrupt */ 
+            /* Queue the pci pending interrupt */
             obtain_lock (&sysblk.intlock);
             QUEUE_IO_INTERRUPT (&dev->pciioint);
             release_lock (&sysblk.intlock);
@@ -2631,7 +2635,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                 || (flags & CCW_FLAGS_SLI) == 0)
                 && (dev->code != 0x03)
 #if defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
-                /* Suppress incorrect length indication if 
+                /* Suppress incorrect length indication if
                    CCW format is one and SLI mode is indicated
                    in the ORB */
                 && !((dev->orb.flag5 & ORB5_F)
@@ -2857,7 +2861,7 @@ int     i;                              /* Interruption subclass     */
 #endif
        regs->chanset != dev->chanset)
         return 0;
-#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
+#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/
 
     /* Isolate the channel number */
     i = dev->devnum >> 8;
@@ -2895,7 +2899,7 @@ int     i;                              /* Interruption subclass     */
         return 0;
 
     /* Isolate the interruption subclass */
-    i = 
+    i =
 #if defined(_FEATURE_IO_ASSIST)
         /* For I/O Assisted devices use the guest (V)ISC */
         regs->sie_state ? (dev->pmcw.flag25 & PMCW25_VISC) :
@@ -3038,13 +3042,13 @@ retry:
     *ioid = 0x00010000 | dev->subchan;
     FETCH_FW(*ioparm,dev->pmcw.intparm);
 #if defined(FEATURE_ESAME) || defined(_FEATURE_IO_ASSIST)
-    *iointid = 
+    *iointid =
 #if defined(_FEATURE_IO_ASSIST)
     /* For I/O Assisted devices use (V)ISC */
                (regs->sie_state) ?
                  (icode == SIE_NO_INTERCEPT) ?
                    ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
-                   ((dev->pmcw.flag25 & PMCW25_VISC) << 27)  
+                   ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
                      | (dev->pmcw.zone << 16)
                      | ((dev->pmcw.flag27 & PMCW27_I) << 8) :
 #endif
@@ -3114,7 +3118,7 @@ static inline int ARCH_DEP(interrupt_zone) (DEVBLK *dev, BYTE zone)
     return 1;
 } /* end function interrupt_zone */
 
-int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm, 
+int ARCH_DEP(present_zone_io_interrupt) (U32 *ioid, U32 *ioparm,
                                                U32 *iointid, BYTE zone)
 {
 IOINT  *io;                             /* -> I/O interrupt entry    */
