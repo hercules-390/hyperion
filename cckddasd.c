@@ -34,6 +34,7 @@
 
 /* external functions */
 int     cckd_chkdsk(int, FILE *, int);
+int     cckd_comp (int, FILE *);
 
 /* internal functions */
 int     cckddasd_init_handler (DEVBLK *, int, BYTE **);
@@ -58,6 +59,7 @@ void    cckd_write_l1ent (DEVBLK *, int);
 int     cckd_read_fsp (DEVBLK *);
 void    cckd_write_fsp (DEVBLK *);
 int     cckd_read_l2 (DEVBLK *, int, int);
+void    cckd_flush_l2 (DEVBLK *, int);
 void    cckd_write_l2 (DEVBLK *);
 int     cckd_read_l2ent (DEVBLK *, CCKD_L2ENT *, int);
 void    cckd_write_l2ent (DEVBLK *, CCKD_L2ENT *, int);
@@ -74,6 +76,7 @@ void    cckd_sf_add (DEVBLK *);
 void    cckd_sf_remove (DEVBLK *, int);
 void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
+void    cckd_sf_comp (DEVBLK *);
 void    cckd_gcol (DEVBLK *);
 void    cckd_gc_combine (DEVBLK *, int, int, int);
 int     cckd_gc_len (DEVBLK *, BYTE *, off_t, int, int);
@@ -1502,6 +1505,9 @@ int             n;                      /* Number entries            */
         n = cckd->cdevhdr[sfx].numl1tab;
     else n = (dev->ckdtrks + 255) >> 8;
 
+    /* Free the old level 1 table if it exists */
+    if (cckd->l1[sfx] != NULL) free (cckd->l1[sfx]);
+
     /* get the level 1 table */
     cckd->l1[sfx] = malloc (n * CCKD_L1ENT_SIZE);
     if (cckd->l1[sfx] == NULL) return -1;
@@ -1764,6 +1770,41 @@ int             lru=-1;                 /* Least-Recently-Used cache
     return rc;
 
 } /* end function cckd_read_l2 */
+
+
+/*-------------------------------------------------------------------*/
+/* Flush all l2tab cache entries for a given index                   */
+/*-------------------------------------------------------------------*/
+void cckd_flush_l2 (DEVBLK *dev, int sfx)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             i;                      /* Index variable            */
+
+    cckd = dev->cckd_ext;
+
+    /* Return if the level 2 cache doesn't exist */
+    if (!cckd->l2cache) return;
+
+    /* write the old table if it has been updated */
+    if (cckd->l2updated)
+        cckd_write_l2 (dev);
+
+    /* Invalidate the active entry if it is for this index */
+    if (sfx == cckd->sfx)
+        cckd->sfx = cckd->l1x = -1;
+
+    /* scan the cache array for l2tabs matching this index */
+    for (i = 0; i < cckd->l2cachenbr; i++)
+    {
+        if (sfx == cckd->l2cache[i].sfx)
+        {
+            /* Invalidate the cache entry */
+            cckd->l2cache[i].sfx = cckd->l2cache[i].l1x = -1;
+            cckd->l2cache[i].tv.tv_sec = cckd->l2cache[i].tv.tv_usec = 0;
+        }
+    }
+
+} /* end function cckd_flush_l2 */
 
 
 /*-------------------------------------------------------------------*/
@@ -2778,6 +2819,7 @@ long            len;                    /* Uncompressed trk length   */
     } /* merge into regular ckd file */
 
     /* remove the old file */
+    cckd_flush_l2 (dev, sfx);
     close (cckd->fd[sfx]);
     free (cckd->l1[sfx]);
     cckd_sf_name (dev, sfx, (char *)&sfn);
@@ -2828,6 +2870,84 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     release_lock (&cckd->filelock);
 
 } /* end function cckd_sf_newname */
+
+
+/*-------------------------------------------------------------------*/
+/* Check and compress a shadow file  (sfc)                           */
+/*-------------------------------------------------------------------*/
+void cckd_sf_comp (DEVBLK *dev)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             rc;                     /* Return code               */
+int             i;                      /* Loop index                */
+int             dfw_locked;             /* Flag byte                 */
+
+    cckd = dev->cckd_ext;
+    if (!cckd)
+    {
+        logmsg ("%4.4X: cckddasd: device is not a shadow file\n",
+                dev->devnum);
+        return;
+    }
+
+    /* schedule updated track entries to be written */
+    dfw_locked = 0;
+    obtain_lock (&cckd->cachelock);
+    for (i = 0; i < dev->ckdcachenbr && cckd->cache; i++)
+    {
+        if (cckd->cache[i].updated)
+        {   cckd->cache[i].updated = 0;
+            cckd->cache[i].writing = 1;
+            if (!dfw_locked)
+            {   obtain_lock (&cckd->dfwlock);
+                dfw_locked = 1;
+            }
+            cckd_write_trk (dev, cckd->cache[i].buf);
+        }
+    }
+
+    /* signal the deferred write thread */
+    if (cckd->dfwq && cckd->dfwaiting)
+    {
+        if (!dfw_locked) obtain_lock (&cckd->dfwlock);
+        if (cckd->dfwq && cckd->dfwaiting)
+            signal_condition (&cckd->dfwcond);
+        release_lock (&cckd->dfwlock);
+    }
+    release_lock (&cckd->cachelock);
+
+    /* wait a bit */
+    while (cckd->dfwq) sleep (1);
+
+    /* obtain control of the file */
+    obtain_lock (&cckd->filelock);
+
+    /* harden the current file */
+    cckd_harden (dev);
+
+    /* call the chkdsk function */
+    rc = cckd_chkdsk (cckd->fd[cckd->sfn], sysblk.msgpipew, 0);
+
+    /* Call the compress function */
+    if (rc >= 0)
+        rc = cckd_comp (cckd->fd[cckd->sfn], sysblk.msgpipew);
+
+    /* Read the header */
+    rc = cckd_read_chdr (dev);
+
+    /* Read the Level 1 table */
+    rc = cckd_read_l1 (dev);
+
+    /* Flush the Level 2 tables */
+    cckd_flush_l2 (dev, cckd->sfn);
+
+    release_lock (&cckd->filelock);
+
+    /* Display the shadow file statistics */
+    cckd_sf_stats (dev);
+
+    return;
+} /* end function cckd_sf_comp */
 
 
 /*-------------------------------------------------------------------*/

@@ -485,7 +485,7 @@ Shadow files are automatically enabled for <b>cckd</b> files; you <em>must</em>
 explicitly enable them for regular CKD files.  To enable shadowing for a CKD
 device, specify
 <p><center>sf=<i>shadow_file_name</i></center><br>
-on the device statement in the <code>hercules.cnf</i> file.  <i>shadow_file_name</i>
+on the device statement in the <i>hercules.cnf</i> file.  <i>shadow_file_name</i>
 should include a spot in the file name, similar to multiple CKD dasd files,
 that can be used as a sequence number, for example, <b>sf=../mvs/shadows/mvsres_1.500</b>.
 The naming convention substitutes the shadow file number (1 thru 8) on the
@@ -507,7 +507,8 @@ shadow files (if any) can only be opened read-only, then a new shadow file is cr
 <p>
 To explicitly create a new shadow file, issue the following command on the Hercules console:
 <p><center>sf+<i>xxxx</i></center><br>
-where <i>xxxx</i> is the device unit address.  For example, <b>sf+0500</b>.
+where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
+For example, <b>sf+0500</b>.
 All updated track images that haven't been written are written and the <i>current</i>
 file is hardened.  Note that if a lot of write activity is ocurring at the time the
 <b>sf+</b> command is entered, then the exact state of the hardened file can not
@@ -517,7 +518,8 @@ To remove the <i>current</i> shadow file, issue either of the following commands
 on the Hercules console:
 <p><center>sf-<i>xxxx</i></center>
    <center>sf-<i>xxxx</i> nomerge</center><br>
-where <i>xxxx</i> is the device unit address.  For example, <b>sf-0500</b>.
+where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
+For example, <b>sf-0500</b>.
 If <b>nomerge</b> was not specified, then the <i>current</i> shadow file contents
 are merged into the preceding shadow file or base file.  The <i>current</i> shadow
 file is deleted and the preceding shadow file or base file is made the <i>current</i>
@@ -528,9 +530,17 @@ amount of time depending on the size of the old <i>shadow</i> file.
 <br>[<i>hmmm... note to myself -- if sf-xxxx nomerge was specified and preceding file is
 read-only, then delete the current file and recreate it ??</i>]
 <p>
+To compress the current shadow file
+issue the following command on the Hercules console:
+<p><center>sfc<i>xxxx</i></center><br>
+where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
+For example, <b>sfc0500</b>.
+<p>
 To display the status and statistics for a shadow-enabled file,
 issue the following command on the Hercules console:
 <p><center>sfd<i>xxxx</i></center><br>
+where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
+For example, <b>sfd0500</b>.
 This command displays status and statistics for the base file and all shadow files
 representing the emulated dasd.  The following data is displayed:
 <table>
@@ -589,6 +599,17 @@ file (or on the <i>attach</i> panel command).
 
 <table border=1>
 <th><td>Regular<td>cckd<td>Function
+
+<tr><td valign="top" align="left">  syncio<br>  syio<br>
+                                    nosyncio<br>nosyio<br><td align="center">X<td align="center"> X
+    <td>Specifies whether or not synchronous I/O will be attempted for the device.
+        For synchronous I/O, the channel program will be executed within the scope
+        of the <b>SIO</b> or <b>SSCH</b> instruction as long as all data referenced
+        by the channel program is already cached. If a ccw attempts to reference data
+        that is not cached, then the channel program is restarted asynchronously at
+        that ccw.  Synchronous I/O reduces threading overhead, which may resut in a
+        performance boost. The default is <i>syncio</i> for cckd files and <i>nosyncio</i>
+        for regular ckd files.
 <tr><td valign="top" align="left">lazywrite<br>nolazywrite<td align="center">X<td> &nbsp
     <td>Data written to a cached track image will not be immediately written,
         but will be written when a track switch occurs.  Thus, only one write
@@ -774,8 +795,7 @@ that you start using <i>shadow</i> files.  If you use regular CKD files, then yo
 <tr><td valign="top"><b>Q.</b><td>
              What devices are supported ?
 <tr><td valign="top"><b>A.</b><td>
-             2311, 2314, 3330, 3340, 3350, 3375, 3380 and 3390.
-             However, I have only tested using 3390 devices.
+             2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390 and 9345.
 <br><br>
 
 <tr><td valign="top"><b>Q.</b><td>
@@ -804,18 +824,17 @@ that you start using <i>shadow</i> files.  If you use regular CKD files, then yo
 <br><br>
 
 <tr><td valign="top"><b>Q.</b><td>
-             When I start hercules, I get these messages showing
-             all this free space in my compressed files.  How do
-             I get rid of that free space ?
+             How can I get rid of the free space in my files ?
 <tr><td valign="top"><b>A.</b><td>
              Once the total amount of free space falls below 6% of
              the total file size, the garbage collector is not very
              aggressive about eliminating free space.  To remove
-             all free space from the file, copy the compressed
-             file to a regular file using the
-             <a href=#cckd2ckd><code>cckd2ckd</code></a> utility
-             and then rebuild the compressed file by using the
-             <a href=#ckd2cckd><code>ckd2cckd</code></a> utility.
+             all free space from the file while Hercules is running
+             use the <b>sfc</b> console command.  See
+             <a href="#usingsfiles">Using Shadow Files</a> above.
+             Otherwise, you can use the <b>cckdcomp</b> utility.
+             See <a href="#utilities">Utilities</a> above.
+
 <br><br>
 
 <tr><td valign="top"><b>Q.</b><td>

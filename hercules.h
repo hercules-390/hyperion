@@ -1517,6 +1517,7 @@ void    cckd_sf_add (DEVBLK *);
 void    cckd_sf_remove (DEVBLK *, int);
 void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
+void    cckd_sf_comp (DEVBLK *);
 void    cckd_print_itrace (DEVBLK *);
 
 /* Functions in module cckdcdsk.c */

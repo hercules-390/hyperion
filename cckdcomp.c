@@ -10,15 +10,13 @@
 
 #ifndef NO_CCKD
 
-#define CCKD_COMP_MAIN
-
 #define compmsg(m, format, a...) \
  if(m>=0) fprintf (m, "cckdcomp: " format, ## a)
 
 int cckd_chkdsk(int, FILE *, int);
 
 int cckd_comp (int, FILE *);
-#ifdef CCKD_COMP_MAIN
+#ifndef CCKD_COMP_NOMAIN
 int syntax ();
 BYTE eighthexFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -326,7 +324,7 @@ int             moved=0;                /* Total space moved         */
 
 #else /* NO_CCKD */
 
-#ifdef CCKD_COMP_MAIN
+#ifndef CCKD_COMP_NOMAIN
 int main ( int argc, char *argv[])
 {
     fprintf (stderr, "cckdcomp support not generated\n");

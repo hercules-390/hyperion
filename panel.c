@@ -2281,60 +2281,111 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 
 /*********************************************************************/
-    /* sf commands - shadow file add/remove/set/display */
-    if (memcmp(cmd,"sf",2)==0)
+    /* sf commands - shadow file add/remove/set/compress/display */
+    if (memcmp(cmd,"sf",2)==0 && strlen(cmd) > 3)
     {
-        devascii = strtok(cmd+3," \t");
+        int  scan = 0;
+        BYTE action = cmd[2];
 
-        /* if `sfd*' then display status for all cckd disks */
-        if (memcmp (cmd, "sfd", 3) == 0 && strcmp (devascii, "*") == 0)
+        /* Get device number or "*" */
+        devascii = strtok(cmd+3," \t");
+        if (devascii == NULL || strcmp (devascii, "") == 0)
         {
-            for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-                if (dev->cckd_ext) cckd_sf_stats (dev);
+            logmsg ("Missing device number\n");
             return NULL;
         }
-
-        if (devascii == NULL
-            || sscanf(devascii, "%hx%c", &devnum, &c) != 1)
+        if (strcmp (devascii, "*") == 0)
         {
-            logmsg ("Device number %s is invalid\n", devascii);
-            return NULL;
+            if (action == '=')
+            {
+                logmsg ("Invalid device number\n");
+                return NULL;
+            }
+            dev = sysblk.firstdev;
+            scan = 1;
+        }
+        else
+        {
+            if (sscanf (devascii, "%hx%c", &devnum, &c) != 1)
+            {
+                logmsg ("Invalid device number\n");
+                return NULL;
+            }
+            dev = find_device_by_devnum (devnum);
+            if (dev == NULL)
+            {
+                logmsg ("Device number %4.4X not found\n", devnum);
+                return NULL;
+            }
+            if (dev->cckd_ext == NULL)
+            {
+                logmsg ("Device number %4.4X is not a cckd device\n", devnum);
+                return NULL;
+            }
         }
 
         devascii = strtok(NULL," \t");
 
-        dev = find_device_by_devnum (devnum);
-        if (dev == NULL)
-        {
-            logmsg ("Device number %4.4X not found\n", devnum);
-            return NULL;
-        }
+        /* Perform the action */
+        do {
+            if (scan) logmsg("Processing device %4.4X\n", dev->devnum);
 
-        switch (cmd[2]) {
-        case '+': cckd_sf_add (dev);
-                  break;
+            switch (action) {
+            case '+': if (devascii != NULL)
+                      {
+                          logmsg ("Unexpected operand: %s\n", devascii);
+                          return NULL; 
+                      }
+                      cckd_sf_add (dev);
+                      break;
 
-        case '-': if (devascii == NULL
-                   || strcmp(devascii, "merge") == 0)
-                      cckd_sf_remove (dev, 1);
-                  else if (strcmp(devascii, "nomerge") == 0)
-                      cckd_sf_remove (dev, 0);
-                  else
-                      logmsg ("Operand must be `merge' or `nomerge'\n");
-                  break;
+            case '-': if (devascii == NULL
+                       || strcmp(devascii, "merge") == 0)
+                          cckd_sf_remove (dev, 1);
+                      else if (strcmp(devascii, "nomerge") == 0)
+                          cckd_sf_remove (dev, 0);
+                      else
+                      {
+                          logmsg ("Operand must be `merge' or `nomerge'\n");
+                          return NULL; 
+                      }
+                      break;
 
-        case '=': if (devascii != NULL)
-                      cckd_sf_newname (dev, devascii);
-                  else
-                      logmsg ("Shadow file name not specified\n");
-                  break;
+            case '=': if (devascii != NULL)
+                          cckd_sf_newname (dev, devascii);
+                      else
+                          logmsg ("Shadow file name not specified\n");
+                      break;
 
-        case 'd': cckd_sf_stats (dev);
-                  break;
+            case 'c': if (devascii != NULL)
+                      {
+                          logmsg ("Unexpected operand: %s\n", devascii);
+                          return NULL; 
+                      }
+                      cckd_sf_comp (dev);
+                      break;
 
-        default:  logmsg ("Command must be `sf+', `sf-', `sf=' or `sfd'\n");
-                  break;
-        }
+            case 'd': if (devascii != NULL)
+                      {
+                          logmsg ("Unexpected operand: %s\n", devascii);
+                          return NULL; 
+                      }
+                      cckd_sf_stats (dev);
+                      break;
+
+            default:  logmsg ("Command must be `sf+', `sf-', `sf=' or `sfd'\n");
+                      return NULL;
+            }
+
+            /* Next cckd device if scanning */
+            if (scan)
+            {
+                for (dev=dev->nextdev; dev && !dev->cckd_ext; dev=dev->nextdev);
+            }
+            else dev = NULL;
+
+        } while (dev);
+
 
         return NULL;
     }

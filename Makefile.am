@@ -41,7 +41,7 @@ hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 	   float.c ctcadpt.c trace.c \
 	   machchk.c vector.c xstore.c \
 	   cmpsc.c sie.c timer.c \
-	   esame.c cckddasd.c cckdcdsx.c cckdend.c \
+	   esame.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c \
 	   parser.c hetlib.c ieee.c \
 	   machdep.h $(FTHREADS)
 
