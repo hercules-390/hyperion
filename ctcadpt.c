@@ -1303,7 +1303,7 @@ void  AddDevice( DEVBLK**    ppDEVBLK,
 {
 
     // Check whether device number has already been defined
-    if( find_device_by_devnum( sDevNum ) != NULL )
+    if( *ppDEVBLK != NULL && find_device_by_devnum( sDevNum ) != NULL )
     {
         logmsg( _("HHCCT034E device %4.4X already exists\n"), sDevNum );
         return;
