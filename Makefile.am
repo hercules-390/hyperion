@@ -19,9 +19,11 @@ endif
 
 if OPTION_DYNAMIC_LOAD
 DYNGUI=dyngui
-DYNGUI_DLL=dyngui.dll
 DYNINST=dyninst
+if USE_DLLTOOL
+DYNGUI_DLL=dyngui.dll
 DYNINST_DLL=dyninst.dll
+endif
 else
 DYNGUI=
 DYNGUI_DLL=
