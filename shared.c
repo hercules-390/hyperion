@@ -2658,7 +2658,7 @@ TID                     tid;            /* Negotiation thread id     */
 
     if (usock < 0)
     {
-        logmsg(_("HHCSH051E unix socket: %s\n"), strerror(errno));
+        logmsg(_("HHCSH051W unix socket: %s\n"), strerror(errno));
     }
 
     /* Allow previous instance of socket to be reused */
@@ -2702,7 +2702,7 @@ TID                     tid;            /* Negotiation thread id     */
 
         if (rc < 0)
         {
-            logmsg(_("HHCSH054E unix bind: %s\n"), strerror(errno));
+            logmsg(_("HHCSH054W unix bind: %s\n"), strerror(errno));
             close(usock);
             usock = -1;
         }
@@ -2724,7 +2724,7 @@ TID                     tid;            /* Negotiation thread id     */
 
         if (rc < 0)
         {
-            logmsg(_("HHCSH056E unix listen: %s\n"), strerror(errno));
+            logmsg(_("HHCSH056W unix listen: %s\n"), strerror(errno));
             close(usock);
             usock = -1;
         }
