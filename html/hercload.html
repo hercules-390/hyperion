@@ -282,6 +282,111 @@ where
 <em>Note: do not use this procedure except on OS/360 IPL volumes;
 other operating systems do not have XCTL tables.</em>
 
+<h2>Other DASD utilities</h2>
+<p>
+These programs can be used to extract data from CKD DASD images
+by means of commands issued at the Unix shell prompt.
+
+<h3>DASDLS - List datasets on volume</h3>
+<p>
+DASDLS, written by Malcolm Beattie, is a command to let you list the
+names of the datasets contained in disk images.
+<p>
+The command format is:
+<br><code>
+dasdls <em>ckdfile ...</em>
+</code></br>
+where <em>ckdfile</em> is the name of a Unix file containing a CKD volume.
+
+<h3>DASDCAT - Display PDS members</h3>
+<p>
+DASDCAT, written by Malcolm Beattie, is a command to let you read
+datasets from disk images.
+<p>
+The command format is:
+<br><code>
+dasdcat -i <em>ckdfile dsname1 dsname2 ...</em> -i <em>ckdfile2 dsname10 ...</em>
+</code><br>
+where <em>ckdfile</em> is the name of a Unix file containing a CKD volume,
+and <em>dsname</em> can be a plain (non-partitioned) dataset name
+(which is currently not handled) or of the form <em>pdsname</em>/<em>memname</em>
+where <em>memname</em> can be:
+<ul>
+<li><b>PDS member name</b> (automatically uppercased),
+    optionally followed by ":" and flags "a" or "c".
+    <ul>
+    <li>"c" means (c)ard images and turns a PDS members with a block
+        size that's a multiple of 80 into multiple newline separated
+        lines of 72 characters with EBCDIC converted to ASCII and with
+        sequence numbers chopped off.
+    <li>"a" means (a)sciify the member (but don't chop off sequence
+        numbers or do the card image thing).
+    </ul>
+<li><b>?</b> (don't forget to quote it to avoid the shell globbing it)
+    to list the names of all PDS members instead of outputting their
+    contents.
+<li><b>*</b> (again, quote it or backwhack it to avoid it being a glob)
+    to output all members of the PDS instead of just a named one.
+    This can optionally be followed with colon-then-flags, as above.
+    Each member is preceded with a line "> Member: memname" and, if
+    the "c" for card-images flags is used, each line of the members'
+    contents is preceded with "| " to guarantee it can be
+    distinguished from contents.
+</ul>
+
+<h5>Examples</h5>
+<pre><code>
+% dasdcat -i mvtres.350 'sys1.parmlib/?'
+ieabld00
+ieaige00
+ieaigg00
+ieaigg01
+iearsv00
+ikjprm00
+lnklst00
+presres
+smfdeflt
+% dasdcat -i mvtres.350 sys1.parmlib/smfdeflt:c
+ OPT=2, SYSTEM,JOB AND STEP DATA COLLECTION
+ EXT=YES, USER EXITS ARE TO BE TAKEN
+ JWT=15, MAXIMUM CONTINUOUS WAIT TIME IS 15 MINS.PER STEP
+ BUF=400, A MINIMUM 400 BYTE BUFFER IS DEFINED
+ SID=6A, SYSTEM ID IS 6A
+ MDL=65, MODEL IS MOD 65
+ OPI=YES, PERMIT OPERATOR INTERVENTION
+ MAN=ALL, RECORD USER AND SYSTEM RECORDS
+ PRM=(,282,NL) SYS1.MAN ALLOCATED TO NON-LABELED TAPE
+% dasdcat -i mvtres.350 sys1.help/\*:c
+> Member ACCOUNT
+| )S SUBCOMMANDS -
+| ADD/A,CHANGE/C,DELETE/D,LIST/L,LISTIDS/LISTI,HELP/H,END
+| )F FUNCTION -
+| THE ACCOUNT COMMAND PROCESSOR INVOKES THE CONVERSATIONAL PROGRAMS
+...
+> Member ALLOC
+| )F FUNCTION -
+| THE ALLOCATE COMMAND DYNAMICALLY DEFINES AND ALLOCATES A DATA SET
+| WITH OR WITHOUT AN ATTRIBUTE LIST OF DCB PARAMETERS
+| )X SYNTAX -
+| ALLOCATE DATASET('DSNAME'/*) FILE('DDNAME')
+...
+</code></pre>
+
+<h3>DASDPDSU - Unload PDS members</h3>
+<p>
+DASDPDSU is a command which unloads PDS members from a disk image
+and copies each member to a file <em>memname</em>.mac in the current
+working directory.
+<p>
+The command format is:
+<br><code>
+dasdpdsu <em>ckdfile pdsname</em> [ascii]
+</code></br>
+where <em>ckdfile</em> is the name of a Unix file containing a CKD
+volume, and <em>pdsname</em> is the name of a PDS on that volume.
+If the optional <b>ascii</b> keyword is specified, the members will be
+unloaded as ASCII variable length text files.  Otherwise the members
+are unloaded as fixed length EBCDIC binary files.
 
 <p><center><hr width=15% noshade></center>
 <p>
@@ -293,6 +398,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 29 October 2000
+<p>Last updated 25 January 2002
 </BODY>
 </HTML>
