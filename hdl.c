@@ -32,7 +32,6 @@ extern void *HDL_FINI;
 static DLLENT *hdl_dll;                  /* dll chain                */
 static LOCK   hdl_lock;                  /* loader lock              */
 static DLLENT *hdl_cdll;                 /* current dll (hdl_lock)   */
-static LOCK   hdl_sdlock;                /* shutdown lock            */
 
 static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
@@ -40,6 +39,7 @@ static char *hdl_modpath = HDL_DEFAULT_PATH;
 
 #endif
 
+static LOCK   hdl_sdlock;                /* shutdown lock            */
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
 /* Global hdl_device_type_equates */
