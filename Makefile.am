@@ -185,7 +185,7 @@ endif
 # unless support for building dynamic modules exists on the build system
 
 bin_PROGRAMS = hercules \
-               dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
+               dasdinit dasdisup dasdload dasdconv dasdls dasdcat dasdpdsu dasdseq \
                tapecopy tapemap tapesplt \
                cckdcdsk cckdcomp cckddiag cckdswap \
                dasdcopy \
@@ -481,6 +481,10 @@ dasdisup_LDFLAGS      = $(tools_LD_FLAGS)
 dasdload_SOURCES      = dasdload.c
 dasdload_LDADD        = $(tools_ADDLIBS)
 dasdload_LDFLAGS      = $(tools_LD_FLAGS)
+
+dasdconv_SOURCES      = dasdconv.c
+dasdconv_LDADD        = $(tools_ADDLIBS)
+dasdconv_LDFLAGS      = $(tools_LD_FLAGS)
 
 dasdls_SOURCES        = dasdls.c
 dasdls_LDADD          = $(tools_ADDLIBS)
