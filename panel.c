@@ -888,14 +888,15 @@ static void display_subchannel (DEVBLK *dev)
 void    device_thread();
 #endif /* !defined(OPTION_FISHIO) */
 
+/*-------------------------------------------------------------------*/
+/* Execute a Unix or Windows command                                 */
+/* Returns the system command status code                            */
+/*-------------------------------------------------------------------*/
+static int herc_system (char* command)
+{
 #ifdef WIN32
-int herc_system (char* command)
-{
-        return system(command);
-}
+    return system(command);
 #else /* !WIN32 */
-int herc_system (char *command)
-{
 extern char **environ;
 int pid, status;
 
@@ -907,7 +908,8 @@ int pid, status;
     if (pid == -1)
         return -1;
 
-    if (pid == 0) {
+    if (pid == 0)
+    {
         char *argv[4];
 
         dup2(sysblk.msgpiper, STDIN_FILENO);
@@ -925,15 +927,18 @@ int pid, status;
 
         exit(127);
     }
-    do {
-        if (waitpid(pid, &status, 0) == -1) {
+
+    do
+    {
+        if (waitpid(pid, &status, 0) == -1)
+        {
             if (errno != EINTR)
                 return -1;
         } else
             return status;
     } while(1);
-}
-#endif /* WIN32 */
+#endif /* !WIN32 */
+} /* end function herc_system */
 
 
 /*-------------------------------------------------------------------*/
