@@ -59,8 +59,8 @@ REGS   *realregs;                       /* Real REGS if guest        */
     {
         obtain_lock (&sysblk.intlock);
         while (IS_IC_BROADCAST_ON)
-            if (IS_IC_BROADCAST(regs))
-                ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
+            if (IS_IC_BROADCAST(realregs))
+                ARCH_DEP(synchronize_broadcast)(realregs, 0, 0);
             else
             {
                 release_lock (&sysblk.intlock);
