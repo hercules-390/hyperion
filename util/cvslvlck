@@ -1,0 +1,137 @@
+#!/usr/bin/perl -w
+
+#    Facility    required special	download URL
+
+my @req = qw(
+     autoconf    2.50		0	http://www.gnu.org/directory/autoconf.html
+     automake    1.5		0	http://www.gnu.org/directory/automake.html
+     flex        2.5		0	http://www.gnu.org/directory/flex.html
+     gawk        3.0		0	http://www.gnu.org/directory/gawk.html
+     gcc         2.95		0	http://www.gnu.org/directory/gcc.html
+     gettext     0.11		0	http://www.gnu.org/directory/gettext.html
+     grep        2.5		0	http://www.gnu.org/directory/grep.html
+     libiconv    1.8		1	http://www.gnu.org/directory/libiconv.html
+     libintl     0.10		1	http://www.gnu.org/directory/gettext.html
+     m4          0.0		1	http://www.gnu.org/directory/GNU/gnum4.html
+     make        3.79		0	http://www.gnu.org/directory/make.html
+     perl        5.6		1	http://www.gnu.org/directory/perl/html
+     sed         3.02		0	http://www.gnu.org/directory/sed.html
+);
+system "clear";
+sayintro();
+for (my $i = 0; $i < @req; $i += 4) {
+	my $facility = $req[$i];
+	my $level = $req[$i+1];
+	my $special = $req[$i+2];
+	my $url = $req[$i+3];
+	if ($special) {
+		weird($facility, $level, $url);
+	} else {
+		my @resp = `$facility --version`;
+		chomp $resp[0];
+		my $instversion = getvers($resp[0]);
+		my $msg = ckvers($level, $instversion);
+		print "$msg\t$facility requires $level, found $instversion\n";
+		print "\tURL: $url\n" if $msg eq 'UPGRADE';
+	}
+	print "\n";
+}
+exit 0;
+
+sub weird {
+	my ($facility, $level, $url) = @_;
+	if ($facility eq 'libiconv') {
+		my @resp = `iconv --version`;
+		chomp $resp[0];
+		my $instversion = getvers($resp[0]);
+		my $msg = ckvers($level, $instversion);
+		print "$msg\t$facility requires $level, found $instversion\n";
+		print "\tFor first-time Libiconv installs, a recompile and reinstall of gettext\n";
+		print "\tis recommended.  Source: libiconv-1.8/README\n";
+		print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		return;
+	}
+	if ($facility eq 'perl') {
+		my @resp = `perl --version`;
+		chomp $resp[1];
+		my $instversion = getvers($resp[1]);
+		my $msg = ckvers($level, $instversion);
+		print "$msg\t$facility requires $level, found $instversion\n";
+		print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		return;
+	}
+	if ($facility eq 'libintl') {
+		print "\tLibintl is included in the gettext source tarball.\n";
+		my @filelist = glob '/lib/libc.so.*';
+		if (@filelist) {
+			print "OK\tYou are running on a glibc system ($filelist[0] exists)\n";
+			print "\tgettext--0.11.5/PACKAGING says libintl is not installed on glibc systems.\n";
+		} else {
+			print "DUNNO\tSorry, I have no idea what to tell you....\n";
+			print "\tURL: $url\n";
+		}
+		return;
+	}
+	if ($facility eq 'm4') {			# m4 --version: GNU m4 1.4o
+		my $resp = `m4 --version`;
+		chomp $resp;
+		my $msg = 'HUH?   ';
+		my $instversion = "DUNNO";
+		if ($resp =~ /GNU m4 (\d+.\d+)/) {
+			$instversion = '';
+			$instversion = $1 if defined $1;
+			$instversion = "$1.$2" if defined $1 && defined $2;
+			$msg = ckvers($level, $instversion);
+		}
+		print "$msg\t$facility requires $level, found $instversion\n";
+		print "\tURL: $url\n" if $msg eq 'UPGRADE';
+		return;
+	}
+	print "ERROR $facility flagged as special, not found\n";
+}
+
+sub getvers {
+	my $resp = $_[0];
+	my $vers;
+	if ($resp =~ /(\d+).(\d+).(\d+)/) {
+		$vers = "$1.$2.$3";
+		return $vers;
+	}
+	if ($resp =~ /(\d+).(\d+)/) {
+		$vers = "$1.$2";
+		return $vers;
+	} 
+	print "HUH?\n";
+}
+
+sub ckvers {
+	my ($reqvers, $instvers) = @_;
+	my @rv = split /\./, $reqvers;
+	my @iv = split /\./, $instvers;
+	for (my $i = 0; $i < @rv; $i++) {
+		if ( (exists $rv[$i]) 
+		  && (exists $iv[$i]) 
+		  && ($iv[$i] > $rv[$i]) ) {
+			return 'OK     ';
+		}
+		if ( (exists $rv[$i]) 
+		  && (exists $iv[$i]) 
+		  && ($iv[$i] < $rv[$i]) ) {
+			return 'UPGRADE';
+		}
+	}
+	return 'OK     ';
+}
+
+sub sayintro {
+	print "-----------------------------------------------------------------------------------\n";
+	print "The following recommendation comes from gettext-0.11.5/doc/gettext_12.html:\n";
+	print "-----------------------------------------------------------------------------------\n";
+	print "Before attempting to use gettextize you should install some other packages first.\n";
+	print "Ensure that recent versions of GNU m4, GNU Autoconf and GNU gettext are already \n";
+	print "installed at your site, and if not, proceed to do this first. If you get to install \n";
+	print "these things, beware that GNU m4 must be fully installed before GNU Autoconf is \n";
+	print "even configured.\n";
+	print "-----------------------------------------------------------------------------------\n\n";
+}
+
