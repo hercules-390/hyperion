@@ -1,3 +1,5 @@
+25 Mar 2001 Correction to LPQ/STPQ - Jan Jaeger
+25 Mar 2001 Correction to MVCK/MVCP/MVCS - Jan Jaeger
 25 Mar 2001 Dynamic device threads - Jan Jaeger
 23 Mar 2001 Set `unit check' status when EOF CKD record read
             even if count field is zero - Greg Smith 

@@ -1274,6 +1274,8 @@ QWORD   qwork;                          /* Quadword work area        */
 
     ODD_CHECK(r1, regs);
 
+    QW_CHECK(effective_addr2, regs);
+
     /* Store regs in workarea */
     STORE_DW(qwork, regs->GR_G(r1));
     STORE_DW(qwork+8, regs->GR_G(r1+1));
@@ -1303,6 +1305,8 @@ QWORD   qwork;                          /* Quadword work area        */
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
+
+    QW_CHECK(effective_addr2, regs);
 
     /* Load R1 and R1+1 registers contents from second operand
        Provide storage consistancy by means of obtaining 

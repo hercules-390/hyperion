@@ -1787,7 +1787,7 @@ GREG    l;                              /* Unsigned workarea         */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Load true length from R1 register */
-    l = regs->GR_L(r1);
+    l = GR_A(r1,regs);
 
     /* If the true length does not exceed 256, set condition code
        zero, otherwise set cc=3 and use effective length of 256 */
@@ -1847,7 +1847,7 @@ GREG    l;                              /* Unsigned workarea         */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
     /* Load true length from R1 register */
-    l = regs->GR_L(r1);
+    l = GR_A(r1,regs);
 
     /* If the true length does not exceed 256, set condition code
        zero, otherwise set cc=3 and use effective length of 256 */
@@ -1929,7 +1929,7 @@ GREG    l;                              /* Unsigned workarea         */
                                      b2, effective_addr2);
 
     /* Load true length from R1 register */
-    l = regs->GR_L(r1);
+    l = GR_A(r1,regs);
 
     /* If the true length does not exceed 256, set condition code
        zero, otherwise set cc=3 and use effective length of 256 */
@@ -3441,7 +3441,7 @@ DEF_INST(set_clock_programmable_field)
     PRIV_CHECK(regs);
 
     /* Program check if register 0 bits 0-15 are not zeroes */
-    if ( regs->GR_L(0) & 0xFFFF0000 )
+    if ( regs->GR_LHH(0) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Set TOD programmable register from register 0 */
@@ -4053,7 +4053,7 @@ static char *ordername[] = {    "Unassigned",
     PERFORM_SERIALIZATION (regs);
 
     /* Load the target CPU address from R3 bits 16-31 */
-    cpad = regs->GR_L(r3) & 0xFFFF;
+    cpad = regs->GR_LHL(r3);
 
     /* Load the order code from operand address bits 24-31 */
     order = effective_addr2 & 0xFF;
@@ -4902,7 +4902,7 @@ int     protect;                        /* 1=ALE or page protection  */
 
     /* Perform ALET translation using EAX value from register
        R2 bits 0-15, and set condition code 3 if exception */
-    if (ARCH_DEP(translate_alet) (regs->AR(r1), (regs->GR_L(r2) >> 16),
+    if (ARCH_DEP(translate_alet) (regs->AR(r1), regs->GR_LHH(r2),
                         ACCTYPE_TAR,
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
                         (regs->sie_state && (regs->siebk->mx & SIE_MX_XC))

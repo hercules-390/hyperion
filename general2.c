@@ -447,7 +447,7 @@ BYTE    termchar;                       /* Terminating character     */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Load string terminating character from register 0 bits 24-31 */
-    termchar = regs->GR_L(0) & 0xFF;
+    termchar = regs->GR_LHLCL(0);
 
     /* Determine the operand end and start addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -1182,7 +1182,7 @@ DEF_INST(supervisor_call)
 {
 BYTE    i;                              /* Instruction byte 1        */
 PSA    *psa;                            /* -> prefixed storage area  */
-U32     px;                            /* prefix                    */
+RADR    px;                             /* prefix                    */
 int     rc;                             /* Return code               */
 
     RR_SVC(inst, execflag, regs, i);

@@ -1569,7 +1569,7 @@ BYTE    termchar;                       /* Terminating character     */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Load string terminating character from register 0 bits 24-31 */
-    termchar = regs->GR_L(0) & 0xFF;
+    termchar = regs->GR_LHLCL(0);
 
     /* Determine the operand addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -1657,10 +1657,10 @@ S32     remlen1, remlen2;               /* Lengths remaining         */
     ODD2_CHECK(r1, r2, regs);
 
     /* Load substring length from bits 24-31 of register 0 */
-    sublen = regs->GR_L(0) & 0xFF;
+    sublen = regs->GR_LHLCL(0);
 
     /* Load padding byte from bits 24-31 of register 1 */
-    pad = regs->GR_L(1) & 0xFF;
+    pad = regs->GR_LHLCL(1);
 
     /* Determine the destination and source addresses */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
@@ -2465,7 +2465,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Or 2nd byte of instruction with low-order byte of R1 */
     if ( r1 != 0 )
-        regs->exinst[1] |= (regs->GR_L(r1) & 0xFF);
+        regs->exinst[1] |= regs->GR_LHLCL(r1);
 
     /* Execute the target instruction */
     EXECUTE_INSTRUCTION (regs->exinst, 1, regs);
@@ -2586,13 +2586,12 @@ int     r1, unused;                     /* Value of R field          */
 
     /* Insert condition code in R1 bits 2-3, program mask
        in R1 bits 4-7, and set R1 bits 0-1 to zero */
-    regs->GR_L(r1) &= 0x00FFFFFF;
-    regs->GR_L(r1) |=
-            (regs->psw.cc << 28)
-            | (regs->psw.fomask << 27)
-            | (regs->psw.domask << 26)
-            | (regs->psw.eumask << 25)
-            | (regs->psw.sgmask << 24);
+    regs->GR_LHHCH(r1) =
+            (regs->psw.cc << 4)
+            | (regs->psw.fomask << 3)
+            | (regs->psw.domask << 2)
+            | (regs->psw.eumask << 1)
+            | regs->psw.sgmask;
 }
 
 
