@@ -40,7 +40,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 {
 
     /* Ensure real instruction address is properly wrapped */   
-    if(likely(!regs->zeroilc))
+    if(likely(!regs->psw.zeroilc))
         regs->psw.IA &= ADDRESS_MAXWRAP(regs);
 
 #if defined(FEATURE_BCMODE)
@@ -58,7 +58,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | regs->psw.zerobyte
                    )
                  );
-        if(unlikely(regs->zeroilc))
+        if(unlikely(regs->psw.zeroilc))
             STORE_FW ( addr + 4, regs->psw.IA | (regs->psw.amode ? 0x80000000 : 0) );
         else
             STORE_FW ( addr + 4,
@@ -73,7 +73,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | (regs->psw.intcode)
                    )
                  );
-        if(unlikely(regs->zeroilc))
+        if(unlikely(regs->psw.zeroilc))
             STORE_FW ( addr + 4,
                    ( ( (REAL_ILC(regs) << 5)
                      | (regs->psw.cc << 4)
@@ -108,7 +108,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
                    | regs->psw.zeroword
                    )
                  );
-        if(unlikely(regs->zeroilc))
+        if(unlikely(regs->psw.zeroilc))
             STORE_DW ( addr + 8, regs->psw.IA );
         else
             STORE_DW ( addr + 8, (regs->psw.IA & ADDRESS_MAXWRAP(regs)) );
@@ -121,7 +121,7 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 {
-    regs->zeroilc = 1;
+    regs->psw.zeroilc = 1;
 
     regs->psw.sysmask = addr[0];
     regs->psw.pkey    = (addr[1] & 0xF0);
@@ -245,7 +245,7 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
         return PGM_SPECIFICATION_EXCEPTION;
 #endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
 
-    regs->zeroilc = 0;
+    regs->psw.zeroilc = 0;
 
     /* Check for wait state PSW */
     if (WAITSTATE(&regs->psw) && (sysblk.insttrace || sysblk.inststep))
@@ -667,7 +667,7 @@ static char *pgmintname[] = {
     {
         /* Store the program interrupt code at PSA+X'8C' */
         psa->pgmint[0] = 0;
-        psa->pgmint[1] = regs->zeroilc ? 0 : ilc;
+        psa->pgmint[1] = regs->psw.zeroilc ? 0 : ilc;
         STORE_HW(psa->pgmint + 2, pcode);
 
         /* Store the exception access identification at PSA+160 */

@@ -1943,7 +1943,7 @@ int     amode64;
         /* amode31 bit must be set when amode64 is set */
         if(!regs->psw.amode)
         {
-            regs->zeroilc = 1;
+            regs->psw.zeroilc = 1;
             rc = PGM_SPECIFICATION_EXCEPTION;
         }
     }

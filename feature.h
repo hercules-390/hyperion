@@ -575,7 +575,7 @@ z900_ ## _name
 #if __GEN_ARCH == 370
 
 #define AEA_MODE(_regs) \
-  ( ( REAL_MODE(&(_regs)->psw) ? 0 : 1 ) \
+  ( ( REAL_MODE(&(_regs)->psw) ? 0 : (((_regs)->psw.asc >> 6) + 1) ) \
   | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
   )
 

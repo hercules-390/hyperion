@@ -592,7 +592,6 @@ typedef struct _REGS {                  /* Processor registers       */
                 hostint:1,              /* 1=Host generated interrupt*/
                 execflag:1,             /* 1=EXecuted instruction    */
                 instvalid:1,            /* 1=Inst field is valid     */
-                zeroilc:1,              /* 1=Zero ILC                */
                 permode:1;              /* 1=PER active              */
         unsigned int                    /* Flags (intlock serialized)*/
                 dummy:1,                /* 1=Dummy regs structure    */

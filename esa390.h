@@ -84,7 +84,8 @@ typedef struct  _PSW {
         U32      zeroword;              /* esame only      (32 - 63) */
         BYTE                            /* Addressing mode (31 - 32) */
                  amode64:1,             /* 64-bit addressing         */
-                 amode:1;               /* 31-bit addressing         */
+                 amode:1,               /* 31-bit addressing         */
+                 zeroilc:1;             /* 1=Zero ILC                */
         DW       ia;                    /* Instruction addrress      */
                                         /*                 (33 - 63) */
                                         /* or (esame)      (64 -127) */
