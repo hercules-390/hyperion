@@ -701,12 +701,6 @@ typedef struct _SYSBLK {
 #endif // !defined(OPTION_FISHIO)
         RADR    addrlimval;             /* Address limit value (SAL) */
         U32     servparm;               /* Service signal parameter  */
-        U32     cp_recv_mask;           /* Syscons CP receive mask   */
-        U32     cp_send_mask;           /* Syscons CP send mask      */
-        U32     sclp_recv_mask;         /* Syscons SCLP receive mask */
-        U32     sclp_send_mask;         /* Syscons SCLP send mask    */
-        BYTE    scpcmdstr[123+1];       /* Operator command string   */
-        int     scpcmdtype;             /* Operator command type     */
         unsigned int                    /* Flags                     */
                 sigintreq:1,            /* 1=SIGINT request pending  */
                 insttrace:1,            /* 1=Instruction trace       */
