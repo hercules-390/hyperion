@@ -349,6 +349,7 @@ U16     xcode;                          /* Exception code            */
         || ((regs->CR(0) & CR0_STORE_OVRD)
         && ((STORAGE_KEY(aaddr) & STORKEY_KEY) == 0x90))))
     {
+        protect = 0; /* clear ALE, PTE protect flag */
         /* Check Key protection for store */
         if (acctype == ACCTYPE_WRITE
             && ((STORAGE_KEY(aaddr) & STORKEY_KEY) != regs->psw.pkey))
