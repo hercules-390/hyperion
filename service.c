@@ -847,8 +847,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #ifdef FEATURE_BRANCH_AND_SET_AUTHORITY
                         | SCCB_CFG3_BRANCH_AND_SET_AUTHORITY
 #endif /*FEATURE_BRANCH_AND_SET_AUTHORITY*/
-//                      | SCCB_CFG3_EXTENDED_FLOATING_POINT
-//                      | SCCB_CFG3_EXTENDED_LOGICAL_COMPUTATION_FACILITY
+#if defined(FEATURE_BASIC_FP_EXTENSIONS)
+                        | SCCB_CFG3_EXTENDED_FLOATING_POINT
+#endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
+/*ZZ*/                  | SCCB_CFG3_EXTENDED_LOGICAL_COMPUTATION_FACILITY
                         ;
         sccbscp->cfg[4] = 0
 #ifdef FEATURE_EXTENDED_TOD_CLOCK

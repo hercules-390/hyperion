@@ -286,7 +286,7 @@ int i;
     
     if(regs->psw.mach)
     {
-        logmsg("CPU%4.4X: Machive check due to host error: %s\n",
+        logmsg("CPU%4.4X: Machine check due to host error: %s\n",
           regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
           strsignal(signo));
 
