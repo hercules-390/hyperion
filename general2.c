@@ -862,19 +862,28 @@ DEF_INST(store_access_multiple)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work area         */
+int     n, d;                           /* Integer work area         */
+BYTE    rwork[64];                      /* Register work area        */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
-    /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Copy access registers into work area */
+    for ( n = r1, d = 0; ; )
+    {
+        /* Copy contents of one access register to work area */
+        STORE_FW(rwork + d, regs->AR(n)); d += 4;
 
-    /* Store 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore4)(regs->AR((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+        /* Instruction is complete when r3 register is done */
+        if ( n == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        n++; n &= 15;
+    }
+
+    /* Store access register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -1084,14 +1093,14 @@ U32    *p;                              /* Mainstor pointer          */
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    n = (r1 <= r3 ? r3 - r1 : (r3 + 16) - r1) + 1;
 
     /* If a boundary is not crossed then store into mainstor */
     if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 4))
     {
         p = (U32*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        for (n += r1; r1 < n; r1++)
-            STORE_FW (p++, regs->GR_L(r1 & 0xF));
+        for (i = 0; i < n; i++)
+            STORE_FW (p++, regs->GR_L((r1 + i) & 0xF));
     }
     /* Otherwise store 4 bytes at a time */
     else
@@ -1099,7 +1108,7 @@ U32    *p;                              /* Mainstor pointer          */
         ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1,
                                    ACCTYPE_WRITE, regs);
         for (i = 0; i < n; i++)
-            ARCH_DEP(vstore4)(regs->GR_L((r1 + i) & 0xF),
+            ARCH_DEP(vstore4)(regs->GR_L((r1 + i) & 0x0F),
                               effective_addr2 + (i*4), b2, regs);
     }
 

@@ -3882,20 +3882,35 @@ int     r1, r3;                         /* Register numbers          */
 int     b2, b4;                         /* Base register numbers     */
 VADR    effective_addr2;                /* Operand2 address          */
 VADR    effective_addr4;                /* Operand4 address          */
-int     i, n;                           /* Integer work areas        */
+int     i, d;                           /* Integer work areas        */
+BYTE    rworkh[64], rworkl[64];         /* High and low halves of new
+                                           values to be loaded       */
 
-    SS(inst, regs, r1, r3, b2, effective_addr2, b4, effective_addr4);
+    SS(inst, regs, r1, r3, b2, effective_addr2,
+                                        b4, effective_addr4);
 
-    /* Calculate number of regs to load */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Calculate the number of bytes to be loaded from each operand */
+    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
 
-    /* Load a register at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    ARCH_DEP(validate_operand)(effective_addr4, b4, (n*4) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
+    /* Fetch high order half of new register contents from operand 2 */
+    ARCH_DEP(vfetchc) ( rworkh, d-1, effective_addr2, b2, regs );
+
+    /* Fetch low order half of new register contents from operand 4 */
+    ARCH_DEP(vfetchc) ( rworkl, d-1, effective_addr4, b4, regs );
+
+    /* Load registers from work areas */
+    for ( i = r1, d = 0; ; )
     {
-        regs->GR_H((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
-        regs->GR_L((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr4 + (i*4), b4, regs);
+        /* Load both halves of one register from the work areas */
+        FETCH_FW(regs->GR_H(i), rworkh + d);
+        FETCH_FW(regs->GR_L(i), rworkl + d);
+        d += 4;
+
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
     }
 
 } /* end DEF_INST(load_multiple_disjoint) */
@@ -3911,17 +3926,29 @@ DEF_INST(load_multiple_high)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, d;                           /* Integer work areas        */
+BYTE    rwork[64];                      /* Character work areas      */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate number of regs to load */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Calculate the number of bytes to be loaded */
+    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
 
-    /* Load 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
-        regs->GR_H((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
+    /* Fetch new register contents from operand address */
+    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+
+    /* Load registers from work area */
+    for ( i = r1, d = 0; ; )
+    {
+        /* Load one register from work area */
+        FETCH_FW(regs->GR_H(i), rwork + d); d += 4;
+
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
+    }
 
 } /* end DEF_INST(load_multiple_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3936,27 +3963,28 @@ DEF_INST(load_multiple_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
-U64    *p;                              /* Mainstor pointer          */
+int     i, d;                           /* Integer work areas        */
+BYTE    rwork[128];                     /* Register work areas       */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate number of regs to load */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Calculate the number of bytes to be loaded */
+    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 8;
 
-    /* If a boundary is not crossed then load from mainstor */
-    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 8))
+    /* Fetch new control register contents from operand address */
+    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+
+    /* Load control registers from work area */
+    for ( i = r1, d = 0; ; )
     {
-        p = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-        for (n += r1; r1 < n; r1++)
-            regs->GR_G(r1 & 0xF) = fetch_dw(p++);
-    }
-    /* Otherwise load 8 bytes at a time */
-    else
-    {
-        ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_READ, regs);
-        for (i = 0; i < n; i++)
-            regs->GR_G((r1 + i) & 0xF) = ARCH_DEP(vfetch8)(effective_addr2 + (i*8), b2, regs);
+        /* Load one general register from work area */
+        FETCH_DW(regs->GR_G(i), rwork + d); d += 8;
+
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
     }
 
 } /* end DEF_INST(load_multiple_long) */
@@ -3972,26 +4000,35 @@ DEF_INST(store_control_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, d;                           /* Integer work areas        */
+BYTE    rwork[128];                      /* Register work areas       */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
-    DW_CHECK(effective_addr2, regs);
+    FW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_ZSIE)
     if(SIE_STATB(regs, IC1, STCTL))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_ZSIE)*/
 
-    /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Copy control registers into work area */
+    for ( i = r1, d = 0; ; )
+    {
+        /* Copy contents of one control register to work area */
+        STORE_DW(rwork + d, regs->CR_G(i)); d += 8;
 
-    /* Store 8 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore8)(regs->CR_G((r1 + i) & 0xF), effective_addr2 + (i*8), b2, regs);
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
+    }
+
+    /* Store control register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_control_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4006,42 +4043,56 @@ DEF_INST(load_control_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
-U16     updated = 0;                    /* Updated control regs      */
+int     len;                            /* Length to load            */
+U32     updated = 0;                    /* Updated control regs      */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
-    DW_CHECK(effective_addr2, regs);
-
-    /* Calculate number of regs to load */
-    n = ((r3 - r1) & 0xF) + 1;
+    FW_CHECK(effective_addr2, regs);
 
 #if defined(_FEATURE_ZSIE)
     if ( SIE_MODE(regs) )
     {
-        for (i = 0; i < n; i++)
-            if (test_bit(2, 15 - ((r1 + i) & 0xF), &regs->siebk->lctl_ctl))
+    int i;
+    U32 n;
+        for(i = r1; ; )
+        {
+            n = 0x8000 >> i;
+            if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & ((i < 8) ? n >> 8 : n))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
-    }
-#endif
 
-    /* Load 8 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
-    {
-        regs->CR_G((r1 + i) & 0xF) = ARCH_DEP(vfetch8)(effective_addr2 + (i*8), b2, regs);
-        set_bit(2, (r1 + i) & 0xF, &updated);
+            if ( i == r3 ) break;
+            i++; i &= 15;
+        }
     }
+#endif /*defined(_FEATURE_ZSIE)*/
 
-    /* Actions based on updated control regs */
+    /* Validate operand address */
+    len = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 8;
+    ARCH_DEP(validate_operand)(effective_addr2, b2, len-1, ACCTYPE_READ, regs);
+
+    do {
+
+        regs->CR_G(r1) = ARCH_DEP(vfetch8)(effective_addr2, b2, regs);
+        set_bit (4, r1, &updated);
+
+        if ( r1 == r3 ) break;
+
+        r1++; r1 &= 15;
+
+        effective_addr2 += 8;
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
+
+    } while (1);
+
     SET_IC_MASK(regs);
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (test_bit(2, regs->aea_ar[16], &updated))
+    if (test_bit(4, regs->aea_ar[16], &updated))
         INVALIDATE_AIA(regs);
-    if (test_bit(2, 9, &updated) && EN_IC_PER_SA(regs))
+    if (test_bit(4, 9, &updated) && EN_IC_PER_SA(regs))
         ARCH_DEP(invalidate_tlb)(regs,~ACC_WRITE);
 
     RETURN_INTCHECK(regs);
@@ -4059,28 +4110,26 @@ DEF_INST(store_multiple_long)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
-U64    *p;                              /* Mainstor pointer          */
+int     i, d;                           /* Integer work areas        */
+BYTE    rwork[128];                      /* Register work areas       */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Copy control registers into work area */
+    for ( i = r1, d = 0; ; )
+    {
+        /* Copy contents of one control register to work area */
+        STORE_DW(rwork + d, regs->GR_G(i)); d += 8;
 
-    /* If a boundary is not crossed then store into mainstor */
-    if ((effective_addr2 & 0x7FF) <= 0x800 - (n * 8))
-    {
-        p = (U64*)MADDR(effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
-        for (n += r1; r1 < n; r1++)
-            store_dw(p++, regs->GR_G(r1 & 0xF));
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
     }
-    /* Otherwise store 8 bytes at a time */
-    else
-    {
-        ARCH_DEP(validate_operand)(effective_addr2, b2, (n*8) - 1, ACCTYPE_WRITE, regs);
-        for (i = 0; i < n; i++)
-            ARCH_DEP(vstore8)(regs->GR_G((r1 + i) & 0xF), effective_addr2 + (i*8), b2, regs);
-    }
+
+    /* Store control register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_multiple_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -4095,17 +4144,26 @@ DEF_INST(store_multiple_high)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work area         */
+int     i, d;                           /* Integer work area         */
+BYTE    rwork[64];                      /* Register work area        */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Copy register contents into work area */
+    for ( i = r1, d = 0; ; )
+    {
+        /* Copy contents of one register to work area */
+        STORE_FW(rwork + d, regs->GR_H(i)); d += 4;
 
-    /* Store 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore4)(regs->GR_H((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
+    }
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_multiple_high) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -6064,21 +6122,31 @@ DEF_INST(load_access_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
+int     n, d;                           /* Integer work areas        */
+BYTE    rwork[64];                      /* Register work area        */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
-    /* Calculate number of regs to load */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Calculate the number of bytes to be loaded */
+    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
 
-    /* Load 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
+    /* Fetch new access register contents from operand address */
+    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+
+    /* Load access registers from work area */
+    for ( n = r1, d = 0; ; )
     {
-        regs->AR((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
-        SET_AEA_AR(regs, (r1 + i) & 0xF);
+        /* Load one access register from work area */
+        FETCH_FW(regs->AR(n), rwork + d); d += 4;
+        SET_AEA_AR(regs, n);
+
+        /* Instruction is complete when r3 register is done */
+        if ( n == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        n++; n &= 15;
     }
 
 } /* end DEF_INST(load_access_multiple_y) */
@@ -6133,17 +6201,29 @@ DEF_INST(load_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, d;                           /* Integer work areas        */
+BYTE    rwork[64];                      /* Character work areas      */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate number of regs to load */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Calculate the number of bytes to be loaded */
+    d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
 
-    /* Load 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
-        regs->GR_L((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
+    /* Fetch new register contents from operand address */
+    ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
+
+    /* Load registers from work area */
+    for ( i = r1, d = 0; ; )
+    {
+        /* Load one register from work area */
+        FETCH_FW(regs->GR_L(i), rwork + d); d += 4;
+
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
+    }
 
 } /* end DEF_INST(load_multiple_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
@@ -6290,19 +6370,28 @@ DEF_INST(store_access_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work area         */
+int     n, d;                           /* Integer work area         */
+BYTE    rwork[64];                      /* Register work area        */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
-    /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Copy access registers into work area */
+    for ( n = r1, d = 0; ; )
+    {
+        /* Copy contents of one access register to work area */
+        STORE_FW(rwork + d, regs->AR(n)); d += 4;
 
-    /* Store 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore4)(regs->AR((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+        /* Instruction is complete when r3 register is done */
+        if ( n == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        n++; n &= 15;
+    }
+
+    /* Store access register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_access_multiple_y) */
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -6403,17 +6492,26 @@ DEF_INST(store_multiple_y)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
-int     i, n;                           /* Integer work area         */
+int     n, d;                           /* Integer work area         */
+BYTE    rwork[64];                      /* Register work area        */
 
     RSY(inst, regs, r1, r3, b2, effective_addr2);
 
-    /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Copy register contents into work area */
+    for ( n = r1, d = 0; ; )
+    {
+        /* Copy contents of one register to work area */
+        STORE_FW(rwork + d, regs->GR_L(n)); d += 4;
 
-    /* Store 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore4)(regs->GR_L((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+        /* Instruction is complete when r3 register is done */
+        if ( n == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        n++; n &= 15;
+    }
+
+    /* Store register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_multiple_y) */
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/

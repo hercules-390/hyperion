@@ -1808,8 +1808,8 @@ DEF_INST(load_control)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
-U16     updated = 0;                    /* Updated control regs      */
+int     len;                            /* Length to load            */
+U32     updated = 0;                    /* Updated control regs      */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 
@@ -1824,27 +1824,50 @@ U16     updated = 0;                    /* Updated control regs      */
 
     FW_CHECK(effective_addr2, regs);
 
-    /* Calculate number of regs to load */
-    n = ((r3 - r1) & 0xF) + 1;
-
 #if defined(_FEATURE_SIE)
     if (SIE_MODE(regs))
     {
-        for (i = 0; i < n; i++)
-            if (test_bit(2, 15 - ((r1 + i) & 0xF), &regs->siebk->lctl_ctl))
+    int i;
+    U32 n;
+        for (i = r1; ; )
+        {
+            n = 0x8000 >> i;
+            if(regs->siebk->lctl_ctl[i < 8 ? 0 : 1] & ((i < 8) ? n >> 8 : n))
                 longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+
+            if ( i == r3 ) break;
+            i++; i &= 15;
+        }
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Load 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_READ, regs);
-    for (i = 0; i < n; i++)
-    {
-        regs->CR_L((r1 + i) & 0xF) = ARCH_DEP(vfetch4)(effective_addr2 + (i*4), b2, regs);
-        set_bit(2, (r1 + i) & 0xF, &updated);
-    }
+    /* Validate operand address */
+    len = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
+    ARCH_DEP(validate_operand)(effective_addr2, b2, len-1, ACCTYPE_READ, regs);
 
-    /* Actions based on updated control regs */
+    do {
+
+#if defined(FEATURE_ECPSVM)
+        if (r1 == 6) obtain_lock (&sysblk.intlock);
+#endif
+
+        /* Load control register bits 32-63 */
+        regs->CR_L(r1) = ARCH_DEP(vfetch4)(effective_addr2, b2, regs);
+        set_bit (4, r1, &updated);
+
+#if defined(FEATURE_ECPSVM)
+        if (r1 == 6) release_lock (&sysblk.intlock);
+#endif
+
+        if ( r1 == r3 ) break;
+
+        r1++; r1 &= 15;
+
+        effective_addr2 += 4;
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
+
+    } while (1);
+
     SET_IC_MASK(regs);
 #if __GEN_ARCH == 370
     if (updated & BIT(1))
@@ -1855,10 +1878,10 @@ U16     updated = 0;                    /* Updated control regs      */
 #else
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
-    if (test_bit(2, regs->aea_ar[16], &updated))
+    if (test_bit(4, regs->aea_ar[16], &updated))
         INVALIDATE_AIA(regs);
 #endif
-    if (test_bit(2, 9, &updated) && EN_IC_PER_SA(regs))
+    if (test_bit(4, 9, &updated) && EN_IC_PER_SA(regs))
         ARCH_DEP(invalidate_tlb)(regs,~ACC_WRITE);
 
     RETURN_INTCHECK(regs);
@@ -5656,7 +5679,8 @@ DEF_INST(store_control)
 int     r1, r3;                         /* Register numbers          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-int     i, n;                           /* Integer work areas        */
+int     i, d;                           /* Integer work areas        */
+BYTE    rwork[64];                      /* Register work areas       */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
@@ -5675,13 +5699,21 @@ int     i, n;                           /* Integer work areas        */
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Calculate number of regs to store */
-    n = ((r3 - r1) & 0xF) + 1;
+    /* Copy control registers into work area */
+    for ( i = r1, d = 0; ; )
+    {
+        /* Copy control register bits 32-63 to work area */
+        STORE_FW(rwork + d, regs->CR_L(i)); d += 4;
 
-    /* Store 4 bytes at a time */
-    ARCH_DEP(validate_operand)(effective_addr2, b2, (n*4) - 1, ACCTYPE_WRITE, regs);
-    for (i = 0; i < n; i++)
-        ARCH_DEP(vstore4)(regs->CR_L((r1 + i) & 0xF), effective_addr2 + (i*4), b2, regs);
+        /* Instruction is complete when r3 register is done */
+        if ( i == r3 ) break;
+
+        /* Update register number, wrapping from 15 to 0 */
+        i++; i &= 15;
+    }
+
+    /* Store control register contents at operand address */
+    ARCH_DEP(vstorec) ( rwork, d-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(store_control) */
 
