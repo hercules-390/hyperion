@@ -53,7 +53,7 @@ while(0)
             } \
         } \
         while(0)
-    #define VERIFY(a) ASSERT(a)
+    #define VERIFY(a) ASSERT((a))
 #else
     #define TRACE(a...)
     #define ASSERT(a)

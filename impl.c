@@ -11,6 +11,14 @@
 #include "hercules.h"
 #include "opcode.h"
 #include "httpmisc.h"
+#include "hostinfo.h"
+
+#if defined(FISH_HANG)
+extern  int   bFishHangAtExit;	// (set to true when shutting down)
+extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
+extern  void  FishHangReport();
+extern  void  FishHangAtExit();
+#endif // defined(FISH_HANG)
 
 /*-------------------------------------------------------------------*/
 /* Signal handler for SIGINT signal                                  */
@@ -115,6 +123,12 @@ TID paneltid;
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+#if defined(FISH_HANG)
+    FishHangInit(__FILE__,__LINE__);
+#endif // defined(FISH_HANG)
+
+    init_hostinfo();
 
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))

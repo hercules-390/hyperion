@@ -41,6 +41,13 @@
 #include "w32chan.h"
 #endif /* defined(OPTION_FISHIO) */
 
+#if defined(FISH_HANG)
+extern  int   bFishHangAtExit;	// (set to true when shutting down)
+extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
+extern  void  FishHangReport();
+extern  void  FishHangAtExit();
+#endif // defined(FISH_HANG)
+
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
 /*-------------------------------------------------------------------*/
@@ -2163,9 +2170,27 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 
 /*********************************************************************/
+/* FishHangReport - verify/debug proper Hercules LOCK handling...    */
+/*********************************************************************/
+
+#if defined(FISH_HANG)
+    if (strcasecmp(cmd,"FishHangReport") == 0)
+    {
+        FishHangReport();
+#if defined(OPTION_FISHIO)
+        PrintAllDEVTHREADPARMSs();
+#endif /* defined(OPTION_FISHIO) */
+        return NULL;
+    }
+#endif // defined(FISH_HANG)
+
+/*********************************************************************/
     /* quit or exit command - terminate the emulator */
     if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"exit") == 0)
     {
+#if defined(FISH_HANG)
+        FishHangAtExit();
+#endif // defined(FISH_HANG)
         sysblk.msgpipew = stderr;
 #if defined(OPTION_FISHIO)
         ios_msgpipew = sysblk.msgpipew;

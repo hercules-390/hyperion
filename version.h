@@ -14,7 +14,7 @@
 #define	VERSION	Unknown                 /* Unkown version number     */
 #endif
 
-void display_version();
+void display_version(FILE *f, char *prog);
 
 #define HERCULES_COPYRIGHT \
        "(c)Copyright 1999-2002 by Roger Bowler, Jan Jaeger, and others"

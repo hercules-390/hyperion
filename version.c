@@ -11,8 +11,8 @@
 #endif
 
 #include "feature.h"
+#include "hostinfo.h"
 #include "version.h"
-#include <stdio.h>
 
 /*--------------------------------*/
 /*   "Unusual" build options...   */
@@ -154,5 +154,7 @@ void display_version (FILE *f, char *prog)
     else
       for( i = 0 ; i < sizeof(build_info) / sizeof(build_info[0]) ; ++i )
         fprintf(f, "  %s\n", build_info[i]);
+
+    display_hostinfo(f);
 
 } /* end function display_version */

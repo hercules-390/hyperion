@@ -29,6 +29,13 @@ extern void  TrimDeviceThreads();
 extern void  KillAllDeviceThreads();
 
 /////////////////////////////////////////////////////////////////////////////
+// Debugging...   (called by panel.c "FishHangReport" command...)
+
+#if defined(FISH_HANG)
+extern void  PrintAllDEVTHREADPARMSs();
+#endif // defined(FISH_HANG)
+
+/////////////////////////////////////////////////////////////////////////////
 // I/O Scheduler variables...
 
 extern FILE*  ios_msgpipew;		// pipe write handle (for logging messages)

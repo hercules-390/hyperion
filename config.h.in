@@ -6,11 +6,14 @@
 /* Define to provide additional information about this build */
 #undef CUSTOM_BUILD_STRING
 
-/* Define to enable extra debugging code */
+/* Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros) */
 #undef DEBUG
 
 /* Define to build interface to external Windows GUI */
 #undef EXTERNALGUI
+
+/* Define to debug correct fthreads LOCK handling (requires fthreads) */
+#undef FISH_HANG
 
 /* Define if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H

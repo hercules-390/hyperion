@@ -167,7 +167,7 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
             } \
         } \
         while(0)
-    #define VERIFY(a) ASSERT(a)
+    #define VERIFY(a) ASSERT((a))
 #else
     #define TRACE(a...)
     #define ASSERT(a)
@@ -202,19 +202,45 @@ typedef fthread_t         TID;
 typedef fthread_mutex_t   LOCK;
 typedef fthread_cond_t    COND;
 typedef fthread_attr_t    ATTR;
-#define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
-#define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
-#define initialize_lock(plk)                   fthread_mutex_init((plk))
-#define obtain_lock(plk)                       fthread_mutex_lock((plk))
-#define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
-#define test_lock(plk) \
-        (fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
-#define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
-#define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
-#define initialize_condition(pcond)            fthread_cond_init((pcond))
-#define signal_condition(pcond)                fthread_cond_signal((pcond))
-#define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
-#define release_lock(plk)                      fthread_mutex_unlock((plk))
+
+#if defined(FISH_HANG)
+
+	#define create_thread(ptid,pat,fn,arg)         fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
+	#define create_device_thread(ptid,pat,fn,arg)  fthread_create(__FILE__,__LINE__,(ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
+
+	#define initialize_lock(plk)                   fthread_mutex_init(__FILE__,__LINE__,(plk))
+	#define obtain_lock(plk)                       fthread_mutex_lock(__FILE__,__LINE__,(plk))
+	#define try_obtain_lock(plk)                   fthread_mutex_trylock(__FILE__,__LINE__,(plk))
+	#define test_lock(plk) \
+			(fthread_mutex_trylock(__FILE__,__LINE__,(plk)) ? 1 : fthread_mutex_unlock(__FILE__,__LINE__,(plk)) )
+	#define release_lock(plk)                      fthread_mutex_unlock(__FILE__,__LINE__,(plk))
+
+	#define initialize_condition(pcond)            fthread_cond_init(__FILE__,__LINE__,(pcond))
+	#define signal_condition(pcond)                fthread_cond_signal(__FILE__,__LINE__,(pcond))
+	#define broadcast_condition(pcond)             fthread_cond_broadcast(__FILE__,__LINE__,(pcond))
+	#define wait_condition(pcond,plk)              fthread_cond_wait(__FILE__,__LINE__,(pcond),(plk))
+	#define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait(__FILE__,__LINE__,(pcond),(plk),(tm))
+
+#else // !defined(FISH_HANG)
+
+	#define create_thread(ptid,pat,fn,arg)         fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),NORMAL_THREAD_PRIORITY)
+	#define create_device_thread(ptid,pat,fn,arg)  fthread_create((ptid),(pat),(PFT_THREAD_FUNC)&(fn),(arg),DEVICE_THREAD_PRIORITY)
+
+	#define initialize_lock(plk)                   fthread_mutex_init((plk))
+	#define obtain_lock(plk)                       fthread_mutex_lock((plk))
+	#define try_obtain_lock(plk)                   fthread_mutex_trylock((plk))
+	#define test_lock(plk) \
+			(fthread_mutex_trylock((plk)) ? 1 : fthread_mutex_unlock((plk)) )
+	#define release_lock(plk)                      fthread_mutex_unlock((plk))
+
+	#define initialize_condition(pcond)            fthread_cond_init((pcond))
+	#define signal_condition(pcond)                fthread_cond_signal((pcond))
+	#define broadcast_condition(pcond)             fthread_cond_broadcast((pcond))
+	#define wait_condition(pcond,plk)              fthread_cond_wait((pcond),(plk))
+	#define timed_wait_condition(pcond,plk,tm)     fthread_cond_timedwait((pcond),(plk),(tm))
+
+#endif // defined(FISH_HANG)
+
 #define initialize_detach_attr(pat)            /* unsupported */
 #define signal_thread(tid,signo)               fthread_kill((tid),(signo))
 #define thread_id()                            fthread_self()
