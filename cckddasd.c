@@ -2583,6 +2583,7 @@ struct stat     st;                     /* File status information   */
 int             cyls, trks;             /* Size of regular file      */
 int             lasttrk;                /* Last trk in regular file  */
 long            len;                    /* Uncompressed trk length   */
+int             add = 0;                /* Add the shadow file back  */
 
     cckd = dev->cckd_ext;
     if (!cckd)
@@ -2608,14 +2609,21 @@ long            len;                    /* Uncompressed trk length   */
     if (cckd->fd[sfx-1] < 0)
     {
         cckd->fd[sfx-1] = open (sfn, O_RDONLY|O_BINARY);
-        logmsg ("cckddasd: cannot remove shadow file [%d], "
-                "file [%d] cannot be opened read-write\n",
-                sfx, sfx-1);
-        release_lock (&cckd->filelock);
-        return;
+        if (merge)
+        {
+            logmsg ("cckddasd: cannot remove shadow file [%d], "
+                    "file [%d] cannot be opened read-write\n",
+                    sfx, sfx-1);
+            release_lock (&cckd->filelock);
+            return;
+        }
+        else add = 1;
     }
-    cckd->open[sfx-1] = CCKD_OPEN_RW;
-    DEVTRACE ("cckddasd: sfrem [%d] %s opened r/w\n", sfx-1, sfn);
+    else
+    {
+        cckd->open[sfx-1] = CCKD_OPEN_RW;
+        DEVTRACE ("cckddasd: sfrem [%d] %s opened r/w\n", sfx-1, sfn);
+    }
 
     /* harden the current file */
     cckd_harden (dev);
@@ -2822,12 +2830,17 @@ long            len;                    /* Uncompressed trk length   */
     cckd_flush_l2 (dev, sfx);
     close (cckd->fd[sfx]);
     free (cckd->l1[sfx]);
+    cckd->l1[sfx] = NULL;
+    memset (&cckd->cdevhdr[sfx], 0, CCKDDASD_DEVHDR_SIZE); 
     cckd_sf_name (dev, sfx, (char *)&sfn);
     rc = unlink ((char *)&sfn);
 
-    /* finished successful */
+    /* Add the file back if necessary */
+    if (add) rc = cckd_sf_new (dev) ;
+
     logmsg ("cckddasd: shadow file [%d] successfully %s\n",
-            sfx, merge ? "merged" : "removed");
+            sfx, merge ? "merged" : add ? "re-added" : "removed");
+
     release_lock (&cckd->filelock);
 
     cckd_sf_stats (dev);

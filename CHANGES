@@ -1,3 +1,5 @@
+26 Feb 2002 `sf-xxx nomerge' rebuilds current shadow file if previous
+            file is `read-only' - Greg Smith
 26 Feb 2002 Set ILC=4 when an EX with PER is to an SVC - Paul Leisy
 26 Feb 2002 Fix RP so it doesn't Space Switch in REAL mode - Paul Leisy
 26 Feb 2002 Fix TRAP in GUEST so Change Bit not set on PIC 04 - Paul Leisy
