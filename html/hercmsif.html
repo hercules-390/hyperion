@@ -1,25 +1,85 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</TITLE>
+Hercules Version 2: System Messages: IF - hercifc</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Hercules Version 2: System Messages: TE - 1052/3270 Terminal Emulation</h1>
+<h1>Hercules Version 2: System Messages: IF - hercifc</h1>
 <p>
-This page describes the terminal emulation messages for the Hercules S/370,
-ESA/390, and z/Architecture emulator.
+This page describes the messages for the Hercules S/370,
+ESA/390, and z/Architecture emulator utility program <code>hercifc</code>.
 <h3>Messages</h3>
 <dl>
-<dt><code><a name="HHCTE001I">
-HHCTE001I text
+<dt><code><a name="HHCIF001E">
+HHCIF001E <em>programname</em>: Must be called from within Hercules.
 </a></code>
 <dd><dl>
   <dt>Meaning
-  <dd>
+  <dd>This program can only be called from Hercules itself, and may not be
+executed from the command line.
+The program was executed using the name <code><em>programname</em></code>.
+  <dt>Action
+  <dd>Don't do that.
   <dt>Issued by
-  <dd>console.c
+  <dd>hercifc.c, function main
+  </dl>
+<dt><code><a name="HHCIF002E">
+HHCIF002E <em>programname</em>: Cannot obtain socket: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to obtain a socket for controlling the destination interface
+failed. The error is described by <code><em>error</em></code>.
+The program was executed using the name <code><em>programname</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>hercifc.c, function main
+  </dl>
+<dt><code><a name="HHCIF003E">
+HHCIF003E <em>programname</em>: I/O error on read: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to read a request from Hercules
+failed. The error is described by <code><em>error</em></code>.
+The program was executed using the name <code><em>programname</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>hercifc.c, function main
+  </dl>
+<dt><code><a name="HHCIF004W">
+HHCIF004W <em>programname</em>: Unknown request: <em>request</em>.
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The request from Hercules was invalid. The request code was
+<code><em>request</em></code>. The request has been ignored.
+The program was executed using the name <code><em>programname</em></code>.
+  <dt>Action
+  <dd>Make sure that the <code>hercifc</code> program is the same version
+as the running copy of Hercules. If so, this is an internal error.
+Report it.
+  <dt>Issued by
+  <dd>hercifc.c, function main
+  </dl>
+<dt><code><a name="HHCIF005E">
+HHCIF005E <em>programname</em>: ioctl error doing <em>operation</em>
+on <em>interface</em>: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>An attempt to perform an ioctl operation,
+<code><em>operation</em></code>, on interface <code><em>interface</em></code>
+failed. The error is described by <code><em>error</em></code>.
+The program was executed using the name <code><em>programname</em></code>.
+  <dt>Action
+  <dd>Correct the error and retry the operation.
+  <dt>Issued by
+  <dd>hercifc.c, function main
   </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
@@ -27,9 +87,9 @@ HHCTE001I text
 If you have a question about Hercules, see the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
 <p><center><hr width=15% noshade>
-<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+<a href="hercmsif.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 15 December 2002
+<p>Last updated 16 December 2002
 </BODY>
 </HTML>

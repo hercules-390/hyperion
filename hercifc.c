@@ -45,7 +45,7 @@ int main( int argc, char **argv )
     if( isatty( STDIN_FILENO ) )
     {
         fprintf( stderr,
-                 _("IFC001E %s: Must be called from within Hercules.\n"),
+                 _("HHCIF001E %s: Must be called from within Hercules.\n"),
                  pszProgName );
         exit( 1 );
     }
@@ -56,7 +56,7 @@ int main( int argc, char **argv )
     if( sockfd < 0 )
     {
         fprintf( stderr,
-                 _("IFC002E %s: Cannot obtain socket: %s\n"),
+                 _("HHCIF002E %s: Cannot obtain socket: %s\n"),
                  pszProgName, strerror( errno ) );
         exit( 2 );
     }
@@ -71,7 +71,7 @@ int main( int argc, char **argv )
         if( rc == -1 )
         {
             fprintf( stderr,
-                     _("IFC003E %s: I/O error on read: %s.\n"),
+                     _("HHCIF003E %s: I/O error on read: %s.\n"),
                      pszProgName, strerror( errno ) );
             exit( 3 );
         }
@@ -148,7 +148,7 @@ int main( int argc, char **argv )
 
         default:
             sprintf( szMsgBuffer,
-                     _("IFC004W %s: Unknown request: %8.8X.\n"),
+                     _("HHCIF004W %s: Unknown request: %8.8X.\n"),
                      pszProgName, ctlreq.iCtlOp );
             
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
@@ -161,7 +161,7 @@ int main( int argc, char **argv )
         if( rc < 0 )
         {
             sprintf( szMsgBuffer,
-                     _("IFC005E %s: ioctl error %s on %s: %s\n"),
+                     _("HHCIF005E %s: ioctl error doing %s on %s: %s\n"),
                      pszProgName, pOp, pIF, strerror( errno ) );
             
             write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );

@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-12-16 21:12-0600\n"
+"POT-Creation-Date: 2002-12-16 21:52-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1343,15 +1343,6 @@ msgstr ""
 msgid "HHC432E: RC file open failed: %s\n"
 msgstr ""
 
-#: timer.c:284
-#, c-format
-msgid "HHC610I Timer thread started: tid=%8.8lX, pid=%d\n"
-msgstr ""
-
-#: timer.c:385
-msgid "HHC612I Timer thread ended\n"
-msgstr ""
-
 #: panel.c:916
 #, c-format
 msgid "HHC650I Control panel thread started: tid=%8.8lX, pid=%d\n"
@@ -1684,6 +1675,15 @@ msgstr ""
 msgid "HHCCP011I CPU%4.4X: Disabled wait state\n"
 msgstr ""
 
+#: timer.c:284
+#, c-format
+msgid "HHCCP012I Timer thread started: tid=%8.8lX, pid=%d\n"
+msgstr ""
+
+#: timer.c:385
+msgid "HHCCP013I Timer thread ended\n"
+msgstr ""
+
 #: cpu.c:1021
 #, c-format
 msgid "HHCCPU006E Cannot create timer thread: %s\n"
@@ -1742,6 +1742,31 @@ msgstr ""
 #: httpserv.c:64
 #, c-format
 msgid "HHCHT011E html_include: Cannot open %s: %s\n"
+msgstr ""
+
+#: hercifc.c:48
+#, c-format
+msgid "HHCIF001E %s: Must be called from within Hercules.\n"
+msgstr ""
+
+#: hercifc.c:59
+#, c-format
+msgid "HHCIF002E %s: Cannot obtain socket: %s\n"
+msgstr ""
+
+#: hercifc.c:74
+#, c-format
+msgid "HHCIF003E %s: I/O error on read: %s.\n"
+msgstr ""
+
+#: hercifc.c:151
+#, c-format
+msgid "HHCIF004W %s: Unknown request: %8.8X.\n"
+msgstr ""
+
+#: hercifc.c:164
+#, c-format
+msgid "HHCIF005E %s: ioctl error doing %s on %s: %s\n"
 msgstr ""
 
 #: printer.c:187
@@ -1999,31 +2024,6 @@ msgstr ""
 
 #: hsccmd.c:1891
 msgid "I/O interrupt queue: "
-msgstr ""
-
-#: hercifc.c:48
-#, c-format
-msgid "IFC001E %s: Must be called from within Hercules.\n"
-msgstr ""
-
-#: hercifc.c:59
-#, c-format
-msgid "IFC002E %s: Cannot obtain socket: %s\n"
-msgstr ""
-
-#: hercifc.c:74
-#, c-format
-msgid "IFC003E %s: I/O error on read: %s.\n"
-msgstr ""
-
-#: hercifc.c:151
-#, c-format
-msgid "IFC004W %s: Unknown request: %8.8X.\n"
-msgstr ""
-
-#: hercifc.c:164
-#, c-format
-msgid "IFC005E %s: ioctl error %s on %s: %s\n"
 msgstr ""
 
 #: hsccmd.c:1477

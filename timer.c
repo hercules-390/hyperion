@@ -281,7 +281,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
   UNREFERENCED(argp);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHC610I Timer thread started: tid="TIDPAT", pid=%d\n"),
+    logmsg (_("HHCCP012I Timer thread started: tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
@@ -382,7 +382,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
     } /* end while */
 
-    logmsg (_("HHC612I Timer thread ended\n"));
+    logmsg (_("HHCCP013I Timer thread ended\n"));
 
     return NULL;
 
