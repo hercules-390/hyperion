@@ -839,12 +839,26 @@ size_t          N;			/* Number of bytes to write  */
 int             trk;                    /* Current track number      */
 int             i;                      /* Cache index               */
 int             lru;                    /* LRU cache entry index     */
+#ifdef OPTION_SYNCIO
+int             active;                 /* 1=Synchronous I/O active  */
+#endif
 
+#ifdef OPTION_SYNCIO
+    active = dev->syncio_active;
+    if (dev->ckdtrkof)
+        dev->syncio_active = 0;
+#endif
     if (dev->cckd_ext == NULL)
     {
         /* if we're not doing full track i/o, simply call lseek() */
         if (dev->ckdnoftio)
-            return lseek (fd, offset, pos);
+        {
+            rc = lseek (fd, offset, pos);
+#ifdef OPTION_SYNCIO
+            dev->syncio_active = active;
+#endif
+            return rc;
+        }
 
         /* calculate new file position */
         switch (pos)
@@ -861,7 +875,7 @@ int             lru;                    /* LRU cache entry index     */
                 newpos =
                  (dev->ckdhicyl[dev->ckdtrkfn]
                                      - dev->ckdlocyl[dev->ckdtrkfn] +1)
-                 * dev->ckdheads * dev->ckdtrksz + CKDDASD_DEVHDR_SIZE;
+                 *dev->ckdheads * dev->ckdtrksz + CKDDASD_DEVHDR_SIZE;
                 break;
 
             default:
@@ -943,6 +957,9 @@ int             lru;                    /* LRU cache entry index     */
                             "size %d: %s\n",
                             (int) (dev->ckdcachenbr * CKDDASD_CACHE_SIZE),
                             strerror(errno));
+#ifdef OPTION_SYNCIO
+                    dev->syncio_active = active;
+#endif
                     return -1;
                 }
             }
@@ -997,6 +1014,9 @@ int             lru;                    /* LRU cache entry index     */
                         logmsg ("ckddasd: malloc error for trk buffer "
                                 "size %d: %s\n", dev->ckdtrksz,
                                 strerror(errno));
+#ifdef OPTION_SYNCIO
+                        dev->syncio_active = active;
+#endif
                         return -1;
                     }
                 }
@@ -1009,6 +1029,9 @@ int             lru;                    /* LRU cache entry index     */
                     /* Handle seek error condition */
                     logmsg ("ckddasd: lseek error reading track"
                             " image: %s\n", strerror(errno));
+#ifdef OPTION_SYNCIO
+                    dev->syncio_active = active;
+#endif
                     return -1;
                 }
 
@@ -1019,6 +1042,9 @@ int             lru;                    /* LRU cache entry index     */
                     logmsg ("ckddasd: read track image error: %s\n",
                             (rc < 0 ? strerror(errno)
                                     : "unexpected end of file"));
+#ifdef OPTION_SYNCIO
+                    dev->syncio_active = active;
+#endif
                     return -1;
                 }
 
@@ -1057,10 +1083,19 @@ int             lru;                    /* LRU cache entry index     */
             dev->ckdcurpos = newpos;
         }
 
+#ifdef OPTION_SYNCIO
+        dev->syncio_active = active;
+#endif
         return oldpos;
     }
     else
-        return cckd_lseek (dev, fd, offset, pos);
+    {
+        rc = cckd_lseek (dev, fd, offset, pos);
+#ifdef OPTION_SYNCIO
+        dev->syncio_active = active;
+#endif
+        return rc;
+    }
 
 } /* end function ckd_lseek */
 
@@ -2132,11 +2167,11 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     }
 
     /* Reset flags at start of CCW chain */
+    if (chained == 0
 #ifdef OPTION_SYNCIO
-    if (chained == 0 && !dev->syncio_retry)
-#else
-    if (chained == 0)
+     && !dev->syncio_retry
 #endif
+       )
     {
         dev->ckdxtdef = 0;
         dev->ckdsetfm = 0;

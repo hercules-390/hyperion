@@ -1661,16 +1661,9 @@ U16     residual;                       /* Residual byte count       */
 BYTE    more;                           /* 1=Count exhausted         */
 BYTE    tic = 0;                        /* Previous CCW was a TIC    */
 BYTE    chain = 1;                      /* 1=Chain to next CCW       */
-BYTE    chained = 0;                    /* Command chain and data chain
-                                           bits from previous CCW    */
-BYTE    prev_chained = 0;               /* Chaining flags from CCW
-                                           preceding the data chain  */
-BYTE    code = 0;                       /* Current CCW opcode        */
-BYTE    prevcode = 0;                   /* Previous CCW opcode       */
 BYTE    tracethis = 0;                  /* 1=Trace this CCW only     */
 BYTE    area[64];                       /* Message area              */
 DEVXF  *devexec;                        /* -> Execute CCW function   */
-int     ccwseq = 0;                     /* CCW sequence number       */
 int     bufpos = 0;                     /* Position in I/O buffer    */
 BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 #ifdef OPTION_SYNCIO
@@ -1710,7 +1703,18 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         dev->syncio_active = 0;
         dev->syncios--; dev->asyncios++;
         ccwaddr = dev->syncio_addr;
+        dev->code = dev->prevcode;
+        dev->prevcode = 0;
+        dev->chained &= ~CCW_FLAGS_CD;
+        dev->prev_chained = 0;
         DEVTRACE ("asynchronous I/O ccw addr %8.8x\n", ccwaddr);
+    }
+    else
+    {
+#endif
+        dev->chained = dev->prev_chained =
+        dev->code    = dev->prevcode     = dev->ccwseq = 0;
+#ifdef OPTION_SYNCIO
     }
 
     /* Check for synchronous I/O */
@@ -1748,11 +1752,11 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
     }
 
     /* Generate an initial status I/O interruption if requested */
+    if ((dev->scsw.flag1 & SCSW1_I)
 #ifdef OPTION_SYNCIO
-    if (dev->scsw.flag1 & SCSW1_I && !dev->syncio_retry)
-#else
-    if (dev->scsw.flag1 & SCSW1_I)
+     && !dev->syncio_retry
 #endif
+       )
     {
         /* Obtain the device lock */
         obtain_lock (&dev->lock);
@@ -1945,6 +1949,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
 
         /* Increment to next CCW address */
 #ifdef OPTION_SYNCIO
+        if ((dev->chained & CCW_FLAGS_CD) == 0)
         dev->syncio_addr = ccwaddr;
 #endif
         ccwaddr += 8;
@@ -1994,10 +1999,10 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         tic = 0;
 
         /* Update current CCW opcode, unless data chaining */
-        if ((chained & CCW_FLAGS_CD) == 0)
+        if ((dev->chained & CCW_FLAGS_CD) == 0)
         {
-            prevcode = code;
-            code = opcode;
+            dev->prevcode = dev->code;
+            dev->code = opcode;
         }
 
         /* Channel program check if invalid flags */
@@ -2030,7 +2035,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             /* Channel program check if the ORB suspend control bit
                was zero, or if this is a data chained CCW */
             if ((dev->scsw.flag0 & SCSW0_S) == 0
-                || (chained & CCW_FLAGS_CD))
+                || (dev->chained & CCW_FLAGS_CD))
             {
                 chanstat = CSW_PROGC;
                 break;
@@ -2119,13 +2124,13 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             release_lock (&dev->lock);
 
             /* Reset fields as if starting a new channel program */
-            code = 0;
+            dev->code = 0;
             tic = 0;
             chain = 1;
-            chained = 0;
-            prev_chained = 0;
-            prevcode = 0;
-            ccwseq = 0;
+            dev->chained = 0;
+            dev->prev_chained = 0;
+            dev->prevcode = 0;
+            dev->ccwseq = 0;
             bufpos = 0;
 #ifdef OPTION_SYNCIO
             dev->syncio_retry = 0;
@@ -2139,11 +2144,11 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
         /* Signal I/O interrupt if PCI flag is set */
+        if ((flags & CCW_FLAGS_PCI)
 #ifdef OPTION_SYNCIO
-        if (flags & CCW_FLAGS_PCI && !dev->syncio_retry)
-#else
-        if (flags & CCW_FLAGS_PCI)
+         && !dev->syncio_retry
 #endif
+           )
         {
             /* Obtain the device lock */
             obtain_lock (&dev->lock);
@@ -2200,7 +2205,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
 
         /* Channel program check if invalid count */
         if (count == 0 && (ccwfmt == 0 ||
-            (flags & CCW_FLAGS_CD) || (chained & CCW_FLAGS_CD)))
+            (flags & CCW_FLAGS_CD) || (dev->chained & CCW_FLAGS_CD)))
         {
             chanstat = CSW_PROGC;
             break;
@@ -2213,55 +2218,14 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             break;
         }
 
-#ifdef OPTION_SYNCIO
-        /* Temporary workaround for -
-           1) Track Overflow processing:
-               Synchronous READ (and probably WRITE) CCWs
-               cannot correctly process splitted records
-               if the continuation has to be scheduled for
-               asynchronous processing;
-           2) DataChained WRITE CCWs:
-               Data merging function used by [C]CKD dev's
-               for data chained write CCW's leads to error
-               when the 1st WRITE CCW which specifies DC is
-               processed SYNChronously and any subsequent
-               WRITE CCW's (including the 1st one) must then
-               be switched to ASYNChronous processing - as a
-               result only last WRITE CCW in the chain is
-               retried although the whole chain starting from
-               the 1st CCW which specified DC must be retried.
-           - this [rough] fix just immediately request 
-             asynchronous processing if one of the above 
-             situations are encountered during synchronous I/O
-             (1:'ckdtrkof' flag is set and CCW specifies READ 
-             or WRITE operation; or 2:WRITE CCW with "DataChain"
-             flag set is processed) 
-        */
-        if( dev->syncio_active &&
-           ( (dev->ckdtrkof
-              && (IS_CCW_READ(code) || IS_CCW_WRITE(code)))
-           || ((flags & CCW_FLAGS_CD)
-              && (IS_CCW_WRITE(code)
-                  || (IS_CCW_CONTROL(code)
-                       && !(IS_CCW_NOP(code)||IS_CCW_SET_EXTENDED(code))))
-              )
-           )
-          )
-        {
-            dev->syncio_retry = 1;
-/*debug   display_ccw(dev, ccw, addr);*/
-            return NULL;
-        }
-#endif
-
         /* For WRITE and CONTROL operations, copy data
            from main storage into channel buffer */
-        if (IS_CCW_WRITE(code)
+        if (IS_CCW_WRITE(dev->code)
             ||
             (
-                IS_CCW_CONTROL(code)
+                IS_CCW_CONTROL(dev->code)
                 &&
-                !(IS_CCW_NOP(code) || IS_CCW_SET_EXTENDED(code))
+                !(IS_CCW_NOP(dev->code) || IS_CCW_SET_EXTENDED(dev->code))
             ))
         {
             /* Channel program check if data exceeds buffer size */
@@ -2272,7 +2236,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             }
 
             /* Copy data into channel buffer */
-            ARCH_DEP(copy_iobuf) (dev, code, flags, addr, count,
+            ARCH_DEP(copy_iobuf) (dev, dev->code, flags, addr, count,
                         ccwkey, idawfmt, idapmask,             /*@IWZ*/
                         iobuf + bufpos, &chanstat);
             if (chanstat != 0) break;
@@ -2289,19 +2253,19 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                 {
                     /* If this is the first CCW in the data chain, then
                        save the chaining flags from the previous CCW */
-                    if ((chained & CCW_FLAGS_CD) == 0)
-                        prev_chained = chained;
+                    if ((dev->chained & CCW_FLAGS_CD) == 0)
+                        dev->prev_chained = dev->chained;
 
                     /* Process next CCW in data chain */
-                    chained = CCW_FLAGS_CD;
+                    dev->chained = CCW_FLAGS_CD;
                     chain = 1;
                     continue;
                 }
 
                 /* If this is the last CCW in the data chain, then
                    restore the chaining flags from the previous CCW */
-                if (chained & CCW_FLAGS_CD)
-                    chained = prev_chained;
+                if (dev->chained & CCW_FLAGS_CD)
+                    dev->chained = dev->prev_chained;
 
             } /* end if(dev->cdwmerge) */
 
@@ -2318,9 +2282,9 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         more = 0;
 
         /* Channel program check if invalid CCW opcode */
-        if (!(IS_CCW_WRITE(code) || IS_CCW_READ(code)
-                || IS_CCW_CONTROL(code) || IS_CCW_SENSE(code)
-                || IS_CCW_RDBACK(code)))
+        if (!(IS_CCW_WRITE(dev->code) || IS_CCW_READ(dev->code)
+                || IS_CCW_CONTROL(dev->code) || IS_CCW_SENSE(dev->code)
+                || IS_CCW_RDBACK(dev->code)))
         {
             chanstat = CSW_PROGC;
             break;
@@ -2330,8 +2294,8 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
 #ifdef OPTION_SYNCIO
         retry = dev->syncio_retry;
 #endif
-        (*devexec) (dev, code, flags, chained, count, prevcode,
-                    ccwseq, iobuf, &more, &unitstat, &residual);
+        (*devexec) (dev, dev->code, flags, dev->chained, count, dev->prevcode,
+                    dev->ccwseq, iobuf, &more, &unitstat, &residual);
 #ifdef OPTION_SYNCIO
         if (retry) dev->syncio_retry = 0;
 
@@ -2354,11 +2318,11 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         /* For READ, SENSE, and READ BACKWARD operations, copy data
            from channel buffer to main storage, unless SKIP is set */
         if ((flags & CCW_FLAGS_SKIP) == 0
-            && (IS_CCW_READ(code)
-                || IS_CCW_SENSE(code)
-                || IS_CCW_RDBACK(code)))
+            && (IS_CCW_READ(dev->code)
+                || IS_CCW_SENSE(dev->code)
+                || IS_CCW_RDBACK(dev->code)))
         {
-            ARCH_DEP(copy_iobuf) (dev, code, flags,
+            ARCH_DEP(copy_iobuf) (dev, dev->code, flags,
                         addr, count - residual,
                         ccwkey, idawfmt, idapmask,             /*@IWZ*/
                         iobuf, &chanstat);
@@ -2373,7 +2337,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                for non-NOP CCWs */
             if (((flags & CCW_FLAGS_CD)
                 || (flags & CCW_FLAGS_SLI) == 0)
-                && (code != 0x03)
+                && (dev->code != 0x03)
 #if defined(FEATURE_INCORRECT_LENGTH_INDICATION_SUPPRESSION)
                 /* Suppress incorrect length indication if 
                    CCW format is one and SLI mode is indicated
@@ -2402,7 +2366,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         if (dev->ccwtrace || dev->ccwstep || tracethis)
         {
             /* Format data for READ or SENSE commands only */
-            if (IS_CCW_READ(code) || IS_CCW_SENSE(code))
+            if (IS_CCW_READ(dev->code) || IS_CCW_SENSE(dev->code))
                 format_iobuf_data (addr, area);
             else
                 area[0] = '\0';
@@ -2462,11 +2426,11 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             chain = 0;
 
         /* Update the chaining flags */
-        chained = flags & (CCW_FLAGS_CD | CCW_FLAGS_CC);
+        dev->chained = flags & (CCW_FLAGS_CD | CCW_FLAGS_CC);
 
         /* Update the CCW sequence number unless data chained */
         if ((flags & CCW_FLAGS_CD) == 0)
-            ccwseq++;
+            dev->ccwseq++;
 
     } /* end while(chain) */
 

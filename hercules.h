@@ -838,6 +838,15 @@ typedef struct _DEVBLK {
 
         struct _DEVBLK *iointq;         /* -> next device in I/O
                                            interrupt queue           */
+        /*  fields used during ccw execution...                      */
+        BYTE    chained;                /* Command chain and data chain
+                                           bits from previous CCW    */
+        BYTE    prev_chained;           /* Chaining flags from CCW
+                                           preceding the data chain  */
+        BYTE    code;                   /* Current CCW opcode        */
+        BYTE    prevcode;               /* Previous CCW opcode       */
+        int     ccwseq;                 /* CCW sequence number       */
+
         /*  device handler function pointers...                      */
 
         DEVIF  *devinit;                /* -> Init device function   */
