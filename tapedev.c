@@ -158,6 +158,7 @@ typedef void TapeDeviceDepSenseFunction (int,DEVBLK *,BYTE *,BYTE);
 static TapeDeviceDepSenseFunction build_sense_3410;
 static TapeDeviceDepSenseFunction build_sense_3420;
 static TapeDeviceDepSenseFunction build_sense_3480;
+static TapeDeviceDepSenseFunction build_sense_Streaming;        /* 9347, 9348, 8809 */
 /*
 void build_sense_3422(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode);
 void build_sense_3430(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode);
@@ -262,6 +263,25 @@ static BYTE TapeCommands3480[256]=
     0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,  /* E0 */
     0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0}; /* F0 */
 
+static BYTE TapeCommands9347[256]=
+ /* 0 1 2 3 4 5 6 7 8 9 A B C D E F */
+  { 0,1,1,1,2,0,0,5,0,0,0,2,1,0,0,5,  /* 00 */
+    0,0,0,4,0,0,0,1,0,0,0,1,0,0,0,1,  /* 10 */
+    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1,  /* 20 */
+    0,0,0,4,0,0,0,1,0,0,0,4,0,0,0,1,  /* 30 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* 40 */
+    0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,  /* 50 */
+    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* 60 */
+    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* 70 */
+    0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,  /* 80 */
+    0,0,0,4,0,0,0,1,0,0,0,0,0,0,0,0,  /* 90 */
+    0,0,0,4,2,0,0,0,0,0,0,4,0,0,0,0,  /* A0 */
+    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* B0 */
+    0,0,0,4,0,0,0,0,0,0,0,4,0,0,0,0,  /* C0 */
+    0,0,0,4,4,0,0,0,0,0,0,0,0,0,0,0,  /* D0 */
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  /* E0 */
+    0,0,0,2,4,0,0,0,0,0,0,0,0,2,0,0}; /* F0 */
+
 static TAPEMEDIA_HANDLER tmh_aws;
 static TAPEMEDIA_HANDLER tmh_oma;
 static TAPEMEDIA_HANDLER tmh_het;
@@ -279,6 +299,7 @@ static BYTE *TapeCommandTable[]={
                      TapeCommands3422,  /* 3422 Code Table */
                      TapeCommands3430,  /* 3430 Code Table */
                      TapeCommands3480,  /* 3480 (Maybe all 38K Tapes) Code Table */
+                     TapeCommands9347,  /* 9347 (Maybe all streaming tapes) code table */
                      NULL};
 
 /* Device type list : */
@@ -292,6 +313,9 @@ static int TapeDevtypeList[]={0x3410,0,1,0,0,
                               0x3480,4,0,0,4,
                               0x3490,4,0,0,4,
                               0x3590,4,0,0,4,
+                              0x9347,5,0,0,5,
+                              0x9348,5,0,0,5,
+                              0x8809,5,0,0,5,
 /* Following 5 devices commented out - Really not sure how to handle those
    Hopefully, should be able to lay my hands on the 9347 manual fairly
    w
@@ -309,6 +333,7 @@ static TapeDeviceDepSenseFunction *TapeSenseTable[]={
         build_sense_3422,
         build_sense_3430,
         build_sense_3480,
+        build_sense_Streaming,
         NULL};
 
 /**************************************/
@@ -3300,6 +3325,116 @@ int sns4mat;
         dev->sense[1]|=SENSE1_TAPE_TUA;
 
 }
+/* Build a sense code for streaming tapes */
+static void build_sense_Streaming(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
+{
+        memset(dev->sense,0,sizeof(dev->sense));
+        switch(ERCode)
+        {
+                case TAPE_BSENSE_TAPEUNLOADED:
+                        switch(ccwcode)
+                        {
+                            case 0x01:
+                            case 0x02:
+                            case 0x0C:
+                            *unitstat=CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
+                            break;
+                            case 0x0f:
+                            /*
+                            *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+                            */
+                            *unitstat=CSW_UC | CSW_DE | CSW_CUE;
+                            break;
+                            default:
+                            *unitstat=CSW_CE | CSW_UC | CSW_DE;
+                            break;
+                        }
+                        dev->sense[0]=SENSE_IR;
+                        dev->sense[3]=6;        /* Int Req ERAC */
+                        break;
+                case TAPE_BSENSE_TAPEUNLOADED2: /* RewUnld op */
+                        *unitstat=CSW_UC | CSW_DE | CSW_CUE;
+                        /*
+                        *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
+                        */
+                        dev->sense[0]=SENSE_IR;
+                        dev->sense[3]=6;        /* Int Req ERAC */
+                        break;
+                case TAPE_BSENSE_REWINDFAILED:
+                case TAPE_BSENSE_ITFERROR:
+                        dev->sense[0]=SENSE_EC;
+                        dev->sense[3]=0x03;     /* Perm Equip Check */
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        break;
+                case TAPE_BSENSE_TAPELOADFAIL:
+                case TAPE_BSENSE_LOCATEERR:
+                case TAPE_BSENSE_ENDOFTAPE:
+                case TAPE_BSENSE_EMPTYTAPE:
+                case TAPE_BSENSE_FENCED:
+                case TAPE_BSENSE_BLOCKSHORT:
+                case TAPE_BSENSE_INCOMPAT:
+                        dev->sense[0]=SENSE_EC;
+                        dev->sense[3]=0x10; /* PE-ID Burst Check */
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        break;
+
+                case TAPE_BSENSE_BADALGORITHM:
+                case TAPE_BSENSE_READFAIL:
+                        dev->sense[0]=SENSE_DC;
+                        dev->sense[3]=0x09;     /* Read Data Check */
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        break;
+                case TAPE_BSENSE_WRITEFAIL:
+                        dev->sense[0]=SENSE_DC;
+                        dev->sense[3]=0x07;     /* Write Data Check (Media Error) */
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        break;
+                case TAPE_BSENSE_BADCOMMAND:
+                        dev->sense[0]=SENSE_CR;
+                        dev->sense[3]=0x0C;     /* Bad Command */
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        break;
+                case TAPE_BSENSE_WRITEPROTECT:
+                        dev->sense[0]=SENSE_CR;
+                        dev->sense[3]=0x0B;     /* File Protect */
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        break;
+                case TAPE_BSENSE_LOADPTERR:
+                        dev->sense[0]=SENSE_CR;
+                        dev->sense[3]=0x0D;     /* Backspace at Load Point */
+                        *unitstat=CSW_CE|CSW_DE|CSW_UC;
+                        break;
+                case TAPE_BSENSE_READTM:
+                        *unitstat=CSW_CE|CSW_DE|CSW_UX;
+                        break;
+                case TAPE_BSENSE_UNSOLICITED:
+                        *unitstat=CSW_CE|CSW_DE;
+                        break;
+                case TAPE_BSENSE_STATUSONLY:
+                        *unitstat=CSW_CE|CSW_DE;
+                        break;
+                        
+        }
+        if(strcmp(dev->filename,TAPE_UNLOADED)==0 || (dev->fd>0 && !dev->tmh->tapeloaded(dev,NULL,0)))
+        {
+            dev->sense[0]|=SENSE_IR;
+            dev->sense[1]|=SENSE1_TAPE_FP;
+            dev->sense[1]&=~SENSE1_TAPE_TUA;
+            dev->sense[1]|=SENSE1_TAPE_TUB;
+        }
+        else
+        {
+            dev->sense[0]&=~SENSE_IR;
+            dev->sense[1]|=IsAtLoadPoint(dev)?SENSE1_TAPE_LOADPT:0;
+            dev->sense[1]|=dev->readonly?SENSE1_TAPE_FP:0; /* FP bit set when tape not ready too */
+            dev->sense[1]|=SENSE1_TAPE_TUA;
+            dev->sense[1]&=~SENSE1_TAPE_TUB;
+        }
+        if(dev->tmh->passedeot(dev))
+        {
+                dev->sense[4]|=0x40;
+        }
+}
 /* Common routine for 3410/3420 magtape devices */
 static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccwcode)
 {
@@ -3957,6 +4092,7 @@ BYTE            devmodel;               /* Device model number       */
 BYTE            devclass;               /* Device class              */
 BYTE            devtcode;               /* Device type code          */
 U32             sctlfeat;               /* Storage control features  */
+int             haverdc;                /* RDC Supported             */
 int             rc;
 
 
@@ -3969,6 +4105,7 @@ int             rc;
             dev->fd=-1;
     }
     autoload_close(dev);
+    haverdc=0;
     switch(dev->devtype)
     {
         case 0x3480:
@@ -3980,6 +4117,7 @@ int             rc;
             sctlfeat = 0x00000200;
             dev->numdevid = 7;
             dev->numsense = 24;
+            haverdc=1;
             break;
        case 0x3490:
             cutype = 0x3490;
@@ -3990,6 +4128,7 @@ int             rc;
             sctlfeat = 0x00000200; /* Support Logical Write Protect */
             dev->numdevid = 7;
             dev->numsense = 32;
+            haverdc=1;
             break;
        case 0x3590:
             cutype = 0x3590;
@@ -4000,6 +4139,7 @@ int             rc;
             sctlfeat = 0x00000200; /* Support Logical Write Protect */
             dev->numdevid = 7;
             dev->numsense = 32;
+            haverdc=1;
             break;
         case 0x3420:
             cutype = 0x3803;
@@ -4010,6 +4150,36 @@ int             rc;
             sctlfeat = 0x00000000;
             dev->numdevid = 0; /* Actually, doesn't support 0xE4 */
             dev->numsense = 24;
+            break;
+        case 0x9347:
+            cutype = 0x9347;
+            cumodel = 0x01;
+            devmodel = 0x01;
+            devclass = 0x80;
+            devtcode = 0x20;
+            sctlfeat = 0x00000000;
+            dev->numdevid = 7;
+            dev->numsense = 32;
+            break;
+        case 0x9348:
+            cutype = 0x9348;
+            cumodel = 0x01;
+            devmodel = 0x01;
+            devclass = 0x80;
+            devtcode = 0x20;
+            sctlfeat = 0x00000000;
+            dev->numdevid = 7;
+            dev->numsense = 32;
+            break;
+        case 0x8809:
+            cutype = 0x8809;
+            cumodel = 0x01;
+            devmodel = 0x01;
+            devclass = 0x80;
+            devtcode = 0x20;
+            sctlfeat = 0x00000000;
+            dev->numdevid = 7;
+            dev->numsense = 32;
             break;
         case 0x3410:
         case 0x3411:
@@ -4045,7 +4215,7 @@ int             rc;
     dev->devid[6] = devmodel;
 
     /* Initialize the device characteristics bytes */
-    if (cutype != 0x3803)
+    if (haverdc)
     {
         memset (dev->devchar, 0, sizeof(dev->devchar));
         memcpy (dev->devchar, dev->devid+1, 6);
@@ -4678,6 +4848,26 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
     /*---------------------------------------------------------------*/
         *residual = 0;
         build_senseX(TAPE_BSENSE_STATUSONLY,dev,unitstat,code);
+        break;
+
+    case 0xA4:
+    /*---------------------------------------------------------------*/
+    /* Read and Reset Buffered Log (9347)                            */
+    /*---------------------------------------------------------------*/
+        /* Calculate residual byte count */
+        num = (count < dev->numsense) ? count : dev->numsense;
+        *residual = count - num;
+        if (count < dev->numsense) *more = 1;
+
+        /* Reset SENSE Data */
+        memset (dev->sense, 0, sizeof(dev->sense));
+        *unitstat=CSW_CE|CSW_DE;
+
+        /* Copy device Buffered log data (Bunch of 0s for now) */
+        memcpy (iobuf, dev->sense, num);
+
+        /* Indicate Contengency Allegiance has been cleared */
+        dev->sns_pending=0;
         break;
 
     case 0x04:

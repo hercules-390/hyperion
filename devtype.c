@@ -32,6 +32,9 @@ DEVENT device_handler_table[] = {
     { "3420", 0x3420, &tapedev_device_hndinfo },
     { "3480", 0x3480, &tapedev_device_hndinfo },
     { "3490", 0x3490, &tapedev_device_hndinfo },
+    { "9347", 0x9347, &tapedev_device_hndinfo },
+    { "9348", 0x9348, &tapedev_device_hndinfo },
+    { "8809", 0x8809, &tapedev_device_hndinfo },
 
     /* Count Key Data Direct Access Storage Devices */
     { "2311", 0x2311, &ckddasd_device_hndinfo },
