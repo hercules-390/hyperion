@@ -48,6 +48,8 @@ int     fc;                             /* File counter              */
 
     fc = 0;
 
+    if (dev->more_files) free (dev->more_files);
+
     dev->more_files = malloc(sizeof(char*) * (fc + 1));
 
     if (!dev->more_files)
@@ -139,6 +141,20 @@ int     fc;                             /* File counter              */
 
         // add additional file arguments
 
+        if (strlen(argv[i]) > sizeof(dev->filename)-1)
+        {
+            logmsg ("HHC401I File name too long (max=%d): \"%s\"\n",
+                sizeof(dev->filename)-1,argv[i]);
+            return -1;
+        }
+
+        if (access(argv[i], R_OK | F_OK) != 0)
+        {
+            logmsg ("HHC402I Unable to access file \"%s\": %s\n",
+                argv[i], strerror(errno));
+            return -1;
+        }
+
         dev->more_files[fc++] = strdup(argv[i]);
         dev->more_files = realloc(dev->more_files, sizeof(char*) * (fc + 1));
 
@@ -196,25 +212,19 @@ int     fc;                             /* File counter              */
 
         if (strlen(argv[0]) > sizeof(dev->filename)-1)
         {
-            logmsg ("HHC401I File name too long\n");
+            logmsg ("HHC401I File name too long (max=%d): \"%s\"\n",
+                sizeof(dev->filename)-1,argv[0]);
             return -1;
         }
 
         if (!sockdev)
         {
-            /* Added by VB, after suggestion by Richard Snow - Aug 26, 2001  */
-            /* Check if reader file exists to avoid gazillion error messages */
-
-            if (access(argv[0], R_OK) != 0)
+            if (access(argv[0], R_OK | F_OK) != 0)
             {
-                /* file does NOT exist                              */
-                /* issue message, and insert empty filename instead */
-
-                logmsg ("HHC402I Unable to read file %s: %s\n",
+                logmsg ("HHC402I Unable to access file \"%s\": %s\n",
                     argv[0], strerror(errno));
-                strcpy(argv[0], "");
+                return -1;
             }
-            /* end of change VB/RSS Aug 2001                            */
         }
 
         /* Save the file name in the device block */
@@ -282,7 +292,14 @@ int cardrdr_close_device ( DEVBLK *dev )
 {
     /* Close the device file */
 
-    fclose (dev->fh);
+    if (dev->fh && fclose(dev->fh) != 0)
+    {
+        logmsg ("HHC419E Close error on file \"%s\": %s\n",
+            dev->filename, strerror(errno));
+        dev->fd = -1;
+        dev->fh = NULL;
+        return -1;
+    }
 
     if (dev->bs)
     {
@@ -300,12 +317,12 @@ int cardrdr_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* Clear the card reader                                             */
 /*-------------------------------------------------------------------*/
-static void clear_cardrdr ( DEVBLK *dev )
+static int clear_cardrdr ( DEVBLK *dev )
 {
     /* Close the card image file */
-    cardrdr_close_device (dev);
+    if (cardrdr_close_device(dev) != 0) return -1;
 
-    if (dev->bs) return;
+    if (dev->bs) return 0;
 
     /* Clear the file name */
     dev->filename[0] = '\0';
@@ -325,6 +342,8 @@ static void clear_cardrdr ( DEVBLK *dev )
         dev->trunc = 0;
         dev->autopad = 0;
     }
+
+    return 0;
 } /* end function clear_cardrdr */
 
 
@@ -354,7 +373,46 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         }
 
         if (!dev->fh)
+        {
+            /*  GNU 'C' Library documentation for "fdopen":
+
+                  "The opentype argument is interpreted in the same
+                   way as for the fopen function (see section Opening
+                   Streams), except that the 'b' option is not permitted;
+                   this is because GNU makes no distinction between text
+                   and binary files. [...] You must make sure that the
+                   opentype argument matches the actual mode of the open
+                   file descriptor."
+
+                GNU 'C' Library documentation for "fopen":
+
+                  "The character 'b' in opentype has a standard meaning;
+                   it requests a binary stream rather than a text stream.
+                   But this makes no difference in POSIX systems (including
+                   the GNU system). If both `+' and 'b' are specified,
+                   they can appear in either order. See section Text and
+                   Binary Streams."
+
+                GNU 'C' Library documentation for "Text and Binary Streams":
+
+                  "When you open a stream, you can specify either a text
+                   stream or a binary stream. You indicate that you want
+                   a binary stream by specifying the 'b' modifier in the
+                   opentype argument to fopen; see section Opening Streams.
+                   Without this option, fopen opens the file as a text stream."
+
+                Note that even though it clearly states (for fdopen) that the
+                'b' option "is NOT permitted", we are assuming such is not true
+                since it accepts it (but simply ignores it) for fopen. Further-
+                more, since Windows (Cygwin?) DOES make a distinction between
+                binary and text files, we should specify the 'b' option in our
+                call to fdopen. (It has already been verified that this is safe
+                to do on Linux systems, so to play it safe (i.e. to prevent any
+                potential problems on Windows systems), we always specify 'b'.)
+            */
+
             dev->fh = fdopen(dev->fd, "rb");
+        }
 
         ASSERT(dev->fd != -1 && dev->fh);
 
@@ -389,7 +447,9 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
 
     /* Save the file descriptor in the device block */
     dev->fd = rc;
-    dev->fh = fdopen(dev->fd, "rb");
+    dev->fh = fdopen(dev->fd, "rb");    /* NOTE: see comments in
+                                           function "open_cardrdr"
+                                           regarding fdopen. */
 
     /* If neither EBCDIC nor ASCII was specified, attempt to
        detect the format by inspecting the first 160 bytes */
@@ -485,7 +545,14 @@ int     rc;                             /* Return code               */
         }
 
         /* Close the file and clear the file name and flags */
-        clear_cardrdr (dev);
+
+        if (clear_cardrdr(dev) != 0)
+        {
+            /* Set unit check with equipment check */
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return -1;
+        }
 
         return -2;
     }
@@ -547,7 +614,13 @@ BYTE    c;                              /* Input character           */
             }
 
             /* Close the file and clear the file name and flags */
-            clear_cardrdr (dev);
+            if (clear_cardrdr(dev) != 0)
+            {
+                /* Set unit check with equipment check */
+                dev->sense[0] = SENSE_EC;
+                *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                return -1;
+            }
 
             return -2;
         }
