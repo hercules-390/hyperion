@@ -2036,6 +2036,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 #if defined(OPTION_FISHIO)
         ios_msgpipew = sysblk.msgpipew;
 #endif // defined(OPTION_FISHIO)
+#if defined(OPTION_W32_CTCI)
+        g_tt32_msgpipew = sysblk.msgpipew;
+#endif // defined(OPTION_W32_CTCI)
         devascii = strtok(cmd+5," \t");
         if (devascii == NULL || strcmp("now",devascii))
             release_config();
@@ -2453,6 +2456,35 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 #endif
+
+#if defined(OPTION_W32_CTCI)
+/*********************************************************************/
+    /* tt32stats command - display CTCI-W32 statistics */
+    if (memcmp(cmd,"tt32stats",9)==0)
+    {
+        devascii = strtok(cmd+9," \t");
+        if (devascii == NULL
+            || sscanf(devascii, "%hx%c", &devnum, &c) != 1)
+        {
+            logmsg("Device number %s is invalid\n",devascii);
+            return NULL;
+        }
+        dev = find_device_by_devnum (devnum);
+        if (dev == NULL)
+        {
+            logmsg("Device number %4.4X not found\n", devnum);
+            return NULL;
+        }
+        if (CTC_CTCI_W32 != dev->ctctype)
+        {
+            logmsg("Device %4.4X is not a CTCI-W32 device\n", devnum);
+            return NULL;
+        }
+        if (display_tt32_stats(dev->fd) < 0)
+            logmsg("(error)\n");
+        return NULL;
+    }
+#endif // defined(OPTION_W32_CTCI)
 
 /*********************************************************************/
     /* Ignore just enter */

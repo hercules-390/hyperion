@@ -105,7 +105,7 @@
 /*        bufsz is the 'device' buffer size for the link             */
 /*             - recommend that this be at least or more than the    */
 /*              CTC MTU for Linux/390, and equal or greater than the */
-/*              IOBUFFERSIZE value in the DEVICE/LINK statement      */ 
+/*              IOBUFFERSIZE value in the DEVICE/LINK statement      */
 /*              in the TCPIP PROFILE on OS/390 (and VM?)             */
 /*                                                                   */
 /* CTCI (Channel to Channel link to TCP/IP stack)                    */
@@ -138,6 +138,54 @@
 /* TUN/TAP can also be installed on Linux 2.2, FreeBSD, and          */
 /* Solaris (and maybe even Windows NT/2000 at a future date).        */
 /* The driver can be obtained from http://vtun.sourceforge.net/tun   */
+/*                                                                   */
+#if defined(OPTION_W32_CTCI)
+/*                                                                   */
+/* CTCI-W32 (Channel to Channel link to Win32 TCP/IP stack)          */
+/* ----------------------------------------------------------------- */
+/* This is a point-to-point link to the Windows TCP/IP stack. The    */
+/* link currently uses the Politecnico di Torino's WinPCap packet    */
+/* driver(*) to create a virtual network interface on the driving    */
+/* system which allows this module to present frames to and receive  */
+/* frames from the virtual interface via the TunTap32 and FishPack   */
+/* DLLs.  This virtual interface appears on the driving system as a  */
+/* point-to-point link to the Hercules machine's IP address via the  */
+/* TunTap32 DLL. The TunTap32 DLL uses the FishPack.dll to directly  */
+/* access the WinPCap device driver in order to present packets to   */
+/* and receive packets from the actual network adapter.  From the    */
+/* point of view of the operating system running in the Hercules     */
+/* machine it appears to be a CTC link to a machine running TCP/IP   */
+/* for MVS or VM or VSE, etc.                                        */
+/*                                                                   */
+/* An even/odd pair of device addresses is required. The format of   */
+/* the device initialization statements is:                          */
+/*                                                                   */
+/*      devn 3088 CTCI-W32 hercip gateip [holdbuff] [iobuff]         */
+/*                                                                   */
+/* where:                                                            */
+/*                                                                   */
+/*    devn            is the device number.                          */
+/*    3088            is the device type.                            */
+/*    CTCI-W32        is the CTC protocol.                           */
+/*    hercip          is the IP address of the Hercules side of      */
+/*                    the link.                                      */
+/*    gateip          is the IP address of the network card to be    */
+/*                    used as Herc's gateway to the outside world.   */
+/*                    If your network adapter doesn't have an IP     */
+/*                    number assigned to it (i.e. you use DHCP),     */
+/*                    then alternatively, you can specify here the   */
+/*                    MAC address (hardware address) instead.        */
+/*    holdbuff K      is the size of the driver's kernel buffer.     */
+/*                    (this parameter is optional; default: 1024K)   */
+/*    iobuff   K      is the size of the TunTap32 dll's i/o buffer.  */
+/*                    (this parameter is optional; default: 64K)     */
+/*                                                                   */
+/* (*) The TunTap32.dll and FishPack.dll are included as part of the */
+/* Windows distribution of Hercules, but the required WinPCap packet */
+/* driver must be installed separately. The WinPCap packet driver    */
+/* can be obtained from: http://netgroup-serv.polito.it/winpcap/     */
+/*                                                                   */
+#endif /* defined(OPTION_W32_CTCI) */
 /*                                                                   */
 /* CFC (Coupling Facility Channel)                                   */
 /* -------------------------------                                   */
@@ -172,6 +220,12 @@
 
 #define HERCIFC_CMD "hercifc"           /* Interface config command  */
 
+#if defined(OPTION_W32_CTCI)
+/* (in case one day we need our own function) */
+#define read_ctci_w32   read_ctci
+#define write_ctci_w32  write_ctci
+#endif /* defined(OPTION_W32_CTCI) */
+
 /*-------------------------------------------------------------------*/
 /* Definitions for 3088 model numbers                                */
 /*-------------------------------------------------------------------*/
@@ -182,6 +236,7 @@
 #define CTC_3088_60     0x308860        /* OSA or 8232 LCS           */
 #define CTC_3088_61     0x308861        /* CLAW device               */
 
+#if 0    /******** (moved to hercules.h) ************/
 /*-------------------------------------------------------------------*/
 /* Definitions for CTC protocol types                                */
 /*-------------------------------------------------------------------*/
@@ -192,8 +247,10 @@
 #define CTC_CTCN        5               /* CTC link via NETBIOS      */
 #define CTC_CTCT        6               /* CTC link via TCP          */
 #define CTC_CTCI        7               /* CTC link to TCP/IP stack  */
-#define CTC_VMNET       8               /* CTC link via wfk's vmnet  */
-#define CTC_CFC         9               /* Coupling facility channel */
+#define CTC_CTCI_W32    8               /* (Win32 CTCI)              */
+#define CTC_VMNET       9               /* CTC link via wfk's vmnet  */
+#define CTC_CFC        10               /* Coupling facility channel */
+#endif    /******** (moved to hercules.h) ************/
 
 /*-------------------------------------------------------------------*/
 /* CTCI read timeout value before returning command retry            */
@@ -404,7 +461,7 @@ BYTE            address[20]="";         /* temp space for IP address */
         {
           memcpy(&ipaddr, hp->h_addr, hp->h_length);
           strcpy(address, inet_ntoa(ipaddr));
-          remaddr = address; 
+          remaddr = address;
         }
         else
         {
@@ -473,7 +530,7 @@ BYTE            address[20]="";         /* temp space for IP address */
         ctcadpt_close_device(dev);
         return -1;
     }
-    
+
     /* initiate a connection to the other end */
     memset(&(parm.addr), 0, sizeof(parm.addr));
     parm.addr.sin_family = AF_INET;
@@ -540,6 +597,184 @@ BYTE            address[20]="";         /* temp space for IP address */
 
     return 0;
 } /* end function init_ctct */
+
+#if defined(OPTION_W32_CTCI)
+/*-------------------------------------------------------------------*/
+/* Subroutine to initialize the device handler in CTCI-W32 mode      */
+/*-------------------------------------------------------------------*/
+static int init_ctci_w32 (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
+{
+char*  hercip;    /* IP address of the Hercules side of the link.    */
+char*  gateip;    /* IP address of the network card to be used       */
+                  /* as Herc's gateway to the outside world.         */
+int   holdbuff;   /* size of the driver's kernel buffer in K bytes.  */
+int   iobuff;     /* size of TunTap32 dll's i/o buffer in K bytes.   */
+
+int             fd;                     /* File descriptor           */
+struct in_addr  ipaddr;                 /* Work area for IP address  */
+BYTE            c;                      /* Character work area       */
+
+    dev->ctctype = CTC_CTCI_W32;
+    *cutype = CTC_3088_08;
+
+    /* Check for correct number of arguments */
+
+    if (argc < 3 || argc > 5)
+    {
+        logmsg ("HHC836I %4.4X incorrect number of parameters\n",
+                dev->devnum);
+        return -1;
+    }
+
+    /* The second argument is the IP address
+       of the Hercules side of the link. */
+
+    hercip = argv[1];
+
+    if (inet_aton(hercip, &ipaddr) == 0)
+    {
+        logmsg ("HHC839I %4.4X invalid IP address %s\n",
+                dev->devnum, hercip);
+        return -1;
+    }
+
+    /* The third argument is the IP address
+       of the network card to be used as
+       Herc's gateway to the outside world. */
+
+    gateip = argv[2];
+
+    if (inet_aton(gateip, &ipaddr) == 0)
+    {
+        /* It might be in optional MAC address format instead */
+
+        int valid = 1;
+
+        if (strlen(gateip) != 17)
+            valid = 0;
+        else
+        {
+            int i; char work[18];
+            
+            strncpy(work,gateip,18); work[18-1] = '-';
+
+            for (i = 0; i < 6; i++)
+            {
+                if (0
+                    || !isxdigit(work[(i*3)+0])
+                    || !isxdigit(work[(i*3)+1])
+                    ||   '-'  != work[(i*3)+2]
+                )
+                {
+                    valid = 0; break;
+                }
+            }
+        }
+
+        if (!valid)
+        {
+            logmsg ("HHC839I %4.4X invalid IP address %s\n",
+                    dev->devnum, gateip);
+            return -1;
+        }
+    }
+
+    snprintf(dev->filename,sizeof(dev->filename),"%s on %s",hercip,gateip);
+
+    /* The optional fourth argument is the size
+       of the driver's kernel buffer in K bytes. */
+
+    holdbuff = DEF_TT32DRV_BUFFSIZE_K * 1024;
+
+    if (argc >= 4)
+    {
+        if (strlen(argv[3]) > 5
+            || sscanf(argv[3], "%ul%c", &holdbuff, &c) != 1
+            || holdbuff < MIN_TT32DRV_BUFFSIZE_K
+            || holdbuff > MAX_TT32DRV_BUFFSIZE_K)
+        {
+            logmsg ("HHC838I %4.4X invalid driver kernel buffer size %s\n",
+                    dev->devnum, argv[3]);
+            return -1;
+        }
+
+        holdbuff *= 1024;
+    }
+
+    /* The optional fifth argument is the size
+       of the dll's i/o buffer in K bytes. */
+
+    iobuff = DEF_TT32DLL_BUFFSIZE_K * 1024;
+
+    if (argc >= 5)
+    {
+        if (strlen(argv[4]) > 5
+            || sscanf(argv[4], "%ul%c", &iobuff, &c) != 1
+            || iobuff < MIN_TT32DLL_BUFFSIZE_K
+            || iobuff > MAX_TT32DLL_BUFFSIZE_K)
+        {
+            logmsg ("HHC838I %4.4X invalid dll i/o buffer size %s\n",
+                    dev->devnum, argv[4]);
+            return -1;
+        }
+
+        iobuff *= 1024;
+    }
+
+    if (iobuff > holdbuff)
+    {
+        logmsg ("HHC838I %4.4X iobuff size cannot exceed holdbuff size\n",
+                dev->devnum);
+        return -1;
+    }
+
+    /* Set the device buffer size equal to the current maximum Ethernet frame size */
+
+    dev->bufsize = 1500;
+
+    /* Find device block for paired CTC adapter device number */
+
+    dev->ctcpair = find_device_by_devnum (dev->devnum ^ 0x01);
+
+    /* Initialize the file descriptor for the TUN device */
+
+    if (dev->ctcpair == NULL)
+    {
+        /* Open TUN device if this is the first CTC of the pair */
+
+        fd = tt32_open (hercip, gateip, holdbuff, iobuff);
+
+        if (fd < 0)
+        {
+            logmsg ("HHC842I %4.4X open error: %s: %s\n",
+                    dev->devnum, dev->filename, strerror(errno));
+            return -1;
+        }
+
+        dev->fd = fd;
+    }
+    else
+    {
+        /* The paired CTC is already defined */
+
+        if (dev->devtype != dev->ctcpair->devtype
+            || dev->ctctype != dev->ctcpair->ctctype
+            || strcmp(dev->filename, dev->ctcpair->filename) != 0
+            || dev->bufsize != dev->ctcpair->bufsize)
+        {
+            logmsg ("HHC850I %4.4X and %4.4X must be identical\n",
+                    dev->devnum, dev->ctcpair->devnum);
+            return -1;
+        }
+
+        /* Copy file descriptor from paired CTC */
+
+        dev->fd = dev->ctcpair->fd;
+    }
+
+    return 0;
+} /* end function init_ctci_w32 */
+#endif /* defined(OPTION_W32_CTCI) */
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to initialize the device handler in CTCI mode          */
@@ -669,7 +904,7 @@ BYTE            c;                      /* Character work area       */
              */
 
             struct ifreq ifr;
-    
+
             memset(&ifr, 0, sizeof(ifr));
             ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
 
@@ -685,10 +920,10 @@ BYTE            c;                      /* Character work area       */
                   ctcadpt_close_device(dev);
                   return -1;
                 }
-	    strcpy(dev->netdevname, ifr.ifr_name);
+        strcpy(dev->netdevname, ifr.ifr_name);
         } else
 #endif
-	  {
+        {
             /* Other OS: Simply use basename of the device */
             char *p = strrchr(dev->filename, '/');
             if (p)
@@ -967,6 +1202,11 @@ U32             stackcmd;               /* VSE IP stack command      */
         }
 
         /* Write the IP packet to the TUN device */
+#if defined(OPTION_W32_CTCI)
+        if (CTC_CTCI_W32 == dev->ctctype)
+            rc = tt32_write (dev->fd, data, datalen);
+        else
+#endif /* defined(OPTION_W32_CTCI) */
         rc = write (dev->fd, data, datalen);
         if (rc < 0)
         {
@@ -1014,7 +1254,7 @@ U32             stackcmd;               /* VSE IP stack command      */
 static void read_ctci (DEVBLK *dev, U16 count, BYTE *iobuf,
                        BYTE *unitstat, U16 *residual, BYTE *more)
 {
-int             len;                    /* Length of received packet */
+int             len = 0;                /* Length of received packet */
 CTCI_BLKHDR    *blk;                    /* -> Block header in buffer */
 int             blklen;                 /* Block length from buffer  */
 CTCI_SEGHDR    *seg;                    /* -> Segment in buffer      */
@@ -1026,15 +1266,29 @@ static struct timeval tv;               /* Timeout time for 'select' */
 
     /* Limit how long we should wait for data to come in */
 
+#if defined(OPTION_W32_CTCI)
+    if (CTC_CTCI_W32 == dev->ctctype)
+    {
+        len = tt32_read (dev->fd, dev->buf, dev->bufsize, CTC_READ_TIMEOUT_SECS * 1000);
+        retval = len;
+    }
+    else
+    {
+#endif /* defined(OPTION_W32_CTCI) */
+
     FD_ZERO (&rfds);
-    FD_SET (dev->fd, &rfds); 
+    FD_SET (dev->fd, &rfds);
 
     tv.tv_sec = CTC_READ_TIMEOUT_SECS;
     tv.tv_usec = 0;
 
     retval = select (dev->fd + 1, &rfds, NULL, NULL, &tv);
 
-    switch (retval) 
+#if defined(OPTION_W32_CTCI)
+    }
+#endif /* defined(OPTION_W32_CTCI) */
+
+    switch (retval)
     {
         case 0:
         {
@@ -1066,6 +1320,9 @@ static struct timeval tv;               /* Timeout time for 'select' */
     }
 
     /* Read an IP packet from the TUN device */
+#if defined(OPTION_W32_CTCI)
+    if (CTC_CTCI_W32 != dev->ctctype)
+#endif /* defined(OPTION_W32_CTCI) */
     len = read (dev->fd, dev->buf, dev->bufsize);
 
 //    /* Check for an EOF condition */
@@ -1485,6 +1742,10 @@ U32             cutype;                 /* Control unit type         */
         rc = init_ctct (dev, argc, argv, &cutype);
     else if (strcasecmp(argv[0], "CTCI") == 0)
         rc = init_ctci (dev, argc, argv, &cutype);
+#if defined(OPTION_W32_CTCI)
+    else if (strcasecmp(argv[0], "CTCI-W32") == 0)
+        rc = init_ctci_w32 (dev, argc, argv, &cutype);
+#endif /* defined(OPTION_W32_CTCI) */
     else if (strcasecmp(argv[0], "CFC") == 0)
         rc = init_cfc (dev, argc, argv, &cutype);
     else
@@ -1539,10 +1800,20 @@ void ctcadpt_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 int ctcadpt_close_device ( DEVBLK *dev )
 {
-    /* Close the device file */
-    close (dev->fd);
-    dev->fd = -1;
-
+    DEVBLK *dev_ctcpair = find_device_by_devnum (dev->devnum ^ 0x01);
+    /* Close the device file (if not already closed) */
+    if (dev->fd >= 0)
+    {
+#if defined(OPTION_W32_CTCI)
+        if (CTC_CTCI_W32 == dev->ctctype)
+            tt32_close(dev->fd);
+        else
+#endif /* defined(OPTION_W32_CTCI) */
+            close (dev->fd);
+        dev->fd = -1;               /* indicate we're now closed */
+        if (dev_ctcpair)            /* if paired device exists,  */
+            dev_ctcpair->fd = -1;   /* then it's now closed too. */
+    }
     return 0;
 } /* end function ctcadpt_close_device */
 
@@ -1612,6 +1883,11 @@ BYTE            opcode;                 /* CCW opcode with modifier
         case CTC_CTCI:
             write_ctci (dev, count, iobuf, unitstat, residual);
             break;
+#if defined(OPTION_W32_CTCI)
+        case CTC_CTCI_W32:
+            write_ctci_w32 (dev, count, iobuf, unitstat, residual);
+            break;
+#endif /* defined(OPTION_W32_CTCI) */
 #ifdef CTC_VMNET
         case CTC_VMNET:
             *residual = count - write_vmnet(dev, iobuf, count, unitstat);
@@ -1641,6 +1917,11 @@ BYTE            opcode;                 /* CCW opcode with modifier
         case CTC_CTCI:
             read_ctci (dev, count, iobuf, unitstat, residual, more);
             break;
+#if defined(OPTION_W32_CTCI)
+        case CTC_CTCI_W32:
+            read_ctci_w32 (dev, count, iobuf, unitstat, residual, more);
+            break;
+#endif /* defined(OPTION_W32_CTCI) */
 #ifdef CTC_VMNET
         case CTC_VMNET:
             *residual = count - read_vmnet(dev, iobuf, count, unitstat);

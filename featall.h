@@ -47,6 +47,22 @@
 #define FEATURE_ALD_FORMAT            0
 
 
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/*
+  The following option is currently hard-coded, but only while
+  development and testing is still in progress. Once development
+  and testing is complete, control of the setting of this option
+  should be moved to the configure script. (Either that or it
+  should be removed altogether and made a permanent feature.)
+*/
+#if defined(WIN32)
+#define OPTION_W32_CTCI
+#endif // defined(WIN32)
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+
 /* Allow for compiler command line overrides */
 #if defined(OPTION_370_MODE) && defined(NO_370_MODE)
  #undef OPTION_370_MODE

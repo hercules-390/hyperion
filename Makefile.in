@@ -96,7 +96,7 @@ EXTRA_hercules_SOURCES = $(fthreads_sources)
 @BUILD_FTHREADS_TRUE@FTHREADS = $(fthreads_sources)
 @BUILD_FTHREADS_FALSE@FTHREADS = 
 
-hercules_SOURCES = impl.c config.c panel.c version.c \
+hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 	   ipl.c assist.c dat.c \
 	   stack.c cpu.c vstore.c \
 	   general1.c general2.c plo.c \
@@ -159,7 +159,7 @@ EXTRA_DIST = hercules.cnf CHANGES
 noinst_HEADERS = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
     codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
-    sllib.h htypes.h fthreads.h w32chan.h linklist.h if_tun.h
+    sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h if_tun.h
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -265,55 +265,55 @@ hercifc_OBJECTS = $(am_hercifc_OBJECTS)
 hercifc_LDADD = $(LDADD)
 hercifc_DEPENDENCIES =
 hercifc_LDFLAGS =
-@BUILD_FTHREADS_TRUE@am_hercules_OBJECTS = impl.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	config.$(OBJEXT) panel.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	version.$(OBJEXT) ipl.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	assist.$(OBJEXT) dat.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	stack.$(OBJEXT) cpu.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	vstore.$(OBJEXT) general1.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	general2.$(OBJEXT) plo.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	control.$(OBJEXT) io.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	decimal.$(OBJEXT) service.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	opcode.$(OBJEXT) diagnose.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	diagmssf.$(OBJEXT) vm.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	channel.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fbadasd.$(OBJEXT) tapedev.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cardrdr.$(OBJEXT) cardpch.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	printer.$(OBJEXT) console.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	external.$(OBJEXT) float.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	ctcadpt.$(OBJEXT) trace.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	machchk.$(OBJEXT) vector.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	xstore.$(OBJEXT) cmpsc.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	sie.$(OBJEXT) timer.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	esame.$(OBJEXT) cckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckdcdsx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	parser.$(OBJEXT) hetlib.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	ieee.$(OBJEXT) fthreads.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	w32chan.$(OBJEXT)
-@BUILD_FTHREADS_FALSE@am_hercules_OBJECTS = impl.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	config.$(OBJEXT) panel.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	version.$(OBJEXT) ipl.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	assist.$(OBJEXT) dat.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	stack.$(OBJEXT) cpu.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	vstore.$(OBJEXT) general1.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	general2.$(OBJEXT) plo.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	control.$(OBJEXT) io.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	decimal.$(OBJEXT) service.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	opcode.$(OBJEXT) diagnose.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	diagmssf.$(OBJEXT) vm.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	channel.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	fbadasd.$(OBJEXT) tapedev.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cardrdr.$(OBJEXT) cardpch.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	printer.$(OBJEXT) console.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	external.$(OBJEXT) float.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	ctcadpt.$(OBJEXT) trace.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	machchk.$(OBJEXT) vector.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	xstore.$(OBJEXT) cmpsc.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	sie.$(OBJEXT) timer.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	esame.$(OBJEXT) cckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckdcdsx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	parser.$(OBJEXT) hetlib.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	ieee.$(OBJEXT)
+@BUILD_FTHREADS_TRUE@am_hercules_OBJECTS = w32ctca.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	impl.$(OBJEXT) config.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	panel.$(OBJEXT) version.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	ipl.$(OBJEXT) assist.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	dat.$(OBJEXT) stack.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	cpu.$(OBJEXT) vstore.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	general1.$(OBJEXT) general2.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	plo.$(OBJEXT) control.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	io.$(OBJEXT) decimal.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	service.$(OBJEXT) opcode.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	diagnose.$(OBJEXT) diagmssf.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	vm.$(OBJEXT) channel.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	ckddasd.$(OBJEXT) fbadasd.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	tapedev.$(OBJEXT) cardrdr.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	cardpch.$(OBJEXT) printer.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	console.$(OBJEXT) external.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	float.$(OBJEXT) ctcadpt.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	trace.$(OBJEXT) machchk.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	vector.$(OBJEXT) xstore.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	cmpsc.$(OBJEXT) sie.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	timer.$(OBJEXT) esame.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	cckdend.$(OBJEXT) parser.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	hetlib.$(OBJEXT) ieee.$(OBJEXT) \
+@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT) w32chan.$(OBJEXT)
+@BUILD_FTHREADS_FALSE@am_hercules_OBJECTS = w32ctca.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	impl.$(OBJEXT) config.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	panel.$(OBJEXT) version.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	ipl.$(OBJEXT) assist.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	dat.$(OBJEXT) stack.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	cpu.$(OBJEXT) vstore.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	general1.$(OBJEXT) general2.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	plo.$(OBJEXT) control.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	io.$(OBJEXT) decimal.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	service.$(OBJEXT) opcode.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	diagnose.$(OBJEXT) diagmssf.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	vm.$(OBJEXT) channel.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	ckddasd.$(OBJEXT) fbadasd.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	tapedev.$(OBJEXT) cardrdr.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	cardpch.$(OBJEXT) printer.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	console.$(OBJEXT) external.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	float.$(OBJEXT) ctcadpt.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	trace.$(OBJEXT) machchk.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	vector.$(OBJEXT) xstore.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	cmpsc.$(OBJEXT) sie.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	timer.$(OBJEXT) esame.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	cckdend.$(OBJEXT) parser.$(OBJEXT) \
+@BUILD_FTHREADS_FALSE@	hetlib.$(OBJEXT) ieee.$(OBJEXT)
 hercules_OBJECTS = $(am_hercules_OBJECTS)
 hercules_LDADD = $(LDADD)
 hercules_DEPENDENCIES =
@@ -398,7 +398,7 @@ depcomp = $(SHELL) $(top_srcdir)/autoconf/depcomp
 @AMDEP_TRUE@	$(DEPDIR)/trace.Po $(DEPDIR)/vector.Po \
 @AMDEP_TRUE@	$(DEPDIR)/version.Po $(DEPDIR)/vm.Po \
 @AMDEP_TRUE@	$(DEPDIR)/vstore.Po $(DEPDIR)/w32chan.Po \
-@AMDEP_TRUE@	$(DEPDIR)/xstore.Po
+@AMDEP_TRUE@	$(DEPDIR)/w32ctca.Po $(DEPDIR)/xstore.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -634,6 +634,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/vstore.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/w32chan.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/w32ctca.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/xstore.Po@am__quote@
 
 distclean-depend:

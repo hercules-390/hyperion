@@ -239,12 +239,15 @@ int             highcyl;                /* CKD header high cyl number*/
     for (cyl = start; cyl <= end; cyl++)
     {
         /* Display progress message every 10 cylinders */
-        if ((cyl % 10) == 0 && cyl != 0)
+        if (cyl && !(cyl % 10))
+        {
 #ifdef EXTERNALGUI
-            if (extgui) fprintf (stderr, "CYL=%u\n", cyl);
+            if (extgui)
+                fprintf (stderr, "CYL=%u\n", cyl);
             else
 #endif /*EXTERNALGUI*/
-               fprintf (stderr, "Writing cylinder %u\r", cyl);
+                fprintf (stderr, "Writing cylinder %u\r", cyl);
+        }
 
         for (head = 0; head < heads; head++)
         {

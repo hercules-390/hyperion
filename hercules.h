@@ -1086,6 +1086,20 @@ typedef struct _DEVBLK {
     } DEVBLK;
 
 /*-------------------------------------------------------------------*/
+/* Definitions for CTC protocol types                                */
+/*-------------------------------------------------------------------*/
+#define CTC_XCA         1               /* XCA device                */
+#define CTC_LCS         2               /* LCS device                */
+#define CTC_CETI        3               /* CETI device               */
+#define CTC_CLAW        4               /* CLAW device               */
+#define CTC_CTCN        5               /* CTC link via NETBIOS      */
+#define CTC_CTCT        6               /* CTC link via TCP          */
+#define CTC_CTCI        7               /* CTC link to TCP/IP stack  */
+#define CTC_CTCI_W32    8               /* (Win32 CTCI)              */
+#define CTC_VMNET       9               /* CTC link via wfk's vmnet  */
+#define CTC_CFC        10               /* Coupling facility channel */
+
+/*-------------------------------------------------------------------*/
 /* Structure definitions for CKD headers                             */
 /*-------------------------------------------------------------------*/
 typedef struct _CKDDASD_DEVHDR {        /* Device header             */
@@ -1505,5 +1519,10 @@ void    cckd_swapend_free (CCKD_FREEBLK *);
 void    cckd_swapend4 (char *);
 void    cckd_swapend2 (char *);
 int     cckd_endian ();
+
+#if defined(OPTION_W32_CTCI)
+/* Functions in module w32ctca.c */
+#include "w32ctca.h"
+#endif // defined(OPTION_W32_CTCI)
 
 #endif /*!defined(_HERCULES_H)*/

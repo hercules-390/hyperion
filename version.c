@@ -20,6 +20,10 @@
 
 static const char *build_info[] = {
 
+#if defined(CUSTOM_BUILD_STRING)
+    CUSTOM_BUILD_STRING,
+#endif
+
 #if defined(DEBUG)
     "**DEBUG**",
 #endif
@@ -62,6 +66,10 @@ static const char *build_info[] = {
     "Linux TUN driver support",
 #endif
 
+#if defined(OPTION_W32_CTCI)
+    "Windows CTCI-W32 support",
+#endif
+
 #if defined(NOTHREAD)
     "No threading support",
 #else
@@ -98,10 +106,6 @@ static const char *build_info[] = {
     "Licensed Program Product restrictions",
 #endif
 
-#if defined(CUSTOM_BUILD_STRING)
-    CUSTOM_BUILD_STRING,
-#endif
-
   " "
 
 };
@@ -113,8 +117,21 @@ void display_version (FILE *f, char *prog)
 {
     unsigned int i;
 
-    fprintf (f, "%sVersion %s built at %s %s\nBuild information:\n",
-             prog, VERSION, __DATE__, __TIME__);
+	/* Log version */
+
+    fprintf (f, "%sVersion %s\n", prog, VERSION);
+
+	/* Log Copyright */
+
+    fprintf(f, "%s\n", HERCULES_COPYRIGHT);
+
+	/* Log build date/time */
+
+    fprintf (f, "Built on %s at %s\n", __DATE__, __TIME__);
+
+	/* Log "unusual" build options */
+
+    fprintf (f, "Build information:\n");
 
     if (sizeof(build_info) == 0)
       fprintf(f, "  (none)\n");
@@ -122,5 +139,4 @@ void display_version (FILE *f, char *prog)
       for( i = 0 ; i < sizeof(build_info) / sizeof(build_info[0]) ; ++i )
         fprintf(f, "  %s\n", build_info[i]);
 
-    fprintf(f, "%s\n", HERCULES_COPYRIGHT);
 } /* end function display_version */

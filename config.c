@@ -847,6 +847,9 @@ BYTE    c;                              /* Work area for sscanf      */
 #endif /*SMP_SERIALIZATION*/
 #endif /*MAX_CPU_ENGINES > 1*/
     initialize_detach_attr (&sysblk.detattr);
+#if defined(OPTION_W32_CTCI)
+    tt32_init(sysblk.msgpipew);
+#endif /* defined(OPTION_W32_CTCI) */
 #if defined(OPTION_FISHIO)
     InitIOScheduler                         // initialize i/o scheduler...
         (
@@ -1015,6 +1018,9 @@ BYTE    c;                              /* Work area for sscanf      */
 #if defined(OPTION_FISHIO)
     ios_msgpipew = sysblk.msgpipew;
 #endif // defined(OPTION_FISHIO)
+#if defined(OPTION_W32_CTCI)
+    g_tt32_msgpipew = sysblk.msgpipew;
+#endif // defined(OPTION_W32_CTCI)
 
     /* Display the version identifier on the control panel */
     display_version (sysblk.msgpipew, "Hercules ");
