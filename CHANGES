@@ -5,7 +5,7 @@
 11 Nov 2003 ieee.c floating point fixes: fix bug in FP_INFINITE, FP_NAN,
             and FP_ZERO handling for CFDBR, CFEBR, CGDBR, and CGEBR,
             fix int divide by zero crash preceded by msg "lbfpston:
-            unexpectedly converting an Infinite".
+            unexpectedly converting an Infinite" - Willem & Fish
 10 Nov 2003 Clear attention interrupt pending during device reset - Greg Smith
 08 Nov 2003 Added command history to panel.c - Volker Bandke, code by Marian Gasparovic
 07 Nov 2003 Added optimization problem bypass for GCC 2.96 - Ivan Warren
