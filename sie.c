@@ -60,16 +60,16 @@ static int (* run_sie[GEN_MAXARCH]) (REGS *regs) =
 #endif /*!defined(_SIE_C)*/
 
 #undef SIE_I_IO
-#if !defined(FEATURE_ESAME)
+#if defined(FEATURE_BCMODE)
 #define SIE_I_IO(_guestregs) \
         (((_guestregs)->siebk->v & SIE_V_IO) \
            && ((_guestregs)->psw.sysmask \
                  & ((_guestregs)->psw.ecmode ? PSW_IOMASK : 0xFE) ))
-#else /*defined(FEATURE_ESAME)*/
+#else /*!defined(FEATURE_BCMODE)*/
 #define SIE_I_IO(_guestregs) \
         (((_guestregs)->siebk->v & SIE_V_IO) \
            && ((_guestregs)->psw.sysmask & PSW_IOMASK ))
-#endif /*defined(FEATURE_ESAME)*/
+#endif /*!defined(FEATURE_BCMODE)*/
 
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
