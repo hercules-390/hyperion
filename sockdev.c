@@ -201,13 +201,10 @@ int add_socket_devices_to_fd_set (fd_set* readset, int maxfd)
         {
             dev = bs->dev;
 
-// ZZ       if (dev->fd == -1)      /* and not already connected, */
-            {
-                FD_SET(bs->sd, readset);    /* then add file to set */
+            FD_SET(bs->sd, readset);    /* then add file to set */
 
-                if (bs->sd > maxfd)
-                    maxfd = bs->sd;
-            }
+            if (bs->sd > maxfd)
+                maxfd = bs->sd;
         }
 
         pListEntry = pListEntry->Flink;
