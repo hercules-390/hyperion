@@ -2342,9 +2342,178 @@ DEF_INST(load_and_test_bfp_short_reg)
  * B343 LCXBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
  * B313 LCDBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
  * B303 LCEBR - LOAD COMPLEMENT (extended BFP)                 [RRE]
- * B347 FIXBR - LOAD FP INTEGER (extended BFP)                 [RRF]
+ */
+
+/* 
+ * B357 FIEBR - LOAD FP INTEGER (extended BFP)                 [RRF]
+ */
+DEF_INST(load_fp_int_short_reg)
+{
+    int r1, r2, m3, raised, pgm_check;
+
+    struct sbfp op;
+
+    RRF_M(inst, execflag, regs, r1, r2, m3);
+    //logmsg("FIEBR r1=%d, r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    get_sbfp(&op, regs->fpr + FPR2I(r2));
+
+    switch(sbfpclassify(&op)) {
+    case FP_NAN:
+        if (sbfpissnan(&op)) {
+            if (regs->fpc & FPC_MASK_IMI) {
+                sbfpstoqnan(&op);
+                ieee_exception(FE_INEXACT, regs);
+            } else {
+                ieee_exception(FE_INVALID, regs);
+            }
+        }
+        break;
+    case FP_ZERO:
+    case FP_INFINITE:
+        break;
+    default:
+
+        feclearexcept(FE_ALL_EXCEPT);
+        sbfpston(&op);
+	    op.v = rint(op.v);
+
+    	if (regs->fpc & FPC_MASK_IMX) {
+            ieee_exception(FE_INEXACT, regs);
+        } else {
+            ieee_exception(FE_INVALID, regs);
+        }
+
+	    sbfpston(&op);
+    
+        raised = fetestexcept(FE_ALL_EXCEPT);
+
+        if (raised) {
+            pgm_check = ieee_exception(raised, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+
+    } /* end switch */
+
+    put_sbfp(&op, regs->fpr + FPR2I(r1));
+}
+
+/*
  * B35F FIDBR - LOAD FP INTEGER (long BFP)                     [RRF]
- * B357 FIEBR - LOAD FP INTEGER (short BFP)                    [RRF]
+ */
+DEF_INST(load_fp_int_long_reg)
+{
+    int r1, r2, m3, raised, pgm_check;
+
+    struct lbfp op;
+
+    RRF_M(inst, execflag, regs, r1, r2, m3);
+    //logmsg("FIDBR r1=%d, r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    get_lbfp(&op, regs->fpr + FPR2I(r2));
+
+    switch(lbfpclassify(&op)) {
+    case FP_NAN:
+        if (lbfpissnan(&op)) {
+            if (regs->fpc & FPC_MASK_IMI) {
+                lbfpstoqnan(&op);
+                ieee_exception(FE_INEXACT, regs);
+            } else {
+                ieee_exception(FE_INVALID, regs);
+            }
+        }
+        break;
+    case FP_ZERO:
+    case FP_INFINITE:
+        break;
+    default:
+
+        feclearexcept(FE_ALL_EXCEPT);
+        lbfpston(&op);
+	    op.v = rint(op.v);
+
+    	if (regs->fpc & FPC_MASK_IMX) {
+            ieee_exception(FE_INEXACT, regs);
+        } else {
+            ieee_exception(FE_INVALID, regs);
+        }
+
+	    lbfpston(&op);
+    
+        raised = fetestexcept(FE_ALL_EXCEPT);
+
+        if (raised) {
+            pgm_check = ieee_exception(raised, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+
+    } /* end switch */
+
+    put_lbfp(&op, regs->fpr + FPR2I(r1));
+}
+
+/*
+ * B347 FIXBR - LOAD FP INTEGER (extended BFP)                 [RRF]
+ */
+
+DEF_INST(load_fp_intext_reg)
+{
+    int r1, r2, m3, raised, pgm_check;
+
+    struct ebfp op;
+
+    RRF_M(inst, execflag, regs, r1, r2, m3);
+    //logmsg("FIXBR r1=%d, r2=%d\n", r1, r2);
+    BFPINST_CHECK(regs);
+    get_ebfp(&op, regs->fpr + FPR2I(r2));
+
+    switch(ebfpclassify(&op)) {
+    case FP_NAN:
+        if (ebfpissnan(&op)) {
+            if (regs->fpc & FPC_MASK_IMI) {
+                ebfpstoqnan(&op);
+                ieee_exception(FE_INEXACT, regs);
+            } else {
+                ieee_exception(FE_INVALID, regs);
+            }
+        }
+        break;
+    case FP_ZERO:
+    case FP_INFINITE:
+        break;
+    default:
+
+        feclearexcept(FE_ALL_EXCEPT);
+        ebfpston(&op);
+	    op.v = rint(op.v);
+
+    	if (regs->fpc & FPC_MASK_IMX) {
+            ieee_exception(FE_INEXACT, regs);
+        } else {
+            ieee_exception(FE_INVALID, regs);
+        }
+
+	    ebfpston(&op);
+    
+        raised = fetestexcept(FE_ALL_EXCEPT);
+
+        if (raised) {
+            pgm_check = ieee_exception(raised, regs);
+            if (pgm_check) {
+                program_interrupt(regs, pgm_check);
+            }
+        }
+
+    } /* end switch */
+
+    put_ebfp(&op, regs->fpr + FPR2I(r1));
+}
+
+/*
  * B29D LFPC  - LOAD FPC                                         [S]
  * B305 LXDBR - LOAD LENGTHENED (long to extended BFP)         [RRE]
  * ED05 LXDB  - LOAD LENGTHENED (long to extended BFP)         [RXE]
