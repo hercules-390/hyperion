@@ -468,6 +468,7 @@ int     repcnt;                         /* Replication count         */
 
             /* Calculate number of bytes to write */
             num = (count < dev->fbablksiz) ? count : dev->fbablksiz;
+            if (num < dev->fbablksiz) *more = 1;
 
             /* Write physical block from channel buffer */
             if (num > 0)
