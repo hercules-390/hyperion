@@ -2102,6 +2102,47 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             break;
         }
 
+#ifdef OPTION_SYNCIO
+        /* Temporary workaround for -
+           1) Track Overflow processing:
+               Synchronous READ (and probably WRITE) CCWs
+               cannot correctly process splitted records
+               if the continuation has to be scheduled for
+               asynchronous processing;
+           2) DataChained WRITE CCWs:
+               Data merging function used by [C]CKD dev's
+               for data chained write CCW's leads to error
+               when the 1st WRITE CCW which specifies DC is
+               processed SYNChronously and any subsequent
+               WRITE CCW's (including the 1st one) must then
+               be switched to ASYNChronous processing - as a
+               result only last WRITE CCW in the chain is
+               retried although the whole chain starting from
+               the 1st CCW which specified DC must be retried.
+           - this [rough] fix just immediately request 
+             asynchronous processing if one of the above 
+             situations are encountered during synchronous I/O
+             (1:'ckdtrkof' flag is set and CCW specifies READ 
+             or WRITE operation; or 2:WRITE CCW with "DataChain"
+             flag set is processed) 
+        */
+        if( dev->syncio_active &&
+           ( (dev->ckdtrkof
+              && (IS_CCW_READ(code) || IS_CCW_WRITE(code)))
+           || ((flags & CCW_FLAGS_CD)
+              && (IS_CCW_WRITE(code)
+                  || (IS_CCW_CONTROL(code)
+                       && !(IS_CCW_NOP(code)||IS_CCW_SET_EXTENDED(code))))
+              )
+           )
+          )
+        {
+            dev->syncio_retry = 1;
+/*debug   display_ccw(dev, ccw, addr);*/
+            return NULL;
+        }
+#endif
+
         /* For WRITE and CONTROL operations, copy data
            from main storage into channel buffer */
         if (IS_CCW_WRITE(code)
