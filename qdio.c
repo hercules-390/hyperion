@@ -2,7 +2,6 @@
 /*              Queued Direct Input Output                           */
 
 /*      This module contains the Signal Adapter instruction          */
-/*      and the Establish Queues CCW                                 */
 
 #include "hercules.h"
 
