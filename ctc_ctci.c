@@ -53,14 +53,27 @@ DEVHND ctci_device_hndinfo =
 // CTCI_Init
 //
 
+
+/* FIXME: work around Cygwin gcc 3.x __alloca large stack vars bug:
+ * http://gcc.gnu.org/cgi-bin/gnatsweb.pl?cmd=view&database=gcc&pr=8750
+ */
+#define GCC3_BUG_8750
+
+
 int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
-    PCTCBLK         pWrkCTCBLK = NULL;  // Working CTCBLK
-    PCTCBLK         pDevCTCBLK = NULL;  // Device  CTCBLK
-    DEVBLK*         pDevPair = NULL;    // Paired  DEVBLK
+#ifndef GCC3_BUG_8750
+    CTCBLK          ctcblk;             // Work CTCBLK
+#endif
+    PCTCBLK         pWrkCTCBLK = NULL;  // Ptr to work CTCBLK
+    PCTCBLK         pDevCTCBLK = NULL;  // Ptr to CTCBLK for device
+    DEVBLK*         pDevPair = NULL;    // Paired DEVBLK
     int             rc = 0;             // Return code
 
     // Housekeeping
+#ifndef GCC3_BUG_8750
+    pWrkCTCBLK = &ctcblk;
+#else
     pWrkCTCBLK = malloc( sizeof( CTCBLK ) );
 
     if( !pWrkCTCBLK )
@@ -69,13 +82,16 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
             pDEVBLK->devnum );
         return -1;
     }
+#endif
 
     memset( pWrkCTCBLK, 0, sizeof( CTCBLK ) );
 
     // Parse configuration file statement
     if( ParseArgs( pDEVBLK, pWrkCTCBLK, argc, (char**)argv ) != 0 )
     {
+#ifdef GCC3_BUG_8750
         free(pWrkCTCBLK);
+#endif
         return -1;
     }
 
@@ -89,7 +105,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         {
             logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
                 pDEVBLK->devnum );
+#ifdef GCC3_BUG_8750
             free(pWrkCTCBLK);
+#endif
             return -1;
         }
 
@@ -141,7 +159,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
             {
                 logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
                     pDEVBLK->devnum );
+#ifdef GCC3_BUG_8750
                 free(pWrkCTCBLK);
+#endif
                 return -1;
             }
             memcpy( pDevCTCBLK, pWrkCTCBLK, sizeof( CTCBLK ) );
@@ -187,7 +207,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
         if( rc < 0 )
         {
+#ifdef GCC3_BUG_8750
             free(pWrkCTCBLK);
+#endif
             return -1;
         }
 
@@ -213,7 +235,9 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         create_thread( &pDevCTCBLK->tid, NULL, CTCI_ReadThread, pDevCTCBLK );
     }
 
+#ifdef GCC3_BUG_8750
     free(pWrkCTCBLK);
+#endif
     return 0;
 }
 
