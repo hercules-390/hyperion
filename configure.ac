@@ -45,8 +45,13 @@ AC_ARG_ENABLE(fthreads,
               AC_HELP_STRING([--enable-fthreads],
                              [Use included fthreads instead of libpthread]),
               [case "$host_os" in
-                 *cygwin*) build_fthreads=true ;;
-                 *) AC_MSG_ERROR([fthreads are only for win32]) ;;
+                 *cygwin*)
+                   build_fthreads=true
+                   AC_DEFINE([OPTION_FTHREADS])
+                   ;;
+                 *)
+                   AC_MSG_ERROR([fthreads are only for win32])
+                   ;;
                esac],
               [AC_CHECK_LIB(pthread, pthread_create,
                [],
@@ -276,5 +281,7 @@ AH_TEMPLATE([WIN32],
             [Define when building under Win32 (cygwin)])
 AH_TEMPLATE([NOTHREAD],
             [Define to disable use of threads])
+AH_TEMPLATE([OPTION_FTHREADS],
+            [Define to use included threads implementation (fthreads)])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
