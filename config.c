@@ -1428,14 +1428,9 @@ BYTE **orig_newargv;
 
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
-#if !defined(MAP_ANONYMOUS) /* the following fix isn't needed */
-    sysblk.mainstor = malloc(sysblk.mainsize);
-/* ISW20030828-1 : Check for MALLOC result */
-    if (sysblk.mainstor == NULL)
-#else /* !defined(MAP_ANONYMOUS) */
     /*
-             Windows "double memory consumption" bug fix
-             (which should work on all other systems too)
+               Windows "double memory consumption" bug fix
+               (which should work on all other systems too)
 
         =============================================================
         From: golden_dog98 [golden_dog98@yahoo.com]
@@ -1472,13 +1467,21 @@ BYTE **orig_newargv;
 
         Mark D.
         =============================================================
-
-        Note we can't use the "HAVE_MMAP" test here because of a "Unix-ism"
-        bug in autoconf that causes mmap tests to always fail on Windows
-        systems as explained in the following Cygwin mailing list post:
-
-        http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
     */
+#if !defined(MAP_ANONYMOUS)    /* (see NOTE just below) */
+
+    /*  ***  NOTE: we can't use the "HAVE_MMAP" test above  ***
+        ***  because of a "Unix-ism" bug in autoconf that   ***
+        ***  causes mmap tests to always fail on Windows    ***
+        ***  systems as explained in the below Cygwin post  ***
+        ***  mailing list post:
+
+         http://www.cygwin.com/ml/cygwin/2002-04/msg00412.html
+    */
+    sysblk.mainstor = malloc(sysblk.mainsize);
+/* ISW20030828-1 : Check for MALLOC result */
+    if (sysblk.mainstor == NULL)
+#else /* !defined(MAP_ANONYMOUS) */
     sysblk.mainstor = mmap(0, sysblk.mainsize,
         PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
 /* ISW20030828-1 : Check for MMAP result */
