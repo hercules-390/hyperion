@@ -81,10 +81,6 @@ int             z=-1;                   /* Compression value         */
 CKDDEV         *ckd;                    /* -> DASD table entry       */
 int             l2empty;                /* 1=level 2 table is empty  */
 
-    /* Display the program identification message */
-    display_version (stderr, "Hercules ckd to cckd copy program ");
-
-    /* parse the arguments */
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -92,6 +88,11 @@ int             l2empty;                /* 1=level 2 table is empty  */
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules ckd to cckd copy program ");
+
+    /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if(**argv != '-') break;

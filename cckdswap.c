@@ -28,6 +28,14 @@ char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             bigend;                 /* 1 = big-endian file       */
 
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
+
     /* Display the program identification message */
     display_version (stderr, "Hercules cckd swap-endian program ");
 

@@ -122,7 +122,7 @@ int reclen = 0;
 || Special flag to indicate whether or not we're being
 || run under the control of the external GUI facility.
 */
-static int extgui = 0;
+int extgui = 0;
 /*
 || Previously reported file position
 */
@@ -618,9 +618,6 @@ main( int argc, char *argv[] )
     int rc;
     int i;
 
-    /* Display the program identification message */
-    display_version (stderr, "Hercules HET extract files program ");
-
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -628,6 +625,9 @@ main( int argc, char *argv[] )
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules HET extract files program ");
 
     /*
     || Process option switches

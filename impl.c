@@ -108,13 +108,6 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
 TID paneltid;
 #endif
 
-    /* Get name of configuration file or default to hercules.cnf */
-    if(!(cfgfile = getenv("HERCULES_CNF")))
-        cfgfile = "hercules.cnf";
-
-    /* Display the version identifier */
-    display_version (stderr, "Hercules ");
-
 #ifdef EXTERNALGUI
     /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
@@ -123,6 +116,13 @@ TID paneltid;
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Get name of configuration file or default to hercules.cnf */
+    if(!(cfgfile = getenv("HERCULES_CNF")))
+        cfgfile = "hercules.cnf";
+
+    /* Display the version identifier */
+    display_version (stderr, "Hercules ");
 
     /* Process the command line options */
     while ((c = getopt(argc, argv, "f:")) != EOF)

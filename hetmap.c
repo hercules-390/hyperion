@@ -38,7 +38,7 @@ static const char help[] =
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
-static int extgui = 0;
+int extgui = 0;
 /* Previous reported file position */
 static long prevpos = 0;
 /* Report progress every this many bytes */
@@ -161,11 +161,6 @@ main( int argc, char *argv[] )
 #define O_LABELS        0X40
 #define O_DATASETS      0X20
 
-    opts = O_ALL;
-
-    /* Display the program identification message */
-    display_version (stderr, "Hercules HET map program ");
-
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -173,6 +168,11 @@ main( int argc, char *argv[] )
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    opts = O_ALL;
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules HET map program ");
 
     while( TRUE )
     {

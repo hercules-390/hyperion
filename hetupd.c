@@ -42,7 +42,7 @@ static HETB *d_hetb     = NULL;
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
-static int extgui = 0;
+int extgui = 0;
 /* Previous reported file position */
 static long prevpos = 0;
 /* Report progress every this many bytes */
@@ -264,12 +264,6 @@ main( int argc, char *argv[] )
     HETB *d_hetb;
     int rc;
 
-    s_hetb = NULL;
-    d_hetb = NULL;
-
-    /* Display the program identification message */
-    display_version (stderr, "Hercules HET copy/update program ");
-
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -277,6 +271,12 @@ main( int argc, char *argv[] )
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    s_hetb = NULL;
+    d_hetb = NULL;
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules HET copy/update program ");
 
     while( TRUE )
     {

@@ -4300,10 +4300,6 @@ int             stmtno;                 /* Statement number          */
 BYTE            comp = 0xff;            /* Compression algoritm      */
 int             altcylflag = 0;         /* Alternate cylinders flag  */
 
-    /* Display the program identification message */
-    display_version (stderr,
-                     "Hercules DASD loader program ");
-
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -4311,6 +4307,10 @@ int             altcylflag = 0;         /* Alternate cylinders flag  */
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr,
+                     "Hercules DASD loader program ");
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--) 

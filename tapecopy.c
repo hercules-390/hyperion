@@ -112,6 +112,12 @@ struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
     return 0;
 } /* end function print_status */
 
+#if defined(EXTERNALGUI)
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*defined(EXTERNALGUI)*/
+
 /*-------------------------------------------------------------------*/
 /* TAPECOPY main entry point                                         */
 /*-------------------------------------------------------------------*/
@@ -134,6 +140,14 @@ struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
 long            density;                /* Tape density code         */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
+
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr, "Hercules tape copy program ");

@@ -235,10 +235,6 @@ BYTE           *blkptr;                 /* -> PDS directory block    */
 BYTE            dirblk[256];            /* Copy of directory block   */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 
-    /* Display the program identification message */
-    display_version (stderr, "Hercules PDS unload program ");
-
-    /* Check the number of arguments */
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -246,6 +242,11 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules PDS unload program ");
+
+    /* Check the number of arguments */
     if (argc < 3 || argc > 5)
     {
         fprintf (stderr,

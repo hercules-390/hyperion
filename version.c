@@ -109,6 +109,10 @@ static const char *build_info[] = {
 
 };
 
+#if defined(EXTERNALGUI)
+extern int extgui;              /* external gui present */
+#endif /*EXTERNALGUI*/
+
 /*-------------------------------------------------------------------*/
 /* Display version and copyright                                     */
 /*-------------------------------------------------------------------*/
@@ -126,7 +130,7 @@ void display_version (FILE *f, char *prog)
         setvbuf(stderr, NULL, _IONBF, 0);
         setvbuf(stdout, NULL, _IONBF, 0);
     }
-#endif
+#endif /*EXTERNALGUI*/
 
         /* Log version */
 

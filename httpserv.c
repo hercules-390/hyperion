@@ -297,7 +297,6 @@ static void http_verify_path(WEBBLK *webblk, char *path)
 static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 {
     char *pointer ,*user, *passwd;
-    struct passwd *pass = NULL;
 
     if (!strcasecmp(type,"Basic"))
     {
@@ -325,6 +324,8 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 #if !defined(WIN32)
                 else
                 {
+                    struct passwd *pass = NULL;
+
                     /* unix userid and password check, the userid
                        must be the same as that hercules is
                        currently running under */

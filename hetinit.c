@@ -34,7 +34,7 @@ static const char help[] =
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
-static int extgui = 0;
+int extgui = 0;
 #endif /*EXTERNALGUI*/
 
 /*
@@ -62,6 +62,14 @@ main( int argc, char *argv[] )
     char *o_owner;
     char *o_volser;
 
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
+
     hetb = NULL;
 
     o_filename = NULL;
@@ -73,14 +81,6 @@ main( int argc, char *argv[] )
 
     /* Display the program identification message */
     display_version (stderr, "Hercules HET IEHINITT program ");
-
-#ifdef EXTERNALGUI
-    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
-    {
-        extgui = 1;
-        argc--;
-    }
-#endif /*EXTERNALGUI*/
 
     while( TRUE )
     {

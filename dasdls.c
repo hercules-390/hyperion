@@ -121,9 +121,6 @@ int main(int argc, char **argv)
     int rc = 0;
     char *fn, *sfn;
 
-    /* Display program info message */
-    display_version (stderr, "Hercules DASD list program ");
-
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -131,6 +128,9 @@ int main(int argc, char **argv)
 		argv[--argc] = 0;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display program info message */
+    display_version (stderr, "Hercules DASD list program ");
 
     if (argc < 2) {
         fprintf(stderr, "Usage: dasdls dasd_image [sf=shadow-file-name]...\n");

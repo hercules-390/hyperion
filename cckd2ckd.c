@@ -70,10 +70,6 @@ int             swapend=0;              /* Need to swap byte order   */
 int             maxerrs=5;              /* Max errors allowed        */
 int             limited=0;              /* 1=Limit cyls copied       */
 
-    /* Display the program identification message */
-    display_version (stderr, "Hercules cckd to ckd copy program ");
-
-    /* parse the arguments */
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -81,6 +77,11 @@ int             limited=0;              /* 1=Limit cyls copied       */
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules cckd to ckd copy program ");
+
+    /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if(**argv != '-') break;

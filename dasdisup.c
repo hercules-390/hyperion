@@ -611,11 +611,6 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
 
-    /* Display the program identification message */
-    display_version (stderr,
-                     "Hercules IEHIOSUP program ");
-
-    /* Check the number of arguments */
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -623,6 +618,12 @@ int             nmem = 0;               /* Number of array entries   */
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr,
+                     "Hercules IEHIOSUP program ");
+
+    /* Check the number of arguments */
     if (argc <= 2 || argc > 3)
     {
         fprintf (stdout,

@@ -31,10 +31,6 @@ int             level=1;                /* Chkdsk level checking     */
 int             ro=0;                   /* 1 = Open readonly         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
-    /* Display the program identification message */
-    display_version (stderr, "Hercules cckd chkdsk program ");
-
-    /* parse the arguments */
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -42,6 +38,11 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules cckd chkdsk program ");
+
+    /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
         if(**argv != '-') break;

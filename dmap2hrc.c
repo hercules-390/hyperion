@@ -46,6 +46,12 @@ typedef struct _DEVMAP_DEV {
 	} parms;
     } DEVMAP_DEV;
 
+#if defined(EXTERNALGUI)
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*defined(EXTERNALGUI)*/
+
 /*-------------------------------------------------------------------*/
 /* DEVMAP2CNF main entry point                                       */
 /*-------------------------------------------------------------------*/
@@ -60,6 +66,14 @@ DEVMAP_DEV      device;			/* Device record             */
 BYTE		output_type[5];		/* Device type to print      */
 BYTE	       *output_filename;	/* -> filename to print      */
 int		more_devices;		/* More devices this ctlr?   */
+
+#ifdef EXTERNALGUI
+    if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
+    {
+        extgui = 1;
+        argc--;
+    }
+#endif /*EXTERNALGUI*/
 
     /* Display the program identification message */
     display_version (stderr,

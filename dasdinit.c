@@ -103,11 +103,6 @@ BYTE    c;                              /* Character work area       */
 CKDDEV *ckd;                            /* -> CKD device table entry */
 FBADEV *fba;                            /* -> FBA device table entry */
 
-    /* Display the program identification message */
-
-    display_version (stderr,
-                     "Hercules DASD image file creation program\n");
-
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
@@ -115,6 +110,10 @@ FBADEV *fba;                            /* -> FBA device table entry */
         argc--;
     }
 #endif /*EXTERNALGUI*/
+
+    /* Display the program identification message */
+    display_version (stderr,
+                     "Hercules DASD image file creation program\n");
 
     /* Process optional arguments */
     for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--) 
