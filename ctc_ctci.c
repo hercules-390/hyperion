@@ -966,7 +966,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // name as the second argument on Linux, or CTCI-W32 as the first
     // argument on Windows.
     if( ( strncasecmp( argv[0], "/", 1 ) == 0 ) ||
-        ( strncasecmp( pDEVBLK->typname, "ctci-w32", 8 ) == 0 ) )
+        ( strncasecmp( pDEVBLK->typname, "CTCI-W32", 8 ) == 0 ) )
     {
         pCTCBLK->fOldFormat = 1;
     }
@@ -981,8 +981,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // argv[0];
 
         // Don't allow us to exceed the allocated storage (sanity check)
-        if( argc > 10 )
-            argc = 10;
+        if( argc > (MAX_ARGS-1) )
+            argc = (MAX_ARGS-1);
 
         for( i = argc; i > 0; i-- )
             argv[i] = argv[i - 1];
@@ -990,7 +990,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         argc++;
         argv[0] = pDEVBLK->typname;
     }
-    
+
     // Parse any optional arguments if not old format
     while( !pCTCBLK->fOldFormat )
     {
@@ -1287,17 +1287,17 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
                 strcpy( pCTCBLK->szTUNCharName, *argv );
 
-                // Kludge: This may look strange at first, but with 
-                // TunTap32, only the last byte of the "driver IP 
-                // address" is actually used. It's purpose is to 
-                // generate a unique MAC for the virtual interface. 
-                // Thus, having the same address for the adapter and 
-                // destination is not an issue. This used to be 
-                // generated from the guest IP address, I screwed up 
+                // Kludge: This may look strange at first, but with
+                // TunTap32, only the last byte of the "driver IP
+                // address" is actually used. It's purpose is to
+                // generate a unique MAC for the virtual interface.
+                // Thus, having the same address for the adapter and
+                // destination is not an issue. This used to be
+                // generated from the guest IP address, I screwed up
                 // TunTap32 V2. (JAP)
                 // This also fixes the confusing error messages from
                 // TunTap.c when a MAC is given for this argument.
-                
+
                 strcpy( pCTCBLK->szDriveIPAddr,
                         pCTCBLK->szGuestIPAddr );
 

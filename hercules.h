@@ -687,7 +687,7 @@ typedef struct _SYSBLK {
         int     panrate;                /* Panel refresh rate        */
         int     npquiet;                /* New Panel quiet indicator */
         struct _DEVBLK *firstdev;       /* -> First device block     */
-#if defined(FEATURE_FAST_DEVLOOKUP)
+#if defined(OPTION_FAST_DEVLOOKUP)
         struct _DEVBLK ***devnum_fl;    /* 1st level table for fast  */
                                         /* devnum lookup             */
         struct _DEVBLK ***subchan_fl;   /* Subchannel table fast     */
@@ -1656,6 +1656,7 @@ int  define_device (U16 olddev, U16 newdev);
 int  configure_cpu (REGS *regs);
 int  deconfigure_cpu (REGS *regs);
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
+#define MAX_ARGS  12                    /* Max argv[] array size     */
 
 /* Access type parameter passed to translate functions in dat.c */
 #define ACCTYPE_HW              0       /* Hardware access           */
@@ -1815,10 +1816,11 @@ int  ecpsvm_virttmr_ext(REGS *regs);
 #endif
 
 
-/* #if defined(OPTION_W32_CTCI)  */
 /* Functions in module w32ctca.c */
 #include "w32ctca.h"
-/* #endif // defined(OPTION_W32_CTCI) */
+#if defined(OPTION_W32_CTCI)
+int (*debug_tt32_stats) (int);
+#endif // defined(OPTION_W32_CTCI)
 
 #if defined(__APPLE__)
 struct mt_tape_info {

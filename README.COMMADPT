@@ -60,7 +60,7 @@ rto, pto, eto : Read, Poll and Enable Timeout values in miliseconds.
 
 dial=IN|OUT|INOUT|NO
         Indicate call direction (if any).
-        This parameter also modifies the behaviour of certain CCWS 
+        This parameter also modifies the behaviour of certain CCWS
         as well as TCP incoming call handling :
 
         ENABLE :
@@ -70,7 +70,7 @@ dial=IN|OUT|INOUT|NO
                 DIAL=NO
                         Completes immediatelly if a call
                         is already present
-                        Otherwise, attemps connecting to the 
+                        Otherwise, attemps connecting to the
                         remote end
                         if the call fails, ENABLE exits with
                         Int Req status
@@ -101,8 +101,8 @@ dial=IN|OUT|INOUT|NO
 
 
 The communication protocol :
-        
-        The communication protocol is basic. Every character written 
+
+        The communication protocol is basic. Every character written
         by the guest program with a WRITE CCW is transfered to the
         remote end, untranslated and untouched (except for Transparent
         BSC rules which deem that DLE characters are doubled when the
@@ -113,7 +113,7 @@ Dial data format
 
         Dial data is originally as follows :
                 x x x x 0 0 0 0 : Dial # 0
-                  .........   
+                  .........
                 x x x x 1 0 0 1 : Dial # 9
                 x x x x 1 1 0 0 : EON
                 x x x x 1 1 0 1 : SEP

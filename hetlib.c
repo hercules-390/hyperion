@@ -4,7 +4,7 @@
 || HETLIB.C     (c) Copyright Leland Lucius, 2000-2003
 ||              Released under terms of the Q Public License.
 ||
-|| Library for managing Hercules Emulated Tapes.  
+|| Library for managing Hercules Emulated Tapes.
 ||
 || ----------------------------------------------------------------------------
 */
@@ -32,7 +32,7 @@
 /*
 || Local constant data
 */
-static const char *het_errstr[] = 
+static const char *het_errstr[] =
 {
     "No error",
     "File error",
@@ -65,17 +65,17 @@ static const char *het_errstr[] =
 
     NAME
             het_open - Open an HET format file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_open( HETB **hetb, char *filename, int flags )
-        
+
     DESCRIPTION
             The het_open() function opens the file indicated by the "filename"
             parameter and, if successful, places the address of an HETB at
             the location pointed to by the "hetb" parameter.
-            
+
             Currently, "HETOPEN_CREATE" is the only flag available and has
             the same function as the O_CREAT flag of the open(3) function.
 
@@ -85,17 +85,17 @@ static const char *het_errstr[] =
 
         When HETOPEN_READONLY is set, the het file must exist.
         It is opened read only. Any attempt to write will fail.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0
             and the address of the newly allocated HETB will be place at the
             "hetb" location.
-            
+
             If an error occurs, then the return value will be < 0 and will be
             one of the following:
-            
+
             HETE_NOMEM          Insufficient memory to allocate an HETB
-            
+
             HETE_ERROR          File system error - check errno(3)
 
             For other possible errors, see:
@@ -112,7 +112,7 @@ static const char *het_errstr[] =
             //
 
             #include "hetlib.h"
-            
+
             int main( int argc, char *argv[] )
             {
                 HETB *hetb;
@@ -138,7 +138,7 @@ static const char *het_errstr[] =
 
 ==DOC==*/
 
-int 
+int
 het_open( HETB **hetb, char *filename, int flags )
 {
     HETB *thetb;
@@ -151,7 +151,7 @@ het_open( HETB **hetb, char *filename, int flags )
     || Initialize
     */
     *hetb = NULL;
-    
+
     /*
     || Allocate a new HETB
     */
@@ -268,21 +268,21 @@ het_open( HETB **hetb, char *filename, int flags )
 
     NAME
             het_close - Close an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_close( HETB **hetb )
-        
+
     DESCRIPTION
             The het_close() function closes an HET file and releases the
             HETB.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0
             and the location specified by the "hetb" parameter will be set
             to NULL.
-            
+
             If an error occurs, then the return value will be < 0.  At this
             time, no errors will be returned.
 
@@ -292,7 +292,7 @@ het_open( HETB **hetb, char *filename, int flags )
             //
 
             #include "hetlib.h"
-            
+
             int main( int argc, char *argv[] )
             {
                 HETB *hetb;
@@ -318,10 +318,10 @@ het_open( HETB **hetb, char *filename, int flags )
 
 ==DOC==*/
 
-int 
+int
 het_close( HETB **hetb )
 {
-    
+
     /*
     || Only free the HETB if we have one
     */
@@ -349,27 +349,27 @@ het_close( HETB **hetb )
 
     NAME
             het_cntl - Control HET file behavior
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_cntl( HETB *hetb, int func, unsigned long val )
-        
+
     DESCRIPTION
             The het_cntl() function allows you to get/set several values
             that control how an HET file behaves.  The value of the "val"
             parameter depends on the function code.
 
             The possible modes are:
-            
+
             HETCNTL_GET         Should be ORed (|) with the function codes
                                 to retrieve the current setting.  (Default)
-                            
+
             HETCNTL_SET         Should be ORed (|) with the function codes
                                 to set a new value.
-                            
+
             The possible function codes are:
-            
+
             HETCNTL_COMPRESS    val=TRUE to enable write compression (see notes)
                                 Values:     FALSE (disable)
                                             TRUE (enable)
@@ -379,22 +379,22 @@ het_close( HETB **hetb )
                                 Values:     FALSE (diable)
                                             TRUE (enable)
                                 Default:    HETDFLT_DECOMPRESS (TRUE)
-            
+
             HETCNTL_METHOD      val=Compression method to use
                                 Values:     HETMETH_ZLIB (1)
                                             HETMETH_BZLIB (2)
                                 Default:    HETDFLT_METHOD (HETMETH_ZLIB)
-            
+
             HETCNTL_LEVEL       val=Level of compression
                                 Min:        HETMIN_LEVEL (1)
                                 Max:        HETMAX_LEVEL (9)
                                 Default:    HETDFLT_LEVEL (4)
-                                
+
             HETCNTL_CHUNKSIZE   val=Size of output chunks (see notes)
                                 Min:        HETMIN_CHUNKSIZE (4096)
                                 Max:        HETMAX_CHUNKSIZE (65535)
                                 Default:    HETDFLT_CHUNKSIZE (65535)
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be either
             the current setting for a "get" request or >= 0 for a "set"
@@ -426,7 +426,7 @@ het_close( HETB **hetb )
             #include "hetlib.h"
 
             char data[] = "This is a test";
-            
+
             int main( int argc, char *argv[] )
             {
                 HETB *hetb;
@@ -461,11 +461,11 @@ het_close( HETB **hetb )
 
 ==DOC==*/
 
-int 
+int
 het_cntl( HETB *hetb, int func, unsigned long val )
 {
     int mode;
-    
+
     /*
     || Isolate the mode
     */
@@ -484,7 +484,7 @@ het_cntl( HETB *hetb, int func, unsigned long val )
 
             hetb->compress = ( val ? TRUE : FALSE );
         break;
-        
+
         case HETCNTL_DECOMPRESS:
             if( mode == HETCNTL_GET )
             {
@@ -493,7 +493,7 @@ het_cntl( HETB *hetb, int func, unsigned long val )
 
             hetb->decompress = ( val ? TRUE : FALSE );
         break;
-        
+
         case HETCNTL_METHOD:
             if( mode == HETCNTL_GET )
             {
@@ -521,7 +521,7 @@ het_cntl( HETB *hetb, int func, unsigned long val )
 
             hetb->level = val;
         break;
-        
+
         case HETCNTL_CHUNKSIZE:
             if( mode == HETCNTL_GET )
             {
@@ -535,7 +535,7 @@ het_cntl( HETB *hetb, int func, unsigned long val )
 
             hetb->chksize = val;
         break;
-        
+
         default:
             return( HETE_BADFUNC );
         break;
@@ -552,15 +552,15 @@ het_cntl( HETB *hetb, int func, unsigned long val )
 
     NAME
             het_read_header - Retrieve the next chunk header from an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_read_header( HETB *hetb )
-        
+
     DESCRIPTION
             Retrieves the next chunk header and stores it in the HETB.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0
             and the current block count will be incremented.
@@ -676,16 +676,16 @@ het_read_header( HETB *hetb )
 
     NAME
             het_read - Retrieve the next block from an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_read( HETB *hetb,  void *sbuf )
-        
+
     DESCRIPTION
             Read the next block of data into the "sbuf" memory location.  The
             length of "sbuf" should be at least HETMAX_BLOCKSIZE bytes.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be the
             size of the block read.  This will be either the compressed or
@@ -698,13 +698,13 @@ het_read_header( HETB *hetb )
             HETE_ERROR          File system error - check errno(3)
 
             HETE_BADBOR         Beginning of record expected but not found
-            
+
             HETE_BADCOMPRESS    Compression mismatch between related chunks
-            
+
             HETE_OVERFLOW       Record too large for buffer
-            
+
             HETE_PREMEOF        Premature EOF on file
-            
+
             HETE_DECERR         Decompression error (stored in errno(3))
 
             HETE_UNKMETH        Unknown compression method encountered
@@ -751,6 +751,8 @@ het_read_header( HETB *hetb )
 
 ==DOC==*/
 
+static char het_read_tbuf[ HETMAX_BLOCKSIZE ];
+
 int
 het_read( HETB *hetb, void *sbuf )
 {
@@ -759,7 +761,6 @@ het_read( HETB *hetb, void *sbuf )
     unsigned long slen;
     int flags;
     unsigned long tlen;
-    char tbuf[ HETMAX_BLOCKSIZE ];
 
     /*
     || Initialize
@@ -803,7 +804,7 @@ het_read( HETB *hetb, void *sbuf )
             {
                 if( hetb->chdr.flags1 & HETHDR_FLAGS1_COMPRESS )
                 {
-                    tptr = tbuf;
+                    tptr = het_read_tbuf;
                 }
             }
 
@@ -886,25 +887,25 @@ het_read( HETB *hetb, void *sbuf )
 #if defined(HAVE_LIBZ)
             case HETHDR_FLAGS1_ZLIB:
                 slen = HETMAX_BLOCKSIZE;
-    
-                rc = uncompress( sbuf, &slen, tbuf, tlen );
+
+                rc = uncompress( sbuf, &slen, het_read_tbuf, tlen );
                 if( rc != Z_OK )
                 {
                     errno = rc;
                     return( HETE_DECERR );
                 }
-    
+
                 tlen = slen;
             break;
 #endif
-    
+
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
                 slen = HETMAX_BLOCKSIZE;
-    
+
                 rc = BZ2_bzBuffToBuffDecompress( sbuf,
                                                  (unsigned int *) &slen,
-                                                 tbuf,
+                                                 het_read_tbuf,
                                                  tlen,
                                                  0,
                                                  0 );
@@ -913,11 +914,11 @@ het_read( HETB *hetb, void *sbuf )
                     errno = rc;
                     return( HETE_DECERR );
                 }
-    
+
                 tlen = slen;
             break;
 #endif /* defined( HET_BZIP2 ) */
-    
+
             default:
                 return( HETE_UNKMETH );
             break;
@@ -939,15 +940,15 @@ het_read( HETB *hetb, void *sbuf )
 
     NAME
             het_write_header - Write a chunk header to an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_write_header( HETB *hetb, int len, int flags1, int flags2 )
-        
+
     DESCRIPTION
             Constructs and writes a chunk header to an HET file.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0
             and the current block count will be incremented.
@@ -1050,7 +1051,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
         fseek( hetb->fd, 0, SEEK_CUR );
         hetb->readlast = FALSE;
     }
-        
+
     /*
     || If this is the first write, truncate the file
     */
@@ -1061,16 +1062,16 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
         {
             return( HETE_ERROR );
         }
-        
+
         rc = ftruncate( fileno( hetb->fd ), rc );
         if( rc == -1 )
         {
             return( HETE_ERROR );
         }
-        
+
         hetb->truncated = TRUE;
     }
-        
+
     /*
     || Construct the header
     */
@@ -1118,7 +1119,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
             Writes a block of data specified by "sbuf" with a length of "slen"
             to an HET file.  Depending on the current HETCNTL_COMPRESS setting,
             the data may be compressed prior to writing.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be the
             size of the block written.  This will be either the compressed or
@@ -1131,9 +1132,9 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
             HETE_ERROR          File system error - check errno(3)
 
             HETE_BADLEN         "slen" parameter out of range
-            
+
             HETE_BADCOMPRESS    Compression mismatch between related chunks
-            
+
             For other possible errors, see:
                 het_write_header()
 
@@ -1145,7 +1146,7 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
             #include "hetlib.h"
 
             char data[] = "This is a test";
-            
+
             int main( int argc, char *argv[] )
             {
                 HETB *hetb;
@@ -1176,13 +1177,14 @@ het_write_header( HETB *hetb, int len, int flags1, int flags2 )
 
 ==DOC==*/
 
+static char het_write_tbuf[ ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12) ];
+
 int
 het_write( HETB *hetb, void *sbuf, int slen )
 {
     int rc;
     int flags;
     unsigned long tlen;
-    char tbuf[ ((((HETMAX_BLOCKSIZE * 1001) + 999) / 1000) + 12) ];
 
     /*
     || Validate
@@ -1211,9 +1213,9 @@ het_write( HETB *hetb, void *sbuf, int slen )
         {
 #if defined(HAVE_LIBZ)
             case HETHDR_FLAGS1_ZLIB:
-                tlen = sizeof( tbuf );
+                tlen = sizeof( het_write_tbuf );
 
-                rc = compress2( tbuf, &tlen, sbuf, slen, hetb->level );
+                rc = compress2( het_write_tbuf, &tlen, sbuf, slen, hetb->level );
                 if( rc != Z_OK )
                 {
                     errno = rc;
@@ -1222,7 +1224,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
                 if( (int)tlen < slen )
                 {
-                    sbuf = tbuf;
+                    sbuf = het_write_tbuf;
                     slen = tlen;
                     flags |= HETHDR_FLAGS1_ZLIB;
                 }
@@ -1231,9 +1233,9 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
 #if defined( HET_BZIP2 )
             case HETHDR_FLAGS1_BZLIB:
-                tlen = sizeof( tbuf );
+                tlen = sizeof( het_write_tbuf );
 
-                rc = BZ2_bzBuffToBuffCompress( tbuf,
+                rc = BZ2_bzBuffToBuffCompress( het_write_tbuf,
                                                (unsigned int *) &tlen,
                                                sbuf,
                                                slen,
@@ -1248,7 +1250,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
                 if( (int)tlen < slen )
                 {
-                    sbuf = tbuf;
+                    sbuf = het_write_tbuf;
                     slen = tlen;
                     flags |= HETHDR_FLAGS1_BZLIB;
                 }
@@ -1297,7 +1299,7 @@ het_write( HETB *hetb, void *sbuf, int slen )
         {
             return( HETE_ERROR );
         }
-        
+
         /*
         || Bump pointers and turn off BOR flag
         */
@@ -1317,16 +1319,16 @@ het_write( HETB *hetb, void *sbuf, int slen )
 
     NAME
             het_tapemark - Write a tape mark to an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_tapemark( HETB *hetb )
-        
+
     DESCRIPTION
             Writes a special chunk header to an HET file to simulate a tape
             mark.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0.
 
@@ -1394,16 +1396,16 @@ het_tapemark( HETB *hetb )
 
     NAME
             het_locate - Locate a block within an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_locate( HETB *hetb, int block )
-        
+
     DESCRIPTION
             Repositions the HET file to the start of the block specified by
             the "block" parameter.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0 and
             represents the new current block number.
@@ -1457,7 +1459,7 @@ int
 het_locate( HETB *hetb, int block )
 {
     int rc;
-    
+
     /*
     || Start the search from the beginning
     */
@@ -1481,21 +1483,21 @@ het_locate( HETB *hetb, int block )
 
     return( hetb->cblk );
 }
-    
+
 /*==DOC==
 
     NAME
             het_bsb - Backspace a block in an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_bsb( HETB *hetb )
-        
+
     DESCRIPTION
-            Repositions the current block pointer in an HET file to the 
+            Repositions the current block pointer in an HET file to the
             previous block.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0 and
             will be the new block number.
@@ -1506,7 +1508,7 @@ het_locate( HETB *hetb, int block )
             HETE_ERROR          File system error - check errno(3)
 
             HETE_BOT            Beginning of tape
-            
+
             HETE_TAPEMARK       Tape mark encountered
 
             For other possible errors, see:
@@ -1561,7 +1563,7 @@ het_bsb( HETB *hetb )
     int newblk;
     int offset;
     int tapemark = FALSE;
-    
+
     /*
     || Error if at BOT
     */
@@ -1682,21 +1684,21 @@ het_bsb( HETB *hetb )
     */
     return( hetb->cblk );
 }
-    
+
 /*==DOC==
 
     NAME
             het_fsb - Foward space a block in an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_fsb( HETB *hetb )
-        
+
     DESCRIPTION
-            Repositions the current block pointer in an HET file to the 
+            Repositions the current block pointer in an HET file to the
             next block.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0 and
             will be the new block number.
@@ -1750,7 +1752,7 @@ int
 het_fsb( HETB *hetb )
 {
     int rc;
-    
+
     /*
     || Loop until we've processed an entire block
     */
@@ -1788,21 +1790,21 @@ het_fsb( HETB *hetb )
     */
     return( hetb->cblk );
 }
-    
+
 /*==DOC==
 
     NAME
             het_bsf - Backspace a file in an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_bsf( HETB *hetb )
-        
+
     DESCRIPTION
-            Repositions the current block pointer in an HET file to the 
+            Repositions the current block pointer in an HET file to the
             previous tapemark.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0 and
             will be the new block number.
@@ -1856,7 +1858,7 @@ int
 het_bsf( HETB *hetb )
 {
     int rc;
-    
+
     /*
     || Backspace until we hit a tapemark
     */
@@ -1865,7 +1867,7 @@ het_bsf( HETB *hetb )
         rc = het_bsb( hetb );
     }
     while( rc >= 0 );
-    
+
     /*
     || Success
     */
@@ -1879,21 +1881,21 @@ het_bsf( HETB *hetb )
     */
     return( rc );
 }
-    
+
 /*==DOC==
 
     NAME
             het_fsf - Forward space a file in an HET file
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_fsf( HETB *hetb )
-        
+
     DESCRIPTION
-            Repositions the current block pointer in an HET file to the 
+            Repositions the current block pointer in an HET file to the
             next tapemark.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0 and
             will be the new block number.
@@ -1943,7 +1945,7 @@ int
 het_fsf( HETB *hetb )
 {
     int rc;
-    
+
     /*
     || Forward space until we hit a tapemark
     */
@@ -1952,7 +1954,7 @@ het_fsf( HETB *hetb )
         rc = het_fsb( hetb );
     }
     while( rc >= 0 );
-    
+
     /*
     || Success
     */
@@ -1970,24 +1972,24 @@ het_fsf( HETB *hetb )
 /*==DOC==
 
     NAME
-            het_rewind - Rewind an HET file 
-        
+            het_rewind - Rewind an HET file
+
     SYNOPSIS
             #include "hetlib.h"
 
             int het_rewind( HETB *hetb )
-        
+
     DESCRIPTION
-            Repositions the current block pointer in an HET file to the 
+            Repositions the current block pointer in an HET file to the
             load point.
-            
+
     RETURN VALUE
             If no errors are detected then the return value will be >= 0 and
             represents the new block number (always 0).
 
             If an error occurs, then the return value will be < 0 and will be
             one of the following:
-            
+
             HETE_ERROR          File system error - check errno(3)
 
     EXAMPLE
@@ -2031,7 +2033,7 @@ int
 het_rewind( HETB *hetb )
 {
     int rc;
-    
+
     /*
     || Just seek to the beginning of the file
     */
@@ -2068,16 +2070,16 @@ het_rewind( HETB *hetb )
 
     NAME
             het_error - Returns a text message for an HET error code
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             char *het_error( int rc )
-        
+
     DESCRIPTION
             Simply returns a pointer to a string that describes the error
             code passed in the "rc" parameter.
-            
+
     RETURN VALUE
             The return value is always valid and no errors are returned.
 
@@ -2111,7 +2113,7 @@ het_error( int rc )
     {
         rc = 0;
     }
-    
+
     /*
     || Turn it into an index
     */
@@ -2134,16 +2136,16 @@ het_error( int rc )
 
     NAME
             het_tell - Returns the current read/write pointer offset
-        
+
     SYNOPSIS
             #include "hetlib.h"
 
             long het_error( HETB *hetb )
-        
+
     DESCRIPTION
             Returns a long describing the actual read/write cursor
             within the HET file
-            
+
     RETURN VALUE
             >=0 The actual cursor offset
             <0 An error occured.

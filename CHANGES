@@ -1,5 +1,14 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+16 Aug 2003 fix tt32stats command when OPTION_DYNAMIC_LOAD - Fish
+16 Aug 2003 fix CTCI segfault caused by bug in build_config when
+            OPTION_CONFIG_SYMBOLS specified - Fish
+16 Aug 2003 fix 'make install-strip' issue with dyn devices identified
+            by yvangamache [yvangamache@hotmail.com]  -- Fish
+16 Aug 2003 copytape (hetupd.c), main (hetmap.c), het_read, het_write
+            (hetlib.c): define global static I/O buffers to work around
+            pre gcc 3.2 bug #8750 identified on "04 Jan 2003" - Fish
+            http://gcc.gnu.org/bugzilla/show_bug.cgi?id=8750
 15 Aug 2003 Compress ESAME psw in semi graphic panel - Jan Jaeger
 14 Aug 2003 Updated dasdutil.c for HDL compatibility - Ivan Warren
 14 Aug 2003 Added D/T 3422,3430 to hdteq & tapedev(hdt3420) - Ivan Warren

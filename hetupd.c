@@ -97,7 +97,7 @@ closetapes( int rc )
 
     het_close( &d_hetb );
     het_close( &s_hetb );
-    
+
     if( dorename )
     {
         if( rc >= 0 )
@@ -117,6 +117,8 @@ closetapes( int rc )
     return;
 }
 
+static char copytape_buf[ HETMAX_BLOCKSIZE ];
+
 /*
 || Copy source to dest
 */
@@ -124,7 +126,6 @@ static int
 copytape( void )
 {
     int rc;
-    char buf[ HETMAX_BLOCKSIZE ];
 
     while( TRUE )
     {
@@ -141,7 +142,7 @@ copytape( void )
         }
 #endif /*EXTERNALGUI*/
 
-        rc = het_read( s_hetb, buf );
+        rc = het_read( s_hetb, copytape_buf );
         if( rc == HETE_EOT )
         {
             rc = 0;
@@ -165,7 +166,7 @@ copytape( void )
             break;
         }
 
-        rc = het_write( d_hetb, buf, rc );
+        rc = het_write( d_hetb, copytape_buf, rc );
         if( rc < 0 )
         {
             printf( "het_write() returned %d\n", rc );
@@ -241,7 +242,7 @@ opentapes( void )
         printf( "Compression level  : %d\n",
             het_cntl( d_hetb, HETCNTL_LEVEL, 0 ) );
     }
-        
+
 exit:
 
     if( rc < 0 )
@@ -357,11 +358,11 @@ main( int argc, char *argv[] )
             o_dname = toname;
             dorename = TRUE;
         break;
-        
+
         case 2:
             o_dname = argv[ optind + 1 ];
         break;
-        
+
         default:
             usage( argv[ 0 ] );
             exit( 1 );
@@ -388,6 +389,6 @@ main( int argc, char *argv[] )
     }
 
     closetapes( rc );
-            
+
     return 0;
 }

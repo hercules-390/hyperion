@@ -34,12 +34,12 @@
   Ensure that your library path LD_LIBRARY_PATH set correctly such that it
   includes the directory of your hercules executables
 
-- ECPS:VM: Do not use ECPS:VM (See README.ECPSVM) in an AP or MP environment 
+- ECPS:VM: Do not use ECPS:VM (See README.ECPSVM) in an AP or MP environment
   in VM/370. If AP=YES or MP=YES is coded in DMKSYS and the AP/MP control
   file is used to build the CP nucleus and NUMCPU is set to more than 1 in
   the hercules.cnf file, any of LOK001, LOK003 or other abends will occur.
   This occurs because the hercules ECPS:VM CP Assist implementation is not
-  MP safe, and particularily, attemps VM dispatching without holding necessary 
+  MP safe, and particularily, attemps VM dispatching without holding necessary
   AP or MP locks.
 
 - Anything else???

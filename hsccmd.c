@@ -152,7 +152,7 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
                              "subchannel not enabled\n"), devnum);
                     break;
         }
-                    
+
     }
 
     return 0;
@@ -372,7 +372,7 @@ int cckd_cmd(int argc, char *argv[], char *cmdline)
     return cckd_command(p,1);
 }
 
-#if defined(OPTION_W32_CTCI) && !defined(OPTION_DYNAMIC_LOAD)
+#if defined(OPTION_W32_CTCI)
 
 ///////////////////////////////////////////////////////////////////////
 /* tt32stats command - display CTCI-W32 statistics */
@@ -398,7 +398,8 @@ int tt32stats_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    if (!(dev = find_device_by_devnum (devnum)))
+    if (!(dev = find_device_by_devnum (devnum)) &&
+        !(dev = find_device_by_devnum (devnum ^ 0x01)))
     {
         logmsg( _("HHCPN033E Device number %4.4X not found\n"), devnum );
         return -1;
@@ -411,12 +412,13 @@ int tt32stats_cmd(int argc, char *argv[], char *cmdline)
         return -1;
     }
 
-    if (display_tt32_stats(dev->fd) < 0)
+    if (debug_tt32_stats)
+        rc = debug_tt32_stats (dev->fd);
+    else
     {
         logmsg( _("(error)\n") );
         rc = -1;
     }
-    else rc = 0;
 
     return rc;
 }
@@ -753,7 +755,7 @@ BYTE c;                                 /* Character work area       */
                          devnum);
                 break;
     }
-                    
+
     if (rc == 3 && CPUSTATE_STOPPED == regs->cpustate)
         logmsg( _("HHCPN049W Are you sure you didn't mean 'ipl %4.4X' "
                   "instead?\n"), devnum );
@@ -2075,7 +2077,7 @@ int script_cmd(int argc, char *argv[], char *cmdline)
             return 1;
         }
     }
-    
+
     for(i=1;i<argc;i++)
     {
         process_script_file(argv[i],0);
@@ -2101,7 +2103,7 @@ int     scr_pause_amt = 0;               /* seconds to pause RC file  */
 BYTE   *p;                              /* (work)                    */
 
 
-    /* Check the recursion level - if it exceeds a certain amount 
+    /* Check the recursion level - if it exceeds a certain amount
        abort the script stack
     */
     if(scr_recursion>=10)
@@ -2427,7 +2429,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         logmsg("%s%2.2x %16.16llx  %2.2x %2d %d %16.16llx\n",
          (regs->VE_G(i) & 0xfff) == regs->aeID ? "*" : " ", i, regs->VE_G(i),
          regs->aekey[i], regs->aearn[i], regs->aeacc[i], regs->AE_G(i));
-        if ((regs->VE_G(i) & 0xfff) == regs->aeID) matches++; 
+        if ((regs->VE_G(i) & 0xfff) == regs->aeID) matches++;
     }
     logmsg("%d aeID matches\n", matches);
 
@@ -2638,7 +2640,7 @@ COMMAND ( "lsdep",     lsdep_cmd,     "list module dependencies\n" )
 #ifdef OPTION_IODELAY_KLUDGE
 COMMAND ( "iodelay",   iodelay_cmd,   "display or set I/O delay value" )
 #endif
-#if defined(OPTION_W32_CTCI) && !defined(OPTION_DYNAMIC_LOAD)
+#if defined(OPTION_W32_CTCI)
 COMMAND ( "tt32stats", tt32stats_cmd, "display CTCI-W32 statistics" )
 #endif
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
@@ -2669,10 +2671,8 @@ COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 ///////////////////////////////////////////////////////////////////////
 // Main panel command processing function...
 
-#define MAX_CMD_ARGS  12
-
 int    cmd_argc;
-BYTE*  cmd_argv[MAX_CMD_ARGS];
+BYTE*  cmd_argv[MAX_ARGS];
 
 int ProcessPanelCommand (const char* pszCmdLine)
 {
@@ -2694,7 +2694,7 @@ int ProcessPanelCommand (const char* pszCmdLine)
 
     /* Parse the command line into its individual arguments...
        Note: original command line now sprinkled with nulls */
-    parse_args((BYTE*)pszCmdLine, MAX_CMD_ARGS, cmd_argv, &cmd_argc);
+    parse_args((BYTE*)pszCmdLine, MAX_ARGS, cmd_argv, &cmd_argc);
 
     if( system_command )
         if( (rc = system_command(cmd_argc, (char**)cmd_argv,pszSaveCmdLine) ) )

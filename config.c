@@ -82,7 +82,6 @@ static BYTE buf[256];                   /* Config statement buffer   */
 #endif /*EXTERNALGUI*/
 static BYTE *keyword;                   /* -> Statement keyword      */
 static BYTE *operand;                   /* -> First argument         */
-#define MAX_ARGS 12                     /* Max #of additional args   */
 static int  addargc;                    /* Number of additional args */
 static BYTE *addargv[MAX_ARGS];         /* Additional argument array */
 
@@ -529,7 +528,7 @@ BYTE **orig_newargv;
                 fname, strerror(errno));
         delayed_exit(1);
     }
-    
+
     /* Set the default system parameter values */
     serial = 0x000001;
     model = 0x0586;
@@ -826,7 +825,7 @@ BYTE **orig_newargv;
                     }
                     addargc--;
                 }
-                    
+
             }
             else if (strcasecmp (keyword, "httproot") == 0)
             {
@@ -1571,8 +1570,8 @@ BYTE **orig_newargv;
             delayed_exit(1);
         }
 #if defined(OPTION_CONFIG_SYMBOLS)
-        newargv=malloc(addargc*sizeof(char *));
-        orig_newargv=malloc(addargc*sizeof(char *));
+        newargv=malloc(MAX_ARGS*sizeof(char *));
+        orig_newargv=malloc(MAX_ARGS*sizeof(char *));
 #endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         for(baddev=0,i=0;i<(int)devncount;i++)
         {
@@ -1754,7 +1753,7 @@ int deconfigure_cpu(REGS *regs)
 } /* end function deconfigure_cpu */
 
 
-#if defined(FEATURE_FAST_DEVLOOKUP)
+#if defined(OPTION_FAST_DEVLOOKUP)
 void AddDevnumFastLookup(DEVBLK *dev,U16 devnum)
 {
     unsigned int Channel;
@@ -1869,7 +1868,7 @@ DEVBLK**dvpp;
 
     /* Mark device valid */
     dev->pmcw.flag5 |= PMCW5_V;
-#if defined(FEATURE_FAST_DEVLOOKUP)
+#if defined(OPTION_FAST_DEVLOOKUP)
     AddDevnumFastLookup(dev,devnum);
 #endif
 
@@ -1887,7 +1886,7 @@ void ret_devblk(DEVBLK *dev)
     /* Mark device invalid */
     dev->pmcw.flag5 &= ~PMCW5_V;
 
-#if defined(FEATURE_FAST_DEVLOOKUP)
+#if defined(OPTION_FAST_DEVLOOKUP)
     DelDevnumFastLookup(dev->devnum);
 #endif
 
@@ -2047,7 +2046,7 @@ DEVBLK *dev;                            /* -> Device block           */
 
     /* Disable the device */
     dev->pmcw.flag5 &= ~PMCW5_E;
-#if defined(FEATURE_FAST_DEVLOOKUP)
+#if defined(OPTION_FAST_DEVLOOKUP)
     DelDevnumFastLookup(olddevn);
     AddDevnumFastLookup(dev,newdevn);
 #endif
@@ -2075,7 +2074,7 @@ DEVBLK *dev;                            /* -> Device block           */
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the device number           */
 /*-------------------------------------------------------------------*/
-#if !defined(FEATURE_FAST_DEVLOOKUP)
+#if !defined(OPTION_FAST_DEVLOOKUP)
 DEVBLK *find_device_by_devnum (U16 devnum)
 {
 DEVBLK *dev;
@@ -2112,7 +2111,7 @@ int Chan;
 /*-------------------------------------------------------------------*/
 /* Function to find a device block given the subchannel number       */
 /*-------------------------------------------------------------------*/
-#if defined(FEATURE_FAST_DEVLOOKUP)
+#if defined(OPTION_FAST_DEVLOOKUP)
 DEVBLK *find_device_by_subchan (U16 subchan)
 {
     DEVBLK *dev;

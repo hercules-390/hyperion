@@ -1,7 +1,7 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.17.b5)
+AM_INIT_AUTOMAKE(hercules,2.17.b6)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AM_GNU_GETTEXT()
@@ -534,5 +534,5 @@ AH_TEMPLATE([OPTION_DYNAMIC_LOAD],
 AH_TEMPLATE([HDL_USE_LIBTOOL],
             [Define to cause dynamic loader use use libtool instead of dlopen])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile m4/Makefile ])
 

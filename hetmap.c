@@ -4,7 +4,7 @@
 || HETMAP.C     (c) Copyright Leland Lucius, 2000-2003
 ||              Released under terms of the Q Public License.
 ||
-|| Displays information about the structure of a Hercules Emulated Tape. 
+|| Displays information about the structure of a Hercules Emulated Tape.
 ||
 || ----------------------------------------------------------------------------
 */
@@ -134,13 +134,14 @@ usage( char *name )
     printf( help, name, name );
 }
 
+static char main_buf[ HETMAX_BLOCKSIZE ];
+
 /*
 || Standard main
 */
 int
 main( int argc, char *argv[] )
 {
-    char buf[ HETMAX_BLOCKSIZE ];
     HETB *hetb;
     int rc;
     int fileno;
@@ -262,7 +263,7 @@ main( int argc, char *argv[] )
         }
 #endif /*EXTERNALGUI*/
 
-        rc = het_read( hetb, buf );
+        rc = het_read( hetb, main_buf );
         if( rc == HETE_EOT )
         {
             break;
@@ -297,7 +298,7 @@ main( int argc, char *argv[] )
             cminsz = 0;
             cmaxsz = 0;
             cbytes = 0;
-            
+
             continue;
         }
 
@@ -318,12 +319,12 @@ main( int argc, char *argv[] )
 
         if( opts & O_LABELS )
         {
-            printlabel( buf, rc );
+            printlabel( main_buf, rc );
         }
 
         if( opts & O_DATASETS )
         {
-            printdataset( buf, rc, fileno );
+            printdataset( main_buf, rc, fileno );
         }
     }
 

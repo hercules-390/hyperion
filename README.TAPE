@@ -95,16 +95,16 @@ the guest program manage the multivolume on it's own.
 
 Multivolume support resides in the capacity of a drive to indicate to the
 controling program that it is about to reach the end of the physical tape
-and that measures have to be taken to close the current volume and 
+and that measures have to be taken to close the current volume and
 request a new media.
 
 3 new options are introduced :
-maxsize[K|M]=nnnn : 
+maxsize[K|M]=nnnn :
         The resulting file size is limited to the amount specified. maxsize
         specifies bytes, maxsizeK specifies a multiple of 10$24 bytes and
         maxsizeM specifies a multiple of 1024*1024 bytes. specifying a size
         of 0 indicates that there is no limit on the size of the file.
-        
+
         the default is 0 (unlimited file size)
 
 strictsize=0|1 :
@@ -118,7 +118,7 @@ strictsize=0|1 :
         extend BEYOND the limit.
         This parameter only affects compress HET files. On AWS tapes, the
         limit is always enforced, but the file is not truncated (i.e. the
-        write does not occur, because 1) AWS tapes are never truncated, 2) 
+        write does not occur, because 1) AWS tapes are never truncated, 2)
         the effects of the write are known in advance (no compression)).
         Regardless of strictsize, any write operation (Write, Write TM)
         will return a Unit Check with Equip Check to the program if the file

@@ -56,7 +56,7 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
 int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
     PLCSBLK     pLCSBLK;
-    PLCSDEV     pDev;
+    PLCSDEV     pLCSDev;
     int         i;
 
     struct in_addr  addr;               // Work area for addresses
@@ -131,7 +131,7 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
     // puke if a subsequent device number is specified in the config file
     // that already exists because of the OAT.
 
-    for( pDev = pLCSBLK->pDevices; pDev; pDev = pDev->pNext )
+    for( pLCSDev = pLCSBLK->pDevices; pLCSDev; pLCSDev = pLCSDev->pNext )
     {
         // The DEVBLK that was passed as an argument needs to be used last
         // to maintain the proper order in the device list. Each slot in the
@@ -140,99 +140,102 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         // the original DEVBLK is used (a non-NULL pointer telling AddDevice
         // to use the existing DEVBLK).
 
-        if( !pDev->pNext && pDev->bMode != LCSDEV_MODE_IP )
-            pDev->pDEVBLK[0] = pDEVBLK;
+        if( !pLCSDev->pNext && pLCSDev->bMode != LCSDEV_MODE_IP )
+            pLCSDev->pDEVBLK[0] = pDEVBLK;
 
-        AddDevice( &pDev->pDEVBLK[0], pDev->sAddr, pDEVBLK );
+        AddDevice( &pLCSDev->pDEVBLK[0], pLCSDev->sAddr, pDEVBLK );
 
-        if( !pDev->pDEVBLK[0] )
-        // FIXME! - Need to emit an error message here.
+        if( !pLCSDev->pDEVBLK[0] )
+        {
+            logmsg( _("HHCLC040E %4.4X AddDevice failed for LCSDEV %4.4X\n"),
+                pDEVBLK->devnum, pLCSDev->sAddr );
             continue;
+        }
 
         // Establish SENSE ID and Command Information Word data.
-        SetSIDInfo( pDev->pDEVBLK[0], 0x3088, 0x60, 0x3088, 0x01 );
-//      SetCIWInfo( pDev->pDEVBLK[0], 0, 0, 0x72, 0x0080 );
-//      SetCIWInfo( pDev->pDEVBLK[0], 1, 1, 0x83, 0x0004 );
-//      SetCIWInfo( pDev->pDEVBLK[0], 2, 2, 0x82, 0x0040 );
+        SetSIDInfo( pLCSDev->pDEVBLK[0], 0x3088, 0x60, 0x3088, 0x01 );
+//      SetCIWInfo( pLCSDev->pDEVBLK[0], 0, 0, 0x72, 0x0080 );
+//      SetCIWInfo( pLCSDev->pDEVBLK[0], 1, 1, 0x83, 0x0004 );
+//      SetCIWInfo( pLCSDev->pDEVBLK[0], 2, 2, 0x82, 0x0040 );
 
-        pDev->pDEVBLK[0]->ctctype  = CTC_LCS;
-        pDev->pDEVBLK[0]->ctcxmode = 1;
-        pDev->pDEVBLK[0]->dev_data = pDev;
-        pDev->pLCSBLK              = pLCSBLK;
-        strcpy( pDev->pDEVBLK[0]->filename, pLCSBLK->pszTUNDevice );
+        pLCSDev->pDEVBLK[0]->ctctype  = CTC_LCS;
+        pLCSDev->pDEVBLK[0]->ctcxmode = 1;
+        pLCSDev->pDEVBLK[0]->dev_data = pLCSDev;
+        pLCSDev->pLCSBLK              = pLCSBLK;
+        strcpy( pLCSDev->pDEVBLK[0]->filename, pLCSBLK->pszTUNDevice );
 
         // If this is an IP Passthru address, we need a write address
-        if( pDev->bMode == LCSDEV_MODE_IP )
+        if( pLCSDev->bMode == LCSDEV_MODE_IP )
         {
-            if( !pDev->pNext )
-                pDev->pDEVBLK[1] = pDEVBLK;
+            if( !pLCSDev->pNext )
+                pLCSDev->pDEVBLK[1] = pDEVBLK;
 
-            AddDevice( &pDev->pDEVBLK[1], pDev->sAddr + 1, pDEVBLK );
+            AddDevice( &pLCSDev->pDEVBLK[1], pLCSDev->sAddr + 1, pDEVBLK );
 
-            if( !pDev->pDEVBLK[1] )
+            if( !pLCSDev->pDEVBLK[1] )
             {
                 // FIXME! - Need to emit an error message here.
 
                 // Cant have one without the other,
                 // so back out the previous device
 
-                obtain_lock(&pDev->pDEVBLK[0]->lock);
+                obtain_lock(&pLCSDev->pDEVBLK[0]->lock);
 
-                ret_devblk(pDev->pDEVBLK[0]);
+                ret_devblk(pLCSDev->pDEVBLK[0]);
 
                 continue;
             }
 
             // Establish SENSE ID and Command Information Word data.
-            SetSIDInfo( pDev->pDEVBLK[1], 0x3088, 0x60, 0x3088, 0x01 );
-//          SetCIWInfo( pDev->pDEVBLK[1], 0, 0, 0x72, 0x0080 );
-//          SetCIWInfo( pDev->pDEVBLK[1], 1, 1, 0x83, 0x0004 );
-//          SetCIWInfo( pDev->pDEVBLK[1], 2, 2, 0x82, 0x0040 );
+            SetSIDInfo( pLCSDev->pDEVBLK[1], 0x3088, 0x60, 0x3088, 0x01 );
+//          SetCIWInfo( pLCSDev->pDEVBLK[1], 0, 0, 0x72, 0x0080 );
+//          SetCIWInfo( pLCSDev->pDEVBLK[1], 1, 1, 0x83, 0x0004 );
+//          SetCIWInfo( pLCSDev->pDEVBLK[1], 2, 2, 0x82, 0x0040 );
 
-            pDev->pDEVBLK[1]->ctctype  = CTC_LCS;
-            pDev->pDEVBLK[1]->ctcxmode = 1;
-            pDev->pDEVBLK[1]->dev_data = pDev;
-            pDev->pLCSBLK              = pLCSBLK;
+            pLCSDev->pDEVBLK[1]->ctctype  = CTC_LCS;
+            pLCSDev->pDEVBLK[1]->ctcxmode = 1;
+            pLCSDev->pDEVBLK[1]->dev_data = pLCSDev;
+            pLCSDev->pLCSBLK              = pLCSBLK;
 
-            strcpy( pDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
+            strcpy( pLCSDev->pDEVBLK[1]->filename, pLCSBLK->pszTUNDevice );
         }
 
         // Indicate that the DEVBLK(s) have been create sucessfully
-        pDev->fCreated = 1;
+        pLCSDev->fCreated = 1;
 
         // Initialize locking and event mechanisms
-        initialize_lock( &pDev->Lock );
-        initialize_lock( &pDev->EventLock );
-        initialize_condition( &pDev->Event );
+        initialize_lock( &pLCSDev->Lock );
+        initialize_lock( &pLCSDev->EventLock );
+        initialize_condition( &pLCSDev->Event );
 
         // Create the TAP interface (if not already created by a
         // previous pass. More than one interface can exist on a port.
-        if( !pLCSBLK->Port[pDev->bPort].fCreated )
+        if( !pLCSBLK->Port[pLCSDev->bPort].fCreated )
         {
             int   rc;
 
             rc = TUNTAP_CreateInterface( pLCSBLK->pszTUNDevice,
                                          IFF_TAP | IFF_NO_PI,
-                                         &pLCSBLK->Port[pDev->bPort].fd,
-                                         pLCSBLK->Port[pDev->bPort].szNetDevName );
+                                         &pLCSBLK->Port[pLCSDev->bPort].fd,
+                                         pLCSBLK->Port[pLCSDev->bPort].szNetDevName );
 
             // Indicate that the port is used.
-            pLCSBLK->Port[pDev->bPort].fUsed    = 1;
-            pLCSBLK->Port[pDev->bPort].fCreated = 1;
+            pLCSBLK->Port[pLCSDev->bPort].fUsed    = 1;
+            pLCSBLK->Port[pLCSDev->bPort].fCreated = 1;
 
-            create_thread( &pLCSBLK->Port[pDev->bPort].tid,
+            create_thread( &pLCSBLK->Port[pLCSDev->bPort].tid,
                            NULL, LCS_PortThread,
-                           &pLCSBLK->Port[pDev->bPort] );
+                           &pLCSBLK->Port[pLCSDev->bPort] );
         }
 
         // Add these devices to the ports device list.
-        pLCSBLK->Port[pDev->bPort].icDevices++;
-        pDev->pDEVBLK[0]->fd = pLCSBLK->Port[pDev->bPort].fd;
+        pLCSBLK->Port[pLCSDev->bPort].icDevices++;
+        pLCSDev->pDEVBLK[0]->fd = pLCSBLK->Port[pLCSDev->bPort].fd;
 
-        if( pDev->pDEVBLK[1] )
+        if( pLCSDev->pDEVBLK[1] )
         {
-            pLCSBLK->Port[pDev->bPort].icDevices++;
-            pDev->pDEVBLK[1]->fd = pLCSBLK->Port[pDev->bPort].fd;
+            pLCSBLK->Port[pLCSDev->bPort].icDevices++;
+            pLCSDev->pDEVBLK[1]->fd = pLCSBLK->Port[pLCSDev->bPort].fd;
         }
     }
 
@@ -556,13 +559,13 @@ int  LCS_Close( DEVBLK* pDEVBLK )
 
     if( !pLCSBLK->pDevices )
     {
-        if( pLCSBLK->pszTUNDevice   ) 
+        if( pLCSBLK->pszTUNDevice   )
             free( pLCSBLK->pszTUNDevice   );
-        if( pLCSBLK->pszOATFilename ) 
+        if( pLCSBLK->pszOATFilename )
             free( pLCSBLK->pszOATFilename );
-        if( pLCSBLK->pszIPAddress   ) 
+        if( pLCSBLK->pszIPAddress   )
             free( pLCSBLK->pszIPAddress   );
-        if( pLCSBLK->pszMACAddress  ) 
+        if( pLCSBLK->pszMACAddress  )
             free( pLCSBLK->pszMACAddress  );
 
         free( pLCSBLK );
@@ -1496,8 +1499,8 @@ int  ParseArgs( DEVBLK* pDEVBLK, PLCSBLK pLCSBLK,
     // argv[0];
 
     // Don't allow us to exceed the allocated storage (sanity check)
-    if( argc > 10 )
-        argc = 10;
+    if( argc > (MAX_ARGS-1))
+        argc = (MAX_ARGS-1);
 
     for( i = argc; i > 0; i-- )
         argv[i] = argv[i - 1];
@@ -1612,7 +1615,7 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
     char*       pszKeyword;             // -> Statement keyword
     char*       pszOperand;             // -> Statement operand
     int         argc;                   // Number of args
-    char*       argv[12];               // Argument array
+    char*       argv[MAX_ARGS];         // Argument array
 
     PLCSPORT    pPort;
     PLCSDEV     pDev;
@@ -1667,13 +1670,13 @@ static int  BuildOAT( char* pszOATName, PLCSBLK pLCSBLK )
 
         // Extract any arguments
         for( argc = 0;
-             argc < 12 &&
+             argc < MAX_ARGS &&
                  ( argv[argc] = strtok( NULL, " \t" ) ) != NULL &&
                  argv[argc][0] != '#';
              argc++ );
 
         // Clear any unused argument pointers
-        for( i = argc; i < 12; i++ )
+        for( i = argc; i < MAX_ARGS; i++ )
             argv[i] = NULL;
 
         if( strcasecmp( pszKeyword, "HWADD" ) == 0 )
@@ -1995,6 +1998,17 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY(DEVBLK);
 }
 END_DEPENDENCY_SECTION;
+
+HDL_REGISTER_SECTION;       // ("Register" our entry-points)
+
+//             Hercules's        Our
+//             registered        overriding
+//             entry-point       entry-point
+//             name              value
+
+HDL_REGISTER ( debug_tt32_stats, display_tt32_stats );
+
+END_REGISTER_SECTION;
 
 
 HDL_DEVICE_SECTION;

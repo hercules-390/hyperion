@@ -26,6 +26,7 @@
 #define OPTION_FAST_MOVECHAR            /* Performance option        */
 #define OPTION_FAST_MOVELONG            /* Performance option        */
 #define OPTION_FAST_PREFIX              /* Performance option        */
+#define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
 #define OPTION_IODELAY_LINUX_DEFAULT 800/* Default if OSTAILOR LINUX */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
@@ -39,13 +40,12 @@
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
 #define FEATURE_ALD_FORMAT            0
 #define FEATURE_SIE_MAXZONES          8
-#define FEATURE_FAST_DEVLOOKUP        1 /* Fast devnum/subchan lookup*/
 
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 
 
 // (handled automatically in configure.ac)
-// #define OPTION_DYNAMIC_LOAD 
+// #define OPTION_DYNAMIC_LOAD
 
 
 /* Allow for compiler command line overrides */
