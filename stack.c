@@ -333,15 +333,8 @@ int     protect = 0;                    /* Protection bits           */
     if (rc != 0)
         ARCH_DEP(program_interrupt) (regs, regs->dat.xcode);
 
-    /* Low-address protection prohibits stores into PSA locations */
-    if (acctype == ACCTYPE_WRITE
-        && ARCH_DEP(is_low_address_protected) (vaddr, regs->dat.private, regs))
-        goto trap_prot;
-
     /* Page protection prohibits all stores into the page */
     protect = regs->dat.protect;
-    if (acctype == ACCTYPE_WRITE && protect)
-        goto trap_prot;
 
     /* Convert real address to absolute address */
     aaddr = APPLY_PREFIXING (regs->dat.raddr, regs->PX);
@@ -360,30 +353,17 @@ int     protect = 0;                    /* Protection bits           */
         /* Convert host real address to host absolute address */
         aaddr = APPLY_PREFIXING (regs->hostregs->dat.raddr, regs->hostregs->PX);
 
-        protect = regs->hostregs->dat.protect;
+        protect |= regs->hostregs->dat.protect;
     }
 #endif /*defined(_FEATURE_SIE)*/
 
-    /* Check for HOST Page protection */
-    if (acctype == ACCTYPE_WRITE && protect)
-        goto trap_prot;
+    if(acctype == ACCTYPE_WRITE)
+        if( ARCH_DEP(is_store_protected) (vaddr, STORAGE_KEY(aaddr, regs), regs->psw.pkey, regs) )
+           goto trap_prot;
+    else
+         if( ARCH_DEP(is_fetch_protected) (vaddr, STORAGE_KEY(aaddr, regs), regs->psw.pkey, regs) )
+             goto trap_prot;
 
-    if (!((regs->psw.pkey == 0)
-        || ((regs->CR(0) & CR0_STORE_OVRD)
-        && ((STORAGE_KEY(aaddr, regs) & STORKEY_KEY) == 0x90))))
-    {
-        regs->dat.protect = 0; /* clear ALE, PTE protect flag */
-        /* Check Key protection for store */
-        if (acctype == ACCTYPE_WRITE
-            && ((STORAGE_KEY(aaddr, regs) & STORKEY_KEY) != regs->psw.pkey))
-            goto trap_prot;
-
-        /* Check Key protection for fetch */
-        if (acctype == ACCTYPE_READ
-            && (STORAGE_KEY(aaddr, regs) & STORKEY_FETCH)
-            && ((STORAGE_KEY(aaddr, regs) & STORKEY_KEY) != regs->psw.pkey))
-            goto trap_prot;
-    }
     /* Set the reference bits in the storage key */
     STORAGE_KEY(aaddr, regs) |= STORKEY_REF;
 
