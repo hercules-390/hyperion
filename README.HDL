@@ -106,7 +106,7 @@ static void *gui_cpu_state(REGS *regs)
 
     /* Call higher level routine if one exists */
     if((prev_cpu_state = HDL_FINDNXT(debug_cpu_state,gui_cpu_state)))
-        prev_cpu_state(regs);
+        return prev_cpu_state(regs);
 
     return NULL;
 }
@@ -123,7 +123,7 @@ void * (*prev_panel_command)(char *);
     else
         /* Call higher level command handler */
         if((prev_panel_command = HDL_FINDNXT(panel_command,ProcessCommand)))
-            prev_panel_command(command);
+            return prev_panel_command(command);
 
     return NULL;
 }
