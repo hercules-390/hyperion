@@ -2,6 +2,7 @@ AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
 AM_INIT_AUTOMAKE(hercules,2.14a)
+AM_CONFIG_HEADER(config.h)
 
 dnl We can switch to using a config.h once every source file includes it
 dnl AM_CONFIG_HEADER(autoconf/config.h)
@@ -71,9 +72,9 @@ if test x$ac_cv_attr_regparm != xyes; then
 fi
 
 case "$host_cpu" in
-	  i386|i486|i586|i686) ;;
+	  i486|i586|i686) ;;
   	  *)
-            # byteswap assembler routines are i386-only
+            # byteswap assembler routines are i486+-only
             AC_DEFINE(NO_ASM_BYTESWAP)
 	    ;;
 esac
@@ -96,7 +97,7 @@ AC_ARG_ENABLE(het-bzip2,
                esac],
               [het_bzip2=$have_libbz2])
 
-if test $cckd_bzip2 = yes -o $het_bzip2 = yes; then
+if test $cckd_bzip2 = yes || test $het_bzip2 = yes; then
   if test $have_libbz2 != yes; then
     AC_MSG_ERROR(bzip2 compression requested but libbz2 not found)
   else
@@ -115,7 +116,11 @@ fi
 # Library functions
 
 AC_CHECK_FUNCS(sqrtl)
-AC_CHECK_FUNCS([setresuid setreuid], [break])
+AC_CHECK_FUNCS([setresuid setreuid],
+               [enable_setuid=true;break])
+if test x$enable_setuid != xtrue; then
+  AC_DEFINE([NO_SETUID])
+fi
 
 # User-definable settings
 
@@ -160,7 +165,7 @@ AC_ARG_ENABLE(optimization,
                esac],
               [optimize=true])
 
-if test x$optimize = xtrue -a x$debug != xtrue; then
+if test x$optimize = xtrue && test x$debug != xtrue; then
   case "$host_cpu" in
 	  i586|i686)
 	    if test "$GCC" = "yes"; then
@@ -210,5 +215,9 @@ AH_TEMPLATE([HET_BZIP2],
 	    [Define to enable bzip2 compression in emulated tapes])
 AH_TEMPLATE([EXTERNALGUI],
             [Define to build interface to external Windows GUI])
+AH_TEMPLATE([HAVE_U_INT],
+            [Define if your system uses u_int8_t, etc. instead of uint8_t])
+AH_TEMPLATE([NO_SETUID],
+            [Define to disable setuid operation])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
