@@ -371,7 +371,7 @@ U16     cpuad;                          /* Originating CPU address   */
         )
     {
         /* Apply prefixing if the parameter is a storage address */
-        if ((sysblk.servparm & 0x00000007) == 0)
+        if ( (sysblk.servparm & ~0x00000007) )
             sysblk.servparm =
                 APPLY_PREFIXING (sysblk.servparm, regs->PX);
 
@@ -381,6 +381,9 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Store service signal parameter at PSA+X'80' */
         psa = (void*)(sysblk.mainstor + regs->PX);
         STORE_FW(psa->extparm,sysblk.servparm);
+
+        /* Reset service parameter */
+        sysblk.servparm = 0;
 
         /* Reset service signal pending */
         OFF_IC_SERVSIG;

@@ -2717,8 +2717,8 @@ else
   BUILD_FTHREADS_FALSE=
 fi
 
-echo "$as_me:2720: checking wether ${CC-cc} accepts -pthread" >&5
-echo $ECHO_N "checking wether ${CC-cc} accepts -pthread... $ECHO_C" >&6
+echo "$as_me:2720: checking whether ${CC-cc} accepts -pthread" >&5
+echo $ECHO_N "checking whether ${CC-cc} accepts -pthread... $ECHO_C" >&6
 
 echo 'void f(){}' >conftest.c
 if test -z "`${CC-cc} -pthread -c conftest.c 2>&1`"; then
