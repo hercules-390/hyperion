@@ -146,7 +146,7 @@ int  i;
     tcba = duct11 & DUCT11_TCBA;
 
     /* Obtain the absolute address of the trap control block */
-    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_WRITE);
+    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
 
 #if defined(FEATURE_ESAME)
     /* Fetch word 0 of the TCB */

@@ -521,6 +521,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
+    INVALIDATE_AIA(regs);
+
+    INVALIDATE_AEA_ALL(regs);
+
 }
 #endif /*defined(FEATURE_SUBSPACE_GROUP)*/
 
@@ -2435,7 +2439,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
             /* ASX translation exception if ASTE invalid bit is one */
             if (aste[0] & ASTE0_INVALID)
+            {
+                regs->TEA = pasn;
                 ARCH_DEP(program_interrupt) (regs, PGM_ASX_TRANSLATION_EXCEPTION);
+            }
         }
 
         /* Obtain the new PSTD or PASCE from the ASTE */

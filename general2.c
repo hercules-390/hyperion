@@ -1674,11 +1674,10 @@ int     ar1 = 4;                        /* Access register number    */
             break;
         }
 
-        regs->GR_L(5) = tempword1;
-
         /* Check bit 0 of GR0 */
         if ( ((U32) regs->GR_L(0)) < 0 )
         {
+            regs->GR_L(5) = tempword1;
             cc = 3;
             break;
         }
@@ -1689,6 +1688,8 @@ int     ar1 = 4;                        /* Access register number    */
         tempaddress &= ADDRESS_MAXWRAP(regs);
         tempword2 = ARCH_DEP(vfetch4) ( tempaddress, ar1, regs );
         tempword3 = ARCH_DEP(vfetch4) ( tempaddress + 4, ar1, regs );
+
+        regs->GR_L(5) = tempword1;
 
         if ( regs->GR_L(0) == tempword2 )
         {

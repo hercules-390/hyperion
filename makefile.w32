@@ -15,7 +15,7 @@ ifndef HOST_ARCH
 HOST_ARCH=pentium
 endif
 
-VERSION  = 2.13c_$(HOST_ARCH)
+VERSION  = 2.13d_$(HOST_ARCH)
 
 #   Set the default directory where you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -34,7 +34,8 @@ DEST = $(DESTDIR)
 endif
 
 # Standard compiler flags used for all architectures
-CFLAGS = -Wall -fomit-frame-pointer -DVERSION=$(VERSION) -DNO_ATTR_REGPARM
+CFLAGS = -Wall -fomit-frame-pointer -DVERSION=$(VERSION) \
+         -DNO_ATTR_REGPARM -DNO_IEEE_SUPPORT
 
 # Directory where the pthreads-win32 library was installed.
 ifeq ($(WIN),yes)

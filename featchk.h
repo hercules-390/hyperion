@@ -139,7 +139,7 @@
 #endif
 
 #if defined(FEATURE_BINARY_FLOATING_POINT) \
- && defined(OPTION_NO_IEEE_SUPPORT)
+ && defined(NO_IEEE_SUPPORT)
  #undef FEATURE_BINARY_FLOATING_POINT
 #endif
 

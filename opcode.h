@@ -94,7 +94,7 @@ extern zz_func opcode_edxx[][GEN_MAXARCH];
 #if defined(OPTION_INSTRUCTION_COUNTING)
 
 #define COUNT_INST(_inst, _regs) \
-{ \
+do { \
 int used; \
     switch((_inst)[0]) { \
 	case 0x01: \
@@ -150,7 +150,7 @@ int used; \
 	logmsg("First use: "); \
 	ARCH_DEP(display_inst) ((_regs), (_inst)); \
     } \
-}
+} while(0)
 
 #else
 
@@ -160,12 +160,12 @@ int used; \
 
 
 #define UNROLLED_EXECUTE(_regs) \
-    { \
-        (_regs)->instvalid = 0; \
-        INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
-        (_regs)->instvalid = 1; \
-        EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
-    }
+do { \
+    (_regs)->instvalid = 0; \
+    INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs)); \
+    (_regs)->instvalid = 1; \
+    EXECUTE_INSTRUCTION ((_regs)->inst, 0, (_regs)); \
+} while(0)
 
 
 /* Main storage access locking 
@@ -185,29 +185,6 @@ int used; \
          ARCH_DEP(purge_alb)((_regs))
  #define SYNCHRONIZE_BROADCAST(_regs)
 #else
-
-#if 0
-#define OBTAIN_MAINLOCK(_register_context) \
-do { \
-    if( pthread_mutex_trylock(&sysblk.mainlock) ) \
-    { \
-        (_register_context)->psw.IA -= (_register_context)->psw.ilc; \
-        (_register_context)->psw.IA &= ADDRESS_MAXWRAP((_register_context)); \
-        longjmp((_register_context)->progjmp,SIE_NO_INTERCEPT); \
-    } \
-    (_register_context)->mainlock = 1; \
-    ARCH_DEP(synchronize_broadcast)((_register_context)); \
-} while(0)
-
-#define RELEASE_MAINLOCK(_register_context) \
-do { \
-    (_register_context)->mainlock = 0; \
-    pthread_mutex_unlock(&sysblk.mainlock); \
-    pthread_mutex_lock(&sysblk.intlock); \
-    pthread_cond_broadcast(&sysblk.brdcstcnd2); \
-    pthread_mutex_unlock(&sysblk.intlock); \
-} while(0)
-#else
 #define OBTAIN_MAINLOCK(_register_context) \
 do { \
     pthread_mutex_lock(&sysblk.mainlock); \
@@ -219,7 +196,6 @@ do { \
     (_register_context)->mainlock = 0; \
     pthread_mutex_unlock(&sysblk.mainlock); \
 } while(0)
-#endif
 
 #define BROADCAST_PTLB(_regs) \
 do { \
@@ -251,21 +227,21 @@ do { \
 #if !defined(OPTION_FOOTPRINT_BUFFER)
 
 #define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
-    { \
-	COUNT_INST((_instruction), (_regs)); \
-	opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
-    }
+do { \
+    COUNT_INST((_instruction), (_regs)); \
+    opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
+} while(0)
 
 #else /*defined(OPTION_FOOTPRINT_BUFFER)*/
 
 #define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
-    { \
-	sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]] = *(_regs); \
-	memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_instruction),6); \
-	sysblk.footprptr[(_regs)->cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
-	COUNT_INST((_instruction), (_regs)); \
-	opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
-    }
+do { \
+    sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]] = *(_regs); \
+    memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_instruction),6); \
+    sysblk.footprptr[(_regs)->cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
+    COUNT_INST((_instruction), (_regs)); \
+    opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
+} while(0)
 
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
 
@@ -440,18 +416,18 @@ do { \
 #undef	INVALIDATE_AIA
 
 #define INSTRUCTION_FETCH(_dest, _addr, _regs) \
+do { \
+    if( (_regs)->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
+      && ((_addr) & PAGEFRAME_BYTEMASK) <= PAGEFRAME_PAGESIZE - 6) \
     { \
-	if( (_regs)->VI == ((_addr) & PAGEFRAME_PAGEMASK) \
-	 && ((_addr) & PAGEFRAME_BYTEMASK) <= PAGEFRAME_PAGESIZE - 6) \
-	{ \
-	    if ((_addr) & 0x01) \
-		ARCH_DEP(program_interrupt) ((_regs), PGM_SPECIFICATION_EXCEPTION); \
-	    memcpy ((_dest), sysblk.mainstor + (_regs)->AI + \
+        if((_addr) & 0x01) \
+            ARCH_DEP(program_interrupt)((_regs), PGM_SPECIFICATION_EXCEPTION); \
+        memcpy ((_dest), sysblk.mainstor + (_regs)->AI + \
 				    ((_addr) & PAGEFRAME_BYTEMASK) , 6); \
-	} \
-	else \
-	    ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)); \
-    }
+    } \
+    else \
+        ARCH_DEP(instfetch) ((_dest), (_addr), (_regs)); \
+} while(0)
 
 #define INVALIDATE_AIA(_regs) \
     (_regs)->VI = 1
@@ -484,11 +460,11 @@ do { \
 	(_regs)->VE((_arn)) = 1
 
 #define INVALIDATE_AEA_ALL(_regs) \
-    { \
-	int i; \
-	for(i = 0; i < 16; i++) \
-	    (_regs)->VE(i) = 1; \
-    }
+do { \
+    int i; \
+    for(i = 0; i < 16; i++) \
+        (_regs)->VE(i) = 1; \
+} while(0)
 
 #else /*!defined(OPTION_AEA_BUFFER)*/
 
@@ -962,17 +938,17 @@ do { \
 #endif
 
 #define SIE_INTERCEPT(_regs) \
-	{ \
-	    if((_regs)->sie_state) \
-		longjmp((_regs)->progjmp, SIE_INTERCEPT_INST); \
-	}
+do { \
+    if((_regs)->sie_state) \
+	longjmp((_regs)->progjmp, SIE_INTERCEPT_INST); \
+} while(0)
 
 #define SIE_TRANSLATE(_addr, _acctype, _regs) \
-	{ \
-	    if((_regs)->sie_state && !(_regs)->sie_pref) \
-		*(_addr) = SIE_LOGICAL_TO_ABS ((_regs)->sie_mso + *(_addr), \
-		  USE_PRIMARY_SPACE, (_regs)->hostregs, (_acctype), 0); \
-	}
+do { \
+    if((_regs)->sie_state && !(_regs)->sie_pref) \
+	*(_addr) = SIE_LOGICAL_TO_ABS ((_regs)->sie_mso + *(_addr), \
+	  USE_PRIMARY_SPACE, (_regs)->hostregs, (_acctype), 0); \
+} while(0)
 
 #define SIE_ONLY_INSTRUCTION(_regs) \
     if(!(_regs)->sie_state) \

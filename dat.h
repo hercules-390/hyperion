@@ -1437,44 +1437,43 @@ tran_excp_addr:
 
     /* Set the address space indication in the exception address */
 #if defined(FEATURE_ESAME)
-#if 0
-    if ((asce & ASCE_TO) == (regs->CR(1) & ASCE_TO))
-        regs->TEA |= TEA_ST_PRIMARY;
-    else if ((asce & ASCE_TO) == (regs->CR(7) & ASCE_TO))
-        regs->TEA |= TEA_ST_SECNDRY;
-    else if ((asce & ASCE_TO) == (regs->CR(13) & ASCE_TO))
-        regs->TEA |= TEA_ST_HOME;
-    else
-        regs->TEA |= TEA_ST_ARMODE;
-#else
-    regs->TEA |= stid;
-#endif
-#else /*!defined(FEATURE_ESAME)*/
-    if ((std & STD_STO) != (regs->CR(1) & STD_STO))
+    if(stid == TEA_ST_ARMODE)
     {
-        if ((std & STD_STO) == (regs->CR(7) & STD_STO))
-        {
-            if (PRIMARY_SPACE_MODE(&regs->psw)
-              || SECONDARY_SPACE_MODE(&regs->psw))
-            {
-                regs->TEA |= TEA_SECADDR | TEA_ST_SECNDRY;
-            } else {
-                regs->TEA |= TEA_ST_SECNDRY;
-            }
-        } else {
-            if ((std & STD_STO) == (regs->CR(13) & STD_STO))
-            {
-                regs->TEA |= TEA_ST_HOME;
-            } else {
-                regs->TEA |= TEA_ST_ARMODE;
-            }
-        }
+        if ((asce & ASCE_TO) == (regs->CR(1) & ASCE_TO))
+            regs->TEA |= TEA_ST_PRIMARY;
+        else if ((asce & ASCE_TO) == (regs->CR(7) & ASCE_TO))
+            regs->TEA |= TEA_ST_SECNDRY;
+        else if ((asce & ASCE_TO) == (regs->CR(13) & ASCE_TO))
+            regs->TEA |= TEA_ST_HOME;
+        else
+            regs->TEA |= TEA_ST_ARMODE;
     }
+    else
+        regs->TEA |= stid;
+#else /*!defined(FEATURE_ESAME)*/
+    if(stid == TEA_ST_ARMODE)
+    {
+        if ((std & STD_STO) == (regs->CR(1) & STD_STO))
+            regs->TEA |= TEA_ST_PRIMARY;
+        else if ((std & STD_STO) == (regs->CR(7) & STD_STO))
+            regs->TEA |= TEA_ST_SECNDRY | TEA_SECADDR;
+        else if ((std & STD_STO) == (regs->CR(13) & STD_STO))
+            regs->TEA |= TEA_ST_HOME;
+        else
+            regs->TEA |= TEA_ST_ARMODE;
+    }
+    else
+        if((stid == TEA_ST_SECNDRY)
+          && (PRIMARY_SPACE_MODE(&regs->psw)
+            || SECONDARY_SPACE_MODE(&regs->psw)))
+            regs->TEA |= stid | TEA_SECADDR;
+        else
+            regs->TEA |= stid;
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Set the exception access identification */
 #if defined(FEATURE_ESAME)
-    if ((stid | TEA_ST_ARMODE)
+    if ((stid & TEA_ST_ARMODE)
 #else
     if (ACCESS_REGISTER_MODE(&regs->psw)
 #endif

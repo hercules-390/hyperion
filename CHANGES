@@ -1,3 +1,8 @@
+02 Jun 2001 Moved IEEE option from featall.h to makefile.w32 - Jan Jaeger
+02 Jun 2001 Correct tea on asx translation exception in PC - Paul Leisy
+02 Jun 2001 Fix update of GR5 in UPT - Paul Leisy
+01 Jun 2001 Clear effective and instruction address cache in BSG - Paul Leisy
+01 Jun 2001 Correct TEA stid identification bits - Paul Leisy
 31 May 2001 Correct TLB purging on SIE dispatch - Jan Jaeger
 31 May 2001 IVSK SIE fix - Paul Leisy
 30 May 2001 Added CHSC channel subsystem call instruction - Jan Jaeger
