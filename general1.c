@@ -1334,7 +1334,7 @@ U32     n;                              /* 32-bit operand value      */
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
 #endif /*defined(_FEATURE_SIE)*/
 
 }
@@ -1406,7 +1406,7 @@ U32     n1, n2;                         /* 32-bit operand values     */
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
 #endif /*defined(_FEATURE_SIE)*/
 
 }

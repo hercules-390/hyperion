@@ -1300,7 +1300,7 @@ BYTE    obyte;                          /* Operand byte              */
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_TS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
 #endif /*defined(_FEATURE_SIE)*/
 
 #if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)

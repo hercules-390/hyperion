@@ -2284,7 +2284,7 @@ U64     n;                              /* 64-bit operand value      */
 
 #if defined(_FEATURE_ZSIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
 #endif /*defined(_FEATURE_ZSIE)*/
 
 } /* end DEF_INST(compare_and_swap_long) */
@@ -2355,7 +2355,7 @@ U64     n1, n2;                         /* 64-bit operand values     */
 
 #if defined(_FEATURE_ZSIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
-        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+        longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
 #endif /*defined(_FEATURE_ZSIE)*/
 
 } /* end DEF_INST(compare_double_and_swap_long) */

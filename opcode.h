@@ -378,9 +378,9 @@ do { \
 
 
 #define PER_RANGE_CHECK(_addr, _low, _high) \
-    ((((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ?
-    (((_addr) >= ((_low) & MAXADDRESS) && (_addr) <= ((_high) & MAXADDRESS)) : \
-    (((_addr) >= ((_low) & MAXADDRESS) || (_addr) <= ((_high) & MAXADDRESS))
+  ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
+  (((_addr) >= ((_low) & MAXADDRESS)) && (_addr) <= ((_high) & MAXADDRESS)) : \
+  (((_addr) >= ((_low) & MAXADDRESS)) || (_addr) <= ((_high) & MAXADDRESS)) )
 
 
 #ifdef WORDS_BIGENDIAN
