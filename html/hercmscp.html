@@ -75,6 +75,20 @@ number.
   <dt>Issued by
   <dd>cpu.c, function cpu_thread
   </dl>
+<dt><code><a name="HHCCP006S">
+HHCCP006S Cannot create timer thread: <em>error</em>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+      <dd>An attempt to create the thread used for timing functions has
+      failed.  The error is described by <code><em>error</em></code>.
+      The CPU thread terminates and successful continuation of Hercules
+      is not possible.
+  <dt>Action
+  <dd>Correct the error and restart Hercules.
+  <dt>Issued by
+  <dd>cpu.c, function cpu_thread
+  </dl>
 <dt><code><a name="HHCCP007I">
 HHCCP007I CPU<em>number</em> architecture mode set to <em>mode</em>
 </a></code>

@@ -1,5 +1,10 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+25 Sep 2003 Fix DASDCOPY bug copying too much to uncompressed FBA o/p - Fish
+25 Sep 2003 Fix dasdtab entry for 3310 FBA device type - Fish
+25 Sep 2003 Initial power-on reset for mainstor & expanded storage - Fish
+25 Sep 2003 Resolve & verify HTTPROOT in config.c before startup - Fish
+25 Sep 2003 Fix bug in fbadasd_init_handler causing DASDCOPY crash - Fish
 21 Sep 2003 Complete overhaul to the build process  (merge of libtool_exp)
             version set to 2.17.c0
             - A Lot of People (commit by Ivan Warren)

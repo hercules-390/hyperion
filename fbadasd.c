@@ -13,6 +13,7 @@
 
 #include "hercules.h"
 
+#include "dasdblks.h"  // (need #define DEFAULT_FBA_TYPE)
 #include "devtype.h"
 
 #if !defined(WIN32) && !defined(__APPLE__)
@@ -63,8 +64,8 @@ int     i;                              /* Loop index                */
 CKDDASD_DEVHDR  devhdr;                 /* Device header             */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
 
-    if(!sscanf(dev->typname,"%hx",&(dev->devtype)))
-        dev->devtype = 0x3370;
+    if (!dev->typname || !sscanf(dev->typname,"%hx",&(dev->devtype)))
+        dev->devtype = DEFAULT_FBA_TYPE;
 
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)

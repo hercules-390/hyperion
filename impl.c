@@ -11,10 +11,9 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include "httpmisc.h"
-#include "hostinfo.h"
 #include "devtype.h"
 #include "herc_getopt.h"
+#include "httpmisc.h"
 
 #if defined(FISH_HANG)
 extern  int   bFishHangAtExit;  // (set to true when shutting down)
@@ -22,6 +21,9 @@ extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
 extern  void  FishHangReport();
 extern  void  FishHangAtExit();
 #endif // defined(FISH_HANG)
+
+/* (delayed_exit function defined in config.c) */
+extern void delayed_exit (int exit_code);
 
 /* forward define process_script_file (ISW20030220-3) */
 int process_script_file(char *,int);
@@ -46,7 +48,7 @@ static void sigint_handler (int signo)
     {
         /* Release the configuration */
         release_config();
-        exit(1);
+        delayed_exit(1);
     }
 
     /* Set SIGINT request pending flag */
@@ -268,7 +270,7 @@ TID     rctid;                          /* RC file thread identifier */
         fprintf (stderr,
                 "usage: %s [-f config-filename]\n",
                 argv[0]);
-        exit(1);
+        delayed_exit(1);
     }
 
     /* Register the SIGINT handler */
@@ -277,7 +279,7 @@ TID     rctid;                          /* RC file thread identifier */
         fprintf (stderr,
                 _("HHCIN001S Cannot register SIGINT handler: %s\n"),
                 strerror(errno));
-        exit(1);
+        delayed_exit(1);
     }
 
     /* Ignore the SIGPIPE signal, otherwise Hercules may terminate with
@@ -310,7 +312,7 @@ TID     rctid;                          /* RC file thread identifier */
                   _("HHCIN003S Cannot register SIGILL/FPE/SEGV/BUS/USR "
                     "handler: %s\n"),
                     strerror(errno));
-            exit(1);
+            delayed_exit(1);
         }
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
@@ -326,39 +328,21 @@ TID     rctid;                          /* RC file thread identifier */
         fprintf (stderr,
               _("HHCIN004S Cannot create watchdog thread: %s\n"),
                 strerror(errno));
-        exit(1);
+        delayed_exit(1);
     }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 
 #if defined(OPTION_HTTP_SERVER)
-    if(sysblk.httpport) {
+    if (sysblk.httpport)
+    {
         /* Start the http server connection thread */
-        if (!sysblk.httproot)
-        {
-#if defined(WIN32)
-            char process_dir[1024];
-            if (get_process_directory(process_dir,1024) > 0)
-                sysblk.httproot = strdup(process_dir);
-            else
-#endif /*defined(WIN32)*/
-            sysblk.httproot = HTTP_ROOT;
-        }
-#if defined(WIN32)
-        if (is_win32_directory(sysblk.httproot))
-        {
-            char posix_dir[1024];
-            convert_win32_directory_to_posix_directory(sysblk.httproot,posix_dir);
-            sysblk.httproot = strdup(posix_dir);
-        }
-#endif /*defined(WIN32)*/
-        TRACE("HTTPROOT = %s\n",sysblk.httproot);
         if ( create_thread (&sysblk.httptid, &sysblk.detattr,
                             http_server, NULL) )
         {
             fprintf (stderr,
                   _("HHCIN005S Cannot create http_server thread: %s\n"),
                     strerror(errno));
-            exit(1);
+            delayed_exit(1);
         }
     }
 #endif /*defined(OPTION_HTTP_SERVER)*/
@@ -372,7 +356,7 @@ TID     rctid;                          /* RC file thread identifier */
             fprintf (stderr,
                   _("HHCIN006S Cannot create shared_server thread: %s\n"),
                     strerror(errno));
-            exit(1);
+            delayed_exit(1);
         }
 
     /* Retry pending connections */
@@ -387,7 +371,7 @@ TID     rctid;                          /* RC file thread identifier */
                     fprintf (stderr,
                           _("HHCIN007S Cannot create %4.4X connection thread: %s\n"),
                             dev->devnum, strerror(errno));
-                    exit(1);
+                    delayed_exit(1);
                 }
     }
 #endif

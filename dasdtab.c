@@ -6,6 +6,10 @@
 /* each DASD device and control unit supported by Hercules.          */
 /* Routines are also provided to perform table lookup and to build   */
 /* to build the device identifier and characteristics areas.         */
+/*                                                                   */
+/* Note: source for most CKD/FBA device capacities take from SDI's   */
+/* device capacity page at: http://www.sdisw.com/dasd_capacity.html  */
+/* (used with permission)                                            */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -83,8 +87,8 @@ static CKDCU ckdcutab[] = {
 /*-------------------------------------------------------------------*/
 static FBADEV fbatab[] = {
 /* name          devt class type mdl  bpg bpp size   blks   cu     */
- {"3310",       0x3310,0x21,0x01,0x01, 32,352,512, 126016,0x4331},
- {"3310-1",     0x3310,0x21,0x01,0x01, 32,352,512, 126016,0x4331},
+ {"3310",       0x3310,0x21,0x01,0x01, 32,352,512, 125664,0x4331},
+ {"3310-1",     0x3310,0x21,0x01,0x01, 32,352,512, 125664,0x4331},
  {"3310-x",     0x3310,0x21,0x01,0x01, 32,352,512,      0,0x4331},
 
  {"3370",       0x3370,0x21,0x02,0x00, 62,744,512, 558000,0x3880},

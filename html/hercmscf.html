@@ -883,13 +883,12 @@ HHCCF065I Hercules: tid=<em>threadid</em>, pid=<em>processid</em>,
       <dd>config.c, function build_config
   </dl>
 <dt><code><a name="HHCCF066E">
-HHCCF066E Cannot create timer thread: <em>error</em>
+HHCCF066E Invalid HTTPROOT: <em>error</em>
 </a></code>
 <dd><dl>
   <dt>Meaning
-      <dd>An attempt to create the thread used for timing functions has
-      failed.  Hercules will continue, but successful execution is
-      unlikely.  The error is described by <code><em>error</em></code>.
+  <dd>The pathname specified on your HTTPROOT statement is invalid.
+The error is described by <code><em>error</em></code>.
   <dt>Action
   <dd>Correct the error and restart Hercules.
   <dt>Issued by

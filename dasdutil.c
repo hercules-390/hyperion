@@ -1684,7 +1684,6 @@ int             x=O_EXCL;               /* Open option               */
                     fname, strerror(errno));
             return -1;
         }
-        sectnum = sectors + 1;
     }
     /* Write each sector */
     else
@@ -1739,7 +1738,7 @@ int             x=O_EXCL;               /* Open option               */
     /* Display completion message */
     fprintf (stderr,
             _("HHCDU052I %u sectors successfully written to file %s\n"),
-            sectnum, fname);
+            sectors, fname);
 
     return 0;
 } /* end function create_fba */

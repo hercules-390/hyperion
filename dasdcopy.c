@@ -57,6 +57,7 @@ FBADEV         *fba=NULL;               /* -> FBA device table entry */
 int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
 BYTE            msgbuf[512];            /* Message buffer            */
+size_t          fba_bytes_remaining;    /* FBA bytes to be copied    */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -285,6 +286,7 @@ BYTE            msgbuf[512];            /* Message buffer            */
     }
     else
     {
+        fba_bytes_remaining = idev->fbanumblk * idev->fbablksiz;
         if (blks < 0) blks = idev->fbanumblk;
         else if (blks == 0) blks = (idev->hnd->used)(idev);
         fba = dasd_lookup (DASD_FBADEV, NULL, idev->devtype, blks);
@@ -370,8 +372,21 @@ BYTE            msgbuf[512];            /* Message buffer            */
                       idev->ckdtrksz, &unitstat);
         }
         else
-            rc = (odev->hnd->write)(odev,  i, 0, idev->buf,
-                      idev->buflen, &unitstat);
+        {
+            if (fba_bytes_remaining >= (size_t)idev->buflen)
+            {
+                rc = (odev->hnd->write)(odev,  i, 0, idev->buf,
+                          idev->buflen, &unitstat);
+                fba_bytes_remaining -= (size_t)idev->buflen;
+            }
+            else
+            {
+                ASSERT(fba_bytes_remaining > 0 && (i+1) >= n);
+                rc = (odev->hnd->write)(odev,  i, 0, idev->buf,
+                          (int)fba_bytes_remaining, &unitstat);
+                fba_bytes_remaining = 0;
+            }
+        }
         if (rc < 0)
         {
             fprintf (stderr, _("HHCDC009E %s: %s write error %s %d "

@@ -284,23 +284,23 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
         symbol_max+=SYMBOL_TABLE_INCREMENT;
         if(symbols==NULL)
         {
-	    symbols=malloc(sizeof(SYMBOL_TOKEN *)*symbol_max);
-	    if(symbols==NULL)
-	    {
-	        symbol_max=0;
-	        symbol_count=0;
-	        return(NULL);
-	    }
+        symbols=malloc(sizeof(SYMBOL_TOKEN *)*symbol_max);
+        if(symbols==NULL)
+        {
+            symbol_max=0;
+            symbol_count=0;
+            return(NULL);
+        }
         }
         else
         {
-	    symbols=realloc(symbols,sizeof(SYMBOL_TOKEN *)*symbol_max);
-	    if(symbols==NULL)
-	    {
-	        symbol_max=0;
-	        symbol_count=0;
-	        return(NULL);
-	    }
+        symbols=realloc(symbols,sizeof(SYMBOL_TOKEN *)*symbol_max);
+        if(symbols==NULL)
+        {
+            symbol_max=0;
+            symbol_count=0;
+            return(NULL);
+        }
         }
     }
     tok=malloc(sizeof(SYMBOL_TOKEN));

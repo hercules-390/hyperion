@@ -24,10 +24,10 @@
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
-
 #include "devtype.h"
-
 #include "opcode.h"
+#include "httpmisc.h"
+#include "hostinfo.h"
 
 #if !defined(_GEN_ARCH)
 
@@ -135,7 +135,7 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc)
     return *pargc;
 }
 
-static void delayed_exit (int exit_code)
+void delayed_exit (int exit_code)
 {
     /* Delay exiting is to give the system
      * time to display the error message. */
@@ -448,9 +448,6 @@ BYTE   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
 BYTE   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
 int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #endif /*defined(_FEATURE_ECPSVM)*/
-#if defined(OPTION_HTTP_SERVER)
-BYTE   *shttpport;                      /* -> HTTP port number       */
-#endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(OPTION_SHARED_DEVICES)
 BYTE   *sshrdport;                      /* -> Shared device port nbr */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -467,9 +464,6 @@ U16     mainsize;                       /* Main storage size (MB)    */
 U16     xpndsize;                       /* Expanded storage size (MB)*/
 U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
-#if defined(OPTION_HTTP_SERVER)
-U16     httpport;                       /* HTTP port number          */
-#endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(OPTION_SHARED_DEVICES)
 U16     shrdport;                       /* Shared device port number */
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -566,9 +560,6 @@ BYTE **orig_newargv;
     ecpsvmavail = 0;
     ecpsvmlevel = 20;
 #endif /*defined(_FEATURE_ECPSVM)*/
-#if defined(OPTION_HTTP_SERVER)
-    httpport = 0;
-#endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(OPTION_SHARED_DEVICES)
     shrdport = 0;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -650,9 +641,6 @@ BYTE **orig_newargv;
         secpsvmlvl = NULL;
         ecpsvmac = 0;
 #endif /*defined(_FEATURE_ECPSVM)*/
-#if defined(OPTION_HTTP_SERVER)
-        shttpport = NULL;
-#endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(OPTION_SHARED_DEVICES)
         sshrdport = NULL;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -847,30 +835,48 @@ BYTE **orig_newargv;
 #if defined(OPTION_HTTP_SERVER)
             else if (strcasecmp (keyword, "httpport") == 0)
             {
-                shttpport = operand;
-                if(addargc > 0)
+                if (!operand)
                 {
-                    if(!strcasecmp(addargv[0],"auth"))
+                    fprintf(stderr, _("HHCCF007S Error in %s line %d: "
+                        "Missing argument.\n"),
+                        fname, stmt);
+                    delayed_exit(1);
+                }
+                if (sscanf(operand, "%hu%c", &sysblk.httpport, &c) != 1
+                    || sysblk.httpport == 0 || (sysblk.httpport < 1024 && sysblk.httpport != 80) )
+                {
+                    fprintf(stderr, _("HHCCF029S Error in %s line %d: "
+                            "Invalid HTTP port number %s\n"),
+                            fname, stmt, operand);
+                    delayed_exit(1);
+                }
+                if (addargc > 0)
+                {
+                    if (!strcasecmp(addargv[0],"auth"))
                         sysblk.httpauth = 1;
-                    else if(strcasecmp(addargv[0],"noauth"))
+                    else if (strcasecmp(addargv[0],"noauth"))
                     {
                         fprintf(stderr, _("HHCCF005S Error in %s line %d: "
-                        "Unrecognized argument %s\n"),
-                        fname, stmt, addargv[0]);
+                            "Unrecognized argument %s\n"),
+                            fname, stmt, addargv[0]);
                         delayed_exit(1);
                     }
                     addargc--;
                 }
-                if(addargc > 0)
+                if (addargc > 0)
                 {
+                    if (sysblk.httpuser) free(sysblk.httpuser);
                     sysblk.httpuser = strdup(addargv[1]);
-                    if(--addargc)
+                    if (--addargc)
+                    {
+                        if (sysblk.httppass) free(sysblk.httppass);
                         sysblk.httppass = strdup(addargv[2]);
+                    }
                     else
                     {
                         fprintf(stderr, _("HHCCF006S Error in %s line %d: "
-                        "Userid, but no password given %s\n"),
-                        fname, stmt, addargv[1]);
+                            "Userid, but no password given %s\n"),
+                            fname, stmt, addargv[1]);
                         delayed_exit(1);
                     }
                     addargc--;
@@ -879,15 +885,16 @@ BYTE **orig_newargv;
             }
             else if (strcasecmp (keyword, "httproot") == 0)
             {
-                if (operand)
-                    sysblk.httproot = strdup(operand);
-                else
+                if (!operand)
                 {
                     fprintf(stderr, _("HHCCF007S Error in %s line %d: "
-                    "Missing argument.\n"),
+                        "Missing argument.\n"),
                         fname, stmt);
                     delayed_exit(1);
                 }
+                if (sysblk.httproot) free(sysblk.httproot);
+                sysblk.httproot = strdup(operand);
+                /* (will be validated later) */
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
 #if defined(OPTION_SHARED_DEVICES)
@@ -1396,21 +1403,6 @@ BYTE **orig_newargv;
         }
 #endif /*defined(_FEATURE_ECPSVM)*/
 
-#if defined(OPTION_HTTP_SERVER)
-        /* Parse http port number operand */
-        if (shttpport != NULL)
-        {
-            if (sscanf(shttpport, "%hu%c", &httpport, &c) != 1
-                || httpport == 0 || (httpport < 1024 && httpport != 80) )
-            {
-                fprintf(stderr, _("HHCCF029S Error in %s line %d: "
-                        "Invalid HTTP port number %s\n"),
-                        fname, stmt, shttpport);
-                delayed_exit(1);
-            }
-        }
-#endif /*defined(OPTION_HTTP_SERVER)*/
-
 #if defined(OPTION_SHARED_DEVICES)
         /* Parse shared device port number operand */
         if (sshrdport != NULL)
@@ -1445,6 +1437,59 @@ BYTE **orig_newargv;
             cckd_command (scckd, 0);
 
     } /* end for(scount) */
+
+#if defined(OPTION_HTTP_SERVER)
+    if (sysblk.httpport)
+    {
+        /* If the HTTP root directory is not specified,
+           use a reasonable default */
+        if (!sysblk.httproot)
+        {
+#if defined(WIN32)
+            char process_dir[HTTP_PATH_LENGTH];
+            if (get_process_directory(process_dir,HTTP_PATH_LENGTH) > 0)
+                sysblk.httproot = strdup(process_dir);
+            else
+#endif /*defined(WIN32)*/
+            sysblk.httproot = strdup(HTTP_ROOT);
+        }
+#if defined(WIN32)
+        if (is_win32_directory(sysblk.httproot))
+        {
+            char  posix_dir[HTTP_PATH_LENGTH];
+            convert_win32_directory_to_posix_directory(sysblk.httproot,posix_dir);
+            free(sysblk.httproot); sysblk.httproot = strdup(posix_dir);
+        }
+#endif /*defined(WIN32)*/
+        /* Convert the specified HTTPROOT value to an absolute path
+           ending with a '/' and save in sysblk.httproot. */
+        {
+            char absolute_httproot_path[HTTP_PATH_LENGTH];
+            char save_working_directory[HTTP_PATH_LENGTH];
+            int  rc;
+            if (!realpath(sysblk.httproot,absolute_httproot_path))
+            {
+                fprintf (stderr,
+                    _("HHCCF066E Invalid HTTPROOT: %s\n"),
+                       strerror(errno));
+                delayed_exit(1);
+            }
+            VERIFY(getcwd(save_working_directory,sizeof(save_working_directory)));
+            rc = chdir(absolute_httproot_path);     // (verify path)
+            VERIFY(!chdir(save_working_directory)); // (restore cwd)
+            if (rc != 0)
+            {
+                fprintf (stderr,
+                    _("HHCCF066E Invalid HTTPROOT: %s\n"),
+                       strerror(errno));
+                delayed_exit(1);
+            }
+            strlcat(absolute_httproot_path,"/",sizeof(absolute_httproot_path));
+            free(sysblk.httproot); sysblk.httproot = strdup(absolute_httproot_path);
+            TRACE("HTTPROOT = %s\n",sysblk.httproot);// (debug display)
+        }
+    }
+#endif /*defined(OPTION_HTTP_SERVER)*/
 
 
     /* Set root mode in order to set priority */
@@ -1541,6 +1586,10 @@ BYTE **orig_newargv;
         delayed_exit(1);
     }
 
+    /* Initial power-on reset for main storage */
+    memset(sysblk.mainstor,0,sysblk.mainsize);
+    memset(sysblk.storkeys,0,sysblk.mainsize / STORAGE_KEY_UNITSIZE);
+
 #if 0   /*DEBUG-JJ-20/03/2000*/
     /* Mark selected frames invalid for debugging purposes */
     for (i = 64 ; i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE); i += 2)
@@ -1564,14 +1613,12 @@ BYTE **orig_newargv;
                     xpndsize, strerror(errno));
             delayed_exit(1);
         }
+        /* Initial power-on reset for expanded storage */
+        memset(sysblk.xpndstor,0,sysblk.xpndsize * XSTORE_PAGESIZE);
 #else /*!_FEATURE_EXPANDED_STORAGE*/
         logmsg(_("HHCCF034W Expanded storage support not installed\n"));
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
-
-#if defined(OPTION_HTTP_SERVER)
-    sysblk.httpport = httpport;
-#endif /*defined(OPTION_HTTP_SERVER)*/
 
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;

@@ -56,8 +56,9 @@ int html_include(WEBBLK *webblk, char *filename)
     char buffer[HTTP_PATH_LENGTH];
     int ret;
 
-    strlcpy(fullname,sysblk.httproot,sizeof(fullname));
-    strlcat(fullname,filename,sizeof(fullname));
+    strlcpy( fullname, sysblk.httproot, sizeof(fullname) );
+    strlcat( fullname, filename,        sizeof(fullname) );
+
     inclfile = fopen(fullname,"r");
 
     if (!inclfile)
@@ -278,22 +279,27 @@ char *http_variable(WEBBLK *webblk, char *name, int type)
 
 static void http_verify_path(WEBBLK *webblk, char *path)
 {
-    char resolved_base[HTTP_PATH_LENGTH];
     char resolved_path[HTTP_PATH_LENGTH];
     int i;
-
-    realpath(sysblk.httproot,resolved_base); strlcat(resolved_base,"/",sizeof(resolved_base));
-    realpath(path,resolved_path);
 
     for (i = 0; path[i]; i++)
         if (!isalnum((int)path[i]) && !strchr("/.-_", path[i]))
             http_error(webblk, "404 File Not Found","",
                                "Illegal character in filename");
 
-    if(strncmp(resolved_base,resolved_path,strlen(resolved_base)))
+    if (!realpath( path, resolved_path ))
+    {
         http_error(webblk, "404 File Not Found","",
                            "Invalid pathname");
+    }
 
+    // The following verifies the specified file does not lie
+    // outside the specified httproot (Note: sysblk.httproot
+    // was previously resolved to an absolute path by config.c)
+
+    if (strncmp( sysblk.httproot, resolved_path, strlen(sysblk.httproot)))
+        http_error(webblk, "404 File Not Found","",
+                           "Invalid pathname");
 }
 
 
@@ -364,8 +370,8 @@ static void http_download(WEBBLK *webblk, char *filename)
     struct stat st;
     CONTYP *mime_type = mime_types;
 
-    strlcpy(fullname,sysblk.httproot,sizeof(fullname));
-    strlcat(fullname,filename,sizeof(fullname));
+    strlcpy( fullname, sysblk.httproot, sizeof(fullname) );
+    strlcat( fullname, filename,        sizeof(fullname) );
 
     http_verify_path(webblk,fullname);
 

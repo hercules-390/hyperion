@@ -41,8 +41,10 @@
 
   CODEPAGE  default                     # CodePage conversion table
   DIAG8CMD  disable                     # OS may not issue commands via DIAG 8
+
   HTTPPORT  8081 noauth userid password # HTTP server port
-  
+# HTTPROOT  /usr/local/share/hercules/  # HTTP root directory
+
   PANRATE   FAST                        # Panel refresh rate
 
 
@@ -81,7 +83,7 @@
   000D    3525    punch00d.txt ascii
   000E    1403    print00e.txt crlf
   001F    3270
-#         The following statements are examples. Some of them require 
+#         The following statements are examples. Some of them require
 #         user tailoring before being used.
 # 0580    3420    ickdsf.ipl
 # 0120    3380    mvsv5r.120
@@ -94,7 +96,7 @@
 #             at address 0200
 # 0200.3  3270
 #
-#         The following statement defines 3480 devices 
+#         The following statement defines 3480 devices
 #             at addresses 0280 to 028F
 # 280-28F 3480
 #
@@ -111,7 +113,7 @@
 #
 #         CCUU may also be used to define a 4 digit device address
 #                 in the name
-#                 device file names will be 
+#                 device file names will be
 #                 0480.3380, 0481.3380, 0482.3380 and 0483.3380
 # 480-483 3380   $(CCUU).3380
 #

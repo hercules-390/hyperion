@@ -62,7 +62,7 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
     FishHangAtExit();
 #endif
 
-    fprintf(stderr, _("HHCIN007I Hercules terminated\n"));
+    fprintf(stderr, _("HHCIN099I Hercules terminated\n"));
     fflush(stderr);
 
     exit(0);
