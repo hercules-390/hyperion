@@ -5,7 +5,7 @@ AM_INIT_AUTOMAKE(hercules,2.17)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
-AM_GNU_GETTEXT()
+AC_CANONICAL_HOST
 
 # Initialization
 CFLAGS="-W -Wall $CFLAGS"
@@ -16,6 +16,13 @@ AC_PROG_CC
 # OS-specific settings that we can't figure out any other way (yet)
 
 case "$host_os" in
+        darwin*)    
+               if test $host_vendor = apple ; then
+                   CPPFLAGS=-traditional-cpp
+                   AC_DEFINE([_BSD_SOCKLEN_T_],[int])     
+                   AC_DEFINE([_INTL_REDIRECT_MACROS])     
+               fi
+               ;;
         linux*)
                 build_hercifc=true
                 ;;
@@ -52,6 +59,8 @@ dnl AC_CHECK_LIB(z, zlibVersion)
 AC_CHECK_LIB(z, main)
 AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 [have_libbz2=yes],[have_libbz2=no])
+
+AM_GNU_GETTEXT()
 
 AC_ARG_ENABLE(fthreads,
               AC_HELP_STRING([--enable-fthreads],
@@ -272,8 +281,8 @@ fi
 
 # Library functions
 
-AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl)
-
+AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
+AC_CHECK_FUNCS(strsignal)
 AC_CHECK_FUNC(InitializeCriticalSectionAndSpinCount)
 
 # If we have setresuid AND getresuid, we can do setuid stuff
@@ -439,5 +448,9 @@ AH_TEMPLATE([PKGDATADIR],
             [Directory where the HTTP server will find documents])
 AH_TEMPLATE([LOCALEDIR],
             [Directory where to find NLS data])
+AH_TEMPLATE([_BSD_SOCKLEN_T_],
+            [Define missing macro on apple darwin (osx) platform])
+AH_TEMPLATE([_INTL_REDIRECT_MACROS],
+            [Define to 1 if non-Intel architecture (gettext)])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile intl/Makefile m4/Makefile  intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile intl/Makefile m4/Makefile ])

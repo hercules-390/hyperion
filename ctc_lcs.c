@@ -5,6 +5,8 @@
 // Copyright (C) 2002-2003 by James A. Pierson
 //
 
+#if !defined(__APPLE__)
+
 #include "hercules.h"
 #include "devtype.h"
 #include "ctcadpt.h"
@@ -1974,4 +1976,4 @@ static char*  ReadOAT( char* pszOATName, FILE* fp, char* pszBuff )
 
     return pszBuff;
 }
-
+#endif /* !defined(__APPLE__) */

@@ -52,13 +52,13 @@
  #include "hbyteswp.h"
 #endif
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/mtio.h>
 #include <sys/utsname.h>
-#include <sys/time.h>
 #include <sys/wait.h>
 #include <sys/uio.h>
 #include <net/if.h>
@@ -1759,5 +1759,12 @@ void alter_display_virt (BYTE *opnd, REGS *regs);
 #include "w32ctca.h"
 /* #endif // defined(OPTION_W32_CTCI) */
 
+#if defined(__APPLE__)
+struct mt_tape_info {
+       long t_type;            /* device type id (mt_type) */
+       char *t_name;           /* descriptive name */
+};
+#define MT_TAPE_INFO   { { 0, NULL } }
+#endif /* defined(__APPLE__) */
 
 #endif /*!defined(_HERCULES_H)*/

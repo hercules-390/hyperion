@@ -1,3 +1,4 @@
+01 Feb 2003 Add changes for Mac OS X support - Paul Scott
 01 Feb 2003 Fix dasdinit wrong trk 0 size - Greg Smith + sidmuc
 31 Jan 2003 Command reject if path assignment is not supported (non-3480
             ASSIGN/UNASSIGN CCW opcodes 0xB7 & 0xC7 only in tapedev.c)

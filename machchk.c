@@ -260,6 +260,11 @@ RADR    fsta = 0;
 
 #if defined(_ARCHMODE3)
  #undef   _GEN_ARCH
+ #if !defined(HAVE_STRSIGNAL)
+    char * strsignal( int sig ) {
+        return sys_siglist[sig];
+    }
+ #endif
  #define  _GEN_ARCH _ARCHMODE3
  #include "machchk.c"
 #endif

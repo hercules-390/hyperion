@@ -114,6 +114,9 @@ struct sbfp {
 #ifndef HAVE_FMODL
 #define fmodl(x,y) fmod(x,y)
 #endif
+#ifndef HAVE_FREXPL  
+#define frexpl(x,y) frexp(x,y)
+#endif
 
 #endif  /* !defined(_IEEE_C) */
 

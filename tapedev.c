@@ -1145,6 +1145,7 @@ int             rc;                     /* Return code               */
 
 } /* end function bsf_het */
 
+#if !defined(__APPLE__)
 /*-------------------------------------------------------------------*/
 /* Obtain and display SCSI tape status                               */
 /*-------------------------------------------------------------------*/
@@ -1608,6 +1609,7 @@ struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
     return 0;
 
 } /* end function bsf_scsitape */
+#endif /* !defined(__APPLE__) */
 
 /*-------------------------------------------------------------------*/
 /* Read the OMA tape descriptor file                                 */
@@ -2750,10 +2752,12 @@ U32             stat;                   /* SCSI tape status bits     */
                 dev->sense[1] |= SENSE1_TAPE_LOADPT;
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             stat = status_scsitape (dev);
             if (GMT_BOT(stat)) dev->sense[1] |= SENSE1_TAPE_LOADPT;
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             if (dev->nxtblkpos == 0 && dev->curfilen == 1)
@@ -3007,7 +3011,9 @@ static int tapedev_close_device ( DEVBLK *dev )
     {
     default:
     case TAPEDEVT_AWSTAPE:
+#   if !defined(__APPLE__)
     case TAPEDEVT_SCSITAPE:
+#   endif /* !defined(__APPLE__) */
     case TAPEDEVT_OMATAPE:
         close (dev->fd);
         break;
@@ -3097,9 +3103,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = open_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = open_scsitape (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             rc = open_omatape (dev, unitstat);
@@ -3140,9 +3148,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = write_het (dev, iobuf, count, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = write_scsitape (dev, iobuf, count, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         } /* end switch(dev->tapedevt) */
 
@@ -3173,9 +3183,11 @@ long            locblock;               /* Block Id for Locate Block */
             len = read_het (dev, iobuf, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             len = read_scsitape (dev, iobuf, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             omadesc = (OMATAPE_DESC*)(dev->omadesc);
@@ -3240,6 +3252,7 @@ long            locblock;               /* Block Id for Locate Block */
     /*---------------------------------------------------------------*/
     /* REWIND                                                        */
     /*---------------------------------------------------------------*/
+#	if !defined(__APPLE__)
         /* For SCSI tape, issue rewind command */
         if (dev->tapedevt == TAPEDEVT_SCSITAPE)
         {
@@ -3255,6 +3268,7 @@ long            locblock;               /* Block Id for Locate Block */
                 break;
             } /* end if(rc) */
         } /* end if(SCSITAPE) */
+#	endif /* !defined(__APPLE__) */
 
         /* For OMA tape, close the current file */
         if (dev->tapedevt == TAPEDEVT_OMATAPE)
@@ -3325,9 +3339,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = bsb_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = bsb_scsitape (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             rc = bsb_omatape (dev, unitstat);
@@ -3359,9 +3375,11 @@ long            locblock;               /* Block Id for Locate Block */
             len = read_het (dev, iobuf, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             len = read_scsitape (dev, iobuf, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             omadesc = (OMATAPE_DESC*)(dev->omadesc);
@@ -3412,9 +3430,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = bsb_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = bsb_scsitape (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             rc = bsb_omatape (dev, unitstat);
@@ -3434,6 +3454,7 @@ long            locblock;               /* Block Id for Locate Block */
     /*---------------------------------------------------------------*/
     /* REWIND UNLOAD                                                 */
     /*---------------------------------------------------------------*/
+#	if !defined(__APPLE__)
         /* For SCSI tape, issue rewind unload command */
         if (dev->tapedevt == TAPEDEVT_SCSITAPE)
         {
@@ -3449,6 +3470,7 @@ long            locblock;               /* Block Id for Locate Block */
                 break;
             } /* end if(rc) */
         } /* end if(SCSITAPE) */
+#	endif /* !defined(__APPLE__) */
 
     if ((dev->tapedevt == TAPEDEVT_AWSTAPE) ||
         (dev->tapedevt == TAPEDEVT_HET))
@@ -3463,7 +3485,9 @@ long            locblock;               /* Block Id for Locate Block */
         {
         default:
         case TAPEDEVT_AWSTAPE:
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
+#	endif /* !defined(__APPLE__) */
         case TAPEDEVT_OMATAPE:
             close (dev->fd);
             break;
@@ -3528,9 +3552,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = write_hetmark (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = write_scsimark (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         } /* end switch(dev->tapedevt) */
 
@@ -3595,9 +3621,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = bsb_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = bsb_scsitape (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             rc = bsb_omatape (dev, unitstat);
@@ -3638,9 +3666,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = bsf_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = bsf_scsitape (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             rc = bsf_omatape (dev, unitstat);
@@ -3673,9 +3703,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = fsb_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = fsb_scsitape (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             rc = fsb_omatape (dev, unitstat);
@@ -3716,9 +3748,11 @@ long            locblock;               /* Block Id for Locate Block */
             rc = fsf_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = fsf_scsitape (dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         case TAPEDEVT_OMATAPE:
             rc = fsf_omatape (dev, unitstat);
@@ -3780,6 +3814,7 @@ long            locblock;               /* Block Id for Locate Block */
         num = (count < len) ? count : len;
         *residual = count - num;
 
+#	if !defined(__APPLE__)
         /* For SCSI tape, issue rewind command */
         if (dev->tapedevt == TAPEDEVT_SCSITAPE)
         {
@@ -3795,6 +3830,7 @@ long            locblock;               /* Block Id for Locate Block */
                 break;
             } /* end if(rc) */
         } /* end if(SCSITAPE) */
+#	endif /* !defined(__APPLE__) */
 
         /* For AWSTAPE file, seek to start of file */
         if (dev->tapedevt == TAPEDEVT_AWSTAPE)
@@ -3856,11 +3892,13 @@ long            locblock;               /* Block Id for Locate Block */
                 rc = fsb_het (dev, unitstat);
             break;
 
+#	if !defined(__APPLE__)
         case TAPEDEVT_SCSITAPE:
             rc = 0;
             while ((dev->blockid < locblock) && (rc >= 0))
                 rc = fsb_scsitape(dev, unitstat);
             break;
+#	endif /* !defined(__APPLE__) */
 
         } /* end switch(dev->tapedevt) */
 

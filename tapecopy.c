@@ -8,6 +8,14 @@
 /* prints a summary of the tape files and blocksizes.                */
 /*-------------------------------------------------------------------*/
 
+#if defined(__APPLE__)
+int sysblk;
+int main (int argc, char *argv[])
+{
+       return 0;
+}
+#else
+
 #include "hercules.h"
 
 /*-------------------------------------------------------------------*/
@@ -387,4 +395,4 @@ char   *scodepage;
     return 0;
 
 } /* end function main */
-
+#endif /* defined(__APPLE__) */
