@@ -28,6 +28,9 @@
 # +-------------------------------------------------------------------+
 # !
 # ! Change Log: '$Log$
+# ! Change Log: 'Revision 1.17  2003/08/15 13:56:14  vbandke
+# ! Change Log: 'fixed minor details
+# ! Change Log: '
 # ! Change Log: 'Revision 1.16  2002/12/16 16:19:17  vbandke
 # ! Change Log: 'remove --prefix=`pwd` from ./configure invocation
 # ! Change Log: '
@@ -54,12 +57,14 @@ AUTO_SET=false
 ANSI_SET=true
 CPU_TYPE=auto
 THREAD_TYPE=fthread
-while getopts :c:nt: THE_OPT ; do
+while getopts :c:fnt: THE_OPT ; do
    lower ${THE_OPT}
    THE_OPT=${RESULT}
    case ${THE_OPT} in
       c) CPU_TYPE=${OPTARG}
          CPU_SET=true
+         ;;
+      f) rm -f ./configure
          ;;
       n) ANSI_SET=false
          ;;
@@ -72,17 +77,18 @@ while getopts :c:nt: THE_OPT ; do
          ;;
      \?) echo -e "\a${RED}Invalid command switch ${WHITE}${OPTARG}${TURQ}\n"
          echo -e "\n${TURQ}Syntax is\n"
-         echo -e "_hercbuild [-c <cputype>] [-t <threadmodel>] [-n]"
-         echo -e "             !              !                  !"
-         echo -e "             !              !                  +--- no-ansi, do not"
-         echo -e "             !              !                       use fancy colours"
-         echo -e "             !              +---------------------- thread model to use"
-         echo -e "             !                                      f or fthread (default)"
-         echo -e "             !                                      p or posix            "
-         echo -e "             +------------------------------------- target cpu type       "
-         echo -e "                                                    i586 for Pentium      "
-         echo -e "                                                    i686 for Pentium Pro  "
-         echo -e "                                                    p4   for Pentium 4    "
+         echo -e "_hercbuild [-c <cputype>] [-t <threadmodel>] [-n] [-f]"
+         echo -e "             !              !                  !    !"
+         echo -e "             !              !                  !    +--- force rebuild of ./configure"
+         echo -e "             !              !                  +-------- no-ansi, do not"
+         echo -e "             !              !                            use fancy colours"
+         echo -e "             !              +--------------------------- thread model to use"
+         echo -e "             !                                           f or fthread (default)"
+         echo -e "             !                                           p or posix            "
+         echo -e "             +------------------------------------------ target cpu type       "
+         echo -e "                                                         i586 for Pentium      "
+         echo -e "                                                         i686 for Pentium Pro  "
+         echo -e "                                                         p4   for Pentium 4    "
          echo -e " "
          echo -e " The default is _build -c `uname -m` -t f"
          echo -e " "
@@ -139,7 +145,7 @@ case ${THREAD_TYPE} in
       ;;
 esac
 echo -e "${TURQ}Hercules will be using the ${THREAD_TYPE} model"
-if ! test -f ./configure -a -f ABOUT-NLS ; then
+if ! test -f ./configure ; then
   bash autogen.sh
   RC=$?
   if [ ${RC} = 0 ] ; then
