@@ -9,9 +9,9 @@
 I - Supported Device Type emulations :
 
 Device Types supported as of yet :
-3410/3411, 3420, 3480, 3490
+3410/3411, 3420, 3480, 3490, 9347
 Upcoming Device type support :
-3422, 3424, 3490E, 3590, 3430, 8809, 9347
+3422, 3424, 3490E, 3590, 3430, 8809
 
 II - Basic ACF support
 
