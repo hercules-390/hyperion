@@ -25,8 +25,19 @@ int  logger_currmsg;
 int  logger_wrapped;
 
 
-/* Find the index for a specific line number in the log,
-   one being the most recent line                                    */
+/* Find the index for a specific line number in the log,             */
+/* one being the most recent line                                    */
+/* Example:                                                          */
+/*   read the last 5 lines in the syslog:                            */
+/*                                                                   */
+/*   int msgnum;                                                     */
+/*   int msgidx;                                                     */
+/*   char *msgbuf;                                                   */
+/*                                                                   */
+/*        msgidx = log_line(5);                                      */
+/*        while((msgcnt = log_read(&msgbuf, &msgidx, LOG_NOBLOCK)))  */
+/*            function_to_process_log(msgbuf, msgcnt);               */
+/*                                                                   */
 int log_line(int linenumber)
 {
 char *msgbuf[2],*tmpbuf = NULL;
