@@ -304,6 +304,8 @@ int  protect = 0;
 U16  xcode;
 REGS    gregs, hgregs;
 
+// FIXME: cygwin emits bad code here so we have the next stmt:
+    if (!regs) return 0;
     gregs = *regs;
     gregs.ghostregs = 1;
 

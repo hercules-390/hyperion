@@ -282,7 +282,9 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
     DEVARRAY *dgrs;     /* Device groups                   */
     U16  cuu1,cuu2;     /* CUUs                            */
     char *strptr;       /* strtoul ptr-ptr                 */
-    BYTE basechan=0;    /* Channel for all CUUs            */
+// FIXME: gcc 2.96 for BYTE causes invalid HHCCF057E ... WTF ??
+//  BYTE basechan=0;    /* Channel for all CUUs            */
+    int  basechan=0;    /* Channel for all CUUs            */
     int  duplicate;     /* duplicated CUU indicator        */
     int badcuu;         /* offending CUU                   */
 
