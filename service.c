@@ -493,21 +493,21 @@ void scp_command (BYTE *command, int priomsg)
     /* Error if disabled for priority messages */
     if (priomsg && !(sysblk.cp_recv_mask & 0x00800000))
     {
-        logmsg (_("HHC703I SCP not receiving priority messages\n"));
+        logmsg (_("HHCCP036E SCP not receiving priority messages\n"));
         return;
     }
 
     /* Error if disabled for commands */
     if (!priomsg && !(sysblk.cp_recv_mask & 0x80000000))
     {
-        logmsg (_("HHC704I SCP not receiving commands\n"));
+        logmsg (_("HHCCP037E SCP not receiving commands\n"));
         return;
     }
 
     /* Error if command string is missing */
     if (strlen(command) < 1)
     {
-        logmsg (_("HHC705I No SCP command\n"));
+        logmsg (_("HHCCP038E No SCP command\n"));
         return;
     }
 
@@ -518,7 +518,7 @@ void scp_command (BYTE *command, int priomsg)
        command with message indicating that service processor is busy */
     if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND))
     {
-        logmsg (_("HHC706I Service Processor busy\n"));
+        logmsg (_("HHCCP039E Service Processor busy\n"));
 
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
@@ -1217,7 +1217,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 FETCH_DW(syslevel,cpi_bk->system_level);
 
 #if 1
-                logmsg(_("HHC707I CPI: System Type: %s Name: %s Sysplex: %s\n"),
+                logmsg(_("HHCCP040I CPI: System Type: %s Name: %s "
+                         "Sysplex: %s\n"),
                     systype,sysname,sysplex);
 #else
                 logmsg(_("HHC770I Control Program Information:\n"));
@@ -1414,9 +1415,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
          || (sysblk.cp_send_mask & sysblk.sclp_recv_mask) != old_cp_send_mask)
         {
             if (sysblk.cp_recv_mask != 0 || sysblk.cp_send_mask != 0)
-                logmsg (_("HHC701I SYSCONS interface active\n"));
+                logmsg (_("HHCCP041I SYSCONS interface active\n"));
             else
-                logmsg (_("HHC702I SYSCONS interface inactive\n"));
+                logmsg (_("HHCCP042I SYSCONS interface inactive\n"));
         }
 // logmsg("cp_send_mask=%8.8X cp_recv_mask=%8.8X\n",sysblk.cp_send_mask,sysblk.cp_recv_mask);
 

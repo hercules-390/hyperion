@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2002-12-25 21:38-0600\n"
+"POT-Creation-Date: 2002-12-29 13:12-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -17,6 +17,10 @@ msgstr ""
 msgid ""
 "\n"
 "HHCDC010I Copy successful !!!       \n"
+msgstr ""
+
+#: ipl.c:126
+msgid "           Sense="
 msgstr ""
 
 #: hsccmd.c:1892
@@ -184,98 +188,98 @@ msgstr ""
 msgid "  %3d%% %7d of %d"
 msgstr "%c %3d%% Spur %6d von %6d"
 
-#: channel.c:668
+#: channel.c:666
 #, c-format
 msgid "%4.4X: Clear subchannel\n"
 msgstr ""
 
-#: channel.c:330
+#: channel.c:328
 #, c-format
 msgid "%4.4X: Halt I/O\n"
 msgstr ""
 
-#: channel.c:774
+#: channel.c:772
 #, c-format
 msgid "%4.4X: Halt subchannel\n"
 msgstr ""
 
-#: channel.c:873
+#: channel.c:871
 #, c-format
 msgid "%4.4X: Halt subchannel: cc=0\n"
 msgstr ""
 
-#: channel.c:787
+#: channel.c:785
 #, c-format
 msgid "%4.4X: Halt subchannel: cc=1\n"
 msgstr ""
 
-#: channel.c:797
+#: channel.c:795
 #, c-format
 msgid "%4.4X: Halt subchannel: cc=2\n"
 msgstr ""
 
-#: channel.c:933
+#: channel.c:931
 #, c-format
 msgid "%4.4X: Resume subchannel: cc=0\n"
 msgstr ""
 
-#: channel.c:901
+#: channel.c:899
 #, c-format
 msgid "%4.4X: Resume subchannel: cc=1\n"
 msgstr ""
 
-#: channel.c:914
+#: channel.c:912
 #, c-format
 msgid "%4.4X: Resume subchannel: cc=2\n"
 msgstr ""
 
-#: channel.c:230
+#: channel.c:228
 #, c-format
 msgid "%4.4X: Test I/O\n"
 msgstr ""
 
-#: channel.c:97
+#: channel.c:95
 #, c-format
 msgid "%4.4X:CCW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s\n"
 msgstr ""
 
-#: channel.c:1448
+#: channel.c:1446
 #, c-format
 msgid ""
 "%4.4X:IDAW=%16.16llX Len=%4.4hX\n"
 "%4.4X:---------------------%s\n"
 msgstr ""
 
-#: channel.c:1443
+#: channel.c:1441
 #, c-format
 msgid "%4.4X:IDAW=%8.8X Len=%3.3hX%s\n"
 msgstr ""
 
-#: channel.c:125
+#: channel.c:123
 #, c-format
 msgid ""
 "%4.4X:SCSW=%2.2X%2.2X%2.2X%2.2X Stat=%2.2X%2.2X Count=%2.2X%2.2X  CCW=%2.2X%"
 "2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: channel.c:2533
+#: channel.c:2531
 #, c-format
 msgid ""
 "%4.4X:Sense=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %"
 "2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: channel.c:2548
+#: channel.c:2546
 #, c-format
 msgid "%4.4X:Sense=%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
 msgstr ""
 
-#: channel.c:110
+#: channel.c:108
 #, c-format
 msgid "%4.4X:Stat=%2.2X%2.2X Count=%2.2X%2.2X  CCW=%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: channel.c:2527
+#: channel.c:2525
 #, c-format
 msgid "%4.4X:Stat=%2.2X%2.2X Count=%4.4X %s\n"
 msgstr ""
@@ -303,134 +307,109 @@ msgstr "Versionsdaten\n"
 msgid "Built on %s at %s\n"
 msgstr "Draaiend op %s %s%s %s %s\n"
 
-#: cpu.c:593
-#, c-format
-msgid "CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%16.16llX\n"
-msgstr ""
-
-#: cpu.c:593
-#, c-format
-msgid "CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%8.8X\n"
-msgstr ""
-
-#: cpu.c:491
+#: cpu.c:492
 #, c-format
 msgid "CPU%4.4X: %s CODE=%4.4X ILC=%d\n"
 msgstr ""
 
-#: machchk.c:354
-#, c-format
-msgid "CPU%4.4X: Check-Stop due to host error: %s\n"
-msgstr "CPU%4.4X: Ceck-stop.  Host Fehler: %s\n"
-
-#: machchk.c:315
-#, c-format
-msgid "CPU%4.4X: Machine check due to host error: %s\n"
-msgstr ""
-
-#: cpu.c:750
-#, c-format
-msgid "CPU%4.4X: Program interrupt loop: "
-msgstr ""
-
-#: ctc_ctci.c:76 ctc_ctci.c:126
+#: ctc_ctci.c:78 ctc_ctci.c:129
 #, c-format
 msgid "CTC001E %4.4X: Unable to allocate CTCBLK\n"
 msgstr ""
 
-#: ctc_ctci.c:1006
+#: ctc_ctci.c:1003
 #, c-format
 msgid "CTC002E %4.4X: Invalid kernel buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1020
+#: ctc_ctci.c:1017
 #, c-format
 msgid "CTC003E %4.4X: Invalid DLL I/O buffer size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:991
+#: ctc_ctci.c:989
 #, fuzzy, c-format
 msgid "CTC005E %4.4X: Invalid device name %s\n"
 msgstr "Ongeldig apparaat nummer\n"
 
-#: ctcadpt.c:512 ctc_ctci.c:1033
+#: ctcadpt.c:515 ctc_ctci.c:1030
 #, c-format
 msgid "CTC006E %4.4X: Invalid MTU size %s\n"
 msgstr ""
 
-#: ctc_ctci.c:1044 ctc_ctci.c:1176
+#: ctc_ctci.c:1041 ctc_ctci.c:1171
 #, c-format
 msgid "CTC007E %4.4X: Invalid netmask %s\n"
 msgstr ""
 
-#: ctcadpt.c:110 ctcadpt.c:454 ctc_ctci.c:1070 ctc_ctci.c:1080 ctc_ctci.c:1118
-#: ctc_ctci.c:1187
+#: ctcadpt.c:115 ctcadpt.c:457 ctc_ctci.c:1067 ctc_ctci.c:1077 ctc_ctci.c:1113
+#: ctc_ctci.c:1182
 #, c-format
 msgid "CTC008E %4.4X: Incorrect number of parameters\n"
 msgstr ""
 
-#: ctc_ctci.c:1127
+#: ctc_ctci.c:1122
 #, fuzzy, c-format
 msgid "CTC009E %4.4X invalid device name %s\n"
 msgstr "Ongeldig apparaat nummer\n"
 
-#: ctc_ctci.c:1141
+#: ctc_ctci.c:1136
 #, c-format
 msgid "CTC010E %4.4X: Invalid MTU size %s\n"
 msgstr ""
 
-#: ctcadpt.c:487 ctc_ctci.c:1088 ctc_ctci.c:1100 ctc_ctci.c:1152
-#: ctc_ctci.c:1164
+#: ctcadpt.c:490 ctc_ctci.c:1085 ctc_ctci.c:1097 ctc_ctci.c:1147
+#: ctc_ctci.c:1159
 #, c-format
 msgid "CTC011E %4.4X: Invalid IP address %s\n"
 msgstr ""
 
-#: ctcadpt.c:466 ctcadpt.c:500
+#: ctcadpt.c:469 ctcadpt.c:503
 #, c-format
 msgid "CTC014E %4.4X: Invalid port number: %s\n"
 msgstr ""
 
-#: ctcadpt.c:533 ctcadpt.c:583
+#: ctcadpt.c:536 ctcadpt.c:587
 #, c-format
 msgid "CTC016E %4.4X: Error creating socket: %s\n"
 msgstr ""
 
-#: ctcadpt.c:553 ctcadpt.c:600
+#: ctcadpt.c:556 ctcadpt.c:604
 #, fuzzy, c-format
 msgid "CTC017E %4.4X: Error binding to socket: %s\n"
 msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
-#: ctcadpt.c:574
+#: ctcadpt.c:577
 #, c-format
 msgid "CTC018I %4.4X: Connect to %s:%s failed, starting server\n"
 msgstr ""
 
-#: ctcadpt.c:608
+#: ctcadpt.c:612
 #, c-format
 msgid "CTC019E %4.4X: Error on call to listen: %s\n"
 msgstr ""
 
-#: ctcadpt.c:622
+#: ctcadpt.c:626
 #, fuzzy, c-format
 msgid "CTC020I %4.4X: Connected to %s:%s\n"
 msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
 
-#: ctcadpt.c:954
+#: ctcadpt.c:952
 #, c-format
 msgid "CTC021E %4.4X: Incorrect client or config error\n"
 msgstr ""
 
-#: ctcadpt.c:956
+#: ctcadpt.c:954
 #, c-format
 msgid "CTC022I        Config=%s, connecting client=%s\n"
 msgstr ""
 
-#: ctcadpt.c:656 ctc_ctci.c:599
+#: ctcadpt.c:660 ctc_ctci.c:600
 #, c-format
 msgid "CTC100W %4.4X Write CCW count %u is invalid\n"
 msgstr ""
 
-#: ctcadpt.c:735 ctc_ctci.c:677
+#: ctcadpt.c:736 ctc_ctci.c:678
 #, c-format
 msgid ""
 "CTC102W %4.4X: Write buffer contains incomplete segment header at offset %"
@@ -444,52 +423,52 @@ msgid ""
 "4.4X\n"
 msgstr ""
 
-#: ctcadpt.c:783 ctc_ctci.c:724
+#: ctcadpt.c:782 ctc_ctci.c:723
 #, fuzzy, c-format
 msgid "CTC104E %4.4X: Error writing to %s: %s\n"
 msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
-#: ctcadpt.c:847 ctcadpt.c:864 ctc_ctci.c:786
+#: ctcadpt.c:845 ctcadpt.c:862 ctc_ctci.c:784
 #, fuzzy, c-format
 msgid "CTC105E %4.4X: Error reading from %s: %s\n"
 msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: ctc_ctci.c:511
+#: ctc_ctci.c:513
 #, c-format
 msgid "CTC901I %4.4X: Halt or Clear Recognized\n"
 msgstr ""
 
-#: ctc_ctci.c:561
+#: ctc_ctci.c:562
 #, c-format
 msgid "CTC903I %4.4X: CTC Received Frame (%d bytes):\n"
 msgstr ""
 
-#: ctcadpt.c:772 ctc_ctci.c:714
+#: ctcadpt.c:771 ctc_ctci.c:713
 #, c-format
 msgid "CTC904I %4.4X: Sending packet to %s:\n"
 msgstr ""
 
-#: ctcadpt.c:874 ctc_ctci.c:798
+#: ctcadpt.c:872 ctc_ctci.c:796
 #, c-format
 msgid "CTC905I %4.4X: Received packet from %s (%d bytes):\n"
 msgstr ""
 
-#: ctcadpt.c:686 ctc_ctci.c:628
+#: ctcadpt.c:690 ctc_ctci.c:629
 #, c-format
 msgid "CTC907I %4.4X: Interface command: %s %8.8X\n"
 msgstr ""
 
-#: ctcadpt.c:1339
+#: ctcadpt.c:1337
 #, c-format
 msgid "CTC950E AddDevice internal error (%s).\n"
 msgstr ""
 
-#: channel.c:1562
+#: channel.c:1560
 #, c-format
 msgid "DEV%4.4X: attention\n"
 msgstr ""
 
-#: channel.c:1552
+#: channel.c:1550
 #, c-format
 msgid "DEV%4.4X: attention signalled\n"
 msgstr ""
@@ -499,62 +478,27 @@ msgstr ""
 msgid "ERROR: Cannot open %s: %s\n"
 msgstr ""
 
-#: external.c:365
-#, c-format
-msgid "External interrupt: CPU timer=%16.16llX\n"
-msgstr ""
-
-#: external.c:354
-msgid "External interrupt: Clock comparator\n"
-msgstr ""
-
-#: external.c:241
-msgid "External interrupt: Interrupt key\n"
-msgstr ""
-
-#: external.c:382
-msgid "External interrupt: Interval timer\n"
-msgstr ""
-
-#: ctc_lcs.c:1936
+#: ctc_lcs.c:1938
 #, fuzzy, c-format
 msgid "HHC001E Error reading file %s line %d: %s\n"
 msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:1960
+#: ctc_lcs.c:1962
 #, c-format
 msgid "HHC002E File %s line %d is too long\n"
 msgstr ""
 
-#: ctc_lcs.c:1651
+#: ctc_lcs.c:1653
 #, c-format
 msgid "HHC003I Cannot open file %s: %s\n"
 msgstr ""
 
-#: ipl.c:275
-#, c-format
-msgid "HHC008I Load from %s failed: %s\n"
-msgstr ""
-
-#: ipl.c:467
-#, c-format
-msgid "HHC010I load_main: %s: %s\n"
-msgstr ""
-
-#: ipl.c:476
-msgid "HHC011I load_main: terminated at end of mainstor\n"
-msgstr ""
-
-#: ipl.c:74
-msgid "HHC023I Device not connected to channelset\n"
-msgstr ""
-
-#: ctcadpt.c:1329
+#: ctcadpt.c:1327
 #, c-format
 msgid "HHC035I device %4.4X already exists\n"
 msgstr ""
 
-#: ctcadpt.c:1357
+#: ctcadpt.c:1355
 #, c-format
 msgid "HHC037I Cannot obtain device block for device %4.4X: %s\n"
 msgstr ""
@@ -563,34 +507,6 @@ msgstr ""
 #, c-format
 msgid "HHC050I CodePage conversion table %s is not defined\n"
 msgstr "HHC050I CodePage conversie tabel %s is niet gedefinieerd\n"
-
-#: ipl.c:63
-#, c-format
-msgid "HHC103I Device %4.4X not in configuration\n"
-msgstr ""
-
-#: ipl.c:124
-#, c-format
-msgid "HHC105I %s mode IPL failed: CSW status=%2.2X%2.2X\n"
-msgstr ""
-
-#: ipl.c:126
-msgid "HHC106I Sense="
-msgstr ""
-
-#: ipl.c:172
-#, c-format
-msgid ""
-"HHC107I IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
-"2.2X\n"
-msgstr ""
-
-#: ipl.c:323
-#, c-format
-msgid ""
-"HHC109I IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
-"2.2X\n"
-msgstr ""
 
 #: tapedev.c:280
 #, c-format
@@ -1046,36 +962,7 @@ msgstr ""
 msgid "HHC422I Device %4.4X unbound from socket %s\n"
 msgstr ""
 
-#: service.c:1417
-msgid "HHC701I SYSCONS interface active\n"
-msgstr "HHC701I SYSCONS interface actief\n"
-
-#: service.c:1419
-msgid "HHC702I SYSCONS interface inactive\n"
-msgstr "HHC702I SYSCONS interface inactief\n"
-
-#: service.c:496
-msgid "HHC703I SCP not receiving priority messages\n"
-msgstr "HHC703I SCP ontvangt geen prioriteits berichten\n"
-
-#: service.c:503
-msgid "HHC704I SCP not receiving commands\n"
-msgstr "HHC704I SCP ontvangt geen commando's\n"
-
-#: service.c:510
-msgid "HHC705I No SCP command\n"
-msgstr "HHC705I Geen SCP commando\n"
-
-#: service.c:521
-msgid "HHC706I Service Processor busy\n"
-msgstr ""
-
-#: service.c:1220
-#, c-format
-msgid "HHC707I CPI: System Type: %s Name: %s Sysplex: %s\n"
-msgstr ""
-
-#: channel.c:1752 channel.c:1770
+#: channel.c:1750 channel.c:1768
 #, c-format
 msgid "HHC760I %4.4X create_thread error: %s"
 msgstr "HHC760I %4.4X create_thread fout: %s"
@@ -1329,47 +1216,52 @@ msgstr ""
 msgid "HHCCF050I Device %4.4X defined as %4.4X\n"
 msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: cpu.c:979
+#: cpu.c:983
 #, c-format
 msgid "HHCCP001W CPU thread set priority %d failed: %s\n"
 msgstr ""
 
-#: cpu.c:986
+#: cpu.c:990
 #, fuzzy, c-format
 msgid "HHCCP002I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
 msgstr "HHC620I CPU%4.4X thread gestart: tid=%8.8lX, pid=%d, prioriteit=%d\n"
 
-#: cpu.c:992
+#: cpu.c:996
 #, fuzzy, c-format
 msgid "HHCCP003I CPU%4.4X architecture mode %s\n"
 msgstr "HHC630I CPU%4.4X Architectuur Modus %s\n"
 
-#: cpu.c:1008
+#: cpu.c:1012
 #, fuzzy, c-format
 msgid "HHCCP005E CPU%4.4X thread already started\n"
 msgstr "HHC623I CPU%4.4X thread al gestart\n"
 
-#: cpu.c:1043
+#: cpu.c:1025
+#, fuzzy, c-format
+msgid "HHCCP006E Cannot create timer thread: %s\n"
+msgstr "Kann %s nicht öffnen: %s\n"
+
+#: cpu.c:1047
 #, fuzzy, c-format
 msgid "HHCCP007I CPU%4.4X architecture mode set to %s\n"
 msgstr "HHC630I CPU%4.4X Architectuur Modus %s\n"
 
-#: cpu.c:1056
+#: cpu.c:1060
 #, fuzzy, c-format
 msgid "HHCCP008I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
 msgstr "HHC624I CPU%4.4X thread geeindigd: tid=%8.8lX, pid=%d\n"
 
-#: cpu.c:1082
+#: cpu.c:1086
 #, fuzzy, c-format
 msgid "HHCCP009E CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"
 msgstr "CPU MASK MISMATCH: %8.8X - %8.8X. Letzter Befehl war:\n"
 
-#: cpu.c:1202
+#: cpu.c:1206
 #, fuzzy, c-format
 msgid "HHCCP010I CPU%4.4X store status completed.\n"
 msgstr "HHC623I CPU%4.4X thread al gestart\n"
 
-#: cpu.c:1269
+#: cpu.c:1273
 #, fuzzy, c-format
 msgid ""
 "HHCCP011I CPU%4.4X: Disabled wait state\n"
@@ -1385,10 +1277,151 @@ msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
 msgid "HHCCP013I Timer thread ended\n"
 msgstr ""
 
-#: cpu.c:1021
+#: cpu.c:484
+msgid "HHCCP014I "
+msgstr ""
+
+#: cpu.c:594
+#, c-format
+msgid "HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%16.16llX\n"
+msgstr ""
+
+#: cpu.c:594
+#, c-format
+msgid "HHCCP015I CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%8.8X\n"
+msgstr ""
+
+#: cpu.c:752
+#, c-format
+msgid "HHCCP016I CPU%4.4X: Program interrupt loop: "
+msgstr ""
+
+#: machchk.c:318
 #, fuzzy, c-format
-msgid "HHCCPU006E Cannot create timer thread: %s\n"
-msgstr "Kann %s nicht öffnen: %s\n"
+msgid "HHCCP017I CPU%4.4X: Machine check due to host error: %s\n"
+msgstr "CPU%4.4X: Ceck-stop.  Host Fehler: %s\n"
+
+#: machchk.c:357
+#, fuzzy, c-format
+msgid "HHCCP018I CPU%4.4X: Check-Stop due to host error: %s\n"
+msgstr "CPU%4.4X: Ceck-stop.  Host Fehler: %s\n"
+
+#: machchk.c:229
+#, c-format
+msgid "HHCCP019I Machine Check code=%16.16llu\n"
+msgstr ""
+
+#: machchk.c:286
+msgid "HHCCP020E signal USR2 received for undetermined device\n"
+msgstr ""
+
+#: machchk.c:290
+#, fuzzy, c-format
+msgid "HHCCP021E signal USR2 received for device %4.4X\n"
+msgstr "CCW Ablaufverfolgung ist %s für %4.4X\n"
+
+#: cpu.c:926
+#, c-format
+msgid "HHCCP022I Machine Check code=%16.16llu\n"
+msgstr ""
+
+#: external.c:241
+msgid "HHCCP023I External interrupt: Interrupt key\n"
+msgstr ""
+
+#: external.c:354
+msgid "HHCCP024I External interrupt: Clock comparator\n"
+msgstr ""
+
+#: external.c:365
+#, c-format
+msgid "HHCCP025I External interrupt: CPU timer=%16.16llX\n"
+msgstr ""
+
+#: external.c:382
+msgid "HHCCP026I External interrupt: Interval timer\n"
+msgstr ""
+
+#: ipl.c:63
+#, fuzzy, c-format
+msgid "HHCCP027E Device %4.4X not in configuration\n"
+msgstr "CPU%4.4X nicht konfiguriert\n"
+
+#: ipl.c:74
+msgid "HHCCP028E Device not connected to channelset\n"
+msgstr ""
+
+#: ipl.c:124
+#, c-format
+msgid "HHCCP029E %s mode IPL failed: CSW status=%2.2X%2.2X\n"
+msgstr ""
+
+#: ipl.c:172
+#, c-format
+msgid ""
+"HHCCP030E IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
+"2.2X\n"
+msgstr ""
+
+#: ipl.c:275
+#, fuzzy, c-format
+msgid "HHCCP031E Load from %s failed: %s\n"
+msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+
+#: ipl.c:323
+#, c-format
+msgid ""
+"HHCCP032E IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
+"2.2X\n"
+msgstr ""
+
+#: ipl.c:467
+#, c-format
+msgid "HHCCP033E load_main: %s: %s\n"
+msgstr ""
+
+#: ipl.c:476
+msgid "HHCCP034W load_main: terminated at end of mainstor\n"
+msgstr ""
+
+#: service.c:496
+#, fuzzy
+msgid "HHCCP036E SCP not receiving priority messages\n"
+msgstr "HHC703I SCP ontvangt geen prioriteits berichten\n"
+
+#: service.c:503
+#, fuzzy
+msgid "HHCCP037E SCP not receiving commands\n"
+msgstr "HHC704I SCP ontvangt geen commando's\n"
+
+#: service.c:510
+#, fuzzy
+msgid "HHCCP038E No SCP command\n"
+msgstr "HHC705I Geen SCP commando\n"
+
+#: service.c:521
+#, fuzzy
+msgid "HHCCP039E Service Processor busy\n"
+msgstr "%d Geräte bearbeitet\n"
+
+#: service.c:1220
+#, c-format
+msgid "HHCCP040I CPI: System Type: %s Name: %s Sysplex: %s\n"
+msgstr ""
+
+#: service.c:1418
+#, fuzzy
+msgid "HHCCP041I SYSCONS interface active\n"
+msgstr "HHC701I SYSCONS interface actief\n"
+
+#: service.c:1420
+#, fuzzy
+msgid "HHCCP042I SYSCONS interface inactive\n"
+msgstr "HHC702I SYSCONS interface inactief\n"
+
+#: cpu.c:255
+msgid "HHCCP043I Wait state PSW loaded: "
+msgstr ""
 
 #: ckddasd.c:231
 #, fuzzy
@@ -2638,7 +2671,7 @@ msgstr ""
 msgid "HHCTE009I Client %s connected to %4.4X device %4.4X\n"
 msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
 
-#: channel.c:375
+#: channel.c:373
 msgid "HIO modification executed CC=1\n"
 msgstr "HIO modificatie uitgevoerd CC=1\n"
 
@@ -2647,207 +2680,202 @@ msgstr "HIO modificatie uitgevoerd CC=1\n"
 msgid "Hercules %s copy program "
 msgstr ""
 
-#: cpu.c:842
+#: cpu.c:845
 #, c-format
 msgid ""
 "I/O interrupt code=%4.4X CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: cpu.c:864
+#: cpu.c:867
 #, c-format
 msgid "I/O interrupt code=%8.8X parm=%8.8X\n"
 msgstr ""
 
-#: cpu.c:866
+#: cpu.c:869
 #, c-format
 msgid "I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"
 msgstr ""
 
-#: ctc_lcs.c:78
+#: ctc_lcs.c:79
 #, c-format
 msgid "LCS001E %4.4X unable to allocate LCSBLK\n"
 msgstr ""
 
-#: ctc_lcs.c:1554
+#: ctc_lcs.c:1556
 #, fuzzy, c-format
 msgid "LCS002E %4.4X invalid device name %s\n"
 msgstr "Ongeldig apparaat nummer\n"
 
-#: ctc_lcs.c:1570
+#: ctc_lcs.c:1572
 #, c-format
 msgid "LCS003E %4.4X invalid MAC address %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1594
+#: ctc_lcs.c:1596
 #, c-format
 msgid "LCS004E %4.4X too many arguments in statement.\n"
 msgstr ""
 
-#: ctc_lcs.c:1604
+#: ctc_lcs.c:1606
 #, c-format
 msgid "LCS005E %4.4X invalid IP address %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1700
+#: ctc_lcs.c:1702
 #, c-format
 msgid "LCS006E Invalid HWADD statement in %s: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1709
+#: ctc_lcs.c:1711
 #, c-format
 msgid ""
 "LCS007E Invalid MAC in HWADD statement in %s: %s (%s)\n"
 " "
 msgstr ""
 
-#: ctc_lcs.c:1726
+#: ctc_lcs.c:1728
 #, c-format
 msgid "LCS008E Invalid ROUTE statement in %s: %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1733
+#: ctc_lcs.c:1735
 #, c-format
 msgid "LCS009E Invalid net address in ROUTE %s: %s (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1742
+#: ctc_lcs.c:1744
 #, c-format
 msgid "LCS010E Invalid net mask in ROUTE %s: %s (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1774
+#: ctc_lcs.c:1776
 #, fuzzy, c-format
 msgid "LCS011E Error in %s: Missing device number or mode\n"
 msgstr "Geen apparaat nummer\n"
 
-#: ctc_lcs.c:1783
+#: ctc_lcs.c:1785
 #, fuzzy, c-format
 msgid "LCS012E Error in %s: %s: Invalid device number\n"
 msgstr "Ongeldig apparaat nummer\n"
 
-#: ctc_lcs.c:1852
+#: ctc_lcs.c:1854
 #, c-format
 msgid "LCS013E Error in %s: %s: Missing PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1795
+#: ctc_lcs.c:1797
 #, c-format
 msgid "LCS013E Error in %s: %s:Missing PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1803
+#: ctc_lcs.c:1805
 #, c-format
 msgid "LCS014E Error in %s: %s: Invalid PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1860
+#: ctc_lcs.c:1862
 #, c-format
 msgid "LCS014E Error in %s: %s:Invalid PORT number\n"
 msgstr ""
 
-#: ctc_lcs.c:1813
+#: ctc_lcs.c:1815
 #, c-format
 msgid "LCS015E Error in %s: %s: Invalid number of arguments\n"
 msgstr ""
 
-#: ctc_lcs.c:1827
+#: ctc_lcs.c:1829
 #, c-format
 msgid "LCS016E Error in %s: %s: Invalid entry starting at %s\n"
 msgstr ""
 
-#: ctc_lcs.c:1837
+#: ctc_lcs.c:1839
 #, c-format
 msgid "LCS017E Error is %s: %s: Invalid IP address (%s)\n"
 msgstr ""
 
-#: ctc_lcs.c:1868
+#: ctc_lcs.c:1870
 #, c-format
 msgid "LCS018E Error in %s: %s: SNA does not accept any arguments\n"
 msgstr ""
 
-#: ctc_lcs.c:1876
+#: ctc_lcs.c:1878
 #, c-format
 msgid "LCS019E Error in %s: %s: Invalid MODE\n"
 msgstr ""
 
-#: ctc_lcs.c:1119
+#: ctc_lcs.c:1122
 #, fuzzy, c-format
 msgid "LCS020E Error in call to socket: %s.\n"
 msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:805
+#: ctc_lcs.c:808
 #, fuzzy, c-format
 msgid "LCS100W %4.4X: Error writing to %s: %s\n"
 msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:1130
+#: ctc_lcs.c:1133
 #, fuzzy, c-format
 msgid "LCS101W ioctl error on device %s: %s.\n"
 msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
 
-#: ctc_lcs.c:649
+#: ctc_lcs.c:652
 #, c-format
 msgid "LCS900I %4.4X: Halt or Clear Recognized\n"
 msgstr ""
 
-#: ctc_lcs.c:692
+#: ctc_lcs.c:695
 #, c-format
 msgid "LCS901I %4.4X: LCS Read Buffer:\n"
 msgstr ""
 
-#: ctc_lcs.c:796
+#: ctc_lcs.c:799
 #, c-format
 msgid "LCS902I %4.4X: Sending packet to %s:\n"
 msgstr ""
 
-#: ctc_lcs.c:827
+#: ctc_lcs.c:830
 #, c-format
 msgid "LCS903I %4.4X Triggering Event.\n"
 msgstr ""
 
-#: ctc_lcs.c:1202
+#: ctc_lcs.c:1205
 #, c-format
 msgid "LCS904I Port %2.2X: Read Buffer:\n"
 msgstr ""
 
-#: ctc_lcs.c:1260
+#: ctc_lcs.c:1263
 #, c-format
 msgid "LCS905I Port %2.2X: ARP frame for %8.8X\n"
 msgstr ""
 
-#: ctc_lcs.c:1233
+#: ctc_lcs.c:1236
 #, c-format
 msgid "LCS905I Port %2.2X: IPV4 frame for %8.8X\n"
 msgstr ""
 
-#: ctc_lcs.c:1284
+#: ctc_lcs.c:1287
 #, c-format
 msgid "LCS905I Port %2.2X: SNA frame\n"
 msgstr ""
 
-#: ctc_lcs.c:1314
+#: ctc_lcs.c:1317
 #, c-format
 msgid "LCS907I Port %2.2X: No match found - selecting primary %4.4X\n"
 msgstr ""
 
-#: ctc_lcs.c:1324
+#: ctc_lcs.c:1327
 #, c-format
 msgid "LCS908I Port %2.2X: No match found - selecting secondary %4.4X\n"
 msgstr ""
 
-#: ctc_lcs.c:1335
+#: ctc_lcs.c:1338
 #, c-format
 msgid "LCS909I Port %2.2X: No match found - Discarding frame\n"
 msgstr ""
 
-#: ctc_lcs.c:1343
+#: ctc_lcs.c:1346
 #, c-format
 msgid "LCS910I Port %2.2X: Enqueing frame to device %4.4X (%8.8X)\n"
-msgstr ""
-
-#: cpu.c:923 machchk.c:229
-#, c-format
-msgid "Machine Check code=%16.16llu\n"
 msgstr ""
 
 #: hsccmd.c:1830
@@ -2858,12 +2886,12 @@ msgstr ""
 msgid "ON\n"
 msgstr ""
 
-#: cpu.c:1697
+#: cpu.c:1701
 #, c-format
 msgid "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
 msgstr ""
 
-#: cpu.c:1704
+#: cpu.c:1708
 #, c-format
 msgid ""
 "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%"
@@ -2875,98 +2903,94 @@ msgstr ""
 msgid "Running on %s %s%s %s %s\n"
 msgstr "Draaiend op %s %s%s %s %s\n"
 
-#: cpu.c:486 hscmisc.c:596
+#: cpu.c:487 hscmisc.c:596
 msgid "SIE: "
 msgstr ""
 
-#: channel.c:289
+#: channel.c:287
 msgid "TIO modification executed CC=1\n"
 msgstr "TIO modificatie uitgevoerd CC=1\n"
 
-#: tuntap.c:99
+#: tuntap.c:101
 #, c-format
 msgid "TUN001E Can not determine operating system: %s\n"
 msgstr ""
 
-#: tuntap.c:110
+#: tuntap.c:112
 #, fuzzy, c-format
 msgid "TUN002E Error opening TUN/TAP device: %s: %s\n"
 msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: tuntap.c:134
+#: tuntap.c:136
 #, c-format
 msgid "TUN003E Error setting TUN/TAP mode: %s: %s\n"
 msgstr ""
 
-#: tuntap.c:155
+#: tuntap.c:157
 #, fuzzy, c-format
 msgid "TUN004E Invalid TUN/TAP device name: %s\n"
 msgstr "Ongeldig apparaat nummer\n"
 
-#: tuntap.c:192 tuntap.c:228 tuntap.c:264 tuntap.c:301 tuntap.c:348
-#: tuntap.c:385 tuntap.c:414 tuntap.c:478
+#: tuntap.c:194 tuntap.c:233 tuntap.c:269 tuntap.c:306 tuntap.c:353
+#: tuntap.c:390 tuntap.c:419 tuntap.c:483
 #, c-format
 msgid "TUN005E Invalid net device name specified: %s\n"
 msgstr ""
 
-#: tuntap.c:202
+#: tuntap.c:206
 #, fuzzy, c-format
 msgid "TUN006E %s: Invalid IP address: %s.\n"
 msgstr "Ongeldig frame adres %8.8X\n"
 
-#: tuntap.c:238
+#: tuntap.c:243
 #, c-format
 msgid "TUN007E %s: Invalid destination address: %s.\n"
 msgstr ""
 
-#: tuntap.c:427 tuntap.c:491
+#: tuntap.c:432 tuntap.c:496
 #, c-format
 msgid "TUN007E %s: Invalid destiniation address: %s.\n"
 msgstr ""
 
-#: tuntap.c:274 tuntap.c:438 tuntap.c:502
+#: tuntap.c:279 tuntap.c:443 tuntap.c:507
 #, c-format
 msgid "TUN008E %s: Invalid net mask: %s.\n"
 msgstr ""
 
-#: tuntap.c:310
+#: tuntap.c:315
 #, c-format
 msgid "TUN009E %s: Invalid null or empty MTU.\n"
 msgstr ""
 
-#: tuntap.c:319
+#: tuntap.c:324
 #, c-format
 msgid "TUN010E %s: Invalid MTU: %s.\n"
 msgstr ""
 
-#: tuntap.c:357
+#: tuntap.c:362
 #, fuzzy, c-format
 msgid "TUN011E %s: Invalid MAC address: %s.\n"
 msgstr "Ongeldig frame adres %8.8X\n"
 
-#: tuntap.c:450 tuntap.c:513
+#: tuntap.c:455 tuntap.c:518
 #, fuzzy, c-format
 msgid "TUN012E %s: Invalid gateway address: %s.\n"
 msgstr "Ongeldig frame adres %8.8X\n"
 
-#: tuntap.c:560
+#: tuntap.c:566
 #, c-format
 msgid "TUN100E Call to socketpair failed: %s\n"
 msgstr ""
 
-#: tuntap.c:574
+#: tuntap.c:580
 #, c-format
 msgid "TUN101E Call to fork failed: %s\n"
 msgstr ""
 
-#: tuntap.c:590
+#: tuntap.c:596
 #, fuzzy, c-format
 msgid "TUN102E execl error on %s: %s.\n"
 msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
-
-#: cpu.c:255
-msgid "Wait state PSW loaded: "
-msgstr ""
 
 #: hsccmd.c:2458
 msgid "add shadow file"
@@ -3017,32 +3041,32 @@ msgstr ""
 msgid "cckdswap: error opening %s: %s\n"
 msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
 
-#: channel.c:1966
+#: channel.c:1964
 #, c-format
 msgid "channel: Device %4.4X attention completed\n"
 msgstr ""
 
-#: channel.c:2030
+#: channel.c:2028
 #, c-format
 msgid "channel: Device %4.4X clear completed\n"
 msgstr ""
 
-#: channel.c:2078
+#: channel.c:2076
 #, c-format
 msgid "channel: Device %4.4X halt completed\n"
 msgstr ""
 
-#: channel.c:1925
+#: channel.c:1923
 #, c-format
 msgid "channel: Device %4.4X initial status interrupt\n"
 msgstr ""
 
-#: channel.c:2263
+#: channel.c:2261
 #, c-format
 msgid "channel: Device %4.4X resumed\n"
 msgstr ""
 
-#: channel.c:2244
+#: channel.c:2242
 #, c-format
 msgid "channel: Device %4.4X suspended\n"
 msgstr ""
@@ -3141,15 +3165,6 @@ msgstr ""
 
 #: ieee.c:489
 msgid "sbfpston: unexpectedly converting an Infinite\n"
-msgstr ""
-
-#: machchk.c:288
-#, c-format
-msgid "signal USR2 received for device %4.4X\n"
-msgstr ""
-
-#: machchk.c:285
-msgid "signal USR2 received for undetermined device\n"
 msgstr ""
 
 #: cckdcdsk.c:107

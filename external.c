@@ -238,7 +238,7 @@ U16     cpuad;                          /* Originating CPU address   */
 #endif /*!defined(_FEATURE_SIE)*/
         )
     {
-        logmsg (_("External interrupt: Interrupt key\n"));
+        logmsg (_("HHCCP023I External interrupt: Interrupt key\n"));
 
         /* Reset interrupt key pending */
         OFF_IC_INTKEY;
@@ -351,7 +351,7 @@ U16     cpuad;                          /* Originating CPU address   */
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg (_("External interrupt: Clock comparator\n"));
+            logmsg (_("HHCCP024I External interrupt: Clock comparator\n"));
         }
         ARCH_DEP(external_interrupt) (EXT_CLOCK_COMPARATOR_INTERRUPT, regs);
     }
@@ -362,7 +362,7 @@ U16     cpuad;                          /* Originating CPU address   */
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg (_("External interrupt: CPU timer=%16.16llX\n"),
+            logmsg (_("HHCCP025I External interrupt: CPU timer=%16.16llX\n"),
                     (long long)regs->ptimer);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
@@ -379,7 +379,7 @@ U16     cpuad;                          /* Originating CPU address   */
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg (_("External interrupt: Interval timer\n"));
+            logmsg (_("HHCCP026I External interrupt: Interval timer\n"));
         }
         OFF_IC_ITIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);

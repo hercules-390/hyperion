@@ -252,7 +252,7 @@ int     armode;
     /* Check for wait state PSW */
     if (regs->psw.wait && (sysblk.insttrace || sysblk.inststep))
     {
-        logmsg (_("Wait state PSW loaded: "));
+        logmsg (_("HHCCP043I Wait state PSW loaded: "));
         display_psw (regs);
     }
 
@@ -1022,7 +1022,7 @@ void *cpu_thread (REGS *regs)
         if ( create_thread (&sysblk.todtid, &sysblk.detattr,
                             timer_update_thread, NULL) )
         {
-            logmsg (_("HHCCPU006E Cannot create timer thread: %s\n"),
+            logmsg (_("HHCCP006E Cannot create timer thread: %s\n"),
                     strerror(errno));
             release_lock(&sysblk.intlock);
             return NULL;
