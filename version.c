@@ -30,7 +30,14 @@ static const char *build_options[] = {
   CUSTOM_BUILD_STRING,
 #endif
 
+  "$Header$",
+
+  "CVS tag (if any): $Name$"
+
 };
+
+static const char CVS_header[] = "$Header$";
+static const char CVS_tag[] = "$Name$";
 
 /*-------------------------------------------------------------------*/
 /* Display version and copyright                                     */
@@ -40,7 +47,7 @@ void display_version (FILE *f, char *prog, char *version,
 {
     unsigned int i;
 
-    fprintf (f, "%sVersion %s build at %s %s\nBuild options:\n",
+    fprintf (f, "%sVersion %s build at %s %s\nBuild information:\n",
              prog, version, date, time);
 
     if (sizeof(build_options) == 0)
