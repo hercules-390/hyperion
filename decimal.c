@@ -19,6 +19,7 @@
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2003      */
 /* TP instruction - Roger Bowler                            08/02/01 */
 /* packed_to_binary subroutine - Roger Bowler               29/06/03 */
+/* binary_to_packed subroutine - Roger Bowler              02jul2003 */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -142,6 +143,71 @@ U64     oreg = 0;                       /* 64 bit overflow work reg  */
     *result = dreg;
 
 } /* end function packed_to_binary */
+
+/*-------------------------------------------------------------------*/
+/* Convert binary number to packed decimal                           */
+/*                                                                   */
+/* This subroutine is called by the CVD/CVDY/CVDG instructions.      */
+/* It performs the conversion of a 64-bit signed binary number       */
+/* to a 16-byte packed decimal result. Since the maximum 63 bit      */
+/* number is less than 31 decimal digits, overflow cannot occur.     */
+/* Similarly, the maximum 31 bit number is less than 15 decimal      */
+/* digits, therefore CVD/CVDY can safely use the rightmost eight     */
+/* bytes of the packed decimal result without risk of overflow.      */
+/*                                                                   */
+/* This routine is not architecture-dependent; all of its operands   */
+/* are contained in work areas passed by the architecture-dependent  */
+/* instruction routines which handle all main-storage accesses and   */
+/* possible program checks.                                          */
+/*                                                                   */
+/* Input:                                                            */
+/*      bin     Binary number (63 bits plus sign)                    */
+/* Output:                                                           */
+/*      result  Points to a 16-byte field which will receive the     */
+/*              result as a packed decimal number (31 digits + sign) */
+/*-------------------------------------------------------------------*/
+void binary_to_packed (S64 bin, BYTE *result)
+{
+int     i;                              /* Array subscript           */
+int     d;                              /* Decimal digit or sign     */
+
+    /* Special case when input is maximum negative value */
+    if ((U64)bin == 0x8000000000000000ULL)
+    {
+        memcpy (result,
+                "\x00\x00\x00\x00\x00\x00\x92\x23"
+                "\x37\x20\x36\x85\x47\x75\x80\x8D",
+                16);
+    }
+    else
+    {
+        /* Load absolute value and generate sign */
+        if ((U64)bin < 0x8000000000000000ULL)
+        {
+            /* Value is positive */
+            d = 0x0C;
+        }
+        else
+        {
+            /* Value is negative */
+            bin = -bin;
+            d = 0x0D;
+        }
+
+        /* Store sign and decimal digits from right to left */
+        memset (result, 0, 16);
+        for (i = 16 - 1; d != 0 || bin != 0; i--)
+        {
+            result[i] = d;
+            d = bin % 10;
+            bin /= 10;
+            result[i] |= (d << 4);
+            d = bin % 10;
+            bin /= 10;
+        }
+    }
+
+} /* end function(binary_to_packed) */
 
 /*-------------------------------------------------------------------*/
 /* Add two decimal byte strings as unsigned decimal numbers          */

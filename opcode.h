@@ -1539,6 +1539,7 @@ int  ARCH_DEP(diag_ppagerel) (int r1, int r2, REGS *regs);
 /* Functions in module decimal.c */
 void packed_to_binary (BYTE *dec, int len, U64 *result,
     int *ovf, int *dxf);
+void binary_to_packed (S64 bin, BYTE *result);
 
 
 /* Functions in module diagnose.c */
