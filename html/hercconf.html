@@ -18,57 +18,73 @@ a real System/390.  The configuration file is an ASCII text file.
 <blockquote><blockquote>
 <table border=1><tr><td>
 <pre><code>
+
+    ####################################################
+    #     Hercules emulator configuration file         #
+    ####################################################
+
     #
     # System parameters
     #
 
-    CPUSERIAL 000611
-    CPUMODEL  3090
-    CPUVERID  FD
-    MAINSIZE  64
-    XPNDSIZE  0
-    CODEPAGE  default
-    CNSLPORT  3270
-    HTTPPORT  8081
-    HTTPROOT  /usr/local/share/hercules/
-    SHRDPORT  3990
-    DIAG8CMD  disable
-    NUMCPU    1
-    NUMVEC    1
-    HERCPRIO  0
-    CPUPRIO   15
-    DEVPRIO   8
-    TODPRIO   -20
-    ARCHMODE  ESA/390
-    LOADPARM  0120....
-    SYSEPOCH  1900
-    TZOFFSET  -0500
-    OSTAILOR  OS/390
-    PANRATE   FAST
+    ARCHMODE   ESA/390
+    OSTAILOR   OS/390
+    LOADPARM   0120....
+
+    CPUSERIAL  000611
+    CPUMODEL   3090
+    CPUVERID   FD
+    MAINSIZE   64
+    XPNDSIZE   0
+    NUMCPU     1
+    NUMVEC     1
+    SYSEPOCH   1900
+    TZOFFSET   -0500
+
+    ##HTTPROOT   /usr/local/share/hercules/
+    HTTPPORT   8081 NOAUTH
+    SHRDPORT   3990
+    CNSLPORT   3270
+    PANRATE    FAST
+    CODEPAGE   default
+
+    TODPRIO    -20
+    HERCPRIO   0
+    DEVPRIO    8
+    CPUPRIO    15
+
+    DIAG8CMD   disable
 
     #
     # Device definitions
     #
 
     000A    1442    adrdmprs.rdr
-    000C    3505    jcl.txt ascii trunc
-    000D    3525    pch00d.txt ascii
+    000C    3505    jcl.txt     ascii  trunc
+    000D    3525    pch00d.txt  ascii
     000E    1403    prt00e.txt
+
     001F    3270
+    0200.4  3270
+
+    0140    3370    dosres.140
+    0141    3370    syswk1.141
+    0300    3370    sysres.300
+
     0120    3380    mvsv5r.120
     0121    3380    mvsv5d.121
     0122    3380    mvswk1.122
     0123    3380    192.168.1.100
-    0140    3370    dosres.140
-    0141    3370    syswk1.141
-    0200.4  3270
-    0300    3370    sysres.300
-    0400    3088    CTCI /dev/tun0 1500 192.168.200.1 192.168.200.2 255.255.255.0    
-    0410    3088    CTCT 30880 192.168.100.2 30880 2048
-    0411    3088    CTCT 30881 192.168.100.2 30881 2048
+
+    0400    3088    CTCT  30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
+    0401    3088    CTCT  30881  192.168.100.2  30881  2048
+    0420    3088    CTCI  192.168.200.1  192.168.200.2
+    0440    LCS      -n   /dev/net/tun   192.168.200.2
+
     0580    3420    ickdsf.ipl
     0581    3420    /dev/st0
     0582    3420    /cdrom/tapes/uaa196.tdf
+    0583-0587 3420  * maxsizeM=170 eotmargin=131072
 </pre></code>
 </td></tr></table>
 </blockquote></blockquote>
@@ -96,7 +112,7 @@ The following system parameters may be specified:
 <dt><code>MAINSIZE <em>nnnn</em></code>
 <dd>specifies the main storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number
-    in the range is 2 to 1024 
+    in the range is 2 to 1024
 <dt><code>XPNDSIZE <em>nnnn</em></code>
 <dd>specifies the expanded storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number
@@ -137,7 +153,7 @@ The following system parameters may be specified:
     If no SHRDPORT statement is present then the Shared Device server thread
     will not be activated.<br>
 <dt><code>DIAG8CMD <em>disable/enable</em></code>
-<dd>When set to enable, commands issued through diagnose 8 will be 
+<dd>When set to enable, commands issued through diagnose 8 will be
     executed by hercules as hercules commands.  When set to disable,
     commands issued through the diagnose 8 interface will be ignored.
     The default is disable.  Note that when this feature is enabled, systems
@@ -146,7 +162,7 @@ The following system parameters may be specified:
 <dt><code>CNSLPORT <em>nnnn</em></code>
 <dd>specifies the port number (in decimal) to which tn3270 and
     telnet clients will connect
-<dd>The CNSLPORT statement may also have the form of host:port, where 
+<dd>The CNSLPORT statement may also have the form of host:port, where
     the telnet console server will bind to the specified address.
 <dt><code>NUMCPU <em>nn</em></code>
 <dd>specifies the number of emulated CPUs.
@@ -317,7 +333,7 @@ The following system parameters may be specified:
     done with ECPS:VM disabled. ECPS:VM should not be enabled in an AP or MP
     environment. ECPS:VM has no effect on non-VM operating systems. It is
     however recommended to disable ECPS:VM when running native non-VM operating
-    systems. If a specific LEVEL is specified, this value will be reported 
+    systems. If a specific LEVEL is specified, this value will be reported
     to the operating system when it issues a Store ECPS:VM level, but it
     doesn't otherwise alter the ECPS:VM facility operations. This is a partial
     implementation.
@@ -824,7 +840,7 @@ The format of the device record is:
     <dd>If these arguments are specified, they must precede the required
         arguments.<p>
         <dl>
-            <dt><code>-n <em>name</em></code> or <code>--dev
+            <dt><code>-n <em>name</em></code> &nbsp;or <code>--dev
                 <em>name</em></code>
             <dd>specifies the name of the tunnel device to use. The default
                 is /dev/net/tun, which is correct for version 2.4 and above
@@ -1096,7 +1112,7 @@ when the primary is not available, and NO
     or a custom made program emulating a 2780, 3780 or 3x74, or a custom made
     program interfacing to a real BSC line.
     </p>
-    The communication is emulated over a TCP connection. All bytes are 
+    The communication is emulated over a TCP connection. All bytes are
     transfered as-is (except for doubling DLE in transparent mode) just
     like it would over a real BSC link. Emulated EIA (DCD, DTR, CTS,
     etc..) or X.21/V.11 leads (C, T, etc..) are treated differently depending
@@ -1126,7 +1142,7 @@ when the primary is not available, and NO
         value is mandatory for <em>DIAL=IN|INOUT|NO</em>. It is ignored for <em>DIAL=OUT</em>.
         <dt><code>rhost=hostname|ip address</code>
         <dt><code>rport=service name|port number</code>
-        <dd>Specifies the remote host and port to which to direct a TCP connection on a 
+        <dd>Specifies the remote host and port to which to direct a TCP connection on a
         DIAL=NO line when an 'ENABLE' CCW is executed. This option is mandatory when <em>DIAL=NO</em>
         is specified. It is ignored for other <em>DIAL</em> values.
         <dt>The following options are tuning options. In most cases, using the default values
@@ -1147,7 +1163,7 @@ when the primary is not available, and NO
         defaults to -1.
     </dl>
 <dd>
-        
+
 </dl>
 <p>
 A comment preceded by a pound sign may be appended to any device
