@@ -423,17 +423,8 @@ VADR    effective_addr2,
         /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
 
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
-        /* It this is a failed locked operation
-           and there is more then 1 CPU in the configuration
-           and there is no broadcast synchronization in progress
-           then call the hypervisor to end this timeslice,
-           this to prevent this virtual CPU monopolizing
-           the physical CPU on a spinlock */
         if(regs->psw.cc && sysblk.numcpu > 1)
-            usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
-
+            sched_yield();
     }
 }
 #endif /*defined(FEATURE_PERFORM_LOCKED_OPERATION)*/

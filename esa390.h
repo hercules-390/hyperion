@@ -71,7 +71,9 @@ typedef union {
 
 /* Internal-format PSW structure definition */
 typedef struct _PSW {
-	unsigned int
+        U32     ilc;			/* Instruction length code   */
+        U32     cc;			    /* Condition code            */
+	unsigned long
 		prob:1, 		/* 1=Problem state	     */
 		wait:1, 		/* 1=Wait state 	     */
 		mach:1, 		/* 1=Machine check enabled   */
@@ -87,8 +89,6 @@ typedef struct _PSW {
 		amode64:1;		/* Addressing mode 64	     */
 	BYTE	sysmask;		/* System mask		     */
 	BYTE	pkey;			/* Bits 0-3=key, 4-7=zeroes  */
-	BYTE	ilc;			/* Instruction length code   */
-	BYTE	cc;			    /* Condition code	     */
 	U16	intcode;		/* Interruption code	     */
 	DW	ia;			    /* Instruction addrress      */
         BYTE    zerobyte;       /* bits 24-31                */

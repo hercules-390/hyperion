@@ -645,7 +645,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 regs->instcount++;
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
-#if defined(OPTION_CPU_UNROLL)
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
 #endif
@@ -659,7 +658,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                 }
-#endif
             }
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)

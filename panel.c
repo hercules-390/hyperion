@@ -395,7 +395,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         return;
         }
     }
-    regs = sysblk.regs + sysblk.pcpu;
+    regs = sysblk.regs[sysblk.pcpu];
 #if defined(_FEATURE_SIE)
     if(regs->sie_active)
         regs = regs->guestregs;
@@ -489,13 +489,13 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #ifdef OPTION_MIPS_COUNTING
 #ifdef _FEATURE_CPU_RECONFIG
     for(mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-      if(sysblk.regs[i].cpuonline)
+      if(sysblk.regs[i]->cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
     for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
     {
-        mipsrate += sysblk.regs[i].mipsrate;
-        siosrate += sysblk.regs[i].siosrate;
+        mipsrate += sysblk.regs[i]->mipsrate;
+        siosrate += sysblk.regs[i]->siosrate;
     }
     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */
     fprintf(confp, "%2.1d.%2.2d  %5d",
@@ -999,7 +999,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         logmsg ("%s%s\n", rc_cmd? "> " : "", cmd);
 
     /* Set target CPU for commands and displays */
-    regs = sysblk.regs + sysblk.pcpu;
+    regs = sysblk.regs[sysblk.pcpu];
 
 #ifdef OPTION_CKD_KEY_TRACING
  #define TSPLUS_CMD \
@@ -1131,8 +1131,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     {
         obtain_lock (&sysblk.intlock);
         for (i = 0; i < MAX_CPU_ENGINES; i++)
-            if(sysblk.regs[i].cpuonline && !regs->checkstop)
-                sysblk.regs[i].cpustate = CPUSTATE_STARTED;
+            if(sysblk.regs[i]->cpuonline && !regs->checkstop)
+                sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
         WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
         release_lock (&sysblk.intlock);
         return NULL;
@@ -1144,10 +1144,10 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     {
         obtain_lock (&sysblk.intlock);
         for (i = 0; i < MAX_CPU_ENGINES; i++)
-            if(sysblk.regs[i].cpuonline)
+            if(sysblk.regs[i]->cpuonline)
         {
-            sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
+            sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs[i]);
             WAKEUP_CPU(i);
         }
         release_lock (&sysblk.intlock);
@@ -1278,8 +1278,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         else
         {
             for (i = 0; i < MAX_CPU_ENGINES; i++)
-                if(sysblk.regs[i].cpuonline
-                    && sysblk.regs[i].cpustate != CPUSTATE_STOPPED)
+                if(sysblk.regs[i]->cpuonline
+                    && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
                 {
                     logmsg(_("archmode: All CPU's must be stopped to change architecture\n"));
                     return NULL;
@@ -1451,7 +1451,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
 #ifdef _FEATURE_CPU_RECONFIG
         for(i = 0; i < MAX_CPU_ENGINES; i++)
-          if(sysblk.regs[i].cpuonline)
+          if(sysblk.regs[i]->cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
         for(i = 0; i < sysblk.numcpu; i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
@@ -1461,53 +1461,53 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 logmsg(_("Interrupt checking debug mode set to "));
                 if(*cmdarg=='+')
                 {
-                    ON_IC_DEBUG(sysblk.regs+i);
+                    ON_IC_DEBUG(sysblk.regs[i]);
                     logmsg("ON\n");
                 }
                 else
                 {
-                    OFF_IC_DEBUG(sysblk.regs+i);
+                    OFF_IC_DEBUG(sysblk.regs[i]);
                     logmsg("OFF\n");
                 }
             }
-// /*DEBUG*/logmsg("CPU%4.4X: Any cpu interrupt %spending\n",
-// /*DEBUG*/    sysblk.regs[i].cpuad, sysblk.regs[i].cpuint ? "" : "not ");
+// /*DEBUG*/logmsg(_("CPU%4.4X: Any cpu interrupt %spending\n"),
+// /*DEBUG*/    sysblk.regs[i]->cpuad, sysblk.regs[i]->cpuint ? "" : _("not "));
             logmsg(_("CPU%4.4X: CPUint=%8.8X (r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n"),
-                sysblk.regs[i].cpuad, IC_INTERRUPT_CPU(sysblk.regs+i),
-                         sysblk.regs[i].ints_state,
+                sysblk.regs[i]->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]),
+                         sysblk.regs[i]->ints_state,
                          sysblk.ints_state, regs[i].ints_mask);
             logmsg(_("CPU%4.4X: Clock comparator %spending\n"),
-                sysblk.regs[i].cpuad,
-                         IS_IC_CLKC(sysblk.regs+i) ? "" : _("not "));
+                sysblk.regs[i]->cpuad,
+                         IS_IC_CLKC(sysblk.regs[i]) ? "" : _("not "));
             logmsg(_("CPU%4.4X: CPU timer %spending\n"),
-                sysblk.regs[i].cpuad,
-                         IS_IC_PTIMER(sysblk.regs+i) ? "" : _("not "));
+                sysblk.regs[i]->cpuad,
+                         IS_IC_PTIMER(sysblk.regs[i]) ? "" : _("not "));
             logmsg(_("CPU%4.4X: Interval timer %spending\n"),
-                sysblk.regs[i].cpuad,
-                         IS_IC_ITIMER(sysblk.regs+i) ? "" : _("not "));
+                sysblk.regs[i]->cpuad,
+                         IS_IC_ITIMER(sysblk.regs[i]) ? "" : _("not "));
             logmsg(_("CPU%4.4X: External call %spending\n"),
-                sysblk.regs[i].cpuad,
-                         IS_IC_EXTCALL(sysblk.regs+i) ? "" : _("not "));
+                sysblk.regs[i]->cpuad,
+                         IS_IC_EXTCALL(sysblk.regs[i]) ? "" : _("not "));
             logmsg(_("CPU%4.4X: Emergency signal %spending\n"),
-                sysblk.regs[i].cpuad,
-                         IS_IC_EMERSIG(sysblk.regs+i) ? "" : _("not "));
+                sysblk.regs[i]->cpuad,
+                         IS_IC_EMERSIG(sysblk.regs[i]) ? "" : _("not "));
             logmsg(_("CPU%4.4X: CPU %swaiting for interlock\n"),
-                sysblk.regs[i].cpuad,
-                         sysblk.regs[i].mainsync ? "" : _("not "));
+                sysblk.regs[i]->cpuad,
+                         sysblk.regs[i]->mainsync ? "" : _("not "));
             logmsg(_("CPU%4.4X: CPU interlock %sheld\n"),
-                sysblk.regs[i].cpuad,
-                         sysblk.regs[i].mainlock ? "" : _("not "));
+                sysblk.regs[i]->cpuad,
+                         sysblk.regs[i]->mainlock ? "" : _("not "));
             logmsg(_("CPU%4.4X: CPU state is %s\n"),
-                sysblk.regs[i].cpuad,
-                         states[sysblk.regs[i].cpustate]);
+                sysblk.regs[i]->cpuad,
+                         states[sysblk.regs[i]->cpustate]);
             if(sysblk.arch_mode == ARCH_370)
             {
-                if(sysblk.regs[i].chanset == 0xFFFF)
+                if(sysblk.regs[i]->chanset == 0xFFFF)
                     logmsg(_("CPU%4.4X: No channelset connected\n"),
-                      sysblk.regs[i].cpuad);
+                      sysblk.regs[i]->cpuad);
                 else
                     logmsg(_("CPU%4.4X: Connected to channelset %4.4X\n"),
-                      sysblk.regs[i].cpuad,sysblk.regs[i].chanset);
+                      sysblk.regs[i]->cpuad,sysblk.regs[i]->chanset);
             }
         }
         logmsg(_("Started mask %8.8X waiting mask %8.8X\n"),
@@ -2131,8 +2131,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     if (memcmp(cmd,"ipl",3)==0)
     {
         for (i = 0; i < MAX_CPU_ENGINES; i++)
-            if(sysblk.regs[i].cpuonline
-                && sysblk.regs[i].cpustate != CPUSTATE_STOPPED)
+            if(sysblk.regs[i]->cpuonline
+                && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
             {
                 logmsg(_("ipl rejected: All CPU's must be stopped\n"));
                 return NULL;
@@ -2160,7 +2160,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         }
 #ifdef _FEATURE_CPU_RECONFIG
         if(cpu < 0 || cpu > MAX_CPU_ENGINES
-           || !sysblk.regs[cpu].cpuonline)
+           || !sysblk.regs[cpu]->cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
         if(cpu < 0 || cpu > sysblk.numcpu)
 #endif /*!_FEATURE_CPU_RECONFIG*/
@@ -3095,7 +3095,7 @@ struct  timeval tv;                     /* Select timeout structure  */
     while (1)
     {
         /* Set target CPU for commands and displays */
-        regs = sysblk.regs + sysblk.pcpu;
+        regs = sysblk.regs[sysblk.pcpu];
         /* If the requested CPU is offline, then take the first available CPU*/
         if(!regs->cpuonline)
           /* regs = first online CPU
@@ -3103,13 +3103,13 @@ struct  timeval tv;                     /* Select timeout structure  */
            */
           for(regs = 0, sysblk.pcpu = 0, i = 0 ;
               i < MAX_CPU_ENGINES ; ++i )
-            if (sysblk.regs[i].cpuonline) {
+            if (sysblk.regs[i]->cpuonline) {
               if (!regs)
-                regs = &sysblk.regs[i];
+                regs = sysblk.regs[i];
               ++sysblk.pcpu;
             }
 
-/* ZZTEMP */ if(!regs) regs = sysblk.regs;
+/* ZZTEMP */ if(!regs) regs = sysblk.regs[0];
         if (!regs)
             /* No CPUs are online! The 'quit' or 'exit'
                command must have been issued; exit loop. */
@@ -3774,13 +3774,13 @@ struct  timeval tv;                     /* Select timeout structure  */
                     /* Calculate MIPS rate */
 #ifdef FEATURE_CPU_RECONFIG
                     for (mipsrate = siosrate = i = 0; i < MAX_CPU_ENGINES; i++)
-                        if(sysblk.regs[i].cpuonline)
+                        if(sysblk.regs[i]->cpuonline)
 #else /*!FEATURE_CPU_RECONFIG*/
                         for(mipsrate = siosrate = i = 0; i < sysblk.numcpu; i++)
 #endif /*!FEATURE_CPU_RECONFIG*/
                         {
-                            mipsrate += sysblk.regs[i].mipsrate;
-                            siosrate += sysblk.regs[i].siosrate;
+                            mipsrate += sysblk.regs[i]->mipsrate;
+                            siosrate += sysblk.regs[i]->siosrate;
                         }
 
                     if (mipsrate > 100000) mipsrate = 0;        /* ignore wildly high rate */

@@ -241,40 +241,14 @@ do { \
 } while(0)
 #endif
 
-
-/* The footprint_buffer option saves a copy of the register context
-   every time an instruction is executed.  This is for problem
-   determination only, as it severely impacts performance.	 *JJ */
-
-#if !defined(OPTION_FOOTPRINT_BUFFER)
-
 #define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
 do { \
     COUNT_INST((_instruction), (_regs)); \
     opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
 } while(0)
 
-#else /*defined(OPTION_FOOTPRINT_BUFFER)*/
-
-#define EXECUTE_INSTRUCTION(_instruction, _execflag, _regs) \
-do { \
-    sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]] = *(_regs); \
-    memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_instruction),6); \
-    sysblk.footprptr[(_regs)->cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
-    COUNT_INST((_instruction), (_regs)); \
-    opcode_table[((_instruction)[0])][ARCH_MODE]((_instruction), (_execflag), (_regs)); \
-} while(0)
-
-#endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
-
-#if defined(OPTION_CPU_UNROLL)
 #define RETURN_INTCHECK(_regs) \
         longjmp((_regs)->progjmp, SIE_NO_INTERCEPT)
-#else
-#define RETURN_INTCHECK(_regs) \
-        return
-#endif
-
 
 #define ODD_CHECK(_r, _regs) \
 	if( (_r) & 1 ) \
@@ -543,9 +517,6 @@ static inline void store_dw(void* storage, U64 value) {
 
 #endif /*!defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
-
-#if defined(OPTION_AIA_BUFFER)
-
 #undef	INSTRUCTION_FETCH
 #undef	INVALIDATE_AIA
 
@@ -566,50 +537,7 @@ do { \
 #define INVALIDATE_AIA(_regs) \
     (_regs)->VI = 1
 
-#else /*!defined(OPTION_AIA_BUFFER)*/
-
-#define INSTRUCTION_FETCH(_dest, _addr, _regs) \
-    ARCH_DEP(instfetch) ((_dest), (_addr), (_regs))
-
-#define INVALIDATE_AIA(_regs)
-
-#endif /*!defined(OPTION_AIA_BUFFER)*/
-
-
 #if defined(OPTION_AEA_BUFFER)
-
-#if !defined(OPTION_FAST_LOGICAL)
-#define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey)	      \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((_arn))) &&	    \
-    ((_arn) >= 0) &&						      \
-    (((_regs)->aekey[(_arn)] == (_akey)) || (_akey) == 0) &&	      \
-    ((_regs)->aeacc[(_arn)] >= (_acctype)) ?			      \
-    ((_acctype) == ACCTYPE_READ) ?				      \
-    (STORAGE_KEY((_regs)->AE((_arn))) |= STORKEY_REF,		      \
-	((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
-    (STORAGE_KEY((_regs)->AE((_arn))) |= (STORKEY_REF | STORKEY_CHANGE), \
-	((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
-    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
-
-#define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey)	      \
-    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((_arn))) &&	    \
-    ((_arn) >= 0) &&						      \
-    (((_regs)->aekey[(_arn)] == (_akey)) || (_akey) == 0) &&	      \
-    ((_regs)->aeacc[(_arn)] >= (_acctype)) ?			      \
-    ((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK))  :  \
-    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
-
-#define INVALIDATE_AEA(_arn, _regs) \
-	(_regs)->VE((_arn)) = 1
-
-#define INVALIDATE_AEA_ALL(_regs) \
-do { \
-    int i; \
-    for(i = 0; i < 16; i++) \
-        (_regs)->VE(i) = 1; \
-} while(0)
-
-#else
 
 #if defined(OPTION_REDUCED_INVAL)
 #define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
@@ -656,7 +584,6 @@ do { \
     for(i = 0; i < MAXAEA; i++) \
         (_regs)->VE(i) = 1; \
 } while(0)
-#endif
 
 #else /*!defined(OPTION_AEA_BUFFER)*/
 
@@ -1273,27 +1200,8 @@ do { \
 
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
 
-
-#undef PERFORM_SERIALIZATION
-#if MAX_CPU_ENGINES > 1 && defined(SMP_SERIALIZATION)
-	/* In order to syncronize mainstorage access we need to flush
-	   the cache on all processors, this needs special case when
-	   running on an SMP machine, as the physical CPU's actually
-	   need to perform this function.  This is accomplished by
-	   obtaining and releasing a mutex lock, which is intended to
-	   serialize storage access */
-#define PERFORM_SERIALIZATION(_regs) \
-	{ \
-	    obtain_lock(&regs->serlock); \
-	    release_lock(&regs->serlock); \
-	}
-#else  /*!SERIALIZATION*/
 #define PERFORM_SERIALIZATION(_regs)
-#endif /*SERIALIZATION*/
-
-
 #define PERFORM_CHKPT_SYNC(_regs)
-
 
 #if !defined(NO_SETUID)
 

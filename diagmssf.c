@@ -293,7 +293,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 #endif /*!_FEATURE_CPU_RECONFIG*/
             {
                 memset (spccbcpu, 0, sizeof(SPCCB_CPU_INFO));
-                spccbcpu->cpuaddr = sysblk.regs[i].cpuad;
+                spccbcpu->cpuaddr = sysblk.regs[i]->cpuad;
                 spccbcpu->todid = 0;
             }
 
@@ -429,13 +429,13 @@ static U64        diag204tod;          /* last diag204 tod           */
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
 #ifdef _FEATURE_CPU_RECONFIG
         for(i = 0; i < MAX_CPU_ENGINES;i++)
-          if(sysblk.regs[i].cpuonline)
+          if(sysblk.regs[i]->cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
         for(i = 0; i < sysblk.numcpu;i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
         {
             memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
-            STORE_HW(cpuinfo->cpaddr,sysblk.regs[i].cpuad);
+            STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
             STORE_HW(cpuinfo->relshare,100);
             dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.numcpu;
             dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);

@@ -55,7 +55,7 @@ void cgibin_reg_control(WEBBLK *webblk)
 {
 int i;
 
-    REGS *regs = sysblk.regs + sysblk.pcpu;
+    REGS *regs = sysblk.regs[sysblk.pcpu];
 
     html_header(webblk);
 
@@ -81,7 +81,7 @@ void cgibin_reg_general(WEBBLK *webblk)
 {
 int i;
 
-    REGS *regs = sysblk.regs + sysblk.pcpu;
+    REGS *regs = sysblk.regs[sysblk.pcpu];
 
     html_header(webblk);
 
@@ -107,7 +107,7 @@ void store_psw (REGS *regs, BYTE *addr);
 
 void cgibin_psw(WEBBLK *webblk)
 {
-    REGS *regs = sysblk.regs + sysblk.pcpu;
+    REGS *regs = sysblk.regs[sysblk.pcpu];
     QWORD   qword;                            /* quadword work area      */  
 
     char *value;
@@ -334,7 +334,7 @@ REGS *regs;
     /* Validate cpu number */
 #if defined(_FEATURE_CPU_RECONFIG)
     if(cpu < 0 || cpu > MAX_CPU_ENGINES
-       || !sysblk.regs[cpu].cpuonline)
+       || !sysblk.regs[cpu]->cpuonline)
 #else
     if(cpu < 0 || cpu > sysblk.numcpu)
 #endif
@@ -345,10 +345,10 @@ REGS *regs;
             cpu < sysblk.numcpu;
 #endif
                 cpu++)
-            if(sysblk.regs[cpu].cpuonline)
+            if(sysblk.regs[cpu]->cpuonline)
                 break;
 
-    regs = sysblk.regs + cpu;
+    regs = sysblk.regs[cpu];
 
     if((value = cgi_variable(webblk,"alter_gr")) && *value == 'A')
     {
@@ -405,7 +405,7 @@ REGS *regs;
         i < sysblk.numcpu;
 #endif
         i++)
-        if(sysblk.regs[i].cpuonline)
+        if(sysblk.regs[i]->cpuonline)
             fprintf(webblk->hsock,"<option value=%d%s>CPU%4.4X</option>\n",
               i,i==cpu?" selected":"",i);
 
@@ -629,7 +629,7 @@ DEVBLK *dev;
         i < sysblk.numcpu;
 #endif
         i++)
-        if(sysblk.regs[i].cpuonline)
+        if(sysblk.regs[i]->cpuonline)
             fprintf(webblk->hsock,"<option value=%4.4X>CPU%4.4X</option>\n",i,i);
 
     fprintf(webblk->hsock,"</select>\n"

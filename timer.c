@@ -101,11 +101,11 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
     {
         /* Ignore this CPU if it is not started */
-        if((sysblk.regs[cpu].cpumask & sysblk.started_mask) == 0)
+        if((sysblk.regs[cpu]->cpumask & sysblk.started_mask) == 0)
             continue;
 
         /* Point to the CPU register context */
-        regs = sysblk.regs + cpu;
+        regs = sysblk.regs[cpu];
 
         /*-------------------------------------------*
          * [1] Check for clock comparator interrupt  *
@@ -319,11 +319,11 @@ struct  timeval tv;                     /* Structure for gettimeofday
 
             for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
             {
-                if ((sysblk.regs[cpu].cpumask & sysblk.started_mask) == 0)
+                if ((sysblk.regs[cpu]->cpumask & sysblk.started_mask) == 0)
                     continue;
 
                 /* Point to the CPU register context */
-                regs = sysblk.regs + cpu;
+                regs = sysblk.regs[cpu];
 
                 /* Calculate instructions/millisecond for this CPU */
                 regs->mipsrate =

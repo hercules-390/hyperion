@@ -88,10 +88,8 @@
 #undef F_AREG
 #undef STORE_W
 #undef FETCH_W
-#if defined(OPTION_AIA_BUFFER)
 #undef VI
 #undef AI
-#endif /*defined(OPTION_AIA_BUFFER)*/
 #if defined(OPTION_AEA_BUFFER)
 #undef AE
 #undef VE
@@ -181,10 +179,8 @@ s370_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
-#if defined(OPTION_AIA_BUFFER)
 #define VI	VI_L
 #define AI	AI_L
-#endif /*defined(OPTION_AIA_BUFFER)*/
 #if defined(OPTION_AEA_BUFFER)
 #define AE(_r)	AE_L(_r)
 #define VE(_r)	VE_L(_r)
@@ -277,10 +273,8 @@ s390_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_FW
 #define FETCH_W FETCH_FW
-#if defined(OPTION_AIA_BUFFER)
 #define VI	VI_L
 #define AI	AI_L
-#endif /*defined(OPTION_AIA_BUFFER)*/
 #if defined(OPTION_AEA_BUFFER)
 #define AE(_r)	AE_L(_r)
 #define VE(_r)	VE_L(_r)
@@ -368,10 +362,8 @@ z900_ ## _name
 #define F_AREG  "%8.8X"
 #define STORE_W STORE_DW
 #define FETCH_W FETCH_DW
-#if defined(OPTION_AIA_BUFFER)
 #define VI	VI_G
 #define AI	AI_G
-#endif /*defined(OPTION_AIA_BUFFER)*/
 #if defined(OPTION_AEA_BUFFER)
 #define AE(_r)	AE_G(_r)
 #define VE(_r)	VE_G(_r)

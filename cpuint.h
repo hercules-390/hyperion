@@ -10,9 +10,9 @@
  are recorded in the regs structure.
  dhim mmmm pppp p000 xxxx xxx0 xxxx hhhh : type U32
  |||| |||| |||| |--- |||| |||- |||| ||||   h:mask is always '1'
- |||| |||| |||| |    |||| |||  |||| |||+--> '1' : (regs)->psw.wait == 1
+ |||| |||| |||| |    |||| |||  |||| |||+--> '1' : PSW_WAIT
  |||| |||| |||| |    |||| |||  |||| ||+---> '1' : RESTART
- |||| |||| |||| |    |||| |||  |||| |+----> '1' : sysblk.broadcast
+ |||| |||| |||| |    |||| |||  |||| |+----> '1' : BROADCAST
  |||| |||| |||| |    |||| |||  |||| +-----> '1' : STORSTAT
  |||| |||| |||| |    |||| |||  ||||
  |||| |||| |||| |    |||| |||  |||+-------> '1' : ETR timer 
@@ -216,10 +216,8 @@ do { \
 #define OFF_IC_MALFALT(_regs)  ((_regs)->ints_state&=~CR0_XM_MALFALT)
 #define OFF_IC_EMERSIG(_regs)  ((_regs)->ints_state&=~CR0_XM_EMERSIG)
 //#define OFF_IC_TRACE           (sysblk.ints_state&=~IC_DEBUG_BIT)
-#define OFF_IC_DEBUG(_regs) \
-    { (_regs)->ints_mask&=~IC_DEBUG_BIT; (_regs)->ints_state&=~IC_DEBUG_BIT; }
-#define OFF_IC_CPUINT(_regs)
-
+#define OFF_IC_DEBUG(_regs)    {(_regs)->ints_mask&=~IC_DEBUG_BIT; \
+                                (_regs)->ints_state&=~IC_DEBUG_BIT; }
 #define OFF_IC_PER(_regs) ((_regs)->ints_state&=~IC_PER_MASK)
 #define OFF_IC_PER_SB(_regs)    ((_regs)->ints_state&=~IC_PER_SB)
 #define OFF_IC_PER_IF(_regs)    ((_regs)->ints_state&=~IC_PER_IF)
@@ -228,7 +226,6 @@ do { \
 #define OFF_IC_PER_STURA(_regs) ((_regs)->ints_state&=~IC_PER_STURA)
 
 /* Check Interrupt State */
-//#define IS_IC_PSW_WAIT(_regs) ((_regs)->ints_state&IC_PSW_WAIT)
 #define IS_IC_DISABLED_WAIT_PSW(_regs) \
              ( ((_regs)->ints_mask & IC_OPEN_MASK) == 0 )
 #define IS_IC_RESTART(_regs)  ((_regs)->ints_state&IC_RESTART)

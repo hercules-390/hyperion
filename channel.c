@@ -1055,7 +1055,7 @@ int i;
 
     /* Connect each channel set to its home cpu */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
-        sysblk.regs[i].chanset = i;
+        sysblk.regs[i]->chanset = i;
 // #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
 
     /* Reset each device in the configuration */

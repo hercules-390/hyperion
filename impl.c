@@ -73,24 +73,24 @@ int i;
         for (i = 0; i < sysblk.numcpu; i++)
 #endif /*!FEATURE_CPU_RECONFIG*/
         {
-            if(sysblk.regs[i].cpustate == CPUSTATE_STARTED
-              && !sysblk.regs[i].psw.wait)
+            if(sysblk.regs[i]->cpustate == CPUSTATE_STARTED
+              && !sysblk.regs[i]->psw.wait)
             {
                 /* If the cpu is running but not executing
                    instructions then it must be malfunctioning */
-                if(sysblk.regs[i].instcount == savecount[i])
+                if(sysblk.regs[i]->instcount == savecount[i])
                 {
                     if(!try_obtain_lock(&sysblk.intlock))
                     {
                         /* Send signal to looping CPU */
-                        signal_thread(sysblk.regs[i].cputid, SIGUSR1);
+                        signal_thread(sysblk.regs[i]->cputid, SIGUSR1);
                         savecount[i] = -1;
                         release_lock(&sysblk.intlock);
                     }
                 }
                 else
                     /* Save current instcount */
-                    savecount[i] = sysblk.regs[i].instcount;
+                    savecount[i] = sysblk.regs[i]->instcount;
             }
             else
                 /* mark savecount invalid as CPU not in running state */
@@ -245,12 +245,12 @@ TID paneltid;
     /* Activate the control panel */
     panel_display ();
 #else
-    if(sysblk.regs[0].cpuonline)
+    if(sysblk.regs[0]->cpuonline)
         return -1;
-    sysblk.regs[0].cpuonline = 1;
-    sysblk.regs[0].cpustate = CPUSTATE_STARTING;
-    sysblk.regs[0].cputid = thread_id();
-    sysblk.regs[0].arch_mode = sysblk.arch_mode;
+    sysblk.regs[0]->cpuonline = 1;
+    sysblk.regs[0]->cpustate = CPUSTATE_STARTING;
+    sysblk.regs[0]->cputid = thread_id();
+    sysblk.regs[0]->arch_mode = sysblk.arch_mode;
     if ( create_thread (&paneltid, &sysblk.detattr,
                         panel_display, NULL) )
     {
@@ -259,7 +259,7 @@ TID paneltid;
                 strerror(errno));
         exit(1);
     }
-    cpu_thread(&sysblk.regs[0]);
+    cpu_thread(sysblk.regs[0]);
 #endif
 
     return 0;
