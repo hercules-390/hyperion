@@ -557,7 +557,7 @@ REGS *regs;
 }
 
 
-zz_cgibin cgibin_debug_memory(WEBBLK *webblk)
+zz_cgibin cgibin_debug_storage(WEBBLK *webblk)
 {
 int i, j;
 char *value;
@@ -688,7 +688,7 @@ CGITAB cgidir[] = {
     { "syslog", (void*)&cgibin_syslog },
     { "ipl", (void*)&cgibin_ipl },
     { "debug/registers", (void*)&cgibin_debug_registers },
-    { "debug/memory", (void*)&cgibin_debug_memory },
+    { "debug/storage", (void*)&cgibin_debug_storage },
     { "debug/version_info", (void*)&cgibin_debug_version_info },
     { "registers/general", (void*)&cgibin_reg_general },
     { "registers/control", (void*)&cgibin_reg_control },
