@@ -1,4 +1,5 @@
 /* TAPEDEV.C    (c) Copyright Roger Bowler, 1999-2003                */
+/* JCS - minor changes by John Summerfield                           */
 /*              ESA/390 Tape Device Handler                          */
 
 /*-------------------------------------------------------------------*/
@@ -1638,7 +1639,8 @@ BYTE            c;                      /* Work area for sscanf      */
         pathlen--;
         if (dev->filename[pathlen-1] == '/') break;
     }
-
+#if 0
+    JCS thinks this is bad
     if (pathlen < 7
         || strncasecmp(dev->filename+pathlen-7, "/tapes/", 7) != 0)
     {
@@ -1648,6 +1650,7 @@ BYTE            c;                      /* Work area for sscanf      */
         return -1;
     }
     pathlen -= 7;
+#endif
 
     /* Open the tape descriptor file */
     fd = open (dev->filename, O_RDONLY | O_BINARY);
@@ -1779,15 +1782,28 @@ BYTE            c;                      /* Work area for sscanf      */
         {
             if (tdffilenm[i] == '\\')
                 tdffilenm[i] = '/';
-            else
-                tdffilenm[i] = tolower(tdffilenm[i]);
+/* JCS */
+//            else
+//                tdffilenm[i] = tolower(tdffilenm[i]);
         } /* end for(i) */
 
         /* Prefix the file name with the base path name and
            save it in the tape descriptor array */
+        /* but only if the filename lacks a leading slash - JCS  */
+/*
         strncpy (tdftab[filecount].filename, dev->filename, pathlen);
         if (tdffilenm[0] != '/')
             strcat (tdftab[filecount].filename, "/");
+        strcat (tdftab[filecount].filename, tdffilenm);
+*/
+        tdftab[filecount].filename[0] = 0;
+
+        if (tdffilenm[0] != '/')
+        {
+            strncpy (tdftab[filecount].filename, dev->filename, pathlen);
+            strcat (tdftab[filecount].filename, "/");
+        }
+
         strcat (tdftab[filecount].filename, tdffilenm);
 
         /* Check for valid file format code */

@@ -1,3 +1,4 @@
+06 Dec 2003 minor changes to tapedev.c read_omadesc function - JCS
 06 Dec 2003 Pre-init residual to zero in tapedev execute_ccw -
             freige@fibertel.com.ar by Fish
             thread's select list before closing it. - Fish
