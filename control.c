@@ -1364,6 +1364,9 @@ int     r1, r2;                         /* Values of R fields        */
 
     PRIV_CHECK(regs);
 
+    INVALIDATE_AIA(regs);
+    INVALIDATE_AEA_ALL(regs);
+
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_IPTECSP))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
