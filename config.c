@@ -1133,9 +1133,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
     if(dfltver)
         version =
 #if defined(_900)
-                  sysblk.arch_z900 ? 0x00 :
+                  (sysblk.arch_mode == ARCH_900) ? 0x00 :
 #endif
-                                            0xFD;
+                                                          0xFD;
 #endif
     /* Build CPU identifier */
     sysblk.cpuid = ((U64)version << 56)
