@@ -1850,7 +1850,8 @@ void *timer_update_thread (void *argp);
 
 /* Functions in module service.c */
 void scp_command (BYTE *command, int priomsg);
-void signal_quiesce (U16 count, BYTE unit);
+int can_signal_quiesce ();
+int signal_quiesce (U16 count, BYTE unit);
 void sclp_reset();
 
 /* Functions in module ckddasd.c */

@@ -129,13 +129,19 @@ void scp_command (BYTE *command, int priomsg)
 } /* end function scp_command */
 
 
-void signal_quiesce (U16 count, BYTE unit)
+int can_signal_quiesce()
+{
+    return (servc_cp_recv_mask & (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1)));
+}
+
+
+int signal_quiesce (U16 count, BYTE unit)
 {
     /* Error if disabled for commands */
     if (!(servc_cp_recv_mask & (0x80000000 >> (SCCB_EVD_TYPE_SIGQ-1))))
     {
         logmsg (_("HHCCPxxxE SCP not receiving quiesce signals\n"));
-        return;
+        return -1;
     }
 
     /* Obtain the interrupt lock */
@@ -149,7 +155,7 @@ void signal_quiesce (U16 count, BYTE unit)
 
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
-        return;
+        return -1;
     }
 
     /* Save delay values for signal shutdown event read */
@@ -171,6 +177,7 @@ void signal_quiesce (U16 count, BYTE unit)
     /* Release the interrupt lock */
     release_lock (&sysblk.intlock);
 
+    return 0;
 } /* end function signal_quiesce */
 
 #endif /*!defined(_SERVICE_C)*/

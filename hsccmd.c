@@ -52,20 +52,17 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
                  any threads which might leave hercules in a 'hanging'
                  state.  The 'now' option should probably be removed
                  in a future version */
-    if (!(argc > 1 && !strcasecmp("now",argv[1])))
+    if ((argc > 1 && !strcasecmp("now",argv[1])))
     {
-//      usleep(10000); /* (fix by new shutdown sequence) */
-        system_shutdown();
+#if defined(FISH_HANG)
+        FishHangAtExit();
+#endif
+        fprintf(stderr, _("HHCIN099I Hercules terminated\n"));
+        fflush(stderr);
+        exit(0);
     }
 
-#if defined(FISH_HANG)
-    FishHangAtExit();
-#endif
-
-    fprintf(stderr, _("HHCIN099I Hercules terminated\n"));
-    fflush(stderr);
-
-    exit(0);
+    do_shutdown();
 
     return 0;   /* (make compiler happy) */
 }
