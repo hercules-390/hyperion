@@ -1168,7 +1168,7 @@ U32     n1, n2;                         /* 32-bit operand values     */
     OBTAIN_MAINLOCK(regs);
 
     /* Some models always store, so validate as a store operand, if desired */
-//   n1 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
+//  n1 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
     /* Load second operand from operand address  */
     n1 = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1866,6 +1866,9 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
     len1 = GR_A(r1+1, regs);
     len2 = GR_A(r2+1, regs);
 
+    if (len1 == 0 && len2 > 0)
+        cc = 1;
+
     /* Process operands from left to right */
     for (i = 0; len1 > 0 && len2 > 0; i++)
     {
@@ -1942,7 +1945,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         addr1 += n + 1;
         addr1 &= ADDRESS_MAXWRAP(regs);
         len1 -= n + 1;
-
+        
         /* Update operand 2 address and length */
         addr2 = naddr2;
         len2 = nlen2;
@@ -1953,10 +1956,11 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         GR_A(r2, regs) = addr2;
         GR_A(r2+1, regs) = len2;
 
+        if (len1 == 0)
+            cc = 1;
+
     } /* end for(i) */
 
-    if (len1 == 0)
-        cc = 1;
     regs->psw.cc = cc;
 
 } /* end convert_unicode_to_utf8 */
@@ -1990,6 +1994,9 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
     /* Load operand lengths from bits 0-31 of R1+1 and R2+1 */
     len1 = GR_A(r1+1, regs);
     len2 = GR_A(r2+1, regs);
+
+    if (len1 == 0 && len2 > 0)
+        cc = 1;
 
     /* Process operands from left to right */
     for (i = 0; len1 > 0 && len2 > 0; i++)
@@ -2051,8 +2058,8 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
             ARCH_DEP(vfetchc) ( utf, n, addr2, r2, regs );
 
             /* Convert F0xxxxxx-F7xxxxxx to Unicode surrogate pair */
-            uvwxy = (((U16)(utf[0] & 0x07) << 2)
-                        | ((U16)(utf[1] & 0x30) >> 4)) - 1;
+            uvwxy = ((((U16)(utf[0] & 0x07) << 2)
+                        | ((U16)(utf[1] & 0x30) >> 4)) - 1) & 0x0F;
             unicode1 = 0xD800 | (uvwxy << 6) | ((U16)(utf[1] & 0x0F) << 2)
                         | ((U16)(utf[2] & 0x30) >> 4);
             unicode2 = 0xDC00 | ((U16)(utf[2] & 0x0F) << 6)
@@ -2112,8 +2119,6 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
 
     } /* end for(i) */
 
-    if (len1 == 0)
-        cc = 1;
     regs->psw.cc = cc;
 
 } /* end convert_utf8_to_unicode */
