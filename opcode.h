@@ -320,6 +320,12 @@ do { \
   (((_addr) >= ((_low) & MAXADDRESS)) && (_addr) <= ((_high) & MAXADDRESS)) : \
   (((_addr) >= ((_low) & MAXADDRESS)) || (_addr) <= ((_high) & MAXADDRESS)) )
 
+#define PER_RANGE_CHECK2(_addr1, _addr2, _low, _high) \
+  ( (((_high) & MAXADDRESS) >= ((_low) & MAXADDRESS)) ? \
+  (((_addr1) >= ((_low) & MAXADDRESS)) && (_addr1) <= ((_high) & MAXADDRESS)) || \
+  (((_addr2) >= ((_low) & MAXADDRESS)) && (_addr2) <= ((_high) & MAXADDRESS)) || \
+  (((_addr1) <= ((_low) & MAXADDRESS)) && (_addr2) >= ((_high) & MAXADDRESS)) :  \
+  (((_addr2) >= ((_low) & MAXADDRESS)) || (_addr1) <= ((_high) & MAXADDRESS)) )
 
 #ifdef WORDS_BIGENDIAN
  #define CSWAP16(_x) (_x)
