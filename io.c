@@ -214,6 +214,9 @@ PMCW    pmcw;                           /* Path management ctl word  */
     dev->pmcw.flag27 &= ~PMCW27_S;
     dev->pmcw.flag27 |= (pmcw.flag27 & PMCW27_S);
 
+    /* Set device priority from the interruption subclass bits */
+    dev->priority = (dev->pmcw.flag4 & PMCW4_ISC) >> 3;
+
     release_lock (&dev->lock);
 
     /* Set condition code 0 */

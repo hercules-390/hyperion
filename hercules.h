@@ -524,7 +524,6 @@ typedef struct _REGS {                  /* Processor registers       */
 #define INTCOND       sysblk.intcond
 #endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND) */
 
-#ifdef OPTION_IOINTQ
 /* Macros to queue/dequeue a device on the I/O interrupt queue */
 #define QUEUE_IO_INTERRUPT(dev) \
  { \
@@ -535,15 +534,23 @@ typedef struct _REGS {                  /* Processor registers       */
    } \
    else if (sysblk.iointq != (dev)) \
    { \
+     if (sysblk.iointq->priority > (dev)->priority) \
+     { \
+       (dev)->iointq = sysblk.iointq; \
+       sysblk.iointq = (dev); \
+     } \
+     else \
+     { \
      DEVBLK *prev; \
      for (prev = sysblk.iointq; prev->iointq != NULL; prev = prev->iointq) \
        if (prev->iointq == (dev) \
-        || prev->iointq->priority < dev->priority) break; \
+          || prev->iointq->priority > dev->priority) break; \
      if (prev->iointq != (dev)) \
      { \
        (dev)->iointq = prev->iointq; \
        prev->iointq = (dev); \
      } \
+   } \
    } \
  }
 #define DEQUEUE_IO_INTERRUPT(dev) \
@@ -552,14 +559,10 @@ typedef struct _REGS {                  /* Processor registers       */
      sysblk.iointq = (dev)->iointq; \
    else { \
      DEVBLK *prev; \
-     for (prev = sysblk.iointq; prev->iointq != (dev); prev = prev->iointq); \
-     prev->iointq = (dev)->iointq; \
+     for (prev = sysblk.iointq; prev && prev->iointq != (dev); prev = prev->iointq); \
+     if (prev) prev->iointq = (dev)->iointq; \
    } \
  }
-#else
-#define QUEUE_IO_INTERRUPT(dev)
-#define DEQUEUE_IO_INTERRUPT(dev)
-#endif
 
 /*-------------------------------------------------------------------*/
 /* System configuration block                                        */
@@ -622,9 +625,7 @@ typedef struct _SYSBLK {
         struct _DEVBLK *firstdev;       /* -> First device block     */
         U16     highsubchan;            /* Highest subchannel + 1    */
         U32     chp_reset[8];           /* Channel path reset masks  */
-#ifdef OPTION_IOINTQ
         struct _DEVBLK *iointq;         /* I/O interrupt queue       */
-#endif
 #if !defined(OPTION_FISHIO)
         struct _DEVBLK *ioq;            /* I/O queue                 */
         LOCK    ioqlock;                /* I/O queue lock            */
@@ -834,10 +835,9 @@ typedef struct _DEVBLK {
         TID     tid;                    /* Thread-id executing CCW   */
         int     priority;               /* I/O q scehduling priority */
         struct _DEVBLK *nextioq;        /* -> next device in I/O q   */
-#ifdef OPTION_IOINTQ
+
         struct _DEVBLK *iointq;         /* -> next device in I/O
                                            interrupt queue           */
-#endif
         /*  device handler function pointers...                      */
 
         DEVIF  *devinit;                /* -> Init device function   */
