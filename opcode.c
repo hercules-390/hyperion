@@ -556,6 +556,31 @@
  UNDEF_INST(cancel_subchannel)
 #endif /*!defined(FEATURE_CANCEL_IO_FACILITY)*/
 
+#if !defined(FEATURE_ECPSVM)
+ UNDEF_INST(ecpsvm_basic_freex);
+ UNDEF_INST(ecpsvm_basic_fretx);
+ UNDEF_INST(ecpsvm_lock_page);
+ UNDEF_INST(ecpsvm_unlock_page);
+ UNDEF_INST(ecpsvm_decode_next_ccw);
+ UNDEF_INST(ecpsvm_free_ccwstor);
+ UNDEF_INST(ecpsvm_locate_vblock);
+ UNDEF_INST(ecpsvm_disp1);
+ UNDEF_INST(ecpsvm_tpage);
+ UNDEF_INST(ecpsvm_tpage_lock);
+ UNDEF_INST(ecpsvm_inval_segtab);
+ UNDEF_INST(ecpsvm_inval_ptable);
+ UNDEF_INST(ecpsvm_decode_first_ccw);
+ UNDEF_INST(ecpsvm_dispatch_main);
+ UNDEF_INST(ecpsvm_locate_rblock);
+ UNDEF_INST(ecpsvm_comm_ccwproc);
+ UNDEF_INST(ecpsvm_unxlate_ccw);
+ UNDEF_INST(ecpsvm_disp2);
+ UNDEF_INST(ecpsvm_store_level);
+ UNDEF_INST(ecpsvm_loc_chgshrpg);
+ UNDEF_INST(ecpsvm_extended_freex);
+ UNDEF_INST(ecpsvm_extended_fretx);
+ UNDEF_INST(ecpsvm_prefmach_assist);
+#endif /*!defined(FEATURE_ECPSVM)*/
 
 /* The following execute_xxxx routines can be optimized by the
    compiler to an indexed jump, leaving the stack frame untouched
