@@ -1827,6 +1827,10 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         dev->busy = 1;
         release_lock (&dev->lock);
     }
+    else
+    {
+        dev->ioactive = DEV_SYS_LOCAL;
+    }
 
     /* Call the i/o start exit */
     if (!dev->syncio_retry)
