@@ -1892,6 +1892,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 rc == 3 ? _("subchannel not enabled") :
                 _("attention request rejected"));
 
+        if (rc == 3)
+            logmsg (_("(Are you sure you didn't mean 'ipl %4.4X' instead?)\n"),devnum);
+
         return NULL;
     } /* end if(i) */
 
