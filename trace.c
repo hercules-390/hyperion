@@ -443,9 +443,11 @@ int  size;
         raddr = ARCH_DEP(get_trace_entry) (&ag, size, regs);
         tte = (void*)sysblk.mainstor + raddr;
         tte->format = TRACE_F1_BSG_FMT;
-        tte->alet[0] = (alet >> 16) & 0xFF; 
+        tte->alet[0] = ((alet >> 17) & 0x80) | ((alet >> 16) & 0x7F); 
         tte->alet[1] = (alet >> 8) & 0xFF; 
-        tte->alet[2] = alet & 0xFF; 
+        tte->alet[2] = alet & 0xFF;
+        if ((ia & 0x80000000) == 0)
+            ia &=0x00FFFFFF;  
         STORE_FW(tte->newia,ia);
     }
 
