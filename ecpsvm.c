@@ -63,6 +63,7 @@ struct _ECPSVM_CPSTATS
     ECPSVM_STAT_DCL(STNSM);
     ECPSVM_STAT_DCL(STOSM);
     ECPSVM_STAT_DCL(SIO);
+    ECPSVM_STAT_DCL(VTIMER);
 } ecpsvm_sastats={
     ECPSVM_STAT_DEF(SVC),
     ECPSVM_STAT_DEF(SSM),
@@ -70,6 +71,7 @@ struct _ECPSVM_CPSTATS
     ECPSVM_STAT_DEFU(STNSM),
     ECPSVM_STAT_DEFU(STOSM),
     ECPSVM_STAT_DEFU(SIO),
+    ECPSVM_STAT_DEF(VTIMER),
 };
 struct _ECPSVM_SASTATS
 {
@@ -102,7 +104,7 @@ struct _ECPSVM_SASTATS
     ECPSVM_STAT_DEF(LCKPG),
     ECPSVM_STAT_DEF(ULKPG),
     ECPSVM_STAT_DEF(SCNRU),
-    ECPSVM_STAT_DEFU(SCNVU),
+    ECPSVM_STAT_DEF(SCNVU),
     ECPSVM_STAT_DEFU(DISP0),
     ECPSVM_STAT_DEFU(DISP1),
     ECPSVM_STAT_DEFU(DISP2),
@@ -241,6 +243,8 @@ struct _ECPSVM_SASTATS
     /* Load the Virtual PSW in a temporary REGS structure */ \
     INITSIESTATE(vpregs); \
     ARCH_DEP(load_psw) (&vpregs,&regs->mainstor[vpswa]); \
+    DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" CR6= %8.8X\n",CR6)); \
+    DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" MICVTMR= %8.8X\n",micblok.MICVTMR)); \
     DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" VPSWA= %8.8X Virtual ",vpswa)); \
     DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
     DEBUG_SASSISTX(_instname,logmsg("HHCEV300D : SASSIST "#_instname" Real ")); \
@@ -401,10 +405,57 @@ DEF_INST(ecpsvm_free_ccwstor)
 {
     ECPSVM_PROLOG(FCCWS);
 }
-/* SCNVU : Not supported */
+/* SCNVU : Scan for Virtual Device blocks */
 DEF_INST(ecpsvm_locate_vblock)
 {
+    U32  vdev;
+    U16  vchix;
+    U16  vcuix;
+    U16  vdvix;
+    VADR vchtbl;
+    VADR vch;
+    VADR vcu;
+    VADR vdv;
+
     ECPSVM_PROLOG(SCNVU);
+    vdev=regs->GR_L(1);
+    vchtbl=effective_addr1;
+
+    vchix=EVM_LH(vchtbl+((vdev & 0xf00)>>7));   /* Get Index */
+    if(vchix & 0x8000)
+    {
+        DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU Virtual Device %4.4X has no VCHAN block\n",vdev));
+        return;
+    }
+    vch=EVM_L(effective_addr2)+vchix;
+
+    vcuix=EVM_LH(vch+8+((vdev & 0xf0)>>3));
+    if(vcuix & 0x8000)
+    {
+        DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU Virtual Device %4.4X has no VCU block\n",vdev));
+        return;
+    }
+    vcu=EVM_L(effective_addr2+4)+vcuix;
+
+    vdvix=EVM_LH(vcu+8+((vdev & 0xf)<<1));
+    if(vdvix & 0x8000)
+    {
+        DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU Virtual Device %4.4X has no VDEV block\n",vdev));
+        return;
+    }
+    vdv=EVM_L(effective_addr2+8)+vdvix;
+    DEBUG_CPASSISTX(SCNVU,logmsg("HHCEV300D SCNVU %4.4X : VCH = %8.8X, VCU = %8.8X, VDEV = %8.8X\n",
+                vdev,
+                vch,
+                vcu,
+                vdv));
+    regs->GR_L(6)=vch;
+    regs->GR_L(7)=vcu;
+    regs->GR_L(8)=vdv;
+    regs->psw.cc=0;
+    CPASSIST_HIT(SCNVU);
+    BR14;
+    return;
 }
 /* DISP1 : Not supported */
 DEF_INST(ecpsvm_disp1)
@@ -1147,6 +1198,71 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
     DEBUG_SASSISTX(LPSW,logmsg("HHCEV300D : SASSIST LPSW New REAL "));
     DEBUG_SASSISTX(LPSW,display_psw(regs));
     SASSIST_HIT(LPSW);
+    return(0);
+}
+
+int ecpsvm_testvtimer(REGS *regs,int td)
+{
+    U32 vtmr;
+    U32 ovtmr;
+    int doint=0;
+    SASSIST_PROLOG(VTIMER);
+    if(!(CR6 & ECPSVM_CR6_VIRTTIMR))
+    {
+        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER reject : Disabled by CR6\n"));
+        return(1);
+    }
+    /* Update the Virt timer */
+    /* Do not set ref/change bit there */
+    /* this is a hardware timer update */
+    /* ALSO ! Not subject to fetch/store protection */
+    FETCH_FW(vtmr,regs->mainstor+micblok.MICVTMR);
+    ovtmr=vtmr;
+    vtmr-=td;
+    DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER old=%8.8X, New=%8.8X\n",ovtmr,vtmr));
+    STORE_FW(regs->mainstor+micblok.MICVTMR,vtmr);
+    if( (vtmr & 0x80000000) != (ovtmr & 0x80000000) )
+    {
+        doint=1;
+        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Need to reflect INT\n"));
+    }
+    SASSIST_HIT(VTIMER);
+    if(doint)
+    {
+        regs->vtimerint=1;
+    }
+    if(regs->vtimerint)
+    {
+        ON_IC_ITIMER(regs);
+    }
+    return(regs->vtimerint?0:1);        /* Also say yes if vtimerint was set before */
+}
+
+
+int     ecpsvm_virttmr_ext(REGS *regs)
+{
+    DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Checking if we can IRPT\n"));
+    if(!regs->vtimerint)
+    {
+        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not pending\n"));
+        return(1);
+    }
+    if(!(regs->psw.prob))
+    {
+        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Not dispatching a VM\n"));
+        return(1);
+    }
+    if(!(regs->psw.sysmask & PSW_EXTMASK))
+    {
+        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Test int : Not enabled for EXT\n"));
+        return(1);
+    }
+    if(!(regs->CR_L(6) & ECPSVM_CR6_VIRTTIMR))
+    {
+        DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Test int : Not enabled for VTIMER\n"));
+        return(1);
+    }
+    DEBUG_SASSISTX(VTIMER,logmsg("HHCEV300D : SASSIST VTIMER Please, do\n"));
     return(0);
 }
 

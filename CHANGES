@@ -1,4 +1,5 @@
-04 Ape 2003 Return IntReq on Card Read unsolicited Sense when
+05 Apr 2003 Virtual Timer Assist - Ivan Warren
+04 Apr 2003 Return IntReq on Card Read unsolicited Sense when
             the card reader is empty - Ivan Warren
 03 Apr 2003 ECPS:VM SSM Correction, panel command rework (evm) 
             and conditional debug messages - Ivan Warren

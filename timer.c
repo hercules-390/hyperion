@@ -9,6 +9,8 @@
 #include "feat390.h"
 #include "feat370.h"
 
+int ecpsvm_testvtimer(REGS *,int);
+
 void check_timer_event(void);
 
 /*-------------------------------------------------------------------*/
@@ -85,7 +87,7 @@ REGS           *regs;                   /* -> CPU register context   */
 PSA_3XX        *psa;                    /* -> Prefixed storage area  */
 S32             itimer;                 /* Interval timer value      */
 S32             olditimer;              /* Previous interval timer   */
-#if defined(OPTION_MIPS_COUNTING) && defined(_FEATURE_SIE)
+#if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(FEATURE_ECPSVM) )
 int             itimer_diff;            /* TOD difference in TU      */
 #endif
 U32             intmask = 0;            /* Interrupt CPU mask        */
@@ -176,7 +178,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
          * [3] Check for interval timer interrupt    *
          *-------------------------------------------*/
 
-#if defined(OPTION_MIPS_COUNTING) && defined(_FEATURE_SIE)
+#if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(FEATURE_ECPSVM) )
         /* Calculate diff in interval timer units */
         itimer_diff = (int)((3*sysblk.todclock_diff)/625);
 #endif
@@ -198,7 +200,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                        comes out to 75 on the Alpha, with its 1024/second
                        tick interval. See 370 POO page 4-29. (ESA doesn't
                        even have an interval timer.) */
-#if defined(OPTION_MIPS_COUNTING) && defined(_FEATURE_SIE)
+#if defined(OPTION_MIPS_COUNTING) && ( defined(_FEATURE_SIE) || defined(FEATURE_ECPSVM) )
             itimer -= itimer_diff;
 #else
             itimer -= 76800 / CLK_TCK;
@@ -209,9 +211,24 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
                if the interval timer went from positive to negative */
             if (itimer < 0 && olditimer >= 0)
             {
+#if defined(FEATURE_ECPSVM)
+                regs->rtimerint=1;      /* To resolve concurrent V/R Int Timer Ints */
+#endif
                 ON_IC_ITIMER(regs);
                 intmask |= regs->cpumask;
             }
+#if defined(FEATURE_ECPSVM)
+#if defined(OPTION_MIPS_COUNTING)
+            if(ecpsvm_testvtimer(regs,itimer_diff)==0)
+#else /* OPTION_MIPS_COUNTING */
+            if(ecpsvm_testvtimer(regs,76800 / CLK_TCK)==0)
+#endif /* OPTION_MIPS_COUNTING */
+            {
+                ON_IC_ITIMER(regs);
+                intmask |= regs->cpumask;
+            }
+#endif /* FEATURE_ECPSVM */
+
         } /*if(regs->arch_mode == ARCH_370)*/
 
 #if defined(_FEATURE_SIE)
@@ -242,6 +259,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
             }
         }
 #endif /*defined(_FEATURE_SIE)*/
+
 
     } /* end for(cpu) */
 

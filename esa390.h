@@ -823,6 +823,9 @@ typedef struct _PSA_900 {       /* Prefixed storage area     */
 #define EXT_EXTERNAL_CALL_INTERRUPT         0x1202
 #define EXT_ETR_INTERRUPT               0x1406
 #define EXT_SERVICE_SIGNAL_INTERRUPT            0x2401
+#if defined(FEATURE_ECPSVM)
+#define EXT_VINTERVAL_TIMER_INTERRUPT   0x0100
+#endif
 
 /* Macros for classifying CCW operation codes */
 #define IS_CCW_WRITE(c)         (((c)&0x03)==0x01)

@@ -466,6 +466,11 @@ typedef struct _REGS {                  /* Processor registers       */
                 hostint:1,              /* Host generated interrupt  */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1,           /* 1=SIGP initial cpu reset  */
+                vtimerint:1,            /* 1=Virtual Timer interrupt */
+                                        /* (ECPS:VM)                 */
+                rtimerint:1,            /* 1=Concurrent Virt & Real  */
+                                        /* Interval Timer interrupts */
+                                        /* (ECPS:VM Only)            */
                 instvalid:1;            /* 1=Inst field is valid     */
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
