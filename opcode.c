@@ -1004,6 +1004,10 @@ int d2,b2;
     logmsg("%-6.6s%d(%d)\n",mnemonic,d2,b2);
 }
 
+/* Gabor Hoffer (performance option) */
+zz_func s370_opcode_table[256];
+zz_func s390_opcode_table[256];
+zz_func z900_opcode_table[256];
 
 zz_func opcode_table[256][GEN_MAXARCH] = {
  /*00*/   GENx___x___x___ ,
