@@ -1020,6 +1020,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
  #define ICOUNT_CMD
 #endif
 
+/*********************************************************************/
     /* ? command - display help text */
     if (cmd[0] == '?')
     {
@@ -1040,6 +1041,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             STSPALL_CMD
             "store=store status\n"
             "loadcore filename [address] = load core image from file\n"
+            "savecore filename [start/*] [end/*] = save core image to file\n"
             "loadtext filename [address] = load text deck from file\n"
             "loadparm xxxxxxxx=set IPL parameter, ipl devn=IPL\n"
             "archmode xxxxxxxx=set architecture mode\n"
@@ -1060,6 +1062,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* g command - turn off single stepping and start CPU */
     if (strcmp(cmd,"g") == 0)
     {
@@ -1092,6 +1095,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* stop command - stop CPU */
     if (strcmp(cmd,"stop") == 0)
     {
@@ -1103,6 +1107,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* quiet command - quiet PANEL */
     if (strcmp(cmd,"quiet") == 0)
     {
@@ -1110,6 +1115,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* Archmode command - Set architecture mode */
     if (memcmp(cmd,"archmode",8)==0)
     {
@@ -1153,6 +1159,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         }
     }
 
+/*********************************************************************/
 #if defined(OPTION_INSTRUCTION_COUNTING)
     /* icount command - display instruction counts */
     if (memcmp(cmd,"icount",6)==0)
@@ -1268,6 +1275,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 #endif
 
+/*********************************************************************/
     /* ipending command - display pending interrupts */
     if (memcmp(cmd,"ipending",8)==0)
     {
@@ -1370,6 +1378,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
 #if MAX_CPU_ENGINES > 1
     /* startall command - start all CPU's */
     if (strcmp(cmd,"startall") == 0)
@@ -1383,6 +1392,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* stopall command - stop all CPU's */
     if (strcmp(cmd,"stopall") == 0)
     {
@@ -1399,6 +1409,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 #endif /*MAX_CPU_ENGINES > 1*/
 
+/*********************************************************************/
     /* store command - store CPU status at absolute zero */
     if (strcmp(cmd,"store") == 0)
     {
@@ -1414,6 +1425,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
 #ifdef OPTION_TODCLOCK_DRAG_FACTOR
     /* toddrag command - display or set TOD clock drag factor */
     if (memcmp(cmd,"toddrag",7)==0)
@@ -1428,6 +1440,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 #endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
 
 
+/*********************************************************************/
 #ifdef PANEL_REFRESH_RATE
     /* panrate command - display or set rate at which console refreshes */
     if (memcmp(cmd,"panrate",7)==0)
@@ -1452,6 +1465,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 #endif /*PANEL_REFRESH_RATE */
 
 
+/*********************************************************************/
 #ifdef FEATURE_SYSTEM_CONSOLE
     /* .xxx and !xxx commands - send command or priority message
        to SCP via the HMC system console facility */
@@ -1462,12 +1476,14 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 #endif /*FEATURE_SYSTEM_CONSOLE*/
 
+/*********************************************************************/
     if (!strncmp(cmd,"sh",2))
     {
         herc_system(cmd + 2);
         return NULL;
     }
 
+/*********************************************************************/
     /* x+ and x- commands - turn switches on or off */
     if (cmd[1] == '+' || cmd[1] == '-')
     {
@@ -1479,6 +1495,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             onoroff = "off";
         }
 
+/*********************************************************************/
         /* f- and f+ commands - mark frames unusable/usable */
         if ((cmd[0] == 'f') && sscanf(cmd+2, "%x%c", &aaddr, &c) == 1)
         {
@@ -1495,6 +1512,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
+/*********************************************************************/
         /* t+ and t- commands - instruction tracing on/off */
         if (cmd[0]=='t' && cmd[2]=='\0')
         {
@@ -1504,6 +1522,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
+/*********************************************************************/
         /* s+ and s- commands - instruction stepping on/off */
         if (cmd[0]=='s' && cmd[2]=='\0')
         {
@@ -1513,6 +1532,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
+/*********************************************************************/
 #ifdef OPTION_CKD_KEY_TRACING
         /* t+ckd and t-ckd commands - turn CKD_KEY tracing on/off */
         if ((cmd[0] == 't') && (memcmp(cmd+2, "ckd", 3) == 0))
@@ -1523,6 +1543,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         }
 #endif /*OPTION_CKD_KEY_TRACING*/
 
+/*********************************************************************/
         /* t+devn and t-devn commands - turn CCW tracing on/off */
         /* s+devn and s-devn commands - turn CCW stepping on/off */
         if ((cmd[0] == 't' || cmd[0] == 's')
@@ -1550,6 +1571,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
     } /* end if(+ or -) */
 
+/*********************************************************************/
     /* gpr command - display general purpose registers */
     if (strcmp(cmd,"gpr") == 0)
     {
@@ -1557,6 +1579,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* fpr command - display floating point registers */
     if (strcmp(cmd,"fpr") == 0)
     {
@@ -1564,6 +1587,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* cr command - display control registers */
     if (strcmp(cmd,"cr") == 0)
     {
@@ -1571,6 +1595,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* ar command - display access registers */
     if (strcmp(cmd,"ar") == 0)
     {
@@ -1578,6 +1603,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* pr command - display prefix register */
     if (strcmp(cmd,"pr") == 0)
     {
@@ -1588,6 +1614,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* psw command - display program status word */
     if (strcmp(cmd,"psw") == 0)
     {
@@ -1595,6 +1622,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* restart command - generate restart interrupt */
     if (strcmp(cmd,"restart") == 0)
     {
@@ -1621,6 +1649,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* r command - display or alter real storage */
     if (cmd[0] == 'r')
     {
@@ -1628,6 +1657,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* v command - display or alter virtual storage */
     if (cmd[0] == 'v')
     {
@@ -1635,6 +1665,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* b command - set breakpoint */
     if (cmd[0] == 'b')
     {
@@ -1655,6 +1686,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         }
     }
 
+/*********************************************************************/
     /* i command - generate I/O attention interrupt for device */
     if (cmd[0] == 'i'
         && sscanf(cmd+1, "%hx%c", &devnum, &c) == 1)
@@ -1679,6 +1711,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     } /* end if(i) */
 
+/*********************************************************************/
     /* ext command - generate external interrupt */
     if (strcmp(cmd,"ext") == 0)
     {
@@ -1693,6 +1726,87 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
+    /* savecore filename command - save a core image to file */
+    if (memcmp(cmd,"savecore",8)==0)
+    {
+    U32 aaddr2;
+
+        /* Locate the operand */
+        fname = strtok (cmd + 8, " \t");
+        if (fname == NULL)
+        {
+            logmsg ("savecore rejected: filename missing\n");
+            return NULL;
+        }
+
+	loadaddr = strtok (NULL, " \t");
+
+	if (loadaddr == NULL || *loadaddr == '*' )
+        {
+            for(aaddr = 0; aaddr < sysblk.mainsize
+              && !(STORAGE_KEY(aaddr)&STORKEY_CHANGE); aaddr += 4096) ;
+            if(aaddr >= sysblk.mainsize )
+                aaddr = 0;
+            else
+                aaddr &= ~0xFFF;
+        }
+	else if (sscanf(loadaddr, "%x", &aaddr) !=1)
+	{
+	    logmsg ("savecore: invalid starting address: %s \n",loadaddr);
+	    return NULL;
+	}
+
+	loadaddr = strtok (NULL, " \t");
+
+	if (loadaddr == NULL || *loadaddr == '*' )
+        {
+            for(aaddr2 = sysblk.mainsize - 4096; aaddr2 > 0
+              && !(STORAGE_KEY(aaddr2)&STORKEY_CHANGE); aaddr2 -= 4096) ;
+            if( STORAGE_KEY(aaddr2) & STORKEY_CHANGE )
+                aaddr2 |= 0xFFF;
+
+        }
+	else if (sscanf(loadaddr, "%x", &aaddr2) !=1)
+	{
+	    logmsg ("savecore: invalid ending address: %s \n",loadaddr);
+	    return NULL;
+	}
+
+        /* Command is valid only when CPU is stopped */
+        if (regs->cpustate != CPUSTATE_STOPPED)
+        {
+            logmsg ("savecore rejected: CPU not stopped\n");
+            return NULL;
+        }
+
+        if(aaddr >= aaddr2)
+        {
+            logmsg("HHCxxxI invalid range: %8.8X-%8.8X\n",aaddr, aaddr2);
+            return NULL;
+        }
+
+        /* Save the file from absolute storage */
+        logmsg ("Saveing location %8.8X-%8.8X to %s\n", aaddr, aaddr2, fname);
+
+        if((fd = open(fname, O_CREAT|O_WRONLY|O_EXCL|O_BINARY, S_IREAD|S_IWRITE|S_IRGRP)) < 0)
+        {
+            logmsg("HHCxxxI savecore: %s: %s\n",fname,strerror(errno));
+            return NULL;
+        }
+
+        if((len = write(fd, sysblk.mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
+            logmsg("HHCxxxI savecore error writing to %s: %s\n",fname,strerror(errno));
+        else if(len < (aaddr2 - aaddr) + 1)
+            logmsg("HHCxxxI savecore: unable to save %d bytes\n",
+              ((aaddr2 - aaddr) + 1) - len);
+
+        close(fd);
+
+        return NULL;
+    }
+
+/*********************************************************************/
     /* loadcore filename command - load a core image file */
     if (memcmp(cmd,"loadcore",8)==0)
     {
@@ -1732,6 +1846,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* loadtext filename command - load a text deck file */
     if (memcmp(cmd,"loadtext",8)==0)
     {
@@ -1810,6 +1925,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 
 
+/*********************************************************************/
     /* loadparm xxxxxxxx command - set IPL parameter */
     if (memcmp(cmd,"loadparm",8)==0)
     {
@@ -1839,6 +1955,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* ipl xxxx command - IPL from device xxxx */
     if (memcmp(cmd,"ipl",3)==0)
     {
@@ -1861,6 +1978,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* cpu command - define target cpu for panel display and commands */
     if (memcmp(cmd,"cpu",3)==0)
     {
@@ -1881,6 +1999,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* quit or exit command - terminate the emulator */
     if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"exit") == 0)
     {
@@ -1894,6 +2013,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         exit(0);
     }
 
+/*********************************************************************/
     /* devlist command - list devices */
     if (strcmp(cmd,"devlist") == 0)
     {
@@ -1938,6 +2058,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* devinit command - assign/open a file for a configured device */
     if (memcmp(cmd,"devinit",7)==0)
     {
@@ -2006,6 +2127,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* attach command - configure a device */
     if (memcmp(cmd,"attach",6)==0)
     {
@@ -2040,6 +2162,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* detach command - configure a device */
     if (memcmp(cmd,"detach",6)==0)
     {
@@ -2057,6 +2180,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* define command - rename a device */
     if (memcmp(cmd,"define",6)==0)
     {
@@ -2082,6 +2206,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* pgmtrace command - trace program interrupts */
     if (memcmp(cmd,"pgmtrace",8)==0)
     {
@@ -2109,6 +2234,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* sf commands - shadow file add/remove/set/display */
     if (memcmp(cmd,"sf",2)==0)
     {
@@ -2167,6 +2293,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* k command - print out cckd internal trace */
     if (cmd[0] == 'k'
         && sscanf(cmd+1, "%hx%c", &devnum, &c) == 1)
@@ -2181,6 +2308,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* ds - display subchannel */
     if (memcmp(cmd,"ds",2)==0)
     {
@@ -2201,8 +2329,8 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* devtmax command - display or set max device threads */
-
     if (memcmp(cmd,"devtmax",7)==0)
     {
         int devtmax = -2;
@@ -2274,6 +2402,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         return NULL;
     }
 
+/*********************************************************************/
     /* Ignore just enter */
     if (cmd[0] == '\0')
         return NULL;

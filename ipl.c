@@ -459,11 +459,14 @@ U32  pagesize;
             return br;
         }
         rl = read(fd, sysblk.mainstor + pageaddr, pagesize);
-        STORAGE_KEY(startloc) |= STORKEY_REF|STORKEY_CHANGE;
+        if(rl > 0)
+        {
+            STORAGE_KEY(pageaddr) |= STORKEY_REF|STORKEY_CHANGE;
+            br += rl;
+        }
         pageaddr += PAGEFRAME_PAGESIZE;
 	pageaddr &= PAGEFRAME_PAGEMASK;
         pagesize = PAGEFRAME_PAGESIZE;
-        if(rl > 0) br += rl;
     } while (rl == pagesize);
 
     close(fd);
