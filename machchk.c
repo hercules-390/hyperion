@@ -296,11 +296,11 @@ int i;
         return;
     }
 
-#ifdef FEATURE_CPU_RECONFIG
+#ifdef _FEATURE_CPU_RECONFIG
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-#else /*!FEATURE_CPU_RECONFIG*/
+#else /*!_FEATURE_CPU_RECONFIG*/
     for (i = 0; i < sysblk.numcpu; i++)
-#endif /*!FEATURE_CPU_RECONFIG*/
+#endif /*!_FEATURE_CPU_RECONFIG*/
     {
         if(sysblk.regs[i].cputid == tid)
         {
@@ -383,11 +383,11 @@ int i;
         {
             if(!try_obtain_lock(&sysblk.intlock))
             {
-#ifdef FEATURE_CPU_RECONFIG
+#ifdef _FEATURE_CPU_RECONFIG
                 for (i = 0; i < MAX_CPU_ENGINES; i++)
-#else /*!FEATURE_CPU_RECONFIG*/
+#else /*!_FEATURE_CPU_RECONFIG*/
                 for (i = 0; i < sysblk.numcpu; i++)
-#endif /*!FEATURE_CPU_RECONFIG*/
+#endif /*!_FEATURE_CPU_RECONFIG*/
                     if(i != regs->cpuad)
                     {
                         ON_IC_MALFALT(&sysblk.regs[i]);

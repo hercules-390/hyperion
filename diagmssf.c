@@ -264,21 +264,21 @@ DEVBLK            *dev;                /* Device block pointer       */
             spccbconfig->hex01 = 0x01;
 
             /* Set CPU array count and offset in SPCCB */
-#ifdef _FEATURE_CPU_RECONFIG
+#ifdef FEATURE_CPU_RECONFIG
             STORE_HW(spccbconfig->toticpu,MAX_CPU_ENGINES);
-#else /*!_FEATURE_CPU_RECONFIG*/
+#else /*!FEATURE_CPU_RECONFIG*/
             STORE_HW(spccbconfig->toticpu,sysblk.numcpu);
-#endif /*!_FEATURE_CPU_RECONFIG*/
+#endif /*!FEATURE_CPU_RECONFIG*/
             offset = sizeof(SPCCB_HEADER) + sizeof(SPCCB_CONFIG_INFO);
             STORE_HW(spccbconfig->officpu,offset);
 
             /* Set HSA array count and offset in SPCCB */
             STORE_HW(spccbconfig->tothsa,0);
-#ifdef _FEATURE_CPU_RECONFIG
+#ifdef FEATURE_CPU_RECONFIG
             offset += sizeof(SPCCB_CPU_INFO) * MAX_CPU_ENGINES;
-#else /*!_FEATURE_CPU_RECONFIG*/
+#else /*!FEATURE_CPU_RECONFIG*/
             offset += sizeof(SPCCB_CPU_INFO) * sysblk.numcpu;
-#endif /*!_FEATURE_CPU_RECONFIG*/
+#endif /*!FEATURE_CPU_RECONFIG*/
             STORE_HW(spccbconfig->offhsa,offset);
 
             /* Move IPL load parameter to SPCCB */
@@ -286,11 +286,11 @@ DEVBLK            *dev;                /* Device block pointer       */
 
             /* Build the CPU information array after the SCP info */
             spccbcpu = (SPCCB_CPU_INFO*)(spccbconfig+1);
-#ifdef _FEATURE_CPU_RECONFIG
+#ifdef FEATURE_CPU_RECONFIG
             for (i = 0; i < MAX_CPU_ENGINES; i++, spccbcpu++)
-#else /*!_FEATURE_CPU_RECONFIG*/
+#else /*!FEATURE_CPU_RECONFIG*/
             for (i = 0; i < sysblk.numcpu; i++, spccbcpu++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
+#endif /*!FEATURE_CPU_RECONFIG*/
             {
                 memset (spccbcpu, 0, sizeof(SPCCB_CPU_INFO));
                 spccbcpu->cpuaddr = sysblk.regs[i].cpuad;
@@ -427,12 +427,12 @@ static U64        diag204tod;          /* last diag204 tod           */
         /* hercules cpu's */
         getrusage(RUSAGE_SELF,&usage);
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
-#ifdef _FEATURE_CPU_RECONFIG
+#ifdef FEATURE_CPU_RECONFIG
         for(i = 0; i < MAX_CPU_ENGINES;i++)
           if(sysblk.regs[i].cpuonline)
-#else /*!_FEATURE_CPU_RECONFIG*/
+#else /*!FEATURE_CPU_RECONFIG*/
         for(i = 0; i < sysblk.numcpu;i++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
+#endif /*!FEATURE_CPU_RECONFIG*/
         {
             memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
             STORE_HW(cpuinfo->cpaddr,sysblk.regs[i].cpuad);

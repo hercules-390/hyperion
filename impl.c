@@ -79,11 +79,11 @@ int i;
 
     while(1)
     {
-#ifdef FEATURE_CPU_RECONFIG
+#ifdef _FEATURE_CPU_RECONFIG
         for (i = 0; i < MAX_CPU_ENGINES; i++)
-#else /*!FEATURE_CPU_RECONFIG*/
+#else /*!_FEATURE_CPU_RECONFIG*/
         for (i = 0; i < sysblk.numcpu; i++)
-#endif /*!FEATURE_CPU_RECONFIG*/
+#endif /*!_FEATURE_CPU_RECONFIG*/
         {
             if(sysblk.regs[i].cpustate == CPUSTATE_STARTED
               && (!sysblk.regs[i].psw.wait

@@ -557,17 +557,17 @@ void  UpdateCPUStatus ()
     mips_rate = 0;
     sios_rate = 0;
 
-#if       !defined(FEATURE_CPU_RECONFIG)
+#if       !defined(_FEATURE_CPU_RECONFIG)
 
     for (i = 0; i < sysblk.numcpu; i++)
 
-#else  //  defined(FEATURE_CPU_RECONFIG)
+#else  //  defined(_FEATURE_CPU_RECONFIG)
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
 
         if(sysblk.regs[i].cpuonline)
 
-#endif // !defined(FEATURE_CPU_RECONFIG)
+#endif // !defined(_FEATURE_CPU_RECONFIG)
 
         {
             mips_rate  +=  sysblk.regs[i].mipsrate;

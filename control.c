@@ -4756,11 +4756,11 @@ static char *ordername[] = {    "Unassigned",
     parm = (r1 & 1) ? regs->GR_L(r1) : regs->GR_L(r1+1);
 
     /* Return condition code 3 if target CPU does not exist */
-#ifdef _FEATURE_CPU_RECONFIG
+#ifdef FEATURE_CPU_RECONFIG
     if (cpad >= MAX_CPU_ENGINES)
-#else /*!_FEATURE_CPU_RECONFIG*/
+#else /*!FEATURE_CPU_RECONFIG*/
     if (cpad >= sysblk.numcpu)
-#endif /*!_FEATURE_CPU_RECONFIG*/
+#endif /*!FEATURE_CPU_RECONFIG*/
     {
         regs->psw.cc = 3;
         return;
@@ -5099,11 +5099,11 @@ static char *ordername[] = {    "Unassigned",
             PERFORM_SERIALIZATION (regs);
             PERFORM_CHKPT_SYNC (regs);
 
-#ifdef _FEATURE_CPU_RECONFIG
+#ifdef FEATURE_CPU_RECONFIG
             for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-#else /*!_FEATURE_CPU_RECONFIG*/
+#else /*!FEATURE_CPU_RECONFIG*/
             for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-#endif /*!_FEATURE_CPU_RECONFIG*/
+#endif /*!FEATURE_CPU_RECONFIG*/
                 if(sysblk.regs[cpu].cpuonline
                     && sysblk.regs[cpu].cpustate != CPUSTATE_STOPPED
                     && sysblk.regs[cpu].cpuad != regs->cpuad)
