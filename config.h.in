@@ -277,6 +277,9 @@
 /* Define to disable sigabend_handler (please describe this better) */
 #undef NO_SIGABEND_HANDLER
 
+/* Define to enable symbolic substitutions in configuration file */
+#undef OPTION_CONFIG_SYMBOLS
+
 /* Define to use included threads implementation (fthreads) */
 #undef OPTION_FTHREADS
 

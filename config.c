@@ -400,7 +400,7 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
 void build_config (BYTE *fname)
 {
 int     rc;                             /* Return code               */
-int     i;                              /* Array subscript           */
+int     i,j;                            /* Array subscript           */
 int     scount;                         /* Statement counter         */
 int     cpu;                            /* CPU number                */
 FILE   *fp;                             /* Configuration file pointer*/
@@ -485,6 +485,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                                            cygwin from thrashing in
                                            select(). sigh            */
 #endif
+#if defined(OPTION_CONFIG_SYMBOLS)
+BYTE **newargv;                         /* Additional Device argument array copy */
+#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
 
     SET_IC_INITIAL_STATE;
 
@@ -1478,12 +1481,39 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
                     fname, stmt, sdevnum);
             delayed_exit(1);
         }
+#if defined(OPTION_CONFIG_SYMBOLS)
+        newargv=malloc(sizeof(char *)*addargc);
+#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
         for(baddev=0,i=0;i<(int)devncount;i++)
         {
             for(devnum=devnarray[i].cuu1;devnum<=devnarray[i].cuu2;devnum++)
             {
+#if defined(OPTION_CONFIG_SYMBOLS)
+               char wrkbfr[16];
+               snprintf(wrkbfr,sizeof(wrkbfr),"%3.3x",devnum);
+               set_symbol("cuu",wrkbfr);
+               snprintf(wrkbfr,sizeof(wrkbfr),"%4.4x",devnum);
+               set_symbol("ccuu",wrkbfr);
+               snprintf(wrkbfr,sizeof(wrkbfr),"%3.3X",devnum);
+               set_symbol("CUU",wrkbfr);
+               snprintf(wrkbfr,sizeof(wrkbfr),"%4.4X",devnum);
+               set_symbol("CCUU",wrkbfr);
+               for(j=0;j<addargc;j++)
+               {
+                   newargv[j]=resolve_symbol_string(addargv[j]);
+               }
+               rc=attach_device(devnum, sdevtype, addargc , newargv);
+#else /* #if defined(OPTION_CONFIG_SYMBOLS) */
+               rc=attach_device(devnum, sdevtype, addargc, addargv);
+#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
                 /* Build the device configuration block */
-               if(attach_device(devnum, sdevtype, addargc, addargv)!=0)
+#if defined(OPTION_CONFIG_SYMBOLS)
+               for(j=0;j<addargc;j++)
+               {
+                   free(newargv[j]);
+               }
+#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
+               if(rc!=0)
                {
                    baddev=1;
                    break;
@@ -1495,6 +1525,9 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
             }
         }
         free(devnarray);
+#if defined(OPTION_CONFIG_SYMBOLS)
+        free(newargv);
+#endif /* #if defined(OPTION_CONFIG_SYMBOLS) */
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))

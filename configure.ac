@@ -345,6 +345,19 @@ AC_ARG_ENABLE(optimization,
                esac],
               [test x$debug != xtrue && auto_optimize=true])
 
+AC_ARG_ENABLE(configsymbols,
+              AC_HELP_STRING([--disable-configsymbols],
+                             [enable/disable symbolic substitutions in configuration file]),
+              [case "${enableval}" in
+                yes) opt_configsymbols=true ;;
+                no) opt_configsymbols=false ;;
+                *) opt_configsymbols=true;;
+               esac],[opt_configsymbols=true])
+if test x$opt_configsymbols = xtrue; then
+    AC_DEFINE([OPTION_CONFIG_SYMBOLS])
+fi
+
+
 if test x$auto_optimize = xtrue; then
   case "$host_cpu" in
           powerpc)
@@ -455,6 +468,8 @@ AH_TEMPLATE([BUILTIN_MEMRCHR],
             [Define to use built-in memrchr implementation])
 AH_TEMPLATE([BUILTIN_STRERROR_R],
             [Define to use built-in strerror_r implementation])
+AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
+            [Define to enable symbolic substitutions in configuration file])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile ])
 

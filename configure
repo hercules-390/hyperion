@@ -864,6 +864,8 @@ Optional Features:
   --enable-optimization=FLAGS
                           enable/disable automatic optimization, or specify
                           flags
+  --disable-configsymbols enable/disable symbolic substitutions in
+                          configuration file
   --disable-external-gui  disable interface to external Windows GUI
   --enable-custom=STRING  provide a custom description for this build
 
@@ -9765,6 +9767,25 @@ else
   test x$debug != xtrue && auto_optimize=true
 fi;
 
+# Check whether --enable-configsymbols or --disable-configsymbols was given.
+if test "${enable_configsymbols+set}" = set; then
+  enableval="$enable_configsymbols"
+  case "${enableval}" in
+                yes) opt_configsymbols=true ;;
+                no) opt_configsymbols=false ;;
+                *) opt_configsymbols=true;;
+               esac
+else
+  opt_configsymbols=true
+fi;
+if test x$opt_configsymbols = xtrue; then
+    cat >>confdefs.h <<\_ACEOF
+#define OPTION_CONFIG_SYMBOLS 1
+_ACEOF
+
+fi
+
+
 if test x$auto_optimize = xtrue; then
   case "$host_cpu" in
           powerpc)
@@ -9845,6 +9866,8 @@ fi
 cat >>confdefs.h <<_ACEOF
 #define LOCALEDIR "${LOCALEDIR}"
 _ACEOF
+
+
 
 
 
