@@ -515,6 +515,12 @@ _VFETCH_C_STATIC void ARCH_DEP(instfetch) (BYTE *dest, VADR addr,
 RADR    abs;                            /* Absolute storage address  */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
+
+    /* Program check if instruction address is odd */
+    if (addr & 0x01)
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+
 #if defined(FEATURE_PER)
     /* Save the address address used to fetch the instruction */
     if( EN_IC_PER(regs) )
@@ -544,9 +550,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Obtain current access key from PSW */
     akey = regs->psw.pkey;
 
-    /* Program check if instruction address is odd */
-    if (addr & 0x01)
-        ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
 
     /* Fetch six bytes if instruction cannot cross a page boundary */
     if ((addr & 0x7FF) <= (0x800 - 6))
