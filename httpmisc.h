@@ -2,7 +2,11 @@
 /*              HTTP Server                                          */
 
 
-#define HTTP_ROOT    "/usr/local/share/hercules/"
+#if !defined(PKGDATADIR)
+ #define HTTP_ROOT   "/usr/local/share/hercules/"
+#else
+ #define HTTP_ROOT   PKGDATADIR
+#endif
 #define HTTP_WELCOME "hercules.html"
 
 

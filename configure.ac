@@ -8,7 +8,7 @@ AM_MAINTAINER_MODE
 AC_CANONICAL_HOST
 
 # Initialization
-CFLAGS="-Wall $CFLAGS"
+CFLAGS="-Wall $CFLAGS -DPKGDATADIR=\"\\\"\$(pkgdatadir)/\\\"\""
 
 # Programs
 AC_PROG_CC
