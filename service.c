@@ -301,9 +301,16 @@ typedef struct _SCCB_EVENT_MASK {
 //      FWORD   cp_recv_mask;           /* These mask fields have    */
 //      FWORD   cp_send_mask;           /* the length defined by     */
 //      FWORD   sclp_recv_mask;         /* the length halfword       */
-#define SCCB_EVENT_SUPP_RECV_MASK       0x40A00000
+#define SCCB_EVENT_SUPP_RECV_MASK ( \
+        (0x80000000 >> (SCCB_EVD_TYPE_MSG-1)) | \
+        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
+        (0x80000000 >> (SCCB_EVD_TYPE_CPIDENT-1)) )
 //      FWORD   sclp_send_mask;
-#define SCCB_EVENT_SUPP_SEND_MASK       0x81800001  
+#define SCCB_EVENT_SUPP_SEND_MASK ( \
+        (0x80000000 >> (SCCB_EVD_TYPE_OPCMD-1)) | \
+        (0x80000000 >> (SCCB_EVD_TYPE_STATECH-1)) | \
+        (0x80000000 >> (SCCB_EVD_TYPE_PRIOR-1)) | \
+        (0x80000000 >> (SCCB_EVD_TYPE_CPCMD-1)) )
     } SCCB_EVENT_MASK;
 
 /* Read/Write Event Data Header */
@@ -1220,6 +1227,10 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
         default:
 
+#if 0
+            logmsg("HHC799I Unknown event received type = %2.2X\n",
+              evd_hdr->type);
+#endif
             /* Set response code X'73F0' in SCCB header */
             sccb->reas = SCCB_REAS_SYNTAX_ERROR;
             sccb->resp = SCCB_RESP_SYNTAX_ERROR;

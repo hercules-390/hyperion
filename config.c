@@ -435,6 +435,7 @@ BYTE    c;                              /* Work area for sscanf      */
             }
             else if (strcasecmp (keyword, "cfccimage") == 0)
             {
+                addargc = 0;
             }
             else if (strcasecmp (keyword, "archmode") == 0)
             {
