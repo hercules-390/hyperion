@@ -587,6 +587,7 @@ noinst_HEADERS = fishhang.h \
                  hercifc.h  \
                  tuntap.h   \
                  tapedev.h  \
+                 scsitape.h \
                  logger.h   \
                  commadpt.h \
                  cache.h    \

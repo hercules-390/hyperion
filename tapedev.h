@@ -10,6 +10,7 @@
 #define SENSE1_TAPE_TUA         0x40    /* TU Status A (ready)       */
 #define SENSE1_TAPE_TUB         0x20    /* TU Status B (not ready)   */
 #define SENSE1_TAPE_7TRK        0x10    /* 7-track feature           */
+#define SENSE1_TAPE_RSE         0x10    /* Record sequence error     */
 #define SENSE1_TAPE_LOADPT      0x08    /* Tape is at load point     */
 #define SENSE1_TAPE_WRT         0x04    /* Tape is in write status   */
 #define SENSE1_TAPE_FP          0x02    /* File protect status       */
@@ -127,6 +128,8 @@
 #define STS_ONLINE(dev)         GMT_ONLINE  ( (dev)->sstat )
 #define STS_NOT_MOUNTED(dev)    GMT_DR_OPEN ( (dev)->sstat )
 
+#define  AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS  (5) /* (default) */
+
 /*-------------------------------------------------------------------*/
 /* Structure definition for HET/AWS/OMA tape block headers           */
 /*-------------------------------------------------------------------*/
@@ -224,7 +227,5 @@ typedef struct _TAPEAUTOLOADENTRY
     char **argv;
 }
 TAPEAUTOLOADENTRY;
-
-#define  AUTOLOAD_WAIT_FOR_TAPEMOUNT_INTERVAL_SECS   (5)
 
 #endif // __TAPEDEV_H__

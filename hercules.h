@@ -1364,6 +1364,7 @@ typedef struct _DEVBLK {
                                            before reporting EOT      */
         }       tdparms;                /* HET device parms          */
         U32                             /* Flags                     */
+                poserror:1,             /* Positioning error         */
                 readonly:1,             /* 1=Tape is write-protected */
                 longfmt:1,              /* 1=Long record format (DDR)*/ /*DDR*/
                 sns_pending:1;          /* Contingency Allegiance    */

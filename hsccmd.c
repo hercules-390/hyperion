@@ -26,6 +26,8 @@
 #include "w32chan.h"
 #endif /* defined(OPTION_FISHIO) */
 
+#include "tapedev.h"
+
 #if defined(FISH_HANG)
 extern  int   bFishHangAtExit;  // (set to true when shutting down)
 extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
@@ -39,6 +41,8 @@ extern void ecpsvm_command(int argc,char **argv);
 
 /* Added forward declaration to process_script_file ISW20030220-3 */
 int process_script_file(char *,int);
+
+#define MAX_DEVLIST_DEVICES  1024
 
 ///////////////////////////////////////////////////////////////////////
 /* quit or exit command - terminate the emulator */
@@ -54,15 +58,15 @@ int quit_cmd(int argc, char *argv[],char *cmdline)
                  any threads which might leave hercules in a 'hanging'
                  state.  The 'now' option should probably be removed
                  in a future version */
-    /*           `quit now' now requires `quit' to be specified first.
+    /*           'quit now' now requires 'quit' to be specified first.
                  If hercules hangs during shutdown (probably due to
-                 some bug) then `quit now' can be specified. Greg */
+                 some bug) then 'quit now' can be specified. Greg */
 
     if ((argc > 1 && !strcasecmp("now",argv[1])))
     {
         if (!sysblk.shutdown)
         {
-            logmsg(_("HHCPN151E specify `quit' first\n"));
+            logmsg(_("HHCPN151E specify 'quit' first\n"));
             return -1;
         }
 #if defined(FISH_HANG)
@@ -142,6 +146,16 @@ int log_cmd(int argc, char *argv[],char *cmdline)
     else
         logmsg(_("HHCPN160E no argument\n"));
 
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* version command - display version information */
+
+int version_cmd(int argc, char *argv[],char *cmdline)
+{
+    UNREFERENCED(cmdline);
+    display_version (stdout, "Hercules ", TRUE);
     return 0;
 }
 
@@ -546,6 +560,8 @@ int iodelay_cmd(int argc, char *argv[], char *cmdline)
 
 int scsimount_cmd(int argc, char *argv[], char *cmdline)
 {
+    DEVBLK*  dev;
+    BYTE     volname[7];
     UNREFERENCED(cmdline);
 
     if (argc > 1)
@@ -576,7 +592,28 @@ int scsimount_cmd(int argc, char *argv[], char *cmdline)
         logmsg( _("SCSI auto-mount queries = every %d seconds (when needed)\n"),
             sysblk.auto_scsi_mount_secs );
     else
-        logmsg( _("SCSI auto-mount queries are disabled.\n") );
+        logmsg( _("SCSI auto-mount queries are currently disabled.\n") );
+
+    // Scan the device list looking for SCSI tape devices
+    // with outstanding mount requests...
+
+    for ( dev = sysblk.firstdev; dev; dev = dev->nextdev )
+    {
+        if (0
+            || !dev->allocated
+            || TAPEDEVT_SCSITAPE != dev->tapedevt
+            || !dev->stape_mountmon_tid
+        )
+            continue;
+
+        volname[0]=0;
+
+        if ( 'M' == dev->tapemsg1[0] && dev->tapemsg1[1] )
+            memcpy( volname, dev->tapemsg1+1, 6 ); volname[6]=0;
+
+        logmsg( _("HHCCF069I Mount for volume %6.6s pending on drive %4.4X\n"),
+            volname, dev->devnum );
+    }
 
     return 0;
 }
@@ -1295,8 +1332,6 @@ int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlk
          (int)((*(DEVBLK**)pDevBlkPtr2)->devnum));
 }
 
-#define MAX_DEVLIST_DEVICES  1024
-
 int devlist_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
@@ -1800,7 +1835,7 @@ BYTE c;                                 /* Character work area       */
                       else
                       {
                           logmsg( _("HHCPN087E Operand must be "
-                                    "`merge' or `nomerge'\n") );
+                                    "'merge' or 'nomerge'\n") );
                           return -1;
                       }
                       break;
@@ -1830,8 +1865,8 @@ BYTE c;                                 /* Character work area       */
                       cckd_sf_stats (dev);
                       break;
 
-            default:  logmsg( _("HHCPN091E Command must be `sf+', `sf-', "
-                                "`sf=', `sfc', or `sfd'\n") );
+            default:  logmsg( _("HHCPN091E Command must be 'sf+', 'sf-', "
+                                "'sf=', 'sfc', or 'sfd'\n") );
                       return -1;
             }
 
@@ -3337,8 +3372,10 @@ CMDTAB Commands[] =
 */
 COMMAND ( "?",         ListAllCommands, "list all commands" )
 COMMAND ( "help",      HelpCommand,   "command specific help\n" )
-COMMAND ( "hst",       History,       "history of commands\n" )
-COMMAND ( "log",       log_cmd,       "direct log output\n" )
+
+COMMAND ( "hst",       History,       "history of commands" )
+COMMAND ( "log",       log_cmd,       "direct log output" )
+COMMAND ( "version",   version_cmd,   "display version information\n" )
 
 COMMAND ( "quit",      quit_cmd,      "terminate the emulator" )
 COMMAND ( "exit",      quit_cmd,      "(synonym for 'quit')\n" )
@@ -3347,6 +3384,7 @@ COMMAND ( "cpu",       cpu_cmd,       "define target cpu for panel display and c
 
 COMMAND ( "start",     start_cmd,     "start CPU (or printer device if argument given)" )
 COMMAND ( "stop",      stop_cmd,      "stop CPU (or printer device if argument given)\n" )
+
 COMMAND ( "startall",  startall_cmd,  "start all CPU's" )
 COMMAND ( "stopall",   stopall_cmd,   "stop all CPU's\n" )
 
@@ -3362,7 +3400,7 @@ COMMAND ( "ssd",       ssd_cmd,       "Signal Shutdown\n" )
 #endif
 
 #ifdef OPTION_PTTRACE
-COMMAND ( "ptt",       ptt_cmd,       "display pthread trace" )
+COMMAND ( "ptt",       ptt_cmd,       "display pthread trace\n" )
 #endif
 
 COMMAND ( "i",         i_cmd,         "generate I/O attention interrupt for device" )
@@ -3417,7 +3455,7 @@ COMMAND ( "loadtext",  loadtext_cmd,  "load a text deck file\n" )
 #if defined(OPTION_DYNAMIC_LOAD)
 COMMAND ( "ldmod",     ldmod_cmd,     "load a module" )
 COMMAND ( "rmmod",     rmmod_cmd,     "delete a module" )
-COMMAND ( "lsmod",     lsmod_cmd,     "list dynamic modules\n" )
+COMMAND ( "lsmod",     lsmod_cmd,     "list dynamic modules" )
 COMMAND ( "lsdep",     lsdep_cmd,     "list module dependencies\n" )
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
 
@@ -3619,13 +3657,20 @@ CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need hel
                        )
 
 #if defined( OPTION_SCSI_TAPE )
-CMDHELP ( "scsimount", "Format:  \"scsimount  [ no | 1-99 ]\".\n"
-                       "Displays or modifies the automatic SCSI tape mounts option.\n"
-                       "\"no\" disables automatic SCSI tape mount detection. 1-99 seconds\n"
-                       "enables it and specifies how often to query SCSI tape drives to detect\n"
-                       "when a tape has been mounted. NOTE! enabling this option may negatively\n"
-                       "impact Hercules performance depending on how your host operating system\n"
-                       "(Windows, Linux, etc) processes SCSI attached tape drive status queries.\n")
+CMDHELP ( "scsimount", "Format:    \"scsimount  [ no | 1-99 ]\".\n\n"
+
+                       "Displays or modifies the automatic SCSI tape mounts option. When entered\n"
+                       "without any operands, it displays the current value and any pending tape\n"
+                       "mount requests. Entering 'no' disables automatic tape mount detection.\n\n"
+
+                       "Entering a value between 1-99 seconds enables the option and specifies\n"
+                       "how often to query SCSI tape drives to automatically detect when a tape\n"
+                       "has been mounted (upon which an unsolicited device-attention interrupt\n"
+                       "will be presented to the guest operating system).\n\n"
+
+                       "NOTE! enabling this option MAY negatively impact Hercules performance,\n"
+                       "depending on how the host operating system (Windows, Linux, etc) processes\n"
+                       "SCSI attached tape drive 'status' queries.\n")
 #endif /* defined( OPTION_SCSI_TAPE ) */
 
 CMDHELP ( "hst",       "Format: \"hst | hst n | hst l\". Command \"hst l\" or \"hst 0\" displays\n"

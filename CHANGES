@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+28 Aug 2004 SCSI tape mods part 1 (cont'd): don't retreive tape status
+            until it's actually needed for error determination - Fish
 27 Aug 2004 Removed all conditional and cast lvalues to accomodate for
             gcc 3.4 and beyond - Ivan Warren
 19 Aug 2004 Suspend/resume loadparm value - Christopher by Greg Smith
