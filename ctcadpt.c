@@ -679,8 +679,9 @@ BYTE            c;                      /* Character work area       */
                 return -1;
             }
 	    strcpy(dev->netdevname, ifr.ifr_name);
-        } else {
+        } else
 #endif /* HAVE_LINUX_IF_TUN_H */
+	  {
             /* Other OS: Simply use basename of the device */
             char *p = strrchr(dev->filename, '/');
             if (p)
@@ -691,9 +692,7 @@ BYTE            c;                      /* Character work area       */
                     dev->devnum, dev->filename);
                 return -1;
             }
-#ifdef HAVE_LINUX_IF_TUN_H
         }
-#endif /* HAVE_LINUX_IF_TUN_H */
 
         /* The TUN network interface cannot be statically configured
            because the TUN/TAP driver creates the interface only
