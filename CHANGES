@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+19 Aug 2003 Make devlist command immune from DEVBLK chain sequence - Fish
 19 Aug 2003 Windows "double memory consumption" fix contributed by
             Mark D. (golden_dog98 [golden_dog98@yahoo.com]) - Fish
 19 Aug 2003 Committed Jim Pierson's "-g -O2" optimization flags fix - Fish

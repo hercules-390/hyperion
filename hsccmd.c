@@ -920,19 +920,79 @@ int FishHangReport_cmd(int argc, char *argv[], char *cmdline)
 ///////////////////////////////////////////////////////////////////////
 /* devlist command - list devices */
 
+int SortDevBlkPtrsAscendingByDevnum(const void* pDevBlkPtr1, const void* pDevBlkPtr2)
+{
+    return
+        ((int)((*(DEVBLK**)pDevBlkPtr1)->devnum) -
+         (int)((*(DEVBLK**)pDevBlkPtr2)->devnum));
+}
+
+#define MAX_DEVLIST_DEVICES  1024
+
 int devlist_cmd(int argc, char *argv[], char *cmdline)
 {
     DEVBLK*  dev;
-    BYTE    *devclass;
-    BYTE     devnam[256];
+    BYTE*    devclass;
+    BYTE     devnam[1024];
+    DEVBLK** pDevBlkPtr;
+    DEVBLK** orig_pDevBlkPtrs;
+    size_t   nDevCount, i;
+    int      bTooMany = 0;
 
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    // Since we wish to display the list of devices in ascending device
+    // number order, we build our own private a sorted array of DEVBLK
+    // pointers and use that instead to make the devlist command wholly
+    // immune from the actual order/sequence of the actual DEVBLK chain.
+
+    // Note too that there is no lock to lock access to ALL device blocks
+    // (even though there really SHOULD be), only one to lock an individual
+    // DEVBLK (which doesn't do us much good here).
+
+    if (!(orig_pDevBlkPtrs = malloc(sizeof(DEVBLK*) * MAX_DEVLIST_DEVICES)))
     {
-        if (!(dev->pmcw.flag5 & PMCW5_V)) continue;
+        logmsg( _("HHCPN146E Work buffer malloc failed: %s\n"),
+            strerror(errno) );
+        return -1;
+    }
+
+    nDevCount = 0;
+    pDevBlkPtr = orig_pDevBlkPtrs;
+
+    for (dev = sysblk.firstdev; dev && nDevCount <= MAX_DEVLIST_DEVICES; dev = dev->nextdev)
+    {
+        if (dev->pmcw.flag5 & PMCW5_V)  // (valid device?)
+        {
+            if (nDevCount < MAX_DEVLIST_DEVICES)
+            {
+                *pDevBlkPtr = dev;      // (save ptr to DEVBLK)
+                nDevCount++;            // (count array entries)
+                pDevBlkPtr++;           // (bump to next entry)
+            }
+            else
+            {
+                bTooMany = 1;           // (no more room)
+                break;                  // (no more room)
+            }
+        }
+    }
+
+    ASSERT(nDevCount <= MAX_DEVLIST_DEVICES);   // (sanity check)
+
+    // Sort the DEVBLK pointers into ascending sequence by device number.
+
+    qsort(orig_pDevBlkPtrs, nDevCount, sizeof(DEVBLK*), SortDevBlkPtrsAscendingByDevnum);
+
+    // Now use our sorted array of DEVBLK pointers
+    // to display our sorted list of devices...
+
+    for (i = nDevCount, pDevBlkPtr = orig_pDevBlkPtrs; i; --i, pDevBlkPtr++)
+    {
+        dev = *pDevBlkPtr;                  // --> DEVBLK
+        ASSERT(dev->pmcw.flag5 & PMCW5_V);  // (sanity check)
 
         /* Call device handler's query definition function */
         (dev->hnd->query)(dev, &devclass, sizeof(devnam), devnam);
@@ -965,6 +1025,16 @@ int devlist_cmd(int argc, char *argv[], char *cmdline)
             if (clientip)   free(clientip);
             if (clientname) free(clientname);
         }
+    }
+
+    free ( orig_pDevBlkPtrs );
+
+    if (bTooMany)
+    {
+        logmsg( _("HHCPN147W Warning: not all devices shown (max %d)\n"),
+            MAX_DEVLIST_DEVICES);
+
+        return -1;      // (treat as error)
     }
 
     return 0;
