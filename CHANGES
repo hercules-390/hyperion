@@ -1,6 +1,12 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+21 Sep 2003 Complete overhaul to the build process  (merge of libtool_exp)
+            version set to 2.17.c0
+            - A Lot of People (commit by Ivan Warren)
+21 Sep 2003 Added test for cygwin gcc alloca bug to configure.ac to fix
+            issue of http server (and possibly other things) crashing - Fish
 20 Sep 2003 Add disassemble command (u [r|v|p|h] addr range) - Jan Jaeger
+16 Sep 2003 Tape read backward fixes contributed by Jay Jaeger - Fish
 16 Sep 2003 Repair DEVPRIO handling - Mark L. Gaubatz
 28 Aug 2003 Check mmap return value when allocating main storg - Ivan Warren
 24 Aug 2003 fix for Asynch I/O Status stacking race condition - Ivan Warren

@@ -129,9 +129,11 @@ BYTE noiplccw2[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 int  infolvl = 1;
 
 #ifdef EXTERNALGUI
+#if 0
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
 int  extgui = 0;
+#endif
 #endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
@@ -143,10 +145,23 @@ argexit ( int code )
     fprintf (stderr,
             "dasdload creates a DASD image file from a list "
             "of TSO XMIT files\n"
-            "Syntax:\tdasdload ctlfile outfile [msglevel]\n"
+            "Syntax:\tdasdload [options] ctlfile outfile [msglevel]\n"
             "where:\tctlfile  = name of input control file\n"
             "\toutfile  = name of DASD image file to be created\n"
-            "\tmsglevel = Value 0-5 controls output verbosity\n");
+            "\tmsglevel = Value 0-5 controls output verbosity\n"
+            "\noptions:\n"
+            "\t-0:   no compression (default)\n"
+            "\t-a:   output disk will include alternate cylinders\n"
+#ifdef CCKD_COMPRESS_ZLIB
+            "\t-z:   compress using zlib\n"
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
+            "\t-bz2: compress using bzip2\n"
+#endif
+#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
+            "\t-lfs: create single large output file\n"
+#endif
+            );
     exit(code);
 } /* end function argexit */
 

@@ -10,9 +10,11 @@
 static int needsep = 0;         /* Write newline separator next time */
 
 #ifdef EXTERNALGUI
+#if 0
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
 int  extgui = 0;
+#endif
 #endif /*EXTERNALGUI*/
 
 int end_of_track(char *ptr)

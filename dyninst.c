@@ -253,6 +253,16 @@ static inline void copy_opcode(zz_func to_table[256], zz_func from_table[256][GE
     to_table[opcode] = from_table[opcode][arch_mode];
 }
 
+/* Libtool static name colision resolution */
+/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#define hdl_ddev dyninst_LTX_hdl_ddev
+#define hdl_depc dyninst_LTX_hdl_depc
+#define hdl_reso dyninst_LTX_hdl_reso
+#define hdl_init dyninst_LTX_hdl_init
+#define hdl_fini dyninst_LTX_hdl_fini
+#endif
+
 
 HDL_DEPENDENCY_SECTION;
 {
@@ -280,6 +290,7 @@ HDL_RESOLVER_SECTION;
 {
 int opcode, extop;
 
+#if 0
 #if defined(WIN32)
     if(!opcodes_saved)
     {
@@ -309,6 +320,7 @@ int opcode, extop;
         opcodes_saved = 1;
     }
 #endif 
+#endif
 
     for(opcode = 0; opcode < 256; opcode++)
     {

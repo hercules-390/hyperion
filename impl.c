@@ -14,6 +14,7 @@
 #include "httpmisc.h"
 #include "hostinfo.h"
 #include "devtype.h"
+#include "herc_getopt.h"
 
 #if defined(FISH_HANG)
 extern  int   bFishHangAtExit;  // (set to true when shutting down)
@@ -145,7 +146,7 @@ BYTE   *rcname;                         /* hercules.rc name pointer  */
 /* IMPL main entry point                                             */
 /*-------------------------------------------------------------------*/
 static int daemon_mode = 0;
-int main (int argc, char *argv[])
+int impl(int argc, char *argv[])
 {
 BYTE   *cfgfile;                        /* -> Configuration filename */
 int     c;                              /* Work area for getopt      */
@@ -396,7 +397,9 @@ TID     rctid;                          /* RC file thread identifier */
 
     /* Activate the control panel */
     if(!daemon_mode)
+    {
         panel_display ();
+    }
     else
         while(1)
 #if defined(OPTION_DYNAMIC_LOAD)

@@ -1064,7 +1064,25 @@ AC_MSG_CHECKING([whether stripping libraries is possible])
 if test -n "$STRIP" && $STRIP -V 2>&1 | grep "GNU strip" >/dev/null; then
   test -z "$old_striplib" && old_striplib="$STRIP --strip-debug"
   test -z "$striplib" && striplib="$STRIP --strip-unneeded"
-  AC_MSG_RESULT([yes])
+# <PATCH NAME="ISW20030916-1">
+# <NEW>
+# The following section is a PATCH to overcome the 
+# stripped import library issues under cygwin
+  case $host_os in
+    cygwin*)
+        striplib=
+        AC_MSG_RESULT([no])
+        ;;
+    *)
+        AC_MSG_RESULT([yes])
+        ;;
+   esac
+# </NEW>
+# <OLD>
+#  AC_MSG_RESULT([yes])
+# </OLD>
+# </PATCH>
+
 else
 # FIXME - insert some real tests, host_os isn't really good enough
   case $host_os in

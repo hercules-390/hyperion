@@ -73,6 +73,17 @@ char *(*nextcall)(char *);
     return NULL;
 }
 
+/* Libtool static name colision resolution */
+/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+/* for use in DLREOPEN case only */
+#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#define hdl_ddev hdteq_LTX_hdl_ddev
+#define hdl_depc hdteq_LTX_hdl_depc
+#define hdl_reso hdteq_LTX_hdl_reso
+#define hdl_init hdteq_LTX_hdl_init
+#define hdl_fini hdteq_LTX_hdl_fini
+#endif
+
 
 HDL_DEPENDENCY_SECTION;
 {

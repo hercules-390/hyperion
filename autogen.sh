@@ -1,83 +1,60 @@
 #!/bin/bash
 
-# Fail if there are any errors -mdz
-set -e
+#
+# A *hopefully* all way around alternate shells...
+#
+test -z "$1" && exec bash $0 "REDRIVE"
+
+
+function handle_failures {
+  printf "FAILED!\n\n"
+  printf "The last 10 lines of 'autogen.log' follows...\n\n"
+  tail autogen.log
+  exit -1
+}
+
+trap handle_failures ERR
+
+echonl()
+{
+    printf "%s" $*
+}
 
 echo "Output goes to autogen.log..."
 echo ""
 echo "                        N  O  T  E"
 echo ""
-echo "Note: if you do not see a 'Completed successfully' message"
-echo "when this script completes, then something went wrong and"
+echo "Note: if you do not see a 'All processing successfully completed.'"
+echo "message when this script completes, then something went wrong and"
 echo "the autogen.log file should be examined to try and determine"
 echo "what it was [that went wrong]."
 echo ""
 
+#
+# NOTE : All automatic invocation of gettextize/libtoolize removed
+#
+
 rm -f ./autogen.log
 
-if test ! -e autoconf/ltmain.sh; then
-
-  echo -e "libtoolizing..."
-
-  # Figure out which libtool to use. OS X calls GNU libtool glibtool,
-  #  and has a different program named libtool. We want the GNU version
-  #  here.
-
-  if test -e "`which glibtool 2>/dev/null`"; then
-    glibtoolize --copy --force --ltdl    >> ./autogen.log 2>&1
-  else
-    libtoolize --copy --force --ltdl     >> ./autogen.log 2>&1
-  fi    
-
-  # Now deal with a minor breakage in GNU libtoolize on OS X: it
-  #  puts the autoconf input files in the current directory, not the
-  #  autoconf subdirectory where it belongs. Since other platforms
-  #  probably get this right, we'll only clean this up if they're found
-  #  in the current directory.
-
-  if test -e ./ltmain.sh; then
-    mv ltmain.sh autoconf
-    # The next two files are an older version than the ones autoconf
-    #  installed, so get rid of them
-    rm -f config.guess config.sub
-  fi
-
-fi
-
-if test ! -e ./ABOUT-NLS; then
-
-  echo ""
-  echo " Due to a bug(?) in the automake process, if this script"
-  echo " appears to 'hang', simply press the enter key. In fact,"
-  echo " you may do that right now if you wish; it's not going to"
-  echo " hurt anything if you do."
-  echo ""
-
-  sed -i -e "s| intl/Makefile||g" configure.ac
-  sed -i -e "s| m4/Makefile||g" configure.ac
-  sed -i -e "s| intl m4||g" Makefile.am
-  sed -i -e "s| autoconf/config.rpath||g" Makefile.am
-
-  echo -e "gettextizing..."
-  gettextize --copy --force --intl --no-changelog >> ./autogen.log 2>&1
-
-  echo -e "\aIn spite of the confirmation required from you,"
-  echo "you do NOT have to run the indicated program(s),"
-  echo "as we will automagically run them for you now..."
-  echo ""
-
-  echo "     aclocal -I m4 -I autoconf..."
-  aclocal -I m4 -I autoconf  >>./autogen.log 2>&1
-
-  echo "     automake m4/Makefile..."
-  automake m4/Makefile       >>./autogen.log 2>&1
-
-  echo ""
-fi
-
+printf "%s" "aclocal...    "
 aclocal -I m4 -I autoconf >>./autogen.log 2>&1
-autoheader                >>./autogen.log 2>&1
-automake                  >>./autogen.log 2>&1
-autoconf                  >>./autogen.log 2>&1
+printf "%b" "OK.   (25% done)\n"
 
-echo "Completed successfully"
+printf "%s" "autoheader... "
+autoheader                >>./autogen.log 2>&1
+printf "%b" "OK.   (50% done)\n"
+
+printf "%s" "automake...   "
+automake                  >>./autogen.log 2>&1
+printf "%b" "OK.   (75% done)\n"
+
+printf "%s" "autoconf...   "
+autoconf                  >>./autogen.log 2>&1
+printf "%b" "OK.   (100% done)\n\n"
+
+echo "All processing successfully completed."
+
+echo ""
+
+echo "You may now run ./configure in order to create a custom Makefile"
+echo "that is suitable for your platform and environment."

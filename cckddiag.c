@@ -40,9 +40,11 @@ static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
         int     pausesnap = 0;          // 1 = pause after snap (getc)
 
 #ifdef EXTERNALGUI
+#if 0
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
 int  extgui = 0;
+#endif
 #endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/

@@ -65,7 +65,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                cgibin.o codepage.o \
                hsccmd.o hscmisc.o logger.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
-               hscutl.o hscutl2.o
+               hscutl.o hscutl2.o hsys.o bootstrap.o
 hdt1403_OBJ  = printer.o
 hdt2703_OBJ  = commadpt.o
 hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
@@ -79,31 +79,31 @@ hercifc_OBJ  = hercifc.o hostinfo.o version.o
 
 dasdinit_OBJ = dasdinit.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o
+               cache.o shared.o logmsg.o hsys.o
 
 dasdisup_OBJ = dasdisup.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o
+               cache.o shared.o logmsg.o hsys.o
 
 dasdload_OBJ = dasdload.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o
+               cache.o shared.o logmsg.o hsys.o
 
 dasdls_OBJ   = dasdls.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o
+               cache.o shared.o logmsg.o hsys.o
 
 dasdcat_OBJ  = dasdcat.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o
+               cache.o shared.o logmsg.o hsys.o
 
 dasdpdsu_OBJ = dasdpdsu.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o
+               cache.o shared.o logmsg.o hsys.o
 
 dasdseq_OBJ  = dasdseq.o dasdutil.o codepage.o hostinfo.o version.o  \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
-               cache.o shared.o logmsg.o
+               cache.o shared.o logmsg.o hsys.o
 
 tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o logmsg.o
 
@@ -117,29 +117,29 @@ cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
 cckddiag_OBJ = cckddiag.o cckddasd.o cckdutil.o ckddasd.o codepage.o \
                dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o \
-               shared.o logmsg.o
+               shared.o logmsg.o hsys.o
 
 cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
 cckd2ckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
-               shared.o logmsg.o
+               shared.o logmsg.o hsys.o
 
 ckd2cckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
-               shared.o logmsg.o
+               shared.o logmsg.o hsys.o
 
 fba2cfba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o logmsg.o
+               shared.o logmsg.o hsys.o
 
 cfba2fba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o logmsg.o
+               shared.o logmsg.o hsys.o
 
 dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
                ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
-               shared.o logmsg.o
+               shared.o logmsg.o hsys.o
 
 hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
                codepage.o

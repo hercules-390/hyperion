@@ -28,7 +28,7 @@ typedef struct _HDLSHD {
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
-char *(*hdl_device_type_equates)(char *);
+extern char *(*hdl_device_type_equates)(char *);
 
 
 #if defined(HDL_USE_LIBTOOL)
@@ -91,8 +91,26 @@ typedef struct _DLLENT {                /* DLL entry                 */
     struct _DLLENT *dllnext;            /* Next entry in chain       */
 } DLLENT;
 
-                                        /* default mod. search path  */
-#define HDL_DEFAULT_PATH     "/usr/lib/hercules" 
+
+#if defined(MODULESDIR)
+#define HDL_DEFAULT_PATH     MODULESDIR
+#else
+#define HDL_DEFAULT_PATH     "hercules"
+#endif
+
+/* SHLIBEXT defined by ISW in configure.ac/config.h */
+#if HDL_BUILD_SHARED
+#define HDL_MODULE_SUFFIX LTDL_SHLIB_EXT
+#else
+#define HDL_MODULE_SUFFIX ".la"
+#endif
+
+
+#if defined(HDL_MODULE_SUFFIX)
+ #define HDL_SUFFIX_LENGTH (sizeof(HDL_MODULE_SUFFIX) - 1)
+#else
+ #define HDL_SUFFIX_LENGTH 0
+#endif
 
 
 int hdl_load(char *, int);              /* load dll                  */

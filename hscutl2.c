@@ -23,7 +23,7 @@
 
 #include <stdlib.h>                     /* Needed for size_t declaration */
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 #include "hscutl.h"                     /* Hercules Utilities         */
 

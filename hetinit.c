@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <time.h>
 #include "sllib.h"
+#include "herc_getopt.h"
 
 /*
 || Local constant data
@@ -36,7 +37,9 @@ static const char help[] =
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
+#if 0
 int extgui = 0;
+#endif
 #endif /*EXTERNALGUI*/
 
 /*

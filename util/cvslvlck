@@ -7,6 +7,12 @@ use strict;
 
 #    Facility, required level, special flag, download URL
 
+# ISW : Removed libintl & libtool
+#       Although "gettextize" is no longer run, Pkg "gettext" is still
+#       needed to run the msgfmt/msgmerge utilities
+#       libintl is now self contained
+#       libtool is now self contained
+#
 my @req = qw(
      cvs         0      1  http://www.cvshome.org
      autoconf    2.50	0  http://www.gnu.org/directory/autoconf.html
@@ -17,12 +23,10 @@ my @req = qw(
      gettext     0.11	0  http://www.gnu.org/directory/gettext.html
      grep        0	0  http://www.gnu.org/directory/grep.html
      libiconv    1.8	1  http://www.gnu.org/directory/libiconv.html
-     libintl     0.10	1  http://www.gnu.org/directory/gettext.html
      m4          0.0	1  http://www.gnu.org/directory/GNU/gnum4.html
      make        3.79	0  http://www.gnu.org/directory/make.html
      perl        5.6	1  http://www.gnu.org/directory/perl/html
      sed         3.02	0  http://www.gnu.org/directory/sed.html
-     libtool     1.5    1  http://www.gnu.org/directory/libtool.html
 );
 my $cvsroot = ":pserver:anonymous\@cvs.conmicro.cx:/usr/cvs/hercules";
 my $msg;
@@ -201,15 +205,13 @@ sub ckvers {
 }
 
 sub sayintro {
-	print "-------------------------------------------------------------------------------\n";
-	print "The following recommendation comes from gettext-0.11.5/doc/gettext_12.html:\n";
-	print "-------------------------------------------------------------------------------\n";
-	print "Before attempting to use gettextize you should install some other packages\n";
-	print "first. Ensure that recent versions of GNU m4, GNU Autoconf and GNU gettext are\n";
-	print "already installed at your site, and if not, proceed to do this first. If you\n";
-	print "get to install these things, beware that GNU m4 must be fully installed before\n";
-	print "GNU Autoconf is even configured.\n";
-	print "-------------------------------------------------------------------------------\n\n";
+    # Intro text changed by ISW. "gettextize" is no longer run by build system
+    #       but only by maintainers. Same goes foe libtoolize
+    print "This utility will check the level of various utilities needed to build\n";
+    print "hercules. Checking is done against versions that are KNOWN to work.\n";
+    print "This doesn't mean a build will NOT succeed with older versions\n";
+    print "of the utilities, but will give a hint as to what package may need\n";
+    print "an upgrade if the build ever fails with some odd reason.\n\n\n";
 }
 
 sub present {

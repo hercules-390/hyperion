@@ -8,10 +8,12 @@ ACLOCAL_AMFLAGS  = -I m4
 
 # (gettextize/libtoolize adds intl & m4 subdirectories)
 
+lns=@LN_S@
+
 SUBDIRS =    intl m4 \
           po util html man
 
-LDADD = @LIBINTL@
+LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@
 
 if BUILD_HERCIFC
   HERCIFC = hercifc
@@ -19,93 +21,31 @@ else
   HERCIFC=
 endif
 
-# The following causes the dyanmic modules to not even get built
-# unless support for building dynamic modules exists on the build system
 
-if OPTION_DYNAMIC_LOAD
-  DYNGUI  = dyngui
-  DYNINST = dyninst
-  HDTEQ   = hdteq
-  HDT1403 = hdt1403
-  HDT2703 = hdt2703
-  HDT3088 = hdt3088
-  HDT3270 = hdt3270
-  HDT3420 = hdt3420
-  HDT3505 = hdt3505
-  HDT3525 = hdt3525
-if USE_DLLTOOL
-    DYNGUI_DLL  = dyngui.dll
-    DYNINST_DLL = dyninst.dll
-    HDTEQ_DLL   = hdteq.dll
-    HDT1403_DLL = hdt1403.dll
-    HDT2703_DLL = hdt2703.dll
-    HDT3088_DLL = hdt3088.dll
-    HDT3270_DLL = hdt3270.dll
-    HDT3420_DLL = hdt3420.dll
-    HDT3505_DLL = hdt3505.dll
-    HDT3525_DLL = hdt3525.dll
-endif
-else
-  DYNGUI      =
-  DYNGUI_DLL  =
-  DYNINST     =
-  DYNINST_DLL =
-  HDTEQ       =
-  HDTEQ_DLL   =
-  HDT1403     =
-  HDT1403_DLL =
-  HDT2703     =
-  HDT2703_DLL =
-  HDT3088     =
-  HDT3088_DLL =
-  HDT3270     =
-  HDT3270_DLL =
-  HDT3420     =
-  HDT3420_DLL =
-  HDT3505     =
-  HDT3505_DLL =
-  HDT3525     =
-  HDT3525_DLL =
-endif
 
-bin_PROGRAMS = hercules \
-               dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
-               tapecopy tapemap tapesplt \
-               cckdcdsk cckdcomp cckddiag cckdswap \
-               cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
-               hetget hetinit hetmap hetupd \
-               dmap2hrc \
-               $(HERCIFC) \
-               $(DYNGUI)  $(DYNGUI_DLL) \
-               $(DYNINST) $(DYNINST_DLL) \
-               $(HDTEQ)   $(HDTEQ_DLL) \
-               $(HDT1403) $(HDT1403_DLL) \
-               $(HDT2703) $(HDT2703_DLL) \
-               $(HDT3088) $(HDT3088_DLL) \
-               $(HDT3270) $(HDT3270_DLL) \
-               $(HDT3420) $(HDT3420_DLL) \
-               $(HDT3505) $(HDT3505_DLL) \
-               $(HDT3525) $(HDT3525_DLL)
-
-EXTRA_PROGRAMS = hercifc
-
-fthreads_sources = fthreads.c
-fishio_sources   = w32chan.c
-fishhang_sources = fishhang.c
-memrchr_sources  = memrchr.c
+fthreads_SRC  = fthreads.c
+fishio_SRC    = w32chan.c
+fishhang_SRC  = fishhang.c
+memrchr_SRC   = memrchr.c
 
 if BUILD_FTHREADS
-  FTHREADS   = $(fthreads_sources)
-  FISHIO     = $(fishio_sources)
+  FTHREADS    = $(fthreads_SRC)
+  FISHIO      = $(fishio_SRC)
+  LIBFTHREADS = libfthreads.la
+  FHOSTINFO   = hostinfo.c
+  HOSTINFO    = 
 if BUILD_FISHHANG
-    FISHHANG = $(fishhang_sources)
+    FISHHANG  = $(fishhang_SRC)
 else
-    FISHHANG =
+    FISHHANG  =
 endif
 else
-  FTHREADS   =
-  FISHHANG   =
-  FISHIO     =
+  FTHREADS    =
+  FISHHANG    =
+  FISHIO      =
+  LIBFTHREADS =
+  FHOSTINFO   =
+  HOSTINFO    = hostinfo.c
 endif
 
 if USE_BUILTIN_MEMRCHR
@@ -127,245 +67,456 @@ endif
 # even be *attempted* to be "built" if support for building dynamic modules
 # doesn't even exist on the system doing the building.
 
-dynamic_sources       = dyngui.c \
-                        dyninst.c \
-                        hdteq.c
+dynamic_SRC        = dyngui.c  \
+                     dyninst.c \
+                     hdteq.c
 
-extra_dynamic_sources = dynguib.h \
-                        dynguip.h \
-                        dynguiv.h \
-                        dyngui.rc
+extra_dynamic_SRC  = dynguib.h \
+                     dynguip.h \
+                     dynguiv.h \
+                     dyngui.rc
 
-dyndev_sources        = commadpt.c \
-                        console.c \
-                        cardpch.c \
-                        cardrdr.c sockdev.c \
-                        printer.c \
-                        tapedev.c hetlib.c \
-                        ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
+dyndev_SRC         = commadpt.c \
+                     console.c  \
+                     cardpch.c  \
+                     cardrdr.c  \
+                     sockdev.c  \
+                     printer.c  \
+                     tapedev.c  \
+                     hetlib.c   \
+                     ctc_lcs.c  \
+                     ctc_ctci.c \
+                     ctcadpt.c  \
+                     w32ctca.c  \
+                     tuntap.c
+
+
+# -module         : create a dlopen'able module
+# -no-undefined   : required on all platform that do not allow shared modules
+#                   to have undefined symbols
+# $(LDADD)        : Misc Linker flags set by autoconf
+# -export-dynamic : so dlsym works (to be verified - not sure it is necessary)
+# -avoid-version  : needed.. Otherwise libtool gives crazy names to Windows
+#                   DLLs
+#
+
+if BUILD_SHARED
+   XSTATIC =
+else
+   XSTATIC = -static
+endif
 
 if OPTION_DYNAMIC_LOAD
-  DYNSRC          =
-  EXTRA_DYNSRC    =
-  DYNDEVSRC       =
-  STADEVSRC       =
-  dyngui_SOURCES  =  dyngui.c
-  dyngui_LDFLAGS  = -shared
-  dyninst_SOURCES =  dyninst.c
-  dyninst_LDFLAGS = -shared
-  hdteq_SOURCES   =  hdteq.c
-  hdteq_LDFLAGS   = -shared
-  hdt1403_SOURCES =  printer.c
-  hdt1403_LDFLAGS = -shared
-  hdt2703_SOURCES =  commadpt.c
-  hdt2703_LDFLAGS = -shared
-  hdt3088_SOURCES =  ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c
-  hdt3088_LDFLAGS = -shared
-  hdt3270_SOURCES =  console.c
-  hdt3270_LDFLAGS = -shared
-  hdt3420_SOURCES =  tapedev.c hetlib.c
-  hdt3420_LDFLAGS = -shared
-  hdt3505_SOURCES =  cardrdr.c sockdev.c
-  hdt3505_LDFLAGS = -shared
-  hdt3525_SOURCES =  cardpch.c
-  hdt3525_LDFLAGS = -shared
+  DYNSRC         =
+  LTDL           = ltdl.c
+
+  DYNMOD_LDFLAGS = -module         \
+                   -no-undefined   \
+                   $(XSTATIC)      \
+                   -export-dynamic \
+                   -avoid-version
+
+#  DYNMOD_LDADD   = libherc.la  \
+#                   libhercs.la    \
+#                   libhercu.la    \
+#                   $(LDADD)       \
+#                   $(LIBFTHREADS)
+
+  DYNMOD_LDADD   = libherc.la  \
+                   libhercs.la \
+                   $(LDADD)
+
+  LIB_LDFLAGS    = -export-dynamic  \
+                   $(XSTATIC)       \
+                   -no-undefined    \
+                   -avoid-version
 else
-  DYNSRC          = $(dynamic_sources)
-  EXTRA_DYNSRC    = $(extra_dynamic_sources)
-  DYNDEVSRC       = $(dyndev_sources)
-  STADEVSRC       = $(DYNDEVSRC)
+  DYNSRC         = $(dyndev_SRC)
+  LTDL           =
+  DYNMOD_LDFLAGS =
+  LIB_LDFLAGS    = $(XSTATIC)    \
+                   -no-undefined \
+                   -avoid-version
 endif
 
-EXTRA_hercules_SOURCES = $(fthreads_sources) \
-                         $(fishhang_sources) \
-                         $(fishio_sources)   \
-                         $(memrchr_sources)  \
-                         $(DYNSRC)           \
-                         $(EXTRA_DYNSRC)     \
-                         $(DYNDEVSRC)
+#
+# List of Libtool shared libraries & loadable modules
+#
+
+  HERCLIBS = $(LIBFTHREADS) \
+             libhercu.la    \
+             libherct.la    \
+             libhercd.la
+
+  HERCLIBS2 = libhercs.la \
+              libherc.la 
+
+  HERCMODS = dyngui.la  \
+             dyninst.la \
+             hdteq.la   \
+             hdt1403.la \
+             hdt2703.la \
+             hdt3088.la \
+             hdt3270.la \
+             hdt3420.la \
+             hdt3505.la \
+             hdt3525.la
 
 if OPTION_DYNAMIC_LOAD
-if USE_DLLTOOL
-  HERCULES_A       = hercules.a
-  HERCULES_EXP     = hercules.exp
-  hercules_LDFLAGS = --export-dynamic
-  hercules_LDADD   = $(LDADD) $(HERCULES_EXP)
-  dyngui_LDADD     = $(LDADD) $(HERCULES_A) dyngui.res
-  dyninst_LDADD    = $(LDADD) $(HERCULES_A)
-  hdteq_LDADD      = $(LDADD) $(HERCULES_A)
-  hdt1403_LDADD    = $(LDADD) $(HERCULES_A)
-  hdt2703_LDADD    = $(LDADD) $(HERCULES_A)
-  hdt3088_LDADD    = $(LDADD) $(HERCULES_A)
-  hdt3270_LDADD    = $(LDADD) $(HERCULES_A)
-  hdt3420_LDADD    = $(LDADD) $(HERCULES_A)
-  hdt3505_LDADD    = $(LDADD) $(HERCULES_A)
-  hdt3525_LDADD    = $(LDADD) $(HERCULES_A)
-else
-  HERCULES_A       =
-  HERCULES_EXP     =
-  hercules_LDADD   = $(LDADD)
-  hercules_LDFLAGS = -rdynamic
-endif
-else
-# This needs to be present whether or not dynamic loading is enabled.
-  hercules_LDADD   = $(LDADD)
+  modexec_LTLIBRARIES = $(HERCMODS)
 endif
 
-# ISW20030826-1 Removed $HERCULES_EXP from definition below
-hercules_SOURCES = version.c   \
-                   hostinfo.c  \
-                   impl.c      \
-                   config.c    \
-                   panel.c     \
-                   ipl.c       \
-                   assist.c    \
-                   dat.c       \
-                   stack.c     \
-                   cpu.c       \
-                   vstore.c    \
-                   general1.c  \
-                   general2.c  \
-                   plo.c       \
-                   control.c   \
-                   crypto.c    \
-                   io.c        \
-                   decimal.c   \
-                   service.c   \
-                   opcode.c    \
-                   diagnose.c  \
-                   diagmssf.c  \
-                   vm.c        \
-                   channel.c   \
-                   ckddasd.c   \
-                   fbadasd.c   \
-                   external.c  \
-                   float.c     \
-                   trace.c     \
-                   machchk.c   \
-                   vector.c    \
-                   xstore.c    \
-                   cmpsc.c     \
-                   sie.c       \
-                   qdio.c      \
-                   timer.c     \
-                   esame.c     \
-                   cckddasd.c  \
-                   cckdutil.c  \
-                   dasdtab.c   \
-                   parser.c    \
-                   ieee.c      \
-                   machdep.h   \
-                   httpserv.c  \
-                   cgibin.c    \
-                   codepage.c  \
-                   hsccmd.c    \
-                   hscmisc.c   \
-                   logger.c    \
-                   cache.c     \
-                   ecpsvm.c    \
-                   shared.c    \
-                   hscutl.c    \
-                   hscutl2.c   \
-                   logmsg.c    \
-                   hdl.c       \
-                   hdlmain.c   \
-                   $(FTHREADS) \
-                   $(FISHHANG) \
-                   $(FISHIO)   \
-                   $(MEMRCHR)  \
-                   $(STADEVSRC)
+  noinst_LTLIBRARIES = $(HERCLIBS)
+  lib_LTLIBRARIES = $(HERCLIBS2)
 
-hercifc_SOURCES = hercifc.c hostinfo.c version.c
+# The following causes the dyanmic modules to not even get built
+# unless support for building dynamic modules exists on the build system
 
-dasdinit_SOURCES = dasdinit.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+bin_PROGRAMS = hercules \
+               dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
+               tapecopy tapemap tapesplt \
+               cckdcdsk cckdcomp cckddiag cckdswap \
+               dasdcopy \
+               hetget hetinit hetmap hetupd \
+               dmap2hrc \
+               $(HERCIFC)
 
-dasdisup_SOURCES = dasdisup.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	  $(FTHREADS) $(FISHHANG)
+EXTRA_PROGRAMS = hercifc
 
-dasdload_SOURCES = dasdload.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+if OPTION_DYNAMIC_LOAD
 
-dasdls_SOURCES = dasdls.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+#
+# For each module:
+#
+#   ModuleName_la_SOURCES      = <list of source files>
+#   ModuleName_la_LDFLAGS      = $(DYNMOD_LDFLAGS) (see above)
+#   ModuleName_la_LIBADD       = libherc.la (the Core Hercules Shared Library)
+#   ModuleName_la_DEPENDENCIES = libherc.la (may not be necessary)
+#
+  dyngui_la_SOURCES  = dyngui.c
+  dyngui_la_LDFLAGS  = $(DYNMOD_LDFLAGS)
+  dyngui_la_LIBADD   = $(DYNMOD_LDADD)
 
-dasdcat_SOURCES = dasdcat.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+  dyninst_la_SOURCES = dyninst.c
+  dyninst_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  dyninst_la_LIBADD  = $(DYNMOD_LDADD)
 
-dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+  hdteq_la_SOURCES   = hdteq.c 
+  hdteq_la_LDFLAGS   = $(DYNMOD_LDFLAGS)
+  hdteq_la_LIBADD    = $(DYNMOD_LDADD)
 
-dasdseq_SOURCES = dasdseq.c dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c logmsg.c \
-	   $(FTHREADS) $(FISHHANG)
+  hdt1403_la_SOURCES = printer.c 
+  hdt1403_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  hdt1403_la_LIBADD  = $(DYNMOD_LDADD)
 
-tapecopy_SOURCES = tapecopy.c codepage.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  hdt2703_la_SOURCES = commadpt.c 
+  hdt2703_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  hdt2703_la_LIBADD  = $(DYNMOD_LDADD)
 
-tapemap_SOURCES = tapemap.c codepage.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  hdt3088_la_SOURCES = ctc_lcs.c ctc_ctci.c ctcadpt.c w32ctca.c tuntap.c 
+  hdt3088_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  hdt3088_la_LIBADD  = $(DYNMOD_LDADD)
 
-tapesplt_SOURCES = tapesplt.c codepage.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  hdt3270_la_SOURCES = console.c 
+  hdt3270_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  hdt3270_la_LIBADD  = $(DYNMOD_LDADD)
 
-cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  hdt3420_la_SOURCES = tapedev.c
+  hdt3420_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  hdt3420_la_LIBADD  = $(DYNMOD_LDADD) libherct.la
 
-cckdcomp_SOURCES = cckdcomp.c cckdutil.c dasdtab.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  hdt3505_la_SOURCES = cardrdr.c sockdev.c 
+  hdt3505_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  hdt3505_la_LIBADD  = $(DYNMOD_LDADD)
 
-cckddiag_SOURCES = cckddiag.c cckddasd.c cckdutil.c ckddasd.c codepage.c \
-	   cache.c \
-	   dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  hdt3525_la_SOURCES = cardpch.c 
+  hdt3525_la_LDFLAGS = $(DYNMOD_LDFLAGS)
+  hdt3525_la_LIBADD  = $(DYNMOD_LDADD)
 
-ckd2cckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+endif
 
-fba2cfba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+if BUILD_FTHREADS
+  libfthreads_la_SOURCES = $(FTHREADS) \
+                           $(FISHHANG) \
+                           $(FHOSTINFO)
 
-cfba2fba_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  libfthreads_la_LDFLAGS = $(LIB_LDFLAGS)
 
-cckd2ckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
-	   cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  libfthreads_la_LIBADD  = $(LDADD)
 
-dasdcopy_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c cache.c \
-	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c shared.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+endif
 
-cckdswap_SOURCES = cckdswap.c cckdutil.c dasdtab.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+#
+# Common data areas (shared) library
+#
 
-hetget_SOURCES = hetget.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  libhercs_la_SOURCES = hsys.c
 
-hetinit_SOURCES = hetinit.c hetlib.c codepage.c sllib.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  libhercs_la_LDFLAGS = $(LIB_LDFLAGS)
 
-hetmap_SOURCES = hetmap.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  libhercs_la_LIBADD  = $(LDADD)
 
-hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c codepage.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+#
+# Tape utility subroutines (shared) library
+#
 
-dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
-	   $(FTHREADS) $(FISHHANG) logmsg.c
+  libherct_la_SOURCES = sllib.c \
+                        hetlib.c
+
+  libherct_la_LDFLAGS = $(LIB_LDFLAGS)
+
+  libherct_la_LIBADD  = $(LDADD)
+
+#
+# DASD utility subroutines (shared) library
+#
+
+  libhercd_la_SOURCES = ckddasd.c   \
+                        fbadasd.c   \
+                        cckddasd.c  \
+                        cckdutil.c  \
+                        dasdtab.c   \
+                        cache.c     \
+                        dasdutil.c  \
+                        shared.c 
+
+  libhercd_la_LDFLAGS = $(LIB_LDFLAGS)
+
+  libhercd_la_LIBADD  = $(LDADD)
+
+#
+## Pure Utility functions
+#
+  libhercu_la_SOURCES = version.c   \
+                        hscutl.c    \
+                        hscutl2.c   \
+                        codepage.c  \
+                        logger.c    \
+                        logmsg.c    \
+                        hdl.c       \
+                        $(HOSTINFO) \
+                        $(MEMRCHR)  \
+                        parser.c    \
+                        $(LTDL)
+
+  libhercu_la_LDFLAGS = $(LIB_LDFLAGS)
+
+  libhercu_la_LIBADD  = $(LDADD)
+
+#
+# Core Hercules (shared) library
+#
+
+  libherc_la_SOURCES = impl.c      \
+                       config.c    \
+                       panel.c     \
+                       ipl.c       \
+                       assist.c    \
+                       dat.c       \
+                       stack.c     \
+                       cpu.c       \
+                       vstore.c    \
+                       general1.c  \
+                       general2.c  \
+                       plo.c       \
+                       control.c   \
+                       crypto.c    \
+                       io.c        \
+                       decimal.c   \
+                       service.c   \
+                       opcode.c    \
+                       diagnose.c  \
+                       diagmssf.c  \
+                       vm.c        \
+                       channel.c   \
+                       external.c  \
+                       float.c     \
+                       trace.c     \
+                       machchk.c   \
+                       vector.c    \
+                       xstore.c    \
+                       cmpsc.c     \
+                       sie.c       \
+                       qdio.c      \
+                       timer.c     \
+                       esame.c     \
+                       ieee.c      \
+                       machdep.h   \
+                       httpserv.c  \
+                       cgibin.c    \
+                       hsccmd.c    \
+                       hscmisc.c   \
+                       $(FISHIO)   \
+                       $(DYNSRC)   \
+                       ecpsvm.c
+
+  EXTRA_libherc_la_SOURCES = $(fthreads_SRC) \
+                             $(fishhang_SRC) \
+                             $(fishio_SRC)   \
+                             $(memrchr_SRC)  \
+                             $(dynamic_SRC)  \
+                             $(extra_SRC)    \
+                             $(dyndev_SRC)   \
+                             ltdl.c
+
+  libherc_la_LDFLAGS = $(LIB_LDFLAGS) 
+
+  libherc_la_LIBADD = libhercs.la    \
+                      libhercu.la    \
+                      libherct.la    \
+                      libhercd.la    \
+                      $(LIBFTHREADS) \
+                      $(LDADD)
+
+#
+# THIS is the hercules executable.
+#      hdlmain.c is requires so that dlopen(self) retrieves
+#                the 'main' hdl symbols
+# 
+
+if OPTION_DYNAMIC_LOAD
+
+if BUILD_SHARED
+  HLDFLAGS = -dlopen self
+  HDEPS =
+
+else
+  HLDFLAGS = -dlopen self       \
+             -dlopen dyngui.la  \
+             -dlopen dyninst.la \
+             -dlopen hdteq.la   \
+             -dlopen hdt1403.la \
+             -dlopen hdt3420.la \
+             -dlopen hdt2703.la \
+             -dlopen hdt3088.la \
+             -dlopen hdt3270.la \
+             -dlopen hdt3505.la \
+             -dlopen hdt3525.la
+
+  HDEPS    = dyngui.la   \
+             dyninst.la  \
+             hdteq.la    \
+             hdt1403.la  \
+             hdt2703.la  \
+             hdt3088.la  \
+             hdt3270.la  \
+             hdt3505.la  \
+             libherc.la  \
+             libherct.la \
+             libhercd.la \
+             hdt3525.la
+endif
+
+else
+  HLDFLAGS =
+  HDEPS    =
+
+endif
+  hercules_SOURCES      = bootstrap.c \
+                          hdlmain.c
+
+  hercules_LDADD        = libherc.la libhercs.la $(LDADD)
+
+  hercules_LDFLAGS      = $(HLDFLAGS)
+
+  hercules_DEPENDENCIES = $(HDEPS)
+
+#
+# side binaries
+#
+
+tools_LDFLGS =
+tools_ADDLIBS = $(HERCLIBS2) $(LDADD)
+
+if BUILD_HERCIFC
+hercifc_SOURCES       = hercifc.c
+hercifc_LDADD         = $(LDADD)
+hercifc_LDFLAGS       = $(tools_LDFLGS)
+endif
+
+dasdinit_SOURCES      = dasdinit.c 
+dasdinit_LDADD        = $(tools_ADDLIBS)   
+dasdinit_LDFLAGS      = $(tools_LDFLGS)
+
+dasdisup_SOURCES      = dasdisup.c
+dasdisup_LDADD        = $(tools_ADDLIBS)   
+dasdisup_LDFLAGS      = $(tools_LDFLGS)
+
+dasdload_SOURCES      = dasdload.c
+dasdload_LDADD        = $(tools_ADDLIBS)   
+dasdload_LDFLAGS      = $(tools_LDFLGS)
+
+dasdls_SOURCES        = dasdls.c
+dasdls_LDADD          = $(tools_ADDLIBS)   
+dasdls_LDFLAGS        = $(tools_LDFLGS)
+
+dasdcat_SOURCES       = dasdcat.c
+dasdcat_LDADD         = $(tools_ADDLIBS)   
+dasdcat_LDFLAGS       = $(tools_LDFLGS)
+
+dasdpdsu_SOURCES      = dasdpdsu.c
+dasdpdsu_LDADD        = $(tools_ADDLIBS)   
+dasdpdsu_LDFLAGS      = $(tools_LDFLGS)
+
+dasdseq_SOURCES       = dasdseq.c 
+dasdseq_LDADD         = $(tools_ADDLIBS)   
+dasdseq_LDFLAGS       = $(tools_LDFLGS)
+
+tapecopy_SOURCES      = tapecopy.c
+tapecopy_LDADD        = $(tools_ADDLIBS)   
+tapecopy_LDFLAGS      = $(tools_LDFLGS)
+
+tapemap_SOURCES       = tapemap.c
+tapemap_LDADD         = $(tools_ADDLIBS)   
+tapemap_LDFLAGS       = $(tools_LDFLGS)
+
+tapesplt_SOURCES      = tapesplt.c
+tapesplt_LDADD        = $(tools_ADDLIBS)   
+tapesplt_LDFLAGS      = $(tools_LDFLGS)
+
+cckdcdsk_SOURCES      = cckdcdsk.c
+cckdcdsk_LDADD        = $(tools_ADDLIBS)   
+cckdcdsk_LDFLAGS      = $(tools_LDFLGS)
+
+cckdcomp_SOURCES      = cckdcomp.c
+cckdcomp_LDADD        = $(tools_ADDLIBS)   
+cckdcomp_LDFLAGS      = $(tools_LDFLGS)
+
+cckddiag_SOURCES      = cckddiag.c
+cckddiag_LDADD        = $(tools_ADDLIBS)   
+cckddiag_LDFLAGS      = $(tools_LDFLGS)
+
+dasdcopy_SOURCES      = dasdcopy.c
+dasdcopy_LDADD        = $(tools_ADDLIBS)   
+dasdcopy_LDFLAGS      = $(tools_LDFLGS)
+
+cckdswap_SOURCES      = cckdswap.c
+cckdswap_LDADD        = $(tools_ADDLIBS)   
+cckdswap_LDFLAGS      = $(tools_LDFLGS)
+
+hetget_SOURCES        = hetget.c
+hetget_LDADD          = $(tools_ADDLIBS)   
+hetget_LDFLAGS        = $(tools_LDFLGS)
+
+hetinit_SOURCES       = hetinit.c
+hetinit_LDADD         = $(tools_ADDLIBS)   
+hetinit_LDFLAGS       = $(tools_LDFLGS)
+
+hetmap_SOURCES        = hetmap.c
+hetmap_LDADD          = $(tools_ADDLIBS)   
+hetmap_LDFLAGS        = $(tools_LDFLGS)
+
+hetupd_SOURCES        = hetupd.c
+hetupd_LDADD          = $(tools_ADDLIBS)   
+hetupd_LDFLAGS        = $(tools_LDFLGS)
+
+dmap2hrc_SOURCES      = dmap2hrc.c
+dmap2hrc_LDADD        = $(tools_ADDLIBS)   
+dmap2hrc_LDFLAGS      = $(tools_LDFLGS)
+
+#
+# files that are not 'built' per-se
+#
 
 EXTRA_DIST =   \
              hercules.cnf          \
@@ -380,7 +531,9 @@ EXTRA_DIST =   \
              CHANGES               \
              RELEASE.NOTES
 
-# ISW20030826-1 Added sockdev.h
+#
+# Source Header files. No 'build' for those 
+#
 noinst_HEADERS = fishhang.h \
                  hostinfo.h \
                  cpuint.h   \
@@ -427,98 +580,23 @@ noinst_HEADERS = fishhang.h \
                  hscutl.h   \
                  hdl.h      \
                  crypto.h   \
-                 sockdev.h   \
-                 service.h
+                 sockdev.h  \
+                 ltdl.h     \
+                 herc_getopt.h \
+                 service.h  \
+                 $(extra_dynamic_SRC)
 
 #########################################################
 #           B U I L D   R U L E S  . . .
 #########################################################
 
-if OPTION_DYNAMIC_LOAD
-if USE_DLLTOOL
-hercules.def: $(am_hercules_OBJECTS) dyngui.res
-	dlltool --export-all-symbols --output-def hercules.def $(am_hercules_OBJECTS)
-
-dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
-	windres -DHAVE_CONFIG_H --include-dir=. -i $(srcdir)/dyngui.rc -o dyngui.res -O coff
-
-hercules.exp: hercules.def
-	dlltool --input-def hercules.def --dllname hercules.exe --output-exp hercules.exp
-
-hercules.a: hercules.def
-	dlltool --input-def hercules.def --dllname hercules.exe --output-lib hercules.a
-
-dyninst.dll$(EXEEXT): $(DYNINST)$(EXEEXT)
-	rm  -f                           $(DYNINST_DLL)
-	rm  -f                           $(DYNINST_DLL)$(EXEEXT)
-	cp           $(DYNINST)$(EXEEXT) $(DYNINST_DLL)
-	cp           $(DYNINST)$(EXEEXT) $(DYNINST_DLL)$(EXEEXT)
-
-dyngui.dll$(EXEEXT):  $(DYNGUI)$(EXEEXT)
-	rm  -f                           $(DYNGUI_DLL)
-	rm  -f                           $(DYNGUI_DLL)$(EXEEXT)
-	cp           $(DYNGUI)$(EXEEXT)  $(DYNGUI_DLL)
-	cp           $(DYNGUI)$(EXEEXT)  $(DYNGUI_DLL)$(EXEEXT)
-
-hdteq.dll$(EXEEXT):   $(HDTEQ)$(EXEEXT)
-	rm  -f                           $(HDTEQ_DLL)
-	rm  -f                           $(HDTEQ_DLL)$(EXEEXT)
-	cp           $(HDTEQ)$(EXEEXT)   $(HDTEQ_DLL)
-	cp           $(HDTEQ)$(EXEEXT)   $(HDTEQ_DLL)$(EXEEXT)
-
-hdt1403.dll$(EXEEXT): $(HDT1403)$(EXEEXT)
-	rm  -f                           $(HDT1403_DLL)
-	rm  -f                           $(HDT1403_DLL)$(EXEEXT)
-	cp           $(HDT1403)$(EXEEXT) $(HDT1403_DLL)
-	cp           $(HDT1403)$(EXEEXT) $(HDT1403_DLL)$(EXEEXT)
-
-hdt2703.dll$(EXEEXT): $(HDT2703)$(EXEEXT)
-	rm  -f                           $(HDT2703_DLL)
-	rm  -f                           $(HDT2703_DLL)$(EXEEXT)
-	cp           $(HDT2703)$(EXEEXT) $(HDT2703_DLL)
-	cp           $(HDT2703)$(EXEEXT) $(HDT2703_DLL)$(EXEEXT)
-
-hdt3088.dll$(EXEEXT): $(HDT3088)$(EXEEXT)
-	rm  -f                           $(HDT3088_DLL)
-	rm  -f                           $(HDT3088_DLL)$(EXEEXT)
-	cp           $(HDT3088)$(EXEEXT) $(HDT3088_DLL)
-	cp           $(HDT3088)$(EXEEXT) $(HDT3088_DLL)$(EXEEXT)
-
-hdt3270.dll$(EXEEXT): $(HDT3270)$(EXEEXT)
-	rm  -f                           $(HDT3270_DLL)
-	rm  -f                           $(HDT3270_DLL)$(EXEEXT)
-	cp           $(HDT3270)$(EXEEXT) $(HDT3270_DLL)
-	cp           $(HDT3270)$(EXEEXT) $(HDT3270_DLL)$(EXEEXT)
-
-hdt3420.dll$(EXEEXT): $(HDT3420)$(EXEEXT)
-	rm  -f                           $(HDT3420_DLL)
-	rm  -f                           $(HDT3420_DLL)$(EXEEXT)
-	cp           $(HDT3420)$(EXEEXT) $(HDT3420_DLL)
-	cp           $(HDT3420)$(EXEEXT) $(HDT3420_DLL)$(EXEEXT)
-
-hdt3505.dll$(EXEEXT): $(HDT3505)$(EXEEXT)
-	rm  -f                           $(HDT3505_DLL)
-	rm  -f                           $(HDT3505_DLL)$(EXEEXT)
-	cp           $(HDT3505)$(EXEEXT) $(HDT3505_DLL)
-	cp           $(HDT3505)$(EXEEXT) $(HDT3505_DLL)$(EXEEXT)
-
-hdt3525.dll$(EXEEXT): $(HDT3525)$(EXEEXT)
-	rm  -f                           $(HDT3525_DLL)
-	rm  -f                           $(HDT3525_DLL)$(EXEEXT)
-	cp           $(HDT3525)$(EXEEXT) $(HDT3525_DLL)
-	cp           $(HDT3525)$(EXEEXT) $(HDT3525_DLL)$(EXEEXT)
-endif
-endif
 
 cckd: cckd2ckd$(EXEEXT) \
-	cckdcdsk$(EXEEXT) \
-	cckddiag$(EXEEXT) \
-	ckd2cckd$(EXEEXT) \
-	cckdcomp$(EXEEXT) \
-	cckdswap$(EXEEXT) \
-	fba2cfba$(EXEEXT) \
-	cfba2fba$(EXEEXT) \
-	dasdcopy$(EXEEXT)
+      cckdcdsk$(EXEEXT) \
+      cckddiag$(EXEEXT) \
+      cckdcomp$(EXEEXT) \
+      cckdswap$(EXEEXT) \
+      dasdcopy$(EXEEXT)
 
 tar: dist
 
@@ -529,70 +607,34 @@ if SETUID_HERCIFC
 	chmod +s   $(DESTDIR)$(bindir)/hercifc
 	rm                             hercifc
 endif
-if OPTION_DYNAMIC_LOAD
-if USE_DLLTOOL
-	rm -f                                          $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(DYNGUI)$(EXEEXT)   $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(DYNGUI_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(DYNINST_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(DYNINST)$(EXEEXT)  $(DESTDIR)$(bindir)/$(DYNINST_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(DYNINST_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDTEQ_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDTEQ)$(EXEEXT)    $(DESTDIR)$(bindir)/$(HDTEQ_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDTEQ_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDT1403_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDT1403)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT1403_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT1403_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDT2703_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDT2703)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT2703_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT2703_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDT3088_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3088)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT3088_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3088_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDT3270_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3270)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT3270_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3270_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDT3420_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3420)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT3420_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3420_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDT3505_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3505)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT3505_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3505_DLL)$(EXEEXT)
-	rm -f                                          $(DESTDIR)$(bindir)/$(HDT3525_DLL)
-	mv -f $(DESTDIR)$(bindir)/$(HDT3525)$(EXEEXT)  $(DESTDIR)$(bindir)/$(HDT3525_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3525_DLL)$(EXEEXT)
+
+install-exec-hook: 
+	rm -f $(DESTDIR)$(libdir)/libherc*.a
+	rm -f $(DESTDIR)$(modexecdir)/dyn*.a
+	rm -f $(DESTDIR)$(modexecdir)/hdt*.a
+if BUILD_SHARED
+else
+	rm -f $(DESTDIR)$(libdir)/libherc*
 endif
-endif
+#
+# NOTE : symbolic links point to FINAL destination (not to staged install)
+#
+	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) fba2cfba$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) ckd2cckd$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cfba2fba$(EXEEXT))
+	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
+	(cd $(DESTDIR)$(bindir); @LN_S@ ./dasdcopy$(EXEEXT) cckd2ckd$(EXEEXT))
 
 uninstall-local:
-if OPTION_DYNAMIC_LOAD
-if USE_DLLTOOL
-	rm -f                     hercules.def
-	rm -f                     $(HERCULES_A)
-	rm -f                     $(HERCULES_EXP)
-	rm -f                     $(DYNGUI).res
-	rm -f $(DESTDIR)$(bindir)/$(DYNGUI_DLL)
-	rm -f                     $(DYNGUI_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(DYNINST_DLL)
-	rm -f                     $(DYNINST_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDTEQ_DLL)
-	rm -f                     $(HDTEQ_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT1403_DLL)
-	rm -f                     $(HDT1403_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT2703_DLL)
-	rm -f                     $(HDT2703_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3088_DLL)
-	rm -f                     $(HDT3088_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3270_DLL)
-	rm -f                     $(HDT3270_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3420_DLL)
-	rm -f                     $(HDT3420_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3505_DLL)
-	rm -f                     $(HDT3505_DLL)
-	rm -f $(DESTDIR)$(bindir)/$(HDT3525_DLL)
-	rm -f                     $(HDT3525_DLL)
-endif
-endif
+
+uninstall-hook:
+	rm -f $(DESTDIR)$(bindir)/fba2cfba$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/ckd2cckd$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cfba2fba$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/cckd2ckd$(EXEEXT)
 
 %.s: %.c
 	$(COMPILE) -S $<

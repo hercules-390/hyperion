@@ -6,6 +6,7 @@
 
 #include "httpmisc.h"
 
+#define CRYPTO_EXTERN extern
 #include "crypto.h"
 
 
@@ -26,7 +27,11 @@
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
-
+/* Following block moved to 'hdl.c' */
+/* this is so that                  */
+/* hdlmain.c can be moved to the executable portion */
+/* hdl_main can find hdl_preload */
+/*
 HDLPRE hdl_preload[] = {
     { "hdteq",          HDL_LOAD_NOMSG },
     { "dyncrypt",       HDL_LOAD_NOMSG },
@@ -36,7 +41,7 @@ HDLPRE hdl_preload[] = {
     { "dyn_test3",      HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
 #endif
     { NULL,             0  } };
-
+*/
 
 HDL_DEPENDENCY_SECTION;
 {

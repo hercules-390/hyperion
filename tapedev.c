@@ -70,10 +70,12 @@
 #include "parser.h"
 #include <regex.h>
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
+
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -4635,7 +4637,14 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
        in the buffer which was not used by the previous CCW */
     if (chained & CCW_FLAGS_CD)
     {
-        memmove (iobuf, iobuf + dev->curbufoff, dev->curblkrem);
+        if(IS_CCW_RDBACK(code))
+        {
+            /* We don't need to move anything in this case - just set length */
+        }
+        else
+        {
+            memmove (iobuf, iobuf + dev->curbufoff, dev->curblkrem);
+        }
         num = (count < dev->curblkrem) ? count : dev->curblkrem;
         *residual = count - num;
         if (count < dev->curblkrem) *more = 1;
@@ -4740,7 +4749,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Calculate number of bytes to read and residual byte count */
         num = (count < len) ? count : len;
         *residual = count - num;
-        if (count < dev->curblkrem) *more = 1;
+        if(count < len) *more = 1;
 
         /* Save size and offset of data not used by this CCW */
         dev->curblkrem = len - num;
@@ -4812,7 +4821,7 @@ BYTE            rustat;                 /* Addl CSW stat on Rewind Unload */
         /* Calculate number of bytes to read and residual byte count */
         num = (count < len) ? count : len;
         *residual = count - num;
-        if (count < dev->curblkrem) *more = 1;
+        if (count < len) *more = 1;
 
         /* Save size and offset of data not used by this CCW */
         dev->curblkrem = len - num;
@@ -5525,6 +5534,7 @@ static TAPEMEDIA_HANDLER tmh_oma = {
 #if defined(OPTION_DYNAMIC_LOAD)
 static
 #endif
+
 DEVHND tapedev_device_hndinfo = {
         &tapedev_init_handler,
         &tapedev_execute_ccw,
@@ -5533,6 +5543,15 @@ DEVHND tapedev_device_hndinfo = {
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
+/* Libtool static name colision resolution */
+/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#define hdl_ddev hdt3420_LTX_hdl_ddev
+#define hdl_depc hdt3420_LTX_hdl_depc
+#define hdl_reso hdt3420_LTX_hdl_reso
+#define hdl_init hdt3420_LTX_hdl_init
+#define hdl_fini hdt3420_LTX_hdl_fini
+#endif
 
 #if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
@@ -5544,7 +5563,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 #undef sysblk
 HDL_RESOLVER_SECTION;
 {

@@ -8,6 +8,7 @@
 
 #include "opcode.h"
 
+#define CRYPTO_EXTERN
 #include "crypto.h"
 
 

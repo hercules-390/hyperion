@@ -1,7 +1,7 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.17.b14)
+AM_INIT_AUTOMAKE(hercules,2.17.c0)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
@@ -32,13 +32,35 @@ CPPFLAGS="-I ./intl"
 #            optimization flags issue)
 
 HC_PROG_CC
-AC_PROG_LIBTOOL
-AM_GNU_GETTEXT()
 
 ##
 ## End JAP unwanted "-g -O2" optimization flags fix...
 ##------------------------------------------------------------
 
+AC_DISABLE_STATIC
+
+modexecdir=${libdir}/${PACKAGE}
+AC_SUBST(modexecdir)
+
+# ISW20030827-1 : Enable use of embedded libltdl 1 Line added
+AC_LIBTOOL_DLOPEN
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
+# ISW20030827-1 : Enable use of embedded libltdl 1 Line added
+AC_LIB_LTDL
+AC_SUBST([LIBTOOL_DEPS])
+
+AM_GNU_GETTEXT(use-libtool)
+
+
+
+##
+## ISW - Add flag to warn about duplicates (if necessary)
+##
+HC_LD_DISALLOWDUPS()
+
+HC_LD_DUPSHAREGETOPT()
+HC_HAVE_OPTERR()
 
 # OS-specific settings that we can't figure out any other way (yet)
 
@@ -103,10 +125,16 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 # done twice; first time to cause default autoconf behavior,
 # the second time to set our flag)
 
+# Leave this one so ltdl doesn't get to think dlopen is not available
 AC_CHECK_LIB(dl,dlopen)
-AC_CHECK_LIB(dl,dlopen, have_dlopen=true, have_dlopen=false )
-AC_CHECK_LIB(ltdl,lt_dlopen)
-AC_CHECK_LIB(ltdl,lt_dlopen, have_lt_dlopen=true, have_lt_dlopen=false )
+# ISW : Following lines commented out - UNCONDITIONALLY use libtool
+# AC_CHECK_LIB(dl,dlopen, have_dlopen=true, have_dlopen=false )
+# ISW20030827-1 : 1 lines added, 2 lines commented out
+have_lt_dlopen=true
+# ISW : Following lines - UNCONDITIONALLY use libtool
+have_dlopen=false
+# AC_CHECK_LIB(ltdl,lt_dlopen)
+# AC_CHECK_LIB(ltdl,lt_dlopen, have_lt_dlopen=true, have_lt_dlopen=false )
 
 opt_dynamic_load=true
 
@@ -116,7 +144,7 @@ AC_ARG_ENABLE(dynamic-load,
               [case "${enableval}" in
                 yes) opt_dynamic_load=true ;;
                 no) opt_dynamic_load=false ;;
-                *) opt_dynamic_load=true;;
+                *) opt_dynamic_load=true ;;
                esac],[opt_dynamic_load=true])
 
 if test $opt_dynamic_load = true; then
@@ -136,6 +164,11 @@ fi
 
 AM_CONDITIONAL(OPTION_DYNAMIC_LOAD, [test "x$opt_dynamic_load" = "xtrue"])
 AM_CONDITIONAL(USE_DLLTOOL,         [test "x$use_dlltool"      = "xtrue"])
+AM_CONDITIONAL(BUILD_SHARED,        [test "x$enable_shared"    = "xyes"])
+
+if test x$enable_shared = xyes; then
+    AC_DEFINE(HDL_BUILD_SHARED)
+fi
 
 AC_ARG_ENABLE(external-gui,
               AC_HELP_STRING([--disable-external-gui],
@@ -306,18 +339,18 @@ AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
                   CFLAGS="$SAVE_CFLAGS"
                 fi])
 
-if test x$ac_cv_attr_regparm = xyes; then
+if test "$GCC" = "yes" && test x$ac_cv_attr_regparm = xyes; then
    case "$host_os" in
         *cygwin*)
-                AC_CACHE_CHECK([for cygwin regparm bug],
-                               [ac_cv_attr_regparm_cygwin_bug],
+                AC_CACHE_CHECK([for cygwin __attribute__ ((regparm(3))) bug],
+                               [ac_cv_cygwin_gcc_attr_regparm_bug],
                                [AC_TRY_RUN([
 /* from Fish */
 
 typedef struct _REGS
 {
         int a, b, c, d;
-        char e[4000];
+        char e[5000];
 }
 REGS;
 
@@ -330,24 +363,24 @@ int main ( int argc, char *argv[] )
         exit(func1 (1, 2, 3, regs));
 }
 
-int func1 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)))
+int func1 (int a, int b, int c, REGS *regs)
 {
         REGS iregs;
         return func2 (a, b, c, &iregs);
 }
 
-int func2 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)))
+int func2 (int a, int b, int c, REGS *regs)
 {
         return ((a == 1 && b == 2 && c == 3) ? 0 : 1);
 }
 ],
-        ac_cv_attr_regparm_cygwin_bug=no,
-        ac_cv_attr_regparm_cygwin_bug=yes,
-        true)])
+        ac_cv_cygwin_gcc_attr_regparm_bug=no,
+        ac_cv_cygwin_gcc_attr_regparm_bug=yes,
+        ac_cv_cygwin_gcc_attr_regparm_bug=yes)])
         ;;
    esac
 
-   if test x$ac_cv_attr_regparm_cygwin_bug = xyes; then
+   if test x$ac_cv_cygwin_gcc_attr_regparm_bug = xyes; then
       ac_cv_attr_regparm=no
    fi
 fi
@@ -355,6 +388,54 @@ fi
 if test x$ac_cv_attr_regparm != xyes; then
   AC_DEFINE(NO_ATTR_REGPARM)
 fi
+
+
+if test "$GCC" = "yes"; then
+case "$host_os" in
+      *cygwin*)
+          AC_CACHE_CHECK([for cygwin gcc __builtin_alloca bug],
+                         [ac_cv_cygwin_gcc_alloca_bug],
+                         [SAVE_CFLAGS="$CFLAGS"
+                          CFLAGS="-O2 -fomit-frame-pointer"
+                          AC_TRY_RUN([
+/*
+ * Test for presence of gcc 3.2 compiler bug.
+ *
+ *  Required compiler options:
+ *
+ *      -O2 -fomit-frame-pointer
+ *
+ *  Note: using any other -O option other than
+ *  -O2 DOES NOT cause the bug to occur!, nor
+ *  does using -fno-omit-frame-pointer! In fact,
+ *  using "-fno-omit-frame-pointer" is the sug-
+ *  gested workaround for this particular bug.
+ */
+
+int foo ()
+{
+    char a[5000+16];
+    memset(a,0xCD,5000);
+    a[5000]=0;
+    return strlen(a);
+}
+
+int main ( int argc, char* argv[] )
+{
+    return (foo() != 5000);
+}
+],
+          ac_cv_cygwin_gcc_alloca_bug=no,
+          ac_cv_cygwin_gcc_alloca_bug=yes,
+          ac_cv_cygwin_gcc_alloca_bug=yes)
+          CFLAGS="$SAVE_CFLAGS"])
+          ;;
+      *)
+          AC_CACHE_VAL(ac_cv_cygwin_gcc_alloca_bug, ac_cv_cygwin_gcc_alloca_bug=no)
+          ;;
+esac
+fi
+
 
 case "$host_cpu" in
           i486|i586|i686) ;;
@@ -491,8 +572,10 @@ if test x$auto_optimize = xtrue; then
           i586|i686)
             if test "$GCC" = "yes"; then
                 OFLAGS="-O3 -march=$host_cpu $OFLAGS"
-                if test x$debug != xtrue; then
+                if test x$debug != xtrue && test x$ac_cv_cygwin_gcc_alloca_bug != xyes; then
                   OFLAGS="-fomit-frame-pointer $OFLAGS"
+                elif test x$ac_cv_cygwin_gcc_alloca_bug = xyes; then
+                  OFLAGS="-fno-omit-frame-pointer $OFLAGS"
                 fi
             else
                 OFLAGS="$OFLAGS"
@@ -502,6 +585,8 @@ if test x$auto_optimize = xtrue; then
             OFLAGS="$OFLAGS"
             ;;
   esac
+elif test x$ac_cv_cygwin_gcc_alloca_bug = xyes; then
+  OFLAGS="-fno-omit-frame-pointer $OFLAGS"
 fi
 
 if test "x$OFLAGS" = x; then
@@ -531,9 +616,16 @@ AC_DEFINE_UNQUOTED([PKGDATADIR], "${PKGDATADIR}")
 if test "x$prefix" = "xNONE"; then
   LOCALEDIR="/usr/local/share/locale"
 else
-  LOCALEDIR="${prefix}/share/locale}"
+  LOCALEDIR="${prefix}/share/locale"
 fi
 AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
+
+if test "x$prefix" = "xNONE"; then
+  MODULESDIR="/usr/local/lib/${PACKAGE}"
+else
+  MODULESDIR="${prefix}/lib/${PACKAGE}"
+fi
+AC_DEFINE_UNQUOTED([MODULESDIR], "${MODULESDIR}")
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
             [Define if your gcc does not support __attribute__((regparm(n)))])
@@ -582,9 +674,16 @@ AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
 AH_TEMPLATE([OPTION_DYNAMIC_LOAD],
             [Define to enable Hercules Dynamic Loader feature])
 AH_TEMPLATE([HDL_USE_LIBTOOL],
-            [Define to cause dynamic loader use use libtool instead of dlopen])
+            [Define to cause dynamic loader to use libtool instead of dlopen])
 AH_TEMPLATE([MAX_CPU_ENGINES],
             [Defines the maximum number of emulated CPU engines])
+AH_TEMPLATE([HDL_BUILD_SHARED],
+            [Define to to indicate shared libraries are being used])
+AH_TEMPLATE([NEED_GETOPT_WRAPPER],
+            [Define to indicate a wrapper for getopt is needed])
+AH_TEMPLATE([NEED_GETOPT_OPTRESET],
+            [Define to indicate optreset exists])
+AH_TEMPLATE([MODULESDIR],
+            [Directory where HERCULES modules are installed])
 
 AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
-

@@ -29,13 +29,13 @@ int dummy = 0;
 // Debugging
 
 #if defined(DEBUG) || defined(_DEBUG)
-    #define TRACE(a...) logmsg(a)
+    #define TRACE(a...) printf(a)
     #define ASSERT(a) \
         do \
         { \
             if (!(a)) \
             { \
-                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+                printf("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
             } \
         } \
         while(0)

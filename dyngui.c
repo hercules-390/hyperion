@@ -52,7 +52,9 @@
 #define  STATUS_STREAM_FILE_PTR   ( stderr )
 #define  MAX_COMMAND_LEN          ( 1024 )
 
-SYSBLK*  my_sysblk_ptr        = NULL;   // (ptr to Herc's SYSBLK structure)
+#if 0
+SYSBLK*  my_sysblk_ptr        = &sysblk; // (ptr to Herc's SYSBLK structure)
+#endif
 FILE*    fInputStream         = NULL;   // (stdin stream)
 FILE*    fStatusStream        = NULL;   // (stderr stream)
 int      nInputStreamFileNum  =  -1;    // (file descriptor for stdin stream)
@@ -95,7 +97,7 @@ void ProcessingLoop()
     // us which is normally not done until immediately before it
     // terminates.
 
-    // Also note we re-retrieve my_sysblk_ptr->panrate each iteration
+    // Also note we re-retrieve sysblk.panrate each iteration
     // since it could change from one iteration to the next as a result
     // of the Hercules "panrate" command being entered and processed.
 
@@ -104,7 +106,7 @@ void ProcessingLoop()
         UpdateTargetCPU();      // ("cpu" command could have changed it)
         UpdateStatus();         // (keep sending status back to gui...)
 
-        ReadInputData( my_sysblk_ptr->panrate );
+        ReadInputData( sysblk.panrate );
 
         ProcessInputData();     // (if there even is any of course...)
     }
@@ -122,26 +124,26 @@ void  UpdateTargetCPU ()
     // unless it's no longer online (enabled), in which case
     // we'll default to the first one we find that's online
 
-    // Note: my_sysblk_ptr->pcpu   =   number of online CPUs
+    // Note: sysblk.pcpu   =   number of online CPUs
     //       pTargetCPU_REGS       ->  first online CPU
 
-    pTargetCPU_REGS = my_sysblk_ptr->regs + my_sysblk_ptr->pcpu;
+    pTargetCPU_REGS = sysblk.regs + sysblk.pcpu;
 
     if (!pTargetCPU_REGS->cpuonline)    // (requested CPU online/available?)
     {
         // Find first available CPU that's online...
 
         int i;                          // (work)
-        my_sysblk_ptr->pcpu = 0;        // (no cpus currently online)
+        sysblk.pcpu = 0;        // (no cpus currently online)
         pTargetCPU_REGS = NULL;         // (target CPU currently unknown)
 
         for (i=0; i < MAX_CPU_ENGINES; i++)
         {
-            if (my_sysblk_ptr->regs[i].cpuonline)
+            if (sysblk.regs[i].cpuonline)
             {
-                my_sysblk_ptr->pcpu++;  // (count #of online cpus)
+                sysblk.pcpu++;  // (count #of online cpus)
                 if (!pTargetCPU_REGS)
-                     pTargetCPU_REGS = my_sysblk_ptr->regs + i;
+                     pTargetCPU_REGS = sysblk.regs + i;
             }
         }
     }
@@ -150,7 +152,7 @@ void  UpdateTargetCPU ()
     // (We MUST have a CPU + registers to work with!)
 
     if (!pTargetCPU_REGS)
-         pTargetCPU_REGS = my_sysblk_ptr->regs;
+         pTargetCPU_REGS = sysblk.regs;
 
     // If SIE is active, use the guest regs rather than the host regs...
 
@@ -348,7 +350,7 @@ void*  gui_panel_command (char* pszCommand)
     if (strncasecmp(pszCommand,"]MAINSTOR=",10) == 0)
     {
         fprintf(fStatusStream,"MAINSTOR=%d\n",(U32)pTargetCPU_REGS->mainstor);
-        fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)my_sysblk_ptr->mainsize);
+        fprintf(fStatusStream,"MAINSIZE=%d\n",(U32)sysblk.mainsize);
         return NULL;
     }
 
@@ -520,7 +522,7 @@ void  UpdateCPUStatus ()
         ,psw[8], psw[9], psw[10], psw[11], psw[12], psw[13], psw[14], psw[15]
 
         ,CPUSTATE_STOPPED == pTargetCPU_REGS->cpustate ? 'M' : '.'
-        ,my_sysblk_ptr->inststep                       ? 'T' : '.'
+        ,sysblk.inststep                       ? 'T' : '.'
         ,wait_bit                                      ? 'W' : '.'
         ,pTargetCPU_REGS->loadstate                    ? 'L' : '.'
         ,pTargetCPU_REGS->checkstop                    ? 'C' : '.'
@@ -553,23 +555,23 @@ void  UpdateCPUStatus ()
 
 #if       !defined(FEATURE_CPU_RECONFIG)
 
-    for (i = 0; i < my_sysblk_ptr->numcpu; i++)
+    for (i = 0; i < sysblk.numcpu; i++)
 
 #else  //  defined(FEATURE_CPU_RECONFIG)
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
 
-        if(my_sysblk_ptr->regs[i].cpuonline)
+        if(sysblk.regs[i].cpuonline)
 
 #endif // !defined(FEATURE_CPU_RECONFIG)
 
         {
-            mips_rate  +=  my_sysblk_ptr->regs[i].mipsrate;
-            sios_rate  +=  my_sysblk_ptr->regs[i].siosrate;
+            mips_rate  +=  sysblk.regs[i].mipsrate;
+            sios_rate  +=  sysblk.regs[i].siosrate;
         }
 
 #ifdef OPTION_SHARED_DEVICES
-    sios_rate  +=  my_sysblk_ptr->shrdrate;
+    sios_rate  +=  sysblk.shrdrate;
 #endif
 
     // (ignore wildly high MIPS rates...)
@@ -732,7 +734,7 @@ void  UpdateDeviceStatus ()
 
     // Process ALL the devices in the entire configuration each time...
 
-    for (pDEVBLK = my_sysblk_ptr->firstdev; pDEVBLK != NULL; pDEVBLK = pDEVBLK->nextdev)
+    for (pDEVBLK = sysblk.firstdev; pDEVBLK != NULL; pDEVBLK = pDEVBLK->nextdev)
     {
         // Does this device actually exist in the configuration?
 
@@ -921,6 +923,16 @@ void gui_panel_display ()
 // was when Hercules was built MUST MATCH the layout as it was when THIS DLL
 // was built)
 
+/* Libtool static name colision resolution */
+/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#define hdl_ddev dyngui_LTX_hdl_ddev
+#define hdl_depc dyngui_LTX_hdl_depc
+#define hdl_reso dyngui_LTX_hdl_reso
+#define hdl_init dyngui_LTX_hdl_init
+#define hdl_fini dyngui_LTX_hdl_fini
+#endif
+
 HDL_DEPENDENCY_SECTION;
 
 HDL_DEPENDENCY ( HERCULES );        // hercules itself
@@ -954,6 +966,7 @@ HDL_REGISTER ( panel_command,   gui_panel_command   );
 
 END_REGISTER_SECTION;
 
+#if 0
 ///////////////////////////////////////////////////////////////////////////////
 //                        HDL_RESOLVER_SECTION
 // The following section "resolves" entry-points that this module needs. The
@@ -975,6 +988,7 @@ HDL_RESOLVE ( panel_command );
 HDL_RESOLVE_PTRVAR (  my_sysblk_ptr,     sysblk         );
 
 END_RESOLVER_SECTION;
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //                        HDL_FINAL_SECTION

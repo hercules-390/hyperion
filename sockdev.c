@@ -6,10 +6,11 @@
 #include "opcode.h"
 
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 extern SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
+
 
 /*===================================================================*/
 /*              S o c k e t  D e v i c e s ...                       */

@@ -1552,14 +1552,23 @@ BYTE    area[64];                       /* Data display area         */
             {
                 idadata =  (idadata - idalen) + 1;
                 memcpy (dev->mainstor + idadata,
-                        &iobuf[ idacount - idalen ], idalen);
+                        iobuf + dev->curblkrem, idalen);
             }
             else
             {
-            if (readcmd)
-                memcpy (dev->mainstor + idadata, iobuf, idalen);
-            else
-                memcpy (iobuf, dev->mainstor + idadata, idalen);
+                if (readcmd)
+                    memcpy (dev->mainstor + idadata, iobuf, idalen);
+                else
+                    memcpy (iobuf, dev->mainstor + idadata, idalen);
+
+                /*
+                    JRJ:  I believe that the following line of code
+                    code is suspect, because data chaining adds the
+                    used length later, as needed.  Also, I note that
+                    this kind of thing is not done in non-IDA mode.
+                    Finally, since iobuf is not used for anything after
+                    this (in IDA mode), it probably doesn't hurt anything.
+                */
 
                 /* Increment buffer pointer */
                 iobuf += idalen;
@@ -1597,7 +1606,7 @@ BYTE    area[64];                       /* Data display area         */
         /* Point to start of data for read backward command */
         if (IS_CCW_RDBACK (code))
         {
-            addr -= (count + 1);
+            addr = addr - count + 1;
         }
 
         /* Channel program check if data is outside main storage */
@@ -1635,10 +1644,23 @@ BYTE    area[64];                       /* Data display area         */
         } /* end for(page) */
 
         /* Copy data between main storage and channel buffer */
+
         if (readcmd)
-            memcpy (dev->mainstor + addr, iobuf, count);
+        {
+            if (IS_CCW_RDBACK(code))
+            {
+                /* read backward  - use END of buffer */
+                memcpy(dev->mainstor + addr,iobuf + dev->curblkrem, count);
+            }
+            else /* read forward */
+            {
+                memcpy (dev->mainstor + addr, iobuf, count);
+            }
+        }
         else
+        {
             memcpy (iobuf, dev->mainstor + addr, count);
+        }
 
     } /* end if(!IDA) */
 

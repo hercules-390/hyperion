@@ -3,10 +3,31 @@
 
 #include "hercules.h"
 
+/*
+extern HDLPRE hdl_preload[];
+*/
 
 #if defined(OPTION_DYNAMIC_LOAD)
+HDLPRE hdl_preload[] = {
+    { "hdteq",          HDL_LOAD_NOMSG },
+    { "dyncrypt",       HDL_LOAD_NOMSG },
+#if 0
+    { "dyn_test1",      HDL_LOAD_DEFAULT },
+    { "dyn_test2",      HDL_LOAD_NOMSG },
+    { "dyn_test3",      HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
+#endif
+    { NULL,             0  } };
 
-extern HDLPRE hdl_preload[];             /* Preload list in hdlmain  */
+#if 0
+/* Forward definitions from hdlmain.c stuff */
+/* needed because we cannot depend on dlopen(self) */
+extern void *HDL_DEPC;
+extern void *HDL_INIT;
+extern void *HDL_RESO;
+extern void *HDL_DDEV;
+extern void *HDL_FINI;
+#endif
+
 
 static DLLENT *hdl_dll;                  /* dll chain                */
 static LOCK   hdl_lock;                  /* loader lock              */
@@ -16,11 +37,13 @@ static HDLDEP *hdl_depend;               /* Version codes in hdlmain */
 
 static char *hdl_modpath = HDL_DEFAULT_PATH;
 
-#endif /*defined(OPTION_DYNAMIC_LOAD)*/
-
+#endif
 
 static HDLSHD *hdl_shdlist;              /* Shutdown call list       */
 
+/* Global hdl_device_type_equates */
+
+char *(*hdl_device_type_equates)(char *);
 
 /* hdl_adsc - add shutdown call
  */
@@ -95,11 +118,14 @@ int fulllen = 0;
     {
         if(hdl_modpath && *hdl_modpath)
         {
-            fulllen = strlen(filename) + strlen(hdl_modpath) + 2;
+            fulllen = strlen(filename) + strlen(hdl_modpath) + 2 + HDL_SUFFIX_LENGTH;
             fullname = malloc(fulllen);
             strlcpy(fullname,hdl_modpath,fulllen);
             strlcat(fullname,"/",fulllen);
             strlcat(fullname,filename,fulllen);
+#if defined(HDL_MODULE_SUFFIX)
+            strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
+#endif
         }
         else
             fullname = filename;
@@ -112,8 +138,53 @@ int fulllen = 0;
             return ret;
         }
 
+#if defined(HDL_MODULE_SUFFIX)
+        fullname[strlen(fullname) - HDL_SUFFIX_LENGTH] = '\0';
+
+        if((ret = dlopen(fullname,flag)))
+        {
+            if(fulllen)
+                free(fullname);
+
+            return ret;
+        }
+#endif
+
         if(fulllen)
             free(fullname);
+        fulllen=0;
+    }
+    if(filename && *filename != '/' && *filename != '.')
+    {
+        fulllen = strlen(filename) + 1 + HDL_SUFFIX_LENGTH;
+        fullname = malloc(fulllen);
+        strlcpy(fullname,filename,fulllen);
+#if defined(HDL_MODULE_SUFFIX)
+        strlcat(fullname,HDL_MODULE_SUFFIX,fulllen);
+#endif
+        if((ret = dlopen(fullname,flag)))
+        {
+            if(fulllen)
+                free(fullname);
+
+            return ret;
+        }
+
+#if defined(HDL_MODULE_SUFFIX)
+        fullname[strlen(fullname) - HDL_SUFFIX_LENGTH] = '\0';
+
+        if((ret = dlopen(fullname,flag)))
+        {
+            if(fulllen)
+                free(fullname);
+
+            return ret;
+        }
+#endif
+
+        if(fulllen)
+            free(fullname);
+        fulllen=0;
     }
 
     return dlopen(filename,flag);
@@ -477,6 +548,11 @@ HDLPRE *preload;
     }
 
     hdl_cdll->name = strdup("*Hercules");
+/* This was a nice trick. Unfortunatelly, on some platforms */
+/* it becomes impossible. Some platform need fully defined  */
+/* DLLs, some other platforms do not allow dlopen(self)     */
+
+#if 1
 
     if(!(hdl_cdll->dll = hdl_dlopen(NULL, RTLD_NOW )))
     {
@@ -501,6 +577,20 @@ HDLPRE *preload;
     hdl_cdll->hdlddev = dlsym(hdl_cdll->dll,HDL_DDEV_Q);
 
     hdl_cdll->hdlfini = dlsym(hdl_cdll->dll,HDL_FINI_Q);
+#else
+
+    hdl_cdll->flags = HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD;
+
+    hdl_cdll->hdldepc = &HDL_DEPC;
+
+    hdl_cdll->hdlinit = &HDL_INIT;
+
+    hdl_cdll->hdlreso = &HDL_RESO;
+
+    hdl_cdll->hdlddev = &HDL_DDEV;
+
+    hdl_cdll->hdlfini = &HDL_FINI;
+#endif
 
     /* No modules or device types registered yet */
     hdl_cdll->modent = NULL;
@@ -574,7 +664,7 @@ char *modname;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
-        logmsg(_("HHCHD013E No depency section in %s: %s\n"),
+        logmsg(_("HHCHD013E No dependency section in %s: %s\n"),
           dllent->name, dlerror());
         dlclose(dllent->dll);
         free(dllent);

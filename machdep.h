@@ -13,7 +13,8 @@
 /*-------------------------------------------------------------------*/
 /* Intel pentiumpro/i686                                             */
 /*-------------------------------------------------------------------*/
-#if defined(__i686__) | defined(__pentiumpro__)
+#if defined(__i686__) | defined(__pentiumpro__) 
+#if !defined(PIC)
 
 #define FETCHIBYTE1(_ib, _inst) \
   __asm__("movzbl 1(%%esi),%%eax" : "=a" (_ib) : "S" (_inst));
@@ -130,6 +131,7 @@ static __inline__ void store_dw_i686(void *ptr, U64 value)
  while ( cmpxchg8 (&orig, CSWAP64(value), (U64 *)ptr) );
 }
 
+#endif /* !defined(PIC) */
 #endif /* defined(__i686__) | defined(__pentiumpro__) */
 
 /*-------------------------------------------------------------------*/

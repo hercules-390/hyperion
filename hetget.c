@@ -20,6 +20,7 @@
 #include "hetlib.h"
 #include "sllib.h"
 #include "hercules.h"
+#include "herc_getopt.h"
 
 /*
 || Local volatile data
@@ -123,7 +124,9 @@ int reclen = 0;
 || Special flag to indicate whether or not we're being
 || run under the control of the external GUI facility.
 */
+#if 0
 int extgui = 0;
+#endif
 /*
 || Previously reported file position
 */

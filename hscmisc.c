@@ -180,7 +180,7 @@ BYTE   *s;                              /* Alteration value pointer  */
 BYTE    delim;                          /* Operand delimiter         */
 BYTE    c;                              /* Character work area       */
 
-    rc = sscanf(operand, "%Lx%c%Lx%c", &opnd1, &delim, &opnd2, &c);
+    rc = sscanf(operand, "%llx%c%llx%c", &opnd1, &delim, &opnd2, &c);
 
     /* Process storage alteration operand */
     if (rc > 2 && delim == '=' && newval)
@@ -974,9 +974,9 @@ void disasm_stor(REGS *regs, char *opnd)
 /*-------------------------------------------------------------------*/
 int herc_system (char* command)
 {
-#ifdef WIN32
+#if defined(WIN32) || defined(__APPLE__)
     return system(command);
-#else /* !WIN32 */
+#else /* !WIN32 && !APPLE */
 extern char **environ;
 int pid, status;
 

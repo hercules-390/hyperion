@@ -24,6 +24,7 @@
 #include "hetlib.h"
 #include "sllib.h"
 #include "hercules.h"
+#include "herc_getopt.h"
 
 /*
 || Local volatile data
@@ -42,7 +43,9 @@ static HETB *d_hetb     = NULL;
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
+#if 0
 int extgui = 0;
+#endif
 /* Previous reported file position */
 static long prevpos = 0;
 /* Report progress every this many bytes */

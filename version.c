@@ -10,10 +10,21 @@
 #include <config.h>
 #endif
 
+#define _IMPORT
+#if defined(WIN32)
+#if defined(HDL_BUILD_SHARED)
+#undef _IMPORT
+#define _IMPORT __declspec(dllimport)
+#endif
+#endif
+
 #include "hercnls.h"
 #include "feature.h"
 #include "hostinfo.h"
 #include "version.h"
+#if defined(EXTERNALGUI)
+extern _IMPORT int extgui;
+#endif
 
 /*--------------------------------*/
 /*   "Unusual" build options...   */
@@ -66,8 +77,18 @@ static const char *build_info[] = {
 #if defined(OPTION_FTHREADS)
     "Using fthreads instead of pthreads",
 #endif
+#if defined(OPTION_DYNAMIC_LOAD)
+    "With Dynamic loading support",
+#else
+    "Without Dynamic loading support",
+#endif
+#if defined(HDL_BUILD_SHARED)
+    "Using shared libraries",
+#else
+    "Using static libraries",
+#endif
 
-#if !defined(EXTERNALGUI) && defined(WIN32)
+#if !defined(EXTERNALGUI)
     "No external GUI support",
 #endif
 
@@ -104,7 +125,9 @@ static const char *build_info[] = {
 };
 
 #if defined(EXTERNALGUI)
+#if 0
 extern int extgui;              /* external gui present */
+#endif
 #endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/

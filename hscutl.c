@@ -7,9 +7,75 @@
 /*                           z/Architecture emulator */
 #include "hercules.h"
 
+
+#if defined(NEED_GETOPT_WRAPPER)
+/* getopt dynamic linking kludge */
+/* for some odd reason, on some platforms */
+/* (namely cygwin & possibly Darwin) */
+/* dynamically linking to the libc */
+/* imports STATIC versions of getopt */
+/* and getopt_long into the linkedited */
+/* shared library. If any program then */
+/* link edits against BOTH the shared library */
+/* and libc, the linker complains about */
+/* getopt and/or getopt_long being defined */
+/* multiple times. In an effort to overcome this, */
+/* I am defining a stub version of getopt & getop_long */
+/* that can be called by loadable modules */
+/* --Ivan */
+
+int herc_opterr=0;
+char *herc_optarg=NULL;
+int herc_optopt=0;
+int herc_optind=1;
+#if defined(NEED_GETOPT_OPTRESET)
+int herc_optreset=0;
+#endif
+
+#if defined(HAVE_GETOPT_LONG)
+#include <getopt.h>
+int herc_getopt_long(int ac,
+                     char * const av[],
+                     const char *opt,
+                     const struct option *lo,
+                     int *li)
+{
+    int rc;
+#if defined(NEED_GETOPT_OPTRESET)
+    optreset=herc_optreset;
+#endif
+    optind=herc_optind;
+    rc=getopt_long(ac,av,opt,lo,li);
+#if defined(NEED_GETOPT_OPTRESET)
+    herc_optreset=optreset;
+#endif
+    herc_optarg=optarg;
+    herc_optind=optind;
+    herc_optopt=optind;
+    herc_opterr=optind;
+    return(rc);
+}
+#endif
+int herc_getopt(int ac,char * const av[],const char *opt)
+{
+    int rc;
+#if defined(NEED_GETOPT_OPTRESET)
+    optreset=herc_optreset;
+#endif
+    rc=getopt(ac,av,opt);
+#if defined(NEED_GETOPT_OPTRESET)
+    herc_optreset=optreset;
+#endif
+    herc_optarg=optarg;
+    herc_optind=optind;
+    herc_optopt=optind;
+    herc_opterr=optind;
+    return(rc);
+}
+#endif /* NEED_GETOPT_WRAPPER */
+
 #if defined(BUILTIN_STRERROR_R)
 static LOCK strerror_lock;
-
 void strerror_r_init(void)
 {
     initialize_lock(&strerror_lock);
@@ -196,17 +262,12 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
 {
     SYMBOL_TOKEN        *tok;
     int i;
-    int freeslot=-1;
 
     for(i=0;i<symbol_count;i++)
     {
         tok=symbols[i];
         if(tok==NULL)
         {
-            if(freeslot<0)
-            {
-                freeslot=i;
-            }
             continue;
         }
         if(strcmp(symbols[i]->var,sym)==0)
@@ -218,34 +279,29 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
     {
         return(NULL);
     }
-    if(freeslot<0)
+    if(symbol_count>=symbol_max)
     {
-        if(symbol_count>=symbol_max)
+        symbol_max+=SYMBOL_TABLE_INCREMENT;
+        if(symbols==NULL)
         {
-            symbol_max+=SYMBOL_TABLE_INCREMENT;
-            if(symbols==NULL)
-            {
-                symbols=malloc(sizeof(SYMBOL_TOKEN *)*symbol_max);
-                if(symbols==NULL)
-                {
-                    symbol_max=0;
-                    symbol_count=0;
-                    return(NULL);
-                }
-            }
-            else
-            {
-                symbols=realloc(symbols,sizeof(SYMBOL_TOKEN *)*symbol_max);
-                if(symbols==NULL)
-                {
-                    symbol_max=0;
-                    symbol_count=0;
-                    return(NULL);
-                }
-            }
+	    symbols=malloc(sizeof(SYMBOL_TOKEN *)*symbol_max);
+	    if(symbols==NULL)
+	    {
+	        symbol_max=0;
+	        symbol_count=0;
+	        return(NULL);
+	    }
         }
-        freeslot=symbol_count;
-        symbol_count++;
+        else
+        {
+	    symbols=realloc(symbols,sizeof(SYMBOL_TOKEN *)*symbol_max);
+	    if(symbols==NULL)
+	    {
+	        symbol_max=0;
+	        symbol_count=0;
+	        return(NULL);
+	    }
+        }
     }
     tok=malloc(sizeof(SYMBOL_TOKEN));
     if(tok==NULL)
@@ -260,7 +316,8 @@ static SYMBOL_TOKEN *get_symbol_token(const char *sym,int alloc)
     }
     strncpy(tok->var,sym,MIN(MAX_SYMBOL_SIZE,strlen(sym)));
     tok->val=NULL;
-    symbols[freeslot]=tok;
+    symbols[symbol_count]=tok;
+    symbol_count++;
     return(tok);
 }
 

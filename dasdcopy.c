@@ -17,9 +17,11 @@ void status (int, int);
 int nulltrk(BYTE *, int, int);
 
 #ifdef EXTERNALGUI
+#if 0
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
 int  extgui = 0;
+#endif
 #endif /*EXTERNALGUI*/
 
 #define CKD      0x01
@@ -113,7 +115,7 @@ BYTE            msgbuf[512];            /* Message buffer            */
         }
         else if (strcmp(argv[0], "-q") == 0
               || strcmp(argv[0], "-quiet") == 0)
-            quiet = 1;  
+            quiet = 1;
         else if (strcmp(argv[0], "-r") == 0)
             r = 1;
 #ifdef CCKD_COMPRESS_ZLIB
@@ -238,7 +240,7 @@ BYTE            msgbuf[512];            /* Message buffer            */
 
     /* Perform sanity checks on the options */
     if ((in & CKDMASK) && !(out & CKDMASK)) return syntax(pgm);
-    if ((in & FBAMASK) && !(out & FBAMASK)) return syntax(pgm);        
+    if ((in & FBAMASK) && !(out & FBAMASK)) return syntax(pgm);
     if (sfile && !(in & COMPMASK)) return syntax(pgm);
     if (comp != 255 && !(out & COMPMASK)) return syntax(pgm);
     if (lfs && (out & COMPMASK)) return syntax(pgm);
@@ -328,6 +330,12 @@ BYTE            msgbuf[512];            /* Message buffer            */
     odev = &ocif->devblk;
 
     /* Copy the files */
+#ifdef EXTERNALGUI
+    if (extgui)
+        /* Notify GUI of total #of tracks or blocks being copied... */
+        fprintf (stderr, "TRKS=%d\n", n);
+    else
+#endif /*EXTERNALGUI*/
     if (!quiet) printf (_("  %3d%% %7d of %d"), 0, 0, n);
     for (i = 0; i < n; i++)
     {
@@ -581,8 +589,8 @@ static char indic[] = "|/-\\";
     {
         if (i % 100) return;
         fprintf (stderr, "TRK=%d\n", i);
-        return; 
-    } 
+        return;
+    }
 #endif /*EXTERNALGUI*/
 //  if (i % 101 != 1) return;
     printf ("\r%c %3d%% %7d", indic[i%4], (int)((i*100.0)/n), i);

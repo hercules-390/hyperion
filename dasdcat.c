@@ -14,9 +14,11 @@
 #define OPT_PDS_LISTONLY 0x8
 
 #ifdef EXTERNALGUI
+#if 0
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
 int  extgui = 0;
+#endif
 #endif /*EXTERNALGUI*/
 
 int end_of_track(char *ptr)

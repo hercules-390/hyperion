@@ -12,10 +12,12 @@
 
 #include "sockdev.h"
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
 #endif
+
 
 /*-------------------------------------------------------------------*/
 /* ISW 2003/03/07                                                    */
@@ -880,6 +882,16 @@ DEVHND cardrdr_device_hndinfo = {
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
+/* Libtool static name colision resolution */
+/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#define hdl_ddev hdt3505_LTX_hdl_ddev
+#define hdl_depc hdt3505_LTX_hdl_depc
+#define hdl_reso hdt3505_LTX_hdl_reso
+#define hdl_init hdt3505_LTX_hdl_init
+#define hdl_fini hdt3505_LTX_hdl_fini
+#endif
+
 
 #if defined(OPTION_DYNAMIC_LOAD)
 HDL_DEPENDENCY_SECTION;
@@ -891,7 +903,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 #undef sysblk
 HDL_RESOLVER_SECTION;
 {

@@ -759,16 +759,16 @@ The format of the device record is:
                                 decreasing it may reduce compression performance, but it's
                                 there if you want it.  The range is from <b><i>4096</i></b>
                                 to <b><i>65535</i></b>.  The latter being the default.
-        <p />
+        </p>
     </dl>
     <dl>
         The following parameters apply to both AWS and HET emulation files :
-        <p />
+        </p>
         <dt><code>MAXSIZE</code>|<code>MAXSIZEK</code>|<code>MAXSIZEM</code>=<em>n</em>
         <dd>Specifies the maximum number of bytes (specified in bytes, Kilobytes or Megabytes) for the emulated file. This parameter defaults to 0, meaning there is no limit on the file size.
         <dt><code>EOTMARGIN</code>=<em>n</em>
         <dd>Specifies the number of bytes remaining before reaching <em>maxsize</em> at which point the tape device will signal the presence of the 'End Of Tape' marker, thus allowing the program to switch to the next tape.
-        <p />
+        </p>
     </dl>
     <dl>
         Additionally, if the file name starts with the '@' character (at sign), the file really describes a list of tape emulation files to be loaded in succession.
@@ -777,10 +777,10 @@ The format of the device record is:
         <br />Parameters are appended in succession. In all cases, is the same parameter is specified more than once, the last instance takes precedence.
         <br />
         Therefore, it is possible to specify a set of parameters in the base configuration file, Another set on a '*' line, and another set for each individual lines. Parameter are then appended in that order.
-        <p />
+        </p>
         An SCSI tape device should *NOT* be given in a file list.
     </dl>
-    <p />
+    </p>
     See the README.TAPE file for additional information, system and application programming for tape devices.
     </dl>
 <p>
@@ -856,21 +856,14 @@ The format of the device record is:
     On the MAC OS X Platform, the long option format (--xxx) is not supported. Only the short option format (-x : One dash, one letter) should be used.
     <p>
         <dl>
-            <dt><code><em>guestip</em></code>
-            <dd>
-            is an optional IP address of the Hercules
-            (guest OS) side. Note: This is only used to
-            establish a point-to-point routing table entry
-            on driving system. If you use the --oat option,
-            do not specify an address here.
             <dt><code><em> -n devname or --dev devname</em></code>
             <dd>
             where <em>devname</em> is:
-            <p /><dl>
+            </p><dl>
                   [*nix] the name of the TUN/TAP special character device,
                    normally /dev/net/tun.
                </dl>
-               <p /><dl>
+               </p><dl>
 
                   [Windows] is either the IP or MAC address of the driving
                   systems network card. TunTap32 will automatically select
@@ -881,26 +874,24 @@ The format of the device record is:
               <dd>
                   where <em>filename</em> specifies the filename of the Address
              Translation file. If this option is specified, the optional
-             <em>guestip</em> and --mac entries are ignored in preference to
+             <i>--mac</i> and <em>guestip</em> entries are ignored in preference to
              statements in the OAT. (See <a href=#OAT>below</a> for the format of the OAT)
                 <dt><code><em>-m MAC Address or --mac MAC address</em></code>
                 <dd>
                     where <em>MAC Address</em> is the optional hardware address of
-                    the interface in the format: xx:xx:xx:xx:xx:xx
+                    the interface in the format: xx:xx:xx:xx:xx:xx. If you use the
+                    <i>--oat</i> option, do not specify an address here.
 
-        <p />
-        If no Address Translation file is specified, the emulation module
-        will create the following:
+            <dt><code><em>guestip</em></code>
+            <dd>
+            is an optional IP address of the Hercules
+            (guest OS) side. Note: This is only used to
+            establish a point-to-point routing table entry
+            on driving system. If you use the <i>--oat</i> option,
+            do not specify an address here.
         <p>
-        <dl>
-             An ethernet adapter (port 0) for TCP/IP traffic only.
-         </dl>
-         <dl>
-             Two device addresses will be defined (devnum and devnum + 1).
-         </dl>
-         <p>
          <a name="OAT" />
-             <dt>OAT File<p />
+             <dt>OAT File</p>
      <dd>
              The syntax for the Address Translation file is as follows:
              <pre><code>
@@ -918,22 +909,28 @@ HWADD 01 02:00:FE:DF:00:43
 ROUTE 00 172.021.003.032 255.255.255.224
 </code></pre>
 <dt>
+<dl>
 where:
-<p />
+<p>
+<dl>
 <dt><code><em>Dev</em></code><dd>   is the base device address
 <dt><code><em>Mode</em></code><dd>  is the operation mode - IP or SNA
 <dt><code><em>Port</em></code><dd>  is the virtual (relative) adapter number.
-<p />
+</dl>
 <dt>
+<p>
 For IP modes, the entry specific information is as follows:
+<p>
 <dd>
+<dl>
 <dt><code><em>PRI|SEC|NO</em></code><dd> specifies where a packet with an unknown IP
 address is forwarded to. PRI is the primary
 default entry, SEC specifies the entry to use
 when the primary is not available, and NO
      specifies that this is not a default entry.
      <dt><code><em>nnn.nnn.nnn.nnn</code></em><dd>specifies the home IP address
-
+</dl>
+<p>
      <dt>When the operation mode is IP, specify only the even (read)
      device number <em>dev</em>. The odd (write) address will be create automatically.
      <p>
@@ -958,7 +955,18 @@ when the primary is not available, and NO
           <p>
 
           Up to 4 virtual (relative) adapters 00-03 are currently supported.
-
+</dl>
+        <p>
+        If no Address Translation file is specified, the emulation module
+        will create the following:
+        <p>
+        <dl>
+             An ethernet adapter (port 0) for TCP/IP traffic only.
+         </dl>
+         <dl>
+             Two device addresses will be defined (devnum and devnum + 1).
+         </dl>
+         <p>
         </dl>
 
     </dl>
@@ -1055,15 +1063,15 @@ when the primary is not available, and NO
     Describes a BSC emulation line entry to either link 2 hercules engines
     or a custom made program emulating a 2780, 3780 or 3x74, or a custom made
     program interfacing to a real BSC line.
-    <p />
+    </p>
     The communication is emulated over a TCP connection. All bytes are 
     transfered as-is (except for doubling DLE in transparent mode) just
     like it would over a real BSC link. Emulated EIA (DCD, DTR, CTS,
     etc..) or X.21/V.11 leads (C, T, etc..) are treated differently depending
     on the DIAL option selected.
-    <p />
+    </p>
     The line emulates a point-to-point BSC link. There is no point-to-multipoint handling.
-    <p />
+    </p>
     The following options define the line emulation behaviour :
     <dl>
         <dt><code>DIAL=IN|OUT|INOUT|NO</code><dd>

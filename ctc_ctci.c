@@ -24,6 +24,10 @@
 #include <getopt.h>
 #endif /* defined(HAVE_GETOPT_LONG) */
 
+/* getopt dynamic linking kludge */
+#include "herc_getopt.h"    
+
+
 // ====================================================================
 // Declarations
 // ====================================================================
@@ -959,6 +963,8 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
     // Initialize getopt's counter. This is necessary in the case
     // that getopt was used previously for another device.
+
+    OPTRESET();
     optind      = 0;
     // Check for correct number of arguments
     if( argc < 2 )
@@ -1106,7 +1112,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             strcpy( pCTCBLK->szNetMask, optarg );
             break;
 
-        case 'm':
+        case 'm':     // (ignored if not Windows)
             if( ParseMAC( optarg, mac ) != 0 )
             {
                 logmsg( _("HHCCT056E %4.4X: Invalid MAC address %s\n"),

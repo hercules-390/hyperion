@@ -13,6 +13,7 @@
  #define EXTERN extern
 #endif
 
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -34,6 +35,8 @@
 #include "cpuint.h"
 
 #if !defined(_HERCULES_H)
+
+
 
 #include <unistd.h>
 #include <stdio.h>
@@ -137,6 +140,14 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 /*-------------------------------------------------------------------*/
 #ifndef O_BINARY
 #define O_BINARY 0
+#endif
+
+#define _IMPORT
+#if defined(WIN32)
+#if defined(HDL_BUILD_SHARED)
+#undef _IMPORT
+#define _IMPORT __declspec(dllimport)
+#endif
 #endif
 
 #ifdef WIN32
@@ -1647,10 +1658,10 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 /*-------------------------------------------------------------------*/
 /* Global data areas in module config.c                              */
 /*-------------------------------------------------------------------*/
-extern SYSBLK   sysblk;                 /* System control block      */
+extern _IMPORT SYSBLK   sysblk;                 /* System control block      */
 extern CCKDBLK  cckdblk;                /* CCKD global block         */
 #ifdef EXTERNALGUI
-extern int extgui;                     // __attribute__ ((deprecated));
+extern _IMPORT int extgui;                     // __attribute__ ((deprecated));
 /* The external gui interface is now external and now uses the
    HDC(debug_cpu_state, regs) interface */
 #endif /*EXTERNALGUI*/
@@ -1727,25 +1738,25 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 
 /* Functions in module panel.c */
 #if defined(OPTION_DYNAMIC_LOAD)
-void *panel_command_r (void *cmdline);
-void *(*panel_command) (void *);
+extern void *panel_command_r (void *cmdline);
+extern void *(*panel_command) (void *);
 
 void panel_display_r (void);
-void (*panel_display) (void);
+extern void (*panel_display) (void);
 
-void (*daemon_task) (void);
+extern void (*daemon_task) (void);
 
-int (*config_command) (int argc, char *argv[], char *cmdline);
-int (*system_command) (int argc, char *argv[], char *cmdline);
+extern int (*config_command) (int argc, char *argv[], char *cmdline);
+extern int (*system_command) (int argc, char *argv[], char *cmdline);
 
-void *(*debug_cpu_state) (REGS *);
-void *(*debug_device_state) (DEVBLK *);
-void *(*debug_program_interrupt) (REGS *, int);
-void *(*debug_diagnose) (U32, int, int, REGS *);
-void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
-void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
-void *(*debug_sclp_event_data) (void *, void *, REGS *);
-void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
+extern void *(*debug_cpu_state) (REGS *);
+extern void *(*debug_device_state) (DEVBLK *);
+extern void *(*debug_program_interrupt) (REGS *, int);
+extern void *(*debug_diagnose) (U32, int, int, REGS *);
+extern void *(*debug_sclp_unknown_command) (U32, void *, REGS *);
+extern void *(*debug_sclp_unknown_event) (void *, void *, REGS *);
+extern void *(*debug_sclp_event_data) (void *, void *, REGS *);
+extern void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
 
 #else
 void *panel_command (void *cmdline);
@@ -1844,7 +1855,7 @@ int  ecpsvm_virttmr_ext(REGS *regs);
 /* Functions in module w32ctca.c */
 #include "w32ctca.h"
 #if defined(OPTION_W32_CTCI)
-int (*debug_tt32_stats) (int);
+extern _IMPORT int (*debug_tt32_stats) (int);
 #endif // defined(OPTION_W32_CTCI)
 
 #if defined(__APPLE__)

@@ -123,27 +123,31 @@ where:
 
          -t <mtu> or --mtu <mtu>
 
-             where <mtu> is the maximum transmission unit size,
-             normally 1500
+             [*nix only] where <mtu> is the maximum transmission
+             unit size, normally 1500
 
-         -m <netmask> or --netmask <netmask>
+         -s <netmask> or --netmask <netmask>
 
-             where <netmask> is the netmask to be configured on
-             the link. Note: Since this is a point-to-point link
-             netmask is meaningless from the perspective of the
-             actual network device.
+             [*nix only] where <netmask> is the netmask to
+             be configured on the link. Note: Since this is a
+             point-to-point link netmask is meaningless from
+             the perspective of the actual network device.
+
+         -m <MAC Address> or --mac <MAC address>
+
+             [Windows only] where <MAC Address> is the optional
+             hardware address of the interface in the format of
+             either xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx.
 
          -k <kbuff> or --kbuff <kbuff>
 
-             where <kbuff> is the size of the WinPCap kernel
-             buffer size, normally 1024. This option is only
-             effective on Windows platforms.
+             [Windows only] where <kbuff> is the size of the
+             WinPCap kernel buffer size, normally 1024.
 
          -i <ibuff> or --ibuff <ibuff>
 
-             where <ibuff> is the size of the WinPCap I/O
-             buffer size, normally 64. This option is only
-             effective on Windows platforms.
+             [Windows only] where <ibuff> is the size of the
+             WinPCap I/O buffer size, normally 64.
 
          -d or --debug
 

@@ -52,7 +52,7 @@
 #include "opcode.h"
 
 
-#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32)
+#if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)
  #define config_cnslport (*config_cnslport)
@@ -1091,9 +1091,9 @@ BYTE                    class;          /* D=3270, P=3287, K=3215/1052 */
 BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
 BYTE                    extended;       /* Extended attributes (Y,N) */
 BYTE                    buf[256];       /* Message buffer            */
-BYTE                    conmsg[80];     /* Connection message        */
-BYTE                    hostmsg[80];    /* Host ID message           */
-BYTE                    rejmsg[80];     /* Rejection message         */
+BYTE                    conmsg[256];     /* Connection message        */
+BYTE                    hostmsg[256];    /* Host ID message           */
+BYTE                    rejmsg[256];     /* Rejection message         */
 
     /* Load the socket address from the thread parameter */
     csock = *csockp;
@@ -2552,6 +2552,16 @@ DEVHND constty_device_hndinfo = {
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
+/* Libtool static name colision resolution */
+/* note : lt_dlopen will look for symbol & modulename_LTX_symbol */
+#if !defined(HDL_BUILD_SHARED) && defined(HDL_USE_LIBTOOL)
+#define hdl_ddev hdt3270_LTX_hdl_ddev
+#define hdl_depc hdt3270_LTX_hdl_depc
+#define hdl_reso hdt3270_LTX_hdl_reso
+#define hdl_init hdt3270_LTX_hdl_init
+#define hdl_fini hdt3270_LTX_hdl_fini
+#endif
+
 
 #if defined(OPTION_DYNAMIC_LOAD)
 static
@@ -2575,7 +2585,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 #undef sysblk
 #undef config_cnslport
 HDL_RESOLVER_SECTION;
