@@ -97,27 +97,24 @@ cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o
 cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o 
 
 cckddiag_OBJ = cckddiag.o cckddasd.o cckdutil.o ckddasd.o codepage.o \
-               dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o \
-               cache.o
+               dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o
 
 cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o 
 
 cckd2ckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o \
-               cache.o
+               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o
 
 ckd2cckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o \
-               cache.o
+               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o
 
 fba2cfba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o   
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o
 
 cfba2fba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o   
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o
 
 dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
-               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o   
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o
 
 hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o 
 
