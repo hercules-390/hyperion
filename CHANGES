@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+08 Dec 2004 dasdinit -linux option support - Greg Smith
 06 Dec 2004 Keep crx in sync with INST_SPACE - Jan Jaeger
 04 Dec 2004 Make chkdsk faster if disk is readonly - Greg Smith
 03 Dec 2004 Optimize clearing memory - Greg Smith

@@ -73,7 +73,10 @@ int             heads, cyls, devt;
         /* free space header -- set to zeroes to force
            cckdcdsk to rebuild the free space */
 
-//      memset (&cdevhdr.CCKD_FREEHDR, 0, CCKD_FREEHDR_SIZE);
+//      cdevhdr.size = cdevhdr.used = cdevhdr.free =
+//      cdevhdr.free_total = cdevhdr.free_largest =
+//      cdevhdr.free_number = cdevhdr.free_imbed = 0;
+
 
         /* number of cylinders on the emulated device
            must be in little-endian byte order */

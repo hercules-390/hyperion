@@ -8,13 +8,14 @@
 #include "hercules.h"
 #include "dasdblks.h"
 #include "devtype.h"
+#include "opcode.h"
 
 #define FBA_BLKGRP_SIZE  (120 * 512)    /* Size of block group       */
 #define FBA_BLKS_PER_GRP        120     /* Blocks per group          */
 
 int syntax (char *);
 void status (int, int);
-int nulltrk(BYTE *, int, int);
+int nulltrk(BYTE *, int, int, int);
 
 #ifdef EXTERNALGUI
 #if 0
@@ -52,12 +53,14 @@ char           *ifile, *ofile;          /* -> Input/Output file names*/
 char           *sfile=NULL;             /* -> Input shadow file name */
 CIFBLK         *icif, *ocif;            /* -> Input/Output CIFBLK    */
 DEVBLK         *idev, *odev;            /* -> Input/Output DEVBLK    */
+
 CKDDEV         *ckd=NULL;               /* -> CKD device table entry */
 FBADEV         *fba=NULL;               /* -> FBA device table entry */
 int             i, n, max;              /* Loop index, limits        */
 BYTE            unitstat;               /* Device unit status        */
 char            msgbuf[512];            /* Message buffer            */
 size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
+int             nullfmt = CKDDASD_NULLTRK_FMT0; /* Null track format */
 
 #if defined(ENABLE_NLS)
     setlocale(LC_ALL, "");
@@ -263,6 +266,7 @@ size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
         return -1;
     }
     idev = &icif->devblk;
+    if (idev->oslinux) nullfmt = CKDDASD_NULLTRK_FMT2;
 
     /* Calculate the number of tracks or blocks to copy */
     if (ckddasd)
@@ -307,7 +311,7 @@ size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
     /* Create the output file */
     if (ckddasd)
         rc = create_ckd(ofile, idev->devtype, idev->ckdheads,
-                        ckd->r1, cyls, "", comp, lfs, 1+r);
+                        ckd->r1, cyls, "", comp, lfs, 1+r, nullfmt);
     else
         rc = create_fba(ofile, idev->devtype, fba->size,
                         blks, "", comp, lfs, 1+r);
@@ -346,7 +350,11 @@ size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
         {
             if (i < max)
                 rc = (idev->hnd->read)(idev, i, &unitstat);
-            else rc = nulltrk(idev->buf, i, idev->ckdheads);
+            else
+            {
+                memset (idev->buf, 0, idev->ckdtrksz);
+                rc = nulltrk(idev->buf, i, idev->ckdheads, nullfmt);
+            }
         }
         else
         {
@@ -408,27 +416,75 @@ size_t          fba_bytes_remaining=0;  /* FBA bytes to be copied    */
 /*-------------------------------------------------------------------*/
 /* Build a null track image                                          */
 /*-------------------------------------------------------------------*/
-int nulltrk(BYTE *buf, int trk, int heads)
+int nulltrk(BYTE *buf, int trk, int heads, int nullfmt)
 {
-    BYTE cchh[4];
-    int  cyl, head;
-    static BYTE eighthexFF[]={0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+int             i;                      /* Loop counter              */
+CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
+CKDDASD_RECHDR *rechdr;                 /* -> Record header          */
+U32             cyl;                    /* Cylinder number           */
+U32             head;                   /* Head number               */
+BYTE            r;                      /* Record number             */
+BYTE           *pos;                    /* -> Next position in buffer*/
+static BYTE     eighthexFF[]={0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
     /* cylinder and head calculations */
     cyl = trk / heads;
     head = trk % heads;
-    cchh[0] = cyl >> 8;
-    cchh[1] = cyl & 0xFF;
-    cchh[2] = head >> 8;
-    cchh[3] = head & 0xFF;
 
-    /* A null track has a 5 byte track hdr, 8 byte r0 count,
-       8 byte r0 data and 8 ff's */
-    memset(buf, 0, 29);
-    memcpy (&buf[1], cchh, sizeof(cchh));
-    memcpy (&buf[5], cchh, sizeof(cchh));
-    buf[12] = 8;
-    memcpy (&buf[21], eighthexFF, 8);
+    /* Build the track header */
+    trkhdr = (CKDDASD_TRKHDR*)buf;
+    trkhdr->bin = 0;
+    store_hw(&trkhdr->cyl, cyl);
+    store_hw(&trkhdr->head, head);
+    pos = buf + CKDDASD_TRKHDR_SIZE;
+
+    /* Build record zero */
+    r = 0;
+    rechdr = (CKDDASD_RECHDR*)pos;
+    pos += CKDDASD_RECHDR_SIZE;
+    store_hw(&rechdr->cyl, cyl);
+    store_hw(&rechdr->head, head);
+    rechdr->rec = r;
+    rechdr->klen = 0;
+    store_hw(&rechdr->dlen, 8);
+    pos += 8;
+    r++;
+
+    /* Specific null track formatting */
+    if (nullfmt == CKDDASD_NULLTRK_FMT0)
+    {
+        rechdr = (CKDDASD_RECHDR*)pos;
+        pos += CKDDASD_RECHDR_SIZE;
+
+        store_hw(&rechdr->cyl, cyl);
+        store_hw(&rechdr->head, head);
+        rechdr->rec = r;
+        rechdr->klen = 0;
+        store_hw(&rechdr->dlen, 0);
+        r++;
+    }
+    else if (nullfmt == CKDDASD_NULLTRK_FMT2)
+    {
+        for (i = 0; i < 12; i++)
+        {
+            rechdr = (CKDDASD_RECHDR*)pos;
+            pos += CKDDASD_RECHDR_SIZE;
+
+            store_hw(&rechdr->cyl, cyl);
+            store_hw(&rechdr->head, head);
+            rechdr->rec = r;
+            rechdr->klen = 0;
+            store_hw(&rechdr->dlen, 4096);
+            r++;
+
+            pos += 4096;
+        }
+    }
+ 
+    /* Build the end of track marker */
+    memcpy (pos, eighthexFF, 8);
+    pos += 8;
+
     return 0;
 }
 

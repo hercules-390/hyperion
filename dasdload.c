@@ -4509,7 +4509,7 @@ int             lfs = 0;                /* 1 = Large file            */
 
     /* Create the output file */
     rc = create_ckd (ofname, devtype, outheads, outmaxdl, reqcyls,
-                     volser, comp, lfs, 0);
+                     volser, comp, lfs, 0, 0);
     if (rc < 0)
     {
         XMERRF ("HHCDL007E Cannot create %s\n", ofname);

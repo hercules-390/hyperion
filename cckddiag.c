@@ -52,7 +52,7 @@ int  extgui = 0;
 /*-------------------------------------------------------------------*/
 int syntax()
 {
-    fprintf (stderr, "\n" 
+    fprintf (stdout, "\n" 
         "cckddiag [options] file-name\n"
         "Valid options are one or more of the following:\n"
         "  -v        display version and exit\n"
@@ -81,10 +81,10 @@ void snap(char *msg, void *data, int len) {
 int    x;
 
     if (msg != NULL) 
-        fprintf(stderr, "%s\n", msg);
+        fprintf(stdout, "%s\n", msg);
     data_dump(data, len);
     if (pausesnap) {
-        fprintf(stderr, "Press enter to continue\n");
+        fprintf(stdout, "Press enter to continue\n");
         x = getc(stdin);
     }
 }
@@ -108,12 +108,12 @@ void *makbuf(int len, char *label) {
 
     p = malloc(len);
     if (p == NULL) {
-        fprintf(stderr, "malloc %s of length %d failed\n", 
+        fprintf(stdout, "malloc %s of length %d failed\n", 
                 label, len);
         clean();
         exit(4);
     }
-    if (debug) fprintf(stderr, "\n"
+    if (debug) fprintf(stdout, "\n"
                "MAKBUF malloc %s buffer of %d bytes at %p\n", 
                label, len, p);
     return p;
@@ -130,26 +130,26 @@ int readpos(
             size_t len            /* length of data to read          */
             ) {
     if (debug) 
-        fprintf(stderr, "\nREADPOS seeking %d (0x%8.8X)\n", 
+        fprintf(stdout, "\nREADPOS seeking %d (0x%8.8X)\n", 
                         (int)offset, (unsigned int)offset);
     if (lseek(fd, offset, SEEK_SET) < 0) {
-        fprintf(stderr, _("lseek to pos 0x%8.8x error: %s\n"),
+        fprintf(stdout, _("lseek to pos 0x%8.8x error: %s\n"),
                         (unsigned int) offset, strerror(errno));
         clean();
         exit (1);
     }
     if (debug) 
 #if SIZEOF_SIZE_T == 8
-        fprintf(stderr, 
+        fprintf(stdout, 
                 "READPOS reading buf addr %p length %ld (0x%8.8lX)\n",
                 buf, len, len);
 #else
-        fprintf(stderr, 
+        fprintf(stdout, 
                 "READPOS reading buf addr %p length %d (0x%8.8X)\n",
                 buf, len, len);
 #endif
     if (read(fd, buf, len) < (ssize_t)len) {
-        fprintf(stderr, _("cckddiag: read error: %s\n"),
+        fprintf(stdout, _("cckddiag: read error: %s\n"),
                         strerror(errno));
         clean();
         exit (2);
@@ -251,7 +251,7 @@ BYTE    *past;
     r  = rh->rec;
     kl = rh->klen;
     dl = (rh->dlen[0] << 8) | (rh->dlen[1]);
-    fprintf(stderr, "\n"
+    fprintf(stdout, "\n"
             "Track %d COUNT "
             "CC=%d HH=%d R=%d KL=%d DL=%d\n",
             trk, cc, hh, r, kl, dl);
@@ -265,7 +265,7 @@ BYTE    *past;
 BYTE *show_ckd_key(CKDDASD_RECHDR *rh, BYTE *buf, int trk, int xop) {
 
     if (rh->klen && xop) {
-        fprintf(stderr, 
+        fprintf(stdout, 
                 "\nTrack %d R%d KEY (%d bytes)\n", 
                 trk, rh->rec, rh->klen);
         data_dump(buf, rh->klen);
@@ -281,7 +281,7 @@ int     dl;
 
     dl = (rh->dlen[0] << 8) | (rh->dlen[1]);
     if (dl && xop) {
-        fprintf(stderr, 
+        fprintf(stdout, 
                 "\nTrack %d R%d DATA (%d bytes)\n", 
                 trk, rh->rec, dl);
         data_dump(buf, dl);
@@ -322,7 +322,7 @@ int             len;
     while (bufp < &buf2[sizeof(buf2)]) {
         rh = (CKDDASD_RECHDR *)bufp;
         if (memcmp((BYTE *)rh, &eighthexFF, 8) == 0) {
-            fprintf(stderr, "\nEnd of Track\n");
+            fprintf(stdout, "\nEnd of Track\n");
             break;
         }
         bufp = show_ckd_count(rh, trk);
@@ -353,14 +353,14 @@ char               *p;
             for (v = 0; isxdigit(*s); ++s) 
                 v = (v << 4) + xv[strchr(xd, *s) - xd];
             if (debug) 
-                fprintf(stderr, 
+                fprintf(stdout, 
                         "OFFTIFY string %s hex %8.8X decimal %d\n",
                         p, (unsigned int)v, (int)v);
             return v;
         } else {                                 /* decimal input */
             v = (off_t) atoi(s);
             if (debug) 
-                fprintf(stderr, 
+                fprintf(stdout, 
                         "OFFTIFY string %s decimal %8.8X %d\n", 
                         p, (unsigned int)v, (int)v);
             return v;
@@ -430,7 +430,7 @@ int             imglen=0;               /* track length              */
 
         switch(argv[0][1]) {
             case 'v':  if (argv[0][2] != '\0') return syntax ();
-                       display_version (stderr, 
+                       display_version (stdout, 
                               "Hercules CCKD diagnostic program\n", FALSE);
                        return 0;
             case 'd':  if (argv[0][2] != '\0') return syntax ();
@@ -487,7 +487,7 @@ int             imglen=0;               /* track length              */
     /* open the file */
     fd = open(fn, O_RDONLY | O_BINARY);
     if (fd < 0) {
-        fprintf(stderr,
+        fprintf(stdout,
                 _("cckddiag: error opening file %s: %s\n"),
                 fn, strerror(errno));
         return -1;
@@ -499,10 +499,10 @@ int             imglen=0;               /* track length              */
     readpos(fd, &devhdr, 0, sizeof(devhdr));
     if (cmd_devhdr) {
 #if SIZEOF_SIZE_T == 8
-        fprintf(stderr, "\nDEVHDR - %ld (decimal) bytes:\n", 
+        fprintf(stdout, "\nDEVHDR - %ld (decimal) bytes:\n", 
                 sizeof(devhdr));
 #else
-        fprintf(stderr, "\nDEVHDR - %d (decimal) bytes:\n", 
+        fprintf(stdout, "\nDEVHDR - %d (decimal) bytes:\n", 
                 sizeof(devhdr));
 #endif
         data_dump(&devhdr, sizeof(devhdr));
@@ -516,7 +516,7 @@ int             imglen=0;               /* track length              */
         ckddasd = 1;
         ckd = dasd_lookup(DASD_CKDDEV, NULL, devhdr.devtype, 0);
         if (ckd == NULL) {
-            fprintf(stderr, 
+            fprintf(stdout, 
                     "DASD table entry not found for devtype 0x%2.2X\n",
                     devhdr.devtype);
             clean(fd);
@@ -529,7 +529,7 @@ int             imglen=0;               /* track length              */
         ckddasd = 0;
         fba = dasd_lookup(DASD_FBADEV, NULL, devhdr.devtype, 0);
         if (fba == NULL) {
-            fprintf(stderr, 
+            fprintf(stdout, 
                     "DASD table entry not found for "
                     "devtype 0x%2.2X\n",
                     DEFAULT_FBA_TYPE);
@@ -538,7 +538,7 @@ int             imglen=0;               /* track length              */
         }
     }
     else {
-        fprintf(stderr, "incorrect header id\n");
+        fprintf(stdout, "incorrect header id\n");
         clean();
         return -1;
     }
@@ -552,7 +552,7 @@ int             imglen=0;               /* track length              */
               | ((U32)(devhdr.heads[1]) << 8)
               | (U32)(devhdr.heads[0]);
         if (debug) 
-            fprintf(stderr, 
+            fprintf(stdout, 
                 "\n%s device has %d heads/cylinder\n", 
                 ckd->name, heads);
     } else {
@@ -568,10 +568,10 @@ int             imglen=0;               /* track length              */
     readpos(fd, &cdevhdr, CKDDASD_DEVHDR_SIZE, sizeof(cdevhdr));
     if (cmd_cdevhdr) {
 #if SIZEOF_SIZE_T == 8
-        fprintf(stderr, "\nCDEVHDR - %ld (decimal) bytes:\n",
+        fprintf(stdout, "\nCDEVHDR - %ld (decimal) bytes:\n",
                 sizeof(cdevhdr));
 #else
-        fprintf(stderr, "\nCDEVHDR - %d (decimal) bytes:\n",
+        fprintf(stdout, "\nCDEVHDR - %d (decimal) bytes:\n",
                 sizeof(cdevhdr));
 #endif
         data_dump(&cdevhdr, sizeof(cdevhdr));
@@ -596,10 +596,10 @@ int             imglen=0;               /* track length              */
     /* L1TAB itself is not adjusted for endian-ness                  */
     if (cmd_l1tab) {
 #if SIZEOF_SIZE_T == 8
-        fprintf(stderr, "\nL1TAB - %ld (0x%8.8lX) bytes:\n",
+        fprintf(stdout, "\nL1TAB - %ld (0x%8.8lX) bytes:\n",
                 (n * CCKD_L1ENT_SIZE), (n * CCKD_L1ENT_SIZE));
 #else
-        fprintf(stderr, "\nL1TAB - %d (0x%8.8X) bytes:\n",
+        fprintf(stdout, "\nL1TAB - %d (0x%8.8X) bytes:\n",
                 (n * CCKD_L1ENT_SIZE), (n * CCKD_L1ENT_SIZE));
 #endif
         data_dump(l1, n * CCKD_L1ENT_SIZE);
@@ -611,7 +611,7 @@ int             imglen=0;               /* track length              */
     if (cmd_offset) {
         bulk = makbuf(op_length, "BULK");
         readpos(fd, bulk, op_offset, op_length);
-        fprintf(stderr, 
+        fprintf(stdout, 
             "\nIMAGE OFFSET %d (0x%8.8X) "
             "of length %d (0x%8.8X) bytes:\n",
             op_offset, op_offset, op_length, op_length);
@@ -624,7 +624,7 @@ int             imglen=0;               /* track length              */
     /* FBA isn't supported here because I don't know much about FBA  */
     /*---------------------------------------------------------------*/
     if ( (!ckddasd) && ((cmd_cchh) || (cmd_tt)) ) {
-        fprintf(stderr, "CCHH/reltrk not supported for FBA\n");
+        fprintf(stdout, "CCHH/reltrk not supported for FBA\n");
         clean();
         exit(3);
     }
@@ -650,7 +650,7 @@ int             imglen=0;               /* track length              */
     /* display CKD CCHH or relative track data                       */
     /*---------------------------------------------------------------*/
     if ((cmd_cchh) || (cmd_tt)) {
-        fprintf(stderr, 
+        fprintf(stdout, 
                 "CC %d HH %d = reltrk %d; " 
                 "L1 index = %d, L2 index = %d\n"
                 "L1 index %d = L2TAB offset %d (0x%8.8X)\n",
@@ -662,21 +662,21 @@ int             imglen=0;               /* track length              */
                 cdevhdr.numl2tab * sizeof(CCKD_L2ENT));
         if (cmd_l2tab) {
 #if SIZEOF_SIZE_T == 8
-            fprintf(stderr, 
+            fprintf(stdout, 
                    "\nL2TAB - %ld (decimal) bytes\n", 
                    (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
 #else
-            fprintf(stderr, 
+            fprintf(stdout, 
                    "\nL2TAB - %d (decimal) bytes\n", 
                    (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)));
 #endif
             data_dump(l2, (cdevhdr.numl2tab * sizeof(CCKD_L2ENT)) );
         }
 #if SIZEOF_SIZE_T == 8
-        fprintf(stderr, "\nL2 index %d = L2TAB entry %ld bytes\n",
+        fprintf(stdout, "\nL2 index %d = L2TAB entry %ld bytes\n",
                l2ndx, sizeof(CCKD_L2ENT) );
 #else
-        fprintf(stderr, "\nL2 index %d = L2TAB entry %d bytes\n",
+        fprintf(stdout, "\nL2 index %d = L2TAB entry %d bytes\n",
                l2ndx, sizeof(CCKD_L2ENT) );
 #endif
         data_dump(&l2[l2ndx], sizeof(CCKD_L2ENT) );
@@ -686,12 +686,12 @@ int             imglen=0;               /* track length              */
             cckd_swapend4((char *)&trkhdroff);
             cckd_swapend4((char *)&imglen);
         }
-        fprintf(stderr, "\nTRKHDR offset %d (0x%8.8X); "
+        fprintf(stdout, "\nTRKHDR offset %d (0x%8.8X); "
                 "length %d (0x%4.4X)\n", 
                 (int)trkhdroff, (int)trkhdroff, imglen, imglen);
         tbuf = makbuf(imglen, "TRKHDR+DATA");
         readpos(fd, tbuf, trkhdroff, imglen);
-        fprintf(stderr, "\nTRKHDR track %d\n", trk);
+        fprintf(stdout, "\nTRKHDR track %d\n", trk);
         data_dump(tbuf, sizeof(CKDDASD_TRKHDR) );
         if (cmd_trkdata) showtrk(tbuf, imglen, trk, cmd_hexdump);
         free(l2); free(tbuf);
@@ -699,7 +699,7 @@ int             imglen=0;               /* track length              */
     }
 
     /* Close file, exit */
-    fprintf(stderr, "\n");
+    fprintf(stdout, "\n");
     clean();
     return cckd_diag_rc;
 }

@@ -1291,6 +1291,7 @@ typedef struct _DEVBLK {
                 localhost:1,            /* 1=Remote is local         */
                 batch:1,                /* 1=Called by dasdutil      */
                 dasdcopy:1,             /* 1=Called by dasdcopy      */
+                oslinux:1,              /* 1=Linux                   */
                 ccwtrace:1,             /* 1=CCW trace               */
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1;             /* 1=Channel will merge data
@@ -1646,6 +1647,16 @@ typedef struct _CKDDASD_RECHDR {        /* Record header             */
 #define CKDDASD_TRKHDR_SIZE     ((ssize_t)sizeof(CKDDASD_TRKHDR))
 #define CKDDASD_RECHDR_SIZE     ((ssize_t)sizeof(CKDDASD_RECHDR))
 
+/* Null track formats */
+#define CKDDASD_NULLTRK_FMT0       0    /* ha r0 r1 eot              */
+#define CKDDASD_NULLTRK_FMT1       1    /* ha r0 eot                 */
+#define CKDDASD_NULLTRK_FMT2       2    /* linux (3390 only)         */
+#define CKDDASD_NULLTRK_FMTMAX     CKDDASD_NULLTRK_FMT2
+
+#define CKDDASD_NULLTRK_SIZE0      (5 + 8 + 8 + 8 + 8)
+#define CKDDASD_NULLTRK_SIZE1      (5 + 8 + 8 + 8)
+#define CKDDASD_NULLTRK_SIZE2      (5 + 8 + 8 + (12 * (8 + 4096)) + 8)
+
 /*-------------------------------------------------------------------*/
 /* Structure definitions for Compressed CKD devices                  */
 /*-------------------------------------------------------------------*/
@@ -1662,7 +1673,7 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 /* 32 */S32              free_number;   /* Number free spaces        */
 /* 36 */U32              free_imbed;    /* Imbedded free space       */
 /* 40 */FWORD            cyls;          /* Cylinders on device       */
-/* 44 */BYTE             resv1;         /* Reserved                  */
+/* 44 */BYTE             nullfmt;       /* Null track format         */
 /* 45 */BYTE             compress;      /* Compression algorithm     */
 /* 46 */S16              compress_parm; /* Compression parameter     */
 /* 48 */BYTE             resv2[464];    /* Reserved                  */
@@ -1677,17 +1688,6 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #define CCKD_ORDWR             64        /* Opened read/write since
                                             last chkdsk              */
 #define CCKD_OPENED            128
-
-/* The first byte of the TRKHDR in a compressed file contains the
-   following bits:
-     nlllllcc
-   where:
-     n      1=track header in new format
-     lllll  low order bits of track image length [for recovery]
-     cc     compression used on the track image                      */
-#define CCKD_FREEHDR           size
-#define CCKD_FREEHDR_SIZE      28
-#define CCKD_FREEHDR_POS       CKDDASD_DEVHDR_SIZE+12
 
 #define CCKD_COMPRESS_NONE     0x00
 #define CCKD_COMPRESS_ZLIB     0x01
@@ -1739,8 +1739,6 @@ typedef char CCKD_TRACE[128];           /* Trace entry               */
 #define CCKD_FREEBLK_ISIZE     ((ssize_t)sizeof(CCKD_FREEBLK))
 #define CCKD_FREE_MIN_SIZE     96
 #define CCKD_CACHE_SIZE        ((ssize_t)sizeof(CCKD_CACHE))
-#define CCKD_NULLTRK_SIZE1     37       /* ha r0 r1 ffff */
-#define CCKD_NULLTRK_SIZE0     29       /* ha r0 ffff */
 
 /* adjustable values */
 
@@ -1862,7 +1860,8 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
                          bufused:1,     /* 1=newbuf was used         */
                          updated:1,     /* 1=Update occurred         */
                          merging:1,     /* 1=File merge in progress  */
-                         stopping:1;    /* 1=Device is closing       */
+                         stopping:1,    /* 1=Device is closing       */
+                         notnull:1;     /* 1=Device has track images */
         LOCK             filelock;      /* File lock                 */
         LOCK             iolock;        /* I/O lock                  */
         COND             iocond;        /* I/O condition             */

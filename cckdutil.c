@@ -664,8 +664,8 @@ int             maxdlen=-1;             /* Max data length for device*/
 int             trksz=-1, hdrtrksz=-1;  /* Track size                */
 off_t           hipos, lopos;           /* Valid high/low offsets    */
 off_t           pos;                    /* File offset               */
-int             hdrerr=0, fsperr=0, l1errs=0, l2errs=0, trkerrs=0,
-                othererrs = 0;          /* Error indicators          */
+int             hdrerr=0, fsperr=0, l1errs=0, l2errs=0, trkerrs=0;
+                                        /* Error indicators          */
 off_t           fsp;                    /* Free space offset         */
 CCKD_FREEBLK    fb;                     /* Free space block          */
 int             n;                      /* Size of space tables      */
@@ -1384,14 +1384,22 @@ space_check:
     trknum = 1;
 
 /*-------------------------------------------------------------------*/
+/* Test for header errors                                            */
+/*-------------------------------------------------------------------*/
+    if (level >= 0
+     && (cdevhdr.size != cdevhdr2.size
+      || cdevhdr.used != cdevhdr2.used
+      || cdevhdr.free != cdevhdr2.free
+      || cdevhdr.free_total != cdevhdr2.free_total
+      || cdevhdr.free_largest != cdevhdr2.free_largest
+      || cdevhdr.free_number != cdevhdr2.free_number
+      || cdevhdr.free_imbed != cdevhdr2.free_imbed))
+        hdrerr = 1;
+
+/*-------------------------------------------------------------------*/
 /* we will rebuild free space on any kind of error                   */
 /*-------------------------------------------------------------------*/
-
-    othererrs = r || l1errs || l2errs || trkerrs;
-    if ((level >= 0
-      && memcmp (&cdevhdr.CCKD_FREEHDR, &cdevhdr2.CCKD_FREEHDR, CCKD_FREEHDR_SIZE))
-     || othererrs)
-        fsperr = 1;
+    fsperr = fsperr || r || l1errs || l2errs || trkerrs || hdrerr;
 
 /*-------------------------------------------------------------------*/
 /* look for gaps and overlaps                                        */
@@ -1887,7 +1895,10 @@ overlap:
             gaps--;
         }
 
-        memset (&cdevhdr.CCKD_FREEHDR, 0, CCKD_FREEHDR_SIZE);
+        cdevhdr.size = cdevhdr.used = cdevhdr.free =
+        cdevhdr.free_total = cdevhdr.free_largest =
+        cdevhdr.free_number = cdevhdr.free_imbed = 0;
+
         cdevhdr.size = hipos;
         if (gaps) cdevhdr.free = gap[0].pos;
         cdevhdr.free_number = gaps;

@@ -245,6 +245,7 @@ DEVBLK**dvpp;
     dev->pciioint.pcipending = 1;
     dev->attnioint.dev = dev;
     dev->attnioint.attnpending = 1;
+    dev->oslinux = sysblk.pgminttr == OS_LINUX;
 
     /* Initialize storage view */
     dev->mainstor = sysblk.mainstor;

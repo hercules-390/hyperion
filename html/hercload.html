@@ -66,13 +66,17 @@ The format of the dasdinit command is:
       -lfs       build large uncompressed ckd file (>2G)
       -a         build dasd image file that includes alternate cylinders
                  (option ignored if size is manually specified)
+      -linux     build dasd image file in linux dasdfmt format (3390 only).
+                 linux s390/s390x dasdfmt will not be required for this volume.
+                 WARNING: this file will NOT be usable by linux in prior
+                          releases of hercules.
 
       filename   name of dasd image file to be created
 
       devtype    CKD: 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
                  FBA: 3310, 3370, 9332, 9335, 9336
 
-      model      device model (implies size) (opt)
+      model      device model (implies size) (optional)
 
       volser     volume serial number (1-6 characters)
 

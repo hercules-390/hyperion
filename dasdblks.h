@@ -345,7 +345,8 @@ int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
 int create_ckd (char *fname, U16 devtype, U32 heads, U32 maxdlen,
-        U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy);
+        U32 volcyls, char *volser, BYTE comp, int lfs, int dasdcopy,
+        int nullfmt);
 int create_fba (char *fname, U16 devtype, U32 sectsz, U32 sectors,
         char *volser, BYTE comp, int lfs, int dasdcopy);
 int create_compressed_fba (char *fname, U16 devtype, U32 sectsz,
