@@ -1463,6 +1463,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         COND             iocond;        /* I/O condition             */
         int              iowaiters;     /* Number I/O waiters        */
         int              wrpending;     /* Number writes pending     */
+        int              ras;           /* Number readaheads active  */
         int              sfn;           /* Number active shadow files*/
         int              sfx;           /* Active level 2 file index */
         int              l1x;           /* Active level 2 table index*/

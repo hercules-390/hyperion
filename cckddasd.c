@@ -338,6 +338,17 @@ int             i;                      /* Index                     */
 
     cckd = dev->cckd_ext;
 
+    /* Wait for readaheads to finish */
+    obtain_lock(&cckdblk.ralock);
+    cckd->stopping = 1;
+    while (cckd->ras)
+    {
+        release_lock(&cckdblk.ralock);
+        usleep(1);
+        obtain_lock(&cckdblk.ralock);
+    }
+    release_lock(&cckdblk.ralock);
+
     /* Flush the cache and wait for the writes to complete */
     obtain_lock (&cckd->iolock);
     cckd->stopping = 1;
@@ -1100,6 +1111,15 @@ TID             tid;                    /* Readahead thread id       */
     cache_scan(CACHE_DEVBUF, cckd_readahead_scan, dev);
     cache_unlock(CACHE_DEVBUF);
 
+    /* Scan the queue to see if the tracks are already there */
+    for (r = cckdblk.ra1st; r >= 0; r = cckdblk.ra[r].next)
+        if (cckdblk.ra[r].dev == dev)
+        {
+            i = cckdblk.ra[r].trk - trk;
+            if (i > 0 && i <= cckdblk.readaheads)
+                cckd->ralkup[i-1] = 1;
+        }
+
     /* Queue the tracks to the readahead queue */
     for (i = 1; i <= cckdblk.readaheads && cckdblk.rafree >= 0; i++)
     {
@@ -1162,6 +1182,7 @@ int             k;                      /* Index                     */
 /*-------------------------------------------------------------------*/
 void cckd_ra ()
 {
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 DEVBLK         *dev;                    /* Readahead devblk          */
 int             trk;                    /* Readahead track           */
 int             ra;                     /* Readahead index           */
@@ -1195,10 +1216,12 @@ TID             tid;                    /* Readahead thread id       */
         /* Possibly shutting down if no writes pending */
         if (cckdblk.ra1st < 0) continue;
 
-        /* Requeue the 1st entry to the readahead free queue */
         r = cckdblk.ra1st;
         trk = cckdblk.ra[r].trk;
         dev = cckdblk.ra[r].dev;
+        cckd = dev->cckd_ext;
+
+        /* Requeue the 1st entry to the readahead free queue */
         cckdblk.ra1st = cckdblk.ra[r].next;
         if (cckdblk.ra[r].next > -1)
             cckdblk.ra[cckdblk.ra[r].next].prev = -1;
@@ -1214,12 +1237,17 @@ TID             tid;                    /* Readahead thread id       */
             else if (cckdblk.ras < cckdblk.ramax)
                 create_thread (&tid, NULL, cckd_ra, dev);
         }
+
+        if (!cckd || cckd->stopping || cckd->merging) continue;
+
+        cckd->ras++;
         release_lock (&cckdblk.ralock);
 
         /* Read the readahead track */
         cckd_read_trk (dev, trk, ra, NULL);
 
         obtain_lock (&cckdblk.ralock);
+        cckd->ras--;
     }
 
     if (!cckdblk.batch)
@@ -4688,7 +4716,7 @@ void cckd_command_debug()
 /*-------------------------------------------------------------------*/
 int cckd_command(BYTE *op, int cmd)
 {
-BYTE *kw, *p, c = '\0';
+BYTE *kw, *p, c = '\0', buf[256];
 int   val, opts = 0;
 
     /* Display help for null operand */
@@ -4698,6 +4726,9 @@ int   val, opts = 0;
             cckd_command_help();
         return 0;
     }
+
+    strcpy(buf, op);
+    op = buf;
 
     /* Initialize the global cckd block if necessary */
     if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)))
