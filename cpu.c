@@ -133,7 +133,11 @@ int     armode;
 #if defined(OPTION_REDUCED_INVAL)
         if ((realmode  != REAL_MODE(&regs->psw)) ||
             (armode    != (regs->psw.armode == 1)) ||
-            (space     != (regs->psw.space == 1)))
+            (space     != (regs->psw.space == 1))
+#if defined (FEATURE_PER)
+           || PER_MODE(regs)
+#endif /* defined (FEATURE_PER) */
+            )
             INVALIDATE_AEA_ALL(regs);
 #endif
 #if defined(FEATURE_ESAME)
