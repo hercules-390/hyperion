@@ -293,6 +293,7 @@ typedef struct _REGS {			/* Processor registers	     */
 	U16	cpuad;			/* CPU address for STAP      */
 	PSW	psw;			/* Program status word	     */
 	BYTE	excarid;		/* Exception access register */
+	BYTE	opndrid;		/* Operand access register   */
 	DWORD	exinst; 		/* Target of Execute (EX)    */
 
 	RADR	mainsize;		/* Central Storage size or   */
