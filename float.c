@@ -5735,25 +5735,7 @@ U64     lsfract;
             shift = ((92 - fl.expo - 16) * 4);
             lsfract = fl.ms_fract << (64 - shift);
             fl.ms_fract >>= shift;
-            if (fl.expo == 72) {
-                if (fl.sign) {
-                    /* negative */
-                    if (fl.ms_fract > 0x80000000UL) {
-                        /* exeeds range by value */
-                        regs->GR_L(r1) = 0x80000000UL;
-                        regs->psw.cc = 3;
-                        return;
-                    }
-                } else {
-                    /* positive */
-                    if (fl.ms_fract > 0x7FFFFFFFUL) {
-                        /* exeeds range by value */
-                        regs->GR_L(r1) = 0x7FFFFFFFUL;
-                        regs->psw.cc = 3;
-                        return;
-                    }
-                }
-            }
+
             if (m3 == 1) {
                 /* biased round to nearest */
                 if (lsfract & 0x8000000000000000ULL) {
@@ -5828,10 +5810,22 @@ U64     lsfract;
         }
         if (fl.sign) {
             /* negative */
+            if (fl.ms_fract > 0x80000000UL) {
+                /* exeeds range by value */
+                regs->GR_L(r1) = 0x80000000UL;
+                regs->psw.cc = 3;
+                return;
+            }
             regs->GR_L(r1) = -((S32) fl.ms_fract);
             regs->psw.cc = 1;
         } else {
             /* positive */
+            if (fl.ms_fract > 0x7FFFFFFFUL) {
+                /* exeeds range by value */
+                regs->GR_L(r1) = 0x7FFFFFFFUL;
+                regs->psw.cc = 3;
+                return;
+            }
             regs->GR_L(r1) = fl.ms_fract;
             regs->psw.cc = 2;
         }
@@ -5878,7 +5872,7 @@ U32     wk;
 U64     wkd;
 
     RXE(inst, execflag, regs, r1, b2, effective_addr2);
-    HFPREG_CHECK(r1, regs);
+    HFPODD_CHECK(r1, regs);
     i1 = FPR2I(r1);
 
     /* Get the 2nd operand */
