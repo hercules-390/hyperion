@@ -741,6 +741,7 @@ BYTE    cmdflags;                       /* Command flags             */
 #define CMDFLAGS_RESERVED       0x1F    /* Reserved bits, must be 0  */
 BYTE    buf[256];                       /* Command buffer (ASCIIZ)   */
 BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
+BYTE    *dresp;                         /* Default response (ASCIIZ) */
 
     /* Obtain command address from R1 register */
     cmdaddr = regs->GR_L(r1);
@@ -776,6 +777,7 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
     for (i = 0; i < cmdlen; i++)
         buf[i] = guest_to_host(buf[i]);
     buf[i] = '\0';
+    dresp="";
 
     if(buf && *buf)
     {
@@ -784,8 +786,12 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
         {
             logmsg ("HHC662I ");
             panel_command(buf);
+            dresp="HHC661I Command initiated";
         }
         else
+            dresp="HHC662E Host command processing disabled by configuration statement";
+#else
+            dresp="HHC663E Host command processing not included in engine build";
 #endif
             logmsg ("HHC660I %s\n", buf);
     }
@@ -793,7 +799,7 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
     /* Store the response and set length if response requested */
     if (cmdflags & CMDFLAGS_RESPONSE)
     {
-        strcpy (resp, "HHC661I Command complete");
+        strcpy (resp, dresp);
         resplen = strlen(resp);
         for (i = 0; i < resplen; i++)
             resp[i] = host_to_guest(resp[i]);
