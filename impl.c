@@ -218,16 +218,6 @@ TID paneltid;
     }
 #endif /*defined(OPTION_HTTP_SERVER)*/
 
-    /* Start the console connection thread */
-    if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
-                        console_connection_handler, NULL) )
-    {
-        fprintf (stderr,
-                "HHC135I Cannot create console thread: %s\n",
-                strerror(errno));
-        exit(1);
-    }
-
     /* Start the TOD clock and CPU timer thread */
     if ( create_thread (&sysblk.todtid, &sysblk.detattr,
                         timer_update_thread, NULL) )

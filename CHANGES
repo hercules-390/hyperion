@@ -1,3 +1,4 @@
+29 Apr 2002 Create console thread dynamically - Jan Jaeger
 25 Apr 2002 Hot fix for fthreads "trylock" oversight - Fish
 21 Apr 2002 Fix various backwards merge problems with cckd - Greg Smith
 19 Apr 2002 Fix cckdcdsk return code bug - Fish

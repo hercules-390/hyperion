@@ -654,6 +654,7 @@ typedef struct _SYSBLK {
         ATTR    detattr;                /* Detached thread attribute */
         TID     cnsltid;                /* Thread-id for console     */
         U16     cnslport;               /* Port number for console   */
+        int     cnslcnt;                /* Number of 3270 devices    */
         RADR    mbo;                    /* Measurement block origin  */
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
@@ -1517,8 +1518,7 @@ void *timer_update_thread (void *argp);
 /* Functions in module service.c */
 void scp_command (BYTE *command, int priomsg);
 
-/* Functions in module console.c */
-void *console_connection_handler (void *arg);
+/* Functions in module ckddasd.c */
 off_t   ckd_lseek (DEVBLK *, int, off_t, int);
 ssize_t ckd_read (DEVBLK *, int, void *, size_t);
 ssize_t ckd_write (DEVBLK *, int, const void *, size_t);

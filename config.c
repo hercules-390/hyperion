@@ -862,7 +862,7 @@ BYTE    c;                              /* Work area for sscanf      */
         }
 
 #if defined(OPTION_HTTP_SERVER)
-        /* Parse console port number operand */
+        /* Parse http port number operand */
         if (shttpport != NULL)
         {
             if (sscanf(shttpport, "%hu%c", &httpport, &c) != 1
@@ -1431,18 +1431,9 @@ DEVBLK *dev;                            /* -> Device block           */
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Close file or socket */
-    if (dev->fd > 2)
-    {
+    if ((dev->fd > 2) || dev->console)
         /* Call the device close handler */
         (dev->hnd->close)(dev);
-
-        /* Signal console thread to redrive select */
-        if (dev->console)
-        {
-            dev->console = 0;
-            signal_thread (sysblk.cnsltid, SIGUSR2);
-        }
-    }
 
     /* Release device lock */
     release_lock(&dev->lock);

@@ -973,7 +973,8 @@ BYTE    c;                              /* Character work area       */
 /*-------------------------------------------------------------------*/
 /* NEW CLIENT CONNECTION THREAD                                      */
 /*-------------------------------------------------------------------*/
-static void *connect_client (int *csockp)
+static void *
+connect_client (int *csockp)
 {
 int                     rc;             /* Return code               */
 DEVBLK                 *dev;            /* -> Device block           */
@@ -1162,13 +1163,13 @@ BYTE                    rejmsg[80];     /* Rejection message         */
 /*-------------------------------------------------------------------*/
 /* CONSOLE CONNECTION AND ATTENTION HANDLER THREAD                   */
 /*-------------------------------------------------------------------*/
-void *console_connection_handler (void *arg)
+static void *
+console_connection_handler (void *arg)
 {
-int                     rc;             /* Return code               */
+int                     rc = 0;         /* Return code               */
 int                     lsock;          /* Socket for listening      */
 int                     csock;          /* Socket for conversation   */
 struct sockaddr_in      server;         /* Server address structure  */
-int                     term_flag=0;    /* Termination flag          */
 fd_set                  readset;        /* Read bit map for select   */
 int                     maxfd;          /* Highest fd for select     */
 int                     optval;         /* Argument for setsockopt   */
@@ -1206,7 +1207,7 @@ BYTE                    unitstat;       /* Status after receive data */
     server.sin_port = htons(server.sin_port);
 
     /* Attempt to bind the socket to the port */
-    while (1)
+    while (sysblk.cnslcnt)
     {
         rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
 
@@ -1236,7 +1237,7 @@ BYTE                    unitstat;       /* Status after receive data */
             sysblk.cnslport);
 
     /* Handle connection requests and attention interrupts */
-    while (term_flag == 0) {
+    while (sysblk.cnslcnt) {
 
         /* Initialize the select parameters */
         maxfd = lsock;
@@ -1366,15 +1367,53 @@ BYTE                    unitstat;       /* Status after receive data */
     /* Close the listening socket */
     close (lsock);
 
+    logmsg ("HHC609I Console connection thread terminated\n");
+
     return NULL;
 
 } /* end function console_connection_handler */
 
 
+static int
+console_initialise()
+{
+    if(!(sysblk.cnslcnt++))
+    {
+        if ( create_thread (&sysblk.cnsltid, &sysblk.detattr,
+                            console_connection_handler, NULL) )
+        {
+            logmsg ("HHC135I Cannot create console thread: %s\n",
+                    strerror(errno));
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+static void
+console_remove(DEVBLK *dev)
+{
+    if(dev->fd > 2)
+        close (dev->fd);
+    dev->fd = -1;
+
+    /* Reset device dependent flags */
+    dev->connected = 0;
+    dev->console = 0;
+
+    if(!sysblk.cnslcnt--)
+        logmsg("console_remove() error\n");
+
+    signal_thread (sysblk.cnsltid, SIGUSR2);
+}
+
+
 /*-------------------------------------------------------------------*/
 /* INITIALIZE THE 3270 DEVICE HANDLER                                */
 /*-------------------------------------------------------------------*/
-int loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+static int
+loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
     /* Indicate that this is a console device */
     dev->console = 1;
@@ -1398,14 +1437,15 @@ int loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->devid[6] = 0x02;
     dev->numdevid = 7;
 
-    return 0;
+    return console_initialise();
 } /* end function loc3270_init_handler */
 
 
 /*-------------------------------------------------------------------*/
 /* QUERY THE 3270 DEVICE DEFINITION                                  */
 /*-------------------------------------------------------------------*/
-void loc3270_query_device (DEVBLK *dev, BYTE **class,
+static void
+loc3270_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -1423,14 +1463,10 @@ void loc3270_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* CLOSE THE 3270 DEVICE HANDLER                                     */
 /*-------------------------------------------------------------------*/
-int loc3270_close_device ( DEVBLK *dev )
+static int
+loc3270_close_device ( DEVBLK *dev )
 {
-    /* Close the device file */
-    close (dev->fd);
-    dev->fd = -1;
-
-    /* Reset device dependent flags */
-    dev->connected = 0;
+    console_remove(dev);
 
     return 0;
 } /* end function loc3270_close_device */
@@ -1439,7 +1475,8 @@ int loc3270_close_device ( DEVBLK *dev )
 /*-------------------------------------------------------------------*/
 /* INITIALIZE THE 1052/3215 DEVICE HANDLER                           */
 /*-------------------------------------------------------------------*/
-int constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
+static int
+constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
     /* Indicate that this is a console device */
     dev->console = 1;
@@ -1463,14 +1500,16 @@ int constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->devid[6] = 0x00;
     dev->numdevid = 7;
 
-    return 0;
+    return console_initialise();
+
 } /* end function constty_init_handler */
 
 
 /*-------------------------------------------------------------------*/
 /* QUERY THE 1052/3215 DEVICE DEFINITION                             */
 /*-------------------------------------------------------------------*/
-void constty_query_device (DEVBLK *dev, BYTE **class,
+static void
+constty_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
 
@@ -1488,14 +1527,10 @@ void constty_query_device (DEVBLK *dev, BYTE **class,
 /*-------------------------------------------------------------------*/
 /* CLOSE THE 1052/3215 DEVICE HANDLER                                */
 /*-------------------------------------------------------------------*/
-int constty_close_device ( DEVBLK *dev )
+static int
+constty_close_device ( DEVBLK *dev )
 {
-    /* Close the device file */
-    close (dev->fd);
-    dev->fd = -1;
-
-    /* Reset device dependent flags */
-    dev->connected = 0;
+    console_remove(dev);
 
     return 0;
 } /* end function constty_close_device */
@@ -1680,7 +1715,8 @@ int     woff = 0;                       /* Current offset in buffer  */
 /*-------------------------------------------------------------------*/
 /* EXECUTE A 3270 CHANNEL COMMAND WORD                               */
 /*-------------------------------------------------------------------*/
-void loc3270_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+static void
+loc3270_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
@@ -2092,7 +2128,8 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
 /*-------------------------------------------------------------------*/
 /* EXECUTE A 1052/3215 CHANNEL COMMAND WORD                          */
 /*-------------------------------------------------------------------*/
-void constty_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
+static void
+constty_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual )
 {
