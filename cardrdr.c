@@ -235,7 +235,12 @@ int     fc;                             /* File counter              */
 
         if (!sockdev)
         {
-            if (access(argv[0], R_OK | F_OK) != 0)
+            /* Check for specification of no file mounted on reader */
+            if (dev->filename[0] == '*')
+            {
+                dev->filename[0] = '\0';
+            }
+            else if (access(argv[0], R_OK | F_OK) != 0)
             {
                 logmsg (_("HHCRD010E Unable to access file \"%s\": %s\n"),
                     argv[0], strerror(errno));
@@ -292,7 +297,7 @@ static void cardrdr_query_device (DEVBLK *dev, BYTE **class,
     *class = "RDR";
 
     snprintf (buffer, buflen, "%s%s%s%s%s%s%s%s",
-        dev->filename,
+        ((dev->filename[0] == '\0') ? "*"          : (char *)dev->filename),
         (dev->bs ?                    " sockdev"   : ""),
         (dev->multifile ?             " multifile" : ""),
         (dev->ascii ?                 " ascii"     : ""),
@@ -356,7 +361,7 @@ static int clear_cardrdr ( DEVBLK *dev )
         dev->multifile = 0;
         dev->ascii = 0;
         dev->ebcdic = 0;
-        dev->rdreof = 0;
+//        dev->rdreof = 0;
         dev->trunc = 0;
         dev->autopad = 0;
     }
