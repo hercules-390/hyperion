@@ -266,7 +266,8 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 	raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
 
-        SIE_TRANSLATE(&raddr2,ACCTYPE_READ,regs);
+        if (raddr2 < regs->mainsize)
+            SIE_TRANSLATE(&raddr2,ACCTYPE_READ,regs);
 
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
@@ -338,7 +339,8 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 	raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
 
-        SIE_TRANSLATE(&raddr1,ACCTYPE_READ,regs);
+        if (raddr1 < regs->mainsize)
+            SIE_TRANSLATE(&raddr1,ACCTYPE_READ,regs);
 
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
