@@ -641,6 +641,7 @@ int     devprio;                        /* Device thread priority    */
 int     asnandlxreuse;          /* ASN And LX Reuse option   */
 #endif
 BYTE    pgmprdos;                       /* Program product OS OK     */
+DEVBLK *dev;                            /* -> Device Block           */
 char   *sdevnum;                        /* -> Device number string   */
 char   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
@@ -1738,8 +1739,6 @@ char **orig_newargv;
             thread_id(), getpid(), getpgrp(),
             getpriority(PRIO_PGRP,0));
 
-    config_storage(mainsize, xpndsize);
-
 #if defined(OPTION_SHARED_DEVICES)
     sysblk.shrdport = shrdport;
 #endif /*defined(OPTION_SHARED_DEVICES)*/
@@ -1851,39 +1850,8 @@ char **orig_newargv;
     /* Set the panel refresh rate */
     sysblk.panrate = panrate;
 
-#if defined(_FEATURE_REGION_RELOCATE)
-    /* Initialize base zone storage view (SIE compat) */
-    for(i = 0; i < FEATURE_SIE_MAXZONES; i++)
-    {
-        sysblk.zpb[i].mso = 0;
-        sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> 20;
-        if(sysblk.xpndsize)
-        {
-            sysblk.zpb[i].eso = 0;
-            sysblk.zpb[i].esl = (sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
-        }
-        else
-        {
-            sysblk.zpb[i].eso = -1;
-            sysblk.zpb[i].esl = -1;
-        }
-    }
-#endif
-
     /* Gabor Hoffer (performance option) */
     copy_opcode_tables();
-
-    /* Initialize dummy regs.
-     * Dummy regs are used by the panel or gui when the target cpu
-     * (sysblk.pcpu) is not configured (ie cpu_thread not started).
-     */
-    sysblk.dummyregs.mainstor = sysblk.mainstor;
-    sysblk.dummyregs.storkeys = sysblk.storkeys;
-    sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
-    sysblk.dummyregs.todoffset = sysblk.todoffset;
-    sysblk.dummyregs.dummy = 1;
-    initial_cpu_reset (&sysblk.dummyregs);
-    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
     /* Parse the device configuration statements */
     while(1)
@@ -1979,6 +1947,49 @@ char **orig_newargv;
             break;
 
     } /* end while(1) */
+
+    /* Configure storage now.  We do this after processing the device
+     * statements so the fork()ed hercifc process won't require as much
+     * virtual storage.  We will need to update all the devices too.
+     */
+    config_storage(mainsize, xpndsize);
+    for (dev = sysblk.firstdev; dev; dev = dev->nextdev)
+    {
+        dev->mainstor = sysblk.mainstor;
+        dev->storkeys = sysblk.storkeys;
+        dev->mainlim = sysblk.mainsize - 1;
+    }
+
+#if defined(_FEATURE_REGION_RELOCATE)
+    /* Initialize base zone storage view (SIE compat) */
+    for(i = 0; i < FEATURE_SIE_MAXZONES; i++)
+    {
+        sysblk.zpb[i].mso = 0;
+        sysblk.zpb[i].msl = (sysblk.mainsize - 1) >> 20;
+        if(sysblk.xpndsize)
+        {
+            sysblk.zpb[i].eso = 0;
+            sysblk.zpb[i].esl = (sysblk.xpndsize * XSTORE_PAGESIZE - 1) >> 20;
+        }
+        else
+        {
+            sysblk.zpb[i].eso = -1;
+            sysblk.zpb[i].esl = -1;
+        }
+    }
+#endif
+
+    /* Initialize dummy regs.
+     * Dummy regs are used by the panel or gui when the target cpu
+     * (sysblk.pcpu) is not configured (ie cpu_thread not started).
+     */
+    sysblk.dummyregs.mainstor = sysblk.mainstor;
+    sysblk.dummyregs.storkeys = sysblk.storkeys;
+    sysblk.dummyregs.mainlim = sysblk.mainsize - 1;
+    sysblk.dummyregs.todoffset = sysblk.todoffset;
+    sysblk.dummyregs.dummy = 1;
+    initial_cpu_reset (&sysblk.dummyregs);
+    sysblk.dummyregs.arch_mode = sysblk.arch_mode;
 
 #ifdef OPTION_SELECT_KLUDGE
     /* Release the dummy file descriptors */
