@@ -1258,7 +1258,7 @@ int             x=O_EXCL;               /* Open option               */
     /* Just allocate file space if `dasdcopy' bit is on */
     if (dasdcopy && comp == 0xff)
     {
-        off_t sz = ((end - start + 1) * heads * trksize) + CKDDASD_DEVHDR_SIZE;
+        off_t sz = (off_t)((off_t)(end - start + 1) * heads * trksize) + (off_t)CKDDASD_DEVHDR_SIZE;
         rc = ftruncate (fd, sz);
         if (rc < 0)
         {

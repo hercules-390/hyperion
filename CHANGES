@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+10 Aug 2004 Fix dasdcopy to large ckd file - Fish & Greg
 04 Aug 2004 PIC1 all ALRF only instructions when ALRF disabled
             Also fix code limit for ESTA - Ivan Warren
 30 Jul 2004 SCSI tape mods part 1: Auto-detect SCSI tape mounts - Fish
