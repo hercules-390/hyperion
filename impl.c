@@ -237,7 +237,7 @@ TID     rctid;                          /* RC file thread identifier */
 #if defined(OPTION_DYNAMIC_LOAD)
         case 'p':
             if(optarg)
-                hdl_setpath(optarg);
+                hdl_setpath(strdup(optarg));
             break;
         case 'l':
             {

@@ -91,7 +91,7 @@ char *fullname;
 void *ret;
 int fulllen = 0;
 
-    if(filename)
+    if(filename && *filename != '/' && *filename != '.')
     {
         if(hdl_modpath && *hdl_modpath)
         {

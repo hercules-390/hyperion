@@ -657,7 +657,7 @@ BYTE **orig_newargv;
 #if defined(OPTION_DYNAMIC_LOAD)
             if (!strcasecmp (keyword, "modpath"))
             {
-                hdl_setpath(operand);
+                hdl_setpath(strdup(operand));
             }
             else
             if (!strcasecmp (keyword, "ldmod"))
