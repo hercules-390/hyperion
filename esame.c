@@ -5756,6 +5756,50 @@ int     i;                              /* Integer work areas        */
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
+/* E306 CVBY  - Convert to Binary (Long Displacement)          [RXY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(convert_to_binary_y)
+{
+U64     dreg;                           /* 64-bit result accumulator */
+int     r1;                             /* Value of R1 field         */
+int     b2;                             /* Base of effective addr    */
+VADR    effective_addr2;                /* Effective address         */
+int     ovf;                            /* 1=overflow                */
+int     dxf;                            /* 1=data exception          */
+BYTE    dec[8];                         /* Packed decimal operand    */
+
+    RXY(inst, execflag, regs, r1, b2, effective_addr2);
+
+    /* Fetch 8-byte packed decimal operand */
+    ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
+
+    /* Convert 8-byte packed decimal to 64-bit signed binary */
+    packed_to_binary (dec, 8-1, &dreg, &ovf, &dxf);
+
+    /* Data exception if invalid digits or sign */
+    if (dxf)
+    {
+        regs->dxc = DXC_DECIMAL;
+        ARCH_DEP(program_interrupt) (regs, PGM_DATA_EXCEPTION);
+    }
+
+    /* Overflow if result exceeds 31 bits plus sign */
+    if ((S64)dreg < -2147483648LL || (S64)dreg > 2147483647LL)
+       ovf = 1;
+
+    /* Store low-order 32 bits of result into R1 register */
+    regs->GR_L(r1) = dreg & 0xFFFFFFFF;
+
+    /* Program check if overflow (R1 contains rightmost 32 bits) */
+    if (ovf)
+        ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_DIVIDE_EXCEPTION);
+
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
 /* EB57 XIY   - Exclusive Or Immediate (Long Displacement)     [SIY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(exclusive_or_immediate_y)
@@ -6435,7 +6479,6 @@ BYTE    tbyte;                          /* Work byte                 */
         (inst,execflag,regs); }
  UNDEF_INST(compare_and_swap_y)
  UNDEF_INST(compare_double_and_swap_y)
- UNDEF_INST(convert_to_binary_y)
  UNDEF_INST(convert_to_decimal_y)
  UNDEF_INST(load_real_address_y)
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
