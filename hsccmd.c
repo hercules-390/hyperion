@@ -22,6 +22,17 @@
 
 #include "opcode.h"
 
+#if defined(OPTION_FISHIO)
+#include "w32chan.h"
+#endif /* defined(OPTION_FISHIO) */
+
+#if defined(FISH_HANG)
+extern  int   bFishHangAtExit;  // (set to true when shutting down)
+extern  void  FishHangInit(char* pszFileCreated, int nLineCreated);
+extern  void  FishHangReport();
+extern  void  FishHangAtExit();
+#endif // defined(FISH_HANG)
+
 ///////////////////////////////////////////////////////////////////////
 /* quit or exit command - terminate the emulator */
 
@@ -361,6 +372,7 @@ int tt32stats_cmd(char* cmdline, int argc, char *argv[])
     int      rc = 0;
     U16      devnum;
     DEVBLK*  dev;
+    BYTE     c;
 
     UNREFERENCED(cmdline);
 
