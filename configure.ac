@@ -440,4 +440,4 @@ AH_TEMPLATE([PKGDATADIR],
 AH_TEMPLATE([LOCALEDIR],
             [Directory where to find NLS data])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile intl/Makefile])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile])

@@ -1,0 +1,2625 @@
+# NL.PO    Hercules dutch messages
+# This file is put in the public domain.
+# Jan Jaeger <jj@septa.nl>, 2002.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: hercules 2.16\n"
+"POT-Creation-Date: 2002-05-13 19:58+0200\n"
+"PO-Revision-Date: 2002-05-10 16:16+0200\n"
+"Last-Translator: Jan Jaeger <jj@septa.nl>\n"
+"Language-Team: none <test@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: fbadasd.c:638
+#, c-format
+msgid "         numblks %d, device size %d\n"
+msgstr "        Blöcke: %d, Gesamtgröße %d\n"
+
+#: panel.c:2236
+#, c-format
+msgid "     (client %s (%s) connected)\n"
+msgstr "    (verbunden mit %s (%s))\n"
+
+#: panel.c:2241
+msgid "     (no one currently connected)\n"
+msgstr "    (zur Zeit keine Verbindung)\n"
+
+#: cckd2ckd.c:446 cckd2ckd.c:476 cckd2ckd.c:494 cckd2ckd.c:677 cckd2ckd.c:693
+msgid "    null track substituted\n"
+msgstr "   durch leere Spur ersetzt\n"
+
+#: cckd2ckd.c:732
+msgid "    null track substituted       \n"
+msgstr "   durch leere Spur ersetzt     \n"
+
+#: cckd2ckd.c:725
+msgid "    track truncated              \n"
+msgstr "   Spur abgeschnitten           \n"
+
+#: panel.c:1550
+msgid " (NULL)\n"
+msgstr ""
+
+#: panel.c:2664
+#, c-format
+msgid "%4.4X  synchronous: %12lld asynchronous: %12lld\n"
+msgstr "%4.4X  synchron: %12lld    asynchron: %12lld\n"
+
+#: ckddasd.c:852
+#, c-format
+msgid ""
+"%4.4X ckddasd: invalid track header for cyl %d head %d  %2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+msgstr ""
+"%4.4X ckddasd: Kopfdaten ungültig für Zyl.  %d Spur %d  %2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+
+#: channel.c:658
+#, c-format
+msgid "%4.4X: Clear subchannel\n"
+msgstr ""
+
+#: channel.c:326
+#, c-format
+msgid "%4.4X: Halt I/O\n"
+msgstr ""
+
+#: channel.c:761
+#, c-format
+msgid "%4.4X: Halt subchannel\n"
+msgstr ""
+
+#: channel.c:860
+#, c-format
+msgid "%4.4X: Halt subchannel: cc=0\n"
+msgstr ""
+
+#: channel.c:774
+#, c-format
+msgid "%4.4X: Halt subchannel: cc=1\n"
+msgstr ""
+
+#: channel.c:784
+#, c-format
+msgid "%4.4X: Halt subchannel: cc=2\n"
+msgstr ""
+
+#: channel.c:919
+#, c-format
+msgid "%4.4X: Resume subchannel: cc=0\n"
+msgstr ""
+
+#: channel.c:887
+#, c-format
+msgid "%4.4X: Resume subchannel: cc=1\n"
+msgstr ""
+
+#: channel.c:900
+#, c-format
+msgid "%4.4X: Resume subchannel: cc=2\n"
+msgstr ""
+
+#: channel.c:228
+#, c-format
+msgid "%4.4X: Test I/O\n"
+msgstr ""
+
+#: channel.c:97
+#, c-format
+msgid "%4.4X:CCW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s\n"
+msgstr ""
+
+#: channel.c:1396
+#, c-format
+msgid ""
+"%4.4X:IDAW=%16.16llX Len=%4.4hX\n"
+"%4.4X:---------------------%s\n"
+msgstr ""
+
+#: channel.c:1391
+#, c-format
+msgid "%4.4X:IDAW=%8.8X Len=%3.3hX%s\n"
+msgstr ""
+
+#: channel.c:125
+#, c-format
+msgid ""
+"%4.4X:SCSW=%2.2X%2.2X%2.2X%2.2X Stat=%2.2X%2.2X Count=%2.2X%2.2X  CCW=%2.2X%"
+"2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: channel.c:2466
+#, c-format
+msgid ""
+"%4.4X:Sense=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %"
+"2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: channel.c:2481
+#, c-format
+msgid "%4.4X:Sense=%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
+msgstr ""
+
+#: channel.c:110
+#, c-format
+msgid "%4.4X:Stat=%2.2X%2.2X Count=%2.2X%2.2X  CCW=%2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: channel.c:2460
+#, c-format
+msgid "%4.4X:Stat=%2.2X%2.2X Count=%4.4X %s\n"
+msgstr ""
+
+#: cckd2ckd.c:605
+#, c-format
+msgid "%c %3d%% track %6d of %6d"
+msgstr "%c %3d%% Spur %6d von %6d"
+
+#: panel.c:2012
+#, c-format
+msgid "%d bytes read from %s\n"
+msgstr "%d Bytes gelesen von %s\n"
+
+#: panel.c:2537
+#, c-format
+msgid "%d devices processed\n"
+msgstr "%d Geräte bearbeitet\n"
+
+#: panel.c:2731
+#, c-format
+msgid "%s command invalid. Enter ? for help\n"
+msgstr "%s is ungültig.  ? zeigt Hilfetext\n"
+
+#: panel.c:4285
+#, c-format
+msgid "%sInstruction fetch error\n"
+msgstr "%sFehler beim Lesen der Instruktion\n"
+
+#: version.c:148
+#, c-format
+msgid "%sVersion %s\n"
+msgstr "%sVersion %s\n"
+
+#: cckd2ckd.c:473
+#, c-format
+msgid "*** decompress error for track %d: %d\n"
+msgstr "*** Fehler beim De-Komprimieren für Spur %d: %d\n"
+
+#: cckd2ckd.c:674
+#, c-format
+msgid "*** track %d HA validation error !! %2.2x%2.2x%2.2x%2.2x%2.2x\n"
+msgstr "*** Spur %d HA Validierungsfehler!  %2.2x%2.2x%2.2x%2.2x%2.2x\n"
+
+#: cckd2ckd.c:717
+#, c-format
+msgid ""
+"*** track %d R%d validation error !! %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+msgstr ""
+"*** Spur %d R%d Validierungsfehler! %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+
+#: cckd2ckd.c:688
+#, c-format
+msgid ""
+"*** track %d R0 validation error !! %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+msgstr ""
+"*** track %d R0 Validierungsfehler! %2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%"
+"2.2x\n"
+
+#: cckd2ckd.c:743
+#, c-format
+msgid "*** track %d size mismatch !! size found %d, expected %d\n"
+msgstr "*** Spur %d hat falsche Länge!. Gefunden: %d, erwartet %d\n"
+
+#: cckd2ckd.c:443
+#, c-format
+msgid "*** uncompress error for track %d: %d\n"
+msgstr "*** Fehler beim Entpacken für Spur %d: %d\n"
+
+#: cckd2ckd.c:491
+#, c-format
+msgid "*** unknown compression for track %d: %d\n"
+msgstr "*** Komprimierungsverfahren für Spur %d: %d ist unbekannt\n"
+
+#: panel.c:2042
+msgid "Address greater than mainstore size. \n"
+msgstr "Adresse ist höher als Speicherobergrenze\n"
+
+#: panel.c:1274
+#, c-format
+msgid "Architecture mode = %s\n"
+msgstr "Modus: %s\n"
+
+#: panel.c:1310
+#, c-format
+msgid "Architecture successfully set to %s mode.\n"
+msgstr "Modus umgeschaltef auf %s\n"
+
+#: panel.c:1515
+#, c-format
+msgid "Broadcast mask %8.8X code %d\n"
+msgstr ""
+
+#: version.c:160
+msgid "Build information:\n"
+msgstr "Versionsdaten\n"
+
+#: version.c:156
+#, c-format
+msgid "Erstellt am %s um %s\n"
+msgstr ""
+
+#: panel.c:1733
+#, c-format
+msgid "CCW stepping is now %s for device %4.4X\n"
+msgstr "CCW Einzelschritt ist %s für %4.4X\n"
+
+#: panel.c:1729
+#, c-format
+msgid "CCW tracing is now %s for device %4.4X\n"
+msgstr "CCW Ablaufverfolgung ist %s für %4.4X\n"
+
+#: panel.c:1708
+#, c-format
+msgid "CKD KEY trace is now %s\n"
+msgstr "CKD KEY Ablaufverfolgung ist %s\n"
+
+#: cpu.c:1058
+#, c-format
+msgid "CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"
+msgstr "CPU MASK MISMATCH: %8.8X - %8.8X. Letzter Befehl war:\n"
+
+#: cpu.c:577
+#, c-format
+msgid "CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%16.16llX\n"
+msgstr ""
+
+#: cpu.c:577
+#, c-format
+msgid "CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=%8.8X\n"
+msgstr ""
+
+#: panel.c:2166
+#, c-format
+msgid "CPU%4.4X not configured\n"
+msgstr "CPU%4.4X nicht konfiguriert\n"
+
+#: cpu.c:482
+#, c-format
+msgid "CPU%4.4X: %s CODE=%4.4X ILC=%d\n"
+msgstr ""
+
+#: panel.c:1493
+#, c-format
+msgid "CPU%4.4X: CPU %swaiting for interlock\n"
+msgstr ""
+
+#: panel.c:1496
+#, c-format
+msgid "CPU%4.4X: CPU interlock %sheld\n"
+msgstr ""
+
+#: panel.c:1499
+#, c-format
+msgid "CPU%4.4X: CPU state is %s\n"
+msgstr "CPU%4.4X: CPU Status: %s\n"
+
+#: panel.c:1481
+#, c-format
+msgid "CPU%4.4X: CPU timer %spending\n"
+msgstr ""
+
+#: panel.c:1474
+#, c-format
+msgid "CPU%4.4X: CPUint=%8.8X (r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n"
+msgstr ""
+
+#: machchk.c:349
+#, c-format
+msgid "CPU%4.4X: Check-Stop due to host error: %s\n"
+msgstr "CPU%4.4X: Ceck-stop.  Host Fehler: %s\n"
+
+#: panel.c:1478
+#, c-format
+msgid "CPU%4.4X: Clock comparator %spending\n"
+msgstr ""
+
+#: panel.c:1508
+#, c-format
+msgid "CPU%4.4X: Connected to channelset %4.4X\n"
+msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
+
+#: cpu.c:1236
+#, c-format
+msgid "CPU%4.4X: Disabled wait state\n"
+msgstr ""
+
+#: panel.c:1490
+#, c-format
+msgid "CPU%4.4X: Emergency signal %spending\n"
+msgstr ""
+
+#: panel.c:1487
+#, c-format
+msgid "CPU%4.4X: External call %spending\n"
+msgstr ""
+
+#: panel.c:1484
+#, c-format
+msgid "CPU%4.4X: Interval timer %spending\n"
+msgstr ""
+
+#: machchk.c:310
+#, c-format
+msgid "CPU%4.4X: Machine check due to host error: %s\n"
+msgstr ""
+
+#: panel.c:1505
+#, c-format
+msgid "CPU%4.4X: No channelset connected\n"
+msgstr "CPU%4.4X: Mit keinem Channel-Set verbunden\n"
+
+#: cpu.c:726
+#, c-format
+msgid "CPU%4.4X: Program interrupt loop: "
+msgstr ""
+
+#: panel.c:2057
+#, c-format
+msgid "Cannot open %s: %s\n"
+msgstr "Kann %s nicht öffnen: %s\n"
+
+#: panel.c:2069
+#, c-format
+msgid "Cannot read %s: %s\n"
+msgstr ""
+
+#: panel.c:2524
+msgid "Command must be `sf+', `sf-', `sf=' or `sfd'\n"
+msgstr ""
+
+#: panel.c:1552
+#, c-format
+msgid "DEV%4.4X\n"
+msgstr ""
+
+#: panel.c:1543
+#, c-format
+msgid "DEV%4.4X: CRW pending\n"
+msgstr ""
+
+#: panel.c:1539
+#, c-format
+msgid "DEV%4.4X: I/O pending\n"
+msgstr ""
+
+#: panel.c:1541
+#, c-format
+msgid "DEV%4.4X: PCI pending\n"
+msgstr ""
+
+#: channel.c:1504
+#, c-format
+msgid "DEV%4.4X: attention\n"
+msgstr ""
+
+#: channel.c:1494
+#, c-format
+msgid "DEV%4.4X: attention signalled\n"
+msgstr ""
+
+#: panel.c:1545
+#, c-format
+msgid "DEV%4.4X: lock held\n"
+msgstr ""
+
+#: panel.c:1841
+msgid "Deleting breakpoint\n"
+msgstr ""
+
+#: panel.c:1872
+#, c-format
+msgid "Device %4.4X %s\n"
+msgstr ""
+
+#: panel.c:2290
+#, c-format
+msgid "Device %4.4X busy or interrupt pending\n"
+msgstr ""
+
+#: panel.c:2310
+#, c-format
+msgid "Device %4.4X initialized\n"
+msgstr ""
+
+#: panel.c:1187 panel.c:1249
+#, c-format
+msgid "Device %4.4X is not a printer device\n"
+msgstr ""
+
+#: panel.c:2469
+#, c-format
+msgid "Device number %4.4X is not a cckd device\n"
+msgstr ""
+
+#: panel.c:1179 panel.c:1241 panel.c:1722 panel.c:1865 panel.c:2269
+#: panel.c:2464 panel.c:2550 panel.c:2571
+#, c-format
+msgid "Device number %4.4X not found\n"
+msgstr ""
+
+#: panel.c:2263 panel.c:2332 panel.c:2361 panel.c:2379 panel.c:2387
+#: panel.c:2565
+#, c-format
+msgid "Device number %s is invalid\n"
+msgstr ""
+
+#: opcode.c:670
+msgid "Dummy instruction: "
+msgstr ""
+
+#: httpserv.c:65
+#, c-format
+msgid "ERROR: Cannot open %s: %s\n"
+msgstr ""
+
+#: external.c:342
+#, c-format
+msgid "External interrupt: CPU timer=%16.16llX\n"
+msgstr ""
+
+#: external.c:331
+msgid "External interrupt: Clock comparator\n"
+msgstr ""
+
+#: external.c:218
+msgid "External interrupt: Interrupt key\n"
+msgstr ""
+
+#: external.c:359
+msgid "External interrupt: Interval timer\n"
+msgstr ""
+
+#: panel.c:2092
+msgid "Finished loading TEXT deck file\n"
+msgstr ""
+
+#: panel.c:1673
+#, c-format
+msgid "Frame %8.8X marked %s\n"
+msgstr ""
+
+#: config.c:164
+#, c-format
+msgid "HHC001I Error reading file %s line %d: %s\n"
+msgstr ""
+
+#: config.c:183
+#, c-format
+msgid "HHC002I File %s line %d is too long\n"
+msgstr ""
+
+#: config.c:335
+#, c-format
+msgid "HHC003I Cannot open file %s: %s\n"
+msgstr ""
+
+#: config.c:372
+#, c-format
+msgid "HHC004I No device records in file %s\n"
+msgstr ""
+
+#: config.c:549
+#, c-format
+msgid "HHC005I Error in %s line %d: Incorrect number of operands\n"
+msgstr ""
+
+#: config.c:540
+#, c-format
+msgid "HHC006I Error in %s line %d: Unrecognized keyword %s\n"
+msgstr ""
+
+#: config.c:601
+#, c-format
+msgid "HHC007I Error in %s line %d: %s is not a valid serial number\n"
+msgstr ""
+
+#: config.c:614
+#, c-format
+msgid "HHC008I Error in %s line %d: %s is not a valid CPU model\n"
+msgstr ""
+
+#: ipl.c:268
+#, c-format
+msgid "HHC008I Load from %s failed: %s\n"
+msgstr ""
+
+#: config.c:627
+#, c-format
+msgid "HHC009I Error in %s line %d: Invalid main storage size %s\n"
+msgstr ""
+
+#: config.c:640
+#, c-format
+msgid "HHC010I Error in %s line %d: Invalid expanded storage size %s\n"
+msgstr ""
+
+#: ipl.c:460
+#, c-format
+msgid "HHC010I load_main: %s: %s\n"
+msgstr ""
+
+#: config.c:653
+#, c-format
+msgid "HHC011I Error in %s line %d: Invalid console port number %s\n"
+msgstr ""
+
+#: ipl.c:469
+msgid "HHC011I load_main: terminated at end of mainstor\n"
+msgstr ""
+
+#: config.c:665
+#, c-format
+msgid "HHC012I Error in %s line %d: Invalid CPU thread priority %s\n"
+msgstr ""
+
+#: config.c:894
+#, c-format
+msgid "HHC012I Error in %s line %d: Invalid I/O delay value: %s\n"
+msgstr ""
+
+#: config.c:686
+#, c-format
+msgid "HHC012I Error in %s line %d: Invalid number of CPUs %s\n"
+msgstr ""
+
+#: config.c:715
+#, c-format
+msgid "HHC013I Error in %s line %d: Load parameter %s exceeds 8 characters\n"
+msgstr ""
+
+#: config.c:737
+#, c-format
+msgid ""
+"HHC014I Error in %s line %d: %s is not a valid system epoch\n"
+"patch config.c to expand the table\n"
+msgstr ""
+
+#: config.c:751
+#, c-format
+msgid "HHC015I Error in %s line %d: %s is not a valid timezone offset\n"
+msgstr ""
+
+#: config.c:841
+#, c-format
+msgid "HHC016I Error in %s line %d: Invalid Max device threads %s\n"
+msgstr ""
+
+#: config.c:765
+#, c-format
+msgid "HHC016I Error in %s line %d: Invalid TOD clock drag factor %s\n"
+msgstr ""
+
+#: config.c:828
+#, c-format
+msgid "HHC017I Error in %s line %d: Unknown OS tailor specification %s\n"
+msgstr ""
+
+#: config.c:583
+#, c-format
+msgid ""
+"HHC017I Error in %s line %d: Unknown or unsupported ARCHMODE specification %"
+"s\n"
+msgstr ""
+
+#: config.c:706
+msgid "HHC019I Vector Facility Support not configured\n"
+msgstr ""
+
+#: config.c:910
+#, c-format
+msgid "HHC020I Cannot obtain %dMB main storage: %s\n"
+msgstr ""
+
+#: config.c:919
+#, c-format
+msgid "HHC021I Cannot obtain storage key array: %s\n"
+msgstr ""
+
+#: config.c:941
+#, c-format
+msgid "HHC022I Cannot obtain %dMB expanded storage: %s\n"
+msgstr ""
+
+#: ipl.c:74
+msgid "HHC023I Device not connected to channelset\n"
+msgstr ""
+
+#: config.c:1104
+#, c-format
+msgid "HHC030I Error in %s line %d: Missing device number or device type\n"
+msgstr ""
+
+#: config.c:1113
+#, c-format
+msgid "HHC031I Error in %s line %d: %s is not a valid device number\n"
+msgstr ""
+
+#: config.c:1133
+#, c-format
+msgid "HHC033I Message pipe creation failed: %s\n"
+msgstr ""
+
+#: config.c:1237
+#, c-format
+msgid "HHC034I Cannot create CPU%4.4X thread: %s\n"
+msgstr ""
+
+#: config.c:1147
+#, c-format
+msgid "HHC034I Message pipe open failed: %s\n"
+msgstr ""
+
+#: config.c:1282
+#, c-format
+msgid "HHC035I device %4.4X already exists\n"
+msgstr ""
+
+#: config.c:1292
+#, c-format
+msgid "HHC036I Device type %s not recognized\n"
+msgstr ""
+
+#: config.c:1307
+#, c-format
+msgid "HHC037I Cannot obtain device block for device %4.4X: %s\n"
+msgstr ""
+
+#: config.c:1353
+#, c-format
+msgid "HHC038I Initialization failed for device %4.4X\n"
+msgstr ""
+
+#: config.c:1370
+#, c-format
+msgid "HHC039I Cannot obtain buffer for device %4.4X: %s\n"
+msgstr ""
+
+#: config.c:1427
+#, c-format
+msgid "HHC040I device %4.4X does not exist\n"
+msgstr ""
+
+#: config.c:1455
+#, c-format
+msgid "HHC041I device %4.4X detached\n"
+msgstr ""
+
+#: config.c:1473
+#, c-format
+msgid "HHC042I device %4.4X does not exist\n"
+msgstr ""
+
+#: config.c:1480
+#, c-format
+msgid "HHC043I device %4.4X already exists\n"
+msgstr ""
+
+#: config.c:1510
+#, c-format
+msgid "HHC044I device %4.4X defined as %4.4X\n"
+msgstr ""
+
+#: config.c:789
+#, c-format
+msgid "HHC045I Error in %s line %d: Invalid panel refresh rate %s\n"
+msgstr ""
+
+#: config.c:1167
+msgid ""
+"HHC046W PGMPRDOS LICENSED specified.\n"
+"        Licensed program product operating systems are enabled.\n"
+"        You are responsible for meeting all conditions of your software "
+"license.\n"
+"\n"
+msgstr ""
+
+#: config.c:866
+#, c-format
+msgid "HHC047I Error in %s line %d: Invalid program product OS permission %s\n"
+msgstr ""
+
+#: codepage.c:187
+#, c-format
+msgid "HHC050I CodePage conversion table %s is not defined\n"
+msgstr "HHC050I CodePage conversie tabel %s is niet gedefinieerd\n"
+
+#: ipl.c:63
+#, c-format
+msgid "HHC103I Device %4.4X not in configuration\n"
+msgstr ""
+
+#: ipl.c:121
+#, c-format
+msgid "HHC105I %s mode IPL failed: CSW status=%2.2X%2.2X\n"
+msgstr ""
+
+#: ipl.c:123
+msgid "HHC106I Sense="
+msgstr ""
+
+#: ipl.c:169
+#, c-format
+msgid ""
+"HHC107I IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
+"2.2X\n"
+msgstr ""
+
+#: ipl.c:316
+#, c-format
+msgid ""
+"HHC109I IPL failed: Invalid IPL PSW: %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%"
+"2.2X\n"
+msgstr ""
+
+#: console.c:1385
+#, c-format
+msgid "HHC135I Cannot create console thread: %s\n"
+msgstr ""
+
+#: cpu.c:997
+#, c-format
+msgid "HHC136I Cannot create timer thread: %s\n"
+msgstr ""
+
+#: tapedev.c:280
+#, c-format
+msgid "HHC201I Error opening %s: %s\n"
+msgstr ""
+
+#: tapedev.c:313
+#, c-format
+msgid "HHC202I Error seeking to offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:890
+#, c-format
+msgid "HHC203I End of file (uninitialized tape) at block %8.8X in file %s\n"
+msgstr ""
+
+#: tapedev.c:342
+#, c-format
+msgid "HHC203I End of file (uninitialized tape) at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:329
+#, c-format
+msgid "HHC203I Error reading block header at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:355
+#, c-format
+msgid ""
+"HHC204I Unexpected end of file in block header at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:1121
+#, c-format
+msgid ""
+"HHC205I Error back spacing to previous file at block %8.8X in file %s:\n"
+" %s(%s)\n"
+msgstr ""
+
+#: tapedev.c:1003
+#, c-format
+msgid "HHC205I Error forward spacing at block %8.8X in file %s: %s(%s)\n"
+msgstr ""
+
+#: tapedev.c:1087
+#, c-format
+msgid ""
+"HHC205I Error forward spacing to next file at block %8.8X in file %s: %s(%"
+"s)\n"
+msgstr ""
+
+#: tapedev.c:900 tapedev.c:1054
+#, c-format
+msgid "HHC205I Error reading data block at block %8.8X in file %s: %s(%s)\n"
+msgstr ""
+
+#: tapedev.c:415
+#, c-format
+msgid "HHC205I Error reading data block at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:428
+#, c-format
+msgid ""
+"HHC206I Unexpected end of file in data block at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:483
+#, c-format
+msgid "HHC207I Error seeking to offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:506
+#, c-format
+msgid "HHC208I Error writing block header at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:932
+#, c-format
+msgid "HHC209I Error writing data block at block %8.8X in file %s: %s(%s)\n"
+msgstr ""
+
+#: tapedev.c:525
+#, c-format
+msgid "HHC209I Error writing data block at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:577
+#, c-format
+msgid "HHC210I Error seeking to offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:600
+#, c-format
+msgid "HHC211I Error writing block header at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:963
+#, c-format
+msgid "HHC211I Error writing tape mark at block %8.8X in file %s: %s(%s)\n"
+msgstr ""
+
+#: tapedev.c:1158
+#, c-format
+msgid "HHC214I Error reading status of %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1227
+#, c-format
+msgid "HHC216I Error opening %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1244
+#, c-format
+msgid "HHC217I Error reading status of %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1266
+#, c-format
+msgid "HHC218I %s device type: %s\n"
+msgstr ""
+
+#: tapedev.c:1269
+#, c-format
+msgid "HHC219I %s device type: 0x%lX\n"
+msgstr ""
+
+#: tapedev.c:1279
+#, c-format
+msgid "HHC220I %s tape density: %s\n"
+msgstr ""
+
+#: tapedev.c:1282
+#, c-format
+msgid "HHC221I %s tape density code: 0x%lX\n"
+msgstr ""
+
+#: tapedev.c:1291
+#, c-format
+msgid "HHC223I Error setting attributes for %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1305
+#, c-format
+msgid "HHC224I Error rewinding %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1334
+#, c-format
+msgid "HHC225I Error reading data block from %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1368
+#, c-format
+msgid "HHC226I Error writing data block to %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1400
+#, c-format
+msgid "HHC227I Error writing tapemark to %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1450
+#, c-format
+msgid "HHC228I Forward space block error on %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1516
+#, c-format
+msgid "HHC229I Backspace block error on %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1551
+#, c-format
+msgid "HHC230I Forward space file error on %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1587
+#, c-format
+msgid "HHC231I Backspace file error on %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1639
+#, c-format
+msgid ""
+"HHC232I Invalid filename %s: TDF files must be in the TAPES subdirectory\n"
+msgstr ""
+
+#: tapedev.c:1650
+#, c-format
+msgid "HHC240I Error opening TDF file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1659
+#, c-format
+msgid "HHC241I %s fstat error: %s\n"
+msgstr ""
+
+#: tapedev.c:1670
+#, c-format
+msgid "HHC242I Cannot obtain buffer for TDF file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1680
+#, c-format
+msgid "HHC243I Error reading TDF file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1693
+#, c-format
+msgid "HHC244I %s is not a valid TDF file\n"
+msgstr ""
+
+#: tapedev.c:1710
+#, c-format
+msgid "HHC245I Cannot obtain buffer for TDF array: %s\n"
+msgstr ""
+
+#: tapedev.c:1750
+#, c-format
+msgid "HHC246I Filename or format missing in line %d of file %s\n"
+msgstr ""
+
+#: tapedev.c:1762
+#, c-format
+msgid "HHC247I Filename %s too long in line %d of file %s\n"
+msgstr ""
+
+#: tapedev.c:1801
+#, c-format
+msgid "HHC248I RECSIZE keyword missing in line %d of file %s\n"
+msgstr ""
+
+#: tapedev.c:1814
+#, c-format
+msgid "HHC249I Invalid record size %s in line %d of file %s\n"
+msgstr ""
+
+#: tapedev.c:1828
+#, c-format
+msgid "HHC250I Invalid record format %s in line %d of file %s\n"
+msgstr ""
+
+#: tapedev.c:1876
+#, c-format
+msgid "HHC251I Attempt to access beyond end of tape %s\n"
+msgstr ""
+
+#: tapedev.c:1893
+#, c-format
+msgid "HHC252I Error opening %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1933
+#, c-format
+msgid "HHC253I Error seeking to offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1949
+#, c-format
+msgid "HHC254I Error reading block header at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:1963
+#, c-format
+msgid ""
+"HHC255I Unexpected end of file in block header at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:1989
+#, c-format
+msgid "HHC256I Invalid block header at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:2058
+#, c-format
+msgid "HHC257I Error reading data block at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:2072
+#, c-format
+msgid ""
+"HHC258I Unexpected end of file in data block at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:2113
+#, c-format
+msgid "HHC259I Error seeking to offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:2129
+#, c-format
+msgid "HHC260I Error reading data block at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:2189
+#, c-format
+msgid "HHC261I Error seeking to offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:2247
+#, c-format
+msgid "HHC270I Error reading data block at offset %8.8lX in file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:2261
+#, c-format
+msgid ""
+"HHC271I Unexpected end of file in data block at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:2276
+#, c-format
+msgid "HHC272I Invalid zero length block at offset %8.8lX in file %s\n"
+msgstr ""
+
+#: tapedev.c:2397
+#, c-format
+msgid "HHC273I Error seeking to end of file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:2521
+#, c-format
+msgid "HHC274I Error seeking to end of file %s: %s\n"
+msgstr ""
+
+#: tapedev.c:2689
+#, c-format
+msgid "HHC281I Tape msg %4.4X: %c %s %s\n"
+msgstr ""
+
+#: tapedev.c:3045
+#, c-format
+msgid "HHC283I Data chaining not supported for CCW %2.2X\n"
+msgstr ""
+
+#: tapedev.c:3217 tapedev.c:3636
+#, c-format
+msgid "HHC284I Error rewinding %s: %s\n"
+msgstr ""
+
+#: tapedev.c:3239 tapedev.c:3651
+#, c-format
+msgid "HHC285I Error seeking to start of %s: %s\n"
+msgstr ""
+
+#: tapedev.c:3256 tapedev.c:3668
+#, c-format
+msgid "HHC285I Error seeking to start of %s: %s(%s)\n"
+msgstr ""
+
+#: tapedev.c:3290
+#, c-format
+msgid "HHC286I Error unloading %s: %s\n"
+msgstr ""
+
+#: tapedev.c:3302
+#, c-format
+msgid "HHC287I Tape %4.4X unloaded\n"
+msgstr ""
+
+#: tapedev.c:829
+#, c-format
+msgid "HHC290I Error opening %s: %s(%s)\n"
+msgstr ""
+
+#: fbadasd.c:222
+#, c-format
+msgid "HHC311I Seek error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:250
+#, c-format
+msgid "HHC312I Read error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:253
+#, c-format
+msgid "HHC313I Unexpected end of file in %s\n"
+msgstr ""
+
+#: fbadasd.c:325
+#, c-format
+msgid "HHC314I Write error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:343
+#, c-format
+msgid "HHC315I Write error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:410
+#, c-format
+msgid "HHC316I Read error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:413
+#, c-format
+msgid "HHC317I Unexpected end of filein %s\n"
+msgstr ""
+
+#: fbadasd.c:550
+#, c-format
+msgid "HHC318I Seek error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:803
+#, c-format
+msgid "HHC321I Seek error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:821
+#, c-format
+msgid "HHC322I Write error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:838
+#, c-format
+msgid "HHC323I Read error in file %s: %s\n"
+msgstr ""
+
+#: fbadasd.c:841
+#, c-format
+msgid "HHC324I Unexpected end of file in %s\n"
+msgstr ""
+
+#: ckddasd.c:207
+msgid "HHC351I File name missing or invalid\n"
+msgstr "HHC351I Bestandsnaam niet opgegeven of ongeldig\n"
+
+#: ckddasd.c:316
+#, c-format
+msgid "HHC351I parameter %d is invalid: %s\n"
+msgstr ""
+
+#: ckddasd.c:340
+#, c-format
+msgid "HHC352I %s open error: %s\n"
+msgstr ""
+
+#: ckddasd.c:364
+#, c-format
+msgid "HHC353I %s fstat error: %s\n"
+msgstr ""
+
+#: ckddasd.c:374 ckddasd.c:411
+#, c-format
+msgid "HHC354I %s read error: %s\n"
+msgstr ""
+
+#: ckddasd.c:416
+#, c-format
+msgid "HHC355I %s CCKD header incomplete\n"
+msgstr ""
+
+#: ckddasd.c:377
+#, c-format
+msgid "HHC355I %s CKD header incomplete\n"
+msgstr ""
+
+#: ckddasd.c:387
+#, c-format
+msgid "HHC356I %s CKD header invalid\n"
+msgstr ""
+
+#: ckddasd.c:396
+#, c-format
+msgid "HHC356I %s Only 1 CCKD file allowed\n"
+msgstr ""
+
+#: ckddasd.c:427
+#, c-format
+msgid "HHC357I %s CKD file out of sequence\n"
+msgstr ""
+
+#: ckddasd.c:473
+#, c-format
+msgid "HHC358I %s heads=%d trklen=%d, expected heads=%d trklen=%d\n"
+msgstr ""
+
+#: ckddasd.c:486
+#, c-format
+msgid "HHC359I %s CKD header inconsistent with file size\n"
+msgstr ""
+
+#: ckddasd.c:494
+#, c-format
+msgid "HHC360I %s CKD header high cylinder incorrect\n"
+msgstr ""
+
+#: ckddasd.c:520
+#, c-format
+msgid "HHC361I %s exceeds maximum %d CKD files\n"
+msgstr ""
+
+#: ckddasd.c:542
+#, c-format
+msgid "HHC362I %4.4X device type %4.4X not found in dasd table\n"
+msgstr ""
+
+#: ckddasd.c:355
+#, c-format
+msgid "HHC362I %s not in a single file for shadowing\n"
+msgstr ""
+
+#: ckddasd.c:551
+#, c-format
+msgid "HHC363I %4.4X control unit %s not found in dasd table\n"
+msgstr ""
+
+#: cardrdr.c:148 cardrdr.c:217
+#, c-format
+msgid "HHC401I File name too long (max=%ud): \"%s\"\n"
+msgstr "HHC401I Bestandsnaam \"%2$s\" te lang (maximum=%1$ud)\n"
+
+#: cardrdr.c:155 cardrdr.c:226
+#, c-format
+msgid "HHC402I Unable to access file \"%s\": %s\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: cardrdr.c:205
+msgid "HHC403I 'multifile' option ignored\n"
+msgstr "HHC403I 'multifile' optie niet gebruikt\n"
+
+#: cardrdr.c:186
+msgid "HHC403I Only one filename (sock_spec) allowed for socket devices\n"
+msgstr "HHC403I Maar een bestandsnaam toegestaan voor socket apparaten\n"
+
+#: cardrdr.c:59 cardrdr.c:165
+msgid "HHC403I Out of memory\n"
+msgstr "HHC403I Niet genoeg geheugen\n"
+
+#: cardrdr.c:178
+msgid "HHC403I Specify 'ascii' or 'ebcdic' (or neither) but not both\n"
+msgstr "HHC403I Specificeer 'ascii' of 'ebcdic' (of niets) maar niet beide\n"
+
+#: cardrdr.c:198
+#, c-format
+msgid "HHC403I defaulting to 'ascii' for socket device %4.4X\n"
+msgstr "HHC403I standaard waarde 'ascii' aan socket apparaat %4.4X toegekend\n"
+
+#: cardrdr.c:437
+#, c-format
+msgid "HHC404I Error opening file %s: %s\n"
+msgstr "HHC404I Fout %2$s bij openen van bestand \"%1$s\"\n"
+
+#: cardrdr.c:461
+#, c-format
+msgid "HHC405I Error reading file %s: %s\n"
+msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: cardrdr.c:494
+#, c-format
+msgid "HHC406I Seek error in file %s: %s\n"
+msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
+
+#: cardrdr.c:561
+#, c-format
+msgid "HHC407I Error reading file %s: %s\n"
+msgstr "HHC407I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: cardrdr.c:564
+#, c-format
+msgid "HHC408I Unexpected end of file on %s\n"
+msgstr "HHC40I Onverwacht einde van bestand \"%s\"\n"
+
+#: cardrdr.c:628
+#, c-format
+msgid "HHC409I Error reading file %s: %s\n"
+msgstr "HHC409I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: cardrdr.c:656
+#, c-format
+msgid "HHC410I Card image exceeds %d bytes in file %s\n"
+msgstr "HHC410I Ponskaart %d bytes te groot in bestand \"%s\"\n"
+
+#: panel.c:4665
+#, c-format
+msgid "HHC411I Socket pathname \"%s\" exceeds limit of %d\n"
+msgstr ""
+
+#: panel.c:4676 panel.c:4769
+#, c-format
+msgid "HHC412I Error creating socket for %s: %s\n"
+msgstr ""
+
+#: printer.c:40
+#, c-format
+msgid "HHC413I Error opening file %s: %s\n"
+msgstr ""
+
+#: panel.c:4689 panel.c:4781
+#, c-format
+msgid "HHC413I Failed to bind or listen on socket %s: %s\n"
+msgstr ""
+
+#: printer.c:187
+#, c-format
+msgid "HHC414I %4.4X Error writing to %s: %s\n"
+msgstr ""
+
+#: panel.c:4739
+#, c-format
+msgid "HHC414I Failed to determine IP address from %s\n"
+msgstr ""
+
+#: printer.c:56
+#, c-format
+msgid "HHC415I %4.4X device initialization error: pipe: %s\n"
+msgstr ""
+
+#: panel.c:4543
+#, c-format
+msgid "HHC415I bind_device malloc() failed for device %4.4X\n"
+msgstr ""
+
+#: panel.c:4552
+#, c-format
+msgid "HHC415I bind_device safe_strdup() failed for device %4.4X\n"
+msgstr ""
+
+#: printer.c:65
+#, c-format
+msgid "HHC416I %4.4X device initialization error: fork: %s\n"
+msgstr ""
+
+#: panel.c:4610
+#, c-format
+msgid "HHC416I Client %s (%s) still connected to device %4.4X (%s)\n"
+msgstr ""
+
+#: panel.c:4532
+#, c-format
+msgid "HHC416I Device %4.4X already bound to socket %s\n"
+msgstr ""
+
+#: panel.c:4581
+#, c-format
+msgid "HHC416I Device %4.4X bound to socket %s\n"
+msgstr ""
+
+#: panel.c:4601
+#, c-format
+msgid "HHC416I Device %4.4X not bound to any socket\n"
+msgstr ""
+
+#: panel.c:4757
+#, c-format
+msgid "HHC417I Failed to determine port number from %s\n"
+msgstr ""
+
+#: printer.c:74
+#, c-format
+msgid "HHC417I pipe receiver (pid=%d) starting for %4.4X\n"
+msgstr ""
+
+#: printer.c:86
+#, c-format
+msgid "HHC418I %4.4X dup2 error: %s\n"
+msgstr ""
+
+#: panel.c:4912
+#, c-format
+msgid "HHC418I Connect to device %4.4X (%s) failed: %s\n"
+msgstr ""
+
+#: panel.c:4899
+#, c-format
+msgid ""
+"HHC418I Connect to device %4.4X (%s) rejected; client %s (%s) still "
+"connected\n"
+msgstr ""
+
+#: panel.c:4888
+#, c-format
+msgid ""
+"HHC418I Connect to device %4.4X (%s) rejected; device busy or interrupt "
+"pending\n"
+msgstr ""
+
+#: cardrdr.c:299
+#, c-format
+msgid "HHC419E Close error on file \"%s\": %s\n"
+msgstr "HHC419E Fout %2$s bij sluiten van bestand \"%1$s\"\n"
+
+#: printer.c:100
+#, c-format
+msgid "HHC419I %4.4X dup2 error: %s\n"
+msgstr ""
+
+#: printer.c:109
+#, c-format
+msgid "HHC420I %4.4X dup2 error: %s\n"
+msgstr ""
+
+#: panel.c:4938
+#, c-format
+msgid "HHC420I %s (%s) connected to device %4.4X (%s)\n"
+msgstr ""
+
+#: cardrdr.c:308
+#, c-format
+msgid "HHC420I %s (%s) disconnected from device %4.4X (%s)\n"
+msgstr "HHC420I %s (%s) afgesloten van apparaat %4.4X (%s)\n"
+
+#: panel.c:4943
+#, c-format
+msgid "HHC420I <unknown> connected to device %4.4X (%s)\n"
+msgstr ""
+
+#: cardpch.c:54
+msgid "HHC421I File name missing or invalid\n"
+msgstr "HHC421I Bestandsnaam niet opgegeven of ongeldig\n"
+
+#: printer.c:152
+#, c-format
+msgid "HHC422I %4.4X Unable to execute %s: %s\n"
+msgstr ""
+
+#: panel.c:4631
+#, c-format
+msgid "HHC422I Device %4.4X unbound from socket %s\n"
+msgstr ""
+
+#: cardpch.c:89
+#, c-format
+msgid "HHC422I Invalid argument: %s\n"
+msgstr "HHC422I Optie %s niet geldig\n"
+
+#: cardpch.c:164
+#, c-format
+msgid "HHC423I Error opening file %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: cardpch.c:34
+#, c-format
+msgid "HHC423I Error writing to %s: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: printer.c:146
+#, c-format
+msgid "HHC423I pipe receiver (pid=%d) terminating for %4.4X\n"
+msgstr ""
+
+#: panel.c:1255
+#, c-format
+msgid "HHC424I Printer %4.4X stopped\n"
+msgstr ""
+
+#: panel.c:1197
+#, c-format
+msgid "HHC425%c Printer %4.4X %s\n"
+msgstr ""
+
+#: panel.c:2879
+#, c-format
+msgid "HHC426I Pausing .RC file processing for %d seconds...\n"
+msgstr ""
+
+#: panel.c:2881
+msgid "HHC427I Resuming .RC file processing...\n"
+msgstr ""
+
+#: panel.c:2875
+msgid "HHC428W Ignoring invalid .RC file pause statement\n"
+msgstr ""
+
+#: panel.c:2897
+#, c-format
+msgid "HHC429E I/O reading .RC file: %s\n"
+msgstr ""
+
+#: panel.c:2895
+msgid "HHC429I EOF reached on .RC file.\n"
+msgstr ""
+
+#: panel.c:2831
+msgid "HHC430I: RC file processing thread started...\n"
+msgstr ""
+
+#: panel.c:2837
+#, c-format
+msgid "HHC431E: RC file buffer malloc failed: %s\n"
+msgstr ""
+
+#: panel.c:2825
+#, c-format
+msgid "HHC432E: RC file open failed: %s\n"
+msgstr ""
+
+#: console.c:1181
+#, c-format
+msgid "HHC600I Console connection thread started: tid=%8.8lX, pid=%d\n"
+msgstr ""
+
+#: console.c:1216
+#, c-format
+msgid "HHC601I Waiting for port %u to become free\n"
+msgstr ""
+
+#: console.c:1236
+#, c-format
+msgid "HHC602I Waiting for console connection on port %u\n"
+msgstr ""
+
+#: console.c:685
+#, c-format
+msgid "HHC603I Device %4.4X connection closed by client %s\n"
+msgstr ""
+
+#: console.c:1132
+#, c-format
+msgid "HHC604I Client %s connected to %4.4X device %4.4X\n"
+msgstr ""
+
+#: console.c:848
+#, c-format
+msgid "HHC606I Device %4.4X connection closed by client %s\n"
+msgstr ""
+
+#: console.c:1370
+msgid "HHC609I Console connection thread terminated\n"
+msgstr ""
+
+#: timer.c:279
+#, c-format
+msgid "HHC610I Timer thread started: tid=%8.8lX, pid=%d\n"
+msgstr ""
+
+#: cpu.c:1177
+#, c-format
+msgid "HHC611I CPU%4.4X store status completed.\n"
+msgstr ""
+
+#: timer.c:359
+msgid "HHC612I Timer thread ended\n"
+msgstr ""
+
+#: cpu.c:962
+#, fuzzy, c-format
+msgid "HHC620I CPU%4.4X thread started: tid=%8.8lX, pid=%d, priority=%d\n"
+msgstr "HHC620I CPU%4.4X thread gestart: tid=%8.8lX, pid=%d, prioriteit=%d\n"
+
+#: cpu.c:955
+#, c-format
+msgid "HHC621I CPU thread set priority %d failed: %s\n"
+msgstr ""
+
+#: cpu.c:984
+#, c-format
+msgid "HHC623I CPU%4.4X thread already started\n"
+msgstr "HHC623I CPU%4.4X thread al gestart\n"
+
+#: cpu.c:1032
+#, fuzzy, c-format
+msgid "HHC624I CPU%4.4X thread ended: tid=%8.8lX, pid=%d\n"
+msgstr "HHC624I CPU%4.4X thread geeindigd: tid=%8.8lX, pid=%d\n"
+
+#: cpu.c:968
+#, c-format
+msgid "HHC630I CPU%4.4X Architecture Mode %s\n"
+msgstr "HHC630I CPU%4.4X Architectuur Modus %s\n"
+
+#: cpu.c:1021
+#, c-format
+msgid "HHC631I CPU%4.4X Architecture Mode set to %s\n"
+msgstr ""
+
+#: panel.c:2985
+#, c-format
+msgid "HHC650I Control panel thread started: tid=%8.8lX, pid=%d\n"
+msgstr "HHC650I Controle paneel thread gestart: tid=%8.8lX, pid=%d\n"
+
+#: service.c:1425
+msgid "HHC701I SYSCONS interface active\n"
+msgstr "HHC701I SYSCONS interface actief\n"
+
+#: service.c:1427
+msgid "HHC702I SYSCONS interface inactive\n"
+msgstr "HHC702I SYSCONS interface inactief\n"
+
+#: service.c:496
+msgid "HHC703I SCP not receiving priority messages\n"
+msgstr "HHC703I SCP ontvangt geen prioriteits berichten\n"
+
+#: service.c:503
+msgid "HHC704I SCP not receiving commands\n"
+msgstr "HHC704I SCP ontvangt geen commando's\n"
+
+#: service.c:510
+msgid "HHC705I No SCP command\n"
+msgstr "HHC705I Geen SCP commando\n"
+
+#: service.c:521
+msgid "HHC706I Service Processor busy\n"
+msgstr ""
+
+#: service.c:1228
+#, c-format
+msgid "HHC707I CPI: System Type: %s Name: %s Sysplex: %s\n"
+msgstr ""
+
+#: channel.c:1694 channel.c:1712
+#, c-format
+msgid "HHC760I %4.4X create_thread error: %s"
+msgstr "HHC760I %4.4X create_thread fout: %s"
+
+#: panel.c:1953
+#, c-format
+msgid "HHCxxxI invalid range: %8.8X-%8.8X\n"
+msgstr ""
+
+#: panel.c:1967
+#, c-format
+msgid "HHCxxxI savecore error writing to %s: %s\n"
+msgstr ""
+
+#: panel.c:1962
+#, c-format
+msgid "HHCxxxI savecore: %s: %s\n"
+msgstr ""
+
+#: panel.c:1969
+#, c-format
+msgid "HHCxxxI savecore: unable to save %d bytes\n"
+msgstr ""
+
+#: config.c:880
+#, c-format
+msgid "HHS002E Error in %s line %d: Invalid HTTP port number %s\n"
+msgstr ""
+
+#: config.c:528
+#, c-format
+msgid "HHS008E Error in %s line %d: Userid, but no password given %s\n"
+msgstr ""
+
+#: config.c:514
+#, c-format
+msgid "HHS009E Error in %s line %d: Unrecognized argument %s\n"
+msgstr ""
+
+#: httpserv.c:661
+#, c-format
+msgid "HHS010E http_request create_thread: %s\n"
+msgstr ""
+
+#: httpserv.c:652
+#, c-format
+msgid "HHS011E fdopen: %s\n"
+msgstr ""
+
+#: httpserv.c:646
+#, c-format
+msgid "HHS012E accept: %s\n"
+msgstr ""
+
+#: httpserv.c:634
+#, c-format
+msgid "HHS013E select: %s\n"
+msgstr ""
+
+#: httpserv.c:609
+#, c-format
+msgid "HHS014I Waiting for HTTP requests on port %u\n"
+msgstr ""
+
+#: httpserv.c:605
+#, c-format
+msgid "HHS015E listen: %s\n"
+msgstr ""
+
+#: httpserv.c:596
+#, c-format
+msgid "HHS016E bind: %s\n"
+msgstr ""
+
+#: httpserv.c:589
+#, c-format
+msgid "HHS017I Waiting for port %u to become free\n"
+msgstr ""
+
+#: httpserv.c:566
+#, c-format
+msgid "HHS018E socket: %s\n"
+msgstr ""
+
+#: httpserv.c:557
+#, c-format
+msgid "HHS019I HTTP listener thread started: tid=%8.8lX, pid=%d\n"
+msgstr ""
+
+#: httpserv.c:63
+#, c-format
+msgid "HHS021E html_include: Cannot open %s: %s\n"
+msgstr ""
+
+#: channel.c:371
+msgid "HIO modification executed CC=1\n"
+msgstr "HIO modificatie uitgevoerd CC=1\n"
+
+#: panel.c:2720
+#, c-format
+msgid "I/O delay = %d\n"
+msgstr ""
+
+#: panel.c:1534
+#, c-format
+msgid "I/O interrupt %spending\n"
+msgstr ""
+
+#: cpu.c:818
+#, c-format
+msgid ""
+"I/O interrupt code=%4.4X CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: cpu.c:840
+#, c-format
+msgid "I/O interrupt code=%8.8X parm=%8.8X\n"
+msgstr ""
+
+#: cpu.c:842
+#, c-format
+msgid "I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"
+msgstr ""
+
+#: panel.c:1548
+msgid "I/O interrupt queue: "
+msgstr ""
+
+#: panel.c:2307
+#, c-format
+msgid "Initialization failed for device %4.4X\n"
+msgstr ""
+
+#: panel.c:1694
+#, c-format
+msgid "Instruction stepping is now %s\n"
+msgstr ""
+
+#: panel.c:1684
+#, c-format
+msgid "Instruction tracing is now %s\n"
+msgstr ""
+
+#: panel.c:1528
+#, c-format
+msgid "Int lock %sheld\n"
+msgstr ""
+
+#: panel.c:1460
+msgid "Interrupt checking debug mode set to "
+msgstr ""
+
+#: panel.c:1893
+msgid "Interrupt key depressed\n"
+msgstr ""
+
+#: panel.c:2716
+#, c-format
+msgid "Invalid I/O delay value: %s\n"
+msgstr ""
+
+#: panel.c:1302
+#, c-format
+msgid "Invalid architecture mode %s\n"
+msgstr "Ongeldige achitectuur modus %s\n"
+
+#: panel.c:1171 panel.c:1233 panel.c:2443 panel.c:2458
+msgid "Invalid device number\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: panel.c:1667
+#, c-format
+msgid "Invalid frame address %8.8X\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: panel.c:2623
+msgid "Invalid max device threads value (must be -1 to n)\n"
+msgstr ""
+
+#: panel.c:822
+#, c-format
+msgid "Invalid operand: %s\n"
+msgstr "Ongeldig operand: %s\n"
+
+#: panel.c:834
+#, c-format
+msgid "Invalid range: %s\n"
+msgstr "Ongeldig bereik: %s\n"
+
+#: panel.c:798
+#, c-format
+msgid "Invalid value: %s\n"
+msgstr "Ongeldige waarde: %s\n"
+
+#: panel.c:1531
+#, c-format
+msgid "Ioq lock %sheld\n"
+msgstr ""
+
+#: panel.c:2093
+#, c-format
+msgid "Last 'TXT' record had address: %3.3X\n"
+msgstr "Laatste 'TXT' record had adres: %3.3X\n"
+
+#: panel.c:2008
+#, c-format
+msgid "Loading %s to location %x \n"
+msgstr ""
+
+#: general1.c:3264
+msgid "MVCL destructive overlap: "
+msgstr ""
+
+#: cpu.c:899 machchk.c:224
+#, c-format
+msgid "Machine Check code=%16.16llu\n"
+msgstr ""
+
+#: panel.c:1518
+#, c-format
+msgid "Machine check interrupt %spending\n"
+msgstr ""
+
+#: panel.c:1526
+#, c-format
+msgid "Main lock %sheld\n"
+msgstr ""
+
+#: panel.c:2644
+#, c-format
+msgid ""
+"Max device threads %d current %d most %d waiting %d total I/Os queued %d\n"
+msgstr ""
+
+#: panel.c:2436
+msgid "Missing device number\n"
+msgstr "Geen apparaat nummer\n"
+
+#: panel.c:2449
+msgid "No cckd devices found\n"
+msgstr ""
+
+#: panel.c:2669
+msgid "No synchronous I/O devices found\n"
+msgstr ""
+
+#: panel.c:2497
+msgid "Operand must be `merge' or `nomerge'\n"
+msgstr ""
+
+#: cpu.c:1664
+#, c-format
+msgid "PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"
+msgstr ""
+
+#: cpu.c:1671
+#, c-format
+msgid ""
+"PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%"
+"2.2X%2.2X\n"
+msgstr ""
+
+#: panel.c:1046
+msgid ""
+"Panel command summary:\n"
+"t+=trace, s+=step, t+ckd=CKD_KEY trace, t+devn=CCW trace, s+devn=CCW step\n"
+"g=go, psw=display psw, pr=prefix reg\n"
+"gpr=general purpose regs, cr=control regs\n"
+"ar=access regs, fpr=floating point regs\n"
+"v addr[.len] or v addr-addr = display virtual storage\n"
+"r addr[.len] or r addr-addr = display real storage\n"
+"v addr=value or r addr=value = alter storage\n"
+"b addr = set breakpoint, b- = delete breakpoint\n"
+"i devn=I/O attention interrupt, ext=external interrupt\n"
+"ds devn=display subchannel\n"
+"ipending [{+|-}debug] = display pending interrupts\n"
+"pgmtrace [-]intcode = trace program interrupts\n"
+"stop=stop CPU, start=start CPU, restart=PSW restart\n"
+"startall/stopall=start/stop all CPUs\n"
+"store=store status\n"
+"loadcore filename [address] = load core image from file\n"
+"savecore filename [start/*] [end/*] = save core image to file\n"
+"loadtext filename [address] = load text deck from file\n"
+"loadparm xxxxxxxx=set IPL parameter, ipl devn=IPL\n"
+"archmode xxxxxxxx=set architecture mode\n"
+"devinit devn arg [arg...] = reinitialize device\n"
+"devlist=list devices\n"
+"attach devn type [arg...] = initialize device\n"
+"detach devn = remove device\n"
+"define olddevn newdevn = rename device\n"
+"devtmax[=n] = report or set maximum device threads\n"
+"              (-1=per i/o, 0=unlimited, 1-n=limit)\n"
+".xxx=scp command, !xxx=scp priority messsage\n"
+"sh xxx = shell command\n"
+"f-addr=mark frame unusable, f+addr=mark frame usable\n"
+"toddrag nnn = display or set TOD clock drag factor\n"
+"panrate [fast|slow|nnnn] = display or set panel refresh rate\n"
+"quit/exit=terminate, Esc=alternate panel display, ?=Help\n"
+msgstr ""
+
+#: panel.c:1625
+#, c-format
+msgid "Panel refresh rate = %d millisecond(s)\n"
+msgstr ""
+
+#: panel.c:2479
+#, c-format
+msgid "Processing device %4.4X\n"
+msgstr ""
+
+#: panel.c:2405
+#, c-format
+msgid "Program interrupt number %s is invalid\n"
+msgstr ""
+
+#: panel.c:2412
+#, c-format
+msgid "Program interrupt number out of range (%4.4X)\n"
+msgstr ""
+
+#: panel.c:1796
+msgid "Restart key depressed\n"
+msgstr "Restart key ingedrukt\n"
+
+#: hostinfo.c:57
+#, c-format
+msgid "Running on %s %s%s %s %s\n"
+msgstr "Draaiend op %s %s%s %s %s\n"
+
+#: config.c:673
+msgid "SETPRIO: Hercules not running as setuid root\n"
+msgstr ""
+
+#: cpu.c:477 panel.c:4255
+msgid "SIE: "
+msgstr ""
+
+#: panel.c:1958
+#, c-format
+msgid "Saveing location %8.8X-%8.8X to %s\n"
+msgstr ""
+
+#: panel.c:1520
+#, c-format
+msgid "Service signal %spending\n"
+msgstr ""
+
+#: panel.c:1851
+#, c-format
+msgid "Setting breakpoint at %16.16llX\n"
+msgstr ""
+
+#: panel.c:2505
+msgid "Shadow file name not specified\n"
+msgstr ""
+
+#: panel.c:1522
+#, c-format
+msgid "Signaling facility %sbusy\n"
+msgstr ""
+
+#: panel.c:1512
+#, c-format
+msgid "Started mask %8.8X waiting mask %8.8X\n"
+msgstr ""
+
+#: channel.c:287
+msgid "TIO modification executed CC=1\n"
+msgstr "TIO modificatie uitgevoerd CC=1\n"
+
+#: panel.c:1600
+#, c-format
+msgid "TOD clock drag factor = %d\n"
+msgstr ""
+
+#: panel.c:1524
+#, c-format
+msgid "TOD lock %sheld\n"
+msgstr ""
+
+#: panel.c:2671
+#, c-format
+msgid "TOTAL synchronous: %12lld asynchronous: %12lld  %3lld%%\n"
+msgstr ""
+
+#: panel.c:2157
+#, c-format
+msgid "Target CPU %s is invalid\n"
+msgstr ""
+
+#: panel.c:2484 panel.c:2510 panel.c:2518
+#, c-format
+msgid "Unexpected operand: %s\n"
+msgstr ""
+
+#: cpu.c:255
+msgid "Wait state PSW loaded: "
+msgstr ""
+
+#: panel.c:1283
+msgid "archmode: All CPU's must be stopped to change architecture\n"
+msgstr ""
+
+#: panel.c:1874
+msgid "attention request raised"
+msgstr ""
+
+#: panel.c:1203 panel.c:1877
+msgid "attention request rejected"
+msgstr ""
+
+#: panel.c:2224
+msgid "busy "
+msgstr ""
+
+#: panel.c:1201 panel.c:1875
+msgid "busy or interrupt pending"
+msgstr ""
+
+#: cckd2ckd.c:354 cckd2ckd.c:541 cckd2ckd.c:549
+#, c-format
+msgid "cckd2ckd: %s close error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:247 cckd2ckd.c:321 cckd2ckd.c:407
+#, c-format
+msgid "cckd2ckd: %s lseek error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:380
+#, c-format
+msgid "cckd2ckd: %s open error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:169 cckd2ckd.c:196 cckd2ckd.c:218 cckd2ckd.c:254 cckd2ckd.c:328
+#: cckd2ckd.c:415
+#, c-format
+msgid "cckd2ckd: %s read error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:390 cckd2ckd.c:513
+#, c-format
+msgid "cckd2ckd: %s write error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:525
+msgid "cckd2ckd: Terminated due to errors\n"
+msgstr ""
+
+#: cckd2ckd.c:304
+#, c-format
+msgid "cckd2ckd: buffer malloc error: %s\n"
+msgstr ""
+
+#: cckd2ckd.c:555
+#, c-format
+msgid "cckd2ckd: copy %s\n"
+msgstr ""
+
+#: cckd2ckd.c:160
+#, fuzzy, c-format
+msgid "cckd2ckd: error opening input file %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: cckd2ckd.c:176
+#, c-format
+msgid "cckd2ckd: input file %s is not a compressed ckd file\n"
+msgstr ""
+
+#: cckdcdsk.c:123
+msgid ""
+"cckdcdsk [-level] [-ro] file-name\n"
+"\n"
+"       where level is a digit 0 - 3:\n"
+"         0  --  minimal checking\n"
+"         1  --  normal  checking\n"
+"         3  --  maximal checking\n"
+"\n"
+"       ro open file readonly, no repairs\n"
+msgstr ""
+
+#: cckdcdsk.c:81
+#, fuzzy, c-format
+msgid "cckdcdsk: error opening file %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: cckdswap.c:98
+#, c-format
+msgid "cckdswap: %s changed from %s to %s\n"
+msgstr ""
+
+#: cckdswap.c:73
+#, c-format
+msgid "cckdswap: %s is not a compressed ckd file\n"
+msgstr ""
+
+#: cckdswap.c:65 cckdswap.c:82
+#, c-format
+msgid "cckdswap: %s read error: %s\n"
+msgstr ""
+
+#: cckdswap.c:94
+msgid "cckdswap: error during swap\n"
+msgstr ""
+
+#: cckdswap.c:56
+#, fuzzy, c-format
+msgid "cckdswap: error opening %s: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: channel.c:1906
+#, c-format
+msgid "channel: Device %4.4X attention completed\n"
+msgstr ""
+
+#: channel.c:1970
+#, c-format
+msgid "channel: Device %4.4X clear completed\n"
+msgstr ""
+
+#: channel.c:2018
+#, c-format
+msgid "channel: Device %4.4X halt completed\n"
+msgstr ""
+
+#: channel.c:1865
+#, c-format
+msgid "channel: Device %4.4X initial status interrupt\n"
+msgstr ""
+
+#: channel.c:2197
+#, c-format
+msgid "channel: Device %4.4X resumed\n"
+msgstr ""
+
+#: channel.c:2183
+#, c-format
+msgid "channel: Device %4.4X suspended\n"
+msgstr ""
+
+#: ckd2cckd.c:265
+#, c-format
+msgid "ckd2cckd %s CKD header high cylinder incorrect\n"
+msgstr ""
+
+#: ckd2cckd.c:292
+#, c-format
+msgid "ckd2cckd %s exceeds maximum %d CKD files\n"
+msgstr ""
+
+#: ckd2cckd.c:208
+#, c-format
+msgid "ckd2cckd %s read error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:306
+#, c-format
+msgid ""
+"ckd2cckd %s unable to lookup DASD table entry for devtype 0x%2.2x cyls %d\n"
+msgstr ""
+
+#: ckd2cckd.c:229
+#, c-format
+msgid "ckd2cckd: %s CKD file out of sequence\n"
+msgstr ""
+
+#: ckd2cckd.c:212
+#, c-format
+msgid "ckd2cckd: %s CKD header incomplete\n"
+msgstr ""
+
+#: ckd2cckd.c:256
+#, c-format
+msgid "ckd2cckd: %s CKD header inconsistent with file size\n"
+msgstr ""
+
+#: ckd2cckd.c:648 ckd2cckd.c:661
+#, c-format
+msgid "ckd2cckd: %s close error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:198
+#, c-format
+msgid "ckd2cckd: %s fstat error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:429 ckd2cckd.c:450 ckd2cckd.c:586 ckd2cckd.c:604 ckd2cckd.c:623
+#, c-format
+msgid "ckd2cckd: %s lseek error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:189 ckd2cckd.c:323
+#, fuzzy, c-format
+msgid "ckd2cckd: %s open error: %s\n"
+msgstr "HHC423I Fout %2$s bij openen bestand \"%1$s\"\n"
+
+#: ckd2cckd.c:471
+#, c-format
+msgid "ckd2cckd: %s read error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:343 ckd2cckd.c:369 ckd2cckd.c:379 ckd2cckd.c:436 ckd2cckd.c:458
+#: ckd2cckd.c:551 ckd2cckd.c:593 ckd2cckd.c:611 ckd2cckd.c:631
+#, c-format
+msgid "ckd2cckd: %s write error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:570
+msgid "ckd2cckd: Terminated due to errors\n"
+msgstr ""
+
+#: ckd2cckd.c:389
+#, c-format
+msgid "ckd2cckd: buffer malloc error: %s\n"
+msgstr ""
+
+#: ckd2cckd.c:670
+#, c-format
+msgid "ckd2cckd: copy %s\n"
+msgstr ""
+
+#: ckd2cckd.c:220
+#, c-format
+msgid "ckd2cckd: input file %s is not a ckd file\n"
+msgstr ""
+
+#: ckddasd.c:625
+#, c-format
+msgid "ckddasd: %4.4X cache hits %d, misses %d\n"
+msgstr ""
+
+#: ckddasd.c:531
+#, c-format
+msgid "ckddasd: %s cyls=%d heads=%d tracks=%d trklen=%d\n"
+msgstr ""
+
+#: ckddasd.c:459
+#, c-format
+msgid "ckddasd: %s seq=%d cyls=%d-%d\n"
+msgstr ""
+
+#: ckddasd.c:1630
+#, c-format
+msgid "ckddasd: Data chaining not supported for CCW %2.2X\n"
+msgstr ""
+
+#: ckddasd.c:1515
+msgid "ckddasd: Write KD orientation error\n"
+msgstr ""
+
+#: ckddasd.c:1557
+msgid "ckddasd: Write data orientation error\n"
+msgstr ""
+
+#: ckddasd.c:1178 ckddasd.c:1296 ckddasd.c:1346
+msgid "ckddasd: attempt to read past end of track\n"
+msgstr ""
+
+#: ckddasd.c:739
+#, c-format
+msgid "ckddasd: calloc error for cache table size %d: %s\n"
+msgstr ""
+
+#: ckddasd.c:821
+#, c-format
+msgid "ckddasd: error reading trk %d: lseek error: %s\n"
+msgstr ""
+
+#: ckddasd.c:834
+#, c-format
+msgid "ckddasd: error reading trk %d: read error: %s\n"
+msgstr ""
+
+#: ckddasd.c:681 ckddasd.c:913
+#, c-format
+msgid "ckddasd: error writing trk %d: lseek error: %s\n"
+msgstr ""
+
+#: ckddasd.c:695 ckddasd.c:926
+#, c-format
+msgid "ckddasd: error writing trk %d: write error: %s\n"
+msgstr ""
+
+#: ckddasd.c:788
+#, c-format
+msgid "ckddasd: malloc error for cache entry buffer size %d: %s\n"
+msgstr ""
+
+#: ckddasd.c:327
+#, c-format
+msgid "ckddasd: opening %s readonly%s\n"
+msgstr ""
+
+#: ckddasd.c:2841
+#, c-format
+msgid "ckddasd: search key %s\n"
+msgstr ""
+
+#: cckd2ckd.c:556
+msgid "completed with errors"
+msgstr ""
+
+#: ckd2cckd.c:671
+msgid "completed with errors            "
+msgstr ""
+
+#: console.c:1406
+msgid "console_remove() error\n"
+msgstr ""
+
+#: ieee.c:389
+msgid "ebfpston: unexpectedly converting a NaN\n"
+msgstr ""
+
+#: ieee.c:393
+msgid "ebfpston: unexpectedly converting an Infinite\n"
+msgstr ""
+
+#: fbadasd.c:574
+#, c-format
+msgid "fbadasd: define extent data too short: %d bytes\n"
+msgstr ""
+
+#: fbadasd.c:636
+#, c-format
+msgid "fbadasd: invalid extent: first block %d, last block %d,\n"
+msgstr ""
+
+#: fbadasd.c:595
+#, c-format
+msgid "fbadasd: invalid file mask %2.2X\n"
+msgstr ""
+
+#: fbadasd.c:584
+msgid "fbadasd: second define extent in chain\n"
+msgstr ""
+
+#: printer.c:189
+msgid "incomplete"
+msgstr ""
+
+#: panel.c:1996 panel.c:2036
+#, c-format
+msgid "invalid address: %s \n"
+msgstr ""
+
+#: panel.c:1446
+#, c-format
+msgid "ipending expects {+|-}debug as operand. %s is invalid\n"
+msgstr ""
+
+#: panel.c:2136
+msgid "ipl rejected: All CPU's must be stopped\n"
+msgstr ""
+
+#: ieee.c:440
+msgid "lbfpston: unexpectedly converting a NaN\n"
+msgstr ""
+
+#: ieee.c:444
+msgid "lbfpston: unexpectedly converting an Infinite\n"
+msgstr ""
+
+#: panel.c:2003
+msgid "loadcore rejected: CPU not stopped\n"
+msgstr ""
+
+#: panel.c:1985
+msgid "loadcore rejected: filename missing\n"
+msgstr ""
+
+#: panel.c:2049
+msgid "loadtext rejected: CPU not stopped\n"
+msgstr ""
+
+#: panel.c:2025
+msgid "loadtext rejected: filename missing\n"
+msgstr ""
+
+#: cckd2ckd.c:211
+#, c-format
+msgid "lookup table malloc error: %s\n"
+msgstr ""
+
+#: cckdcdsk.c:92
+#, c-format
+msgid "lseek error: %s\n"
+msgstr ""
+
+#: panel.c:1480 panel.c:1483 panel.c:1486 panel.c:1489 panel.c:1492
+#: panel.c:1495 panel.c:1498 panel.c:1519 panel.c:1521 panel.c:1523
+#: panel.c:1525 panel.c:1527 panel.c:1529 panel.c:1532 panel.c:1535
+msgid "not "
+msgstr ""
+
+#: panel.c:2223
+msgid "open "
+msgstr ""
+
+#: panel.c:2992
+#, c-format
+msgid "panel: Cannot obtain keyboard buffer: %s\n"
+msgstr ""
+
+#: panel.c:2226
+msgid "pending "
+msgstr ""
+
+#: cckdcdsk.c:99
+#, c-format
+msgid "read error: %s\n"
+msgstr ""
+
+#: panel.c:1947
+msgid "savecore rejected: CPU not stopped\n"
+msgstr ""
+
+#: panel.c:1907
+msgid "savecore rejected: filename missing\n"
+msgstr ""
+
+#: panel.c:1940
+#, c-format
+msgid "savecore: invalid ending address: %s \n"
+msgstr ""
+
+#: panel.c:1924
+#, c-format
+msgid "savecore: invalid starting address: %s \n"
+msgstr ""
+
+#: ieee.c:485
+msgid "sbfpston: unexpectedly converting a NaN\n"
+msgstr ""
+
+#: ieee.c:489
+msgid "sbfpston: unexpectedly converting an Infinite\n"
+msgstr ""
+
+#: machchk.c:283
+#, c-format
+msgid "signal USR2 received for device %4.4X\n"
+msgstr ""
+
+#: machchk.c:280
+msgid "signal USR2 received for undetermined device\n"
+msgstr ""
+
+#: cckdcdsk.c:107
+#, c-format
+msgid "size %d used %d free %d first 0x%x number %d\n"
+msgstr ""
+
+#: panel.c:1200
+msgid "started"
+msgstr ""
+
+#: panel.c:1564
+msgid "store status rejected: CPU not stopped\n"
+msgstr ""
+
+#: panel.c:1202 panel.c:1876
+msgid "subchannel not enabled"
+msgstr ""
+
+#: cckd2ckd.c:557
+msgid "successful!!         "
+msgstr ""
+
+#: ckd2cckd.c:672
+msgid "successful!!                     "
+msgstr ""
+
+#: tapedev.c:3686
+#, c-format
+msgid "tapedev: Locate block 0x%8.8lX on %4.4X\n"
+msgstr ""
+
+#: panel.c:1674
+msgid "unusable"
+msgstr ""
+
+#: panel.c:1674
+msgid "usable"
+msgstr ""
+
+#: cckd2ckd.c:565
+#, c-format
+msgid ""
+"usage:  cckd2ckd [-options] input-file output-file\n"
+"\n"
+"     input-file   --   input compressed ckd dasd file\n"
+"     output-file  --   output ckd dasd file\n"
+"\n"
+"   options:\n"
+"     -cyl cyls         number cylinders to copy if\n"
+"                       entire file is not to be copied\n"
+"                       0 - copy to last used cylinder\n"
+"     -maxerrs errs     max number of errors before copy\n"
+"                       is terminated; if 0 then errors\n"
+"                       are ignored.  Default is 5\n"
+"     -quiet            quiet mode, don't display status\n"
+"     -validate         validate track images [default]\n"
+"     -novalidate       don't validate track images\n"
+"%s"
+msgstr ""
+
+#: cckdswap.c:109
+msgid ""
+"usage:  cckdswap cckd-file\n"
+"\n"
+"     cckd-file    --   name of the compressed ckd\n"
+"                       file which will have its\n"
+"                       byte order swapped\n"
+msgstr ""
+
+#: ckd2cckd.c:685
+#, c-format
+msgid ""
+"usage:  ckd2cckd [-options] input-file output-file\n"
+"\n"
+"     create a compressed ckd file from a regular ckd file\n"
+"\n"
+"     input-file   --   input ckd dasd file\n"
+"     output-file  --   output compressed ckd dasd file\n"
+"\n"
+"   options:\n"
+"     -compress  n      compression algorithm\n"
+"                         0 = don't compress\n"
+"                         1 = compress using zlib (default)\n"
+"%s     -dontcompress     don't compress track images\n"
+"                       (same as -compress 0)\n"
+"     -maxerrs errs     max number of errors before copy\n"
+"                       is terminated; if 0 then errors\n"
+"                       are ignored.  Default is 5\n"
+"     -nofudge          turn on the `nofudge' bit to disable\n"
+"                       imbedded free space.  note that\n"
+"                       ckd2cckd does not produce any imbedded\n"
+"                       free space itself\n"
+"     -quiet            quiet mode, don't display status\n"
+"     -z       level    zlib compression level: 0=no compression\n"
+"                       1=fastest ... 9=best\n"
+"%s"
+msgstr ""
