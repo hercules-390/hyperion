@@ -3076,6 +3076,7 @@ S32             nxthdro;                /* Offset of next header     */
 static void close_omatape(DEVBLK *dev)
 {
     close (dev->fd);
+    dev->fd=-1;
     if (dev->omadesc != NULL)
     {
         free (dev->omadesc);
@@ -3083,6 +3084,10 @@ static void close_omatape(DEVBLK *dev)
     }
 
     /* Reset the device dependent fields */
+    dev->nxtblkpos=0;
+    dev->prvblkpos=-1;
+    dev->curfilen=1;
+    dev->blockid=0;
     dev->omafiles = 0;
     return;
 }
