@@ -1577,7 +1577,7 @@ TID             tid;                    /* Writer thread id          */
             signal_condition (&cckdblk.wrcond);
         else if (cckdblk.wrs < cckdblk.wrmax)
         {
-            rc = create_thread (&tid, NULL, cckd_writer, (void *)(long)cckdblk.wrs + 1);
+            rc = create_thread (&tid, NULL, cckd_writer, (void *)((long)cckdblk.wrs + 1));
             if (rc == 0) cckdblk.wrs++;
         }
     }
@@ -1720,7 +1720,7 @@ BYTE            buf2[65536];            /* Compress buffer           */
                 signal_condition (&cckdblk.wrcond);
             else if (cckdblk.wrs < cckdblk.wrmax)
             {
-                rc = create_thread (&tid, NULL, cckd_writer, (void *)(long)cckdblk.wrs + 1);
+                rc = create_thread (&tid, NULL, cckd_writer, (void *)((long)cckdblk.wrs + 1));
                 if (rc == 0) cckdblk.wrs++;
             }
         }
@@ -4200,7 +4200,7 @@ int             gctab[5]= {             /* default gcol parameters   */
             release_lock (&cckd->iolock);
 
             /* Call the garbage collector */
-            cckd_gc_percolate (dev, size);
+            cckd_gc_percolate (dev, (unsigned int)size);
 
             /* Schedule any updated tracks to be written */
             obtain_lock (&cckd->iolock);
