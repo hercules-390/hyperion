@@ -1,3 +1,6 @@
+12 Jul 2001 Fix CEFR when converting 0x80000000 - Paul leisy
+12 Jul 2001 Fix BSG trace entry for 24bit mode - Paul Leisy
+12 Jul 2001 Fix BSA so it traces when R2=0 - Paul Leisy
 11 Jul 2001 "sh" shell command support for Win32 builds - Fish
 11 Jul 2001 UPT fails to detect CC=3 condition - Paul Leisy
 11 Jul 2001 Fix CXFR characteristic and LEXR shift amount - Paul Leisy
