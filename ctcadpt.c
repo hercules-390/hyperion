@@ -1277,51 +1277,6 @@ int             lastlen = 2;            /* block length at last pckt */
 // ====================================================================
 
 // ---------------------------------------------------------------------
-// AddDevice
-// ---------------------------------------------------------------------
-//
-// Creates an additional DEVBLK structure for LCS devices.
-//
-// Input:
-//      sDevNum   Unit address for the new DEVBLK
-//      sDevType  Device type for the new DEVBLK
-//
-// Output:
-//      ppDEVBLK  Address of a pointer to receive the new DEVBLK addr
-//
-
-void  AddDevice( DEVBLK**    ppDEVBLK,
-                 U16         sDevNum,
-                 DEVBLK*     pDevBlk )
-{
-
-    // Check whether device number has already been defined
-    if( *ppDEVBLK != NULL && find_device_by_devnum( sDevNum ) != NULL )
-    {
-        logmsg( _("HHCCT034E device %4.4X already exists\n"), sDevNum );
-        return;
-    }
-
-    if( *ppDEVBLK == NULL )
-    {
-        (*ppDEVBLK) = get_devblk(sDevNum);
-        (*ppDEVBLK)->hnd = pDevBlk->hnd;
-        (*ppDEVBLK)->devtype = pDevBlk->devtype;
-        (*ppDEVBLK)->typname = strdup(pDevBlk->typname);
-        // Release the just aquired devblk
-        release_lock( &(*ppDEVBLK)->lock );
-    }
-    else
-    {
-        release_lock( &(*ppDEVBLK)->lock );
-        if((*ppDEVBLK)->devnum != sDevNum)
-            define_device((*ppDEVBLK)->devnum, sDevNum);
-    }
-
-    return;
-}
-
-// ---------------------------------------------------------------------
 // ParseMAC
 // ---------------------------------------------------------------------
 //

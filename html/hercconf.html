@@ -79,8 +79,8 @@ a real System/390.  The configuration file is an ASCII text file.
 
     0400    3088    CTCT  30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
     0401    3088    CTCT  30881  192.168.100.2  30881  2048
-    0420    3088    CTCI  192.168.200.1  192.168.200.2
-    0440    LCS      -n   /dev/net/tun   192.168.200.2
+    0420-0421    CTCI    192.168.200.1  192.168.200.2
+    0440-0441    LCS     -n   /dev/net/tun   192.168.200.2
 
     0580    3420    ickdsf.ipl
     0581    3420    /dev/st0
@@ -911,9 +911,6 @@ The format of the device record is:
     mode is not limited to TCP/IP traffic, but in fact will handle
     any ethernet frame.
     <p>
-    A single device should be declared for all LCS device numbers. The LCS
-    emulator will create all the additional devices necessary for LCS operations.
-    Also, the 1st declared device should be an even numbered device.
     The configuration statement for LCS is as follows:
     <p>
     NOTE :<br>
@@ -1021,6 +1018,10 @@ when the primary is not available, and NO
           virtual adapter. Please note that it is not necessary to include
           point-to-point routes for each IP address in the table. This is
           done automatically by the emulation module.
+          <p>
+
+          The read/write devices can be swapped by coding the odd address
+          of the even-odd pair in the OAT
           <p>
 
           Up to 4 virtual (relative) adapters 00-03 are currently supported.

@@ -1033,6 +1033,7 @@ typedef struct _DEVGRP      // Device Group
 {
     int members;            // number of member devices in group
     int acount;             // number of allocated members in group
+    void *grp_data;         // group dependent data (generic)
     struct _DEVBLK *memdev[];  // member devices
 } DEVGRP;
 

@@ -78,10 +78,6 @@ extern void     LCS_SDC( DEVBLK* pDEVBLK,   BYTE   bOpCode,
                          BYTE*   UnitStat,  U16*   pResidual,
                          BYTE*   pMore );
 
-extern void     AddDevice( DEVBLK**    ppDEVBLK,
-                           U16         sDevNum,
-                           DEVBLK*     pDevBlk );
-
 extern int      ParseMAC( char* pszMACAddr, BYTE* pbMACAddr );
 extern void     packet_trace( BYTE *addr, int len );
 
@@ -207,7 +203,7 @@ struct  _CTCBLK
     pid_t       pid;                      // Read Thread pid
 
     DEVBLK*     pDEVBLK[2];               // 0 - Read subchannel
-                                          // 1 - Write cubchannel
+                                          // 1 - Write subchannel
 
     U16         iMaxFrameBufferSize;
     BYTE        bFrameBuffer[CTC_FRAME_BUFFER_SIZE];
@@ -393,6 +389,8 @@ struct  _LCSBLK
 
     BYTE
       fDebug:1;
+
+    int         icDevices;                // Number of devices
 
     PLCSDEV     pDevices;                 // -> Device chain
     LCSPORT     Port[LCS_MAX_PORTS];      // Port Blocks
