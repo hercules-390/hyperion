@@ -158,9 +158,10 @@ argexit ( int code )
 #ifdef CCKD_COMPRESS_BZIP2
             "\t-bz2: compress using bzip2\n"
 #endif
-#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
+            );
+    if (sizeof(off_t) > 4)
+        fprintf (stderr,
             "\t-lfs: create single large output file\n"
-#endif
             );
     exit(code);
 } /* end function argexit */
@@ -4395,10 +4396,8 @@ int             lfs = 0;                /* 1 = Large file            */
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
-#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
-        else if (strcmp("lfs", &argv[1][1]) == 0)
+        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
             lfs = 1;
-#endif
         else argexit(0);
     }
 

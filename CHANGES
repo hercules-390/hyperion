@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+19 Jun 2004 lfs.pat - Allow large files if sizeof(off_t) > 4 - Fish & Greg
 17 Jun 2004 iawrap.pat - Performance improvement for instruction address
             wrapping - Greg Smith
 17 Jun 2004 ex4.pat - Performance improvement for 4 byte inst - Greg Smith

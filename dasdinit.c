@@ -99,9 +99,11 @@ argexit ( int code, char *m )
 "  -bz2       build compressed dasd image file using bzip2\n"
 #endif
 "  -0         build compressed dasd image file with no compression\n"
-#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
-"  -lfs       build a large (uncompressed) dasd file\n"
-#endif
+);
+        if (sizeof(off_t) > 4) fprintf(stderr,
+"  -lfs       build a large (uncompressed) dasd file (if supported)\n"
+);
+        fprintf(stderr,
 "  -a         build dasd image file that includes alternate cylinders\n"
 "             (option ignored if size is manually specified)\n\n"
 
@@ -171,10 +173,8 @@ int     lfs = 0;                        /* 1 = Build large file      */
 #endif
         else if (strcmp("a", &argv[1][1]) == 0)
             altcylflag = 1;
-#if _FILE_OFFSET_BITS == 64 || defined(_LARGE_FILES)
-        else if (strcmp("lfs", &argv[1][1]) == 0)
+        else if (strcmp("lfs", &argv[1][1]) == 0 && sizeof(off_t) > 4)
             lfs = 1;
-#endif
         else argexit(0, argv[1]);
     }
 
