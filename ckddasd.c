@@ -523,6 +523,16 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
     /* Set number of sense bytes */
     dev->numsense = 32;
+    if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 ))
+    {
+        dev->numsense = 6;
+    }
+    if ((dev->devtype == 0x3330 ) || (dev->devtype == 0x3340 )
+     || (dev->devtype == 0x3350 ) || (dev->devtype == 0x3375 )
+     || (dev->devtype == 0x3380 ))
+    {
+        dev->numsense = 24;
+    }
 
     /* Locate the CKD dasd table entry */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
@@ -1285,6 +1295,7 @@ BYTE byte;
 void ckd_build_sense ( DEVBLK *dev, BYTE sense0, BYTE sense1,
                        BYTE sense2, BYTE format, BYTE message )
 {
+int shift;  /* num of bits to shift left 'high cyl' in sense6 */
     /* Clear the sense bytes */
     memset (dev->sense, 0, sizeof(dev->sense));
 
@@ -1306,6 +1317,46 @@ void ckd_build_sense ( DEVBLK *dev, BYTE sense0, BYTE sense1,
     /* Sense byte 4 is the physical device address */
     dev->sense[4] = 0;
 
+    if (dev->devtype == 0x2311)
+    {
+       /* 0x80=READY, 0x40=ONLINE 0x08=ONLINE 0x04=END OF CYL */
+        dev->sense[3] = (((dev->sense[1]) & 0x20) >> 3) | 0xC8;
+    }
+    if (dev->devtype == 0x2314)
+    {
+       /*             0x40=ONLINE             0x04=END OF CYL */
+        dev->sense[3] = (((dev->sense[1]) & 0x20) >> 3) | 0x40;
+    }
+    if (dev->devtype == 0x3330)
+    {
+     /* bits 0-1 = controller address */
+     /* bits 2-7: drive A = 111000, B = 110001, ... H = 000111 */
+       dev->sense[4] = (dev->devnum & 0x07) | ((~(dev->devnum) & 0x07) << 3);
+    }
+    if (dev->devtype == 0x3340)
+    {
+     /* X'01' = 35 MB drive, X'02' = 70 MB drive  (same as 'model') */
+     /* X'80' RPS feature installed */
+       dev->sense[2] |= 0x80 | dev->devid[6];  /* RPS + model */
+       /* drive A = bit 0 (0x80), ... drive H = bit 7 (0x01) */
+       dev->sense[4] =  0x80 >> (dev->devnum & 0x07);
+    }
+    if (dev->devtype == 0x3350)
+    {
+       /* drive 0 = bit 0 (0x80), ... drive 7 = bit 7 (0x01) */
+       dev->sense[4] =  0x80 >> (dev->devnum & 0x07);
+    }
+    if (dev->devtype == 0x3375)
+    {
+       /* bits 3-4 = controller address, bits 5-7 = device address */
+       dev->sense[4] = dev->devnum & 0x07;
+    }
+    if (dev->devtype == 0x3380)
+    {
+       /* bits 4-7 = device address */
+       dev->sense[4] = dev->devnum & 0x0F;
+    }
+
     /* Sense byte 5 contains bits 8-15 of the cylinder address
        and sense byte 6 contains bits 4-7 of the cylinder
        address followed by bits 12-15 of the head address,
@@ -1318,9 +1369,33 @@ void ckd_build_sense ( DEVBLK *dev, BYTE sense0, BYTE sense1,
     }
     else
     {
+     if ((dev->devtype == 0x2311 ) || (dev->devtype == 0x2314 ))
+     {
+     }
+     else
+     {
         dev->sense[5] = dev->ckdcurcyl & 0xFF;
-        dev->sense[6] = ((dev->ckdcurcyl >> 4) & 0xF0)
-                        | (dev->ckdcurhead & 0x0F);
+
+     /* sense byte 6 bits     c = cyl high byte, h=head    */
+     /*                          0 1 2 3 4 5 6 7   shift   */
+     /* 3330-1                   - c - h h h h h      6    */
+     /* 3330-11 3350             - c c h h h h h      5    */
+     /* 3340                     - c c - h h h h      5    */
+     /* 3375                     c c - - h h h h      6    */
+     /* 3380                     c c c c h h h h      4    */
+       switch (dev->devtype) {
+        case 0x3330:
+             if (dev->devid[6] == 0x01)
+                                   shift = 6; /* 3330-1 */
+             else
+                                   shift = 5; /* 3330-11 */
+        case 0x3340: case 0x3350:  shift = 5;
+        case 0x3375:               shift = 6;
+        default:                   shift = 4;
+       }
+        dev->sense[6] = ( (dev->ckdcurcyl >> 8) << shift )
+                        | (dev->ckdcurhead & 0x1F);
+     }
     }
 
     /* Sense byte 7 contains the format code and message type */
@@ -4628,6 +4703,10 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         }
 
     sense:
+        /* If sense bytes are cleared then build sense */
+        if ((dev->sense[0] == 0) & (dev->sense[1] == 0))
+            ckd_build_sense (dev, 0, 0, 0, 0, 0);
+
         /* Calculate residual byte count */
         num = (count < dev->numsense) ? count : dev->numsense;
         *residual = count - num;
