@@ -837,8 +837,7 @@ typedef struct _SYSBLK {
 #define BROADCAST_PFRA_L broadcast_pfra.F.L.F
         int     broadcast_count;        /* Broadcast CPU count       */
         COND    broadcast_cond;         /* Broadcast condition       */
-        U64     breakaddr;              /* Breakpoint address        */
-        U64     breakadd2;              /* Breakpoint address 2      */
+        U64     breakaddr[2];           /* Breakpoint addresses      */
 #ifdef FEATURE_ECPSVM
 //
         /* ECPS:VM */

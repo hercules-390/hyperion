@@ -1002,33 +1002,33 @@ REGS *regs;
 
 int bset_cmd(int argc, char *argv[], char *cmdline)
 {
-BYTE c,c2;                              /* Character work area       */
+int  rc;                                /* Return code               */
+BYTE c[2];                              /* Character work area       */
 
     UNREFERENCED(cmdline);
 
-    if (argc < 2)
+    if (argc != 2)
     {
-        logmsg( _("HHCPN039E Missing argument\n") );
+        logmsg( _("HHCPN039E Invalid or missing argument\n") );
         return -1;
     }
 
-    if (sscanf(argv[1], "%llx%c", &sysblk.breakaddr, &c) == 1)
+    rc = sscanf(argv[1], "%llx%c%llx%c", &sysblk.breakaddr[0], &c[0],
+                                         &sysblk.breakaddr[1], &c[2]);
+    if (rc == 1 || (rc == 3 && c[0] == '-'))
     {
-        logmsg( _("HHCPN040I Setting breakpoint at %16.16llX\n"),
-            (long long)sysblk.breakaddr
+        if (rc == 1)
+            sysblk.breakaddr[1] = sysblk.breakaddr[0];
+        logmsg( _("HHCPN040I Setting breakpoint at %16.16llX-%16.16llx\n"),
+            (long long)sysblk.breakaddr[0],(long long)sysblk.breakaddr[1]
             );
-        sysblk.breakadd2 = sysblk.breakaddr;
         sysblk.instbreak = 1;
         ON_IC_TRACE;
     }
-    else if (sscanf(argv[1], "%llx%c%llx%c",
-          &sysblk.breakaddr, &c, &sysblk.breakadd2, &c2) == 3 && c == '-')
+    else
     {
-        logmsg( _("HHCPN040I Setting breakpoint at %16.16llX-%16.16llX\n"),
-            (long long)sysblk.breakaddr,(long long)sysblk.breakadd2
-            );
-        sysblk.instbreak = 1;
-        ON_IC_TRACE;
+        logmsg( _("HHCPN039E Invalid or missing argument\n") );
+        return -1;
     }
 
     return 0;
