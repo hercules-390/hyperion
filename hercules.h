@@ -711,11 +711,11 @@ typedef struct _SYSBLK {
         int     cpuprio;                /* CPU thread priority       */
         int     pgmprdos;               /* Program product OS flag   */
 // #if defined(OPTION_HTTP_SERVER)
-        TID     httptid;
-        U16     httpport;
-        int     httpauth;
-        char   *httpuser;
-        char   *httppass;
+        TID     httptid;                /* HTTP listener thread id   */
+        U16     httpport;               /* HTTP port number or zero  */
+        int     httpauth;               /* HTTP auth required flag   */
+        char   *httpuser;               /* HTTP userid               */
+        char   *httppass;               /* HTTP password             */
 // #endif /*defined(OPTION_HTTP_SERVER)*/
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/
