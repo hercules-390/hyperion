@@ -397,6 +397,11 @@ void system_cleanup (void)
 /*-------------------------------------------------------------------*/
 void system_shutdown (void)
 {
+    /* ZZ FIXME: Using the shutdown flag does not serialize shutdown
+                 it would be better to call a synchronous termination
+                 routine, which only returns when the shutdown of
+                 the function in question has been completed */
+                 
     sysblk.shutdown = 1;
 
     /* ZZ FIXME: logger_term() should really be the last thing to do
