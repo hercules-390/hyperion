@@ -23,7 +23,7 @@ if test ! -e autoconf/ltmain.sh; then
   #  and has a different program named libtool. We want the GNU version
   #  here.
 
-  if test -e "`which glibtool`"; then
+  if test -e "which glibtool"; then
     glibtoolize --copy --force --ltdl    >> ./autogen.log 2>&1
   else
     libtoolize --copy --force --ltdl     >> ./autogen.log 2>&1
@@ -46,6 +46,7 @@ fi
 
 if test ! -e ./ABOUT-NLS; then
 
+  echo ""
   echo " Due to a bug(?) in the automake process, if this script"
   echo " appears to 'hang', simply press the enter key. In fact,"
   echo " you may do that right now if you wish; it's not going to"
@@ -55,8 +56,7 @@ if test ! -e ./ABOUT-NLS; then
   echo -e "gettextizing..."
   gettextize --copy --force --intl --no-changelog >> ./autogen.log 2>&1
 
-  echo -e "\a"
-  echo "In spite of the confirmation required from you,"
+  echo -e "\aIn spite of the confirmation required from you,"
   echo "you do NOT have to run the indicated program(s),"
   echo "as we will automagically run them for you now..."
   echo ""
