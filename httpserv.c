@@ -58,7 +58,8 @@ int html_include(WEBBLK *webblk, char *filename)
 
     inclfile = fopen(strcat(fullname,filename),"r");
 
-    if (!inclfile) {
+    if (!inclfile)
+    {
         logmsg("HHS021E html_include: Cannot open %s: %s\n",
           fullname,strerror(errno));
         fprintf(webblk->hsock,"ERROR: Cannot open %s: %s\n",
@@ -66,7 +67,8 @@ int html_include(WEBBLK *webblk, char *filename)
         return 0;
     }
 
-    while (!feof(inclfile)) {
+    while (!feof(inclfile))
+    {
         ret = fread(buffer, 1, sizeof(buffer), inclfile);
         if (ret <= 0) break;
         fwrite(buffer, 1, ret, webblk->hsock);
@@ -79,22 +81,20 @@ int html_include(WEBBLK *webblk, char *filename)
 
 void html_header(WEBBLK *webblk)
 {
-    if (webblk->request_type != REQTYPE_POST) {
+    if (webblk->request_type != REQTYPE_POST)
         fprintf(webblk->hsock,"Expires: 0\n");
-    }
+
     fprintf(webblk->hsock,"Content-type: text/html;\n\n");
 
-    if (!html_include(webblk,HTML_HEADER)) {
+    if (!html_include(webblk,HTML_HEADER))
         fprintf(webblk->hsock,"<HTML>\n<HEAD>\n<TITLE>Hercules</TITLE>\n</HEAD>\n<BODY>\n\n");
-    }
 }
 
 
 void html_footer(WEBBLK *webblk)
 {
-    if (!html_include(webblk,HTML_FOOTER)) {
+    if (!html_include(webblk,HTML_FOOTER))
         fprintf(webblk->hsock,"\n</BODY>\n</HTML>\n");
-    }
 }
 
 
@@ -152,15 +152,19 @@ static void http_decode_base64(char *s)
 
     n=i=0;
 
-    while (*s && (p = strchr(b64, *s))) {
+    while (*s && (p = strchr(b64, *s)))
+    {
         idx = (int)(p - b64);
         byte_o = (i*6)/8;
         bit_o = (i*6)%8;
         d[byte_o] &= ~((1<<(8-bit_o))-1);
-        if (bit_o < 3) {
+        if (bit_o < 3)
+        {
             d[byte_o] |= (idx << (2-bit_o));
             n = byte_o+1;
-        } else {
+        }
+        else
+        {
             d[byte_o] |= (idx >> (bit_o-2));
             d[byte_o+1] = 0;
             d[byte_o+1] |= (idx << (8-(bit_o-2))) & 0xFF;
@@ -182,7 +186,8 @@ static char *http_unescape(char *buffer)
 
     pointer = buffer;
 
-    while (pointer && *pointer && (pointer = strchr(pointer,'%'))) {
+    while (pointer && *pointer && (pointer = strchr(pointer,'%')))
+    {
         int highnibble = pointer[1];
         int lownibble = pointer[2];
 
@@ -302,12 +307,9 @@ static void http_verify_path(WEBBLK *webblk, char *path)
     realpath(path,resolved_path);
 
     for (i=0;path[i];i++)
-    {
-        if (!isalnum((int)path[i]) && !strchr("/.-_", path[i])) {
+        if (!isalnum((int)path[i]) && !strchr("/.-_", path[i]))
             http_error(webblk, "404 File Not Found","",
                                "Illegal character in filename");
-        }
-    }
 
     if(strncmp(resolved_base,resolved_path,strlen(resolved_base)))
         http_error(webblk, "404 File Not Found","",
@@ -394,10 +396,9 @@ static void http_download(WEBBLK *webblk, char *filename)
                            "The requested file is not a regular file");
 
     fd = open(fullname,O_RDONLY,0);
-    if (fd == -1) {
+    if (fd == -1)
         http_error(webblk, "404 File Not Found","",
                            strerror(errno));
-    }
 
     fprintf(webblk->hsock,"HTTP/1.0 200 OK\n");
     if ((filetype = strrchr(filename,'.')))
