@@ -2714,11 +2714,16 @@ resume_suspend:
             || ((unitstat & CSW_UC) && dev->sense[0] != 0))
         {
             /* Trace the CCW if not already done */
-            if (!(dev->ccwtrace || dev->ccwstep || tracethis))
+            if (!(dev->ccwtrace || dev->ccwstep || tracethis)
+              && (sysblk.insttrace || sysblk.inststep || sysblk.pgminttr 
+                || dev->ccwtrace || dev->ccwstep) )
                 display_ccw (dev, ccw, addr);
 
-            /* Activate tracing for this CCW chain only */
-            tracethis = 1;
+            /* Activate tracing for this CCW chain only 
+               if any trace is already active */
+            if(sysblk.insttrace || sysblk.inststep || sysblk.pgminttr
+              || dev->ccwtrace || dev->ccwstep)
+                tracethis = 1;
         }
 
         /* Trace the results of CCW execution */
