@@ -1,5 +1,5 @@
-/* DEVMAP2CNF.C   (c) Copyright Jay Maynard, 2001                    */
-/*              Convert P/390 DEVMAP to Hercules .CNF file           */
+/* DMAP2HRC.C   (c) Copyright Jay Maynard, 2001                      */
+/*              Convert P/390 DEVMAP to Hercules config file         */
 
 /*-------------------------------------------------------------------*/
 /* This program reads a P/390 DEVMAP file and extracts the device    */
@@ -61,6 +61,11 @@ BYTE		output_type[5];		/* Device type to print      */
 BYTE	       *output_filename;	/* -> filename to print      */
 int		more_devices;		/* More devices this ctlr?   */
 
+    /* Display the program identification message */
+    display_version (stderr,
+                     "P/390 DEVMAP to Hercules conversion program\n",
+                     MSTRING(VERSION), __DATE__, __TIME__);
+
     /* The only argument is the DEVMAP file name */
     if (argc == 2 && argv[1] != NULL)
     {
@@ -68,7 +73,7 @@ int		more_devices;		/* More devices this ctlr?   */
     }
     else
     {
-        fprintf (stderr,"Usage: devmap2cnf filename\n");
+        fprintf (stderr,"Usage: dmap2hrc filename\n");
         exit (1);
     }
 
@@ -76,7 +81,7 @@ int		more_devices;		/* More devices this ctlr?   */
     infd = open (filename, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
-        fprintf (stderr,"devmap2cnf: Error opening %s: %s\n",
+        fprintf (stderr,"dmap2hrc: Error opening %s: %s\n",
                  filename, strerror(errno));
         exit (2);
     }
@@ -88,7 +93,7 @@ int		more_devices;		/* More devices this ctlr?   */
         if (len < 0)
         {
             fprintf (stderr,
-                     "devmap2cnf: error reading header records from %s: %s\n",
+                     "dmap2hrc: error reading header records from %s: %s\n",
                      filename, strerror(errno));
             exit (3);
         }
@@ -102,7 +107,7 @@ int		more_devices;		/* More devices this ctlr?   */
         if (len < 0)
         {
             fprintf (stderr,
-                     "devmap2cnf: error reading controller record from %s:"
+                     "dmap2hrc: error reading controller record from %s:"
                      " %s\n",
                      filename, strerror(errno));
             exit (4);
@@ -112,7 +117,7 @@ int		more_devices;		/* More devices this ctlr?   */
         if ((len > 0) && (len < sizeof(DEVMAP_CTLR)))
         {
             fprintf (stderr,
-                     "devmap2cnf: incomplete controller record on %s\n",
+                     "dmap2hrc: incomplete controller record on %s\n",
                      filename);
             exit(5);
         }
@@ -120,6 +125,7 @@ int		more_devices;		/* More devices this ctlr?   */
         /* Check for end of file. */
         if (len == 0)
         {
+            fprintf(stderr, "End of input file.\n");
             break;
         }
         
@@ -133,7 +139,7 @@ int		more_devices;		/* More devices this ctlr?   */
             if (len < 0)
             {
                 fprintf (stderr,
-                         "devmap2cnf: error reading device record from %s:"
+                         "dmap2hrc: error reading device record from %s:"
                          " %s\n",
                          filename, strerror(errno));
                 exit (6);
@@ -143,7 +149,7 @@ int		more_devices;		/* More devices this ctlr?   */
             if ((len > 0) && (len < sizeof(DEVMAP_DEV)))
             {
                 fprintf (stderr,
-                         "devmap2cnf: incomplete device record on %s\n",
+                         "dmap2hrc: incomplete device record on %s\n",
                          filename);
                 exit(7);
             }
@@ -151,7 +157,7 @@ int		more_devices;		/* More devices this ctlr?   */
             /* Check for end of file. */
             if (len == 0)
             {
-                fprintf (stderr,"devmap2cnf: premature end of input file\n");
+                fprintf (stderr,"dmap2hrc: premature end of input file\n");
                 exit(8);
             }
 
