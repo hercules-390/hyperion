@@ -985,15 +985,16 @@ int ARCH_DEP(run_sie) (REGS *regs)
 /* 1 LINE ADDED ISW20040727 */
                 do
                 {
+                    REGS *gregs = GUESTREGS;
                     SIE_PERFMON(SIE_PERF_EXEC_U);
+                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
                     regs->instcount += 7;
-                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(GUESTREGS, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
 /* 1 LINE CHANGED ISW20040727 - was '}' only */
                 } while( !SIE_I_HOST(regs) );
             } while( !SIE_I_HOST(regs) );

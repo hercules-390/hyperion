@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+28 Jul 2004 Some more SIE perf updates - Ivan Warren P/O Greg Smith
 27 Jul 2004 SIE Perf boost. Look for string ISW20040727 to revert - Ivan Warren
 27 Jul 2004 SR Fix affecting suspended CCWs - Ivan Warren P/O Greg Smith
 26 Jul 2004 Hercules suspend/resume command support - Greg Smith
