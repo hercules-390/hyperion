@@ -743,7 +743,7 @@ VADR    effective_addr2;                /* Effective address         */
     if (
 #if defined(_FEATURE_SIE)
         !regs->sie_state &&
-#endif defined(_FEATURE_SIE)
+#endif /* defined(_FEATURE_SIE) */
                       effective_addr2 != 0xF08)
 #endif
 
@@ -2594,7 +2594,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->psw.amode = (ete[1] & ETE1_AMODE) ? 1 : 0;
         regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
         regs->psw.IA = ete[1] & ETE1_EIA;
-      #endif /!*defined(FEATURE_ESAME)*/
+      #endif /*!defined(FEATURE_ESAME)*/
         regs->psw.prob = (ete[1] & ETE1_PROB) ? 1 : 0;
 
         /* Replace the PSW key by the entry key if the K bit is set */

@@ -436,7 +436,7 @@ VADR    effective_addr2,
            the physical CPU on a spinlock */
         if(regs->psw.cc && sysblk.numcpu > 1)
             usleep(1L);
-#endif MAX_CPU_ENGINES > 1
+#endif /* MAX_CPU_ENGINES > 1 */
 
     }
 }
@@ -1306,7 +1306,7 @@ BYTE    obyte;                          /* Operand byte              */
            the physical CPU on a spinlock */
         if(regs->psw.cc && sysblk.numcpu > 1)
             usleep(1L);
-#endif MAX_CPU_ENGINES > 1
+#endif /* MAX_CPU_ENGINES > 1 */
 
 }
 
