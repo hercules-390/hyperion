@@ -441,19 +441,19 @@ fi
 if test "$GCC" = "yes"; then
 case "$host_os" in
       darwin*)
-          AC_CACHE_CHECK([for OS X gcc preprocessor string concatenation bug],
+          AC_CACHE_CHECK([for OS X gcc preprocessor macro argument count bug],
                          [ac_cv_darwin_gcc_cpp_bug],
-                         [if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null \
-                             2>&1
-#if __GNUC__ == 3 && __GNUC_MINOR__ == 1
-yes
-#endif
-__EOF
-                          then
-                              ac_cv_darwin_gcc_cpp_bug=yes
-                          else
-                              ac_cv_darwin_gcc_cpp_bug=no
-                          fi])
+                         [AC_COMPILE_IFELSE([
+#include <stdio.h>
+#define MACRO(_x,_args...)  printf(_x, ## _args)
+int  main( int argc, char **argv, char **arge )
+{
+        MACRO( "bare printf\n" );
+        return 0;
+}
+                         ],
+                         [ac_cv_darwin_gcc_cpp_bug=no],
+                         [ac_cv_darwin_gcc_cpp_bug=yes])])
           ;;
       *)
           ac_cv_darwin_gcc_cpp_bug=no
