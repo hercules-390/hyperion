@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2002-12-16 20:28-0600\n"
+"POT-Creation-Date: 2002-12-16 20:56-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -1709,6 +1709,61 @@ msgstr "HHC623I CPU%4.4X thread al gestart\n"
 msgid "HHCCPU006E Cannot create timer thread: %s\n"
 msgstr "Kann %s nicht öffnen: %s\n"
 
+#: httpserv.c:561
+#, fuzzy, c-format
+msgid "HHCHT001I HTTP listener thread started: tid=%8.8lX, pid=%d\n"
+msgstr "HHC620I CPU%4.4X thread gestart: tid=%8.8lX, pid=%d, prioriteit=%d\n"
+
+#: httpserv.c:570
+#, c-format
+msgid "HHCHT002E socket: %s\n"
+msgstr ""
+
+#: httpserv.c:593
+#, c-format
+msgid "HHCHT003W Waiting for port %u to become free\n"
+msgstr ""
+
+#: httpserv.c:600
+#, c-format
+msgid "HHCHT004E bind: %s\n"
+msgstr ""
+
+#: httpserv.c:609
+#, c-format
+msgid "HHCHT005E listen: %s\n"
+msgstr ""
+
+#: httpserv.c:613
+#, c-format
+msgid "HHCHT006I Waiting for HTTP requests on port %u\n"
+msgstr ""
+
+#: httpserv.c:638
+#, c-format
+msgid "HHCHT007E select: %s\n"
+msgstr ""
+
+#: httpserv.c:650
+#, c-format
+msgid "HHCHT008E accept: %s\n"
+msgstr ""
+
+#: httpserv.c:656
+#, fuzzy, c-format
+msgid "HHCHT009E fdopen: %s\n"
+msgstr "HHC760I %4.4X create_thread fout: %s"
+
+#: httpserv.c:665
+#, fuzzy, c-format
+msgid "HHCHT010E http_request create_thread: %s\n"
+msgstr "Kann %s nicht öffnen: %s\n"
+
+#: httpserv.c:64
+#, fuzzy, c-format
+msgid "HHCHT011E html_include: Cannot open %s: %s\n"
+msgstr "Kann %s nicht öffnen: %s\n"
+
 #: printer.c:187
 #, fuzzy, c-format
 msgid "HHCPR003E %4.4X Error writing to %s: %s\n"
@@ -1912,61 +1967,6 @@ msgstr "HHC406I Fout %2$s bij zoeken in bestand \"%1$s\"\n"
 #: hsccmd.c:1576
 #, c-format
 msgid "HHCxxxI savecore: unable to save %d bytes\n"
-msgstr ""
-
-#: httpserv.c:665
-#, c-format
-msgid "HHS010E http_request create_thread: %s\n"
-msgstr ""
-
-#: httpserv.c:656
-#, c-format
-msgid "HHS011E fdopen: %s\n"
-msgstr ""
-
-#: httpserv.c:650
-#, c-format
-msgid "HHS012E accept: %s\n"
-msgstr ""
-
-#: httpserv.c:638
-#, c-format
-msgid "HHS013E select: %s\n"
-msgstr ""
-
-#: httpserv.c:613
-#, c-format
-msgid "HHS014I Waiting for HTTP requests on port %u\n"
-msgstr ""
-
-#: httpserv.c:609
-#, c-format
-msgid "HHS015E listen: %s\n"
-msgstr ""
-
-#: httpserv.c:600
-#, c-format
-msgid "HHS016E bind: %s\n"
-msgstr ""
-
-#: httpserv.c:593
-#, c-format
-msgid "HHS017I Waiting for port %u to become free\n"
-msgstr ""
-
-#: httpserv.c:570
-#, c-format
-msgid "HHS018E socket: %s\n"
-msgstr ""
-
-#: httpserv.c:561
-#, fuzzy, c-format
-msgid "HHS019I HTTP listener thread started: tid=%8.8lX, pid=%d\n"
-msgstr "HHC620I CPU%4.4X thread gestart: tid=%8.8lX, pid=%d, prioriteit=%d\n"
-
-#: httpserv.c:64
-#, c-format
-msgid "HHS021E html_include: Cannot open %s: %s\n"
 msgstr ""
 
 #: channel.c:375

@@ -61,7 +61,7 @@ int html_include(WEBBLK *webblk, char *filename)
 
     if (!inclfile)
     {
-        logmsg(_("HHS021E html_include: Cannot open %s: %s\n"),
+        logmsg(_("HHCHT011E html_include: Cannot open %s: %s\n"),
           fullname,strerror(errno));
         fprintf(webblk->hsock,_("ERROR: Cannot open %s: %s\n"),
           filename,strerror(errno));
@@ -558,7 +558,7 @@ TID                     httptid;        /* Negotiation thread id     */
     UNREFERENCED(arg);
 
     /* Display thread started message on control panel */
-    logmsg (_("HHS019I HTTP listener thread started: "
+    logmsg (_("HHCHT001I HTTP listener thread started: "
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
@@ -567,7 +567,7 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (lsock < 0)
     {
-        logmsg(_("HHS018E socket: %s\n"), strerror(errno));
+        logmsg(_("HHCHT002E socket: %s\n"), strerror(errno));
         return NULL;
     }
 
@@ -590,14 +590,14 @@ TID                     httptid;        /* Negotiation thread id     */
 
         if (rc == 0 || errno != EADDRINUSE) break;
 
-        logmsg (_("HHS017I Waiting for port %u to become free\n"),
+        logmsg (_("HHCHT003W Waiting for port %u to become free\n"),
                 sysblk.httpport);
         sleep(10);
     } /* end while */
 
     if (rc != 0)
     {
-        logmsg(_("HHS016E bind: %s\n"), strerror(errno));
+        logmsg(_("HHCHT004E bind: %s\n"), strerror(errno));
         return NULL;
     }
 
@@ -606,11 +606,11 @@ TID                     httptid;        /* Negotiation thread id     */
 
     if (rc < 0)
     {
-        logmsg(_("HHS015E listen: %s\n"), strerror(errno));
+        logmsg(_("HHCHT005E listen: %s\n"), strerror(errno));
         return NULL;
     }
 
-    logmsg(_("HHS014I Waiting for HTTP requests on port %u\n"),
+    logmsg(_("HHCHT006I Waiting for HTTP requests on port %u\n"),
             sysblk.httpport);
 
     /* Handle connection requests and attention interrupts */
@@ -635,7 +635,7 @@ TID                     httptid;        /* Negotiation thread id     */
         if (rc < 0 )
         {
             if (errno == EINTR) continue;
-            logmsg(_("HHS013E select: %s\n"), strerror(errno));
+            logmsg(_("HHCHT007E select: %s\n"), strerror(errno));
             break;
         }
 
@@ -647,13 +647,13 @@ TID                     httptid;        /* Negotiation thread id     */
 
             if (csock < 0)
             {
-                logmsg(_("HHS012E accept: %s\n"), strerror(errno));
+                logmsg(_("HHCHT008E accept: %s\n"), strerror(errno));
                 continue;
             }
 
             if(!(hsock = fdopen(csock,"r+")))
             {
-                logmsg(_("HHS011E fdopen: %s\n"),strerror(errno));
+                logmsg(_("HHCHT009E fdopen: %s\n"),strerror(errno));
                 close(csock);
                 continue;
             }
@@ -662,7 +662,7 @@ TID                     httptid;        /* Negotiation thread id     */
             if ( create_thread (&httptid, &sysblk.detattr,
                                 http_request, hsock) )
             {
-                logmsg(_("HHS010E http_request create_thread: %s\n"),
+                logmsg(_("HHCHT010E http_request create_thread: %s\n"),
                         strerror(errno));
                 fclose (hsock);
                 close (csock);
