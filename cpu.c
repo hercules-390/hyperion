@@ -1201,6 +1201,9 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         memcpy(regs->opctab, ARCH_DEP(opcode_table), 256*sizeof(zz_func));
     }
 
+    /* Set tracing bit */
+    regs->tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
+
     /* Take interrupts if CPU is not stopped */
     if (regs->cpustate == CPUSTATE_STARTED)
     {
