@@ -71,6 +71,8 @@ RADR    ag,                             /* Abs Guest addr of TTE     */
     STORE_FW(sysblk.mainstor + n, ia);
     if (amode)
         sysblk.mainstor[n] |= 0x80;
+    else
+        sysblk.mainstor[n] = 0x00;
     n += 4;
 
 #if defined(_FEATURE_SIE)

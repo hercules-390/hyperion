@@ -1,3 +1,4 @@
+13 Jun 2001 Zero highbyte in 24 bit branch trace entry - Paul Leisy
 13 Jun 2001 Correct attention processing on suspended devices - Jan Jaeger
 13 Jun 2001 Clear DPS arrays during I/O reset - Jan Jaeger
 13 Jun 2001 Fix false protection indication on MVPG - Paul Leisy
