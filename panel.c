@@ -686,10 +686,33 @@ int     i;
 static void display_fregs (REGS *regs)
 {
 
+#if !defined(FEATURE_BASIC_FP_EXTENSIONS)
+
     logmsg ("FPR0=%8.8X %8.8X\t\tFPR2=%8.8X %8.8X\n"
             "FPR4=%8.8X %8.8X\t\tFPR6=%8.8X %8.8X\n",
             regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3],
             regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7]);
+
+#else /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
+
+    logmsg ("FPR0=%8.8X %8.8X\t\tFPR1=%8.8X %8.8X\n"
+            "FPR2=%8.8X %8.8X\t\tFPR3=%8.8X %8.8X\n"
+            "FPR4=%8.8X %8.8X\t\tFPR5=%8.8X %8.8X\n"
+            "FPR6=%8.8X %8.8X\t\tFPR7=%8.8X %8.8X\n"
+            "FPR8=%8.8X %8.8X\t\tFPR9=%8.8X %8.8X\n"
+            "FPRa=%8.8X %8.8X\t\tFPRb=%8.8X %8.8X\n"
+            "FPRc=%8.8X %8.8X\t\tFPRd=%8.8X %8.8X\n"
+            "FPRe=%8.8X %8.8X\t\tFPRf=%8.8X %8.8X\n",
+            regs->fpr[0], regs->fpr[1], regs->fpr[2], regs->fpr[3],
+            regs->fpr[4], regs->fpr[5], regs->fpr[6], regs->fpr[7],
+            regs->fpr[8], regs->fpr[9], regs->fpr[10], regs->fpr[11],
+            regs->fpr[12], regs->fpr[13], regs->fpr[14], regs->fpr[15],
+            regs->fpr[16], regs->fpr[17], regs->fpr[18], regs->fpr[19],
+            regs->fpr[20], regs->fpr[21], regs->fpr[22], regs->fpr[23],
+            regs->fpr[24], regs->fpr[25], regs->fpr[26], regs->fpr[27],
+            regs->fpr[28], regs->fpr[29], regs->fpr[30], regs->fpr[31]);
+
+#endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
 } /* end function display_fregs */
 
