@@ -217,6 +217,7 @@ int     icode;                          /* Interception code         */
     /* Load the guest registers */
     memcpy(GUESTREGS->gr, regs->gr, 14 * sizeof(U64));
     memcpy(GUESTREGS->ar, regs->ar, 16 * sizeof(U32));
+    memcpy(GUESTREGS->fpr, regs->fpr, 32 * sizeof(U32));
 
     /* Load GR14 */
     FETCH_W(GUESTREGS->GR(14), STATEBK->gr14);
@@ -404,6 +405,7 @@ int     n;
     /* Update the approprate host registers */
     memcpy(regs->gr, GUESTREGS->gr, 14 * sizeof(U64));
     memcpy(regs->ar, GUESTREGS->ar, 16 * sizeof(U32));
+    memcpy(regs->fpr, GUESTREGS->fpr, 32 * sizeof(U32));
 
     /* Zeroize the interruption parameters */
     memset(STATEBK->ipa, 0, 10);
