@@ -230,7 +230,17 @@ TID paneltid;
 #if defined(OPTION_HTTP_SERVER)
     if(sysblk.httpport) {
         /* Start the http server connection thread */
-        if (!sysblk.httproot) sysblk.httproot = HTTP_ROOT;
+        if (!sysblk.httproot)
+        {
+#if defined(WIN32)
+            char process_dir[1024];
+            if (get_process_directory(process_dir,1024) > 0)
+                sysblk.httproot = strdup(process_dir);
+            else
+#endif /*defined(WIN32)*/
+            sysblk.httproot = HTTP_ROOT;
+        }
+        TRACE("HTTPROOT = %s\n",sysblk.httproot);
         if ( create_thread (&sysblk.httptid, &sysblk.detattr,
                             http_server, NULL) )
         {

@@ -33,4 +33,8 @@ extern  HOST_INFO  hostinfo;
 extern  void  init_hostinfo ();
 extern  void  display_hostinfo (FILE *f);
 
+#if defined(WIN32)
+extern  int   get_process_directory(char* dirbuf, size_t bufsiz);
+#endif /*defined(WIN32)*/
+
 #endif /*!defined(_HOSTINFO_H_)*/

@@ -17,6 +17,7 @@
 #if defined(WIN32)
 #define _WIN32_WINNT 0x0403
 #include <windows.h>
+#include <sys/cygwin.h>
 #endif /*defined(WIN32)*/
 
 #include <sys/utsname.h>
@@ -71,3 +72,29 @@ void display_hostinfo (FILE *f)
         uname_info.version
         );
 }
+
+#if defined(WIN32)
+/*-------------------------------------------------------------------*/
+/* Retrieve directory where process was loaded from                  */
+/*-------------------------------------------------------------------*/
+int get_process_directory(char* dirbuf, size_t bufsiz)
+{
+    /* (returns >0 == success, 0 == failure) */
+    char win32_dirbuf[MAX_PATH];
+    char posix_dirbuf[MAX_PATH];
+    char* p;
+    DWORD dwDirBytes =
+        GetModuleFileName(GetModuleHandle(NULL),win32_dirbuf,MAX_PATH);
+    if (!dwDirBytes || dwDirBytes >= MAX_PATH)
+        return 0;
+    p = strrchr(win32_dirbuf,'\\'); if (p) *p = 0;
+    /* (note: we assume win32 == cygwin) */
+    cygwin_conv_to_full_posix_path(win32_dirbuf, posix_dirbuf);
+    if ('/' != *(p+strlen(posix_dirbuf)-1))
+        strncat(posix_dirbuf,"/",MAX_PATH);
+    if (strlen(posix_dirbuf) >= bufsiz)
+        return 0;
+    strncpy(dirbuf,posix_dirbuf,bufsiz);
+    return strlen(dirbuf);
+}
+#endif /*defined(WIN32)*/
