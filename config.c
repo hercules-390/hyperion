@@ -1389,7 +1389,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         initialize_condition (&dev->iocond);
 
         /* Assign new subchannel number */
-        dev->subchan = sysblk.highsubchan++;
+        dev->subchan = sysblk.highsubchan;
 
     }
 
@@ -1431,12 +1431,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
 
         /* Release the device block if we just acquired it */
         if (newdevblk)
-        {
-            sysblk.highsubchan--;       /* @ISW - Backout 1 sch    */
-                                        /* so that configured      */
-                                        /* devices are consecutive */
             free(dev);
-        }
 
         return 1;
     }
@@ -1470,6 +1465,9 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
         /* Add the new device block to the end of the chain */
         *dvpp = dev;
         dev->nextdev = NULL;
+
+        /* Increase highest subchannel number */
+        sysblk.highsubchan++;
     }
 
     /* Mark device valid */
