@@ -2582,10 +2582,11 @@ static const unsigned short sqtab[] = {
         return(xi);
 
     /* iterate */
+    /* exit iteration when xi, xj equal or differ by 1 */
     for (;;) {
         xj = (((U32)(a / xi)) + xi) >> 1;
 
-        if ((xj & 0xFFFFFFFE) == (xi & 0xFFFFFFFE)) {
+        if ((xj == xi) || (abs(xj - xi) == 1)) {
             break;
         }
         xi = xj;
@@ -4726,10 +4727,11 @@ U64     msj, lsj;
                | 0x80000000UL;
 
             /* continue iteration for high precision */
+            /* done iteration when xi, xj equal or differ by 1 */
             for (;;) {
                 xj = (div_U128(mmsa, msa, xi) + xi) >> 1;
-
-                if ((xj & 0xFFFFFFFFFFFFFFFE) == (xi & 0xFFFFFFFFFFFFFFFE)) {
+                
+                if ((xj == xi) || (abs(xj - xi) == 1)) {
                     break;
                 }
                 xi = xj;
