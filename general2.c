@@ -1275,7 +1275,7 @@ DEF_INST(test_and_set)
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 RADR    abs2;                           /* Real address              */
-BYTE    old, new;                       /* Old, new values           */
+BYTE    old;                            /* Old value                 */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
@@ -1289,12 +1289,11 @@ BYTE    old, new;                       /* Old, new values           */
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    /* Get old, new values */
+    /* Get old value */
     old = regs->mainstor[abs2];
-    new = 0xff;
 
     /* Attempt to exchange the values */
-    cmpxchg1(&old, new, regs->mainstor + abs2);
+    while (cmpxchg1(&old, 255, regs->mainstor + abs2));
     regs->psw.cc = old >> 7;
 
     /* Release main-storage access lock */
