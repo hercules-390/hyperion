@@ -25,6 +25,10 @@
 #undef	OPTION_CMPSC_DEBUGLVL	   /* 3 ** 1=Exp 2=Comp 3=Both debug */
 #define OPTION_NO_IEEE_SUPPORT          /* No/downlevel IEEE support */
 
+#ifdef WIN32
+#define OPTION_NO_IEEE_SUPPORT          /* not supported in cygwin   */
+#endif
+
 #define FEATURE_ALD_FORMAT            0
 
 #undef FEATURE_4K_STORAGE_KEYS
