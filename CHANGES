@@ -1,3 +1,4 @@
+08 Apr 2002 Remove cckd garbage collection messages - Greg Smith
 08 Apr 2002 "&comments on|off" logic deleted; '*' now "talking" comments,
             '#' now silent comments (per Willem's suggestion). - Fish
 08 Apr 2002 (RESCINDED): display_version via stdout instead of stderr;

@@ -1307,7 +1307,7 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_L2CACHE_NBR       32       /* Number of secondary lookup
                                            tables that will be cached
                                            in storage                */
-#define CCKD_MAX_WRITE_TIME    60       /* Number of seconds a track
+#define CCKD_MAX_WRITE_TIME    5        /* Number of seconds a track
                                            image remains idle until
                                            it is written             */
 #define CCKD_COMPRESS_MIN      512      /* Track images smaller than

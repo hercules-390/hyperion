@@ -3014,13 +3014,11 @@ int             interval;               /* Collection interval (sec) */
 int             iterations;             /* Iterations per interval   */
 int             size;                   /* Bytes per iteration       */
     }           gctab[5]= {             /* default gcol parameters   */
-               {GC_COMBINE_HI,  8, 8, -4},   /* critical  50% - 100% */
-               {GC_COMBINE_HI,  8, 4, -2},   /* severe    25% - 50%  */
-               {GC_COMBINE_HI,  8, 4, -1},   /* moderate 12.5%- 25%  */
-               {GC_COMBINE_LO, 10, 2, -1},   /* light     6.3%- 12.5%*/
-               {GC_COMBINE_LO, 20, 1, -1}};  /* none       0% -  6.3%*/
-char           *gc_state[]=             /* Garbage states            */
-                   {"critical", "severe", "moderate", "light", "none"};
+               {GC_COMBINE_HI, 5, 8, -4},   /* critical  50% - 100% */
+               {GC_COMBINE_HI, 5, 4, -2},   /* severe    25% - 50%  */
+               {GC_COMBINE_HI, 5, 4, -1},   /* moderate 12.5%- 25%  */
+               {GC_COMBINE_LO, 5, 2, -1},   /* light     6.3%- 12.5%*/
+               {GC_COMBINE_LO, 5, 1, -1}};  /* none       0% -  6.3%*/
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
@@ -3042,8 +3040,7 @@ char           *gc_state[]=             /* Garbage states            */
         obtain_lock (&cckd->cachelock);
         for (i = 0; i < dev->ckdcachenbr && cckd->cache; i++)
         {
-            if (cckd->cache[i].updated && cckd->cache[i].tv.tv_sec +
-                cckd->max_wt < cckd->gctime)
+            if (cckd->cache[i].updated)
             {   cckd->cache[i].updated = 0;
                 cckd->cache[i].writing = 1;
                 if (!dfw_locked)
@@ -3072,18 +3069,11 @@ char           *gc_state[]=             /* Garbage states            */
 
         /* determine garbage state */
         size = cckd->cdevhdr[sfx].size;
-        if      (cckd->cdevhdr[sfx].free_total >= (size = size /2)) gc = 0;
-        else if (cckd->cdevhdr[sfx].free_total >= (size = size /2)) gc = 1;
-        else if (cckd->cdevhdr[sfx].free_total >= (size = size /2)) gc = 2;
-        else if (cckd->cdevhdr[sfx].free_total >= (size = size /2)) gc = 3;
+        if      (cckd->cdevhdr[sfx].free_total >= (size = size/2)) gc = 0;
+        else if (cckd->cdevhdr[sfx].free_total >= (size = size/2)) gc = 1;
+        else if (cckd->cdevhdr[sfx].free_total >= (size = size/2)) gc = 2;
+        else if (cckd->cdevhdr[sfx].free_total >= (size = size/2)) gc = 3;
         else gc = 4;
-
-        /* reduce state for `smallish' files */
-        if (gc < 2 && cckd->cdevhdr[sfx].size < 10 * 1024*1024) gc = 2;
-
-        if (gc < 3)
-            devmsg ("cckddasd: %4.4x garbage collection state is %s\n",
-                    dev->devnum, gc_state[gc]);
 
         /* call the garbage collector */
         switch (gctab[gc].algorithm) {
@@ -3101,7 +3091,7 @@ char           *gc_state[]=             /* Garbage states            */
 
         /* wait a bit */
         wait = gctab[gc].interval;
-        if (wait < 1) wait = 10;
+        if (wait < 1) wait = 5;
 
     gc_wait:
 #ifndef CCKD_NOTHREAD
