@@ -533,6 +533,7 @@ U32	ssaste[16];			/* Subspace ASTE	     */
     /* ASTE validity exception if subspace ASTE invalid bit is one */
     if (ssaste[0] & ASTE0_INVALID)
     {
+        regs->excarid = 0;
 	if (xcode == NULL)
 	    ARCH_DEP(program_interrupt) (regs, PGM_ASTE_VALIDITY_EXCEPTION);
 	else
@@ -544,6 +545,7 @@ U32	ssaste[16];			/* Subspace ASTE	     */
        number does not match the sequence number in the DUCT */
     if ((ssaste[5] & ASTE5_ASTESN) != (duct3 & DUCT3_SSASTESN))
     {
+        regs->excarid = 0;
 	if (xcode == NULL)
 	    ARCH_DEP(program_interrupt) (regs, PGM_ASTE_SEQUENCE_EXCEPTION);
 	else

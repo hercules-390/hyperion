@@ -56,6 +56,18 @@ typedef int64_t 	S64;
  #error Cannot determine byte order
 #endif
 
+typedef union {
+                 HWORD H;
+                 struct { BYTE H; BYTE L; } B;
+	       } HWORD_U;
+typedef union {
+		 FWORD F;
+		 struct { HWORD_U H; HWORD_U L; } H;
+	       } FWORD_U;
+typedef union {
+		 DWORD D;
+		 struct { FWORD_U H; FWORD_U L; } F;
+	       } DWORD_U;
 
 /* Internal-format PSW structure definition */
 typedef struct _PSW {
@@ -589,7 +601,10 @@ typedef struct _PSA_900 {		/* Prefixed storage area     */
 /*00A2*/ BYTE  opndrid;			/* Operand access id	     */
 /*00A3*/ BYTE  arch;			/* Architecture mode ID      */
 /*00A4*/ FWORD mpladdr;			/* MPL addr		     */
-/*00A8*/ DWORD tea;			/* Translation exception addr*/
+/*00A8*/ DWORD_U tea;			/* Translation exception addr*/
+#define TEA_G tea.D
+#define TEA_L tea.F.L.F
+#define TEA_H tea.F.H.F
 /*00B0*/ DWORD moncode;			/* Monitor code 	     */
 /*00B8*/ FWORD ioid;			/* I/O interrupt subsys id   */
 /*00BC*/ FWORD ioparm;			/* I/O interrupt parameter   */

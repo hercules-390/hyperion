@@ -1,3 +1,7 @@
+28 Mar 2001 Fix nullification problem in form_stack_entry - Jan Jaeger
+27 Mar 2001 Fix exception access id in BSG - Jan Jaeger
+27 Mar 2001 Fix exception access id during subspace replacement - Jan Jaeger
+27 Mar 2001 Fix translation exception address in ESAME mode - Jan Jaeger
 27 Mar 2001 Correction to ckd2cckd for small ckd files - Greg Smith
 25 Mar 2001 Correction to LPQ/STPQ - Jan Jaeger
 25 Mar 2001 Correction to MVCK/MVCP/MVCS - Jan Jaeger

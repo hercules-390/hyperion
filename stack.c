@@ -381,7 +381,8 @@ LSED    lsed;                           /* Linkage stack entry desc. */
 LSED    lsed2;                          /* New entry descriptor      */
 U16     rfs;                            /* Remaining free space      */
 VADR    fsha;                           /* Forward section hdr addr  */
-VADR    bsea;                           /* Backward stack entry addr */
+VADR    bsea = 0;                       /* Backward stack entry addr */
+RADR    absea;                          /* Absolute address of bsea  */
 int     i;                              /* Array subscript           */
 
     /* [5.12.3] Special operation exception if ASF is not enabled,
@@ -457,11 +458,9 @@ int     i;                              /* Array subscript           */
         lsea = fsha - 8;
         LSEA_WRAP(lsea);
 
-        /* Form the backward stack entry address and
-           place it in the new section's header entry */
+        /* Form the backward stack entry address */
         bsea = LSHE_BVALID | (regs->CR(15) & CR15_LSEA);
-        abs = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_WRITE);
-        STORE_BSEA(sysblk.mainstor + abs, bsea);
+        absea = ARCH_DEP(abs_stack_addr) (lsea, regs, ACCTYPE_WRITE);
 
         /* Use the virtual address of the entry descriptor of the
            new section's header entry as the current entry address */
@@ -489,6 +488,11 @@ int     i;                              /* Array subscript           */
 #ifdef STACK_DEBUG
     logmsg ("stack: New stack entry at " F_VADR "\n", lsea);
 #endif /*STACK_DEBUG*/
+
+    /* If a new section then place updated backward stack
+       entry address in the new section's header entry */
+    if(bsea)
+        STORE_BSEA(sysblk.mainstor + absea, bsea);
 
     /* Store general registers 0-15 in bytes 0-63 (ESA/390)
        or bytes 0-127 (ESAME) of the new state entry */

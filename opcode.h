@@ -211,7 +211,7 @@ int used; \
 #define HFPREG_CHECK(_r, _regs) \
 	if( !((_regs)->CR(0) & CR0_AFP) ) { \
 	    if( (_r) & 9 ) { \
-                _regs->dxc = DXC_AFP_REGISTER; \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
 		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
 	    } \
 	}
@@ -220,7 +220,7 @@ int used; \
 #define HFPREG2_CHECK(_r1, _r2, _regs) \
 	if( !((_regs)->CR(0) & CR0_AFP) ) { \
 	    if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                _regs->dxc = DXC_AFP_REGISTER; \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
 		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
 	    } \
 	}
@@ -231,7 +231,7 @@ int used; \
 	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
 	else if( !((_regs)->CR(0) & CR0_AFP) ) { \
 	    if( (_r) & 9 ) { \
-                _regs->dxc = DXC_AFP_REGISTER; \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
 		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
 	    } \
 	}
@@ -242,7 +242,7 @@ int used; \
 	    ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
 	else if( !((_regs)->CR(0) & CR0_AFP) ) { \
 	    if( ((_r1) & 9) || ((_r2) & 9) ) { \
-                _regs->dxc = DXC_AFP_REGISTER; \
+                (_regs)->dxc = DXC_AFP_REGISTER; \
 		ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
 	    } \
 	}
@@ -292,7 +292,7 @@ int used; \
 
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) ) { \
-            _regs->dxc = DXC_BFP_INSTRUCTION; \
+            (_regs)->dxc = DXC_BFP_INSTRUCTION; \
             ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
         }
 

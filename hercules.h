@@ -282,11 +282,10 @@ typedef struct _REGS {			/* Processor registers	     */
 	U32	ar[16]; 		/* Access registers	     */
 #define AR(_r)	ar[(_r)]
 	U32	fpr[32];		/* Floating point registers  */
-	U32	dxc;                    /* Data exception code       */
 // #if defined(FEATURE_BINARY_FLOATING_POINT)
         U32     fpc;                    /* IEEE Floating Point 
                                                     Control Register */
-        BYTE    DXC;                    /* Data Exception Code       */
+	U32	dxc;                    /* Data exception code       */
 // #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 	U32	todpr;			/* TOD programmable register */
 	U16	monclass;		/* Monitor event class	     */

@@ -514,15 +514,37 @@ static char *pgmintname[] = {
            )
             psa->excarid = regs->excarid;
 
-        /* Store the translation exception address at PSA+144 */
+#if defined(FEATURE_ESAME)
+        /* Store the translation exception address at PSA+168 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
           || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
-#if defined(FEATURE_ESAME)
           || code == PGM_ASCE_TYPE_EXCEPTION
           || code == PGM_REGION_FIRST_TRANSLATION_EXCEPTION
           || code == PGM_REGION_SECOND_TRANSLATION_EXCEPTION
           || code == PGM_REGION_THIRD_TRANSLATION_EXCEPTION
-#endif /*defined(FEATURE_ESAME)*/
+#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+          || code == PGM_PROTECTION_EXCEPTION
+#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+           )
+        {
+            STORE_DW(psa->TEA_G, regs->TEA);
+        }
+
+        /* Store the translation exception address at PSA+172 */
+        if ( code == PGM_AFX_TRANSLATION_EXCEPTION
+          || code == PGM_ASX_TRANSLATION_EXCEPTION
+          || code == PGM_PRIMARY_AUTHORITY_EXCEPTION
+          || code == PGM_SECONDARY_AUTHORITY_EXCEPTION
+          || code == PGM_SPACE_SWITCH_EVENT
+          || code == PGM_LX_TRANSLATION_EXCEPTION
+          || code == PGM_EX_TRANSLATION_EXCEPTION)
+        {
+            STORE_FW(psa->TEA_L, regs->TEA);
+        }
+#else /*!defined(FEATURE_ESAME)*/
+        /* Store the translation exception address at PSA+144 */
+        if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
+          || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
           || code == PGM_AFX_TRANSLATION_EXCEPTION
           || code == PGM_ASX_TRANSLATION_EXCEPTION
           || code == PGM_PRIMARY_AUTHORITY_EXCEPTION
@@ -535,8 +557,9 @@ static char *pgmintname[] = {
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
            )
         {
-            STORE_W(psa->tea, regs->TEA);
+            STORE_FW(psa->tea, regs->TEA);
         }
+#endif /*!defined(FEATURE_ESAME)*/
 
         /* Store Data exception code in PSA */
         if (code == PGM_DATA_EXCEPTION)

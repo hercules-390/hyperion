@@ -397,7 +397,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* ASTE sequence exception if the subspace ASTE sequence
            number does not match the sequence number in the DUCT */
         if ((daste[5] & ASTE5_ASTESN) != (duct3 & DUCT3_SSASTESN))
+        {
+            regs->excarid = r2;
             ARCH_DEP(program_interrupt) (regs, PGM_ASTE_SEQUENCE_EXCEPTION);
+        }
 
         break;
 
@@ -409,7 +412,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Program check if ALET translation error */
         if (xcode != 0)
+        {
+            regs->excarid = r2;
             ARCH_DEP(program_interrupt) (regs, xcode);
+        }
 
         /* Special operation exception if the destination ASTE
            is the base space of a different subspace group */
