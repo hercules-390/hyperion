@@ -1012,7 +1012,7 @@ BYTE **newargv;
         if (snumcpu != NULL)
         {
             if (sscanf(snumcpu, "%hu%c", &numcpu, &c) != 1
-                || numcpu < 0 || numcpu > MAX_CPU_ENGINES)
+                || numcpu > MAX_CPU_ENGINES)
             {
                 fprintf(stderr, _("HHCCF018S Error in %s line %d: "
                         "Invalid number of CPUs %s\n"),
