@@ -721,7 +721,7 @@ struct termios kbattr;                  /* Terminal I/O structure    */
     kbattr.c_lflag |= (ECHO | ICANON);
     tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
 
-    fprintf(stderr, ANSI_RESET_WHT_BLK  ANSI_ROW24_COL79 );
+    fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_ROW24_COL79 );
     fflush(stderr);
 }
 
@@ -1083,6 +1083,8 @@ struct  timeval tv;                     /* Select timeout structure  */
                         case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                             {
+                                fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_CLEAR_SCREEN);
+                                fflush(stderr);
                                 panel_command("quit");
                                 while (1) sched_yield();
                             }
