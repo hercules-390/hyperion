@@ -1677,6 +1677,8 @@ void *(*panel_command) (void *);
 
 void panel_display_r (void);
 void (*panel_display) (void);
+
+void (*daemon_task) (void);
 #else
 void *panel_command (void *cmdline);
 void panel_display (void);

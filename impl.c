@@ -183,11 +183,16 @@ TID     rctid;                          /* RC file thread identifier */
     textdomain(PACKAGE);
 #endif
 
+    /* default to background mode when both stdout and stderr
+       are redirected to a non-tty device */
+    daemon_mode = !isatty(STDERR_FILENO);
+
 #ifdef EXTERNALGUI
     /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
         extgui = 1;
+        daemon_mode = 0;
         argc--;
     }
 #endif /*EXTERNALGUI*/
@@ -201,10 +206,6 @@ TID     rctid;                          /* RC file thread identifier */
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))
         cfgfile = "hercules.cnf";
-
-    /* default to background mode when both stdout and stderr
-       are redirected to a non-tty device */
-    daemon_mode = !isatty(STDERR_FILENO);
 
     /* Process the command line options */
     while ((c = getopt(argc, argv, "f:d")) != EOF)
@@ -222,14 +223,6 @@ TID     rctid;                          /* RC file thread identifier */
         } /* end switch(c) */
     } /* end while */
 
-#ifdef EXTERNALGUI
-    if(extgui) 
-        daemon_mode = 0;
-#endif /*EXTERNALGUI*/
-
-    /* The getopt function sets the external variable optind
-       to the index in argv of the first non-option argument.
-       There should not be any non-option arguments */
     if (optind < argc)
         arg_error = 1;
 
@@ -371,9 +364,14 @@ TID     rctid;                          /* RC file thread identifier */
         panel_display ();
     else
         while(1)
-            if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
-                if(isatty(STDERR_FILENO))
-                    fwrite(msgbuf,msgcnt,1,stderr);
+#if defined(OPTION_DYNAMIC_LOAD)
+            if(daemon_task)
+                daemon_task ();
+            else
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+                if((msgcnt = log_read(&msgbuf, &msgnum, LOG_BLOCK)))
+                    if(isatty(STDERR_FILENO))
+                        fwrite(msgbuf,msgcnt,1,stderr);
 
     return 0;
 } /* end function main */
