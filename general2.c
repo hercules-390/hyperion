@@ -2073,7 +2073,7 @@ DEF_INST(convert_utf32_to_utf8)
       regs->psw.cc = 2;
       return;
     }
-    else if(utf32[1] = 0x00)
+    else if(utf32[1] == 0x00)
     {
       if(utf32[2] == 0x00)
       {
