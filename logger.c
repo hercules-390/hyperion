@@ -230,6 +230,8 @@ int bytes_read;
 
         if(bytes_read == -1)
         {
+            if (EINTR == errno)
+                continue;
             if(logger_hrdcpy)
                 fprintf(logger_hrdcpy, _("HHCLG002E Error reading syslog pipe: %s\n"),
                   strerror(errno));
@@ -400,7 +402,7 @@ int   new_hrdcpyfd;
         {
             obtain_lock(&logger_lock);
             logger_hrdcpy = 0;
-	    logger_hrdcpyfd = 0;
+        logger_hrdcpyfd = 0;
             release_lock(&logger_lock);
             fprintf(temp_hrdcpy,_("HHCLG015I log closed\n"));
             fclose(temp_hrdcpy);
@@ -411,7 +413,7 @@ int   new_hrdcpyfd;
     else
     {
         new_hrdcpyfd = open(filename, 
-			    O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
+                O_WRONLY | O_CREAT | O_TRUNC /* O_SYNC */,
                             S_IRUSR  | S_IWUSR | S_IRGRP);
         if(new_hrdcpyfd < 0)
         {
@@ -436,7 +438,7 @@ int   new_hrdcpyfd;
                 logger_hrdcpyfd = new_hrdcpyfd;
                 release_lock(&logger_lock);
 
-		if(temp_hrdcpy)
+        if(temp_hrdcpy)
                 {
                     fprintf(temp_hrdcpy,_("HHCLG018I log switched to %s\n"),
                       filename);

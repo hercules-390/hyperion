@@ -42,7 +42,7 @@ static void sigint_handler (int signo)
 
     signal(SIGINT, sigint_handler);
     /* Ignore signal unless presented on console thread */
-    if (thread_id() != sysblk.cnsltid)
+    if ( !equal_threads( thread_id(), sysblk.cnsltid ) )
         return;
 
     /* Exit if previous SIGINT request was not actioned */
@@ -299,6 +299,18 @@ TID     rctid;                          /* RC file thread identifier */
                 strerror(errno));
     }
 
+#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
+    {
+        int fds[2];
+        pipe(fds);
+        sysblk.cnslwpipe=fds[1];
+        sysblk.cnslrpipe=fds[0];
+        pipe(fds);
+        sysblk.sockwpipe=fds[1];
+        sysblk.sockrpipe=fds[0];
+    }
+#endif
+
 #if !defined(NO_SIGABEND_HANDLER)
     {
     struct sigaction sa;
@@ -426,7 +438,7 @@ void system_shutdown (void)
                  it would be better to call a synchronous termination
                  routine, which only returns when the shutdown of
                  the function in question has been completed */
-                 
+
     sysblk.shutdown = 1;
     release_config();
     usleep(50000);

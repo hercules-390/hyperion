@@ -19,6 +19,7 @@
 /*           (target) CPU when no other status has otherwise changed.*/
 /* 06/09/04  Minor fix to UpdateDeviceStatus for terminal devices.   */
 /* 07/28/04  Minor fix to UpdateDeviceStatus for non-terminal devices*/
+/* 10/04/04  Change default maxrates interval to 1440 mins (1 day).  */
 /*                                                                   */
 /*********************************************************************/
 
@@ -59,6 +60,7 @@
 #define  OUTPUT_STREAM_FILE_PTR   ( stdout )
 #define  STATUS_STREAM_FILE_PTR   ( stderr )
 #define  MAX_COMMAND_LEN          (  1024  )
+#define  DEF_MAXRATES_RPT_INTVL   (  1440  )
 
 #if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 SYSBLK            *psysblk;                    // (ptr to Herc's SYSBLK structure)
@@ -342,7 +344,7 @@ U32    prev_high_sios_rate = 0;   // (saved high water mark for previous interva
 
 time_t int_start_time      = 0;   // (start time of current interval)
 time_t prev_int_start_time = 0;   // (start time of previous interval)
-U32    rpt_interval        = 5;   // (reporting interval = every 5 minutes)
+U32    rpt_interval        = DEF_MAXRATES_RPT_INTVL;
 
 #endif
 

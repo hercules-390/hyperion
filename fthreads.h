@@ -151,6 +151,15 @@ fthread_t  fthread_self
 );
 
 ////////////////////////////////////////////////////////////////////////////////////
+// Compare thread-ids...
+
+int  fthread_equal
+(
+    fthread_t  pdwThreadID_1,
+    fthread_t  pdwThreadID_2
+);
+
+////////////////////////////////////////////////////////////////////////////////////
 // (thread signalling not [currently] supported (yet); always returns ENOTSUP...)
 
 int  fthread_kill   // FIXME: TODO:

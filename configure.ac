@@ -88,7 +88,7 @@ case "$host_os" in
                 use_dlltool=true
                 CFLAGS="$CFLAGS -Wno-format"
                 AC_DEFINE([WIN32])
-                AC_DEFINE([NO_SIGABEND_HANDLER])
+##              AC_DEFINE([NO_SIGABEND_HANDLER])
                 ;;
         *)
                 build_hercifc=false
@@ -147,10 +147,10 @@ AM_PATH_LIBGCRYPT("0.4.4",[have_gcrypt=true],[have_gcrypt=false])
 AM_CONDITIONAL(HAVE_GCRYPT, [test "x$have_gcrypt" = "xtrue"])
 
 if test "x$have_gcrypt" = "xtrue" ; then
-	OCFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS $GCRYPT_CFLAGS"
-	AC_MSG_CHECKING([whether gcry_cipher_open takes 3 or 4 args])
-	AC_COMPILE_IFELSE([
+    OCFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $GCRYPT_CFLAGS"
+    AC_MSG_CHECKING([whether gcry_cipher_open takes 3 or 4 args])
+    AC_COMPILE_IFELSE([
 #include <gcrypt.h>
 int main()
 {
@@ -159,7 +159,7 @@ int main()
   return 0;
 }
 ],[gcrypt_form=3],
-	AC_COMPILE_IFELSE(
+    AC_COMPILE_IFELSE(
 [
 #include <gcrypt.h>
 int main()
@@ -169,19 +169,19 @@ int main()
   return 0;
 }
 ],[gcrypt_form=4],[gcrypt_form=0]))
-	case $gcrypt_form in
-		3)
-		AC_MSG_RESULT([3])
-		;;
-		4)
-		AC_MSG_RESULT([4])
-		;;
-		*)
-		AC_MSG_RESULT([unknown])
-		;;
-	esac
-	CFLAGS="$OCFLAGS"
-	AC_DEFINE_UNQUOTED(GCRYPT_OPENFORMAT,${gcrypt_form})
+    case $gcrypt_form in
+        3)
+        AC_MSG_RESULT([3])
+        ;;
+        4)
+        AC_MSG_RESULT([4])
+        ;;
+        *)
+        AC_MSG_RESULT([unknown])
+        ;;
+    esac
+    CFLAGS="$OCFLAGS"
+    AC_DEFINE_UNQUOTED(GCRYPT_OPENFORMAT,${gcrypt_form})
 
 fi
 

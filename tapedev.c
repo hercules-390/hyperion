@@ -70,6 +70,21 @@
 #include "parser.h"    /* generic parameter string parser            */
 #include <regex.h>     /* POSIX(?) regular expressions               */
 
+#define  ENABLE_TRACING_STMTS   0   // (debugging: 1/0 enable/disable)
+
+#if ENABLE_TRACING_STMTS
+  #if !defined(DEBUG)
+    #warning DEBUG required (i.e. --enable-debug) for ENABLE_TRACING_STMTS
+  #endif
+#else
+  #undef  TRACE
+  #undef  ASSERT
+  #undef  VERIFY
+  #define TRACE(a...)
+  #define ASSERT(a)
+  #define VERIFY(a) ((void)(a))
+#endif
+
 #if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
  SYSBLK *psysblk;
  #define sysblk (*psysblk)

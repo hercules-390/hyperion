@@ -301,9 +301,10 @@ typedef fthread_attr_t    ATTR;
                                                fthread_attr_setdetachstate((pat),FTHREAD_CREATE_JOINABLE)
 #define join_thread(tid,pcode)                 fthread_join((tid),(pcode))
 #define detach_thread(tid)                     fthread_detach((tid))
-#define signal_thread(tid,signo)               fthread_kill((tid),(signo))
+#define signal_thread(tid,signo)               herc_kill((tid),(signo))
 #define thread_id()                            fthread_self()
 #define exit_thread(exitvar_ptr)               fthread_exit((exitvar_ptr))
+#define equal_threads(tid1,tid2)               fthread_equal((tid1),(tid2))
 #else // !defined(OPTION_FTHREADS)
 typedef pthread_t                       TID;
 typedef pthread_mutex_t                 LOCK;
@@ -351,9 +352,11 @@ typedef void*THREAD_FUNC(void*);
 #define exit_thread(_code) \
         pthread_exit((_code))
 #define signal_thread(tid,signo) \
-        pthread_kill(tid,signo)
+        herc_kill(tid,signo)
 #define thread_id() \
         pthread_self()
+#define equal_threads(tid1,tid2) \
+        pthread_equal(tid1,tid2)
 #endif // defined(OPTION_FTHREADS)
 
 #ifdef OPTION_PTTRACE
@@ -398,7 +401,7 @@ typedef void*THREAD_FUNC(void*);
         ptt_pthread_detach((tid),__FILE__,__LINE__)
 #undef  signal_thread
 #define signal_thread(tid,signo) \
-        ptt_pthread_kill(tid,signo,__FILE__,__LINE__)
+        herc_kill(tid,signo,__FILE__,__LINE__)
 #endif /* OPTION_PTTRACE */
 
 /* Pattern for displaying the thread_id */
@@ -637,7 +640,7 @@ typedef struct _REGS {                  /* Processor registers       */
                *s370_opcode_e6xx, *s370_opcode_edxx;
 
         FUNC   *s390_opcode_table;
-        FUNC   *s390_opcode_01xx, *s390_opcode_a4xx, *s390_opcode_a5xx, 
+        FUNC   *s390_opcode_01xx, *s390_opcode_a4xx, *s390_opcode_a5xx,
                *s390_opcode_a6xx, *s390_opcode_a7xx, *s390_opcode_b2xx,
                *s390_opcode_b3xx, *s390_opcode_b9xx, *s390_opcode_c0xx,
                *s390_opcode_e3xx, *s390_opcode_e4xx, *s390_opcode_e5xx,
@@ -818,6 +821,12 @@ typedef struct _SYSBLK {
         ATTR    detattr;                /* Detached thread attribute */
         TID     cnsltid;                /* Thread-id for console     */
         TID     socktid;                /* Thread-id for sockdev     */
+#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
+        int     cnslwpipe;              /* Console signaling pipe Wr */
+        int     cnslrpipe;              /* Console signaling pipe Rd */
+        int     sockwpipe;              /* Sockdev signaling pipe Wr */
+        int     sockrpipe;              /* Sockdev signaling pipe Rd */
+#endif
         RADR    mbo;                    /* Measurement block origin  */
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
@@ -2077,6 +2086,11 @@ int     cckd_comp (int, FILE *);
 int     cckd_chkdsk(int, FILE *, int);
 
 /* Functions in module hscmisc.c */
+#ifdef OPTION_PTTRACE
+int herc_kill(TID tid, int sig, char* file, int line);
+#else
+int herc_kill(TID tid, int sig);
+#endif
 int herc_system (char* command);
 void do_shutdown();
 void display_regs (REGS *regs);

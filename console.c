@@ -848,9 +848,12 @@ int     eor = 0;                        /* 1=End of record received  */
         dev->readpending = 0;
     }
 
+    /*
+        The following chunk of code was added to try and catch
+        a race condition that may or may no longer still exist.
+    */
     TNSDEBUG1("DBG031: verifying data is available...\n");
     {
-
         fd_set readset;
         struct timeval tv = {0,0};      /* (non-blocking poll) */
 
@@ -885,7 +888,11 @@ int     eor = 0;                        /* 1=End of record received  */
                BUFLEN_3270 - dev->rlen3270, 0);
 
     if (rc < 0) {
-        TNSERROR("DBG023: recv: %s\n", strerror(errno));
+        if ( ECONNRESET == errno )
+            logmsg( _( "HHCTE014E: %4.4X device %4.4X disconnected.\n" ),
+                dev->devtype, dev->devnum );
+        else
+            TNSERROR("DBG023: recv: %s\n", strerror(errno));
         dev->sense[0] = SENSE_EC;
         return (CSW_ATTN | CSW_UC);
     }
@@ -1576,11 +1583,17 @@ BYTE                    unitstat;       /* Status after receive data */
     while (console_cnslcnt) {
 
         /* Initialize the select parameters */
-        maxfd = lsock;
-        FD_ZERO (&readset);
-        FD_SET (lsock, &readset);
 
-        FD_ZERO(&c_rset);
+        FD_ZERO ( &readset );
+        FD_SET  ( lsock, &readset );
+#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
+        FD_SET  ( sysblk.cnslrpipe, &readset );
+        maxfd = lsock > sysblk.cnslrpipe ? lsock : sysblk.cnslrpipe;
+#else
+        maxfd = lsock;
+#endif
+
+        FD_ZERO ( &c_rset );
         c_mfd = 0;
 
         /* Include the socket for each connected console */
@@ -1618,23 +1631,21 @@ BYTE                    unitstat;       /* Status after receive data */
 
 
         /* Wait for a file descriptor to become ready */
-#ifdef WIN32
-    {
-        struct timeval tv={0,500000};   /* half a second */
-        rc = select ( maxfd+1, &readset, NULL, NULL, &tv );
-    }
-#else /* WIN32 */
         rc = select ( maxfd+1, &readset, NULL, NULL, NULL );
-#endif /* WIN32 */
-
-        if (rc == 0) continue;
-
         if (rc < 0 )
         {
-            if (errno == EINTR) continue;
+            if ( EINTR == errno ) continue;
             TNSERROR("DBG028: select: %s\n", strerror(errno));
             break;
         }
+#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
+        if ( FD_ISSET( sysblk.cnslrpipe, &readset ) )
+        {
+            BYTE c;
+            VERIFY( read( sysblk.cnslrpipe, &c, 1 ) == 1 );
+            continue;
+        }
+#endif
 
         /* If a client connection request has arrived then accept it */
         if (FD_ISSET(lsock, &readset))

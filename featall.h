@@ -41,6 +41,9 @@
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
+#define OPTION_WAKEUP_SELECT_VIA_PIPE   /* Use communication pipes to
+                                           interrupt selects instead
+                                           of inter-thread signaling */
 
 // ZZ FIXME: We should really move the setting of OPTION_SCSI_TAPE
 //           to configure.ac rather than have it hard-coded here,
@@ -110,6 +113,7 @@
   #define OPTION_W32_CTCI               /* Fish's TunTap for CTCA's  */
   #define OPTION_SELECT_KLUDGE       10 /* fd's to reserve for select*/
   #undef  OPTION_FISH_STUPID_GUI_PRTSPLR_EXPERIMENT  /* (Don't ask!) */
+
 #endif
 
 /* Allow for compiler command line overrides...                      */

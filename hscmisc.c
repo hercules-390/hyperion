@@ -12,7 +12,7 @@
 
 #if !defined(_HSCMISC_C)
 #define _HSCMISC_C
-        
+
 static int wait_sigq_pending = 0;
 
 static int is_wait_sigq_pending()
@@ -38,7 +38,7 @@ int pending, i;
         if (IS_CPU_ONLINE(i)
           && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
             wait_sigq_pending = 1;
-	pending = wait_sigq_pending;
+    pending = wait_sigq_pending;
         release_lock(&sysblk.intlock);
 
         if(pending)
@@ -389,7 +389,7 @@ REGS    gregs, hgregs;
     }
 
     hgregs.ghostregs = 1;
-        
+
     if( !(icode = setjmp(gregs.progjmp)) )
     {
         memcpy(&hgregs.progjmp,&gregs.progjmp,sizeof(jmp_buf));
@@ -474,10 +474,10 @@ U16     xcode;                          /* Exception code            */
 
   #if defined(FEATURE_ESAME)
     n = sprintf (buf, "%c:%16.16llX:", ar == USE_REAL_ADDR ? 'R' : 'V',
-		                       (long long)vaddr);
+                               (long long)vaddr);
   #else /*!defined(FEATURE_ESAME)*/
     n = sprintf (buf, "%c:%8.8X:", ar == USE_REAL_ADDR ? 'R' : 'V',
-		                     vaddr);
+                             vaddr);
   #endif /*!defined(FEATURE_ESAME)*/
     xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
@@ -572,7 +572,7 @@ char    type;
         }
 
         memcpy(inst, regs->mainstor + aaddr, ilc);
-        logmsg("%c" F_RADR ": %2.2X%2.2X", 
+        logmsg("%c" F_RADR ": %2.2X%2.2X",
           stid == TEA_ST_PRIMARY ? 'P' :
           stid == TEA_ST_HOME ? 'H' :
           stid == TEA_ST_SECNDRY ? 'S' : 'R',
@@ -871,7 +871,7 @@ int     n;                              /* Number of bytes in buffer */
     {
         if(REAL_MODE(&regs->psw))
             n = ARCH_DEP(display_virt) (regs, addr1, buf, USE_REAL_ADDR,
-			                                    ACCTYPE_READ);
+                                                ACCTYPE_READ);
         else
             n = ARCH_DEP(display_virt) (regs, addr1, buf, b1,
                                 (opcode == 0x44 ? ACCTYPE_INSTFETCH :
@@ -890,7 +890,7 @@ int     n;                              /* Number of bytes in buffer */
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
             || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
             n = ARCH_DEP(display_virt) (regs, addr1, buf, USE_REAL_ADDR,
-			                                    ACCTYPE_READ);
+                                                ACCTYPE_READ);
         else
             n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,
                                         ACCTYPE_READ);
@@ -1016,7 +1016,6 @@ void disasm_stor(REGS *regs, char *opnd)
 
 }
 
-
 /*-------------------------------------------------------------------*/
 /* Execute a Unix or Windows command                                 */
 /* Returns the system command status code                            */
@@ -1067,5 +1066,46 @@ int pid, status;
     } while(1);
 #endif /* !WIN32 */
 } /* end function herc_system */
+
+/*-------------------------------------------------------------------*/
+/* Hercules thread signalling function...                            */
+/*-------------------------------------------------------------------*/
+#if defined( OPTION_PTTRACE )
+int  herc_kill( TID  tid, int  sig, char* file, int line )
+#else
+int  herc_kill( TID  tid, int  sig)
+#endif
+{
+#if defined( OPTION_WAKEUP_SELECT_VIA_PIPE )
+    if ( SIGUSR2 == sig &&
+        equal_threads( sysblk.cnsltid, tid ) )
+    {
+        BYTE c=0;
+        VERIFY( write( sysblk.cnslwpipe, &c, 1 ) == 1 );
+        return 0;
+    }
+    if ( SIGUSR2 == sig &&
+        equal_threads( sysblk.socktid, tid ) )
+    {
+        BYTE c=0;
+        VERIFY( write( sysblk.sockwpipe, &c, 1 ) == 1 );
+        return 0;
+    }
+#endif
+    // Call the appropriate "thread kill" (signal_thread) function
+#if defined( OPTION_PTTRACE )
+    // Note: 'ptt_pthread_kill' is somewhat of a misnomer
+    // since it DOES call the appropriate thread kill function
+    // (pthread_kill or fthread_kill) depending on what build
+    // of Herc this is (i.e. OPTION_FTHREADS or not).
+    return ptt_pthread_kill( tid, sig, file, line );
+#else
+  #if defined(OPTION_FTHREADS)
+    return fthread_kill( tid, sig );
+  #else
+    return pthread_kill( tid, sig );
+  #endif
+#endif
+}
 
 #endif /*!defined(_GEN_ARCH)*/

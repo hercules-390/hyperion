@@ -281,11 +281,13 @@ int i;
     if( signo == SIGUSR2 )
     {
     DEVBLK *dev;
-
-        if(tid == sysblk.cnsltid || tid == sysblk.socktid)
+        if ( equal_threads( tid, sysblk.cnsltid ) ||
+             equal_threads( tid, sysblk.socktid ) )
             return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
-            if (dev->tid == tid || dev->shrdtid == tid) break;
+            if ( equal_threads( dev->tid, tid ) ||
+                 equal_threads( dev->shrdtid, tid ) )
+                 break;
         if( dev == NULL)
         {
             if (!sysblk.shutdown)
@@ -301,7 +303,7 @@ int i;
 
     for (i = 0; i < MAX_CPU; i++)
     {
-        if(sysblk.cputid[i] == tid)
+        if ( equal_threads( sysblk.cputid[i], tid ) )
         {
             regs = sysblk.regs[i];
             break;
@@ -314,7 +316,7 @@ int i;
         raise(signo);
         return;
     }
-    
+
     if(MACHMASK(&regs->psw))
     {
 #if defined(_FEATURE_SIE)
@@ -368,7 +370,7 @@ int i;
 #if defined(_FEATURE_SIE)
                      regs->sie_active ? regs->guestregs :
 #endif /*defined(_FEAURE_SIE)*/
-                                                          regs, 
+                                                          regs,
 #if defined(_FEATURE_SIE)
           regs->sie_active ? regs->guestregs->ip :
 #endif /*defined(_FEAURE_SIE)*/
