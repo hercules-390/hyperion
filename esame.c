@@ -442,6 +442,16 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+
     /* Space switch event when switching into or
        out of home space mode AND space-switch-event on in CR1 or CR13 */
     if((HOME_SPACE_MODE(&(regs->psw)) ^ HOME_SPACE_MODE(&save_psw))
@@ -1817,10 +1827,20 @@ U32     i2;                             /* 32-bit operand values     */
 
     /* Branch if R1 mask bit is set */
     if ((0x08 >> regs->psw.cc) & r1)
+    {
         /* Calculate the relative branch address */
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
-
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 } /* end DEF_INST(branch_relative_on_condition_long) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
 
@@ -1851,6 +1871,15 @@ U32     i2;                             /* 32-bit operand values     */
     regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
 
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
 } /* end DEF_INST(branch_relative_and_save_long) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
 
@@ -2053,8 +2082,19 @@ S64     i,j;                            /* Integer workareas         */
 
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
+    {
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 
 } /* end DEF_INST(branch_relative_on_index_high_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2083,8 +2123,19 @@ S64     i,j;                            /* Integer workareas         */
 
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
+    {
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 6) : regs->ET)
                                 + 2LL*(S32)i2) & ADDRESS_MAXWRAP(regs);
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 
 } /* end DEF_INST(branch_relative_on_index_low_or_equal_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2114,7 +2165,18 @@ S64     i, j;                           /* Integer work areas        */
 
     /* Branch if result compares high */
     if ( (S64)regs->GR_G(r1) > j )
+    {
         regs->psw.IA = effective_addr2;
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (effective_addr2 >= regs->CR(10) && effective_addr2 <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 
 } /* end DEF_INST(branch_on_index_high_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2144,7 +2206,18 @@ S64     i, j;                           /* Integer work areas        */
 
     /* Branch if result compares low or equal */
     if ( (S64)regs->GR_G(r1) <= j )
+    {
         regs->psw.IA = effective_addr2;
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (effective_addr2 >= regs->CR(10) && effective_addr2 <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 
 } /* end DEF_INST(branch_on_index_low_or_equal_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2299,7 +2372,18 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
+    {
         regs->psw.IA = effective_addr2;
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (effective_addr2 >= regs->CR(10) && effective_addr2 <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 
 } /* end DEF_INST(branch_on_count_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2322,7 +2406,18 @@ VADR    newia;                          /* New instruction address   */
     /* Subtract 1 from the R1 operand and branch if result
            is non-zero and R2 operand is not register zero */
     if ( --(regs->GR_G(r1)) && r2 != 0 )
+    {
         regs->psw.IA = newia;
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (newia >= regs->CR(10) && newia <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 
 } /* end DEF_INST(branch_on_count_long_register) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -2989,9 +3084,19 @@ U16     i2;                             /* 16-bit operand values     */
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_G(r1)) )
+    {
         regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
-
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 } /* end DEF_INST(branch_relative_on_count_long) */
 #endif /*defined(FEATURE_ESAME)*/
 

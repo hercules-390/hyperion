@@ -1801,14 +1801,14 @@ U16     xcode;                          /* Exception code            */
         /* Set the reference and change bits in the storage key */
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
 
-#if defined(FEATURE_PER2)
+#if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
 /* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER2)*/
+#endif /*defined(FEATURE_PER)*/
 
         break;
 
@@ -1818,14 +1818,14 @@ U16     xcode;                          /* Exception code            */
                                 private, protect, regs))
             goto vabs_prot_excp;
 
-#if defined(FEATURE_PER2)
+#if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
 /* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER2)*/
+#endif /*defined(FEATURE_PER)*/
 
         break;
 
@@ -2013,14 +2013,14 @@ int     aeind;
 
         /* Set the reference and change bits in the storage key */
         STORAGE_KEY(aaddr) |= (STORKEY_REF | STORKEY_CHANGE);
-#if defined(FEATURE_PER2)
+#if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
 /* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER2)*/
+#endif /*defined(FEATURE_PER)*/
         break;
 
     case ACCTYPE_WRITE_SKP:
@@ -2028,14 +2028,14 @@ int     aeind;
         if (ARCH_DEP(is_store_protected) (addr, STORAGE_KEY(aaddr), akey,
                                 private, protect, regs))
             goto vabs_prot_excp;
-#if defined(FEATURE_PER2)
+#if defined(FEATURE_PER)
         if( EN_IC_PER_SA(regs)
           && (REAL_MODE(&regs->psw) 
 /* INCOMLETE CHECK FOR SAEVENT BIT IN STD/ASCE USED */ )
           && addr >= regs->CR(10)
           && addr <= regs->CR(11) )
             ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER2)*/
+#endif /*defined(FEATURE_PER)*/
 
         break;
 

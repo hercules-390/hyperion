@@ -116,7 +116,10 @@ do { \
      (_regs)->ints_mask = (((_regs)->ints_mask&~IC_PER_MASK) \
                           | (((_regs)->CR(9) >> IC_CR9_SHIFT)&IC_PER_MASK)); \
    else \
+   { \
      (_regs)->ints_mask &= ~IC_PER_MASK; \
+     (_regs)->ints_state &= ~IC_PER_MASK; \
+   } \
 } while (0)
 
 #define SET_IC_EXTERNAL_MASK(_regs) \

@@ -200,6 +200,16 @@ int  i;
         regs->CR(12) = ARCH_DEP(trace_br) (1, trap_ia, regs);
   #endif /*FEATURE_TRACING*/
 
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (trap_ia >= regs->CR(10) && trap_ia <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+
     trap_flags = regs->psw.ilc << 16;
 
     if(execflag)

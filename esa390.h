@@ -212,6 +212,8 @@ typedef struct _TLBE {
 #define CR9_GRA 	0x10000000	/* General Register Alt.     */
 #define CR9_STURA	0x08000000	/* Store using real addr     */
 #define CR9_GRMASK	0x0000FFFF	/* GR mask bits 	     */
+#define CR9_BAC         0x00800000      /* Br addr control PER2 only */
+#define CR9_SAC         0x00200000      /* Stor. alter. c. PER2 only */
 
 /* Bit definitions for control register 12 */
 #define S_CR12_BRTRACE	0x80000000	/* Branch trace control      */

@@ -277,6 +277,15 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
 }
 #endif /*defined(FEATURE_BRANCH_AND_SET_AUTHORITY)*/
 
@@ -542,6 +551,16 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     INVALIDATE_AEA_ALL(regs);
 
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+
 }
 #endif /*defined(FEATURE_SUBSPACE_GROUP)*/
 
@@ -630,7 +649,18 @@ VADR    n = 0;                          /* Work area                 */
 
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
+    {
         regs->psw.IA = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+#if defined(FEATURE_PER)
+        if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+          && ( !(regs->CR(9) & CR9_BAC)
+           || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+            )
+            ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+    }
 
 }
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
@@ -2680,6 +2710,16 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
 
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
+
     /* Generate space switch event if required */
     if (ssevent)
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
@@ -2865,6 +2905,16 @@ int     rc;                             /* return code from load_psw */
     lsedp = (LSED*)(sysblk.mainstor + alsed);
     lsedp->nes[0] = 0;
     lsedp->nes[1] = 0;
+
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (regs->psw.IA >= regs->CR(10) && regs->psw.IA <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
 
     /* Generate space switch event if required */
     if (ssevent)
@@ -3079,6 +3129,16 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     if (regs->CR(12) & CR12_ASNTRACE)
         regs->CR(12) = newcr12;
 #endif /*FEATURE_TRACING*/
+
+#if defined(FEATURE_PER)
+    if( EN_IC_PER_SB(regs) 
+#if defined(FEATURE_PER2)
+      && ( !(regs->CR(9) & CR9_BAC)
+       || (ia >= regs->CR(10) && ia <= regs->CR(11)) )
+#endif /*defined(FEATURE_PER2)*/
+        )
+        ON_IC_PER_SB(regs);
+#endif /*defined(FEATURE_PER)*/
 
     /* Replace PSW amode, instruction address, and problem state bit */
     regs->psw.amode = amode;
