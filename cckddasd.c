@@ -4258,6 +4258,7 @@ size_t          moved = 0;              /* Space moved               */
 int             after = 0, a;           /* New space after old       */
 int             sfx;                    /* File index                */
 int             i, j, l;                /* Indexes                   */
+int             flags;                  /* Write trkimg flags        */
 off_t           fpos, upos;             /* File offsets              */
 size_t          flen, ulen, len;        /* Lengths                   */
 int             trk;                    /* Track number              */
@@ -4382,6 +4383,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
             goto cckd_gc_perc_error;
 
         /* Process each space in the buffer */
+        flags = cckd->cdevhdr[sfx].free_number < 100 ? CCKD_SIZE_EXACT : CCKD_SIZE_ANY;
         for (i = a = 0; i + CKDDASD_TRKHDR_SIZE <= (int)ulen; i += len)
         {
             /* Check for level 2 table */
@@ -4425,7 +4427,7 @@ BYTE            buf[256*1024];          /* Buffer                    */
                           trk, (long long)(upos + i), (int)l2.len);
 
                 /* Relocate the track image somewhere else */
-                if ((rc = cckd_write_trkimg (dev, buf + i, (int)l2.len, trk, CCKD_SIZE_EXACT)) < 0)
+                if ((rc = cckd_write_trkimg (dev, buf + i, (int)l2.len, trk, flags)) < 0)
                     goto cckd_gc_perc_error;
                 a += rc;
             }
