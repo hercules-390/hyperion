@@ -14,6 +14,7 @@ typedef struct _DEVHND {
 
 
 typedef struct _DEVENT {
+        char  *name;
         U16   type;
         DEVHND *hnd;                        /* Device handlers       */
 } DEVENT;

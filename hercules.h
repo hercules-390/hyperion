@@ -1451,7 +1451,7 @@ void release_config ();
 DEVBLK *find_device_by_devnum (U16 devnum);
 DEVBLK *find_device_by_subchan (U16 subchan);
 DEVBLK *find_unused_device ();
-int  attach_device (U16 devnum, U16 devtype, int addargc,
+int  attach_device (U16 devnum, char *devtype, int addargc,
         BYTE *addargv[]);
 int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);

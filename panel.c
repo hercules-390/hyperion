@@ -954,7 +954,7 @@ REGS   *regs;                           /* -> CPU register context   */
 U32     aaddr;                          /* Absolute storage address  */
 U16     devnum;                         /* Device number             */
 U16     newdevn;                        /* Device number             */
-U16     devtype;                        /* Device type               */
+char    *devtype;                       /* Device type               */
 DEVBLK *dev;                            /* -> Device block           */
 BYTE    c;                              /* Character work area       */
 int     rc;                             /* Return code               */
@@ -2308,13 +2308,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             return NULL;
         }
 
-        devascii = strtok(NULL," \t");
-        if (devascii == NULL
-            || sscanf(devascii, "%hx%c", &devtype, &c) != 1)
-        {
-            logmsg ("Device type %s is invalid\n", devascii);
-            return NULL;
-        }
+        devtype = strtok(NULL," \t");
 
         /* Set up remaining arguments for initialization handler */
 #if 0 // ndef EXTERNALGUI

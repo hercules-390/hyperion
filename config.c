@@ -304,7 +304,6 @@ BYTE    pgmprdos;                       /* Program product OS OK     */
 BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
-U16     devtype;                        /* Device type               */
 int     devtmax;                        /* Max number device threads */
 #ifdef OPTION_IODELAY_KLUDGE
 int     iodelay=-1;                     /* I/O delay value           */
@@ -1108,16 +1107,8 @@ BYTE    c;                              /* Work area for sscanf      */
             exit(1);
         }
 
-        if (sscanf(sdevtype, "%hx%c", &devtype, &c) != 1)
-        {
-            logmsg( "HHC032I Error in %s line %d: "
-                    "%s is not a valid device type\n",
-                    fname, stmt, sdevtype);
-            exit(1);
-        }
-
         /* Build the device configuration block */
-        if (attach_device (devnum, devtype, addargc, addargv))
+        if (attach_device (devnum, sdevtype, addargc, addargv))
             exit(1);
 
         /* Read next device record from the configuration file */
@@ -1267,7 +1258,7 @@ int deconfigure_cpu(REGS *regs)
 /*-------------------------------------------------------------------*/
 /* Function to build a device configuration block                    */
 /*-------------------------------------------------------------------*/
-int attach_device (U16 devnum, U16 devtype,
+int attach_device (U16 devnum, char *type,
                    int addargc, BYTE *addargv[])
 {
 DEVBLK *dev;                            /* -> Device block           */
@@ -1284,15 +1275,15 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     }
 
     for(;devent->hnd;devent++)
-        if(devent->type == devtype)
+        if(!strcasecmp(devent->name, type))
             break;
 
     if(!devent->hnd)
     {
-        logmsg ("HHC036I Device type %4.4X not recognized\n",
-                devtype);
+        logmsg ("HHC036I Device type %s not recognized\n",
+                type);
         return 1;
-    } /* end switch(devtype) */
+    }
 
     /* Attempt to reuse an existing device block */
     dev = find_unused_device();
@@ -1333,7 +1324,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->chanset = devnum >> 12;
     if( dev->chanset >= MAX_CPU_ENGINES )
         dev->chanset = MAX_CPU_ENGINES - 1;
-    dev->devtype = devtype;
+    dev->devtype = devent->type;
     dev->fd = -1;
 
     /* Initialize the path management control word */

@@ -8,49 +8,49 @@
 
 DEVENT device_handler_table[] = {
 
-    /* { device_type, device_handler_info } */
+    /* { type_name, device_type, device_handler_info } */
 
     /* TTY consoles */
-    { 0x1052, &constty_device_hndinfo },
-    { 0x3215, &constty_device_hndinfo },
+    { "1052", 0x1052, &constty_device_hndinfo },
+    { "3215", 0x3215, &constty_device_hndinfo },
 
     /* Card readers */
-    { 0x1442, &cardrdr_device_hndinfo },
-    { 0x2501, &cardrdr_device_hndinfo },
-    { 0x3505, &cardrdr_device_hndinfo },
+    { "1442", 0x1442, &cardrdr_device_hndinfo },
+    { "2501", 0x2501, &cardrdr_device_hndinfo },
+    { "3505", 0x3505, &cardrdr_device_hndinfo },
 
     /* Card punches */
-    { 0x3525, &cardpch_device_hndinfo },
+    { "3525", 0x3525, &cardpch_device_hndinfo },
 
     /* Printers */
-    { 0x1403, &printer_device_hndinfo },
-    { 0x3211, &printer_device_hndinfo },
+    { "1403", 0x1403, &printer_device_hndinfo },
+    { "3211", 0x3211, &printer_device_hndinfo },
 
     /* Tapes */
-    { 0x3420, &tapedev_device_hndinfo },
-    { 0x3480, &tapedev_device_hndinfo },
+    { "3420", 0x3420, &tapedev_device_hndinfo },
+    { "3480", 0x3480, &tapedev_device_hndinfo },
 
     /* Count Key Data Direct Access Storage Devices */
-    { 0x2311, &ckddasd_device_hndinfo },
-    { 0x2314, &ckddasd_device_hndinfo },
-    { 0x3330, &ckddasd_device_hndinfo },
-    { 0x3340, &ckddasd_device_hndinfo },
-    { 0x3350, &ckddasd_device_hndinfo },
-    { 0x3375, &ckddasd_device_hndinfo },
-    { 0x3380, &ckddasd_device_hndinfo },
-    { 0x3390, &ckddasd_device_hndinfo },
-    { 0x9345, &ckddasd_device_hndinfo },
+    { "2311", 0x2311, &ckddasd_device_hndinfo },
+    { "2314", 0x2314, &ckddasd_device_hndinfo },
+    { "3330", 0x3330, &ckddasd_device_hndinfo },
+    { "3340", 0x3340, &ckddasd_device_hndinfo },
+    { "3350", 0x3350, &ckddasd_device_hndinfo },
+    { "3375", 0x3375, &ckddasd_device_hndinfo },
+    { "3380", 0x3380, &ckddasd_device_hndinfo },
+    { "3390", 0x3390, &ckddasd_device_hndinfo },
+    { "9345", 0x9345, &ckddasd_device_hndinfo },
 
     /* Fixed Block Architecture Direct Access Storage Devices */
-    { 0x0671, &fbadasd_device_hndinfo },
-    { 0x3310, &fbadasd_device_hndinfo },
-    { 0x3370, &fbadasd_device_hndinfo },
-    { 0x9336, &fbadasd_device_hndinfo },
+    { "0671", 0x0671, &fbadasd_device_hndinfo },
+    { "3310", 0x3310, &fbadasd_device_hndinfo },
+    { "3370", 0x3370, &fbadasd_device_hndinfo },
+    { "9336", 0x9336, &fbadasd_device_hndinfo },
 
     /* Local Non-SNA 3270 devices */
-    { 0x3270, &loc3270_device_hndinfo },
+    { "3270", 0x3270, &loc3270_device_hndinfo },
 
     /* Communications devices */
-    { 0x3088, &ctcadpt_device_hndinfo },
+    { "3088", 0x3088, &ctcadpt_device_hndinfo },
 
-    { 0, NULL } };
+    { NULL, 0, NULL } };
