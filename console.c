@@ -1519,8 +1519,6 @@ loc3270_close_device ( DEVBLK *dev )
 static int
 constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
     /* Indicate that this is a console device */
     dev->console = 1;
@@ -1534,6 +1532,17 @@ constty_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     /* Set length of print buffer */
     dev->bufsize = BUFLEN_1052;
 
+    /* Assume we want to prompt */
+    dev->prompt1052 = 1;
+    
+    /* Is there an argument? */
+    if (argc == 1)
+    {
+        /* Look at the argument and set noprompt flag if specified. */
+        if (strcmp(argv[0], "noprompt") == 0)
+            dev->prompt1052 = 0;
+    }
+    
     /* Initialize the device identifier bytes */
     dev->devid[0] = 0xFF;
     dev->devid[1] = dev->devtype >> 8;
@@ -1560,10 +1569,13 @@ constty_query_device (DEVBLK *dev, BYTE **class,
     *class = "CON";
 
     if (dev->connected)
-        snprintf (buffer, buflen, "%s",
+        snprintf (buffer, buflen, "%s ",
                 (BYTE*)inet_ntoa(dev->ipaddr));
     else
         buffer[0] = '\0';
+
+    if (dev->prompt1052 == 0)
+        strcat(buffer,"noprompt");
 
 } /* end function constty_query_device */
 
@@ -2265,16 +2277,19 @@ BYTE    stat;                           /* Unit status               */
         /* Solicit console input if no data in the device buffer */
         if (dev->keybdrem == 0)
         {
-            /* Display prompting message on console */
-            len = sprintf (dev->buf,
-                    "HHC901I Enter input for console device %4.4X\r\n",
-                    dev->devnum);
-            rc = send_packet (dev->fd, dev->buf, len, NULL);
-            if (rc < 0)
+            /* Display prompting message on console if allowed */
+            if (dev->prompt1052 == 1)
             {
-                dev->sense[0] = SENSE_EC;
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-                break;
+                len = sprintf (dev->buf,
+                        "HHC901I Enter input for console device %4.4X\r\n",
+                        dev->devnum);
+                rc = send_packet (dev->fd, dev->buf, len, NULL);
+                if (rc < 0)
+                {
+                    dev->sense[0] = SENSE_EC;
+                    *unitstat = CSW_CE | CSW_DE | CSW_UC;
+                    break;
+                }
             }
 
             /* Accumulate client input data into device buffer */

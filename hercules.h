@@ -980,7 +980,8 @@ typedef struct _DEVBLK {
         int     keybdrem;               /* Number of bytes remaining
                                            in keyboard read buffer   */
         U32                             /* Flags                     */
-                eab3270:1;              /* 1=Extended attributes     */
+                eab3270:1,              /* 1=Extended attributes     */
+                prompt1052:1;           /* 1=Prompt for linemode i/p */
         BYTE    aid3270;                /* Current input AID value   */
         BYTE    mod3270;                /* 3270 model number         */
 
