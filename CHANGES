@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+17 Dec 2003 Correct structure size boundaries for ARM compiles - Ivan Warren
 12 Dec 2003 Clear tlb every 2^16 invalidations instead of 2^8 - Greg Smith
 05 Dec 2003 Move IS_IC_TRACE check to slowloop in run_cpu - Greg Smith
 05 Dec 2003 Clear regs->ve every 2^20 invalidations instead of 2^12 - Greg Smith

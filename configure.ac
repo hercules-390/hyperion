@@ -325,6 +325,39 @@ AC_CHECK_HEADERS(linux/if_tun.h)
 AC_C_BIGENDIAN
 
 
+#
+# TEST FOR STRUCTURE ALIGNEMENT
+#
+cat > conftest.h << __EOF
+#include <stdio.h>
+struct sizeoftest
+{
+    unsigned char a;
+};
+__EOF
+
+AC_CHECK_SIZEOF(struct sizeoftest,,[#include "conftest.h"])
+
+AC_MSG_CHECKING([whether ${CC-cc} can/needs a byte structure alignement flag])
+hc_cv_sizeok=1
+hc_cv_needflag=no
+if test "x$ac_cv_sizeof_struct_sizeoftest" != "x1"; then
+    case "$host_cpu-$GCC" in
+        arm*-yes|xscale*-yes|sh*-yes|pxa*-yes)
+               CFLAGS="$CFLAGS -mstructure-size-boundary=8"
+                hc_cv_needflag=yes
+               ;;
+        *)
+                hc_cv_sizeok=0
+                ;;
+    esac
+fi
+if test "x$hc_cv_sizeok" = "x0"; then
+    AC_MSG_ERROR([Size of structures are aligned/rounded and we don't know how to tell the compiler otherwise])
+fi
+AC_MSG_RESULT([$hc_cv_needflag])
+
+
 # GCC only seems to support regparm on i386 right now, but that could
 # change in the future.
 AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
@@ -596,6 +629,12 @@ if test x$auto_optimize = xtrue; then
   case "$host_cpu" in
           powerpc)
             OFLAGS="-O3 $OFLAGS"
+            ;;
+          arm)
+            OFLAGS="-O3 -frename-registers"
+            ;;
+          xscale|arm*)
+            OFLAGS="-O3 -frename-registers -mcpu=$host_cpu -mtune=$host_cpu"
             ;;
           i386|i486|i586|i686)
             ac_xarch=$host_cpu
