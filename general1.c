@@ -3082,8 +3082,8 @@ GREG    len3;
     ODD2_CHECK(r1, r2, regs);
 
     /* Determine the destination and source addresses */
-    addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
-    addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
+    addr1 = regs->GR(r1) = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
+    addr2 = regs->GR(r2) = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
     /* Load padding byte from bits 0-7 of R2+1 register */
     pad = regs->GR_LHHCH(r2+1);
