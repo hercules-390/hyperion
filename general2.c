@@ -762,8 +762,8 @@ U32     n;                              /* Integer work areas        */
                     (S32)regs->GR_L(r1) >> n;
 
     /* Set the condition code */
-    regs->psw.cc = (S32)regs->GR_L(r1) > 0 ? 2 :
-                   (S32)regs->GR_L(r1) < 0 ? 1 : 0;
+    regs->psw.cc = ((S32)regs->GR_L(r1) > 0) ? 2 :
+                   (((S32)regs->GR_L(r1) < 0) ? 1 : 0);
 }
 
 
