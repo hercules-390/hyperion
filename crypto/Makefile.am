@@ -5,7 +5,7 @@
 
 lns=@LN_S@
 
-LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@
+LDADD = @LTLIBINTL@ @LTLIBICONV@ @LIBS@ ../libhercs.la ../libherc.la
 
 LDADD += $(LIBGCRYPT_LIBS)
 
