@@ -14,13 +14,36 @@ volumes for use with Hercules.
 
 <h2>Using pre-built DASD images</h2>
 <p>
-If you can obtain one of the IBM Application Development CDs
-which are supplied for use with the P/390, you will find that
-these contain pre-built DASD image files which simply need to be
-unzipped onto your hard drive.  These images can be directly
-read by Hercules.  However, you cannot legally use this method because
-the software on the CD is licensed for use only on the P/390
-system that it was shipped with.
+IBM distributes pre-built OS/390 and z/OS systems on two
+different CD-ROM packages:
+<dl>
+<dt>The OS/390 and z/OS Application Development CD (ADCD)
+<dd>available only to members of IBM PartnerWorld for Developers,
+and
+<dt>The OS/390 and z/OS DemoPkg
+<dd>available only to IBM employees and qualified IBM Business Partners.
+</dl>
+<p>Both of these packages contain pre-built DASD image files
+which simply need to be unzipped onto your hard drive.  The
+unzipped images can be directly read by Hercules.
+<p>
+Be aware, however, that you cannot use the ADCD images because
+the PartnerWorld scheme requires you to purchase or lease an IBM
+approved machine in order to obtain the ADCD, and the software on
+the ADCD is licensed for use only on the machine that it was
+shipped with.
+See
+<a href="http://etpgw02.dfw.ibm.com/adcd.html">
+http://etpgw02.dfw.ibm.com/adcd.html</a>.
+If you want Hercules to be an approved machine so that you can
+use the ADCD, then I suggest you lobby IBM Developer Relations
+<!---(fyolton&nbsp;&#064;&nbsp;us.ibm.com)--->
+at the address given on their web page.
+<p>
+Different rules apply to the OS/390 and z/OS
+DemoPkg CD which is available only to IBM employees and business
+partners.  If you fall into this category then you probably know
+what the rules are -- I don't :-(
 
 <h2>Restoring DASD from full-volume dumps</h2>
 
@@ -327,7 +350,7 @@ lrecl blksize keylen</em></code>
     <dt><code>SEQ <em>filename</em></code>
     <dd>the sequential dataset is loaded from a <b>binary</b> file.
         ascii/ebcdic translation is not currently supported.  Also,
-        the dsorg must either be <em>PS</em> or <em>DA</em> and 
+        the dsorg must either be <em>PS</em> or <em>DA</em> and
         recfm must either be <em>F</em> or <em>FB</em>.
     <dt><code>EMPTY</code>
     <dd>the dataset is initialized with an end of file record
@@ -567,6 +590,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 3 October 2003
+<p>Last updated 4 January 2004
 </BODY>
 </HTML>
