@@ -57,7 +57,6 @@
 
 #ifdef FEATURE_ECPSVM
 
-static ECPSVM_CMDENT ecpsvm_cmdtab[];
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd);
 
 struct _ECPSVM_CPSTATS
@@ -2726,36 +2725,6 @@ void ecpsvm_showstats(int ac,char **av)
     free(ar);
 }
 
-static void ecpsvm_helpcmdlist(void)
-{
-    int i;
-    ECPSVM_CMDENT *ce;
-
-    for(i=0;ecpsvm_cmdtab[i].name;i++)
-    {
-        ce=&ecpsvm_cmdtab[i];
-        logmsg(_("HHCEV010I : %s : %s\n"),ce->name,ce->expl);
-    }
-    return;
-}
-void ecpsvm_helpcmd(int ac,char **av)
-{
-    ECPSVM_CMDENT *ce;
-    if(ac==1)
-    {
-        ecpsvm_helpcmdlist();
-        return;
-    }
-    ce=ecpsvm_getcmdent(av[1]);
-    if(ce==NULL)
-    {
-        logmsg(_("HHCEV011E Unknown subcommand %s - valid subcommands are :\n"),av[1]);
-        ecpsvm_helpcmdlist();
-        return;
-    }
-    logmsg(_("HHCEV012I : %s : %s"),ce->name,ce->help);
-    return;
-}
 
 ECPSVM_STAT *ecpsvm_findstat(char *feature,char **fclass)
 {
@@ -2929,6 +2898,8 @@ void ecpsvm_level(int ac,char **av)
     }
 }
 
+static  void ecpsvm_helpcmd(int,char **);
+
 static ECPSVM_CMDENT ecpsvm_cmdtab[]={
     {"Help",1,ecpsvm_helpcmd,"Show help","format : \"evm help [cmd]\" Shows help on the specified\n"
                                                         "        ECPSVM subcommand\n"},
@@ -2941,6 +2912,38 @@ static ECPSVM_CMDENT ecpsvm_cmdtab[]={
 #endif
     {"Level",1,ecpsvm_level,"Set/Show ECPS:VM level","format : evm Level [nn]\n"},
     {NULL,0,NULL,NULL,NULL}};
+
+static void ecpsvm_helpcmdlist(void)
+{
+    int i;
+    ECPSVM_CMDENT *ce;
+
+    for(i=0;ecpsvm_cmdtab[i].name;i++)
+    {
+        ce=&ecpsvm_cmdtab[i];
+        logmsg(_("HHCEV010I : %s : %s\n"),ce->name,ce->expl);
+    }
+    return;
+}
+
+void ecpsvm_helpcmd(int ac,char **av)
+{
+    ECPSVM_CMDENT *ce;
+    if(ac==1)
+    {
+        ecpsvm_helpcmdlist();
+        return;
+    }
+    ce=ecpsvm_getcmdent(av[1]);
+    if(ce==NULL)
+    {
+        logmsg(_("HHCEV011E Unknown subcommand %s - valid subcommands are :\n"),av[1]);
+        ecpsvm_helpcmdlist();
+        return;
+    }
+    logmsg(_("HHCEV012I : %s : %s"),ce->name,ce->help);
+    return;
+}
 
 ECPSVM_CMDENT *ecpsvm_getcmdent(char *cmd)
 {
