@@ -80,6 +80,9 @@ BYTE    chanstat;                       /* IPL device channel status */
     /* Point to the PSA in main storage */
     psa = (PSA*)(regs->mainstor + regs->PX);
 
+    /* Set Main Storage Reference and Update bits */
+    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+
     /* Build the IPL CCW at location 0 */
     psa->iplpsw[0] = 0x02;              /* CCW command = Read */
     psa->iplpsw[1] = 0;                 /* Data address = zero */
