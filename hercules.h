@@ -73,6 +73,10 @@
 #include <bzlib.h>
 #endif
 
+#if defined(BUILTIN_MEMRCHR)
+#include "memrchr.h"
+#endif
+
 /* Include LOCALE.H - Otherwise impl.c will not compile when
  * CFLAGS does not contain -O[x] (libtinl.h only includes locale.h
  * when __OPTIMIZE__ is defined) and impl.c uses LC_xxx macros 

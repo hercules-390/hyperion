@@ -13,10 +13,6 @@
 
 #include "hercules.h" 
 
-#if defined(BUILTIN_MEMRCHR)
-#include "memrchr.h"
-#endif
-
 ATTR logger_attr;
 COND logger_cond;
 LOCK logger_lock;
