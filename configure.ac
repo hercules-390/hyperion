@@ -576,7 +576,7 @@ if test x$auto_optimize = xtrue; then
             ac_xarch=$host_cpu
             if test "$GCC" = "yes"; then
                 if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null 2>&1
-#if __GNUC__ == 2 && __GNUC__MINOR__ == 96
+#if __GNUC__ == 2 && __GNUC_MINOR__ == 96
 yes
 #endif
 __EOF
