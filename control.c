@@ -288,7 +288,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         )
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
-}
+
+} /* end DEF_INST(branch_and_set_authority) */
 #endif /*defined(FEATURE_BRANCH_AND_SET_AUTHORITY)*/
 
 
@@ -519,6 +520,13 @@ CREG    inst_cr;                        /* Instruction CR            */
     /* Set SASN equal to PASN */
     regs->CR_LHL(3) = regs->CR_LHL(4);
 
+    /* When ASN-and-LX-reuse is installed and enabled by CR0,
+       set the SASTEIN in CR3 equal to the PASTEIN in CR4 */
+    if (ASN_AND_LX_REUSE_ENABLED(regs))
+    {
+        regs->CR_H(3) = regs->CR_H(4);
+    } /* end if (ASN_AND_LX_REUSE_ENABLED) */
+
     /* Reset the subspace fields in the DUCT */
     if (alet == ALET_SECONDARY)
     {
@@ -568,7 +576,7 @@ CREG    inst_cr;                        /* Instruction CR            */
         ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
 
-}
+} /* end DEF_INST(branch_in_subspace_group) */
 #endif /*defined(FEATURE_SUBSPACE_GROUP)*/
 
 
@@ -669,7 +677,7 @@ VADR    n = 0;                          /* Work area                 */
 #endif /*defined(FEATURE_PER)*/
     }
 
-}
+} /* end DEF_INST(branch_and_stack) */
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
 
 
@@ -743,7 +751,7 @@ U32     old;                            /* old value                 */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-}
+} /* end DEF_INST(compare_and_swap_and_purge) */
 #endif /*defined(FEATURE_BROADCASTED_PURGING)*/
 
 
@@ -787,7 +795,8 @@ VADR    effective_addr2;                /* Effective address         */
 #ifdef FEATURE_HERCULES_DIAGCALLS
     RETURN_INTCHECK(regs);
 #endif
-}
+
+} /* end DEF_INST(diagnose) */
 
 
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
