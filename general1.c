@@ -1833,7 +1833,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
     len2 = GR_A(r2+1, regs);
 
     /* Process operands from left to right */
-    for (i = 0; len1 > 0 || len2 > 0; i++)
+    for (i = 0; len1 > 0 && len2 > 0; i++)
     {
         /* If 4096 characters have been converted, exit with cc=3 */
         if (i >= 4096)
@@ -1956,7 +1956,7 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
     len2 = GR_A(r2+1, regs);
 
     /* Process operands from left to right */
-    for (i = 0; len1 > 0 || len2 > 0; i++)
+    for (i = 0; len1 > 0 && len2 > 0; i++)
     {
         /* If 4096 characters have been converted, exit with cc=3 */
         if (i >= 4096)

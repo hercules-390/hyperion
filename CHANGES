@@ -1,3 +1,5 @@
+09 Jun 2001 Fix CUTFU/CUUTF with zero op2 length - Paul Leisy
+09 Jun 2001 Fix STSI condition code - Paul Leisy
 09 Jun 2001 Add t-ckd/t-ckd ckd keytrace command - Valery Pogonchenko
 03 Jun 2001 Fix TRAP save area access - Paul Leisy
 03 Jun 2001 Fix priority of interruptions in stacking PC - Jan Jaeger

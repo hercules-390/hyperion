@@ -5126,10 +5126,10 @@ static BYTE mpfact[32] = { 0x00,0x4B,0x00,0x4B,0x00,0x4B,0x00,0x4B,
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Return with cc3 if selector codes invalid */
-    if( ((regs->GR_L(0) & STSI_GPR0_FC_MASK) == 1
-      && ((regs->GR_L(0) & STSI_GPR0_SEL1_MASK) > 1
-      || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) > 1))
-     || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 0
+    if( ((regs->GR_L(0) & STSI_GPR0_FC_MASK)   == 0x10000000
+      && (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 1
+      && (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) >  1)
+      || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) == 0
       || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) == 0
       || (regs->GR_L(0) & STSI_GPR0_SEL1_MASK) > 2
       || (regs->GR_L(1) & STSI_GPR1_SEL2_MASK) > 2)
