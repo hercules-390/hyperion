@@ -879,22 +879,21 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
                          regs->fpr + FPR2I(r1));
 
 }
-#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
+
+/* The following instructions are not yet implemented */
+#define UNDEF_INST(_x) \
+        DEF_INST(_x) { ARCH_DEP(operation_exception) \
+        (inst,execflag,regs); }
 /*
  * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
- * B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF]
- * B365 LXR   - LOAD (extended)                                [RRE]
- * 28   LDR   - LOAD (long)                                    [RR]
- * 68   LD    - LOAD (long)                                    [RX]
- * 38   LER   - LOAD (short)                                   [RR]
- * 78   LE    - LOAD (short)                                   [RX]
- * B376 LZXR  - LOAD ZERO (extended)                           [RRE]
- * B375 LZDR  - LOAD ZERO (long)                               [RRE]
- * B374 LZER  - LOAD ZERO (short)                              [RRE]
- * 60   STD   - STORE (long)                                   [RX]
- * 70   STE   - STORE (short)                                  [RX]
  */
+ UNDEF_INST(convert_float_long_to_bfp_long_reg)
+/*
+ * B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF]
+ */
+ UNDEF_INST(convert_float_long_to_bfp_short_reg)
+#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 /*
  * Chapter 19. Binary-Floating-Point Instructions
