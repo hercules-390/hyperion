@@ -1,3 +1,5 @@
+11 Jan 2002 Gabor Hoffers performance updates
+11 Jan 2002 Fix ifetch performance so it works with PER - Juergen Dobrinski
 06 Jan 2002 CMPSC kludge for Cygwin gcc faulty linkage - Greg Smith
 05 Jan 2002 Make sure that {fthreads,w32chan}.c go into dist - Matt Zimmerman
 02 Jan 2002 Change store of percode in PSA to use realregs->perc - Paul Leisy
