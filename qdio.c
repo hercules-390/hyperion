@@ -52,9 +52,6 @@ DEVBLK *dev;                            /* -> device block           */
         return;
     }
 
-    /* ZZ INCOMPLETE: 
-       This code will never be reached as no devices support QDIO yet */
-
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
 
@@ -69,13 +66,17 @@ DEVBLK *dev;                            /* -> device block           */
     switch(regs->GR_L(0)) {
 
     case SIGA_FC_R:
-        /* ZZ INCOMPLETE */
-        regs->psw.cc = 0;  
+	if(dev->hnd->siga_r)
+            regs->psw.cc = (dev->hnd->siga_r) (dev, regs->GR_L(2) );
+        else
+            regs->psw.cc = 3;
         break;
 
     case SIGA_FC_W:
-        /* ZZ INCOMPLETE */
-        regs->psw.cc = 0;  
+	if(dev->hnd->siga_r)
+            regs->psw.cc = (dev->hnd->siga_w) (dev, regs->GR_L(2) );
+        else
+            regs->psw.cc = 3;
         break;
 
     case SIGA_FC_S:

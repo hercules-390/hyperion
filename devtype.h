@@ -20,6 +20,8 @@ typedef struct _DEVHND {
         DEVRR *reserve;                /* Device Reserve             */
         DEVRR *release;                /* Device Release             */
 	DEVIM immed;                   /* Immediate CCW Codes        */
+	DEVSA *siga_r;                 /* Signal Adapter Input       */
+	DEVSA *siga_w;                 /* Signal Adapter Output      */
 } DEVHND;
 
 

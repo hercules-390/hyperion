@@ -436,6 +436,7 @@ typedef int DEVWF (struct _DEVBLK *dev, int rcd, int off, BYTE *buf, int len,
         BYTE *unitstat);
 typedef int DEVUF (struct _DEVBLK *dev);
 typedef void DEVRR (struct _DEVBLK *dev);
+typedef int DEVSA (struct _DEVBLK *dev, U32 qmask);
 
 /*-------------------------------------------------------------------*/
 /* Device handler description structures                             */
