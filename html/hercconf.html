@@ -24,120 +24,149 @@ a real System/390.  The configuration file is an ASCII text file.
     ####################################################
 
     #
-    # System parameters
+    # <a href="#system_parameters">System parameters</a>
     #
 
-    ARCHMODE   ESA/390
-    OSTAILOR   OS/390
-    LOADPARM   0120....
+    <a href="#ARCHMODE">ARCHMODE</a>   ESA/390
+    <a href="#OSTAILOR">OSTAILOR</a>   OS/390
+    <a href="#LOADPARM">LOADPARM</a>   0120....
 
-    CPUSERIAL  000611
-    CPUMODEL   3090
-    CPUVERID   FD
-    MAINSIZE   64
-    XPNDSIZE   0
-    NUMCPU     1
-    NUMVEC     1
-    SYSEPOCH   1900
-    TZOFFSET   -0500
+    <a href="#CPUSERIAL">CPUSERIAL</a>  000611
+    <a href="#CPUMODEL">CPUMODEL</a>   3090
+    <a href="#CPUVERID">CPUVERID</a>   FD
+    <a href="#MAINSIZE">MAINSIZE</a>   64
+    <a href="#XPNDSIZE">XPNDSIZE</a>   0
+    <a href="#NUMCPU">NUMCPU</a>     1
+    <a href="#NUMVEC">NUMVEC</a>     1
+    <a href="#SYSEPOCH">SYSEPOCH</a>   1900
+    <a href="#TZOFFSET">TZOFFSET</a>   -0500
 
-    ##HTTPROOT   /usr/local/share/hercules/
-    HTTPPORT   8081 NOAUTH
-    SHRDPORT   3990
-    CNSLPORT   3270
-    PANRATE    FAST
-    CODEPAGE   default
+    ##<a href="#HTTPROOT">HTTPROOT</a>   /usr/local/share/hercules/
+    <a href="#HTTPPORT">HTTPPORT</a>   8081 NOAUTH
+    <a href="#SHRDPORT">SHRDPORT</a>   3990
+    <a href="#CNSLPORT">CNSLPORT</a>   3270
+    <a href="#PANRATE">PANRATE</a>    FAST
+    <a href="#CODEPAGE">CODEPAGE</a>   default
 
-    TODPRIO    -20
-    HERCPRIO   0
-    DEVPRIO    8
-    CPUPRIO    15
+    <a href="#TODPRIO">TODPRIO</a>    -20
+    <a href="#HERCPRIO">HERCPRIO</a>   0
+    <a href="#DEVPRIO">DEVPRIO</a>    8
+    <a href="#CPUPRIO">CPUPRIO</a>    15
 
-    DIAG8CMD   disable
+    <a href="#DIAG8CMD">DIAG8CMD</a>   disable
 
     #
-    # Device definitions
+    # <a href="#device_definitions">Device definitions</a>
     #
 
-    000A    1442    adrdmprs.rdr
-    000C    3505    jcl.txt     ascii  trunc
-    000D    3525    pch00d.txt  ascii
-    000E    1403    prt00e.txt
+    000A      <a href="#1442">1442</a>    adrdmprs.rdr
+    000C      <a href="#3505">3505</a>    jcl.txt     ascii  trunc
+    000D      <a href="#3525">3525</a>    pch00d.txt  ascii
+    000E      <a href="#1403">1403</a>    prt00e.txt
 
-    001F    3270
-    0200.4  3270
-    0220.16 3270    GROUP1
+    001F      <a href="#3270">3270</a>    * 192.168.0.1
+    0200.4    <a href="#3270">3270</a>    * 192.168.0.0  255.255.255.0
+    0220.8    <a href="#3270">3270</a>    GROUP1  192.168.100.0  255.255.255.0
+    0228.8    <a href="#3270">3270</a>    GROUP2
+    0230.16   <a href="#3270">3270</a>
 
-    0140    3370    dosres.140
-    0141    3370    syswk1.141
-    0300    3370    sysres.300
+    0140      <a href="#3370">3370</a>    dosres.140
+    0141      <a href="#3370">3370</a>    syswk1.141
+    0300      <a href="#3370">3370</a>    sysres.300
 
-    0120    3380    mvsv5r.120
-    0121    3380    mvsv5d.121
-    0122    3380    mvswk1.122
-    0123    3380    192.168.1.100
+    0120      <a href="#3380">3380</a>    mvsv5r.120
+    0121      <a href="#3380">3380</a>    mvsv5d.121
+    0122      <a href="#3380">3380</a>    mvswk1.122
+    0123      <a href="#3380">3380</a>    192.168.1.100
 
-    0400    3088    CTCT  30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
-    0401    3088    CTCT  30881  192.168.100.2  30881  2048
-    0420.2  CTCI    192.168.200.1  192.168.200.2
-    0440.2  LCS     -n   /dev/net/tun   192.168.200.2
+    0400      <a href="#3088">3088</a>    CTCT  30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
+    0401      <a href="#3088">3088</a>    CTCT  30881  192.168.100.2  30881  2048
+    0420.2    <a href="#CTCI">CTCI</a>    192.168.200.1  192.168.200.2
+    0440.2    <a href="#LCS">LCS</a>     -n   /dev/net/tun   192.168.200.2
 
-    0580    3420    ickdsf.ipl
-    0581    3420    /dev/st0
-    0582    3420    /cdrom/tapes/uaa196.tdf
-    0583-0587 3420  * maxsizeM=170 eotmargin=131072
+    0580      <a href="#3420">3420</a>    ickdsf.ipl
+    0581      <a href="#3420">3420</a>    /dev/st0
+    0582      <a href="#3420">3420</a>    /cdrom/tapes/uaa196.tdf
+    0583-0587 <a href="#3420">3420</a>  * maxsizeM=170 eotmargin=131072
 </pre></code>
 </td></tr></table>
 </blockquote></blockquote>
+
 <h3>Comment lines</h3>
 <p>
-Blank lines, and lines beginning with a pound sign ('#' - "hash" to
-Europeans) or an asterisk, are treated as comments.
+    Blank lines, and lines beginning with a pound sign ('#' - "hash" to
+    Europeans) or an asterisk, are treated as comments.
+    <p>
+
+<hr><!-- ---------------------------------------------------------------------------- -->
+
+<a name="system_parameters">
 <h3>System parameters</h3>
 <p>
-System parameters may appear in any order but they must precede all
-device records.  Each system parameter must be on a separate line.
-The following system parameters may be specified:
+    System parameters may appear in any order but they must precede all
+    device records.  Each system parameter must be on a separate line.
+    The following system parameters may be specified:
+
 <dl>
+
+<a name="CPUSERIAL">
 <dt><code>CPUSERIAL <em>xxxxxx</em></code>
-<dd>specifies the 6 hexadecimal digit CPU serial
+<dd><p>
+    specifies the 6 hexadecimal digit CPU serial
     number stored by the STIDP instruction
+    <p>
+
+<a name="CPUMODEL">
 <dt><code>CPUMODEL <em>xxxx</em></code>
-<dd>specifies the 4 hexadecimal digit CPU model number
+<dd><p>
+    specifies the 4 hexadecimal digit CPU model number
     stored by the STIDP instruction
+    <p>
+
+<a name="CPUVERID">
 <dt><code>CPUVERID <em>xx</em></code>
-<dd>specifies the 2 hexadecimal digit CPU version code
+<dd><p>
+    specifies the 2 hexadecimal digit CPU version code
     stored by the STIDP instruction.
     The default version code is FD when ARCHMODE S/370 or ARCHMODE ESA/390
     is specified.  For the ESAME architecture mode 00 is used as default.
+    <p>
+
+<a name="LPARNAME">
 <dt><code>LPARNAME <em>name</em></code>
-<dd>specifies the LPAR name returned by DIAG X'204'.  The default is
+<dd><p>
+    specifies the LPAR name returned by DIAG X'204'.  The default is
     <code><em>HERCULES</em></code>.
+    <p>
+
+<a name="MAINSIZE">
 <dt><code>MAINSIZE <em>nnnn</em></code>
-<dd>specifies the main storage size in megabytes, where
+<dd><p>
+    specifies the main storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number
     in the range 2 to 1024
+    <p>
+
+<a name="XPNDSIZE">
 <dt><code>XPNDSIZE <em>nnnn</em></code>
-<dd>specifies the expanded storage size in megabytes, where
+<dd><p>
+    specifies the expanded storage size in megabytes, where
     <code><em>nnnn</em></code> is a decimal number
     in the range 0 to 1024
-<dt><code>HTTPPORT <em>nnnn</em> [AUTH/NOAUTH] <em>[userid password]</em></code>
-<dd>specifies the port number (in decimal) on which the HTTP server
-    will listen. The port number must either be 80
-    or within the range 1024 - 65535 inclusive. If no HTTPPORT statement is
-    present or an invalid port number is specified, then the HTTP server thread
-    will not be activated.<br>
-    <tt>AUTH</tt> indictates that a userid and password are required to access
-    the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
-    are not required. The userid and password may be any valid string.
+    <p>
+
+<a name="HTTPROOT">
 <dt><code>HTTPROOT <em>directory</em></code>
-<dd>specifies the root directory where the HTTP server's files reside.
+<dd><p>
+    specifies the root directory where the HTTP server's files reside.
     If not specified, the default value for Win32 builds of Hercules is the
     directory where the Hercules executable itself is executing out of, and for
     non-Win32 builds it is the directory specified as the default package
     installation directory when the Hercules executable was built (which can
     vary depending on how the Hercules package was built, but is usually
-    <tt>/usr/local/share/hercules/</tt>).<br>
+    <tt>/usr/local/share/hercules/</tt>).
+    <p>
+
     Note: Windows users of Hercules who do not have the complete Cygwin package
     installed (i.e. only have the required Cygwin DLLs installed instead)
     should specify this value in the form: "<tt>/cygdrive/x/pathname/</tt>"
@@ -146,8 +175,25 @@ The following system parameters may be specified:
     "<tt>K:\Hercules\html\</tt>", then you should specify
     "<tt>/cygdrive/k/Hercules/html/</tt>"
     on your <tt>HTTPROOT</tt> statement.
+    <p>
+
+<a name="HTTPPORT">
+<dt><code>HTTPPORT <em>nnnn</em> [AUTH/NOAUTH] <em>[userid password]</em></code>
+<dd><p>
+    specifies the port number (in decimal) on which the HTTP server
+    will listen. The port number must either be 80
+    or within the range 1024 - 65535 inclusive. If no HTTPPORT statement is
+    present or an invalid port number is specified, then the HTTP server thread
+    will not be activated.<br>
+    <tt>AUTH</tt> indictates that a userid and password are required to access
+    the HTTP server, whereas <tt>NOAUTH</tt> indicates that a userid and password
+    are not required. The userid and password may be any valid string.
+    <p>
+
+<a name="SHRDPORT">
 <dt><code>SHRDPORT <em>nnnn</em></code>
-<dd>specifies the port number (in decimal) on which the Shared Device server
+<dd><p>
+    specifies the port number (in decimal) on which the Shared Device server
     will listen.  Specifying SHRDPORT will allow other Hercules instances
     to access devices on this instance.  (Currently only DASD devices may
     be shared).  By default, the other Hercules instances (clients) will
@@ -156,32 +202,56 @@ The following system parameters may be specified:
     Hercules clients.
     If no SHRDPORT statement is present then the Shared Device server thread
     will not be activated.<br>
+    <p>
+
+<a name="DIAG8CMD">
 <dt><code>DIAG8CMD <em>disable/enable</em></code>
-<dd>When set to enable, commands issued through diagnose 8 will be
+<dd><p>
+    When set to enable, commands issued through diagnose 8 will be
     executed by hercules as hercules commands.  When set to disable,
     commands issued through the diagnose 8 interface will be ignored.
-    The default is disable.  Note that when this feature is enabled, systems
+    The default is disable.
+    <p>
+
+    <i><b>Caution:</b> &nbsp; Enabling this feature may have security consequences</i>
+    <p>
+
+    Note that when this feature is enabled, systems
     running under hercules can even issue host commands through the hercules
-    sh command.  Enabling this feature may have security consequences.
-<dt><code>CNSLPORT <em>nnnn</em></code>
-<dd>specifies the port number (in decimal) to which tn3270 and
+    <code>'sh'</code> (shell) command.
+    <p>
+    
+<a name="CNSLPORT">
+<dt><code>CNSLPORT &nbsp;<i>nnnn</i></code>
+<dd><p>
+    specifies the port number (in decimal) to which tn3270 and
     telnet clients will connect
-<dd>The CNSLPORT statement may also have the form of host:port, where
+    <p>
+
+    The CNSLPORT statement may also have the form of host:port, where
     the telnet console server will bind to the specified address.
+    <p>
+
+<a name="NUMCPU">
 <dt><code>NUMCPU <em>nn</em></code>
-<dd>specifies the number of emulated CPUs.
+<dd><p>
+    specifies the number of emulated CPUs.
+    <p>
+
     <em>Note:</em>
     Multiprocessor emulation is only available when the definition of
     the compile-time variable <code>MAX_CPU_ENGINES</code>
     in the file <tt>config.h</tt> has a value of more than 1.
-    <i>Note:</i> current versions of Hercules already have this value
+    Current versions of Hercules already have this value
     set to 2 by default, so all you need to do is specify
     <tt>NUMCPU 2</tt>
-    in your configuration file. If you wish to set a different value
+    in your configuration file. If you wish to define a greater value
     for <tt>MAX_CPU_ENGINES</tt>, use the
     <tt>--enable-multi-cpu=NUMBER</tt>
     option when you do your <tt>./configure</tt> before doing your
     <tt>make</tt>.
+    <p>
+
     Multiprocessor emulation works best
     if your host system actually has more than one physical CPU, but you can
     still emulate multiple CPUs nervertheless  even on a uniprocessor system
@@ -191,44 +261,87 @@ The following system parameters may be specified:
     actually able to support multiple CPUs (and if you do not actually need
     multiprocessor emulation, then setting <tt>MAX_CPU_ENGINES</tt> to 1 at
     compile time might even produce a slight performance advantage too).
+    <p>
+
+<a name="NUMVEC">
 <dt><code>NUMVEC <em>nn</em></code>
-<dd>specifies the number of emulated vector facilities. Default is one per
+<dd><p>
+    specifies the number of emulated vector facilities. Default is one per
     CPU. Only available by default in ESA/390 mode.
+    <p>
+
+<a name="HERCPRIO">
 <dt><code>HERCPRIO <em>nn</em></code>
-<dd>specifies the process priority for Hercules.  The default is 0.  See
-    "Process Priorities" below for more information.
+<dd><p>
+    specifies the process priority for Hercules.  The default is 0.
+    See <a href="#process_priorities">"Process Priorities"</a>
+    below for more information.
+    <p>
+
+<a name="CPUPRIO">
 <dt><code>CPUPRIO <em>nn</em></code>
-<dd>specifies the priority of the CPU thread.  Default is a nice value
+<dd><p>
+    specifies the priority of the CPU thread.  Default is a nice value
     of 15, which means a low priority such that I/O can be scheduled and
     completed in favour of CPU cycles being burned. On Multi-CPU
     systems, a real CPU can be "dedicated" to Hercules, by giving the
-    CPU thread a very high dispatching priority (-20).  See "Thread
-    Priorities" below for more information.
-    <b>Caution: </b> CPUPRIO should not have a higher dispatching
-    priority than the TOD Clock and timer thread.
+    CPU thread a very high dispatching priority (-20).
+    See <a href="#thread_priorities">"Thread Priorities"</a>
+    below for more information.
+    <p>
+
+    <i><b>Caution:</b> &nbsp; CPUPRIO should not have a higher dispatching
+    priority than the TOD Clock and timer thread.</i>
     </ol>
+    <p>
+
+<a name="DEVPRIO">
 <dt><code>DEVPRIO <em>nn</em></code>
-<dd>specifies the priority of the device threads.  The default value is
-    8.  See "Thread Priorities" below for more information.
-    <b>Caution: </b> DEVPRIO should not have a higher dispatching
-    priority than the TOD Clock and timer thread.
+<dd><p>
+    specifies the priority of the device threads.  The default value is 8.
+    See <a href="#thread_priorities">"Thread Priorities"</a>
+    below for more information.
+    <p>
+
+    <i><b>Caution:</b> &nbsp; DEVPRIO should not have a higher dispatching
+    priority than the TOD Clock and timer thread.</i>
+    <p>
+
+<a name="TODPRIO">
 <dt><code>TODPRIO <em>nn</em></code>
-<dd>specifies the priority of the TOD Clock and timer thread.  The
-    default value is -20.  See "Thread Priorities" below for more
-    information.  <b>Caution: </b> TODPRIO should be given a dispatching
-    priority equal to or higher than any other thread within Hercules.
+<dd><p>
+    specifies the priority of the TOD Clock and timer thread.  The
+    default value is -20.  See
+    <a href="#thread_priorities">"Thread Priorities"</a>
+    below for more information.
+    <p>
+
+    <i><b>Caution:</b> &nbsp; TODPRIO should be given a dispatching
+    priority equal to or higher than any other thread within Hercules.</i>
+    <p>
+
+<a name="LOADPARM">
 <dt><code>LOADPARM <em>xxxxxxxx</em></code>
-<dd>specifies the eight-character IPL parameter which is used
+<dd><p>
+    specifies the eight-character IPL parameter which is used
     by some operating systems to select system parameters
+    <p>
+
+<a name="SYSEPOCH">
 <dt><code>SYSEPOCH <em>yyyy</em></code>
-<dd>specifies the base date for the TOD clock.  Use the default
+<dd><p>
+    specifies the base date for the TOD clock.  Use the default
     value (1900) for all systems except OS/360.
     OS/360 expects the base date to be 1960, but specifying this
     value causes an error because OS/360 regards 2000 as an invalid
     date.  For OS/360, <code>SYSEPOCH 1988</code> is recommended.
     This makes the year 2000 appear to be 1972.
+    <p>
+
+<a name="TZOFFSET">
 <dt><code>TZOFFSET &plusmn;<em>hhmm</em></code>
-<dd>specifies the hours and minutes by which the TOD clock will
+<dd><p>
+    specifies the hours and minutes by which the TOD clock will
     be offset from the current system time.  For GMT, use the
     default value (0000).  For timezones west of Greenwich, specify
     a negative value (example: <code>-0500</code> for US Eastern Standard
@@ -236,24 +349,40 @@ The following system parameters may be specified:
     For timezones east of Greenwich, specify a positive value
     (example: <code>+0100</code> for Central European Time,
     <code>+0930</code> for South Australian Time).
+    <p>
+
+<a name="TODDRAG">
 <dt><code>TODDRAG <em>nn</em></code>
-<dd>specifies the TOD clock drag factor.  This parameter can be used
+<dd><p>
+    specifies the TOD clock drag factor.  This parameter can be used
     to slow down the TOD clock by a factor of <em>nn</em>, which can
     improve the performance of some operating systems which consume
     significant amounts of CPU time processing timer interrupts.
     <em>Use of the TODDRAG parameter is no longer recommended.</em>
+    <p>
+
+<a name="OSTAILOR">
 <dt><code>OSTAILOR OS/390 &#124; VM &#124; VSE &#124; LINUX</code>
-<dd>specifies the intended operating system.  The effect of this
+<dd><p>
+    specifies the intended operating system.  The effect of this
     parameter is to reduce control panel message traffic by
     selectively suppressing trace messages for program checks
     which are considered normal in the specified environment.
+    <p>
+
+<a name="PANRATE">
 <dt><code>PANRATE SLOW &#124 FAST &#124 <em>nn</em></code>
-<dd>specifies the panel refresh rate, in milliseconds between refreshes. SLOW
+<dd><p>
+    specifies the panel refresh rate, in milliseconds between refreshes. SLOW
     is the same as 500, and FAST is the same as 50. A value less than the
     Linux system clock tick interval (10 on Intel, 1 on Alpha), or more than
     5000, will be rejected. SLOW is the default.
+    <p>
+
+<a name="ARCHMODE">
 <dt><code>ARCHMODE S/370 &#124 ESA/390 &#124 ESAME</code>
-<dd>specifies the initial architecture mode.
+<dd><p>
+    specifies the initial architecture mode.
     Use <code>S/370</code> for OS/360, VM/370, and MVS 3.8.
     Use <code>ESA/390</code> for MVS/XA, MVS/ESA, OS/390, VM/ESA, VSE/ESA,
     Linux/390, and ZZSA.
@@ -261,8 +390,12 @@ The following system parameters may be specified:
     When ESAME is specified, the machine will always IPL in ESA/390 mode,
     but is capable of being switched into z/Architecture mode after IPL.
     This is handled automatically by all z/Architecture operating systems.
+    <p>
+
+<a name="DEVTMAX">
 <dt><code>DEVTMAX -1 &#124 0 &#124 1-n</code>
-<dd>specifies the maximum number of device threads allowed.
+<dd><p>
+    specifies the maximum number of device threads allowed.
     <p>Specify <code>-1</code> to cause 'one time only' temporary threads to be
     created to service each I/O request to a device. Once the I/O request is
     complete, the thread exits. Subsequent I/O to the same device will cause
@@ -290,8 +423,12 @@ The following system parameters may be specified:
     (possibly related to the cygwin Pthreads implementation) on Windows systems.
     <p>The default for Windows is <code>8</code>. The default for all other systems
     is <code>0</code>.
+    <p>
+
+<a name="PGMPRDOS">
 <dt><code>PGMPRDOS RESTRICTED &#124 LICENSED</code>
-<dd>specifies whether or not Hercules will run licensed program product ESA
+<dd><p>
+    specifies whether or not Hercules will run licensed program product ESA
     or z/Architecture operating systems.  Specify <code>RESTRICTED</code> to
     make Hercules emulate an IFL (Integrated Facility for Linux) CPU. With
     this specified, licensed ESA or z/Architecture OSes will refuse to
@@ -299,16 +436,26 @@ The following system parameters may be specified:
     at IPL time.  Specify <code>LICENSED</code> to allow these operating
     systems to run normally. This parameter has no effect on Linux/390,
     Linux for z/Series, or any 370-mode OS.
-    <p><b>NOTE: It is <em>YOUR</em> responsibility to comply with the terms
-    of your license for the software you intend to run on Hercules. If you
-    specify LICENSED and run a licensed operating system in violation of
-    that license, then don't come after the Hercules developers when the
-    vendor sends his lawyers after you.</b>
-    <p><code>RESTRICTED</code> is the default. Specifying
+    <p>
+
+    <blockquote class=box>
+    <b>NOTE: &nbsp;It is <u>YOUR</u> responsibility to comply with
+    the terms of the license for the operating system you intend to run on
+    Hercules. If you specify LICENSED and run a licensed operating system in
+    violation of that license, then don't come after the Hercules developers
+    when the vendor sends his lawyers after you.</b>
+    </blockquote>
+    <p>
+
+    <code>RESTRICTED</code> is the default. Specifying
     <code>LICENSED</code> will produce a message at Hercules startup to
     remind you of your responsibility to comply with software license terms.
+    <p>
+
+<a name="IODELAY">
 <dt><code>IODELAY <em>usec</em></code>
-<dd>specifies the amount of time (in microseconds) to wait after
+<dd><p>
+    specifies the amount of time (in microseconds) to wait after
     an I/O interrupt is ready to be set pending.  This value can also be
     set using the Hercules console.  The purpose of this parameter is to
     bypass a bug in the <b>Linux/390</b> and <b>zLinux</b> <code>dasd.c</code>
@@ -317,15 +464,30 @@ The following system parameters may be specified:
     real machine.  This problem is being pursued with IBM linux. Meanwhile,
     if <code>OSTAILOR LINUX</code> is specified, then this value defaults to
     <em>800</em> otherwise the value defaults to <em>0</em>.
+    <p>
+
+<a name="CODEPAGE">
 <dt><code>CODEPAGE <em>codepage</em></code>
-<dd>specifies the codepage conversion table used for ascii/ebcdic translation
-    "default" specifies traditional hercules codepage, "437/037",
+<dd><p>
+    specifies the codepage conversion table used for ASCII/EBCDIC translation.
+    <p>
+
+    "default" specifies traditional hercules codepage. Code pages "437/037",
     "437/500" and "850/273" are also supported.
+    <p>
+
     Iconv single byte codepages may also be used. (eg."UTF8/EBCDIC-CP-NL")
+    <p>
+
     If no codepage is specified then the environment variable HERCULES_CP
-    will be inspected.  The default codepage used is "default"
+    will be inspected. The default codepage used is "default"
+
+    <p>
+
+<a name="ECPSVM">
 <dt><code>ECPSVM YES &#124 <em>NO</em> &#124 LEVEL nn</code>
-<dd>specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
+<dd><p>
+    specifies whether ECPS:VM (Extended Control Program Support : Virtual Machine)
     support is to be enabled. If <em>YES</em> is specified, then the support
     level reported to the operating system is <em>20</em>. The purpose of
     ECPS:VM is to provide to the VM/370 Operating system a set of shortcut
@@ -341,282 +503,505 @@ The following system parameters may be specified:
     to the operating system when it issues a Store ECPS:VM level, but it
     doesn't otherwise alter the ECPS:VM facility operations. This is a partial
     implementation.
+    <p>
+
+<a name="LDMOD">
 <dt><code>LDMOD <em>module list</em></code>
-<dd>specifies additional modules that are to be loaded by the hercules dynamic loader.
-The default search order is with the hercules directory in the default DLL search path. Most systems also support absolute filenames (ie names starting with '/' or '.') in which case the default search path is not taken.
-<br>Multiple LDMOD statements may be used.
+<dd><p>
+    specifies additional modules that are to be loaded by the hercules dynamic loader.
+    The default search order is with the hercules directory in the default DLL search
+    path. Most systems also support absolute filenames (ie names starting with '/'
+    or '.') in which case the default search path is not taken.
+    <p>
+    Multiple LDMOD statements may be used.
+    <p>
+
+<a name="MODPATH">
 <dt><code>MODPATH <em>path</em></code>
-<dd>specifies the path where dynamic modules are loaded from.
-When a modpath statement is specified, the path on the modpath statement is searched before the default path is searched.
-When a relative path is specified is interpreted as a relative path within the default search path, if an absolute path is specified is interpreted as such.
-<br>The default MODPATH is hercules, which means modules are loaded from the directory hercules within the default LD_LIBRARY_PATH.
+<dd><p>
+    specifies the path where dynamic modules are loaded from. When a modpath
+    statement is specified, the path on the modpath statement is searched before
+    the default path is searched. When a relative path is specified is interpreted
+    as a relative path within the default search path, if an absolute path is
+    specified is interpreted as such.
+    <p>
+    The default MODPATH is hercules, which means modules are loaded from the
+    directory hercules within the default LD_LIBRARY_PATH.
 </dl>
-<p>
-A comment preceded by a pound sign may be appended to any system
-parameter statement.
 
+<p>
+    A comment preceded by a pound sign may be appended to any system
+    parameter statement.
+<p>
+
+<hr><!-- ---------------------------------------------------------------------------- -->
+
+<a name="process_and_thread_priorities">
 <h4>Process and Thread Priorities</h4>
-<dl>
-<dt> <dd>
-<h5>Process Priorities</h5>
-<dl><dt><dd>
-<P><B>Note: </B>Under Linux, a process is a thread and thread priority information
-applies instead.
-<P>For Windows, the following conversions are used for translating Unix
-process priorities to Windows process priority classes:
-<BR>
-<BR>
-<table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
-<TR>
-<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
-<TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
-<TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
-<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority Class</TH>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Realtime</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">High</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal
-</TD></TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Low</TD>
-</TR></TABLE>
-</dl><dt><dd>
 
-<h5>Thread Priorities</h5>
-<dl><dt><dd>
-<P>On a *ix (Linux/Unix) host, Hercules needs to be a setuid root
-program to allow it to reset its dispatching priority to a high
-(negative) value
-(i.e., <code>chown root.root hercules; chmod +s hercules</code>).
-<P>For Windows, the following conversions are used for translating
-Linux/Unix thread priorities to Windows thread priorities:
+<dl> <!-- begin Process and Thread Priorities -->
+
+<dt><dd>
+
+<a name="process_priorities">
+<p><br>
+
+<h4>Process Priorities</h4>
+
+<dl> <!-- begin Process Priorities -->
+
+<dt><dd>
+
 <P>
+    <B>Note:</B> Under Linux, a process is a thread and thread priority information
+    applies instead.
+<P>
+    For Windows, the following conversions are used for translating Unix
+    process priorities to Windows process priority classes:
+<BR>
+<BR>
 <table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
-<TR>
-<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
-<TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
-<TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
-<TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority</TH>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16
-</TD><TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Time Critical</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD
-><TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Highest</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">19</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Lowest</TD>
-</TR><TR>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">&nbsp;</TD>
-<TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
-<TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Idle</TD>
-</TR></TABLE>
-</dl>
-</dl>
+    <TR>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
+        <TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
+        <TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority Class</TH>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Realtime</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">High</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Low</TD>
+    </TR>
+</TABLE>
 
-<h3>Device records</h3>
+</dl> <!-- end Process Priorities -->
+
+<dt><dd>
+
+<a name="thread_priorities">
+<p><br>
+
+<h4>Thread Priorities</h4>
+
+<dl> <!-- begin Thread Priorities -->
+
+<dt><dd>
+
+<P>
+    On a *ix (Linux/Unix) host, Hercules needs to be a setuid root
+    program to allow it to reset its dispatching priority to a high
+    (negative) value
+    (i.e., <code>chown root.root hercules; chmod +s hercules</code>).
+<P>
+    For Windows, the following conversions are used for translating
+    Linux/Unix thread priorities to Windows thread priorities:
+<P>
+
+<table frame="VOID" rules="NONE" cellpadding="0" cellspacing="0">
+    <TR>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%"><BR></TH>
+        <TH ALIGN="RIGHT" VALIGN="BASELINE" COLSPAN="3" WIDTH="14%">Unix Priority</TH>
+        <TH ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%"><BR></TH>
+        <TH ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Windows Priority</TH>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-20</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-16</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Time Critical</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-15</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-9</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Highest</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-8</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">-1</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Above Normal</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">0</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">7</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Normal</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">8</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">15</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Below Normal</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">16</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;to&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">19</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Lowest</TD>
+    </TR>
+    <TR>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="7%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">20</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="RIGHT" VALIGN="BASELINE" WIDTH="4%">&nbsp;</TD>
+        <TD ALIGN="CENTER" VALIGN="BASELINE" WIDTH="6%">&nbsp;</TD>
+        <TD ALIGN="LEFT" VALIGN="BASELINE" WIDTH="73%">Idle</TD>
+    </TR>
+</TABLE>
+
+</dl> <!-- end Thread Priorities -->
+
+</dl> <!-- end Process and Thread Priorities -->
+
+<hr><!-- ---------------------------------------------------------------------------- -->
+
+<a name="device_definitions">
+<h3>Device definitions</h3>
+
 <p>
-The remaining statements in the configuration file are device records.
-There must be one device record for each I/O device or group of identical I/O devices.
-The format of the device record is:
-<p><code><em>devnums devtype</em> [<em>arguments</em>]</code>
-<p>where:
-<dl>
-<dt><code><em>devnums</em></code>
-<dd>is either a single <em>devnum</em>, a range of <em>devnum</em> (separated by a '-'),
-    a count of <em>devnum</em> (separated by a '.') or a comma separated list
-    of <em>devnums</em>.
-    Examples would be 200-210 or 0300.10 or 0400,0403 or 0100,0110-011F.
+    The remaining statements in the configuration file are device records.
+    There must be one device record for each I/O device or group of identical I/O devices.
+    The format of the device record is:
+    <p>
+
+    <blockquote>
+        <code><em>devnum(s) &nbsp; devtype</em> &nbsp; [ <em>arguments</em> ] </code>
+    </blockquote>
+    <p>
+
+    where:
+
+<blockquote>
+
+<dl> <!-- begin Device records -->
+
+<dt><code><em>devnum(s)</em></code>
+<dd><p>
+    is either a single <em>devnum</em>, a range of <em>devnums</em> (separated by a '-' (dash)),
+    a count of <em>devnums</em> (separated by a '.' (dot/period/stop)), or a comma separated
+    list of <em>devnums</em>. Examples would be 200-210 or 0300.10 or 0400,0403 or 0100,0110-011F.
+    <p>
+
     All devices defined when <em>devnums</em> specifies more than one device
-    have identical caracteristics (except for the device number itself).
+    have identical characteristics (except for the device number itself).
     All devices defined as a group must be defined on a single channel.
     A channel is defined as a contiguous group of 256 (or hexadecimal 100) devices.
     0010 and 0020 are on the same channels. 0100 and 0210 are not.
-    See <em>devnum</em> below for an explanation of how each device number is specified.
-<dt><code><em>devnum</em></code>
-<dd>is a 1 to 4 digit hexadecimal number, in the range 0000 to FFFF
-    (for ESA/390) or 0000 to 0FFF (for S/370).  The device number uniquely
-    identifies each device to the operating system.
-<dt><code><em>devtype</em></code>
-<dd>is the device type.  Valid device types are:
     <p>
-    <table border=1 cellpadding=5 align=center>
-    <tr><th>Device type</th>
-        <th>Description</th>
-        <th>Emulated by</th>
-    </tr>
-    <tr><td>3270, 3287</td>
-        <td><a href="#loc3270">Local non-SNA 3270 display or printer</a></td>
-        <td>TN3270 client connection</td>
-    </tr>
-    <tr><td>1052, 3215</td>
-        <td><a href="#conprkb">Console printer-keyboards</a></td>
-        <td>Telnet client connection</td>
-    </tr>
-    <tr><td>1442, 2501, 3505</td>
-        <td><a href="#cardrdr">Card readers</a></td>
-        <td>Disk file(s) (ASCII or EBCDIC)</td>
-    </tr>
-    <tr><td>3525</td>
-        <td><a href="#cardpch">Card punch</a></td>
-        <td>Disk file (ASCII or EBCDIC)</td>
-    </tr>
-    <tr><td>1403, 3211</td>
-        <td><a href="#printer">Line printers</a></td>
-        <td>Disk file (ASCII)</td>
-    </tr>
-    <tr><td>3410, 3420, 3480<br>3490, 9347, 8809<br>3422, 3430</td>
-        <td><a href="#tapedev">Tape drives</a></td>
-        <td>Disk file, CDROM, or SCSI tape</td>
-    </tr>
-    <tr><td>3088</td>
-        <td><a href="#ctca">Channel-to-channel adapters</a></td>
-        <td>TCP socket, TUN/TAP Driver</td>
-    </tr>
-    <tr><td>3310, 3370, 9332<br>9335, 9336, 0671</td>
-        <td><a href="#fbadasd">FBA direct access storage devices</a></td>
-        <td>Disk file</td>
-    </tr>
-    <tr><td>2311, 2314, 3330<br>3340, 3350, 3375<br>3380, 3390, 9345</td>
-        <td><a href="#ckddasd">CKD direct access storage devices</a></td>
-        <td>Disk file</td>
-    </tr>
-    <tr><td>2703</td>
-        <td><a href="#comline">Communication Line</a></td>
-        <td>TCP Socket</td>
+
+    See <em>devnum</em> immediately below for an explanation of how each device number is specified.
+    <p>
+
+<dt><code><em>devnum</em></code>
+<dd><p>
+    is either a 1 to 4 digit hexadecimal number in the range 0000 to FFFF
+    for ESA/390, or 0000 to 0FFF for S/370.  The device number uniquely
+    identifies each device to the operating system.
+    <p>
+
+<dt><code><em>devtype</em></code>
+<dd><p>
+    is the device type.  Valid device types are shown in the
+    <a href="#device_types_table">table</a> just below.
+    <p>
+
+<dt><code><em>arguments</em></code>
+<dd><p>
+    is a list of parameters whose meaning depends on the device type.
+    The arguments required for each class of device are shown below.
+    <p>
+
+</dl> <!-- end Device records -->
+
+</blockquote>
+
+
+<p><br>
+
+<a name="device_types_table">
+
+    <table>
+    <tr>
+
+        <td width=20%>
+        &nbsp;
+        </td>
+
+        <td>
+
+            <table border=1 cellpadding=8>
+
+            <tr>
+                <th colspan=3><br><big>Supported Device Types</big><p></th>
+            </tr>
+
+            <tr><th>Device type</th>
+                <th>Description</th>
+                <th>Emulated by</th>
+            </tr>
+
+            <tr><td>3270, 3287</td>
+                <td><a href="#loc3270">Local non-SNA 3270 display or printer</a></td>
+                <td>TN3270 client connection</td>
+            </tr>
+
+            <tr><td>1052, 3215</td>
+                <td><a href="#conprkb">Console printer-keyboards</a></td>
+                <td>Telnet client connection</td>
+            </tr>
+
+            <tr><td>1442, 2501, 3505</td>
+                <td><a href="#cardrdr">Card readers</a></td>
+                <td>Disk file(s) (ASCII or EBCDIC)</td>
+            </tr>
+
+            <tr><td>3525</td>
+                <td><a href="#cardpch">Card punch</a></td>
+                <td>Disk file (ASCII or EBCDIC)</td>
+            </tr>
+
+            <tr><td>1403, 3211</td>
+                <td><a href="#printer">Line printers</a></td>
+                <td>Disk file (ASCII)</td>
+            </tr>
+
+            <tr><td>3410, 3420, 3480, 3490<br>
+                    9347, 8809, 3422, 3430</td>
+                <td><a href="#tapedev">Tape drives</a></td>
+                <td>Disk file, CDROM, or SCSI tape</td>
+            </tr>
+
+            <tr><td>3088</td>
+                <td><a href="#ctca">Channel-to-channel adapters</a></td>
+                <td>TCP socket, TUN/TAP Driver</td>
+            </tr>
+
+            <tr><td>3310, 3370, 9332, 9335<br>
+                    9336, 0671</td>
+                <td><a href="#fbadasd">FBA direct access storage devices</a></td>
+                <td>Disk file</td>
+            </tr>
+
+            <tr><td>2311, 2314, 3330, 3340<br>
+                    3350, 3375, 3380, 3390<br>
+                    9345</td>
+                <td><a href="#ckddasd">CKD direct access storage devices</a></td>
+                <td>Disk file</td>
+            </tr>
+
+            <tr><td>2703</td>
+                <td><a href="#comline">Communication Line</a></td>
+                <td>TCP Socket</td>
+            </tr>
+
+            </table>
+
+        </td>
+
     </tr>
     </table>
-<dt><code><em>arguments</em></code>
-<dd>is a list of parameters whose meaning depends on the device type.
-    The arguments required for each class of device are shown below.
-</dl>
-<h3>Arguments required for each device type</h3>
-<dl>
+
+<p><br>
+
+
+<h4>Arguments required for each device type</h4>
+
+<dl> <!-- begin Arguments for each device type -->
+
 <p>
+<a name="3270">
 <a name="loc3270">
 <dt><em>Local non-SNA 3270 devices</em>
-<dd>No arguments are required for this device type.  To use this
-    device, a tn3270 client must connect to the host Linux machine
-    via the port number specified in the CNSLPORT parameter.
-    A valid tn3270 device type, such as IBM-3278, must be used.
-    If your tn3270 client software allows you to specify a device
-    type suffix (for example, IBM-3278@001F) then you can use the
-    suffix to connect the client to a specific device number.
-    If no suffix is specified, then the client will be connected
-    to the first available 3270 device.
-    A group name can be specified as an option. If a group name is
-    given on the device definition statement, a device type suffix
-    with this group name can be used to indicate that a device in
-    this group is to be used. If a group name is specified as a
-    terminal type suffix and there are no, or no more, devices in
-    this group, the connection is rejected. If no group name is
-    specified as a terminal type suffix, this connection will only
-    be eligible for devices that do not have a group name.
-    The device number suffix has precedence over a group name. The
-    group name should not be an hexadecimal value.
-<p>
+<dd><p>
+    There are no required arguments for this particular device type, but
+    there are however several optional arguments which are discussed below.
+    <p>
+
+    To use this device, a tn3270 client must connect to the host machine
+    via the port number specified on the <a href="#CNSLPORT">CNSLPORT</a>
+    statement. A valid tn3270 device type, such as IBM-3278, must be used.
+    <p>
+
+    If your tn3270 client software allows you to specify a device type suffix
+    (e.g. <code>IBM-3278@001F</code> ), then you can use the suffix to connect
+    to that specific device number, if eligible. If no suffix is specified,
+    then your client will be connected to the first available 3270 device for
+    which it is eligible, if any.
+    <p>
+
+    If you specify a specific terminal device address (via the device type
+    suffix of your tn3270 client software), then you must be eligible to connect
+    at that device address or your connection is immediately rejected; an
+    alternative terminal device for which you <i>might</i> be eligible is
+    <i><u>NOT</u></i> automatically selected instead.
+    <p>
+
+    Optional arguments:
+    <p>
+
+    <dl>
+    <dt><code>groupname</code>
+    <dd><p>
+        If a terminal group name is given on the device statement, a device type
+        suffix with this group name can be used to indicate that a device in this
+        group is to be used. If a group name is specified as a terminal type suffix
+        (e.g. <code>IBM-3278@GROUPNAME</code> ) and there are no devices defined
+        for that group (or there are no more available devices remaining in that
+        group), then the connection is rejected. If no group name is specified
+        as a terminal type suffix, then the connection will only be eligible for
+        any terminal devices which do <i>not</i> have a group name specified on
+        their device statements. The terminal group name, if specified, should
+        obviously <i>not</i> be a hexadecimal number.
+        <p>
+
+    <dt><code>ipaddr [ mask ]</code>
+    <dd><p>
+        The optional IP address and optional subnet mask specify the ip address(es)
+        of which client(s) are allowed to connect at the device address identified
+        by the device statement on which they appear. This provides an alternative
+        and/or additional means of specifying to which device(s) a client tn3270
+        session may, or should, connect.
+        <p>
+
+        If the IP address of the tn3270 client trying to connect, when 'and'ed with
+        the optional subnet mask (which defaults to 255.255.255.255 if not specified),
+        matches the IP address entered on the device statement, then the client
+        is eligible to connect at that device address. Otherwise the client is
+        ineligible to connect at that address and then next available device, if
+        any, for which the client is eligible to connect (if any) is selected instead.
+        <p>
+
+        If no permissible terminal devices remain (i.e. terminal devices for which
+        the client is eligible to connect), or there are no more available terminal
+        devices remaining, then the client connection is rejected.
+        <p>
+
+        The optional IP address and subnet mask may also be specified in conjunction
+        with the previously mentioned terminal group argument, but the terminal group
+        argument, if specified, must be specified <i>ahead of</i> (i.e. before) the
+        optional ip address and subnet mask arguments. To specify an IP address and
+        subnet mask without also specifying a terminal group, simply use '*' as the
+        group name instead.
+        <p>
+
+        If an IP address / subnet mask are <i>not</i> specified, then <i><u>any</u></i>
+        client tn3270 session is allowed to connect to the device (provided they are also
+        a member of the specified terminal group, if any).
+        <p>
+
+        The terminal group name argument, if specified, always takes precedence over
+        any optional ip address and subnet mask which may also be specified.
+        <p>
+
+    </dl>
+
+    To summarize, the device number suffix always takes precedence over any group name
+    which may also be specified, and any group name, if specified, always takes precedence
+    over any ip address / subnet mask value which may also be specified.
+    <p>
+
 <a name="conprkb">
 <dt><em>Console printer-keyboard devices</em>
-<dd>No arguments are required for this device type.  To use this
-    device, a telnet client must connect to the host Linux machine
-    via the port number specified in the CNSLPORT parameter.
-    If your telnet client software allows you to specify a device
-    type suffix (for example, ansi@0009) then you can use the
-    suffix to connect the client to a specific device number.
-    If no suffix is specified, then the client will be connected
-    to the first available 1052 or 3215 device. One optional argument
-    may be specified: <code>noprompt</code>, if specified, will remove
-    the message at the console prompting for input.
-    A group name can be specified as an option. If a group name is
-    given on the device definition statement, a device type suffix
-    with this group name can be used to indicate that a device in
-    this group is to be used. If a group name is specified as a
-    terminal type suffix and there are no, or no more, devices in
-    this group, the connection is rejected. If no group name is
-    specified as a terminal type suffix, this connection will only
-    be eligible for devices that do not have a group name.
-    The device number suffix has precedence over a group name. The
-    group name should not be an hexadecimal value.
-<p>
+<dd><p>
+
+    There are no required arguments for this particular device type, but
+    there are however several optional arguments discussed below.
+    <p>
+
+    To use this device, a telnet client must connect to the host machine
+    via the port number specified on the <a href="#CNSLPORT">CNSLPORT</a> statement.
+    <p>
+
+    If your telnet client software allows you to specify a device type suffix
+    (for example: <code>ansi@0009</code> ), then you can use that suffix to specify
+    the specific 1052 or 3215 device to which you wish to connect. If you do not
+    specify a suffix in your telnet client software (or your software does not
+    allow it), then your client will be connected to the first available 1052 or
+    3215 device for which it is eligible.
+    <p>
+
+    An optional <code>noprompt</code> argument may be specified on the device
+    statement to cause suppression of the "Enter input for console device nnnn"
+    prompt message which is otherwise normally issued to the device whenever
+    the system is awaiting input on that device.
+    <p>
+
+    Additionally, a terminal group name, ip address and subnet mask may all also
+    be optionally specified in the exact same manner as discussed in the previous
+    <a href="#loc3270">Local non-SNA 3270 devices</a> section with the exception
+    that the "noprompt" option, if specified, must precede the other arguments.
+    <p>
+
+<a name="1442">
+<a name="3505">
 <a name="cardrdr">
 <dt><em>Card reader devices</em>
-<dd>The argument specifies a list of file names containing card images.
+<dd><p>
+
+    The argument specifies a list of file names containing card images.
     Additional arguments may be specified after the file names:
     <p>
+
     <dl>
     <dt><code>sockdev</code>
-    <dd>indicates the card reader is a socket device wherein the
+    <dd><p>
+        indicates the card reader is a socket device wherein the
         filename is actually a socket specification instead of a
         device filename.  When used, there must only be one filename
         specified in the form: <code>port</code> or <code>host:port</code>
@@ -626,474 +1011,745 @@ The format of the device record is:
         file. This allows automatic remote submission of card reader
         data. See the <a href="hercrdr.html">Hercules Socket Reader</a>
         page for more details.
+        <p>
+
     <dt><code>eof</code>
-    <dd>specifies that unit exception status is presented after
+    <dd><p>
+        specifies that unit exception status is presented after
         reading the last card in the file. This option is persistent, and
         will remain in effect until the reader is reinitialized with the
         <code>intrq</code> option.
+        <p>
+
     <dt><code>intrq</code>
-    <dd>specifies that unit check status with intervention required
+    <dd><p>
+        specifies that unit check status with intervention required
         sense bytes is presented after reading the last card
         in the file. This option is persistent, and will remain in
         effect until the reader is reinitialized with the <code>eof</code>
         option.
+        <p>
+
     <dt><code>multifile</code>
-    <dd>specifies, when multiple input files are entered, to
+    <dd><p>
+        specifies, when multiple input files are entered, to
         automatically open the next input file and continue reading
         whenever EOF is encountered on a given file. If not specified,
         then reading stops once EOF is reached on a given file and
         an attention interrupt is then required to open and begin
         reading the next file.
+        <p>
+
     <dt><code>ebcdic</code>
-    <dd>specifies that the file contains fixed length 80-byte EBCDIC
+    <dd><p>
+        specifies that the file contains fixed length 80-byte EBCDIC
         records with no line-end delimiters.
+        <p>
+
     <dt><code>ascii</code>
-    <dd>specifies that the file contains variable length lines of
+    <dd><p>
+        specifies that the file contains variable length lines of
         ASCII characters delimited by LF (line feed) sequences or CRLF
         (carraige return line feed) sequences at the end of each line.
-    <p>
-    If neither EBCDIC nor ASCII is specified, then the device handler
-    attempts to detect the format of the card image file when the device
-    is first accessed.
-    Auto-detection is not supported for socket devices, and the default
-    is ASCII if sockdev is specified.
+        <p>
+
+        If neither EBCDIC nor ASCII is specified, then the device handler
+        attempts to detect the format of the card image file when the device
+        is first accessed.
+        Auto-detection is not supported for socket devices, and the default
+        is ASCII if sockdev is specified.
+        <p>
+
     <dt><code>trunc</code>
-    <dd>specifies, for ASCII files, that lines longer than 80
+    <dd><p>
+        specifies, for ASCII files, that lines longer than 80
         characters are truncated instead of producing a unit check
         error.
+        <p>
+
     <dt><code>autopad</code>
-    <dd>specifies, for EBCDIC files, that the file is automatically
+    <dd><p>
+        specifies, for EBCDIC files, that the file is automatically
         padded to a multiple of 80 bytes if necessary.
+        <p>
+
     </dl>
-<p>
+    <p>
+
+<a name="3525">
 <a name="cardpch">
 <dt><em>Card punch devices</em>
-<dd>The argument specifies the name of a file to which the punched
+<dd><p>
+    The argument specifies the name of a file to which the punched
     output will be written.
     Additional arguments may be specified after the file name:
     <p>
+
     <dl>
     <dt><code>ascii</code>
-    <dd>specifies that the file will be written as variable length
+    <dd><p>
+        specifies that the file will be written as variable length
         lines of ASCII characters delimited by line feeds or
         carriage return line feed sequences at the end of each line.
         Trailing blanks are removed from each line.
         If the <code>ascii</code> argument is not specified, the
         file is written as fixed length 80-byte EBCDIC records with
         no line-end delimiters.
+        <p>
+
     <dt><code>crlf</code>
-    <dd>specifies, for ASCII files, that carriage return line feed
+    <dd><p>
+        specifies, for ASCII files, that carriage return line feed
         sequences are written at the end of each line.
         If the <code>crlf</code> argument is not specified, then
         line-feeds only are written at the end of each line.
+        <p>
+
     </dl>
-<p>
+    <p>
+
+<a name="1403">
 <a name="printer">
 <dt><em>Line printer devices</em>
-<dd>The argument specifies the name of a file to which the printer
+<dd><p>
+    The argument specifies the name of a file to which the printer
     output will be written.  The output is written in the form of
     variable length lines of ASCII characters delimited by line
     feeds or by carriage return line feed sequences.  Trailing
     blanks are removed from each line.  Carriage control characters
     are translated to blank lines or ASCII form feed characters.
     If the file exists it will be overwritten.
+    <p>
+
     Additional arguments may be specified after the file name:
     <p>
+
     <dl>
     <dt><code>crlf</code>
-    <dd>specifies, for ASCII files, that carriage return line feed
+    <dd><p>
+        specifies, for ASCII files, that carriage return line feed
         sequences are written at the end of each line.
         If the <code>crlf</code> argument is not specified, then
         line-feeds only are written at the end of each line.
+        <p>
+
     </dl>
-<p>
+    <p>
+
+<a name="3420">
 <a name="tapedev">
 <dt><em>Emulated tape devices</em>
-<dd>Four types of emulation are supported:
-    <dl>
-    <p><dt><b>SCSI tapes</b>
-    <dd>The argument specifies the tape device name (usually
+<dd><p>
+    Four types of emulation are supported:
+    <p>
+
+    <dl> <!-- begin Emulated tape types of emulation -->
+
+    <dt><b>SCSI tapes</b>
+    <dd><p>
+        The argument specifies the tape device name (usually
         <b><i>/dev/st0</i></b>).  SCSI tapes are read and written
         using variable length EBCDIC blocks and filemarks exactly
         like a mainframe tape volume.
-    <p><dt><b>Optical Media Attach (OMA) virtual files</b>
-    <dd>These are read-only files which usually reside on CDROM.
+        <p>
+
+    <dt><b>Optical Media Attach (OMA) virtual files</b>
+    <dd><p>
+        These are read-only files which usually reside on CDROM.
         OMA virtual tapes consist of one CDROM file corresponding
         to each physical file of the emulated tape.  An ASCII text
         file called the tape descriptor file (TDF) specifies the
         names of the files which make up the virtual tape.
         The argument specifies the name of the tape descriptor
         file (for example <b><i>/cdrom/tapes/uaa196.tdf</i></b>)
-        <p>Each file on the virtual tape can be in one of three
-        formats:
+        <p>
+
+        Each file on the virtual tape can be in one of three formats:
+        <p>
+
         <dl>
-            <dt><code>TEXT</code>
-            <dd><b><i>TEXT</i></b> files consist of variable length
-                ASCII records delimited by carriage return line feed
-                sequences at the end of each record.  Each record is
-                translated to EBCDIC and presented to the program as
-                one physical tape block.
-            <dt><code>FIXED <em>nnnnn</em></code>
-            <dd><b><i>FIXED</i></b> files consist of fixed length
-                EBCDIC blocks of the specified length
-                (<code><em>nnnnn</em></code>)
-            <dt><code>HEADERS</code>
-            <dd><b><i>HEADERS</i></b> files consist of variable
-                length EBCDIC blocks.  Each block is preceded by a
-                12-byte header.
+        <dt><code>TEXT</code>
+        <dd><p>
+            <b><i>TEXT</i></b> files consist of variable length
+            ASCII records delimited by carriage return line feed
+            sequences at the end of each record.  Each record is
+            translated to EBCDIC and presented to the program as
+            one physical tape block.
+            <p>
+
+        <dt><code>FIXED <em>nnnnn</em></code>
+        <dd><p>
+            <b><i>FIXED</i></b> files consist of fixed length
+            EBCDIC blocks of the specified length
+            (<code><em>nnnnn</em></code>)
+            <p>
+
+        <dt><code>HEADERS</code>
+        <dd><p>
+            <b><i>HEADERS</i></b> files consist of variable
+            length EBCDIC blocks.  Each block is preceded by a
+            12-byte header.
+            <p>
+
         </dl>
-        <p>If you have any IBM manuals in Bookmanager format on CDROM,
+        <p>
+
+        If you have any IBM manuals in Bookmanager format on CDROM,
         you can see some examples of TDF files in the
         <b><i>\TAPES</i></b> directory on the CDROM.
-    <p><dt><b>AWSTAPE files</b>
-    <dd>These contain a complete tape in one file.  AWSTAPE files
+        <p>
+
+    <dt><b>AWSTAPE virtual files</b>
+    <dd><p>
+        These contain a complete tape in one file.  AWSTAPE files
         consist of variable length EBCDIC blocks.  Each block is
         preceded by a 6-byte header.  Filemarks are represented by
         a 6-byte header with no data.  This is the same format as is
         used by the P/390.
         The argument specifies the location of the AWSTAPE file
         (for example <b><i>ickdsf.ipl</i></b>)
-    <p><dt><b>HET files</b>
-    <dd>These contain a complete tape in one file and have the same
+        <p>
+
+    <dt><b>HET virtual files</b>
+    <dd><p>
+        These contain a complete tape in one file and have the same
         structure as the AWSTAPE format with the added ability to have
         compressed data.
         The first argument specifies the location of the HET file.  The
         filename must end with ".het" to be recognized by Hercules as an
         HET file.
         (for example <b><i>023178.het</i></b>)
-        <p>Additional arguments that allow you to control various HET settings
+        <p>
+
+        Additional arguments that allow you to control various HET settings
         are:
-        <dl>
-            <dt><code>AWSTAPE</code>
-            <dd>The <b><i>AWSTAPE</i></b> argument causes HET files to
-                be written in AWSTAPE format.  This basically, disables
-                the additional features provided by the HET format.
-            <dt><code>COMPRESS=<em>n</em></code>
-            <dt><code>IDRC=<em>n</em></code>
-            <dd><b><i>COMPRESS</i></b> and <b><i>IDRC</i></b> control
-                whether compression should be used when writing to HET
-                files.  The value <code><em>n</em></code> can be <b>1</b>
-                to turn on compression (the default) or <b>0</b> to turn
-                it off.  <b><i>IDRC</i></b> is a currently a synonym for
-                <b><i>COMPRESS</i></b>, but may be used in the future to
-                control other emulated tape drive features.
-            <dt><code>METHOD=<em>n</em></code>
-            <dd>The <b><i>METHOD</i></b> option allows you to specify
-                which compression method to use.  You may specify
-                <b><i>1</i></b> for ZLIB compression or <b><i>2</i></b>
-                for BZIP2 compression.  The default is <b><i>1</i></b>.
-            <dt><code>LEVEL=<em>n</em></code>
-            <dd>The <b><i>LEVEL</i></b> option controls the level of
-                compression.  It ranges from <b><i>1</i></b> for fastest
-                compression to <b><i>9</i></b> for best compression.
-                The default is <b><i>4</i></b>.
-            <dt><code>CHUNKSIZE=<em>nnnnn</em></code>
-            <dd>The <b><i>CHUNKSIZE</i></b> option allows you to create
-                                HET files that contain different chunk sizes.  The AWSTAPE
-                                (and therefore the HET) format allows each tape block to be
-                                logically broken up into smaller chunks.  For instance, if
-                                your S/3x0 application creates tapes with a block size of
-                                27998, those blocks would be broken down into
-                                <code><em>nnnnn</em></code> sized chunks.  To be honest, I
-                                can't think of a reason you'd want to change this since
-                                decreasing it may reduce compression performance, but it's
-                                there if you want it.  The range is from <b><i>4096</i></b>
-                                to <b><i>65535</i></b>.  The latter being the default.
-        </p>
-    </dl>
+        <p>
+
+        <dl> <!-- begin Aditional HET arguments -->
+        <dt><code>AWSTAPE</code>
+        <dd><p>
+            The <b><i>AWSTAPE</i></b> argument causes HET files to
+            be written in AWSTAPE format.  This basically, disables
+            the additional features provided by the HET format.
+            <p>
+
+        <dt><code>COMPRESS=<em>n</em></code>
+        <dt><code>IDRC=<em>n</em></code>
+        <dd><p>
+            <b><i>COMPRESS</i></b> and <b><i>IDRC</i></b> control
+            whether compression should be used when writing to HET
+            files.  The value <code><em>n</em></code> can be <b>1</b>
+            to turn on compression (the default) or <b>0</b> to turn
+            it off.  <b><i>IDRC</i></b> is a currently a synonym for
+            <b><i>COMPRESS</i></b>, but may be used in the future to
+            control other emulated tape drive features.
+            <p>
+
+        <dt><code>METHOD=<em>n</em></code>
+        <dd><p>
+            The <b><i>METHOD</i></b> option allows you to specify
+            which compression method to use.  You may specify
+            <b><i>1</i></b> for ZLIB compression or <b><i>2</i></b>
+            for BZIP2 compression.  The default is <b><i>1</i></b>.
+            <p>
+
+        <dt><code>LEVEL=<em>n</em></code>
+        <dd><p>
+            The <b><i>LEVEL</i></b> option controls the level of
+            compression.  It ranges from <b><i>1</i></b> for fastest
+            compression to <b><i>9</i></b> for best compression.
+            The default is <b><i>4</i></b>.
+            <p>
+
+        <dt><code>CHUNKSIZE=<em>nnnnn</em></code>
+        <dd><p>
+            The <b><i>CHUNKSIZE</i></b> option allows you to create
+            HET files that contain different chunk sizes.  The AWSTAPE
+            (and therefore the HET) format allows each tape block to be
+            logically broken up into smaller chunks.  For instance, if
+            your S/3x0 application creates tapes with a block size of
+            27998, those blocks would be broken down into
+            <code><em>nnnnn</em></code> sized chunks.  To be honest, I
+            can't think of a reason you'd want to change this since
+            decreasing it may reduce compression performance, but it's
+            there if you want it.  The range is from <b><i>4096</i></b>
+            to <b><i>65535</i></b>.  The latter being the default.
+            <p>
+
+        </dl> <!-- end Aditional HET arguments -->
+
+    </dl> <!-- begin Emulated tape types of emulation -->
+
+    The following parameters apply to both AWS and HET emulation files:
+    <p>
+
     <dl>
-        The following parameters apply to both AWS and HET emulation files :
-        </p>
-        <dt><code>MAXSIZE</code>|<code>MAXSIZEK</code>|<code>MAXSIZEM</code>=<em>n</em>
-        <dd>Specifies the maximum number of bytes (specified in bytes, Kilobytes or Megabytes) for the emulated file. This parameter defaults to 0, meaning there is no limit on the file size.
-        <dt><code>EOTMARGIN</code>=<em>n</em>
-        <dd>Specifies the number of bytes remaining before reaching <em>maxsize</em> at which point the tape device will signal the presence of the 'End Of Tape' marker, thus allowing the program to switch to the next tape.
-        </p>
+    <dt><code>MAXSIZE</code>=<i>n</i> &nbsp;|&nbsp; <code>MAXSIZEK</code>=<i>n</i>
+         &nbsp;|&nbsp; <code>MAXSIZEM</code>=<i>n</i>
+    <dd><p>
+        Specifies the maximum number of bytes (specified in bytes, Kilobytes or
+        Megabytes) for the emulated file. This parameter defaults to 0, meaning
+        there is no limit on the file size.
+        <p>
+
+    <dt><code>EOTMARGIN</code>=<em>n</em>
+    <dd><p>
+        Specifies the number of bytes remaining before reaching <em>maxsize</em>
+        at which point the tape device will signal the presence of the 'End Of Tape'
+        marker, thus allowing the program to switch to the next tape.
+        <p>
+
     </dl>
-    <dl>
-        Additionally, if the file name starts with the '@' character (at sign), the file really describes a list of tape emulation files to be loaded in succession.
-        <br />The syntax of each line is identical to the information specified that can be specified after the device type when the emulation file is specified directly after the device type in the configuration file.
-        <br />If the emulation file filename in the file list is the '*' character, then this specifies a set of options to be applied to all additional emulation files specified in the file list.
-        <br />Parameters are appended in succession. In all cases, is the same parameter is specified more than once, the last instance takes precedence.
-        <br />
-        Therefore, it is possible to specify a set of parameters in the base configuration file, Another set on a '*' line, and another set for each individual lines. Parameter are then appended in that order.
-        </p>
-        An SCSI tape device should *NOT* be given in a file list.
-    </dl>
-    </p>
+
+    Additionally, if the file name starts with the '@' character (at sign), the file
+    really describes a list of tape emulation files to be loaded in succession.
+    <p>
+
+    The syntax of each line is identical to the information specified that can be
+    specified after the device type when the emulation file is specified directly
+    after the device type in the configuration file.
+    <p>
+
+    If the emulation file filename in the file list is the '*' character, then this
+    specifies a set of options to be applied to all additional emulation files
+    specified in the file list.
+    <p>
+
+    Parameters are appended in succession. In all cases, is the same parameter is
+    specified more than once, the last instance takes precedence.
+    <p>
+
+    Therefore, it is possible to specify a set of parameters in the base configuration
+    file, another set on a '*' line, and another set for each individual lines.
+    Parameter are then appended in that order.
+    <p>
+
+    <i>A <b>SCSI tape</b> device should <b><u>NOT</u></b> be given in a file list.</i>
+    <p>
+
     See the README.TAPE file for additional information, system and application programming for tape devices.
-    </dl>
-<p>
+    <p>
+
+<a name="3088">
 <a name="ctca">
 <dt><em>Channel-to-channel adapters</em>
-<dd>The first argument defines the emulation type, and the remaining
+<dd><p>
+    The first argument defines the emulation type, and the remaining
     arguments depend on the chosen emulation type. If the first argument
     is not a recognized emulation type, then the driver will operate as
     in Hercules Version 1, using Willem Konynenberg's vmnet package, as
     described in Axel Schwarzer's
     <a href="http://www.kiyoinc.com/herc3088.html">CTCA 3088</a> document.
-    <p>The following are the emulation types currently supported:
-    <dl>
-    <p><dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)<p>
-    <dd>A point-to-point IP connection with the TCP/IP stack of the
+    <p>
+
+    The following are the emulation types currently supported:
+    <p>
+
+    <dl> <!-- begin emulation types -->
+
+<a name="CTCI">
+    <dt><b>CTCI</b> &nbsp; &nbsp; (Channel to Channel link to TCP/IP stack)
+    <dd><p>
+        A point-to-point IP connection with the TCP/IP stack of the
         driving system on which Hercules is running.  See the
-        <a href="herctcp.html">Hercules TCP/IP</a> page for details.<p>
+        <a href="herctcp.html">Hercules TCP/IP</a> page for details.
+        <p>
+
         (Note: The CTCI protocol is only for the Linux version of
         Hercules. For Windows, use the below CTCI protocol instead).
-    <p><dt><b>CTCI</b>  &nbsp; &nbsp; (Channel to Channel link to Win32 TCP/IP stack)<p>
-    <dd>A modified Win32 version of the CTCI protocol for the Windows
-    crowd. Note that the protocol name (CTCI) is the same,
+        <p>
+
+    <dt><b>CTCI</b>  &nbsp; &nbsp; (Channel to Channel link to Win32 TCP/IP stack)
+    <dd><p>
+        A modified Win32 version of the CTCI protocol for the Windows
+        crowd. Note that the protocol name (CTCI) is the same,
         even though the actual implementation is very different. See Fish's
         <a href="http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html">CTCI-W32</a>
         page for further details and information.
-    <p><dt>Required for both Linux and Windows:
-    <dd><p>
-        <dl>
+        <p>
+
+        <dl> <!-- begin CTCI parms -->
+
+        <dt>Required for both Linux and Windows:
+        <dd><p>
+
+            <dl> <!-- begin Required for both Linux and Windows -->
+
             <dt><code><em>guestip</em></code>
-            <dd>specifies the IP address of the guest operating system
+            <dd><p>
+                specifies the IP address of the guest operating system
                 running under Hercules.
+                <p>
+
             <dt><code><em>hostip</em></code>
-            <dd>specifies the IP address of the host (Linux or Windows) side
+            <dd><p>
+                specifies the IP address of the host (Linux or Windows) side
                 of the point-to-point link. This may or may not be the same
                 as your system's regular IP address. For Windows, if the
                 host system is configured with DHCP, this should instead be
                 the MAC address of the Ethernet adapter you wish to use to
                 have Hercules communicate with the outside world.
-        </dl>
-    <p><dt>Optional for Linux:
-    <dd>If these arguments are specified, they must precede the required
-        arguments.<p>
-        <dl>
-            <dt><code>-n <em>name</em></code> &nbsp;or <code>--dev
-                <em>name</em></code>
-            <dd>specifies the name of the tunnel device to use. The default
+                <p>
+
+            </dl> <!-- end Required for both Linux and Windows -->
+
+            <p>
+
+        <dt>Optional for Linux:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments.
+            <p>
+
+            <dl> <!-- begin Optional for Linux -->
+
+            <dt><code>-n <em>name</em></code> &nbsp;or <code>--dev <em>name</em></code>
+            <dd><p>
+                specifies the name of the tunnel device to use. The default
                 is /dev/net/tun, which is correct for version 2.4 and above
                 of the Linux kernel.
+                <p>
+
             <dt><code>-d</code> or <code>--debug</code>
-            <dd>specifies that debugging output is to be produced on the
+            <dd><p>
+                specifies that debugging output is to be produced on the
                 Hercules control panel. This should normally be left
                 unspecified.
-        </dl>
-    <p><dt>Optional for Windows:
-    <dd>If these arguments are specified, they must precede the required
-        arguments. See Fish's <a href="http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html">CTCI-W32</a>
-        page for further details and information.<p>
-    <P><dt><b>CTCT</b> &nbsp; &nbsp; (Channel to Channel Emulation via TCP connection)<p>
-    <dd>An emulated CTCA to another Hercules system. Four arguments
-        are required:<p>
-        <dl>
-            <dt><code><em>lport</em></code>
-            <dd>specifies the local TCP port. This is the TCP port that
-                Hercules will listen on for this CTCA.
-            <dt><code><em>rhost</em></code>
-            <dd>specifies the remote host. This is the name or IP address
-                of the remote system that Hercules is running on, not the
-                name or IP address of the OS running on that copy of
-                Hercules.
-            <dt><code><em>rport</em></code>
-            <dd>specifies the remote TCP port. The rport parameter on this
-                system must match the lport parameter on the remote system,
-                and vice versa.
-            <dt><code><em>bufsize</em></code>
-            <dd>specifies the buffer size for the link. If this link is used
-                for IP traffic, this parameter should be more than the MTU
-                of the interface definition in the OS.
-        </dl>
-        Note : CTCT currently only supports IP traffic, so it cannot be used to
+                <p>
+
+            </dl> <!-- end Optional for Linux -->
+
+            <p>
+
+        <dt>Optional for Windows:
+        <dd><p>
+            If these arguments are specified, they must precede the required
+            arguments. See Fish's
+            <a href="http://home.sprintmail.com/~dtrout/Hercules/ctci-w32-index.html">CTCI-W32</a>
+            page for further details and information.
+            <p>
+
+        </dl> <!-- end CTCI parms -->
+
+<a name="CTCT">
+    <dt><b>CTCT</b> &nbsp; &nbsp; (Channel to Channel Emulation via TCP connection)
+    <dd><p>
+        An emulated CTCA to another Hercules system. Four arguments
+        are required:
+        <p>
+
+        <dl> <!-- begin CTCT parms -->
+
+        <dt><code><em>lport</em></code>
+        <dd><p>
+            specifies the local TCP port. This is the TCP port that
+            Hercules will listen on for this CTCA.
+            <p>
+
+        <dt><code><em>rhost</em></code>
+        <dd><p>
+            specifies the remote host. This is the name or IP address
+            of the remote system that Hercules is running on, not the
+            name or IP address of the OS running on that copy of
+            Hercules.
+            <p>
+
+        <dt><code><em>rport</em></code>
+        <dd><p>
+            specifies the remote TCP port. The rport parameter on this
+            system must match the lport parameter on the remote system,
+            and vice versa.
+            <p>
+
+        <dt><code><em>bufsize</em></code>
+        <dd><p>
+            specifies the buffer size for the link. If this link is used
+            for IP traffic, this parameter should be more than the MTU
+            of the interface definition in the OS.
+            <p>
+
+        </dl> <!-- end CTCT parms -->
+
+        <p>
+
+        Note: CTCT currently only supports IP traffic, so it cannot be used to
         transport NJE, SNA, PVM, etc.. payload. This may change in the future.
-    <P><dt><b>LCS</b> &nbsp; &nbsp; (LAN Channel Station Emulation)<p>
-    <dd>An emulated Lan Channel Station Adapter.
-    This emulation mode appears to the operating system running in
-    the Hercules machine as an IBM 8232 LCS device, an IBM 2216
-    router, a 3172 running ICP (Interconnect Communications Program),
-    the LCS3172 driver of a P/390, or an IBM Open Systems Adapter.
-        <br>
-    Rather than a point-to-point link, this emulation creates a
-    virtual ethernet adapter through which the guest operating system
-    running in the Hercules machine can communicate. As such, this
-    mode is not limited to TCP/IP traffic, but in fact will handle
-    any ethernet frame.
-    <p>
-    The configuration statement for LCS is as follows:
-    <p>
-    NOTE :<br>
-    There are no required parameters for the LCS emulation, however
-    there are several options that can be specified on the config
-    statement:
-    <p>
-    NOTE :<br>
-    On the MAC OS X Platform, the long option format (--xxx) is not supported. Only the short option format (-x : One dash, one letter) should be used.
-    <p>
-        <dl>
-            <dt><code><em> -n devname or --dev devname</em></code>
-            <dd>
+        <p>
+
+<a name="LCS">
+    <dt><b>LCS</b> &nbsp; &nbsp; (LAN Channel Station Emulation)
+    <dd><p>
+        An emulated Lan Channel Station Adapter.
+        This emulation mode appears to the operating system running in
+        the Hercules machine as an IBM 8232 LCS device, an IBM 2216
+        router, a 3172 running ICP (Interconnect Communications Program),
+        the LCS3172 driver of a P/390, or an IBM Open Systems Adapter.
+        <p>
+
+        Rather than a point-to-point link, this emulation creates a
+        virtual ethernet adapter through which the guest operating system
+        running in the Hercules machine can communicate. As such, this
+        mode is not limited to TCP/IP traffic, but in fact will handle
+        any ethernet frame.
+        <p>
+
+        The configuration statement for LCS is as follows:
+        <p>
+
+        NOTE: There are no required parameters for the LCS emulation,
+        however there are several options that can be specified on the
+        config statement:
+        <p>
+
+        NOTE: On the MAC OS X Platform, the long option format (--xxx) is not
+        supported. Only the short option format (-x : one dash, one letter) should
+        be used.
+        <p>
+
+        <dl> <!-- begin LCS parms -->
+
+        <dt><code><em> -n devname or --dev devname</em></code>
+        <dd><p>
             where <em>devname</em> is:
+            <p>
+
             <dl>
-              <dt>*nix
-              <dd>the name of the TUN/TAP special character device,
-                   normally /dev/net/tun.
+            <dt>(*nix)
+            <dd><p>
+                the name of the TUN/TAP special character device,
+                normally /dev/net/tun.
+                <p>
+
+            <dt>(Windows)
+            <dd><p>
+                is either the IP or MAC address of the driving
+                systems network card. TunTap32 will automatically select
+                the first network card it finds if this option is
+                omitted, this may not be desirable for some users.
+                <p>
+
             </dl>
-            <dl>
-              <dt>[Windows]
-              <dd>is either the IP or MAC address of the driving
-                  systems network card. TunTap32 will automatically select
-                  the first network card it finds if this option is
-                  omitted, this may not be desirable for some users.
-            </dl>
-            <dt><code><em>-o filename or --oat filename</em></code>
-            <dd>
+            <p>
+
+        <dt><code><em>-o filename or --oat filename</em></code>
+        <dd><p>
             where <em>filename</em> specifies the filename of the Address
             Translation file. If this option is specified, the optional
             <i>--mac</i> and <em>guestip</em> entries are ignored in preference to
-            statements in the OAT. (See <a href=#OAT>below</a> for the format of the OAT)
-            <dt><code><em>-m MAC Address or --mac MAC address</em></code>
-            <dd>
+            statements in the OAT. (See further below for the <a href=#OAT>syntax
+            of the OAT file</a>)
+            <p>
+
+        <dt><code><em>-m MAC Address or --mac MAC address</em></code>
+        <dd><p>
             where <em>MAC Address</em> is the optional hardware address of
             the interface in the format: xx:xx:xx:xx:xx:xx. If you use the
             <i>--oat</i> option, do not specify an address here.
-            <dt><code><em>guestip</em></code>
-            <dd>
+            <p>
+
+        <dt><code><em>guestip</em></code>
+        <dd><p>
             is an optional IP address of the Hercules
             (guest OS) side. Note: This is only used to
             establish a point-to-point routing table entry
             on driving system. If you use the <i>--oat</i> option,
             do not specify an address here.
-        <p>
-         <a name="OAT" />
-             <dt>OAT File</p>
-     <dd>
-             The syntax for the Address Translation file is as follows:
-             <pre><code>
-*********************************************************
-* Dev Mode Port Entry specific information              *
-*********************************************************
-0400  IP   00  PRI 172.021.003.032
-0402  IP   00  SEC 172.021.003.033
-0404  IP   00  NO  172.021.003.038
-0406  IP   01  NO  172.021.002.016
-040E  SNA  00
+            <p>
 
-HWADD 00 02:00:FE:DF:00:42
-HWADD 01 02:00:FE:DF:00:43
-ROUTE 00 172.021.003.032 255.255.255.224
+        <a name="OAT">
+        <dt><b>OAT file syntax</b>
+        <dd><p>
+            The syntax for the Address Translation file is as follows:
+            <blockquote>
+<pre><code>
+*********************************************************
+* Dev   Mode  Port  Entry specific information...       *
+*********************************************************
+
+  0400  IP    00    PRI  172.021.003.032
+  0402  IP    00    SEC  172.021.003.033
+  0404  IP    00    NO   172.021.003.038
+  0406  IP    01    NO   172.021.002.016
+  040E  SNA   00
+
+HWADD  00  02:00:FE:DF:00:42
+HWADD  01  02:00:FE:DF:00:43
+
+ROUTE  00  172.021.003.032  255.255.255.224
 </code></pre>
-<dt>
-<dl>
-where:
-<p>
-<dl>
-<dt><code><em>Dev</em></code><dd>   is the base device address
-<dt><code><em>Mode</em></code><dd>  is the operation mode - IP or SNA
-<dt><code><em>Port</em></code><dd>  is the virtual (relative) adapter number.
-</dl>
-<dt>
-<p>
-For IP modes, the entry specific information is as follows:
-<p>
-<dd>
-<dl>
-<dt><code><em>PRI|SEC|NO</em></code><dd> specifies where a packet with an unknown IP
-address is forwarded to. PRI is the primary
-default entry, SEC specifies the entry to use
-when the primary is not available, and NO
-     specifies that this is not a default entry.
-     <dt><code><em>nnn.nnn.nnn.nnn</code></em><dd>specifies the home IP address
-</dl>
-<p>
-     <dt>When the operation mode is IP, specify only the even (read)
-     device number <em>dev</em>. The odd (write) address will be create automatically.
-     <p>
+            </blockquote>
+            <p>
 
-     Note: SNA is currently <em>NOT</em> implemented.
-          <p>
+            <dl> <!-- begin LCS OATFILE parms -->
+            <dt>where:
+            <dd><p>
 
-          Additionally, two other statements can be included in the
-          address translation file. The HWADD and ROUTE statements.
-          <p>
+                <dl>
+                <dt><code><em>Dev</em></code>
+                <dd><p>
+                    is the base device address
+                    <p>
 
-          Use the HWADD to specify a hardware (MAC) address for a
-          virtual adapter. The first parameter after HWADD specifies
-          with relative adapter for which the address is applied.
-          <p>
+                <dt><code><em>Mode</em></code>
+                <dd><p>
+                    is the operation mode: IP or SNA.
+                    <p>
+                    (<i><b>Note:</b> the SNA operation mode is NOT currently implemented.</i>)
+                    <p>
 
-          The ROUTE statement is included for convenience. This allows the
-          hercifc program to create a network route for this specified
-          virtual adapter. Please note that it is not necessary to include
-          point-to-point routes for each IP address in the table. This is
-          done automatically by the emulation module.
-          <p>
+                <dt><code><em>Port</em></code>
+                <dd><p>
+                    is the virtual (relative) adapter number.
+                    <p>
+                </dl>
+                <p>
+            </dl> <!-- end LCS OATFILE parms -->
+            <p>
 
-          The read/write devices can be swapped by coding the odd address
-          of the even-odd pair in the OAT
-          <p>
+            For IP modes, the entry specific information is as follows:
+            <p>
 
-          Up to 4 virtual (relative) adapters 00-03 are currently supported.
-</dl>
+            <dl> <!-- begin LCS OATFILE parms entry specific information -->
+            <dt><code><em>PRI|SEC|NO</em></code>
+            <dd><p>
+                specifies where a packet with an unknown IP
+                address is forwarded to. PRI is the primary
+                default entry, SEC specifies the entry to use
+                when the primary is not available, and NO
+                specifies that this is not a default entry.
+                <p>
+
+            <dt><code><em>nnn.nnn.nnn.nnn</code></em>
+            <dd><p>
+                specifies the home IP address
+            </dl> <!-- end LCS OATFILE parms entry specific information -->
+            <p>
+
+            When the operation mode is IP, specify only the even (read)
+            device number <em>dev</em>. The odd (write) address will be
+            create automatically.
+            <p>
+
+            <i><b>Note:</b> the SNA operation mode is NOT currently implemented.</i>
+            <p>
+
+            Additionally, two other statements can be included in the
+            address translation file. The HWADD and ROUTE statements.
+            <p>
+
+            Use the HWADD to specify a hardware (MAC) address for a
+            virtual adapter. The first parameter after HWADD specifies
+            with relative adapter for which the address is applied.
+            <p>
+
+            The ROUTE statement is included for convenience. This allows the
+            hercifc program to create a network route for this specified
+            virtual adapter. Please note that it is not necessary to include
+            point-to-point routes for each IP address in the table. This is
+            done automatically by the emulation module.
+            <p>
+
+            The read/write devices can be swapped by coding the odd address
+            of the even-odd pair in the OAT
+            <p>
+
+            Up to 4 virtual (relative) adapters 00-03 are currently supported.
+
+        </dl> <!-- end LCS parms -->
         <p>
+
         If no Address Translation file is specified, the emulation module
         will create the following:
         <p>
-        <dl>
-             An ethernet adapter (port 0) for TCP/IP traffic only.
-         </dl>
-         <dl>
-             Two device addresses will be defined (devnum and devnum + 1).
-         </dl>
-         <p>
-        </dl>
 
-    </dl>
-<p>
+        <dl>
+            An ethernet adapter (port 0) for TCP/IP traffic only.
+        </dl>
+        <p>
+
+        <dl>
+            Two device addresses will be defined (devnum and devnum + 1).
+        </dl>
+        <p>
+
+    </dl> <!-- end emulation types -->
+    <p>
+
+<a name="3370">
 <a name="fbadasd">
 <dt><em>FBA DASD devices</em>
-<dd>The argument specifies the name of a file which contains the FBA
+<dd><p>
+    The argument specifies the name of a file which contains the FBA
     DASD image or the INET address of a Hercules shared device server.
     <p>
+
     The file consists of fixed length 512-byte records,
     each of which represents one physical block of the emulated disk.
     <p>
+
     To allow access to a minidisk within a full-pack FBA DASD image
     file, two additional arguments may be specified after the file
     name:
     <p>
-    <dl>
+
+    <dl> <!-- begin FBA DASD arguments -->
+
     <dt><code><em>origin</em></code>
-    <dd>specifies the relative block number within the DASD image
+    <dd><p>
+        specifies the relative block number within the DASD image
         file at which the minidisk begins.  The number must be less
         than the number of blocks in the file.  The default origin
         is zero.
+        <p>
+
     <dt><code><em>numblks</em></code>
-    <dd>specifies the number of 512-byte blocks in the minidisk.
+    <dd><p>
+        specifies the number of 512-byte blocks in the minidisk.
         This number must not exceed the number of blocks in the file
         minus the origin.
         If omitted, or if specified as an asterisk, then the minidisk
         continues to the end of the DASD image file.
-    </dl>
+        <p>
+
+    </dl> <!-- end FBA DASD arguments -->
     <p>
+
     If you specify an INET address the format is:
     <p>
-    <dl>
+
+    <dl> <!-- begin INET parms -->
+
     <dt><code><em>ip-name-or-addr:port:devnum</em></code>
-    <dd><i>ip-name-or-addr</i> specifies the internet name or address
+    <dd><p>
+
+        <i>ip-name-or-addr</i> specifies the internet name or address
         where the Hercules shared device server is running.
-    <p>
-    <dd><i>port</i> specifies the port number the shared device server
+        <p>
+
+        <i>port</i> specifies the port number the shared device server
         is listening on.  If omitted, the default is 3990.
-    <p>
-    <dd><i>devnum</i> specifies the device number on the shared
+        <p>
+
+        <i>devnum</i> specifies the device number on the shared
         device server.  If omitted, the default is the current device number.
-    </dl>
-<p>
+
+    </dl> <!-- end INET parms -->
+    <p>
+
+<a name="3380">
 <a name="ckddasd">
 <dt><em>CKD DASD devices</em>
-<dd>The argument specifies the name of a file containing the disk CKD
+<dd><p>
+    The argument specifies the name of a file containing the disk CKD
     DASD image or the INET address of a Hercules shared device server.
     <p>
+
     The file consists of a 512-byte device header record
     followed by fixed length track images.  The length of each track
     image depends on the emulated device type, and is always rounded
     up to the next multiple of 512 bytes.
     <p>
+
     Volumes larger than 2GB (for example, the 3390 model 3)
     can be supported by spreading the data across more than one file.
     Each file contains a whole number of cylinders.  The first file
@@ -1102,52 +1758,73 @@ when the primary is not available, and NO
     allocates the remaining files by replacing the last character of
     the file name by the characters 2, 3, etc.
     <p>
+
     <em>When CKD DASD images are spread across multiple files, you must
     specify only the first file name (the file with suffix _1) in the
     configuration statement!</em>
     <p>
+
     If your operating system supports <i>large file sizes</i> or
     <i>64 bit offsets</i> then volumes larger than 2G can be kept
     in a single file.
     <p>
+
     Alternatively, the argument may specify the name of a file containing
     a compressed CKD DASD image.  The CKD driver will automatically detect
     whether the file contains a regular CKD image or a compressed CKD
     image.  Refer to the <a href="cckddasd.html">CCKD</a> page for details
     on how to create and use compressed CKD DASD images.
     <p>
+
     If you specify an INET address the format is:
     <p>
-    <dl>
+
+    <dl> <!-- begin INET parms -->
     <dt><code><em>ip-name-or-addr:port:devnum</em></code>
-    <dd><i>ip-name-or-addr</i> specifies the internet name or address
+    <dd><p>
+        <i>ip-name-or-addr</i> specifies the internet name or address
         where the Hercules shared device server is running.
-    <p>
-    <dd><i>port</i> specifies the port number the shared device server
+        <p>
+
+        <i>port</i> specifies the port number the shared device server
         is listening on.  If omitted, the default is 3990.
-    <p>
-    <dd><i>devnum</i> specifies the device number on the shared
+        <p>
+
+        <i>devnum</i> specifies the device number on the shared
         device server.  If omitted, the default is the current device number.
-    </dl>
-<p>
+        <p>
+
+    </dl> <!-- end INET parms -->
+    <p>
+
 <a name="comline">
-    <dt><em>Communication Adapter</em>
-    <dd>
+<dt><em>Communication Line</em>
+<dd><p>
+    ( Preliminary 2703 BSC Support )
+    <p>
+
     Describes a BSC emulation line entry to either link 2 hercules engines
     or a custom made program emulating a 2780, 3780 or 3x74, or a custom made
     program interfacing to a real BSC line.
-    </p>
+    <p>
+
     The communication is emulated over a TCP connection. All bytes are
     transfered as-is (except for doubling DLE in transparent mode) just
     like it would over a real BSC link. Emulated EIA (DCD, DTR, CTS,
     etc..) or X.21/V.11 leads (C, T, etc..) are treated differently depending
     on the DIAL option selected.
-    </p>
+    <p>
+
     The line emulates a point-to-point BSC link. There is no point-to-multipoint handling.
-    </p>
-    The following options define the line emulation behaviour :
-    <dl>
-        <dt><code>DIAL=IN|OUT|INOUT|NO</code><dd>
+    <p>
+
+    The following options define the line emulation behaviour:
+    <p>
+
+    <dl> <!-- begin Communication Adapter parms -->
+
+    <dt><code>DIAL=IN|OUT|INOUT|NO</code>
+    <dd><p>
         Specifies call direction (if any). If <em>DIAL=NO</em> is specified, the
         TCP outgoing connection is attempted as soon as an 'ENABLE' CCW is executed.
         Also, in this mode, an incoming connection will always be accepted. If <em>DIAL=IN|INOUT</em>
@@ -1156,51 +1833,91 @@ when the primary is not available, and NO
         When <em>DIAL=IN|INOUT</em> is specified, a DIAL CCW allows the application
         to establish a TCP connection to a specific host. For other DIAL values,
         the DIAL CCW is rejected.
-        <dt><code>lhost=hostname|ip address|<em>*</em></code>
-        <dd>Specifies which IP address to listen on. This also conditions the network
+        <p>
+
+    <dt><code>lhost=hostname|ip address|<em>*</em></code>
+    <dd><p>
+        Specifies which IP address to listen on. This also conditions the network
         interface from which incoming calls will be accepted. Specifying '*' means
         all incoming TCP calls are accepted, regardless of the destination IP
         address or call origin. This is the default value. Specifying a specific
         IP address when <em>DIAL=OUT</em> is specified has no effect.
-        <dt><code>lport=service name|port number</code>
-        <dd>Specifies the TCP port for which to listen to incoming TCP calls. This
+        <p>
+
+    <dt><code>lport=service name|port number</code>
+    <dd><p>
+        Specifies the TCP port for which to listen to incoming TCP calls. This
         value is mandatory for <em>DIAL=IN|INOUT|NO</em>. It is ignored for <em>DIAL=OUT</em>.
-        <dt><code>rhost=hostname|ip address</code>
-        <dt><code>rport=service name|port number</code>
-        <dd>Specifies the remote host and port to which to direct a TCP connection on a
+        <p>
+
+    <dt><code>rhost=hostname|ip address</code>
+    <dt><code>rport=service name|port number</code>
+    <dd><p>
+        Specifies the remote host and port to which to direct a TCP connection on a
         DIAL=NO line when an 'ENABLE' CCW is executed. This option is mandatory when <em>DIAL=NO</em>
         is specified. It is ignored for other <em>DIAL</em> values.
-        <dt>The following options are tuning options. In most cases, using the default values
-        give the best results
-        <dt><code>rto=0|-1|nnn|<em>3000</em></code>
-        <dd>Specifies the number of miliseconds before terminating a read on a timeout, when
+        <p>
+
+    </dl> <!-- end Communication Adapter parms -->
+
+    The following options are tuning options. In most cases, using the default values
+    give the best results
+    <p>
+
+    <dl> <!-- begin Communication Adapter tuning options -->
+
+    <dt><code>rto=0|-1|nnn|<em>3000</em></code>
+    <dd><p>
+        Specifies the number of miliseconds before terminating a read on a timeout, when
         no read termination control character is received. Specifying 0 means the READ ends
         immediatly. -1 specifies there is no timeout.
-        <dt><code>pto=0|-1|nnn|<em>3000</em></code>
-        <dd>Specifies the number of miliseconds before terminating a POLL on a timeout, when
+        <p>
+
+    <dt><code>pto=0|-1|nnn|<em>3000</em></code>
+    <dd><p>
+        Specifies the number of miliseconds before terminating a POLL on a timeout, when
         no ACK or NACK sequence is received. Specifying 0 means the POLL ends
         immediatly. -1 specifies there is no timeout.
-        <dt><code>eto=0|<em>-1</em>|nnn|<em>10000</em></code>
-        <dd>Specifies the number of miliseconds before terminating an ENABLE operation on a timeout.
-        the timeout applies when <em>DIAL=NO|IN|INOUT</em> is specified, the outgoing TCP call fails (<em>DIAL=NO</em>)
-        and there is no previously or currently established TCP connection for this line. When <em>DIAL=NO</em> is
-        specified, the timeout defaults to 10 seconds. for <em>DIAL=IN|INOUT</em>, the timeout
-        defaults to -1.
-    </dl>
-<dd>
+        <p>
 
-</dl>
-<p>
+    <dt><code>eto=0|<em>-1</em>|nnn|<em>10000</em></code>
+    <dd><p>
+        Specifies the number of miliseconds before terminating an ENABLE operation on a timeout.
+        the timeout applies when <em>DIAL=NO|IN|INOUT</em> is specified, the outgoing TCP call
+        fails (<em>DIAL=NO</em>) and there is no previously or currently established TCP connection
+        for this line. When <em>DIAL=NO</em> is specified, the timeout defaults to 10 seconds.
+        For <em>DIAL=IN|INOUT</em>, the timeout defaults to -1.
+        <p>
+
+    </dl> <!-- end Communication Adapter tuning options -->
+
+</dl> <!-- end Arguments for each device type -->
+
+<p><br>
+
 A comment preceded by a pound sign may be appended to any device
 definition statement.
-<p><center><hr width=15% noshade></center>
 <p>
+
+<center><hr width=15% noshade></center>
+<p>
+
 If you have a question about Hercules, see the
 <a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
-<p><center><hr width=15% noshade>
-<a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+<p>
+
+<center>
+
+    <hr width=15% noshade>
+    <p>
+
+    <a href="hercinst.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+    <p>
+
+    <small>Last updated 05 June 2004
+    <p>
+
 </center>
-<small>
-<p>Last updated 30 November 2003
+
 </BODY>
 </HTML>

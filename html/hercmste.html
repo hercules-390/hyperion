@@ -127,6 +127,34 @@ HHCTE010E CNSLPORT statement invalid: <em>statement</em>
   <dt>Issued by
   <dd>console.c, function console_connection_handler
   </dl>
+<dt><code><a name="HHCTE011E">
+HHCTE011E Device <i>devn</i>: Invalid IP address: <i>ipaddr</i>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The IP address <code>ipaddr</code> is invalid.
+  <dt>Issued by
+  <dd>console.c, function loc3270_init_handler or constty_init_handler.
+  </dl>
+<dt><code><a name="HHCTE012E">
+HHCTE012E Device <i>devn</i>: Invalid mask value: <i>ipmask</i>
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The mask value <code>ipmask</code> is invalid.
+  <dt>Issued by
+  <dd>console.c, function loc3270_init_handler or constty_init_handler.
+  </dl>
+<dt><code><a name="HHCTE013E">
+HHCTE013E Device <i>devn</i>: Extraneous argument(s): <i>xxx</i>...
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The argument <code>xxx</code> and any which follow it (if any)
+      was not recognized nor understood and are thus invalid.
+  <dt>Issued by
+  <dd>console.c, function loc3270_init_handler or constty_init_handler.
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>
@@ -136,6 +164,6 @@ If you have a question about Hercules, see the
 <a href="hercmsg.html"><img src="gifs/back.gif" border=0 alt="back"></a>
 </center>
 <small>
-<p>Last updated 3 October 2003
+<p>Last updated 6 June 2004
 </BODY>
 </HTML>

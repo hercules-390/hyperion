@@ -17,6 +17,7 @@
 /*           use Herc-calculate MIPS/SIOS rate.                      */
 /* 01/06/04  Minor fix to detect switching to a different displayed  */
 /*           (target) CPU when no other status has otherwise changed.*/
+/* 09/06/04  Minor fix to UpdateDeviceStatus for terminal devices.   */
 /*                                                                   */
 /*********************************************************************/
 
@@ -900,7 +901,8 @@ void  UpdateDeviceStatus ()
                                                                               chPendingStat =
                                                                               chOpenStat    = '0';
 
-        if (pDEVBLK->filename[0] || (pDEVBLK->console && pDEVBLK->connected)) chOnlineStat  = '1';
+        if ((!pDEVBLK->console && pDEVBLK->filename[0]) ||
+            ( pDEVBLK->console && pDEVBLK->connected))                        chOnlineStat  = '1';
         if (pDEVBLK->busy)                                                    chBusyStat    = '1';
         if (IOPENDING(pDEVBLK))                                               chPendingStat = '1';
         if (pDEVBLK->fd > max(STDIN_FILENO,max(STDOUT_FILENO,STDERR_FILENO))) chOpenStat    = '1';

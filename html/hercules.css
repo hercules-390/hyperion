@@ -7,5 +7,14 @@ h1 {color:blue}
 h2 {color:red; font-style:italic}
 p {color:black; font-family:Arial}
 pre, code {font-family:Courier}
+blockquote.box
+{
+    padding:          12px;
+    margin-left:      4%;
+    border-style:     solid;
+    border-width:     1px;
+    font-style:       italic;
+    margin-right:     10%;
+}
 -->
 </style>

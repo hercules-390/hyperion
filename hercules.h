@@ -1275,7 +1275,9 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for console                      */
 
-        struct  in_addr ipaddr;         /* Client IP address         */
+        struct in_addr ipaddr;          /* Client IP address         */
+        in_addr_t  acc_ipaddr;          /* Allowable clients IP addr */
+        in_addr_t  acc_ipmask;          /* Allowable clients IP mask */
         U32     rlen3270;               /* Length of data in buffer  */
         int     pos3270;                /* Current screen position   */
         int     keybdrem;               /* Number of bytes remaining
