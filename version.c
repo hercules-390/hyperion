@@ -63,14 +63,6 @@ static const char *build_info[] = {
     #endif
 #endif
 
-#if defined(HAVE_LINUX_IF_TUN_H)
-    "Linux TUN driver support",
-#endif
-
-#if defined(OPTION_W32_CTCI)
-    "Windows CTCI-W32 support",
-#endif
-
 #if defined(OPTION_FTHREADS)
     "Using fthreads instead of pthreads",
 #endif
