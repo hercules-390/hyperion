@@ -13,16 +13,16 @@
 
 #include "hercules.h" 
 
-ATTR logger_attr;
-COND logger_cond;
-LOCK logger_lock;
-TID  logger_tid;
+static ATTR logger_attr;
+static COND logger_cond;
+static LOCK logger_lock;
+static TID  logger_tid;
 
-char *logger_buffer;
-int  logger_bufsize;
+static char *logger_buffer;
+static int  logger_bufsize;
 
-int  logger_currmsg;
-int  logger_wrapped;
+static int  logger_currmsg;
+static int  logger_wrapped;
 
 
 /* Find the index for a specific line number in the log,             */

@@ -1628,7 +1628,9 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
 extern SYSBLK   sysblk;                 /* System control block      */
 extern CCKDBLK  cckdblk;                /* CCKD global block         */
 #ifdef EXTERNALGUI
-extern int extgui;              /* external gui present */
+extern int extgui __attribute__ ((deprecated));
+/* The external gui interface is now external and now uses the
+   HDC(debug_cpu_state, regs) interface */
 #endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
@@ -1654,13 +1656,6 @@ int  define_device (U16 olddev, U16 newdev);
 int  configure_cpu (REGS *regs);
 int  deconfigure_cpu (REGS *regs);
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
-
-/* Global data areas and functions in module panel.c */
-extern int volatile initdone;    /* Initialization complete flag */
-extern LIST_ENTRY  bind_head;
-extern LOCK        bind_lock;
-extern int bind_device   (DEVBLK* dev, char* spec);
-extern int unbind_device (DEVBLK* dev);
 
 /* Access type parameter passed to translate functions in dat.c */
 #define ACCTYPE_HW              0       /* Hardware access           */
@@ -1717,6 +1712,7 @@ void (*daemon_task) (void);
 int (*config_command) (int argc, BYTE *argv[]);
 
 void *(*debug_cpu_state) (REGS *);
+void *(*debug_device_state) (DEVBLK *);
 void *(*debug_program_interrupt) (REGS *, int);
 void *(*debug_diagnose) (U32, int, int, REGS *);
 
@@ -1724,6 +1720,12 @@ void *(*debug_diagnose) (U32, int, int, REGS *);
 void *panel_command (void *cmdline);
 void panel_display (void);
 #endif
+extern int volatile initdone __attribute__ ((deprecated));
+/* initdone is deprecated as it only used to signal that 
+   at least one cpu is online.  Future versions of hercules
+   will be able to run without any cpu online in order to
+   support remote devices *JJ*/
+
 
 /* Functions in module impl.c */
 void system_cleanup(void);
@@ -1794,6 +1796,11 @@ void display_subchannel (DEVBLK *dev);
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (BYTE *opnd, REGS *regs);
 void alter_display_virt (BYTE *opnd, REGS *regs);
+
+/* sockdev.c */
+extern void init_sockdev();
+extern int bind_device   (DEVBLK* dev, char* spec);
+extern int unbind_device (DEVBLK* dev);
 
 /* Functions in ecpsvm.c that are not *direct* instructions */
 /* but support functions either used by other instruction   */

@@ -21,8 +21,15 @@
 
 /* Linked list of bind structures for bound socket devices */
 
-LIST_ENTRY  bind_head;      /* (bind_struct list anchor) */
-LOCK        bind_lock;      /* (lock for accessing list) */
+static LIST_ENTRY  bind_head;      /* (bind_struct list anchor) */
+static LOCK        bind_lock;      /* (lock for accessing list) */
+
+void init_sockdev()
+{
+    InitializeListHead(&bind_head);
+    initialize_lock(&bind_lock);
+}
+
 
 /*-------------------------------------------------------------------*/
 /* safe_strdup   make copy of string and return a pointer to it      */

@@ -1397,8 +1397,7 @@ BYTE **newargv;
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
 #endif // defined(OPTION_FISHIO)
-    InitializeListHead(&bind_head);
-    initialize_lock(&bind_lock);
+    init_sockdev();
 
     /* Initialize HercIFC fd's */
     sysblk.ifcfd[0] = sysblk.ifcfd[1] = -1;
