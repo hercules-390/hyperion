@@ -1228,6 +1228,9 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
 
     /* Initialize the device block */
     dev->devnum = devnum;
+    dev->chanset = devnum >> 12;
+    if( dev->chanset >= MAX_CPU_ENGINES )
+        dev->chanset = MAX_CPU_ENGINES - 1;
     dev->devtype = devtype;
     dev->devinit = devinit;
     dev->devqdef = devqdef;

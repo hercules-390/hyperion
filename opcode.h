@@ -1278,6 +1278,14 @@ do { \
 
 #if defined(_FEATURE_SIE)
 
+#define SIE_SET_VI(_who, _when, _why, _regs) \
+    { \
+        (_regs)->siebk->vi_who = (_who); \
+        (_regs)->siebk->vi_when = (_when); \
+        STORE_HW((_regs)->siebk->vi_why, (_why)); \
+        memset((_regs)->siebk->vi_zero, 0, 6); \
+    }
+
 #if !defined(_GEN_ARCH) || _GEN_ARCH == 900 || (_GEN_ARCH == 390 && !defined(_FEATURE_ZSIE))
 
 #define SIE_TRANSLATE_ADDR(_parms...) \
@@ -1618,6 +1626,7 @@ int  ARCH_DEP(present_io_interrupt) (REGS *regs, U32 *ioid,
         U32 *ioparm, U32 *iointid, BYTE *csw);
 void io_reset (void);
 int  chp_reset(BYTE chpid);
+void channelset_reset(REGS *regs);
 int  device_attention (DEVBLK *dev, BYTE unitstat);
 int  ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat);
 

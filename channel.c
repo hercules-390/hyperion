@@ -156,6 +156,10 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
         /* Skip the device if not on specified channel */
         if ((dev->devnum & 0xFF00) != chan)
             continue;
+#if defined(FEATURE_CHANNEL_SWITCHING)
+        if(regs->chanset != dev->chanset)
+            continue;
+#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
 
         /* Count devices on channel */
         devcount++;
@@ -176,7 +180,7 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     /* Exit with condition code 0 indicating channel id stored */
     return 0;
 
-} /* end function testch */
+} /* end function stchan_id */
 
 /*-------------------------------------------------------------------*/
 /* TEST CHANNEL                                                      */
@@ -192,6 +196,10 @@ DEVBLK *dev;                            /* -> Device control block   */
         /* Skip the device if not on specified channel */
         if ((dev->devnum & 0xFF00) != chan)
             continue;
+#if defined(FEATURE_CHANNEL_SWITCHING)
+        if(regs->chanset != dev->chanset)
+            continue;
+#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
 
         /* Count devices on channel */
         devcount++;
@@ -833,6 +841,24 @@ device_reset (DEVBLK *dev)
 } /* end device_reset() */
 
 
+void
+channelset_reset(REGS *regs)
+{
+DEVBLK *dev;                            /* -> Device control block   */
+
+    /* Reset each device in the configuration */
+    for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
+    {
+        if( regs->chanset == dev->chanset)
+            device_reset(dev);
+    }
+
+    /* Signal console thread to redrive select */
+    signal_thread (sysblk.cnsltid, SIGUSR2);
+
+} /* end function channelset_reset */
+
+
 int
 chp_reset(BYTE chpid)
 {
@@ -872,6 +898,13 @@ void
 io_reset (void)
 {
 DEVBLK *dev;                            /* -> Device control block   */
+// #if defined(FEATURE_CHANNEL_SWITCHING)
+int i;
+
+    /* Connect each channel set to its home cpu */
+    for(i = 0; i < MAX_CPU_ENGINES; i++)
+        sysblk.regs[i].chanset = i;
+// #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
 
     /* Reset each device in the configuration */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -2514,6 +2547,10 @@ int     iopending = 0;                  /* 1 = I/O still pending     */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
 #endif /*!OPTION_IOINTQ*/
     {
+#if defined(FEATURE_CHANNEL_SWITCHING)
+        if(regs->chanset != dev->chanset)
+            continue;
+#endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
         obtain_lock (&dev->lock);
         if ((dev->pending || dev->pcipending)
             && (dev->pmcw.flag5 & PMCW5_V))

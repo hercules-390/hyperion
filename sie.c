@@ -101,6 +101,9 @@ int     icode;                          /* Interception code         */
     ARCH_DEP(display_inst) (regs, regs->ip);
 #endif /*defined(SIE_DEBUG)*/
 
+    if(effective_addr2 > regs->mainsize - (sizeof(SIEBK)-1))
+	ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
     /* Direct pointer to state descriptor block */
     STATEBK = (void*)(sysblk.mainstor + effective_addr2);
 
@@ -120,10 +123,19 @@ int     icode;                          /* Interception code         */
     }
 #endif /*!defined(FEATURE_ESAME)*/
     else
+    if(STATEBK->m & SIE_M_XA)
     {
         GUESTREGS->arch_mode = ARCH_390;
         GUESTREGS->sie_guestpi = (SIEFN)&s390_program_interrupt;
         gpv = s390_load_psw(GUESTREGS, STATEBK->psw);
+    }
+    else
+    {
+logmsg("SIE validity intercept\n");
+        /* Validity intercept for invalid mode */
+        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+          SIE_VI_WHY_MODE, GUESTREGS);
+        return;
     }
 
 #if defined(OPTION_REDUCED_INVAL)
@@ -501,6 +513,9 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     /* Process PER program interrupts */
                     if( OPEN_IC_PERINT(GUESTREGS) )
                         ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
+
+                    obtain_lock(&sysblk.intlock);
+
 #if MAX_CPU_ENGINES > 1
                     /* Perform broadcasted purge of ALB and TLB if requested
                        synchronize_broadcast() must be called until there are

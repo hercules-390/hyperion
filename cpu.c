@@ -1,3 +1,4 @@
+#define SIE_DEBUG
 /* CPU.C        (c) Copyright Roger Bowler, 1994-2001                */
 /*              ESA/390 CPU Emulator                                 */
 

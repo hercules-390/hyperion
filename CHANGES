@@ -1,3 +1,6 @@
+16 Dec 2001 Add missing obtain intlock to sie.c - Greg Smith
+16 Dec 2001 Add channel set switching feature - Jan Jaeger
+16 Dec 2001 Complete MP for S/370 - Jan Jaeger
 14 Dec 2001 Fix BSM instruction for z/OS - Greg Smith
 12 Dec 2001 Correct SIE intercept with concurrent PER indication - Jan Jaeger
 09 Dec 2001 SIE PER enhancements - Jan Jaeger

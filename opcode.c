@@ -435,10 +435,10 @@
 #endif /*!defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
 
-#if !defined(_FEATURE_SIE)
+#if !defined(FEATURE_CHANNEL_SWITCHING)
  UNDEF_INST(connect_channel_set)
  UNDEF_INST(disconnect_channel_set)
-#endif /*!defined(_FEATURE_SIE)*/
+#endif /*!defined(FEATURE_CHANNEL_SWITCHING)*/
 
 
 #if !defined(FEATURE_EXTENDED_TRANSLATION)

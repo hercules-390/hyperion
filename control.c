@@ -4605,7 +4605,12 @@ static char *ordername[] = {    "Unassigned",
        Initial CPU reset may IML a processor that is currently not
        part of the configuration, ie configure the cpu implicitly
        online */
-    if (order != SIGP_INITRESET && !tregs->cpuonline)
+    if (order != SIGP_INITRESET
+#if defined(FEATURE_BC_MODE)
+       && order != SIGP_IMPL
+       && order != SIGP_IPR
+#endif /*defined(FEATURE_BC_MODE)*/
+       && !tregs->cpuonline)
     {
         sysblk.sigpbusy = 0;
         release_lock(&sysblk.intlock);
@@ -4748,6 +4753,12 @@ static char *ordername[] = {    "Unassigned",
 
             break;
 
+#if defined(FEATURE_BC_MODE)
+        case SIGP_IMPL:
+        case SIGP_IPR:
+            channelset_reset(tregs);
+            /* fallthrough*/
+#endif defined(FEATURE_BC_MODE)
         case SIGP_INITRESET:
             if(tregs->cpuonline)
             {
@@ -4761,6 +4772,11 @@ static char *ordername[] = {    "Unassigned",
 
             break;
 
+#if defined(FEATURE_BC_MODE)
+        case SIGP_PR:
+            channelset_reset(tregs);
+            /* fallthrough*/
+#endif defined(FEATURE_BC_MODE)
         case SIGP_RESET:
             /* Signal CPU reset function */
             tregs->sigpreset = 1;

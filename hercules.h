@@ -381,6 +381,7 @@ typedef struct _REGS {                  /* Processor registers       */
                                                     Control Register */
         U32     dxc;                    /* Data exception code       */
 // #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+        U16     chanset;                /* Connected channel set     */
         U32     todpr;                  /* TOD programmable register */
         U16     monclass;               /* Monitor event class       */
         U16     cpuad;                  /* CPU address for STAP      */
@@ -808,7 +809,8 @@ typedef struct _DEVBLK {
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
         U16     devtype;                /* Device type               */
-        U16     reserved0;              /* (alignment)               */
+        U16     chanset;                /* Channel Set to which this   
+                                           device is connected S/370 */
 
 #if defined(WIN32)
         BYTE    filename[1024];         /* Windows pathname          */
