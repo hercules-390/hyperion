@@ -2,7 +2,7 @@
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
 #
 
-VERSION  = \"2.17jj\"
+VERSION  = \"2.17\"
 
 # Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
@@ -12,7 +12,7 @@ DESTDIR  = $(PREFIX)/usr/bin
 
 # For Linux use:
 CFLAGS  = -O3 -march=pentium -fomit-frame-pointer
-CFLAGS += -DVERSION=$(VERSION) -DHAVE_INTTYPES_H -DNO_SETUID
+CFLAGS += -DVERSION=$(VERSION) -DHAVE_INTTYPES_H
 CFLAGS += -W -Wall
 # For older Linux versions use:
 # For Linux/390 use:
@@ -32,6 +32,9 @@ LFLAGS	+= -lbz2
 
 # Dynamic loader support
 LFLAGS	+= -rdynamic -ldl
+CFLAGS  += -DOPTION_DYNAMIC_LOAD
+
+CFLAGS  += -DOPTION_CONFIG_SYMBOLS 
 
 EXEFILES = hercules hercifc \
            dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
@@ -57,7 +60,8 @@ hercules_OBJ = hostinfo.o w32ctca.o impl.o config.o panel.o \
                parser.o hetlib.o ieee.o sockdev.o httpserv.o \
                cgibin.o devtype.o codepage.o ctc_ctci.o ctc_lcs.o \
                tuntap.o hsccmd.o hscmisc.o logger.o commadpt.o \
-               cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o
+               cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
+               hscutl.o
 
 hercifc_OBJ  = hercifc.o hostinfo.o version.o 
 
@@ -127,7 +131,7 @@ dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
 
 hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
 
-hetinit_OBJ  = hetinit.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
+hetinit_OBJ  = hetinit.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o codepage.o
 
 hetmap_OBJ   = hetmap.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
 
