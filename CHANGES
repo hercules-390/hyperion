@@ -1,3 +1,4 @@
+07 Nov 2002 Correct execution controls - Jan Jaeger
 29 Oct 2002 Make card reader eof/intrq parameter persistent - Jay Maynard
 29 Oct 2002 Correct devinit command to work when only one argument is given -
             Jay Maynard
