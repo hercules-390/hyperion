@@ -336,9 +336,13 @@ CIFBLK* open_ckd_image (BYTE *fname, BYTE *sfname, int omode);
 int  close_ckd_image (CIFBLK *cif);
 int  build_extent_array (CIFBLK *cif, BYTE *dsnama, DSXTENT extent[],
         int *noext);
-int  capacity_calc (U16 devtype, int used, int keylen, int datalen,
+int  capacity_calc (CIFBLK *cif, int used, int keylen, int datalen,
         int *newused, int *trkbaln, int *physlen, int *kbconst,
         int *lbconst, int *nkconst, BYTE*devflag, int *tolfact,
         int *maxdlen, int *numrecs, int *numhead, int *numcyls);
+int create_ckd (BYTE *fname, U16 devtype, U32 heads,
+        U32 maxdlen, U32 volcyls, BYTE *volser, BYTE comp);
+int create_fba (BYTE *fname, U16 devtype,
+        U32 sectsz, U32 sectors, BYTE *volser, BYTE comp);
 int get_verbose_util(void);
 void set_verbose_util(int v);

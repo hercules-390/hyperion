@@ -62,6 +62,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sched.h>
+#include <zlib.h>
+#if defined(CCKD_BZIP2) || defined(HET_BZIP2)
+#include <bzlib.h>
+#endif
 #include "version.h"
 #include "hetlib.h"
 
@@ -85,6 +89,8 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 #if !defined(_HERCULES_H)
 
 #define _HERCULES_H
+
+#include "dasdtab.h"
 
 /*-------------------------------------------------------------------*/
 /* Windows 32-specific definitions                                   */
@@ -896,7 +902,7 @@ typedef struct _DEVBLK {
         int     numsense;               /* Number of sense bytes     */
         BYTE    sense[32];              /* Sense bytes               */
         int     numdevid;               /* Number of device id bytes */
-        BYTE    devid[32];              /* Device identifier bytes   */
+        BYTE    devid[256];             /* Device identifier bytes   */
         int     numdevchar;             /* Number of devchar bytes   */
         BYTE    devchar[64];            /* Device characteristics    */
         BYTE    pgid[11];               /* Path Group ID             */
@@ -1033,6 +1039,7 @@ typedef struct _DEVBLK {
 
         /*  Device dependent fields for fbadasd                      */
 
+        FBADEV *fbatab;                 /* Device table entry        */
         U32     fbaorigin;              /* Device origin block number*/
         U32     fbanumblk;              /* Number of blocks in device*/
         U32     fbaxblkn;               /* Offset from start of device
@@ -1058,6 +1065,8 @@ typedef struct _DEVBLK {
                                            in each CKD image file    */
         U16     ckdhicyl[CKD_MAXFILES]; /* Highest cylinder number
                                            in each CKD image file    */
+        CKDDEV *ckdtab;                 /* Device table entry        */
+        CKDCU  *ckdcu;                  /* Control unit entry        */ 
         BYTE   *ckdtrkbuf;              /* Track image buffer        */
         int     ckdtrkfd;               /* Track image fd            */
         int     ckdtrkfn;               /* Track image file nbr      */
@@ -1069,8 +1078,6 @@ typedef struct _DEVBLK {
         U16     ckdtrks;                /* Number of tracks          */
         U16     ckdheads;               /* #of heads per cylinder    */
         U16     ckdtrksz;               /* Track size                */
-        U16     ckdmaxr0len;            /* Maximum length of R0 data */
-        U16     ckdmaxr1len;            /* Maximum length of R1 data */
         U16     ckdcurcyl;              /* Current cylinder          */
         U16     ckdcurhead;             /* Current head              */
         BYTE    ckdcurrec;              /* Current record id         */
@@ -1094,8 +1101,6 @@ typedef struct _DEVBLK {
         BYTE    ckdloper;               /* Locate record operation   */
         BYTE    ckdlaux;                /* Locate record aux byte    */
         BYTE    ckdlcount;              /* Locate record count       */
-        BYTE    ckdsectors;             /* Number of sectors         */
-
         struct _CKDDASD_CACHE *ckdcache;/* Cache table               */
         int     ckdcachenbr;            /* Cache table size          */
         int     ckdcachehits;           /* Cache hits                */
@@ -1280,7 +1285,8 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
 #define CCKD_FREEBLK_SIZE      8
 #define CCKD_FREEBLK_ISIZE     sizeof(CCKD_FREEBLK)
 #define CCKD_CACHE_SIZE        sizeof(CCKD_CACHE)
-#define CCKD_NULLTRK_SIZE      37
+#define CCKD_NULLTRK_SIZE1     37       /* ha r0 r1 ffff */
+#define CCKD_NULLTRK_SIZE0     29       /* ha r0 ffff */
 #define GC_COMBINE_LO          0
 #define GC_COMBINE_HI          1
 
@@ -1558,10 +1564,7 @@ void    cckd_sf_stats (DEVBLK *);
 void    cckd_sf_comp (DEVBLK *);
 void    cckd_print_itrace (DEVBLK *);
 
-/* Functions in module cckdcdsk.c */
-int     cckd_chkdsk(int, FILE *, int);
-
-/* Functions in module cckdend.c */
+/* Functions in module cckutil.c */
 int     cckd_swapend (int, FILE *);
 void    cckd_swapend_chdr (CCKDDASD_DEVHDR *);
 void    cckd_swapend_l1 (CCKD_L1ENT *, int);
@@ -1570,6 +1573,8 @@ void    cckd_swapend_free (CCKD_FREEBLK *);
 void    cckd_swapend4 (char *);
 void    cckd_swapend2 (char *);
 int     cckd_endian ();
+int     cckd_comp (int, FILE *);
+int     cckd_chkdsk(int, FILE *, int);
 
 #if defined(OPTION_W32_CTCI)
 /* Functions in module w32ctca.c */

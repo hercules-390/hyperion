@@ -44,20 +44,14 @@ int fbadasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 int     rc;                             /* Return code               */
 struct  stat statbuf;                   /* File information          */
-U32     blkspcg;                        /* Blocks per cyclical group */
-U32     blkspap;                        /* Blocks per access position*/
-U32     blksufh;                        /* Blocks under fixed heads  */
 U32     startblk;                       /* Device origin block number*/
 U32     numblks;                        /* Device block count        */
-BYTE    unittyp;                        /* Unit type                 */
-BYTE    unitmdl;                        /* Unit model                */
 BYTE    c;                              /* Character work area       */
 
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        fprintf (stderr,
-                "HHC301I File name missing or invalid\n");
+        devmsg ("HHC301I File name missing or invalid\n");
         return -1;
     }
 
@@ -71,8 +65,7 @@ BYTE    c;                              /* Character work area       */
         dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
         if (dev->fd < 0)
         {
-            fprintf (stderr,
-                    "HHC302I File %s open error: %s\n",
+            devmsg ("HHC302I File %s open error: %s\n",
                     dev->filename, strerror(errno));
             return -1;
         }
@@ -82,8 +75,7 @@ BYTE    c;                              /* Character work area       */
     rc = fstat (dev->fd, &statbuf);
     if (rc < 0)
     {
-        fprintf (stderr,
-                "HHC303I File %s fstat error: %s\n",
+        devmsg ("HHC303I File %s fstat error: %s\n",
                 dev->filename, strerror(errno));
         close (dev->fd);
         dev->fd = -1;
@@ -101,8 +93,7 @@ BYTE    c;                              /* Character work area       */
         if (sscanf(argv[1], "%u%c", &startblk, &c) != 1
             || startblk >= dev->fbanumblk)
         {
-            fprintf (stderr,
-                    "HHC304I Invalid device origin block number %s\n",
+            devmsg ("HHC304I Invalid device origin block number %s\n",
                     argv[1]);
             close (dev->fd);
             dev->fd = -1;
@@ -118,8 +109,7 @@ BYTE    c;                              /* Character work area       */
         if (sscanf(argv[2], "%u%c", &numblks, &c) != 1
             || numblks > dev->fbanumblk)
         {
-            fprintf (stderr,
-                    "HHC305I Invalid device block count %s\n",
+            devmsg ("HHC305I Invalid device block count %s\n",
                     argv[2]);
             close (dev->fd);
             dev->fd = -1;
@@ -128,109 +118,27 @@ BYTE    c;                              /* Character work area       */
         dev->fbanumblk = numblks;
     }
 
-    logmsg ("fbadasd: %s origin=%d blks=%d\n",
+    devmsg ("fbadasd: %s origin=%d blks=%d\n",
             dev->filename, dev->fbaorigin, dev->fbanumblk);
 
     /* Set number of sense bytes */
     dev->numsense = 24;
 
-    /* Set the device dependent characteristics fields */
-    switch (dev->devtype) {
-    case 0x3310:
-        unittyp = 0x01;
-        unitmdl = 0x01;
-        blkspcg = 32;
-        blkspap = 352;
-        blksufh = 0;
-        break;
-    case 0x3370:
-        unittyp = 0x02;
-        unitmdl = 0x04;
-        blkspcg = 62;
-        blkspap = 744;
-        blksufh = 0;
-        break;
-    case 0x9336:
-        unittyp = 0x02;
-        unitmdl = 0x04;
-        blkspcg = 64;
-        blkspap = 960;
-        blksufh = 0;
-        break;
-    case 0x0671:
-        unittyp = 0x02;
-        unitmdl = 0x04;
-        blkspcg = 63;
-        blkspap = 630;
-        blksufh = 0;
-        break;
-    default:
-        fprintf (stderr,
-                "HHC306I Unsupported device type: %4.4X\n",
-                dev->devtype);
+    /* Locate the FBA dasd table entry */
+    dev->fbatab = dasd_lookup (DASD_FBADEV, NULL, dev->devtype, dev->fbanumblk);
+    if (dev->fbatab == NULL)
+    {
+        devmsg ("HHC306I %4.4X device type %4.4X not found in dasd table\n",
+                dev->devnum, dev->devtype);
         return -1;
-    } /* end switch(dev->devtype) */
+    }
 
-    /* Initialize the device identifier bytes */
-    dev->devid[0] = 0xFF;
-    dev->devid[1] = 0x38; /* Control unit type is 3880-1 */
-    dev->devid[2] = 0x80;
-    dev->devid[3] = 0x01;
-    dev->devid[4] = dev->devtype >> 8;
-    dev->devid[5] = dev->devtype & 0xFF;
-    dev->devid[6] = unitmdl;
-    dev->numdevid = 7;
+    /* Build the devid area */
+    dev->numdevid = dasd_build_fba_devid (dev->fbatab,(BYTE *)&dev->devid);
 
-    /* Initialize the device characteristics bytes */
-    memset (dev->devchar, 0, sizeof(dev->devchar));
-    /* Operation modes */
-    dev->devchar[0] = 0x30;
-    /* Features */
-    dev->devchar[1] = 0x08;
-    /* Device class */
-    dev->devchar[2] = 0x21;
-    /* Unit type */
-    dev->devchar[3] = unittyp;
-    /* Physical record size */
-    dev->devchar[4] = (dev->fbablksiz & 0xFF00) >> 8;
-    dev->devchar[5] = dev->fbablksiz & 0xFF;
-    /* Blocks per cyclical group */
-    dev->devchar[6] = (blkspcg & 0xFF000000) >> 24;
-    dev->devchar[7] = (blkspcg & 0xFF0000) >> 16;
-    dev->devchar[8] = (blkspcg & 0xFF00) >> 8;
-    dev->devchar[9] = blkspcg & 0xFF;
-    /* Blocks per access position */
-    dev->devchar[10] = (blkspap & 0xFF000000) >> 24;
-    dev->devchar[11] = (blkspap & 0xFF0000) >> 16;
-    dev->devchar[12] = (blkspap & 0xFF00) >> 8;
-    dev->devchar[13] = blkspap & 0xFF;
-    /* Blocks under movable heads*/
-    dev->devchar[14] = (dev->fbanumblk & 0xFF000000) >> 24;
-    dev->devchar[15] = (dev->fbanumblk & 0xFF0000) >> 16;
-    dev->devchar[16] = (dev->fbanumblk & 0xFF00) >> 8;
-    dev->devchar[17] = dev->fbanumblk & 0xFF;
-    /* Blocks under fixed heads*/
-    dev->devchar[18] = (blksufh & 0xFF000000) >> 24;
-    dev->devchar[19] = (blksufh & 0xFF0000) >> 16;
-    dev->devchar[20] = (blksufh & 0xFF00) >> 8;
-    dev->devchar[21] = blksufh & 0xFF;
-    /* Blocks in alternate area */
-    dev->devchar[22] = 0;
-    dev->devchar[23] = 0;
-    /* Blocks in CE+SA areas */
-    dev->devchar[24] = 0;
-    dev->devchar[25] = 0;
-    /* Cyclic period of media in milliseconds */
-    dev->devchar[26] = 0;
-    dev->devchar[27] = 0;
-    /* Minimum time to change access position in milliseconds */
-    dev->devchar[28] = 0;
-    dev->devchar[29] = 0;
-    /* Maximum time to change access position in milliseconds */
-    dev->devchar[30] = 0;
-    dev->devchar[31] = 0;
-    /* Number of device characteristics bytes */
-    dev->numdevchar = 32;
+    /* Build the devchar area */
+    dev->numdevchar = dasd_build_fba_devchar (dev->fbatab,
+                                 (BYTE *)&dev->devchar,dev->fbanumblk);
 
     /* Activate I/O tracing */
 //  dev->ccwtrace = 1;

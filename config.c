@@ -982,7 +982,7 @@ BYTE    c;                              /* Work area for sscanf      */
 
 #ifdef OPTION_IODELAY_KLUDGE
     /* Set I/O delay value */
-    if (iodelay >= 0)
+    if (iodelay > 0)
         sysblk.iodelay = iodelay;
     else if (ostailor == OS_LINUX)
         sysblk.iodelay = OPTION_IODELAY_LINUX_DEFAULT;

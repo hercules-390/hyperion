@@ -72,6 +72,8 @@ static BYTE *secondload[] = {
         "IGG094",                       /* TSO (SVC94)               */
         NULL };                         /* End of list               */
 
+static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */

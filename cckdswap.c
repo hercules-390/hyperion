@@ -7,7 +7,11 @@
 
 #include "hercules.h"
 
-#ifndef NO_CCKD
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
 /* Swap the `endianess' of  cckd file                                */
@@ -96,12 +100,3 @@ void syntax ()
     exit (1);
 } /* end function syntax */
 
-#else /* NO_CCKD */
-
-int main ( int argc, char *argv[])
-{
-    fprintf (stderr, "cckdswap support not generated\n");
-    return -1;
-}
-
-#endif

@@ -9,13 +9,6 @@
 
 #include "hercules.h"
 
-#ifndef NO_CCKD
-
-#include "zlib.h"
-#ifdef CCKD_BZIP2
-#include "bzlib.h"
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Internal functions                                                */
 /*-------------------------------------------------------------------*/
@@ -24,12 +17,16 @@ int abbrev (char *, char *);
 void status (int, int);
 int trk_len(unsigned char *, int, int, int);
 int null_trk (int, unsigned char *, int);
-int chk_endian ();
 
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
 /*-------------------------------------------------------------------*/
 int          errs = 0;
+
+/*-------------------------------------------------------------------*/
+/* Static data areas                                                 */
+/*-------------------------------------------------------------------*/
+static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
@@ -81,6 +78,7 @@ int             maxerrs=5;              /* Max errors allowed        */
 int             nofudge=1;              /* Disable fudge factor      */
 unsigned int    c=CCKD_COMPRESS_ZLIB;   /* Compression algorithm     */
 int             z=-1;                   /* Compression value         */
+CKDDEV         *ckd;                    /* -> DASD table entry       */
 
     /* Display the program identification message */
     display_version (stdout, "Hercules ckd to cckd copy program ");
@@ -182,7 +180,7 @@ int             z=-1;                   /* Compression value         */
         {
             fprintf (stderr, "ckd2cckd: %s open error: %s\n",
                     ifile, strerror(errno));
-            exit (1);
+            return -1;
         }
 
         /* Determine the device size */
@@ -191,7 +189,7 @@ int             z=-1;                   /* Compression value         */
         {
             fprintf (stderr, "ckd2cckd: %s fstat error: %s\n",
                     ifile, strerror(errno));
-            exit (2);
+            return -1;
         }
 
         /* Read the device header */
@@ -204,7 +202,7 @@ int             z=-1;                   /* Compression value         */
             else
                 fprintf (stderr,
                         "ckd2cckd: %s CKD header incomplete\n", ifile);
-            exit (3);
+            return -1;
         }
 
         /* Check the device header identifier */
@@ -213,7 +211,7 @@ int             z=-1;                   /* Compression value         */
             fprintf (stderr,
                     "ckd2cckd: input file %s is not a ckd file\n",
                     ifile);
-            exit (4);
+            return -1;
         }
 
         /* Check for correct file sequence number */
@@ -222,7 +220,7 @@ int             z=-1;                   /* Compression value         */
         {
             fprintf (stderr, "ckd2cckd: %s CKD file out of sequence\n",
                     ifile);
-            exit (5);
+            return -1;
         }
 
         /* get heads and track size */
@@ -249,7 +247,7 @@ int             z=-1;                   /* Compression value         */
             fprintf (stderr,
                     "ckd2cckd: %s CKD header inconsistent with file size\n",
                     ifile);
-            exit (6);
+            return -1;
         }
 
         /* Check for correct high cylinder number */
@@ -258,7 +256,7 @@ int             z=-1;                   /* Compression value         */
             fprintf (stderr,
                     "ckd2cckd %s CKD header high cylinder incorrect\n",
                     ifile);
-            exit (7);
+            return -1;
         }
 
         /* Save file descriptor and high track numbers */
@@ -285,7 +283,7 @@ int             z=-1;                   /* Compression value         */
             fprintf (stderr,
                     "ckd2cckd %s exceeds maximum %d CKD files\n",
                     ifile, CKD_MAXFILES);
-            exit (8);
+            return -1;
         }
 
     } /* end for(fileseq) */
@@ -293,48 +291,18 @@ int             z=-1;                   /* Compression value         */
     /* Restore the last character of the file name */
     *sfxptr = sfxchar;
 
-    /* Figure out how many cylinders are on this volume */
-    switch (devtype)
+    /* Find the CKD DASD table entry for the device */
+    ckd = dasd_lookup (DASD_CKDDEV, NULL, devtype, ckdcyls);
+    if (ckd == NULL)
     {
-        case 0x90:
-            if (ckdcyls > 3339) cyls = 10017;
-            else if (ckdcyls > 2226) cyls = 3339;
-            else if (ckdcyls > 1113) cyls = 2226;
-            else cyls = 1113;
-            break;
-        case 0x80:
-            if (ckdcyls > 1770) cyls = 2655;
-            else if (ckdcyls > 885) cyls = 1770;
-            else cyls = 885;
-            break;
-        case 0x75:
-            cyls = 959;
-            break;
-        case 0x50:
-            cyls = 555;
-            break;
-        case 0x40:
-            if (ckdcyls > 348) cyls = 696;
-            else cyls = 348;
-            break;
-        case 0x30:
-            if (ckdcyls > 404) cyls = 808;
-            else cyls = 404;
-            break;
-        case 0x14:
-        case 0x11:
-            cyls = 200;
-            break;
-        case 0x45:
-            if (ckdcyls > 1440) cyls = 2156;
-            else cyls = 1440;
-            break;
-        default:
-            fprintf (stderr,
-                    "ckd2cckd %s unsupported CKD device: 33%2x\n",
-                    ifile, devhdr.devtype);
-            exit (9);
-    } /* end switch(devtype) */
+        fprintf (stderr, "ckd2cckd %s unable to lookup DASD "
+                 "table entry for devtype 0x%2.2x cyls %d\n",
+                 ifile, devtype, ckdcyls);
+        return -1;
+    }
+
+    /* Set cylinders and tracks */
+    cyls = ckd->cyls;
     trks = cyls * heads;
 
     /* Open the output file */
@@ -372,7 +340,7 @@ int             z=-1;                   /* Compression value         */
     cdevhdr.vrm[0] = CCKD_VERSION;
     cdevhdr.vrm[1] = CCKD_RELEASE;
     cdevhdr.vrm[2] = CCKD_MODLVL;
-    if (chk_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
+    if (cckd_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
     if (nofudge || 1)  cdevhdr.options |= CCKD_NOFUDGE;
     cdevhdr.options |= CCKD_ORDWR;
     if (trks < ckdtrks)
@@ -496,7 +464,7 @@ int             z=-1;                   /* Compression value         */
         /* get track image length */
         buflen = trk_len (buf, i, heads, trksz);
 
-        if (buflen != CCKD_NULLTRK_SIZE)
+        if (buflen != CCKD_NULLTRK_SIZE0 && buflen != CCKD_NULLTRK_SIZE1)
         {
             switch (c)
             {
@@ -574,6 +542,8 @@ int             z=-1;                   /* Compression value         */
             }
             pos += obuflen;
         }
+        else if (buflen == CCKD_NULLTRK_SIZE0)
+            l2[i % 256].len = l2[i % 256].size = 0xffff;
 
         /* update status information */
         if (!quiet) status (i+1, ckdtrks);
@@ -821,30 +791,3 @@ char            cchh[4];                /* Cyl, head big-endian      */
 
     return 37;
 } /* end function null_trk */
-
-
-/*-------------------------------------------------------------------*/
-/* Are we little or big endian?  From Harbison&Steele.               */
-/*-------------------------------------------------------------------*/
-int chk_endian()
-{
-union
-{
-    long l;
-    char c[sizeof (long)];
-}   u;
-
-    u.l = 1;
-    return (u.c[sizeof (long) - 1] == 1);
-} /* end function chk_endian */
-
-
-#else /* NO_CCKD */
-
-int main ( int argc, char *argv[])
-{
-    fprintf (stderr, "ckd2cckd support not generated\n");
-    return -1;
-}
-
-#endif

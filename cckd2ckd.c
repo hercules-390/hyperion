@@ -9,26 +9,20 @@
 
 #include "hercules.h"
 
-#ifndef NO_CCKD
-
-#include "zlib.h"
-#ifdef CCKD_BZIP2
-#include "bzlib.h"
-#endif
-
 /*-------------------------------------------------------------------*/
 /* Internal functions                                                */
 /*-------------------------------------------------------------------*/
 void syntax ();
 int abbrev (char *, char *);
 void status (int, int);
-int null_trk (int, unsigned char *, int);
+int null_trk (int, unsigned char *, int, int);
 int valid_trk (int, unsigned char *, int, int);
 
 /*-------------------------------------------------------------------*/
 /* Global data areas                                                 */
 /*-------------------------------------------------------------------*/
 int         errs = 0;
+static BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
@@ -382,7 +376,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
             /* read next track image */
             if (l2[j].pos == 0)
             {
-                obuflen = null_trk (trk, buf, heads);
+                obuflen = null_trk (trk, buf, heads, l2[j].len);
                 obuf = buf;
             }
             else
@@ -431,7 +425,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                             fprintf (stderr,
                                      "    null track substituted\n");
                             errs++;
-                            obuflen = null_trk (trk, buf, heads);
+                            obuflen = null_trk (trk, buf, heads, 0);
                             obuf = buf;
                         }
                         else
@@ -461,7 +455,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                             fprintf (stderr,
                                      "    null track substituted\n");
                             errs++;
-                            obuflen = null_trk (trk, buf, heads);
+                            obuflen = null_trk (trk, buf, heads, 0);
                             obuf = buf;
                         }
                         else
@@ -479,7 +473,7 @@ int             limited=0;              /* 1=Limit cyls copied       */
                         fprintf (stderr,
                                  "    null track substituted\n");
                         errs++;
-                        obuflen = null_trk (trk, buf, heads);
+                        obuflen = null_trk (trk, buf, heads, 0);
                         obuf = buf;
                         break;
                 }
@@ -588,11 +582,12 @@ static char indic[] = "|/-\\";
 /*-------------------------------------------------------------------*/
 /* Build a null track                                                */
 /*-------------------------------------------------------------------*/
-int null_trk (int trk, unsigned char *buf, int heads)
+int null_trk (int trk, unsigned char *buf, int heads, int len)
 {
 int             cyl;                    /* Cylinder                  */
 int             head;                   /* Head                      */
 char            cchh[4];                /* Cyl, head big-endian      */
+int             size;                   /* Size of null record       */
 
     /* cylinder and head calculations */
     cyl = trk / heads;
@@ -608,11 +603,19 @@ char            cchh[4];                /* Cyl, head big-endian      */
     memcpy (&buf[1], cchh, sizeof(cchh));
     memcpy (&buf[5], cchh, sizeof(cchh));
     buf[12] = 8;
-    memcpy (&buf[21], cchh, sizeof(cchh));
-    buf[25] = 1;
-    memcpy (&buf[29], eighthexFF, 8);
-
-    return 37;
+    if (len == 0)
+    {
+        memcpy (&buf[21], cchh, sizeof(cchh));
+        buf[25] = 1;
+        memcpy (&buf[29], eighthexFF, 8);
+        size = CCKD_NULLTRK_SIZE1;
+    }
+    else
+    {
+        memcpy (&buf[21], eighthexFF, 8);
+        size = CCKD_NULLTRK_SIZE0;
+    }
+    return size;
 } /* end function null_trk */
 
 
@@ -644,7 +647,7 @@ int             kl,dl;                  /* Key/Data lengths          */
                  trk, buf[0], buf[1], buf[2], buf[3], buf[4]);
         fprintf (stderr, "    null track substituted\n");
         errs++;
-        return null_trk (trk, buf, heads);
+        return null_trk (trk, buf, heads, 0);
     }
 
     /* validate record 0 */
@@ -659,7 +662,7 @@ int             kl,dl;                  /* Key/Data lengths          */
                  buf[10], buf[11], buf[12]);
         fprintf (stderr, "    null track substituted\n");
         errs++;
-        return null_trk (trk, buf, heads);
+        return null_trk (trk, buf, heads, 0);
     }
 
     /* validate records 1 thru n */
@@ -697,7 +700,7 @@ int             kl,dl;                  /* Key/Data lengths          */
             {
                 printf ("    null track substituted       \n");
 
-                return null_trk (trk, buf, heads);
+                return null_trk (trk, buf, heads, 0);
             }
         }
     }
@@ -714,13 +717,3 @@ int             kl,dl;                  /* Key/Data lengths          */
 
     return sz;
 } /* end function valid_trk */
-
-#else /* NO_CCKD */
-
-int main ( int argc, char *argv[])
-{
-    fprintf (stderr, "cckd2ckd support not generated\n");
-    return -1;
-}
-
-#endif

@@ -32,10 +32,9 @@
    sprintf(&cckd->itrace[n], "%4.4X:" format, dev->devnum, a); }
 #endif
 
-/* external functions */
-int     cckd_chkdsk(int, FILE *, int);
-int     cckd_comp (int, FILE *);
-
+/*-------------------------------------------------------------------*/
+/* Internal functions                                                */
+/*-------------------------------------------------------------------*/
 /* internal functions */
 int     cckddasd_init_handler (DEVBLK *, int, BYTE **);
 int     cckddasd_close_device (DEVBLK *);
@@ -67,7 +66,7 @@ int     cckd_read_trkimg (DEVBLK *, BYTE *, int);
 int     cckd_write_trkimg (DEVBLK *, BYTE *, int, int);
 void    cckd_harden (DEVBLK *);
 int     cckd_trklen (DEVBLK *, BYTE *);
-int     cckd_null_trk (DEVBLK *, BYTE *, int);
+int     cckd_null_trk (DEVBLK *, BYTE *, int, int);
 int     cckd_cchh (DEVBLK *, BYTE *, int);
 int     cckd_sf_name (DEVBLK *, int, char *);
 int     cckd_sf_init (DEVBLK *);
@@ -82,7 +81,11 @@ void    cckd_gc_combine (DEVBLK *, int, int, int);
 int     cckd_gc_len (DEVBLK *, BYTE *, off_t, int, int);
 void    cckd_print_itrace(DEVBLK *);
 
-BYTE    cckd_empty_l2tab[CCKD_L2TAB_SIZE];  /* Empty Level 2 table   */
+/*-------------------------------------------------------------------*/
+/* Static data areas                                                 */
+/*-------------------------------------------------------------------*/
+static  BYTE    cckd_empty_l2tab[CCKD_L2TAB_SIZE];  /* Empty Level 2 table   */
+static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
 /*-------------------------------------------------------------------*/
 /* Initialize the compressed device handler                          */
@@ -695,7 +698,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         if (rc != Z_OK)
         {   devmsg ("%4.4X cckddasd: rdtrk %d uncompress error: %d\n",
                         dev->devnum, trk, rc);
-            cckd_null_trk (dev, buf, trk);
+            len = cckd_null_trk (dev, buf, trk, 0);
         }
         break;
 
@@ -716,7 +719,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         if (rc != BZ_OK)
         {   devmsg ("cckddasd: decompress error for trk %d: %d\n",
                     trk, rc);
-            cckd_null_trk (dev, buf, trk);
+            len = cckd_null_trk (dev, buf, trk, 0);
         }
         break;
 #endif
@@ -724,7 +727,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
     default:
         devmsg ("cckddasd: %4.4x unknown compression for trk %d: %d\n",
                 dev->devnum, trk, buf2[0]);
-        cckd_null_trk (dev, buf2, trk);
+        len = cckd_null_trk (dev, buf2, trk, 0);
         break;
     }
 
@@ -1040,7 +1043,8 @@ int             dfwqovflow=0;           /* 1=dfw queue overflowed    */
             default:
             case CCKD_COMPRESS_NONE:
                 memcpy (cbuf, buf, len);
-                clen = (len == CCKD_NULLTRK_SIZE) ? 0 : len;
+                clen = (len == CCKD_NULLTRK_SIZE1) ? 0 :
+                       (len == CCKD_NULLTRK_SIZE0) ? 0xffff : len;
                 cbuf[0] = CCKD_COMPRESS_NONE;
                 break;
             }
@@ -1931,7 +1935,7 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
         cckd->reads[sfx]++;
         cckd->totreads++;
     }
-    else rc = cckd_null_trk (dev, buf, trk);
+    else rc = cckd_null_trk (dev, buf, trk, l2.len);
 
     /* if sfx is zero and l2.pos is all 0xff's, then we are reading
        from a regular ckd file (ie not a compressed one) */
@@ -1952,7 +1956,7 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
             devmsg ("%4.4x: cckddasd: trkimg %d beyond end of "
                     "regular ckd file: trks %d\n",
                     dev->devnum, trk, dev->ckdtrks);
-            rc = cckd_null_trk (dev, buf, trk);
+            rc = cckd_null_trk (dev, buf, trk, 0);
         }
     }
 
@@ -1962,7 +1966,7 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
               buf[0], buf[1], buf[2], buf[3], buf[4]);
 
     if (cckd_cchh (dev, buf, trk) < 0)
-        rc = cckd_null_trk (dev, buf, trk);
+        rc = cckd_null_trk (dev, buf, trk, 0);
 
     return rc;
 } /* end function cckd_read_trkimg */
@@ -1992,7 +1996,9 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
         {   rc = lseek (cckd->fd[sfx],
                         trk * dev->ckdtrksz + CKDDASD_DEVHDR_SIZE,
                         SEEK_SET);
-            rc = write (cckd->fd[sfx], buf, len ? len : CCKD_NULLTRK_SIZE);
+            rc = write (cckd->fd[sfx], buf,
+                        (len == 0) ? CCKD_NULLTRK_SIZE1 :
+                        (len == 0xffff) ? CCKD_NULLTRK_SIZE0 : len);
             cckd->writes[sfx]++;
             cckd->totwrites++;
             DEVTRACE ("cckddasd: trkimg %d write regular len %d "
@@ -2106,12 +2112,13 @@ int             size;                   /* Track size                */
 /*-------------------------------------------------------------------*/
 /* Build a null track                                                */
 /*-------------------------------------------------------------------*/
-int cckd_null_trk(DEVBLK *dev, BYTE *buf, int trk)
+int cckd_null_trk(DEVBLK *dev, BYTE *buf, int trk, int len)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 U16             cyl;                    /* Cylinder                  */
 U16             head;                   /* Head                      */
 FWORD           cchh;                   /* Cyl, head big-endian      */
+int             size;                   /* Size of null record       */
 
     cckd = dev->cckd_ext;
 
@@ -2131,11 +2138,19 @@ FWORD           cchh;                   /* Cyl, head big-endian      */
     memcpy (&buf[1], cchh, sizeof(cchh));
     memcpy (&buf[5], cchh, sizeof(cchh));
     buf[12] = 8;
-    memcpy (&buf[21], cchh, sizeof(cchh));
-    buf[25] = 1;
-    memcpy (&buf[29], eighthexFF, 8);
-
-    return CCKD_NULLTRK_SIZE;
+    if (len == 0)
+    {
+        memcpy (&buf[21], cchh, sizeof(cchh));
+        buf[25] = 1;
+        memcpy (&buf[29], eighthexFF, 8);
+        size = CCKD_NULLTRK_SIZE1;
+    }
+    else
+    {
+        memcpy (&buf[21], eighthexFF, 8);
+        size = CCKD_NULLTRK_SIZE0;
+    }
+    return size;
 
 } /* end function cckd_null_trk */
 
@@ -2319,20 +2334,9 @@ int             rc;                     /* Return code               */
 BYTE            sfn[256];               /* Shadow file name          */
 int             sfx;                    /* Shadow file index         */
 int             sfd;                    /* Shadow file descriptor    */
-int            *cyltab;                 /* Possible cyls for device  */
 int             i;                      /* Loop index                */
 int             cyls;                   /* Number cylinders for devt */
 int             l1size;                 /* Size of level 1 table     */
-
-int             cyls2311[]   = {200, 0};
-int             cyls2314[]   = {200, 0};
-int             cyls3330[]   = {404, 808, 0};
-int             cyls3340[]   = {348, 696, 0};
-int             cyls3350[]   = {555, 0};
-int             cyls3375[]   = {959, 0};
-int             cyls3380[]   = {885, 1770, 2655, 0};
-int             cyls3390[]   = {1113, 2226, 3339, 10017, 0};
-int             cyls9345[]   = {1440, 2156, 0};
 
     cckd = dev->cckd_ext;
 
@@ -2371,37 +2375,10 @@ int             cyls9345[]   = {1440, 2156, 0};
        regular ckd file and not contain all the cylinders that
        the device allows while a compressed ckd file (including
        shadow files) must contain all the cylinders.           */
-    switch (dev->devtype) {
-    case 0x2311: cyltab = cyls2311;
-                 break;
-    case 0x2314: cyltab = cyls2314;
-                 break;
-    case 0x3330: cyltab = cyls3330;
-                 break;
-    case 0x3340: cyltab = cyls3340;
-                 break;
-    case 0x3350: cyltab = cyls3350;
-                 break;
-    case 0x3375: cyltab = cyls3375;
-                 break;
-    case 0x3380: cyltab = cyls3380;
-                 break;
-    case 0x3390: cyltab = cyls3390;
-                 break;
-    case 0x9345: cyltab = cyls9345;
-                 break;
-    default:     devmsg ("Unsupported device type %4.4x\n",
-                       dev->devtype);
-               return -1;
-    } /* end switch(dev->devtype) */
-    for (i = 0; cyltab[i] != 0; i++)
-        if (dev->ckdcyls <= cyltab[i]) break;
-    cyls = cyltab[i];
-    if (!cyls)
-    {    devmsg ("Unsupported number of cylinders (%d) for %4.4x device\n",
-                 dev->ckdcyls, dev->devtype);
-         return -1;
-    }
+    cyls = dev->ckdtab->cyls;
+    if (cyls < dev->ckdcyls) /* must have alternate cylinders */
+        cyls = dev->ckdcyls;
+
     cckd->cdevhdr[sfx].numl1tab = (cyls * dev->ckdheads + 255) >> 8;
     l1size = cckd->cdevhdr[sfx].numl1tab * CCKD_L1ENT_SIZE;
     cckd->cdevhdr[sfx].numl2tab = 256;
@@ -2743,7 +2720,7 @@ int             add = 0;                /* Add the shadow file back  */
             {
                 if (i * 256 + j >= trks) break;
                 if (cckd->l2[j].pos == 0xffffffff) continue;
-                if (!cckd->l2[j].pos) cckd_null_trk (dev, buf, i * 256 + j);
+                if (!cckd->l2[j].pos) cckd_null_trk (dev, buf, i * 256 + j, cckd->l2[j].len);
                 else
                 {   rc = lseek (cckd->fd[sfx], cckd->l2[j].pos, SEEK_SET);
                     rc = read (cckd->fd[sfx], buf, cckd->l2[j].len);
@@ -2765,7 +2742,7 @@ int             add = 0;                /* Add the shadow file back  */
                         (long)cckd->l2[j].len - CKDDASD_TRKHDR_SIZE);
                     len += CKDDASD_TRKHDR_SIZE;
                     if (rc != Z_OK)
-                        len = cckd_null_trk (dev, buf2, i * 256 + j);
+                        len = cckd_null_trk (dev, buf2, i * 256 + j, 0);
                     break;
 
 #ifdef CCKD_BZIP2
@@ -2779,11 +2756,11 @@ int             add = 0;                /* Add the shadow file back  */
                         cckd->l2[j].len - CKDDASD_TRKHDR_SIZE, 0, 0);
                     len += CKDDASD_TRKHDR_SIZE;
                     if (rc != BZ_OK)
-                        len = cckd_null_trk (dev, buf2, i * 256 + j);
+                        len = cckd_null_trk (dev, buf2, i * 256 + j, 0);
                     break;
 #endif
                 default:
-                    len = cckd_null_trk (dev, buf2, i * 256 + j);
+                    len = cckd_null_trk (dev, buf2, i * 256 + j, 0);
                     break;
                 }
 

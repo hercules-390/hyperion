@@ -23,6 +23,7 @@
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
 static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
+static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being

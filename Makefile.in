@@ -92,12 +92,9 @@ bin_PROGRAMS = hercules $(HERCIFC) \
 EXTRA_PROGRAMS = hercifc
 
 fthreads_sources = fthreads.c w32chan.c
-fthreads_sautil = fthreads.c
 EXTRA_hercules_SOURCES = $(fthreads_sources)
 @BUILD_FTHREADS_TRUE@FTHREADS = $(fthreads_sources)
 @BUILD_FTHREADS_FALSE@FTHREADS = 
-@BUILD_FTHREADS_TRUE@SAUTIL = $(fthreads_sautil)
-@BUILD_FTHREADS_FALSE@SAUTIL = 
 
 hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 	   ipl.c assist.c dat.c \
@@ -120,27 +117,27 @@ hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 hercifc_SOURCES = hercifc.c version.c
 
 dasdinit_SOURCES = dasdinit.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
 
 dasdisup_SOURCES = dasdisup.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
 
 dasdload_SOURCES = dasdload.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
 
 dasdls_SOURCES = dasdls.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
 
 dasdcat_SOURCES = dasdcat.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
 
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
 
 
 tapecopy_SOURCES = tapecopy.c version.c
@@ -169,12 +166,12 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c version.c
 
-EXTRA_DIST = hercules.cnf CHANGES _build _build.bat
+EXTRA_DIST = hercules.cnf CHANGES
 
 noinst_HEADERS = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
-	feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
-	codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
-	sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h if_tun.h
+    feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
+    codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
+    sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h if_tun.h
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -235,92 +232,50 @@ ckd2cckd_OBJECTS = $(am_ckd2cckd_OBJECTS)
 ckd2cckd_LDADD = $(LDADD)
 ckd2cckd_DEPENDENCIES =
 ckd2cckd_LDFLAGS =
-@BUILD_FTHREADS_TRUE@am_dasdcat_OBJECTS = dasdcat.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT)
-@BUILD_FTHREADS_FALSE@am_dasdcat_OBJECTS = dasdcat.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT)
+am_dasdcat_OBJECTS = dasdcat.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdcat_OBJECTS = $(am_dasdcat_OBJECTS)
 dasdcat_LDADD = $(LDADD)
 dasdcat_DEPENDENCIES =
 dasdcat_LDFLAGS =
-@BUILD_FTHREADS_TRUE@am_dasdinit_OBJECTS = dasdinit.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT)
-@BUILD_FTHREADS_FALSE@am_dasdinit_OBJECTS = dasdinit.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT)
+am_dasdinit_OBJECTS = dasdinit.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdinit_OBJECTS = $(am_dasdinit_OBJECTS)
 dasdinit_LDADD = $(LDADD)
 dasdinit_DEPENDENCIES =
 dasdinit_LDFLAGS =
-@BUILD_FTHREADS_TRUE@am_dasdisup_OBJECTS = dasdisup.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT)
-@BUILD_FTHREADS_FALSE@am_dasdisup_OBJECTS = dasdisup.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT)
+am_dasdisup_OBJECTS = dasdisup.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdisup_OBJECTS = $(am_dasdisup_OBJECTS)
 dasdisup_LDADD = $(LDADD)
 dasdisup_DEPENDENCIES =
 dasdisup_LDFLAGS =
-@BUILD_FTHREADS_TRUE@am_dasdload_OBJECTS = dasdload.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT)
-@BUILD_FTHREADS_FALSE@am_dasdload_OBJECTS = dasdload.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT)
+am_dasdload_OBJECTS = dasdload.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdload_OBJECTS = $(am_dasdload_OBJECTS)
 dasdload_LDADD = $(LDADD)
 dasdload_DEPENDENCIES =
 dasdload_LDFLAGS =
-@BUILD_FTHREADS_TRUE@am_dasdls_OBJECTS = dasdls.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT)
-@BUILD_FTHREADS_FALSE@am_dasdls_OBJECTS = dasdls.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT)
+am_dasdls_OBJECTS = dasdls.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdls_OBJECTS = $(am_dasdls_OBJECTS)
 dasdls_LDADD = $(LDADD)
 dasdls_DEPENDENCIES =
 dasdls_LDFLAGS =
-@BUILD_FTHREADS_TRUE@am_dasdpdsu_OBJECTS = dasdpdsu.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT) \
-@BUILD_FTHREADS_TRUE@	fthreads.$(OBJEXT)
-@BUILD_FTHREADS_FALSE@am_dasdpdsu_OBJECTS = dasdpdsu.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	dasdutil.$(OBJEXT) version.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) \
-@BUILD_FTHREADS_FALSE@	cckdcomx.$(OBJEXT) cckdend.$(OBJEXT)
+am_dasdpdsu_OBJECTS = dasdpdsu.$(OBJEXT) dasdutil.$(OBJEXT) \
+	version.$(OBJEXT) eightxff.$(OBJEXT) ckddasd.$(OBJEXT) \
+	cckddasd.$(OBJEXT) cckdcdsx.$(OBJEXT) cckdcomx.$(OBJEXT) \
+	cckdend.$(OBJEXT)
 dasdpdsu_OBJECTS = $(am_dasdpdsu_OBJECTS)
 dasdpdsu_LDADD = $(LDADD)
 dasdpdsu_DEPENDENCIES =
