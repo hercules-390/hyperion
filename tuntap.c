@@ -237,7 +237,7 @@ int             TUNTAP_SetDestAddr( char*   pszNetDevName,
 
     memset( &ifreq, 0, sizeof( struct ifreq ) );
 
-    sin = (struct sockaddr_in*)&ifreq.ifr_addr;
+    sin = (struct sockaddr_in*)&ifreq.ifr_dstaddr;
 
     sin->sin_family = AF_INET;
 
@@ -565,6 +565,7 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
 
     ctlreq.iCtlOp = iRequest;
 
+#if 0 /* debugging print */
     // Select string to represent ioctl request for debugging.
     switch (iRequest) {
     case SIOCSIFADDR:
@@ -589,8 +590,10 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         sprintf(unknown_request,"Unknown (0x%x)",iRequest);
         request_name=unknown_request;
     }
-    logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
-              request_name,ifc_fd[0],ifc_fd[1]);
+logmsg(_("HHCTU030I IFC_IOCtl called for %s on FDs %d %d\n"),
+          request_name,ifc_fd[0],ifc_fd[1]);
+#endif /* 0 -- debugging */
+
     if( iRequest == SIOCADDRT ||
         iRequest == SIOCDELRT )
     {
@@ -621,6 +624,8 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
         // Obtain the name of the interface config program or default
         if( !( pszCfgCmd = getenv( "HERCULES_IFC" ) ) )
             pszCfgCmd = HERCIFC_CMD;
+//DEBUG     logmsg(_("HHCTU029I Executing '%s' to configure interface\n")
+//DEBUG               pszCfgCmd);
 
         // Fork a process to execute the hercifc
         ifc_pid = fork();
@@ -642,8 +647,17 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             */
             struct rlimit rlim;
             int i;
+            rlim_t file_limit;
             getrlimit(RLIMIT_NOFILE,&rlim);
-            for(i=0;(unsigned int)i<rlim.rlim_max;i++)
+            /* While Linux and Cygwin have limits of 1024 files by default,
+             * Mac OS X does not - its default is -1, or completely unlimited.
+             * The following hack is to defend against trying to close 2
+             * billion files. -- JRM */
+            file_limit=rlim.rlim_max;
+            file_limit=(file_limit>1024)?1024:file_limit;
+//DEBUG     logmsg(_("HHCTU031I Closing %lld files\n"),
+//DEBUG              (long long)file_limit);
+            for(i=0;(unsigned int)i<file_limit;i++)
             {
                 if(i!=ifc_fd[1] && i!=STDOUT_FILENO)
                 {
@@ -654,8 +668,6 @@ static int      IFC_IOCtl( int fd, unsigned long int iRequest, char* argp )
             dup2( ifc_fd[1], STDIN_FILENO  );
             dup2( STDOUT_FILENO, STDERR_FILENO );
             
-            logmsg(_("HHCTU029I Executing '%s' to configure interface: %s\n"),
-                      pszCfgCmd, request_name);
             // Execute the interface configuration command
             rc = execlp( pszCfgCmd, pszCfgCmd, NULL );
             

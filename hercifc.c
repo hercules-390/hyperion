@@ -170,8 +170,8 @@ int main( int argc, char **argv )
         }
             
         sprintf( szMsgBuffer,
-                 _("HHCIF006I %s: Doing %s on %s: %s\n"),
-                 pszProgName, pOp, pIF, strerror( errno ) );
+                 _("HHCIF006I %s: Doing %s on %s\n"),
+                 pszProgName, pOp, pIF);
 
         write( STDERR_FILENO, szMsgBuffer, strlen( szMsgBuffer ) );
     
