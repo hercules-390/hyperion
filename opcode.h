@@ -1604,6 +1604,7 @@ DEF_INST(dummy_instruction);
 
 
 /* Instructions in assist.c */
+DEF_INST(fix_page);
 DEF_INST(svc_assist);
 DEF_INST(obtain_local_lock);
 DEF_INST(release_local_lock);

@@ -2914,7 +2914,9 @@ zz_func opcode_e3xx[256][GEN_MAXARCH] = {
 zz_func opcode_e5xx[256][GEN_MAXARCH] = {
  /*E500*/ GENx370x390x900 (load_address_space_parameters,SSE,"LASP"),
  /*E501*/ GENx370x390x900 (test_protection,SSE,"TPROT"),
- /*E502*/ GENx___x___x900 (store_real_address,SSE,"STRAG"),
+ /* The following opcode has been re-used in z/Arch */
+#define s370_store_real_address s370_fix_page
+ /*E502*/ GENx370x___x900 (store_real_address,SSE,"STRAG"),
  /*E503*/ GENx370x390x900 (svc_assist,SSE,"Assist"),
  /*E504*/ GENx370x390x900 (obtain_local_lock,SSE,"Assist"),
  /*E505*/ GENx370x390x900 (release_local_lock,SSE,"Assist"),
