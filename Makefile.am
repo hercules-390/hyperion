@@ -416,7 +416,7 @@ else
              -dlopen hdt3088.la \
              -dlopen hdt3270.la \
              -dlopen hdt3505.la \
-             -dlopen hdt3525.la
+             -dlopen hdt3525.la \
              -dlopen hdtqeth.la
 
   HDEPS    = dyngui.la   \
@@ -430,7 +430,7 @@ else
              libherc.la  \
              libherct.la \
              libhercd.la \
-             hdt3525.la
+             hdt3525.la  \
              hdtqeth.la
 endif
 
