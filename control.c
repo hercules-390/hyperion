@@ -1769,10 +1769,18 @@ U32     updated = 0;                    /* Updated control regs      */
     } while (1);
 
     SET_IC_MASK(regs);
+#if __GEN_ARCH == 370
+    if (updated & BIT(1))
+    {
+        SET_AEA_COMMON(regs);
+        INVALIDATE_AIA(regs);
+    }
+#else
     if (updated & (BIT(1) | BIT(7) | BIT(13)))
         SET_AEA_COMMON(regs);
     if (test_bit(4, regs->aea_ar[16], &updated))
         INVALIDATE_AIA(regs);
+#endif
     if (test_bit(4, 9, &updated) && EN_IC_PER_SA(regs))
         ARCH_DEP(invalidate_tlb)(regs,~ACC_WRITE);
 
@@ -3228,7 +3236,7 @@ int     rc;                             /* return code from load_psw */
     /* Update the updated CPU registers from the working copy */
     memcpy(&(regs->psw), &(newregs.psw), sizeof(newregs.psw));
     memcpy(regs->gr, newregs.gr, sizeof(newregs.gr));
-    memcpy(regs->cr, newregs.cr, sizeof(newregs.cr));
+    memcpy(regs->cr, newregs.cr, CR_SIZE);
     memcpy(regs->ar, newregs.ar, sizeof(newregs.ar));
 
     regs->psw.ilc = 2;

@@ -2930,7 +2930,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("aea mode   %2.2x\n",regs->aea_mode);
+    logmsg ("aea mode   %2.2x crx   %2.2x\n",regs->aea_mode,regs->aea_crx);
 
     logmsg ("aea ar    ");
     for (i = 0; i < 21; i++) logmsg(" %2.2x",regs->aea_ar[i]);
@@ -2940,11 +2940,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     for (i = 0; i < 17; i++) logmsg(" %2.2x",regs->aea_common[i]);
     logmsg ("\n");
 
+    logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
+            "    cr[13] %16.16llx\n    cr[16] %16.16llx\n",
+            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13),regs->CR_G(16));
+
     if (regs->sie_active)
     {
         regs = regs->guestregs;
 
-        logmsg ("aea mode   %2.2x\n",regs->aea_mode);
+        logmsg ("aea SIE\n");
+        logmsg ("aea mode   %2.2x crx   %2.2x\n",regs->aea_mode,regs->aea_crx);
 
         logmsg ("aea ar    ");
         for (i = 0; i < 21; i++) logmsg(" %2.2x",regs->aea_ar[i]);
@@ -2953,6 +2958,48 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
         logmsg ("aea common");
         for (i = 0; i < 17; i++) logmsg(" %2.2x",regs->aea_common[i]);
         logmsg ("\n");
+
+        logmsg ("aea cr[1]  %16.16llx\n    cr[7]  %16.16llx\n"
+                "    cr[13] %16.16llx\n    cr[16] %16.16llx\n",
+            regs->CR_G(1),regs->CR_G(7),regs->CR_G(13),regs->CR_G(16));
+    }
+
+    release_lock (&sysblk.cpulock[sysblk.pcpu]);
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
+/* aia - display aia values */
+
+int aia_cmd(int argc, char *argv[], char *cmdline)
+{
+    int     i;                          /* Index                     */
+    REGS   *regs;
+
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    obtain_lock(&sysblk.cpulock[sysblk.pcpu]);
+
+    if (!IS_CPU_ONLINE(sysblk.pcpu))
+    {
+        release_lock(&sysblk.cpulock[sysblk.pcpu]);
+        logmsg( _("HHCPN160W CPU%4.4X not configured\n"), sysblk.pcpu);
+        return 0;
+    }
+    regs = sysblk.regs[sysblk.pcpu];
+
+    logmsg ("mainstor %p  aim %p  aiv %16.16llx  aie %16.16llx\n",
+            regs->mainstor,regs->aim,regs->aiv,regs->aie);
+
+    if (regs->sie_active)
+    {
+        regs = regs->guestregs;
+        logmsg ("SIE:\n");
+        logmsg ("mainstor %p  aim %p  aiv %16.16llx  aie %16.16llx\n",
+            regs->mainstor,regs->aim,regs->aiv,regs->aie);
     }
 
     release_lock (&sysblk.cpulock[sysblk.pcpu]);
@@ -3355,6 +3402,7 @@ COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands" )
 #endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
+COMMAND ( "aia",       aia_cmd,       "Display AIA fields" )
 COMMAND ( "tlb",       tlb_cmd,       "Display TLB tables" )
 
 #if defined(SIE_DEBUG_PERFMON)

@@ -1146,7 +1146,8 @@ int cpu_init (int cpu, REGS *regs, REGS *hostregs)
     }
 
     /* Initialize accelerated lookup fields */
-    regs->CR_G(16) = 0xFFFFFFFFFFFFFFFFULL;
+    regs->CR_G(16) = ~0;
+    regs->aea_crx                     = 16;
     memset(regs->aea_ar,16,16);
     regs->aea_ar[USE_INST_SPACE]      = 16;
     regs->aea_ar[USE_REAL_ADDR]       = 16;

@@ -213,7 +213,7 @@ s370_ ## _name
 #define TLB_PAGESHIFT 11
 #define TLBID_PAGEMASK  0x00E00000
 #define TLBID_BYTEMASK  0x001FFFFF
-#define ASD_PRIVATE   0
+#define ASD_PRIVATE   SEGTAB_370_CMN
 #define BROADCAST_PFRA BROADCAST_PFRA_L
 
 #elif __GEN_ARCH == 390
@@ -550,6 +550,191 @@ z900_ ## _name
  #define XSTORE_PAGEMASK    0xFFFFFFFFFFFFF000ULL
 #else
  #define XSTORE_PAGEMASK    0x7FFFF000
+#endif
+
+/* Macros for accelerated lookup */
+#undef AEA_MODE
+#undef SET_AEA_COMMON
+#undef SET_AEA_MODE
+#undef TEST_SET_AEA_MODE
+#undef SET_AEA_AR
+#undef MADDR
+
+#if __GEN_ARCH == 370
+
+#define AEA_MODE(_regs) \
+  ( ( REAL_MODE(&(_regs)->psw) ? 0 : 1 ) \
+  | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
+  )
+
+#define SET_AEA_COMMON(_regs) \
+do { \
+  (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+} while (0)
+
+#define SET_AEA_MODE(_regs) \
+do { \
+  int i; \
+  BYTE oldmode = (_regs)->aea_mode; \
+  (_regs)->aea_mode = AEA_MODE((_regs)); \
+  if ((_regs)->aea_mode & 0x0F) \
+      (_regs)->aea_crx = 1; \
+  else \
+      (_regs)->aea_crx = 16; \
+  if ((oldmode & PSW_PERMODE) == 0 && ((_regs)->aea_mode & PSW_PERMODE) != 0) { \
+    INVALIDATE_AIA((_regs)); \
+    if (EN_IC_PER_SA((_regs))) \
+      ARCH_DEP(invalidate_tlb)((_regs),~ACC_WRITE); \
+  } \
+} while (0)
+
+#define TEST_SET_AEA_MODE(_regs) \
+do { \
+  if ((_regs)->aea_mode != AEA_MODE((_regs))) { \
+    SET_AEA_MODE((_regs)); \
+  } \
+} while (0)
+
+#define SET_AEA_AR(_regs, _arn)
+
+#define MADDR(_addr, _arn, _regs, _acctype, _akey) \
+ ( \
+       likely( \
+              ((_regs)->CR((_regs)->aea_crx) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
+           || ((_regs)->aea_common[(_regs)->aea_crx] & (_regs)->tlb.common[TLBIX(_addr)]) \
+             ) \
+   &&  likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]) \
+   &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
+   &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
+   ? ( \
+       ((_acctype) == ACCTYPE_WRITE_SKP) \
+        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)] \
+        : (0), \
+       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+     ) \
+   : ( \
+       ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
+     ) \
+ )
+
+#else
+
+ /*
+  * Accelerated lookup address mode
+  *    0 - real mode
+  *    1 - primary space mode
+  *    2 - access register mode
+  *    3 - secondary space mode
+  *    4 - home space mode
+  *   4x - per mode
+  */
+#define AEA_MODE(_regs) \
+  ( ( REAL_MODE(&(_regs)->psw) ? 0 : (((_regs)->psw.asc >> 6) + 1) ) \
+  | ( PER_MODE((_regs)) ? 0x40 : 0 ) \
+  )
+
+#define SET_AEA_COMMON(_regs) \
+do { \
+  (_regs)->aea_common[1]  = ((_regs)->CR(1)  & ASD_PRIVATE) == 0; \
+  (_regs)->aea_common[7]  = ((_regs)->CR(7)  & ASD_PRIVATE) == 0; \
+  (_regs)->aea_common[13] = ((_regs)->CR(13) & ASD_PRIVATE) == 0; \
+} while (0)
+
+ /*
+  * Reset aea_ar vector to indicate the appropriate
+  * control register:
+  *   0 - unresolvable (armode and alet is not 0, 1 or 2)
+  *   1 - primary space
+  *   7 - secondary space
+  *  13 - home space
+  *  16 - real
+  */
+#define SET_AEA_MODE(_regs) \
+do { \
+  int i; \
+  BYTE inst_cr = (_regs)->aea_ar[16]; \
+  BYTE oldmode = (_regs)->aea_mode; \
+  (_regs)->aea_mode = AEA_MODE((_regs)); \
+  switch ((_regs)->aea_mode & 0x0F) { \
+    case 0: \
+      memset((_regs)->aea_ar, 16, 17); \
+      break; \
+    case 1: \
+      memset((_regs)->aea_ar,  1, 17); \
+      break; \
+    case 2: \
+      memset((_regs)->aea_ar,  1, 17); \
+      for (i = 1; i < 16; i++) { \
+        if ((_regs)->AR(i) == ALET_SECONDARY) (_regs)->aea_ar[i] = 7; \
+        else if ((_regs)->AR(i) == ALET_HOME) (_regs)->aea_ar[i] = 13; \
+        else if ((_regs)->AR(i) != ALET_PRIMARY) (_regs)->aea_ar[i] = 0; \
+      } \
+      break; \
+    case 3: \
+      memset((_regs)->aea_ar,  7, 16); \
+      (_regs)->aea_ar[16] = 1; \
+      break; \
+    case 4: \
+      memset((_regs)->aea_ar, 13, 17); \
+      break; \
+  } \
+  if (inst_cr != (_regs)->aea_ar[USE_INST_SPACE]) \
+    INVALIDATE_AIA((_regs)); \
+  if ((oldmode & PSW_PERMODE) == 0 && ((_regs)->aea_mode & PSW_PERMODE) != 0) { \
+    INVALIDATE_AIA((_regs)); \
+    if (EN_IC_PER_SA((_regs))) \
+      ARCH_DEP(invalidate_tlb)((_regs),~ACC_WRITE); \
+  } \
+} while (0)
+
+ /*
+  * Conditionally reset the aea_ar vector
+  */
+#define TEST_SET_AEA_MODE(_regs) \
+do { \
+  if ((_regs)->aea_mode != AEA_MODE((_regs))) { \
+    SET_AEA_MODE((_regs)); \
+  } \
+} while (0)
+
+ /*
+  * Update the aea_ar vector whenever an access register
+  * is changed and in armode
+  */
+#define SET_AEA_AR(_regs, _arn) \
+do { \
+  if (ACCESS_REGISTER_MODE(&(_regs)->psw) && (_arn) > 0) { \
+    if ((_regs)->AR((_arn)) == ALET_PRIMARY) (_regs)->aea_ar[(_arn)] = 1; \
+    else if ((_regs)->AR((_arn)) == ALET_SECONDARY) (_regs)->aea_ar[(_arn)] = 7; \
+    else if ((_regs)->AR((_arn)) == ALET_HOME) (_regs)->aea_ar[(_arn)] = 13; \
+    else (_regs)->aea_ar[(_arn)] = 0; \
+  } \
+} while (0)
+
+ /*
+  * Accelerated lookup
+  */
+#define MADDR(_addr, _arn, _regs, _acctype, _akey) \
+ ( \
+       likely((_regs)->aea_ar[(_arn)]) \
+   &&  likely( \
+              ((_regs)->CR((_regs)->aea_ar[(_arn)]) == (_regs)->tlb.TLB_ASD(TLBIX(_addr))) \
+           || ((_regs)->aea_common[(_regs)->aea_ar[(_arn)]] & (_regs)->tlb.common[TLBIX(_addr)]) \
+             ) \
+   &&  likely((_akey) == 0 || (_akey) == (_regs)->tlb.skey[TLBIX(_addr)]) \
+   &&  likely((((_addr) & TLBID_PAGEMASK) | (_regs)->tlbID) == (_regs)->tlb.TLB_VADDR(TLBIX(_addr))) \
+   &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
+   ? ( \
+       ((_acctype) == ACCTYPE_WRITE_SKP) \
+        ? (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)] \
+        : (0), \
+       MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
+     ) \
+   : ( \
+       ARCH_DEP(logical_to_main) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
+     ) \
+ )
+
 #endif
 
 /* end of FEATURES.H */
