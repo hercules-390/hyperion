@@ -24,7 +24,7 @@ int  extgui = 0;
 /*-------------------------------------------------------------------*/
 int main (int argc, char *argv[])
 {
-int             rc;                     /* Return code               */
+int             cckd_chkdsk_rc = 0;     /* Program return code       */
 char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             level=1;                /* Chkdsk level checking     */
@@ -78,21 +78,35 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     }
 
     /* call the actual chkdsk function */
-    rc = cckd_chkdsk (fd, stderr, level);
+    cckd_chkdsk_rc = cckd_chkdsk (fd, stderr, level);
 
     /* print some statistics */
-    rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
-    rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
-    if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
-        cckd_swapend_chdr (&cdevhdr);
-    fprintf (stdout, "size %d used %d free %d first 0x%x number %d\n",
-             cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
-             cdevhdr.free, cdevhdr.free_number);
+	if (lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET) < 0)
+	{
+		fprintf (stderr, "lseek error: %s\n",strerror(errno));
+		if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
+	}
+	else
+	{
+		if (read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE) < 0)
+		{
+			fprintf (stderr, "read error: %s\n",strerror(errno));
+			if (!cckd_chkdsk_rc) cckd_chkdsk_rc = 1;
+		}
+		else
+		{
+			if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
+				cckd_swapend_chdr (&cdevhdr);
+
+			fprintf (stdout, "size %d used %d free %d first 0x%x number %d\n",
+					 cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
+					 cdevhdr.free, cdevhdr.free_number);
+		}
+	}
 
     close (fd);
 
-    return rc;
-
+    return cckd_chkdsk_rc;
 }
 
 /*-------------------------------------------------------------------*/
