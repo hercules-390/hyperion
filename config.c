@@ -1431,7 +1431,12 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
 
         /* Release the device block if we just acquired it */
         if (newdevblk)
+        {
+            sysblk.highsubchan--;       /* @ISW - Backout 1 sch    */
+                                        /* so that configured      */
+                                        /* devices are consecutive */
             free(dev);
+        }
 
         return 1;
     }
