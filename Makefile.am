@@ -5,13 +5,14 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 #ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = util html
+SUBDIRS = intl util html
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
 else
 HERCIFC=
 endif
+LDADD = @INTLLIBS@
 
 bin_PROGRAMS = hercules $(HERCIFC) \
 	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu \
