@@ -16,9 +16,6 @@
 /*-------------------------------------------------------------------*/
 /* Static data areas                                                 */
 /*-------------------------------------------------------------------*/
-static BYTE eighthexFF[] =              /* End of track marker       */
-        {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
 static int verbose = 1;                /* Be chatty about reads etc. */
 
 /*-------------------------------------------------------------------*/
@@ -175,9 +172,11 @@ int             lastsame = 0;
 int read_track (CIFBLK *cif, int cyl, int head)
 {
 int             rc;                     /* Return code               */
+int             i;                      /* Loop index                */
 int             len;                    /* Record length             */
 off_t           seekpos;                /* Seek position for lseek   */
 CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
+DEVBLK         *dev;                    /* -> CKD device block       */
 
     /* Exit if required track is already in buffer */
     if (cif->curcyl == cyl && cif->curhead == head)
@@ -195,12 +194,26 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
                cyl, head);
     }
 
+    dev = &cif->devblk;
+
+    /* Determine which file contains the requested cylinder */
+    for (i = 0; cyl > dev->ckdhicyl[i]; i++)
+    {
+        if (dev->ckdhicyl[i] == 0 || i == dev->ckdnumfd - 1)
+            break;
+    }
+    dev->ckdtrkfn = i;
+
+    /* Set the device file descriptor to the selected file */
+    cif->fd = dev->fd = dev->ckdfd[i];
+
     /* Seek to start of track header */
     seekpos = CKDDASD_DEVHDR_SIZE
-            + (((cyl * cif->heads) + head) * cif->trksz);
+            + ((((cyl - dev->ckdlocyl[i]) * dev->ckdheads) + head)
+                * dev->ckdtrksz);
 
-    rc = lseek (cif->fd, seekpos, SEEK_SET);
-    if (rc < 0)
+    rc = ckd_lseek (dev, cif->fd, seekpos, SEEK_SET);
+    if (rc == -1)
     {
         fprintf (stderr,
                 "%s lseek error: %s\n",
@@ -209,7 +222,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
     }
 
     /* Read the track */
-    len = read (cif->fd, cif->trkbuf, cif->trksz);
+    len = ckd_read (dev, cif->fd, cif->trkbuf, cif->trksz);
     if (len < 0)
     {
         fprintf (stderr,
@@ -247,8 +260,10 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> Track header           */
 int rewrite_track (CIFBLK *cif)
 {
 int             rc;                     /* Return code               */
+int             i;                      /* Loop index                */
 int             len;                    /* Record length             */
 off_t           seekpos;                /* Seek position for lseek   */
+DEVBLK         *dev;                    /* -> CKD device block       */
 
     /* Exit if track buffer has not been modified */
     if (cif->trkmodif == 0)
@@ -262,13 +277,26 @@ off_t           seekpos;                /* Seek position for lseek   */
                cif->curcyl, cif->curhead);
     }
 
+    dev = &cif->devblk;
+
+    /* Determine which file contains the requested cylinder */
+    for (i = 0; cif->curcyl > dev->ckdhicyl[i]; i++)
+    {
+        if (dev->ckdhicyl[i] == 0 || i == dev->ckdnumfd - 1)
+            break;
+    }
+    dev->ckdtrkfn = i;
+
+    /* Set the device file descriptor to the selected file */
+    cif->fd = dev->fd = dev->ckdfd[i];
+
     /* Seek to start of track header */
     seekpos = CKDDASD_DEVHDR_SIZE
-              + (((cif->curcyl * cif->heads) + cif->curhead)
-                 * cif->trksz);
+            + ((((cif->curcyl - dev->ckdlocyl[i]) * dev->ckdheads) + cif->curhead)
+                * dev->ckdtrksz);
 
-    rc = lseek (cif->fd, seekpos, SEEK_SET);
-    if (rc < 0)
+    rc = ckd_lseek (dev, cif->fd, seekpos, SEEK_SET);
+    if (rc == -1)
     {
         fprintf (stderr,
                 "%s lseek error: %s\n",
@@ -277,7 +305,7 @@ off_t           seekpos;                /* Seek position for lseek   */
     }
 
     /* Write the track */
-    len = write (cif->fd, cif->trkbuf, cif->trksz);
+    len = ckd_write (dev, cif->fd, cif->trkbuf, cif->trksz);
     if (len < cif->trksz)
     {
         fprintf (stderr,
@@ -550,14 +578,22 @@ int             extsize;                /* Extent size in tracks     */
 /* Return value is a pointer to the CKD image file descriptor        */
 /* structure if successful, or NULL if unsuccessful.                 */
 /*-------------------------------------------------------------------*/
-CIFBLK* open_ckd_image (BYTE *fname, int omode)
+CIFBLK* open_ckd_image (BYTE *fname, BYTE *sfname, int omode)
 {
+int             fd;                     /* File descriptor           */
+int             rc;                     /* Return code               */
 int             len;                    /* Record length             */
 CKDDASD_DEVHDR  devhdr;                 /* CKD device header         */
 CIFBLK         *cif;                    /* CKD image file descriptor */
+DEVBLK         *dev;                    /* CKD device block          */
+BYTE           *sfxptr;                 /* -> Last char of file name */
+U16             devnum;                 /* Device number             */
+BYTE            c;                      /* Work area for sscanf      */
+BYTE           *argv[2];                /* Arguments to              */
+int             argc=0;                 /*     ckddasd_init_handler  */
 
     /* Obtain storage for the file descriptor structure */
-    cif = (CIFBLK*) malloc (sizeof(CIFBLK));
+    cif = (CIFBLK*) calloc (sizeof(CIFBLK), 1);
     if (cif == NULL)
     {
         fprintf (stderr,
@@ -566,45 +602,98 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
         return NULL;
     }
 
-    /* Open the CKD image file */
-    cif->fname = fname;
-    cif->fd = open (cif->fname, omode);
-    if (cif->fd < 0)
+    /* Initialize the devblk */
+
+    dev = &cif->devblk;
+    dev->msgpipew = stderr;
+    if ((omode & O_RDWR) == 0) dev->ckdrdonly = 1;
+    dev->batch = 1;
+
+    /* Read the device header so we can determine the device type */
+    fd = open (fname, omode);
+    if (fd < 0)
     {
-        fprintf (stderr,
-                "Cannot open %s: %s\n",
-                cif->fname, strerror(errno));
+        fprintf (stderr, "Cannot open %s: %s\n", fname, strerror(errno));
         free (cif);
         return NULL;
     }
-
-    /* Read the device header */
-    len = read (cif->fd, &devhdr, CKDDASD_DEVHDR_SIZE);
+    len = read (fd, &devhdr, CKDDASD_DEVHDR_SIZE);
     if (len < 0)
     {
-        fprintf (stderr,
-                "%s read error: %s\n",
-                cif->fname, strerror(errno));
+        fprintf (stderr, "%s read error: %s\n", fname, strerror(errno));
+        close (fd);
+        free (cif);
+        return NULL;
+    }
+    close (fd);
+    if (len < CKDDASD_DEVHDR_SIZE
+     || (memcmp(devhdr.devid, "CKD_P370", 8) != 0
+      && memcmp(devhdr.devid, "CKD_C370", 8) != 0))
+    {
+        fprintf (stderr, "%s CKD header invalid\n", fname);
         free (cif);
         return NULL;
     }
 
-    /* Check the device header identifier */
-    if (len < CKDDASD_DEVHDR_SIZE
-        || memcmp(devhdr.devid, "CKD_P370", 8) != 0)
+    /* Set the device type */
+    switch (devhdr.devtype) {
+    case 0x11: dev->devtype = 0x2311;
+               break;
+    case 0x14: dev->devtype = 0x2314;
+               break;
+    case 0x30: dev->devtype = 0x3330;
+               break;
+    case 0x40: dev->devtype = 0x3340;
+               break;
+    case 0x50: dev->devtype = 0x3350;
+               break;
+    case 0x75: dev->devtype = 0x3375;
+               break;
+    case 0x80: dev->devtype = 0x3380;
+               break;
+    case 0x90: dev->devtype = 0x3390;
+               break;
+    case 0x45: dev->devtype = 0x9345;
+               break;
+    default:   fprintf (stderr, "%s invalid device type: %2.2x\n",
+                        fname, devhdr.devtype);
+               free (cif);
+               return NULL;
+    }
+
+    /* If the end of the filename is a valid device address then
+       use that as the device number, otherwise default to 0x0000 */
+    sfxptr = strrchr (fname, '/');
+    if (sfxptr == NULL) sfxptr = fname + 1;
+    sfxptr = strchr (sfxptr, '.');
+    if (sfxptr != NULL)
+        if (sscanf(sfxptr+1, "%hx%c", &devnum, &c) == 1)
+            dev->devnum = devnum;
+
+    /* Build arguments for ckddasd_init_handler */
+    argv[0] = fname;
+    argc++;
+    if (sfname != NULL)
     {
-        fprintf (stderr,
-                "%s CKD header invalid\n",
-                cif->fname);
+        argv[1] = sfname;
+        argc++;
+    }
+
+    /* Call the CKD device handler initialization function */
+    rc = ckddasd_init_handler(dev, argc, argv);
+    if (rc < 0)
+    {
+        fprintf (stderr, "CKD initialization failed for %s\n", fname);
         free (cif);
         return NULL;
     }
+
+    /* Set CIF fields */
+    cif->fname = fname;
+    cif->fd = dev->fd;
 
     /* Extract the number of heads and the track size */
-    cif->heads = ((U32)(devhdr.heads[3]) << 24)
-                | ((U32)(devhdr.heads[2]) << 16)
-                | ((U32)(devhdr.heads[1]) << 8)
-                | (U32)(devhdr.heads[0]);
+    cif->heads = dev->ckdheads;
     cif->trksz = ((U32)(devhdr.trksize[3]) << 24)
                 | ((U32)(devhdr.trksize[2]) << 16)
                 | ((U32)(devhdr.trksize[1]) << 8)
@@ -647,13 +736,15 @@ CIFBLK         *cif;                    /* CKD image file descriptor */
 int close_ckd_image (CIFBLK *cif)
 {
 int             rc;                     /* Return code               */
+DEVBLK         *dev;                    /* -> CKD device block       */
 
     /* Rewrite the track buffer if it has been modified */
     rc = rewrite_track (cif);
     if (rc < 0) return -1;
 
     /* Close the CKD image file */
-    rc = close (cif->fd);
+    dev = &cif->devblk;
+    rc = ckddasd_close_device (dev);
     if (rc < 0) return -1;
 
     /* Release the track buffer and the file descriptor structure */
