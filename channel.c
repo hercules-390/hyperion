@@ -820,6 +820,9 @@ device_reset (DEVBLK *dev)
     dev->pmcw.mbi[0] = 0;
     dev->pmcw.mbi[1] = 0;
     dev->pmcw.flag27 &= ~PMCW27_S;
+    dev->ckdxtdef = 0;
+    dev->ckdsetfm = 0;
+    dev->ckdlcount = 0;
     memset (&dev->scsw, 0, sizeof(SCSW));
     memset (&dev->pciscsw, 0, sizeof(SCSW));
     memset (dev->sense, 0, sizeof(dev->sense));

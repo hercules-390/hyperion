@@ -1,3 +1,4 @@
+28 Nov 2001 Reset device status in device_reset() for ckd dev - Jan Jaeger
 28 Nov 2001 Alignment fixes for SPARC64 - Matt Zimmerman
 28 Nov 2001 Bypass syncio if track overflow or data chaining - Valery
             Pogonchenko
