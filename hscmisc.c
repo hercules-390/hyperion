@@ -452,7 +452,7 @@ U64     saddr, eaddr;                   /* Range start/end addresses */
 U64     maxadr;                         /* Highest real storage addr */
 RADR    raddr;                          /* Real storage address      */
 RADR    aaddr;                          /* Absolute storage address  */
-int     stid;
+int     stid = -1;
 int     len;                            /* Number of bytes to alter  */
 int     i;                              /* Loop counter              */
 int     ilc;
@@ -484,14 +484,6 @@ char    type;
         case 'H': /* home */
           type = toupper(*opnd);
           opnd++;
-    }
-
-    if(type == 'V')
-    {
-        if(HOME_SPACE_MODE(&(regs->psw)))
-            type = 'H';
-        else
-            type = 'P';
     }
 
     /* Parse the range or alteration operand */
@@ -530,7 +522,11 @@ char    type;
         }
 
         memcpy(inst, regs->mainstor + aaddr, ilc);
-        logmsg("%c" F_RADR ": %2.2X%2.2X", type, raddr, inst[0], inst[1]);
+        logmsg("%c" F_RADR ": %2.2X%2.2X", 
+          stid == TEA_ST_PRIMARY ? 'P' :
+          stid == TEA_ST_HOME ? 'H' :
+          stid == TEA_ST_SECNDRY ? 'S' : 'R',
+          raddr, inst[0], inst[1]);
         if(ilc > 2)
         {
             logmsg("%2.2X%2.2X", inst[2], inst[3]);
