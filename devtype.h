@@ -34,6 +34,10 @@ extern DEVHND tapedev_device_hndinfo;
 extern DEVHND ckddasd_device_hndinfo;
 extern DEVHND fbadasd_device_hndinfo;
 extern DEVHND ctcadpt_device_hndinfo;
+extern DEVHND ctci_device_hndinfo;
+extern DEVHND ctct_device_hndinfo;
+extern DEVHND lcs_device_hndinfo;
+extern DEVHND vmnet_device_hndinfo;
 
 
 #endif /*!defined(_DEVICES_H)*/

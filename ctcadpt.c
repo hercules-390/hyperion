@@ -108,49 +108,21 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 {
     pDEVBLK->devtype = 0x3088;
 
-    // Allow for depreciated 3088 device type
-    if( strcasecmp( pDEVBLK->typname, "3088" ) == 0 )
+    // The first argument is the device emulation type
+    if( argc < 1 )
     {
-        // The first argument is the device emulation type
-        if( argc < 1 )
-        {
-            logmsg( _("HHCCT001E %4.4X: Incorrect number of parameters\n"),
-                pDEVBLK->devnum );
-            return -1;
-        }
-
-        // Replace typname in DEVBLK with actual type.
-        if( strcasecmp( argv[0], "CTCI"     ) == 0 ||
-            strcasecmp( argv[0], "CTCI-W32" ) == 0 )
-            pDEVBLK->typname = "CTCI";
-        else if( strcasecmp( argv[0], "CTCT" ) == 0 )
-            pDEVBLK->typname = "CTCT";
-        else if( strcasecmp( argv[0], "LCS" ) == 0 )
-            pDEVBLK->typname = "LCS";
-        else
-            pDEVBLK->typname = "VMNET";
+        logmsg( _("HHCCT001E %4.4X: Incorrect number of parameters\n"),
+            pDEVBLK->devnum );
+        return -1;
     }
 
-    // A little slight of hand here...
-    //
-    // The table in devtype.c points all CTC emulation types
-    // to ctcadpt_device_hndinfo. Based on the typnam member
-    // of DEVBLK, substitute the proper handler entries for
-    // this device.
-
-    if     ( strcasecmp( pDEVBLK->typname, "CTCI" ) == 0 )
-        pDEVBLK->hnd = &ctci_device_hndinfo;
-    else if( strcasecmp( pDEVBLK->typname, "CTCT"  ) == 0 )
-        pDEVBLK->hnd = &ctct_device_hndinfo;
-    else if( strcasecmp( pDEVBLK->typname, "LCS"   ) == 0 )
-        pDEVBLK->hnd = &lcs_device_hndinfo;
-    else if( strcasecmp( pDEVBLK->typname, "VMNET" ) == 0 )
-        pDEVBLK->hnd = &vmnet_device_hndinfo;
-    else
+    if((pDEVBLK->hnd = hdl_ghnd(argv[0])))
+    {
+        free(pDEVBLK->typname);
+        pDEVBLK->typname = strdup(argv[0]);
+        return (pDEVBLK->hnd->init)( pDEVBLK, argc, argv );
+    }
         return -1;
-
-    // Now call the proper device init function
-    return (pDEVBLK->hnd->init)( pDEVBLK, argc, argv );
 }
 
 // -------------------------------------------------------------------
@@ -442,6 +414,8 @@ static int  CTCT_Init( DEVBLK *dev, int argc, BYTE *argv[] )
     TID            tid;                // Thread ID for server
     CTCG_PARMBLK   parm;               // Parameters for the server
     BYTE           address[20]="";     // temp space for IP address
+
+    dev->devtype = 0x3088;
 
     dev->ctctype = CTC_CTCT;
 
@@ -1053,6 +1027,8 @@ static int VMNET_Init(DEVBLK *dev, int argc, BYTE *argv[])
 U16             xdevnum;                /* Pair device devnum        */
 BYTE            c;                      /* tmp for scanf             */
 DEVBLK          *xdev;                  /* Pair device               */
+
+    dev->devtype = 0x3088;
 
     /* parameters for network CTC are:
      *    devnum of the other CTC device of the pair

@@ -61,6 +61,8 @@ int  LCS_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
     struct in_addr  addr;               // Work area for addresses
 
+    pDEVBLK->devtype = 0x3088;
+
     // Housekeeping
     pLCSBLK = malloc( sizeof( LCSBLK ) );
     if( !pLCSBLK )

@@ -64,6 +64,8 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
     DEVBLK*         pDevPair = NULL;    // Paired  DEVBLK
     int             rc = 0;             // Return code
 
+    pDEVBLK->devtype = 0x3088;
+
     // Housekeeping
     pWrkCTCBLK = malloc( sizeof( CTCBLK ) );
 

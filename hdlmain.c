@@ -191,10 +191,10 @@ HDL_DEVICE_SECTION;
 #if !defined(__APPLE__)
     /* Communications devices */
     HDL_DEVICE(3088, ctcadpt_device_hndinfo );
-    HDL_DEVICE(CTCI, ctcadpt_device_hndinfo );
-    HDL_DEVICE(CTCT, ctcadpt_device_hndinfo );
-    HDL_DEVICE(LCS,  ctcadpt_device_hndinfo );
-    HDL_DEVICE(VMNET,ctcadpt_device_hndinfo );
+    HDL_DEVICE(CTCI, ctci_device_hndinfo    );
+    HDL_DEVICE(CTCT, ctct_device_hndinfo    );
+    HDL_DEVICE(LCS,  lcs_device_hndinfo     );
+    HDL_DEVICE(VMNET,vmnet_device_hndinfo   );
 #endif /* !defined(__APPLE__) */
 }
 END_DEVICE_SECTION;
