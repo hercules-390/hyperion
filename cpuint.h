@@ -181,11 +181,13 @@
 #define SET_IC_ECMODE_MASK(_regs) \
  do { \
    (_regs)->ints_mask = IC_ECMODE_MASK((_regs)); \
+   (_regs)->permode = ((IC_PER_MASK & (_regs)->ints_mask) != 0); \
  } while (0)
 
 #define SET_IC_BCMODE_MASK(_regs) \
  do { \
    (_regs)->ints_mask = IC_BCMODE_MASK((_regs)); \
+   (_regs)->permode = ((IC_PER_MASK & (_regs)->ints_mask) != 0); \
  } while (0)
 
 #undef SET_IC_MASK
@@ -193,6 +195,7 @@
  #define SET_IC_MASK(_regs) \
   do { \
     (_regs)->ints_mask = IC_MASK((_regs)); \
+    (_regs)->permode = ((IC_PER_MASK & (_regs)->ints_mask) != 0); \
   } while (0)
 #else
  #define SET_IC_MASK(_regs) SET_IC_ECMODE_MASK(_regs)
@@ -583,12 +586,12 @@
    * Test PER mask bits      *
    * * * * * * * * * * * * * */
 
-#define EN_IC_PER(_regs)        (          (   IC_PER_MASK & (_regs)->ints_mask) )
-#define EN_IC_PER_SB(_regs)     ( test_bit (4, IC_PER_SB,    &(_regs)->ints_mask) )
-#define EN_IC_PER_IF(_regs)     ( test_bit (4, IC_PER_IF,    &(_regs)->ints_mask) )
-#define EN_IC_PER_SA(_regs)     ( test_bit (4, IC_PER_SA,    &(_regs)->ints_mask) )
-#define EN_IC_PER_GRA(_regs)    ( test_bit (4, IC_PER_GRA,   &(_regs)->ints_mask) )
-#define EN_IC_PER_STURA(_regs)  ( test_bit (4, IC_PER_STURA, &(_regs)->ints_mask) )
+#define EN_IC_PER(_regs)        unlikely( (_regs)->permode )
+#define EN_IC_PER_SB(_regs)     (EN_IC_PER(_regs) && test_bit(4, IC_PER_SB,    &(_regs)->ints_mask))
+#define EN_IC_PER_IF(_regs)     (EN_IC_PER(_regs) && test_bit(4, IC_PER_IF,    &(_regs)->ints_mask))
+#define EN_IC_PER_SA(_regs)     (EN_IC_PER(_regs) && test_bit(4, IC_PER_SA,    &(_regs)->ints_mask))
+#define EN_IC_PER_GRA(_regs)    (EN_IC_PER(_regs) && test_bit(4, IC_PER_GRA,   &(_regs)->ints_mask))
+#define EN_IC_PER_STURA(_regs)  (EN_IC_PER(_regs) && test_bit(4, IC_PER_STURA, &(_regs)->ints_mask))
 
 
   /* * * * * * * * * * * * * * * * * * * * * * * * *

@@ -199,7 +199,7 @@ typedef struct _TLBE {
         U16     common:1,               /* 1=Page in common segment  */
                 protect:1;              /* 1=Page in protected segmnt*/
     } TLBE;
-#define TLBN    256                     /* Number TLB entries        */
+#define TLBN    1024                    /* Number TLB entries        */
 
 /* Bit definitions for control register 0 */
 #define CR0_BMPX        0x80000000      /* Block multiplex ctl  S/370*/

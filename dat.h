@@ -746,7 +746,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
     if (acctype == ACCTYPE_LRA)
         tlbp = NULL;
     else
-        tlbp = &(regs->tlb[(vaddr >> 12) & 0xFF]);
+        tlbp = &(regs->tlb[(vaddr >> 12) & 0x3FF]);
 
     if (tlbp != NULL
         && ((((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) &&
@@ -904,7 +904,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
        || acctype == ACCTYPE_PTE)
         tlbp = NULL;
     else
-        tlbp = &(regs->tlb[(vaddr >> 12) & 0xFF]);
+        tlbp = &(regs->tlb[(vaddr >> 12) & 0x3FF]);
 
     if (tlbp != NULL
         && (vaddr & 0x7FFFF000) == tlbp->TLB_VADDR
@@ -1043,7 +1043,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
        || acctype == ACCTYPE_PTE)
         tlbp = NULL;
     else
-        tlbp = &(regs->tlb[(vaddr >> 12) & 0xFF]);
+        tlbp = &(regs->tlb[(vaddr >> 12) & 0x3FF]);
 
 #if 1
     if (tlbp != NULL

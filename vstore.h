@@ -590,7 +590,7 @@ VADR    mask;                           /* Mask for page crossing    */
 
 #if defined(FEATURE_PER)
     /* Save the address address used to fetch the instruction */
-    if( unlikely(EN_IC_PER(regs)) )
+    if( EN_IC_PER(regs) )
     {
 #if defined(FEATURE_PER2)
         regs->perc = 0x40    /* ATMID-validity */

@@ -595,7 +595,8 @@ typedef struct _REGS {                  /* Processor registers       */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 hostint:1,              /* 1=Host generated interrupt*/
                 execflag:1,             /* 1=EXecuted instruction    */
-                instvalid:1;            /* 1=Inst field is valid     */
+                instvalid:1,            /* 1=Inst field is valid     */
+                permode:1;              /* 1=PER active              */
         unsigned int                    /* Flags (intlock serialized)*/
                 dummy:1,                /* 1=Dummy regs structure    */
                 configured:1,           /* 1=CPU is online           */
