@@ -33,7 +33,6 @@ esac
 AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
 
 # Libraries
-AC_CHECK_LIB(pthread, pthread_create)
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(nsl, gethostbyname)
@@ -43,10 +42,42 @@ dnl AC_CHECK_LIB(z, zlibVersion)
 AC_CHECK_LIB(z, main)
 AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 [have_libbz2=yes],[have_libbz2=no])
+AC_CHECK_LIB(pthread, pthread_create,
+             [],
+             [case "$host_os" in
+                *cygwin*)
+                  # Alternate pthreads location for older cygwin
+                  AC_MSG_NOTICE([Looking for pthreadw32 in /usr/DLL])
+                  LDFLAGS_SAVE="$LDFLAGS"
+                  LDFLAGS="$LDFLAGS -L/usr/DLL"
+                  AC_CHECK_LIB(pthreadw32, pthread_create,
+                               [],
+                               [LDFLAGS="$LDFLAGS_SAVE"])
+                  ;;
+              esac])
 
 # Headers
 AC_CHECK_HEADERS(byteswap.h linux/if_tun.h)
 AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
+AC_CHECK_HEADER(pthread.h,
+                [],
+                [case "$host_os" in
+                   *cygwin*)
+                     # Alternate pthreads location for older cygwin
+                     AC_MSG_NOTICE([Looking for pthread.h in /usr/Pthreads])
+                     CFLAGS_SAVE="$CFLAGS"
+                     CFLAGS="$CFLAGS -I/usr/Pthreads"
+                     AC_CHECK_HEADER(pthread.h,
+                                     [],
+                                     [CFLAGS="$CFLAGS_SAVE"
+                                      AC_DEFINE([NOTHREAD])
+                                      AC_MSG_WARN([Unable to find pthread.h, disabling threads]) ])
+                     ;;
+                   *)
+                     AC_MSG_WARN([Unable to find pthread.h, disabling threads])
+                     AC_DEFINE([NOTHREAD])
+                     ;;
+                 esac])
 
 dnl AC_MSG_NOTICE([Checking how to get fixed-size data types])
 AC_CHECK_HEADER(inttypes.h,
@@ -166,13 +197,13 @@ AC_MSG_CHECKING([for optimization flags to use])
 AC_ARG_ENABLE(optimization,
               [  --enable-optimization[=FLAGS] enable optimization],
               [case "${enableval}" in
-                yes) optimize=true ;;
-                no) optimize=false ;;
-                *) optimize=false; OFLAGS="${enableval}" ;;
+                yes) auto_optimize=true ;;
+                no) auto_optimize=false ;;
+                *) auto_optimize=false; OFLAGS="${enableval}" ;;
                esac],
-              [optimize=true])
+              [auto_optimize=true])
 
-if test x$optimize = xtrue && test x$debug != xtrue; then
+if test x$auto_optimize = xtrue && test x$debug != xtrue; then
   case "$host_cpu" in
 	  i586|i686)
 	    if test "$GCC" = "yes"; then
@@ -230,5 +261,7 @@ AH_TEMPLATE([NO_SIGABEND_HANDLER],
             [Define to disable sigabend_handler (please describe this better)])
 AH_TEMPLATE([WIN32],
             [Define when building under Win32 (cygwin)])
+AH_TEMPLATE([NOTHREAD],
+            [Define to disable use of threads])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
