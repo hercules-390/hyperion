@@ -142,7 +142,7 @@ struct _ECPSVM_SASTATS
 { \
     if((_cond)) \
     { \
-        (x); \
+        x; \
     }\
 }
 
