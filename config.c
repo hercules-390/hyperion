@@ -1260,12 +1260,7 @@ int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
         }
 
         /* Build the device configuration block */
-#if 1
         attach_device (devnum, sdevtype, addargc, addargv);
-#else
-        if (attach_device (devnum, sdevtype, addargc, addargv))
-            delayed_exit(1);
-#endif
 
         /* Read next device record from the configuration file */
         if (read_config (fname, fp))
@@ -1480,6 +1475,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->mainlim = sysblk.mainsize - 1;
 
     /* Initialize the path management control word */
+    memset (&dev->pmcw, 0, sizeof(PMCW));
     dev->pmcw.devnum[0] = dev->devnum >> 8;
     dev->pmcw.devnum[1] = dev->devnum & 0xFF;
     dev->pmcw.lpm = 0x80;
