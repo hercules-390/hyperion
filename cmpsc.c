@@ -1088,10 +1088,10 @@ DEF_INST(compression_call)
   /* Initialize itermediate registers using COMMITREGS the other way round */
   COMMITREGS(&iregs, regs, r1, r2);
 
-#if (_GEN_ARCH == _ARCHMODE3)
+#if (__GEN_ARCH == 900)
   /* In z/Archtecture we need the 64bit flag */
   iregs.psw.amode64 = regs->psw.amode64;
-#endif /* (_GEN_ARCH == _ARCHMODE3) */
+#endif /* (__GEN_ARCH == 900) */
 
   /* Now go to the requested function */
   if(GR0_e(regs))
