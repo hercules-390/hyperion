@@ -599,7 +599,7 @@ int     d;                              /* Decimal digit or sign     */
 
         /* Store sign and decimal digits from right to left */
         memset (result, 0, len);
-        for (i = len - 1; d != 0 && n != 0; i--)
+        for (i = len - 1; d != 0 || n != 0; i--)
         {
             result[i] = d;
             d = n % 10;

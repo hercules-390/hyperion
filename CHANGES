@@ -1,3 +1,4 @@
+13 Apr 2001 Correction to CVDG - Jan Jaeger
 09 Apr 2001 Fix intlock access in clock and timer routines - Jan Jaeger
 08 Apr 2001 Small optimization of vstore/vfetch - Jan Jaeger
 08 Apr 2001 Correction to SIGP Set Architecture Mode - Jan Jaeger
