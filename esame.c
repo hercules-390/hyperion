@@ -5367,7 +5367,7 @@ int     cpu_length;                     /* cpu determined length     */
         /* Update the second operand address and length */
         if (len2 > 0)
         {
-            addr2 +=2;
+            addr2 += 2;
             addr2 &= ADDRESS_MAXWRAP(regs);
             len2 -= 2;
         }
