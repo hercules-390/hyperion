@@ -3722,7 +3722,8 @@ int     pgm_check;
 
 
 /*-------------------------------------------------------------------*/
-/* 3C   MER   - Multiply Short to Long Floating Point Register  [RR] */
+/* 3C   MDER  - Multiply Short to Long Floating Point Register  [RR] */
+/*              Older mnemonic of this instruction is MER            */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_float_short_to_long_reg)
 {
@@ -4353,7 +4354,7 @@ int     pgm_check;
 
 /*-------------------------------------------------------------------*/
 /* 7C   MDE   - Multiply Floating Point Short to Long           [RX] */
-/*              Older mnemonic of this instruction ME                */
+/*              Older mnemonic of this instruction is ME             */
 /*-------------------------------------------------------------------*/
 DEF_INST(multiply_float_short_to_long)
 {
