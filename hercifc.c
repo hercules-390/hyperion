@@ -6,7 +6,7 @@
 /* It is invoked as a setuid root program by ctcadpt.c               */
 /* The command line arguments are:                                   */
 /* argv[0]      Name of this program                                 */
-/* argv[1]      Name of the TUN device (/dev/tun0)                   */
+/* argv[1]      Name of the TUN network device (tun0)                */
 /* argv[2]      The maximum transmission unit size                   */
 /* argv[3]      The IP address of the Hercules side of the link      */
 /* argv[4]      The IP address of the driving system side of the link*/
@@ -141,7 +141,7 @@ BYTE           *drivaddr;               /* Driving system IP address */
 BYTE           *netmask;                /* Network mask              */
 int             sockfd;                 /* Socket descriptor         */
 int             errflag = 0;            /* 1=error(s) occurred       */
-BYTE            ifname[8];              /* Interface name: tun[0-9]  */
+BYTE            ifname[IFNAMSIZ];       /* Interface name: tun[0-9]  */
 
     /* Check for correct number of arguments */
     if (argc != 6)
@@ -160,17 +160,17 @@ BYTE            ifname[8];              /* Interface name: tun[0-9]  */
     drivaddr = argv[4];
     netmask = argv[5];
 
-    /* Check for correct device name */
-    if (strlen(tundevn) != 9 || memcmp(tundevn, "/dev/tun", 8) != 0)
+    /* Only check for length, since network device-names can actually
+     * be anything!!
+     */
+    if (strlen(tundevn) > (IFNAMSIZ - 1))
     {
         fprintf (stderr,
             "HHC892I Invalid device name %s passed to %s\n",
             tundevn, progname);
         exit(2);
     }
-
-    /* Extract the interface name (tunx) from the device name */
-    strcpy (ifname, tundevn+5);
+    strcpy(ifname, tundevn);
 
     /* Obtain a socket for ioctl operations */
     sockfd = socket (AF_INET, SOCK_DGRAM, 0);

@@ -599,11 +599,17 @@ typedef struct _DEVBLK {
 		rdreof:1,		/* 1=Unit exception at EOF   */
 		ebcdic:1,		/* 1=Card deck is EBCDIC     */
 		ascii:1,		/* 1=Convert ASCII to EBCDIC */
-		trunc:1;		/* Truncate overlength record*/
+		trunc:1,		/* Truncate overlength record*/
+		autopad:1;		/* 1=Pad incomplete last rec
+                                           to 80 bytes if EBCDIC     */
 	int	cardpos;		/* Offset of next byte to be
 					   read from data buffer     */
 	int	cardrem;		/* Number of bytes remaining
 					   in data buffer	     */
+        char	**more_files;		/* for more that one file in
+					   reader */
+	char	**current_file;		/* counts how many additional
+					   reader files are avail    */
 	/* Device dependent fields for ctcadpt */
 	unsigned int			/* Flags		     */
 		ctcxmode:1;		/* 0=Basic mode, 1=Extended  */
@@ -613,6 +619,7 @@ typedef struct _DEVBLK {
 	int	ctcrem; 		/* bytes remaining in buffer */
 	int	ctclastpos;		/* last packet read	     */
 	int	ctclastrem;		/* last packet read	     */
+        BYTE    netdevname[IFNAMSIZ];   /* network device name       */
 	/* Device dependent fields for printer */
 	unsigned int			/* Flags		     */
 		crlf:1, 		/* 1=CRLF delimiters, 0=LF   */

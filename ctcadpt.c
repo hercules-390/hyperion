@@ -1,6 +1,7 @@
 /* CTCADPT.C    (c) Copyright Roger Bowler, 2000-2001                */
 /*              ESA/390 Channel-to-Channel Adapter Device Handler    */
 /* vmnet modifications (c) Copyright Willem Konynenberg, 2000-2001   */
+/* linux 2.4 modifications (c) Copyright Fritz Elfert, 2001          */
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
@@ -389,6 +390,14 @@ BYTE            c;                      /* Character work area       */
     /* Initialize the file descriptor for the TUN device */
     if (dev->ctcpair == NULL)
     {
+        struct utsname utsbuf;
+
+        if (uname(&utsbuf) != 0)
+        {
+            logmsg ("HHC851I %4.4X can not determine operating system: %s\n",
+                    dev->devnum, strerror(errno));
+            return -1;
+        }
         /* Open TUN device if this is the first CTC of the pair */
         fd = open (dev->filename, O_RDWR);
         if (fd < 0)
@@ -398,6 +407,85 @@ BYTE            c;                      /* Character work area       */
             return -1;
         }
         dev->fd = fd;
+        if ((strncasecmp(utsbuf.sysname, "linux", 5) == 0) &&
+            (strncmp(utsbuf.machine, "s390", 4) != 0) &&
+            (strncmp(utsbuf.release, "2.4", 3) == 0))
+        {
+            /* Linux kernel 2.4.x (builtin tun device)
+             * except Linux for S/390 where no tun driver is builtin (yet)
+             */
+
+            int sockfd;
+            int tunmax = -1;
+            int i;
+            struct ifreq ifr;
+    
+            sockfd = socket (AF_INET, SOCK_DGRAM, 0);
+            if (sockfd < 0)
+            {
+                logmsg ("HHC852I %4.4X can not create socket: %s\n",
+                    dev->devnum, strerror(errno));
+                ctcadpt_close_device(dev);
+                return -1;
+            }
+            /*
+             * Loop over all network interfaces, finding
+             * the tun device with the higest number
+             */
+            for (i = 1; ; i++)
+            {
+                memset(&ifr, 0, sizeof(ifr));
+
+                ifr.ifr_ifindex = i;
+                if (ioctl(sockfd, SIOCGIFNAME, &ifr) == 0)
+                {
+                    if (strncmp(ifr.ifr_name, "tun", 3) == 0)
+                        if (isdigit(ifr.ifr_name[3]))
+                        {
+                            char *eptr;
+                            int ifnum;
+                            ifnum = strtol(&ifr.ifr_name[3],
+                                    &eptr, 10);
+                            if (eptr && (*eptr == '\0'))
+                                tunmax = (ifnum > tunmax) ? ifnum : tunmax;
+                        }
+                } else
+                    break;
+            }
+            close(sockfd);
+            sprintf(dev->netdevname, "tun%d", ++tunmax);
+
+            memset(&ifr, 0, sizeof(ifr));
+            /* Note:
+             * Intentionally did _NOT_ used constants IFF_... and
+             * TUNSETIFF to avoid #include <linux/if_tun.h> and thus
+             * make it possible to build on systems not having linux-2.4's
+             * kernel headers installed.
+             * Drawback: If these defines change in the kernel headers,
+             *           that has to be changed here too (probably depending
+             *           on the kernel-release check above).
+             */
+            ifr.ifr_flags = 0x1001; /* IFF_TUN | IFF_NO_PI */
+            strncpy(ifr.ifr_name, dev->netdevname, IFNAMSIZ);
+            if (ioctl(fd, (('T' << 8) | 202), &ifr) != 0)
+            {
+                logmsg ("HHC853I %4.4X setting net device param failed: %s\n",
+                    dev->devnum, strerror(errno));
+                ctcadpt_close_device(dev);
+                return -1;
+            }
+        } else {
+            /* Other OS: Simply use basename of the device */
+            char *p = strrchr(dev->filename, '/');
+            if (p)
+                strncpy(dev->netdevname, ++p, sizeof(dev->netdevname));
+            else {
+                ctcadpt_close_device(dev);
+                logmsg ("HHC854I %4.4X invalid device name: %s\n",
+                    dev->devnum, dev->filename);
+                return -1;
+            }
+        }
 
         /* The TUN network interface cannot be statically configured
            because the TUN/TAP driver creates the interface only
@@ -414,6 +502,7 @@ BYTE            c;                      /* Character work area       */
         {
             logmsg ("HHC843I %4.4X fork error: %s\n",
                     dev->devnum, strerror(errno));
+            ctcadpt_close_device(dev);
             return -1;
         }
 
@@ -442,7 +531,7 @@ BYTE            c;                      /* Character work area       */
             /* Execute the interface configuration command */
             rc = execlp (cfcmd,         /* Command to be executed    */
                         cfcmd,          /* $0=Command name           */
-                        tundevn,        /* $1=TUN device name        */
+                        dev->netdevname,/* $1=TUN device name        */
                         mtusize,        /* $2=MTU size               */
                         hercaddr,       /* $3=Hercules IP address    */
                         drivaddr,       /* $4=Driving system IP addr */
@@ -462,6 +551,7 @@ BYTE            c;                      /* Character work area       */
         {
             logmsg ("HHC847I %4.4X waitpid error: %s\n",
                     dev->devnum, strerror(errno));
+            ctcadpt_close_device(dev);
             return -1;
         }
 
@@ -475,6 +565,7 @@ BYTE            c;                      /* Character work area       */
                 logmsg ("HHC848I %4.4X configuration failed: "
                         "%s rc=%d\n",
                         dev->devnum, cfcmd, rc);
+                ctcadpt_close_device(dev);
                 return -1;
             }
         }
@@ -486,6 +577,7 @@ BYTE            c;                      /* Character work area       */
                     dev->devnum, cfcmd,
                     (WIFSIGNALED(pxc) ? WTERMSIG(pxc) :
                         WIFSTOPPED(pxc) ? WSTOPSIG(pxc) : 0));
+            ctcadpt_close_device(dev);
             return -1;
         }
     }

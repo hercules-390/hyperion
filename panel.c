@@ -2206,6 +2206,8 @@ struct  timeval tv;                     /* Select timeout structure  */
     {
         confp = stderr;
         logfp = stdout;
+	/* Logfile should be unbuffered to be always in sync */
+	setvbuf(logfp, NULL, _IONBF, 0);
     }
 
     /* Set screen output stream to fully buffered */

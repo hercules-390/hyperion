@@ -18,6 +18,7 @@ static void sighup_handler (int signo)
 {
 //  logmsg ("config: sighup handler entered for thread %lu\n",/*debug*/
 //          thread_id());                                     /*debug*/
+    signal(SIGHUP, sighup_handler);
     return;
 } /* end function sighup_handler */
 
@@ -29,13 +30,18 @@ static void sigint_handler (int signo)
 //  logmsg ("config: sigint handler entered for thread %lu\n",/*debug*/
 //          thread_id());                                     /*debug*/
 
+    signal(SIGINT, sigint_handler);
     /* Ignore signal unless presented on console thread */
     if (thread_id() != sysblk.cnsltid)
         return;
 
     /* Exit if previous SIGINT request was not actioned */
     if (sysblk.sigintreq)
+    {
+        /* Release the configuration */
+        release_config();
         exit(1);
+    }
 
     /* Set SIGINT request pending flag */
     sysblk.sigintreq = 1;

@@ -182,7 +182,7 @@ the device record is:
     </tr>
     <tr><td>1442, 2501, 3505</td>
         <td><a href="#cardrdr">Card readers</a></td>
-        <td>Disk file (ASCII or EBCDIC)</td>
+        <td>Disk file(s) (ASCII or EBCDIC)</td>
     </tr>
     <tr><td>3525</td>
         <td><a href="#cardpch">Card punch</a></td>
@@ -241,8 +241,8 @@ the device record is:
 <p>
 <a name="cardrdr">
 <dt><em>Card reader devices</em>
-<dd>The argument specifies the name of a file containing card images.
-    Additional arguments may be specified after the file name:
+<dd>The argument specifies a list of file names containing card images.
+    Additional arguments may be specified after the file names:
     <p>
     <dl>
     <dt><code>ebcdic</code>
@@ -256,6 +256,9 @@ the device record is:
     <dd>specifies, for ASCII files, that lines longer than 80
         characters are truncated instead of producing a unit check
         error.
+    <dt><code>autopad</code>
+    <dd>specifies, for EBCDIC files, that the file is automatically
+        padded to a multiple of 80 bytes if necessary.
     <dt><code>eof</code>
     <dd>specifies that unit exception status is presented after
         reading the last card in the file.  If <code>eof</code> is not

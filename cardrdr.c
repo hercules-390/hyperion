@@ -20,6 +20,7 @@
 int cardrdr_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 int     i;                              /* Array subscript           */
+int	fc;				/* File counter		     */
 
     /* The first argument is the file name */
     if (argc > 0)
@@ -45,7 +46,16 @@ int     i;                              /* Array subscript           */
     dev->trunc = 0;
     dev->cardpos = 0;
     dev->cardrem = 0;
+    dev->autopad = 0;
+    fc = 0;
 
+    dev->more_files = malloc(sizeof(char *) * (fc + 1));
+    if (!dev->more_files)
+    {
+        logmsg ("HHC403I Out of memory\n");
+        return -1;
+    }
+    dev->more_files[fc] = NULL;
     /* Process the driver arguments */
     for (i = 1; i < argc; i++)
     {
@@ -87,11 +97,26 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        logmsg ("HHC402I Invalid argument: %s\n",
-                argv[i]);
-        return -1;
+	/* autopad means that if reading fixed sized records
+	 * (ebcdic) and end of file is reached in the middle of
+	 * a record, the record is automatically padded to 80 bytes.
+	 */
+        if (strcasecmp(argv[i], "autopad") == 0)
+        {
+            dev->autopad = 1;
+            continue;
+        }
+	// add additional file arguments
+	dev->more_files[fc++] = strdup(argv[i]);
+        dev->more_files = realloc(dev->more_files, sizeof(char *) * (fc + 1));
+        if (!dev->more_files)
+        {
+            logmsg ("HHC403I Out of memory\n");
+            return -1;
+        }
+        dev->more_files[fc] = NULL;
     }
-
+    dev->current_file = dev->more_files; 
     /* Check for conflicting arguments */
     if (dev->ebcdic && dev->ascii)
     {
@@ -129,10 +154,11 @@ void cardrdr_query_device (DEVBLK *dev, BYTE **class,
 {
 
     *class = "RDR";
-    snprintf (buffer, buflen, "%s%s%s%s%s",
+    snprintf (buffer, buflen, "%s%s%s%s%s%s",
                 dev->filename,
                 (dev->ascii ? " ascii" : ""),
                 (dev->ebcdic ? " ebcdic" : ""),
+                (dev->autopad ? " autopad" : ""),
                 (dev->rdreof ? " eof" : ""),
                 ((dev->ascii && dev->trunc) ? " trunc" : ""));
 
@@ -162,12 +188,19 @@ static void clear_cardrdr ( DEVBLK *dev )
     /* Clear the file name */
     dev->filename[0] = '\0';
 
-    /* Reset the device dependent flags */
-    dev->ascii = 0;
-    dev->ebcdic = 0;
-    dev->rdreof = 0;
-    dev->trunc = 0;
+    /* If next file is available, open it */
+    if (dev->current_file && *(dev->current_file))
+    {
+        strcpy(dev->filename, *(dev->current_file++));
+    } else {
 
+        /* Reset the device dependent flags */
+        dev->ascii = 0;
+        dev->ebcdic = 0;
+        dev->rdreof = 0;
+        dev->trunc = 0;
+        dev->autopad = 0;
+    }
 } /* end function clear_cardrdr */
 
 
@@ -188,7 +221,7 @@ BYTE    buf[160];                       /* Auto-detection buffer     */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return -1;
     }
-
+    *unitstat=0;
     /* Open the device file */
 #ifdef WIN32
     rc = open (dev->filename, O_RDONLY | O_BINARY);
@@ -279,6 +312,11 @@ int     rc;                             /* Return code               */
 
     /* Read 80 bytes of card image data into the device buffer */
     rc = read (dev->fd, dev->buf, CARD_SIZE);
+
+    if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad) {
+        memset(&dev->buf[rc], 0, CARD_SIZE - rc);
+	rc = CARD_SIZE;
+    }
 
     /* Handle end-of-file condition */
     if (rc == 0)
