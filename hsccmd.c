@@ -2655,35 +2655,35 @@ int ListAllCommands(char* cmdline, int argc, char *argv[])
     UNREFERENCED(argc);
     UNREFERENCED(argv);
 
-    logmsg( _("HHCPN140I Valid panel commands are...\n \n") );
-    logmsg( "  %-9.9s    %s \n \n", "Command", "Description..." );
-    logmsg( "  %-9.9s    %s \n \n", "-------", "-----------------------------------------------" );
+    logmsg( _("HHCPN140I Valid panel commands are...\n\n") );
+    logmsg( "  %-9.9s    %s \n", "Command", "Description..." );
+    logmsg( "  %-9.9s    %s \n", "-------", "-----------------------------------------------" );
 
     /* List standard formatted commands from our routing table... */
 
     for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
-        logmsg( "  %-9.9s    %s \n \n", pCmdTab->pszCommand, _(pCmdTab->pszCmdDesc) );
+        logmsg( "  %-9.9s    %s \n", pCmdTab->pszCommand, _(pCmdTab->pszCmdDesc) );
 
     // List non-standard formatted commands...
 
     /* sf commands - shadow file add/remove/set/compress/display */
 
-    logmsg( "  %-9.9s    %s \n \n", "sf+", _("add shadow file") );
-    logmsg( "  %-9.9s    %s \n \n", "sf-", _("delete shadow file") );
-    logmsg( "  %-9.9s    %s \n \n", "sf=", _("rename shadow file") );
-    logmsg( "  %-9.9s    %s \n \n", "sfc", _("compress shadow files") );
-    logmsg( "  %-9.9s    %s \n \n", "sfd", _("display shadow file stats") );
+    logmsg( "  %-9.9s    %s \n", "sf+", _("add shadow file") );
+    logmsg( "  %-9.9s    %s \n", "sf-", _("delete shadow file") );
+    logmsg( "  %-9.9s    %s \n", "sf=", _("rename shadow file") );
+    logmsg( "  %-9.9s    %s \n", "sfc", _("compress shadow files") );
+    logmsg( "  %-9.9s    %s \n", "sfd", _("display shadow file stats") );
 
     /* x+ and x- commands - turn switches on or off */
 
-    logmsg( "  %-9.9s    %s \n \n", "t{+/-}",    _("turn instruction tracing on/off") );
-    logmsg( "  %-9.9s    %s \n \n", "s{+/-}",    _("turn instruction stepping on/off") );
-    logmsg( "  %-9.9s    %s \n \n", "t{+/-}dev", _("turn CCW tracing on/off") );
-    logmsg( "  %-9.9s    %s \n \n", "s{+/-}dev", _("turn CCW stepping on/off") );
+    logmsg( "  %-9.9s    %s \n", "t{+/-}",    _("turn instruction tracing on/off") );
+    logmsg( "  %-9.9s    %s \n", "s{+/-}",    _("turn instruction stepping on/off") );
+    logmsg( "  %-9.9s    %s \n", "t{+/-}dev", _("turn CCW tracing on/off") );
+    logmsg( "  %-9.9s    %s \n", "s{+/-}dev", _("turn CCW stepping on/off") );
 #ifdef OPTION_CKD_KEY_TRACING
-    logmsg( "  %-9.9s    %s \n \n", "t{+/-}CKD", _("turn CKD_KEY tracing on/off") );
+    logmsg( "  %-9.9s    %s \n", "t{+/-}CKD", _("turn CKD_KEY tracing on/off") );
 #endif
-    logmsg( "  %-9.9s    %s \n \n", "f{+/-}adr", _("mark frames unusable/usable") );
+    logmsg( "  %-9.9s    %s \n", "f{+/-}adr", _("mark frames unusable/usable") );
 
     return 0;
 }
