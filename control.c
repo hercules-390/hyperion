@@ -4397,23 +4397,6 @@ int     armode;
     /* Load new system mask value from operand address */
     regs->psw.sysmask = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
-    SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
-    SET_IC_IO_MASK(regs);
-    SET_IC_PER_MASK(regs);
-
-    INVALIDATE_AIA(regs);
-
-#if defined(OPTION_REDUCED_INVAL)
-    if ((realmode  != REAL_MODE(&regs->psw)) ||
-        (armode    != (regs->psw.armode == 1)) ||
-        (space     != (regs->psw.space == 1)))
-        INVALIDATE_AEA_ALL(regs);
-#else
-    INVALIDATE_AEA_ALL(regs);
-#endif
-
-
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* DAT must be off in XC mode */
     if(regs->sie_state
@@ -4429,6 +4412,25 @@ int     armode;
 #endif /*defined(FEATURE_BCMODE)*/
                             (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    /* Handle eventual PER event before the masks are changed */
+    if( OPEN_IC_PERINT(regs) )
+        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+
+    SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
+    SET_IC_IO_MASK(regs);
+    SET_IC_PER_MASK(regs);
+
+    INVALIDATE_AIA(regs);
+#if defined(OPTION_REDUCED_INVAL)
+    if ((realmode  != REAL_MODE(&regs->psw)) ||
+        (armode    != (regs->psw.armode == 1)) ||
+        (space     != (regs->psw.space == 1)))
+        INVALIDATE_AEA_ALL(regs);
+#else
+    INVALIDATE_AEA_ALL(regs);
+#endif
 
     RETURN_INTCHECK(regs);
 
@@ -5364,6 +5366,11 @@ int     armode;
         (space     != (regs->psw.space == 1)))
         INVALIDATE_AEA_ALL(regs);
 #endif
+
+    /* Handle eventual PER event before the masks are changed */
+    if( OPEN_IC_PERINT(regs) )
+        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
@@ -5398,15 +5405,6 @@ VADR    effective_addr1;                /* Effective address         */
     /* OR system mask with immediate operand */
     regs->psw.sysmask |= i2;
 
-    SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
-    SET_IC_IO_MASK(regs);
-    SET_IC_PER_MASK(regs);
-
-    INVALIDATE_AIA(regs);
-
-    INVALIDATE_AEA_ALL(regs);
-
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* DAT must be off in XC mode */
     if(regs->sie_state
@@ -5422,6 +5420,14 @@ VADR    effective_addr1;                /* Effective address         */
 #endif /*defined(FEATURE_BCMODE)*/
                             (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+    SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_MCK_MASK(regs);
+    SET_IC_IO_MASK(regs);
+    SET_IC_PER_MASK(regs);
+
+    INVALIDATE_AIA(regs);
+    INVALIDATE_AEA_ALL(regs);
 
     RETURN_INTCHECK(regs);
 
