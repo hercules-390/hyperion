@@ -18,12 +18,12 @@
 DEF_INST(cipher_message_r)
 {
     if( ARCH_DEP(cipher_message) )
-        ARCH_DEP(cipher_message) (inst, execflag, regs);
+        ARCH_DEP(cipher_message) (inst, regs);
     else
     {
     int  r1, r2;                                /* register values   */
 
-        RRE(inst, execflag, regs, r1, r2);
+        RRE(inst, regs, r1, r2);
 
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }
@@ -36,12 +36,12 @@ DEF_INST(cipher_message_r)
 DEF_INST(cipher_message_with_chaining_r)
 {
     if( ARCH_DEP(cipher_message_with_chaining) )
-        ARCH_DEP(cipher_message_with_chaining) (inst, execflag, regs);
+        ARCH_DEP(cipher_message_with_chaining) (inst, regs);
     else
     {
     int  r1, r2;                                /* register values   */
 
-        RRE(inst, execflag, regs, r1, r2);
+        RRE(inst, regs, r1, r2);
 
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }
@@ -54,12 +54,12 @@ DEF_INST(cipher_message_with_chaining_r)
 DEF_INST(compute_intermediate_message_digest_r)
 {
     if( ARCH_DEP(compute_intermediate_message_digest) )
-        ARCH_DEP(compute_intermediate_message_digest) (inst, execflag, regs);
+        ARCH_DEP(compute_intermediate_message_digest) (inst, regs);
     else
     {
     int  r1, r2;                                /* register values   */
 
-        RRE(inst, execflag, regs, r1, r2);
+        RRE(inst, regs, r1, r2);
 
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }
@@ -72,12 +72,12 @@ DEF_INST(compute_intermediate_message_digest_r)
 DEF_INST(compute_last_message_digest_r)
 {
     if( ARCH_DEP(compute_last_message_digest) )
-        ARCH_DEP(compute_last_message_digest) (inst, execflag, regs);
+        ARCH_DEP(compute_last_message_digest) (inst, regs);
     else
     {
     int  r1, r2;                                /* register values   */
 
-        RRE(inst, execflag, regs, r1, r2);
+        RRE(inst, regs, r1, r2);
 
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }
@@ -90,12 +90,12 @@ DEF_INST(compute_last_message_digest_r)
 DEF_INST(compute_message_authentication_code_r)
 {
     if( ARCH_DEP(compute_message_authentication_code) )
-        ARCH_DEP(compute_message_authentication_code) (inst, execflag, regs);
+        ARCH_DEP(compute_message_authentication_code) (inst, regs);
     else
     {
     int  r1, r2;                                /* register values   */
 
-        RRE(inst, execflag, regs, r1, r2);
+        RRE(inst, regs, r1, r2);
 
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
     }

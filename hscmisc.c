@@ -323,7 +323,7 @@ REGS    gregs, hgregs;
     gregs = *regs;
     gregs.ghostregs = 1;
 
-    if(SIE_STATE(&gregs))
+    if(SIE_MODE(&gregs))
     {
         hgregs = *gregs.hostregs;
         gregs.hostregs = &hgregs;
@@ -709,7 +709,7 @@ BYTE    buf[100];                       /* Message buffer            */
 int     n;                              /* Number of bytes in buffer */
 
   #if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs))
+    if(SIE_MODE(regs))
         logmsg(_("SIE: "));
   #endif /*defined(_FEATURE_SIE)*/
 

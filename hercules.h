@@ -409,6 +409,8 @@ typedef void*THREAD_FUNC(void*);
 /* Pattern for displaying the thread_id */
 #define TIDPAT "%8.8lX"
 
+#undef likely
+#undef unlikely
 #if __GNUC__ >= 3
 #define likely(_c)   __builtin_expect((_c),1)
 #define unlikely(_c) __builtin_expect((_c),0)
@@ -457,7 +459,22 @@ typedef void    (*SIEFN) ();
 typedef struct _REGS {                  /* Processor registers       */
 #define HDL_VERS_REGS   "2.17"          /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
+
         int     arch_mode;              /* Architectural mode        */
+
+        DW      px;                     /* Prefix register           */
+        PSW     psw;                    /* Program status word       */
+        DW      gr[16];                 /* General registers         */
+        DW      cr[16];                 /* Control registers         */
+        U32     ar[16];                 /* Access registers          */
+        U32     fpr[32];                /* Floating point registers  */
+        U32     fpc;                    /* IEEE Floating Point
+                                                    Control Register */
+        U32     dxc;                    /* Data exception code       */
+        DW      mc;                     /* Monitor Code              */
+        DW      ea;                     /* Exception address         */
+        DW      et;                     /* Execute Target address    */
+
         U64     ptimer;                 /* CPU timer                 */
         U64     clkc;                   /* 0-7=Clock comparator epoch,
                                            8-63=Comparator bits 0-55 */
@@ -470,18 +487,11 @@ typedef struct _REGS {                  /* Processor registers       */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
         U64     waittime;               /* Wait time (us) in interval*/
-#ifdef WIN32
         struct  timeval lasttod;        /* Last gettimeofday         */
-#endif
         int     tlbID;                  /* Validation identifier     */
         TLBE   *tlb;                    /* Translation lookaside buf */
-        DW      gr[16];                 /* General registers         */
-        DW      cr[16];                 /* Control registers         */
-        DW      px;                     /* Prefix register           */
-        DW      mc;                     /* Monitor Code              */
-        DW      ea;                     /* Exception address         */
-        DW      et;                     /* Execute Target address    */
         void   *opctab;                 /* -> opcode table           */
+
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
 #define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
@@ -502,39 +512,34 @@ typedef struct _REGS {                  /* Processor registers       */
 #define CR_LHH(_r) cr[(_r)].F.L.H.H.H    /* Halfword bits 32-47      */
 #define CR_LHHCH(_r) cr[(_r)].F.L.H.H.B.H   /* Character, bits 32-39 */
 #define CR_LHL(_r) cr[(_r)].F.L.H.L.H    /* Halfword low, bits 48-63 */
-#define MC_G    mc.D
-#define MC_L    mc.F.L.F
-#define EA_G    ea.D
-#define EA_L    ea.F.L.F
-#define ET_G    et.D
-#define ET_L    et.F.L.F
-#define PX_G    px.D
-#define PX_L    px.F.L.F
-#define AI_G    ai.D
-#define AI_L    ai.F.L.F
-#define VI_G    vi.D
-#define VI_L    vi.F.L.F
-#define VIE_G   vie.D
-#define VIE_L   vie.F.L.F
-#define AE_G(_r)    ae[(_r)].D
-#define AE_L(_r)    ae[(_r)].F.L.F
-#define VE_G(_r)    ve[(_r)].D
-#define VE_L(_r)    ve[(_r)].F.L.F
-#define ME_G(_r)    me[(_r)].D
-#define ME_L(_r)    me[(_r)].F.L.F
-        U32     ar[16];                 /* Access registers          */
-#define AR(_r)  ar[(_r)]
-        U32     fpr[32];                /* Floating point registers  */
-// #if defined(FEATURE_BINARY_FLOATING_POINT)
-        U32     fpc;                    /* IEEE Floating Point
-                                                    Control Register */
-        U32     dxc;                    /* Data exception code       */
-// #endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
+#define MC_G     mc.D
+#define MC_L     mc.F.L.F
+#define EA_G     ea.D
+#define EA_L     ea.F.L.F
+#define ET_G     et.D
+#define ET_L     et.F.L.F
+#define PX_G     px.D
+#define PX_L     px.F.L.F
+#define AI_G     ai.D
+#define AI_L     ai.F.L.F
+#define VI_G     vi.D
+#define VI_L     vi.F.L.F
+#define VIE_G    vie.D
+#define VIE_L    vie.F.L.F
+#define AE_G(_r) ae[(_r)].D
+#define AE_L(_r) ae[(_r)].F.L.F
+#define VE_G(_r) ve[(_r)].D
+#define VE_L(_r) ve[(_r)].F.L.F
+#define ME_G(_r) me[(_r)].D
+#define ME_L(_r) me[(_r)].F.L.F
+#define AR(_r)   ar[(_r)]
+#define INVABS_G invabs.D
+#define INVABS_L invabs.F.L.F
+
         U16     chanset;                /* Connected channel set     */
         U32     todpr;                  /* TOD programmable register */
         U16     monclass;               /* Monitor event class       */
         U16     cpuad;                  /* CPU address for STAP      */
-        PSW     psw;                    /* Program status word       */
         BYTE    excarid;                /* Exception access register */
         BYTE    opndrid;                /* Operand access register   */
         BYTE    exinst[8];              /* Target of Execute (EX)    */
@@ -543,6 +548,17 @@ typedef struct _REGS {                  /* Processor registers       */
         RADR    mainlim;                /* Central Storage limit or  */
                                         /* guest storage limit (SIE) */
 #if defined(_FEATURE_SIE)
+     /* These notes are to try and maintain my own sanity ... Greg
+      * `sie_state' has the real address of the SIEBK
+      * `siebk' has the mainstor address of the SIEBK
+      * `sie_active' is 1 in hostregs if SIE is executing
+      *         and the current register context is `guestregs'
+      * `sie_mode' is 1 in guestregs always
+      * `hostregs' is always NULL in hostregs
+      *         (sysblk.regs[i]->hostregs == NULL)
+      * `guestregs' is always NULL in guestregs
+      *         (sysblk.regs[i]->guestregs->guestregs == NULL)
+      */
         RADR    sie_state;              /* Address of the SIE state
                                            descriptor block or 0 when
                                            not running under SIE     */
@@ -562,6 +578,7 @@ typedef struct _REGS {                  /* Processor registers       */
         S64     sie_epoch;              /* TOD offset in state desc. */
         unsigned int
                 sie_active:1,           /* SIE active (host only)    */
+                sie_mode:1,             /* Running under SIE (guest) */
                 sie_pref:1;             /* Preferred-storage mode    */
 #endif /*defined(_FEATURE_SIE)*/
 
@@ -573,16 +590,18 @@ typedef struct _REGS {                  /* Processor registers       */
 
         BYTE    cpustate;               /* CPU stopped/started state */
         unsigned int                    /* Flags (cpu thread only)   */
-                armode:1,               /* 1=Access register mode    */
                 mainlock:1,             /* 1=Mainlock held           */
+                todlock:1,              /* 1=TODlock held            */
                 checkstop:1,            /* 1=CPU is checkstop-ed     */
                 hostint:1,              /* 1=Host generated interrupt*/
+                execflag:1,             /* 1=EXecuted instruction    */
                 instvalid:1;            /* 1=Inst field is valid     */
         unsigned int                    /* Flags (intlock serialized)*/
                 dummy:1,                /* 1=Dummy regs structure    */
                 configured:1,           /* 1=CPU is online           */
                 loadstate:1,            /* 1=CPU is in load state    */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
+                invalidate:1,           /* 1=Do AIA/AEA invalidation */
                 reset_opctab:1,         /* 1=Copy new opcode table   */
                 tracing:1,              /* 1=Trace is active         */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
@@ -605,6 +624,7 @@ typedef struct _REGS {                  /* Processor registers       */
         BYTE    *ip;                    /* Pointer to last-fetched
                                            instruction (either inst
                                            above or in mainstor      */
+        DW      invabs;                 /* Abs address to invalidate */
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS *vf;                     /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/

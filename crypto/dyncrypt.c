@@ -1475,7 +1475,7 @@ DEF_INST(compute_message_authentication_code_d)
   int r1;
   int r2;
 
-  RRE(inst, execflag, regs, r1, r2);
+  RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMAC_DEBUG
   logmsg("KMAC: compute message authentication code\n");
@@ -1504,7 +1504,7 @@ DEF_INST(cipher_message_d)
   int r1;
   int r2;
 
-  RRE(inst, execflag, regs, r1, r2);
+  RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KM_DEBUG
   logmsg("KM: cipher message\n");
@@ -1535,7 +1535,7 @@ DEF_INST(cipher_message_with_chaining_d)
   int r1;
   int r2;
 
-  RRE(inst, execflag, regs, r1, r2);
+  RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KMC_DEBUG
   logmsg("KMC: cipher message with chaining\n");
@@ -1566,7 +1566,7 @@ DEF_INST(compute_intermediate_message_digest_d)
   int r1;
   int r2;
 
-  RRE(inst, execflag, regs, r1, r2);
+  RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KIMD_DEBUG
   logmsg("KIMD: compute intermediate message digest\n");
@@ -1597,7 +1597,7 @@ DEF_INST(compute_last_message_digest_d)
   int r1;
   int r2;
 
-  RRE(inst, execflag, regs, r1, r2);
+  RRE(inst, regs, r1, r2);
 
 #ifdef OPTION_KLMD_DEBUG
   logmsg("KLMD: compute last message digest\n");

@@ -43,7 +43,7 @@ DEF_INST(add_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc =
@@ -52,7 +52,7 @@ int     r1, r2;                         /* Values of R fields        */
                     regs->GR_L(r2));
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && regs->psw.fomask )
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 }
 
@@ -67,7 +67,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -79,7 +79,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && regs->psw.fomask )
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
@@ -95,7 +95,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
     (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -107,7 +107,7 @@ U32     n;                              /* 32-bit operand values     */
                     n);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && regs->psw.fomask )
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
@@ -123,7 +123,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit immediate op       */
 
-    RI(inst, execflag, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc =
@@ -132,7 +132,7 @@ U16     i2;                             /* 16-bit immediate op       */
                      (S16)i2);
 
     /* Program check if fixed-point overflow */
-    if ( regs->psw.cc == 3 && regs->psw.fomask )
+    if ( regs->psw.cc == 3 && FOMASK(&regs->psw) )
         ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
 
 }
@@ -146,7 +146,7 @@ DEF_INST(add_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Add signed operands and set condition code */
     regs->psw.cc =
@@ -166,7 +166,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -186,7 +186,7 @@ DEF_INST(and_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* AND second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) &= regs->GR_L(r2) ) ? 1 : 0;
@@ -203,7 +203,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -223,7 +223,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    rbyte;                          /* Result byte               */
 
-    SI(inst, execflag, regs, i2, b1, effective_addr1);
+    SI(inst, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -256,14 +256,14 @@ int     cc = 0;                         /* Condition code            */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
+    SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
     /* Obtain current access key from PSW */
     akey = regs->psw.pkey;
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS_SKP (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
 
     /* Calculate page addresses of rightmost operand bytes */
@@ -274,7 +274,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS_SKP (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
@@ -332,7 +332,7 @@ DEF_INST(branch_and_link_register)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
@@ -351,14 +351,10 @@ VADR    newia;                          /* New instruction address   */
     else
 #endif
     regs->GR_L(r1) =
-        ( regs->psw.amode ) ?
-            0x80000000 | regs->psw.IA_L :
-            (regs->psw.ilc << 29) | (regs->psw.cc << 28)
-            | (regs->psw.fomask << 27)
-            | (regs->psw.domask << 26)
-            | (regs->psw.eumask << 25)
-            | (regs->psw.sgmask << 24)
-            | regs->psw.IA_L;
+        ( regs->psw.amode )
+        ? 0x80000000 | regs->psw.IA_L
+        : (regs->psw.ilc << 29)      | (regs->psw.cc << 28)
+        | (regs->psw.progmask << 24) | regs->psw.IA_L;
 
     /* Execute the branch unless R2 specifies register 0 */
     if ( r2 != 0 )
@@ -386,7 +382,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 operand */
 #if defined(FEATURE_ESAME)
@@ -395,14 +391,10 @@ VADR    effective_addr2;                /* Effective address         */
     else
 #endif
     regs->GR_L(r1) =
-        ( regs->psw.amode ) ?
-            0x80000000 | regs->psw.IA_L :
-            (regs->psw.ilc << 29) | (regs->psw.cc << 28)
-            | (regs->psw.fomask << 27)
-            | (regs->psw.domask << 26)
-            | (regs->psw.eumask << 25)
-            | (regs->psw.sgmask << 24)
-            | regs->psw.IA_L;
+        ( regs->psw.amode )
+          ? 0x80000000 | regs->psw.IA_L
+          : (regs->psw.ilc << 29)      | (regs->psw.cc << 28)
+          | (regs->psw.progmask << 24) | regs->psw.IA_L;
 
     regs->psw.IA = effective_addr2;
 
@@ -426,7 +418,7 @@ DEF_INST(branch_and_save_register)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
@@ -475,7 +467,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Save the link information in the R1 register */
 #if defined(FEATURE_ESAME)
@@ -512,7 +504,7 @@ DEF_INST(branch_and_save_and_set_mode)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -597,7 +589,7 @@ DEF_INST(branch_and_set_mode)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compute the branch address from the R2 operand */
     newia = regs->GR(r2);
@@ -678,7 +670,7 @@ DEF_INST(branch_on_condition_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Branch if R1 mask bit is set and R2 is not register 0 */
     if (((0x08 >> regs->psw.cc) & r1) && r2 != 0)
@@ -718,7 +710,7 @@ VADR    effective_addr2;                /* Effective address         */
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
-        RX(inst, execflag, regs, r1, b2, effective_addr2);
+        RX(inst, regs, r1, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -730,12 +722,7 @@ VADR    effective_addr2;                /* Effective address         */
             ON_IC_PER_SB(regs);
 #endif /*defined(FEATURE_PER)*/
     } else
-        if (!(execflag))
-        {
-            regs->psw.ilc = 4;
-            regs->psw.IA += 4;
-            regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-        }
+        INST_UPDATE_PSW(regs, 4);
 }
 
 
@@ -747,7 +734,7 @@ DEF_INST(branch_on_count_register)
 int     r1, r2;                         /* Values of R fields        */
 VADR    newia;                          /* New instruction address   */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
     newia = regs->GR(r2);
 
     /* Subtract 1 from the R1 operand and branch if result
@@ -779,7 +766,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
@@ -810,7 +797,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -849,7 +836,7 @@ int     b2;                             /* effective address base    */
 VADR    effective_addr2;                /* effective address         */
 S32     i, j;                           /* Integer work areas        */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Load the increment value from the R3 register */
     i = regs->GR_L(r3);
@@ -888,13 +875,13 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, execflag, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Branch if R1 mask bit is set */
     if ((0x08 >> regs->psw.cc) & r1)
     {
         /* Calculate the relative branch address */
-        regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
+        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -920,7 +907,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, execflag, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Save the link information in the R1 operand */
 #if defined(FEATURE_ESAME)
@@ -934,7 +921,7 @@ U16     i2;                             /* 16-bit operand values     */
         regs->GR_L(r1) = regs->psw.IA_LA24;
 
     /* Calculate the relative branch address */
-    regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
+    regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -959,12 +946,12 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, execflag, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Subtract 1 from the R1 operand and branch if non-zero */
     if ( --(regs->GR_L(r1)) )
     {
-        regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
+        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -990,7 +977,7 @@ int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
 
-    RI(inst, execflag, regs, r1, r3, i2);
+    RI(inst, regs, r1, r3, i2);
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1004,7 +991,7 @@ S32     i,j;                            /* Integer workareas         */
     /* Branch if result compares high */
     if ( (S32)regs->GR_L(r1) > j )
     {
-        regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
+        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -1031,7 +1018,7 @@ int     r1, r3;                         /* Register numbers          */
 U16     i2;                             /* 16-bit operand            */
 S32     i,j;                            /* Integer workareas         */
 
-    RI(inst, execflag, regs, r1, r3, i2);
+    RI(inst, regs, r1, r3, i2);
 
     /* Load the increment value from the R3 register */
     i = (S32)regs->GR_L(r3);
@@ -1045,7 +1032,7 @@ S32     i,j;                            /* Integer workareas         */
     /* Branch if result compares low or equal */
     if ( (S32)regs->GR_L(r1) <= j )
     {
-        regs->psw.IA = ((!execflag ? (regs->psw.IA - 4) : regs->ET)
+        regs->psw.IA = ((!regs->execflag ? (regs->psw.IA - 4) : regs->ET)
                                   + 2*(S16)i2) & ADDRESS_MAXWRAP(regs);
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -1076,7 +1063,7 @@ int     cc = 0;                         /* Condition code            */
 U32     n;                              /* Word loaded from operand  */
 U64     dreg;                           /* Checksum accumulator      */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     ODD_CHECK(r2, regs);
 
@@ -1153,7 +1140,7 @@ DEF_INST(compare_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1172,7 +1159,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1203,7 +1190,7 @@ U16     temp_hw;                        /* TEMPHW                    */
 U16     op1, op3;                       /* 16-bit operand values     */
 BYTE    operand_control;                /* Operand control bit       */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    S(inst, regs, b2, effective_addr2);
 
     /* Check GR1, GR2, GR3 even */
     if ( regs->GR_L(1) & 1 || regs->GR_L(2) & 1 || regs->GR_L(3) & 1 )
@@ -1299,7 +1286,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U32     old;                            /* old value                 */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -1353,7 +1340,7 @@ VADR    effective_addr2;                /* effective address         */
 RADR    abs2;                           /* absolute address          */
 U64     old, new;                       /* old, new values           */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -1413,7 +1400,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of comparand from operand address */
     (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -1435,7 +1422,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI(inst, execflag, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Compare signed operands and set condition code */
     regs->psw.cc =
@@ -1453,7 +1440,7 @@ DEF_INST(compare_logical_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Compare unsigned operands and set condition code */
     regs->psw.cc = regs->GR_L(r1) < regs->GR_L(r2) ? 1 :
@@ -1471,7 +1458,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -1492,7 +1479,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    cbyte;                          /* Compare byte              */
 
-    SI(inst, execflag, regs, i2, b1, effective_addr1);
+    SI(inst, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     cbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -1510,24 +1497,55 @@ DEF_INST(compare_logical_character)
 {
 BYTE    l;                              /* Lenght byte               */
 int     b1, b2;                         /* Base registers            */
-VADR    effective_addr1,
-        effective_addr2;                /* Effective addresses       */
-int     rc;                             /* Return code               */
-BYTE    cwork1[256];                    /* Character work areas      */
-BYTE    cwork2[256];                    /* Character work areas      */
+VADR    ea1, ea2;                       /* Effective addresses       */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
-                                  b2, effective_addr2);
+    SS_L(inst, regs, l, b1, ea1, b2, ea2);
 
-    /* Fetch first and second operands into work areas */
-    ARCH_DEP(vfetchc) ( cwork1, l, effective_addr1, b1, regs );
-    ARCH_DEP(vfetchc) ( cwork2, l, effective_addr2, b2, regs );
+    /* `Survey says ...' 94% of all CLC calls are 8 bytes or less and
+     * that those 8 bytes fall within a 0x800 boundary for both ops.
+     */
+    if (l < 8
+     && (ea1 & 0x7FF) <= 0x7FF - l && (ea2 & 0x7FF) <= 0x7FF - l)
+    {
+        U64   value1, value2;
+        BYTE *main1, *main2;
 
-    /* Compare first operand with second operand */
-    rc = memcmp (cwork1, cwork2, l + 1);
+        //NOTE: we use the memcpy/CSWAP64 technique to get the 8 byte
+        //  value rather than fetch_dw().  fetch_dw() may try to
+        //  get a coherent 8 byte value (eg on ia32 by executing
+        //  the cmpxchg8b) instruction.  CLC does not need a coherent
+        //  8 byte value, especially if the compare length is < 8.
+        //NOTE2: (as a reminder) we use `memcpy' because some arches
+        //  require alignment when working with, in this case, 8 byte
+        //  values.  U64 should be 8 byte aligned.  The compiler for
+        //  other arches should (and do) optimize this.
 
-    /* Set the condition code */
-    regs->psw.cc = (rc == 0) ? 0 : (rc < 0) ? 1 : 2;
+        main1 = LOGICAL_TO_ABS (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey)
+              + regs->mainstor;
+        memcpy (&value1, main1, 8);
+        value1 = CSWAP64(value1) >> ((7 - l) << 3);
+        main2 = LOGICAL_TO_ABS (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey)
+              + regs->mainstor;
+        memcpy (&value2, main2, 8);
+        value2 = CSWAP64(value2) >> ((7 - l) << 3);
+        regs->psw.cc = value1 < value2 ? 1 : value1 > value2 ? 2 : 0;
+    }
+    else
+    {
+        int  rc;
+        BYTE cwork1[256];
+        BYTE cwork2[256];
+
+        /* Fetch first and second operands into work areas */
+        ARCH_DEP(vfetchc) ( cwork1, l, ea1, b1, regs );
+        ARCH_DEP(vfetchc) ( cwork2, l, ea2, b2, regs );
+
+        /* Compare first operand with second operand */
+        rc = memcmp (cwork1, cwork2, l + 1);
+
+        /* Set the condition code */
+        regs->psw.cc = (rc == 0) ? 0 : (rc < 0) ? 1 : 2;
+    }
 }
 
 
@@ -1544,7 +1562,7 @@ int     cc = 0;                         /* Condition code            */
 BYTE    rbyte[4],                       /* Register bytes            */
         vbyte;                          /* Virtual storage byte      */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Set register bytes by mask */
     i = 0;
@@ -1582,7 +1600,7 @@ U32     len1, len2;                     /* Operand lengths           */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    pad;                            /* Padding byte              */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
 
@@ -1679,7 +1697,7 @@ GREG    len1, len2;                     /* Operand lengths           */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    pad;                            /* Padding byte              */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -1757,7 +1775,7 @@ VADR    addr1, addr2;                   /* Operand addresses         */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    termchar;                       /* Terminating character     */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -1847,7 +1865,7 @@ S32     len1, len2;                     /* Operand lengths           */
 S32     remlen1, remlen2;               /* Lengths remaining         */
 #endif /*!defined(FEATURE_ESAME)*/
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
 
@@ -2041,7 +2059,7 @@ U16     unicode2;                       /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
 
@@ -2170,7 +2188,7 @@ U16     unicode2 = 0;                   /* Unicode low surrogate     */
 GREG    n;                              /* Number of UTF-8 bytes - 1 */
 BYTE    utf[4];                         /* UTF-8 bytes               */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
 
@@ -2328,7 +2346,7 @@ int     ovf;                            /* 1=overflow                */
 int     dxf;                            /* 1=data exception          */
 BYTE    dec[8];                         /* Packed decimal operand    */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Fetch 8-byte packed decimal operand */
     ARCH_DEP(vfetchc) (dec, 8-1, effective_addr2, b2, regs);
@@ -2368,7 +2386,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 BYTE    dec[16];                        /* Packed decimal result     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load value of register and sign-extend to 64 bits */
     bin = (S64)((S32)(regs->GR_L(r1)));
@@ -2390,7 +2408,7 @@ DEF_INST(copy_access)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy R2 access register to R1 access register */
     regs->AR(r1) = regs->AR(r2);
@@ -2409,7 +2427,7 @@ int     r1;                             /* Values of R fields        */
 int     r2;                             /* Values of R fields        */
 int     divide_overflow;                /* 1=divide overflow         */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -2437,7 +2455,7 @@ VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 int     divide_overflow;                /* 1=divide overflow         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -2465,7 +2483,7 @@ DEF_INST(exclusive_or_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* XOR second operand with first and set condition code */
     regs->psw.cc = ( regs->GR_L(r1) ^= regs->GR_L(r2) ) ? 1 : 0;
@@ -2482,7 +2500,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2502,7 +2520,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 BYTE    rbyte;                          /* Result byte               */
 
-    SI(inst, execflag, regs, i2, b1, effective_addr1);
+    SI(inst, regs, i2, b1, effective_addr1);
 
     /* Fetch byte from operand address */
     rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
@@ -2535,7 +2553,7 @@ int     cc = 0;                         /* Condition code            */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
+    SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
     /* Obtain current access key from PSW */
@@ -2545,7 +2563,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
        this means we set the source/destination to zero */
     if (effective_addr1 == effective_addr2 && b1 == b2)
     {
-        abs1 = LOGICAL_TO_ABS_SKP (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+        abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
 
         /* Calculate page addresses of rightmost operand bytes */
         npv1 = (effective_addr1 + l) & ADDRESS_MAXWRAP(regs);
@@ -2553,7 +2571,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
         /* Translate next page addresses if page boundary crossed */
         if (npv1 != (effective_addr1 & ~0x7FF))
-            npa1 = LOGICAL_TO_ABS_SKP (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+            npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
 
         /* all operands and page crossers valid, now alter ref & chg bits */
         STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
@@ -2574,7 +2592,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     }
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS_SKP (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
 
     /* Calculate page addresses of rightmost operand bytes */
@@ -2585,7 +2603,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS_SKP (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
@@ -2646,7 +2664,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 BYTE   *ip;                             /* -> executed instruction   */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(effective_addr2, regs);
 
@@ -2674,9 +2692,12 @@ BYTE   *ip;                             /* -> executed instruction   */
     if ( r1 != 0 )
         regs->exinst[1] |= regs->GR_LHLCL(r1);
 
-    /* Execute the target instruction */
-    EXECUTE_INSTRUCTION (regs->exinst, 1, regs, ARCH_DEP(opcode_table));
-
+    /* Execute the target instruction.
+     * This is the *only* place where `execflag' is set to 1.
+     */
+    regs->execflag = 1;
+    EXECUTE_INSTRUCTION (regs->exinst, regs, ARCH_DEP(opcode_table));
+    regs->execflag = 0;
 }
 
 
@@ -2688,7 +2709,7 @@ DEF_INST(extract_access_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Copy R2 access register to R1 general register */
     regs->GR_L(r1) = regs->AR(r2);
@@ -2705,7 +2726,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Insert character in r1 register */
     regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
@@ -2732,7 +2753,7 @@ static const unsigned int               /* Turn reg bytes off by mask*/
                       0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
                       0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000};
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     switch (r3) {
 
@@ -2788,16 +2809,11 @@ DEF_INST(insert_program_mask)
 {
 int     r1, unused;                     /* Value of R field          */
 
-    RRE(inst, execflag, regs, r1, unused);
+    RRE(inst, regs, r1, unused);
 
     /* Insert condition code in R1 bits 2-3, program mask
        in R1 bits 4-7, and set R1 bits 0-1 to zero */
-    regs->GR_LHHCH(r1) =
-            (regs->psw.cc << 4)
-            | (regs->psw.fomask << 3)
-            | (regs->psw.domask << 2)
-            | (regs->psw.eumask << 1)
-            | regs->psw.sgmask;
+    regs->GR_LHHCH(r1) = (regs->psw.cc << 4) | regs->psw.progmask;
 }
 
 
@@ -2810,7 +2826,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load R1 register from second operand */
     regs->GR_L(r1) = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );
@@ -2824,7 +2840,7 @@ DEF_INST(load_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Copy second operand to first operand */
     regs->GR_L(r1) = regs->GR_L(r2);
@@ -2843,7 +2859,7 @@ VADR    effective_addr2;                /* effective address         */
 int     n, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work area        */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     FW_CHECK(effective_addr2, regs);
 
@@ -2884,7 +2900,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
     GR_A(r1, regs) = effective_addr2;
@@ -2901,7 +2917,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load operand address into register */
     GR_A(r1, regs) = effective_addr2;
@@ -2928,7 +2944,7 @@ DEF_INST(load_and_test_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Copy second operand and set condition code */
     regs->GR_L(r1) = regs->GR_L(r2);
@@ -2945,14 +2961,14 @@ DEF_INST(load_complement_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Condition code 3 and program check if overflow */
     if ( regs->GR_L(r2) == 0x80000000 )
     {
         regs->GR_L(r1) = regs->GR_L(r2);
         regs->psw.cc = 3;
-        if ( regs->psw.fomask )
+        if ( FOMASK(&regs->psw) )
             ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
@@ -2974,7 +2990,7 @@ int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load rightmost 2 bytes of register from operand address */
     (S32)regs->GR_L(r1) = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -2991,7 +3007,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand values     */
 
-    RI(inst, execflag, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Load operand into register */
     (S32)regs->GR_L(r1) = (S16)i2;
@@ -3011,7 +3027,7 @@ VADR    effective_addr2;                /* effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Character work areas      */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     /* Calculate the number of bytes to be loaded */
     d = (((r3 < r1) ? r3 + 16 - r1 : r3 - r1) + 1) * 4;
@@ -3041,7 +3057,7 @@ DEF_INST(load_negative_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Load negative value of second operand and set cc */
     (S32)regs->GR_L(r1) = (S32)regs->GR_L(r2) > 0 ?
@@ -3059,14 +3075,14 @@ DEF_INST(load_positive_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     /* Condition code 3 and program check if overflow */
     if ( regs->GR_L(r2) == 0x80000000 )
     {
         regs->GR_L(r1) = regs->GR_L(r2);
         regs->psw.cc = 3;
-        if ( regs->psw.fomask )
+        if ( FOMASK(&regs->psw) )
             ARCH_DEP(program_interrupt) (regs, PGM_FIXED_POINT_OVERFLOW_EXCEPTION);
         return;
     }
@@ -3090,7 +3106,7 @@ int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 CREG    n;                              /* Work                      */
 
-    SI(inst, execflag, regs, i2, b1, effective_addr1);
+    SI(inst, regs, i2, b1, effective_addr1);
 
     /* Program check if monitor class exceeds 15 */
     if ( i2 > 0x0F )
@@ -3119,7 +3135,7 @@ BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 
-    SI(inst, execflag, regs, i2, b1, effective_addr1);
+    SI(inst, regs, i2, b1, effective_addr1);
 
     /* Store immediate operand at operand address */
     ARCH_DEP(vstoreb) ( i2, effective_addr1, b1, regs );
@@ -3136,7 +3152,7 @@ int     b1, b2;                         /* Values of base fields     */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
+    SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
     /* Move characters using current addressing mode and key */
@@ -3158,7 +3174,7 @@ VADR    n;                              /* 32-bit operand values     */
 BYTE    tbyte;                          /* Byte work areas           */
 int     i;                              /* Integer work areas        */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
+    SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
     /* If operand 1 crosses a page, make sure both pages are accessable */
@@ -3211,7 +3227,7 @@ RADR    abs1, abs2;
 GREG    len3;
 #endif
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     ODD2_CHECK(r1, r2, regs);
 
@@ -3452,7 +3468,7 @@ BYTE    obyte;                          /* Operand byte              */
 BYTE    pad;                            /* Padding byte              */
 int     cpu_length;                     /* cpu determined length     */
 
-    RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+    RS(inst, regs, r1, r3, b2, effective_addr2);
 
     ODD2_CHECK(r1, r3, regs);
 
@@ -3533,14 +3549,14 @@ int     i;                              /* Loop counter              */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
+    SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
     /* Obtain current access key from PSW */
     akey = regs->psw.pkey;
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS_SKP (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
 
     /* Calculate page addresses of rightmost operand bytes */
@@ -3551,7 +3567,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS_SKP (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
@@ -3608,7 +3624,7 @@ BYTE    sbyte;                          /* String character          */
 BYTE    termchar;                       /* Terminating character     */
 int     cpu_length;                     /* length to next page       */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Program check if bits 0-23 of register 0 not zero */
     if ((regs->GR_L(0) & 0xFFFFFF00) != 0)
@@ -3678,7 +3694,7 @@ int     i, j;                           /* Loop counters             */
 BYTE    sbyte;                          /* Source operand byte       */
 BYTE    dbyte;                          /* Destination operand byte  */
 
-    SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
+    SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* If operand 1 crosses a page, make sure both pages are accessable */
@@ -3746,14 +3762,14 @@ int     i;                              /* Loop counter              */
 BYTE    byte1, byte2;                   /* Operand bytes             */
 BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
+    SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
     /* Obtain current access key from PSW */
     akey = regs->psw.pkey;
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS_SKP (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
 
     /* Calculate page addresses of rightmost operand bytes */
@@ -3764,7 +3780,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & ~0x7FF))
-        npa1 = LOGICAL_TO_ABS_SKP (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
+        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     if (npv2 != (effective_addr2 & ~0x7FF))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
@@ -3816,7 +3832,7 @@ DEF_INST(multiply_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RR(inst, execflag, regs, r1, r2);
+    RR(inst, regs, r1, r2);
 
     ODD_CHECK(r1, regs);
 
@@ -3837,7 +3853,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     ODD_CHECK(r1, regs);
 
@@ -3862,7 +3878,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load 2 bytes from operand address */
     (S32)n = (S16)ARCH_DEP(vfetch2) ( effective_addr2, b2, regs );
@@ -3884,7 +3900,7 @@ int     r1;                             /* Register number           */
 int     opcd;                           /* Opcode                    */
 U16     i2;                             /* 16-bit operand            */
 
-    RI(inst, execflag, regs, r1, opcd, i2);
+    RI(inst, regs, r1, opcd, i2);
 
     /* Multiply register by operand ignoring overflow  */
     (S32)regs->GR_L(r1) *= (S16)i2;
@@ -3899,7 +3915,7 @@ DEF_INST(multiply_single_register)
 {
 int     r1, r2;                         /* Values of R fields        */
 
-    RRE(inst, execflag, regs, r1, r2);
+    RRE(inst, regs, r1, r2);
 
     /* Multiply signed registers ignoring overflow */
     (S32)regs->GR_L(r1) *= (S32)regs->GR_L(r2);
@@ -3917,7 +3933,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U32     n;                              /* 32-bit operand values     */
 
-    RX(inst, execflag, regs, r1, b2, effective_addr2);
+    RX(inst, regs, r1, b2, effective_addr2);
 
     /* Load second operand from operand address */
     n = ARCH_DEP(vfetch4) ( effective_addr2, b2, regs );

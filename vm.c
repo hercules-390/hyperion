@@ -1073,7 +1073,7 @@ DEF_INST(inter_user_communication_vehicle)
 int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    S(inst, regs, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
     if(ecpsvm_doiucv(regs,b2,effective_addr2)==0)
     {
@@ -1086,7 +1086,7 @@ VADR    effective_addr2;                /* Effective address         */
        the IUCV instruction generates an operation exception
        rather then a priviliged operation exception when
        executed in problem state                                 *JJ */
-    if ( regs->psw.prob )
+    if ( PROBSTATE(&regs->psw) )
         ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
 
     SIE_INTERCEPT(regs);

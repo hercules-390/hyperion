@@ -58,11 +58,7 @@ U32     i;                              /* Array subscript           */
 REGS   *realregs;                       /* Real REGS if guest        */
 REGS   *tregs;                          /* Target regs               */
 
-    realregs =
-#if defined(_FEATURE_SIE)
-               SIE_STATE(regs) ? regs->hostregs :
-#endif /*defined(_FEATURE_SIE)*/
-                                                  regs;
+    realregs = SIE_MODE(regs) ? regs->hostregs : regs;
 
     do {
         if (code)
@@ -138,7 +134,7 @@ int     rc;
 
 #if defined(_FEATURE_SIE)
     /* Set the main storage reference and change bits */
-    if(SIE_STATE(regs)
+    if(SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !SIE_FEATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
@@ -173,20 +169,18 @@ int     rc;
 
 #if defined(FEATURE_BCMODE)
     /* For ECMODE, store external interrupt code at PSA+X'86' */
-    if ( regs->psw.ecmode )
+    if ( ECMODE(&regs->psw) )
 #endif /*defined(FEATURE_BCMODE)*/
         STORE_HW(psa->extint,code);
 
-#if defined(_FEATURE_SIE)
-    if(!SIE_STATE(regs)
+    if ( !SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        || SIE_FEATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        || SIE_FEATB(regs, EC0, EXTA)
 #endif
-                                                            )
-#endif /*defined(_FEATURE_SIE)*/
+       )
     {
         /* Store current PSW at PSA+X'18' */
         ARCH_DEP(store_psw) (regs, psa->extold);
@@ -203,18 +197,16 @@ int     rc;
 
     release_lock(&sysblk.intlock);
 
-#if defined(_FEATURE_SIE)
-    if(SIE_STATE(regs)
+    if ( SIE_MODE(regs)
 #if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !SIE_FEATB(regs, S, EXP_TIMER)
 #endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        && !SIE_FEATB(regs, EC0, EXTA)
 #endif
-                                                            )
+       )
         longjmp (regs->progjmp, SIE_INTERCEPT_EXT);
     else
-#endif /*defined(_FEATURE_SIE)*/
         longjmp (regs->progjmp, SIE_NO_INTERCEPT);
 
 } /* end function external_interrupt */
@@ -241,11 +233,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 U16     cpuad;                          /* Originating CPU address   */
 
     /* External interrupt if console interrupt key was depressed */
-    if (OPEN_IC_INTKEY(regs)
-#if defined(_FEATURE_SIE)
-        && !SIE_STATE(regs)
-#endif /*!defined(_FEATURE_SIE)*/
-        )
+    if ( OPEN_IC_INTKEY(regs) && !SIE_MODE(regs) )
     {
         logmsg (_("HHCCP023I External interrupt: Interrupt key\n"));
 
@@ -422,11 +410,7 @@ U16     cpuad;                          /* Originating CPU address   */
 #endif /*FEATURE_INTERVAL_TIMER*/
 
     /* External interrupt if service signal is pending */
-    if (OPEN_IC_SERVSIG(regs)
-#if defined(_FEATURE_SIE)
-        && !SIE_STATE(regs)
-#endif /*!defined(_FEATURE_SIE)*/
-        )
+    if ( OPEN_IC_SERVSIG(regs) && !SIE_MODE(regs) )
     {
         /* Apply prefixing if the parameter is a storage address */
         if ( (sysblk.servparm & SERVSIG_ADDR) )

@@ -58,7 +58,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -77,7 +77,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -105,7 +105,7 @@ U32     lcpa;                           /* Logical CPU address       */
 VADR    newia;                          /* Unsuccessful branch addr  */
 int     acc_mode = 0;                   /* access mode to use        */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -200,7 +200,7 @@ U32     lcpa;                           /* Logical CPU address       */
 VADR    newia;                          /* Unsuccessful branch addr  */
 int     acc_mode = 0;                   /* access mode to use        */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -292,7 +292,7 @@ U32     lock;                           /* Lock value                */
 VADR    newia;                          /* Unsuccessful branch addr  */
 int     acc_mode = 0;                   /* access mode to use        */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -386,7 +386,7 @@ U32     susp;                           /* Lock suspend queue        */
 VADR    newia;                          /* Unsuccessful branch addr  */
 int     acc_mode = 0;                   /* access mode to use        */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -469,7 +469,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -491,7 +491,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -513,7 +513,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -535,7 +535,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -557,7 +557,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -579,7 +579,7 @@ int     b1, b2;                         /* Values of base field      */
 VADR    effective_addr1,
         effective_addr2;                /* Effective addresses       */
 
-    SSE(inst, execflag, regs, b1, effective_addr1, b2, effective_addr2);
+    SSE(inst, regs, b1, effective_addr1, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 

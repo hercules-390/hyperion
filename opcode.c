@@ -33,7 +33,7 @@
 
 #define UNDEF_INST(_x) \
         DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,execflag,regs); }
+        (inst,regs); }
 
 
 #if !defined(FEATURE_CHANNEL_SUBSYSTEM)
@@ -678,79 +678,79 @@
 
 DEF_INST(execute_01xx)
 {
-    opcode_01xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    opcode_01xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_a7xx)
 {
-    opcode_a7xx[inst[1] & 0x0F][ARCH_MODE](inst, execflag, regs);
+    opcode_a7xx[inst[1] & 0x0F][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_b2xx)
 {
-    opcode_b2xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    opcode_b2xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 
 #if defined(FEATURE_BASIC_FP_EXTENSIONS)
 DEF_INST(execute_b3xx)
 {
-    opcode_b3xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    opcode_b3xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 DEF_INST(execute_edxx)
 {
-    opcode_edxx[inst[5]][ARCH_MODE](inst, execflag, regs);
+    opcode_edxx[inst[5]][ARCH_MODE](inst, regs);
 }
 #endif /*defined(FEATURE_BASIC_FP_EXTENSIONS)*/
 
 
 DEF_INST(execute_e5xx)
 {
-    opcode_e5xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    opcode_e5xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 DEF_INST(execute_e6xx)
 {
-    opcode_e6xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    opcode_e6xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 #if defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
 DEF_INST(execute_a5xx)
 {
-    opcode_a5xx[inst[1] & 0x0F][ARCH_MODE](inst, execflag, regs);
+    opcode_a5xx[inst[1] & 0x0F][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_b9xx)
 {
-    opcode_b9xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    opcode_b9xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_e3xx)
 {
-    opcode_e3xx[inst[5]][ARCH_MODE](inst, execflag, regs);
+    opcode_e3xx[inst[5]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_ebxx)
 {
-    opcode_ebxx[inst[5]][ARCH_MODE](inst, execflag, regs);
+    opcode_ebxx[inst[5]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_ecxx)
 {
-    opcode_ecxx[inst[5]][ARCH_MODE](inst, execflag, regs);
+    opcode_ecxx[inst[5]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_c0xx)
 {
-    opcode_c0xx[inst[1] & 0x0F][ARCH_MODE](inst, execflag, regs);
+    opcode_c0xx[inst[1] & 0x0F][ARCH_MODE](inst, regs);
 }
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -759,25 +759,25 @@ DEF_INST(execute_c0xx)
 
 DEF_INST(execute_a4xx)
 {
-    v_opcode_a4xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    v_opcode_a4xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_a5xx)
 {
-    v_opcode_a5xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    v_opcode_a5xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_a6xx)
 {
-    v_opcode_a6xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    v_opcode_a6xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 
 DEF_INST(execute_e4xx)
 {
-    v_opcode_e4xx[inst[1]][ARCH_MODE](inst, execflag, regs);
+    v_opcode_e4xx[inst[1]][ARCH_MODE](inst, regs);
 }
 
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
@@ -785,18 +785,13 @@ DEF_INST(execute_e4xx)
 
 DEF_INST(operation_exception)
 {
-    if( !execflag )
-    {
-        regs->psw.ilc = ILC(inst[0]);
-        regs->psw.IA += regs->psw.ilc;
-        regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-    }
+    INST_UPDATE_PSW (regs, ILC(inst[0]));
 
 #if defined(MODEL_DEPENDENT)
 #if defined(_FEATURE_SIE)
     /* The B2XX extended opcodes which are not defined are always
        intercepted by SIE when issued in supervisor state */
-    if(!regs->psw.prob && inst[0] == 0xB2)
+    if(!PROBSTATE(&regs->psw) && inst[0] == 0xB2)
         SIE_INTERCEPT(regs);
 #endif /*defined(_FEATURE_SIE)*/
 #endif /*defined(MODEL_DEPENDENT)*/
@@ -808,14 +803,7 @@ DEF_INST(operation_exception)
 DEF_INST(dummy_instruction)
 {
 //  logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
-
-    if( !execflag )
-    {
-        regs->psw.ilc = ILC(inst[0]);
-        regs->psw.IA += regs->psw.ilc;
-        regs->psw.IA &= ADDRESS_MAXWRAP(regs);
-    }
-
+    INST_UPDATE_PSW (regs, ILC(inst[0]));
 }
 
 

@@ -5,6 +5,11 @@
 #include <config.h>
 #endif
 
+#include <ctype.h>
+#if defined(WIN32) && !defined(__WORDSIZE)
+#define __WORDSIZE 32
+#endif
+
 /*-------------------------------------------------------------------*/
 /* S/370, ESA/390 and ESAME features implemented             */
 /*-------------------------------------------------------------------*/
@@ -101,6 +106,7 @@
 #undef TLB_VADDR
 #undef TLB_PTE
 #undef BROADCAST_PFRA
+#undef INVABS
 
 #if !defined(NO_ATTR_REGPARM)
 #define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
@@ -113,7 +119,7 @@
 #define ARCH_MODE   ARCH_370
 
 #define DEF_INST(_name) \
-void (ATTR_REGPARM(3) s370_ ## _name) (BYTE inst[], int execflag, REGS *regs)
+void (ATTR_REGPARM(2) s370_ ## _name) (BYTE inst[], REGS *regs)
 
 #define ARCH_DEP(_name) \
 s370_ ## _name
@@ -131,15 +137,15 @@ s370_ ## _name
     (AMASK31)
 
 #define REAL_MODE(p) \
-    ((p)->ecmode==0 || ((p)->sysmask & PSW_DATMODE)==0)
+    (!ECMODE(p) || ((p)->sysmask & PSW_DATMODE)==0)
 
 #if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
-        ( ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE)) \
-          | (SIE_STATE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
+        ( (ECMODE(&(_regs)->psw) && ((_regs)->psw.sysmask & PSW_PERMODE)) \
+          || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
 #else
 #define PER_MODE(_regs) \
-        ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE))
+        (ECMODE(&(_regs)->psw) && ((_regs)->psw.sysmask & PSW_PERMODE))
 #endif
 
 #define ASF_ENABLED(_regs)  0 /* ASF is never enabled for S/370 */
@@ -168,6 +174,7 @@ s370_ ## _name
 #define PX_MASK 0x7FFFF000
 #define RSTOLD  iplccw1
 #define RSTNEW  iplpsw
+//#if !defined(_FEATURE_ZSIE) || __WORDSIZE == 32
 #if !defined(_FEATURE_ZSIE)
 #define RADR    U32
 #define F_RADR  "%8.8X"
@@ -197,13 +204,14 @@ s370_ ## _name
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
 #define BROADCAST_PFRA BROADCAST_PFRA_L
+#define INVABS  INVABS_L
 
 #elif __GEN_ARCH == 390
 
 #define ARCH_MODE   ARCH_390
 
 #define DEF_INST(_name) \
-void (ATTR_REGPARM(3) s390_ ## _name) (BYTE inst[], int execflag, REGS *regs)
+void (ATTR_REGPARM(2) s390_ ## _name) (BYTE inst[], REGS *regs)
 
 #define ARCH_DEP(_name) \
 s390_ ## _name
@@ -226,7 +234,7 @@ s390_ ## _name
 #if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.sysmask & PSW_PERMODE) \
-          | (SIE_STATE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
+          || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
 #else
 #define PER_MODE(_regs) \
         ((_regs)->psw.sysmask & PSW_PERMODE)
@@ -267,6 +275,7 @@ s390_ ## _name
 #define PX_MASK 0x7FFFF000
 #define RSTNEW  iplpsw
 #define RSTOLD  iplccw1
+//#if !defined(_FEATURE_ZSIE) ||  __WORDSIZE == 32
 #if !defined(_FEATURE_ZSIE)
 #define RADR    U32
 #define F_RADR  "%8.8X"
@@ -296,6 +305,7 @@ s390_ ## _name
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
 #define BROADCAST_PFRA BROADCAST_PFRA_L
+#define INVABS  INVABS_L
 
 #elif __GEN_ARCH == 900
 
@@ -319,7 +329,7 @@ s390_ ## _name
 #if defined(_FEATURE_SIE)
 #define PER_MODE(_regs) \
         ( ((_regs)->psw.sysmask & PSW_PERMODE) \
-          | (SIE_STATE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
+          || (SIE_MODE((_regs)) && ((_regs)->siebk->m & SIE_M_GPE)) )
 #else
 #define PER_MODE(_regs) \
         ((_regs)->psw.sysmask & PSW_PERMODE)
@@ -347,7 +357,7 @@ s390_ ## _name
 #define CHM_GPR2_RESV   Z_CHM_GPR2_RESV
 
 #define DEF_INST(_name) \
-void (ATTR_REGPARM(3) z900_ ## _name) (BYTE inst[], int execflag, REGS *regs)
+void (ATTR_REGPARM(2) z900_ ## _name) (BYTE inst[], REGS *regs)
 
 #define ARCH_DEP(_name) \
 z900_ ## _name
@@ -366,7 +376,12 @@ z900_ ## _name
 #define PX_MASK 0x7FFFE000
 #define RSTOLD  rstold
 #define RSTNEW  rstnew
+//#if  __WORDSIZE == 32
+#if 0
+#define RADR    U32
+#else
 #define RADR    U64
+#endif
 #define F_RADR  "%16.16llX"
 #define VADR    U64
 #define F_VADR  "%16.16llX"
@@ -390,6 +405,7 @@ z900_ ## _name
 #define TLB_VADDR TLB_VADDR_G
 #define TLB_PTE   TLB_PTE_G
 #define BROADCAST_PFRA BROADCAST_PFRA_G
+#define INVABS  INVABS_G
 
 #else
 
