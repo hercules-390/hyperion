@@ -5,7 +5,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = m4 util html po
+SUBDIRS = m4  m4 util html po
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -106,7 +106,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
 
 noinst_HEADERS  = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
