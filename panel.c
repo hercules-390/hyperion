@@ -28,6 +28,7 @@
 #include "hercules.h"
 #include "devtype.h"
 #include "opcode.h"
+#include "history.h"
 // #include "inline.h"
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
@@ -830,7 +831,8 @@ BYTE    redraw_status;                  /* 1=Redraw status line      */
 BYTE    readbuf[MSG_SIZE];              /* Message read buffer       */
 int     readoff = 0;                    /* Number of bytes in readbuf*/
 BYTE    cmdline[CMD_SIZE+1];            /* Command line buffer       */
-int     cmdoff = 0;                     /* Number of bytes in cmdline*/
+int     cmdoff = 0;                     /* Cursor position in cmdline*/
+int     cmdlen = 0;                     /* Number of bytes in cmdline*/  
 BYTE    c;                              /* Character work area       */
 FILE   *confp;                          /* Console file pointer      */
 struct termios kbattr;                  /* Terminal I/O structure    */
@@ -845,6 +847,9 @@ struct  timeval tv;                     /* Select timeout structure  */
 
 #if 1
     panel_compat_init();
+    for (i=0; i < CMD_SIZE+1; i++)
+      cmdline[i] = 0;
+    history_init();
 #endif
 
     /* Display thread started message on control panel */
@@ -934,8 +939,8 @@ struct  timeval tv;                     /* Select timeout structure  */
         if (FD_ISSET(keybfd, &readset))
         {
             /* Read character(s) from the keyboard */
-
             kblen = read (keybfd, kbbuf, kbbufsize-1);
+
             if (kblen < 0)
             {
                 fprintf (stderr,
@@ -943,6 +948,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                         strerror(errno));
                 break;
             }
+
             kbbuf[kblen] = '\0';
 
             /* =NP= : Intercept NP commands & process */
@@ -1169,20 +1175,30 @@ struct  timeval tv;                     /* Select timeout structure  */
                 if (strcmp(kbbuf+i, KBD_UP_ARROW) == 0
                     || strcmp(kbbuf+i, xKBD_UP_ARROW) == 0)
                 {
-                    if (firstmsgn == 0) break;
-                    firstmsgn--;
-                    redraw_msgs = 1;
-                    break;
-                }
+		  if (history_prev() != -1) {
+		    strcpy(cmdline, historyCmdLine);
+		    cmdoff = strlen(cmdline);
+		    cmdlen = cmdoff;
+		    NPDup = 0;
+		    NPDinit = 1;
+		    redraw_cmd = 1;
+		  }
+		  break;
+		}
 
                 /* Test for line down command */
                 if (strcmp(kbbuf+i, KBD_DOWN_ARROW) == 0
                     || strcmp(kbbuf+i, xKBD_DOWN_ARROW) == 0)
                 {
-                    if (firstmsgn + NUM_LINES >= nummsgs) break;
-                    firstmsgn++;
-                    redraw_msgs = 1;
-                    break;
+		  if (history_next() != -1) {
+		    strcpy(cmdline, historyCmdLine);
+		    cmdoff = strlen(cmdline);
+		    cmdlen = cmdoff;
+		    NPDup = 0;
+		    NPDinit = 1;
+		    redraw_cmd = 1;
+		  }
+		  break;
                 }
 
                 /* Test for page up command */
@@ -1206,19 +1222,43 @@ struct  timeval tv;                     /* Select timeout structure  */
                     break;
                 }
 
-                /* Process backspace character               */
-                /* DEL (\x7F), KBD_LEFT_ARROW and KBD_DELETE */
-                /* are all equivalent to backspace           */
-                if (kbbuf[i] == '\b' || kbbuf[i] == '\x7F'
-                    || strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0
-                    || strcmp(kbbuf+i, xKBD_LEFT_ARROW) == 0
-                    || strcmp(kbbuf+i, KBD_DELETE) == 0)
+                /* Process backspace character  */
+                if (kbbuf[i] == '\b' || kbbuf[i] == '\x7F')
+                {
+                    if (cmdoff > 0) {
+		      int j;
+		      for (j = cmdoff-1; j<cmdlen; j++)
+			cmdline[j] = cmdline[j+1];
+		      cmdoff--;
+		      cmdlen--;
+		    }
+                    i++;
+                    redraw_cmd = 1;
+                    break;
+                }
+                /* Process DEL character              */
+                if (strcmp(kbbuf+i, KBD_DELETE) == 0) {
+		  if (cmdoff < cmdlen) {
+		      int j;
+		      for (j = cmdoff; j<cmdlen; j++)
+			cmdline[j] = cmdline[j+1];
+		      cmdlen--;
+		    }
+                    i++;
+                    redraw_cmd = 1;
+                    break;
+		}
+                
+                /* Process LEFT_ARROW character              */
+                if (strcmp(kbbuf+i, KBD_LEFT_ARROW) == 0
+                    || strcmp(kbbuf+i, xKBD_LEFT_ARROW) == 0)
                 {
                     if (cmdoff > 0) cmdoff--;
                     i++;
                     redraw_cmd = 1;
                     break;
                 }
+
 
                 /* Test for other KBD_* strings           */
                 /* Just ignore them, no function assigned */
@@ -1227,6 +1267,8 @@ struct  timeval tv;                     /* Select timeout structure  */
                     || strcmp(kbbuf+i, KBD_INSERT) == 0)
                 {
                     redraw_msgs = 1;
+		    if (cmdoff < cmdlen) 
+		      cmdoff++;
                     break;
                 }
 
@@ -1243,14 +1285,31 @@ struct  timeval tv;                     /* Select timeout structure  */
                 /* Process the command if newline was read */
                 if (kbbuf[i] == '\n')
                 {
-                    cmdline[cmdoff] = '\0';
+		  if (cmdlen == 0) {
+		    history_show();
+		  }
+		  else {
+                    cmdline[cmdlen] = '\0';
                     /* =NP= create_thread replaced with: */
                     if (NPDup == 0) {
                         if ('#' == cmdline[0] || '*' == cmdline[0]) {
                             if ('*' == cmdline[0])
                                 logmsg("%s\n", cmdline);
                         } else {
-                            panel_command(cmdline);
+			  history_requested = 0;
+			  panel_command(cmdline);
+			  cmdoff = 0;
+			  for (;cmdlen >=0; cmdlen--)
+			    cmdline[cmdlen] = '\0';
+			  cmdlen = 0;
+			  if (history_requested == 1) {
+			     	strcpy(cmdline, historyCmdLine);
+				cmdoff = strlen(cmdline);
+				cmdlen = cmdoff;
+			      	NPDup = 0;
+				NPDinit = 1;
+				redraw_cmd = 1;
+			  }
                         }
                     } else {
                         NPdataentry = 0;
@@ -1287,9 +1346,9 @@ struct  timeval tv;                     /* Select timeout structure  */
                         redraw_status = 1;
                     }
                     /* =END= */
-                    cmdoff = 0;
                     redraw_cmd = 1;
-                    break;
+		  }
+                break;
                 }
 
                 /* Ignore non-printable characters */
@@ -1301,7 +1360,17 @@ struct  timeval tv;                     /* Select timeout structure  */
                 }
 
                 /* Append the character to the command buffer */
-                if (cmdoff < CMD_SIZE-1) cmdline[cmdoff++] = kbbuf[i];
+                if (cmdoff < CMD_SIZE-1) {
+		  if (cmdoff < cmdlen) {
+		    int j;
+		    for (j=cmdlen-1; j>=cmdoff; j--)
+		      cmdline[j+1] = cmdline[j];
+		    cmdline[cmdoff++] = kbbuf[i];
+		  }
+		  else 
+		    cmdline[cmdoff++] = kbbuf[i];
+		  cmdlen++;
+		}
                 i++;
                 redraw_cmd = 1;
 
@@ -1519,7 +1588,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     "Command ==> "
                     ANSI_WHITE_BLACK);
 
-                for (i = 0; i < cmdoff; i++)
+                for (i = 0; i < cmdlen; i++)
                     putc (cmdline[i], confp);
 
                 fprintf (confp,
@@ -1547,7 +1616,7 @@ struct  timeval tv;                     /* Select timeout structure  */
                     NPDinit = 1;
                     NP_screen(confp);
                 }
-                NP_update(confp, cmdline, cmdoff);
+                NP_update(confp, cmdline, cmdlen);
                 fflush (confp);
                 redraw_msgs = 0;
                 redraw_cmd = 0;

@@ -316,6 +316,7 @@ endif
   libherc_la_SOURCES = impl.c      \
                        config.c    \
                        panel.c     \
+                       history.c   \
                        ipl.c       \
                        assist.c    \
                        dat.c       \
@@ -591,6 +592,7 @@ noinst_HEADERS = fishhang.h \
                  herc_getopt.h \
                  service.h  \
                  pttrace.h  \
+                 history.h  \
                  $(extra_dynamic_SRC)
 
 #########################################################
