@@ -572,6 +572,7 @@ typedef struct _REGS {                  /* Processor registers       */
         struct _REGS *guestregs;        /* Pointer to the guest
                                            register context          */
         PSA_3XX *sie_psa;               /* PSA of guest CPU          */
+        RADR    sie_px;                 /* Host address of guest px  */
         RADR    sie_mso;                /* Main Storage Origin       */
         RADR    sie_xso;                /* eXpanded Storage Origin   */
         RADR    sie_xsl;                /* eXpanded Storage Limit    */
