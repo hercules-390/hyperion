@@ -331,7 +331,7 @@ char *modname;
     {
         if((dllent->hdldepc)(&hdl_dchk))
         {
-            logmsg("HHCHDxxxE Dependency check failed for %s\n",
+            logmsg("HHCHDxxxE Dependency check failed for module %s\n",
               dllent->name);
             if(!(flags & HDL_LOAD_FORCE))
             {
