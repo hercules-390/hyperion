@@ -209,6 +209,9 @@ int testio (REGS *regs, DEVBLK *dev, BYTE ibyte)
 int     cc;                             /* Condition code            */
 PSA_3XX *psa;                           /* -> Prefixed storage area  */
 
+if (dev->ccwtrace || dev->ccwstep)
+    logmsg ("%4.4X: Test I/O\n", dev->devnum);
+
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
 
@@ -276,6 +279,9 @@ int haltio (REGS *regs, DEVBLK *dev, BYTE ibyte)
 {
 int     cc;                             /* Condition code            */
 PSA_3XX *psa;                           /* -> Prefixed storage area  */
+
+    if (dev->ccwtrace || dev->ccwstep)
+        logmsg ("%4.4X: Halt I/O\n", dev->devnum);
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);

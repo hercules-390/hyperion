@@ -1,3 +1,4 @@
+20 Jun 2001 Remove subchannel enabled check from console - Jan Jaeger
 19 Jun 2001 Correct check for MVCL in different spaces - Jan Jaeger
 19 Jun 2001 Prevent msg HHC611I during machine check - Jan Jaeger
 19 Jun 2001 Enhance MVCL cc3 diagostics - Jan Jaeger
