@@ -857,7 +857,7 @@ BYTE    c;                              /* Work area for sscanf      */
             {
                 logmsg( "HHC047I Error in %s line %d: "
                         "Invalid program product OS permission %s\n",
-                        fname, stmt, sdevtmax);
+                        fname, stmt, spgmprdos);
                 exit(1);
             }
         }
