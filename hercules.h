@@ -1648,6 +1648,7 @@ void release_config ();
 DEVBLK *find_device_by_devnum (U16 devnum);
 DEVBLK *find_device_by_subchan (U16 subchan);
 DEVBLK *get_devblk (U16 devnum);
+void ret_devblk (DEVBLK *dev);
 int  attach_device (U16 devnum, char *devtype, int addargc,
         BYTE *addargv[]);
 int  detach_device (U16 devnum);

@@ -1874,6 +1874,19 @@ DEVBLK**dvpp;
 }
 
 
+void ret_devblk(DEVBLK *dev)
+{
+    /* Mark device invalid */
+    dev->pmcw.flag5 &= ~PMCW5_V;
+
+#if defined(FEATURE_FAST_DEVLOOKUP)
+    DelDevnumFastLookup(dev->devnum);
+#endif
+
+    release_lock(&dev->lock);
+}
+
+
 /*-------------------------------------------------------------------*/
 /* Function to build a device configuration block                    */
 /*-------------------------------------------------------------------*/
@@ -1896,12 +1909,8 @@ int     rc;                             /* Return code               */
     if(!(dev->hnd = hdl_ghnd(type)))
     {
         logmsg (_("HHCCF042E Device type %s not recognized\n"), type);
-        /* Mark device invalid */
-        dev->pmcw.flag5 &= ~PMCW5_V;
-#if defined(FEATURE_FAST_DEVLOOKUP)
-        DelDevnumFastLookup(devnum);
-#endif
-        release_lock(&dev->lock);
+
+        ret_devblk(dev);
 
         return 1;
     }
@@ -1917,12 +1926,8 @@ int     rc;                             /* Return code               */
                 devnum);
 
         free(dev->typname);
-        /* Mark device invalid */
-        dev->pmcw.flag5 &= ~PMCW5_V;
-#if defined(FEATURE_FAST_DEVLOOKUP)
-        DelDevnumFastLookup(devnum);
-#endif
-        release_lock(&dev->lock);
+
+        ret_devblk(dev);
 
         return 1;
     }
@@ -1937,12 +1942,7 @@ int     rc;                             /* Return code               */
                     "for device %4.4X: %s\n"),
                     dev->devnum, strerror(errno));
 
-            /* Mark device invalid */
-            dev->pmcw.flag5 &= ~PMCW5_V;
-#if defined(FEATURE_FAST_DEVLOOKUP)
-            DelDevnumFastLookup(devnum);
-#endif
-            release_lock(&dev->lock);
+            ret_devblk(dev);
 
             return 1;
         }
@@ -1979,17 +1979,6 @@ DEVBLK *dev;                            /* -> Device block           */
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
 
-    /* Mark device invalid */
-    dev->pmcw.flag5 &= ~(PMCW5_E | PMCW5_V);
-#if defined(FEATURE_FAST_DEVLOOKUP)
-    DelDevnumFastLookup(devnum);
-#endif
-
-#ifdef _FEATURE_CHANNEL_SUBSYSTEM
-    /* Indicate a CRW is pending for this device */
-    dev->crwpending = 1;
-#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
-
     /* Close file or socket */
     if ((dev->fd > 2) || dev->console)
         /* Call the device close handler */
@@ -1997,8 +1986,12 @@ DEVBLK *dev;                            /* -> Device block           */
 
     free(dev->typname);
 
-    /* Release device lock */
-    release_lock(&dev->lock);
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
+    /* Indicate a CRW is pending for this device */
+    dev->crwpending = 1;
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+
+    ret_devblk(dev);
 
 #ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
