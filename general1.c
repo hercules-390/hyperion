@@ -2477,7 +2477,7 @@ int     r1, r2;                         /* Values of R fields        */
     /* Copy R2 access register to R1 access register */
     regs->AR(r1) = regs->AR(r2);
 
-    INVALIDATE_AEA(r1, regs);
+    INVALIDATE_AEA_AR(r1, regs);
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
@@ -2908,13 +2908,17 @@ BYTE    rwork[64];                      /* Register work area        */
         /* Load one access register from work area */
         FETCH_FW(regs->AR(n), rwork + d); d += 4;
 
-        INVALIDATE_AEA(n, regs);
         /* Instruction is complete when r3 register is done */
         if ( n == r3 ) break;
 
         /* Update register number, wrapping from 15 to 0 */
         n++; n &= 15;
     }
+
+    if (r1 == r3)
+        INVALIDATE_AEA_AR(r1, regs);
+    else
+        INVALIDATE_AEA_ARALL(regs);
 
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
@@ -2961,7 +2965,7 @@ VADR    effective_addr2;                /* Effective address         */
     else /* ACCESS_REGISTER_MODE(&(regs->psw)) */
         regs->AR(r1) = (b2 == 0) ? 0 : regs->AR(b2);
 
-    INVALIDATE_AEA(r1, regs);
+    INVALIDATE_AEA_AR(r1, regs);
 }
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 

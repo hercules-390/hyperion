@@ -83,10 +83,8 @@ int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 {
 int     realmode;
 int     space;
-int     armode;
 
     realmode = REAL_MODE(&regs->psw);
-    armode = (regs->psw.armode == 1);
     space = (regs->psw.space == 1);
 
     regs->psw.sysmask = addr[0];
@@ -125,13 +123,13 @@ int     armode;
 
         INVALIDATE_AIA(regs);
         if ((realmode  != REAL_MODE(&regs->psw)) ||
-            (armode    != (regs->psw.armode == 1)) ||
             (space     != (regs->psw.space == 1))
 #if defined (FEATURE_PER)
            || PER_MODE(regs)
 #endif /* defined (FEATURE_PER) */
             )
             INVALIDATE_AEA_ALL(regs);
+        SET_AENOARN(regs);
 
 #if defined(FEATURE_ESAME)
         FETCH_DW(regs->psw.IA, addr + 8);
@@ -227,9 +225,9 @@ int     armode;
 
         INVALIDATE_AIA(regs);
         if ((realmode  != REAL_MODE(&regs->psw)) ||
-            (armode    != (regs->psw.armode == 1)) ||
             (space     != (regs->psw.space == 1)))
             INVALIDATE_AEA_ALL(regs);
+        SET_AENOARN(regs);
 
         FETCH_FW(regs->psw.IA, addr + 4);
         regs->psw.IA &= 0x00FFFFFF;

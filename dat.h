@@ -479,10 +479,10 @@ ext_auth_excp:
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(purge_alb) (REGS *regs)
 {
-    INVALIDATE_AEA_ALL(regs);
+    INVALIDATE_AEA_ARALL(regs);
   #if defined(_FEATURE_SIE)
     if(regs->guestregs) {
-        INVALIDATE_AEA_ALL(regs->guestregs);
+        INVALIDATE_AEA_ARALL(regs->guestregs);
     }
   #endif /*defined(_FEATURE_SIE)*/
 } /* end function purge_alb */
@@ -1859,29 +1859,34 @@ int     aeind;
 
     } /* end switch */
 
+    /* Update the aea tables */
     if(arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs) )
     {
+        SET_AENOARN(regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
-        if(ACCESS_REGISTER_MODE(&regs->psw))
-            regs->aenoarn = 0;
+        if (ACCESS_REGISTER_MODE(&regs->psw))
+        {
+            if (arn > 0 && regs->AR(arn) == 0)
+                arn = 0;
+        }
         else
-            regs->aenoarn = 1;
+            arn = 0;
 #else
-        regs->aenoarn = 1;
+        arn = 0;
 #endif
         aeind = AEIND(addr);
         regs->AE(aeind) = aaddr & STORAGE_KEY_PAGEMASK;
         regs->VE(aeind) = (addr & STORAGE_KEY_PAGEMASK) | regs->aeID;
         regs->aekey[aeind] = akey;
         regs->aeacc[aeind] = acctype;
-        if (!regs->aenoarn)
-            regs->aearn[aeind] = arn;
-        if((addr < PSA_SIZE) && !private)
+        regs->aearn[aeind] = arn;
+        if (arn) regs->aearvalid = 1;
+        if (addr < PSA_SIZE && !private)
         {
             if(akey == 0)
-                regs->aeacc[arn] = ACCTYPE_READ;
+                regs->aeacc[aeind] = ACCTYPE_READ;
             else
-                INVALIDATE_AEA(arn, regs);
+                regs->VE(0) = 0;
         }
     }
 

@@ -2434,6 +2434,34 @@ BYTE c;                                 /* Character work area       */
 }
 
 ///////////////////////////////////////////////////////////////////////
+/* aea - display aea tables */
+
+int aea_cmd(char* cmdline, int argc, char *argv[])
+{
+    int     i;                          /* Index                     */
+    int     matches = 0;                /* Number aeID matches       */
+    REGS   *regs;
+
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
+    regs = sysblk.regs + 0;
+    logmsg ("aenoarn %d aeID 0x%3.3x\n",regs->aenoarn,regs->aeID);
+    logmsg (" ix               ve key ar a               ae\n");
+    for (i = 0; i < MAXAEA; i++)
+    {
+        logmsg("%s%2.2x %16.16llx  %2.2x %2d %d %16.16llx\n",
+         (regs->VE_G(i) & 0xfff) == regs->aeID ? "*" : " ", i, regs->VE_G(i),
+         regs->aekey[i], regs->aearn[i], regs->aeacc[i], regs->AE_G(i));
+        if ((regs->VE_G(i) & 0xfff) == regs->aeID) matches++; 
+    }
+    logmsg("%d aeID matches\n", matches);
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////
 // Layout of command routing table...
 
 typedef int CMDFUNC(char* cmdline, int argc, char *argv[]);
@@ -2542,6 +2570,8 @@ COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/eve
 #endif
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
 COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread" )
+
+COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };

@@ -851,7 +851,10 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     /* Load registers from the stack entry */
     ARCH_DEP(unstack_registers) (0, lsea, r1, r2, regs);
 
-    INVALIDATE_AEA_ALL(regs);
+    if (r1 == r2)
+        INVALIDATE_AEA_AR(r1, regs);
+    else
+        INVALIDATE_AEA_ARALL(regs);
 
 }
 #endif /*defined(FEATURE_LINKAGE_STACK)*/
@@ -1643,6 +1646,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work areas       */
+int     inval = 0;                      /* Invalidation flag        */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -1672,13 +1676,40 @@ BYTE    rwork[64];                      /* Register work areas       */
     /* Fetch new control register contents from operand address */
     ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
 
-    INVALIDATE_AIA(regs);
-
-    INVALIDATE_AEA_ALL(regs);
-
     /* Load control registers from work area */
     for ( i = r1, d = 0; ; )
     {
+        /* Check for invalidation */
+        if (!inval) {
+            switch (i) {
+            case  0:
+                if ((fetch_fw(rwork + d) & CR0_TRAN_FMT) != (regs->CR_L(0) & CR0_TRAN_FMT))
+                    inval = 1;
+                break;
+            case  1:
+            case  2:
+            case  3:
+            case  4:
+            case  5:
+            case  7:
+            case 13:
+                if (fetch_fw(rwork + d) != regs->CR_L(i))
+                    inval = 1;
+                break;
+            case  8:
+                if ((fetch_fw(rwork + d) & CR8_EAX) != (regs->CR_L(8) & CR8_EAX))
+                    inval = 1;
+                break;
+            case 14:
+                if ((fetch_fw(rwork + d) & (CR14_ASN_TRAN|CR14_AFTO))
+                  != (regs->CR_L(14) & (CR14_ASN_TRAN|CR14_AFTO)))
+                    inval = 1;
+                break;
+            default:
+                break;
+            }
+        }
+
         /* Load control register bits 32-63 from work area */
         FETCH_FW(regs->CR_L(i), rwork + d); d += 4;
 
@@ -1687,6 +1718,13 @@ BYTE    rwork[64];                      /* Register work areas       */
 
         /* Update register number, wrapping from 15 to 0 */
         i++; i &= 15;
+    }
+
+    /* Conditionally invalidate the AIA and AEA buffers */
+    if (inval)
+    {
+        INVALIDATE_AIA(regs);
+        INVALIDATE_AEA_ALL(regs);
     }
 
     SET_IC_EXTERNAL_MASK(regs);
@@ -3689,8 +3727,6 @@ int     ssevent = 0;                    /* 1=space switch event      */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
-    INVALIDATE_AEA_ALL(regs);
-
     if(inst[1] == 0x19)
     {
         /* Perform serialization and checkpoint-synchronization */
@@ -3739,7 +3775,17 @@ int     ssevent = 0;                    /* 1=space switch event      */
     regs->psw.space = mode & 1;
     regs->psw.armode = mode >> 1;
 
-    INVALIDATE_AIA(regs);
+    /* Invalidate if space mode changed */
+    if (mode != oldmode)
+    {
+        if ( (mode & 1) || (oldmode & 1) )
+        {
+            INVALIDATE_AIA(regs);
+            INVALIDATE_AEA_ALL(regs);
+        }
+        else
+            SET_AENOARN(regs);
+    }
 
     /* If switching into or out of home-space mode, and also:
        primary space-switch-event control bit is set; or
@@ -4012,8 +4058,6 @@ int     n;                              /* Storage key workarea      */
 
     INVALIDATE_AIA(regs);
 
-    INVALIDATE_AEA_ALL(regs);
-
     /* Set PSW key */
     regs->psw.pkey = n;
 
@@ -4160,6 +4204,10 @@ RADR    n;                              /* Absolute storage addr     */
 #if defined(_FEATURE_SIE)
     if(regs->sie_state)
     {
+        /* Perform aia and aea invalidation */
+        INVALIDATE_AIA(regs);
+        INVALIDATE_AEA_ALL(regs);
+
         if(regs->siebk->ic[2] & SIE_IC2_SSKE)
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
@@ -4303,6 +4351,9 @@ RADR    n;                              /* Absolute storage addr     */
         STORAGE_KEY2(n, regs) &= STORKEY_BADFRM;
         STORAGE_KEY2(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #endif
+        /* Perform aia and aea invalidation */
+        INVALIDATE_AIA_ABS(n, regs);
+        INVALIDATE_AEA_ABS(n, regs);
     }
 
 //  /*debug*/logmsg("SSK storage block %8.8X key %2.2X\n",
@@ -4325,10 +4376,6 @@ RADR    n;                              /* Abs frame addr stor key   */
 
     PRIV_CHECK(regs);
 
-    INVALIDATE_AIA(regs);
-
-    INVALIDATE_AEA_ALL(regs);
-
     /* Load 4K block address from R2 register */
     n = regs->GR(r2) & ADDRESS_MAXWRAP_E(regs);
 
@@ -4346,6 +4393,9 @@ RADR    n;                              /* Abs frame addr stor key   */
 #if defined(_FEATURE_SIE)
     if(regs->sie_state)
     {
+        INVALIDATE_AIA(regs);
+        INVALIDATE_AEA_ALL(regs);
+
         if(regs->siebk->ic[2] & SIE_IC2_SSKE)
             longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 
@@ -4508,6 +4558,9 @@ RADR    n;                              /* Abs frame addr stor key   */
         STORAGE_KEY2(n, regs) &= STORKEY_BADFRM;
         STORAGE_KEY2(n, regs) |= regs->GR_LHLCL(r1) & ~(STORKEY_BADFRM);
 #endif
+        /* Perform aia and aea invalidation */
+        INVALIDATE_AIA_ABS(n, regs);
+        INVALIDATE_AEA_ABS(n, regs);
     }
 
     /* Perform serialization and checkpoint-synchronization */
@@ -5497,21 +5550,19 @@ BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
 int     realmode;
-int     space;
-int     armode;
+int     permode;
 
     SI(inst, execflag, regs, i2, b1, effective_addr1);
 
     PRIV_CHECK(regs);
 
-    realmode = REAL_MODE(&regs->psw);
-    armode = (regs->psw.armode == 1);
-    space = (regs->psw.space == 1);
-
 #if defined(_FEATURE_SIE)
     if(regs->sie_state && (regs->siebk->ic[1] & SIE_IC1_STNSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
+
+    realmode = REAL_MODE(&regs->psw);
+    permode = PER_MODE(regs);
 
     /* Store current system mask value into storage operand */
     ARCH_DEP(vstoreb) ( regs->psw.sysmask, effective_addr1, b1, regs );
@@ -5519,14 +5570,16 @@ int     armode;
     /* AND system mask with immediate operand */
     regs->psw.sysmask &= i2;
 
-    INVALIDATE_AIA(regs);
-    if ((realmode  != REAL_MODE(&regs->psw)) ||
-        (armode    != (regs->psw.armode == 1)) ||
-        (space     != (regs->psw.space == 1)))
+    /* Check for invalidation */
+    if (realmode != REAL_MODE(&regs->psw)
+     || permode  != PER_MODE(regs))
+    {
+        INVALIDATE_AIA(regs);
         INVALIDATE_AEA_ALL(regs);
+    }
 
     SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
+//  SET_IC_MCK_MASK(regs);  machine check is bit 13
     SET_IC_IO_MASK(regs);
     SET_IC_PER_MASK(regs);
 
@@ -5543,6 +5596,8 @@ DEF_INST(store_then_or_system_mask)
 BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
+int     realmode;
+int     permode;
 
     SI(inst, execflag, regs, i2, b1, effective_addr1);
 
@@ -5552,6 +5607,9 @@ VADR    effective_addr1;                /* Effective address         */
     if(regs->sie_state && (regs->siebk->ic[1] & SIE_IC1_STOSM))
         longjmp(regs->progjmp, SIE_INTERCEPT_INST);
 #endif /*defined(_FEATURE_SIE)*/
+
+    realmode = REAL_MODE(&regs->psw);
+    permode = PER_MODE(regs);
 
     /* Store current system mask value into storage operand */
     ARCH_DEP(vstoreb) ( regs->psw.sysmask, effective_addr1, b1, regs );
@@ -5575,13 +5633,18 @@ VADR    effective_addr1;                /* Effective address         */
                             (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
+    /* Check for invalidation */
+    if (realmode != REAL_MODE(&regs->psw)
+     || permode  != PER_MODE(regs))
+    {
+        INVALIDATE_AIA(regs);
+        INVALIDATE_AEA_ALL(regs);
+    }
+
     SET_IC_EXTERNAL_MASK(regs);
-    SET_IC_MCK_MASK(regs);
+//  SET_IC_MCK_MASK(regs);  machine check is bit 13
     SET_IC_IO_MASK(regs);
     SET_IC_PER_MASK(regs);
-
-    INVALIDATE_AIA(regs);
-    INVALIDATE_AEA_ALL(regs);
 
     RETURN_INTCHECK(regs);
 

@@ -455,7 +455,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Update access register b2 */
     regs->AR(b2) = ar;
-    INVALIDATE_AEA(b2, regs);
+    INVALIDATE_AEA_AR(b2, regs);
 
     /* Update general register b2 */
 #if defined(FEATURE_ESAME)
@@ -1447,7 +1447,11 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     /* Load registers from the stack entry */
     ARCH_DEP(unstack_registers) (1, lsea, r1, r2, regs);
 
-    INVALIDATE_AEA_ALL(regs);
+    if (r1 == r2)
+        INVALIDATE_AEA_AR(r1, regs);
+    else
+        INVALIDATE_AEA_ARALL(regs);
+
 
 } /* end DEF_INST(extract_stacked_registers_long) */
 #endif /*defined(FEATURE_ESAME)*/
@@ -3981,6 +3985,7 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[128];                     /* Register work areas       */
+int     inval = 0;                      /* Invalidation flag        */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -4010,13 +4015,40 @@ BYTE    rwork[128];                     /* Register work areas       */
     /* Fetch new control register contents from operand address */
     ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
 
-    INVALIDATE_AIA(regs);
-
-    INVALIDATE_AEA_ALL(regs);
-
     /* Load control registers from work area */
     for ( i = r1, d = 0; ; )
     {
+        /* Check for invalidation */
+        if (!inval) {
+            switch (i) {
+            case  0:
+                if ((fetch_dw(rwork + d) & CR0_TRAN_FMT) != (regs->CR(0) & CR0_TRAN_FMT))
+                    inval = 1;
+                break;
+            case  1:
+            case  2:
+            case  3:
+            case  4:
+            case  5:
+            case  7:
+            case 13:
+                if (fetch_dw(rwork + d) != regs->CR(i))
+                    inval = 1;
+                break;
+            case  8:
+                if ((fetch_dw(rwork + d) & CR8_EAX) != (regs->CR(8) & CR8_EAX))
+                    inval = 1;
+                break;
+            case 14:
+                if ((fetch_dw(rwork + d) & (CR14_ASN_TRAN|CR14_AFTO))
+                  != (regs->CR(14) & (CR14_ASN_TRAN|CR14_AFTO)))
+                    inval = 1;
+                break;
+            default:
+                break;
+            }
+        }
+
         /* Load one control register from work area */
         FETCH_DW(regs->CR_G(i), rwork + d); d += 8;
 
@@ -4025,6 +4057,13 @@ BYTE    rwork[128];                     /* Register work areas       */
 
         /* Update register number, wrapping from 15 to 0 */
         i++; i &= 15;
+    }
+
+    /* Conditionally invalidate the AIA and AEA buffers */
+    if (inval)
+    {
+        INVALIDATE_AIA(regs);
+        INVALIDATE_AEA_ALL(regs);
     }
 
     SET_IC_EXTERNAL_MASK(regs);

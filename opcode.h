@@ -569,6 +569,12 @@ do { \
 #define INVALIDATE_AIA(_regs) \
     (_regs)->VI = 1
 
+#define INVALIDATE_AIA_ABS(_addr, _regs) \
+do { \
+  if (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->AI) \
+    (_regs)->VI = 1; \
+} while (0)
+
 #define AEIND(_addr) (((_addr) >> PAGEFRAME_PAGESHIFT) & 0xff)
 #define MAXAEA 256
 
@@ -576,7 +582,13 @@ do { \
       (((_addr) & PAGEFRAME_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
   &&  (_arn) >= 0 \
   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
-  &&  ((_regs)->aenoarn || (_regs)->aearn[AEIND(_addr)] == (_arn)) \
+  &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
+    ||  ( !(_regs)->aenoarn \
+      && ( (_regs)->aearn[AEIND(_addr)] == (_arn) \
+        || ((_regs)->aearn[AEIND(_addr)] == 0 && (_regs)->AR(_arn) == 0) \
+         ) \
+        ) \
+      ) \
   &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) \
   ?   (_acctype) == ACCTYPE_READ \
       ? ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= STORKEY_REF, \
@@ -591,7 +603,13 @@ do { \
       (((_addr) & PAGEFRAME_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
   &&  (_arn) >= 0 \
   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
-  &&  ((_regs)->aenoarn || (_regs)->aearn[AEIND(_addr)] == (_arn)) \
+  &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
+    ||  ( !(_regs)->aenoarn \
+      && ( (_regs)->aearn[AEIND(_addr)] == (_arn) \
+        || ((_regs)->aearn[AEIND(_addr)] == 0 && (_regs)->AR(_arn) == 0) \
+         ) \
+        ) \
+      ) \
   &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) \
   ?   ( \
         (_regs)->AE(AEIND(_addr)) | ((_addr) & PAGEFRAME_BYTEMASK) \
@@ -600,17 +618,48 @@ do { \
         ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
       )
 
-#define INVALIDATE_AEA(_arn, _regs) \
+#undef SET_AENOARN
+#if defined(FEATURE_ACCESS_REGISTERS)
+#define SET_AENOARN(_regs) \
+  (_regs)->aenoarn = !(ACCESS_REGISTER_MODE(&regs->psw))
+#else
+#define SET_AENOARN(_regs) \
+  (_regs)->aenoarn = 1
+#endif
+
+#define INVALIDATE_AEA_AR(_arn, _regs) \
+do { \
+    int i; \
+    if ((_regs)->aearvalid) \
+      for(i = 0; i < MAXAEA; i++) \
+        if ((_regs)->aearn[i] == (_arn)) \
+          (_regs)->VE(i) = 0; \
+} while(0)
+
+#define INVALIDATE_AEA_ARALL(_regs) \
+do { \
+    int i; \
+    if ((_regs)->aearvalid) \
+    { \
+      (_regs)->aearvalid = 0; \
+      for(i = 0; i < MAXAEA; i++) \
+        if ((_regs)->aearn[i] != 0) \
+          (_regs)->VE(i) = 0; \
+    } \
+} while(0)
+
+#define INVALIDATE_AEA_ABS(_addr, _regs) \
 do { \
     int i; \
     for(i = 0; i < MAXAEA; i++) \
-      if ((_regs)->aearn[i] == (_arn)) \
+      if (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->AE(i)) \
         (_regs)->VE(i) = 0; \
 } while(0)
 
 #define INVALIDATE_AEA_ALL(_regs) \
 do { \
     (_regs)->aeID++; \
+    (_regs)->aearvalid = 0; \
     if ((_regs)->aeID == PAGEFRAME_PAGESIZE) \
     { \
         (_regs)->aeID = 1; \

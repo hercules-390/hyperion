@@ -72,7 +72,7 @@ VADR op4addr;
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -165,7 +165,7 @@ VADR op4addr;
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -433,7 +433,7 @@ VADR op4addr;
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -571,7 +571,7 @@ VADR op4addr;
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -682,7 +682,7 @@ VADR op4addr;
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -783,7 +783,7 @@ VADR op4addr;
                 ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION);
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -843,7 +843,7 @@ VADR op4addr,
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -871,7 +871,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore4)(op3, op4addr, r3, regs);
 
@@ -879,7 +879,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore4)(op5, op6addr, r3, regs);
 
@@ -937,7 +937,7 @@ VADR op4addr,
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -965,7 +965,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op3, op4addr, r3, regs);
 
@@ -973,7 +973,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op5, op6addr, r3, regs);
 
@@ -1027,7 +1027,7 @@ VADR op4addr,
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -1047,7 +1047,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op3, op4addr, r3, regs);
 
@@ -1055,7 +1055,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op5, op6addr, r3, regs);
 
@@ -1115,7 +1115,7 @@ VADR op4addr,
             op4alet = ARCH_DEP(vfetch4)(effective_addr4 + 68, b4, regs);
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -1135,7 +1135,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstorec)(op3, 16-1, op4addr, r3, regs);
 
@@ -1143,7 +1143,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstorec)(op5, 16-1, op6addr, r3, regs);
 
@@ -1201,7 +1201,7 @@ VADR op4addr,
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -1238,7 +1238,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(validate_operand) (op6addr, r3, 4-1, ACCTYPE_WRITE_SKP, regs);
 
@@ -1246,7 +1246,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore4)(op3, op4addr, r3, regs);
 
@@ -1254,7 +1254,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore4)(op5, op6addr, r3, regs);
 
@@ -1262,7 +1262,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore4)(op7, op8addr, r3, regs);
 
@@ -1325,7 +1325,7 @@ VADR op4addr,
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -1362,7 +1362,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(validate_operand) (op6addr, r3, 8-1,ACCTYPE_WRITE_SKP, regs);
 
@@ -1370,7 +1370,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op3, op4addr, r3, regs);
 
@@ -1378,7 +1378,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op5, op6addr, r3, regs);
 
@@ -1386,7 +1386,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op7, op8addr, r3, regs);
 
@@ -1445,7 +1445,7 @@ VADR op4addr,
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -1470,7 +1470,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(validate_operand) (op6addr, r3, 8-1,ACCTYPE_WRITE_SKP, regs);
 
@@ -1478,7 +1478,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op3, op4addr, r3, regs);
 
@@ -1486,7 +1486,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op5, op6addr, r3, regs);
 
@@ -1494,7 +1494,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstore8)(op7, op8addr, r3, regs);
 
@@ -1559,7 +1559,7 @@ VADR op4addr,
             op6alet = ARCH_DEP(vfetch4)(effective_addr4 + 100, b4, regs);
             op8alet = ARCH_DEP(vfetch4)(effective_addr4 + 132, b4, regs);
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
 
         /* Load address of operand 4 */
@@ -1584,7 +1584,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(validate_operand) (op6addr, r3, 16-1, ACCTYPE_WRITE_SKP, regs);
 
@@ -1592,7 +1592,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op4alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstorec)(op3, 16-1, op4addr, r3, regs);
 
@@ -1600,7 +1600,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op6alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstorec)(op5, 16-1, op6addr, r3, regs);
 
@@ -1608,7 +1608,7 @@ VADR op4addr,
         if(!REAL_MODE(&regs->psw) && ACCESS_REGISTER_MODE(&regs->psw))
         {
             regs->AR(r3) = op8alet;
-            INVALIDATE_AEA(r3, regs);
+            INVALIDATE_AEA_AR(r3, regs);
         }
         ARCH_DEP(vstorec)(op7, 16-1, op8addr, r3, regs);
 

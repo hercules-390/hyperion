@@ -390,8 +390,9 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      ve[256];                /* Virtual effective addr    */
         BYTE    aekey[256];             /* Storage Key               */
         int     aeacc[256];             /* Access type               */
-        int     aearn[256];             /* Address room              */
-        int     aenoarn;                /* no access mode            */
+        int     aearn[256];             /* Access register used      */
+        int     aenoarn;                /* 1=Not in AR mode          */
+        int     aearvalid;              /* 1=Address(es) in AR mode  */
         U32     aeID;                   /* Validation identifier     */
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
