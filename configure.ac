@@ -39,8 +39,15 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 [have_libbz2=yes],[have_libbz2=no])
 
 # Headers
-AC_CHECK_HEADERS(byteswap.h linux/if_tun.h inttypes.h)
+AC_CHECK_HEADERS(byteswap.h linux/if_tun.h)
 AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
+
+dnl AC_MSG_NOTICE([Checking how to get fixed-size data types])
+AC_CHECK_HEADER(inttypes.h,
+                [AC_DEFINE([HAVE_INTTYPES_H])],
+                [AC_CHECK_TYPE(u_int8_t,
+                               [AC_DEFINE([HAVE_U_INT])],
+                               [AC_MSG_ERROR([Unable to find fixed-size data types])] )] )
 
 # Compiler characteristics
 
