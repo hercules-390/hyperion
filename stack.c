@@ -406,8 +406,8 @@ U16     xcode;                          /* Exception code            */
 #endif /*defined(FEATURE_PER2)*/
           && PER_RANGE_CHECK(vaddr,regs->CR(10),regs->CR(11)) )
             ON_IC_PER_SA(regs);
-#endif /*defined(FEATURE_PER)*/
     }
+#endif /*defined(FEATURE_PER)*/
 
     /* Return absolute address */
     return aaddr;
