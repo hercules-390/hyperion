@@ -380,7 +380,7 @@ typedef void    (*SIEFN) ();
 /* Structure definition for CPU register context                     */
 /*-------------------------------------------------------------------*/
 typedef struct _REGS {                  /* Processor registers       */
-#define HDL_VERS_REGS   "1.0"           /* Internal Version Number   */
+#define HDL_VERS_REGS   "2.17"          /* Internal Version Number   */
 #define HDL_SIZE_REGS   sizeof(REGS)
         int     arch_mode;              /* Architectural mode        */
         U64     ptimer;                 /* CPU timer                 */
@@ -621,7 +621,7 @@ typedef struct _ZPBLK {
 /* System configuration block                                        */
 /*-------------------------------------------------------------------*/
 typedef struct _SYSBLK {
-#define HDL_VERS_SYSBLK   "1.0"         /* Internal Version Number   */
+#define HDL_VERS_SYSBLK   "2.17"        /* Internal Version Number   */
 #define HDL_SIZE_SYSBLK   sizeof(SYSBLK)
         int     arch_mode;              /* Architecturual mode       */
                                         /* 0 == S/370                */
@@ -912,7 +912,7 @@ struct _DEVDATA;                                /* Forward reference */
 /* Device configuration block                                        */
 /*-------------------------------------------------------------------*/
 typedef struct _DEVBLK {
-#define HDL_VERS_DEVBLK   "1.0"         /* Internal Version Number   */
+#define HDL_VERS_DEVBLK   "2.17"        /* Internal Version Number   */
 #define HDL_SIZE_DEVBLK   sizeof(DEVBLK)
         struct _DEVBLK *nextdev;        /* -> next device block      */
         LOCK    lock;                   /* Device block lock         */
