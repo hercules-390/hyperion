@@ -120,7 +120,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     akey = regs->psw.pkey;
 
     /* Translate addresses of leftmost operand bytes */
-    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE, akey);
+    abs1 = LOGICAL_TO_ABS (effective_addr1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     abs2 = LOGICAL_TO_ABS (effective_addr2, b2, regs, ACCTYPE_READ, akey);
 
     /* Calculate page addresses of rightmost operand bytes */
@@ -131,9 +131,14 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
 
     /* Translate next page addresses if page boundary crossed */
     if (npv1 != (effective_addr1 & PAGEFRAME_PAGEMASK))
-        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE, akey);
+        npa1 = LOGICAL_TO_ABS (npv1, b1, regs, ACCTYPE_WRITE_SKP, akey);
     if (npv2 != (effective_addr2 & PAGEFRAME_PAGEMASK))
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
+
+    /* all operands and page crossers valid, now alter ref & chg bits */
+    STORAGE_KEY(abs1) |= (STORKEY_REF | STORKEY_CHANGE);
+    if (npa1)
+        STORAGE_KEY(npa1) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Process operands from left to right */
     for ( i = 0; i <= l; i++ )
@@ -193,9 +198,15 @@ BYTE    dbyte;                          /* Destination operand byte  */
     SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    /* Validate the operands for addressing and protection */
-    ARCH_DEP(validate_operand) (effective_addr1, b1, l1, ACCTYPE_WRITE, regs);
-    ARCH_DEP(validate_operand) (effective_addr2, b2, l2, ACCTYPE_READ, regs);
+    /* If operand 1 crosses a page, make sure both pages are accessable */
+    if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
+        ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
+        ARCH_DEP(validate_operand) (effective_addr1, b1, l1, ACCTYPE_WRITE_SKP, regs);
+
+    /* If operand 2 crosses a page, make sure both pages are accessable */
+    if((effective_addr2 & PAGEFRAME_PAGEMASK) !=
+        ((effective_addr2 + l2) & PAGEFRAME_PAGEMASK))
+        ARCH_DEP(validate_operand) (effective_addr2, b2, l2, ACCTYPE_READ, regs);
 
     /* Exchange the digits in the rightmost byte */
     effective_addr1 += l1;
@@ -1402,8 +1413,10 @@ BYTE    cwork[256];                     /* Character work areas      */
     SS_L(inst, execflag, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
-    /* Validate the first operand for write access */
-    ARCH_DEP(validate_operand) (effective_addr1, b1, l, ACCTYPE_WRITE, regs);
+    /* If operand 1 crosses a page, make sure both pages are accessable */
+    if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
+        ((effective_addr1 + l) & PAGEFRAME_PAGEMASK))
+        ARCH_DEP(validate_operand) (effective_addr1, b1, l, ACCTYPE_WRITE_SKP, regs);
 
     /* Fetch first operand into work area */
     ARCH_DEP(vfetchc) ( cwork, l, effective_addr1, b1, regs );
@@ -1417,9 +1430,11 @@ BYTE    cwork[256];                     /* Character work areas      */
         if (cwork[i] > h) h = cwork[i];
     }
 
-    /* Validate the referenced portion of the second operand */
     n = (effective_addr2 + d) & ADDRESS_MAXWRAP(regs);
-    ARCH_DEP(validate_operand) (n, b2, h-d, ACCTYPE_READ, regs);
+    /* If operand 2 crosses a page, make sure both pages are accessable */
+    if((n & PAGEFRAME_PAGEMASK) !=
+        ((n + (h-d)) & PAGEFRAME_PAGEMASK))
+        ARCH_DEP(validate_operand) (n, b2, h-d, ACCTYPE_READ, regs);
 
     /* Process first operand from left to right, refetching
        second operand and storing the result byte by byte
@@ -1599,9 +1614,15 @@ BYTE    lbyte;                          /* Left result byte of pair  */
     SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
-    /* Validate the operands for addressing and protection */
-    ARCH_DEP(validate_operand) (effective_addr1, b1, l1, ACCTYPE_WRITE, regs);
-    ARCH_DEP(validate_operand) (effective_addr2, b2, l2, ACCTYPE_READ, regs);
+    /* If operand 1 crosses a page, make sure both pages are accessable */
+    if((effective_addr1 & PAGEFRAME_PAGEMASK) !=
+        ((effective_addr1 + l1) & PAGEFRAME_PAGEMASK))
+        ARCH_DEP(validate_operand) (effective_addr1, b1, l1, ACCTYPE_WRITE_SKP, regs);
+
+    /* If operand 2 crosses a page, make sure both pages are accessable */
+    if((effective_addr2 & PAGEFRAME_PAGEMASK) !=
+        ((effective_addr2 + l2) & PAGEFRAME_PAGEMASK))
+        ARCH_DEP(validate_operand) (effective_addr2, b2, l2, ACCTYPE_READ, regs);
 
     /* Exchange the digits in the rightmost byte */
     effective_addr1 += l1;
