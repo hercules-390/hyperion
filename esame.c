@@ -4482,6 +4482,7 @@ RADR    n;                              /* 64-bit operand values     */
 
 
 #if defined(_900) || defined(FEATURE_ESAME) || defined(FEATURE_ESAME_N3_ESA390)
+BYTE ARCH_DEP(stfl_data)[4] = { 0, 0, 0, 0 };
 /*-------------------------------------------------------------------*/
 /* B2B1 STFL  - Store Facilities List                            [S] */
 /*-------------------------------------------------------------------*/
@@ -4503,7 +4504,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     /* Point to PSA in main storage */
     psa = (void*)(regs->mainstor + regs->PX);
 
-    psa->stfl[0] = 0
+    psa->stfl[0] = ARCH_DEP(stfl_data)[0] 
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)
                  | STFL_0_N3
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
@@ -4517,8 +4518,8 @@ PSA    *psa;                            /* -> Prefixed storage area  */
                  | STFL_0_IDTE_INSTALLED
 #endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
                  ;
-    psa->stfl[1] = 0;
-    psa->stfl[2] = 0
+    psa->stfl[1] = ARCH_DEP(stfl_data)[1];
+    psa->stfl[2] = ARCH_DEP(stfl_data)[2] 
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
                  | STFL_2_TRAN_FAC2
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
@@ -4533,7 +4534,7 @@ PSA    *psa;                            /* -> Prefixed storage area  */
                  | STFL_2_HFP_MULT_ADD_SUB
 #endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
                  ;
-    psa->stfl[3] = 0;
+    psa->stfl[3] = ARCH_DEP(stfl_data)[3];
 
 } /* end DEF_INST(store_facilities_list) */
 #endif /*defined(_900) || defined(FEATURE_ESAME)*/
