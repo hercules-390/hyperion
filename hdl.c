@@ -338,12 +338,6 @@ char *modname;
 
     modname = (modname = strrchr(name,'/')) ? ++modname : name;
 
-    // ZZ FIXME: Win32-specific file name handling: If no file name
-    // extension is specified in the file name parameter, the default
-    // library extension ".dll" is appended. However, the file name
-    // string can include a trailing point character (.) to indicate
-    // that the module name has no extension.
-
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
         if(strfilenamecmp(modname,dllent->name) == 0)
