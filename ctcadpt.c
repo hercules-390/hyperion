@@ -1643,6 +1643,11 @@ U32             stackcmd;               /* VSE IP stack command      */
         return;
     }
 
+#if 0 
+    // Notes: It appears that TurboLinux has gotten sloppy in their
+    //        ways. They are now giving us block sizes that are
+    //        greater than the CCW count, but the segment size
+    //        is within the count. 
     /* Check that the block length is valid */
     if (blklen < (int)sizeof(CTCI_BLKHDR) || blklen > count)
     {
@@ -1653,6 +1658,10 @@ U32             stackcmd;               /* VSE IP stack command      */
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
         return;
     }
+#endif
+
+    /* Adjust the residual byte count */
+    *residual -= sizeof( CTCI_BLKHDR );
 
     /* Process each segment in the buffer */
     for (pos = sizeof(CTCI_BLKHDR); pos < blklen; pos += seglen)
@@ -1716,6 +1725,17 @@ U32             stackcmd;               /* VSE IP stack command      */
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             return;
         }
+
+        /* Adjust the residual byte count */
+        *residual -= seglen;
+
+	/* We are done if current segment satisfies CCW count */
+	if( pos + seglen == count )
+	{
+	    *residual -= seglen;
+	    *unitstat = CSW_CE | CSW_DE;
+	    return;
+	}
 
     } /* end for */
 

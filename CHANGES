@@ -22,6 +22,7 @@
 11 Jul 2002 File integrity fixes for compressed dasd - Greg Smith
 11 Jul 2002 New optional HTTPROOT control file statement - Fish
 09 Jul 2002 Minor fix to OPTION_CPU_UTILIZATION to fix FISH_HANG issue - Fish
+02 Jul 2002 CTC fix for TurboLinux bug - Jim Pierson
 02 Jul 2002 3287 printer support via TN3270 - Tomas Masek
 02 Jul 2002 S/370 extended memory fixes - Tomas Masek
 02 Jul 2002 Fixes to ckdtab in dasdtab.c - Greg Smith
