@@ -23,11 +23,9 @@ static int
 open_printer (DEVBLK *dev)
 {
 int             fd;                     /* File descriptor           */
-#if !defined(WIN32)
 int             rc;                     /* Return code               */
 int             pipefd[2];              /* Pipe descriptors          */
 pid_t           pid;                    /* Child process identifier  */
-#endif /* !defined(WIN32) */
 
     /* Regular open if 1st char of filename is not vertical bar */
     if (dev->filename[0] != '|')
@@ -49,12 +47,6 @@ pid_t           pid;                    /* Child process identifier  */
 
     /* Filename is in format |xxx, set up pipe to program xxx */
 
-#if defined(WIN32)
-    logmsg ("HHC414I %4.4X print to pipe not supported under Windows\n",
-            dev->devnum);
-    return -1;
-#else /* !defined(WIN32) */
-
     /* Create a pipe */
     rc = pipe (pipefd);
     if (rc < 0)
@@ -73,12 +65,12 @@ pid_t           pid;                    /* Child process identifier  */
         return -1;
     }
 
-    /* The child process executes the pipe receiver program */
+    /* The child process executes the pipe receiver program... */
     if (pid == 0)
     {
         /* Log start of child process */
-        logmsg ("HHC417I %4.4X pipe receiver (pid=%d) starting\n",
-                dev->devnum, getpid());
+        logmsg ("HHC417I pipe receiver (pid=%d) starting for %4.4X\n",
+                getpid(), dev->devnum);
 
         /* Close the write end of the pipe */
         close (pipefd[1]);
@@ -104,6 +96,7 @@ pid_t           pid;                    /* Child process identifier  */
         {
             logmsg ("HHC419I %4.4X dup2 error: %s\n",
                     dev->devnum, strerror(errno));
+            close (STDIN_FILENO);
             _exit(127);
         }
 
@@ -113,6 +106,8 @@ pid_t           pid;                    /* Child process identifier  */
         {
             logmsg ("HHC420I %4.4X dup2 error: %s\n",
                     dev->devnum, strerror(errno));
+            close (STDIN_FILENO);
+            close (STDOUT_FILENO);
             _exit(127);
         }
 
@@ -120,22 +115,60 @@ pid_t           pid;                    /* Child process identifier  */
         SETMODE(TERM);
 
         /* Execute the specified pipe receiver program */
+
+#if defined(WIN32)
+        {
+            /* Build cmdline to start print spooler:
+
+              "<splrpgm> pid=nnnn dev=dddd [extgui=1|0]"
+
+            The "pid=", "dev=", etc, parms are informational
+            only and allows the spooler program to identify
+            which printer for which Herc it is controlling.
+            The "extgui=" parm tells the spooler whether the
+            Hercules it is controlling a device for is under
+            the control of an external gui or not (so it can
+            behave differently if it needs to).
+            */
+            BYTE* pCmdLine;
+            int nMaxLen = 1 + strlen(dev->filename+1) + 64;
+            pCmdLine = malloc(nMaxLen);
+            snprintf(pCmdLine,nMaxLen-1,"%s pid=%d dev=%4.4X"
+#ifdef EXTERNALGUI
+                " extgui=%d"
+#endif /*EXTERNALGUI*/
+                ,dev->filename+1,getpid(),dev->devnum
+#ifdef EXTERNALGUI
+                ,extgui
+#endif /*EXTERNALGUI*/
+                );
+            pCmdLine[nMaxLen-1] = 0;
+            rc = system (pCmdLine);
+            free(pCmdLine);
+        }
+#else
         rc = system (dev->filename+1);
+#endif
+
         if (rc != 0)
         {
             logmsg ("HHC422I %4.4X Unable to execute %s: %s\n",
                     dev->devnum, dev->filename+1, strerror(errno));
             close (STDIN_FILENO);
+            close (STDOUT_FILENO);
+            close (STDERR_FILENO);
             _exit(rc);
         }
 
         /* Log end of child process */
-        logmsg ("HHC423I %4.4X pipe receiver (pid=%d) terminating\n",
-                dev->devnum, getpid());
+        logmsg ("HHC423I pipe receiver (pid=%d) terminating for %4.4X\n",
+                getpid(), dev->devnum);
 
         /* The child process terminates using _exit instead of exit
            to avoid invoking the panel atexit cleanup routine */
         close (STDIN_FILENO);
+        close (STDOUT_FILENO);
+        close (STDERR_FILENO);
         _exit(0);
 
     } /* end if(pid==0) */
@@ -149,7 +182,6 @@ pid_t           pid;                    /* Child process identifier  */
     dev->fd = pipefd[1];
 
     return 0;
-#endif /* !defined(WIN32) */
 } /* end function open_printer */
 
 /*-------------------------------------------------------------------*/
@@ -201,6 +233,7 @@ int     i;                              /* Array subscript           */
     dev->diaggate = 0;
     dev->fold = 0;
     dev->crlf = 0;
+    dev->stopprt = 0;
 
     /* Process the driver arguments */
     for (i = 1; i < argc; i++)
@@ -244,11 +277,11 @@ int     i;                              /* Array subscript           */
 void printer_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer)
 {
-
     *class = "PRT";
-    snprintf (buffer, buflen, "%s%s",
+    snprintf (buffer, buflen, "%s%s%s",
                 dev->filename,
-                (dev->crlf ? " crlf" : ""));
+                (dev->crlf ? " crlf" : ""),
+                (dev->stopprt ? " stopped" : ""));
 
 } /* end function printer_query_device */
 
@@ -260,6 +293,7 @@ int printer_close_device ( DEVBLK *dev )
     /* Close the device file */
     close (dev->fd);
     dev->fd = -1;
+    dev->stopprt = 0;
 
     return 0;
 } /* end function printer_close_device */
@@ -271,7 +305,7 @@ void printer_execute_ccw (DEVBLK *dev, BYTE code, BYTE flags,
         BYTE chained, U16 count, BYTE prevcode, int ccwseq,
         BYTE *iobuf, BYTE *more, BYTE *unitstat, U16 *residual)
 {
-int             rc;                     /* Return code               */
+int             rc = 0;                 /* Return code               */
 int             i;                      /* Loop counter              */
 int             num;                    /* Number of bytes to move   */
 char           *eor;                    /* -> end of record string   */
@@ -285,15 +319,22 @@ BYTE            c;                      /* Print character           */
 
     /* Open the device file if necessary */
     if (dev->fd < 0 && !IS_CCW_SENSE(code))
-    {
         rc = open_printer (dev);
-        if (rc < 0)
-        {
-            /* Set unit check with intervention required */
-            dev->sense[0] = SENSE_IR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return;
-        }
+    else
+    {
+        /* If printer stopped, return intervention required */
+        if (dev->stopprt && !IS_CCW_SENSE(code))
+            rc = -1;
+        else
+            rc = 0;
+    }
+
+    if (rc < 0)
+    {
+        /* Set unit check with intervention required */
+        dev->sense[0] = SENSE_IR;
+        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+        return;
     }
 
     /* Process depending on CCW opcode */
@@ -674,4 +715,3 @@ BYTE            c;                      /* Print character           */
     } /* end switch(code) */
 
 } /* end function printer_execute_ccw */
-

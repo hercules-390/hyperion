@@ -982,6 +982,7 @@ typedef struct _DEVBLK {
                                            placed in print buffer    */
         int     printrem;               /* Number of bytes remaining
                                            in print buffer           */
+        int     stopprt;                /* 1=stopped; 0=started      */
         unsigned int                    /* Flags                     */
                 crlf:1,                 /* 1=CRLF delimiters, 0=LF   */
                 diaggate:1,             /* 1=Diagnostic gate command */

@@ -975,6 +975,7 @@ BYTE   *devascii;                       /* ASCII text device number  */
 int     devargc;                        /* Arg count for devinit     */
 BYTE   *devargv[MAX_ARGS];              /* Arg array for devinit     */
 BYTE   *devclass;                       /* -> Device class name      */
+BYTE    devnam[256];                    /* devqdef(...) buffer       */
 BYTE   *cmdarg;                         /* -> Command argument       */
 
     /* Copy panel command to work area */
@@ -1069,17 +1070,26 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 
 /*********************************************************************/
+
     /* g command - turn off single stepping and start CPU */
-    if (strcmp(cmd,"g") == 0)
+
+    if (strcasecmp(cmd,"g") == 0)
     {
         sysblk.inststep = 0;
         SET_IC_TRACE;
         strcpy (cmd, "start");
+
+        /* (fall through to "start" command....) */
     }
 
+/*********************************************************************/
+
+    /* (NOTE: below logic must follow "g" command) */
+
     /* start command (or just Enter) - start CPU */
+
     if ((cmd[0] == '\0' && sysblk.inststep)
-        || strcmp(cmd,"start") == 0)
+        || strcasecmp(cmd,"start") == 0)
     {
         /* Obtain the interrupt lock */
         obtain_lock (&sysblk.intlock);
@@ -1102,14 +1112,104 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 
 /*********************************************************************/
-    /* stop command - stop CPU */
-    if (strcmp(cmd,"stop") == 0)
+
+    /* start command w/argument: start specified printer device */
+
+    if (strncasecmp(cmd,"start",5) == 0)
     {
-        obtain_lock (&sysblk.intlock);
-        regs->cpustate = CPUSTATE_STOPPING;
-        ON_IC_CPU_NOT_STARTED(regs);
-        WAKEUP_CPU (regs->cpuad);
-        release_lock (&sysblk.intlock);
+        int stopprt;
+
+        devascii = strtok(cmd+5," \t");
+
+        if (devascii)
+        {
+            if (sscanf(devascii, "%hx%c", &devnum, &c) != 1)
+            {
+                logmsg ("Invalid device number\n");
+                return NULL;
+            }
+
+            dev = find_device_by_devnum (devnum);
+
+            if (dev == NULL)
+            {
+                logmsg("Device number %4.4X not found\n", devnum);
+                return NULL;
+            }
+
+            (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+
+            if (strcasecmp(devclass,"PRT") != 0)
+            {
+                logmsg("Device %4.4X is not a printer device\n", devnum);
+                return NULL;
+            }
+
+            /* un-stop the printer and raise attention interrupt */
+
+            stopprt = dev->stopprt; dev->stopprt = 0;
+            rc = device_attention (dev, CSW_ATTN);
+            if (rc != 0) dev->stopprt = stopprt;
+
+            logmsg ("HHC425%c Printer %4.4X %s\n",
+                    (rc ? 'E' : 'I'),
+                    devnum,
+                    rc == 0 ? "started" :
+                    rc == 1 ? "busy or interrupt pending" :
+                    rc == 3 ? "subchannel not enabled" :
+                    "attention request rejected");
+
+            return NULL;
+        }
+    }
+
+/*********************************************************************/
+
+    /* stop command - stop CPU (or printer device) */
+
+    if (strncasecmp(cmd,"stop",4) == 0)
+    {
+        devascii = strtok(cmd+4," \t");
+
+        if (!devascii)
+        {
+            /* stop the CPU */
+
+            obtain_lock (&sysblk.intlock);
+            regs->cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(regs);
+            WAKEUP_CPU (regs->cpuad);
+            release_lock (&sysblk.intlock);
+            return NULL;
+        }
+
+        /* stop specified printer device */
+
+        if (sscanf(devascii, "%hx%c", &devnum, &c) != 1)
+        {
+            logmsg ("Invalid device number\n");
+            return NULL;
+        }
+
+        dev = find_device_by_devnum (devnum);
+
+        if (dev == NULL)
+        {
+            logmsg("Device number %4.4X not found\n", devnum);
+            return NULL;
+        }
+
+        (dev->devqdef)(dev, &devclass, sizeof(devnam), devnam);
+
+        if (strcasecmp(devclass,"PRT") != 0)
+        {
+            logmsg("Device %4.4X is not a printer device\n", devnum);
+            return NULL;
+        }
+
+        dev->stopprt = 1;
+
+        logmsg("HHC424I Printer %4.4X stopped\n", devnum);
         return NULL;
     }
 
@@ -2344,7 +2444,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             case '+': if (devascii != NULL)
                       {
                           logmsg ("Unexpected operand: %s\n", devascii);
-                          return NULL; 
+                          return NULL;
                       }
                       cckd_sf_add (dev);
                       break;
@@ -2357,7 +2457,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                       else
                       {
                           logmsg ("Operand must be `merge' or `nomerge'\n");
-                          return NULL; 
+                          return NULL;
                       }
                       break;
 
@@ -2370,7 +2470,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             case 'c': if (devascii != NULL)
                       {
                           logmsg ("Unexpected operand: %s\n", devascii);
-                          return NULL; 
+                          return NULL;
                       }
                       cckd_sf_comp (dev);
                       break;
@@ -2378,7 +2478,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             case 'd': if (devascii != NULL)
                       {
                           logmsg ("Unexpected operand: %s\n", devascii);
-                          return NULL; 
+                          return NULL;
                       }
                       cckd_sf_stats (dev);
                       break;
