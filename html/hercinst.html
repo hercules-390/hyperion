@@ -31,26 +31,23 @@ href="http://www.bsp-gmbh.com/hercules/nude_w32.html">http://www.bsp-gmbh.com/he
 <li>Use these commands to unzip the distribution file:
 <pre>tar xvzf ../hercules-2.13.tar.gz
 cd hercules-2.13</pre>
-<li>Build the executable files:
-<br><code>make </code>[<code>HOST_ARCH=<i>arch</i></code>]<br>
-The <code>HOST_ARCH</code> argument is optional. It specifies the machine
-architecture, for setting options on the C compiler. Possible values are:
-<ul>
-<li><code>i386</code>: Intel 386 and above. No architecture optimizations
-are done.
-<li><code>i586</code>: Pentium and above. If specified, the resulting
-package will not run on 386 or 486 systems.
-<li><code>i686</code>: Pentium Pro and Pentium II. If specified, the
-resulting package will not run on 386, 486, or Pentium systems.
-<li>Anything else will remove the Intel-specific compiler flag.
-</ul>
-The default is i586, since most Hercules users appear to be running
-Pentiums. If building for an Intel-based system, you must not give HOST_ARCH
-an undefined value, as this will cause Hercules to break in weird and
-wonderful ways. If, on the other hand, you are building for a non-Intel
-platform, you must give HOST_ARCH a non-Intel value.
-<li>Install the programs: as root,
-<br><code>make install</code>
+<li>Configure Hercules for your system:
+
+<p><code>./configure</code>
+
+<p>By default, the configure script will attempt to guess appropriate
+	  compiler optimization flags for your system.  If its guesses
+	  turn out to be wrong, you can disable all optimization by
+	  passing the <code>--disable-optimization</code> option to
+	  configure, or specify your own optimization flags with
+	  <code>--enable-optimization=FLAGS</code>
+
+<p>For additional configuration options, run <code>./configure
+	      --help</code>
+
+<li>Build the executables: <p><code>make</code>
+
+<li>Install the programs: as root: <p><code>make install</code>
 </ol>
 
 <em>Important:</em>
@@ -78,6 +75,21 @@ This will leave the Hercules executables in /usr/bin, where you can run them
 from anywhere. Sample configuration files will be placed in /etc/hercules,
 and the IPLable card deck for the ZZSA standalone utility will be placed in
 /var/share/hercules.
+
+<h3>Installing Debian packages:</h3>
+
+Debian packages are available for "woody" and later releases.  As of
+this writing, "woody" is not yet released.
+
+<ul>
+<li>Using apt: <code>apt-get install hercules</code>
+<li>Manually with dpkg:
+  <ol>
+    <li>Download a <a href="http://packages.debian.org/hercules">.deb
+		package</a>
+    <li><code>dpkg -i</code> <i>DEB</i>
+  </ol>
+</ul>
 
 <h2>Configuration Procedure</h2>
 <p>
