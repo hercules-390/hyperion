@@ -1672,7 +1672,12 @@ int  ecpsvm_dossm(REGS *regs,int b,VADR ea);
 int  ecpsvm_dolpsw(REGS *regs,int b,VADR ea);
 int  ecpsvm_dostnsm(REGS *regs,int b,VADR ea,int imm);
 int  ecpsvm_dostosm(REGS *regs,int b,VADR ea,int imm);
-int  ecpsvm_dosio(BYTE *inst,REGS *regs,int b,VADR ea);
+int  ecpsvm_dosio(REGS *regs,int b,VADR ea);
+int  ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2);
+int  ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2);
+int  ecpsvm_dostctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2);
+int  ecpsvm_doiucv(REGS *regs,int b2,VADR effective_addr2);
+int  ecpsvm_virttmr_ext(REGS *regs);
 #endif
 
 

@@ -747,6 +747,13 @@ VADR    effective_addr2;                /* Effective address         */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_dodiag(regs,r1,r3,b2,effective_addr2)==0)
+    {
+        return;
+    }
+#endif
+
 #ifdef FEATURE_HERCULES_DIAGCALLS
     if (
 #if defined(_FEATURE_SIE)
@@ -1649,6 +1656,12 @@ BYTE    rwork[64];                      /* Register work areas       */
 int     inval = 0;                      /* Invalidation flag        */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_dolctl(regs,r1,r3,b2,effective_addr2)==0)
+    {
+        return;
+    }
+#endif
 
     PRIV_CHECK(regs);
 
@@ -5237,6 +5250,12 @@ int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work areas       */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_dostctl(regs,r1,r3,b2,effective_addr2)==0)
+    {
+        return;
+    }
+#endif
 
     PRIV_CHECK(regs);
 

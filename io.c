@@ -868,6 +868,15 @@ VADR    ccwaddr;                        /* CCW address for start I/O */
 BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
 
     S(inst, execflag, regs, b2, effective_addr2);
+#if defined(FEATURE_ECPSVM)
+    if((inst[1])!=0x02)
+    {
+        if(ecpsvm_dosio(regs,b2,effective_addr2)==0)
+        {
+            return;
+        }
+    }
+#endif
 
     PRIV_CHECK(regs);
 

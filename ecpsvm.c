@@ -64,6 +64,10 @@ struct _ECPSVM_CPSTATS
     ECPSVM_STAT_DCL(STOSM);
     ECPSVM_STAT_DCL(SIO);
     ECPSVM_STAT_DCL(VTIMER);
+    ECPSVM_STAT_DCL(STCTL);
+    ECPSVM_STAT_DCL(LCTL);
+    ECPSVM_STAT_DCL(DIAG);
+    ECPSVM_STAT_DCL(IUCV);
 } ecpsvm_sastats={
     ECPSVM_STAT_DEF(SVC),
     ECPSVM_STAT_DEF(SSM),
@@ -72,6 +76,10 @@ struct _ECPSVM_CPSTATS
     ECPSVM_STAT_DEFU(STOSM),
     ECPSVM_STAT_DEFU(SIO),
     ECPSVM_STAT_DEF(VTIMER),
+    ECPSVM_STAT_DEFU(STCTL),
+    ECPSVM_STAT_DEF(LCTL),
+    ECPSVM_STAT_DEFU(DIAG),
+    ECPSVM_STAT_DEFU(IUCV),
 };
 struct _ECPSVM_SASTATS
 {
@@ -1781,8 +1789,6 @@ DEF_INST(ecpsvm_unxlate_ccw)
 /* DISP2 : Not supported */
 DEF_INST(ecpsvm_disp2)
 {
-    VADR vmb;
-
     ECPSVM_PROLOG(DISP2);
     switch(ecpsvm_do_disp2(regs,effective_addr1,effective_addr2))
     {
@@ -2300,22 +2306,11 @@ int     ecpsvm_virttmr_ext(REGS *regs)
 }
 
 /* SIO/SIOF Assist */
-int ecpsvm_dosio(BYTE *inst,REGS *regs,int b2,VADR e2)
+int ecpsvm_dosio(REGS *regs,int b2,VADR e2)
 {
     SASSIST_PROLOG(SIO);
     UNREFERENCED(b2);
     UNREFERENCED(e2);
-    /* Reject if V PSW is in problem state */
-    if(CR6 & ECPSVM_CR6_VIRTPROB)
-    {
-        DEBUG_SASSISTX(SIO,logmsg("HHCEV300D : SASSIST SSM reject : V PB State\n"));
-        return(1);
-    }
-    if(inst[1]>1)
-    {
-        DEBUG_SASSISTX(SIO,logmsg("HHCEV300D : SASSIST - RIO Not supported\n"));
-        return(1);      /* RIO is a NOGO */
-    }
     return(1);
 }
 int ecpsvm_dostnsm(REGS *regs,int b1,VADR effective_addr1,int imm2)
@@ -2332,6 +2327,218 @@ int ecpsvm_dostosm(REGS *regs,int b1,VADR effective_addr1,int imm2)
     UNREFERENCED(effective_addr1);
     UNREFERENCED(imm2);
     SASSIST_PROLOG(STOSM);
+    return(1);
+}
+
+int ecpsvm_dostctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
+{
+    SASSIST_PROLOG(STCTL);
+
+    UNREFERENCED(r1);
+    UNREFERENCED(r3);
+    UNREFERENCED(b2);
+    UNREFERENCED(effective_addr2);
+    return(1);
+}
+int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
+{
+    U32 crs[16];        /* New CRs */
+    U32 rcrs[16];       /* REAL CRs */
+    U32 ocrs[16];       /* Old CRs */
+    VADR F_ECBLOK,vmb;
+    BYTE B_VMPSTAT;
+
+    int i,j,numcrs;
+
+    SASSIST_PROLOG(LCTL);
+
+    if(effective_addr2 & 0x03)
+    {
+        DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : Not aligned\n"));
+        return(1);
+    }
+
+    vmb=vpswa-0xA8;
+    B_VMPSTAT=regs->mainstor[vmb+VMPSTAT];
+
+    if((!(B_VMPSTAT & VMV370R)) && ((r1!=r3) || (r1!=0)))
+    {
+        DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : BC Mode VM & LCTL != 0,0\n"));
+        return(1);
+    }
+    /* Determine the range of CRs to be loaded */
+    if(r1>r3)
+    {
+        numcrs=(r3+16)-r1;
+    }
+    else
+    {
+        numcrs=r3-r1;
+    }
+    numcrs++;
+    for(j=r1,i=0;i<numcrs;i++,j++)
+    {
+        if(j>15)
+        {
+            j-=16;
+        }
+        crs[j]=ARCH_DEP(vfetch4)((effective_addr2+(i*4)) & ADDRESS_MAXWRAP(regs),b2,regs);
+    }
+    if(B_VMPSTAT & VMV370R)
+    {
+        F_ECBLOK=EVM_L(vmb+VMECEXT);
+        /* Ensure ref bit set */
+        LOGICAL_TO_ABS(F_ECBLOK,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+        if((F_ECBLOK & 0x7FF) != ((F_ECBLOK+((numcrs-1)*4)) & 0x7FF))
+        {
+            /* set ref bit in 2nd 2K Page is necessary */
+            LOGICAL_TO_ABS(F_ECBLOK+((numcrs-1)*4),USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+        }
+        /* Load OLD Crs from ECBLOK */
+        for(i=0;i<16;i++)
+        {
+            FETCH_FW(ocrs[i],regs->mainstor+F_ECBLOK+(i*4));
+        }
+    }
+    else
+    {
+        F_ECBLOK=vmb+VMECEXT;  /* Update ECBLOK ADDRESS for VCR0 Update */
+        /* Load OLD CR0 From VMBLOK */
+        /* Note : ref bit already set in proglog */
+        FETCH_FW(ocrs[0],regs->mainstor+F_ECBLOK);
+    }
+    for(i=0;i<16;i++)
+    {
+        rcrs[i]=regs->CR_L(i);
+    }
+    /* Source safely loaded into "crs" array */
+    /* Load the CRS - exit from loop if it's not possible */
+    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL %d,%d : Modifying %d cregs\n",r1,r3,numcrs));
+    for(j=r1,i=0;i<numcrs;i++,j++)
+    {
+        if(j>15)
+        {
+            j-=16;
+        }
+        switch(j)
+        {
+            case 0:     /* CR0 Case */
+                /* Check 1st 2 bytes of CR0 - No change allowed */
+                if((ocrs[0] & 0xffff0000) != (crs[0] & 0xffff0000))
+                {
+                    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR0 High changed\n"));
+                    return 1;
+                }
+                /* Not allowed if : NEW mask is being enabled AND MICPEND AND PSW has EXT enabled */
+                if(vpregs.psw.sysmask & 0x01)
+                {
+                    if(micpend & 0x80)
+                    {
+                        if((~(ocrs[0] & 0xffff)) & (crs[0] & 0xffff))
+                        {
+                            DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR0 EXTSM Enables new EXTS\n"));
+                            return 1;
+                        }
+                    }
+                }
+                ocrs[0]=crs[0];
+                break;
+            case 1:
+                if(ocrs[1] != crs[1])
+                {
+                    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR1 Updates shadow table\n"));
+                    return 1;
+                }
+                break;
+            case 2:
+                /* Not allowed if : NEW Channel mask is turned on AND micpend AND PSW Extended I/O Mask is on */
+                if(vpregs.psw.sysmask & 0x02)
+                {
+                    if((~ocrs[2]) & crs[2])
+                    {
+                        if(micpend & 0x80)
+                        {
+                            DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : CR2 IOCSM Enables I/O Ints\n"));
+                            return(1);
+                        }
+                    }
+                }
+                ocrs[2]=crs[2];
+                break;
+            case 3:     /* DAS Control regs (not used under VM/370) */
+            case 4:
+            case 5:
+            case 7:
+                ocrs[j]=crs[j];
+                rcrs[j]=crs[j];
+                break;
+            case 6: /* VCR6 Ignored on real machine */
+                ocrs[j]=crs[j];
+                break;
+            case 8: /* Monitor Calls */
+                DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : MC CR8 Update\n"));
+                return(1);
+            case 9: /* PER Control Regs */
+            case 10: 
+            case 11:
+                DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL Reject : PER CR%d Update\n",j));
+                return(1);
+            case 12:
+            case 13: /* 12-13 : Unused */
+                ocrs[j]=crs[j];
+                rcrs[j]=crs[j];
+                break;
+            case 14:
+            case 15: /* 14-15 Machine Check & I/O Logout control (plus DAS) */
+                ocrs[j]=crs[j];
+                break;
+            default:
+                break;
+        }
+    }
+    /* Update REAL Control regs */
+    for(i=0;i<16;i++)
+    {
+        regs->CR_L(i)=rcrs[i];
+    }
+    /* Update ECBLOK/VMBLOK Control regs */
+    /* Set change bit in ECBLOCK (or VMBLOCK) */
+    /* Note : if F_ECBLOK addresses VMVCR0 in the VMBLOCK */
+    /*        check has already been done to make sure    */
+    /*        r1=0 and numcrs=1                           */
+    LOGICAL_TO_ABS(F_ECBLOK,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
+    if((F_ECBLOK & 0x7FF) != ((F_ECBLOK+((numcrs-1)*4)) & 0x7FF))
+    {
+        /* set change bit in 2nd 2K Page is necessary */
+        LOGICAL_TO_ABS(F_ECBLOK+((numcrs-1)*4),USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
+    }
+    for(j=r1,i=0;i<numcrs;i++,j++)
+    {
+        if(j>15)
+        {
+            j-=16;
+        }
+        STORE_FW(regs->mainstor+F_ECBLOK+(j*4),ocrs[j]);
+    }
+    DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL %d,%d Done\n",r1,r3));
+    SASSIST_HIT(LCTL);
+    return 0;
+}
+int ecpsvm_doiucv(REGS *regs,int b2,VADR effective_addr2)
+{
+    SASSIST_PROLOG(IUCV);
+
+    UNREFERENCED(b2);
+    UNREFERENCED(effective_addr2);
+    return(1);
+}
+int ecpsvm_dodiag(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
+{
+    SASSIST_PROLOG(DIAG);
+    UNREFERENCED(r1);
+    UNREFERENCED(r3);
+    UNREFERENCED(b2);
+    UNREFERENCED(effective_addr2);
     return(1);
 }
 static char *ecpsvm_stat_sep="HHCEV003I +-----------+----------+----------+-------+\n";

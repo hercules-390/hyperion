@@ -1029,6 +1029,13 @@ int     b2;                             /* Effective addr base       */
 VADR    effective_addr2;                /* Effective address         */
 
     S(inst, execflag, regs, b2, effective_addr2);
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_doiucv(regs,b2,effective_addr2)==0)
+    {
+        return;
+    }
+#endif
+
 
     /* Program check if in problem state,
        the IUCV instruction generates an operation exception
