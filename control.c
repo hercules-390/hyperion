@@ -100,6 +100,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         if (r2 == 0)
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
+      #ifdef FEATURE_TRACING
+        /* Perform tracing */
+        if (regs->CR(12) & CR12_BRTRACE)
+            newcr12 = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
+                                    regs->GR_L(r2), regs);
+      #endif /*FEATURE_TRACING*/
+
         /* Obtain the new PSW key from R1 register bits 24-27 */
         key = regs->GR_L(r1) & 0x000000F0;
 
@@ -177,12 +184,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.IA = regs->GR_L(r2) & AMASK24;
         }
 
-#ifdef FEATURE_TRACING
-        /* Perform tracing */
-        if (regs->CR(12) & CR12_BRTRACE)
-            newcr12 = ARCH_DEP(trace_br) (regs->GR_L(r2) & 0x80000000,
-                                    regs->GR_L(r2), regs);
-#endif /*FEATURE_TRACING*/
 
     } /* end if(BSA-ba) */
     else
@@ -191,6 +192,13 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         /* In reduced authority state R2 must specify register zero */
         if (r2 != 0)
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+      #ifdef FEATURE_TRACING
+        /* Perform tracing */
+        if (regs->CR(12) & CR12_BRTRACE)
+                newcr12 = ARCH_DEP(trace_br) (duct_reta & DUCT_AM31,
+                                        duct_reta &DUCT_IA31, regs);
+      #endif /*FEATURE_TRACING*/
 
         /* If R1 is non-zero, save the current PSW addressing mode
            and instruction address in the R1 register */
@@ -221,15 +229,6 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             regs->psw.IA = duct_reta & DUCT_IA31;
             regs->psw.amode = (duct_reta & DUCT_AM31) ? 1 : 0;
             regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
-
-#ifdef FEATURE_TRACING
-            /* Perform tracing */
-            if (regs->CR(12) & CR12_BRTRACE)
-                newcr12 = ARCH_DEP(trace_br) (duct_reta & DUCT_AM31,
-                                        duct_reta &DUCT_IA31, regs);
-#endif /*FEATURE_TRACING*/
-
-
         }
 
         /* Restore the PSW key mask from the DUCT */
