@@ -386,11 +386,11 @@ void ebfpston(struct ebfp *op)
 
 	switch (ebfpclassify(op)) {
 	case FP_NAN:
-		logmsg("ebfpston: unexpectedly converting a NaN\n");
+		logmsg(_("ebfpston: unexpectedly converting a NaN\n"));
 		op->v = sqrt(-1);
 		break;
 	case FP_INFINITE:
-		logmsg("ebfpston: unexpectedly converting an Infinite\n");
+		logmsg(_("ebfpston: unexpectedly converting an Infinite\n"));
 		if (op->sign) {
 			op->v = log(0);
 		} else {
@@ -437,11 +437,11 @@ void lbfpston(struct lbfp *op)
 
 	switch (lbfpclassify(op)) {
 	case FP_NAN:
-		logmsg("lbfpston: unexpectedly converting a NaN\n");
+		logmsg(_("lbfpston: unexpectedly converting a NaN\n"));
 		op->v = sqrt(-1);
 		break;
 	case FP_INFINITE:
-		logmsg("lbfpston: unexpectedly converting an Infinite\n");
+		logmsg(_("lbfpston: unexpectedly converting an Infinite\n"));
 		if (op->sign) {
 			op->v = log(0);
 		} else {
@@ -482,11 +482,11 @@ void sbfpston(struct sbfp *op)
 
 	switch (sbfpclassify(op)) {
 	case FP_NAN:
-		logmsg("sbfpston: unexpectedly converting a NaN\n");
+		logmsg(_("sbfpston: unexpectedly converting a NaN\n"));
 		op->v = sqrt(-1);
 		break;
 	case FP_INFINITE:
-		logmsg("sbfpston: unexpectedly converting an Infinite\n");
+		logmsg(_("sbfpston: unexpectedly converting an Infinite\n"));
 		if (op->sign) {
 			op->v = log(0);
 		} else {

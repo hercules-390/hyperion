@@ -667,7 +667,7 @@ DEF_INST(operation_exception)
 
 DEF_INST(dummy_instruction)
 {
-    logmsg("Dummy instruction: "); ARCH_DEP(display_inst) (regs, inst);
+    logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
 
     if( !execflag )
     {

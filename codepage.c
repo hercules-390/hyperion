@@ -184,5 +184,5 @@ void set_codepage(char *name)
         sysblk.codepage++);
 
     if(!sysblk.codepage->name)
-        logmsg("HHC050I CodePage conversion table %s is not defined\n",name);
+        logmsg(_("HHC050I CodePage conversion table %s is not defined\n"),name);
 }

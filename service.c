@@ -493,21 +493,21 @@ void scp_command (BYTE *command, int priomsg)
     /* Error if disabled for priority messages */
     if (priomsg && !(sysblk.cp_recv_mask & 0x00800000))
     {
-        logmsg ("HHC703I SCP not receiving priority messages\n");
+        logmsg (_("HHC703I SCP not receiving priority messages\n"));
         return;
     }
 
     /* Error if disabled for commands */
     if (!priomsg && !(sysblk.cp_recv_mask & 0x80000000))
     {
-        logmsg ("HHC704I SCP not receiving commands\n");
+        logmsg (_("HHC704I SCP not receiving commands\n"));
         return;
     }
 
     /* Error if command string is missing */
     if (strlen(command) < 1)
     {
-        logmsg ("HHC705I No SCP command\n");
+        logmsg (_("HHC705I No SCP command\n"));
         return;
     }
 
@@ -518,7 +518,7 @@ void scp_command (BYTE *command, int priomsg)
        command with message indicating that service processor is busy */
     if (IS_IC_SERVSIG && (sysblk.servparm & SERVSIG_PEND))
     {
-        logmsg ("HHC706I Service Processor busy\n");
+        logmsg (_("HHC706I Service Processor busy\n"));
 
         /* Release the interrupt lock */
         release_lock (&sysblk.intlock);
@@ -1225,14 +1225,14 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 FETCH_DW(syslevel,cpi_bk->system_level);
 
 #if 1
-                logmsg("HHC707I CPI: System Type: %s Name: %s Sysplex: %s\n",
+                logmsg(_("HHC707I CPI: System Type: %s Name: %s Sysplex: %s\n"),
                     systype,sysname,sysplex);
 #else
-                logmsg("HHC770I Control Program Information:\n");
-                logmsg("HHC771I System Type  = %s\n",systype);
-                logmsg("HHC772I System Name  = %s\n",sysname);
-                logmsg("HHC773I Sysplex Name = %s\n",sysplex);
-                logmsg("HHC774I System Level = %16.16llX\n",syslevel);
+                logmsg(_("HHC770I Control Program Information:\n"));
+                logmsg(_("HHC771I System Type  = %s\n",systype));
+                logmsg(_("HHC772I System Name  = %s\n",sysname));
+                logmsg(_("HHC773I Sysplex Name = %s\n",sysplex));
+                logmsg(_("HHC774I System Level = %16.16llX\n"),syslevel);
 #endif
             }
 
@@ -1249,7 +1249,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         default:
 
 #if 0
-            logmsg("HHC799I Unknown event received type = %2.2X\n",
+            logmsg(_("HHC799I Unknown event received type = %2.2X\n"),
               evd_hdr->type);
 #endif
             /* Set response code X'73F0' in SCCB header */
@@ -1422,9 +1422,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
          || (sysblk.cp_send_mask & sysblk.sclp_recv_mask) != old_cp_send_mask)
         {
             if (sysblk.cp_recv_mask != 0 || sysblk.cp_send_mask != 0)
-                logmsg ("HHC701I SYSCONS interface active\n");
+                logmsg (_("HHC701I SYSCONS interface active\n"));
             else
-                logmsg ("HHC702I SYSCONS interface inactive\n");
+                logmsg (_("HHC702I SYSCONS interface inactive\n"));
         }
 // logmsg("cp_send_mask=%8.8X cp_recv_mask=%8.8X\n",sysblk.cp_send_mask,sysblk.cp_recv_mask);
 
@@ -1548,7 +1548,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(sysblk.regs[i].vf->online)
-            logmsg("CPU%4.4X: Vector Facility configured offline\n",i);
+            logmsg(_("CPU%4.4X: Vector Facility configured offline\n"),i);
 
         /* Take the VF out of the configuration */
         sysblk.regs[i].vf->online = 0;
@@ -1579,7 +1579,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         if(!sysblk.regs[i].vf->online)
-            logmsg("CPU%4.4X: Vector Facility configured online\n",i);
+            logmsg(_("CPU%4.4X: Vector Facility configured online\n"),i);
 
         /* Mark the VF online to the CPU */
         sysblk.regs[i].vf->online = 1;
@@ -1596,7 +1596,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     default:
 
 #if 0
-        logmsg("Invalid service call command word:%8.8X SCCB=%8.8X\n",
+        logmsg(_("Invalid service call command word:%8.8X SCCB=%8.8X\n"),
             sclp_command, sccb_absolute_addr);
 
         logmsg("SCCB data area:\n");

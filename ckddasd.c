@@ -204,7 +204,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        devmsg ("HHC351I File name missing or invalid\n");
+        devmsg (_("HHC351I File name missing or invalid\n"));
         return -1;
     }
 
@@ -313,7 +313,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
          && argv[i][4] >= '0' && argv[i][4] <= '0' + CCKD_MAX_DFW)
             continue;
 
-        devmsg ("HHC351I parameter %d is invalid: %s\n",
+        devmsg (_("HHC351I parameter %d is invalid: %s\n"),
                 i + 1, argv[i]);
         return -1;
     }
@@ -324,7 +324,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
     /* Open all of the CKD image files which comprise this volume */
     if (dev->ckdrdonly)
-        devmsg ("ckddasd: opening %s readonly%s\n", dev->filename,
+        devmsg (_("ckddasd: opening %s readonly%s\n"), dev->filename,
                 dev->ckdfakewr ? " with fake writing" : "");
     for (fileseq = 1;;)
     {
@@ -337,7 +337,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                 dev->fd = open (dev->filename, O_RDONLY|O_BINARY);
             if (dev->fd < 0)
             {
-                devmsg ("HHC352I %s open error: %s\n",
+                devmsg (_("HHC352I %s open error: %s\n"),
                         dev->filename, strerror(errno));
                 return -1;
             }
@@ -352,7 +352,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         /* If shadow file, only one base file is allowed */
         if (fileseq > 1 && dev->ckdsfn[0] != '\0')
         {
-            devmsg ("HHC362I %s not in a single file for shadowing\n",
+            devmsg (_("HHC362I %s not in a single file for shadowing\n"),
                     dev->filename);
             return -1;
         }
@@ -361,7 +361,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         rc = fstat (dev->fd, &statbuf);
         if (rc < 0)
         {
-            devmsg ("HHC353I %s fstat error: %s\n",
+            devmsg (_("HHC353I %s fstat error: %s\n"),
                     dev->filename, strerror(errno));
             return -1;
         }
@@ -371,10 +371,10 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         if (rc < CKDDASD_DEVHDR_SIZE)
         {
             if (rc < 0)
-                devmsg ("HHC354I %s read error: %s\n",
+                devmsg (_("HHC354I %s read error: %s\n"),
                         dev->filename, strerror(errno));
             else
-                devmsg ("HHC355I %s CKD header incomplete\n",
+                devmsg (_("HHC355I %s CKD header incomplete\n"),
                         dev->filename);
             return -1;
         }
@@ -384,7 +384,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         {
             if (memcmp(devhdr.devid, "CKD_C370", 8) != 0)
             {
-                devmsg ("HHC356I %s CKD header invalid\n",
+                devmsg (_("HHC356I %s CKD header invalid\n"),
                         dev->filename);
                 return -1;
             }
@@ -393,7 +393,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                 cckd = 1;
                 if (fileseq != 1)
                 {
-                    devmsg ("HHC356I %s Only 1 CCKD file allowed\n",
+                    devmsg (_("HHC356I %s Only 1 CCKD file allowed\n"),
                             dev->filename);
                     return -1;
                 }
@@ -408,12 +408,12 @@ int             cckd=0;                 /* 1 if compressed CKD       */
             {
                 if (rc < 0)
                 {
-                    devmsg ("HHC354I %s read error: %s\n",
+                    devmsg (_("HHC354I %s read error: %s\n"),
                             dev->filename, strerror(errno));
                 }
                 else
                 {
-                    devmsg ("HHC355I %s CCKD header incomplete\n",
+                    devmsg (_("HHC355I %s CCKD header incomplete\n"),
                             dev->filename);
                 }
                 return -1;
@@ -424,7 +424,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         if (devhdr.fileseq != fileseq
             && !(devhdr.fileseq == 0 && fileseq == 1))
         {
-            devmsg ("HHC357I %s CKD file out of sequence\n",
+            devmsg (_("HHC357I %s CKD file out of sequence\n"),
                     dev->filename);
             return -1;
         }
@@ -456,7 +456,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
 
         if (devhdr.fileseq > 0)
         {
-            devmsg ("ckddasd: %s seq=%d cyls=%d-%d\n",
+            devmsg (_("ckddasd: %s seq=%d cyls=%d-%d\n"),
                     dev->filename, devhdr.fileseq, dev->ckdcyls,
                     (highcyl > 0 ? highcyl : dev->ckdcyls + cyls - 1));
         }
@@ -470,8 +470,8 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         }
         else if (heads != dev->ckdheads || trksize != dev->ckdtrksz)
         {
-            devmsg ("HHC358I %s heads=%d trklen=%d, "
-                    "expected heads=%d trklen=%d\n",
+            devmsg (_("HHC358I %s heads=%d trklen=%d, "
+                    "expected heads=%d trklen=%d\n"),
                     dev->filename, heads, trksize,
                     dev->ckdheads, dev->ckdtrksz);
             return -1;
@@ -483,7 +483,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
                             != statbuf.st_size
             || (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)))
         {
-            devmsg ("HHC359I %s CKD header inconsistent with file size\n",
+            devmsg (_("HHC359I %s CKD header inconsistent with file size\n"),
                     dev->filename);
             return -1;
         }
@@ -491,7 +491,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         /* Check for correct high cylinder number */
         if (highcyl != 0 && highcyl != dev->ckdcyls + cyls - 1)
         {
-            devmsg ("HHC360I %s CKD header high cylinder incorrect\n",
+            devmsg (_("HHC360I %s CKD header high cylinder incorrect\n"),
                     dev->filename);
             return -1;
         }
@@ -517,7 +517,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         /* Check that maximum files has not been exceeded */
         if (fileseq > CKD_MAXFILES)
         {
-            devmsg ("HHC361I %s exceeds maximum %d CKD files\n",
+            devmsg (_("HHC361I %s exceeds maximum %d CKD files\n"),
                     dev->filename, CKD_MAXFILES);
             return -1;
         }
@@ -528,7 +528,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     *sfxptr = sfxchar;
 
     /* Log the device geometry */
-    devmsg ("ckddasd: %s cyls=%d heads=%d tracks=%d trklen=%d\n",
+    devmsg (_("ckddasd: %s cyls=%d heads=%d tracks=%d trklen=%d\n"),
             dev->filename, dev->ckdcyls,
             dev->ckdheads, dev->ckdtrks, dev->ckdtrksz);
 
@@ -539,7 +539,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     dev->ckdtab = dasd_lookup (DASD_CKDDEV, NULL, dev->devtype, dev->ckdcyls);
     if (dev->ckdtab == NULL)
     {
-        devmsg ("HHC362I %4.4X device type %4.4X not found in dasd table\n",
+        devmsg (_("HHC362I %4.4X device type %4.4X not found in dasd table\n"),
                 dev->devnum, dev->devtype);
         return -1;
     }
@@ -548,7 +548,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
     dev->ckdcu = dasd_lookup (DASD_CKDCU, cu ? cu : dev->ckdtab->cu, 0, 0);
     if (dev->ckdcu == NULL)
     {
-        devmsg ("HHC363I %4.4X control unit %s not found in dasd table\n",
+        devmsg (_("HHC363I %4.4X control unit %s not found in dasd table\n"),
                 dev->devnum, cu ? cu : dev->ckdtab->cu);
         return -1;
     }
@@ -622,7 +622,7 @@ BYTE    unitstat;                       /* Unit Status               */
     }
 
     if (!dev->batch)
-        devmsg ("ckddasd: %4.4X cache hits %d, misses %d\n",
+        devmsg (_("ckddasd: %4.4X cache hits %d, misses %d\n"),
                 dev->devnum, dev->ckdcachehits, dev->ckdcachemisses);
 
     /* Close all of the CKD image files */
@@ -678,7 +678,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            devmsg ("ckddasd: error writing trk %d: lseek error: %s\n",
+            devmsg (_("ckddasd: error writing trk %d: lseek error: %s\n"),
                     dev->ckdcurtrk, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
@@ -692,7 +692,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (rc < dev->bufupdhi - dev->bufupdlo)
         {
             /* Handle seek error condition */
-            devmsg ("ckddasd: error writing trk %d: write error: %s\n",
+            devmsg (_("ckddasd: error writing trk %d: write error: %s\n"),
                     dev->ckdcurtrk, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
@@ -736,8 +736,8 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (dev->ckdcache == NULL)
         {
             /* Handle calloc error condition */
-            devmsg ("ckddasd: calloc error for cache table "
-                    "size %d: %s\n",
+            devmsg (_("ckddasd: calloc error for cache table "
+                    "size %d: %s\n"),
                     dev->ckdcachenbr * CKDDASD_CACHE_SIZE,
                     strerror(errno));
             return (SENSE_EC << 8);
@@ -785,8 +785,8 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         if (dev->ckdcache[o].buf == NULL)
         {
             /* Handle calloc error condition */
-            devmsg ("ckddasd: malloc error for cache entry buffer "
-                    "size %d: %s\n",
+            devmsg (_("ckddasd: malloc error for cache entry buffer "
+                    "size %d: %s\n"),
                     dev->ckdtrksz, strerror(errno));
             dev->syncio_active = active;
             return (SENSE_EC << 8);
@@ -818,7 +818,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     if (offset < 0)
     {
         /* Handle seek error condition */
-        devmsg ("ckddasd: error reading trk %d: lseek error: %s\n",
+        devmsg (_("ckddasd: error reading trk %d: lseek error: %s\n"),
                 trk, strerror(errno));
         ckd_build_sense (dev, SENSE_EC, 0, 0,
                         FORMAT_1, MESSAGE_0);
@@ -831,7 +831,7 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
     if (rc < dev->ckdtrksz)
     {
         /* Handle read error condition */
-        devmsg ("ckddasd: error reading trk %d: read error: %s\n",
+        devmsg (_("ckddasd: error reading trk %d: read error: %s\n"),
            trk, (rc < 0 ? strerror(errno) : "unexpected end of file"));
         ckd_build_sense (dev, SENSE_EC, 0, 0,
                         FORMAT_1, MESSAGE_0);
@@ -849,8 +849,8 @@ CKDDASD_TRKHDR *trkhdr;                 /* -> New track header       */
         || trkhdr->head[0] != (head >> 8)
         || trkhdr->head[1] != (head & 0xFF))
     {
-        devmsg ("%4.4X ckddasd: invalid track header for cyl %d head %d "
-                " %2.2x%2.2x%2.2x%2.2x%2.2x\n", dev->devnum, cyl, head,
+        devmsg (_("%4.4X ckddasd: invalid track header for cyl %d head %d "
+                " %2.2x%2.2x%2.2x%2.2x%2.2x\n"), dev->devnum, cyl, head,
                 trkhdr->bin,trkhdr->cyl[0],trkhdr->cyl[1],trkhdr->head[0],trkhdr->head[1]);
         ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -910,7 +910,7 @@ off_t           offset;                 /* File offsets              */
         if (offset < 0)
         {
             /* Handle seek error condition */
-            devmsg ("ckddasd: error writing trk %d: lseek error: %s\n",
+            devmsg (_("ckddasd: error writing trk %d: lseek error: %s\n"),
                     dev->ckdcurtrk, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
@@ -923,7 +923,7 @@ off_t           offset;                 /* File offsets              */
         if (rc < len)
         {
             /* Handle seek error condition */
-            devmsg ("ckddasd: error writing trk %d: write error: %s\n",
+            devmsg (_("ckddasd: error writing trk %d: write error: %s\n"),
                     dev->ckdcurtrk, strerror(errno));
             ckd_build_sense (dev, SENSE_EC, 0, 0,
                             FORMAT_1, MESSAGE_0);
@@ -1175,7 +1175,7 @@ char           *orient[] = {"none", "index", "count", "key", "data", "eot"};
         if (dev->bufoff + CKDDASD_RECHDR_SIZE >= dev->bufoffhi)
         {
             /* Handle error condition */
-            devmsg ("ckddasd: attempt to read past end of track\n");
+            devmsg (_("ckddasd: attempt to read past end of track\n"));
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1293,7 +1293,7 @@ CKDDASD_RECHDR  rechdr;                 /* CKD record header         */
         if (dev->bufoffhi - dev->bufoff < dev->ckdcurkl)
         {
             /* Handle error condition */
-            devmsg ("ckddasd: attempt to read past end of track\n");
+            devmsg (_("ckddasd: attempt to read past end of track\n"));
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1343,7 +1343,7 @@ CKDDASD_RECHDR  rechdr;                 /* Record header             */
         if (dev->bufoff + dev->ckdcurdl >= dev->bufoffhi)
         {
             /* Handle error condition */
-            devmsg ("ckddasd: attempt to read past end of track\n");
+            devmsg (_("ckddasd: attempt to read past end of track\n"));
 
             /* Set unit check with equipment check */
             ckd_build_sense (dev, SENSE_EC, 0, 0,
@@ -1512,7 +1512,7 @@ int             kdlen;                  /* Key+data length           */
     /* Unit check if not oriented to count area */
     if (dev->ckdorient != CKDORIENT_COUNT)
     {
-        devmsg ("ckddasd: Write KD orientation error\n");
+        devmsg (_("ckddasd: Write KD orientation error\n"));
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1554,7 +1554,7 @@ int             rc;                     /* Return code               */
     if (dev->ckdorient != CKDORIENT_COUNT
         && dev->ckdorient != CKDORIENT_KEY)
     {
-        devmsg ("ckddasd: Write data orientation error\n");
+        devmsg (_("ckddasd: Write data orientation error\n"));
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_2);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -1627,7 +1627,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         && (code & 0x7F) != 0x16 && (code & 0x7F) != 0x12
         && (code & 0x7F) != 0x0E && (code & 0x7F) != 0x06)
     {
-        devmsg("ckddasd: Data chaining not supported for CCW %2.2X\n",
+        devmsg(_("ckddasd: Data chaining not supported for CCW %2.2X\n"),
                 code);
         ckd_build_sense (dev, SENSE_CR, 0, 0,
                         FORMAT_0, MESSAGE_1);
@@ -2838,7 +2838,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             for (i=0; i < sizeof(module)-1 && i < num; i++)
                 module[i] = guest_to_host(iobuf[i]);
             module[i] = '\0';
-            devmsg ("ckddasd: search key %s\n", module);
+            devmsg (_("ckddasd: search key %s\n"), module);
         }
 #endif /*OPTION_CKD_KEY_TRACING*/
 

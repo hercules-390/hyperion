@@ -215,7 +215,7 @@ U16     cpuad;                          /* Originating CPU address   */
 #endif /*!defined(_FEATURE_SIE)*/
         )
     {
-        logmsg ("External interrupt: Interrupt key\n");
+        logmsg (_("External interrupt: Interrupt key\n"));
 
         /* Reset interrupt key pending */
         OFF_IC_INTKEY;
@@ -237,7 +237,7 @@ U16     cpuad;                          /* Originating CPU address   */
             }
         } /* end for(cpuad) */
 
-// /*debug*/ logmsg ("External interrupt: Malfuction Alert from CPU %d\n",
+// /*debug*/ logmsg (_("External interrupt: Malfuction Alert from CPU %d\n"),
 // /*debug*/    cpuad);
 
         /* Reset the indicator for the CPU which was found */
@@ -277,7 +277,7 @@ U16     cpuad;                          /* Originating CPU address   */
             }
         } /* end for(cpuad) */
 
-// /*debug*/ logmsg ("External interrupt: Emergency Signal from CPU %d\n",
+// /*debug*/ logmsg (_("External interrupt: Emergency Signal from CPU %d\n"),
 // /*debug*/    cpuad);
 
         /* Reset the indicator for the CPU which was found */
@@ -306,7 +306,7 @@ U16     cpuad;                          /* Originating CPU address   */
     /* External interrupt if external call is pending */
     if (OPEN_IC_EXTCALL(regs))
     {
-//  /*debug*/logmsg ("External interrupt: External Call from CPU %d\n",
+//  /*debug*/logmsg (_("External interrupt: External Call from CPU %d\n"),
 //  /*debug*/       regs->extccpu);
 
         /* Reset external call pending */
@@ -328,7 +328,7 @@ U16     cpuad;                          /* Originating CPU address   */
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg ("External interrupt: Clock comparator\n");
+            logmsg (_("External interrupt: Clock comparator\n"));
         }
         ARCH_DEP(external_interrupt) (EXT_CLOCK_COMPARATOR_INTERRUPT, regs);
     }
@@ -339,7 +339,7 @@ U16     cpuad;                          /* Originating CPU address   */
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg ("External interrupt: CPU timer=%16.16llX\n",
+            logmsg (_("External interrupt: CPU timer=%16.16llX\n"),
                     (long long)regs->ptimer);
         }
         ARCH_DEP(external_interrupt) (EXT_CPU_TIMER_INTERRUPT, regs);
@@ -356,7 +356,7 @@ U16     cpuad;                          /* Originating CPU address   */
     {
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg ("External interrupt: Interval timer\n");
+            logmsg (_("External interrupt: Interval timer\n"));
         }
         OFF_IC_ITIMER(regs);
         ARCH_DEP(external_interrupt) (EXT_INTERVAL_TIMER_INTERRUPT, regs);
@@ -375,7 +375,7 @@ U16     cpuad;                          /* Originating CPU address   */
             sysblk.servparm =
                 APPLY_PREFIXING (sysblk.servparm, regs->PX);
 
-//      logmsg ("External interrupt: Service signal %8.8X\n",
+//      logmsg (_("External interrupt: Service signal %8.8X\n"),
 //              sysblk.servparm);
 
         /* Store service signal parameter at PSA+X'80' */

@@ -111,7 +111,7 @@ int     icode;                          /* Interception code         */
     PERFORM_CHKPT_SYNC (regs);
 
 #if defined(SIE_DEBUG)
-    logmsg("SIE: state descriptor " F_RADR "\n",effective_addr2);
+    logmsg(_("SIE: state descriptor " F_RADR "\n"),effective_addr2);
     ARCH_DEP(display_inst) (regs, regs->ip);
 #endif /*defined(SIE_DEBUG)*/
 
@@ -415,7 +415,7 @@ void ARCH_DEP(sie_exit) (REGS *regs, int code)
 int     n;
 
 #if defined(SIE_DEBUG)
-    logmsg("SIE: interception code %d\n",code);
+    logmsg(_("SIE: interception code %d\n"),code);
     ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->instvalid ?
                                         GUESTREGS->inst : NULL);
 #endif /*defined(SIE_DEBUG)*/

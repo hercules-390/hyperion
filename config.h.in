@@ -9,6 +9,10 @@
 /* Define to enable extra debugging code (TRACE/VERIFY/ASSERT macros) */
 #undef DEBUG
 
+/* Define to 1 if translation of program messages to the user's native
+   language is requested. */
+#undef ENABLE_NLS
+
 /* Define to build interface to external Windows GUI */
 #undef EXTERNALGUI
 
@@ -18,11 +22,21 @@
 /* Define if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
 
+/* Define if the GNU dcgettext() function is already present or preinstalled.
+   */
+#undef HAVE_DCGETTEXT
+
 /* Define if you have the `fabsl' function. */
 #undef HAVE_FABSL
 
 /* Define if you have the `fmodl' function. */
 #undef HAVE_FMODL
+
+/* Define if the GNU gettext() function is already present or preinstalled. */
+#undef HAVE_GETTEXT
+
+/* Define if you have the iconv() function. */
+#undef HAVE_ICONV
 
 /* Define if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -89,6 +103,9 @@
 
 /* Define to enable bzip2 compression in emulated tapes */
 #undef HET_BZIP2
+
+/* Directory where to find NLS data */
+#undef LOCALEDIR
 
 /* Define to disable use of threads */
 #undef NOTHREAD

@@ -115,6 +115,12 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
 TID paneltid;
 #endif
 
+#if defined(ENABLE_NLS)
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+#endif
+
 #ifdef EXTERNALGUI
     /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

@@ -8,12 +8,9 @@
 /* functions to set/query host system information                    */
 /*-------------------------------------------------------------------*/
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>                     /* (need WIN32 flag defined) */
-#endif /*defined(HAVE_CONFIG_H)*/
+#include "hercules.h"
 
 #include "hostinfo.h"
-#include <sys/utsname.h>
 
 HOST_INFO  hostinfo;                /* Host system information       */
 
@@ -57,7 +54,7 @@ void display_hostinfo (FILE *f)
 
     uname(&uname_info);
 
-    fprintf(f,"Running on %s %s%s %s %s\n",
+    fprintf(f,_("Running on %s %s%s %s %s\n"),
         uname_info.sysname,
         uname_info.machine,
 #if defined(WIN32)

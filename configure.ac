@@ -5,7 +5,7 @@ AM_INIT_AUTOMAKE(hercules,2.16a.2)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
-AC_CANONICAL_HOST
+AM_GNU_GETTEXT([external])
 
 # Initialization
 CFLAGS="-Wall $CFLAGS"
@@ -41,10 +41,6 @@ AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
 
 # System Services
 AC_SYS_LARGEFILE
-
-# NLS
-ALL_LINGUAS="nl"
-AM_GNU_GETTEXT
 
 # Libraries
 AC_CHECK_LIB(m, sqrt)
@@ -344,6 +340,12 @@ else
   PKGDATADIR="${prefix}/share/${PACKAGE}"
 fi
 AC_DEFINE_UNQUOTED([PKGDATADIR], "${PKGDATADIR}")
+if test "x$prefix" = "xNONE"; then
+  LOCALEDIR="/usr/local/share/locale"
+else
+  PKGDATADIR="${prefix}/share/locale}"
+fi
+AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
 	    [Define if your gcc does not support __attribute__((regparm(n)))])
@@ -377,5 +379,7 @@ AH_TEMPLATE([FISH_HANG],
             [Define to debug correct fthreads LOCK handling (requires fthreads)])
 AH_TEMPLATE([PKGDATADIR],
             [Directory where the HTTP server will find documents])
+AH_TEMPLATE([LOCALEDIR],
+            [Directory where to find NLS data])
 
-AC_OUTPUT(Makefile util/Makefile html/Makefile)
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in m4/Makefile ])

@@ -60,7 +60,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     dev = find_device_by_devnum (devnum);
     if (dev == NULL)
     {
-        logmsg ("HHC103I Device %4.4X not in configuration\n",
+        logmsg (_("HHC103I Device %4.4X not in configuration\n"),
                 devnum);
 #ifdef EXTERNALGUI
         if (extgui) logmsg("LOAD=0\n");
@@ -71,7 +71,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     if(sysblk.arch_mode == ARCH_370
       && dev->chanset != regs->chanset)
     {
-        logmsg("HHC023I Device not connected to channelset\n");
+        logmsg(_("HHC023I Device not connected to channelset\n"));
 #ifdef EXTERNALGUI
         if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
@@ -118,9 +118,9 @@ BYTE    chanstat;                       /* IPL device channel status */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0) {
-        logmsg ("HHC105I %s mode IPL failed: CSW status=%2.2X%2.2X\n",
+        logmsg (_("HHC105I %s mode IPL failed: CSW status=%2.2X%2.2X\n"),
                 get_arch_mode_string(regs), unitstat, chanstat);
-        logmsg ("HHC106I Sense=");
+        logmsg (_("HHC106I Sense="));
         for (i=0; i < dev->numsense; i++)
         {
             logmsg ("%2.2X", dev->sense[i]);
@@ -166,8 +166,8 @@ BYTE    chanstat;                       /* IPL device channel status */
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
     if ( rc )
     {
-        logmsg ("HHC107I IPL failed: Invalid IPL PSW: "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n",
+        logmsg (_("HHC107I IPL failed: Invalid IPL PSW: "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
@@ -265,7 +265,7 @@ U32     fileaddr;
     fp = fopen(fname, "r");
     if(fp == NULL)
     {
-        logmsg("HHC008I Load from %s failed: %s\n",fname,strerror(errno));
+        logmsg(_("HHC008I Load from %s failed: %s\n"),fname,strerror(errno));
         return -1;
     }
 
@@ -313,8 +313,8 @@ U32     fileaddr;
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
     if ( rc )
     {
-        logmsg ("HHC109I IPL failed: Invalid IPL PSW: "
-                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n",
+        logmsg (_("HHC109I IPL failed: Invalid IPL PSW: "
+                "%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
@@ -457,7 +457,7 @@ U32  pagesize;
     fd = open (fname, O_RDONLY|O_BINARY);
     if(fd < 0)
     {
-        logmsg("HHC010I load_main: %s: %s\n", fname, strerror(errno));
+        logmsg(_("HHC010I load_main: %s: %s\n"), fname, strerror(errno));
         return fd;
     }
 
@@ -466,7 +466,7 @@ U32  pagesize;
     do {
         if(pageaddr >= sysblk.mainsize)
         {
-            logmsg("HHC011I load_main: terminated at end of mainstor\n");
+            logmsg(_("HHC011I load_main: terminated at end of mainstor\n"));
             close(fd);
             return br;
         }

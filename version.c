@@ -10,6 +10,16 @@
 #include <config.h>
 #endif
 
+#if defined(ENABLE_NLS)
+ #include <libintl.h>
+ #define _(_string) gettext(_string)
+#else
+ #define _(_string) (_string)
+ #define N_(_string) (_string)
+ #define textdomain(_domain)
+ #define bindtextdomain(_package, _directory)
+#endif
+
 #include "feature.h"
 #include "hostinfo.h"
 #include "version.h"
@@ -135,7 +145,7 @@ void display_version (FILE *f, char *prog)
 
         /* Log version */
 
-    fprintf (f, "%sVersion %s\n", prog, VERSION);
+    fprintf (f, _("%sVersion %s\n"), prog, VERSION);
 
         /* Log Copyright */
 
@@ -143,11 +153,11 @@ void display_version (FILE *f, char *prog)
 
         /* Log build date/time */
 
-    fprintf (f, "Built on %s at %s\n", __DATE__, __TIME__);
+    fprintf (f, _("Built on %s at %s\n"), __DATE__, __TIME__);
 
         /* Log "unusual" build options */
 
-    fprintf (f, "Build information:\n");
+    fprintf (f, _("Build information:\n"));
 
     if (sizeof(build_info) == 0)
       fprintf(f, "  (none)\n");

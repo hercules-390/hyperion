@@ -31,7 +31,7 @@ int             rc;                     /* Return code               */
     /* Equipment check if error writing to output file */
     if (rc < len)
     {
-        logmsg ("HHC423I Error writing to %s: %s\n",
+        logmsg (_("HHC423I Error writing to %s: %s\n"),
                 dev->filename,
                 (errno == 0 ? "incomplete": strerror(errno)));
         dev->sense[0] = SENSE_EC;
@@ -51,7 +51,7 @@ int     i;                              /* Array subscript           */
     /* The first argument is the file name */
     if (argc == 0 || strlen(argv[0]) > sizeof(dev->filename)-1)
     {
-        logmsg ("HHC421I File name missing or invalid\n");
+        logmsg (_("HHC421I File name missing or invalid\n"));
         return -1;
     }
 
@@ -86,7 +86,7 @@ int     i;                              /* Array subscript           */
             continue;
         }
 
-        logmsg ("HHC422I Invalid argument: %s\n",
+        logmsg (_("HHC422I Invalid argument: %s\n"),
                 argv[i]);
         return -1;
     }
@@ -161,7 +161,7 @@ BYTE            c;                      /* Output character          */
         if (rc < 0)
         {
             /* Handle open failure */
-            logmsg ("HHC423I Error opening file %s: %s\n",
+            logmsg (_("HHC423I Error opening file %s: %s\n"),
                     dev->filename, strerror(errno));
 
             /* Set unit check with intervention required */

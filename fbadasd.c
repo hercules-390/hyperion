@@ -219,7 +219,7 @@ int     repcnt;                         /* Replication count         */
         if (rc < 0)
         {
             /* Handle seek error condition */
-            logmsg ("HHC311I Seek error in file %s: %s\n",
+            logmsg (_("HHC311I Seek error in file %s: %s\n"),
                     dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
@@ -247,10 +247,10 @@ int     repcnt;                         /* Replication count         */
         {
             /* Handle read error condition */
             if (rc < 0)
-                logmsg ("HHC312I Read error in file %s: %s\n",
+                logmsg (_("HHC312I Read error in file %s: %s\n"),
                         dev->filename, strerror(errno));
             else
-                logmsg ("HHC313I Unexpected end of file in %s\n",
+                logmsg (_("HHC313I Unexpected end of file in %s\n"),
                         dev->filename);
 
             /* Set unit check with equipment check */
@@ -322,7 +322,7 @@ int     repcnt;                         /* Replication count         */
                 if (rc < num)
                 {
                     /* Handle write error condition */
-                    logmsg ("HHC314I Write error in file %s: %s\n",
+                    logmsg (_("HHC314I Write error in file %s: %s\n"),
                             dev->filename, strerror(errno));
 
                     /* Set unit check with equipment check */
@@ -340,7 +340,7 @@ int     repcnt;                         /* Replication count         */
                 if (rc < rem)
                 {
                     /* Handle write error condition */
-                    logmsg ("HHC315I Write error in file %s: %s\n",
+                    logmsg (_("HHC315I Write error in file %s: %s\n"),
                             dev->filename, strerror(errno));
 
                     /* Set unit check with equipment check */
@@ -407,10 +407,10 @@ int     repcnt;                         /* Replication count         */
             {
                 /* Handle read error condition */
                 if (rc < 0)
-                    logmsg ("HHC316I Read error in file %s: %s\n",
+                    logmsg (_("HHC316I Read error in file %s: %s\n"),
                             dev->filename, strerror(errno));
                 else
-                    logmsg ("HHC317I Unexpected end of filein %s\n",
+                    logmsg (_("HHC317I Unexpected end of filein %s\n"),
                             dev->filename);
 
                 /* Set unit check with equipment check */
@@ -547,7 +547,7 @@ int     repcnt;                         /* Replication count         */
         if (rc < 0)
         {
             /* Handle seek error condition */
-            logmsg ("HHC318I Seek error in file %s: %s\n",
+            logmsg (_("HHC318I Seek error in file %s: %s\n"),
                     dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
@@ -571,7 +571,7 @@ int     repcnt;                         /* Replication count         */
         /* Control information length must be at least 16 bytes */
         if (count < 16)
         {
-            logmsg("fbadasd: define extent data too short: %d bytes\n",
+            logmsg(_("fbadasd: define extent data too short: %d bytes\n"),
                     count);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -581,7 +581,7 @@ int     repcnt;                         /* Replication count         */
         /* Reject if extent previously defined in this CCW chain */
         if (dev->fbaxtdef)
         {
-            logmsg("fbadasd: second define extent in chain\n");
+            logmsg(_("fbadasd: second define extent in chain\n"));
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
             break;
@@ -592,7 +592,7 @@ int     repcnt;                         /* Replication count         */
         if ((dev->fbamask & (FBAMASK_RESV | FBAMASK_CE))
             || (dev->fbamask & FBAMASK_CTL) == FBAMASK_CTL_RESV)
         {
-            logmsg("fbadasd: invalid file mask %2.2X\n",
+            logmsg(_("fbadasd: invalid file mask %2.2X\n"),
                     dev->fbamask);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -603,7 +603,7 @@ int     repcnt;                         /* Replication count         */
 //      /* Verify that bytes 1-3 are zeroes */
 //      if (iobuf[1] != 0 || iobuf[2] != 0 || iobuf[3] != 0)
 //      {
-//          logmsg("fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n",
+//          logmsg(_("fbadasd: invalid reserved bytes %2.2X %2.2X %2.2X\n"),
 //                  iobuf[1], iobuf[2], iobuf[3]);
 //          dev->sense[0] = SENSE_CR;
 //          *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -633,9 +633,9 @@ int     repcnt;                         /* Replication count         */
             || dev->fbaxlast - dev->fbaxfirst
                 >= dev->fbanumblk - dev->fbaxblkn)
         {
-            logmsg("fbadasd: invalid extent: first block %d, last block %d,\n",
+            logmsg(_("fbadasd: invalid extent: first block %d, last block %d,\n"),
                     dev->fbaxfirst, dev->fbaxlast);
-            logmsg("         numblks %d, device size %d\n",
+            logmsg(_("         numblks %d, device size %d\n"),
                     dev->fbaxblkn, dev->fbanumblk);
             dev->sense[0] = SENSE_CR;
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -800,7 +800,7 @@ int     blkfactor;                      /* Number of device blocks
     if (rc < 0)
     {
         /* Handle seek error condition */
-        logmsg ("HHC321I Seek error in file %s: %s\n",
+        logmsg (_("HHC321I Seek error in file %s: %s\n"),
                 dev->filename, strerror(errno));
 
         /* Set unit check with equipment check */
@@ -818,7 +818,7 @@ int     blkfactor;                      /* Number of device blocks
         if (rc < blksize)
         {
             /* Handle write error condition */
-            logmsg ("HHC322I Write error in file %s: %s\n",
+            logmsg (_("HHC322I Write error in file %s: %s\n"),
                     dev->filename, strerror(errno));
 
             /* Set unit check with equipment check */
@@ -835,10 +835,10 @@ int     blkfactor;                      /* Number of device blocks
         {
             /* Handle read error condition */
             if (rc < 0)
-                logmsg ("HHC323I Read error in file %s: %s\n",
+                logmsg (_("HHC323I Read error in file %s: %s\n"),
                         dev->filename, strerror(errno));
             else
-                logmsg ("HHC324I Unexpected end of file in %s\n",
+                logmsg (_("HHC324I Unexpected end of file in %s\n"),
                         dev->filename);
 
             /* Set unit check with equipment check */

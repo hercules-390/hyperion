@@ -429,7 +429,7 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs, REGS * iregs)
 		{
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-		  logmsg ("expand: trying to process entry 128\n");
+		  logmsg (_("expand: trying to process entry 128\n"));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
 		  ARCH_DEP (program_interrupt) (regs, PGM_DATA_EXCEPTION);
@@ -513,7 +513,7 @@ static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, REGS * iregs, BYTE * ch, in
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-      logmsg ("fetch_ch : reached end of source\n");
+      logmsg (_("fetch_ch : reached end of source\n"));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
       regs->psw.cc = 0;
@@ -587,7 +587,7 @@ static int ARCH_DEP (fetch_is) (int r2, REGS * regs, REGS * iregs, U16 * index_s
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-      logmsg ("fetch_is : reached end of source\n");
+      logmsg (_("fetch_is : reached end of source\n"));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
       regs->psw.cc = 0;
       return (1);
@@ -869,7 +869,7 @@ static int ARCH_DEP (store_ch) (int r1, REGS * regs, REGS * iregs, BYTE * data, 
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-      logmsg ("store_ch : Reached end of destination\n");
+      logmsg (_("store_ch : Reached end of destination\n"));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
       /* Indicate end of destination */
@@ -994,7 +994,7 @@ DEF_INST (compression_call)
   RRE (inst, execflag, regs, r1, r2);
 
 #ifdef OPTION_CMPSC_DEBUGLVL
-  logmsg ("CMPSC: compression call\n");
+  logmsg (_("CMPSC: compression call\n"));
   logmsg ("  r1      : GR%02d\n", r1);
   logmsg ("  address : " F_VADR "\n", regs->GR (r1));
   logmsg ("  length  : " F_GREG "\n", regs->GR (r1 + 1));

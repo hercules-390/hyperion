@@ -252,7 +252,7 @@ int     armode;
     /* Check for wait state PSW */
     if (regs->psw.wait && (sysblk.insttrace || sysblk.inststep))
     {
-        logmsg ("Wait state PSW loaded: ");
+        logmsg (_("Wait state PSW loaded: "));
         display_psw (regs);
     }
 
@@ -390,7 +390,7 @@ static char *pgmintname[] = {
         ) )
     {
 #if defined(SIE_DEBUG)
-        logmsg("program_int() passing to guest code=%4.4X\n",pcode);
+        logmsg(_("program_int() passing to guest code=%4.4X\n"),pcode);
 #endif /*defined(SIE_DEBUG)*/
         realregs->guestregs->TEA = realregs->TEA;
         realregs->guestregs->excarid = realregs->excarid;
@@ -474,12 +474,12 @@ static char *pgmintname[] = {
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
 #if defined(_FEATURE_SIE)
         if(realregs->sie_state)
-            logmsg("SIE: ");
+            logmsg(_("SIE: "));
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(SIE_DEBUG)
         logmsg (MSTRING(_GEN_ARCH) " ");
 #endif /*defined(SIE_DEBUG)*/
-        logmsg ("CPU%4.4X: %s CODE=%4.4X ILC=%d\n", realregs->cpuad,
+        logmsg (_("CPU%4.4X: %s CODE=%4.4X ILC=%d\n"), realregs->cpuad,
                 pgmintname[ (code - 1) & 0x3F], pcode, realregs->psw.ilc);
         ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
                                                 realregs->ip : NULL);
@@ -574,7 +574,7 @@ static char *pgmintname[] = {
     if( OPEN_IC_PERINT(realregs) )
     {
         if( IS_IC_TRACE )
-            logmsg("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n",
+            logmsg(_("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n"),
               regs->cpuad, pcode, IS_IC_PER(realregs) >> 16,
               (realregs->psw.IA - realregs->psw.ilc) & ADDRESS_MAXWRAP(realregs) );
 
@@ -723,7 +723,7 @@ static char *pgmintname[] = {
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
-                logmsg ("CPU%4.4X: Program interrupt loop: ",realregs->cpuad);
+                logmsg (_("CPU%4.4X: Program interrupt loop: "),realregs->cpuad);
                 display_psw (realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
                 ON_IC_CPU_NOT_STARTED(realregs);
@@ -815,8 +815,8 @@ DWORD   csw;                            /* CSW for S/370 channels    */
 
     /* Trace the I/O interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-        logmsg ("I/O interrupt code=%4.4X "
-                "CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n",
+        logmsg (_("I/O interrupt code=%4.4X "
+                "CSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 regs->psw.intcode,
                 csw[0], csw[1], csw[2], csw[3],
                 csw[4], csw[5], csw[6], csw[7]);
@@ -837,9 +837,9 @@ DWORD   csw;                            /* CSW for S/370 channels    */
     /* Trace the I/O interrupt */
     if (sysblk.insttrace || sysblk.inststep)
 #if !defined(FEATURE_ESAME)
-        logmsg ("I/O interrupt code=%8.8X parm=%8.8X\n", ioid, ioparm);
+        logmsg (_("I/O interrupt code=%8.8X parm=%8.8X\n"), ioid, ioparm);
 #else /*defined(FEATURE_ESAME)*/
-        logmsg ("I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n",
+        logmsg (_("I/O interrupt code=%8.8X parm=%8.8X id=%8.8X\n"),
           ioid, ioparm, iointid);
 #endif /*defined(FEATURE_ESAME)*/
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
@@ -896,7 +896,7 @@ RADR    fsta;                           /* Failing storage address   */
 
     /* Trace the machine check interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-        logmsg ("Machine Check code=%16.16llu\n", (long long)mcic);
+        logmsg (_("Machine Check code=%16.16llu\n"), (long long)mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -952,25 +952,25 @@ void *cpu_thread (REGS *regs)
     
     /* Set CPU thread priority */
     if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
-        logmsg ("HHC621I CPU thread set priority %d failed: %s\n",
+        logmsg (_("HHC621I CPU thread set priority %d failed: %s\n"),
                 sysblk.cpuprio, strerror(errno));
 
     /* Back to user mode */
     SETMODE(USER);
     
     /* Display thread started message on control panel */
-    logmsg ("HHC620I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
-            "priority=%d\n",
+    logmsg (_("HHC620I CPU%4.4X thread started: tid="TIDPAT", pid=%d, "
+            "priority=%d\n"),
             regs->cpuad, thread_id(), getpid(),
             getpriority(PRIO_PROCESS,0));
 #endif
 
-    logmsg ("HHC630I CPU%4.4X Architecture Mode %s\n",
+    logmsg (_("HHC630I CPU%4.4X Architecture Mode %s\n"),
 		regs->cpuad,get_arch_mode_string(regs));
 
 #ifdef FEATURE_VECTOR_FACILITY
     if (regs->vf->online)
-        logmsg ("HHC625I CPU%4.4X Vector Facility online\n",
+        logmsg (_("HHC625I CPU%4.4X Vector Facility online\n"),
                 regs->cpuad);
 #endif /*FEATURE_VECTOR_FACILITY*/
 
@@ -981,7 +981,7 @@ void *cpu_thread (REGS *regs)
     obtain_lock(&sysblk.intlock);
     if(regs->cpustate != CPUSTATE_STARTING)
     {
-        logmsg("HHC623I CPU%4.4X thread already started\n",
+        logmsg(_("HHC623I CPU%4.4X thread already started\n"),
             regs->cpuad);
         release_lock(&sysblk.intlock);
         return NULL;
@@ -994,7 +994,7 @@ void *cpu_thread (REGS *regs)
         if ( create_thread (&sysblk.todtid, &sysblk.detattr,
                             timer_update_thread, NULL) )
         {
-            logmsg ("HHC136I Cannot create timer thread: %s\n",
+            logmsg (_("HHC136I Cannot create timer thread: %s\n"),
                     strerror(errno));
             release_lock(&sysblk.intlock);
             return NULL;
@@ -1018,7 +1018,7 @@ void *cpu_thread (REGS *regs)
     if(sysblk.arch_mode != regs->arch_mode)
     {
         regs->arch_mode = sysblk.arch_mode;
-        logmsg ("HHC631I CPU%4.4X Architecture Mode set to %s\n",
+        logmsg (_("HHC631I CPU%4.4X Architecture Mode set to %s\n"),
 			regs->cpuad,get_arch_mode_string(regs));
     }
 
@@ -1029,7 +1029,7 @@ void *cpu_thread (REGS *regs)
     initial_cpu_reset (regs);
 
     /* Display thread ended message on control panel */
-    logmsg ("HHC624I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n",
+    logmsg (_("HHC624I CPU%4.4X thread ended: tid="TIDPAT", pid=%d\n"),
             regs->cpuad, thread_id(), getpid());
 
     /* Thread exit */
@@ -1055,7 +1055,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 	        SET_IC_PER_MASK(regs);
 	        if(prevmask != regs->ints_mask)
 		{
-	            logmsg("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n",
+	            logmsg(_("CPU MASK MISMATCH: %8.8X - %8.8X. Last instruction:\n"),
 		       prevmask, regs->ints_mask);
 		       ARCH_DEP(display_inst) (regs, regs->ip);
 		}
@@ -1174,7 +1174,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 {
                     OFF_IC_STORSTAT(regs);
                     ARCH_DEP(store_status) (regs, 0);
-                    logmsg ("HHC611I CPU%4.4X store status completed.\n",
+                    logmsg (_("HHC611I CPU%4.4X store status completed.\n"),
                         regs->cpuad);
 
 #ifdef OPTION_CPU_UNROLL
@@ -1233,7 +1233,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 /* Test for disabled wait PSW and issue message */
                 if( IS_IC_DISABLED_WAIT_PSW(regs) )
                 {
-                    logmsg ("CPU%4.4X: Disabled wait state\n",regs->cpuad);
+                    logmsg (_("CPU%4.4X: Disabled wait state\n"),regs->cpuad);
                     display_psw (regs);
                     regs->cpustate = CPUSTATE_STOPPING;
                     ON_IC_CPU_NOT_STARTED(regs);
@@ -1661,15 +1661,15 @@ QWORD   qword;                            /* quadword work area      */
     if( regs->arch_mode != ARCH_900 )
     {
         store_psw (regs, qword);
-        logmsg ("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n",
+        logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X\n"),
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7]);
     }
     else
     {
         store_psw (regs, qword);
-        logmsg ("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
-                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n",
+        logmsg (_("PSW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X "
+                "%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X%2.2X\n"),
                 qword[0], qword[1], qword[2], qword[3],
                 qword[4], qword[5], qword[6], qword[7],
                 qword[8], qword[9], qword[10], qword[11],

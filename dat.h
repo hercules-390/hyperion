@@ -1883,8 +1883,8 @@ U16     xcode;                          /* Exception code            */
         /* Check for access to interval timer at location 80 */
         if (sysblk.insttrace || sysblk.inststep)
         {
-            logmsg ("dat.c: Interval timer accessed: "
-                    "%2.2X%2.2X%2.2X%2.2X\n",
+            logmsg (_("dat.c: Interval timer accessed: "
+                    "%2.2X%2.2X%2.2X%2.2X\n"),
                     psa->inttimer[0], psa->inttimer[1],
                     psa->inttimer[2], psa->inttimer[3]);
         }

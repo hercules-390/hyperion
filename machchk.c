@@ -221,7 +221,7 @@ RADR    fsta = 0;
 
     /* Trace the machine check interrupt */
     if (sysblk.insttrace || sysblk.inststep)
-        logmsg ("Machine Check code=%16.16llu\n", (long long)mcic);
+        logmsg (_("Machine Check code=%16.16llu\n"), (long long)mcic);
 
     /* Store the external damage code at PSA+244 */
     STORE_FW(psa->xdmgcode, xdmg);
@@ -277,10 +277,10 @@ int i;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->tid == tid) break;
         if( dev == NULL)
-            logmsg("signal USR2 received for undetermined device\n");
+            logmsg(_("signal USR2 received for undetermined device\n"));
         else
             if(dev->ccwtrace)
-                logmsg("signal USR2 received for device %4.4X\n",dev->devnum);
+                logmsg(_("signal USR2 received for device %4.4X\n"),dev->devnum);
         return;
     }
 
@@ -307,11 +307,11 @@ int i;
     if(regs->psw.mach)
     {
 #if defined(_FEATURE_SIE)
-        logmsg("CPU%4.4X: Machine check due to host error: %s\n",
+        logmsg(_("CPU%4.4X: Machine check due to host error: %s\n"),
           regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
           strsignal(signo));
 #else /*!defined(_FEATURE_SIE)*/
-        logmsg("CPU%4.4X: Machine check due to host error: %s\n",
+        logmsg(_("CPU%4.4X: Machine check due to host error: %s\n"),
           regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEATURE_SIE)*/
 
@@ -346,11 +346,11 @@ int i;
     else
     {
 #if defined(_FEATURE_SIE)
-        logmsg("CPU%4.4X: Check-Stop due to host error: %s\n",
+        logmsg(_("CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
           strsignal(signo));
 #else /*!defined(_FEAURE_SIE)*/
-        logmsg("CPU%4.4X: Check-Stop due to host error: %s\n",
+        logmsg(_("CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->cpuad, strsignal(signo));
 #endif /*!defined(_FEAURE_SIE)*/
         display_inst(
