@@ -725,8 +725,15 @@ static void put_sbfp(struct sbfp *op, U32 *fpr)
     fpr[0] = (op->sign ? 1<<31 : 0) | (op->exp<<23) | op->fract;
     //logmsg("sput exp=%d fract=%x r=%8.8x\n", op->exp, op->fract, *fpr);
 }
+#define _IEEE_C
+#endif  /* !defined(_IEEE_C) */
+
+/*
+ * Chapter 9. Floating-Point Overview and Support Instructions
+ */
 
 #if defined(FEATURE_FPS_EXTENSIONS)
+#if !defined(_CBH_FUNC)
 /*
  * Convert binary floating point to hexadecimal long floating point
  * save result into long register and return condition code
@@ -816,16 +823,9 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
     fpr[1] = r1;
     return cc;
 }
-#endif /*defined(FEATURE_FPS_EXTENSIONS)*/
+#define _CBH_FUNC
+#endif /*!defined(_CBH_FUNC)*/
 
-#define _IEEE_C
-#endif  /* !defined(_IEEE_C) */
-
-/*
- * Chapter 9. Floating-Point Overview and Support Instructions
- */
-
-#if defined(FEATURE_FPS_EXTENSIONS)
 /*
  * B359 THDR  - CONVERT BFP TO HFP (long)                      [RRE]
  * Roger Bowler, 19 July 2003
@@ -845,7 +845,7 @@ DEF_INST(convert_bfp_long_to_float_long_reg)
     /* Convert to hfp register and set condition code */
     regs->psw.cc =
         cnvt_bfp_to_hfp (&op2,
-                         sbfpclassify(&op2),
+                         lbfpclassify(&op2),
                          regs->fpr + FPR2I(r1));
 
 }
