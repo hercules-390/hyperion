@@ -633,14 +633,15 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     {
     printf
     (
-        _(
 #if SIZEOF_LONG == 8
+        _(
             "          Bytes written: %ld (%3.1f MB)\n"
+         )
 #else
+        _(
             "          Bytes written: %lld (%3.1f MB)\n"
+         )
 #endif
-        )
-
         ,           bytes_written
         ,(double) ( bytes_written + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
     );
