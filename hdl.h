@@ -17,21 +17,21 @@
  #define dlinit()
 #endif
 
-int hdl_load(char *, int);           		/* load dll          */
+int hdl_load(char *, int);              /* load dll                  */
 #define HDL_LOAD_DEFAULT     0x00000000
-#define HDL_LOAD_MAIN        0x00000001
-#define HDL_LOAD_NOUNLOAD    0x00000002
-#define HDL_LOAD_FORCE       0x00000004         /* Override depchk   */
-#define HDL_LOAD_NOMSG       0x00000008
+#define HDL_LOAD_MAIN        0x00000001 /* Hercules MAIN module flag */
+#define HDL_LOAD_NOUNLOAD    0x00000002 /* Module cannot be unloaded */
+#define HDL_LOAD_FORCE       0x00000004 /* Override dependency check */
+#define HDL_LOAD_NOMSG       0x00000008 /* Do not issue not found msg*/
 
-int hdl_dele(char *);                           /* unload dll        */
-void hdl_list();                          /* list all loaded modules */
-void hdl_dlst();                          /* list all dependencies   */
+int hdl_dele(char *);                   /* Unload dll                */
+void hdl_list();                        /* list all loaded modules   */
+void hdl_dlst();                        /* list all dependencies     */
 
-void hdl_main();  
+void hdl_main();                        /* Main initialization rtn   */
 
-void * hdl_nent(char *, void*);
-void * hdl_fent(char *);
+void * hdl_fent(char *);                /* Find entry name           */
+void * hdl_nent(char *, void*);         /* Find next in chain        */
 
 /* Cygwin back-link support */
 #if defined(WIN32)
@@ -119,39 +119,39 @@ struct _MODENT;
 struct _DLLENT;
 
 
-typedef struct _HDLDEP {
-    struct _HDLDEP *next;
-    char *name;
-    char *version;
-    int  size;
+typedef struct _HDLDEP {                /* Dependency entry          */
+    struct _HDLDEP *next;               /* Next entry                */
+    char *name;                         /* Dependency name           */
+    char *version;                      /* Version                   */
+    int  size;                          /* Structure/module size     */
 } HDLDEP;
 
 
-typedef struct _HDLPRE {
-    char *name;
-    int  flag;
+typedef struct _HDLPRE {                /* Preload list entry        */
+    char *name;                         /* Module name               */
+    int  flag;                          /* Load flags                */
 } HDLPRE;
 
 
-typedef struct _MODENT {
-    void (*fep)();                           /* Function entry point */
-    char *name;                                     /* Function name */
-    int  count;
-    struct _DLLENT *dllent;
-    struct _MODENT *modnext;
+typedef struct _MODENT {                /* External Symbol entry     */
+    void (*fep)();                      /* Function entry point      */
+    char *name;                         /* Function symbol name      */
+    int  count;                         /* Symbol load count         */
+    struct _DLLENT *dllent;             /* Owning DLL entry          */
+    struct _MODENT *modnext;            /* Next entry in chain       */
 } MODENT;
 
 
-typedef struct _DLLENT {
-    char *name;
-    void *dll;
-    int flags;
-    int (*hdldepc)(void *);                  /* hdl_depc             */
-    int (*hdlreso)(void *);                  /* hdl_reso             */
-    int (*hdlinit)(void *);                  /* hdl_init             */
-    int (*hdlfini)();                        /* hdl_fini             */
-    struct _MODENT *modent;
-    struct _DLLENT *dllnext;
+typedef struct _DLLENT {                /* DLL entry                 */
+    char *name;                         /* load module name          */
+    void *dll;                          /* DLL handle (dlopen)       */
+    int flags;                          /* load flags                */
+    int (*hdldepc)(void *);             /* hdl_depc                  */
+    int (*hdlreso)(void *);             /* hdl_reso                  */
+    int (*hdlinit)(void *);             /* hdl_init                  */
+    int (*hdlfini)();                   /* hdl_fini                  */
+    struct _MODENT *modent;             /* First symbol entry        */
+    struct _DLLENT *dllnext;            /* Next entry in chain       */
 } DLLENT;
 
 #endif
