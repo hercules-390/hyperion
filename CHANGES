@@ -1,6 +1,7 @@
 05 Jun 2003 Dynamic loader support - Jan Jaeger
-05 Jun 2003 Preliminary substitution capabilities in config file. Substitution 
-            format is $(varname). Current vars are cuu,ccuu,CUU,CCUU - Ivan Warren
+05 Jun 2003 Preliminary substitution capabilities in config file.
+            Substitution format is $(varname).
+            Current vars are cuu,ccuu,CUU,CCUU - Ivan Warren
 04 Jun 2003 Device number specification extension. Device numbers are now
             CUU or CUU-CUU or CUU.count or CUU,CUU or a combination
             of the above - Ivan Warren
