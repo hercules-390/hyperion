@@ -995,7 +995,7 @@ DEF_INST (compression_call)
 {
   int r1;
   int r2;
-  REGS iregs;
+  REGS *iregs;
 
   RRE (inst, execflag, regs, r1, r2);
 
@@ -1025,13 +1025,17 @@ DEF_INST (compression_call)
     ARCH_DEP (program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
   /* Initialize the intermediate registers */
-  memcpy (&iregs, regs, sizeof (REGS));
+  iregs = malloc (sizeof (REGS));
+  memcpy (iregs, regs, sizeof (REGS));
 
   /* Now go to the requested function */
   if (GR0_e (regs))
-    ARCH_DEP (expand) (r1, r2, regs, &iregs);
+    ARCH_DEP (expand) (r1, r2, regs, iregs);
   else
-    ARCH_DEP (compress) (r1, r2, regs, &iregs);
+    ARCH_DEP (compress) (r1, r2, regs, iregs);
+
+  /* Free the intermediate registers */
+  free (iregs);
 }
 
 #endif /* FEATURE_COMPRESSION */
