@@ -1,9 +1,23 @@
 ECPS:VM : Extended Control Program Support : VM/370
 
+*************************
+
+Affected operating systems :
+
+VM/370 Release 6 (PTFs required - PLC 029 works fine)
+
+up to
+
+VM/SP 6 (with or without HPO option)
+
+--- VM/XA SF, VM/XA SP, VM/ESA and z/VM do NOT use these Assists,
+    but rely on the SIE instruction to perform some of these functions.
+
+************************
 
 How to enable VM Assists :
 
-In the HERCULES.CNF file, in the configuration secion :
+In the HERCULES.CNF file, in the configuration section :
 
 ECPS:VM NO|n (where n is the requested level.)
 
@@ -22,8 +36,15 @@ evm enable/disable feature : Enable/Disable named feature
 evm help : (guess)
 evm debug [feature|ALL|CPASSIST|VMASSIST] : Turn on debugging messages for a specific feature
 evm nodebug [feature|ALL|CPASSIST|VMASSIST] : Turn off...
+evm level [nn] : Force ECPS:VM to report a certain support level
+        (or display the current support level)
 
 NOTE : evm disable does NOT entirelly disables CP ASSISTS. If it did (i.e. generate a program interrupt whenever a E6xx instruction is invoked) VM would abend immediatelly. Rather, ommit the ECPS:VM statement in the configuration file.
+
+To determine the feature names, type "evm enable ALL".
+        All the enabled features will be listed.
+
+the evm command is NOT case sensitive
 
 **********
 
