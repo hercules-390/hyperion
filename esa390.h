@@ -8,21 +8,25 @@
 
 #define _ESA390_H
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Header file containing ESA/390 structure definitions 	     */
 /*-------------------------------------------------------------------*/
 
 /* Platform-independent storage operand definitions */
-typedef u_int8_t	BYTE;
-typedef u_int8_t	HWORD[2];
-typedef u_int8_t	FWORD[4];
-typedef u_int8_t	DWORD[8];
-typedef u_int8_t	QWORD[16];
-typedef u_int16_t	U16;
+typedef uint8_t	BYTE;
+typedef uint8_t	HWORD[2];
+typedef uint8_t	FWORD[4];
+typedef uint8_t	DWORD[8];
+typedef uint8_t	QWORD[16];
+typedef uint16_t	U16;
 typedef int16_t 	S16;
-typedef u_int32_t	U32;
+typedef uint32_t	U32;
 typedef int32_t 	S32;
-typedef u_int64_t	U64;
+typedef uint64_t	U64;
 typedef int64_t 	S64;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
  typedef union {

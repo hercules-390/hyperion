@@ -15,6 +15,11 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+
 #include "version.h"
 
 #if !defined( TRUE )
@@ -30,10 +35,10 @@
 */
 typedef struct _hethdr
 {
-    u_int8_t        clen[ 2 ];          /* Length of current block          */
-    u_int8_t        plen[ 2 ];          /* Length of previous block         */
-    u_int8_t        flags1;             /* Flags byte 1                     */
-    u_int8_t        flags2;             /* Flags byte 2                     */
+    uint8_t        clen[ 2 ];          /* Length of current block          */
+    uint8_t        plen[ 2 ];          /* Length of previous block         */
+    uint8_t        flags1;             /* Flags byte 1                     */
+    uint8_t        flags2;             /* Flags byte 2                     */
 } HETHDR;
 
 /*
@@ -58,18 +63,18 @@ typedef struct _hethdr
 typedef struct _hetb
 {
     FILE            *fd;                /* Tape file descriptor             */
-    u_int32_t       chksize;            /* Size of output chunks            */
-    u_int32_t       ublksize;           /* Current block compressed size    */
-    u_int32_t       cblksize;           /* Current block uncompressed size  */
-    u_int32_t       cblk;               /* Current block number             */
+    uint32_t       chksize;            /* Size of output chunks            */
+    uint32_t       ublksize;           /* Current block compressed size    */
+    uint32_t       cblksize;           /* Current block uncompressed size  */
+    uint32_t       cblk;               /* Current block number             */
     HETHDR          chdr;               /* Current block header             */
-    u_int8_t        writeprotect:1;     /* TRUE=write protected             */
-    u_int8_t        readlast:1;         /* TRUE=last i/o was read           */
-    u_int8_t        truncated:1;        /* TRUE=file truncated              */
-    u_int8_t        compress:1;         /* TRUE=compress written data       */
-    u_int8_t        decompress:1;       /* TRUE=decompress read data        */
-    u_int8_t        method:2;           /* 1=ZLIB, 2=BZLIB compresion       */
-    u_int8_t        level:4;            /* 1=<n<=9 compression level        */
+    uint8_t        writeprotect:1;     /* TRUE=write protected             */
+    uint8_t        readlast:1;         /* TRUE=last i/o was read           */
+    uint8_t        truncated:1;        /* TRUE=file truncated              */
+    uint8_t        compress:1;         /* TRUE=compress written data       */
+    uint8_t        decompress:1;       /* TRUE=decompress read data        */
+    uint8_t        method:2;           /* 1=ZLIB, 2=BZLIB compresion       */
+    uint8_t        level:4;            /* 1=<n<=9 compression level        */
 } HETB;
 
 /*
