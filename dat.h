@@ -715,8 +715,6 @@ RADR    sto = 0;                        /* Segment table origin      */
 RADR    pto = 0;                        /* Page table origin         */
 int     cc;                             /* Condition code            */
 
-    regs->dat.private = regs->dat.protect = 0;
-
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
 /*-----------------------------------*/
 /* S/370 Dynamic Address Translation */
@@ -726,6 +724,8 @@ RADR    ste;                            /* Segment table entry       */
 U16     pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
 TLBE   *tlbp;                           /* -> TLB entry              */
+
+    regs->dat.private = regs->dat.protect = 0;
 
     /* Load the effective segment table descriptor */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
@@ -882,6 +882,8 @@ RADR    pte;                            /* Page table entry          */
 U32     ptl;                            /* Page table length         */
 TLBE   *tlbp;                           /* -> TLB entry              */
 
+    regs->dat.private = regs->dat.protect = 0;
+
     /* [3.11.3.1] Load the effective segment table descriptor */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
         goto tran_alet_excp;
@@ -1020,6 +1022,8 @@ U16     rfx, rsx, rtx;                  /* Region first/second/third
 U16     sx, px;                         /* Segment and page index,
                                            + 3 low-order zero bits   */
 TLBE   *tlbp;                           /* -> TLB entry              */
+
+    regs->dat.private = regs->dat.protect = 0;
 
     /* Load the address space control element */
     if (ARCH_DEP(load_address_space_designator) (arn, regs, acctype))
