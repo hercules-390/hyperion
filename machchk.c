@@ -280,7 +280,7 @@ int i;
     {
     DEVBLK *dev;
 
-        if(tid == sysblk.cnsltid)
+        if(tid == sysblk.cnsltid || tid == sysblk.socktid)
             return;
         for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
             if (dev->tid == tid) break;

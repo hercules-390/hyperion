@@ -50,11 +50,6 @@ extern  void  FishHangAtExit();
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
-
-/* (Socket Devices...) */
-int add_socket_devices_to_fd_set (fd_set* mask, int maxfd);
-void check_socket_devices_for_connections (fd_set* mask);
-
 /* forward define process_script_file (ISW20030220-3) */
 int process_script_file(char *,int);
 
@@ -940,7 +935,6 @@ struct  timeval tv;                     /* Select timeout structure  */
         FD_SET (pipefd, &readset);
         maxfd = keybfd;
         if (pipefd > maxfd) maxfd = pipefd;
-        maxfd = add_socket_devices_to_fd_set (&readset, maxfd);
 
         /* Wait for a message to arrive, a key to be pressed,
            or the inactivity interval to expire */
@@ -1454,9 +1448,6 @@ struct  timeval tv;                     /* Select timeout structure  */
             }
 #endif /*EXTERNALGUI*/
         }
-
-        /* Check if any sockets have received new connections */
-        check_socket_devices_for_connections (&readset);
 
 #ifdef EXTERNALGUI
         if (!extgui)

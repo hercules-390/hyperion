@@ -24,7 +24,6 @@
 LIST_ENTRY  bind_head;      /* (bind_struct list anchor) */
 LOCK        bind_lock;      /* (lock for accessing list) */
 
-
 /*-------------------------------------------------------------------*/
 /* safe_strdup   make copy of string and return a pointer to it      */
 /*-------------------------------------------------------------------*/
@@ -177,163 +176,6 @@ int inet_socket (char* spec)
     }
 
     return sd;
-}
-
-
-/*-------------------------------------------------------------------*/
-/* bind_device   bind a device to a socket (adds entry to our list   */
-/*               of bound devices) (1=success, 0=failure)            */
-/*-------------------------------------------------------------------*/
-int bind_device (DEVBLK* dev, char* spec)
-{
-    bind_struct* bs;
-
-    logdebug("bind_device (%4.4X, %s)\n", dev->devnum, spec);
-
-    /* Error if device already bound */
-
-    if (dev->bs)
-    {
-        logmsg (_("HHCSD001E Device %4.4X already bound to socket %s\n"),
-            dev->devnum, dev->bs->spec);
-        return 0;   /* (failure) */
-    }
-
-    /* Create a new bind_struct entry */
-
-    bs = malloc(sizeof(bind_struct));
-
-    if (!bs)
-    {
-        logmsg (_("HHCSD002E bind_device malloc() failed for device %4.4X\n"),
-            dev->devnum);
-        return 0;   /* (failure) */
-    }
-
-    memset(bs,0,sizeof(bind_struct));
-
-    if (!(bs->spec = safe_strdup(spec)))
-    {
-        logmsg (_("HHCSD003E bind_device safe_strdup() failed for device %4.4X\n"),
-            dev->devnum);
-        free (bs);
-        return 0;   /* (failure) */
-    }
-
-    /* Create a listening socket */
-
-    if (bs->spec[0] == '/') bs->sd = unix_socket (bs->spec);
-    else                    bs->sd = inet_socket (bs->spec);
-
-    if (bs->sd == -1)
-    {
-        /* (error message already issued) */
-        free (bs);
-        return 0; /* (failure) */
-    }
-
-    /* Chain device and socket to each other */
-
-    dev->bs = bs;
-    bs->dev = dev;
-
-    /* Add the new entry to our list of bound devices */
-
-    obtain_lock(&bind_lock);
-    InsertListTail(&bind_head,&bs->bind_link);
-    release_lock(&bind_lock);
-
-    logmsg (_("HHCSD004I Device %4.4X bound to socket %s\n"),
-        dev->devnum, dev->bs->spec);
-
-    return 1;   /* (success) */
-}
-
-
-/*-------------------------------------------------------------------*/
-/* unbind_device   unbind a device from a socket (removes entry from */
-/*                 our list and discards it) (1=success, 0=failure)  */
-/*-------------------------------------------------------------------*/
-int unbind_device (DEVBLK* dev)
-{
-    bind_struct* bs;
-
-    logdebug("unbind_device(%4.4X)\n", dev->devnum);
-
-    /* Error if device not bound */
-
-    if (!(bs = dev->bs))
-    {
-        logmsg (_("HHCSD005E Device %4.4X not bound to any socket\n"),
-            dev->devnum);
-        return 0;   /* (failure) */
-    }
-
-    /* Error if someone still connected */
-
-    if (dev->fd != -1)
-    {
-        logmsg (_("HHCSD006E Client %s (%s) still connected to device %4.4X (%s)\n"),
-            dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
-        return 0;   /* (failure) */
-    }
-
-    /* IMPORTANT! it's bad form to close a listening socket (and it
-     * happens to crash the Cygwin build) while another thread is still
-     * listening for connections on that socket (i.e. is in its FD_SET
-     * 'select' list). Thus we always issue a message (any message)
-     * immediately AFTER removing the entry from the sockdev (bind_struct)
-     * list and BEFORE closing our listening socket, thereby forcing
-     * the panel thread to rebuild its FD_SET 'select' list. (It wakes up
-     * from its 'select' as a result of our sending it our message and
-     * then before issuing another 'select' before going back to sleep,
-     * it then rebuilds its FD_SET 'select' list based on the current
-     * state of the sockdev (bind_struct) list, and since we just removed
-     * our entry from that list, the panel thread will thus not add our
-     * listening socket to its FD_SET 'select' list and thus we can then
-     * SAFELY close the listening socket).
-     */
-
-    /* Remove the entry from our list */
-
-    obtain_lock(&bind_lock);
-    RemoveListEntry(&bs->bind_link);
-    release_lock(&bind_lock);
-
-    /* Issue message to wake up panel thread from its 'select' */
-
-    logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
-        dev->devnum, bs->spec);
-
-    /* Give panel thread time to process our message
-     * and rebuild its select list. */
-
-    usleep(100000);
-
-    /* Now safe to close the listening socket */
-
-    if (bs->sd != -1)
-        close (bs->sd);
-
-    /* Unchain device and socket from each another */
-
-    dev->bs = NULL;
-    bs->dev = NULL;
-
-    /* Discard the entry */
-
-    if (bs->clientname)
-        free(bs->clientname);
-    bs->clientname = NULL;
-
-    if (bs->clientip)
-        free(bs->clientip);
-    bs->clientip = NULL;
-
-    free (bs->spec);
-    free (bs);
-
-    return 1;   /* (success) */
 }
 
 
@@ -521,20 +363,21 @@ void check_socket_devices_for_connections (fd_set* readset)
 }
 
 
-#if 0
-void socket_thread(void unused)
+void *socket_thread(void *arg)
 {
 fd_set sockset;
 int maxfd = 0;
+int rc;
+
+    UNREFERENCED(arg);
 
     /* Display thread started message on control panel */
     logmsg (_("HHCSD020I Socketdevice listener thread started: "
             "tid="TIDPAT", pid=%d\n"),
             thread_id(), getpid());
 
-    while(bind_head)
+    while(1)
     {
-
         /* Set the file descriptors for select */
         FD_ZERO (&sockset);
         maxfd = add_socket_devices_to_fd_set (&sockset, maxfd);
@@ -542,14 +385,15 @@ int maxfd = 0;
 #if defined(WIN32)
         {
             struct timeval tv={0,500000};   /* half a second */
-            rc = select ( maxfd+1, &selset, NULL, NULL, &tv );
+            rc = select ( maxfd+1, &sockset, NULL, NULL, &tv );
         }
 #else /*!defined(WIN32)*/
-        rc = select ( maxfd+1, &selset, NULL, NULL, NULL );
+        rc = select ( maxfd+1, &sockset, NULL, NULL, NULL );
 #endif /*!defined(WIN32)*/
 
         if (rc < 0 )
         {
+            if (errno == EINTR) continue;
             logmsg ( _("HHCSD021E select: %s\n"), strerror(errno));
             break;
         }
@@ -561,7 +405,176 @@ int maxfd = 0;
 
     logmsg (_("HHCSD022I Socketdevice listener thread terminated\n"));
 
-    return;
+    return NULL;
 
-} /* end function panel_display */
-#endif
+}
+
+
+/*-------------------------------------------------------------------*/
+/* bind_device   bind a device to a socket (adds entry to our list   */
+/*               of bound devices) (1=success, 0=failure)            */
+/*-------------------------------------------------------------------*/
+int bind_device (DEVBLK* dev, char* spec)
+{
+    bind_struct* bs;
+
+    logdebug("bind_device (%4.4X, %s)\n", dev->devnum, spec);
+
+    if(!sysblk.socktid)
+    {
+        if ( create_thread (&sysblk.socktid, &sysblk.detattr,
+                                    socket_thread, NULL) )
+            {
+                logmsg (_("HHCSD023E Cannot create socketdevice thread: %s\n"),
+                        strerror(errno));
+                return 0;
+            }
+    }
+
+    /* Error if device already bound */
+
+    if (dev->bs)
+    {
+        logmsg (_("HHCSD001E Device %4.4X already bound to socket %s\n"),
+            dev->devnum, dev->bs->spec);
+        return 0;   /* (failure) */
+    }
+
+    /* Create a new bind_struct entry */
+
+    bs = malloc(sizeof(bind_struct));
+
+    if (!bs)
+    {
+        logmsg (_("HHCSD002E bind_device malloc() failed for device %4.4X\n"),
+            dev->devnum);
+        return 0;   /* (failure) */
+    }
+
+    memset(bs,0,sizeof(bind_struct));
+
+    if (!(bs->spec = safe_strdup(spec)))
+    {
+        logmsg (_("HHCSD003E bind_device safe_strdup() failed for device %4.4X\n"),
+            dev->devnum);
+        free (bs);
+        return 0;   /* (failure) */
+    }
+
+    /* Create a listening socket */
+
+    if (bs->spec[0] == '/') bs->sd = unix_socket (bs->spec);
+    else                    bs->sd = inet_socket (bs->spec);
+
+    if (bs->sd == -1)
+    {
+        /* (error message already issued) */
+        free (bs);
+        return 0; /* (failure) */
+    }
+
+    /* Chain device and socket to each other */
+
+    dev->bs = bs;
+    bs->dev = dev;
+
+    /* Add the new entry to our list of bound devices */
+
+    obtain_lock(&bind_lock);
+    InsertListTail(&bind_head,&bs->bind_link);
+    release_lock(&bind_lock);
+
+    signal_thread (sysblk.socktid, SIGUSR2);
+
+    logmsg (_("HHCSD004I Device %4.4X bound to socket %s\n"),
+        dev->devnum, dev->bs->spec);
+
+    return 1;   /* (success) */
+}
+
+
+/*-------------------------------------------------------------------*/
+/* unbind_device   unbind a device from a socket (removes entry from */
+/*                 our list and discards it) (1=success, 0=failure)  */
+/*-------------------------------------------------------------------*/
+int unbind_device (DEVBLK* dev)
+{
+    bind_struct* bs;
+
+    logdebug("unbind_device(%4.4X)\n", dev->devnum);
+
+    /* Error if device not bound */
+
+    if (!(bs = dev->bs))
+    {
+        logmsg (_("HHCSD005E Device %4.4X not bound to any socket\n"),
+            dev->devnum);
+        return 0;   /* (failure) */
+    }
+
+    /* Error if someone still connected */
+
+    if (dev->fd != -1)
+    {
+        logmsg (_("HHCSD006E Client %s (%s) still connected to device %4.4X (%s)\n"),
+            dev->bs->clientip, dev->bs->clientname, dev->devnum, dev->bs->spec);
+        return 0;   /* (failure) */
+    }
+
+    /* IMPORTANT! it's bad form to close a listening socket (and it
+     * happens to crash the Cygwin build) while another thread is still
+     * listening for connections on that socket (i.e. is in its FD_SET
+     * 'select' list). Thus we always issue a message (any message)
+     * immediately AFTER removing the entry from the sockdev (bind_struct)
+     * list and BEFORE closing our listening socket, thereby forcing
+     * the panel thread to rebuild its FD_SET 'select' list. (It wakes up
+     * from its 'select' as a result of our sending it our message and
+     * then before issuing another 'select' before going back to sleep,
+     * it then rebuilds its FD_SET 'select' list based on the current
+     * state of the sockdev (bind_struct) list, and since we just removed
+     * our entry from that list, the panel thread will thus not add our
+     * listening socket to its FD_SET 'select' list and thus we can then
+     * SAFELY close the listening socket).
+     */
+
+    /* Remove the entry from our list */
+
+    obtain_lock(&bind_lock);
+    RemoveListEntry(&bs->bind_link);
+    release_lock(&bind_lock);
+
+    /* Issue message to wake up panel thread from its 'select' */
+
+    logmsg (_("HHCSD007I Device %4.4X unbound from socket %s\n"),
+        dev->devnum, bs->spec);
+
+    /* Give panel thread time to process our message
+     * and rebuild its select list. */
+
+    usleep(100000);
+
+    /* Now safe to close the listening socket */
+
+    if (bs->sd != -1)
+        close (bs->sd);
+
+    /* Unchain device and socket from each another */
+
+    dev->bs = NULL;
+    bs->dev = NULL;
+
+    /* Discard the entry */
+
+    if (bs->clientname)
+        free(bs->clientname);
+    bs->clientname = NULL;
+
+    if (bs->clientip)
+        free(bs->clientip);
+    bs->clientip = NULL;
+
+    free (bs->spec);
+    free (bs);
+
+    return 1;   /* (success) */
+}

@@ -1204,9 +1204,6 @@ BYTE                    unitstat;       /* Status after receive data */
     /* Get information about this system */
     uname (&hostinfo);
 
-    /* Wait for system to finish coming up */
-    while (!initdone) sleep(1);
-
     /* Obtain a socket */
     lsock = socket (AF_INET, SOCK_STREAM, 0);
 

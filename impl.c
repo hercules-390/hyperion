@@ -174,9 +174,6 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
         exit(1);
     }
 
-    /* Build system configuration */
-    build_config (cfgfile);
-
     /* Register the SIGINT handler */
     if ( signal (SIGINT, sigint_handler) == SIG_ERR )
     {
@@ -219,6 +216,9 @@ int     arg_error = 0;                  /* 1=Invalid arguments       */
             exit(1);
         }
     }
+
+    /* Build system configuration */
+    build_config (cfgfile);
 
     /* Start the watchdog */
     if ( create_thread (&sysblk.wdtid, &sysblk.detattr,

@@ -655,6 +655,7 @@ typedef struct _SYSBLK {
         TID     cnsltid;                /* Thread-id for console     */
         U16     cnslport;               /* Port number for console   */
         int     cnslcnt;                /* Number of 3270 devices    */
+        TID     socktid;                /* Thread-id for sockdev     */
         RADR    mbo;                    /* Measurement block origin  */
         BYTE    mbk;                    /* Measurement block key     */
         int     mbm;                    /* Measurement block mode    */
