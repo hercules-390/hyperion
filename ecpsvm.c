@@ -2418,17 +2418,19 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
     }
     if(B_VMPSTAT & VMV370R)
     {
-        F_ECBLOK=EVM_L(vmb+VMECEXT);
+        F_ECBLOK=fetch_fw(regs->mainstor+vmb+VMECEXT);
 	for(i=0;i<16;i++)
 	{
-		ocrs[i]=EVM_L(F_ECBLOK+(i*4));
+		ecb_p=MADDR(F_ECBLOK+(i*4),USE_REAL_ADDR,regs,ACCTYPE_READ,0);
+		ocrs[i]=fetch_fw(ecb_p);
 	}
     }
     else
     {
         F_ECBLOK=vmb+VMECEXT;  /* Update ECBLOK ADDRESS for VCR0 Update */
+	ecb_p=MADDR(F_ECBLOK,USE_REAL_ADDR,regs,ACCTYPE_READ,0);
         /* Load OLD CR0 From VMBLOK */
-	ocrs[0]=EVM_L(F_ECBLOK);
+	ocrs[0]=fetch_fw(ecb_p);
     }
     for(i=0;i<16;i++)
     {
@@ -2525,23 +2527,17 @@ int ecpsvm_dolctl(REGS *regs,int r1,int r3,int b2,VADR effective_addr2)
         regs->CR_L(i)=rcrs[i];
     }
     /* Update ECBLOK/VMBLOK Control regs */
-    /* Set change bit in ECBLOCK (or VMBLOCK) */
     /* Note : if F_ECBLOK addresses VMVCR0 in the VMBLOCK */
     /*        check has already been done to make sure    */
     /*        r1=0 and numcrs=1                           */
-    MADDR(F_ECBLOK,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
-    if((F_ECBLOK & 0x7FF) != ((F_ECBLOK+((numcrs-1)*4)) & 0x7FF))
-    {
-        /* set change bit in 2nd 2K Page is necessary */
-        MADDR(F_ECBLOK+((numcrs-1)*4),USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
-    }
     for(j=r1,i=0;i<numcrs;i++,j++)
     {
         if(j>15)
         {
             j-=16;
         }
-	EVM_ST(ocrs[j],F_ECBLOK+(j*4));
+	ecb_p=MADDR(F_ECBLOK+(j*4),USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
+	store_fw(ecb_p,ocrs[j]);
     }
     DEBUG_SASSISTX(LCTL,logmsg("HHCEV300D : SASSIST LCTL %d,%d Done\n",r1,r3));
     SASSIST_HIT(LCTL);
