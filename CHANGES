@@ -1,3 +1,6 @@
+02 Jan 2002 Change store of percode in PSA to use realregs->perc - Paul Leisy
+02 Jan 2002 Fix stack and BCT per checks - Paul Leisy
+02 Jan 2002 Don't set STORE PER when operand specified as REAL - Paul Leisy
 30 Dec 2001 Fix for cckd and big-endian - Greg Smith
 23 Dec 2001 OPTION_LPP_RESTRICT - Jan Jaeger
 23 Dec 2001 Selective ArchMode build options - Jan Jaeger
