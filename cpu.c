@@ -1249,22 +1249,12 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         sysblk.waitmask |= regs->cpumask;
         sysblk.started_mask &= ~regs->cpumask;
 
-#ifdef EXTERNALGUI
-        if (extgui && regs == (sysblk.regs + sysblk.pcpu))
-            logmsg("MAN=1\n");
-#endif /*EXTERNALGUI*/
-
         HDC(debug_cpu_state, regs);
 
         while (regs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&regs->intcond, &sysblk.intlock);
         }
-
-#ifdef EXTERNALGUI
-        if (extgui && regs == (sysblk.regs + sysblk.pcpu))
-            logmsg("MAN=0\n");
-#endif /*EXTERNALGUI*/
 
         HDC(debug_cpu_state, regs);
 
@@ -1344,22 +1334,12 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             obtain_lock (&sysblk.intlock);
             sysblk.waitmask |= regs->cpumask;
 
-#ifdef EXTERNALGUI
-            if (extgui && regs == (sysblk.regs + sysblk.pcpu))
-                logmsg("MAN=1\n");
-#endif /*EXTERNALGUI*/
-
             HDC(debug_cpu_state, regs);
 
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
             }
-
-#ifdef EXTERNALGUI
-            if (extgui && regs == (sysblk.regs + sysblk.pcpu))
-                logmsg("MAN=0\n");
-#endif /*EXTERNALGUI*/
 
             HDC(debug_cpu_state, regs);
 
