@@ -1854,7 +1854,7 @@ DEF_INST(convert_utf8_to_utf32)
     
   /* Initialize number of translated charachters */
   xlated = 0;
-  while(xlated++ < 4096)
+  while(xlated < 4096)
   {
     /* Check end of source or destination */  
     if(srcelen < 1)
@@ -1987,7 +1987,7 @@ DEF_INST(convert_utf16_to_utf32)
     
   /* Initialize number of translated charachters */
   xlated = 0;
-  while(xlated++ < 4096)
+  while(xlated < 4096)
   {
     /* Check end of source or destination */  
     if(srcelen < 2)
@@ -2077,7 +2077,7 @@ DEF_INST(convert_utf32_to_utf8)
   /* Initialize number of translated charachters */
   xlated = 0;
   write = 0;
-  while(xlated++ < 4096)
+  while(xlated < 4096)
   {
     /* Check end of source or destination */  
     if(srcelen < 4)
@@ -2214,7 +2214,7 @@ DEF_INST(convert_utf32_to_utf16)
   
   /* Initialize number of translated charachters */
   xlated = 0;
-  while(xlated++ < 4096)
+  while(xlated < 4096)
   {
     /* Check end of source or destination */  
     if(srcelen < 4)

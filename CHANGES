@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+02 Jan 2005 Bug fix 14dec05 fixed - Bernard van der Helm
 02 Jan 2005 Add integrated 1052/3215 consoles - Jan Jaeger
 29 Dec 2004 3480 Modeset (X'DB') has 1 byte of data - Ivan Warren
 28 Dec 2004 Set reserved VOL1 fields to blanks - Greg Smith
