@@ -24,6 +24,9 @@ typedef struct _COMMADPT
 {
     DEVBLK *dev;                /* the devblk to which this CA is attched   */
     BYTE lnctl;                 /* Line control used                        */
+    int  rto;                   /* Read Time-Out                            */
+    int  pto;                   /* Poll Time-Out                            */
+    int  eto;                   /* Enable Time-Out                          */
     TID  cthread;               /* Thread used to control the socket        */
     BYTE curpending;            /* Current pending operation                */
     U16  lport;                 /* Local listening port                     */

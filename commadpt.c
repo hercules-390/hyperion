@@ -23,6 +23,9 @@ static PARSER ptab[]={
     {"rport","%s"},
     {"rhost","%s"},
     {"dial","%s"},
+    {"rto","%s"},
+    {"pto","%s"},
+    {"eto","%s"},
     {"switched","%s"},
     {NULL,NULL}
 };
@@ -33,6 +36,9 @@ enum {
     COMMADPT_KW_RPORT,
     COMMADPT_KW_RHOST,
     COMMADPT_KW_DIAL,
+    COMMADPT_KW_READTO,
+    COMMADPT_KW_POLLTO,
+    COMMADPT_KW_ENABLETO,
     COMMADPT_KW_SWITCHED
 } commadpt_kw;
 
@@ -476,6 +482,28 @@ static void commadpt_read(COMMADPT *ca)
     }
 }
 /*-------------------------------------------------------------------*/
+/* Communication Thread - Set TimeOut                                */
+/*-------------------------------------------------------------------*/
+static struct timeval *commadpt_setto(struct timeval *tv,int tmo)
+{
+    if(tmo!=0)
+    {
+        if(tmo<0)
+        {
+            tv->tv_sec=0;
+            tv->tv_usec=1;
+        }
+        else
+        {
+            tv->tv_sec=tmo/1000;
+            tv->tv_usec=(tmo%1000)*1000;
+        }
+        return(tv);
+    }
+    return(NULL);
+}
+
+/*-------------------------------------------------------------------*/
 /* Communication Thread main loop                                    */
 /*-------------------------------------------------------------------*/
 static void commadpt_thread(void *vca)
@@ -680,9 +708,7 @@ static void commadpt_thread(void *vca)
                     signal_condition(&ca->ipc);
                     break;
                 }
-                tv.tv_sec=3;
-                tv.tv_usec=0;
-                seltv=&tv;
+                seltv=commadpt_setto(&tv,ca->rto);
                 FD_SET(ca->sfd,&rfd);
                 maxfd=maxfd<ca->sfd?ca->sfd:maxfd;
                 break;
@@ -733,11 +759,9 @@ static void commadpt_thread(void *vca)
                     }
                     b=commadpt_ring_pop(&ca->pollbfr);
                     ca->pollix=b;
-                    /* Prepare to read - 3 secs timeout */
-                    tv.tv_sec=3;
-                    tv.tv_usec=0;
+                    seltv=commadpt_setto(&tv,ca->pto);
                 }
-                if(!writecont)
+                if(!writecont && ca->pto!=0)
                 {
                     /* Set tv value (have been set earlier) */
                     seltv=&tv;
@@ -824,9 +848,7 @@ static void commadpt_thread(void *vca)
                         /* a tight loop                         */
                         if(ca->callissued)
                         {
-                            tv.tv_sec=3;
-                            tv.tv_usec=0;
-                            seltv=&tv;
+                            seltv=commadpt_setto(&tv,ca->eto);
                             break;
                         }
                         /* Issue a Connect out */
@@ -862,9 +884,7 @@ static void commadpt_thread(void *vca)
                         /* to prevent OSes from issuing a loop of ENABLES       */
                         else
                         {
-                            tv.tv_sec=3;
-                            tv.tv_usec=0;
-                            seltv=&tv;
+                            seltv=commadpt_setto(&tv,ca->eto);
                         }
                         break;
                     default:
@@ -1235,6 +1255,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
     struct in_addr in_temp;
     char    *dialt;
     char        fmtbfr[64];
+    int etospec;        /* ETO= Specified */
     union {
         int num;
         char text[80];
@@ -1270,6 +1291,10 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         dev->commadpt->rhost=INADDR_NONE;
         dev->commadpt->dialin=0;
         dev->commadpt->dialout=1;
+        dev->commadpt->rto=3000;        /* Read Time-Out in milis */
+        dev->commadpt->pto=3000;        /* Poll Time-out in milis */
+        dev->commadpt->eto=10000;       /* Enable Time-out in milis */
+        etospec=0;
 
         for(i=0;i<argc;i++)
         {
@@ -1333,6 +1358,16 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                         msg013e(dev,"RHOST",res.text);
                         errcnt++;
                     }
+                    break;
+                case COMMADPT_KW_READTO:
+                    dev->commadpt->rto=atoi(res.text);
+                    break;
+                case COMMADPT_KW_POLLTO:
+                    dev->commadpt->pto=atoi(res.text);
+                    break;
+                case COMMADPT_KW_ENABLETO:
+                    dev->commadpt->eto=atoi(res.text);
+                    etospec=1;
                     break;
                 case COMMADPT_KW_SWITCHED:
                 case COMMADPT_KW_DIAL:
@@ -1407,6 +1442,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         switch(dev->commadpt->dialin+dev->commadpt->dialout*2)
         {
             case 0: /* DIAL = NO */
+                dev->commadpt->eto=0;
                 if(dev->commadpt->lport==0)
                 {
                     msg015e(dev,dialt,"LPORT");
@@ -1422,6 +1458,13 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     msg015e(dev,dialt,"RHOST");
                     errcnt++;
                 }
+                if(etospec)
+                {
+                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->eto);
+                    msg016w017i(dev,dialt,"ETO",fmtbfr);
+                    errcnt++;
+                }
+                dev->commadpt->eto=0;
                 break;
             case 1: /* DIAL = IN */
             case 3: /* DIAL = INOUT */

@@ -6,6 +6,7 @@ Only allows Point to Point connection.
 Hercules device statement :
 
 CCUU 2703 lport=port lhost=host rhost=host rport=port dial=IN|OUT|INOUT|NO
+          [pto=nnn|0|-1] [rto=nnn|0|-1] [eto=nnn|0|-1]
 
 lport : the local TCP port number or service name on which the line will listen
         for incoming TCP calls
@@ -32,6 +33,30 @@ rhost : the remote host ip address or name
 rport : the remote port number or service name
         This parameter is irrelevant and is ignored for DIAL=IN
         for DIAL=OUT|INOUT|NO, this parameter is mandatory
+
+rto, pto, eto : Read, Poll and Enable Timeout values in miliseconds.
+        specifying 0 means No Timeout (infinite wait). -1 Means immediate
+        timeout.
+
+        The read timeout is how long the handler will wait for an ending
+        character after the last character was received or the I/O initiated.
+        The read timeout default is 3000 Miliseconds (3 Seconds)
+
+        The poll timeout is how long the handler will wait for a polled
+        station to respond to a poll request.
+        The poll timeout default is 3000 Miliseconds (3 Seconds)
+
+        The enable timeout is how long the handler will wait for the TCP
+        connection to be established.
+        The enable timeout default is 10000 Miliseconds (10 Seconds), except
+        if DIAL=NO is also specified, in which case the enable timeout defaults
+        to 0.
+
+        Note : the ETO parameter is ignored if DIAL=NO is not specified.
+               for a dialed line, there is no enable timeout. If the eto
+               parameter is specified and DIAL is not "NO", then a warning message
+               is issued and the parameter is ignored.
+
 
 dial=IN|OUT|INOUT|NO
         Indicate call direction (if any).
