@@ -2638,7 +2638,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Program check if the LSTESN in word 1 of the LSTE is
            non-zero and not equal to bits 0-31 of register 15 */
-        if (lste[1] != 0 && regs->GR_L(15) != lste[1])
+        if (lste[1] != 0 && regs->GR_H(15) != lste[1])
         {
             regs->TEA = pctea;
             ARCH_DEP(program_interrupt) (regs, PGM_LSTE_SEQUENCE_EXCEPTION);
