@@ -39,6 +39,8 @@ BYTE    chanstat;                       /* IPL device channel status */
     if (extgui) logmsg("LOAD=1\n");
 #endif /*EXTERNALGUI*/
 
+    HDC(debug_cpu_state, regs);
+
     /* Reset external interrupts */
     OFF_IC_SERVSIG;
     OFF_IC_INTKEY;
@@ -62,6 +64,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     {
         logmsg (_("HHCCP027E Device %4.4X not in configuration\n"),
                 devnum);
+        HDC(debug_cpu_state, regs);
 #ifdef EXTERNALGUI
         if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
@@ -72,6 +75,7 @@ BYTE    chanstat;                       /* IPL device channel status */
       && dev->chanset != regs->chanset)
     {
         logmsg(_("HHCCP028E Device not connected to channelset\n"));
+        HDC(debug_cpu_state, regs);
 #ifdef EXTERNALGUI
         if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
@@ -131,6 +135,7 @@ BYTE    chanstat;                       /* IPL device channel status */
             if ((i & 3) == 3) logmsg(" ");
         }
         logmsg ("\n");
+        HDC(debug_cpu_state, regs);
 #ifdef EXTERNALGUI
         if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
@@ -176,6 +181,7 @@ BYTE    chanstat;                       /* IPL device channel status */
                 psa->iplpsw[0], psa->iplpsw[1], psa->iplpsw[2],
                 psa->iplpsw[3], psa->iplpsw[4], psa->iplpsw[5],
                 psa->iplpsw[6], psa->iplpsw[7]);
+        HDC(debug_cpu_state, regs);
 #ifdef EXTERNALGUI
         if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
@@ -204,6 +210,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 #ifdef EXTERNALGUI
     if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
+    HDC(debug_cpu_state, regs);
     return 0;
 } /* end function load_ipl */
 
@@ -241,6 +248,8 @@ U32     fileaddr;
 
     if(fname == NULL)                   /* Default ipl from DASD     */
         fname = "hercules.ins";         /*   from hercules.ins       */
+
+    HDC(debug_cpu_state, regs);
 
 #ifdef EXTERNALGUI
     if (extgui) logmsg("LOAD=1\n");
@@ -302,6 +311,7 @@ U32     fileaddr;
 #ifdef EXTERNALGUI
                 if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
+                HDC(debug_cpu_state, regs);
                 return -1;
             }
         }
@@ -330,6 +340,7 @@ U32     fileaddr;
 #ifdef EXTERNALGUI
         if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
+        HDC(debug_cpu_state, regs);
         return -1;
     }
 
@@ -351,6 +362,7 @@ U32     fileaddr;
 #ifdef EXTERNALGUI
     if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/
+    HDC(debug_cpu_state, regs);
     return 0;
 } /* end function load_hmc */
 /*-------------------------------------------------------------------*/

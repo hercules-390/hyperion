@@ -163,6 +163,15 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
 
 /* Debugging */
 
+
+#if defined(OPTION_DYNAMIC_LOAD)
+    #define HDC(_func, _args...) \
+    ((_func) ? (_func) (_args) : (NULL))
+#else
+    #define HDC(_func, _args...)
+#endif
+
+
 #if defined(DEBUG) || defined(_DEBUG)
     #define TRACE(a...) logmsg(a)
     #define ASSERT(a) \
@@ -1684,6 +1693,10 @@ void (*panel_display) (void);
 void (*daemon_task) (void);
 
 int (*config_command) (int argc, BYTE *argv[]);
+
+void *(*debug_cpu_state) (REGS *);
+void *(*debug_program_interrupt) (REGS *);
+
 #else
 void *panel_command (void *cmdline);
 void panel_display (void);

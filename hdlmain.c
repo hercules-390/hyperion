@@ -36,6 +36,9 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER(config_command,*NULL);
     HDL_REGISTER(daemon_task,*NULL);
 
+    HDL_REGISTER(debug_cpu_state, *NULL);
+    HDL_REGISTER(debug_program_interrupt, *NULL);
+
 } END_REGISTER_SECTION;
 
 
@@ -46,6 +49,9 @@ HDL_RESOLVER_SECTION;
     HDL_RESOLVE(panel_display);
     HDL_RESOLVE(config_command);
     HDL_RESOLVE(daemon_task);
+
+    HDL_RESOLVE(debug_cpu_state);
+    HDL_RESOLVE(debug_program_interrupt);
 
 } END_RESOLVER_SECTION;
 

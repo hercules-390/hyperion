@@ -483,6 +483,7 @@ static char *pgmintname[] = {
                 pgmintname[ (code - 1) & 0x3F], pcode, realregs->psw.ilc);
         ARCH_DEP(display_inst) (realregs, realregs->instvalid ?
                                                 realregs->ip : NULL);
+        HDC(debug_program_interrupt, regs);
     }
 
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
@@ -1251,6 +1252,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             logmsg("MAN=1\n");
 #endif /*EXTERNALGUI*/
 
+        HDC(debug_cpu_state, regs);
+
         while (regs->cpustate == CPUSTATE_STOPPED)
         {
             wait_condition (&regs->intcond, &sysblk.intlock);
@@ -1260,6 +1263,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
         if (extgui && regs == (sysblk.regs + sysblk.pcpu))
             logmsg("MAN=0\n");
 #endif /*EXTERNALGUI*/
+
+        HDC(debug_cpu_state, regs);
 
         sysblk.started_mask |= regs->cpumask;
         sysblk.waitmask &= ~regs->cpumask;
@@ -1342,6 +1347,8 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
                 logmsg("MAN=1\n");
 #endif /*EXTERNALGUI*/
 
+            HDC(debug_cpu_state, regs);
+
             while (regs->cpustate == CPUSTATE_STOPPED)
             {
                 wait_condition (&regs->intcond, &sysblk.intlock);
@@ -1351,6 +1358,8 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
             if (extgui && regs == (sysblk.regs + sysblk.pcpu))
                 logmsg("MAN=0\n");
 #endif /*EXTERNALGUI*/
+
+            HDC(debug_cpu_state, regs);
 
             sysblk.waitmask &= ~regs->cpumask;
             release_lock (&sysblk.intlock);
