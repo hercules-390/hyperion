@@ -273,6 +273,7 @@ HDLSHD *newcall;
     hdl_shdlist = newcall;
 }
 
+
 /* Remove shutdown call */
 int hdl_rmsc(void *shdcall, void *shdarg)
 {
@@ -376,11 +377,11 @@ HDLPRE *preload;
 
     release_lock(&hdl_lock);
 
-    for(preload = hdl_preload; preload->name; preload++)
-        hdl_load(preload->name, preload->flag);
-
     /* Register termination exit */
     hdl_adsc(hdl_term, NULL);
+
+    for(preload = hdl_preload; preload->name; preload++)
+        hdl_load(preload->name, preload->flag);
 }
 
 
