@@ -59,6 +59,14 @@
  #define _FEATURE_CPU_RECONFIG
 #endif
 
+#if defined(FEATURE_PER)
+ #define _FEATURE_PER
+#endif
+
+#if defined(FEATURE_PER2)
+ #define _FEATURE_PER2
+#endif
+
 #undef _VSTORE_C_STATIC
 #if !defined(OPTION_NO_INLINE_VSTORE)
  #define _VSTORE_C_STATIC static inline

@@ -439,13 +439,13 @@ int     n;
         /* Indicate interception format 2 */
         STATEBK->f |= SIE_F_IN;
 
-#if defined(FEATURE_PER)
+#if defined(_FEATURE_PER)
         /* Handle PER or concurrent PER event */
         if( OPEN_IC_PERINT(GUESTREGS)
           && (GUESTREGS->psw.sysmask & PSW_PERMODE) )
         {
         PSA *psa;   
-#if defined(FEATURE_PER2)
+#if defined(_FEATURE_PER2)
             GUESTREGS->perc |= OPEN_IC_PERINT(GUESTREGS) >> ((32 - IC_CR9_SHIFT) - 16);
             /* Positions 14 and 15 contain zeros if a storage alteration
                event was not indicated */
@@ -453,7 +453,7 @@ int     n;
               || (OPEN_IC_PERINT(GUESTREGS) & IC_PER_STURA) )
                 GUESTREGS->perc &= 0xFFFC;
 
-#endif /*defined(FEATURE_PER2)*/
+#endif /*defined(_FEATURE_PER2)*/
             /* Point to PSA fields in state descriptor */
             psa = (void*)(sysblk.mainstor + GUESTREGS->sie_state + SIE_IP_PSA_OFFSET);
             STORE_HW(psa->perint, GUESTREGS->perc);
@@ -461,7 +461,7 @@ int     n;
 
             STATEBK->f |= SIE_F_IF;
         }
-#endif /*defined(FEATURE_PER)*/
+#endif /*defined(_FEATURE_PER)*/
 
         /* Update interception parameters in the state descriptor */
         if(GUESTREGS->inst[0] != 0x44)
@@ -493,10 +493,10 @@ int ARCH_DEP(run_sie) (REGS *regs)
     SET_IC_MCK_MASK(GUESTREGS);
     SET_IC_IO_MASK(GUESTREGS);
     SET_IC_PER_MASK(GUESTREGS);
-#if defined(FEATURE_PER)
+#if defined(_FEATURE_PER)
     /* Reset any PER pending indication */
     OFF_IC_PER(GUESTREGS);
-#endif /*defined(FEATURE_PER)*/
+#endif /*defined(_FEATURE_PER)*/
 
     do {
         if(!(icode = setjmp(GUESTREGS->progjmp)))

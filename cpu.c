@@ -453,7 +453,7 @@ static char *pgmintname[] = {
     }
         
     /* Store the interrupt code in the PSW */
-    realregs->psw.intcode = code;
+    realregs->psw.intcode = pcode;
 
     /* Trace program checks other then PER event */
     if(code && (sysblk.insttrace || sysblk.inststep
@@ -549,16 +549,12 @@ static char *pgmintname[] = {
     }
 #endif /*defined(_FEATURE_SIE)*/
 
+
+#if defined(_FEATURE_PER)
 #if defined(FEATURE_BCMODE)
-    /* For ECMODE, store extended interrupt information in PSA */
-    if ( realregs->psw.ecmode )
+    if ( realregs->psw.ecmode || realregs->sie_state )
 #endif /*defined(FEATURE_BCMODE)*/
     {
-        /* Store the program interrupt code at PSA+X'8C' */
-        psa->pgmint[0] = 0;
-        psa->pgmint[1] = realregs->psw.ilc;
-        STORE_HW(psa->pgmint + 2, pcode);
-
         /* Handle PER or concurrent PER event */
         if( OPEN_IC_PERINT(realregs) )
         {
@@ -585,6 +581,19 @@ static char *pgmintname[] = {
             OFF_IC_PER(realregs);
 
         }
+    }
+#endif /*defined(_FEATURE_PER)*/
+
+
+#if defined(FEATURE_BCMODE)
+    /* For ECMODE, store extended interrupt information in PSA */
+    if ( realregs->psw.ecmode )
+#endif /*defined(FEATURE_BCMODE)*/
+    {
+        /* Store the program interrupt code at PSA+X'8C' */
+        psa->pgmint[0] = 0;
+        psa->pgmint[1] = realregs->psw.ilc;
+        STORE_HW(psa->pgmint + 2, pcode);
 
         /* Store the access register number at PSA+160 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
