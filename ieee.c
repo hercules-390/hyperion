@@ -2806,6 +2806,7 @@ DEF_INST(load_fp_int_short_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("FIEBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+
     get_sbfp(&op, regs->fpr + FPR2I(r2));
 
     switch(sbfpclassify(&op)) {
@@ -2861,6 +2862,7 @@ DEF_INST(load_fp_int_long_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("FIDBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+
     get_lbfp(&op, regs->fpr + FPR2I(r2));
 
     switch(lbfpclassify(&op)) {
@@ -2907,7 +2909,6 @@ DEF_INST(load_fp_int_long_reg)
 /*
  * B347 FIXBR - LOAD FP INTEGER (extended BFP)                 [RRF]
  */
-
 DEF_INST(load_fp_int_ext_reg)
 {
     int r1, r2, m3, raised, pgm_check;
@@ -2917,6 +2918,8 @@ DEF_INST(load_fp_int_ext_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("FIXBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+    BFPREGPAIR2_CHECK(r1, r2, regs);
+
     get_ebfp(&op, regs->fpr + FPR2I(r2));
 
     switch(ebfpclassify(&op)) {
@@ -3018,7 +3021,7 @@ DEF_INST(loadlength_bfp_long_to_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("LXDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
 
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -3061,7 +3064,7 @@ DEF_INST(loadlength_bfp_short_to_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("LXEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
 
     get_sbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -3634,7 +3637,7 @@ DEF_INST(multiply_bfp_long_to_ext_reg)
     RRE(inst, regs, r1, r2);
     //logmsg("MXDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
-    BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPREGPAIR2_CHECK(r1, 0, regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
