@@ -752,9 +752,6 @@ int             rc;                     /* Return code               */
 CIFBLK         *cif;                    /* FBA image file descriptor */
 DEVBLK         *dev;                    /* FBA device block          */
 FBADEV         *fba;                    /* FBA DASD table entry      */
-BYTE           *sfxptr;                 /* -> Last char of file name */
-U16             devnum;                 /* Device number             */
-BYTE            c;                      /* Work area for sscanf      */
 BYTE           *argv[2];                /* Arguments to              */
 int             argc=0;                 /*  device open              */
 
@@ -790,14 +787,8 @@ int             argc=0;                 /*  device open              */
     /* Set the device handlers */
     dev->hnd = &fbadasd_device_hndinfo;
 
-    /* If the end of the filename is a valid device address then
-       use that as the device number, otherwise default to 0x0000 */
-    sfxptr = strrchr (fname, '/');
-    if (sfxptr == NULL) sfxptr = fname + 1;
-    sfxptr = strchr (sfxptr, '.');
-    if (sfxptr != NULL)
-        if (sscanf(sfxptr+1, "%hx%c", &devnum, &c) == 1)
-            dev->devnum = devnum;
+    /* Set the device number */
+    dev->devnum = ++nextnum;
 
     /* Build arguments for fbadasd_init_handler */
     argv[0] = fname;
