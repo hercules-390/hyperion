@@ -26,6 +26,7 @@ XPNDSIZE  0
 CNSLPORT  3270
 NUMCPU    1
 NUMVEC    1
+CPUPRIO   15
 ARCHMODE  ESA/390
 LOADPARM  0120....
 SYSEPOCH  1900
@@ -103,6 +104,15 @@ The following system parameters may be specified:
 <dt><code>NUMVEC <em>nn</em></code>
 <dd>specifies the number of emulated vector facilities. Default is one per
     CPU. Only available by default in ESA/390 mode.
+<dt><code>CPUPRIO <em>nn</em></code>
+<dd>specifies priority of the CPU thread.  Default is a nice value of 15, 
+    which means a low priority such that I/O can be scheduled and completed
+    in favour of CPU cycles being burned.  
+<dd>On Multi CPU systems, a real CPU can be 'dedicated' to Hercules, by
+    giving the CPU thread a very high dispatching priority (-20).  
+    Hercules needs to be a setuid root program to allow it to
+    reset is dispatching priority to a high (negative) value.
+    (ie. chown root.root hercules; chmod +s hercules)
 <dt><code>LOADPARM <em>xxxxxxxx</em></code>
 <dd>specifies the eight-character IPL parameter which is used
     by some operating systems to select system parameters

@@ -873,6 +873,9 @@ int pid, status;
         dup2(fileno(sysblk.msgpipew), STDOUT_FILENO);
         dup2(fileno(sysblk.msgpipew), STDERR_FILENO);
 
+        /* Drop ROOT authority (saved uid) */
+        SETMODE(TERM);
+
         argv[0] = "sh";
         argv[1] = "-c";
         argv[2] = command;

@@ -1160,6 +1160,69 @@ do { \
 #define PERFORM_CHKPT_SYNC(_regs)
 
 
+#if !defined(NO_SETUID)
+
+/* SETMODE(INIT) 
+ *   sets the saved uid to the effective uid, and
+ *   sets the effective uid to the real uid, such
+ *   that the program is running with normal user
+ *   attributes, other then that it may switch to
+ *   the saved uid by SETMODE(ROOT). This call is
+ *   usually made upon entry to the setuid program.
+ * 
+ * SETMODE(ROOT)
+ *   sets the saved uid to the real uid, and
+ *   sets the real and effective uid to the saved uid.
+ *   A setuid root program will enter 'root mode' and
+ *   will have all the appropriate access.
+ *
+ * SETMODE(USER)
+ *   sets the real and effective uid to the uid of the 
+ *   caller.  The saved uid will be the effective uid 
+ *   upon entry to the program (as before SETMODE(INIT))
+ *
+ * SETMODE(TERM)
+ *   sets real, effective and saved uid to the real uid
+ *   upon entry to the program.  This call will revoke 
+ *   any setuid access that the thread/process has.  It
+ *   is important to issue this call before an exec to a 
+ *   shell or other program that could introduce integrity
+ *   exposures when running with root access.
+ */
+
+#define _SETMODE_INIT \
+do { \
+    getresuid(&sysblk.ruid,&sysblk.euid,&sysblk.suid); \
+    getresgid(&sysblk.rgid,&sysblk.egid,&sysblk.sgid); \
+    setresuid(sysblk.ruid,sysblk.ruid,sysblk.euid); \
+    setresgid(sysblk.rgid,sysblk.rgid,sysblk.egid); \
+} while(0)
+
+#define _SETMODE_ROOT \
+do { \
+    setresuid(sysblk.suid,sysblk.suid,sysblk.ruid); \
+} while(0)
+
+#define _SETMODE_USER \
+do { \
+    setresuid(sysblk.ruid,sysblk.ruid,sysblk.suid); \
+} while(0)
+
+#define _SETMODE_TERM \
+do { \
+    setresuid(sysblk.ruid,sysblk.ruid,sysblk.ruid); \
+    setresgid(sysblk.rgid,sysblk.rgid,sysblk.rgid); \
+} while(0)
+
+#define SETMODE(_func) _SETMODE_ ## _func
+
+#else 
+
+#define SETMODE(_func)
+
+#endif
+
+
 /* Functions in module channel.c */
 int  ARCH_DEP(startio) (DEVBLK *dev, ORB *orb); 	       /*@IZW*/
 void *s370_execute_ccw_chain (DEVBLK *dev);

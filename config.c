@@ -18,6 +18,7 @@
 /*      Dynamic device attach/detach by Jan Jaeger                   */
 /*      OSTAILOR parameter by Jay Maynard                            */
 /*      PANRATE parameter by Reed H. Petty                           */
+/*      CPUPRIO parameter by Jan Jaeger                              */
 /* z/Architecture support - (c) Copyright Jan Jaeger, 1999-2001      */
 /*-------------------------------------------------------------------*/
 
@@ -264,6 +265,7 @@ BYTE   *stoddrag;                       /* -> TOD clock drag factor  */
 BYTE   *sostailor;                      /* -> OS to tailor system to */
 BYTE   *spanrate;                       /* -> Panel refresh rate     */
 BYTE   *sdevtmax;                       /* -> Max device threads     */
+BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
 U32     serial;                         /* CPU serial number         */
@@ -279,6 +281,7 @@ S32     tzoffset;                       /* System timezone offset    */
 int     toddrag;                        /* TOD clock drag factor     */
 U64     ostailor;                       /* OS to tailor system to    */
 int     panrate;                        /* Panel refresh rate        */
+int     cpuprio;                        /* CPU thread priority       */
 BYTE   *sdevnum;                        /* -> Device number string   */
 BYTE   *sdevtype;                       /* -> Device type string     */
 U16     devnum;                         /* Device number             */
@@ -288,6 +291,9 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
+
+    /* Initialize SETMODE and set user authority */
+    SETMODE(INIT);
 
     /* Direct logmsg output to stderr during initialization */
     sysblk.msgpipew = stderr;
@@ -316,6 +322,7 @@ BYTE    c;                              /* Work area for sscanf      */
     archmode = ARCH_390;
     ostailor = OS_NONE;
     panrate = PANEL_REFRESH_RATE_SLOW;
+    cpuprio = 15;
     devtmax = MAX_DEVICE_THREADS;
 
     /* Read records from the configuration file */
@@ -349,6 +356,7 @@ BYTE    c;                              /* Work area for sscanf      */
         stoddrag = NULL;
         sostailor = NULL;
         spanrate = NULL;
+        scpuprio = NULL;
         sdevtmax = NULL;
 
         /* Check for old-style CPU statement */
@@ -427,6 +435,10 @@ BYTE    c;                              /* Work area for sscanf      */
             else if (strcasecmp (keyword, "archmode") == 0)
             {
                 sarchmode = operand;
+            }
+            else if (strcasecmp (keyword, "cpuprio") == 0)
+            {
+                scpuprio = operand;
             }
             else if (strcasecmp (keyword, "devtmax") == 0)
             {
@@ -540,6 +552,26 @@ BYTE    c;                              /* Work area for sscanf      */
                 exit(1);
             }
         }
+
+        /* Parse CPU thread priority operand */
+        if (scpuprio != NULL)
+        {
+            if (sscanf(scpuprio, "%d%c", &cpuprio, &c) != 1)
+            {
+                logmsg( "HHC012I Error in %s line %d: "
+                        "Invalid CPU thread priority %s\n",
+                        fname, stmt, scpuprio);
+                exit(1);
+            }
+
+#if !defined(NO_SETUID)
+        if(sysblk.suid != 0 && cpuprio < 0)
+            logmsg("SETPRIO: Hercules not running as setuid root\n");
+#endif /*!defined(NO_SETUID)*/
+
+        }
+        else
+            sysblk.cpuprio = cpuprio;
 
         /* Parse number of CPUs operand */
         if (snumcpu != NULL)

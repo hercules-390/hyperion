@@ -52,6 +52,14 @@
 #include "version.h"
 #include "hetlib.h"
 
+#if 1
+/* Following declares are missing from suse 7.1 */
+int getresuid(uid_t *ruid, uid_t *euid, uid_t *suid);
+int getresgid(gid_t *rgid, gid_t *egid, gid_t *sgid);
+int setresuid(uid_t ruid, uid_t euid, uid_t suid);
+int setresgid(gid_t rgid, gid_t egid, gid_t sgid);
+#endif
+
 #endif /*!defined(_HERCULES_H)*/
 
 #include "esa390.h"
@@ -462,6 +470,12 @@ typedef struct _SYSBLK {
 	int	msgpiper;		/* Message pipe read handle  */
 	U64	pgminttr;		/* Program int trace mask    */
 	int	pcpu;			/* Tgt CPU panel cmd & displ */
+
+        int     cpuprio;                /* CPU thread priority       */
+#if !defined(NO_SETUID)
+        uid_t   ruid, euid, suid;
+        gid_t   rgid, egid, sgid;
+#endif /*!defined(NO_SETUID)*/
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
 #define IMAP_FIRST sysblk.imap01

@@ -843,14 +843,19 @@ static void (* run_cpu[GEN_MAXARCH]) (REGS *regs) =
 
 void *cpu_thread (REGS *regs)
 {
-#define CPU_PRIORITY    15              /* CPU thread priority       */
-
 #ifndef WIN32
-    /* Set CPU thread priority */
-    if (setpriority(PRIO_PROCESS, 0, CPU_PRIORITY))
-        logmsg ("HHC621I CPU thread set priority failed: %s\n",
-                strerror(errno));
 
+    /* Set root mode in order to set priority */
+    SETMODE(ROOT);
+    
+    /* Set CPU thread priority */
+    if (setpriority(PRIO_PROCESS, 0, sysblk.cpuprio))
+        logmsg ("HHC621I CPU thread set priority %d failed: %s\n",
+                sysblk.cpuprio, strerror(errno));
+
+    /* Back to user mode */
+    SETMODE(USER);
+    
     /* Display thread started message on control panel */
     logmsg ("HHC620I CPU%4.4X thread started: tid=%8.8lX, pid=%d, "
             "priority=%d\n",
