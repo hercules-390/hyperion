@@ -397,12 +397,16 @@
  UNDEF_INST(compare_bfp_long_reg)
  UNDEF_INST(compare_bfp_short)
  UNDEF_INST(compare_bfp_short_reg)
+ UNDEF_INST(convert_bfp_ext_to_fix32_reg)
  UNDEF_INST(convert_bfp_long_to_fix32_reg)
  UNDEF_INST(convert_bfp_short_to_fix32_reg)
+ UNDEF_INST(convert_fix32_to_bfp_ext_reg)
  UNDEF_INST(convert_fix32_to_bfp_long_reg)
  UNDEF_INST(convert_fix32_to_bfp_short_reg)
+ UNDEF_INST(convert_fix64_to_bfp_ext_reg);
  UNDEF_INST(convert_fix64_to_bfp_long_reg);
  UNDEF_INST(convert_fix64_to_bfp_short_reg);
+ UNDEF_INST(convert_bfp_ext_to_fix64_reg);
  UNDEF_INST(convert_bfp_long_to_fix64_reg);
  UNDEF_INST(convert_bfp_short_to_fix64_reg);
  UNDEF_INST(divide_bfp_ext_reg)
@@ -439,6 +443,8 @@
  UNDEF_INST(multiply_bfp_short)
  UNDEF_INST(multiply_bfp_short_reg)
  UNDEF_INST(round_bfp_long_to_short_reg)
+ UNDEF_INST(round_bfp_ext_to_long_reg)
+ UNDEF_INST(round_bfp_ext_to_short_reg)
  UNDEF_INST(squareroot_bfp_ext_reg)
  UNDEF_INST(squareroot_bfp_long)
  UNDEF_INST(squareroot_bfp_long_reg)
