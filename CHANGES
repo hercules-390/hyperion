@@ -1,3 +1,12 @@
+18 Dec 2001 Make sure PC, PR, PT state switch when pending PER - Paul Leisy
+18 Dec 2001 Fix up ILC for PR when PER interrupt - Paul Leisy
+18 Dec 2001 Zero STD ID part of PER code for STURA - Paul Leisy
+18 Dec 2001 For SSM, LPSW, purge Herc Op cache when PER bit on - Paul Leisy
+18 Dec 2001 Move PERAID update to store accesses only - Paul Leisy
+18 Dec 2001 Fix trace entry for BSG - Paul Leisy
+18 Dec 2001 Add Branch PER check to BCT - Paul Leisy
+18 Dec 2001 Add Store PER check to Stack accesses - Paul Leisy
+18 Dec 2001 Check odd IA before IFetch PER - Paul Leisy
 16 Dec 2001 Do not process PER in native BC mode - Jan Jaeger
 16 Dec 2001 Correct PER for S/370 under SIE - Jan Jaeger
 16 Dec 2001 Add missing obtain intlock to sie.c - Greg Smith
