@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
+<HTML>
+<HEAD><TITLE>
+Hercules: What's new</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
+</HEAD>
+<BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
+      VLINK="#008040" ALINK="#000000">
+<h1>Hercules release notes and known issues</h1>
+<hr noshade>
+<h2>Release notes for release 2.17</h2>
+<p>Release date: 3 October 2003
+<dl>
+<dt>CTCI device changes
+<dd><p>
+<ul>
+<li>The CTCI-W32 protocol is deprecated. You should use the CTCI
+protocol instead.</li>
+<li>The VMNET protocol is also deprecated. Not even its author uses it any
+more. Every system on which Hercules is now prebuilt has the TUN/TAP
+driver functionality available inone form or another, and it's much more
+robust.</li>
+</ul>
+Both of these will go away in a future release.</p>
+<p>In addition, you <b>must not</b> define both even/odd CTCI device pairs in
+your configuration file. You should <b>only</b> define the first even
+numbered device. Hercules will automatically define the odd numbered device
+for you. If you define the odd numbered device by mistake, an open error will
+occur on that device. This is by design. See the README.NETWORKING document
+for further details.</p>
+<dt>Hercules Dynamic Loader support
+<dd>
+<p>Starting with version 2.18, Hercules now contains support for the dynamic
+loading of certain modules upon startup on Linux, Windows, and Mac OS X.
+This support should also work on any platform supported by GNU libtool. As a
+result of this new feature, Hercules itself now no longer consists of just the
+'hercules.exe' module by itself, but rather consists of both the 'hercules.exe'
+program as well as whatever dynamic modules (DLLs) that accompany it.</p>
+<p>As a result of this change, whenever you install a new version of Hercules,
+you must ensure that you ALSO install the accompanying new versions of the
+new dynamic modules as well. Attempting to use a version of Hercules with a
+dynamic module that was not specifically built for that version will cause
+loading of that dynamic module to fail.</p>
+<p>You <b>cannot</b> mix versions of Hercules with differing versions of
+dynamically loaded modules.</p>
+<p>Ensure that your library path (set by the environment variable
+LD_LIBRARY_PATH) set correctly such that it includes the directory of your
+Hercules dynamic load libraries. If you see message <code>HHCCF042E</code>,
+which indicates that the system is unable to locate necessary loadable
+modules, this is likely your problem. This should not be necessary if you
+have a binary download, but if you're building from source, especially if
+you've previously installed a binary package, this should be the first thing
+you do.</p>
+<dt>ECPS:VM
+<dd>
+<p>Do not use ECPS:VM (See README.ECPSVM) in an AP or MP environment
+in VM/370. If <code>AP=YES</code> or <code>MP=YES</code> is coded in DMKSYS
+and the AP/MP control file is used to build the CP nucleus and
+<code>NUMCPU</code> is set to more than 1 in the <code>hercules.cnf</code>
+file, any of LOK001, LOK003 or other abends will occur. This occurs because
+the Hercules ECPS:VM CP Assist implementation is not MP safe, and
+particularly, attemps VM dispatching without holding necessary AP or MP
+locks.</p>
+<dt>Memory allocation on Windows
+<dd>
+<p>Due to the change in Hercules' "mainstor" memory allocation technique to
+address a "double memory consumption" bug in Cygwin's malloc implementation,
+some Windows Hercules users may experience an "out of memory" error whenever
+Hercules is started with a large <code>MAINSIZE</code> configuration file
+value:</p>
+<p><code>HHCCF031S Cannot obtain nnnMB main storage</code></p>
+<p>This error will most likely occur (if it does at all) for those users who
+have manually adjusted their Cygwin <code>heap_chunk_in_mb</code> Windows
+registry setting value (in order to allow them to specify a large
+<code>MAINSIZE</code> value when running Hercules). If this problem does occur
+(i.e. if you <b>do</b> happen to experience the above mentioned error with
+this new release of Hercules), then either reduce your
+<code>heap_chunk_in_mb</code> value (yes, that's correct: <b>reduce</b> it,
+as in change it to a <b>smaller</b> value) or else remove it altogether (so
+as to let it default).</p>
+<p>A complete discussion of this issue is in the RELEASE.NOTES file
+in the source distribution.</p>
+<dt>Thread priority and other problems
+<dd>
+<p>There is a known problem with thread priority handling under Mac OS
+X. The OS X threading model is different from the one classically used in
+Linux. This causes failures to set the timer thread priority, and slow
+performance as all of Hercules is set to a low execution priority. This
+will be fixed in a future release. A workaround, for now, for slow
+performance is to add the statement</p>
+<p><code>CPUPRIO 0</code></p>
+<p>to your Hercules configuration file.</p>
+<p>A possibly related problem is that Hercules fails in random ways when
+using the NPTL (new POSIX threads library) library under Linux.
+This library is used by default in Red Hat 9, and possibly other systems.
+If problems are encountered on a very recent version of Linux, try issuing
+the command</p>
+<p><code>export LD_ASSUME_KERNEL=2.4.1</code></p>
+<p>before starting Hercules.</p>
+</dl>
+<p><center><hr width=15% noshade></center>
+<p>
+If you have a question about Hercules, see the
+<a href="hercfaq.html">Hercules Frequently-Asked Questions</a> page.
+
+<p><center><hr width=15% noshade>
+<a href="index.html"><img src="gifs/back.gif" border=0 alt="back"></a>
+</center>
+
+<small>
+<p>Last updated 3 October 2003
+</BODY>
+</HTML>
