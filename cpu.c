@@ -24,6 +24,7 @@
 /*      Instruction decode rework - Jan Jaeger                       */
 /*      Modifications for Interpretive Execution (SIE) by Jan Jaeger */
 /*      Basic FP extensions support - Peter Kuschnerus           v209*/
+/*      ASN-and-LX-reuse facility - Roger Bowler, June 2004      @ALR*/
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -438,6 +439,9 @@ static char *pgmintname[] = {
       || code == PGM_AFX_TRANSLATION_EXCEPTION
       || code == PGM_ASX_TRANSLATION_EXCEPTION
       || code == PGM_LX_TRANSLATION_EXCEPTION
+      || code == PGM_LFX_TRANSLATION_EXCEPTION                 /*@ALR*/
+      || code == PGM_LSX_TRANSLATION_EXCEPTION                 /*@ALR*/
+      || code == PGM_LSTE_SEQUENCE_EXCEPTION                   /*@ALR*/
       || code == PGM_EX_TRANSLATION_EXCEPTION
       || code == PGM_PRIMARY_AUTHORITY_EXCEPTION
       || code == PGM_SECONDARY_AUTHORITY_EXCEPTION
@@ -445,6 +449,7 @@ static char *pgmintname[] = {
       || code == PGM_ALE_SEQUENCE_EXCEPTION
       || code == PGM_ASTE_VALIDITY_EXCEPTION
       || code == PGM_ASTE_SEQUENCE_EXCEPTION
+      || code == PGM_ASTE_INSTANCE_EXCEPTION                   /*@ALR*/
       || code == PGM_EXTENDED_AUTHORITY_EXCEPTION
       || code == PGM_STACK_FULL_EXCEPTION
       || code == PGM_STACK_EMPTY_EXCEPTION
@@ -653,7 +658,7 @@ static char *pgmintname[] = {
         psa->pgmint[1] = realregs->psw.ilc;
         STORE_HW(psa->pgmint + 2, pcode);
 
-        /* Store the access register number at PSA+160 */
+        /* Store the exception access identification at PSA+160 */
         if ( code == PGM_PAGE_TRANSLATION_EXCEPTION
           || code == PGM_SEGMENT_TRANSLATION_EXCEPTION
 #if defined(FEATURE_ESAME)
@@ -666,6 +671,7 @@ static char *pgmintname[] = {
           || code == PGM_ALE_SEQUENCE_EXCEPTION
           || code == PGM_ASTE_VALIDITY_EXCEPTION
           || code == PGM_ASTE_SEQUENCE_EXCEPTION
+          || code == PGM_ASTE_INSTANCE_EXCEPTION               /*@ALR*/
           || code == PGM_EXTENDED_AUTHORITY_EXCEPTION
 #ifdef FEATURE_SUPPRESSION_ON_PROTECTION
           || code == PGM_PROTECTION_EXCEPTION
@@ -701,6 +707,9 @@ static char *pgmintname[] = {
           || code == PGM_SECONDARY_AUTHORITY_EXCEPTION
           || code == PGM_SPACE_SWITCH_EVENT
           || code == PGM_LX_TRANSLATION_EXCEPTION
+          || code == PGM_LFX_TRANSLATION_EXCEPTION             /*@ALR*/
+          || code == PGM_LSX_TRANSLATION_EXCEPTION             /*@ALR*/
+          || code == PGM_LSTE_SEQUENCE_EXCEPTION               /*@ALR*/
           || code == PGM_EX_TRANSLATION_EXCEPTION)
         {
             STORE_FW(psa->TEA_L, regs->TEA);
