@@ -15,8 +15,7 @@ Hercules: What's new</TITLE>
 execution (Ivan Warren)
 <li>Added command-line control panel command history (Martin Gasparovic,
 Volker Bandke)
-<li>Added ALS4 (z/990) cryptographic instructions (Bernard van der Helm, Jan
-Jaeger)
+<li>Message Security Assist (Bernard van der Helm, Jan Jaeger)
 <li>Fixed device interrupt pending on IPL that caused OS/360 to have to be
 IPLed twice (David "Fish" Trout, Greg Smith)
 <li>Added pthreads trace function for debugging (Greg Smith)
@@ -34,7 +33,7 @@ still performing better (David "Fish" Trout)
 <li>Dynamically loaded module support for devices, instructions, and
 operator console panels (Jan Jaeger, David "Fish" Trout, Ivan Warren)
 <li>Shared and remote DASD support (Greg Smith)
-<li>z/990 (ALS4) instruction support (Roger Bowler, Jan Jaeger, Bernard van
+<li>z990 (ALS4) instruction support (Roger Bowler, Jan Jaeger, Bernard van
 der Helm)
 <li>Simplified network adapter specifications (David "Fish" Trout, Jim
 Pierson)
@@ -164,7 +163,7 @@ Greg Smith, Volker Bandke, Bernard van der Helm, David "Fish" Trout)
 <p>Release date: 04 December 2001
 <ul>
 <li> Autoconf added to ease portability (Matt Zimmerman, Fritz Elfert,
-Willem Konynberg) 
+Willem Konynenberg)
 <li> Numerous instruction fixes (Paul Leisy)
 <li> TUN/TAP support for Linux kernels beyond 2.4.6 (Matt Zimmerman)
 <li> Timer fixes (Greg Smith)
@@ -179,11 +178,110 @@ Willem Konynberg)
 </ul>
 <p>Download
 <a href="hercules-2.15.tar.gz">hercules-2.15.tar.gz</a>
+<h2>(There was no release 2.14)</h2>
+<h2>What's new in release 2.13</h2>
+<p>Release date: 05 July 2001
+<ul>
+<li>Restrict TODEPOCH to 1900, 1928, 1960, 1970, or 1988, and
+    correct offset calculation (Michael Koehne)
+<li>HET unmount option (Michael Koehne)
+<li>quiet command (Michael Koehne)
+<li>Panel instruction disassembly (Jan Jaeger)
+<li>CMPSC corrections (Bernard van der Helm)
+<li>CTCT CTC over TCP/IP (Vic Cross)
+<li>Sundry instruction and channel fixes (Jan Jaeger)
+<li>Numerous instruction fixes (Paul Leisy)
+<li>CKD trace command (Valery Pogonchenko)
+<li>Performance enhancements (Juergen Dobrinski)
+<li>CGEBR/CGDBR instructions (Jan Jaeger)
+<li>CEGBR/CDGBR instructions (Kris Van Hees)
+<li>CKD 9345 support (Greg Smith)
+<li>Storage Key Assist (Jan Jaeger)
+<li>Move Page Facility 2 (Jan Jaeger)
+</ul>
+<p>Download
+<a href="hercules-2.13.tar.gz">hercules-2.13.tar.gz</a>
+<h2>What's new in release 2.12</h2>
+<p>Release date: 04 May 2001
+<ul>
+<li>Numerous instruction fixes (Paul Leisy, Jan Jaeger,
+    Peter Stammbach, Roger Bowler)
+<li>FBA and CKD read-only support (Greg Smith)
+<li>Enable ISKE/RRBE/SSKE in S/370 mode (Valery Pogonchenko)
+<li>CCKD corrections (Greg Smith)
+<li>CMPSC fixes for expansion (Greg Smith)
+<li>Correct prefix alignment for ESA/390 guest in 64 bit mode SIE (Jan Jaeger)
+<li>Card reader multiple files and EBCDIC autopad support
+<li>Support for built-in TUN driver of Linux kernel 2.4.x
+<li>Device I/O thread throttling (Greg Smith, Fish)
+<li>Small optimization of vstore/vfetch and TPI (Jan Jaeger)
+<li>Sense/Set Path Group ID for DASD (Jan Jaeger)
+<li>Dynamic device threads (Jan Jaeger)
+<li>Fast interrupt processing for MCK and PER (Jan Jaeger)
+<li>Allow HET files to reside on read-only media (Leland Lucius)
+<li>Utilities display versioning and copyright info (Greg Smith)
+<li>Present device end on terminating console session (Jan Jaeger)
+<li>sh panel command (Bernard van der Helm)
+<li>9221 power-off diagnose (Jan Jaeger)
+<li>Debug format enhancements (Peter Stammbach)
+<li>Fix for device threads (Juergen Dobrinski)
+<li>Sundry new ESAME instructions and corrections (Roger Bowler, Jan Jaeger)
+<li>Improved interrupt processing (Valery Pogonchenko)
+<li>Incorrect-Length-Indication-Suppression facility (Jan Jaeger)
+<li>S/370 interval timer fixes (Mark Gaubatz)
+<li>64-bit Interpretive Execution (Jan Jaeger)
+<li>IEEE floating point (Willem Konynenberg)
+<li>64-bit panel updates (Roger Bowler)
+<li>LPM fixes and display subchannel command (Nobumichi Kozawa)
+<li>Fix amode64 in load_psw (Ulrich Weigand)
+<li>Multiply Logical instructions (Vic Cross)
+<li>Environment variables to override filenames
+    of hercules.rc hercules.cnf and hercifc (Jan Jaeger)
+<li>Floating point enhancements (Roger Bowler, Jan Jaeger)
+<li>Country codepage tables (Roger Bowler)
+</ul>
+<p>Download
+<a href="hercules-2.12.tar.gz">hercules-2.12.tar.gz</a>
+<h2>What's new in release 2.11</h2>
+<p>Release date: 09 February 2001
+<ul>
+<li>Sundry new ESAME instructions and corrections (Jan Jaeger)
+<li>Panel display instruction operands (Roger Bowler)
+<li>TRAP and RP instructions (Jan Jaeger)
+<li>TP instruction (Roger Bowler)
+<li>Tape data chaining patch  (Brandon Hill)
+<li>Bypass Cygwin stack problem (Greg Smith)
+<li>Fixes for Windows port (Volker Bandke)
+<li>SSK/ISK/RRB fix for 2K storage keys (Valery Pogonchenko, Jan Jaeger)
+<li>Extended Translation Facility 2 (Roger Bowler)
+<li>Divide Logical instructions (Vic Cross)
+</ul>
+<p>Download
+<a href="hercules-2.11.tar.gz">hercules-2.11.tar.gz</a>
 <h2>What's new in release 2.10</h2>
 <p>Release date: 02 February 2001
 <ul>
-<li> z/Architecture support (Jan Jaeger)
-<li> TUN/TAP support for CTC (Roger Bowler)
+<li>z/Architecture support (Jan Jaeger)
+<li>TUN/TAP support for CTC (Roger Bowler)
+<li>OSTAILOR VSE option (Roger Bowler)
+<li>2K/4K storage key support (Jan Jaeger)
+<li>Fully functional CMPSC instruction (Bernard van der Helm)
+<li>Fix read-only AWSTAPE (Roger Bowler)
+<li>Sundry new ESAME instructions (Jan Jaeger, Roger Bowler)
+<li>Format-2 2K/4K IDAW (Roger Bowler)
+<li>ESAME 5-level DAT (Roger Bowler)
+<li>ESAME ASN authorization and ALET translation (Roger Bowler)
+<li>ESAME linkage-stack instructions (Roger Bowler)
+<li>ESAME subspace replacement (Roger Bowler)
+<li>ESAME DUCT format changes (Roger Bowler)
+<li>Unloaded tape drive support (Brandon Hill)
+<li>Extended floating point (Peter Kuschnerus)
+<li>Divide Single instructions (Jan Jaeger)
+<li>EPSW instruction (Roger Bowler)
+<li>Compressed CKD updates (Greg Smith)
+<li>Timer update correction (Valery Pogonchenko)
+<li>Fix MVCLE instruction (Jan Jaeger)
+<li>Interval Timer fix (Bob Abeles)
 </ul>
 <p>Download
 <a href="hercules-2.10.tar.gz">hercules-2.10.tar.gz</a>
@@ -200,7 +298,7 @@ Maynard)
 <li> Treat printer X'37' CCW as NOP (Jay Maynard, suggested by Brandon Hill)
 <li> Treat X'E503' MVS/XA assist instruction as no-op (Jay Maynard, suggested
 by Brandon Hill)
-<li> Read commands from hercules.rc at startup (Willem Koynenberg)
+<li> Read commands from hercules.rc at startup (Willem Konynenberg)
 <li> New tapelist program prints contents of 80-byte record tapes (Jim
 Morrison)
 <li> Increased MAXDBLK from 3000 to 40000 and MAXTTR from 10000 to 40000 in
@@ -215,7 +313,8 @@ dasdload (Volker Bandke)
 Bandke)
 <li>More performance enhancements (Juergen Dobrinski)
 <li>ALS-1 and ALS-2 support completion (Roger Bowler and Jan Jaeger)
-<li>Pick up correct float.c module (Jay Maynard)
+<li>Extended Translation Facility (Roger Bowler)
+<li>Pick up correct float.c module (Jay Maynard for Peter Kuschnerus)
 <li>Distribute Windows binaries as well as Linux (Jay Maynard)
 <li>Fix orienting bug in CKD DASD search CCW processing (Bob Abeles)
 <li>Obtain TOD clock lock when accessing or updating 370 interval timer (Bob
