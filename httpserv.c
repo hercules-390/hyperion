@@ -234,9 +234,9 @@ CGIVAR **cgivar;
     for(cgivar = &(webblk->cgivar); *cgivar != NULL;
         cgivar = &((*cgivar)->next));
 
-    for (name = strtok_r(qstring,"&;",&strtok_str);
+    for (name = strtok_r(qstring,"&; ",&strtok_str);
          name; 
-         name = strtok_r(NULL,"&;",&strtok_str))
+         name = strtok_r(NULL,"&; ",&strtok_str))
     {
         if(!(value = strchr(name,'=')))
             continue;
@@ -465,7 +465,8 @@ static void *http_request(FILE *hsock)
 #if 0
             if(!strcasecmp(pointer,"Cookie:"))
             {
-                    http_interpret_variable_string(webblk, pointer + 8, VARTYPE_COOKIE);
+                if((pointer = strtok_r(NULL,"\r\n",&strtok_str)))
+                    http_interpret_variable_string(webblk, pointer, VARTYPE_COOKIE);
             }
             else
 #endif
