@@ -1133,6 +1133,10 @@ int rc;
         build_senseX(TAPE_BSENSE_REWINDFAILED,dev,unitstat,code);
         return -1;
     }
+    dev->nxtblkpos=0;
+    dev->prvblkpos=-1;
+    dev->curfilen=1;
+    dev->blockid=0;
     return 0;
 }
 /*-------------------------------------------------------------------*/
@@ -1154,6 +1158,7 @@ int             rc;                     /* Return code               */
         if (HETE_TAPEMARK == rc)
         {
             dev->curfilen++;
+            dev->blockid++;				
             return 0;
         }
 
@@ -1178,7 +1183,7 @@ int             rc;                     /* Return code               */
         build_senseX(TAPE_BSENSE_READFAIL,dev,unitstat,code);
         return -1;
     }
-
+    dev->blockid++;
     /* Return block length */
     return rc;
 
@@ -1243,6 +1248,7 @@ size_t          cursize;                /* Current size for size chk */
 
 
     /* Return normal status */
+    dev->blockid++;
     return 0;
 
 } /* end function write_het */
