@@ -84,14 +84,18 @@ END_REGISTER_SECTION;
 
 HDL_RESOLVER_SECTION;
 {
-    HDL_RESOLVE( panel_command           );
-    HDL_RESOLVE( panel_display           );
-    HDL_RESOLVE( config_command          );
-    HDL_RESOLVE( daemon_task             );
-    HDL_RESOLVE( debug_cpu_state         );
-    HDL_RESOLVE( debug_device_state      );
-    HDL_RESOLVE( debug_program_interrupt );
-    HDL_RESOLVE( debug_diagnose          );
+    HDL_RESOLVE( panel_command              );
+    HDL_RESOLVE( panel_display              );
+    HDL_RESOLVE( config_command             );
+    HDL_RESOLVE( daemon_task                );
+    HDL_RESOLVE( debug_cpu_state            );
+    HDL_RESOLVE( debug_device_state         );
+    HDL_RESOLVE( debug_program_interrupt    );
+    HDL_RESOLVE( debug_diagnose             );
+    HDL_RESOLVE( debug_sclp_unknown_command );
+    HDL_RESOLVE( debug_sclp_unknown_event   );
+    HDL_RESOLVE( debug_sclp_event_data      );
+    HDL_RESOLVE( debug_chsc_unknown_request );
 
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
     HDL_RESOLVE( s390_cipher_message                      );
