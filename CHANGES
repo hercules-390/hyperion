@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+05 Dec 2003 Move IS_IC_TRACE check to slowloop in run_cpu - Greg Smith
+05 Dec 2003 Clear regs->ve every 2^20 invalidations instead of 2^12 - Greg Smith
 05 Dec 2003 Add "filename completion" shortcut via TAB character to panel.c - Volker Bandke, original code by Marian Gasparovic
 01 Dec 2003 Signal Quiesce (shutdown) & ssd command - Jan Jaeger
 29 Nov 2003 Fix race condition in console.c recv_3270_data causing 100%

@@ -2582,9 +2582,10 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     for (i = 0; i < MAXAEA; i++)
     {
         logmsg("%s%2.2x %16.16llx  %2.2x %2d %d %16.16llx\n",
-         (regs->VE_G(i) & 0xfff) == regs->aeID ? "*" : " ", i, regs->VE_G(i),
-         regs->aekey[i], regs->aearn[i], regs->aeacc[i], regs->AE_G(i));
-        if ((regs->VE_G(i) & 0xfff) == regs->aeID) matches++;
+         (regs->VE_G(i) & AEA_BYTEMASK) == regs->aeID ? "*" : " ", i,
+         regs->VE_G(i),regs->aekey[i], regs->aearn[i], regs->aeacc[i],
+         regs->AE_G(i));
+        if ((regs->VE_G(i) & AEA_BYTEMASK) == regs->aeID) matches++;
     }
     logmsg("%d aeID matches\n", matches);
 

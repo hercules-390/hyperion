@@ -1310,7 +1310,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 /*-------------------------------------------------------------------*/
 /* Process Trace                                                     */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(process_trace)(REGS *regs, int tracethis, int stepthis)
+void ARCH_DEP(process_trace)(REGS *regs)
 {
 int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
@@ -1319,11 +1319,10 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
                && (regs->psw.IA == sysblk.breakaddr);
 
     /* Display the instruction */
-    if (sysblk.insttrace || sysblk.inststep || shouldbreak
-     || tracethis || stepthis)
+    if (sysblk.insttrace || sysblk.inststep || shouldbreak)
     {
         ARCH_DEP(display_inst) (regs, regs->ip);
-        if (sysblk.inststep || stepthis || shouldbreak)
+        if (sysblk.inststep || shouldbreak)
         {
             /* Put CPU into stopped state */
             regs->cpustate = CPUSTATE_STOPPED;
@@ -1354,8 +1353,6 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(run_cpu) (REGS *regs)
 {
-int     tracethis;                      /* Trace this instruction    */
-int     stepthis;                       /* Stop on this instruction  */
 VADR    pageend;
 BYTE    *ip, *pagestart = NULL;
 
@@ -1369,24 +1366,25 @@ BYTE    *ip, *pagestart = NULL;
     setjmp(regs->progjmp);
 
     /* Reset instruction trace indicators */
-    tracethis = 0;
-    stepthis = 0;
     pageend = 0;
     ip = regs->inst;
     regs->ip = ip;
 
     pagestart = regs->mainstor + regs->AI; 
 
+    if (IS_IC_TRACE
 #ifdef FEATURE_PER
-    if (PER_MODE(regs))
-        goto slowloop;
+     || PER_MODE(regs)
 #endif
+       )
+        goto slowloop;
 
     while (1)
     {
         /* Test for interrupts if it appears that one may be pending */
         if( IC_INTERRUPT_CPU(regs) )
         {
+            if (IS_IC_TRACE) goto slowloop;
             ARCH_DEP(process_interrupt)(regs);
             if (!regs->cpuonline)
                  return;
@@ -1396,19 +1394,6 @@ BYTE    *ip, *pagestart = NULL;
         FAST_INSTRUCTION_FETCH(ip, regs->psw.IA, regs, pageend,
                             ifetch0);
 exec0:
-
-        if( IS_IC_TRACE )
-        {
-            regs->ip = ip;
-            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
-    
-            /* Reset instruction trace indicators */
-            tracethis = 0;
-            stepthis = 0;
-            regs->instcount++;
-            FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
-            longjmp(regs->progjmp, SIE_NO_INTERCEPT);
-        }
 
         /* Execute the instruction */
         regs->instcount += 8;
@@ -1432,7 +1417,6 @@ FAST_IFETCH(regs, pageend, ip, ifetch5, exec5);
 FAST_IFETCH(regs, pageend, ip, ifetch6, exec6);
 FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
 
-#ifdef FEATURE_PER
 slowloop:
     while (1)
     {
@@ -1457,18 +1441,13 @@ slowloop:
         if( IS_IC_TRACE )
         {
             regs->ip = ip;
-            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
-
-            /* Reset instruction trace indicators */
-            tracethis = 0;
-            stepthis = 0;
+            ARCH_DEP(process_trace)(regs);
         }
 
         /* Execute the instruction */
         regs->instcount++;
         EXECUTE_INSTRUCTION (regs->ip, 0, regs);
     }
-#endif
 
 } /* end function cpu_thread */
 

@@ -450,6 +450,20 @@ z900_ ## _name
  #define STORAGE_KEY_BYTEMASK   0x000007FF
 #endif
 
+#undef AEA_PAGEMASK
+#undef AEA_BYTEMASK
+#ifdef FEATURE_4K_STORAGE_KEYS
+ #if defined(FEATURE_ESAME)
+  #define AEA_PAGEMASK  0xFFFFFFFFFFF00000ULL
+ #else
+  #define AEA_PAGEMASK  0x7FF00000
+ #endif
+ #define AEA_BYTEMASK   0x000FFFFF
+#else
+ #define AEA_PAGEMASK   0x7FF80000
+ #define AEA_BYTEMASK   0x0007FFFF
+#endif
+
 #define STORAGE_KEY(_addr, _pointer) \
    (_pointer)->storkeys[(_addr)>>STORAGE_KEY_PAGESHIFT]
 

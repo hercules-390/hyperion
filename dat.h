@@ -1950,8 +1950,8 @@ int     aeind;
         arn = 0;
 #endif
         aeind = AEIND(addr);
-        regs->AE(aeind) = aaddr & STORAGE_KEY_PAGEMASK;
-        regs->VE(aeind) = (addr & STORAGE_KEY_PAGEMASK) | regs->aeID;
+        regs->AE(aeind) = aaddr & PAGEFRAME_PAGEMASK;
+        regs->VE(aeind) = (addr & AEA_PAGEMASK) | regs->aeID;
         regs->aekey[aeind] = akey;
         regs->aeacc[aeind] = acctype;
         regs->aearn[aeind] = arn;
