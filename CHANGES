@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+10 Mar 2004 Changed MAXTTR in DASDLOAD.C to 50000 - Volker Bandke
 08 Mar 2004 Optimised non crossing/non overlap MVCs with length
             2,4,8,12 and 16 - Ivan Warren
 06 Mar 2004 RR, RRE, RRF_* macro optimalization - Bernard van der Helm
@@ -26,11 +27,11 @@
 31 Jan 2004 Fix possible CKD/FBA corruption - Karl-Heinz Lohner by Greg Smith
 30 Jan 2004 LOGICAL_TO_ABS/logical_to_abs performance enhancement -
             Greg Smith
-30 Jan 2004 vfetch/vstore, RR format Optimisation 
+30 Jan 2004 vfetch/vstore, RR format Optimisation
             re-instate static/inline for IFETCH & LOGICAL - Ivan Warren
 21 Jan 2004 Correct 'unloaded' tape processing - Ivan Warren
 20 Jan 2004 Fix references to regs->inst to regs->ip - Greg Smith
-19 Jan 2004 Return 'Already at BOT' sense on BSF when at BOT 
+19 Jan 2004 Return 'Already at BOT' sense on BSF when at BOT
             (Detected by Mark Drummond) - Ivan Warren
 16 Jan 2004 Performance Enhancement: REGS on run_cpu stack - Greg Smith
 16 Jan 2004 Performance Enhancement: instfetch - Greg Smith

@@ -20,7 +20,7 @@
 /*-------------------------------------------------------------------*/
 #define MAXDBLK 10000                   /* Maximum number of directory
                                            blocks per dataset        */
-#define MAXTTR  30000                   /* Maximum number of TTRs
+#define MAXTTR  50000                   /* Maximum number of TTRs
                                            per dataset               */
 #define MAXDSCB 1000                    /* Maximum number of DSCBs   */
 
