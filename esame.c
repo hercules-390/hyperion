@@ -4596,12 +4596,25 @@ PSA    *psa;                            /* -> Prefixed storage area  */
 #if defined(FEATURE_ESAME)
                  | STFL_0_ESAME_ACTIVE
 #endif /*defined(FEATURE_ESAME)*/
+#if defined(FEATURE_DAT_ENHANCEMENT)
+                 | STFL_0_IDTE_INSTALLED
+#endif /*defined(FEATURE_DAT_ENHANCEMENT)*/
                  ;
     psa->stfl[1] = 0;
     psa->stfl[2] = 0
 #if defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)
                  | STFL_2_TRAN_FAC2
 #endif /*defined(FEATURE_EXTENDED_TRANSLATION_FACILITY_2)*/
+#if defined(FEATURE_MESSAGE_SECURITY_ASSIST)
+                 | STFL_2_MSG_SECURITY
+#endif /*defined(FEATURE_MESSAGE_SECURITY_ASSIST)*/
+#if defined(FEATURE_LONG_DISPLACEMENT)
+                 | STFL_2_LONG_DISPL_INST
+                 | STFL_2_LONG_DISPL_HPERF
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+#if defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)
+                 | STFL_2_HFP_MULT_ADD_SUB
+#endif /*defined(FEATURE_HFP_MULTIPLY_ADD_SUBTRACT)*/
                  ;
     psa->stfl[3] = 0;
 
