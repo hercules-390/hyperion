@@ -657,7 +657,8 @@ DEVBLK *dev;
       ebcdic_to_ascii[sysblk.loadparm[6]],
       ebcdic_to_ascii[sysblk.loadparm[7]]);
 
-    fprintf(webblk->hsock,"<input type=submit name=doipl value=\"IPL\">");
+    fprintf(webblk->hsock,"<input type=submit name=doipl value=\"IPL\">\n"
+                          "</form>\n");
 
     html_footer(webblk);
 
