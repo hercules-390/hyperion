@@ -91,7 +91,7 @@
 
 /* Include LOCALE.H - Otherwise impl.c will not compile when
  * CFLAGS does not contain -O[x] (libtinl.h only includes locale.h
- * when __OPTIMIZE__ is defined) and impl.c uses LC_xxx macros 
+ * when __OPTIMIZE__ is defined) and impl.c uses LC_xxx macros
  */
 #include <locale.h>
 
@@ -398,9 +398,9 @@ typedef struct _REGS {                  /* Processor registers       */
         U32     siosrate;               /* IOs per second            */
         double  cpupct;                 /* Percent CPU busy          */
         U64     waittod;                /* Time of day last wait (us)*/
-        U64     waittime;               /* Wait time (us) in interval*/ 
+        U64     waittime;               /* Wait time (us) in interval*/
 #ifdef WIN32
-        struct  timeval lasttod;        /* Last gettimeofday         */ 
+        struct  timeval lasttod;        /* Last gettimeofday         */
 #endif
         TLBE    tlb[256];               /* Translation lookaside buf */
         TID     cputid;                 /* CPU thread identifier     */
@@ -926,7 +926,7 @@ typedef struct _DEVBLK {
         U16     subchan;                /* Subchannel number         */
         U16     devnum;                 /* Device number             */
         U16     devtype;                /* Device type               */
-        U16     chanset;                /* Channel Set to which this   
+        U16     chanset;                /* Channel Set to which this
                                            device is connected S/370 */
         char    *typname;               /* Device type name          */
 
@@ -1006,7 +1006,7 @@ typedef struct _DEVBLK {
         /* to rely on the handler to perform the halt           @ISW */
 
         void ( *halt_device)(struct _DEVBLK *);         /*      @ISW */
-                
+
 
         /*  emulated architecture fields...   (MUST be aligned!)     */
 
@@ -1187,7 +1187,7 @@ typedef struct _DEVBLK {
             U16 chksize;                /* Chunk size                */
             off_t maxsize;              /* Maximum allowed TAPE file
                                            size                      */
-            size_t eotmargin;           /* Amount of space left   
+            size_t eotmargin;           /* Amount of space left
                                            before reporting EOT      */
         }       tdparms;                /* HET device parms          */
         U32                             /* Flags                     */
@@ -1725,7 +1725,7 @@ void *panel_command (void *cmdline);
 void panel_display (void);
 #endif
 extern int volatile initdone __attribute__ ((deprecated));
-/* initdone is deprecated as it only used to signal that 
+/* initdone is deprecated as it only used to signal that
    at least one cpu is online.  Future versions of hercules
    will be able to run without any cpu online in order to
    support remote devices *JJ*/
