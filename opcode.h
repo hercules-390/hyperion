@@ -1559,7 +1559,7 @@ void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module external.c */
-void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, U64 pfra);
+void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, RADR pfra);
 void ARCH_DEP(perform_external_interrupt) (REGS *regs);
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
 void store_status (REGS *ssreg, U64 aaddr);

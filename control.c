@@ -719,7 +719,11 @@ U32     old;                            /* old value                 */
     {
         /* Perform requested funtion specified as per request code in r2 */
         if (regs->GR_L(r2) & 3)
+        {
+            obtain_lock (&sysblk.intlock);
             ARCH_DEP(synchronize_broadcast)(regs, regs->GR_L(r2) & 3, 0);
+            release_lock (&sysblk.intlock);
+        }
     }
     else
     {

@@ -34,9 +34,17 @@
 /* Synchronize broadcast request                                     */
 /* Input:                                                            */
 /*      regs    A pointer to the CPU register context                */
+/*      code    A mask indicating which function to perform.         */
+/*              More than 1 function may be requested:               */
+/*              PTLB  - 0x01 - purge TLB            (CSP)            */
+/*              PALB  - 0x02 - purge ALB            (CSP)            */
+/*              PTLBE - 0x04 - purge TLB entry      (IPTE)           */
+/*              If the code is zero then we are entering on the      */
+/*              behalf of another CPU and the function to be         */
+/*              performed is in sysblk.broadcast_code.               */
+/*      pfra    Real address if PTLBE request                        */
 /*                                                                   */
-/* The intlock MUST be held when `code' is zero otherwise            */
-/* the intlock MUST NOT be held                                      */
+/* The intlock MUST be held on entry                                 */
 /*                                                                   */
 /* Signals all other CPU's to perform a requested function           */
 /* synchronously, such as purging the ALB and TLB buffers.           */
@@ -44,7 +52,7 @@
 /* all other CPU's have performed the requested action.         *JJ  */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, U64 pfra)
+void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, RADR pfra)
 {
 U32     i;                              /* Array subscript           */
 REGS   *realregs;                       /* Real REGS if guest        */
@@ -56,77 +64,64 @@ REGS   *tregs;                          /* Target regs               */
 #endif /*defined(_FEATURE_SIE)*/
                                                   regs;
 
-    /* Signal the other (if any) CPU's */
-    if (code > 0)
-    {
-        obtain_lock (&sysblk.intlock);
-
-        /* Wait for outstanding broadcasts to complete */
-        while (sysblk.broadcast_count)
-            ARCH_DEP(synchronize_broadcast)(realregs, 0, 0);
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
+    do {
+        if (code)
         {
-            tregs = sysblk.regs + i;
+            /* Complete any outstanding broadcasts */
+            while (sysblk.broadcast_count)
+                ARCH_DEP(synchronize_broadcast) (realregs, 0, 0);
 
-            if (tregs->cpuad == realregs->cpuad
-             || (tregs->cpumask & sysblk.started_mask) == 0)
-                continue;
-
-            ON_IC_BROADCAST(tregs);
-            sysblk.broadcast_count++;
-        }
-        sysblk.broadcast_code = code;
-        sysblk.broadcast_pfra = pfra;
-        if (sysblk.broadcast_count)
+            /* Turn broadcast bit on for all started CPUs */
+            for (i = 0; i < MAX_CPU_ENGINES; i++)
+            {
+                tregs = sysblk.regs + i;
+                if (tregs->cpumask & sysblk.started_mask)
+                {
+                    ON_IC_BROADCAST(tregs);
+                    sysblk.broadcast_count++;
+                }
+            }
+            sysblk.broadcast_code = code;
+            sysblk.BROADCAST_PFRA = pfra;
             WAKEUP_WAITING_CPUS(ALL_CPUS, CPUSTATE_STARTED);
-    }
-
-    /* Perform the requested functions */
-    if (code != 0 || IS_IC_BROADCAST(realregs))
-    {
-        /* Purge TLB */
-        if (sysblk.broadcast_code & BROADCAST_PTLB)
-            ARCH_DEP(purge_tlb) (realregs);
-
-#if defined(FEATURE_ACCESS_REGISTERS)
-        /* Purge ALB */
-        if (sysblk.broadcast_code & BROADCAST_PALB)
-            ARCH_DEP(purge_alb) (realregs);
-#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-
-        /* Invalidate TLB entries */
-        if (sysblk.broadcast_code & BROADCAST_ITLB)
-        {
-            for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)); i++)
-                if ((regs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
-                  && regs->tlb[i].valid)
-                    regs->tlb[i].valid = 0;
-            for (i = 0; i < (sizeof(realregs->tlb)/sizeof(TLBE)) && realregs != regs; i++)
-                if ((realregs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
-                  && realregs->tlb[i].valid)
-                    realregs->tlb[i].valid = 0;
         }
-    }
 
-    /* Wait for the other cpus */
-    if (code != 0)
-    {
-        if (sysblk.broadcast_count)
-            wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
-        release_lock (&sysblk.intlock);
-    }
-    else
-    {
+        /* Perform the requested functions */
         if (IS_IC_BROADCAST(realregs))
         {
+            /* Purge TLB */
+            if (sysblk.broadcast_code & BROADCAST_PTLB)
+                ARCH_DEP(purge_tlb) (realregs);
+
+            /* Purge TLB entries */
+            if (sysblk.broadcast_code & BROADCAST_PTLBE)
+                ARCH_DEP(purge_tlbe) (realregs, sysblk.BROADCAST_PFRA);
+
+#if defined(FEATURE_ACCESS_REGISTERS)
+            /* Purge ALB */
+            if (sysblk.broadcast_code & BROADCAST_PALB)
+                ARCH_DEP(purge_alb) (realregs);
+#endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+
             OFF_IC_BROADCAST(realregs);
             sysblk.broadcast_count--;
         }
+
+        /* Wait for the other CPUs.  If count is zero and code is
+         * non-zero then there are no other CPUs
+         */
         if (sysblk.broadcast_count)
             wait_condition (&sysblk.broadcast_cond, &sysblk.intlock);
-        else
+        else if (!code)
             broadcast_condition (&sysblk.broadcast_cond);
-    }
+
+        /* If we were the instigating CPU and there are other CPUs
+         * then we waited.  While we were waiting, another CPU may
+         * have instigated a synchronize broadcast request.
+         */
+        code = 0;
+
+    } while (sysblk.broadcast_count);
 
 } /* end function synchronize_broadcast */
 

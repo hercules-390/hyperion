@@ -2561,13 +2561,16 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     int     i;                          /* Index                     */
     int     matches = 0;                /* Number aeID matches       */
     REGS   *regs;
+    int     cpu = 0;
 
     UNREFERENCED(cmdline);
-    UNREFERENCED(argc);
-    UNREFERENCED(argv);
 
-    regs = sysblk.regs + 0;
-    logmsg ("aenoarn %d aeID 0x%3.3x\n",regs->aenoarn,regs->aeID);
+    if (argc == 2) cpu = atoi (argv[1]);
+    if (cpu < 0 || cpu >= MAX_CPU_ENGINES)
+        cpu = 0;
+
+    regs = sysblk.regs + cpu;
+    logmsg ("cpu %d aenoarn %d aeID 0x%3.3x\n",cpu,regs->aenoarn,regs->aeID);
     logmsg (" ix               ve key ar a               ae\n");
     for (i = 0; i < MAXAEA; i++)
     {
@@ -2580,6 +2583,58 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
 
     return 0;
 }
+
+///////////////////////////////////////////////////////////////////////
+/* tlb - display tlb table */
+
+int tlb_cmd(int argc, char *argv[], char *cmdline)
+{
+    int     i;                          /* Index                     */
+    int     matches = 0;                /* Number aeID matches       */
+    REGS   *regs;
+    int     cpu = 0;
+
+    UNREFERENCED(cmdline);
+
+    if (argc == 2) cpu = atoi (argv[1]);
+    if (cpu < 0 || cpu >= MAX_CPU_ENGINES)
+        cpu = 0;
+
+    regs = sysblk.regs + cpu;
+    logmsg ("cpu %d tlbID 0x%3.3x\n",cpu,regs->tlbID);
+    logmsg (" ix              std            vaddr              pte id c p\n");
+    for (i = 0; i < MAXAEA; i++)
+    {
+        logmsg("%s%2.2x %16.16llx %16.16llx %16.16llx %2.2x %1d %1d\n",
+         regs->tlb[i].valid == regs->tlbID ? "*" : " ",
+         i,regs->tlb[i].TLB_STD_G,regs->tlb[i].TLB_VADDR_G,
+         regs->tlb[i].TLB_PTE_G,regs->tlb[i].valid, regs->tlb[i].common,
+         regs->tlb[i].protect);
+        matches += (regs->tlb[i].valid == regs->tlbID);
+    }
+    logmsg("%d tlbID matches\n", matches);
+
+    return 0;
+}
+
+#if defined(OPTION_COUNTING)
+///////////////////////////////////////////////////////////////////////
+/* count - display counts */
+
+int count_cmd(int argc, char *argv[], char *cmdline)
+{
+    int     i;                          /* Index                     */
+
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+
+    for (i = 0; i < OPTION_COUNTING; i++)
+        logmsg ("%3d: %12lld\n", i, sysblk.count[i]);
+
+    return 0;
+}
+#endif
 
 #if defined(OPTION_DYNAMIC_LOAD)
 ///////////////////////////////////////////////////////////////////////
@@ -2815,6 +2870,10 @@ COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands" )
 #endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
+COMMAND ( "tlb",       tlb_cmd,       "Display TLB tables" )
+#if defined(OPTION_COUNTING)
+COMMAND ( "count",     count_cmd,     "Display counts" )
+#endif
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };

@@ -25,6 +25,7 @@ _DAT_C_STATIC int ARCH_DEP(translate_addr) (VADR vaddr, int arn,
        REGS *regs, int acctype, RADR *raddr, U16 *xcode, int *priv,
                                         int *prot, int *pstid);
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs);
+_DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra);
 _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
                            int r2, REGS *regs);
 _LOGICAL_C_STATIC RADR ARCH_DEP(logical_to_abs) (VADR addr, int arn,

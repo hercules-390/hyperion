@@ -445,7 +445,8 @@ typedef struct _REGS {                  /* Processor registers       */
 #ifdef WIN32
         struct  timeval lasttod;        /* Last gettimeofday         */
 #endif
-        TLBE    tlb[256];               /* Translation lookaside buf */
+        int     tlbID;                  /* Validation identifier     */
+        TLBE    tlb[TLBN];              /* Translation lookaside buf */
         TID     cputid;                 /* CPU thread identifier     */
         DW      gr[16];                 /* General registers         */
         DW      cr[16];                 /* Control registers         */
@@ -763,10 +764,12 @@ typedef struct _SYSBLK {
         U32     waitmask;               /* Mask for waiting CPUs     */
         U32     started_mask;           /* Mask for started CPUs     */
         int     broadcast_code;         /* Broadcast code            */
-#define BROADCAST_PTLB 1                /* Broadcast purge tlb       */
-#define BROADCAST_PALB 2                /* Broadcast purge alb       */
-#define BROADCAST_ITLB 4                /* Broadcast invalidate tlb  */
-        U64     broadcast_pfra;         /* Broadcast pfra            */
+#define BROADCAST_PTLB  1               /* Broadcast purge tlb       */
+#define BROADCAST_PALB  2               /* Broadcast purge alb       */
+#define BROADCAST_PTLBE 4               /* Broadcast purge tlb entry */
+        DW      broadcast_pfra;         /* Broadcast pfra            */
+#define BROADCAST_PFRA_G broadcast_pfra.D
+#define BROADCAST_PFRA_L broadcast_pfra.F.L.F
         int     broadcast_count;        /* Broadcast CPU count       */
         COND    broadcast_cond;         /* Broadcast condition       */
         U64     breakaddr;              /* Breakpoint address        */
@@ -825,6 +828,13 @@ typedef struct _SYSBLK {
         uid_t   ruid, euid, suid;
         gid_t   rgid, egid, sgid;
 #endif /*!defined(NO_SETUID)*/
+
+#if defined(OPTION_COUNTING)
+        long long count[OPTION_COUNTING];
+#define COUNT(n) sysblk.count[(n)]++
+#else
+#define COUNT(n)
+#endif
 
 #if defined(OPTION_INSTRUCTION_COUNTING)
 #define IMAP_FIRST sysblk.imap01

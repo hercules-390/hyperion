@@ -762,7 +762,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
         (vaddr & 0x00FFF000) == tlbp->TLB_VADDR) ||
         (((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_2K) &&
         (vaddr & 0x00FFF800) == tlbp->TLB_VADDR))
-        && tlbp->valid
+        && (tlbp->valid == regs->tlbID)
         && (tlbp->common || std == tlbp->TLB_STD)
         && !(tlbp->common && private))
     {
@@ -860,7 +860,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
             tlbp->TLB_PTE = pte;
             tlbp->common = (ste & SEGTAB_370_CMN) ? 1 : 0;
             tlbp->protect = (ste & SEGTAB_370_PROT) ? 1 : 0;
-            tlbp->valid = 1;
+            tlbp->valid = regs->tlbID;
         }
 
         #ifdef FEATURE_SEGMENT_PROTECTION
@@ -920,7 +920,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
 
     if (tlbp != NULL
         && (vaddr & 0x7FFFF000) == tlbp->TLB_VADDR
-        && tlbp->valid
+        && (tlbp->valid == regs->tlbID)
         && (tlbp->common || std == tlbp->TLB_STD)
         && !(tlbp->common && private))
     {
@@ -998,7 +998,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
             tlbp->TLB_VADDR = vaddr & 0x7FFFF000;
             tlbp->TLB_PTE = pte;
             tlbp->common = (ste & SEGTAB_COMMON) ? 1 : 0;
-            tlbp->valid = 1;
+            tlbp->valid = regs->tlbID;
         }
     
     } /* end if(!TLB) */
@@ -1059,10 +1059,10 @@ TLBE   *tlbp;                           /* -> TLB entry              */
     else
         tlbp = &(regs->tlb[(vaddr >> 12) & 0xFF]);
 
-#if 0
+#if 1
     if (tlbp != NULL
         && (vaddr & 0xFFFFFFFFFFFFF000ULL) == tlbp->TLB_VADDR
-        && tlbp->valid
+        && (tlbp->valid == regs->tlbID)
         && (tlbp->common || asce == tlbp->TLB_STD)
         && !(tlbp->common && private))
     {
@@ -1071,7 +1071,6 @@ TLBE   *tlbp;                           /* -> TLB entry              */
     else
 #endif
     {
-
         /* If ASCE indicates a real-space then real addr = virtual addr */
         if (asce & ASCE_R)
         {
@@ -1332,7 +1331,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
             tlbp->TLB_VADDR = vaddr & 0xFFFFFFFFFFFFF000ULL;
             tlbp->TLB_PTE = pte;
             tlbp->common = (ste & SEGTAB_COMMON) ? 1 : 0;
-            tlbp->valid = 1;
+            tlbp->valid = regs->tlbID;
         }
 
     } /* end if(!tlbp) */
@@ -1509,18 +1508,81 @@ tran_excp_addr:
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
 {
-    memset (regs->tlb, 0, sizeof(regs->tlb));
+    regs->tlbID = ++regs->tlbID & 0xFF;
+    if (!regs->tlbID)
+    {
+        memset (regs->tlb, 0, sizeof(regs->tlb));
+        regs->tlbID = 1;
+    }
     INVALIDATE_AIA(regs);
     INVALIDATE_AEA_ALL(regs);
 #if defined(_FEATURE_SIE)
     /* Also clear the guest registers in the SIE copy */
-    if(regs->guestregs) {
-        memset (regs->guestregs->tlb, 0, sizeof(regs->guestregs->tlb));
+    if(regs->guestregs)
+    {
+        regs->guestregs->tlbID = ++regs->guestregs->tlbID & 0xFF;
+        if (!regs->guestregs->tlbID)
+        {
+            memset (regs->guestregs->tlb, 0, sizeof(regs->guestregs->tlb));
+            regs->guestregs->tlbID = 1;
+        }
         INVALIDATE_AIA(regs->guestregs);
         INVALIDATE_AEA_ALL(regs->guestregs);
     }
 #endif /*defined(_FEATURE_SIE)*/
 } /* end function purge_tlb */
+
+
+/*-------------------------------------------------------------------*/
+/* Purge translation lookaside buffer entries                        */
+/*-------------------------------------------------------------------*/
+_DAT_C_STATIC void ARCH_DEP(purge_tlbe) (REGS *regs, RADR pfra)
+{
+int  i;
+RADR pte;
+RADR ptemask;
+
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+    ptemask = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
+              PAGETAB_PFRA_4K : PAGETAB_PFRA_2K;
+    pte = ((pfra & 0xFFFFFF) >> 8) & ptemask;
+#endif
+
+#if defined(FEATURE_S390_DAT)
+    ptemask = PAGETAB_PFRA;
+    pte = pfra & ptemask;
+#endif /* defined(FEATURE_S390_DAT) */
+
+#if defined(FEATURE_ESAME)
+    ptemask = ZPGETAB_PFRA;
+    pte = pfra & ptemask;
+#endif /* defined(FEATURE_ESAME) */
+
+    for (i = 0; i < TLBN; i++)
+        if (regs->tlb[i].valid == regs->tlbID
+         && (regs->tlb[i].TLB_PTE & ptemask) == pte)
+        {
+            regs->tlb[i].valid = 0;
+        }
+    INVALIDATE_AIA_ABS(pfra, regs);
+    INVALIDATE_AEA_ABS(pfra, regs);
+
+#if defined(_FEATURE_SIE)
+    /* Also clear the guest registers in the SIE copy */
+    if (regs->guestregs)
+    {
+        for (i = 0; i < TLBN; i++)
+            if (regs->guestregs->tlb[i].valid == regs->guestregs->tlbID
+             && (regs->guestregs->tlb[i].TLB_PTE & ptemask) == pte)
+            {
+                regs->guestregs->tlb[i].valid = 0;
+            }
+        INVALIDATE_AIA_ABS(pfra, regs->guestregs);
+        INVALIDATE_AEA_ABS(pfra, regs->guestregs);
+    }
+#endif /*defined(_FEATURE_SIE)*/
+
+} /* end function purge_tlbe */
 
 
 /*-------------------------------------------------------------------*/
@@ -1544,6 +1606,7 @@ _DAT_C_STATIC void ARCH_DEP(invalidate_pte) (BYTE ibyte, int r1,
 {
 RADR    raddr;                          /* Addr of page table entry  */
 RADR    pte;
+RADR    pfra;
 
     UNREFERENCED_370(ibyte);
 
@@ -1584,6 +1647,12 @@ RADR    pte;
         else
             pte |= PAGETAB_INV_4K;
         ARCH_DEP(vstore2) ( pte, raddr, USE_REAL_ADDR, regs );
+        pfra = ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K) ?
+#if defined(FEATURE_S370E_EXTENDED_ADDRESSING)
+            (((U32)pte & PAGETAB_EA_4K) << 23) |
+#endif
+            (((U32)pte & PAGETAB_PFRA_4K) << 8) :
+            (((U32)pte & PAGETAB_PFRA_2K) << 8);
     }
 #elif defined(FEATURE_S390_DAT)
     {
@@ -1612,6 +1681,7 @@ RADR    pte;
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
             pte |= PAGETAB_INVALID;
         ARCH_DEP(vstore4) ( pte, raddr, USE_REAL_ADDR, regs );
+        pfra = pte & PAGETAB_PFRA;
     }
 #else /*defined(FEATURE_ESAME)*/
     {
@@ -1638,14 +1708,17 @@ RADR    pte;
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/
             pte |= ZPGETAB_I;
         ARCH_DEP(vstore8) ( pte, raddr, USE_REAL_ADDR, regs );
+        pfra = pte & ZPGETAB_PFRA;
     }
 #endif /*defined(FEATURE_ESAME)*/
 
-    /* Release mainlock before calling synchronize broadcast */
+    /* Release mainlock */
     RELEASE_MAINLOCK(regs);
 
     /* Invalidate TLB entries */
-    ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_ITLB, pte & PAGETAB_PFRA);
+    obtain_lock (&sysblk.intlock);
+    ARCH_DEP(synchronize_broadcast)(regs, BROADCAST_PTLBE, pfra);
+    release_lock (&sysblk.intlock);
 
 } /* end function invalidate_pte */
 

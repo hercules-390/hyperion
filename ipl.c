@@ -404,6 +404,7 @@ int             i;                      /* Array subscript           */
     regs->MC_G = 0;
 
     /* Purge the lookaside buffers */
+    regs->tlbID = 255;
     ARCH_DEP(purge_tlb) (regs);
 #if defined(FEATURE_ACCESS_REGISTERS)
     ARCH_DEP(purge_alb) (regs);

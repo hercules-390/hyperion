@@ -98,6 +98,7 @@
 #undef TLB_STD
 #undef TLB_VADDR
 #undef TLB_PTE
+#undef BROADCAST_PFRA
 
 #if !defined(NO_ATTR_REGPARM)
 #define ATTR_REGPARM(n) __attribute__ ((regparm(n)))
@@ -191,6 +192,7 @@ s370_ ## _name
 #define TLB_STD   TLB_STD_L
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
+#define BROADCAST_PFRA BROADCAST_PFRA_L
 
 #elif __GEN_ARCH == 390
 
@@ -287,6 +289,7 @@ s390_ ## _name
 #define TLB_STD   TLB_STD_L
 #define TLB_VADDR TLB_VADDR_L
 #define TLB_PTE   TLB_PTE_L
+#define BROADCAST_PFRA BROADCAST_PFRA_L
 
 #elif __GEN_ARCH == 900
 
@@ -378,6 +381,7 @@ z900_ ## _name
 #define TLB_STD   TLB_STD_G
 #define TLB_VADDR TLB_VADDR_G
 #define TLB_PTE   TLB_PTE_G
+#define BROADCAST_PFRA BROADCAST_PFRA_G
 
 #else
 
