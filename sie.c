@@ -218,6 +218,9 @@ int     icode;                          /* Interception code         */
     memcpy(GUESTREGS->gr, regs->gr, 14 * sizeof(U64));
     memcpy(GUESTREGS->ar, regs->ar, 16 * sizeof(U32));
     memcpy(GUESTREGS->fpr, regs->fpr, 32 * sizeof(U32));
+#if defined(FEATURE_BINARY_FLOATING_POINT)
+    GUESTREGS->fpc =  regs->fpc;
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
     /* Load GR14 */
     FETCH_W(GUESTREGS->GR(14), STATEBK->gr14);
@@ -406,6 +409,9 @@ int     n;
     memcpy(regs->gr, GUESTREGS->gr, 14 * sizeof(U64));
     memcpy(regs->ar, GUESTREGS->ar, 16 * sizeof(U32));
     memcpy(regs->fpr, GUESTREGS->fpr, 32 * sizeof(U32));
+#if defined(FEATURE_BINARY_FLOATING_POINT)
+    regs->fpc =  GUESTREGS->fpc;
+#endif /*defined(FEATURE_BINARY_FLOATING_POINT)*/
 
     /* Zeroize the interruption parameters */
     memset(STATEBK->ipa, 0, 10);
