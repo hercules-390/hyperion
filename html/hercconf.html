@@ -92,10 +92,13 @@ The following system parameters may be specified:
     in the range is 0 to 1024
 <dt><code>HTTPPORT <em>nnnn [auth/noauth] [userid password]</em></code>
 <dd>specifies the port number (in decimal) on which the HTTP server
-    will listen. Auth indictates that userid and password are required
+    will listen.<br>
+    Auth indictates that userid and password are required
     to access the HTTP server, whereas noauth indicates that userid
-    and password are not required.  Userid and password can be any 
-    valid string.
+    and password are not required.<br>
+    Userid and password can be any valid string.<br>
+    If no HTTPPORT statement is present, or if the 
+    portnumber is zero, then the HTTP server thread will not be activated
 <dt><code>CNSLPORT <em>nnnn</em></code>
 <dd>specifies the port number (in decimal) to which tn3270 and
     telnet clients will connect
