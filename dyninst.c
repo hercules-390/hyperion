@@ -15,7 +15,7 @@
 #if defined(OPTION_DYNAMIC_LOAD)
 
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 /* We need to do some special tricks for cygwin here, since cygwin   */
 /* does not support backlink and we need to resolve symbols during   */
 /* dll initialisation (REGISTER/RESOLVER). Opcode tables are renamed */
@@ -42,7 +42,7 @@
 
 #include "opcode.h"
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
  #undef opcode_table
  #undef opcode_01xx
  #undef opcode_a5xx
@@ -98,7 +98,7 @@ static zz_func save_ebxx[256][GEN_MAXARCH];
 static zz_func save_ecxx[256][GEN_MAXARCH];
 static zz_func save_edxx[256][GEN_MAXARCH];
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
 static int opcodes_saved;
 static void * opcode_table;
 static void * opcode_01xx;
@@ -277,7 +277,7 @@ HDL_DEPENDENCY_SECTION;
 HDL_REGISTER_SECTION;
 {
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
     opcodes_saved = 0;
 #else
     opcode_save();
@@ -291,7 +291,7 @@ HDL_RESOLVER_SECTION;
 int opcode, extop;
 
 #if 0
-#if defined(WIN32)
+#if defined(WIN32) && !defined(HDL_USE_LIBTOOL)
     if(!opcodes_saved)
     {
         HDL_RESOLVE(opcode_table);
