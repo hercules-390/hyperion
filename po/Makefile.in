@@ -9,7 +9,7 @@
 # General Public License and is *not* in the public domain.
 
 PACKAGE = hercules
-VERSION = 2.17.b11
+VERSION = 2.17.b12
 
 SHELL = /bin/sh
 
@@ -18,7 +18,7 @@ srcdir = .
 top_srcdir = ..
 
 
-prefix = /usr/local
+prefix = /home/ivan/hercules
 exec_prefix = ${prefix}
 datadir = ${prefix}/share
 localedir = $(datadir)/locale
