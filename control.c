@@ -4606,10 +4606,10 @@ static char *ordername[] = {    "Unassigned",
        part of the configuration, ie configure the cpu implicitly
        online */
     if (order != SIGP_INITRESET
-#if defined(FEATURE_BC_MODE)
+#if defined(FEATURE_BCMODE)
        && order != SIGP_IMPL
        && order != SIGP_IPR
-#endif /*defined(FEATURE_BC_MODE)*/
+#endif /*defined(FEATURE_BCMODE)*/
        && !tregs->cpuonline)
     {
         sysblk.sigpbusy = 0;
@@ -4753,12 +4753,12 @@ static char *ordername[] = {    "Unassigned",
 
             break;
 
-#if defined(FEATURE_BC_MODE)
+#if defined(FEATURE_BCMODE)
         case SIGP_IMPL:
         case SIGP_IPR:
             channelset_reset(tregs);
             /* fallthrough*/
-#endif defined(FEATURE_BC_MODE)
+#endif defined(FEATURE_BCMODE)
         case SIGP_INITRESET:
             if(tregs->cpuonline)
             {
@@ -4772,11 +4772,11 @@ static char *ordername[] = {    "Unassigned",
 
             break;
 
-#if defined(FEATURE_BC_MODE)
+#if defined(FEATURE_BCMODE)
         case SIGP_PR:
             channelset_reset(tregs);
             /* fallthrough*/
-#endif defined(FEATURE_BC_MODE)
+#endif defined(FEATURE_BCMODE)
         case SIGP_RESET:
             /* Signal CPU reset function */
             tregs->sigpreset = 1;
