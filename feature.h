@@ -123,8 +123,10 @@ void (ATTR_REGPARM(2) s370_ ## _name) (BYTE inst[], REGS *regs)
 s370_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
-    (((U32)((addr)&0x7FFFF000)==(U32)0)?((addr)&0xFFF)|pfx:\
-    ((U32)((addr)&0x7FFFF000)==(U32)pfx)?(addr)&0xFFF:(addr))
+    ( ((U32)(addr) & 0x7FFFF000) == 0 || ((U32)(addr) & 0x7FFFF000) == (pfx) \
+      ? (U32)(addr) ^ (pfx) \
+      : (addr) \
+    )
 
 #define AMASK   AMASK_L
 
@@ -212,8 +214,10 @@ void (ATTR_REGPARM(2) s390_ ## _name) (BYTE inst[], REGS *regs)
 s390_ ## _name
 
 #define APPLY_PREFIXING(addr,pfx) \
-    (((U32)((addr)&0x7FFFF000)==(U32)0)    ?((addr)&0xFFF)|(pfx):\
-     ((U32)((addr)&0x7FFFF000)==(U32)(pfx))?((addr)&0xFFF):(addr))
+    ( ((U32)(addr) & 0x7FFFF000) == 0 || ((U32)(addr) & 0x7FFFF000) == (pfx) \
+      ? (U32)(addr) ^ (pfx) \
+      : (addr) \
+    )
 
 #define AMASK   AMASK_L
 
@@ -304,8 +308,10 @@ s390_ ## _name
 #define ARCH_MODE   ARCH_900
 
 #define APPLY_PREFIXING(addr,pfx) \
-    (((U64)((addr)&0xFFFFFFFFFFFFE000ULL)==(U64)0)?((addr)&0x1FFF)|(pfx):\
-    ((U64)((addr)&0xFFFFFFFFFFFFE000ULL)==(U64)(pfx))?(addr)&0x1FFF:(addr))
+    ( ((addr) & 0xFFFFFFFFFFFFE000) == 0 || ((addr) & 0xFFFFFFFFFFFFE000) == (pfx) \
+      ? (addr) ^ (pfx) \
+      : (addr) \
+    )
 
 #define AMASK   AMASK_G
 

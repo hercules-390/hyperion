@@ -15,7 +15,6 @@ int        pttracen;                    /* Pthreads trace entries    */
 LOCK       pttlock;                     /* Pthreads trace lock       */
 int        pttimer;                     /* 1=trace timer events      */
 int        pttnothreads;                /* 1=no threads events       */
-int        pttnoptt;                    /* 1=no PTT events           */
 int        pttnolock;                   /* 1=no PTT locking          */
 
 void ptt_trace_init (int n, int init)
@@ -41,7 +40,6 @@ void ptt_trace_init (int n, int init)
 #endif
         pttimer = 1;
         pttnothreads = 0;
-        pttnoptt = 0;
         pttnolock = 0;
     }
 }
@@ -73,16 +71,6 @@ int ptt_cmd(int argc, char *argv[], char* cmdline)
         if (argc == 2 && strcasecmp("threads", argv[1]) == 0)
         {
             pttnothreads = 0;
-            return 0;
-        }
-        if (argc == 2 && strcasecmp("noptt", argv[1]) == 0)
-        {
-            pttnoptt = 1;
-            return 0;
-        }
-        if (argc == 2 && strcasecmp("ptt", argv[1]) == 0)
-        {
-            pttnoptt = 0;
             return 0;
         }
         if (argc == 2 && strcasecmp("nolock", argv[1]) == 0)
@@ -123,7 +111,7 @@ int ptt_cmd(int argc, char *argv[], char* cmdline)
 #ifndef OPTION_FTHREADS
 int ptt_pthread_mutex_init(LOCK *mutex, pthread_mutexattr_t *attr, char *file, int line)
 {
-    PTTRACE ("lock init", mutex, attr, file, line, NULL);
+    PTTRACE ("lock init", mutex, attr, file, line, PTT_MAGIC);
     return pthread_mutex_init(mutex, attr);
 }
 
@@ -131,9 +119,9 @@ int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
 {
 int result;
 
-    PTTRACE ("lock before", mutex, NULL, file, line, NULL);
+    PTTRACE ("lock before", mutex, NULL, file, line, PTT_MAGIC);
     result = pthread_mutex_lock(mutex);
-    PTTRACE ("lock after", mutex, NULL, file, line, &result);
+    PTTRACE ("lock after", mutex, NULL, file, line, result);
     return result;
 }
 
@@ -142,13 +130,13 @@ int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
 int result;
 
     result = pthread_mutex_unlock(mutex);
-    PTTRACE ("unlock", mutex, NULL, file, line, &result);
+    PTTRACE ("unlock", mutex, NULL, file, line, result);
     return result;
 }
 
 int ptt_pthread_cond_init(COND *cond, pthread_condattr_t *attr, char *file, int line)
 {
-    PTTRACE ("cond init", NULL, cond, file, line, NULL);
+    PTTRACE ("cond init", NULL, cond, file, line, PTT_MAGIC);
     return pthread_cond_init(cond, attr);
 }
 
@@ -157,7 +145,7 @@ int ptt_pthread_cond_signal(COND *cond, char *file, int line)
 int result;
 
     result = pthread_cond_signal(cond);
-    PTTRACE ("signal", NULL, cond, file, line, &result);
+    PTTRACE ("signal", NULL, cond, file, line, result);
     return result;
 }
 
@@ -166,7 +154,7 @@ int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
 int result;
 
     result = pthread_cond_broadcast(cond);
-    PTTRACE ("broadcast", NULL, cond, file, line, &result);
+    PTTRACE ("broadcast", NULL, cond, file, line, result);
     return result;
 }
 
@@ -174,9 +162,9 @@ int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
 {
 int result;
 
-    PTTRACE ("wait before", mutex, cond, file, line, NULL);
+    PTTRACE ("wait before", mutex, cond, file, line, PTT_MAGIC);
     result = pthread_cond_wait(cond, mutex);
-    PTTRACE ("wait after", mutex, cond, file, line, &result);
+    PTTRACE ("wait after", mutex, cond, file, line, result);
     return result;
 }
 
@@ -185,9 +173,9 @@ int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
 {
 int result;
 
-    PTTRACE ("tw before", mutex, cond, file, line, NULL);
+    PTTRACE ("tw before", mutex, cond, file, line, PTT_MAGIC);
     result = pthread_cond_timedwait(cond, mutex, time);
-    PTTRACE ("tw after", mutex, cond, file, line, &result);
+    PTTRACE ("tw after", mutex, cond, file, line, result);
     return result;
 }
 
@@ -197,7 +185,7 @@ int ptt_pthread_create(pthread_t *tid, ATTR *attr,
 int result;
 
     result = pthread_create(tid, attr, start, arg);
-    PTTRACE ("create", (void *)*tid, NULL, file, line, &result);
+    PTTRACE ("create", (void *)*tid, NULL, file, line, result);
     return result;
 }
 
@@ -205,9 +193,9 @@ int ptt_pthread_join(pthread_t tid, void **value, char *file, int line)
 {
 int result;
 
-    PTTRACE ("join before", (void *)tid, value ? *value : NULL, file, line, NULL);
+    PTTRACE ("join before", (void *)tid, value ? *value : NULL, file, line, PTT_MAGIC);
     result = pthread_join(tid,value);
-    PTTRACE ("join after", (void *)tid, value ? *value : NULL, file, line, &result);
+    PTTRACE ("join after", (void *)tid, value ? *value : NULL, file, line, result);
     return result;
 }
 
@@ -215,21 +203,21 @@ int ptt_pthread_detach(pthread_t tid, char *file, int line)
 {
 int result;
 
-    PTTRACE ("dtch before", (void *)tid, NULL, file, line, NULL);
+    PTTRACE ("dtch before", (void *)tid, NULL, file, line, PTT_MAGIC);
     result = pthread_detach(tid);
-    PTTRACE ("dtch after", (void *)tid, NULL, file, line, &result);
+    PTTRACE ("dtch after", (void *)tid, NULL, file, line, result);
     return result;
 }
 
 int ptt_pthread_kill(pthread_t tid, int sig, char *file, int line)
 {
-    PTTRACE ("kill", (void *)tid, (void *)sig, file, line, NULL);
+    PTTRACE ("kill", (void *)tid, (void *)sig, file, line, PTT_MAGIC);
     return pthread_kill(tid, sig);
 }
 #else /* OPTION_FTHREADS */
 int ptt_pthread_mutex_init(LOCK *mutex, void *attr, char *file, int line)
 {
-    PTTRACE ("lock init", mutex, attr, file, line, NULL);
+    PTTRACE ("lock init", mutex, attr, file, line, PTT_MAGIC);
     return fthread_mutex_init(mutex,attr);
 }
 
@@ -237,9 +225,9 @@ int ptt_pthread_mutex_lock(LOCK *mutex, char *file, int line)
 {
 int result;
 
-    PTTRACE ("lock before", mutex, NULL, file, line, NULL);
+    PTTRACE ("lock before", mutex, NULL, file, line, PTT_MAGIC);
     result = fthread_mutex_lock(mutex);
-    PTTRACE ("lock after", mutex, NULL, file, line, &result);
+    PTTRACE ("lock after", mutex, NULL, file, line, result);
     return result;
 }
 
@@ -248,13 +236,13 @@ int ptt_pthread_mutex_unlock(LOCK *mutex, char *file, int line)
 int result;
 
     result = fthread_mutex_unlock(mutex);
-    PTTRACE ("unlock", mutex, NULL, file, line, &result);
+    PTTRACE ("unlock", mutex, NULL, file, line, result);
     return result;
 }
 
 int ptt_pthread_cond_init(COND *cond, void *attr, char *file, int line)
 {
-    PTTRACE ("cond init", NULL, cond, file, line, NULL);
+    PTTRACE ("cond init", NULL, cond, file, line, PTT_MAGIC);
     return fthread_cond_init(cond);
 }
 
@@ -263,7 +251,7 @@ int ptt_pthread_cond_signal(COND *cond, char *file, int line)
 int result;
 
     result = fthread_cond_signal(cond);
-    PTTRACE ("signal", NULL, cond, file, line, &result);
+    PTTRACE ("signal", NULL, cond, file, line, result);
     return result;
 }
 
@@ -272,7 +260,7 @@ int ptt_pthread_cond_broadcast(COND *cond, char *file, int line)
 int result;
 
     result = fthread_cond_broadcast(cond);
-    PTTRACE ("broadcast", NULL, cond, file, line, &result);
+    PTTRACE ("broadcast", NULL, cond, file, line, result);
     return result;
 }
 
@@ -280,9 +268,9 @@ int ptt_pthread_cond_wait(COND *cond, LOCK *mutex, char *file, int line)
 {
 int result;
 
-    PTTRACE ("wait before", mutex, cond, file, line, NULL);
+    PTTRACE ("wait before", mutex, cond, file, line, PTT_MAGIC);
     result = fthread_cond_wait(cond, mutex);
-    PTTRACE ("wait after", mutex, cond, file, line, &result);
+    PTTRACE ("wait after", mutex, cond, file, line, result);
     return result;
 }
 
@@ -291,9 +279,9 @@ int ptt_pthread_cond_timedwait(COND *cond, LOCK *mutex,
 {
 int result;
 
-    PTTRACE ("tw before", mutex, cond, file, line, NULL);
+    PTTRACE ("tw before", mutex, cond, file, line, PTT_MAGIC);
     result = fthread_cond_timedwait(cond, mutex, time);
-    PTTRACE ("tw after", mutex, cond, file, line, &result);
+    PTTRACE ("tw after", mutex, cond, file, line, result);
     return result;
 }
 
@@ -303,7 +291,7 @@ int ptt_pthread_create(fthread_t *tid, ATTR *attr,
 int result;
 
     result = fthread_create(tid, attr, start, arg);
-    PTTRACE ("create", (void *)*tid, NULL, file, line, &result);
+    PTTRACE ("create", (void *)*tid, NULL, file, line, result);
     return result;
 }
 
@@ -311,9 +299,9 @@ int ptt_pthread_join(fthread_t tid, void **value, char *file, int line)
 {
 int result;
 
-    PTTRACE ("join before", (void *)tid, value ? *value : NULL, file, line, NULL);
+    PTTRACE ("join before", (void *)tid, value ? *value : NULL, file, line, PTT_MAGIC);
     result = fthread_join(tid,value);
-    PTTRACE ("join after", (void *)tid, value ? *value : NULL, file, line, &result);
+    PTTRACE ("join after", (void *)tid, value ? *value : NULL, file, line, result);
     return result;
 }
 
@@ -321,26 +309,25 @@ int ptt_pthread_detach(fthread_t tid, char *file, int line)
 {
 int result;
 
-    PTTRACE ("dtch before", (void *)tid, NULL, file, line, NULL);
+    PTTRACE ("dtch before", (void *)tid, NULL, file, line, PTT_MAGIC);
     result = fthread_detach(tid);
-    PTTRACE ("dtch after", (void *)tid, NULL, file, line, &result);
+    PTTRACE ("dtch after", (void *)tid, NULL, file, line, result);
     return result;
 }
 
 int ptt_pthread_kill(fthread_t tid, int sig, char *file, int line)
 {
-    PTTRACE ("kill", (void *)tid, (void *)sig, file, line, NULL);
+    PTTRACE ("kill", (void *)tid, (void *)sig, file, line, PTT_MAGIC);
     return fthread_kill(tid, sig);
 }
 #endif
 
 void ptt_pthread_trace (char * type, void *data1, void *data2,
-                        char *file, int line, int *result)
+                        char *file, int line, int result)
 {
 int i;
 
-    if (pttrace == NULL
-     || (result == (int *)PTT_MAGIC && pttnoptt)) return;
+    if (pttrace == NULL) return;
 
 /* Timer thread can produce hundreds of entries per second
  * (by obtaining intlock and todlock each HZ).  
@@ -365,10 +352,7 @@ int i;
     pttrace[i].file  = file;
     pttrace[i].line  = line;
     gettimeofday(&pttrace[i].tv,NULL);
-    if (result && result != (int *)PTT_MAGIC)
-        pttrace[i].result = *result;
-    else
-        pttrace[i].result = PTT_MAGIC;
+    pttrace[i].result = result;
 }
 
 void ptt_pthread_print ()

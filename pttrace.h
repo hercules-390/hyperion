@@ -51,7 +51,7 @@ int ptt_pthread_kill(TID, int, char *, int);
 
 void ptt_trace_init (int n, int init);
 int  ptt_cmd(int argc, char *argv[], char*cmdline);
-void ptt_pthread_trace (char *, void *, void *, char *, int, int *);
+void ptt_pthread_trace (char *, void *, void *, char *, int, int);
 void ptt_pthread_print ();
 
 typedef struct _PTT_TRACE {
@@ -66,8 +66,8 @@ typedef struct _PTT_TRACE {
       } PTT_TRACE;
 #define PTT_TRACE_SIZE sizeof(PTT_TRACE)
 #define PTT_MAGIC -99
-#define PTT(_a,_b,_c) \
-        ptt_pthread_trace(_a,(void *)(_b),(void *)(_c),__FILE__,__LINE__,(int *)PTT_MAGIC)
+#define PTT(_a,_b,_c,_d) \
+        ptt_pthread_trace(_a,(void *)(_b),(void *)(_c),__FILE__,__LINE__,(int)(_d))
 #define PTTRACE(_a,_b,_c,_d,_e,_f) \
   if (!pttnothreads) \
     ptt_pthread_trace(_a,_b,_c,_d,_e,_f)

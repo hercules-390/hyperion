@@ -1813,7 +1813,7 @@ RADR    aaddr;                          /* Absolute address          */
     if (acctype == ACCTYPE_INSTFETCH || acctype == ACCTYPE_READ)
     {
         /* Program check if fetch protected location */
-        if (ARCH_DEP(is_fetch_protected) (addr, *regs->dat.storkey, akey, regs))
+        if (unlikely(ARCH_DEP(is_fetch_protected) (addr, *regs->dat.storkey, akey, regs)))
         {
             if (SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
             goto vabs_prot_excp;
@@ -1826,7 +1826,7 @@ RADR    aaddr;                          /* Absolute address          */
     if (acctype == ACCTYPE_WRITE_SKP || acctype == ACCTYPE_WRITE)
     {
         /* Program check if store protected location */
-        if (ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs))
+        if (unlikely(ARCH_DEP(is_store_protected) (addr, *regs->dat.storkey, akey, regs)))
         {
             if (SIE_MODE(regs)) regs->hostregs->dat.protect = 0;
             goto vabs_prot_excp;
@@ -1854,7 +1854,7 @@ RADR    aaddr;                          /* Absolute address          */
     {
         int i;
 
-        if ((addr < PSA_SIZE && !regs->dat.private) || acctype < ACCTYPE_READ)
+        if (addr < PSA_SIZE && !regs->dat.private)
             acctype = ACCTYPE_READ;
 
 #if defined(FEATURE_ACCESS_REGISTERS)
@@ -1866,10 +1866,10 @@ RADR    aaddr;                          /* Absolute address          */
 
         i = AEAIX(addr);
         regs->aearn[i] = arn;
+        regs->aeacc[i] = (acctype > ACCTYPE_READ);
+        regs->aekey[i] = akey;
         regs->aem[i]   = NEW_AEADDR (regs, addr, aaddr);
         regs->AEV(i)   = (addr & PAGEFRAME_PAGEMASK);
-        regs->aekey[i] = akey;
-        regs->aeacc[i] = (acctype > ACCTYPE_READ);
         regs->aeid[i]  = regs->aeID;
         regs->aesk[i]  = regs->dat.storkey;
     }

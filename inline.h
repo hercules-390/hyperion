@@ -194,7 +194,11 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
 
     /* [3.4.1] Fetch is allowed if access key is zero, regardless
        of the storage key and fetch protection bit */
-    if (akey == 0)
+    /* [3.4.1] Fetch protection prohibits fetch if storage key fetch
+       protect bit is on and access key does not match storage key */
+    if (likely(akey == 0
+    || akey == (skey & STORKEY_KEY)
+    || !(skey & STORKEY_FETCH)))
     return 0;
 
 #ifdef FEATURE_FETCH_PROTECTION_OVERRIDE
@@ -215,14 +219,8 @@ static inline int ARCH_DEP(is_fetch_protected) (VADR addr, BYTE skey,
     return 0;
 #endif /*FEATURE_STORAGE_PROTECTION_OVERRIDE*/
 
-    /* [3.4.1] Fetch protection prohibits fetch if storage key fetch
-       protect bit is on and access key does not match storage key */
-    if ((skey & STORKEY_FETCH)
-    && akey != (skey & STORKEY_KEY))
+    /* Return one if location is fetch protected */
     return 1;
-
-    /* Return zero if location is not fetch protected */
-    return 0;
 
 } /* end function is_fetch_protected */
 

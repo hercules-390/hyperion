@@ -1,5 +1,9 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+17 Mar 2003 clc.pat - Optimize CLC - Ivan & Greg - Greg Smith
+17 Mar 2003 l2m.pat - Tweaks to logical_to_main - Greg Smith
+17 Mar 2003 protected.pat - Optimization for is_fetch_protected - Greg Smith
+17 Mar 2003 prefixing.pat - Optimize APPLY_PREFIXING using xor - Greg Smith
 14 Mar 2003 tlb1024.pat - Increase TLB size to 1024 - Greg Smith
 14 Mar 2003 permode.pat - bit check for PER mode - Greg Smith
 14 Mar 2003 maddr.pat - virtual address translation returns mainstor
