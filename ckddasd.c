@@ -4232,9 +4232,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
     /*---------------------------------------------------------------*/
     /* SUSPEND MULTIPATH RECONNECTION                                */
     /*---------------------------------------------------------------*/
-        /* Command reject if within the domain of a Locate Record
-           or if chained from any other CCW */
-        if (dev->ckdlcount > 0 || chained)
+        /* Command reject if within the domain of a Locate Record */
+        if (dev->ckdlcount > 0)
         {
             ckd_build_sense (dev, SENSE_CR, 0, 0,
                             FORMAT_0, MESSAGE_2);
