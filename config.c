@@ -221,9 +221,9 @@ int     lstarted;                       /* Indicate if non-whitespace*/
 
         parse_args (buf, MAX_ARGS, addargv, &addargc);
 #if defined(OPTION_DYNAMIC_LOAD)
-        if(config_statement)
+        if(config_command)
         {
-            if( config_statement(addargc, addargv) )
+            if( config_command(addargc, addargv) )
             continue;
         }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
