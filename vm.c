@@ -742,6 +742,8 @@ BYTE    cmdflags;                       /* Command flags             */
 BYTE    buf[256];                       /* Command buffer (ASCIIZ)   */
 BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
 BYTE    *dresp;                         /* Default response (ASCIIZ) */
+int     freeresp;                       /* Flag to free resp bfr     */
+int     j,k;
 
     /* Obtain command address from R1 register */
     cmdaddr = regs->GR_L(r1);
@@ -774,51 +776,72 @@ BYTE    *dresp;                         /* Default response (ASCIIZ) */
     ARCH_DEP(vfetchc) (buf, cmdlen-1, cmdaddr, USE_REAL_ADDR, regs);
 
     /* Display the command on the console */
+    /* (translate to lower case too)      */
     for (i = 0; i < cmdlen; i++)
+    {
         buf[i] = guest_to_host(buf[i]);
+        if(isupper(buf[i]))
+        {
+            buf[i]=tolower(buf[i]);
+        }
+    }
     buf[i] = '\0';
     dresp="";
+    freeresp=0;
 
     if(buf && *buf)
     {
 #ifdef FEATURE_HERCULES_DIAGCALLS
         if(sysblk.diag8cmd)
         {
-            logmsg ("HHC662I ");
-            panel_command(buf);
-            dresp="HHC661I Command initiated";
+            logmsg ("HHC660I *%s* panel command issued by the host program\n", buf);
+            dresp=log_capture(panel_command,buf);
+            if(dresp!=NULL)
+            {
+                freeresp=1;
+            }
+            else
+            {
+                dresp="";
+            }
         }
         else
             dresp="HHC662E Host command processing disabled by configuration statement";
 #else
             dresp="HHC663E Host command processing not included in engine build";
 #endif
-            logmsg ("HHC660I %s\n", buf);
     }
 
     /* Store the response and set length if response requested */
     if (cmdflags & CMDFLAGS_RESPONSE)
     {
-        strcpy (resp, dresp);
-        resplen = strlen(resp);
+        if(!freeresp)
+        {
+                strcpy (resp, dresp);
+                dresp=resp;
+        }
+        resplen = strlen(dresp);
         for (i = 0; i < resplen; i++)
-            resp[i] = host_to_guest(resp[i]);
+            dresp[i] = host_to_guest(dresp[i]);
 
         respadr = regs->GR_L(r1+1);
         maxrlen = regs->GR_L(r2+1);
 
-        if (resplen <= maxrlen)
+        i=(resplen<=maxrlen) ? resplen : maxrlen;
+        j=0;
+        while(i>0)
         {
-            ARCH_DEP(vstorec) (resp, resplen-1, respadr, USE_REAL_ADDR, regs);
-            regs->GR_L(r2+1) = resplen;
-            cc = 0;
+            k=(i<255 ? i : 255);
+            ARCH_DEP(vstorec) (&dresp[j], k , respadr+j, USE_REAL_ADDR, regs);
+            i-=k;
+            j+=k;
         }
-        else
-        {
-            ARCH_DEP(vstorec) (resp, maxrlen-1, respadr, USE_REAL_ADDR, regs);
-            regs->GR_L(r2+1) = resplen - maxrlen;
-            cc = 1;
-        }
+        regs->GR_L(r2+1) = (resplen<=maxrlen) ? resplen : resplen-maxrlen;
+        cc = (resplen<=maxrlen) ? 0 : 1;
+    }
+    if(freeresp)
+    {
+        free(dresp);
     }
 
     /* Set R2 register to CP completion code */

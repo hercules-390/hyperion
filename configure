@@ -8948,8 +8948,8 @@ typedef struct _REGS
 }
 REGS;
 
-__attribute__ ((regparm(3))) int func1 (int a, int b, int c, REGS *regs);
-__attribute__ ((regparm(3))) int func2 (int a, int b, int c, REGS *regs);
+int func1 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)));
+int func2 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)));
 
 int main ( int argc, char *argv[] )
 {
@@ -8957,13 +8957,13 @@ int main ( int argc, char *argv[] )
         exit(func1 (1, 2, 3, regs));
 }
 
-__attribute__ ((regparm(3))) int func1 (int a, int b, int c, REGS *regs)
+int func1 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)))
 {
         REGS iregs;
         return func2 (a, b, c, &iregs);
 }
 
-__attribute__ ((regparm(3))) int func2 (int a, int b, int c, REGS *regs)
+int func2 (int a, int b, int c, REGS *regs) __attribute__ ((regparm(3)))
 {
         return ((a == 1 && b == 2 && c == 3) ? 0 : 1);
 }
@@ -11383,6 +11383,5 @@ if test "$no_create" != yes; then
   # would make configure fail if this is the last instruction.
   $ac_cs_success || { (exit 1); exit 1; }
 fi
-
 
 
