@@ -1,3 +1,4 @@
+22 Apr 2001 cmpsc fixes for expansion - Greg Smith
 22 Apr 2001 Correct prefix alignment for ESA/390 
             guest in 64 bit mode SIE - Jan Jaeger
 17 Apr 2001 Fix SSKE rcp guest ref and change bits - Paul Leisy

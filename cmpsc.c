@@ -140,11 +140,26 @@
 /*----------------------------------------------------------------------------*/
 /* Adjust registers conform length                                            */
 /*----------------------------------------------------------------------------*/
-#undef ADJUSTREGS
+#ifdef  ADJUSTREGS
+#undef  ADJUSTREGS
+#endif
 #define ADJUSTREGS(r, regs, len) \
 { \
   GR_A ((r), (regs)) = (GR_A ((r), (regs)) + (len)) & ADDRESS_MAXWRAP((regs)); \
   GR_A ((r) + 1, (regs)) -= (len); \
+}
+
+#ifdef  COMMITREGS
+#undef  COMMITREGS
+#endif
+#define COMMITREGS(regs, iregs, r1, r2) \
+{ \
+  GR_A (0, (regs)) = GR_A (0, (iregs)); \
+  GR_A (1, (regs)) = GR_A (1, (iregs)); \
+  GR_A ((r1), (regs)) = GR_A ((r1), (iregs)); \
+  GR_A ((r1) + 1, (regs)) = GR_A ((r1) + 1, (iregs)); \
+  GR_A ((r2), (regs)) = GR_A ((r2), (iregs)); \
+  GR_A ((r2) + 1, (regs)) = GR_A ((r2) + 1, (iregs)); \
 }
 
 /*----------------------------------------------------------------------------*/
@@ -153,35 +168,24 @@
 #define PROCESS_MAX             4096	/* CPU-determined amount of data      */
 
 /*----------------------------------------------------------------------------*/
-/* Type definitions                                                           */
-/*----------------------------------------------------------------------------*/
-typedef struct
-{
-  int cbn;			/* compressed-data bit number                 */
-  GREG vr2;			/* value register 2                           */
-  GREG vr2plus1;		/* value register 2 + 1                       */
-}
-ARCH_DEP (SRCPOS);
-
-/*----------------------------------------------------------------------------*/
 /* Function proto types                                                       */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP (compress) (int r1, int r2, REGS * regs);
-static void ARCH_DEP (expand) (int r1, int r2, REGS * regs);
-static void ARCH_DEP (fetch_cce) (REGS * regs, BYTE * cce, int index);
-static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, BYTE * ch, int offset);
-static void ARCH_DEP (fetch_ece) (REGS * regs, BYTE * ece, int index);
-static int ARCH_DEP (fetch_is) (int r2, REGS * regs, U16 * index_symbol);
-static void ARCH_DEP (fetch_sd) (REGS * regs, BYTE * sd, int index);
-static int ARCH_DEP (store_ch) (int r1, int r2, REGS * regs, BYTE * data, int length, int offset, ARCH_DEP (SRCPOS) * srcpos);
-static void ARCH_DEP (store_is) (int r1, REGS * regs, U16 index_symbol);
-static int ARCH_DEP (test_ch261) (REGS * regs, int * processed, int length);
-static int ARCH_DEP (test_ec) (int r2, REGS * regs, BYTE * cce, int * ec_match);
+static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs);
+static void ARCH_DEP (expand) (int r1, int r2, REGS * regs, REGS * iregs);
+static void ARCH_DEP (fetch_cce) (REGS * regs, REGS * iregs, BYTE * cce, int index);
+static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, REGS * iregs, BYTE * ch, int offset);
+static void ARCH_DEP (fetch_ece) (REGS * regs, REGS * iregs, BYTE * ece, int index);
+static int ARCH_DEP (fetch_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 * index_symbol);
+static void ARCH_DEP (fetch_sd) (REGS * regs, REGS * iregs, BYTE * sd, int index);
+static int ARCH_DEP (store_ch) (int r1, int r2, REGS * regs, REGS * iregs, BYTE * data, int length, int offset);
+static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 index_symbol);
+static int ARCH_DEP (test_ch261) (REGS * regs, REGS * iregs, int * processed, int length);
+static int ARCH_DEP (test_ec) (int r2, REGS * regs, REGS * iregs, BYTE * cce, int * ec_match);
 			
 /*----------------------------------------------------------------------------*/
 /* compress                                                                   */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
+static void ARCH_DEP (compress) (int r1, int r2, REGS * regs, REGS * iregs)
 {
   int cc_index;			/* child character index                      */
   BYTE cce_child[8];		/* child compression character entry          */
@@ -200,13 +204,14 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
   translated = 0;
   while (translated++ < PROCESS_MAX)
     {
+      COMMITREGS (regs, iregs, r1, r2);
 
       /* First check if we can write */
-      if (GR0_st (regs))
+      if (GR0_st (iregs))
 	{
 
 	  /* Can we write an interchange symbol */
-	  if (GR_A (r1 + 1, regs) < 2)
+	  if (GR_A (r1 + 1, iregs) < 2)
 	    {
 	      regs->psw.cc = 1;
 	      return;
@@ -216,7 +221,7 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
 	{
 
 	  /* Can we write an index symbol */
-	  if (((GR1_cbn (regs) + GR0_symbol_size (regs)) / 8) > GR_A (r1 + 1, regs))
+	  if (((GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8) > GR_A (r1 + 1, iregs))
 	    {
 	      regs->psw.cc = 1;
 	      return;
@@ -225,12 +230,12 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
 
 
       /* Get the alphabet entry, return on end of source */
-      if (ARCH_DEP (fetch_ch) (r2, regs, &ch, 0))
+      if (ARCH_DEP (fetch_ch) (r2, regs, iregs, &ch, 0))
 	return;
-      ARCH_DEP (fetch_cce) (regs, cce_parent, ch);
+      ARCH_DEP (fetch_cce) (regs, iregs, cce_parent, ch);
 
       /* We always match the alpabet entry, so set last match */
-      ADJUSTREGS (r2, regs, 1);
+      ADJUSTREGS (r2, iregs, 1);
       index_symbol = ch;
 
       parent_found = 1;
@@ -240,11 +245,12 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
 	{
 
 	  /* Get the next character when there are children */
-	  if (CCE_cct (cce_parent) && ARCH_DEP (fetch_ch) (r2, regs, &ch, 0))
+	  if (CCE_cct (cce_parent) && ARCH_DEP (fetch_ch) (r2, regs, iregs, &ch, 0))
 	    {
 
 	      /* Reached end of source, store last match */
-	      ARCH_DEP (store_is) (r1, regs, index_symbol);
+	      ARCH_DEP (store_is) (r1, r2, regs, iregs, index_symbol);
+              COMMITREGS (regs, iregs, r1, r2);
 	      return;
 	    }
 
@@ -270,21 +276,22 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
 		  child_tested = 1;
 
 		  /* Found a child get the character entry */
-		  ARCH_DEP (fetch_cce) (regs, cce_child, CCE_cptr (cce_parent) + cc_index);
+		  ARCH_DEP (fetch_cce) (regs, iregs, cce_child, CCE_cptr (cce_parent) + cc_index);
 
 		  /* Check if additional extension characters match */
-		  if (ARCH_DEP (test_ec) (r2, regs, cce_child, &parent_found))
+		  if (ARCH_DEP (test_ec) (r2, regs, iregs, cce_child, &parent_found))
 		    {
 
 			/* Reached end of source, store last match */
-			ARCH_DEP (store_is) (r1, regs, index_symbol);
+			ARCH_DEP (store_is) (r1, r2, regs, iregs, index_symbol);
+                    COMMITREGS (regs, iregs, r1, r2);
 			return;
 		    }
 		  if (parent_found)
 		    {
 
 		      /* Set last match */
-		      ADJUSTREGS (r2, regs, CCE_act (cce_child) + 1);
+		      ADJUSTREGS (r2, iregs, CCE_act (cce_child) + 1);
 		      index_symbol = CCE_cptr (cce_parent) + cc_index;
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -316,33 +323,33 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
 		{
 
 		  /* Get the sibling descriptor */
-		  ARCH_DEP (fetch_sd) (regs, sd, CCE_cptr (cce_parent) + sd_ptr);
+		  ARCH_DEP (fetch_sd) (regs, iregs, sd, CCE_cptr (cce_parent) + sd_ptr);
 
 		  /* Check all children in sibling descriptor */
 		  for (sc_index = 0; sc_index < SD_sct (regs, sd); sc_index++)
 		    {
-		      if (ch == SD_sc (regs, sd)[sc_index])
+		      if (ch == SD_sc (iregs, sd)[sc_index])
 			{
 
 			  /* Raise child tested indicator */
 			  child_tested = 1;
 
 			  /* Found a child get the character entry */
-			  ARCH_DEP (fetch_cce) (regs, cce_child, CCE_cptr (cce_parent) + sd_ptr + sc_index + 1);
+			  ARCH_DEP (fetch_cce) (regs, iregs, cce_child, CCE_cptr (cce_parent) + sd_ptr + sc_index + 1);
 
 			  /* Check if additional extension characters match */
-			  if (ARCH_DEP (test_ec) (r2, regs, cce_child, &parent_found))
+			  if (ARCH_DEP (test_ec) (r2, regs, iregs, cce_child, &parent_found))
 		    	    {
 
 			      /* Reached end of source, store last match */
-			      ARCH_DEP (store_is) (r1, regs, index_symbol);
+			      ARCH_DEP (store_is) (r1, r2, regs, iregs, index_symbol);
 			      return;
 		            }
 			  if (parent_found)
 			    {
 
 			      /* Set last match */
-			      ADJUSTREGS (r2, regs, CCE_act (cce_child) + 1);
+			      ADJUSTREGS (r2, iregs, CCE_act (cce_child) + 1);
 			      index_symbol = CCE_cptr (cce_parent) + sd_ptr + sc_index + 1;
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -360,34 +367,34 @@ static void ARCH_DEP (compress) (int r1, int r2, REGS * regs)
 
 
 		  /* Next sibling follows last possible child */
-		  sd_ptr += SD_sct (regs, sd) + 1;
+		  sd_ptr += SD_sct (iregs, sd) + 1;
 
 		  /* test for searching child 261 */
-		  if (ARCH_DEP (test_ch261) (regs, &searched, SD_sct (regs, sd)))
+		  if (ARCH_DEP (test_ch261) (regs, iregs, &searched, SD_sct (iregs, sd)))
 		    return;
 		}
-	      while (!child_tested && SD_more_sc (regs, sd));
+	      while (!child_tested && SD_more_sc (iregs, sd));
 	    }
 	}
 
       /* Write the last match, this can be the alphabet entry */
-      ARCH_DEP (store_is) (r1, regs, index_symbol);
+      ARCH_DEP (store_is) (r1, r2, regs, iregs, index_symbol);
     }
 
   /* Reached model dependent CPU processing amount */
+  COMMITREGS (regs, iregs, r1, r2);
   regs->psw.cc = 3;
 }
 
 /*----------------------------------------------------------------------------*/
 /* expand                                                                     */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP (expand) (int r1, int r2, REGS * regs)
+static void ARCH_DEP (expand) (int r1, int r2, REGS * regs, REGS * iregs)
 {
   BYTE byte;			/* a byte                                     */
   U16 index_symbol;		/* Index symbol                               */
   BYTE ece[8];			/* Expansion Character Entry                  */
   U16 pptr;			/* predecessor pointer                        */
-  ARCH_DEP (SRCPOS) srcpos;	/* posistion in source                        */
   int translated;		/* number of bytes generated                  */
   int written;			/* Childs written                             */
 
@@ -396,14 +403,10 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs)
   translated = 0;
   while (translated++ < PROCESS_MAX)
     {
-
-      /* Store the current source position */
-      srcpos.cbn = GR1_cbn (regs);
-      srcpos.vr2 = regs->GR (r2);
-      srcpos.vr2plus1 = regs->GR (r2 + 1);
+      COMMITREGS (regs, iregs, r1, r2);
 
       /* Get an index symbol, return on end of source */
-      if (ARCH_DEP (fetch_is) (r2, regs, &index_symbol))
+      if (ARCH_DEP (fetch_is) (r1, r2, regs, iregs, &index_symbol))
 	return;
 
       /* Check if this is an alphabet entry */
@@ -412,17 +415,17 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs)
 
 	  /* Write the alphabet entry, return on trouble */
 	  byte = index_symbol;
-	  if (ARCH_DEP (store_ch) (r1, r2, regs, &byte, 1, 0, &srcpos))
+	  if (ARCH_DEP (store_ch) (r1, r2, regs, iregs, &byte, 1, 0))
 	    return;
 
 	  /* Adjust destination registers */
-	  ADJUSTREGS (r1, regs, 1);
+	  ADJUSTREGS (r1, iregs, 1);
 	}
       else
 	{
 
 	  /* Get the Expansion character entry */
-	  ARCH_DEP (fetch_ece) (regs, ece, index_symbol);
+	  ARCH_DEP (fetch_ece) (regs, iregs, ece, index_symbol);
 
           /* Reset child counter */
           written = 0;
@@ -432,46 +435,47 @@ static void ARCH_DEP (expand) (int r1, int r2, REGS * regs)
 	    {
 
               /* Check for writing child 261 */
-              if (ARCH_DEP (test_ch261) (regs, &written, ECE_psl (ece)))
+              if (ARCH_DEP (test_ch261) (regs, iregs, &written, ECE_psl (ece)))
                 return;
 
 	      /* Output extension characters in preceeded entry, return on trouble */
-	      if (ARCH_DEP (store_ch) (r1, r2, regs, ECE_ec (ece), ECE_psl (ece), ECE_ofst (ece), &srcpos))
+	      if (ARCH_DEP (store_ch) (r1, r2, regs, iregs, ECE_ec (ece), ECE_psl (ece), ECE_ofst (ece)))
 		return;
 
 	      /* Get the preceeding entry */
 	      pptr = ECE_pptr (ece);
-	      ARCH_DEP (fetch_ece) (regs, ece, pptr);
+	      ARCH_DEP (fetch_ece) (regs, iregs, ece, pptr);
 	    }
 	
           /* Check for writing child 261 */
-          if (ARCH_DEP (test_ch261) (regs, &written, ECE_csl (ece)))
+          if (ARCH_DEP (test_ch261) (regs, iregs, &written, ECE_csl (ece)))
             return;
 	
 	  /* Output extension characters in last or only unpreceeded entry, return on trouble */
-	  if (ARCH_DEP (store_ch) (r1, r2, regs, ECE_ec (ece), ECE_csl (ece), 0, &srcpos))
+	  if (ARCH_DEP (store_ch) (r1, r2, regs, iregs, ECE_ec (ece), ECE_csl (ece), 0))
 	    return;
 
 	  /* Adjust destination registers */
-	  ADJUSTREGS (r1, regs, written);
+	  ADJUSTREGS (r1, iregs, written);
 	}
     }
 
   /* CPU-determined amount of data processed */
+  COMMITREGS (regs, iregs, r1, r2);
   regs->psw.cc = 3;
 }
 
 /*----------------------------------------------------------------------------*/
 /* fetch_cce                                                                  */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP (fetch_cce) (REGS * regs, BYTE * cce, int index)
+static void ARCH_DEP (fetch_cce) (REGS * regs, REGS * iregs, BYTE * cce, int index)
 {
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
   int i;
   int prt_detail;
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
-  ARCH_DEP (vfetchc) (cce, 7, (GR1_dictor (regs) + index * 8) & ADDRESS_MAXWRAP (regs), 1, regs);
+  ARCH_DEP (vfetchc) (cce, 7, (GR1_dictor (iregs) + index * 8) & ADDRESS_MAXWRAP (regs), 1, regs);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
   logmsg ("fetch_cce: index %03X\n", index);
@@ -505,9 +509,9 @@ static void ARCH_DEP (fetch_cce) (REGS * regs, BYTE * cce, int index)
 /*----------------------------------------------------------------------------*/
 /* fetch_ch                                                                   */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, BYTE * ch, int offset)
+static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, REGS * iregs, BYTE * ch, int offset)
 {
-  if (GR_A (r2 + 1, regs) <= offset)
+  if (GR_A (r2 + 1, iregs) <= offset)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
@@ -517,10 +521,10 @@ static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, BYTE * ch, int offset)
       regs->psw.cc = 0;
       return (1);
     }
-  *ch = ARCH_DEP (vfetchb) ((GR_A (r2, regs) + offset) & ADDRESS_MAXWRAP (regs), r2, regs);
+  *ch = ARCH_DEP (vfetchb) ((GR_A (r2, iregs) + offset) & ADDRESS_MAXWRAP (regs), r2, regs);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-  logmsg ("fetch_ch : %02X at " ADRFMT "\n", *ch, (GR_A (r2, regs) + offset));
+  logmsg ("fetch_ch : %02X at " ADRFMT "\n", *ch, (GR_A (r2, iregs) + offset));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
   return (0);
@@ -529,14 +533,14 @@ static int ARCH_DEP (fetch_ch) (int r2, REGS * regs, BYTE * ch, int offset)
 /*----------------------------------------------------------------------------*/
 /* fetch_ece                                                                  */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP (fetch_ece) (REGS * regs, BYTE * ece, int index)
+static void ARCH_DEP (fetch_ece) (REGS * regs, REGS * iregs, BYTE * ece, int index)
 {
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
   int i;
   int prt_detail;
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
-  ARCH_DEP (vfetchc) (ece, 7, (GR1_dictor (regs) + index * 8) & ADDRESS_MAXWRAP (regs), 1, regs);
+  ARCH_DEP (vfetchc) (ece, 7, (GR1_dictor (iregs) + index * 8) & ADDRESS_MAXWRAP (regs), 1, regs);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
     logmsg ("fetch_ece: index %03X\n", index);
@@ -577,13 +581,14 @@ static void ARCH_DEP (fetch_ece) (REGS * regs, BYTE * ece, int index)
 /*----------------------------------------------------------------------------*/
 /* fetch_is                                                                   */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP (fetch_is) (int r2, REGS * regs, U16 * index_symbol)
+static int ARCH_DEP (fetch_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 * index_symbol)
 {
   U32 mask;
   BYTE work[3];
 
   /* Check if we can read an index symbol */
-  if (((GR1_cbn (regs) + GR0_symbol_size (regs)) / 8) > GR_A (r2 + 1, regs))
+  if (((GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8) > GR_A (r2 + 1, iregs)
+     || GR_A (r2 + 1, iregs) == 1)
     {
       regs->psw.cc = 0;
       return (1);
@@ -591,22 +596,22 @@ static int ARCH_DEP (fetch_is) (int r2, REGS * regs, U16 * index_symbol)
 
   /* Get the storage */
   memset (work, 0, 3);
-  ARCH_DEP (vfetchc) (&work, (GR0_symbol_size (regs) + GR1_cbn (regs) - 1) / 8, GR_A (r2, regs) & ADDRESS_MAXWRAP (regs), r2, regs);
+  ARCH_DEP (vfetchc) (&work, (GR0_symbol_size (iregs) + GR1_cbn (iregs) - 1) / 8, GR_A (r2, iregs) & ADDRESS_MAXWRAP (regs), r2, regs);
 
   /* Get the bits */
-  mask = work[0] << 16 | work[1] << 8 | work[3];
-  mask >>= (24 - GR0_symbol_size (regs) - GR1_cbn (regs));
+  mask = work[0] << 16 | work[1] << 8 | work[2];
+  mask >>= (24 - GR0_symbol_size (iregs) - GR1_cbn (iregs));
   mask &= 0xFFFF >> (16 - GR0_symbol_size (regs));
   *index_symbol = mask;
 
   /* Adjust source registers */
-  ADJUSTREGS (r2, regs, (GR1_cbn (regs) + GR0_symbol_size (regs)) / 8);
+  ADJUSTREGS (r2, iregs, (GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8);
 
   /* Calculate and set the new compressed-data bit number */
-  GR1_setcbn (regs, (GR1_cbn (regs) + GR0_symbol_size (regs)) % 8);
+  GR1_setcbn (iregs, (GR1_cbn (iregs) + GR0_symbol_size (iregs)) % 8);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-  logmsg ("fetch_is : %03X, cbn=%d, GR%02d=" ADRFMT ", GR%02d=" ADRFMT "\n", *index_symbol, GR1_cbn (regs), r2, regs->GR (r2), r2 + 1, regs->GR (r2 + 1));
+  logmsg ("fetch_is : %03X, cbn=%d, GR%02d=" ADRFMT ", GR%02d=" ADRFMT "\n", *index_symbol, GR1_cbn (iregs), r2, iregs->GR (r2), r2 + 1, iregs->GR (r2 + 1));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
   return (0);
@@ -615,19 +620,19 @@ static int ARCH_DEP (fetch_is) (int r2, REGS * regs, U16 * index_symbol)
 /*----------------------------------------------------------------------------*/
 /* fetch_sd                                                                   */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP (fetch_sd) (REGS * regs, BYTE * sd, int index)
+static void ARCH_DEP (fetch_sd) (REGS * regs, REGS * iregs, BYTE * sd, int index)
 {
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
   int i;
   int prt_detail;
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 
-  ARCH_DEP (vfetchc) (sd, 7, (GR1_dictor (regs) + index * 8) & ADDRESS_MAXWRAP (regs), 1, regs);
-  if (GR0_f1 (regs))
-    ARCH_DEP (vfetchc) (&sd[8], 7, (GR1_dictor (regs) + GR0_dictor_size(regs) + index * 8) & ADDRESS_MAXWRAP (regs), 1, regs);
+  ARCH_DEP (vfetchc) (sd, 7, (GR1_dictor (iregs) + index * 8) & ADDRESS_MAXWRAP (iregs), 1, regs);
+  if (GR0_f1 (iregs))
+    ARCH_DEP (vfetchc) (&sd[8], 7, (GR1_dictor (iregs) + GR0_dictor_size(iregs) + index * 8) & ADDRESS_MAXWRAP (regs), 1, regs);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-  if (GR0_f1 (regs))
+  if (GR0_f1 (iregs))
     {
       logmsg ("fetch_sd1: index %03X\n", index);
       logmsg ("sd1      : ");
@@ -677,32 +682,36 @@ static void ARCH_DEP (fetch_sd) (REGS * regs, BYTE * sd, int index)
 /*----------------------------------------------------------------------------*/
 /* store_ch                                                                   */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP (store_ch) (int r1, int r2, REGS * regs, BYTE * data, int length, int offset, ARCH_DEP (SRCPOS) * srcpos)
+static int ARCH_DEP (store_ch) (int r1, int r2, REGS * regs, REGS * iregs, BYTE * data, int length, int offset)
 {
 
   /* Check destination size */
-  if (GR_A (r1 + 1, regs) + offset < length)
+  if (GR_A (r1 + 1, iregs) + offset < length)
     {
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
       logmsg ("expand_store: Reached end of destination\n");
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
-      /* Restore source position */
-      GR1_setcbn (regs, srcpos->cbn);
-      regs->GR (r2) = srcpos->vr2;
-      regs->GR (r2 + 1) = srcpos->vr2plus1;
-
       /* Indicate end of destination */
       regs->psw.cc = 1;
       return (1);
     }
 
+#if 0
+{int i;
+logmsg ("cmpsc store  "ADRFMT"+%d(%d):",
+        iregs->GR(r1), offset, length);
+for (i=0; i< length; i++) logmsg("%c",ebcdic_to_ascii[data[i]]);
+logmsg("\n");
+}
+#endif
+
   /* Store the data */
-  ARCH_DEP (vstorec) (data, length - 1, (GR_A (r1, regs) + offset) & ADDRESS_MAXWRAP (regs), r1, regs);
+  ARCH_DEP (vstorec) (data, length - 1, (GR_A (r1, iregs) + offset) & ADDRESS_MAXWRAP (regs), r1, regs);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2
-  logmsg ("expand_store: at " ADRFMT "\n", (regs->GR (r1) + offset));
+  logmsg ("expand_store: at " ADRFMT "\n", (iregs->GR (r1) + offset));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 2 */
 
   return (0);
@@ -711,38 +720,38 @@ static int ARCH_DEP (store_ch) (int r1, int r2, REGS * regs, BYTE * data, int le
 /*----------------------------------------------------------------------------*/
 /* store_is                                                                   */
 /*----------------------------------------------------------------------------*/
-static void ARCH_DEP (store_is) (int r1, REGS * regs, U16 index_symbol)
+static void ARCH_DEP (store_is) (int r1, int r2, REGS * regs, REGS * iregs, U16 index_symbol)
 {
   U32 clear_mask;		/* mask to clear the bits                     */
   U32 set_mask;			/* mask to set the bits                       */
   BYTE work[3];			/* work bytes                                 */
 
   /* Check if symbol translation is requested */
-  if (GR0_st (regs))
+  if (GR0_st (iregs))
     {
 
       /* Get the interchange symbol at sttoff+indexsymbol after the compression dictionary */
-      ARCH_DEP (vfetchc) (work, 1, (GR1_dictor (regs) + GR0_dictor_size (regs) + GR1_sttoff (regs) + index_symbol * 2) & ADDRESS_MAXWRAP (regs), 1, regs);
+      ARCH_DEP (vfetchc) (work, 1, (GR1_dictor (iregs) + GR0_dictor_size (iregs) + GR1_sttoff (iregs) + index_symbol * 2) & ADDRESS_MAXWRAP (regs), 1, regs);
 
       /* Store the 2 bytes interchange symbol */
-      ARCH_DEP (vstorec) (work, 1, (GR_A (r1, regs)) & ADDRESS_MAXWRAP (regs), r1, regs);
+      ARCH_DEP (vstorec) (work, 1, (GR_A (r1, iregs)) & ADDRESS_MAXWRAP (regs), r1, regs);
 
       /* Adjust destination registers */
-      ADJUSTREGS (r1, regs, 2);
+      ADJUSTREGS (r1, iregs, 2);
       return;
     }
 
   /* Calculate clear mask */
-  clear_mask = ~(0xFFFF >> (16 - GR0_symbol_size (regs)) << (24 - GR0_symbol_size (regs)) >> GR1_cbn (regs));
+  clear_mask = ~(0xFFFF >> (16 - GR0_symbol_size (iregs)) << (24 - GR0_symbol_size (iregs)) >> GR1_cbn (iregs));
 
   /* Calculate set mask */
-  set_mask = index_symbol << (24 - GR0_symbol_size (regs)) >> GR1_cbn (regs);
+  set_mask = index_symbol << (24 - GR0_symbol_size (iregs)) >> GR1_cbn (iregs);
 
   /* Get the storage */
   if (set_mask & 0xFF)
-    ARCH_DEP (vfetchc) (work, 2, GR_A (r1, regs) & ADDRESS_MAXWRAP (regs), r1, regs);
+    ARCH_DEP (vfetchc) (work, 2, GR_A (r1, iregs) & ADDRESS_MAXWRAP (regs), r1, regs);
   else
-    ARCH_DEP (vfetchc) (work, 1, GR_A (r1, regs) & ADDRESS_MAXWRAP (regs), r1, regs);
+    ARCH_DEP (vfetchc) (work, 1, GR_A (r1, iregs) & ADDRESS_MAXWRAP (regs), r1, regs);
 
   /* Do the job */
   work[0] &= clear_mask >> 16;
@@ -757,25 +766,25 @@ static void ARCH_DEP (store_is) (int r1, REGS * regs, U16 index_symbol)
 
   /* Set the storage */
   if (set_mask & 0xFF)
-    ARCH_DEP (vstorec) (work, 2, GR_A (r1, regs) & ADDRESS_MAXWRAP (regs), r1, regs);
+    ARCH_DEP (vstorec) (work, 2, GR_A (r1, iregs) & ADDRESS_MAXWRAP (regs), r1, regs);
   else
-    ARCH_DEP (vstorec) (work, 1, GR_A (r1, regs) & ADDRESS_MAXWRAP (regs), r1, regs);
+    ARCH_DEP (vstorec) (work, 1, GR_A (r1, iregs) & ADDRESS_MAXWRAP (regs), r1, regs);
 
   /* Adjust destination registers */
-  ADJUSTREGS (r1, regs, (GR1_cbn (regs) + GR0_symbol_size (regs)) / 8);
+  ADJUSTREGS (r1, iregs, (GR1_cbn (iregs) + GR0_symbol_size (iregs)) / 8);
 
   /* Calculate and set the new Compressed-data Bit Number */
-  GR1_setcbn (regs, (GR1_cbn (regs) + GR0_symbol_size (regs)) % 8);
+  GR1_setcbn (iregs, (GR1_cbn (iregs) + GR0_symbol_size (iregs)) % 8);
 
 #if defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1
-  logmsg ("store_is : %03X, cbn=%d, GR%02d=" ADRFMT ", GR%02d=" ADRFMT "\n", index_symbol, GR1_cbn (regs), r1, regs->GR (r1), r1 + 1, regs->GR (r1 + 1));
+  logmsg ("store_is : %03X, cbn=%d, GR%02d=" ADRFMT ", GR%02d=" ADRFMT "\n", index_symbol, GR1_cbn (iregs), r1, iregs->GR (r1), r1 + 1, iregs->GR (r1 + 1));
 #endif /* defined(OPTION_CMPSC_DEBUGLVL) && OPTION_CMPSC_DEBUGLVL & 1 */
 }
 
 /*----------------------------------------------------------------------------*/
 /* test_ch261                                                                 */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP (test_ch261) (REGS * regs, int * processed, int length)
+static int ARCH_DEP (test_ch261) (REGS * regs, REGS * iregs, int * processed, int length)
 {
 
  /* Check for processing child 261 */
@@ -796,7 +805,7 @@ static int ARCH_DEP (test_ch261) (REGS * regs, int * processed, int length)
 /*----------------------------------------------------------------------------*/
 /* test_ec                                                                    */
 /*----------------------------------------------------------------------------*/
-static int ARCH_DEP (test_ec) (int r2, REGS * regs, BYTE * cce, int * ec_match)
+static int ARCH_DEP (test_ec) (int r2, REGS * regs, REGS * iregs, BYTE * cce, int * ec_match)
 {
   BYTE ch;
   int i;
@@ -804,7 +813,7 @@ static int ARCH_DEP (test_ec) (int r2, REGS * regs, BYTE * cce, int * ec_match)
   *ec_match = 1;
   for (i = 0; i < CCE_act (cce); i++)
     {
-      if (ARCH_DEP (fetch_ch) (r2, regs, &ch, i + 1))
+      if (ARCH_DEP (fetch_ch) (r2, regs, iregs, &ch, i + 1))
 	{		
 	
 	  /* Reached end of source, store last match */
@@ -829,6 +838,7 @@ DEF_INST (compression_call)
 {
   int r1;
   int r2;
+  REGS iregs; 
 
   RRE (inst, execflag, regs, r1, r2);
 
@@ -862,11 +872,15 @@ DEF_INST (compression_call)
       return;
     }
 
+  /* Initialize the intermediate registers */
+  memcpy (&iregs, regs, sizeof(REGS));
+
   /* Now go to the requested function */
   if (GR0_e (regs))
-    ARCH_DEP (expand) (r1, r2, regs);
+    ARCH_DEP (expand) (r1, r2, regs, &iregs);
   else
-    ARCH_DEP (compress) (r1, r2, regs);
+    ARCH_DEP (compress) (r1, r2, regs, &iregs);
+
 }
 
 #endif /* FEATURE_COMPRESSION */

@@ -2010,11 +2010,6 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             return NULL;
         }
 
-        logmsg ("Max device threads %d current %d most %d "
-                "waiting %d total I/Os queued %d\n",
-                sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
-                sysblk.devtwait, sysblk.devtunavail);
-
         /* Create a new device thread if the I/O queue is not NULL
            and more threads can be created */
 
@@ -2031,6 +2026,11 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             signal_condition(&sysblk.ioqcond);
             sleep (1);
         }
+
+        logmsg ("Max device threads %d current %d most %d "
+                "waiting %d total I/Os queued %d\n",
+                sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
+                sysblk.devtwait, sysblk.devtunavail);
 
         return NULL;
     }
