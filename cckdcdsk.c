@@ -28,7 +28,7 @@ int             cckd_chkdsk_rc = 0;     /* Program return code       */
 char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             level=1;                /* Chkdsk level checking     */
-int             ro=0;                   /* 1 = Open readonly         */
+int             ro=0;                   /* 1=Open readonly           */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
 #if defined(ENABLE_NLS)
@@ -45,9 +45,6 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     }
 #endif /*EXTERNALGUI*/
 
-    /* Display the program identification message */
-    display_version (stderr, "Hercules cckd chkdsk program ");
-
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
@@ -57,6 +54,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
         {
             case '0':
             case '1':
+            case '2':
             case '3':  if (argv[0][2] != '\0') return syntax ();
                        level = (argv[0][1] & 0xf);
                        break;
@@ -64,6 +62,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
                            ro = 1;
                        else return syntax ();
                        break;
+            case 'v':  display_version (stderr, "Hercules cckd chkdsk program ");
+                       return 0;
             default:   return syntax ();
         }
     }
@@ -120,13 +120,16 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 /*-------------------------------------------------------------------*/
 int syntax()
 {
-    fprintf (stderr, _("cckdcdsk [-level] [-ro] file-name\n"
+    fprintf (stderr, _("cckdcdsk [-v] [-level] [-ro] file-name\n"
                 "\n"
-                "       where level is a digit 0 - 3:\n"
-                "         0  --  minimal checking\n"
-                "         1  --  normal  checking\n"
-                "         3  --  maximal checking\n"
+                "          -v      display version and exit\n"
                 "\n"
-                "       ro open file readonly, no repairs\n"));
+                "        level is a digit 0 - 3:\n"
+                "          -0  --  minimal checking\n"
+                "          -1  --  normal  checking\n"
+                "          -3  --  maximal checking\n"
+                "\n"
+                "          -ro     open file readonly, no repairs\n"
+                "\n"));
     return -1;
 }

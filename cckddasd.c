@@ -74,7 +74,8 @@ int     cckd_harden (DEVBLK *);
 void    cckd_truncate (DEVBLK *, int);
 int     cckd_trklen (DEVBLK *, BYTE *);
 int     cckd_null_trk (DEVBLK *, BYTE *, int, int);
-int     cckd_cchh (DEVBLK *, BYTE *, int, int);
+int     cckd_cchh (DEVBLK *, BYTE *, int);
+int     cckd_validate (DEVBLK *, BYTE *, int, int);
 int     cckd_sf_name (DEVBLK *, int, char *);
 int     cckd_sf_init (DEVBLK *);
 int     cckd_sf_new (DEVBLK *);
@@ -331,7 +332,6 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             i;                      /* Index                     */
 
     cckd = dev->cckd_ext;
-    cckd->stopping = 1;
 
     /* Remove the device from the cckd queue */
     obtain_lock (&cckdblk.gclock);
@@ -351,15 +351,17 @@ int             i;                      /* Index                     */
     /* Flush the cache and wait for the writes to complete */
     obtain_lock (&cckdblk.cachelock);
     cckd_flush_cache (dev);
-    if (cckdblk.writepending)
+    while (cckdblk.writepending || cckd->ioactive)
     {
         cckdblk.writewaiting++;
         wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
         cckdblk.writewaiting--;
+        cckd_flush_cache (dev);
     }
 
     /* Purge the device entries from the cache */
-    cckd_purge_cache (dev);
+    cckd_purge_cache (dev); cckd_purge_l2 (dev);
+    cckd->stopping = 1;
     release_lock (&cckdblk.cachelock);
 
     /* harden the file */
@@ -404,14 +406,20 @@ void cckddasd_start (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
-    if (!cckd || cckd->stopping) return;
+    if (!cckd || cckd->stopping)
+    {
+        dev->dasdcur = -1;
+        return;
+    }
 
     obtain_lock (&cckdblk.cachelock);
+    cckd->ioactive = 1;
 
     /* If previous active cache entry has been stolen or is busy
-       then set it to null and return */
+       then set it to null and return.  This forces `cckd_read_trk'
+       to be called.                                                  */
     if (!cckd->active || dev != cckd->active->dev
-     || dev->dasdcur != cckd->active->trk
+     || dev->dasdcur != cckd->active->trk || cckd->merging
      || (cckd->active->flags & (CCKD_CACHE_READING | CCKD_CACHE_WRITING)))
     {
         dev->dasdcur = -1;
@@ -443,19 +451,26 @@ void cckddasd_end (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
-    if (!cckd || cckd->stopping) return;
-    if (cckd->active)
+    obtain_lock (&cckdblk.cachelock);
+    if (cckd)
     {
-        obtain_lock (&cckdblk.cachelock);
-        cckd->active->flags &= ~CCKD_CACHE_ACTIVE;
-        if (!(cckd->active->flags & CCKD_CACHE_BUSY) && cckdblk.cachewaiting)
-            signal_condition (&cckdblk.cachecond);
-        else if ((cckd->active->flags & CCKD_CACHE_BUSY) == CCKD_CACHE_UPDATED
-              && !cckdblk.writers)
-            cckd_flush_cache (dev);
-        release_lock (&cckdblk.cachelock);
+        if (cckd->active)
+        {
+            cckd->active->flags &= ~CCKD_CACHE_ACTIVE;
+            if (!(cckd->active->flags & CCKD_CACHE_BUSY) && cckdblk.cachewaiting)
+                signal_condition (&cckdblk.cachecond);
+            else if ((cckd->active->flags & CCKD_CACHE_BUSY) == CCKD_CACHE_UPDATED
+                  && !cckdblk.writers)
+                cckd_flush_cache (dev);
+        }
+        if (cckd->ioactive)
+        {
+            cckd->ioactive = 0;
+            if (cckdblk.writewaiting)
+                broadcast_condition (&cckdblk.writecond);
+        } 
     }
-
+    release_lock (&cckdblk.cachelock);
 } /* end function cckddasd_end */
 
 
@@ -470,14 +485,6 @@ CCKD_CACHE     *active;                 /* New active cache entry    */
 int             act;                    /* Syncio indicator          */
 
     cckd = dev->cckd_ext;
-
-    /* Error if device is stopping */
-    if (!cckd || cckd->stopping)
-    {
-        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
 
     /* Turn off the synchronous I/O bit if trk overflow or trk 0 */
     act = dev->syncio_active;
@@ -529,14 +536,6 @@ int cckd_update_track (DEVBLK *dev, BYTE *buf, int len, BYTE *unitstat)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     cckd = dev->cckd_ext;
-
-    /* Error if device is stopping */
-    if (!cckd || cckd->stopping)
-    {
-        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
 
     /* Immediately return if fake writing */
     if (dev->ckdfakewr)
@@ -619,19 +618,11 @@ int             copylen;                /* Length to copy            */
 int             len;                    /* Length left to copy       */
 
     cckd = dev->cckd_ext;
-
-    /* Error if device is stopping */
-    if (!cckd || cckd->stopping)
-    {
-        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
-
     len = rdlen;
 
     /* Command reject if seek position is outside volume */
-    if ((dev->fbarba + len - 1) / dev->fbablksiz >= dev->fbanumblk)
+    if ((dev->fbarba + len - 1) / dev->fbablksiz >= dev->fbanumblk
+     || cckd->stopping)
     {
         ckd_build_sense (dev, SENSE_CR, 0, 0, FORMAT_0, MESSAGE_4);
         if (unitstat) *unitstat = CSW_CE | CSW_DE | CSW_UC;
@@ -718,15 +709,6 @@ int             copylen;                /* Length to copy            */
 int             len;                    /* Length left to copy       */
 
     cckd = dev->cckd_ext;
-
-    /* Error if device is stopping */
-    if (!cckd || cckd->stopping)
-    {
-        ckd_build_sense (dev, SENSE_EC, SENSE1_PER, 0,FORMAT_1, MESSAGE_0);
-        *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        return -1;
-    }
-
     len = wrlen;
 
     /* Command reject if seek position is outside volume */
@@ -851,7 +833,7 @@ CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
 /*-------------------------------------------------------------------*/
 CCKD_CACHE *cckd_read_trk(DEVBLK *dev, int trk, int ra, BYTE *unitstat)
 {
-int             rc;                     /* Return code               */
+int             rc, urc=0, vrc=0;       /* Return code               */
 int             i;                      /* Index variable            */
 int             fnd;                    /* Cache index for hit       */
 int             lru;                    /* Least-Recently-Used cache
@@ -865,6 +847,26 @@ BYTE           *buf, buf2[65536];       /* Buffers                   */
     cckdtrc ("cckddasd: %d rdtrk     %d\n", ra, trk);
 
     obtain_lock (&cckdblk.cachelock);
+
+    /* Check for merge in progress */
+    if (cckd->merging)
+    {
+        /* Return if readahead */
+        if (ra > 0)
+        {   release_lock (&cckdblk.cachelock);
+            return NULL;
+        }
+        /* If asynchronous i/o then wait while merging.
+           Note that synchronous i/o will be redriven
+           below since the cache has been purged and a
+           cache miss will therefore occur */
+        while (dev->syncio_active == 0 && cckd->merging)
+        {
+            cckdblk.writewaiting++;
+            wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
+            cckdblk.writewaiting--;
+        }
+    }
 
 cckd_read_trk_retry:
 
@@ -1057,6 +1059,7 @@ cckd_read_trk_retry:
     case CCKD_COMPRESS_NONE:
         memcpy (buf, &buf2, len2);
         len = len2;
+        urc = 0;
         cckdtrc ("cckddasd: %d rdtrk[%d] %d not compressed\n",
                  ra, lru, trk);
         break;
@@ -1072,16 +1075,7 @@ cckd_read_trk_retry:
         len += CKDDASD_TRKHDR_SIZE;
         cckdtrc ("cckddasd: %d rdtrk[%d] %d uncompressed len %ld code %d\n",
                  ra, lru, trk, len, rc);
-        if (rc != Z_OK)
-        {   devmsg ("%4.4X cckddasd: rdtrk %d uncompress error: %d\n",
-                        dev->devnum, trk, rc);
-            len = cckd_null_trk (dev, buf, trk, 0);
-            if (unitstat)
-            {
-                ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            }
-        }
+        urc = (rc != Z_OK);
         break;
 #endif
 
@@ -1098,32 +1092,81 @@ cckd_read_trk_retry:
         len += CKDDASD_TRKHDR_SIZE;
         cckdtrc ("cckddasd: %d rdtrk[%d] %d decompressed len %ld code %d\n",
                  ra, lru, trk, len, rc);
-        if (rc != BZ_OK)
-        {   devmsg ("cckddasd: decompress error for trk %d: %d\n",
-                    trk, rc);
-            len = cckd_null_trk (dev, buf, trk, 0);
-            if (unitstat)
-            {
-                ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
-                *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            }
-        }
+        urc = (rc != BZ_OK);
         break;
 #endif
 
     default:
-        devmsg ("cckddasd: %4.4x unknown compression for trk %d: %d\n",
-                dev->devnum, trk, buf2[0]);
-        rc = -1;
+        urc = 1;
+        break;
+    } /* switch (compression type) */
+
+    if (urc == 0) vrc = cckd_validate (dev, buf, trk, len);
+    cckdtrc ("cckddasd: %d rdtrk[%d] %d urc=%d vrc=%d\n",
+             ra, lru, trk, urc, vrc);
+
+    /* If an uncompress or validation error occurred then the
+       compression algorithm may be wrong and the image recoverable */
+    for (i = 0; i <= CCKD_COMPRESS_MAX && (urc || vrc); i++)
+    {
+        if (i == (buf2[0] & CCKD_COMPRESS_MASK)) continue;
+        switch (i) {
+        case CCKD_COMPRESS_NONE:
+            memcpy (buf, &buf2, len2);
+            len = len2;
+            urc = 0;
+            break;
+
+#ifdef CCKD_COMPRESS_ZLIB
+        case CCKD_COMPRESS_ZLIB:
+            memcpy (buf, &buf2, CKDDASD_TRKHDR_SIZE);
+            len = dev->ckdtrksz - CKDDASD_TRKHDR_SIZE;
+            rc = uncompress(&buf[CKDDASD_TRKHDR_SIZE],
+                        &len, &buf2[CKDDASD_TRKHDR_SIZE],
+                        len2 - CKDDASD_TRKHDR_SIZE);
+            len += CKDDASD_TRKHDR_SIZE;
+            urc = (rc != Z_OK);
+            break;
+#endif
+
+#ifdef CCKD_COMPRESS_BZIP2
+        case CCKD_COMPRESS_BZIP2:
+            memcpy (buf, &buf2, CKDDASD_TRKHDR_SIZE);
+            len = dev->ckdtrksz - CKDDASD_TRKHDR_SIZE;
+            rc = BZ2_bzBuffToBuffDecompress (
+                        &buf[CKDDASD_TRKHDR_SIZE],
+                        (unsigned int *)&len,
+                        &buf2[CKDDASD_TRKHDR_SIZE],
+                        len2 - CKDDASD_TRKHDR_SIZE, 0, 0);
+            len += CKDDASD_TRKHDR_SIZE;
+            urc = (rc != BZ_OK);
+            break;
+#endif
+        } /* switch (compression type) */
+        if (urc == 0) vrc = cckd_validate (dev, buf, trk, len);
+        if (urc == 0 && vrc == 0)
+        {
+            devmsg ("%4.4X cckddasd: rdtrk %d recovered, comp %d !! "
+                    "%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                    dev->devnum, trk, i, buf[0], buf[1], buf[2], buf[3], buf[4]);
+//          cckd_print_itrace ();
+        }
+    }
+    buf[0] = 0;
+
+    /* Check for image error */
+    if (urc || vrc)
+    {
+        devmsg ("%4.4X cckddasd: rdtrk %d not valid !! %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                dev->devnum, trk, buf[0], buf[1], buf[2], buf[3], buf[4]);
+        cckd_print_itrace ();
         len = cckd_null_trk (dev, buf, trk, 0);
         if (unitstat)
         {
             ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
-        break;
-    } /* switch (compression type) */
-    buf[0] = 0;
+    }
 
     obtain_lock (&cckdblk.cachelock);
 
@@ -2423,9 +2466,7 @@ int             lru=-1;                 /* Least-Recently-Used cache
     /* Inactivate the previous entry */
     if (cckd->l2active)
         cckd->l2active->flags &= ~CCKD_CACHE_ACTIVE;
-    cckd->l2active = NULL;
-    cckd->l2 = NULL;
-
+    cckd->l2active = (void *)cckd->l2 = NULL;
     cckd->sfx = cckd->l1x = -1;
 
 cckd_read_l2_retry:
@@ -2554,21 +2595,18 @@ void cckd_purge_l2 (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             i;                      /* Index variable            */
 
-    /* Return if the level 2 cache doesn't exist */
-    if (!cckdblk.l2cache) return;
+    /* scan the cache array for l2tabs matching this index */
+    obtain_lock (&cckdblk.l2cachelock);
 
     /* Invalidate the active entry */
     if (dev != NULL)
     {
         cckd = dev->cckd_ext;
         cckd->sfx = cckd->l1x = -1;
-        cckd->l2 = NULL;
-        cckd->l2active = NULL;
+        cckd->l2 = (void *)cckd->l2active = NULL;
     }
 
-    /* scan the cache array for l2tabs matching this index */
-    obtain_lock (&cckdblk.l2cachelock);
-    for (i = 0; i < cckdblk.l2cachenbr; i++)
+    for (i = 0; i < cckdblk.l2cachenbr && cckdblk.l2cache; i++)
     {
         if (dev == NULL || dev == cckdblk.l2cache[i].dev)
         {
@@ -2777,7 +2815,7 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
               trk, sfx, l2.pos, rc,
               buf[0], buf[1], buf[2], buf[3], buf[4]);
 
-    if (cckd_cchh (dev, buf, trk, rc) < 0) goto cckd_read_trkimg_error;
+    if (cckd_cchh (dev, buf, trk) < 0) goto cckd_read_trkimg_error;
 
     return rc;
 
@@ -2816,7 +2854,7 @@ int             after = 0;              /* 1=New track after old     */
              sfx, trk, len);
 
     /* Validate the new track image */
-    rc = cckd_cchh (dev, buf, trk, 0);
+    rc = cckd_cchh (dev, buf, trk);
     if (rc < 0)
     {
         devmsg ("%4.4X:cckddasd: file[%d] trk %d not written, invalid format\n",
@@ -2842,9 +2880,6 @@ int             after = 0;              /* 1=New track after old     */
         if (oldl2.pos != 0 && oldl2.pos != 0xffffffff && oldl2.pos < l2.pos)
             after = 1;
     }
-
-    /* Set the `length' in the first byte of the buf */
-    CCKD_SET_BUFLEN (buf[0], len);
 
     /* write the track image */
     if (l2.pos)
@@ -2894,35 +2929,32 @@ int             after = 0;              /* 1=New track after old     */
 int cckd_harden(DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int             rc;                     /* Return code               */
+int             rc, hrc=0;              /* Return codes              */
 
     cckd = dev->cckd_ext;
     if (dev->ckdrdonly) return 0;
 
-    /* Purge the level 2 entries */
-    cckd_purge_l2 (dev);
-
     /* Write the compressed device header */
     rc = cckd_write_chdr (dev);
-    if (rc < 0) return -1;
+    if (rc < hrc) hrc = rc;
 
     /* Write the level 1 table */
     rc = cckd_write_l1 (dev);
-    if (rc < 0) return -1;
+    if (rc < hrc) hrc = rc;
 
     /* Write the free space chain */
     rc = cckd_write_fsp (dev);
-    if (rc < 0) return -1;
+    if (rc < hrc) hrc = rc;
 
     /* Re-write the compressed device header */
     cckd->cdevhdr[cckd->sfn].options &= ~CCKD_OPENED;
     rc = cckd_write_chdr (dev);
-    if (rc < 0) return -1;
+    if (rc < hrc) hrc = rc;
 
     if (cckdblk.fsync)
         rc = fdatasync (cckd->fd[cckd->sfn]);
 
-    return 0;
+    return hrc;
 } /* cckd_harden */
 
 
@@ -3088,7 +3120,7 @@ int             size;                   /* Size of null record       */
 /*-------------------------------------------------------------------*/
 /* Verify a track/block header and return track/block number         */
 /*-------------------------------------------------------------------*/
-int cckd_cchh (DEVBLK *dev, BYTE *buf, int trk, int len)
+int cckd_cchh (DEVBLK *dev, BYTE *buf, int trk)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 U16             cyl;                    /* Cylinder                  */
@@ -3104,23 +3136,19 @@ int             t;                      /* Calculated track          */
         head = (buf[3] << 8) + buf[4];
         t = cyl * dev->ckdheads + head;
 
-        if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX
+        if (buf[0] <= CCKD_COMPRESS_MAX
          && cyl < dev->ckdcyls
          && head < dev->ckdheads
-         && (trk == -1 || t == trk)
-         && (len == 0 || CCKD_GET_BUFLEN(buf[0]) == 0 
-          || CCKD_GET_BUFLEN(buf[0]) == (len & CCKD_LEN_MASK)))
+         && (trk == -1 || t == trk))
             return t;
     }
     /* FBA dasd header verification */
     else
     {
         t = (buf[1] << 24) + (buf[2] << 16) + (buf[3] << 8) + buf[4];
-        if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX
+        if (buf[0] <= CCKD_COMPRESS_MAX
          && t < dev->fbanumblk
-         && (trk == -1 || t == trk)
-         && (len == 0 || CCKD_GET_BUFLEN(buf[0]) == 0 
-          || CCKD_GET_BUFLEN(buf[0]) == (len & CCKD_LEN_MASK)))
+         && (trk == -1 || t == trk))
             return t;
     }
 
@@ -3134,6 +3162,87 @@ int             t;                      /* Calculated track          */
 
     return -1;
 } /* end function cckd_cchh */
+
+/*-------------------------------------------------------------------*/
+/* Validate a track image                                            */
+/*-------------------------------------------------------------------*/
+int cckd_validate (DEVBLK *dev, BYTE *buf, int trk, int len)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             cyl;                    /* Cylinder                  */
+int             head;                   /* Head                      */
+char            cchh[4],cchh2[4];       /* Cyl, head big-endian      */
+int             r;                      /* Record number             */
+int             sz;                     /* Track size                */
+int             kl,dl;                  /* Key/Data lengths          */
+
+    cckd = dev->cckd_ext;
+
+    cckdtrc ("cckddasd: validating %s %d len %d %2.2x%2.2x%2.2x%2.2x%2.2x "
+             "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+             cckd->ckddasd ? "trk" : "blkgrp", trk, len,
+             buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6],
+             buf[7], buf[8], buf[9], buf[10], buf[11], buf[12]);
+
+    /* FBA dasd check */
+    if (cckd->fbadasd)
+    {
+        if (len == CFBA_BLOCK_SIZE + CKDDASD_TRKHDR_SIZE) return 0;
+        cckdtrc ("cckddasd: validation failed: bad length%s\n","");
+        return -1;
+    }
+
+    /* cylinder and head calculations */
+    cyl = trk / dev->ckdheads;
+    head = trk % dev->ckdheads;
+    cchh[0] = cyl >> 8;
+    cchh[1] = cyl & 0xFF;
+    cchh[2] = head >> 8;
+    cchh[3] = head & 0xFF;
+
+    /* validate record 0 */
+    memcpy (cchh2, &buf[5], 4); cchh2[0] &= 0x7f; /* fix for ovflow */
+    if (memcmp (cchh, cchh2, 4) != 0 || buf[9]  != 0 ||
+        buf[10] != 0 || buf[11] != 0 || buf[12] != 8)
+    {
+        cckdtrc ("cckddasd: validation failed: bad r0%s\n","");
+        return -1;
+    }
+
+    /* validate records 1 thru n */
+    for (r = 1, sz = 21; sz + 8 <= len; sz += 8 + kl + dl, r++)
+    {
+        if (memcmp (&buf[sz], eighthexFF, 8) == 0) break;
+        kl = buf[sz+5];
+        dl = buf[sz+6] * 256 + buf[sz+7];
+        /* fix for track overflow bit */
+        memcpy (cchh2, &buf[sz], 4); cchh2[0] &= 0x7f;
+
+        /* fix for funny formatted vm disks */
+        if (r == 1) memcpy (cchh, cchh2, 4);
+
+        if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] == 0 ||
+            sz + 8 + kl + dl >= len)
+        {
+            cckdtrc ("cckddasd: validation failed: bad r%d "
+                 "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                 r, buf[sz], buf[sz+1], buf[sz+2], buf[sz+3],
+                 buf[sz+4], buf[sz+5], buf[sz+6], buf[sz+7]);
+             return -1;
+        }
+    }
+    sz += 8;
+
+    if (sz != len)
+    {
+        cckdtrc ("cckddasd: validation failed: no eot%s\n","");
+        return -1;
+    }
+
+    return 0;
+
+} /* end function cckd_validate */
+
 
 
 /*-------------------------------------------------------------------*/
@@ -3296,7 +3405,6 @@ char            sfn[256];               /* Shadow file name          */
 
 } /* end function cckd_sf_init */
 
-
 /*-------------------------------------------------------------------*/
 /* Create a new shadow file                                          */
 /*-------------------------------------------------------------------*/
@@ -3353,6 +3461,7 @@ int             l1size;                 /* Size of level 1 table     */
     {
         devmsg ("%4.4X:cckddasd: shadow file[%d] write error offset %d: %s\n",
                 dev->devnum, sfx, 0, strerror(errno));
+        close (sfd);
         return -1;
     }
 
@@ -3414,12 +3523,16 @@ BYTE            sfn[256];               /* Shadow file name          */
     /* schedule updated track entries to be written */
     obtain_lock (&cckdblk.cachelock);
     cckd_flush_cache (dev);
-    if (cckdblk.writepending)
+    while (cckdblk.writepending || cckd->ioactive)
     {
         cckdblk.writewaiting++;
         wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
         cckdblk.writewaiting--;
+        cckd_flush_cache (dev);
     }
+    cckd_purge_cache (dev); cckd_purge_l2 (dev);
+    dev->dasdcur = -1; cckd->active = NULL;
+    cckd->merging = 1;
     release_lock (&cckdblk.cachelock);
 
     /* obtain control of the file */
@@ -3435,6 +3548,11 @@ BYTE            sfn[256];               /* Shadow file name          */
         devmsg ("%4.4X:cckddasd: file[%d] error adding shadow file: %s\n",
                 dev->devnum, cckd->sfn  + 1, strerror(errno));
         release_lock (&cckd->filelock);
+        obtain_lock (&cckdblk.cachelock);
+        cckd->merging = 0;
+        if (cckdblk.writewaiting)
+            broadcast_condition (&cckdblk.writecond);
+        release_lock (&cckdblk.cachelock);
         return;
     }
 
@@ -3452,6 +3570,12 @@ BYTE            sfn[256];               /* Shadow file name          */
     devmsg ("%4.4X:cckddasd: file[%d] %s added\n",dev->devnum, cckd->sfn, sfn);
     release_lock (&cckd->filelock);
 
+    obtain_lock (&cckdblk.cachelock);
+    cckd->merging = 0;
+    if (cckdblk.writewaiting)
+        broadcast_condition (&cckdblk.writecond);
+    release_lock (&cckdblk.cachelock);
+
     cckd_sf_stats (dev);
 
 } /* end function cckd_sf_add */
@@ -3465,10 +3589,14 @@ void cckd_sf_remove (DEVBLK *dev, int merge)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
 off_t           rcoff;                  /* lseek() return value      */
-int             i,j,sfx;                /* Indices                   */
+int             add = 0;                /* 1=Add shadow file back    */
+int             err = 0;                /* 1=I/O error occurred      */
+int             l2updated;              /* 1=L2 table was updated    */
+int             i,j;                    /* Loop indexes              */
+off_t           pos;                    /* File offset               */
+int             sfx[2];                 /* Shadow file indexes       */
 BYTE            sfn[256];               /* Shadow file name          */
-CCKD_L2TAB      l2;                     /* Level 2 table             */
-int             add = 0;                /* Add the shadow file back  */
+CCKD_L2ENT      l2[2][256];             /* Level 2 tables            */
 BYTE            buf[65536];             /* Buffer                    */
 
     cckd = dev->cckd_ext;
@@ -3484,184 +3612,311 @@ BYTE            buf[65536];             /* Buffer                    */
         return;
     }
 
-
-    /* schedule updated track entries to be written */
+    /* Schedule updated track entries to be written */
     obtain_lock (&cckdblk.cachelock);
     cckd_flush_cache (dev);
-    if (cckdblk.writepending)
+    while (cckdblk.writepending || cckd->ioactive)
     {
         cckdblk.writewaiting++;
         wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
         cckdblk.writewaiting--;
+        cckd_flush_cache (dev);
     }
+    cckd_purge_cache (dev); cckd_purge_l2 (dev);
+    dev->dasdcur = -1; cckd->active = NULL;
+    cckd->merging = 1;
     release_lock (&cckdblk.cachelock);
 
     obtain_lock (&cckd->filelock);
-    sfx = cckd->sfn;
+    sfx[0] = cckd->sfn;
+    sfx[1] = cckd->sfn - 1;
 
-    /* attempt to re-open the previous file read-write */
-    close (cckd->fd[sfx-1]);
-    cckd_sf_name (dev, sfx-1, (char *)&sfn);
-    cckd->fd[sfx-1] = open (sfn, O_RDWR|O_BINARY);
-    if (cckd->fd[sfx-1] < 0)
+    /* Attempt to re-open the `to' file read-write */
+    close (cckd->fd[sfx[1]]);
+    cckd_sf_name (dev, sfx[1], (char *)&sfn);
+    cckd->fd[sfx[1]] = open (sfn, O_RDWR|O_BINARY);
+    if (cckd->fd[sfx[1]] < 0)
     {
-        cckd->fd[sfx-1] = open (sfn, O_RDONLY|O_BINARY);
+        cckd->fd[sfx[1]] = open (sfn, O_RDONLY|O_BINARY);
         if (merge)
         {
             devmsg ("%4.4X:cckddasd: file[%d] not merged, "
                     "file[%d] cannot be opened read-write\n",
-                    dev->devnum, sfx, sfx-1);
-            release_lock (&cckd->filelock);
-            return;
+                    dev->devnum, sfx[0], sfx[1]);
+            goto sf_remove_exit;
         }
         else add = 1;
     }
-    else cckd->open[sfx-1] = CCKD_OPEN_RW;
+    else
+    {
+        rc = cckd_chkdsk (cckd->fd[sfx[1]], dev->msgpipew, 0);
+        if (rc < 0)
+        {
+            devmsg ("%4.4X:cckddasd: file[%d] not merged, "
+                    "file[%d] check failed\n",
+                    dev->devnum, sfx[0], sfx[1]);
+            goto sf_remove_exit;
+        }
+        cckd->open[sfx[1]] = CCKD_OPEN_RW;
+    }
 
     /* Harden the current file */
-    rc = cckd_harden (dev);
-    if (rc < 0)
+    if (merge)
     {
-        devmsg ("%4.4X:cckddasd: file[%d] not merged, "
-                "file[%d] not hardened\n",
-                dev->devnum, sfx, sfx);
-        release_lock (&cckd->filelock);
-        return;
+        rc = cckd_harden (dev);
+        if (rc < 0)
+        {
+            devmsg ("%4.4X:cckddasd: file[%d] not merged, "
+                    "file[%d] not hardened\n",
+                    dev->devnum, sfx[0], sfx[0]);
+            goto sf_remove_exit;
+        }
     }
 
     /* make the previous file active */
     cckd->sfn--;
 
-    /* Perform chkdsk on the previous file */
-    rc = cckd_chkdsk (cckd->fd[sfx-1], dev->msgpipew, 0);
-    if (rc < 0)
-    {
-        devmsg ("%4.4X:cckddasd: file[%d] not removed, "
-                "file[%d] failed chkdsk\n",dev->devnum, sfx, sfx-1);
-        cckd->sfn++;
-        release_lock (&cckd->filelock);
-        return;         
-    }
-
-    /* Perform initial read */
-    rc = cckd_read_init (dev);
-    if (rc < 0)
-    {
-        devmsg ("%4.4X:cckddasd: file[%d] not removed, "
-                "file[%d] initial read failed\n",
-                dev->devnum, sfx, sfx-1);
-        cckd->sfn++;
-        release_lock (&cckd->filelock);
-        return;         
-    }
-
     /* perform backwards merge */
     if (merge)
     {
-        cckdtrc ("cckddasd: merging to file[%d] %s\n",
-                  sfx-1, sfn);
-        cckd->cdevhdr[cckd->sfn].options |= (CCKD_OPENED | CCKD_ORDWR);
-        for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
+        cckdtrc ("cckddasd: merging to file[%d] %s\n", sfx[1], sfn);
+        cckd->cdevhdr[sfx[1]].options |= (CCKD_OPENED | CCKD_ORDWR);
+
+        /* Loop for each level 1 table entry */
+        for (i = 0; i < cckd->cdevhdr[sfx[0]].numl1tab; i++)
         {
-            /* get the level 2 tables */
-            rc = cckd_read_l2 (dev, sfx, i);
-            memcpy (&l2, cckd->l2, CCKD_L2TAB_SIZE);
-            rc = cckd_read_l2 (dev, sfx-1, i);
+            cckdtrc ("cckddasd: merging l1[%d]: from %llx, to %llx\n",
+                     i, (long long)cckd->l1[sfx[0]][i],
+                     (long long)cckd->l1[sfx[1]][i]);
 
-            /* loop for each level 2 table entry */
-            for (j = 0; j < 256; j++)
+            if (cckd->l1[sfx[0]][i] == 0xffffffff
+             || (cckd->l1[sfx[0]][i] == 0 && cckd->l1[sfx[1]] == 0))
+                continue;
+
+            /* Read `from' l2 table */
+            if (cckd->l1[sfx[0]][i] == 0)
+                memset (&l2[0], 0, CCKD_L2TAB_SIZE);
+            else if (cckd->l1[sfx[0]][i] == 0xffffffff)
+                memset (&l2[0], 0xff, CCKD_L2TAB_SIZE);
+            else
             {
-                /* continue if `pass-thru' */
-                if (l2[j].pos == 0xffffffff) continue;
-
-                /* continue if both l2 entries are zero */
-                if (!l2[j].pos && !cckd->l2[j].pos) continue;
-
-                /* current entry is 0 and previous is `pass-thru' */
-                if (!l2[j].pos && cckd->l2[j].pos == 0xffffffff)
-                {
-                    cckd->l2[j].pos = cckd->l2[j].len = cckd->l2[j].size = 0;
-                    rc = cckd_write_l2ent (dev, NULL, i * 256 + j);
-                    continue;
-                }
-
-                /* remove track image for a zero l2 entry */
-                if (!l2[j].pos)
-                {
-
-cckd_sf_remove_trkerr:
-
-                    cckdtrc ("cckddasd: erasing trk %d\n", i * 256 + j);
-                    cckd_rel_space (dev, (off_t) cckd->l2[j].pos, cckd->l2[j].len);
-                    cckd->l2[j].pos = 0;
-                    cckd->l2[j].len = cckd->l2[j].size = l2[j].len;
-                    rc = cckd_write_l2ent (dev, NULL, i * 256 + j);
-                    continue;
-                }
-
-                /* read the track image and write it to the new file */
-                rcoff = lseek (cckd->fd[sfx], (off_t)l2[j].pos, SEEK_SET);
+                rcoff = lseek (cckd->fd[sfx[0]], (off_t)cckd->l1[sfx[0]][i], SEEK_SET);
                 if (rcoff < 0)
                 {
-                    devmsg ("%4.4X:cckddasd: file[%d] error reading trk %d: %s\n",
-                            dev->devnum, sfx, i * 256 + j, strerror(errno));
-                    goto cckd_sf_remove_trkerr;
+                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] lseek error offset %lld: %s\n",
+                            dev->devnum, sfx[0], i, (long long)cckd->l1[sfx[0]][i],
+                            strerror(errno));
+                    err = 1;
+                    continue;
                 }
-                rc = read (cckd->fd[sfx], &buf, l2[j].len);
-                if (rc < l2[j].len)
+                rc = read (cckd->fd[sfx[0]], &l2[0], CCKD_L2TAB_SIZE);
+                if (rc < CCKD_L2TAB_SIZE)
                 {
-                    devmsg ("%4.4X:cckddasd: file[%d] error reading trk %d: %s\n",
-                            dev->devnum, sfx, i * 256 + j, strerror(errno));
-                    goto cckd_sf_remove_trkerr;
+                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] read error offset %lld: %s\n",
+                            dev->devnum, sfx[0], i, (long long)cckd->l1[sfx[0]][i],
+                            strerror(errno));
+                    err = 1;
+                    continue;
                 }
-                cckdtrc ("cckddasd: trk %d read sfx %d pos 0x%x len %d "
-                          "%2.2x%2.2x%2.2x%2.2x%2.2x\n",
-                          i * 256 + j, sfx, l2[j].pos, l2[j].len,
-                          buf[0], buf[1], buf[2], buf[3], buf[4]);
-                rc = cckd_write_trkimg (dev, buf, l2[j].len, i * 256 + j);
-                if (rc < 0)
-                {
-                    devmsg ("%4.4X:cckddasd: file[%d] error writing trk %d: %s\n",
-                            dev->devnum, sfx-1, i * 256 + j, strerror(errno));
-                    goto cckd_sf_remove_trkerr;
-                }
-            } /* for each level 2 entry */
-
-            /* check for empty l2 */
-            if (!memcmp (cckd->l2, &cckd_empty_l2tab, CCKD_L2TAB_SIZE))
-            {
-                cckd->l1[sfx-1][i] = 0;
-                rc = cckd_write_l1ent (dev, i);
             }
 
-        } /* for each level 1 entry */
+            /* Read `to' l2 table */
+            if (cckd->l1[sfx[1]][i] == 0)
+                memset (&l2[1], 0, CCKD_L2TAB_SIZE);
+            else if (cckd->l1[sfx[1]][i] == 0xffffffff)
+                memset (&l2[1], 0xff, CCKD_L2TAB_SIZE);
+            else
+            {
+                rcoff = lseek (cckd->fd[sfx[1]], (off_t)cckd->l1[sfx[1]][i], SEEK_SET);
+                if (rcoff < 0)
+                {
+                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] lseek error offset %lld: %s\n",
+                            dev->devnum, sfx[1], i, (long long)cckd->l1[sfx[1]][i],
+                            strerror(errno));
+                    err = 1;
+                    continue;
+                }
+                rc = read (cckd->fd[sfx[1]], &l2[1], CCKD_L2TAB_SIZE);
+                if (rc < CCKD_L2TAB_SIZE)
+                {
+                    devmsg ("%4.4X:cckddasd: file[%d] l2[%d] read error offset %lld: %s\n",
+                            dev->devnum, sfx[1], i, (long long)cckd->l1[sfx[1]][i],
+                            strerror(errno));
+                    err = 1;
+                    continue;
+                }
+            }
 
-#if 0
+            /* Loop for each level 2 table entry */
+            l2updated = 0;
+            for (j = 0; j < 256; j++)
+            {
+                cckdtrc ("cckddasd: merging l2[%d]: from %llx:%d, to %llx:%d\n",
+                         j, (long long)l2[0][j].pos, (int)l2[0][j].len,
+                         (long long)l2[1][j].pos, (int)l2[1][j].len);
+
+                if (l2[0][j].pos == 0xffffffff
+                 || (l2[0][j].pos == 0 && l2[1][j].pos == 0))
+                    continue;
+
+                /* Read the `from' track/blkgrp image*/
+                if (l2[0][j].len > 1)
+                {
+                    rcoff = lseek (cckd->fd[sfx[0]], (off_t)l2[0][j].pos, SEEK_SET);
+                    if (rcoff < 0)
+                    {
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] lseek error "
+                                " offset %lld: %s\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256 + j, (long long)l2[0][j].pos,
+                                strerror(errno));
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256 + j);
+                        err = 1;
+                        continue;
+                    }
+                    rc = read (cckd->fd[sfx[0]], &buf, (size_t)l2[0][j].len);
+                    if (rc != (int)l2[0][j].len)
+                    {
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] read error "
+                                " offset %lld: %s\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256 + j, (long long)l2[0][j].pos,
+                                strerror(errno));
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256 + j);
+                        err = 1;
+                        continue;
+                    }
+                }
+
+                /* Get space for new `to' entry */
+                pos = cckd_get_space (dev, (int)l2[0][j].len);
+
+                /* Write the `to' track/blkgrp image */
+                if (l2[0][j].len > 1)
+                {
+                    cckdtrc ("cckddasd: merging trk[%d] to %llx\n",
+                         i * 256 + j, (long long)pos);
+
+                    rcoff = lseek (cckd->fd[sfx[1]], pos, SEEK_SET);
+                    if (rcoff < 0)
+                    {
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] lseek error "
+                                " offset %lld: %s\n",
+                                dev->devnum, sfx[1], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256 + j, (long long)pos, strerror(errno));
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256 + j);
+                        err = 1;
+                        continue;
+                    }
+                    rc = write (cckd->fd[sfx[1]], &buf, (size_t)l2[0][j].len);
+                    if (rc != (int)l2[0][j].len)
+                    {
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] write error "
+                                " offset %lld: %s\n",
+                                dev->devnum, sfx[1], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256, (long long)pos, strerror(errno));
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d] not merged\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trk" : "blkgrp",
+                                i * 256 + j);
+                        err = 1;
+                        continue;
+                    }
+                }
+
+                /* Release space occupied by old `to' entry */
+                cckd_rel_space (dev, (off_t)l2[1][j].pos, (int)l2[1][j].len);
+
+                /* Update `to' l2 table entry */
+                l2updated = 1;
+                l2[1][j].pos = (U32)pos;
+                l2[1][j].len = l2[1][j].size = l2[0][j].len;
+            } /* for each level 2 table entry */
+
+            /* Update the `to' level 2 table */
+            if (l2updated)
+            {
+                if (memcmp (&l2[1], &cckd_empty_l2tab, CCKD_L2TAB_SIZE) == 0)
+                {
+                    cckd_rel_space (dev, (off_t)cckd->l1[sfx[1]][i], CCKD_L2TAB_SIZE);
+                    cckd->l1[sfx[1]][i] = 0;
+                }
+                else
+                {
+                    pos = (off_t)cckd->l1[sfx[1]][i];
+                    if (pos == 0 || pos == 0xffffffff)
+                        pos = cckd_get_space (dev, CCKD_L2TAB_SIZE);
+
+                    cckdtrc ("cckddasd: merging l2[%d] to %llx\n",
+                             i, (long long)pos);
+
+                    rcoff = lseek (cckd->fd[sfx[1]], pos, SEEK_SET);
+                    if (rcoff < 0)
+                    {
+                        devmsg ("%4.4X:cckddasd: file[%d] l1[%d] lseek error "
+                                " offset %lld: %s\n",
+                                dev->devnum, sfx[1], i, (long long)pos,
+                                strerror(errno));
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d-%d] not merged\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trks" : "blkgrps",
+                                i * 256, i * 256 +255);
+                        err = 1;
+                        continue;
+                    }
+                    rc = write (cckd->fd[sfx[1]], &l2[1], CCKD_L2TAB_SIZE);
+                    if (rc != CCKD_L2TAB_SIZE)
+                    {
+                        devmsg ("%4.4X:cckddasd: file[%d] l1[%d] write error "
+                                " offset %lld: %s\n",
+                                dev->devnum, sfx[1], i, (long long)pos,
+                                strerror(errno));
+                        devmsg ("%4.4X:cckddasd: file[%d] %s[%d-%d] not merged\n",
+                                dev->devnum, sfx[0], cckd->ckddasd ? "trks" : "blkgrps",
+                                i * 256, i * 256 + 255);
+                        err = 1;
+                        continue;
+                    }
+                    cckd->l1[sfx[1]][i] = (U32)pos;
+                } /* `to' level 2 table not null */
+            } /* Update level 2 table */
+        } /* for each level 1 table entry */
+
         /* Validate the merge */
         cckd_harden (dev);
-        cckd_chkdsk (cckd->fd[sfx-1], dev->msgpipew, 1);
+        if (err)
+            cckd_chkdsk (cckd->fd[sfx[1]], dev->msgpipew, 2);
         cckd_read_init (dev);
-#endif
-    } /* merge */
-    else
-        cckd_purge_cache (dev);
 
-    /* remove the old file */
-    cckd_purge_l2 (dev);
-    close (cckd->fd[sfx]);
-    free (cckd->l1[sfx]);
-    cckd->l1[sfx] = NULL;
-    memset (&cckd->cdevhdr[sfx], 0, CCKDDASD_DEVHDR_SIZE); 
-    cckd_sf_name (dev, sfx, (char *)&sfn);
+    } /* if merge */
+
+    /* Remove the old file */
+    close (cckd->fd[sfx[0]]);
+    free (cckd->l1[sfx[0]]);
+    cckd->l1[sfx[0]] = NULL;
+    memset (&cckd->cdevhdr[sfx[0]], 0, CCKDDASD_DEVHDR_SIZE); 
+    cckd_sf_name (dev, sfx[0], (char *)&sfn);
     rc = unlink ((char *)&sfn);
 
     /* Add the file back if necessary */
     if (add) rc = cckd_sf_new (dev) ;
 
-    devmsg ("cckddasd: shadow file [%d] successfully %s\n",
-            sfx, merge ? "merged" : add ? "re-added" : "removed");
+    devmsg ("cckddasd: shadow file [%d] successfully %s%s\n",
+            sfx[0], merge ? "merged" : add ? "re-added" : "removed",
+            err ? " with errors" : "");
 
+sf_remove_exit:
     release_lock (&cckd->filelock);
+
+    obtain_lock (&cckdblk.cachelock);
+    cckd->merging = 0;
+    if (cckdblk.writewaiting)
+        broadcast_condition (&cckdblk.writecond);
+    release_lock (&cckdblk.cachelock);
 
     cckd_sf_stats (dev);
 } /* end function cckd_sf_remove */
@@ -3724,12 +3979,16 @@ int             rc;                     /* Return code               */
     /* schedule updated track entries to be written */
     obtain_lock (&cckdblk.cachelock);
     cckd_flush_cache (dev);
-    if (cckdblk.writepending)
+    while (cckdblk.writepending || cckd->ioactive)
     {
         cckdblk.writewaiting++;
         wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
         cckdblk.writewaiting--;
+        cckd_flush_cache (dev);
     }
+    cckd_purge_cache (dev); cckd_purge_l2 (dev);
+    dev->dasdcur = -1; cckd->active = NULL;
+    cckd->merging = 1;
     release_lock (&cckdblk.cachelock);
 
     /* obtain control of the file */
@@ -3738,17 +3997,19 @@ int             rc;                     /* Return code               */
     /* harden the current file */
     cckd_harden (dev);
 
-    /* call the chkdsk function */
-    rc = cckd_chkdsk (cckd->fd[cckd->sfn], dev->msgpipew, 0);
-
     /* Call the compress function */
-    if (rc >= 0)
-        rc = cckd_comp (cckd->fd[cckd->sfn], dev->msgpipew);
+    rc = cckd_comp (cckd->fd[cckd->sfn], dev->msgpipew);
 
     /* Perform initial read */
     rc = cckd_read_init (dev);
 
     release_lock (&cckd->filelock);
+
+    obtain_lock (&cckdblk.cachelock);
+    cckd->merging = 0;
+    if (cckdblk.writewaiting)
+        broadcast_condition (&cckdblk.writecond);
+    release_lock (&cckdblk.cachelock);
 
     /* Display the shadow file statistics */
     cckd_sf_stats (dev);
@@ -3876,7 +4137,8 @@ int             gctab[5]= {             /* default gcol parameters   */
         for (dev = cckdblk.dev1st; dev; dev = cckd->devnext)
         {
             cckd = dev->cckd_ext;
-            if (!cckd || cckd->stopping) continue;
+            if (!cckd || cckd->stopping || cckd->merging)
+                continue;
 
             if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
             {
@@ -3919,11 +4181,12 @@ int             gctab[5]= {             /* default gcol parameters   */
             cckd_flush_cache (dev);
 
             /* Wait for pending writes to complete */
-            if (cckdblk.writepending)
+            while (cckdblk.writepending || cckd->ioactive)
             {
                 cckdblk.writewaiting++;
                 wait_condition (&cckdblk.writecond, &cckdblk.cachelock);
                 cckdblk.writewaiting--;
+                cckd_flush_cache (dev);
             }
             release_lock (&cckdblk.cachelock);
 
@@ -4138,7 +4401,7 @@ int             asw;                    /* New spc after current spc */
                 else
                 {
                     /* Moving a track image */
-                    trk = cckd_cchh (dev, &buf[b], -1, 0);
+                    trk = cckd_cchh (dev, &buf[b], -1);
                     if (trk < 0) goto cckd_gc_perc_error;
 
                     l1x = trk >> 8;

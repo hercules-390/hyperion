@@ -1390,13 +1390,6 @@ int             x=O_EXCL;               /* Open option               */
                 memcpy (pos, eighthexFF, 8);
                 pos += 8;
 
-                /* Set the `length' in the TRKHDR if compressed */
-                if (comp != 0xff)
-                {
-                    trksize = pos - buf;
-                    CCKD_SET_BUFLEN(buf[0], trksize);
-                }
-
                 /* Write the track to the file */
                 rc = write (fd, buf, trksize);
                 if (rc != (int)trksize)
@@ -1897,7 +1890,6 @@ int             x=O_EXCL;               /* Open option               */
     if (comp && rc == Z_OK)
     {
         buf[0] = CCKD_COMPRESS_ZLIB;
-        CCKD_SET_BUFLEN(buf[0], CKDDASD_TRKHDR_SIZE + len2);
         rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE);
         if (rc < (int)CKDDASD_TRKHDR_SIZE)
         {

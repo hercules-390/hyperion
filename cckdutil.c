@@ -553,7 +553,6 @@ restart:
                 rc = lseek (fd, (off_t)l2.pos, SEEK_SET);
                 rc = read  (fd, buf, len);
                 l2.pos -= freed;
-                CCKD_SET_BUFLEN(buf[0], len);
                 rc = lseek (fd, (off_t)l2.pos, SEEK_SET);
                 rc = write (fd, buf, len);
             }
@@ -1267,13 +1266,11 @@ space_check:
                 /* consistency check on track header */
                 if (ckddasd)
                 {
-                  if ((buf[0] & CCKD_COMPRESS_MASK) > CCKD_COMPRESS_MAX
+                  if ( buf[0] > CCKD_COMPRESS_MAX
                    || (buf[1] * 256 + buf[2]) >= cyls
                    || (buf[3] * 256 + buf[4]) >= heads
                    || (buf[1] * 256 + buf[2]) * heads +
-                      (buf[3] * 256 + buf[4]) != trk
-                   || (CCKD_GET_BUFLEN(buf[0]) != 0
-                    && CCKD_GET_BUFLEN(buf[0]) != (l2[j].len & CCKD_LEN_MASK)))
+                      (buf[3] * 256 + buf[4]) != trk)
                   {
                       sprintf (msg, "track %d invalid header "
                                "0x%2.2x%2.2x%2.2x%2.2x%2.2x", trk,
@@ -1284,9 +1281,7 @@ space_check:
                 else
                 {
                   if ((buf[0] & CCKD_COMPRESS_MASK) > CCKD_COMPRESS_MAX
-                   || (buf[1] << 24) + (buf[2] << 16) + (buf[3] << 8) + buf[4] != trk
-                   || (CCKD_GET_BUFLEN(buf[0]) != 0
-                    && CCKD_GET_BUFLEN(buf[0]) != (l2[j].len & CCKD_LEN_MASK)))
+                   || (buf[1] << 24) + (buf[2] << 16) + (buf[3] << 8) + buf[4] != trk)
                   {
                       sprintf (msg, "block %d invalid header "
                                "0x%2.2x%2.2x%2.2x%2.2x%2.2x", trk,
@@ -1304,20 +1299,7 @@ space_check:
                 if (rc != l2[j].len)
                     goto bad_trk;
             }
-#if 1
-            /* Turn off the `new format' bit if it's on.
-               Was the `write under stress' bit */
-            if (buf[0] & CCKD_NEWFMT)
-            {
-                buf[0] &= ~CCKD_NEWFMT;
-                if (fdflags & O_RDWR)
-                {
-                    rc = lseek (fd, (off_t)l2[j].pos, SEEK_SET);
-                    if (rc != -1)
-                        rc = write (fd, buf, 1);
-                }
-            }
-#endif
+
             /* add track to the space table */
             valid_trks++;
             cdevhdr2.used += l2[j].len;
@@ -1341,8 +1323,14 @@ space_check:
 
         /* if the level 2 table appears valid, add the table to the
            space table; otherwise add the table to the recover table */
+//FIXME: problem recovering l2 table
+#if 0
         if (valid_l2 || valid_trks > 0)
+#else
+        if (1)
+#endif
         {
+
             cdevhdr2.used += CCKD_L2TAB_SIZE;
             spc[s].pos = l1[i];
             spc[s].len = spc[s].siz = CCKD_L2TAB_SIZE;
@@ -1559,8 +1547,7 @@ overlap:
             /* test for possible track header */
             if (ckddasd)
             {
-              if (!((gapbuf[j] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX
-                 && (gapbuf[j+1] << 8) + gapbuf[j+2] < cyls
+              if (!((gapbuf[j+1] << 8) + gapbuf[j+2] < cyls
                  && (gapbuf[j+3] << 8) + gapbuf[j+4] < heads))
                   continue;
               /* get track number */
@@ -1573,10 +1560,9 @@ overlap:
               /* get block number */
               trk = (gapbuf[j+1] << 24) + (gapbuf[j+2] << 16) +
                     (gapbuf[j+3] <<  8) +  gapbuf[j+4];
-              if (!((gapbuf[j] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX
-                 && trk < trks))
-                  continue;
             }
+            if (trk >= trks)
+                continue;
 
             /* see if track is to be recovered */
             for (k = 0; k < r; k++)
@@ -1592,10 +1578,9 @@ overlap:
             if (n - j < trksz) maxlen = n - j;
             else maxlen = trksz;
 
-            CDSKMSG (m, "%s %d at 0x%llx maxlen %d comp %s: ",
+            CDSKMSG (m, "%s %d at 0x%llx maxlen %d: ",
                      ckddasd ? "trk" : "blk",
-                     trk, (long long)(gap[i].pos + j), maxlen,
-                     compression[gapbuf[j] & CCKD_COMPRESS_MASK]);
+                     trk, (long long)(gap[i].pos + j), maxlen);
 
             /* Try to recover the track at the space in the gap */
             trklen = cdsk_recover_trk (trk, &gapbuf[j], heads,
@@ -1608,7 +1593,11 @@ overlap:
                 continue;
             }
 
-            if (m) fprintf (m,"recovered!! len %ld trys %d\n", trklen, trys);
+            rc = lseek (fd, gap[i].pos + j, SEEK_SET);
+            rc = write (fd, &gapbuf[j], 1);
+
+            if (m) fprintf (m,"recovered!! len %ld comp %s trys %d\n",
+                trklen, compression[gapbuf[j]], trys);
 
             /* enter the recovered track into the space table */
             spc[s].pos = gap[i].pos + j;
@@ -2017,17 +2006,14 @@ BYTE           *bufp;                   /* Buffer pointer            */
 int             bufl;                   /* Buffer length             */
 BYTE            buf2[65536];            /* Uncompressed buffer       */
 
-    /* Check buffer length */
-    if ((buf[0] & CCKD_COMPRESS_MASK) != 0
-     && CCKD_GET_BUFLEN(buf[0]) != 0
-     && CCKD_GET_BUFLEN(buf[0]) != (len & CCKD_LEN_MASK))
+    /* Check for extraneous bits in the first byte */
+    if (buf[0] & ~CCKD_COMPRESS_MASK)
     {
         if (msg)
-            sprintf (msg, "%s %d length %d validation error: "
-                     "%2.2x%2.2x%2.2x%2.2x%2.2x",
-                     heads >= 0 ? "trk" : "blk", trk, len,
-                     buf[0], buf[1], buf[2], buf[3], buf[4]);
-
+            sprintf(msg,"%s %d invalid byte[0]: "
+                   "%2.2x%2.2x%2.2x%2.2x%2.2x",
+                   heads >= 0 ? "trk" : "blk", trk,
+                   buf[0], buf[1], buf[2], buf[3], buf[4]);
         return -1;
     }
 
@@ -2200,32 +2186,53 @@ int             rc;                     /* Return code               */
 int             startlen;               /* Start length              */
 int             incr;                   /* Increment                 */
 int             adjust;                 /* Adjustment value          */
+BYTE            b0;                     /* First buffer byte         */
 
     if (trys) *trys = 0;
 
-    /* Special case for no compression */
-    if ((buf[0] & CCKD_COMPRESS_MASK) == CCKD_COMPRESS_NONE)
+    b0 = buf[0];
+
+    /* Special case if not compressed */
+    buf[0] = 0;
+    rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL);
+    if (rc > 0)
     {
         if (trys) (*trys)++;
-        return cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL);
+        return rc;
     }
 
     /* If the maxlen falls within range, try the maxlen */
     if (maxlen <= trksz)
     {
+#ifdef CCKD_COMPRESS_ZLIB
+        buf[0] = CCKD_COMPRESS_ZLIB;
         if (trys) (*trys)++;
         rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL);
         if (rc > 0) return rc;
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
+        buf[0] = CCKD_COMPRESS_BZIP2;
+        if (trys) (*trys)++;
+        rc = cdsk_valid_trk (trk, buf, heads, maxlen, trksz, NULL);
+        if (rc > 0) return rc;
+#endif
     }
 
     /* Try the original length if it fits */
-    if (origlen && origlen <= maxlen
-     && (CCKD_GET_BUFLEN(buf[0]) == 0
-      || CCKD_GET_BUFLEN(buf[0]) == (origlen & CCKD_LEN_MASK)))
+    if (origlen && origlen <= maxlen)
     {
+#ifdef CCKD_COMPRESS_ZLIB
+        buf[0] = CCKD_COMPRESS_ZLIB;
         if (trys) (*trys)++;
         rc = cdsk_valid_trk (trk, buf, heads, origlen, trksz, NULL);
         if (rc > 0) return rc;
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
+        buf[0] = CCKD_COMPRESS_BZIP2;
+        if (trys) (*trys)++;
+        rc = cdsk_valid_trk (trk, buf, heads, origlen, trksz, NULL);
+        if (rc > 0) return rc;
+#endif
     }
 
     /* Figure out the offset to start recovering */
@@ -2234,19 +2241,21 @@ int             adjust;                 /* Adjustment value          */
      && origlen >= avglen - (avglen >> 1)) startlen = origlen;
     else if (avglen < maxlen) startlen = avglen;
     else startlen = maxlen;
-    if (CCKD_GET_BUFLEN(buf[0]))
-    {
-        startlen &= ~CCKD_LEN_MASK;
-        startlen |= CCKD_GET_BUFLEN(buf[0]);
-        incr = 32;
-        if (startlen > maxlen) startlen -= incr;
-    }
-    else incr = 1;
+    incr = 1;
 
     /* Try the start length */
+#ifdef CCKD_COMPRESS_ZLIB
+    buf[0] = CCKD_COMPRESS_ZLIB;
     if (trys) (*trys)++;
     rc = cdsk_valid_trk (trk, buf, heads, startlen, trksz, NULL);
     if (rc > 0) return rc;
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
+    buf[0] = CCKD_COMPRESS_BZIP2;
+    if (trys) (*trys)++;
+    rc = cdsk_valid_trk (trk, buf, heads, startlen, trksz, NULL);
+    if (rc > 0) return rc;
+#endif
 
     /* Now we start trying on both sides of the start length,
        adjusting by `incr' each iteration */
@@ -2255,20 +2264,39 @@ int             adjust;                 /* Adjustment value          */
     {
         if (startlen - adjust >= 8)
         {
+#ifdef CCKD_COMPRESS_ZLIB
+            buf[0] = CCKD_COMPRESS_ZLIB;
             if (trys) (*trys)++;
             rc = cdsk_valid_trk (trk, buf, heads, startlen - adjust, trksz, NULL);
             if (rc > 0) return rc;
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
+            buf[0] = CCKD_COMPRESS_BZIP2;
+            if (trys) (*trys)++;
+            rc = cdsk_valid_trk (trk, buf, heads, startlen - adjust, trksz, NULL);
+            if (rc > 0) return rc;
+#endif
         }
         if (startlen + adjust <= maxlen)
         {
+#ifdef CCKD_COMPRESS_ZLIB
+            buf[0] = CCKD_COMPRESS_ZLIB;
             if (trys) (*trys)++;
             rc = cdsk_valid_trk (trk, buf, heads, startlen + adjust, trksz, NULL);
             if (rc > 0) return rc;
+#endif
+#ifdef CCKD_COMPRESS_BZIP2
+            buf[0] = CCKD_COMPRESS_BZIP2;
+            if (trys) (*trys)++;
+            rc = cdsk_valid_trk (trk, buf, heads, startlen + adjust, trksz, NULL);
+            if (rc > 0) return rc;
+#endif
         }
         adjust += incr;
     }
 
     /* Track image not found */
+    buf[0] = b0;
     return -1;
 
 } /* end function cdsk_recover_trk */
