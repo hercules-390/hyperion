@@ -1268,58 +1268,38 @@ DEF_INST(test_and_set)
 {
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
-RADR    abs;                            /* Absolute address          */
-BYTE    obyte;                          /* Operand byte              */
 
     S(inst, execflag, regs, b2, effective_addr2);
 
     /* Perform serialization before starting operation */
     PERFORM_SERIALIZATION (regs);
 
-    abs = LOGICAL_TO_ABS (effective_addr2, b2, regs,
-					ACCTYPE_WRITE, regs->psw.pkey);
-
     /* Obtain main-storage access lock */
     OBTAIN_MAINLOCK(regs);
 
-    /* Fetch byte from operand address */
-    obyte = sysblk.mainstor[abs];
-
-    /* Set all bits of operand to ones */
-    if(obyte != 0xFF)
-        sysblk.mainstor[abs] = 0xFF;
+    TEST_AND_SET(effective_addr2, b2, regs);
 
     /* Release main-storage access lock */
     RELEASE_MAINLOCK(regs);
 
-    /* Set condition code from leftmost bit of operand byte */
-    regs->psw.cc = obyte >> 7;
-
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
-#if defined(_FEATURE_SIE)
-    if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_TS1))
-      && regs->psw.cc == 1)
+    if (regs->psw.cc == 1)
     {
-        if( !OPEN_IC_PERINT(regs) )
-            longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#if defined(_FEATURE_SIE)
+        if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1)))
+        {
+            if( !OPEN_IC_PERINT(regs) )
+                longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+            else
+                longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
+        }
         else
-            longjmp(regs->progjmp, SIE_INTERCEPT_INSTCOMP);
-    }
 #endif /*defined(_FEATURE_SIE)*/
-
-#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
-        /* It this is a failed locked operation
-           and there is more then 1 CPU in the configuration
-           and there is no broadcast synchronization in progress
-           then call the hypervisor to end this timeslice,
-           this to prevent this virtual CPU monopolizing
-           the physical CPU on a spinlock */
-        if(regs->psw.cc && sysblk.numcpu > 1)
-            usleep(1L);
-#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
-
+            if (sysblk.numcpu > 1)
+                sched_yield();
+    }
 }
 
 
