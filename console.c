@@ -2330,7 +2330,8 @@ DEVHND constty_device_hndinfo = {
         &constty_init_handler,
         &constty_execute_ccw,
         &constty_close_device,
-        &constty_query_device
+        &constty_query_device,
+        NULL, NULL, NULL, NULL
 };
 
 
@@ -2338,5 +2339,6 @@ DEVHND loc3270_device_hndinfo = {
         &loc3270_init_handler,
         &loc3270_execute_ccw,
         &loc3270_close_device,
-        &loc3270_query_device
+        &loc3270_query_device,
+        NULL, NULL, NULL, NULL
 };

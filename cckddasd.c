@@ -6,7 +6,7 @@
 /* count-key-data direct access storage devices.                     */
 /*-------------------------------------------------------------------*/
 
-//#define CCKD_ITRACEMAX 100000
+//#define CCKD_ITRACEMAX 10000
 
 #include "hercules.h"
 #include "devtype.h"
@@ -19,6 +19,7 @@
 #ifdef CCKD_ITRACEMAX
 #undef DEVTRACE
 #define DEVTRACE(format, a...) \
+ if (cckd->itracex >= 0) \
   {int n; \
    if (cckd->itracex >= 128 * CCKD_ITRACEMAX) cckd->itracex = 0; \
    n = cckd->itracex; cckd->itracex += 128; \
@@ -30,14 +31,15 @@
 /*-------------------------------------------------------------------*/
 int     cckddasd_init_handler (DEVBLK *, int, BYTE **);
 int     cckddasd_close_device (DEVBLK *);
+void    cckddasd_start (DEVBLK *);
+void    cckddasd_end (DEVBLK *);
 int     cckd_read_track (DEVBLK *, int, int, BYTE *);
 int     cckd_update_track (DEVBLK *, BYTE *, int, BYTE *);
 CCKD_CACHE *cckd_read_trk (DEVBLK *, int, int, BYTE *);
 void    cckd_readahead (DEVBLK *, int);
 void    cckd_ra (DEVBLK *);
-void    cckd_write_trk (DEVBLK *, BYTE *);
-CCKD_DFWQE *cckd_scan_dfwq (DEVBLK *, int);
-void    cckd_dfw (DEVBLK *);
+void    cckd_flush_cache(DEVBLK *);
+void    cckd_writer(DEVBLK *);
 off_t   cckd_get_space (DEVBLK *, int);
 void    cckd_rel_space (DEVBLK *, unsigned int, int);
 void    cckd_rel_free_atend (DEVBLK *, unsigned int, int, int);
@@ -49,7 +51,7 @@ void    cckd_write_l1ent (DEVBLK *, int);
 int     cckd_read_fsp (DEVBLK *);
 void    cckd_write_fsp (DEVBLK *);
 int     cckd_read_l2 (DEVBLK *, int, int);
-void    cckd_flush_l2 (DEVBLK *, int);
+void    cckd_purge_l2 (DEVBLK *, int);
 void    cckd_write_l2 (DEVBLK *);
 int     cckd_read_l2ent (DEVBLK *, CCKD_L2ENT *, int);
 void    cckd_write_l2ent (DEVBLK *, CCKD_L2ENT *, int);
@@ -68,8 +70,7 @@ void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
 void    cckd_sf_comp (DEVBLK *);
 void    cckd_gcol (DEVBLK *);
-void    cckd_gc_combine (DEVBLK *, int, int, int);
-int     cckd_gc_len (DEVBLK *, BYTE *, off_t, int, int);
+int     cckd_gc_percolate (DEVBLK *, int, int);
 void    cckd_print_itrace(DEVBLK *);
 
 /*-------------------------------------------------------------------*/
@@ -108,13 +109,7 @@ void    cckd_print_itrace(DEVBLK *);
 /*-------------------------------------------------------------------*/
 static  BYTE cckd_empty_l2tab[CCKD_L2TAB_SIZE];  /* Empty L2 table   */
 static  BYTE eighthexFF[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-
-DEVHND cckddasd_device_hndinfo = {
-        &ckddasd_init_handler,
-        &ckddasd_execute_ccw,
-        &cckddasd_close_device,
-        &ckddasd_query_device
-};
+DEVHND  cckddasd_device_hndinfo; 
 
 /*-------------------------------------------------------------------*/
 /* Initialize the compressed device handler                          */
@@ -122,106 +117,46 @@ DEVHND cckddasd_device_hndinfo = {
 int cckddasd_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             i;                      /* Index                     */
 int             rc;                     /* Return code               */
 int             fdflags;                /* File flags                */
-int             i;                      /* Loop index                */
-char           *kw, *op;                /* Argument keyword/option   */
 
     /* Obtain area for cckd extension */
     dev->cckd_ext = cckd = malloc(sizeof(CCKDDASD_EXT));
     memset(cckd, 0, sizeof(CCKDDASD_EXT));
     memset(&cckd_empty_l2tab, 0, CCKD_L2TAB_SIZE);
 
-    /* Set threading indicator */
-    cckd->threading = 1;
-
 #ifdef CCKD_ITRACEMAX
     /* get internal trace table */
     cckd->itrace = calloc (CCKD_ITRACEMAX, 128);
 #endif
 
-    /* process arguments starting with arg 1 */
-    cckd->l2cachenbr = cckd->max_dfwq = cckd->max_ra =
-                       cckd->max_dfw  = cckd->max_wt = -1;
-    for (i = 1; i < argc; i++)
-    {
-        /* `l2cache=' specifies size of the level 2 cache */
-        if (strlen (argv[i]) > 8 &&
-            memcmp ("l2cache=", argv[i], 8) == 0)
-        {
-            kw = strtok (argv[i], "=");
-            op = strtok (NULL, " \t");
-            if (op) cckd->l2cachenbr = atoi (op);
-            continue;
-        }
-
-        /* `dfwq=' specifies max size of the deferred write queue
-           before throttling occurs */
-        if (strlen (argv[i]) > 5 &&
-            memcmp ("dfwq=", argv[i], 5) == 0)
-        {
-            kw = strtok (argv[i], "=");
-            op = strtok (NULL, " \t");
-            if (op) cckd->max_dfwq = atoi (op);
-            continue;
-        }
-
-        /* `wt=' specifies idle time for an updated thread before the
-           garbage collector will write it */
-        if (strlen (argv[i]) > 3 &&
-            memcmp ("wt=", argv[i], 3) == 0)
-        {
-            kw = strtok (argv[i], "=");
-            op = strtok (NULL, " \t");
-            if (op) cckd->max_wt = atoi (op);
-            continue;
-        }
-
-        /* `ra=' specifies number of readahead threads */
-        if (strlen (argv[i]) == 4
-         && memcmp ("ra=", argv[i], 3) == 0
-         && argv[i][3] >= '0'
-         && argv[i][3] <= '0' + CCKD_MAX_RA)
-        {
-            cckd->max_ra = argv[i][3] - '0';
-            continue;
-        }
-
-        /* `dfw=' specifies number of deferred write threads */
-        if (strlen (argv[i]) == 5
-         && memcmp ("dfw=", argv[i], 4) == 0
-         && argv[i][4] >= '0'
-         && argv[i][4] <= '0' + CCKD_MAX_DFW)
-        {
-            cckd->max_dfw = argv[i][4] - '0';
-            continue;
-        }
-    }
-    if (cckd->l2cachenbr < 1) cckd->l2cachenbr = CCKD_L2CACHE_NBR;
-    if (cckd->max_dfwq < 1) cckd->max_dfwq = CCKD_MAX_DFWQ_DEPTH;
-    if (cckd->max_ra < 0) cckd->max_ra = 2;
-    if (cckd->max_dfw < 1) cckd->max_dfw = 1;
-    if (cckd->max_wt < 1) cckd->max_wt = CCKD_MAX_WRITE_TIME;
-
-    /* Initialize locks, conditions and attributes */
+    /* Initialize locks and conditions */
     initialize_lock (&cckd->filelock);
-    initialize_lock (&cckd->dfwlock);
     initialize_lock (&cckd->gclock);
-    initialize_lock (&cckd->termlock);
     initialize_lock (&cckd->cachelock);
-    initialize_condition (&cckd->dfwcond);
+    initialize_lock (&cckd->ralock);
+    initialize_condition (&cckd->readcond);
+    initialize_condition (&cckd->writecond);
+    initialize_condition (&cckd->cachecond);
     initialize_condition (&cckd->gccond);
-    initialize_condition (&cckd->rtcond);
     initialize_condition (&cckd->termcond);
-    initialize_detach_attr (&cckd->gcattr);
-    initialize_detach_attr (&cckd->dfwattr);
-    for (i = 0; i < cckd->max_ra; i++)
-    {   /* read-ahead locks, conditions and attributes */
-        initialize_lock (&cckd->ralock[i]);
-        initialize_condition (&cckd->racond[i]);
-    }
+    initialize_condition (&cckd->racond);
+    initialize_condition (&cckd->writercond);
 
+    /* Initialize some variables */
     cckd->l1x = cckd->sfx = -1;
+    cckd->gcolsmax = CCKD_DEFAULT_GCOL;
+    cckd->writersmax = CCKD_DEFAULT_WRITER;
+    cckd->ramax = CCKD_DEFAULT_RA;
+    cckd->l2cachenbr = CCKD_L2CACHE_NBR;
+    dev->ckdcachenbr = dev->ckdheads + cckd->ramax;
+
+    /* Initialize the readahead queue */
+    cckd->ra1st = cckd->ralast = -1;
+    cckd->rafree = 0;
+    for (i = 0; i < CCKD_RA_SIZE; i++) cckd->ra[i].next = i + 1;
+    cckd->ra[CCKD_RA_SIZE - 1].next = -1;
 
     /* Read the compressed device header */
     cckd->fd[0] = dev->fd;
@@ -253,10 +188,6 @@ char           *kw, *op;                /* Argument keyword/option   */
     /* display statistics */
 //  cckd_sf_stats (dev);
 
-    /* set default cache limit for cckd_read_trk */
-    if (dev->ckdcachenbr < 1)
-        dev->ckdcachenbr = dev->ckdheads + cckd->max_ra;
-
     /* Update the routines */
     dev->hnd = &cckddasd_device_hndinfo;
     dev->ckdrdtrk = &cckd_read_track;
@@ -276,61 +207,36 @@ int             i;                      /* Index                     */
 
     cckd = dev->cckd_ext;
 
-    /* write any updated track images */
-    obtain_lock (&cckd->cachelock);
-    obtain_lock (&cckd->dfwlock);
-    for (i = 0; i < dev->ckdcachenbr && cckd->cache; i++)
-        if (cckd->cache[i].updated)
-        {
-            cckd->cache[i].updated = 0;
-            cckd_write_trk (dev, cckd->cache[i].buf);
-        }
-    if (cckd->dfwq && cckd->dfwaiting)
-        signal_condition (&cckd->dfwcond);
-    release_lock (&cckd->dfwlock);
-    release_lock (&cckd->cachelock);
-    if (cckd->dfwq) sleep (1); /* not sure why this is necessary */
-
-    /* terminate threads */
-    if (cckd->threading)
+    /* Terminate the readahead threads */
+    obtain_lock (&cckd->ralock);
+    cckd->ramax = 0;
+    if (cckd->ras)
     {
-        cckd->threading = 0;
+        broadcast_condition (&cckd->racond);
+        wait_condition (&cckd->termcond, &cckd->ralock);
+    }
+    release_lock (&cckd->ralock);
 
-        /* I'm using a termination lock and condition because for
-           some reason I can't get pthread_join to work correctly */
-        obtain_lock (&cckd->termlock);
+    /* Terminate the garbage collection threads */
+    obtain_lock (&cckd->gclock);
+    cckd->gcolsmax = 0;
+    if (cckd->gcols)
+    {
+        broadcast_condition (&cckd->gccond);
+        wait_condition (&cckd->termcond, &cckd->gclock);
+    }
+    release_lock (&cckd->gclock);
 
-        /* Terminate the readahead threads */
-        for (i = 0; i < cckd->max_ra; i++)
-            if (cckd->rainit[i])
-            {
-                obtain_lock (&cckd->ralock[i]);
-                signal_condition (&cckd->racond[i]);
-                release_lock (&cckd->ralock[i]);
-                wait_condition (&cckd->termcond, &cckd->termlock);
-            }
-
-        /* Terminate the deferred-write threads */
-        if (cckd->writeinit)
-            for (i = 0; i < cckd->max_dfw; i++)
-            {
-                obtain_lock (&cckd->dfwlock);
-                signal_condition (&cckd->dfwcond);
-                release_lock (&cckd->dfwlock);
-                wait_condition (&cckd->termcond, &cckd->termlock);
-            } while (cckd->dfwaiting);
-
-        /* Terminate the garbage-collection thread */
-        if (cckd->gcinit)
-        {
-            obtain_lock (&cckd->gclock);
-            signal_condition (&cckd->gccond);
-            release_lock (&cckd->gclock);
-            wait_condition (&cckd->termcond, &cckd->termlock);
-        }
-
-        release_lock (&cckd->termlock);
-        }
+    /* write any updated track images and wait for writers to stop */
+    obtain_lock (&cckd->cachelock);
+    cckd_flush_cache (dev);
+    cckd->writersmax = 0;
+    if (cckd->writepending || cckd->writers)
+    {
+        broadcast_condition (&cckd->writercond);
+        wait_condition (&cckd->termcond, &cckd->cachelock);
+    }
+    release_lock (&cckd->cachelock);
 
     /* harden the file */
     cckd_harden (dev);
@@ -352,8 +258,6 @@ int             i;                      /* Index                     */
             if (cckd->cache[i].buf)
                 free (cckd->cache[i].buf);
         free (cckd->cache);
-        for (i = 0; i <= cckd->max_ra; i++)
-            free (cckd->cachebuf[i]);
     }
 
     /* free the level 2 cache */
@@ -377,7 +281,57 @@ int             i;                      /* Index                     */
     close (dev->fd);
 
     return 0;
+} /* end function cckddasd_close_device */
+
+
+/*-------------------------------------------------------------------*/
+/* Compressed ckd start/resume channel program                       */
+/*-------------------------------------------------------------------*/
+void cckddasd_start (DEVBLK *dev)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+
+    cckd = dev->cckd_ext;
+
+    obtain_lock (&cckd->cachelock);
+
+    /* If previous active cache entry has been stolen or is busy
+       then set it to null and return */
+    if (!cckd->active || dev->ckdcurtrk != cckd->active->trk
+     || (cckd->active->flags & (CCKD_CACHE_READING | CCKD_CACHE_WRITING)))
+    {
+        dev->ckdcurtrk = -1;
+        cckd->active = NULL;
+        release_lock (&cckd->cachelock);
+        return;
+    }
+
+    /* Make the previous cache entry active again */
+    cckd->active->flags |= CCKD_CACHE_ACTIVE;
+
+    /* If the entry is pending write then change it to `updated' */
+    if (cckd->active->flags & CCKD_CACHE_WRITE)
+    {
+        cckd->active->flags &= ~CCKD_CACHE_WRITE;
+        cckd->active->flags |= CCKD_CACHE_UPDATED;
+        cckd->writepending--;
+    }
+
+    release_lock (&cckd->cachelock);
 }
+
+
+/*-------------------------------------------------------------------*/
+/* Compressed ckd end/suspend channel program                        */
+/*-------------------------------------------------------------------*/
+void cckddasd_end (DEVBLK *dev)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+
+    cckd = dev->cckd_ext;
+    if (cckd->active) cckd->active->flags &= ~CCKD_CACHE_ACTIVE;
+}
+
 
 /*-------------------------------------------------------------------*/
 /* Compressed ckd read track image                                   */
@@ -413,7 +367,7 @@ int             act;                    /* Syncio indicator          */
     dev->bufoffhi = dev->ckdtrksz;
 
     /* Return if reading the same track image and not trk 0 */
-    if (trk == dev->ckdcurtrk && dev->buf) return 0;
+    if (trk == dev->ckdcurtrk && dev->buf && cckd->active) return 0;
 
     DEVTRACE ("cckddasd: read  trk   %d (%s)\n", trk,
               dev->syncio_active ? "synchronous" : "asynchronous");
@@ -423,7 +377,6 @@ int             act;                    /* Syncio indicator          */
     *unitstat = 0;
     active = cckd_read_trk (dev, trk, 0, unitstat);
     if (dev->syncio_retry) return -1;
-
     dev->syncio_active = act;
     cckd->active = active;
     dev->ckdcurtrk = trk;
@@ -469,7 +422,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     if (buf) memcpy (&dev->buf[dev->bufoff], buf, len);
 
     /* Update the cache entry */
-    cckd->active->updated = cckd->active->used = 1;
+    cckd->active->flags |= CCKD_CACHE_UPDATED | CCKD_CACHE_USED;
 
     return len;
 
@@ -480,7 +433,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 /* Read a track image                                                */
 /*                                                                   */
 /* This routine can be called by the i/o thread (`ra' == 0) or       */
-/* by readahead threads (0 < `ra' <= CCKD_MAX_RA).                   */
+/* by readahead threads (0 < `ra' <= cckd->ramax).                   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 CCKD_CACHE *cckd_read_trk(DEVBLK *dev, int trk, int ra, BYTE *unitstat)
@@ -491,9 +444,8 @@ int             fnd;                    /* Cache index for hit       */
 int             lru;                    /* Least-Recently-Used cache
                                             index                    */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-CCKD_DFWQE     *dfw;                    /* -> deferred write q elem  */
 unsigned long   len,len2;               /* Lengths                   */
-BYTE           *buf,*buf2;              /* Buffers                   */
+BYTE           *buf, buf2[65536];       /* Buffers                   */
 
     cckd = dev->cckd_ext;
 
@@ -503,11 +455,9 @@ BYTE           *buf,*buf2;              /* Buffers                   */
 
     /* get the cache array if it doesn't exist yet */
     if (cckd->cache == NULL)
-    {
         cckd->cache = calloc (dev->ckdcachenbr, CCKD_CACHE_SIZE);
-        for (i = 0; i <= cckd->max_ra; i++)
-            cckd->cachebuf[i] = malloc (dev->ckdtrksz);
-    }
+
+cckd_read_trk_retry:
 
     /* scan the cache array for the track */
     for (fnd = lru = -1, i = 0; i < dev->ckdcachenbr; i++)
@@ -516,8 +466,8 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         {   fnd = i;
             break;
         }
-        /* find the oldest entry that doesn't have an active read */
-        if (!cckd->cache[i].reading && !cckd->cache[i].active
+        /* find the oldest entry that isn't busy */
+        if (!(cckd->cache[i].flags & CCKD_CACHE_BUSY)
          && (lru == - 1 || cckd->cache[i].age < cckd->cache[lru].age))
             lru = i;
     }
@@ -530,38 +480,63 @@ BYTE           *buf,*buf2;              /* Buffers                   */
             return NULL;
         }
 
+        /* If synchronous I/O and we need to wait for a read or
+           write to complete then return with syncio_retry bit on */
+        if (dev->syncio_active
+         && cckd->cache[fnd].flags & (CCKD_CACHE_READING | CCKD_CACHE_WRITING))
+        {
+            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d syncio %s\n",
+                      ra, lru, trk,
+                      cckd->cache[fnd].flags & CCKD_CACHE_READING ?
+                      "reading" : "writing");
+            dev->syncio_retry = 1;
+            release_lock (&cckd->cachelock);
+            return NULL;
+        }
+
         /* Mark the entry active */
-        if (cckd->active) cckd->active->active = 0;
-        cckd->cache[fnd].active = 1;
+        DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d cache hit buf %p\n",
+                  ra, fnd, trk, cckd->cache[fnd].buf);
+        if (cckd->active) cckd->active->flags &= ~CCKD_CACHE_ACTIVE;
+        cckd->cache[fnd].flags |= CCKD_CACHE_ACTIVE | CCKD_CACHE_USED;
+        cckd->cache[fnd].age = ++cckd->cacheage;
+        cckd->cachehits++;
 
         /* if read is in progress then wait for it to finish */
-        if (cckd->cache[fnd].reading)
+        if (cckd->cache[fnd].flags & CCKD_CACHE_READING)
         {
-            /* Return with the `syio_retry' bit on if synchronous I/O */
-            if (dev->syncio_active)
-            {
-                DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d syncio reading\n",
-                           ra, lru, trk);
-                dev->syncio_retry = 1;
-                release_lock (&cckd->cachelock);
-                return NULL;
-            }
             DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d waiting for read\n",
                       ra, fnd, trk);
-            cckd->cache[fnd].waiting = 1;
-            wait_condition (&cckd->rtcond, &cckd->cachelock);
-            cckd->cache[fnd].waiting = 0;
-            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d wait complete buf %p\n",
+            cckd->cache[fnd].flags |= CCKD_CACHE_READWAIT;
+            wait_condition (&cckd->readcond, &cckd->cachelock);
+            cckd->cache[fnd].flags &= ~CCKD_CACHE_READWAIT;
+            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d read wait complete buf %p\n",
                       ra, fnd, trk, cckd->cache[fnd].buf);
         }
 
-        cckd->cache[fnd].age = ++cckd->cacheage;
+        /* if write is in progress then wait for it to finish */
+        if (cckd->cache[fnd].flags & CCKD_CACHE_WRITING)
+        {
+            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d waiting for write\n",
+                      ra, fnd, trk);
+            cckd->cache[fnd].flags |= CCKD_CACHE_WRITEWAIT;
+            wait_condition (&cckd->writecond, &cckd->cachelock);
+            cckd->cache[fnd].flags &= ~CCKD_CACHE_WRITEWAIT;
+            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d write wait complete buf %p\n",
+                      ra, fnd, trk, cckd->cache[fnd].buf);
+        }
 
-        DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d cache hit buf %p\n",
-                  ra, fnd, trk, cckd->cache[fnd].buf);
+        /* If the entry is pending write then change it to `updated' */
+        if (cckd->cache[fnd].flags & CCKD_CACHE_WRITE)
+        {
+            cckd->cache[i].flags &= ~CCKD_CACHE_WRITE;
+            cckd->cache[i].flags |= CCKD_CACHE_UPDATED;
+            cckd->writepending--;
+        }
 
-        cckd->cachehits++;
+        /* Check for readahead */
         if (trk == dev->ckdcurtrk + 1) cckd_readahead (dev, trk);
+
         release_lock (&cckd->cachelock);
         return &cckd->cache[fnd];
     }
@@ -570,93 +545,29 @@ BYTE           *buf,*buf2;              /* Buffers                   */
        the `syio_retry' bit set */
     if (!ra && dev->syncio_active)
     {
-        DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d syncio not found\n",
-                   ra, fnd, trk);
+        DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d syncio cache miss\n",
+                   ra, lru, trk);
         dev->syncio_retry = 1;
         release_lock (&cckd->cachelock);
         return NULL;
     }
 
-    /* Mark the entry active if not readahead */
-    if (ra == 0)
+    /* If no cache entry was stolen, then schedule all updated entries
+       to be written, and wait for a cache entry unless readahead */
+    if (lru < 0)
     {
-        if (cckd->active) cckd->active->active = 0;
-        cckd->cache[lru].active = 1;
-    }
-
-    /* if readahead, return if the lru entry active */
-    else if (cckd->cache[lru].active)
-    {   release_lock (&cckd->cachelock);
-        return NULL;
-    }
-
-    if (cckd->writeinit || cckd->cache[lru].updated)
-    {
-        /* note the nested locking */
-        obtain_lock (&cckd->dfwlock);
-
-        /* queue the the old track for write if it has been updated */
-        if (cckd->cache[lru].updated)
+        DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d no available cache entry\n",
+                   ra, lru, trk);
+        cckd_flush_cache (dev);
+        if (ra)
         {
-            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d upd old trk %d buf %p\n",
-                      ra, lru, trk, cckd->cache[lru].trk, cckd->cache[lru].buf);
-            cckd_write_trk (dev, cckd->cache[lru].buf);
-            cckd->cache[lru].buf = NULL;
-            cckd->cache[lru].updated = 0;
-        }
-
-        /* see if the track is in the deferred write queue */
-        dfw = cckd_scan_dfwq (dev, trk);
-        if (dfw != NULL)
-        {
-            buf = dfw->buf;
-
-            /* check for readahead miss */
-            if (cckd->cache[lru].buf && !cckd->cache[lru].used)
-                cckd->misses++;
-
-            /* free old cache buffer if it isn't writing */
-            if (cckd->cache[lru].buf && !cckd->cache[lru].writing)
-            {   free (cckd->cache[lru].buf);
-                DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d free buf %p\n",
-                          ra, lru, trk, cckd->cache[lru].buf);
-            }
-
-            /* update the cache entry */
-            cckd->cache[lru].trk = trk;
-            cckd->cache[lru].buf = buf;
-            cckd->cache[lru].used = 0;
-            cckd->cache[lru].writing = 1;
-            cckd->cache[lru].age = ++cckd->cacheage;
-
-            if (!ra)
-            {   cckd->cachehits++;
-                if (trk == dev->ckdcurtrk + 1) cckd_readahead (dev, trk);
-            }
-
-            /* wakeup dfw if old track was updated */
-            if (cckd->dfwaiting)
-                signal_condition (&cckd->dfwcond);
-
-            release_lock (&cckd->dfwlock);
             release_lock (&cckd->cachelock);
-
-            DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d in dfwq %p buf %p\n",
-                      ra, lru, trk, dfw, cckd->cache[lru].buf);
-
-            return &cckd->cache[lru];
+            return NULL;
         }
-        release_lock (&cckd->dfwlock);
-    }
-
-    /* if the current cache buf is writing, then NULLify the buf */
-    if (cckd->cache[lru].writing)
-    {
-        DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d old trk %d writing"
-                  " buf %p released\n", ra, lru, trk,
-                  cckd->cache[lru].trk, cckd->cache[lru].buf);
-        cckd->cache[lru].buf = NULL;
-        cckd->cache[lru].writing = 0;
+        cckd->cachewaits++;
+        wait_condition (&cckd->cachecond, &cckd->cachelock);
+        cckd->cachewaits--;
+        goto cckd_read_trk_retry;
     }
 
     /* get buffer if there isn't one */
@@ -665,20 +576,33 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         cckd->cache[lru].buf = malloc (dev->ckdtrksz);
         DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d get buf %p\n",
                   ra, lru, trk, cckd->cache[lru].buf);
+        if (!cckd->cache[lru].buf)
+        {
+            devmsg ("%4.4X cckddasd: %d rdtrk[%2.2d] %d malloc failed: %s\n",
+                    dev->devnum, ra, lru, trk, strerror(errno));
+            cckd->cache[lru].flags |= CCKD_CACHE_INVALID;
+            goto cckd_read_trk_retry;
+        }
     }
     else
     {
         DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d dropping %d from cache buf %p\n",
                   ra, lru, trk, cckd->cache[lru].trk, cckd->cache[lru].buf);
-        if (!cckd->cache[lru].used) cckd->misses++;
+        if (!(cckd->cache[lru].flags & CCKD_CACHE_USED)) cckd->misses++;
     }
 
+    /* Mark the entry active if not readahead */
+    if (ra == 0)
+    {
+        if (cckd->active) cckd->active->flags &= ~CCKD_CACHE_ACTIVE;
+        cckd->cache[lru].flags = CCKD_CACHE_ACTIVE | CCKD_CACHE_USED;
+    }
+    else cckd->cache[lru].flags = 0;
+
     buf = cckd->cache[lru].buf;
-    buf2 = cckd->cachebuf[ra];
     cckd->cache[lru].trk = trk;
     if (ra) cckd->readaheads++;
-    cckd->cache[lru].reading = 1;
-    cckd->cache[lru].used = 0;
+    cckd->cache[lru].flags |= CCKD_CACHE_READING;
     cckd->cache[lru].age = ++cckd->cacheage;
 
     /* asynchrously schedule readaheads */
@@ -689,22 +613,24 @@ BYTE           *buf,*buf2;              /* Buffers                   */
 
     /* read the track image */
     obtain_lock (&cckd->filelock);
-    len2 = cckd_read_trkimg (dev, buf2, trk, unitstat);
+    len2 = cckd_read_trkimg (dev, (BYTE *)&buf2, trk, unitstat);
     release_lock (&cckd->filelock);
-    DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d read buf %p len %ld\n",
-              ra, lru, trk, buf2, len2);
+    DEVTRACE ("cckddasd: %d rdtrk[%2.2d] %d read len %ld\n",
+              ra, lru, trk, len2);
 
     /* uncompress the track image */
     switch (buf2[0]) {
 
     case CCKD_COMPRESS_NONE:
+        memcpy (buf, &buf2, len2);
+        len = len2;
         DEVTRACE("cckddasd: %d rdtrk[%2.2d] %d not compressed\n",
                  ra, lru, trk);
         break;
 
     case CCKD_COMPRESS_ZLIB:
         /* Uncompress the track image using zlib */
-        memcpy (buf, buf2, CKDDASD_TRKHDR_SIZE);
+        memcpy (buf, &buf2, CKDDASD_TRKHDR_SIZE);
         len = dev->ckdtrksz - CKDDASD_TRKHDR_SIZE;
         rc = uncompress(&buf[CKDDASD_TRKHDR_SIZE],
                         &len, &buf2[CKDDASD_TRKHDR_SIZE],
@@ -712,15 +638,13 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         len += CKDDASD_TRKHDR_SIZE;
         DEVTRACE("cckddasd: %d rdtrk[%2.2d] %d uncompressed len %ld code %d\n",
                  ra, lru, trk, len, rc);
-
         if (rc != Z_OK)
         {   devmsg ("%4.4X cckddasd: rdtrk %d uncompress error: %d\n",
                         dev->devnum, trk, rc);
             len = cckd_null_trk (dev, buf, trk, 0);
-            if (*unitstat)
+            if (unitstat)
             {
-                ckd_build_sense (dev, SENSE_EC, 0, 0,
-                                 FORMAT_1, MESSAGE_0);
+                ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
             }
         }
@@ -729,7 +653,7 @@ BYTE           *buf,*buf2;              /* Buffers                   */
 #ifdef CCKD_BZIP2
     case CCKD_COMPRESS_BZIP2:
         /* Decompress the track image using bzip2 */
-        memcpy (buf, buf2, CKDDASD_TRKHDR_SIZE);
+        memcpy (buf, &buf2, CKDDASD_TRKHDR_SIZE);
         len = dev->ckdtrksz - CKDDASD_TRKHDR_SIZE;
         rc = BZ2_bzBuffToBuffDecompress (
                         &buf[CKDDASD_TRKHDR_SIZE],
@@ -739,15 +663,13 @@ BYTE           *buf,*buf2;              /* Buffers                   */
         len += CKDDASD_TRKHDR_SIZE;
         DEVTRACE("cckddasd: %d rdtrk[%2.2d] %d decompressed len %ld code %d\n",
                  ra, lru, trk, len, rc);
-
         if (rc != BZ_OK)
         {   devmsg ("cckddasd: decompress error for trk %d: %d\n",
                     trk, rc);
             len = cckd_null_trk (dev, buf, trk, 0);
-            if (*unitstat)
+            if (unitstat)
             {
-                ckd_build_sense (dev, SENSE_EC, 0, 0,
-                                 FORMAT_1, MESSAGE_0);
+                ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
                 *unitstat = CSW_CE | CSW_DE | CSW_UC;
             }
         }
@@ -757,11 +679,10 @@ BYTE           *buf,*buf2;              /* Buffers                   */
     default:
         devmsg ("cckddasd: %4.4x unknown compression for trk %d: %d\n",
                 dev->devnum, trk, buf2[0]);
-        len = cckd_null_trk (dev, buf2, trk, 0);
-        if (*unitstat)
+        len = cckd_null_trk (dev, buf, trk, 0);
+        if (unitstat)
         {
-            ckd_build_sense (dev, SENSE_EC, 0, 0,
-                             FORMAT_1, MESSAGE_0);
+            ckd_build_sense (dev, SENSE_EC, 0, 0, FORMAT_1, MESSAGE_0);
             *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
         break;
@@ -769,35 +690,26 @@ BYTE           *buf,*buf2;              /* Buffers                   */
 
     obtain_lock (&cckd->cachelock);
 
-    cckd->cache[lru].reading = cckd->cache[lru].updated = 0;
-
-    if (buf2[0] == CCKD_COMPRESS_NONE)
-    {   /* need to flip/flop buffers */
-        cckd->cache[lru].buf = buf2;
-        cckd->cachebuf[ra] = buf;
-    }
-    else buf[0] = CCKD_COMPRESS_NONE;
-
+    cckd->cache[lru].flags &= ~CCKD_CACHE_READING;
 
     /* wakeup other thread waiting for this read */
-    if (cckd->cache[lru].waiting)
+    if (cckd->cache[lru].flags & CCKD_CACHE_READWAIT)
     {   DEVTRACE("cckddasd: %d rdtrk[%2.2d] %d signalling read complete buf %p\n",
                  ra, lru, trk, cckd->cache[lru].buf);
-        signal_condition (&cckd->rtcond);
+        signal_condition (&cckd->readcond);
+    }
+
+    /* wakeup cache entry waiters if readahead */
+    if (ra && cckd->cachewaits)
+    {   DEVTRACE("cckddasd: %d rdtrk[%2.2d] %d signalling cache entry available\n",
+                 ra, lru, trk);
+        signal_condition (&cckd->cachecond);
     }
 
     DEVTRACE("cckddasd: %d rdtrk[%2.2d] %d complete buf %p\n",
               ra, lru, trk, buf);
 
     release_lock (&cckd->cachelock);
-
-    /* schedule any outstanding writes */
-    if (cckd->dfwq)
-    {   obtain_lock (&cckd->dfwlock);
-        if (cckd->dfwq && cckd->dfwaiting)
-            signal_condition (&cckd->dfwcond);
-        release_lock (&cckd->dfwlock);
-    }
 
     return &cckd->cache[lru];
 
@@ -810,39 +722,55 @@ BYTE           *buf,*buf2;              /* Buffers                   */
 void cckd_readahead (DEVBLK *dev, int trk)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int             ra[CCKD_MAX_RA];        /* Thread create switches    */
-int             i;                      /* Loop index                */
+int             ra[CCKD_RA_SIZE];       /* Thread create switches    */
+int             i, r;                   /* Indexes                   */
+TID             tid;                    /* Readahead thread id       */
 
-//  return; /*DEBUG*/
     cckd = dev->cckd_ext;
 
-    if (!cckd->threading || dev->ckdcachenbr < cckd->max_ra + 2 ||
-        cckd->max_ra < 1 || dev->batch) return;
+    if (dev->ckdcachenbr < cckd->ramax + 2 || cckd->ramax < 1 || dev->batch)
+        return;
 
-    /* initialize */
+    /* Initialize */
     memset ( ra, 0, sizeof (ra));
 
     /* make sure readahead tracks aren't already cached */
     for (i = 0; i < dev->ckdcachenbr; i++)
         if (cckd->cache[i].trk > trk
-         && cckd->cache[i].trk <= trk + cckd->max_ra)
+         && cckd->cache[i].trk <= trk + cckd->ramax)
             ra[cckd->cache[i].trk - (trk+1)] = 1;
 
-    /* wakeup readahead threads for uncached tracks */
-    for (i = 0; i < cckd->max_ra; i++)
+    /* Queue the tracks to the readahead queue */
+    obtain_lock (&cckd->ralock);
+    for (i = 0; i < cckd->ramax && cckd->rafree >= 0; i++)
     {
-        if (ra[i] || trk + 1 +i >= dev->ckdtrks) continue;
-        cckd->ratrk[i] = trk + 1 + i;
-        if (cckd->rainit[i])
+        if (ra[i] || trk + 1 + i >= dev->ckdtrks) continue;
+        r = cckd->rafree;
+        cckd->rafree = cckd->ra[r].next;
+        if (cckd->ralast < 0)
         {
-            obtain_lock (&cckd->ralock[i]);
-            signal_condition (&cckd->racond[i]);
-            release_lock (&cckd->ralock[i]);
+            cckd->ra1st = cckd->ralast = r;
+            cckd->ra[r].prev = cckd->ra[r].next = -1;
         }
         else
-           create_thread (&cckd->ratid[i], NULL, cckd_ra, dev);
+        {
+            cckd->ra[cckd->ralast].next = r;
+            cckd->ra[r].prev = cckd->ralast;
+            cckd->ra[r].next = -1;
+            cckd->ralast = r;
+        }
+        cckd->ra[r].trk = trk + 1 + i;
     }
 
+    /* Schedule the readahead if any are pending */
+    if (cckd->ra1st >= 0)
+    {
+        if (cckd->rawaiting)
+            signal_condition (&cckd->racond);
+        else if (cckd->ras < cckd->ramax)
+            create_thread (&tid, NULL, cckd_ra, dev);
+    }
+    release_lock (&cckd->ralock);
 } /* end function cckd_readahead */
 
 
@@ -854,329 +782,289 @@ void cckd_ra (DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             trk;                    /* Readahead track           */
 int             ra;                     /* Readahead index           */
+int             r;                      /* Readahead queue index     */
+TID             tid;                    /* Readahead thread id       */
 
     cckd = dev->cckd_ext;
 
-    obtain_lock (&cckd->cachelock);
-    ra = cckd->ra++;
-    release_lock (&cckd->cachelock);
-    if (ra >= cckd->max_ra) return;
-
-    cckd->rainit[ra] = 1;
-
-    do /* while (cckd->threading) */
+    obtain_lock (&cckd->ralock);
+    ra = ++cckd->ras;
+    
+    /* Return without messages if too many already started */
+    if (ra > cckd->ramax)
     {
-        /* call readahead while `trk' isn't zero */
-        while ((trk = cckd->ratrk[ra]) > 0)
-        {   cckd->ratrk[ra] = 0;
-            cckd_read_trk (dev, trk, ra + 1, NULL);
+        --cckd->ras;
+        release_lock (&cckd->ralock);
+        return;
+    }
+
+    devmsg ("%4.4X: cckd_readahead[%d] thread started: tid="TIDPAT", pid = %d\n",
+            dev->devnum, ra, thread_id(), getpid());
+
+    while (ra <= cckd->ramax)
+    {
+        if (cckd->ra1st < 0)
+        {
+            cckd->rawaiting++;
+            wait_condition (&cckd->racond, &cckd->ralock);
+            cckd->rawaiting--;
         }
 
-        /* wait for the next track */
-        obtain_lock (&cckd->ralock[ra]);
-        wait_condition (&cckd->racond[ra], &cckd->ralock[ra]);
-        release_lock (&cckd->ralock[ra]);
+        /* Possibly shutting down if no writes pending */
+        if (cckd->ra1st < 0) continue;
 
-    } while (cckd->threading);
+        /* Requeue the 1st entry to the readahead free queue */
+        r = cckd->ra1st;
+        trk = cckd->ra[r].trk;
+        cckd->ra1st = cckd->ra[r].next;
+        if (cckd->ra[r].next > -1)
+            cckd->ra[cckd->ra[r].next].prev = -1;
+        else cckd->ralast = -1;
+        cckd->ra[r].next = cckd->rafree;
+        cckd->rafree = r;
 
-    cckd->rainit[ra] = 0;
-    obtain_lock (&cckd->termlock);
-    signal_condition (&cckd->termcond);
-    release_lock (&cckd->termlock);
+        /* Schedule the other readaheads if any are still pending */
+        if (cckd->ra1st)
+        {
+            if (cckd->rawaiting)
+                signal_condition (&cckd->racond);
+            else if (cckd->ras < cckd->ramax)
+                create_thread (&tid, NULL, cckd_ra, dev);
+        }
+        release_lock (&cckd->ralock);
+
+        /* Read the readahead track */
+        cckd_read_trk (dev, trk, ra, NULL);
+
+        obtain_lock (&cckd->ralock);
+    }
+
+    devmsg ("%4.4X cckd_readahead[%d] thread stopping: tid="TIDPAT", pid = %d\n",
+            dev->devnum, ra, thread_id(), getpid());
+    --cckd->ras;
+    if (!cckd->ras) signal_condition(&cckd->termcond);
+    release_lock(&cckd->ralock);
 
 } /* end thread cckd_ra_thread */
 
 
 /*-------------------------------------------------------------------*/
-/* Schedule a track image to be written                              */
+/* Flush updated cache entries                                       */
 /*-------------------------------------------------------------------*/
-void cckd_write_trk(DEVBLK *dev, BYTE *buf)
+void cckd_flush_cache(DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             i;                      /* Index                     */
+TID             tid;                    /* Writer thread id          */
+
+    cckd = dev->cckd_ext;
+    if (cckd->cache == NULL) return;
+
+    /* Scan cache for updated cache entries */
+    for (i = 0; i < dev->ckdcachenbr; i++)
+        if ((cckd->cache[i].flags & CCKD_CACHE_BUSY) == CCKD_CACHE_UPDATED)
+        {
+            cckd->cache[i].flags &= ~CCKD_CACHE_UPDATED;
+            cckd->cache[i].flags |= CCKD_CACHE_WRITE;
+            cckd->writepending++;
+        }
+
+    /* Schedule the writer if any writes are pending */
+    if (cckd->writepending)
+    {
+        if (cckd->writewaiting)
+            signal_condition (&cckd->writercond);
+        else if (cckd->writers < cckd->writersmax)
+            create_thread (&tid, NULL, cckd_writer, dev);
+    }
+}
+
+
+/*-------------------------------------------------------------------*/
+/* Writer thread                                                     */
+/*-------------------------------------------------------------------*/
+void cckd_writer(DEVBLK *dev)
+{
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
+int             writer;                 /* Writer identifier         */
+int             i, o;                   /* Indexes                   */
+BYTE           *buf;                    /* Buffer                    */
+BYTE            buf2[65536];            /* Compress buffer           */
+BYTE           *bufp;                   /* Buffer to be written      */
+unsigned long   len, len2, bufl;        /* Buffer lengths            */
 int             trk;                    /* Track number              */
-CCKD_DFWQE     *dfw;                    /* -> deferred write q elem  */
-int             i;                      /* Loop index                */
+BYTE            compress;               /* Compression algorithm     */
+TID             tid;                    /* Writer thead id           */
+int             rc;                     /* Return code               */
 
     cckd = dev->cckd_ext;
 
-    trk = cckd_cchh (dev, buf, -1);
-    if (trk < 0)
+#ifndef WIN32
+    /* Set writer priority just below cpu priority to mimimize the
+       compression effect */
+    if(dev->cpuprio >= 0)
+        setpriority(PRIO_PROCESS, 0, dev->cpuprio+1);
+#endif
+
+    obtain_lock (&cckd->cachelock);
+    writer = ++cckd->writers;
+
+    /* Return without messages if too many already started */
+    if (writer > cckd->writersmax)
     {
-        free (buf);
+        --cckd->writers;
+        release_lock (&cckd->cachelock);
         return;
     }
 
-    dfw = cckd_scan_dfwq (dev, trk);
-    if (dfw)
-    {   /* reuse the existing entry */
-        DEVTRACE("cckddasd: wrtrk reusing%s dfw %p\n",
-                 dfw->busy ? " busy" : "", dfw);
-        if (dfw->busy) dfw->retry = 1;
-    }
-    else
-    {   /* build a new deferred write queue element */
-        dfw = malloc (CCKD_DFWQE_SIZE);
-        dfw->busy = dfw->retry = 0;
-        dfw->next = cckd->dfwq;
-        cckd->dfwq = dfw;
-    }
-    dfw->buf = buf;
-    dfw->trk = trk;
+    devmsg ("%4.4X cckd_writer[%d] thread started: tid="TIDPAT", pid = %d\n",
+            dev->devnum, writer, thread_id(), getpid());
 
-    DEVTRACE("cckddasd: wrtrk dfw %p trk %u buf %p\n",
-             dfw, trk, buf);
-
-    if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
+    while (writer <= cckd->writersmax || cckd->writepending)
     {
-        obtain_lock (&cckd->filelock);
-        cckd->cdevhdr[cckd->sfn].options |= (CCKD_OPENED | CCKD_ORDWR);
-        cckd_write_chdr (dev);
-        if (cckd->threading)
+        /* Wait for work */
+        if (!cckd->writepending)
         {
-            if (!cckd->writeinit)
-              for (i = 0; i < cckd->max_dfw; i++)
-                create_thread (&cckd->dfwtid, &cckd->dfwattr,
-                               cckd_dfw, dev);
-            if (!cckd->gcinit)
-                create_thread (&cckd->gctid, &cckd->gcattr,
-                               cckd_gcol, dev);
+            cckd->writewaiting++;
+            wait_condition (&cckd->writercond, &cckd->cachelock);
+            cckd->writewaiting--;
         }
-        release_lock (&cckd->filelock);
-    }
 
-} /* end function cckd_write_trk */
+        /* Scan the cache for the oldest pending entry */
+        for (o = -1, i = 0; i < dev->ckdcachenbr; i++)
+            if ((cckd->cache[i].flags & CCKD_CACHE_WRITE)
+             && (o == -1 || cckd->cache[i].age < cckd->cache[o].age))
+                o = i;
 
+        /* Possibly shutting down if no writes pending */
+        if (o < 0)
+        {
+            cckd->writepending = 0;
+            continue;
+        }
 
-/*-------------------------------------------------------------------*/
-/* Deferred Write queue scan                                         */
-/*-------------------------------------------------------------------*/
-CCKD_DFWQE *cckd_scan_dfwq(DEVBLK *dev, int trk)
-{
-CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-CCKD_DFWQE     *dfw;                    /* -> deferred write q elem  */
-int             q;                      /* Queue depth               */
+        cckd->writepending--;
+        cckd->cache[o].flags &= ~CCKD_CACHE_WRITE;
+        cckd->cache[o].flags |= CCKD_CACHE_WRITING;
 
-    cckd = dev->cckd_ext;
+        /* Schedule the other writers if any writes are still pending */
+        if (cckd->writepending)
+        {
+            if (cckd->writewaiting)
+                signal_condition (&cckd->writercond);
+            else if (cckd->writers < cckd->writersmax)
+                create_thread (&tid, NULL, cckd_writer, dev);
+        }
 
-    for (dfw = cckd->dfwq, q = 0; dfw; dfw = dfw->next, q++)
-        if (trk == dfw->trk) break;
-    if (!dfw) cckd->dfwqdepth = q;
+        release_lock (&cckd->cachelock);
 
-    DEVTRACE("cckddasd: dfwqscan trk %d: %s depth %d\n", trk,
-             dfw ? "found" :
-             cckd->dfwq ? "not found" : "null queue", q);
+        /* Compress the track image */
 
-    return dfw;
+        buf = cckd->cache[o].buf;
+        len = cckd_trklen (dev, buf);
+        trk = cckd->cache[o].trk;
+        compress = (len < CCKD_COMPRESS_MIN ?
+                    CCKD_COMPRESS_NONE : cckd->cdevhdr[cckd->sfn].compress);
 
-} /* end function cckd_scan_dfwq */
+        DEVTRACE ("writer[%d] writing track %d\n", writer, cckd->cache[o].trk);
 
+        switch (compress) {
 
-/*-------------------------------------------------------------------*/
-/* Deferred Write thread                                             */
-/*-------------------------------------------------------------------*/
-void cckd_dfw(DEVBLK *dev)
-{
-int             rc;                     /* Return code               */
-int             i;                      /* Index                     */
-CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-CCKD_DFWQE     *dfw;                    /* -> deferred write q elem  */
-CCKD_DFWQE     *prevdfw;                /* -> previous write q elem  */
-BYTE           *buf;                    /* Buffer                    */
-BYTE           *cbuf;                   /* Compress buffer           */
-int             len;                    /* Buffer length             */
-unsigned long   clen;                   /* Compressed buffer length  */
-int             trk;                    /* Track number              */
-BYTE            compress;               /* Compression algorithm     */
-int             d;                      /* Thread id                 */
-int             dfwqovflow=0;           /* 1=dfw queue overflowed    */
-
-    cckd = dev->cckd_ext;
-    cbuf = malloc (dev->ckdtrksz);
-    cckd->writeinit = 1;
-
-    /* start off holding the deferred-write lock */
-    obtain_lock (&cckd->dfwlock);
-    d = cckd->dfwid++;
-
-    do /* while(cckd->threading) */
-    {
-        while (cckd->dfwq != NULL)
-        {   /* get a queue element */
-            dfw = cckd->dfwq;
-            while (dfw && dfw->busy) dfw = dfw->next;
-            if (!dfw) goto dfw_wait;
-        dfw_retry:
-            dfw->busy = 1;
-            dfw->retry = 0;
-            buf = dfw->buf;
-            trk = dfw->trk;
-            len = cckd_trklen (dev, buf);
-            DEVTRACE("cckddasd: %d dfw %p nxt %p buf %p trk %u len %d\n",
-                     d, dfw, dfw->next, buf, trk, len);
-            /* signal other thread if more work to do */
-            if (cckd->dfwaiting && dfw->next)
-                signal_condition (&cckd->dfwcond);
-
-            release_lock (&cckd->dfwlock);
-
-            /* Compress the track image */
-            compress = (len < CCKD_COMPRESS_MIN ?
-                        CCKD_COMPRESS_NONE : cckd->cdevhdr[cckd->sfn].compress);
-            switch (compress) {
-
-            case CCKD_COMPRESS_ZLIB:
-                /* Compress the track image using zlib. Note
-                   that the track header is not compressed. */
-                memcpy (cbuf, buf, CKDDASD_TRKHDR_SIZE);
-                cbuf[0] = CCKD_COMPRESS_ZLIB;
-                clen = dev->ckdtrksz - CKDDASD_TRKHDR_SIZE;
-                rc = compress2 (&cbuf[CKDDASD_TRKHDR_SIZE], &clen,
-                                &buf[CKDDASD_TRKHDR_SIZE],
-                                len - CKDDASD_TRKHDR_SIZE,
-                                cckd->cdevhdr[cckd->sfn].compress_parm);
-                clen += CKDDASD_TRKHDR_SIZE;
-                DEVTRACE("cckddasd: %d dfw compress trk %d len %lu rc=%d\n",
-                         d, trk, clen, rc);
-                if (rc != Z_OK)
-                {   /* compression error */
-                    memcpy (cbuf, buf, len);
-                    clen = len;
-                    cbuf[0] = CCKD_COMPRESS_NONE;
-                }
-                break;
+        case CCKD_COMPRESS_ZLIB:
+            memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
+            buf2[0] = CCKD_COMPRESS_ZLIB;
+            len2 = 65535 - CKDDASD_TRKHDR_SIZE;
+            rc = compress2 (&buf2[CKDDASD_TRKHDR_SIZE], &len2,
+                            &buf[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
+                            cckd->cdevhdr[cckd->sfn].compress_parm);
+            len2 += CKDDASD_TRKHDR_SIZE;
+            DEVTRACE("cckddasd: writer[%d] compress trk %d len %lu rc=%d\n",
+                     writer, trk, len2, rc);
+            if (rc != Z_OK || len2 >= len)
+            {
+                bufp = buf;
+                bufl = len;
+            }
+            else
+            {
+                bufp = (BYTE *)&buf2;
+                bufl = len2;
+            }
+            break;
 
 #ifdef CCKD_BZIP2
-            case CCKD_COMPRESS_BZIP2:
-                /* Compress the track image using bzip2. Note
-                   that the track header is not compressed. */
-                memcpy (cbuf, buf, CKDDASD_TRKHDR_SIZE);
-                cbuf[0] = CCKD_COMPRESS_BZIP2;
-                clen = dev->ckdtrksz - CKDDASD_TRKHDR_SIZE;
-                rc = BZ2_bzBuffToBuffCompress (
-                                &cbuf[CKDDASD_TRKHDR_SIZE],
-                                (unsigned int *)&clen,
-                                &buf[CKDDASD_TRKHDR_SIZE],
-                                len - CKDDASD_TRKHDR_SIZE,
-                                cckd->cdevhdr[cckd->sfn].compress_parm >= 1 &&
-                                cckd->cdevhdr[cckd->sfn].compress_parm <= 9 ?
-                                cckd->cdevhdr[cckd->sfn].compress_parm : 5, 0, 0);
-                clen += CKDDASD_TRKHDR_SIZE;
-                DEVTRACE("cckddasd: %d dfw compress trk %d len %lu rc=%d\n",
-                         d, trk, clen, rc);
-                if (rc != BZ_OK)
-                {   /* compression error */
-                    memcpy (cbuf, buf, len);
-                    clen = len;
-                    cbuf[0] = CCKD_COMPRESS_NONE;
-                }
-                break;
+        case CCKD_COMPRESS_BZIP2:
+            memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
+            buf2[0] = CCKD_COMPRESS_BZIP2;
+            len2 = 65535 - CKDDASD_TRKHDR_SIZE;
+            rc = BZ2_bzBuffToBuffCompress (
+                            &buf2[CKDDASD_TRKHDR_SIZE], (unsigned int *)&len2,
+                            &buf[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
+                            cckd->cdevhdr[cckd->sfn].compress_parm >= 1 &&
+                            cckd->cdevhdr[cckd->sfn].compress_parm <= 9 ?
+                            cckd->cdevhdr[cckd->sfn].compress_parm : 5, 0, 0);
+            len2 += CKDDASD_TRKHDR_SIZE;
+            DEVTRACE("cckddasd: %d writer compress trk %d len %lu rc=%d\n",
+                     writer, trk, len2, rc);
+            if (rc != BZ_OK || len2 >= len)
+            {
+                bufp = buf;
+                bufl = len;
+            }
+            else
+            {
+                bufp = (BYTE *)&buf2;
+                bufl = len2;
+            }
+            break;
 #endif
 
-            default:
-            case CCKD_COMPRESS_NONE:
-                memcpy (cbuf, buf, len);
-                clen = (len == CCKD_NULLTRK_SIZE1) ? 0 :
-                       (len == CCKD_NULLTRK_SIZE0) ? 0xffff : len;
-                cbuf[0] = CCKD_COMPRESS_NONE;
-                break;
-            }
+        default:
+        case CCKD_COMPRESS_NONE:
+            bufp = buf;
+            bufl = len;
+            break;
+        } /* switch (compress) */
 
-            /* if the same track was updated while we were
-               compressing then try again */
-            if (dfw->retry)
-            {   DEVTRACE ("cckddasd: %d dfw %p retry trk %d\n", d, dfw, trk);
-                obtain_lock (&cckd->dfwlock);
-                goto dfw_retry;
-            }
+        obtain_lock (&cckd->filelock);
 
-            /* write the track image */
-            obtain_lock (&cckd->filelock);
-            cckd_write_trkimg (dev, cbuf, clen, trk);
-            release_lock (&cckd->filelock);
-
-            obtain_lock (&cckd->dfwlock);
-
-            /* if the same track was updated while we were
-               writing it then try again */
-            if (dfw->retry)
-            {   DEVTRACE ("cckddasd: %d dfw %p retry trk %d\n", d, dfw, trk);
-                goto dfw_retry;
-            }
-
-            /* remove the dfw entry from the queue */
-            prevdfw = (CCKD_DFWQE *)&cckd->dfwq;
-            while (prevdfw->next != dfw)
-                prevdfw = prevdfw->next;
-            prevdfw->next = dfw->next;
-            release_lock (&cckd->dfwlock);
-
-            /* free the queue entry */
-            free (dfw);
-            DEVTRACE ("cckddasd: %d dfw %p freed\n", d, dfw);
-
-            /* free the buffer unless in use in the cache --  if the
-               overflow flag is 1 then we already have the cache lock */
-            if (!dfwqovflow) obtain_lock (&cckd->cachelock);
-            for (i = 0; i < dev->ckdcachenbr; i++)
-                if (cckd->cache[i].trk == trk)
-                {
-                    cckd->cache[i].writing = 0;
-                    break;
-                }
-            if (!dfwqovflow) release_lock (&cckd->cachelock);
-
-            if (i >= dev->ckdcachenbr)
-            {   DEVTRACE ("cckddasd: %d dfw trk %d free buf %p\n",
-                          d, trk, buf);
-                free (buf);
-            }
-
-            /* if the dfw queue has exceeded its maximum depth,
-               obtain the cache lock to prevent cckd_write_trk()
-               from being called.  note that this will also lock
-               out any other dfw threads for the time being. */
-            if (!dfwqovflow && cckd->dfwqdepth >= cckd->max_dfwq)
-            {
-                DEVTRACE ("cckddasd: dfw q overflow size %d\n",
-                          cckd->dfwqdepth);
-                obtain_lock (&cckd->cachelock);
-                dfwqovflow = 1;
-            }
-
-            obtain_lock (&cckd->dfwlock);
-
-            /* if the dfw queue has overflowed, check its status */
-            if (dfwqovflow)
-            {
-                cckd_scan_dfwq (dev, -1); /* sets cckd->dfwqdepth */
-                if (cckd->dfwqdepth < cckd->max_dfwq)
-                {
-                    dfwqovflow = 0;
-                    release_lock (&cckd->cachelock);
-                    DEVTRACE ("cckddasd: dfw q overflow relieved size %d\n",
-                          cckd->dfwqdepth);
-                }
-            }
-        } /* while (cckd->dfwq != NULL) */
-
-    dfw_wait:
-        /* wait for another track to be written */
-        if (cckd->threading)
-        {   DEVTRACE ("cckddasd: %d dfw waiting\n", d);
-            cckd->dfwaiting++;
-            wait_condition (&cckd->dfwcond, &cckd->dfwlock);
-            cckd->dfwaiting--;
+        /* Turn on read-write header bits if not already on */
+        if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED))
+        {
+            cckd->cdevhdr[cckd->sfn].options |= (CCKD_OPENED | CCKD_ORDWR);
+            cckd_write_chdr (dev);
         }
 
-    } while (cckd->threading);
+        /* Write the track image */
+        cckd_write_trkimg (dev, bufp, bufl, trk);
 
-    release_lock (&cckd->dfwlock);
-    free (cbuf) ;
+        release_lock (&cckd->filelock);
 
-    obtain_lock (&cckd->termlock);
-    signal_condition (&cckd->termcond);
-    release_lock (&cckd->termlock);
-} /* end thread cckd_dfw */
+        /* Schedule the garbage collector */
+        if (cckd->cdevhdr[cckd->sfn].free_number
+         && cckd->gcols < cckd->gcolsmax)
+            create_thread (&tid, NULL, cckd_gcol, dev);
+
+        obtain_lock (&cckd->cachelock);
+        cckd->cache[o].flags &= ~CCKD_CACHE_WRITING;
+        if (cckd->cache[o].flags & CCKD_CACHE_WRITEWAIT)
+        {   DEVTRACE("cckddasd: writer[%d] cache[%2.2d] %d signalling write complete\n",
+                 writer, o, trk);
+            signal_condition (&cckd->writecond);
+        }
+        else if (cckd->cachewaits)
+        {   DEVTRACE("cckddasd: writer[%d] cache[%2.2d] %d signalling"
+            " cache entry available\n", writer, o, trk);
+            signal_condition (&cckd->cachecond);
+        }
+    }
+
+    devmsg ("%4.4X cckd_writer[%d] thread stopping: tid="TIDPAT", pid = %d\n",
+            dev->devnum, writer, thread_id(), getpid());
+    cckd->writers--;
+    if (!cckd->writers) signal_condition(&cckd->termcond);
+    release_lock(&cckd->cachelock);
+} /* end thread cckd_writer */
 
 
 /*-------------------------------------------------------------------*/
@@ -1744,7 +1632,7 @@ int             lru=-1;                 /* Least-Recently-Used cache
         if  (lru == - 1 || cckd->l2cache[i].age < cckd->l2cache[lru].age)
             lru = i;
     }
-
+DEVTRACE("cckd_read_l2 sfx %d l1x %d i %d fnd %d lru %d\n", i,sfx,l1x,fnd,lru);
     /* check for level 2 cache hit */
     if (fnd >= 0)
     {
@@ -1760,9 +1648,8 @@ int             lru=-1;                 /* Least-Recently-Used cache
 
     cckd->l2cache[lru].sfx = sfx;
     cckd->l2cache[lru].l1x = l1x;
-    cckd->l2cache[i].age = ++cckd->cacheage;
+    cckd->l2cache[lru].age = ++cckd->cacheage;
     cckd->l2 = (CCKD_L2ENT *)cckd->l2cache[lru].buf;
-
 
     /* check for null table */
     if (!cckd->l1[sfx][l1x] || cckd->l1[sfx][l1x] == 0xffffffff)
@@ -1791,9 +1678,9 @@ int             lru=-1;                 /* Least-Recently-Used cache
 
 
 /*-------------------------------------------------------------------*/
-/* Flush all l2tab cache entries for a given index                   */
+/* Purge all l2tab cache entries for a given index                   */
 /*-------------------------------------------------------------------*/
-void cckd_flush_l2 (DEVBLK *dev, int sfx)
+void cckd_purge_l2 (DEVBLK *dev, int sfx)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             i;                      /* Index variable            */
@@ -1822,7 +1709,7 @@ int             i;                      /* Index variable            */
         }
     }
 
-} /* end function cckd_flush_l2 */
+} /* end function cckd_purge_l2 */
 
 
 /*-------------------------------------------------------------------*/
@@ -2480,8 +2367,6 @@ void cckd_sf_add (DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
-int             i;                      /* Loop index                */
-int             dfw_locked;             /* Flag byte                 */
 BYTE            sfn[256];               /* Shadow file name          */
 
     cckd = dev->cckd_ext;
@@ -2493,33 +2378,12 @@ BYTE            sfn[256];               /* Shadow file name          */
     }
 
     /* schedule updated track entries to be written */
-    dfw_locked = 0;
     obtain_lock (&cckd->cachelock);
-    for (i = 0; i < dev->ckdcachenbr && cckd->cache; i++)
-    {
-        if (cckd->cache[i].updated)
-        {   cckd->cache[i].updated = 0;
-            cckd->cache[i].writing = 1;
-            if (!dfw_locked)
-            {   obtain_lock (&cckd->dfwlock);
-                dfw_locked = 1;
-            }
-            cckd_write_trk (dev, cckd->cache[i].buf);
-        }
-    }
-
-    /* signal the deferred write thread */
-    if (cckd->dfwq && cckd->dfwaiting)
-    {
-        if (!dfw_locked) obtain_lock (&cckd->dfwlock);
-        if (cckd->dfwq && cckd->dfwaiting)
-            signal_condition (&cckd->dfwcond);
-        release_lock (&cckd->dfwlock);
-    }
+    cckd_flush_cache (dev);
     release_lock (&cckd->cachelock);
 
     /* wait a bit */
-    while (cckd->dfwq) sleep (1);
+    while (cckd->writepending) usleep (5000);
 
     /* obtain control of the file */
     obtain_lock (&cckd->filelock);
@@ -2823,7 +2687,7 @@ int             add = 0;                /* Add the shadow file back  */
     } /* merge into regular ckd file */
 
     /* remove the old file */
-    cckd_flush_l2 (dev, sfx);
+    cckd_purge_l2 (dev, sfx);
     close (cckd->fd[sfx]);
     free (cckd->l1[sfx]);
     cckd->l1[sfx] = NULL;
@@ -2888,8 +2752,6 @@ void cckd_sf_comp (DEVBLK *dev)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             rc;                     /* Return code               */
-int             i;                      /* Loop index                */
-int             dfw_locked;             /* Flag byte                 */
 
     cckd = dev->cckd_ext;
     if (!cckd)
@@ -2900,33 +2762,12 @@ int             dfw_locked;             /* Flag byte                 */
     }
 
     /* schedule updated track entries to be written */
-    dfw_locked = 0;
     obtain_lock (&cckd->cachelock);
-    for (i = 0; i < dev->ckdcachenbr && cckd->cache; i++)
-    {
-        if (cckd->cache[i].updated)
-        {   cckd->cache[i].updated = 0;
-            cckd->cache[i].writing = 1;
-            if (!dfw_locked)
-            {   obtain_lock (&cckd->dfwlock);
-                dfw_locked = 1;
-            }
-            cckd_write_trk (dev, cckd->cache[i].buf);
-        }
-    }
-
-    /* signal the deferred write thread */
-    if (cckd->dfwq && cckd->dfwaiting)
-    {
-        if (!dfw_locked) obtain_lock (&cckd->dfwlock);
-        if (cckd->dfwq && cckd->dfwaiting)
-            signal_condition (&cckd->dfwcond);
-        release_lock (&cckd->dfwlock);
-    }
+    cckd_flush_cache (dev);
     release_lock (&cckd->cachelock);
 
     /* wait a bit */
-    while (cckd->dfwq) sleep (1);
+    while (cckd->writepending) usleep (5000);
 
     /* obtain control of the file */
     obtain_lock (&cckd->filelock);
@@ -2947,8 +2788,8 @@ int             dfw_locked;             /* Flag byte                 */
     /* Read the Level 1 table */
     rc = cckd_read_l1 (dev);
 
-    /* Flush the Level 2 tables */
-    cckd_flush_l2 (dev, cckd->sfn);
+    /* Purge the Level 2 tables */
+    cckd_purge_l2 (dev, cckd->sfn);
 
     release_lock (&cckd->filelock);
 
@@ -3013,7 +2854,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     devmsg ("cckddasd: %s\n", dev->filename);
     devmsg ("cckddasd: [0] %10lld %3lld%% %4d %s %7d %7d %7d\n",
             (long long)st.st_size,
-            (long long)((cckd->cdevhdr[0].free_total * 100) / st.st_size),
+            (long long)((long long)((long long)cckd->cdevhdr[0].free_total * 100) / st.st_size),
             cckd->cdevhdr[0].free_number, ost[cckd->open[0]],
             cckd->reads[0], cckd->writes[0], cckd->l2reads[0]);
 
@@ -3028,7 +2869,7 @@ BYTE            sfn[256];               /* Shadow file name          */
     {
         devmsg ("cckddasd: [%d] %10lld %3lld%% %4d %s %7d %7d %7d\n",
                 i, (long long)cckd->cdevhdr[i].size,
-                (long long)((cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
+                (long long)((long long)((long long)cckd->cdevhdr[i].free_total * 100) / cckd->cdevhdr[i].size),
                 cckd->cdevhdr[i].free_number, ost[cckd->open[i]],
                 cckd->reads[i], cckd->writes[i], cckd->l2reads[i]);
     }
@@ -3041,395 +2882,257 @@ BYTE            sfn[256];               /* Shadow file name          */
 /*-------------------------------------------------------------------*/
 void cckd_gcol(DEVBLK *dev)
 {
-int             i,sfx;                  /* Indices                   */
+int             gcol;                   /* Identifier                */
+int             rc;                     /* Return code               */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int             dfw_locked;             /* Dfw lock obtained         */
 long long       size, free;             /* File size, free           */
 int             wait;                   /* Seconds to wait           */
+struct timeval  now;                    /* Time-of-day               */
 struct timespec tm;                     /* Time-of-day to wait       */
-int             gc;                     /* Garbage states            */
+int             gc, oldgc = -1;         /* Garbage states            */
 struct          CCKD_GCOL {             /* Garbage collection parms  */
-int             algorithm;              /* Algorithm                 */
+int             hi;                     /* 1 = start after last      */
 int             interval;               /* Collection interval (sec) */
-int             iterations;             /* Iterations per interval   */
-int             size;                   /* Bytes per iteration       */
+int             size;                   /* K bytes per iteration     */
     }           gctab[5]= {             /* default gcol parameters   */
-               {GC_COMBINE_HI, 5, 8, -4},   /* critical  50% - 100%  */
-               {GC_COMBINE_HI, 5, 4, -2},   /* severe    25% - 50%   */
-               {GC_COMBINE_HI, 5, 4, -1},   /* moderate 12.5%- 25%   */
-               {GC_COMBINE_LO, 5, 2, -1},   /* light     6.3%- 12.5% */
-               {GC_COMBINE_LO, 5, 1, -1}};  /* none       0% -  6.3% */
+               {FALSE, 5,4096},         /* critical  50%   - 100%    */
+               {FALSE, 5,2048},         /* severe    25%   -  50%    */
+               {FALSE, 5,1024},         /* moderate  12.5% -  25%    */
+               {FALSE, 5, 512},         /* light      6.3% -  12.5%  */
+               {FALSE, 5, 256}};        /* none       0%   -   6.3%  */
+char *gcstates[] = {"critical","severe","moderate","light","none"}; 
 
     cckd = dev->cckd_ext;
-    sfx = cckd->sfn;
 
-    /* first-time initialization */
-    if (!cckd->gcinit) cckd->gcinit=1;
-
-    time (&cckd->gctime);
-
-    do /* while cckd->threading */
+    obtain_lock (&cckd->gclock);
+    gcol = ++cckd->gcols;
+    
+    /* Return without messages if too many already started */
+    if (gcol > cckd->gcolsmax)
     {
-        sfx = cckd->sfn;
+        --cckd->gcols;
+        release_lock (&cckd->gclock);
+        return;
+    }
 
-        /* find updated tracks if enough time has elapsed */
-        dfw_locked = 0;
+    devmsg ("%4.4x: gcol[%d] started pid %d tid "TIDPAT"\n",
+            dev->devnum, gcol, getpid(), thread_id());
+
+    while (gcol <= cckd->gcolsmax)
+    {
+        release_lock (&cckd->gclock);
+
+        /* schedule any updated tracks to be written */
         obtain_lock (&cckd->cachelock);
-        for (i = 0; i < dev->ckdcachenbr && cckd->cache; i++)
-        {
-            if (cckd->cache[i].updated)
-            {   cckd->cache[i].updated = 0;
-                cckd->cache[i].writing = 1;
-                if (!dfw_locked)
-                {   obtain_lock (&cckd->dfwlock);
-                    dfw_locked = 1;
-                }
-                cckd_write_trk (dev, cckd->cache[i].buf);
-            }
-        }
-
-        /* signal dfw thread if any writes were scheduled */
-        if (dfw_locked)
-        {
-            if (cckd->dfwq && cckd->dfwaiting)
-                signal_condition (&cckd->dfwcond);
-            release_lock (&cckd->dfwlock);
-        }
+        cckd_flush_cache (dev);
         release_lock (&cckd->cachelock);
 
-        /* go wait if no free space */
-        if (!cckd->cdevhdr[sfx].free_number)
-        {
-            wait = cckd->max_wt;
-            goto gc_wait;
-        }
-
         /* determine garbage state */
-        size = (long long)cckd->cdevhdr[sfx].size;
-        free = (long long)cckd->cdevhdr[sfx].free_total;
+        size = (long long)cckd->cdevhdr[cckd->sfn].size;
+        free = (long long)cckd->cdevhdr[cckd->sfn].free_total;
         if      (free >= (size = size/2)) gc = 0;
         else if (free >= (size = size/2)) gc = 1;
         else if (free >= (size = size/2)) gc = 2;
         else if (free >= (size = size/2)) gc = 3;
         else gc = 4;
 
-        /* call the garbage collector */
-        switch (gctab[gc].algorithm) {
-        default:
-        case GC_COMBINE_LO:
-             cckd_gc_combine(dev, gctab[gc].iterations,
-                                  gctab[gc].size, 0);
-             break;
+        /* Adjust the state based on the number of free spaces */
+        if (cckd->cdevhdr[cckd->sfn].free_number >  800 && gc > 0) gc--;
+        if (cckd->cdevhdr[cckd->sfn].free_number > 1800 && gc > 0) gc--;
 
-        case GC_COMBINE_HI:
-             cckd_gc_combine(dev, gctab[gc].iterations,
-                                  gctab[gc].size, 1);
-             break;
-        }
+        /* Issue garbage state message */
+        if (gc != oldgc && TRUE)
+            devmsg ("%4.4X gcol[%d] state is %s\n", dev->devnum, gcol, gcstates[gc]);
+        oldgc = gc;
+
+        /* call the garbage collector */
+        rc = cckd_gc_percolate(dev, gctab[gc].size, gctab[gc].hi);
 
         /* wait a bit */
         wait = gctab[gc].interval;
         if (wait < 1) wait = 5;
 
-    gc_wait:
-        time (&cckd->gctime);
-        DEVTRACE ( "cckddasd: gcol waiting %d seconds at %s",
-                   wait, ctime(&cckd->gctime));
+        DEVTRACE ( "gcol[%d] waiting %d seconds, max %d\n", gcol, wait,
+                   cckd->gcolsmax);
 
-        tm.tv_sec = cckd->gctime + wait;
-        tm.tv_nsec = 0;
         obtain_lock (&cckd->gclock);
-        timed_wait_condition ( &cckd->gccond, &cckd->gclock, &tm);
-        release_lock (&cckd->gclock);
-        time (&cckd->gctime);
-        DEVTRACE ( "cckddasd: gcol waking up at %s", ctime(&cckd->gctime));
-    } while (cckd->threading);
+        gettimeofday (&now, NULL);
+        tm.tv_sec = now.tv_sec + wait;
+        tm.tv_nsec = now.tv_usec * 1000;
+        timed_wait_condition (&cckd->gccond, &cckd->gclock, &tm);
+    }
 
-    obtain_lock (&cckd->termlock);
-    cckd->gcinit = 0;
-    signal_condition (&cckd->termcond);
-    release_lock (&cckd->termlock);
+    devmsg ("%4.4x: gcol[%d] stopping pid %d tid "TIDPAT"\n",
+            dev->devnum, gcol, getpid(), thread_id());
+
+    cckd->gcols--;
+    if (!cckd->gcols) signal_condition (&cckd->termcond);
+    release_lock (&cckd->gclock);
 } /* end thread cckd_gcol */
 
+
 /*-------------------------------------------------------------------*/
-/* Garbage Collection -- Combine algorithm                           */
+/* Garbage Collection -- Percolate algorithm                         */
 /*                                                                   */
-/* Selects the free space block that will combine with the most      */
-/* other free space blocks within `size' bytes.                      */
-/* In the event of a tie selects the free space block closest to the */
-/* beginning of the file (hi == 0) or the end of the file (hi == 1). */
+/* A kinder gentler algorithm                                        */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
-void cckd_gc_combine(DEVBLK *dev, int iterations, int size, int hi)
+int cckd_gc_percolate(DEVBLK *dev, int size, int hi)
 {
 int             rc;                     /* Return code               */
-int             f,i,j,n,p;              /* Indices                   */
+int             i;                      /* Index                     */
+int             fd;                     /* Current file descriptor   */
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             sfx,l1x,l2x;            /* Table Indices             */
-int             read_len;               /* Read length               */
-int             len;                    /* Length                    */
-off_t           pos;                    /* Buffer offset             */
-off_t           off;                    /* Offset into buffer        */
-off_t           fpos,npos;              /* Free space offsets        */
-int             moved;                  /* Amount of space moved     */
+int             trk;                    /* Track number              */
+off_t           pos = 0, fpos, oldpos;  /* File offsets              */
+int             len = 0, flen;          /* Space lengths             */
+int             moved = 0;              /* Space moved               */
+CCKD_L2ENT      l2;                     /* Copied level 2 entry      */
+int             b, blen;                /* Buffer index, length      */
+BYTE            buf[65536];             /* Buffer                    */
 
     cckd = dev->cckd_ext;
     sfx = cckd->sfn;
+    size = size << 10;
 
-    if (iterations == 0) iterations = 1;
-    if (size == 0) size = dev->ckdtrksz;
-    if (size < 0) size = abs (size) * dev->ckdtrksz;
+    DEVTRACE("cckddasd: gcperc size %d 1st 0x%x nbr %d\n",
+             size, cckd->cdevhdr[sfx].free, cckd->cdevhdr[sfx].free_number);
 
-    DEVTRACE("cckddasd: gccomb iter %d sz %d 1st 0x%x nbr %d\n",
-             iterations, size, cckd->cdevhdr[sfx].free, cckd->cdevhdr[sfx].free_number);
-
-    if (cckd->cdevhdr[sfx].free == 0 || cckd->cdevhdr[sfx].free_number == 0)
-        return;
-
-    /* free the old buffer if it's too short */
-    if (cckd->gcbuf != NULL && size > cckd->gcbuflen)
-    {
-        free (cckd->gcbuf);
-        cckd->gcbuf = NULL;
-    }
-
-    /* get a buffer if we don't have one */
-    if (cckd->gcbuf == NULL)
-    {
-       cckd->gcbuflen = size > dev->ckdtrksz ?
-                        size : dev->ckdtrksz;
-       cckd->gcbuf = malloc (cckd->gcbuflen);
-    }
-
-    for ( ; iterations && cckd->threading; iterations--)
+    while (moved < size)
     {
         /* get the file lock */
         obtain_lock (&cckd->filelock);
         sfx = cckd->sfn;
+        fd = cckd->fd[sfx];
 
         /* exit if no more free space */
-        if (cckd->cdevhdr[sfx].free == 0)
-        {   release_lock (&cckd->filelock);
-            break;
+        if (cckd->cdevhdr[sfx].free == 0 || cckd->cdevhdr[sfx].free_number == 0)
+        {
+            release_lock (&cckd->filelock);
+            return 0;
         }
 
         /* make sure the free space chain is built */
         if (!cckd->free) cckd_read_fsp (dev);
 
-        /* find the free space that can combine with the most */
-        fpos = cckd->cdevhdr[sfx].free;
-        for (f = i = cckd->free1st; i >= 0; i = cckd->free[i].next)
+        /* Move either the first or last free space */
+        fpos = (off_t)cckd->cdevhdr[sfx].free;
+        for (i = cckd->free1st; hi && cckd->free[i].next >= 0; i = cckd->free[i].next)
+            fpos = (off_t)cckd->free[i].pos;
+        flen = cckd->free[i].len;
+        DEVTRACE ("cckddasd: gcperc free pos 0x%llx len %d\n",
+                  (long long)fpos, flen);
+
+        /* Read to the next free space or to end-of-file but don't exceed 64K */
+        if (cckd->free[i].pos)
+            blen = cckd->free[i].pos - (fpos + flen);
+        else blen = cckd->cdevhdr[sfx].size - (fpos + flen);
+        if (blen > 65536) blen = 65536;
+
+        /* Read l2tab and trk spaces */
+        DEVTRACE ("cckddasd: gcperc buf read file[%d] offset 0x%llx len %d\n",
+                  sfx, (long long)(fpos + flen), blen);
+        oldpos = lseek (fd, (off_t)(fpos + flen), SEEK_SET);
+        if (oldpos < 0)
         {
-            pos = fpos + cckd->free[i].len + size * iterations;
-            cckd->free[i].cnt = (pos >= cckd->cdevhdr[sfx].size);
-            npos = cckd->free[i].pos;
-            for (j = cckd->free[i].next; j >= 0; j = cckd->free[j].next)
+            devmsg ("%4.4X cckddasd: gcperc lseek error file[%d] offset 0x%llx: %s\n",
+                    dev->devnum, sfx, (long long)(fpos + flen), strerror(errno));
+            release_lock (&cckd->filelock);
+            return moved;
+        }
+        rc = read (fd, &buf, blen);
+        if (rc < blen)
+        {
+            devmsg ("%4.4X cckddasd: gcperc read error file[%d] offset 0x%llx: %s\n",
+                    dev->devnum, sfx, (long long)(fpos + flen), strerror(errno));
+            release_lock (&cckd->filelock);
+            return moved;
+        }
+
+        /* Process each space in the buffer */
+        for (b = 0; b + CKDDASD_TRKHDR_SIZE <= blen; b += len, moved += len)
+        {
+            /* Check for level 2 table */
+            for (i = 0; i < cckd->cdevhdr[sfx].numl1tab; i++)
+                if (cckd->l1[sfx][i] == (U32)(fpos + flen + b)) break;
+
+            if (i < cckd->cdevhdr[sfx].numl1tab)
             {
-                if (pos < npos) break;
-                cckd->free[i].cnt++;
-                npos = cckd->free[j].pos;
+                /* Moving a level 2 table */
+                len = CCKD_L2TAB_SIZE;
+                if (b + len > blen) break;
+                DEVTRACE ("cckddasd: gcperc move l2tab[%d] at pos 0x%llx len %d\n",
+                          i, (unsigned long long)(fpos + flen + b), len);
+
+                /* Read the level 2 table again because it might have been updated */
+                oldpos = lseek (fd, (off_t)(fpos + flen + b), SEEK_SET);
+                rc = read (fd, &buf[b], len);
+
+                /* Relocate the level 2 table somewhere else */
+                pos = cckd_get_space (dev, len);
+                oldpos = lseek (fd, pos, SEEK_SET);
+                rc = write (fd, &buf[b], len);
+
+                /* Update the level 1 table entry */
+                cckd->l1[sfx][i] = (U32)pos;
+                oldpos = lseek (fd, CCKD_L1TAB_POS + (i * CCKD_L1ENT_SIZE), SEEK_SET);
+                rc = write (fd, &cckd->l1[sfx][i], CCKD_L1ENT_SIZE);
             }
-            fpos = cckd->free[i].pos;
-            if (cckd->free[i].cnt > cckd->free[f].cnt) f = i;
             else
-                if (hi && cckd->free[i].cnt == cckd->free[f].cnt) f = i;
-        }
-
-        if (cckd->free[f].prev >= 0)
-            fpos = cckd->free[cckd->free[f].prev].pos;
-        else fpos = cckd->cdevhdr[sfx].free;
-        pos = fpos + cckd->free[f].len;
-
-        DEVTRACE ("cckddasd: gccomb free pos 0x%llx len %d cnt %d\n",
-                  (long long)fpos, cckd->free[f].len, cckd->free[f].cnt);
-
-        /* read to end of file or `size' */
-        if (pos + size <= cckd->cdevhdr[sfx].size)
-            read_len = size;
-        else
-            read_len = cckd->cdevhdr[sfx].size - pos;
-
-        rc = lseek (cckd->fd[sfx], (off_t)pos, SEEK_SET);
-        rc = read (cckd->fd[sfx], cckd->gcbuf, read_len);
-
-        /* make sure we read at least 1 complete img */
-        len = cckd_gc_len(dev, cckd->gcbuf, pos, 0, read_len);
-        if (len > read_len)
-        {
-            rc = read(cckd->fd[sfx], &cckd->gcbuf[read_len],
-                      len - read_len);
-            read_len = len;
-        }
-
-        DEVTRACE("cckddasd: gccomb read pos 0x%llx len %u\n",
-                 (long long)pos, read_len);
-
-        /* relocate each track image or level 2 table in the buffer */
-        off = moved = 0;
-        while (len !=0 && off + len <= read_len)
-        {
-                l1x = cckd->gcl1x;
-            l2x = cckd->gcl2x;
-
-            if (cckd->gcl2x == -1)
-            {   /* reposition a level 2 table */
-                if (memcmp (&cckd->gcbuf[off], &cckd_empty_l2tab, len))
+            {
+                /* Moving a track image */
+                trk = cckd_cchh (dev, &buf[b], -1);
+                if (trk < 0)
                 {
-                    DEVTRACE("cckddasd: gccomb repo l2[%u]: "
-                             "0x%x to 0x%x\n", l1x, cckd->l1[sfx][l1x],
-                             cckd->l1[sfx][l1x] - cckd->free[f].len);
-                    cckd->l1[sfx][l1x] -= cckd->free[f].len;
-                    cckd->l2updated = 1;
-                    moved += len;
+                    release_lock (&cckd->filelock);
+                    return -1;
                 }
-                else
-                { /* empty level 2 table */
-                    DEVTRACE("cckddasd: gccomb empty l2[%d]\n",l1x);
-                    cckd->l1[sfx][l1x] = 0;
-                    cckd->cdevhdr[sfx].used -= len;
-                    cckd->cdevhdr[sfx].free_total += len;
-                    cckd->free[f].len += len;
+                l1x = trk >> 8;
+                l2x = trk & 0xff;
+
+                /* Read the lookup entry for the track */
+                rc = cckd_read_l2ent (dev, &l2, trk);
+                if (l2.pos != (U32)(fpos + flen + b))
+                {
+                    devmsg ("cckddasd: %4.4x unknown space at offset 0x%llx\n",
+                            dev->devnum, (long long)(fpos + flen + b));
+                    devmsg ("cckddasd: %4.4x %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                            dev->devnum, buf[b+0], buf[b+1],buf[b+2], buf[b+3], buf[b+4]);
+                    cckd_print_itrace (dev);
+                    release_lock (&cckd->filelock);
+                    return -1;
                 }
-                cckd->l1updated = 1;
-            }
-            else
-            {   /* repositioning a track image */
-                cckd->l2[l2x].pos -= cckd->free[f].len;
-                rc = lseek (cckd->fd[sfx], (off_t)cckd->l2[l2x].pos, SEEK_SET);
-                rc = write (cckd->fd[sfx], &cckd->gcbuf[off], len);
-                moved += len;
-                DEVTRACE("cckddasd: gccomb repo trk %u: 0x%x(%u) to 0x%x\n",
-                         l1x * 256 + l2x, cckd->l2[l2x].pos + cckd->free[f].len,
-                         cckd->l2[l2x].len, cckd->l2[l2x].pos);
-                cckd->l2updated = 1;
-            }
-            off += len;
+                len = l2.len;
+                if (b + len > blen) break;
+                DEVTRACE ("cckddasd: gcperc move trk %d at pos 0x%llx len %d\n",
+                          trk, (long long)(fpos + flen + b), len);
 
-            /* check if we are now at a free space */
-            if (pos + off == cckd->free[f].pos)
-            {
-                n = cckd->free[f].next;
-                DEVTRACE("cckddasd: gccomb combine free 0x%llx len %d\n",
-                         (long long)pos + off, cckd->free[n].len);
-                off += cckd->free[n].len;
-                cckd->free[f].pos = cckd->free[n].pos;
-                cckd->free[f].len += cckd->free[n].len;
-                cckd->free[f].next = cckd->free[n].next;
-                cckd->free[n].next = cckd->freeavail;
-                cckd->freeavail = n;
-                n = cckd->free[f].next;
-                if (n >= 0) cckd->free[n].prev = f;
-                cckd->cdevhdr[sfx].free_number--;
+                /* Relocate the track image somewhere else */
+                pos = cckd_get_space (dev, len);
+                oldpos = lseek (fd, pos, SEEK_SET);
+                rc = write (fd, &buf[b], len);
+
+                /* Update the level 2 table entry */
+                l2.pos = (U32)pos;
+                cckd_write_l2ent (dev, &l2, trk);
             }
 
-            /* get length of next space */
-            len = cckd_gc_len(dev, cckd->gcbuf, pos, off, read_len);
-        }
+            /* Release the space occupied by the l2tab or track image */
+            cckd_rel_space (dev, (unsigned int)(fpos + flen + b), len);
 
-        /* write the lookup tables */
-        cckd_write_l2 (dev);
-        cckd_write_l1 (dev);
-
-        DEVTRACE("cckddasd: gccomb space moved %d\n", moved);
-
-        /* relocate the free space */
-        fpos += moved;
-        DEVTRACE("cckddasd: gccomb new free 0x%llx len %d nbr %d\n",
-                 (long long)fpos, cckd->free[f].len,
-                 cckd->cdevhdr[sfx].free_number);
-        p = cckd->free[f].prev;
-        if (p >= 0)
-            cckd->free[p].pos = fpos;
-        else cckd->cdevhdr[sfx].free = fpos;
-        if (cckd->free[f].len > cckd->cdevhdr[sfx].free_largest)
-            cckd->cdevhdr[sfx].free_largest = cckd->free[f].len;
-
-        /* if the free space is at the end then release it */
-        if (fpos + cckd->free[f].len == cckd->cdevhdr[sfx].size)
-            cckd_rel_free_atend (dev, fpos, cckd->free[f].len, f);
+        } /* for each space in the buffer */
 
         release_lock (&cckd->filelock);
-    }
+    } /* while (moved < size) */
 
-    /* free the buffer if it's not standard */
-    if (cckd->gcbuflen > dev->ckdtrksz)
-    {
-        free (cckd->gcbuf);
-        cckd->gcbuf = NULL;
-    }
-
-    return;
-
-} /* end function cckd_gc_combine */
-
-
-/*-------------------------------------------------------------------*/
-/* Garbage Collection -- Return length of space                      */
-/*                                                                   */
-/* Space should either be a track image or a level 2 table.          */
-/* Sets the following fields in the CCKD extension:                  */
-/*                                                                   */
-/*   gcl1x   -  level 1 table index for the space                    */
-/*   gcl2x   -  level 2 table index for a track image else -1        */
-/*                                                                   */
-/*-------------------------------------------------------------------*/
-int cckd_gc_len(DEVBLK *dev, BYTE *buf, off_t pos, int off, int len)
-{
-int             rc;                     /* Return code               */
-int             sfx;                    /* File index                */
-CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
-int             cyl;                    /* Cylinder  (from trk hdr)  */
-int             hd;                     /* Head      (from trk hdr)  */
-int             trk;                    /* Track number              */
-
-    if (off + CKDDASD_TRKHDR_SIZE > len) return 0;
-    cckd = dev->cckd_ext;
     sfx = cckd->sfn;
+    DEVTRACE("cckddasd: gcperc moved %d 1st 0x%x nbr %d\n",
+             moved, cckd->cdevhdr[sfx].free, cckd->cdevhdr[sfx].free_number);
 
-    /* check for level 2 table */
-    cckd->gcl2x = -1;
-    for (cckd->gcl1x = 0; cckd->gcl1x < cckd->cdevhdr[sfx].numl1tab;
-         cckd->gcl1x++)
-        if (cckd->l1[sfx][cckd->gcl1x] == pos + off)
-        {   /* space is a level 2 table */
-            DEVTRACE("cckddasd: gclen off 0x%llx is l2tab[%d] len %ld\n",
-                     (long long)(pos + off), cckd->gcl1x, (long) CCKD_L2TAB_SIZE);
-            rc = cckd_read_l2 (dev, sfx, cckd->gcl1x);
-            return CCKD_L2TAB_SIZE;
-        }
+    return moved;
 
-    cyl = (buf[off+1] << 8) + buf[off+2];
-    hd  = (buf[off+3] << 8) + buf[off+4];
-    trk = cyl * dev->ckdheads + hd;
-    cckd->gcl1x = trk >> 8;
-    cckd->gcl2x = trk & 0xff;
-
-    /* check for track image */
-    if (cyl < dev->ckdcyls
-     && hd  < dev->ckdheads
-     && cckd->l1[sfx][cckd->gcl1x]
-     && cckd->l1[sfx][cckd->gcl1x] != 0xffffffff)
-    {   /* get the level 2 table entry */
-        rc = cckd_read_l2 (dev, sfx, cckd->gcl1x);
-        if (cckd->l2[cckd->gcl2x].pos == pos + off)
-        {   /* space is a track image */
-            DEVTRACE("cckddasd: gclen off 0x%llx is trk %d len %d\n",
-                     (long long)pos + off, trk, cckd->l2[cckd->gcl2x].len);
-            return cckd->l2[cckd->gcl2x].len;
-        }
-    }
-
-    /* unknown space */
-    devmsg ("cckddasd: %4.4x unknown space at offset 0x%llx\n",
-            dev->devnum, (long long)(pos + off));
-    devmsg ("cckddasd: %4.4x %2.2x%2.2x%2.2x%2.2x %2.2x%2.2x%2.2x%2.2x\n",
-            dev->devnum, buf[off], buf[off+1], buf[off+2], buf[off+3],
-            buf[off+4], buf[off+5], buf[off+6], buf[off+7]);
-
-    cckd->gcl1x = cckd->gcl2x = -1;
-    return 0;
-
-} /* end function cckd_gc_len */
+} /* end function cckd_gc_percolate */
 
 
 /*-------------------------------------------------------------------*/
@@ -3441,9 +3144,11 @@ void cckd_print_itrace(DEVBLK *dev)
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 int             start, i;               /* Start index, index        */
 
-devmsg ("%4.4X:cckddasd: print_itrace\n", dev->devnum);
+    if (cckd->itracex < 0) return;
+    devmsg ("%4.4X:cckddasd: print_itrace\n", dev->devnum);
     cckd = dev->cckd_ext;
     i = start = cckd->itracex;
+    cckd->itracex = -1;
     do
     {
         if (i >= 128*CCKD_ITRACEMAX) i = 0;
@@ -3455,3 +3160,15 @@ devmsg ("%4.4X:cckddasd: print_itrace\n", dev->devnum);
     sleep (2);
 #endif
 }
+
+
+DEVHND cckddasd_device_hndinfo = {
+        &ckddasd_init_handler,
+        &ckddasd_execute_ccw,
+        &cckddasd_close_device,
+        &ckddasd_query_device,
+        &cckddasd_start,
+        &cckddasd_end,
+        &cckddasd_start,
+        &cckddasd_end
+};

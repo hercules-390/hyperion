@@ -1758,6 +1758,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
 int     retry = 0;                      /* 1=I/O asynchronous retry  */
 #endif
 
+    if (dev->hnd->start) (dev->hnd->start) (dev);
+
     /* Extract the I/O parameters from the ORB */              /*@IWZ*/
     FETCH_FW(ccwaddr, dev->orb.ccwaddr);                       /*@IWZ*/
     ccwfmt = (dev->orb.flag5 & ORB5_F) ? 1 : 0;                /*@IWZ*/
@@ -1905,7 +1907,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("channel: Device %4.4X attention completed\n"),
                         dev->devnum);
-
+            if (dev->hnd->end) (dev->hnd->end) (dev);
             return NULL;
         } /* end attention processing */
 
@@ -1969,7 +1971,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("channel: Device %4.4X clear completed\n"),
                         dev->devnum);
-
+            if (dev->hnd->end) (dev->hnd->end) (dev);
             return NULL;
         } /* end perform clear subchannel */
 
@@ -2017,7 +2019,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             if (dev->ccwtrace || dev->ccwstep || tracethis)
                 logmsg (_("channel: Device %4.4X halt completed\n"),
                         dev->devnum);
-
+            if (dev->hnd->end) (dev->hnd->end) (dev);
             return NULL;
         } /* end perform halt subchannel */
 
@@ -2138,6 +2140,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                 {
                     dev->syncio_retry = 1;
                     release_lock (&dev->lock);
+                    if (dev->hnd->end) (dev->hnd->end) (dev);
                     return NULL;
                 }
 #endif
@@ -2183,6 +2186,8 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                     logmsg (_("channel: Device %4.4X suspended\n"),
                             dev->devnum);
 
+                if (dev->hnd->suspend) (dev->hnd->suspend) (dev);
+
                 while (dev->busy && (dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
                     wait_condition (&dev->resumecond, &dev->lock);
 
@@ -2190,8 +2195,11 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                 if(!dev->busy)
                 {
                     release_lock (&dev->lock);
+                    if (dev->hnd->end) (dev->hnd->end) (dev);
                     return NULL;
                 }
+
+                if (dev->hnd->resume) (dev->hnd->resume) (dev);
 
                 if (dev->ccwtrace || dev->ccwstep || tracethis)
                     logmsg (_("channel: Device %4.4X resumed\n"),
@@ -2387,6 +2395,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         /* Check if synchronous I/O needs to be retried */
         if (dev->syncio_retry)
         {
+            if (dev->hnd->end) (dev->hnd->end) (dev);
             return NULL;
         }
         retry = 0;
@@ -2518,6 +2527,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
             dev->ccwseq++;
 
     } /* end while(chain) */
+    if (dev->hnd->end) (dev->hnd->end) (dev);
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);

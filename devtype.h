@@ -6,10 +6,14 @@
 #define _DEVICES_H
 
 typedef struct _DEVHND {
-        DEVIF *init;                        /* Device Initialisation */
-        DEVXF *exec;                        /* Device CCW execute    */
-        DEVCF *close;                       /* Device Close          */
-        DEVQF *query;                       /* Device Query          */
+        DEVIF *init;                   /* Device Initialisation      */
+        DEVXF *exec;                   /* Device CCW execute         */
+        DEVCF *close;                  /* Device Close               */
+        DEVQF *query;                  /* Device Query               */
+        DEVSF *start;                  /* Device Start channel pgm   */
+        DEVSF *end;                    /* Device End channel pgm     */
+        DEVSF *resume;                 /* Device Resume channel pgm  */
+        DEVSF *suspend;                /* Device Suspend channel pgm */
 } DEVHND;
 
 

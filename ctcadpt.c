@@ -3127,5 +3127,6 @@ DEVHND ctcadpt_device_hndinfo = {
         &ctcadpt_init_handler,
         &ctcadpt_execute_ccw,
         &ctcadpt_close_device,
-        &ctcadpt_query_device
+        &ctcadpt_query_device,
+        NULL, NULL, NULL, NULL
 };

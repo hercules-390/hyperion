@@ -1329,6 +1329,7 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     /* Initialize the device block */
     dev->hnd = devent->hnd;
     dev->msgpipew = sysblk.msgpipew;
+    dev->cpuprio = sysblk.cpuprio;
     dev->devnum = devnum;
     dev->chanset = devnum >> 12;
     if( dev->chanset >= MAX_CPU_ENGINES )

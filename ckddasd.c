@@ -309,8 +309,7 @@ int             cckd=0;                 /* 1 if compressed CKD       */
         if (strlen (argv[i]) == 4 && !memcmp ("ra=", argv[i], 3)
          && argv[i][3] >= '0' && argv[i][3] <= '0' + CCKD_MAX_RA)
             continue;
-        if (strlen (argv[i]) == 5 && !memcmp ("dfw=", argv[i], 4)
-         && argv[i][4] >= '0' && argv[i][4] <= '0' + CCKD_MAX_DFW)
+        if (strlen (argv[i]) == 5 && !memcmp ("dfw=", argv[i], 4))
             continue;
 
         devmsg (_("HHC351I parameter %d is invalid: %s\n"),
@@ -4479,5 +4478,6 @@ DEVHND ckddasd_device_hndinfo = {
         &ckddasd_init_handler,
         &ckddasd_execute_ccw,
         &ckddasd_close_device,
-        &ckddasd_query_device
+        &ckddasd_query_device,
+        NULL, NULL, NULL, NULL
 };

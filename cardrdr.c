@@ -802,5 +802,6 @@ DEVHND cardrdr_device_hndinfo = {
         &cardrdr_init_handler,
         &cardrdr_execute_ccw,
         &cardrdr_close_device,
-        &cardrdr_query_device
+        &cardrdr_query_device,
+        NULL, NULL, NULL, NULL
 };

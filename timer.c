@@ -178,7 +178,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
 
 #if defined(OPTION_MIPS_COUNTING) && defined(_FEATURE_SIE)
         /* Calculate diff in interval timer units */
-        itimer_diff = (int)((3*sysblk.todclock_diff)/160000);
+        itimer_diff = (int)((3*sysblk.todclock_diff)/625);
 #endif
 
         if(regs->arch_mode == ARCH_370)

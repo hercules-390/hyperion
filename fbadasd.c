@@ -861,5 +861,6 @@ DEVHND fbadasd_device_hndinfo = {
         &fbadasd_init_handler,
         &fbadasd_execute_ccw,
         &fbadasd_close_device,
-        &fbadasd_query_device
+        &fbadasd_query_device,
+        NULL, NULL, NULL, NULL
 };

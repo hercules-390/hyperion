@@ -707,5 +707,6 @@ DEVHND printer_device_hndinfo = {
         &printer_init_handler,
         &printer_execute_ccw,
         &printer_close_device,
-        &printer_query_device
+        &printer_query_device,
+        NULL, NULL, NULL, NULL
 };
