@@ -293,6 +293,7 @@ int attach_device (U16 devnum, char *type,
 {
 DEVBLK *dev;                            /* -> Device block           */
 int     rc;                             /* Return code               */
+int     i;                              /* Loop index                */
 
     /* Check whether device number has already been defined */
     if (find_device_by_devnum(devnum) != NULL)
@@ -315,6 +316,20 @@ int     rc;                             /* Return code               */
 
     dev->typname = strdup(type);
 
+    /* Copy the arguments */
+    dev->argc = addargc;
+    if (addargc)
+    {
+        dev->argv = malloc ( addargc * sizeof(BYTE *) );
+        for (i = 0; i < addargc; i++)
+            if (addargv[i])
+                dev->argv[i] = strdup(addargv[i]);
+            else
+                dev->argv[i] = NULL;
+    }
+    else
+        dev->argv = NULL;
+
     /* Call the device handler initialization function */
     rc = (dev->hnd->init)(dev, addargc, addargv);
 
@@ -322,6 +337,12 @@ int     rc;                             /* Return code               */
     {
         logmsg (_("HHCCF044E Initialization failed for device %4.4X\n"),
                 devnum);
+
+        for (i = 0; i < dev->argc; i++)
+            if (dev->argv[i])
+                free(dev->argv[i]);
+        if (dev->argv)
+            free(dev->argv);
 
         free(dev->typname);
 
@@ -339,6 +360,12 @@ int     rc;                             /* Return code               */
             logmsg (_("HHCCF045E Cannot obtain buffer "
                     "for device %4.4X: %s\n"),
                     dev->devnum, strerror(errno));
+
+            for (i = 0; i < dev->argc; i++)
+                if (dev->argv[i])
+                    free(dev->argv[i]);
+            if (dev->argv)
+                free(dev->argv);
 
             free(dev->typname);
 
@@ -365,6 +392,7 @@ int     rc;                             /* Return code               */
 /*-------------------------------------------------------------------*/
 static int detach_devblk (DEVBLK *dev)
 {
+int     i;                              /* Loop index                */
 
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
@@ -379,6 +407,12 @@ static int detach_devblk (DEVBLK *dev)
     if ((dev->fd > 2) || dev->console)
         /* Call the device close handler */
         (dev->hnd->close)(dev);
+
+    for (i = 0; i < dev->argc; i++)
+        if (dev->argv[i])
+            free(dev->argv[i]);
+    if (dev->argv)
+        free(dev->argv);
 
     free(dev->typname);
 

@@ -3413,6 +3413,9 @@ COMMAND ( "count",     count_cmd,     "Display counts" )
 #endif
 COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures" )
 
+COMMAND ( "suspend",    suspend_cmd,  "Suspend hercules" )
+COMMAND ( "resume",     resume_cmd,   "Resume hercules" )
+
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };
 

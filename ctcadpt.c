@@ -67,29 +67,68 @@ CTCG_PARMBLK;
 
 DEVHND ctcadpt_device_hndinfo =
 {
-    &CTCX_Init,
-    &CTCX_ExecuteCCW,
-    &CTCX_Close,
-    &CTCX_Query,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        &CTCX_Init,                    /* Device Initialisation      */
+        &CTCX_ExecuteCCW,              /* Device CCW execute         */
+        &CTCX_Close,                   /* Device Close               */
+        &CTCX_Query,                   /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 DEVHND ctct_device_hndinfo =
 {
-    &CTCT_Init,
-    &CTCX_ExecuteCCW,
-    &CTCX_Close,
-    &CTCX_Query,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        &CTCT_Init,                    /* Device Initialisation      */
+        &CTCX_ExecuteCCW,              /* Device CCW execute         */
+        &CTCX_Close,                   /* Device Close               */
+        &CTCX_Query,                   /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 DEVHND vmnet_device_hndinfo =
 {
-    &VMNET_Init,
-    &CTCX_ExecuteCCW,
-    &CTCX_Close,
-    &CTCX_Query,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        &VMNET_Init,                   /* Device Initialisation      */
+        &CTCX_ExecuteCCW,              /* Device CCW execute         */
+        &CTCX_Close,                   /* Device Close               */
+        &CTCX_Query,                   /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 extern DEVHND ctci_device_hndinfo;

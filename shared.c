@@ -2906,36 +2906,45 @@ int shared_cmd(int argc, char *argv[], char *cmdline)
 }
 
 DEVHND shared_ckd_device_hndinfo = {
-        &shared_ckd_init,
-        &ckddasd_execute_ccw,
-        &shared_ckd_close,
-        &ckddasd_query_device,
-        &shared_start,
-        &shared_end,
-        &shared_start,
-        &shared_end,
-        &shared_ckd_read,
-        &shared_ckd_write,
-        &shared_used,
-        &shared_reserve,
-        &shared_release
+        &shared_ckd_init,              /* Device Initialisation      */
+        &ckddasd_execute_ccw,          /* Device CCW execute         */
+        &shared_ckd_close,             /* Device Close               */
+        &ckddasd_query_device,         /* Device Query               */
+        &shared_start,                 /* Device Start channel pgm   */
+        &shared_end,                   /* Device End channel pgm     */
+        &shared_start,                 /* Device Resume channel pgm  */
+        &shared_end,                   /* Device Suspend channel pgm */
+        &shared_ckd_read,              /* Device Read                */
+        &shared_ckd_write,             /* Device Write               */
+        &shared_used,                  /* Device Query used          */
+        &shared_reserve,               /* Device Reserve             */
+        &shared_release,               /* Device Release             */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        &ckddasd_hsuspend,             /* Hercules suspend           */
+        &ckddasd_hresume               /* Hercules resume            */
 };
 
-
 DEVHND shared_fba_device_hndinfo = {
-        &shared_fba_init,
-        &fbadasd_execute_ccw,
-        &shared_fba_close,
-        &fbadasd_query_device,
-        &shared_start,
-        &shared_end,
-        &shared_start,
-        &shared_end,
-        &shared_fba_read,
-        &shared_fba_write,
-        &shared_used,
-        &shared_reserve,
-        &shared_release
+        &shared_fba_init,              /* Device Initialisation      */
+        &fbadasd_execute_ccw,          /* Device CCW execute         */
+        &shared_fba_close,             /* Device Close               */
+        &fbadasd_query_device,         /* Device Query               */
+        &shared_start,                 /* Device Start channel pgm   */
+        &shared_end,                   /* Device End channel pgm     */
+        &shared_start,                 /* Device Resume channel pgm  */
+        &shared_end,                   /* Device Suspend channel pgm */
+        &shared_ckd_read,              /* Device Read                */
+        &shared_ckd_write,             /* Device Write               */
+        &shared_used,                  /* Device Query used          */
+        &shared_reserve,               /* Device Reserve             */
+        &shared_release,               /* Device Release             */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        &fbadasd_hsuspend,             /* Hercules suspend           */
+        &fbadasd_hresume               /* Hercules resume            */
 };
 
 #else

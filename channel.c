@@ -1998,6 +1998,12 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         dev->ioactive = DEV_SYS_LOCAL;
         dev->startpending = 0;
     }
+
+#ifdef FEATURE_CHANNEL_SUBSYSTEM
+    /* For hercules `resume' resume suspended state */
+    if (dev->suspended) goto resume_suspend;
+#endif
+
     release_lock (&dev->lock);
 
     /* Call the i/o start exit */
@@ -2436,6 +2442,7 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
                             dev->devnum);
 
                 /* Suspend the device until resume instruction */
+resume_suspend:
                 while (dev->suspended && (dev->scsw.flag2 & SCSW2_AC_RESUM) == 0)
                 {
                     wait_condition (&dev->resumecond, &dev->lock);

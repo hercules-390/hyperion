@@ -5584,21 +5584,26 @@ static
 #endif
 
 DEVHND tapedev_device_hndinfo = {
-        &tapedev_init_handler,	/* INIT */
-        &tapedev_execute_ccw,	/* EXEC */
-        &tapedev_close_device,	/* CLOSE */
-        &tapedev_query_device,  /* QUERY */
-        NULL,                   /* Start */
-	NULL,                   /* End */
-	NULL,                   /* Resume */
-	NULL,                   /* Suspend */
-	NULL,                   /* Read */
-	NULL,                   /* Write */
-	NULL,                   /* Qry Used */
-	NULL,                   /* Reserve */
-	NULL,                   /* Release */
-	TapeImmedCommands       /* Immed CCWs */
+        &tapedev_init_handler,         /* Device Initialisation      */
+        &tapedev_execute_ccw,          /* Device CCW execute         */
+        &tapedev_close_device,         /* Device Close               */
+        &tapedev_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        TapeImmedCommands,             /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
+
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */

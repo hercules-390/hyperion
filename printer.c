@@ -755,12 +755,24 @@ BYTE            c;                      /* Print character           */
 static
 #endif
 DEVHND printer_device_hndinfo = {
-        &printer_init_handler,
-        &printer_execute_ccw,
-        &printer_close_device,
-        &printer_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    printer_immed_commands
+        &printer_init_handler,         /* Device Initialisation      */
+        &printer_execute_ccw,          /* Device CCW execute         */
+        &printer_close_device,         /* Device Close               */
+        &printer_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        printer_immed_commands,        /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 /* Libtool static name colision resolution */

@@ -875,11 +875,24 @@ int     num;                            /* Number of bytes to move   */
 static
 #endif
 DEVHND cardrdr_device_hndinfo = {
-        &cardrdr_init_handler,
-        &cardrdr_execute_ccw,
-        &cardrdr_close_device,
-        &cardrdr_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        &cardrdr_init_handler,         /* Device Initialisation      */
+        &cardrdr_execute_ccw,          /* Device CCW execute         */
+        &cardrdr_close_device,         /* Device Close               */
+        &cardrdr_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 /* Libtool static name colision resolution */

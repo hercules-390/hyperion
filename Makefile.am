@@ -355,6 +355,7 @@ endif
                        loadparm.c    \
                        hsccmd.c    \
                        hscmisc.c   \
+                       sr.c        \
                        $(FISHIO)   \
                        $(DYNSRC)   \
                        ecpsvm.c
@@ -595,6 +596,7 @@ noinst_HEADERS = fishhang.h \
                  service.h  \
                  pttrace.h  \
                  history.h  \
+                 sr.h       \
                  $(extra_dynamic_SRC)
 
 #########################################################

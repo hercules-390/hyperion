@@ -22,6 +22,8 @@ typedef struct _DEVHND {
 	DEVIM immed;                   /* Immediate CCW Codes        */
 	DEVSA *siga_r;                 /* Signal Adapter Input       */
 	DEVSA *siga_w;                 /* Signal Adapter Output      */
+        DEVSR *hsuspend;               /* Hercules suspend           */
+        DEVSR *hresume;                /* Hercules resume            */
 } DEVHND;
 
 

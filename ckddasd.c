@@ -18,6 +18,7 @@
 
 #include "hercules.h"
 #include "devtype.h"
+#include "sr.h"
 
 /*-------------------------------------------------------------------*/
 /* Bit definitions for File Mask                                     */
@@ -1035,6 +1036,253 @@ static
 int ckddasd_used (DEVBLK *dev)
 {
     return dev->ckdcyls;
+}
+
+/*-------------------------------------------------------------------*/
+/* Hercules suspend/resume text unit key values                      */
+/*-------------------------------------------------------------------*/
+#define SR_DEV_CKD_BUFCUR       ( SR_DEV_CKD | 0x001 )
+#define SR_DEV_CKD_BUFOFF       ( SR_DEV_CKD | 0x002 )
+#define SR_DEV_CKD_CURCYL       ( SR_DEV_CKD | 0x003 )
+#define SR_DEV_CKD_CURHEAD      ( SR_DEV_CKD | 0x004 )
+#define SR_DEV_CKD_CURREC       ( SR_DEV_CKD | 0x005 )
+#define SR_DEV_CKD_CURKL        ( SR_DEV_CKD | 0x006 )
+#define SR_DEV_CKD_ORIENT       ( SR_DEV_CKD | 0x007 )
+#define SR_DEV_CKD_CUROPER      ( SR_DEV_CKD | 0x008 )
+#define SR_DEV_CKD_CURDL        ( SR_DEV_CKD | 0x009 )
+#define SR_DEV_CKD_REM          ( SR_DEV_CKD | 0x00a )
+#define SR_DEV_CKD_POS          ( SR_DEV_CKD | 0x00b )
+#define SR_DEV_CKD_DXBLKSZ      ( SR_DEV_CKD | 0x010 )
+#define SR_DEV_CKD_DXBCYL       ( SR_DEV_CKD | 0x011 )
+#define SR_DEV_CKD_DXBHEAD      ( SR_DEV_CKD | 0x012 )
+#define SR_DEV_CKD_DXECYL       ( SR_DEV_CKD | 0x013 )
+#define SR_DEV_CKD_DXEHEAD      ( SR_DEV_CKD | 0x014 )
+#define SR_DEV_CKD_DXFMASK      ( SR_DEV_CKD | 0x015 )
+#define SR_DEV_CKD_DXGATTR      ( SR_DEV_CKD | 0x016 )
+#define SR_DEV_CKD_LRTRANLF     ( SR_DEV_CKD | 0x020 )
+#define SR_DEV_CKD_LROPER       ( SR_DEV_CKD | 0x021 )
+#define SR_DEV_CKD_LRAUX        ( SR_DEV_CKD | 0x022 )
+#define SR_DEV_CKD_LRCOUNT      ( SR_DEV_CKD | 0x023 )
+#define SR_DEV_CKD_3990         ( SR_DEV_CKD | 0x040 )
+#define SR_DEV_CKD_XTDEF        ( SR_DEV_CKD | 0x041 )
+#define SR_DEV_CKD_SETFM        ( SR_DEV_CKD | 0x042 )
+#define SR_DEV_CKD_LOCAT        ( SR_DEV_CKD | 0x043 )
+#define SR_DEV_CKD_SPCNT        ( SR_DEV_CKD | 0x044 )
+#define SR_DEV_CKD_SEEK         ( SR_DEV_CKD | 0x045 )
+#define SR_DEV_CKD_SKCYL        ( SR_DEV_CKD | 0x046 )
+#define SR_DEV_CKD_RECAL        ( SR_DEV_CKD | 0x047 )
+#define SR_DEV_CKD_RDIPL        ( SR_DEV_CKD | 0x048 )
+#define SR_DEV_CKD_XMARK        ( SR_DEV_CKD | 0x049 )
+#define SR_DEV_CKD_HAEQ         ( SR_DEV_CKD | 0x04a )
+#define SR_DEV_CKD_IDEQ         ( SR_DEV_CKD | 0x04b )
+#define SR_DEV_CKD_KYEQ         ( SR_DEV_CKD | 0x04c )
+#define SR_DEV_CKD_WCKD         ( SR_DEV_CKD | 0x04d )
+#define SR_DEV_CKD_TRKOF        ( SR_DEV_CKD | 0x04e )
+#define SR_DEV_CKD_SSI          ( SR_DEV_CKD | 0x04f )
+#define SR_DEV_CKD_WRHA         ( SR_DEV_CKD | 0x050 )
+
+/*-------------------------------------------------------------------*/
+/* Hercules suspend                                                  */
+/*-------------------------------------------------------------------*/
+int ckddasd_hsuspend(DEVBLK *dev, void *file) {
+    if (dev->bufcur >= 0)
+    {
+        SR_WRITE_VALUE(file, SR_DEV_CKD_BUFCUR, dev->bufcur, sizeof(dev->bufcur));
+        SR_WRITE_VALUE(file, SR_DEV_CKD_BUFOFF, dev->bufoff, sizeof(dev->bufoff));
+    }
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURCYL, dev->ckdcurcyl, sizeof(dev->ckdcurcyl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURHEAD, dev->ckdcurhead, sizeof(dev->ckdcurhead));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURREC, dev->ckdcurrec, sizeof(dev->ckdcurrec));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURKL, dev->ckdcurkl, sizeof(dev->ckdcurkl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_ORIENT, dev->ckdorient, sizeof(dev->ckdorient));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CUROPER, dev->ckdcuroper, sizeof(dev->ckdcuroper));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_CURDL, dev->ckdcurdl, sizeof(dev->ckdcurdl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_REM, dev->ckdrem, sizeof(dev->ckdrem));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_POS, dev->ckdpos, sizeof(dev->ckdpos));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBLKSZ, dev->ckdxblksz, sizeof(dev->ckdxblksz));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBCYL, dev->ckdxbcyl, sizeof(dev->ckdxbcyl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXBHEAD, dev->ckdxbhead, sizeof(dev->ckdxbhead));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXECYL, dev->ckdxecyl, sizeof(dev->ckdxecyl));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXEHEAD, dev->ckdxehead, sizeof(dev->ckdxehead));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXFMASK, dev->ckdfmask, sizeof(dev->ckdfmask));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_DXGATTR, dev->ckdxgattr, sizeof(dev->ckdxgattr));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LRTRANLF, dev->ckdltranlf, sizeof(dev->ckdltranlf));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LROPER, dev->ckdloper, sizeof(dev->ckdloper));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LRAUX, dev->ckdlaux, sizeof(dev->ckdlaux));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LRCOUNT, dev->ckdlcount, sizeof(dev->ckdlcount));
+    SR_WRITE_VALUE(file, SR_DEV_CKD_3990, dev->ckd3990, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_XTDEF, dev->ckdxtdef, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SETFM, dev->ckdsetfm, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_LOCAT, dev->ckdlocat, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SPCNT, dev->ckdspcnt, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SEEK, dev->ckdseek, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SKCYL, dev->ckdskcyl, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_RECAL, dev->ckdrecal, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_RDIPL, dev->ckdrdipl, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_XMARK, dev->ckdxmark, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_HAEQ, dev->ckdhaeq, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_IDEQ, dev->ckdideq, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_KYEQ, dev->ckdkyeq, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_WCKD, dev->ckdwckd, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_TRKOF, dev->ckdtrkof, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_SSI, dev->ckdssi, 1);
+    SR_WRITE_VALUE(file, SR_DEV_CKD_WRHA, dev->ckdwrha, 1);
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Hercules resume                                                   */
+/*-------------------------------------------------------------------*/
+int ckddasd_hresume(DEVBLK *dev, void *file)
+{
+int  rc, key, len;
+BYTE byte;
+
+    do {
+        SR_READ_HDR(file, key, len);
+        switch (key) {
+        case SR_DEV_CKD_BUFCUR:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            rc = (dev->hnd->read) ? (dev->hnd->read)(dev, rc, &byte) : -1;
+            if (rc < 0) return -1;
+            break;
+        case SR_DEV_CKD_BUFOFF:
+            SR_READ_VALUE(file, len, &dev->bufoff, sizeof(dev->bufoff));
+            break;
+        case SR_DEV_CKD_CURCYL:
+            SR_READ_VALUE(file, len, &dev->ckdcurcyl, sizeof(dev->ckdcurcyl));
+            break;
+        case SR_DEV_CKD_CURHEAD:
+            SR_READ_VALUE(file, len, &dev->ckdcurhead, sizeof(dev->ckdcurhead));
+            break;
+        case SR_DEV_CKD_CURREC:
+            SR_READ_VALUE(file, len, &dev->ckdcurrec, sizeof(dev->ckdcurrec));
+            break;
+        case SR_DEV_CKD_CURKL:
+            SR_READ_VALUE(file, len, &dev->ckdcurkl, sizeof(dev->ckdcurkl));
+            break;
+        case SR_DEV_CKD_ORIENT:
+            SR_READ_VALUE(file, len, &dev->ckdorient, sizeof(dev->ckdorient));
+            break;
+        case SR_DEV_CKD_CUROPER:
+            SR_READ_VALUE(file, len, &dev->ckdcuroper, sizeof(dev->ckdcuroper));
+            break;
+        case SR_DEV_CKD_CURDL:
+            SR_READ_VALUE(file, len, &dev->ckdcurdl, sizeof(dev->ckdcurdl));
+            break;
+        case SR_DEV_CKD_REM:
+            SR_READ_VALUE(file, len, &dev->ckdrem, sizeof(dev->ckdrem));
+            break;
+        case SR_DEV_CKD_POS:
+            SR_READ_VALUE(file, len, &dev->ckdpos, sizeof(dev->ckdpos));
+            break;
+        case SR_DEV_CKD_DXBLKSZ:
+            SR_READ_VALUE(file, len, &dev->ckdxblksz, sizeof(dev->ckdxblksz));
+            break;
+        case SR_DEV_CKD_DXBCYL:
+            SR_READ_VALUE(file, len, &dev->ckdxbcyl, sizeof(dev->ckdxbcyl));
+            break;
+        case SR_DEV_CKD_DXBHEAD:
+            SR_READ_VALUE(file, len, &dev->ckdxbhead, sizeof(dev->ckdxbhead));
+            break;
+        case SR_DEV_CKD_DXECYL:
+            SR_READ_VALUE(file, len, &dev->ckdxecyl, sizeof(dev->ckdxecyl));
+            break;
+        case SR_DEV_CKD_DXEHEAD:
+            SR_READ_VALUE(file, len, &dev->ckdxehead, sizeof(dev->ckdxehead));
+            break;
+        case SR_DEV_CKD_DXFMASK:
+            SR_READ_VALUE(file, len, &dev->ckdfmask, sizeof(dev->ckdfmask));
+            break;
+        case SR_DEV_CKD_DXGATTR:
+            SR_READ_VALUE(file, len, &dev->ckdxgattr, sizeof(dev->ckdxgattr));
+            break;
+        case SR_DEV_CKD_LRTRANLF:
+            SR_READ_VALUE(file, len, &dev->ckdltranlf, sizeof(dev->ckdltranlf));
+            break;
+        case SR_DEV_CKD_LROPER:
+            SR_READ_VALUE(file, len, &dev->ckdloper, sizeof(dev->ckdloper));
+            break;
+        case SR_DEV_CKD_LRAUX:
+            SR_READ_VALUE(file, len, &dev->ckdlaux, sizeof(dev->ckdlaux));
+            break;
+        case SR_DEV_CKD_LRCOUNT:
+            SR_READ_VALUE(file, len, &dev->ckdltranlf, sizeof(dev->ckdltranlf));
+            break;
+        case SR_DEV_CKD_3990:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckd3990 = rc;
+            break;
+        case SR_DEV_CKD_XTDEF:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdxtdef = rc;
+            break;
+        case SR_DEV_CKD_SETFM:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdsetfm = rc;
+            break;
+        case SR_DEV_CKD_LOCAT:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdlocat = rc;
+            break;
+        case SR_DEV_CKD_SPCNT:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdspcnt = rc;
+            break;
+        case SR_DEV_CKD_SEEK:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdseek = rc;
+            break;
+        case SR_DEV_CKD_SKCYL:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdskcyl = rc;
+            break;
+        case SR_DEV_CKD_RECAL:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdrecal = rc;
+            break;
+        case SR_DEV_CKD_RDIPL:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdrdipl = rc;
+            break;
+        case SR_DEV_CKD_XMARK:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdxmark = rc;
+            break;
+        case SR_DEV_CKD_HAEQ:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdhaeq = rc;
+            break;
+        case SR_DEV_CKD_IDEQ:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdideq = rc;
+            break;
+        case SR_DEV_CKD_KYEQ:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdkyeq = rc;
+            break;
+        case SR_DEV_CKD_WCKD:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdwckd = rc;
+            break;
+        case SR_DEV_CKD_TRKOF:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdtrkof = rc;
+            break;
+        case SR_DEV_CKD_SSI:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdssi = rc;
+            break;
+        case SR_DEV_CKD_WRHA:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ckdwrha = rc;
+            break;
+        default:
+            SR_READ_SKIP(file, len);
+            break;
+        } /* switch (key) */
+    } while ((key & SR_DEV_MASK) == SR_DEV_CKD);
+    return 0;
 }
 
 /*-------------------------------------------------------------------*/
@@ -4683,20 +4931,23 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
 
 } /* end function ckddasd_execute_ccw */
 
-
 DEVHND ckddasd_device_hndinfo = {
-        &ckddasd_init_handler,
-        &ckddasd_execute_ccw,
-        &ckddasd_close_device,
-        &ckddasd_query_device,
-        &ckddasd_start,
-        &ckddasd_end,
-        &ckddasd_start,
-        &ckddasd_end,
-        &ckddasd_read_track,
-        &ckddasd_update_track,
-        &ckddasd_used,
-        NULL,
-        NULL,
-        NULL
+        &ckddasd_init_handler,          /* Device Initialisation      */
+        &ckddasd_execute_ccw,           /* Device CCW execute         */
+        &ckddasd_close_device,          /* Device Close               */
+        &ckddasd_query_device,          /* Device Query               */
+        &ckddasd_start,                 /* Device Start channel pgm   */
+        &ckddasd_end,                   /* Device End channel pgm     */
+        &ckddasd_start,                 /* Device Resume channel pgm  */
+        &ckddasd_end,                   /* Device Suspend channel pgm */
+        &ckddasd_read_track,            /* Device Read                */
+        &ckddasd_update_track,          /* Device Write               */
+        &ckddasd_used,                  /* Device Query used          */
+        NULL,                           /* Device Reserve             */
+        NULL,                           /* Device Release             */
+        NULL,                           /* Immediate CCW Codes        */
+        NULL,                           /* Signal Adapter Input       */
+        NULL,                           /* Signal Adapter Ouput       */
+        &ckddasd_hsuspend,              /* Hercules suspend           */
+        &ckddasd_hresume                /* Hercules resume            */
 };

@@ -2081,11 +2081,24 @@ static
 #endif
 DEVHND lcs_device_hndinfo =
 {
-    &LCS_Init,
-    &LCS_ExecuteCCW,
-    &LCS_Close,
-    &LCS_Query,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, CTC_Immed_Commands
+        &LCS_Init,                    /* Device Initialisation      */
+        &LCS_ExecuteCCW,              /* Device CCW execute         */
+        &LCS_Close,                   /* Device Close               */
+        &LCS_Query,                   /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        CTC_Immed_Commands,            /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 

@@ -29,6 +29,8 @@
 
 #include "service.h"
 
+#include "sr.h"
+
 
 #if !defined(_SERVICE_C)
 
@@ -173,6 +175,69 @@ int signal_quiesce (U16 count, BYTE unit)
 
     return 0;
 } /* end function signal_quiesce */
+
+#define SR_SYS_SERVC_RECVMASK    ( SR_SYS_SERVC | 0x001 )
+#define SR_SYS_SERVC_SENDMASK    ( SR_SYS_SERVC | 0x002 )
+#define SR_SYS_SERVC_SCPCMD      ( SR_SYS_SERVC | 0x003 )
+#define SR_SYS_SERVC_SCPTYPE     ( SR_SYS_SERVC | 0x004 )
+#define SR_SYS_SERVC_SQP         ( SR_SYS_SERVC | 0x005 )
+#define SR_SYS_SERVC_SQC         ( SR_SYS_SERVC | 0x006 )
+#define SR_SYS_SERVC_SQU         ( SR_SYS_SERVC | 0x007 )
+#define SR_SYS_SERVC_PARM        ( SR_SYS_SERVC | 0x008 )
+
+int servc_hsuspend(void *file)
+{
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_RECVMASK, servc_cp_recv_mask, sizeof(servc_cp_recv_mask));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_SENDMASK, servc_cp_send_mask, sizeof(servc_cp_send_mask));
+    SR_WRITE_STRING(file, SR_SYS_SERVC_SCPCMD,  servc_scpcmdstr);
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_SCPTYPE,  servc_scpcmdtype,   sizeof(servc_scpcmdtype));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_SQP,      servc_signal_quiesce_pending,
+                                         sizeof(servc_signal_quiesce_pending));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_SQC,      servc_signal_quiesce_count,
+                                         sizeof(servc_signal_quiesce_count));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_SQU,      servc_signal_quiesce_unit,
+                                         sizeof(servc_signal_quiesce_unit));
+    SR_WRITE_VALUE(file, SR_SYS_SERVC_PARM,     sysblk.servparm,
+                                         sizeof(sysblk.servparm));
+    return 0;
+}
+
+int servc_hresume(void *file)
+{
+    int key, len;
+
+    sclp_reset();
+    do {
+        SR_READ_HDR(file, key, len);
+        switch (key) {
+        case SR_SYS_SERVC_RECVMASK:
+            SR_READ_VALUE(file, len, &servc_cp_recv_mask, sizeof(servc_cp_recv_mask));
+            break;
+        case SR_SYS_SERVC_SENDMASK:
+            SR_READ_VALUE(file, len, &servc_cp_send_mask, sizeof(servc_cp_send_mask));
+            break;
+        case SR_SYS_SERVC_SQP:
+            SR_READ_VALUE(file, len, &servc_signal_quiesce_pending,
+                              sizeof(servc_signal_quiesce_pending));
+            break;
+        case SR_SYS_SERVC_SQC:
+            SR_READ_VALUE(file, len, &servc_signal_quiesce_count,
+                              sizeof(servc_signal_quiesce_count));
+            break;
+        case SR_SYS_SERVC_SQU:
+            SR_READ_VALUE(file, len, &servc_signal_quiesce_unit,
+                              sizeof(servc_signal_quiesce_unit));
+            break;
+        case SR_SYS_SERVC_PARM:
+            SR_READ_VALUE(file, len, &sysblk.servparm, sizeof(sysblk.servparm));
+            break;
+        default:
+            SR_READ_SKIP(file, len);
+            break;
+        }
+    } while ((key & SR_SYS_MASK) == SR_SYS_SERVC);
+    return 0;
+}
 
 #endif /*!defined(_SERVICE_C)*/
 

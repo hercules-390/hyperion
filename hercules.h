@@ -437,6 +437,7 @@ typedef int DEVWF (struct _DEVBLK *dev, int rcd, int off, BYTE *buf, int len,
 typedef int DEVUF (struct _DEVBLK *dev);
 typedef void DEVRR (struct _DEVBLK *dev);
 typedef int DEVSA (struct _DEVBLK *dev, U32 qmask);
+typedef int DEVSR (struct _DEVBLK *dev, void *file);
 
 /*-------------------------------------------------------------------*/
 /* Device handler description structures                             */
@@ -782,7 +783,6 @@ typedef struct _SYSBLK {
         LOCK    cpulock[MAX_CPU_ENGINES];  /* CPU lock               */
         TID     cputid[MAX_CPU_ENGINES];   /* CPU thread identifiers */
         REGS   *regs[MAX_CPU_ENGINES+1];   /* Registers for each CPU */
-        REGS    dummyregs;              /* Regs for unconfigured CPU */
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS  vf[MAX_CPU_ENGINES];    /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
@@ -962,6 +962,8 @@ typedef struct _SYSBLK {
         U32     siosrate;               /* IOs per second            */
 #endif /*defined(OPTION_MIPS_COUNTING)*/
 
+        REGS    dummyregs;              /* Regs for unconfigured CPU */
+
     } SYSBLK;
 
 /* Definitions for OS tailoring - msb eq mon event, lsb eq oper exc. */
@@ -1089,6 +1091,9 @@ typedef struct _DEVBLK {
 
         int    member;                  /* Group member number       */
         DEVGRP *group;                  /* Device Group              */
+
+        int     argc;                   /* Init number arguments     */
+        BYTE  **argv;                   /* Init arguments            */
 
         /*  Storage accessible by device                             */
 
@@ -1282,6 +1287,7 @@ typedef struct _DEVBLK {
                                            in keyboard read buffer   */
         U32                             /* Flags                     */
                 eab3270:1,              /* 1=Extended attributes     */
+                ewa3270:1,              /* 1=Last erase was EWA      */
                 prompt1052:1;           /* 1=Prompt for linemode i/p */
         BYTE    aid3270;                /* Current input AID value   */
         BYTE    mod3270;                /* 3270 model number         */
@@ -1956,6 +1962,8 @@ void scp_command (BYTE *command, int priomsg);
 int can_signal_quiesce ();
 int signal_quiesce (U16 count, BYTE unit);
 void sclp_reset();
+int servc_hsuspend(void *file);
+int servc_hresume(void *file);
 
 /* Functions in module ckddasd.c */
 void ckd_build_sense ( DEVBLK *, BYTE, BYTE, BYTE, BYTE, BYTE);
@@ -1966,6 +1974,8 @@ void ckddasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
 int ckddasd_close_device ( DEVBLK *dev );
 void ckddasd_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer);
+int ckddasd_hsuspend ( DEVBLK *dev, void *file );
+int ckddasd_hresume  ( DEVBLK *dev, void *file );
 
 /* Functions in module fbadasd.c */
 void fbadasd_syncblk_io (DEVBLK *dev, BYTE type, int blknum,
@@ -1977,7 +1987,8 @@ void fbadasd_execute_ccw ( DEVBLK *dev, BYTE code, BYTE flags,
 int fbadasd_close_device ( DEVBLK *dev );
 void fbadasd_query_device (DEVBLK *dev, BYTE **class,
                 int buflen, BYTE *buffer);
-
+int fbadasd_hsuspend ( DEVBLK *dev, void *file );
+int fbadasd_hresume  ( DEVBLK *dev, void *file );
 
 /* Functions in module cckddasd.c */
 DEVIF   cckddasd_init_handler;
@@ -2017,6 +2028,10 @@ void display_subchannel (DEVBLK *dev);
 void get_connected_client (DEVBLK* dev, char** pclientip, char** pclientname);
 void alter_display_real (BYTE *opnd, REGS *regs);
 void alter_display_virt (BYTE *opnd, REGS *regs);
+
+/* Functions in module sr.c */
+int suspend_cmd(int argc, char *argv[],char *cmdline);
+int resume_cmd(int argc, char *argv[],char *cmdline);
 
 /* Functions in ecpsvm.c that are not *direct* instructions */
 /* but support functions either used by other instruction   */

@@ -15,6 +15,7 @@
 
 #include "dasdblks.h"  // (need #define DEFAULT_FBA_TYPE)
 #include "devtype.h"
+#include "sr.h"
 
 #if !defined(WIN32) && !defined(__APPLE__)
 /* Note : "man sd" says to include 'linux/fs.h' - But including kernel
@@ -1338,19 +1339,152 @@ int     blkfactor;                      /* Number of device blocks
 
 } /* end function fbadasd_syncblk_io */
 
+/*-------------------------------------------------------------------*/
+/* Hercules suspend/resume text unit key values                      */
+/*-------------------------------------------------------------------*/
+#define SR_DEV_FBA_BUFCUR       ( SR_DEV_FBA | 0x001 )
+#define SR_DEV_FBA_BUFOFF       ( SR_DEV_FBA | 0x002 )
+#define SR_DEV_FBA_ORIGIN       ( SR_DEV_FBA | 0x003 )
+#define SR_DEV_FBA_NUMBLK       ( SR_DEV_FBA | 0x004 )
+#define SR_DEV_FBA_RBA          ( SR_DEV_FBA | 0x005 )
+#define SR_DEV_FBA_END          ( SR_DEV_FBA | 0x006 )
+#define SR_DEV_FBA_DXBLKN       ( SR_DEV_FBA | 0x007 )
+#define SR_DEV_FBA_DXFIRST      ( SR_DEV_FBA | 0x008 )
+#define SR_DEV_FBA_DXLAST       ( SR_DEV_FBA | 0x009 )
+#define SR_DEV_FBA_LCBLK        ( SR_DEV_FBA | 0x00a )
+#define SR_DEV_FBA_LCNUM        ( SR_DEV_FBA | 0x00b )
+#define SR_DEV_FBA_BLKSIZ       ( SR_DEV_FBA | 0x00c )
+#define SR_DEV_FBA_XTDEF        ( SR_DEV_FBA | 0x00d )
+#define SR_DEV_FBA_OPER         ( SR_DEV_FBA | 0x00e )
+#define SR_DEV_FBA_MASK         ( SR_DEV_FBA | 0x00f )
+
+/*-------------------------------------------------------------------*/
+/* Hercules suspend                                                  */
+/*-------------------------------------------------------------------*/
+int fbadasd_hsuspend(DEVBLK *dev, void *file) {
+    if (dev->bufcur >= 0)
+    {
+        SR_WRITE_VALUE(file, SR_DEV_FBA_BUFCUR, dev->bufcur, sizeof(dev->bufcur));
+        SR_WRITE_VALUE(file, SR_DEV_FBA_BUFOFF, dev->bufoff, sizeof(dev->bufoff));
+    }
+    SR_WRITE_VALUE(file, SR_DEV_FBA_ORIGIN, dev->fbaorigin, sizeof(dev->fbaorigin));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_NUMBLK, dev->fbanumblk, sizeof(dev->fbanumblk));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_RBA, dev->fbarba, sizeof(dev->fbarba));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_END, dev->fbaend, sizeof(dev->fbaend));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_DXBLKN, dev->fbaxblkn, sizeof(dev->fbaxblkn));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_DXFIRST, dev->fbaxfirst, sizeof(dev->fbaxfirst));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_DXLAST, dev->fbaxlast, sizeof(dev->fbaxlast));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_LCBLK, dev->fbalcblk, sizeof(dev->fbalcblk));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_LCNUM, dev->fbalcnum, sizeof(dev->fbalcnum));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_BLKSIZ, dev->fbablksiz, sizeof(dev->fbablksiz));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_XTDEF, dev->fbaxtdef, 1);
+    SR_WRITE_VALUE(file, SR_DEV_FBA_OPER, dev->fbaoper, sizeof(dev->fbaoper));
+    SR_WRITE_VALUE(file, SR_DEV_FBA_MASK, dev->fbamask, sizeof(dev->fbamask));
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* Hercules resume                                                   */
+/*-------------------------------------------------------------------*/
+int fbadasd_hresume(DEVBLK *dev, void *file)
+{
+int  rc, key, len;
+BYTE byte;
+
+    do {
+        SR_READ_HDR(file, key, len);
+        switch (key) {
+        case SR_DEV_FBA_BUFCUR:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            rc = (dev->hnd->read) ? (dev->hnd->read)(dev, rc, &byte) : -1;
+            if (rc < 0) return -1;
+            break;
+        case SR_DEV_FBA_BUFOFF:
+            SR_READ_VALUE(file, len, &dev->bufoff, sizeof(dev->bufoff));
+            break;
+        case SR_DEV_FBA_ORIGIN:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            if (rc != dev->fbaorigin)
+            {
+                logmsg(_("HHCDA901E %4.4x FBA origin mismatch: %d, expected %d,\n"),
+                       rc, dev->fbaorigin);
+                return -1;
+            }
+            break;
+        case SR_DEV_FBA_NUMBLK:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            if (rc != dev->fbanumblk)
+            {
+                logmsg(_("HHCDA902E %4.4x FBA numblk mismatch: %d, expected %d,\n"),
+                       rc, dev->fbanumblk);
+                return -1;
+            }
+            break;
+        case SR_DEV_FBA_RBA:
+            SR_READ_VALUE(file, len, &dev->fbarba, sizeof(dev->fbarba));
+            break;
+        case SR_DEV_FBA_END:
+            SR_READ_VALUE(file, len, &dev->fbaend, sizeof(dev->fbaend));
+            break;
+        case SR_DEV_FBA_DXBLKN:
+            SR_READ_VALUE(file, len, &dev->fbaxblkn, sizeof(dev->fbaxblkn));
+            break;
+        case SR_DEV_FBA_DXFIRST:
+            SR_READ_VALUE(file, len, &dev->fbaxfirst, sizeof(dev->fbaxfirst));
+            break;
+        case SR_DEV_FBA_DXLAST:
+            SR_READ_VALUE(file, len, &dev->fbaxlast, sizeof(dev->fbaxlast));
+            break;
+        case SR_DEV_FBA_LCBLK:
+            SR_READ_VALUE(file, len, &dev->fbalcblk, sizeof(dev->fbalcblk));
+            break;
+        case SR_DEV_FBA_LCNUM:
+            SR_READ_VALUE(file, len, &dev->fbalcnum, sizeof(dev->fbalcnum));
+            break;
+        case SR_DEV_FBA_BLKSIZ:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            if (rc != dev->fbablksiz)
+            {
+                logmsg(_("HHCDA903E %4.4x FBA blksiz mismatch: %d, expected %d,\n"),
+                       rc, dev->fbablksiz);
+                return -1;
+            }
+            break;
+        case SR_DEV_FBA_XTDEF:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->fbaxtdef = rc;
+            break;
+        case SR_DEV_FBA_OPER:
+            SR_READ_VALUE(file, len, &dev->fbaoper, sizeof(dev->fbaoper));
+            break;
+        case SR_DEV_FBA_MASK:
+            SR_READ_VALUE(file, len, &dev->fbamask, sizeof(dev->fbamask));
+            break;
+        default:
+            SR_READ_SKIP(file, len);
+            break;
+        } /* switch (key) */
+    } while ((key & SR_DEV_MASK) == SR_DEV_FBA);
+    return 0;
+}
+
 DEVHND fbadasd_device_hndinfo = {
-        &fbadasd_init_handler,         /* Device Initialisation      */
-        &fbadasd_execute_ccw,          /* Device CCW execute         */
-        &fbadasd_close_device,         /* Device Close               */
-        &fbadasd_query_device,         /* Device Query               */
-        NULL,                          /* Device Start channel pgm   */
-        &fbadasd_end,                  /* Device End channel pgm     */
-        NULL,                          /* Device Resume channel pgm  */
-        &fbadasd_end,                  /* Device Suspend channel pgm */
-        &fbadasd_read_blkgrp,          /* Device Read                */
-        &fbadasd_update_blkgrp,        /* Device Write               */
-        &fbadasd_used,                 /* Device Query used          */
-        NULL,                          /* Device Reserve             */
-        NULL,                          /* Device Release             */
-	NULL                           /* Immediate Commands         */
+        &fbadasd_init_handler,          /* Device Initialisation      */
+        &fbadasd_execute_ccw,           /* Device CCW execute         */
+        &fbadasd_close_device,          /* Device Close               */
+        &fbadasd_query_device,          /* Device Query               */
+        NULL,                           /* Device Start channel pgm   */
+        &fbadasd_end,                   /* Device End channel pgm     */
+        NULL,                           /* Device Resume channel pgm  */
+        &fbadasd_end,                   /* Device Suspend channel pgm */
+        &fbadasd_read_blkgrp,           /* Device Read                */
+        &fbadasd_update_blkgrp,         /* Device Write               */
+        &fbadasd_used,                  /* Device Query used          */
+        NULL,                           /* Device Reserve             */
+        NULL,                           /* Device Release             */
+        NULL,                           /* Immediate CCW Codes        */
+        NULL,                           /* Signal Adapter Input       */
+        NULL,                           /* Signal Adapter Ouput       */
+        &fbadasd_hsuspend,              /* Hercules suspend           */
+        &fbadasd_hresume                /* Hercules resume            */
 };

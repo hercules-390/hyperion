@@ -304,11 +304,24 @@ BYTE            c;                      /* Output character          */
 static
 #endif
 DEVHND cardpch_device_hndinfo = {
-        &cardpch_init_handler,
-        &cardpch_execute_ccw,
-        &cardpch_close_device,
-        &cardpch_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+        &cardpch_init_handler,         /* Device Initialisation      */
+        &cardpch_execute_ccw,          /* Device CCW execute         */
+        &cardpch_close_device,         /* Device Close               */
+        &cardpch_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        NULL,                          /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 /* Libtool static name colision resolution */

@@ -2454,13 +2454,26 @@ BYTE    gotdle;                 /* Write routine DLE marker */
 static
 #endif
 DEVHND comadpt_device_hndinfo = {
-        &commadpt_init_handler,
-        &commadpt_execute_ccw,
-        &commadpt_close_device,
-        &commadpt_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	commadpt_immed_command
+        &commadpt_init_handler,        /* Device Initialisation      */
+        &commadpt_execute_ccw,         /* Device CCW execute         */
+        &commadpt_close_device,        /* Device Close               */
+        &commadpt_query_device,        /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        commadpt_immed_command,        /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
+
 
 /* Libtool static name colision resolution */
 /* note : lt_dlopen will look for symbol & modulename_LTX_symbol */

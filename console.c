@@ -56,6 +56,7 @@
 
 #include "opcode.h"
 
+#include "sr.h"
 
 #if defined(OPTION_DYNAMIC_LOAD) && defined(WIN32) && !defined(HDL_USE_LIBTOOL)
  SYSBLK *psysblk;
@@ -1939,6 +1940,120 @@ loc3270_close_device ( DEVBLK *dev )
 
 
 /*-------------------------------------------------------------------*/
+/* 3270 Hercules Suspend/Resume text units                           */
+/*-------------------------------------------------------------------*/
+#define SR_DEV_3270_BUF          ( SR_DEV_3270 | 0x001 )
+#define SR_DEV_3270_EWA          ( SR_DEV_3270 | 0x002 )
+#define SR_DEV_3270_POS          ( SR_DEV_3270 | 0x003 )
+
+/*-------------------------------------------------------------------*/
+/* 3270 Hercules Suspend Routine                                     */
+/*-------------------------------------------------------------------*/
+static int
+loc3270_hsuspend(DEVBLK *dev, void *file)
+{
+    int rc, len;
+    BYTE buf[BUFLEN_3270];
+
+    if (!dev->connected) return 0;
+    SR_WRITE_VALUE(file, SR_DEV_3270_POS, dev->pos3270, sizeof(dev->pos3270));
+    SR_WRITE_VALUE(file, SR_DEV_3270_EWA, dev->ewa3270, 1);
+    obtain_lock(&dev->lock);
+    rc = solicit_3270_data (dev, R3270_RB);
+    if (rc == 0 && dev->rlen3270 > 0 && dev->rlen3270 <= BUFLEN_3270)
+    {
+        len = dev->rlen3270;
+        memcpy (buf, dev->buf, len);
+    }
+    else
+        len = 0;
+    release_lock(&dev->lock);
+    if (len)
+        SR_WRITE_BUF(file, SR_DEV_3270_BUF, buf, len);
+    return 0;
+}
+
+/*-------------------------------------------------------------------*/
+/* 3270 Hercules Resume Routine                                      */
+/*-------------------------------------------------------------------*/
+static int
+loc3270_hresume(DEVBLK *dev, void *file)
+{
+    int rc, key, len, rbuflen = 0, pos = 0;
+    BYTE *rbuf = NULL, buf[BUFLEN_3270];
+
+    do {
+        SR_READ_HDR(file, key, len);
+        switch (key) {
+        case SR_DEV_3270_POS:
+            SR_READ_VALUE(file, len, &pos, sizeof(pos));
+            break;
+        case SR_DEV_3270_EWA:
+            SR_READ_VALUE(file, len, &rc, sizeof(rc));
+            dev->ewa3270 = rc;
+            break;
+        case SR_DEV_3270_BUF:
+            if (rbuflen = len)
+            {
+                rbuf = malloc(len);
+                if (rbuf == NULL)
+                {
+                    logmsg(_("HHCTE090E %4.4X malloc() failed for resume buf: %s\n"),
+                           dev->devnum, strerror(errno));
+                    return 0;
+                }
+                SR_READ_BUF(file, rbuf, rbuflen);
+            }
+            break;
+        default:
+            SR_READ_SKIP(file, len);
+            break;
+        } /* switch (key) */
+    } while ((key & SR_DEV_MASK) == SR_DEV_3270);
+
+    /* Dequeue any I/O interrupts for this device */
+    DEQUEUE_IO_INTERRUPT(&dev->ioint);
+    DEQUEUE_IO_INTERRUPT(&dev->pciioint);
+    DEQUEUE_IO_INTERRUPT(&dev->attnioint);
+
+    /* Restore the 3270 screen image if connected and buf was provided */
+    if (dev->connected && rbuf && rbuflen > 3)
+    {
+        obtain_lock(&dev->lock);
+
+        /* Construct buffer to send to the 3270 */
+        len = 0;
+        buf[len++] = dev->ewa3270 ? R3270_EWA : R3270_EW;
+        buf[len++] = 0xC2;
+        memcpy (&buf[len], &rbuf[3], rbuflen - 3);
+        len += rbuflen - 3;
+        buf[len++] = O3270_SBA;
+        buf[len++] = rbuf[1];
+        buf[len++] = rbuf[2];
+        buf[len++] = O3270_IC;
+
+        /* Double up any IAC's in the data */
+        len = double_up_iac (buf, len);
+
+        /* Append telnet EOR marker */
+        buf[len++] = IAC;
+        buf[len++] = EOR_MARK;
+
+        /* Restore the 3270 screen */
+        rc = send_packet(dev->fd, buf, len, "3270 data");
+
+        dev->pos3270 = pos;
+
+        release_lock(&dev->lock);
+    }
+
+    if (rbuf) free(rbuf);
+
+    return 0;
+}
+
+
+/*-------------------------------------------------------------------*/
 /* INITIALIZE THE 1052/3215 DEVICE HANDLER                           */
 /*-------------------------------------------------------------------*/
 static int
@@ -2382,6 +2497,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /*---------------------------------------------------------------*/
         dev->pos3270 = 0;
         cmd = R3270_EW;
+        dev->ewa3270 = 0;
         goto write;
 
     case L3270_EWA:
@@ -2390,6 +2506,7 @@ BYTE            buf[BUFLEN_3270];       /* tn3270 write buffer       */
     /*---------------------------------------------------------------*/
         dev->pos3270 = 0;
         cmd = R3270_EWA;
+        dev->ewa3270 = 1;
         goto write;
 
     case L3270_WSF:
@@ -2945,12 +3062,24 @@ BYTE    stat;                           /* Unit status               */
 static
 #endif
 DEVHND constty_device_hndinfo = {
-        &constty_init_handler,
-        &constty_execute_ccw,
-        &constty_close_device,
-        &constty_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-        constty_immed
+        &constty_init_handler,         /* Device Initialisation      */
+        &constty_execute_ccw,          /* Device CCW execute         */
+        &constty_close_device,         /* Device Close               */
+        &constty_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        constty_immed,                 /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 /* Libtool static name colision resolution */
@@ -2968,12 +3097,24 @@ DEVHND constty_device_hndinfo = {
 static
 #endif
 DEVHND loc3270_device_hndinfo = {
-        &loc3270_init_handler,
-        &loc3270_execute_ccw,
-        &loc3270_close_device,
-        &loc3270_query_device,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-       loc3270_immed
+        &loc3270_init_handler,         /* Device Initialisation      */
+        &loc3270_execute_ccw,          /* Device CCW execute         */
+        &loc3270_close_device,         /* Device Close               */
+        &loc3270_query_device,         /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        loc3270_immed,                 /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        &loc3270_hsuspend,             /* Hercules suspend           */
+        &loc3270_hresume               /* Hercules resume            */
 };
 
 

@@ -77,12 +77,24 @@ static int      ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
 DEVHND ctci_device_hndinfo =
 {
-    &CTCI_Init,
-    &CTCI_ExecuteCCW,
-    &CTCI_Close,
-    &CTCI_Query,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    CTCI_Immed_Commands
+        &CTCI_Init,                    /* Device Initialisation      */
+        &CTCI_ExecuteCCW,              /* Device CCW execute         */
+        &CTCI_Close,                   /* Device Close               */
+        &CTCI_Query,                   /* Device Query               */
+        NULL,                          /* Device Start channel pgm   */
+        NULL,                          /* Device End channel pgm     */
+        NULL,                          /* Device Resume channel pgm  */
+        NULL,                          /* Device Suspend channel pgm */
+        NULL,                          /* Device Read                */
+        NULL,                          /* Device Write               */
+        NULL,                          /* Device Query used          */
+        NULL,                          /* Device Reserve             */
+        NULL,                          /* Device Release             */
+        CTCI_Immed_Commands,           /* Immediate CCW Codes        */
+        NULL,                          /* Signal Adapter Input       */
+        NULL,                          /* Signal Adapter Output      */
+        NULL,                          /* Hercules suspend           */
+        NULL                           /* Hercules resume            */
 };
 
 // ====================================================================
