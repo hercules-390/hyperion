@@ -10,7 +10,6 @@
 
 #include "hercules.h"
 #include "opcode.h"
-#include <unistd.h>
 #include "httpmisc.h"
 
 /*-------------------------------------------------------------------*/
