@@ -2460,7 +2460,7 @@ DEF_INST(load_fp_int_long_reg)
  * B347 FIXBR - LOAD FP INTEGER (extended BFP)                 [RRF]
  */
 
-DEF_INST(load_fp_intext_reg)
+DEF_INST(load_fp_int_ext_reg)
 {
     int r1, r2, m3, raised, pgm_check;
 
