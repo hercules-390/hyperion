@@ -245,7 +245,7 @@ else
 fi
 
 AC_ARG_ENABLE(external-gui,
-              AC_HELP_STRING([--with-external-gui],
+              AC_HELP_STRING([--enable-external-gui],
                              [Interface to external Windows GUI]),
               [case "${enableval}" in
                  yes) build_external_gui=true ;;
@@ -260,6 +260,11 @@ AC_ARG_ENABLE(external-gui,
 if test x$build_external_gui = xtrue; then
   AC_DEFINE([EXTERNALGUI])
 fi
+
+AC_ARG_ENABLE(custom,
+              AC_HELP_STRING([--enable-custom],
+                             [Provide a custom description for this build]),
+              [AC_DEFINE_UNQUOTED([CUSTOM_BUILD_STRING], "${enableval}") ])
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
 	    [Define if your gcc does not support __attribute__((regparm(n)))])
@@ -285,5 +290,7 @@ AH_TEMPLATE([NOTHREAD],
             [Define to disable use of threads])
 AH_TEMPLATE([OPTION_FTHREADS],
             [Define to use included threads implementation (fthreads)])
+AH_TEMPLATE([CUSTOM_BUILD_STRING],
+            [Define to provide additional information about this build])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
