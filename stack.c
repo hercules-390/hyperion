@@ -149,13 +149,13 @@ int  i;
 
 #if defined(FEATURE_ESAME)
     /* Fetch word 0 of the TCB */
-    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
+    atcba = ARCH_DEP(abs_trap_addr) (tcba, regs, ACCTYPE_READ);
     tcba0 = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
 #endif /*defined(FEATURE_ESAME)*/
 
     /* Advance to offset +12 */
     tcba += 12;
-    atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
+    atcba = ARCH_DEP(abs_trap_addr) (tcba, regs, ACCTYPE_READ);
 
     /* Fetch word 3 of the TCB */
     tsao = ARCH_DEP(fetch_fullword_absolute)(atcba, regs) & 0x7FFFFFF8;
@@ -163,7 +163,7 @@ int  i;
     /* Advance to offset +20 */
     tcba += 8; atcba += 8;
     if((atcba & PAGEFRAME_BYTEMASK) < 8)
-        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
+        atcba = ARCH_DEP(abs_trap_addr) (tcba, regs, ACCTYPE_READ);
 
     /* Fetch word 3 of the TCB */
     trap_ia = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
@@ -176,12 +176,12 @@ int  i;
 #endif /*defined(FEATURE_ESAME)*/
                                                        ;
 
-    /* Use abs_stack_addr as it conforms to trap save area access */
-    tsaa1 = tsaa2 = ARCH_DEP(abs_stack_addr) (tsao, regs, ACCTYPE_WRITE);
+    /* Use abs_trap_addr as it conforms to trap save area access */
+    tsaa1 = tsaa2 = ARCH_DEP(abs_trap_addr) (tsao, regs, ACCTYPE_WRITE);
     if((tsaa1 & PAGEFRAME_PAGEMASK) != (lastbyte & PAGEFRAME_PAGEMASK))
     {
         tsao = lastbyte & PAGEFRAME_PAGEMASK;
-        tsaa2 = ARCH_DEP(abs_stack_addr) (tsao, regs, ACCTYPE_WRITE);
+        tsaa2 = ARCH_DEP(abs_trap_addr) (tsao, regs, ACCTYPE_WRITE);
     }
 
 #if defined(FEATURE_ESAME)
@@ -292,6 +292,91 @@ int  i;
     INVALIDATE_AEA_ALL(regs);
 }
 
+/*-------------------------------------------------------------------*/
+/* Convert trap virtual address to absolute address                  */
+/*                                                                   */
+/* Input:                                                            */
+/*      vaddr   Virtual address of trap area                         */
+/*      regs    Pointer to the CPU register context                  */
+/*      acctype Type of access requested: READ or WRITE              */
+/* Return value:                                                     */
+/*      Absolute address of trap area                                */
+/*                                                                   */
+/*      The virtual address is translated using the segment table    */
+/*      for the home address space.  Key-controlled protection does  */
+/*      apply to trap addresses, as well as page protection          */
+/*      and low-address protection.                                  */
+/*                                                                   */
+/*      A program check may be generated if the stack address causes */
+/*      an addressing, protection, or translation exception, and in  */
+/*      this case the function does not return.                      */
+/*-------------------------------------------------------------------*/
+RADR ARCH_DEP(abs_trap_addr) (VADR vaddr, REGS *regs, int acctype)
+{
+int     rc;                             /* Return code               */
+RADR    raddr;                          /* Real address              */
+RADR    aaddr;                          /* Absolute address          */
+int     private = 0;                    /* 1=Private address space   */
+int     protect = 0;                    /* 1=page 2=ALE protection   */
+int     stid;                           /* Segment table indication  */
+U16     xcode;                          /* Exception code            */
+
+    /* Convert to real address using home segment table */
+    rc = ARCH_DEP(translate_addr) (vaddr, 0, regs, ACCTYPE_STACK,
+                &raddr, &xcode, &private, &protect, &stid);
+    if (rc != 0)
+        ARCH_DEP(program_interrupt) (regs, xcode);
+
+    /* Low-address protection prohibits stores into PSA locations */
+    if (acctype == ACCTYPE_WRITE
+        && ARCH_DEP(is_low_address_protected) (vaddr, private, regs))
+        goto trap_prot;
+
+    /* Page protection prohibits all stores into the page */
+    if (acctype == ACCTYPE_WRITE && protect)
+        goto trap_prot;
+
+    /* Convert real address to absolute address */
+    aaddr = APPLY_PREFIXING (raddr, regs->PX);
+
+    /* Program check if absolute address is outside main storage */
+    if (aaddr >= regs->mainsize)
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
+    SIE_TRANSLATE(&aaddr, acctype, regs);
+
+    if (regs->psw.pkey)
+    {
+        /* Check Key protection for store */
+        if (acctype == ACCTYPE_WRITE
+            && ((STORAGE_KEY(aaddr) & STORKEY_KEY) != regs->psw.pkey))
+            goto trap_prot;
+
+        /* Check Key protection for fetch */
+        if (acctype == ACCTYPE_READ
+            && (STORAGE_KEY(aaddr) & STORKEY_FETCH)
+            && ((STORAGE_KEY(aaddr) & STORKEY_KEY) != regs->psw.pkey))
+            goto trap_prot;
+    }
+    /* Set the reference and change bits in the storage key */
+    STORAGE_KEY(aaddr) |= STORKEY_REF;
+    if (acctype == ACCTYPE_WRITE)
+        STORAGE_KEY(aaddr) |= STORKEY_CHANGE;
+
+    /* Return absolute address */
+    return aaddr;
+
+trap_prot:
+#ifdef FEATURE_SUPPRESSION_ON_PROTECTION
+        regs->TEA = (vaddr & STORAGE_KEY_PAGEMASK)
+                        | protect << 2 | TEA_ST_HOME;
+        regs->excarid = 0;
+#endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
+        ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+
+    return -1; /* avoid compiler warnings */
+
+} /* end function ARCH_DEP(abs_trap_addr) */
 
 /*-------------------------------------------------------------------*/
 /* Convert linkage stack virtual address to absolute address         */
