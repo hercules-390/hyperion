@@ -522,10 +522,15 @@ void check_socket_devices_for_connections (fd_set* readset)
 
 
 #if 0
-void socket_thread()
+void socket_thread(void unused)
 {
 fd_set sockset;
 int maxfd = 0;
+
+    /* Display thread started message on control panel */
+    logmsg (_("HHCSD020I Socketdevice listener thread started: "
+            "tid="TIDPAT", pid=%d\n"),
+            thread_id(), getpid());
 
     while(bind_head)
     {
@@ -545,7 +550,7 @@ int maxfd = 0;
 
         if (rc < 0 )
         {
-            logmsg ( _("HHCPN004E select: %s\n"), strerror(errno));
+            logmsg ( _("HHCSD021E select: %s\n"), strerror(errno));
             break;
         }
 
@@ -553,6 +558,8 @@ int maxfd = 0;
         check_socket_devices_for_connections (&sockset);
 
     } /* end while */
+
+    logmsg (_("HHCSD022I Socketdevice listener thread terminated\n"));
 
     return;
 
