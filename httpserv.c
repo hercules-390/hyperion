@@ -230,8 +230,8 @@ CGIVAR **cgivar;
 
         (*cgivar) = malloc(sizeof(CGIVAR));
         (*cgivar)->next = NULL;
-        (*cgivar)->name = http_unescape(strdup(separator));
-        (*cgivar)->value = http_unescape(strdup(pointer));
+        (*cgivar)->name = strdup(http_unescape(separator));
+        (*cgivar)->value = strdup(http_unescape(pointer));
         (*cgivar)->type = type;
         cgivar = &((*cgivar)->next);
     }
