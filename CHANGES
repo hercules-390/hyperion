@@ -1,6 +1,9 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+24 Sep 2004 Remove (most) int/ptr mismatch warnings for 64 bit machines
+            tentative x86_64 support in autoconf
+            prevent redefining "ffs" if built-in (for non-ia32) - Ivan Warren
 24 Sep 2004 Tapecopy: progress msgs for external gui -- Fish
 23 Sep 2004 Restore '-Wall -W' flags to gcc, Pass along CFLAGS to configure
             Eliminated all but 8 warnings -- Ivan Warren

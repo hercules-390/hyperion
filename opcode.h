@@ -12,6 +12,11 @@
 #include <config.h>
 #endif
 
+#undef PTRININTOK
+#if defined(SIZEOF_INT) && defined(SIZEOF_INT_P) && SIZEOF_INT == SIZEOF_INT_P
+#define PTRININTOK
+#endif
+
 #if defined(_370)
  #define _GEN370(_name) &s370_ ## _name,
 #else
@@ -521,24 +526,31 @@ do { \
 
 #define TLBIX(_addr) (((_addr) >> TLB_PAGESHIFT) & TLB_MASK)
 
+#if defined(PTRININTOK)
 #define MAINADDR(_main, _addr) \
- ( (sizeof(unsigned int) == sizeof(BYTE*)) \
-   ? (BYTE *)((unsigned int)(_main) ^ (unsigned int)(_addr)) \
-   : (_main) + ((_addr) & TLB_BYTEMASK) \
- )
+   (BYTE *)((unsigned int)(_main) ^ (unsigned int)(_addr))
+#else
+#define MAINADDR(_main, _addr) \
+   (_main) + ((_addr) & TLB_BYTEMASK)
+#endif
 
+#if defined(PTRININTOK)
 #define NEW_INSTADDR(_regs, _addr, _ia) \
- ( (sizeof(unsigned int) == sizeof(BYTE*)) \
-   ? (BYTE *)((unsigned int)(_ia) ^ (unsigned int)(_addr)) \
-   : (_ia) \
- )
+   (BYTE *)((unsigned int)(_ia) ^ (unsigned int)(_addr))
+#else
+#define NEW_INSTADDR(_regs, _addr, _ia) \
+   (_ia)
+#endif
 
+#if defined(PTRININTOK)
 #define NEW_MAINADDR(_regs, _addr, _aaddr) \
- ( (sizeof(unsigned int) == sizeof(BYTE*)) \
-   ? (BYTE *)((unsigned int)((_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK)) \
-            ^ (unsigned int)((_addr) & TLB_PAGEMASK)) \
-   : (_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK) \
- )
+   (BYTE *)((unsigned int)((_regs)->mainstor \
+            + ((_aaddr) & PAGEFRAME_PAGEMASK)) \
+            ^ (unsigned int)((_addr) & TLB_PAGEMASK))
+#else
+#define NEW_MAINADDR(_regs, _addr, _aaddr) \
+   (_regs)->mainstor + ((_aaddr) & PAGEFRAME_PAGEMASK)
+#endif
 
 /* Perform invalidation after storage key update.
  * If the REF or CHANGE bit is turned off for an absolute

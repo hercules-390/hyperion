@@ -103,6 +103,9 @@ case "$host_cpu-$GCC" in
         hppa*-yes)
                 CFLAGS="$CFLAGS -ffunction-sections"
         ;;
+        x86_64-yes|s390x-yes)
+                CFLAGS="$CFLAGS -m64"
+        ;;
 esac
 
 
@@ -379,6 +382,10 @@ struct sizeoftest
     unsigned char a;
 };
 __EOF
+
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(int *)
+AC_CHECK_FUNCS(ffs)
 
 AC_CHECK_SIZEOF(struct sizeoftest,,[#include "conftest.h"])
 
@@ -677,6 +684,9 @@ if test x$auto_optimize = xtrue; then
           xscale-yes|arm*-yes)
             OFLAGS="-O3 -frename-registers -mcpu=$host_cpu -mtune=$host_cpu"
             ;;
+          x86_64-yes)
+                OFLAGS="-O3 -march=k8 -fomit-frame-pointers"
+           ;;
           i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
             if test $host_cpu = "i786" ; then
                 ac_xarch=pentium4

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-09-23 16:36+0200\n"
+"POT-Creation-Date: 2004-09-24 18:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -5701,110 +5701,171 @@ msgstr ""
 msgid "SCSI tape not supported with this build\n"
 msgstr ""
 
-#: tapecopy.c:121
+#: tapecopy.c:130
 #, c-format
 msgid "HHCTC015I %s status: %8.8lX"
 msgstr ""
 
-#: tapecopy.c:163
+#: tapecopy.c:171
 #, c-format
 msgid "HHCTC016E Error reading status of %s: rc=%d, errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:326
+#: tapecopy.c:257
+#, c-format
+msgid ""
+"\n"
+"Creates a .AWS disk file from a SCSI input tape.\n"
+"\n"
+"Tapecopy reads a SCSI i/p tape and either outputs a .aws file "
+"representation\n"
+"of the tape (if an o/p filename is given), or else simply prints a summary "
+"of\n"
+"the files and blocksizes found on the tape (if no o/p filename is "
+"specified).\n"
+"\n"
+"Usage:\n"
+"\n"
+"   tapecopy  /dev/st?  [outfile]\n"
+"\n"
+"Where:\n"
+"\n"
+"   /dev/st0     specifies the device filename of the i/p SCSI tape.\n"
+"   outfile      specifies the filename of the optional o/p .aws disk file\n"
+"                that is to be created.\n"
+"\n"
+"The i/p SCSI tape is read and processed until physical EOD (end-of-data) is\n"
+"reached (i.e. it does not stop whenever multiple tapemarks/filemarks are "
+"read;\n"
+"it continues processing until the SCSI tape drive says there is no more "
+"data\n"
+"on the tape). The resulting .aws o/p disk file, when specified for the "
+"filename\n"
+"on a Hercules tape device configuration statement, can then be used instead "
+"in\n"
+"order for the Hercules guest o/s to read the exact same data without having "
+"to\n"
+"have a SCSI tape drive physically attached to the host system. This allows "
+"you\n"
+"to easily transfer SCSI tape data to other systems that may not have SCSI "
+"tape\n"
+"drives attached to them.\n"
+"\n"
+"The possible return codes and their meaning are:\n"
+"\n"
+"   %2d           Successful completion.\n"
+"   %2d           Invalid arguments or no arguments given.\n"
+"   %2d           Unable to open I/P SCSI tape file.\n"
+"   %2d           Unable to open O/P .AWS disk file.\n"
+"   %2d           Unrecoverable I/O error setting variable length block\n"
+"                processing for i/p SCSI tape device.\n"
+"   %2d           Unrecoverable I/O error rewinding i/p SCSI tape device.\n"
+"   %2d           Unrecoverable I/O error obtaining status of i/p SCSI "
+"device.\n"
+"   %2d           Unrecoverable I/O error reading i/p SCSI tape device.\n"
+"   %2d           Unrecoverable I/O error writing 'tapemark' block\n"
+"                to o/p .AWS disk file.\n"
+"   %2d           Unrecoverable I/O error writing 'AWS block header'\n"
+"                to o/p .AWS disk file.\n"
+"   %2d           Unrecoverable I/O error writing 'data' block\n"
+"                to o/p .AWS disk file.\n"
+"\n"
+msgstr ""
+
+#: tapecopy.c:335
 #, c-format
 msgid "HHCTC001E Error opening %s: errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:339
+#: tapecopy.c:348
 #, c-format
 msgid "HHCTC005E Error setting attributes for %s: rc=%d, errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:352
+#: tapecopy.c:361
 #, c-format
 msgid "HHCTC006E Error rewinding %s: rc=%d, errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:363
-#, c-format
-msgid "HHCTC002E Error reading status of %s: rc=%d, errno=%d: %s\n"
-msgstr ""
-
-#: tapecopy.c:373
+#: tapecopy.c:378
 #, c-format
 msgid "HHCTC003I %s device type: %s\n"
 msgstr ""
 
-#: tapecopy.c:375
+#: tapecopy.c:380
 #, c-format
 msgid "HHCTC003I %s device type: 0x%lX\n"
 msgstr ""
 
-#: tapecopy.c:384
+#: tapecopy.c:389
 #, c-format
 msgid "HHCTC004I %s tape density: %s\n"
 msgstr ""
 
-#: tapecopy.c:387
+#: tapecopy.c:392
 #, c-format
 msgid "HHCTC004I %s tape density code: 0x%lX\n"
 msgstr ""
 
-#: tapecopy.c:401
+#: tapecopy.c:404
 #, c-format
 msgid "HHCTC007E Error opening %s: errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:432
+#: tapecopy.c:457
 #, c-format
 msgid "HHCTC011I End of tape.\n"
 msgstr ""
 
-#: tapecopy.c:438
+#: tapecopy.c:463
 #, c-format
 msgid "HHCTC008E Error reading %s: errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:446
-#, c-format
-msgid "(tapemark)\n"
-msgstr ""
-
-#: tapecopy.c:463
+#: tapecopy.c:486
 #, c-format
 msgid "HHCTC010E Error writing %s: rc=%d, errno=%d, %s\n"
 msgstr ""
 
-#: tapecopy.c:477
+#: tapecopy.c:500
 #, c-format
 msgid ""
 "HHCTC009I File %u: Blocks=%u, Bytes=%lld, Block size min=%u, max=%u, avg=%u\n"
 msgstr ""
 
-#: tapecopy.c:517
+#: tapecopy.c:513
+#, c-format
+msgid "(tapemark)\n"
+msgstr ""
+
+#: tapecopy.c:548
 #, c-format
 msgid "HHCTC012I %s\n"
 msgstr ""
 
-#: tapecopy.c:543
+#: tapecopy.c:557
+#, c-format
+msgid "File %u: Block %u\r"
+msgstr ""
+
+#: tapecopy.c:579
 #, c-format
 msgid "HHCTC013I Error writing %s: rc=%d, errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:554
+#: tapecopy.c:590
 #, c-format
 msgid "HHCTC014I Error writing %s: rc=%d, errno=%d: %s\n"
 msgstr ""
 
-#: tapecopy.c:573
+#: tapecopy.c:609
 #, c-format
 msgid ""
 "HHCTC000I Successful completion;\n"
-"          Bytes read: %lld (%3.1f MB)\n"
+"          Bytes read: %lld (%3.1f MB), Blocks=%u, avg=%u\n"
 msgstr ""
 
-#: tapecopy.c:586
+#: tapecopy.c:624
 #, c-format
 msgid "          Bytes written: %lld (%3.1f MB)\n"
 msgstr ""

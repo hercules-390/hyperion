@@ -456,7 +456,7 @@ static __inline__ int test_bit(int len, int nr, volatile void * addr)
 }
 #endif
 
-#ifndef ffs
+#ifndef HAVE_FFS
 static __inline__ unsigned long ffs(U32 word)
 {
     unsigned long i = 0;
