@@ -1536,6 +1536,11 @@ void ARCH_DEP(access_reipl_data) (int r1, int r2, REGS *regs);
 int  ARCH_DEP(diag_ppagerel) (int r1, int r2, REGS *regs);
 
 
+/* Functions in module decimal.c */
+void packed_to_binary (BYTE *dec, int len, U64 *result,
+    int *ovf, int *dxf);
+
+
 /* Functions in module diagnose.c */
 void ARCH_DEP(diagnose_call) (U32 effective_addr2, int r1, int r3,
     REGS *regs);
