@@ -400,8 +400,8 @@ size_t          fba_bytes_remaining;    /* FBA bytes to be copied    */
         if (!quiet) status (i+1, n);
     }
 
-    if (!quiet) printf (_("\nHHCDC010I Copy successful !!!       \n"));
     close_image_file(icif); close_image_file(ocif);
+    if (!quiet) printf (_("\nHHCDC010I Copy successful !!!       \n"));
     return 0;
 }
 

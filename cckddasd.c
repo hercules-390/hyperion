@@ -768,7 +768,7 @@ int             maxlen;                 /* Size for cache entry      */
                 dev->syncio_retry = 1;
                 return -1;
             }
-            len = cache_getval(CACHE_DEVBUF, dev->cache);
+            len = cache_getval(CACHE_DEVBUF, dev->cache) + CKDDASD_TRKHDR_SIZE;
             newbuf = cckd_uncompress (dev, cbuf, len, maxlen, blkgrp);
             if (newbuf == NULL) {
                 dev->sense[0] = SENSE_EC;
@@ -810,7 +810,9 @@ int             maxlen;                 /* Size for cache entry      */
     dev->bufcur   = blkgrp;
     dev->bufoff   = 0;
     dev->bufoffhi = CFBA_BLOCK_SIZE;
-    dev->buflen   = cache_getval (CACHE_DEVBUF, dev->cache);
+    dev->buflen   = cache_getval (CACHE_DEVBUF, dev->cache)
+                  - CKDDASD_TRKHDR_SIZE;
+    cache_setval  (CACHE_DEVBUF, dev->cache, dev->buflen);
     dev->bufsize  = cache_getlen (CACHE_DEVBUF, dev->cache);
     dev->comp     = cbuf[0] & CCKD_COMPRESS_MASK;
 
@@ -2249,14 +2251,18 @@ int             i;                      /* Index                     */
 
     /* get storage for the internal free space chain;
        get a multiple of 1024 entries. */
-    cckd->freenbr = ((cckd->cdevhdr[sfx].free_number << 10) + 1) >> 10;
-    cckd->free = calloc (cckd->freenbr, CCKD_FREEBLK_ISIZE);
-    if (!cckd->free)
+    cckd->freenbr = (cckd->cdevhdr[sfx].free_number + 1023) & ~0x3FF;
+    if (cckd->freenbr)
     {
-        logmsg ("%4.4X:",dev->devnum); logmsg (_("HHCCD120E calloc failed for free space, size %d: %s\n"),
+        cckd->free = calloc (cckd->freenbr, CCKD_FREEBLK_ISIZE);
+        if (!cckd->free)
+        {
+            logmsg ("%4.4X:",dev->devnum);
+            logmsg (_("HHCCD120E calloc failed for free space, size %d: %s\n"),
                 cckd->freenbr * CCKD_FREEBLK_ISIZE,
                 strerror(errno));
-        return -1;
+            return -1;
+        }
     }
 
     /* if the only free space is at the end of the file,
