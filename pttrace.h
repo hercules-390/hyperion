@@ -67,7 +67,7 @@ typedef struct _PTT_TRACE {
 #define PTT_TRACE_SIZE sizeof(PTT_TRACE)
 #define PTT_MAGIC -99
 #define PTT(_a,_b,_c) \
-        ptt_pthread_trace(_a,(void *)(_b),(void *)(_c),__FILE__,__LINE__,(int *)PTT_MAGIC);
+        ptt_pthread_trace(_a,(void *)(_b),(void *)(_c),__FILE__,__LINE__,(int *)PTT_MAGIC)
 #define PTTRACE(_a,_b,_c,_d,_e,_f) \
   if (!pttnothreads) \
     ptt_pthread_trace(_a,_b,_c,_d,_e,_f)

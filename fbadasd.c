@@ -198,7 +198,7 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             dev->fd = -1;
             return -1;
         }
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(WIN32) && !defined(__APPLE__) && defined(BLKGETSIZE)
         if(S_ISBLK(statbuf.st_mode))
         {
             rc=ioctl(dev->fd,BLKGETSIZE,&statbuf.st_size);
@@ -216,17 +216,13 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             logmsg("REAL FBA Opened\n");
         }
         else
-        {
 #endif
-
+        {
             /* Set block size, device origin, and device size in blocks */
             dev->fbablksiz = 512;
             dev->fbaorigin = 0;
             dev->fbanumblk = statbuf.st_size / dev->fbablksiz;
-#if !defined(WIN32) && !defined(__APPLE__)
         }
-#endif
-
 
         /* The second argument is the device origin block number */
         if (argc >= 2)
@@ -551,8 +547,8 @@ fba_read_blkgrp_retry:
     /* Cache hit */
     if (i >= 0)
     {
-        cache_setflag(CACHE_DEVBUF, dev->cache, ~0, FBA_CACHE_ACTIVE);
-        cache_setage(CACHE_DEVBUF, dev->cache);
+        cache_setflag(CACHE_DEVBUF, i, ~0, FBA_CACHE_ACTIVE);
+        cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
         DEVTRACE (_("HHCDA071I read blkgrp %d cache hit, using cache[%d]\n"),

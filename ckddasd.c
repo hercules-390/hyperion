@@ -804,8 +804,8 @@ ckd_read_track_retry:
     /* Cache hit */
     if (i >= 0)
     {
-        cache_setflag(CACHE_DEVBUF, dev->cache, ~0, FBA_CACHE_ACTIVE);
-        cache_setage(CACHE_DEVBUF, dev->cache);
+        cache_setflag(CACHE_DEVBUF, i, ~0, CKD_CACHE_ACTIVE);
+        cache_setage(CACHE_DEVBUF, i);
         cache_unlock(CACHE_DEVBUF);
 
         DEVTRACE (_("HHCDA028I read trk %d cache hit, using cache[%d]\n"),
@@ -4045,6 +4045,20 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
                 /* Compare the count field with the search CCHHR */
                 if (memcmp (&rechdr, cchhr, 5) == 0)
                     break;
+
+                if (memcmp (&rechdr, cchhr, 4) != 0)
+                {
+    	            logmsg ("HHCDA999E wrong recordheader: cc hh r=%d %d %d,"
+		                    "should be:cc hh r=%d %d %d\n",
+                    (rechdr.cyl[0] << 8) | rechdr.cyl[1],
+                    (rechdr.head[0] << 8) | rechdr.head[1],
+                    (rechdr.head[0] << 8) | rechdr.head[1],
+                    rechdr.rec,
+                    (cchhr[0] << 8) | cchhr[1],
+                    (cchhr[2] << 8) | cchhr[3],
+                    cchhr[4]);
+                    break;
+                }
 
             } /* end while */
 

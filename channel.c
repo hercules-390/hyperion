@@ -2685,7 +2685,8 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         /* Force tracing for this CCW if any unusual status occurred */
         if ((chanstat & (CSW_PROGC | CSW_PROTC | CSW_CDC | CSW_CCC
                                 | CSW_ICC | CSW_CHC))
-            || ((unitstat & CSW_UC) && dev->sense[0] != 0))
+            || ((unitstat & CSW_UC) 
+			&& (dev->sense[0] != 0 | dev->sense[1] != 0 )))
         {
             /* Trace the CCW if not already done */
             if (!(dev->ccwtrace || dev->ccwstep || tracethis))
