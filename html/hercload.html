@@ -45,7 +45,7 @@ DemoPkg CD which is available only to IBM employees and business
 partners.  If you fall into this category then you probably know
 what the rules are -- I don't :-(
 
-<h2>Restoring DASD from full-volume dumps</h2>
+<h2>Creating, formatting, and loading DASD volumes</h2>
 
 <h4>Creating an empty DASD volume</h4>
 <p>
@@ -53,112 +53,114 @@ The dasdinit program must first be run from the Unix shell prompt to
 create a file containing an empty DASD volume.
 <p>
 The format of the dasdinit command is:
+<p><br>
 <pre>
-  dasdinit [-options] filename devtype[-model] volser [size]
+      dasdinit [-options] filename devtype[-model] volser [size]
 
-where:
+    where:
 
-  options:
-  -z         build compressed dasd image file using zlib
-  -bz2       build compressed dasd image file using bzip2
-  -0         build compressed dasd image file with no compression
-  -lfs       build large uncompressed ckd file (>2G)
-  -a         build dasd image file that includes alternate cylinders
-             (option ignored if size is manually specified)
+      options:
+      -z         build compressed dasd image file using zlib
+      -bz2       build compressed dasd image file using bzip2
+      -0         build compressed dasd image file with no compression
+      -lfs       build large uncompressed ckd file (>2G)
+      -a         build dasd image file that includes alternate cylinders
+                 (option ignored if size is manually specified)
 
-  filename   name of dasd image file to be created
+      filename   name of dasd image file to be created
 
-  devtype    CKD: 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
-             FBA: 3310, 3370, 9332, 9335, 9336
+      devtype    CKD: 2311, 2314, 3330, 3340, 3350, 3375, 3380, 3390, 9345
+                 FBA: 3310, 3370, 9332, 9335, 9336
 
-  model      device model (implies size) (opt)
+      model      device model (implies size) (opt)
 
-  volser     volume serial number (1-6 characters)
+      volser     volume serial number (1-6 characters)
 
-  size       number of CKD cylinders or 512-byte FBA sectors
-             (required if model not specified else optional)
+      size       number of CKD cylinders or 512-byte FBA sectors
+                 (required if model not specified else optional)
 </pre>
 <p><br>
 <a NAME="models">
 The current list of device types and models supported is:
-<p>
+<p><br>
 <pre>
-          CKD DEVICES
+              CKD DEVICES
 
-                         alt
-    devtype-model  cyls  cyls
+                             alt
+        devtype-model  cyls  cyls
 
-    2311           [*]
-    2311-1         200    2
+        2311           [*]
+        2311-1         200    2
 
-    2314           [*]
-    2314-1         200    3
+        2314           [*]
+        2314-1         200    3
 
-    3330           [*]
-    3330-1         404    7
-    3330-2         808    7
-    3330-11        808    7
+        3330           [*]
+        3330-1         404    7
+        3330-2         808    7
+        3330-11        808    7
 
-    3340           [*]
-    3340-1         348    1
-    3340-35        348    1
-    3340-2         696    2
-    3340-70        696    2
+        3340           [*]
+        3340-1         348    1
+        3340-35        348    1
+        3340-2         696    2
+        3340-70        696    2
 
-    3350           [*]
-    3350-1         555    5
+        3350           [*]
+        3350-1         555    5
 
-    3375           [*]
-    3375-1         959    1
+        3375           [*]
+        3375-1         959    1
 
-    3380           [*]
-    3380-1         885    1
-    3380-A         885    1
-    3380-B         885    1
-    3380-D         885    1
-    3380-J         885    1
-    3380-2        1770    2
-    3380-E        1770    2
-    3380-3        2655    3
-    3380-K        2655    3
-    EMC3380K+     3339    3
-    EMC3380K++    3993    3
+        3380           [*]
+        3380-1         885    1
+        3380-A         885    1
+        3380-B         885    1
+        3380-D         885    1
+        3380-J         885    1
+        3380-2        1770    2
+        3380-E        1770    2
+        3380-3        2655    3
+        3380-K        2655    3
+        EMC3380K+     3339    3
+        EMC3380K++    3993    3
 
-    3390           [*]
-    3390-1        1113    1
-    3390-2        2226    1
-    3390-3        3339    1
-    3390-9       10017    3
+        3390           [*]
+        3390-1        1113    1
+        3390-2        2226    1
+        3390-3        3339    1
+        3390-9       10017    3
 
-    9345           [*]
-    9345-1        1440    0
-    9345-2        2156    0
+        9345           [*]
+        9345-1        1440    0
+        9345-2        2156    0
 
-         FBA DEVICES
 
-    devtype-model  blocks
+             FBA DEVICES
 
-    3310              [*]
-    3310-1         125664
+        devtype-model  blocks
 
-    3370              [*]
-    3370-Al        558000
-    3370-B1        558000
-    3370-A2        712752
-    3370-B2        712752
+        3310              [*]
+        3310-1         125664
 
-    9332              [*]
-    9332-200       360036
-    9332-400       360036
-    9332-600       554800
+        3370              [*]
+        3370-Al        558000
+        3370-B1        558000
+        3370-A2        712752
+        3370-B2        712752
 
-    9335              [*]
-    9335-1         804714
+        9332              [*]
+        9332-200       360036
+        9332-400       360036
+        9332-600       554800
 
-    9336              [*]
-    9336-10        920115
-    9336-20       1672881
-    9336-25       1672881
+        9335              [*]
+        9335-1         804714
+
+        9336              [*]
+        9336-10        920115
+        9336-20       1672881
+        9336-25       1672881
 </pre>
 <br>
 [<b>*</b>] size may be specified else size defaults to the

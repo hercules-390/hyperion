@@ -14,7 +14,7 @@ Hercules: Compressed Dasd Emulation</TITLE>
 <li><a href="#shadowfiles">        Shadow Files       </a>
 <li><a href="#filestructure">      File Structure     </a>
 <li><a href="#howitworks">         How It Works       </a>
-<li><a href="#cckdcommand">        The CCKD Command   </a>
+<li><a href="#cckdcommand">        The CCKD Command (and initialization statement)   </a>
 <li><a href="#utilities">          Utilities          </a>
 <li><a href="#faq">                FAQ                </a>
 </ul>
@@ -75,7 +75,20 @@ shadow files.  All files are opened <em>read-only</em>
 except for the <em>current</em> file, which is opened <em>read-write</em>.
 <p>
 Shadow files are specified by the <b>sf=</b><i>shadow-file-name</i> parameter
-on the device statement for the compressed DASD device.  The shadow file name
+on the device statement for the compressed DASD device.
+<p>
+    <blockquote>
+    Please note that the specified shadow filename does <u>not</u> have to
+    actually exist. The <i>shadow-file-name</i> operand of the <i>sf=</i>
+    parameter is simply a filename <i><u>template</u></i> that will be used
+    to name the shadow file whenever a shadow file is to be created, but
+    shadow files do not actually get created until you specifically create
+    them via the <code>sf+xxxx</code> (or <code>sf+*</code>) command. Please
+    refer to the discussion of the <b>sf</b> command several paragraphs
+    below for more information.
+    </blockquote>
+<p>
+The shadow file name
 should have spot where the shadow file number will be set.  This is
 either the character preceding the last period after the last slash or the
 last character if there is no period.  For example:<br><br>
@@ -110,11 +123,13 @@ curent shadow file, and display the shadow file status and statistics:<br><br>
     <td align="left">&nbsp&nbsp Create a new shadow file</td>
 <tr><td align="left"><b>sf-</b></td>
     <td align="left" colspan="2"><font size=-1>unit</font></td>
-    <td align="left">&nbsp&nbsp Remove a shadow file with backwards merge</td>
+    <td align="left">&nbsp&nbsp Remove a shadow file with backwards merge
+        (i.e. <i>commit</i> all of your changes/updates)</td>
 <tr><td align="left"><b>sf-</b></td>
     <td align="left">            <font size=-1>unit</font></td>
     <td><b>nomerge</b></td>
-    <td align="left">&nbsp&nbsp Remove a shadow file without backwards merge</td>
+    <td align="left">&nbsp&nbsp Remove a shadow file without backwards merge
+        (i.e. <i>discard</i> all of your changes/updates)</td>
 <tr><td align="left"><b>sfc</b></td>
     <td align="left" colspan="2"><font size=-1>unit</font></td>
     <td align="left">&nbsp&nbsp Compress the current file</td>
@@ -124,7 +139,8 @@ curent shadow file, and display the shadow file status and statistics:<br><br>
 </table>
 <br>
 <b><font size=-1>Note</font></b>.  You can use <b>*</b> in place of unit
-address to apply the command to all compressed dasd.
+address to apply the command to all compressed dasd (e.g. <code>'sf+*'</code>,
+or <code>'sf-* nomerge'</code>).
 
 <p>
 <hr noshade>
@@ -417,12 +433,16 @@ counter-productive (ie the offset of the new space is greater than the
 current offset).
 
 <hr noshade>
-<p><h3><a NAME="cckdcommand">The cckd command</a></h3>
+<p><h3><a name=cckdcommand>The cckd command and initialization statement</a></h3>
 
 The <b>cckd</b> command and initialization statement can be used to
-affect cckd processing.  Normally the defaults should suffice; however
-the cache size may need to be adjusted depending upon the number of
-emulated devices and the amount of physical memory you have.
+affect cckd processing. The <b>CCKD</b> initialization statement is specified
+as a Hercules configuration file statement and supports the same options as
+the <b>cckd</b> command explained below.
+<p>
+Normally the defaults values should suffice; however the cache size may
+need to be adjusted depending upon the number of emulated devices and the
+amount of physical memory you have.
 <p>
 <b>Syntax:</b>
 <table>
@@ -634,19 +654,23 @@ emulated devices and the amount of physical memory you have.
         want your host operating system to page.  However, you don't want
         your cache to flush too often because cpu cycles may have to be stolen
         from the cpu thread to compress updated images.
+        <p>
     <li>You need at least one l2cache entry per compressed device.  Since the
         maximum number of l2cache entries is 1024, this implies that no more
         than 1024 compressed devices can be defined.  Let me know if this is a
         problem ;-)  If you have a large number of devices then specify the
         maximum value otherwise the default should suffice.
+        <p>
     <li><em>raq</em> should be at least as large as <em>ra</em>.  Readahead
         threads are scheduled from entries in the readahead queue.  Likewise
         <em>rat</em> should not exceed <em>raq</em> because only <em>raq</em>
         tracks or block groups can be queued at any time.
+        <p>
     <li>The number of writer threads (<em>wr</em>) should usually be 1 more
         than the number of host processors.  This is because one writer thread
         could be cpu-bound (compressing a track or block-group image) and the
         other could be i/o-bound (writing the compressed image).
+        <p>
     <li>The garbage collection interval governs the maximum time in seconds
         an updated track or block group image will reside in storage before
         being written to the emulation file.  A large value may mean more data
@@ -662,14 +686,16 @@ emulated devices and the amount of physical memory you have.
         is flushed each interval).  This may mean that the garbage collector
         space recovery routine will perform more work and that the emulation
         file may be larger.
+        <p>
     <li>Specify <em>fsync=1</em> and <em>gcint=5</em> if you are absolutely
         paranoid about your data being lost due to a failure.  <em>fsync</em>
         will ensure your data on disk is coherent.  However, fsync may cause
         a noticeable performance degradation.  Note that an fsync will not
         be performed more often than every 5 seconds.
 </ul>
-My advice is to use the default options and adjust them if you have a very
-good reason.
+My advice is to use the default options and adjust them only if you have a very
+good reason to do so.
+<p>
 
 <hr noshade>
 <p><h3><a NAME="utilities">Utilities</a></h3>

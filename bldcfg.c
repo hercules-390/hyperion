@@ -1737,7 +1737,7 @@ BYTE **orig_newargv;
     if (iodelay >= 0)
         sysblk.iodelay = iodelay;
     else if (ostailor == OS_LINUX)
-        sysblk.iodelay = OPTION_IODELAY_LINUX_DEFAULT;
+        sysblk.iodelay = DEFAULT_LINUX_IODELAY;
 #endif /*OPTION_IODELAY_KLUDGE*/
 
     /* Set the panel refresh rate */

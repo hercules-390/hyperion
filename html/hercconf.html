@@ -43,7 +43,10 @@ a real System/390.  The configuration file is an ASCII text file.
 
     ##<a href="#HTTPROOT">HTTPROOT</a>   /usr/local/share/hercules/
     <a href="#HTTPPORT">HTTPPORT</a>   8081 NOAUTH
+
+    <a href="cckddasd.html#cckdcommand">CCKD</a>       cache=8
     <a href="#SHRDPORT">SHRDPORT</a>   3990
+
     <a href="#CNSLPORT">CNSLPORT</a>   3270
     <a href="#PANRATE">PANRATE</a>    FAST
     <a href="#CODEPAGE">CODEPAGE</a>   default
@@ -70,14 +73,14 @@ a real System/390.  The configuration file is an ASCII text file.
     0228.8    <a href="#3270">3270</a>    GROUP2
     0230.16   <a href="#3270">3270</a>
 
-    0140      <a href="#3370">3370</a>    dosres.140
-    0141      <a href="#3370">3370</a>    syswk1.141
-    0300      <a href="#3370">3370</a>    sysres.300
-
     0120      <a href="#3380">3380</a>    mvsv5r.120
     0121      <a href="#3380">3380</a>    mvsv5d.121
     0122      <a href="#3380">3380</a>    mvswk1.122
     0123      <a href="#3380">3380</a>    192.168.1.100
+
+    0140      <a href="#3370">3370</a>    dosres.140
+    0141      <a href="#3370">3370</a>    syswk1.141
+    0300      <a href="#3370">3370</a>    sysres.300
 
     0400      <a href="#3088">3088</a>    CTCT  30880  192.168.100.2  30880  2048 &nbsp; &nbsp; &nbsp;
     0401      <a href="#3088">3088</a>    CTCT  30881  192.168.100.2  30881  2048
@@ -220,7 +223,7 @@ a real System/390.  The configuration file is an ASCII text file.
     running under hercules can even issue host commands through the hercules
     <code>'sh'</code> (shell) command.
     <p>
-    
+
 <a name="CNSLPORT">
 <dt><code>CNSLPORT &nbsp;<i>nnnn</i></code>
 <dd><p>
@@ -462,8 +465,9 @@ a real System/390.  The configuration file is an ASCII text file.
     device driver. The problem is more apt to happen under Hercules than
     on a real machine because we may present an I/O interrupt sooner than a
     real machine.  This problem is being pursued with IBM linux. Meanwhile,
-    if <code>OSTAILOR LINUX</code> is specified, then this value defaults to
-    <em>800</em> otherwise the value defaults to <em>0</em>.
+    if <code><a href="#OSTAILOR">OSTAILOR LINUX</a></code> is specified,
+    then this value defaults to <em>800</em> otherwise the value defaults
+    to <em>0</em>.
     <p>
 
 <a name="CODEPAGE">
@@ -1675,6 +1679,164 @@ ROUTE  00  172.021.003.032  255.255.255.224
     </dl> <!-- end emulation types -->
     <p>
 
+<a name="3380">
+<a name="ckddasd">
+<dt><em>CKD DASD devices</em>
+<dd><p>
+    The argument specifies the name of a file containing the disk CKD
+    DASD image or the INET address of a Hercules shared device server.
+    <p>
+
+    The file consists of a 512-byte device header record
+    followed by fixed length track images.  The length of each track
+    image depends on the emulated device type, and is always rounded
+    up to the next multiple of 512 bytes.
+    <p>
+
+    Volumes larger than 2GB (for example, the 3390 model 3)
+    can be supported by spreading the data across more than one file.
+    Each file contains a whole number of cylinders.  The first file
+    (which contains cylinders 0-2518 in the case of a 3390) usually
+    has _1 as the last two characters of its name.  The ckddasd driver
+    allocates the remaining files by replacing the last character of
+    the file name by the characters 2, 3, etc.
+    <p>
+
+    <blockquote>
+    <em>Note! When CKD DASD images are spread across multiple files, you must
+    specify only the first file name (the file with suffix _1) in the
+    configuration statement!</em>
+    </blockquote>
+    <p>
+
+    If your operating system supports <i>large file sizes</i> (or
+    <i>64-bit offsets</i>) then volumes larger than 2G can be kept
+    in a single file.
+    <p>
+
+    Alternatively, the argument may specify the name of a file containing
+    a compressed CKD DASD image.  The CKD driver will automatically detect
+    whether the file contains a regular CKD image or a compressed CKD
+    image.
+    <p>
+
+    Refer to "Creating an empty DASD volume" in the "Creating, formatting,
+    and loading DASD volumes" section of the
+    <a href="hercload.html">Creating DASD</a>
+    web page for information on using the 'dasdinit' command/utility to
+    create compressed dasd files. Refer to the
+    <a href="cckddasd.html">Compressed Dasd Emulation</a>
+    page for details on the actual CCKD emulation itself and additional
+    information on the <a href="cckddasd.html#cckdcommand">CCKD</a>
+    initialization/tuning control file statement.
+    <p>
+
+    If you specify an INET address the format is:
+    <p>
+
+    <dl> <!-- begin INET parms -->
+    <dt><code><em>ip-name-or-addr:port:devnum</em></code>
+    <dd><p>
+        <i>ip-name-or-addr</i> specifies the internet name or address
+        where the Hercules shared device server is running.
+        <p>
+
+        <i>port</i> specifies the port number the shared device server
+        is listening on.  If omitted, the default is 3990.
+        <p>
+
+        <i>devnum</i> specifies the device number on the shared
+        device server.  If omitted, the default is the current device number.
+        <p>
+
+    </dl> <!-- end INET parms -->
+    <p>
+
+
+    In addition to the above, some additional optional arguments are also
+    supported.
+    <p>
+
+    <dl> <!-- begin (CKD) additional DASD arguments -->
+
+    <dt><code><em>sf=shadow-file-name</em></code>
+    <dd><p>
+        A shadow file contains all the changes made to the emulated dasd since
+        it was created, until the next shadow file is created. The moment of the
+        shadow file's creation can be thought of as a snapshot of the current
+        emulated dasd at that time, because if the shadow file is later removed,
+        then the emulated dasd reverts back to the state it was at when the snapshot
+        was taken.
+        <p>
+
+        Using shadow files, you can keep the base file on a read-only device such
+        as cdrom, or change the base file attributes to read-only, ensuring that
+        this file can never be corrupted.
+        <p>
+
+        Hercules console commands are provided to add a new shadow file, remove
+        the current shadow file (with or without backward merge), compress the
+        curent shadow file, and display the shadow file status and statistics
+        <p>
+
+        For detailed information regarding shadow files and their use, please
+        see the "<a href="cckddasd.html#shadowfiles">Shadow Files</a>" section
+        of the <a href="cckddasd.html">Compressed Dasd Emulation</a> web page.
+        <p>
+
+    <dt><code><em>syncio</em></code>
+    <dd><p>
+        syncio enables possible 'synchronous' i/o. This is a dasd i/o feature
+        wherein guest i/o requests are completed "synchronously" during the
+        actual emulated execution of the SIO/SSCH (start-i/o / start subchannel)
+        instruction rather than being deferred and executed asynchronously in
+        a separate device i/o thread.
+        <p>
+
+        Only i/o which are known to be able to be completed without actually
+        needing to perform any actual host i/o are completed synchronously (e.g.
+        whenever the data being requested is found to already be in cache). If
+        the requested data is not found in the cache, then an actual host i/o
+        will need to be done and the request is passed to a device i/o thread
+        to be completed asyncronously instead.
+        <p>
+
+        syncio is the default for ckd. syncio statistics may be displayed via
+        the hercules syncio panel command.
+        <p>
+
+        Note: If you plan on using syncio with <b>Linux/390</b> and/or <b>zLinux</b>
+        you might also want to take a look at the <a href="#IODELAY">IODELAY</a>
+        configuration file statement as well.
+        <p>
+
+    <dt><code><em>readonly</em></code>
+    <dd><p>
+        readonly returns "write inhibited" sense when a write is attempted.
+        Note that not all of the sense bits may be getting set absolutely
+        correctly however. (Some people have reported getting different
+        error messages under hercules than a real machine, but it really
+        hasn't been an issue for a while now.)
+        <p>
+
+    <dt><code><em>fakewrite</em></code>
+    <dd><p>
+        fakewrite is a kludge for the readonly sense problem mentioned above.
+        Here the disk is not intended to be updated (MVS updates the DSCB
+        last referenced field for a readonly file) and any writes appear to
+        be successful even though nothing actually gets written.
+        <p>
+
+    <dt><code><em>lazywrite</em></code>
+    <dt><code><em>fulltrackio</em></code>
+    <dd><p>
+        These options have been deprecated. They are still accepted, but they
+        do absolutely nothing.
+        <p>
+
+    </dl> <!-- end (CKD) additional DASD arguments  -->
+    <p>
+
 <a name="3370">
 <a name="fbadasd">
 <dt><em>FBA DASD devices</em>
@@ -1736,65 +1898,29 @@ ROUTE  00  172.021.003.032  255.255.255.224
     </dl> <!-- end INET parms -->
     <p>
 
-<a name="3380">
-<a name="ckddasd">
-<dt><em>CKD DASD devices</em>
-<dd><p>
-    The argument specifies the name of a file containing the disk CKD
-    DASD image or the INET address of a Hercules shared device server.
+    In addition to the above, some additional optional arguments are also
+    supported.
     <p>
 
-    The file consists of a 512-byte device header record
-    followed by fixed length track images.  The length of each track
-    image depends on the emulated device type, and is always rounded
-    up to the next multiple of 512 bytes.
-    <p>
+    <dl> <!-- begin (FBA) additional DASD arguments -->
 
-    Volumes larger than 2GB (for example, the 3390 model 3)
-    can be supported by spreading the data across more than one file.
-    Each file contains a whole number of cylinders.  The first file
-    (which contains cylinders 0-2518 in the case of a 3390) usually
-    has _1 as the last two characters of its name.  The ckddasd driver
-    allocates the remaining files by replacing the last character of
-    the file name by the characters 2, 3, etc.
-    <p>
-
-    <em>When CKD DASD images are spread across multiple files, you must
-    specify only the first file name (the file with suffix _1) in the
-    configuration statement!</em>
-    <p>
-
-    If your operating system supports <i>large file sizes</i> or
-    <i>64 bit offsets</i> then volumes larger than 2G can be kept
-    in a single file.
-    <p>
-
-    Alternatively, the argument may specify the name of a file containing
-    a compressed CKD DASD image.  The CKD driver will automatically detect
-    whether the file contains a regular CKD image or a compressed CKD
-    image.  Refer to the <a href="cckddasd.html">CCKD</a> page for details
-    on how to create and use compressed CKD DASD images.
-    <p>
-
-    If you specify an INET address the format is:
-    <p>
-
-    <dl> <!-- begin INET parms -->
-    <dt><code><em>ip-name-or-addr:port:devnum</em></code>
+    <dt><code><em>sf=shadow-file-name</em></code>
     <dd><p>
-        <i>ip-name-or-addr</i> specifies the internet name or address
-        where the Hercules shared device server is running.
+        The handling of shadow files for FBA devices is identical as that for
+        CKD devices. Please refer to the preceding CKD section for information
+        regarding use of the <code><i>sf=</i></code> shadow file option.
         <p>
 
-        <i>port</i> specifies the port number the shared device server
-        is listening on.  If omitted, the default is 3990.
+    <dt><code><em>syncio</em></code>
+    <dd><p>
+        syncio enables possible 'synchronous' i/o and is explained in detail in
+        the preceding CKD dasd section. Note however that syncio is currently
+        disabled by default for FBA dasd due to an as yet unresolved problem
+        and must therefore be specifically enabled if you wish to use it for FBA
+        dasd.
         <p>
 
-        <i>devnum</i> specifies the device number on the shared
-        device server.  If omitted, the default is the current device number.
-        <p>
-
-    </dl> <!-- end INET parms -->
+    </dl> <!-- end (FBA) additional DASD arguments  -->
     <p>
 
 <a name="comline">

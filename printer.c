@@ -144,16 +144,13 @@ pid_t           pid;                    /* Child process identifier  */
 
         /* Execute the specified pipe receiver program */
 
-#if defined(WIN32)
+#if defined(OPTION_FISH_STUPID_GUI_PRTSPLR_EXPERIMENT)
         {
             /* The dev=, pid= and extgui= arguments are for informational
                purposes only so the spooler knows who/what it's spooling. */
-
             BYTE  cmdline[256];
-
             snprintf(cmdline,256,"\"%s\" pid=%d dev=%4.4X",
                 dev->filename+1,getpid(),dev->devnum);
-
             rc = system (cmdline);
         }
 #else
@@ -529,9 +526,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -543,9 +540,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -557,9 +554,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -583,9 +580,9 @@ BYTE            c;                      /* Print character           */
     /*---------------------------------------------------------------*/
     /* BLOCK DATA CHECK                                              */
     /*---------------------------------------------------------------*/
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -593,9 +590,9 @@ BYTE            c;                      /* Print character           */
     /*---------------------------------------------------------------*/
     /* ALLOW DATA CHECK                                              */
     /*---------------------------------------------------------------*/
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -607,9 +604,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -621,9 +618,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -635,9 +632,9 @@ BYTE            c;                      /* Print character           */
         write_buffer (dev, eor, strlen(eor), unitstat);
         if (*unitstat != 0) break;
 
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -680,9 +677,9 @@ BYTE            c;                      /* Print character           */
 
         /* Set fold indicator and return normal status */
         dev->fold = 1;
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -700,9 +697,9 @@ BYTE            c;                      /* Print character           */
 
         /* Reset fold indicator and return normal status */
         dev->fold = 0;
-	/*
+    /*
         *residual = 0;
-	*/
+    */
         *unitstat = CSW_CE | CSW_DE;
         break;
 
@@ -763,7 +760,7 @@ DEVHND printer_device_hndinfo = {
         &printer_close_device,
         &printer_query_device,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	printer_immed_commands
+    printer_immed_commands
 };
 
 /* Libtool static name colision resolution */

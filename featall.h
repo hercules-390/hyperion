@@ -28,58 +28,46 @@
 #define OPTION_FAST_PREFIX              /* Performance option        */
 #define OPTION_FAST_DEVLOOKUP           /* Fast devnum/subchan lookup*/
 #define OPTION_IODELAY_KLUDGE           /* IODELAY kludge for linux  */
-#define OPTION_IODELAY_LINUX_DEFAULT 800/* Default if OSTAILOR LINUX */
+#define DEFAULT_LINUX_IODELAY       800 /* Default if OSTAILOR LINUX */
 #undef  OPTION_FOOTPRINT_BUFFER /* 2048 ** Size must be a power of 2 */
 #undef  OPTION_INSTRUCTION_COUNTING     /* First use trace and count */
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
 #undef  OPTION_CMPSC_DEBUGLVL      /* 3 ** 1=Exp 2=Comp 3=Both debug */
-#ifdef  WIN32
-#define OPTION_SELECT_KLUDGE         10 /* fd's to reserve for select*/
-#endif
 #undef  MODEL_DEPENDENT_STCM            /* STCM, STCMH always store  */
 #define OPTION_NOP_MODEL158_DIAGNOSE    /* NOP mod 158 specific diags*/
-#define FEATURE_ALD_FORMAT            0
-#define FEATURE_SIE_MAXZONES          8
+#define FEATURE_ALD_FORMAT            0 /* Use fmt0 Access-lists     */
+#define FEATURE_SIE_MAXZONES          8 /* Maximum SIE Zones         */
+// #define SIE_DEBUG_PERFMON            /* SIE performance monitor   */
 #define OPTION_LPARNAME                 /* DIAG 204 lparname         */
-
-// #define SIE_DEBUG_PERFMON
-
 #define OPTION_HTTP_SERVER              /* HTTP server support       */
-
 #define OPTION_PTTRACE                  /* Pthreads tracing          */
 
-// (handled automatically in configure.ac)
-// #define OPTION_DYNAMIC_LOAD
+/* (dynamic load option & max cpu engines handled in configure.ac)   */
+// #define OPTION_DYNAMIC_LOAD          /* Hercules Dynamic Loader   */
+// #define MAX_CPU_ENGINES            2 /* Maximum number of CPUs    */
 
-#if !defined(MAX_CPU_ENGINES)
-#define MAX_CPU_ENGINES               2
+#ifdef WIN32                            /* (Windows-only options)    */
+  /* (Note: OPTION_FISHIO only possible with OPTION_FTHREADS)        */
+  #if defined(OPTION_FTHREADS)          
+    #define OPTION_FISHIO               /* Use Fish's I/O scheduler  */
+  #else
+    #undef  OPTION_FISHIO               /* Use Herc's I/O scheduler  */
+  #endif
+  #define OPTION_W32_CTCI               /* Fish's TunTap for CTCA's  */
+  #define OPTION_SELECT_KLUDGE       10 /* fd's to reserve for select*/
+  #undef  OPTION_FISH_STUPID_GUI_PRTSPLR_EXPERIMENT  /* (Don't ask!) */
 #endif
 
-
-/* Allow for compiler command line overrides */
+/* Allow for compiler command line overrides...                      */
 #if defined(OPTION_370_MODE) && defined(NO_370_MODE)
- #undef OPTION_370_MODE
+  #undef    OPTION_370_MODE
 #endif
 #if defined(OPTION_390_MODE) && defined(NO_390_MODE)
- #undef OPTION_390_MODE
+  #undef    OPTION_390_MODE
 #endif
 #if defined(OPTION_900_MODE) && defined(NO_900_MODE)
- #undef OPTION_900_MODE
+  #undef    OPTION_900_MODE
 #endif
-
-/* OPTION_FISHIO only possible with OPTION_FTHREADS */
-#if defined(OPTION_FTHREADS)
-  #define OPTION_FISHIO
-#else // !defined(OPTION_FTHREADS)
-  #undef OPTION_FISHIO
-#endif
-
-
-/* CTCI-W32 only valid for Win32 */
-#if defined(WIN32)
-#define OPTION_W32_CTCI
-#endif // defined(WIN32)
-
 
 #undef FEATURE_4K_STORAGE_KEYS
 #undef FEATURE_2K_STORAGE_KEYS
