@@ -2850,7 +2850,6 @@ struct  timeval tv;                     /* Select timeout structure  */
 int     rc_pause_amt = 0;               /* seconds to pause RC file  */
 time_t  rc_time_paused = 0;             /* time RC file was paused   */
 BYTE    rc_paused = 0;                  /* 1 = RC file is paused     */
-BYTE    rc_comments = 0;                /* 1 = show RC file comments */
 
     /* Display thread started message on control panel */
     logmsg ("HHC650I Control panel thread started: "
@@ -3377,31 +3376,12 @@ BYTE    rc_comments = 0;                /* 1 = show RC file comments */
                             else
                                 logmsg ("HHC428E ignoring invalid .rc file pause statement\n");
                         }
-                        else if (rc_cmd && strncasecmp(cmdline,"&comments",9) == 0)
-                        {
-                            BYTE err = 0, *onoroff = strtok(cmdline+9," \t");
-
-                            if (!onoroff)
-                                err = 1;
-                            else
-                            {
-                                if (strcasecmp(onoroff,"on") == 0)
-                                    rc_comments = 1;
-                                else if (strcasecmp(onoroff,"off") == 0)
-                                    rc_comments = 0;
-                                else
-                                    err = 1;
-                            }
-                            if (err)
-                                logmsg ("HHC423E ignoring invalid .rc file &comments statement\n");
-                        }
                         else
                         {
                             if ('#' == cmdline[0] || '*' == cmdline[0])
                             {
-                                /* Show comment statements (if requested) */
-                                if (!rc_cmd || rc_comments)
-                                    logmsg ("%s%s\n", (rcfp && rc_cmd) ? "> " : "", cmdline);
+                                if (!rc_cmd || '*' == cmdline[0])
+                                    logmsg ("%s%s\n", (rc_cmd) ? "> " : "", cmdline);
                             }
                             else
                             {
