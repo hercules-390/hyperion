@@ -2,6 +2,7 @@
 /*              ESA/390 Channel-to-Channel Adapter Device Handler    */
 /* vmnet modifications (c) Copyright Willem Konynenberg, 2000-2001   */
 /* linux 2.4 modifications (c) Copyright Fritz Elfert, 2001          */
+/* CTCT additions (c) Copyright Vic Cross, 2001                      */
 
 /*-------------------------------------------------------------------*/
 /* This module contains device handling functions for emulated       */
@@ -95,13 +96,17 @@
 /* This provides protocol-independent communication with another     */
 /* instance of this driver via a TCP connection.                     */
 /* An example device initialization statement is:                    */
-/*      A40 3088 CTCT lport rhost rport                              */
+/*      A40 3088 CTCT lport rhost rport bufsz                        */
 /* where: A40 is the device number                                   */
-/*        3088 CTCT is the device type                               */
-/*        lport is the listening port number on this machine         */
-/*        rhost is the IP address or hostname of partner CTC         */
-/*        rport is the listening port number of the partner CTC      */
-/* **THIS PROTOCOL IS NOT YET IMPLEMENTED**                          */
+/*        3088 CTCT is the device type.                              */
+/*        lport is the listening port number on this machine.        */
+/*        rhost is the IP address or hostname of partner CTC.        */
+/*        rport is the listening port number of the partner CTC.     */
+/*        bufsz is the 'device' buffer size for the link             */
+/*             - recommend that this be at least or more than the    */
+/*              CTC MTU for Linux/390, and equal or greater than the */
+/*              IOBUFFERSIZE value in the DEVICE/LINK statement      */ 
+/*              in the TCPIP PROFILE on OS/390 (and VM?)             */
 /*                                                                   */
 /* CTCI (Channel to Channel link to TCP/IP stack)                    */
 /* ----------------------------------------------                    */
@@ -202,6 +207,15 @@ typedef struct _CTCI_SEGHDR {           /* CTCI segment header       */
 #define CTC_PKTTYPE_IP          0x0800  /* IP packet type            */
 
 /*-------------------------------------------------------------------*/
+/* Definitions for CTC general data blocks                           */
+/*-------------------------------------------------------------------*/
+typedef struct _CTCG_PARMBLK {
+        int listenfd;
+        struct sockaddr_in addr;
+        DEVBLK *dev;
+    } CTCG_PARMBLK;
+
+/*-------------------------------------------------------------------*/
 /* Subroutine to trace the contents of a buffer                      */
 /*-------------------------------------------------------------------*/
 static void packet_trace (BYTE *addr, int len)
@@ -236,6 +250,50 @@ unsigned char print_chars[17];
     } /* end for(offset) */
 
 } /* end function packet_trace */
+
+/*-------------------------------------------------------------------*/
+/* Subroutine to service incoming CTCT connections                   */
+/*-------------------------------------------------------------------*/
+static void * serv_ctct(void *arg)
+{
+    int connfd;
+    socklen_t servlen;
+    char str[80];
+    CTCG_PARMBLK parm;
+
+    /* set up the parameters passed via create_thread */
+    parm = *((CTCG_PARMBLK *) arg);
+    free(arg);
+
+    for ( ; ; )
+    {
+        servlen = sizeof(parm.addr);
+        /* await a connection */
+        connfd=accept(parm.listenfd, (struct sockaddr *) &parm.addr, &servlen);
+        sprintf(str,"%s:%d",
+                inet_ntoa(parm.addr.sin_addr),
+                ntohs(parm.addr.sin_port));
+        if (strcmp(str,parm.dev->filename) != 0)
+        {
+            logmsg("HHC894I Incorrect client or config error on %4.4X\n",
+                   parm.dev->devnum);
+            logmsg("HHC894I Config=%s, connecting client=%s\n",
+                   parm.dev->filename, str);
+            close(connfd);
+        }
+        else
+        {
+            parm.dev->fd = connfd;
+        }
+
+        /* Ok, so having done that we're going to loop back to the    */
+        /* accept().  This was meant to handle the connection failing */
+        /* at the other end; this end will be ready to accept another */
+        /* connection.  Although this will happen, I'm sure you can   */
+        /* see the possibility for bad things to occur (eg if another */
+        /* Hercules tries to connect).  This will also be fixed RSN.  */
+    }
+}
 
 /*-------------------------------------------------------------------*/
 /* Subroutine to initialize the device handler in XCA mode           */
@@ -290,11 +348,190 @@ static int init_ctcn (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 /*-------------------------------------------------------------------*/
 static int init_ctct (DEVBLK *dev, int argc, BYTE *argv[], U32 *cutype)
 {
+int             rc;                     /* Return code               */
+int             mtu;                    /* MTU size (binary)         */
+int             lport;                  /* Listen port (binary)      */
+int             rport;                  /* Destination port (binary) */
+BYTE           *listenp;                /* Listening port number     */
+BYTE           *remotep;                /* Destination port number   */
+BYTE           *mtusize;                /* MTU size (characters)     */
+BYTE           *remaddr;                /* Remote IP address         */
+struct in_addr  ipaddr;                 /* Work area for IP address  */
+pid_t           pid;                    /* Process identifier        */
+int             pxc;                    /* Process exit code         */
+BYTE            c;                      /* Character work area       */
+TID             tid;                    /* Thread ID for server      */
+CTCG_PARMBLK    parm;                   /* Parameters for the server */
+BYTE            address[20]="";         /* temp space for IP address */
+
     dev->ctctype = CTC_CTCT;
     *cutype = CTC_3088_08;
-    logmsg ("HHC835I %4.4X %s mode not implemented\n",
-            dev->devnum, argv[0]);
-    return -1;
+
+    /* Check for correct number of arguments */
+    if (argc != 5)
+    {
+        logmsg ("HHC836I %4.4X incorrect number of parameters\n",
+                dev->devnum);
+        return -1;
+    }
+
+    /* The second argument is the listening port number */
+    listenp = argv[1];
+    if (strlen(listenp) > 5
+        || sscanf(listenp, "%u%c", &lport, &c) != 1
+        || lport < 1024 || lport > 65534)
+    {
+        logmsg ("HHC838I %4.4X invalid listen port number %s\n",
+                dev->devnum, listenp);
+        return -1;
+    }
+
+    /* The third argument is the IP address or hostname of the
+       remote side of the point-to-point link */
+    remaddr = argv[2];
+    if (inet_aton(remaddr, &ipaddr) == 0)
+    {
+        struct hostent *hp;
+
+        if ((hp=gethostbyname(remaddr)) != NULL)
+        {
+          memcpy(&ipaddr, hp->h_addr, hp->h_length);
+          strcpy(address, inet_ntoa(ipaddr));
+          remaddr = address; 
+        }
+        else
+        {
+            logmsg ("HHC839I %4.4X invalid remote host address %s\n",
+                    dev->devnum, remaddr);
+            return -1;
+        }
+    }
+
+    /* The fourth argument is the destination port number */
+    remotep = argv[3];
+    if (strlen(remotep) > 5
+        || sscanf(remotep, "%u%c", &rport, &c) != 1
+        || rport < 1024 || rport > 65534)
+    {
+        logmsg ("HHC838I %4.4X invalid destination port number %s\n",
+                dev->devnum, remotep);
+        return -1;
+    }
+
+    /* The fifth argument is the maximum transmission unit (MTU) size */
+    mtusize = argv[4];
+    if (strlen(mtusize) > 5
+        || sscanf(mtusize, "%u%c", &mtu, &c) != 1
+        || mtu < 46 || mtu > 65536)
+    {
+        logmsg ("HHC838I %4.4X invalid MTU size %s\n",
+                dev->devnum, mtusize);
+        return -1;
+    }
+
+    /* Set the device buffer size equal to the MTU size */
+    dev->bufsize = mtu;
+
+    /* Initialize the file descriptor for the socket connection */
+
+    /* It's a little confusing, but we're using a couple of the       */
+    /* members of the server paramter structure to initiate the       */
+    /* outgoing connection.  Saves a couple of variable declarations, */
+    /* though.  If we feel strongly about it, we can declare separate */
+    /* variables...                                                   */
+
+    /* make a TCP socket */
+    parm.listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (parm.listenfd < 0)
+    {
+        logmsg ("HHC852I %4.4X can not create socket: %s\n",
+            dev->devnum, strerror(errno));
+        ctcadpt_close_device(dev);
+        return -1;
+    }
+
+    /* bind socket to our local port */
+    /* (might seem like overkill, and usually isn't done, but doing this  */
+    /* bind() to the local port we configure gives the other end a chance */
+    /* at validating the connection request)                              */
+    memset(&(parm.addr), 0, sizeof(parm.addr));
+    parm.addr.sin_family = AF_INET;
+    parm.addr.sin_port = htons(lport);
+    parm.addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    rc = bind(parm.listenfd, (struct sockaddr *) &parm.addr, sizeof(parm.addr));
+    if (rc < 0)
+    {
+        logmsg ("HHC853I %4.4X can not bind socket: %s\n",
+            dev->devnum, strerror(errno));
+        ctcadpt_close_device(dev);
+        return -1;
+    }
+    
+    /* initiate a connection to the other end */
+    memset(&(parm.addr), 0, sizeof(parm.addr));
+    parm.addr.sin_family = AF_INET;
+    parm.addr.sin_port = htons(rport);
+    parm.addr.sin_addr = ipaddr;
+    rc = connect(parm.listenfd, (struct sockaddr *) &parm.addr, sizeof(parm.addr));
+
+    /* if connection was not successful, start a server */
+    if (rc < 0)
+    {
+        /* used to pass parameters to the server thread */
+        CTCG_PARMBLK *arg;
+
+        logmsg ("HHC892I %4.4X connect to %s:%s failed, starting server\n",
+            dev->devnum, remaddr, remotep);
+
+        /* probably don't need to do this, not sure... */
+        close(parm.listenfd);
+        parm.listenfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (parm.listenfd < 0)
+        {
+            logmsg ("HHC852I %4.4X can not create socket: %s\n",
+                dev->devnum, strerror(errno));
+            ctcadpt_close_device(dev);
+            return -1;
+        }
+
+        /* set up the listening port */
+        memset(&(parm.addr), 0, sizeof(parm.addr));
+        parm.addr.sin_family = AF_INET;
+        parm.addr.sin_port = htons(lport);
+        parm.addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        if (bind(parm.listenfd, (struct sockaddr *) &parm.addr, sizeof(parm.addr))<0)
+        {
+            logmsg ("HHC853I %4.4X socket bind error: %s\n",
+                dev->devnum, strerror(errno));
+            ctcadpt_close_device(dev);
+            return -1;
+        }
+        if (listen(parm.listenfd, 1) < 0)
+        {
+            logmsg ("HHC854I %4.4X socket listen error: %s\n",
+                dev->devnum, strerror(errno));
+            ctcadpt_close_device(dev);
+            return -1;
+        }
+
+        /* we are listening, so create a thread to accept connection */
+        arg = malloc(sizeof(CTCG_PARMBLK));
+        memcpy(arg,&parm,sizeof(parm));
+        arg->dev = dev;
+        create_thread(&tid, NULL, serv_ctct, arg);
+    }
+    else  /* successfully connected (outbound) to the other end */
+    {
+        logmsg ("HHC891I %4.4X connected to %s:%s\n",
+            dev->devnum, remaddr, remotep);
+        dev->fd = parm.listenfd;
+    }
+
+    /* for cosmetics, since we are successfully connected or serving, */
+    /* fill in some details for the panel.                            */
+    sprintf(dev->filename, "%s:%s", remaddr, remotep);
+
+    return 0;
 } /* end function init_ctct */
 
 /*-------------------------------------------------------------------*/
@@ -816,6 +1053,18 @@ U16             num;                    /* Number of bytes returned  */
 
     /* Read an IP packet from the TUN device */
     len = read (dev->fd, dev->buf, dev->bufsize);
+
+//    /* Check for an EOF condition */
+//    if (len = 0)
+//    {
+//        logmsg ("HHC868I %4.4X End of file on %s\n",
+//                dev->devnum, dev->filename);
+//        dev->sense[0] = SENSE_EC;
+//        *unitstat = CSW_CE | CSW_DE | CSW_UC;
+//        return;
+//    }
+
+    /* Check for other error condition */
     if (len < 0)
     {
         logmsg ("HHC869I %4.4X Error reading from %s: %s\n",
@@ -1337,6 +1586,9 @@ BYTE            opcode;                 /* CCW opcode with modifier
 
         /* Write data and set unit status and residual byte count */
         switch (dev->ctctype) {
+        case CTC_CTCT:
+            write_ctci (dev, count, iobuf, unitstat, residual);
+            break;
         case CTC_CTCI:
             write_ctci (dev, count, iobuf, unitstat, residual);
             break;
@@ -1363,6 +1615,9 @@ BYTE            opcode;                 /* CCW opcode with modifier
     /*---------------------------------------------------------------*/
         /* Read data and set unit status and residual byte count */
         switch (dev->ctctype) {
+        case CTC_CTCT:
+            read_ctci (dev, count, iobuf, unitstat, residual, more);
+            break;
         case CTC_CTCI:
             read_ctci (dev, count, iobuf, unitstat, residual, more);
             break;
