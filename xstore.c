@@ -450,9 +450,11 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Obtain absolute address of main storage block,
-           check protection, and set reference bit */
-        aaddr2 = LOGICAL_TO_ABS (vaddr2, r2, regs,
+           check protection, and set reference bit. 
+           Use last byte of page to avoid FPO area.  */
+        aaddr2 = LOGICAL_TO_ABS (vaddr2 + 0xFFF, r2, regs,
                                 ACCTYPE_READ, akey2);
+        aaddr2 &= 0xFFFFF000;
     }
 
 #if defined(FEATURE_EXPANDED_STORAGE)
