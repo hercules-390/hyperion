@@ -5690,6 +5690,60 @@ BYTE    cbyte;                          /* Compare byte              */
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
+/* EB21 CLMY  - Compare Logical Characters under Mask Long Disp[RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(compare_logical_characters_under_mask_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+U32     n;                              /* 32-bit operand values     */
+int     cc = 0;                         /* Condition code            */
+BYTE    sbyte,
+        dbyte;                          /* Byte work areas           */
+int     i;                              /* Integer work areas        */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    /* Load value from register */
+    n = regs->GR_L(r1);
+
+    /* if mask is zero, access rupts recognized for 1 byte */
+    if (r3 == 0)
+            sbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
+    /* Compare characters in register with operand characters */
+    for ( i = 0; i < 4; i++ )
+    {
+        /* Test mask bit corresponding to this character */
+        if ( r3 & 0x08 )
+        {
+            /* Fetch character from register and operand */
+            dbyte = n >> 24;
+            sbyte = ARCH_DEP(vfetchb) ( effective_addr2++, b2, regs );
+
+            /* Compare bytes, set condition code if unequal */
+            if ( dbyte != sbyte )
+            {
+                cc = (dbyte < sbyte) ? 1 : 2;
+                break;
+            } /* end if */
+        }
+
+        /* Shift mask and register for next byte */
+        r3 <<= 1;
+        n <<= 8;
+
+    } /* end for(i) */
+
+    /* Update the condition code */
+    regs->psw.cc = cc;
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
 /* EB57 XIY   - Exclusive Or Immediate (Long Displacement)     [SIY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(exclusive_or_immediate_y)
@@ -5753,6 +5807,77 @@ VADR    effective_addr2;                /* Effective address         */
     /* Insert character in r1 register */
     regs->GR_LHLCL(r1) = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
 
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
+/* EB81 ICMY  - Insert Characters under Mask Long Displacement [RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(insert_characters_under_mask_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+int     cc = 0;                         /* Condition code            */
+BYTE    tbyte;                          /* Byte work areas           */
+int     h, i;                           /* Integer work areas        */
+U64     dreg;                           /* Double register work area */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    /* If the mask is all zero, we must nevertheless load one
+       byte from the storage operand, because POP requires us
+       to recognize an access exception on the first byte */
+    if ( r3 == 0 )
+    {
+        tbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+        regs->psw.cc = 0;
+        return;
+    }
+
+    /* Load existing register value into 64-bit work area */
+    dreg = regs->GR_L(r1);
+
+    /* Insert characters into register from operand address */
+    for ( i = 0, h = 0; i < 4; i++ )
+    {
+        /* Test mask bit corresponding to this character */
+        if ( r3 & 0x08 )
+        {
+            /* Fetch the source byte from the operand */
+            tbyte = ARCH_DEP(vfetchb) ( effective_addr2, b2, regs );
+
+            /* If this is the first byte fetched then test the
+               high-order bit to determine the condition code */
+            if ( (r3 & 0xF0) == 0 )
+                h = (tbyte & 0x80) ? 1 : 2;
+
+            /* If byte is non-zero then set the condition code */
+            if ( tbyte != 0 )
+                 cc = h;
+
+            /* Insert the byte into the register */
+            dreg &= 0xFFFFFFFF00FFFFFFULL;
+            dreg |= (U32)tbyte << 24;
+
+            /* Increment the operand address */
+            effective_addr2++;
+            effective_addr2 &= ADDRESS_MAXWRAP(regs);
+        }
+
+        /* Shift mask and register for next byte */
+        r3 <<= 1;
+        dreg <<= 8;
+
+    } /* end for(i) */
+
+    /* Load the register with the updated value */
+    regs->GR_L(r1) = dreg >> 32;
+
+    /* Set condition code */
+    regs->psw.cc = cc;
 }
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
@@ -6058,6 +6183,58 @@ VADR    effective_addr2;                /* Effective address         */
 
 #if defined(FEATURE_LONG_DISPLACEMENT)
 /*-------------------------------------------------------------------*/
+/* EB2D STCMY - Store Characters under Mask (Long Displacement)[RSY] */
+/*-------------------------------------------------------------------*/
+DEF_INST(store_characters_under_mask_y)
+{
+int     r1, r3;                         /* Register numbers          */
+int     b2;                             /* effective address base    */
+VADR    effective_addr2;                /* effective address         */
+U32     n;                              /* 32-bit operand values     */
+int     i, j;                           /* Integer work areas        */
+BYTE    cwork[4];                       /* Character work areas      */
+
+    RSY(inst, execflag, regs, r1, r3, b2, effective_addr2);
+
+    /* Load value from register */
+    n = regs->GR_L(r1);
+
+    /* Copy characters from register to work area */
+    for ( i = 0, j = 0; i < 4; i++ )
+    {
+        /* Test mask bit corresponding to this character */
+        if ( r3 & 0x08 )
+        {
+            /* Copy character from register to work area */
+            cwork[j++] = n >> 24;
+        }
+
+        /* Shift mask and register for next byte */
+        r3 <<= 1;
+        n <<= 8;
+
+    } /* end for(i) */
+
+    /* If the mask is all zero, we nevertheless access one byte
+       from the storage operand, because POP states that an
+       access exception may be recognized on the first byte */
+    if (j == 0)
+    {
+#if defined(MODEL_DEPENDENT_STCM)
+// /*debug*/logmsg ("Model dependent STCMY use\n");
+        ARCH_DEP(validate_operand) (effective_addr2, b2, 0, ACCTYPE_WRITE, regs);
+#endif /*defined(MODEL_DEPENDENT_STCM)*/
+        return;
+    }
+
+    /* Store result at operand location */
+    ARCH_DEP(vstorec) ( cwork, j-1, effective_addr2, b2, regs );
+}
+#endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
+
+
+#if defined(FEATURE_LONG_DISPLACEMENT)
+/*-------------------------------------------------------------------*/
 /* E370 STHY  - Store Halfword (Long Displacement)             [RXY] */
 /*-------------------------------------------------------------------*/
 DEF_INST(store_halfword_y)
@@ -6225,12 +6402,9 @@ BYTE    tbyte;                          /* Work byte                 */
         (inst,execflag,regs); }
  UNDEF_INST(compare_and_swap_y)
  UNDEF_INST(compare_double_and_swap_y)
- UNDEF_INST(compare_logical_characters_under_mask_y)
  UNDEF_INST(convert_to_binary_y)
  UNDEF_INST(convert_to_decimal_y)
- UNDEF_INST(insert_characters_under_mask_y)
  UNDEF_INST(load_real_address_y)
- UNDEF_INST(store_characters_under_mask_y)
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 #if !defined(_GEN_ARCH)
