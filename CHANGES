@@ -1,3 +1,6 @@
+10 Jan 2003 Display a reasonable error message if a track image
+            is probably compressed using a locally unsupported
+            compression algorithm (such as bzip2) - Greg Smith
 09 Jan 2003 Require `-f' option for cckdcdsk & cckdcomp if
             file has OPENED bit on - Greg Smith
 09 Jan 2003 Correct & enable DAS for S/370 - Jan Jaeger

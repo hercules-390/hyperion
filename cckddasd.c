@@ -3126,6 +3126,8 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 U16             cyl;                    /* Cylinder                  */
 U16             head;                   /* Head                      */
 int             t;                      /* Calculated track          */
+int             badcomp=0;              /* 1=Unsupported compression */
+char           *comp[] = {"none", "zlib", "bzip2"};
 
     cckd = dev->cckd_ext;
 
@@ -3136,29 +3138,46 @@ int             t;                      /* Calculated track          */
         head = (buf[3] << 8) + buf[4];
         t = cyl * dev->ckdheads + head;
 
-        if (buf[0] <= CCKD_COMPRESS_MAX
-         && cyl < dev->ckdcyls
+        if (cyl < dev->ckdcyls
          && head < dev->ckdheads
          && (trk == -1 || t == trk))
-            return t;
+        {
+            if (buf[0] <= CCKD_COMPRESS_MAX)
+                return t;
+            if (buf[0] <= CCKD_COMPRESS_MAX_POSSIBLE)
+                badcomp = 1;
+        }
     }
     /* FBA dasd header verification */
     else
     {
         t = (buf[1] << 24) + (buf[2] << 16) + (buf[3] << 8) + buf[4];
-        if (buf[0] <= CCKD_COMPRESS_MAX
-         && t < dev->fbanumblk
+        if (t < dev->fbanumblk
          && (trk == -1 || t == trk))
-            return t;
+        {
+            if (buf[0] <= CCKD_COMPRESS_MAX)
+                return t;
+            if (buf[0] <= CCKD_COMPRESS_MAX_POSSIBLE)
+                badcomp = 1;
+        }
     }
 
-    devmsg ("%4.4X:cckddasd: invalid %s hdr %s %d "
-            "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n",
-            dev->devnum, cckd->ckddasd ? "trk" : "blk",
-            cckd->ckddasd ? "trk" : "blk", trk,
-            buf[0], buf[1], buf[2], buf[3], buf[4]);
-
-    cckd_print_itrace ();
+    if (badcomp)
+    {
+        devmsg ("%4.4X:cckddasd: invalid %s hdr %s %d: "
+                "%s compression unsupported\n",
+                dev->devnum, cckd->ckddasd ? "trk" : "blk",
+                cckd->ckddasd ? "trk" : "blk", t, comp[buf[0]]);
+    }
+    else
+    {
+        devmsg ("%4.4X:cckddasd: invalid %s hdr %s %d "
+                "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n",
+                dev->devnum, cckd->ckddasd ? "trk" : "blk",
+                cckd->ckddasd ? "trk" : "blk", trk,
+                buf[0], buf[1], buf[2], buf[3], buf[4]);
+        cckd_print_itrace ();
+    }
 
     return -1;
 } /* end function cckd_cchh */
