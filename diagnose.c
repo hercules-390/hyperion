@@ -138,7 +138,9 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
 
         /* The poweroff diagnose is only valid on the 9221 */
-        if((sysblk.cpuid >> 16 & 0xFFFF) != 0x9221
+        if(((sysblk.cpuid >> 16 & 0xFFFF) != 0x9221
+          /* And also on the 937X line of processors */
+          && (sysblk.cpuid >> 16 & 0xFFF0) != 0x9370 ) 
           /* and r1/r2 must contain C'POWEROFF' in EBCDIC */
           || regs->GR_L(r1) != 0xD7D6E6C5
           || regs->GR_L(r2) != 0xD9D6C6C6)
