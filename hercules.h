@@ -1284,6 +1284,7 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 
 #define CCKD_LEN_MASK          0x1f     /* Low order length          */
 #define CCKD_LEN_SHIFT         2        /* Bits length shifted over  */
+#if 0
 #define CCKD_GET_BUFLEN(c) \
  (((c) >> CCKD_LEN_SHIFT) & CCKD_LEN_MASK)
 #define CCKD_SET_BUFLEN(c,len) \
@@ -1292,6 +1293,10 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
   if ((c) & CCKD_COMPRESS_MASK) \
    (c) |= ((len) & CCKD_LEN_MASK) << CCKD_LEN_SHIFT; \
  } while (0)
+#else
+#define CCKD_GET_BUFLEN(c) 0
+#define CCKD_SET_BUFLEN(c,len) (c) &= ~(CCKD_LEN_MASK << CCKD_LEN_SHIFT);
+#endif
 
 typedef struct _CCKD_L2ENT {            /* Level 2 table entry       */
         U32              pos;           /* Track offset              */
@@ -1465,6 +1470,7 @@ typedef struct _CCKDDASD_EXT {          /* Ext for compressed ckd    */
         DEVBLK          *devnext;       /* cckd device queue         */
         unsigned int     ckddasd:1,     /* 1=CKD dasd                */
                          fbadasd:1,     /* 1=FBA dasd                */
+                         updated:1,     /* 1=Data has been updated   */
                          stopping:1;    /* 1=Device is closing       */
         LOCK             filelock;      /* File lock                 */
         CCKDDASD_DEVHDR  cdevhdr[CCKD_MAX_SF+1];/* cckd device hdr   */

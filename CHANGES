@@ -1,3 +1,4 @@
+30 Jul 2002 Compressed dasd tweaks - Greg Smith
 26 Jul 2002 Compressed dasd enhanced free pending processing - Greg Smith
 22 Jul 2002 Performance tweaks - Gabor Hofi & Greg Smith
 22 Jul 2002 cckd options `nofsync' and `fsyncwa' - Greg Smith
