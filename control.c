@@ -1784,7 +1784,7 @@ int     amode64;
     rc = s390_load_psw ( regs, dword );
     /* Set the notesame bit to zero as it has been set, 
        and set the amode64 bit according to byte 3 */
-    regs->psw.notesame = 0;
+    regs->psw.notesame = regs->psw.notesame ? 0 : 1;
     regs->psw.amode64 = amode64;
 #else /*!defined(FEATURE_ESAME)*/
     rc = ARCH_DEP(load_psw) ( regs, dword );
