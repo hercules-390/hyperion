@@ -1,3 +1,7 @@
+#### Don't forget to change the version number in configure.ac! ####
+
+01 Aug 2003 Created RELEASE.NOTES member - Fish
+01 Aug 2003 Added Hercules VERSION to dyngui - Fish
 01 Aug 2003 Various OMA tape processing fixes - Ivan Warren
 29 Jul 2003 Fix shared device open to not set `connecting' bit on
             until after parameter verification - Greg Smith

@@ -1,0 +1,36 @@
+
+                     Version 2.18 RELEASE NOTES
+
+
+- Reminder that CTCI device handling was changed starting with version 2.17
+  as follows:
+
+  - The CTCI-W32 protocol is deprecated. You should use the CTCI protocol
+    instead.
+
+  - You MUST NOT define both even/odd CTCI device pairs in your configuration
+    file. You should ONLY define the first even numbered device. Hercules will
+    automatically define the odd numbered device for you. If you define the
+    odd numbered device by mistake, an open error will occur on that device.
+    This is by design. See the README.NETWORKING document for further details.
+
+
+- Hercules Dynamic Loader support: starting with version 2.18, Hercules now
+  contains support for the dynamic loading of certain modules upon startup on
+  some platforms (e.g. Linux and Windows for example). As a result of this new
+  feature, "Hercules" itself now no longer consists of just the 'hercules.exe'
+  module by itself, but rather consists of BOTH the 'hercules.exe' program AS
+  WELL AS whatever dynamic modules (DLLs) that accompany it.
+
+  As a result if this change, whenever you install a new version of Hercules,
+  you must ensure that you ALSO install the accompanying new versions of the
+  new dynamic modules as well. Attempting to use a version of Hercules with a
+  dynamic module that was not specifically built for that version will cause
+  loading of that dynamic module to fail.
+
+  You CANNOT mix versions of hercules with differing versions of dynamically
+  loaded modules.
+
+
+- Anything else???
+

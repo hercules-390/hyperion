@@ -895,7 +895,7 @@ void Cleanup()
 
 void gui_panel_display ()
 {
-    logmsg(_("HHCDG001I dyngui.dll version " DYNGUI_VERSION " initiated\n"));
+    logmsg(_("HHCDG001I dyngui.dll version " DYNGUI_VERSION "-" VERSION " initiated\n"));
     Initialize();               // (allocate buffers, etc)
     ProcessingLoop();           // (primary processing loop)
     logmsg(_("HHCDG002I dyngui.dll terminated\n"));
