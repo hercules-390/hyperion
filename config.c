@@ -364,27 +364,6 @@ int     rc;                             /* Return code               */
 static int detach_devblk (DEVBLK *dev)
 {
 
-    // detach all devices in group
-    if(dev->group)
-    {
-    int i;
-    DEVGRP *group;
-
-        group = dev->group;
-	dev->group = NULL;
-
-        for(i = 0; i < group->acount; i++)
-        {
-            if(group->memdev[i] != NULL
-              && group->memdev[i] != dev)
-            {
-                group->memdev[i]->group = NULL;
-                detach_devblk(group->memdev[i]);
-            }
-        }
-        free(group);
-    }
-
     /* Obtain the device lock */
     obtain_lock(&dev->lock);
 
@@ -405,6 +384,25 @@ static int detach_devblk (DEVBLK *dev)
     /* Indicate a CRW is pending for this device */
     dev->crwpending = 1;
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
+
+    // detach all devices in group
+    if(dev->group)
+    {
+    int i;
+
+        dev->group->memdev[dev->member] = NULL;
+
+        for(i = 0; i < dev->group->acount; i++)
+        {
+            if(dev->group->memdev[i])
+            {
+                detach_devblk(dev->group->memdev[i]);
+            }
+        }
+
+        free(dev->group);
+	dev->group = NULL;
+    }
 
     ret_devblk(dev);
 
@@ -531,6 +529,73 @@ DEVBLK *dev;                            /* -> Device block           */
 
 /*-------------------------------------------------------------------*/
 /* Function to group devblk's belonging to one device (eg OSA, LCS)  */
+/*                                                                   */
+/* group_device is intended to be called from within a device        */
+/* initialisation routine to group 1 or more devices to a logical    */
+/* device group.                                                     */
+/*                                                                   */
+/* group_device will return true for the device that completes       */
+/* the device group. (ie the last device to join the group)          */
+/*                                                                   */
+/* when no group exists, and device group is called with a device    */
+/* count of zero, then no group will be created.  Otherwise          */
+/* a new group will be created and the currently attaching device    */
+/* will be the first in the group.                                   */
+/*                                                                   */
+/* when a device in a group is detached, all devices in the group    */
+/* will be detached. The first device to be detached will enter      */
+/* its close routine with the group intact.  Subsequent devices      */
+/* being detached will no longer have access to previously detached  */
+/* devices.                                                          */
+/*                                                                   */
+/* Example of a fixed count device group:                            */
+/*                                                                   */
+/* device_init(dev)                                                  */
+/* {                                                                 */
+/*    if(!device_group(dev, 2))                                      */
+/*       return 0;                                                   */
+/*                                                                   */
+/*    ... all devices in the group have been attached,               */
+/*    ... group initialisation may proceed.                          */
+/*                                                                   */
+/* }                                                                 */
+/*                                                                   */
+/*                                                                   */
+/* Variable device group:                                            */
+/*                                                                   */
+/* device_init(dev)                                                  */
+/* {                                                                 */
+/*    if(device_group(dev, 0))                                       */
+/*    {                                                              */
+/*    ... all devices in the group have been attached,               */
+/*    ... group initialisation may proceed.                          */
+/*    }                                                              */
+/*    else                                                           */
+/*        if(device->group)                                          */
+/*           return 0;                                               */
+/*        else                                                       */
+/*        {                                                          */
+/*            ... process parameters to determine number of devices  */
+/*            device_group(dev, variable_count);                     */
+/*        }                                                          */
+/* }                                                                 */
+/*                                                                   */
+/*                                                                   */
+/* dev->group      : pointer to DEVGRP structure or NULL             */
+/* dev->member     : index into memdev array in DEVGRP structure for */
+/*                 : current DEVBLK                                  */
+/* group->members  : number of members in group                      */
+/* group->acount   : number active members in group                  */
+/* group->memdev[] : array of DEVBLK pointers of member devices      */
+/*                                                                   */
+/*                                                                   */
+/* members will be equal to acount for a complete group              */
+/*                                                                   */
+/*                                                                   */
+/* Always: (for grouped devices)                                     */
+/*   dev->group->memdev[dev->member] == dev                          */
+/*                                                                   */
+/*                                                                   */
 /*-------------------------------------------------------------------*/
 int group_device(DEVBLK *dev, int members)
 {
@@ -559,6 +624,7 @@ DEVBLK *tmp;
         dev->group->members = members;
         dev->group->acount = 1;
         dev->group->memdev[0] = dev;
+	dev->member = 0;
     }
 
     return (dev->group && (dev->group->members == dev->group->acount));
