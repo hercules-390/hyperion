@@ -7,6 +7,7 @@
 /*                                                                   */
 /* Telnet support is provided for two classes of console device:     */
 /* - local non-SNA 3270 display consoles via tn3270                  */
+/* - local non-SNA 3270 printers         via tn3270                  */
 /* - 1052 and 3215 console printer keyboards via regular telnet      */
 /*-------------------------------------------------------------------*/
 
@@ -478,6 +479,7 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
 /* extended attributes. Displays are negotiated into tn3270 mode.    */
 /* An optional device number suffix (example: IBM-3270@01F) may      */
 /* be specified to request allocation to a specific device number.   */
+/* Valid 3270 printer type is "IBM-3287-1"                           */
 /*                                                                   */
 /* Terminal types whose first four characters are not "IBM-" are     */
 /* handled as printer-keyboard consoles using telnet line mode.      */
@@ -486,6 +488,7 @@ static BYTE will_bin[] = { IAC, WILL, BINARY, IAC, DO, BINARY };
 /*      csock   Socket number for client connection                  */
 /* Output:                                                           */
 /*      class   D=3270 display console, K=printer-keyboard console   */
+/*              P=3270 printer                                       */
 /*      model   3270 model indicator (2,3,4,5,X)                     */
 /*      extatr  3270 extended attributes (Y,N)                       */
 /*      devn    Requested device number, or FFFF=any device number   */
@@ -603,6 +606,7 @@ static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
               || memcmp(termtype+4, "3278", 4) == 0
               || memcmp(termtype+4, "3179", 4) == 0
               || memcmp(termtype+4, "3180", 4) == 0
+              || memcmp(termtype+4, "3287", 4) == 0
               || memcmp(termtype+4, "3279", 4) == 0))
             return -1;
 
@@ -610,9 +614,10 @@ static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
         *extatr = 'N';
 
         if (termtype[8]=='-') {
-            if (termtype[9] < '2' || termtype[9] > '5')
+            if (termtype[9] < '1' || termtype[9] > '5')
                 return -1;
             *model = termtype[9];
+            if (memcmp(termtype+4, "328",3) == 0) *model = '2';
             if (memcmp(termtype+10, "-E", 2) == 0)
                 *extatr = 'Y';
         }
@@ -637,7 +642,8 @@ static BYTE dont_echo[] = { IAC, DONT, ECHO_OPTION };
     if (rc < 0) return -1;
 
     /* Return display terminal class */
-    *class = 'D';
+    if (memcmp(termtype+4,"3287",4)==0) *class='P';
+    else *class = 'D';
     return 0;
 
 } /* end function negotiate */
@@ -988,7 +994,7 @@ struct hostent         *pHE;            /* Addr of hostent structure */
 char                   *clientip;       /* Addr of client ip address */
 char                   *clientname;     /* Addr of client hostname   */
 U16                     devnum;         /* Requested device number   */
-BYTE                    class;          /* D=3270, K=3215/1052       */
+BYTE                    class;          /* D=3270, P=3287, K=3215/1052 */
 BYTE                    model;          /* 3270 model (2,3,4,5,X)    */
 BYTE                    extended;       /* Extended attributes (Y,N) */
 BYTE                    buf[256];       /* Message buffer            */
@@ -1037,6 +1043,9 @@ BYTE                    rejmsg[80];     /* Rejection message         */
 
         /* Loop if non-matching device type */
         if (class == 'D' && dev->devtype != 0x3270)
+            continue;
+
+        if (class == 'P' && dev->devtype != 0x3287)
             continue;
 
         if (class == 'K' && dev->devtype != 0x1052
@@ -1099,7 +1108,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
         if (devnum == 0xFFFF)
             len = sprintf (rejmsg,
                     "Connection rejected, no available %s device",
-                    (class=='D' ? "3270" : "1052 or 3215"));
+       (class=='D' ? "3270" : (class=='P' ? "3287" : "1052 or 3215")));
         else
             len = sprintf (rejmsg,
                     "Connection rejected, device %4.4X unavailable",
@@ -1108,7 +1117,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
         TNSDEBUG1( "%s\n", rejmsg);
 
         /* Send connection rejection message to client */
-        if (class == 'D')
+        if (class != 'K')
         {
             len = sprintf (buf,
                         "\xF5\x40\x11\x40\x40\x1D\x60%s"
@@ -1124,6 +1133,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
         {
             len = sprintf (buf, "%s\r\n%s\r\n%s\r\n", conmsg, hostmsg, rejmsg);
         }
+        if (class != 'P')  /* do not write connection resp on 3287 */
         rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
 
         /* Close the connection and terminate the thread */
@@ -1137,7 +1147,7 @@ BYTE                    rejmsg[80];     /* Rejection message         */
             clientip, dev->devtype, dev->devnum);
 
     /* Send connection message to client */
-    if (class == 'D')
+    if (class != 'K')
     {
         len = sprintf (buf,
                     "\xF5\x40\x11\x40\x40\x1D\x60%s"
@@ -1151,9 +1161,11 @@ BYTE                    rejmsg[80];     /* Rejection message         */
     {
         len = sprintf (buf, "%s\r\n%s\r\n", conmsg, hostmsg);
     }
+    if (class != 'P')  /* do not write connection resp on 3287 */
     rc = send_packet (csock, buf, len, "CONNECTION RESPONSE");
 
     /* Raise attention interrupt for the device */
+    if (class != 'P')  /* do not raise attention for  3287 */
     rc = device_attention (dev, CSW_ATTN);
 
     /* Signal connection thread to redrive its select loop */
@@ -1326,7 +1338,7 @@ BYTE                    unitstat;       /* Status after receive data */
                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
             {
                 /* Receive console input data from the client */
-                if (dev->devtype == 0x3270)
+                if ((dev->devtype == 0x3270) || (dev->devtype == 0x3287))
                     unitstat = recv_3270_data (dev);
                 else
                     unitstat = recv_1052_data (dev);
@@ -1349,18 +1361,29 @@ BYTE                    unitstat;       /* Status after receive data */
                 /* Indicate that data is available at the device */
                 if(dev->rlen3270)
                     dev->readpending = 1;
-
+  
                 /* Release the device lock */
                 release_lock (&dev->lock);
 
                 /* Raise attention interrupt for the device */
+                /* Do not raise attention interrupt for 3287  */
+                /* Otherwise zVM loops after ENABLE ccuu     */
+                /* Following 5 lines are repeated on Hercules console: */
+                /* console: sending 3270 data */
+                /* +0000   F5C2FFEF     */
+                /* console: Packet received length=7 */
+                /* +0000   016CD902 00FFEF */   
+                /*         I do not know what is this */
+                /* console: CCUU attention requests raised */
+                if (dev->devtype != 0x3287)
+                {
                 rc = device_attention (dev, unitstat);
 
                 /* Trace the attention request */
                 TNSDEBUG2("%4.4X attention request %s\n",
                         dev->devnum,
                         (rc == 0 ? "raised" : "rejected"));
-
+                }
                 continue;
             } /* end if(data available) */
 
@@ -1443,8 +1466,16 @@ loc3270_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
     dev->devid[2] = 0x74;
     dev->devid[3] = 0x1D;
     dev->devid[4] = 0x32; /* Device type is 3278-2 */
+    if ((dev->devtype & 0xFF)==0x70)
+     {
     dev->devid[5] = 0x78;
     dev->devid[6] = 0x02;
+     }
+    else
+     {
+     dev->devid[5] = dev->devtype & 0xFF; /* device type is 3287-1 */
+     dev->devid[6] = 0x01;
+     }
     dev->numdevid = 7;
 
     return console_initialise();
