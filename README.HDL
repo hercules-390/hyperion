@@ -350,7 +350,7 @@ HDL_DEPENDENCY_SECTION;
 END_DEPENDENCY_SECTION;
 
 
-/*  Register re-bindable entry point with resident version, or NULL
+/*  Register re-bindable entry point with resident version, or UNRESOLVED
 **
 ** The following section defines the entry points within Hercules that
 ** your module is overriding (replacing). Your module's functions will
@@ -376,7 +376,7 @@ HDL_REGISTER_SECTION;
     */
     HDL_REGISTER( panel_command,      my_panel_command );
     HDL_REGISTER( panel_display,      my_panel_display );
-    HDL_REGISTER( some_exitpoint,     *NULL            );
+    HDL_REGISTER( some_exitpoint,     UNRESOLVED       );
 }
 END_REGISTER_SECTION;
 
