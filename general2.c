@@ -1935,8 +1935,8 @@ DEF_INST(convert_utf16_to_utf32)
   int read;                        /* Bytes read                     */
   VADR srce;                       /* Source address                 */
   GREG srcelen;                    /* Source length                  */
-  BYTE utf16[4];                     /* utf16 character(s)             */
-  BYTE utf32[4];                     /* utf328 character(s)            */
+  BYTE utf16[4];                   /* utf16 character(s)             */
+  BYTE utf32[4];                   /* utf328 character(s)            */
   BYTE uvwxy;                      /* Work value                     */
   int xlated;                      /* characters translated          */
   
@@ -2026,8 +2026,8 @@ DEF_INST(convert_utf32_to_utf8)
   int r2;
   VADR srce;                       /* Source address                 */
   GREG srcelen;                    /* Source length                  */
-  BYTE utf32[4];                     /* utf32 character(s)             */
-  BYTE utf8[4];                      /* utf8 character(s)              */
+  BYTE utf32[4];                   /* utf32 character(s)             */
+  BYTE utf8[4];                    /* utf8 character(s)              */
   BYTE uvwxy;                      /* Work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
@@ -2162,8 +2162,8 @@ DEF_INST(convert_utf32_to_utf16)
   int r2;
   VADR srce;                       /* Source address                 */
   GREG srcelen;                    /* Source length                  */
-  BYTE utf16[4];                     /* utf16 character(s)             */
-  BYTE utf32[4];                     /* utf32 character(s)             */
+  BYTE utf16[4];                   /* utf16 character(s)             */
+  BYTE utf32[4];                   /* utf32 character(s)             */
   BYTE uvwxy;                      /* work value                     */
   int write;                       /* Bytes written                  */
   int xlated;                      /* characters translated          */
