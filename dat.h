@@ -1414,10 +1414,11 @@ seg_tran_invalid:
 page_tran_invalid:
     *xcode = PGM_PAGE_TRANSLATION_EXCEPTION;
     *raddr = pto;
-    if(acctype != ACCTYPE_PTE)
-        cc = 2;
-    else
-	return 0;
+    if(acctype == ACCTYPE_PTE) return 0;
+    /* MVPG needs the protect flag and stid value even for PIC 11 */
+    if (protect) *prot = protect;
+    *pstid = stid;
+    cc = 2;
     goto tran_excp_addr;
 
 #if !defined(FEATURE_ESAME)
