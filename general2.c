@@ -78,21 +78,15 @@ DEF_INST(or_immediate)
 BYTE    i2;                             /* Immediate operand byte    */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    rbyte;                          /* Result byte               */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
-    /* Fetch byte from operand address */
-    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+    /* Get byte mainstor address */
+    dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* OR with immediate operand */
-    rbyte |= i2;
-
-    /* Store result at operand address */
-    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
-
-    /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    /* OR byte with immediate operand, setting condition code */
+    regs->psw.cc = ((*dest |= i2) != 0);
 }
 
 

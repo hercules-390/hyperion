@@ -221,21 +221,15 @@ DEF_INST(and_immediate)
 BYTE    i2;                             /* Immediate byte of opcode  */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    rbyte;                          /* Result byte               */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
-    /* Fetch byte from operand address */
-    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+    /* Get byte mainstor address */
+    dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* AND with immediate operand */
-    rbyte &= i2;
-
-    /* Store result at operand address */
-    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
-
-    /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    /* AND byte with immediate operand, setting condition code */
+    regs->psw.cc = ((*dest &= i2) != 0);
 }
 
 
@@ -748,14 +742,13 @@ int     r1, r2;                         /* Values of R fields        */
 /*-------------------------------------------------------------------*/
 DEF_INST(branch_on_condition)
 {
-int     r1;                             /* Value of R field          */
 int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 
     /* Branch to operand address if r1 mask bit is set */
     if ((0x80 >> regs->psw.cc) & inst[1])
     {
-        RX(inst, regs, r1, b2, effective_addr2);
+        RX_BC(inst, regs, b2, effective_addr2);
         regs->psw.IA = effective_addr2;
 #if defined(FEATURE_PER)
         if( EN_IC_PER_SB(regs)
@@ -2672,21 +2665,15 @@ DEF_INST(exclusive_or_immediate)
 BYTE    i2;                             /* Immediate operand         */
 int     b1;                             /* Base of effective addr    */
 VADR    effective_addr1;                /* Effective address         */
-BYTE    rbyte;                          /* Result byte               */
+BYTE   *dest;                           /* Pointer to target byte    */
 
     SI(inst, regs, i2, b1, effective_addr1);
 
-    /* Fetch byte from operand address */
-    rbyte = ARCH_DEP(vfetchb) ( effective_addr1, b1, regs );
+    /* Get byte mainstor address */
+    dest = MADDR (effective_addr1, b1, regs, ACCTYPE_WRITE, regs->psw.pkey );
 
-    /* XOR with immediate operand */
-    rbyte ^= i2;
-
-    /* Store result at operand address */
-    ARCH_DEP(vstoreb) ( rbyte, effective_addr1, b1, regs );
-
-    /* Set condition code */
-    regs->psw.cc = rbyte ? 1 : 0;
+    /* XOR byte with immediate operand, setting condition code */
+    regs->psw.cc = ((*dest ^= i2) != 0);
 }
 
 

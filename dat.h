@@ -56,6 +56,7 @@ _DAT_C_STATIC U16 ARCH_DEP(translate_asn) (U16 asn, REGS *regs,
 U32     afte_addr;                      /* Address of AFTE           */
 U32     afte;                           /* ASN first table entry     */
 U32     aste_addr;                      /* Address of ASTE           */
+BYTE   *aste_main;                      /* ASTE mainstor address     */
 int     code;                           /* Exception code            */
 int     numwords;                       /* ASTE size (4 or 16 words) */
 int     i;                              /* Array subscript           */
@@ -113,10 +114,11 @@ int     i;                              /* Array subscript           */
        storage.  Each fullword of the ASTE must be fetched
        concurrently as observed by other CPUs */
     aste_addr = APPLY_PREFIXING (aste_addr, regs->PX);
+    aste_main = FETCH_MAIN_ABSOLUTE(aste_addr, regs, numwords * 4);
     for (i = 0; i < numwords; i++)
     {
-        aste[i] = ARCH_DEP(fetch_fullword_absolute) (aste_addr, regs);
-        aste_addr += 4;
+        aste[i] = fetch_fw(aste_main);
+        aste_main += 4;
     }
     /* Clear remaining words if fewer than 16 words were loaded */
     while (i < 16) aste[i++] = 0;
@@ -304,6 +306,7 @@ U32     all;                            /* Access-list length        */
 U32     ale[4];                         /* Access-list entry         */
 U32     aste_addr;                      /* Real address of ASTE      */
 U32     abs;                            /* Absolute address          */
+BYTE   *main;                           /* Mainstor address          */
 int     i;                              /* Array subscript           */
 
     regs->dat.protect = 0;
@@ -353,10 +356,11 @@ int     i;                              /* Array subscript           */
        Each fullword of the ALE must be fetched concurrently as
        observed by other CPUs */
     alo = APPLY_PREFIXING (alo, regs->PX);
+    main = FETCH_MAIN_ABSOLUTE(alo, regs, 16);
     for (i = 0; i < 4; i++)
     {
-        ale[i] = ARCH_DEP(fetch_fullword_absolute) (alo, regs);
-        alo += 4;
+        ale[i] = fetch_fw (main);
+        main += 4;
     }
 
     /* Check the ALEN invalid bit in the ALE */
@@ -376,14 +380,15 @@ int     i;                              /* Array subscript           */
     abs = APPLY_PREFIXING (aste_addr, regs->PX);
     if (abs > regs->mainlim)
         goto alet_addr_excp;
+    main = FETCH_MAIN_ABSOLUTE(abs, regs, 64);
 
     /* Fetch the 64-byte ASN second table entry from real storage.
        Each fullword of the ASTE must be fetched concurrently as
        observed by other CPUs.  ASTE cannot cross a page boundary */
     for (i = 0; i < 16; i++)
     {
-        aste[i] = ARCH_DEP(fetch_fullword_absolute) (abs, regs);
-        abs += 4;
+        aste[i] = fetch_fw(main);
+        main += 4;
     }
 
     /* Check the ASX invalid bit in the ASTE */

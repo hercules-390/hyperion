@@ -1,5 +1,10 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+13 May 2004 bc.pat - Yet another BC optimization - Greg Smith
+13 May 2004 fetch_main_absolute.pat - Resolve absolute addresses only
+            once for multiple addresses in the same page - Greg Smith
+13 May 2004 sieregs.pat - Obtain guestregs on first execute of SIE - Greg Smith
+13 May 2004 immed.pat - ni/xi/oi optimizations - Greg Smith
 04 May 2004 cckdbuf.pat - cckd fixes - Greg Smith
 17 Apr 2004 Correct merged PER guest interrupt propagation - Jan Jaeger
 10 Apr 2004 Use signal shutdown on quit - Jan Jaeger

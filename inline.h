@@ -326,6 +326,35 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
 
 
 /*-------------------------------------------------------------------*/
+/* Return mainstor address of absolute address.                      */
+/* The caller is assumed to have already checked that the absolute   */
+/* address is within the limit of main storage.                      */
+/*-------------------------------------------------------------------*/
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+static inline BYTE *ARCH_DEP(fetch_main_absolute) (RADR addr,
+                                REGS *regs, int len)
+#else
+static inline BYTE *ARCH_DEP(fetch_main_absolute) (RADR addr,
+                                REGS *regs)
+#endif
+{
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+    if(addr > regs->mainlim - len)
+    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
+
+    SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
+
+    /* Set the main storage reference bit */
+    STORAGE_KEY(addr, regs) |= STORKEY_REF;
+
+    /* Return absolute storage mainstor address */
+    return (regs->mainstor + addr);
+
+} /* end function fetch_main_absolute */
+
+
+/*-------------------------------------------------------------------*/
 /* Fetch a doubleword from absolute storage.                         */
 /* The caller is assumed to have already checked that the absolute   */
 /* address is within the limit of main storage.                      */
@@ -336,19 +365,7 @@ static inline int ARCH_DEP(is_store_protected) (VADR addr, BYTE skey,
 static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
                                 REGS *regs)
 {
-#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainlim - 8)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
-
-    SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
-
-    /* Set the main storage reference bit */
-    STORAGE_KEY(addr, regs) |= STORKEY_REF;
-
-    /* Fetch the doubleword from absolute storage */
-    return fetch_dw(regs->mainstor + addr);
-
+    return fetch_dw(FETCH_MAIN_ABSOLUTE(addr, regs, 8));
 } /* end function fetch_doubleword_absolute */
 
 
@@ -363,18 +380,7 @@ static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
 static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
                                 REGS *regs)
 {
-#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainlim - 4)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
-
-    SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
-
-    /* Set the main storage reference bit */
-    STORAGE_KEY(addr, regs) |= STORKEY_REF;
-
-    /* Fetch the fullword from absolute storage */
-    return fetch_fw(regs->mainstor + addr);
+    return fetch_fw(FETCH_MAIN_ABSOLUTE(addr, regs, 4));
 } /* end function fetch_fullword_absolute */
 
 
@@ -389,19 +395,7 @@ static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
 static inline U16 ARCH_DEP(fetch_halfword_absolute) (RADR addr,
                                 REGS *regs)
 {
-#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainlim - 2)
-    ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-#endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
-
-    SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
-
-    /* Set the main storage reference bit */
-    STORAGE_KEY(addr, regs) |= STORKEY_REF;
-
-    /* Fetch the halfword from absolute storage */
-    return fetch_hw(regs->mainstor + addr);
-
+    return fetch_hw(FETCH_MAIN_ABSOLUTE(addr, regs, 2));
 } /* end function fetch_halfword_absolute */
 
 
@@ -495,8 +489,9 @@ U32 ducto;              /* DUCT origin           */
 U32 duct0;              /* DUCT word 0           */
 U32 duct1;              /* DUCT word 1           */
 U32 duct3;              /* DUCT word 3           */
-U32 ssasteo;            /* Subspace ASTE origin      */
+U32 ssasteo;            /* Subspace ASTE origin  */
 U32 ssaste[16];         /* Subspace ASTE         */
+BYTE *p;                /* Mainstor pointer      */
 
     /* Clear the exception code field, if provided */
     if (xcode != NULL) *xcode = 0;
@@ -518,9 +513,10 @@ U32 ssaste[16];         /* Subspace ASTE         */
 
     /* Fetch DUCT words 0, 1, and 3 from absolute storage
        (note: the DUCT cannot cross a page boundary) */
-    duct0 = ARCH_DEP(fetch_fullword_absolute) (ducto, regs);
-    duct1 = ARCH_DEP(fetch_fullword_absolute) (ducto+4, regs);
-    duct3 = ARCH_DEP(fetch_fullword_absolute) (ducto+12, regs);
+    p = FETCH_MAIN_ABSOLUTE(ducto, regs, 16);
+    duct0 = fetch_fw(p);
+    duct1 = fetch_fw(p+4);
+    duct3 = fetch_fw(p+12);
 
     /* Return the original STD unchanged if the dispatchable unit is
        not subspace active or if the ASTE obtained by ASN translation
@@ -539,12 +535,13 @@ U32 ssaste[16];         /* Subspace ASTE         */
 
     /* Fetch subspace ASTE words 0, 2, 3, and 5 from absolute
        storage (note: the ASTE cannot cross a page boundary) */
-    ssaste[0] = ARCH_DEP(fetch_fullword_absolute) (ssasteo, regs);
-    ssaste[2] = ARCH_DEP(fetch_fullword_absolute) (ssasteo+8, regs);
+    p = FETCH_MAIN_ABSOLUTE(ssasteo, regs, 24);
+    ssaste[0] = fetch_fw(p);
+    ssaste[2] = fetch_fw(p+8);
 #if defined(FEATURE_ESAME)
-    ssaste[3] = ARCH_DEP(fetch_fullword_absolute) (ssasteo+12, regs);
+    ssaste[3] = fetch_fw(p+12);
 #endif /*defined(FEATURE_ESAME)*/
-    ssaste[5] = ARCH_DEP(fetch_fullword_absolute) (ssasteo+20, regs);
+    ssaste[5] = fetch_fw(p+20);
 
     /* ASTE validity exception if subspace ASTE invalid bit is one */
     if (ssaste[0] & ASTE0_INVALID)

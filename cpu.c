@@ -1107,10 +1107,9 @@ int   cpu  = *ptr;
 /*-------------------------------------------------------------------*/
 /* Initialize a CPU                                                  */
 /*-------------------------------------------------------------------*/
-int cpu_init (int cpu, REGS *regs)
+int cpu_init (int cpu, REGS *regs, REGS *hostregs)
 {
-    if (!regs->hostregs)
-        obtain_lock (&sysblk.cpulock[cpu]);
+    obtain_lock (&sysblk.cpulock[cpu]);
 
     regs->cpuad = cpu;
     regs->arch_mode = sysblk.arch_mode;
@@ -1137,30 +1136,26 @@ int cpu_init (int cpu, REGS *regs)
 
     initial_cpu_reset(regs);
 
-    regs->configured = 1;
-
-    if (!regs->hostregs)
-    {
 #if defined(_FEATURE_SIE)
-        regs->guestregs = calloc(sizeof(REGS), 1);
-        if (!regs->guestregs)
-        {
-            logmsg (_("HHCCP079E CPU%4.4X: calloc failed for sie regs: %s\n"),
-                    cpu, strerror(errno));
-            return -1;
-        }
-        regs->guestregs->hostregs = regs;
-        regs->guestregs->sie_mode = 1;
-        if (cpu_init (cpu, regs->guestregs))
-            return -1;
+    if (hostregs)
+    {
+        hostregs->guestregs = regs;
+        regs->hostregs = hostregs;
+        regs->sie_mode = 1;
+    }
+    else
 #endif /*defined(_FEATURE_SIE)*/
+    {
         regs->cpustate = CPUSTATE_STOPPING;
         ON_IC_INTERRUPT(regs);
         sysblk.regs[cpu] = regs;
         set_bit(4, cpu, &sysblk.config_mask);
         set_bit(4, cpu, &sysblk.started_mask);
-        release_lock (&sysblk.cpulock[cpu]);
     }
+
+    regs->configured = 1;
+
+    release_lock (&sysblk.cpulock[cpu]);
 
     return 0;
 }
@@ -1485,7 +1480,7 @@ zz_func opcode_table[256];
     {
         memset (&regs, 0, sizeof(REGS));
 
-        if (cpu_init (cpu, &regs))
+        if (cpu_init (cpu, &regs, NULL))
             return NULL;
 
         logmsg (_("HHCCP003I CPU%4.4X architecture mode %s\n"),

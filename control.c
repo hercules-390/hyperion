@@ -308,6 +308,7 @@ U32     duct0;                          /* DUCT word 0               */
 U32     duct1;                          /* DUCT word 1               */
 U32     duct3;                          /* DUCT word 3               */
 RADR    abs;                            /* Absolute address          */
+BYTE   *main;                           /* Mainstor address          */
 VADR    newia;                          /* New instruction address   */
 U16     xcode;                          /* Exception code            */
 #ifdef FEATURE_TRACING
@@ -356,9 +357,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
     /* Fetch DUCT words 0, 1, and 3 from absolute storage
        (note: the DUCT cannot cross a page boundary) */
-    duct0 = ARCH_DEP(fetch_fullword_absolute) (ducto, regs);
-    duct1 = ARCH_DEP(fetch_fullword_absolute) (ducto+4, regs);
-    duct3 = ARCH_DEP(fetch_fullword_absolute) (ducto+12, regs);
+    main = FETCH_MAIN_ABSOLUTE (ducto, regs, 16);
+    duct0 = fetch_fw (main);
+    duct1 = fetch_fw (main+4);
+    duct3 = fetch_fw (main+12);
 
     /* Special operation exception if the current primary ASTE origin
        is not the same as the base ASTE for the dispatchable unit */
@@ -386,8 +388,9 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Fetch destination ASTE words 2 and 3 from absolute storage
            (note: the ASTE cannot cross a page boundary) */
-        daste[2] = ARCH_DEP(fetch_fullword_absolute) (abs+8, regs);
-        daste[3] = ARCH_DEP(fetch_fullword_absolute) (abs+12, regs);
+        main = FETCH_MAIN_ABSOLUTE (abs, regs, 16);
+        daste[2] = fetch_fw (main+8);
+        daste[3] = fetch_fw (main+12);
 
         break;
 
@@ -409,10 +412,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
         /* Fetch subspace ASTE words 0, 2, 3, and 5 from absolute
            storage (note: the ASTE cannot cross a page boundary) */
-        daste[0] = ARCH_DEP(fetch_fullword_absolute) (abs, regs);
-        daste[2] = ARCH_DEP(fetch_fullword_absolute) (abs+8, regs);
-        daste[3] = ARCH_DEP(fetch_fullword_absolute) (abs+12, regs);
-        daste[5] = ARCH_DEP(fetch_fullword_absolute) (abs+20, regs);
+        main = FETCH_MAIN_ABSOLUTE (abs, regs, 24);
+        daste[0] = fetch_fw (main);
+        daste[2] = fetch_fw (main+8);
+        daste[3] = fetch_fw (main+12);
+        daste[5] = fetch_fw (main+20);
 
         /* ASTE validity exception if ASTE invalid bit is one */
         if (daste[0] & ASTE0_INVALID)
@@ -2312,6 +2316,7 @@ int     b2;                             /* Base of effective addr    */
 U32     pcnum;                          /* Program call number       */
 VADR    effective_addr2;                /* Effective address         */
 RADR    abs;                            /* Absolute address          */
+BYTE   *main;                           /* Mainstor address          */
 RADR    pstd;                           /* Primary STD or ASCE       */
 U32     oldpstd;                        /* Old Primary STD or ASCE   */
 U32     ltd;                            /* Linkage table designation */
@@ -2466,6 +2471,23 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
        storage.  Each fullword of the ETE must be fetched
        concurrently as observed by other CPUs.  The entry
        table cannot cross a page boundary. */
+
+//QUESTION:  If the table cannot cross a page boundary why do
+//           we apply prefixing and address wrapping for each
+//           loop iteration ??  Also, would 0x7fffffff be correct
+//           for esame ??  Can we do the code below instead ??
+
+#if 1
+    abs = APPLY_PREFIXING (eto, regs->PX);
+    if (abs > regs->mainlim - (numwords * 4))
+        ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+    main = FETCH_MAIN_ABSOLUTE (abs, regs, numwords * 4);
+    for (i = 0; i < numwords; i++)
+    {
+        ete[i] = fetch_fw (main);
+        main += 4;
+    }
+#else
     for (i = 0; i < numwords; i++)
     {
         /* Program check if address is outside main storage */
@@ -2478,6 +2500,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         eto += 4;
         eto &= 0x7FFFFFFF;
     }
+#endif
 
     /* Clear remaining words if fewer than 8 words were loaded */
     while (i < 8) ete[i++] = 0;
@@ -2559,10 +2582,11 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 
             /* Fetch the 16-word ASTE from absolute storage
                (note: the ASTE cannot cross a page boundary) */
+            main = FETCH_MAIN_ABSOLUTE (abs, regs, 64);
             for (i = 0; i < 16; i++)
             {
-                aste[i] = ARCH_DEP(fetch_fullword_absolute) (abs, regs);
-                abs += 4;
+                aste[i] = fetch_fw (main);
+                main += 4;
             }
 
             /* ASX translation exception if ASTE invalid bit is one */

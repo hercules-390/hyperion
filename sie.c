@@ -253,10 +253,25 @@ int     icode = 0;                      /* Interception code         */
     if(effective_addr2 > regs->mainlim - (sizeof(SIEBK)-1))
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
+    obtain_lock(&sysblk.intlock);
+
+    /* Initialize guestregs if first time */
+    if (GUESTREGS == NULL)
+    {
+        REGS *gregs = calloc (sizeof(REGS), 1);
+        if (gregs == NULL)
+        {
+             release_lock(&sysblk.intlock);
+            logmsg (_("HHCCP079E CPU%4.4X: calloc failed for sie regs: %s\n"),
+                    regs->cpuad, strerror(errno));
+            signal_thread(sysblk.cputid[regs->cpuad], SIGUSR1);
+            return;
+        }
+        cpu_init (regs->cpuad, gregs, regs);
+    }
+
     /* Direct pointer to state descriptor block */
     STATEBK = (void*)(regs->mainstor + effective_addr2);
-
-    obtain_lock(&sysblk.intlock);
 
 #if defined(FEATURE_ESAME)
     if(STATEBK->mx & SIE_MX_ESAME)

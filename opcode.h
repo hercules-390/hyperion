@@ -641,6 +641,14 @@ do { \
    } \
  } while (0)
 
+#if defined(INLINE_STORE_FETCH_ADDR_CHECK)
+ #define FETCH_MAIN_ABSOLUTE(_addr, _regs, _len) \
+  ARCH_DEP(fetch_main_absolute)((_addr), (_regs), (_len))
+#else
+ #define FETCH_MAIN_ABSOLUTE(_addr, _regs, _len) \
+  ARCH_DEP(fetch_main_absolute)((_addr), (_regs))
+#endif
+
 #define INST_UPDATE_PSW(_regs, _len) \
      do { \
             if( likely(!(_regs)->execflag) ) \
@@ -752,6 +760,29 @@ do { \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
             INST_UPDATE_PSW((_regs), 4); \
+    }
+
+/* RX_BC register and indexed storage - optimized for BC */
+#undef RX_BC
+#define RX_BC(_inst, _regs, _b2, _effective_addr2) \
+    {   U32 temp; \
+            memcpy (&temp, (_inst), 4); \
+            temp = CSWAP32(temp); \
+            (_effective_addr2) = temp & 0xfff; \
+            (_b2) = (temp >> 12) & 0xf; \
+            if(likely(_b2)) \
+            { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            (_b2) = (temp >> 16) & 0xf; \
+            if(unlikely(_b2)) \
+            { \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+                (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
+            } \
+            if (likely(!(_regs)->execflag)) \
+                (_regs)->psw.ilc = 4; \
     }
 
 /* RXE register and indexed storage with extended op code */
@@ -1456,6 +1487,7 @@ void s390_store_psw (REGS *regs, BYTE *addr);
 #endif /*defined(_FEATURE_ZSIE)*/
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr);
 int  ARCH_DEP(load_psw) (REGS *regs, BYTE *addr);
+int cpu_init (int cpu, REGS *regs, REGS *hostregs);
 void ARCH_DEP(perform_io_interrupt) (REGS *regs);
 #if defined(_FEATURE_SIE)
 void s370_program_interrupt (REGS *regs, int code);
