@@ -253,6 +253,7 @@ int msgcount = 22;
 
     fprintf(webblk->hsock, "<FORM method=post>Command:\n");
     fprintf(webblk->hsock, "<INPUT type=text name=command size=80>\n");
+    fprintf(webblk->hsock, "<INPUT type=submit name=send value=\"Send\">\n");
     fprintf(webblk->hsock, "<INPUT type=hidden name=%srefresh value=1>\n",autorefresh ? "auto" : "no");
     fprintf(webblk->hsock, "<INPUT type=hidden name=refresh_interval value=%d>\n",refresh_interval);
     fprintf(webblk->hsock, "<INPUT type=hidden name=msgcount value=%d>\n",msgcount);
