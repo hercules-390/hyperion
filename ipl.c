@@ -127,9 +127,9 @@ BYTE    chanstat;                       /* IPL device channel status */
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
 
     if (unitstat != (CSW_CE | CSW_DE) || chanstat != 0) {
-        logmsg (_("HHCCP029E %s mode IPL failed: CSW status=%2.2X%2.2X\n"),
+        logmsg (_("HHCCP029E %s mode IPL failed: CSW status=%2.2X%2.2X\n"
+                  "           Sense="),
                 get_arch_mode_string(regs), unitstat, chanstat);
-        logmsg (_("           Sense="));
         for (i=0; i < (int)dev->numsense; i++)
         {
             logmsg ("%2.2X", dev->sense[i]);
