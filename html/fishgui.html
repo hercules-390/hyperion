@@ -4,6 +4,17 @@
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="GENERATOR" content="Mozilla/4.76 [en] (X11; U; Linux 2.2.18 i686) [Netscape]">
 </head>
+<script language="Javascript">
+<!--
+function confirm_quit() {
+  if(confirm('Are you sure you want to Power Off\n'
+     + 'This will terminate Hercules'))
+    return true
+  else
+    return false
+}
+//-->
+</script>
 <body>
 <center>
 <!table border=0 cellspacing=0 bgcolor="#000000">
@@ -15,14 +26,14 @@
 <td>
 <table border=0 cellspacing=0>
 <tr>
-<td><img src="images/storeu.gif" alt="[store status]"></td>
-<td><img src="images/restartu.gif" alt="[restart]"></td>
+<form method=post action="/cgi-bin/syslog#bottom?command=store" target="main"><td><input type=image src="images/storeu.gif" border=0 alt="[store status]" name="[store status]"></td></form>
+<form method=post action="/cgi-bin/syslog#bottom?command=restart" target="main"><td><input type=image src="images/restartu.gif" border=0 alt="[restart]" name="[restart]"></td></form>
 </tr>
 
 <tr>
-<td><img name="start_img" src="images/startu.gif" alt="[start]"></td>
+<form method=post action="/cgi-bin/syslog#bottom?command=startall" target="main"><td><input type=image src="images/startu.gif" border=0 alt="[start]" name="[start]"></td></form>
 
-<td><img src="images/stopu.gif" alt="[stop]"></td>
+<form method=post action="/cgi-bin/syslog#bottom?command=stopall" target="main"><td><input type=image src="images/stopu.gif" border=0 alt="[stop]" name="[stop]"></td></form>
 </tr>
 </table>
 </td>
@@ -62,13 +73,13 @@
 <tr>
 <td><img src="images/powerononu.gif" alt="[power on]"></td>
 
-<td><img src="images/poweroffu.gif" alt="[power off]"></td>
+<form method=post action="/cgi-bin/syslog#bottom?command=quit" target="main" onSubmit="return confirm_quit()"><td><input type=image src="images/poweroffu.gif" border=0 alt="[poweroff]" name="[power off]"></td></form>
 </tr>
 
 <tr>
-<td><img src="images/interruptu.gif" alt="[interrupt]"></td>
+<form method=post action="/cgi-bin/syslog#bottom?command=ext" target="main" onSubmit=""><td><input type=image src="images/interruptu.gif" border=0 alt="[interrupt]" name="[interrupt]"></td></form>
 
-<form method=get action="/cgi-bin/ipl" target="main"><td><input type=image src="images/loadu.gif" border=0 alt="[load]" name=load value=load></td></form>
+<form method=get action="/cgi-bin/ipl" target="main"><td><input type=image src="images/loadu.gif" border=0 alt="[load]" name="[load]"></td></form>
 </tr>
 </table>
 </td>
