@@ -36,8 +36,8 @@
         { \
             RADR  abs; \
             U32   prev=0, old, new; \
-            abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
-                                ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
+            abs = LOGICAL_TO_ABS ((addr), (arn), (regs), \
+                                ACCTYPE_WRITE, (regs)->psw.pkey); \
             old = CSWAP32((regs)->GR_L((r1))); \
             new = CSWAP32((regs)->GR_L((r3))); \
             __asm__("lock; cmpxchgl %1,%2" \
@@ -49,12 +49,10 @@
             if ((regs)->GR_L((r1)) == prev) \
             { \
                 (regs)->psw.cc = 0; \
-                STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE); \
             } \
             else \
             { \
                 (regs)->psw.cc = 1; \
-                STORAGE_KEY(abs) |= STORKEY_REF; \
                 (regs)->GR_L((r1)) = prev; \
             } \
         }
@@ -64,8 +62,8 @@
             RADR  abs; \
             void *ptr; \
             U32   temp[4]; \
-            abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
-                                ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
+            abs = LOGICAL_TO_ABS ((addr), (arn), (regs), \
+                                ACCTYPE_WRITE, (regs)->psw.pkey); \
             ptr = sysblk.mainstor + abs; \
             temp[0] = (regs)->GR_L((r1)); \
             temp[1] = (regs)->GR_L((r1)+1); \
@@ -91,12 +89,10 @@
             if ((regs)->GR_L((r1)) == temp[0] && (regs)->GR_L((r1)+1) == temp[1]) \
             { \
                 (regs)->psw.cc = 0; \
-                STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE); \
             } \
             else \
             { \
                 (regs)->psw.cc = 1; \
-                STORAGE_KEY(abs) |= STORKEY_REF; \
                 (regs)->GR_L((r1)) = temp[0]; \
                 (regs)->GR_L((r1)+1) = temp[1]; \
             } \
