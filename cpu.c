@@ -910,8 +910,6 @@ void *cpu_thread (REGS *regs)
         return NULL;
     }
     sysblk.numcpu++;
-    sysblk.waitmask &= ~regs->cpumask;
-    sysblk.started_mask |= regs->cpumask;
     initdone = 1;  /* now safe for panel_display function to proceed */
 
     /* Perform initial cpu reset */
@@ -1023,6 +1021,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             {
                 /* Change CPU status to stopped */
                 regs->cpustate = CPUSTATE_STOPPED;
+                sysblk.started_mask &= ~regs->cpumask;
+                sysblk.waitmask &= ~regs->cpumask;
 
                 if (!regs->cpuonline)
                 {
@@ -1035,7 +1035,6 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                        the number of CPU's in the configuration.  */
 
                     sysblk.numcpu--;
-                    sysblk.started_mask &= ~regs->cpumask;
 
 #ifdef FEATURE_VECTOR_FACILITY
                     /* Mark Vector Facility offline */
@@ -1131,6 +1130,8 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             /* Test for wait state */
             if (regs->psw.wait)
             {
+                sysblk.waitmask |= regs->cpumask;
+
                 /* Test for disabled wait PSW and issue message */
                 if( IS_IC_DISABLED_WAIT_PSW(regs) )
                 {
@@ -1149,7 +1150,6 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
                 INVALIDATE_AEA_ALL(regs);
 
                 /* Wait for I/O, external or restart interrupt */
-                sysblk.waitmask |= regs->cpumask;
                 wait_condition (&INTCOND, &sysblk.intlock);
                 sysblk.waitmask &= ~regs->cpumask;
                 release_lock (&sysblk.intlock);
@@ -1268,6 +1268,14 @@ BYTE    *ip;
     /* Establish longjmp destination for program check */
     setjmp(regs->progjmp);
 
+    /* Turn the started mask bit on for this CPU and the wait mask
+       bit off.  If the CPU is STOPPING then the started mask
+       bit will be turned off in `process_interrupt' */
+    obtain_lock (&sysblk.intlock);
+    sysblk.started_mask |= regs->cpumask;
+    sysblk.waitmask &= ~regs->cpumask;
+    release_lock (&sysblk.intlock);
+
     /* Reset instruction trace indicators */
     tracethis = 0;
     stepthis = 0;
@@ -1359,6 +1367,14 @@ int     stepthis;                       /* Stop on this instruction  */
 
     /* Establish longjmp destination for program check */
     setjmp(regs->progjmp);
+
+    /* Turn the started mask bit on for this CPU and the wait mask
+       bit off.  If the CPU is STOPPING then the started mask
+       bit will be turned off in `process_interrupt' */
+    obtain_lock (&sysblk.intlock);
+    sysblk.started_mask |= regs->cpumask;
+    sysblk.waitmask &= ~regs->cpumask;
+    release_lock (&sysblk.intlock);
 
     /* Reset instruction trace indicators */
     tracethis = 0;

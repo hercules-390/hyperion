@@ -914,9 +914,8 @@ BYTE    c;                              /* Work area for sscanf      */
 #if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
         initialize_condition (&sysblk.regs[cpu].intcond);
 #endif
-        sysblk.regs[cpu].cpustate = CPUSTATE_STARTED;
+        sysblk.regs[cpu].cpustate = CPUSTATE_STOPPED;
         sysblk.regs[cpu].cpumask = 0x80000000 >> cpu;
-        sysblk.waitmask |= sysblk.regs[cpu].cpumask;
 
     } /* end for(cpu) */
 

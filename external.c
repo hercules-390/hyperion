@@ -46,6 +46,13 @@
 void ARCH_DEP(synchronize_broadcast) (REGS *regs, int code, U64 pfra)
 {
 int     i;                              /* Array subscript           */
+REGS   *realregs;                       /* Real REGS if guest        */
+
+    realregs =
+#if defined(_FEATURE_SIE)
+               regs->sie_state ? regs->hostregs :
+#endif /*defined(_FEATURE_SIE)*/
+                                                  regs;
 
 #if MAX_CPU_ENGINES > 1
     if (code > 0)
@@ -74,32 +81,30 @@ int     i;                              /* Array subscript           */
 
     /* Purge TLB */
     if (sysblk.broadcast_code & BROADCAST_PTLB)
-        ARCH_DEP(purge_tlb) (
-#if defined(_FEATURE_SIE)
-                             regs->sie_state ? regs->hostregs :
-#endif /*defined(_FEATURE_SIE)*/
-                                                                regs);
+        ARCH_DEP(purge_tlb) (realregs);
 
 #if defined(FEATURE_ACCESS_REGISTERS)
     /* Purge ALB */
     if (sysblk.broadcast_code & BROADCAST_PALB)
-        ARCH_DEP(purge_alb) (
-#if defined(_FEATURE_SIE)
-                             regs->sie_state ? regs->hostregs :
-#endif /*defined(_FEATURE_SIE)*/
-                                                                regs);
+        ARCH_DEP(purge_alb) (realregs);
 #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
 
     /* Invalidate TLB entries */
     if (sysblk.broadcast_code & BROADCAST_ITLB)
+    {
         for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)); i++)
             if ((regs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
               && regs->tlb[i].valid)
                     regs->tlb[i].valid = 0;
+        for (i = 0; i < (sizeof(regs->tlb)/sizeof(TLBE)) && realregs != regs; i++)
+            if ((realregs->tlb[i].TLB_PTE & PAGETAB_PFRA) == sysblk.broadcast_pfra
+              && realregs->tlb[i].valid)
+                    realregs->tlb[i].valid = 0;
+    }
 
 #if MAX_CPU_ENGINES > 1
     /* Wait for the other cpus */
-    sysblk.broadcast_mask &= ~regs->cpumask;
+    sysblk.broadcast_mask &= ~realregs->cpumask;
     if (code > 0)
     {
         if (sysblk.broadcast_mask != 0)

@@ -1271,6 +1271,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     /* ipending command - display pending interrupts */
     if (memcmp(cmd,"ipending",8)==0)
     {
+        char *states[] = {"?", "STOPPED", "STOPPING", "?", "STARTED",
+                          "?", "?", "?", "STARTING"};
+
         cmdarg = strtok(cmd+8," \t");
         if (cmdarg != NULL && (memcmp(cmdarg+1,"debug",5) != 0 
 	    		    || (*cmdarg!='+' && *cmdarg!='-')))
@@ -1328,7 +1331,16 @@ BYTE   *cmdarg;                         /* -> Command argument       */
             logmsg("CPU%4.4X: CPU interlock %sheld\n",
                 sysblk.regs[i].cpuad,
 		         sysblk.regs[i].mainlock ? "" : "not ");
+            logmsg("CPU%4.4X: CPU state is %s\n",
+                sysblk.regs[i].cpuad,
+                         states[sysblk.regs[i].cpustate]);
         }
+        logmsg("Started mask %8.8X waiting mask %8.8X\n",
+                                sysblk.started_mask, sysblk.waitmask);
+#if MAX_CPU_ENGINES > 1
+        logmsg("Broadcast mask %8.8X code %d\n",
+                        sysblk.broadcast_mask, sysblk.broadcast_code);
+#endif
         logmsg("Machine check interrupt %spending\n",
                                 IS_IC_MCKPENDING ? "" : "not ");
         logmsg("Service signal %spending\n",

@@ -1,3 +1,4 @@
+09 Nov 2001 Fix hang in synchronize_broadcast - Greg Smith
 09 Nov 2001 Make MODEL_DEPENDENT more specific with CS and STCM - Paul Leisy
 08 Nov 2001 Correct/Remove OPTION_REDUCE_INVAL miss-spelling - Paul Leisy
 05 Nov 2001 RP needs to INVALIDATE_AEA() since AR loaded - Paul Leisy
