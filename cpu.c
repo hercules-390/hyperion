@@ -363,9 +363,10 @@ static char *pgmintname[] = {
        The PER indication will be stored in the PER handling
        code */
     code = pcode & ~PGM_PER_EVENT;
+
     /* If this is a concurrent PER event then we must add the PER
        bit to the interrupts code */
-    if( IS_IC_PER(regs) )
+    if( OPEN_IC_PERINT(regs) )
         pcode |= PGM_PER_EVENT;
 
     /* Perform serialization and checkpoint synchronization */
@@ -560,14 +561,14 @@ static char *pgmintname[] = {
         STORE_HW(psa->pgmint + 2, pcode);
 
         /* Handle PER or concurrent PER event */
-        if( IS_IC_PER(regs) )
+        if( OPEN_IC_PERINT(regs) )
         {
             if( IS_IC_TRACE )
                 logmsg("CPU%4.4X PER event: code=%4.4X perc=%2.2X addr=" F_VADR "\n",
                   regs->cpuad, pcode, IS_IC_PER(regs) >> 16,
                   (regs->psw.IA - regs->psw.ilc) & ADDRESS_MAXWRAP(regs) );
 
-            regs->perc = IS_IC_PER(regs) >> 8;
+            regs->perc = OPEN_IC_PERINT(regs) >> ((32 - IC_CR9_SHIFT) - 16);
             STORE_HW(psa->perint, regs->perc);
 
             STORE_W(psa->peradr, regs->peradr);
@@ -982,9 +983,6 @@ void *cpu_thread (REGS *regs)
 
 void ARCH_DEP(process_interrupt)(REGS *regs)
 {
-            /* Obtain the interrupt lock */
-            obtain_lock (&sysblk.intlock);
-
             if( OPEN_IC_DEBUG(regs) )
             {
             U32 prevmask;
@@ -1001,6 +999,13 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 		}
 	    }
 
+            /* Process PER program interrupts */
+            if( OPEN_IC_PERINT(regs) )
+                ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
+
+            /* Obtain the interrupt lock */
+            obtain_lock (&sysblk.intlock);
+
 #if MAX_CPU_ENGINES > 1
             /* Perform broadcasted purge of ALB and TLB if requested
                synchronize_broadcast() must be called until there are
@@ -1013,14 +1018,6 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             /* Take interrupts if CPU is not stopped */
             if (regs->cpustate == CPUSTATE_STARTED)
             {
-
-                /* Process PER program interrupts */
-                if( OPEN_IC_PERINT(regs) )
-                {
-                    /* release the interrupt lock */
-                    release_lock (&sysblk.intlock);
-                    ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
-                }
 
                 /* If a machine check is pending and we are enabled for
                    machine checks then take the interrupt */

@@ -934,7 +934,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                             ;
             sccbcpu->cpf[1] = 0
 //                          | SCCB_CPF1_IO_INTERPRETATION_LEVEL_2
-//                          | SCCB_CPF1_GUEST_PER_ENHANCED
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+                            | SCCB_CPF1_GUEST_PER_ENHANCED
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 //                          | SCCB_CPF1_SIGP_INTERPRETATION_ASSIST
 #if defined(FEATURE_STORAGE_KEY_ASSIST)
                             | SCCB_CPF1_RCP_BYPASS_FACILITY

@@ -1179,7 +1179,7 @@ typedef struct _SIE1BK { 		/* SIE State Descriptor      */
 #define SIE_M_370	0x10		/* 370 mode guest	     */
 #define SIE_M_VR	0x08		/* V=R mode guest	     */
 #define SIE_M_ITMOF	0x04		/* Guest ival timer disabled */
-#define SIE_M_GPE	0x02		/* Guest per enhancement     */
+#define SIE_M_GPE	0x01		/* Guest per enhancement     */
 /*004*/	FWORD prefix;			/* Guest prefix register     */
 /*008*/	HWORD mso;			/* Main Storage Origin	     */
 /*00A*/	HWORD mse;			/* Main Storage Extent	     */
@@ -1311,7 +1311,7 @@ typedef struct _SIE2BK { 		/* SIE State Descriptor      */
 #define SIE_M_370	0x10		/* 370 mode guest	     */
 #define SIE_M_VR	0x08		/* V=R mode guest	     */
 #define SIE_M_ITMOF	0x04		/* Guest ival timer disabled */
-#define SIE_M_GPE	0x02		/* Guest per enhancement     */
+#define SIE_M_GPE	0x01		/* Guest per enhancement     */
 /*004*/	FWORD prefix;			/* Guest prefix register     */
 /*008*/ FWORD resv008f;
 /*00C*/	FWORD resv00cf;

@@ -112,7 +112,8 @@
 
 #define SET_IC_PER_MASK(_regs) \
 do { \
-  if( (_regs)->psw.sysmask & PSW_PERMODE ) \
+  if( ((_regs)->psw.sysmask & PSW_PERMODE) \
+    || ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) ) \
      (_regs)->ints_mask = (((_regs)->ints_mask&~IC_PER_MASK) \
                           | (((_regs)->CR(9) >> IC_CR9_SHIFT)&IC_PER_MASK)); \
    else \
@@ -316,7 +317,7 @@ do { \
               (IC_PER_MASK | IC_STORSTAT | (IC_EXTPENDING & ~CR0_XM_ITIMER))
 
 #define OPEN_IC_PERINT(_regs) \
-       ((regs)->ints_state&IC_PER_MASK&(_regs)->ints_mask)
+       ((_regs)->ints_state&IC_PER_MASK&(_regs)->ints_mask)
 
 #define OPEN_IC_CPUINT(_regs) \
    ( ((_regs)->ints_state&IC_EXT_BUT_IT_OR_STORSTAT&(_regs)->ints_mask) \

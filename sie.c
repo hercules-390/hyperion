@@ -98,6 +98,7 @@ int     icode;                          /* Interception code         */
 
 #if defined(SIE_DEBUG)
     logmsg("SIE: state descriptor " F_RADR "\n",effective_addr2);
+    ARCH_DEP(display_inst) (regs, regs->ip);
 #endif /*defined(SIE_DEBUG)*/
 
     /* Direct pointer to state descriptor block */
@@ -343,12 +344,12 @@ int     n;
             break;
         case SIE_HOST_PGMINT:
             break;
-        case SIE_INTERCEPT_PER:
-            STATEBK->f |= SIE_F_IF;
-            /*fallthru*/
         case SIE_INTERCEPT_INST:
             STATEBK->c = SIE_C_INST;
             break;
+        case SIE_INTERCEPT_PER:
+            STATEBK->f |= SIE_F_IF;
+            /*fallthru*/
         case SIE_INTERCEPT_INSTCOMP:
             STATEBK->c = SIE_C_PGMINST;
             break;
@@ -426,6 +427,11 @@ int     n;
         /* Indicate interception format 2 */
         STATEBK->f |= SIE_F_IN;
 
+#if defined(FEATURE_PER)
+        if(code & PGM_PER_EVENT)
+            STATEBK->f |= SIE_F_IF;
+#endif /*defined(FEATURE_PER)*/
+
         /* Update interception parameters in the state descriptor */
         if(GUESTREGS->inst[0] != 0x44)
         {
@@ -469,9 +475,8 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 if( SIE_IC_INTERRUPT_CPU(GUESTREGS) )
                 {
                     /* Process PER program interrupts */
-                    if( OPEN_IC_PERINT(regs) )
-                        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
-
+                    if( OPEN_IC_PERINT(GUESTREGS) )
+                        ARCH_DEP(program_interrupt) (GUESTREGS, PGM_PER_EVENT);
 #if MAX_CPU_ENGINES > 1
                     /* Perform broadcasted purge of ALB and TLB if requested
                        synchronize_broadcast() must be called until there are
@@ -515,7 +520,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 UNROLLED_EXECUTE(GUESTREGS);
                 UNROLLED_EXECUTE(GUESTREGS);
 #endif
-
             }
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)
