@@ -1084,9 +1084,13 @@ static void    commadpt_halt(DEVBLK *dev)
     wait_condition(&dev->commadpt->ipc_halt,&dev->commadpt->lock);
     release_lock(&dev->commadpt->lock);
 }
-/* The following 2 MSG functions ensure only 1 (one)  */
+/* The following 3 MSG functions ensure only 1 (one)  */
 /* hardcoded instance exist for the same numbered msg */
 /* that is issued on multiple situations              */
+static void msg013e(DEVBLK *dev,char *kw,char *kv)
+{
+        logmsg(_("HHCCA013E %4.4X:Incorrect %s specification %s\n"),dev->devnum,kw,kv);
+}
 static void msg015e(DEVBLK *dev,char *dialt,char *kw)
 {
         logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and %s not specified\n"),dev->devnum,dialt,kw);
@@ -1124,7 +1128,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         rc=commadpt_alloc_device(dev);
         if(rc<0)
         {
-                logmsg(_("HHCCL010I %4.4X:initialisation not performed\n"),
+                logmsg(_("HHCCA010I %4.4X:initialisation not performed\n"),
                         dev->devnum);
             return(-1);
         }
@@ -1166,7 +1170,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     if(rc<0)
                     {
                         errcnt++;
-                        logmsg(_("HHCCA013E %4.4X:Incorrect local port specification %s\n"),dev->devnum,res.text);
+                        msg013e(dev,"LPORT",res.text);
                         break;
                     }
                     dev->commadpt->lport=rc;
@@ -1180,7 +1184,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     rc=commadpt_getaddr(&dev->commadpt->lhost,res.text);
                     if(rc!=0)
                     {
-                        logmsg(_("HHCCA013E %4.4X:Incorrect local host specification %s\n"),dev->devnum,res.text);
+                        msg013e(dev,"LHOST",res.text);
                         errcnt++;
                     }
                     break;
@@ -1189,7 +1193,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     if(rc<0)
                     {
                         errcnt++;
-                        logmsg(_("HHCCA013E %4.4X:Incorrect remote port specification %s\n"),dev->devnum,res.text);
+                        msg013e(dev,"RPORT",res.text);
                         break;
                     }
                     dev->commadpt->rport=rc;
@@ -1203,7 +1207,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
                     rc=commadpt_getaddr(&dev->commadpt->rhost,res.text);
                     if(rc!=0)
                     {
-                        logmsg(_("HHCCA013E %4.4X:Incorrect remote host specification %s\n"),dev->devnum,res.text);
+                        msg013e(dev,"RHOST",res.text);
                         errcnt++;
                     }
                     break;
@@ -1344,7 +1348,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
         }
         if(errcnt>0)
         {
-            logmsg(_("HHCCA018I %4.4X:Initialisation failed due to previous errors\n"),dev->devnum);
+            logmsg(_("HHCCA021I %4.4X:Initialisation failed due to previous errors\n"),dev->devnum);
             return -1;
         }
         in_temp.s_addr=dev->commadpt->lhost;
