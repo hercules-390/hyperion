@@ -149,6 +149,12 @@ int     msgnum;                         /*                           */
 int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 
+    if(isatty(STDERR_FILENO))
+        display_version (stderr, "Hercules ");
+    else
+        if(isatty(STDOUT_FILENO))
+            display_version (stdout, "Hercules ");
+
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
@@ -181,6 +187,8 @@ TID     rctid;                          /* RC file thread identifier */
     /* Get name of configuration file or default to hercules.cnf */
     if(!(cfgfile = getenv("HERCULES_CNF")))
         cfgfile = "hercules.cnf";
+
+    daemon_mode = !isatty(STDERR_FILENO);
 
     /* Process the command line options */
     while ((c = getopt(argc, argv, "f:d")) != EOF)
