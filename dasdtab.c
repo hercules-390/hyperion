@@ -4,8 +4,8 @@
 /*-------------------------------------------------------------------*/
 /* This module contains the tables that define the attributes of     */
 /* each DASD device and control unit supported by Hercules.          */
-/* Routines are also provided to perform table lookup and to build   */
-/* to build the device identifier and characteristics areas.         */
+/* Routines are also provided to perform table lookup and build the  */
+/* device identifier and characteristics areas.                      */
 /*                                                                   */
 /* Note: source for most CKD/FBA device capacities take from SDI's   */
 /* device capacity page at: http://www.sdisw.com/dasd_capacity.html  */
