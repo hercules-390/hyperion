@@ -1,3 +1,4 @@
+12 Jan 2003 select() kludge for win32 for high cpu - Greg Smith
 10 Jan 2003 Display a reasonable error message if a track image
             is probably compressed using a locally unsupported
             compression algorithm (such as bzip2) - Greg Smith

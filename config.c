@@ -293,6 +293,14 @@ int     devtmax;                        /* Max number device threads */
 int     iodelay=-1;                     /* I/O delay value           */
 #endif /*OPTION_IODELAY_KLUDGE*/
 BYTE    c;                              /* Work area for sscanf      */
+#ifdef OPTION_SELECT_KLUDGE
+int     dummyfd[OPTION_SELECT_KLUDGE];  /* Dummy file descriptors --
+                                           this allows the console to
+                                           get a low fd when the msg
+                                           pipe is opened... prevents
+                                           cygwin from thrashing in
+                                           select(). sigh            */
+#endif
 
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
@@ -310,6 +318,12 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Direct logmsg output to stderr during initialization */
     sysblk.msgpipew = stderr;
+
+#ifdef OPTION_SELECT_KLUDGE
+    /* Reserve some fd's to be used later for the message pipes */
+    for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
+        dummyfd[i] = dup(fileno(stderr));
+#endif
 
     if((scodepage = getenv("HERCULES_CP")))
         set_codepage(scodepage);
@@ -1167,6 +1181,12 @@ BYTE    c;                              /* Work area for sscanf      */
             break;
 
     } /* end while(1) */
+
+#ifdef OPTION_SELECT_KLUDGE
+    /* Release the dummy file descriptors */
+    for (i = 0; i < OPTION_SELECT_KLUDGE; i++)
+        close(dummyfd[i]);
+#endif
 
     /* Create the message pipe */
     rc = pipe (pfd);
