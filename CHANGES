@@ -1,3 +1,6 @@
+23 Aug 2001 LXD missing PIC 06 when R1 not valid - Paul Leisy
+23 Aug 2001 CFXR needs to test overflow after rounding - Paul Leisy
+23 Aug 2001 BSG failed to set subspace active in DUCT - Paul Leisy
 20 Aug 2001 LKPG setting wrong cc - Paul Leisy
 20 Aug 2001 Just set cc when r1=r2 for CUSE - Paul Leisy
 20 Aug 2001 CUUTF wrong cc when len1 = 0 and len2 = 1 - Paul Leisy
