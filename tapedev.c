@@ -3331,6 +3331,9 @@ int sns4mat;
                             case 0x0C:
                             *unitstat=CSW_CE | CSW_UC;
                             break;
+                            case 0x03:
+                            *unitstat=CSW_UC;
+                            break;
                             case 0x0f:
                             *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
                             break;
@@ -3479,6 +3482,9 @@ static void build_sense_Streaming(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
                             case 0x0C:
                             *unitstat=CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
                             break;
+                            case 0x03:
+                            *unitstat=CSW_UC;
+                            break;
                             case 0x0f:
                             /*
                             *unitstat=CSW_CE | CSW_UC | CSW_DE | CSW_CUE;
@@ -3588,6 +3594,9 @@ static void build_sense_3410_3420(int ERCode,DEVBLK *dev,BYTE *unitstat,BYTE ccw
                             case 0x02:
                             case 0x0C:
                             *unitstat=CSW_CE | CSW_UC | (dev->tdparms.deonirq?CSW_DE:0);
+                            break;
+                            case 0x03:
+                            *unitstat=CSW_UC;
                             break;
                             case 0x0f:
                             /*
