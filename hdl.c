@@ -7,7 +7,8 @@
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
-extern HDL_VRS *hdl_version;            /* Version codes in hdlmain */
+extern HDL_VRS hdl_version[];            /* Version codes in hdlmain */
+extern HDL_PRE hdl_preload[];            /* Preload list in hdlmain */
 
 static DLLENT *hdl_dll;                 /* dll chain           */
 static LOCK   hdl_lock;
@@ -22,7 +23,7 @@ MODENT *modent;
 
     for(dllent = hdl_dll; dllent; dllent = dllent->dllnext)
     {
-        logmsg("dll type = %s",dllent->type ? "load" : "main");
+        logmsg("dll type = %s",(dllent->flags & HDL_LOAD_MAIN) ? "main" : "load");
         logmsg(", name = %s\n",dllent->name);
 
         for(modent = dllent->modent; modent; modent = modent->modnext)
@@ -44,7 +45,7 @@ int hdl_dchk(char *name, char *version, int size)
 {
 HDL_VRS *version_entry;
 
-    for(version_entry = &hdl_version;
+    for(version_entry = hdl_version;
       version_entry->name && strcmp(name,version_entry->name);
       version_entry++);
 
@@ -207,6 +208,8 @@ MODENT *modent;
  */
 void hdl_main()
 {
+HDL_PRE *preload;
+
     initialize_lock(&hdl_lock);
 
     dlinit();
@@ -227,7 +230,7 @@ void hdl_main()
         exit(1);
     }
 
-    hdl_cdll->type = DLL_TYPE_MAIN;
+    hdl_cdll->flags = HDL_LOAD_MAIN | HDL_LOAD_NOUNLOAD;
 
     if(!(hdl_cdll->hdldepc = dlsym(hdl_cdll->dll,HDL_DEPC_Q)))
     {
@@ -267,6 +270,9 @@ void hdl_main()
         (hdl_cdll->hdlreso)(&hdl_fent);
 
     release_lock(&hdl_lock);
+
+    for(preload = hdl_preload; preload->name; preload++)
+        hdl_load(preload->name, preload->flag);
 }
 
 
@@ -301,13 +307,13 @@ char *modname;
     if(!(dllent->dll = dlopen(name, RTLD_NOW)))
     {
         if(!(flags & HDL_LOAD_NOMSG))
-            logmsg("HHCHD007E unable to open DLL: %s\n",
-              dlerror());
+            logmsg("HHCHD007E unable to open DLL %s: %s\n",
+              name,dlerror());
         free(dllent);
         return -1;
     }
 
-    dllent->type = DLL_TYPE_LOAD;
+    dllent->flags = flags;
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {
@@ -392,7 +398,7 @@ char *modname;
 
     for(dllent = &(hdl_dll); *dllent; dllent = &((*dllent)->dllnext))
     {
-        if(((*dllent)->type == DLL_TYPE_LOAD)
+        if(!((*dllent)->flags & HDL_LOAD_NOUNLOAD)
           && !strcmp(modname,(*dllent)->name))
         {
             for(modent = &((*dllent)->modent); *modent; modent = &((*modent)->modnext))

@@ -16,6 +16,13 @@ HDL_VRS hdl_version[] = {
     { NULL,       NULL,              0                 } };
 
 
+HDL_PRE hdl_preload[] = {
+    { "dyn_test1",      HDL_LOAD_DEFAULT },
+    { "dyn_test2",      HDL_LOAD_NOMSG },
+    { "dyn_test3",      HDL_LOAD_NOMSG | HDL_LOAD_NOUNLOAD },
+    { NULL,             0  } };
+
+
 HDL_DEPENDENCY_SECTION;
 {
      HDL_DEPENDENCY (HERCULES);
