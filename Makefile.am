@@ -91,6 +91,7 @@ dyndev_SRC         = commadpt.c \
                      ctc_ctci.c \
                      ctcadpt.c  \
                      w32ctca.c  \
+                     hchan.c  \
                      tuntap.c
 
 
@@ -164,6 +165,7 @@ endif
              hdt3270.la \
              hdt3420.la \
              hdt3505.la \
+             hdt2880.la \
              hdt3525.la
 
 if OPTION_DYNAMIC_LOAD
@@ -212,6 +214,10 @@ if OPTION_DYNAMIC_LOAD
   hdt1403_la_SOURCES = printer.c
   hdt1403_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt1403_la_LIBADD  = $(DYNMOD_LD_ADD)
+
+  hdt2880_la_SOURCES = hchan.c
+  hdt2880_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdt2880_la_LIBADD  = $(DYNMOD_LD_ADD)
 
   hdt2703_la_SOURCES = commadpt.c
   hdt2703_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
@@ -597,6 +603,7 @@ noinst_HEADERS = fishhang.h \
                  pttrace.h  \
                  history.h  \
                  sr.h       \
+                 hchan.h    \
                  $(extra_dynamic_SRC)
 
 #########################################################
