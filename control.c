@@ -4424,21 +4424,17 @@ int     armode;
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
 
+    INVALIDATE_AIA(regs);
+
 #if defined(OPTION_REDUCED_INVAL)
     if ((realmode  != REAL_MODE(&regs->psw)) ||
         (armode    != (regs->psw.armode == 1)) ||
         (space     != (regs->psw.space == 1)))
-    {
-        INVALIDATE_AIA(regs);
-
         INVALIDATE_AEA_ALL(regs);
-    }
 #else
-    INVALIDATE_AIA(regs);
-
     INVALIDATE_AEA_ALL(regs);
-
 #endif
+
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
     /* DAT must be off in XC mode */
@@ -5375,9 +5371,8 @@ int     armode;
     /* Store current system mask value into storage operand */
     ARCH_DEP(vstoreb) ( regs->psw.sysmask, effective_addr1, b1, regs );
 
-#if !defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AIA(regs);
-
+#if !defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AEA_ALL(regs);
 #endif
 
@@ -5388,16 +5383,7 @@ int     armode;
     if ((realmode  != REAL_MODE(&regs->psw)) ||
         (armode    != (regs->psw.armode == 1)) ||
         (space     != (regs->psw.space == 1)))
-    {
-        INVALIDATE_AIA(regs);
-
         INVALIDATE_AEA_ALL(regs);
-    }
-#else
-    INVALIDATE_AIA(regs);
-
-    INVALIDATE_AEA_ALL(regs);
-
 #endif
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);

@@ -87,13 +87,12 @@ int     space;
 int     armode;
 #endif
 
+    INVALIDATE_AIA(regs);
 #if defined(OPTION_REDUCED_INVAL)
     realmode = REAL_MODE(&regs->psw);
     armode = (regs->psw.armode == 1);
     space = (regs->psw.space == 1);
 #else
-    INVALIDATE_AIA(regs);
-
     INVALIDATE_AEA_ALL(regs);
 #endif
 
@@ -134,16 +133,7 @@ int     armode;
         if ((realmode  != REAL_MODE(&regs->psw)) ||
             (armode    != (regs->psw.armode == 1)) ||
             (space     != (regs->psw.space == 1)))
-        {
-            INVALIDATE_AIA(regs);
-
             INVALIDATE_AEA_ALL(regs);
-        }
-#else
-        INVALIDATE_AIA(regs);
-
-        INVALIDATE_AEA_ALL(regs);
-
 #endif
 #if defined(FEATURE_ESAME)
         FETCH_DW(regs->psw.IA, addr + 8);
@@ -240,16 +230,7 @@ int     armode;
         if ((realmode  != REAL_MODE(&regs->psw)) ||
             (armode    != (regs->psw.armode == 1)) ||
             (space     != (regs->psw.space == 1)))
-        {
-            INVALIDATE_AIA(regs);
-
             INVALIDATE_AEA_ALL(regs);
-        }
-#else
-        INVALIDATE_AIA(regs);
-
-        INVALIDATE_AEA_ALL(regs);
-
 #endif
         FETCH_FW(regs->psw.IA, addr + 4);
         regs->psw.IA &= 0x00FFFFFF;
