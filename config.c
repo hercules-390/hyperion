@@ -305,9 +305,9 @@ BYTE    c;                              /* Work area for sscanf      */
     /* Gabor Hoffer (performance option) */
     for (i = 0; i < 256; i++)
     {
-	s370_opcode_table [i] = opcode_table [i][0];
-	s390_opcode_table [i] = opcode_table [i][1];
-	z900_opcode_table [i] = opcode_table [i][2];
+        s370_opcode_table [i] = opcode_table [i][0];
+        s390_opcode_table [i] = opcode_table [i][1];
+        z900_opcode_table [i] = opcode_table [i][2];
     }
 
     /* Initialize SETMODE and set user authority */
@@ -665,9 +665,9 @@ BYTE    c;                              /* Work area for sscanf      */
             if (strlen(ssysepoch) != 4
                 || sscanf(ssysepoch, "%d%c", &sysepoch, &c) != 1
                 || ((sysepoch != 1900) && (sysepoch != 1928)
-		 && (sysepoch != 1960) && (sysepoch != 1988)
+                 && (sysepoch != 1960) && (sysepoch != 1988)
                  && (sysepoch != 1970)
-		    ))
+                    ))
             {
                 logmsg( "HHC014I Error in %s line %d: "
                         "%s is not a valid system epoch\npatch config.c to expand the table\n",
@@ -807,6 +807,9 @@ BYTE    c;                              /* Work area for sscanf      */
 
     } /* end for(scount) */
 
+    /* close configuration file */
+    rc = fclose(fp);
+
     /* Obtain main storage */
     sysblk.mainsize = mainsize * 1024 * 1024;
     sysblk.mainstor = malloc(sysblk.mainsize);
@@ -906,28 +909,28 @@ BYTE    c;                              /* Work area for sscanf      */
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock
        adjustment, then add in the specified time zone offset
-    
+
        The problem here, is that no formular can do it right, as
        we have to do it wrong in 1928 and 1988 case !
     */
     switch (sysepoch) {
-	case 1988:
-	    sysblk.todoffset = (18*365 + 4) * -86400ULL;
-	    break;
-	case 1960:
-	    sysblk.todoffset = (10*365 + 3) * 86400ULL;
-	    break;
-	case 1928:
-	    sysblk.todoffset = (42*365 + 10) * 86400ULL;
-	    break;
+        case 1988:
+            sysblk.todoffset = (18*365 + 4) * -86400ULL;
+            break;
+        case 1960:
+            sysblk.todoffset = (10*365 + 3) * 86400ULL;
+            break;
+        case 1928:
+            sysblk.todoffset = (42*365 + 10) * 86400ULL;
+            break;
         case 1970:
             sysblk.todoffset = 0;
             break;
-	default:
+        default:
             sysepoch = 1900;
-	case 1900:
-	    sysblk.todoffset = (70*365 + 17) * 86400ULL;
-	    break;
+        case 1900:
+            sysblk.todoffset = (70*365 + 17) * 86400ULL;
+            break;
     }
 
     /* Compute the timezone offset in seconds and crank that in */
@@ -945,7 +948,7 @@ BYTE    c;                              /* Work area for sscanf      */
 
     /* Set the system OS tailoring value */
     sysblk.pgminttr = ostailor;
-    
+
     /* Set the system program product OS restriction flag */
     sysblk.pgmprdos = pgmprdos;
 
