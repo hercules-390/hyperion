@@ -126,16 +126,6 @@ AC_CHECK_HEADER(inttypes.h,
                                [AC_DEFINE([HAVE_U_INT])],
                                [AC_MSG_ERROR([Unable to find fixed-size data types])] )] )
 
-dnl AC_MSG_NOTICE([Checking for SCSI tape support and what type])
-AC_CHECK_HEADER(sys/mtio.h,
-                [AC_DEFINE([HAVE_MTIO_H])])
-
-AC_TRY_COMPILE([#include mtio.h],
-               [mtget test;
-                int result;
-                result = test.mt_gstat; ],
-               [AC_DEFINE([GNU_MTIO_SUPPORT])])
-
 # Compiler characteristics
 
 AC_C_BIGENDIAN
@@ -337,9 +327,5 @@ AH_TEMPLATE([CUSTOM_BUILD_STRING],
             [Define to provide additional information about this build])
 AH_TEMPLATE([DEBUG],
             [Define to enable extra debugging code])
-AH_TEMPLATE([HAVE_MTIO_H],
-            [Define if your system has sys/mtio.h])
-AH_TEMPLATE([GNU_MTIO_SUPPORT],
-            [Define if you have the GNU version of mtio.h (Linux)])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
