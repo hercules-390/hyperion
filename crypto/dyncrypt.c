@@ -19,13 +19,25 @@
 
 #include <gcrypt.h>
 
-/* FIXME: This should probably be fixed in a better way */
 #if defined(GCRYPT_OPENFORMAT) && ( GCRYPT_OPENFORMAT == 4 )
  #define GCRY_CIPHER_OPEN(_hd, _p1, _p2, _p3) \
-  gcry_cipher_open (&(_hd),(_p1),(_p2),(_p3))
+  { \
+    gcry_error_t __err; \
+    __err=gcry_cipher_open (&(_hd),(_p1),(_p2),(_p3)); \
+    if(__err) \
+    { \
+      logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(__err)); \
+      return; \
+    } \
+  }
 #else
  #define GCRY_CIPHER_OPEN(_hd, _p1, _p2, _p3) \
-  (_hd) = gcry_cipher_open ((_p1),(_p2),(_p3))
+  (_hd) = gcry_cipher_open ((_p1),(_p2),(_p3)); \
+  if(!(_hd)) \
+  { \
+    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1)); \
+    return; \
+  }
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -469,11 +481,6 @@ static void ARCH_DEP(km_dea)(int r1, int r2, REGS *regs)
   /* Open a cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Fetch and set the cryptographic key */
   ARCH_DEP(vfetchc)(k, 7, GR_A(1, regs), 1, regs);
@@ -567,11 +574,6 @@ static void ARCH_DEP(km_tdea_128)(int r1, int r2, REGS *regs)
   /* Open the cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 15, GR_A(1, regs), 1, regs);
@@ -669,11 +671,6 @@ static void ARCH_DEP(km_tdea_192)(int r1, int r2, REGS *regs)
   /* Open the cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_ECB, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Fetch and set the cryptographic keys */
   ARCH_DEP(vfetchc)(k, 23, GR_A(1, regs), 1, regs);
@@ -794,11 +791,6 @@ static void ARCH_DEP(kmac_dea)(int r1, int r2, REGS *regs)
   /* Open a cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -892,11 +884,6 @@ static void ARCH_DEP(kmac_tdea_128)(int r1, int r2, REGS *regs)
   /* Open a cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -994,11 +981,6 @@ static void ARCH_DEP(kmac_tdea_192)(int r1, int r2, REGS *regs)
   /* Open a cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -1112,11 +1094,6 @@ static void ARCH_DEP(kmc_dea)(int r1, int r2, REGS *regs)
   /* Open a cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_CBC, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -1234,11 +1211,6 @@ static void ARCH_DEP(kmc_tdea_128)(int r1, int r2, REGS *regs)
   /* Open a cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
@@ -1360,11 +1332,6 @@ static void ARCH_DEP(kmc_tdea_192)(int r1, int r2, REGS *regs)
   /* Open a cipher handle */
 //if(!(hd = gcry_cipher_open(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0)))
   GCRY_CIPHER_OPEN(hd, GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_CBC, 0);
-  if (!hd)
-  {
-    logmsg("  %s(%d): gcry_cypher_open(): %s\n", __FILE__, __LINE__, gcry_strerror(-1));
-    return;
-  }
 
   /* Test writeability output chaining value */
   ARCH_DEP(validate_operand)(GR_A(1,regs), 1, 7, ACCTYPE_WRITE, regs);
