@@ -1353,16 +1353,42 @@ void cckd_flush_cache(DEVBLK *dev)
 {
 int             i;                      /* Index                     */
 TID             tid;                    /* Writer thread id          */
+U32             busy;                   /* Cache entry busy bits     */
+CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 
     /* Scan cache for updated cache entries */
     for (i = 0; i < cckdblk.cachenbr; i++)
-        if ((cckdblk.cache[i].flags & CCKD_CACHE_BUSY) == CCKD_CACHE_UPDATED
+    {
+        busy = cckdblk.cache[i].flags & CCKD_CACHE_BUSY;
+
+        /* If the cache entry is active and updated but no
+           i/o is active then flush the entry */
+        if (busy == (CCKD_CACHE_UPDATED | CCKD_CACHE_ACTIVE)
+         && (dev == NULL || dev == cckdblk.cache[i].dev))
+        {
+            cckd = cckdblk.cache[i].dev->cckd_ext;
+            if (!cckd->ioactive)
+            {
+                busy &= ~CCKD_CACHE_ACTIVE;
+                cckdblk.cache[i].flags &= ~CCKD_CACHE_ACTIVE;
+                cckd->active = NULL;
+                cckdblk.cache[i].dev->dasdcur = -1;
+                cckdtrc ("cckddasd: flush cache[%d] trk %d made inactive\n",
+                         i, cckdblk.cache[i].trk);
+            }
+        }
+
+        /* Flush the entry if updated but not otherwise busy */
+        if (busy == CCKD_CACHE_UPDATED
          && (dev == NULL || dev == cckdblk.cache[i].dev))
         {
             cckdblk.cache[i].flags &= ~CCKD_CACHE_UPDATED;
             cckdblk.cache[i].flags |= CCKD_CACHE_WRITE;
             cckdblk.writepending++;
+            cckdtrc ("cckddasd: flush cache[%d] trk %d flushed\n",
+                     i, cckdblk.cache[i].trk);
         }
+    }
 
     /* Schedule the writer if any writes are pending */
     if (cckdblk.writepending)
