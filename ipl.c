@@ -280,6 +280,7 @@ U32     fileaddr;
 
             if( ARCH_DEP(load_main) (pathname, fileaddr) < 0 )
             {
+                fclose(fp);
 #ifdef EXTERNALGUI
                 if (extgui) logmsg("LOAD=0\n");
 #endif /*EXTERNALGUI*/

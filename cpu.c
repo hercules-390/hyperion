@@ -1319,6 +1319,11 @@ exec0:
         }
 
         /* Execute the instruction */
+#ifdef OPTION_CPU_UNROLL
+        regs->instcount += 8;
+#else
+        regs->instcount++;
+#endif
         FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
 
 #ifdef OPTION_CPU_UNROLL
@@ -1336,8 +1341,6 @@ exec0:
                            ifetch6, exec6, specexception);
         FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch7, exec7, specexception);
-
-        regs->instcount += 8;
 #endif
 
     }
@@ -1418,6 +1421,11 @@ int     stepthis;                       /* Stop on this instruction  */
         }
 
         /* Execute the instruction */
+#ifdef OPTION_CPU_UNROLL
+        regs->instcount += 8;
+#else
+        regs->instcount++;
+#endif
         EXECUTE_INSTRUCTION (regs->ip, 0, regs);
 
 #ifdef OPTION_CPU_UNROLL
@@ -1428,8 +1436,6 @@ int     stepthis;                       /* Stop on this instruction  */
         UNROLLED_EXECUTE(regs);
         UNROLLED_EXECUTE(regs);
         UNROLLED_EXECUTE(regs);
-
-        regs->instcount += 8;
 #endif
 
     }

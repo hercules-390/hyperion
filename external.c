@@ -65,7 +65,7 @@ REGS   *realregs;                       /* Real REGS if guest        */
             {
                 release_lock (&sysblk.intlock);
 #ifdef OPTION_CS_USLEEP
-                usleep (1);
+                usleep (1L);
 #endif
                 obtain_lock (&sysblk.intlock);
             }

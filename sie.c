@@ -495,12 +495,14 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->inst);
 #endif /*defined(SIE_DEBUG)*/
 
+#if defined(OPTION_CPU_UNROLL)
+                regs->instcount += 8;
+#else
+                regs->instcount++;
+#endif
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
-#if !defined(OPTION_CPU_UNROLL)
-                regs->instcount++;
-#else
-
+#if defined(OPTION_CPU_UNROLL)
                 UNROLLED_EXECUTE(GUESTREGS);
                 UNROLLED_EXECUTE(GUESTREGS);
                 UNROLLED_EXECUTE(GUESTREGS);
@@ -508,8 +510,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 UNROLLED_EXECUTE(GUESTREGS);
                 UNROLLED_EXECUTE(GUESTREGS);
                 UNROLLED_EXECUTE(GUESTREGS);
-
-                regs->instcount += 8;
 #endif
 
             }
