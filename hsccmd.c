@@ -1148,7 +1148,7 @@ BYTE c;                                 /* Character work area       */
     {
         unsigned i = 0, k = strlen(argv[1]);
 
-        memset (sysblk.loadparm, 0x4B, 8);
+        memset (sysblk.loadparm, 0x40, 8);
 
         for (; i < k && i < 8; i++)
         {

@@ -679,7 +679,7 @@ BYTE **orig_newargv;
     xpndsize = 0;
     numcpu = 0;
     numvec = MAX_CPU_ENGINES;
-    memset (loadparm, 0x4B, 8);
+    memset (loadparm, 0x40, 8);
     sysepoch = 1900;
     tzoffset = 0;
     diag8cmd = 0;
@@ -1331,7 +1331,7 @@ BYTE **orig_newargv;
             }
 
             /* Convert the load parameter to EBCDIC */
-            memset (loadparm, 0x4B, 8);
+            memset (loadparm, 0x40, 8);
             for (i = 0; i < (int)strlen(sloadparm); i++)
                 loadparm[i] = host_to_guest(sloadparm[i]);
         }
