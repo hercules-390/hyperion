@@ -3180,16 +3180,19 @@ GREG    len3;
                   ((addr2 & PAGEFRAME_PAGEMASK) ==
                    ((addr2 + 255) & PAGEFRAME_PAGEMASK)))
     {
-        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
         abs2 = LOGICAL_TO_ABS (addr2, r2, regs, ACCTYPE_READ, regs->psw.pkey);
+        abs1 = LOGICAL_TO_ABS (addr1, r1, regs, ACCTYPE_WRITE, regs->psw.pkey);
 
         memcpy(sysblk.mainstor+abs1, sysblk.mainstor+abs2, 256);
 
         /* Update the registers */
         GR_A(r1, regs) = addr1 + 256;
-        GR_A(r2, regs) = addr2 + 256;
         regs->GR_LA24(r1+1) -= 256;
-        regs->GR_LA24(r2+1) -= 256;
+        if (r1 != r2)
+        {
+            GR_A(r2, regs) = addr2 + 256;
+            regs->GR_LA24(r2+1) -= 256;
+        }
         if (regs->GR_LA24(r1+1) ||
             regs->GR_LA24(r2+1))
         {
