@@ -1,3 +1,5 @@
+04 Ape 2003 Return IntReq on Card Read unsolicited Sense when
+            the card reader is empty - Ivan Warren
 03 Apr 2003 ECPS:VM SSM Correction, panel command rework (evm) 
             and conditional debug messages - Ivan Warren
 02 Apr 2003 Reordered int/dev locks in channel handler
