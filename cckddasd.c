@@ -1248,7 +1248,7 @@ TID             tid;                    /* Readahead thread id       */
     }
 
     if (!cckdblk.batch)
-    logmsg (_("HHCCD001I Readahead thread %d started: tid="TIDPAT"), pid=%d\n"),
+    logmsg (_("HHCCD001I Readahead thread %d started: tid="TIDPAT", pid=%d\n"),
             ra, thread_id(), getpid());
 
     while (ra <= cckdblk.ramax)
