@@ -29,6 +29,14 @@ case "$host_os" in
 		;;
 esac
 
+# Arch-specific settings that we can't figure out any other way (yet)
+
+case "$host_cpu-$GCC" in
+        hppa*-yes)
+                CFLAGS="$CFLAGS -ffunction-sections"
+        ;;
+esac
+
 AM_CONDITIONAL(BUILD_HERCIFC, [test "x$build_hercifc" = "xtrue"])
 
 # Libraries
