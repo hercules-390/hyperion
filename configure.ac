@@ -43,7 +43,7 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 
 AC_ARG_ENABLE(fthreads,
               AC_HELP_STRING([--enable-fthreads],
-                             [Use included fthreads instead of libpthread]),
+                             [use included fthreads instead of libpthread]),
               [case "${host_os},${enableval}" in
                  *cygwin*,yes)
                    build_fthreads=true
@@ -205,7 +205,8 @@ AC_ARG_ENABLE(debug,
               [debug=false])
 
 AC_ARG_ENABLE(setuid-hercifc,
-              AC_HELP_STRING([--enable-setuid-hercifc], [install hercifc setuid root]),
+              AC_HELP_STRING([--enable-setuid-hercifc],
+                             [install hercifc setuid root]),
               [case "${enableval}" in
                 yes) setuid_hercifc=yes ;;
                 no)  setuid_hercifc=no ;;
@@ -253,7 +254,7 @@ fi
 
 AC_ARG_ENABLE(external-gui,
               AC_HELP_STRING([--disable-external-gui],
-                             [Disable interface to external Windows GUI]),
+                             [disable interface to external Windows GUI]),
               [case "${enableval}" in
                  yes) build_external_gui=true ;;
                  no) build_external_gui=false ;;
@@ -270,7 +271,7 @@ fi
 
 AC_ARG_ENABLE(custom,
               AC_HELP_STRING([--enable-custom=STRING],
-                             [Provide a custom description for this build]),
+                             [provide a custom description for this build]),
               [AC_DEFINE_UNQUOTED([CUSTOM_BUILD_STRING], "${enableval}") ])
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
