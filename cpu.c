@@ -1213,13 +1213,6 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     while (IS_IC_BROADCAST(regs))
         ARCH_DEP(synchronize_broadcast)(regs, 0, 0);
 
-    /* Refresh opcode table */
-    if (regs->reset_opctab)
-    {
-        regs->reset_opctab = 0;
-        memcpy(regs->opctab, ARCH_DEP(opcode_table), 256*sizeof(zz_func));
-    }
-
     /* Set tracing bit */
     regs->tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
 
@@ -1446,7 +1439,6 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 REGS *ARCH_DEP(run_cpu) (int cpu, REGS *oldregs)
 {
 REGS    regs;
-zz_func opcode_table[256];
 
     if (oldregs)
     {
@@ -1476,10 +1468,6 @@ zz_func opcode_table[256];
 
     regs.tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
     regs.ints_state |= sysblk.ints_state;
-
-    /* Copy the opcode table */
-    memcpy(opcode_table, ARCH_DEP(opcode_table), sizeof(opcode_table));
-    regs.opctab = opcode_table;
 
     release_lock (&sysblk.intlock);
 
@@ -1525,17 +1513,17 @@ zz_func opcode_table[256];
                 return cpu_uninit(cpu, &regs);
         }
 
-        UNROLLED_EXECUTE(&regs, opcode_table);
-        UNROLLED_EXECUTE(&regs, opcode_table);
-        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs);
+        UNROLLED_EXECUTE(&regs);
+        UNROLLED_EXECUTE(&regs);
 
         regs.instcount += 8;
 
-        UNROLLED_EXECUTE(&regs, opcode_table);
-        UNROLLED_EXECUTE(&regs, opcode_table);
-        UNROLLED_EXECUTE(&regs, opcode_table);
-        UNROLLED_EXECUTE(&regs, opcode_table);
-        UNROLLED_EXECUTE(&regs, opcode_table);
+        UNROLLED_EXECUTE(&regs);
+        UNROLLED_EXECUTE(&regs);
+        UNROLLED_EXECUTE(&regs);
+        UNROLLED_EXECUTE(&regs);
+        UNROLLED_EXECUTE(&regs);
     }
 
 slowloop:
@@ -1557,7 +1545,7 @@ slowloop:
 
         /* Execute the instruction */
         regs.instcount++;
-        EXECUTE_INSTRUCTION(regs.ip, &regs, opcode_table);
+        EXECUTE_INSTRUCTION(regs.ip, &regs);
     }
 
 } /* end function cpu_thread */

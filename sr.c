@@ -196,7 +196,6 @@ BYTE     psw[16];
         SR_WRITE_VALUE(file, SR_CPU_PERMODE, regs->permode, 1);
         SR_WRITE_VALUE(file, SR_CPU_LOADSTATE, regs->loadstate, 1);
         SR_WRITE_VALUE(file, SR_CPU_INVALIDATE, regs->invalidate, 1);
-        SR_WRITE_VALUE(file, SR_CPU_RESET_OPCTAB, regs->reset_opctab, 1);
         SR_WRITE_VALUE(file, SR_CPU_SIGPRESET, regs->sigpreset, 1);
         SR_WRITE_VALUE(file, SR_CPU_SIGPIRESET, regs->sigpireset, 1);
         SR_WRITE_VALUE(file, SR_CPU_VTIMERINT, regs->vtimerint, 1);

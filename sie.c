@@ -977,7 +977,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 SIE_PERFMON(SIE_PERF_EXEC);
                 regs->instcount++;
-                EXECUTE_INSTRUCTION(GUESTREGS->ip, GUESTREGS, ARCH_DEP(opcode_table));
+                EXECUTE_INSTRUCTION(GUESTREGS->ip, GUESTREGS);
 
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
@@ -987,14 +987,14 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 {
                     REGS *gregs = GUESTREGS;
                     SIE_PERFMON(SIE_PERF_EXEC_U);
-                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs);
+                    UNROLLED_EXECUTE(gregs);
+                    UNROLLED_EXECUTE(gregs);
                     regs->instcount += 7;
-                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
-                    UNROLLED_EXECUTE(gregs, ARCH_DEP(opcode_table));
+                    UNROLLED_EXECUTE(gregs);
+                    UNROLLED_EXECUTE(gregs);
+                    UNROLLED_EXECUTE(gregs);
+                    UNROLLED_EXECUTE(gregs);
 /* 1 LINE CHANGED ISW20040727 - was '}' only */
                 } while( !SIE_I_HOST(regs) );
             } while( !SIE_I_HOST(regs) );

@@ -2868,7 +2868,7 @@ BYTE   *ip;                             /* -> executed instruction   */
      */
     regs->execflag = 1;
     regs->psw.IA -= ILC(regs->exinst[0]);
-    EXECUTE_INSTRUCTION (regs->exinst, regs, ARCH_DEP(opcode_table));
+    EXECUTE_INSTRUCTION (regs->exinst, regs);
     regs->execflag = 0;
 }
 

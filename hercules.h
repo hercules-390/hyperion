@@ -497,7 +497,6 @@ typedef struct _REGS {                  /* Processor registers       */
         U64     waittime;               /* Wait time (us) in interval*/
         struct  timeval lasttod;        /* Last gettimeofday         */
         DAT     dat;                    /* Fields for DAT use        */
-        void   *opctab;                 /* -> opcode table           */
 
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
@@ -601,7 +600,6 @@ typedef struct _REGS {                  /* Processor registers       */
                 loadstate:1,            /* 1=CPU is in load state    */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
                 invalidate:1,           /* 1=Do AIA/AEA invalidation */
-                reset_opctab:1,         /* 1=Copy new opcode table   */
                 tracing:1,              /* 1=Trace is active         */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1,           /* 1=SIGP initial cpu reset  */

@@ -276,17 +276,17 @@ do { \
     )
 
 /* Instruction execution */
-#define EXECUTE_INSTRUCTION(_inst, _regs, _tab) \
+#define EXECUTE_INSTRUCTION(_inst, _regs) \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_inst), (_regs)); \
-    ((_tab)[_inst[0]]) ((_inst), (_regs)); \
+    ARCH_DEP(opcode_table)[_inst[0]]((_inst), (_regs)); \
 } while(0)
 
-#define UNROLLED_EXECUTE(_regs, _tab) \
+#define UNROLLED_EXECUTE(_regs) \
 do { \
     (_regs)->ip = INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs), 0); \
-    EXECUTE_INSTRUCTION((_regs)->ip, (_regs), (_tab)); \
+    EXECUTE_INSTRUCTION((_regs)->ip, (_regs)); \
 } while(0)
 
 #define RETURN_INTCHECK(_regs) \
