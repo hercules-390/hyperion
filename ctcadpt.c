@@ -122,7 +122,7 @@ int  CTCX_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
         pDEVBLK->typname = strdup(argv[0]);
         return (pDEVBLK->hnd->init)( pDEVBLK, argc, argv );
     }
-        return -1;
+    return -1;
 }
 
 // -------------------------------------------------------------------
