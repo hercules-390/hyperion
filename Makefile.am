@@ -95,7 +95,7 @@ cckdcdsk_SOURCES = cckdcdsk.c cckdutil.c dasdtab.c hostinfo.c version.c
 cckdcomp_SOURCES = cckdcomp.c cckdutil.c dasdtab.c hostinfo.c version.c
 
 cckddiag_SOURCES = cckddiag.c cckddasd.c cckdutil.c ckddasd.c codepage.c \
-	dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c
+	dasdtab.c dasdutil.c fbadasd.c hostinfo.c version.c $(FTHREADS) $(FISHHANG)
 
 ckd2cckd_SOURCES = dasdcopy.c  dasdutil.c codepage.c hostinfo.c version.c \
 	   ckddasd.c cckddasd.c cckdutil.c dasdtab.c fbadasd.c $(FTHREADS) $(FISHHANG)
