@@ -794,17 +794,12 @@ do { \
             (_r1) = (temp >> 20) & 0xf; \
             (_b2) = (temp >> 16) & 0xf; \
             (_effective_addr2) = temp & 0xfff; \
-        if((_b2)) \
-        { \
-        (_effective_addr2) += (_regs)->GR((_b2)); \
-        (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-        } \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
             (_b2) = (temp >> 12) & 0xf; \
-        if((_b2)) \
-        { \
-        (_effective_addr2) += (_regs)->GR((_b2)); \
-        (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-        } \
+            if((_b2)) \
+                (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             INST_UPDATE_PSW((_regs), 4); \
     }
 
@@ -821,6 +816,7 @@ do { \
             (_b2) = (temp >> 12) & 0xf; \
             if((_b2)) \
                 (_effective_addr2) += (_regs)->GR((_b2)); \
+            (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
             (_regs)->psw.ilc = 4; \
     }
 
