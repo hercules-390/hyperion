@@ -2057,8 +2057,8 @@ DEVBLK *dev;                            /* -> Device block           */
     machine_check_crwpend();
 #endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
-    logmsg (_("HHCCF050I Device %4.4X defined as %4.4X\n"),
-            olddevn, newdevn);
+//  logmsg (_("HHCCF050I Device %4.4X defined as %4.4X\n"),
+//          olddevn, newdevn);
 
     return 0;
 } /* end function define_device */
