@@ -4,6 +4,7 @@
 
 #include "hercules.h"
 
+#include "httpmisc.h"
 
 #if defined(OPTION_DYNAMIC_LOAD)
 
@@ -23,6 +24,7 @@ HDL_DEPENDENCY_SECTION;
      HDL_DEPENDENCY(REGS);
      HDL_DEPENDENCY(DEVBLK);
      HDL_DEPENDENCY(SYSBLK);
+     HDL_DEPENDENCY(WEBBLK);
 }
 END_DEPENDENCY_SECTION;
 

@@ -537,6 +537,22 @@ static void *http_request(FILE *hsock)
         }
     }
 
+#if defined(OPTION_DYNAMIC_LOAD)
+    {
+    zz_cgibin dyncgi;
+
+        if( (dyncgi = HDL_FINDSYM(webblk->baseurl)) )
+        {
+        char tbuf[80];
+            fprintf(webblk->hsock,"HTTP/1.0 200 OK\nConnection: close\n");
+            fprintf(webblk->hsock,"Date: %s\n",
+              http_timestring(tbuf,sizeof(tbuf),time(NULL)));
+            dyncgi(webblk);
+            http_exit(webblk);
+        }
+    }
+#endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
     http_error(webblk, "404 File Not Found","",
                        "The requested file was not found");
 

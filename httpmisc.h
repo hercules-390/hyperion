@@ -53,6 +53,8 @@ typedef struct _CONTYP {
 
 
 typedef struct _WEBBLK {
+#define HDL_VERS_WEBBLK "2.17"
+#define HDL_SIZE_WEBBLK sizeof(WEBBLK)
     FILE *hsock;
     int request_type;
 #define REQTYPE_NONE   0

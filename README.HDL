@@ -509,3 +509,102 @@ HDL_FINAL_SECTION;
 #endif /*!defined(_GEN_ARCH)*/
 
 /* END DYNDIAG.C */
+
+
+
+/* DYNCGI.C     (c)Copyright Jan Jaeger, 2002-2003                   */
+/*              HTTP cgi-bin routines                                */
+
+/* This file contains cgi routines that may be executed on the      */
+/* server (ie under control of a hercules thread)                    */
+/*                                                                   */
+/*                                                                   */
+/* Dynamically loaded cgi routines must be registered under the      */
+/* pathname that they are accessed with (ie /cgi-bin/test)           */
+/* All cgi pathnames must start with /cgi-bin/                       */
+/*                                                                   */
+/*                                                                   */
+/* The cgi-bin routines may call the following HTTP service routines */
+/*                                                                   */
+/* char *cgi_variable(WEBBLK *webblk, char *name);                   */
+/*   This call returns a pointer to the cgi variable requested       */
+/*   or a NULL pointer if the variable is not found                  */
+/*                                                                   */
+/* char *cgi_cookie(WEBBLK *webblk, char *name);                     */
+/*   This call returns a pointer to the cookie requested             */
+/*   or a NULL pointer if the cookie is not found                    */
+/*                                                                   */
+/* char *cgi_username(WEBBLK *webblk);                               */
+/*   Returns the username for which the user has been authenticated  */
+/*   or NULL if not authenticated (refer to auth/noauth parameter    */
+/*   on the HTTPPORT configuration statement)                        */
+/*                                                                   */
+/* char *cgi_baseurl(WEBBLK *webblk);                                */
+/*   Returns the url as requested by the user                        */
+/*                                                                   */
+/*                                                                   */
+/* void html_header(WEBBLK *webblk);                                 */
+/*   Sets up the standard html header, and includes the              */
+/*   html/header.htmlpart file.                                      */
+/*                                                                   */
+/* void html_footer(WEBBLK *webblk);                                 */
+/*   Sets up the standard html footer, and includes the              */
+/*   html/footer.htmlpart file.                                      */
+/*                                                                   */
+/* int html_include(WEBBLK *webblk, char *filename);                 */
+/*   Includes an html file                                           */
+/*                                                                   */
+/*                                                                   */
+/*                                           Jan Jaeger - 28/03/2002 */
+ 
+
+#include "hercules.h"
+#include "devtype.h"
+#include "opcode.h"
+#include "httpmisc.h"
+
+#if defined(OPTION_HTTP_SERVER)
+
+
+
+void cgibin_test(WEBBLK *webblk)
+{
+    html_header(webblk);
+
+    fprintf(webblk->hsock, "<H2>Sample cgi routine</H2>\n");
+
+    html_footer(webblk);
+}
+
+
+HDL_DEPENDENCY_SECTION;
+{
+     HDL_DEPENDENCY(HERCULES);
+//   HDL_DEPENDENCY(REGS);
+//   HDL_DEPENDENCY(DEVBLK);
+//   HDL_DEPENDENCY(SYSBLK);
+     HDL_DEPENDENCY(WEBBLK);
+}
+END_DEPENDENCY_SECTION;
+
+
+HDL_REGISTER_SECTION;
+{
+    HDL_REGISTER( /cgi-bin/test, cgibin_test );
+}
+END_REGISTER_SECTION;
+
+
+HDL_RESOLVER_SECTION;
+{
+}
+END_RESOLVER_SECTION;
+
+
+HDL_FINAL_SECTION;
+{
+}
+END_FINAL_SECTION;
+
+
+#endif /*defined(OPTION_HTTP_SERVER)*/
