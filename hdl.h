@@ -38,6 +38,7 @@ char *(*hdl_device_type_equates)(char *);
  #define dlsym(_handle, _symbol) lt_dlsym(_handle, _symbol)
  #define dlclose(_handle)        lt_dlclose(_handle)
  #define dlerror()               lt_dlerror()
+ #define RTLD_NOW                0
 #else
  #include <dlfcn.h>
  #define dlinit()
