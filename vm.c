@@ -795,14 +795,22 @@ int     j,k;
         if(sysblk.diag8cmd)
         {
             logmsg ("HHC660I *%s* panel command issued by the host program\n", buf);
-            dresp=log_capture(panel_command,buf);
-            if(dresp!=NULL)
+            if (cmdflags & CMDFLAGS_RESPONSE)
             {
-                freeresp=1;
+                dresp=log_capture(panel_command,buf);
+                if(dresp!=NULL)
+                {
+                    freeresp=1;
+                }
+                else
+                {
+                    dresp="";
+                }
             }
             else
             {
-                dresp="";
+                panel_command(buf);
+                logmsg ("HHC661I *%s* command complete\n", buf);
             }
         }
         else
