@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: hercules 2.16\n"
-"POT-Creation-Date: 2003-01-30 20:11-0600\n"
+"POT-Creation-Date: 2003-01-30 20:40-0600\n"
 "PO-Revision-Date: 2002-05-10 16:16+0200\n"
 "Last-Translator: Jan Jaeger <jj@septa.nl>\n"
 "Language-Team: none <test@li.org>\n"
@@ -35,6 +35,11 @@ msgid ""
 "\n"
 "          -ro     open file readonly, no repairs\n"
 "\n"
+msgstr ""
+
+#: ctcadpt.c:954
+#, c-format
+msgid "                 Config=%s, connecting client=%s\n"
 msgstr ""
 
 #: ipl.c:126
@@ -234,162 +239,6 @@ msgstr "Draaiend op %s %s%s %s %s\n"
 msgid "CPU%4.4X: %s CODE=%4.4X ILC=%d\n"
 msgstr ""
 
-#: ctc_ctci.c:68 ctc_ctci.c:90 ctc_ctci.c:135
-#, c-format
-msgid "CTC001E %4.4X: Unable to allocate CTCBLK\n"
-msgstr ""
-
-#: ctc_ctci.c:1010
-#, c-format
-msgid "CTC002E %4.4X: Invalid kernel buffer size %s\n"
-msgstr ""
-
-#: ctc_ctci.c:1024
-#, c-format
-msgid "CTC003E %4.4X: Invalid DLL I/O buffer size %s\n"
-msgstr ""
-
-#: ctc_ctci.c:996
-#, fuzzy, c-format
-msgid "CTC005E %4.4X: Invalid device name %s\n"
-msgstr "Ongeldig apparaat nummer\n"
-
-#: ctcadpt.c:515 ctc_ctci.c:1037
-#, c-format
-msgid "CTC006E %4.4X: Invalid MTU size %s\n"
-msgstr ""
-
-#: ctc_ctci.c:1048 ctc_ctci.c:1190
-#, c-format
-msgid "CTC007E %4.4X: Invalid netmask %s\n"
-msgstr ""
-
-#: ctcadpt.c:115 ctcadpt.c:457 ctc_ctci.c:1086 ctc_ctci.c:1096 ctc_ctci.c:1132
-#: ctc_ctci.c:1201
-#, c-format
-msgid "CTC008E %4.4X: Incorrect number of parameters\n"
-msgstr ""
-
-#: ctc_ctci.c:1141
-#, fuzzy, c-format
-msgid "CTC009E %4.4X invalid device name %s\n"
-msgstr "Ongeldig apparaat nummer\n"
-
-#: ctc_ctci.c:1155
-#, c-format
-msgid "CTC010E %4.4X: Invalid MTU size %s\n"
-msgstr ""
-
-#: ctcadpt.c:490 ctc_ctci.c:1104 ctc_ctci.c:1116 ctc_ctci.c:1166
-#: ctc_ctci.c:1178
-#, c-format
-msgid "CTC011E %4.4X: Invalid IP address %s\n"
-msgstr ""
-
-#: ctc_ctci.c:1059
-#, fuzzy, c-format
-msgid "CTC012E %4.4X: Invalid MAC address %s\n"
-msgstr "Ongeldig frame adres %8.8X\n"
-
-#: ctcadpt.c:469 ctcadpt.c:503
-#, c-format
-msgid "CTC014E %4.4X: Invalid port number: %s\n"
-msgstr ""
-
-#: ctcadpt.c:536 ctcadpt.c:587
-#, c-format
-msgid "CTC016E %4.4X: Error creating socket: %s\n"
-msgstr ""
-
-#: ctcadpt.c:556 ctcadpt.c:604
-#, fuzzy, c-format
-msgid "CTC017E %4.4X: Error binding to socket: %s\n"
-msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: ctcadpt.c:577
-#, c-format
-msgid "CTC018I %4.4X: Connect to %s:%s failed, starting server\n"
-msgstr ""
-
-#: ctcadpt.c:612
-#, c-format
-msgid "CTC019E %4.4X: Error on call to listen: %s\n"
-msgstr ""
-
-#: ctcadpt.c:626
-#, fuzzy, c-format
-msgid "CTC020I %4.4X: Connected to %s:%s\n"
-msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
-
-#: ctcadpt.c:952
-#, c-format
-msgid "CTC021E %4.4X: Incorrect client or config error\n"
-msgstr ""
-
-#: ctcadpt.c:954
-#, c-format
-msgid "CTC022I        Config=%s, connecting client=%s\n"
-msgstr ""
-
-#: ctcadpt.c:660 ctc_ctci.c:627
-#, c-format
-msgid "CTC100W %4.4X Write CCW count %u is invalid\n"
-msgstr ""
-
-#: ctcadpt.c:736 ctc_ctci.c:705
-#, c-format
-msgid ""
-"CTC102W %4.4X: Write buffer contains incomplete segment header at offset %"
-"4.4X\n"
-msgstr ""
-
-#: ctcadpt.c:756 ctc_ctci.c:725
-#, c-format
-msgid ""
-"CTC103W %4.4X: Write buffer contains invalid segment length %u at offset %"
-"4.4X\n"
-msgstr ""
-
-#: ctcadpt.c:782 ctc_ctci.c:750
-#, fuzzy, c-format
-msgid "CTC104E %4.4X: Error writing to %s: %s\n"
-msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
-
-#: ctcadpt.c:845 ctcadpt.c:862 ctc_ctci.c:811
-#, fuzzy, c-format
-msgid "CTC105E %4.4X: Error reading from %s: %s\n"
-msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
-
-#: ctc_ctci.c:540
-#, c-format
-msgid "CTC901I %4.4X: Halt or Clear Recognized\n"
-msgstr ""
-
-#: ctc_ctci.c:589
-#, c-format
-msgid "CTC903I %4.4X: CTC Received Frame (%d bytes):\n"
-msgstr ""
-
-#: ctcadpt.c:771 ctc_ctci.c:740
-#, c-format
-msgid "CTC904I %4.4X: Sending packet to %s:\n"
-msgstr ""
-
-#: ctcadpt.c:872 ctc_ctci.c:823
-#, c-format
-msgid "CTC905I %4.4X: Received packet from %s (%d bytes):\n"
-msgstr ""
-
-#: ctcadpt.c:690 ctc_ctci.c:656
-#, c-format
-msgid "CTC907I %4.4X: Interface command: %s %8.8X\n"
-msgstr ""
-
-#: ctcadpt.c:1337
-#, c-format
-msgid "CTC950E AddDevice internal error (%s).\n"
-msgstr ""
-
 #: httpserv.c:66
 #, c-format
 msgid "ERROR: Cannot open %s: %s\n"
@@ -408,16 +257,6 @@ msgstr ""
 #: ctc_lcs.c:1642
 #, c-format
 msgid "HHC003I Cannot open file %s: %s\n"
-msgstr ""
-
-#: ctcadpt.c:1327
-#, c-format
-msgid "HHC035I device %4.4X already exists\n"
-msgstr ""
-
-#: ctcadpt.c:1355
-#, c-format
-msgid "HHC037I Cannot obtain device block for device %4.4X: %s\n"
 msgstr ""
 
 #: config.c:170
@@ -947,7 +786,7 @@ msgstr ""
 
 #: channel.c:864
 #, c-format
-msgid "HHCCP058I%4.4X: Halt subchannel: cc=2\n"
+msgid "HHCCP058I %4.4X: Halt subchannel: cc=2\n"
 msgstr ""
 
 #: channel.c:940
@@ -1048,6 +887,343 @@ msgstr ""
 #, c-format
 msgid "HHCCP077I %4.4X:Sense=%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
 msgstr ""
+
+#: ctcadpt.c:115
+#, fuzzy, c-format
+msgid "HHCCT001E %4.4X: Incorrect number of parameters\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctcadpt.c:457
+#, fuzzy, c-format
+msgid "HHCCT002E %4.4X: Incorrect number of parameters\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctcadpt.c:469
+#, fuzzy, c-format
+msgid "HHCCT003E %4.4X: Invalid port number: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctcadpt.c:490
+#, fuzzy, c-format
+msgid "HHCCT004E %4.4X: Invalid IP address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctcadpt.c:503
+#, fuzzy, c-format
+msgid "HHCCT005E %4.4X: Invalid port number: %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctcadpt.c:515
+#, fuzzy, c-format
+msgid "HHCCT006E %4.4X: Invalid MTU size %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctcadpt.c:536
+#, fuzzy, c-format
+msgid "HHCCT007E %4.4X: Error creating socket: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:556
+#, fuzzy, c-format
+msgid "HHCCT008E %4.4X: Error binding to socket: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:577
+#, fuzzy, c-format
+msgid "HHCCT009I %4.4X: Connect to %s:%s failed, starting server\n"
+msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
+
+#: ctcadpt.c:587
+#, fuzzy, c-format
+msgid "HHCCT010E %4.4X: Error creating socket: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:604
+#, fuzzy, c-format
+msgid "HHCCT011E %4.4X: Error binding to socket: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:612
+#, fuzzy, c-format
+msgid "HHCCT012E %4.4X: Error on call to listen: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:626
+#, fuzzy, c-format
+msgid "HHCCT013I %4.4X: Connected to %s:%s\n"
+msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
+
+#: ctcadpt.c:660
+#, c-format
+msgid "HHCCT014E %4.4X Write CCW count %u is invalid\n"
+msgstr ""
+
+#: ctcadpt.c:690
+#, c-format
+msgid "HHCCT015I %4.4X: Interface command: %s %8.8X\n"
+msgstr ""
+
+#: ctcadpt.c:736
+#, c-format
+msgid ""
+"HHCCT016E %4.4X: Write buffer contains incomplete segment header at offset %"
+"4.4X\n"
+msgstr ""
+
+#: ctcadpt.c:756
+#, c-format
+msgid ""
+"HHCCT017E %4.4X: Write buffer contains invalid segment length %u at offset %"
+"4.4X\n"
+msgstr ""
+
+#: ctcadpt.c:771
+#, fuzzy, c-format
+msgid "HHCCT018I %4.4X: Sending packet to %s:\n"
+msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
+
+#: ctcadpt.c:782
+#, fuzzy, c-format
+msgid "HHCCT019E %4.4X: Error writing to %s: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:845
+#, fuzzy, c-format
+msgid "HHCCT020E %4.4X: Error reading from %s: %s\n"
+msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: ctcadpt.c:862
+#, fuzzy, c-format
+msgid "HHCCT021E %4.4X: Error reading from %s: %s\n"
+msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: ctcadpt.c:872
+#, c-format
+msgid "HHCCT022I %4.4X: Received packet from %s (%d bytes):\n"
+msgstr ""
+
+#: ctcadpt.c:952
+#, fuzzy, c-format
+msgid "HHCCT023E %4.4X: Incorrect client or config error\n"
+msgstr "CPU%4.4X nicht konfiguriert\n"
+
+#: ctcadpt.c:994
+msgid "HHCCT024E 4.4X: Not enough arguments to start vmnet\n"
+msgstr ""
+
+#: ctcadpt.c:1004
+#, fuzzy, c-format
+msgid "HHCCT025E %4.4X: Failed: socketpair: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:1012
+#, fuzzy, c-format
+msgid "HHCCT026E %4.4X: Failed: fork: %s\n"
+msgstr "HHC760I %4.4X create_thread fout: %s"
+
+#: ctcadpt.c:1060
+#, fuzzy, c-format
+msgid "HHCCT027E %4.4X: Not enough parameters\n"
+msgstr "CPU%4.4X nicht konfiguriert\n"
+
+#: ctcadpt.c:1065
+#, fuzzy, c-format
+msgid "HHCCT028E %4.4X: Bad device number '%s'\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctcadpt.c:1102
+#, c-format
+msgid "HHCCT029E %4.4X: bad block length: %d < %d\n"
+msgstr ""
+
+#: ctcadpt.c:1112
+#, c-format
+msgid "HHCCT030E %4.4X: bad packet length: %d < %d\n"
+msgstr ""
+
+#: ctcadpt.c:1117
+#, c-format
+msgid "HHCCT031E %4.4X: bad packet length: %d < 6\n"
+msgstr ""
+
+#: ctcadpt.c:1163
+#, c-format
+msgid "HHCCT032E %4.4X: Error: EOF on read, CTC network down\n"
+msgstr ""
+
+#: ctcadpt.c:1171
+#, fuzzy, c-format
+msgid "HHCCT033E %4.4X: Error: read: %s\n"
+msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: ctcadpt.c:1329
+#, fuzzy, c-format
+msgid "HHCCT034E device %4.4X already exists\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctcadpt.c:1339
+#, c-format
+msgid "HHCCT035E AddDevice internal error (%s).\n"
+msgstr ""
+
+#: ctcadpt.c:1357
+#, fuzzy, c-format
+msgid "HHCCT036E Cannot obtain device block for device %4.4X: %s\n"
+msgstr "Kann %s nicht öffnen: %s\n"
+
+#: ctc_ctci.c:68
+#, fuzzy, c-format
+msgid "HHCCT037E %4.4X: Unable to allocate CTCBLK\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: ctc_ctci.c:90
+#, fuzzy, c-format
+msgid "HHCCT038E %4.4X: Unable to allocate CTCBLK\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: ctc_ctci.c:135
+#, fuzzy, c-format
+msgid "HHCCT039E %4.4X: Unable to allocate CTCBLK\n"
+msgstr "HHC402I Fout %2$s bij benaderen bestand \"%1$s\"\n"
+
+#: ctc_ctci.c:540
+#, c-format
+msgid "HHCCT040I %4.4X: Halt or Clear Recognized\n"
+msgstr ""
+
+#: ctc_ctci.c:589
+#, c-format
+msgid "HHCCT041I %4.4X: CTC Received Frame (%d bytes):\n"
+msgstr ""
+
+#: ctc_ctci.c:627
+#, c-format
+msgid "HHCCT042E %4.4X Write CCW count %u is invalid\n"
+msgstr ""
+
+#: ctc_ctci.c:656
+#, c-format
+msgid "HHCCT043I %4.4X: Interface command: %s %8.8X\n"
+msgstr ""
+
+#: ctc_ctci.c:705
+#, c-format
+msgid ""
+"HHCCT044E %4.4X: Write buffer contains incomplete segment header at offset %"
+"4.4X\n"
+msgstr ""
+
+#: ctc_ctci.c:725
+#, c-format
+msgid ""
+"HHCCT045E %4.4X: Write buffer contains invalid segment length %u at offset %"
+"4.4X\n"
+msgstr ""
+
+#: ctc_ctci.c:740
+#, fuzzy, c-format
+msgid "HHCCT046I %4.4X: Sending packet to %s:\n"
+msgstr "CPU%4.4X: Verbunden mit Channel-Set %4.4X\n"
+
+#: ctc_ctci.c:750
+#, fuzzy, c-format
+msgid "HHCCT047E %4.4X: Error writing to %s: %s\n"
+msgstr "HHC423I Fout %2$s bij schrijven naar bestand \"%1$s\"\n"
+
+#: ctc_ctci.c:811
+#, fuzzy, c-format
+msgid "HHCCT048E %4.4X: Error reading from %s: %s\n"
+msgstr "HHC405I Fout %2$s bij lezen van bestand \"%1$s\"\n"
+
+#: ctc_ctci.c:823
+#, c-format
+msgid "HHCCT049I %4.4X: Received packet from %s (%d bytes):\n"
+msgstr ""
+
+#: ctc_ctci.c:996
+#, fuzzy, c-format
+msgid "HHCCT051E %4.4X: Invalid device name %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_ctci.c:1010
+#, fuzzy, c-format
+msgid "HHCCT052E %4.4X: Invalid kernel buffer size %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_ctci.c:1024
+#, fuzzy, c-format
+msgid "HHCCT053E %4.4X: Invalid DLL I/O buffer size %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_ctci.c:1037
+#, fuzzy, c-format
+msgid "HHCCT054E %4.4X: Invalid MTU size %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_ctci.c:1048
+#, fuzzy, c-format
+msgid "HHCCT055E %4.4X: Invalid netmask %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_ctci.c:1086
+#, fuzzy, c-format
+msgid "HHCCT056E %4.4X: Incorrect number of parameters\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctc_ctci.c:1059
+#, fuzzy, c-format
+msgid "HHCCT056E %4.4X: Invalid MAC address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_ctci.c:1096
+#, fuzzy, c-format
+msgid "HHCCT057E %4.4X: Incorrect number of parameters\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctc_ctci.c:1104
+#, fuzzy, c-format
+msgid "HHCCT058E %4.4X: Invalid IP address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_ctci.c:1116
+#, fuzzy, c-format
+msgid "HHCCT059E %4.4X: Invalid IP address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_ctci.c:1132
+#, fuzzy, c-format
+msgid "HHCCT060E %4.4X: Incorrect number of parameters\n"
+msgstr "Geen apparaat nummer\n"
+
+#: ctc_ctci.c:1141
+#, fuzzy, c-format
+msgid "HHCCT061E %4.4X invalid device name %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_ctci.c:1155
+#, fuzzy, c-format
+msgid "HHCCT062E %4.4X: Invalid MTU size %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_ctci.c:1166
+#, fuzzy, c-format
+msgid "HHCCT063E %4.4X: Invalid IP address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_ctci.c:1178
+#, fuzzy, c-format
+msgid "HHCCT064E %4.4X: Invalid IP address %s\n"
+msgstr "Ongeldig frame adres %8.8X\n"
+
+#: ctc_ctci.c:1190
+#, fuzzy, c-format
+msgid "HHCCT065E %4.4X: Invalid netmask %s\n"
+msgstr "Ongeldig apparaat nummer\n"
+
+#: ctc_ctci.c:1201
+#, fuzzy, c-format
+msgid "HHCCT066E %4.4X: Incorrect number of parameters\n"
+msgstr "Geen apparaat nummer\n"
 
 #: ckddasd.c:231
 #, fuzzy

@@ -861,7 +861,7 @@ int halt_subchan (REGS *regs, DEVBLK *dev)
     if (dev->scsw.flag2 & (SCSW2_AC_HALT | SCSW2_AC_CLEAR))
     {
         if (dev->ccwtrace || dev->ccwstep)
-            logmsg (_("HHCCP058I%4.4X: Halt subchannel: cc=2\n"), dev->devnum);
+            logmsg (_("HHCCP058I %4.4X: Halt subchannel: cc=2\n"), dev->devnum);
         release_lock (&dev->lock);
         return 2;
     }

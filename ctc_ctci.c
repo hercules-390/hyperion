@@ -65,7 +65,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
     if( !pWrkCTCBLK )
     {
-        logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
+        logmsg( _("HHCCT037E %4.4X: Unable to allocate CTCBLK\n"),
                 pDEVBLK->devnum );
         return -1;
     }
@@ -87,7 +87,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
         if( !pDevCTCBLK )
         {
-            logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
+            logmsg( _("HHCCT038E %4.4X: Unable to allocate CTCBLK\n"),
                     pDEVBLK->devnum );
             free( pWrkCTCBLK );
             return -1;
@@ -132,7 +132,7 @@ int  CTCI_Init( DEVBLK* pDEVBLK, int argc, BYTE *argv[] )
 
             if( !pDevCTCBLK )
             {
-                logmsg( _("CTC001E %4.4X: Unable to allocate CTCBLK\n"),
+                logmsg( _("HHCCT039E %4.4X: Unable to allocate CTCBLK\n"),
                         pDEVBLK->devnum );
                 free( pWrkCTCBLK );
                 return -1;
@@ -537,7 +537,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
                     pDEVBLK->scsw.flag2 & SCSW2_FC_CLEAR )
                 {
                     if( pDEVBLK->ccwtrace || pDEVBLK->ccwstep )
-                        logmsg( _("CTC901I %4.4X: Halt or Clear Recognized\n"),
+                        logmsg( _("HHCCT040I %4.4X: Halt or Clear Recognized\n"),
                                 pDEVBLK->devnum );
 
                     *pUnitStat = CSW_CE | CSW_DE;
@@ -586,7 +586,7 @@ void  CTCI_Read( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( pCTCBLK->fDebug )
         {
-            logmsg( _("CTC903I %4.4X: CTC Received Frame (%d bytes):\n"),
+            logmsg( _("HHCCT041I %4.4X: CTC Received Frame (%d bytes):\n"),
                     pDEVBLK->devnum, iLength );
             packet_trace( pCTCBLK->bFrameBuffer, iLength );
         }
@@ -624,7 +624,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
     // Check that CCW count is sufficient to contain block header
     if( sCount < sizeof( CTCIHDR ) )
     {
-        logmsg( _("CTC100W %4.4X Write CCW count %u is invalid\n"),
+        logmsg( _("HHCCT042E %4.4X Write CCW count %u is invalid\n"),
                 pDEVBLK->devnum, sCount );
 
         pDEVBLK->sense[0] = SENSE_DC;
@@ -653,7 +653,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         FETCH_FW( iStackCmd, *((FWORD*)&pIOBuf[36]) );
 
         // Display stack command and discard the packet
-        logmsg( _("CTC907I %4.4X: Interface command: %s %8.8X\n"),
+        logmsg( _("HHCCT043I %4.4X: Interface command: %s %8.8X\n"),
                 pDEVBLK->devnum, szStackID, iStackCmd );
 
         *pUnitStat = CSW_CE | CSW_DE;
@@ -702,7 +702,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Check that the segment is fully contained within the block
         if( iPos + sizeof( CTCISEG ) > sOffset )
         {
-            logmsg( _("CTC102W %4.4X: Write buffer contains incomplete "
+            logmsg( _("HHCCT044E %4.4X: Write buffer contains incomplete "
                       "segment header at offset %4.4X\n"),
                     pDEVBLK->devnum, iPos );
 
@@ -722,7 +722,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
             ( iPos + sSegLen > sOffset           ) ||
             ( iPos + sSegLen > sCount            ) )
         {
-            logmsg( _("CTC103W %4.4X: Write buffer contains invalid "
+            logmsg( _("HHCCT045E %4.4X: Write buffer contains invalid "
                     "segment length %u at offset %4.4X\n"),
                     pDEVBLK->devnum, sSegLen, iPos );
 
@@ -737,7 +737,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
         // Trace the IP packet before sending to TUN device
         if( pCTCBLK->fDebug )
         {
-            logmsg( _("CTC904I %4.4X: Sending packet to %s:\n"),
+            logmsg( _("HHCCT046I %4.4X: Sending packet to %s:\n"),
                     pDEVBLK->devnum, pCTCBLK->szTUNDevName );
             packet_trace( pSegment->bData, sDataLen );
         }
@@ -747,7 +747,7 @@ void  CTCI_Write( DEVBLK* pDEVBLK,   U16   sCount,
 
         if( rc < 0 )
         {
-            logmsg( _("CTC104E %4.4X: Error writing to %s: %s\n"),
+            logmsg( _("HHCCT047E %4.4X: Error writing to %s: %s\n"),
                     pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                     strerror( errno ) );
 
@@ -808,7 +808,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
         if( iLength < 0 )
         {
             if( pCTCBLK->fd != -1 )
-                logmsg( _("CTC105E %4.4X: Error reading from %s: %s\n"),
+                logmsg( _("HHCCT048E %4.4X: Error reading from %s: %s\n"),
                     pDEVBLK->devnum, pCTCBLK->szTUNDevName,
                     strerror( errno ) );
 
@@ -820,7 +820,7 @@ static void*  CTCI_ReadThread( PCTCBLK pCTCBLK )
 
         if( pCTCBLK->fDebug )
         {
-            logmsg( _("CTC905I %4.4X: Received packet from %s (%d bytes):\n"),
+            logmsg( _("HHCCT049I %4.4X: Received packet from %s (%d bytes):\n"),
                     pDEVBLK->devnum, pCTCBLK->szTUNDevName, iLength );
             packet_trace( szBuff, iLength );
         }
@@ -984,7 +984,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Not an IP address, check for valid MAC
                 if( ParseMAC( optarg, mac ) != 0 )
                 {
-                    logmsg( _("CTC004E %4.4X: Invalid adapter address %s\n"),
+                    logmsg( _("HHCCT050E %4.4X: Invalid adapter address %s\n"),
                         pDEVBLK->devnum, optarg );
                     return -1;
                 }
@@ -993,7 +993,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             // This is the file name of the special TUN/TAP character device
             if( strlen( optarg ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
             {
-                logmsg( _("CTC005E %4.4X: Invalid device name %s\n"),
+                logmsg( _("HHCCT051E %4.4X: Invalid device name %s\n"),
                     pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1007,7 +1007,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iKernBuff < MIN_TT32DLL_BUFFSIZE_K    ||
                 iKernBuff > MAX_TT32DLL_BUFFSIZE_K )
             {
-                logmsg( _("CTC002E %4.4X: Invalid kernel buffer size %s\n"),
+                logmsg( _("HHCCT052E %4.4X: Invalid kernel buffer size %s\n"),
                     pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1021,7 +1021,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
             if( iIOBuff < MIN_TT32DLL_BUFFSIZE_K    ||
                 iIOBuff > MAX_TT32DLL_BUFFSIZE_K )
             {
-                logmsg( _("CTC003E %4.4X: Invalid DLL I/O buffer size %s\n"),
+                logmsg( _("HHCCT053E %4.4X: Invalid DLL I/O buffer size %s\n"),
                     pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1034,7 +1034,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
             if( iMTU < 46 || iMTU > 65536 )
             {
-                logmsg( _("CTC006E %4.4X: Invalid MTU size %s\n"),
+                logmsg( _("HHCCT054E %4.4X: Invalid MTU size %s\n"),
                     pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1045,7 +1045,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         case 's':     // Netmask of point-to-point link (ignored if Windows)
             if( inet_aton( optarg, &addr ) == 0 )
             {
-                logmsg( _("CTC007E %4.4X: Invalid netmask %s\n"),
+                logmsg( _("HHCCT055E %4.4X: Invalid netmask %s\n"),
                     pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1056,7 +1056,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         case 'm':
             if( ParseMAC( optarg, mac ) != 0 )
             {
-                logmsg( _("CTC012E %4.4X: Invalid MAC address %s\n"),
+                logmsg( _("HHCCT056E %4.4X: Invalid MAC address %s\n"),
                         pDEVBLK->devnum, optarg );
                 return -1;
             }
@@ -1083,7 +1083,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
     // Check for correct number of arguments
     if( argc == 0 )
     {
-        logmsg( _("CTC008E %4.4X: Incorrect number of parameters\n"),
+        logmsg( _("HHCCT056E %4.4X: Incorrect number of parameters\n"),
                 pDEVBLK->devnum );
         return -1;
     }
@@ -1093,7 +1093,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // New format has 2 and only 2 parameters (Though several options).
         if( argc != 2 )
         {
-            logmsg( _("CTC008E %4.4X: Incorrect number of parameters\n"),
+            logmsg( _("HHCCT057E %4.4X: Incorrect number of parameters\n"),
                 pDEVBLK->devnum );
             return -1;
         }
@@ -1101,7 +1101,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Guest IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            logmsg( _("CTC011E %4.4X: Invalid IP address %s\n"),
+            logmsg( _("HHCCT058E %4.4X: Invalid IP address %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1113,7 +1113,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Driver IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            logmsg( _("CTC011E %4.4X: Invalid IP address %s\n"),
+            logmsg( _("HHCCT059E %4.4X: Invalid IP address %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1129,7 +1129,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Old format has 5 and only 5 arguments
         if( argc != 5 )
         {
-            logmsg( _("CTC008E %4.4X: Incorrect number of parameters\n"),
+            logmsg( _("HHCCT060E %4.4X: Incorrect number of parameters\n"),
                 pDEVBLK->devnum );
             return -1;
         }
@@ -1138,7 +1138,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         if( **argv != '/' ||
             strlen( *argv ) > sizeof( pCTCBLK->szTUNCharName ) - 1 )
         {
-            logmsg( _("CTC009E %4.4X invalid device name %s\n"),
+            logmsg( _("HHCCT061E %4.4X invalid device name %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1152,7 +1152,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
         if( iMTU < 46 || iMTU > 65536 )
         {
-            logmsg( _("CTC010E %4.4X: Invalid MTU size %s\n"),
+            logmsg( _("HHCCT062E %4.4X: Invalid MTU size %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1163,7 +1163,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Guest IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            logmsg( _("CTC011E %4.4X: Invalid IP address %s\n"),
+            logmsg( _("HHCCT063E %4.4X: Invalid IP address %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1175,7 +1175,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Driver IP Address
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            logmsg( _("CTC011E %4.4X: Invalid IP address %s\n"),
+            logmsg( _("HHCCT064E %4.4X: Invalid IP address %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1187,7 +1187,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
         // Netmask
         if( inet_aton( *argv, &addr ) == 0 )
         {
-            logmsg( _("CTC007E %4.4X: Invalid netmask %s\n"),
+            logmsg( _("HHCCT065E %4.4X: Invalid netmask %s\n"),
                 pDEVBLK->devnum, *argv );
             return -1;
         }
@@ -1198,7 +1198,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
 
         if( argc > 0 )
         {
-            logmsg( _("CTC008E %4.4X: Incorrect number of parameters\n"),
+            logmsg( _("HHCCT066E %4.4X: Incorrect number of parameters\n"),
                 pDEVBLK->devnum );
             return -1;
         }
@@ -1216,7 +1216,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 // Guest IP Address
                 if( inet_aton( *argv, &addr ) == 0 )
                 {
-                    logmsg( _("CTC011E %4.4X: Invalid IP address %s\n"),
+                    logmsg( _("HHCCT067E %4.4X: Invalid IP address %s\n"),
                         pDEVBLK->devnum, *argv );
                     return -1;
                 }
@@ -1231,7 +1231,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                     // Not an IP address, check for valid MAC
                     if( ParseMAC( *argv, mac ) != 0 )
                     {
-                        logmsg( _("CTC012E %4.4X: Invalid MAC address %s\n"),
+                        logmsg( _("HHCCT068E %4.4X: Invalid MAC address %s\n"),
                             pDEVBLK->devnum, *argv );
                         return -1;
                     }
@@ -1263,7 +1263,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( iKernBuff < MIN_TT32DRV_BUFFSIZE_K ||
                     iKernBuff > MAX_TT32DRV_BUFFSIZE_K )
                 {
-                    logmsg( _("CTC002E %4.4X: Invalid kernel buffer size %s\n"),
+                    logmsg( _("HHCCT069E %4.4X: Invalid kernel buffer size %s\n"),
                         pDEVBLK->devnum, *argv );
                     return -1;
                 }
@@ -1280,7 +1280,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 if( iIOBuff < MIN_TT32DLL_BUFFSIZE_K ||
                     iIOBuff > MAX_TT32DLL_BUFFSIZE_K )
                 {
-                    logmsg( _("CTC003E %4.4X: Invalid DLL I/O buffer size %s\n"),
+                    logmsg( _("HHCCT070E %4.4X: Invalid DLL I/O buffer size %s\n"),
                         pDEVBLK->devnum, *argv );
                     return -1;
                 }
@@ -1291,7 +1291,7 @@ static int  ParseArgs( DEVBLK* pDEVBLK, PCTCBLK pCTCBLK,
                 continue;
 
             default:
-                logmsg( _("CTC008E %4.4X: Incorrect number of parameters\n"),
+                logmsg( _("HHCCT071E %4.4X: Incorrect number of parameters\n"),
                     pDEVBLK->devnum );
                 return -1;
             }
