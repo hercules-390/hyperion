@@ -20,6 +20,10 @@ case "$host_os" in
 	linux*)
 		build_hercifc=true
 		;;
+        *cygwin*)
+                build_hercifc=false
+                AC_DEFINE([NO_SIGABEND_HANDLER])
+		;;
 	*)
 		build_hercifc=false
 		;;
@@ -219,5 +223,7 @@ AH_TEMPLATE([HAVE_U_INT],
             [Define if your system uses u_int8_t, etc. instead of uint8_t])
 AH_TEMPLATE([NO_SETUID],
             [Define to disable setuid operation])
+AH_TEMPLATE([NO_SIGABEND_HANDLER],
+            [Define to disable sigabend_handler (please describe this better)])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
