@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+18 Mar 2003 re-enable ECPS:VM + VTIMER fix - Ivan Warren
 17 Mar 2003 clc.pat - Optimize CLC - Ivan & Greg - Greg Smith
 17 Mar 2003 l2m.pat - Tweaks to logical_to_main - Greg Smith
 17 Mar 2003 protected.pat - Optimization for is_fetch_protected - Greg Smith

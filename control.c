@@ -1638,7 +1638,8 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 int     i, d;                           /* Integer work areas        */
 BYTE    rwork[64];                      /* Register work areas       */
-int     inval = 0;                      /* Invalidation flag        */
+int     inval = 0;                      /* Invalidation flag         */
+int	intlockheld;			/* int lock held by CR6 load */
 
     RS(inst, regs, r1, r3, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
@@ -1674,6 +1675,7 @@ int     inval = 0;                      /* Invalidation flag        */
     /* Fetch new control register contents from operand address */
     ARCH_DEP(vfetchc) ( rwork, d-1, effective_addr2, b2, regs );
 
+    intlockheld=0;
     /* Load control registers from work area */
     for ( i = r1, d = 0; ; )
     {
@@ -1707,9 +1709,23 @@ int     inval = 0;                      /* Invalidation flag        */
                 break;
             }
         }
+#if defined(FEATURE_ECPSVM)
+	if(i==6)
+	{
+		obtain_lock(&sysblk.intlock);
+		intlockheld=1;
+	}
+#endif
 
         /* Load control register bits 32-63 from work area */
         FETCH_FW(regs->CR_L(i), rwork + d); d += 4;
+#if defined(FEATURE_ECPSVM)
+	if(intlockheld)
+	{
+	    release_lock(&sysblk.intlock);
+            intlockheld=0;
+	}
+#endif
 
         /* Instruction is complete when r3 register is done */
         if ( i == r3 ) break;
