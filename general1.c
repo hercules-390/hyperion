@@ -2117,6 +2117,9 @@ BYTE    utf[4];                         /* UTF-8 bytes               */
         GR_A(r2, regs) = addr2;
         GR_A(r2+1, regs) = len2;
 
+        if (len1 == 0)
+            cc = 1;
+
     } /* end for(i) */
 
     regs->psw.cc = cc;
