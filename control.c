@@ -2534,7 +2534,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         lto = ltdesig & LTD_LTO;
         ltl = ltdesig & LTD_LTL;
 
-        /* Program check if linkage index is outside the linkage table */
+        /* Program check if linkage index outside the linkage table */
         if (ltl < ((pcnum & PC_LX) >> 13))
         {
             regs->TEA = pctea;
@@ -2545,7 +2545,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         lto += (pcnum & PC_LX) >> 6;
         lto &= 0x7FFFFFFF;
 
-        /* Program check if linkage table entry is outside real storage */
+        /* Program check if linkage table entry outside real storage */
         if (lto > regs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
@@ -2568,17 +2568,19 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     }
     else /* ASN_AND_LX_REUSE_ENABLED */
     {
-        /* Extract the linkage first table origin and length from the LFTD */
+        /* Extract linkage first table origin and length from LFTD */
         lfto = ltdesig & LFTD_LFTO;
         lftl = ltdesig & LFTD_LFTL;
 
-        /* If the linkage first index would cause us to exceed the total
-           length of the linkage first table, then generate a program check.
-           We compare the LFX1 (which is now in bits 1-12 of the 32-bit PC
-           number) with the 8 bit LFTL. This implies that the first 4 bits
-           of the LFX1 (originally in bits 32-35 of the operand address)
-           must always be 0. The LFX1 was loaded from bits 32-43 of the
-           operand address if bit 44 was 1, otherwise the LFX1 is zero. */
+        /* If the linkage first index exceeds the length of the
+           linkage first table, then generate a program check.
+           The index exceeds the table length if the LFX1 (which
+           is now in bits 1-12 of the 32-bit PC number) exceeds the
+           LFTL. Since the LFTL is only 8 bits, this also implies
+           that the first 4 bits of the LFX1 (originally bits 32-35
+           of the operand address) must always be 0. The LFX1 was
+           loaded from bits 32-43 of the operand address if bit 44
+           of the operand address was 1, otherwise LFX1 is zero. */
         if (lftl < (pcnum >> 19))
         {
             regs->TEA = pctea;
@@ -2590,7 +2592,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         lfto += (pcnum & ((PC_LFX1>>1)|PC_LFX2)) >> 11;
         lfto &= 0x7FFFFFFF;
 
-        /* Program check if linkage first table entry outside real storage */
+        /* Program check if the LFTE address is outside real storage */
         if (lfto > regs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
@@ -2614,12 +2616,14 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         lsto += (pcnum & PC_LSX) >> 6;
         lsto &= 0x7FFFFFFF;
 
-        /* Program check if linkage second table entry outside real storage */
+        /* Program check if the LSTE address is outside real storage */
         if (lsto > regs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-        /* Fetch linkage second table entry from real storage.  All bytes
-           must be fetched concurrently as observed by other CPUs */
+        /* Fetch the linkage second table entry from real storage.
+           The LSTE is 2 fullwords and cannot cross a page boundary.
+           All 8 bytes of the LSTE must be fetched concurrently as
+           observed by other CPUs */
         abs = APPLY_PREFIXING (lsto, regs->PX);
         main = FETCH_MAIN_ABSOLUTE (abs, regs, 2 * 4);
         lste[0] = fetch_fw (main);
@@ -2632,7 +2636,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
             ARCH_DEP(program_interrupt) (regs, PGM_LSX_TRANSLATION_EXCEPTION);
         }
 
-        /* Program check if LSTESN is non-zero and R15 bits 0-31 != LSTESN */
+        /* Program check if the LSTESN in word 1 of the LSTE is
+           non-zero and not equal to bits 0-31 of register 15 */
         if (lste[1] != 0 && regs->GR_L(15) != lste[1])
         {
             regs->TEA = pctea;
