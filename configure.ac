@@ -31,9 +31,9 @@ case "$host_os" in
                 ;;
         *cygwin*)
                 build_hercifc=false
+                use_dlltool=true
                 AC_DEFINE([WIN32])
                 AC_DEFINE([NO_SIGABEND_HANDLER])
-                use_dlltool=true
                 ;;
         *)
                 build_hercifc=false
