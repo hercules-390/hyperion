@@ -19,6 +19,7 @@
 
 int hdl_load(char *, int);           		/* load dll          */
 #define HDL_LOAD_FORCE 0x00000001               /* Override depchk   */
+#define HDL_LOAD_NOMSG 0x00000002
 int hdl_dele(char *);                           /* unload dll        */
 void hdl_list();                          /* list all loaded modules */
 
