@@ -1324,7 +1324,10 @@ int     rc;                             /* Return code               */
 
     /* Load new PSW from PSA+X'60' */
     if ( (rc = ARCH_DEP(load_psw) ( regs, psa->svcnew ) ) )
+    {
+        regs->psw.zeroilc = 0;
         ARCH_DEP(program_interrupt) (regs, rc);
+    }
 
     /* Perform serialization and checkpoint synchronization */
     PERFORM_SERIALIZATION (regs);
