@@ -2529,6 +2529,7 @@ VADR    effective_addr2;                /* Effective address         */
 
     /* Fetch target instruction from operand address */
     INSTRUCTION_FETCH(regs->exinst, effective_addr2, regs);
+    INVALIDATE_AIA(regs);
 
     /* Program check if recursive execute */
     if ( regs->exinst[0] == 0x44 )
