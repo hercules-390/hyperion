@@ -2315,7 +2315,8 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
  */
 static int integer_ebfp(struct ebfp *op, int mode, REGS *regs)
 {
-    int r, cl1, cl2, raised;
+    int r, raised;
+    UNREFERENCED(mode);
 
     switch(ebfpclassify(op)) {
     case FP_NAN:
@@ -2359,7 +2360,8 @@ static int integer_ebfp(struct ebfp *op, int mode, REGS *regs)
  */
 static int integer_lbfp(struct lbfp *op, int mode, REGS *regs)
 {
-    int r, cl1, cl2, raised;
+    int r, raised;
+    UNREFERENCED(mode);
 
     switch(lbfpclassify(op)) {
     case FP_NAN:
@@ -2403,7 +2405,8 @@ static int integer_lbfp(struct lbfp *op, int mode, REGS *regs)
  */
 static int integer_sbfp(struct sbfp *op, int mode, REGS *regs)
 {
-    int r, cl1, cl2, raised;
+    int r, raised;
+    UNREFERENCED(mode);
 
     switch(sbfpclassify(op)) {
     case FP_NAN:
@@ -2934,7 +2937,7 @@ DEF_INST(load_and_test_bfp_short_reg)
  */
 DEF_INST(load_fp_int_short_reg)
 {
-    int r1, r2, m3, raised, pgm_check;
+    int r1, r2, m3, pgm_check;
     struct sbfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -2958,7 +2961,7 @@ DEF_INST(load_fp_int_short_reg)
  */
 DEF_INST(load_fp_int_long_reg)
 {
-    int r1, r2, m3, raised, pgm_check;
+    int r1, r2, m3, pgm_check;
     struct lbfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
@@ -2982,7 +2985,7 @@ DEF_INST(load_fp_int_long_reg)
  */
 DEF_INST(load_fp_int_ext_reg)
 {
-    int r1, r2, m3, raised, pgm_check;
+    int r1, r2, m3, pgm_check;
     struct ebfp op;
 
     RRF_M(inst, regs, r1, r2, m3);
