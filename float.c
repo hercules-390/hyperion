@@ -2578,11 +2578,14 @@ static const unsigned short sqtab[] = {
     /* initial table look up */
     xi = ((U32) sqtab[a >> 48]) << 16;
 
+    if (xi == 0)
+        return(xi);
+
     /* iterate */
     for (;;) {
         xj = (((U32)(a / xi)) + xi) >> 1;
 
-        if (xj == xi) {
+        if ((xj & 0xFFFFFFFE) == (xi & 0xFFFFFFFE)) {
             break;
         }
         xi = xj;
@@ -4749,11 +4752,11 @@ U64     msj, lsj;
                 lsi = lsj;
             }
             /* round with guard digit */
-            add_U128(msi, lsi, 0, 8);
+            add_U128(msi, lsi, 0, 0x80);
 
-            sq_fl.ls_fract = (lsi >> 4)
-                           | (msi << 60);
-            sq_fl.ms_fract = msi >> 4;
+            sq_fl.ls_fract = (lsi >> 8)
+                           | (msi << 56);
+            sq_fl.ms_fract = msi >> 8;
         }
     } else {
         /* true zero */
