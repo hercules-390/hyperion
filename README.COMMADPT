@@ -111,3 +111,14 @@ Dial data format
 
         The EON is optional. If it is present, it must be the
         last character of the dial data.
+
+Bugs, Caveats
+
+        The Address Prepare is not implemented
+        The POLL CCW Has not been tested
+        Group DIAL IN is not implemented
+        DIAL CCW Not tested
+        There is 1 thread per line, when there should be 1 thread for ALL lines.
+        MAXDEVT may have to be adjusted under WINDOWS to accomodate for a large number of lines
+            (because some I/O may take an undefinite amount of time).
+        There is no 'REAL' Bsc line support yet.
