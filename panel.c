@@ -1112,6 +1112,37 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     }
 
 /*********************************************************************/
+#if MAX_CPU_ENGINES > 1
+    /* startall command - start all CPU's */
+    if (strcmp(cmd,"startall") == 0)
+    {
+        obtain_lock (&sysblk.intlock);
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
+            if(sysblk.regs[i].cpuonline && !regs->checkstop)
+                sysblk.regs[i].cpustate = CPUSTATE_STARTED;
+        WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
+        release_lock (&sysblk.intlock);
+        return NULL;
+    }
+
+/*********************************************************************/
+    /* stopall command - stop all CPU's */
+    if (strcmp(cmd,"stopall") == 0)
+    {
+        obtain_lock (&sysblk.intlock);
+        for (i = 0; i < MAX_CPU_ENGINES; i++)
+            if(sysblk.regs[i].cpuonline)
+        {
+            sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
+            WAKEUP_CPU(i);
+        }
+        release_lock (&sysblk.intlock);
+        return NULL;
+    }
+#endif /*MAX_CPU_ENGINES > 1*/
+
+/*********************************************************************/
 
     /* start command w/argument: start specified printer device */
 
@@ -1510,37 +1541,6 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 
         return NULL;
     }
-
-/*********************************************************************/
-#if MAX_CPU_ENGINES > 1
-    /* startall command - start all CPU's */
-    if (strcmp(cmd,"startall") == 0)
-    {
-        obtain_lock (&sysblk.intlock);
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
-            if(sysblk.regs[i].cpuonline && !regs->checkstop)
-                sysblk.regs[i].cpustate = CPUSTATE_STARTED;
-        WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
-        release_lock (&sysblk.intlock);
-        return NULL;
-    }
-
-/*********************************************************************/
-    /* stopall command - stop all CPU's */
-    if (strcmp(cmd,"stopall") == 0)
-    {
-        obtain_lock (&sysblk.intlock);
-        for (i = 0; i < MAX_CPU_ENGINES; i++)
-            if(sysblk.regs[i].cpuonline)
-        {
-            sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
-            WAKEUP_CPU(i);
-        }
-        release_lock (&sysblk.intlock);
-        return NULL;
-    }
-#endif /*MAX_CPU_ENGINES > 1*/
 
 /*********************************************************************/
     /* store command - store CPU status at absolute zero */
