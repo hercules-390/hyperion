@@ -775,15 +775,10 @@ int     j,k;
     /* Obtain the command string from storage */
     ARCH_DEP(vfetchc) (buf, cmdlen-1, cmdaddr, USE_REAL_ADDR, regs);
 
-    /* Display the command on the console */
-    /* (translate to lower case too)      */
+    /* Translate EBCDIC command to ASCII */
     for (i = 0; i < cmdlen; i++)
     {
         buf[i] = guest_to_host(buf[i]);
-        if(isupper(buf[i]))
-        {
-            buf[i]=tolower(buf[i]);
-        }
     }
     buf[i] = '\0';
     dresp="";
