@@ -1675,7 +1675,7 @@ int     ar1 = 4;                        /* Access register number    */
         }
 
         /* Check bit 0 of GR0 */
-        if ( ((U32) regs->GR_L(0)) < 0 )
+        if ( regs->GR_L(0) & 0x80000000 )
         {
             regs->GR_L(5) = tempword1;
             cc = 3;
