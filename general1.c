@@ -1613,7 +1613,7 @@ BYTE    termchar;                       /* Terminating character     */
         /* If first operand byte is the terminating character,
            or if the first operand byte is lower than the
            second operand byte, then return condition code 1 */
-        if (byte1 == termchar || byte1 < byte2)
+        if (byte1 == termchar || ((byte1 < byte2) && (byte2 != termchar)))
         {
             cc = 1;
             break;
@@ -2193,6 +2193,7 @@ BYTE    sbyte;                          /* Source operand byte       */
 
         /* Increment operand address */
         effective_addr2++;
+        effective_addr2 &= ADDRESS_MAXWRAP(regs);
 
     } /* end for(i) */
 
