@@ -59,10 +59,10 @@ static __inline__ void __clear_bit_i686(int nr, volatile void * addr)
 		:"Ir" (nr));
 }
 
-#define test_bit(x,y,z) test_bit_i686((y),(z))
-static __inline__ int test_bit_i686(int nr, volatile void *addr)
+#define test_bit(x,y,z) test_bit_i686((x),(y),(z))
+static __inline__ int test_bit_i686(int len, int nr, volatile void *addr)
 {
-    if (__builtin_constant_p(nr))
+    if (__builtin_constant_p(nr) && len == 4)
         return ((*(const volatile unsigned int *)addr) & (1 << nr));
     else
     {

@@ -186,10 +186,10 @@ static char *dbg_name[] = {
 #undef SIE_I_WAIT
 #if defined(_FEATURE_WAITSTATE_ASSIST)
 #define SIE_I_WAIT(_guestregs) \
-        ((_guestregs)->psw.wait && !((_guestregs)->siebk->ec[0] & SIE_EC0_WAIA))
+        (WAITSTATE(&(_guestregs)->psw) && !((_guestregs)->siebk->ec[0] & SIE_EC0_WAIA))
 #else
 #define SIE_I_WAIT(_guestregs) \
-        ((_guestregs)->psw.wait)
+        (WAITSTATE(&(_guestregs)->psw))
 #endif
 
 #undef SIE_I_IO
@@ -197,7 +197,7 @@ static char *dbg_name[] = {
 #define SIE_I_IO(_guestregs) \
         (((_guestregs)->siebk->v & SIE_V_IO) \
            && ((_guestregs)->psw.sysmask \
-                 & ((_guestregs)->psw.ecmode ? PSW_IOMASK : 0xFE) ))
+                 & (ECMODE(&(_guestregs)->psw) ? PSW_IOMASK : 0xFE) ))
 #else /*!defined(FEATURE_BCMODE)*/
 #define SIE_I_IO(_guestregs) \
         (((_guestregs)->siebk->v & SIE_V_IO) \
@@ -218,7 +218,7 @@ int     n;                              /* Loop counter              */
 U16     lhcpu;                          /* Last Host CPU address     */
 int     icode = 0;                      /* Interception code         */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    S(inst, regs, b2, effective_addr2);
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -553,6 +553,9 @@ int     icode = 0;                      /* Interception code         */
 
     if(!setjmp(GUESTREGS->progjmp))
     {
+        /* Set `execflag' to 0 in case EXecuted instruction did progjmp */
+        GUESTREGS->execflag = 0;
+
         /* Set SIE active */
         regs->sie_active = 1;
 
@@ -860,6 +863,9 @@ int ARCH_DEP(run_sie) (REGS *regs)
             {
                 SIE_PERFMON(SIE_PERF_RUNLOOP_2);
 
+                /* Set `execflag' to 0 in case EXecuted instruction did progjmp */
+                GUESTREGS->execflag = 0;
+
                 if(
                     SIE_I_STOP(GUESTREGS)
                  || SIE_I_EXT(GUESTREGS)
@@ -897,7 +903,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
 #if defined(_FEATURE_WAITSTATE_ASSIST)
                     /* Wait state assist */
-                    if (GUESTREGS->psw.wait && (STATEBK->ec[0] & SIE_EC0_WAIA))
+                    if (WAITSTATE(&GUESTREGS->psw) && (STATEBK->ec[0] & SIE_EC0_WAIA))
                     {
 
                         /* Test for disabled wait PSW and issue message */
@@ -960,7 +966,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
 
                 SIE_PERFMON(SIE_PERF_EXEC);
                 regs->instcount++;
-                EXECUTE_INSTRUCTION(GUESTREGS->ip, 0, GUESTREGS, ARCH_DEP(opcode_table));
+                EXECUTE_INSTRUCTION(GUESTREGS->ip, GUESTREGS, ARCH_DEP(opcode_table));
 
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
@@ -1018,7 +1024,7 @@ RADR    effective_addr2;                /* address of state desc.    */
 ZPB     zpb;                            /* Zone Parameter Block      */
 int     zone;                           /* Zone number               */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    S(inst, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -1059,7 +1065,7 @@ RADR    mso,                            /* Main Storage Origin       */
         eso,                            /* Expanded Storage Origin   */
         esl;                            /* Expanded Storage Length   */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    S(inst, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 
@@ -1114,7 +1120,7 @@ U32     iointid;                        /* I/O interruption ident    */
 FWORD   tpziid[3];
 int     zone;                           /* Zone number               */
 
-    S(inst, execflag, regs, b2, effective_addr2);
+    S(inst, regs, b2, effective_addr2);
 
     PRIV_CHECK(regs);
 

@@ -37,41 +37,56 @@
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 {
-    addr[0] = regs->psw.sysmask;
-    addr[1] = (regs->psw.pkey & 0xF0) | (regs->psw.ecmode << 3)
-                | (regs->psw.mach << 2) | (regs->psw.wait << 1)
-                | regs->psw.prob;
 
 #if defined(FEATURE_BCMODE)
-    if ( regs->psw.ecmode ) {
+    if ( ECMODE(&regs->psw) ) {
 #endif /*defined(FEATURE_BCMODE)*/
 #if !defined(FEATURE_ESAME)
-        addr[2] = (regs->psw.space << 7) | (regs->psw.armode << 6)
-                    | (regs->psw.cc << 4)
-                    | (regs->psw.fomask << 3) | (regs->psw.domask << 2)
-                    | (regs->psw.eumask << 1) | regs->psw.sgmask;
-        addr[3] = regs->psw.zerobyte;
-        STORE_FW(addr + 4,regs->psw.IA); addr[4] |= regs->psw.amode << 7;
+        STORE_FW ( addr,
+                   ( (regs->psw.sysmask << 24)
+                   | ((regs->psw.pkey | regs->psw.states) << 16)
+                   | ( ( (regs->psw.asc)
+                       | (regs->psw.cc << 4)
+                       | (regs->psw.progmask)
+                       ) << 8
+                     )
+                   | (0)
+                   )
+                 );
+        STORE_FW ( addr + 4,
+                   ( regs->psw.IA | (regs->psw.amode ? 0x80000000 : 0) )
+                 );
 #endif /*!defined(FEATURE_ESAME)*/
 #if defined(FEATURE_BCMODE)
     } else {
-        STORE_HW(addr + 2,regs->psw.intcode);
-        STORE_FW(addr + 4,regs->psw.IA);
-        addr[4] = (regs->psw.ilc << 5) | (regs->psw.cc << 4)
-                    | (regs->psw.fomask << 3) | (regs->psw.domask << 2)
-                    | (regs->psw.eumask << 1) | regs->psw.sgmask;
+        STORE_FW ( addr,
+                   ( (regs->psw.sysmask << 24)
+                   | ((regs->psw.pkey | regs->psw.states) << 16)
+                   | (regs->psw.intcode)
+                   )
+                 );
+        STORE_FW ( addr + 4,
+                   ( ( (regs->psw.ilc << 5)
+                     | (regs->psw.cc << 4)
+                     | regs->psw.progmask
+                     ) << 24
+                   ) | regs->psw.IA
+                 );
     }
 #elif defined(FEATURE_ESAME)
-        addr[2] = (regs->psw.space << 7) | (regs->psw.armode << 6)
-                    | (regs->psw.cc << 4)
-                    | (regs->psw.fomask << 3) | (regs->psw.domask << 2)
-                    | (regs->psw.eumask << 1) | regs->psw.sgmask;
-        addr[3] = regs->psw.amode64;
-        addr[4] = (regs->psw.amode << 7);
-        addr[5] = 0;
-        addr[6] = 0;
-        addr[7] = 0;
-        STORE_DW(addr + 8,regs->psw.IA);
+        STORE_FW ( addr,
+                   ( (regs->psw.sysmask << 24)
+                   | ((regs->psw.pkey | regs->psw.states) << 16)
+                   | ( ( (regs->psw.asc) 
+                       | (regs->psw.cc << 4)
+                       | (regs->psw.progmask)
+                       ) << 8
+                     )
+                   | (regs->psw.amode64 ? 0x01 : 0)
+                   )
+                 );
+        STORE_FW ( addr + 4, regs->psw.amode ? 0x80000000 : 0 );
+        STORE_DW ( addr + 8, regs->psw.IA );
 #endif /*defined(FEATURE_ESAME)*/
 } /* end function ARCH_DEP(store_psw) */
 
@@ -81,64 +96,40 @@ void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(load_psw) (REGS *regs, BYTE *addr)
 {
-int     permode;
-int     realmode;
-int     space;
-int     homemode;
-BYTE    pkey;
-
-    permode = PER_MODE(regs);
-    realmode = REAL_MODE(&regs->psw);
-    space = (regs->psw.space == 1);
-    homemode = HOME_SPACE_MODE(&regs->psw);
-    pkey = regs->psw.pkey;
+int     permode = PER_MODE(regs);
+int     realmode = REAL_MODE(&regs->psw);
+int     space = SPACE_BIT(&regs->psw);
+int     homemode = HOME_SPACE_MODE(&regs->psw);
+BYTE    pkey = regs->psw.pkey;
 
     regs->psw.sysmask = addr[0];
-    regs->psw.pkey = addr[1] & 0xF0;
-    regs->psw.ecmode = (addr[1] & 0x08) >> 3;
-    regs->psw.mach = (addr[1] & 0x04) >> 2;
-    regs->psw.wait = (addr[1] & 0x02) >> 1;
-    regs->psw.prob = addr[1] & 0x01;
-    regs->psw.zerobyte = addr[3];
+    regs->psw.pkey    = (addr[1] & 0xF0);
+    regs->psw.states  = (addr[1] & 0x0F);
 
 #if defined(FEATURE_BCMODE)
-    if ( regs->psw.ecmode ) {
+    if ( ECMODE(&regs->psw) ) {
 #endif /*defined(FEATURE_BCMODE)*/
 
         SET_IC_ECMODE_MASK(regs);
 
         /* Processing for EC mode PSW */
-        regs->psw.space = (addr[2] & 0x80) >> 7;
-        regs->psw.armode = (addr[2] & 0x40) >> 6;
-        regs->psw.intcode = 0;
-        regs->psw.ilc = 0;
-        regs->psw.cc = (addr[2] & 0x30) >> 4;
-        regs->psw.fomask = (addr[2] & 0x08) >> 3;
-        regs->psw.domask = (addr[2] & 0x04) >> 2;
-        regs->psw.eumask = (addr[2] & 0x02) >> 1;
-        regs->psw.sgmask = addr[2] & 0x01;
-
-        regs->psw.amode = (addr[4] & 0x80) >> 7;
-        regs->psw.AMASK = regs->psw.amode ? AMASK31 : AMASK24;
-
-        if ((realmode  != REAL_MODE(&regs->psw)) ||
-            (space     != (regs->psw.space == 1))
-#if defined (FEATURE_PER)
-           || PER_MODE(regs)
-#endif /* defined (FEATURE_PER) */
-            )
-            INVALIDATE_AEA_ALL(regs);
-        regs->armode = ACCESS_REGISTER_MODE(&regs->psw);
+        regs->psw.intcode  = regs->psw.ilc = 0;
+        regs->psw.asc      = (addr[2] & 0xC0);
+        regs->psw.cc       = (addr[2] & 0x30) >> 4;
+        regs->psw.progmask = (addr[2] & 0x0F);
+        regs->psw.amode    = (addr[4] & 0x80) ? 1 : 0;
 
 #if defined(FEATURE_ESAME)
-        FETCH_DW(regs->psw.IA, addr + 8);
-        regs->psw.amode64 = (addr[3] & 0x01);
-        if( regs->psw.amode64 )
-            regs->psw.AMASK = AMASK64;
+        regs->psw.zerobyte = addr[3] & 0xFE;
+        regs->psw.amode64  = addr[3] & 0x01;
+        regs->psw.IA       = fetch_dw (addr + 8);
+        regs->psw.AMASK    = regs->psw.amode64 ? AMASK64
+                           : regs->psw.amode   ? AMASK31 : AMASK24;
 #else /*!defined(FEATURE_ESAME)*/
-        FETCH_FW(regs->psw.IA, addr + 4);
-        regs->psw.IA &= 0x7FFFFFFF;
-        regs->psw.amode64 = 0;
+        regs->psw.zerobyte = addr[3];
+        regs->psw.amode64  = 0;
+        regs->psw.IA       = fetch_fw(addr + 4) & 0x7FFFFFFF;
+        regs->psw.AMASK    = regs->psw.amode ? AMASK31 : AMASK24;
 #endif /*!defined(FEATURE_ESAME)*/
 
         /* Bits 0 and 2-4 of system mask must be zero */
@@ -147,56 +138,56 @@ BYTE    pkey;
 
 #if defined(FEATURE_ESAME)
         /* For ESAME, bit 12 must be zero */
-        if (addr[1] & 0x08)
+        if (NOTESAME(&regs->psw))
             return PGM_SPECIFICATION_EXCEPTION;
 
         /* Bits 24-30 must be zero */
-        if (addr[3] & 0xFE)
+        if (regs->psw.zerobyte)
             return PGM_SPECIFICATION_EXCEPTION;
 
         /* Bits 33-63 must be zero */
-        if ((addr[4] & 0x7F) || addr[5] || addr[6] || addr[7])
+        if ( fetch_fw(addr+4) & 0x7FFFFFFF )
             return PGM_SPECIFICATION_EXCEPTION;
 #else /*!defined(FEATURE_ESAME)*/
         /* Bits 24-31 must be zero */
-        if ( addr[3] )
+        if ( regs->psw.zerobyte )
             return PGM_SPECIFICATION_EXCEPTION;
 
         /* For ESA/390, bit 12 must be one */
-        if (!(addr[1] & 0x08))
+        if (!ECMODE(&regs->psw))
             return PGM_SPECIFICATION_EXCEPTION;
 #endif /*!defined(FEATURE_ESAME)*/
 
 #ifndef FEATURE_DUAL_ADDRESS_SPACE
         /* If DAS feature not installed then bit 16 must be zero */
-        if (regs->psw.space)
+        if (SPACE_BIT(&regs->psw))
             return PGM_SPECIFICATION_EXCEPTION;
 #endif /*!FEATURE_DUAL_ADDRESS_SPACE*/
 
 #ifndef FEATURE_ACCESS_REGISTERS
         /* If not ESA/370 or ESA/390 then bit 17 must be zero */
-        if (regs->psw.armode)
+        if (AR_BIT(&regs->psw))
             return PGM_SPECIFICATION_EXCEPTION;
 #endif /*!FEATURE_ACCESS_REGISTERS*/
 
         /* Check validity of amode and instruction address */
 #if defined(FEATURE_ESAME)
         /* For ESAME, bit 32 cannot be zero if bit 31 is one */
-        if ((addr[3] & 0x01) && (addr[4] & 0x80) == 0)
+        if (regs->psw.amode64 && !regs->psw.amode)
             return PGM_SPECIFICATION_EXCEPTION;
 
         /* If bit 32 is zero then IA cannot exceed 24 bits */
-        if (regs->psw.amode == 0 && regs->psw.IA > 0x00FFFFFF)
+        if (!regs->psw.amode && regs->psw.IA > 0x00FFFFFF)
             return PGM_SPECIFICATION_EXCEPTION;
 
         /* If bit 31 is zero then IA cannot exceed 31 bits */
-        if (regs->psw.amode64 == 0 && regs->psw.IA > 0x7FFFFFFF)
+        if (!regs->psw.amode64 && regs->psw.IA > 0x7FFFFFFF)
             return PGM_SPECIFICATION_EXCEPTION;
 #else /*!defined(FEATURE_ESAME)*/
   #ifdef FEATURE_BIMODAL_ADDRESSING
         /* For 370-XA, ESA/370, and ESA/390,
            if amode=24, bits 33-39 must be zero */
-        if (addr[4] > 0x00 && addr[4] < 0x80)
+        if (!regs->psw.amode && regs->psw.IA > 0x00FFFFFF)
             return PGM_SPECIFICATION_EXCEPTION;
   #else /*!FEATURE_BIMODAL_ADDRESSING*/
         /* For S/370, bits 32-39 must be zero */
@@ -211,46 +202,49 @@ BYTE    pkey;
         SET_IC_BCMODE_MASK(regs);
 
         /* Processing for S/370 BC mode PSW */
-        regs->psw.space = 0;
-        regs->psw.armode = 0;
-        regs->psw.intcode = (addr[2] << 8) | addr[3];
+        regs->psw.intcode = fetch_hw (addr + 2);
         regs->psw.ilc = (addr[4] >> 6) * 2;
         regs->psw.cc = (addr[4] & 0x30) >> 4;
-        regs->psw.fomask = (addr[4] & 0x08) >> 3;
-        regs->psw.domask = (addr[4] & 0x04) >> 2;
-        regs->psw.eumask = (addr[4] & 0x02) >> 1;
-        regs->psw.sgmask = addr[4] & 0x01;
-        regs->psw.amode = 0;
-        regs->psw.AMASK = AMASK24;
-
-        if (realmode != REAL_MODE(&regs->psw) || space)
-            INVALIDATE_AEA_ALL(regs);
-        regs->armode = 0;
+        regs->psw.progmask = (addr[4] & 0x0F);
 
         FETCH_FW(regs->psw.IA, addr + 4);
         regs->psw.IA &= 0x00FFFFFF;
+        regs->psw.AMASK = AMASK24;
+
+        regs->psw.zerobyte = 0;
+        regs->psw.asc = 0;
+        regs->psw.amode64 = regs->psw.amode = 0;
     }
 #endif /*defined(FEATURE_BCMODE)*/
 
+#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+    /* Bits 5 and 16 must be zero in XC mode */
+    if( SIE_STATB(regs, MX, XC)
+      && ( (regs->psw.sysmask & PSW_DATMODE) || SPACE_BIT(&regs->psw)) )
+        return PGM_SPECIFICATION_EXCEPTION;
+#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+
+    /* Check for wait state PSW */
+    if (WAITSTATE(&regs->psw) && (sysblk.insttrace || sysblk.inststep))
+    {
+        logmsg (_("HHCCP043I Wait state PSW loaded: "));
+        display_psw (regs);
+    }
+
+    /* Perform AIA/AEA invalidations */
     if (realmode != REAL_MODE(&regs->psw)
      || permode  != PER_MODE(regs)
      || homemode != HOME_SPACE_MODE(&regs->psw)
      ||(pkey     != regs->psw.pkey && regs->psw.pkey != 0))
         INVALIDATE_AIA(regs);
 
-#if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-    /* Bits 5 and 16 must be zero in XC mode */
-    if( SIE_STATB(regs, MX, XC)
-      && ( (regs->psw.sysmask & PSW_DATMODE) || regs->psw.space) )
-        return PGM_SPECIFICATION_EXCEPTION;
-#endif /*defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-
-    /* Check for wait state PSW */
-    if (regs->psw.wait && (sysblk.insttrace || sysblk.inststep))
-    {
-        logmsg (_("HHCCP043I Wait state PSW loaded: "));
-        display_psw (regs);
-    }
+    if ( (realmode  != REAL_MODE(&regs->psw)) ||
+         (space     != SPACE_BIT(&regs->psw))
+#if defined (FEATURE_PER)
+      || PER_MODE(regs)
+#endif /* defined (FEATURE_PER) */
+       )
+        INVALIDATE_AEA_ALL(regs);
 
     return 0;
 } /* end function ARCH_DEP(load_psw) */
@@ -348,12 +342,19 @@ static char *pgmintname[] = {
        which must be used when loading/storing the psw, or backing up
        the instruction address in case of nullification */
 #if defined(_FEATURE_SIE)
-        realregs = SIE_STATE(regs)
+        realregs = SIE_MODE(regs)
                  ? sysblk.regs[regs->cpuad]->guestregs
                  : sysblk.regs[regs->cpuad];
 #else /*!defined(_FEATURE_SIE)*/
     realregs = sysblk.regs[regs->cpuad];
 #endif /*!defined(_FEATURE_SIE)*/
+
+    /* Set `execflag' to 0 in case EXecuted instruction program-checked */
+    realregs->execflag = 0;
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+    if(realregs->sie_active)
+        realregs->guestregs->execflag = 0;
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Unlock the main storage lock if held */
     if (realregs->mainlock)
@@ -361,6 +362,20 @@ static char *pgmintname[] = {
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
     if(realregs->sie_active && realregs->guestregs->mainlock)
         RELEASE_MAINLOCK(realregs->guestregs);
+#endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
+
+    /* Unlock the TOD lock if held */
+    if (realregs->todlock)
+    {
+        realregs->todlock = 0;
+        release_lock(&sysblk.todlock);
+    }
+#if defined(FEATURE_INTERPRETIVE_EXECUTION)
+    if(realregs->sie_active && realregs->guestregs->todlock)
+    {
+        realregs->guestregs->todlock = 0;
+        release_lock(&sysblk.todlock);
+    }
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
 
     /* Remove PER indication from program interrupt code
@@ -480,7 +495,7 @@ static char *pgmintname[] = {
 #endif /*defined(OPTION_FOOTPRINT_BUFFER)*/
         logmsg(_("HHCCP014I "));
 #if defined(_FEATURE_SIE)
-        if(SIE_STATE(realregs))
+        if(SIE_MODE(realregs))
             logmsg(_("SIE: "));
 #endif /*defined(_FEATURE_SIE)*/
 #if defined(SIE_DEBUG)
@@ -505,7 +520,7 @@ static char *pgmintname[] = {
     SIE_TRANSLATE(&px, ACCTYPE_WRITE, realregs);
 
 #if defined(_FEATURE_SIE)
-    if(!SIE_STATE(regs) ||
+    if(!SIE_MODE(regs) ||
       /* Interception is mandatory for the following exceptions */
       (
 #if defined(_FEATURE_PROTECTION_INTERCEPTION_CONTROL)
@@ -620,7 +635,7 @@ static char *pgmintname[] = {
 
 #if defined(FEATURE_BCMODE)
     /* For ECMODE, store extended interrupt information in PSA */
-    if ( realregs->psw.ecmode )
+    if ( ECMODE(&realregs->psw) )
 #endif /*defined(FEATURE_BCMODE)*/
     {
         /* Store the program interrupt code at PSA+X'8C' */
@@ -743,7 +758,7 @@ static char *pgmintname[] = {
         if ( (code = ARCH_DEP(load_psw) (realregs, psa->pgmnew)) )
         {
 #if defined(_FEATURE_SIE)
-            if(SIE_STATE(realregs))
+            if(SIE_MODE(realregs))
             {
                 release_lock(&sysblk.intlock); 
                 longjmp(realregs->progjmp, pcode);
@@ -830,7 +845,7 @@ DWORD   csw;                            /* CSW for S/370 channels    */
     if (icode == 0) return;
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATE(regs) && icode != SIE_NO_INTERCEPT)
+    if(SIE_MODE(regs) && icode != SIE_NO_INTERCEPT)
     {
         /* Point to SIE copy of PSA in state descriptor */
         psa = (void*)(regs->hostregs->mainstor + SIE_STATE(regs) + SIE_II_PSA_OFFSET);
@@ -854,7 +869,7 @@ DWORD   csw;                            /* CSW for S/370 channels    */
     regs->psw.intcode = ioid;
 
     /* For ECMODE, store the I/O device address at PSA+X'B8' */
-    if (regs->psw.ecmode)
+    if (ECMODE(&regs->psw))
         STORE_FW(psa->ioid, ioid);
 
     /* Trace the I/O interrupt */
@@ -1125,6 +1140,7 @@ int cpu_init (int cpu, REGS *regs)
             return -1;
         }
         regs->guestregs->hostregs = regs;
+        regs->guestregs->sie_mode = 1;
         if (cpu_init (cpu, regs->guestregs))
             return -1;
 #endif /*defined(_FEATURE_SIE)*/
@@ -1203,6 +1219,22 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
 
     /* Set tracing bit */
     regs->tracing = (sysblk.instbreak || sysblk.inststep || sysblk.insttrace);
+
+    /* Perform invalidations */
+    if (regs->invalidate)
+    {
+        if (regs->INVABS == 1)
+        {
+            INVALIDATE_AIA(regs);
+            INVALIDATE_AEA_ALL(regs);
+        }
+        else
+        {
+            INVALIDATE_AIA_ABS(regs->INVABS, regs);
+            INVALIDATE_AEA_ABS(regs->INVABS, regs);
+        }
+        regs->invalidate = 0;
+    }
 
     /* Take interrupts if CPU is not stopped */
     if (regs->cpustate == CPUSTATE_STARTED)
@@ -1337,7 +1369,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     } /*CPUSTATE_STOPPED*/
 
     /* Test for wait state */
-    if (regs->psw.wait)
+    if (WAITSTATE(&regs->psw))
     {
         INVALIDATE_AIA(regs);
         INVALIDATE_AEA_ALL(regs);
@@ -1495,6 +1527,9 @@ zz_func opcode_table[256];
     /* Establish longjmp destination for program check */
     setjmp(regs.progjmp);
 
+    /* Set `execflag' is 0 in case EXecuted instruction did a longjmp() */
+    regs.execflag = 0;
+
     if (regs.tracing || PER_MODE(&regs))
         goto slowloop;
 
@@ -1540,7 +1575,7 @@ slowloop:
 
         /* Execute the instruction */
         regs.instcount++;
-        EXECUTE_INSTRUCTION(regs.ip, 0, &regs, opcode_table);
+        EXECUTE_INSTRUCTION(regs.ip, &regs, opcode_table);
     }
 
 } /* end function cpu_thread */

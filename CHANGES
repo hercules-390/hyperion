@@ -1,5 +1,13 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+16 Feb 2004 clc.pat - Optimize CLC - Greg Smith
+16 Feb 2004 move_chars.pat - Optimize move_chars - Greg Smith
+16 Feb 2004 radr.pat - Make type RADR type U32 for 32 bit machines - Greg Smith
+16 Feb 2004 sie_mode.pat - Check sie_mode bit for sie mode regs - Greg Smith
+16 Feb 2004 vfethc.pat - Optimize vfetchc - Greg Smith
+16 Feb 2004 execflag.pat - Remove execflag from inst calls - Greg Smith
+16 Feb 2004 skp.pat - Reduce setting storage key bits - Greg Smith
+16 Feb 2004 psw.pat - Revise internal psw format - Greg Smith
 07 Feb 2004 Device groups descriminators for console devices - Ivan Warren
 07 Feb 2004 Update cpuints.h bit processing - Greg Smith
 05 Feb 2004 Reverse armode patch - problems with XC mode - Greg Smith

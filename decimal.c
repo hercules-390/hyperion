@@ -661,7 +661,7 @@ BYTE    dec3[MAX_DECIMAL_DIGITS];       /* Work area for result      */
 int     count1, count2, count3;         /* Significant digit counters*/
 int     sign1, sign2, sign3;            /* Sign of operands & result */
 
-    SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
+    SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* Load operands into work areas */
@@ -714,7 +714,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
     regs->psw.cc = cc;
 
     /* Program check if overflow and PSW program mask is set */
-    if (cc == 3 && regs->psw.domask)
+    if (cc == 3 && DOMASK(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_DECIMAL_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(add_decimal) */
@@ -735,7 +735,7 @@ int     count1, count2;                 /* Significant digit counters*/
 int     sign1, sign2;                   /* Sign of each operand      */
 int     rc;                             /* Return code               */
 
-    SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
+    SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* Load operands into work areas */
@@ -795,7 +795,7 @@ int     count1, count2;                 /* Significant digit counters*/
 int     sign1, sign2;                   /* Sign of operands          */
 int     signq, signr;                   /* Sign of quotient/remainder*/
 
-    SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
+    SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* Program check if the second operand length exceeds 15 digits
@@ -868,7 +868,7 @@ BYTE    fbyte;                          /* Fill byte                 */
 BYTE    pbyte;                          /* Pattern byte              */
 BYTE    rbyte;                          /* Result byte               */
 
-    SS_L(inst, execflag, regs, l, b1, effective_addr1,
+    SS_L(inst, regs, l, b1, effective_addr1,
                                   b2, effective_addr2);
 
     /* If addr1 crosses page, make sure both pages are accessable */
@@ -1050,7 +1050,7 @@ int     d;                              /* Decimal digit             */
 int     i1, i2, i3;                     /* Array subscripts          */
 int     carry;                          /* Carry indicator           */
 
-    SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
+    SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* Program check if the second operand length exceeds 15 digits
@@ -1116,7 +1116,7 @@ int     i, j;                           /* Array subscripts          */
 int     d;                              /* Decimal digit             */
 int     carry;                          /* Carry indicator           */
 
-    SS(inst, execflag, regs, l1, i3, b1, effective_addr1,
+    SS(inst, regs, l1, i3, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* Load operand into work area */
@@ -1185,7 +1185,7 @@ int     carry;                          /* Carry indicator           */
     regs->psw.cc = cc;
 
     /* Program check if overflow and PSW program mask is set */
-    if (cc == 3 && regs->psw.domask)
+    if (cc == 3 && DOMASK(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_DECIMAL_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(shift_and_round_decimal) */
@@ -1207,7 +1207,7 @@ BYTE    dec3[MAX_DECIMAL_DIGITS];       /* Work area for result      */
 int     count1, count2, count3;         /* Significant digit counters*/
 int     sign1, sign2, sign3;            /* Sign of operands & result */
 
-    SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
+    SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* Load operands into work areas */
@@ -1260,7 +1260,7 @@ int     sign1, sign2, sign3;            /* Sign of operands & result */
     regs->psw.cc = cc;
 
     /* Program check if overflow and PSW program mask is set */
-    if (cc == 3 && regs->psw.domask)
+    if (cc == 3 && DOMASK(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_DECIMAL_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(subtract_decimal) */
@@ -1280,7 +1280,7 @@ BYTE    dec[MAX_DECIMAL_DIGITS];        /* Work area for operand     */
 int     count;                          /* Significant digit counter */
 int     sign;                           /* Sign                      */
 
-    SS(inst, execflag, regs, l1, l2, b1, effective_addr1,
+    SS(inst, regs, l1, l2, b1, effective_addr1,
                                      b2, effective_addr2);
 
     /* Load second operand into work area */
@@ -1304,7 +1304,7 @@ int     sign;                           /* Sign                      */
     regs->psw.cc = cc;
 
     /* Program check if overflow and PSW program mask is set */
-    if (cc == 3 && regs->psw.domask)
+    if (cc == 3 && DOMASK(&regs->psw))
         ARCH_DEP(program_interrupt) (regs, PGM_DECIMAL_OVERFLOW_EXCEPTION);
 
 } /* end DEF_INST(zero_and_add) */
@@ -1323,7 +1323,7 @@ int     i;                              /* Array subscript           */
 int     cc = 0;                         /* Condition code            */
 BYTE    pack[MAX_DECIMAL_LENGTH];       /* Packed decimal work area  */
 
-    RSL(inst, execflag, regs, l1, b1, effective_addr1);
+    RSL(inst, regs, l1, b1, effective_addr1);
 
     /* Fetch the packed decimal operand into the work area */
     ARCH_DEP(vfetchc) (pack, l1, effective_addr1, b1, regs);

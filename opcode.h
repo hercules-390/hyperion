@@ -104,7 +104,7 @@
     }
 
 
-typedef void (ATTR_REGPARM(3) (*zz_func)) (BYTE inst[], int execflag, REGS *regs);
+typedef void (ATTR_REGPARM(2) (*zz_func)) (BYTE inst[], REGS *regs);
 
 extern BYTE     ilc_table[];
 #define ILC(_b) ilc_table[(_b)]
@@ -230,6 +230,8 @@ do { \
 
 
 #if defined(_FEATURE_SIE)
+  #define SIE_MODE(_register_context) \
+          ((_register_context)->sie_mode)
   #define SIE_STATE(_register_context) \
           ((_register_context)->sie_state)
   #define SIE_FEATB(_regs, _feat_byte, _feat_name) \
@@ -239,7 +241,9 @@ do { \
   #define SIE_STATNB(_regs, _feat_byte, _feat_name) \
           (SIE_STATE((_regs)) && !SIE_FEATB((_regs), _feat_byte, _feat_name) )
 #else
+  #define SIE_MODE(_register_context) (0)
   #define SIE_STATE(_register_context) (0)
+  #define SIE_FEATB(_register_context, _feat_byte, _feat_name) (0)
   #define SIE_STATB(_register_context, _feat_byte, _feat_name) (0)
 #endif
 
@@ -281,17 +285,17 @@ do { \
     )
 
 /* Instruction execution */
-#define EXECUTE_INSTRUCTION(_inst, _execflag, _regs, _tab) \
+#define EXECUTE_INSTRUCTION(_inst, _regs, _tab) \
 do { \
     FOOTPRINT ((_regs)); \
     COUNT_INST ((_inst), (_regs)); \
-    ((_tab)[_inst[0]]) ((_inst), (_execflag), (_regs)); \
+    ((_tab)[_inst[0]]) ((_inst), (_regs)); \
 } while(0)
 
 #define UNROLLED_EXECUTE(_regs, _tab) \
 do { \
     (_regs)->ip = INSTRUCTION_FETCH((_regs)->inst, (_regs)->psw.IA, (_regs), 0); \
-    EXECUTE_INSTRUCTION((_regs)->ip, 0, (_regs), (_tab)); \
+    EXECUTE_INSTRUCTION((_regs)->ip, (_regs), (_tab)); \
 } while(0)
 
 #define RETURN_INTCHECK(_regs) \
@@ -323,7 +327,7 @@ do { \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION)
 
 #define PRIV_CHECK(_regs) \
-    if( (_regs)->psw.prob ) \
+    if( PROBSTATE(&(_regs)->psw) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_PRIVILEGED_OPERATION_EXCEPTION)
 
 #define BFPREGPAIR2_CHECK(_r1, _r2, _regs) \
@@ -377,7 +381,7 @@ do { \
 
 #define BFPINST_CHECK(_regs) \
         if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
             (_regs)->dxc = DXC_BFP_INSTRUCTION; \
             ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
         }
@@ -386,7 +390,7 @@ do { \
     /* Program check if r1 is not 0, 2, 4, or 6 */
 #define HFPREG_CHECK(_r, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -396,7 +400,7 @@ do { \
     /* Program check if r1 and r2 are not 0, 2, 4, or 6 */
 #define HFPREG2_CHECK(_r1, _r2, _regs) \
     if( !((_regs)->CR(0) & CR0_AFP) \
-            || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+            || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -408,7 +412,7 @@ do { \
     if( (_r) & 2 ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-               || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+               || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( (_r) & 9 ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -420,7 +424,7 @@ do { \
     if( ((_r1) & 2) || ((_r2) & 2) ) \
         ARCH_DEP(program_interrupt)( (_regs), PGM_SPECIFICATION_EXCEPTION); \
     else if( !((_regs)->CR(0) & CR0_AFP) \
-                || (SIE_STATE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
+                || (SIE_MODE((_regs)) && !((_regs)->hostregs->CR(0) & CR0_AFP)) ) { \
         if( ((_r1) & 9) || ((_r2) & 9) ) { \
                 (_regs)->dxc = DXC_AFP_REGISTER; \
         ARCH_DEP(program_interrupt)( (_regs), PGM_DATA_EXCEPTION); \
@@ -533,35 +537,15 @@ do { \
    &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
    &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
    &&  ( (_regs)->aearn[AEIND(_addr)] == 0 \
-       && ( !(_regs)->armode || (_arn) == 0 || (_regs)->AR(_arn) == 0 ) \
-     ||  ( (_regs)->armode && (_regs)->aearn[AEIND(_addr)] == (_arn) ) \
+       && ( !ACCESS_REGISTER_MODE(&(_regs)->psw) || (_arn) == 0 || (_regs)->AR(_arn) == 0 ) \
+     ||  ( ACCESS_REGISTER_MODE(&(_regs)->psw) && (_regs)->aearn[AEIND(_addr)] == (_arn) ) \
        ) \
    ? ( \
-       ( (_acctype) == ACCTYPE_READ ) \
-         ? ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= STORKEY_REF ) \
-         : ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= (STORKEY_REF|STORKEY_CHANGE) ), \
        (_regs)->ME(AEIND(_addr)) ^ (_addr) \
      ) \
    : ( \
        ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
      ) \
- )
-
-#define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey) \
- (     (_arn) >= 0 \
-   &&  (_acctype) <= (_regs)->aeacc[AEIND(_addr)] \
-   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
-   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
-   &&  ( (_regs)->aearn[AEIND(_addr)] == 0 \
-       && ( !(_regs)->armode || (_arn) == 0 || (_regs)->AR(_arn) == 0 ) \
-     ||  ( (_regs)->armode && (_regs)->aearn[AEIND(_addr)] == (_arn) ) \
-       ) \
-   ?   ( \
-         (_regs)->ME(AEIND(_addr)) ^ (_addr) \
-       ) \
-   :   ( \
-         ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
-       ) \
  )
 
 #define INVALIDATE_AEA_AR(_arn, _regs) \
@@ -604,89 +588,121 @@ do { \
     } \
 } while (0)
 
+/* Perform invalidation after storage key update.
+ * If the REF or CHANGE bit is turned off for an absolute
+ * address then we need to invalidate any AIA/AEA entries
+ * for that address on *all* CPUs.  This is because
+ * LOGICAL_TO_ABS no longer updates the storage keys on a
+ * successful lookup.
+ * FIXME: Synchronization, esp for the CHANGE bit, should
+ * be tighter than what is provided here.
+ */
 
-#define INST_UPDATE_PSW(_regs, _len, _execflag) \
-        { \
-            if( !(_execflag) ) \
+#define STORKEY_INVALIDATE(n, regs) \
+ do { \
+   INVALIDATE_AIA_ABS(n, regs); \
+   INVALIDATE_AEA_ABS(n, regs); \
+   if (sysblk.cpus > 1) { \
+     int i; \
+     obtain_lock (&sysblk.intlock); \
+     for (i = 0; i < HI_CPU; i++) { \
+       if ( !IS_CPU_ONLINE(i) || sysblk.regs[i]->cpuad == regs->cpuad \
+        ||  test_bit(4, i, &sysblk.waiting_mask) ) \
+         continue; \
+       ON_IC_INTERRUPT( sysblk.regs[i] ); \
+       if (!sysblk.regs[i]->invalidate) { \
+         sysblk.regs[i]->invalidate = 1; \
+         sysblk.regs[i]->INVABS = n; \
+       } else { \
+         sysblk.regs[i]->INVABS = 1; \
+       } \
+     } \
+     release_lock (&sysblk.intlock); \
+   } \
+ } while (0)
+
+#define INST_UPDATE_PSW(_regs, _len) \
+     do { \
+            if( likely(!(_regs)->execflag) ) \
             { \
                 (_regs)->psw.ilc = (_len); \
                 (_regs)->psw.IA += (_len); \
                 (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
             } \
-        }
+        } while(0)
 
 /* E implied operands and extended op code */
 #undef E
-#define E(_inst, _execflag, _regs) \
+#define E(_inst, _regs) \
         { \
-            INST_UPDATE_PSW((_regs), 2, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 2); \
         }
 
 /* RR register to register */
 #undef RR
-#define RR(_inst, _execflag, _regs, _r1, _r2) \
+#define RR(_inst, _regs, _r1, _r2) \
         { \
             register U32 ib; \
 	    ib=(_inst)[1]; \
             (_r1) = ib >> 4; \
             (_r2) = ib & 0x0F; \
-            INST_UPDATE_PSW((_regs), 2, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 2); \
         }
 
 /* RR special format for SVC instruction */
 #undef RR_SVC
 #if defined(FETCHIBYTE1)
-#define RR_SVC(_inst, _execflag, _regs, _svc) \
+#define RR_SVC(_inst, _regs, _svc) \
         { \
             FETCHIBYTE1((_svc), (_inst)) \
-            INST_UPDATE_PSW((_regs), 2, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 2); \
         }
 #else
-#define RR_SVC(_inst, _execflag, _regs, _svc) \
+#define RR_SVC(_inst, _regs, _svc) \
         { \
             (_svc) = (_inst)[1]; \
-            INST_UPDATE_PSW((_regs), 2, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 2); \
         }
 #endif
 
 /* RRE register to register with extended op code */
 #undef RRE
-#define RRE(_inst, _execflag, _regs, _r1, _r2) \
+#define RRE(_inst, _regs, _r1, _r2) \
         {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
         }
 
 /* RRF register to register with additional R3 field */
 #undef RRF_R
-#define RRF_R(_inst, _execflag, _regs, _r1, _r2, _r3) \
+#define RRF_R(_inst, _regs, _r1, _r2, _r3) \
         {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 12) & 0xf; \
             (_r3) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
         }
 
 /* RRF register to register with additional M3 field */
 #undef RRF_M
-#define RRF_M(_inst, _execflag, _regs, _r1, _r2, _m3) \
+#define RRF_M(_inst, _regs, _r1, _r2, _m3) \
         {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_m3) = (temp >> 12) & 0xf; \
             (_r1) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
         }
 
 /* RRF register to register with additional R3 and M4 fields */
 #undef RRF_RM
-#define RRF_RM(_inst, _execflag, _regs, _r1, _r2, _r3, _m4) \
+#define RRF_RM(_inst, _regs, _r1, _r2, _r3, _m4) \
         {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -694,12 +710,12 @@ do { \
             (_m4) = (temp >> 8) & 0xf; \
             (_r1) = (temp >> 4) & 0xf; \
             (_r2) = temp & 0xf; \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* RX register and indexed storage */
 #undef RX
-#define RX(_inst, _execflag, _regs, _r1, _b2, _effective_addr2) \
+#define RX(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -717,12 +733,12 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* RXE register and indexed storage with extended op code */
 #undef RXE
-#define RXE(_inst, _execflag, _regs, _r1, _b2, _effective_addr2) \
+#define RXE(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -740,12 +756,12 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* RXF register and indexed storage with ext.opcode and additional R3 */
 #undef RXF
-#define RXF(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
+#define RXF(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; \
         (_r1) = (_inst)[4] >> 4; \
             memcpy (&temp, (_inst), 4); \
@@ -764,14 +780,14 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* RXY register and indexed storage with extended op code
    and long displacement */
 #undef RXY
 #if defined(FEATURE_LONG_DISPLACEMENT)
-#define RXY(_inst, _execflag, _regs, _r1, _b2, _effective_addr2) \
+#define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp; S32 temp2; int tempx; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -785,10 +801,10 @@ do { \
                         ((_b2) ? (_regs)->GR((_b2)) : (GREG)0) + \
                         temp2; \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 #else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
-#define RXY(_inst, _execflag, _regs, _r1, _b2, _effective_addr2) \
+#define RXY(_inst, _regs, _r1, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -806,13 +822,13 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 #endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* RS register and storage with additional R3 or M3 field */
 #undef RS
-#define RS(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
+#define RS(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -825,14 +841,14 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* RSE register and storage with extended op code and additional
    R3 or M3 field (note, this is NOT the ESA/390 vector RSE format) */
 /* Note: Effective June 2003, RSE is retired and replaced by RSY */
 #undef RSE
-#define RSE(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
+#define RSE(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -845,14 +861,14 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* RSY register and storage with extended op code, long displacement,
    and additional R3 or M3 field */
 #undef RSY
 #if defined(FEATURE_LONG_DISPLACEMENT)
-#define RSY(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
+#define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; S32 temp2; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -865,10 +881,10 @@ do { \
                         ((_b2) ? (_regs)->GR((_b2)) : (GREG)0) + \
                         temp2; \
             (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 #else /*!defined(FEATURE_LONG_DISPLACEMENT)*/
-#define RSY(_inst, _execflag, _regs, _r1, _r3, _b2, _effective_addr2) \
+#define RSY(_inst, _regs, _r1, _r3, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -881,13 +897,13 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 #endif /*!defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* RSL storage operand with extended op code and 4-bit L field */
 #undef RSL
-#define RSL(_inst, _execflag, _regs, _l1, _b1, _effective_addr1) \
+#define RSL(_inst, _regs, _l1, _b1, _effective_addr1) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -899,48 +915,48 @@ do { \
                 (_effective_addr1) += (_regs)->GR((_b1)); \
                 (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
             } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
         }
 
 /* RSI register and immediate with additional R3 field */
 #undef RSI
-#define RSI(_inst, _execflag, _regs, _r1, _r3, _i2) \
+#define RSI(_inst, _regs, _r1, _r3, _i2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* RI register and immediate with extended 4-bit op code */
 #undef RI
-#define RI(_inst, _execflag, _regs, _r1, _op, _i2) \
+#define RI(_inst, _regs, _r1, _op, _i2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 20) & 0xf; \
             (_op) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* RIE register and immediate with ext.opcode and additional R3 */
 #undef RIE
-#define RIE(_inst, _execflag, _regs, _r1, _r3, _i2) \
+#define RIE(_inst, _regs, _r1, _r3, _i2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
             (_r1) = (temp >> 20) & 0xf; \
             (_r3) = (temp >> 16) & 0xf; \
             (_i2) = temp & 0xffff; \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* RIL register and longer immediate with extended 4 bit op code */
 #undef RIL
-#define RIL(_inst, _execflag, _regs, _r1, _op, _i2) \
+#define RIL(_inst, _regs, _r1, _op, _i2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -949,12 +965,12 @@ do { \
             (_i2) = ((temp & 0xffff) << 16) \
           | ((_inst)[4] << 8) \
           | (_inst)[5]; \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* SI storage and immediate */
 #undef SI
-#define SI(_inst, _execflag, _regs, _i2, _b1, _effective_addr1) \
+#define SI(_inst, _regs, _i2, _b1, _effective_addr1) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -966,13 +982,13 @@ do { \
         (_effective_addr1) += (_regs)->GR((_b1)); \
         (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* SIY storage and immediate with long displacement */
 #undef SIY
 #if defined(FEATURE_LONG_DISPLACEMENT)
-#define SIY(_inst, _execflag, _regs, _i2, _b1, _effective_addr1) \
+#define SIY(_inst, _regs, _i2, _b1, _effective_addr1) \
     {   U32 temp; S32 temp1; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -984,13 +1000,13 @@ do { \
                         ((_b1) ? (_regs)->GR((_b1)) : (GREG)0) + \
                         temp1; \
             (_effective_addr1) &= ADDRESS_MAXWRAP((_regs)); \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 #endif /*defined(FEATURE_LONG_DISPLACEMENT)*/
 
 /* S storage operand only */
 #undef S
-#define S(_inst, _execflag, _regs, _b2, _effective_addr2) \
+#define S(_inst, _regs, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
             temp = CSWAP32(temp); \
@@ -1001,12 +1017,12 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 4, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* SS storage to storage with two 4-bit L or R fields */
 #undef SS
-#define SS(_inst, _execflag, _regs, _r1, _r3, \
+#define SS(_inst, _regs, _r1, _r3, \
         _b1, _effective_addr1, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
@@ -1027,12 +1043,12 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* SS storage to storage with one 8-bit L field */
 #undef SS_L
-#define SS_L(_inst, _execflag, _regs, _l, \
+#define SS_L(_inst, _regs, _l, \
         _b1, _effective_addr1, _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
@@ -1052,12 +1068,12 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* SSE storage to storage with extended op code */
 #undef SSE
-#define SSE(_inst, _execflag, _regs, _b1, _effective_addr1, \
+#define SSE(_inst, _regs, _b1, _effective_addr1, \
                      _b2, _effective_addr2) \
     {   U32 temp; \
             memcpy (&temp, (_inst), 4); \
@@ -1076,7 +1092,7 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-            INST_UPDATE_PSW((_regs), 6, (_execflag)); \
+            INST_UPDATE_PSW((_regs), 6); \
     }
 
 
@@ -1128,13 +1144,13 @@ do { \
 
 #define SIE_INTERCEPT(_regs) \
 do { \
-    if(SIE_STATE((_regs))) \
+    if(SIE_MODE((_regs))) \
     longjmp((_regs)->progjmp, SIE_INTERCEPT_INST); \
 } while(0)
 
 #define SIE_TRANSLATE(_addr, _acctype, _regs) \
 do { \
-    if(SIE_STATE((_regs)) && !(_regs)->sie_pref) \
+    if(SIE_MODE((_regs)) && !(_regs)->sie_pref) \
     *(_addr) = SIE_LOGICAL_TO_ABS ((_regs)->sie_mso + *(_addr), \
       USE_PRIMARY_SPACE, (_regs)->hostregs, (_acctype), 0); \
 } while(0)
@@ -1155,10 +1171,10 @@ do { \
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
 
 #define SIE_MODE_XC_OPEX(_regs) \
-    if((SIE_STATE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
+    if((SIE_MODE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
         ARCH_DEP(program_interrupt)((_regs), PGM_OPERATION_EXCEPTION)
 #define SIE_MODE_XC_SOPEX(_regs) \
-    if((SIE_STATE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
+    if((SIE_MODE((_regs)) && ((_regs)->siebk->mx & SIE_MX_XC))) \
         ARCH_DEP(program_interrupt)((_regs), PGM_SPECIAL_OPERATION_EXCEPTION)
 
 #else /*!defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
@@ -1213,51 +1229,36 @@ do { \
 
 /* VST and QST formats are the same */
 #undef VST
-#define VST(_inst, _execflag, _regs, _vr3, _rt2, _vr1, _rs2) \
+#define VST(_inst, _regs, _vr3, _rt2, _vr1, _rs2) \
     { \
         (_qr3) = (_inst)[2] >> 4; \
         (_rt2) = (_inst)[2] & 0x0F; \
         (_vr1) = (_inst)[3] >> 4; \
         (_rs2) = (_inst)[3] & 0x0F; \
-        if( !(_execflag) ) \
-        { \
-        (_regs)->psw.ilc = 4; \
-        (_regs)->psw.IA += 4; \
-        (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-        } \
+        INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* VR, VV and QV formats are the same */
 #undef VR
-#define VR(_inst, _execflag, _regs, _qr3, _vr1, _vr2) \
+#define VR(_inst, _regs, _qr3, _vr1, _vr2) \
     { \
         (_qr3) = (_inst)[2] >> 4; \
         (_vr1) = (_inst)[3] >> 4; \
         (_vr2) = (_inst)[3] & 0x0F; \
-        if( !(_execflag) ) \
-        { \
-        (_regs)->psw.ilc = 4; \
-        (_regs)->psw.IA += 4; \
-        (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-        } \
+        INST_UPDATE_PSW((_regs), 4); \
     }
 
 #undef VS
-#define VS(_inst, _execflag, _regs, _rs2) \
+#define VS(_inst, _regs, _rs2) \
     { \
         (_rs2) = (_inst)[3] & 0x0F; \
-        if( !(_execflag) ) \
-        { \
-        (_regs)->psw.ilc = 4; \
-        (_regs)->psw.IA += 4; \
-        (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-        } \
+        INST_UPDATE_PSW((_regs), 4); \
     }
 
 /* The RSE vector instruction format of ESA/390 is referred to as
    VRSE to avoid conflict with the ESAME RSE instruction format */
 #undef VRSE
-#define VRSE(_inst, _execflag, _regs, _r3, _vr1, \
+#define VRSE(_inst, _regs, _r3, _vr1, \
                      _b2, _effective_addr2) \
     { \
         (_r3) = (_inst)[2] >> 4; \
@@ -1269,17 +1270,12 @@ do { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         (_effective_addr2) &= ADDRESS_MAXWRAP((_regs)); \
         } \
-        if( !(_execflag) ) \
-        { \
-        (_regs)->psw.ilc = 6; \
-        (_regs)->psw.IA += 6; \
-        (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-        } \
+        INST_UPDATE_PSW((_regs), 6); \
     }
 
 /* S format instructions where the effective address does not wrap */
 #undef S_NW
-#define S_NW(_inst, _execflag, _regs, _b2, _effective_addr2) \
+#define S_NW(_inst, _regs, _b2, _effective_addr2) \
     { \
         (_b2) = (_inst)[2] >> 4; \
         (_effective_addr2) = (((_inst)[2] & 0x0F) << 8) | (_inst)[3]; \
@@ -1287,12 +1283,7 @@ do { \
         { \
         (_effective_addr2) += (_regs)->GR((_b2)); \
         } \
-        if( !(_execflag) ) \
-        { \
-        (_regs)->psw.ilc = 4; \
-        (_regs)->psw.IA += 4; \
-        (_regs)->psw.IA &= ADDRESS_MAXWRAP((_regs)); \
-        } \
+        INST_UPDATE_PSW((_regs), 4); \
     }
 
 #endif /*defined(FEATURE_VECTOR_FACILITY)*/
@@ -1523,7 +1514,7 @@ void ARCH_DEP(diagnose_002) (REGS *regs, int r1, int r3);
 
 
 /* Functions in module stack.c */
-void ARCH_DEP(trap_x) (int trap_is_trap4, int execflag, REGS *regs, U32 trap_operand);
+void ARCH_DEP(trap_x) (int trap_is_trap4, REGS *regs, U32 trap_operand);
 RADR ARCH_DEP(abs_trap_addr) (VADR vaddr, REGS *regs, int acctype);
 RADR ARCH_DEP(abs_stack_addr) (VADR vaddr, REGS *regs, int acctype);
 void ARCH_DEP(form_stack_entry) (BYTE etype, VADR retna, VADR calla,

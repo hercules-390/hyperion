@@ -449,7 +449,7 @@ int     cc;                             /* Condition code            */
     obtain_lock (&dev->lock);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATE(regs)
+    if(SIE_MODE(regs)
       && (regs->siebk->zone != dev->pmcw.zone
         || !(dev->pmcw.flag27 & PMCW27_I)))
     {
@@ -541,7 +541,7 @@ int     cc;                             /* Condition code            */
     obtain_lock (&dev->lock);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATE(regs)
+    if(SIE_MODE(regs)
       && (regs->siebk->zone != dev->pmcw.zone
         || !(dev->pmcw.flag27 & PMCW27_I)))
     {
@@ -556,7 +556,7 @@ int     cc;                             /* Condition code            */
 #if defined(_FEATURE_IO_ASSIST)
         /* For I/O assisted devices we must intercept if type B
            status is present on the subchannel */
-        if(SIE_STATE(regs)
+        if(SIE_MODE(regs)
           && ( (regs->siebk->tschds & dev->pciscsw.unitstat)
             || (regs->siebk->tschsc & dev->pciscsw.chanstat) ) )
         {
@@ -609,7 +609,7 @@ int     cc;                             /* Condition code            */
 #if defined(_FEATURE_IO_ASSIST)
         /* For I/O assisted devices we must intercept if type B
            status is present on the subchannel */
-        if(SIE_STATE(regs)
+        if(SIE_MODE(regs)
           && ( (regs->siebk->tschds & dev->scsw.unitstat)
             || (regs->siebk->tschsc & dev->scsw.chanstat) ) )
         {
@@ -684,7 +684,7 @@ int     cc;                             /* Condition code            */
 #if defined(_FEATURE_IO_ASSIST)
             /* For I/O assisted devices we must intercept if type B
                status is present on the subchannel */
-            if(SIE_STATE(regs)
+            if(SIE_MODE(regs)
               && ( (regs->siebk->tschds & dev->attnscsw.unitstat)
                 || (regs->siebk->tschsc & dev->attnscsw.chanstat) ) )
             {
@@ -768,7 +768,7 @@ int pending = 0;
     obtain_lock (&dev->lock);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATE(regs)
+    if(SIE_MODE(regs)
       && (regs->siebk->zone != dev->pmcw.zone
         || !(dev->pmcw.flag27 & PMCW27_I)))
     {
@@ -869,7 +869,7 @@ int pending = 0;
     obtain_lock (&dev->lock);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATE(regs)
+    if(SIE_MODE(regs)
       && (regs->siebk->zone != dev->pmcw.zone
         || !(dev->pmcw.flag27 & PMCW27_I)))
     {
@@ -992,7 +992,7 @@ int resume_subchan (REGS *regs, DEVBLK *dev)
     obtain_lock (&dev->lock);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATE(regs)
+    if(SIE_MODE(regs)
       && (regs->siebk->zone != dev->pmcw.zone
         || !(dev->pmcw.flag27 & PMCW27_I)))
     {
@@ -1797,7 +1797,7 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
     obtain_lock (&dev->lock);
 
 #if defined(_FEATURE_IO_ASSIST)
-    if(SIE_STATE(regs)
+    if(SIE_MODE(regs)
       && (regs->siebk->zone != dev->pmcw.zone
         || !(dev->pmcw.flag27 & PMCW27_I)))
     {
@@ -2877,14 +2877,14 @@ int     i;                              /* Interruption subclass     */
 
 #if defined(_FEATURE_IO_ASSIST)
     /* For I/O Assist the zone must match the guest zone */
-    if(SIE_STATE(regs) && regs->siebk->zone != dev->pmcw.zone)
+    if(SIE_MODE(regs) && regs->siebk->zone != dev->pmcw.zone)
         return 0;
 #endif
 
 #if defined(_FEATURE_IO_ASSIST)
     /* The interrupt interlock control bit must be on
        if not we must intercept */
-    if(SIE_STATE(regs) && !(dev->pmcw.flag27 & PMCW27_I))
+    if(SIE_MODE(regs) && !(dev->pmcw.flag27 & PMCW27_I))
         return SIE_INTERCEPT_IOINT;
 #endif
 
@@ -2894,7 +2894,7 @@ int     i;                              /* Interruption subclass     */
     /* Is this device on a channel connected to this CPU? */
     if(
 #if defined(_FEATURE_IO_ASSIST)
-       !SIE_STATE(regs) &&
+       !SIE_MODE(regs) &&
 #endif
        regs->chanset != dev->chanset)
         return 0;
@@ -2902,11 +2902,11 @@ int     i;                              /* Interruption subclass     */
 
     /* Isolate the channel number */
     i = dev->devnum >> 8;
-    if (regs->psw.ecmode == 0 && i < 6)
+    if (!ECMODE(&regs->psw) && i < 6)
     {
 #if defined(_FEATURE_IO_ASSIST)
         /* We must always intercept in BC mode */
-        if(SIE_STATE(regs))
+        if(SIE_MODE(regs))
             return SIE_INTERCEPT_IOINT;
 #endif
         /* For BC mode channels 0-5, test system mask bits 0-5 */
@@ -2924,7 +2924,7 @@ int     i;                              /* Interruption subclass     */
         if ((regs->CR(2) & (0x80000000 >> i)) == 0)
             return
 #if defined(_FEATURE_IO_ASSIST)
-                   SIE_STATE(regs) ? SIE_INTERCEPT_IOINTP :
+                   SIE_MODE(regs) ? SIE_INTERCEPT_IOINTP :
 #endif
                                                            0;
     }
@@ -2939,7 +2939,7 @@ int     i;                              /* Interruption subclass     */
     i =
 #if defined(_FEATURE_IO_ASSIST)
         /* For I/O Assisted devices use the guest (V)ISC */
-        SIE_STATE(regs) ? (dev->pmcw.flag25 & PMCW25_VISC) :
+        SIE_MODE(regs) ? (dev->pmcw.flag25 & PMCW25_VISC) :
 #endif
         ((dev->pmcw.flag4 & PMCW4_ISC) >> 3);
 
@@ -2947,7 +2947,7 @@ int     i;                              /* Interruption subclass     */
     if ((regs->CR_L(6) & (0x80000000 >> i)) == 0)
         return
 #if defined(_FEATURE_IO_ASSIST)
-                   SIE_STATE(regs) ? SIE_INTERCEPT_IOINTP :
+                   SIE_MODE(regs) ? SIE_INTERCEPT_IOINTP :
 #endif
                                                            0;
 #endif /*FEATURE_CHANNEL_SUBSYSTEM*/
@@ -3016,7 +3016,7 @@ retry:
     /* In the case of I/O assist, do a rescan, to see if there are
        any devices with pending subclasses for which we are not
        enabled, if so cause a interception */
-    if (io == NULL && SIE_STATE(regs))
+    if (io == NULL && SIE_MODE(regs))
     {
         /* Find a device with a pending interrupt, regardless
            of the interrupt subclass mask */
@@ -3082,7 +3082,7 @@ retry:
     *iointid =
 #if defined(_FEATURE_IO_ASSIST)
     /* For I/O Assisted devices use (V)ISC */
-               (SIE_STATE(regs)) ?
+               (SIE_MODE(regs)) ?
                  (icode == SIE_NO_INTERCEPT) ?
                    ((dev->pmcw.flag25 & PMCW25_VISC) << 27) :
                    ((dev->pmcw.flag25 & PMCW25_VISC) << 27)
@@ -3101,10 +3101,10 @@ retry:
 #if defined(_FEATURE_IO_ASSIST)
     /* Do not drain pending interrupts on intercept due to
        zero ISC mask */
-    if(!SIE_STATE(regs) || icode != SIE_INTERCEPT_IOINTP)
+    if(!SIE_MODE(regs) || icode != SIE_INTERCEPT_IOINTP)
 #endif
     {
-        if(!SIE_STATE(regs) || icode != SIE_NO_INTERCEPT)
+        if(!SIE_MODE(regs) || icode != SIE_NO_INTERCEPT)
             dev->pmcw.flag27 &= ~PMCW27_I;
 
         /* Reset the interrupt pending flag for the device */
