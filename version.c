@@ -49,7 +49,7 @@ static const char *build_info[] = {
     "Win32 (Windows) build",
 #else
     #if defined(NO_SETUID)
-        "No setuid support"
+        "No setuid support",
     #else
       "Using "
       #if defined(HAVE_SETRESUID)
