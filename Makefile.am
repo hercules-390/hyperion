@@ -12,18 +12,21 @@ else
 HERCIFC=
 endif
 
-if BUILD_FTHREADS
-FTHREADS=fthreads.c w32chan.c
-else
-FTHREADS=
-endif
-
 bin_PROGRAMS = hercules $(HERCIFC) \
 	   dasdinit dasdisup dasdload dasdls dasdpdsu \
 	   tapecopy tapemap tapesplt \
 	   cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap \
 	   hetget hetinit hetmap hetupd \
 	   dmap2hrc
+EXTRA_PROGRAMS=hercifc
+
+fthreads_sources=fthreads.c w32chan.c
+EXTRA_hercules_SOURCES=$(fthreads_sources)
+if BUILD_FTHREADS
+FTHREADS=$(fthreads_sources)
+else
+FTHREADS=
+endif
 
 hercules_SOURCES = impl.c config.c panel.c version.c \
 	   ipl.c assist.c dat.c \
