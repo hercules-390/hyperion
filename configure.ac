@@ -1,7 +1,7 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.17.a1)
+AM_INIT_AUTOMAKE(hercules,2.17.a5)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 AM_GNU_GETTEXT()
@@ -22,11 +22,11 @@ use_dlltool=false
 is_cygwin=false
 
 case "$host_os" in
-        darwin*)    
+        darwin*)
                if test $host_vendor = apple ; then
                    CPPFLAGS=-traditional-cpp
-                   AC_DEFINE([_BSD_SOCKLEN_T_],[int])     
-                   AC_DEFINE([_INTL_REDIRECT_MACROS])     
+                   AC_DEFINE([_BSD_SOCKLEN_T_],[int])
+                   AC_DEFINE([_INTL_REDIRECT_MACROS])
                fi
                ;;
         linux*)
