@@ -20,7 +20,7 @@
 int cardrdr_init_handler ( DEVBLK *dev, int argc, BYTE *argv[] )
 {
 int     i;                              /* Array subscript           */
-int	fc;				/* File counter		     */
+int     fc;                             /* File counter              */
 
     /* The first argument is the file name */
     if (argc > 0)
@@ -31,6 +31,21 @@ int	fc;				/* File counter		     */
             logmsg ("HHC401I File name too long\n");
             return -1;
         }
+        /* Added by VB, after suggestion by Richard Snow - Aug 26, 2001   */
+        /* Check if reader file exists, to avoid gazillion error messages */
+        dev->fd = open(argv[0], O_RDONLY);
+        if(dev->fd < 0)
+        {       /* file does NOT exist                              */
+                /* issue message, and insert empty filename instead */
+                logmsg ("HHC402I File %s does not exist\n", argv[0]);
+                strcpy(argv[0], "");
+        }
+        else
+        {
+                /* if file DID exist, we need to close it now */
+                close(dev->fd);
+        }
+        /* end of change VB/RSS Aug 2001                            */
 
         /* Save the file name in the device block */
         strcpy (dev->filename, argv[0]);
@@ -106,17 +121,17 @@ int	fc;				/* File counter		     */
             continue;
         }
 
-	/* autopad means that if reading fixed sized records
-	 * (ebcdic) and end of file is reached in the middle of
-	 * a record, the record is automatically padded to 80 bytes.
-	 */
+        /* autopad means that if reading fixed sized records
+         * (ebcdic) and end of file is reached in the middle of
+         * a record, the record is automatically padded to 80 bytes.
+         */
         if (strcasecmp(argv[i], "autopad") == 0)
         {
             dev->autopad = 1;
             continue;
         }
-	// add additional file arguments
-	dev->more_files[fc++] = strdup(argv[i]);
+        // add additional file arguments
+        dev->more_files[fc++] = strdup(argv[i]);
         dev->more_files = realloc(dev->more_files, sizeof(char *) * (fc + 1));
         if (!dev->more_files)
         {
@@ -125,7 +140,7 @@ int	fc;				/* File counter		     */
         }
         dev->more_files[fc] = NULL;
     }
-    dev->current_file = dev->more_files; 
+    dev->current_file = dev->more_files;
     /* Check for conflicting arguments */
     if (dev->ebcdic && dev->ascii)
     {
@@ -325,9 +340,9 @@ int     rc;                             /* Return code               */
     rc = read (dev->fd, dev->buf, CARD_SIZE);
 
     if ((rc > 0) && (rc < CARD_SIZE) && dev->autopad)
-	{
+        {
         memset(&dev->buf[rc], 0, CARD_SIZE - rc);
-		rc = CARD_SIZE;
+                rc = CARD_SIZE;
     }
 
     /* Handle end-of-file condition */
@@ -490,21 +505,21 @@ int     num;                            /* Number of bytes to move   */
         /* Read next card if not data-chained from previous CCW */
         if ((chained & CCW_FLAGS_CD) == 0)
         {
-			for (;;)
-			{
-				/* Read ASCII or EBCDIC card image */
-				if (dev->ascii)
-					rc = read_ascii (dev, unitstat);
-				else
-					rc = read_ebcdic (dev, unitstat);
+                        for (;;)
+                        {
+                                /* Read ASCII or EBCDIC card image */
+                                if (dev->ascii)
+                                        rc = read_ascii (dev, unitstat);
+                                else
+                                        rc = read_ebcdic (dev, unitstat);
 
-				if (0
-					|| rc != -2
-					|| !dev->multifile
-					|| open_cardrdr (dev, unitstat) != 0
-					)
-				break;
-			}
+                                if (0
+                                        || rc != -2
+                                        || !dev->multifile
+                                        || open_cardrdr (dev, unitstat) != 0
+                                        )
+                                break;
+                        }
 
             /* Return error status if read was unsuccessful */
             if (rc) break;

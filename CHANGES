@@ -1,3 +1,4 @@
+26 Aug 2001 Added test for file-existance in cardrdr.c (code suggested by Richard Snow) - Volker Bandke
 24 Aug 2001 Add optional address parm to loadcore panel command - Michael Ackerson
 23 Aug 2001 Fix general1.c so commented statements don't wrap to 2 lines - Paul Leisy
 23 Aug 2001 LXD missing PIC 06 when R1 not valid - Paul Leisy
@@ -170,7 +171,7 @@
 22 Apr 2001 ckd fix Read Count setting index marker - Valery Pogonchenko
 22 Apr 2001 ckd fix processing multitrack read ops - Valery Pogonchenko
 22 Apr 2001 cmpsc fixes for expansion - Greg Smith
-22 Apr 2001 Correct prefix alignment for ESA/390 
+22 Apr 2001 Correct prefix alignment for ESA/390
             guest in 64 bit mode SIE - Jan Jaeger
 21 Apr 2001 Added support for muliple files in card reader
 21 Apr 2001 Added support auto-padding of ebcdic files in card reader
@@ -210,7 +211,7 @@
 25 Mar 2001 Correction to MVCK/MVCP/MVCS - Jan Jaeger
 25 Mar 2001 Dynamic device threads - Jan Jaeger
 23 Mar 2001 Set `unit check' status when EOF CKD record read
-            even if count field is zero - Greg Smith 
+            even if count field is zero - Greg Smith
 23 Mar 2001 Bypass number of cylinder check in cckdcdsk.c - Greg Smith
 22 Mar 2001 Implement XSTORE in ESAME mode - Jan Jaeger
 22 Mar 2001 Implement fast interrupt processing for MCK and PER - Jan Jaeger
@@ -267,7 +268,7 @@
 24 Feb 2001 Correction to 64bit IDAW's - Peter Stammbach
 24 Feb 2001 cckd patches  - Greg Smith
 24 Feb 2001 Incorrect-Length-Indication-Suppression facility - Jan Jaeger
-24 Feb 2001 Correction to interval timer Fix 
+24 Feb 2001 Correction to interval timer Fix
 22 Feb 2001 S/370 interval timer fixes - Mark Gaubatz
 22 Feb 2001 64 bit Interpretive Execution (SIE) - Jan Jaeger
 22 Feb 2001 Corrections to load_psw and store_psw - Jan Jaeger
@@ -298,7 +299,7 @@
 11 Feb 2001 Correction to LRAG - Jan Jaeger
 11 Feb 2001 Allow use of environment variables to override filenames
             of hercules.rc hercules.cnf and hercifc - Jan Jaeger
-11 Feb 2001 Various floating additions inclusing EFPC/SRNM 
+11 Feb 2001 Various floating additions inclusing EFPC/SRNM
             instructions, and data exception code specs - Roger Bowler
 11 Feb 2001 Correction to pgmint instruction nullification - Jan Jaeger
 10 Feb 2001 NLS support - Roger Bowler
@@ -347,7 +348,7 @@
 29 Jan 2001 Fix MVCL/CLCL/MVCLE/CLCLE in 64 bit mode - Jan Jaeger
 29 Jan 2001 Fix BAL/BAS type instructions in 64bit mode - Jan Jaeger
 29 Jan 2001 Fix program interruption type in SAM24 and SAM31 - Jan Jaeger
-29 Jan 2001 Correct typo in LMD 
+29 Jan 2001 Correct typo in LMD
 29 Jan 2001 ALGF/ALGFR instructions - Jan Jaeger
 29 Jan 2001 Fix all relative instructions when target of execute - Jan Jaeger
 29 Jan 2001 DSG/DSGF/DSGR/DSGFR instructions - Jan Jaeger
