@@ -1145,31 +1145,10 @@ BYTE c;                                 /* Character work area       */
 
     /* Update IPL parameter if operand is specified */
     if (argc > 1)
-    {
-        unsigned i = 0, k = strlen(argv[1]);
-
-        memset (sysblk.loadparm, 0x40, 8);
-
-        for (; i < k && i < 8; i++)
-        {
-            c = argv[1][i];
-            c = toupper(c);
-            if (!isprint(c)) c = '.';
-            sysblk.loadparm[i] = host_to_guest(c);
-        }
-    }
+	set_loadparm(argv[1]);
 
     /* Display IPL parameter */
-    logmsg( _("HHCPN051I LOADPARM=%c%c%c%c%c%c%c%c\n"),
-            guest_to_host(sysblk.loadparm[0]),
-            guest_to_host(sysblk.loadparm[1]),
-            guest_to_host(sysblk.loadparm[2]),
-            guest_to_host(sysblk.loadparm[3]),
-            guest_to_host(sysblk.loadparm[4]),
-            guest_to_host(sysblk.loadparm[5]),
-            guest_to_host(sysblk.loadparm[6]),
-            guest_to_host(sysblk.loadparm[7])
-        );
+    logmsg( _("HHCPN051I LOADPARM=%s\n"),str_loadparm());
 
     return 0;
 }

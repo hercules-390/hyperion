@@ -351,6 +351,7 @@ endif
                        machdep.h   \
                        httpserv.c  \
                        cgibin.c    \
+                       loadparm.c    \
                        hsccmd.c    \
                        hscmisc.c   \
                        $(FISHIO)   \

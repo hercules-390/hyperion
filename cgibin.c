@@ -615,12 +615,7 @@ U32 doipl;
         iplcpu = sysblk.iplcpu;
 
     if((value = cgi_variable(webblk,"loadparm")))
-    {
-        for(i = 0; i < strlen(value); i++)
-            sysblk.loadparm[i] = host_to_guest((int)value[i]);
-        for(; i < 8; i++)
-            sysblk.loadparm[i] = host_to_guest(' ');
-    }
+	set_loadparm(value);
 
     /* Validate CPU number */
     if(iplcpu >= MAX_CPU)
@@ -647,15 +642,7 @@ U32 doipl;
 
         fprintf(webblk->hsock,"</select>\n");
 
-        fprintf(webblk->hsock,"Loadparm:<input type=text name=loadparm size=8 value=\"%c%c%c%c%c%c%c%c\">\n",
-          guest_to_host(sysblk.loadparm[0]),
-          guest_to_host(sysblk.loadparm[1]),
-          guest_to_host(sysblk.loadparm[2]),
-          guest_to_host(sysblk.loadparm[3]),
-          guest_to_host(sysblk.loadparm[4]),
-          guest_to_host(sysblk.loadparm[5]),
-          guest_to_host(sysblk.loadparm[6]),
-          guest_to_host(sysblk.loadparm[7]));
+        fprintf(webblk->hsock,"Loadparm:<input type=text name=loadparm size=8 value=\"%s\">\n", str_loadparm());
 
         fprintf(webblk->hsock,"<input type=submit name=doipl value=\"IPL\">\n"
                           "</form>\n");

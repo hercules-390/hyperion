@@ -274,7 +274,7 @@ DEVBLK            *dev;                /* Device block pointer       */
             STORE_HW(spccbconfig->offhsa,offset);
 
             /* Move IPL load parameter to SPCCB */
-            memcpy (spccbconfig->loadparm, sysblk.loadparm, 8);
+            get_loadparm (spccbconfig->loadparm);
 
             /* Build the CPU information array after the SCP info */
             spccbcpu = (SPCCB_CPU_INFO*)(spccbconfig+1);

@@ -778,7 +778,6 @@ typedef struct _SYSBLK {
         struct timeval   lasttod;       /* Last gettimeofday         */
 #endif
         TID     wdtid;                  /* Thread-id for watchdog    */
-        BYTE    loadparm[8];            /* IPL load parameter        */
         U16     ipldev;                 /* IPL device                */
         int     iplcpu;                 /* IPL cpu                   */
         int     numcpu;                 /* Number of CPUs installed  */
@@ -1912,6 +1911,11 @@ extern void *(*debug_chsc_unknown_request) (void *, void *, REGS *);
 void *panel_command (void *cmdline);
 void panel_display (void);
 #endif
+
+/* Functions in module loadparm.c */
+void set_loadparm(char *loadpstr);
+void get_loadparm(BYTE *dest);
+char *str_loadparm();
 
 /* Functions in module impl.c */
 void system_cleanup(void);

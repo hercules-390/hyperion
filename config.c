@@ -592,7 +592,6 @@ BYTE   *siodelay;                       /* -> I/O delay value        */
 BYTE   *sptt;                           /* Pthread trace table size  */
 #endif /*defined(OPTION_PTTRACE)*/
 BYTE   *scckd;                          /* -> CCKD parameters        */
-BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
 int     dfltver = 1;                    /* Default version code      */
 U32     serial;                         /* CPU serial number         */
@@ -679,7 +678,6 @@ BYTE **orig_newargv;
     xpndsize = 0;
     numcpu = 0;
     numvec = MAX_CPU_ENGINES;
-    memset (loadparm, 0x40, 8);
     sysepoch = 1900;
     tzoffset = 0;
     diag8cmd = 0;
@@ -1331,9 +1329,7 @@ BYTE **orig_newargv;
             }
 
             /* Convert the load parameter to EBCDIC */
-            memset (loadparm, 0x40, 8);
-            for (i = 0; i < (int)strlen(sloadparm); i++)
-                loadparm[i] = host_to_guest(sloadparm[i]);
+            set_loadparm(sloadparm);
         }
 
         /* Parse system epoch operand */
@@ -1677,9 +1673,6 @@ BYTE **orig_newargv;
     sysblk.cpuid = ((U64)version << 56)
                  | ((U64)serial << 32)
                  | ((U64)model << 16);
-
-    /* Set the load parameter */
-    memcpy (sysblk.loadparm, loadparm, 8);
 
     /* Initialize locks, conditions, and attributes */
 #ifdef OPTION_PTTRACE

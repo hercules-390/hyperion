@@ -592,7 +592,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         STORE_HW(sccbscp->offhsa, offset);
 
         /* Move IPL load parameter to SCCB */
-        memcpy (sccbscp->loadparm, sysblk.loadparm, 8);
+        get_loadparm (sccbscp->loadparm);
 
         /* Set installed features bit mask in SCCB */
         memcpy(sccbscp->ifm, ARCH_DEP(scpinfo_ifm), sizeof(sccbscp->ifm));
