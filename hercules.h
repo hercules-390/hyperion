@@ -1662,7 +1662,11 @@ void alter_display_virt (BYTE *opnd, REGS *regs);
 /* functions or from somewhere else                         */
 #ifdef FEATURE_ECPSVM
 int  ecpsvm_dosvc(REGS *regs, int svccode);
-int  ecpsvm_dossm(REGS *regs,VADR ea,int b);
+int  ecpsvm_dossm(REGS *regs,int b,VADR ea);
+int  ecpsvm_dolpsw(REGS *regs,int b,VADR ea);
+int  ecpsvm_dostnsm(REGS *regs,int b,VADR ea,int imm);
+int  ecpsvm_dostosm(REGS *regs,int b,VADR ea,int imm);
+int  ecpsvm_dosio(BYTE *inst,REGS *regs,int b,VADR ea);
 #endif
 
 

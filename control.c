@@ -1752,7 +1752,7 @@ int     amode64;
 
     S(inst, execflag, regs, b2, effective_addr2);
 #if defined(FEATURE_ECPSVM)
-    if(ecpsvm_lpsw(regs,effective_addr2,b2)==0)
+    if(ecpsvm_dolpsw(regs,b2,effective_addr2)==0)
     {
         return;
     }
@@ -4640,7 +4640,10 @@ int     armode;
         regs->psw.ecmode &&
 #endif /*defined(FEATURE_BCMODE)*/
                             (regs->psw.sysmask & 0xB8) != 0)
+    {
+        logmsg("SSM Specification\n");
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+    }
 
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
@@ -5572,6 +5575,12 @@ int     realmode;
 int     permode;
 
     SI(inst, execflag, regs, i2, b1, effective_addr1);
+#ifdef FEATURE_ECPSVM
+    if(ecpsvm_dostnsm(regs,b1,effective_addr1,i2)==0)
+    {
+        return;
+    }
+#endif
 
     PRIV_CHECK(regs);
 
@@ -5619,6 +5628,13 @@ int     realmode;
 int     permode;
 
     SI(inst, execflag, regs, i2, b1, effective_addr1);
+
+#ifdef FEATURE_ECPSVM
+    if(ecpsvm_dostosm(regs,b1,effective_addr1,i2)==0)
+    {
+        return;
+    }
+#endif
 
     PRIV_CHECK(regs);
 
