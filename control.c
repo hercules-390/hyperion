@@ -2835,6 +2835,11 @@ int     rc;                             /* return code from load_psw */
                 /* Indicate space-switch event required */
                 ssevent = 1;
             }
+            else
+            {
+                /* space-switch event maybe - if PER event */
+                ssevent = 2;
+            }
 
             /* Obtain new PSTD (or PASCE) and AX from the ASTE */
             newregs.CR(1) = ASTE_AS_DESIGNATOR(aste);
@@ -2936,7 +2941,7 @@ int     rc;                             /* return code from load_psw */
 #endif /*defined(FEATURE_PER)*/
 
     /* Generate space switch event if required */
-    if ( ssevent || (pasn != oldpasn && IS_IC_PER(regs)) )
+    if ( ssevent == 1 || (ssevent == 2 && IS_IC_PER(regs)) )
     {
         /* [6.5.2.34] Set translation exception address equal
            to old primary ASN, and set high-order bit if old
