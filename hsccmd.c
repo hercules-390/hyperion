@@ -2760,7 +2760,7 @@ int ListAllCommands(char* cmdline, int argc, char *argv[])
     /* List standard formatted commands from our routing table... */
 
     for (pCmdTab = Commands; pCmdTab->pszCommand; pCmdTab++)
-        logmsg( "  %-9.9s    %s \n", pCmdTab->pszCommand, _(pCmdTab->pszCmdDesc) );
+        logmsg( _("  %-9.9s    %s \n"), pCmdTab->pszCommand, pCmdTab->pszCmdDesc );
 
     // List non-standard formatted commands...
 
@@ -2956,7 +2956,7 @@ int HelpCommand(char* cmdline, int argc, char *argv[])
     {
         if (!strcasecmp(pHelpTab->pszCommand,argv[1]))
         {
-            logmsg( _(pHelpTab->pszCmdHelp) );
+            logmsg( _("%s"),pHelpTab->pszCmdHelp );
             return 0;
         }
     }
