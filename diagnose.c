@@ -39,6 +39,30 @@ U32             n;                      /* 32-bit operand value      */
     switch(code) {
 
 
+    case 0x01F:
+    /*---------------------------------------------------------------*/
+    /* Diagnose 01F: Power Off                                       */
+    /*---------------------------------------------------------------*/
+
+        /* The poweroff diagnose is only valid on the 9221 */
+        if((sysblk.cpuid >> 16 & 0xFFFF) != 0x9221
+          /* and r1/r2 must contain C'POWEROFF' in EBCDIC */
+          || regs->GR_L(r1) != 0xD7D6E6C5
+          || regs->GR_L(r2) != 0xD9D6C6C6)
+            ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
+
+        regs->cpustate = CPUSTATE_STOPPING;
+        ON_IC_CPU_NOT_STARTED(regs);
+
+        /* Release the configuration */
+        release_config();
+
+        /* Power Off: exit hercules */
+        exit(0);
+
+        break;
+
+
 #if defined(FEATURE_HYPERVISOR) || defined(FEATURE_EMULATE_VM)
     case 0x044:
     /*---------------------------------------------------------------*/

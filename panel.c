@@ -930,6 +930,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             "detach devn = remove device\n"
             "define olddevn newdevn = rename device\n"
             SYSCONS_CMD
+            "@xxx = shell command\n"
             "f-addr=mark frame unusable, f+addr=mark frame usable\n"
             TODDRAG_CMD
             PANRATE_CMD
@@ -1278,6 +1279,12 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
        return NULL;
     }
 #endif /*FEATURE_SYSTEM_CONSOLE*/
+
+    if (cmd[0] == '@')
+    {
+        system(cmd + 1);
+        return NULL;
+    }
 
     /* x+ and x- commands - turn switches on or off */
     if (cmd[1] == '+' || cmd[1] == '-')

@@ -6,5 +6,6 @@
 /*-------------------------------------------------------------------*/
 
 #if !defined(VERSION)
-#define	VERSION	2.12k                   /* Hercules version number   */
+#warning No version specified
+#define	VERSION	Unknown                 /* Unkown version number     */
 #endif

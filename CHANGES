@@ -1,3 +1,6 @@
+07 Mar 2001 Correction to MLG/MLGR - Jan Jaeger
+07 Mar 2001 Add @shell panel command - Bernard van der Helm/Jan Jaeger
+07 Mar 2001 Add 9221 power-off diagnose - Jan Jaeger
 05 Mar 2001 Correction to RP - Peter Stammbach
 05 Mar 2001 Correction to DIAG204 - Jan Jaeger
 05 Mar 2001 64 Bit fix to program_return_unstack - Jan Jaeger

@@ -90,7 +90,7 @@ static inline int mult_logical_long
     int i;
 
     *high = ((md & 1) ? mr : 0);
-    for (i = 0; i < 63; i++)
+    for (i = 0; i < 64; i++)
     {
         *lo = (*lo >> 1) | (*high << 63);
         *high >>= 1;

@@ -3436,7 +3436,7 @@ DEF_INST(set_clock_programmable_field)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Set TOD programmable register from register 0 */
-    regs->todpr = regs->GR_L(0) & 0x0000FFFF;
+    regs->todpr = regs->GR_LHL(0);
 }
 #endif /*defined(FEATURE_EXTENDED_TOD_CLOCK)*/
 
