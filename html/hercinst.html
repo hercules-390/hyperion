@@ -1,13 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules Version 2: Installation and Operation</TITLE>
+Hercules Version 3: Installation and Operation</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
 
-<h1>Installing and Operating Hercules Version 2</h1>
+<h1>Hercules Version 3: Installation and Operation</h1>
 
 <h2>Installation Procedure</h2>
 <h3>Building from source</h3>
@@ -16,7 +16,7 @@ instructions on how to build the Win32 version at <a
 href="http://www.bsp-gmbh.com/hercules/nude_w32.html">http://www.bsp-gmbh.com/hercules/nude_w32.html</a>.
 <ol>
 <li>Download the distribution file
-<a href="hercules-2.17.tar.gz">hercules-2.17.tar.gz</a>
+<a href="hercules-3.00.tar.gz">hercules-3.00.tar.gz</a>
 <p>
 <em>Notes:</em>
 <ol>
@@ -29,8 +29,8 @@ href="http://www.bsp-gmbh.com/hercules/nude_w32.html">http://www.bsp-gmbh.com/he
 </ol>
 <p>
 <li>Use these commands to unzip the distribution file:
-<pre>tar xvzf ../hercules-2.17.tar.gz
-cd hercules-2.17</pre>
+<pre>tar xvzf ../hercules-3.00.tar.gz
+cd hercules-3.00</pre>
 <li>Configure Hercules for your system:
 
 <p><code>./configure</code>
@@ -60,12 +60,13 @@ compiler and other software levels.
 <ol>
 <li>Download the RPM file you want:
 <ul>
-<li><a href="hercules-2.17-1.i386.rpm">hercules-2.17-1.i386.rpm</a>: Intel
+<li><a href="hercules-3.00-1.i386.rpm">hercules-3.00-1.i386.rpm</a>: Intel
 </ul>
 <li>Install the RPM:
 <br><code>rpm -Uvh</code> <i>RPMfile</i>
 </ol>
-This will leave the Hercules executables in /usr/bin, where you can run them
+This will leave the Hercules executables in /usr/bin and the dynamic
+libraries in /usr/lib and /usr/lib/hercules, where you can run them
 from anywhere. Sample configuration files will be placed in /etc/hercules,
 and the IPLable card deck for the ZZSA standalone utility will be placed in
 /var/share/hercules.
@@ -89,11 +90,38 @@ this writing, "woody" is not yet released.
 
 <ol>
 <li>Download the compressed disk image: <a
-href="hercules-2.17.dmg">hercules-2.17.dmg</a>
+href="hercules-3.00.dmg">hercules-3.00.dmg</a>
 <li>Mount the image by double-clicking on it in the Finder.
 Your web browser may have done that for you already.
 <li>Installation and use instructions are in the
 file <code>OS&nbsp;X&nbsp;ReadMe.rtf</code>.
+</ol>
+
+<h3>Installing on Windows:</h3>
+
+<ol>
+<li>You must first install the Cygwin package.
+Download the setup program from <a href="http://www.cygwin.com">the Cygwin
+site</a>, and run it. If it's not preselected for you,
+select the libintl-2 package when you're presented with a list of packages
+to install. Hercules version 3.00 was built with version 1.5.5 
+of Cygwin, and may not work with other versions, as the
+Cygwin library tends to have subtle incompatibilities form version
+to version that Herucles seems to stress.
+<li>Download the self-extracting Windows archive: 
+<ul>
+<li><a href="hercules300-i686f.exe">hercules300-i686f.exe</a>: Pentium
+Pro/Pentium II and above, optimized (Fish) threads version
+<li><a href="hercules300-i586f.exe">hercules300-i586f.exe</a>: Pentium,
+optimized (Fish) threads version
+<li><a href="hercules300-i686p.exe">hercules300-i686p.exe</a>: Pentium
+Pro/Pentium II and above, standard POSIX threads version
+<li><a href="hercules300-i586p.exe">hercules300-i586p.exe</a>: Pentium,
+standard POSIX threads version
+</ul>
+The Fish threads versions are recommended unless you encounter strange
+problems.
+<li>Run the self-extracting archive to install on your system.
 </ol>
 
 <h2>Configuration Procedure</h2>
@@ -416,6 +444,6 @@ should in no way be interpreted as an endorsement of the Yahoo! service.</i><sma
 </center>
 
 <small>
-<p>Last updated 6 June 2003
+<p>Last updated 3 October 2003
 </BODY>
 </HTML>
