@@ -34,7 +34,16 @@ int main (int argc, char *argv[])
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
 int  extgui = 0;
+time_t curr_progress_time = 0;
+time_t prev_progress_time = 0;
+#define PROGRESS_INTERVAL_SECS  (   3   )     /* (just what it says) */
+#define MAX_BLKS                ( 13000 )     /* (just a wild guess) */
 #endif /*defined(EXTERNALGUI)*/
+
+/*-------------------------------------------------------------------*/
+/* Tape ioctl areas                                                  */
+/*-------------------------------------------------------------------*/
+struct mtget mtget;                     /* Area for MTIOCGET ioctl   */
 
 /*-------------------------------------------------------------------*/
 /* Return Codes...                                                   */
@@ -145,17 +154,16 @@ static void print_status (BYTE *devname, long stat)
 /*-------------------------------------------------------------------*/
 static int obtain_status (BYTE *devname, int devfd)
 {
-int             rc;                     /* Return code               */
-struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
+int rc;                                 /* Return code               */
 
-    rc = ioctl (devfd, MTIOCGET, (char*)&stblk);
+    rc = ioctl (devfd, MTIOCGET, (char*)&mtget);
     if (rc < 0)
     {
         if (1
             && EIO == errno
             && (0
-                || GMT_EOD( stblk.mt_gstat )
-                || GMT_EOT( stblk.mt_gstat )
+                || GMT_EOD( mtget.mt_gstat )
+                || GMT_EOT( mtget.mt_gstat )
             )
         )
             return +1;
@@ -165,10 +173,8 @@ struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
         return -1;
     }
 
-    print_status (devname, stblk.mt_gstat);
-
-    if (GMT_EOD( stblk.mt_gstat ) ||
-        GMT_EOT( stblk.mt_gstat ))
+    if (GMT_EOD( mtget.mt_gstat ) ||
+        GMT_EOT( mtget.mt_gstat ))
         return +1;
 
     return 0;
@@ -201,10 +207,10 @@ int             devfd;                  /* Tape file descriptor      */
 int             outfd = -1;             /* Output file descriptor    */
 int             fileno;                 /* Tape file number          */
 int             blkcount;               /* Block count               */
+int             totalblks = 0;          /* Block count               */
 int             minblksz;               /* Minimum block size        */
 int             maxblksz;               /* Maximum block size        */
 struct mtop     opblk;                  /* Area for MTIOCTOP ioctl   */
-struct mtget    stblk;                  /* Area for MTIOCGET ioctl   */
 long            density;                /* Tape density code         */
 BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
@@ -226,10 +232,12 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     {
         extgui = 1;
         argc--;
+        setvbuf(stderr, NULL, _IONBF, 0);
+        setvbuf(stdout, NULL, _IONBF, 0);
     }
 #endif /*EXTERNALGUI*/
 
-    /* Display the program identification message */
+   /* Display the program identification message */
     display_version (stderr, "Hercules tape copy program ", FALSE);
 
     /* The first argument is the tape device name */
@@ -245,7 +253,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     else
     {
         printf
-        (
+        ( _(
             "\n"
 //           1...5...10...15...20...25...30...35...40...45...50...55...60...65...70...75...80
             "Creates a .AWS disk file from a SCSI input tape.\n\n"
@@ -292,6 +300,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
             "   %2d           Unrecoverable I/O error writing 'data' block\n"
             "                to o/p .AWS disk file.\n"
             "\n"
+            )
 
             ,RC_SUCCESS
             ,RC_ERROR_BAD_ARGUMENTS
@@ -357,24 +366,20 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     sleep(1);
 
     /* Obtain the tape status */
-    rc = ioctl (devfd, MTIOCGET, (char*)&stblk);
+    rc = obtain_status (devname, devfd);
     if (rc < 0)
-    {
-        printf (_("HHCTC002E Error reading status of %s: rc=%d, errno=%d: %s\n"),
-                devname, rc, errno, strerror(errno));
         EXIT( RC_ERROR_OBTAINING_SCSI_STATUS );
-    }
 
     /* Display tape status information */
     for (i = 0; tapeinfo[i].t_type != 0
-                && tapeinfo[i].t_type != stblk.mt_type; i++);
+                && tapeinfo[i].t_type != mtget.mt_type; i++);
 
     if (tapeinfo[i].t_name)
         printf (_("HHCTC003I %s device type: %s\n"), devname, tapeinfo[i].t_name);
     else
-        printf (_("HHCTC003I %s device type: 0x%lX\n"), devname, stblk.mt_type);
+        printf (_("HHCTC003I %s device type: 0x%lX\n"), devname, mtget.mt_type);
 
-    density = (stblk.mt_dsreg & MT_ST_DENSITY_MASK)
+    density = (mtget.mt_dsreg & MT_ST_DENSITY_MASK)
                 >> MT_ST_DENSITY_SHIFT;
 
     for (i = 0; densinfo[i].t_type != 0
@@ -386,10 +391,8 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     else
         printf (_("HHCTC004I %s tape density code: 0x%lX\n"), devname, density);
 
-    if (stblk.mt_gstat != 0)
-    {
-        print_status (devname, stblk.mt_gstat);
-    }
+    if (mtget.mt_gstat != 0)
+        print_status (devname, mtget.mt_gstat);
 
     /* Open the output file */
     if (filename)
@@ -407,6 +410,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     /* Copy blocks from tape to the output file */
     fileno = 1;
     blkcount = 0;
+    totalblks = 0;
     minblksz = 0;
     maxblksz = 0;
     len = 0;
@@ -414,8 +418,29 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     bytes_written = 0;
     file_bytes = 0;
 
+#if defined(EXTERNALGUI)
+    if ( extgui )
+    {
+        fprintf( stderr, "BLKS=%d\n", MAX_BLKS );
+        prev_progress_time = time( NULL );
+    }
+#endif /*defined(EXTERNALGUI)*/
+
     while (1)
     {
+#if defined(EXTERNALGUI)
+        /* Issue a progress message every few seconds... */
+        if ( extgui )
+        {
+            if ( ( curr_progress_time = time( NULL ) ) >=
+                ( prev_progress_time + PROGRESS_INTERVAL_SECS ) )
+            {
+                prev_progress_time = curr_progress_time;
+                fprintf( stderr, "BLK=%d\n", totalblks );
+            }
+        }
+#endif /*defined(EXTERNALGUI)*/
+
         /* Save previous block length */
         prevlen = len;
 
@@ -443,8 +468,6 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         /* Check for tape mark */
         if (len == 0)
         {
-            printf(_("(tapemark)\n"));
-
             /* Write tape mark to output file */
             if (outfd >= 0)
             {
@@ -476,15 +499,22 @@ int64_t         file_bytes;             /* Byte count for curr file  */
 
                 printf (_("HHCTC009I File %u: Blocks=%u, Bytes=%lld, Block size min=%u, "
                         "max=%u, avg=%u\n"),
-                        fileno, blkcount, file_bytes, minblksz, maxblksz, (int)file_bytes/blkcount);
+                        fileno, blkcount, file_bytes, minblksz, maxblksz,
+                        (int)file_bytes/blkcount);
             }
             else
             {
                 ASSERT( !file_bytes ); // (sanity check)
             }
 
+            /* Show the 'tapemark' AFTER the above file summary since
+               that's the actual physical sequence of events; i.e. the
+               file data came first THEN it was followed by a tapemark */
+            printf(_("(tapemark)\n"));
+
             /* Reset counters for next file */
-            fileno++;
+            if (blkcount)
+                fileno++;
             minblksz = 0;
             maxblksz = 0;
             blkcount = 0;
@@ -494,6 +524,7 @@ int64_t         file_bytes;             /* Byte count for curr file  */
 
         /* Count blocks and block sizes */
         blkcount++;
+        totalblks++;
         bytes_read += len;
         file_bytes += len;
         if (len > maxblksz) maxblksz = len;
@@ -519,7 +550,12 @@ int64_t         file_bytes;             /* Byte count for curr file  */
         else
         {
             ASSERT(blkcount);
-            printf ("File %u: Block %u\r", fileno, blkcount);
+
+#if defined(EXTERNALGUI)
+            if ( !extgui )
+#endif
+                printf( _("File %u: Block %u\r"),
+                    fileno, blkcount );
         }
 
         /* Write block to output file */
@@ -571,11 +607,13 @@ int64_t         file_bytes;             /* Byte count for curr file  */
     (
         _(
             "HHCTC000I Successful completion;\n"
-            "          Bytes read: %lld (%3.1f MB)\n"
+            "          Bytes read: %lld (%3.1f MB), Blocks=%u, avg=%u\n"
         )
 
         ,           bytes_read
         ,(double) ( bytes_read    + HALF_MEGABYTE ) / (double) ONE_MEGABYTE
+        ,totalblks
+        ,totalblks ? (int)bytes_read/totalblks : -1
     );
 
     if (filename)

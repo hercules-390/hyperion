@@ -968,7 +968,6 @@ DWORD  __stdcall  FTWin32ThreadFunc
     PFT_THREAD_FUNC        pfnTheirThreadFunc;
     void*                  pvTheirThreadArgs;
     FTHREAD*               pFTHREAD;
-    void*                  ExitVal;
 
     pCallTheirThreadParms = (FT_CALL_THREAD_PARMS*) pMyArgs;
 
@@ -1445,7 +1444,7 @@ int  fthread_mutex_init
     const fthread_mutexattr_t*  pFT_MUTEX_ATTR
 )
 {
-    DWORD  dwMutexType;
+    DWORD  dwMutexType = 0;
 
     if ( !pFTUSER_MUTEX )
         return RC(EINVAL);      // (invalid mutex ptr)

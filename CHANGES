@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+24 Sep 2004 Tapecopy: progress msgs for external gui -- Fish
 23 Sep 2004 Restore '-Wall -W' flags to gcc, Pass along CFLAGS to configure
             Eliminated all but 8 warnings -- Ivan Warren
 22 Sep 2004 Fix tapecopy -- Fish
