@@ -790,7 +790,7 @@ int     j,k;
 #ifdef FEATURE_HERCULES_DIAGCALLS
         if(sysblk.diag8cmd)
         {
-            logmsg ("HHC660I *%s* panel command issued by the host program\n", buf);
+            logmsg ("HHC660I *%s* panel command issued by guest\n", buf);
             if (cmdflags & CMDFLAGS_RESPONSE)
             {
                 dresp=log_capture(panel_command,buf);
