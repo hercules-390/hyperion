@@ -348,7 +348,7 @@ int      pending = 0;                   /* New interrupt pending     */
         memcpy (psa->csw, dev->csw, 8);
 
         /* Set pending interrupt */
-        dev->pending = 1;
+        dev->pending = pending = 1;
 
         if (dev->ccwtrace || dev->ccwstep)
             display_csw (dev, dev->csw);
@@ -386,8 +386,6 @@ int      pending = 0;                   /* New interrupt pending     */
     {
         signal_thread (sysblk.cnsltid, SIGUSR2);
     }
-
-    pending = (dev->pending || dev->pcipending);
 
     release_lock (&dev->lock);
 
