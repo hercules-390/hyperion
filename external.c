@@ -443,6 +443,10 @@ U16     cpuad;                          /* Originating CPU address   */
 /*      sregs   Register context of CPU whose status is to be stored */
 /*      aaddr   A valid absolute address of a 512-byte block into    */
 /*              which status is to be stored                         */
+/*              For an implicit store status, or an operator         */
+/*              initiated store status the absolute address will be  */
+/*              zero, for a store status at address order the        */
+/*              supplied address will be nonzero                     */
 /*-------------------------------------------------------------------*/
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr)
 {
@@ -450,15 +454,26 @@ U64     dreg;                           /* Double register work area */
 int     i;                              /* Array subscript           */
 PSA     *sspsa;                         /* -> Store status area      */
 
-    /* Point to the PSA into which status is to be stored */
-    sspsa = (void*)(ssreg->mainstor + aaddr);
-
     /* Set reference and change bits */
     STORAGE_KEY(aaddr, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
 #if defined(FEATURE_ESAME)
     /* The ESAME PSA is two pages in size */
-    STORAGE_KEY(aaddr + 4096, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
+    if(!aaddr)
+        STORAGE_KEY(aaddr + 4096, ssreg) |= (STORKEY_REF | STORKEY_CHANGE);
 #endif /*defined(FEATURE_ESAME)*/
+
+    /* For store status at address, we must ajust the PSA offset */
+    if(aaddr)
+        aaddr -= 512
+#if defined(FEATURE_ESAME)
+                     + 4096
+#endif 
+                           ;
+
+    aaddr &= 0x7FFFFE00;
+
+    /* Point to the PSA into which status is to be stored */
+    sspsa = (void*)(ssreg->mainstor + aaddr);
 
     /* Store CPU timer in bytes 216-223 */
     dreg = ssreg->ptimer;
@@ -482,10 +497,12 @@ PSA     *sspsa;                         /* -> Store status area      */
 #endif /*defined(FEATURE_ESAME)*/
 
 #if defined(_900)
+    /* Only store the arch mode indicator for a PSA type store status */
+    if(!aaddr)
 #if defined(FEATURE_ESAME)
-    sspsa->arch = 1;
+        sspsa->arch = 1;
 #else /*defined(FEATURE_ESAME)*/
-    sspsa->arch = 0;
+        sspsa->arch = 0;
 #endif /*defined(FEATURE_ESAME)*/
 #endif /*defined(_900)*/
 
