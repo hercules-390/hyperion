@@ -45,31 +45,31 @@ endif
 
 
 #set compiler flags depending on HOST_ARCH
-ifeq ($HOST_ARCH),i386)
+ifeq ($(HOST_ARCH),i386)
 CFLAGS	+= -O3 -malign-double
 endif
 
-ifeq ($HOST_ARCH),i586)
+ifeq ($(HOST_ARCH),i586)
 CFLAGS	+= -O3 -malign-double -march=pentium
 endif
 
-ifeq ($HOST_ARCH),pentium)
+ifeq ($(HOST_ARCH),pentium)
 CFLAGS	+= -O3 -malign-double -march=pentium
 endif
 
-ifeq ($HOST_ARCH),i686)
+ifeq ($(HOST_ARCH),i686)
 CFLAGS	+= -O3 -malign-double -march=pentiumpro
 endif
 
-ifeq ($HOST_ARCH),pentiumpro)
+ifeq ($(HOST_ARCH),pentiumpro)
 CFLAGS	+= -O3 -malign-double -march=pentiumpro
 endif
 
-ifeq ($HOST_ARCH),alpha)
+ifeq ($(HOST_ARCH),alpha)
 CFLAGS	+= -O2
 endif
 
-ifeq ($HOST_ARCH),other)
+ifeq ($(HOST_ARCH),other)
 CFLAGS	+= -O3
 endif
 
