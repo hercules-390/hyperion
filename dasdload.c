@@ -1804,6 +1804,7 @@ DATABLK        *datablk;                /* Data block                */
 /* Input:                                                            */
 /*      xbuf    Pointer to buffer containing control record          */
 /*      xreclen Length of control record                             */
+/*      filen   Pointer to field to receive file sequence number     */
 /*      dsorg   Pointer to byte to receive dataset organization      */
 /*      recfm   Pointer to byte to receive record format             */
 /*      lrecl   Pointer to integer to receive logical record length  */
@@ -1820,8 +1821,9 @@ DATABLK        *datablk;                /* Data block                */
 /* File information is listed if infolvl is 2 or greater.            */
 /*-------------------------------------------------------------------*/
 static int
-process_inmr02 (BYTE *xbuf, int xreclen, BYTE *dsorg, BYTE *recfm,
-                U16 *lrecl, U16 *blksz, U16 *keyln, U16 *dirnm)
+process_inmr02 (BYTE *xbuf, int xreclen, int *filen,
+                BYTE *dsorg, BYTE *recfm, U16 *lrecl, U16 *blksz,
+                U16 *keyln, U16 *dirnm)
 {
 int             rc;                     /* Return code               */
 int             i;                      /* Array subscript           */
@@ -1846,6 +1848,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
     /* Extract the file number which follows the record name */
     filenum = (xbuf[6] << 24) | (xbuf[7] << 16)
             | (xbuf[8] << 8) | xbuf[9];
+    XMINFF (4, "File number: %d\n", filenum);
 
     /* Point to the first text unit */
     bufpos = 10;
@@ -1926,6 +1929,7 @@ BYTE           *fieldptr[MAXNUM];       /* Array of field pointers   */
                 "LRECL=%d BLKSIZE=%d KEYLEN=%d DIRBLKS=%d\n",
                 dsorg_name(tudsorg), recfm_name(turecfm),
                 tulrecl, tublksz, tukeyln, tudirct);
+        *filen = filenum;
         *dsorg = tudsorg[0];
         *recfm = turecfm[0];
         *lrecl = tulrecl;
@@ -2626,6 +2630,8 @@ int             xreclen;                /* Logical record length     */
 BYTE            xctl;                   /* 0x20=Control record       */
 BYTE            xrecname[8];            /* XMIT control record name  */
 int             datarecn = 0;           /* Data record counter       */
+int             datafiln = 0;           /* Data file counter         */
+int             copyfiln = 0;           /* Seq num of file to copy   */
 BYTE            dsorg;                  /* Dataset organization      */
 BYTE            recfm;                  /* Dataset record format     */
 U16             lrecl;                  /* Dataset record length     */
@@ -2737,8 +2743,9 @@ COPYR1         *copyr1;                 /* -> header record 1        */
             /* Process control record according to type */
             if (strcmp(xrecname, "INMR02") == 0)
             {
-                rc = process_inmr02 (xbuf, xreclen, &dsorg, &recfm,
-                                     &lrecl, &blksz, &keyln, &dirnm);
+                rc = process_inmr02 (xbuf, xreclen, &copyfiln,
+                                     &dsorg, &recfm, &lrecl, &blksz,
+                                     &keyln, &dirnm);
                 if (rc < 0) return -1;
             }
             else
@@ -2750,7 +2757,11 @@ COPYR1         *copyr1;                 /* -> header record 1        */
             /* Reset the data counter if data control record */
             if (strcmp(xrecname, "INMR03") == 0)
             {
+                datafiln++;
                 datarecn = 0;
+                XMINFF (4, "File number: %d %s\n", datafiln,
+                    (datafiln == copyfiln) ? "(selected)"
+                                           : "(not selected)");
             }
 
             /* Loop to get next record */
@@ -2762,6 +2773,12 @@ COPYR1         *copyr1;                 /* -> header record 1        */
         datarecn++;
         XMINFF (4, "Data record: length %d\n", xreclen);
         if (infolvl >= 5) data_dump (xbuf, xreclen);
+
+        /* If this is not the IEBCOPY file then ignore data record */
+        if (method == METHOD_XMIT && datafiln != copyfiln)
+        {
+            continue;
+        }
 
         /* Process IEBCOPY header record 1 */
         if (datarecn == 1)
@@ -3506,7 +3523,7 @@ DATABLK         datablk;                /* Data block                */
             return -1;
         }
     }
- 
+
     /* Close the input file */
     close (sfd);
 
@@ -4347,7 +4364,7 @@ int             lfs = 0;                /* 1 = Large file            */
                      "Hercules DASD loader program ");
 
     /* Process optional arguments */
-    for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--) 
+    for ( ; argc > 1 && argv[1][0] == '-'; argv++, argc--)
     {
         if (strcmp("0", &argv[1][1]) == 0)
             comp = CCKD_COMPRESS_NONE;

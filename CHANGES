@@ -1,3 +1,4 @@
+03 Aug 2002 Fix dasdload to ignore comments in CBT XMIT files - Roger Bowler
 03 Aug 2002 Change automagic to make NLS support work - Volker Bandke
 30 Jul 2002 Compressed dasd tweaks - Greg Smith
 26 Jul 2002 Compressed dasd enhanced free pending processing - Greg Smith
