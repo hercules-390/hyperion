@@ -544,151 +544,179 @@ U16     eax;                            /* Authorization index       */
     UNREFERENCED_370(arn);
     UNREFERENCED_370(acctype);
 
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
-    if (acctype == ACCTYPE_INSTFETCH)
-  #if defined(FEATURE_LINKAGE_STACK)
+    switch(arn)
     {
-        if (HOME_SPACE_MODE(&regs->psw))
-        {
-            regs->dat.stid = TEA_ST_HOME;
-            regs->dat.asd = regs->CR(13);
-        }
-        else
-  #endif /*defined(FEATURE_LINKAGE_STACK)*/
-        {
-            regs->dat.stid = TEA_ST_PRIMARY;
-            regs->dat.asd = regs->CR(1);
-        }
-  #if defined(FEATURE_LINKAGE_STACK)
-    }
-    else if (acctype == ACCTYPE_STACK)
-    {
-        regs->dat.stid = TEA_ST_HOME;
-        regs->dat.asd = regs->CR(13);
-    }
-  #endif /*defined(FEATURE_LINKAGE_STACK)*/
-    else if (arn == USE_PRIMARY_SPACE)
-    {
-        regs->dat.stid = TEA_ST_PRIMARY;
-        regs->dat.asd = regs->CR(1);
-    }
-    else if (arn == USE_SECONDARY_SPACE)
-    {
-        regs->dat.stid = TEA_ST_SECNDRY;
-        regs->dat.asd = regs->CR(7);
-    }
-    else if (arn == USE_HOME_SPACE)
-    {
-        regs->dat.stid = TEA_ST_HOME;
-        regs->dat.asd = regs->CR(13);
-    }
-  #if defined(FEATURE_ACCESS_REGISTERS)
-    else if(ACCESS_REGISTER_MODE(&regs->psw)
-    #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-      || (regs->sie_active
-        && (regs->guestregs->siebk->mx & SIE_MX_XC)
-        && AR_BIT(&regs->guestregs->psw))
-    #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-        )
-    {
-        /* [5.8.4.1] Select the access-list-entry token */
-        alet = (arn == 0) ? 0 :
-    #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
-        /* Obtain guest ALET if guest is XC guest in AR mode */
-        (regs->sie_active && (regs->guestregs->siebk->mx & SIE_MX_XC)
-         && AR_BIT(&regs->guestregs->psw))
-          ? regs->guestregs->AR(arn) :
-        /* else if in SIE mode but not an XC guest in AR mode
-           then the ALET will be zero */
-        (regs->sie_active) ? 0 :
-    #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
-            regs->AR(arn);
-
-        /* Use the ALET to determine the segment table origin */
-        switch (alet) {
-
-        case ALET_PRIMARY:
-            /* [5.8.4.2] Obtain primary segment table designation */
+        case USE_PRIMARY_SPACE:
             regs->dat.stid = TEA_ST_PRIMARY;
             regs->dat.asd = regs->CR(1);
             break;
 
-        case ALET_SECONDARY:
-            /* [5.8.4.2] Obtain secondary segment table designation */
+        case USE_SECONDARY_SPACE:
             regs->dat.stid = TEA_ST_SECNDRY;
             regs->dat.asd = regs->CR(7);
             break;
 
-        default:
-#if 1
-            /* ALB Lookup */
-            if(regs->aea_ar[arn] >= CR_ALB_OFFSET)
+        case USE_HOME_SPACE:
+            regs->dat.stid = TEA_ST_HOME;
+            regs->dat.asd = regs->CR(13);
+            break;
+
+        case USE_REAL_ADDR:
+            regs->dat.stid = 0;
+            regs->dat.asd = TLB_REAL_ASD;
+            break;
+
+        case USE_INST_SPACE:
+            switch(regs->aea_ar[USE_INST_SPACE])
             {
-                regs->dat.asd = regs->CR(regs->aea_ar[arn]);
-                regs->dat.protect = regs->aea_aleprot[arn];
-                regs->dat.stid = TEA_ST_ARMODE;
+                case 1:
+                    regs->dat.stid = TEA_ST_PRIMARY;
+                    break;
+                case 7:
+                    regs->dat.stid = TEA_ST_SECNDRY;
+                    break;
+                case 13:
+                    regs->dat.stid = TEA_ST_HOME;
+                    break;
+                default:
+                    regs->dat.stid = 0;
+            }
+            regs->dat.asd = regs->CR(regs->aea_ar[USE_INST_SPACE]);
+            break;
+
+        default:
+            
+    #if defined(FEATURE_DUAL_ADDRESS_SPACE)
+        if (acctype == ACCTYPE_INSTFETCH)
+      #if defined(FEATURE_LINKAGE_STACK)
+        {
+            if (HOME_SPACE_MODE(&regs->psw))
+            {
+                regs->dat.stid = TEA_ST_HOME;
+                regs->dat.asd = regs->CR(13);
             }
             else
-#endif
+      #endif /*defined(FEATURE_LINKAGE_STACK)*/
             {
-                /* Extract the extended AX from CR8 bits 0-15 (32-47) */
-                eax = regs->CR_LHH(8);
-
-                /* [5.8.4.3] Perform ALET translation to obtain ASTE */
-                if (ARCH_DEP(translate_alet) (alet, eax, acctype,
-                                              regs, &asteo, aste))
-                    /* Exit if ALET translation error */
-                    return regs->dat.xcode;
-
-                /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
-                regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
-                regs->dat.stid = TEA_ST_ARMODE;
-#if 1
-                if(regs->dat.protect & 2)
-                {
-#if defined(FEATURE_ESAME)
-                   regs->dat.asd ^= ASCE_RESV;
-                   regs->dat.asd |= ASCE_P;
-#else
-                   regs->dat.asd ^= STD_RESV;
-                   regs->dat.asd |= STD_PRIVATE;
-#endif
-               }
-
-                /* Update ALB */
-                regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
-                regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
-                regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
-                regs->aea_aleprot[arn] = regs->dat.protect & 2;
-
-#endif
+                regs->dat.stid = TEA_ST_PRIMARY;
+                regs->dat.asd = regs->CR(1);
             }
-
-        } /* end switch(alet) */
-
-    } /* end if(ACCESS_REGISTER_MODE) */
-  #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
-    else if (PRIMARY_SPACE_MODE(&regs->psw))
-    {
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-        regs->dat.stid = TEA_ST_PRIMARY;
-        regs->dat.asd = regs->CR(1);
-#if defined(FEATURE_DUAL_ADDRESS_SPACE)
-    }
-  #if defined(FEATURE_LINKAGE_STACK)
-    else if (HOME_SPACE_MODE(&regs->psw))
-    {
-        regs->dat.stid = TEA_ST_HOME;
-        regs->dat.asd = regs->CR(13);
-    }
-  #endif /*defined(FEATURE_LINKAGE_STACK)*/
-    else /* SECONDARY_SPACE_MODE */
-    {
-        regs->dat.stid = TEA_ST_SECNDRY;
-        regs->dat.asd = regs->CR(7);
-    }
-#endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
-
+      #if defined(FEATURE_LINKAGE_STACK)
+        }
+        else if (acctype == ACCTYPE_STACK)
+        {
+            regs->dat.stid = TEA_ST_HOME;
+            regs->dat.asd = regs->CR(13);
+        }
+      #endif /*defined(FEATURE_LINKAGE_STACK)*/
+      #if defined(FEATURE_ACCESS_REGISTERS)
+        else if(ACCESS_REGISTER_MODE(&regs->psw)
+        #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+          || (regs->sie_active
+            && (regs->guestregs->siebk->mx & SIE_MX_XC)
+            && AR_BIT(&regs->guestregs->psw))
+        #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+            )
+        {
+            /* [5.8.4.1] Select the access-list-entry token */
+            alet = (arn == 0) ? 0 :
+        #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+            /* Obtain guest ALET if guest is XC guest in AR mode */
+            (regs->sie_active && (regs->guestregs->siebk->mx & SIE_MX_XC)
+             && AR_BIT(&regs->guestregs->psw))
+              ? regs->guestregs->AR(arn) :
+            /* else if in SIE mode but not an XC guest in AR mode
+               then the ALET will be zero */
+            (regs->sie_active) ? 0 :
+        #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
+                regs->AR(arn);
+    
+            /* Use the ALET to determine the segment table origin */
+            switch (alet) {
+    
+            case ALET_PRIMARY:
+                /* [5.8.4.2] Obtain primary segment table designation */
+                regs->dat.stid = TEA_ST_PRIMARY;
+                regs->dat.asd = regs->CR(1);
+                break;
+    
+            case ALET_SECONDARY:
+                /* [5.8.4.2] Obtain secondary segment table designation */
+                regs->dat.stid = TEA_ST_SECNDRY;
+                regs->dat.asd = regs->CR(7);
+                break;
+    
+            default:
+    #if 1
+                /* ALB Lookup */
+                if(regs->aea_ar[arn] >= CR_ALB_OFFSET)
+                {
+                    regs->dat.asd = regs->CR(regs->aea_ar[arn]);
+                    regs->dat.protect = regs->aea_aleprot[arn];
+                    regs->dat.stid = TEA_ST_ARMODE;
+                }
+                else
+    #endif
+                {
+                    /* Extract the extended AX from CR8 bits 0-15 (32-47) */
+                    eax = regs->CR_LHH(8);
+    
+                    /* [5.8.4.3] Perform ALET translation to obtain ASTE */
+                    if (ARCH_DEP(translate_alet) (alet, eax, acctype,
+                                                  regs, &asteo, aste))
+                        /* Exit if ALET translation error */
+                        return regs->dat.xcode;
+    
+                    /* [5.8.4.9] Obtain the STD or ASCE from the ASTE */
+                    regs->dat.asd = ASTE_AS_DESIGNATOR(aste);
+                    regs->dat.stid = TEA_ST_ARMODE;
+    #if 1
+                    if(regs->dat.protect & 2)
+                    {
+    #if defined(FEATURE_ESAME)
+                       regs->dat.asd ^= ASCE_RESV;
+                       regs->dat.asd |= ASCE_P;
+    #else
+                       regs->dat.asd ^= STD_RESV;
+                       regs->dat.asd |= STD_PRIVATE;
+    #endif
+                   }
+    
+                    /* Update ALB */
+                    regs->CR(CR_ALB_OFFSET + arn) = regs->dat.asd;
+                    regs->aea_ar[arn] = CR_ALB_OFFSET + arn;
+                    regs->aea_common[CR_ALB_OFFSET + arn] = (regs->dat.asd & ASD_PRIVATE) == 0;
+                    regs->aea_aleprot[arn] = regs->dat.protect & 2;
+    
+    #endif
+                }
+    
+            } /* end switch(alet) */
+    
+        } /* end if(ACCESS_REGISTER_MODE) */
+      #endif /*defined(FEATURE_ACCESS_REGISTERS)*/
+        else if (PRIMARY_SPACE_MODE(&regs->psw))
+        {
+    #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+            regs->dat.stid = TEA_ST_PRIMARY;
+            regs->dat.asd = regs->CR(1);
+    #if defined(FEATURE_DUAL_ADDRESS_SPACE)
+        }
+      #if defined(FEATURE_LINKAGE_STACK)
+        else if (HOME_SPACE_MODE(&regs->psw))
+        {
+            regs->dat.stid = TEA_ST_HOME;
+            regs->dat.asd = regs->CR(13);
+        }
+      #endif /*defined(FEATURE_LINKAGE_STACK)*/
+        else /* SECONDARY_SPACE_MODE */
+        {
+            regs->dat.stid = TEA_ST_SECNDRY;
+            regs->dat.asd = regs->CR(7);
+        }
+    #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
+    
+    } /* switch(arn) */
     return 0;
 } /* end function load_address_space_designator */
 
@@ -1602,6 +1630,19 @@ RADR ptemask;
             if ((regs->guestregs->tlb.TLB_PTE(i) & ptemask) == pte)
                 regs->guestregs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
     }
+
+
+#if 1 /*ZZ1*/
+    else
+    /* For guests, clear any host entries */
+    if (regs->hostregs)
+    {
+        INVALIDATE_AIA(regs->hostregs);
+        for (i = 0; i < TLBN; i++)
+            if ((regs->hostregs->tlb.TLB_PTE(i) & ptemask) == pte)
+                regs->hostregs->tlb.TLB_VADDR(i) &= TLBID_PAGEMASK;
+    }
+#endif
 #endif /*defined(_FEATURE_SIE)*/
 
 } /* end function purge_tlbe */
@@ -1625,9 +1666,32 @@ int  i;
 #if defined(_FEATURE_SIE)
     /* Also invalidate the guest registers in the SIE copy */
     if(regs->guestregs)
-        ARCH_DEP(invalidate_tlb) (regs->guestregs, mask);
-#endif /*defined(_FEATURE_SIE)*/
+    {
+        INVALIDATE_AIA(regs->guestregs);
+        if (mask == 0)
+            memset(&regs->guestregs->tlb.acc, 0, TLBN);
+        else
+            for (i = 0; i < TLBN; i++)
+                if ((regs->guestregs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->guestregs->tlbID)
+                    regs->guestregs->tlb.acc[i] &= mask;
+    }
 
+#if 1 /*ZZ1*/
+    else
+    /* Also invalidate the guest registers in the SIE copy */
+    if(regs->hostregs)
+    {
+        INVALIDATE_AIA(regs->hostregs);
+        if (mask == 0)
+            memset(&regs->hostregs->tlb.acc, 0, TLBN);
+        else
+            for (i = 0; i < TLBN; i++)
+                if ((regs->hostregs->tlb.TLB_VADDR(i) & TLBID_BYTEMASK) == regs->hostregs->tlbID)
+                    regs->hostregs->tlb.acc[i] &= mask;
+    }
+#endif
+
+#endif /*defined(_FEATURE_SIE)*/
 } /* end function invalidate_tlb */
 
 
@@ -1643,25 +1707,54 @@ int i;
         ARCH_DEP(invalidate_tlb)(regs, 0);
         return;
     }
-    else
-    {
-        INVALIDATE_AIA_MAIN(regs, main);
-        for (i = 0; i < TLBN; i++)
-            if (MAINADDR(regs->tlb.main[i], regs->tlb.TLB_VADDR(i)) == main)
-            {
-                regs->tlb.acc[i] = 0;
+
+    INVALIDATE_AIA_MAIN(regs, main);
+    for (i = 0; i < TLBN; i++)
+        if (MAINADDR(regs->tlb.main[i], regs->tlb.TLB_VADDR(i)) == main)
+        {
+            regs->tlb.acc[i] = 0;
 #if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
-                if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
-                    regs->tlb.acc[i^1] = 0;
+            if ((regs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+                regs->tlb.acc[i^1] = 0;
+#endif
+        }
+
+#if defined(_FEATURE_SIE)
+    /* Also clear the guest registers in the SIE copy */
+    if (regs->guestregs)
+    {
+        INVALIDATE_AIA_MAIN(regs->guestregs, main);
+        for (i = 0; i < TLBN; i++)
+            if (MAINADDR(regs->guestregs->tlb.main[i],
+                         regs->guestregs->tlb.TLB_VADDR(i)) == main)
+            {
+                regs->guestregs->tlb.acc[i] = 0;
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+                if ((regs->guestregs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+                    regs->guestregs->tlb.acc[i^1] = 0;
 #endif
             }
-    
-#if defined(_FEATURE_SIE)
-        /* Also clear the guest registers in the SIE copy */
-        if (regs->guestregs)
-            ARCH_DEP(invalidate_tlbe)(regs->guestregs, main);
-#endif
     }
+
+#if 1 /*ZZ1*/
+    /* Also clear the host registers in the SIE copy */
+    if (regs->hostregs)
+    {
+        INVALIDATE_AIA_MAIN(regs->hostregs, main);
+        for (i = 0; i < TLBN; i++)
+            if (MAINADDR(regs->hostregs->tlb.main[i],
+                         regs->hostregs->tlb.TLB_VADDR(i)) == main)
+            {
+                regs->hostregs->tlb.acc[i] = 0;
+#if !defined(FEATURE_S390_DAT) && !defined(FEATURE_ESAME)
+                if ((regs->hostregs->CR(0) & CR0_PAGE_SIZE) == CR0_PAGE_SZ_4K)
+                    regs->hostregs->tlb.acc[i^1] = 0;
+#endif
+            }
+    }
+#endif
+#endif /*defined(_FEATURE_SIE)*/
+
 } /* end function purge_tlbe */
 
 
@@ -1865,6 +1958,9 @@ int     ix = TLBIX(addr);               /* TLB index                 */
       && !(regs->sie_active
 #if !defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
                             && arn == USE_PRIMARY_SPACE
+#else
+//                          && ( (arn == USE_PRIMARY_SPACE)
+//                               || SIE_STATB(regs->guestregs, MX, XC) )
 #endif /*defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)*/
           )
 #endif /*defined(FEATURE_INTERPRETIVE_EXECUTION)*/
