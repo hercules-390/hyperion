@@ -526,7 +526,7 @@ char *compression[] = {"none", "zlib", "bzip2"};
 /* get the space/recovery/gap tables                                 */
 /*-------------------------------------------------------------------*/
 
-    n = 4 + cdevhdr.numl1tab + trks + cdevhdr2.free_number;
+    n = 4 + (cdevhdr.numl1tab + trks) * 2;
 
     spc = malloc (n * sizeof(SPCTAB));
     if (spc == NULL)
