@@ -50,12 +50,16 @@
 #include "inline.h"
 
 #include "ecpsvm.h"
-
-struct _ECPSVM_STATS
+struct _ECPSVM_CPSTATS
 {
     ECPSVM_STAT_DCL(SVC);
     ECPSVM_STAT_DCL(SSM);
-    ECPSVM_STAT_DCL(SASSIST);
+} ecpsvm_sastats={
+    ECPSVM_STAT_DEF(SVC),
+    ECPSVM_STAT_DEF(SSM),
+};
+struct _ECPSVM_SASTATS
+{
     ECPSVM_STAT_DCL(FREE);
     ECPSVM_STAT_DCL(FRET);
     ECPSVM_STAT_DCL(LCKPG);
@@ -79,11 +83,7 @@ struct _ECPSVM_STATS
     ECPSVM_STAT_DCL(FRETX);
     ECPSVM_STAT_DCL(PMASS);
     ECPSVM_STAT_DCL(LCSPG);
-    ECPSVM_STAT_DCL(CPASSIST);
-} ecpsvm_stats={
-    ECPSVM_STAT_DEF(SVC),
-    ECPSVM_STAT_DEF(SSM),
-    ECPSVM_STAT_DEFM(SASSIST),
+} ecpsvm_cpstats={
     ECPSVM_STAT_DEFU(FREE),
     ECPSVM_STAT_DEFU(FRET),
     ECPSVM_STAT_DEF(LCKPG),
@@ -107,14 +107,8 @@ struct _ECPSVM_STATS
     ECPSVM_STAT_DEF(FRETX),
     ECPSVM_STAT_DEFU(PMASS),
     ECPSVM_STAT_DEFU(LCSPG),
-    ECPSVM_STAT_DEFM(CPASSIST),
 };
 
-typedef union _ECPSVM_STATARRAY
-{
-    struct _ECPSVM_STATS;
-    ECPSVM_STAT s[1];
-} ECPSVM_STATARRAY;
 // #define DEBUG_CPASSIST
 // #define DEBUG_SASSIST
 
@@ -142,11 +136,9 @@ typedef union _ECPSVM_STATARRAY
 #define INITSIESTATE(x)
 #endif
 
-#define CPASSIST_HIT(_stat) ecpsvm_stats._stat.hit++; \
-        ecpsvm_stats.CPASSIST.hit++
+#define CPASSIST_HIT(_stat) ecpsvm_cpstats._stat.hit++
 
-#define SASSIST_HIT(_stat) ecpsvm_stats._stat.hit++; \
-        ecpsvm_stats.SASSIST.hit++
+#define SASSIST_HIT(_stat) ecpsvm_sastats._stat.hit++
 
 #define SASSIST_PROLOG( _instname ) \
     VADR micblok; \
@@ -176,8 +168,7 @@ typedef union _ECPSVM_STATARRAY
         return(1); \
     } \
     /* Increment call now (don't count early misses) */ \
-    ecpsvm_stats._instname.call++; \
-    ecpsvm_stats.SASSIST.call++; \
+    ecpsvm_sastats._instname.call++; \
     micblok=LOGICAL_TO_ABS(micblok,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     /* Load the Virtual PSW Address */ \
     FETCH_FW(vpswa,regs->mainstor+micblok+8); \
@@ -209,8 +200,7 @@ VADR    effective_addr1, \
      { \
         return; \
      } \
-     ecpsvm_stats._inst.call++; \
-     ecpsvm_stats.CPASSIST.call++;
+     ecpsvm_cpstats._inst.call++;
 
 #ifdef FEATURE_ECPSVM
 
@@ -559,6 +549,7 @@ DEF_INST(ecpsvm_store_level)
     ECPSVM_PROLOG(STEVL);
     EVM_ST(sysblk.ecpsvm.level,effective_addr1);
     DEBUG_ASSIST(logmsg("HHCEV300D : ECPS:VM STORE LEVEL %d called\n",sysblk.ecpsvm.level));
+    CPASSIST_HIT(STEVL);
 }
 DEF_INST(ecpsvm_loc_chgshrpg)
 {
@@ -881,60 +872,74 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     return(0);
 }
 
-/* SHOW STATS */
+static char *ecpsvm_stat_sep="HHCEV003I +-----------+----------+----------+-------+\n";
 
-void ecpsvm_showstats(void)
+static int ecpsvm_sortstats(const void *a,const void *b)
 {
-    char *sep="HHCEV003I +-----------+----------+----------+-------+\n";
+    ECPSVM_STAT *ea,*eb;
+    ea=(ECPSVM_STAT *)a;
+    eb=(ECPSVM_STAT *)b;
+    return(eb->call-ea->call);
+}
+    
+
+static void ecpsvm_showstats2(ECPSVM_STAT *ar,size_t count)
+{
+    char *sep=ecpsvm_stat_sep;
     char nname[32];
-    size_t  nument;
     int  havedisp=0;
     int  notshown=0;
     size_t unsupcc=0;
-    ECPSVM_STATARRAY *ar;
+    int haveunsup=0;
+    int callt=0;
+    int hitt=0;
     size_t i;
-    ar=(ECPSVM_STATARRAY *)&ecpsvm_stats;
-    logmsg(sep);
-    logmsg("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n","Function","Calls","Hits","Ratio");
-    logmsg(sep);
-    nument=(sizeof(struct _ECPSVM_STATS)/sizeof(ECPSVM_STAT));
-    for(i=0;i<nument;i++)
+    for(i=0;i<count;i++)
     {
-        if(ar->s[i].total && havedisp)
+        if(ar[i].call)
         {
-                logmsg(sep);
-        }
-        if(ar->s[i].call || ar->s[i].total)
-        {
-            if(!ar->s[i].support)
+            callt+=ar[i].call;
+            hitt+=ar[i].hit;
+            if(!ar[i].support)
             {
-                unsupcc+=ar->s[i].call;
+                unsupcc+=ar[i].call;
+                haveunsup++;
             }
             havedisp=1;
-            snprintf(nname,32,"%s%s",ar->s[i].name,ar->s[i].support ? "" : "*");
-            if(ar->s[i].total)
+            snprintf(nname,32,"%s%s",ar[i].name,ar[i].support ? "" : "*");
+            if(ar[i].total)
             {
                 strcat(nname,"+");
             }
             logmsg("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n",
                     nname,
-                    ar->s[i].call,
-                    ar->s[i].hit,
-                    ar->s[i].call ?
-                            (ar->s[i].hit*100)/ar->s[i].call :
+                    ar[i].call,
+                    ar[i].hit,
+                    ar[i].call ?
+                            (ar[i].hit*100)/ar[i].call :
                             100);
         }
         else
         {
             notshown++;
         }
-        if(ar->s[i].total && i!=(nument-1))
-        {
-                logmsg(sep);
-        }
     }
+    if(havedisp)
+    {
+        logmsg(sep);
+    }
+    logmsg("HHCEV001I | %-9s | %8d | %8d |  %3d%% |\n",
+            "Total",
+            callt,
+            hitt,
+            callt ?
+                    (hitt*100)/callt :
+                    100);
     logmsg(sep);
-    logmsg("HHCEV004I (*) Unsupported; (+) Category summary.\n");
+    if(haveunsup)
+    {
+        logmsg("HHCEV004I *Unsupported\n");
+    }
     if(notshown)
     {
         logmsg("HHCEV005I %d Entr%s not shown (never invoked)\n",notshown,notshown==1?"y":"ies");
@@ -951,6 +956,31 @@ void ecpsvm_showstats(void)
         }
     }
     return;
+}
+/* SHOW STATS */
+void ecpsvm_showstats(void)
+{
+    size_t      asize;
+    ECPSVM_STAT *ar;
+    char *sep=ecpsvm_stat_sep;
+    logmsg(sep);
+    logmsg("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n","VM ASSIST","Calls","Hits","Ratio");
+    logmsg(sep);
+    ar=malloc(sizeof(ecpsvm_sastats));
+    memcpy(ar,&ecpsvm_sastats,sizeof(ecpsvm_sastats));
+    asize=sizeof(ecpsvm_sastats)/sizeof(ECPSVM_STAT);
+    qsort(ar,asize,sizeof(ECPSVM_STAT),ecpsvm_sortstats);
+    ecpsvm_showstats2(ar,asize);
+    free(ar);
+    logmsg(sep);
+    logmsg("HHCEV002I | %-9s | %-8s | %-8s | %-5s |\n","CP ASSIST","Calls","Hits","Ratio");
+    logmsg(sep);
+    ar=malloc(sizeof(ecpsvm_cpstats));
+    memcpy(ar,&ecpsvm_cpstats,sizeof(ecpsvm_cpstats));
+    asize=sizeof(ecpsvm_cpstats)/sizeof(ECPSVM_STAT);
+    qsort(ar,asize,sizeof(ECPSVM_STAT),ecpsvm_sortstats);
+    ecpsvm_showstats2(ar,asize);
+    free(ar);
 }
 
 #endif /* ifdef FEATURE_ECPSVM */
