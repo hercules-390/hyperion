@@ -3917,7 +3917,8 @@ RADR    n;                              /* Abs frame addr stor key   */
             STORAGE_KEY(rcpa) |= STORKEY_REF;
             /* or with host set */
             rcpkey |= realkey << 4;
-            /* or new settings with guest set */
+            /* insert new settings of the guest set */
+            rcpkey &= ~(STORKEY_REF | STORKEY_CHANGE);
             rcpkey |= regs->GR_L(r1) & (STORKEY_REF | STORKEY_CHANGE);
             sysblk.mainstor[rcpa] = rcpkey;
             STORAGE_KEY(rcpa) |= (STORKEY_REF|STORKEY_CHANGE);
