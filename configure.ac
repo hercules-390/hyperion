@@ -477,5 +477,5 @@ AH_TEMPLATE([OPTION_CONFIG_SYMBOLS],
 AH_TEMPLATE([HDL_USE_LIBTOOL],
             [Define to enable use libtool instead of dlopen/dlsym/dlclose])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
 

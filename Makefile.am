@@ -6,22 +6,34 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4 po util html man
+SUBDIRS = intl m4  po util html man
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
 else
 HERCIFC=
 endif
+
+if USE_DLLTOOL
+#  USE_DLLTOOL implies Cygwin which implies external gui
+DYNINST_DLL=dyninst.dll
+DYNGUI=dyngui
+DYNGUI_DLL=dyngui.dll
+else
+DYNINST_DLL=
+DYNGUI=
+DYNGUI_DLL=
+endif
+
 LDADD = @LIBINTL@
 
-bin_PROGRAMS = hercules $(HERCIFC) \
+bin_PROGRAMS = hercules \
 	   dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
 	   tapecopy tapemap tapesplt \
 	   cckdcdsk cckdcomp cckddiag cckdswap \
 	   cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
 	   hetget hetinit hetmap hetupd \
-	   dmap2hrc dyninst
+	   dmap2hrc $(HERCIFC) dyninst $(DYNINST_DLL) $(DYNGUI) $(DYNGUI_DLL)
 
 EXTRA_PROGRAMS=hercifc
 
@@ -57,6 +69,7 @@ HERCULES_EXP=hercules.exp
 HERCULES_A=hercules.a
 hercules_LDADD = $(LDADD) $(HERCULES_EXP)
 dyninst_LDADD = $(LDADD) $(HERCULES_A)
+dyngui_LDADD = $(LDADD) $(HERCULES_A)
 hercules_LDFLAGS = --export-dynamic
 else
 HERCULES_EXP=
@@ -181,6 +194,9 @@ dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c \
 dyninst_SOURCES = dyninst.c
 dyninst_LDFLAGS = -shared
 
+dyngui_SOURCES = dyngui.c
+dyngui_LDFLAGS = -shared
+
 if USE_DLLTOOL
 hercules.def: $(am_hercules_OBJECTS)
 	dlltool --export-all-symbols --output-def hercules.def $(am_hercules_OBJECTS)
@@ -188,11 +204,19 @@ hercules.def: $(am_hercules_OBJECTS)
 hercules.exp: hercules.def
 	dlltool --input-def hercules.def --dllname hercules.exe --output-exp hercules.exp
 
-hercules.a:	hercules.def
+hercules.a: hercules.def
 	dlltool --input-def hercules.def --dllname hercules.exe --output-lib hercules.a
+
+dyninst.dll$(EXEEXT): dyninst$(EXEEXT)
+	rm  -f                         dyninst.dll
+	mv           dyninst$(EXEEXT)  dyninst.dll
+
+dyngui.dll$(EXEEXT):  dyngui$(EXEEXT)
+	rm  -f                         dyngui.dll
+	mv           dyngui$(EXEEXT)   dyngui.dll
 endif
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
+EXTRA_DIST = autoconf/config.rpath hercules.cnf CHANGES README.NETWORKING \
     README.OSX README.TAPE README.COMMADPT
 
 noinst_HEADERS  = fishhang.h \

@@ -114,6 +114,9 @@
 /* Define to 1 if you have the `ldexpl' function. */
 #undef HAVE_LDEXPL
 
+/* Define to 1 if you have the `dl' library (-ldl). */
+#undef HAVE_LIBDL
+
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
@@ -246,6 +249,9 @@
 
 /* Define to 1 if you have the `__argz_stringify' function. */
 #undef HAVE___ARGZ_STRINGIFY
+
+/* Define to enable use libtool instead of dlopen/dlsym/dlclose */
+#undef HDL_USE_LIBTOOL
 
 /* Define to enable bzip2 compression in emulated tapes */
 #undef HET_BZIP2

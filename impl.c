@@ -152,9 +152,9 @@ int     msgcnt;                         /*                           */
 TID     rctid;                          /* RC file thread identifier */
 
 #if defined(FISH_HANG)
-	/* "FishHang" debugs lock/cond/threading logic. Thus it must
-	 * be initialized BEFORE any lock/cond/threads are created.
-	 */
+    /* "FishHang" debugs lock/cond/threading logic. Thus it must
+     * be initialized BEFORE any lock/cond/threads are created.
+     */
     FishHangInit(__FILE__,__LINE__);
 #endif // defined(FISH_HANG)
 
@@ -191,8 +191,9 @@ TID     rctid;                          /* RC file thread identifier */
     /* Set GUI flag if specified as final argument */
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
     {
-        extgui = 1;
+        extgui = 0;
         daemon_mode = 0;
+        hdl_load("dyngui",HDL_LOAD_NOUNLOAD);
         argc--;
     }
 #endif /*EXTERNALGUI*/
@@ -390,10 +391,6 @@ TID     rctid;                          /* RC file thread identifier */
 /*-------------------------------------------------------------------*/
 void system_cleanup (void)
 {
-
-    if(!daemon_mode)
-        panel_cleanup();
-
     /* ZZ FIXME: Closing the syslog makes the logger terminate 
        but a more elegant shutdown procedure is required */
     close(sysblk.syslogfd[LOG_WRITE]) ;

@@ -1,9 +1,10 @@
 /* HDL.H        (c) Copyright Jan Jaeger, 2003                       */
 /*              Hercules Dynamic Loader                              */
 
-
-#if !defined(_HDL_H)
+#ifndef _HDL_H
 #define _HDL_H
+
+/*-------------------------------------------------------------------*/
 
 #if defined(HDL_USE_LIBTOOL)
  #include <ltdl.h>
@@ -16,6 +17,8 @@
  #include <dlfcn.h>
  #define dlinit()
 #endif
+
+/*-------------------------------------------------------------------*/
 
 int hdl_load(char *, int);              /* load dll                  */
 #define HDL_LOAD_DEFAULT     0x00000000
@@ -32,6 +35,8 @@ void hdl_main();                        /* Main initialization rtn   */
 
 void * hdl_fent(char *);                /* Find entry name           */
 void * hdl_nent(char *, void*);         /* Find next in chain        */
+
+/*-------------------------------------------------------------------*/
 
 /* Cygwin back-link support */
 #if defined(WIN32)
@@ -50,6 +55,7 @@ static void * (*hdl_fent_l)(char *) __attribute__ ((unused)) ;
 #define HDL_INIT_Q QSTRING(HDL_INIT)
 #define HDL_FINI_Q QSTRING(HDL_FINI)
 
+/*-------------------------------------------------------------------*/
 
 #define HDL_DEPENDENCY_SECTION \
 int HDL_DEPC(int (*hdl_depc_vers)(char *, char *, int) __attribute__ ((unused)) ) \
@@ -63,36 +69,44 @@ int hdl_depc_rc = 0
 #define END_DEPENDENCY_SECTION                            \
 return hdl_depc_rc; }
 
-
-/* Cygwin back-link support */
-#if !defined(WIN32)
-#define HDL_RESOLVER_SECTION                            \
-void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
-{
-#else /*defined(WIN32)*/
-#define HDL_RESOLVER_SECTION                            \
-void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
-{                                                       \
-hdl_fent_l = hdl_reso_fent
-#endif /*defined(WIN32)*/
-
-#define HDL_RESOLVE(_name)                              \
-    (_name) = (hdl_reso_fent)(STRINGMAC(_name))
-
-#define END_RESOLVER_SECTION                            \
-}
-
+/*-------------------------------------------------------------------*/
 
 #define HDL_REGISTER_SECTION                            \
 void HDL_INIT(int (*hdl_init_regi)(char *, void *) __attribute__ ((unused)) ) \
 {
 
-#define HDL_REGISTER(_name, _ep)                        \
-    (hdl_init_regi)(STRINGMAC(_name),&(_ep))
+/*       register this epname, as ep = addr of this var or func...   */
+#define HDL_REGISTER( _epname, _varname )               \
+    (hdl_init_regi)( STRINGMAC(_epname), &(_varname) )
 
 #define END_REGISTER_SECTION                            \
 }
 
+/*-------------------------------------------------------------------*/
+
+/* Cygwin back-link support */
+#if defined(WIN32)
+#define HDL_RESOLVER_SECTION                                            \
+void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
+{                                                                       \
+    hdl_fent_l = hdl_reso_fent
+#else
+#define HDL_RESOLVER_SECTION                                            \
+void HDL_RESO(void *(*hdl_reso_fent)(char *) __attribute__ ((unused)) ) \
+{
+#endif
+
+#define HDL_RESOLVE(_name)                              \
+    (_name) = (hdl_reso_fent)(STRINGMAC(_name))
+
+/*                  set this ptrvar, to this ep value...             */
+#define HDL_RESOLVE_PTRVAR( _ptrvar, _epname )          \
+    (_ptrvar) = (hdl_reso_fent)( STRINGMAC(_epname) )
+
+#define END_RESOLVER_SECTION                            \
+}
+
+/*-------------------------------------------------------------------*/
 
 #define HDL_FINAL_SECTION                               \
 void HDL_FINI()                                         \
@@ -101,18 +115,21 @@ void HDL_FINI()                                         \
 #define END_FINAL_SECTION                               \
 }
 
+/*-------------------------------------------------------------------*/
 
-#if !defined(WIN32)
-#define HDL_FINDSYM(_name)                              \
-    hdl_fent( (_name) )
-#else /*defined(WIN32)*/
+/* Cygwin back-link support */
+#if defined(WIN32)
 #define HDL_FINDSYM(_name)                              \
     hdl_fent_l( (_name) )
-#endif /*defined(WIN32)*/
+#else
+#define HDL_FINDSYM(_name)                              \
+    hdl_fent( (_name) )
+#endif
 
 #define HDL_FINDNXT(_name, _ep)                         \
     hdl_nent( STRINGMAC(_name), &(_ep) )
 
+/*-------------------------------------------------------------------*/
 
 struct _HDLDEP;
 struct _MODENT; 
@@ -154,5 +171,6 @@ typedef struct _DLLENT {                /* DLL entry                 */
     struct _DLLENT *dllnext;            /* Next entry in chain       */
 } DLLENT;
 
-#endif
+/*-------------------------------------------------------------------*/
 
+#endif

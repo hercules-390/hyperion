@@ -1,3 +1,7 @@
+25 Jun 2003 Fix unlikely but serious fthreads bug in wait_condition - Fish
+25 Jun 2003 Move external gui logic from panel_display to dyngui.c, and
+            modify build process (makefile.am) to automatically build
+            new dyngui.dll (and dyninst.dll too) - Fish
 25 Jun 2003 Add dyninst qualifier to dynamic instr. symbol names - Jan Jaeger
 23 Jun 2003 Fix interrupt queue problem in haltio - Fish (by Greg Smith)
 17 Jun 2003 dyninst now supports dynamic instruction update - Jan Jaeger

@@ -804,6 +804,29 @@ fthread_cond_wait
 
         if (WAIT_OBJECT_0 != dwWaitRetCode)
         {
+            MyLeaveCriticalSection(&pFT_COND_VAR->CondVarLock);
+
+            // Re-acquire the original lock before returning...
+
+            rc = fthread_mutex_lock
+            (
+#ifdef FISH_HANG
+                pszFile,
+                nLine,
+#endif
+                pFT_MUTEX
+            );
+
+            if (rc)
+            {
+#ifdef FISH_HANG
+                TRACE("fthread_cond_wait: fthread_mutex_lock failed; %s(%d)\n",pszFile,nLine);
+#else
+                TRACE("fthread_cond_wait: fthread_mutex_lock failed\n");
+#endif
+                return (errno = rc);
+            }
+
 #ifdef FISH_HANG
             TRACE("fthread_cond_wait: Invalid handle; %s(%d)\n",pszFile,nLine);
 #else

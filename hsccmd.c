@@ -2031,10 +2031,10 @@ int icount_cmd(char* cmdline, int argc, char *argv[])
 
 /* PATCH ISW20030220 - Script command support */
 
-static int scr_recursion=0;		/* Recursion count (set to 0) */
+static int scr_recursion=0;     /* Recursion count (set to 0) */
 static int scr_aborted=0;          /* Script abort flag */
 static int scr_uaborted=0;          /* Script user abort flag */
-TID	scr_tid=0;
+TID scr_tid=0;
 
 int cscript_cmd(char* cmdline, int argc, char *argv[])
 {
@@ -2127,8 +2127,8 @@ BYTE   *p;                              /* (work)                    */
 
     if(isrcfile)
     {
-	    logmsg(_("HHCPN008I Script file processing started using file %s\n"),
-		   script_name);
+        logmsg(_("HHCPN008I Script file processing started using file %s\n"),
+           script_name);
     }
 
     /* Obtain storage for the SCRIPT file buffer */
@@ -2221,11 +2221,11 @@ BYTE   *p;                              /* (work)                    */
     }
 
     fclose(scrfp);
-    scr_recursion--;	/* Decrement recursion count */
+    scr_recursion--;    /* Decrement recursion count */
     if(scr_recursion==0)
     {
-      scr_aborted=0;	/* reset abort flag */
-      scr_tid=0;	/* reset script thread id */
+      scr_aborted=0;    /* reset abort flag */
+      scr_tid=0;    /* reset script thread id */
     }
 
     return 0;
@@ -2450,8 +2450,9 @@ int ldmod_cmd(char* cmdline, int argc, char *argv[])
 
     for(i = 1; i < argc; i++)
     {
-        logmsg("HHCHD100I Loading %s\n",argv[i]);
+        logmsg("HHCHD100I Loading %s ...\n",argv[i]);
         hdl_load(argv[i], 0);
+        logmsg("HHCHD101I Module %s loaded\n",argv[i]);
     }
 
     return 0;
@@ -2474,8 +2475,9 @@ int rmmod_cmd(char* cmdline, int argc, char *argv[])
 
     for(i = 1; i < argc; i++)
     {
-        logmsg("HHCHD101I Unloading %s\n",argv[i]);
+        logmsg("HHCHD102I Unloading %s ...\n",argv[i]);
         hdl_dele(argv[i]);
+        logmsg("HHCHD103I Module %s unloaded\n",argv[i]);
     }
 
     return 0;
@@ -2509,6 +2511,9 @@ int lsdep_cmd(char* cmdline, int argc, char *argv[])
     return 0;
 }
 #endif /*defined(OPTION_DYNAMIC_LOAD)*/
+
+///////////////////////////////////////////////////////////////////////
+/* evm - ECPS:VM command */
 
 #ifdef FEATURE_ECPSVM
 int evm_cmd(char* cmdline, int argc, char *argv[])
@@ -2999,37 +3004,6 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
 
     ProcessPanelCommand(cmd);
     return NULL;
+}
 
-#ifdef OPTION_CKD_KEY_TRACING
- #define TSPLUS_CMD \
-  "t+=trace, s+=step, t+ckd=CKD_KEY trace, t+devn=CCW trace, s+devn=CCW step\n"
-#else
- #define TSPLUS_CMD \
-  "t+=trace, s+=step, t+devn=CCW trace, s+devn=CCW step\n"
-#endif /*OPTION_CKD_KEY_TRACING*/
-
-#ifdef _FEATURE_SYSTEM_CONSOLE
- #define SYSCONS_CMD ".xxx=scp command, !xxx=scp priority messsage\n"
-#else
- #define SYSCONS_CMD
-#endif /*_FEATURE_SYSTEM_CONSOLE*/
-
-#ifdef OPTION_TODCLOCK_DRAG_FACTOR
- #define TODDRAG_CMD "toddrag nnn = display or set TOD clock drag factor\n"
-#else
- #define TODDRAG_CMD
-#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
-
-#ifdef PANEL_REFRESH_RATE
- #define PANRATE_CMD "panrate [fast|slow|nnnn] = display or set panel refresh rate\n"
-#else
- #define PANRATE_CMD
-#endif /*PANEL_REFRESH_RATE*/
-
-#if defined(OPTION_INSTRUCTION_COUNTING)
- #define ICOUNT_CMD "icount [clear] = display instruction counters\n"
-#else
- #define ICOUNT_CMD
-#endif
-
-        }
+///////////////////////////////////////////////////////////////////////
