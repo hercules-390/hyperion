@@ -197,6 +197,7 @@ AC_ARG_ENABLE(debug,
                 yes)
                   debug=true
                   CFLAGS="-g $CFLAGS"
+		  AC_DEFINE([DEBUG])
                   ;;
                 no) debug=false ;;
                 *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
