@@ -1751,6 +1751,13 @@ int     amode64;
 #endif /*defined(FEATURE_ESAME)*/
 
     S(inst, execflag, regs, b2, effective_addr2);
+#if defined(FEATURE_ECPSVM)
+    if(ecpsvm_lpsw(regs,effective_addr2,b2)==0)
+    {
+        return;
+    }
+#endif
+
 
     PRIV_CHECK(regs);
 

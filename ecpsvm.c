@@ -54,9 +54,11 @@ struct _ECPSVM_CPSTATS
 {
     ECPSVM_STAT_DCL(SVC);
     ECPSVM_STAT_DCL(SSM);
+    ECPSVM_STAT_DCL(LPSW);
 } ecpsvm_sastats={
     ECPSVM_STAT_DEF(SVC),
     ECPSVM_STAT_DEF(SSM),
+    ECPSVM_STAT_DEF(LPSW),
 };
 struct _ECPSVM_SASTATS
 {
@@ -140,6 +142,15 @@ struct _ECPSVM_SASTATS
 
 #define SASSIST_HIT(_stat) ecpsvm_sastats._stat.hit++
 
+#define SASSIST_LPSW(_regs) \
+        regs->psw.IA=_regs.psw.IA; \
+        regs->psw.cc=_regs.psw.cc; \
+        regs->psw.pkey=_regs.psw.pkey; \
+        regs->psw.domask=_regs.psw.domask; \
+        regs->psw.fomask=_regs.psw.fomask; \
+        regs->psw.eumask=_regs.psw.eumask; \
+        regs->psw.sgmask=_regs.psw.sgmask;
+
 #define SASSIST_PROLOG( _instname ) \
     VADR micblok; \
     VADR vpswa; \
@@ -179,6 +190,7 @@ struct _ECPSVM_SASTATS
     /* Set ref bit on page where Virtual PSW is stored */ \
     vpswa=LOGICAL_TO_ABS(vpswa,USE_REAL_ADDR,regs,ACCTYPE_READ,0); \
     /* Load the Virtual PSW in a temporary REGS structure */ \
+    INITSIESTATE(vpregs); \
     ARCH_DEP(load_psw) (&vpregs,&regs->mainstor[vpswa]); \
     DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST "#_instname" Virtual ")); \
     DEBUG_ASSIST(display_psw(&vpregs)); \
@@ -695,11 +707,13 @@ int     ecpsvm_check_pswtrans(REGS *regs,VADR micblok, BYTE micpend, REGS *oldr,
     /* Check for a switch from BC->EC or EC->BC */
     if(oldr->psw.ecmode!=newr->psw.ecmode)
     {
+        DEBUG_ASSIST(logmsg("HHCEV300D : New and Old PSW have a EC/BC transition\n"));
         return(1);
     }
     /* Check if PER or DAT is being changed */
     if(newr->psw.ecmode)
     {
+        DEBUG_ASSIST(logmsg("HHCEV300D : New PSW Enables DAT or PER\n"));
         if((newr->psw.sysmask & 0x44) != (oldr->psw.sysmask & 0x44))
         {
             return(1);
@@ -712,6 +726,7 @@ int     ecpsvm_check_pswtrans(REGS *regs,VADR micblok, BYTE micpend, REGS *oldr,
         {
             if(((~oldr->psw.sysmask) & 0x03) & newr->psw.sysmask)
             {
+                DEBUG_ASSIST(logmsg("HHCEV300D : New PSW Enables interrupts and MICPEND (EC)\n"));
                 return(1);
             }
         }
@@ -719,20 +734,27 @@ int     ecpsvm_check_pswtrans(REGS *regs,VADR micblok, BYTE micpend, REGS *oldr,
         {
             if(~oldr->psw.sysmask & newr->psw.sysmask)
             {
+                DEBUG_ASSIST(logmsg("HHCEV300D : New PSW Enables interrupts and MICPEND (BC)\n"));
                 return(1);
             }
         }
     }
-    /* Check NEW PSW Validity */
+    if(newr->psw.wait)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : New PSW is a WAIT PSW\n"));
+        return(1);
+    }
     if(newr->psw.ecmode)
     {
         if(newr->psw.sysmask & 0xb8)
         {
+            DEBUG_ASSIST(logmsg("HHCEV300D : New PSW sysmask incorrect\n"));
             return(1);
         }
     }
     if(newr->psw.IA & 0x01)
     {
+        DEBUG_ASSIST(logmsg("HHCEV300D : New PSW has ODD IA\n"));
         return(1);
     }
     return(0);
@@ -856,19 +878,46 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     /* 
      * Now, update some stuff in the REAL PSW
      */
-    regs->psw.cc=newr.psw.cc;           /* Update Condition code  */
-    regs->psw.pkey=newr.psw.pkey;       /* Update PSW Storage Key */
-    regs->psw.IA=newr.psw.IA;           /* Update IA              */
-    regs->psw.fomask=newr.psw.fomask;   /* Fixed Point Overflow   */
-    regs->psw.domask=newr.psw.domask;   /* Decimal Overflow       */
-    regs->psw.eumask=newr.psw.eumask;   /* Exponent Underflow     */
-    regs->psw.sgmask=newr.psw.sgmask;   /* Significance           */
+    SASSIST_LPSW(newr);
     /*
      * Now store the new PSW in the area pointed by the MICBLOK
      */
     ARCH_DEP(store_psw) (&newr,regs->mainstor+vpswa);
     DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST SVC Done\n"));
     SASSIST_HIT(SVC);
+    return(0);
+}
+/* LPSW Assist */
+int ecpsvm_lpsw(REGS *regs,VADR e2,int b2)
+{
+    VADR nlpsw;
+    REGS nregs;
+
+    SASSIST_PROLOG(LPSW);
+    if(e2&0x03)
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST LPSW %6.6X - Alignement error\n",e2));
+        return(1);
+
+    }
+    nlpsw=LOGICAL_TO_ABS(e2,b2,regs,ACCTYPE_READ,regs->psw.pkey);
+    INITSIESTATE(nregs);
+    ARCH_DEP(load_psw) (&nregs,regs->mainstor+nlpsw);
+    if(ecpsvm_check_pswtrans(regs,micblok,micpend,&vpregs,&nregs))
+    {
+        DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST LPSW Rejected - Cannot make PSW transition\n"));
+        return(1);
+
+    }
+    SASSIST_LPSW(nregs);
+    LOGICAL_TO_ABS(vpswa,USE_REAL_ADDR,regs,ACCTYPE_WRITE,0);
+                        /* Set ref bit in address pointed by MICBLOK */
+    ARCH_DEP(store_psw) (&nregs,regs->mainstor+vpswa);
+    DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST LPSW New VIRT "));
+    DEBUG_ASSIST(display_psw(&nregs));
+    DEBUG_ASSIST(logmsg("HHCEV300D : SASSIST LPSW New REAL "));
+    DEBUG_ASSIST(display_psw(regs));
+    SASSIST_HIT(LPSW);
     return(0);
 }
 
