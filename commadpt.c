@@ -1717,6 +1717,8 @@ BYTE    gotdle;                 /* Write routine DLE marker */
                 {
                     *unitstat=CSW_CE|CSW_DE;
                     dev->commadpt->enabled=1;
+                    /* Clean the input buffer */
+                    commadpt_ring_flush(&dev->commadpt->inbfr);
                     break;
                 }
                 if(dev->commadpt->haltpending)
