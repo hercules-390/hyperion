@@ -1399,7 +1399,14 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
      /* Test for breakpoint */
     shouldbreak = sysblk.instbreak
-               && (regs->psw.IA == sysblk.breakaddr);
+                ? sysblk.breakaddr <= sysblk.breakadd2
+                  ? sysblk.breakaddr <= regs->psw.IA && regs->psw.IA <= sysblk.breakadd2
+                    ? 1
+                    : 0
+                  : sysblk.breakadd2 <= regs->psw.IA && regs->psw.IA <= sysblk.breakaddr
+                    ? 1
+                    : 0
+                : 0;
 
     /* Display the instruction */
     if (sysblk.insttrace || sysblk.inststep || shouldbreak)

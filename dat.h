@@ -1796,7 +1796,19 @@ int     host_protect = 0;               /* 1=Page prot, 2=ALE prot   */
 int     stid = 0;                       /* Address space indication  */
 U16     xcode;                          /* Exception code            */
 
-    if (arn > 0 && (!regs->armode || regs->AR(arn) == 0))
+    /* Set arn (access register number) to zero if not in access
+     * register mode or if the access register is zero unless SIE
+     * is active and guest is an XC guest and guest AR is not zero.
+     */
+    if (arn > 0 && (!regs->armode || regs->AR(arn) == 0)
+#if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
+      && !(regs->sie_active
+        && (regs->guestregs->siebk->mx & SIE_MX_XC)
+        && regs->guestregs->psw.armode
+        && regs->guestregs->AR(arn) != 0
+          )
+#endif
+       )
         arn = 0;
 
     /* Convert logical address to real address */

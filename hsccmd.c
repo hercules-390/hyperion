@@ -1002,7 +1002,7 @@ REGS *regs;
 
 int bset_cmd(int argc, char *argv[], char *cmdline)
 {
-BYTE c;                                 /* Character work area       */
+BYTE c,c2;                              /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -1016,6 +1016,16 @@ BYTE c;                                 /* Character work area       */
     {
         logmsg( _("HHCPN040I Setting breakpoint at %16.16llX\n"),
             (long long)sysblk.breakaddr
+            );
+        sysblk.breakadd2 = sysblk.breakaddr;
+        sysblk.instbreak = 1;
+        ON_IC_TRACE;
+    }
+    else if (sscanf(argv[1], "%llx%c%llx%c",
+          &sysblk.breakaddr, &c, &sysblk.breakadd2, &c2) == 3 && c == '-')
+    {
+        logmsg( _("HHCPN040I Setting breakpoint at %16.16llX-%16.16llX\n"),
+            (long long)sysblk.breakaddr,(long long)sysblk.breakadd2
             );
         sysblk.instbreak = 1;
         ON_IC_TRACE;
@@ -3553,11 +3563,12 @@ CMDHELP ( "sh",        "Format: \"sh command [args...]\" where 'command' is any 
                        "shell for processing and the results are displayed on the console.\n"
                        )
 
-CMDHELP ( "b",         "Format: \"b addr\" where 'addr' is the instruction address where you\n"
-                       "wish to halt execution. Once the breakpoint is reached, instruction\n"
-                       "execution is temporarily halted and the next instruction to be executed\n"
-                       "is displayed. You may then examine registers and/or storage, etc. To\n"
-                       "continue execution after reaching a breakpoint, enter the 'g' command.\n"
+CMDHELP ( "b",         "Format: \"b addr\" or \"b addr-addr\" where 'addr' is the instruction\n"
+                       "address or range of addresses where you wish to halt execution. Once\n"
+                       "the breakpoint is reached, instruction execution is temporarily halted\n"
+                       "and the next instruction to be executed is displayed. You may then\n"
+                       "examine registers and/or storage, etc. To continue execution after\n"
+                       "reaching a breakpoint, enter the 'g' command.\n"
                        )
 
 CMDHELP ( "b-",        "Format: \"b-\"  (removes any previously set breakpoint)\n"
