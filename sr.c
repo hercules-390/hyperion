@@ -140,7 +140,7 @@ BYTE     psw[16];
     for (ioq = sysblk.iointq; ioq; ioq = ioq->next)
         if (ioq->pcipending)
             SR_WRITE_VALUE(file,SR_SYS_PCIPENDING, ioq->dev->devnum,sizeof(ioq->dev->devnum));
-        else if (ioq->pcipending)
+        else if (ioq->attnpending)
             SR_WRITE_VALUE(file,SR_SYS_ATTNPENDING, ioq->dev->devnum,sizeof(ioq->dev->devnum));
         else
             SR_WRITE_VALUE(file,SR_SYS_IOPENDING, ioq->dev->devnum,sizeof(ioq->dev->devnum));

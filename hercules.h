@@ -1123,7 +1123,8 @@ typedef struct _IOINT {
         struct _IOINT  *next;           /* -> next interrupt entry   */
         struct _DEVBLK *dev;            /* -> Device block           */
         int     priority;               /* Device priority           */
-        int     pending:1,              /* 1=Normal interrupt        */
+        unsigned int
+                pending:1,              /* 1=Normal interrupt        */
                 pcipending:1,           /* 1=PCI interrupt           */
                 attnpending:1;          /* 1=ATTN interrupt          */
     } IOINT;
@@ -1278,7 +1279,7 @@ typedef struct _DEVBLK {
 
         /*  control flags...                                         */
 
-        U32                             /* Flags                     */
+        unsigned int                    /* Flags                     */
 #ifdef OPTION_CKD_KEY_TRACING
                 ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
 #endif /*OPTION_CKD_KEY_TRACING*/
@@ -1297,7 +1298,7 @@ typedef struct _DEVBLK {
                 cdwmerge:1;             /* 1=Channel will merge data
                                              chained write CCWs      */
 
-        int                             /* Device state - serialized
+        unsigned int                    /* Device state - serialized
                                             by dev->lock             */
                 busy:1,                 /* 1=Device is busy          */
                 reserved:1,             /* 1=Device is reserved      */
