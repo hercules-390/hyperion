@@ -223,7 +223,7 @@ dyngui.res: config.h  dyngui.rc  dynguib.h  dynguip.h  dynguiv.h
 	windres -DHAVE_CONFIG_H --include-dir=. -i $(srcdir)/dyngui.rc -o dyngui.res -O coff
 endif
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
              README.HDL README.NETWORKING README.OSX README.TAPE hercules.cnf
 
 noinst_HEADERS  = fishhang.h \
@@ -233,7 +233,7 @@ noinst_HEADERS  = fishhang.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
-    ecpsvm.h memrchr.h shared.h hscutl.h hdl.h
+    ecpsvm.h memrchr.h shared.h hscutl.h hdl.h crypto.h service.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) cckddiag$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \

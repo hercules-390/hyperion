@@ -316,7 +316,7 @@ dyngui_SOURCES = dyngui.c
 dyngui_LDFLAGS = -shared
 EXTRA_dyngui_SOURCES = dynguib.h dynguip.h dynguiv.h dyngui.rc
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  CHANGES README.COMMADPT README.CVS README.ECPSVM \
              README.HDL README.NETWORKING README.OSX README.TAPE hercules.cnf
 
 
@@ -327,7 +327,7 @@ noinst_HEADERS = fishhang.h \
     sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h \
     if_tun.h ieee-w32.h httpmisc.h devtype.h codepage.h hercnls.h \
     ctcadpt.h hercifc.h tuntap.h tapedev.h logger.h commadpt.h cache.h \
-    ecpsvm.h memrchr.h shared.h hscutl.h hdl.h
+    ecpsvm.h memrchr.h shared.h hscutl.h hdl.h crypto.h service.h
 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -832,7 +832,7 @@ $(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 $(srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(srcdir)/configure.ac $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
 	cd $(srcdir) && $(AUTOCONF)
 
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.ac m4/codeset.m4 m4/gettext.m4 m4/glibc21.m4 m4/iconv.m4 m4/isc-posix.m4 m4/lcmessage.m4 m4/lib-ld.m4 m4/lib-link.m4 m4/lib-prefix.m4 m4/progtest.m4
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ configure.ac m4/codeset.m4 m4/gettext.m4 m4/glibc21.m4 m4/iconv.m4 m4/intdiv0.m4 m4/inttypes-pri.m4 m4/inttypes.m4 m4/inttypes_h.m4 m4/isc-posix.m4 m4/lcmessage.m4 m4/lib-ld.m4 m4/lib-link.m4 m4/lib-prefix.m4 m4/progtest.m4 m4/stdint_h.m4 m4/uintmax_t.m4 m4/ulonglong.m4
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 
 config.h: stamp-h1
