@@ -1,6 +1,5 @@
 #### Don't forget to change the version number in configure.ac! ####
 
-06 Mar 2004 Performance update BCR - Bernard van der Helm
 06 Mar 2004 RR, RRE, RRF_* macro optimalization - Bernard van der Helm
 28 Feb 2004 Simplify translate_addr() parameter list - Greg Smith
 28 Feb 2004 vstore/vfetch updates for boundary crosses - Greg Smith
