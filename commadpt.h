@@ -105,6 +105,7 @@ enum {
     "DIAL",\
     "DISABLE",\
     "PREPARE",\
+    "POLL",\
     "TINIT",\
     "TCLOSED",\
     "SHUTDOWN"}
