@@ -454,6 +454,7 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
         }
     }
     regs = sysblk.regs + sysblk.pcpu;
+    /* ZZ FIXME: There should be a check here if the addressed cpu is online */
 
 #if defined(OPTION_MIPS_COUNTING)
     fprintf(confp, ANSI_WHT_BLU);
