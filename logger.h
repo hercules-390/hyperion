@@ -17,7 +17,7 @@
  #define LOG_DEFSIZE 65536
 #endif
 
-#ifdef NO_CYGWIN_SETVBUF_BUG
+#if defined(NO_CYGWIN_SETVBUF_BUG) || !defined(WIN32)
 #if 0
 #define logmsg(_message...) printf(_message)
 #else
