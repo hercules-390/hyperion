@@ -1,3 +1,4 @@
+12 Apr 2002 Fix TRAP storing incorrect PSW in trap save area - Jan Jaeger
 12 Apr 2002 Fix false specification exception in RP (64bit only) - Jan Jaeger
 11 Apr 2002 Build device type table and device handler tables - Jan Jaeger
 08 Apr 2002 Remove cckd garbage collection messages - Greg Smith

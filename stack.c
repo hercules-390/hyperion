@@ -114,7 +114,6 @@ U32  duct11;
 U32  tcba;
 RADR atcba;
 #if defined(FEATURE_ESAME)
-int  notesame_save;
 U32  tcba0;
 #endif /*defined(FEATURE_ESAME)*/
 U32  tsao;
@@ -237,21 +236,18 @@ int  i;
         tsaa1 = tsaa2;
 
 #if defined(FEATURE_ESAME)
-    /* Save the current EC bit from the PSW */
-    notesame_save = regs->psw.notesame;
-
-    /* If the P bit is zero then store the PSW in esa390 format */
-    if(!(tcba0 & TCB0_P))
-        regs->psw.notesame = 1;
+    /* If the P bit is one then store the PSW in esame format */
+    if(tcba0 & TCB0_P)
+        ARCH_DEP(store_psw) (regs, trap_psw);
+    else
 #endif /*defined(FEATURE_ESAME)*/
-
-    /* Store the PSW in mode specified in psw.notesame */
-    ARCH_DEP(store_psw) (regs, trap_psw);
-
+    {
+        s390_store_psw(regs, trap_psw);
 #if defined(FEATURE_ESAME)
-    /* Restore the EC bit in the PSW */
-    regs->psw.notesame = notesame_save;
+        /* Set the notesame mode bit for a esa/390 psw */
+        trap_psw[1] |= 0x08;
 #endif /*defined(FEATURE_ESAME)*/
+    }
 
     /* bits 0-63 of PSW at offset +16 */
     memcpy(sysblk.mainstor + tsaa1, trap_psw, 8);
@@ -260,8 +256,9 @@ int  i;
         tsaa1 = tsaa2;
 
 #if defined(FEATURE_ESAME)
+    /* If the P bit is one then store the PSW in esame format */
     /* bits 64-127 of PSW at offset +24 */
-    if(!regs->psw.notesame)
+    if(tcba0 & TCB0_P)
         memcpy(sysblk.mainstor + tsaa1, trap_psw + 8, 8);
     else
 #endif /*defined(FEATURE_ESAME)*/

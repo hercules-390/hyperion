@@ -405,10 +405,10 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
 #if defined(FEATURE_ESAME)
     if(flags & 0x0004) 
     {
+        /* Do not check esame bit (force to zero) */
+        psw[1] &= ~0x08;
         if( ARCH_DEP(load_psw) (regs, psw) )/* only check invalid IA not odd */
         {
-            /* Do not check esame bit (force to zero) */
-            psw[1] &= ~0x08;
             /* restore the psw */
             regs->psw = save_psw;
             /* And generate a program interrupt */
@@ -418,17 +418,20 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     else
 #endif /*defined(FEATURE_ESAME)*/
     {
+#if defined(FEATURE_ESAME)
+        /* Do not check amode64 bit (force to zero) */
+        psw[3] &= ~0x01;
+#endif /*defined(FEATURE_ESAME)*/
         if( s390_load_psw(regs, psw) )
         {
-#if defined(FEATURE_ESAME)
-            /* Do not check amode64 bit (force to zero) */
-            psw[3] &= ~0x01;
-#endif /*defined(FEATURE_ESAME)*/
             /* restore the psw */
             regs->psw = save_psw;
             /* And generate a program interrupt */
             ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         }
+#if defined(FEATURE_ESAME)
+        regs->psw.notesame = 0;
+#endif /*defined(FEATURE_ESAME)*/
     }
 
     /* load_psw() has set the ILC to zero.  This needs to

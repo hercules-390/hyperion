@@ -1763,10 +1763,14 @@ int     amode64;
     /* make psw valid for esa390 mode */
     dword[3] &= ~0x01;
     if ( ( rc = s390_load_psw ( regs, dword ) ) )
+    {
+        regs->psw.notesame = 0;
 #else /*!defined(FEATURE_ESAME)*/
     if ( ( rc = ARCH_DEP(load_psw) ( regs, dword ) ) )
+    {
 #endif /*!defined(FEATURE_ESAME)*/
         ARCH_DEP(program_interrupt) (regs, rc);
+    }
 
     /* load_psw() has set the ILC to zero.  This needs to
        be reset to 4 for an eventual PER event */

@@ -682,14 +682,14 @@ BYTE   buf[80];
              (dev->hnd->query)(dev, &class, sizeof(buf), buf);
 
              fprintf(webblk->hsock,"<tr>"
-                                   "<td><a href=\"detail?devnum=%4.4X\">%4.4X</a></td>"
                                    "<td>%4.4X</td>"
+                                   "<td><a href=\"detail?devnum=%4.4X\">%4.4X</a></td>"
                                    "<td>%s</td>"
                                    "<td>%4.4X</td>"
                                    "<td>%s%s%s</td>"
                                    "</tr>\n",
-                                   dev->devnum,dev->devnum,
-                                   dev->subchan,
+                                   dev->devnum,
+                                   dev->devnum,dev->subchan,
                                    class,
                                    dev->devtype,
                                    (dev->fd > 2 ? "open " : ""),
