@@ -38,4 +38,44 @@ int setpriority(int, int, int);
 
 #endif /*defined(__CYGWIN__)*/
 
+#if !defined(HAVE_STRLCPY)
+/* $OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $ */
+/*
+ * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ */
+/*
+ * Copy src to string dst of size siz.  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz == 0).
+ * Returns strlen(src); if retval >= siz, truncation occurred.
+ */
+/*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncpy! */
+size_t
+strlcpy(char *dst, const char *src, size_t siz);
+#endif
+
+#if !defined(HAVE_STRLCAT)
+/* $OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp $ */
+/*
+ * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ */
+/*
+ * Appends src to string dst of size siz (unlike strncat, siz is the
+ * full size of dst, not space left).  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz <= strlen(dst)).
+ * Returns strlen(src) + MIN(siz, strlen(initial dst)).
+ * If retval >= siz, truncation occurred.
+ */
+/*  ** NOTE **  returns 'size_t' and NOT 'char*' like strncat! */
+size_t
+strlcat(char *dst, const char *src, size_t siz);
+#endif
+
 #endif /* __HSCUTL_H__ */

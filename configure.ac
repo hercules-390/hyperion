@@ -1,7 +1,7 @@
 AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
-AM_INIT_AUTOMAKE(hercules,2.17.b8)
+AM_INIT_AUTOMAKE(hercules,2.17.b9)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
@@ -389,8 +389,9 @@ AC_CHECK_FUNCS(strerror_r,,[AC_DEFINE(BUILTIN_STRERROR_R)])
 
 AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl frexpl)
 AC_CHECK_FUNCS(strsignal getopt_long)
-AC_CHECK_FUNC(InitializeCriticalSectionAndSpinCount)
-AC_CHECK_FUNC(iconv)
+AC_CHECK_FUNCS(InitializeCriticalSectionAndSpinCount)
+AC_CHECK_FUNCS(iconv)
+AC_CHECK_FUNCS(strlcpy strlcat)
 
 # If we have setresuid AND getresuid, we can do setuid stuff
 AC_CHECK_FUNCS([setresuid getresuid],
@@ -559,5 +560,5 @@ AH_TEMPLATE([OPTION_DYNAMIC_LOAD],
 AH_TEMPLATE([HDL_USE_LIBTOOL],
             [Define to cause dynamic loader use use libtool instead of dlopen])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile  intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile])
 

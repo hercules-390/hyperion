@@ -1,5 +1,10 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+22 Aug 2003 Remove setpriority from execute_ccw_chain and instead
+            move it directly into the device thread itself - Fish
+22 Aug 2003 Add support for strlcpy/strlcat and use in httpserv.c
+            (please use where possible instead of strncpy/strncat) - Fish
+22 Aug 2003 Define default priorities for WIN32 / non-WIN32 - Fish
 20 Aug 2003 Correct interval timer references and resolution - Mark L. Gaubatz
 19 Aug 2003 Make devlist command immune from DEVBLK chain sequence - Fish
 19 Aug 2003 Windows "double memory consumption" fix contributed by

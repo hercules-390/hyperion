@@ -25,6 +25,7 @@ int dummy = 0;
 #include "w32chan.h"    // (function prototypes for this module)
 #include "linklist.h"   // (linked list macros)
 #include "hercnls.h"    // (need NLS support)
+#include "hscutl.h"     // (need setpriority)
 
 /////////////////////////////////////////////////////////////////////////////
 // (helper macros...)
@@ -87,8 +88,9 @@ int dummy = 0;
 /////////////////////////////////////////////////////////////////////////////
 // i/o scheduler variables...  (some private, some externally visible)
 
-int    ios_arch_mode          = 0;
-int    ios_devthread_timeout  = 30;
+int    ios_arch_mode          = 0;          // current architecture mode
+int    ios_devthread_timeout  = 30;         // max device thread wait time
+int*   ios_devthread_prio     = NULL;       // pointer to sysblk.devprio
 
 LIST_ENTRY        ThreadListHeadListEntry;  // anchor for DEVTHREADPARMS linked list
 CRITICAL_SECTION  IOSchedulerLock;          // lock for accessing above list
@@ -106,11 +108,13 @@ int  ios_devtunavail = 0;   // #of times 'idle' thread unavailable
 void  InitIOScheduler
 (
     int    arch_mode,       // (for calling execute_ccw_chain)
+    int*   devt_prio,       // (ptr to device thread priority)
     int    devt_timeout,    // (MAX_DEVICE_THREAD_IDLE_SECS)
     long   devt_max         // (maximum #of device threads allowed)
 )
 {
     ios_arch_mode          = arch_mode;
+    ios_devthread_prio     = devt_prio;
     ios_devthread_timeout  = devt_timeout;
     ios_devtmax            = devt_max;
 
@@ -150,6 +154,7 @@ DEVIOREQUEST;
 DEVTHREADPARMS*  SelectDeviceThread();
 DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum);
 
+void   AdjustThreadPriority(int* pCurPrio, int* pNewPrio);
 void*  DeviceThread(void* pThreadParms);
 void   RemoveDeadThreadsFromList();
 void   RemoveThisThreadFromOurList(DEVTHREADPARMS* pThreadParms);
@@ -399,6 +404,18 @@ DEVTHREADPARMS*  CreateDeviceThread(unsigned short wDevNum)
 }
 
 /////////////////////////////////////////////////////////////////////////////
+//  helper function to set a thread's priority to its proper value
+
+void AdjustThreadPriority(int* pCurPrio, int* pNewPrio)
+{
+    if ((*pCurPrio = getpriority(PRIO_PROCESS, 0)) != *pNewPrio)
+    {
+        setpriority(PRIO_PROCESS, 0, *pNewPrio);
+        *pCurPrio = *pNewPrio;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // the device_thread itself...  (processes queued i/o request
 // by calling "execute_ccw_chain" function in channel.c...)
 
@@ -410,10 +427,13 @@ void*  DeviceThread (void* pArg)
     LIST_ENTRY*      pListEntry;        // (work)
     DEVIOREQUEST*    pIORequest;        // ptr to i/o request
     void*            pDevBlk;           // ptr to device block
+    int              nCurPrio;          // current thread priority
 
     pThreadParms = (DEVTHREADPARMS*) pArg;
 
     pThreadParms->dwThreadID = GetCurrentThreadId();
+
+    AdjustThreadPriority(&nCurPrio,ios_devthread_prio);
 
     for (;;)
     {
@@ -422,6 +442,8 @@ void*  DeviceThread (void* pArg)
         InterlockedIncrement(&ios_devtwait);
         MyWaitForSingleObject(pThreadParms->hRequestQueuedEvent,ios_devthread_timeout * 1000);
         InterlockedDecrement(&ios_devtwait);
+
+        AdjustThreadPriority(&nCurPrio,ios_devthread_prio);
 
         if (IsEventSet(pThreadParms->hShutdownEvent)) break;
 

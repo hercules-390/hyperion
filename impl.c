@@ -175,10 +175,17 @@ TID     rctid;                          /* RC file thread identifier */
        hdl_shut will ensure entries are only called once */
     atexit(hdl_shut);
 
-
     set_codepage(NULL);
 
     logger_init();
+
+    /* ZZFIXME: I don't know what's going on (yet), but for some reason
+       log messages seem to get permanently "stuck" in the logmsg pipe.
+       (see SECOND issue in zHerc message #6562) and the following brief
+       delay seems to fix it. Note too that this problem occurs with or
+       without the GUI and is thus NOT a GUI related issue.
+    */
+    usleep(100000);     /* wait a bit before issuing messages */
 
     /* Display the version identifier */
     display_version (stdout, "Hercules ");

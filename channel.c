@@ -1145,22 +1145,35 @@ int i;
 
 #if !defined(OPTION_FISHIO)
 /*-------------------------------------------------------------------*/
+/* Set a thread's priority to its proper value                       */
+/*-------------------------------------------------------------------*/
+void adjust_thread_priority(int *oldprio, int *newprio)
+{
+    if ((*oldprio = getpriority(PRIO_PROCESS, 0)) != *newprio)
+    {
+        /* Set root mode in order to set priority */
+        SETMODE(ROOT);
+
+        /* Set device thread priority; ignore any errors */
+        setpriority(PRIO_PROCESS, 0, *newprio);
+
+        /* Back to user mode */
+        SETMODE(USER);
+
+        /* Save new priority for next time */
+        *oldprio = *newprio;
+    }
+}
+
+/*-------------------------------------------------------------------*/
 /* Execute a queued I/O                                              */
 /*-------------------------------------------------------------------*/
 void *device_thread (void *arg)
 {
 DEVBLK  *dev;
+int     curprio;                         /* Current thread priority  */
 
     UNREFERENCED(arg);
-
-    /* Set root mode in order to set priority */
-    SETMODE(ROOT);
-
-    /* Set device thread priority; ignore any errors */
-    setpriority(PRIO_PROCESS, 0, sysblk.devprio);
-
-    /* Back to user mode */
-    SETMODE(USER);
 
     obtain_lock(&sysblk.ioqlock);
 
@@ -1170,8 +1183,12 @@ DEVBLK  *dev;
 
     while (1)
     {
+        adjust_thread_priority(&curprio,&sysblk.devprio);
+
         while ((dev=sysblk.ioq) != NULL)
         {
+            adjust_thread_priority(&curprio,&sysblk.devprio);
+
             sysblk.ioq = dev->nextioq;
             if (sysblk.ioq && sysblk.devtwait)
                 signal_condition(&sysblk.ioqcond);
@@ -1829,7 +1846,6 @@ DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 void *ARCH_DEP(execute_ccw_chain) (DEVBLK *dev)
 {
 int     sysid = DEV_SYS_LOCAL;          /* System Identifier         */
-int     intprior;                       /* Incoming thread priority  */
 U32     ccwaddr;                        /* Address of CCW        @IWZ*/
 U16     idapmask;                       /* IDA page size - 1     @IWZ*/
 BYTE    idawfmt;                        /* IDAW format (1 or 2)  @IWZ*/
@@ -1878,19 +1894,6 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         dev->startpending = 0;
     }
     release_lock (&dev->lock);
-
-    /* Set device thread priority */
-    if ((intprior = getpriority(PRIO_PROCESS, 0)) != dev->devprio)
-    {
-        /* Set root mode in order to set priority */
-        SETMODE(ROOT);
-
-        /* Set device thread priority; ignore any errors */
-        setpriority(PRIO_PROCESS, 0, dev->devprio);
-
-        /* Back to user mode */
-        SETMODE(USER);
-    }
 
     /* Call the i/o start exit */
     if (!dev->syncio_retry)
@@ -2733,19 +2736,6 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
     obtain_lock (&sysblk.intlock);
     QUEUE_IO_INTERRUPT (&dev->ioint);
     release_lock (&sysblk.intlock);
-
-    /* Restore thread priority */
-    if (intprior != dev->devprio)
-    {
-        /* Set root mode in order to set priority */
-        SETMODE(ROOT);
-
-        /* Set device thread priority; ignore any errors */
-        setpriority(PRIO_PROCESS, 0, intprior);
-
-        /* Back to user mode */
-        SETMODE(USER);
-    }
 
     return NULL;
 

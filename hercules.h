@@ -737,6 +737,17 @@ typedef struct _SYSBLK {
         U64     pgminttr;               /* Program int trace mask    */
         int     pcpu;                   /* Tgt CPU panel cmd & displ */
 
+#ifndef WIN32
+  #define DEFAULT_HERCPRIO    0
+  #define DEFAULT_TOD_PRIO  -20
+  #define DEFAULT_CPU_PRIO   15
+  #define DEFAULT_DEV_PRIO    8
+#else
+  #define DEFAULT_HERCPRIO    0
+  #define DEFAULT_TOD_PRIO    0
+  #define DEFAULT_CPU_PRIO    0
+  #define DEFAULT_DEV_PRIO   -8
+#endif
         int     hercprio;               /* Hercules process priority */
         int     todprio;                /* TOD Clock thread priority */
         int     cpuprio;                /* CPU thread priority       */

@@ -554,10 +554,10 @@ BYTE **orig_newargv;
 #endif
     ostailor = OS_NONE;
     panrate = PANEL_REFRESH_RATE_SLOW;
-    hercprio = 0;
-    todprio = -20;                      /* TOD clock is REALTIME     */
-    cpuprio = 15;
-    devprio = 8;
+    hercprio = DEFAULT_HERCPRIO;
+    todprio  = DEFAULT_TOD_PRIO;
+    cpuprio  = DEFAULT_CPU_PRIO;
+    devprio  = DEFAULT_DEV_PRIO;
     pgmprdos = PGM_PRD_OS_RESTRICTED;
     devtmax = MAX_DEVICE_THREADS;
 #if defined(_FEATURE_ECPSVM)
@@ -1559,12 +1559,13 @@ BYTE **orig_newargv;
 #endif /*defined(OPTION_CPU_UTILIZATION)*/
 
 #if defined(OPTION_FISHIO)
-    InitIOScheduler                         // initialize i/o scheduler...
-        (
-            sysblk.arch_mode,               // (for calling execute_ccw_chain)
-            MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
-            devtmax                         // (maximum #of device threads allowed)
-        );
+    InitIOScheduler                     // initialize i/o scheduler...
+    (
+        sysblk.arch_mode,               // (for calling execute_ccw_chain)
+        &sysblk.devprio,                // (ptr to device thread priority)
+        MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
+        devtmax                         // (maximum #of device threads allowed)
+    );
 #else // !defined(OPTION_FISHIO)
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
