@@ -758,7 +758,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         if(vmb!=runu || (vmb==runu && (F_QUANTUM & 0x80000000)))
         {
             DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Restarting Time Slice\n"));
-            F_QUANTUM=EVM_L(dl+4);
+            F_QUANTUM=EVM_L(dl+16);
             if(EVM_IC(vmb+VMQLEVEL) & VMCOMP)
             {
                 F_QUANTUM <<= 2;
@@ -1038,7 +1038,7 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         DEBUG_CPASSISTX(DISP2,logmsg("HHCPEV300D : DISP2 - Next Instruction : %2.2X\n",ARCH_DEP(vfetchb)(regs->psw.IA,USE_PRIMARY_SPACE,regs)));
         DEBUG_CPASSISTX(DISP2,display_regs(regs));
         DEBUG_CPASSISTX(DISP2,display_cregs(regs));
-        return(0);
+        return(2);      /* OK - Perform INTCHECK */
     }
     /* Nothing else to do - wait state */
     DEBUG_CPASSISTX(DISP2,logmsg("DISP2 : Nothing to dispatch - IDLEECPS\n"));
@@ -1060,10 +1060,19 @@ DEF_INST(ecpsvm_disp1)
             return;
         case 1: /* No-op */
             break;
-        case 2: /* Call DISP2 */
-            if(ecpsvm_do_disp2(regs,effective_addr1,effective_addr2)==0)
+        case 2: /* Call DISP2 - INTCHECK NOT needed */
+            switch(ecpsvm_do_disp2(regs,effective_addr1,effective_addr2))
             {
-                CPASSIST_HIT(DISP1);
+                case 0:
+                        CPASSIST_HIT(DISP1);
+                        return;
+                case 1:
+                        return;
+                case 2:
+                        CPASSIST_HIT(DISP1);
+                        RETURN_INTCHECK(regs);
+                default:
+                        break;
             }
             return;
         default:
@@ -1448,7 +1457,7 @@ DEF_INST(ecpsvm_dispatch_main)
     /* Now, check if we should unstack an external int */
     /* 1st check if VMPXINT is NULL */
     F_VMPSWHI=EVM_L(vmb+VMPSW);     /* Load top of virt PSW - Will need it */
-    B_VMPSTAT=EVM_L(vmb+VMPSTAT);   /* Will need VMPSTAT for I/O ints too */
+    B_VMPSTAT=EVM_IC(vmb+VMPSTAT);   /* Will need VMPSTAT for I/O ints too */
     F_VMPXINT=EVM_L(vmb+VMPXINT);
     DEBUG_CPASSISTX(DISP0,logmsg("DISP0 : Checking for EXT; Base VMPXINT=%8.8X\n",F_VMPXINT));
     /* This is DMKDSP - CKEXT */
@@ -1770,6 +1779,9 @@ DEF_INST(ecpsvm_disp2)
             return;
         case 1: /* No-op */
             return;
+        case 2: /* Done */
+            CPASSIST_HIT(DISP2);
+            RETURN_INTCHECK(regs);
     }
     return;
 }
