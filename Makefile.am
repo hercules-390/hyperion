@@ -586,6 +586,7 @@ noinst_HEADERS = fishhang.h \
                  ltdl.h     \
                  herc_getopt.h \
                  service.h  \
+                 pttrace.h  \
                  $(extra_dynamic_SRC)
 
 #########################################################
