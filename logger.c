@@ -150,6 +150,7 @@ static void logger_term(void *arg __attribute__ ((unused)) )
     {
         obtain_lock(&logger_lock);
 
+fflush(stdout);
         /* Redirect all output to stderr */
         dup2(STDERR_FILENO, STDOUT_FILENO);
 
