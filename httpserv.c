@@ -52,8 +52,8 @@ static CONTYP mime_types[] = {
 int html_include(WEBBLK *webblk, char *filename)
 {
     FILE *inclfile;
-    char fullname[1024];
-    char buffer[1024];
+    char fullname[HTTP_PATH_LENGTH];
+    char buffer[HTTP_PATH_LENGTH];
     int ret;
 
     strlcpy(fullname,sysblk.httproot,sizeof(fullname));
@@ -278,8 +278,8 @@ char *http_variable(WEBBLK *webblk, char *name, int type)
 
 static void http_verify_path(WEBBLK *webblk, char *path)
 {
-    char resolved_base[1024];
-    char resolved_path[1024];
+    char resolved_base[HTTP_PATH_LENGTH];
+    char resolved_path[HTTP_PATH_LENGTH];
     int i;
 
     realpath(sysblk.httproot,resolved_base); strlcat(resolved_base,"/",sizeof(resolved_base));
@@ -356,11 +356,11 @@ static int http_authenticate(WEBBLK *webblk, char *type, char *userpass)
 
 static void http_download(WEBBLK *webblk, char *filename)
 {
-    char buffer[1024];
+    char buffer[HTTP_PATH_LENGTH];
     char tbuf[80];
     int fd, length;
     char *filetype;
-    char fullname[1024];
+    char fullname[HTTP_PATH_LENGTH];
     struct stat st;
     CONTYP *mime_type = mime_types;
 
@@ -405,7 +405,7 @@ static void *http_request(FILE *hsock)
 {
     WEBBLK *webblk;
     int authok = !sysblk.httpauth;
-    char line[1024];
+    char line[HTTP_PATH_LENGTH];
     char *url = NULL;
     char *pointer;
     char *strtok_str;
