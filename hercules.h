@@ -1551,6 +1551,7 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         char            *itrace;        /* Internal trace table      */
         int              itracex;       /* Internal trace index      */
         int              itracen;       /* Internal trace size       */
+        int              bytemsgs;      /* Limit for `byte 0' msgs   */
         CCKD_CACHE       cache[CCKD_MAX_CACHE];     /* CCKD cache    */
         CCKD_CACHE       l2cache[CCKD_MAX_L2CACHE]; /* CCKD l2 cache */
       } CCKDBLK;

@@ -379,6 +379,9 @@ int             imbedded=0;             /* Imbedded space freed      */
 int             moved=0;                /* Total space moved         */
 int             ckddasd;                /* 1=CKD dasd  0=FBA dasd    */
 BYTE            buf[65536];             /* Buffer                    */
+#ifdef EXTERNALGUI
+int extgui2 = (m!= NULL && fileno(m) == fileno(stderr) && extgui);
+#endif
 
 /*-------------------------------------------------------------------*/
 /* Read the headers and level 1 table                                */
@@ -479,7 +482,7 @@ restart:
     else pos = (off_t)cdevhdr.free;
 
 #ifdef EXTERNALGUI
-    if (extgui) fprintf (stderr,"SIZE=%d\n",cdevhdr.size);
+    if (extgui2) fprintf (stderr,"SIZE=%d\n",cdevhdr.size);
 #endif /*EXTERNALGUI*/
 
     /* process each space in file sequence; the only spaces we expect
@@ -487,7 +490,7 @@ restart:
     for ( ; pos + freed < (off_t)cdevhdr.size; pos += len)
     {
 #ifdef EXTERNALGUI
-        if (extgui) fprintf (stderr,"POS=%lu\n",pos);
+        if (extgui2) fprintf (stderr,"POS=%lu\n",pos);
 #endif /*EXTERNALGUI*/
 
         /* check for free space */
@@ -594,7 +597,7 @@ restart:
     for (pos = cdevhdr.free; pos; pos = fb.pos)
     {
 #ifdef EXTERNALGUI
-        if (extgui) fprintf (stderr,"POS=%lu\n",pos);
+        if (extgui2) fprintf (stderr,"POS=%lu\n",pos);
 #endif /*EXTERNALGUI*/
         rc = lseek (fd, pos, SEEK_SET);
         rc = read (fd, &fb, CCKD_FREEBLK_SIZE);

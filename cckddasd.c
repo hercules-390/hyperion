@@ -1050,6 +1050,13 @@ cckd_read_trk_retry:
 
     release_lock (&cckdblk.cachelock);
 
+    /* Clear the buffers if batch mode */
+    if (dev->batch)
+    {
+        memset(buf, 0, 65536);
+        memset(&buf2, 0,65536);
+    }
+
     /* read the track image */
     obtain_lock (&cckd->filelock);
     len2 = cckd_read_trkimg (dev, (BYTE *)&buf2, trk, unitstat);
@@ -3148,7 +3155,8 @@ char           *comp[] = {"none", "zlib", "bzip2"};
             {
                 if (buf[0] & ~CCKD_COMPRESS_MASK)
                 {
-                    devmsg ("%4.4X:cckddasd: invalid byte 0 trk %d: "
+                    if (cckdblk.bytemsgs++ < 10)
+                        devmsg ("%4.4X:cckddasd: invalid byte 0 trk %d: "
                             "buf %2.2x%2.2x%2.2x%2.2x%2.2x\n", dev->devnum,
                             t, buf[0],buf[1],buf[2],buf[3],buf[4]);
                     buf[0] &= CCKD_COMPRESS_MASK;
