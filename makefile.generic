@@ -63,7 +63,7 @@ hercules_OBJ = hostinfo.o impl.o config.o panel.o \
                timer.o esame.o cckddasd.o cckdutil.o dasdtab.o \
                parser.o ieee.o httpserv.o \
                cgibin.o codepage.o \
-               hsccmd.o hscmisc.o logger.o \
+               hsccmd.o hscmisc.o logger.o history.o \
                cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
                hscutl.o hscutl2.o hsys.o bootstrap.o pttrace.o
 hdt1403_OBJ  = printer.o
@@ -164,7 +164,7 @@ HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            inline.h linklist.h logger.h machdep.h opcode.h \
            parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
            vstore.h w32chan.h w32ctca.h shared.h hdl.h crypto.h \
-           sockdev.h
+           sockdev.h history.h
 
 all:	   $(EXEFILES) $(DYNFILES)
 
