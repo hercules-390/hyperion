@@ -140,6 +140,7 @@
 /*----------------------------------------------------------------------------*/
 /* Adjust registers conform length                                            */
 /*----------------------------------------------------------------------------*/
+#undef ADJUSTREGS
 #define ADJUSTREGS(r, regs, len) \
 { \
   GR_A ((r), (regs)) = (GR_A ((r), (regs)) + (len)) & ADDRESS_MAXWRAP((regs)); \
