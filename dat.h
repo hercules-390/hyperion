@@ -952,13 +952,13 @@ TLBE   *tlbp;                           /* -> TLB entry              */
         stl = std & STD_STL;
         sto += (vaddr & 0x7FF00000) >> 18;
 
-        /* Generate addressing exception if outside real storage */
-        if (sto >= regs->mainsize)
-            goto address_excp;
-
         /* Check that virtual address is within the segment table */
         if ((vaddr >> 24) > stl)
             goto seg_tran_length;
+
+        /* Generate addressing exception if outside real storage */
+        if (sto >= regs->mainsize)
+            goto address_excp;
 
         /* Fetch segment table entry from real storage.  All bytes
            must be fetched concurrently as observed by other CPUs */
@@ -987,13 +987,13 @@ TLBE   *tlbp;                           /* -> TLB entry              */
         /* Calculate the real address of the page table entry */
         pto += (vaddr & 0x000FF000) >> 10;
 
-        /* Generate addressing exception if outside real storage */
-        if (pto >= regs->mainsize)
-            goto address_excp;
-
         /* Check that the virtual address is within the page table */
         if (((vaddr & 0x000FF000) >> 16) > ptl)
             goto page_tran_length;
+
+        /* Generate addressing exception if outside real storage */
+        if (pto >= regs->mainsize)
+            goto address_excp;
 
         /* Fetch the page table entry from real storage.  All bytes
            must be fetched concurrently as observed by other CPUs */
@@ -1745,6 +1745,9 @@ U16     xcode;                          /* Exception code            */
                         &xcode, &private, &protect, &stid))
             goto vabs_prog_check;
     }
+
+    if ((acctype == ACCTYPE_WRITE) && protect)
+        goto vabs_prot_excp;
 
     /* Convert real address to absolute address */
     aaddr = APPLY_PREFIXING (raddr, regs->PX);
