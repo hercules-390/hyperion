@@ -585,7 +585,29 @@ The format of the device record is:
                                 decreasing it may reduce compression performance, but it's
                                 there if you want it.  The range is from <b><i>4096</i></b>
                                 to <b><i>65535</i></b>.  The latter being the default.
-        </dl>
+        <p />
+    </dl>
+    <dl>
+        The following parameters apply to both AWS and HET emulation files :
+        <p />
+        <dt><code>MAXSIZE</code>|<code>MAXSIZEK</code>|<code>MAXSIZEM</code>=<em>n</em>
+        <dd>Specifies the maximum number of bytes (specified in bytes, Kilobytes or Megabytes) for the emulated file. This parameter defaults to 0, meaning there is no limit on the file size.
+        <dt><code>EOTMARGIN</code>=<em>n</em>
+        <dd>Specifies the number of bytes remaining before reaching <em>maxsize</em> at which point the tape device will signal the presence of the 'End Of Tape' marker, thus allowing the program to switch to the next tape.
+        <p />
+    </dl>
+    <dl>
+        Additionally, if the file name starts with the '@' character (at sign), the file really describes a list of tape emulation files to be loaded in succession.
+        <br />The syntax of each line is identical to the information specified that can be specified after the device type when the emulation file is specified directly after the device type in the configuration file.
+        <br />If the emulation file filename in the file list is the '*' character, then this specifies a set of options to be applied to all additional emulation files specified in the file list.
+        <br />Parameters are appended in succession. In all cases, is the same parameter is specified more than once, the last instance takes precedence.
+        <br />
+        Therefore, it is possible to specify a set of parameters in the base configuration file, Another set on a '*' line, and another set for each individual lines. Parameter are then appended in that order.
+        <p />
+        An SCSI tape device should *NOT* be given in a file list.
+    </dl>
+    <p />
+    See the README.TAPE file for additional information, system and application programming for tape devices.
     </dl>
 <p>
 <a name="ctca">
