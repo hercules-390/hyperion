@@ -18,17 +18,17 @@ override the defaule modules and HTTP documents directory in the
 Hercules configuration file, or by setting an environment variable. This
 error has been corrected. Hercules also now reports the actual directory
 that it uses by default for these files at startup time. If you specified
-the MODULESDIR or HTTPROOT configuration file statements because you
+the MODPATH or HTTPROOT configuration file statements because you
 encountered problems, you should examine the mesages printed at startup to
 see if the default directories are now correct, and remove the statements
 if so.
-<p>In general, MODULESDIR and HTTPROOT should not have to be specified
+<p>In general, MODPATH and HTTPROOT should not have to be specified
 except in unusual circumstances.
 <dt>Windows default directories
 <dd>In conjunction with the fix above, the default directories of the
 Windows distributed binaries have been changed. The new directories are
 under C:\cygwin\usr\local (which is the same as /usr/local under the Cygwin
-environment). No action is needed unless you have specified the MODULESDIR or
+environment). No action is needed unless you have specified the MODPATH or
 HTTPROOT configuration file entries; if so, see the previous note.
 <h2>Release notes for release 3.00</h2>
 <p>Release date: 3 October 2003
