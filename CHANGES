@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+26 Sep 2004 Fix segfault when multiple ckd files for dasd volume - Greg Smith
 26 Sep 2004 Fix segfault when no cckd shadow file - Greg Smith
 24 Sep 2004 Remove (most) int/ptr mismatch warnings for 64 bit machines
             tentative x86_64 support in autoconf
