@@ -188,6 +188,18 @@ struct _ECPSVM_SASTATS
 #define INITSIESTATE(_regs)
 #endif
 
+#define INITPSEUDOIP(_regs) \
+    do {    \
+        (_regs).ip="\0\0";  \
+    } while(0)
+
+#define INITPSEUDOREGS(_regs) \
+    do { \
+        INITSIESTATE((_regs)); \
+        INITPSEUDOIP((_regs)); \
+    } while(0)
+
+
 #define CPASSIST_HIT(_stat) ecpsvm_cpstats._stat.hit++
 
 #define SASSIST_HIT(_stat) ecpsvm_sastats._stat.hit++
@@ -279,7 +291,7 @@ struct _ECPSVM_SASTATS
     if((_cput)) \
     { \
         /* Load the Virtual PSW in a temporary REGS structure */ \
-        INITSIESTATE(vpregs); \
+        INITPSEUDOREGS(vpregs); \
         ARCH_DEP(load_psw) (&vpregs,vpswa_p); \
         DEBUG_SASSISTX(_instname,display_psw(&vpregs)); \
     } \
@@ -845,13 +857,13 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
         }
 
         memset(&wregs,0,sizeof(wregs));
-        INITSIESTATE(wregs);
+        INITPSEUDOREGS(wregs);
     work_p=MADDR(vmb+VMPSW,0,regs,USE_REAL_ADDR,0);
         ARCH_DEP(load_psw) (&wregs,work_p);    /* Load user's Virtual PSW in work structure */
 
         /* Build REAL PSW */
         memset(&rregs,0,sizeof(rregs));
-        INITSIESTATE(rregs);
+        INITPSEUDOREGS(rregs);
         /* Copy IAR */
         rregs.psw.IA=wregs.psw.IA & ADDRESS_MAXWRAP(regs);
         /* Copy CC, PSW KEYs and PGM Mask */
@@ -2125,7 +2137,7 @@ int     ecpsvm_dossm(REGS *regs,int b2,VADR effective_addr2)
     /* but also fetch protection control, ref bit, etc.. */
     reqmask=ARCH_DEP(vfetchb) (effective_addr2,b2,regs);
 
-    INITSIESTATE(npregs);
+    INITPSEUDOREGS(npregs);
     /* Load the virtual PSW AGAIN in a new structure */
 
     ARCH_DEP(load_psw) (&npregs,vpswa_p);
@@ -2176,7 +2188,7 @@ int     ecpsvm_dosvc(REGS *regs,int svccode)
     psa=(PSA_3XX *)MADDR((VADR)0 , USE_PRIMARY_SPACE, regs, ACCTYPE_READ, 0);
                                                                                          /* Use all around access key 0 */
                                                                                          /* Also sets reference bit     */
-    INITSIESTATE(newr);
+    INITPSEUDOREGS(newr);
     ARCH_DEP(load_psw) (&newr, (BYTE *)&psa->svcnew);   /* Ref bit set above */
     DEBUG_SASSISTX(SVC,logmsg("HHCEV300D : SASSIST SVC NEW VIRT "));
     DEBUG_SASSISTX(SVC,display_psw(&newr));
@@ -2247,7 +2259,7 @@ int ecpsvm_dolpsw(REGS *regs,int b2,VADR e2)
 
     }
     nlpsw=MADDR(e2,b2,regs,ACCTYPE_READ,regs->psw.pkey);
-    INITSIESTATE(nregs);
+    INITPSEUDOREGS(nregs);
     ARCH_DEP(load_psw) (&nregs,nlpsw);
     if(ecpsvm_check_pswtrans(regs,&micblok,micpend,&vpregs,&nregs))
     {
