@@ -1,3 +1,8 @@
+02 Mar 2002 Display version info via stdout instead of stderr - Fish
+02 Mar 2002 Added #include <sched.h> to hercules.h and some #ifdefs
+            in a few places to fix some compiler warnings, and fixed
+            a few minor typos here and there - Fish
+02 Mar 2002 external gui support to dasdcat - Fish
 01 Mar 2002 Fix and simplify cckd chkdsk default processing - Greg Smith
 01 Mar 2002 Fix priority of PIC 13 for PT - Paul Leisy
 01 Mar 2002 Fix cancel_subchan if OPTION_FISHIO - Greg Smith

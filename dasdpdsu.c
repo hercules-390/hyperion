@@ -235,7 +235,7 @@ BYTE            dirblk[256];            /* Copy of directory block   */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules PDS unload program ");
+    display_version (stdout, "Hercules PDS unload program ");
 
     /* Check the number of arguments */
 #ifdef EXTERNALGUI

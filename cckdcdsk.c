@@ -77,7 +77,7 @@ int             ro=0;                   /* 1 = Open readonly         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules cckd chkdsk program ");
+    display_version (stdout, "Hercules cckd chkdsk program ");
 
     /* parse the arguments */
 #ifdef EXTERNALGUI

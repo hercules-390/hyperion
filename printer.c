@@ -22,10 +22,12 @@
 static int
 open_printer (DEVBLK *dev)
 {
-int             rc;                     /* Return code               */
 int             fd;                     /* File descriptor           */
+#if !defined(WIN32)
+int             rc;                     /* Return code               */
 int             pipefd[2];              /* Pipe descriptors          */
 pid_t           pid;                    /* Child process identifier  */
+#endif /* !defined(WIN32) */
 
     /* Regular open if 1st char of filename is not vertical bar */
     if (dev->filename[0] != '|')
@@ -47,11 +49,11 @@ pid_t           pid;                    /* Child process identifier  */
 
     /* Filename is in format |xxx, set up pipe to program xxx */
 
-#ifdef WIN32
+#if defined(WIN32)
     logmsg ("HHC414I %4.4X print to pipe not supported under Windows\n",
             dev->devnum);
     return -1;
-#else /*!WIN32*/
+#else /* !defined(WIN32) */
 
     /* Create a pipe */
     rc = pipe (pipefd);
@@ -147,7 +149,7 @@ pid_t           pid;                    /* Child process identifier  */
     dev->fd = pipefd[1];
 
     return 0;
-#endif /*!WIN32*/
+#endif /* !defined(WIN32) */
 } /* end function open_printer */
 
 /*-------------------------------------------------------------------*/

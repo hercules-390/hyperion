@@ -84,7 +84,7 @@ unsigned int    c=CCKD_COMPRESS_ZLIB;   /* Compression algorithm     */
 int             z=-1;                   /* Compression value         */
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules ckd to cckd copy program ");
+    display_version (stdout, "Hercules ckd to cckd copy program ");
 
     /* parse the arguments */
 #ifdef EXTERNALGUI

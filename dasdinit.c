@@ -792,7 +792,7 @@ BYTE    c;                              /* Character work area       */
 
     /* Display the program identification message */
 
-    display_version (stderr,
+    display_version (stdout,
                      "Hercules DASD image file creation program\n");
 
 #ifdef EXTERNALGUI
@@ -857,7 +857,7 @@ BYTE    c;                              /* Character work area       */
 
     /* FBA compression not yet supported */
 
-    if ('F' == type && 0xff != comp)
+    if (type == 'F' && 0xff != comp)
         argexit(0);
 
     /* If compression is specified, they MUST specify a specific

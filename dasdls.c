@@ -121,7 +121,7 @@ int main(int argc, char **argv)
     int rc = 0;
 
     /* Display program info message */
-    display_version (stderr, "Hercules DASD list program ");
+    display_version (stdout, "Hercules DASD list program ");
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

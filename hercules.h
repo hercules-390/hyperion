@@ -61,6 +61,7 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sched.h>
 #include "version.h"
 #include "hetlib.h"
 

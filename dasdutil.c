@@ -19,7 +19,7 @@
 static BYTE eighthexFF[] =              /* End of track marker       */
         {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-static int verbose = 1;                        /* Be chatty about reads etc. */
+static int verbose = 1;                /* Be chatty about reads etc. */
 
 /*-------------------------------------------------------------------*/
 /* ASCII to EBCDIC translate tables                                  */

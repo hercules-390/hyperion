@@ -62,7 +62,7 @@ BYTE	       *output_filename;	/* -> filename to print      */
 int		more_devices;		/* More devices this ctlr?   */
 
     /* Display the program identification message */
-    display_version (stderr,
+    display_version (stdout,
                      "P/390 DEVMAP to Hercules conversion program\n");
 
     /* The only argument is the DEVMAP file name */

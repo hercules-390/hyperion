@@ -72,7 +72,7 @@ main( int argc, char *argv[] )
     o_volser = NULL;
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules HET IEHINITT program ");
+    display_version (stdout, "Hercules HET IEHINITT program ");
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)

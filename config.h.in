@@ -12,9 +12,6 @@
 /* Define to build interface to external Windows GUI */
 #undef EXTERNALGUI
 
-/* Define if you have the GNU version of mtio.h (Linux) */
-#undef GNU_MTIO_SUPPORT
-
 /* Define if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
 
@@ -53,9 +50,6 @@
 
 /* Define if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
-
-/* Define if your system has sys/mtio.h */
-#undef HAVE_MTIO_H
 
 /* Define if you have the `setresuid' function. */
 #undef HAVE_SETRESUID
@@ -113,9 +107,6 @@
 
 /* Define to use included threads implementation (fthreads) */
 #undef OPTION_FTHREADS
-
-/* Pthread Checking */
-#undef OST_LIB_PTHREAD
 
 /* Name of package */
 #undef PACKAGE

@@ -13,6 +13,12 @@
 #define OPT_PDS_WILDCARD 0x4
 #define OPT_PDS_LISTONLY 0x8
 
+#ifdef EXTERNALGUI
+/* Special flag to indicate whether or not we're being
+   run under the control of the external GUI facility. */
+int  extgui = 0;
+#endif /*EXTERNALGUI*/
+
 int end_of_track(char *ptr)
 {
  unsigned char *p = (unsigned char *)ptr;
@@ -158,6 +164,9 @@ int do_cat_pdsmember(CIFBLK *cif, DSXTENT *extent, int noext,
  BYTE *blkptr;
  BYTE dirblk[256];
  int cyl, head, len;
+#ifdef EXTERNALGUI
+ if (extgui) fprintf(stderr,"CTRK=%d\n",trk);
+#endif /*EXTERNALGUI*/
  rc = convert_tt(trk, noext, extent, cif->heads, &cyl, &head);
  if (rc < 0)
  return -1;
@@ -240,6 +249,26 @@ int do_cat(CIFBLK *cif, char *file)
  if (rc < 0)
  return -1;
 
+#ifdef EXTERNALGUI
+ /* Calculate ending relative track */
+ if (extgui) {
+ int bcyl;  /* Extent begin cylinder     */
+ int btrk;  /* Extent begin head         */
+ int ecyl;  /* Extent end cylinder       */
+ int etrk;  /* Extent end head           */
+ int trks;  /* total tracks in dataset   */
+ int i;     /* loop control              */
+ for (i = 0, trks = 0; i < noext; i++) {
+ bcyl = (extent[i].xtbcyl[0] << 8) | extent[i].xtbcyl[1];
+ btrk = (extent[i].xtbtrk[0] << 8) | extent[i].xtbtrk[1];
+ ecyl = (extent[i].xtecyl[0] << 8) | extent[i].xtecyl[1];
+ etrk = (extent[i].xtetrk[0] << 8) | extent[i].xtetrk[1];
+ trks += (((ecyl*cif->heads)+etrk)-((bcyl*cif->heads)+btrk))+1;
+ }
+ fprintf(stderr,"ETRK=%d\n",trks-1);
+ }
+#endif /*EXTERNALGUI*/
+
  if (pdsmember)
  rc = do_cat_pdsmember(cif, extent, noext, pdsmember, optflags);
  else
@@ -253,8 +282,16 @@ int main(int argc, char **argv)
  int rc = 0;
  CIFBLK *cif = 0;
 
+#ifdef EXTERNALGUI
+ if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0) {
+ argv[argc-1] = NULL;
+ extgui = 1;
+ argc--;
+ }
+#endif /*EXTERNALGUI*/
+
  /* Display program info message */
- display_version (stderr, "Hercules DASD cat program ");
+ display_version (stdout, "Hercules DASD cat program ");
 
  if (argc < 2) {
  fprintf(stderr, "Usage: dasdcat [-i dasd_image dsname...]...\n");

@@ -4220,7 +4220,7 @@ BYTE            stmt[256];              /* Control file statement    */
 int             stmtno;                 /* Statement number          */
 
     /* Display the program identification message */
-    display_version (stderr,
+    display_version (stdout,
                      "Hercules DASD loader program ");
 
     /* Check the number of arguments */

@@ -74,7 +74,7 @@ BYTE            labelrec[81];           /* Standard label (ASCIIZ)   */
 AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
 
     /* Display the program identification message */
-    display_version (stderr, "Hercules tape split program ");
+    display_version (stdout, "Hercules tape split program ");
 
 #ifdef EXTERNALGUI
     if (argc >= 1 && strncmp(argv[argc-1],"EXTERNALGUI",11) == 0)
