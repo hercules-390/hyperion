@@ -529,32 +529,31 @@ int     rc;                             /* Return code               */
         memset(&dev->buf[rc], 0, CARD_SIZE - rc);
         rc = CARD_SIZE;
     }
-
-    /* Handle end-of-file condition */
-    if (feof(dev->fh))
+    else if (feof(dev->fh)) /* End of file */
     {
-        /* Return unit exception or intervention required */
-        if (dev->rdreof)
-        {
-            *unitstat = CSW_CE | CSW_DE | CSW_UX;
-        }
-        else
-        {
-            dev->sense[0] = SENSE_IR;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-        }
 
-        /* Close the file and clear the file name and flags */
-
-        if (clear_cardrdr(dev) != 0)
+      /* Return unit exception or intervention required */
+      if (dev->rdreof)
         {
-            /* Set unit check with equipment check */
-            dev->sense[0] = SENSE_EC;
-            *unitstat = CSW_CE | CSW_DE | CSW_UC;
-            return -1;
+          *unitstat = CSW_CE | CSW_DE | CSW_UX;
+        }
+      else
+        {
+          dev->sense[0] = SENSE_IR;
+          *unitstat = CSW_CE | CSW_DE | CSW_UC;
         }
 
-        return -2;
+      /* Close the file and clear the file name and flags */
+
+      if (clear_cardrdr(dev) != 0)
+        {
+          /* Set unit check with equipment check */
+          dev->sense[0] = SENSE_EC;
+          *unitstat = CSW_CE | CSW_DE | CSW_UC;
+          return -1;
+        }
+
+      return -2;
     }
 
     /* Handle read error condition */
