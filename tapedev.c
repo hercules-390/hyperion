@@ -2140,6 +2140,7 @@ BYTE            c;                      /* Work area for sscanf      */
         if (strcasecmp(tdfrec, "TM") == 0)
         {
                 tdftab[filecount].format='X';
+                tdfbuf[tdfpos] = c;
                 continue;
         }
         if(strcasecmp(tdfrec, "EOT") == 0)
