@@ -1,4 +1,5 @@
-28 Feb 2001 Allow for cr/lf in 3215 code and change ebcdic to ascii
+01 Mar 2002 Fix cancel_subchan if OPTION_FISHIO - Greg Smith
+28 Feb 2002 Allow for cr/lf in 3215 code and change ebcdic to ascii
             convertion table entry x'15' from x'b4' to x'0a' - Jan Jaeger
 26 Feb 2002 `sf-xxx nomerge' rebuilds current shadow file if previous
             file is `read-only' - Greg Smith
