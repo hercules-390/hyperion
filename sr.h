@@ -173,6 +173,7 @@
 #define SR_SYS_SIGINTREQ        0xace10041
 #define SR_SYS_VMACTIVE         0xace10042
 #define SR_SYS_MSCHDELAY        0xace10043
+#define SR_SYS_LOADPARM         0xace10044
 
 #define SR_SYS_SERVC            0xace11000
 

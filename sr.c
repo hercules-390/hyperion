@@ -152,6 +152,7 @@ BYTE     psw[16];
     SR_WRITE_VALUE (file,SR_SYS_SIGINTREQ,sysblk.sigintreq,1);
     SR_WRITE_VALUE (file,SR_SYS_VMACTIVE,sysblk.vmactive,1);
     SR_WRITE_VALUE (file,SR_SYS_MSCHDELAY,sysblk.mschdelay,1);
+    SR_WRITE_STRING(file,SR_SYS_LOADPARM,str_loadparm());
     SR_WRITE_VALUE (file,SR_SYS_INTS_STATE,sysblk.ints_state,sizeof(sysblk.ints_state));
     SR_WRITE_HDR(file, SR_DELIMITER, 0);
 
@@ -563,6 +564,11 @@ BYTE     buf[SR_MAX_STRING_LENGTH+1];
         case SR_SYS_MSCHDELAY:
             SR_READ_VALUE(file, len, &rc, sizeof(rc));
             sysblk.mschdelay = rc;
+            break;
+
+        case SR_SYS_LOADPARM:
+            SR_READ_STRING(file, buf, len);
+            set_loadparm ((char *)buf);
             break;
 
         case SR_SYS_SERVC:

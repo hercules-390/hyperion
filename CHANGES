@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+19 Aug 2004 Suspend/resume loadparm value - Christopher by Greg Smith
 19 Aug 2004 cckd fix: Honor readonly option on sf- to base file - Greg Smith
 18 Aug 2004 cckd fixes: possible sf- corruption, messages - Greg Smith
 16 Aug 2004 DAT-enhancement facility: IDTE instruction - Roger Bowler
