@@ -1,3 +1,4 @@
+27 Oct 2002 Fix dasdisup to accept one argument - Jay Maynard
 13 Oct 2002 64bit cmpsc fixes Bernard van der Helm
 12 Oct 2002 CKD fix when offset >= 2G - Greg Smith
 03 Okt 2002 PER fixes - Jan Jaeger

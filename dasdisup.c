@@ -628,7 +628,7 @@ int             nmem = 0;               /* Number of array entries   */
                      "Hercules IEHIOSUP program ");
 
     /* Check the number of arguments */
-    if (argc <= 2 || argc > 3)
+    if (argc < 2 || argc > 3)
     {
         fprintf (stdout,
                 "Usage: %s ckdfile [sf=shadow-file-name]\n",
