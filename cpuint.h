@@ -112,8 +112,7 @@
 
 #define SET_IC_PER_MASK(_regs) \
 do { \
-  if( ((_regs)->psw.sysmask & PSW_PERMODE) \
-    || ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) ) \
+  if( PER_MODE((_regs)) ) \
      (_regs)->ints_mask = (((_regs)->ints_mask&~IC_PER_MASK) \
                           | (((_regs)->CR(9) >> IC_CR9_SHIFT)&IC_PER_MASK)); \
    else \

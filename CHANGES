@@ -1,3 +1,4 @@
+16 Dec 2001 Do not process PER in native BC mode - Jan Jaeger
 16 Dec 2001 Correct PER for S/370 under SIE - Jan Jaeger
 16 Dec 2001 Add missing obtain intlock to sie.c - Greg Smith
 16 Dec 2001 Add channel set switching feature - Jan Jaeger

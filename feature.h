@@ -35,6 +35,7 @@
 #undef AMASK
 #undef ADDRESS_MAXWRAP
 #undef REAL_MODE
+#undef PER_MODE
 #undef ASF_ENABLED
 #undef ASTE_AS_DESIGNATOR
 #undef ASTE_LT_DESIGNATOR
@@ -122,6 +123,10 @@ s370_ ## _name
 #define REAL_MODE(p) \
 	((p)->ecmode==0 || ((p)->sysmask & PSW_DATMODE)==0)
 
+#define PER_MODE(_regs) \
+        ( ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE)) \
+          | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
+
 #define ASF_ENABLED(_regs)	0 /* ASF is never enabled for S/370 */
 
 #define ASTE_AS_DESIGNATOR(_aste) \
@@ -199,6 +204,10 @@ s390_ ## _name
 
 #define REAL_MODE(p) \
 	(((p)->sysmask & PSW_DATMODE)==0)
+
+#define PER_MODE(_regs) \
+        ( ((_regs)->psw.sysmask & PSW_PERMODE) \
+          | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
 
 #define ASF_ENABLED(_regs)	((_regs)->CR(0) & CR0_ASF)
 
@@ -280,6 +289,10 @@ s390_ ## _name
 
 #define REAL_MODE(p) \
 	(((p)->sysmask & PSW_DATMODE)==0)
+
+#define PER_MODE(_regs) \
+        ( ((_regs)->psw.sysmask & PSW_PERMODE) \
+          | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
 
 #define ASF_ENABLED(_regs)	1 /* ASF is always enabled for ESAME */
 

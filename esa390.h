@@ -119,10 +119,6 @@ typedef struct _PSW {
 	((p)->space==0 && (p)->armode==1)
 #define HOME_SPACE_MODE(p) \
 	((p)->space==1 && (p)->armode==1)
-#define PER_MODE(_regs) \
-        ( ((_regs)->psw.sysmask & PSW_PERMODE) \
-          | ((_regs)->sie_state && ((_regs)->siebk->m & SIE_M_GPE)) )
-
 
 /* Structure definition for translation-lookaside buffer entry */
 typedef struct _TLBE {
