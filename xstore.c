@@ -402,7 +402,11 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         /* Program check if page protection or access-list controlled
            protection applies to the first operand */
         if (prot)
+        {
+            regs->TEA = vaddr1 | stid | 0x00000004;
+            regs->excarid = (stid == TEA_ST_ARMODE) ? r1 : 0;
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
+        }
 
     } /* end if(!REAL_MODE) */
 

@@ -1688,7 +1688,7 @@ RADR    raddr;                          /* Real address              */
 RADR    aaddr;                          /* Absolute address          */
 int     private = 0;                    /* 1=Private address space   */
 int     protect = 0;                    /* 1=Page prot, 2=ALE prot   */
-int     stid;                           /* Address space indication  */
+int     stid = 0;                       /* Address space indication  */
 #ifdef FEATURE_INTERVAL_TIMER
 PSA    *psa;                            /* -> Prefixed storage area  */
 S32     itimer;                         /* Interval timer value      */
