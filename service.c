@@ -846,6 +846,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         /* Point to SCCB data area following SCCB header */
         evd_hdr = (SCCB_EVD_HDR*)(sccb+1);
 
+        if( HDC(debug_sclp_event_data, evd_hdr, sccb, regs) )
+            break;
+
         /* Set response code X'60F0' if no outstanding events */
         event_msglen = strlen(servc_scpcmdstr);
         if (event_msglen == 0)

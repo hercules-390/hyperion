@@ -60,6 +60,7 @@ HDL_REGISTER_SECTION;
     HDL_REGISTER( debug_diagnose,             UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_command, UNRESOLVED      );
     HDL_REGISTER( debug_sclp_unknown_event,   UNRESOLVED      );
+    HDL_REGISTER( debug_sclp_event_data,      UNRESOLVED      );
     HDL_REGISTER( debug_chsc_unknown_request, UNRESOLVED      );
 
 #if defined(_390_FEATURE_MESSAGE_SECURITY_ASSIST)
