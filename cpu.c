@@ -1106,7 +1106,7 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
     if( OPEN_IC_DEBUG(regs) )
     {
         U32 prevmask = regs->ints_mask;
-	SET_IC_EXTERNAL_MASK(regs);
+    SET_IC_EXTERNAL_MASK(regs);
         SET_IC_IO_MASK(regs);
         SET_IC_MCK_MASK(regs);
         SET_IC_PER_MASK(regs);

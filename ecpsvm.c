@@ -696,15 +696,15 @@ int ecpsvm_do_disp2(REGS *regs,VADR dl,VADR el)
             {
                 regs->GR_L(i)=CPEXBKUP[i];
             }
-	    /* Save GPRS 12-1 (wraping) in DSPSAVE (datalist +40) */
-	    /* So that LM 12,1,DSPSAVE in DMKDSP works after call to DMKFRET */
-	    EVM_ST(dl+40,CPEXBKUP[12]);
-	    EVM_ST(dl+44,CPEXBKUP[13]);
-	    EVM_ST(dl+48,CPEXBKUP[14]);
-	    EVM_ST(dl+52,CPEXBKUP[15]);
-	    EVM_ST(dl+56,CPEXBKUP[0]);
-	    EVM_ST(dl+60,CPEXBKUP[1]);	/* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
-	    /* Upon taking this exit, GPRS 12-15 are same as entry */
+        /* Save GPRS 12-1 (wraping) in DSPSAVE (datalist +40) */
+        /* So that LM 12,1,DSPSAVE in DMKDSP works after call to DMKFRET */
+        EVM_ST(dl+40,CPEXBKUP[12]);
+        EVM_ST(dl+44,CPEXBKUP[13]);
+        EVM_ST(dl+48,CPEXBKUP[14]);
+        EVM_ST(dl+52,CPEXBKUP[15]);
+        EVM_ST(dl+56,CPEXBKUP[0]);
+        EVM_ST(dl+60,CPEXBKUP[1]);  /* Note : DMKDSP Is wrong -  SCHMASK is at +64 (not +60) */
+        /* Upon taking this exit, GPRS 12-15 are same as entry */
             regs->psw.IA=EVM_L(el+12);
             return(0);
         }

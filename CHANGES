@@ -1,5 +1,8 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+08 Aug 2003 2.17.b2: fixed incorrectly typed thread functions - Fish
+            all thread functions s/b "void *thread(void *arg)", not
+            void thread(void *arg) or void *thread() or anything else
 08 Aug 2003 Increased 2311 Alt Cyl count from 2 to 3 - Ivan Warren
 01 Aug 2003 Created RELEASE.NOTES member - Fish
 01 Aug 2003 Added Hercules VERSION to dyngui - Fish

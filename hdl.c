@@ -423,7 +423,7 @@ char *modname;
         return -1;
     }
 
-    dllent->flags = flags;
+    dllent->flags = (flags & (~HDL_LOAD_WAS_FORCED));
 
     if(!(dllent->hdldepc = dlsym(dllent->dll,HDL_DEPC_Q)))
     {

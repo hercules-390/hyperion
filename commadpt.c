@@ -506,7 +506,7 @@ static struct timeval *commadpt_setto(struct timeval *tv,int tmo)
 /*-------------------------------------------------------------------*/
 /* Communication Thread main loop                                    */
 /*-------------------------------------------------------------------*/
-static void commadpt_thread(void *vca)
+static void *commadpt_thread(void *vca)
 {
     COMMADPT    *ca;            /* Work CA Control Block Pointer     */
     int        sockopt;         /* Used for setsocketoption          */
@@ -559,7 +559,7 @@ static void commadpt_thread(void *vca)
             logmsg(_("HHCCA003E %4.4X:Cannot obtain socket for incoming calls : %s\n"),devnum,strerror(errno));
             ca->have_cthread=0;
             release_lock(&ca->lock);
-            return;
+            return NULL;
         }
         /* Turn blocking I/O off */
         rc=fcntl(ca->lfd,F_GETFL);
@@ -1183,7 +1183,7 @@ static void commadpt_thread(void *vca)
     /*        the lock                                */
     logmsg(_("HHCCA009I %4.4X:BSC utility thread terminated\n"),ca->devnum);
     release_lock(&ca->lock);
-    return;
+    return NULL;
 }
 /*-------------------------------------------------------------------*/
 /* Wakeup the comm thread                                            */

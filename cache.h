@@ -178,7 +178,7 @@ typedef struct _CACHE {                 /* Cache entry               */
       U64       key;                    /* Key                       */
       U32       flag;                   /* Flags                     */
       int       len;                    /* Buffer length             */
-      void     *buf;                    /* Buffer address            */	
+      void     *buf;                    /* Buffer address            */ 
       int       value;                  /* Arbitrary value           */
       U64       age;                    /* Age                       */
     } CACHE;

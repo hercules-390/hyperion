@@ -197,7 +197,7 @@ int     compat_shutdown;                /* Shutdown flag             */
 static char *lmsbuf;
 static int  lmsnum;
 static int  lmscnt;
-static void panel_compat_thread(void *arg)
+static void *panel_compat_thread(void *arg)
 {
 
     UNREFERENCED(arg);
@@ -207,7 +207,8 @@ static void panel_compat_thread(void *arg)
             fwrite(lmsbuf,lmscnt,1,compat_msgpipew);
 
     fclose(compat_msgpipew);
-    
+
+    return NULL;
 }
 
 
@@ -746,7 +747,7 @@ char c;
     fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_CLEAR_SCREEN );
 
     /* Reset the first line to be displayed (i.e.
-	   "scroll down to the most current message") */
+       "scroll down to the most current message") */
     firstmsgn = nummsgs - NUM_LINES;
     if (firstmsgn < 0) firstmsgn = 0;
 

@@ -59,10 +59,12 @@ static void sigint_handler (int signo)
 
 
 #if !defined(NO_SIGABEND_HANDLER)
-static void watchdog_thread()
+static void *watchdog_thread(void *arg)
 {
 S64 savecount[MAX_CPU_ENGINES];
 int i;
+
+    UNREFERENCED(arg);
 
 #ifndef WIN32
     /* Set watchdog priority just below cpu priority
@@ -110,6 +112,8 @@ int i;
         /* Sleep for 20 seconds */
         sleep(20);
     }
+
+    return NULL;
 }
 #endif /*!defined(NO_SIGABEND_HANDLER)*/
 

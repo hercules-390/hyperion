@@ -37,14 +37,14 @@
                                           /* is empty */
 #define TAPE_BSENSE_ENDOFTAPE      8      /* A read was issued past the end 
                                              of the tape or a write was issued
-					     and there is no space left */
+                         and there is no space left */
 #define TAPE_BSENSE_LOADPTERR      9      /* A BSF/BSR/RdBW was attempted at 
-					     BOT */
+                         BOT */
 #define TAPE_BSENSE_FENCED         10     /* Media damaged - unload/reload
-					     required */
+                         required */
 #define TAPE_BSENSE_BADALGORITHM   11     /* Bad compression - 
-					     HET tape compressed with an 
-					     unsuported method */
+                         HET tape compressed with an 
+                         unsuported method */
 #define TAPE_BSENSE_TAPEUNLOADED2  12     /* Sucessful Rewind Unload operation */
 #define TAPE_BSENSE_STATUSONLY     13     /* No exception occured */
 #define TAPE_BSENSE_LOCATEERR      14     /* Cannot find a block or TM */
@@ -174,26 +174,26 @@ typedef struct _OMATAPE_DESC {
     } OMATAPE_DESC;
 
 typedef struct _TAPEMEDIA_HANDLER {
-	int (* open)(DEVBLK *,BYTE *unitstat,BYTE code);
-	void (* close)(DEVBLK *);
-	int (* read)(DEVBLK *,BYTE *buf,BYTE *unitstat,BYTE code);
-	int (* write)(DEVBLK *,BYTE *buf,U16 blklen,BYTE *unitstat,BYTE code);
-	int (* rewind)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* bsb)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* fsb)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* bsf)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* fsf)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* wtm)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* dse)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* erg)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* tapeloaded)(DEVBLK *,BYTE *unitstat,BYTE code);
-	int (* passedeot)(DEVBLK *);
+    int (* open)(DEVBLK *,BYTE *unitstat,BYTE code);
+    void (* close)(DEVBLK *);
+    int (* read)(DEVBLK *,BYTE *buf,BYTE *unitstat,BYTE code);
+    int (* write)(DEVBLK *,BYTE *buf,U16 blklen,BYTE *unitstat,BYTE code);
+    int (* rewind)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* bsb)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* fsb)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* bsf)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* fsf)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* wtm)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* dse)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* erg)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* tapeloaded)(DEVBLK *,BYTE *unitstat,BYTE code);
+    int (* passedeot)(DEVBLK *);
 } TAPEMEDIA_HANDLER;
 
 typedef struct _TAPEAUTOLOADENTRY {
-	BYTE *filename;
-	int  argc;
-	char **argv;
+    BYTE *filename;
+    int  argc;
+    char **argv;
 } TAPEAUTOLOADENTRY;
 
 #endif

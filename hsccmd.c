@@ -1191,7 +1191,7 @@ int syncio_cmd(char* cmdline, int argc, char *argv[])
 /* devtmax command - display or set max device threads */
 
 #if !defined(OPTION_FISHIO)
-void    device_thread();
+void *device_thread(void *arg);
 #endif /* !defined(OPTION_FISHIO) */
 
 int devtmax_cmd(char* cmdline, int argc, char *argv[])

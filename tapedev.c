@@ -4280,7 +4280,7 @@ static int autoload_mount_next(DEVBLK *dev)
         return(autoload_mount_tape(dev,dev->alsix));
 }
 
-static void defered_mounttape(void *db)
+static void *defered_mounttape(void *db)
 {
     int rc;
     DEVBLK *dev;
@@ -4304,10 +4304,10 @@ static void defered_mounttape(void *db)
     release_lock(&dev->lock);
     if(rc!=0)
     {
-        return;
+        return NULL;
     }
     device_attention(dev,CSW_DE);
-    return;
+    return NULL;
 }
 /*-------------------------------------------------------------------*/
 /* Initialize the device handler                                     */

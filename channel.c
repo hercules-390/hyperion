@@ -1120,9 +1120,11 @@ int i;
 /*-------------------------------------------------------------------*/
 /* Execute a queued I/O                                              */
 /*-------------------------------------------------------------------*/
-void device_thread ()
+void *device_thread (void *arg)
 {
-    DEVBLK         *dev;
+DEVBLK  *dev;
+
+    UNREFERENCED(arg);
 
     obtain_lock(&sysblk.ioqlock);
 
@@ -1160,6 +1162,7 @@ void device_thread ()
 
     sysblk.devtnbr--;
     release_lock (&sysblk.ioqlock);
+    return NULL;
 
 } /* end function device_thread */
 
