@@ -2753,7 +2753,12 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
       #endif /*defined(FEATURE_ESAME)*/
 
         /* Set the called-space identification */
-        csi = (pasn == 0) ? 0 : pasn << 16 | (aste[5] & 0x0000FFFF);
+        if (pasn == 0)
+            csi = 0;
+        else if (ASN_AND_LX_REUSE_ENABLED(regs))
+            csi = pasn << 16 | (aste[11] & 0x0000FFFF);
+        else
+            csi = pasn << 16 | (aste[5] & 0x0000FFFF);
 
         /* Set the addressing mode bits in the return address */
         retn = regs->psw.IA;

@@ -868,11 +868,10 @@ int     i;                              /* Array subscript           */
     if ((lsea & PAGEFRAME_BYTEMASK) == 0x000)
         abs = abs2;
 
-  #if defined(FEATURE_ASN_AND_LX_REUSE)
     /* If ASN-and-LX-reuse is installed and active, store
        the SASTEIN (CR3 bits 0-31) in bytes 176-179, and
        store the PASTEIN (CR4 bits 0-31) in bytes 180-183 */
-    if (regs->CR(0) & CR0_ASN_LX_REUS)
+    if (ASN_AND_LX_REUSE_ENABLED(regs))
     {
         STORE_FW(regs->mainstor + abs, regs->CR_H(3));
         STORE_FW(regs->mainstor + abs + 4, regs->CR_H(4));
@@ -888,8 +887,7 @@ int     i;                              /* Array subscript           */
                 lsea, abs);
       #endif /*STACK_DEBUG*/
 
-    } /* end if(CR0_ASN_LX_REUS) */
-  #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
+    } /* end if(ASN_AND_LX_REUSE_ENABLED) */
 
     /* Skip bytes 176-223 of the new stack entry */
     lsea += 48;

@@ -54,6 +54,7 @@
 #undef REAL_MODE
 #undef PER_MODE
 #undef ASF_ENABLED
+#undef ASN_AND_LX_REUSE_ENABLED
 #undef ASTE_AS_DESIGNATOR
 #undef ASTE_LT_DESIGNATOR
 #undef SAEVENT_BIT
@@ -78,7 +79,7 @@
 #undef MONCODE
 #undef TEA
 #undef DXC
-#undef ET 
+#undef ET
 #undef PX_MASK
 #undef RSTOLD
 #undef RSTNEW
@@ -149,6 +150,8 @@ s370_ ## _name
 #endif
 
 #define ASF_ENABLED(_regs)  0 /* ASF is never enabled for S/370 */
+
+#define ASN_AND_LX_REUSE_ENABLED(_regs) 0 /* never enabled for S/370 */
 
 #define ASTE_AS_DESIGNATOR(_aste) \
     ((_aste)[2])
@@ -240,6 +243,8 @@ s390_ ## _name
 #endif
 
 #define ASF_ENABLED(_regs)  ((_regs)->CR(0) & CR0_ASF)
+
+#define ASN_AND_LX_REUSE_ENABLED(_regs) 0 /* never enabled in ESA/390 */
 
 #define ASTE_AS_DESIGNATOR(_aste) \
     ((_aste)[2])
@@ -334,6 +339,15 @@ s390_ ## _name
 #endif
 
 #define ASF_ENABLED(_regs)  1 /* ASF is always enabled for ESAME */
+
+/* ASN-and-LX-reuse is enabled if the ASN-and-LX-reuse
+   facility is installed and CR0 bit 44 is 1 */
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+  #define ASN_AND_LX_REUSE_ENABLED(_regs) \
+      ((_regs)->CR_L(0) & CR0_ASN_LX_REUS)
+#else /* !defined(FEATURE_ASN_AND_LX_REUSE) */
+  #define ASN_AND_LX_REUSE_ENABLED(_regs) 0
+#endif /* !defined(FEATURE_ASN_AND_LX_REUSE) */
 
 #define ASTE_AS_DESIGNATOR(_aste) \
     (((U64)((_aste)[2])<<32)|(U64)((_aste)[3]))
