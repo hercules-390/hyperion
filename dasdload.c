@@ -517,6 +517,10 @@ int             rc;                     /* Return code               */
     UNREFERENCED(ofname);
     UNREFERENCED(trklen);
 
+    /* Don't overwrite HA */
+    if (*usedv == 0)
+        *usedv = CKDDASD_TRKHDR_SIZE;
+
     /* Build end of track marker at end of buffer */
     memcpy (cif->trkbuf + *usedv, eighthexFF, 8);
     cif->trkmodif = 1;
@@ -2891,6 +2895,13 @@ COPYR1         *copyr1;                 /* -> header record 1        */
         } /* end while(xreclen) */
 
     } /* end while(1) */
+
+    /* Check for unsupported xmit utility */
+    if (method == METHOD_XMIT && copyfiln == 0)
+    {
+        XMERRF ("HHCDL130W WARNING -- XMIT file utility is not IEBCOPY;"
+                " file %s not loaded\n", xfname);
+    }
 
     /* Return the last record number and track balance */
     *lastrec = outrec;
