@@ -146,9 +146,9 @@ int     rc;
 #if defined(_FEATURE_SIE)
     /* Set the main storage reference and change bits */
     if(regs->sie_state
-#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+#if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !(regs->siebk->s & SIE_S_EXP_TIMER)
-#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+#endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        && !(regs->siebk->ec[0] & SIE_EC0_EXTA)
 #endif
@@ -163,9 +163,9 @@ int     rc;
     {
         /* Point to PSA in main storage */
         pfx = regs->PX;
-#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+#if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
         SIE_TRANSLATE(&pfx, ACCTYPE_SIE, regs);
-#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+#endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
         psa = (void*)(regs->mainstor + pfx);
         STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     }
@@ -186,9 +186,9 @@ int     rc;
 
 #if defined(_FEATURE_SIE)
     if(!regs->sie_state
-#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+#if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        || (regs->siebk->s & SIE_S_EXP_TIMER)
-#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+#endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        || (regs->siebk->ec[0] & SIE_EC0_EXTA)
 #endif
@@ -212,9 +212,9 @@ int     rc;
 
 #if defined(_FEATURE_SIE)
     if(regs->sie_state
-#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+#if defined(_FEATURE_EXPEDITED_SIE_SUBSET)
                        && !(regs->siebk->s & SIE_S_EXP_TIMER)
-#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+#endif /*defined(_FEATURE_EXPEDITED_SIE_SUBSET)*/
 #if defined(_FEATURE_EXTERNAL_INTERRUPT_ASSIST)
                        && !(regs->siebk->ec[0] & SIE_EC0_EXTA)
 #endif
