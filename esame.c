@@ -601,7 +601,6 @@ int     b2;                             /* Base of effective addr    */
 VADR    effective_addr2;                /* Effective address         */
 U64     n;                              /* Absolute value to convert */
 BYTE    result[16];                     /* 31-digit signed result    */
-int     len = 16;                       /* Result length             */
 int     i;                              /* Array subscript           */
 int     d;                              /* Decimal digit or sign     */
 
@@ -632,8 +631,8 @@ int     d;                              /* Decimal digit or sign     */
         }
 
         /* Store sign and decimal digits from right to left */
-        memset (result, 0, len);
-        for (i = len - 1; d != 0 || n != 0; i--)
+        memset (result, 0, 16);
+        for (i = 16 - 1; d != 0 || n != 0; i--)
         {
             result[i] = d;
             d = n % 10;
@@ -645,7 +644,7 @@ int     d;                              /* Decimal digit or sign     */
     }
 
     /* Store 16-byte packed decimal result at operand address */
-    ARCH_DEP(vstorec) ( result, len-1, effective_addr2, b2, regs );
+    ARCH_DEP(vstorec) ( result, 16-1, effective_addr2, b2, regs );
 
 } /* end DEF_INST(convert_to_decimal_long) */
 #endif /*defined(FEATURE_ESAME)*/

@@ -18,6 +18,7 @@
 /*      Suppress superflous HHC701I/HHC702I messages - Jan Jaeger    */
 /*      Break syscons output if too long - Jan Jaeger                */
 /*      Added CHSC - CHannel Subsystem Call - Jan Jaeger 2001-05-30  */
+/*      Added CPI - Control Program Information ev. - JJ 2001-11-19  */
 /*-------------------------------------------------------------------*/
 
 #include "hercules.h"
@@ -300,9 +301,9 @@ typedef struct _SCCB_EVENT_MASK {
 //      FWORD   cp_recv_mask;           /* These mask fields have    */
 //      FWORD   cp_send_mask;           /* the length defined by     */
 //      FWORD   sclp_recv_mask;         /* the length halfword       */
-#define SCCB_EVENT_SUPP_RECV_MASK       0x40800000
+#define SCCB_EVENT_SUPP_RECV_MASK       0x40A00000
 //      FWORD   sclp_send_mask;
-#define SCCB_EVENT_SUPP_SEND_MASK       0x80800000
+#define SCCB_EVENT_SUPP_SEND_MASK       0x81800001  
     } SCCB_EVENT_MASK;
 
 /* Read/Write Event Data Header */
@@ -312,7 +313,10 @@ typedef struct _SCCB_EVD_HDR {
         BYTE    type;
 #define SCCB_EVD_TYPE_OPCMD     0x01    /* Operator command          */
 #define SCCB_EVD_TYPE_MSG       0x02    /* Message from Control Pgm  */
+#define SCCB_EVD_TYPE_STATECH   0x08    /* State Change              */
 #define SCCB_EVD_TYPE_PRIOR     0x09    /* Priority message/command  */
+#define SCCB_EVD_TYPE_CPIDENT   0x0B    /* CntlProgIdent             */
+#define SCCB_EVD_TYPE_CPCMD     0x20    /* CntlProgOpCmd             */
         BYTE    flag;
 #define SCCB_EVD_FLAG_PROC      0x80    /* Event successful          */
         HWORD   resv;                   /* Reserved for future use   */
@@ -401,6 +405,20 @@ typedef struct _SCCB_MGO_BK {
         BYTE    sysname[8];             /* Originating system name   */
         BYTE    jobname[8];             /* Jobname or guestname      */
     } SCCB_MGO_BK;
+
+/* Control Program Information */
+typedef struct _SCCB_CPI_BK {
+        BYTE    id_fmt;
+        BYTE    resv0;
+        BYTE    system_type[8];
+        DWORD   resv1;
+        BYTE    system_name[8];
+        DWORD   resv2;
+        DWORD   system_level;
+        DWORD   resv3;
+        BYTE    sysplex_name[8];
+        BYTE    resv4[16];
+    } SCCB_CPI_BK;
 
 /* Message Control Data Block NLS Object */
 typedef struct _SCCB_NLS_BK {
@@ -558,6 +576,7 @@ int             obj_type;               /* Object type               */
 SCCB_MTO_BK    *mto_bk;                 /* Message Text Object       */
 BYTE           *event_msg;              /* Message Text pointer      */
 int             event_msglen;           /* Message Text length       */
+SCCB_CPI_BK    *cpi_bk;                 /* Control Program Info      */
 #ifndef NO_CYGWIN_STACK_BUG
 BYTE           *message = NULL;         /* Maximum event data buffer
                                            length plus one for \0    */
@@ -1159,6 +1178,45 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 
             break;
 
+        case SCCB_EVD_TYPE_CPIDENT:
+
+            /* Point to the Control Program Information Data Block */
+            cpi_bk = (SCCB_CPI_BK*)(evd_hdr+1);
+
+            {
+            BYTE systype[9], sysname[9], sysplex[9];
+            U64  syslevel;
+            
+                for(i = 0; i < 8; i++)
+                {
+                    systype[i] = ebcdic_to_ascii[cpi_bk->system_type[i]];
+                    sysname[i] = ebcdic_to_ascii[cpi_bk->system_name[i]];
+                    sysplex[i] = ebcdic_to_ascii[cpi_bk->sysplex_name[i]];
+                }
+                systype[8] = sysname[8] = sysplex[8] = 0;
+                FETCH_DW(syslevel,cpi_bk->system_level);
+
+#if 1
+                logmsg("HHC707I CPI: System Type: %s Name: %s Sysplex: %s\n",
+                    systype,sysname,sysplex);
+#else
+                logmsg("HHC770I Control Program Information:\n");
+                logmsg("HHC771I System Type  = %s\n",systype);
+                logmsg("HHC772I System Name  = %s\n",sysname);
+                logmsg("HHC773I Sysplex Name = %s\n",sysplex);
+                logmsg("HHC774I System Level = %16.16llX\n",syslevel);
+#endif
+            }
+
+            /* Indicate Event Processed */
+            evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
+
+            /* Set response code X'0020' in SCCB header */
+            sccb->reas = SCCB_REAS_NONE;
+            sccb->resp = SCCB_RESP_COMPLETE;
+
+            break;
+
 
         default:
 
@@ -1296,8 +1354,8 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         FETCH_HW(masklen, evd_mask->length);
 
         /* Save old mask settings in order to suppress superflous messages */
-        old_cp_recv_mask = sysblk.cp_recv_mask;
-        old_cp_send_mask = sysblk.cp_send_mask;
+        old_cp_recv_mask = sysblk.cp_recv_mask & sysblk.sclp_send_mask;
+        old_cp_send_mask = sysblk.cp_send_mask & sysblk.sclp_recv_mask;
 
         for (i = 0; i < 4; i++)
         {
@@ -1327,15 +1385,16 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 (sysblk.sclp_send_mask >> ((3-i)*8)) & 0xFF;
         }
 
-        /* Issue message only when mask has changed */
-        if (sysblk.cp_recv_mask != old_cp_recv_mask
-         || sysblk.cp_send_mask != old_cp_send_mask)
+        /* Issue message only when supported mask has changed */
+        if ((sysblk.cp_recv_mask & sysblk.sclp_send_mask) != old_cp_recv_mask
+         || (sysblk.cp_send_mask & sysblk.sclp_recv_mask) != old_cp_send_mask)
         {
             if (sysblk.cp_recv_mask != 0 || sysblk.cp_send_mask != 0)
                 logmsg ("HHC701I SYSCONS interface active\n");
             else
                 logmsg ("HHC702I SYSCONS interface inactive\n");
         }
+// logmsg("cp_send_mask=%8.8X cp_recv_mask=%8.8X\n",sysblk.cp_send_mask,sysblk.cp_recv_mask);
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
