@@ -607,25 +607,26 @@ dnl config.h, but this is the only way I've found to do so. The incantation
 dnl "${prefix}/share" is needed because ${datadir} doesn't expand to the
 dnl desired data directory. If there's a better way to get there, PLEASE
 dnl replace this. --JRM
-if test "x$prefix" = "xNONE"; then
-  PKGDATADIR="/usr/local/share/${PACKAGE}"
-else
-  PKGDATADIR="${prefix}/share/${PACKAGE}"
-fi
-AC_DEFINE_UNQUOTED([PKGDATADIR], "${PKGDATADIR}")
-if test "x$prefix" = "xNONE"; then
-  LOCALEDIR="/usr/local/share/locale"
-else
-  LOCALEDIR="${prefix}/share/locale"
-fi
-AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
 
-if test "x$prefix" = "xNONE"; then
-  MODULESDIR="/usr/local/lib/${PACKAGE}"
-else
-  MODULESDIR="${prefix}/lib/${PACKAGE}"
+dnl If DEST is set, we're doing an RPM build, and we want to use that
+dnl value. If it's not set, and prefix is set and not equal to NONE, then
+dnl we'll use that. If prefix is NONE, then default to /usr/local.
+
+if test "x${DESTPREFIX}" = "x"; then
+  if test "x$prefix" = "xNONE"; then
+    DESTPREFIX="/usr/local/share"
+  else
+    DESTPREFIX="${prefix}"
+  fi
 fi
+
+PKGDATADIR="${DESTPREFIX}/share/${PACKAGE}"
+AC_DEFINE_UNQUOTED([PKGDATADIR], "${PKGDATADIR}")
+LOCALEDIR="${DESTPREFIX}/share/locale"
+AC_DEFINE_UNQUOTED([LOCALEDIR], "${LOCALEDIR}")
+MODULESDIR="${DESTPREFIX}/lib/${PACKAGE}"
 AC_DEFINE_UNQUOTED([MODULESDIR], "${MODULESDIR}")
+AC_MSG_NOTICE([Package destination directory prefix is ${DESTPREFIX}])
 
 AH_TEMPLATE([NO_ATTR_REGPARM],
             [Define if your gcc does not support __attribute__((regparm(n)))])
