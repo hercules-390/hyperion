@@ -75,14 +75,6 @@
 #if !defined(_IEEE_C)
 /* Architecture independent code goes within this ifdef */
 
-/* move this into an appropriate header file */
-#define DXC_INCREMENTED (0x04)
-#define DXC_INEXACT (0x08)
-#define DXC_UNDERFLOW   (0x10)
-#define DXC_OVERFLOW    (0x20)
-#define DXC_DIVBYZERO   (0x40)
-#define DXC_INVALID (0x80)
-
 #ifndef FE_INEXACT
 #define FE_INEXACT 0x00
 #endif
@@ -182,25 +174,25 @@ static inline int ieee_exception(int raised, REGS * regs)
          * C doesn't tell use whether it truncated or incremented,
          * so we will just always claim it truncated.
          */
-        dxc = DXC_INEXACT;
+        dxc = DXC_IEEE_INEXACT_INCR;
     }
     /* This sequence sets dxc according to the priorities defined
      * in PoP, Ch. 6, Data Exception Code.
      */
     if (raised & FE_UNDERFLOW) {
-        dxc |= DXC_UNDERFLOW;
+        dxc |= DXC_IEEE_UF_EXACT;
     } else if (raised & FE_OVERFLOW) {
-        dxc |= DXC_OVERFLOW;
+        dxc |= DXC_IEEE_OF_EXACT;
     } else if (raised & FE_DIVBYZERO) {
-        dxc = DXC_DIVBYZERO;
+        dxc = DXC_IEEE_DIV_ZERO;
     } else if (raised & FE_INVALID) {
-        dxc = DXC_INVALID;
+        dxc = DXC_IEEE_INVALID_OP;
     }
 
     if (dxc & ((regs->fpc & FPC_MASK) >> 24)) {
         regs->dxc = dxc;
         regs->fpc |= dxc << 8;
-        if (dxc == DXC_DIVBYZERO || dxc == DXC_INVALID) {
+        if (dxc == DXC_IEEE_DIV_ZERO || dxc == DXC_IEEE_INVALID_OP) {
             /* suppress operation */
             program_interrupt(regs, PGM_DATA_EXCEPTION);
         }
