@@ -444,6 +444,9 @@ typedef struct _SYSBLK {
 #endif /*INTERRUPTS_FAST_CHECK*/
 		sigpbusy:1,		/* 1=Signal facility in use  */
 		sigintreq:1,		/* 1=SIGINT request pending  */
+#ifdef OPTION_CKD_KEY_TRACING
+                ckdkeytrace:1,          /* 1=Log CKD_KEY_TRACE       */
+#endif /*OPTION_CKD_KEY_TRACING*/
 		insttrace:1,		/* 1=Instruction trace	     */
 		inststep:1,		/* 1=Instruction step	     */
 		instbreak:1;		/* 1=Have breakpoint	     */

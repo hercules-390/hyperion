@@ -3267,7 +3267,8 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
         /* If the search was successful, trace the first 8 bytes of
            the key, which will usually be a dataset name or member
            name and can provide useful debugging information */
-        if ((*unitstat & CSW_SM) && isprint(ebcdic_to_ascii[iobuf[0]]))
+        if ((*unitstat & CSW_SM) && sysblk.ckdkeytrace
+            && isprint(ebcdic_to_ascii[iobuf[0]]))
         {
             BYTE module[45]; int i;
             for (i=0; i < sizeof(module)-1 && i < num; i++)

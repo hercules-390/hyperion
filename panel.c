@@ -935,6 +935,14 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     /* Set target CPU for commands and displays */
     regs = sysblk.regs + sysblk.pcpu;
 
+#ifdef OPTION_CKD_KEY_TRACING
+ #define TSPLUS_CMD \
+  "t+=trace, s+=step, t+ckd=CKD_KEY trace, t+devn=CCW trace, s+devn=CCW step\n"
+#else
+ #define TSPLUS_CMD \
+  "t+=trace, s+=step, t+devn=CCW trace, s+devn=CCW step\n"
+#endif /*OPTION_CKD_KEY_TRACING*/
+
 #if MAX_CPU_ENGINES > 1
  #define STSPALL_CMD "startall/stopall=start/stop all CPUs\n"
 #else
@@ -969,7 +977,7 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
     if (cmd[0] == '?')
     {
         logmsg ("Panel command summary:\n"
-            "t+=trace, s+=step, t+devn=CCW trace, s+devn=CCW step\n"
+            TSPLUS_CMD
             "g=go, psw=display psw, pr=prefix reg\n"
             "gpr=general purpose regs, cr=control regs\n"
             "ar=access regs, fpr=floating point regs\n"
@@ -1427,6 +1435,16 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
             logmsg ("Instruction stepping is now %s\n", onoroff);
             return NULL;
         }
+
+#ifdef OPTION_CKD_KEY_TRACING
+        /* t+ckd and t-ckd commands - turn CKD_KEY tracing on/off */
+        if ((cmd[0] == 't') && (memcmp(cmd+2, "ckd", 3) == 0))
+        {
+            sysblk.ckdkeytrace = oneorzero;
+            logmsg("CKD KEY trace is now %s\n",onoroff);
+            return NULL;
+        }
+#endif /*OPTION_CKD_KEY_TRACING*/
 
         /* t+devn and t-devn commands - turn CCW tracing on/off */
         /* s+devn and s-devn commands - turn CCW stepping on/off */
