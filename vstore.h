@@ -357,7 +357,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Fetch 2 bytes when operand does not cross page boundary
        (Page boundary test at 800 to catch FPO crosser too) */
     if(!(addr & 1) || (abs1 & 0x000007FF) <= (2048 - 2))
-        return CSWAP16(*((U16*)(sysblk.mainstor + abs1)));
+        return fetch_hw(sysblk.mainstor + abs1);
 
     /* Calculate address of second byte of operand */
     addr2 = (addr + 1) & ADDRESS_MAXWRAP(regs);
@@ -400,7 +400,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Fetch 4 bytes when operand does not cross page boundary
        (Page boundary test at 800 to catch FPO crosser too) */
     if(!(addr & 3) || (abs & 0x000007FF) <= (2048 - 4))
-        return CSWAP32(*((U32*)(sysblk.mainstor + abs)));
+        return fetch_fw(sysblk.mainstor + abs);
 
     /* Operand is not fullword aligned and may cross a page boundary */
 
@@ -461,7 +461,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
     /* Fetch 8 bytes when operand does not cross page boundary
        (Page boundary test at 800 to catch FPO crosser too) */
     if(!(addr & 7) || (abs & 0x000007FF) <= (2048 - 8))
-        return CSWAP64(*((U64*)(sysblk.mainstor + abs)));
+        return fetch_dw(sysblk.mainstor + abs);
 
     /* Calculate page address of last byte of operand */
     addr2 = (addr + 7) & ADDRESS_MAXWRAP(regs);

@@ -387,24 +387,64 @@ do { \
  #define CSWAP64(_x) bswap_64(_x)
 #endif
 
-#define STORE_HW(_storage, _value) \
+#if i386
+#define store_hw(_storage, _value) \
 	*((U16*)(_storage)) = CSWAP16((_value))
 
-#define FETCH_HW(_value, _storage) \
-	(_value) = CSWAP16(*((U16*)(_storage)))
+#define fetch_hw(_storage) \
+	CSWAP16(*((U16*)(_storage)))
 
-#define STORE_FW(_storage, _value) \
+#define store_fw(_storage, _value) \
 	*((U32*)(_storage)) = CSWAP32((_value))
 
-#define FETCH_FW(_value, _storage) \
-	(_value) = CSWAP32(*((U32*)(_storage)))
+#define fetch_fw(_storage) \
+	CSWAP32(*((U32*)(_storage)))
 
-#define STORE_DW(_storage, _value) \
+#define store_dw(_storage, _value) \
 	*((U64*)(_storage)) = CSWAP64((_value))
 
-#define FETCH_DW(_value, _storage) \
-	(_value) = CSWAP64(*((U64*)(_storage)))
+#define fetch_dw(_storage) \
+	CSWAP64(*((U64*)(_storage)))
 
+#else
+
+static inline U16 fetch_hw(void* storage) {
+  U16 tmp;
+  memcpy(&tmp, storage, 2);
+  return CSWAP16(tmp);
+}
+static inline void store_hw(void* storage, U16 value) {
+  U16 tmp = CSWAP16(value);
+  memcpy(storage, &tmp, 2);
+}
+static inline U32 fetch_fw(void* storage) {
+  U32 tmp;
+  memcpy(&tmp, storage, 4);
+  return CSWAP32(tmp);
+}
+static inline void store_fw(void* storage, U32 value) {
+  U32 tmp = CSWAP32(value);
+  memcpy(storage, &tmp, 4);
+}
+static inline U64 fetch_dw(void* storage) {
+  U64 tmp;
+  memcpy(&tmp, storage, 8);
+  return CSWAP64(tmp);
+}
+static inline void store_dw(void* storage, U64 value) {
+  U64 tmp = CSWAP64(value);
+  memcpy(storage, &tmp, 8);
+}
+
+#endif /* i386 */
+
+#define FETCH_HW(_value, _storage) (_value) = fetch_hw(_storage)
+#define FETCH_FW(_value, _storage) (_value) = fetch_fw(_storage)
+#define FETCH_DW(_value, _storage) (_value) = fetch_dw(_storage)
+
+#define STORE_HW(_storage, _value) store_hw(_storage, _value)
+#define STORE_FW(_storage, _value) store_fw(_storage, _value)
+#define STORE_DW(_storage, _value) store_dw(_storage, _value)
 
 #endif /*!defined(_OPCODE_H)*/
 

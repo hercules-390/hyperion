@@ -335,7 +335,7 @@ static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
     STORAGE_KEY(addr) |= STORKEY_REF;
 
     /* Fetch the doubleword from absolute storage */
-    return CSWAP64(*((U64*)(sysblk.mainstor + addr)));
+    return fetch_dw(sysblk.mainstor + addr);
 
 } /* end function fetch_doubleword_absolute */
 
@@ -362,7 +362,7 @@ static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
     STORAGE_KEY(addr) |= STORKEY_REF;
 
     /* Fetch the fullword from absolute storage */
-    return CSWAP32(*((U32*)(sysblk.mainstor + addr)));
+    return fetch_fw(sysblk.mainstor + addr);
 } /* end function fetch_fullword_absolute */
 
 
@@ -387,10 +387,10 @@ static inline U16 ARCH_DEP(fetch_halfword_absolute) (RADR addr,
     /* Set the main storage reference bit */
     STORAGE_KEY(addr) |= STORKEY_REF;
 
-    /* Fetch the fullword from absolute storage */
-    return CSWAP16(*((U16*)(sysblk.mainstor + addr)));
+    /* Fetch the halfword from absolute storage */
+    return fetch_hw(sysblk.mainstor + addr);
 
-} /* end function fetch_fullword_absolute */
+} /* end function fetch_halfword_absolute */
 
 
 /*-------------------------------------------------------------------*/
@@ -413,7 +413,7 @@ static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
     STORAGE_KEY(addr) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Store the doubleword into absolute storage */
-    *((U64*)(sysblk.mainstor + addr)) = CSWAP64(value);
+    store_dw(sysblk.mainstor + addr, value);
 
 } /* end function store_doubleword_absolute */
 
@@ -438,7 +438,7 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
     STORAGE_KEY(addr) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Store the fullword into absolute storage */
-    *((U32*)(sysblk.mainstor + addr)) = CSWAP32(value);
+    store_fw(sysblk.mainstor + addr, value);
 
 } /* end function store_fullword_absolute */
 
