@@ -916,6 +916,7 @@ typedef struct _DEVBLK {
                 console:1,              /* 1=Console device          */
                 connected:1,            /* 1=Console client connected*/
                 readpending:2,          /* 1=Console read pending    */
+                batch:1,                /* 1=Called by dasdutil      */
                 ccwtrace:1,             /* 1=CCW trace               */
                 ccwstep:1,              /* 1=CCW single step         */
                 cdwmerge:1;             /* 1=Channel will merge data
@@ -1396,6 +1397,12 @@ extern int extgui;              /* external gui present */
 extern const char* arch_name[];
 extern const char* get_arch_mode_string(REGS* regs);
 
+
+/*-------------------------------------------------------------------*/
+/* Global data areas and functions in module eightxff.c              */
+/*-------------------------------------------------------------------*/
+extern BYTE eighthexFF[8];
+
 /*-------------------------------------------------------------------*/
 /* Function prototypes                                               */
 /*-------------------------------------------------------------------*/
@@ -1510,10 +1517,13 @@ DEVXF tapedev_execute_ccw;
 DEVCF tapedev_close_device;
 
 /* Functions in module ckddasd.c */
-DEVIF ckddasd_init_handler;
-DEVQF ckddasd_query_device;
-DEVXF ckddasd_execute_ccw;
-DEVCF ckddasd_close_device;
+DEVIF   ckddasd_init_handler;
+DEVQF   ckddasd_query_device;
+DEVXF   ckddasd_execute_ccw;
+DEVCF   ckddasd_close_device;
+off_t   ckd_lseek (DEVBLK *, int, off_t, int);
+ssize_t ckd_read (DEVBLK *, int, void *, size_t);
+ssize_t ckd_write (DEVBLK *, int, const void *, size_t);
 
 /* Functions in module fbadasd.c */
 DEVIF fbadasd_init_handler;
