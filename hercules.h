@@ -800,6 +800,7 @@ typedef struct _DEVBLK {
         BYTE    filename[256];          /* Unix file name            */
 #endif /*EXTERNALGUI*/
         int     fd;                     /* File desc / socket number */
+        FILE   *fh;
         /* Device dependent fields for console */
         struct  in_addr ipaddr;         /* Client IP address         */
         int     rlen3270;               /* Length of data in buffer  */
