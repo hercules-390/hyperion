@@ -618,7 +618,7 @@ do { \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
        (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-      *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), \
+   /* *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), */ \
        MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
@@ -738,7 +738,7 @@ do { \
    &&  likely((_acctype) & (_regs)->tlb.acc[TLBIX(_addr)]) \
    ? ( \
        (_regs)->dat.storkey = (_regs)->tlb.storkey[TLBIX(_addr)], \
-      *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), \
+   /* *((_regs)->dat.storkey) |= ((_acctype) & (STORKEY_REF|STORKEY_CHANGE)), */ \
        MAINADDR((_regs)->tlb.main[TLBIX(_addr)], (_addr)) \
      ) \
    : ( \
