@@ -1,6 +1,6 @@
-# NL.PO    Hercules dutch messages
-# This file is put in the public domain.
-# Jan Jaeger <jj@septa.nl>, 2002.
+# DE.PO    Hercules German messages
+# I assume this file is put in the public domain, Volker? (Fish <fish@infidels.org>)
+# Volker Bandke <vbandke@bsp-gmbh.com>, 2002-2003.
 #
 msgid ""
 msgstr ""
