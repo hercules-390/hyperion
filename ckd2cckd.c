@@ -540,6 +540,9 @@ int             l2empty;                /* 1=level 2 table is empty  */
 
             }
 
+            /* Set the `length' in the first byte of the buffer */
+            CCKD_SET_BUFLEN(obuf[0], obuflen);
+
             /* update the secondary table and write track image */
             l2x = i % 256;
             l2[l2x].pos = pos;

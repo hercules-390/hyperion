@@ -1254,9 +1254,14 @@ int             highcyl;                /* CKD header high cyl number*/
             memcpy (pos, eighthexFF, 8);
             pos += 8;
 
-            /* Write the track to the file */
+            /* Set the `length' in the TRKHDR if compressed */
             if (comp != 0xff)
+            {
                 trksize = pos - buf;
+                CCKD_SET_BUFLEN(buf[0], trksize);
+            }
+
+            /* Write the track to the file */
             rc = write (fd, buf, trksize);
             if (rc < trksize)
             {
@@ -1721,6 +1726,7 @@ BYTE            buf[65536];             /* Buffer                    */
     if (comp && rc == Z_OK)
     {
         buf[0] = CCKD_COMPRESS_ZLIB;
+        CCKD_SET_BUFLEN(buf[0], CKDDASD_TRKHDR_SIZE + len2);
         rc = write (fd, &buf, CKDDASD_TRKHDR_SIZE);
         if (rc < CKDDASD_TRKHDR_SIZE)
         {

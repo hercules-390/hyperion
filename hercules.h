@@ -1300,7 +1300,13 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
                                             last chkdsk              */
 #define CCKD_OPENED            128
 
-
+/* The first byte of the TRKHDR in a compressed file contains the
+   following bits:
+     nlllllcc
+   where:
+     n      1=track header in new format
+     lllll  low order bits of track image length [for recovery]
+     cc     compression used on the track image                      */
 #define CCKD_FREEHDR           size
 #define CCKD_FREEHDR_SIZE      28
 #define CCKD_FREEHDR_POS       CKDDASD_DEVHDR_SIZE+12
@@ -1313,12 +1319,24 @@ typedef struct _CCKDDASD_DEVHDR {       /* Compress device header    */
 #define CCKD_COMPRESS_BZIP2    2
 #define CCKD_COMPRESS_MAX      CCKD_COMPRESS_BZIP2
 #endif
-#define CCKD_COMPRESS_STRESSED 0x80
+#define CCKD_COMPRESS_MASK     0x03
+#define CCKD_NEWFMT            0x80
 
 #define CCKD_STRESS_MINLEN     4096
 #define CCKD_STRESS_COMP       CCKD_COMPRESS_ZLIB
 #define CCKD_STRESS_PARM1      4
 #define CCKD_STRESS_PARM2      2
+
+#define CCKD_LEN_MASK          0x1f     /* Low order length          */
+#define CCKD_LEN_SHIFT         2        /* Bits length shifted over  */
+#define CCKD_GET_BUFLEN(c) \
+ (((c) >> CCKD_LEN_SHIFT) & CCKD_LEN_MASK)
+#define CCKD_SET_BUFLEN(c,len) \
+ do { \
+  (c) &= ~(CCKD_LEN_MASK << CCKD_LEN_SHIFT); \
+  if ((c) & CCKD_COMPRESS_MASK) \
+   (c) |= ((len) & CCKD_LEN_MASK) << CCKD_LEN_SHIFT; \
+ } while (0)
 
 typedef struct _CCKD_L2ENT {            /* Level 2 table entry       */
         U32              pos;           /* Track offset              */
@@ -1443,6 +1461,7 @@ typedef struct _CCKDBLK {               /* Global cckd dasd block    */
         int              ra1st;         /* First readahead entry     */
         int              ralast;        /* Last readahead entry      */
         int              rafree;        /* Free readahead entry      */
+        int              nostress;      /* 1=No stress writes        */
         COND             writercond;    /* Writer condition          */
         int              writepending;  /* Number writes pending     */
         int              writerswaiting;/* Number writers waiting    */

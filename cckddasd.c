@@ -75,7 +75,7 @@ int     cckd_write_trkimg (DEVBLK *, BYTE *, int, int);
 int     cckd_harden (DEVBLK *);
 int     cckd_trklen (DEVBLK *, BYTE *);
 int     cckd_null_trk (DEVBLK *, BYTE *, int, int);
-int     cckd_cchh (DEVBLK *, BYTE *, int);
+int     cckd_cchh (DEVBLK *, BYTE *, int, int);
 int     cckd_sf_name (DEVBLK *, int, char *);
 int     cckd_sf_init (DEVBLK *);
 int     cckd_sf_new (DEVBLK *);
@@ -937,7 +937,7 @@ cckd_read_trk_retry:
               ra, lru, trk, len2);
 
     /* uncompress the track image */
-    switch (buf2[0] & ~CCKD_COMPRESS_STRESSED) {
+    switch (buf2[0] & CCKD_COMPRESS_MASK) {
 
     case CCKD_COMPRESS_NONE:
         memcpy (buf, &buf2, len2);
@@ -1280,7 +1280,8 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
         if (!cckdblk.writepending)
         {
             /* Wake up threads waiting for writes to finish */
-            if (cckdblk.writewaiting)
+            if (cckdblk.writewaiting
+             && cckdblk.writerswaiting + 1 >= cckdblk.writers)
                 broadcast_condition (&cckdblk.writecond);
 
             /* Wait for new work */
@@ -1328,11 +1329,12 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
         parm = cckd->cdevhdr[cckd->sfn].compress_parm;
 
         /* Stress adjustments */
-        if ((cckdblk.cache[o].flags & CCKD_CACHE_WRITEWAIT)
-         || cckdblk.cachewaiting
-         || cckdblk.writepending > cckdblk.cachenbr >> 2)
+        if (((cckdblk.cache[o].flags & CCKD_CACHE_WRITEWAIT)
+          || cckdblk.cachewaiting
+          || cckdblk.writepending > cckdblk.cachenbr >> 2)
+         && !cckdblk.nostress)
         {
-            stressed = CCKD_COMPRESS_STRESSED;
+            stressed = 1;
             cckdblk.stats_stresswrites++;
             if (len < CCKD_STRESS_MINLEN)
                 compress = CCKD_COMPRESS_NONE;
@@ -1355,7 +1357,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
 
         case CCKD_COMPRESS_ZLIB:
             memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
-            buf2[0] = CCKD_COMPRESS_ZLIB | stressed;
+            buf2[0] = CCKD_COMPRESS_ZLIB;
             len2 = 65535 - CKDDASD_TRKHDR_SIZE;
             rc = compress2 (&buf2[CKDDASD_TRKHDR_SIZE], &len2,
                             &buf[CKDDASD_TRKHDR_SIZE], len - CKDDASD_TRKHDR_SIZE,
@@ -1378,7 +1380,7 @@ BYTE           *comp[] = {"none", "zlib", "bzip2"};
 #ifdef CCKD_BZIP2
         case CCKD_COMPRESS_BZIP2:
             memcpy (&buf2, buf, CKDDASD_TRKHDR_SIZE);
-            buf2[0] = CCKD_COMPRESS_BZIP2 | stressed;
+            buf2[0] = CCKD_COMPRESS_BZIP2;
             len2 = 65535 - CKDDASD_TRKHDR_SIZE;
             rc = BZ2_bzBuffToBuffCompress (
                             &buf2[CKDDASD_TRKHDR_SIZE], (unsigned int *)&len2,
@@ -2532,7 +2534,7 @@ CCKD_L2ENT      l2;                     /* Level 2 entry             */
               trk, sfx, l2.pos, rc,
               buf[0], buf[1], buf[2], buf[3], buf[4]);
 
-    if (cckd_cchh (dev, buf, trk) < 0) goto cckd_read_trkimg_error;
+    if (cckd_cchh (dev, buf, trk, rc) < 0) goto cckd_read_trkimg_error;
 
     return rc;
 
@@ -2570,7 +2572,7 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
              sfx, trk, len);
 
     /* Validate the new track image */
-    rc = cckd_cchh (dev, buf, trk);
+    rc = cckd_cchh (dev, buf, trk, 0);
     if (rc < 0)
     {
         devmsg ("%4.4X:cckddasd: file[%d] trk %d not written, invalid format\n",
@@ -2594,6 +2596,9 @@ int             sfx,l1x,l2x;            /* Lookup table indices      */
         l2.len = l2.size = len;
         if (l2.pos == 0) return -1;
     }
+
+    /* Set the `length' in the first byte of the buf */
+    CCKD_SET_BUFLEN (buf[0], len);
 
     /* write the track image */
     if (l2.pos)
@@ -2773,7 +2778,7 @@ int             size;                   /* Size of null record       */
 /*-------------------------------------------------------------------*/
 /* Verify a track/block header and return track/block number         */
 /*-------------------------------------------------------------------*/
-int cckd_cchh (DEVBLK *dev, BYTE *buf, int trk)
+int cckd_cchh (DEVBLK *dev, BYTE *buf, int trk, int len)
 {
 CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
 U16             cyl;                    /* Cylinder                  */
@@ -2789,19 +2794,23 @@ int             t;                      /* Calculated track          */
         head = (buf[3] << 8) + buf[4];
         t = cyl * dev->ckdheads + head;
 
-        if ((buf[0] & ~CCKD_COMPRESS_STRESSED) <= CCKD_COMPRESS_MAX
+        if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX
          && cyl < dev->ckdcyls
          && head < dev->ckdheads
-         && (trk == -1 || t == trk))
+         && (trk == -1 || t == trk)
+         && (len == 0 || CCKD_GET_BUFLEN(buf[0]) == 0 
+          || CCKD_GET_BUFLEN(buf[0]) == (len & CCKD_LEN_MASK)))
             return t;
     }
     /* FBA dasd header verification */
     else
     {
         t = (buf[1] << 24) + (buf[2] << 16) + (buf[3] << 8) + buf[4];
-        if ((buf[0] & ~CCKD_COMPRESS_STRESSED) <= CCKD_COMPRESS_MAX
+        if ((buf[0] & CCKD_COMPRESS_MASK) <= CCKD_COMPRESS_MAX
          && t < dev->fbanumblk
-         && (trk == -1 || t == trk))
+         && (trk == -1 || t == trk)
+         && (len == 0 || CCKD_GET_BUFLEN(buf[0]) == 0 
+          || CCKD_GET_BUFLEN(buf[0]) == (len & CCKD_LEN_MASK)))
             return t;
     }
 
@@ -3746,7 +3755,7 @@ BYTE            buf[65536];             /* Buffer                    */
             else
             {
                 /* Moving a track image */
-                trk = cckd_cchh (dev, &buf[b], -1);
+                trk = cckd_cchh (dev, &buf[b], -1, 0);
                 if (trk < 0) goto cckd_gc_perc_error;
 
                 l1x = trk >> 8;
@@ -3812,6 +3821,7 @@ void cckd_command_help()
              "gcint=<n>\tSet garbage collector interval (sec)\t(1 .. 60)\n"
              "gcparm=<n>\tSet garbage collector parameter\t\t(-8 .. 8)\n"
              "\t\t    (least agressive ... most aggressive)\n"
+             "nostress=<n>\t1=Disable stress writes\n"
              "trace=<n>\tSet trace table size\t\t\t(0 .. 200000)\n"
             );
 } /* end function cckd_command_help */
@@ -3823,12 +3833,12 @@ void cckd_command_help()
 void cckd_command_opts()
 {
     cckdmsg ("cache=%d,l2cache=%d,ra=%d,raq=%d,rat=%d,"
-             "wr=%d,gcint=%d,gcparm=%d,trace=%d\n",
+             "wr=%d,gcint=%d,gcparm=%d,nostress=%d,\n\ttrace=%d\n",
              (cckdblk.cachenbr + 8) >> 4,
              cckdblk.l2cachenbr << 1, cckdblk.ramax,
              cckdblk.ranbr, cckdblk.readaheads,
              cckdblk.writermax, cckdblk.gcolwait,
-             cckdblk.gcolparm, cckdblk.itracen);
+             cckdblk.gcolparm, cckdblk.nostress,cckdblk.itracen);
 } /* end function cckd_command_opts */
 
 
@@ -4074,6 +4084,19 @@ int   val, i, opts = 0;
             else
             {
                 cckdblk.gcolparm = val;
+                opts = 1;
+            }
+        }
+        else if (strcasecmp (kw, "nostress") == 0)
+        {
+            if (val < 0 || val > 1 || c != '\0')
+            {
+                cckdmsg ("Invalid value for nostress=\n");
+                return -1;
+            }
+            else
+            {
+                cckdblk.nostress = val;
                 opts = 1;
             }
         }

@@ -420,7 +420,7 @@ int             lfs=0;                  /* 1=Large File supported    */
                 /* uncompress the track image */
                 compress = buf[0];
                 buf[0] = 0;
-                switch (compress & ~CCKD_COMPRESS_STRESSED)
+                switch (compress & CCKD_COMPRESS_MASK)
                 {
                     case CCKD_COMPRESS_NONE:
                         obuflen = l2[j].len;
