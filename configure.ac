@@ -36,6 +36,7 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 
 # Headers
 AC_CHECK_HEADERS(byteswap.h linux/if_tun.h inttypes.h)
+AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
 
 # Types
 # AC_CHECK_SIZEOF(double)
