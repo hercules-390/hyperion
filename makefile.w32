@@ -1,435 +1,308 @@
 #
 # Makefile for Hercules S/370, ESA/390 and z/Architecture emulator
-# modified to build hercules under windows (VB)
-# modified to build external GUI compatible version under Windows (Fish)
-# modified to be useful (hopefully) for Linux AND windows (VB)
-# Added LINKMAP option (Fish)
-# Support for version >= 1.3.3 of Cygwin = built-in pthreads (Fish)
-# Added Malcolm Beattie's dasdcat program (rbowler)
 #
 
-#### VERSION #####
+VERSION  = \"2.17w32\"
 
-ifndef VER
-VER=2.15a
-endif
-
-# Change the following to yes/no depending on whether
-# or not you're using Cygwin version 1.3.3 or higher
-
-CYGWIN_133_OR_HIGHER=yes
-
-# Change the following to yes/no to
-# generate a link map for debugging
-
-LINKMAP=no
-
-WIN=NO
-THEOS=$(OSTYPE)
-ifeq ($(THEOS),cygwin)
-WIN=yes
-endif
-
-ifndef HOST_ARCH
-HOST_ARCH=pentium
-endif
-
-VERSION  = $(VER)_$(HOST_ARCH)
-
-#   Set the default directory where you want to install the Hercules executables somewhere
+# Change this if you want to install the Hercules executables somewhere
 #   besides /usr/bin. The $PREFIX (which defaults to nothing) can be
 #   overridden in the make command line, as in "PREFIX=/foo make install"
 #   (the directory is only used when installing).
-ifeq ($(WIN),yes)
-DESTDIR  = $(PREFIX)/hercules2
-else
-DESTDIR  = $(prefix)/usr/bin
-endif
+DESTDIR  = $(PREFIX)/usr/bin
+DESTLIB  = $(PREFIX)/usr/lib
 
-#    The default installation directory can be overridden by the DEST= keyword
-#    when executing the make utility
-ifndef DEST
-DEST = $(DESTDIR)
-endif
-
-# Standard compiler flags used for all architectures
-CFLAGS	= -Wall
-CFLAGS += -fomit-frame-pointer
-CFLAGS += -DVERSION=$(VERSION)
-CFLAGS += -DNO_IEEE_SUPPORT
-#CFLAGS += -DNO_ATTR_REGPARM
-
-ifeq ($(WIN),yes)
-ifeq ($(CYGWIN_133_OR_HIGHER),yes)
-CC = gcc
-else
-# Directory where the pthreads-win32 library was installed.
-PTHREADS_W32DIR = /usr
-CC = gcc -I$(PTHREADS_W32DIR)/Pthreads
-endif
-CC = gcc
-endif
-
-ifeq ($(WIN),yes)
-CFLAGS += -DWIN32
-CFLAGS += -DNO_BYTESWAP_H
-CFLAGS += -DNO_SETUID
-CFLAGS += -DHAVE_U_INT
-CFLAGS += -DHAVE_SETRESUID
-endif
-
-
-#set compiler flags depending on HOST_ARCH
-ifeq ($(HOST_ARCH),i386)
-CFLAGS += -O3
-CFLAGS += -malign-double
-CFLAGS += -DNO_ASM_BYTESWAP
-endif
-
-ifeq ($(HOST_ARCH),i586)
-CFLAGS += -O3
-CFLAGS += -malign-double
-CFLAGS += -march=pentium
-endif
-
-ifeq ($(HOST_ARCH),pentium)
-CFLAGS += -O3
-CFLAGS += -malign-double
-CFLAGS += -march=pentium
-endif
-
-ifeq ($(HOST_ARCH),i686)
-CFLAGS += -O3
-CFLAGS += -malign-double
-CFLAGS += -march=pentiumpro
-endif
-
-ifeq ($(HOST_ARCH),pentiumpro)
-CFLAGS += -O3
-CFLAGS += -malign-double
-CFLAGS += -march=pentiumpro
-endif
-
-ifeq ($(HOST_ARCH),alpha)
-CFLAGS += -O2
-CFLAGS += -DNO_ASM_BYTESWAP
-endif
-
-ifeq ($(HOST_ARCH),other)
-CFLAGS += -O3
-CFLAGS += -DNO_ASM_BYTESWAP
-endif
-
+# For Linux use:
+CFLAGS  = -O3 -march=pentium -fomit-frame-pointer
+CFLAGS += -DVERSION=$(VERSION) -DHAVE_INTTYPES_H
+CFLAGS += -W -Wall
+# For older Linux versions use:
 # For Linux/390 use:
-#CFLAGS += -DNO_ASM_BYTESWAP
-#
+#CFLAGS  = -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP -DNO_ATTR_REGPARM
 
-# The sigabend handler has not yet been tested with windows *JJ
-CFLAGS += -DNO_SIGABEND_HANDLER
+LFLAGS	 = -lpthread -lm -lz
 
-ifeq ($(WIN),yes)
-ifeq ($(CYGWIN_133_OR_HIGHER),yes)
-LFLAGS =
-else
-LFLAGS = -L$(PTHREADS_W32DIR)/DLL -lpthreadw32
-endif
-else
-LFLAGS = -lpthread
-endif
+#CFLAGS  += -DHAVE_SQRTL
 
-# Comment out the line below to build a console-mode only
-# (i.e. NON-external GUI compatible) version of Hercules
-#
-# Note: the external GUI compatible version of Hercules
-# (which is the default) can be run in both console mode
-# or external GUI mode, whereas a NON-external GUI compatible
-# version can ONLY be run in console (non-GUI) mode.
+#CFLAGS  += -DHAVE_SETRESUID
 
-CFLAGS += -DEXTERNALGUI
+# Uncomment the lines below to enable Compressed CKD bzip2 compression
+CFLAGS	+= -DHAVE_LIBZ -DCCKD_BZIP2
+LFLAGS	+= -lbz2
 
-# Change the value below to YES to enable compresion
-#			 to NO	to disable compression
-CCKD=YES
+# Uncomment the lines below to enable HET bzip2 compression
+CFLAGS	+= -DHET_BZIP2
+LFLAGS	+= -lbz2
 
-# Change the value below to YES to use bzip2 compression
-# to NO to use standard compression
-BZIP2=YES
+# Dynamic loader support
+#LFLAGS	+= -rdynamic -ldl
+CFLAGS  += -DOPTION_DYNAMIC_LOAD
 
-ifeq ($(CCKD),YES)
-LFLAGS += -lz
-else
-CFLAGS += -DNO_CCKD
-endif
+CFLAGS  += -DOPTION_CONFIG_SYMBOLS 
 
-ifeq ($(BZIP2),YES)
-CFLAGS += -DCCKD_BZIP2
-CFLAGS += -DHET_BZIP2
-LFLAGS += -lbz2
-endif
-
-ifeq ($(LINKMAP),no)
-else
-LFLAGS +=  -Xlinker -Map -Xlinker hercules.map
-endif
+#cygwin
+CFLAGS  += -DWIN32
+CFLAGS  += -DNO_SIGABEND_HANDLER
+CFLAGS  += -DHAVE_STRSIGNAL
+CFLAGS  += -DNO_SETUID
+DFLAGS   = hercules.a -shared -dll
 
 EXEFILES = hercules \
-	   dasdinit \
-	   dasdisup \
-	   dasdload \
-	   dasdls   \
-	   dasdcat  \
-	   dasdpdsu \
-	   tapecopy \
-	   tapemap  \
-	   tapesplt \
-	   cckd2ckd \
-	   cckdcdsk \
-	   ckd2cckd \
-	   cckdcomp \
-	   hetget   \
-	   hetinit  \
-	   hetmap   \
-	   hetupd   \
-	   dmap2hrc
+           dasdinit dasdisup dasdload dasdls dasdcat dasdpdsu dasdseq \
+           tapecopy tapemap tapesplt \
+           cckdcdsk cckdcomp cckddiag cckdswap \
+           cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
+           hetget hetinit hetmap hetupd \
+           dmap2hrc
+DYNFILES = dyninst hdteq \
+           hdt1403 hdt2703 hdt3088 hdt3270 hdt3420 hdt3505 hdt3525
 
-ifeq ($(WIN),yes)
-else
-EXEFILES += hercifc
-endif
 
-TARFILES = makefile \
-	   *.c \
-	   *.h \
-	   hercules.cnf \
-	   tapeconv.jcl \
-	   util/dasdlist \
-	   html \
-	   zzsa.cnf \
-	   zzsacard.bin
+TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
+	   html zzsa.cnf zzsacard.bin
 
-HRC_OBJS = impl.o \
-	   config.o \
-	   panel.o \
-	   version.o \
-	   ipl.o \
-	   assist.o \
-	   dat.o \
-	   stack.o \
-	   cpu.o \
-	   vstore.o \
-	   general1.o \
-	   general2.o \
-	   plo.o \
-	   control.o \
-	   io.o \
-	   decimal.o \
-	   service.o \
-	   opcode.o \
-	   diagnose.o \
-	   diagmssf.o \
-	   vm.o \
-	   channel.o \
-	   ckddasd.o \
-	   fbadasd.o \
-	   tapedev.o \
-	   cardrdr.o \
-	   cardpch.o \
-	   printer.o \
-	   console.o \
-	   external.o \
-	   float.o \
-	   ctcadpt.o \
-	   trace.o \
-	   machchk.o \
-	   vector.o \
-	   xstore.o \
-	   cmpsc.o \
-	   sie.o \
-	   timer.o \
-	   esame.o \
-	   cckddasd.o \
-	   cckdcdsx.o \
-	   parser.o \
-	   hetlib.o \
-	   ieee.o
+hercules_OBJ = hostinfo.o impl.o config.o panel.o \
+               version.o ipl.o assist.o dat.o stack.o cpu.o \
+               vstore.o general1.o general2.o plo.o control.o \
+               io.o decimal.o service.o opcode.o diagnose.o \
+               diagmssf.o vm.o channel.o ckddasd.o fbadasd.o \
+               crypto.o external.o float.o trace.o \
+               machchk.o vector.o xstore.o cmpsc.o sie.o qdio.o \
+               timer.o esame.o cckddasd.o cckdutil.o dasdtab.o \
+               parser.o ieee.o httpserv.o \
+               cgibin.o codepage.o \
+               hsccmd.o hscmisc.o logger.o \
+               cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
+               hscutl.o hscutl2.o hsys.o bootstrap.o
+hercules_OBJ += memrchr.o
+hdt1403_OBJ  = printer.o
+hdt2703_OBJ  = commadpt.o
+hdt3088_OBJ  = ctc_lcs.o ctc_ctci.o ctcadpt.o w32ctca.o tuntap.o
+hdt3270_OBJ  = console.o
+hdt3420_OBJ  = tapedev.o hetlib.o
+hdt3505_OBJ  = cardrdr.o sockdev.o
+hdt3525_OBJ  = cardpch.o
+hdteq_OBJ    = hdteq.o
 
-ifeq ($(WIN),yes)
-else
-HIFC_OBJ = hercifc.o version.o
-endif
+#hercifc_OBJ  = hercifc.o hostinfo.o version.o 
 
-DIN_OBJS = dasdinit.o dasdutil.o version.o
+dasdinit_OBJ = dasdinit.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o
 
-DIS_OBJS = dasdisup.o dasdutil.o version.o
+dasdisup_OBJ = dasdisup.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o
 
-DLD_OBJS = dasdload.o dasdutil.o version.o
+dasdload_OBJ = dasdload.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o
 
-DLS_OBJS = dasdls.o dasdutil.o version.o
+dasdls_OBJ   = dasdls.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o
 
-DCA_OBJS = dasdcat.o dasdutil.o version.o
+dasdcat_OBJ  = dasdcat.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o
 
-DPU_OBJS = dasdpdsu.o dasdutil.o version.o
+dasdpdsu_OBJ = dasdpdsu.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o
 
-TCY_OBJS = tapecopy.o version.o
+dasdseq_OBJ  = dasdseq.o dasdutil.o codepage.o hostinfo.o version.o  \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o \
+               cache.o shared.o logmsg.o hsys.o
 
-TMA_OBJS = tapemap.o version.o
+tapecopy_OBJ = tapecopy.o codepage.o hostinfo.o version.o logmsg.o
 
-TSP_OBJS = tapesplt.o version.o
+tapemap_OBJ  = tapemap.o codepage.o hostinfo.o version.o logmsg.o
 
-CCHK_OBJ = cckdcdsk.o version.o
+tapesplt_OBJ = tapesplt.o codepage.o hostinfo.o version.o logmsg.o
 
-COMP_OBJ = cckdcomp.o cckdcdsx.o version.o
+cckdcdsk_OBJ = cckdcdsk.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
-C2CC_OBJ = ckd2cckd.o version.o
+cckdcomp_OBJ = cckdcomp.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
-CC2C_OBJ = cckd2ckd.o version.o
+cckddiag_OBJ = cckddiag.o cckddasd.o cckdutil.o ckddasd.o codepage.o \
+               dasdtab.o dasdutil.o fbadasd.o hostinfo.o version.o cache.o \
+               shared.o logmsg.o hsys.o
 
-HGT_OBJS = hetget.o hetlib.o sllib.o version.o
+cckdswap_OBJ = cckdswap.o cckdutil.o dasdtab.o hostinfo.o version.o logmsg.o
 
-HIN_OBJS = hetinit.o hetlib.o sllib.o version.o
+cckd2ckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
+               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
+               shared.o logmsg.o hsys.o
 
-HMA_OBJS = hetmap.o hetlib.o sllib.o version.o
+ckd2cckd_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
+               dasdtab.o ckddasd.o fbadasd.o cckddasd.o cckdutil.o cache.o \
+               shared.o logmsg.o hsys.o
 
-HUP_OBJS = hetupd.o hetlib.o sllib.o version.o
+fba2cfba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
+               shared.o logmsg.o hsys.o
 
-D2H_OBJS = dmap2hrc.o version.o
+cfba2fba_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
+               shared.o logmsg.o hsys.o
 
-HEADERS  = feat370.h \
-	   feat390.h \
-	   feat900.h \
-	   featall.h \
-	   featchk.h \
-	   features.h \
-	   esa390.h \
-	   opcode.h \
-	   hercules.h \
-	   inline.h \
-	   dat.h \
-	   vstore.h \
-	   byteswap.h \
-	   dasdblks.h \
-	   hetlib.h \
-	   version.h
+dasdcopy_OBJ = dasdcopy.o dasdutil.o codepage.o hostinfo.o version.o \
+               ckddasd.o cckddasd.o cckdutil.o dasdtab.o fbadasd.o cache.o \
+               shared.o logmsg.o hsys.o
 
-#HEADERS  = esa390.h version.h inline.h
+hetget_OBJ   = hetget.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
+               codepage.o
 
-all:  $(EXEFILES)
+hetinit_OBJ  = hetinit.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
+               codepage.o
 
-hercules:  $(HRC_OBJS)
-	$(CC) -o hercules $(HRC_OBJS) $(LFLAGS)
+hetmap_OBJ   = hetmap.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o \
+               codepage.o
 
-$(HRC_OBJS): %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -o $@ -c $<
+hetupd_OBJ   = hetupd.o hetlib.o sllib.o codepage.o hostinfo.o version.o  logmsg.o
 
-ifeq ($(WIN),yes)
-else
-hercifc:  $(HIFC_OBJ)
-	$(CC) -o hercifc $(HIFC_OBJ)
-endif
+dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o
 
-dasdinit:  $(DIN_OBJS)
-	$(CC) -o dasdinit $(DIN_OBJS)
+dyninst_OBJ = dyninst.o
 
-dasdisup:  $(DIS_OBJS)
-	$(CC) -o dasdisup $(DIS_OBJS)
+HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
+           dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
+           feat900.h featall.h featchk.h feature.h fishhang.h \
+           fthreads.h hbyteswp.h hercifc.h hercnls.h hercules.h \
+           hetlib.h hostinfo.h httpmisc.h htypes.h ieee-w32.h \
+           inline.h linklist.h logger.h machdep.h opcode.h \
+           parser.h sllib.h tapedev.h tt32api.h tuntap.h version.h \
+           vstore.h w32chan.h w32ctca.h shared.h hdl.h crypto.h \
+           sockdev.h
 
-dasdload:  $(DLD_OBJS)
-	$(CC) -o dasdload $(DLD_OBJS)
+all:	   $(EXEFILES) $(DYNFILES)
 
-dasdls:  $(DLS_OBJS)
-	$(CC) -o dasdls $(DLS_OBJS)
+hercules.def: $(hercules_OBJ)
+	dlltool --export-all-symbols --output-def hercules.def $(hercules_OBJ)
 
-dasdcat:  $(DCA_OBJS)
-	$(CC) -o dasdcat $(DCA_OBJS)
+hercules.exp: hercules.def
+	dlltool --input-def hercules.def --dllname hercules.exe --output-exp hercules.exp
 
-dasdpdsu:  $(DPU_OBJS)
-	$(CC) -o dasdpdsu $(DPU_OBJS)
+hercules.a: hercules.def
+	dlltool --input-def hercules.def --dllname hercules.exe --output-lib hercules.a
 
-tapecopy:  $(TCY_OBJS)
-	$(CC) -o tapecopy $(TCY_OBJS)
+hercules: $(hercules_OBJ) hercules.exp
+	$(CC) -o hercules $(hercules_OBJ) hercules.exp $(LFLAGS)
 
-tapemap:  $(TMA_OBJS)
-	$(CC) -o tapemap $(TMA_OBJS)
+$(hercules_OBJ): %.o: %.c $(HEADERS)
+	  $(CC) $(CFLAGS) -o $@ -c $<
 
-tapesplt:  $(TSP_OBJS)
-	$(CC) -o tapesplt $(TSP_OBJS)
+#hercifc:  $(hercifc_OBJ)
+#	  $(CC) -o hercifc $(hercifc_OBJ) $(LFLAGS)
 
-hetget:  $(HGT_OBJS)
-	$(CC) -o hetget $(HGT_OBJS) $(LFLAGS)
+dasdinit: $(dasdinit_OBJ)
+	  $(CC) -o dasdinit $(dasdinit_OBJ) $(LFLAGS)
 
-hetinit:  $(HIN_OBJS)
-	$(CC) -o hetinit $(HIN_OBJS) $(LFLAGS)
+dasdisup: $(dasdisup_OBJ)
+	  $(CC) -o dasdisup $(dasdisup_OBJ) $(LFLAGS)
 
-hetmap:  $(HMA_OBJS)
-	$(CC) -o hetmap $(HMA_OBJS) $(LFLAGS)
+dasdload: $(dasdload_OBJ)
+	  $(CC) -o dasdload $(dasdload_OBJ) $(LFLAGS)
 
-hetupd:  $(HUP_OBJS)
-	$(CC) -o hetupd $(HUP_OBJS) $(LFLAGS)
+dasdls:   $(dasdls_OBJ)
+	  $(CC) -o dasdls $(dasdls_OBJ) $(LFLAGS)
 
-dmap2hrc:  $(D2H_OBJS)
-	$(CC) -o dmap2hrc $(D2H_OBJS) $(LFLAGS)
+dasdcat:  $(dasdcat_OBJ)
+	  $(CC) -o dasdcat $(dasdcat_OBJ) $(LFLAGS)
 
-dasdinit.o: dasdinit.c $(HEADERS) dasdblks.h
+dasdpdsu: $(dasdpdsu_OBJ)
+	  $(CC) -o dasdpdsu $(dasdpdsu_OBJ) $(LFLAGS)
 
-dasdisup.o: dasdisup.c $(HEADERS) dasdblks.h
+dasdseq:  $(dasdseq_OBJ)
+	  $(CC) -o dasdseq $(dasdseq_OBJ) $(LFLAGS)
 
-dasdload.o: dasdload.c $(HEADERS) dasdblks.h
+tapecopy: $(tapecopy_OBJ)
+	  $(CC) -o tapecopy $(tapecopy_OBJ) $(LFLAGS)
 
-dasdls.o: dasdls.c $(HEADERS) dasdblks.h
+tapemap:  $(tapemap_OBJ)
+	  $(CC) -o tapemap $(tapemap_OBJ) $(LFLAGS)
 
-dasdcat.o: dasdcat.c $(HEADERS) dasdblks.h
+tapesplt: $(tapesplt_OBJ)
+	  $(CC) -o tapesplt $(tapesplt_OBJ) $(LFLAGS)
 
-dasdpdsu.o: dasdpdsu.c $(HEADERS) dasdblks.h
+cckdcdsk: $(cckdcdsk_OBJ)
+	  $(CC) -o cckdcdsk $(cckdcdsk_OBJ) $(LFLAGS)
 
-dasdutil.o: dasdutil.c $(HEADERS) dasdblks.h
+cckdcomp: $(cckdcomp_OBJ)
+	  $(CC) -o cckdcomp $(cckdcomp_OBJ) $(LFLAGS)
 
-tapecopy.o: tapecopy.c $(HEADERS)
+cckddiag: $(cckddiag_OBJ)
+	  $(CC) -o cckddiag $(cckddiag_OBJ) $(LFLAGS)
 
-tapemap.o: tapemap.c $(HEADERS)
+cckdswap: $(cckdswap_OBJ)
+	  $(CC) -o cckdswap $(cckdswap_OBJ) $(LFLAGS)
 
-tapesplt.o: tapesplt.c $(HEADERS)
+cckd2ckd: $(cckd2ckd_OBJ)
+	  $(CC) -o cckd2ckd $(cckd2ckd_OBJ) $(LFLAGS)
 
-cckdcdsk: $(CCHK_OBJ)
-	$(CC) -o cckdcdsk $(CCHK_OBJ) $(LFLAGS)
+ckd2cckd: $(ckd2cckd_OBJ)
+	  $(CC) -o ckd2cckd $(ckd2cckd_OBJ) $(LFLAGS)
 
-cckdcomp: $(COMP_OBJ)
-	$(CC) -o cckdcomp $(COMP_OBJ) $(LFLAGS)
+fba2cfba: $(fba2cfba_OBJ)
+	  $(CC) -o fba2cfba $(fba2cfba_OBJ) $(LFLAGS)
 
-cckd2ckd: $(CC2C_OBJ)
-	$(CC) -o cckd2ckd $(CC2C_OBJ) $(LFLAGS)
+cfba2fba: $(cfba2fba_OBJ)
+	  $(CC) -o cfba2fba $(cfba2fba_OBJ) $(LFLAGS)
 
-ckd2cckd: $(C2CC_OBJ)
-	$(CC) -o ckd2cckd $(C2CC_OBJ) $(LFLAGS)
+dasdcopy: $(dasdcopy_OBJ)
+	  $(CC) -o dasdcopy $(dasdcopy_OBJ) $(LFLAGS)
 
-hetget.o: hetget.c hetlib.h sllib.h
+hetget:   $(hetget_OBJ)
+	  $(CC) -o hetget $(hetget_OBJ) $(LFLAGS)
 
-hetinit.o: hetinit.c hetlib.h sllib.h
+hetinit:  $(hetinit_OBJ)
+	  $(CC) -o hetinit $(hetinit_OBJ) $(LFLAGS)
 
-hetmap.o: hetmap.c hetlib.h sllib.h
+hetmap:   $(hetmap_OBJ)
+	  $(CC) -o hetmap $(hetmap_OBJ) $(LFLAGS)
 
-hetupd.o: hetupd.c hetlib.h sllib.h
+hetupd:   $(hetupd_OBJ)
+	  $(CC) -o hetupd $(hetupd_OBJ) $(LFLAGS)
 
-dmap2hrc.o: dmap2hrc.c $(HEADERS)
+dmap2hrc: $(dmap2hrc_OBJ)
+	  $(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
 
-cckd: cckd2ckd cckdcdsk ckd2cckd cckdcomp
+dyninst:  $(dyninst_OBJ) hercules.a
+	  $(CC) -o dyninst.dll $(dyninst_OBJ) $(DFLAGS)
+
+hdt1403:  $(hdt1403_OBJ) hercules.a
+	  $(CC) -o hdt1403.dll $(hdt1403_OBJ) $(DFLAGS)
+
+hdt2703:  $(hdt2703_OBJ) hercules.a
+	  $(CC) -o hdt2703.dll $(hdt2703_OBJ) $(DFLAGS)
+
+hdt3088:  $(hdt3088_OBJ) hercules.a
+	  $(CC) -o hdt3088.dll $(hdt3088_OBJ) $(DFLAGS)
+
+hdt3270:  $(hdt3270_OBJ) hercules.a
+	  $(CC) -o hdt3270.dll $(hdt3270_OBJ) $(DFLAGS)
+
+hdt3420:  $(hdt3420_OBJ) hercules.a
+	  $(CC) -o hdt3420.dll $(hdt3420_OBJ) $(DFLAGS)
+
+hdt3505:  $(hdt3505_OBJ) hercules.a
+	  $(CC) -o hdt3505.dll $(hdt3505_OBJ) $(DFLAGS)
+
+hdt3525:  $(hdt3525_OBJ) hercules.a
+	  $(CC) -o hdt3525.dll $(hdt3525_OBJ) $(DFLAGS)
+
+hdteq:    $(hdteq_OBJ) hercules.a
+	  $(CC) -o hdteq.dll $(hdteq_OBJ) $(DFLAGS)
 
 clean:
-	rm -rf $(EXEFILES) *.o
+	rm -rf $(EXEFILES) $(DYNFILES) *.o
 
 tar:	clean
 	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))
 
 install:  $(EXEFILES)
-	mkdir -p $(DEST)
-ifeq ($(WIN),yes)
-	cp *.exe $(DEST)
-	rm -f $(DEST)/dasdlist*
-	cp util/dasdlist* $(DEST)
-else
-	cp $(EXEFILES) $(DEST)
-	cp util/dasdlist $(DEST)
-	chown root $(DEST)/hercifc
-	chmod 0751 $(DEST)/hercifc
-	chmod +s $(DEST)/hercifc
-	rm hercifc
-endif
+	cp $(EXEFILES) $(DESTDIR)
+	cp $(DYNFILES) $(DESTLIB)
+#	chown root $(DESTDIR)/hercifc
+#	chmod 0751 $(DESTDIR)/hercifc
+#	chmod +s $(DESTDIR)/hercifc
+#	rm hercifc
