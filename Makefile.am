@@ -8,7 +8,7 @@ ACLOCAL_AMFLAGS  = -I m4
 
 # (gettextize/libtoolize adds intl & m4 subdirectories)
 
-SUBDIRS =    \
+SUBDIRS =    intl m4 \
           po util html man
 
 LDADD = @LIBINTL@
