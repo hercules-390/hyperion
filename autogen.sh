@@ -53,6 +53,9 @@ if test ! -e ./ABOUT-NLS; then
   echo " hurt anything if you do."
   echo ""
 
+  sed -i -e "s| intl/Makefile||g" configure.ac
+  sed -i -e "s| m4/Makefile||g" configure.ac
+
   echo -e "gettextizing..."
   gettextize --copy --force --intl --no-changelog >> ./autogen.log 2>&1
 
