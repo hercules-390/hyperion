@@ -92,7 +92,8 @@ dyndev_SRC         = commadpt.c \
                      ctcadpt.c  \
                      w32ctca.c  \
                      hchan.c  \
-                     tuntap.c
+                     tuntap.c   \
+                     qeth.c
 
 
 # -module         : create a dlopen'able module
@@ -166,7 +167,8 @@ endif
              hdt3420.la \
              hdt3505.la \
              hdt2880.la \
-             hdt3525.la
+             hdt3525.la \
+             hdtqeth.la
 
 if OPTION_DYNAMIC_LOAD
   modexec_LTLIBRARIES = $(HERCMODS)
@@ -242,6 +244,10 @@ if OPTION_DYNAMIC_LOAD
   hdt3525_la_SOURCES = cardpch.c
   hdt3525_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
   hdt3525_la_LIBADD  = $(DYNMOD_LD_ADD)
+
+  hdtqeth_la_SOURCES = qeth.c
+  hdtqeth_la_LDFLAGS = $(DYNMOD_LD_FLAGS)
+  hdtqeth_la_LIBADD  = $(DYNMOD_LD_ADD)
 
 endif
 
@@ -408,6 +414,7 @@ else
              -dlopen hdt3270.la \
              -dlopen hdt3505.la \
              -dlopen hdt3525.la
+             -dlopen hdtqeth.la
 
   HDEPS    = dyngui.la   \
              dyninst.la  \
@@ -421,6 +428,7 @@ else
              libherct.la \
              libhercd.la \
              hdt3525.la
+             hdtqeth.la
 endif
 
 else
