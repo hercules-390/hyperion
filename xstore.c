@@ -204,7 +204,7 @@ int     cc = 0;				/* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
 RADR    raddr1, raddr2;                 /* Real addresses            */
 RADR    aaddr1 = 0, aaddr2 = 0;         /* Absolute addresses        */
-int     priv = 0;                       /* 1=Private address space   */
+int     priv;                           /* 1=Private address space   */
 int     prot = 0;                       /* 1=Protected page          */
 int     stid;                           /* Segment table indication  */
 U16     xcode;                          /* Exception code            */
@@ -330,6 +330,8 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
             goto mvpg_progck;
 	}
 
+        /* Reset protection indication before calling translate_addr() */
+        prot = 0;
         /* Translate the first operand address to a real address */
         rc = ARCH_DEP(translate_addr) (vaddr1, r1, regs, ACCTYPE_WRITE, &raddr1,
                         &xcode, &priv, &prot, &stid);

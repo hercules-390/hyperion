@@ -1246,9 +1246,10 @@ BYTE                    unitstat;       /* Status after receive data */
         {
             if (dev->console
                 && dev->connected
-                && dev->busy == 0
+                && (dev->busy == 0 || (dev->scsw.flag3 & SCSW3_AC_SUSP))
                 && dev->pending == 0
                 && (dev->pmcw.flag5 & PMCW5_V)
+                && (dev->pmcw.flag5 & PMCW5_E)
                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
             {
                 FD_SET (dev->fd, &readset);
@@ -1308,9 +1309,10 @@ BYTE                    unitstat;       /* Status after receive data */
             if (dev->console
                 && dev->connected
                 && FD_ISSET (dev->fd, &readset)
-                && dev->busy == 0
+                && (dev->busy == 0 || (dev->scsw.flag3 & SCSW3_AC_SUSP))
                 && dev->pending == 0
                 && (dev->pmcw.flag5 & PMCW5_V)
+                && (dev->pmcw.flag5 & PMCW5_E)
                 && (dev->scsw.flag3 & SCSW3_SC_PEND) == 0)
             {
                 /* Receive console input data from the client */
