@@ -51,6 +51,10 @@
 
 #include "opcode.h"
 
+
+char *console_cnslport = "3270";
+
+
 /*-------------------------------------------------------------------*/
 /* Telnet command definitions                                        */
 /*-------------------------------------------------------------------*/
@@ -244,6 +248,81 @@ unsigned char print_chars[17];
 #endif
 
 
+#if 1
+struct sockaddr_in * get_inet_socket(char *host_serv)
+{
+char *host = NULL;
+char *serv;
+struct sockaddr_in *sin;
+
+    if((serv = strchr(host_serv,':')))
+    {
+        *serv++ = '\0';
+        if(*host_serv)
+            host = host_serv;
+    }
+    else
+        serv = host_serv;
+
+    if(!(sin = malloc(sizeof(struct sockaddr_in))))
+        return sin;
+
+    sin->sin_family = AF_INET;
+
+    if(host) 
+    {
+    struct hostent *hostent;
+
+        hostent = gethostbyname(host);
+
+        if(!hostent)
+        {
+            logmsg("HHCxx001I Unable to determine IP address from %s\n",
+                host);
+            free(sin);
+            return NULL;
+        }
+
+        memcpy(&sin->sin_addr,*hostent->h_addr_list,sizeof(sin->sin_addr));
+    }
+    else
+        sin->sin_addr.s_addr = INADDR_ANY;
+
+    if(serv)
+    {
+        if(!isdigit(*serv))
+        {
+        struct servent *servent;
+
+            servent = getservbyname(serv, "tcp");
+
+            if(!servent)
+            {
+                logmsg("HHCxx002I Unable to determine port number from %s\n",
+                    host);
+                free(sin);
+                return NULL;
+            }
+
+            sin->sin_port = servent->s_port;
+        }
+        else
+            sin->sin_port = htons(atoi(serv));
+
+    }
+    else
+    {
+        logmsg("HHCxx003E Invalid parameter: %s\n",
+            host_serv);
+        free(sin);
+        return NULL;
+    }
+
+    return sin;
+
+}
+
+#endif
 /*-------------------------------------------------------------------*/
 /* SUBROUTINE TO REMOVE ANY IAC SEQUENCES FROM THE DATA STREAM       */
 /* Returns the new length after deleting IAC commands                */
@@ -1201,7 +1280,7 @@ console_connection_handler (void *arg)
 int                     rc = 0;         /* Return code               */
 int                     lsock;          /* Socket for listening      */
 int                     csock;          /* Socket for conversation   */
-struct sockaddr_in      server;         /* Server address structure  */
+struct sockaddr_in     *server;         /* Server address structure  */
 fd_set                  readset;        /* Read bit map for select   */
 int                     maxfd;          /* Highest fd for select     */
 int                     optval;         /* Argument for setsockopt   */
@@ -1234,21 +1313,22 @@ BYTE                    unitstat;       /* Status after receive data */
                 &optval, sizeof(optval));
 
     /* Prepare the sockaddr structure for the bind */
-    memset (&server, 0, sizeof(server));
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = sysblk.cnslport;
-    server.sin_port = htons(server.sin_port);
+    if(!( server = get_inet_socket(console_cnslport) ))
+    {
+        logmsg("HHCxxnnnE CNSLPORT statement invalid: %s\n",
+            console_cnslport);
+        return NULL;
+    }
 
     /* Attempt to bind the socket to the port */
     while (sysblk.cnslcnt  && !sysblk.shutdown)
     {
-        rc = bind (lsock, (struct sockaddr *)&server, sizeof(server));
+        rc = bind (lsock, server, sizeof(struct sockaddr));
 
         if (rc == 0 || errno != EADDRINUSE) break;
 
         logmsg (_("HHCTE002W Waiting for port %u to become free\n"),
-                sysblk.cnslport);
+                ntohs(server->sin_port));
         sleep(10);
     } /* end while */
 
@@ -1268,7 +1348,7 @@ BYTE                    unitstat;       /* Status after receive data */
     }
 
     logmsg (_("HHCTE003I Waiting for console connection on port %u\n"),
-            sysblk.cnslport);
+            ntohs(server->sin_port));
 
     /* Handle connection requests and attention interrupts */
     while (sysblk.cnslcnt) {

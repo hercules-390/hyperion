@@ -403,6 +403,7 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
     return(gcount);
 }
 
+extern char *console_cnslport;
 /*-------------------------------------------------------------------*/
 /* Function to build system configuration                            */
 /*-------------------------------------------------------------------*/
@@ -418,7 +419,6 @@ BYTE   *smodel;                         /* -> CPU model string       */
 BYTE   *sversion;                       /* -> CPU version string     */
 BYTE   *smainsize;                      /* -> Main size string       */
 BYTE   *sxpndsize;                      /* -> Expanded size string   */
-BYTE   *scnslport;                      /* -> Console port number    */
 BYTE   *snumcpu;                        /* -> Number of CPUs         */
 BYTE   *snumvec;                        /* -> Number of VFs          */
 BYTE   *sarchmode;                      /* -> Architectural mode     */
@@ -455,7 +455,6 @@ U32     serial;                         /* CPU serial number         */
 U16     model;                          /* CPU model number          */
 U16     mainsize;                       /* Main storage size (MB)    */
 U16     xpndsize;                       /* Expanded storage size (MB)*/
-U16     cnslport;                       /* Console port number       */
 U16     numcpu;                         /* Number of CPUs            */
 U16     numvec;                         /* Number of VFs             */
 #if defined(OPTION_HTTP_SERVER)
@@ -534,7 +533,6 @@ BYTE **newargv;
     model = 0x0586;
     mainsize = 2;
     xpndsize = 0;
-    cnslport = 3270;
     numcpu = 0;
     numvec = MAX_CPU_ENGINES;
     memset (loadparm, 0x4B, 8);
@@ -600,7 +598,6 @@ BYTE **newargv;
         sversion = NULL;
         smainsize = NULL;
         sxpndsize = NULL;
-        scnslport = NULL;
         snumcpu = NULL;
         snumvec = NULL;
         sarchmode = NULL;
@@ -639,7 +636,7 @@ BYTE **newargv;
             smodel = operand;
             smainsize = addargv[0];
             sxpndsize = addargv[1];
-            scnslport = addargv[2];
+            console_cnslport = strdup(addargv[2]);
             snumcpu = addargv[3];
             sloadparm = addargv[4];
         }
@@ -675,7 +672,7 @@ BYTE **newargv;
             }
             else if (strcasecmp (keyword, "cnslport") == 0)
             {
-                scnslport = operand;
+                console_cnslport = strdup(operand);
             }
             else if (strcasecmp (keyword, "numcpu") == 0)
             {
@@ -972,19 +969,6 @@ BYTE **newargv;
                 fprintf(stderr, _("HHCCF014S Error in %s line %d: "
                         "Invalid expanded storage size %s\n"),
                         fname, stmt, sxpndsize);
-                delayed_exit(1);
-            }
-        }
-
-        /* Parse console port number operand */
-        if (scnslport != NULL)
-        {
-            if (sscanf(scnslport, "%hu%c", &cnslport, &c) != 1
-                || cnslport == 0)
-            {
-                fprintf(stderr, _("HHCCF015S Error in %s line %d: "
-                        "Invalid console port number %s\n"),
-                        fname, stmt, scnslport);
                 delayed_exit(1);
             }
         }
@@ -1384,9 +1368,6 @@ BYTE **newargv;
         logmsg(_("HHCCF034W Expanded storage support not installed\n"));
 #endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
-
-    /* Save the console port number */
-    sysblk.cnslport = cnslport;
 
 #if defined(OPTION_HTTP_SERVER)
     sysblk.httpport = httpport;
