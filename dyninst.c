@@ -31,6 +31,9 @@
  #define opcode_ebxx  opcode_ebxx_r
  #define opcode_ecxx  opcode_ecxx_r
  #define opcode_edxx  opcode_edxx_r
+ #define s370_opcode_table s370_opcode_table_r
+ #define s390_opcode_table s390_opcode_table_r
+ #define z900_opcode_table z900_opcode_table_r
 #endif
 
 #include "opcode.h"
@@ -51,6 +54,9 @@
  #undef opcode_ebxx
  #undef opcode_ecxx
  #undef opcode_edxx
+ #undef s370_opcode_table
+ #undef s390_opcode_table
+ #undef z900_opcode_table
 #endif
 
 #include "inline.h"
@@ -107,6 +113,9 @@ static void * opcode_e6xx;
 static void * opcode_ebxx;
 static void * opcode_ecxx;
 static void * opcode_edxx;
+static zz_func s370_opcode_table[];
+static zz_func s390_opcode_table[];
+static zz_func z900_opcode_table[];
 #endif
 
 static char *prefix[] = {
@@ -367,20 +376,18 @@ int opcode, extop;
             default:
                 assign_opcode(opcode, opcode_table, save_table);
 
-#if 0
-/* ZZ FIXME:  also fixup the following such that online instruction
-   replacement works properly */
-                /* Gabor Hoffer (performance option) */
-                for (i = 0; i < 256; i++)
+#if !defined(WIN32)  /* ZZ FIXME */
+                /* Copy opcodes to performance shadow table */
+                for (opcode = 0; opcode < 256; opcode++)
                 {
 #if defined(_370)
-                    s370_opcode_table [i] = opcode_table [i][ARCH_370];
+                    s370_opcode_table[opcode] = opcode_table[opcode][ARCH_370];
 #endif
 #if defined(_390)
-                    s390_opcode_table [i] = opcode_table [i][ARCH_390];
+                    s390_opcode_table[opcode] = opcode_table[opcode][ARCH_390];
 #endif
 #if defined(_900)
-                    z900_opcode_table [i] = opcode_table [i][ARCH_900];
+                    z900_opcode_table[opcode] = opcode_table[opcode][ARCH_900];
 #endif
                 }
 #endif
