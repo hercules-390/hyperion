@@ -813,6 +813,39 @@ HHCCF058E Some or all devices in <em>CUU</em>-<em>CUU</em> duplicate devices alr
   <dt>Issued by
   <dd>config.c, function parse_devnums
   </dl>
+<dt><code><a name="HHCCF061W">
+HHCCF061W ECPS:VM Statement deprecated. Use ECPSVM instead
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The "ECPS:VM" statement was encountered. This statement is deprecated in favor of the "ECPSVM" statement.
+  <dt>Action
+  <dd>The configuration statement is still carried out, but the statement syntax should be changed as soon as possible.
+  <dt>Issued by
+  <dd>config.c
+  </dl>
+<dt><code><a name="HHCCF062W">
+HHCCF062W Missing ECPSVM level value. 20 Assumed
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The "ECPSVM" statement keyword "LEVEL" was encountered, but no numeric level followed it
+  <dt>Action
+  <dd>The default level of 20 is used, and the ECPS:VM feature is made available. The statement should be corrected as soon as possible.
+  <dt>Issued by
+  <dd>config.c
+  </dl>
+<dt><code><a name="HHCCF063W">
+HHCCF063W Specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keyword instead
+</a></code>
+<dd><dl>
+  <dt>Meaning
+  <dd>The deprecated "ECPSVM" level syntax form (without the LEVEL keyword) was found.
+  <dt>Action
+  <dd>The ECPS:VM Level is set to the specified value. The configuration statement should be updated to include the "LEVEL" keyword.
+  <dt>Issued by
+  <dd>config.c
+  </dl>
 </dl>
 <p><center><hr width=15% noshade></center>
 <p>

@@ -432,7 +432,9 @@ BYTE   *scpuprio;                       /* -> CPU thread priority    */
 BYTE   *spgmprdos;                      /* -> Program product OS OK  */
 BYTE   *scodepage;                      /* -> Code page              */
 #if defined(_FEATURE_ECPSVM)
-BYTE   *secpsvmlevel;                   /* -> ECPS:VM level (or 'no')*/
+BYTE   *secpsvmlevel;                   /* -> ECPS:VM Keyword        */
+BYTE   *secpsvmlvl;                     /* -> ECPS:VM level (or 'no')*/
+int    ecpsvmac;                        /* -> ECPS:VM add'l arg cnt  */
 #endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(OPTION_HTTP_SERVER)
 BYTE   *shttpport;                      /* -> HTTP port number       */
@@ -613,6 +615,8 @@ BYTE **newargv;
         scodepage = NULL;
 #if defined(_FEATURE_ECPSVM)
         secpsvmlevel = NULL;
+        secpsvmlvl = NULL;
+        ecpsvmac = 0;
 #endif /*defined(_FEATURE_ECPSVM)*/
 #if defined(OPTION_HTTP_SERVER)
         shttpport = NULL;
@@ -740,6 +744,17 @@ BYTE **newargv;
             else if(strcasecmp(keyword, "ecps:vm") == 0)
             {
                 secpsvmlevel=operand;
+                secpsvmlvl=addargv[0];
+                ecpsvmac=addargc;
+                fprintf(stderr, _("HHCCF061W Warning in %s line %d: "
+                    "ECPS:VM Statement deprecated. Use ECPSVM instead\n"),
+                    fname, stmt);
+            }
+            else if(strcasecmp(keyword, "ecpsvm") == 0)
+            {
+                secpsvmlevel=operand;
+                secpsvmlvl=addargv[0];
+                ecpsvmac=addargc;
             }
 #endif /*defined(_FEATURE_ECPSVM)*/
 #ifdef OPTION_IODELAY_KLUDGE
@@ -1223,14 +1238,44 @@ BYTE **newargv;
                     ecpsvmlevel=20;
                     break;
                 }
+                if(strcasecmp(secpsvmlevel,"level")==0)
+                {
+                    ecpsvmavail=1;
+                    if(ecpsvmac==0)
+                    {
+                        fprintf(stderr, _("HHCCF062W Warning in %s line %d: "
+                                "Missing ECPSVM level value. 20 Assumed\n"),
+                                fname, stmt);
+                        ecpsvmavail=1;
+                        ecpsvmlevel=20;
+                        break;
+                    }
+                    if (sscanf(secpsvmlvl, "%d%c", &ecpsvmlevel, &c) != 1)
+                    {
+                        fprintf(stderr, _("HHCCF051W Warning in %s line %d: "
+                                "Invalid ECPSVM level value : %s. 20 Assumed\n"),
+                                fname, stmt, secpsvmlevel);
+                        ecpsvmavail=1;
+                        ecpsvmlevel=20;
+                        break;
+                    }
+                    break;
+                }
                 ecpsvmavail=1;
                 if (sscanf(secpsvmlevel, "%d%c", &ecpsvmlevel, &c) != 1)
                 {
                     fprintf(stderr, _("HHCCF051W Error in %s line %d: "
-                            "Invalid ECPS:VM value : %s. NO Assumed\n"),
+                            "Invalid ECPSVM keyword : %s. NO Assumed\n"),
                             fname, stmt, secpsvmlevel);
                     ecpsvmavail=0;
                     ecpsvmlevel=0;
+                    break;
+                }
+                else
+                {
+                    fprintf(stderr, _("HHCCF063W Warning in %s line %d: "
+                            "Specifying ECPSVM level directly is deprecated. Use the 'LEVEL' keyword instead.\n"),
+                            fname, stmt);
                     break;
                 }
                 break;

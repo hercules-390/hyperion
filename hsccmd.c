@@ -2518,6 +2518,16 @@ int lsdep_cmd(char* cmdline, int argc, char *argv[])
 /* evm - ECPS:VM command */
 
 #ifdef FEATURE_ECPSVM
+int evm_cmd_1(char* cmdline, int argc, char *argv[])
+{
+    UNREFERENCED(cmdline);
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+
+    logmsg(_("HHCPN150W evm command is deprecated. Use \"ecpsvm\" instead\n"));
+    ecpsvm_command(argc,argv);
+    return 0;
+}
 int evm_cmd(char* cmdline, int argc, char *argv[])
 {
     UNREFERENCED(cmdline);
@@ -2647,7 +2657,8 @@ COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/eve
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
 COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread" )
 #if defined(FEATURE_ECPSVM)
-COMMAND ( "evm",   evm_cmd,   "ECPS:VM Commands" )
+COMMAND ( "evm",   evm_cmd_1,   "ECPS:VM Commands (Deprecated)" )
+COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands" )
 #endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
@@ -2903,8 +2914,11 @@ CMDHELP ( "cscript",   "Format: \"cscript\". This command will cancel the curren
                        )
 
 #if defined(FEATURE_ECPSVM)
-CMDHELP ( "evm",   "Format: \"evm\". This command invokes ECPS:VM Subcommands.\n"
-                       "Type \"evm help\" to see a list of available commands\n"
+CMDHELP ( "ecpsvm",   "Format: \"evm\". This command invokes ECPS:VM Subcommands.\n"
+                       "Type \"ecpsvm help\" to see a list of available commands\n"
+                       )
+CMDHELP ( "evm",      "Format: \"evm\". This command is deprecated.\n"
+                       "use \"ecpsvm\" instead\n"
                        )
 #endif
 
