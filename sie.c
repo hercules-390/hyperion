@@ -984,7 +984,6 @@ int ARCH_DEP(run_sie) (REGS *regs)
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
 #endif
-/* 1 LINE ADDED ISW20040727 */
                 do
                 {
                     REGS *gregs = GUESTREGS;
@@ -997,13 +996,16 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(gregs);
                     UNROLLED_EXECUTE(gregs);
                     UNROLLED_EXECUTE(gregs);
-/* 1 LINE CHANGED ISW20040727 - was '}' only */
-                } while( !SIE_I_HOST(regs) );
+                } while( unlikely(!SIE_I_HOST(regs)
+                                && !SIE_I_WAIT(GUESTREGS)
+                                && !SIE_I_EXT(GUESTREGS)
+                                && !SIE_I_IO(GUESTREGS)
+                                && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
             } while( unlikely(!SIE_I_HOST(regs)
-			    && !SIE_I_WAIT(GUESTREGS)
-			    && !SIE_I_EXT(GUESTREGS)
-			    && !SIE_I_IO(GUESTREGS)
-			    && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
+                            && !SIE_I_WAIT(GUESTREGS)
+                            && !SIE_I_EXT(GUESTREGS)
+                            && !SIE_I_IO(GUESTREGS)
+                            && !SIE_IC_INTERRUPT_CPU(GUESTREGS)));
 
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)
