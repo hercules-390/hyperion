@@ -2,31 +2,18 @@ AC_INIT(hercules.h)
 AC_CONFIG_AUX_DIR(autoconf)
 
 AM_INIT_AUTOMAKE(hercules,2.14a)
+
+dnl We can switch to using a config.h once every source file includes it
 dnl AM_CONFIG_HEADER(autoconf/config.h)
 
 AC_CANONICAL_HOST
 
+CFLAGS="-Wall $CFLAGS"
+
 # Programs
 AC_PROG_CC
 
-CFLAGS="$CFLAGS -Wall"
-
-case "$host_cpu" in
-	i[56]86)
-	    OFLAGS="-O3 $OFLAGS"
-	    if test "$GCC" = "yes"; then
-		OFLAGS="-march=$host_cpu $OFLAGS"
-	    fi
-	    ;;
-	*)
-	    # Don't try to use the regparm attribute on non-i386
-            # (avoids many compiler warnings)
-	    AC_DEFINE(NO_ATTR_REGPARM)
-            # byteswap assembler routines are i386-only
-            AC_DEFINE(NO_ASM_BYTESWAP)
-	    ;;
-esac
-CFLAGS="$OFLAGS $CFLAGS"
+# OS-specific tests
 
 case "$host_os" in
 	linux*)
@@ -52,24 +39,29 @@ AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffDecompress,
 AC_CHECK_HEADERS(byteswap.h linux/if_tun.h inttypes.h)
 AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
 
-# Types
-# AC_CHECK_SIZEOF(double)
-# AC_CHECK_SIZEOF(long double)
-
-# if test $SIZEOF_DOUBLE -eq $SIZEOF_LONG_DOUBLE; then
-#   AC_DEFINE(HAVE_LONG_DOUBLE)
-# fi
-
 # Compiler characteristics
 
 # It would be nice if we could check for __attribute__((regparm))
-# automatically.  For now, use it with gcc.
+# automatically.  For now, disable it when GCC is not in use, and when
+# on non-x86 architectures (below)
 if test x$GCC != xyes; then
   AC_DEFINE(NO_ATTR_REGPARM)
 fi
 
+case "$host_cpu" in
+	  i586|i686) ;;
+  	  *)
+	    # Don't try to use the regparm attribute on non-i386
+            # (avoids many compiler warnings)
+	    AC_DEFINE(NO_ATTR_REGPARM)
+
+            # byteswap assembler routines are i386-only
+            AC_DEFINE(NO_ASM_BYTESWAP)
+	    ;;
+esac
+
 AC_ARG_ENABLE(cckd-bzip2,
-[  --enable-cckd-bzip2     enable Compressed CKD bzip2 compression],
+[  --enable-cckd-bzip2         enable bzip2 compression for emulated DASD],
 [case "${enableval}" in
   yes) cckd_bzip2=yes ;;
   no) cckd_bzip2=no ;;
@@ -77,7 +69,7 @@ AC_ARG_ENABLE(cckd-bzip2,
 esac],[cckd_bzip2=$have_libbz2])
 
 AC_ARG_ENABLE(het-bzip2,
-[  --enable-het-bzip2      enable HET bzip2 compression],
+[  --enable-het-bzip2          enable bzip2 compression for emulated tapes],
 [case "${enableval}" in
   yes) het_bzip2=yes ;;
   no) het_bzip2=no ;;
@@ -107,15 +99,27 @@ AC_CHECK_FUNCS(sqrtl)
 # User-definable settings
 
 AC_ARG_ENABLE(profiling,
-[  --enable-profiling      enable profiling],
+[  --enable-profiling          enable profiling],
 [case "${enableval}" in
-  yes) CFLAGS="$CFLAGS -pg -DPROFILE_CPU" ;;
+  yes) CFLAGS="-pg -DPROFILE_CPU $CFLAGS" ;;
   no) ;;
-  *) CFLAGS="$CFLAGS ${enableval}" ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-profiling]) ;;
 esac])
 
+AC_ARG_ENABLE(debug,
+[  --enable-debug              enable debugging],
+[case "${enableval}" in
+  yes)
+    debug=true
+    CFLAGS="-g $CFLAGS"
+    ;;
+  no) debug=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
+esac],
+[debug=false])
+
 AC_ARG_ENABLE(setuid-hercifc,
-[  --enable-setuid-hercifc install hercifc setuid root],
+[  --enable-setuid-hercifc     install hercifc setuid root],
 [case "${enableval}" in
   yes) setuid_hercifc=yes ;;
   no)  setuid_hercifc=no ;;
@@ -123,10 +127,48 @@ AC_ARG_ENABLE(setuid-hercifc,
 esac],[setuid_hercifc=no])
 AM_CONDITIONAL(SETUID_HERCIFC, test x$setuid_hercifc = xyes)
 
-AH_TEMPLATE([NO_ATTR_REGPARM],[Define if your gcc does not support __attribute__((regparm(n)))])
-AH_TEMPLATE([NO_ASM_BYTESWAP],[Define to disable assembler routines for byte swapping])
-AH_TEMPLATE([NO_IEEE_SUPPORT],[Define to disable IEEE floating point support])
-AH_TEMPLATE([CCKD_BZIP2],[Define to enable bzip2 compression in emulated DASDs])
-AH_TEMPLATE([HET_BZIP2],[Define to enable bzip2 compression in emulated tapes])
+AC_MSG_CHECKING([for optimization flags to use])
+
+AC_ARG_ENABLE(optimization,
+[  --enable-optimization[=FLAGS] enable optimization],
+[case "${enableval}" in
+  yes) optimize=true ;;
+  no) optimize=false ;;
+  *) optimize=false; OFLAGS="${enableval}" ;;
+esac],
+[optimize=true])
+
+if test x$optimize = xtrue -a x$debug != xtrue; then
+  case "$host_cpu" in
+	  i586|i686)
+	    if test "$GCC" = "yes"; then
+		OFLAGS="-O3 -march=$host_cpu -fomit-frame-pointer $OFLAGS"
+	    else
+                OFLAGS="-O2 $OFLAGS"
+	    fi
+	    ;;
+	  *)
+	    OFLAGS="-O2 $OFLAGS"
+	    ;;
+  esac
+fi
+
+if test "x$OFLAGS" = x; then
+  AC_MSG_RESULT([(none)])
+else
+  AC_MSG_RESULT([$OFLAGS])
+  CFLAGS="$OFLAGS $CFLAGS"
+fi
+
+AH_TEMPLATE([NO_ATTR_REGPARM],
+	[Define if your gcc does not support __attribute__((regparm(n)))])
+AH_TEMPLATE([NO_ASM_BYTESWAP],
+	[Define to disable assembler routines for byte swapping])
+AH_TEMPLATE([NO_IEEE_SUPPORT],
+	[Define to disable IEEE floating point support])
+AH_TEMPLATE([CCKD_BZIP2],
+	[Define to enable bzip2 compression in emulated DASDs])
+AH_TEMPLATE([HET_BZIP2],
+	[Define to enable bzip2 compression in emulated tapes])
 
 AC_OUTPUT(Makefile util/Makefile html/Makefile)
