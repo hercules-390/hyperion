@@ -768,8 +768,6 @@ typedef struct _SYSBLK {
         int          shrdtracen;        /* Number of entries         */
 #endif
         CPCONV *codepage;
-        int     ifcfd[2];
-        int     ifcpid;
 #ifdef OPTION_IODELAY_KLUDGE
         int     iodelay;                /* I/O delay kludge for linux*/
 #endif /*OPTION_IODELAY_KLUDGE*/

@@ -1399,9 +1399,6 @@ BYTE **newargv;
 #endif // defined(OPTION_FISHIO)
     init_sockdev();
 
-    /* Initialize HercIFC fd's */
-    sysblk.ifcfd[0] = sysblk.ifcfd[1] = -1;
-
     /* Set up the system TOD clock offset: compute the number of
        seconds from the designated year to 1970 for TOD clock
        adjustment, then add in the specified time zone offset
@@ -1653,16 +1650,6 @@ int     cpu;
             ON_IC_CPU_NOT_STARTED(sysblk.regs + cpu);
         }
     release_lock (&sysblk.intlock);
-
-    /* Terminate HercIFC if necessary */
-    if( sysblk.ifcfd[0] != -1 || sysblk.ifcfd[1] != -1 )
-    {
-        close( sysblk.ifcfd[0] );
-        close( sysblk.ifcfd[1] );
-        sysblk.ifcfd[0] = sysblk.ifcfd[1] = -1;
-
-        kill( sysblk.ifcpid, SIGINT );
-    }
 
 #if defined(OPTION_SHARED_DEVICES)
     /* Terminate the shared device listener thread */
