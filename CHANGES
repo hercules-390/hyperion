@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+22 Feb 2005 Fix for "invalid command in 3270 data stream" - John Decker
 19 Feb 2005 ECPS:VM Fix : Another CPA/SCNRU Fix - Ivan Warren
 16 Feb 2005 ECPS:VM Fix : Revalidate AIA after changing IA - Ivan Warren
 16 Feb 2005 ECPS:VM Fix : Bug in CPA/SCNRU - Ivan Warren
