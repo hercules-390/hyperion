@@ -5,7 +5,7 @@ AM_INIT_AUTOMAKE(hercules,2.16a.2)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
-AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT()
 
 # Initialization
 CFLAGS="-W -Wall $CFLAGS"
@@ -440,4 +440,4 @@ AH_TEMPLATE([PKGDATADIR],
 AH_TEMPLATE([LOCALEDIR],
             [Directory where to find NLS data])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile])
+AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile intl/Makefile m4/Makefile ])
