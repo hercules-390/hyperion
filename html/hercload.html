@@ -35,6 +35,7 @@ The format of the dasdinit command is:
 
 where:
 
+  options:
   -z         build compressed dasd image file using zlib
   -bz2       build compressed dasd image file using bzip2
   -0         build compressed dasd image file with no compression
@@ -54,6 +55,7 @@ where:
              (required if model not specified else optional)
 </pre>
 <p><br>
+<a NAME="models">
 The current list of device types and models supported is:
 <p>
 <pre>
@@ -62,30 +64,30 @@ The current list of device types and models supported is:
                          alt
     devtype-model  cyls  cyls
 
-    2311             ?
+    2311           [*]
     2311-1         200    2
 
-    2314             ?
+    2314           [*]
     2314-1         200    3
 
-    3330             ?
+    3330           [*]
     3330-1         404    7
     3330-2         808    7
     3330-11        808    7
 
-    3340             ?
+    3340           [*]
     3340-1         348    1
     3340-35        348    1
     3340-2         696    2
     3340-70        696    2
 
-    3350             ?
+    3350           [*]
     3350-1         555    5
 
-    3375             ?
+    3375           [*]
     3375-1         959    1
 
-    3380             ?
+    3380           [*]
     3380-1         885    1
     3380-A         885    1
     3380-B         885    1
@@ -98,13 +100,13 @@ The current list of device types and models supported is:
     EMC3380K+     3339    3
     EMC3380K++    3993    3
 
-    3390             ?
+    3390           [*]
     3390-1        1113    1
     3390-2        2226    1
     3390-3        3339    1
     3390-9       10017    3
 
-    9345             ?
+    9345           [*]
     9345-1        1440    0
     9345-2        2156    0
 
@@ -112,41 +114,44 @@ The current list of device types and models supported is:
 
     devtype-model  blocks
 
-    3310                ?
+    3310              [*]
     3310-1         125664
 
-    3370                ?
+    3370              [*]
     3370-Al        558000
     3370-B1        558000
     3370-A2        712752
     3370-B2        712752
 
-    9332                ?
+    9332              [*]
     9332-200       360036
     9332-400       360036
     9332-600       554800
 
-    9335                ?
+    9335              [*]
     9335-1         804714
 
-    9336                ?
+    9336              [*]
     9336-10        920115
     9336-20       1672881
     9336-25       1672881
-
-
-(? = user must specify size)
 </pre>
+<br>
+[<b>*</b>] size may be specified else size defaults to the
+           first listed model.
 <p>
 <h5>Volumes exceeding 2GB</h5>
 <p>
 For CKD volumes which exceed 2GB, such as the 3390-3, the DASDINIT
 program will create multiple files by appending the characters
-<b><i>_1, _2, _3</b></i> etc.
-to the file name specified on the command line.  Each file contains a
-whole number of cylinders.  Hercules CKD support recognizes the files
-as belonging to a single logical volume. Specify the full name of just the
-first file in the Hercules configuration file (e.g. "<i>filename</i>_1").
+<b><i>_1</b></i>, <b>_2</b></i>, <b>_3</b></i> etc.
+to the file name specified on the command line.  These characters
+are inserted before the first dot (<b>.</b>) after the last slash
+(<b>/</b>).  If there is no dot, then the characters are appended
+to the end of the name. Each file contains a whole number of cylinders.
+ Hercules CKD support recognizes the files as belonging to a single
+logical volume. Specify the full name of just the first file in the
+Hercules configuration file (e.g. "<i>filename</i>_1").
 <p>
 The DASDINIT program cannot create FBA volumes exceeding 2GB.
 
@@ -179,11 +184,11 @@ with volume serial number WORK02 in a file called
 To create a 3390 model 3 (triple density) CKD volume
 of 3339 cylinders with volume serial number WORK03:
 <pre>
-    dasdinit 3390.triple.a88 3390-3 work03
+    dasdinit triple.a88 3390-3 work03
 </pre>
 Because this volume exceeds 2GB, DASDINIT will create two files
-with <b><i>3390.triple.a88_1</b></i> containing cylinders 0-2518 and
-<b><i>3390.triple.a88_2</b></i> containing cylinders 2519-3339.
+with <b><i>triple_1.a88</b></i> containing cylinders 0-2518 and
+<b><i>triple_2.a88</b></i> containing cylinders 2519-3339.
 
 <h4>Formatting the empty DASD volume</h4>
 <p>
@@ -234,10 +239,20 @@ create a new DASD image file and load it with data from unloaded
 PDS files.
 <p>
 The format of the dasdload command is:
-<p><code>dasdload <em>ctlfile outfile msglevel</em></code>
+<p><code>dasdload <i>[options]</i> <em>ctlfile outfile msglevel</em></code>
 <p>
 where
 <dl>
+    <dt><em>[options]</em>
+    <dt><code><i>-z</i></code>
+    <dd>build compressed dasd image file using zlib
+    <dt><code><i>-bz2</i></code>
+    <dd>build compressed dasd image file using bzip2
+    <dt><code><i>-0</i></code>
+    <dd>build compressed dasd image file with no compression
+    <dt><code><i>-a</i></code>
+    <dd>build dasd image file that includes alternate cylinders
+
     <dt><code><em>ctlname</em></code>
     <dd>is the name of the control file which specifies the datasets
         that are to be loaded onto the newly-created volume
@@ -255,7 +270,7 @@ file consisting of a <em>volume statement</em> followed by one
 <em>dataset statement</em> for each dataset to be created.
 <p>
 The format of the volume statement is:
-<p><code><em>volser devtype</em> [<em>cyls</em> [<em>ipltext</em>] ]</code>
+<p><code><em>volser devtype</em>[-<em>model</em>] [<em>cyls</em> [<em>ipltext</em>] ]</code>
 <p>where:
 <dl>
 <dt><code><em>volser</em></code>
@@ -263,14 +278,14 @@ The format of the volume statement is:
 <dt><code><em>devtype</em></code>
 <dd>is the emulated device type (2311, 2314, 3330, 3340, 3350, 3375,
     3380, or 3390) for the new volume.  FBA device types are not supported
-    by the dasdload program.
+    by the dasdload program.  Model may be specified like
+    <a href="#models">dasdinit</a> above.
 <dt><code><em>cyls</em></code>
 <dd>is the size of the new volume in cylinders.
     If <code><em>cyls</em></code> is coded as <code>*</code>
-    or is omitted, then the default size for the device type is used.
-    If <code><em>cyls</em></code> is <code>0</code>,
-    then the volume will contain the minimum number of cylinders
-    needed to contain the requested datasets.
+    or as <code>0</code> or is omitted, then the default size
+    for the device type and model is used.  Cylinders is ignored
+    for compressed devices.
 <dt><code><em>ipltext</em></code>
 <dd>is an optional parameter specifying the name of a file
     containing the IPL text which will be written to the volume.
@@ -292,6 +307,11 @@ lrecl blksize keylen</em></code>
     <dt><code>XMIT <em>filename</em></code>
     <dd>the dataset is loaded from an unloaded PDS created by
         the TSO XMIT command
+    <dt><code>SEQ <em>filename</em></code>
+    <dd>the sequential dataset is loaded from a <b>binary</b> file.
+        ascii/ebcdic translation is not currently supported.  Also,
+        the dsorg must either be <em>PS</em> or <em>DA</em> and 
+        recfm must either be <em>F</em> or <em>FB</em>.
     <dt><code>EMPTY</code>
     <dd>the dataset is initialized with an end of file record
         (if DSORG is PS) or an empty PDS directory (if DSORG is PO)
@@ -319,7 +339,7 @@ lrecl blksize keylen</em></code>
 <dd>is the dataset organization: <code>PS</code>, <code>PO</code>,
     <code>DA</code>, or <code>IS</code>,
 <dt><code><em>recfm</em></code>
-<dd>is the record format: <code>FB</code>, <code>FBS</code>,
+<dd>is the record format: <code>F</code>, <code>FB</code>, <code>FBS</code>,
     <code>V</code>, <code>VB</code>, <code>VBS</code>,
     or <code>U</code>.
 <dt><code><em>lrecl</em></code>
@@ -341,7 +361,7 @@ required to load the dataset, whichever is larger.
 
 <h4>Examples</h4>
 <p>
-To create a 2314 volume in a file called <b><i>sysres.230</i></b>
+<b>[1]</b> To create a 2314 volume in a file called <b><i>sysres.230</i></b>
 using the control file <b><i>sysres.plf</i></b> with message level 2:
 <pre><code>dasdload sysres.plf sysres.230 2</pre></code>
 
@@ -363,8 +383,25 @@ sys1.dump       empty   cyl 10 0 0      ps u 0 3625 0
 </pre></code>
 
 <p>
-<em>Note: the DASDLOAD program cannot create volumes exceeding
-2GB in size.</em>
+<b>[2]</b> To create a compressed 3390-3 volume in a file called
+<b><i>linux.500</i></b> containing a bootable linux system for
+linux/390 installation using the control file <b><i>linux.prm</i></b>:
+<pre><code>dasdload -z linux.prm linux.500</pre></code>
+
+<p>
+An example control file is shown below:
+<code><pre>
+#
+# Build a bootable linux disk
+#   [Note: the dataset names (sys1.linux. ...) are hard-coded in
+#          linuxipl.obj and cannot be changed without rebuilding it]
+#
+linux  3390-3 * linuxipl.obj
+sys1.linux.parmfile    SEQ images/redhat.prm trk   1 0 0 ps fb 1024 1024
+sys1.linux.tapeipl.ikr SEQ images/kernel.img trk 200 0 0 ps fb 1024 1024
+sys1.linux.initrd      SEQ images/initrd.img trk 200 0 0 ps fb 1024 1024
+</pre></code>
+
 
 <h3>Fixing the XCTL tables in SVCLIB</h3>
 <p>
@@ -379,12 +416,15 @@ To solve this problem, Hercules provides a program called dasdisup
 which can be run from the Unix command line after running dasdload.
 <p>
 The format of the dasdisup command is:
-<p><code>dasdisup <em>outfile</em></code>
+<p><code>dasdisup <em>outfile [sf=shadow-file-name]</em></code>
 <p>
 where
 <dl>
     <dt><code><em>outfile</em></code>
     <dd>is the name of the DASD image file to be updated
+    <dt><code><em>shadow-file-name</em></code>
+    <dd>(optional) is the name of the associated shadow file
+        as specified in the Hercules config file
 </dl>
 <p>
 <em>Note: do not use this procedure except on OS/360 IPL volumes;
@@ -402,9 +442,11 @@ names of the datasets contained in disk images.
 <p>
 The command format is:
 <br><code>
-dasdls <em>ckdfile ...</em>
+dasdls <em>ckdfile [sf=shadow-file-name] ...</em>
 </code></br>
-where <em>ckdfile</em> is the name of a Unix file containing a CKD volume.
+where <em>ckdfile</em> is the name of a Unix file containing a CKD volume
+and <em>shadow-file-name</em> (optional) is the name of the associated
+shadow file.
 
 <h3>DASDCAT - Display PDS members</h3>
 <p>
@@ -413,9 +455,10 @@ datasets from disk images.
 <p>
 The command format is:
 <br><code>
-dasdcat -i <em>ckdfile dsname1 dsname2 ...</em> -i <em>ckdfile2 dsname10 ...</em>
+dasdcat -i <em>ckdfile [sf=shadow-file-name] dsname1 dsname2 ...</em> -i <em>ckdfile2 dsname10 ...</em>
 </code><br>
 where <em>ckdfile</em> is the name of a Unix file containing a CKD volume,
+<em>shadow-file-name</em> (optional) is the name of the associated shadow file,
 and <em>dsname</em> can be a plain (non-partitioned) dataset name
 (which is currently not handled) or of the form <em>pdsname</em>/<em>memname</em>
 where <em>memname</em> can be:
@@ -444,7 +487,7 @@ where <em>memname</em> can be:
 
 <h5>Examples</h5>
 <pre><code>
-% dasdcat -i mvtres.350 'sys1.parmlib/?'
+% dasdcat -i mvtres.350 sf= mvtres_1.350 'sys1.parmlib/?'
 ieabld00
 ieaige00
 ieaigg00
@@ -488,10 +531,11 @@ working directory.
 <p>
 The command format is:
 <br><code>
-dasdpdsu <em>ckdfile pdsname</em> [ascii]
+dasdpdsu <em>ckdfile [sf=shadow-file-name] pdsname</em> [ascii]
 </code></br>
 where <em>ckdfile</em> is the name of a Unix file containing a CKD
-volume, and <em>pdsname</em> is the name of a PDS on that volume.
+volume, <em>shadow-file-name</em> (optional) is the name of the associated
+shadow file, and <em>pdsname</em> is the name of a PDS on that volume.
 If the optional <b>ascii</b> keyword is specified, the members will be
 unloaded as ASCII variable length text files.  Otherwise the members
 are unloaded as fixed length EBCDIC binary files.
@@ -506,6 +550,6 @@ If you have a question about Hercules, see the
 </center>
 
 <small>
-<p>Last updated 25 January 2002
+<p>Last updated 2 April 2002
 </BODY>
 </HTML>
