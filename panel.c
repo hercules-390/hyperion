@@ -4643,8 +4643,8 @@ int unix_socket (char* path)
 
     if (strlen (path) > sizeof(addr.sun_path) - 1)
     {
-        logmsg ("HHC411I Socket pathname \"%s\" exceeds limit of %ul\n",
-            path, (unsigned long int)sizeof(addr.sun_path) - 1);
+        logmsg ("HHC411I Socket pathname \"%s\" exceeds limit of %d\n",
+            path, (int) sizeof(addr.sun_path) - 1);
         return -1;
     }
 
