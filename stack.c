@@ -158,15 +158,15 @@ int  i;
     /* Advance to offset +12 */
     tcba += 12; atcba += 12;
     if((atcba & PAGEFRAME_BYTEMASK) < 12)
-        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_WRITE);
+        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
 
     /* Fetch word 3 of the TCB */
     tsao = ARCH_DEP(fetch_fullword_absolute)(atcba, regs) & 0x7FFFFFF8;
 
     /* Advance to offset +20 */
     tcba += 8; atcba += 8;
-    if((atcba & PAGEFRAME_BYTEMASK) == 0)
-        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_WRITE);
+    if((atcba & PAGEFRAME_BYTEMASK) < 8)
+        atcba = ARCH_DEP(abs_stack_addr) (tcba, regs, ACCTYPE_READ);
 
     /* Fetch word 3 of the TCB */
     trap_ia = ARCH_DEP(fetch_fullword_absolute) (atcba, regs);
