@@ -11,8 +11,8 @@ VERSION  = 2.12n
 DESTDIR  = $(PREFIX)/usr/bin
 
 # For Linux use:
-CFLAGS  = -O3 -Wall -march=pentium -fomit-frame-pointer \
-	   -DVERSION=$(VERSION)
+#CFLAGS  = -O3 -Wall -march=pentium -fomit-frame-pointer \
+#	   -DVERSION=$(VERSION)
 # For older Linux versions use:
 CFLAGS  = -O3 -march=pentiumpro -fomit-frame-pointer \
 	  -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP \
@@ -35,7 +35,8 @@ EXEFILES = hercules hercifc \
 	   dasdinit dasdisup dasdload dasdls dasdpdsu \
 	   tapecopy tapemap tapesplt \
 	   cckd2ckd cckdcdsk ckd2cckd cckdcomp \
-	   hetget hetinit hetmap hetupd
+	   hetget hetinit hetmap hetupd \
+	   dmap2hrc
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
 	   html zzsa.cnf zzsacard.bin
@@ -89,6 +90,8 @@ HIN_OBJS = hetinit.o hetlib.o sllib.o version.o
 HMA_OBJS = hetmap.o hetlib.o sllib.o version.o
 
 HUP_OBJS = hetupd.o hetlib.o sllib.o version.o
+
+D2H_OBJS = dmap2hrc.o version.o
 
 HEADERS  = feat370.h feat390.h feat900.h featall.h featchk.h features.h \
 	   esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
@@ -159,6 +162,9 @@ hetmap:  $(HMA_OBJS)
 hetupd:  $(HUP_OBJS)
 	$(CC) -o hetupd $(HUP_OBJS) $(LFLAGS)
 
+dmap2hrc:  $(D2H_OBJS)
+	$(CC) -o dmap2hrc $(D2H_OBJS) $(LFLAGS)
+
 dasdinit.o: dasdinit.c $(HEADERS) dasdblks.h
 
 dasdisup.o: dasdisup.c $(HEADERS) dasdblks.h
@@ -185,10 +191,12 @@ hetmap.o: hetmap.c hetlib.h sllib.h
 
 hetupd.o: hetupd.c hetlib.h sllib.h
 
+dmap2hrc.o: dmap2hrc.c $(HEADERS)
+
 cckd:	   cckd2ckd cckdcdsk ckd2cckd cckdcomp
 
 clean:
-	rm -rf $(EXEFILES) *.o
+	rm -rf $(EXEFILES) *.o core
 
 tar:	clean
 	(cd ..; tar cvzf hercules-$(VERSION).tar.gz hercules-$(VERSION))

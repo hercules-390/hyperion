@@ -57,6 +57,9 @@ BYTE           *filename;               /* -> Input file name        */
 int             infd = -1;              /* Input file descriptor     */
 DEVMAP_CTLR     controller;             /* Controller record         */
 DEVMAP_DEV      device;			/* Device record             */
+BYTE		output_type[5];		/* Device type to print      */
+BYTE	       *output_filename;	/* -> filename to print      */
+int		more_devices;		/* More devices this ctlr?   */
 
     /* The only argument is the DEVMAP file name */
     if (argc == 2 && argv[1] != NULL)
@@ -65,7 +68,7 @@ DEVMAP_DEV      device;			/* Device record             */
     }
     else
     {
-        printf ("Usage: devmap2cnf filename\n");
+        fprintf (stderr,"Usage: devmap2cnf filename\n");
         exit (1);
     }
 
@@ -73,19 +76,20 @@ DEVMAP_DEV      device;			/* Device record             */
     infd = open (filename, O_RDONLY | O_BINARY);
     if (infd < 0)
     {
-        printf ("devmap2cnf: Error opening %s: %s\n",
-                filename, strerror(errno));
+        fprintf (stderr,"devmap2cnf: Error opening %s: %s\n",
+                 filename, strerror(errno));
         exit (2);
     }
 
     /* Skip the file header */
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 9; i++)
     {
-        len = read (infd, controller, sizeof(DEVMAP_CTLR));
+        len = read (infd, (void *)&controller, sizeof(DEVMAP_CTLR));
         if (len < 0)
         {
-            printf ("devmap2cnf: error reading header records from %s: %s\n",
-                    filename, strerror(errno));
+            fprintf (stderr,
+                     "devmap2cnf: error reading header records from %s: %s\n",
+                     filename, strerror(errno));
             exit (3);
         }
     }
@@ -93,97 +97,99 @@ DEVMAP_DEV      device;			/* Device record             */
     /* Read records from the input file and convert them */
     while (1)
     {
-        /* Read a controller record */
-        len = read (infd, controller, sizeof(DEVMAP_CTLR));
+        /* Read a controller record. */
+        len = read (infd, (void *)&controller, sizeof(DEVMAP_CTLR));
         if (len < 0)
         {
-            printf ("tapemap: error reading header block from %s: %s\n",
-                    filename, strerror(errno));
-            exit (3);
+            fprintf (stderr,
+                     "devmap2cnf: error reading controller record from %s:"
+                     " %s\n",
+                     filename, strerror(errno));
+            exit (4);
         }
 
         /* Did we finish too soon? */
-        if ((len > 0) && (len < sizeof(AWSTAPE_BLKHDR)))
+        if ((len > 0) && (len < sizeof(DEVMAP_CTLR)))
         {
-            printf ("tapemap: incomplete block header on %s\n",
-                    filename);
-            exit(4);
+            fprintf (stderr,
+                     "devmap2cnf: incomplete controller record on %s\n",
+                     filename);
+            exit(5);
         }
         
-        /* Check for end of tape. */
+        /* Check for end of file. */
         if (len == 0)
         {
-            printf ("End of tape.\n");
             break;
         }
         
-        /* Parse the block header */
-        memcpy(&awshdr, buf, sizeof(AWSTAPE_BLKHDR));
-        
-        /* Tapemark? */
-        if ((awshdr.flags1 & AWSTAPE_FLAG1_TAPEMARK) != 0)
+        /* Read devices on this controller. */
+        more_devices = 1;
+        while (more_devices)
         {
-            /* Print summary of current file */
-            printf ("File %u: Blocks=%u, block size min=%u, max=%u\n",
-                    fileno, blkcount, minblksz, maxblksz);
 
-            /* Reset counters for next file */
-            fileno++;
-            minblksz = 0;
-            maxblksz = 0;
-            blkcount = 0;
-
-        }
-        else /* if(tapemark) */
-        {
-            /* Count blocks and block sizes */
-            blkcount++;
-            curblkl = awshdr.curblkl[0] + (awshdr.curblkl[1] << 8);
-            if (curblkl > maxblksz) maxblksz = curblkl;
-            if (minblksz == 0 || curblkl < minblksz) minblksz = curblkl;
-
-            /* Read the data block. */
-            len = read (infd, buf, curblkl);
+            /* Read a device record. */
+            len = read (infd, (void *)&device, sizeof(DEVMAP_DEV));
             if (len < 0)
             {
-                printf ("tapemap: error reading data block from %s: %s\n",
-                        filename, strerror(errno));
-                exit (5);
+                fprintf (stderr,
+                         "devmap2cnf: error reading device record from %s:"
+                         " %s\n",
+                         filename, strerror(errno));
+                exit (6);
             }
 
             /* Did we finish too soon? */
-            if ((len > 0) && (len < curblkl))
+            if ((len > 0) && (len < sizeof(DEVMAP_DEV)))
             {
-                printf ("tapemap: incomplete final data block on %s, "
-                        "expected %d bytes, got %d\n",
-                        filename, curblkl, len);
-                exit(6);
-            }
-        
-            /* Check for end of tape */
-            if (len == 0)
-            {
-                printf ("tapemap: header block with no data on %s\n",
-                        filename);
+                fprintf (stderr,
+                         "devmap2cnf: incomplete device record on %s\n",
+                         filename);
                 exit(7);
             }
         
-            /* Print standard labels */
-            if (len == 80 && blkcount < 4
-                && (memcmp(buf, vollbl, 3) == 0
-                    || memcmp(buf, hdrlbl, 3) == 0
-                    || memcmp(buf, eoflbl, 3) == 0
-                    || memcmp(buf, eovlbl, 3) == 0))
+            /* Check for end of file. */
+            if (len == 0)
             {
-                for (i=0; i < 80; i++)
-                    labelrec[i] = ebcdic_to_ascii[buf[i]];
-                labelrec[i] = '\0';
-                printf ("%s\n", labelrec);
+                fprintf (stderr,"devmap2cnf: premature end of input file\n");
+                exit(8);
             }
-            
-        } /* end if(tapemark) */
 
-    } /* end while */
+	    /* Is this the dummy device record at the end of the controller's
+	       set of devices? */
+	    if (strncmp(device.type,"    ",4) == 0)
+	    {
+	        more_devices = 0;
+	        break;
+	    }
+	    
+	    /* It's a real device. Fix the type so Hercules can use it and
+	       locate the output filename. */
+	    strncpy(output_type, device.type, 4);
+	    output_type[4] = '\0';
+	    if (isprint(device.parms.disk.volser[0]))
+	        output_filename = device.parms.disk.filename;
+	    else output_filename = device.parms.other.filename;
+	    
+	    if (strncmp(device.type, "3278", 4) == 0)
+	    {
+	        strcpy(output_type, "3270");
+	        output_filename = "";
+	    }
+	    if (strncmp(device.type, "2540", 4) == 0)
+	        strcpy(output_type, "3505");
+	    
+	    /* Emit the Hercules config file entry. */
+	    printf("%02X%02X    %s",
+	           device.highaddr, device.lowaddr,
+	           output_type);
+	    if (strlen(output_filename) > 0)
+	        printf("    %s", output_filename);
+	    puts("");	/* newline */
+
+        } /* end while more_devices) */
+
+    } /* end while (1) */
 
     /* Close files and exit */
     close (infd);
