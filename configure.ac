@@ -19,6 +19,8 @@ case "$host_cpu" in
 	    # Don't try to use the regparm attribute on non-i386
             # (avoids many compiler warnings)
 	    AC_DEFINE(NO_ATTR_REGPARM)
+            # byteswap assembler routines are i386-only
+            AC_DEFINE(NO_ASM_BYTESWAP)
 	    ;;
 esac
 CFLAGS="$OFLAGS $CFLAGS"
