@@ -207,23 +207,23 @@ DEVBLK            *dev;                /* Device block pointer       */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Program check if SPCCB is outside main storage */
-    if ( spccb_absolute_addr >= regs->mainsize )
+    if ( spccb_absolute_addr > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 //  /*debug*/logmsg("MSSF call %8.8X SPCCB=%8.8X\n",
 //  /*debug*/       mssf_command, spccb_absolute_addr);
 
     /* Point to Service Processor Command Control Block */
-    spccb = (SPCCB_HEADER*)(sysblk.mainstor + spccb_absolute_addr);
+    spccb = (SPCCB_HEADER*)(regs->mainstor + spccb_absolute_addr);
 
     /* Load SPCCB length from header */
     FETCH_HW(spccblen,spccb->length);
 
     /* Mark page referenced */
-    STORAGE_KEY(spccb_absolute_addr) |= STORKEY_REF;
+    STORAGE_KEY(spccb_absolute_addr, regs) |= STORKEY_REF;
 
     /* Program check if end of SPCCB falls outside main storage */
-    if ( regs->mainsize - spccblen < spccb_absolute_addr )
+    if ( sysblk.mainsize - spccblen < spccb_absolute_addr )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Obtain the interrupt lock */
@@ -258,7 +258,7 @@ DEVBLK            *dev;                /* Device block pointer       */
             memset (spccbconfig, 0, sizeof(SPCCB_CONFIG_INFO));
 
             /* Set main storage size in SPCCB */
-            spccbconfig->totstori = regs->mainsize >> 20;
+            spccbconfig->totstori = sysblk.mainsize >> 20;
             spccbconfig->storisiz = 1;
             spccbconfig->hex04 = 0x04;
             spccbconfig->hex01 = 0x01;
@@ -293,7 +293,7 @@ DEVBLK            *dev;                /* Device block pointer       */
 #endif /*!_FEATURE_CPU_RECONFIG*/
             {
                 memset (spccbcpu, 0, sizeof(SPCCB_CPU_INFO));
-                spccbcpu->cpuaddr = sysblk.regs[i]->cpuad;
+                spccbcpu->cpuaddr = sysblk.regs[i].cpuad;
                 spccbcpu->todid = 0;
             }
 
@@ -341,7 +341,7 @@ DEVBLK            *dev;                /* Device block pointer       */
         } /* end switch(mssf_command) */
 
     /* Mark page changed */
-    STORAGE_KEY(spccb_absolute_addr) |= STORKEY_CHANGE;
+    STORAGE_KEY(spccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
     /* Set service signal external interrupt pending */
     sysblk.servparm &= ~SERVSIG_ADDR;
@@ -380,7 +380,7 @@ static U64        diag204tod;          /* last diag204 tod           */
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Program check if RMF data area is outside main storage */
-    if ( abs >= regs->mainsize )
+    if ( abs > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Test DIAG204 command word */
@@ -404,10 +404,10 @@ static U64        diag204tod;          /* last diag204 tod           */
         release_lock (&sysblk.todlock);
 
         /* Point to DIAG 204 data area */
-        hdrinfo = (DIAG204_HDR*)(sysblk.mainstor + abs);
+        hdrinfo = (DIAG204_HDR*)(regs->mainstor + abs);
 
         /* Mark page referenced */
-        STORAGE_KEY(abs) |= STORKEY_REF | STORKEY_CHANGE;
+        STORAGE_KEY(abs, regs) |= STORKEY_REF | STORKEY_CHANGE;
 
         memset(hdrinfo, 0, sizeof(DIAG204_HDR));
         hdrinfo->numpart = 1;
@@ -429,13 +429,13 @@ static U64        diag204tod;          /* last diag204 tod           */
         cpuinfo = (DIAG204_PART_CPU*)(partinfo + 1);
 #ifdef _FEATURE_CPU_RECONFIG
         for(i = 0; i < MAX_CPU_ENGINES;i++)
-          if(sysblk.regs[i]->cpuonline)
+          if(sysblk.regs[i].cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
         for(i = 0; i < sysblk.numcpu;i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
         {
             memset(cpuinfo, 0, sizeof(DIAG204_PART_CPU));
-            STORE_HW(cpuinfo->cpaddr,sysblk.regs[i]->cpuad);
+            STORE_HW(cpuinfo->cpaddr,sysblk.regs[i].cpuad);
             STORE_HW(cpuinfo->relshare,100);
             dreg = (U64)(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) / sysblk.numcpu;
             dreg = dreg * 1000000 + (i ? 0 : usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);

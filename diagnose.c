@@ -146,7 +146,7 @@ U32             n;                      /* 32-bit operand value      */
     /* Diagnose 060: Virtual Machine Storage Size                    */
     /*---------------------------------------------------------------*/
         /* Load main storage size in bytes into R1 register */
-        regs->GR_L(r1) = regs->mainsize;
+        regs->GR_L(r1) = sysblk.mainsize;
         break;
 
     case 0x064:
@@ -266,15 +266,15 @@ U32             n;                      /* 32-bit operand value      */
         n = APPLY_PREFIXING (n, regs->PX);
 
         /* Addressing exception if block is outside main storage */
-        if ( n >= regs->mainsize )
+        if ( n > regs->mainlim )
         {
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
             break;
         }
 
         /* Update the storage key from R1 register bit 31 */
-        STORAGE_KEY(n) &= ~(STORKEY_BADFRM);
-        STORAGE_KEY(n) |= regs->GR_L(r1) & STORKEY_BADFRM;
+        STORAGE_KEY(n, regs) &= ~(STORKEY_BADFRM);
+        STORAGE_KEY(n, regs) |= regs->GR_L(r1) & STORKEY_BADFRM;
 
         break;
 

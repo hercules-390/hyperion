@@ -68,7 +68,7 @@ U32     xaddr;                          /* Expanded storage address  */
     maddr &= XSTORE_PAGEMASK;
 
     /* Copy data from expanded to main */
-    memcpy (sysblk.mainstor + maddr, sysblk.xpndstor + xaddr,
+    memcpy (regs->mainstor + maddr, sysblk.xpndstor + xaddr,
             XSTORE_PAGESIZE);
 
     /* cc0 means pgin ok */
@@ -135,7 +135,7 @@ U32     xaddr;                          /* Expanded storage address  */
     maddr &= XSTORE_PAGEMASK;
 
     /* Copy data from main to expanded */
-    memcpy (sysblk.xpndstor + xaddr, sysblk.mainstor + maddr,
+    memcpy (sysblk.xpndstor + xaddr, regs->mainstor + maddr,
             XSTORE_PAGESIZE);
 
     /* cc0 means pgout ok */
@@ -280,7 +280,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
     raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
 
-        if (raddr2 >= regs->mainsize)
+        if (raddr2 > regs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
@@ -313,7 +313,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
         {
-        FETCH_W(pte2,sysblk.mainstor + raddr2);
+        FETCH_W(pte2,regs->mainstor + raddr2);
             /* If page is invalid in real storage but valid in expanded
                storage then xpblk2 now contains expanded storage block# */
             if(pte2 & PAGETAB_ESVALID)
@@ -345,9 +345,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                    therefor add 1024 + 8 times the page index */
                                  1024 + ((vaddr2 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
-                if (xpkeya > regs->mainsize)
+                if (xpkeya > regs->mainlim)
                     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-                xpkey2 = sysblk.mainstor[xpkeya]; 
+                xpkey2 = regs->mainstor[xpkeya]; 
 
 /*DEBUG logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
                   pte2,xpkey2,xpblk2,akey2);  */
@@ -380,7 +380,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
     raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
 
-        if (raddr1 >= regs->mainsize)
+        if (raddr1 > regs->mainlim)
             ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 #if defined(_FEATURE_SIE)
@@ -413,7 +413,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_EXPANDED_STORAGE)
         if(rc == 2)
         {
-        FETCH_W(pte1,sysblk.mainstor + raddr1);
+        FETCH_W(pte1,regs->mainstor + raddr1);
             /* If page is invalid in real storage but valid in expanded
                storage then xpblk1 now contains expanded storage block# */
             if(pte1 & PAGETAB_ESVALID)
@@ -445,9 +445,9 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
                    therefor add 1024 + 8 times the page index */
                               1024 + ((vaddr1 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
-                if (xpkeya > regs->mainsize)
+                if (xpkeya > regs->mainlim)
                     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-                xpkey1 = sysblk.mainstor[xpkeya]; 
+                xpkey1 = regs->mainstor[xpkeya]; 
 
 /*DEBUG  logmsg("MVPG pte1 = " F_CREG ", xkey1 = %2.2X, xpblk1 = %5.5X, akey1 = %2.2X\n",
                   pte1,xpkey1,xpblk1,akey1);  */
@@ -555,40 +555,40 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
     if (xpvalid2)
     {
         /* Set the main storage reference and change bits */
-        STORAGE_KEY(aaddr1) |= (STORKEY_REF | STORKEY_CHANGE);
+        STORAGE_KEY(aaddr1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Set Expanded Storage reference bit in the PTE */
-        STORE_W(sysblk.mainstor + raddr2, pte2 | PAGETAB_ESREF);
+        STORE_W(regs->mainstor + raddr2, pte2 | PAGETAB_ESREF);
         
 
         /* Move 4K bytes from expanded storage to main storage */
-        memcpy (sysblk.mainstor + aaddr1,
+        memcpy (regs->mainstor + aaddr1,
                 sysblk.xpndstor + (xpblk2 << XSTORE_PAGESHIFT),
                 XSTORE_PAGESIZE);
     }
     else if (xpvalid1)
     {
         /* Set the main storage reference bit */
-        STORAGE_KEY(aaddr2) |= STORKEY_REF;
+        STORAGE_KEY(aaddr2, regs) |= STORKEY_REF;
 
     /* Set Expanded Storage reference and change bits in the PTE */
-        STORE_W(sysblk.mainstor + raddr1, pte1 | PAGETAB_ESREF | PAGETAB_ESCHA);
+        STORE_W(regs->mainstor + raddr1, pte1 | PAGETAB_ESREF | PAGETAB_ESCHA);
 
         /* Move 4K bytes from main storage to expanded storage */
         memcpy (sysblk.xpndstor + (xpblk1 << XSTORE_PAGESHIFT),
-                sysblk.mainstor + aaddr2,
+                regs->mainstor + aaddr2,
                 XSTORE_PAGESIZE);
     }
     else
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Set the main storage reference and change bits */
-        STORAGE_KEY(aaddr1) |= (STORKEY_REF | STORKEY_CHANGE);
-        STORAGE_KEY(aaddr2) |= STORKEY_REF;
+        STORAGE_KEY(aaddr1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+        STORAGE_KEY(aaddr2, regs) |= STORKEY_REF;
 
         /* Move 4K bytes from main storage to main storage */
-        memcpy (sysblk.mainstor + aaddr1,
-                sysblk.mainstor + aaddr2,
+        memcpy (regs->mainstor + aaddr1,
+                regs->mainstor + aaddr2,
                 XSTORE_PAGESIZE);
     }
 

@@ -48,7 +48,7 @@ BYTE    chanstat;                       /* IPL device channel status */
 
     /* Perform CPU reset on all other CPUs */
     for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-        ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
+        ARCH_DEP(cpu_reset) (sysblk.regs + cpu);
 
     /* put cpu in load state */
     regs->loadstate = 1;
@@ -78,7 +78,7 @@ BYTE    chanstat;                       /* IPL device channel status */
         return -1;
     }
     /* Point to the PSA in main storage */
-    psa = (PSA*)(sysblk.mainstor + regs->PX);
+    psa = (PSA*)(regs->mainstor + regs->PX);
 
     /* Build the IPL CCW at location 0 */
     psa->iplpsw[0] = 0x02;              /* CCW command = Read */
@@ -160,7 +160,7 @@ BYTE    chanstat;                       /* IPL device channel status */
     regs->psw.intcode = 0;
 
     /* Point to PSA in main storage */
-    psa = (PSA*)(sysblk.mainstor + regs->PX);
+    psa = (PSA*)(regs->mainstor + regs->PX);
 
     /* Load IPL PSW from PSA+X'0' */
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
@@ -253,7 +253,7 @@ U32     fileaddr;
 
     /* Perform CPU reset on all other CPUs */
     for (cpu = 0; cpu < sysblk.numcpu; cpu++)
-        ARCH_DEP(cpu_reset) (sysblk.regs[cpu]);
+        ARCH_DEP(cpu_reset) (sysblk.regs + cpu);
 
     /* put cpu in load state */
     regs->loadstate = 1;
@@ -311,7 +311,7 @@ U32     fileaddr;
     regs->psw.intcode = 0;
 
     /* Point to PSA in main storage */
-    psa = (PSA*)(sysblk.mainstor + regs->PX);
+    psa = (PSA*)(regs->mainstor + regs->PX);
 
     /* Load IPL PSW from PSA+X'0' */
     rc = ARCH_DEP(load_psw) (regs, psa->iplpsw);
@@ -372,6 +372,7 @@ int             i;                      /* Array subscript           */
     for (i = 0; i < MAX_CPU_ENGINES; i++)
         regs->emercpu[i] = 0;
     OFF_IC_STORSTAT(regs);
+    OFF_IC_CPUINT(regs);
     regs->instvalid = 0;
     regs->instcount = 0;
 
@@ -476,7 +477,7 @@ U32  pagesize;
         rl = read(fd, sysblk.mainstor + pageaddr, pagesize);
         if(rl > 0)
         {
-            STORAGE_KEY(pageaddr) |= STORKEY_REF|STORKEY_CHANGE;
+            STORAGE_KEY(pageaddr, &sysblk) |= STORKEY_REF|STORKEY_CHANGE;
             br += rl;
         }
         pageaddr += PAGEFRAME_PAGESIZE;

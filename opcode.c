@@ -671,7 +671,7 @@ DEF_INST(operation_exception)
 
 DEF_INST(dummy_instruction)
 {
-    logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
+//  logmsg(_("Dummy instruction: ")); ARCH_DEP(display_inst) (regs, inst);
 
     if( !execflag )
     {
@@ -1817,10 +1817,6 @@ zz_func opcode_a5xx[16][GEN_MAXARCH] = {
  /*A5xF*/ GENx___x___x900 (load_logical_immediate_low_low,RI,"LLILL") } ;
 
 // #endif /*defined(FEATURE_ESAME)*/
-
-zz_func s370_opcode_a7xx[16];
-zz_func s390_opcode_a7xx[16];
-zz_func z900_opcode_a7xx[16];
 
 zz_func opcode_a7xx[16][GEN_MAXARCH] = {
  /*A7x0*/ GENx___x390x900 (test_under_mask_high,RI,"TMH"),

@@ -10,9 +10,9 @@
  are recorded in the regs structure.
  dhim mmmm pppp p000 xxxx xxx0 xxxx hhhh : type U32
  |||| |||| |||| |--- |||| |||- |||| ||||   h:mask is always '1'
- |||| |||| |||| |    |||| |||  |||| |||+--> '1' : PSW_WAIT
+ |||| |||| |||| |    |||| |||  |||| |||+--> '1' : (regs)->psw.wait == 1
  |||| |||| |||| |    |||| |||  |||| ||+---> '1' : RESTART
- |||| |||| |||| |    |||| |||  |||| |+----> '1' : BROADCAST
+ |||| |||| |||| |    |||| |||  |||| |+----> '1' : sysblk.broadcast
  |||| |||| |||| |    |||| |||  |||| +-----> '1' : STORSTAT
  |||| |||| |||| |    |||| |||  ||||
  |||| |||| |||| |    |||| |||  |||+-------> '1' : ETR timer 
@@ -106,184 +106,98 @@
                         | IC_PER_GRA \
                         | IC_PER_STURA )
 
-#define IAIA \
-do { \
-  int i; \
-  for (i = 0; i < MAX_CPU_ENGINES; i++) \
-    if (IC_INTERRUPT_CPU(sysblk.regs[i])) \
-      INVALIDATE_AIA(sysblk.regs[i]); \
-} while (0);
-
-#define IAIAR(_regs) \
-do { \
-  if (IC_INTERRUPT_CPU((_regs))) \
-    INVALIDATE_AIA((_regs)); \
-} while (0);
-
 /* Bit manipulation macros */
-#define SET_IC_INITIAL_MASK(_regs) \
-do { \
-  (_regs)->ints_mask = (IC_INITIAL_MASK|((_regs)->ints_state&IC_DEBUG_BIT)); \
-  IAIAR((_regs)); \
-} while (0)
+#define SET_IC_INITIAL_MASK(_regs) (_regs)->ints_mask= \
+              (IC_INITIAL_MASK|((_regs)->ints_state&IC_DEBUG_BIT))
 
 #define SET_IC_PER_MASK(_regs) \
 do { \
-  if( PER_MODE((_regs)) ) { \
+  if( PER_MODE((_regs)) ) \
      (_regs)->ints_mask = (((_regs)->ints_mask&~IC_PER_MASK) \
                           | (((_regs)->CR(9) >> IC_CR9_SHIFT)&IC_PER_MASK)); \
-     IAIAR((_regs)); \
-   } \
    else \
      (_regs)->ints_mask &= ~IC_PER_MASK; \
 } while (0)
 
 #define SET_IC_EXTERNAL_MASK(_regs) \
-do { \
-  if( (_regs)->psw.sysmask & PSW_EXTMASK ) { \
+  if( (_regs)->psw.sysmask & PSW_EXTMASK ) \
      (_regs)->ints_mask = (((_regs)->ints_mask&~IC_EXTPENDING) \
                           | ((_regs)->CR(0)&IC_EXTPENDING)); \
-     IAIAR((_regs)); \
-   } \
    else \
-     (_regs)->ints_mask &= ~IC_EXTPENDING; \
-} while (0);
+     (_regs)->ints_mask &= ~IC_EXTPENDING
 
 #undef SET_IC_IO_MASK
 #ifdef FEATURE_BCMODE
 #define SET_IC_IO_MASK(_regs) \
-do { \
   if( ((_regs)->psw.ecmode ? ((_regs)->psw.sysmask&PSW_IOMASK) : \
-                             ((_regs)->psw.sysmask&0xFE)) ) { \
+                             ((_regs)->psw.sysmask&0xFE)) ) \
      (_regs)->ints_mask |= IC_IOPENDING; \
-     IAIAR((_regs)); \
-   } \
    else \
-     (_regs)->ints_mask &= ~IC_IOPENDING; \
-} while (0);
+     (_regs)->ints_mask &= ~IC_IOPENDING
 #else /*!FEATURE_BCMODE*/
   #define SET_IC_IO_MASK(_regs) SET_IC_ECIO_MASK(_regs)
 #endif /*FEATURE_BCMODE*/
 
 #define SET_IC_ECIO_MASK(_regs) \
-do { \
-  if( (_regs)->psw.sysmask & PSW_IOMASK ) { \
+  if( (_regs)->psw.sysmask & PSW_IOMASK ) \
      (_regs)->ints_mask |= IC_IOPENDING; \
-     IAIAR((_regs)); \
-   } \
    else \
-     (_regs)->ints_mask &= ~IC_IOPENDING; \
-} while (0);
+     (_regs)->ints_mask &= ~IC_IOPENDING
 
 #define SET_IC_BCIO_MASK(_regs) \
-do { \
-  if( (_regs)->psw.sysmask & 0xFE ) { \
+  if( (_regs)->psw.sysmask & 0xFE ) \
      (_regs)->ints_mask |= IC_IOPENDING; \
-     IAIAR((_regs)); \
-   } \
    else \
-     (_regs)->ints_mask &= ~IC_IOPENDING; \
-} while (0);
+     (_regs)->ints_mask &= ~IC_IOPENDING
 
 #define SET_IC_MCK_MASK(_regs) \
-do { \
-  if( (_regs)->psw.mach ) { \
+  if( (_regs)->psw.mach ) \
      (_regs)->ints_mask = (((_regs)->ints_mask&~IC_MCKPENDING) \
                           | ((_regs)->CR(14)&IC_MCKPENDING)); \
-     IAIAR((_regs)); \
-   } \
    else \
-     (_regs)->ints_mask &= ~IC_MCKPENDING; \
-} while (0);
+     (_regs)->ints_mask &= ~IC_MCKPENDING
 
 /* Set('1') or Reset('0') bit according to condition */
 
-#define SET_IC_TRACE \
-do { \
-  if(sysblk.instbreak || sysblk.inststep || sysblk.insttrace) { \
-    sysblk.ints_state|=IC_DEBUG_BIT; \
-    IAIA; \
-  } \
-  else \
-    sysblk.ints_state&=~IC_DEBUG_BIT; \
-} while (0);
-
 #define SET_IC_PSW_WAIT(_regs) \
-do { \
-  if((_regs)->psw.wait) { \
+  if((_regs)->psw.wait) \
     (_regs)->ints_state|=IC_PSW_WAIT; \
-    IAIAR(_regs); \
-  } \
+   else \
+    (_regs)->ints_state&=~IC_PSW_WAIT
+
+#define SET_IC_TRACE \
+  if(sysblk.instbreak || sysblk.inststep || sysblk.insttrace) \
+    sysblk.ints_state|=IC_DEBUG_BIT; \
   else \
-   (_regs)->ints_state&=~IC_PSW_WAIT; \
-} while (0)
+    sysblk.ints_state&=~IC_DEBUG_BIT;
+
+#define RESET_IC_CPUINT(_regs) 
 
 /* Set bit to '1' */
 #define ON_IC_CPU_NOT_STARTED(_regs) \
-                               do { \
-                               (_regs)->ints_state|=IC_CPU_NOT_STARTED; IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_RESTART(_regs)   do { \
-                               (_regs)->ints_state|=IC_RESTART;         IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_BROADCAST        do { \
-                                 sysblk.ints_state|=IC_BROADCAST;       IAIA; \
-                               } while (0)
-#define ON_IC_STORSTAT(_regs)  do { \
-                               (_regs)->ints_state|=IC_STORSTAT;        IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_IOPENDING        do { \
-                                 sysblk.ints_state|=IC_IOPENDING;       IAIA; \
-                               } while (0)
-#define ON_IC_CHANRPT          do { \
-                                 sysblk.ints_state|=CR14_CHANRPT;       IAIA; \
-                               } while (0)
-#define ON_IC_INTKEY           do { \
-                                 sysblk.ints_state|=CR0_XM_INTKEY;      IAIA; \
-                               } while (0)
-#define ON_IC_SERVSIG          do { \
-                                 sysblk.ints_state|=CR0_XM_SERVSIG;     IAIA; \
-                               } while (0)
-#define ON_IC_ITIMER(_regs)    do { \
-                               (_regs)->ints_state|=CR0_XM_ITIMER;      IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_PTIMER(_regs)    do { \
-                               (_regs)->ints_state|=CR0_XM_PTIMER;      IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_CLKC(_regs)      do { \
-                               (_regs)->ints_state|=CR0_XM_CLKC;        IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_EXTCALL(_regs)   do { \
-                               (_regs)->ints_state|=CR0_XM_EXTCALL;     IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_MALFALT(_regs)   do { \
-                               (_regs)->ints_state|=CR0_XM_MALFALT;     IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_EMERSIG(_regs)   do { \
-                               (_regs)->ints_state|=CR0_XM_EMERSIG;     IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_TRACE            do { \
-                                 sysblk.ints_state|=IC_DEBUG_BIT;       IAIA; \
-                               } while (0)
-#define ON_IC_DEBUG(_regs)     do { \
-                               (_regs)->ints_mask |=IC_DEBUG_BIT; \
-                               (_regs)->ints_state|=IC_DEBUG_BIT;       IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_PER_SB(_regs)    do { \
-                               (_regs)->ints_state|=(IC_PER_SB)&(_regs)->ints_mask;    IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_PER_IF(_regs)    do { \
-                               (_regs)->ints_state|=(IC_PER_IF)&(_regs)->ints_mask;    IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_PER_SA(_regs)    do { \
-                               (_regs)->ints_state|=(IC_PER_SA)&(_regs)->ints_mask;    IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_PER_GRA(_regs)   do { \
-                               (_regs)->ints_state|=(IC_PER_GRA)&(_regs)->ints_mask;   IAIAR((_regs)); \
-                               } while (0)
-#define ON_IC_PER_STURA(_regs) do { \
-                               (_regs)->ints_state|=(IC_PER_STURA)&(_regs)->ints_mask; IAIAR((_regs)); \
-                               } while (0)
+                        ((_regs)->ints_state|=IC_CPU_NOT_STARTED)
+#define ON_IC_RESTART(_regs)    ((_regs)->ints_state|=IC_RESTART)
+#define ON_IC_BROADCAST         (sysblk.ints_state|=IC_BROADCAST)
+#define ON_IC_STORSTAT(_regs)   ((_regs)->ints_state|=IC_STORSTAT)
+#define ON_IC_IOPENDING         (sysblk.ints_state|=IC_IOPENDING)
+#define ON_IC_CHANRPT           (sysblk.ints_state|=CR14_CHANRPT)
+#define ON_IC_INTKEY            (sysblk.ints_state|=CR0_XM_INTKEY)
+#define ON_IC_SERVSIG           (sysblk.ints_state|=CR0_XM_SERVSIG)
+#define ON_IC_ITIMER(_regs)     ((_regs)->ints_state|=CR0_XM_ITIMER)
+#define ON_IC_PTIMER(_regs)     ((_regs)->ints_state|=CR0_XM_PTIMER)
+#define ON_IC_CLKC(_regs)       ((_regs)->ints_state|=CR0_XM_CLKC)
+#define ON_IC_EXTCALL(_regs)    ((_regs)->ints_state|=CR0_XM_EXTCALL)
+#define ON_IC_MALFALT(_regs)    ((_regs)->ints_state|=CR0_XM_MALFALT)
+#define ON_IC_EMERSIG(_regs)    ((_regs)->ints_state|=CR0_XM_EMERSIG)
+#define ON_IC_TRACE             (sysblk.ints_state|=IC_DEBUG_BIT)
+#define ON_IC_DEBUG(_regs) \
+    { (_regs)->ints_mask|=IC_DEBUG_BIT; (_regs)->ints_state|=IC_DEBUG_BIT; }
+
+#define ON_IC_PER_SB(_regs)    ((_regs)->ints_state|=(IC_PER_SB)&(_regs)->ints_mask)
+#define ON_IC_PER_IF(_regs)    ((_regs)->ints_state|=(IC_PER_IF)&(_regs)->ints_mask)
+#define ON_IC_PER_SA(_regs)    ((_regs)->ints_state|=(IC_PER_SA)&(_regs)->ints_mask)
+#define ON_IC_PER_GRA(_regs)   ((_regs)->ints_state|=(IC_PER_GRA)&(_regs)->ints_mask)
+#define ON_IC_PER_STURA(_regs) ((_regs)->ints_state|=(IC_PER_STURA)&(_regs)->ints_mask)
 
 /* Re-Set bit to '0' */
 #define OFF_IC_CPU_NOT_STARTED(_regs) \
@@ -302,8 +216,10 @@ do { \
 #define OFF_IC_MALFALT(_regs)  ((_regs)->ints_state&=~CR0_XM_MALFALT)
 #define OFF_IC_EMERSIG(_regs)  ((_regs)->ints_state&=~CR0_XM_EMERSIG)
 //#define OFF_IC_TRACE           (sysblk.ints_state&=~IC_DEBUG_BIT)
-#define OFF_IC_DEBUG(_regs) do { (_regs)->ints_mask&=~IC_DEBUG_BIT; \
-                                 (_regs)->ints_state&=~IC_DEBUG_BIT; } while (0)
+#define OFF_IC_DEBUG(_regs) \
+    { (_regs)->ints_mask&=~IC_DEBUG_BIT; (_regs)->ints_state&=~IC_DEBUG_BIT; }
+#define OFF_IC_CPUINT(_regs)
+
 #define OFF_IC_PER(_regs) ((_regs)->ints_state&=~IC_PER_MASK)
 #define OFF_IC_PER_SB(_regs)    ((_regs)->ints_state&=~IC_PER_SB)
 #define OFF_IC_PER_IF(_regs)    ((_regs)->ints_state&=~IC_PER_IF)
@@ -312,6 +228,7 @@ do { \
 #define OFF_IC_PER_STURA(_regs) ((_regs)->ints_state&=~IC_PER_STURA)
 
 /* Check Interrupt State */
+//#define IS_IC_PSW_WAIT(_regs) ((_regs)->ints_state&IC_PSW_WAIT)
 #define IS_IC_DISABLED_WAIT_PSW(_regs) \
              ( ((_regs)->ints_mask & IC_OPEN_MASK) == 0 )
 #define IS_IC_RESTART(_regs)  ((_regs)->ints_state&IC_RESTART)
@@ -344,10 +261,6 @@ do { \
 #define IS_IC_PER_SA(_regs)    ((_regs)->ints_state&IC_PER_SA)
 #define IS_IC_PER_GRA(_regs)   ((_regs)->ints_state&IC_PER_GRA)
 #define IS_IC_PER_STURA(_regs) ((_regs)->ints_state&IC_PER_STURA)
-
-#define IS_IC_TRACE_OR_PER(_regs) \
-                              ((sysblk.ints_state|(_regs)->ints_state) \
-                              &(IC_DEBUG_BIT|IC_PER_MASK))
 
 #define EN_IC_PER(_regs)       ((_regs)->ints_mask&IC_PER_MASK)
 #define EN_IC_PER_SB(_regs)    ((_regs)->ints_mask&IC_PER_SB)
@@ -402,6 +315,10 @@ do { \
 
 #define OPEN_IC_PERINT(_regs) \
        ((_regs)->ints_state&IC_PER_MASK)
+
+#define OPEN_IC_CPUINT(_regs) \
+   ( ((_regs)->ints_state&IC_EXT_BUT_IT_OR_STORSTAT&((_regs)->ints_mask|IC_PER_MASK)) \
+     || OPEN_IC_ITIMER(_regs) )
 
 #define IC_INTERRUPT_CPU(_regs) \
    (((_regs)->ints_state|sysblk.ints_state) & ((_regs)->ints_mask|IC_PER_MASK))

@@ -13,21 +13,23 @@
 #define  HERCULES_MACHINE i686
 
 /* Fetching instruction bytes                                        */
+#if defined(OPTION_FETCHIBYTE)
 #define FETCHIBYTE1(_ib, _inst) \
         { \
             __asm__("movzbl 1(%%esi),%%eax" : \
                     "=a" (_ib) : "S" (_inst)); \
         }
-#define FETCHIBYTE4(_ib, _inst) \
+#define FETCHIBYTE2(_ib, _inst) \
         { \
-            __asm__("movzbl 4(%%esi),%%ebx" : \
+            __asm__("movzbl 2(%%esi),%%ebx" : \
                     "=b" (_ib) : "S" (_inst)); \
         }
-#define FETCHIBYTE5(_ib, _inst) \
+#define FETCHIBYTE3(_ib, _inst) \
         { \
-            __asm__("movzbl 5(%%esi),%%eax" : \
+            __asm__("movzbl 3(%%esi),%%eax" : \
                     "=a" (_ib) : "S" (_inst)); \
         }
+#endif /*defined(OPTION_FETCHIBYTE)*/
 
 #if 1
 #define COMPARE_AND_SWAP(r1, r3, addr, arn, regs) \
@@ -41,7 +43,7 @@
             __asm__("lock; cmpxchgl %1,%2" \
                     :"=a"(prev) \
                     : "q"(new), \
-                      "m"(sysblk.mainstor[abs]), "0"(old) \
+                      "m"(regs->mainstor[abs]), "0"(old) \
                     : "memory"); \
             prev = CSWAP32(prev); \
             if ((regs)->GR_L((r1)) == prev) \
@@ -62,7 +64,7 @@
             U32   temp[4]; \
             abs = LOGICAL_TO_ABS ((addr), (arn), (regs), \
                                 ACCTYPE_WRITE, (regs)->psw.pkey); \
-            ptr = sysblk.mainstor + abs; \
+            ptr = regs->mainstor + abs; \
             temp[0] = (regs)->GR_L((r1)); \
             temp[1] = (regs)->GR_L((r1)+1); \
             temp[2] = (regs)->GR_L((r3)); \
@@ -102,12 +104,12 @@
             BYTE  old, new=255; \
             abs = LOGICAL_TO_ABS((addr), (arn), (regs), \
                                 ACCTYPE_WRITE, (regs)->psw.pkey); \
-            old = sysblk.mainstor[abs]; \
+            old = regs->mainstor[abs]; \
             __asm__("1:\t" \
                     "lock; cmpxchgb %b1,%2\n\t" \
                     "jnz 1b" \
                     :"=a"(old) \
-                    : "q"(new), "m"(sysblk.mainstor[abs]), "0"(old) \
+                    : "q"(new), "m"(regs->mainstor[abs]), "0"(old) \
                     : "memory"); \
             (regs)->psw.cc = old >> 7; \
         }
@@ -122,18 +124,20 @@
 #if !defined(HERCULES_MACHINE)
 
 /* Fetching instruction bytes                                        */
+#if defined(OPTION_FETCHIBYTE)
 #define FETCHIBYTE1(_ib, _inst) \
         { \
             (_ib) = (_inst)[1]; \
         }
-#define FETCHIBYTE4(_ib, _inst) \
+#define FETCHIBYTE2(_ib, _inst) \
         { \
-            (_ib) = (_inst)[4]; \
+            (_ib) = (_inst)[2]; \
         }
-#define FETCHIBYTE5(_ib, _inst) \
+#define FETCHIBYTE3(_ib, _inst) \
         { \
-            (_ib) = (_inst)[5]; \
+            (_ib) = (_inst)[3]; \
         }
+#endif /*defined(OPTION_FETCHIBYTE)*/
 
 #endif /*!defined(HERCULES_MACHINE)*/
 
@@ -144,20 +148,20 @@
             U32   temp; \
             abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
                                 ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
-            memcpy (&temp, &sysblk.mainstor[abs], 4); \
+            memcpy (&temp, &regs->mainstor[abs], 4); \
             temp = CSWAP32(temp); \
             if (temp == (regs)->GR_L((r1))) \
             { \
                 temp = (regs)->GR_L((r3)); \
                 temp = CSWAP32(temp); \
-                memcpy (&sysblk.mainstor[abs], &temp, 4); \
+                memcpy (&regs->mainstor[abs], &temp, 4); \
                 (regs)->psw.cc = 0; \
-                STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE); \
+                STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE); \
             } \
             else \
             { \
                 (regs)->psw.cc = 1; \
-                STORAGE_KEY(abs) |= STORKEY_REF; \
+                STORAGE_KEY(abs, regs) |= STORKEY_REF; \
                 (regs)->GR_L((r1)) = temp; \
             } \
         }
@@ -170,23 +174,23 @@
             U32   temp1, temp2; \
             abs = LOGICAL_TO_ABS_SKP ((addr), (arn), (regs), \
                                 ACCTYPE_WRITE_SKP, (regs)->psw.pkey); \
-            memcpy (&temp1, &sysblk.mainstor[abs], 4); \
-            memcpy (&temp2, &sysblk.mainstor[abs+4], 4); \
+            memcpy (&temp1, &regs->mainstor[abs], 4); \
+            memcpy (&temp2, &regs->mainstor[abs+4], 4); \
             temp1 = CSWAP32(temp1); \
             temp2 = CSWAP32(temp2); \
             if (temp1 == (regs)->GR_L((r1)) && temp2 == (regs)->GR_L((r1)+1)) \
             { \
                 temp1 = CSWAP32((regs)->GR_L((r3))); \
                 temp2 = CSWAP32((regs)->GR_L((r3)+1)); \
-                memcpy (&sysblk.mainstor[abs], &temp1, 4); \
-                memcpy (&sysblk.mainstor[abs+4], &temp2, 4); \
+                memcpy (&regs->mainstor[abs], &temp1, 4); \
+                memcpy (&regs->mainstor[abs+4], &temp2, 4); \
                 (regs)->psw.cc = 0; \
-                STORAGE_KEY(abs) |= (STORKEY_REF | STORKEY_CHANGE); \
+                STORAGE_KEY(abs, regs) |= (STORKEY_REF | STORKEY_CHANGE); \
             } \
             else \
             { \
                 (regs)->psw.cc = 1; \
-                STORAGE_KEY(abs) |= STORKEY_REF; \
+                STORAGE_KEY(abs, regs) |= STORKEY_REF; \
                 (regs)->GR_L((r1)) = temp1; \
                 (regs)->GR_L((r1)+1) = temp2; \
             } \
@@ -200,8 +204,8 @@
             BYTE  obyte; \
             abs = LOGICAL_TO_ABS((addr), (arn), (regs), \
                                 ACCTYPE_WRITE, (regs)->psw.pkey); \
-            if ((obyte = sysblk.mainstor[abs]) != 255) \
-                sysblk.mainstor[abs] = 255; \
+            if ((obyte = regs->mainstor[abs]) != 255) \
+                regs->mainstor[abs] = 255; \
             (regs)->psw.cc = obyte >> 7; \
         }
 #endif /*!defined(TEST_AND_SET)*/

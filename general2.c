@@ -136,16 +136,16 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         npa2 = LOGICAL_TO_ABS (npv2, b2, regs, ACCTYPE_READ, akey);
 
     /* all operands and page crossers valid, now alter ref & chg bits */
-    STORAGE_KEY(abs1) |= (STORKEY_REF | STORKEY_CHANGE);
+    STORAGE_KEY(abs1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     if (npa1)
-        STORAGE_KEY(npa1) |= (STORKEY_REF | STORKEY_CHANGE);
+        STORAGE_KEY(npa1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Process operands from left to right */
     for ( i = 0; i <= l; i++ )
     {
         /* Fetch a byte from each operand */
-        byte1 = sysblk.mainstor[abs1];
-        byte2 = sysblk.mainstor[abs2];
+        byte1 = regs->mainstor[abs1];
+        byte2 = regs->mainstor[abs2];
 
         /* OR operand 1 with operand 2 */
         byte1 |= byte2;
@@ -154,7 +154,7 @@ BYTE    akey;                           /* Bits 0-3=key, 4-7=zeroes  */
         if (byte1 != 0) cc = 1;
 
         /* Store the result in the destination operand */
-        sysblk.mainstor[abs1] = byte1;
+        regs->mainstor[abs1] = byte1;
 
         /* Increment first operand address */
         effective_addr1++;
@@ -423,8 +423,17 @@ VADR    effective_addr2,
         /* Release main-storage access lock */
         RELEASE_MAINLOCK(regs);
 
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
+        /* It this is a failed locked operation
+           and there is more then 1 CPU in the configuration
+           and there is no broadcast synchronization in progress
+           then call the hypervisor to end this timeslice,
+           this to prevent this virtual CPU monopolizing
+           the physical CPU on a spinlock */
         if(regs->psw.cc && sysblk.numcpu > 1)
-            sched_yield();
+            usleep(1L);
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
+
     }
 }
 #endif /*defined(FEATURE_PERFORM_LOCKED_OPERATION)*/
@@ -1205,7 +1214,7 @@ int     new_ilc;                        /* New ilc to set            */
     SIE_TRANSLATE(&px, ACCTYPE_WRITE, regs);
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(px) |= (STORKEY_REF | STORKEY_CHANGE);
+    STORAGE_KEY(px, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Use the I-byte to set the SVC interruption code */
     regs->psw.intcode = i;
@@ -1219,7 +1228,7 @@ int     new_ilc;                        /* New ilc to set            */
 #endif
 
     /* Point to PSA in main storage */
-    psa = (void*)(sysblk.mainstor + px);
+    psa = (void*)(regs->mainstor + px);
 
 #if defined(FEATURE_BCMODE)
     /* For ECMODE, store SVC interrupt code at PSA+X'88' */

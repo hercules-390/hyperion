@@ -594,13 +594,8 @@ SCCB_MTO_BK    *mto_bk;                 /* Message Text Object       */
 BYTE           *event_msg;              /* Message Text pointer      */
 U32             event_msglen;           /* Message Text length       */
 SCCB_CPI_BK    *cpi_bk;                 /* Control Program Info      */
-#ifndef NO_CYGWIN_STACK_BUG
-BYTE           *message = NULL;         /* Maximum event data buffer
-                                           length plus one for \0    */
-#else
 BYTE            message[4089];          /* Maximum event data buffer
                                            length plus one for \0    */
-#endif
 static BYTE     const1_template[] = {
         0x13,0x10,                      /* MDS message unit          */
         0x00,0x25,0x13,0x11,            /* MDS routine info          */
@@ -677,23 +672,23 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Program check if SCCB is outside main storage */
-    if ( sccb_absolute_addr >= regs->mainsize )
+    if ( sccb_absolute_addr > regs->mainlim )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
 //  /*debug*/logmsg("Service call %8.8X SCCB=%8.8X\n",
 //  /*debug*/       sclp_command, sccb_absolute_addr);
 
     /* Point to service call control block */
-    sccb = (SCCB_HEADER*)(sysblk.mainstor + sccb_absolute_addr);
+    sccb = (SCCB_HEADER*)(regs->mainstor + sccb_absolute_addr);
 
     /* Load SCCB length from header */
     FETCH_HW(sccblen, sccb->length);
 
     /* Set the main storage reference bit */
-    STORAGE_KEY(sccb_absolute_addr) |= STORKEY_REF;
+    STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_REF;
 
     /* Program check if end of SCCB falls outside main storage */
-    if ( regs->mainsize - sccblen < sccb_absolute_addr )
+    if ( sysblk.mainsize - sccblen < sccb_absolute_addr )
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Obtain lock if immediate response is not requested */
@@ -719,7 +714,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     case SCLP_READ_SCP_INFO:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr) |= STORKEY_CHANGE;
+        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -750,7 +745,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         memset (sccbscp, 0, sizeof(SCCB_SCP_INFO));
 
         /* Set main storage size in SCCB */
-        realmb = regs->mainsize >> 20;
+        realmb = sysblk.mainsize >> 20;
         STORE_HW(sccbscp->realinum, realmb);
         sccbscp->realiszm = 1;
         sccbscp->realbszk = 4;
@@ -923,7 +918,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
 #endif /*!FEATURE_CPU_RECONFIG*/
         {
             memset (sccbcpu, 0, sizeof(SCCB_CPU_INFO));
-            sccbcpu->cpa = sysblk.regs[i]->cpuad;
+            sccbcpu->cpa = sysblk.regs[i].cpuad;
             sccbcpu->tod = 0;
             sccbcpu->cpf[0] = 0
 #if defined(FEATURE_INTERPRETIVE_EXECUTION)
@@ -954,21 +949,25 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                             | SCCB_CPF1_RCP_BYPASS_FACILITY
 #endif /*defined(FEATURE_STORAGE_KEY_ASSIST)*/
 //                          | SCCB_CPF1_REGION_RELOCATE_FACILITY
-//                          | SCCB_CPF1_EXPEDITE_TIMER_PROCESSING
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+                            | SCCB_CPF1_EXPEDITE_TIMER_PROCESSING
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
                             ;
             sccbcpu->cpf[2] = 0
 #if defined(FEATURE_CRYPTO)
                             | SCCB_CPF2_CRYPTO_FEATURE_ACCESSED
 #endif /*defined(FEATURE_CRYPTO)*/
-//                          | SCCB_CPF2_EXPEDITE_RUN_PROCESSING
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+                            | SCCB_CPF2_EXPEDITE_RUN_PROCESSING
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
                             ;
 
 #ifdef FEATURE_VECTOR_FACILITY
 #ifndef FEATURE_CPU_RECONFIG
-            if(sysblk.regs[i]->vf->online)
+            if(sysblk.regs[i].vf->online)
 #endif /*!FEATURE_CPU_RECONFIG*/
               sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_INSTALLED;
-            if(sysblk.regs[i]->vf->online)
+            if(sysblk.regs[i].vf->online)
                 sccbcpu->cpf[2] |= SCCB_CPF2_VECTOR_FEATURE_CONNECTED;
 #ifdef FEATURE_CPU_RECONFIG
             else
@@ -1012,7 +1011,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     case SCLP_READ_CHP_INFO:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr) |= STORKEY_CHANGE;
+        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1078,7 +1077,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     case SCLP_READ_CSI_INFO:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr) |= STORKEY_CHANGE;
+        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1119,7 +1118,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     case SCLP_WRITE_EVENT_DATA:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr) |= STORKEY_CHANGE;
+        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1165,12 +1164,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                     /* Print line unless it is a response prompt */
                     if (!(mto_bk->ltflag[0] & SCCB_MTO_LTFLG0_PROMPT))
                     {
-#ifndef NO_CYGWIN_STACK_BUG
-                        message = malloc (4089);
-                        for (i = 0, j = 0; i < event_msglen && message; i++)
-#else
                         for (i = 0, j = 0; i < event_msglen; i++)
-#endif
                         {
                             message[j++] = isprint(guest_to_host(event_msg[i])) ?
                                 guest_to_host(event_msg[i]) : 0x20;
@@ -1195,10 +1189,6 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                 (BYTE*)obj_hdr += obj_len;
             }
     
-#ifndef NO_CYGWIN_STACK_BUG
-            if(message) free(message);
-#endif
-
             /* Indicate Event Processed */
             evd_hdr->flag |= SCCB_EVD_FLAG_PROC;
 
@@ -1267,7 +1257,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     case SCLP_READ_EVENT_DATA:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr) |= STORKEY_CHANGE;
+        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1370,7 +1360,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
     case SCLP_WRITE_EVENT_MASK:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr) |= STORKEY_CHANGE;
+        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1441,7 +1431,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
    case SCLP_READ_XST_MAP:
 
         /* Set the main storage change bit */
-        STORAGE_KEY(sccb_absolute_addr) |= STORKEY_CHANGE;
+        STORAGE_KEY(sccb_absolute_addr, regs) |= STORKEY_CHANGE;
 
         /* Set response code X'0100' if SCCB crosses a page boundary */
         if ((sccb_absolute_addr & STORAGE_KEY_PAGEMASK) !=
@@ -1508,7 +1498,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Add cpu to the configuration */
-        configure_cpu(sysblk.regs[i]);
+        configure_cpu(sysblk.regs + i);
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1528,7 +1518,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Take cpu out of the configuration */
-        deconfigure_cpu(sysblk.regs[i]);
+        deconfigure_cpu(sysblk.regs + i);
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1549,11 +1539,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
             break;
         }
 
-        if(sysblk.regs[i]->vf->online)
+        if(sysblk.regs[i].vf->online)
             logmsg(_("CPU%4.4X: Vector Facility configured offline\n"),i);
 
         /* Take the VF out of the configuration */
-        sysblk.regs[i]->vf->online = 0;
+        sysblk.regs[i].vf->online = 0;
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1573,18 +1563,18 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         }
 
         /* Return improper state if associated cpu is offline */
-        if(!sysblk.regs[i]->cpuonline)
+        if(!sysblk.regs[i].cpuonline)
         {
             sccb->reas = SCCB_REAS_IMPROPER_RSC;
             sccb->resp = SCCB_RESP_REJECT;
             break;
         }
 
-        if(!sysblk.regs[i]->vf->online)
+        if(!sysblk.regs[i].vf->online)
             logmsg(_("CPU%4.4X: Vector Facility configured online\n"),i);
 
         /* Mark the VF online to the CPU */
-        sysblk.regs[i]->vf->online = 1;
+        sysblk.regs[i].vf->online = 1;
 
         /* Set response code X'0020' in SCCB header */
         sccb->reas = SCCB_REAS_NONE;
@@ -1604,7 +1594,7 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
         logmsg("SCCB data area:\n");
         for(i = 0; i < sccblen; i++)
         {
-            logmsg("%2.2X",sysblk.mainstor[sccb_real_addr + i]);
+            logmsg("%2.2X",regs->mainstor[sccb_real_addr + i]);
             if(i % 32 == 31)
                 logmsg("\n");
             else
@@ -1673,7 +1663,7 @@ CHSC_RSP *chsc_rsp;                             /* Response structure*/
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     abs = LOGICAL_TO_ABS(n, r1, regs, ACCTYPE_READ, regs->psw.pkey);
-    chsc_req = (CHSC_REQ*)(sysblk.mainstor + abs);
+    chsc_req = (CHSC_REQ*)(regs->mainstor + abs);
 
     /* Fetch length of request field */
     FETCH_HW(length, chsc_req->length);

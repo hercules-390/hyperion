@@ -342,17 +342,17 @@ static inline U64 ARCH_DEP(fetch_doubleword_absolute) (RADR addr,
                                 REGS *regs)
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainsize - 8)
+    if(addr > regs->mainlim - 8)
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
 
     /* Set the main storage reference bit */
-    STORAGE_KEY(addr) |= STORKEY_REF;
+    STORAGE_KEY(addr, regs) |= STORKEY_REF;
 
     /* Fetch the doubleword from absolute storage */
-    return fetch_dw(sysblk.mainstor + addr);
+    return fetch_dw(regs->mainstor + addr);
 
 } /* end function fetch_doubleword_absolute */
 
@@ -369,17 +369,17 @@ static inline U32 ARCH_DEP(fetch_fullword_absolute) (RADR addr,
                                 REGS *regs)
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainsize - 4)
+    if(addr > regs->mainlim - 4)
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
 
     /* Set the main storage reference bit */
-    STORAGE_KEY(addr) |= STORKEY_REF;
+    STORAGE_KEY(addr, regs) |= STORKEY_REF;
 
     /* Fetch the fullword from absolute storage */
-    return fetch_fw(sysblk.mainstor + addr);
+    return fetch_fw(regs->mainstor + addr);
 } /* end function fetch_fullword_absolute */
 
 
@@ -395,17 +395,17 @@ static inline U16 ARCH_DEP(fetch_halfword_absolute) (RADR addr,
                                 REGS *regs)
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainsize - 2)
+    if(addr > regs->mainlim - 2)
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_READ, regs);
 
     /* Set the main storage reference bit */
-    STORAGE_KEY(addr) |= STORKEY_REF;
+    STORAGE_KEY(addr, regs) |= STORKEY_REF;
 
     /* Fetch the halfword from absolute storage */
-    return fetch_hw(sysblk.mainstor + addr);
+    return fetch_hw(regs->mainstor + addr);
 
 } /* end function fetch_halfword_absolute */
 
@@ -420,17 +420,17 @@ static inline void ARCH_DEP(store_doubleword_absolute) (U64 value,
                           RADR addr, REGS *regs)
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainsize - 8)
+    if(addr > regs->mainlim - 8)
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(addr) |= (STORKEY_REF | STORKEY_CHANGE);
+    STORAGE_KEY(addr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Store the doubleword into absolute storage */
-    store_dw(sysblk.mainstor + addr, value);
+    store_dw(regs->mainstor + addr, value);
 
 } /* end function store_doubleword_absolute */
 
@@ -445,17 +445,17 @@ static inline void ARCH_DEP(store_fullword_absolute) (U32 value,
                           RADR addr, REGS *regs)
 {
 #if defined(INLINE_STORE_FETCH_ADDR_CHECK)
-    if(addr > regs->mainsize - 4)
+    if(addr > regs->mainlim - 4)
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 #endif /*defined(INLINE_STORE_FETCH_ADDR_CHECK)*/
 
     SIE_TRANSLATE(&addr, ACCTYPE_WRITE, regs);
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(addr) |= (STORKEY_REF | STORKEY_CHANGE);
+    STORAGE_KEY(addr, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Store the fullword into absolute storage */
-    store_fw(sysblk.mainstor + addr, value);
+    store_fw(regs->mainstor + addr, value);
 
 } /* end function store_fullword_absolute */
 
@@ -518,7 +518,7 @@ U32 ssaste[16];         /* Subspace ASTE         */
     ducto = APPLY_PREFIXING (ducto, regs->PX);
 
     /* Program check if DUCT origin address is invalid */
-    if (ducto >= regs->mainsize)
+    if (ducto > regs->mainlim)
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Fetch DUCT words 0, 1, and 3 from absolute storage
@@ -539,7 +539,7 @@ U32 ssaste[16];         /* Subspace ASTE         */
     ssasteo = APPLY_PREFIXING (ssasteo, regs->PX);
 
     /* Program check if ASTE origin address is invalid */
-    if (ssasteo >= regs->mainsize)
+    if (ssasteo > regs->mainlim)
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Fetch subspace ASTE words 0, 2, 3, and 5 from absolute

@@ -591,13 +591,13 @@ U32     iointid;                        /* I/O interruption ident    */
             if ( effective_addr2 == 0 )
             {
                 /* If operand address is zero, store in PSA */
-                psa = (void*)(sysblk.mainstor + regs->PX);
+                psa = (void*)(regs->mainstor + regs->PX);
                 STORE_FW(psa->ioid,ioid);
                 STORE_FW(psa->ioparm,ioparm);
 #if defined(FEATURE_ESAME)
                 STORE_FW(psa->iointid,iointid);
 #endif /*defined(FEATURE_ESAME)*/
-                STORAGE_KEY(regs->PX) |= (STORKEY_REF|STORKEY_CHANGE);
+                STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF|STORKEY_CHANGE);
             }
             else
             {
@@ -744,7 +744,7 @@ BYTE    ccwkey;                         /* Bits 0-3=key, 4=7=zeroes  */
     }
 
     /* Fetch key and CCW address from the CAW at PSA+X'48' */
-    psa = (PSA*)(sysblk.mainstor + regs->PX);
+    psa = (PSA*)(regs->mainstor + regs->PX);
     ccwkey = psa->caw[0] & 0xF0;
     ccwaddr = (psa->caw[1] << 16) | (psa->caw[2] << 8)
                     | psa->caw[3];
@@ -938,7 +938,7 @@ int     i;
        CPU then return with cc1 */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
     {
-        if(sysblk.regs[i]->chanset == effective_addr2)
+        if(sysblk.regs[i].chanset == effective_addr2)
         {
             release_lock(&sysblk.intlock);
             regs->psw.cc = 1;
@@ -998,11 +998,11 @@ int     i;
        CPU then return with cc0 */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
     {
-        if(sysblk.regs[i]->chanset == effective_addr2)
+        if(sysblk.regs[i].chanset == effective_addr2)
         {
-            if(sysblk.regs[i]->cpustate != CPUSTATE_STARTED)
+            if(sysblk.regs[i].cpustate != CPUSTATE_STARTED)
             {
-                sysblk.regs[i]->chanset = 0xFFFF;
+                sysblk.regs[i].chanset = 0xFFFF;
                 regs->psw.cc = 0;
             }
             else

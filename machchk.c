@@ -207,10 +207,10 @@ RADR    fsta = 0;
 
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(regs->PX) |= (STORKEY_REF | STORKEY_CHANGE);
+    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Point to the PSA in main storage */
-    psa = (void*)(sysblk.mainstor + regs->PX);
+    psa = (void*)(regs->mainstor + regs->PX);
 
     /* Store registers in machine check save area */
     ARCH_DEP(store_status) (regs, regs->PX);
@@ -295,9 +295,9 @@ int i;
     for (i = 0; i < sysblk.numcpu; i++)
 #endif /*!FEATURE_CPU_RECONFIG*/
     {
-        if(sysblk.regs[i]->cputid == tid)
+        if(sysblk.regs[i].cputid == tid)
         {
-            regs = sysblk.regs[i];
+            regs = sysblk.regs + i;
             break;
         }
     }
@@ -354,18 +354,18 @@ int i;
         logmsg(_("CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
           strsignal(signo));
-#else /*!defined(_FEATURE_SIE)*/
+#else /*!defined(_FEAURE_SIE)*/
         logmsg(_("CPU%4.4X: Check-Stop due to host error: %s\n"),
           regs->cpuad, strsignal(signo));
-#endif /*!defined(_FEATURE_SIE)*/
+#endif /*!defined(_FEAURE_SIE)*/
         display_inst(
 #if defined(_FEATURE_SIE)
                      regs->sie_active ? regs->guestregs :
-#endif /*defined(_FEATURE_SIE)*/
+#endif /*defined(_FEAURE_SIE)*/
                                                           regs, 
 #if defined(_FEATURE_SIE)
           regs->sie_active ? regs->guestregs->ip :
-#endif /*defined(_FEATURE_SIE)*/
+#endif /*defined(_FEAURE_SIE)*/
                                                    regs->ip);
         regs->cpustate = CPUSTATE_STOPPING;
         regs->checkstop = 1;
@@ -383,8 +383,8 @@ int i;
 #endif /*!FEATURE_CPU_RECONFIG*/
                     if(i != regs->cpuad)
                     {
-                        ON_IC_MALFALT(sysblk.regs[i]);
-                        sysblk.regs[i]->malfcpu[regs->cpuad] = 1;
+                        ON_IC_MALFALT(&sysblk.regs[i]);
+                        sysblk.regs[i].malfcpu[regs->cpuad] = 1;
                     }
                 release_lock(&sysblk.intlock);
             }

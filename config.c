@@ -289,46 +289,12 @@ BYTE    c;                              /* Work area for sscanf      */
     /* Clear the system configuration block */
     memset (&sysblk, 0, sizeof(SYSBLK));
 
-    /* allocate register contexts */
-    for (i = 0; i < MAX_CPU_ENGINES; i++) 
-    {
-        sysblk.regs[i] = malloc (sizeof(REGS));
-        if (sysblk.regs[i] == NULL)
-        {
-            logmsg( "HHC025I Cannot obtain storage for REGS: %s\n",
-                    strerror(errno));
-            exit(1);
-        }
-#if defined(_FEATURE_SIE)
-        sysblk.sie_regs[i] = malloc (sizeof(REGS));
-        if (sysblk.sie_regs[i] == NULL)
-        {
-            logmsg( "HHC025I Cannot obtain storage for REGS: %s\n",
-                    strerror(errno));
-            exit(1);
-        }
-#endif
-    }
-
     /* Gabor Hoffer (performance option) */
     for (i = 0; i < 256; i++)
     {
-#if defined(_370)
-        s370_opcode_table [i] = opcode_table [i][ARCH_370];
-#endif
-#if defined(_390)
-        s390_opcode_table [i] = opcode_table [i][ARCH_390];
-#endif
-#if defined(_900)
-        z900_opcode_table [i] = opcode_table [i][ARCH_900];
-#endif
-    }
-    
-    for (i = 0; i < 16; i++)
-    {
-        s370_opcode_a7xx [i] = opcode_a7xx [i][0];
-        s390_opcode_a7xx [i] = opcode_a7xx [i][1];
-        z900_opcode_a7xx [i] = opcode_a7xx [i][2];
+        s370_opcode_table [i] = opcode_table [i][0];
+        s390_opcode_table [i] = opcode_table [i][1];
+        z900_opcode_table [i] = opcode_table [i][2];
     }
 
     /* Initialize SETMODE and set user authority */
@@ -350,7 +316,7 @@ BYTE    c;                              /* Work area for sscanf      */
                 fname, strerror(errno));
         exit(1);
     }
-
+    
     /* Set the default system parameter values */
     serial = 0x000001;
     model = 0x0586;
@@ -958,8 +924,8 @@ BYTE    c;                              /* Work area for sscanf      */
 
 #if 0   /*DEBUG-JJ-20/03/2000*/
     /* Mark selected frames invalid for debugging purposes */
-    for (i = 64 ; i < (regs->mainsize / STORAGE_KEY_UNITSIZE); i += 2)
-        if (i < (regs->mainsize / STORAGE_KEY_UNITSIZE) - 64)
+    for (i = 64 ; i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE); i += 2)
+        if (i < (sysblk.mainsize / STORAGE_KEY_UNITSIZE) - 64)
             sysblk.storkeys[i] = STORKEY_BADFRM;
         else
             sysblk.storkeys[i++] = STORKEY_BADFRM;
@@ -968,6 +934,7 @@ BYTE    c;                              /* Work area for sscanf      */
     if (xpndsize != 0)
     {
 #ifdef _FEATURE_EXPANDED_STORAGE
+
         /* Obtain expanded storage */
         sysblk.xpndsize = xpndsize * (1024*1024 / XSTORE_PAGESIZE);
         sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
@@ -1003,8 +970,21 @@ BYTE    c;                              /* Work area for sscanf      */
     initialize_lock (&sysblk.mainlock);
     initialize_lock (&sysblk.intlock);
     initialize_lock (&sysblk.sigplock);
+#if MAX_CPU_ENGINES == 1 || !defined(OPTION_FAST_INTCOND)
+    initialize_condition (&sysblk.intcond);
+#endif
+#if MAX_CPU_ENGINES > 1
     initialize_condition (&sysblk.broadcast_cond);
+#ifdef SMP_SERIALIZATION
+    for(i = 0; i < MAX_CPU_ENGINES; i++)
+        initialize_lock (&sysblk.regs[i].serlock);
+#endif /*SMP_SERIALIZATION*/
+#endif /*MAX_CPU_ENGINES > 1*/
     initialize_detach_attr (&sysblk.detattr);
+#if defined(OPTION_CPU_UTILIZATION)
+    for(i = 0; i < MAX_CPU_ENGINES; i++)
+        initialize_lock (&sysblk.regs[i].accum_wait_time_lock);
+#endif /*defined(OPTION_CPU_UTILIZATION)*/
 #if defined(OPTION_W32_CTCI)
     tt32_init(sysblk.msgpipew);
 #endif /* defined(OPTION_W32_CTCI) */
@@ -1092,30 +1072,34 @@ BYTE    c;                              /* Work area for sscanf      */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
     {
         /* Initialize the processor address register for STAP */
-        sysblk.regs[cpu]->cpuad = cpu;
+        sysblk.regs[cpu].cpuad = cpu;
 
-        /* Initialize storage size (SIE compat) */
-        sysblk.regs[cpu]->mainsize = sysblk.mainsize;
+        /* Initialize storage views (SIE compat) */
+        sysblk.regs[cpu].mainstor = sysblk.mainstor;
+        sysblk.regs[cpu].storkeys = sysblk.storkeys;
+        sysblk.regs[cpu].mainlim = sysblk.mainsize - 1;
 
         /* Initialize the TOD offset field for this CPU */
-        sysblk.regs[cpu]->todoffset = sysblk.todoffset;
+        sysblk.regs[cpu].todoffset = sysblk.todoffset;
 
         /* Perform initial CPU reset */
-        initial_cpu_reset (sysblk.regs[cpu]);
+        initial_cpu_reset (sysblk.regs + cpu);
 
 #if defined(_FEATURE_VECTOR_FACILITY)
-        sysblk.regs[cpu]->vf = &sysblk.vf[cpu];
+        sysblk.regs[cpu].vf = &sysblk.vf[cpu];
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
 
 #if defined(_FEATURE_SIE)
-        memcpy (sysblk.sie_regs[cpu], sysblk.regs[cpu], sizeof(REGS));
-        sysblk.sie_regs[cpu]->hostregs = sysblk.regs[cpu];
-        sysblk.regs[cpu]->guestregs = sysblk.sie_regs[cpu];
+        sysblk.sie_regs[cpu] = sysblk.regs[cpu];
+        sysblk.sie_regs[cpu].hostregs = &sysblk.regs[cpu];
+        sysblk.regs[cpu].guestregs = &sysblk.sie_regs[cpu];
 #endif /*defined(_FEATURE_SIE)*/
 
-        initialize_condition (&sysblk.regs[cpu]->intcond);
-        sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPED;
-        sysblk.regs[cpu]->cpumask = 0x80000000 >> cpu;
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_FAST_INTCOND)
+        initialize_condition (&sysblk.regs[cpu].intcond);
+#endif
+        sysblk.regs[cpu].cpustate = CPUSTATE_STOPPED;
+        sysblk.regs[cpu].cpumask = 0x80000000 >> cpu;
 
     } /* end for(cpu) */
 
@@ -1201,12 +1185,12 @@ BYTE    c;                              /* Work area for sscanf      */
 
 #ifdef _FEATURE_VECTOR_FACILITY
     for(i = 0; i < numvec && i < numcpu; i++)
-        sysblk.regs[i]->vf->online = 1;
+        sysblk.regs[i].vf->online = 1;
 #endif /*_FEATURE_VECTOR_FACILITY*/
 
 #ifndef PROFILE_CPU
     for(i = 0; i < numcpu; i++)
-        configure_cpu(sysblk.regs[i]);
+        configure_cpu(sysblk.regs + i);
 #endif
     /* close configuration file */
     rc = fclose(fp);
@@ -1225,10 +1209,10 @@ int     cpu;
     /* Stop all CPU's */
     obtain_lock (&sysblk.intlock);
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if(sysblk.regs[cpu]->cpuonline)
+        if(sysblk.regs[cpu].cpuonline)
         {
-            sysblk.regs[cpu]->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs[cpu]);
+            sysblk.regs[cpu].cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs + cpu);
         }
     release_lock (&sysblk.intlock);
 
@@ -1249,8 +1233,8 @@ int     cpu;
 
     /* Deconfigure all CPU's */
     for(cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
-        if(sysblk.regs[cpu]->cpuonline)
-            deconfigure_cpu(sysblk.regs[cpu]);
+        if(sysblk.regs[cpu].cpuonline)
+            deconfigure_cpu(sysblk.regs + cpu);
 
 } /* end function release_config */
 
@@ -1375,6 +1359,11 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     dev->devtype = devent->type;
     dev->typname = devent->name;
     dev->fd = -1;
+
+    /* Initialize storage view */
+    dev->mainstor = sysblk.mainstor;
+    dev->storkeys = sysblk.storkeys;
+    dev->mainlim = sysblk.mainsize - 1;
 
     /* Initialize the path management control word */
     dev->pmcw.devnum[0] = dev->devnum >> 8;

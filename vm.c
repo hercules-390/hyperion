@@ -298,9 +298,9 @@ BYTE            skey1, skey2;           /* Storage keys of first and
            and is not subject to fetch-protection override
            or storage-protection override mechanisms, and
            an SBILIST entry cannot cross a page boundary */
-        if (sbiaddr >= regs->mainsize
-            || ((STORAGE_KEY(sbiaddr) & STORKEY_FETCH)
-                && (STORAGE_KEY(sbiaddr) & STORKEY_KEY) != ioparm.akey
+        if (sbiaddr > regs->mainlim
+            || ((STORAGE_KEY(sbiaddr, regs) & STORKEY_FETCH)
+                && (STORAGE_KEY(sbiaddr, regs) & STORKEY_KEY) != ioparm.akey
                 && ioparm.akey != 0))
         {
             regs->GR_L(15) = 10;
@@ -321,7 +321,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
         }
 
         /* Return code 12 and cond code 2 if buffer exceeds storage */
-        if (absadr >= regs->mainsize - blksize)
+        if (absadr > regs->mainlim - blksize)
         {
             regs->GR_L(15) = 12;
             return 2;
@@ -333,8 +333,8 @@ BYTE            skey1, skey2;           /* Storage keys of first and
            pages, and the access is not subject to fetch-protection
            override, storage-protection override, or low-address
            protection */
-        skey1 = STORAGE_KEY(absadr);
-        skey2 = STORAGE_KEY(absadr + blksize - 1);
+        skey1 = STORAGE_KEY(absadr, regs);
+        skey2 = STORAGE_KEY(absadr + blksize - 1, regs);
         if (ioparm.akey != 0
             && (
                    ((skey1 & STORKEY_KEY) != ioparm.akey
@@ -351,7 +351,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
 
         /* Call device handler to read or write one block */
         fbadasd_syncblk_io (dev, ioparm.type, blknum, blksize,
-                            sysblk.mainstor + absadr,
+                            regs->mainstor + absadr,
                             &unitstat, &residual);
 
         /* Set incorrect length if residual count is non-zero */
@@ -976,7 +976,7 @@ BYTE    func;                           /* Function code...          */
 
     /* Validate start/end addresses if function is not CAPR */
     if (func != DIAG214_CAPR
-        && (start > end || end >= regs->mainsize))
+        && (start > end || end > regs->mainlim))
     {
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
         return 0;
@@ -1000,8 +1000,8 @@ BYTE    func;                           /* Function code...          */
         /* Set storage key for each frame within specified range */
         for (abs = start; abs <= end; abs += STORAGE_KEY_PAGESIZE)
         {
-            STORAGE_KEY(abs) &= ~(STORKEY_KEY | STORKEY_FETCH);
-            STORAGE_KEY(abs) |= skey;
+            STORAGE_KEY(abs, regs) &= ~(STORKEY_KEY | STORKEY_FETCH);
+            STORAGE_KEY(abs, regs) |= skey;
         } /* end for(abs) */
 
         break;

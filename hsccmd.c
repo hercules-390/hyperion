@@ -1,10 +1,12 @@
-/* HMCCMDS.C    (c) Copyright "Fish" (David B. Trout), 2002          */
-
+/* HSCCMD.C     (c) Copyright Roger Bowler, 1999-2002                */
+/*              (c) Copyright "Fish" (David B. Trout), 2002          */
+/*              Execute Hercules System Commands                     */
+/*                                                                   */
 /*   Released under the Q Public License (http://www.conmicro.cx/    */
 /*     hercules/herclic.html) as modifications to Hercules.          */
 
 /*-------------------------------------------------------------------*/
-/* This module implements the various Hercules Master Console        */
+/* This module implements the various Hercules System Console        */
 /* (i.e. hardware console) commands that the emulator supports.      */
 /* It is not currently designed to be compiled directly, but rather  */
 /* is #included inline by the panel.c source module.                 */
@@ -13,6 +15,12 @@
 /* add additional help text to the HelpTab HELPTAB. Both tables are  */
 /* near the end of this module.                                      */
 /*-------------------------------------------------------------------*/
+
+#include "hercules.h"
+
+#include "devtype.h"
+
+#include "opcode.h"
 
 ///////////////////////////////////////////////////////////////////////
 /* quit or exit command - terminate the emulator */
@@ -51,6 +59,8 @@ int quit_cmd(char* cmdline, int argc, char *argv[])
 
 int start_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
 
     if (argc < 2)
@@ -82,6 +92,7 @@ int start_cmd(char* cmdline, int argc, char *argv[])
         BYTE*    devclass;
         BYTE     devnam[256];
         int      rc;
+        BYTE    c;                      /* Character work area       */
 
         if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
         {
@@ -144,6 +155,8 @@ int g_cmd(char* cmdline, int argc, char *argv[])
 
 int stop_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
 
     if (argc < 2)
@@ -164,6 +177,7 @@ int stop_cmd(char* cmdline, int argc, char *argv[])
         DEVBLK*  dev;
         BYTE*    devclass;
         BYTE     devnam[256];
+        BYTE    c;                      /* Character work area       */
 
         if (sscanf(argv[1], "%hx%c", &devnum, &c) != 1)
         {
@@ -200,6 +214,7 @@ int stop_cmd(char* cmdline, int argc, char *argv[])
 
 int startall_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
     unsigned i;
 
     UNREFERENCED(cmdline);
@@ -209,8 +224,8 @@ int startall_cmd(char* cmdline, int argc, char *argv[])
     obtain_lock (&sysblk.intlock);
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if(sysblk.regs[i]->cpuonline && !regs->checkstop)
-            sysblk.regs[i]->cpustate = CPUSTATE_STARTED;
+        if(sysblk.regs[i].cpuonline && !regs->checkstop)
+            sysblk.regs[i].cpustate = CPUSTATE_STARTED;
 
     WAKEUP_WAITING_CPUS (ALL_CPUS, CPUSTATE_ALL);
 
@@ -233,10 +248,10 @@ int stopall_cmd(char* cmdline, int argc, char *argv[])
     obtain_lock (&sysblk.intlock);
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if(sysblk.regs[i]->cpuonline)
+        if(sysblk.regs[i].cpuonline)
         {
-            sysblk.regs[i]->cpustate = CPUSTATE_STOPPING;
-            ON_IC_CPU_NOT_STARTED(sysblk.regs[i]);
+            sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
             WAKEUP_CPU(i);
         }
 
@@ -262,8 +277,8 @@ int quiet_cmd(char* cmdline, int argc, char *argv[])
         return 0;
     }
 #endif /*EXTERNALGUI*/
-    NPquiet = !NPquiet;
-    logmsg( _("Automatic refresh %s.\n"), NPquiet ? _("disabled") : _("enabled") );
+    sysblk.npquiet = !sysblk.npquiet;
+    logmsg( _("Automatic refresh %s.\n"), sysblk.npquiet ? _("disabled") : _("enabled") );
     return 0;
 }
 
@@ -272,6 +287,8 @@ int quiet_cmd(char* cmdline, int argc, char *argv[])
 
 int clocks_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -286,7 +303,7 @@ int clocks_cmd(char* cmdline, int argc, char *argv[])
     if (regs->arch_mode == ARCH_370)
     {
         U32 itimer;
-        PSA_3XX *psa = (void*) (sysblk.mainstor + regs->PX);
+        PSA_3XX *psa = (void*) (regs->mainstor + regs->PX);
         FETCH_FW(itimer, psa->inttimer);
         logmsg( "itm = %8.8X\n", itimer );
     }
@@ -306,6 +323,7 @@ int iodelay_cmd(char* cmdline, int argc, char *argv[])
     if (argc > 1)
     {
         int iodelay = 0;
+        BYTE    c;                      /* Character work area       */
 
         if (sscanf(argv[1], "%d%c", &iodelay, &c) != 1)
             logmsg( _("Invalid I/O delay value: %s\n"), argv[1] );
@@ -387,6 +405,8 @@ int tt32stats_cmd(char* cmdline, int argc, char *argv[])
 
 int store_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -478,6 +498,8 @@ int sh_cmd(char* cmdline, int argc, char *argv[])
 
 int gpr_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -490,6 +512,8 @@ int gpr_cmd(char* cmdline, int argc, char *argv[])
 
 int fpr_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -502,6 +526,8 @@ int fpr_cmd(char* cmdline, int argc, char *argv[])
 
 int cr_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -514,6 +540,8 @@ int cr_cmd(char* cmdline, int argc, char *argv[])
 
 int ar_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -526,6 +554,8 @@ int ar_cmd(char* cmdline, int argc, char *argv[])
 
 int pr_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -541,6 +571,8 @@ int pr_cmd(char* cmdline, int argc, char *argv[])
 
 int psw_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -553,6 +585,8 @@ int psw_cmd(char* cmdline, int argc, char *argv[])
 
 int restart_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(cmdline);
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -585,6 +619,8 @@ int restart_cmd(char* cmdline, int argc, char *argv[])
 
 int r_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     alter_display_real (cmdline+1, regs);
@@ -596,6 +632,8 @@ int r_cmd(char* cmdline, int argc, char *argv[])
 
 int v_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     UNREFERENCED(argc);
     UNREFERENCED(argv);
     alter_display_virt (cmdline+1, regs);
@@ -607,6 +645,8 @@ int v_cmd(char* cmdline, int argc, char *argv[])
 
 int bset_cmd(char* cmdline, int argc, char *argv[])
 {
+BYTE c;                                 /* Character work area       */
+
     UNREFERENCED(cmdline);
 
     if (argc < 2)
@@ -646,6 +686,9 @@ int bdelete_cmd(char* cmdline, int argc, char *argv[])
 
 int i_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+BYTE c;                                 /* Character work area       */
+
     int      rc = 0;
     U16      devnum;
     DEVBLK*  dev;
@@ -714,6 +757,8 @@ int ext_cmd(char* cmdline, int argc, char *argv[])
 
 int loadparm_cmd(char* cmdline, int argc, char *argv[])
 {
+BYTE c;                                 /* Character work area       */
+
     UNREFERENCED(cmdline);
 
     /* Update IPL parameter if operand is specified */
@@ -752,6 +797,9 @@ int loadparm_cmd(char* cmdline, int argc, char *argv[])
 
 int ipl_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+BYTE c;                                 /* Character work area       */
+
     unsigned i;
     U16      devnum;
 
@@ -762,8 +810,8 @@ int ipl_cmd(char* cmdline, int argc, char *argv[])
     }
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if(sysblk.regs[i]->cpuonline
-            && sysblk.regs[i]->cpustate != CPUSTATE_STOPPED)
+        if(sysblk.regs[i].cpuonline
+            && sysblk.regs[i].cpustate != CPUSTATE_STOPPED)
         {
             logmsg( _("ipl rejected: All CPU's must be stopped\n") );
             return -1;
@@ -783,6 +831,8 @@ int ipl_cmd(char* cmdline, int argc, char *argv[])
 
 int cpu_cmd(char* cmdline, int argc, char *argv[])
 {
+BYTE c;                                 /* Character work area       */
+
     int cpu;
 
     UNREFERENCED(cmdline);
@@ -801,7 +851,7 @@ int cpu_cmd(char* cmdline, int argc, char *argv[])
 
 #ifdef _FEATURE_CPU_RECONFIG
     if(cpu < 0 || cpu > MAX_CPU_ENGINES
-       || !sysblk.regs[cpu]->cpuonline)
+       || !sysblk.regs[cpu].cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
     if(cpu < 0 || cpu > sysblk.numcpu)
 #endif /*!_FEATURE_CPU_RECONFIG*/
@@ -891,7 +941,8 @@ int devlist_cmd(char* cmdline, int argc, char *argv[])
 
 int attach_cmd(char* cmdline, int argc, char *argv[])
 {
-    U16  devnum /* , dummy_devtype */;
+U16  devnum /* , dummy_devtype */;
+BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -923,7 +974,8 @@ int attach_cmd(char* cmdline, int argc, char *argv[])
 
 int detach_cmd(char* cmdline, int argc, char *argv[])
 {
-    U16  devnum;
+U16  devnum;
+BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -947,7 +999,8 @@ int detach_cmd(char* cmdline, int argc, char *argv[])
 
 int define_cmd(char* cmdline, int argc, char *argv[])
 {
-    U16  devnum, newdevn;
+U16  devnum, newdevn;
+BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -977,7 +1030,8 @@ int define_cmd(char* cmdline, int argc, char *argv[])
 
 int pgmtrace_cmd(char* cmdline, int argc, char *argv[])
 {
-    int abs_rupt_num, rupt_num;
+int abs_rupt_num, rupt_num;
+BYTE    c;                              /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -1062,8 +1116,9 @@ int k_cmd(char* cmdline, int argc, char *argv[])
 
 int ds_cmd(char* cmdline, int argc, char *argv[])
 {
-    DEVBLK*  dev;
-    U16      devnum;
+DEVBLK*  dev;
+U16      devnum;
+BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -1135,6 +1190,10 @@ int syncio_cmd(char* cmdline, int argc, char *argv[])
 
 ///////////////////////////////////////////////////////////////////////
 /* devtmax command - display or set max device threads */
+
+#if !defined(OPTION_FISHIO)
+void    device_thread();
+#endif /* !defined(OPTION_FISHIO) */
 
 int devtmax_cmd(char* cmdline, int argc, char *argv[])
 {
@@ -1225,10 +1284,11 @@ int devtmax_cmd(char* cmdline, int argc, char *argv[])
 
 int ShadowFile_cmd(char* cmdline, int argc, char *argv[])
 {
-    BYTE   *cmd = (BYTE*) cmdline;      /* Copy of panel command     */
-    BYTE   *devascii;                   /* ASCII text device number  */
-    DEVBLK *dev;                        /* -> Device block           */
-    U16     devnum;                     /* Device number             */
+BYTE   *cmd = (BYTE*) cmdline;      /* Copy of panel command     */
+BYTE   *devascii;                   /* ASCII text device number  */
+DEVBLK *dev;                        /* -> Device block           */
+U16     devnum;                     /* Device number             */
+BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -1355,8 +1415,9 @@ int ShadowFile_cmd(char* cmdline, int argc, char *argv[])
 
 int devinit_cmd(char* cmdline, int argc, char *argv[])
 {
-    DEVBLK*  dev;
-    U16      devnum;
+DEVBLK*  dev;
+U16      devnum;
+BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(cmdline);
 
@@ -1419,6 +1480,8 @@ int devinit_cmd(char* cmdline, int argc, char *argv[])
 
 int savecore_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     BYTE   *fname;                      /* -> File name (ASCIIZ)     */
     BYTE   *loadaddr;                   /* loadcore memory address   */
     U32     aaddr;                      /* Absolute storage address  */
@@ -1439,7 +1502,7 @@ int savecore_cmd(char* cmdline, int argc, char *argv[])
     if (argc < 3 || '*' == *(loadaddr = argv[2]))
     {
         for (aaddr = 0; aaddr < sysblk.mainsize &&
-            !(STORAGE_KEY(aaddr) & STORKEY_CHANGE); aaddr += 4096)
+            !(STORAGE_KEY(aaddr, regs) & STORKEY_CHANGE); aaddr += 4096)
         {
             ;   /* (nop) */
         }
@@ -1458,12 +1521,12 @@ int savecore_cmd(char* cmdline, int argc, char *argv[])
     if (argc < 4 || '*' == *(loadaddr = argv[3]))
     {
         for (aaddr2 = sysblk.mainsize - 4096; aaddr2 > 0 &&
-            !(STORAGE_KEY(aaddr2) & STORKEY_CHANGE); aaddr2 -= 4096)
+            !(STORAGE_KEY(aaddr2, regs) & STORKEY_CHANGE); aaddr2 -= 4096)
         {
             ;   /* (nop) */
         }
 
-        if ( STORAGE_KEY(aaddr2) & STORKEY_CHANGE )
+        if ( STORAGE_KEY(aaddr2, regs) & STORKEY_CHANGE )
             aaddr2 |= 0xFFF;
 
     }
@@ -1495,7 +1558,7 @@ int savecore_cmd(char* cmdline, int argc, char *argv[])
         return -1;
     }
 
-    if ((len = write(fd, sysblk.mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
+    if ((len = write(fd, regs->mainstor + aaddr, (aaddr2 - aaddr) + 1)) < 0)
         logmsg( _("HHCxxxI savecore error writing to %s: %s\n"), fname, strerror(errno) );
     else if((U32)len < (aaddr2 - aaddr) + 1)
         logmsg( _("HHCxxxI savecore: unable to save %d bytes\n"),
@@ -1512,6 +1575,8 @@ int savecore_cmd(char* cmdline, int argc, char *argv[])
 
 int loadcore_cmd(char* cmdline, int argc, char *argv[])
 {
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
     BYTE   *fname;                      /* -> File name (ASCIIZ)     */
     struct stat statbuff;               /* Buffer for file status    */
     BYTE   *loadaddr;                   /* loadcore memory address   */
@@ -1577,6 +1642,7 @@ int loadtext_cmd(char* cmdline, int argc, char *argv[])
     BYTE    buf[80];                    /* Read buffer               */
     int     len;                        /* Number of bytes read      */
     int     n;
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
@@ -1600,7 +1666,7 @@ int loadtext_cmd(char* cmdline, int argc, char *argv[])
         }
     }
 
-    if (aaddr >= regs->mainsize)
+    if (aaddr > regs->mainlim)
     {
         logmsg( _("Address greater than mainstore size. \n") );
         return -1;
@@ -1643,9 +1709,9 @@ int loadtext_cmd(char* cmdline, int argc, char *argv[])
         {
             n   = buf[5]*65536 + buf[6]*256 + buf[7];
             len = buf[11];
-            memcpy(sysblk.mainstor + aaddr + n, &buf[16], len);
-            STORAGE_KEY(aaddr + n) |= (STORKEY_REF | STORKEY_CHANGE);
-            STORAGE_KEY(aaddr + n + len - 1) |= (STORKEY_REF | STORKEY_CHANGE);
+            memcpy(regs->mainstor + aaddr + n, &buf[16], len);
+            STORAGE_KEY(aaddr + n, regs) |= (STORKEY_REF | STORKEY_CHANGE);
+            STORAGE_KEY(aaddr + n + len - 1, regs) |= (STORKEY_REF | STORKEY_CHANGE);
         }
     }
 
@@ -1667,6 +1733,7 @@ int ipending_cmd(char* cmdline, int argc, char *argv[])
     unsigned i;
     char *states[] = {"?", "STOPPED", "STOPPING", "?", "STARTED",
                       "?", "?", "?", "STARTING"};
+REGS *regs = sysblk.regs + sysblk.pcpu;
 
     UNREFERENCED(cmdline);
 
@@ -1689,7 +1756,7 @@ int ipending_cmd(char* cmdline, int argc, char *argv[])
 
 #ifdef _FEATURE_CPU_RECONFIG
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if (sysblk.regs[i]->cpuonline)
+        if (sysblk.regs[i].cpuonline)
 #else /*!_FEATURE_CPU_RECONFIG*/
     for (i = 0; i < sysblk.numcpu; i++)
 #endif /*!_FEATURE_CPU_RECONFIG*/
@@ -1700,64 +1767,64 @@ int ipending_cmd(char* cmdline, int argc, char *argv[])
 
             if ('+' == *cmdarg)
             {
-                ON_IC_DEBUG(sysblk.regs[i]);
+                ON_IC_DEBUG(sysblk.regs + i);
                 logmsg( _("ON\n") );
             }
             else
             {
-                OFF_IC_DEBUG(sysblk.regs[i]);
+                OFF_IC_DEBUG(sysblk.regs + i);
                 logmsg( _("OFF\n") );
             }
         }
 // /*DEBUG*/logmsg( _("CPU%4.4X: Any cpu interrupt %spending\n"),
-// /*DEBUG*/    sysblk.regs[i]->cpuad, sysblk.regs[i]->cpuint ? "" : _("not ") );
+// /*DEBUG*/    sysblk.regs[i].cpuad, sysblk.regs[i].cpuint ? "" : _("not ") );
         logmsg( _("CPU%4.4X: CPUint=%8.8X (r:%8.8X|s:%8.8X)&(Mask:%8.8X)\n"),
-            sysblk.regs[i]->cpuad, IC_INTERRUPT_CPU(sysblk.regs[i]),
-            sysblk.regs[i]->ints_state,
+            sysblk.regs[i].cpuad, IC_INTERRUPT_CPU(sysblk.regs + i),
+            sysblk.regs[i].ints_state,
             sysblk.ints_state, regs[i].ints_mask
             );
         logmsg( _("CPU%4.4X: Clock comparator %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_CLKC(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_CLKC(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU timer %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_PTIMER(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_PTIMER(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: Interval timer %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_ITIMER(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_ITIMER(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: External call %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_EXTCALL(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_EXTCALL(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: Emergency signal %spending\n"),
-            sysblk.regs[i]->cpuad,
-            IS_IC_EMERSIG(sysblk.regs[i]) ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            IS_IC_EMERSIG(sysblk.regs + i) ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU %swaiting for interlock\n"),
-            sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->mainsync ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            sysblk.regs[i].mainsync ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU interlock %sheld\n"),
-            sysblk.regs[i]->cpuad,
-            sysblk.regs[i]->mainlock ? "" : _("not ")
+            sysblk.regs[i].cpuad,
+            sysblk.regs[i].mainlock ? "" : _("not ")
             );
         logmsg( _("CPU%4.4X: CPU state is %s\n"),
-            sysblk.regs[i]->cpuad,
-            states[sysblk.regs[i]->cpustate]
+            sysblk.regs[i].cpuad,
+            states[sysblk.regs[i].cpustate]
             );
 
         if (ARCH_370 == sysblk.arch_mode)
         {
-            if (0xFFFF == sysblk.regs[i]->chanset)
+            if (0xFFFF == sysblk.regs[i].chanset)
                 logmsg( _("CPU%4.4X: No channelset connected\n"),
-                    sysblk.regs[i]->cpuad
+                    sysblk.regs[i].cpuad
                     );
             else
                 logmsg( _("CPU%4.4X: Connected to channelset %4.4X\n"),
-                    sysblk.regs[i]->cpuad,sysblk.regs[i]->chanset
+                    sysblk.regs[i].cpuad,sysblk.regs[i].chanset
                     );
         }
     }
@@ -1960,8 +2027,8 @@ int archmode_cmd(char* cmdline, int argc, char *argv[])
     }
 
     for (i = 0; i < MAX_CPU_ENGINES; i++)
-        if (sysblk.regs[i]->cpuonline
-            && CPUSTATE_STOPPED != sysblk.regs[i]->cpustate)
+        if (sysblk.regs[i].cpuonline
+            && CPUSTATE_STOPPED != sysblk.regs[i].cpustate)
         {
             logmsg( _("All CPU's must be stopped to change architecture\n") );
             return -1;
@@ -2009,6 +2076,8 @@ int OnOffCommand(char* cmdline, int argc, char *argv[])
     U32     aaddr;                      /* Absolute storage address  */
     DEVBLK* dev;
     U16     devnum;
+REGS *regs = sysblk.regs + sysblk.pcpu;
+BYTE c;                                 /* Character work area       */
 
     UNREFERENCED(argc);
     UNREFERENCED(argv);
@@ -2026,14 +2095,14 @@ int OnOffCommand(char* cmdline, int argc, char *argv[])
 
     if ((cmd[0] == 'f') && sscanf(cmd+2, "%x%c", &aaddr, &c) == 1)
     {
-        if (aaddr >= regs->mainsize)
+        if (aaddr > regs->mainlim)
         {
             logmsg( _("Invalid frame address %8.8X\n"), aaddr );
             return -1;
         }
-        STORAGE_KEY(aaddr) &= ~(STORKEY_BADFRM);
+        STORAGE_KEY(aaddr, regs) &= ~(STORKEY_BADFRM);
         if (!oneorzero)
-            STORAGE_KEY(aaddr) |= STORKEY_BADFRM;
+            STORAGE_KEY(aaddr, regs) |= STORKEY_BADFRM;
         logmsg( _("Frame %8.8X marked %s\n"), aaddr,
                 oneorzero ? _("usable") : _("unusable")
             );
@@ -2507,3 +2576,93 @@ int HelpCommand(char* cmdline, int argc, char *argv[])
 }
 
 ///////////////////////////////////////////////////////////////////////
+
+void *panel_command (void *cmdline)
+{
+#define MAX_CMD_LEN (32768)
+    BYTE  cmd[MAX_CMD_LEN];             /* Copy of panel command     */
+    BYTE *pCmdLine;
+    unsigned i;
+REGS *regs = sysblk.regs + sysblk.pcpu;
+
+    pCmdLine = (BYTE*)cmdline; ASSERT(pCmdLine);
+
+    /* Copy panel command to work area, skipping leading blanks */
+    while (*pCmdLine && isspace(*pCmdLine)) pCmdLine++;
+    i = 0;
+    while (*pCmdLine && i < (MAX_CMD_LEN-1))
+    {
+        cmd[i] = *pCmdLine;
+        i++;
+        pCmdLine++;
+    }
+    cmd[i] = 0;
+
+    /* Ignore null commands (just pressing enter)
+       unless instruction tracing is enabled. */
+    if (!sysblk.inststep && 0 == cmd[0])
+        return NULL;
+
+    /* Echo the command to the control panel */
+#if 0
+    logmsg( "%s%s\n",
+        rc_cmd ? "> " : "",
+        cmd
+        );
+#else
+    logmsg( "%s\n", cmd);
+#endif
+
+    /* Set target CPU for commands and displays */
+    regs = sysblk.regs + sysblk.pcpu;
+
+#ifdef _FEATURE_SYSTEM_CONSOLE
+    if ('.' == cmd[0] || '!' == cmd[0])
+    {
+       scp_command (cmd+1, cmd[0] == '!');
+       return NULL;
+    }
+#endif /*_FEATURE_SYSTEM_CONSOLE*/
+
+    ProcessPanelCommand(cmd);
+    return NULL;
+
+#ifdef OPTION_CKD_KEY_TRACING
+ #define TSPLUS_CMD \
+  "t+=trace, s+=step, t+ckd=CKD_KEY trace, t+devn=CCW trace, s+devn=CCW step\n"
+#else
+ #define TSPLUS_CMD \
+  "t+=trace, s+=step, t+devn=CCW trace, s+devn=CCW step\n"
+#endif /*OPTION_CKD_KEY_TRACING*/
+
+#if MAX_CPU_ENGINES > 1
+ #define STSPALL_CMD "startall/stopall=start/stop all CPUs\n"
+#else
+ #define STSPALL_CMD
+#endif /*MAX_CPU_ENGINES>1*/
+
+#ifdef _FEATURE_SYSTEM_CONSOLE
+ #define SYSCONS_CMD ".xxx=scp command, !xxx=scp priority messsage\n"
+#else
+ #define SYSCONS_CMD
+#endif /*_FEATURE_SYSTEM_CONSOLE*/
+
+#ifdef OPTION_TODCLOCK_DRAG_FACTOR
+ #define TODDRAG_CMD "toddrag nnn = display or set TOD clock drag factor\n"
+#else
+ #define TODDRAG_CMD
+#endif /*OPTION_TODCLOCK_DRAG_FACTOR*/
+
+#ifdef PANEL_REFRESH_RATE
+ #define PANRATE_CMD "panrate [fast|slow|nnnn] = display or set panel refresh rate\n"
+#else
+ #define PANRATE_CMD
+#endif /*PANEL_REFRESH_RATE*/
+
+#if defined(OPTION_INSTRUCTION_COUNTING)
+ #define ICOUNT_CMD "icount [clear] = display instruction counters\n"
+#else
+ #define ICOUNT_CMD
+#endif
+
+        }

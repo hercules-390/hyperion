@@ -40,7 +40,7 @@ do { \
 #undef CHADDRCHK
 #if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
 #define CHADDRCHK(_addr,_dev)                   \
-  (   ((_addr) >= sysblk.mainsize)              \
+  (   ((_addr) > (_dev)->mainlim)               \
     || ((dev->orb.flag5 & ORB5_A)               \
       && ((((_dev)->pmcw.flag5 & PMCW5_LM_LOW)  \
         && ((_addr) < sysblk.addrlimval))       \
@@ -48,7 +48,7 @@ do { \
         && ((_addr) >= sysblk.addrlimval)) ) ))
 #else /*!defined(FEATURE_ADDRESS_LIMIT_CHECKING)*/
 #define CHADDRCHK(_addr,_dev) \
-        ((_addr) >= sysblk.mainsize)
+        ((_addr) > (_dev)->mainlim)
 #endif /*!defined(FEATURE_ADDRESS_LIMIT_CHECKING)*/
 
 #if !defined(_CHANNEL_C)
@@ -59,16 +59,16 @@ do { \
 /*-------------------------------------------------------------------*/
 /* FORMAT I/O BUFFER DATA                                            */
 /*-------------------------------------------------------------------*/
-static void format_iobuf_data (RADR addr, BYTE *area)          /*@IWZ*/
+static void format_iobuf_data (RADR addr, BYTE *area, DEVBLK *dev)          /*@IWZ*/
 {
 BYTE   *a;                              /* -> Byte in main storage   */
 int     i, j;                           /* Array subscripts          */
 BYTE    c;                              /* Character work area       */
 
     area[0] = '\0';
-    if (addr < sysblk.mainsize - 16)
+    if (addr <= dev->mainlim - 16)
     {
-        a = sysblk.mainstor + addr;
+        a = dev->mainstor + addr;
         j = sprintf (area,
                 "=>%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X"
                 " %2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X ",
@@ -93,7 +93,7 @@ static void display_ccw (DEVBLK *dev, BYTE ccw[], U32 addr)
 {
 BYTE    area[64];                       /* Data display area         */
 
-    format_iobuf_data (addr, area);
+    format_iobuf_data (addr, area, dev);
     logmsg (_("%4.4X:CCW=%2.2X%2.2X%2.2X%2.2X %2.2X%2.2X%2.2X%2.2X%s\n"),
             dev->devnum,
             ccw[0], ccw[1], ccw[2], ccw[3],
@@ -170,7 +170,7 @@ PSA_3XX *psa;                           /* -> Prefixed storage area  */
     chanid = CHANNEL_BMX;
 
     /* Store the channel id word at PSA+X'A8' */
-    psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+    psa = (PSA_3XX*)(regs->mainstor + regs->PX);
     STORE_FW(psa->chanid, chanid);
 
     /* Exit with condition code 0 indicating channel id stored */
@@ -244,7 +244,7 @@ if (dev->ccwtrace || dev->ccwstep)
         cc = 1;
 
         /* Store the channel status word at PSA+X'40' */
-        psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+        psa = (PSA_3XX*)(regs->mainstor + regs->PX);
         memcpy (psa->csw, dev->pcicsw, 8);
         if (dev->ccwtrace || dev->ccwstep)
             display_csw (dev, dev->pcicsw);
@@ -259,7 +259,7 @@ if (dev->ccwtrace || dev->ccwstep)
         cc = 1;
 
         /* Store the channel status word at PSA+X'40' */
-        psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+        psa = (PSA_3XX*)(regs->mainstor + regs->PX);
         memcpy (psa->csw, dev->csw, 8);
         if (dev->ccwtrace || dev->ccwstep)
             display_csw (dev, dev->csw);
@@ -282,7 +282,7 @@ if (dev->ccwtrace || dev->ccwstep)
             cc = 1;
             dev->csw[4] = 0;
             dev->csw[5] = 0;
-            psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+            psa = (PSA_3XX*)(regs->mainstor + regs->PX);
             memcpy (psa->csw, dev->csw, 8);
             if (dev->ccwtrace)
             {
@@ -352,7 +352,7 @@ int     deq=0;                          /* Device may be dequeued    */
         cc = 1;
 
         /* Store the channel status word at PSA+X'40' */
-        psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+        psa = (PSA_3XX*)(regs->mainstor + regs->PX);
         memcpy (psa->csw, dev->csw, 8);
         if (dev->ccwtrace || dev->ccwstep)
             display_csw (dev, dev->csw);
@@ -368,7 +368,7 @@ int     deq=0;                          /* Device may be dequeued    */
             cc = 1;
             dev->csw[4] = 0;
             dev->csw[5] = 0;
-            psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+            psa = (PSA_3XX*)(regs->mainstor + regs->PX);
             memcpy (psa->csw, dev->csw, 8);
             if (dev->ccwtrace)
             {
@@ -1067,7 +1067,7 @@ int i;
 
     /* Connect each channel set to its home cpu */
     for(i = 0; i < MAX_CPU_ENGINES; i++)
-        sysblk.regs[i]->chanset = i;
+        sysblk.regs[i].chanset = i;
 // #endif /*defined(FEATURE_CHANNEL_SWITCHING)*/    
 
     /* Reset each device in the configuration */
@@ -1184,7 +1184,7 @@ BYTE   *ccw;                            /* CCW pointer               */
     }
 
     /* Channel protection check if CCW is fetch protected */
-    storkey = STORAGE_KEY(ccwaddr);
+    storkey = STORAGE_KEY(ccwaddr, dev);
     if (ccwkey != 0 && (storkey & STORKEY_FETCH)
         && (storkey & STORKEY_KEY) != ccwkey)
     {
@@ -1193,10 +1193,10 @@ BYTE   *ccw;                            /* CCW pointer               */
     }
 
     /* Set the main storage reference bit for the CCW location */
-    STORAGE_KEY(ccwaddr) |= STORKEY_REF;
+    STORAGE_KEY(ccwaddr, dev) |= STORKEY_REF;
 
     /* Point to the CCW in main storage */
-    ccw = sysblk.mainstor + ccwaddr;
+    ccw = dev->mainstor + ccwaddr;
 
     /* Extract CCW opcode, flags, byte count, and data address */
     if (ccwfmt == 0)
@@ -1252,7 +1252,7 @@ BYTE    storkey;                        /* Storage key               */
     }
 
     /* Channel protection check if IDAW is fetch protected */
-    storkey = STORAGE_KEY(idawaddr);
+    storkey = STORAGE_KEY(idawaddr, dev);
     if (ccwkey != 0 && (storkey & STORKEY_FETCH)
         && (storkey & STORKEY_KEY) != ccwkey)
     {
@@ -1261,13 +1261,13 @@ BYTE    storkey;                        /* Storage key               */
     }
 
     /* Set the main storage reference bit for the IDAW location */
-    STORAGE_KEY(idawaddr) |= STORKEY_REF;
+    STORAGE_KEY(idawaddr, dev) |= STORKEY_REF;
 
     /* Fetch IDAW from main storage */
     if (idawfmt == 2)                                          /*@IWZ*/
     {                                                          /*@IWZ*/
         /* Fetch format-2 IDAW */                              /*@IWZ*/
-        FETCH_DW(idaw2, sysblk.mainstor + idawaddr);           /*@IWZ*/
+        FETCH_DW(idaw2, dev->mainstor + idawaddr);           /*@IWZ*/
 
        #ifndef FEATURE_ESAME                                   /*@IWZ*/
         /* Channel program check in ESA/390 mode
@@ -1285,7 +1285,7 @@ BYTE    storkey;                        /* Storage key               */
     else                                                       /*@IWZ*/
     {                                                          /*@IWZ*/
         /* Fetch format-1 IDAW */                              /*@IWZ*/
-        FETCH_FW(idaw1, sysblk.mainstor + idawaddr);           /*@IWZ*/
+        FETCH_FW(idaw1, dev->mainstor + idawaddr);           /*@IWZ*/
 
         /* Channel program check if bit 0 of
            the format-1 IDAW is not zero */                    /*@IWZ*/
@@ -1401,7 +1401,7 @@ BYTE    area[64];                       /* Data display area         */
             /* Channel protection check if IDAW data location is
                fetch protected, or if location is store protected
                and command is READ, READ BACKWARD, or SENSE */
-            storkey = STORAGE_KEY(idadata);
+            storkey = STORAGE_KEY(idadata, dev);
             if (ccwkey != 0 && (storkey & STORKEY_KEY) != ccwkey
                 && ((storkey & STORKEY_FETCH) || readcmd))
             {
@@ -1413,22 +1413,22 @@ BYTE    area[64];                       /* Data display area         */
             if (idalen > idacount) idalen = idacount;
 
             /* Set the main storage reference and change bits */
-            STORAGE_KEY(idadata) |=
+            STORAGE_KEY(idadata, dev) |=
                 (readcmd ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
 
             /* Copy data between main storage and channel buffer */
             if (IS_CCW_RDBACK(code))
             {
                 idadata =  (idadata - idalen) + 1;
-                memcpy (sysblk.mainstor + idadata,
+                memcpy (dev->mainstor + idadata,
                         &iobuf[ idacount - idalen ], idalen);
             }
             else
             {
             if (readcmd)
-                memcpy (sysblk.mainstor + idadata, iobuf, idalen);
+                memcpy (dev->mainstor + idadata, iobuf, idalen);
             else
-                memcpy (iobuf, sysblk.mainstor + idadata, idalen);
+                memcpy (iobuf, dev->mainstor + idadata, idalen);
 
                 /* Increment buffer pointer */
                 iobuf += idalen;
@@ -1437,7 +1437,7 @@ BYTE    area[64];                       /* Data display area         */
             /* Display the IDAW if CCW tracing is on */
             if (dev->ccwtrace || dev->ccwstep)
             {
-                format_iobuf_data (idadata, area);
+                format_iobuf_data (idadata, area, dev);
                 if (idawfmt == 1)                              /*@IWZ*/
                 {                                              /*@IWZ*/
                     logmsg ( _(                                /*@IWZ*/
@@ -1485,7 +1485,7 @@ BYTE    area[64];                       /* Data display area         */
              page <= (endpage | STORAGE_KEY_BYTEMASK);
              page += STORAGE_KEY_PAGESIZE)
         {
-            storkey = STORAGE_KEY(page);
+            storkey = STORAGE_KEY(page, dev);
             if (ccwkey != 0 && (storkey & STORKEY_KEY) != ccwkey
                 && ((storkey & STORKEY_FETCH) || readcmd))
             {
@@ -1499,15 +1499,15 @@ BYTE    area[64];                       /* Data display area         */
              page <= (endpage | STORAGE_KEY_BYTEMASK);
              page += STORAGE_KEY_PAGESIZE)
         {
-            STORAGE_KEY(page) |=
+            STORAGE_KEY(page, dev) |=
                 (readcmd ? (STORKEY_REF|STORKEY_CHANGE) : STORKEY_REF);
         } /* end for(page) */
 
         /* Copy data between main storage and channel buffer */
         if (readcmd)
-            memcpy (sysblk.mainstor + addr, iobuf, count);
+            memcpy (dev->mainstor + addr, iobuf, count);
         else
-            memcpy (iobuf, sysblk.mainstor + addr, count);
+            memcpy (iobuf, dev->mainstor + addr, count);
 
     } /* end if(!IDA) */
 
@@ -1877,11 +1877,11 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         mbaddr = sysblk.mbo;
         mbaddr += (dev->pmcw.mbi[0] << 8 | dev->pmcw.mbi[1]) << 5;
         if ( !CHADDRCHK(mbaddr, dev)
-            && (((STORAGE_KEY(mbaddr) & STORKEY_KEY) == sysblk.mbk)
+            && (((STORAGE_KEY(mbaddr, dev) & STORKEY_KEY) == sysblk.mbk)
                 || (sysblk.mbk == 0)))
         {
-            STORAGE_KEY(mbaddr) |= (STORKEY_REF | STORKEY_CHANGE);
-            mbk = (MBK*)&sysblk.mainstor[mbaddr];
+            STORAGE_KEY(mbaddr, dev) |= (STORKEY_REF | STORKEY_CHANGE);
+            mbk = (MBK*)&dev->mainstor[mbaddr];
             FETCH_HW(mbcount,mbk->srcount);
             mbcount++;
             STORE_HW(mbk->srcount,mbcount);
@@ -2090,7 +2090,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
                     &flags, &count, &chanstat);
 
         /* Point to the CCW in main storage */
-        ccw = sysblk.mainstor + ccwaddr;
+        ccw = dev->mainstor + ccwaddr;
 
         /* Increment to next CCW address */
 #ifdef OPTION_SYNCIO
@@ -2519,7 +2519,7 @@ int     retry = 0;                      /* 1=I/O asynchronous retry  */
         {
             /* Format data for READ or SENSE commands only */
             if (IS_CCW_READ(dev->code) || IS_CCW_SENSE(dev->code) || IS_CCW_RDBACK(dev->code))
-                format_iobuf_data (addr, area);
+                format_iobuf_data (addr, area, dev);
             else
                 area[0] = '\0';
 

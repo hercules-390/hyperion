@@ -64,7 +64,9 @@ REGS   *realregs;                       /* Real REGS if guest        */
             else
             {
                 release_lock (&sysblk.intlock);
-                sched_yield();
+#ifdef OPTION_CS_USLEEP
+                usleep (1L);
+#endif
                 obtain_lock (&sysblk.intlock);
             }
         ON_IC_BROADCAST;
@@ -130,25 +132,37 @@ REGS   *realregs;                       /* Real REGS if guest        */
 /*-------------------------------------------------------------------*/
 static void ARCH_DEP(external_interrupt) (int code, REGS *regs)
 {
+RADR    pfx;
 PSA     *psa;
 int     rc;
+
+    /* reset the cpuint indicator */
+    RESET_IC_CPUINT(regs);
 
     release_lock(&sysblk.intlock);
 
 #if defined(_FEATURE_SIE)
     /* Set the main storage reference and change bits */
-    if(regs->sie_state)
+    if(regs->sie_state
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+                       && !(regs->siebk->s & SIE_S_EXP_TIMER)
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+                                                            )
     {
         /* Point to SIE copy of PSA in state descriptor */
-        psa = (void*)(sysblk.mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
-        STORAGE_KEY(regs->sie_state) |= (STORKEY_REF | STORKEY_CHANGE);
+        psa = (void*)(regs->mainstor + regs->sie_state + SIE_IP_PSA_OFFSET);
+        STORAGE_KEY(regs->sie_state, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
 #endif /*defined(_FEATURE_SIE)*/
     {
         /* Point to PSA in main storage */
-        psa = (void*)(sysblk.mainstor + regs->PX);
-        STORAGE_KEY(regs->PX) |= (STORKEY_REF | STORKEY_CHANGE);
+        pfx = regs->PX;
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+        SIE_TRANSLATE(&pfx, ACCTYPE_SIE, regs);
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+        psa = (void*)(regs->mainstor + pfx);
+        STORAGE_KEY(pfx, regs) |= (STORKEY_REF | STORKEY_CHANGE);
     }
 
     /* Store the interrupt code in the PSW */
@@ -166,7 +180,11 @@ int     rc;
         STORE_HW(psa->extint,code);
 
 #if defined(_FEATURE_SIE)
-    if(!regs->sie_state)
+    if(!regs->sie_state
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+                       || (regs->siebk->s & SIE_S_EXP_TIMER)
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+                                                            )
 #endif /*defined(_FEATURE_SIE)*/
     {
         /* Store current PSW at PSA+X'18' */
@@ -179,7 +197,17 @@ int     rc;
             ARCH_DEP(program_interrupt)(regs, rc);
     }
 
-    longjmp (regs->progjmp, SIE_INTERCEPT_EXT);
+#if defined(_FEATURE_SIE)
+    if(regs->sie_state
+#if defined(FEATURE_EXPEDITED_SIE_SUBSET)
+                       && !(regs->siebk->s & SIE_S_EXP_TIMER)
+#endif /*defined(FEATURE_EXPEDITED_SIE_SUBSET)*/
+                                                            )
+        longjmp (regs->progjmp, SIE_INTERCEPT_EXT);
+    else
+#endif /*defined(_FEATURE_SIE)*/
+        longjmp (regs->progjmp, SIE_NO_INTERCEPT);
+
 } /* end function external_interrupt */
 
 /*-------------------------------------------------------------------*/
@@ -239,7 +267,7 @@ U16     cpuad;                          /* Originating CPU address   */
         regs->malfcpu[cpuad] = 0;
 
         /* Store originating CPU address at PSA+X'84' */
-        psa = (void*)(sysblk.mainstor + regs->PX);
+        psa = (void*)(regs->mainstor + regs->PX);
         STORE_HW(psa->extcpad,cpuad);
 
         /* Reset emergency signal pending flag if there are
@@ -279,7 +307,7 @@ U16     cpuad;                          /* Originating CPU address   */
         regs->emercpu[cpuad] = 0;
 
         /* Store originating CPU address at PSA+X'84' */
-        psa = (void*)(sysblk.mainstor + regs->PX);
+        psa = (void*)(regs->mainstor + regs->PX);
         STORE_HW(psa->extcpad,cpuad);
 
         /* Reset emergency signal pending flag if there are
@@ -308,7 +336,7 @@ U16     cpuad;                          /* Originating CPU address   */
         OFF_IC_EXTCALL(regs);
 
         /* Store originating CPU address at PSA+X'84' */
-        psa = (void*)(sysblk.mainstor + regs->PX);
+        psa = (void*)(regs->mainstor + regs->PX);
         STORE_HW(psa->extcpad,regs->extccpu);
 
         /* Generate external call interrupt */
@@ -374,7 +402,7 @@ U16     cpuad;                          /* Originating CPU address   */
 //              sysblk.servparm);
 
         /* Store service signal parameter at PSA+X'80' */
-        psa = (void*)(sysblk.mainstor + regs->PX);
+        psa = (void*)(regs->mainstor + regs->PX);
         STORE_FW(psa->extparm,sysblk.servparm);
 
         /* Reset service parameter */
@@ -386,6 +414,9 @@ U16     cpuad;                          /* Originating CPU address   */
         /* Generate service signal interrupt */
         ARCH_DEP(external_interrupt) (EXT_SERVICE_SIGNAL_INTERRUPT, regs);
     }
+
+    /* reset the cpuint indicator */
+    RESET_IC_CPUINT(regs);
 
 } /* end function perform_external_interrupt */
 
@@ -404,7 +435,7 @@ int     i;                              /* Array subscript           */
 PSA     *sspsa;                         /* -> Store status area      */
 
     /* Point to the PSA into which status is to be stored */
-    sspsa = (void*)(sysblk.mainstor + aaddr);
+    sspsa = (void*)(ssreg->mainstor + aaddr);
 
     /* Store CPU timer in bytes 216-223 */
     dreg = ssreg->ptimer;

@@ -294,7 +294,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Fetch flags from the instruction address space */
     abs = LOGICAL_TO_ABS (pl_addr, 0, regs,
             ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(flags, sysblk.mainstor + abs);
+    FETCH_HW(flags, regs->mainstor + abs);
 
 #if defined(FEATURE_ESAME)
     /* Bits 0-12 must be zero */
@@ -308,17 +308,17 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     /* Fetch the offset to the new psw */
     abs = LOGICAL_TO_ABS (pl_addr + 2, 0, regs,
             ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(psw_offset, sysblk.mainstor + abs);
+    FETCH_HW(psw_offset, regs->mainstor + abs);
 
     /* Fetch the offset to the new ar */
     abs = LOGICAL_TO_ABS (pl_addr + 4, 0, regs,
             ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(ar_offset, sysblk.mainstor + abs);
+    FETCH_HW(ar_offset, regs->mainstor + abs);
 
     /* Fetch the offset to the new gr */
     abs = LOGICAL_TO_ABS (pl_addr + 6, 0, regs,
             ACCTYPE_INSTFETCH, regs->psw.pkey);
-    FETCH_HW(gr_offset, sysblk.mainstor + abs);
+    FETCH_HW(gr_offset, regs->mainstor + abs);
 
 #if defined(FEATURE_ESAME)
     /* Fetch the offset to the new disjoint gr_h */
@@ -326,7 +326,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     {
         abs = LOGICAL_TO_ABS (pl_addr + 8, 0, regs,
             ACCTYPE_INSTFETCH, regs->psw.pkey);
-        FETCH_HW(grd_offset, sysblk.mainstor + abs);
+        FETCH_HW(grd_offset, regs->mainstor + abs);
     }
 #endif /*defined(FEATURE_ESAME)*/
 
@@ -452,6 +452,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_ECIO_MASK(regs);
+    SET_IC_PSW_WAIT(regs);
 
     /* Update access register b2 */
     regs->AR(b2) = ar;
@@ -2302,8 +2303,16 @@ U64     n;                              /* 64-bit operand value      */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
+    /* It this is a failed compare and swap
+       and there is more then 1 CPU in the configuration
+       and there is no broadcast synchronization in progress
+       then call the hypervisor to end this timeslice,
+       this to prevent this virtual CPU monopolizing
+       the physical CPU on a spinlock */
     if(regs->psw.cc && sysblk.numcpu > 1)
-        sched_yield();
+        usleep(1L);
+#endif /* MAX_CPU_ENGINES > 1 && defined)OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_ZSIE)
     if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CS1))
@@ -2371,8 +2380,16 @@ U64     n1, n2;                         /* 64-bit operand values     */
     /* Perform serialization after completing operation */
     PERFORM_SERIALIZATION (regs);
 
+#if MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP)
+    /* It this is a failed compare and swap
+       and there is more then 1 CPU in the configuration
+       and there is no broadcast synchronization in progress
+       then call the hypervisor to end this timeslice,
+       this to prevent this virtual CPU monopolizing
+       the physical CPU on a spinlock */
     if(regs->psw.cc && sysblk.numcpu > 1)
-        sched_yield();
+        usleep(1L);
+#endif /* MAX_CPU_ENGINES > 1 && defined(OPTION_CS_USLEEP) */
 
 #if defined(_FEATURE_ZSIE)
     if((regs->sie_state && (regs->siebk->ic[0] & SIE_IC0_CDS1))
@@ -4564,10 +4581,10 @@ PSA    *psa;                            /* -> Prefixed storage area  */
     SIE_INTERCEPT(regs);
 
     /* Set the main storage reference and change bits */
-    STORAGE_KEY(regs->PX) |= (STORKEY_REF | STORKEY_CHANGE);
+    STORAGE_KEY(regs->PX, regs) |= (STORKEY_REF | STORKEY_CHANGE);
 
     /* Point to PSA in main storage */
-    psa = (void*)(sysblk.mainstor + regs->PX);
+    psa = (void*)(regs->mainstor + regs->PX);
 
     psa->stfl[0] = 0
 #if defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)

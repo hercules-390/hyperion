@@ -20,6 +20,9 @@
  #if defined(FEATURE_ESAME)
   #define _FEATURE_ZSIE
  #endif
+ #if defined(FEATURE_PROTECTION_INTERCEPTION_CONTROL)
+  #define _FEATURE_PROTECTION_INTERCEPTION_CONTROL
+ #endif
 #endif
 
 /* _FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE is used for host 
@@ -196,6 +199,11 @@
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE) \
  && !defined(FEATURE_INTERPRETIVE_EXECUTION)
  #error MCDS only supported with SIE
+#endif
+
+#if defined(FEATURE_PROTECTION_INTERCEPTION_CONTROL) \
+ && !defined(FEATURE_INTERPRETIVE_EXECUTION)
+ #error Protection Interception Control only supported with SIE
 #endif
 
 #if defined(FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE) \

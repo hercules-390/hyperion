@@ -116,11 +116,11 @@ int     icode;                          /* Interception code         */
     ARCH_DEP(display_inst) (regs, regs->ip);
 #endif /*defined(SIE_DEBUG)*/
 
-    if(effective_addr2 > regs->mainsize - (sizeof(SIEBK)-1))
+    if(effective_addr2 > regs->mainlim - (sizeof(SIEBK)-1))
     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
     /* Direct pointer to state descriptor block */
-    STATEBK = (void*)(sysblk.mainstor + effective_addr2);
+    STATEBK = (void*)(regs->mainstor + effective_addr2);
 
 #if defined(FEATURE_ESAME)
     if(STATEBK->mx & SIE_MX_ESAME)
@@ -146,12 +146,15 @@ int     icode;                          /* Interception code         */
     }
 #endif /*!defined(FEATURE_ESAME)*/
     else
+#if !defined(FEATURE_ESAME)
     if(STATEBK->m & SIE_M_XA)
+#endif /*!defined(FEATURE_ESAME)*/
     {
         GUESTREGS->arch_mode = ARCH_390;
         GUESTREGS->sie_guestpi = (SIEFN)&s390_program_interrupt;
         gpv = s390_load_psw(GUESTREGS, STATEBK->psw);
     }
+#if !defined(FEATURE_ESAME)
     else
     {
         /* Validity intercept for invalid mode */
@@ -160,6 +163,7 @@ int     icode;                          /* Interception code         */
         STATEBK->c = SIE_C_VALIDITY;
         return;
     }
+#endif /*!defined(FEATURE_ESAME)*/
 
 #if defined(OPTION_REDUCED_INVAL)
     INVALIDATE_AIA(GUESTREGS);
@@ -187,7 +191,7 @@ int     icode;                          /* Interception code         */
 
     /* System Control Area Origin */
     FETCH_FW(GUESTREGS->sie_scao, STATEBK->scao);
-    if(GUESTREGS->sie_scao >= sysblk.mainsize)
+    if(GUESTREGS->sie_scao > regs->mainlim)
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_SCADR, GUESTREGS);
@@ -210,11 +214,10 @@ int     icode;                          /* Interception code         */
     GUESTREGS->sie_mso &= SIE2_MS_MASK;
 
     /* Load main storage extend */
-    FETCH_DW(GUESTREGS->mainsize,STATEBK->mse);
-    GUESTREGS->mainsize += 0x100000;
-    GUESTREGS->mainsize &= SIE2_MS_MASK;
+    FETCH_DW(GUESTREGS->mainlim,STATEBK->mse);
+    GUESTREGS->mainlim |= ~SIE2_MS_MASK;
 
-    if(GUESTREGS->sie_mso > GUESTREGS->mainsize)
+    if(GUESTREGS->sie_mso > GUESTREGS->mainlim)
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_MSDEF, GUESTREGS);
@@ -223,7 +226,7 @@ int     icode;                          /* Interception code         */
     }
 
     /* Calculate main storage size */
-    GUESTREGS->mainsize -= GUESTREGS->sie_mso;
+    GUESTREGS->mainlim -= GUESTREGS->sie_mso;
 
 #else /*!defined(FEATURE_ESAME)*/
     /* Load main storage origin */
@@ -231,12 +234,12 @@ int     icode;                          /* Interception code         */
     GUESTREGS->sie_mso <<= 16;
 
     /* Load main storage extend */
-    FETCH_HW(GUESTREGS->mainsize,STATEBK->mse);
-    GUESTREGS->mainsize = (GUESTREGS->mainsize + 1) << 16;
+    FETCH_HW(GUESTREGS->mainlim,STATEBK->mse);
+    GUESTREGS->mainlim = ((GUESTREGS->mainlim + 1) << 16) - 1;
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Validate Guest prefix */
-    if(GUESTREGS->PX >= GUESTREGS->mainsize)
+    if(GUESTREGS->PX > GUESTREGS->mainlim)
     {
         SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
           SIE_VI_WHY_PFOUT, GUESTREGS);
@@ -350,9 +353,9 @@ int     icode;                          /* Interception code         */
 
     /* Get PSA pointer and ensure PSA is paged in */
     if(GUESTREGS->sie_pref)
-        GUESTREGS->sie_psa = (PSA_3XX*)(sysblk.mainstor + GUESTREGS->PX);
+        GUESTREGS->sie_psa = (PSA_3XX*)(regs->mainstor + GUESTREGS->PX);
     else
-        GUESTREGS->sie_psa = (PSA_3XX*)(sysblk.mainstor
+        GUESTREGS->sie_psa = (PSA_3XX*)(regs->mainstor
                            + ARCH_DEP(logical_to_abs) (GUESTREGS->sie_mso
                            + GUESTREGS->PX, USE_PRIMARY_SPACE, regs,
                              ACCTYPE_SIE, 0) );
@@ -557,7 +560,7 @@ int     n;
 
 #endif /*defined(_FEATURE_PER2)*/
             /* Point to PSA fields in state descriptor */
-            psa = (void*)(sysblk.mainstor + GUESTREGS->sie_state + SIE_IP_PSA_OFFSET);
+            psa = (void*)(regs->mainstor + GUESTREGS->sie_state + SIE_IP_PSA_OFFSET);
             STORE_HW(psa->perint, GUESTREGS->perc);
             STORE_W(psa->peradr, GUESTREGS->peradr);
         }
@@ -647,14 +650,15 @@ int ARCH_DEP(run_sie) (REGS *regs)
                 ARCH_DEP(display_inst) (GUESTREGS, GUESTREGS->inst);
 #endif /*defined(SIE_DEBUG)*/
 
-                regs->instcount32++;
+                regs->instcount++;
                 EXECUTE_INSTRUCTION(GUESTREGS->inst, 0, GUESTREGS);
 
+#if defined(OPTION_CPU_UNROLL)
 #ifdef FEATURE_PER
                 if (!PER_MODE(GUESTREGS))
 #endif
                 {
-                    regs->instcount32 += 7;
+                    regs->instcount += 7;
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
@@ -663,6 +667,7 @@ int ARCH_DEP(run_sie) (REGS *regs)
                     UNROLLED_EXECUTE(GUESTREGS);
                     UNROLLED_EXECUTE(GUESTREGS);
                 }
+#endif
             }
 
         if(icode == 0 || icode == SIE_NO_INTERCEPT)

@@ -101,11 +101,11 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
     for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
     {
         /* Ignore this CPU if it is not started */
-        if((sysblk.regs[cpu]->cpumask & sysblk.started_mask) == 0)
+        if((sysblk.regs[cpu].cpumask & sysblk.started_mask) == 0)
             continue;
 
         /* Point to the CPU register context */
-        regs = sysblk.regs[cpu];
+        regs = sysblk.regs + cpu;
 
         /*-------------------------------------------*
          * [1] Check for clock comparator interrupt  *
@@ -184,7 +184,7 @@ U32             intmask = 0;            /* Interrupt CPU mask        */
         if(regs->arch_mode == ARCH_370)
         {
             /* Point to PSA in main storage */
-            psa = (PSA_3XX*)(sysblk.mainstor + regs->PX);
+            psa = (PSA_3XX*)(regs->mainstor + regs->PX);
 
                     /* Decrement the location 80 timer */
             FETCH_FW(itimer,psa->inttimer);
@@ -331,7 +331,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
             for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
             {
                 /* Point to the CPU register context */
-                regs = sysblk.regs[cpu];
+                regs = sysblk.regs + cpu;
 
                 /* 0% if no cpu thread or first time thru */
                 if (regs->cputid == 0 || then == 0 || regs->waittod == 0)
@@ -340,10 +340,6 @@ struct  timeval tv;                     /* Structure for gettimeofday
                     regs->cpupct = 0.0;
                     continue;
                 }
-
-                /* Get instruction count for this last interval */
-                regs->instcount += regs->instcount32;
-                regs->instcount32 = 0;
 
                 /* Calculate instructions/millisecond for this CPU */
                 regs->mipsrate =

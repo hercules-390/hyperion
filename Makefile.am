@@ -5,7 +5,7 @@
 AUTOMAKE_OPTIONS=foreign 1.5
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = intl m4  po util html
+SUBDIRS = intl m4  intl m4  intl m4  po util html
 
 if BUILD_HERCIFC
 HERCIFC=hercifc
@@ -26,10 +26,8 @@ EXTRA_PROGRAMS=hercifc
 fthreads_sources=fthreads.c
 fishhang_sources=fishhang.c
 fishio_sources=w32chan.c
-gabor_sources=cpu-inst.c
-hmccmds_sources=hmccmds.c
 
-EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources) $(gabor_sources) $(hmccmds_sources)
+EXTRA_hercules_SOURCES=$(fthreads_sources) $(fishhang_sources) $(fishio_sources)
 
 if BUILD_FTHREADS
 FTHREADS=$(fthreads_sources)
@@ -63,7 +61,7 @@ hercules_SOURCES = hostinfo.c w32ctca.c \
 	   parser.c hetlib.c ieee.c \
 	   machdep.h $(FTHREADS) $(FISHHANG) $(FISHIO) \
            httpserv.c cgibin.c devtype.c codepage.c \
-           ctc_ctci.c ctc_lcs.c tuntap.c
+           ctc_ctci.c ctc_lcs.c tuntap.c hsccmd.c hscmisc.c
 
 hercifc_SOURCES = hercifc.c hostinfo.c version.c
 
@@ -122,7 +120,7 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c hostinfo.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c hostinfo.c version.c
 
-EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
+EXTRA_DIST = autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  autoconf/config.rpath  hercules.cnf CHANGES
 
 noinst_HEADERS  = fishhang.h \
     hostinfo.h cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
