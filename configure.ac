@@ -56,6 +56,8 @@ AC_CHECK_HEADER(inttypes.h,
 
 # Compiler characteristics
 
+AC_C_BIGENDIAN
+
 # GCC only seems to support regparm on i386 right now, but that could
 # change in the future.
 AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
