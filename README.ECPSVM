@@ -44,7 +44,7 @@ ASSIST ON SVC TMR
 
 Caveats :
 
-Timer Assist is not implemented, and is the only feature for which CP doesn't ask for the availability and does really react well to it's absence. Therefore, for any Guest application that make heavy use of the Interval Timer, the Virtual Timer Assist should be disabled with :
+Timer Assist is not implemented, and is the only feature for which CP doesn't ask for the availability and doesn't really react well to it's absence. Therefore, for any Guest application that make heavy use of the Interval Timer, the Virtual Timer Assist should be disabled with :
 
 CP SET ASSIST ON SVC NOTMR
 
