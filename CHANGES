@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+07 Oct 2003 Shared library fix for dyninst.c - Jan Jaeger
 06 Oct 2003 Enable ia32 assembler assists for -fPIC - Greg Smith
 02 Oct 2003 Issue warning message when restoring non-IEBCOPY xmit file
             using dasdload - Greg Smith
