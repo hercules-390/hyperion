@@ -10,6 +10,7 @@
  * MXDBR,MXDB,MDEBR,MDEB by Roger Bowler, 16 Nov 2004.
  * MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB by Roger Bowler, 17 Nov 2004.
  * DIEBR,DIDBR by Roger Bowler, 18 Nov 2004.
+ * TBEDR by Roger Bowler, 28 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -28,12 +29,15 @@
 
 /*
  * WARNING
- * This code is presently incomplete
- *
- * Instructions:
- * The following instructions are not yet implemented:
- * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
- * B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF]
+ * For rapid implementation, this module was written to perform its   
+ * floating point arithmetic using the floating point operations of
+ * the native C compiler. This method is a short-cut which may under
+ * some circumstances produce results different from those required
+ * by the Principles of Operation manuals. For complete conformance
+ * with Principles of Operation, this module would need to be updated
+ * to perform all floating point arithmetic using explicitly coded
+ * bit operations, similar to how float.c implements the hexadecimal
+ * floating point instructions.
  *
  * Rounding:
  * The native IEEE implementation can be set to apply the rounding
@@ -103,6 +107,19 @@ do { \
 #else
 #include "ieee-w32.h"
 #endif
+
+/* Definitions of BFP rounding methods */
+#define RM_DEFAULT_ROUNDING             0
+#define RM_BIASED_ROUND_TO_NEAREST      1
+#define RM_ROUND_TO_NEAREST             4
+#define RM_ROUND_TOWARD_ZERO            5
+#define RM_ROUND_TOWARD_POS_INF         6
+#define RM_ROUND_TOWARD_NEG_INF         7
+
+/* Macro to generate program check if invalid BFP rounding method */
+#define BFPRM_CHECK(x,regs) \
+        {if (!((x)==0 || (x)==1 || ((x)>=4 && (x)<=7))) \
+            {program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);}}
 
 #if !defined(_IEEE_C)
 /* Architecture independent code goes within this ifdef */
@@ -924,6 +941,95 @@ static int cnvt_bfp_to_hfp (struct lbfp *op, int class, U32 *fpr)
     fpr[1] = r1;
     return cc;
 } /* end function cnvt_bfp_to_hfp */
+
+/*
+ * Convert hexadecimal long floating point register to binary short
+ * floating point operand and return condition code
+ * Roger Bowler, 28 Nov 2004
+ */
+static int cnvt_lhfp_to_sbfp (struct sbfp *op, U32 *fpr, int rounding)
+{
+    BYTE sign;
+    short expo;
+    U64 fract;
+    int roundup = 0;
+    int cc;
+
+    /* Break the source operand into sign, characteristic, fraction */
+    sign = fpr[0] >> 31;
+    expo = (fpr[0] >> 24) & 0x007F;
+    fract = ((U64)(fpr[0] & 0x00FFFFFF) << 32) | fpr[1];
+
+    /* Determine whether to round up or down */
+    switch (rounding) {
+    case RM_DEFAULT_ROUNDING:
+    case RM_BIASED_ROUND_TO_NEAREST:
+    case RM_ROUND_TO_NEAREST:
+    case RM_ROUND_TOWARD_ZERO: roundup = 0; break;
+    case RM_ROUND_TOWARD_POS_INF: roundup = (sign ? 0 : 1); break;
+    case RM_ROUND_TOWARD_NEG_INF: roundup = sign; break;
+    } /* end switch(rounding) */
+
+    /* Convert HFP zero to BFP zero and return cond code 0 */
+    if (fract == 0) /* a = -0 or +0 */
+    {
+        op->sign = sign;
+        op->exp = 0;
+        op->fract = 0;
+        return 0;
+    }
+
+    /* Set the condition code */
+    cc = sign ? 1 : 2;
+
+    /* Convert the HFP characteristic to a true binary exponent */
+    expo = (expo - 64) * 4;
+
+    /* Convert true binary exponent to a biased exponent */
+    expo += 127;
+
+    /* Shift the fraction left until leftmost 1 is in bit 8 */
+    while ((fract & 0x0080000000000000ULL) == 0)
+    {
+        fract <<= 1;
+        expo -= 1;
+    }
+
+    /* Convert 56-bit fraction to 55-bit with implied 1 */
+    expo--;
+    fract &= 0x007FFFFFFFFFFFFFULL;
+
+    if (expo < -22) /* |a| < Dmin */
+    {
+        if (roundup) { expo = 0; fract = 1; } /* Dmin */
+        else { expo = 0; fract = 0; } /* Zero */
+    }
+    else if (expo < 1) /* Dmin <= |a| < Nmin */
+    {
+        /* Reinstate implied 1 in preparation for denormalization */
+        fract |= 0x0080000000000000ULL;
+
+        /* Denormalize to get exponent back in range */
+        fract >>= (expo + 22);
+        expo = 0;
+    }
+    else if (expo > 254) /* |a| > Nmax */
+    {
+        cc = 3;
+        if (roundup) { expo = 255; fract = 0; } /* Inf */
+        else { expo = 254; fract = 0x007FFFFF00000000ULL; } /* Nmax */
+    } /* end Nmax < |a| */
+     
+    /* Set the result sign and exponent */
+    op->sign = sign;
+    op->exp = expo;
+
+    /* Convert 55-bit fraction to a 23-bit fraction */
+    op->fract = fract >> 32;
+     
+    return cc;
+} /* end function cnvt_lhfp_to_sbfp */
+
 #define _CBH_FUNC
 #endif /*!defined(_CBH_FUNC)*/
 
@@ -981,19 +1087,33 @@ DEF_INST(convert_bfp_short_to_float_long_reg)
 
 }
 
-
-/* The following instructions are not yet implemented */
-#define UNDEF_INST(_x) \
-        DEF_INST(_x) { ARCH_DEP(operation_exception) \
-        (inst,regs); }
 /*
  * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
  */
- UNDEF_INST(convert_float_long_to_bfp_long_reg)
+DEF_INST(convert_float_long_to_bfp_long_reg)
+{
+    ARCH_DEP(operation_exception) (inst,regs); 
+} /* end DEF_INST(convert_float_long_to_bfp_long_reg) */
+
 /*
  * B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF]
  */
- UNDEF_INST(convert_float_long_to_bfp_short_reg)
+DEF_INST(convert_float_long_to_bfp_short_reg)
+{
+    int r1, r2, m3;
+    struct sbfp op1;
+
+    RRF_M(inst, regs, r1, r2, m3);
+    //logmsg("TBEDR r1=%d r2=%d\n", r1, r2);
+    HFPREG2_CHECK(r1, r2, regs);
+    BFPRM_CHECK(m3,regs);
+
+    regs->psw.cc = 
+        cnvt_lhfp_to_sbfp (&op1, regs->fpr + FPR2I(r1), m3);
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+
+} /* end DEF_INST(convert_float_long_to_bfp_short_reg) */
 #endif /*defined(FEATURE_FPS_EXTENSIONS)*/
 
 /*
@@ -1933,6 +2053,7 @@ DEF_INST(convert_bfp_ext_to_fix32_reg)
     //logmsg("CFXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPRM_CHECK(m3,regs);
 
     get_ebfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -1997,6 +2118,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("CFDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+    BFPRM_CHECK(m3,regs);
 
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -2061,6 +2183,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("CFEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+    BFPRM_CHECK(m3,regs);
 
     get_sbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -2126,6 +2249,7 @@ DEF_INST(convert_bfp_ext_to_fix64_reg)
     //logmsg("CGXBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPRM_CHECK(m3,regs);
 
     get_ebfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -2192,6 +2316,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("CGDBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+    BFPRM_CHECK(m3,regs);
 
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -2258,6 +2383,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("CGEBR r1=%d r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+    BFPRM_CHECK(m3,regs);
 
     get_sbfp(&op2, regs->fpr + FPR2I(r2));
 
@@ -2943,6 +3069,7 @@ DEF_INST(load_fp_int_short_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("FIEBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+    BFPRM_CHECK(m3,regs);
 
     get_sbfp(&op, regs->fpr + FPR2I(r2));
 
@@ -2967,6 +3094,7 @@ DEF_INST(load_fp_int_long_reg)
     RRF_M(inst, regs, r1, r2, m3);
     //logmsg("FIDBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
+    BFPRM_CHECK(m3,regs);
 
     get_lbfp(&op, regs->fpr + FPR2I(r2));
 
@@ -2992,6 +3120,7 @@ DEF_INST(load_fp_int_ext_reg)
     //logmsg("FIXBR r1=%d, r2=%d\n", r1, r2);
     BFPINST_CHECK(regs);
     BFPREGPAIR2_CHECK(r1, r2, regs);
+    BFPRM_CHECK(m3,regs);
 
     get_ebfp(&op, regs->fpr + FPR2I(r2));
 
@@ -4789,6 +4918,7 @@ DEF_INST(divide_integer_bfp_long_reg)
     if (r1 == r2 || r2 == r3 || r1 == r3) {
         program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
     }
+    BFPRM_CHECK(m4,regs);
 
     get_lbfp(&op1, regs->fpr + FPR2I(r1));
     get_lbfp(&op2, regs->fpr + FPR2I(r2));
@@ -4845,6 +4975,7 @@ DEF_INST(divide_integer_bfp_short_reg)
     if (r1 == r2 || r2 == r3 || r1 == r3) {
         program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
     }
+    BFPRM_CHECK(m4,regs);
 
     get_sbfp(&op1, regs->fpr + FPR2I(r1));
     get_sbfp(&op2, regs->fpr + FPR2I(r2));
