@@ -535,12 +535,12 @@ void ebfpntos(struct ebfp *op)
 		ebfpzero(op, signbit(op->v));
 		break;
 	case FP_SUBNORMAL:
-		/* This may need special handling, but I don't
+		/* This may need special handling, but I don't know
 		 * exactly how yet.  I suspect I need to do something
 		 * to deal with the different implied unit bit.
 		 */
 	case FP_NORMAL:
-		f = frexpf(op->v, &(op->exp));
+		f = frexpl(op->v, &(op->exp));
 		op->sign = signbit(op->v);
 		op->exp += 16383 - 1;
 		op->fracth = (U64)ldexp(fabsl(f), 49) & 0xFFFFFFFFFFFFL;
@@ -552,7 +552,7 @@ void ebfpntos(struct ebfp *op)
 
 void lbfpntos(struct lbfp *op)
 {
-	double f = 0;
+	double f;
 
 	switch (fpclassify(op->v)) {
 	case FP_NAN:
@@ -565,12 +565,12 @@ void lbfpntos(struct lbfp *op)
 		lbfpzero(op, signbit(op->v));
 		break;
 	case FP_SUBNORMAL:
-		/* This may need special handling, but I don't
+		/* This may need special handling, but I don't know
 		 * exactly how yet.  I suspect I need to do something
 		 * to deal with the different implied unit bit.
 		 */
 	case FP_NORMAL:
-		f = frexpf(op->v, &(op->exp));
+		f = frexp(op->v, &(op->exp));
 		op->sign = signbit(op->v);
 		op->exp += 1023 - 1;
 		op->fract = (U64)ldexp(fabs(f), 53) & 0xFFFFFFFFFFFFFL;
@@ -581,7 +581,7 @@ void lbfpntos(struct lbfp *op)
 
 void sbfpntos(struct sbfp *op)
 {
-	float f = frexpf(op->v, &(op->exp));
+	float f;
 
 	switch (fpclassify(op->v)) {
 	case FP_NAN:
