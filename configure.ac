@@ -171,7 +171,7 @@ fi
 
 # Library functions
 
-AC_CHECK_FUNCS(sqrtl)
+AC_CHECK_FUNCS(sqrtl ldexpl fabsl fmodl)
 AC_CHECK_FUNCS([setresuid setreuid],
                [enable_setuid=true;break])
 if test x$enable_setuid != xtrue; then
@@ -183,7 +183,10 @@ fi
 AC_ARG_ENABLE(profiling,
               AC_HELP_STRING([--enable-profiling], [enable execution profiling]),
               [case "${enableval}" in
-                yes) CFLAGS="-pg -DPROFILE_CPU $CFLAGS" ;;
+                yes)
+                  enable_profiling=true
+                  CFLAGS="-pg -DPROFILE_CPU $CFLAGS"
+                ;;
                 no) ;;
                 *) AC_MSG_ERROR([bad value ${enableval} for --enable-profiling]) ;;
                esac])
@@ -226,7 +229,10 @@ if test x$auto_optimize = xtrue && test x$debug != xtrue; then
   case "$host_cpu" in
 	  i586|i686)
 	    if test "$GCC" = "yes"; then
-		OFLAGS="-O3 -march=$host_cpu -fomit-frame-pointer $OFLAGS"
+		OFLAGS="-O3 -march=$host_cpu $OFLAGS"
+                if test x$enable_profiling != xtrue; then
+                  OFLAGS="-fomit-frame-pointer $OFLAGS"
+                fi
 	    else
                 OFLAGS="-O2 $OFLAGS"
 	    fi
