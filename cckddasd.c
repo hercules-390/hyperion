@@ -2904,9 +2904,10 @@ char            sfn[256];               /* Shadow file name          */
         for (dev2 = cckdblk.dev1st; dev2; dev2 = cckd2->devnext)
         {
             cckd2 = dev2->cckd_ext;
-            if (dev2 == dev || dev2->dasdsfn[0] == '\0') continue;
+            if (dev2 == dev) continue;
             for (j = 0; j <= CCKD_MAX_SF; j++)
             {
+                if (j > 0 && dev2->dasdsfn[0] == '\0') break;
                 rc = cckd_sf_name (dev2, j, (char *)&sfn2);
                 if (rc < 0) continue;
                 if (strcmp ((char *)&sfn, (char *)&sfn2) == 0)
