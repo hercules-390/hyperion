@@ -427,15 +427,6 @@ typedef struct _LSED {
 	HWORD	resv;			/* Reserved bits - must be 0 */
     } LSED;
 
-/* Linkage stack entry descriptor bit definitions */
-#define LSED_UET_U	0x80		/* Unstack suppression bit   */
-#define LSED_UET_ET	0x7F		/* Entry type...	     */
-#define LSED_UET_HDR	0x01		/* ...header entry	     */
-#define LSED_UET_TLR	0x02		/* ...trailer entry	     */
-#define LSED_UET_BAKR	0x04		/* ...branch state entry     */
-#define LSED_UET_PC	0x05		/* ...call state entry	     */
-
-
 /* Program call number bit definitions */
 #define PC_LX		0x000FFF00	/* Linkage index	     */
 #define PC_EX		0x000000FF	/* Entry index		     */

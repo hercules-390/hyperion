@@ -18,6 +18,7 @@
 /* ESAME low-address protection                   v208d Roger Bowler */
 /* ESAME linkage stack operations                 v208e Roger Bowler */
 /* TRAP support added                                     Jan Jaeger */
+/* Correction to stack types in ESAME mode                Jan Jaeger */
 /*-------------------------------------------------------------------*/
 
 // #define  STACK_DEBUG
@@ -31,6 +32,12 @@
 /*-------------------------------------------------------------------*/
 /* Linkage stack macro definitions                                   */
 /*-------------------------------------------------------------------*/
+#undef  LSED_UET_U
+#undef  LSED_UET_ET
+#undef  LSED_UET_HDR
+#undef  LSED_UET_TLR
+#undef  LSED_UET_BAKR
+#undef  LSED_UET_PC
 #undef  CR15_LSEA
 #undef  LSEA_WRAP
 #undef  LSSE_SIZE
@@ -46,6 +53,13 @@
 #undef  LSTE_FVALID
 
 #if defined(FEATURE_ESAME)
+
+  #define LSED_UET_U	0x80		/* Unstack suppression bit   */
+  #define LSED_UET_ET	0x7F		/* Entry type...	     */
+  #define LSED_UET_HDR	0x09		/* ...header entry	     */
+  #define LSED_UET_TLR	0x0A		/* ...trailer entry	     */
+  #define LSED_UET_BAKR	0x0C		/* ...branch state entry     */
+  #define LSED_UET_PC	0x0D		/* ...call state entry	     */
 
   #define CR15_LSEA     CR15_LSEA_900   /* Bit mask for ESAME linkage
                                            stack entry addr in CR15  */
@@ -73,6 +87,13 @@
   /* LSTE words 2 and 3 contain a linkage stack entry descriptor */
 
 #else /*!defined(FEATURE_ESAME)*/
+
+  #define LSED_UET_U	0x80		/* Unstack suppression bit   */
+  #define LSED_UET_ET	0x7F		/* Entry type...	     */
+  #define LSED_UET_HDR	0x01		/* ...header entry	     */
+  #define LSED_UET_TLR	0x02		/* ...trailer entry	     */
+  #define LSED_UET_BAKR	0x04		/* ...branch state entry     */
+  #define LSED_UET_PC	0x05		/* ...call state entry	     */
 
   #define CR15_LSEA     CR15_LSEA_390   /* Bit mask for ESA/390 linkage
                                            stack entry addr in CR15  */
