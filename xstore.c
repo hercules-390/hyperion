@@ -477,7 +477,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
         if (prot || (xpvalid1 && (pte1 & PAGETAB_PROT)))
         {
             regs->TEA = vaddr1 | TEA_PROT_AP | stid;
-            regs->excarid = (ACCESS_REGISTER_MODE(&regs->psw)) ? r1 : 0;
+            regs->excarid = regs->armode ? r1 : 0;
             ARCH_DEP(program_interrupt) (regs, PGM_PROTECTION_EXCEPTION);
         }
 

@@ -2949,7 +2949,7 @@ int aea_cmd(int argc, char *argv[], char *cmdline)
     }
     regs = sysblk.regs[sysblk.pcpu];
 
-    logmsg ("cpu %d aenoarn %d aeID 0x%5.5x\n",sysblk.pcpu,regs->aenoarn,regs->aeID);
+    logmsg ("cpu %d aearvalid %d aeID 0x%5.5x\n",sysblk.pcpu,regs->aearvalid,regs->aeID);
     logmsg (" ix               ve key ar a               ae\n");
     for (i = 0; i < MAXAEA; i++)
     {

@@ -134,7 +134,7 @@ BYTE    pkey;
 #endif /* defined (FEATURE_PER) */
             )
             INVALIDATE_AEA_ALL(regs);
-        SET_AENOARN(regs);
+        regs->armode =ARMODE(regs);
 
 #if defined(FEATURE_ESAME)
         FETCH_DW(regs->psw.IA, addr + 8);
@@ -231,7 +231,7 @@ BYTE    pkey;
         if ((realmode  != REAL_MODE(&regs->psw)) ||
             (space     != (regs->psw.space == 1)))
             INVALIDATE_AEA_ALL(regs);
-        SET_AENOARN(regs);
+        regs->armode = 0;
 
         FETCH_FW(regs->psw.IA, addr + 4);
         regs->psw.IA &= 0x00FFFFFF;
@@ -610,7 +610,7 @@ static char *pgmintname[] = {
 
         STORE_W(psa->peradr, realregs->peradr);
 
-        if( IS_IC_PER_SA(realregs) && ACCESS_REGISTER_MODE(&realregs->psw) )
+        if( IS_IC_PER_SA(realregs) && realregs->armode )
             psa->perarid = realregs->peraid;
 
         /* Reset PER pending indication */

@@ -482,19 +482,6 @@ typedef struct _REGS {                  /* Processor registers       */
         DW      ea;                     /* Exception address         */
         DW      et;                     /* Execute Target address    */
         void   *opctab;                 /* -> opcode table           */
-        BYTE   *mi;                     /* Mainstor instruction addr */
-        DW      ai;                     /* Absolute instruction addr */
-        DW      vi;                     /* Virtual instruction addr  */
-        DW      vie;                    /* Virt instr page end addr  */
-        DW      ae[256];                /* Absolute effective addr   */
-        DW      ve[256];                /* Virtual effective addr    */
-        DW      me[256];                /* Mangled effective addr    */
-        BYTE    aekey[256];             /* Storage Key               */
-        int     aeacc[256];             /* Access type               */
-        int     aearn[256];             /* Access register used      */
-        int     aenoarn;                /* 1=Not in AR mode          */
-        int     aearvalid;              /* 1=Address(es) in AR mode  */
-        U32     aeID;                   /* Validation identifier     */
 #define GR_G(_r) gr[(_r)].D
 #define GR_H(_r) gr[(_r)].F.H.F          /* Fullword bits 0-31       */
 #define GR_HHH(_r) gr[(_r)].F.H.H.H.H    /* Halfword bits 0-15       */
@@ -550,7 +537,7 @@ typedef struct _REGS {                  /* Processor registers       */
         PSW     psw;                    /* Program status word       */
         BYTE    excarid;                /* Exception access register */
         BYTE    opndrid;                /* Operand access register   */
-        BYTE    exinst[6];              /* Target of Execute (EX)    */
+        BYTE    exinst[8];              /* Target of Execute (EX)    */
         BYTE   *mainstor;               /* -> Main storage           */
         BYTE   *storkeys;               /* -> Main storage key array */
         RADR    mainlim;                /* Central Storage limit or  */
@@ -585,22 +572,24 @@ typedef struct _REGS {                  /* Processor registers       */
 // #endif /*defined(FEATURE_PER)*/
 
         BYTE    cpustate;               /* CPU stopped/started state */
-        unsigned int                    /* Flags                     */
+        unsigned int                    /* Flags (cpu thread only)   */
+                armode:1,               /* 1=Access register mode    */
+                mainlock:1,             /* 1=Mainlock held           */
+                checkstop:1,            /* 1=CPU is checkstop-ed     */
+                hostint:1,              /* 1=Host generated interrupt*/
+                instvalid:1;            /* 1=Inst field is valid     */
+        unsigned int                    /* Flags (intlock serialized)*/
                 configured:1,           /* 1=CPU is online           */
                 loadstate:1,            /* 1=CPU is in load state    */
-                checkstop:1,            /* 1=CPU is checkstop-ed     */
-                mainlock:1,             /* 1=Mainlock held           */
                 ghostregs:1,            /* 1=Ghost registers (panel) */
-                hostint:1,              /* Host generated interrupt  */
                 reset_opctab:1,         /* 1=Copy new opcode table   */
                 sigpreset:1,            /* 1=SIGP cpu reset received */
                 sigpireset:1,           /* 1=SIGP initial cpu reset  */
                 vtimerint:1,            /* 1=Virtual Timer interrupt */
                                         /* (ECPS:VM)                 */
-                rtimerint:1,            /* 1=Concurrent Virt & Real  */
+                rtimerint:1;            /* 1=Concurrent Virt & Real  */
                                         /* Interval Timer interrupts */
                                         /* (ECPS:VM Only)            */
-                instvalid:1;            /* 1=Inst field is valid     */
         U32     ints_state;             /* CPU Interrupts Status     */
         U32     ints_mask;              /* Respective Interrupts Mask*/
         BYTE    malfcpu                 /* Malfuction alert flags    */
@@ -608,10 +597,12 @@ typedef struct _REGS {                  /* Processor registers       */
         BYTE    emercpu                 /* Emergency signal flags    */
                     [MAX_CPU_ENGINES];  /* for each CPU (1=pending)  */
         U16     extccpu;                /* CPU causing external call */
-        BYTE    inst[6];                /* Last-fetched instruction  */
-        BYTE    *ip;                    /* Pointer to Last-fetched
-                                           instruction (inst might
-                                           not be uptodate           */
+        BYTE    inst[8];                /* Fetched instruction when
+                                           instruction crosses a page
+                                           boundary                  */
+        BYTE    *ip;                    /* Pointer to last-fetched
+                                           instruction (either inst
+                                           above or in mainstor      */
 #if defined(_FEATURE_VECTOR_FACILITY)
         VFREGS *vf;                     /* Vector Facility           */
 #endif /*defined(_FEATURE_VECTOR_FACILITY)*/
@@ -623,6 +614,25 @@ typedef struct _REGS {                  /* Processor registers       */
                                            switch architecture mode  */
         COND    intcond;                /* CPU interrupt condition   */
         U32     cpumask;                /* CPU mask                  */
+
+     /* AIA - Instruction fetch accelerator                          */
+
+        BYTE   *mi;                     /* Mainstor instruction addr */
+        DW      ai;                     /* Absolute instruction addr */
+        DW      vi;                     /* Virtual instruction addr  */
+        DW      vie;                    /* Virt instr page end addr  */
+
+     /* AEA - Virtual storage translation accelerator                */
+
+        U32     aeID;                   /* Validation identifier     */
+        int     aearvalid;              /* 1=Address(es) in AR mode  */
+        DW      ae[256];                /* Absolute effective addr   */
+        DW      ve[256];                /* Virtual effective addr    */
+        DW      me[256];                /* Mangled effective addr    */
+        BYTE    aekey[256];             /* Storage Key               */
+        int     aeacc[256];             /* Access type               */
+        int     aearn[256];             /* Access register used      */
+
     } REGS;
 
 /* Definitions for CPU state */
@@ -1797,10 +1807,10 @@ int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
 
 /* Access type parameter passed to translate functions in dat.c */
 #define ACCTYPE_HW              0       /* Hardware access           */
-#define ACCTYPE_READ            1       /* Read operand data         */
-#define ACCTYPE_WRITE_SKP       2       /* Write but skip change bit */
-#define ACCTYPE_WRITE           3       /* Write operand data        */
-#define ACCTYPE_INSTFETCH       4       /* Instruction fetch         */
+#define ACCTYPE_INSTFETCH       1       /* Instruction fetch         */
+#define ACCTYPE_READ            2       /* Read operand data         */
+#define ACCTYPE_WRITE_SKP       3       /* Write but skip change bit */
+#define ACCTYPE_WRITE           4       /* Write operand data        */
 #define ACCTYPE_TAR             5       /* Test Access               */
 #define ACCTYPE_LRA             6       /* Load Real Address         */
 #define ACCTYPE_TPROT           7       /* Test Protection           */

@@ -569,7 +569,7 @@ U16     xcode;                          /* ALET tran.exception code  */
         *pasd = regs->CR(7);
     }
   #if defined(FEATURE_ACCESS_REGISTERS)
-    else if(ACCESS_REGISTER_MODE(&regs->psw)
+    else if(regs->armode
     #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || (regs->sie_active
         && (regs->guestregs->siebk->mx & SIE_MX_XC)
@@ -1488,7 +1488,7 @@ tran_excp_addr:
 #endif /*!defined(FEATURE_ESAME)*/
 
     /* Set the exception access identification */
-    if (ACCESS_REGISTER_MODE(&regs->psw)
+    if (regs->armode
 #if defined(_FEATURE_MULTIPLE_CONTROLLED_DATA_SPACE)
       || (regs->sie_active
         && (regs->guestregs->siebk->mx & SIE_MX_XC)
@@ -1795,7 +1795,9 @@ int     host_protect = 0;               /* 1=Page prot, 2=ALE prot   */
 #endif /*defined(_FEATURE_SIE)*/
 int     stid = 0;                       /* Address space indication  */
 U16     xcode;                          /* Exception code            */
-int     aeind;
+
+    if (arn > 0 && (!regs->armode || regs->AR(arn) == 0))
+        arn = 0;
 
     /* Convert logical address to real address */
     if ((REAL_MODE(&regs->psw) || arn == USE_REAL_ADDR)
@@ -1938,35 +1940,21 @@ int     aeind;
     } /* end switch */
 
     /* Update the aea tables */
-    if(arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs) )
+    if ( arn >= 0 && acctype <= ACCTYPE_WRITE && !EN_IC_PER_SA(regs)
+     &&  ( addr >= PSA_SIZE || private || akey == 0 ) )
     {
-        SET_AENOARN(regs);
-#if defined(FEATURE_ACCESS_REGISTERS)
-        if (ACCESS_REGISTER_MODE(&regs->psw))
-        {
-            if (arn > 0 && regs->AR(arn) == 0)
-                arn = 0;
-        }
-        else
-            arn = 0;
-#else
-        arn = 0;
-#endif
-        aeind = AEIND(addr);
-        regs->AE(aeind) = aaddr & PAGEFRAME_PAGEMASK;
-        regs->ME(aeind) = (aaddr ^ addr) & PAGEFRAME_PAGEMASK;
-        regs->VE(aeind) = (addr & AEA_PAGEMASK) | regs->aeID;
-        regs->aekey[aeind] = akey;
-        regs->aeacc[aeind] = acctype;
-        regs->aearn[aeind] = arn;
+        if ((addr < PSA_SIZE && !private) || acctype < ACCTYPE_READ)
+            acctype = ACCTYPE_READ;
+        else if (acctype > ACCTYPE_READ)
+            acctype = ACCTYPE_WRITE;
+
+        regs->AE(AEIND(addr)) = aaddr & PAGEFRAME_PAGEMASK;
+        regs->ME(AEIND(addr)) = (aaddr ^ addr) & PAGEFRAME_PAGEMASK;
+        regs->VE(AEIND(addr)) = (addr & AEA_PAGEMASK) | regs->aeID;
+        regs->aekey[AEIND(addr)] = akey;
+        regs->aeacc[AEIND(addr)] = acctype;
+        regs->aearn[AEIND(addr)] = arn;
         if (arn) regs->aearvalid = 1;
-        if (addr < PSA_SIZE && !private)
-        {
-            if(akey == 0)
-                regs->aeacc[aeind] = ACCTYPE_READ;
-            else
-                regs->VE(0) = 0;
-        }
     }
 
     /* Return the absolute address */

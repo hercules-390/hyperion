@@ -516,6 +516,8 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
         ARCH_DEP(program_interrupt) (regs, PGM_SPACE_SWITCH_EVENT);
     }
 
+    regs->armode = ARMODE(regs);
+
     RETURN_INTCHECK(regs);
 
 } /* end DEF_INST(resume_program) */

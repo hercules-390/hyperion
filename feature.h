@@ -48,6 +48,7 @@
 #undef ADDRESS_MAXWRAP_E
 #undef REAL_MODE
 #undef PER_MODE
+#undef ARMODE
 #undef ASF_ENABLED
 #undef ASTE_AS_DESIGNATOR
 #undef ASTE_LT_DESIGNATOR
@@ -142,6 +143,8 @@ s370_ ## _name
         ((_regs)->psw.ecmode && ((_regs)->psw.sysmask & PSW_PERMODE))
 #endif
 
+#define ARMODE(_regs) 0
+
 #define ASF_ENABLED(_regs)  0 /* ASF is never enabled for S/370 */
 
 #define ASTE_AS_DESIGNATOR(_aste) \
@@ -231,6 +234,9 @@ s390_ ## _name
 #define PER_MODE(_regs) \
         ((_regs)->psw.sysmask & PSW_PERMODE)
 #endif
+
+#define ARMODE(_regs) \
+        (!REAL_MODE(&(_regs)->psw) && ACCESS_REGISTER_MODE(&(_regs)->psw))
 
 #define ASF_ENABLED(_regs)  ((_regs)->CR(0) & CR0_ASF)
 
@@ -324,6 +330,9 @@ s390_ ## _name
 #define PER_MODE(_regs) \
         ((_regs)->psw.sysmask & PSW_PERMODE)
 #endif
+
+#define ARMODE(_regs) \
+        (!REAL_MODE(&(_regs)->psw) && ACCESS_REGISTER_MODE(&(_regs)->psw))
 
 #define ASF_ENABLED(_regs)  1 /* ASF is always enabled for ESAME */
 

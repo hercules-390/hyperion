@@ -548,53 +548,41 @@ do { \
 #define MAXAEA 256
 
 #define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
-  likely (  (_arn) >= 0 \
-  &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
-  &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
-  &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
-    ||  ( !(_regs)->aenoarn \
-      && ( (_regs)->aearn[AEIND(_addr)] == (_arn) \
-        || ((_regs)->aearn[AEIND(_addr)] == 0 && (_regs)->AR(_arn) == 0) \
-         ) \
-        ) \
-      ) \
-  &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) ) \
-  ?   (_acctype) == ACCTYPE_READ \
-      ? ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= STORKEY_REF, \
-          (_regs)->ME(AEIND(_addr)) ^ (_addr) \
-        ) \
-      : ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= (STORKEY_REF|STORKEY_CHANGE), \
-          (_regs)->ME(AEIND(_addr)) ^ (_addr) \
-        ) \
-  :   ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
+ (     (_arn) >= 0 \
+   &&  (_acctype) <= (_regs)->aeacc[AEIND(_addr)] \
+   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
+   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
+   &&  ( (_regs)->aearn[AEIND(_addr)] == 0 \
+       && ( !(_regs)->armode || (_arn) == 0 || (_regs)->AR(_arn) == 0 ) \
+     ||  ( (_regs)->armode && (_regs)->aearn[AEIND(_addr)] == (_arn) ) \
+       ) \
+   ? ( \
+       ( (_acctype) == ACCTYPE_READ ) \
+         ? ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= STORKEY_REF ) \
+         : ( STORAGE_KEY((_regs)->AE(AEIND(_addr)), (_regs)) |= (STORKEY_REF|STORKEY_CHANGE) ), \
+       (_regs)->ME(AEIND(_addr)) ^ (_addr) \
+     ) \
+   : ( \
+       ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
+     ) \
+ )
 
 #define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey) \
-  likely ( (_arn) >= 0 \
-  &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
-  &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
-  &&  ( ( (_regs)->aenoarn && (_regs)->aearn[AEIND(_addr)] == 0 ) \
-    ||  ( !(_regs)->aenoarn \
-      && ( (_regs)->aearn[AEIND(_addr)] == (_arn) \
-        || ((_regs)->aearn[AEIND(_addr)] == 0 && (_regs)->AR(_arn) == 0) \
-         ) \
-        ) \
-      ) \
-  &&  (_regs)->aeacc[AEIND(_addr)] >= (_acctype) ) \
-  ?   ( \
-        (_regs)->ME(AEIND(_addr)) ^ (_addr) \
-      ) \
-  :   ( \
-        ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
-      )
-
-#undef SET_AENOARN
-#if defined(FEATURE_ACCESS_REGISTERS)
-#define SET_AENOARN(_regs) \
-  (_regs)->aenoarn = !(ACCESS_REGISTER_MODE(&(_regs)->psw))
-#else
-#define SET_AENOARN(_regs) \
-  (_regs)->aenoarn = 1
-#endif
+ (     (_arn) >= 0 \
+   &&  (_acctype) <= (_regs)->aeacc[AEIND(_addr)] \
+   &&  ((_akey) == 0 || (_regs)->aekey[AEIND(_addr)] == (_akey)) \
+   &&  (((_addr) & AEA_PAGEMASK) | (_regs)->aeID) == (_regs)->VE(AEIND(_addr)) \
+   &&  ( (_regs)->aearn[AEIND(_addr)] == 0 \
+       && ( !(_regs)->armode || (_arn) == 0 || (_regs)->AR(_arn) == 0 ) \
+     ||  ( (_regs)->armode && (_regs)->aearn[AEIND(_addr)] == (_arn) ) \
+       ) \
+   ?   ( \
+         (_regs)->ME(AEIND(_addr)) ^ (_addr) \
+       ) \
+   :   ( \
+         ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey)) \
+       ) \
+ )
 
 #define INVALIDATE_AEA_AR(_arn, _regs) \
 do { \
@@ -632,7 +620,7 @@ do { \
     if (((++(_regs)->aeID) & AEA_BYTEMASK) == 0) \
     { \
         (_regs)->aeID = 1; \
-        MEMSET((_regs)->ve, 0, 256*sizeof(DW)); \
+        memset((_regs)->ve, 0, 256*sizeof(DW)); \
     } \
 } while (0)
 
