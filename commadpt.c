@@ -1084,6 +1084,18 @@ static void    commadpt_halt(DEVBLK *dev)
     wait_condition(&dev->commadpt->ipc_halt,&dev->commadpt->lock);
     release_lock(&dev->commadpt->lock);
 }
+/* The following 2 MSG functions ensure only 1 (one)  */
+/* hardcoded instance exist for the same numbered msg */
+/* that is issued on multiple situations              */
+static void msg015e(DEVBLK *dev,char *dialt,char *kw)
+{
+        logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and %s not specified\n"),dev->devnum,dialt,kw);
+}
+static void msg016w017i(DEVBLK *dev,char *dialt,char *kw,char *kv)
+{
+        logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and %s=%s specified\n"),dev->devnum,dialt,kw,kv);
+        logmsg(_("HHCCA017I %4.4X:RPORT parameter ignored\n"),dev->devnum);
+}
 /*-------------------------------------------------------------------*/
 /* Device Initialisation                                             */
 /*-------------------------------------------------------------------*/
@@ -1095,6 +1107,7 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
     int errcnt;
     struct in_addr in_temp;
     char    *dialt;
+    char        fmtbfr[64];
     union {
         int num;
         char text[80];
@@ -1269,17 +1282,17 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
             case 0: /* DIAL = NO */
                 if(dev->commadpt->lport==0)
                 {
-                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and LPORT not specified\n"),dev->devnum,dialt);
+                    msg015e(dev,dialt,"LPORT");
                     errcnt++;
                 }
                 if(dev->commadpt->rport==0)
                 {
-                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and RPORT not specified\n"),dev->devnum,dialt);
+                    msg015e(dev,dialt,"RPORT");
                     errcnt++;
                 }
                 if(dev->commadpt->rhost==INADDR_NONE)
                 {
-                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and RHOST not specified\n"),dev->devnum,dialt);
+                    msg015e(dev,dialt,"RHOST");
                     errcnt++;
                 }
                 break;
@@ -1287,46 +1300,44 @@ static int commadpt_init_handler (DEVBLK *dev, int argc, BYTE *argv[])
             case 3: /* DIAL = INOUT */
                 if(dev->commadpt->lport==0)
                 {
-                    logmsg(_("HHCCA015E %4.4X:Missing parameter : DIAL=%s and LPORT not specified\n"),dev->devnum,dialt);
+                    msg015e(dev,dialt,"LPORT");
                     errcnt++;
                 }
                 if(dev->commadpt->rport!=0)
                 {
-                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RPORT=%d specified\n"),dev->devnum,dialt,dev->commadpt->rport);
-                    logmsg(_("HHCCA017I %4.4X:RPORT parameter ignored\n"),dev->devnum);
+                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->rport);
+                    msg016w017i(dev,dialt,"RPORT",fmtbfr);
                 }
                 if(dev->commadpt->rhost!=INADDR_NONE)
                 {
                     in_temp.s_addr=dev->commadpt->rhost;
-                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RHOST=%s specified\n"),dev->devnum,dialt,inet_ntoa(in_temp));
-                    logmsg(_("HHCCA017I %4.4X:RHOST parameter ignored\n"),dev->devnum);
+                    msg016w017i(dev,dialt,"RHOST",inet_ntoa(in_temp));
                     dev->commadpt->rhost=INADDR_NONE;
                 }
                 break;
             case 2: /* DIAL = OUT */
                 if(dev->commadpt->lport!=0)
                 {
-                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and LPORT=%d specified\n"),dev->devnum,dialt,dev->commadpt->lport);
-                    logmsg(_("HHCCA017I %4.4X:LPORT parameter ignored\n"),dev->devnum);
+                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->lport);
+                    msg016w017i(dev,dialt,"LPORT",fmtbfr);
                     dev->commadpt->lport=0;
                 }
                 if(dev->commadpt->rport!=0)
                 {
-                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RPORT=%d specified\n"),dev->devnum,dialt,dev->commadpt->rport);
-                    logmsg(_("HHCCA017I %4.4X:RPORT parameter ignored\n"),dev->devnum);
+                    snprintf(fmtbfr,sizeof(fmtbfr),"%d",dev->commadpt->rport);
+                    msg016w017i(dev,dialt,"RPORT",fmtbfr);
                     dev->commadpt->rport=0;
                 }
                 if(dev->commadpt->lhost!=INADDR_ANY)    /* Actually it's more like INADDR_NONE */
                 {
-                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and LHOST=%d specified\n"),dev->devnum,dialt,dev->commadpt->lhost);
-                    logmsg(_("HHCCA017I %4.4X:LHOST parameter ignored\n"),dev->devnum);
+                    in_temp.s_addr=dev->commadpt->lhost;
+                    msg016w017i(dev,dialt,"LHOST",inet_ntoa(in_temp));
                     dev->commadpt->lhost=INADDR_ANY;
                 }
                 if(dev->commadpt->rhost!=INADDR_NONE)
                 {
                     in_temp.s_addr=dev->commadpt->rhost;
-                    logmsg(_("HHCCA016W %4.4X:Conflicting parameter : DIAL=%s and RHOST=%s specified\n"),dev->devnum,dialt,inet_ntoa(in_temp));
-                    logmsg(_("HHCCA017I %4.4X:RHOST parameter ignored\n"),dev->devnum);
+                    msg016w017i(dev,dialt,"RHOST",inet_ntoa(in_temp));
                     dev->commadpt->rhost=INADDR_NONE;
                 }
                 break;
