@@ -12,7 +12,7 @@ CFLAGS="-Wall $CFLAGS"
 # Programs
 AC_PROG_CC
 
-# OS-specific tests
+# OS-specific settings that we can't figure out any other way (yet)
 
 case "$host_os" in
 	linux*)
@@ -123,6 +123,7 @@ AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
                                     [ac_cv_attr_regparm=no])
                   CFLAGS="$SAVE_CFLAGS"
                 fi])
+
 if test x$ac_cv_attr_regparm != xyes; then
   AC_DEFINE(NO_ATTR_REGPARM)
 fi
@@ -136,7 +137,8 @@ case "$host_cpu" in
 esac
 
 AC_ARG_ENABLE(cckd-bzip2,
-              [  --enable-cckd-bzip2         enable bzip2 compression for emulated DASD],
+              AC_HELP_STRING([--enable-cckd-bzip2],
+                             [enable bzip2 compression for emulated DASD]),
               [case "${enableval}" in
                  yes) cckd_bzip2=yes ;;
                  no) cckd_bzip2=no ;;
@@ -145,7 +147,8 @@ AC_ARG_ENABLE(cckd-bzip2,
               [cckd_bzip2=$have_libbz2])
 
 AC_ARG_ENABLE(het-bzip2,
-              [  --enable-het-bzip2          enable bzip2 compression for emulated tapes],
+              AC_HELP_STRING([--enable-het-bzip2],
+                             [enable bzip2 compression for emulated tapes]),
               [case "${enableval}" in
                  yes) het_bzip2=yes ;;
                  no) het_bzip2=no ;;
