@@ -1,7 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
 17 Aug 2003 Disabled Fast devnum & subchan lookup because of
-            some incompatibilities - Ivan Warren
+            some incompatibilities / reported by yvangamache - Ivan Warren
 16 Aug 2003 fix tt32stats command when OPTION_DYNAMIC_LOAD - Fish
 16 Aug 2003 fix CTCI segfault caused by bug in build_config when
             OPTION_CONFIG_SYMBOLS specified - Fish
