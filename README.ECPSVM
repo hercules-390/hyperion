@@ -67,6 +67,48 @@ ASSIST ON SVC TMR
 
 ***********
 
+Implemented Assists :
+
+CP ASSISTS :
+FREEX, FRETX (CP Free Storage management)
+DISP0, DISP1, DISP2 (CP Dispatching)
+PGLOCK, PGULOCK (Real frame locking/unlocking)
+TRANBRNG, TRANLOCK (Virtual frame addressing/locking)
+SCNRU, SCNVU (Real/Virtual Device control block scan)
+STEVL (Store ECPS:VM support level)
+
+VM ASSISTS :
+Virtual Interval Timer
+LPSW Simulation
+SSM Simulation
+SVC Simulation
+
+Non-Implemented assists :
+
+CP ASSISTS :
+CCWGN, DFCCW, DNCCW, UXCCW : CCW/CSW Translation assists
+LCSPG : Locate Changed Shared Page
+VIPT, VIST : Virtual Translation Page/Segment Invalidation
+LINK/RETURN (SVC 8/SVC 12)
+Prefered Machine Assists
+
+Non-implemented VM Assists :
+SIO
+DIAG
+IUCV
+STxSM
+ISK/SSK
+LRA
+VM Assists for MVS
+
+*****************
+
+ECPS:VM Has not been tested in a AP/MP System.
+My belief is that they WILL NOT WORK.
+ECPS:VM Should be disabled if the system is MP or AP generated
+
+*****************
+
 Have Fun,
 
 --Ivan
