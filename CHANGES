@@ -1,5 +1,7 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+04 Aug 2004 PIC1 all ALRF only instructions when ALRF disabled
+            Also fix code limit for ESTA - Ivan Warren
 30 Jul 2004 SCSI tape mods part 1: Auto-detect SCSI tape mounts - Fish
 30 Jul 2004 Fix bug in bldcfg that was causing device initialization
             failures to not abort Herc statup as they should -- Fish

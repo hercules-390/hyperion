@@ -836,6 +836,10 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(extract_primary_asn_and_instance)
 {
   int r1, r2;                           /* Values of R fields        */
+  if(!sysblk.asnandlxreuse)
+  {
+      ARCH_DEP(operation_exception)(inst,regs);
+  }
 
   RRE(inst, regs, r1, r2);
 
@@ -899,6 +903,10 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(extract_secondary_asn_and_instance)
 {
   int r1, r2;                           /* Values of R fields        */
+  if(!sysblk.asnandlxreuse)
+  {
+      ARCH_DEP(operation_exception)(inst,regs);
+  }
 
   RRE(inst, regs, r1, r2);
 
@@ -960,17 +968,11 @@ int     r1, r2;                         /* Values of R fields        */
 BYTE    code;                           /* Extraction code           */
 LSED    lsed;                           /* Linkage stack entry desc. */
 VADR    lsea;                           /* Linkage stack entry addr  */
+int     max_esta_code;
 
-#undef  MAX_ESTA_CODE
-#if defined(FEATURE_ASN_AND_LX_REUSE)
-#define MAX_ESTA_CODE   5
-#elif defined(FEATURE_ESAME)
-#define MAX_ESTA_CODE   4
-#else /*!defined(FEATURE_ESAME)*/
-#define MAX_ESTA_CODE   3
-#endif /*!defined(FEATURE_ESAME)*/
 
     RRE(inst, regs, r1, r2);
+
 
     SIE_MODE_XC_OPEX(regs);
 
@@ -982,8 +984,16 @@ VADR    lsea;                           /* Linkage stack entry addr  */
     /* Load the extraction code from low-order byte of R2 register */
     code = regs->GR_LHLCL(r2);
 
+#if defined(FEATURE_ASN_AND_LX_REUSE)
+    max_esta_code=sysblk.asnandlxreuse?5:4;
+#elif defined(FEATURE_ESAME)
+    max_esta_code=4;
+#else /*!defined(FEATURE_ESAME)*/
+    max_esta_code=3;
+#endif /*!defined(FEATURE_ESAME)*/
+
     /* Program check if r1 is odd, or if extraction code is invalid */
-    if ((r1 & 1) || code > MAX_ESTA_CODE)
+    if ((r1 & 1) || code > max_esta_code)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
     /* Find the virtual address of the entry descriptor
@@ -3676,6 +3686,10 @@ DEF_INST(program_transfer_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
 
+    if(!sysblk.asnandlxreuse)
+    {
+        ARCH_DEP(operation_exception)(inst,regs);
+    }
     RRE(inst, regs, r1, r2);
     ARCH_DEP(program_transfer_proc) (regs, r1, r2, 1);
 
@@ -4629,6 +4643,11 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(set_secondary_asn_with_instance)
 {
 int     r1, r2;                         /* Values of R fields        */
+
+    if(!sysblk.asnandlxreuse)
+    {
+        ARCH_DEP(operation_exception)(inst,regs);
+    }
 
     RRE(inst, regs, r1, r2);
     ARCH_DEP(set_secondary_asn_proc) (regs, r1, r2, 1);
