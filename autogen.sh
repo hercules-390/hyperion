@@ -7,6 +7,9 @@ if test ! -e ./ABOUT-NLS; then
   gettextize --force --no-changelog > /dev/null
 fi
 
-aclocal && autoconf && autoheader && automake --add-missing
+aclocal
+autoconf
+autoheader
+automake --add-missing
 
 echo "Completed successfully"
