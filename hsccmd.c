@@ -368,6 +368,16 @@ REGS *regs = sysblk.regs + sysblk.pcpu;
     logmsg( "          ckc = %16.16llX\n", (long long)regs->clkc << 8 );
     logmsg( "          cpt = %16.16llX\n", (long long)regs->ptimer );
 
+    if(regs->sie_active)
+    {
+        logmsg( _("         vtod = %16.16llX\n"),
+            (long long)(sysblk.todclk + regs->guestregs->todoffset) << 8
+            );
+
+        logmsg( "         vckc = %16.16llX\n", (long long)regs->guestregs->clkc << 8 );
+        logmsg( "         vcpt = %16.16llX\n", (long long)regs->guestregs->ptimer );
+    }
+
     if (regs->arch_mode == ARCH_370)
     {
         U32 itimer;
