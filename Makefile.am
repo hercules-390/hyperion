@@ -314,6 +314,7 @@ endif
 
   libherc_la_SOURCES = impl.c      \
                        config.c    \
+                       bldcfg.c    \
                        panel.c     \
                        history.c   \
                        fillfnam.c  \

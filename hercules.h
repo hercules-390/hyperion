@@ -1029,6 +1029,13 @@ LIST_ENTRY, *PLIST_ENTRY;
 
 struct _DEVBLK;             // (forward reference)
 
+typedef struct _DEVGRP      // Device Group
+{
+    int members;            // number of member devices in group
+    int acount;             // number of allocated members in group
+    struct _DEVBLK *memdev[];  // member devices
+} DEVGRP;
+
 typedef struct _bind_struct
 {
     LIST_ENTRY bind_link;   // (just a link in the chain)
@@ -1078,6 +1085,9 @@ typedef struct _DEVBLK {
         U16     chanset;                /* Channel Set to which this
                                            device is connected S/370 */
         char    *typname;               /* Device type name          */
+
+        int    member;                  /* Group member number       */
+        DEVGRP *group;                  /* Device Group              */
 
         /*  Storage accessible by device                             */
 
@@ -1819,8 +1829,10 @@ DEVBLK *get_devblk (U16 devnum);
 void ret_devblk (DEVBLK *dev);
 int  attach_device (U16 devnum, char *devtype, int addargc,
         BYTE *addargv[]);
+int  detach_subchan (U16 subchan);
 int  detach_device (U16 devnum);
 int  define_device (U16 olddev, U16 newdev);
+int  group_device(DEVBLK *dev, int members);
 int  configure_cpu (int cpu);
 int  deconfigure_cpu (int cpu);
 int parse_args (BYTE* p, int maxargc, BYTE** pargv, int* pargc);
