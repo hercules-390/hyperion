@@ -4478,10 +4478,6 @@ int     armode;
                             (regs->psw.sysmask & 0xB8) != 0)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    /* Handle eventual PER event before the masks are changed */
-    if( OPEN_IC_PERINT(regs) )
-        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
-
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
     SET_IC_IO_MASK(regs);
@@ -5431,10 +5427,6 @@ int     armode;
         (space     != (regs->psw.space == 1)))
         INVALIDATE_AEA_ALL(regs);
 #endif
-
-    /* Handle eventual PER event before the masks are changed */
-    if( OPEN_IC_PERINT(regs) )
-        ARCH_DEP(program_interrupt) (regs, PGM_PER_EVENT);
 
     SET_IC_EXTERNAL_MASK(regs);
     SET_IC_MCK_MASK(regs);
