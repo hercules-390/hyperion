@@ -21,11 +21,14 @@ bin_PROGRAMS = hercules $(HERCIFC) \
 EXTRA_PROGRAMS=hercifc
 
 fthreads_sources=fthreads.c w32chan.c
+fthreads_sautil=fthreads.c
 EXTRA_hercules_SOURCES=$(fthreads_sources)
 if BUILD_FTHREADS
 FTHREADS=$(fthreads_sources)
+SAUTIL=$(fthreads_sautil)
 else
 FTHREADS=
+SAUTIL=
 endif
 
 hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
@@ -48,22 +51,22 @@ hercules_SOURCES = w32ctca.c impl.c config.c panel.c version.c \
 hercifc_SOURCES = hercifc.c version.c
 
 dasdinit_SOURCES = dasdinit.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
 
 dasdisup_SOURCES = dasdisup.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
-
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
+	
 dasdload_SOURCES = dasdload.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
 
 dasdls_SOURCES = dasdls.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
 
 dasdcat_SOURCES = dasdcat.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
 
 dasdpdsu_SOURCES = dasdpdsu.c dasdutil.c version.c eightxff.c \
-	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c
+	   ckddasd.c cckddasd.c cckdcdsx.c cckdcomx.c cckdend.c $(SAUTIL)
 
 tapecopy_SOURCES = tapecopy.c version.c
 
@@ -91,12 +94,12 @@ hetupd_SOURCES = hetupd.c hetlib.c sllib.c version.c
 
 dmap2hrc_SOURCES = dmap2hrc.c version.c
 
-EXTRA_DIST = hercules.cnf CHANGES
+EXTRA_DIST = hercules.cnf CHANGES _build _build.bat
 
 noinst_HEADERS  = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
-    feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
-    codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
-    sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h if_tun.h
+	feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
+	codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
+	sllib.h htypes.h fthreads.h w32chan.h w32ctca.h tt32api.h linklist.h if_tun.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \

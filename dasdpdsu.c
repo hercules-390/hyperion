@@ -27,7 +27,7 @@ static BYTE asciiflag = 0;              /* 1=Translate to ASCII      */
 #ifdef EXTERNALGUI
 /* Special flag to indicate whether or not we're being
    run under the control of the external GUI facility. */
-static int  extgui = 0;
+int  extgui = 0;
 #endif /*EXTERNALGUI*/
 
 /*-------------------------------------------------------------------*/
