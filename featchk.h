@@ -275,9 +275,13 @@
  #error Expedited SIE Subset only supported with SIE
 #endif
 
-#if defined(FEATURE_ASN_AND_LX_REUSE) \
- && !defined(FEATURE_DUAL_ADDRESS_SPACE)
- #error ASN-and-LX-Reuse requires Dual Address-Space feature
+#if defined(FEATURE_ASN_AND_LX_REUSE) 
+ #if !defined(FEATURE_DUAL_ADDRESS_SPACE)
+  #error ASN-and-LX-Reuse requires Dual Address-Space feature
+ #endif
+ #if !defined(FEATURE_ESAME)
+  #error ASN-and-LX-Reuse is only supported with ESAME
+ #endif
 #endif
  
 #if defined(FEATURE_ESAME) \

@@ -464,11 +464,11 @@ typedef struct _TLBE {
 /* ASN second table entry bit definitions */
 #define ASTE0_INVALID   0x80000000      /* ASX invalid               */
 #define ASTE0_ATO       0x7FFFFFFC      /* Authority-table origin    */
-#define ASTE0_RESV      0x00000002      /* Reserved bits - must be 0 */
+#define ASTE0_RESV      0x00000002      /* Must be 0 for ESA/390     */
 #define ASTE0_BASE      0x00000001      /* Base space of group       */
 #define ASTE1_AX        0xFFFF0000      /* Authorization index       */
 #define ASTE1_ATL       0x0000FFF0      /* Authority-table length    */
-#define ASTE1_RESV      0x0000000C      /* Reserved bits - must be 0 */
+#define ASTE1_RESV      0x0000000F      /* Must be 0 for ESA/390     */
 #define ASTE1_CA        0x00000002      /* Controlled ASN            */
 #define ASTE1_RA        0x00000001      /* Reusable ASN              */
 /* ASTE word 2 is the segment table designation for ESA/390 */
