@@ -131,7 +131,7 @@ U32     xaddr;                          /* Expanded storage address  */
 
     /* Obtain abs address, verify access and set ref/change bits */
     maddr = LOGICAL_TO_ABS (regs->GR(r1) & ADDRESS_MAXWRAP(regs),
-         USE_REAL_ADDR, regs, ACCTYPE_READ, regs->psw.pkey);
+         USE_REAL_ADDR, regs, ACCTYPE_READ, 0);
     maddr &= XSTORE_PAGEMASK;
 
     /* Copy data from main to expanded */
