@@ -1508,7 +1508,7 @@ tran_excp_addr:
 /*-------------------------------------------------------------------*/
 _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
 {
-    regs->tlbID = ++regs->tlbID & 0xFF;
+    regs->tlbID = ++regs->tlbID & 0xFFFF;
     if (!regs->tlbID)
     {
         MEMSET (regs->tlb, 0, sizeof(regs->tlb));
@@ -1520,7 +1520,7 @@ _DAT_C_STATIC void ARCH_DEP(purge_tlb) (REGS *regs)
     /* Also clear the guest registers in the SIE copy */
     if(regs->guestregs)
     {
-        regs->guestregs->tlbID = ++regs->guestregs->tlbID & 0xFF;
+        regs->guestregs->tlbID = ++regs->guestregs->tlbID & 0xFFFF;
         if (!regs->guestregs->tlbID)
         {
             MEMSET (regs->guestregs->tlb, 0, sizeof(regs->guestregs->tlb));

@@ -2610,10 +2610,10 @@ int tlb_cmd(int argc, char *argv[], char *cmdline)
 
     regs = sysblk.regs + cpu;
     logmsg ("cpu %d tlbID 0x%3.3x\n",cpu,regs->tlbID);
-    logmsg (" ix              std            vaddr              pte id c p\n");
+    logmsg (" ix              std            vaddr              pte   id c p\n");
     for (i = 0; i < MAXAEA; i++)
     {
-        logmsg("%s%2.2x %16.16llx %16.16llx %16.16llx %2.2x %1d %1d\n",
+        logmsg("%s%2.2x %16.16llx %16.16llx %16.16llx %4.4x %1d %1d\n",
          regs->tlb[i].valid == regs->tlbID ? "*" : " ",
          i,regs->tlb[i].TLB_STD_G,regs->tlb[i].TLB_VADDR_G,
          regs->tlb[i].TLB_PTE_G,regs->tlb[i].valid, regs->tlb[i].common,
