@@ -4958,7 +4958,7 @@ int     i1, i2;
         regs->psw.cc = (regs->fpr[i1] & 0x80000000) ? 1 : 2;
     } else {
         /* true zero with sign */
-        regs->fpr[i1] = regs->fpr[i2] ^ 0x80000000;
+        regs->fpr[i1] = (regs->fpr[i2] ^ 0x80000000) & 0x80000000;
         regs->fpr[i1+FPREX] = regs->fpr[i1];
         regs->fpr[i1+1] = 0;
         regs->fpr[i1+FPREX+1] = 0;
