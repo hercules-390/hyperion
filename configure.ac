@@ -136,6 +136,9 @@ have_dlopen=false
 # AC_CHECK_LIB(ltdl,lt_dlopen)
 # AC_CHECK_LIB(ltdl,lt_dlopen, have_lt_dlopen=true, have_lt_dlopen=false )
 
+AC_CHECK_LIB(gcrypt,gcry_cipher_open, have_gcrypt=true, have_gcrypt=false )
+AM_CONDITIONAL(HAVE_GCRYPT, [test "x$have_gcrypt" = "xtrue"])
+
 opt_dynamic_load=true
 
 AC_ARG_ENABLE(dynamic-load,
@@ -693,4 +696,4 @@ AH_TEMPLATE([NEED_GETOPT_OPTRESET],
 AH_TEMPLATE([MODULESDIR],
             [Directory where HERCULES modules are installed])
 
-AC_OUTPUT([Makefile util/Makefile html/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])
+AC_OUTPUT([Makefile util/Makefile html/Makefile crypto/Makefile po/Makefile.in po/Makefile man/Makefile intl/Makefile m4/Makefile ])

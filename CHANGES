@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+30 Oct 2003 Added crypto functions - Bernard van der Helm / Jan Jaeger
 24 Oct 2003 pttrace.c threads trace patch - Greg
 22 Oct 2003 shared_server tolerates unix socket problems - Greg
 20 Oct 2003 Prevent dyngui unload when gui active - Jan Jaeger
