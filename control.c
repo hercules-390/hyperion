@@ -2639,7 +2639,7 @@ CREG    newcr12 = 0;                    /* CR12 upon completion      */
            a space switch event, or if PER mode is set */
         if ((regs->CR(1) & SSEVENT_BIT)
             || (ASTE_AS_DESIGNATOR(aste) & SSEVENT_BIT)
-            || (regs->psw.sysmask & PSW_PERMODE))
+            || (OPEN_IC_PERINT(regs) ))
         {
             /* [6.5.2.34] Set the translation exception address equal
                to the old primary ASN, with the high-order bit set if
@@ -3598,7 +3598,7 @@ int     ssevent = 0;                    /* 1=space switch event      */
     if (((oldmode != 3 && mode == 3) || (oldmode == 3 && mode != 3))
          && (regs->CR(1) & SSEVENT_BIT
               || regs->CR(13) & SSEVENT_BIT
-              || regs->psw.sysmask & PSW_PERMODE ))
+              || OPEN_IC_PERINT(regs) ))
       {
         /* Indicate space-switch event required */
         ssevent = 1;
