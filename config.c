@@ -577,6 +577,21 @@ BYTE **newargv;                         /* Additional Device argument array copy
         if (strlen(keyword) <= 4
             && sscanf(keyword, "%x%c", &rc, &c) == 1)
             break;
+        /* ISW */
+        /* Also exit if keyword contains '-', ',' or '.' */
+        /* Added because device statements may now be a compound device number specification */
+        if(strchr(keyword,'-'))
+        {
+            break;
+        }
+        if(strchr(keyword,'.'))
+        {
+            break;
+        }
+        if(strchr(keyword,','))
+        {
+            break;
+        }
 
         /* Clear the operand value pointers */
         sserial = NULL;
@@ -724,6 +739,31 @@ BYTE **newargv;                         /* Additional Device argument array copy
                 siodelay = operand;
             }
 #endif /*OPTION_IODELAY_KLUDGE*/
+#if defined(OPTION_CONFIG_SYMBOLS)
+            else if (strcasecmp(keyword,"defsym")==0)
+            {
+                char *subval;
+                /* Execute this operation immediatelly */
+                if(operand==NULL)
+                {
+                    fprintf(stderr, _("HHCCF059S Error in %s line %d: "
+                        "Missing symbol name on DEFSYM statement\n"),
+                        fname, stmt);
+                    delayed_exit(1);
+                }
+                if(addargc!=1)
+                {
+                    fprintf(stderr, _("HHCCF059S Error in %s line %d: "
+                        "DEFSYM requires a single symbol value (include quotation marks if necessary)\n"),
+                        fname, stmt);
+                    delayed_exit(1);
+                }
+                subval=resolve_symbol_string(addargv[0]);
+                set_symbol(operand,subval);
+                free(subval);
+                addargc--;
+            }
+#endif /* defined(OPTION_CONFIG_SYMBOLS) */
 #if defined(OPTION_HTTP_SERVER)
             else if (strcasecmp (keyword, "httpport") == 0)
             {
