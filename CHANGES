@@ -1,3 +1,6 @@
+13 Feb 2002 Fix TS intercept test - Paul Leisy
+13 Feb 2002 Fix TXA for HOST PIC 04 fault on GUEST stack access - Paul Leisy
+13 Feb 2002 Throw out Store PER when merged with null/supr rupts - Paul Leisy
 13 Feb 2002 Make CS, CDS, CSP behave consistently: always store - Paul Leisy
 11 Feb 2002 ISK, SSK missing 2k/4k check in 370 native - Paul Leisy
 11 Feb 2002 Fix SIGP Initial Program Reset (S/370) - Jan Jaeger
