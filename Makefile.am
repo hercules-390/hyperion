@@ -85,7 +85,7 @@ EXTRA_DIST = hercules.cnf
 noinst_HEADERS  = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
     feature.h esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
     codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
-    sllib.h htypes.h fthreads.h w32chan.h linklist.h
+    sllib.h htypes.h fthreads.h w32chan.h linklist.h if_tun.h
 
 cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
 	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
