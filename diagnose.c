@@ -108,7 +108,7 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
     /* Diagnose 000: Store Extended Identification Code              */
     /*---------------------------------------------------------------*/
-        extid_call (r1, r2, regs);
+        ARCH_DEP(extid_call) (r1, r2, regs);
         break;
 
     case 0x008:
@@ -116,21 +116,21 @@ U32             n;                      /* 32-bit operand value      */
     /* Diagnose 008: Virtual Console Function                        */
     /*---------------------------------------------------------------*/
         /* Process CP command and set condition code */
-        regs->psw.cc = cpcmd_call (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(cpcmd_call) (r1, r2, regs);
         break;
 
     case 0x00C:
     /*---------------------------------------------------------------*/
     /* Diagnose 00C: Pseudo Timer                                    */
     /*---------------------------------------------------------------*/
-        pseudo_timer (code, r1, r2, regs);
+        ARCH_DEP(pseudo_timer) (code, r1, r2, regs);
         break;
 
     case 0x024:
     /*---------------------------------------------------------------*/
     /* Diagnose 024: Device Type and Features                        */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = diag_devtype (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(diag_devtype) (r1, r2, regs);
         break;
 
     case 0x05C:
@@ -162,7 +162,7 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
     /* Diagnose 0A4: Synchronous I/O (Standard CMS Blocksize)        */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = syncblk_io (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(syncblk_io) (r1, r2, regs);
 //      logmsg ("Diagnose X\'0A4\': CC=%d, R15=%8.8X\n",      /*debug*/
 //              regs->psw.cc, regs->GR_L(15));                 /*debug*/
         break;
@@ -171,7 +171,7 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
     /* Diagnose 0A8: Synchronous General I/O                         */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = syncgen_io (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(syncgen_io) (r1, r2, regs);
 //      logmsg ("Diagnose X\'0A8\': CC=%d, R15=%8.8X\n",      /*debug*/
 //              regs->psw.cc, regs->GR_L(15));                 /*debug*/
         break;
@@ -180,7 +180,7 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
     /* Diagnose 0B0: Access Re-IPL Data                              */
     /*---------------------------------------------------------------*/
-        access_reipl_data (r1, r2, regs);
+        ARCH_DEP(access_reipl_data) (r1, r2, regs);
         break;
 
     case 0x0DC:
@@ -196,7 +196,7 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
     /* Diagnose 214: Pending Page Release                            */
     /*---------------------------------------------------------------*/
-        regs->psw.cc = diag_ppagerel (r1, r2, regs);
+        regs->psw.cc = ARCH_DEP(diag_ppagerel) (r1, r2, regs);
         break;
 
     case 0x23C:
@@ -219,7 +219,7 @@ U32             n;                      /* 32-bit operand value      */
     /*---------------------------------------------------------------*/
     /* Diagnose 270: Pseudo Timer Extended                           */
     /*---------------------------------------------------------------*/
-        pseudo_timer (code, r1, r2, regs);
+        ARCH_DEP(pseudo_timer) (code, r1, r2, regs);
         break;
 
     case 0x274:

@@ -1017,16 +1017,6 @@ void panel_display (void);
 #define ARCH_900	2		/* ESAME mode		     */
 
 
-/* Functions in module vm.c */
-int  diag_devtype (int r1, int r2, REGS *regs);
-int  syncblk_io (int r1, int r2, REGS *regs);
-int  syncgen_io (int r1, int r2, REGS *regs);
-void extid_call (int r1, int r2, REGS *regs);
-int  cpcmd_call (int r1, int r2, REGS *regs);
-void pseudo_timer (U32 code, int r1, int r2, REGS *regs);
-void access_reipl_data (int r1, int r2, REGS *regs);
-int  diag_ppagerel (int r1, int r2, REGS *regs);
-
 /* Functions in module timer.c */
 void update_TOD_clock (void);
 void *timer_update_thread (void *argp);

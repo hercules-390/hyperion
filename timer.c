@@ -227,7 +227,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                        comes out to 75 on the Alpha, with its 1024/second
                        tick interval. See 370 POO page 4-29. (ESA doesn't
                        even have an interval timer.) */
-#ifdef OPTION_MIPS_COUNTING
+#if defined(OPTION_MIPS_COUNTING) && defined(_FEATURE_SIE)
                     itimer -= itimer_diff;
 #else
                     itimer -= 76800 / CLK_TCK;
@@ -264,7 +264,7 @@ struct  timeval tv;                     /* Structure for gettimeofday
                comes out to 75 on the Alpha, with its 1024/second
                tick interval. See 370 POO page 4-29. (ESA doesn't
                even have an interval timer.) */
-#ifdef OPTION_MIPS_COUNTING
+#if defined(OPTION_MIPS_COUNTING) && defined(_FEATURE_SIE)
             itimer -= itimer_diff;
 #else
             itimer -= 76800 / CLK_TCK;

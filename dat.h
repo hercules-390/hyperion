@@ -80,7 +80,7 @@ int     i;                              /* Array subscript           */
 
   #if !defined(FEATURE_ESAME)
     /* ASN translation specification exception if reserved bits set */
-    if (ASF_ENABLED(regs) == 0) {
+    if (!ASF_ENABLED(regs)) {
         if (afte & AFTE_RESV_0)
               goto asn_asn_tran_spec_excp;
     } else {
@@ -90,7 +90,7 @@ int     i;                              /* Array subscript           */
   #endif /*!defined(FEATURE_ESAME)*/
 
     /* [3.9.3.2] Use AFTE and ASX to obtain real address of ASTE */
-    if (ASF_ENABLED(regs) == 0) {
+    if (!ASF_ENABLED(regs)) {
         aste_addr = afte & AFTE_ASTO_0;
         aste_addr += (asn & ASN_ASX) << 4;
         numwords = 4;
@@ -132,7 +132,7 @@ int     i;                              /* Array subscript           */
     if ((aste[0] & ASTE0_RESV) || (aste[1] & ASTE1_RESV)
         || ((aste[0] & ASTE0_BASE)
           #ifdef FEATURE_SUBSPACE_GROUP
-            && ASF_ENABLED(regs) == 0
+            && !ASF_ENABLED(regs)
           #endif /*FEATURE_SUBSPACE_GROUP*/
             ))
         goto asn_asn_tran_spec_excp;
@@ -421,7 +421,7 @@ int     code;                           /* Exception code            */
             if ((aste[0] & ASTE0_RESV) || (aste[1] & ASTE1_RESV)
                 || ((aste[0] & ASTE0_BASE)
                       #ifdef FEATURE_SUBSPACE_GROUP
-                        && ASF_ENABLED(regs) == 0
+                        && !ASF_ENABLED(regs)
                       #endif /*FEATURE_SUBSPACE_GROUP*/
                    ))
                 goto alet_asn_tran_spec_excp;

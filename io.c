@@ -829,6 +829,7 @@ U32     effective_addr2;                /* Effective address         */
 }
 
 
+#if defined(_FEATURE_SIE)
 /*-------------------------------------------------------------------*/
 /* B200 CONCS - Connect Channel Set                              [S] */
 /*-------------------------------------------------------------------*/
@@ -865,6 +866,7 @@ U32     effective_addr2;                /* Effective address         */
     SIE_INTERCEPT(regs);
 
 }
+#endif /*defined(_FEATURE_SIE)*/
 #endif /*defined(FEATURE_S370_CHANNEL)*/
 
 

@@ -579,8 +579,8 @@ static char *pgmintname[] = {
             else
 #endif /*defined(_FEATURE_SIE)*/
             {
-                logmsg ("CPU%4.4X: Program interrupt loop: ",regs->cpuad);
-                display_psw (regs);
+                logmsg ("CPU%4.4X: Program interrupt loop: ",realregs->cpuad);
+                display_psw (realregs);
                 realregs->cpustate = CPUSTATE_STOPPING;
                 ON_IC_CPU_NOT_STARTED(realregs);
             }
@@ -1029,6 +1029,10 @@ U32     prevmask;
                     display_psw (regs);
                     regs->cpustate = CPUSTATE_STOPPING;
                     ON_IC_CPU_NOT_STARTED(regs);
+                    INVALIDATE_AIA(regs);
+                    INVALIDATE_AEA_ALL(regs);
+                    release_lock (&sysblk.intlock);
+                    continue;
                 }
 
                 INVALIDATE_AIA(regs);

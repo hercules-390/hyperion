@@ -1091,7 +1091,6 @@ void s390_store_psw (REGS *regs, BYTE *addr);
 #endif /*defined(_FEATURE_ZSIE)*/
 void ARCH_DEP(store_psw) (REGS *regs, BYTE *addr);
 int  ARCH_DEP(load_psw) (REGS *regs, BYTE *addr);
-
 #if defined(_FEATURE_SIE)
 void s370_program_interrupt (REGS *regs, int code);
 #endif /*!defined(_FEATURE_SIE)*/
@@ -1102,6 +1101,17 @@ void ARCH_DEP(program_interrupt) (REGS *regs, int code);
 void *cpu_thread (REGS *regs);
 void store_psw (REGS *regs, BYTE *addr);
 void display_psw (REGS *regs);
+
+
+/* Functions in module vm.c */
+int  ARCH_DEP(diag_devtype) (int r1, int r2, REGS *regs);
+int  ARCH_DEP(syncblk_io) (int r1, int r2, REGS *regs);
+int  ARCH_DEP(syncgen_io) (int r1, int r2, REGS *regs);
+void ARCH_DEP(extid_call) (int r1, int r2, REGS *regs);
+int  ARCH_DEP(cpcmd_call) (int r1, int r2, REGS *regs);
+void ARCH_DEP(pseudo_timer) (U32 code, int r1, int r2, REGS *regs);
+void ARCH_DEP(access_reipl_data) (int r1, int r2, REGS *regs);
+int  ARCH_DEP(diag_ppagerel) (int r1, int r2, REGS *regs);
 
 
 /* Functions in module diagnose.c */
@@ -1119,7 +1129,7 @@ void ARCH_DEP(diag204_call) (int r1, int r2, REGS *regs);
 void ARCH_DEP(perform_external_interrupt) (REGS *regs);
 void ARCH_DEP(store_status) (REGS *ssreg, RADR aaddr);
 void synchronize_broadcast (REGS *regs, U32 *type);
-void store_status (REGS *ssreg, RADR aaddr);
+void store_status (REGS *ssreg, U64 aaddr);
 
 
 /* Functions in module ipl.c */
@@ -1812,6 +1822,7 @@ DEF_INST(pack_unicode);
 DEF_INST(unpack_ascii);
 DEF_INST(unpack_unicode);
 
+
 /* Instructions in ieee.c */
 DEF_INST(add_bfp_ext_reg);
 DEF_INST(add_bfp_long_reg);
@@ -1865,4 +1876,6 @@ DEF_INST(subtract_bfp_long_reg);
 DEF_INST(subtract_bfp_long);
 DEF_INST(subtract_bfp_short_reg);
 DEF_INST(subtract_bfp_short);
+
+
 /* end of OPCODE.H */

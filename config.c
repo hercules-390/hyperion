@@ -29,11 +29,11 @@
 
 #if !defined(_GEN_ARCH)
 
-#define  _GEN_ARCH 370
+#define  _GEN_ARCH 390
 #include "config.c"
 #undef   _GEN_ARCH
 
-#define  _GEN_ARCH 390
+#define  _GEN_ARCH 370
 #include "config.c"
 #undef   _GEN_ARCH
 
@@ -330,13 +330,16 @@ BYTE    c;                              /* Work area for sscanf      */
             {
                 sostailor = operand;
             }
-// #if defined(FEATURE_HARDWARE_LOADER)
             else if (strcasecmp (keyword, "cfccimage") == 0)
             {
+#if defined(_FEATURE_HARDWARE_LOADER)
                 /* Set the CFCC image file name in the system block */
                 strncpy(sysblk.hwl_fname,operand,sizeof(sysblk.hwl_fname));
+#else /*!defined(_FEATURE_HARDWARE_LOADER)*/
+                logmsg( "HHC019I Hardware Loader Support not configured\n");
+                exit(1);
+#endif /*!defined(_FEATURE_HARDWARE_LOADER)*/
             }
-// #endif /*defined(FEATURE_HARDWARE_LOADER)*/
             else if (strcasecmp (keyword, "archmode") == 0)
             {
                 sarchmode = operand;
@@ -475,10 +478,10 @@ BYTE    c;                              /* Work area for sscanf      */
                         fname, stmt, snumvec);
                 exit(1);
             }
-#else /*!FEATURE_VECTOR_FACILITY*/
+#else /*!_FEATURE_VECTOR_FACILITY*/
             logmsg( "HHC019I Vector Facility Support not configured\n");
             exit(1);
-#endif /*!FEATURE_VECTOR_FACILITY*/
+#endif /*!_FEATURE_VECTOR_FACILITY*/
         }
 
         /* Parse load parameter operand */
@@ -631,7 +634,7 @@ BYTE    c;                              /* Work area for sscanf      */
 
     if (xpndsize != 0)
     {
-#ifdef FEATURE_EXPANDED_STORAGE
+#ifdef _FEATURE_EXPANDED_STORAGE
         /* Obtain expanded storage */
         sysblk.xpndsize = xpndsize * (1024*1024 / XSTORE_PAGESIZE);
         sysblk.xpndstor = malloc(sysblk.xpndsize * XSTORE_PAGESIZE);
@@ -642,10 +645,10 @@ BYTE    c;                              /* Work area for sscanf      */
                     xpndsize, strerror(errno));
             exit(1);
         }
-#else /*!FEATURE_EXPANDED_STORAGE*/
+#else /*!_FEATURE_EXPANDED_STORAGE*/
         logmsg( "HHC024I Expanded storage support not installed\n");
         exit(1);
-#endif /*!FEATURE_EXPANDED_STORAGE*/
+#endif /*!_FEATURE_EXPANDED_STORAGE*/
     } /* end if(sysblk.xpndsize) */
 
     /* Save the console port number */
@@ -816,6 +819,16 @@ void release_config()
 {
 DEVBLK *dev;
 int     cpu;
+
+    /* Stop all CPU's */
+    obtain_lock (&sysblk.intlock);
+    for (cpu = 0; cpu < MAX_CPU_ENGINES; cpu++)
+        if(sysblk.regs[cpu].cpuonline)
+        {
+            sysblk.regs[cpu].cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs + cpu);
+        }
+    release_lock (&sysblk.intlock);
 
     /* Detach all devices */
     for (dev = sysblk.firstdev; dev != NULL; dev = dev->nextdev)
@@ -1142,18 +1155,18 @@ int     newdevblk = 0;                  /* 1=Newly created devblk    */
     /* Mark device valid */
     dev->pmcw.flag5 |= PMCW5_V;
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
     dev->crwpending = 1;
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Release device lock */
     release_lock(&dev->lock);
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
     machine_check_crwpend();
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     return 0;
 } /* end function attach_device */
@@ -1181,10 +1194,10 @@ DEVBLK *dev;                            /* -> Device block           */
     /* Mark device invalid */
     dev->pmcw.flag5 &= ~(PMCW5_E | PMCW5_V);
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
     dev->crwpending = 1;
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Close file or socket */
     if (dev->fd > 2)
@@ -1203,10 +1216,10 @@ DEVBLK *dev;                            /* -> Device block           */
     /* Release device lock */
     release_lock(&dev->lock);
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
     machine_check_crwpend();
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     logmsg ("HHC041I device %4.4X detached\n", devnum);
 
@@ -1250,18 +1263,18 @@ DEVBLK *dev;                            /* -> Device block           */
     /* Disable the device */
     dev->pmcw.flag5 &= ~PMCW5_E;
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Indicate a CRW is pending for this device */
     dev->crwpending = 1;
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     /* Release device lock */
     release_lock(&dev->lock);
 
-#ifdef FEATURE_CHANNEL_SUBSYSTEM
+#ifdef _FEATURE_CHANNEL_SUBSYSTEM
     /* Signal machine check */
     machine_check_crwpend();
-#endif /*FEATURE_CHANNEL_SUBSYSTEM*/
+#endif /*_FEATURE_CHANNEL_SUBSYSTEM*/
 
     logmsg ("HHC044I device %4.4X defined as %4.4X\n",
             olddevn, newdevn);

@@ -1760,9 +1760,11 @@ U32     i2;                             /* 32-bit operand values     */
 
     RIL(inst, execflag, regs, r1, opcd, i2);
 
+#if defined(FEATURE_ESAME)
     if(regs->psw.amode64)
         regs->GR_G(r1) = regs->psw.IA;
     else
+#endif /*defined(FEATURE_ESAME)*/
     if ( regs->psw.amode )
         regs->GR_L(r1) = 0x80000000 | regs->psw.IA;
     else
@@ -3946,7 +3948,11 @@ DEF_INST(test_addressing_mode)
 {
     E(inst, execflag, regs);
 
-    regs->psw.cc = (regs->psw.amode64 << 1) | regs->psw.amode;
+    regs->psw.cc =
+#if defined(FEATURE_ESAME)
+                   (regs->psw.amode64 << 1) |
+#endif /*defined(FEATURE_ESAME)*/
+                                              regs->psw.amode;
 
 } /* end DEF_INST(test_addressing_mode) */
 #endif /*defined(FEATURE_ESAME_N3_ESA390) || defined(FEATURE_ESAME)*/
@@ -3969,7 +3975,10 @@ VADR    ia;                             /* Unupdated instruction addr*/
     if (ia > 0xFFFFFFULL)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    regs->psw.amode = regs->psw.amode64 = 0;
+#if defined(FEATURE_ESAME)
+    regs->psw.amode64 =
+#endif /*defined(FEATURE_ESAME)*/
+                        regs->psw.amode = 0;
     regs->psw.AMASK = AMASK24;
 
 } /* end DEF_INST(set_addressing_mode_24) */
@@ -3993,7 +4002,10 @@ VADR    ia;                             /* Unupdated instruction addr*/
     if (ia > 0x7FFFFFFFULL)
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIFICATION_EXCEPTION);
 
-    regs->psw.amode = 1; regs->psw.amode64 = 0;
+#if defined(FEATURE_ESAME)
+    regs->psw.amode64 = 0;
+#endif /*defined(FEATURE_ESAME)*/
+    regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
 
 } /* end DEF_INST(set_addressing_mode_31) */

@@ -79,10 +79,13 @@ typedef struct _HCPSGIOP {
 #define HCPSGIOP_FLAG_RESV    0x7F      /* Reserved bits, must be 0  */
 
 
+#endif /*!defined(_VM_C)*/
+
+
 /*-------------------------------------------------------------------*/
 /* Device Type and Features (Function code 0x024)                    */
 /*-------------------------------------------------------------------*/
-int diag_devtype (int r1, int r2, REGS *regs)
+int ARCH_DEP(diag_devtype) (int r1, int r2, REGS *regs)
 {
 U32             vdevinfo;               /* Virtual device information*/
 U32             rdevinfo;               /* Real device information   */
@@ -150,7 +153,7 @@ U16             devnum;                 /* Device number             */
 /*-------------------------------------------------------------------*/
 /* Process Synchronous Fixed Block I/O call (Function code 0x0A4)    */
 /*-------------------------------------------------------------------*/
-int syncblk_io (int r1, int r2, REGS *regs)
+int ARCH_DEP(syncblk_io) (int r1, int r2, REGS *regs)
 {
 int             i;                      /* Array subscript           */
 int             numsense;               /* Number of sense bytes     */
@@ -412,7 +415,7 @@ BYTE            skey1, skey2;           /* Storage keys of first and
 /*-------------------------------------------------------------------*/
 /* Process Synchronous General I/O call (Function code 0x0A8)        */
 /*-------------------------------------------------------------------*/
-int syncgen_io (int r1, int r2, REGS *regs)
+int ARCH_DEP(syncgen_io) (int r1, int r2, REGS *regs)
 {
 int             i;                      /* Array subscript           */
 int             numsense;               /* Number of sense bytes     */
@@ -611,7 +614,7 @@ BYTE            chanstat = 0;           /* Subchannel status         */
 /*-------------------------------------------------------------------*/
 /* Store Extended Identification Code (Function code 0x000)          */
 /*-------------------------------------------------------------------*/
-void extid_call (int r1, int r2, REGS *regs)
+void ARCH_DEP(extid_call) (int r1, int r2, REGS *regs)
 {
 int             i;                      /* Array subscript           */
 int             ver, rel;               /* Version and release number*/
@@ -719,7 +722,7 @@ BYTE            c;                      /* Character work area       */
 /*-------------------------------------------------------------------*/
 /* Process CP command (Function code 0x008)                          */
 /*-------------------------------------------------------------------*/
-int cpcmd_call (int r1, int r2, REGS *regs)
+int ARCH_DEP(cpcmd_call) (int r1, int r2, REGS *regs)
 {
 int     i;                              /* Array subscript           */
 int     cc = 0;                         /* Condition code            */
@@ -808,7 +811,7 @@ BYTE    resp[256];                      /* Response buffer (ASCIIZ)  */
 /*-------------------------------------------------------------------*/
 /* Access Re-IPL data (Function code 0x0B0)                          */
 /*-------------------------------------------------------------------*/
-void access_reipl_data (int r1, int r2, REGS *regs)
+void ARCH_DEP(access_reipl_data) (int r1, int r2, REGS *regs)
 {
 U32     bufadr;                         /* Real addr of data buffer  */
 U32     buflen;                         /* Length of data buffer     */
@@ -840,7 +843,7 @@ U32     buflen;                         /* Length of data buffer     */
 /* Pseudo Timer Extended (Function code 0x270)                       */
 /* Pseudo Timer (Function code 0x00C)                                */
 /*-------------------------------------------------------------------*/
-void pseudo_timer (U32 code, int r1, int r2, REGS *regs)
+void ARCH_DEP(pseudo_timer) (U32 code, int r1, int r2, REGS *regs)
 {
 int     i;                              /* Array subscript           */
 time_t  timeval;                        /* Current time              */
@@ -944,7 +947,7 @@ static  BYTE timefmt[]="%m/%d/%y%H:%M:%S%m/%d/%Y%Y-%m-%d";
 /*-------------------------------------------------------------------*/
 /* Pending Page Release (Function code 0x214)                        */
 /*-------------------------------------------------------------------*/
-int diag_ppagerel (int r1, int r2, REGS *regs)
+int ARCH_DEP(diag_ppagerel) (int r1, int r2, REGS *regs)
 {
 U32     abs, start, end;                /* Absolute frame addresses  */
 BYTE    skey;                           /* Specified storage key     */
@@ -1014,9 +1017,6 @@ BYTE    func;                           /* Function code...          */
 } /* end function diag_ppagerel */
 
 
-#endif /*!defined(_VM_C)*/
-
-
 /*-------------------------------------------------------------------*/
 /* B2F0 IUCV  - Inter User Communications Vehicle                [S] */
 /*-------------------------------------------------------------------*/
@@ -1041,6 +1041,8 @@ U32     effective_addr2;                /* Effective address         */
 
 }
 
+#endif /*FEATURE_EMULATE_VM*/
+
 
 #if !defined(_GEN_ARCH)
 
@@ -1052,6 +1054,3 @@ U32     effective_addr2;                /* Effective address         */
 #include "vm.c"
 
 #endif /*!defined(_GEN_ARCH)*/
-
-
-#endif /*FEATURE_EMULATE_VM*/

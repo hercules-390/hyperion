@@ -401,7 +401,7 @@ PSA     *sspsa;                         /* -> Store status area      */
 
     /* Store general-purpose registers in bytes 384-447 */
     for (i = 0; i < 16; i++)
-        STORE_W(sspsa->storegpr[i],ssreg->GR_L(i));
+        STORE_W(sspsa->storegpr[i],ssreg->GR(i));
 
     /* Store control registers in bytes 448-511 */
     for (i = 0; i < 16; i++)
@@ -424,13 +424,15 @@ PSA     *sspsa;                         /* -> Store status area      */
 #include "external.c"
 
 
-void store_status (REGS *ssreg, RADR aaddr)
+void store_status (REGS *ssreg, U64 aaddr)
 {
     switch(ssreg->arch_mode) {
         case ARCH_370:
+            aaddr &= 0x7FFFFFFF;
             s370_store_status (ssreg, aaddr);
             break;
         case ARCH_390:
+            aaddr &= 0x7FFFFFFF;
             s390_store_status (ssreg, aaddr);
             break;
         case ARCH_900:

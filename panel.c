@@ -1251,7 +1251,10 @@ static char *arch_name[] = { "S/370", "ESA/390", "ESAME" };
         obtain_lock (&sysblk.intlock);
         for (i = 0; i < MAX_CPU_ENGINES; i++)
             if(sysblk.regs[i].cpuonline)
-                sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
+        {
+            sysblk.regs[i].cpustate = CPUSTATE_STOPPING;
+            ON_IC_CPU_NOT_STARTED(sysblk.regs + i);
+        }
         release_lock (&sysblk.intlock);
         return NULL;
     }

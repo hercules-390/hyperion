@@ -1,3 +1,8 @@
+10 Mar 2001 Stop all CPU's in release_config - Jan Jaeger
+10 Mar 2001 Fix CPU entering manual state on disabled wait - Jan Jaeger
+10 Mar 2001 Various fixes to configurable features logic - Jan Jaeger
+08 Mar 2001 Fix ESAME Add/Subtract/Multiply/Divide
+            when both operands address same register - Jan Jaeger
 07 Mar 2001 Correction to MLG/MLGR - Jan Jaeger
 07 Mar 2001 Add @shell panel command - Bernard van der Helm/Jan Jaeger
 07 Mar 2001 Add 9221 power-off diagnose - Jan Jaeger

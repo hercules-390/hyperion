@@ -176,6 +176,33 @@
 
  UNDEF_INST(execute_a6xx)
  UNDEF_INST(execute_e4xx)
+
+ UNDEF_INST(v_test_vmr)
+ UNDEF_INST(v_complement_vmr)
+ UNDEF_INST(v_count_left_zeros_in_vmr)
+ UNDEF_INST(v_count_ones_in_vmr)
+ UNDEF_INST(v_extract_vct)
+ UNDEF_INST(v_extract_vector_modes)
+ UNDEF_INST(v_restore_vr)
+ UNDEF_INST(v_save_changed_vr)
+ UNDEF_INST(v_save_vr)
+ UNDEF_INST(v_load_vmr)
+ UNDEF_INST(v_load_vmr_complement)
+ UNDEF_INST(v_store_vmr)
+ UNDEF_INST(v_and_to_vmr)
+ UNDEF_INST(v_or_to_vmr)
+ UNDEF_INST(v_exclusive_or_to_vmr)
+ UNDEF_INST(v_save_vsr)
+ UNDEF_INST(v_save_vmr)
+ UNDEF_INST(v_restore_vsr)
+ UNDEF_INST(v_restore_vmr)
+ UNDEF_INST(v_load_vct_from_address)
+ UNDEF_INST(v_clear_vr)
+ UNDEF_INST(v_set_vector_mask_mode)
+ UNDEF_INST(v_load_vix_from_address)
+ UNDEF_INST(v_store_vector_parameters)
+ UNDEF_INST(v_save_vac)
+ UNDEF_INST(v_restore_vac)
 #endif /*!defined(FEATURE_VECTOR_FACILITY)*/
 
 

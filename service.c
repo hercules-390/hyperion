@@ -1324,8 +1324,11 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         message[j] = '\0';
                         if(j > 0)
                             logmsg ("%s\n", message);
-// if(!memcmp(message,"*IEE479W",8)) { regs->cpustate = CPUSTATE_STOPPING;
-//                                     ON_IC_CPU_NOT_STARTED(regs); }
+#if 0
+   if(!memcmp(message," IEA190I",8)) { regs->cpustate = CPUSTATE_STOPPING;
+                                       memset(sysblk.imap01,0,27008);
+                                       ON_IC_CPU_NOT_STARTED(regs); }
+#endif
                     }
                 }
                 mcd_len -= obj_len;
