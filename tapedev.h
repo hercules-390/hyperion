@@ -166,8 +166,9 @@ typedef struct _OMATAPE_BLKHDR {
 /* Structure definition for OMA tape descriptor array                */
 /*-------------------------------------------------------------------*/
 typedef struct _OMATAPE_DESC {
+        int     fd;                     /* File Descriptor for the file */
         BYTE    filename[256];          /* Filename of data file     */
-        BYTE    format;                 /* H=HEADERS,T=TEXT,F=FIXED  */
+        BYTE    format;                 /* H=HEADERS,T=TEXT,F=FIXED,X=Tape Mark */
         BYTE    resv;                   /* Reserved for alignment    */
         U16     blklen;                 /* Fixed block length        */
     } OMATAPE_DESC;

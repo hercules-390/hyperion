@@ -2091,6 +2091,8 @@ BYTE            c;                      /* Work area for sscanf      */
     {
         if (tdfbuf[i] == '\n') filecount++;
     } /* end for(i) */
+    /* ISW Add 1 to filecount to add an extra EOT marker */
+    filecount++;
 
     /* Obtain storage for the tape descriptor array */
     tdftab = (OMATAPE_DESC*)malloc (filecount * sizeof(OMATAPE_DESC));
@@ -2103,7 +2105,7 @@ BYTE            c;                      /* Work area for sscanf      */
     }
 
     /* Build the tape descriptor array */
-    for (filecount = 1, tdfpos = 0, stmt = 1; ; filecount++)
+    for (filecount = 0, tdfpos = 0, stmt = 1; ; filecount++)
     {
         /* Clear the tape descriptor array entry */
         memset (&(tdftab[filecount]), 0, sizeof(OMATAPE_DESC));
@@ -2124,9 +2126,16 @@ BYTE            c;                      /* Work area for sscanf      */
         tdfbuf[tdfpos] = '\0';
 
         /* Exit if TM or EOT record */
-        if (strcasecmp(tdfrec, "TM") == 0
-            || strcasecmp(tdfrec, "EOT") == 0)
-            break;
+        if (strcasecmp(tdfrec, "TM") == 0)
+        {
+                tdftab[filecount].format='X';
+                continue;
+        }
+        if(strcasecmp(tdfrec, "EOT") == 0)
+        {
+                tdftab[filecount].format='E';
+                break;
+        }
 
         /* Parse the TDF record */
         tdffilenm = strtok (tdfrec, " \t");
@@ -2237,9 +2246,10 @@ BYTE            c;                      /* Work area for sscanf      */
         }
         tdfbuf[tdfpos] = c;
     } /* end for(filecount) */
+    tdftab[filecount].format='E';     /* Force an EOT as last entry (filecount is correctly adjusted here) */
 
     /* Save the file count and TDF array pointer in the device block */
-    dev->omafiles = filecount;
+    dev->omafiles = filecount+1;
     dev->omadesc = tdftab;
 
     /* Release the TDF file buffer and exit */
@@ -2272,6 +2282,11 @@ OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
     }
 
     /* Unit exception if beyond end of tape */
+    /* ISW : CHANGED PROCESSING - RETURN UNDEFINITE Tape Marks */
+    /*       NOTE : The last entry in the TDF table is ALWAYS  */
+    /*              an EOT Condition                           */
+    /*              This is ensured by the TDF reading routine */
+#if 0
     if (dev->curfilen >= dev->omafiles)
     {
         logmsg (_("HHCTA050E Attempt to access beyond end of tape %s\n"),
@@ -2280,10 +2295,25 @@ OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
         build_senseX(TAPE_BSENSE_ENDOFTAPE,dev,unitstat,code);
         return -1;
     }
+#else
+    if(dev->curfilen>dev->omafiles)
+    {
+        dev->curfilen=dev->omafiles;
+        return(0);
+    }
+#endif
 
     /* Point to the current file entry in the OMA descriptor table */
     omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += dev->curfilen;
+    omadesc += (dev->curfilen-1);
+    if(omadesc->format=='X')
+    {
+        return 0;
+    }
+    if(omadesc->format=='E')
+    {
+        return 0;
+    }
 
     /* Open the OMATAPE file */
     rc = open (omadesc->filename, O_RDONLY | O_BINARY);
@@ -2689,7 +2719,7 @@ static int read_omatape (DEVBLK *dev,
 int len;
 OMATAPE_DESC *omadesc;
     omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += dev->curfilen;
+    omadesc += (dev->curfilen-1);
 
     switch (omadesc->format)
     {
@@ -2702,6 +2732,13 @@ OMATAPE_DESC *omadesc;
         break;
     case 'T':
         len = read_omatext (dev, omadesc, buf, unitstat,code);
+        break;
+    case 'X':
+        len=0;
+        dev->curfilen++;
+        break;
+    case 'E':
+        len=0;
         break;
     } /* end switch(omadesc->format) */
     return len;
@@ -2864,7 +2901,7 @@ OMATAPE_DESC   *omadesc;                /* -> OMA descriptor entry   */
 
     /* Point to the current file entry in the OMA descriptor table */
     omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += dev->curfilen;
+    omadesc += (dev->curfilen-1);
 
     /* Forward space block depending on OMA file type */
     switch (omadesc->format)
@@ -2921,7 +2958,7 @@ S32             nxthdro;                /* Offset of next header     */
 
     /* Point to the current file entry in the OMA descriptor table */
     omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += dev->curfilen;
+    omadesc += (dev->curfilen-1);
 
     /* Open the new current file */
     rc = open_omatape (dev, unitstat,code);
@@ -3000,7 +3037,7 @@ S32             nxthdro;                /* Offset of next header     */
 
     /* Point to the current file entry in the OMA descriptor table */
     omadesc = (OMATAPE_DESC*)(dev->omadesc);
-    omadesc += dev->curfilen;
+    omadesc += (dev->curfilen-1);
 
     /* Backspace file if current position is at start of file */
     if (dev->nxtblkpos == 0)
@@ -3073,7 +3110,7 @@ S32             nxthdro;                /* Offset of next header     */
 /*                                                                   */
 /* All errors are ignored                                            */
 /*-------------------------------------------------------------------*/
-static void close_omatape(DEVBLK *dev)
+static void close_omatape2(DEVBLK *dev)
 {
     close (dev->fd);
     dev->fd=-1;
@@ -3092,6 +3129,19 @@ static void close_omatape(DEVBLK *dev)
     return;
 }
 /*-------------------------------------------------------------------*/
+/* Close an OMA tape file set                                        */
+/*                                                                   */
+/* All errors are ignored                                            */
+/* Change the filename to '*' - unloaded                             */
+/* TAPE REALLY UNLOADED                                              */
+/*-------------------------------------------------------------------*/
+static void close_omatape(DEVBLK *dev)
+{
+    close_omatape2(dev);
+    strcpy(dev->filename,TAPE_UNLOADED);
+    return;
+}
+/*-------------------------------------------------------------------*/
 /* Rewind an OMA tape file set                                       */
 /*                                                                   */
 /* All errors are ignored                                            */
@@ -3100,7 +3150,7 @@ static int rewind_omatape(DEVBLK *dev,BYTE *unitstat,BYTE code)
 {
     UNREFERENCED(unitstat);
     UNREFERENCED(code);
-    close_omatape(dev);
+    close_omatape2(dev);
     return 0;
 }
 /*-------------------------------------------------------------------*/
