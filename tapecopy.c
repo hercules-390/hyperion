@@ -171,7 +171,7 @@ AWSTAPE_BLKHDR  awshdr;                 /* AWSTAPE block header      */
     }
     else
     {
-        printf ("Usage: tapecopy /dev/st0 [outfile]\n");
+        printf ("Usage: tapecopy /dev/st? [outfile]\n");
         exit (1);
     }
 
