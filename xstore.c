@@ -157,6 +157,11 @@ int     r1, r2;                         /* Values of R fields        */
 
     PRIV_CHECK(regs);
 
+#if defined(_FEATURE_SIE)
+    if(regs->sie_state && !(regs->siebk->ec[0] & SIE_EC0_MVPG))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
+
     /* Perform serialization before operation */
     PERFORM_SERIALIZATION (regs);
 
@@ -215,6 +220,11 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
     RRE(inst, execflag, regs, r1, r2);
+
+#if defined(_FEATURE_SIE)
+    if(regs->sie_state && !(regs->siebk->ec[0] & SIE_EC0_MVPG))
+        longjmp(regs->progjmp, SIE_INTERCEPT_INST);
+#endif /*defined(_FEATURE_SIE)*/
 
     /* Use PSW key as access key for both operands */
     akey1 = akey2 = regs->psw.pkey;
