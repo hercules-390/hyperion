@@ -270,8 +270,11 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 	raddr2 = APPLY_PREFIXING (raddr2, regs->PX);
 
+        if (raddr2 >= regs->mainsize)
+            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
 #if defined(_FEATURE_SIE)
-        if(raddr2 < regs->mainsize && regs->sie_state  && !regs->sie_pref)
+        if(regs->sie_state  && !regs->sie_pref)
         {
         U32 sie_stid;
         U16 sie_xcode;
@@ -367,10 +370,11 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
 	raddr1 = APPLY_PREFIXING (raddr1, regs->PX);
 
-        if (raddr1 < regs->mainsize)
-            SIE_TRANSLATE(&raddr1,ACCTYPE_READ,regs);
+        if (raddr1 >= regs->mainsize)
+            ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
+
 #if defined(_FEATURE_SIE)
-        if(raddr1 < regs->mainsize && regs->sie_state  && !regs->sie_pref)
+        if(regs->sie_state  && !regs->sie_pref)
         {
         U32 sie_stid;
         U16 sie_xcode;
