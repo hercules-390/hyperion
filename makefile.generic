@@ -39,7 +39,7 @@ EXEFILES = hercules hercifc \
            cckdcdsk cckdcomp cckddiag cckdswap \
            cckd2ckd ckd2cckd fba2cfba cfba2fba dasdcopy \
            hetget hetinit hetmap hetupd \
-           dmap2hrc
+           dmap2hrc dyninst
 
 
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
@@ -135,6 +135,8 @@ hetupd_OBJ   = hetupd.o hetlib.o sllib.o hostinfo.o version.o  logmsg.o
 
 dmap2hrc_OBJ = dmap2hrc.o hostinfo.o version.o  logmsg.o
 
+dyninst_OBJ = dyninst.o
+
 HEADERS  = codepage.h commadpt.h cpuint.h ctcadpt.h dasdblks.h \
            dasdtab.h dat.h devtype.h esa390.h feat370.h feat390.h \
            feat900.h featall.h featchk.h feature.h fishhang.h \
@@ -227,6 +229,9 @@ hetupd:   $(hetupd_OBJ)
 
 dmap2hrc: $(dmap2hrc_OBJ)
 	  $(CC) -o dmap2hrc $(dmap2hrc_OBJ) $(LFLAGS)
+
+dyninst:  $(dyninst_OBJ)
+	  $(CC) -o dyninst $(dyninst_OBJ) $(LFLAGS) -shared
 
 clean:
 	rm -rf $(EXEFILES) *.o
