@@ -45,6 +45,16 @@ int process_script_file(char *,int);
 #define MAX_DEVLIST_DEVICES  1024
 
 ///////////////////////////////////////////////////////////////////////
+/* comment command - do absolutely nothing */
+int comment_cmd(int argc, char *argv[],char *cmdline)
+{
+    UNREFERENCED(argc);
+    UNREFERENCED(argv);
+    UNREFERENCED(cmdline);
+    // Do nothing; command has already been echo'ed to console...
+    return 0;   // (make compiler happy)
+}
+///////////////////////////////////////////////////////////////////////
 /* quit or exit command - terminate the emulator */
 
 int quit_cmd(int argc, char *argv[],char *cmdline)
@@ -3608,6 +3618,7 @@ CMDTAB Commands[] =
 */
 COMMAND ( "?",         ListAllCommands, "list all commands" )
 COMMAND ( "help",      HelpCommand,   "command specific help\n" )
+COMMAND ( "*",         comment_cmd,   "(log comment to syslog)\n" )
 
 COMMAND ( "hst",       History,       "history of commands" )
 COMMAND ( "log",       log_cmd,       "direct log output" )
@@ -3712,32 +3723,32 @@ COMMAND ( "panrate",   panrate_cmd,   "display or set rate at which console refr
 #endif
 COMMAND ( "syncio",    syncio_cmd,    "display syncio devices statistics" )
 #if defined(OPTION_INSTRUCTION_COUNTING)
-COMMAND ( "icount",    icount_cmd,    "display instruction counts" )
+COMMAND ( "icount",    icount_cmd,    "display individual instruction counts\n" )
 #endif
 #if defined(FISH_HANG)
-COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects" )
+COMMAND ( "FishHangReport", FishHangReport_cmd, "(DEBUG) display thread/lock/event objects\n" )
 #endif
 COMMAND ( "script",    script_cmd,    "Run a sequence of panel commands contained in a file" )
-COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread" )
+COMMAND ( "cscript",   cscript_cmd,   "Cancels a running script thread\n" )
 #if defined(FEATURE_ECPSVM)
 COMMAND ( "evm",   evm_cmd_1,   "ECPS:VM Commands (Deprecated)" )
-COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands" )
+COMMAND ( "ecpsvm",   evm_cmd,   "ECPS:VM Commands\n" )
 #endif
 
 COMMAND ( "aea",       aea_cmd,       "Display AEA tables" )
 COMMAND ( "aia",       aia_cmd,       "Display AIA fields" )
-COMMAND ( "tlb",       tlb_cmd,       "Display TLB tables" )
+COMMAND ( "tlb",       tlb_cmd,       "Display TLB tables\n" )
 
 #if defined(SIE_DEBUG_PERFMON)
-COMMAND ( "spm",       spm_cmd,       "SIE performance monitor" )
+COMMAND ( "spm",       spm_cmd,       "SIE performance monitor\n" )
 #endif
 #if defined(OPTION_COUNTING)
-COMMAND ( "count",     count_cmd,     "Display counts" )
+COMMAND ( "count",     count_cmd,     "Display/clear overall instruction count\n" )
 #endif
-COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures" )
+COMMAND ( "sizeof",    sizeof_cmd,    "Display size of structures\n" )
 
 COMMAND ( "suspend",    suspend_cmd,  "Suspend hercules" )
-COMMAND ( "resume",     resume_cmd,   "Resume hercules" )
+COMMAND ( "resume",     resume_cmd,   "Resume hercules\n" )
 
 COMMAND ( NULL, NULL, NULL )         /* (end of table) */
 };
@@ -3901,6 +3912,11 @@ HELPTAB HelpTab[] =
 /*        command         additional hep text...
         (max 9 chars)
 */
+CMDHELP ( "*",         "The '*' comment command simply provides a convenient means\n"
+                       "of entering comments into the console log without otherwise\n"
+                       "doing anything. It is not processed in any way other than to\n"
+                       "simply echo it to the console.\n"
+                       )
 CMDHELP ( "help",      "Enter \"help cmd\" where cmd is the command you need help\n"
                        "with. If the command has additional help text defined for it,\n"
                        "it will be displayed. Help text is usually limited to explaining\n"

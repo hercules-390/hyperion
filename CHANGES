@@ -1,6 +1,7 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+14 Jan 2005 Added '*' comment command as official do-nothing command - Fish
 14 Feb 2005 Add zArch (64-bit mode) support to UPT (Update Tree)
             and CFC (Compare and Form Codeword) instructions - Fish
 07 Feb 2005 Make logmsg/p/b functions not macros - Roger Bowler
