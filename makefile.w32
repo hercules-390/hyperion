@@ -34,8 +34,11 @@ DEST = $(DESTDIR)
 endif
 
 # Standard compiler flags used for all architectures
-CFLAGS = -Wall -fomit-frame-pointer -DVERSION=$(VERSION) \
-         -DNO_ATTR_REGPARM -DNO_IEEE_SUPPORT
+CFLAGS	= -Wall
+CFLAGS += -fomit-frame-pointer
+CFLAGS += -DVERSION=$(VERSION)
+CFLAGS += -DNO_IEEE_SUPPORT
+#CFLAGS += -DNO_ATTR_REGPARM
 
 # Directory where the pthreads-win32 library was installed.
 ifeq ($(WIN),yes)
@@ -53,24 +56,33 @@ endif
 
 #set compiler flags depending on HOST_ARCH
 ifeq ($(HOST_ARCH),i386)
-CFLAGS += -O3 -malign-double
+CFLAGS += -O3
+CFLAGS += -malign-double
 CFLAGS += -DNO_ASM_BYTESWAP
 endif
 
 ifeq ($(HOST_ARCH),i586)
-CFLAGS += -O3 -malign-double -march=pentium
+CFLAGS += -O3
+CFLAGS += -malign-double
+CFLAGS += -march=pentium
 endif
 
 ifeq ($(HOST_ARCH),pentium)
-CFLAGS += -O3 -malign-double -march=pentium
+CFLAGS += -O3
+CFLAGS += -malign-double
+CFLAGS += -march=pentium
 endif
 
 ifeq ($(HOST_ARCH),i686)
-CFLAGS += -O3 -malign-double -march=pentiumpro
+CFLAGS += -O3
+CFLAGS += -malign-double
+CFLAGS += -march=pentiumpro
 endif
 
 ifeq ($(HOST_ARCH),pentiumpro)
-CFLAGS += -O3 -malign-double -march=pentiumpro
+CFLAGS += -O3
+CFLAGS += -malign-double
+CFLAGS += -march=pentiumpro
 endif
 
 ifeq ($(HOST_ARCH),alpha)
@@ -109,7 +121,7 @@ CFLAGS += -DEXTERNALGUI
 CCKD=YES
 
 # Change the value below to YES to use bzip2 compression
-#			 to NO	to use standard compression
+# to NO to use standard compression
 BZIP2=YES
 
 ifeq ($(CCKD),YES)
@@ -368,6 +380,7 @@ install:  $(EXEFILES)
 	mkdir -p $(DEST)
 ifeq ($(WIN),yes)
 	cp *.exe $(DEST)
+	rm -f $(DEST)/dasdlist*
 	cp util/dasdlist* $(DEST)
 else
 	cp $(EXEFILES) $(DEST)
