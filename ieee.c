@@ -9,7 +9,7 @@
  * LDXBR,LEXBR,CXFBR,CXGBR,CFXBR,CGXBR by Roger Bowler, 15 Nov 2004.
  * MXDBR,MXDB,MDEBR,MDEB by Roger Bowler, 16 Nov 2004.
  * MADBR,MADB,MAEBR,MAEB,MSDBR,MSDB,MSEBR,MSEB by Roger Bowler, 17 Nov 2004.
- * DIEBR,DIDBR framework by Roger Bowler, 17 Nov 2004.
+ * DIEBR,DIDBR by Roger Bowler, 18 Nov 2004.
  * Licensed under the Q Public License
  * For details, see html/herclic.html
  */
@@ -34,8 +34,6 @@
  * The following instructions are not yet implemented:
  * B351 TBDR  - CONVERT HFP TO BFP (long)                      [RRF]
  * B350 TBEDR - CONVERT HFP TO BFP (long to short)             [RRF]
- * B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRF]
- * B353 DIEBR - DIVIDE TO INTEGER (short BFP)                  [RRF]
  *
  * Rounding:
  * The native IEEE implementation can be set to apply the rounding
@@ -174,8 +172,9 @@ struct sbfp {
 #define divide_ebfp ARCH_DEP(divide_ebfp)
 #define divide_lbfp ARCH_DEP(divide_lbfp)
 #define divide_sbfp ARCH_DEP(divide_sbfp)
-#define divint_lbfp ARCH_DEP(divint_lbfp)
-#define divint_sbfp ARCH_DEP(divint_sbfp)
+#define integer_ebfp ARCH_DEP(integer_ebfp)
+#define integer_lbfp ARCH_DEP(integer_lbfp)
+#define integer_sbfp ARCH_DEP(integer_sbfp)
 #define load_test_ebfp ARCH_DEP(load_test_ebfp)
 #define load_test_lbfp ARCH_DEP(load_test_lbfp)
 #define load_test_sbfp ARCH_DEP(load_test_sbfp)
@@ -197,6 +196,8 @@ struct sbfp {
 #define testdataclass_ebfp ARCH_DEP(testdataclass_ebfp)
 #define testdataclass_lbfp ARCH_DEP(testdataclass_lbfp)
 #define testdataclass_sbfp ARCH_DEP(testdataclass_sbfp)
+#define divint_lbfp ARCH_DEP(divint_lbfp)
+#define divint_sbfp ARCH_DEP(divint_sbfp)
 
 /*
  * Convert from C IEEE exception to Pop IEEE exception
@@ -2310,6 +2311,138 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
 
 
 /*
+ * FP INTEGER (extended)
+ */
+static int integer_ebfp(struct ebfp *op, int mode, REGS *regs)
+{
+    int r, cl1, cl2, raised;
+
+    switch(ebfpclassify(op)) {
+    case FP_NAN:
+        if (ebfpissnan(op)) {
+            if (regs->fpc & FPC_MASK_IMI) {
+                ebfpstoqnan(op);
+                ieee_exception(FE_INEXACT, regs);
+            } else {
+                ieee_exception(FE_INVALID, regs);
+            }
+        }
+        break;
+    case FP_ZERO:
+    case FP_INFINITE:
+        break;
+    default:
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
+        ebfpston(op);
+        op->v = rint(op->v);
+        if (regs->fpc & FPC_MASK_IMX) {
+            ieee_exception(FE_INEXACT, regs);
+        } else {
+            ieee_exception(FE_INVALID, regs);
+        }
+        ebfpston(op);
+
+        raised = fetestexcept(FE_ALL_EXCEPT);
+        if (raised) {
+            r = ieee_exception(raised, regs);
+            if (r) {
+                return r;
+            }
+        }
+    } /* end switch */
+    return 0;
+
+} /* end function integer_ebfp */
+
+/*
+ * FP INTEGER (long)
+ */
+static int integer_lbfp(struct lbfp *op, int mode, REGS *regs)
+{
+    int r, cl1, cl2, raised;
+
+    switch(lbfpclassify(op)) {
+    case FP_NAN:
+        if (lbfpissnan(op)) {
+            if (regs->fpc & FPC_MASK_IMI) {
+                lbfpstoqnan(op);
+                ieee_exception(FE_INEXACT, regs);
+            } else {
+                ieee_exception(FE_INVALID, regs);
+            }
+        }
+        break;
+    case FP_ZERO:
+    case FP_INFINITE:
+        break;
+    default:
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
+        lbfpston(op);
+        op->v = rint(op->v);
+        if (regs->fpc & FPC_MASK_IMX) {
+            ieee_exception(FE_INEXACT, regs);
+        } else {
+            ieee_exception(FE_INVALID, regs);
+        }
+        lbfpston(op);
+
+        raised = fetestexcept(FE_ALL_EXCEPT);
+        if (raised) {
+            r = ieee_exception(raised, regs);
+            if (r) {
+                return r;
+            }
+        }
+    } /* end switch */
+    return 0;
+
+} /* end function integer_lbfp */
+
+/*
+ * FP INTEGER (short)
+ */
+static int integer_sbfp(struct sbfp *op, int mode, REGS *regs)
+{
+    int r, cl1, cl2, raised;
+
+    switch(sbfpclassify(op)) {
+    case FP_NAN:
+        if (sbfpissnan(op)) {
+            if (regs->fpc & FPC_MASK_IMI) {
+                sbfpstoqnan(op);
+                ieee_exception(FE_INEXACT, regs);
+            } else {
+                ieee_exception(FE_INVALID, regs);
+            }
+        }
+        break;
+    case FP_ZERO:
+    case FP_INFINITE:
+        break;
+    default:
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
+        sbfpston(op);
+        op->v = rint(op->v);
+        if (regs->fpc & FPC_MASK_IMX) {
+            ieee_exception(FE_INEXACT, regs);
+        } else {
+            ieee_exception(FE_INVALID, regs);
+        }
+        sbfpston(op);
+
+        raised = fetestexcept(FE_ALL_EXCEPT);
+        if (raised) {
+            r = ieee_exception(raised, regs);
+            if (r) {
+                return r;
+            }
+        }
+    } /* end switch */
+    return 0;
+
+} /* end function integer_sbfp */
+
+/*
  * DIVIDE (extended)
  */
 static int divide_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
@@ -2664,87 +2797,6 @@ DEF_INST(divide_bfp_short)
         program_interrupt(regs, pgm_check);
     }
 }
-/*
- * DIVIDE TO INTEGER (long)
- */
-static int divint_lbfp(struct lbfp *op1, struct lbfp *op2,
-                        struct lbfp *op3, int mode, REGS *regs)
-{
-    /* DIVIDE TO INTEGER not yet implemented */
-    UNREFERENCED(op1); UNREFERENCED(op2); UNREFERENCED(op3); UNREFERENCED(mode);
-    program_interrupt(regs, PGM_OPERATION_EXCEPTION);
-    return 0;
-} /* end function divint_lbfp */
- 
-/*
- * B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRF]
- */
-DEF_INST(divide_integer_bfp_long_reg)
-{
-    int r1, r2, r3, m4;
-    struct lbfp op1, op2, op3;
-    int pgm_check;
-
-    RRF_RM(inst, regs, r1, r2, r3, m4);
-    //logmsg("DIDBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
-    BFPINST_CHECK(regs);
-    if (r1 == r2 || r2 == r3 || r1 == r3) {
-        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-    }
-
-    get_lbfp(&op1, regs->fpr + FPR2I(r1));
-    get_lbfp(&op2, regs->fpr + FPR2I(r2));
-
-    pgm_check = divint_lbfp(&op1, &op2, &op3, m4, regs);
-
-    put_lbfp(&op1, regs->fpr + FPR2I(r1));
-    put_lbfp(&op3, regs->fpr + FPR2I(r3));
-
-    if (pgm_check) {
-        program_interrupt(regs, pgm_check);
-    }
-} /* end DEF_INST(divide_integer_bfp_long_reg) */
-
-/*
- * DIVIDE TO INTEGER (short)
- */
-static int divint_sbfp(struct sbfp *op1, struct sbfp *op2,
-                        struct sbfp *op3, int mode, REGS *regs)
-{
-    /* DIVIDE TO INTEGER not yet implemented */
-    UNREFERENCED(op1); UNREFERENCED(op2); UNREFERENCED(op3); UNREFERENCED(mode);
-    program_interrupt(regs, PGM_OPERATION_EXCEPTION);
-    return 0;
-} /* end function divint_sbfp */
-
-/*
- * B353 DIEBR - DIVIDE TO INTEGER (short BFP)                  [RRF]
- */
-DEF_INST(divide_integer_bfp_short_reg)
-{
-    int r1, r2, r3, m4;
-    struct sbfp op1, op2, op3;
-    int pgm_check;
-
-    RRF_RM(inst, regs, r1, r2, r3, m4);
-    //logmsg("DIEBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
-    BFPINST_CHECK(regs);
-    if (r1 == r2 || r2 == r3 || r1 == r3) {
-        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
-    }
-
-    get_sbfp(&op1, regs->fpr + FPR2I(r1));
-    get_sbfp(&op2, regs->fpr + FPR2I(r2));
-
-    pgm_check = divint_sbfp(&op1, &op2, &op3, m4, regs);
-
-    put_sbfp(&op1, regs->fpr + FPR2I(r1));
-    put_sbfp(&op3, regs->fpr + FPR2I(r3));
-
-    if (pgm_check) {
-        program_interrupt(regs, pgm_check);
-    }
-} /* end DEF_INST(divide_integer_bfp_short_reg) */
 
 /*
  * B38C EFPC  - EXTRACT FPC                                    [RRE]
@@ -2891,46 +2943,15 @@ DEF_INST(load_fp_int_short_reg)
 
     get_sbfp(&op, regs->fpr + FPR2I(r2));
 
-    switch(sbfpclassify(&op)) {
-    case FP_NAN:
-        if (sbfpissnan(&op)) {
-            if (regs->fpc & FPC_MASK_IMI) {
-                sbfpstoqnan(&op);
-                ieee_exception(FE_INEXACT, regs);
-            } else {
-                ieee_exception(FE_INVALID, regs);
-            }
-        }
-        break;
-    case FP_ZERO:
-    case FP_INFINITE:
-        break;
-    default:
-        FECLEAREXCEPT(FE_ALL_EXCEPT);
-        sbfpston(&op);
-        op.v = rint(op.v);
+    pgm_check = integer_sbfp(&op, m3, regs);
 
-        if (regs->fpc & FPC_MASK_IMX) {
-            ieee_exception(FE_INEXACT, regs);
-        } else {
-            ieee_exception(FE_INVALID, regs);
-        }
-
-        sbfpston(&op);
-
-        raised = fetestexcept(FE_ALL_EXCEPT);
-
-        if (raised) {
-            pgm_check = ieee_exception(raised, regs);
-            if (pgm_check) {
-                program_interrupt(regs, pgm_check);
-            }
-        }
-
-    } /* end switch */
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
 
     put_sbfp(&op, regs->fpr + FPR2I(r1));
-}
+
+} /* end DEF_INST(load_fp_int_short_reg) */
 
 /*
  * B35F FIDBR - LOAD FP INTEGER (long BFP)                     [RRF]
@@ -2946,46 +2967,15 @@ DEF_INST(load_fp_int_long_reg)
 
     get_lbfp(&op, regs->fpr + FPR2I(r2));
 
-    switch(lbfpclassify(&op)) {
-    case FP_NAN:
-        if (lbfpissnan(&op)) {
-            if (regs->fpc & FPC_MASK_IMI) {
-                lbfpstoqnan(&op);
-                ieee_exception(FE_INEXACT, regs);
-            } else {
-                ieee_exception(FE_INVALID, regs);
-            }
-        }
-        break;
-    case FP_ZERO:
-    case FP_INFINITE:
-        break;
-    default:
-        FECLEAREXCEPT(FE_ALL_EXCEPT);
-        lbfpston(&op);
-        op.v = rint(op.v);
+    pgm_check = integer_lbfp(&op, m3, regs);
 
-        if (regs->fpc & FPC_MASK_IMX) {
-            ieee_exception(FE_INEXACT, regs);
-        } else {
-            ieee_exception(FE_INVALID, regs);
-        }
-
-        lbfpston(&op);
-
-        raised = fetestexcept(FE_ALL_EXCEPT);
-
-        if (raised) {
-            pgm_check = ieee_exception(raised, regs);
-            if (pgm_check) {
-                program_interrupt(regs, pgm_check);
-            }
-        }
-
-    } /* end switch */
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
 
     put_lbfp(&op, regs->fpr + FPR2I(r1));
-}
+
+} /* end DEF_INST(load_fp_int_long_reg) */
 
 /*
  * B347 FIXBR - LOAD FP INTEGER (extended BFP)                 [RRF]
@@ -3002,46 +2992,15 @@ DEF_INST(load_fp_int_ext_reg)
 
     get_ebfp(&op, regs->fpr + FPR2I(r2));
 
-    switch(ebfpclassify(&op)) {
-    case FP_NAN:
-        if (ebfpissnan(&op)) {
-            if (regs->fpc & FPC_MASK_IMI) {
-                ebfpstoqnan(&op);
-                ieee_exception(FE_INEXACT, regs);
-            } else {
-                ieee_exception(FE_INVALID, regs);
-            }
-        }
-        break;
-    case FP_ZERO:
-    case FP_INFINITE:
-        break;
-    default:
-        FECLEAREXCEPT(FE_ALL_EXCEPT);
-        ebfpston(&op);
-        op.v = rint(op.v);
+    pgm_check = integer_ebfp(&op, m3, regs);
 
-        if (regs->fpc & FPC_MASK_IMX) {
-            ieee_exception(FE_INEXACT, regs);
-        } else {
-            ieee_exception(FE_INVALID, regs);
-        }
-
-        ebfpston(&op);
-
-        raised = fetestexcept(FE_ALL_EXCEPT);
-
-        if (raised) {
-            pgm_check = ieee_exception(raised, regs);
-            if (pgm_check) {
-                program_interrupt(regs, pgm_check);
-            }
-        }
-
-    } /* end switch */
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
 
     put_ebfp(&op, regs->fpr + FPR2I(r1));
-}
+
+} /* end DEF_INST(load_fp_int_ext_reg) */
 
 /*
  * B29D LFPC  - LOAD FPC                                         [S]
@@ -4784,6 +4743,118 @@ DEF_INST(testdataclass_bfp_ext)
     bit=31-bit;
     regs->psw.cc = (effective_addr2>>bit) & 1;
 }
+
+/*
+ * DIVIDE TO INTEGER (long)
+ */
+static int divint_lbfp(struct lbfp *op1, struct lbfp *op2,
+                        struct lbfp *op3, int mode, REGS *regs)
+{
+    int r;
+     
+    *op3 = *op1;
+    r = divide_lbfp(op3, op2, regs);
+    if (r) return r;
+
+    r = integer_lbfp(op3, mode, regs);
+    if (r) return r;
+
+    r = multiply_lbfp(op2, op3, regs);
+    if (r) return r;
+     
+    op2->sign = !(op2->sign);
+    r = add_lbfp(op1, op2, regs);
+    op2->sign = !(op2->sign);
+    if (r) return r;
+     
+    regs->psw.cc = 0;
+    return 0;
+} /* end function divint_lbfp */
+ 
+/*
+ * B35B DIDBR - DIVIDE TO INTEGER (long BFP)                   [RRF]
+ */
+DEF_INST(divide_integer_bfp_long_reg)
+{
+    int r1, r2, r3, m4;
+    struct lbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+    //logmsg("DIDBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
+    BFPINST_CHECK(regs);
+    if (r1 == r2 || r2 == r3 || r1 == r3) {
+        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+
+    get_lbfp(&op1, regs->fpr + FPR2I(r1));
+    get_lbfp(&op2, regs->fpr + FPR2I(r2));
+
+    pgm_check = divint_lbfp(&op1, &op2, &op3, m4, regs);
+
+    put_lbfp(&op1, regs->fpr + FPR2I(r1));
+    put_lbfp(&op3, regs->fpr + FPR2I(r3));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(divide_integer_bfp_long_reg) */
+
+/*
+ * DIVIDE TO INTEGER (short)
+ */
+static int divint_sbfp(struct sbfp *op1, struct sbfp *op2,
+                        struct sbfp *op3, int mode, REGS *regs)
+{
+    int r;
+
+    *op3 = *op1;
+    r = divide_sbfp(op3, op2, regs);
+    if (r) return r;
+
+    r = integer_sbfp(op3, mode, regs);
+    if (r) return r;
+
+    r = multiply_sbfp(op2, op3, regs);
+    if (r) return r;
+     
+    op2->sign = !(op2->sign);
+    r = add_sbfp(op1, op2, regs);
+    op2->sign = !(op2->sign);
+    if (r) return r;
+     
+    regs->psw.cc = 0;
+    return 0;
+} /* end function divint_sbfp */
+
+/*
+ * B353 DIEBR - DIVIDE TO INTEGER (short BFP)                  [RRF]
+ */
+DEF_INST(divide_integer_bfp_short_reg)
+{
+    int r1, r2, r3, m4;
+    struct sbfp op1, op2, op3;
+    int pgm_check;
+
+    RRF_RM(inst, regs, r1, r2, r3, m4);
+    //logmsg("DIEBR r1=%d r3=%d r2=%d m4=%d\n", r1, r3, r2, m4);
+    BFPINST_CHECK(regs);
+    if (r1 == r2 || r2 == r3 || r1 == r3) {
+        program_interrupt(regs, PGM_SPECIFICATION_EXCEPTION);
+    }
+
+    get_sbfp(&op1, regs->fpr + FPR2I(r1));
+    get_sbfp(&op2, regs->fpr + FPR2I(r2));
+
+    pgm_check = divint_sbfp(&op1, &op2, &op3, m4, regs);
+
+    put_sbfp(&op1, regs->fpr + FPR2I(r1));
+    put_sbfp(&op3, regs->fpr + FPR2I(r3));
+
+    if (pgm_check) {
+        program_interrupt(regs, pgm_check);
+    }
+} /* end DEF_INST(divide_integer_bfp_short_reg) */
 
 #endif  /* FEATURE_BINARY_FLOATING_POINT */
 
