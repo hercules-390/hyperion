@@ -1536,6 +1536,11 @@ void ARCH_DEP(access_reipl_data) (int r1, int r2, REGS *regs);
 int  ARCH_DEP(diag_ppagerel) (int r1, int r2, REGS *regs);
 
 
+/* Functions in module control.c */
+void ARCH_DEP(load_real_address_proc) (REGS *regs,
+    int r1, int b2, VADR effective_addr2);
+
+
 /* Functions in module decimal.c */
 void packed_to_binary (BYTE *dec, int len, U64 *result,
     int *ovf, int *dxf);
