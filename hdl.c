@@ -176,24 +176,27 @@ void hdl_main()
 
     if(!(hdl_cdll = hdl_dll = malloc(sizeof(DLLENT))))
     {
-        logmsg( "HHCHD002E cannot allocate memory for DLL descriptor: %s\n",
+        fprintf(stderr, "HHCHD002E cannot allocate memory for DLL descriptor: %s\n",
           strerror(errno));
+        exit(1);
     }
 
     hdl_cdll->name = strdup("*Hercules");
 
     if(!(hdl_cdll->dll = dlopen(NULL, RTLD_NOW )))
     {
-        logmsg( "HHCHD003E unable to open hercules as DLL: %s\n",
+        fprintf(stderr, "HHCHD003E unable to open hercules as DLL: %s\n",
           dlerror());
+        exit(1);
     }
 
     hdl_cdll->type = DLL_TYPE_MAIN;
 
     if(!(hdl_cdll->hdlinit = dlsym(hdl_cdll->dll,HDL_INIT_Q)))
     {
-        logmsg("HHCHD004I No initialiser in %s: %s\n",
+        fprintf(stderr, "HHCHD004I No initialiser in %s: %s\n",
           hdl_cdll->name, dlerror());
+        exit(1);
     }
 
     hdl_cdll->hdlreso = dlsym(hdl_cdll->dll,HDL_RESO_Q);
