@@ -810,10 +810,11 @@ int     r1, r2;                         /* Values of R fields        */
          && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    /* Load R1 with PASN from control register 4 bits 16-31 */
+    /* Load R1 bits 48-63 with PASN from control register 4 bits 48-63 
+       and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(4);
 
-}
+} /* end DEF_INST(extract_primary_asn) */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
@@ -826,8 +827,27 @@ DEF_INST(extract_primary_asn_and_instance)
   int r1, r2;                           /* Values of R fields        */
   
   RRE(inst, regs, r1, r2);
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-}
+
+    SIE_MODE_XC_OPEX(regs);
+
+    /* Special operation exception if DAT is off */
+    if ( (regs->psw.sysmask & PSW_DATMODE) == 0 )
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+    /* Privileged operation exception if in problem state
+       and the extraction-authority control bit is zero */
+    if ( PROBSTATE(&regs->psw)
+         && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
+        ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
+
+    /* Load R1 bits 48-63 with PASN from control register 4 bits 48-63 
+       and zeroize R1 bits 32-47 */
+    regs->GR_L(r1) = regs->CR_LHL(4);
+
+    /* Load R1 bits 0-31 with PASTEIN from control register 4 bits 0-31 */
+    regs->GR_H(r1) = regs->CR_H(4);
+
+} /* end DEF_INST(extract_primary_asn_and_instance) */
 #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
@@ -853,10 +873,11 @@ int     r1, r2;                         /* Values of R fields        */
          && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
         ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
 
-    /* Load R1 with SASN from control register 3 bits 16-31 */
+    /* Load R1 bits 48-63 with SASN from control register 3 bits 48-63 
+       and zeroize R1 bits 32-47 */
     regs->GR_L(r1) = regs->CR_LHL(3);
 
-}
+} /* end DEF_INST(extract_secondary_asn) */
 #endif /*defined(FEATURE_DUAL_ADDRESS_SPACE)*/
 
 
@@ -869,8 +890,27 @@ DEF_INST(extract_secondary_asn_and_instance)
   int r1, r2;                           /* Values of R fields        */
   
   RRE(inst, regs, r1, r2);
-  ARCH_DEP(program_interrupt) (regs, PGM_OPERATION_EXCEPTION);
-} 
+
+    SIE_MODE_XC_OPEX(regs);
+
+    /* Special operation exception if DAT is off */
+    if ( (regs->psw.sysmask & PSW_DATMODE) == 0 )
+        ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
+
+    /* Privileged operation exception if in problem state
+       and the extraction-authority control bit is zero */
+    if ( PROBSTATE(&regs->psw)
+         && (regs->CR(0) & CR0_EXT_AUTH) == 0 )
+        ARCH_DEP(program_interrupt) (regs, PGM_PRIVILEGED_OPERATION_EXCEPTION);
+
+    /* Load R1 bits 48-63 with SASN from control register 3 bits 48-63 
+       and zeroize R1 bits 32-47 */
+    regs->GR_L(r1) = regs->CR_LHL(3);
+
+    /* Load R1 bits 0-31 with SASTEIN from control register 3 bits 0-31 */
+    regs->GR_H(r1) = regs->CR_H(3);
+
+} /* end DEF_INST(extract_secondary_asn_and_instance) */
 #endif /*defined(FEATURE_ASN_AND_LX_REUSE)*/
 
 
