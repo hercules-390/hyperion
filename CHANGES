@@ -1,3 +1,7 @@
+31 Oct 2001 Fix CFDR so overflow check done after rounding - Paul Leisy
+31 Oct 2001 Fix MVCL so unused R1 and R2 bits zeroed - Paul Leisy
+31 Oct 2001 Add "loadtext" panel command to load text decks - Paul Leisy
+31 Oct 2001 Add "QUIET" ostailor option so all pgmtrace disabled - Paul Leisy
 28 Oct 2001 Added WAKEUP_CPU call to stop/stopall commands in panel.c to
             fix "ipl rejected: All CPU's must be stopped" problem - Fish
 28 Oct 2001 Various fixes to cardrdr.c - Fish
