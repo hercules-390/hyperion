@@ -1,611 +1,675 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3.0//EN" "html.dtd">
 <HTML>
 <HEAD><TITLE>
-Hercules: Compressed CKD Dasd Emulation</TITLE>
+Hercules: Compressed Dasd Emulation</TITLE>
 <LINK REL=STYLESHEET TYPE="text/css" HREF="hercules.css">
 </HEAD>
 <BODY BGCOLOR="#ffffcc" TEXT="#000000" LINK="#0000A0"
       VLINK="#008040" ALINK="#000000">
-<h1>Compressed CKD Dasd Emulation</h1>
+<h1>Compressed Dasd Emulation</h1>
 <hr noshade>
 <h2>Contents</h2>
 <ul>
 <li><a href="#introduction">       Introduction       </a>
 <li><a href="#shadowfiles">        Shadow Files       </a>
 <li><a href="#filestructure">      File Structure     </a>
-<li><a href="#methodology">        Methodology        </a>
-<li><a href="#quickstart">         Quick Start        </a>
-<li><a href="#usingsfiles">        Using Shadow Files </a>
-<li><a href="#options">            Options            </a>
+<li><a href="#howitworks">         How It Works       </a>
+<li><a href="#cckdcommand">        The CCKD Command   </a>
 <li><a href="#utilities">          Utilities          </a>
 <li><a href="#faq">                FAQ                </a>
-<li><a href="#changes">            Changes            </a>
-<li><a href="#bugs">               Bugs               </a>
-<li><a href="#cckddump">           cckddump os/390 hlasm program</a>
 </ul>
 
 <hr noshade>
 <h3><a NAME="introduction">Introduction</a></h3>
-Using compressed CKD files, or <b>cckd</b> files, you can significantly
-reduce the file space required for emulated CKD dasd and possibly gain
-a performance benefit because less physical i/o occurs.  Using the
-<i>shadow</i> function, you can minimize the amount of data loss in the
-event of file corruption.
+Using compressed DASD files you can significantly reduce the file space
+required for emulated DASD files and possibly gain a performance boost
+because less physical I/O occurs.
+
+Both <b>CKD</b> (Count-Key-Data) and <b>FBA</b> (Fixed-Block-Architecture)
+emulation files can be compressed.
 <p>
-A <b>cckd</b> file contains <i>track images</i>, which may be <i>compressed</i>
-or <i>uncompressed</i>, and overhead blocks which are <i>headers</i>,
-<i>lookup tables</i>, and <i>free space</i>.  Compressed track images
-may be compressed by
+In regular (or uncompressed) files, each CKD track or FBA block occupies
+a specific spot in the emulation file.  The offset of the track or block
+in the file can be directly calculated knowing the track or block number
+and the maximum size of the track or block.  In compressed files, each
+track image or group of blocks may be compressed by
 <a href="http://www.info-zip.org/pub/infozip/zlib/"><b>zlib</b></a> or
-<a href="http://sourceware.cygnus.com/bzip2/"><b>bzip2</b></a>.
+<a href="http://sourceware.cygnus.com/bzip2/"><b>bzip2</b></a>, and only
+occupies the space neccessary for the compressed image.  The offset of a compressed
+track or block is obtained by performing a two-table lookup.  The lookup
+tables themselves reside in the emulation file.
 <p>
-Track images are addressed by <i>track number</i> using a two table
-lookup method:  <i>track number</i> divided by 256 (<code>trk >> 8</code>)
-indexes into the <i>primary lookup table</i>, which contains the file offset
-to the <i>secondary lookup table</i>; the remainder of <i>track number</i>
-divided by 256 (<code>trk & 0xff</code>) indexes into the corresponding
-<i>secondary lookup table</i>, which contains the <i>offset</i> and
-<i>length</i> of the track image.
+Because FBA blocks are 512 bytes in length, and that being a rather small
+number, FBA blocks are grouped into <b>block groups</b>.  Each block group
+contains 120 FBA blocks (60K).
 <p>
-There is a single <i>primary lookup table</i> and a variable number of
-<i>secondary lookup tables</i>.  The maximum number of <i>secondary lookup
-tables</i> is the number of tracks for the device type divided by 256, rounded up.
-For example, a 3390-3 contains 50085 tracks and would require at most 196
-<i>secondary lookup tables</i>.
+Whenever a track or block group is written to a compressed file,
+it is written either to an existing free space within the file, or at
+the end of the file, then the lookup tables are updated, and then the space the
+track or block group previously occupied is freed.  The location of a
+track or block group in the file can change many times.
 <p>
-<a NAME="formula1">
-A regular CKD file contains a 512 byte <i>header</i> followed by <i>track
-images</i>, each taking the same amount of space: the maximum track size.
-The offset of a track image can be readily calculated by the track number:
-<center>
-<code>offset = 512 + trk * maxtrksz </code>
-</center>
-</a>
+In the event of a catastrophic failure (for example, Hercules crash,
+operating system crash, power failure), the compressed emulation file
+on the host's physical disk may be out of sync if the host operating
+system defers physical writes to the file system containing the emulation
+file.  A number of techniques have been provided to minimize emulation
+file corruption in such an event.
 <p>
-A <b>cckd</b> file can take significantly less file space than a regular
-CKD file because
-<p>
-<ul><li>A track image only occupies its <i>length</i> in the file and
-        not the <i>maximum track size</i>
-    <li>A track image may be compressed, reducing its <i>length</i>
-    <li>Unused or <i>null</i> tracks do not occupy any space at all
-</ul>
-Performance improvements may also occur because less data is read and
-written to the hard drive.
-<br>However, the <i>lookup tables</i> must be
-accurately maintained, <i>track images</i> must be compressed and
-uncompressed, and <i>free space</i> must be kept track of, and dealt
-with by a <i>garbage collector</i>.  This results in a more complicated
-file structure, more CPU activity, and the possibility of file corruption
-due to program failure or bug.  The introduction of <i>shadow files</i>,
-however, reduces the impact of possible file corruption.
+A compressed file may occupy only 20% of the disk space required by an
+uncompressed file.  In other words, you may be able to have 5 times more
+emulated volumes using compressed DASD files.  However, compressed files
+are more sensitive to failures and corruption may occur.
 
 <p>
 <hr noshade>
 <p><h3><a NAME="shadowfiles">Shadow Files</a></h3>
 
-Malcom Beattie originally introduced the concept of <i>shadow</i>
-files in a <a href="http://www.egroups.com/message/hercules-390/6695">
-post</a> to the <a href="http://www.egroups.com/community/hercules-390">newsgroup</a>
-8 December 2000.  The function is actually implemented as a kind of
+
+An compressed CKD or FBA dasd can have more than one physical file.  The
+additional files are called <em>shadow files</em>.  
+The function is implemented as a kind of
 <i>snapshot</i>, where a new shadow file can be created on demand.
-A CKD emulated dasd is represented by a <i>base</i> file and 0 or more
-shadow files.  All files are opened <i>read-only</i>
-except for the <i>current</i> file, which is opened <i>read-write</i>.
+An emulated dasd is represented by a <em>base</em> file and 0 or more
+shadow files.  All files are opened <em>read-only</em>
+except for the <em>current</em> file, which is opened <em>read-write</em>.
 <p>
-Shadow files are implemented using the same file structure as base <b>cckd</b> files.
-By default, there can be up to 8 shadow files in use at any time for an
-emulated CKD device.  The base file is designated file <b>[0]</b> and
-the shadow files are files <b>[1]</b> up to file <b>[8]</b>.
-The <i>highest</i> numbered file in use at a given time is the <i>current</i>
-file, where all writes will occur.  Track reads start with the <i>current</i>
+Shadow files are specified by the <b>sf=</b><i>shadow-file-name</i> parameter
+on the device statement for the compressed DASD device.  The shadow file name
+should have spot where the shadow file number will be set.  This is
+either the character preceding the last period after the last slash or the
+last character if there is no period.  For example:<br><br>
+<code>0100 3390 disks/linux1.dsk sf=shadows/linux1_*.dsk</code>
+<p>
+There can be up to 8 shadow files in use at any time for an
+emulated dasd device.  The base file is designated file<b>[0]</b> and
+the shadow files are file<b>[1]</b> to file<b>[8]</b>.
+The <em>highest</em> numbered file in use at a given time is the <em>current</em>
+file, where all writes will occur.  Track reads start with the <em>current</em>
 file and proceed down until a file is found that actually contains the track
 image.
 <p>
-A shadow file, then, contains all the changes made to the emulated CKD dasd
-since its creation, until the creation of the next shadow file.  The moment
-of the shadow file's creation can be thought of as taking a <i>snapshot</i>
-of the current emulated CKD dasd at that time, because if the shadow file is
-later removed, then the emulated CKD dasd will revert to the state it was at
-when the <i>snapshot</i> was taken.
+A shadow file contains all the changes made to the emulated dasd
+since it was created, until the next shadow file is created.  The moment
+of the shadow file's creation can be thought of as a <em>snapshot</em>
+of the current emulated dasd at that time, because if the shadow file is
+later removed, then the emulated dasd reverts back to the state it was at
+when the <em>snapshot</em> was taken.
 <p>
-Using shadow files, you can keep the base CKD file on a read-only device
-such as cdrom, or change the base CKD file attributes to read-only,
+Using shadow files, you can keep the base file on a read-only device
+such as cdrom, or change the base file attributes to read-only,
 ensuring that this file can never be corrupted.
 <p>
 Hercules console commands are provided to add a new shadow file, remove
 the current shadow file (with or without backward merge), compress the
-curent shadow file, and display the shadow file status and statistics.
+curent shadow file, and display the shadow file status and statistics:<br><br>
+
+<table>
+<tr><td align="left"><b>sf+</b></td>
+    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left">&nbsp&nbsp Create a new shadow file</td>
+<tr><td align="left"><b>sf-</b></td>
+    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left">&nbsp&nbsp Remove a shadow file with backwards merge</td>
+<tr><td align="left"><b>sf-</b></td>
+    <td align="left">            <font size=-1>unit</font></td>
+    <td><b>nomerge</b></td>
+    <td align="left">&nbsp&nbsp Remove a shadow file without backwards merge</td>
+<tr><td align="left"><b>sfc</b></td>
+    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left">&nbsp&nbsp Compress the current file</td>
+<tr><td align="left"><b>sfd</b></td>
+    <td align="left" colspan="2"><font size=-1>unit</font></td>
+    <td align="left">&nbsp&nbsp Display shadow file status and statistics</td>
+</table>
+<br>
+<b><font size=-1>Note</font></b>.  You can use <b>*</b> in place of unit
+address to apply the command to all compressed dasd.
 
 <p>
 <hr noshade>
-<p><h3><a NAME="filestructure">CCKD File Structure</a></h3>
+<p><h3><a NAME="filestructure">Compressed DASD File Structure</a></h3>
 
-Like a regular CKD emulation file, the first 512 bytes
-of a compressed or shadow file contains a <code>CKDDASD_DEVHDR</code>
-block.  The eye-catcher at the beginning is different to distinguish
-the file:
-<ul><li><b>CKD_P370</b>&nbsp&nbsp&nbsp Regular CKD file
-    <li><b>CKD_C370</b>&nbsp&nbsp&nbsp Compressed CKD file
-    <li><b>CKD_S370</b>&nbsp&nbsp&nbsp Shadow CKD file
-</ul>
-The next 512 bytes contain a compressed device
-header or <code>CCKDDASD_DEVHDR</code> block.  This contains the
-version-release-mod level of the file, options, space statistics,
-and total number of cylinders for the device.  Next is
-the primary lookup table or the <code>L1TAB</code>.  Each 4 byte
-entry in the <code>L1TAB</code> contains the file offset to a secondary
-lookup table (or <code>L2TAB</code>) or <code>0x00000000</code> (indicating that
-the secondary lookup table is <i>null</i>), or <code>0xffffffff</code> (indicating
-that the previous file should be searched instead).<br>
-The size of the <code>L1TAB</code> is dependent on the number
-of tracks on the emulated device.
+A compressed DASD file has 6 types of spaces, a <em>device header</em>,
+a <em>compressed device header</em>, a <em>primary lookup table</em>,
+<em>secondary lookup tables</em>, track or block group <em>images</em>,
+and <em>free spaces</em>.  The first 3 types only occur once, at the
+beginning of the file in order.  The rest of the file is occupied by
+the other 3 space types.
 <p>
-<center>
+The first 512 bytes of a compressed DASD file contains a <b>device header</b>.
+The device header contains an eye-catcher that identifies the file type
+(CKD or FBA and base or shadow).  The device type and file size is also
+specified in this header.  The header is identical to the header used
+for uncompressed CKD files, except for the eye-catcher:
+<p>
 <table border=1>
-<tr><td align="left"><code>CKDDASD_DEVHDR</code><br><br><br><br></td>
-<tr><td align="left"><code>CCKDDASD_DEVHDR</code><br><br><br><br></td>
-<tr><td align="left"><code>L1TAB</code><br><br>
-                     <center>.&nbsp&nbsp.&nbsp&nbsp.</center><br><br></td>
+<tr><td align="left" colspan="8"><font size=-1>devid</font></td>
+    <td align="left" colspan="4"><font size=-1>heads</font></td>
+    <td align="left" colspan="4"><font size=-1>trksize</font></td>
+<tr><td align="left" colspan="1"><font size=-1>devt</font></td>
+    <td align="left" colspan="1"><font size=-1>seq</font></td>
+    <td align="left" colspan="2"><font size=-1>hicyl</font></td>
+    <td align="left" colspan="12">&nbsp</td>
+<tr><td align="center" valign="middle" colspan="16">
+        <br><br><font size=-1>reserved</font><br><br><br></td>
 </table>
-</center>
 <p>
-Following the <code>L1TAB</code>,
-in no particular order, are <code>L2TAB</code>s, compressed track
-images, and free spaces.
+
+The next 512 bytes contains the <b>compressed device header</b>.
+This contains file usage information such as the amount of free
+space in the file:
 <p>
-<code><b>L2TAB</b></code>s contain 256 8-byte
-entries,and each are, consequently, 2048 bytes in length.  Each entry
-contains the <i>offset</i> and <i>length</i> of a track image.  If
-the <i>offset</i> is <code>0x00000000</code> then the track image is <i>null</i>;
-if the <i>offset</i> is <code>0xffffffff</code> then the previous file should be
-searched instead.
-<p>
-<center><code><b>L2TAB</b></code> entry
 <table border=1>
-<tr><td><code><b>offset</b></code><br>4 bytes</td>
-    <td><code><b>length</b></code><br>2 bytes</td>
-    <td><code>[unused]</code><br>2 bytes</td>
+<tr><td align="left" colspan="3"><font size=-1>vrm</font></td>
+    <td align="left" colspan="1"><font size=-1>opts</font></td>
+    <td align="left" colspan="4"><font size=-1>numl1</font></td>
+    <td align="left" colspan="4"><font size=-1>numl2</font></td>
+    <td align="left" colspan="4"><font size=-1>size</font></td>
+<tr><td align="left" colspan="4"><font size=-1>used</font></td>
+    <td align="left" colspan="4"><font size=-1>->free</font></td>
+    <td align="left" colspan="4"><font size=-1>free</font></td>
+    <td align="left" colspan="4"><font size=-1>largest</font></td>
+<tr><td align="left" colspan="4"><font size=-1>number</font></td>
+    <td align="left" colspan="4"><font size=-1>&nbsp</font></td>
+    <td align="left" colspan="4"><font size=-1>cyls</font></td>
+    <td align="left" colspan="1"><font size=-1>&nbsp</font></td>
+    <td align="left" colspan="1"><font size=-1>comp</font></td>
+    <td align="left" colspan="4"><font size=-1>parm</font></td>
+<tr><td align="center" colspan="16">
+        <br><br><font size=-1>reserved</font><br><br><br></td>
 </table>
-</center>
 <p>
-A <b>compressed track image</b> contains the following two fields:
+After the compressed device header is the <b>primary lookup table</b>,
+also called the <em>level 1 table</em> or <em>l1tab</em>.  Each
+4 byte unsigned entry in the l1tab contains the file offset of
+a <em>secondary lookup table</em> or <em>level 2 table</em> or
+<em>l2tab</em>.  The track or block group number being accessed
+divided by 256 gives the index into the l1tab.  That is, each l1tab
+entry represents 256 tracks or block groups.  The number of entries
+in the l1tab is dependent on the size of the emulated device:
+<p>
+<table border=1>
+<tr><td align="left" colspan="4"><font size=-1>l2<sub>0</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>1</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>2</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>3</sub></font></td>
+<tr><td align="left" colspan="4"><font size=-1>l2<sub>4</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>5</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>6</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>7</sub></font></td>
+<tr><td align="left" colspan="16">
+        <br><br><center>.&nbsp&nbsp.&nbsp&nbsp.</center><br><br></td>
+<tr><td align="left" colspan="4"><font size=-1>l2<sub>n-4</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>n-3</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>n-2</sub></font></td>
+    <td align="left" colspan="4"><font size=-1>l2<sub>n-1</sub></font></td>
+</table>
+<p>
+Following the <em>l1tab</em>,
+in no particular order, are <em>l2tabs</em>, track or block group
+<em>images</em>, and <em>free spaces</em>.
+<p>
+Each <b>secondary lookup table</b> (or <em>l2tab</em>), contains 256 8-byte
+entries.  The entry is indexed
+by the remainder of the track or block group number divided by 256.  Each
+entry contains an unsigned 4 byte offset and an unsigned 2 byte length of the
+track or block group image:<p>
+<table border=1>
+<tr><td align="left" colspan="4"><font size=-1>
+       <sup>0</sup>&nbsp ->image
+       &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</font></td>
+    <td align="left" colspan="2"><font size=-1>length</font></td>
+    <td align="left" colspan="2"><font size=-1>unused</font></td>
+<tr><td align="left" colspan="4"><font size=-1>
+       <sup>1</sup>&nbsp ->image
+       &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</font></td>
+    <td align="left" colspan="2"><font size=-1>length</font></td>
+    <td align="left" colspan="2"><font size=-1>unused</font></td>
+<tr><td align="center" colspan="8"><font size=-1>
+       <br>.&nbsp&nbsp .&nbsp&nbsp .<br><br></td>
+<tr><td align="left" colspan="4"><font size=-1>
+       <sup>255</sup>&nbsp ->image
+       &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</font></td>
+    <td align="left" colspan="2"><font size=-1>length</font></td>
+    <td align="left" colspan="2"><font size=-1>unused</font></td>
+</table>
+<p>
+A track or block group <b>image</b> contains two fields, a 5-byte
+<em>header</em> and a variable amount of data that may or may not be
+compressed.  The length in the l2tab entry includes the length of the
+header and the data.
+<p>
+<table border=1>
+<tr><td align="left"><font size=-1>hdr</font></td>
+    <td align="left"><font size=-1>track or block group data</font></td>
+</table>
+<p>
+The 5 byte header contains a 1 byte flag field and 4 bytes that
+identify the track or block group.  The format of the identifier
+depends on whether the emulated device is CKD or FBA:
+<p>
+CKD hdr
+<table border=1>
+<tr><td><font size=-1>flags</font></td>
+    <td align="left" colspan="2"><font size=-1><b>CC</b></font>&nbsp&nbsp</td>
+    <td align="left" colspan="2"><font size=-1><b>HH</b></font>&nbsp&nbsp</td>
+</table>
+<p>
+The 2 byte CC is the cylinder number for the track image and the HH
+is the head number.  These numbers are stored in <em>big-endian</em>
+byte order.  When the flag byte is zeroed, the 5 byte header is identical
+to the <em>Home Address</em> (or <em>HA</em>) for the track image.
+The data, which may or may not be compressed, begins with the <em>R0</em>
+count and ends with the <em>end-of-track</em> (or <em>eot</em>) marker,
+which is a count field containing 8 0xff's.  The <em>HA</em> plus the
+uncompressed track data comprise the track image.
+<p>
+FBA hdr
+<table border=1>
+<tr><td><font size=-1>flags</font></td>
+    <td align="left" colspan="4"><font size=-1>nnnn</font>
+        &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+</table>
+<p>
+The 4 byte nnnn field is the FBA block group number in
+<em>big-endian</em> byte order. The data contains 120 FBA blocks,
+which may or may not be compressed.  Uncompressed, the FBA block
+group is 60K.  The header for FBA, unlike CKD, is not used as part
+of the uncompressed image.
+<p>
+The flags byte contains 8 bits in the format
+<table border=1>
+<tr><td><font size=-1>0 &nbsp 0 &nbsp 0 &nbsp 0 &nbsp
+                      0 &nbsp 0 &nbsp <b>c</b> &nbsp <b>c</b> &nbsp
+    </font></td>
+</table>
+The first 6 bits are always zero but may be used in future releases.
+The last two bits, <em>cc</em>, indicate the compression algorithm
+for the data portion:
+<table border="1">
+<tr><td>0 &nbsp 0</td><td>&nbsp &nbsp Data is uncompressed</td>
+<tr><td>0 &nbsp 1</td><td>&nbsp &nbsp Data is compressed using zlib</td>
+<tr><td>1 &nbsp 0</td><td>&nbsp &nbsp Data is compressed using bzip2</td>
+<tr><td>1 &nbsp 1</td><td>&nbsp &nbsp Not valid</td>
+</table>
+
+<p>
+
+<b>Free space</b> contains a 4-byte <i>offset</i> to the next free space, a
+4-byte <i>length</i> of the free space, and zero or more bytes of residual data:
+<p>
+<table border=1>
+<tr><td><font size=-1>->next</font></td>
+    <td><font size=-1>length</font></td>
+    <td>&nbsp &nbsp<font size=-1>residual</font>&nbsp &nbsp</td>
+</table>
+<p>
+The minimum length of a free space is 8 bytes.
+The free space chain is ordered by file offset and no two free spaces are
+adjacent.  The <em>compressed device header</em> contains the offset to the
+first free space.  The chain is terminated when a free space has zero offset
+to the next free space.  The free space chain is read when the file is opened
+for read-write and written when the file is closed; while the file is opened,
+the free space chain is maintained in storage.
+<p>
+
+<hr noshade>
+<p><h3><a NAME="howitworks">How It Works</a></h3>
+
+<b>Reading</b><br>
+A track or block group image is read while executing a channel
+program or by the <em>readahead</em> thread.  An image has to
+be read before it is updated or written to.  An image may be <em>cached</em>.
+If an image is cached, then the channel program may complete
+<em>synchronously</em>.  This means that if all the data a channel program
+accesses is cached and Hercules does not have to perform physical I/O,
+then the channel program runs synchronously within the SSCH or SIO
+instruction in the <em>CPU</em> thread.  All DASD channel programs are started
+synchronously.  If a CCW in the channel program requires physical I/O
+then the channel program is interrupted and restarted at that CCW
+<em>asynchronously</em> in a <em>device I/O</em> thread.
+<p>
+All compressed devices share a common cache; the devices can be a mixture
+of FBA and/or CKD device types.  Each cache entry contains a pointer to
+a 64K buffer containing an uncompressed track or block group image.
+If the track or block group image being read is not found in the cache,
+then the oldest (or <em>least recently used</em> or <em>LRU</em>) entry that
+is not <em>busy</em> is <em>stolen</em>.  A cache entry is busy if it is
+being read, or last accessed by an <em>active</em> channel program, or updated
+but not yet written, or being written.  If no cache entries are available then
+the read must enter a <em>cache wait</em>.  When images are detected to be
+accessed sequentially then the readahead thread(s) may be signalled to read
+following sequential images.
+<p>
+<b>Writing</b><br>
+When a cache entry is updated or written to, a bit is turned on indicating
+the cache entry has been updated.  When a <em>cache wait</em> occurs, or
+(more likely) during garbage collection, a cache <em>flush</em> is performed.
+When the cache is flushed, if any entries have the updated bit on, then
+the writer thread(s) are signalled.  The writer thread selects the oldest
+cache entry with the updated bit on, compresses the image, and writes it
+to the file.  The new image is written to a new space in the file and then
+the space previously occupied by the image is freed.  In certain circumstances,
+the image may be written under <em>stress</em>.  A stress write occurs when
+a reading thread is in a <em>cache wait</em> or when a high percentage of
+cache entries are pending write.  In this circumstance, the compression
+parameters are relaxed to reduce the CPU requirements.  An image written
+under stress is likely to take up more space than the same image written
+not under stress.  The writer thread(s) run 1 nicer than the CPU thread(s);
+compression is a CPU intensive activity.
+<p>
+<b>Garbage Collection</b><br>
+The primary function of the garbage collector is to keep the emulated
+compressed DASD files as small as possible.  After all, that is the reason
+for using compressed DASD files in the first place.  Another function
+is to perform emulation file synchronization.
+<p>
+A single garbage collector thread runs for all compressed devices.
+By default it wakes up at 5 second intervals.  The garbage collector
+performs <em>space recovery</em> for each compressed device in the order
+that the device was defined or attached.  After space recovery the garbage
+collector flushes the cache to force all outstanding writes.  Once all the
+writes have been completed, a file synchronization (<em>fsync()</em>) may
+optionally be performed, which commits any outstanding host I/O to the
+physical disk.  Finally free space is flushed (to be explained later).
+<p>
+We see that with the fsync option enabled that the physical disk file
+has a coherent emulation file at the end of each garbage collection cycle.
+Space freed since the last garbage collection cycle completed is not
+available for allocation until the current garbage collection cycle
+completes.  This free space is called <em>pending free space</em>.
+That is, previous track or block group images are not overwritten
+until the current garbage collection completes.
+If a catastrophic error occurs, then the emulation file should be
+recoverable at least up to the point of the last garbage collection cycle.
+<p>
+However, performing an fsync() may decrease performance.  You can increase
+the garbage collection interval, to reduce the number of fsync()s, but this may also increase the probability of a cache wait occurring.  You can increase the
+size of the cache to decrease this probability, but you may increase paging or
+have to decrease the size of emulated memory.
+<p>
+Another possibility is to not enable the fsync option.  This is the default.
+In this circumstance, by default, freed space is not available until 2
+garbage collection cycles complete.  That is, <i>pending free space</i> is
+not an attribute but a count.  You have the option to explicitly set the
+pending free space count.  However, by increasing the free space count or
+by increasing the garbage collection interval, then you may be increasing
+the size of the emulation file.
+<p>
+At the very end of the garbage collection cycle, the free space is
+<em>flushed</em>.  This means that the pending free space count is decremented
+for all free spaces with a non-zero count.  If the count goes to zero and
+the preceding space is a free space with a zero count then the spaces are
+combined.
+<P>
+The space recovery process of the garbage collector simply attempts to move
+some amount of used space towards the beginning of the file causing free
+space to move towards the end of the file.  When a free space reaches the
+end of the file, the file is <em>truncated</em>, reducing its size.  The
+amount of used space moved depends on the ratio of free space to used space
+and on the number of free spaces.  The larger the numbers, the more space
+the garbage collector attempts to move.  That is, the garbage collector
+attempts to decrease the ratio of free space to used space and to decrease
+the number of free spaces.  Within a cycle, the garbage collector might not
+move the selected amount of used space if the moves are detected to be
+counter-productive (ie the offset of the new space is greater than the
+current offset).
+
+<hr noshade>
+<p><h3><a NAME="cckdcommand">The cckd command</a></h3>
+
+The <b>cckd</b> command and initialization statement can be used to
+affect cckd processing.  Normally the defaults should suffice; however
+the cache size may need to be adjusted depending upon the number of
+emulated devices and the amount of physical memory you have.
+<p>
+<b>Syntax:</b>
+<table>
+<tr><td><b>cckd</b></td><td><b>help</b></td><td>Display cckd help</td>
+<tr><td><b>cckd</b></td><td><b>stats</b></td>
+                        <td>Display current cckd statistics</td>
+<tr><td><b>cckd</b></td><td><b>opts</b></td><td>Display current cckd options</td>
+<tr><td><b>cckd</b></td><td>opt=value</td><td>Set a cckd option</td>
+<tr><td>&nbsp;</td><td>&nbsp;</td><td>Multiple options may be specified,
+                                      separated by a comma with no intervening
+                                      blanks.</td>
+<tr><td>&nbsp;</td><td><b>cache=</b>n</td><td>Cache size in M</td>
+<tr><td>&nbsp;</td><td><b>l2cache=</b>n</td><td>L2 cache size in K</td>
+<tr><td>&nbsp;</td><td><b>ra=</b>n</td><td>Number readahead threads</td>
+<tr><td>&nbsp;</td><td><b>raq=</b>n</td><td>Readahead queue size</td>
+<tr><td>&nbsp;</td><td><b>rat=</b>n</td><td>Number of tracks to readahead</td>
+<tr><td>&nbsp;</td><td><b>wr=</b>n</td><td>Number writer threads</td>
+<tr><td>&nbsp;</td><td><b>gcint=</b>n</td><td>Garbage collection interval</td>
+<tr><td>&nbsp;</td><td><b>gcparm=</b>n</td><td>Garbage collection parameter</td>
+<tr><td>&nbsp;</td><td><b>nostress=</b>n</td><td>Turn stress writes on or off</td>
+<tr><td>&nbsp;</td><td><b>freepend=</b>n</td><td>Set the free pending value</td>
+<tr><td>&nbsp;</td><td><b>fsync=</b>n</td><td>Turn fsync on or off</td>
+<tr><td>&nbsp;</td><td><b>ftruncwa=</b>n</td><td>Turn ftruncate bug workaround
+                                                 on or off</td>
+<tr><td>&nbsp;</td><td><b>trace=</b>n</td><td>Number of trace table entries</td>
+</table>
+<p>
+<b>Options:</b>
+<table>
+<tr><td valign="top"><b>cache=</b>n</td>
+    <td>Size of the cache in megabytes.  Each cache entry points
+        to a 64K buffer.  Therefore each megabyte represents 16 cache entries.
+        <p>
+        The default is <b>8</b>, or 256 cache entries.
+        <p>
+        You can specify a number between <b>1</b> and <b>64</b> (16 to
+        1024 cache entries).
+        <p>
+    </td>
+<tr><td valign="top"><b>l2cache=</b>n&nbsp</td>
+    <td>Size of the level 2 table cache in kilobytes.
+        Each cache entry points to a 2K l2tab.  Therefore each 2K
+        represents a single cache entry.
+        <p>
+        The default is <b>512</b>, or 256 cache entries.
+        <p>
+        You can specify a number between <b>256</b> and <b>2048</b> (128 to
+        1024 cache entries).
+        <p>
+    </td>
+<tr><td valign="top"><b>ra=</b>n</td>
+    <td>Number of readahead threads.  When sequential track or block group
+        access is detected, some number (<em>rat= </em>) of tracks or
+        block groups are queued (<em>raq= </em>) to be read by one of the
+        readahead threads.
+        <p>
+        The default is <b>2</b>.
+        <p>
+        You can specify a number between <b>1</b> and <b>9</b>.
+        <p>
+    </td>
+<tr><td valign="top"><b>raq=</b>n</td>
+    <td>Size of the readahead queue.  When sequential track or block group
+        access is detected, some number (<em>rat= </em>) of tracks or
+        block groups are queued in the readahead queue.
+        <p>
+        The default is <b>4</b>.
+        <p>
+        You can specify a number between <b>0</b> and <b>16</b> (a value
+        of zero disables readahead).
+        <p>
+    </td>
+<tr><td valign="top"><b>rat=</b>n</td>
+    <td>Number of tracks or block groups to read ahead when sequential access
+        has been detected.
+        <p>
+        The default is <b>2</b>.
+        <p>
+        You can specify a number between <b>0</b> and <b>16</b> (a value
+        of zero disables readahead).
+        <p>
+    </td>
+<tr><td valign="top"><b>wr=</b>n</td>
+    <td>Number of writer threads.  When the cache is <em>flushed</em> updated
+        cache entries are marked write pending and a writer thread is signalled.
+        The writer thread compresses the track or block group and writes the
+        compressed image to the emulation file.  A writer thread is cpu-intensive
+        while compressing the track or block group and i/o-intensive while writing
+        the compressed image.  The writer thread runs one <em>nicer</em> than
+        the CPU thread(s).
+        <p>
+        The default is <b>2</b>.
+        <p>
+        You can specify a number between <b>1</b> and <b>9</b>.
+        <p>
+    </td>
+<tr><td valign="top"><b>gcint=</b>n</td>
+    <td>Number of seconds the garbage collector thread waits durinng an interval.
+        At the end of an interval, the garbage collector performs space recovery,
+        flushes the cache, and optionally <em>fsync</em>s the emulation file.
+        (However, the file will not be <em>fsync</em>ed unless at least 5
+        seconds have elapsed since the last <em>fsync</em>).
+        <p>
+        The default is <b>5</b> seconds.
+        <p>
+        You can specify a number between <b>1</b> and <b>60</b>.
+        <p>
+    </td>
+<tr><td valign="top"><b>gcparm=</b>n</td>
+    <td>A value affecting the amount of data moved during the garbage collector's
+        space recovery routine. The garbage collector determines an amount of
+        space to move based on the ratio of free space to used space in an
+        emulation file, and on the number of free spaces in the file.  (The
+        garbage collector wants to reduce the free space to used space ratio
+        and the number of free spaces).  The value is logarithmic; a value
+        of 8 means moving 2<sup>8</sup> the selected value while a negative
+        value similarly decreases the amount to be moved.  Normally, 256K
+        will be moved for a file in an interval.  Specifying a value of 8 can
+        increase the amount to 64M.  At least 64K will be moved.  Interestingly,
+        specifying a large value (such as 8) may not increase the garbage
+        collection efficiency correspondingly.
+        <p>
+        The default is <b>0</b>.
+        <p>
+        You can specify a number between <b>-8</b> and <b>8</b>.
+        <p>
+<tr><td valign="top"><b>nostress=</b>n&nbsp</td>
+    <td>Indicates whether <em>stress</em> writes will occur or not.  A track
+        or block group may be written under stress when a high percentage of
+        the cache is pending write or when a device i/o thread is waiting for
+        a cache entry.  When a stressed write occurs, the compression algorithm
+        and/or compression parm may be relaxed, resulting in faster compression
+        but usually a larger compressed image.  If <em>nostress</em> is set
+        to one, then a stressed situation is ignored.  You would typically
+        set this value to one when you want create the smallest emulation file
+        possible in exchange for a possible performance degradation.
+        <p>
+        The default is <b>0</b>.
+        <p>
+        You can specify <b>0</b> (enable stressed writes) or <b>1</b>
+        (disable stressed writes).
+        <p>
+    </td>
+<tr><td valign="top"><b>freepend=</b>n&nbsp</td>
+    <td>Specifies the <em>free pending</em> value for freed space.  When a
+        track or block group image is written the space it previously occupied
+        is freed.  This space will not be available for future 
+        allocations until <em>n</em> garbage collection intervals have completed.
+        In the event of a catastrophic failure, previously written track or
+        block group images should be recoverable if the current image has
+        not yet been written to the physical disk.  By default the value
+        is set to <b>-1</b>.  This means that if <em>fsync</em> is specified
+        then the value is 1 otherwise it is 2.  If 0 is specified then freed
+        space is immediately available for new allocations.
+        <p>
+        The default is <b>-1</b>.
+        <p>
+        You can specify a number between <b>-1</b> and <b>4</b>.
+        <p>
+    </td>
+<tr><td valign="top"><b>fsync=</b>n&nbsp</td>
+    <td>Enables or disables <em>fsync</em>.  When fsync is enabled, then
+        the disk emulation file is synchronized with the physical hard
+        disk at the end of a garbage collection interval (however, no more
+        often than 5 seconds).  This means that if <em>freepend</em> is
+        non-zero then if a catastrophic error occurs then the emulated disks
+        <em>should</em> be recovered coherently.  However, fsync may cause
+        performance degradation depending on the host operating system and/or
+        the host operating system level.
+        <p>
+        The default is <b>0</b> (fsync disabled).
+        <p>
+        You can specify <b>0</b> (disable fsync) or <b>1</b> (enable fsync).
+        <p>
+    </td>
+<tr><td valign="top"><b>ftruncwa=</b>n&nbsp</td>
+    <td>Work-around for a linux kernel bug in 2.4.18 (shipped in at least RH7.3
+        and RH8.0).  Symptom is excessive amount of kernel cpu time and
+        non-responsiveness of the associated hercules emulated dasd file.
+        The problem may still occur with this option turned on, although
+        less freqently.<br>  
+        The problem appears to be fixed in 2.4.19.
+        <p>
+        The default is <b>0</b>.
+        <p>
+        You can specify <b>0</b> or <b>1</b> (enable workaround).
+        <p>
+    </td>
+<tr><td valign="top"><b>trace=</b>n&nbsp</td>
+    <td>Number of cckd trace entries.  You would normally specify a non-zero
+        value when debugging or capturing a problem in cckd code.  When the
+        problem occurs, you should enter the <b>k</b> Hercules console command
+        which will print the trace table entries.
+        <p>
+        The default is <b>0</b>.
+        <p>
+        You can specify a number between <b>0</b> and <b>200000</b>.
+        Each entry represents 128 bytes.  Normally, for debugging, I use
+        100000.
+        <p>
+    </td>
+</table>
+<h4>Notes</h4>
 <ul>
-<li> A <i>track header</i>, also called a <i>home address</i> or a <i>track index</i>.
-     The track header is <b>never</b> compressed.
-<li> The track image, beginning with the <i>R0 count</i> and ending with the
-     <i>end-of-track</i> marker, which is a count field containing all hex 0xff's.
-     The track image may or may not be compressed.
+    <li>The size of the <em>cache</em> is a difficult number to determine.
+        The storage used by the cache could also be used for emulated virtual
+        storage instead.  You don't want to steal storage from your emulated
+        operating system so that it starts paging heavily.  You also don't
+        want your host operating system to page.  However, you don't want
+        your cache to flush too often because cpu cycles may have to be stolen
+        from the cpu thread to compress updated images.
+    <li>You need at least one l2cache entry per compressed device.  Since the
+        maximum number of l2cache entries is 1024, this implies that no more
+        than 1024 compressed devices can be defined.  Let me know if this is a
+        problem ;-)  If you have a large number of devices then specify the
+        maximum value otherwise the default should suffice.
+    <li><em>raq</em> should be at least as large as <em>ra</em>.  Readahead
+        threads are scheduled from entries in the readahead queue.  Likewise
+        <em>rat</em> should not exceed <em>raq</em> because only <em>raq</em>
+        tracks or block groups can be queued at any time.
+    <li>The number of writer threads (<em>wr</em>) should usually be 1 more
+        than the number of host processors.  This is because one writer thread
+        could be cpu-bound (compressing a track or block-group image) and the
+        other could be i/o-bound (writing the compressed image).
+    <li>The garbage collection interval governs the maximum time in seconds
+        an updated track or block group image will reside in storage before
+        being written to the emulation file.  A large value may mean more data
+        loss if a catastrophic error occurs.  A small value may mean that
+        more cpu time is spent compressing images.  For example, suppose that
+        a particular image is updated several times each second.  If the interval
+        is changed from the default 5 seconds to 1 second, then that image will
+        be compressed and written 5 times more often.  A large value may cause
+        more cache flushes within a garbage collection interval.  These kind
+        of flushes mean that a read will wait because there are no available
+        cache entries, slowing the emulated operating system.  A large value
+        will also cause more pending free space to build up (since free space
+        is flushed each interval).  This may mean that the garbage collector
+        space recovery routine will perform more work and that the emulation
+        file may be larger.
+    <li>Specify <em>fsync=1</em> and <em>gcint=5</em> if you are absolutely
+        paranoid about your data being lost due to a failure.  <em>fsync</em>
+        will ensure your data on disk is coherent.  However, fsync may cause
+        a noticeable performance degradation.  Note that an fsync will not
+        be performed more often than every 5 seconds.
 </ul>
-<center><table border=1>
-<tr><td><code><b>HA</b></code><br>5 bytes</td>
-    <td><b>track image</b> (compressed or uncompressed)</br><i>length</i>-5 bytes</td>
-</table></center>
-<p>
-The <b>HA</b> contains <code>0CCHH</code>, that is, a byte of zeroes, 2 bytes indicating
-the <i>cylinder</i> of the track, and 2 bytes indicating the <i>head</i> of the track
-on the cylinder.  Both <code>CC</code> and <code>HH</code> are stored in
-<i>big-endian</i> byte order.  The track is computed by
-<br><center><code>
-trk = (((CC[0] << 8) + CC[1]) * <i>trks_per_cyl</i>) + (HH[0] << 8) + HH[1]
-</code></center><br>
-Since the first byte of the <code>HA</code> is always 0x00 (at least in emulated
-CKD files), this byte as stored in the file actually indicates the compression
-algorithm used for the remainder of the track image
-(<b>0</b> = no compression, <b>1</b> = zlib compression, <b>2</b> = bzip2 compression).
-The hi-order bit (<b>0x80</b>) may also be on, indicating the track image was written
-under <i>stress</i>.
-<p>
-<b>Free space</b> contains a 4-byte <i>offset</i> to the next free space,
-a 4-byte <i>length</i> of the free space, and zero or more bytes of residual data.
-<p>
-<center><b>Free Space</b> entry
-<table border=1>
-<tr><td><code><b>offset</b></code><br>4 bytes</td>
-    <td><code><b>length</b></code><br>4 bytes</td>
-    <td><code><b>residual</b></code><br>(<i>length</i> - 8) bytes</td>
-</table>
-</center>
-<p>The minimum length of a free space is 8 bytes.
-Since free space is ordered by file offset and no two free spaces are adjacent,
-<i>offset</i> in the free space entry is always greater than the current free space
-offset + the current free space <i>length</i>, unless the <i>offset</i> is zero,
-which indicates the free space chain is terminated.<br>
-The free space chain is read when the file is opened for read-write and
-written when the file is closed; while the file is opened, the free space chain is
-maintained in storage.
-
-<p>
-<hr noshade>
-<p><h3><a NAME="methodology">Methodology</a></h3>
-This section is tedious; you probably want to skip to the
-<a href="#quickstart">next section</a> unless you are genuinely
- curious as to how cckd actually works.  This section is for my edification
-as much as anything...
-<p>
-<b>The interface</b>
-<p>
-All Hercules emulated devices have standard interface routines described
-by the <code>DEVHND</code> structure.  These routines are
-<table>
-<tr><td><b>init</b></td><td>Device initialization (attach)</td>
-<tr><td><b>exec</b></td><td>Device execute channel command</td>
-<tr><td><b>close</b></td><td>Device close (detach)</td>
-<tr><td><b>query</b></td><td>Device query</td>
-<tr><td><b>start</b></td><td>Device channel program start</td>
-<tr><td><b>end</b></td><td>Device channel program end</td>
-<tr><td><b>resume</b></td><td>Device channel program resume</td>
-<tr><td><b>suspend</b></td><td>Device channel program suspend</td>
-</table>
-<p>
-Emulated CKD DASD devices have two additional routines:
-<table>
-<tr><td><b>ckdrdtrk</b></td><td>Read CKD track image</td>
-<tr><td><b>ckdupdtrk</b></td><td>Update CKD track image</td>
-</table>
-<code>ckdrdtrk</code> is called whenever a <code>SEEK</code>
-type channel command is executed and <code>ckdupdtrk</code> is
-called whenever any of the various <code>WRITE</code> channel
-commands modifies the current track image.
-<p>
-The <b>cckd</b> code implements the following routines:
-<table>
-<tr><td><code>cckddasd_init_handler</code></td>
-    <td>cckd device initialization (attach)</td>
-<tr><td><code>cckddasd_close_device</code></td><td>cckd device close (detach)</td>
-<tr><td><code>cckd_start</code></td><td>cckd channel program start/resume</td>
-<tr><td><code>cckd_end</code></td><td>cckd channel program end/suspend</td>
-</table>
-<p>
-<b>The cache</b>
-<p>
-The implementation is <i>cache</i> table driven.  The cache table contains
-16 to 1024 entries, each representing a track image, and is shared by <em>all</em>
-cckd devices.  Each entry contains a pointer to a track image buffer which
-is 64K bytes.  That is, every 16 entries represents 1M of buffer space.
-The size of the cache can be changed by a configuration file statement
-or by a hercules console command.
-<p>
-Each entry can be in one (or certain combinations) of the following states:
-<table>
-<tr><td><b>active</b></td><td>A channel program is active for the device
-                               and the track image is the last <code>SEEK</code>ed
-                               track image.</td>
-<tr><td><b>updated</b></td><td>The track image has been updated by a
-                               <code>WRITE</code> command.</td>
-<tr><td><b>write</b></td><td>The track image is not <b>active</b> and has
-                             been <b>updated</b> and is eligible to be written.</td>
-<tr><td><b>reading</b></td><td>The track image is currently being read.</td>
-<tr><td><b>writing</b></td><td>The track image is currently being written.</td>
-<tr><td><b>inactive</b></td><td>The track image is not <i>busy</i> and is eligible
-                               to be <i>stolen</i></td>
-</table>
-When the <code>ckdrdtrk</code> routine is called, and the track to be
-read is not the <em>active</em> track, then a <em>track switch</em> event
-occurs.  The cache is scanned to see if it contains the track image.  If
-it does, then a <em>cache hit</em> occurs else a <em>cache miss</em>
-occurs.
-<p>
-In the case of a <em>cache hit</em>, if the entry status is <em>reading</em>
-or <em>writing</em> then the code waits for the read or write to complete.
-If the entry is <em>write</em>-pending, then the entry is changed back
-to <em>updated</em>.
-<p>
-Otherwise, for a <em>cache miss</em>, the oldest <em>inactive</em> cache
-entry will then be <em>stolen</em>.
-If no inactive cache entry was found then the cache is <em>flushed</em>
-and the code will have to wait for an inactive cache entry to become
-available.  This is called a <em>cache wait</em> event.  When the cache
-is flushed, all cache entries that have been <em>updated</em> and are
-not <em>active</em> are set to <em>write</em>-pending and the <b>writer</b>
-thread is signalled.  After an entry has been stolen the track image will
-then be read and uncompressed.
-If sequential access is detected then track <em>readaheads</em> will be
-scheduled.
-<p>
-<b>L1 tables</b>
-<p>
-The L1 tables, or <i>primary lookup</i> tables, contain the file offsets
-to each <b>L2 table</b>, or <i>secondary lookup</i> table.  Each L1 table
-4-byte entry represents 256 track images and there is an L1 table for the base
-file and each opened shadow file (if any).  These tables are memory resident.
-<p>
-<b>The L2 cache</b>
-<p>
-The L2 tables, or <i>secondary lookup</i> tables contain the file offsets
-and lengths of 256 track images.  Each table is 2K in length.  These tables
-are cached in the <em>l2cache</em>, which is shared for all cckd devices.
-The cache can contain 128 (512K) entries to 1024 entries (2M).  Each cckd
-device has one active l2cache entry implying that, architecturally speaking,
-there can be no more than 1024 cckd devices.  If this is a problem for
-you then I'll buy you a beer ;-)
-<p>
-The size of the l2cache can be specified by a configuration statement or
-changed by a hercules console command.  If a cache miss occurs and no
-inactive entries are found, then the cache is automatically extended
-(unless the 1024 entry barrier would be crossed).
-<p>
-L2 tables are read but never written.  Instead, as track images are
-written, the individual 8-byte L2 entries are updated in the file.
-<p>
-<b>Writing</b>
-<p>
-Whenever the <code>ckdupdtrk</code> is called, indicating the active
-track image has been updated, the <em>updated</em> flag bit is turned
-on for the cache entry.  However, the updated cache entries are never
-scheduled to be written until a <em>cache flush</em> occurs (routine
-<code>cckd_flush_cache</code>).  A cache flush occurs whenever a cache
-entry couldn't be <em>stolen</em> during read or at the beginning of
-the <em>garbage collection</em> cycle.
-<p>
-When a <em>cache flush</em> occurs, all cache entries that are <em>updated</em>
-(but not <em>active</em>) get the <em>write</em>-pending bit turned on
-and one of the <b>writer</b> threads is signalled (or created).
-<p>
-The <em>writer</em> thread selects the oldest cache entry with the
-<em>write</em>-pending bit on and changes the status to <em>writing</em>.
-If there are other writes pending and other writer threads are waiting then
-they are signalled.  Otherwise if there are writes pending and the maximum
-number of writer threads hasn't been created yet, then a new writer thread
-is created.
-<p>
-The writer thread, because it performs track image compression, is cpu
-intensive.  Therefore, the writer thread resets its priority to 1 below
-the cpu thread(s) (except under Cygwin (Windows)).  In periods of
-<em>write stress</em> then the level of compression is downgraded.
-Write stress occurs when more than a quarter of the cache entries are
-pending write, or when there are threads waiting for a cache entry, or
-when a thread is waiting for this track image to be written.  When a
-track image is written under stress, a bit is turned on in the track
-image so that the <em>garbage collector</em> can later rewrite the
-track image properly compressed during a period of no stress.
-<p>
-A track image is always written to a new location in the file.
-After a successful write, its L2 entry is updated and then the
-space it previously occupied is freed.
-<p>
-The <em>writer</em> threads 
-<p>
-<b>The Garbage Collector</b>
-<p>
-For some reason, this seems to be everyone's favorite routine.
-For me, it has to do with the fact that the garbage man only has
-to apparently work on Fridays  ;-).
-<p>
-Simply, the garbage collector moves occupied spaces (track images
-and level 2 tables) towards the beginning of the file while moving
-free spaces towards the end of the file.  When a free space reaches
-the end of the file, then the file is <em>truncated</em>, that is,
-reduced in size.  Another important job the garbage collector performs
-is to combine free spaces to make a larger free space that will be
-more likely to satisfy a <i>get space</i> request.  Finally, the
-garbage collector will cause track images that were written under
-stress to be rewritten (with optimal compression).
-<p>
-The garbage collector runs in a separate thread.  There is a single
-garbage collector for all cckd devices.  The collector waits for
-some number of seconds and then performs collection for each cckd
-device in turn.  The wait interval and the aggressiveness parameter
-can be specified by a configuration file statement or by a hercules
-console command.
-<p>
-The garbage collector algorithm simply selects an occupied space after
-some free space, obtains a new space for that space, writes it to the
-new space, updates the meta-data for that space to point to the new
-space, frees the previously occupied space, and repeats the process
-until some number of bytes have been moved.  In other words, the collector
-shifts the spaces around <i>coherently</i> such that in the event of
-a crash then the space occupies at least one space in the file
-(the original and possibly the new).
-<p>
-The garbage collector on each interval (or round ;-) flushes the cache
-and waits for all pending writes to complete.  Therefore, the collector
-doesn't run while <em>write stress</em> is occurring.
-
-<hr noshade>
-<p><h3><a NAME="quickstart">Quick Start</a></h3>
-
-The <i>ckd2cckd</i> utility can be used to create a new compressed CKD file from a
-regular CKD file.  Your disk images can be a combination of regular CKD files and
-compressed CKD files. Simply specify the names of your new compressed ckd files in
-<code>hercules.cnf</code> in place of the regular CKD file names.
-<p>
-You can also use the <i>cckddump</i> program on an os/390 system to build a
-compressed CKD file from a real disk that can be transferred to your Hercules machine
-and used right away.
-<p>
-
-
-<hr noshade>
-<p><h3><a NAME="usingsfiles">Using Shadow Files</a></h3>
-
-Shadow files enable you to make updates to <b>cckd</b> emulation files and
-not worry about possibly corrupting your entire disk image.  I strongly urge
-those of you who use <b>cckd</b> to start using shadow files immediately and
-change your base file to read-only.  This, in turn, reduces the amount of
-data you have to back up, increasing the amount of file savings cckd has to
-offer.  You can even change shadow files to read-only, as long as a new shadow
-file can be created.  You can also use shadow files for regular (non-cckd)
-files.
-
-<p>
-
-Shadow files are automatically enabled for <b>cckd</b> files; you <em>must</em>
-explicitly enable them for regular CKD files.  To enable shadowing for a CKD
-device, specify
-<p><center>sf=<i>shadow_file_name</i></center><br>
-on the device statement in the <i>hercules.cnf</i> file.  <i>shadow_file_name</i>
-should include a spot in the file name, similar to multiple CKD dasd files,
-that can be used as a sequence number, for example, <b>sf=../mvs/shadows/mvsres_1.500</b>.
-The naming convention substitutes the shadow file number (1 thru 8) on the
-character preceding the period after the last slash, or the last character
-if no period follows the last slash.  Example <p>
-<b>0500 3390 ../mvs/disks/mvsres.500 sf=../mvs/shadows/mvsres_1.500</b>
-<p>
-If you did not specify <i>sf=</i> for a cckd file, or you wish to change
-the shadow file name for a cckd or regular file, but no shadow files are
-in use, then you can issue the following command on the Hercules console:
-<br><center>sf=<i>xxxx</i> &nbsp <i>shadow_file_name</i></center><br>
-where <i>xxxx</i> is the device unit address.  For example,
-<b>sf=0500 ../mvs/shadows/mvsres_1.500</b>.
-<p>
-Specifying a <i>shadow_file_name</i> does not explicitly create a shadow file
-if the base file or current shadow file
-is able to be opened read-write.  Otherwise, if the base file and all existing
-shadow files (if any) can only be opened read-only, then a new shadow file is created.
-<p>
-To explicitly create a new shadow file, issue the following command on the Hercules console:
-<p><center>sf+<i>xxxx</i></center><br>
-where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
-For example, <b>sf+0500</b>.
-All updated track images that haven't been written are written and the <i>current</i>
-file is hardened.  Note that if a lot of write activity is ocurring at the time the
-<b>sf+</b> command is entered, then the exact state of the hardened file can not
-be predicted.  A new shadow file is created and all new writes are directed to it.
-<p>
-To remove the <i>current</i> shadow file, issue either of the following commands
-on the Hercules console:
-<p><center>sf-<i>xxxx</i></center>
-   <center>sf-<i>xxxx</i> nomerge</center><br>
-where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
-For example, <b>sf-0500</b>.
-If <b>nomerge</b> was not specified, then the <i>current</i> shadow file contents
-are merged into the preceding shadow file or base file.  The <i>current</i> shadow
-file is deleted and the preceding shadow file or base file is made the <i>current</i>
-file.  If the preceding file is read-only, then an error message is issued.
-If possible, you can make the preceding file read-write and re-issue the command.
-Note that if <b>merge</b> is specified or implied, then the command may take some
-amount of time depending on the size of the old <i>shadow</i> file.
-<br>[<i>hmmm... note to myself -- if sf-xxxx nomerge was specified and preceding file is
-read-only, then delete the current file and recreate it ??</i>]
-<p>
-To compress the current shadow file
-issue the following command on the Hercules console:
-<p><center>sfc<i>xxxx</i></center><br>
-where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
-For example, <b>sfc0500</b>.
-<p>
-To display the status and statistics for a shadow-enabled file,
-issue the following command on the Hercules console:
-<p><center>sfd<i>xxxx</i></center><br>
-where <i>xxxx</i> is the device unit address or <b>*</b> (for all eligible units).
-For example, <b>sfd0500</b>.
-This command displays status and statistics for the base file and all shadow files
-representing the emulated dasd.  The following data is displayed:
-<table>
-<tr><td>&nbsp <td valign="top"><b>size</b>    <td>The total size of the file
-<tr><td>&nbsp <td valign="top"><b>free</b>    <td>The amount of free space in the file as a percentage
-                                                  of the file size
-<tr><td>&nbsp <td valign="top"><b>nbr</b>     <td>The number of free spaces in a file
-<tr><td>&nbsp <td valign="top"><b>st</b>      <td>File open status - <b>ro</b>=read-only;
-                                                  <b>rd</b>=read-only, but can be opened read-write;
-                                                  <b>rw</b>=read-write
-<tr><td>&nbsp <td valign="top"><b>reads</b>   <td>Number of times <i>cckd_read_trkimg</i> performed
-                                                  physical read i/o
-<tr><td>&nbsp <td valign="top"><b>writes</b>  <td>Number of times <i>cckd_write_trkimg</i> performed
-                                                  physical write i/o
-<tr><td>&nbsp <td valign="top"><b>l2reads</b> <td>Number of times a secondary lookup table was read
-<tr><td>&nbsp <td valign="top"><b>hits</b>    <td>Number of times <i>cckd_read_trk</i> found a track
-                                                  image in the <i>track cache</i> when called by the
-                                                  i/o thread
-<tr><td>&nbsp <td valign="top"><b>switches</b><td>Number of times <i>cckd_read_trk</i> was called by
-                                                  the i/o thread  (<i>cckd_lseek</i>)
-<tr><td>&nbsp <td valign="top"><b>readaheads</b><td>Number of track images read by the <i>readahead</i>
-                                                  threads
-<tr><td>&nbsp <td valign="top"><b>misses</b>  <td>Number of track images read by the <i>readahead</i>
-                                                  threads that were never referenced when the
-                                                  <i>track cache</i> entry was <i>stolen</i>
-</table>
-
-<p>
-
-<hr noshade>
-<p><h3><a NAME="options">CKD Options</a></h3>
-
-In this section I will attempt to document all the options that can be
-specified for a CKD file (regular or compressed) in the <code>hercules.cnf</code>
-file (or on the <i>attach</i> panel command).
-
-<table border=1>
-<th><td>Regular<td>cckd<td>Function
-
-<tr><td valign="top" align="left">  syncio<br>  syio<br>
-                                    nosyncio<br>nosyio<br><td align="center">X<td align="center"> X
-    <td>Specifies whether or not synchronous I/O will be attempted for the device.
-        For synchronous I/O, the channel program will be executed within the scope
-        of the <b>SIO</b> or <b>SSCH</b> instruction as long as all data referenced
-        by the channel program is already cached. If a ccw attempts to reference data
-        that is not cached, then the channel program is restarted asynchronously at
-        that ccw.  Synchronous I/O reduces threading overhead, which may resut in a
-        performance boost. The default is <i>syncio</i> for cckd files and <i>nosyncio</i>
-        for regular ckd files.
-<tr><td valign="top" align="left">lazywrite<br>nolazywrite<td align="center">X<td> &nbsp
-    <td>Data written to a cached track image will not be immediately written,
-        but will be written when a track switch occurs.  Thus, only one write
-        will occur for a track image while it is the <i>active</i> image.
-        <i>nolazywrite</i>, the default, specifies that all writes are performed
-        when requested.
-<tr><td valign="top" align="left">  fulltrackio<br>  fulltrkio<br>ftio<br>
-                                  nofulltrackio<br>nofulltrkio<br>noftio<td align="center">X<td> &nbsp
-    <td>Specifies whether or not a full track will be read when a track switch
-        occurs.  Subsequent reads to this track image will not cause any physical I/Os.
-        Turning on <i>fulltrackio</i> can considerably enhance CKD device response time.
-        However, if you are sharing CKD disk images with more than 1 instance of Hercules
-        at the same time when writes could occur, you should specify <i>nofulltrackio</i>.
-        The default is <i>fulltrackio</i>.
-<tr><td valign="top" align="left">readonly<br>rdonly<br>ro<br><td align="center">X<td align="center"> X
-    <td>Causes the CKD file image to be opened <i>read-only</i>.  Attempts to write to
-        the emulated device will cause an I/O error unless option <i>fakewrite</i> is
-        also specified.  If <i>readonly</i> is specified for shadowed
-        file images, then the base file will be opened readonly and a shadow file will be
-        created if one doesn't exist.
-<tr><td valign="top" align="left">fakewrite<br>fakewrt<br>fw<br>
-    <td align="center">X<td align="center"> X
-    <td>Writes to a <i>readonly</i> file will be considered successful even though no write
-        actually occurred.  This option is only meaningful if <i>readonly</i> is also specified.
-        <i>Fakewrite</i> is ignored for shadowed file images.
-<tr><td valign="top" align="left">cache=<i>n</i><td align="center">X<td align="center">X
-    <td>Specifies the number of track images that will be cached.  The default is the number
-        of tracks per cylinder for the device.  [For <b>cckd</b> files, the default is the
-        number of tracks per cylinder <i>plus</i> the number of readahead threads].  If
-        <i>nofulltrackio</i> is specified for a regular CKD file, then no caching occurs.
-        Caching <em>always</em> occurs for <b>cckd</b> files, although you can set the cache
-        value to 1.
-<tr><td valign="top" align="left">sf=<i>file_name</i><td align="center">X<td align="center">X
-    <td>Specifies the name of the shadow file(s) for the emulated device.  The name should have
-        a spot where the shadow file number can be inserted into the name (see
-        <a href="#usingsfiles">above</a>).
-<tr><td valign="top" align="left">l2cache=<i>n</i><td align="center">* <td align="center">X
-    <td>Specifies the number of Secondary Lookup Tables (l2tabs) that will be cached for the
-        <b>cckd</b> or <i>shadowed</i> device.  (Each l2tab is 2048 bytes).  The default is 32.
-<tr><td valign="top" align="left">dfwq=<i>n</i><td align="center">* <td align="center">X
-    <td>Specifies a threshold for the size of <i>deferred-write-queue</i> where processing will be
-        <i>throttled</i> if the size exceeds this number.  Each entry in the <i>deferred-
-        write-queue</i> contains a pointer to a buffer whose size is <i>max-track-size</i>.
-        The default is 64.
-<tr><td valign="top" align="left">wt=<i>n</i><td align="center">*<td align="center">X
-    <td>Specifies the time in seconds that an updated track image will be written after its
-        last reference.  The <i>garbage collector</i> is responsible for scheduling these
-        old track images to be updated.  The default is 60 seconds.
-<tr><td valign="top" align="left">ra=<i>n</i><td align="center">*<td align="center">X
-    <td>Specifies the number of <i>readahead</i> threads (and number of tracks to be read ahead)
-        when sequential access to the emulated device is detected.  That is, each track that
-        is read ahead of time is read by a different thread.  A value between 0 and 9 can be
-        specified.  Currently, readahead should be <em>disabled</em> for Windows32 due to
-        an unknown error involving the pthreads implementation.  Default for WIN32 is 0
-        otherwise the default is 2.
-<tr><td valign="top" align="left">dfw=<i>n</i><td align="center">*<td align="center">X
-    <td>Specifies the number of <i>deferred write</i> threads.  A number between 1 and 9
-        may be specified; the default is 1.  It has not been shown that specifying a greater
-        number results in any performance improvements.
-</table>
-<font size=-1><b> * </b>Option is only applicable if shadowing is active for the regular CKD file.
-</font>
-<p>
-Generally, the defaults for all options (except <b>sf=</b>) should not be changed unless there
-is an explicit reason for doing so.  If you use <b>cckd</b> files, then I strongly recommend
-that you start using <i>shadow</i> files.  If you use regular CKD files, then you can use
-<i>shadow</i> files if you want to gain the <i>snapshot</i> benefit .
+My advice is to use the default options and adjust them if you have a very
+good reason.
 
 <hr noshade>
 <p><h3><a NAME="utilities">Utilities</a></h3>
@@ -832,265 +896,9 @@ that you start using <i>shadow</i> files.  If you use regular CKD files, then yo
 </table>
 
 <hr noshade>
-<p><h3><a NAME="changes">Changes</a></h3>
-<ul>
-<li>0.2.0
-    <ul>
-    <li>This release greatly enhances the stability of cckd files.
-    <li>Free spaces are read at file open time, maintained in storage,
-        and written at file close time.  If a file is not successfully
-        closed, then free spaces are easily recovered by the chkdsk
-        function when the file is opened next.
-    <li>Imbedded free space is deprecated.  Because the free space chain
-        is now in storage, the overhead required to keep an updated track
-        image at its same location in the file is no longer necessary;
-        the penalty for traversing the free space chain to find a new location
-        is greatly reduced.  Also, because a free space header is no longer
-        written at the beginning of a freed space when it is freed, that space
-        is eligible for recovery in the event of a failure.
-    <li>Garbage collection is more efficient because it can combine the
-        most free spaces per iteration now that the penalty for scanning
-        free space is gone.
-    <li>Secondary lookup tables (or l2tabs) are now cached.  Most overhead
-        I/O for cckd files is now eliminated.
-    <li>Support for read-only files is added.
-    <li>Utility <i>cckdcomp</i> is provided to remove all free space from
-        a cckd file.
-    </ul>
-<li>0.2.1
-    <ul>
-    <li>The concept of shadow files is implemented, which logically performs
-        a snapshot function.
-    <li>Windows 32 support is enabled.
-    <li>Seems like there should be more but I can't mush my brain much farther.
-        Some new options have been added so #defines in hercules.cnf don't have
-        to be changed; overflow tracks are supported (I hope) -- Thanks Valery!!
-    </ul>
-</ul>
-
-<hr noshade>
-<p><h3><a NAME="bugs">BUGS</a></h3>
-This code is absolutely bug free; if you encounter any problems then
-it must be a personal problem and you've done something wrong.  Also,
-there are no enhancements that can be made because I've already thought
-of them all and implemented them.  By the way, I have some prime soon to be
-ocean front property in Tennessee to sell to the highest bidder;-)
-
-<hr noshade>
-<p><h3><a NAME="cckddump">cckddump os/390 hlasm program</a></h3>
-The cckddump program (supplied in file <code>cckddump.hla</code>) is an
-os/390 assembler language program that creates a compressed CKD Dasd emulation
-file from a real DASD volume.  This program must be APF-authorized since
-it modifies the DEB to be able to read all tracks from the real device.
-The program executes 16 or so instructions while in supervisor state/key 0;
-otherwise the program runs entirely in problem state/key 8.
-It is not the prettiest assembler language program I've ever written, and
-there are plenty of enhancements that I originally intended to put into the
-program that I haven't yet; once I got the program working good enough, I
-spent the rest of my time writing the fun stuff, the Hercules part.
-<p>The real CKD Dasd volume that is dumped must be an ECKD device (ie support
-'Locate Record' and 'Read Track' CCWs); this shouldn't be a problem because
-I don't think any os/390 release supports a non-ECKD device.  The output file
-must be a DASD file; its characteristics are LRECL=4096, BLKSIZE=4096, RECFM=F.
-The program only dumps allocated tracks (plus track 0) and only dumps tracks up
-to DS1LSTAR for DSORG=PS and DSORG=PO files.  The program will call zlib
-to compress the track images if the zlib routines have been linked with the
-program; however, I don't think the program will be advantageous if it can't
-call zlib.
 <p>
-<h4>Preparing zlib</h4>
-<ul>
-<li>zlib can be obtained from
-    <a href="http://www.info-zip.org/pub/infozip/zlib/"><b>here</b></a>
-<li>Copy or ftp the *.c files to a LRECL=255,RECFM=VB partitioned dataset;
-    here we will call the dataset <i>prefix</i>.ZLIB.C
-<li>Similarly, copy or ftp the *.h files to a LRECL=255,RECFM=VB partitioned
-    dataset; we'll call it <i>prefix</i>.ZLIB.H
-<li>Edit member <i>prefix</i>.ZLIB.H(ZCONF).  Near the bottom, before the 2nd
-    to last <code>#endif</code>, add the following lines:<br><pre>
-    #   pragma map(compress,"COMPRESS")
-    #   pragma map(compress2,"COMPRES2")
-    #   pragma map(uncompress,"UNCOMPRE")
-    </pre>
-<li>Allocate an object partitioned dataset <i>prefix</i>.ZLIB.OBJ;
-    LRECL=80,BLKSIZE=3200,RECFM=FB.<br>Submit the following job to compile zlib:
-    <pre>
-//         JOB
-//CC    JCLLIB ORDER=(CBC.SCBCPRC)
-//*
-//ADLER32 EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(ADLER32)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(ADLER32),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//COMPRESS EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(COMPRESS)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(COMPRESS),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//CRC32   EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(CRC32)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(CRC32),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//DEFLATE EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(DEFLATE)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(DEFLATE),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//EXAMPLE EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(EXAMPLE)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(EXAMPLE),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//GZIO    EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(GZIO)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(GZIO),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//INFBLOCK EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(INFBLOCK)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(INFBLOCK),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//INFCODES EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(INFCODES)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(INFCODES),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//INFFAST EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(INFFAST)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(INFFAST),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//INFLATE EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(INFLATE)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(INFLATE),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//INFTREES EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(INFTREES)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(INFTREES),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//INFUTIL EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(INFUTIL)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(INFUTIL),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//TREES   EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(TREES)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(TREES),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//UNCOMPR EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(UNCOMPR)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(UNCOMPR),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-//*
-//ZUTIL   EXEC EDCC,INFILE='<i>prefix</i>.ZLIB.C(ZUTIL)',
-//             CPARM='RENT,LIST,SOURCE,LONGNAME,AGG,OPT(2)',
-//             OUTFILE='<i>prefix</i>.ZLIB.OBJ(ZUTIL),DISP=SHR'
-//USERLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.H
-</pre>
-<li>Prelink zlib using the following job:
-<pre>
-//        JOB
-//PLKED  EXEC PGM=EDCPRLK
-//SYSMSGS  DD DISP=SHR,DSN=CEE.SCEEMSGP(EDCPMSGE)
-//SYSLIB   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ
-//         DD DISP=SHR,DSN=CEE.SCEEOBJ
-//SYSOUT   DD SYSOUT=*
-//SYSPRINT DD SYSOUT=*
-//SYSIN    DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(ADLER32)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(COMPRESS)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(CRC32)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(DEFLATE)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(GZIO)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(INFBLOCK)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(INFCODES)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(INFFAST)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(INFLATE)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(INFTREES)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(INFUTIL)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(TREES)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(UNCOMPR)
-//         DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(ZUTIL)
-//SYSMOD   DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ(ZLIB)
-</pre>
-</ul>
-
-<h4>Assemble and linkedit cckddump</h4>
-<ul>
-<li>Allocate partitioned dataset <i>prefix.cckddump.source</i>;
-    LRECL=80,RECFM=FB and copy or ftp file cckddump.hla
-<li>Submit the following job:
-<pre>
-//        JOB
-//C      EXEC PGM=ASMA90
-//SYSLIB   DD DISP=SHR,DSN=SYS1.MACLIB
-//         DD DISP=SHR,DSN=SYS1.MODGEN
-//SYSPRINT DD SYSOUT=*
-//SYSIN    DD DISP=SHR,DSN=<i>prefix.cckddump.source</i>(CCKDDUMP)
-//SYSUT1   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
-//SYSLIN   DD DISP=(,PASS),DSN=&&OBJ,UNIT=SYSDA,SPACE=(CYL,(1,1))
-//            LRECL=80,BLKSIZE=3200,RECFM=FB
-//L      EXEC PGM=HEWL
-//SYSPRINT DD SYSOUT=*
-//SYSUT1   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
-//SYSLIB   DD DISP=SHR,DSN=CEE.SCEESPC
-//         DD DISP=SHR,DSN=CEE.SCEELKED
-//ZLIB     DD DISP=SHR,DSN=<i>prefix</i>.ZLIB.OBJ
-//SYSLMOD  DD DISP=SHR,DSN=<i>apfauth.load</i>
-//SYSLIN   DD DISP=(OLD,DELETE),DSN=&&OBJ
-//         DD *
-  INCLUDE  ZLIB(ZLIB)
-  INCLUDE  SYSLIB(EDCXHOTL)
-  INCLUDE  SYSLIB(EDCXHOTU)
-  INCLUDE  SYSLIB(EDCXHOTT)
-  ORDER    MAIN(P)
-  ENTRY    MAIN
-  SETCODE  AC(1)
-  NAME     CCKDDUMP(R)
-</pre>
-<li>The assemble step (C) should complete with condition code 4.
-    This is a `feature' due to the way IBM macro IECSDSL1 is coded.
-    The linkedit step (L) should complete with condition code 0.
-</ul>
-
-<h4>Executing cckddump</h4>
-<ul>
-<li>The volume to be dumped is identified by the SYSUT1 DD statement;
-    the output compressed CKD Dasd emulation file is identified by the
-    SYSUT2 DD statement.
-<li>Submit a job similar to the following:
-<pre>
-//        JOB
-//S1     EXEC PGM=CCKDDUMP
-//STEPLIB  DD DISP=SHR,DSN=<i>apfauth.load</i>
-//SYSPRINT DD SYSOUT=*,RECFM=VB,LRECL=255,BLKSIZE=4096
-//SYSUT1   DD DISP=OLD,UNIT=SYSDA,VOL=SER=<i>volser</i>
-//SYSUT2   DD DISP=(,CATLG),DSN=<i>prefix.volser.cckd</i>,
-//            UNIT=SYSDA,SPACE=(TRK,(7500,1500),RLSE),
-//            LRECL=4096,BLKSIZE=4096,RECFM=F
-</pre>
-</ul>
-
-
-<h4>Make the file available to Hercules</h4>
-<ul>
-<li>Copy or ftp <i>prefix.volser.cckd</i> in <b>binary</b> mode
-    to your platform running Hercules.
-</ul>
-
-<hr noshade>
-<p><h3><a NAME="feedback">Feedback</a></h3>
-Questions ?? Problems ?? Comments ?? Suggestions ?? Corrections ?? Bugs ??<br>
-Let me know at <a href="mailto:gsmith@nc.rr.com"><em>gsmith</em>&#064;<em>nc.rr.com</em></a>
-
-<p>
-greg smith
-
-<p><small>Last updated  1 May 2002</small>
+Greg Smith
+<a href="mailto:gsmith@nc.rr.com"><em>gsmith</em>&#064;<em>nc.rr.com</em></a>
+<p><small>Last updated 17 Nov 2002</small>
 </BODY>
 </HTML>
