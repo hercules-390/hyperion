@@ -1004,6 +1004,7 @@ BYTE **orig_newargv;
                         fname, stmt);
                     delayed_exit(1);
                 }
+		/*
                 subval=resolve_symbol_string(addargv[0]);
                 if(subval!=NULL)
                 {
@@ -1012,8 +1013,11 @@ BYTE **orig_newargv;
                 }
                 else
                 {
+		*/
                     set_symbol(operand,addargv[0]);
+		/*
                 }
+		*/
                 addargc--;
             }
 #endif /* defined(OPTION_CONFIG_SYMBOLS) */
