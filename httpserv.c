@@ -126,7 +126,7 @@ static void http_error(WEBBLK *webblk, char *err, char *header, char *info)
     fprintf(webblk->hsock,"HTTP/1.0 %s\n%sConnection: close\n"
                           "Content-Type: text/html\n\n"
                           "<HTML><HEAD><TITLE>%s</TITLE></HEAD>" 
-                          "<BODY><H1>%s</H1>%s<P></BODY></HTML>\n\n",
+                          "<BODY><H1>%s</H1><P>%s</BODY></HTML>\n\n",
                           err, header, err, err, info);
     http_exit(webblk);
 }
