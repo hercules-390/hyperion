@@ -1088,8 +1088,6 @@ struct  timeval tv;                     /* Select timeout structure  */
                         case 4:                     /* POWER - 2nd part */
                             if (NPdevice == 'y' || NPdevice == 'Y')
                             {
-                                fprintf(stderr, ANSI_RESET_WHT_BLK ANSI_CLEAR_SCREEN);
-                                fflush(stderr);
                                 panel_command("quit");
                                 while (1) sched_yield();
                             }
