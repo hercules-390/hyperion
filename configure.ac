@@ -41,20 +41,28 @@ AC_CHECK_HEADER(fenv.h,,[AC_DEFINE([NO_IEEE_SUPPORT])])
 
 # Compiler characteristics
 
-# It would be nice if we could check for __attribute__((regparm))
-# automatically.  For now, disable it when GCC is not in use, and when
-# on non-x86 architectures (below)
-if test x$GCC != xyes; then
+# GCC only seems to support regparm on i386 right now, but that could
+# change in the future.
+AC_CACHE_CHECK([whether gcc supports __attribute__((regparm(n)))],
+               [ac_cv_attr_regparm],
+               [if test x$GCC != xyes; then
+                  # __attribute__ is a GNU C extension
+                  ac_cv_attr_regparm=no
+                else
+                  SAVE_CFLAGS="$CFLAGS"
+                  CFLAGS="-Wall -Werror"
+                  AC_COMPILE_IFELSE([void conftest () __attribute__ ((regparm(1)));],
+                                    [ac_cv_attr_regparm=yes],
+                                    [ac_cv_attr_regparm=no])
+                  CFLAGS="$SAVE_CFLAGS"
+                fi])
+if test x$ac_cv_attr_regparm != xyes; then
   AC_DEFINE(NO_ATTR_REGPARM)
 fi
 
 case "$host_cpu" in
-	  i586|i686) ;;
+	  i386|i486|i586|i686) ;;
   	  *)
-	    # Don't try to use the regparm attribute on non-i386
-            # (avoids many compiler warnings)
-	    AC_DEFINE(NO_ATTR_REGPARM)
-
             # byteswap assembler routines are i386-only
             AC_DEFINE(NO_ASM_BYTESWAP)
 	    ;;
