@@ -1,3 +1,4 @@
+05 Nov 2001 RP needs to INVALIDATE_AEA() since AR loaded - Paul Leisy
 02 Nov 2001 Fix SQXR when iteration results are off by 1 - Paul Leisy
 02 Nov 2001 Fix one IPTE bug by adding INVALIDATE_AxA() - Paul Leisy
 31 Oct 2001 OPTION_FISHIO only if fthreads and not OPTION_SYNCIO - Fish
