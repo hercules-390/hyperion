@@ -849,7 +849,9 @@ BYTE            *xstmap;                /* Xstore bitmap, zero means
                         | SCCB_CFG0_SUPPRESSION_ON_PROTECTION
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
 //                      | SCCB_CFG0_INITIATE_RESET
-//                      | SCCB_CFG0_STORE_CHANNEL_SUBSYS_CHARACTERISTICS
+#if defined(FEATURE_CHSC)
+                        | SCCB_CFG0_STORE_CHANNEL_SUBSYS_CHARACTERISTICS
+#endif /*defined(FEATURE_CHSC)*/
 #if defined(FEATURE_MOVE_PAGE_FACILITY_2)
                         | SCCB_CFG0_MVPG_FOR_ALL_GUESTS
 #endif /*defined(FEATURE_MOVE_PAGE_FACILITY_2)*/

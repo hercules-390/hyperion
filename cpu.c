@@ -619,9 +619,12 @@ static char *pgmintname[] = {
           || code == PGM_PROTECTION_EXCEPTION
 #endif /*FEATURE_SUPPRESSION_ON_PROTECTION*/
            )
+        {
             psa->excarid = regs->excarid;
-            psa->opndrid = regs->opndrid;
+            if(regs->TEA | TEA_MVPG)    
+                psa->opndrid = regs->opndrid;
             regs->opndrid = 0;
+        }
 
 #if defined(FEATURE_ESAME)
         /* Store the translation exception address at PSA+168 */

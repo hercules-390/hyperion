@@ -1,3 +1,7 @@
+27 Jun 2002 Fix validation intercept when no S/370 mode installed - Jan Jaeger
+27 Jun 2002 Fix scpinfo CHSC bit - Jan Jaeger
+27 Jun 2002 Remove MVCL overlap logging - Jan Jaeger
+27 Jun 2002 Fix operand access id - Jan Jaeger
 27 Jun 2002 Fix keyaccess on PGOUT - Jan Jaeger
 23 Jun 2002 Fix for `no shadow file name' messages - Greg Smith
 23 Jun 2002 Gabor Hoffer's performance patch: parts 1 & 2 -- Fish

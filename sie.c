@@ -137,7 +137,11 @@ int     icode;                          /* Interception code         */
         GUESTREGS->sie_guestpi = (SIEFN)&s370_program_interrupt;
         gpv = s370_load_psw(GUESTREGS, STATEBK->psw);
 #else
-// validation intercept
+        /* Validity intercept when 370 mode not installed */
+        SIE_SET_VI(SIE_VI_WHO_CPU, SIE_VI_WHEN_SIENT,
+          SIE_VI_WHY_370NI, GUESTREGS);
+        STATEBK->c = SIE_C_VALIDITY;
+        return;
 #endif
     }
 #endif /*!defined(FEATURE_ESAME)*/
