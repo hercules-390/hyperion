@@ -2629,6 +2629,8 @@ U16     xcode;                          /* Exception code            */
     memcpy(regs->ar, &newregs.ar, sizeof(newregs.ar));
     memcpy(regs->cr, &newregs.cr, sizeof(newregs.cr));
     memcpy(&regs->psw, &newregs.psw, sizeof(newregs.psw));
+    INVALIDATE_AIA(regs);
+    INVALIDATE_AEA_ALL(regs);
 
     /* Set the main storage reference and change bits */
     STORAGE_KEY(alsed) |= (STORKEY_REF | STORKEY_CHANGE);
