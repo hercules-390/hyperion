@@ -104,7 +104,7 @@
     }
 
 
-typedef ATTR_REGPARM(3) void (*zz_func) (BYTE inst[], int execflag, REGS *regs);
+typedef void (ATTR_REGPARM(3) (*zz_func)) (BYTE inst[], int execflag, REGS *regs);
 
 /* Gabor Hoffer (performance option) */
 extern zz_func s370_opcode_table[];

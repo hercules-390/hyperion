@@ -114,7 +114,7 @@
 #define ARCH_MODE   ARCH_370
 
 #define DEF_INST(_name) \
-ATTR_REGPARM(3) void s370_ ## _name (BYTE inst[], int execflag, REGS *regs)
+void (ATTR_REGPARM(3) s370_ ## _name) (BYTE inst[], int execflag, REGS *regs)
 
 #define ARCH_DEP(_name) \
 s370_ ## _name
@@ -205,7 +205,7 @@ s370_ ## _name
 #define ARCH_MODE   ARCH_390
 
 #define DEF_INST(_name) \
-ATTR_REGPARM(3) void s390_ ## _name (BYTE inst[], int execflag, REGS *regs)
+void (ATTR_REGPARM(3) s390_ ## _name) (BYTE inst[], int execflag, REGS *regs)
 
 #define ARCH_DEP(_name) \
 s390_ ## _name
@@ -350,7 +350,7 @@ s390_ ## _name
 #define CHM_GPR2_RESV   Z_CHM_GPR2_RESV
 
 #define DEF_INST(_name) \
-ATTR_REGPARM(3) void z900_ ## _name (BYTE inst[], int execflag, REGS *regs)
+void (ATTR_REGPARM(3) z900_ ## _name) (BYTE inst[], int execflag, REGS *regs)
 
 #define ARCH_DEP(_name) \
 z900_ ## _name
