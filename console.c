@@ -1524,6 +1524,7 @@ BYTE                    unitstat;       /* Status after receive data */
 
     /* Close the listening socket */
     close (lsock);
+    free(server);
 
     logmsg (_("HHCTE004I Console connection thread terminated\n"));
 
