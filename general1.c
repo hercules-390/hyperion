@@ -1538,94 +1538,168 @@ BYTE    cbyte;                          /* Compare byte              */
 /*-------------------------------------------------------------------*/
 DEF_INST(compare_logical_character)
 {
-BYTE    l;                              /* Lenght byte               */
-int     b1, b2;                         /* Base registers            */
-VADR    ea1, ea2;                       /* Effective addresses       */
+unsigned int len, len1, len2;           /* Lengths                   */
+int      rc;                            /* memcmp() return code      */
+int      b1, b2;                        /* Base registers            */
+VADR     ea1, ea2;                      /* Effective addresses       */
+BYTE    *m1, *m2;                       /* Mainstor addresses        */
 
-    SS_L(inst, regs, l, b1, ea1, b2, ea2);
+    SS_L(inst, regs, len, b1, ea1, b2, ea2);
 
-    /* `Survey says ...' 94% of all CLC calls are 8 bytes or less and
-     * that those 8 bytes fall within a 0x800 boundary for both ops.
-     */
-    if ((ea1 & 0x7FF) <= 0x7FF - l && (ea2 & 0x7FF) <= 0x7FF - l)
+    /* Translate addresses of leftmost operand bytes */
+    m1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
+    m2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
+
+    /* Quick out if comparing just 1 byte */
+    if (unlikely(len == 0))
     {
-	int rc;
-        BYTE *main1, *main2;
-
-        //NOTE: we use the memcpy/CSWAP64 technique to get the 8 byte
-        //  value rather than fetch_dw().  fetch_dw() may try to
-        //  get a coherent 8 byte value (eg on ia32 by executing
-        //  the cmpxchg8b) instruction.  CLC does not need a coherent
-        //  8 byte value, especially if the compare length is < 8.
-        //NOTE2: (as a reminder) we use `memcpy' because some arches
-        //  require alignment when working with, in this case, 8 byte
-        //  values.  U64 should be 8 byte aligned.  The compiler for
-        //  other arches should (and do) optimize this.
-	//NOTE3 : (Added by ISW 20040311)
-	//  memcpy removed.
-	//  Alignement issue raised in NOTE2 needs to be re-addressed.
-	//  Doing 'natural' integer comparison yields a significant
-	//  performance gain. For archs requiring integers to be aligned
-	//  on their boundaries some configure & run time tests need to be
-	//  added.
-
-        main1 = MADDR (ea1, b1, regs, ACCTYPE_READ, regs->psw.pkey);
-        main2 = MADDR (ea2, b2, regs, ACCTYPE_READ, regs->psw.pkey);
-
-	switch(l)
-	{
-		case 0:
-			rc=*main1-*main2;
-			break;
-		case 1:
-			{
-				U16 v1,v2;
-				v1=CSWAP16(*(U16 *)main1);
-				v2=CSWAP16(*(U16 *)main2);
-				regs->psw.cc = ( v1==v2 ? 0 : ( v1<v2 ? 1 : 2 ) );
-			}
-			return;
-		case 3:
-			{
-				U32 v1,v2;
-				v1=CSWAP32(*(U32 *)main1);
-				v2=CSWAP32(*(U32 *)main2);
-				regs->psw.cc = ( v1==v2 ? 0 : ( v1<v2 ? 1 : 2 ) );
-			}
-			return;
-		case 7:
-			/*
-			{
-				U64 v1,v2;
-				v1=CSWAP64(*(U64 *)main1);
-				v2=CSWAP64(*(U64 *)main2);
-				rc=v1-v2;
-			}
-			*/
-			rc=memcmp(main1,main2,8);
-			break;
-		default:
-			rc=memcmp(main1,main2,l+1);
-			break;
-	}
+        rc = *m1 - *m2;
         regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
+        return;
+    }
+
+    /* There are several scenarios (in optimal order):
+     * (1) dest boundary and source boundary not crossed
+     *     (a) halfword compare
+     *     (b) fullword compare
+     *     (c) doubleword compare (64-bit machines)
+     *     (d) other
+     * (2) dest boundary not crossed and source boundary crossed
+     * (3) dest boundary crossed and source boundary not crossed
+     * (4) dest boundary and source boundary are crossed
+     *     (a) dest and source boundary cross at the same time
+     *     (b) dest boundary crossed first
+     *     (c) source boundary crossed first
+     */
+
+    if ( (ea1 & 0x7FF) <= 0x7FF - len )
+    {
+        if ( (ea2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (1) - No boundaries are crossed */
+            switch(len) {
+
+            case 1:
+                /* (1a) - halfword compare */
+                {
+                    U16 v1, v2;
+                    v1 = fetch_hw(m1);
+                    v2 = fetch_hw(m2);
+                    regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+                    return;
+                }
+                break;
+
+            case 3:
+                /* (1b) - fullword compare */
+                {
+                    U32 v1, v2;
+                    v1 = fetch_fw(m1);
+                    v2 = fetch_fw(m2);
+                    regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+                    return;
+                }
+                break;
+
+            case 7:
+                /* (1c) - doubleword compare (64-bit machines) */
+                if (sizeof(unsigned int) >= 8)
+                {
+                    U64 v1, v2;
+                    v1 = fetch_dw(m1);
+                    v2 = fetch_dw(m2);
+                    regs->psw.cc = ( v1 == v2 ? 0 : ( v1 < v2 ? 1 : 2 ) );
+                    return;
+                }
+
+            default:
+                /* (1d) - other compare */
+                rc = memcmp(m1, m2, len + 1);
+                break;
+            }
+        }
+        else
+        {
+            /* (2) - Second operand crosses a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            rc = memcmp(m1, m2, len2);
+            if (rc == 0)
+            {
+                m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                            b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1 + len2, m2, len - len2 + 1);
+             }
+        }
     }
     else
     {
-        int  rc;
-        BYTE cwork1[256];
-        BYTE cwork2[256];
-
-        /* Fetch first and second operands into work areas */
-        ARCH_DEP(vfetchc) ( cwork1, l, ea1, b1, regs );
-        ARCH_DEP(vfetchc) ( cwork2, l, ea2, b2, regs );
-
-        /* Compare first operand with second operand */
-        rc = memcmp (cwork1, cwork2, l + 1);
-
-        /* Set the condition code */
-        regs->psw.cc = (rc == 0) ? 0 : (rc < 0) ? 1 : 2;
+        /* First operand crosses a boundary */
+        len1 = 0x800 - (ea1 & 0x7FF);
+        if ( (ea2 & 0x7FF) <= 0x7FF - len )
+        {
+            /* (3) - First operand crosses a boundary */
+            rc = memcmp(m1, m2, len1);
+            if (rc == 0)
+            {
+                m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                            b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                rc = memcmp(m1, m2 + len1, len - len1 + 1);
+             }
+        }
+        else
+        {
+            /* (4) - Both operands cross a boundary */
+            len2 = 0x800 - (ea2 & 0x7FF);
+            if (len1 == len2)
+            {
+                /* (4a) - Both operands cross at the same time */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    m2 = MADDR ((ea2 + len1) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp(m1, m2, len - len1 +1);
+                }
+            }
+            else if (len1 < len2)
+            {
+                /* (4b) - First operand crosses first */
+                rc = memcmp(m1, m2, len1);
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1, len2 - len1);
+                }
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2 - len1, m2, len - len2 + 1);
+                }
+            }
+            else
+            {
+                /* (4c) - Second operand crosses first */
+                rc = memcmp(m1, m2, len2);
+                if (rc == 0)
+                {
+                    m2 = MADDR ((ea2 + len2) & ADDRESS_MAXWRAP(regs),
+                                b2, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1 + len2, m2, len1 - len2);
+                }
+                if (rc == 0)
+                {
+                    m1 = MADDR ((ea1 + len1) & ADDRESS_MAXWRAP(regs),
+                                b1, regs, ACCTYPE_READ, regs->psw.pkey);
+                    rc = memcmp (m1, m2 + len1 - len2, len - len1 + 1);
+                }
+            }
+        }
     }
+    regs->psw.cc = ( rc == 0 ? 0 : ( rc < 0 ? 1 : 2 ) );
 }
 
 

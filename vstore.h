@@ -723,9 +723,6 @@ int     i;                              /* Loop counter              */
      */
 
     /* Translate addresses of leftmost operand bytes */
-    dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
-    sk1 = regs->dat.storkey;
-    source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
 
 #ifdef FEATURE_INTERVAL_TIMER
     if (unlikely(addr2 == 80))
@@ -742,6 +739,8 @@ int     i;                              /* Loop counter              */
 
     if ( (addr1 & 0x7FF) <= 0x7FF - len )
     {
+	source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
+	dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE, key1);
         if ( (addr2 & 0x7FF) <= 0x7FF - len )
         {
              /* (1) - No boundaries are crossed */
@@ -807,10 +806,12 @@ int     i;                              /* Loop counter              */
              len2 = len - len2;
              for ( i = 0; i <= len2; i++) *dest1++ = *source2++;
         }
-        *sk1 |= (STORKEY_REF | STORKEY_CHANGE);
     }
     else
     {
+        dest1 = MADDR (addr1, arn1, regs, ACCTYPE_WRITE_SKP, key1);
+        sk1 = regs->dat.storkey;
+        source1 = MADDR (addr2, arn2, regs, ACCTYPE_READ, key2);
         /* First operand crosses a boundary */
         len2 = 0x800 - (addr1 & 0x7FF);
         dest2 = MADDR ((addr1 + len2) & ADDRESS_MAXWRAP(regs),
