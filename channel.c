@@ -21,9 +21,9 @@
 
 #include "opcode.h"
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
 #include "w32chan.h"
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
 #undef CHADDRCHK
 #if defined(FEATURE_ADDRESS_LIMIT_CHECKING)
@@ -828,7 +828,7 @@ DEVBLK *dev;                            /* -> Device control block   */
 } /* end function io_reset */
 
 
-#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#if !defined(OPTION_FISHIO)
 
 /*-------------------------------------------------------------------*/
 /* Execute a queued I/O                                              */
@@ -890,7 +890,7 @@ void device_thread ()
 
 } /* end function device_thread */
 
-#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#endif // !defined(OPTION_FISHIO)
 
 
 #endif /*!defined(_CHANNEL_C)*/
@@ -1319,11 +1319,11 @@ int ARCH_DEP(device_attention) (DEVBLK *dev, BYTE unitstat)
 /*-------------------------------------------------------------------*/
 int ARCH_DEP(startio) (DEVBLK *dev, ORB *orb)                  /*@IWZ*/
 {
-#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#if !defined(OPTION_FISHIO)
 TID     tid;                            /* Device thread thread id   */
 DEVBLK *previoq, *ioq;                  /* Device I/O queue pointers */
 int     rc;                             /* Return code               */
-#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#endif // !defined(OPTION_FISHIO)
 
     /* Obtain the device lock */
     obtain_lock (&dev->lock);
@@ -1375,10 +1375,10 @@ int     rc;                             /* Return code               */
     memcpy (dev->pmcw.intparm, orb->intparm,                   /*@IWZ*/
                         sizeof(dev->pmcw.intparm));            /*@IWZ*/
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
     release_lock (&dev->lock);
     return ScheduleIORequest(dev,dev->devnum);
-#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#else // !defined(OPTION_FISHIO)
     if (sysblk.devtmax >= 0)
     {
         /* Queue the I/O request */
@@ -1435,7 +1435,7 @@ int     rc;                             /* Return code               */
     /* Return with condition code zero */
     return 0;
 
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 } /* end function startio */
 
 /*-------------------------------------------------------------------*/
@@ -2037,6 +2037,14 @@ BYTE    iobuf[65536];                   /* Channel I/O buffer        */
         (*devexec) (dev, code, flags, chained, count, prevcode,
                     ccwseq, iobuf, &more, &unitstat, &residual);
 
+        /* Check for Command Retry (suggested by Jim Pierson) */
+        if ( unitstat == ( CSW_CE | CSW_DE | CSW_UC | CSW_SM ) )
+        {
+            chain    = 1;
+            ccwaddr -= 8;   /* (retry same ccw again) */
+            continue;
+        }
+
         /* For READ, SENSE, and READ BACKWARD operations, copy data
            from channel buffer to main storage, unless SKIP is set */
         if ((flags & CCW_FLAGS_SKIP) == 0
@@ -2406,7 +2414,7 @@ int device_attention (DEVBLK *dev, BYTE unitstat)
     return 3;
 }
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
 void  call_execute_ccw_chain(int arch_mode, void* pDevBlk)
 {
     switch (arch_mode)
@@ -2417,6 +2425,6 @@ void  call_execute_ccw_chain(int arch_mode, void* pDevBlk)
         case ARCH_390: s390_execute_ccw_chain((DEVBLK*)pDevBlk); break;
     }
 }
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
 #endif /*!defined(_GEN_ARCH)*/

@@ -35,9 +35,9 @@
 
 #include "inline.h"
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
 #include "w32chan.h"
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
 #define  DISPLAY_INSTRUCTION_OPERANDS
 
@@ -880,9 +880,9 @@ static void display_subchannel (DEVBLK *dev)
 
 } /* end function display_subchannel */
 
-#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#if !defined(OPTION_FISHIO)
 void    device_thread();
-#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#endif // !defined(OPTION_FISHIO)
 
 #ifdef WIN32
 int herc_system (char* command)
@@ -1140,9 +1140,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 return NULL;
             }
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
             ios_arch_mode = sysblk.arch_mode;
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
             logmsg("Architecture successfully set to %s mode.\n",get_arch_mode_string(NULL));
 
@@ -1894,10 +1894,9 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     if (strcmp(cmd,"quit") == 0 || strcmp(cmd,"exit") == 0)
     {
         sysblk.msgpipew = stderr;
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
         ios_msgpipew = sysblk.msgpipew;
-        KillAllDeviceThreads();
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
         devascii = strtok(cmd+5," \t");
         if (devascii == NULL || strcmp("now",devascii))
             release_config();
@@ -2216,7 +2215,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
     if (memcmp(cmd,"devtmax",7)==0)
     {
         int devtmax = -2;
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
 
         // Note: no need to lock scheduler vars since WE are the only one
         // that updates "ios_devtmax" (the scheduler just references it)
@@ -2242,7 +2241,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 ios_devtmax, ios_devtnbr, ios_devthwm,
                 (int)ios_devtwait, ios_devtunavail);
 
-#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#else // !defined(OPTION_FISHIO)
         TID tid;
 
         if (cmd[7] == '=')
@@ -2280,7 +2279,7 @@ BYTE   *cmdarg;                         /* -> Command argument       */
                 sysblk.devtmax, sysblk.devtnbr, sysblk.devthwm,
                 sysblk.devtwait, sysblk.devtunavail);
 
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
         return NULL;
     }
 

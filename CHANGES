@@ -1,3 +1,6 @@
+31 Oct 2001 OPTION_FISHIO only if fthreads and not OPTION_SYNCIO - Fish
+31 Oct 2001 'KillAllDeviceThreads' function disabled - Fish
+31 Oct 2001 CTC Channel Command retry (contributed by Jim Pierson) - Fish
 31 Oct 2001 Fix CFDR so overflow check done after rounding - Paul Leisy
 31 Oct 2001 Fix MVCL so unused R1 and R2 bits zeroed - Paul Leisy
 31 Oct 2001 Add "loadtext" panel command to load text decks - Paul Leisy

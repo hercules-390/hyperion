@@ -32,9 +32,9 @@
 
 #include "inline.h"
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
 #include "w32chan.h"
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
 #if defined(FEATURE_BRANCH_AND_SET_AUTHORITY)
 /*-------------------------------------------------------------------*/
@@ -4857,9 +4857,9 @@ static char *ordername[] = {    "Unassigned",
                         status |= SIGP_STATUS_INVALID_PARAMETER;
                 }
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
             ios_arch_mode = sysblk.arch_mode;
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
             /* Invalidate the ALB and TLB */
             ARCH_DEP(purge_tlb) (regs);

@@ -609,7 +609,7 @@ typedef struct _SYSBLK {
 #ifdef OPTION_IOINTQ
         struct _DEVBLK *iointq;         /* I/O interrupt queue       */
 #endif
-#if !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#if !defined(OPTION_FISHIO)
         struct _DEVBLK *ioq;            /* I/O queue                 */
         LOCK    ioqlock;                /* I/O queue lock            */
         COND    ioqcond;                /* I/O queue condition       */
@@ -618,7 +618,7 @@ typedef struct _SYSBLK {
         int     devtmax;                /* Max device threads        */
         int     devthwm;                /* High water mark           */
         int     devtunavail;            /* Count thread unavailable  */
-#endif // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#endif // !defined(OPTION_FISHIO)
         RADR    addrlimval;             /* Address limit value (SAL) */
         U32     servparm;               /* Service signal parameter  */
         U32     cp_recv_mask;           /* Syscons CP receive mask   */
@@ -1015,10 +1015,6 @@ typedef struct _DEVBLK {
                                              for read only file      */
     } DEVBLK;
 
-#define LOOPER_WAIT 0
-#define LOOPER_EXEC 1
-#define LOOPER_DIE  2
-
 /*-------------------------------------------------------------------*/
 /* Structure definitions for CKD headers                             */
 /*-------------------------------------------------------------------*/
@@ -1178,7 +1174,7 @@ typedef struct _CCKD_CACHE {            /* Cache structure           */
                                            threads: 1 - 9            */
 #define CCKD_MAX_DFW           9        /* Number of deferred write
                                            threads: 1 - 9            */
-#ifdef WIN42
+#ifdef WIN32
 #define CCKD_MAX_DFWQ_DEPTH    8
 #else
 #define CCKD_MAX_DFWQ_DEPTH    32

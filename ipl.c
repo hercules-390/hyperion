@@ -17,9 +17,9 @@
 
 #include "inline.h"
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
 #include "w32chan.h"
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
 /*-------------------------------------------------------------------*/
 /* Function to run initial CCW chain from IPL device and load IPLPSW */
@@ -305,9 +305,9 @@ int load_ipl (U16 devnum, REGS *regs)
 {
     if(sysblk.arch_mode > ARCH_390)
         sysblk.arch_mode = ARCH_390;
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
     ios_arch_mode = sysblk.arch_mode;
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
     switch(sysblk.arch_mode) {
         case ARCH_370: return s370_load_ipl(devnum, regs);
         default:       return s390_load_ipl(devnum, regs);

@@ -37,9 +37,9 @@
 #include "config.c"
 #undef   _GEN_ARCH
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
 #include "w32chan.h"
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
 /*-------------------------------------------------------------------*/
 /* Internal macro definitions                                        */
@@ -820,7 +820,7 @@ BYTE    c;                              /* Work area for sscanf      */
 #endif /*SMP_SERIALIZATION*/
 #endif /*MAX_CPU_ENGINES > 1*/
     initialize_detach_attr (&sysblk.detattr);
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
     InitIOScheduler                         // initialize i/o scheduler...
         (
             sysblk.msgpipew,                // (for issuing msgs to Herc console)
@@ -829,14 +829,14 @@ BYTE    c;                              /* Work area for sscanf      */
             MAX_DEVICE_THREAD_IDLE_SECS,    // (maximum device thread wait time)
             devtmax                         // (maximum #of device threads allowed)
         );
-#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+#else // !defined(OPTION_FISHIO)
     initialize_lock (&sysblk.ioqlock);
     initialize_condition (&sysblk.ioqcond);
     /* Set max number device threads */
     sysblk.devtmax = devtmax;
     sysblk.devtwait = sysblk.devtnbr =
     sysblk.devthwm  = sysblk.devtunavail = 0;
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
     InitializeListHead(&bind_head);
     initialize_lock(&bind_lock);
 
@@ -986,9 +986,9 @@ BYTE    c;                              /* Work area for sscanf      */
     }
     setvbuf (sysblk.msgpipew, NULL, _IOLBF, 0);
 
-#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#if defined(OPTION_FISHIO)
     ios_msgpipew = sysblk.msgpipew;
-#endif // defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+#endif // defined(OPTION_FISHIO)
 
     /* Display the version identifier on the control panel */
     display_version (sysblk.msgpipew, "Hercules ",

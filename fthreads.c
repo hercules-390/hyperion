@@ -1,6 +1,17 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //         fthreads.c           Fish's WIN32 version of pthreads
 ////////////////////////////////////////////////////////////////////////////////////
+// (c) Copyright "Fish" (David B. Trout), 2001. Released under the Q Public License
+// (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
+////////////////////////////////////////////////////////////////////////////////////
+
+#if defined(HAVE_CONFIG_H)
+#include <config.h>		// (needed to set OPTION_FTHREADS flag appropriately)
+#endif
+
+#if !defined(OPTION_FTHREADS)
+int dummy = 0;
+#else // defined(OPTION_FTHREADS)
 
 #include <windows.h>
 #include <stdio.h>
@@ -12,7 +23,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef FISH_HANG
+#if defined(FISH_HANG)
 
 	#include "fishhang.h"	// (function definitions)
 
@@ -32,7 +43,7 @@
 
 	#define MyWaitForSingleObject(handle,millsecs)            (FishHang_WaitForSingleObject(pszFile,nLine,(handle),(millsecs)))
 
-#else
+#else // !defined(FISH_HANG)
 
 	#define MyCreateThread(secat,stack,start,parm,flags,tid)  (CreateThread((secat),(stack),(start),(parm),(flags),(tid)))
 	#define MyExitThread(code)                                (ExitThread((code)))
@@ -50,7 +61,7 @@
 
 	#define MyWaitForSingleObject(handle,millisecs)           (WaitForSingleObject((handle),(millisecs)))
 
-#endif
+#endif // defined(FISH_HANG)
 
 #define _fthreadmsg(fmt...)     \
 {                          \
@@ -59,6 +70,27 @@
 }
 
 #define IsEventSet(hEventHandle) (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
+
+/////////////////////////////////////////////////////////////////////////////
+// Debugging
+
+#if defined(DEBUG) || defined(_DEBUG)
+    #define TRACE(a...) _fthreadmsg(a)
+    #define ASSERT(a) \
+        do \
+        { \
+            if (!(a)) \
+            { \
+                _fthreadmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+            } \
+        } \
+        while(0)
+    #define VERIFY(a) ASSERT(a)
+#else
+    #define TRACE(a...)
+    #define ASSERT(a)
+    #define VERIFY(a) ((void)(a))
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////
 // (thread signalling not supported...)
@@ -621,3 +653,5 @@ fthread_cond_timedwait
 ////////////////////////////////////////////////////////////////////////////////////
 
 #undef IsEventSet
+
+#endif // !defined(OPTION_FTHREADS)

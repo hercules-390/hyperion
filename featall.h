@@ -38,17 +38,27 @@
 #define OPTION_CKD_KEY_TRACING          /* Trace CKD search keys     */
 #undef  OPTION_CMPSC_DEBUGLVL      /* 3 ** 1=Exp 2=Comp 3=Both debug */
 
+
 /* This is set as appropriate by configure and makefile.w32; don't
-   undefine it -mdz */
+   define or undefine it here. -mdz */
 /* #undef NO_SIGABEND_HANDLER */
 
+
+/* The following option is set as appropriate by configure and
+   makefile.w32; don't define or undefine it here. */
+/* #define OPTION_FTHREADS */           /* Fish pthreads replacement */
+
+
+/* OPTION_FISHIO only possible with OPTION_FTHREADS, but can't
+   be used with OPTION_SYNCIO as the two are mutually exclusive. */
+#if defined(OPTION_FTHREADS) && !defined(OPTION_SYNCIO)
+  #define OPTION_FISHIO
+#else // !defined(OPTION_FTHREADS) || defined(OPTION_SYNCIO)
+  #undef OPTION_FISHIO
+#endif
+
+
 #define FEATURE_ALD_FORMAT            0
-
-// The following option is set as appropriate by configure and
-// makefile.w32; don't define/undefine it.
-//
-//#define OPTION_FTHREADS           /* Fish pthreads replacement */
-
 
 #undef FEATURE_4K_STORAGE_KEYS
 #undef FEATURE_ACCESS_REGISTERS

@@ -1,6 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //         w32chan.c           Fish's new i/o scheduling logic
 ////////////////////////////////////////////////////////////////////////////////////
+// (c) Copyright "Fish" (David B. Trout), 2001. Released under the Q Public License
+// (http://www.conmicro.cx/hercules/herclic.html) as modifications to Hercules.
+////////////////////////////////////////////////////////////////////////////////////
+
+#if defined(HAVE_CONFIG_H)
+#include <config.h>		// (needed 1st to set OPTION_FTHREADS flag appropriately)
+#endif
+
+#include "featall.h"	// (needed 2nd to set OPTION_FISHIO flag appropriately)
+
+#if !defined(OPTION_FISHIO)
+int dummy = 0;
+#else // defined(OPTION_FISHIO)
 
 #include <windows.h>	// (standard WIN32)
 #include <errno.h>		// (need "errno")
@@ -11,12 +24,10 @@
 #include "w32chan.h"	// (function prototypes for this module)
 #include "linklist.h"	// (linked list macros)
 
-#undef FISH_HANG_DEADLOCK_DETECTION_TEST
-
 /////////////////////////////////////////////////////////////////////////////
 // (helper macros...)
 
-#ifdef FISH_HANG
+#if defined(FISH_HANG)
 
 	#include "fishhang.h"
 
@@ -32,7 +43,7 @@
 	#define UnlockScheduler()                       (FishHang_LeaveCriticalSection(&IOSchedulerLock))
 	#define UnlockThreadParms(pThreadParms)         (FishHang_LeaveCriticalSection(&pThreadParms->IORequestListLock))
 
-#else
+#else // !defined(FISH_HANG)
 
 	#define MyInitializeCriticalSection(lock)       (InitializeCriticalSection((lock)))
 	#define MyDeleteCriticalSection(lock)           (DeleteCriticalSection((lock)))
@@ -46,7 +57,7 @@
 	#define UnlockScheduler()                       (LeaveCriticalSection(&IOSchedulerLock))
 	#define UnlockThreadParms(pThreadParms)         (LeaveCriticalSection(&pThreadParms->IORequestListLock))
 
-#endif // FISH_HANG
+#endif // defined(FISH_HANG)
 
 #define logmsg(fmt...)           \
 {                                \
@@ -55,6 +66,27 @@
 }
 
 #define IsEventSet(hEventHandle) (WaitForSingleObject(hEventHandle,0) == WAIT_OBJECT_0)
+
+/////////////////////////////////////////////////////////////////////////////
+// Debugging
+
+#if defined(DEBUG) || defined(_DEBUG)
+    #define TRACE(a...) logmsg(a)
+    #define ASSERT(a) \
+        do \
+        { \
+            if (!(a)) \
+            { \
+                logmsg("** Assertion Failed: %s(%d)\n",__FILE__,__LINE__); \
+            } \
+        } \
+        while(0)
+    #define VERIFY(a) ASSERT(a)
+#else
+    #define TRACE(a...)
+    #define ASSERT(a)
+    #define VERIFY(a) ((void)(a))
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // i/o scheduler variables...  (some private, some externally visible)
@@ -169,21 +201,6 @@ int  ScheduleIORequest(void* pDevBlk, unsigned short wDevNum)
 	// Schedule a device_thread to process this i/o request
 
 	LockScheduler();		// (lock scheduler vars)
-
-#ifdef FISH_HANG_DEADLOCK_DETECTION_TEST
-	// DEADLOCK DETECTION TEST
-	// Scheduler thread: [try to] obtain the threadparms lock
-	// after having already obtained the scheduler lock
-	if (!IsListEmpty(&ThreadListHeadListEntry))
-	{
-		LIST_ENTRY* pListEntry = ThreadListHeadListEntry.Flink;
-		pThreadParms = CONTAINING_RECORD(pListEntry,DEVTHREADPARMS,ThreadListLinkingListEntry);
-		MySetEvent(pThreadParms->hRequestQueuedEvent);
-		LockThreadParms(pThreadParms);
-		Sleep(100);
-		UnlockThreadParms(pThreadParms);
-	}
-#endif // FISH_HANG_DEADLOCK_DETECTION_TEST
 
 	if (ios_devtmax < 0)
 	{
@@ -422,15 +439,6 @@ void*  DeviceThread (void* pArg)
 
 		LockThreadParms(pThreadParms);		// (freeze moving target)
 
-#ifdef FISH_HANG_DEADLOCK_DETECTION_TEST
-		// DEADLOCK DETECTION TEST
-		// Device thread: [try to] obtain the scheduler lock
-		// after having already obtained the threadparms lock
-		LockScheduler();
-		Sleep(100);
-		UnlockScheduler();
-#endif // FISH_HANG_DEADLOCK_DETECTION_TEST
-
 		// Check to see if we have any work...
 
 		if (IsListEmpty(&pThreadParms->IORequestListHeadListEntry))
@@ -493,6 +501,8 @@ void*  DeviceThread (void* pArg)
 
 		UnlockThreadParms(pThreadParms);	// (thaw moving target)
 
+		if (IsEventSet(pThreadParms->hShutdownEvent)) break;
+
 		// If we're a "one time only" thread, then we're done.
 
 		if (ios_devtmax < 0)
@@ -510,6 +520,8 @@ void*  DeviceThread (void* pArg)
 	// were manually "cancelled" or asked to stop processing; i.e. the i/o subsystem
 	// was reset). Discard all i/o requests that may still be remaining in our queue.
 
+	TRACE("** DeviceThread %8.8X: shutdown detected\n",pThreadParms->dwThreadID);
+
 	LockThreadParms(pThreadParms);			// (freeze moving target)
 
 	// Discard all queued i/o requests...
@@ -517,11 +529,18 @@ void*  DeviceThread (void* pArg)
 	while (!IsListEmpty(&pThreadParms->IORequestListHeadListEntry))
 	{
 		pListEntry = RemoveListHead(&pThreadParms->IORequestListHeadListEntry);
+
 		pIORequest = CONTAINING_RECORD(pListEntry,DEVIOREQUEST,IORequestListLinkingListEntry);
+
+		TRACE("** DeviceThread %8.8X: discarding i/o request for device %4.4X\n",
+			pThreadParms->dwThreadID,pIORequest->wDevNum);
+
 		free(pIORequest);
 	}
 
 	pThreadParms->bThreadIsDead = TRUE;		// (tell scheduler we've died)
+
+	TRACE("** DeviceThread %8.8X: shutdown complete\n",pThreadParms->dwThreadID);
 
 	UnlockThreadParms(pThreadParms);		// (thaw moving target)
 
@@ -564,6 +583,7 @@ void  TrimDeviceThreads()
 	UnlockScheduler();		// (unlock shceduler vars)
 }
 
+#if 0	// (the following is not needed yet)
 /////////////////////////////////////////////////////////////////////////////
 // ask all device_threads to exit... (i.e. i/o subsystem reset)
 
@@ -572,31 +592,46 @@ void  KillAllDeviceThreads()
 	DEVTHREADPARMS*  pThreadParms;
 	LIST_ENTRY*      pListEntry;
 
-	LockScheduler();		// (lock scheduler vars)
+	TRACE("** ENTRY KillAllDeviceThreads\n");
 
-	pListEntry = ThreadListHeadListEntry.Flink;		// (get starting link in chain)
+	LockScheduler();				// (lock scheduler vars)
 
-	while (pListEntry != &ThreadListHeadListEntry)	// (while not end of chain reached...)
-	{
-		pThreadParms = CONTAINING_RECORD(pListEntry,DEVTHREADPARMS,ThreadListLinkingListEntry);
-
-		// (Note: we need to signal the hRequestQueuedEvent event too so that
-		//  it can wake up and notice that the hShutdownEvent event is signaled)
-
-		MySetEvent(pThreadParms->hShutdownEvent);		// (MUST be first)
-		MySetEvent(pThreadParms->hRequestQueuedEvent);	// (THEN this one)
-
-		pListEntry = pListEntry->Flink;		// (go on to next link in chain)
-	}
+	RemoveDeadThreadsFromList();	// (discard dead threads)
 
 	while (!IsListEmpty(&ThreadListHeadListEntry))
 	{
+		pListEntry = ThreadListHeadListEntry.Flink;		// (get starting link in chain)
+
+		while (pListEntry != &ThreadListHeadListEntry)	// (while not end of chain reached...)
+		{
+			pThreadParms = CONTAINING_RECORD(pListEntry,DEVTHREADPARMS,ThreadListLinkingListEntry);
+
+			// (Note: we need to signal the hRequestQueuedEvent event too so that
+			//  it can wake up and notice that the hShutdownEvent event is signaled)
+
+			TRACE("** KillAllDeviceThreads: setting shutdown event for thread %8.8X\n",
+				pThreadParms->dwThreadID);
+
+			LockThreadParms(pThreadParms);					// (lock thread parms)
+			MySetEvent(pThreadParms->hShutdownEvent);		// (request shutdown)
+			MySetEvent(pThreadParms->hRequestQueuedEvent);	// (wakeup thread)
+			UnlockThreadParms(pThreadParms);				// (unlock thread parms)
+
+			pListEntry = pListEntry->Flink;		// (go on to next link in chain)
+		}
+
+		UnlockScheduler();				// (unlock scheduler vars)
+		TRACE("** KillAllDeviceThreads: waiting for thread(s) to shutdown\n");
 		Sleep(100);						// (give them time to die)
+		LockScheduler();				// (re-lock scheduler vars)
 		RemoveDeadThreadsFromList();	// (discard dead threads)
 	}
 
-	UnlockScheduler();		// (unlock scheduler vars)
+	UnlockScheduler();				// (unlock scheduler vars)
+
+	TRACE("** EXIT KillAllDeviceThreads\n");
 }
+#endif // (the preceding is not needed yet)
 
 /////////////////////////////////////////////////////////////////////////////
 // remove all dead threads from our list of threads...
@@ -640,7 +675,7 @@ void  RemoveThisThreadFromOurList(DEVTHREADPARMS* pThreadParms)
 
 /////////////////////////////////////////////////////////////////////////////
 
-#ifdef FISH_HANG
+#if defined(FISH_HANG)
 
 char PrintDEVIOREQUESTBuffer[2048];
 
@@ -771,6 +806,8 @@ void  PrintAllDEVTHREADPARMSs()
 
 #include "fishhang.c"
 
-#endif // FISH_HANG
+#endif // defined(FISH_HANG)
 
 /////////////////////////////////////////////////////////////////////////////
+
+#endif // !defined(OPTION_FISHIO)

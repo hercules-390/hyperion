@@ -194,6 +194,11 @@
 #define CTC_CFC         9               /* Coupling facility channel */
 
 /*-------------------------------------------------------------------*/
+/* CTCI read timeout value before returning command retry            */
+/*-------------------------------------------------------------------*/
+#define CTC_READ_TIMEOUT_SECS  (5)      /* five seconds              */
+
+/*-------------------------------------------------------------------*/
 /* Definitions for CTC TCP/IP data blocks                            */
 /*-------------------------------------------------------------------*/
 typedef struct _CTCI_BLKHDR {           /* CTCI block header         */
@@ -986,19 +991,19 @@ U32             stackcmd;               /* VSE IP stack command      */
 /* set to indicate the amount of the buffer which was not filled.    */
 /* Two slack bytes follow the packet in the I/O buffer.              */
 /*                                                                   */
-/* On a real CTC device, channel command retry is used to keep the   */
-/* read command active until a packet arrives.  This routine blocks  */
-/* until a packet is available, which achieves the same effect.      */
-/* Note that the operating system missing interrupt handler must     */
-/* be deactivated for the CTC device because the channel program     */
-/* could remain blocked on a read for an indefinite period of time.  */
+/* Command retry is supported (thanks to Jim Pierson) by means of    */
+/* setting a limit on how long we wait for the read to complete      */
+/* (via a call to 'select' with a timeout value specified). If the   */
+/* select times out, we return CE+DE+UC+SM and the "execute_ccw_     */
+/* _chain" function in channel.c should then backup and call us      */
+/* again for the same ccw, allowing us to retry the read (select).   */
 /*                                                                   */
 /* Input:                                                            */
 /*      dev     A pointer to the CTC adapter device block            */
 /*      count   The I/O buffer length from the write CCW             */
 /*      iobuf   The I/O buffer from the write CCW                    */
 /* Output:                                                           */
-/*      unitstat The CSW status (CE+DE or CE+DE+UC)                  */
+/*      unitstat The CSW status (CE+DE or CE+DE+UC or CE+DE+UC+SM)   */
 /*      residual The CSW residual byte count                         */
 /*      more    Set to 1 if packet data exceeds CCW count            */
 /*-------------------------------------------------------------------*/
@@ -1011,6 +1016,45 @@ int             blklen;                 /* Block length from buffer  */
 CTCI_SEGHDR    *seg;                    /* -> Segment in buffer      */
 int             seglen;                 /* Current segment length    */
 U16             num;                    /* Number of bytes returned  */
+fd_set          rfds;                   /* Read FD_SET               */
+int             retval;                 /* Return code from 'select' */
+static struct timeval tv;               /* Timeout time for 'select' */
+
+    /* Limit how long we should wait for data to come in */
+
+    FD_ZERO (&rfds);
+    FD_SET (dev->fd, &rfds); 
+
+    tv.tv_sec = CTC_READ_TIMEOUT_SECS;
+    tv.tv_usec = 0;
+
+    retval = select (dev->fd + 1, &rfds, NULL, NULL, &tv);
+
+    switch (retval) 
+    {
+        case 0:
+        {
+            *unitstat = CSW_CE | CSW_DE | CSW_UC | CSW_SM;
+            dev->sense[0] = 0;
+            return;
+            break;
+        }
+
+        case -1:
+        {
+            logmsg ("HHC869I %4.4X Error reading from %s: %s\n",
+                dev->devnum, dev->filename, strerror(errno));
+            dev->sense[0] = SENSE_EC;
+            *unitstat = CSW_CE | CSW_DE | CSW_UC;
+            return;
+            break;
+        }
+
+        default:
+        {
+            break;
+        }
+    }
 
     /* Read an IP packet from the TUN device */
     len = read (dev->fd, dev->buf, dev->bufsize);
