@@ -239,7 +239,7 @@ CGIVAR **cgivar;
          name = strtok_r(NULL,"&;",&strtok_str))
     {
         if(!(value = strchr(name,'=')))
-            break;
+            continue;
                         
         *value++ = '\0';
 
