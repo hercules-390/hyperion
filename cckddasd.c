@@ -829,7 +829,8 @@ TID             tid;                    /* Readahead thread id       */
 
     cckd = dev->cckd_ext;
 
-    if (cckdblk.ramax < 1 || cckdblk.readaheads < 1 || dev->batch)
+    if (cckdblk.ramax < 1 || cckdblk.readaheads < 1
+     || cckdblk.cachewaiting || dev->batch)
         return;
 
     /* Initialize */
@@ -898,7 +899,7 @@ TID             tid;                    /* Readahead thread id       */
         return;
     }
 
-    cckdmsg ("cckddasd: readahead thread %d started: tid="TIDPAT", pid = %d\n",
+    cckdmsg ("cckddasd: readahead thread %d started: tid="TIDPAT", pid=%d\n",
             ra, thread_id(), getpid());
 
     while (ra <= cckdblk.ramax)
@@ -1164,6 +1165,9 @@ int             rc;                     /* Return code               */
 
         /* Write the track image */
         cckd_write_trkimg (dev, bufp, bufl, trk);
+
+        /* Sync the file */
+//      rc = fdatasync (cckd->fd[cckd->sfn]);
 
         release_lock (&cckd->filelock);
 
@@ -2389,8 +2393,7 @@ int             rc;                     /* Return code               */
     /* Purge the level 2 entries */
     cckd_purge_l2 (dev);
 
-    /* write the compressed device header */
-    cckd->cdevhdr[cckd->sfn].options &= ~CCKD_OPENED;
+    /* Write the compressed device header */
     rc = cckd_write_chdr (dev);
     if (rc < 0) return -1;
 
@@ -2398,9 +2401,16 @@ int             rc;                     /* Return code               */
     rc = cckd_write_l1 (dev);
     if (rc < 0) return -1;
 
-    /* write the free space chain */
-    cckd_write_fsp (dev);
+    /* Write the free space chain */
+    rc = cckd_write_fsp (dev);
     if (rc < 0) return -1;
+
+    /* Re-write the compressed device header */
+    cckd->cdevhdr[cckd->sfn].options &= ~CCKD_OPENED;
+    rc = cckd_write_chdr (dev);
+    if (rc < 0) return -1;
+
+    rc = fdatasync (cckd->fd[cckd->sfn]);
 
     return 0;
 }
@@ -3239,7 +3249,7 @@ int             gctab[5]= {             /* default gcol parameters   */
         return;
     }
 
-    cckdmsg ("cckddasd: garbage collector thread starting: tid="TIDPAT" pid=%d \n",
+    cckdmsg ("cckddasd: garbage collector thread started: tid="TIDPAT" pid=%d \n",
               thread_id(), getpid());
 
     while (gcol <= cckdblk.gcolmax)
@@ -3254,7 +3264,13 @@ int             gctab[5]= {             /* default gcol parameters   */
         {
             cckd = dev->cckd_ext;
 
-            /* determine garbage state */
+            /* Bypass collection if no writes have been performed yet
+               or if there's no free space */
+            if (!(cckd->cdevhdr[cckd->sfn].options & CCKD_OPENED)
+             || cckd->cdevhdr[cckd->sfn].free_number == 0)
+                continue;
+
+            /* Determine garbage state */
             size = (long long)cckd->cdevhdr[cckd->sfn].size;
             free = (long long)cckd->cdevhdr[cckd->sfn].free_total;
             if      (free >= (size = size/2)) gc = 0;
@@ -3274,13 +3290,18 @@ int             gctab[5]= {             /* default gcol parameters   */
             if (cckdblk.gcolparm > 0) size = gctab[gc] << cckdblk.gcolparm;
             else if (cckdblk.gcolparm < 0) size = gctab[gc] >> abs(cckdblk.gcolparm);
             else size = gctab[gc];
+            if (size < 65536) size = 65536;
 
             /* call the garbage collector */
             rc = cckd_gc_percolate (dev, (int)size , hi);
 
-            /* Sync the file if any data moved */
-            if (rc > 0)
+            /* Sync or harden the file */
+//          obtain_lock (&cckd->filelock);
+//          if (cckd->cdevhdr[cckd->sfn].free_number)
                 rc = fdatasync (cckd->fd[cckd->sfn]);
+//          else
+//              rc = cckd_harden (dev);
+//          release_lock (&cckd->filelock);
 
         } /* for each cckd device */
 
@@ -3461,6 +3482,212 @@ cckd_gc_perc_error:
     return moved;
 
 } /* end function cckd_gc_percolate */
+
+
+/*-------------------------------------------------------------------*/
+/* cckd command help                                                 */
+/*-------------------------------------------------------------------*/
+void cckd_command_help()
+{
+    cckdmsg ("cckd command parameters:\n"
+             "help\t\tDisplay help message\n"
+             "stats\t\tDisplay cckd statistics\n"
+             "opts\t\tDisplay cckd options\n"
+             "cache=<n>\tSet cache size (M)\t\t\t(1 .. 64)\n"
+             "l2cache=<n>\tSet l2cache size (K)\t\t\t(256 .. 2048)\n"
+             "ra=<n>\t\tSet number readahead threads\t\t(1 .. 9)\n"
+             "raq=<n>\t\tSet readahead queue size\t\t(0 .. 16)\n"
+             "rat=<n>\t\tSet number tracks to read ahead\t\t(0 .. 16)\n"
+             "wr=<n>\t\tSet number writer threads\t\t(1 .. 9)\n"
+             "gcint=<n>\tSet garbage collector interval (sec)\t(1 .. 60)\n"
+             "gcparm=<n>\tSet garbage collector parameter\t\t(-4 .. 4)\n"
+             "\t\t    (least agressive ... most aggressive)\n");
+}
+
+
+/*-------------------------------------------------------------------*/
+/* cckd command stats                                                */
+/*-------------------------------------------------------------------*/
+void cckd_command_stats()
+{
+}
+
+
+/*-------------------------------------------------------------------*/
+/* cckd command processor                                            */
+/*-------------------------------------------------------------------*/
+void cckd_command(BYTE *op)
+{
+BYTE *kw, *p, c = '\0';
+int   val, i;
+
+    /* Display help for null operand */
+    if (op == NULL)
+    {
+        if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)) == 0)
+            cckd_command_help();
+        return;
+    }
+
+    /* Initialize the global cckd block if necessary */
+    if (memcmp (&cckdblk.id, "CCKDBLK ", sizeof(cckdblk.id)))
+        cckddasd_init (0, NULL);
+
+    while (op)
+    {
+        /* Operands are delimited by commas */
+        kw = op;
+        op = strchr (op, ',');
+        if (op) *op++ = '\0';
+
+        /* Check for keyword = value */
+        if ((p = strchr (kw, '=')))
+        {
+            *p++ = '\0';
+            sscanf (p, "%d%c", &val, &c);
+        }
+        else val = -77;
+
+        /* Parse the keyword */
+        if (strcasecmp (kw, "stats") == 0)
+            cckd_command_stats ();
+        else if (strcasecmp (kw, "opts") == 0)
+        {
+            cckdmsg ("cache=%d,l2cache=%d,ra=%d,raq=%d,rat=%d,"
+                     "wr=%d,gcint=%d,gcparm=%d\n",
+                     (cckdblk.cachenbr + 8) >> 4,
+                     cckdblk.l2cachenbr << 1, cckdblk.ramax,
+                     cckdblk.ranbr, cckdblk.readaheads,
+                     cckdblk.writermax, cckdblk.gcolwait,
+                     cckdblk.gcolparm);
+        }
+        else if (strcasecmp (kw, "cache") == 0)
+        {
+            val = val << 4;
+            if (val < CCKD_MIN_CACHE || val > CCKD_MAX_CACHE || c != '\0')
+            {
+                cckdmsg ("Invalid value for cache= (%d)\n", val);
+                op = NULL;
+            }
+            else
+            {
+                obtain_lock (&cckdblk.cachelock);
+
+                /* Free cache entries if the number is decreasing */
+                if (val < cckdblk.cachenbr)
+                {
+                    for (i = cckdblk.cachenbr - 1; i >= val; i--);
+                    {
+                        if (cckdblk.cache[i].flags & CCKD_CACHE_ACTIVE)
+                            break;
+                        else if (cckdblk.cache[i].buf)
+                            free (cckdblk.cache[i].buf);
+                        memset (&cckdblk.cache[i], 0, CCKD_CACHE_SIZE);
+                    }
+                    val = i + 1;
+                }
+
+                cckdblk.cachenbr = val;
+                release_lock (&cckdblk.cachelock);
+            }
+        }
+        else if (strcasecmp (kw, "l2cache") == 0)
+        {
+            val = (val + 1) >> 1;
+            if (val < CCKD_MIN_L2CACHE || val > CCKD_MAX_L2CACHE || c != '\0')
+            {
+                cckdmsg ("Invalid value for l2cache=\n");
+                op = NULL;
+            }
+            else
+            {
+                obtain_lock (&cckdblk.l2cachelock);
+
+                /* Free cache entries if the number is decreasing */
+                if (val < cckdblk.l2cachenbr)
+                {
+                    for (i = cckdblk.l2cachenbr - 1; i >= val; i--);
+                    {
+                        if (cckdblk.l2cache[i].flags & CCKD_CACHE_ACTIVE)
+                            break;
+                        else if (cckdblk.l2cache[i].buf)
+                            free (cckdblk.l2cache[i].buf);
+                        memset (&cckdblk.l2cache[i], 0, CCKD_CACHE_SIZE);
+                    }
+                    val = i + 1;
+                }
+
+                cckdblk.l2cachenbr = val;
+                release_lock (&cckdblk.l2cachelock);
+            }
+        }
+        else if (strcasecmp (kw, "ra") == 0)
+        {
+            if (val < CCKD_MIN_RA || val > CCKD_MAX_RA || c != '\0')
+            {
+                cckdmsg ("Invalid value for ra=\n");
+                op = NULL;
+            }
+            else
+                cckdblk.ramax = val;
+        }
+        else if (strcasecmp (kw, "raq") == 0)
+        {
+            if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
+            {
+                cckdmsg ("Invalid value for raq=\n");
+                op = NULL;
+            }
+            else
+                cckdblk.ranbr = val;
+        }
+        else if (strcasecmp (kw, "rat") == 0)
+        {
+            if (val < 0 || val > CCKD_MAX_RA_SIZE || c != '\0')
+            {
+                cckdmsg ("Invalid value for rat=\n");
+                op = NULL;
+            }
+            else
+                cckdblk.readaheads = val;
+        }
+        else if (strcasecmp (kw, "wr") == 0)
+        {
+            if (val < CCKD_MIN_WRITER || val > CCKD_MAX_WRITER || c != '\0')
+            {
+                cckdmsg ("Invalid value for wr=\n");
+                op = NULL;
+            }
+            else
+                cckdblk.writermax = val;
+        }
+        else if (strcasecmp (kw, "gcint") == 0)
+        {
+            if (val < 1 || val > 60 || c != '\0')
+            {
+                cckdmsg ("Invalid value for gcint=\n");
+                op = NULL;
+            }
+            else
+                cckdblk.gcolwait = val;
+        }
+        else if (strcasecmp (kw, "gcparm") == 0)
+        {
+            if (val < -4 || val > 4 || c != '\0')
+            {
+                cckdmsg ("Invalid value for gcparm=\n");
+                op = NULL;
+            }
+            else
+                cckdblk.gcolparm = val;
+        }
+        else
+        {
+            cckd_command_help ();
+            op = NULL;
+        }
+    }
+}
 
 
 /*-------------------------------------------------------------------*/

@@ -277,6 +277,7 @@ BYTE   *shttpport;                      /* -> HTTP port number       */
 #ifdef OPTION_IODELAY_KLUDGE
 BYTE   *siodelay;                       /* -> I/O delay value        */
 #endif /*OPTION_IODELAY_KLUDGE*/
+BYTE   *scckd;                          /* -> CCKD parameters        */
 BYTE    loadparm[8];                    /* Load parameter (EBCDIC)   */
 BYTE    version = 0x00;                 /* CPU version code          */
 U32     serial;                         /* CPU serial number         */
@@ -404,6 +405,7 @@ BYTE    c;                              /* Work area for sscanf      */
 #ifdef OPTION_IODELAY_KLUDGE
         siodelay = NULL;
 #endif /*OPTION_IODELAY_KLUDGE*/
+        scckd = NULL;
 
         /* Check for old-style CPU statement */
         if (scount == 0 && addargc == 5 && strlen(keyword) == 6
@@ -535,6 +537,10 @@ BYTE    c;                              /* Work area for sscanf      */
                     
             }
 #endif /*defined(OPTION_HTTP_SERVER)*/
+            else if (strcasecmp (keyword, "cckd") == 0)
+            {
+                scckd = operand;
+            }
             else
             {
                 logmsg(_("HHC006I Error in %s line %d: "
@@ -898,6 +904,10 @@ BYTE    c;                              /* Work area for sscanf      */
             }
         }
 #endif /*OPTION_IODELAY_KLUDGE*/
+
+        /* Parse cckd value value */
+        if (scckd)
+            cckd_command (scckd);
 
     } /* end for(scount) */
 

@@ -2716,6 +2716,16 @@ BYTE   *cmdarg;                         /* -> Command argument       */
 #endif /*OPTION_IODELAY_KLUDGE*/
 
 /*********************************************************************/
+    /* cckd command */
+    if (memcmp(cmd,"cckd", 4) == 0)
+    {
+        devascii = strtok(cmd+4," \t");
+        cckd_command(devascii);
+        return NULL;
+    }
+
+
+/*********************************************************************/
     /* Ignore just enter */
     if (cmd[0] == '\0')
         return NULL;

@@ -1601,6 +1601,7 @@ void    cckd_sf_remove (DEVBLK *, int);
 void    cckd_sf_newname (DEVBLK *, BYTE *);
 void    cckd_sf_stats (DEVBLK *);
 void    cckd_sf_comp (DEVBLK *);
+void    cckd_command(BYTE *);
 void    cckd_print_itrace ();
 
 /* Functions in module cckdutil.c */
