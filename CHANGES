@@ -1,3 +1,5 @@
+06 Sep 2001 Add FPO crossing checks to all storage fetches - Paul Leisy
+06 Sep 2001 Fix RP so trace entry finished on PIC 1C - Paul Leisy
 30 Aug 2001 Fix Change Bit in Key so on page crossers with rupt it's not set.
             Done by using new acctype ACCTYPE_WRITE_SKP - Paul Leisy
 28 Aug 2001 Change FPR display so if BASIC FP EXTENSIONS all displayed - Paul Leisy
