@@ -1142,6 +1142,7 @@ int cpu_init (int cpu, REGS *regs, REGS *hostregs)
         hostregs->guestregs = regs;
         regs->hostregs = hostregs;
         regs->sie_mode = 1;
+        regs->cpustate = CPUSTATE_STARTED;
     }
     else
 #endif /*defined(_FEATURE_SIE)*/
