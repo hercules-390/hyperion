@@ -1,3 +1,4 @@
+26 Nov 2002 Missing devtype.c FBA entries - Greg Smith and Ivan
 23 Nov 2002 Remove cckd/het zlib dependency - Greg Smith
 16 Nov 2002 Add MVCLU and CLCLU instructions - Jan Jaeger
 16 Nov 2002 Add TROO, TROT, TRTO and TRTT instructions - Jan Jaeger
