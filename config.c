@@ -277,6 +277,7 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
     char *strptr;       /* strtoul ptr-ptr                 */
     BYTE basechan=0;    /* Channel for all CUUs            */
     int  duplicate;     /* duplicated CUU indicator        */
+    int badcuu;         /* offending CUU                   */
 
     sc=malloc(strlen(spec)+1);
     strcpy(sc,spec);
@@ -305,6 +306,7 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
                 cuu2=strtoul(&strptr[1],&strptr,16);
                 if(*strptr!=0)
                 {
+                    fprintf(stderr,_("HHCCF053E Incorrect second device number in device range near character %c\n"),*strptr);
                     free(dgrs);
                     return(0);
                 }
@@ -314,20 +316,20 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
                 cuu2--;
                 if(*strptr!=0)
                 {
-                    fprintf(stderr,_("HHCCFXXXE Incorrect Device count near character %c\n"),*strptr);
+                    fprintf(stderr,_("HHCCF054E Incorrect Device count near character %c\n"),*strptr);
                     free(dgrs);
                     return(0);
                 }
                 break;
             default:
-                fprintf(stderr,_("HHCCFXXXE Incorrect single device address specification near character %c\n"),*strptr);
+                fprintf(stderr,_("HHCCF055E Incorrect device address specification near character %c\n"),*strptr);
                 free(dgrs);
                 return(0);
         }
         /* Check cuu1 <= cuu2 */
         if(cuu1>cuu2)
         {
-            fprintf(stderr,_("HHCCFXXXE Incorrect device address range. %4.4X < %4.4X\n"),cuu2,cuu1);
+            fprintf(stderr,_("HHCCF056E Incorrect device address range. %4.4X < %4.4X\n"),cuu2,cuu1);
             free(dgrs);
             return(0);
         }
@@ -335,15 +337,21 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
         {
             basechan=(cuu1 >> 8) & 0xff;
         }
+        badcuu=-1;
         if(((cuu1 >> 8) & 0xff) != basechan)
         {
-            fprintf(stderr,_("HHCCFXXXE %4.4X is on wrong channel (should be on channel %2.2X)\n"),cuu1,basechan);
-            free(dgrs);
-            return(0);
+            badcuu=cuu1;
         }
-        if(((cuu2 >> 8) & 0xff) != basechan)
+        else
         {
-            fprintf(stderr,_("HHCCFXXXE %4.4X is on wrong channel (1st device defined on channel %2.2X)\n"),cuu2,basechan);
+            if(((cuu2 >> 8) & 0xff) != basechan)
+            {
+                badcuu=cuu2;
+            }
+        }
+        if(badcuu>=0)
+        {
+            fprintf(stderr,_("HHCCF057E %4.4X is on wrong channel (1st device defined on channel %2.2X)\n"),badcuu,basechan);
             free(dgrs);
             return(0);
         }
@@ -372,7 +380,7 @@ static size_t parse_devnums(const char *spec,DEVARRAY **da)
         }
         if(duplicate)
         {
-            fprintf(stderr,_("HHCCFXXXE Device range %4.4X-%4.4X duplicates devices already defined\n"),cuu1,cuu2);
+            fprintf(stderr,_("HHCCF058E Some or all devices in %4.4X-%4.4X duplicate devices already defined\n"),cuu1,cuu2);
             free(dgrs);
             return(0);
         }
