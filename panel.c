@@ -709,6 +709,16 @@ static void NP_update(FILE *confp, char *cmdline, int cmdoff)
 #define xKBD_RIGHT_ARROW        "\x1BOC"
 #define xKBD_LEFT_ARROW         "\x1BOD"
 
+#define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
+#define ANSI_CLEAR_SCREEN    "\x1B[2J"
+
+static void panel_clear()
+/* Reset the cursor position */
+{
+    fprintf(stderr, ANSI_RESET_WHT_BLK  ANSI_CLEAR_SCREEN );
+    fflush(stderr);
+}
+
 /*-------------------------------------------------------------------*/
 /* Panel display thread                                              */
 /*                                                                   */
@@ -799,6 +809,8 @@ struct  timeval tv;                     /* Select timeout structure  */
     confp = stderr;
     pipefd = compat_msgpiper;
     keybfd = STDIN_FILENO;
+
+    atexit(panel_clear);
 
     /* Set screen output stream to fully buffered */
     setvbuf (confp, NULL, _IOFBF, 0);

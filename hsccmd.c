@@ -57,15 +57,6 @@ struct termios kbattr;                  /* Terminal I/O structure    */
     kbattr.c_lflag |= (ECHO | ICANON);
     tcsetattr (STDIN_FILENO, TCSANOW, &kbattr);
 
-    /* Reset the cursor position */
-    if (!extgui)
-    {
-#define ANSI_RESET_WHT_BLK   "\x1B[0;37;40m"
-#define ANSI_CLEAR_SCREEN    "\x1B[2J"
-        fprintf(stderr, ANSI_RESET_WHT_BLK  ANSI_CLEAR_SCREEN );
-        fflush(stderr);
-    }
-
     sysblk.shutdown = 1;
 
     if (!(argc > 1 && !strcasecmp("now",argv[1])))
