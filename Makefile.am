@@ -87,7 +87,9 @@ noinst_HEADERS  = cpuint.h feat370.h feat390.h feat900.h featall.h featchk.h \
     codeconv.h hbyteswp.h dasdblks.h hetlib.h  version.h parser.h \
     sllib.h htypes.h fthreads.h w32chan.h linklist.h
 
-cckd: cckd2ckd cckdcdsk ckd2cckd cckdcomp cckdswap
+cckd: cckd2ckd$(EXEEXT) cckdcdsk$(EXEEXT) \
+	ckd2cckd$(EXEEXT) cckdcomp$(EXEEXT) \
+	cckdswap$(EXEEXT)
 
 tar: dist
 
