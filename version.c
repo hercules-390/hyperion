@@ -81,13 +81,7 @@ static const char *build_info[] = {
     CUSTOM_BUILD_STRING,
 #endif
 
-#if defined(__DATE__) && defined(__TIME__)
-  "Build date: " __DATE__ " " __TIME__,
-#endif
-
-  "$Id$",
-
-  "$Name$"
+  " "
 
 };
 
@@ -106,7 +100,7 @@ void display_version (FILE *f, char *prog, char *version,
       fprintf(f, "  (none)\n");
     else
       for( i = 0 ; i < sizeof(build_info) / sizeof(build_info[0]) ; ++i )
-	fprintf(f, "  %s\n", build_info[i]);
+        fprintf(f, "  %s\n", build_info[i]);
 
     fprintf(f, "%s\n", HERCULES_COPYRIGHT);
 } /* end function display_version */
