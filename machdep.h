@@ -10,10 +10,15 @@
 
 #include "esa390.h"
 
+#undef _ext_ia32
+#if defined(__i686__) || defined(__pentiumpro__) || defined(__pentium4__)
+#define _ext_ia32
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Intel pentiumpro/i686                                             */
 /*-------------------------------------------------------------------*/
-#if defined(__i686__) | defined(__pentiumpro__) 
+#if defined(_ext_ia32)
 
 #ifdef OPTION_SMP
 #define LOCK_PREFIX "lock ; "

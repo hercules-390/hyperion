@@ -669,18 +669,19 @@ if test x$opt_configsymbols = xtrue; then
 fi
 
 if test x$auto_optimize = xtrue; then
-  case "$host_cpu" in
-          powerpc)
-            OFLAGS="-O3 $OFLAGS"
-            ;;
-          arm)
+  case "$host_cpu-$GCC" in
+          arm-yes)
             OFLAGS="-O3 -frename-registers"
             ;;
-          xscale|arm*)
+          xscale-yes|arm*-yes)
             OFLAGS="-O3 -frename-registers -mcpu=$host_cpu -mtune=$host_cpu"
             ;;
-          i386|i486|i586|i686)
-            ac_xarch=$host_cpu
+          i386-yes|i486-yes|i586-yes|i686-yes|i786-yes)
+            if test $host_cpu = "i786" ; then
+                ac_xarch=pentium4
+            else
+                ac_xarch=$host_cpu
+            fi
             if test "$GCC" = "yes"; then
                 if ${CC-cc} -E - << __EOF | fgrep "yes" > /dev/null 2>&1
 #if __GNUC__ == 2 && __GNUC_MINOR__ == 96
@@ -703,7 +704,7 @@ __EOF
             fi
             ;;
           *)
-            OFLAGS="$OFLAGS"
+            OFLAGS="-O3 $OFLAGS"
             ;;
   esac
 elif test x$ac_cv_cygwin_gcc_alloca_bug = xyes; then

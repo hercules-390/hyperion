@@ -58,6 +58,28 @@
 /* INFINITY.                           */
 #define _ISW_PREVENT_COMPWARN
 
+/* ABOUT THE MACRO BELOW :             */
+/* ISW 2004/09/15                      */
+/* Current GLIBC has an issue with     */
+/* feclearexcept that re-enables       */
+/* FE Traps by re-enabling Intel SSE   */
+/* trap mask. This leads to various    */
+/* machine checks from the CPU receiv- */
+/* ing SIGFPE. feholdexcept reestab-   */
+/* lishes the proper non-stop mask     */
+/*                                     */
+/* Until a proper conditional can be   */
+/* devised to only do the feholdexcept */
+/* when appropriate, it is there for   */
+/* all host architectures              */
+#define FECLEAREXCEPT(_e) \
+do { \
+    fenv_t __fe; \
+    feclearexcept((_e)); \
+    fegetenv(&__fe); \
+    feholdexcept(&__fe); \
+} while(0)
+
 
 #include "hercules.h"
 #include "opcode.h"
@@ -912,7 +934,7 @@ static int add_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
 
     if ((cl1 == FP_NORMAL || cl1 == FP_SUBNORMAL)
       &&(cl2 == FP_NORMAL || cl2 == FP_SUBNORMAL)) {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         ebfpston(op1);
         ebfpston(op2);
         op1->v += op2->v;
@@ -1056,7 +1078,7 @@ static int add_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
     } else if (cl2 == FP_ZERO) {
         /* result is first operand */
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(op1);
         lbfpston(op2);
         op1->v += op2->v;
@@ -1180,7 +1202,7 @@ static int add_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
     } else if (cl2 == FP_ZERO) {
         /* result is first operand */
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(op1);
         sbfpston(op2);
         op1->v += op2->v;
@@ -1816,7 +1838,7 @@ DEF_INST(convert_bfp_long_to_fix32_reg)
         }
         break;
     default:
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(&op2);
         op1 = (S32)op2.v;
         raised = fetestexcept(FE_ALL_EXCEPT);
@@ -1879,7 +1901,7 @@ DEF_INST(convert_bfp_short_to_fix32_reg)
         }
         break;
     default:
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(&op2);
         op1 = (S32)op2.v;
         raised = fetestexcept(FE_ALL_EXCEPT);
@@ -1949,7 +1971,7 @@ DEF_INST(convert_bfp_long_to_fix64_reg)
         }
         break;
     default:
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(&op2);
         op1 = (S64)op2.v;
         raised = fetestexcept(FE_ALL_EXCEPT);
@@ -2014,7 +2036,7 @@ DEF_INST(convert_bfp_short_to_fix64_reg)
         }
         break;
     default:
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(&op2);
         op1 = (S64)op2.v;
         raised = fetestexcept(FE_ALL_EXCEPT);
@@ -2091,7 +2113,7 @@ static int divide_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
         }
         ebfpinfinity(op1, op2->sign ? !(op1->sign) : op1->sign);
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         ebfpston(op1);
         ebfpston(op2);
         op1->v /= op2->v;
@@ -2193,7 +2215,7 @@ static int divide_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
         }
         lbfpinfinity(op1, op2->sign ? !(op1->sign) : op1->sign);
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(op1);
         lbfpston(op2);
         op1->v /= op2->v;
@@ -2320,7 +2342,7 @@ static int divide_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
         }
         sbfpinfinity(op1, op2->sign ? !(op1->sign) : op1->sign);
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(op1);
         sbfpston(op2);
         op1->v /= op2->v;
@@ -2559,7 +2581,7 @@ DEF_INST(load_fp_int_short_reg)
         break;
     default:
 
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(&op);
             op.v = rint(op.v);
 
@@ -2615,7 +2637,7 @@ DEF_INST(load_fp_int_long_reg)
         break;
     default:
 
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(&op);
             op.v = rint(op.v);
 
@@ -2672,7 +2694,7 @@ DEF_INST(load_fp_int_ext_reg)
         break;
     default:
 
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         ebfpston(&op);
             op.v = rint(op.v);
 
@@ -3100,7 +3122,7 @@ DEF_INST(round_bfp_long_to_short_reg)
         sbfpinfinity(&op1, op2.sign);
         break;
     default:
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(&op2);
         op1.v = (double)op2.v;
         sbfpntos(&op1);
@@ -3176,7 +3198,7 @@ static int multiply_ebfp(struct ebfp *op1, struct ebfp *op2, REGS *regs)
     } else if (cl1 == FP_ZERO || cl2 == FP_ZERO) {
         ebfpzero(op1, op1->sign != op2->sign);
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         ebfpston(op1);
         ebfpston(op2);
         op1->v *= op2->v;
@@ -3277,7 +3299,7 @@ static int multiply_lbfp(struct lbfp *op1, struct lbfp *op2, REGS *regs)
     } else if (cl1 == FP_ZERO || cl2 == FP_ZERO) {
         lbfpzero(op1, op1->sign != op2->sign);
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(op1);
         lbfpston(op2);
         op1->v *= op2->v;
@@ -3408,7 +3430,7 @@ static int multiply_sbfp(struct sbfp *op1, struct sbfp *op2, REGS *regs)
     } else if (cl1 == FP_ZERO || cl2 == FP_ZERO) {
         sbfpzero(op1, op1->sign != op2->sign);
     } else {
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(op1);
         sbfpston(op2);
         op1->v *= op2->v;
@@ -3506,7 +3528,7 @@ static int squareroot_ebfp(struct ebfp *op, REGS *regs)
         if (op->sign) {
             return ieee_exception(FE_INVALID, regs);
         }
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         ebfpston(op);
         op->v = sqrtl(op->v);
         ebfpntos(op);
@@ -3560,7 +3582,7 @@ static int squareroot_lbfp(struct lbfp *op, REGS *regs)
         if (op->sign) {
             return ieee_exception(FE_INVALID, regs);
         }
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         lbfpston(op);
         op->v = sqrtl(op->v);
         lbfpntos(op);
@@ -3638,7 +3660,7 @@ static int squareroot_sbfp(struct sbfp *op, REGS *regs)
         if (op->sign) {
             return ieee_exception(FE_INVALID, regs);
         }
-        feclearexcept(FE_ALL_EXCEPT);
+        FECLEAREXCEPT(FE_ALL_EXCEPT);
         sbfpston(op);
         op->v = sqrtl(op->v);
         sbfpntos(op);

@@ -1,6 +1,11 @@
 
 ####   Don't forget to change the version number in configure.ac!   ####
 
+15 Sep 2004 Enable pentium4 specifics for gcc. Fixes
+                - SIGFPE in CFEBR (due to possible bug in feclearexcept)
+                - Allow use of assisted MEMCPY/MEMSET/etc.. for P4
+                - ./configure ... --host|--build=pentium4|i786-<os>
+                  - Ivan Warren
 12 Sep 2004 Fix crash in CTCI_Query when device group incomplete - Fish
 06 Sep 2004 emulated positioning error fix for read blockid - Fish
 05 Sep 2004 tapedev.c/scsiptape.h: blockid s/b maintained by media handlers,
