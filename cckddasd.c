@@ -466,7 +466,7 @@ CCKDDASD_EXT   *cckd;                   /* -> cckd extension         */
     }
 
     /* Copy the data into the buffer */
-    memcpy (&dev->buf[dev->bufoff], buf, len);
+    if (buf) memcpy (&dev->buf[dev->bufoff], buf, len);
 
     /* Update the cache entry */
     cckd->active->updated = cckd->active->used = 1;

@@ -885,7 +885,7 @@ off_t           offset;                 /* File offsets              */
     }
 
     /* Invalid track format if going past buffer end */
-    if (dev->bufoff + len >= dev->bufoffhi)
+    if (dev->bufoff + len > dev->bufoffhi)
     {
         ckd_build_sense (dev, 0, SENSE1_ITF, 0, 0, 0);
         *unitstat = CSW_CE | CSW_DE | CSW_UC;
