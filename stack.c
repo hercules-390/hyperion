@@ -358,7 +358,27 @@ U16     xcode;                          /* Exception code            */
     if (aaddr >= regs->mainsize)
         ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
 
-    SIE_TRANSLATE(&aaddr, acctype, regs);
+#if defined(_FEATURE_SIE)
+    if(regs->sie_state  && !regs->sie_pref)
+    {
+    U32 sie_stid;
+    U16 sie_xcode;
+    int sie_private;
+
+        if (SIE_TRANSLATE_ADDR (regs->sie_mso + aaddr,
+                USE_PRIMARY_SPACE,
+                regs->hostregs, ACCTYPE_SIE, &aaddr, &sie_xcode,
+                &sie_private, &protect, &sie_stid))
+            (regs->sie_hostpi) (regs->hostregs, sie_xcode);
+
+        /* Convert host real address to host absolute address */
+        aaddr = APPLY_PREFIXING (aaddr, regs->hostregs->PX);
+    }
+
+    /* Check for HOST Page protection */
+    if (acctype == ACCTYPE_WRITE && protect)
+        goto trap_prot;
+#endif /*defined(_FEATURE_SIE)*/
 
     if (!((regs->psw.pkey == 0) 
         || ((regs->CR(0) & CR0_STORE_OVRD)
