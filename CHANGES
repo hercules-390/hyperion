@@ -1,5 +1,6 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+10 Apr 2004 Use signal shutdown on quit - Jan Jaeger
 09 Apr 2004 PMCW QDIO bit no longer reserved - Jan Jaeger
 08 Apr 2004 QDIO device handler changes - Jan Jaeger
 08 Apr 2004 Correct false PIC 04 on TRAP2/4 instructions - Jan Jaeger
