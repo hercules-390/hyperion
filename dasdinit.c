@@ -190,6 +190,7 @@ int             highcyl;                /* CKD header high cyl number*/
         cdevhdr.cyls[1] = (volcyls >>    8) & 0xFF;
         cdevhdr.cyls[0] = volcyls & 0xFF;
         cdevhdr.compress = comp;
+        cdevhdr.compress_parm = -1;
 
         /* Write the compressed device header */
         rc = write (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
