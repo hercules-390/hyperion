@@ -61,6 +61,10 @@ typedef struct _DADSM {
 //----------------------------------------------------------------------------------
 //  Globals
 //----------------------------------------------------------------------------------
+// ISW - Added extgui for EXTERNALGUI to allow for Windows build
+#ifdef EXTERNALGUI
+        int     extgui;                 // extgui flag for GUI support
+#endif
         int     local_verbose = 0;      // verbose setting
         int     copy_verbose = 0;       // verbose setting for copyfile
         char    *din;                   // dasd image filename
