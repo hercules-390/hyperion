@@ -338,7 +338,7 @@ REGS    gregs, hgregs;
         memcpy(&hgregs.progjmp,&gregs.progjmp,sizeof(jmp_buf));
 
         /* Convert logical address to real address */
-        if (REAL_MODE(&gregs.psw))
+        if (REAL_MODE(&gregs.psw) || arn == USE_REAL_ADDR)
             raddr = vaddr;
         else {
             /* Return condition code 3 if translation exception */
@@ -439,9 +439,11 @@ int     stid;                           /* Segment table indication  */
 U16     xcode;                          /* Exception code            */
 
   #if defined(FEATURE_ESAME)
-    n = sprintf (buf, "V:%16.16llX:", (long long)vaddr);
+    n = sprintf (buf, "%c:%16.16llX:", ar == USE_REAL_ADDR ? 'R' : 'V',
+		                       (long long)vaddr);
   #else /*!defined(FEATURE_ESAME)*/
-    n = sprintf (buf, "V:%8.8X:", vaddr);
+    n = sprintf (buf, "%c:%8.8X:", ar == USE_REAL_ADDR ? 'R' : 'V',
+		                     vaddr);
   #endif /*!defined(FEATURE_ESAME)*/
     xcode = ARCH_DEP(virt_to_abs) (&raddr, &stid,
                                     vaddr, ar, regs, acctype);
@@ -833,13 +835,9 @@ int     n;                              /* Number of bytes in buffer */
     /* Display storage at first storage operand location */
     if (b1 >= 0)
     {
-        if(REAL_MODE(&regs->psw)
-        /* ISW20040202 - Don't do display_real when running under SIE */
-#if defined(_FEATURE_SIE)
-           && (!regs->sie_state)
-#endif
-          )
-            n = ARCH_DEP(display_real) (regs, addr1, buf, 1);
+        if(REAL_MODE(&regs->psw))
+            n = ARCH_DEP(display_virt) (regs, addr1, buf, USE_REAL_ADDR,
+			                                    ACCTYPE_READ);
         else
             n = ARCH_DEP(display_virt) (regs, addr1, buf, b1,
                                 (opcode == 0x44 ? ACCTYPE_INSTFETCH :
@@ -852,16 +850,13 @@ int     n;                              /* Number of bytes in buffer */
     if (b2 >= 0)
     {
         if(
-        /* ISW20040202 - Don't do display_real when running under SIE */
-#if defined(_FEATURE_SIE)
-           (!regs->sie_state) &&
-#endif
             (REAL_MODE(&regs->psw)
             || (opcode == 0xB2 && inst[1] == 0x4B) /*LURA*/
             || (opcode == 0xB2 && inst[1] == 0x46) /*STURA*/
             || (opcode == 0xB9 && inst[1] == 0x05) /*LURAG*/
             || (opcode == 0xB9 && inst[1] == 0x25))) /*STURG*/
-            n = ARCH_DEP(display_real) (regs, addr2, buf, 1);
+            n = ARCH_DEP(display_virt) (regs, addr1, buf, USE_REAL_ADDR,
+			                                    ACCTYPE_READ);
         else
             n = ARCH_DEP(display_virt) (regs, addr2, buf, b2,
                                         ACCTYPE_READ);
