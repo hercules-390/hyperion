@@ -452,8 +452,8 @@ BYTE    termchar;                       /* Terminating character     */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r2) & ADDRESS_MAXWRAP(regs);
 
-    /* Search up to 4096 bytes until end of operand */
-    for (i = 0; i < 4096; i++)
+    /* Search up to 256 bytes or until end of operand */
+    for (i = 0; i < 0x100; i++)
     {
         /* If operand end address has been reached, return condition
            code 2 and leave the R1 and R2 registers unchanged */
