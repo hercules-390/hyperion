@@ -57,8 +57,7 @@ hercules_OBJ = hostinfo.o w32ctca.o impl.o config.o panel.o \
                parser.o hetlib.o ieee.o sockdev.o httpserv.o \
                cgibin.o devtype.o codepage.o ctc_ctci.o ctc_lcs.o \
                tuntap.o hsccmd.o hscmisc.o logger.o commadpt.o \
-               cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o \
-               crypto.o
+               cache.o ecpsvm.o shared.o logmsg.o hdl.o hdlmain.o
 
 hercifc_OBJ  = hercifc.o hostinfo.o version.o 
 
