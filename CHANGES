@@ -1,3 +1,5 @@
+16 Jul 2003 Allow specifying a native block device as an FBA
+            * Linux only, <2Gb Only - Ivan Warren
 15 Jul 2003 Fix s/370 testio race condition - Greg Smith as reported
             by Victor Shkamerda
 14 Jul 2003 Fixes for compiler weirdness - Greg Smith

@@ -15,6 +15,10 @@
 
 #include "devtype.h"
 
+#if !defined(WIN32) && !defined(__APPLE__)
+#include <linux/fs.h>
+#endif
+
 /*-------------------------------------------------------------------*/
 /* Bit definitions for Define Extent file mask                       */
 /*-------------------------------------------------------------------*/
@@ -186,11 +190,35 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed device header  */
             dev->fd = -1;
             return -1;
         }
+#if !defined(WIN32) && !defined(__APPLE__)
+        if(S_ISBLK(statbuf.st_mode))
+        {
+            rc=ioctl(dev->fd,BLKGETSIZE,&statbuf.st_size);
+            if(rc<0)
+            {
+                logmsg ("HHCDA082E File %s IOCTL BLKGETSIZE error: %s\n",
+                        dev->filename, strerror(errno));
+                close (dev->fd);
+                dev->fd = -1;
+                return -1;
+            }
+            dev->fbablksiz = 512;
+            dev->fbaorigin = 0;
+            dev->fbanumblk = statbuf.st_size;
+            logmsg("REAL FBA Opened\n");
+        }
+        else
+        {
+#endif
 
-        /* Set block size, device origin, and device size in blocks */
-        dev->fbablksiz = 512;
-        dev->fbaorigin = 0;
-        dev->fbanumblk = statbuf.st_size / dev->fbablksiz;
+            /* Set block size, device origin, and device size in blocks */
+            dev->fbablksiz = 512;
+            dev->fbaorigin = 0;
+            dev->fbanumblk = statbuf.st_size / dev->fbablksiz;
+#if !defined(WIN32) && !defined(__APPLE__)
+        }
+#endif
+
 
         /* The second argument is the device origin block number */
         if (argc >= 2)
