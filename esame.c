@@ -5310,6 +5310,7 @@ VADR    addr1, addr2;                   /* Operand addresses         */
 GREG    len1, len2;                     /* Operand lengths           */
 U16     dbyte1, dbyte2;                 /* Operand double bytes      */
 U16     pad;                            /* Padding double byte       */
+int     cpu_length;                     /* cpu determined length     */
 
     RSE(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -5328,11 +5329,17 @@ U16     pad;                            /* Padding double byte       */
     addr1 = regs->GR(r1) & ADDRESS_MAXWRAP(regs);
     addr2 = regs->GR(r3) & ADDRESS_MAXWRAP(regs);
 
+    /* set cpu_length as shortest distance to new page */
+    if ((addr1 & 0xFFF) > (addr2 & 0xFFF))
+        cpu_length = 0x1000 - (addr1 & 0xFFF);
+    else
+        cpu_length = 0x1000 - (addr2 & 0xFFF);
+
     /* Process operands from left to right */
     for (i = 0; len1 > 0 || len2 > 0 ; i += 2)
     {
-        /* If 4096 bytes have been compared, exit with cc=3 */
-        if (i >= 4096)
+        /* If max 4096 bytes have been compared, exit with cc=3 */
+        if (i >= cpu_length)
         {
             cc = 3;
             break;
