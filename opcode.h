@@ -1712,40 +1712,6 @@ DEF_INST(v_save_vac);
 DEF_INST(v_restore_vac);
 
 
-/* Instructions in ses.c */
-DEF_INST(ses_opcode_0105);
-DEF_INST(ses_opcode_0106);
-DEF_INST(ses_opcode_0108);
-DEF_INST(ses_opcode_0109);
-DEF_INST(ses_opcode_B260);
-DEF_INST(ses_opcode_B261);
-DEF_INST(ses_opcode_B264);
-DEF_INST(ses_opcode_B265);
-DEF_INST(ses_opcode_B266);
-DEF_INST(ses_opcode_B267);
-DEF_INST(ses_opcode_B268);
-DEF_INST(ses_opcode_B272);
-DEF_INST(ses_opcode_B27A);
-DEF_INST(ses_opcode_B27B);
-DEF_INST(ses_opcode_B27C);
-DEF_INST(ses_opcode_B27E);
-DEF_INST(ses_opcode_B27F);
-DEF_INST(ses_opcode_B2A4);
-DEF_INST(ses_opcode_B2A8);
-DEF_INST(ses_opcode_B2F1);
-DEF_INST(ses_opcode_B2F6);
-
-
-/* Instructions in crypto.c */
-DEF_INST(crypto_opcode_B269);
-DEF_INST(crypto_opcode_B26A);
-DEF_INST(crypto_opcode_B26B);
-DEF_INST(crypto_opcode_B26C);
-DEF_INST(crypto_opcode_B26D);
-DEF_INST(crypto_opcode_B26E);
-DEF_INST(crypto_opcode_B26F);
-
-
 /* Instructions in esame.c */
 DEF_INST(store_fpc);
 DEF_INST(load_fpc);
