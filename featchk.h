@@ -159,6 +159,11 @@
  #endif
 #endif
 
+#if defined(FEATURE_PER2) && !defined(FEATURE_PER)
+ #error FEATURE_PER must be defined when using FEATURE_PER2
+#endif
+
+
 #endif /*!defined(FEATALL_CHECKALL)*/
 
 /* end of FEATCHK.H */
