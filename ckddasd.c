@@ -786,7 +786,7 @@ int	i;				/* Index                     */
         {
             /* if lazy write, write the last track image */
             if (dev->ckdlazywrt)
-                ckd_lseek (dev, -1, -1, -1);
+                ckd_lseek (dev, -1, (off_t)-1, -1);
 
             /* free the cache */
             for (i = 0; i < dev->ckdcachenbr; i++)
@@ -1275,7 +1275,7 @@ int             rc;                     /* Return code               */
 
     DEVTRACE("ckddasd: skipping %d bytes\n", skiplen);
 
-    rc = ckd_lseek (dev, dev->fd, skiplen, SEEK_CUR);
+    rc = ckd_lseek (dev, dev->fd, (off_t)skiplen, SEEK_CUR);
     if (rc == -1)
     {
 #ifdef OPTION_SYNCIO
@@ -1769,7 +1769,7 @@ int             skiplen;                /* Number of bytes to skip   */
     ckdlen = CKDDASD_RECHDR_SIZE + keylen + datalen;
 
     /* Determine the current position in the file */
-    curpos = ckd_lseek (dev, dev->fd, 0, SEEK_CUR);
+    curpos = ckd_lseek (dev, dev->fd, (off_t)0, SEEK_CUR);
     if (curpos == -1)
     {
 #ifdef OPTION_SYNCIO
@@ -1817,7 +1817,7 @@ int             skiplen;                /* Number of bytes to skip   */
     }
 
     /* Backspace over end of track marker */
-    rc = ckd_lseek (dev, dev->fd, -(CKDDASD_RECHDR_SIZE), SEEK_CUR);
+    rc = ckd_lseek (dev, dev->fd, -(off_t)(CKDDASD_RECHDR_SIZE), SEEK_CUR);
     if (rc == -1)
     {
 #ifdef OPTION_SYNCIO
@@ -1889,7 +1889,7 @@ int             skiplen;                /* Number of bytes to skip   */
     ckdlen = CKDDASD_RECHDR_SIZE + keylen + datalen;
 
     /* Determine the current position in the file */
-    curpos = ckd_lseek (dev, dev->fd, 0, SEEK_CUR);
+    curpos = ckd_lseek (dev, dev->fd, (off_t)0, SEEK_CUR);
     if (curpos == -1)
     {
 #ifdef OPTION_SYNCIO
@@ -1973,7 +1973,7 @@ int             skiplen;                /* Number of bytes to skip   */
     }
 
     /* Backspace over end of track marker */
-    rc = ckd_lseek (dev, dev->fd, -(CKDDASD_RECHDR_SIZE), SEEK_CUR);
+    rc = ckd_lseek (dev, dev->fd, -(off_t)(CKDDASD_RECHDR_SIZE), SEEK_CUR);
     if (rc == -1)
     {
 #ifdef OPTION_SYNCIO

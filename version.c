@@ -20,6 +20,14 @@
 
 static const char *build_info[] = {
 
+#if defined(GNU_MTIO_SUPPORT)
+	"Using GNU tape handling",
+#elif defined(HAVE_MTIO_H)
+	"Using generic Unix tape handling",
+#else 
+	"No SCSI tape support",
+#endif
+
 #if defined(CUSTOM_BUILD_STRING)
     CUSTOM_BUILD_STRING,
 #endif

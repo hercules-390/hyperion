@@ -217,6 +217,7 @@ typedef pthread_attr_t                  ATTR;
         pthread_cond_timedwait((pcond),(plk),(timeout))
 #define initialize_detach_attr(pat) \
         pthread_attr_init((pat)); \
+		pthread_attr_setstacksize((pat),1048576); \
         pthread_attr_setdetachstate((pat),PTHREAD_CREATE_DETACHED)
 typedef void*THREAD_FUNC(void*);
 #define create_thread(ptid,pat,fn,arg) \
