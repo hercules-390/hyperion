@@ -272,7 +272,7 @@ _if: \
     (_ip) = (_regs)->inst; \
     (_regs)->ip = (_ip); \
     ARCH_DEP(instfetch) ((_regs)->inst, (_regs)->psw.IA, (_regs));  \
-    (regs)->instvalid = 1; \
+    (_regs)->instvalid = 1; \
     (_pe) = ((_regs)->psw.IA & ~0x7FF) + (0x800 - 6); \
     pagestart = (_regs)->mainstor + (_regs)->AI; \
     goto _ex; \
@@ -622,7 +622,7 @@ do { \
 #undef SET_AENOARN
 #if defined(FEATURE_ACCESS_REGISTERS)
 #define SET_AENOARN(_regs) \
-  (_regs)->aenoarn = !(ACCESS_REGISTER_MODE(&regs->psw))
+  (_regs)->aenoarn = !(ACCESS_REGISTER_MODE(&(_regs)->psw))
 #else
 #define SET_AENOARN(_regs) \
   (_regs)->aenoarn = 1

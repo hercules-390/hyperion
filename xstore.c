@@ -74,7 +74,7 @@ U32     xaddr;                          /* Expanded storage address  */
     /* cc0 means pgin ok */
     regs->psw.cc = 0;
 
-} 
+}
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
 
 
@@ -286,7 +286,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(_FEATURE_SIE)
         if(regs->sie_state  && !regs->sie_pref)
         {
-        U32 sie_stid;
+        int sie_stid;
         U16 sie_xcode;
         int sie_private;
 
@@ -340,14 +340,14 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_ESAME)
                                    2048;
 #else /*!defined(FEATURE_ESAME)*/
-                /* For ESA/390 mode, the XPTE lies directly beyond 
+                /* For ESA/390 mode, the XPTE lies directly beyond
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
                                  1024 + ((vaddr2 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
                 if (xpkeya > regs->mainlim)
                     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-                xpkey2 = regs->mainstor[xpkeya]; 
+                xpkey2 = regs->mainstor[xpkeya];
 
 /*DEBUG logmsg("MVPG pte2 = " F_CREG ", xkey2 = %2.2X, xpblk2 = %5.5X, akey2 = %2.2X\n",
                   pte2,xpkey2,xpblk2,akey2);  */
@@ -386,7 +386,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(_FEATURE_SIE)
         if(regs->sie_state  && !regs->sie_pref)
         {
-        U32 sie_stid;
+        int sie_stid;
         U16 sie_xcode;
         int sie_private;
 
@@ -440,14 +440,14 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #if defined(FEATURE_ESAME)
                                   2048;
 #else /*!defined(FEATURE_ESAME)*/
-                /* For ESA/390 mode, the XPTE lies directly beyond 
+                /* For ESA/390 mode, the XPTE lies directly beyond
                    the PTE, and each entry is 12 bytes long, we must
                    therefor add 1024 + 8 times the page index */
                               1024 + ((vaddr1 & 0x000FF000) >> 9);
 #endif /*!defined(FEATURE_ESAME)*/
                 if (xpkeya > regs->mainlim)
                     ARCH_DEP(program_interrupt) (regs, PGM_ADDRESSING_EXCEPTION);
-                xpkey1 = regs->mainstor[xpkeya]; 
+                xpkey1 = regs->mainstor[xpkeya];
 
 /*DEBUG  logmsg("MVPG pte1 = " F_CREG ", xkey1 = %2.2X, xpblk1 = %5.5X, akey1 = %2.2X\n",
                   pte1,xpkey1,xpblk1,akey1);  */
@@ -543,7 +543,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 #endif /*defined(FEATURE_EXPANDED_STORAGE)*/
     {
         /* Obtain absolute address of main storage block,
-           check protection, and set reference bit. 
+           check protection, and set reference bit.
            Use last byte of page to avoid FPO area.  */
         aaddr2 = LOGICAL_TO_ABS (vaddr2 + 0xFFF, r2, regs,
                                 ACCTYPE_READ, akey2);
@@ -559,7 +559,7 @@ BYTE    xpkey1 = 0, xpkey2 = 0;         /* Expanded storage keys     */
 
     /* Set Expanded Storage reference bit in the PTE */
         STORE_W(regs->mainstor + raddr2, pte2 | PAGETAB_ESREF);
-        
+
 
         /* Move 4K bytes from expanded storage to main storage */
         memcpy (regs->mainstor + aaddr1,

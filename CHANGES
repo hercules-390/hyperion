@@ -1,5 +1,10 @@
 #### Don't forget to change the version number in configure.ac! ####
 
+29 Nov 2003 Fix race condition in console.c recv_3270_data causing 100%
+            CPU utilization, zero MIPS" Hercules hang symptom (version
+            in configure.ac version bumped to 3.00a.5) - Fish
+29 Nov 2003 Fix "passing arg n of <function> from incompatible pointer type"
+            warnings in codepage.c, dat.h, stack.c, xstore.c - Fish
 29 Nov 2003 Fix reset_channel_path - Mark Drummond by Greg Smith
 28 Nov 2003 Flush Buffer On lost data condition in 2703 handler - Ivan Warren
 27 Nov 2003 CTCI/LCS: fix enqueue full frame buffer loop; enable thread

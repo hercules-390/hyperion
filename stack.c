@@ -126,7 +126,7 @@ QWORD trap_psw;
 int  i;
 
     if (   REAL_MODE(&regs->psw)
-      || !(PRIMARY_SPACE_MODE(&regs->psw) 
+      || !(PRIMARY_SPACE_MODE(&regs->psw)
       ||   ACCESS_REGISTER_MODE(&regs->psw)) )
         ARCH_DEP(program_interrupt) (regs, PGM_SPECIAL_OPERATION_EXCEPTION);
 
@@ -170,7 +170,7 @@ int  i;
     trap_ia &= 0x7FFFFFFF;
 
     /* Calculate last byte stored */
-    lastbyte = tsao + 95 
+    lastbyte = tsao + 95
 #if defined(FEATURE_ESAME)
                          + ((tcba0 & TCB0_R) ? 64 : 0)
 #endif /*defined(FEATURE_ESAME)*/
@@ -200,7 +200,7 @@ int  i;
   #endif /*FEATURE_TRACING*/
 
 #if defined(FEATURE_PER)
-    if( EN_IC_PER_SB(regs) 
+    if( EN_IC_PER_SB(regs)
 #if defined(FEATURE_PER2)
       && ( !(regs->CR(9) & CR9_BAC)
        || PER_RANGE_CHECK(trap_ia,regs->CR(10),regs->CR(11)) )
@@ -286,13 +286,13 @@ int  i;
             if((tsaa1 & PAGEFRAME_BYTEMASK) == 0)
                 tsaa1 = tsaa2;
         }
- 
+
     /* Load the Trap Control Block Address in gr15 */
     regs->GR_L(15) = duct11 & DUCT11_TCBA;
-    
+
     /* Set the Trap program address as a 31 bit instruction address */
 #if defined(FEATURE_ESAME)
-    regs->psw.amode64 = 0; 
+    regs->psw.amode64 = 0;
 #endif /*defined(FEATURE_ESAME)*/
     regs->psw.amode = 1;
     regs->psw.AMASK = AMASK31;
@@ -358,7 +358,7 @@ U16     xcode;                          /* Exception code            */
 #if defined(_FEATURE_SIE)
     if(regs->sie_state  && !regs->sie_pref)
     {
-    U32 sie_stid;
+    int sie_stid;
     U16 sie_xcode;
     int sie_private;
 
@@ -377,13 +377,13 @@ U16     xcode;                          /* Exception code            */
         goto trap_prot;
 #endif /*defined(_FEATURE_SIE)*/
 
-    if (!((regs->psw.pkey == 0) 
+    if (!((regs->psw.pkey == 0)
         || ((regs->CR(0) & CR0_STORE_OVRD)
         && ((STORAGE_KEY(aaddr, regs) & STORKEY_KEY) == 0x90))))
     {
         protect = 0; /* clear ALE, PTE protect flag */
         /* Check Key protection for store */
-        if (acctype == ACCTYPE_WRITE 
+        if (acctype == ACCTYPE_WRITE
             && ((STORAGE_KEY(aaddr, regs) & STORKEY_KEY) != regs->psw.pkey))
             goto trap_prot;
 
@@ -491,7 +491,7 @@ U16     xcode;                          /* Exception code            */
 #if defined(_FEATURE_SIE)
     if(regs->sie_state  && !regs->sie_pref)
     {
-    U32 sie_stid;
+    int sie_stid;
     U16 sie_xcode;
     int sie_private;
 
@@ -724,7 +724,7 @@ int     i;                              /* Array subscript           */
         STORE_FW(regs->mainstor + abs, regs->AR(i));
 
       #ifdef STACK_DEBUG
-        logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR 
+        logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR
                 " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 
@@ -912,7 +912,7 @@ int     i;                              /* Array subscript           */
         STORE_FW(regs->mainstor + abs, regs->AR(i));
 
       #ifdef STACK_DEBUG
-        logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR 
+        logmsg (_("stack: AR%d=" F_AREG " stored at V:" F_VADR
                 " A:" F_RADR "\n"), i, regs->AR(i), lsea, abs);
       #endif /*STACK_DEBUG*/
 

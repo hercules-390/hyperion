@@ -21,7 +21,7 @@
 /*      ESAME ASN authorization and ALET translation - Roger Bowler  */
 /*-------------------------------------------------------------------*/
 
-#if !defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C) 
+#if !defined(OPTION_NO_INLINE_DAT) || defined(_DAT_C)
 #if defined(FEATURE_DUAL_ADDRESS_SPACE)
 /*-------------------------------------------------------------------*/
 /* Translate ASN to produce address-space control parameters         */
@@ -1000,7 +1000,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
             tlbp->common = (ste & SEGTAB_COMMON) ? 1 : 0;
             tlbp->valid = regs->tlbID;
         }
-    
+
     } /* end if(!TLB) */
 
     /* Set the protection indicator if page protection is active */
@@ -1012,7 +1012,7 @@ TLBE   *tlbp;                           /* -> TLB entry              */
        index of the virtual address to form the real address */
         *raddr = (pte & PAGETAB_PFRA) | (vaddr & 0xFFF);
     else
-    /* In the case of lock page, return the address of the 
+    /* In the case of lock page, return the address of the
        pagetable entry */
         *raddr = pto;
 
@@ -1097,27 +1097,27 @@ TLBE   *tlbp;                           /* -> TLB entry              */
             rfx = (vaddr >> 50) & 0x3FF8;
             rsx = (vaddr >> 39) & 0x3FF8;
             rtx = (vaddr >> 28) & 0x3FF8;
-    
+
             /* Extract the 11-bit segment index from the virtual address,
                and shift it into bits 2-12 of a 16-bit integer, ready
                for addition to the segment table origin */
             sx = (vaddr >> 17) & 0x3FF8;
-    
+
             /* Extract the 8-bit page index from the virtual address,
                and shift it into bits 2-12 of a 16-bit integer, ready
                for addition to the page table origin */
             px = (vaddr >> 9) & 0x07F8;
-    
+
             /* ASCE-type exception if the virtual address is too large
                for the table type designated by the ASCE */
             if ((rfx != 0 && tt < TT_R1TABL)
                 || (rsx != 0 && tt < TT_R2TABL)
                 || (rtx != 0 && tt < TT_R3TABL))
                 goto asce_type_excp;
-    
+
             /* Perform region translation */
             switch (tt) {
-    
+
             /* Perform region-first translation */
             case TT_R1TABL:
 
@@ -1125,203 +1125,203 @@ TLBE   *tlbp;                           /* -> TLB entry              */
                    less than high-order 2 bits of region-first index */
                 if (tl < (rfx >> 12))
                     goto reg_first_excp;
-    
+
                 /* Add the region-first index (with three low-order zeroes)
                    to the region-first table origin, giving the address of
                    the region-first table entry */
                 rto += rfx;
-    
+
                 /* Addressing exception if outside main storage */
                 if (rto > regs->mainlim)
                     goto address_excp;
-    
+
                 /* Fetch region-first table entry from absolute storage.
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
 //              logmsg("r1te:%16.16llX=>%16.16llX\n",rto,rte);
-    
+
                 /* Region-first translation exception if the bit 58 of
                    the region-first table entry is set (region invalid) */
                 if (rte & REGTAB_I)
                     goto reg_first_excp;
-    
+
                 /* Translation specification exception if bits 60-61 of
                    the region-first table entry do not indicate the
                    correct type of region table */
                 if ((rte & REGTAB_TT) != TT_R1TABL)
                     goto tran_spec_excp;
-    
+
                 /* Extract the region-second table origin, offset, and
                    length from the region-first table entry */
                 rto = rte & REGTAB_TO;
                 tf = (rte & REGTAB_TF) >> 6;
                 tl = rte & REGTAB_TL;
-    
+
                 /* Fall through to perform region-second translation */
-    
+
             /* Perform region-second translation */
             case TT_R2TABL:
-    
+
                 /* Region-second translation exception if table offset is
                    greater than high-order 2 bits of region-second index */
                 if (tf > (rsx >> 12))
                     goto reg_second_excp;
-    
+
                 /* Region-second translation exception if table length is
                    less than high-order 2 bits of region-second index */
                 if (tl < (rsx >> 12))
                     goto reg_second_excp;
-    
+
                 /* Add the region-second index (with three low-order zeroes)
                    to the region-second table origin, giving the address of
                    the region-second table entry */
                 rto += rsx;
-    
+
                 /* Addressing exception if outside main storage */
                 if (rto > regs->mainlim)
                     goto address_excp;
-    
+
                 /* Fetch region-second table entry from absolute storage.
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
 //              logmsg("r2te:%16.16llX=>%16.16llX\n",rto,rte);
-    
+
                 /* Region-second translation exception if the bit 58 of
                    the region-second table entry is set (region invalid) */
                 if (rte & REGTAB_I)
                     goto reg_second_excp;
-    
+
                 /* Translation specification exception if bits 60-61 of
                    the region-second table entry do not indicate the
                    correct type of region table */
                 if ((rte & REGTAB_TT) != TT_R2TABL)
                     goto tran_spec_excp;
-    
+
                 /* Extract the region-third table origin, offset, and
                    length from the region-second table entry */
                 rto = rte & REGTAB_TO;
                 tf = (rte & REGTAB_TF) >> 6;
                 tl = rte & REGTAB_TL;
-    
+
                 /* Fall through to perform region-third translation */
-    
+
             /* Perform region-third translation */
             case TT_R3TABL:
-    
+
                 /* Region-third translation exception if table offset is
                    greater than high-order 2 bits of region-third index */
                 if (tf > (rtx >> 12))
                     goto reg_third_excp;
-    
+
                 /* Region-third translation exception if table length is
                    less than high-order 2 bits of region-third index */
                 if (tl < (rtx >> 12))
                     goto reg_third_excp;
-    
+
                 /* Add the region-third index (with three low-order zeroes)
                    to the region-third table origin, giving the address of
                    the region-third table entry */
                 rto += rtx;
-    
+
                 /* Addressing exception if outside main storage */
                 if (rto > regs->mainlim)
                     goto address_excp;
-    
+
                 /* Fetch region-third table entry from absolute storage.
                    All bytes must be fetched concurrently as observed by
                    other CPUs */
                 rte = ARCH_DEP(fetch_doubleword_absolute) (rto, regs);
 //              logmsg("r3te:%16.16llX=>%16.16llX\n",rto,rte);
-    
+
                 /* Region-third translation exception if the bit 58 of
                    the region-third table entry is set (region invalid) */
                 if (rte & REGTAB_I)
                     goto reg_third_excp;
-    
+
                 /* Translation specification exception if bits 60-61 of
                    the region-third table entry do not indicate the
                    correct type of region table */
                 if ((rte & REGTAB_TT) != TT_R3TABL)
                     goto tran_spec_excp;
-    
+
                 /* Extract the segment table origin, offset, and
                    length from the region-third table entry */
                 sto = rte & REGTAB_TO;
                 tf = (rte & REGTAB_TF) >> 6;
                 tl = rte & REGTAB_TL;
-    
+
                 /* Fall through to perform segment translation */
             } /* end switch(tt) */
-    
+
             /* Perform ESAME segment translation */
-    
+
             /* Add the segment index (with three low-order zeroes)
                to the segment table origin, giving the address of
                the segment table entry */
             sto += sx;
-    
+
             /* Segment translation exception if table offset is
                greater than high-order 2 bits of segment index */
             if (tf > (sx >> 12))
                 goto seg_tran_length;
-    
+
             /* Segment translation exception if table length is
                less than high-order 2 bits of segment index */
             if (tl < (sx >> 12))
                 goto seg_tran_length;
-    
+
             /* Addressing exception if outside real storage */
             if (sto > regs->mainlim)
                 goto address_excp;
-    
+
             /* Fetch segment table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             ste = ARCH_DEP(fetch_doubleword_absolute) (sto, regs);
 //          logmsg("ste:%16.16llX=>%16.16llX\n",sto,ste);
-    
+
             /* Segment translation exception if segment invalid */
             if (ste & ZSEGTAB_I)
                 goto seg_tran_invalid;
-    
+
             /* Translation specification exception if bits 60-61 of
                the segment table entry do not indicate segment table */
             if ((ste & ZSEGTAB_TT) != TT_SEGTAB)
                 goto tran_spec_excp;
-    
+
             /* Translation specification exception if the ASCE
                indicates a private space, and the segment table
                entry indicates a common segment */
             if (private && (ste & ZSEGTAB_C))
                 goto tran_spec_excp;
-    
+
             /* Extract the page table origin from segment table entry */
             pto = ste & ZSEGTAB_PTO;
-    
+
             /* Perform ESAME page translation */
-    
+
             /* Add the page index (with three low-order zeroes) to the
                page table origin, giving address of page table entry */
             pto += px;
-    
+
             /* Addressing exception if outside real storage */
             if (pto > regs->mainlim)
                 goto address_excp;
-    
+
             /* Fetch the page table entry from absolute storage.  All bytes
                must be fetched concurrently as observed by other CPUs */
             pte = ARCH_DEP(fetch_doubleword_absolute) (pto, regs);
 //          logmsg("pte:%16.16llX=>%16.16llX\n",pto,pte);
-    
+
             /* Page translation exception if page invalid */
             if (pte & ZPGETAB_I)
                 goto page_tran_invalid;
-    
+
             /* Check that all the reserved bits in the PTE are zero */
             if (pte & ZPGETAB_RESV)
                 goto tran_spec_excp;
-    
+
         } /* end else(ASCE_R) */
 
         /* [3.11.4.2] Place the translated address in the TLB */
@@ -1750,7 +1750,7 @@ int protect = 0;
 }
 #endif /*defined(FEATURE_PER2)*/
 
-#if !defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C) 
+#if !defined(OPTION_NO_INLINE_LOGICAL) || defined(_DAT_C)
 /*-------------------------------------------------------------------*/
 /* Convert logical address to absolute address and check protection  */
 /*                                                                   */
@@ -1833,7 +1833,7 @@ int     aeind;
 #if defined(_FEATURE_SIE)
     if(regs->sie_state  && !regs->sie_pref)
     {
-    U32 sie_stid;
+    int sie_stid;
     U16 sie_xcode;
     int sie_private;
 
