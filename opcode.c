@@ -4281,7 +4281,7 @@ zz_func opcode_edxx[256][GEN_MAXARCH] = {
  /*ED0C*/ GENx___x390x900 (dummy_instruction,RXE,"MDEB"),
  /*ED0D*/ GENx___x390x900 (divide_bfp_short,RXE,"DEB"),
  /*ED0E*/ GENx___x390x900 (dummy_instruction,RXF,"MAEB"),
- /*ED0F*/ GENx___x390x900 (dummy_instruction,RXF,"MSDB"),
+ /*ED0F*/ GENx___x390x900 (dummy_instruction,RXF,"MSEB"),
  /*ED10*/ GENx___x390x900 (testdataclass_bfp_short,RXE,"TCEB"),
  /*ED11*/ GENx___x390x900 (testdataclass_bfp_long,RXE,"TCDB"),
  /*ED12*/ GENx___x390x900 (testdataclass_bfp_ext,RXE,"TCXB"),
