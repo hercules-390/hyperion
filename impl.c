@@ -72,9 +72,13 @@ int i;
                    instructions then it must be malfunctioning */
                 if(sysblk.regs[i].instcount == savecount[i])
                 {
-                    /* Send signal to looping CPU */
-                    signal_thread(sysblk.regs[i].cputid, SIGUSR1);
-                    savecount[i] = -1;
+                    if(!try_obtain_lock(&sysblk.intlock))
+                    {
+                        /* Send signal to looping CPU */
+                        signal_thread(sysblk.regs[i].cputid, SIGUSR1);
+                        savecount[i] = -1;
+                        release_lock(&sysblk.intlock);
+                    }
                 }
                 else
                     /* Save current instcount */
