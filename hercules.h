@@ -9,6 +9,10 @@
 /* and function prototypes.                                          */
 /*-------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #define _REENTRANT    /* Ensure that reentrant code is generated *JJ */
 #define _THREAD_SAFE            /* Some systems use this instead *JJ */
 
