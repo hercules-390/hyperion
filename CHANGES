@@ -1,3 +1,4 @@
+17 Sep 2001 Minor corrections to CEFR, CDFR, CXFR and MVPG - Jan Jaeger
 13 Sep 2001 CXR setting wrong cc when fract=0 but char not - Paul Leisy
 13 Sep 2001 Fix TRAP so page cross rupt does not set change bit - Paul Leisy
 13 Sep 2001 MVPG missing TEA bit 29 and OP ACCESS ID on PIC 11 - Paul Leisy 

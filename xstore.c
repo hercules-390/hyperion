@@ -199,7 +199,7 @@ int     r1, r2;                         /* Values of R fields        */
 DEF_INST(move_page)
 {
 int     r1, r2;                         /* Register values           */
-int     rc;                             /* Return code               */
+int     rc = 0;                         /* Return code               */
 int     cc = 0;				/* Condition code            */
 VADR    vaddr1, vaddr2;                 /* Virtual addresses         */
 RADR    raddr1, raddr2;                 /* Real addresses            */

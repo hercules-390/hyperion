@@ -5327,7 +5327,7 @@ S64     fix;
     /* get fixed value */
     fix = regs->GR_L(r2);
     if (fix &  0x0000000080000000)
-        fix |= 0xFFFFFFFF00000000;
+        fix |= 0xFFFFFFFF00000000ULL;
 
     if (fix) {
         if (fix < 0) {
@@ -5370,7 +5370,7 @@ S64     fix;
     /* get fixed value */
     fix = regs->GR_L(r2);
     if (fix &  0x0000000080000000)
-        fix |= 0xFFFFFFFF00000000;
+        fix |= 0xFFFFFFFF00000000ULL;
 
     if (fix) {
         if (fix < 0) {
@@ -5412,7 +5412,7 @@ S64     fix;
     /* get fixed value */
     fix = regs->GR_L(r2);
     if (fix &  0x0000000080000000)
-        fix |= 0xFFFFFFFF00000000;
+        fix |= 0xFFFFFFFF00000000ULL;
 
     if (fix) {
         if (fix < 0) {
