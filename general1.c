@@ -3220,6 +3220,7 @@ VADR    addr1, addr2;                   /* Operand addresses         */
 GREG    len1, len2;                     /* Operand lengths           */
 BYTE    obyte;                          /* Operand byte              */
 BYTE    pad;                            /* Padding byte              */
+int     cpu_length;                     /* cpu determined length     */
 
     RS(inst, execflag, regs, r1, r3, b2, effective_addr2);
 
@@ -3236,14 +3237,20 @@ BYTE    pad;                            /* Padding byte              */
     len1 = GR_A(r1+1, regs);
     len2 = GR_A(r3+1, regs);
 
+    /* set cpu_length as shortest distance to new page */
+    if ((addr1 & 0xFFF) > (addr2 & 0xFFF))
+        cpu_length = 0x1000 - (addr1 & 0xFFF);
+    else
+        cpu_length = 0x1000 - (addr2 & 0xFFF);
+
     /* Set the condition code according to the lengths */
     cc = (len1 < len2) ? 1 : (len1 > len2) ? 2 : 0;
 
     /* Process operands from left to right */
     for (i = 0; len1 > 0; i++)
     {
-        /* If 4096 bytes have been moved, exit with cc=3 */
-        if (i >= 4096)
+        /* If cpu determined length has been moved, exit with cc=3 */
+        if (i >= cpu_length)
         {
             cc = 3;
             break;
