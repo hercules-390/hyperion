@@ -28,6 +28,9 @@
 # +-------------------------------------------------------------------+
 # !
 # ! Change Log: '$Log$
+# ! Change Log: 'Revision 1.15  2002/12/15 21:56:03  vbandke
+# ! Change Log: 'Complete rework.  Include support for P4 processor
+# ! Change Log: '
 function lower() {
 if [ "${1}X" = "X" ] ; then
    RESULT=""
@@ -42,7 +45,6 @@ function pause() {
 . set_color_vars
 clear
 echo -e "\n\n${YELLOW}  Building Hercules Binaries from local Source\n${TURQ}"
-export PATH=/usr/bin:/usr/local/bin:${PATH}:./
 THREAD_SET=false
 CPU_SET=false
 AUTO_SET=false
@@ -154,7 +156,8 @@ else
 fi
 mkdir -p ${TARG_DIR}_${FDIR}
 cd ${TARG_DIR}_${FDIR}
-../configure --prefix=`pwd` ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${TARG_DIR}"  --enable-optimization="${OPTOPT}"
+#../configure --prefix=`pwd` ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${TARG_DIR}"  --enable-optimization="${OPTOPT}"
+../configure                 ${BUILD_OPT} --enable-fthreads=${FTHREAD} --enable-custom="compiled for ${TARG_DIR}"  --enable-optimization="${OPTOPT}"
 RC=$?
 if [ $RC = 0 ]
 then
