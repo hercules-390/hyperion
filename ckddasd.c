@@ -2036,6 +2036,7 @@ BYTE            trk_ovfl;               /* == 1 if track ovfl write  */
             && (code & 0x7F) != 0x49
             && (code & 0x7F) != 0x69)
         || (IS_CCW_READ(code)
+            &&  code         != 0x12     /*TEST!!*/
             && (code & 0x7F) != 0x22))
         dev->ckdxmark = 0;
 

@@ -70,6 +70,10 @@ int             level=1;                /* Chkdsk level checking     */
 int             ro=0;                   /* 1 = Open readonly         */
 CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
 
+    /* Display the program identification message */
+    display_version (stderr, "Hercules cckd chkdsk program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
+
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
@@ -388,15 +392,22 @@ char *compression[] = {"none", "zlib", "bzip2"};
         goto cdsk_return;
     }
 
-    if (cdevhdr.numl1tab != (hdrcyls * heads + 255) / 256)
+    if (cdevhdr.numl1tab < (hdrcyls * heads + 255) / 256
+     || cdevhdr.numl1tab > (hdrcyls * heads + 255) / 256 + 1)
     {
         cdskmsg (m, "Invalid number of l1 table entries in header: "
                  "expected %d and found %d\n",
                  (hdrcyls * heads + 255) / 256, cdevhdr.numl1tab);
-        goto cdsk_return;
+      goto cdsk_return;
     }
     cyls = hdrcyls;
     trks = cyls * heads;
+    /* allow for alternate tracks */
+    if ((cdevhdr.numl1tab << 8) > trks)
+    {
+        trks = (cdevhdr.numl1tab << 8);
+        cyls = trks / heads;
+    }
     l1tabsz = cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
 
 /*-------------------------------------------------------------------*/
@@ -1577,7 +1588,9 @@ int             kl,dl;                  /* Key/Data lengths          */
         dl = buf[sz+6] * 256 + buf[sz+7];
         /* fix for track overflow bit */
         memcpy (cchh2, &buf[sz], 4); cchh2[0] &= 0x7f;
-        if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] != r ||
+        /* fix for funny formatted vm disks */
+        if (r == 1) memcpy (cchh, cchh2, 4);
+        if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] == 0 ||
             sz + 8 + kl + dl >= len)
         {
              if (msg)

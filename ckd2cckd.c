@@ -21,7 +21,7 @@
 /*-------------------------------------------------------------------*/
 void syntax ();
 int abbrev (char *, char *);
-void status (int, int);
+void status (int, int, int, int);
 int trk_len(unsigned char *, int, int, int);
 int null_trk (int, unsigned char *, int);
 int chk_endian ();
@@ -50,7 +50,7 @@ char           *ofile;                  /* Output file name          */
 int             ofd;                    /* Output file descriptor    */
 char           *sfxptr;                 /* -> Last char of file name */
 char            sfxchar;                /* Last char of file name    */
-int             fileseq;                /* Input file sequence nbr   */
+int             fileseq,fseq;           /* Input file sequence nbr   */
 int             heads;                  /* Heads per cylinder        */
 int             trksz;                  /* Track size                */
 int             highcyl;                /* High cyl on output file   */
@@ -76,6 +76,10 @@ int             maxerrs=5;              /* Max errors allowed        */
 int             nofudge=1;              /* Disable fudge factor      */
 unsigned int    c=CCKD_COMPRESS_ZLIB;   /* Compression algorithm     */
 int             z=-1;                   /* Compression value         */
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules ckd to cckd copy program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
 
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
@@ -349,7 +353,7 @@ int             z=-1;                   /* Compression value         */
     cdevhdr.vrm[2] = CCKD_MODLVL;
     if (chk_endian())  cdevhdr.options |= CCKD_BIGENDIAN;
     if (nofudge)       cdevhdr.options |= CCKD_NOFUDGE;
-    cdevhdr.numl1tab = (trks + 255) / 256;
+    cdevhdr.numl1tab = (ckdtrks + 255) / 256;
     cdevhdr.numl2tab = 256;
     cdevhdr.cyls[3] = (cyls >> 24) & 0xFF;
     cdevhdr.cyls[2] = (cyls >> 16) & 0xFF;
@@ -368,18 +372,18 @@ int             z=-1;                   /* Compression value         */
     buf2 = malloc (trksz);
 
     /* Start reading/writing tracks */
-    fileseq = 0;
-    ifd = ckdfd[fileseq];
+    fseq = 0;
+    ifd = ckdfd[fseq];
     pos = CCKD_L1TAB_POS + cdevhdr.numl1tab * CCKD_L1ENT_SIZE;
     l1x = 0;
     l2pos = 0;
     for (i = 0; i < ckdtrks; i++)
     {
         /* see if we need to changed input file descriptor */
-        if (i >= ckdhitrk[fileseq])
+        if (i >= ckdhitrk[fseq])
         {
             fileseq++;
-            ifd = ckdfd[fileseq];
+            ifd = ckdfd[fseq];
         }
 
         /* Check for secondary lookup table switch */
@@ -484,7 +488,7 @@ int             z=-1;                   /* Compression value         */
         }
 
         /* update status information */
-        if (!quiet) status (i+1, ckdtrks);
+        if (!quiet) status (i+1, ckdtrks, fseq+1, fileseq);
 
         /* check max errors */
         if (maxerrs > 0 && errs > maxerrs)
@@ -548,9 +552,9 @@ int             z=-1;                   /* Compression value         */
     }
 
     if (quiet == 0 || errs > 0)
-        printf ("ckd2cckd: copy %s\n",
-                errs ? "completed with errors"
-                     : "successful!!         ");
+        printf ("\rckd2cckd: copy %s\n",
+                errs ? "completed with errors            "
+                     : "successful!!                     ");
 
     return 0;
 
@@ -598,12 +602,16 @@ int abbrev (char *tst, char *cmp)
     return ((len >= 1) && (!strncmp(tst, cmp, len)));
 } /* end function abbrev */
 
-void status (int i, int n)
+void status (int i, int n, int f, int fn)
 {
 static char indic[] = "|/-\\";
 
-    printf ("\r%c %3d%% track %6d of %6d\r",
+    if (!i % 100) return;
+    printf ("\r%c %3d%% track %6d of %6d",
             indic[i%4], (i*100)/n, i, n);
+    if (fn > 1)
+        printf ("  [%d of %d]", f, fn);
+    printf ("\r");
 } /* end function status */
 
 

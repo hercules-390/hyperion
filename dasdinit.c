@@ -500,10 +500,9 @@ BYTE    volser[7];                      /* Volume serial number      */
 BYTE    c;                              /* Character work area       */
 
     /* Display the program identification message */
-    fprintf (stderr,
-            "Hercules DASD image file creation program %s "
-            "(c)Copyright Roger Bowler, 1999-2001\n",
-            MSTRING(VERSION));
+    display_version (stderr,
+                     "Hercules DASD image file creation program\n",
+                     MSTRING(VERSION), __DATE__, __TIME__);
 
     /* Check the number of arguments */
     if (argc != 5)

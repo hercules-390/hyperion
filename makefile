@@ -14,26 +14,18 @@ DESTDIR  = $(PREFIX)/usr/bin
 #CFLAGS  = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
 	   -DVERSION=$(VERSION)
 # For older Linux versions use:
-#CFLAGS	 = -O3 -Wall -malign-double -march=pentium -fomit-frame-pointer \
-#	   -DVERSION=$(VERSION) -DNO_BYTESWAP_H
 # For Linux/390 use:
 CFLAGS  = -O3 -DVERSION=$(VERSION) -DNO_BYTESWAP_H -DNO_ASM_BYTESWAP\
 	  -DNO_ATTR_REGPARM
 
-LFLAGS	 = -lpthread -lm
+LFLAGS	 = -lpthread -lm -lz
 
-# Reverse the comments below to disable Compressed CKD Dasd support
-#CFLAGS  += -DNO_CCKD
-#CFL_370 += -DNO_CCKD
-LFLAGS	 += -lz
+# Uncomment the lines below to enable Compressed CKD bzip2 compression
+#CFLAGS	+= -DCCKD_BZIP2
+#LFLAGS	+= -lbz2
 
-# Uncomment these lines to enable Compressed CKD bzip2 compression
-#CFLAGS  += -DCCKD_BZIP2
-#CFL_370 += -DCCKD_BZIP2
-
-# Uncomment these lines to enable HET bzip2 compression
+# Uncomment the lines below to enable HET bzip2 compression
 #CFLAGS	+= -DHET_BZIP2
-#CFL_370	+= -DHET_BZIP2
 #LFLAGS	+= -lbz2
 
 EXEFILES = hercules hercifc \
@@ -45,7 +37,7 @@ EXEFILES = hercules hercifc \
 TARFILES = makefile *.c *.h hercules.cnf tapeconv.jcl dasdlist \
 	   html zzsa.cnf zzsacard.bin
 
-HRC_OBJS = impl.o config.o panel.o \
+HRC_OBJS = impl.o config.o panel.o version.o \
 	   ipl.o assist.o dat.o \
 	   stack.o cpu.o vstore.o \
 	   general1.o general2.o plo.o \
@@ -61,39 +53,39 @@ HRC_OBJS = impl.o config.o panel.o \
 	   esame.o cckddasd.o cckdcdsx.o \
 	   parser.o hetlib.o ieee.o
 
-HIFC_OBJ = hercifc.o
+HIFC_OBJ = hercifc.o version.o
 
-DIN_OBJS = dasdinit.o dasdutil.o
+DIN_OBJS = dasdinit.o dasdutil.o version.o
 
-DIS_OBJS = dasdisup.o dasdutil.o
+DIS_OBJS = dasdisup.o dasdutil.o version.o
 
-DLD_OBJS = dasdload.o dasdutil.o
+DLD_OBJS = dasdload.o dasdutil.o version.o
 
-DLS_OBJS = dasdls.o dasdutil.o
+DLS_OBJS = dasdls.o dasdutil.o version.o
 
-DPU_OBJS = dasdpdsu.o dasdutil.o
+DPU_OBJS = dasdpdsu.o dasdutil.o version.o
 
-TCY_OBJS = tapecopy.o
+TCY_OBJS = tapecopy.o version.o
 
-TMA_OBJS = tapemap.o
+TMA_OBJS = tapemap.o version.o
 
-TSP_OBJS = tapesplt.o
+TSP_OBJS = tapesplt.o version.o
 
-CCHK_OBJ = cckdcdsk.o
+CCHK_OBJ = cckdcdsk.o version.o
 
-COMP_OBJ = cckdcomp.o cckdcdsx.o
+COMP_OBJ = cckdcomp.o cckdcdsx.o version.o
 
-C2CC_OBJ = ckd2cckd.o
+C2CC_OBJ = ckd2cckd.o version.o
 
-CC2C_OBJ = cckd2ckd.o
+CC2C_OBJ = cckd2ckd.o version.o
 
-HGT_OBJS = hetget.o hetlib.o sllib.o
+HGT_OBJS = hetget.o hetlib.o sllib.o version.o
 
-HIN_OBJS = hetinit.o hetlib.o sllib.o
+HIN_OBJS = hetinit.o hetlib.o sllib.o version.o
 
-HMA_OBJS = hetmap.o hetlib.o sllib.o
+HMA_OBJS = hetmap.o hetlib.o sllib.o version.o
 
-HUP_OBJS = hetupd.o hetlib.o sllib.o
+HUP_OBJS = hetupd.o hetlib.o sllib.o version.o
 
 HEADERS  = feat370.h feat390.h feat900.h featall.h featchk.h features.h \
 	   esa390.h opcode.h hercules.h inline.h dat.h vstore.h \
@@ -137,8 +129,20 @@ tapecopy:  $(TCY_OBJS)
 tapemap:  $(TMA_OBJS)
 	$(CC) -o tapemap $(TMA_OBJS)
 
-tapesplt:  $(TSP_OBJS)
+tapesplt: $(TSP_OBJS)
 	$(CC) -o tapesplt $(TSP_OBJS)
+
+cckdcdsk: $(CCHK_OBJ)
+	$(CC) -o cckdcdsk $(CCHK_OBJ) $(LFLAGS)
+
+cckdcomp: $(COMP_OBJ)
+	$(CC) -o cckdcomp $(COMP_OBJ) $(LFLAGS)
+
+cckd2ckd: $(CC2C_OBJ)
+	$(CC) -o cckd2ckd $(CC2C_OBJ) $(LFLAGS)
+
+ckd2cckd: $(C2CC_OBJ)
+	$(CC) -o ckd2cckd $(C2CC_OBJ) $(LFLAGS)
 
 hetget:  $(HGT_OBJS)
 	$(CC) -o hetget $(HGT_OBJS) $(LFLAGS)
@@ -179,21 +183,6 @@ hetmap.o: hetmap.c hetlib.h sllib.h
 hetupd.o: hetupd.c hetlib.h sllib.h
 
 cckd:	   cckd2ckd cckdcdsk ckd2cckd cckdcomp
-
-cckd2ckd:  $(CC2C_OBJ)
-	$(CC) -o cckd2ckd $(CC2C_OBJ) $(LFLAGS)
-
-cckdcdsk:  $(CCHK_OBJ)
-	$(CC) -o cckdcdsk $(CCHK_OBJ) $(LFLAGS)
-
-ckd2cckd:  $(C2CC_OBJ)
-	$(CC) -o ckd2cckd $(C2CC_OBJ) $(LFLAGS)
-
-cckdcomp:  $(COMP_OBJ)
-	$(CC) -o cckdcomp $(COMP_OBJ) $(LFLAGS)
-
-$(CCHK_OBJ): %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
 	rm -rf $(EXEFILES) *.o

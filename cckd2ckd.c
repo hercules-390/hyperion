@@ -73,6 +73,10 @@ int             valid=1;                /* Validate track images     */
 int             swapend=0;              /* Need to swap byte order   */
 int             maxerrs=5;              /* Max errors allowed        */
 
+    /* Display the program identification message */
+    display_version (stderr, "Hercules cckd to ckd copy program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
+
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {
@@ -231,7 +235,7 @@ int             maxerrs=5;              /* Max errors allowed        */
     buf2 = malloc (trksz);
 
     /* process each entry in the primary lookup table */
-    for (i = 0; i * 256 < trks; i++)
+    for (i = 0; i * 256 < trks || l1[i] != 0; i++)
     {
         /* get the secondary lookup table */
         if (i >= cdevhdr.numl1tab || l1[i] == 0)
@@ -250,7 +254,9 @@ int             maxerrs=5;              /* Max errors allowed        */
         }
 
         /* process each entry in the secondary lookup table */
-        for (j = 0; j < 256 && i * 256 + j < trks; j++)
+        for (j = 0;
+             j < 256 && (i * 256 + j < trks || (l1[i] != 0 && l2[j].pos != 0));
+             j++)
         {
             trk = i * 256 + j;
 
@@ -560,7 +566,7 @@ int             kl,dl;                  /* Key/Data lengths          */
     if (memcmp (cchh, cchh2, 4) != 0   ||  buf[9] != 0 ||
         buf[10] != 0   || buf[11] != 0 || buf[12] != 8)
     {
-        fprintf (stderr, "*** track %d R0 validation error !! "
+        fprintf (stderr, "\r*** track %d R0 validation error !! "
                  "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
                  trk, buf[5], buf[6], buf[7], buf[8], buf[9],
                  buf[10], buf[11], buf[12]);
@@ -578,23 +584,25 @@ int             kl,dl;                  /* Key/Data lengths          */
         dl = buf[sz+6] * 256 + buf[sz+7];
         /* fix for track overflow bit */
         memcpy (cchh2, &buf[sz], 4); cchh2[0] &= 0x7f;
-        if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] != r ||
+        /* fix for funny formatted vm disks */
+        if (r == 1) memcpy (cchh, cchh2, 4);
+        if (memcmp (cchh, cchh2, 4) != 0 || buf[sz+4] == 0 ||
             sz + 8 + kl + dl >= len)
         {
-            fprintf (stderr, "*** track %d R%d validation error !! "
+            fprintf (stderr, "\r*** track %d R%d validation error !! "
                      "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
                      trk, r, buf[sz], buf[sz+1], buf[sz+2], buf[sz+3],
                      buf[sz+4], buf[sz+5], buf[sz+6], buf[sz+7]);
             errs++;
             if (r > 1)
             {
-                printf ("    track truncated\n");
+                printf ("    track truncated              \n");
                 memcpy (&buf[sz], eighthexFF, 8);
                 return sz + 8;
             }
             else
             {
-                printf ("    null track substituted\n");
+                printf ("    null track substituted       \n");
                 return null_trk (trk, buf, heads);
             }
         }
@@ -603,7 +611,7 @@ int             kl,dl;                  /* Key/Data lengths          */
 
     if (sz != len)
     {
-        fprintf (stderr, "*** track %d size mismatch !! "
+        fprintf (stderr, "\r*** track %d size mismatch !! "
                  "size found %d, expected %d\n",
                  trk, sz, len);
         errs++;

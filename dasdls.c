@@ -106,6 +106,10 @@ int main(int argc, char **argv)
 {
     int rc = 0;
 
+    /* Display program info message */
+    display_version (stderr, "Hercules DASD list program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
+
     if (argc < 2) {
         fprintf(stderr, "Usage: dasdls dasd_image...\n");
         exit(2);

@@ -605,10 +605,9 @@ MEMINFO        *memtab;                 /* -> Member info array      */
 int             nmem = 0;               /* Number of array entries   */
 
     /* Display the program identification message */
-    fprintf (stdout,
-            "Hercules IEHIOSUP program %s "
-            "(c)Copyright Roger Bowler, 1999-2001\n",
-            MSTRING(VERSION));
+    display_version (stderr,
+                     "Hercules IEHIOSUP program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
 
     /* Check the number of arguments */
     if (argc != 2)

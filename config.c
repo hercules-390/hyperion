@@ -796,10 +796,8 @@ BYTE    c;                              /* Work area for sscanf      */
     setvbuf (sysblk.msgpipew, NULL, _IOLBF, 0);
 
     /* Display the version identifier on the control panel */
-    logmsg ("Hercules version %s build at %s %s\n"
-            "(c)Copyright 1999-2001 by "
-            "Roger Bowler, Jan Jaeger, and others\n",
-            MSTRING(VERSION), __DATE__, __TIME__);
+    display_version (sysblk.msgpipew, "Hercules ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
 
 #ifdef _FEATURE_VECTOR_FACILITY
     for(i = 0; i < numvec && i < numcpu; i++)

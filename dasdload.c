@@ -4196,10 +4196,9 @@ BYTE            stmt[256];              /* Control file statement    */
 int             stmtno;                 /* Statement number          */
 
     /* Display the program identification message */
-    fprintf (stdout,
-            "Hercules DASD loader program %s "
-            "(c)Copyright Roger Bowler, 1999-2001\n",
-            MSTRING(VERSION));
+    display_version (stderr,
+                     "Hercules DASD loader program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
 
     /* Check the number of arguments */
     if (argc < 3 || argc > 4)

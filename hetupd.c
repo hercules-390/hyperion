@@ -20,6 +20,7 @@
 
 #include "hetlib.h"
 #include "sllib.h"
+#include "hercules.h"
 
 /*
 || Local volatile data
@@ -240,6 +241,10 @@ main( int argc, char *argv[] )
 
     s_hetb = NULL;
     d_hetb = NULL;
+
+    /* Display the program identification message */
+    display_version (stderr, "Hercules HET copy/update program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
 
     while( TRUE )
     {

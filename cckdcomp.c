@@ -33,6 +33,10 @@ char           *fn;                     /* File name                 */
 int             fd;                     /* File descriptor           */
 int             level=-1;               /* Level for chkdsk          */
 
+    /* Display the program identification message */
+    display_version (stderr, "Hercules cckd compress program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
+
     /* parse the arguments */
     for (argc--, argv++ ; argc > 0 ; argc--, argv++)
     {

@@ -229,10 +229,8 @@ BYTE            dirblk[256];            /* Copy of directory block   */
 CIFBLK         *cif;                    /* CKD image file descriptor */
 
     /* Display the program identification message */
-    fprintf (stderr,
-            "Hercules PDS unload program %s "
-            "(c)Copyright Roger Bowler, 1999-2001\n",
-            MSTRING(VERSION));
+    display_version (stderr, "Hercules PDS unload program ",
+                     MSTRING(VERSION), __DATE__, __TIME__);
 
     /* Check the number of arguments */
     if (argc < 3 || argc > 4)

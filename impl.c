@@ -59,9 +59,8 @@ int     c;                              /* Work area for getopt      */
         cfgfile = "hercules.cnf";
 
     /* Display the version identifier */
-    fprintf (stderr,
-            "Hercules version %s build at %s %s\n",
-            MSTRING(VERSION), __DATE__, __TIME__);
+    display_version (stderr, "Hercules ", MSTRING(VERSION),
+                             __DATE__, __TIME__);
 
     /* Process the command line options */
     while ((c = getopt(argc, argv, "f:")) != EOF)
