@@ -58,11 +58,6 @@ U32               o;                    /* Level 2 table offset      */
 
     cckd_swapend_chdr (&cdevhdr);
 
-    swapend = (cckd_endian() !=
-               (cdevhdr.options & CCKD_BIGENDIAN) != 0);
-    n = cdevhdr.numl1tab;
-    if (swapend) cckd_swapend4((char *)&n);
-
     rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     if (rc == -1)
     {
@@ -79,7 +74,15 @@ U32               o;                    /* Level 2 table offset      */
         return -1;
     }
 
+    /* Determine need to swap */
+
+    swapend = (cckd_endian() !=
+               ((cdevhdr.options & CCKD_BIGENDIAN) != 0));
+
     /* fix the level 1 table */
+
+    n = cdevhdr.numl1tab;
+    if (swapend) cckd_swapend4((char *)&n);
 
     l1 = malloc (n * CCKD_L1ENT_SIZE);
     if (l1 == NULL)
@@ -148,7 +151,7 @@ U32               o;                    /* Level 2 table offset      */
             rc = read (fd, &l2, CCKD_L2TAB_SIZE);
             if (rc != CCKD_L2TAB_SIZE)
             {
-                ENDMSG (m, "l2[%d] read error, offset %d byres read %d : %s\n",
+                ENDMSG (m, "l2[%d] read error, offset %d bytes read %d : %s\n",
                         i, o, rc, strerror(errno));
                 free (l1);
                 return -1;

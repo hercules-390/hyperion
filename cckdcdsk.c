@@ -127,6 +127,8 @@ CCKDDASD_DEVHDR cdevhdr;                /* Compressed CKD device hdr */
     /* print some statistics */
     rc = lseek (fd, CKDDASD_DEVHDR_SIZE, SEEK_SET);
     rc = read (fd, &cdevhdr, CCKDDASD_DEVHDR_SIZE);
+    if (cckd_endian() != ((cdevhdr.options & CCKD_BIGENDIAN) != 0))
+        cckd_swapend_chdr (&cdevhdr);
     fprintf (stdout, "size %d used %d free %d first 0x%x number %d\n",
              cdevhdr.size, cdevhdr.used, cdevhdr.free_total,
              cdevhdr.free, cdevhdr.free_number);
