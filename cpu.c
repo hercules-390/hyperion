@@ -1152,16 +1152,10 @@ void ARCH_DEP(process_interrupt)(REGS *regs)
             release_lock (&sysblk.intlock);
 }
 
-void ARCH_DEP(process_trace)(REGS *regs, BYTE *inst, int tracethis, int stepthis)
+void ARCH_DEP(process_trace)(REGS *regs, int tracethis, int stepthis)
 {
 int     shouldbreak;                    /* 1=Stop at breakpoint      */
 
-#ifdef OPTION_FAST_INSTFETCH
-            /* fill regs->inst in case of fast ifetch; 
-               it is also needed for program_interrupt when pgminttr is set */
-            if (regs->inst != inst)
-                memcpy(regs->inst, inst, 6);
-#endif
 
             /* Test for breakpoint */
             shouldbreak = sysblk.instbreak
@@ -1209,6 +1203,7 @@ int     shouldbreak;                    /* 1=Stop at breakpoint      */
 #define FAST_EXECUTE_INSTRUCTION(_inst, _execflag, _regs) \
         { \
         COUNT_INST ((_inst), (_regs)); \
+        (_regs)->ip = (_inst); \
         (opcode_table[_inst[0]][ARCH_MODE]) \
                                ((_inst), 0, (_regs)); \
         }
@@ -1219,6 +1214,7 @@ do { \
     memcpy(&sysblk.footprregs[(_regs)->cpuad][sysblk.footprptr[(_regs)->cpuad]++].inst,(_inst),6); \
     sysblk.footprptr[(_regs)->cpuad] &= OPTION_FOOTPRINT_BUFFER - 1; \
     COUNT_INST((_inst), (_regs)); \
+    (_regs)->ip = (_inst); \
     opcode_table[((_inst)[0])][ARCH_MODE]((_inst), 0, (_regs)); \
 } while(0)
 
@@ -1228,9 +1224,10 @@ do { \
     { \
 _if: \
     regs->instvalid = 0; \
-    ARCH_DEP(instfetch) (regs->inst, regs->psw.IA, regs);  \
     (_ip) = regs->inst; \
-    regs->instvalid = 1; \
+    (_regs)->ip = (_ip); \
+    ARCH_DEP(instfetch) (regs->inst, regs->psw.IA, regs);  \
+    (regs)->instvalid = 1; \
     (_pe) = (regs->psw.IA & PAGEFRAME_PAGEMASK) + PAGEFRAME_PAGESIZE - 6; \
     goto _ex; \
     }
@@ -1248,6 +1245,7 @@ void ARCH_DEP(run_cpu) (REGS *regs)
 int     tracethis;                      /* Trace this instruction    */
 int     stepthis;                       /* Stop on this instruction  */
 VADR    pageend;
+BYTE    *ip;
 
     /* Establish longjmp destination for program check */
     setjmp(regs->progjmp);
@@ -1256,7 +1254,8 @@ VADR    pageend;
     tracethis = 0;
     stepthis = 0;
     pageend = 0;
-    regs->ip = regs->inst;
+    ip = regs->inst;
+    regs->ip = ip;
 
     while (1)
     {
@@ -1269,7 +1268,7 @@ VADR    pageend;
         }
 
         /* Fetch the next sequential instruction */
-        FAST_INSTRUCTION_FETCH(regs->ip, regs->psw.IA, regs, pageend,
+        FAST_INSTRUCTION_FETCH(ip, regs->psw.IA, regs, pageend,
                             ifetch0, specexception);
 exec0:
 
@@ -1281,7 +1280,8 @@ exec0:
 
         if( IS_IC_TRACE )
         {
-            ARCH_DEP(process_trace)(regs, regs->ip, tracethis, stepthis);
+            regs->ip = ip;
+            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
 
     
             /* Reset instruction trace indicators */
@@ -1289,28 +1289,28 @@ exec0:
             stepthis = 0;
 #ifdef OPTION_CPU_UNROLL
             regs->instcount++;
-            FAST_EXECUTE_INSTRUCTION (regs->ip, 0, regs);
+            FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
             longjmp(regs->progjmp, SIE_NO_INTERCEPT);
 #endif
         }
 
         /* Execute the instruction */
-        FAST_EXECUTE_INSTRUCTION (regs->ip, 0, regs);
+        FAST_EXECUTE_INSTRUCTION (ip, 0, regs);
 
 #ifdef OPTION_CPU_UNROLL
-        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch1, exec1, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch2, exec2, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch3, exec3, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch4, exec4, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch5, exec5, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch6, exec6, specexception);
-        FAST_UNROLLED_EXECUTE(regs, pageend, regs->ip, 
+        FAST_UNROLLED_EXECUTE(regs, pageend, ip, 
                            ifetch7, exec7, specexception);
 
         regs->instcount += 8;
@@ -1318,16 +1318,17 @@ exec0:
 
     }
 
-FAST_IFETCH(regs, pageend, regs->ip, ifetch0, exec0);
-FAST_IFETCH(regs, pageend, regs->ip, ifetch1, exec1);
-FAST_IFETCH(regs, pageend, regs->ip, ifetch2, exec2);
-FAST_IFETCH(regs, pageend, regs->ip, ifetch3, exec3);
-FAST_IFETCH(regs, pageend, regs->ip, ifetch4, exec4);
-FAST_IFETCH(regs, pageend, regs->ip, ifetch5, exec5);
-FAST_IFETCH(regs, pageend, regs->ip, ifetch6, exec6);
-FAST_IFETCH(regs, pageend, regs->ip, ifetch7, exec7);
+FAST_IFETCH(regs, pageend, ip, ifetch0, exec0);
+FAST_IFETCH(regs, pageend, ip, ifetch1, exec1);
+FAST_IFETCH(regs, pageend, ip, ifetch2, exec2);
+FAST_IFETCH(regs, pageend, ip, ifetch3, exec3);
+FAST_IFETCH(regs, pageend, ip, ifetch4, exec4);
+FAST_IFETCH(regs, pageend, ip, ifetch5, exec5);
+FAST_IFETCH(regs, pageend, ip, ifetch6, exec6);
+FAST_IFETCH(regs, pageend, ip, ifetch7, exec7);
 
 specexception:
+    regs->ip = ip;
     regs->instvalid = 0;
     ARCH_DEP(program_interrupt)(regs, PGM_SPECIFICATION_EXCEPTION); 
 
@@ -1373,7 +1374,7 @@ int     stepthis;                       /* Stop on this instruction  */
 
         if( IS_IC_TRACE )
         {
-            ARCH_DEP(process_trace)(regs, regs->ip, tracethis, stepthis);
+            ARCH_DEP(process_trace)(regs, tracethis, stepthis);
 
     
             /* Reset instruction trace indicators */

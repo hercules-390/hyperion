@@ -291,7 +291,7 @@ int i;
           strsignal(signo));
 
         display_inst(regs->sie_active ? regs->guestregs : regs,
-          regs->sie_active ? regs->guestregs->inst : regs->inst);
+          regs->sie_active ? regs->guestregs->ip : regs->ip);
 
         switch(regs->arch_mode) {
             case ARCH_370:
@@ -312,7 +312,7 @@ int i;
           regs->sie_active ? regs->guestregs->cpuad : regs->cpuad,
           strsignal(signo));
         display_inst(regs->sie_active ? regs->guestregs : regs, 
-          regs->sie_active ? regs->guestregs->inst : regs->inst);
+          regs->sie_active ? regs->guestregs->ip : regs->ip);
         regs->cpustate = CPUSTATE_STOPPING;
         regs->checkstop = 1;
         ON_IC_CPU_NOT_STARTED(regs);

@@ -456,6 +456,14 @@ do { \
 	((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
     ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
 
+#define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey)	      \
+    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((_arn))) &&	    \
+    ((_arn) >= 0) &&						      \
+    (((_regs)->aekey[(_arn)] == (_akey)) || (_akey) == 0) &&	      \
+    ((_regs)->aeacc[(_arn)] >= (_acctype)) ?			      \
+    ((_regs)->AE((_arn)) | ((_addr) & PAGEFRAME_BYTEMASK))  :  \
+    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
+
 #define INVALIDATE_AEA(_arn, _regs) \
 	(_regs)->VE((_arn)) = 1
 
@@ -489,6 +497,15 @@ do { \
 	((_regs)->AE((AEIND(_addr))) | ((_addr) & PAGEFRAME_BYTEMASK)) ) :  \
     ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
 
+#define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey)	      \
+    (((_addr) & PAGEFRAME_PAGEMASK) == (_regs)->VE((AEIND(_addr)))) &&	    \
+    ((_arn) >= 0) &&						      \
+    (((_regs)->aekey[(AEIND(_addr))] == (_akey)) || (_akey) == 0) &&	      \
+    (((_regs)->aenoarn) || ((_regs)->aearn[AEIND(_addr)] == (_arn))) && \
+    ((_regs)->aeacc[(AEIND(_addr))] >= (_acctype)) ?			      \
+    ((_regs)->AE((AEIND(_addr))) | ((_addr) & PAGEFRAME_BYTEMASK))  :  \
+    ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
+
 #define INVALIDATE_AEA(_arn, _regs) \
 do { \
     int i; \
@@ -509,6 +526,9 @@ do { \
 #else /*!defined(OPTION_AEA_BUFFER)*/
 
 #define LOGICAL_TO_ABS(_addr, _arn, _regs, _acctype, _akey) \
+	ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
+
+#define LOGICAL_TO_ABS_SKP(_addr, _arn, _regs, _acctype, _akey) \
 	ARCH_DEP(logical_to_abs) ((_addr), (_arn), (_regs), (_acctype), (_akey))
 
 #define INVALIDATE_AEA(_arn, _regs)

@@ -2045,11 +2045,6 @@ BYTE   *cmdarg;                         /* -> Command argument       */
         else
             sysblk.pgminttr |= ((U64)1 << (n - 1));
 
-        if (sysblk.pgminttr)
-        {
-            SET_IC_TRACE;
-        }
-
         return NULL;
     }
 
@@ -3785,7 +3780,7 @@ int     n;                              /* Number of bytes in buffer */
     display_regs (regs);
 
     /* Display control registers if appropriate */
-    if (!REAL_MODE(&regs->psw) || regs->inst[0] == 0xB2)
+    if (!REAL_MODE(&regs->psw) || regs->ip[0] == 0xB2)
         display_cregs (regs);
 
     /* Display access registers if appropriate */

@@ -199,6 +199,8 @@ void ARCH_DEP(cpu_reset) (REGS *regs)
 {
 int             i;                      /* Array subscript           */
 
+    regs->ip = regs->inst;
+
     /* Clear pending interrupts and indicators */
     regs->loadstate = 0;
     regs->checkstop = 0;
