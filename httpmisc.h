@@ -18,6 +18,11 @@ typedef struct _CGIVAR {
     char *name;
     char *value;
     int  type;
+#define VARTYPE_NONE   0
+#define VARTYPE_GET    1
+#define VARTYPE_POST   2
+#define VARTYPE_PUT    4
+#define VARTYPE_COOKIE 8
 } CGIVAR;
 
 
@@ -33,7 +38,7 @@ typedef struct _WEBBLK {
 #define REQTYPE_NONE   0
 #define REQTYPE_GET    1
 #define REQTYPE_POST   2
-#define REQTYPE_PUT    3
+#define REQTYPE_PUT    4
     char *request;
     char *baseurl;
     char *user;

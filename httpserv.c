@@ -462,6 +462,13 @@ static void *http_request(FILE *hsock)
                                   strtok_r(NULL," \t\r\n",&strtok_str));
             }
             else
+#if 0
+            if(!strcasecmp(pointer,"Cookie:"))
+            {
+                    http_interpret_variable_string(webblk, pointer + 8, VARTYPE_COOKIE);
+            }
+            else
+#endif
             if(!strcasecmp(pointer,"Content-Length:"))
             {
                 if((pointer = strtok_r(NULL," \t\r\n",&strtok_str)))
@@ -485,7 +492,7 @@ static void *http_request(FILE *hsock)
                     pointer++;
             } 
             *pointer = '\0';
-            http_interpret_variable_string(webblk, post_arg, REQTYPE_POST);
+            http_interpret_variable_string(webblk, post_arg, VARTYPE_POST);
             free(post_arg);
         }
     }
@@ -502,7 +509,7 @@ static void *http_request(FILE *hsock)
     /* anything following a ? in the URL is part of the get arguments */
     if ((pointer=strchr(url,'?'))) {
         *pointer = 0;
-        http_interpret_variable_string(webblk, pointer + 1, REQTYPE_GET);
+        http_interpret_variable_string(webblk, pointer + 1, VARTYPE_GET);
     }
 
     while(url[0] == '/' && url[1] == '/')
